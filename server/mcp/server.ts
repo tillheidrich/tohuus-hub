@@ -25,6 +25,11 @@ import { overview } from '../lib/overview.js';
 import { getRecipe, listRecipes, logCooked, saveRecipe, suggest } from '../lib/recipes.js';
 import { addPlan, autofill, getPlan, planShopping, shiftPlan, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
+import { register as register_data } from './tools-data.js';
+import { register as register_party } from './tools-party.js';
+import { register as register_fresh } from './tools-fresh.js';
+import { register as register_shop } from './tools-shop.js';
+import { register as register_home } from './tools-home.js';
 import { norm } from '../lib/text.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -498,6 +503,11 @@ export function buildMcpServer(actorName: string) {
     },
   );
 
+  register_data(s, actorName);
+  register_party(s, actorName);
+  register_fresh(s, actorName);
+  register_shop(s, actorName);
+  register_home(s, actorName);
   return s;
 }
 

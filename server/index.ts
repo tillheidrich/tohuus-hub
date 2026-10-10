@@ -15,6 +15,11 @@ import { guest, guestAdmin } from './routes/guest.js';
 import { r as ha } from './routes/ha.js';
 import { r as imports } from './routes/imports.js';
 import { r as recipes } from './routes/recipes.js';
+import { r as dataRoutes } from './routes/data.js';
+import { r as partyRoutes } from './routes/party.js';
+import { r as freshRoutes } from './routes/fresh.js';
+import { r as shopRoutes } from './routes/shop.js';
+import { r as homeRoutes } from './routes/home.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 ensureBaseData();
@@ -62,6 +67,11 @@ app.use('/api', imports);
 app.use('/api', recipes);
 app.use('/api', ha);
 app.use('/api', guestAdmin);
+app.use('/api', dataRoutes);
+app.use('/api', partyRoutes);
+app.use('/api', freshRoutes);
+app.use('/api', shopRoutes);
+app.use('/api', homeRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

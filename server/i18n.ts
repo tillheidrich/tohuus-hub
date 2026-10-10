@@ -3,7 +3,14 @@
  * The English text is the key; translations live in server/locales/<lang>.ts.
  */
 import { lang } from './db.js';
-import { de } from './locales/de.js';
+import { de as deBase } from './locales/de.js';
+import { de_data } from './locales/de-data.js';
+import { de_party } from './locales/de-party.js';
+import { de_fresh } from './locales/de-fresh.js';
+import { de_shop } from './locales/de-shop.js';
+import { de_home } from './locales/de-home.js';
+
+const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home };
 
 const DICTS: Record<string, Record<string, string>> = { en: {}, de };
 const LOCALES: Record<string, string> = { en: 'en-GB', de: 'de-DE' };

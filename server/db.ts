@@ -289,6 +289,19 @@ migrations.forEach((sql, i) => {
   })();
 });
 
+/**
+ * Named, append-only migrations for feature modules: call `migrate('party-1', sql)` at module load.
+ * A name runs exactly once; never edit the SQL of a name that has shipped – add 'party-2' instead.
+ */
+db.exec(`CREATE TABLE IF NOT EXISTS _migrations_named (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+export function migrate(name: string, sql: string) {
+  if (db.prepare('SELECT 1 FROM _migrations_named WHERE name = ?').get(name)) return;
+  db.transaction(() => {
+    db.exec(sql);
+    db.prepare('INSERT INTO _migrations_named (name) VALUES (?)').run(name);
+  })();
+}
+
 export function getSetting<T>(key: string, fallback: T): T {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined;
   if (!row) return fallback;
