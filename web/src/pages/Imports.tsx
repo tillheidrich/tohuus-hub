@@ -5,6 +5,7 @@ import type { Me } from '../App';
 import { type Location, api, fmtDate, invalidate, post, useApi } from '../api';
 import { Empty, Ic, Seg, Skeleton, useToast } from '../ui';
 import { num, t } from '../i18n';
+import { money } from '../region';
 import { InboxStatusCard } from './Retail';
 
 export function Imports({ me }: { me: Me }) {
@@ -199,7 +200,7 @@ export function Imports({ me }: { me: Me }) {
                 <div className="grow">
                   <div className="title">{i.title}</div>
                   <div className="sub">
-                    {[i.lines === 1 ? t('1 line') : t('{n} lines', { n: i.lines }), i.meta?.finalTotal ? `${num(Number(i.meta.finalTotal), 2)} €` : i.total ? `${num(Number(i.total), 2)} €` : null, i.meta?.reconciledWith ? t('matched with receipt') : null, fmtDate(i.created_at)].filter(Boolean).join(' · ')}
+                    {[i.lines === 1 ? t('1 line') : t('{n} lines', { n: i.lines }), i.meta?.finalTotal ? money(Number(i.meta.finalTotal)) : i.total ? money(Number(i.total)) : null, i.meta?.reconciledWith ? t('matched with receipt') : null, fmtDate(i.created_at)].filter(Boolean).join(' · ')}
                   </div>
                 </div>
                 <span className={`badge ${i.status === 'review' ? 'expiring' : i.status === 'applied' ? 'good' : ''}`}>

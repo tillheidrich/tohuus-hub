@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDFBF7"/><stop offset="1" stop-color="#F1EBE0"/>
+    </linearGradient>
+    <radialGradient id="tglow" cx="0.5" cy="0.18" r="0.75">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tbg)"/>
+  <rect width="1024" height="1024" rx="232" fill="url(#tglow)"/>
+  <rect x="4" y="4" width="1016" height="1016" rx="228" fill="none" stroke="#1f4257" stroke-opacity="0.10" stroke-width="8"/><g transform="translate(71.68 57.92) scale(1.7200)">
+    <path d="M256 92 L404 196 L108 196 Z" fill="#1f4257" stroke="#1f4257" stroke-width="22" stroke-linejoin="round"/>
+    <rect x="118" y="234" width="276" height="54" rx="27" fill="#1f4257"/>
+    <rect x="118" y="314" width="200" height="54" rx="27" fill="#b4472e"/>
+    <rect x="118" y="394" width="124" height="54" rx="27" fill="#1f4257" opacity="0.32"/></g>
+</svg>

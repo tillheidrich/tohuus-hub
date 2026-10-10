@@ -26,7 +26,7 @@ import type { Me } from '../App';
 import { invalidate, patch, post, put, useApi } from '../api';
 import { BRANDS } from '../brand';
 import { CHANGELOG, latestChange, unseenChanges } from '../changelog';
-import { lang, setLang, t } from '../i18n';
+import { LANGUAGE_OPTIONS, lang, locale, pick, setLang, t } from '../i18n';
 import { Ic, LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
 
 type Step = 'home' | 'invite' | 'stock';
@@ -137,6 +137,8 @@ interface RoomTpl {
   key: string;
   en: string;
   de: string;
+  /** in the household language */
+  name?: string;
   icon: string;
 }
 
@@ -148,20 +150,19 @@ function StepHome({ g, onNext }: { g: GettingStarted; onNext: () => void }) {
   const [own, setOwn] = useState('');
   const [busy, setBusy] = useState(false);
   const toast = useToast();
-  const de = lang() === 'de';
 
   // base rooms that this household doesn't have (any more) – offered as chips, off by default
   const missing = useMemo(() => {
     const names = new Set(g.rooms.map((r) => r.name.toLowerCase()));
     const kinds = new Set(g.rooms.map((r) => r.kind));
-    return (tpls.data ?? []).filter((x) => !kinds.has(x.key) && !names.has(x.en.toLowerCase()) && !names.has(x.de.toLowerCase()));
+    return (tpls.data ?? []).filter((x) => !kinds.has(x.key) && !names.has(x.en.toLowerCase()) && !names.has(x.de.toLowerCase()) && !names.has((x.name ?? x.en).toLowerCase()));
   }, [tpls.data, g.rooms]);
   useEffect(() => {
     setExtra((cur) => {
       const have = new Set(cur.map((c) => c.name));
-      return [...cur, ...missing.map((m) => ({ name: de ? m.de : m.en, icon: m.icon, on: false })).filter((m) => !have.has(m.name))];
+      return [...cur, ...missing.map((m) => ({ name: m.name ?? pick(m), icon: m.icon, on: false })).filter((m) => !have.has(m.name))];
     });
-  }, [missing, de]);
+  }, [missing]);
 
   const setSetting = (body: Record<string, string>) => patch('/settings', body);
   const addOwn = () => {
@@ -212,7 +213,7 @@ function StepHome({ g, onNext }: { g: GettingStarted; onNext: () => void }) {
                 location.reload();
               })
             }
-            options={[['en', 'English'], ['de', 'Deutsch']]}
+            options={LANGUAGE_OPTIONS}
           />
         </div>
         <div className="field">
@@ -642,7 +643,6 @@ export function WhatsNew({ me }: { me: Me }) {
   if (closed || !prefs.data || (me.actor.role === 'admin' && !g.data) || !latest || fresh || (seen && seen >= latest) || loc.pathname.startsWith('/willkommen')) return null;
   const entries = unseenChanges(seen);
   if (!entries.length) return null;
-  const de = lang() === 'de';
   const close = () => {
     setClosed(true);
     mark();
@@ -652,14 +652,14 @@ export function WhatsNew({ me }: { me: Me }) {
       <div className="stack" style={{ gap: 18 }}>
         {entries.map((e) => (
           <section key={e.id}>
-            <div className="eyebrow">{new Date(e.id.slice(0, 10) + 'T12:00:00').toLocaleDateString(de ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long' })}</div>
-            <h3 style={{ fontSize: 17, margin: '2px 0 10px' }}>{de ? e.title.de : e.title.en}</h3>
+            <div className="eyebrow">{new Date(e.id.slice(0, 10) + 'T12:00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long' })}</div>
+            <h3 style={{ fontSize: 17, margin: '2px 0 10px' }}>{pick(e.title)}</h3>
             <ul className="onb-news">
               {e.items.map((i, n) => (
                 <li key={n}>
                   <Sparkle size={16} weight="fill" />
                   <span className="grow">
-                    {de ? i.de : i.en}
+                    {pick(i)}
                     {i.to && (
                       <>
                         {' '}
@@ -695,18 +695,17 @@ export function WhatsNew({ me }: { me: Me }) {
 
 /** Kept for the help page: the full list in the household language. */
 export function ChangelogList() {
-  const de = lang() === 'de';
   return (
     <div className="stack" style={{ gap: 16 }}>
       {CHANGELOG.map((e) => (
         <div key={e.id}>
-          <div className="eyebrow">{new Date(e.id.slice(0, 10) + 'T12:00:00').toLocaleDateString(de ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-          <b>{de ? e.title.de : e.title.en}</b>
+          <div className="eyebrow">{new Date(e.id.slice(0, 10) + 'T12:00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          <b>{pick(e.title)}</b>
           <ul className="onb-news" style={{ marginTop: 8 }}>
             {e.items.map((i, n) => (
               <li key={n}>
                 <Sparkle size={14} weight="fill" />
-                <span className="grow small">{de ? i.de : i.en}</span>
+                <span className="grow small">{pick(i)}</span>
               </li>
             ))}
           </ul>

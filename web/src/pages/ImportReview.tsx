@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { type Location, fmtDate, invalidate, patch, post, qc, useApi } from '../api';
 import { Ic, ProductPicker, Sheet, Skeleton, Stepper, Thumb, useToast } from '../ui';
 import { num, t } from '../i18n';
+import { money } from '../region';
 
 /** line status (API value) → [English display label, badge class] */
 const STATUS: Record<string, [string, string]> = {
@@ -106,7 +107,7 @@ export function ImportReview() {
             </>
           )}
           {readonly && <span className="mono small">{skip ? '–' : `${l.qty > 0 ? '+' : ''}${l.qty}`}</span>}
-          {l.price != null && l.status !== 'deposit' && <span className="small muted mono">{num(l.price, 2)} €</span>}
+          {l.price != null && l.status !== 'deposit' && <span className="small muted mono">{money(l.price)}</span>}
         </div>
       </div>
     );
@@ -139,7 +140,7 @@ export function ImportReview() {
           <div className="small">
             <b>{t('Matched with the receipt.')}</b>{' '}
             {meta.finalTotal
-              ? t('Anything returned at pickup has been taken out – paid: {total} €.', { total: num(Number(meta.finalTotal), 2) })
+              ? t('Anything returned at pickup has been taken out – paid: {total}.', { total: money(Number(meta.finalTotal)) })
               : t('Anything returned at pickup has been taken out.')}
           </div>
         </div>

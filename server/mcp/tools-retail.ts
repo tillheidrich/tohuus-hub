@@ -35,7 +35,7 @@ export function register(s: McpServer, _actorName: string) {
     {
       title: 'What was thrown away this month',
       description:
-        'Household summary of food logged as thrown away in a month: items, reasons, a tip, and the estimated value in EUR from the latest known receipt prices. A shared household view – never attribute waste to a person.',
+        'Household summary of food logged as thrown away in a month: items, reasons, a tip, and the estimated value in the household currency (`currency`) from the latest known receipt prices. A shared household view – never attribute waste to a person.',
       inputSchema: { month: z.string().regex(/^\d{4}-\d{2}$/).optional().describe('YYYY-MM, default: current month') },
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
@@ -49,7 +49,8 @@ export function register(s: McpServer, _actorName: string) {
           items: w.items.map((x) => ({ name: x.name, qty: x.qty, times: x.times, reasons: x.reasons })),
           by_reason: w.by_reason,
           tip: w.tip,
-          estimated_value_eur: v.value,
+          estimated_value: v.value,
+          currency: v.currency,
           items_without_known_price: v.unpriced,
           previous_month: w.previous,
         });

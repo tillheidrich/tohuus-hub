@@ -1,0 +1,13 @@
+          Coop Konsum Exempel
+              coop.se
+
+Smör Normalsaltat 500g          64,95
+Medlemspris                    -10,00
+Lax Fryst 4-pack                89,00
+Pasta Penne 500g                29,80
+  2 st x 14,90
+2 för 25                        -4,80
+Mellansumma                    168,95
+Summa att betala               168,95
+Kortbetalning                  168,95
+2026-10-03 12:30

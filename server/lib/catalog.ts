@@ -1,7 +1,9 @@
 import { config } from '../config.js';
 import { db, lang, now } from '../db.js';
+import { commaDecimal } from '../languages.js';
 import { t } from '../i18n.js';
 import { BASE_LOCATIONS, baseName, categoryIdByKey, type CategoryKey } from './basedata.js';
+import { regionCategoryRules } from './region-categories.js';
 import { emit } from './bus.js';
 import { dateKindOf, entryExpiry, openDaysFor } from './fresh-shelf.js';
 import { notify, notifySettings } from './notify.js';
@@ -260,7 +262,7 @@ export async function afterStatusChange(p: ProductRow, before: Status, after: St
 
 export function fmtQty(p: Pick<ProductRow, 'track_mode' | 'unit'>, total: number) {
   if (p.track_mode === 'level') return levelLabels()[Math.max(0, Math.min(3, Math.round(total)))];
-  const n = Number.isInteger(total) ? String(total) : lang() === 'de' ? total.toFixed(1).replace('.', ',') : total.toFixed(1);
+  const n = Number.isInteger(total) ? String(total) : commaDecimal(lang()) ? total.toFixed(1).replace('.', ',') : total.toFixed(1);
   return `${n} ${p.unit}`;
 }
 
@@ -389,7 +391,9 @@ const CATEGORY_RULES: [RegExp, CategoryKey][] = [
 ];
 
 export function guessCategory(name: string): number | null {
-  for (const [re, key] of CATEGORY_RULES) {
+  // English / Swedish keywords first when the household region shops in that language (region-categories.ts)
+  const extra = regionCategoryRules();
+  for (const [re, key] of [...extra.first, ...CATEGORY_RULES, ...extra.last]) {
     if (re.test(name)) {
       const id = categoryIdByKey(key);
       if (id) return id;

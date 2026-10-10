@@ -1,0 +1,378 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ToHuus Hub verbinden",
+        "description": "Öffne in ToHuus Hub Einstellungen › Zugänge & KI › Neuer Zugang, wähle „Home Assistant“ und kopiere den Token. Gib die Adresse ein, mit der du ToHuus Hub öffnest.",
+        "data": {
+          "url": "Adresse",
+          "token": "Zugangs-Token",
+          "verify_ssl": "SSL-Zertifikat prüfen"
+        },
+        "data_description": {
+          "url": "Zum Beispiel http://192.168.1.20:8080 oder https://home.example.de",
+          "token": "Beginnt mit sw_ – wird nur beim Erstellen einmal angezeigt.",
+          "verify_ssl": "Nur bei selbst signierten Zertifikaten ausschalten."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Neuer Zugangs-Token",
+        "description": "ToHuus Hub unter {url} nimmt den Token nicht mehr an. Erstelle einen neuen „Home Assistant“-Zugang und füge ihn hier ein.",
+        "data": {
+          "token": "Zugangs-Token"
+        }
+      },
+      "reconfigure": {
+        "title": "Adresse von ToHuus Hub ändern",
+        "description": "Token leer lassen, um den bisherigen zu behalten.",
+        "data": {
+          "url": "Adresse",
+          "token": "Zugangs-Token",
+          "verify_ssl": "SSL-Zertifikat prüfen"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "ToHuus Hub ist unter dieser Adresse nicht erreichbar.",
+      "invalid_auth": "Der Token wurde abgelehnt. Erstelle in ToHuus Hub einen neuen „Home Assistant“-Zugang.",
+      "not_supported": "Dieses ToHuus Hub ist zu alt für die Integration. Bitte zuerst ToHuus Hub aktualisieren.",
+      "unknown": "Unerwarteter Fehler."
+    },
+    "abort": {
+      "already_configured": "Dieses ToHuus Hub ist schon eingerichtet.",
+      "reauth_successful": "Token aktualisiert.",
+      "reconfigure_successful": "Adresse aktualisiert.",
+      "wrong_instance": "Das ist ein anderes ToHuus Hub als das hier eingerichtete."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ToHuus Hub in Home Assistant",
+        "description": "Sensoren sind immer dabei. Wähle, was sonst noch angezeigt wird.",
+        "data": {
+          "features": "Funktionen",
+          "live_updates": "Live-Aktualisierung",
+          "display_mode": "Farben des Display-Bilds",
+          "display_width": "Breite des Display-Bilds",
+          "display_height": "Höhe des Display-Bilds"
+        },
+        "data_description": {
+          "live_updates": "Hält eine Verbindung offen, damit Änderungen nach ein, zwei Sekunden ankommen. Ohne fragt Home Assistant jede Minute nach.",
+          "display_mode": "Für Küchen-Displays als Bild-Entitäten."
+        }
+      }
+    }
+  },
+  "selector": {
+    "features": {
+      "options": {
+        "todo": "Einkaufsliste als To-do-Liste",
+        "calendars": "Kalender (Wochenplan, Pflege-Aufgaben)",
+        "displays": "Küchen-Displays als Bilder",
+        "buttons": "Tasten (Bon-Postfach, Woche füllen, Backup)",
+        "events": "Ereignis-Entität für Benachrichtigungen"
+      }
+    },
+    "display_mode": {
+      "options": {
+        "color": "Farbe",
+        "gray": "Graustufen",
+        "bw": "Schwarz-Weiß (E-Ink)"
+      }
+    },
+    "slot": {
+      "options": {
+        "lunch": "Mittag",
+        "dinner": "Abend"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "products_low": {
+        "name": "Wird knapp"
+      },
+      "products_empty": {
+        "name": "Aufgebraucht"
+      },
+      "expiring_soon": {
+        "name": "Bald abgelaufen"
+      },
+      "shopping_list": {
+        "name": "Einkaufsliste"
+      },
+      "open_orders": {
+        "name": "Offene Bestellungen"
+      },
+      "care_due": {
+        "name": "Fällige Pflege-Aufgaben"
+      },
+      "next_care_task": {
+        "name": "Nächste Pflege-Aufgabe"
+      },
+      "eat_first": {
+        "name": "Zuerst essen"
+      },
+      "tonight": {
+        "name": "Heute Abend"
+      },
+      "party": {
+        "name": "Party",
+        "state": {
+          "off": "Aus",
+          "live": "Läuft"
+        }
+      },
+      "kid_wishes": {
+        "name": "Offene Kinderwünsche"
+      },
+      "receipts_to_review": {
+        "name": "Bons zu prüfen"
+      }
+    },
+    "binary_sensor": {
+      "party_running": {
+        "name": "Party läuft"
+      },
+      "something_expired": {
+        "name": "Etwas ist abgelaufen"
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "name": "Einkaufsliste"
+      }
+    },
+    "calendar": {
+      "meal_plan": {
+        "name": "Wochenplan"
+      },
+      "care_tasks": {
+        "name": "Pflege-Aufgaben"
+      }
+    },
+    "image": {
+      "display": {
+        "name": "Display {name}"
+      }
+    },
+    "button": {
+      "check_receipt_inbox": {
+        "name": "Bon-Postfach prüfen"
+      },
+      "fill_week": {
+        "name": "Woche füllen"
+      },
+      "backup_now": {
+        "name": "Jetzt sichern"
+      }
+    },
+    "event": {
+      "notification": {
+        "name": "Benachrichtigung",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "stock_low": "Wird knapp",
+              "stock_empty": "Aufgebraucht",
+              "stock_expiring": "Bald abgelaufen",
+              "import_review": "Import wartet",
+              "order_new": "Neue Bestellung",
+              "order_status": "Bestellstatus",
+              "shopping_added": "Auf die Einkaufsliste gesetzt",
+              "digest_daily": "Tageszusammenfassung",
+              "care_due": "Pflege-Aufgabe fällig",
+              "party_ending": "Party endet",
+              "kids_wish": "Kinderwunsch",
+              "test": "Test"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "request_failed": {
+      "message": "ToHuus Hub: {error}"
+    },
+    "no_entry": {
+      "message": "Kein ToHuus Hub eingerichtet (oder nicht geladen)."
+    },
+    "text_or_product": {
+      "message": "Gib entweder einen Text oder ein Produkt an."
+    },
+    "recipe_or_title": {
+      "message": "Gib entweder ein Rezept oder einen Titel an."
+    },
+    "order_empty": {
+      "message": "Nenne mindestens ein Produkt oder schreib eine Notiz."
+    }
+  },
+  "services": {
+    "add_to_shopping_list": {
+      "name": "Auf die Einkaufsliste",
+      "description": "Setzt etwas auf die Einkaufsliste von ToHuus Hub. Text wird wie bei der Schnelleingabe verstanden: „2 Milch, Brot“.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "Was gekauft werden soll, z. B. „2 Milch, Brot“."
+        },
+        "product": {
+          "name": "Produkt",
+          "description": "Produktname wie in ToHuus Hub oder seine Nummer."
+        },
+        "quantity": {
+          "name": "Menge",
+          "description": "Wie viel."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    },
+    "consume": {
+      "name": "Verbrauchen",
+      "description": "Nimmt eine Menge aus dem Bestand (älteste zuerst).",
+      "fields": {
+        "product": {
+          "name": "Produkt",
+          "description": "Produktname wie in ToHuus Hub oder seine Nummer."
+        },
+        "quantity": {
+          "name": "Menge",
+          "description": "Wie viel."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    },
+    "mark_used_up": {
+      "name": "Als aufgebraucht markieren",
+      "description": "Setzt den Bestand auf null und das Produkt auf die Einkaufsliste.",
+      "fields": {
+        "product": {
+          "name": "Produkt",
+          "description": "Produktname wie in ToHuus Hub oder seine Nummer."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    },
+    "add_stock": {
+      "name": "Einlagern",
+      "description": "Bucht einen Einkauf in den Bestand.",
+      "fields": {
+        "product": {
+          "name": "Produkt",
+          "description": "Produktname wie in ToHuus Hub oder seine Nummer."
+        },
+        "quantity": {
+          "name": "Menge",
+          "description": "Wie viel."
+        },
+        "best_before": {
+          "name": "Mindestens haltbar bis",
+          "description": "Optionales Datum."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    },
+    "plan_meal": {
+      "name": "Gericht planen",
+      "description": "Setzt ein Rezept oder einen freien Titel in den Wochenplan.",
+      "fields": {
+        "recipe": {
+          "name": "Rezept",
+          "description": "Rezeptname oder -nummer in ToHuus Hub."
+        },
+        "title": {
+          "name": "Titel",
+          "description": "Freier Text, wenn es kein Rezept gibt."
+        },
+        "date": {
+          "name": "Datum",
+          "description": "Standard: heute."
+        },
+        "slot": {
+          "name": "Mahlzeit",
+          "description": "Mittag oder Abend."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    },
+    "order": {
+      "name": "Bestellen",
+      "description": "Bestellt vom Sofa oder für die Party – erscheint in ToHuus Hub wie jede andere Bestellung.",
+      "fields": {
+        "product": {
+          "name": "Produkt",
+          "description": "Ein Produkt zum Bestellen (für mehrere: Positionen)."
+        },
+        "quantity": {
+          "name": "Menge",
+          "description": "Wie viel."
+        },
+        "items": {
+          "name": "Positionen",
+          "description": "Liste von Produkten mit Menge und Optionen."
+        },
+        "note": {
+          "name": "Notiz",
+          "description": "Ein freier Wunsch, z. B. „eine Decke, bitte“."
+        },
+        "name": {
+          "name": "Von",
+          "description": "Von wem die Bestellung kommt (Standard: Home Assistant)."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    },
+    "approve_kid_wish": {
+      "name": "Kinderwunsch beantworten",
+      "description": "Erlaubt einen Wunsch aus dem Kindermodus (wird zur Bestellung) oder lehnt ihn ab.",
+      "fields": {
+        "wish_id": {
+          "name": "Wunsch",
+          "description": "Nummer des Wunsches (siehe Sensor „Offene Kinderwünsche“)."
+        },
+        "approve": {
+          "name": "Erlauben",
+          "description": "Aus lehnt den Wunsch ab."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    },
+    "complete_care_task": {
+      "name": "Pflege-Aufgabe erledigen",
+      "description": "Hakt eine Pflege-Aufgabe ab; der nächste Termin wird berechnet.",
+      "fields": {
+        "task": {
+          "name": "Aufgabe",
+          "description": "Name oder Nummer der Aufgabe."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    }
+  }
+}

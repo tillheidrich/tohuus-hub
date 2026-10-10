@@ -1,0 +1,140 @@
+add_to_shopping_list:
+  fields:
+    text:
+      example: "2 milk, bread"
+      selector:
+        text:
+    product:
+      example: "Coffee beans"
+      selector:
+        text:
+    quantity:
+      selector:
+        number:
+          min: 0.01
+          max: 999
+          step: any
+          mode: box
+    config_entry_id: &entry
+      selector:
+        config_entry:
+          integration: tohuus_hub
+
+consume:
+  fields:
+    product:
+      required: true
+      example: "Milk"
+      selector:
+        text:
+    quantity:
+      default: 1
+      selector:
+        number:
+          min: 0.01
+          max: 999
+          step: any
+          mode: box
+    config_entry_id: *entry
+
+mark_used_up:
+  fields:
+    product:
+      required: true
+      example: "Coffee beans"
+      selector:
+        text:
+    config_entry_id: *entry
+
+add_stock:
+  fields:
+    product:
+      required: true
+      example: "Sparkling water"
+      selector:
+        text:
+    quantity:
+      default: 1
+      selector:
+        number:
+          min: 0.01
+          max: 999
+          step: any
+          mode: box
+    best_before:
+      selector:
+        date:
+    config_entry_id: *entry
+
+plan_meal:
+  fields:
+    recipe:
+      example: "Lasagne"
+      selector:
+        text:
+    title:
+      example: "Pizza night"
+      selector:
+        text:
+    date:
+      selector:
+        date:
+    slot:
+      default: dinner
+      selector:
+        select:
+          translation_key: slot
+          options:
+            - lunch
+            - dinner
+    config_entry_id: *entry
+
+order:
+  fields:
+    product:
+      example: "Cola"
+      selector:
+        text:
+    quantity:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 20
+          mode: box
+    items:
+      example: '[{"product": "Cola", "qty": 2}, {"product": "Crisps"}]'
+      selector:
+        object:
+    note:
+      example: "A blanket, please"
+      selector:
+        text:
+    name:
+      example: "Living room"
+      selector:
+        text:
+    config_entry_id: *entry
+
+approve_kid_wish:
+  fields:
+    wish_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    approve:
+      default: true
+      selector:
+        boolean:
+    config_entry_id: *entry
+
+complete_care_task:
+  fields:
+    task:
+      required: true
+      example: "Water filter"
+      selector:
+        text:
+    config_entry_id: *entry

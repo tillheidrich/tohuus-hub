@@ -4,8 +4,6 @@ import { z } from 'zod';
 import { db } from '../db.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
-import { addToShopping, getProduct } from '../lib/catalog.js';
-import { setOrderStatus } from '../lib/orders.js';
 import { haSettings } from '../lib/plan.js';
 import { haTodoSettings, haTodoStatus, setHaTodoSettings, startHaTodoSync, syncHaTodo } from '../lib/hatodo.js';
 import {
@@ -28,7 +26,7 @@ import {
 } from '../lib/shop.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
-import { answerWish } from '../lib/kids.js';
+import { NOTIFY_ACTIONS, runNotifyAction } from '../lib/notify-actions.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -203,34 +201,14 @@ r.post('/push/test', async (req, res) => {
   res.json({ ok });
 });
 
-/** Buttons on a notification, posted by the service worker with the session cookie. */
+/** Buttons on a notification, posted by the service worker with the session cookie (same logic as Telegram buttons). */
 r.post('/push/action', (req, res) => {
-  const b = z.object({ action: z.enum(['shop-add', 'order-accept', 'kid-approve', 'kid-decline']), data: z.record(z.string(), z.unknown()).default({}) }).parse(req.body);
-  if (b.action === 'kid-approve' || b.action === 'kid-decline') {
-    // kid mode: a parent answers a wish right from the notification
-    try {
-      res.json({ ok: true, ...answerWish(Number(b.data.wish_id), b.action === 'kid-approve' ? 'approve' : 'decline', actorName(req)) });
-    } catch (e) {
-      res.status((e as any).status ?? 500).json({ error: (e as Error).message });
-    }
-    return;
+  const b = z.object({ action: z.enum(NOTIFY_ACTIONS), data: z.record(z.string(), z.unknown()).default({}) }).parse(req.body);
+  try {
+    res.json(runNotifyAction(b.action, b.data, actorName(req)));
+  } catch (e) {
+    fail(res, e);
   }
-  if (b.action === 'shop-add') {
-    const p = getProduct(Number(b.data.product_id));
-    if (!p) {
-      res.status(404).json({ error: 'not found' });
-      return;
-    }
-    res.json({ ok: true, ...addToShopping({ productId: p.id, text: p.name, source: 'auto', addedBy: actorName(req) }) });
-    return;
-  }
-  const o = db.prepare('SELECT id, status FROM orders WHERE id = ?').get(Number(b.data.order_id)) as { id: number; status: string } | undefined;
-  if (!o) {
-    res.status(404).json({ error: 'not found' });
-    return;
-  }
-  if (o.status === 'new') setOrderStatus(o.id, 'accepted');
-  res.json({ ok: true, status: o.status === 'new' ? 'accepted' : o.status });
 });
 
 // ---------------------------------------------------------------- Home Assistant to-do

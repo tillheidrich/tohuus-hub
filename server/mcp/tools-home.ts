@@ -116,7 +116,7 @@ export function register(s: McpServer, actorName: string) {
     'spending_summary',
     {
       title: 'Spending summary',
-      description: 'Grocery spending for one month from applied receipts and orders (EUR): total, deposit, by store, by category, top items and price-change hints. No bank data – only what was imported.',
+      description: 'Grocery spending for one month from applied receipts and orders, in the household currency (see `currency`, set by the region): total, deposit, by store, by category, top items and price-change hints. No bank data – only what was imported.',
       inputSchema: { month: z.string().regex(/^\d{4}-\d\d$/).optional().describe('YYYY-MM, default current month') },
       annotations: RO,
     },

@@ -87,7 +87,8 @@ export interface PushMessage {
 export function actionsFor(event: string, data: Record<string, unknown> = {}): { action: string; title: string }[] {
   if ((event === 'stock.low' || event === 'stock.empty') && data.product_id && !data.on_shopping_list)
     return [{ action: 'shop-add', title: t('Add to list') }];
-  if (event === 'order.new' && data.order_id) return [{ action: 'order-accept', title: t('Accept') }];
+  if (event === 'order.new' && data.order_id) return [{ action: 'order-accept', title: t('Accept') }, { action: 'order-done', title: t('Ready') }];
+  if (event === 'care.due' && data.care_task_id) return [{ action: 'care-done', title: t('Done') }];
   if (event === 'kids.wish' && data.wish_id) return [{ action: 'kid-approve', title: t('Approve') }, { action: 'kid-decline', title: t('Not now') }];
   return [];
 }

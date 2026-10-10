@@ -1,0 +1,184 @@
+# ToHuus Hub – dashboard with built-in cards only (Home Assistant 2024.12+, no HACS cards needed)
+#
+# Use: Settings › Dashboards › Add dashboard › "New dashboard from scratch" › open it ›
+#      ⋮ › Edit dashboard › ⋮ › Raw configuration editor › paste this file › Save.
+# Entity ids are the integration's defaults (sensor.tohuus_hub_…). With a second ToHuus Hub they end in _2.
+# The kitchen display picture needs a display in ToHuus Hub (Settings › Displays); delete that card otherwise.
+
+title: ToHuus Hub
+views:
+  # ------------------------------------------------------------------ kitchen (phone and desktop)
+  - title: Kitchen
+    path: kitchen
+    icon: mdi:silverware-fork-knife
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Tonight
+            heading_style: title
+          - type: markdown
+            content: >-
+              {% set t = states.sensor.tohuus_hub_tonight %}
+              {% if t and t.state not in ['unknown', 'unavailable'] %}
+              {% if t.attributes.image_url %}![]({{ t.attributes.image_url }}){% endif %}
+
+              ## {{ t.state }}
+
+              {% if t.attributes.source == 'idea' %}*Idea – nothing planned yet.* {{ t.attributes.reasons | join(' · ') }}{% endif %}
+
+              [Open recipe]({{ t.attributes.url }})
+              {% else %}Nothing planned for tonight.{% endif %}
+          - type: tile
+            entity: calendar.tohuus_hub_meal_plan
+            name: Next on the plan
+            state_content: message
+          - type: tile
+            entity: button.tohuus_hub_fill_week
+            name: Fill the week
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.tohuus_hub_fill_week
+          - type: heading
+            heading: Eat first
+            heading_style: subtitle
+            badges:
+              - type: entity
+                entity: sensor.tohuus_hub_eat_first
+          - type: markdown
+            content: >-
+              {% for i in state_attr('sensor.tohuus_hub_eat_first', 'items') or [] %}
+              - **{{ i.name }}**{% if i.kind == 'leftover' %} (leftovers){% endif %}{% if i.days_left is not none %} – {% if i.days_left < 0 %}expired{% elif i.days_left == 0 %}today{% else %}{{ i.days_left }} d{% endif %}{% endif %}
+              {% else %}
+              Nothing urgent in the fridge.
+              {% endfor %}
+      - type: grid
+        cards:
+          - type: heading
+            heading: Shopping list
+            heading_style: title
+          - type: todo-list
+            entity: todo.tohuus_hub_shopping_list
+            hide_completed: false
+          - type: heading
+            heading: Running low
+            heading_style: subtitle
+          - type: tile
+            entity: sensor.tohuus_hub_products_low
+            name: Running low
+            vertical: true
+          - type: tile
+            entity: sensor.tohuus_hub_products_empty
+            name: Run out
+            vertical: true
+          - type: markdown
+            content: >-
+              {% set low = state_attr('sensor.tohuus_hub_products_low', 'items') or [] %}
+              {% set empty = state_attr('sensor.tohuus_hub_products_empty', 'items') or [] %}
+              {% for i in empty %}- ~~{{ i.name }}~~ (gone)
+              {% endfor %}{% for i in low %}- {{ i.name }} ({{ i.qty_text }})
+              {% endfor %}{% if not low and not empty %}Everything is stocked.{% endif %}
+      - type: grid
+        cards:
+          - type: heading
+            heading: House
+            heading_style: title
+          - type: tile
+            entity: sensor.tohuus_hub_care_due
+            name: Care tasks due
+          - type: tile
+            entity: sensor.tohuus_hub_next_care_task
+            name: Next care task
+          - type: calendar
+            entities:
+              - calendar.tohuus_hub_care_tasks
+              - calendar.tohuus_hub_meal_plan
+            initial_view: listWeek
+          - type: tile
+            entity: sensor.tohuus_hub_party
+            name: Party
+          - type: tile
+            entity: sensor.tohuus_hub_open_orders
+            name: Open orders
+          - type: tile
+            entity: sensor.tohuus_hub_kid_wishes
+            name: Kid wishes
+            visibility:
+              - condition: numeric_state
+                entity: sensor.tohuus_hub_kid_wishes
+                above: 0
+          - type: tile
+            entity: binary_sensor.tohuus_hub_something_expired
+            name: Something expired
+            visibility:
+              - condition: state
+                entity: binary_sensor.tohuus_hub_something_expired
+                state: "on"
+          - type: entities
+            title: Maintenance
+            entities:
+              - entity: button.tohuus_hub_check_receipt_inbox
+              - entity: sensor.tohuus_hub_receipts_to_review
+              - entity: button.tohuus_hub_backup_now
+              - entity: event.tohuus_hub_notification
+                name: Last notification
+
+  # ------------------------------------------------------------------ wall tablet (landscape, 10")
+  - title: Wall
+    path: wall
+    icon: mdi:tablet-dashboard
+    type: panel
+    cards:
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: >-
+                  # {{ now().strftime('%H:%M') }}
+
+                  {{ now().strftime('%A, %d %B') }}
+              - type: markdown
+                content: >-
+                  {% set t = states.sensor.tohuus_hub_tonight %}
+                  ### Tonight
+
+                  {% if t and t.state not in ['unknown', 'unavailable'] %}{% if t.attributes.image_url %}![]({{ t.attributes.image_url }})
+
+                  {% endif %}**{{ t.state }}**{% else %}Nothing planned.{% endif %}
+              - type: markdown
+                content: >-
+                  ### Eat first
+
+                  {% for i in (state_attr('sensor.tohuus_hub_eat_first', 'items') or [])[:5] %}- {{ i.name }}
+                  {% else %}Nothing urgent.{% endfor %}
+          - type: todo-list
+            entity: todo.tohuus_hub_shopping_list
+            hide_completed: true
+          - type: vertical-stack
+            cards:
+              - type: picture-entity
+                entity: image.tohuus_hub_display_1
+                show_name: false
+                show_state: false
+              - type: glance
+                show_name: true
+                entities:
+                  - entity: sensor.tohuus_hub_products_low
+                    name: Low
+                  - entity: sensor.tohuus_hub_expiring_soon
+                    name: Best before
+                  - entity: sensor.tohuus_hub_care_due
+                    name: Care
+                  - entity: sensor.tohuus_hub_open_orders
+                    name: Orders
+              - type: calendar
+                entities:
+                  - calendar.tohuus_hub_meal_plan
+                initial_view: listWeek

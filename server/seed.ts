@@ -29,8 +29,8 @@ export function ensureBaseData() {
 const cat = (key: CategoryKey) => categoryIdByKey(key);
 
 // ------------------------------------------------------------ demo household
-// The German list is the source of truth (it is a German-supermarket household). For English households
-// every visible text goes through the EN_* maps below; brands stay as they are.
+// The German list is the source of truth (it is a German-supermarket household). For English and Swedish
+// households every visible text goes through the EN / SV maps below; brands stay as they are.
 
 const COFFEE_OPTIONS = [
   { group: 'Milch', choices: ['Normal', 'Laktosefrei', 'Hafer'], multi: false },
@@ -218,12 +218,122 @@ const EN: Record<string, string> = {
   Grillabend: 'Barbecue night',
 };
 
-const english = () => lang() === 'en';
+/** German demo text → Swedish (same keys as EN). Brands stay as they are. */
+const SV: Record<string, string> = {
+  // products
+  'Pizza (Wunsch in Notiz)': 'Pizza (skriv vilken i kommentaren)',
+  'Vanille-Eis': 'Vaniljglass',
+  'Schoko-Eis': 'Chokladglass',
+  'Erdbeer-Eis': 'Jordgubbsglass',
+  Frikadelle: 'Köttbulle',
+  'Chips Paprika': 'Paprikachips',
+  Milchmäuse: 'Chokladmöss',
+  'Mildes Frühstück Multivitamin': 'Multivitaminjuice',
+  'Mineralwasser Medium': 'Mineralvatten (lätt kolsyrat)',
+  'Vegane Dino Nuggets': 'Veganska dinonuggets',
+  'Süsskartoffel Pommes': 'Sötpotatispommes',
+  'Curly Fries pikant': 'Kryddiga curly fries',
+  Rahmspinat: 'Stuvad spenat',
+  Erbsen: 'Ärtor',
+  'Mini Pizza Pomodori vegan': 'Vegansk minipizza pomodori',
+  '6-Kräuter': 'Örtmix (6 örter)',
+  'Eier Freilandhaltung': 'Ägg från frigående höns',
+  'Fruchtzwerge weniger süß': 'Fruchtzwerge mindre söt',
+  'Kochcreme 15%': 'Matlagningsgrädde 15 %',
+  'Cheddar Scheiben': 'Cheddarskivor',
+  'Veganer Schinken Spicker Mortadella': 'Vegansk mortadella i skivor',
+  'Basmati Reis': 'Basmatiris',
+  'Rote Linsen': 'Röda linser',
+  'Stückige Tomaten': 'Krossade tomater',
+  Kokosmilch: 'Kokosmjölk',
+  Haferflocken: 'Havregryn',
+  'Sonnenmais Supersweet': 'Majs',
+  'Sesamöl Nativ': 'Sesamolja',
+  'Burger Gewürz': 'Burgerkrydda',
+  Bananen: 'Bananer',
+  'Snack-Äpfel': 'Snackäpplen',
+  Süßkartoffeln: 'Sötpotatis',
+  Paprika: 'Paprika',
+  Zucchini: 'Zucchini',
+  Kartoffeln: 'Potatis',
+  Zwiebeln: 'Lök',
+  Vollkornsandwich: 'Fullkornsformbröd',
+  Paketband: 'Packtejp',
+  'Müllbeutel 35l': 'Soppåsar 35 l',
+  'Spülmaschinen-Tabs': 'Diskmaskinstabletter',
+  Toilettenpapier: 'Toalettpapper',
+  Küchenrolle: 'Hushållspapper',
+  'Waschmittel Megaperls': 'Tvättmedel Megaperls',
+  'Batterien AA': 'AA-batterier',
+  Zahnpasta: 'Tandkräm',
+  Fieberthermometer: 'Febertermometer',
+  'Pflaster & Verbandszeug': 'Plåster & förband',
+  Taschenlampe: 'Ficklampa',
+  Sicherungskasten: 'Proppskåp',
+  Werkzeugkiste: 'Verktygslåda',
+  Wärmflasche: 'Varmvattenflaska',
+  'Slipeinlagen Daily Protect': 'Trosskydd Daily Protect',
+  Butter: 'Smör',
+  Feta: 'Fetaost',
+  Geschenkpapier: 'Presentpapper',
+  // units
+  Stk: 'st',
+  Tasse: 'kopp',
+  Glas: 'glas',
+  Bestellung: 'beställning',
+  Kugel: 'kula',
+  Tüte: 'påse',
+  Packung: 'förp.',
+  Pack: 'förp.',
+  Flasche: 'flaska',
+  Dose: 'burk',
+  Rolle: 'rulle',
+  Tube: 'tub',
+  // order groups and options
+  Getränke: 'Dryck',
+  Extern: 'Hämtmat',
+  Eis: 'Glass',
+  Milch: 'Mjölk',
+  Laktosefrei: 'Laktosfri',
+  Hafer: 'Havre',
+  Koffein: 'Koffein',
+  Entkoffeiniert: 'Koffeinfri',
+  Aroma: 'Smak',
+  Keins: 'Ingen',
+  Vanille: 'Vanilj',
+  Karamell: 'Kola',
+  Streusel: 'Strössel',
+  Schokosauce: 'Chokladsås',
+  Nüsse: 'Nötter',
+  Saucen: 'Såser',
+  Senf: 'Senap',
+  // spots and location hints
+  'Regal neben der Tür, Kiste „Post & Pakete“': 'Hyllan bredvid dörren, lådan ”Post & paket”',
+  'Oberste Schublade links': 'Översta lådan till vänster',
+  'Unterschrank, linke Tür': 'Underskåpet, vänstra dörren',
+  'Spiegelschrank, mittleres Fach': 'Spegelskåpet, mittersta hyllan',
+  'Spiegelschrank, unten – rote Box': 'Spegelskåpet, längst ner – röda lådan',
+  'Haken rechts neben dem Sicherungskasten': 'Kroken till höger om proppskåpet',
+  'Hinter der Tür, auf Augenhöhe': 'Bakom dörren, i ögonhöjd',
+  'Unterstes Regal, grüne Kiste': 'Nedersta hyllan, gröna lådan',
+  'Handtuchregal, ganz oben': 'Handdukshyllan, högst upp',
+  'Kellertreppe runter, erste Tür links. Licht rechts neben der Tür.': 'Ner för källartrappan, första dörren till vänster. Lysknappen till höger om dörren.',
+  'Neben der Waschküche, Tür mit dem Kalender.': 'Bredvid tvättstugan, dörren med kalendern.',
+  Grillabend: 'Grillkväll',
+};
+
+/** Translation map for the household language (German is the source, so none for 'de'). */
+const demoMap = (): Record<string, string> | null => ({ en: EN, sv: SV, de: null })[lang()];
 /** Demo text in the household language. */
-const tr = (s: string) => (english() ? EN[s] ?? s : s);
-/** "0,5l" → "0.5l", "10 Stück" → "10 pcs", "8 Rollen" → "8 rolls" */
-const trSize = (s: string | null) =>
-  s && english() ? s.replace(/(\d),(\d)/g, '$1.$2').replace(/\bStück\b/, 'pcs').replace(/\bRollen\b/, 'rolls') : s;
+const tr = (s: string) => demoMap()?.[s] ?? s;
+/** English: "0,5l" → "0.5l", "10 Stück" → "10 pcs", "8 Rollen" → "8 rolls"; Swedish: "10 st", "8 rullar" */
+const trSize = (s: string | null) => {
+  if (!s) return s;
+  const l = lang();
+  if (l === 'en') return s.replace(/(\d),(\d)/g, '$1.$2').replace(/\bStück\b/, 'pcs').replace(/\bRollen\b/, 'rolls');
+  if (l === 'sv') return s.replace(/Stück/, 'st').replace(/Rollen/, 'rullar');
+  return s;
+};
 const trOptions = (opts: unknown) =>
   (opts as { group: string; choices: string[]; multi: boolean }[] | undefined)?.map((o) => ({ ...o, group: tr(o.group), choices: o.choices.map(tr) }));
 
@@ -284,7 +394,7 @@ export function seedDemo() {
 type DemoRecipe = [recipe: Parameters<typeof saveRecipe>[0], cookedDaysAgo: number[]];
 
 function seedRecipes() {
-  for (const [r, cookedDaysAgo] of english() ? RECIPES_EN : RECIPES_DE) {
+  for (const [r, cookedDaysAgo] of ({ en: RECIPES_EN, sv: RECIPES_SV, de: RECIPES_DE } as const)[lang()]) {
     const id = saveRecipe(r);
     for (const d of cookedDaysAgo)
       db.prepare(`INSERT INTO cook_log (recipe_id, cooked_at, actor) VALUES (?, datetime('now', ?), 'Demo')`).run(id, `-${d} days`);
@@ -669,6 +779,198 @@ const RECIPES_EN: DemoRecipe[] = [
         { text: 'Ketchup', pantry: true },
       ],
       steps: [{ text: 'Preheat the oven to 200 °C, bake the nuggets and fries according to the packet (approx. 20 min), warm the sweetcorn.' }],
+    },
+    [9],
+  ],
+];
+
+/** Swedish demo recipes – same dishes, order and cooking history as RECIPES_DE. */
+const RECIPES_SV: DemoRecipe[] = [
+  [
+    {
+      title: 'Gnocchipanna med tomat & mozzarella',
+      description: 'Krispigt stekta gnocchi, en snabb tomatsås och mozzarella på toppen. 20 minuter, en kastrull mindre att diska.',
+      source_type: 'hellofresh',
+      servings: 3,
+      time_min: 20,
+      tags: ['snabbt', 'vegetariskt', 'familj'],
+      favorite: true,
+      ingredients: [
+        { text: '500 g gnocchi', qty: 500, unit: 'g' },
+        { text: '1 burk krossade tomater', qty: 1, unit: 'burk' },
+        { text: '1 mozzarella', qty: 1 },
+        { text: '1 zucchini', qty: 1 },
+        { text: '1 lök', qty: 1 },
+        { text: 'Olivolja, salt, peppar', pantry: true },
+      ],
+      steps: [
+        { text: 'Tärna löken och zucchinin. Stek gnocchin i olja tills den är gyllene (ca 6 min) och ta upp den.' },
+        { text: 'Stek lök och zucchini i samma panna, tillsätt tomaterna, låt puttra i 5 min och smaka av med salt och peppar.' },
+        { text: 'Vänd ner gnocchin igen, riv mozzarellan över och låt den smälta i 2 min under lock.' },
+      ],
+    },
+    [12, 40],
+  ],
+  [
+    {
+      title: 'Sötpotatiscurry med kokos',
+      description: 'Mild, krämig och barnvänlig – 30 minuter i Thermomixen.',
+      source_type: 'own',
+      servings: 4,
+      time_min: 30,
+      thermomix: true,
+      tags: ['Thermomix', 'veganskt', 'curry'],
+      ingredients: [
+        { text: '1 lök', qty: 1 },
+        { text: '600 g sötpotatis', qty: 600, unit: 'g' },
+        { text: '400 ml kokosmjölk', qty: 400, unit: 'ml' },
+        { text: '1 burk krossade tomater', qty: 1, unit: 'burk' },
+        { text: '150 g röda linser', qty: 150, unit: 'g' },
+        { text: '200 g basmatiris', qty: 200, unit: 'g' },
+        { text: '2 tsk curry, salt', pantry: true },
+      ],
+      steps: [
+        { text: 'Lägg löken i bunken och hacka.', tm: { time: '5 sek', temp: null, speed: '5' } },
+        { text: 'Tillsätt olja och fräs.', tm: { time: '3 min', temp: '120°C', speed: '1' } },
+        { text: 'Tillsätt tärnad sötpotatis, linser, kokosmjölk, tomater och kryddor och koka.', tm: { time: '18 min', temp: '100°C', speed: 'Motsols 1' } },
+        { text: 'Koka under tiden riset i kokkorgen eller i en kastrull, smaka av och servera.' },
+      ],
+    },
+    [45],
+  ],
+  [
+    {
+      title: 'Spaghetti med vegansk köttfärssås',
+      source_type: 'own',
+      servings: 4,
+      time_min: 35,
+      thermomix: true,
+      tags: ['Thermomix', 'klassiker', 'familj'],
+      favorite: true,
+      ingredients: [
+        { text: '500 g spaghetti', qty: 500, unit: 'g' },
+        { text: '1 lök', qty: 1 },
+        { text: '2 burkar krossade tomater', qty: 2, unit: 'burk' },
+        { text: '100 g röda linser', qty: 100, unit: 'g' },
+        { text: '1 zucchini', qty: 1 },
+        { text: 'Salt, peppar, oregano, olivolja', pantry: true },
+      ],
+      steps: [
+        { text: 'Hacka lök och zucchini.', tm: { time: '5 sek', temp: null, speed: '5' } },
+        { text: 'Fräs med olja.', tm: { time: '4 min', temp: '120°C', speed: '1' } },
+        { text: 'Tillsätt tomater, linser och kryddor och låt puttra.', tm: { time: '20 min', temp: '100°C', speed: 'Motsols 1' } },
+        { text: 'Koka spaghettin enligt förpackningen och servera med såsen.' },
+      ],
+    },
+    [5],
+  ],
+  [
+    {
+      title: 'Ugnsrostade grönsaker med fetaost',
+      description: 'In med plåten, ut med plåten. Bra när det finns grönsaker som behöver ätas upp.',
+      source_type: 'hellofresh',
+      servings: 2,
+      time_min: 35,
+      tags: ['restmat', 'vegetariskt'],
+      ingredients: [
+        { text: '2 sötpotatis', qty: 2 },
+        { text: '1 zucchini', qty: 1 },
+        { text: '1 paprika', qty: 1 },
+        { text: '200 g fetaost', qty: 200, unit: 'g' },
+        { text: 'Olivolja, salt, örter', pantry: true },
+      ],
+      steps: [
+        { text: 'Sätt ugnen på 220 °C varmluft. Skär grönsakerna i lagom stora bitar.' },
+        { text: 'Blanda med olja, salt och örter och rosta i 25 min.' },
+        { text: 'Smula fetaosten över och rosta ytterligare 5 min.' },
+      ],
+    },
+    [],
+  ],
+  [
+    {
+      title: 'Pannkakor',
+      source_type: 'own',
+      servings: 4,
+      time_min: 25,
+      thermomix: true,
+      tags: ['Thermomix', 'sött', 'barn'],
+      favorite: true,
+      ingredients: [
+        { text: '4 ägg', qty: 4 },
+        { text: '250 g vetemjöl', qty: 250, unit: 'g', pantry: true },
+        { text: '500 ml mjölk', qty: 500, unit: 'ml' },
+        { text: 'Smör till stekning', qty: null },
+        { text: '1 nypa salt, 1 msk socker', pantry: true },
+      ],
+      steps: [
+        { text: 'Lägg alla ingredienser utom smöret i bunken och blanda.', tm: { time: '20 sek', temp: null, speed: '5' } },
+        { text: 'Låt smeten vila i 10 min.' },
+        { text: 'Stek i smör, en pannkaka i taget.' },
+      ],
+    },
+    [20],
+  ],
+  [
+    {
+      title: 'Stuvad spenat med potatis och stekt ägg',
+      source_type: 'own',
+      servings: 3,
+      time_min: 30,
+      tags: ['klassiker', 'vegetariskt'],
+      ingredients: [
+        { text: '750 g stuvad spenat (fryst)', qty: 750, unit: 'g' },
+        { text: '1 kg potatis', qty: 1, unit: 'kg' },
+        { text: '6 ägg', qty: 6 },
+        { text: 'Smör, salt, muskot', pantry: true },
+      ],
+      steps: [
+        { text: 'Skala potatisen och koka den i saltat vatten i ca 20 min.' },
+        { text: 'Värm den stuvade spenaten enligt förpackningen och smaka av med muskot.' },
+        { text: 'Stek äggen i smör och servera allt tillsammans.' },
+      ],
+    },
+    [60],
+  ],
+  [
+    {
+      title: 'Linsdal med ris',
+      source_type: 'own',
+      servings: 4,
+      time_min: 30,
+      thermomix: true,
+      tags: ['Thermomix', 'veganskt', 'billigt'],
+      ingredients: [
+        { text: '1 lök', qty: 1 },
+        { text: '250 g röda linser', qty: 250, unit: 'g' },
+        { text: '400 ml kokosmjölk', qty: 400, unit: 'ml' },
+        { text: '1 burk krossade tomater', qty: 1, unit: 'burk' },
+        { text: '250 g basmatiris', qty: 250, unit: 'g' },
+        { text: 'Curry, gurkmeja, salt, grönsaksbuljong', pantry: true },
+      ],
+      steps: [
+        { text: 'Hacka löken och fräs.', tm: { time: '3 min', temp: '120°C', speed: '1' } },
+        { text: 'Tillsätt linser, kokosmjölk, tomater, 300 ml vatten och kryddor och koka.', tm: { time: '15 min', temp: '100°C', speed: 'Motsols 1' } },
+        { text: 'Servera med ris.' },
+      ],
+    },
+    [],
+  ],
+  [
+    {
+      title: 'Nuggetstallrik med sötpotatispommes',
+      description: 'Fredagsräddaren. Allt från frysen.',
+      source_type: 'own',
+      servings: 3,
+      time_min: 25,
+      tags: ['barn', 'ugn', 'snabbt'],
+      ingredients: [
+        { text: '1 förp. veganska dinonuggets', qty: 1 },
+        { text: '1 förp. sötpotatispommes', qty: 1 },
+        { text: '1 burk majs', qty: 1 },
+        { text: 'Ketchup', pantry: true },
+      ],
+      steps: [{ text: 'Sätt ugnen på 200 °C, grädda nuggets och pommes enligt förpackningen (ca 20 min) och värm majsen.' }],
     },
     [9],
   ],

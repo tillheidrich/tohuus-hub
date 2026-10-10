@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { fmtDate, invalidate, put, useApi } from '../api';
 import { Empty, Sheet, Skeleton, Thumb, useToast } from '../ui';
 import { locale, t } from '../i18n';
+import { money, region } from '../region';
 
 interface PriceChange {
   from: number;
@@ -28,7 +29,8 @@ interface Summary {
   price_hints: { product_id: number; name: string; change: PriceChange }[];
 }
 
-export const eur = (n: number) => n.toLocaleString(locale(), { style: 'currency', currency: 'EUR' });
+/** amounts in the household currency (Settings › Household › Region) */
+export const eur = (n: number) => money(n);
 const pct = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toLocaleString(locale(), { maximumFractionDigits: 0 })} %`;
 
 function thisMonth() {
@@ -328,7 +330,7 @@ function TargetSheet({ open, current, onClose }: { open: boolean; current: numbe
       <div className="stack">
         <p className="small muted" style={{ margin: 0 }}>{t('Entirely optional. Only shows a bar – no warnings, no comparisons.')}</p>
         <div className="field">
-          <label>{t('Amount in EUR')}</label>
+          <label>{t('Amount in {currency}', { currency: region().currency })}</label>
           <input className="input" type="number" inputMode="decimal" min={0} step={10} defaultValue={current ?? ''} onChange={(e) => setV(e.target.value)} placeholder="600" />
         </div>
         <div className="row">

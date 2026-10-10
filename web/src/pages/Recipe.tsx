@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, del, invalidate, patch, post, put, relTime, useApi } from '../api';
 import { t } from '../i18n';
+import { Amounts } from '../RegionAmounts';
 import { Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { type LeftoverChoice, LeftoversField, saveLeftovers } from './FreshParts';
 
@@ -116,7 +117,7 @@ export function RecipeDetail() {
                   <div key={i.id} className="ingr">
                     <span className={`mark ${cls}`}>{cls === 'have' ? <Check size={13} weight="bold" /> : cls === 'miss' ? <X size={12} weight="bold" /> : <Minus size={12} />}</span>
                     <div className="grow">
-                      <div style={{ fontWeight: 550 }}>{i.text}</div>
+                      <Amounts text={i.text} style={{ fontWeight: 550 }} />
                       {x?.product && <div className="small muted">{t('In stock: {name}', { name: x.product.name })}</div>}
                       {Boolean(i.pantry) && <div className="small muted">{t('Pantry staple')}</div>}
                     </div>
@@ -133,7 +134,7 @@ export function RecipeDetail() {
               <div key={n} className="step">
                 <span className="n">{n + 1}</span>
                 <div>
-                  <div>{s.text}</div>
+                  <Amounts text={s.text} />
                   {s.tm && (s.tm.time || s.tm.temp || s.tm.speed) && (
                     <div className="tm">
                       {s.tm.time && <span>{s.tm.time}</span>}

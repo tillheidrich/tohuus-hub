@@ -12,7 +12,7 @@ import { norm, parseGermanNumber, titleCaseReceipt } from '../lib/text.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
 import { safeFetch } from '../lib/net.js';
-import { t } from '../i18n.js';
+import { fmtDay, t } from '../i18n.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -144,7 +144,7 @@ r.post('/imports/upload', upload.array('files', 8), async (req, res) => {
       const dataUrls = await Promise.all(images.map((i) => toVisionJpeg(i.buffer)));
       const task = mode === 'shelf' ? 'shelf' : 'receipt';
       const j = await runVision(task, { images: dataUrls });
-      const title = task === 'shelf' ? `Foto-Inventur ${new Date().toLocaleDateString('de-DE')}` : `Bon ${j.shop ?? ''}`.trim();
+      const title = task === 'shelf' ? t('Photo stocktake {date}', { date: fmtDay(new Date()) }) : t('Receipt {shop}', { shop: j.shop ?? '' }).trim();
       const imp = linesToImport(task === 'shelf' ? 'shelf' : 'receipt', title, cleanLines(j.lines), { shop: typeof j.shop === 'string' ? j.shop : null, total: typeof j.total === 'number' ? j.total : null, date: typeof j.date === 'string' ? j.date : null });
       if (task === 'shelf' && req.body.location_id) imp.meta.location_id = Number(req.body.location_id);
       const out = createImport(imp, { actor: actorName(req) });
@@ -169,7 +169,7 @@ async function importText(text: string, actor: string) {
       const m = l.match(/^(\d+(?:[.,]\d+)?)\s*(?:x|×|stk\.?|stück|dosen?|flaschen?|packungen?|pck\.?)?\s+(.*)$/i);
       return m ? { name: m[2], qty: parseGermanNumber(m[1]) } : { name: l, qty: 1 };
     });
-  return createImport(linesToImport('text', `Liste vom ${new Date().toLocaleDateString('de-DE')}`, lines), { actor, rawText: text });
+  return createImport(linesToImport('text', t('List from {date}', { date: fmtDay(new Date()) }), lines), { actor, rawText: text });
 }
 
 /** Digital receipt via QR code / link: fetch the document and import it. */

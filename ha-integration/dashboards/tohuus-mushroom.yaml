@@ -1,0 +1,143 @@
+# ToHuus Hub – dashboard with Mushroom cards
+#
+# Requires (install via HACS › Frontend):
+#   - Mushroom            https://github.com/piitaya/lovelace-mushroom
+#   - card-mod (optional) https://github.com/thomasloven/lovelace-card-mod   – only for the rounded recipe image
+# Paste into a dashboard's raw configuration editor (⋮ › Edit dashboard › ⋮ › Raw configuration editor).
+# Entity ids are the integration's defaults (sensor.tohuus_hub_…).
+
+title: ToHuus Hub
+views:
+  - title: Kitchen
+    path: kitchen
+    icon: mdi:silverware-fork-knife
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: custom:mushroom-title-card
+            title: "{{ states('sensor.tohuus_hub_tonight') if states('sensor.tohuus_hub_tonight') not in ['unknown','unavailable'] else 'Tonight' }}"
+            subtitle: >-
+              {{ 'Planned' if state_attr('sensor.tohuus_hub_tonight', 'source') == 'plan' else 'Idea – ' ~ (state_attr('sensor.tohuus_hub_tonight', 'reasons') or []) | join(' · ') }}
+          # the recipe photo is the sensor's entity picture
+          - type: picture-entity
+            entity: sensor.tohuus_hub_tonight
+            show_name: false
+            show_state: false
+            visibility:
+              - condition: state
+                entity: sensor.tohuus_hub_tonight
+                state_not: unknown
+          - type: custom:mushroom-template-card
+            primary: Eat first
+            secondary: >-
+              {% set items = state_attr('sensor.tohuus_hub_eat_first', 'items') or [] %}
+              {{ items[:4] | map(attribute='name') | join(', ') if items else 'Nothing urgent' }}
+            icon: mdi:food-apple-outline
+            icon_color: "{{ 'red' if states('sensor.tohuus_hub_eat_first') | int(0) > 0 else 'green' }}"
+            badge_icon: "{{ 'mdi:alert' if is_state('binary_sensor.tohuus_hub_something_expired', 'on') else '' }}"
+            badge_color: red
+          - type: custom:mushroom-entity-card
+            entity: button.tohuus_hub_fill_week
+            name: Fill the week
+            icon_color: deep-orange
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.tohuus_hub_fill_week
+      - type: grid
+        cards:
+          - type: custom:mushroom-title-card
+            title: Shopping
+            subtitle: "{{ states('sensor.tohuus_hub_shopping_list') }} on the list"
+          - type: todo-list
+            entity: todo.tohuus_hub_shopping_list
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                icon: mdi:package-variant
+                icon_color: amber
+                content: "{{ states('sensor.tohuus_hub_products_low') }} low"
+                tap_action:
+                  action: more-info
+                entity: sensor.tohuus_hub_products_low
+              - type: template
+                icon: mdi:package-variant-remove
+                icon_color: red
+                content: "{{ states('sensor.tohuus_hub_products_empty') }} gone"
+                tap_action:
+                  action: more-info
+                entity: sensor.tohuus_hub_products_empty
+              - type: template
+                icon: mdi:calendar-alert
+                icon_color: orange
+                content: "{{ states('sensor.tohuus_hub_expiring_soon') }} best before"
+                entity: sensor.tohuus_hub_expiring_soon
+                tap_action:
+                  action: more-info
+      - type: grid
+        cards:
+          - type: custom:mushroom-title-card
+            title: House
+          - type: custom:mushroom-template-card
+            entity: sensor.tohuus_hub_care_due
+            primary: Care tasks
+            secondary: >-
+              {% set t = state_attr('sensor.tohuus_hub_care_due', 'tasks') or [] %}
+              {{ t | map(attribute='name') | join(', ') if t else 'Nothing due – next: ' ~ (state_attr('sensor.tohuus_hub_next_care_task', 'task') or '–') }}
+            icon: mdi:wrench-clock
+            icon_color: "{{ 'red' if state_attr('sensor.tohuus_hub_care_due', 'overdue') else ('orange' if states('sensor.tohuus_hub_care_due') | int(0) > 0 else 'green') }}"
+          - type: custom:mushroom-template-card
+            entity: sensor.tohuus_hub_party
+            primary: "{{ 'Party: ' ~ state_attr('sensor.tohuus_hub_party', 'name') if is_state('sensor.tohuus_hub_party', 'live') else 'No party' }}"
+            secondary: >-
+              {% if is_state('sensor.tohuus_hub_party', 'live') %}{{ state_attr('sensor.tohuus_hub_party', 'open_orders') }} open orders{% else %}Start one in ToHuus Hub{% endif %}
+            icon: mdi:party-popper
+            icon_color: "{{ 'pink' if is_state('sensor.tohuus_hub_party', 'live') else 'grey' }}"
+          - type: custom:mushroom-template-card
+            entity: sensor.tohuus_hub_kid_wishes
+            primary: Kid wishes
+            secondary: >-
+              {% set w = state_attr('sensor.tohuus_hub_kid_wishes', 'wishes') or [] %}
+              {{ w | map(attribute='kid') | zip(w | map(attribute='name')) | map('join', ': ') | join(', ') }}
+            icon: mdi:human-child
+            icon_color: purple
+            visibility:
+              - condition: numeric_state
+                entity: sensor.tohuus_hub_kid_wishes
+                above: 0
+            # tap → list of wishes; answer them in ToHuus Hub, from the push notification or with the
+            # tohuus_hub.approve_kid_wish action in an automation (frontend actions can't template the wish id)
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: action
+                icon: mdi:glass-cocktail
+                tap_action:
+                  action: perform-action
+                  perform_action: tohuus_hub.order
+                  data:
+                    note: Something to drink, please
+                    name: Sofa
+              - type: action
+                icon: mdi:email-sync-outline
+                tap_action:
+                  action: perform-action
+                  perform_action: button.press
+                  target:
+                    entity_id: button.tohuus_hub_check_receipt_inbox
+              - type: action
+                icon: mdi:database-export-outline
+                tap_action:
+                  action: perform-action
+                  perform_action: button.press
+                  target:
+                    entity_id: button.tohuus_hub_backup_now
+          - type: calendar
+            entities:
+              - calendar.tohuus_hub_meal_plan
+              - calendar.tohuus_hub_care_tasks
+            initial_view: listWeek

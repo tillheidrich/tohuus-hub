@@ -1,15 +1,18 @@
-import { Bell, Copy, House, Key, Plug, Question, SignOut, Trash, UploadSimple } from '@phosphor-icons/react';
+import { Bell, Copy, Key, Plug, Question, SignOut, Trash, UploadSimple } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../App';
 import { type Category, type Location, api, del, invalidate, patch, post, relTime, useApi } from '../api';
 import { ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
-import { lang, setLang, t } from '../i18n';
+import { LANGUAGE_OPTIONS, lang, setLang, t } from '../i18n';
 import { Backups, Members } from './DataSettings';
 import { HaTodoCard, PushCard } from '../shop/ShopSettings';
 import { InboxSettingsCard } from './Retail';
 import { KidsSettings } from './KidsSettings';
+import { ChannelsSettings, useChannelColumns } from './Channels';
 import { Displays } from './Displays';
+import { RegionCard } from './RegionSettings';
+import { HaCreated, HaIntegrationCard } from './HaIntegration';
 
 type Tab = 'home' | 'members' | 'places' | 'notify' | 'access' | 'displays' | 'data';
 
@@ -137,7 +140,7 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
                 location.reload();
               });
             }}
-            options={[['en', 'English'], ['de', 'Deutsch']]}
+            options={LANGUAGE_OPTIONS}
           />
         </div>
         <div className="field">
@@ -148,6 +151,7 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
           </div>
         </div>
       </div>
+      <RegionCard admin={admin} />
     </div>
   );
 }
@@ -245,6 +249,7 @@ function Notify({ admin }: { admin: boolean }) {
   const log = useApi<any[]>('notifications', '/notifications');
   const [n, setN] = useState<any>(null);
   const toast = useToast();
+  const extraCols = useChannelColumns();
   useEffect(() => s.data && setN(s.data.notify), [s.data]);
   if (!n) return <Skeleton n={4} />;
   const save = async (next = n) => {
@@ -301,10 +306,11 @@ function Notify({ admin }: { admin: boolean }) {
         </div>
       </div>
       <PushCard />
+      <ChannelsSettings admin={admin} eventLabels={EVENT_LABEL} />
       <section>
         <h2 style={{ marginBottom: 10 }}>{t('What goes where?')}</h2>
-        <div className="card" style={{ overflowX: 'auto' }}>
-          <table className="table">
+        <div className="card notify-matrix-wrap" style={{ overflowX: 'auto' }}>
+          <table className="table notify-matrix">
             <thead>
               <tr>
                 <th>{t('Event')}</th>
@@ -313,13 +319,16 @@ function Notify({ admin }: { admin: boolean }) {
                 <th>Webhook</th>
                 <th>{t('Email')}</th>
                 <th>{t('Push')}</th>
+                {extraCols.map(([k, l]) => (
+                  <th key={k}>{l}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {Object.keys(EVENT_LABEL).map((ev) => (
                 <tr key={ev}>
                   <td>{t(EVENT_LABEL[ev])}</td>
-                  {['ha', 'ntfy', 'webhook', 'email', 'push'].map((ch) => (
+                  {['ha', 'ntfy', 'webhook', 'email', 'push', ...extraCols.map(([k]) => k)].map((ch) => (
                     <td key={ch}>
                       <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
                     </td>
@@ -374,6 +383,7 @@ function Access({ admin }: { admin: boolean }) {
     const r = await post('/tokens', { name, scope });
     setCreated({ name, token: r.token, scope });
     invalidate('tokens');
+    setYaml('');
     if (scope === 'ha') setYaml(await post('/ha/package.yaml', { token: r.token }));
   };
   const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast({ text: t('Copied') }));
@@ -393,16 +403,7 @@ function Access({ admin }: { admin: boolean }) {
           <li>{t('Enter the MCP address shown as the URL, authentication: none.')}</li>
         </ol>
       </div>
-      <div className="card pad stack">
-        <div className="row">
-          <span className="thumb" style={{ width: 44, height: 44 }}><House size={22} /></span>
-          <div className="grow">
-            <b>Home Assistant</b>
-            <div className="small muted">{t('Sensors for your dashboard (low stock, best-before, shopping list, meal idea), push notifications to your phone with an “Add to list” button.')}</div>
-          </div>
-        </div>
-        <div className="small muted">{t('Create a “Home Assistant” access – you’ll get a ready-made package to paste in.')}</div>
-      </div>
+      <HaIntegrationCard base={base} />
       {admin && s.data && <HaConnection initial={s.data.ha} />}
       {admin && s.data && <HaTodoCard />}
       {admin && <InboxSettingsCard />}
@@ -437,14 +438,7 @@ function Access({ admin }: { admin: boolean }) {
               <button className="icon-btn" onClick={() => copy(created.token)}><Copy size={16} /></button>
             </div>
           </div>
-          {yaml && (
-            <div className="field">
-              <label>{t('Home Assistant package (packages/tohuus.yaml)')}</label>
-              <div className="codebox">{yaml}</div>
-              <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(yaml)}><Copy size={14} /> {t('Copy YAML')}</button>
-              <div className="help">{t('Adjust the webhook ID and notify service in the YAML, and enter the same webhook URL under “Notifications”.')}</div>
-            </div>
-          )}
+          {created.scope === 'ha' && <HaCreated base={base} yaml={yaml} />}
         </div>
       )}
       {admin && (

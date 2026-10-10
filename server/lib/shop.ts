@@ -67,12 +67,12 @@ function categorySection(categoryId: number | null | undefined): Section | null 
     const c = db.prepare('SELECT name FROM categories WHERE id = ?').get(categoryId) as { name: string } | undefined;
     let key: string | null = null;
     if (c) {
-      key = BASE_CATEGORIES.find((b) => b.en === c.name || b.de === c.name)?.key ?? null;
+      key = BASE_CATEGORIES.find((b) => b.en === c.name || b.de === c.name || b.sv === c.name)?.key ?? null;
       if (!key) {
         // custom category: guess from its name ("Getränke Keller" → drinks)
         const g = guessCategory(c.name);
         const gc = g ? (db.prepare('SELECT name FROM categories WHERE id = ?').get(g) as { name: string } | undefined) : undefined;
-        key = gc ? (BASE_CATEGORIES.find((b) => b.en === gc.name || b.de === gc.name)?.key ?? null) : null;
+        key = gc ? (BASE_CATEGORIES.find((b) => b.en === gc.name || b.de === gc.name || b.sv === gc.name)?.key ?? null) : null;
       }
     }
     catKeyById.set(categoryId, key);

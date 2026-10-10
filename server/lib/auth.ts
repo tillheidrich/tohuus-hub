@@ -127,7 +127,8 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     return;
   }
   if (actor.kind === 'token' && actor.scope !== 'full') {
-    const isHa = req.originalUrl.startsWith('/api/ha/');
+    // Home Assistant tokens: the HA API and the live change stream only
+    const isHa = req.originalUrl.startsWith('/api/ha/') || req.originalUrl === '/api/events' || req.originalUrl.startsWith('/api/events?');
     if (actor.scope === 'mcp' || (actor.scope === 'ha' && !isHa)) {
       res.status(403).json({ error: t('This access is meant for {client} only.', { client: actor.scope === 'ha' ? 'Home Assistant' : 'MCP' }) });
       return;

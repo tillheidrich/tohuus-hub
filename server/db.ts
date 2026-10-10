@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from './config.js';
+import { LANG_CODES, isLang, type Lang } from './languages.js';
 
 fs.mkdirSync(config.dataDir, { recursive: true });
 fs.mkdirSync(path.join(config.dataDir, 'images'), { recursive: true });
@@ -322,11 +323,11 @@ export function setSetting(key: string, value: unknown) {
 export const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
 
 export type Brand = 'tohuus' | 'fredirando';
-export type Lang = 'en' | 'de';
-export const LANGS: Lang[] = ['en', 'de'];
+export type { Lang };
+export const LANGS: Lang[] = [...LANG_CODES];
 export function lang(): Lang {
   const l = getSetting<string>('language', config.language);
-  return (LANGS as string[]).includes(l) ? (l as Lang) : 'en';
+  return isLang(l) ? l : 'en';
 }
 
 export function brand(): Brand {

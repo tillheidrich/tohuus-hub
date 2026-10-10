@@ -1,0 +1,20 @@
+               TARGET
+        Example Store T-0000
+       Springfield, ST 00000
+            555-555-0100
+
+    GROCERY
+212030123  GG ORGANIC 2% MILK   NF  $4.29
+071140230  MP FOODS BREAD       NF  $2.99
+270060001  STRAWBERRIES         NF  $3.99
+           Circle Offer 20% off    -$0.80
+288100010  CHOBANI YOGURT       NF  $5.00
+           2 @ $2.50 ea
+    HOUSEHOLD
+083030127  UP&UP DISH SOAP      T   $2.79
+
+           SUBTOTAL                $18.26
+           T = ST TAX  8.25000 on $2.79   $0.23
+           TOTAL                   $18.49
+           *1234 VISA CHARGE       $18.49
+     10/07/2026 06:15 PM

@@ -12,6 +12,7 @@ import type { ParsedImport } from '../importers/types.js';
 import { categoryIdByKey } from './basedata.js';
 import { categoryDefaults, localDay, matchProduct } from './catalog.js';
 import { emit } from './bus.js';
+import { parseRegionReceipt, region } from './region.js';
 import { dateKindOf, defaultDateKind, type DateKind } from './fresh-shelf.js';
 
 migrate(
@@ -36,7 +37,8 @@ export class RetailError extends Error {}
  * New products from drugstore receipts default to the bathroom / utility room.
  */
 export function parseOtherReceipt(text: string): ParsedImport | null {
-  const parsed = parseGenericReceipt(text, { fallbackTitle: t('Receipt') });
+  // UK, US and Swedish tills first (region.ts decides by store, currency signs and the household region)
+  const parsed = parseRegionReceipt(text, t('Receipt')) ?? parseGenericReceipt(text, { fallbackTitle: t('Receipt') });
   if (!parsed) return null;
   if (!parsed.shop) parsed.title = parsed.title.replace(/^Receipt\b/, t('Receipt'));
   for (const l of parsed.lines as (GenericLine & { locationId?: number | null })[]) {
@@ -103,5 +105,5 @@ export function wasteValue(month = localDay(0).slice(0, 7)) {
     priced++;
   }
   value = Math.round(value * 100) / 100;
-  return { month, value, rounded: Math.round(value), currency: 'EUR', priced, unpriced, count: rows.length };
+  return { month, value, rounded: Math.round(value), currency: region().currency, priced, unpriced, count: rows.length };
 }

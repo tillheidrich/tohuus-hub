@@ -27,8 +27,7 @@ import { r as kioskRoutes, pub as kioskPublic } from './routes/kiosk.js';
 import { r as kidsRoutes, kid as kidDevice } from './routes/kids.js';
 import { r as onboardRoutes } from './routes/onboard.js';
 import { r as retailRoutes } from './routes/retail.js';
-import { r as haRoutes } from './routes/ha.js';
-import { r as channelsRoutes } from './routes/channels.js';
+import { r as channelsRoutes, pub as channelsPublic } from './routes/channels.js';
 import { r as intlRoutes } from './routes/intl.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
@@ -60,7 +59,7 @@ app.use('/api', (req, res, next) => {
   const origin = req.headers.origin;
   const site = req.headers['sec-fetch-site'];
   if (origin === ownOrigin || site === 'same-origin' || (!origin && !site)) return next();
-  res.status(403).json({ error: 'Fremde Herkunft' });
+  res.status(403).json({ error: t('Request from another site') });
 });
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
@@ -76,6 +75,7 @@ app.use('/api/party-board', partyBoard);
 app.use(kioskPublic);
 app.use('/api/kid', kidDevice);
 app.use('/api', dataPublic);
+app.use('/api', channelsPublic);
 app.use('/api', core);
 app.use('/api', imports);
 app.use('/api', recipes);
@@ -90,7 +90,6 @@ app.use('/api', kioskRoutes);
 app.use('/api', kidsRoutes);
 app.use('/api', onboardRoutes);
 app.use('/api', retailRoutes);
-app.use('/api', haRoutes);
 app.use('/api', channelsRoutes);
 app.use('/api', intlRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
@@ -104,6 +103,8 @@ if (webDir) {
     '/apple-touch-icon.png': 'fredirando-touch.png',
     '/icon-192.png': 'fredirando-192.png',
     '/icon-512.png': 'fredirando-512.png',
+    '/icon-maskable-192.png': 'fredirando-maskable-192.png',
+    '/icon-maskable-512.png': 'fredirando-maskable-512.png',
   };
   app.get(Object.keys(BRAND_FILES), (req, res, next) => {
     if (brand() !== 'fredirando') return next();
@@ -113,7 +114,7 @@ if (webDir) {
   app.get('/manifest.webmanifest', (_req, res, next) => {
     if (brand() !== 'fredirando') return next();
     const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
-    Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: t('Ordered. Delivered. From kitchen & cellar.'), background_color: '#fff8f3', theme_color: '#f2601d' });
+    Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: t('Ordered. Delivered. From kitchen & cellar.'), background_color: '#fff8f3', theme_color: '#fff8f3' });
     res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
   });
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {

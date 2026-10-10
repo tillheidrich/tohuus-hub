@@ -14,7 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp, { type OverlayOptions } from 'sharp';
 import { config } from '../config.js';
-import { db, getSetting, migrate } from '../db.js';
+import { db, getSetting, lang, migrate } from '../db.js';
 import { locale, t } from '../i18n.js';
 import { randomToken, sha256 } from './auth.js';
 import { onEmit } from './bus.js';
@@ -281,7 +281,7 @@ export function displayData(d: DisplayRow, nowMs = Date.now()): DisplayData {
   const out: DisplayData = {
     display: { name: d.name, layout: d.layout, widgets, night_from: d.night_from, night_to: d.night_to },
     household: getSetting('household.name', t('Our home')),
-    language: getSetting<string>('language', config.language) === 'de' ? 'de' : 'en',
+    language: lang(),
     now: new Date(nowMs).toISOString(),
     time: fmtTime(nowMs),
     date: fmtDate(nowMs),

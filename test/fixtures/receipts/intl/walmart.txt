@@ -1,0 +1,23 @@
+               Walmart
+      Save money. Live better.
+         ( 555 ) 555 - 0100
+       MANAGER JANE EXAMPLE
+         100 EXAMPLE BLVD
+       SPRINGFIELD ST 00000
+ ST# 0000 OP# 000000 TE# 00 TR# 01234
+GV 2% MILK 1G   007874235186 F    3.48 N
+BANANAS         000000004011KF    1.24 N
+  2.68 lb @  1 lb /0.46
+GV LG EGGS 18   007874206787 F    3.12 N
+CHEERIOS        001600027527 F    4.98 N
+  2 @ 2.49
+PAPER TOWELS    003700083756      8.97 X
+BOTTLE DEP      000000000001      0.60 N
+PEPSI 12PK      001200000129 F    6.98 N
+                      SUBTOTAL   29.37
+            TAX 1   6.250 %       0.56
+                         TOTAL   29.93
+                     VISA TEND   29.93
+                    CHANGE DUE    0.00
+          # ITEMS SOLD 8
+     10/08/26          17:42:10

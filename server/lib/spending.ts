@@ -5,6 +5,7 @@
 import { config } from '../config.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { t } from '../i18n.js';
+import { region } from './region.js';
 
 // ------------------------------------------------------------------ pure helpers
 
@@ -162,7 +163,7 @@ export function spendingSummary(month = currentMonth()) {
     });
   return {
     month,
-    currency: 'EUR',
+    currency: region().currency,
     total,
     goods: round2(total - deposit),
     deposit,
@@ -186,7 +187,7 @@ export function priceHistory(productId: number) {
     if (u != null) points.push({ date: l.day, unit_price: u, shop: shopName(l.shop) });
   }
   const p = db.prepare('SELECT id, name, brand, image_path FROM products WHERE id = ?').get(productId) as { id: number; name: string; brand: string | null; image_path: string | null } | undefined;
-  return { product: p ?? null, currency: 'EUR', points, change: priceChange(points), spent_total: round2(lines.reduce((s, l) => s + l.price, 0)) };
+  return { product: p ?? null, currency: region().currency, points, change: priceChange(points), spent_total: round2(lines.reduce((s, l) => s + l.price, 0)) };
 }
 
 /** Products that got noticeably more (or less) expensive – compared with about three months ago. */
@@ -228,7 +229,7 @@ export function spendingCsv(month?: string) {
     const s = v == null ? '' : String(v);
     return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const head = [t('Date'), t('Store'), t('Item'), t('Category'), t('Quantity'), t('Price (EUR)')];
+  const head = [t('Date'), t('Store'), t('Item'), t('Category'), t('Quantity'), t('Price ({currency})', { currency: region().currency })];
   return [head, ...lines.map((l) => [l.day, shopName(l.shop), l.product_name ?? l.name, l.category ?? '', l.qty, l.price.toFixed(2)])]
     .map((r) => r.map(esc).join(';'))
     .join('\n');

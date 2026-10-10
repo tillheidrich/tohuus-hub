@@ -6,6 +6,7 @@ import { ArrowClockwise, CheckCircle, Copy, EnvelopeSimple, WarningCircle } from
 import { useEffect, useState } from 'react';
 import { type DateKind, fmtDate, invalidate, post, put, relTime, useApi } from '../api';
 import { num, t } from '../i18n';
+import { money } from '../region';
 import { Seg, Skeleton, Toggle, useDebounced, useToast } from '../ui';
 
 interface InboxStatus {
@@ -307,8 +308,8 @@ export function WasteValueLine({ month }: { month: string }) {
   return (
     <p className="small rt-waste-value">
       {v < 1
-        ? t('Worth less than 1 € in {month}.', { month: monthName })
-        : t('Roughly {value} € in {month}.', { value: v < 10 ? num(v, 1) : String(q.data.rounded), month: monthName })}{' '}
+        ? t('Worth less than {amount} in {month}.', { amount: money(1, { digits: 0 }), month: monthName })
+        : t('Roughly {value} in {month}.', { value: v < 10 ? money(v) : money(q.data.rounded, { digits: 0 }), month: monthName })}{' '}
       <span className="muted">
         {q.data.unpriced > 0 ? t('Estimated from receipt prices; {n} item(s) without a known price.', { n: q.data.unpriced }) : t('Estimated from receipt prices.')}
       </span>

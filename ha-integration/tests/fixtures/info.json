@@ -1,0 +1,15 @@
+{
+ "api": 1,
+ "instance_id": "test-instance",
+ "household": "Test home",
+ "base_url": "http://tohuus.local:8080",
+ "language": "de",
+ "scope": "ha",
+ "features": {
+  "todo": true,
+  "calendar": true,
+  "events": true,
+  "displays": true,
+  "services": true
+ }
+}

@@ -51,6 +51,7 @@ import { Today } from './pages/Today';
 import { Avatar, Sheet } from './ui';
 import { applyBrand } from './brand';
 import { setLang, t } from './i18n';
+import { setRegion } from './region';
 
 export interface Me {
   actor: { name: string; role: string; kind: string; userId?: number };
@@ -79,6 +80,7 @@ function Authed() {
   if (me.error && (me.error as ApiError).status === 401) return <Login />;
   if (!me.data) return <Login />;
   setLang(me.data.language);
+  setRegion((me.data as { region?: Parameters<typeof setRegion>[0] }).region);
   return <Shell key={me.data.language} me={me.data} />;
 }
 

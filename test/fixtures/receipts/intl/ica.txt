@@ -1,0 +1,19 @@
+        ICA Supermarket Exempelstad
+     Exempelgatan 1, 123 45 Exempelstad
+            Org nr 556000-0000
+            Tel 08-000 00 00
+
+Beskrivning              Art. nr.        Pris   Mängd     Summa(SEK)
+Mjölk 3% 1,5l            7310865004703  18,95   1,00 st   18,95
+Bananer                  2000000000001  24,90   0,812 kg  20,22
+Kaffe Mellanrost 450g    7310050001234  54,90   2,00 st  109,80
+Rabatt: Stammispris                                      -20,00
+Ägg 12-pack              7350000000001  39,90   1,00 st   39,90
+Pant                                                       2,00
+Coca-Cola 1,5l           5449000000001  21,90   1,00 st   21,90
+
+Totalt                                                   192,77
+Mottaget Kort                                            192,77
+Moms %        Moms        Netto       Brutto
+12,00        20,65       172,12       192,77
+Kvitto nr 1234   Kassa 2   2026-10-04 16:20

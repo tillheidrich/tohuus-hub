@@ -15,7 +15,7 @@
   <a href="LICENSE"><img alt="AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-1d9a63"></a>
   <img alt="Docker" src="https://img.shields.io/badge/docker-ready-17181a">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-Claude%20%7C%20ChatGPT-17181a">
-  <img alt="Home Assistant" src="https://img.shields.io/badge/Home%20Assistant-webhooks%20%2B%20sensors-17181a">
+  <a href="https://github.com/tillheidrich/tohuus-hub-ha"><img alt="Home Assistant" src="https://img.shields.io/badge/Home%20Assistant-HACS%20integration-17181a"></a>
 </p>
 
 <p align="center">
@@ -61,7 +61,7 @@ And because the honest answer to *"what should we cook?"* depends on what's actu
 | **Backups** | Nightly snapshots with rotation, restore from the UI, optional off-site copy to WebDAV/Nextcloud, exports without secrets. |
 | **Guest bar** | Share a link or QR code: guests order drinks, ice cream and snacks from what's actually in stock — with options like oat milk or toppings. You get a push, accept, serve; stock is deducted. Babysitter links can show selected locations read-only. |
 | **Notifications** | Web Push to installed phones (with action buttons), Home Assistant webhook, ntfy, any webhook, e-mail. Low / empty / expiring, import waiting, new guest order, daily digest. |
-| **Home Assistant** | REST summary endpoint for dashboard sensors, action endpoint for `rest_command`, generated package with an actionable iOS push ("put on shopping list"). |
+| **Home Assistant** | Native integration via HACS: shopping list as a two-way to-do list (Assist, voice), meal plan and care tasks as calendars, sensors (tonight with photo, low, eat first, care due, party …), actions for automations, `tohuus_hub_event` on the bus, kitchen display images, ready-made dashboards. Live updates. YAML package as fallback. |
 | **MCP** | 20 focused tools for Claude, ChatGPT and other MCP clients: overview, search, update stock, used up, record purchase (with review), shopping list, suggest meals, save recipe, log cooked, week plan, shop for the week … |
 | **Where is what** | Every item can carry an exact spot ("left shelf, top compartment") and every room a short direction. Search "where's the plaster?" — or give the babysitter a link with exactly that search plus a note (emergency numbers, bedtime). Works for things you don't count, too: thermometer, fuse box, toolbox. |
 | **Languages** | English and German built in, switchable per household. Notifications, e-mails, demo data and the Home Assistant package follow the language. Adding a language is one dictionary file. |
@@ -84,6 +84,7 @@ Open `http://localhost:8080`. Want to look around first? Set `SEED_DEMO=true` be
 | `BASE_URL` | `http://localhost:8080` | Public URL — used for links in notifications, guest links and MCP. |
 | `ADMIN_NAME` / `ADMIN_PASSWORD` | `Admin` / random | First account, created on first start. More members in *Settings*. |
 | `SEED_DEMO` | `false` | Demo data on first start (in the chosen language). |
+| `REGION` | from `LANGUAGE` | Where the household shops, on first start: `DE`, `AT`, `CH`, `GB`, `IE`, `US`, `SE`, `DK`, `NO`, `NL` (default: `de` → DE, `en` → GB, `sv` → SE). Changeable under *Settings → Household → Region*. |
 | `LANGUAGE` | `en` | Language on first start: `en` or `de`. Changeable under *Settings → Household*. |
 | `BRAND` | `tohuus` | Look on first start: `tohuus` or `fredirando` (a playful home-delivery theme). |
 | `VISION_BASE_URL` / `VISION_API_KEY` / `VISION_MODEL` | – | Optional. Any OpenAI-compatible chat endpoint with image input (Mistral, Ollama + a VL model, vLLM, OpenRouter …). Enables photo imports. |
@@ -102,13 +103,15 @@ Then, from your phone: send a photo of a receipt or a HelloFresh card and say *"
 
 ## Home Assistant
 
-*Settings → Access & AI → New access → "Home Assistant"* generates a ready-to-paste package with:
+Install the **ToHuus Hub** integration from HACS ([tillheidrich/tohuus-hub-ha](https://github.com/tillheidrich/tohuus-hub-ha), add it as a custom repository), create an access under *Settings → Access & AI → New access → "Home Assistant"*, then *Add integration → ToHuus Hub* in Home Assistant with your ToHuus Hub address and the token. You get:
 
-- REST sensors: low/empty count (with attributes), expiring count, shopping list, tonight's recipe idea;
-- `rest_command.tohuus_action` (`add_shopping`, `consume`, `used_up`, `restock`);
-- an automation turning ToHuus Hub webhooks into phone notifications with an *"Auf die Einkaufsliste"* button.
+- `todo.tohuus_hub_shopping_list` – the shopping list, two-way, works with Assist ("add milk to the shopping list");
+- calendars for the meal plan and care tasks; sensors for tonight's meal (with photo), running low, run out, best before, eat first, open orders, care due, party, kid wishes;
+- actions (`tohuus_hub.add_to_shopping_list`, `consume`, `mark_used_up`, `add_stock`, `plan_meal`, `order`, `approve_kid_wish`, `complete_care_task`), buttons, kitchen display images;
+- every notification as `tohuus_hub_event` on the event bus, updates within a second via server-sent events;
+- two ready-made dashboards (core cards, Mushroom).
 
-Put the webhook URL into *Settings → Notifications*.
+Full reference: [docs/home-assistant.md](docs/home-assistant.md). The older YAML package (REST sensors, `rest_command`, actionable push via webhook) is still generated when you create the access – handy without HACS.
 
 **Cookidoo week plan:** set up the official *Cookidoo* integration in Home Assistant, create a long-lived access token (Profile → Security) and enter both under *Settings → Access & AI → Cookidoo*. The default calendar entity is `calendar.cookidoo_speiseplan`.
 
@@ -123,8 +126,29 @@ Put the webhook URL into *Settings → Notifications*.
 | Purchase history CSV (e.g. REWE GDPR export) | ✅ builds the product catalogue and receipt aliases |
 | Receipts by e-mail (IMAP inbox) | ✅ forward eBons and order mails to a mailbox; PDFs and HTML/text receipts are imported automatically into review |
 | Lidl, Aldi Süd/Nord, Edeka, Netto, Kaufland, Penny, Norma, Globus, tegut, dm, Rossmann, Müller, Budni (PDF/text) | 🧪 generic German receipt parser, tested with synthetic fixtures – real-world receipts welcome as (anonymised) issues |
+| 🇬🇧 Tesco, Sainsbury's, Asda, Morrisons, Waitrose, M&S, Co-op, Aldi UK, Lidl GB, Boots, Superdrug (PDF/text) | 🧪 UK receipt parser: £ amounts, Clubcard/Nectar prices, multibuy and meal-deal savings, `kg @ £/kg`, carrier bags as fees – synthetic fixtures |
+| 🇺🇸 Walmart, Target, Costco, Kroger, Trader Joe's, Whole Foods, Safeway, Aldi US, CVS, Walgreens (PDF/text) | 🧪 US receipt parser: UPCs and tax flags stripped, sales tax added on top, coupons/BOGO/`0.50-` savings, `lb @ $/lb`, bottle deposits (CRV, BTL DEP) – synthetic fixtures |
+| 🇸🇪 ICA, Coop, Willys, Hemköp, Lidl SE, City Gross, Apotek Hjärtat (PDF/text) | 🧪 Swedish receipt parser: `1 234,56 kr`, ICA column layout, Stammis/medlemspris/Willys Plus and "2 för" discounts, pant/pantretur, `kg x kr/kg` – synthetic fixtures |
 
 Parsers for other shops are welcome — see `server/importers/` and the fixtures in `test/fixtures/`.
+
+## Regions
+
+The region is a household setting, separate from the UI language (an English-speaking family in Stockholm keeps English menus and gets kronor). *Settings → Household → Region* sets:
+
+| | DE | GB | US | SE |
+|---|---|---|---|---|
+| Currency | EUR | GBP | USD | SEK |
+| Numbers / dates | 3,49 € · 31.10.2026 | £3.49 · 31/10/2026 | $3.49 · 10/31/2026 | 3,49 kr · 2026-10-31 |
+| Units shown in recipes | metric | metric | US customary (oz, lb, cups, °F) | metric |
+| Week starts | Monday | Monday | Sunday | Monday |
+| Receipts read | German tills + REWE | UK tills | US tills | Swedish tills |
+| Open Food Facts | de | uk / en | us / en | se / sv |
+| Store mode presets | REWE, Edeka, Aldi, Lidl … | Tesco, Sainsbury's, Asda … | Walmart, Target, Costco … | ICA, Coop, Willys … |
+
+Also available: Austria, Switzerland, Ireland, Denmark, Norway, the Netherlands. Currency, number format, units and first day of the week can be adjusted on their own. Recipe amounts are only *shown* converted (500 g → 1.1 lb, 2 dl → ¾ cup, 180 °C → 350 °F); the stored recipe text never changes. Receipts are recognised by store and currency signs first, so a Tesco receipt from a holiday still reads correctly in a German household. Base locations and categories exist in English, German and Swedish (Kylskåp, Frys, Skafferi …), and category guessing knows English and Swedish product words. Existing installs keep euro.
+
+MCP: `region_info` tells assistants the currency and receipt conventions before they record a purchase.
 
 ## How it compares
 
@@ -139,7 +163,7 @@ Parsers for other shops are welcome — see `server/importers/` and the fixtures
 | Guest bar / party mode with TV board | ✅ | – | – | – | – |
 | Kid mode with parent approval | ✅ | – | – | – | – |
 | MCP server for Claude/ChatGPT | ✅ | – | – | – | – |
-| Home Assistant | sensors, push, to-do sync, e-ink image | integration | – | – | – |
+| Home Assistant | HACS integration: to-do, calendars, sensors, actions, events, e-ink image | integration | – | – | – |
 
 Comparison as of October 2026, from public docs; corrections welcome.
 

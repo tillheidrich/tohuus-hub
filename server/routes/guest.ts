@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { regionInfo } from '../lib/region.js';
 import { z } from 'zod';
 import { config } from '../config.js';
 import { brand, db, getSetting, lang } from '../db.js';
@@ -32,6 +33,8 @@ guest.get('/:token', (req, res) => {
     household: getSetting('household.name', t('Our home')),
     brand: brand(),
     language: lang(),
+    // currency/number format only – guests see no other household settings
+    region: (({ code, currency, locale, units, week_start_day }) => ({ code, currency, locale, units, week_start_day }))(regionInfo()),
     note: (db.prepare('SELECT note FROM guest_links WHERE id = ?').get(req.actor!.guestLinkId) as { note: string | null } | undefined)?.note ?? null,
     party: partyForGuest(req.actor!.guestLinkId, guestClientId(req, res)),
   });

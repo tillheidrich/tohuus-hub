@@ -83,10 +83,11 @@ export function saveRecipe(input: RecipeInput, id?: number): number {
 export function ingredientCore(text: string) {
   return text
     .replace(/\(.*?\)/g, '')
-    .replace(/^[\d.,/½¼¾\s-]+(g|kg|ml|l|el|tl|stk|stück|prise[n]?|pck|packung(en)?|dosen?|bund|zehen?|scheiben?|becher|gläser|glas|flaschen?|tüten?|handvoll|msp|kugeln?|tbsp|tsp|pcs?|packs?|packets?|cans?|tins?|bunch(es)?|cloves?|pinch(es)?|slices?|jars?|bottles?|bags?|cups?|handful)?\.?\s+/i, '')
+    .replace(/^[\d.,/½¼¾\s-]+(g|kg|ml|l|el|tl|stk|stück|prise[n]?|pck|packung(en)?|dosen?|bund|zehen?|scheiben?|becher|gläser|glas|flaschen?|tüten?|handvoll|msp|kugeln?|tbsp|tsp|pcs?|packs?|packets?|cans?|tins?|bunch(es)?|cloves?|pinch(es)?|slices?|jars?|bottles?|bags?|cups?|handful|st|förp|paket|burk(ar)?|knippen?|klyftor?|nypa|skivor?|flask(a|or)|påsar?|påse|msk|tsk|krm|dl|cl|koppar?|kulor?)?\.?\s+/i, '')
     .split(',')[0]
     .replace(/\s+(zum|für|nach|zum|als|oder)\s.*$/i, '')
     .replace(/\s+(for|to|or|as)\s.*$/i, '')
+    .replace(/\s+(till|för|eller|som)\s.*$/i, '')
     .trim();
 }
 

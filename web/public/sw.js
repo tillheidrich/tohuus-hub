@@ -1,5 +1,5 @@
 /* ToHuus Hub service worker: app shell + last shopping list offline, Web Push with actions. */
-const VERSION = 'tohuus-v1';
+const VERSION = 'tohuus-v2';
 const SHELL = `${VERSION}-shell`;
 const DATA = `${VERSION}-data`;
 const SHELL_URLS = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/apple-touch-icon.png'];

@@ -3,6 +3,8 @@ import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled, visionEnabled } from '../config.js';
 import { brand, db, getSetting, lang, setSetting } from '../db.js';
+import { LANG_CODES } from '../languages.js';
+import { regionInfo } from '../lib/region.js';
 import {
   SESSION_COOKIE,
   createApiToken,
@@ -96,6 +98,7 @@ r.get('/me', (req, res) => {
     household: getSetting('household.name', t('Our home')),
     brand: brand(),
     language: lang(),
+    region: regionInfo(),
     features: { vision: visionEnabled(), email: smtpEnabled() },
     version: process.env.npm_package_version ?? '0.1.0',
   });
@@ -538,7 +541,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
     .object({
       household: z.string().optional(),
       brand: z.enum(['tohuus', 'fredirando']).optional(),
-      language: z.enum(['en', 'de']).optional(),
+      language: z.enum(LANG_CODES).optional(),
       importAutoApply: z.boolean().optional(),
       ha: z.object({ url: z.string().url().or(z.literal('')).optional(), token: z.string().max(400).optional(), cookidooCalendar: z.string().max(120).optional() }).optional(),
       notify: z
@@ -550,7 +553,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
           digestHour: z.number().int().min(-1).max(23).optional(),
           expiryWarnDays: z.number().int().min(0).max(30).optional(),
           autoShoppingList: z.boolean().optional(),
-          events: z.record(z.string(), z.object({ ha: z.boolean(), webhook: z.boolean(), ntfy: z.boolean(), email: z.boolean(), push: z.boolean().optional() })).optional(),
+          events: z.record(z.string(), z.object({ ha: z.boolean(), webhook: z.boolean(), ntfy: z.boolean(), email: z.boolean(), push: z.boolean().optional(), telegram: z.boolean().optional(), gotify: z.boolean().optional(), matrix: z.boolean().optional() })).optional(),
         })
         .optional(),
     })

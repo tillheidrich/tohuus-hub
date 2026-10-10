@@ -1,0 +1,60 @@
+"""Constants for the ToHuus Hub integration."""
+
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Final
+
+DOMAIN: Final = "tohuus_hub"
+MANUFACTURER: Final = "ToHuus Hub"
+API_VERSION: Final = 1
+
+CONF_FEATURES: Final = "features"
+CONF_LIVE_UPDATES: Final = "live_updates"
+CONF_DISPLAY_MODE: Final = "display_mode"
+CONF_DISPLAY_WIDTH: Final = "display_width"
+CONF_DISPLAY_HEIGHT: Final = "display_height"
+
+FEATURE_TODO: Final = "todo"
+FEATURE_CALENDARS: Final = "calendars"
+FEATURE_DISPLAYS: Final = "displays"
+FEATURE_BUTTONS: Final = "buttons"
+FEATURE_EVENTS: Final = "events"
+ALL_FEATURES: Final = [FEATURE_TODO, FEATURE_CALENDARS, FEATURE_DISPLAYS, FEATURE_BUTTONS, FEATURE_EVENTS]
+
+DISPLAY_MODES: Final = ["color", "gray", "bw"]
+DEFAULT_DISPLAY_MODE: Final = "color"
+DEFAULT_DISPLAY_WIDTH: Final = 800
+DEFAULT_DISPLAY_HEIGHT: Final = 480
+
+SCAN_INTERVAL: Final = timedelta(seconds=60)
+
+# Fired on the Home Assistant event bus for every ToHuus Hub notification
+EVENT_TOHUUS: Final = "tohuus_hub_event"
+
+# Notification events ToHuus Hub knows about (dotted on the wire, underscored for HA event entities)
+EVENT_TYPES: Final = [
+    "stock.low",
+    "stock.empty",
+    "stock.expiring",
+    "import.review",
+    "order.new",
+    "order.status",
+    "shopping.added",
+    "digest.daily",
+    "care.due",
+    "party.ending",
+    "kids.wish",
+    "test",
+]
+
+ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
+
+SERVICE_ADD_TO_SHOPPING_LIST: Final = "add_to_shopping_list"
+SERVICE_CONSUME: Final = "consume"
+SERVICE_MARK_USED_UP: Final = "mark_used_up"
+SERVICE_ADD_STOCK: Final = "add_stock"
+SERVICE_PLAN_MEAL: Final = "plan_meal"
+SERVICE_ORDER: Final = "order"
+SERVICE_APPROVE_KID_WISH: Final = "approve_kid_wish"
+SERVICE_COMPLETE_CARE_TASK: Final = "complete_care_task"

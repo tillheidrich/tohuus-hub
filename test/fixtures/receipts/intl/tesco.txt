@@ -1,0 +1,22 @@
+                 TESCO
+           Superstore Example
+        1 Example Road, Testtown
+         VAT Number: GB000000000
+
+TESCO SEMI SKIMMED MILK 4PT          £1.65
+WARBURTONS TOASTIE 800G              £1.40
+HEINZ BAKED BEANS 4X415G             £4.50
+Clubcard Price                      -£0.75
+LOOSE BROWN ONIONS                   £0.53
+ 0.540 kg @ £0.99/kg
+COCA COLA 2L                         £2.10
+ 2 x £1.05
+TESCO FREE RANGE EGGS 6PK            £1.85
+MULTIBUY SAVING                     -£0.50
+--------------------------------------------
+TOTAL                               £10.78
+VISA                                £10.78
+CHANGE DUE                           £0.00
+
+Clubcard points this visit: 10
+08/10/26 17:42   Store 1234  OP 5678  Trn 9012

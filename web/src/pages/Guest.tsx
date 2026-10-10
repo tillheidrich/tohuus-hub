@@ -7,8 +7,9 @@ import { connectEvents, qc } from '../api';
 import { Empty, Ic, Seg, Sheet, Thumb, useToast } from '../ui';
 import { BRANDS, applyBrand } from '../brand';
 import { locale, num, setLang, t } from '../i18n';
+import { money, setRegion } from '../region';
 
-const eur = (n: number) => n.toLocaleString(locale(), { style: 'currency', currency: 'EUR' });
+const eur = (n: number) => money(n);
 
 async function gapi(token: string, path: string, body?: unknown) {
   const r = await fetch(`/api/guest/${token}${path}`, {
@@ -67,7 +68,10 @@ export function Guest() {
   }, [info.data]);
   const fredi = info.data?.brand === 'fredirando';
   // Guests see the household's language, not their browser's. Idempotent, so safe during render.
-  if (info.data) setLang(info.data.language);
+  if (info.data) {
+    setLang(info.data.language);
+    setRegion(info.data.region);
+  }
 
   if (info.isLoading) return <div className="guest"><div className="skel" style={{ height: 120 }} /></div>;
   if (info.error)

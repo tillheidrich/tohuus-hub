@@ -27,7 +27,25 @@ export interface NotifySettings {
   digestHour: number; // -1 = off
   expiryWarnDays: number;
   autoShoppingList: boolean;
-  events: Record<string, { ha: boolean; webhook: boolean; ntfy: boolean; email: boolean; push?: boolean }>;
+  events: Record<string, { ha: boolean; webhook: boolean; ntfy: boolean; email: boolean; push?: boolean; telegram?: boolean; gotify?: boolean; matrix?: boolean }>;
+}
+
+/** Channels that live in their own module (server/lib/channels.ts) and register themselves here. */
+export const EXTRA_CHANNELS = ['telegram', 'gotify', 'matrix'] as const;
+export type ExtraChannelName = (typeof EXTRA_CHANNELS)[number];
+export interface ChannelMessage extends NotifyInput {
+  /** absolute URL */
+  url: string;
+}
+interface ExtraChannel {
+  name: ExtraChannelName;
+  /** configured and switched on */
+  ready: () => boolean;
+  send: (msg: ChannelMessage) => Promise<boolean>;
+}
+const extraChannels = new Map<ExtraChannelName, ExtraChannel>();
+export function registerNotifyChannel(c: ExtraChannel) {
+  extraChannels.set(c.name, c);
 }
 
 export const DEFAULT_NOTIFY: NotifySettings = {
@@ -59,6 +77,9 @@ export function notifySettings(): NotifySettings {
   const events = { ...DEFAULT_NOTIFY.events, ...(s.events ?? {}) };
   // routes saved before Web Push existed get the default for the push column
   for (const [k, v] of Object.entries(events)) if (v.push === undefined) events[k] = { ...v, push: DEFAULT_NOTIFY.events[k]?.push ?? false };
+  // Telegram, Gotify, Matrix start with the same events as push
+  for (const [k, v] of Object.entries(events))
+    for (const ch of EXTRA_CHANNELS) if (v[ch] === undefined) events[k] = { ...events[k], [ch]: events[k].push ?? false };
   return { ...DEFAULT_NOTIFY, ...s, events };
 }
 
@@ -142,6 +163,17 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
     jobs.push(
       post(s.ntfyUrl, input.message, { Title: encodeHeader(input.title), Click: url, Tags: 'house' }).then((ok) => ['ntfy', ok]),
     );
+  for (const c of extraChannels.values())
+    if (route[c.name] && c.ready())
+      jobs.push(
+        c
+          .send({ ...input, url })
+          .then((ok): [string, boolean] => [c.name, ok])
+          .catch((e: Error): [string, boolean] => {
+            console.warn(`[${c.name}]`, e.message);
+            return [c.name, false];
+          }),
+      );
   const m = mailer();
   if (route.email && m && s.emailTo) {
     jobs.push(

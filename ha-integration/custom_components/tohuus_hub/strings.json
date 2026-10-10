@@ -1,0 +1,378 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect ToHuus Hub",
+        "description": "In ToHuus Hub open Settings › Access & AI › New access, choose \"Home Assistant\" and copy the token. Enter the address you open ToHuus Hub with.",
+        "data": {
+          "url": "Address",
+          "token": "Access token",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "url": "For example http://192.168.1.20:8080 or https://home.example.com",
+          "token": "Starts with sw_ – shown only once when you create it.",
+          "verify_ssl": "Turn off only for self-signed certificates."
+        }
+      },
+      "reauth_confirm": {
+        "title": "New access token",
+        "description": "ToHuus Hub at {url} no longer accepts the token. Create a new \"Home Assistant\" access and paste it here.",
+        "data": {
+          "token": "Access token"
+        }
+      },
+      "reconfigure": {
+        "title": "Change ToHuus Hub address",
+        "description": "Leave the token empty to keep the current one.",
+        "data": {
+          "url": "Address",
+          "token": "Access token",
+          "verify_ssl": "Verify SSL certificate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Can't reach ToHuus Hub at this address.",
+      "invalid_auth": "The token was rejected. Create a new \"Home Assistant\" access in ToHuus Hub.",
+      "not_supported": "This ToHuus Hub is too old for the integration. Update ToHuus Hub first.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This ToHuus Hub is already set up.",
+      "reauth_successful": "Token updated.",
+      "reconfigure_successful": "Address updated.",
+      "wrong_instance": "That is a different ToHuus Hub than the one set up here."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ToHuus Hub in Home Assistant",
+        "description": "Sensors are always there. Choose what else to show.",
+        "data": {
+          "features": "Features",
+          "live_updates": "Live updates",
+          "display_mode": "Display image colours",
+          "display_width": "Display image width",
+          "display_height": "Display image height"
+        },
+        "data_description": {
+          "live_updates": "Keeps a connection open so changes show up within a second or two. Without it, Home Assistant asks every minute.",
+          "display_mode": "For kitchen displays shown as image entities."
+        }
+      }
+    }
+  },
+  "selector": {
+    "features": {
+      "options": {
+        "todo": "Shopping list as to-do list",
+        "calendars": "Calendars (meal plan, care tasks)",
+        "displays": "Kitchen displays as images",
+        "buttons": "Buttons (receipt inbox, fill the week, backup)",
+        "events": "Notification event entity"
+      }
+    },
+    "display_mode": {
+      "options": {
+        "color": "Colour",
+        "gray": "Greyscale",
+        "bw": "Black and white (e-ink)"
+      }
+    },
+    "slot": {
+      "options": {
+        "lunch": "Lunch",
+        "dinner": "Dinner"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "products_low": {
+        "name": "Running low"
+      },
+      "products_empty": {
+        "name": "Run out"
+      },
+      "expiring_soon": {
+        "name": "Best before soon"
+      },
+      "shopping_list": {
+        "name": "Shopping list"
+      },
+      "open_orders": {
+        "name": "Open orders"
+      },
+      "care_due": {
+        "name": "Care tasks due"
+      },
+      "next_care_task": {
+        "name": "Next care task"
+      },
+      "eat_first": {
+        "name": "Eat first"
+      },
+      "tonight": {
+        "name": "Tonight"
+      },
+      "party": {
+        "name": "Party",
+        "state": {
+          "off": "Off",
+          "live": "Running"
+        }
+      },
+      "kid_wishes": {
+        "name": "Kid wishes waiting"
+      },
+      "receipts_to_review": {
+        "name": "Receipts to review"
+      }
+    },
+    "binary_sensor": {
+      "party_running": {
+        "name": "Party running"
+      },
+      "something_expired": {
+        "name": "Something expired"
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "name": "Shopping list"
+      }
+    },
+    "calendar": {
+      "meal_plan": {
+        "name": "Meal plan"
+      },
+      "care_tasks": {
+        "name": "Care tasks"
+      }
+    },
+    "image": {
+      "display": {
+        "name": "Display {name}"
+      }
+    },
+    "button": {
+      "check_receipt_inbox": {
+        "name": "Check receipt inbox"
+      },
+      "fill_week": {
+        "name": "Fill the week"
+      },
+      "backup_now": {
+        "name": "Back up now"
+      }
+    },
+    "event": {
+      "notification": {
+        "name": "Notification",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "stock_low": "Running low",
+              "stock_empty": "Run out",
+              "stock_expiring": "Best before soon",
+              "import_review": "Import waiting",
+              "order_new": "New order",
+              "order_status": "Order status",
+              "shopping_added": "Added to shopping list",
+              "digest_daily": "Daily summary",
+              "care_due": "Care task due",
+              "party_ending": "Party ending",
+              "kids_wish": "Kid wish",
+              "test": "Test"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "request_failed": {
+      "message": "ToHuus Hub: {error}"
+    },
+    "no_entry": {
+      "message": "No ToHuus Hub is set up (or it is not loaded)."
+    },
+    "text_or_product": {
+      "message": "Give either a text or a product."
+    },
+    "recipe_or_title": {
+      "message": "Give either a recipe or a title."
+    },
+    "order_empty": {
+      "message": "Name at least one product or write a note."
+    }
+  },
+  "services": {
+    "add_to_shopping_list": {
+      "name": "Add to shopping list",
+      "description": "Puts things on the ToHuus Hub shopping list. Text is understood like the quick add: \"2 milk, bread\".",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "What to buy, e.g. \"2 milk, bread\"."
+        },
+        "product": {
+          "name": "Product",
+          "description": "Product name as in ToHuus Hub, or its number."
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "How many / how much."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    },
+    "consume": {
+      "name": "Consume",
+      "description": "Takes an amount out of stock (oldest first).",
+      "fields": {
+        "product": {
+          "name": "Product",
+          "description": "Product name as in ToHuus Hub, or its number."
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "How many / how much."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    },
+    "mark_used_up": {
+      "name": "Mark as used up",
+      "description": "Sets the stock to zero and puts the product on the shopping list.",
+      "fields": {
+        "product": {
+          "name": "Product",
+          "description": "Product name as in ToHuus Hub, or its number."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    },
+    "add_stock": {
+      "name": "Add to stock",
+      "description": "Books a purchase into stock.",
+      "fields": {
+        "product": {
+          "name": "Product",
+          "description": "Product name as in ToHuus Hub, or its number."
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "How many / how much."
+        },
+        "best_before": {
+          "name": "Best before",
+          "description": "Optional date."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    },
+    "plan_meal": {
+      "name": "Plan a meal",
+      "description": "Puts a recipe or a free title into the meal plan.",
+      "fields": {
+        "recipe": {
+          "name": "Recipe",
+          "description": "Recipe name or number in ToHuus Hub."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Free text if there is no recipe."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Defaults to today."
+        },
+        "slot": {
+          "name": "Meal",
+          "description": "Lunch or dinner."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    },
+    "order": {
+      "name": "Order",
+      "description": "Orders from the sofa or for the party – shows up in ToHuus Hub like any other order.",
+      "fields": {
+        "product": {
+          "name": "Product",
+          "description": "One product to order (for several use items)."
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "How many / how much."
+        },
+        "items": {
+          "name": "Items",
+          "description": "List of products with qty and options."
+        },
+        "note": {
+          "name": "Note",
+          "description": "A free-text wish, e.g. \"a blanket, please\"."
+        },
+        "name": {
+          "name": "From",
+          "description": "Who the order is from (default: Home Assistant)."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    },
+    "approve_kid_wish": {
+      "name": "Answer a kid wish",
+      "description": "Approves (it becomes an order) or declines a wish from kid mode.",
+      "fields": {
+        "wish_id": {
+          "name": "Wish",
+          "description": "Number of the wish (see the \"Kid wishes waiting\" sensor)."
+        },
+        "approve": {
+          "name": "Approve",
+          "description": "Off declines the wish."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    },
+    "complete_care_task": {
+      "name": "Complete a care task",
+      "description": "Marks a care task as done; the next date is calculated.",
+      "fields": {
+        "task": {
+          "name": "Task",
+          "description": "Task name or number."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    }
+  }
+}

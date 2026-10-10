@@ -6,6 +6,7 @@
 import { config, visionEnabled } from '../config.js';
 import { lang } from '../db.js';
 import { t } from '../i18n.js';
+import { visionRegionHint as regionHint } from './region-hints.js';
 
 export type VisionTask = 'receipt' | 'shelf' | 'recipe' | 'product' | 'text-recipe' | 'text-items';
 
@@ -35,11 +36,13 @@ If several photos belong to one recipe, merge them.`,
 
 /** Tasks whose output is free text for the household (not copied from a printed source). */
 const WRITE_IN_LANGUAGE: VisionTask[] = ['recipe', 'text-recipe', 'shelf', 'product'];
-const LANGUAGE_NAMES: Record<string, string> = { en: 'English', de: 'German' };
+const LANGUAGE_NAMES: Record<string, string> = { en: 'English', de: 'German', sv: 'Swedish' };
 
 function prompt(task: VisionTask) {
-  if (!WRITE_IN_LANGUAGE.includes(task)) return PROMPTS[task];
-  return `${PROMPTS[task]}\nWrite all text in ${LANGUAGE_NAMES[lang()] ?? 'English'}.`;
+  // currency, decimal mark and receipt vocabulary of the household region (region-hints.ts)
+  const hint = regionHint(task);
+  if (!WRITE_IN_LANGUAGE.includes(task)) return hint ? `${PROMPTS[task]}\n${hint}` : PROMPTS[task];
+  return `${PROMPTS[task]}\n${hint ? hint + '\n' : ''}Write all text in ${LANGUAGE_NAMES[lang()] ?? 'English'}.`;
 }
 
 export function visionAvailable() {

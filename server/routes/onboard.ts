@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db, setSetting } from '../db.js';
+import { LANG_CODES } from '../languages.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import {
@@ -15,7 +16,7 @@ import {
   starterSets,
   updateOnboardState,
 } from '../lib/onboard.js';
-import { BASE_LOCATIONS } from '../lib/basedata.js';
+import { BASE_LOCATIONS, baseName } from '../lib/basedata.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -54,7 +55,7 @@ r.put('/onboarding/home', requireAdmin, (req, res) => {
   const b = z
     .object({
       household: z.string().trim().min(1).max(60).optional(),
-      language: z.enum(['en', 'de']).optional(),
+      language: z.enum(LANG_CODES).optional(),
       brand: z.enum(['tohuus', 'fredirando']).optional(),
       rooms: z.object({ keep: z.array(z.number().int()).max(60), add: z.array(z.string().max(60)).max(20).default([]) }).optional(),
     })
@@ -68,8 +69,8 @@ r.put('/onboarding/home', requireAdmin, (req, res) => {
   res.json({ ok: true, rooms, state });
 });
 
-/** Base rooms that could be added back as chips (in both languages, the client shows the household one). */
-r.get('/onboarding/room-templates', (_req, res) => res.json(BASE_LOCATIONS.map((l) => ({ key: l.key, en: l.en, de: l.de, icon: l.icon }))));
+/** Base rooms that could be added back as chips (`name` in the household language, en/de for matching renamed rooms). */
+r.get('/onboarding/room-templates', (_req, res) => res.json(BASE_LOCATIONS.map((l) => ({ key: l.key, en: l.en, de: l.de, name: baseName(l), icon: l.icon }))));
 
 /** Step 3: typical staples per room. */
 r.get('/onboarding/starter', (_req, res) => res.json(starterSets()));

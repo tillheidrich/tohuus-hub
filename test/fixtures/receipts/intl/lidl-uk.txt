@@ -1,0 +1,19 @@
+                 Lidl
+      Lidl Great Britain Limited
+            1 Example Way
+                                 GBP
+Milbona Greek Style Yogurt     1.19 A
+Deluxe Sourdough               1.65 A
+Lidl Plus Discount            -0.20
+Broccoli                       0.45 A
+Bananas Loose
+ 0.920 kg x 0.89 GBP/kg        0.82 A
+Washing Up Liquid              1.58 B
+  2 x 0.79
+----------------------------------
+TOTAL                          5.49
+Card                           5.49
+VAT          Net       VAT    Gross
+A  0%       5.08      0.00     5.08
+09/10/26 18:20   1234 5678
+www.lidl.co.uk

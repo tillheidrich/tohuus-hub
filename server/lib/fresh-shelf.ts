@@ -61,7 +61,7 @@ export function categoryKeyOf(categoryId: number | null | undefined): string | n
   if (!categoryId) return null;
   const row = db.prepare('SELECT name FROM categories WHERE id = ?').get(categoryId) as { name: string } | undefined;
   if (!row) return null;
-  return BASE_CATEGORIES.find((c) => c.en === row.name || c.de === row.name)?.key ?? null;
+  return BASE_CATEGORIES.find((c) => c.en === row.name || c.de === row.name || c.sv === row.name)?.key ?? null;
 }
 
 /** Default shelf life after opening for a name/category, or null when there is no sensible rule. */

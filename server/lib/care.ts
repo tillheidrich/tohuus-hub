@@ -6,6 +6,7 @@
 import crypto from 'node:crypto';
 import { config } from '../config.js';
 import { db, lang, migrate } from '../db.js';
+import { localeOf } from '../languages.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, localDay, matchProduct, stockOf } from './catalog.js';
@@ -413,7 +414,7 @@ export async function checkCareDue() {
 }
 
 function fmtDayShort(d: string) {
-  return new Date(d + 'T12:00:00').toLocaleDateString(lang() === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'short' });
+  return new Date(d + 'T12:00:00').toLocaleDateString(localeOf(lang()), { day: 'numeric', month: 'short' });
 }
 // ------------------------------------------------------------------ QR labels
 

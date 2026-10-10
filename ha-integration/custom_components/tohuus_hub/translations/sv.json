@@ -1,0 +1,378 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Anslut ToHuus Hub",
+        "description": "Öppna Inställningar › Åtkomst & AI › Ny åtkomst i ToHuus Hub, välj \"Home Assistant\" och kopiera token. Ange adressen du öppnar ToHuus Hub med.",
+        "data": {
+          "url": "Adress",
+          "token": "Åtkomsttoken",
+          "verify_ssl": "Verifiera SSL-certifikat"
+        },
+        "data_description": {
+          "url": "Till exempel http://192.168.1.20:8080 eller https://hem.example.se",
+          "token": "Börjar med sw_ – visas bara en gång när den skapas.",
+          "verify_ssl": "Stäng bara av för självsignerade certifikat."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Ny åtkomsttoken",
+        "description": "ToHuus Hub på {url} godtar inte längre token. Skapa en ny \"Home Assistant\"-åtkomst och klistra in den här.",
+        "data": {
+          "token": "Åtkomsttoken"
+        }
+      },
+      "reconfigure": {
+        "title": "Ändra adress till ToHuus Hub",
+        "description": "Lämna token tom för att behålla den nuvarande.",
+        "data": {
+          "url": "Adress",
+          "token": "Åtkomsttoken",
+          "verify_ssl": "Verifiera SSL-certifikat"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "ToHuus Hub går inte att nå på den här adressen.",
+      "invalid_auth": "Token avvisades. Skapa en ny \"Home Assistant\"-åtkomst i ToHuus Hub.",
+      "not_supported": "Den här ToHuus Hub är för gammal för integrationen. Uppdatera ToHuus Hub först.",
+      "unknown": "Oväntat fel."
+    },
+    "abort": {
+      "already_configured": "Den här ToHuus Hub är redan konfigurerad.",
+      "reauth_successful": "Token uppdaterad.",
+      "reconfigure_successful": "Adress uppdaterad.",
+      "wrong_instance": "Det är en annan ToHuus Hub än den som är konfigurerad här."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ToHuus Hub i Home Assistant",
+        "description": "Sensorerna finns alltid med. Välj vad mer som ska visas.",
+        "data": {
+          "features": "Funktioner",
+          "live_updates": "Liveuppdateringar",
+          "display_mode": "Färger för skärmbilden",
+          "display_width": "Skärmbildens bredd",
+          "display_height": "Skärmbildens höjd"
+        },
+        "data_description": {
+          "live_updates": "Håller en anslutning öppen så att ändringar syns inom en sekund eller två. Utan den frågar Home Assistant varje minut.",
+          "display_mode": "För köksskärmar som visas som bildentiteter."
+        }
+      }
+    }
+  },
+  "selector": {
+    "features": {
+      "options": {
+        "todo": "Inköpslistan som att göra-lista",
+        "calendars": "Kalendrar (matsedel, skötsel)",
+        "displays": "Köksskärmar som bilder",
+        "buttons": "Knappar (kvittoinkorg, fyll veckan, säkerhetskopia)",
+        "events": "Händelseentitet för aviseringar"
+      }
+    },
+    "display_mode": {
+      "options": {
+        "color": "Färg",
+        "gray": "Gråskala",
+        "bw": "Svartvitt (e-ink)"
+      }
+    },
+    "slot": {
+      "options": {
+        "lunch": "Lunch",
+        "dinner": "Middag"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "products_low": {
+        "name": "Börjar ta slut"
+      },
+      "products_empty": {
+        "name": "Slut"
+      },
+      "expiring_soon": {
+        "name": "Bäst före snart"
+      },
+      "shopping_list": {
+        "name": "Inköpslista"
+      },
+      "open_orders": {
+        "name": "Öppna beställningar"
+      },
+      "care_due": {
+        "name": "Skötsel att göra"
+      },
+      "next_care_task": {
+        "name": "Nästa skötseluppgift"
+      },
+      "eat_first": {
+        "name": "Ät först"
+      },
+      "tonight": {
+        "name": "I kväll"
+      },
+      "party": {
+        "name": "Fest",
+        "state": {
+          "off": "Av",
+          "live": "Pågår"
+        }
+      },
+      "kid_wishes": {
+        "name": "Barnens önskningar"
+      },
+      "receipts_to_review": {
+        "name": "Kvitton att granska"
+      }
+    },
+    "binary_sensor": {
+      "party_running": {
+        "name": "Fest pågår"
+      },
+      "something_expired": {
+        "name": "Något har gått ut"
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "name": "Inköpslista"
+      }
+    },
+    "calendar": {
+      "meal_plan": {
+        "name": "Matsedel"
+      },
+      "care_tasks": {
+        "name": "Skötsel"
+      }
+    },
+    "image": {
+      "display": {
+        "name": "Skärm {name}"
+      }
+    },
+    "button": {
+      "check_receipt_inbox": {
+        "name": "Kolla kvittoinkorgen"
+      },
+      "fill_week": {
+        "name": "Fyll veckan"
+      },
+      "backup_now": {
+        "name": "Säkerhetskopiera nu"
+      }
+    },
+    "event": {
+      "notification": {
+        "name": "Avisering",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "stock_low": "Börjar ta slut",
+              "stock_empty": "Slut",
+              "stock_expiring": "Bäst före snart",
+              "import_review": "Import väntar",
+              "order_new": "Ny beställning",
+              "order_status": "Beställningsstatus",
+              "shopping_added": "Tillagt på inköpslistan",
+              "digest_daily": "Dagens sammanfattning",
+              "care_due": "Skötsel att göra",
+              "party_ending": "Festen slutar",
+              "kids_wish": "Barnets önskan",
+              "test": "Test"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "request_failed": {
+      "message": "ToHuus Hub: {error}"
+    },
+    "no_entry": {
+      "message": "Ingen ToHuus Hub är konfigurerad (eller den är inte laddad)."
+    },
+    "text_or_product": {
+      "message": "Ange antingen en text eller en produkt."
+    },
+    "recipe_or_title": {
+      "message": "Ange antingen ett recept eller en titel."
+    },
+    "order_empty": {
+      "message": "Ange minst en produkt eller skriv en anteckning."
+    }
+  },
+  "services": {
+    "add_to_shopping_list": {
+      "name": "Lägg till på inköpslistan",
+      "description": "Lägger till saker på inköpslistan i ToHuus Hub. Text tolkas som snabbinmatningen: \"2 mjölk, bröd\".",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "Vad som ska köpas, t.ex. \"2 mjölk, bröd\"."
+        },
+        "product": {
+          "name": "Produkt",
+          "description": "Produktnamn som i ToHuus Hub, eller dess nummer."
+        },
+        "quantity": {
+          "name": "Mängd",
+          "description": "Hur många / hur mycket."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    },
+    "consume": {
+      "name": "Förbruka",
+      "description": "Tar en mängd ur förrådet (äldsta först).",
+      "fields": {
+        "product": {
+          "name": "Produkt",
+          "description": "Produktnamn som i ToHuus Hub, eller dess nummer."
+        },
+        "quantity": {
+          "name": "Mängd",
+          "description": "Hur många / hur mycket."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    },
+    "mark_used_up": {
+      "name": "Markera som slut",
+      "description": "Sätter förrådet till noll och lägger produkten på inköpslistan.",
+      "fields": {
+        "product": {
+          "name": "Produkt",
+          "description": "Produktnamn som i ToHuus Hub, eller dess nummer."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    },
+    "add_stock": {
+      "name": "Lägg in i förrådet",
+      "description": "Bokför ett inköp i förrådet.",
+      "fields": {
+        "product": {
+          "name": "Produkt",
+          "description": "Produktnamn som i ToHuus Hub, eller dess nummer."
+        },
+        "quantity": {
+          "name": "Mängd",
+          "description": "Hur många / hur mycket."
+        },
+        "best_before": {
+          "name": "Bäst före",
+          "description": "Valfritt datum."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    },
+    "plan_meal": {
+      "name": "Planera en måltid",
+      "description": "Lägger ett recept eller en fri titel i matsedeln.",
+      "fields": {
+        "recipe": {
+          "name": "Recept",
+          "description": "Receptets namn eller nummer i ToHuus Hub."
+        },
+        "title": {
+          "name": "Titel",
+          "description": "Fri text om det inte finns något recept."
+        },
+        "date": {
+          "name": "Datum",
+          "description": "Standard är i dag."
+        },
+        "slot": {
+          "name": "Måltid",
+          "description": "Lunch eller middag."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    },
+    "order": {
+      "name": "Beställ",
+      "description": "Beställ från soffan eller till festen – syns i ToHuus Hub som alla andra beställningar.",
+      "fields": {
+        "product": {
+          "name": "Produkt",
+          "description": "En produkt att beställa (för flera: använd poster)."
+        },
+        "quantity": {
+          "name": "Mängd",
+          "description": "Hur många / hur mycket."
+        },
+        "items": {
+          "name": "Poster",
+          "description": "Lista med produkter, antal och val."
+        },
+        "note": {
+          "name": "Anteckning",
+          "description": "En fri önskan, t.ex. \"en filt, tack\"."
+        },
+        "name": {
+          "name": "Från",
+          "description": "Vem beställningen kommer från (standard: Home Assistant)."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    },
+    "approve_kid_wish": {
+      "name": "Svara på ett barns önskan",
+      "description": "Godkänner (blir en beställning) eller avböjer en önskan från barnläget.",
+      "fields": {
+        "wish_id": {
+          "name": "Önskan",
+          "description": "Önskans nummer (se sensorn \"Barnens önskningar\")."
+        },
+        "approve": {
+          "name": "Godkänn",
+          "description": "Av avböjer önskan."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    },
+    "complete_care_task": {
+      "name": "Klarmarkera skötsel",
+      "description": "Markerar en skötseluppgift som klar; nästa datum räknas ut.",
+      "fields": {
+        "task": {
+          "name": "Uppgift",
+          "description": "Uppgiftens namn eller nummer."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    }
+  }
+}

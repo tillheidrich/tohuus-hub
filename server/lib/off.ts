@@ -5,6 +5,7 @@
 import { config } from '../config.js';
 import { db } from '../db.js';
 import { nameScore, norm } from './text.js';
+import { region } from './region.js';
 
 export interface OffProduct {
   code: string;
@@ -18,7 +19,19 @@ export interface OffProduct {
   score?: number;
 }
 
-const FIELDS = 'code,product_name,product_name_de,generic_name_de,brands,quantity,image_front_small_url,image_front_url,categories_tags';
+const BASE_FIELDS = 'code,product_name,product_name_de,generic_name_de,brands,quantity,image_front_small_url,image_front_url,categories_tags';
+
+/** Open Food Facts country + language of the household region (names come back in that language when OFF has them). */
+function offLocale() {
+  try {
+    return region().off;
+  } catch {
+    return { cc: 'de', lc: 'de' };
+  }
+}
+const fieldsFor = (lc: string) => (lc === 'de' ? BASE_FIELDS : `${BASE_FIELDS},product_name_${lc},generic_name_${lc}`);
+/** cache keys stay as they were for German households */
+const keyFor = (lc: string, key: string) => (lc === 'de' ? key : key.replace(/^(\w+):/, `$1:${lc}:`));
 
 function cacheGet<T>(key: string, days = 30): T | null {
   const row = db
@@ -47,9 +60,9 @@ async function getJson(url: string): Promise<any | null> {
   }
 }
 
-function mapProduct(p: any, source: 'off' | 'opf'): OffProduct | null {
+function mapProduct(p: any, source: 'off' | 'opf', lc = 'de'): OffProduct | null {
   if (!p) return null;
-  const name = p.product_name_de || p.product_name || p.generic_name_de;
+  const name = p[`product_name_${lc}`] || p.product_name || p[`generic_name_${lc}`] || p.product_name_de || p.generic_name_de;
   if (!name) return null;
   const brands = Array.isArray(p.brands) ? p.brands.join(', ') : p.brands;
   return {
@@ -68,16 +81,17 @@ export async function lookupBarcode(code: string): Promise<OffProduct | null> {
   if (!config.off.enabled) return null;
   const clean = code.replace(/\D/g, '');
   if (clean.length < 6) return null;
-  const key = `ean:${clean}`;
+  const { cc, lc } = offLocale();
+  const key = keyFor(lc, `ean:${clean}`);
   const cached = cacheGet<OffProduct | { miss: true }>(key);
   if (cached) return 'miss' in cached ? null : cached;
   for (const [host, source] of [
     ['https://world.openfoodfacts.org', 'off'],
     ['https://world.openproductsfacts.org', 'opf'],
   ] as const) {
-    const j = await getJson(`${host}/api/v2/product/${clean}.json?fields=${FIELDS}`);
+    const j = await getJson(`${host}/api/v2/product/${clean}.json?fields=${fieldsFor(lc)}&lc=${lc}&cc=${cc}`);
     if (j?.status === 1) {
-      const p = mapProduct(j.product, source);
+      const p = mapProduct(j.product, source, lc);
       if (p) {
         cacheSet(key, p);
         return p;
@@ -100,20 +114,21 @@ export async function searchProducts(query: string, brand?: string | null, limit
   if (!config.off.enabled) return [];
   const q = [brand, query].filter(Boolean).join(' ').trim();
   if (q.length < 3) return [];
-  const key = `q:${norm(q)}`;
+  const { cc, lc } = offLocale();
+  const key = keyFor(lc, `q:${norm(q)}`);
   const cached = cacheGet<OffProduct[]>(key, 14);
   if (cached) return cached.slice(0, limit);
   await throttle(1200);
   const j = await getJson(
-    `https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&langs=de&page_size=20&fields=${FIELDS}`,
+    `https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&langs=${lc === 'en' ? 'en' : `${lc},en`}&page_size=20&fields=${fieldsFor(lc)}`,
   );
-  let list: OffProduct[] = (j?.hits ?? []).map((h: any) => mapProduct(h, 'off')).filter(Boolean);
+  let list: OffProduct[] = (j?.hits ?? []).map((h: any) => mapProduct(h, 'off', lc)).filter(Boolean);
   if (list.length === 0) {
     // household goods live in Open Products Facts (legacy search API)
     const k = await getJson(
-      `https://world.openproductsfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=10&fields=${FIELDS}`,
+      `https://world.openproductsfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=10&fields=${fieldsFor(lc)}&lc=${lc}&cc=${cc}`,
     );
-    list = (k?.products ?? []).map((h: any) => mapProduct(h, 'opf')).filter(Boolean);
+    list = (k?.products ?? []).map((h: any) => mapProduct(h, 'opf', lc)).filter(Boolean);
   }
   for (const p of list) {
     const label = [p.brand, p.name].filter(Boolean).join(' ');

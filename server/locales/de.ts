@@ -123,4 +123,8 @@ export const de: Record<string, string> = {
   "Order {id}: {status}": "Bestellung {id}: {status}",
   "all gone": "alle",
   "Please tell us your name.": "Bitte sag uns deinen Namen.",
+  "Photo stocktake {date}": "Foto-Inventur {date}",
+  "Receipt {shop}": "Bon {shop}",
+  "List from {date}": "Liste vom {date}",
+  "Request from another site": "Fremde Herkunft",
 };
