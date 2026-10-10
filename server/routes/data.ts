@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { db, setSetting } from '../db.js';
 import { t } from '../i18n.js';
-import { SESSION_COOKIE, createSession, rateLimited, requireAdmin, requireAuth } from '../lib/auth.js';
+import { NAME_MAX, PASSWORD_MIN, SESSION_COOKIE, createSession, rateLimited, requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import {
   RestoreError,
@@ -171,7 +171,7 @@ r.get('/invites', requireAdmin, (_req, res) => res.json(pendingInvites()));
 
 r.post('/invites', requireAdmin, (req, res) => {
   const b = z
-    .object({ name: z.string().trim().min(1).max(40), role: z.enum(['admin', 'member']).default('member'), color: z.string().max(20).optional() })
+    .object({ name: z.string().trim().min(1).max(NAME_MAX), role: z.enum(['admin', 'member']).default('member'), color: z.string().max(20).optional() })
     .parse(req.body);
   if (db.prepare('SELECT 1 FROM users WHERE lower(name) = lower(?)').get(b.name)) {
     res.status(409).json({ error: t('Someone with this name already exists.') });
@@ -208,7 +208,7 @@ pub.post('/invite/:token', (req, res) => {
     res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
     return;
   }
-  const b = z.object({ name: z.string().trim().max(40).optional(), password: z.string().min(8).max(200) }).parse(req.body);
+  const b = z.object({ name: z.string().trim().max(NAME_MAX).optional(), password: z.string().min(PASSWORD_MIN).max(200) }).parse(req.body);
   try {
     const u = acceptInvite(String(req.params.token), b, {
       invalid: t('This invitation has expired or was already used.'),

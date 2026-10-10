@@ -1,6 +1,6 @@
 import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Plus, TextAa, ThumbsDown, ThumbsUp } from '@phosphor-icons/react';
 import { useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { api, invalidate, post, useApi } from '../api';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
@@ -13,7 +13,8 @@ export function Cook({ me }: { me: Me }) {
   const recipes = useApi<any[]>('recipes', '/recipes');
   const [idx, setIdx] = useState(0);
   const [q, setQ] = useState('');
-  const [importOpen, setImportOpen] = useState(false);
+  const [sp] = useSearchParams();
+  const [importOpen, setImportOpen] = useState(() => sp.get('add') === '1');
   const nav = useNavigate();
   const settings = useApi<any>('settings', '/settings');
   const deck = sugg.data ?? [];
@@ -54,7 +55,7 @@ export function Cook({ me }: { me: Me }) {
         <div className="skel" style={{ height: 420, maxWidth: 420, margin: '0 auto', borderRadius: 26 }} />
       ) : !cur ? (
         <div className="card">
-          <Empty icon={<ChefHat size={26} />} title={t('No suggestions yet')}>
+          <Empty icon={<ChefHat size={26} />} title={t('No suggestions yet')} action={(recipes.data?.length ?? 0) === 0 ? { label: t('Add a recipe'), icon: <Plus size={14} weight="bold" />, onClick: () => setImportOpen(true) } : undefined}>
             {t('Add a few favorite recipes – by link, photo (e.g. a HelloFresh card) or via Claude/ChatGPT.')}
           </Empty>
         </div>
@@ -88,6 +89,8 @@ export function Cook({ me }: { me: Me }) {
         </div>
         {recipes.isLoading ? (
           <Skeleton n={2} h={180} />
+        ) : list.length === 0 ? (
+          <div className="card pad small muted">{q ? t('No recipe matches “{q}”.', { q }) : t('Your recipes will show up here.')}</div>
         ) : (
           <div className="rgrid">
             {list.map((r) => (

@@ -16,6 +16,7 @@ export type NotifyEvent =
   | 'digest.daily'
   | 'care.due'
   | 'party.ending'
+  | 'kids.wish'
   | 'test';
 
 export interface NotifySettings {
@@ -48,6 +49,7 @@ export const DEFAULT_NOTIFY: NotifySettings = {
     'digest.daily': { ha: true, webhook: true, ntfy: false, email: true, push: false },
     'care.due': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'party.ending': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    'kids.wish': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     test: { ha: true, webhook: true, ntfy: true, email: true, push: true },
   },
 };

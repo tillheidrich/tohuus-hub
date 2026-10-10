@@ -1,4 +1,5 @@
-import { Bell, Copy, House, Key, Plug, SignOut, Trash, UploadSimple } from '@phosphor-icons/react';
+import { Bell, Copy, House, Key, Plug, Question, SignOut, Trash, UploadSimple } from '@phosphor-icons/react';
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../App';
 import { type Category, type Location, api, del, invalidate, patch, post, relTime, useApi } from '../api';
@@ -6,11 +7,19 @@ import { ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui'
 import { lang, setLang, t } from '../i18n';
 import { Backups, Members } from './DataSettings';
 import { HaTodoCard, PushCard } from '../shop/ShopSettings';
+import { InboxSettingsCard } from './Retail';
+import { KidsSettings } from './KidsSettings';
+import { Displays } from './Displays';
 
-type Tab = 'home' | 'members' | 'places' | 'notify' | 'access' | 'data';
+type Tab = 'home' | 'members' | 'places' | 'notify' | 'access' | 'displays' | 'data';
 
 export function Settings({ me }: { me: Me }) {
-  const [tab, setTab] = useState<Tab>('home');
+  const TABS: Tab[] = ['home', 'members', 'places', 'notify', 'access', 'data'];
+  const [tab, setTab] = useState<Tab>(() => {
+    const q = new URLSearchParams(location.search).get('tab') as Tab | null;
+    return q && TABS.includes(q) ? q : 'home';
+  });
+  const nav = useNavigate();
   const admin = me.actor.role === 'admin';
   return (
     <div>
@@ -20,6 +29,9 @@ export function Settings({ me }: { me: Me }) {
           <h1>{t('Settings')}</h1>
         </div>
         <div className="actions">
+          <button className="btn ghost" onClick={() => nav('/hilfe')}>
+            <Question size={16} /> {t('Help')}
+          </button>
           <button className="btn ghost" onClick={() => post('/auth/logout').then(() => invalidate('me'))}>
             <SignOut size={16} /> {t('Sign out')}
           </button>
@@ -33,6 +45,7 @@ export function Settings({ me }: { me: Me }) {
             ['places', t('Places & categories')],
             ['notify', t('Notifications')],
             ['access', t('Access & AI')],
+            ['displays', t('Displays')],
             ['data', t('Data & backups')],
           ] as [Tab, string][]
         ).map(([k, l]) => (
@@ -43,9 +56,11 @@ export function Settings({ me }: { me: Me }) {
       </div>
       {tab === 'home' && <Household me={me} admin={admin} />}
       {tab === 'members' && <Members me={me} admin={admin} />}
+      {tab === 'members' && <KidsSettings admin={admin} />}
       {tab === 'places' && <Places admin={admin} />}
       {tab === 'notify' && <Notify admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
+      {tab === 'displays' && <Displays admin={admin} />}
       {tab === 'data' && <Data admin={admin} />}
     </div>
   );
@@ -128,7 +143,7 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
         <div className="field">
           <label>{t('Change my password')}</label>
           <div className="row">
-            <input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t('new password')} />
+            <input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t('New password (at least 8 characters)')} autoComplete="new-password" minLength={8} />
             <button className="btn" disabled={pw.length < 8} onClick={() => patch(`/users/${me.actor.userId}`, { password: pw }).then(() => { setPw(''); toast({ text: t('Password changed') }); }).catch((e) => toast({ text: e.message, error: true }))}>{t('Change')}</button>
           </div>
         </div>
@@ -222,6 +237,7 @@ const EVENT_LABEL: Record<string, string> = {
   'shopping.added': 'New item on the shopping list',
   'digest.daily': 'Daily digest (once a day)',
   'care.due': 'Home care task due',
+  'kids.wish': 'A kid wishes for something',
 };
 
 function Notify({ admin }: { admin: boolean }) {
@@ -389,6 +405,7 @@ function Access({ admin }: { admin: boolean }) {
       </div>
       {admin && s.data && <HaConnection initial={s.data.ha} />}
       {admin && s.data && <HaTodoCard />}
+      {admin && <InboxSettingsCard />}
       {admin && (
         <div className="card pad stack">
           <b>{t('New access')}</b>

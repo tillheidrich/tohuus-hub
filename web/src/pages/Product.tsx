@@ -1,10 +1,11 @@
 import { ArrowLeft, Basket, Camera, Check, ImageSquare, MagnifyingGlass, PencilSimple, Trash, ArrowsClockwise } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { type Category, type Location, type Product, api, del, fmtDate, fmtQty, get, invalidate, patch, post, relTime, useApi } from '../api';
+import { type Category, type DateKind, type Location, type Product, api, del, fmtDate, fmtQty, get, invalidate, patch, post, relTime, useApi } from '../api';
 import { Empty, Ic, LevelPicker, Seg, Sheet, Skeleton, StatusBadge, Stepper, Thumb, Toggle, expiryText, statusText, useDebounced, useToast } from '../ui';
 import { num, t } from '../i18n';
 import { FreshPanel } from './FreshParts';
+import { DateKindField } from './Retail';
 
 export function ProductDetail() {
   const { id } = useParams();
@@ -348,6 +349,7 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
     spot: '',
     code: '',
     image_url: '',
+    date_kind: null as DateKind | null,
   };
   const [f, setF] = useState(empty);
   const [busy, setBusy] = useState(false);
@@ -366,6 +368,7 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
         code: '',
         image_url: '',
         initial_qty: 0,
+        date_kind: product.date_kind ?? null,
       });
     else setF({ ...empty, ...(initial ?? {}) });
     setOffHits([]);
@@ -398,6 +401,7 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
         order_group: f.order_group || null,
         notes: f.notes || null,
         spot: f.spot || null,
+        date_kind: f.date_kind,
       };
       if (product) {
         await patch(`/products/${product.id}`, body);
@@ -502,6 +506,7 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
             {f.track_mode === 'none' && t('For coffee from the machine or things ordered in: only for the bar and recipes.')}
           </div>
         </div>
+        {f.track_mode !== 'none' && <DateKindField value={f.date_kind} onChange={(v) => set('date_kind', v)} name={f.name} />}
         {f.track_mode === 'count' && (
           <div className="grid-2">
             {!product && (

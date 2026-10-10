@@ -70,7 +70,7 @@ export const shop: Record<string, string> = {
 
   // claims
   'Who takes care of it?': 'Wer kümmert sich?',
-  '{name} takes care of it': '{name} holt das',
+  '{name} is getting it': '{name} holt das',
   'Just so nobody buys it twice. No points, no ranking.': 'Damit niemand doppelt kauft. Keine Punkte, kein Ranking.',
   Me: 'Ich',
   'Who cooks?': 'Wer kocht?',

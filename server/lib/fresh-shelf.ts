@@ -116,3 +116,27 @@ export function entryExpiry(
   const opened = addDays(dayOf(e.opened_at), days);
   return bb && bb < opened ? bb : opened;
 }
+
+// ------------------------------------------------------------ best-before vs use-by (retail)
+
+/**
+ * 'best_before' (MHD): past the date it is usually still fine – look, smell, taste.
+ * 'use_by' (Verbrauchsdatum): highly perishable food (minced meat, fresh fish, poultry, raw milk …) –
+ * past the date, don't eat it anymore. products.date_kind stores an explicit choice; null = automatic.
+ */
+export type DateKind = 'best_before' | 'use_by';
+
+const USE_BY =
+  /(hackfleisch|gehacktes|rinderhack|schweinehack|\bhack\b|\bmett\b|tatar|faschiert|frische[rs]?\s+fisch|fischfilet|lachs|forelle|kabeljau|seelachs|dorsch|scholle|thunfischsteak|garnele|shrimp|muschel|meeresfr(?:ü|ue)cht|tintenfisch|sushi|h(?:ä|ae)hnchen|h(?:ü|ue)hnchen|huhn|gefl(?:ü|ue)gel|pute|truthahn|\bente\b|leber|innereien|rohmilch|vorzugsmilch|rohe?\s+eier|\bmince|\bminced|ground beef|ground meat|fresh fish|\bsalmon|\btrout|\bcod\b|\bchicken|\bpoultry|\bturkey|\bprawn|\bshrimp|\bmussel|raw milk|\bsteak|schnitzel|gulasch|geschnetzeltes|rouladen|bratwurst|grillwurst)/i;
+/** preserved, frozen or cured: these carry a best-before date even when the name says fish or meat */
+const NOT_USE_BY =
+  /(dose|konserve|leberwurst|streichwurst|aufschnitt|\bin\s+(?:öl|oel|tomatensauce|wasser)|tiefk(?:ü|ue)hl|\btk\b|\bfrozen|\bcanned|\btinned|st(?:ä|ae)bchen|nuggets|fingers|salami|schinken|r(?:ä|ae)ucher(?!lachs)|getrocknet|\bdried|jerky|fond|br(?:ü|ue)he|\bstock\b|sauce|so(?:ß|ss)e|chips|aroma|gew(?:ü|ue)rz|seasoning|vegan|veggie|vegetari|pflanz)/i;
+
+export function defaultDateKind(name: string): DateKind {
+  return USE_BY.test(name) && !NOT_USE_BY.test(name) ? 'use_by' : 'best_before';
+}
+
+export function dateKindOf(p: { name: string; date_kind?: string | null }): DateKind {
+  if (p.date_kind === 'use_by' || p.date_kind === 'best_before') return p.date_kind;
+  return defaultDateKind(p.name);
+}

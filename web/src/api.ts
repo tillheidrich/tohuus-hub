@@ -42,14 +42,14 @@ export function useApi<T = any>(key: string | (string | number)[], path: string 
 
 /** topic → query keys to refresh when the server announces a change */
 const TOPIC_KEYS: Record<string, string[]> = {
-  stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh'],
-  products: ['products', 'product', 'overview', 'shopping', 'fresh'],
+  stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh', 'onboarding'],
+  products: ['products', 'product', 'overview', 'shopping', 'fresh', 'onboarding'],
   shopping: ['shopping', 'overview'],
-  recipes: ['recipes', 'recipe', 'suggest', 'overview', 'plan'],
+  recipes: ['recipes', 'recipe', 'suggest', 'overview', 'plan', 'onboarding'],
   imports: ['imports', 'import', 'overview', 'spending'],
   orders: ['orders', 'overview'],
   notifications: ['notifications'],
-  settings: ['settings', 'me'],
+  settings: ['settings', 'me', 'onboarding'],
   care: ['care'],
 };
 
@@ -118,9 +118,15 @@ export interface Product {
   total: number;
   status: Status;
   nextExpiry: string | null;
+  /** effective kind of the printed date: best-before (check it) or use-by (don't eat after) */
+  dateKind?: DateKind;
+  /** stored choice; null = automatic by name */
+  date_kind?: DateKind | null;
   shelf_days: number | null;
   codes?: string[];
 }
+
+export type DateKind = 'best_before' | 'use_by';
 
 export interface Location {
   id: number;

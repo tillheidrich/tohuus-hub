@@ -5,6 +5,7 @@ import { type Category, type Location, type Product, fmtQty, invalidate, post, q
 import { Empty, Ic, LevelPicker, Skeleton, StatusBadge, Stepper, Thumb, expiryText, useToast } from '../ui';
 import { t } from '../i18n';
 import { QuickCheckButton, WasteCard } from './FreshParts';
+import { StarterSheet } from './Onboarding';
 
 // English labels, translated at render time with t()
 const STATUS_FILTERS: [string, string][] = [
@@ -22,6 +23,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
   const locations = useApi<Location[]>('locations', '/locations');
   const categories = useApi<Category[]>('categories', '/categories');
   const [q, setQ] = useState('');
+  const [starter, setStarter] = useState(false);
   const [group, setGroup] = useState<'location' | 'category'>('location');
   const nav = useNavigate();
   const toast = useToast();
@@ -144,7 +146,11 @@ export function Stock({ onNew }: { onNew: () => void }) {
         <Skeleton n={6} />
       ) : filtered.length === 0 ? (
         <div className="card">
-          <Empty icon={<Package size={26} />} title={q ? t('Nothing for “{q}”', { q }) : t('Nothing here')}>
+          <Empty
+            icon={<Package size={26} />}
+            title={q ? t('Nothing for “{q}”', { q }) : (products.data ?? []).length === 0 ? t('Nothing in stock yet') : t('Nothing here')}
+            action={!q && (products.data ?? []).length === 0 ? { label: t('Add typical staples'), onClick: () => setStarter(true) } : undefined}
+          >
             {q ? (
               <button className="btn sm" style={{ marginTop: 8 }} onClick={onNew}>
                 {t('Add “{q}”', { q })}
@@ -153,6 +159,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
               t('Upload a REWE receipt, scan a barcode or add products by hand.')
             )}
           </Empty>
+          <StarterSheet open={starter} onClose={() => setStarter(false)} />
         </div>
       ) : (
         <div className="stack" style={{ gap: 22 }}>

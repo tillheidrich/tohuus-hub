@@ -3,7 +3,7 @@ import { db, lang, now } from '../db.js';
 import { t } from '../i18n.js';
 import { BASE_LOCATIONS, baseName, categoryIdByKey, type CategoryKey } from './basedata.js';
 import { emit } from './bus.js';
-import { entryExpiry, openDaysFor } from './fresh-shelf.js';
+import { dateKindOf, entryExpiry, openDaysFor } from './fresh-shelf.js';
 import { notify, notifySettings } from './notify.js';
 import { nameScore, norm, splitProductName, tokens } from './text.js';
 
@@ -33,6 +33,8 @@ export interface ProductRow {
   notes: string | null;
   spot: string | null;
   archived: number;
+  /** 'best_before' | 'use_by' | null (automatic by name) – column added by the retail module */
+  date_kind?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -67,7 +69,8 @@ export function productStatus(p: ProductRow, entries: StockEntry[], warnDays = n
     if (nextExpiry < today) status = 'expired';
     else if (nextExpiry <= soon) status = 'expiring';
   }
-  return { total, status, nextExpiry };
+  // best-before past → "check it"; use-by past → "don't eat anymore"
+  return { total, status, nextExpiry, dateKind: dateKindOf(p) };
 }
 
 const dayFmt = new Intl.DateTimeFormat('sv-SE', { timeZone: config.timezone });

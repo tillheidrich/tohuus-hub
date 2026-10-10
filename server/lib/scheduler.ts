@@ -8,6 +8,7 @@ import { haSettings, syncCookidoo } from './plan.js';
 import { fmtDay, t } from '../i18n.js';
 import { checkCareDue } from './care.js';
 import { startPartyScheduler } from './party.js';
+import { startInboxPoller } from './retail-inbox.js';
 
 function localHour() {
   return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: config.timezone }).format(new Date()));
@@ -21,8 +22,13 @@ async function checkExpiry() {
   for (const p of products) {
     await notify({
       event: 'stock.expiring',
-      title: p.status === 'expired' ? t('{name}: past best-before date', { name: p.name }) : t('Use up {name} soon', { name: p.name }),
-      message: t('{product} – best before {date} ({qty} left).', {
+      title:
+        p.status === 'expired'
+          ? p.dateKind === 'use_by'
+            ? t('{name}: use-by date passed – please don’t eat it anymore', { name: p.name })
+            : t('{name}: past best-before – look, smell, taste; often still fine', { name: p.name })
+          : t('Use up {name} soon', { name: p.name }),
+      message: t(p.dateKind === 'use_by' ? '{product} – use by {date} ({qty} left).' : '{product} – best before {date} ({qty} left).', {
         product: [p.brand, p.name].filter(Boolean).join(' '),
         date: fmtDay(p.nextExpiry!),
         qty: fmtQty(p, p.total),
@@ -70,6 +76,7 @@ export async function sendDigest(force = false) {
 
 export function startScheduler() {
   startPartyScheduler();
+  startInboxPoller();
   const tick = async () => {
     try {
       await checkExpiry();

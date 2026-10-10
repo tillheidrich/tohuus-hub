@@ -57,6 +57,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (url.pathname.startsWith('/mcp') || url.pathname.startsWith('/img/') || url.pathname.startsWith('/g/')) return;
+  // kiosk displays are server-rendered pages with their own refresh – never cache them as the app shell
+  if (url.pathname.startsWith('/display')) return;
   if (req.mode === 'navigate') {
     // the app is a single page: any route falls back to the cached shell
     event.respondWith(

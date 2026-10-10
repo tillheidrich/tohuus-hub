@@ -104,16 +104,23 @@ const STATUS_LABEL: Record<Status, string> = {
   untracked: 'not counted',
 };
 
-export function StatusBadge({ p, compact = false }: { p: Pick<Product, 'status' | 'nextExpiry'>; compact?: boolean }) {
+export function StatusBadge({ p, compact = false }: { p: Pick<Product, 'status' | 'nextExpiry' | 'dateKind'>; compact?: boolean }) {
   if (p.status === 'ok' || p.status === 'untracked') return null;
   let label = t(STATUS_LABEL[p.status]);
+  // best-before past = "check it" (calm amber, not waste); use-by past = "don't eat it anymore" (red)
+  const useBy = p.dateKind === 'use_by';
+  if (p.status === 'expired' && !useBy) label = t('check it');
   if ((p.status === 'expiring' || p.status === 'expired') && p.nextExpiry) {
     const d = daysUntil(p.nextExpiry);
-    label = compact
-      ? d < 0 ? t('{n} d over', { n: -d }) : d === 0 ? t('today') : d === 1 ? t('tomorrow') : t('in {n} days', { n: d })
-      : d < 0 ? t('Best before {n} d over', { n: -d }) : d === 0 ? t('Best before today') : d === 1 ? t('Best before tomorrow') : t('Best before in {n} days', { n: d });
+    label = useBy
+      ? compact
+        ? d < 0 ? t('don’t eat') : d === 0 ? t('today') : d === 1 ? t('tomorrow') : t('in {n} days', { n: d })
+        : d < 0 ? t('Use-by passed – don’t eat it anymore') : d === 0 ? t('Use by today') : d === 1 ? t('Use by tomorrow') : t('Use by in {n} days', { n: d })
+      : compact
+        ? d < 0 ? t('{n} d over · check', { n: -d }) : d === 0 ? t('today') : d === 1 ? t('tomorrow') : t('in {n} days', { n: d })
+        : d < 0 ? t('Best before {n} d over – look, smell, taste', { n: -d }) : d === 0 ? t('Best before today') : d === 1 ? t('Best before tomorrow') : t('Best before in {n} days', { n: d });
   }
-  return <span className={`badge ${p.status}`}>{label}</span>;
+  return <span className={`badge ${p.status === 'expired' && !useBy ? 'low' : p.status}`}>{label}</span>;
 }
 
 export function statusText(s: Status) {
@@ -251,12 +258,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 // ------------------------------------------------------------------ misc
 
-export function Empty({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
+/** Empty state. `action` is the single, obvious next step (rendered as a button). */
+export function Empty({ icon, title, children, action }: { icon: ReactNode; title: string; children?: ReactNode; action?: { label: string; onClick: () => void; icon?: ReactNode } }) {
   return (
     <div className="empty-state">
       <div className="art">{icon}</div>
       <b>{title}</b>
       {children && <div className="small" style={{ maxWidth: 320 }}>{children}</div>}
+      {action && (
+        <button type="button" className="btn sm primary empty-action" onClick={action.onClick}>
+          {action.icon}
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }

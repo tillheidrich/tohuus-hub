@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ToHuus Hub · Let the house do the remembering</title>
-<meta name="description" content="Free, open-source home app you host yourself: what's in the fridge, where the parcel tape lives, what's for dinner. Stock by room, shared shopping list, receipt imports, week plan, order from the sofa, Home Assistant and MCP.">
+<meta name="description" content="Free, open-source home app you host yourself: what's in the fridge, where the parcel tape lives, what's for dinner. Stock by room, shared shopping list with store mode, receipt imports, week plan, party mode, home care, Home Assistant and MCP.">
 <link rel="canonical" href="https://tohuus.heidrich-digital.de/">
 <link rel="alternate" hreflang="en" href="https://tohuus.heidrich-digital.de/">
 <link rel="alternate" hreflang="de" href="https://tohuus.heidrich-digital.de/de/">
@@ -50,7 +50,7 @@
 <header class="nav" aria-label="Main">
   <a class="brand" href="./" aria-label="ToHuus Hub home"><img src="assets/favicon.svg" alt="" width="28" height="28">ToHuus Hub</a>
   <nav class="nav-links" aria-label="Sections">
-    <a href="#day">A day at ours</a>
+    <a href="#day">A weekend at ours</a>
     <a href="#self-hosting">Self-hosting</a>
     <a href="#install">Install</a>
   </nav>
@@ -240,28 +240,30 @@
       <p class="house-hint" aria-hidden="true"><i></i>Hover or tap a room</p>
       <div class="house-note" aria-live="polite"><div class="hn-where"></div><div class="hn-title"></div><ul></ul></div>
       <ul class="house-list">
-        <li data-room="kitchen" data-where="Kitchen · fridge"><b>14 things in the fridge</b> <span class="warn">Milk is out. Already on the list.</span> <span>Feta: use within 2 days</span> <span>Tonight: gnocchi skillet with tomato</span></li>
-        <li data-room="freezer" data-where="Cellar · chest freezer"><b>9 things, 2 to use soon</b> <span class="warn">Fish fingers: 1 pack left</span> <span>Ice cream is on the sofa menu</span></li>
-        <li data-room="utility" data-where="Upstairs · utility room"><b>Parcel tape</b> <span>Shelf by the door, box "post &amp; parcels"</span> <span>Washing powder: half full</span></li>
+        <li data-room="kitchen" data-where="Kitchen · fridge"><b>14 things in the fridge</b> <span class="warn">Milk is out. Already on the list.</span> <span>Pesto: opened Tuesday, eat first</span> <span>Tonight: gnocchi skillet with tomato</span></li>
+        <li data-room="freezer" data-where="Cellar · chest freezer"><b>9 things, 2 to use soon</b> <span class="warn">Fish fingers: 1 pack left</span> <span>Chili leftovers, frozen with a new date</span> <span>Ice cream is on the sofa menu</span></li>
+        <li data-room="utility" data-where="Upstairs · utility room"><b>Parcel tape</b> <span>Shelf by the door, box "post &amp; parcels"</span> <span>QR label on the box: scan, one tap</span> <span class="warn">Water filter: due this week</span></li>
         <li data-room="pantry" data-where="Kitchen · pantry"><b>Pasta, tins and the rest</b> <span>Pasta: 3 packs, oldest gets used first</span> <span class="warn">Tinned tomatoes: running low</span></li>
-        <li data-room="drinks" data-where="Cellar · drinks"><b>2 crates of water</b> <span class="warn">Cola: all gone (the guests noticed)</span> <span>Wine rack: 3 bottles</span></li>
-        <li data-room="bath" data-where="Upstairs · bathroom"><b>The mirror cabinet</b> <span>Plasters: top shelf, left</span> <span class="warn">Toothpaste: 1 left, on the list</span></li>
+        <li data-room="drinks" data-where="Cellar · drinks"><b>2 crates of water</b> <span class="warn">Cola: gone after the party, on the list</span> <span>Wine rack: 3 bottles</span></li>
+        <li data-room="bath" data-where="Upstairs · bathroom"><b>The mirror cabinet</b> <span>Plasters: top shelf, left</span> <span class="warn">Toothpaste: 1 left, on the list</span> <span>Smoke detector test: once a year</span></li>
         <li data-room="attic" data-where="Attic"><b>Christmas lights</b> <span>Box 3, under the round window</span> <span>Not counted. Just easy to find.</span></li>
       </ul>
     </div>
   </div>
 </section>
 
-<!-- A DAY AT OURS -->
+<!-- A WEEKEND AT OURS -->
 <section class="section" id="day" style="padding-top:40px">
   <div class="wrap">
     <div class="head">
-      <span class="eyebrow reveal">A day at ours</span>
-      <h2 class="reveal">Not a feature list. A Saturday.</h2>
-      <p class="reveal">ToHuus Hub shows up in small moments, the ones where you'd otherwise shout up the stairs. Here's what that looks like on an ordinary weekend.</p>
+      <span class="eyebrow reveal">A weekend at ours</span>
+      <h2 class="reveal">Not a feature list. A weekend.</h2>
+      <p class="reveal">ToHuus Hub shows up in small moments, the ones where you'd otherwise shout up the stairs. Here's what that looks like on an ordinary Saturday and Sunday.</p>
     </div>
 
     <div class="day">
+      <div class="day-mark reveal"><span>Saturday</span></div>
+
       <article class="moment">
         <div class="m-text">
           <div class="m-time reveal"><b>09:30</b><span>Coffee, notebook</span></div>
@@ -279,53 +281,100 @@
 
       <article class="moment flip">
         <div class="m-text">
-          <div class="m-time reveal"><b>11:20</b><span>Back from REWE</span></div>
+          <div class="m-time reveal"><b>10:40</b><span>Waiting for the pickup</span></div>
+          <h3 class="reveal">"Can you grab wrapping paper?"</h3>
+          <p class="reveal">The REWE order is still being packed, so Lea goes in for the few things it forgot. In store mode the list is sorted by aisle, in the order she usually walks that shop, and it keeps working at the back where the signal gives up.</p>
+          <p class="reveal">At home you type "wrapping paper and 2 milk" into the list and it shows up on her phone a moment later. Anything someone tapped "I'll get it" on carries their name, so nobody buys the cream twice. At the till, "done shopping" books the whole basket into stock.</p>
+          <ul class="m-tags reveal"><li class="new">New: store mode</li><li>Aisle order per shop</li><li>Works offline</li><li>"I'll get it"</li><li>Push to the phone</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet red"></span>
+          <figure class="shot" style="--tilt:1.5deg"><div class="crop"><img src="assets/img/store.webp" alt="Shopping list in store mode, grouped by aisle for one shop" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky tl reveal" style="--d:380ms"><small>Lea · REWE</small>frozen aisle first, then out.</p>
+        </div>
+      </article>
+
+      <article class="moment">
+        <div class="m-text">
+          <div class="m-time reveal"><b>11:20</b><span>Back home</span></div>
           <h3 class="reveal">Nobody types in the shopping.</h3>
           <p class="reveal">Upload the pickup notice and the eBon instead. ToHuus Hub reads both, matches the order against the receipt and shows what changed: the substitution, the item that wasn't there, the new product that still needs a shelf. You check it once and it's in stock.</p>
           <p class="reveal">Receipt photos, QR receipts and pasted text work too. Right now the parsers know REWE; other shops are welcome as contributions.</p>
           <ul class="m-tags reveal"><li>Order + receipt reconciliation</li><li>Learns receipt abbreviations</li><li>Barcode scan</li></ul>
         </div>
         <div class="m-media reveal" style="--d:100ms">
-          <span class="magnet red"></span>
-          <figure class="shot" style="--tilt:1.6deg"><div class="crop"><img src="assets/img/import-review.webp" alt="Import review of a grocery pickup with one substitution and one reduced quantity" width="780" height="1688" loading="lazy"></div></figure>
-          <p class="sticky tl white reveal" style="--d:380ms"><small>Review</small>they swapped the tape. fine.</p>
-        </div>
-      </article>
-
-      <article class="moment">
-        <div class="m-text">
-          <div class="m-time reveal"><b>15:10</b><span>Parcel half packed</span></div>
-          <h3 class="reveal">"Where's the parcel tape?"</h3>
-          <p class="reveal">Every room gets a short direction and every thing can get an exact spot. Type "tape" and the answer is: utility room, shelf by the door, box "post &amp; parcels".</p>
-          <p class="reveal">It works for things you'd never count, too. The thermometer, the fuse box, the spare key.</p>
-          <ul class="m-tags reveal"><li>Where is what</li><li>Exact spots per item</li></ul>
-        </div>
-        <div class="m-media reveal" style="--d:100ms">
           <span class="magnet honey"></span>
-          <figure class="shot" style="--tilt:-1.2deg"><div class="crop"><img src="assets/img/where.webp" alt="Where is it? search with exact spots for each item" width="780" height="1688" loading="lazy"></div></figure>
-          <p class="sticky tr blue reveal" style="--d:380ms"><small>Utility room</small>box "post &amp; parcels"</p>
+          <figure class="shot" style="--tilt:-1.6deg"><div class="crop"><img src="assets/img/import-review.webp" alt="Import review of a grocery pickup with one substitution and one reduced quantity" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky br white reveal" style="--d:380ms"><small>Review</small>they swapped the tape. fine.</p>
         </div>
       </article>
 
       <article class="moment flip">
         <div class="m-text">
-          <div class="m-time reveal"><b>17:45</b><span>Standing at the open fridge</span></div>
-          <h3 class="reveal">One look, and you know.</h3>
-          <p class="reveal">The Today screen shows the whole house at once: what needs using up, what's gone, what's running low, what's on the list and tonight's best recipe. Finished the yoghurt? One tap.</p>
-          <p class="reveal">Fridge, freezer, pantry and cellar each keep their own list, with best-before per batch. The oldest gets used first.</p>
-          <ul class="m-tags reveal"><li>Today</li><li>Stock by room</li><li>Shared shopping list, live</li></ul>
+          <div class="m-time reveal"><b>15:10</b><span>Parcel half packed</span></div>
+          <h3 class="reveal">"Where's the parcel tape?"</h3>
+          <p class="reveal">Every room gets a short direction and every thing can get an exact spot. Type "tape" and the answer is: utility room, shelf by the door, box "post &amp; parcels".</p>
+          <p class="reveal">That box has a QR label we printed from the app. Point the phone camera at it and one tap takes a roll out of stock. If it was the last one, the tape goes straight on the list.</p>
+          <ul class="m-tags reveal"><li>Where is what</li><li>Exact spots per item</li><li class="new">New: QR labels</li></ul>
         </div>
         <div class="m-media reveal" style="--d:100ms">
           <span class="magnet"></span>
-          <figure class="shot" style="--tilt:1.4deg"><div class="crop"><img src="assets/img/today.webp" alt="Today screen: three things to use soon, three that are out, four running low" width="780" height="1688" loading="lazy"></div></figure>
-          <figure class="shot second" aria-hidden="true"><div class="crop"><img src="assets/img/stock.webp" alt="" width="780" height="1688" loading="lazy"></div></figure>
-          <p class="sticky bl reveal" style="--d:380ms"><small>Fridge</small>milk!! (already on the list)</p>
+          <figure class="shot" style="--tilt:1.2deg"><div class="crop"><img src="assets/img/where.webp" alt="Where is it? search with exact spots for each item" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky tl blue reveal" style="--d:380ms"><small>Utility room</small>box "post &amp; parcels"</p>
         </div>
       </article>
 
       <article class="moment">
         <div class="m-text">
-          <div class="m-time reveal"><b>18:30</b><span>Doorbell</span></div>
+          <div class="m-time reveal"><b>17:45</b><span>Standing at the open fridge</span></div>
+          <h3 class="reveal">One look, and you know.</h3>
+          <p class="reveal">The Today screen shows the whole house at once: what needs using up, what's gone, what's running low, what's on the list and tonight's best recipe. Finished the yoghurt? One tap.</p>
+          <p class="reveal">Opened things run on their own clock. The pesto jar from Tuesday and the chili left over from Thursday sit under "eat first", and something you put in the freezer gets a new date instead of quietly expiring.</p>
+          <ul class="m-tags reveal"><li>Today</li><li>Eat first</li><li>Opened, frozen, leftovers</li><li>Best-before per batch</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet red"></span>
+          <figure class="shot" style="--tilt:-1.4deg"><div class="crop"><img src="assets/img/today.webp" alt="Today screen: three things to use soon, three that are out, four running low" width="780" height="1688" loading="lazy"></div></figure>
+          <figure class="shot second" aria-hidden="true"><div class="crop"><img src="assets/img/stock.webp" alt="" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky bl reveal" style="--d:380ms"><small>Fridge</small>milk!! (already on the list)</p>
+        </div>
+      </article>
+
+      <article class="moment flip">
+        <div class="m-text">
+          <div class="m-time reveal"><b>19:20</b><span>Friends over</span></div>
+          <h3 class="reveal">The TV takes the orders.</h3>
+          <p class="reveal">Two taps start a party. The TV shows a QR code and what's on the menu tonight. Guests scan it and order from their own phones, picking from what's actually in the house. The kitchen works through new, in progress and ready, and the TV shows which numbers can be picked up at the counter.</p>
+          <p class="reveal">If two people want the last cola, the first order gets it. When nobody has ordered for a while the party ends by itself, and the recap puts whatever ran out on the shopping list.</p>
+          <p class="reveal">Most evenings it's smaller. Lea on the sofa orders a cappuccino, extra hot, and whoever is in the kitchen gets a push. If you like, the whole app dresses up as "Fredirando", a slightly silly home-delivery service in orange.</p>
+          <ul class="m-tags reveal"><li class="new">New: party mode</li><li>TV board &amp; kitchen view</li><li>Order from the sofa</li><li>Guest bar via QR</li></ul>
+        </div>
+        <div class="m-media tv reveal" style="--d:100ms">
+          <figure class="tv-frame" style="--tilt:-0.8deg"><img src="assets/img/party-tv.webp" alt="Party board on the TV: a QR code to order, the menu, and order number 1 ready at the counter" width="1200" height="675" loading="lazy"></figure>
+          <p class="sticky br reveal" style="--d:380ms"><small>Lea · sofa</small>cappuccino, extra hot</p>
+        </div>
+      </article>
+
+      <div class="day-mark reveal"><span>Sunday</span></div>
+
+      <article class="moment">
+        <div class="m-text">
+          <div class="m-time reveal"><b>09:05</b><span>Coffee's brewing</span></div>
+          <h3 class="reveal">One minute with the fridge.</h3>
+          <p class="reveal">After a party the numbers drift. Quick check goes through one shelf, one tap per item: right, less, empty, gone. Butter, right. Yoghurt, gone. About a minute later the count is honest again, and the week plan works from what's really there.</p>
+          <p class="reveal">Once a month a small card shows what got thrown away. It doesn't scold. It just helps you notice.</p>
+          <ul class="m-tags reveal"><li class="new">New: quick check</li><li>One tap per item</li><li>Monthly waste card</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet honey"></span>
+          <figure class="shot" style="--tilt:-1.2deg"><div class="crop"><img src="assets/img/check.webp" alt="Quick check of the fridge: butter, with buttons for right, less, empty and gone" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky tr reveal" style="--d:380ms"><small>Fridge</small>done before the coffee.</p>
+        </div>
+      </article>
+
+      <article class="moment flip">
+        <div class="m-text">
+          <div class="m-time reveal"><b>18:30</b><span>Doorbell, night out</span></div>
           <h3 class="reveal">The babysitter is here.</h3>
           <p class="reveal">Instead of a page of notes on the counter, she gets a link. It opens exactly the "where is what" search, with your note on top: emergency numbers, bedtime, which story has to be read twice.</p>
           <p class="reveal">Guest links show names and places, never quantities, and they expire on their own.</p>
@@ -333,24 +382,8 @@
         </div>
         <div class="m-media reveal" style="--d:100ms">
           <span class="magnet red"></span>
-          <figure class="shot" style="--tilt:-1.6deg"><div class="crop"><img src="assets/img/guest-sitter.webp" alt="Babysitter view with an emergency note and a search for where things are" width="780" height="1688" loading="lazy"></div></figure>
-          <p class="sticky br pink reveal" style="--d:380ms"><small>For the sitter</small>bedtime 7:30. story first!</p>
-        </div>
-      </article>
-
-      <article class="moment flip">
-        <div class="m-text">
-          <div class="m-time reveal"><b>20:15</b><span>Lea, on the sofa</span></div>
-          <h3 class="reveal">"A cappuccino, please. Extra hot."</h3>
-          <p class="reveal">Everyone at home can order from the sofa. Pick from what's actually in the house, add a note to each item, send. The order lands as a push on whoever is in the kitchen, gets served from stock and comes off the count.</p>
-          <p class="reveal">The same menu works for guests at a barbecue, as a link or a QR code. And if you like, the whole app dresses up as "Fredirando", a slightly silly home-delivery service in orange.</p>
-          <ul class="m-tags reveal"><li class="new">New: order from the sofa</li><li>Notes per item</li><li>Guest bar via QR</li></ul>
-        </div>
-        <div class="m-media reveal" style="--d:100ms">
-          <span class="magnet honey"></span>
-          <figure class="shot" style="--tilt:1.8deg"><div class="crop"><img src="assets/img/guest-bar.webp" alt="Menu with cappuccino, espresso and other drinks that are in stock" width="780" height="1688" loading="lazy"></div></figure>
-          <figure class="shot second" aria-hidden="true" style="--tilt:5deg"><div class="crop"><img src="assets/img/fredi-today.webp" alt="" width="780" height="1688" loading="lazy"></div></figure>
-          <p class="sticky bl reveal" style="--d:380ms"><small>Lea · 20:15</small>extra hot, please</p>
+          <figure class="shot" style="--tilt:1.6deg"><div class="crop"><img src="assets/img/guest-sitter.webp" alt="Babysitter view with an emergency note and a search for where things are" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky bl pink reveal" style="--d:380ms"><small>For the sitter</small>bedtime 7:30. story first!</p>
         </div>
       </article>
     </div>
@@ -364,15 +397,37 @@
       <div class="fridge-head">
         <span class="eyebrow reveal">House rules</span>
         <h2 class="reveal">What's stuck to our fridge door.</h2>
-        <p class="reveal">A few rules we built the app around. They're the reason it still gets used after the first week.</p>
+        <p class="reveal">The rules we built the app around. They're the reason it still gets used after the first week.</p>
       </div>
       <ul class="notes">
         <li class="note y reveal"><span class="magnet red"></span><h3>Half full is an answer.</h3><p>Fruit, veg and bread are just full, half, low or empty. Packets and bottles get counted. Coffee from the machine isn't tracked at all.</p></li>
         <li class="note w reveal" style="--d:80ms"><span class="magnet"></span><h3>Nobody types in the shopping.</h3><p>Stock comes in through receipts, orders, photos and the barcode scanner. Typing is the fallback, not the plan.</p></li>
         <li class="note b reveal" style="--d:160ms"><span class="magnet honey"></span><h3>Nobody keeps it all in their head.</h3><p>Built for brains that forget things: few taps, gentle nudges instead of a wall of data, and it still works on a bad day.</p></li>
         <li class="note k reveal"><span class="magnet"></span><h3>Guests see names, not numbers.</h3><p>Babysitter and guest links show places and the menu. Quantities, the rest of the house and your settings stay private.</p></li>
-        <li class="note p reveal" style="--d:80ms"><span class="magnet red"></span><h3>It stays in the house.</h3><p>One SQLite file on your own server. No account with us, no telemetry, no cloud in between.</p></li>
-        <li class="note list reveal" style="--d:160ms"><span class="magnet honey"></span><h3>Shopping</h3><ul><li class="done">milk</li><li class="done">parcel tape</li><li>oat milk for Lea</li><li>tinned tomatoes</li></ul><small>The real list lives in the app, on every phone.</small></li>
+        <li class="note b reveal"><span class="magnet red"></span><h3>Opened is a different clock.</h3><p>An open jar doesn't keep like a closed one. Opened, frozen and leftover things get their own dates and move up to "eat first".</p></li>
+        <li class="note y reveal" style="--d:80ms"><span class="magnet"></span><h3>The house has chores too.</h3><p>Water filter, smoke detectors, descaling, tyres, passports. They come back on their own, and the spare filter cartridge lands on the list.</p></li>
+        <li class="note p reveal" style="--d:160ms"><span class="magnet red"></span><h3>It stays in the house.</h3><p>One SQLite file on your own server. No account with us, no telemetry, no cloud in between.</p></li>
+        <li class="note list reveal" style="--d:240ms"><span class="magnet honey"></span><h3>Shopping</h3><ul><li class="done">milk</li><li class="done">parcel tape</li><li>oat milk for Lea</li><li>water filter</li></ul><small>The real list lives in the app, on every phone.</small></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- EVERYTHING ELSE -->
+<section class="section" id="more" style="padding-top:24px;padding-bottom:40px">
+  <div class="wrap">
+    <div class="drawer reveal">
+      <div class="drawer-head">
+        <span class="eyebrow">The kitchen drawer</span>
+        <h2>Everything else is in here.</h2>
+      </div>
+      <ul>
+        <li><b>Recipes</b><span>Import from any recipe site, a HelloFresh card or a photo. Thermomix steps keep their time, temperature and speed.</span></li>
+        <li><b>Spending</b><span>Monthly totals by shop and category, straight from the receipts, plus a hint when something got more expensive.</span></li>
+        <li><b>Notifications</b><span>Web push to installed phones, with buttons in the notification. Or ntfy, a webhook, e-mail, Home Assistant.</span></li>
+        <li><b>Voice</b><span>The shopping list syncs with a Home Assistant to-do list, so Assist or Siri can add to it.</span></li>
+        <li><b>Family</b><span>Invite the others with a link. Everyone picks their own password, nobody shares yours.</span></li>
+        <li><b>Backups</b><span>Nightly snapshots, restore from the app, and an optional copy to WebDAV or Nextcloud.</span></li>
       </ul>
     </div>
   </div>

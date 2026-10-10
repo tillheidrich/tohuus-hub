@@ -20,6 +20,10 @@ declare module 'express-serve-static-core' {
   }
 }
 
+/** One rule for every place that sets a name or password (login form, members, invites, first admin). */
+export const PASSWORD_MIN = 8;
+export const NAME_MAX = 40;
+
 export const sha256 = (s: string) => crypto.createHash('sha256').update(s).digest('hex');
 export const randomToken = (bytes = 24) => crypto.randomBytes(bytes).toString('base64url');
 

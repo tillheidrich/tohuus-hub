@@ -10,6 +10,10 @@ import { locale, t } from '../i18n';
 import { FreshToday } from './FreshParts';
 import { CareDueSection } from './Care';
 import { PartyBanner } from './Party';
+import { KidWishesCard } from './KidsSettings';
+import { ChecklistCard, StarterSheet } from './Onboarding';
+import { useState } from 'react';
+import { ListChecks } from '@phosphor-icons/react';
 
 function greeting() {
   const h = new Date().getHours();
@@ -24,6 +28,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
   const shopping = useApi<any[]>('shopping', '/shopping');
   const nav = useNavigate();
   const toast = useToast();
+  const [starter, setStarter] = useState(false);
   const onList = new Set((shopping.data ?? []).filter((s) => !s.checked_at && s.product_id).map((s) => s.product_id));
 
   if (isLoading || !o) {
@@ -48,8 +53,10 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
     invalidate('overview', 'products');
     toast({ text: t('{name}: one less', { name }), action: { label: t('Undo'), run: () => post('/stock/adjust', { product_id: id, delta: 1, reason: 'undo' }).then(() => invalidate('overview')) } });
   };
-  const summary =
-    c.empty + c.low + c.expiring + c.expired === 0
+  const emptyHome = c.products === 0;
+  const summary = emptyHome
+    ? t('Nothing in stock yet – let’s change that in a minute.')
+    : c.empty + c.low + c.expiring + c.expired === 0
       ? t('All good. Nothing needs restocking today.')
       : [
           c.expired + c.expiring ? (c.expired + c.expiring === 1 ? t('1 thing should be used soon') : t('{n} things should be used soon', { n: c.expired + c.expiring })) : null,
@@ -70,6 +77,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
           <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>{summary}</p>
         </div>
       </header>
+      <ChecklistCard me={me} />
       <button className="finder-hero" style={{ width: '100%', cursor: 'pointer', marginBottom: 18, color: 'var(--ink-3)', textAlign: 'left' }} onClick={() => nav('/wo')}>
         <MagnifyingGlass size={20} />
         <span style={{ padding: '10px 0', fontSize: 16 }}>{t('Where can I find …?')}</span>
@@ -95,6 +103,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
       </div>
 
       <PartyBanner />
+      <KidWishesCard />
       {(o.imports.length > 0 || o.orders.some((x: any) => !x.party_id)) && (
         <div className="stack section" style={{ gap: 8, marginTop: 14 }}>
           {/* party orders are summed up in the party banner */}
@@ -122,8 +131,24 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
       )}
 
       <FreshToday />
+      <CareDueSection />
       {/* expiring items live in "Eat first" above – here only what's low or out */}
 
+      {emptyHome ? (
+        <section className="section">
+          <div className="card">
+            <Empty
+              icon={<Ic name="archive" size={26} />}
+              title={t('Your home is still empty')}
+              action={{ label: t('Add typical staples'), icon: <ListChecks size={16} />, onClick: () => setStarter(true) }}
+            >
+              {t('One tap per room – pasta, rice, toilet paper … Or upload a receipt or scan barcodes with the plus button.')}
+            </Empty>
+          </div>
+          <StarterSheet open={starter} onClose={() => setStarter(false)} />
+        </section>
+      ) : (
+      <>
       <section className="section">
         <div className="section-head">
           <h2>{t('Needs attention')}</h2>
@@ -168,8 +193,6 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         )}
       </section>
 
-      <CareDueSection />
-
       <section className="section">
         <div className="section-head">
           <h2>{t('Places')}</h2>
@@ -209,6 +232,8 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
           })}
         </div>
       </section>
+      </>
+      )}
 
       {o.planned?.length > 0 && (
         <section className="section">
@@ -242,7 +267,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         </div>
         {o.tonight.length === 0 ? (
           <div className="card">
-            <Empty icon={<ChefHat size={26} />} title={t('No recipes yet')}>
+            <Empty icon={<ChefHat size={26} />} title={t('No recipes yet')} action={{ label: t('Add a recipe'), onClick: () => nav('/kochen?add=1') }}>
               {t('Add recipes from a photo, a link or your AI assistant – then ToHuus Hub suggests what you can make with what you have.')}
             </Empty>
           </div>

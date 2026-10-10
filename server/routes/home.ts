@@ -25,6 +25,7 @@ import {
   updateCareTask,
   type QrKind,
 } from '../lib/care.js';
+import { FreshError, markOpened } from '../lib/fresh.js';
 import { priceHistory, pricedProducts, setSpendingTarget, spendingCsv, spendingSummary, spendingTarget } from '../lib/spending.js';
 
 export const r = Router();
@@ -268,12 +269,14 @@ r.post('/qr/:code/action', (req, res) => {
       adjustStock({ productId: p.id, delta: -1, reason: 'consume', actor, ref: `qr:${code}` });
       message = t('{name}: one less', { name: p.name });
     } else if (action === 'opened') {
-      const e = db.prepare('SELECT id FROM stock WHERE product_id = ? AND qty > 0 AND opened_at IS NULL ORDER BY best_before IS NULL, best_before, id LIMIT 1').get(p.id) as { id: number } | undefined;
-      if (e) {
-        db.prepare(`UPDATE stock SET opened_at = ?, updated_at = datetime('now') WHERE id = ?`).run(localDay(0), e.id);
-        emit('stock');
+      // same logic as the fresh area: splits one unit off, skips the freezer, applies shelf life after opening
+      try {
+        markOpened(p.id, { actor });
+        message = t('{name} marked as opened', { name: p.name });
+      } catch (err) {
+        if (!(err instanceof FreshError)) throw err;
+        message = t('Nothing unopened in stock');
       }
-      message = e ? t('{name} marked as opened', { name: p.name }) : t('Nothing unopened in stock');
     } else if (action === 'list') {
       addToShopping({ productId: p.id, text: p.name, source: 'qr', addedBy: actor });
       message = t('{name} is on the shopping list', { name: p.name });

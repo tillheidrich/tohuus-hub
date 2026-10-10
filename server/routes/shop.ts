@@ -28,6 +28,7 @@ import {
 } from '../lib/shop.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
+import { answerWish } from '../lib/kids.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -204,7 +205,16 @@ r.post('/push/test', async (req, res) => {
 
 /** Buttons on a notification, posted by the service worker with the session cookie. */
 r.post('/push/action', (req, res) => {
-  const b = z.object({ action: z.enum(['shop-add', 'order-accept']), data: z.record(z.string(), z.unknown()).default({}) }).parse(req.body);
+  const b = z.object({ action: z.enum(['shop-add', 'order-accept', 'kid-approve', 'kid-decline']), data: z.record(z.string(), z.unknown()).default({}) }).parse(req.body);
+  if (b.action === 'kid-approve' || b.action === 'kid-decline') {
+    // kid mode: a parent answers a wish right from the notification
+    try {
+      res.json({ ok: true, ...answerWish(Number(b.data.wish_id), b.action === 'kid-approve' ? 'approve' : 'decline', actorName(req)) });
+    } catch (e) {
+      res.status((e as any).status ?? 500).json({ error: (e as Error).message });
+    }
+    return;
+  }
   if (b.action === 'shop-add') {
     const p = getProduct(Number(b.data.product_id));
     if (!p) {

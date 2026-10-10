@@ -2,7 +2,7 @@ import { config } from './config.js';
 import { db, getSetting, lang, setSetting } from './db.js';
 import { t } from './i18n.js';
 import { adjustStock, createProduct } from './lib/catalog.js';
-import { hashPassword, randomToken } from './lib/auth.js';
+import { NAME_MAX, PASSWORD_MIN, hashPassword, randomToken } from './lib/auth.js';
 import { BASE_CATEGORIES, BASE_LOCATIONS, baseName, categoryIdByKey, locationIdByKey, type CategoryKey } from './lib/basedata.js';
 import { saveRecipe } from './lib/recipes.js';
 
@@ -18,7 +18,9 @@ export function ensureBaseData() {
   }
   if ((db.prepare('SELECT COUNT(*) n FROM users').get() as { n: number }).n === 0) {
     const pw = config.adminPassword || randomToken(9);
-    db.prepare(`INSERT INTO users (name, role, password_hash, color) VALUES (?, 'admin', ?, '#2f5bea')`).run(config.adminName, hashPassword(pw));
+    if (config.adminPassword && config.adminPassword.length < PASSWORD_MIN)
+      console.warn(`  ToHuus Hub: ADMIN_PASSWORD is shorter than ${PASSWORD_MIN} characters – it works for the first login, but please change it in Settings.`);
+    db.prepare(`INSERT INTO users (name, role, password_hash, color) VALUES (?, 'admin', ?, '#2f5bea')`).run(config.adminName.trim().slice(0, NAME_MAX) || 'Admin', hashPassword(pw));
     if (!config.adminPassword) console.log(`\n  ToHuus Hub: admin "${config.adminName}" created, password: ${pw}\n`);
   }
   if (!getSetting('household.name', null)) setSetting('household.name', t('Our home'));

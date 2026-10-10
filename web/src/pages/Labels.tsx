@@ -1,7 +1,7 @@
 import { CheckSquare, MagnifyingGlass, Printer, QrCode, Square } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { type Location, type Product, post, useApi } from '../api';
 import { Empty, Ic, Seg, Skeleton, Thumb, useToast } from '../ui';
 import { t } from '../i18n';
@@ -37,6 +37,7 @@ export function Labels() {
   const [labels, setLabels] = useState<Label[]>([]);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
+  const nav = useNavigate();
 
   const products = useApi<Product[]>('products', kind === 'product' ? '/products' : null);
   const locations = useApi<Location[]>('locations', kind === 'location' ? '/locations' : null);
@@ -124,7 +125,13 @@ export function Labels() {
           <Skeleton n={4} h={56} />
         ) : items.length === 0 ? (
           <div className="card">
-            <Empty icon={<QrCode size={26} />} title={t('Nothing to label yet')} />
+            <Empty
+              icon={<QrCode size={26} />}
+              title={q ? t('Nothing for “{q}”', { q }) : t('Nothing to label yet')}
+              action={q ? undefined : kind === 'care' ? { label: t('Add home care tasks'), onClick: () => nav('/pflege') } : kind === 'location' ? { label: t('Set up places'), onClick: () => nav('/einstellungen?tab=places') } : { label: t('Open stock'), onClick: () => nav('/bestand') }}
+            >
+              {q ? null : kind === 'care' ? t('Labels for care tasks appear once you have a task.') : t('Labels appear here for everything you keep at home.')}
+            </Empty>
           </div>
         ) : (
           <div className="list labels-pick">

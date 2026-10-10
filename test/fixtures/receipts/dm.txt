@@ -1,0 +1,16 @@
+dm-drogerie markt
+Musterstr. 7
+99999 Musterstadt
+                                          EUR
+Balea Duschgel Creme 300ml             0,95  1
+Alverde Zahnpasta Kamille              1,45  1
+dmBio Haferflocken 500g                0,89  2
+Denkmit Spülmittel 500ml               0,85  1
+Babylove Feuchttücher                  1,70  1
+   2 x 0,85
+SUMME EUR                              5,84
+EC-Karte                               5,84
+MwSt-Satz         Netto     MwSt    Brutto
+1 = 19,00%         4,16     0,79      4,95
+2 =  7,00%         0,83     0,06      0,89
+03.10.2026 10:05  Filiale 1234  Bon-Nr. 9001

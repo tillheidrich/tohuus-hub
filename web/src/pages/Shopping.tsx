@@ -451,7 +451,7 @@ function ShopRow({ i, big = false, onCheck, onMore }: { i: ShopItem; big?: boole
         </div>
         {(sub || i.claim) && (
           <div className="sub">
-            {i.claim && !big ? t('{name} takes care of it', { name: i.claim.name }) + (sub ? ' · ' : '') : ''}
+            {i.claim && !big ? t('{name} is getting it', { name: i.claim.name }) + (sub ? ' · ' : '') : ''}
             {sub}
           </div>
         )}

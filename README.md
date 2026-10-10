@@ -121,8 +121,31 @@ Put the webhook URL into *Settings → Notifications*.
 | Digital receipts via QR link | ✅ PDF or HTML behind the link |
 | Any receipt / shelf / recipe photo | ✅ with a vision model, or via your MCP assistant |
 | Purchase history CSV (e.g. REWE GDPR export) | ✅ builds the product catalogue and receipt aliases |
+| Receipts by e-mail (IMAP inbox) | ✅ forward eBons and order mails to a mailbox; PDFs and HTML/text receipts are imported automatically into review |
+| Lidl, Aldi Süd/Nord, Edeka, Netto, Kaufland, Penny, Norma, Globus, tegut, dm, Rossmann, Müller, Budni (PDF/text) | 🧪 generic German receipt parser, tested with synthetic fixtures – real-world receipts welcome as (anonymised) issues |
 
 Parsers for other shops are welcome — see `server/importers/` and the fixtures in `test/fixtures/`.
+
+## How it compares
+
+| | ToHuus Hub | Grocy | KitchenOwl | Mealie | Bring! |
+|---|---|---|---|---|---|
+| Self-hosted, open source | ✅ AGPL | ✅ MIT | ✅ AGPL | ✅ AGPL | – |
+| Stock comes in via receipts / order PDFs / e-mail | ✅ | – (manual, barcode) | – | – | – |
+| Coarse fill levels instead of exact counts | ✅ | partly | – | – | – |
+| Where-is-what with exact spot + babysitter link | ✅ | – | – | – | – |
+| Shopping list with store order, offline, partner live sync | ✅ | basic | ✅ | basic | ✅ |
+| Recipes + week plan + "what can we cook from stock" | ✅ | ✅ | ✅ | ✅ (strong) | – |
+| Guest bar / party mode with TV board | ✅ | – | – | – | – |
+| Kid mode with parent approval | ✅ | – | – | – | – |
+| MCP server for Claude/ChatGPT | ✅ | – | – | – | – |
+| Home Assistant | sensors, push, to-do sync, e-ink image | integration | – | – | – |
+
+Comparison as of October 2026, from public docs; corrections welcome.
+
+## How it's built
+
+ToHuus Hub is written by its maintainer together with AI coding agents (Claude). Every feature lands with tests (`npm test`, 130+ at the moment), typed end to end, reviewed and run daily by a real family on a small server. The research notes that drive the roadmap are in [`docs/research/`](docs/research/). If something looks off, open an issue — that's the point of it being open.
 
 ## Development
 

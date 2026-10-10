@@ -1,0 +1,22 @@
+                         Lidl
+            Lidl Vertriebs-GmbH & Co. KG
+                 Musterstrasse 12
+                 99999 Musterstadt
+                                              EUR
+Milbona Frische Vollmilch 3,5%             1,15 A
+Bananen                                    1,48 A
+   0,876 kg x  1,69 EUR/kg
+Joghurt Natur 500g      0,59 x  2          1,18 A
+Mineralwasser 1,5l                         0,29 B
+Pfand 0,25 EUR                             0,25 B
+Butter                                     2,29 A
+Lidl Plus Rabatt                          -0,30 A
+------------------------------------------------
+zu zahlen                                  6,34
+Kartenzahlung                              6,34
+------------------------------------------------
+MWST%       MWST   +   Netto   =  Brutto
+A  7 %      0,38       5,43       5,81
+B 19 %      0,08       0,45       0,53
+------------------------------------------------
+10.10.26  18:42   Filiale 1234  Kasse 3  Bon-Nr 4711

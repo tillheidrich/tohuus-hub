@@ -129,7 +129,7 @@ r.post('/imports/upload', upload.array('files', 8), async (req, res) => {
         const imp = linesToImport('receipt', t('Receipt {file}', { file: f.originalname }), cleanLines(j.lines));
         results.push({ file: f.originalname, ...createImport(imp, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
       } else {
-        results.push({ file: f.originalname, error: t('PDF format not recognised (supported: REWE pickup notice, delivery notice, eBon).') });
+        results.push({ file: f.originalname, error: t('PDF format not recognised (supported: REWE notices and eBons, receipts from most German supermarkets and drugstores).') });
       }
     } else if (f.mimetype.startsWith('image/')) {
       images.push(f);

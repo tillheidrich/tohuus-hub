@@ -23,8 +23,8 @@ import { r as partyRoutes, board as partyBoard } from './routes/party.js';
 import { r as freshRoutes } from './routes/fresh.js';
 import { r as shopRoutes } from './routes/shop.js';
 import { r as homeRoutes } from './routes/home.js';
-import { r as kioskRoutes } from './routes/kiosk.js';
-import { r as kidsRoutes } from './routes/kids.js';
+import { r as kioskRoutes, pub as kioskPublic } from './routes/kiosk.js';
+import { r as kidsRoutes, kid as kidDevice } from './routes/kids.js';
 import { r as onboardRoutes } from './routes/onboard.js';
 import { r as retailRoutes } from './routes/retail.js';
 import { ensureBaseData, seedDemo } from './seed.js';
@@ -70,6 +70,8 @@ app.use('/img', express.static(path.join(config.dataDir, 'images'), { maxAge: '3
 
 app.use('/api/guest', guest);
 app.use('/api/party-board', partyBoard);
+app.use(kioskPublic);
+app.use('/api/kid', kidDevice);
 app.use('/api', dataPublic);
 app.use('/api', core);
 app.use('/api', imports);

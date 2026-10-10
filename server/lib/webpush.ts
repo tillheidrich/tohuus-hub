@@ -88,6 +88,7 @@ export function actionsFor(event: string, data: Record<string, unknown> = {}): {
   if ((event === 'stock.low' || event === 'stock.empty') && data.product_id && !data.on_shopping_list)
     return [{ action: 'shop-add', title: t('Add to list') }];
   if (event === 'order.new' && data.order_id) return [{ action: 'order-accept', title: t('Accept') }];
+  if (event === 'kids.wish' && data.wish_id) return [{ action: 'kid-approve', title: t('Approve') }, { action: 'kid-decline', title: t('Not now') }];
   return [];
 }
 
@@ -107,7 +108,7 @@ export async function sendPush(msg: PushMessage, opts: { userId?: number } = {})
           vapidDetails: { subject: subject(), publicKey: v.publicKey, privateKey: v.privateKey },
           TTL: 6 * 3600,
           timeout: 10_000,
-          urgency: msg.event === 'order.new' ? 'high' : 'normal',
+          urgency: msg.event === 'order.new' || msg.event === 'kids.wish' ? 'high' : 'normal',
         });
         any = true;
         db.prepare(`UPDATE push_subscriptions SET fails = 0, last_ok_at = datetime('now') WHERE id = ?`).run(s.id);

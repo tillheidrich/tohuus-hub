@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { fmtQty, invalidate, post, useApi } from '../api';
 import { t } from '../i18n';
 import { Empty, Ic, LevelPicker, Skeleton, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { StarterSheet } from './Onboarding';
 
 export const WASTE_REASONS: [string, string][] = [
   ['expired', 'Past its date'],
@@ -38,6 +39,7 @@ export function Check() {
 
 function CheckIndex() {
   const nav = useNavigate();
+  const [starter, setStarter] = useState(false);
   const { data, isLoading, error } = useApi<CheckPlace[]>(['fresh', 'check'], '/fresh/check');
   const places = (data ?? []).filter((p) => p.items > 0).sort((a, b) => (b.days_since_check ?? 999) - (a.days_since_check ?? 999));
   return (
@@ -62,7 +64,8 @@ function CheckIndex() {
         <div className="card"><Empty icon={<X size={26} />} title={t('Could not load')}>{(error as Error).message}</Empty></div>
       ) : places.length === 0 ? (
         <div className="card">
-          <Empty icon={<ClipboardText size={26} />} title={t('Nothing to check')}>{t('As soon as something is in stock, you can check it here.')}</Empty>
+          <Empty icon={<ClipboardText size={26} />} title={t('Nothing to check')} action={{ label: t('Add typical staples'), onClick: () => setStarter(true) }}>{t('As soon as something is in stock, you can check it here.')}</Empty>
+          <StarterSheet open={starter} onClose={() => setStarter(false)} />
         </div>
       ) : (
         <div className="list">

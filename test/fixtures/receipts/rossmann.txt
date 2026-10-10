@@ -1,0 +1,12 @@
+ROSSMANN
+Dirk Rossmann GmbH
+Filiale 1234 Musterstadt
+                                         EUR
+ISANA Shampoo Repair 300ml             1,29 A
+domol Allzweckreiniger                 0,99 A
+enerBiO Dinkel Kekse                   1,49 B
+Rabatt 10% Coupon                     -0,38 B
+Summe                                  3,39
+Steuer  A 19%   1,91  0,37
+Steuer  B  7%   1,04  0,07
+02.10.2026 14:22 Bon-Nr. 31

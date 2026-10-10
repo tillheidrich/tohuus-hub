@@ -1,0 +1,16 @@
+KAUFLAND
+Kaufland Musterstadt
+Am Markt 1, 99999 Musterstadt
+                                         EUR
+Hackfleisch gem. 500g                 3,99 A
+K-Classic Mehl 1kg
+   2 x 0,59                           1,18 A
+Rinderhack frisch                     4,49 A
+Waschmittel Color                     5,99 B
+-----------------------------------------
+Summe                                15,65
+Girocard                             15,65
+Steuer    %     Netto   Steuer   Brutto
+A         7%     9,03     0,63     9,66
+B        19%     5,03     0,96     5,99
+04.10.2026 16:30  Bon 8812

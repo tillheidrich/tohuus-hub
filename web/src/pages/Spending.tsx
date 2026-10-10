@@ -43,6 +43,7 @@ const monthName = (m: string, short = false) =>
   new Date(`${m}-15T12:00:00`).toLocaleDateString(locale(), short ? { month: 'short' } : { month: 'long', year: 'numeric' });
 
 export function Spending() {
+  const nav = useNavigate();
   const [month, setMonth] = useState(thisMonth());
   const { data: s, isLoading, error } = useApi<Summary>(['spending', month], `/spending?month=${month}`);
   const [priceFor, setPriceFor] = useState<number | null>(null);
@@ -76,7 +77,7 @@ export function Spending() {
         <div className="card"><Empty icon={<Coins size={26} />} title={t('Could not load')}>{(error as Error)?.message}</Empty></div>
       ) : s.months.length === 0 ? (
         <div className="card">
-          <Empty icon={<Receipt size={26} />} title={t('No receipts yet')}>
+          <Empty icon={<Receipt size={26} />} title={t('No receipts yet')} action={{ label: t('Upload a receipt'), onClick: () => nav('/import?mode=file') }}>
             {t('Spending appears here as soon as you apply a receipt or an order under Imports. Prices come straight from the receipt.')}
           </Empty>
         </div>

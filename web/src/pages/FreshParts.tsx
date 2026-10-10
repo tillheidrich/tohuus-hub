@@ -6,6 +6,7 @@ import { type Location, daysUntil, fmtDate, fmtQty, invalidate, patch, post, use
 import { num, t } from '../i18n';
 import { Ic, Seg, Sheet, Stepper, Thumb, expiryText, useToast } from '../ui';
 import { WASTE_REASONS, sinceText } from './Check';
+import { WasteValueLine } from './Retail';
 
 const refreshAll = () => invalidate('fresh', 'product', 'products', 'overview');
 
@@ -399,6 +400,7 @@ export function WasteCard() {
           <span key={k} className="badge">{t(reasonLabel[k] ?? 'Other')} · {n}</span>
         ))}
       </div>
+      <WasteValueLine month={data.month} />
       {data.tip && <p className="small" style={{ margin: '10px 0 0', color: 'var(--ink-2)' }}>{data.tip}</p>}
     </section>
   );

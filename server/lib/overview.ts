@@ -21,6 +21,7 @@ export function overview() {
       track_mode: p.track_mode,
       min_qty: p.min_qty,
       nextExpiry: p.nextExpiry,
+      dateKind: p.dateKind,
       location_id: p.stock.find((s) => s.qty > 0)?.location_id ?? p.default_location_id,
     }))
     .sort((a, b) => rank(a.status) - rank(b.status) || (a.nextExpiry ?? '9').localeCompare(b.nextExpiry ?? '9'));

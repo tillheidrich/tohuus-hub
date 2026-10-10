@@ -3,11 +3,10 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { brand, db, getSetting, lang } from '../db.js';
 import { guestFromToken, randomToken, rateLimited, requireAuth, sha256 } from '../lib/auth.js';
-import { addClient, emit } from '../lib/bus.js';
-import { addToShopping, adjustStock, listProducts } from '../lib/catalog.js';
-import { notify } from '../lib/notify.js';
+import { addClient } from '../lib/bus.js';
+import { addToShopping, listProducts } from '../lib/catalog.js';
 import { findThings } from '../lib/find.js';
-import { createOrder, listOrders, orderMenu, orderSchema } from '../lib/orders.js';
+import { createOrder, listOrders, orderMenu, orderSchema, setOrderStatus } from '../lib/orders.js';
 import { guestClientId, partyForGuest, partyIdForLink, partyMenu } from '../lib/party.js';
 import { t } from '../i18n.js';
 
@@ -191,21 +190,11 @@ guestAdmin.get('/orders', (req, res) => {
 
 guestAdmin.patch('/orders/:id', (req, res) => {
   const { status } = z.object({ status: z.enum(['new', 'accepted', 'done', 'declined']) }).parse(req.body);
-  const o = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id)) as any;
+  // one place for status changes: stock booking + notification live in setOrderStatus()
+  const o = setOrderStatus(Number(req.params.id), status);
   if (!o) {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  db.prepare(`UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id = ?`).run(status, o.id);
-  if (status === 'done' && !o.stock_booked) {
-    db.prepare('UPDATE orders SET stock_booked = 1 WHERE id = ?').run(o.id);
-    const lines = db.prepare('SELECT * FROM order_lines WHERE order_id = ?').all(o.id) as any[];
-    for (const l of lines) {
-      const p = db.prepare('SELECT track_mode FROM products WHERE id = ?').get(l.product_id) as any;
-      if (p && p.track_mode === 'count') adjustStock({ productId: l.product_id, delta: -l.qty, reason: 'order', actor: o.guest_name, ref: `order:${o.id}` });
-    }
-  }
-  emit('orders', 'stock');
-  void notify({ event: 'order.status', title: t('Order {id}: {status}', { id: o.id, status }), message: `${o.guest_name}: ${status}`, path: '/bar', data: { order_id: o.id, status } });
   res.json({ ok: true });
 });

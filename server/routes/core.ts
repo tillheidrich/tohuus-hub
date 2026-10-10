@@ -9,6 +9,8 @@ import {
   createSession,
   destroySession,
   hashPassword,
+  NAME_MAX,
+  PASSWORD_MIN,
   rateLimited,
   requireAdmin,
   sha256,
@@ -38,6 +40,7 @@ import { haSettings } from '../lib/plan.js';
 import { findThings } from '../lib/find.js';
 import { buildExport, showNamesOnLogin } from '../lib/data.js';
 import { t } from '../i18n.js';
+import { setDateKind } from '../lib/retail.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -48,7 +51,7 @@ const id = (v: unknown) => Number(v);
 // ---------------------------------------------------------------- auth
 
 r.post('/auth/login', async (req, res) => {
-  const { name, password } = z.object({ name: z.string().max(80), password: z.string().max(200) }).parse(req.body);
+  const { name, password } = z.object({ name: z.string().trim().max(NAME_MAX * 2), password: z.string().max(200) }).parse(req.body);
   if (rateLimited(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimited(`user:${name.toLowerCase()}`, 8, 5 * 60_000)) {
     res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
     return;
@@ -216,6 +219,8 @@ const productSchema = z.object({
   initial_qty: z.number().optional(),
   initial_location_id: z.number().nullable().optional(),
   best_before: z.string().nullable().optional(),
+  /** best-before (default) or use-by; null = automatic by name (retail) */
+  date_kind: z.enum(['best_before', 'use_by']).nullable().optional(),
 });
 
 r.post('/products', async (req, res) => {
@@ -238,6 +243,7 @@ r.post('/products', async (req, res) => {
     offCode: b.code ?? null,
     shelfDays: b.shelf_days ?? null,
   });
+  if (b.date_kind !== undefined) setDateKind(pid, b.date_kind);
   if (b.image_url) {
     const buf = await fetchImage(b.image_url);
     if (buf) {
@@ -285,6 +291,7 @@ r.patch('/products/:id', (req, res) => {
      updated_at=datetime('now') WHERE id=${p.id}`,
   ).run(next);
   if (b.code) db.prepare('INSERT OR REPLACE INTO product_codes (code, product_id) VALUES (?, ?)').run(b.code, p.id);
+  if (b.date_kind !== undefined) setDateKind(p.id, b.date_kind);
   emit('products', 'stock');
   res.json({ ok: true });
 });
@@ -570,7 +577,11 @@ r.get('/settings/defaults', (_req, res) => res.json(DEFAULT_NOTIFY));
 
 r.get('/users', requireAdmin, (_req, res) => res.json(db.prepare('SELECT id, name, color, role, email, created_at FROM users ORDER BY id').all()));
 r.post('/users', requireAdmin, (req, res) => {
-  const b = z.object({ name: z.string().min(1).max(40), password: z.string().min(8).max(200), role: z.enum(['admin', 'member']).default('member'), color: z.string().max(20).default('#2f5bea') }).parse(req.body);
+  const b = z.object({ name: z.string().trim().min(1).max(NAME_MAX), password: z.string().min(PASSWORD_MIN).max(200), role: z.enum(['admin', 'member']).default('member'), color: z.string().max(20).default('#2f5bea') }).parse(req.body);
+  if (db.prepare('SELECT 1 FROM users WHERE lower(name) = lower(?)').get(b.name)) {
+    res.status(409).json({ error: t('Someone with this name already exists.') });
+    return;
+  }
   const info = db.prepare('INSERT INTO users (name, password_hash, role, color) VALUES (?, ?, ?, ?)').run(b.name, hashPassword(b.password), b.role, b.color);
   res.json({ id: Number(info.lastInsertRowid) });
 });
@@ -580,7 +591,11 @@ r.patch('/users/:id', (req, res) => {
     res.status(403).json({ error: 'forbidden' });
     return;
   }
-  const b = z.object({ password: z.string().min(8).max(200).optional(), color: z.string().max(20).optional(), name: z.string().min(1).max(40).optional() }).parse(req.body);
+  const b = z.object({ password: z.string().min(PASSWORD_MIN).max(200).optional(), color: z.string().max(20).optional(), name: z.string().trim().min(1).max(NAME_MAX).optional() }).parse(req.body);
+  if (b.name && db.prepare('SELECT 1 FROM users WHERE lower(name) = lower(?) AND id != ?').get(b.name, target)) {
+    res.status(409).json({ error: t('Someone with this name already exists.') });
+    return;
+  }
   if (b.password) {
     db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(b.password), target);
     // sign out everywhere else

@@ -7,6 +7,7 @@ import { db, getSetting } from '../db.js';
 import { detectReweKind, isSameShopping, parseReweAvis, parseReweEbon, reconcile } from '../importers/rewe.js';
 import type { ParsedImport, ParsedLine } from '../importers/types.js';
 import { emit } from './bus.js';
+import { parseOtherReceipt } from './retail.js';
 import {
   adjustStock,
   categoryDefaults,
@@ -33,7 +34,8 @@ export function parseDocumentText(text: string, filename?: string): ParsedImport
   const kind = detectReweKind(text);
   if (kind === 'rewe-avis') return parseReweAvis(text, filename);
   if (kind === 'rewe-ebon') return parseReweEbon(text);
-  return null;
+  // Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm, Rossmann … (generic receipt grammar)
+  return parseOtherReceipt(text);
 }
 
 interface ImportRow {

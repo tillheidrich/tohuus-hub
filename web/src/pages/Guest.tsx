@@ -215,6 +215,13 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
         </button>
       )}
       {menu.isLoading && <div className="skel" style={{ height: 240 }} />}
+      {!menu.isLoading && !menu.error && (menu.data ?? []).length === 0 && (
+        <div className="card" style={{ marginBottom: 18 }}>
+          <Empty icon={<Martini size={26} />} title={src.member ? t('Nothing to order yet') : t('The menu is still empty')}>
+            {src.member ? t('Use “Special request” above – or mark drinks and snacks as orderable on the product page.') : t('Just ask your hosts.')}
+          </Empty>
+        </div>
+      )}
       {groups.map(([k, items], gi) => {
         const pantry = k.startsWith('p|');
         const g = k.slice(2);

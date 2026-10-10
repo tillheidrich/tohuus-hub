@@ -62,9 +62,10 @@ export function orderMenu(member: boolean) {
 
 export function createOrder(
   input: OrderInput,
-  who: { guestLinkId?: number | null; userId?: number | null; name: string; linkName?: string | null; clientId?: string | null },
+  who: { guestLinkId?: number | null; userId?: number | null; name: string; linkName?: string | null; clientId?: string | null; member?: boolean },
 ) {
-  const member = Boolean(who.userId);
+  // `member` lets a household-side caller (an approved kid wish) order everything in the house without a user id
+  const member = who.member ?? Boolean(who.userId);
   // party links order from the party menu; during a party every order (sofa included) shows up on the board
   const linkParty = partyIdForLink(who.guestLinkId);
   const partyId = linkParty ?? livePartyId();

@@ -5,6 +5,7 @@ import type { Me } from '../App';
 import { type Location, api, fmtDate, invalidate, post, useApi } from '../api';
 import { Empty, Ic, Seg, Skeleton, useToast } from '../ui';
 import { num, t } from '../i18n';
+import { InboxStatusCard } from './Retail';
 
 export function Imports({ me }: { me: Me }) {
   const [params] = useSearchParams();
@@ -131,7 +132,7 @@ export function Imports({ me }: { me: Me }) {
                   ? photoMode === 'shelf'
                     ? t('Recognised products land in a list for you to check – nothing gets booked blindly.')
                     : t('Photograph the receipt straight on, with all of it in frame.')
-                  : t('REWE pickup and delivery notices and eBons are recognised directly. A notice and the eBon from the same pickup are matched automatically.')}
+                  : t('REWE pickup and delivery notices and eBons are recognised directly. A notice and the eBon from the same pickup are matched automatically.') + ' ' + t('Receipts from Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm and Rossmann work too.')}
               </span>
               <input
                 ref={fileRef}
@@ -170,6 +171,10 @@ export function Imports({ me }: { me: Me }) {
             </button>
           </div>
         )}
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <InboxStatusCard admin={me.actor.role === 'admin'} />
       </div>
 
       <section className="section">
