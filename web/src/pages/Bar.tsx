@@ -161,14 +161,14 @@ function Links() {
                   </button>
                 ))}
               </div>
-              <div className="help">Keiner gewählt = alle Orte.</div>
+              <div className="help">Nur die gewählten Orte sind sichtbar – nie Mengen oder Einkäufe.</div>
             </div>
           )}
           <div className="field">
             <label>Gültig</label>
             <Seg value={String(f.days)} onChange={(v) => setF({ ...f, days: Number(v) })} options={[['1', '1 Tag'], ['2', 'Wochenende'], ['14', '2 Wochen'], ['0', 'immer']]} />
           </div>
-          <button className="btn primary lg" disabled={!f.name || !f.scopes.length} onClick={create}>
+          <button className="btn primary lg" disabled={!f.name || !f.scopes.length || (f.scopes.includes('stock') && !f.location_ids.length)} onClick={create}>
             Link erstellen
           </button>
         </div>

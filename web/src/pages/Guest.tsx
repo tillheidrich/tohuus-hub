@@ -1,4 +1,4 @@
-import { Basket, Check, Martini, Minus, Plus } from '@phosphor-icons/react';
+import { Basket, Check, Coffee, Cookie, IceCream, Martini, Minus, Pizza, Plus } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -139,7 +139,9 @@ function GuestBar({ token }: { token: string }) {
           <div className="menu-grid">
             {items.map((i: any) => (
               <button key={i.id} className={`mitem ${i.available ? '' : 'off'}`} onClick={() => tap(i)}>
-                <div className="pic">{i.image_path ? <img src={i.image_path} alt="" /> : <Thumb p={i} size={80} />}</div>
+                <div className="pic" style={i.image_path ? undefined : { background: groupTint(i.group) }}>
+                  {i.image_path ? <img src={i.image_path} alt="" /> : <GroupIcon group={i.group} name={i.name} />}
+                </div>
                 <div style={{ fontWeight: 650, fontSize: 14, lineHeight: 1.2 }}>{i.name}</div>
                 <div className="small muted">{!i.available ? 'gerade alle' : i.hint ?? (i.options?.length ? 'mit Extras' : ' ')}</div>
                 {qtyOf(i.id) > 0 && <span className="qty">{qtyOf(i.id)}</span>}
@@ -279,4 +281,20 @@ function GuestShopping({ token }: { token: string }) {
       </div>
     </div>
   );
+}
+
+function groupTint(g: string) {
+  if (/eis/i.test(g)) return '#f6e6ea';
+  if (/getr|drink|kaffee/i.test(g)) return '#e8e2d8';
+  if (/extern|pizza/i.test(g)) return '#f3e3d6';
+  return '#e3ece4';
+}
+
+function GroupIcon({ group, name }: { group: string; name: string }) {
+  const props = { size: 54, weight: 'duotone' as const, color: '#3b3a36' };
+  if (/pizza/i.test(name) || /extern/i.test(group)) return <Pizza {...props} />;
+  if (/eis/i.test(group)) return <IceCream {...props} />;
+  if (/kaffee|cappu|latte|espresso/i.test(name)) return <Coffee {...props} />;
+  if (/getr/i.test(group)) return <Martini {...props} />;
+  return <Cookie {...props} />;
 }

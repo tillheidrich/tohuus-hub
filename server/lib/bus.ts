@@ -4,7 +4,12 @@ import type { Response } from 'express';
 type Client = { res: Response; guest: boolean };
 const clients = new Set<Client>();
 
+const MAX_CLIENTS = 200;
 export function addClient(res: Response, guest = false) {
+  if (clients.size >= MAX_CLIENTS || (guest && [...clients].filter((c) => c.guest).length >= 60)) {
+    res.status(503).end();
+    return;
+  }
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',

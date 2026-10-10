@@ -7,6 +7,6 @@ export default defineConfig({
   build: { outDir: '../dist/web', emptyOutDir: true, chunkSizeWarningLimit: 1200 },
   server: {
     port: 5173,
-    proxy: { '/api': 'http://localhost:8099', '/img': 'http://localhost:8099', '/mcp': 'http://localhost:8099' },
+    proxy: { '/api': 'http://localhost:8080', '/img': 'http://localhost:8080', '/mcp': 'http://localhost:8080' },
   },
 });

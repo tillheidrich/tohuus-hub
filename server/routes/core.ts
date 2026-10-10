@@ -9,7 +9,9 @@ import {
   createSession,
   destroySession,
   hashPassword,
+  rateLimited,
   requireAdmin,
+  sha256,
   requireAuth,
   resolveActor,
   verifyPassword,
@@ -22,6 +24,8 @@ import {
   getProduct,
   learnAlias,
   listProducts,
+  markUsedUp,
+  moveStock,
   matchProduct,
   productView,
 } from '../lib/catalog.js';
@@ -31,7 +35,7 @@ import { DEFAULT_NOTIFY, notify, notifySettings } from '../lib/notify.js';
 import { lookupBarcode, searchProducts } from '../lib/off.js';
 import { overview } from '../lib/overview.js';
 
-export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: 8 } });
+export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
 
 const actorName = (req: any) => req.actor?.name ?? 'unbekannt';
@@ -39,10 +43,14 @@ const id = (v: unknown) => Number(v);
 
 // ---------------------------------------------------------------- auth
 
-r.post('/auth/login', (req, res) => {
-  const { name, password } = z.object({ name: z.string(), password: z.string() }).parse(req.body);
+r.post('/auth/login', async (req, res) => {
+  const { name, password } = z.object({ name: z.string().max(80), password: z.string().max(200) }).parse(req.body);
+  if (rateLimited(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimited(`user:${name.toLowerCase()}`, 8, 5 * 60_000)) {
+    res.status(429).json({ error: 'Zu viele Versuche. Bitte ein paar Minuten warten.' });
+    return;
+  }
   const u = db.prepare('SELECT * FROM users WHERE lower(name) = lower(?)').get(name.trim()) as any;
-  if (!u || !verifyPassword(password, u.password_hash)) {
+  if (!u || !(await verifyPassword(password, u.password_hash))) {
     res.status(401).json({ error: 'Name oder Passwort stimmt nicht.' });
     return;
   }
@@ -113,6 +121,10 @@ r.post('/locations', requireAdmin, (req, res) => {
 r.patch('/locations/:id', requireAdmin, (req, res) => {
   const b = z.object({ name: z.string().optional(), icon: z.string().optional(), kind: z.string().optional(), sort: z.number().optional() }).parse(req.body);
   const cur = db.prepare('SELECT * FROM locations WHERE id = ?').get(id(req.params.id)) as any;
+  if (!cur) {
+    res.status(404).json({ error: 'not found' });
+    return;
+  }
   db.prepare('UPDATE locations SET name=?, icon=?, kind=?, sort=? WHERE id=?').run(b.name ?? cur.name, b.icon ?? cur.icon, b.kind ?? cur.kind, b.sort ?? cur.sort, cur.id);
   emit('stock');
   res.json({ ok: true });
@@ -141,6 +153,10 @@ r.patch('/categories/:id', requireAdmin, (req, res) => {
     .object({ name: z.string().optional(), icon: z.string().optional(), default_location_id: z.number().nullable().optional(), track_mode: z.enum(['count', 'level', 'none']).optional() })
     .parse(req.body);
   const c = db.prepare('SELECT * FROM categories WHERE id = ?').get(id(req.params.id)) as any;
+  if (!c) {
+    res.status(404).json({ error: 'not found' });
+    return;
+  }
   db.prepare('UPDATE categories SET name=?, icon=?, default_location_id=?, track_mode=? WHERE id=?').run(
     b.name ?? c.name, b.icon ?? c.icon, b.default_location_id === undefined ? c.default_location_id : b.default_location_id, b.track_mode ?? c.track_mode, c.id,
   );
@@ -308,6 +324,10 @@ r.post('/products/:id/alias', (req, res) => {
 
 r.post('/products/merge', requireAdmin, (req, res) => {
   const { keep, remove } = z.object({ keep: z.number(), remove: z.number() }).parse(req.body);
+  if (keep === remove || !getProduct(keep) || !getProduct(remove)) {
+    res.status(400).json({ error: 'Ungültige Produkte' });
+    return;
+  }
   const tx = db.transaction(() => {
     db.prepare('UPDATE stock SET product_id = ? WHERE product_id = ?').run(keep, remove);
     db.prepare('UPDATE movements SET product_id = ? WHERE product_id = ?').run(keep, remove);
@@ -330,7 +350,7 @@ r.post('/stock/adjust', (req, res) => {
       product_id: z.number(),
       location_id: z.number().nullable().optional(),
       delta: z.number().optional(),
-      set: z.number().optional(),
+      set: z.number().min(0).optional(),
       best_before: z.string().nullable().optional(),
       reason: z.string().default('manual'),
     })
@@ -349,20 +369,11 @@ r.post('/stock/adjust', (req, res) => {
 
 r.post('/stock/used-up', (req, res) => {
   const { product_id } = z.object({ product_id: z.number() }).parse(req.body);
-  const p = getProduct(product_id);
-  if (!p) {
+  if (!getProduct(product_id)) {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  const total = (db.prepare('SELECT COALESCE(SUM(qty),0) t FROM stock WHERE product_id = ?').get(p.id) as { t: number }).t;
-  adjustStock({ productId: p.id, set: 0, locationId: p.default_location_id, reason: 'consume', actor: actorName(req) });
-  if (total > 0) {
-    // set() only touches one location — clear the rest too
-    db.prepare('UPDATE stock SET qty = 0 WHERE product_id = ?').run(p.id);
-  }
-  const s = addToShopping({ productId: p.id, text: p.name, source: 'used-up', addedBy: actorName(req) });
-  emit('stock', 'shopping');
-  res.json({ ok: true, shopping: s });
+  res.json({ ok: true, shopping: markUsedUp(product_id, actorName(req)) });
 });
 
 r.patch('/stock/:id', (req, res) => {
@@ -384,9 +395,7 @@ r.patch('/stock/:id', (req, res) => {
 
 r.post('/stock/move', (req, res) => {
   const b = z.object({ product_id: z.number(), from: z.number(), to: z.number(), qty: z.number().positive() }).parse(req.body);
-  adjustStock({ productId: b.product_id, locationId: b.from, delta: -b.qty, reason: 'move', actor: actorName(req), silent: true });
-  adjustStock({ productId: b.product_id, locationId: b.to, delta: b.qty, reason: 'move', actor: actorName(req) });
-  res.json({ ok: true });
+  res.json({ moved: moveStock(b.product_id, b.from, b.to, b.qty, actorName(req)) });
 });
 
 // ---------------------------------------------------------------- lookup (barcode / search)
@@ -447,11 +456,12 @@ r.patch('/shopping/:id', (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
+  const wasOpen = it.checked_at == null;
   if (b.checked !== undefined)
     db.prepare(`UPDATE shopping_items SET checked_at = ${b.checked ? "datetime('now')" : 'NULL'}, checked_by = ? WHERE id = ?`).run(b.checked ? actorName(req) : null, it.id);
   if (b.text !== undefined || b.qty !== undefined || b.note !== undefined)
     db.prepare('UPDATE shopping_items SET text = ?, qty = ?, note = ? WHERE id = ?').run(b.text ?? it.text, b.qty === undefined ? it.qty : b.qty, b.note === undefined ? it.note : b.note, it.id);
-  if (b.checked && b.to_stock && it.product_id) {
+  if (b.checked && wasOpen && b.to_stock && it.product_id) {
     adjustStock({ productId: it.product_id, delta: it.qty ?? 1, reason: 'purchase', actor: actorName(req) });
   }
   emit('shopping');
@@ -537,7 +547,7 @@ r.get('/settings/defaults', (_req, res) => res.json(DEFAULT_NOTIFY));
 
 r.get('/users', requireAdmin, (_req, res) => res.json(db.prepare('SELECT id, name, color, role, email, created_at FROM users ORDER BY id').all()));
 r.post('/users', requireAdmin, (req, res) => {
-  const b = z.object({ name: z.string().min(1), password: z.string().min(4), role: z.enum(['admin', 'member']).default('member'), color: z.string().default('#2f5bea') }).parse(req.body);
+  const b = z.object({ name: z.string().min(1).max(40), password: z.string().min(8).max(200), role: z.enum(['admin', 'member']).default('member'), color: z.string().max(20).default('#2f5bea') }).parse(req.body);
   const info = db.prepare('INSERT INTO users (name, password_hash, role, color) VALUES (?, ?, ?, ?)').run(b.name, hashPassword(b.password), b.role, b.color);
   res.json({ id: Number(info.lastInsertRowid) });
 });
@@ -547,8 +557,13 @@ r.patch('/users/:id', (req, res) => {
     res.status(403).json({ error: 'forbidden' });
     return;
   }
-  const b = z.object({ password: z.string().min(4).optional(), color: z.string().optional(), name: z.string().optional() }).parse(req.body);
-  if (b.password) db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(b.password), target);
+  const b = z.object({ password: z.string().min(8).max(200).optional(), color: z.string().max(20).optional(), name: z.string().min(1).max(40).optional() }).parse(req.body);
+  if (b.password) {
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(b.password), target);
+    // sign out everywhere else
+    const current = req.cookies?.[SESSION_COOKIE];
+    db.prepare('DELETE FROM sessions WHERE user_id = ? AND token_hash != ?').run(target, current ? sha256(current) : '');
+  }
   if (b.color) db.prepare('UPDATE users SET color = ? WHERE id = ?').run(b.color, target);
   if (b.name) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(b.name, target);
   res.json({ ok: true });

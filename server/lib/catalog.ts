@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 import { db, now } from '../db.js';
 import { emit } from './bus.js';
 import { notify, notifySettings } from './notify.js';
@@ -46,8 +47,8 @@ export const LEVELS = ['leer', 'knapp', 'halb', 'voll'] as const;
 
 export function productStatus(p: ProductRow, entries: StockEntry[], warnDays = notifySettings().expiryWarnDays) {
   const total = entries.reduce((s, e) => s + e.qty, 0);
-  const today = new Date().toISOString().slice(0, 10);
-  const soon = new Date(Date.now() + warnDays * 86400000).toISOString().slice(0, 10);
+  const today = localDay(0);
+  const soon = localDay(warnDays);
   const withQty = entries.filter((e) => e.qty > 0);
   const dated = withQty.filter((e) => e.best_before).map((e) => e.best_before!).sort();
   const nextExpiry = dated[0] ?? null;
@@ -60,6 +61,12 @@ export function productStatus(p: ProductRow, entries: StockEntry[], warnDays = n
     else if (nextExpiry <= soon) status = 'expiring';
   }
   return { total, status, nextExpiry };
+}
+
+const dayFmt = new Intl.DateTimeFormat('sv-SE', { timeZone: config.timezone });
+/** YYYY-MM-DD in the household's time zone, offset by n days */
+export function localDay(offsetDays = 0) {
+  return dayFmt.format(new Date(Date.now() + offsetDays * 86400000));
 }
 
 export function getProduct(id: number) {
@@ -130,6 +137,8 @@ export interface AdjustInput {
 export function adjustStock(input: AdjustInput) {
   const p = getProduct(input.productId);
   if (!p) throw new Error('Produkt nicht gefunden');
+  if (input.set !== undefined && (input.set < 0 || !Number.isFinite(input.set))) throw new Error('Menge darf nicht negativ sein');
+  if (input.delta !== undefined && !Number.isFinite(input.delta)) throw new Error('Ungültige Menge');
   const before = productStatus(p, stockOf(p.id));
   const tx = db.transaction(() => {
     const locationId = input.locationId ?? p.default_location_id ?? firstLocationId();
@@ -240,6 +249,46 @@ export function fmtQty(p: Pick<ProductRow, 'track_mode' | 'unit'>, total: number
   if (p.track_mode === 'level') return LEVELS[Math.max(0, Math.min(3, Math.round(total)))];
   const n = Number.isInteger(total) ? String(total) : total.toFixed(1).replace('.', ',');
   return `${n} ${p.unit}`;
+}
+
+/** Everything of this product is gone: consume all entries (logged) and put it on the shopping list. */
+export function markUsedUp(productId: number, actor: string) {
+  const total = (db.prepare('SELECT COALESCE(SUM(qty),0) t FROM stock WHERE product_id = ?').get(productId) as { t: number }).t;
+  if (total > 0) adjustStock({ productId, delta: -total, reason: 'consume', actor });
+  const p = getProduct(productId)!;
+  const out = addToShopping({ productId, text: p.name, source: 'used-up', addedBy: actor });
+  emit('stock', 'shopping');
+  return out;
+}
+
+/** Move stock between locations: only takes from `from`, keeps best-before dates. */
+export function moveStock(productId: number, from: number, to: number, qty: number, actor: string) {
+  let moved = 0;
+  db.transaction(() => {
+    const entries = db
+      .prepare('SELECT * FROM stock WHERE product_id = ? AND location_id = ? AND qty > 0 ORDER BY best_before IS NULL, best_before, id')
+      .all(productId, from) as StockEntry[];
+    let left = qty;
+    for (const e of entries) {
+      if (left <= 0) break;
+      const take = Math.min(e.qty, left);
+      db.prepare('UPDATE stock SET qty = qty - ?, updated_at = ? WHERE id = ?').run(take, now(), e.id);
+      const target = db
+        .prepare(`SELECT id FROM stock WHERE product_id = ? AND location_id = ? AND IFNULL(best_before,'') = IFNULL(?, '')`)
+        .get(productId, to, e.best_before) as { id: number } | undefined;
+      if (target) db.prepare('UPDATE stock SET qty = qty + ?, updated_at = ? WHERE id = ?').run(take, now(), target.id);
+      else db.prepare('INSERT INTO stock (product_id, location_id, qty, best_before, opened_at) VALUES (?, ?, ?, ?, ?)').run(productId, to, take, e.best_before, e.opened_at);
+      left -= take;
+      moved += take;
+    }
+    if (moved > 0) {
+      db.prepare('INSERT INTO movements (product_id, location_id, delta, reason, actor) VALUES (?, ?, ?, ?, ?)').run(productId, from, -moved, 'move', actor);
+      db.prepare('INSERT INTO movements (product_id, location_id, delta, reason, actor) VALUES (?, ?, ?, ?, ?)').run(productId, to, moved, 'move', actor);
+    }
+    db.prepare('DELETE FROM stock WHERE product_id = ? AND qty <= 0').run(productId);
+  })();
+  emit('stock');
+  return moved;
 }
 
 // ------------------------------------------------------------ shopping

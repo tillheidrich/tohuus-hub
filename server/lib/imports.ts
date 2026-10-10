@@ -24,7 +24,7 @@ import { splitProductName, titleCaseReceipt } from './text.js';
 const pexec = promisify(execFile);
 
 export async function pdfToText(file: string): Promise<string> {
-  const { stdout } = await pexec('pdftotext', ['-layout', '-enc', 'UTF-8', file, '-'], { maxBuffer: 20 * 1024 * 1024 });
+  const { stdout } = await pexec('pdftotext', ['-layout', '-enc', 'UTF-8', file, '-'], { maxBuffer: 20 * 1024 * 1024, timeout: 30000 });
   return stdout;
 }
 
@@ -54,10 +54,10 @@ function defaultLocationFor(name: string, productId: number | null): number | nu
   return categoryDefaults(guessCategory(name)).location;
 }
 
-function insertLines(importId: number, lines: (ParsedLine & { receiptName?: string | null; productId?: number | null })[], startSort = 0) {
+function insertLines(importId: number, lines: (ParsedLine & { receiptName?: string | null; productId?: number | null; locationId?: number | null; bestBefore?: string | null })[], startSort = 0) {
   const ins = db.prepare(
-    `INSERT INTO import_lines (import_id, sort, raw, name, qty, unit, price, status, note, product_id, location_id, action, confidence, receipt_name)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO import_lines (import_id, sort, raw, name, qty, unit, price, status, note, product_id, location_id, action, confidence, receipt_name, best_before)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   lines.forEach((l, i) => {
     const m = l.productId ? { productId: l.productId, score: 1 } : matchProduct(l.receiptName ?? l.name) ?? matchProduct(l.name);
@@ -78,10 +78,11 @@ function insertLines(importId: number, lines: (ParsedLine & { receiptName?: stri
       l.status,
       note,
       productId,
-      defaultLocationFor(l.name, productId),
+      l.locationId ?? defaultLocationFor(l.name, productId),
       action,
       m?.score ?? 0,
       l.receiptName ?? null,
+      l.bestBefore && /^\d{4}-\d\d-\d\d$/.test(l.bestBefore) ? l.bestBefore : null,
     );
   });
 }
@@ -241,7 +242,7 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
 export function applyImport(id: number, actor: string) {
   const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
   if (!imp) throw new Error('Import nicht gefunden');
-  if (imp.status === 'applied') return { applied: 0 };
+  if (imp.status !== 'review') return { applied: 0, created: 0 };
   const lines = db.prepare('SELECT * FROM import_lines WHERE import_id = ? ORDER BY sort').all(id) as any[];
   let applied = 0;
   const created: number[] = [];
@@ -281,7 +282,7 @@ export function linesToImport(
   title: string,
   lines: { name: string; qty?: number | null; price?: number | null; deposit?: boolean; brand?: string | null; best_before?: string | null }[],
   extra: Partial<ParsedImport> = {},
-): ParsedImport {
+): ParsedImport & { lines: (ParsedLine & { bestBefore?: string | null; locationId?: number | null })[] } {
   return {
     kind,
     title,
@@ -295,7 +296,8 @@ export function linesToImport(
         qty: l.qty ?? 1,
         price: l.price ?? null,
         unitPrice: l.price ?? null,
-        status: l.deposit || /^(pfand|leergut)/i.test(l.name) ? 'deposit' : 'ok',
+        status: (l.deposit || /^(pfand|leergut)/i.test(l.name) ? 'deposit' : 'ok') as ParsedLine['status'],
+        bestBefore: l.best_before ?? null,
       })),
   };
 }

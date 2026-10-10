@@ -1,7 +1,7 @@
 import { Bell, Copy, House, Key, Plug, SignOut, Trash, UploadSimple } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../App';
-import { type Category, type Location, api, del, get, invalidate, patch, post, relTime, useApi } from '../api';
+import { type Category, type Location, api, del, invalidate, patch, post, relTime, useApi } from '../api';
 import { Avatar, ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 
 type Tab = 'home' | 'places' | 'notify' | 'access' | 'data';
@@ -349,7 +349,7 @@ function Access({ admin }: { admin: boolean }) {
     const r = await post('/tokens', { name, scope });
     setCreated({ name, token: r.token, scope });
     invalidate('tokens');
-    if (scope === 'ha') setYaml(await get(`/ha/package.yaml?token=${encodeURIComponent(r.token)}`));
+    if (scope === 'ha') setYaml(await post('/ha/package.yaml', { token: r.token }));
   };
   const copy = (t: string) => navigator.clipboard.writeText(t).then(() => toast({ text: 'Kopiert' }));
   return (

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ZodError } from 'zod';
+import { MulterError } from 'multer';
 import { config } from './config.js';
 import './db.js';
 import { startScheduler } from './lib/scheduler.js';
@@ -20,14 +21,30 @@ if (config.seedDemo) seedDemo();
 
 const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', true);
+app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 1));
 app.use(express.json({ limit: '4mb' }));
 app.use(cookieParser());
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'same-origin');
-  res.setHeader('Permissions-Policy', 'camera=(self), microphone=()');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+  );
   next();
+});
+
+// CSRF: cookie-authenticated writes must come from our own origin (sibling subdomains share SameSite=Lax)
+const ownOrigin = new URL(config.baseUrl).origin;
+app.use('/api', (req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  if (req.path.startsWith('/guest/') || req.headers.authorization || req.headers['x-api-key']) return next();
+  const origin = req.headers.origin;
+  const site = req.headers['sec-fetch-site'];
+  if (origin === ownOrigin || site === 'same-origin' || (!origin && !site)) return next();
+  res.status(403).json({ error: 'Fremde Herkunft' });
 });
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
@@ -59,6 +76,10 @@ if (webDir) {
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ZodError) {
     res.status(400).json({ error: 'Ungültige Eingabe', issues: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`) });
+    return;
+  }
+  if (err instanceof MulterError) {
+    res.status(413).json({ error: 'Datei zu groß (max. 15 MB)' });
     return;
   }
   const msg = (err as Error)?.message ?? 'Fehler';

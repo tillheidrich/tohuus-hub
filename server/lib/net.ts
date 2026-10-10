@@ -1,0 +1,105 @@
+/**
+ * Outbound fetch for URLs that come from users, web pages or assistants.
+ * Blocks private/internal networks (checked at connect time → no DNS rebinding), limits redirects,
+ * response size and time.
+ */
+import dns from 'node:dns';
+import net from 'node:net';
+import { Agent, fetch as ufetch } from 'undici';
+
+function v4ToInt(ip: string) {
+  return ip.split('.').reduce((a, b) => (a << 8) + Number(b), 0) >>> 0;
+}
+const V4_BLOCK: [string, number][] = [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16], ['172.16.0.0', 12],
+  ['192.0.0.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['224.0.0.0', 3],
+];
+
+export function isPrivateIp(ip: string): boolean {
+  if (net.isIPv4(ip)) {
+    const n = v4ToInt(ip);
+    return V4_BLOCK.some(([base, bits]) => (n >>> (32 - bits)) === (v4ToInt(base) >>> (32 - bits)));
+  }
+  if (net.isIPv6(ip)) {
+    const l = ip.toLowerCase();
+    if (l === '::' || l === '::1') return true;
+    const mapped = l.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+    if (mapped) return isPrivateIp(mapped[1]);
+    if (/^f[cd]/.test(l) || /^fe[89ab]/.test(l) || /^ff/.test(l)) return true;
+    return false;
+  }
+  return true;
+}
+
+const agent = new Agent({
+  connect: {
+    lookup: (hostname: string, opts: any, cb: any) => {
+      dns.lookup(hostname, { all: true }, (err, addrs) => {
+        if (err) return cb(err);
+        const list = addrs as dns.LookupAddress[];
+        if (!list.length || list.some((a) => isPrivateIp(a.address))) return cb(new Error('Adresse nicht erlaubt'));
+        if (opts?.all) return cb(null, list);
+        cb(null, list[0].address, list[0].family);
+      });
+    },
+  },
+});
+
+export interface SafeResponse {
+  status: number;
+  ok: boolean;
+  contentType: string;
+  buf: Buffer;
+  url: string;
+}
+
+export async function safeFetch(
+  url: string,
+  opts: { maxBytes?: number; timeoutMs?: number; headers?: Record<string, string>; maxRedirects?: number } = {},
+): Promise<SafeResponse> {
+  const maxBytes = opts.maxBytes ?? 10 * 1024 * 1024;
+  let current = url;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? 15000);
+  try {
+    for (let hop = 0; hop <= (opts.maxRedirects ?? 3); hop++) {
+      const u = new URL(current);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('Nur http(s)-Links');
+      if (u.port && !['80', '443'].includes(u.port)) throw new Error('Port nicht erlaubt');
+      const host = u.hostname.replace(/^\[|\]$/g, '');
+      if (net.isIP(host) && isPrivateIp(host)) throw new Error('Adresse nicht erlaubt');
+      if (/^(localhost|.*\.local|.*\.internal)$/i.test(host)) throw new Error('Adresse nicht erlaubt');
+      const r = await ufetch(current, { dispatcher: agent, redirect: 'manual', signal: ctrl.signal, headers: opts.headers });
+      if (r.status >= 300 && r.status < 400 && r.headers.get('location')) {
+        current = new URL(r.headers.get('location')!, current).toString();
+        await r.body?.cancel();
+        continue;
+      }
+      const len = Number(r.headers.get('content-length') ?? 0);
+      if (len > maxBytes) {
+        await r.body?.cancel();
+        throw new Error('Datei zu groß');
+      }
+      const chunks: Buffer[] = [];
+      let size = 0;
+      if (r.body) {
+        for await (const chunk of r.body as any) {
+          size += chunk.length;
+          if (size > maxBytes) {
+            ctrl.abort();
+            throw new Error('Datei zu groß');
+          }
+          chunks.push(Buffer.from(chunk));
+        }
+      }
+      return { status: r.status, ok: r.ok, contentType: r.headers.get('content-type') ?? '', buf: Buffer.concat(chunks), url: current };
+    }
+    throw new Error('Zu viele Weiterleitungen');
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (/nicht erlaubt|zu groß|Nur http|Weiterleitungen|Port/.test(msg)) throw e;
+    throw new Error('Link nicht erreichbar');
+  } finally {
+    clearTimeout(timer);
+  }
+}

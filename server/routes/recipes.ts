@@ -8,6 +8,12 @@ import { deleteImage, fetchImage, saveImage, toVisionJpeg } from '../lib/images.
 import { getRecipe, ingredientCore, listRecipes, logCooked, parseRecipeJsonLd, saveRecipe, suggest } from '../lib/recipes.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
+import { safeFetch } from '../lib/net.js';
+
+const rid = (v: unknown) => {
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 && db.prepare('SELECT 1 FROM recipes WHERE id = ?').get(n) ? n : null;
+};
 
 export const r = Router();
 r.use(requireAuth);
@@ -61,22 +67,35 @@ r.delete('/recipes/:id', (req, res) => {
 });
 
 r.post('/recipes/:id/image', upload.single('image'), async (req, res) => {
+  const id = rid(req.params.id);
+  if (!id) {
+    res.status(404).json({ error: 'not found' });
+    return;
+  }
   if (!req.file) {
     res.status(400).json({ error: 'Kein Bild' });
     return;
   }
-  const img = await saveImage(req.file.buffer, `r${req.params.id}`);
-  const old = db.prepare('SELECT image_path FROM recipes WHERE id = ?').get(Number(req.params.id)) as any;
+  const img = await saveImage(req.file.buffer, `r${id}`);
+  const old = db.prepare('SELECT image_path FROM recipes WHERE id = ?').get(id) as any;
   deleteImage(old?.image_path);
-  db.prepare('UPDATE recipes SET image_path = ? WHERE id = ?').run(img, Number(req.params.id));
+  db.prepare('UPDATE recipes SET image_path = ? WHERE id = ?').run(img, id);
   emit('recipes');
   res.json({ image_path: img });
 });
 
 r.post('/recipes/:id/cooked', (req, res) => {
-  const b = z.object({ rating: z.number().min(1).max(5).nullable().optional(), note: z.string().nullable().optional(), consume: z.array(z.number()).optional() }).parse(req.body ?? {});
-  logCooked(Number(req.params.id), actorName(req), b.rating ?? null, b.note ?? null);
-  for (const pid of b.consume ?? []) adjustStock({ productId: pid, delta: -1, reason: 'cook', actor: actorName(req), ref: `recipe:${req.params.id}` });
+  const id = rid(req.params.id);
+  if (!id) {
+    res.status(404).json({ error: 'not found' });
+    return;
+  }
+  const b = z.object({ rating: z.number().min(1).max(5).nullable().optional(), note: z.string().max(500).nullable().optional(), consume: z.array(z.number()).max(40).optional() }).parse(req.body ?? {});
+  const valid = (b.consume ?? []).filter((pid) => db.prepare('SELECT 1 FROM products WHERE id = ?').get(pid));
+  db.transaction(() => {
+    logCooked(id, actorName(req), b.rating ?? null, b.note ?? null);
+    for (const pid of valid) adjustStock({ productId: pid, delta: -1, reason: 'cook', actor: actorName(req), ref: `recipe:${id}` });
+  })();
   res.json({ ok: true });
 });
 
@@ -108,31 +127,54 @@ async function attachImage(id: number, url: string | null | undefined) {
 
 r.post('/recipes/import/url', async (req, res) => {
   const { url } = z.object({ url: z.string().url() }).parse(req.body);
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 15000);
+  let html: string;
   try {
-    const resp = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Stockwerk recipe import)', 'Accept-Language': 'de-DE,de' } });
-    const html = await resp.text();
-    let rec = parseRecipeJsonLd(html, url);
-    if (!rec && visionAvailable()) {
-      const text = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 15000);
-      const j = await runVision('text-recipe', { text });
-      rec = { ...j, source_type: 'url', source_url: url };
-    }
-    if (!rec) {
-      res.status(422).json({ error: 'Auf der Seite wurde kein Rezept gefunden.' });
-      return;
-    }
-    const imageUrl = rec.image_path;
-    const id = saveRecipe({ ...rec, image_path: null });
-    await attachImage(id, imageUrl);
-    res.json({ id });
+    const resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Stockwerk recipe import)', 'Accept-Language': 'de-DE,de' }, maxBytes: 5 * 1024 * 1024 });
+    html = resp.buf.toString('utf8');
   } catch (e) {
     res.status(502).json({ error: (e as Error).message });
-  } finally {
-    clearTimeout(t);
+    return;
   }
+  let rec = parseRecipeJsonLd(html, url);
+  if (!rec && visionAvailable()) {
+    const text = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 15000);
+    const parsed = modelRecipe(await runVision('text-recipe', { text }));
+    if (parsed) rec = { ...parsed, source_type: 'url', source_url: url };
+  }
+  if (!rec) {
+    res.status(422).json({ error: 'Auf der Seite wurde kein Rezept gefunden.' });
+    return;
+  }
+  const imageUrl = rec.image_path;
+  const id = saveRecipe({ ...rec, image_path: null });
+  await attachImage(id, imageUrl);
+  res.json({ id });
 });
+
+/** Validate model output for recipes; returns null when unusable. */
+function modelRecipe(j: unknown) {
+  const r = recipeSchema.safeParse(normalizeModelRecipe(j));
+  return r.success ? r.data : null;
+}
+function normalizeModelRecipe(j: any) {
+  if (!j || typeof j !== 'object') return j;
+  const str = (v: unknown) => (typeof v === 'string' ? v : null);
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  return {
+    title: str(j.title) ?? 'Rezept',
+    description: str(j.description),
+    servings: num(j.servings),
+    time_min: num(j.time_min),
+    thermomix: Boolean(j.thermomix),
+    tags: Array.isArray(j.tags) ? j.tags.filter((t: unknown) => typeof t === 'string').slice(0, 8) : [],
+    ingredients: Array.isArray(j.ingredients)
+      ? j.ingredients.filter((i: any) => i && typeof i.text === 'string').map((i: any) => ({ text: i.text, qty: num(i.qty), unit: str(i.unit), pantry: Boolean(i.pantry) }))
+      : [],
+    steps: Array.isArray(j.steps)
+      ? j.steps.filter((s: any) => s && typeof s.text === 'string').map((s: any) => ({ text: s.text, tm: s.tm && typeof s.tm === 'object' ? { time: str(s.tm.time), temp: str(s.tm.temp), speed: s.tm.speed == null ? null : String(s.tm.speed) } : null }))
+      : [],
+  };
+}
 
 /** One or more photos of a recipe card (e.g. HelloFresh front + back) → one recipe. */
 r.post('/recipes/import/photo', upload.array('files', 6), async (req, res) => {
@@ -147,8 +189,13 @@ r.post('/recipes/import/photo', upload.array('files', 6), async (req, res) => {
   }
   const imgs = await Promise.all(files.map((f) => toVisionJpeg(f.buffer, 1800)));
   const j = await runVision('recipe', { images: imgs });
-  const source = String(req.body.source ?? (/hellofresh/i.test(JSON.stringify(j)) ? 'hellofresh' : 'photo'));
-  const id = saveRecipe({ ...j, source_type: source });
+  const rec = modelRecipe(j);
+  if (!rec) {
+    res.status(422).json({ error: 'Auf dem Foto wurde kein Rezept erkannt.' });
+    return;
+  }
+  const source = /hellofresh/i.test(JSON.stringify(j)) ? 'hellofresh' : 'photo';
+  const id = saveRecipe({ ...rec, source_type: source });
   const img = await saveImage(files[0].buffer, `r${id}`);
   db.prepare('UPDATE recipes SET image_path = ? WHERE id = ?').run(img, id);
   emit('recipes');
@@ -166,8 +213,12 @@ r.post('/recipes/import/text', async (req, res) => {
     res.json({ id: saveRecipe({ title, ingredients, steps, source_type: 'own' }) });
     return;
   }
-  const j = await runVision('text-recipe', { text });
-  res.json({ id: saveRecipe({ ...j, source_type: 'own' }) });
+  const rec = modelRecipe(await runVision('text-recipe', { text }));
+  if (!rec) {
+    res.status(422).json({ error: 'Kein Rezept erkannt.' });
+    return;
+  }
+  res.json({ id: saveRecipe({ ...rec, source_type: 'own' }) });
 });
 
 r.get('/recipes/:id/match', (req, res) => {

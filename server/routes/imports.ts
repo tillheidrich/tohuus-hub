@@ -11,6 +11,14 @@ import { applyImport, createImport, linesToImport, parseDocumentText, pdfToText,
 import { norm, parseGermanNumber, titleCaseReceipt } from '../lib/text.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
+import { safeFetch } from '../lib/net.js';
+
+const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
+/** model output → validated lines (drops anything malformed) */
+export function cleanLines(raw: unknown) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((l) => lineSchema.safeParse(l)).filter((x) => x.success).map((x) => x.data!);
+}
 
 export const r = Router();
 r.use(requireAuth);
@@ -60,7 +68,9 @@ r.patch('/imports/:id/lines/:lineId', (req, res) => {
       best_before: z.string().nullable().optional(),
     })
     .parse(req.body);
-  const l = db.prepare('SELECT * FROM import_lines WHERE id = ? AND import_id = ?').get(Number(req.params.lineId), Number(req.params.id)) as any;
+  const l = db
+    .prepare(`SELECT l.* FROM import_lines l JOIN imports i ON i.id = l.import_id WHERE l.id = ? AND l.import_id = ? AND i.status = 'review'`)
+    .get(Number(req.params.lineId), Number(req.params.id)) as any;
   if (!l) {
     res.status(404).json({ error: 'not found' });
     return;
@@ -115,7 +125,7 @@ r.post('/imports/upload', upload.array('files', 8), async (req, res) => {
         results.push({ file: f.originalname, ...createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
       } else if (visionAvailable() && text.trim().length > 30) {
         const j = await runVision('text-items', { text: text.slice(0, 12000) });
-        const imp = linesToImport('receipt', `Beleg ${f.originalname}`, j.lines ?? []);
+        const imp = linesToImport('receipt', `Beleg ${f.originalname}`, cleanLines(j.lines));
         results.push({ file: f.originalname, ...createImport(imp, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
       } else {
         results.push({ file: f.originalname, error: 'PDF-Format nicht erkannt (unterstützt: REWE Abholavis, Lieferavis, eBon).' });
@@ -134,7 +144,7 @@ r.post('/imports/upload', upload.array('files', 8), async (req, res) => {
       const task = mode === 'shelf' ? 'shelf' : 'receipt';
       const j = await runVision(task, { images: dataUrls });
       const title = task === 'shelf' ? `Foto-Inventur ${new Date().toLocaleDateString('de-DE')}` : `Bon ${j.shop ?? ''}`.trim();
-      const imp = linesToImport(task === 'shelf' ? 'shelf' : 'receipt', title, j.lines ?? [], { shop: j.shop ?? null, total: j.total ?? null, date: j.date ?? null });
+      const imp = linesToImport(task === 'shelf' ? 'shelf' : 'receipt', title, cleanLines(j.lines), { shop: typeof j.shop === 'string' ? j.shop : null, total: typeof j.total === 'number' ? j.total : null, date: typeof j.date === 'string' ? j.date : null });
       if (task === 'shelf' && req.body.location_id) imp.meta.location_id = Number(req.body.location_id);
       const out = createImport(imp, { actor: actorName(req) });
       if (task === 'shelf' && req.body.location_id)
@@ -164,53 +174,50 @@ async function importText(text: string, actor: string) {
 /** Digital receipt via QR code / link: fetch the document and import it. */
 r.post('/imports/url', async (req, res) => {
   const { url } = z.object({ url: z.string().url() }).parse(req.body);
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 20000);
+  let resp;
   try {
-    const resp = await fetch(url, { signal: ctrl.signal, redirect: 'follow', headers: { 'User-Agent': 'Mozilla/5.0 Stockwerk' } });
-    const type = resp.headers.get('content-type') ?? '';
-    const buf = Buffer.from(await resp.arrayBuffer());
-    if (type.includes('pdf') || buf.subarray(0, 4).toString() === '%PDF') {
-      const file = saveUpload(buf, '.pdf');
-      const text = await pdfToText(file);
-      const parsed = parseDocumentText(text);
-      if (parsed) {
-        res.json(createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }));
-        return;
-      }
-      if (visionAvailable()) {
-        const j = await runVision('text-items', { text: text.slice(0, 12000) });
-        res.json(createImport(linesToImport('url', 'Digitaler Bon', j.lines ?? []), { actor: actorName(req), rawText: text }));
-        return;
-      }
-      res.status(422).json({ error: 'PDF erkannt, aber Format unbekannt und kein Modell eingerichtet.' });
+    resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 Stockwerk' }, timeoutMs: 20000 });
+  } catch (e) {
+    res.status(502).json({ error: (e as Error).message });
+    return;
+  }
+  const { buf, contentType: type } = resp;
+  if (type.includes('pdf') || buf.subarray(0, 4).toString() === '%PDF') {
+    const file = saveUpload(buf, '.pdf');
+    const text = await pdfToText(file);
+    const parsed = parseDocumentText(text);
+    if (parsed) {
+      res.json(createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }));
       return;
     }
-    if (type.includes('html') || type.includes('text')) {
-      const text = buf
-        .toString('utf8')
-        .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<br\s*\/?>|<\/(p|div|tr|li)>/gi, '\n')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/[ \t]+/g, ' ');
-      const parsed = parseDocumentText(text);
-      if (parsed) {
-        res.json(createImport(parsed, { actor: actorName(req), rawText: text }));
-        return;
-      }
-      if (visionAvailable()) {
-        const j = await runVision('text-items', { text: text.slice(0, 12000) });
-        res.json(createImport(linesToImport('url', 'Digitaler Bon', j.lines ?? []), { actor: actorName(req), rawText: text }));
-        return;
-      }
+    if (visionAvailable()) {
+      const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
+      res.json(createImport(linesToImport('url', 'Digitaler Bon', lines), { actor: actorName(req), rawText: text }));
+      return;
     }
-    res.status(422).json({ error: 'Unter diesem Link wurde kein lesbarer Bon gefunden. Öffne ihn im Browser und lade das PDF hoch.' });
-  } catch (e) {
-    res.status(502).json({ error: `Link nicht erreichbar: ${(e as Error).message}` });
-  } finally {
-    clearTimeout(t);
+    res.status(422).json({ error: 'PDF erkannt, aber Format unbekannt und kein Modell eingerichtet.' });
+    return;
   }
+  if (type.includes('html') || type.includes('text')) {
+    const text = buf
+      .toString('utf8')
+      .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<br\s*\/?>|<\/(p|div|tr|li)>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/[ \t]+/g, ' ');
+    const parsed = parseDocumentText(text);
+    if (parsed) {
+      res.json(createImport(parsed, { actor: actorName(req) }));
+      return;
+    }
+    if (visionAvailable()) {
+      const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
+      res.json(createImport(linesToImport('url', 'Digitaler Bon', lines), { actor: actorName(req) }));
+      return;
+    }
+  }
+  res.status(422).json({ error: 'Unter diesem Link wurde kein lesbarer Bon gefunden. Öffne ihn im Browser und lade das PDF hoch.' });
 });
 
 /**
@@ -226,6 +233,10 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
   const minCount = Number(req.body.min_count ?? 3);
   const text = req.file.buffer.toString('utf8').replace(/^﻿/, '');
   const [head, ...rows] = text.split(/\r?\n/).filter(Boolean);
+  if (!head) {
+    res.status(400).json({ error: 'Datei ist leer' });
+    return;
+  }
   const sep = head.includes(';') ? ';' : ',';
   const cols = head.split(sep).map((c) => c.trim().toLowerCase());
   const iRaw = cols.indexOf('artikel_roh');

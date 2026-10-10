@@ -4,7 +4,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { config } from '../config.js';
 import { db } from '../db.js';
-import { actorFromBearer } from '../lib/auth.js';
+import { actorFromBearer, safeEqual } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import {
   addToShopping,
@@ -13,6 +13,7 @@ import {
   fmtQty,
   getProduct,
   listProducts,
+  markUsedUp,
   matchProduct,
   productView,
 } from '../lib/catalog.js';
@@ -23,12 +24,13 @@ import { overview } from '../lib/overview.js';
 import { getRecipe, listRecipes, logCooked, saveRecipe, suggest } from '../lib/recipes.js';
 import { norm } from '../lib/text.js';
 
+const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 const text = (v: unknown) => ({ content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 1) }] });
 const RO = { readOnlyHint: true, openWorldHint: false };
 const RW = { readOnlyHint: false, destructiveHint: false, openWorldHint: false };
 
 function findProduct(ref: string | number) {
-  if (typeof ref === 'number' || /^\d+$/.test(String(ref))) return getProduct(Number(ref)) ?? null;
+  if (typeof ref === 'number') return getProduct(ref) ?? null;
   const m = matchProduct(String(ref));
   return m && m.score >= 0.6 ? getProduct(m.productId)! : null;
 }
@@ -113,7 +115,7 @@ export function buildMcpServer(actorName: string) {
         }
       }
       if (location) {
-        const l = db.prepare('SELECT id FROM locations WHERE lower(name) LIKE lower(?)').get(`%${location}%`) as { id: number } | undefined;
+        const l = db.prepare(`SELECT id FROM locations WHERE lower(name) LIKE lower(?) ESCAPE '\\'`).get(`%${likeEsc(location)}%`) as { id: number } | undefined;
         if (l) list = list.filter((p) => p.stock.some((s) => s.location_id === l.id && s.qty > 0) || p.default_location_id === l.id);
       }
       if (status) list = list.filter((p) => (status === 'in_stock' ? p.total > 0 : p.status === status));
@@ -139,7 +141,7 @@ export function buildMcpServer(actorName: string) {
     async ({ product, delta, set, location, best_before }) => {
       const p = findProduct(product);
       if (!p) return text({ error: 'Produkt nicht eindeutig gefunden', candidates: candidates(String(product)), hint: 'create_product verwenden, falls neu.' });
-      const loc = location ? (db.prepare('SELECT id FROM locations WHERE lower(name) LIKE lower(?)').get(`%${location}%`) as { id: number } | undefined)?.id : undefined;
+      const loc = location ? (db.prepare(`SELECT id FROM locations WHERE lower(name) LIKE lower(?) ESCAPE '\\'`).get(`%${likeEsc(location)}%`) as { id: number } | undefined)?.id : undefined;
       const out = adjustStock({ productId: p.id, locationId: loc ?? null, delta, set, bestBefore: best_before ?? null, reason: 'assistant', actor: actorName });
       return text({ product: p.name, now: fmtQty(p, out.total), status: out.status });
     },
@@ -151,10 +153,7 @@ export function buildMcpServer(actorName: string) {
     async ({ product }) => {
       const p = findProduct(product);
       if (!p) return text({ error: 'nicht gefunden', candidates: candidates(String(product)) });
-      db.prepare('UPDATE stock SET qty = 0 WHERE product_id = ?').run(p.id);
-      adjustStock({ productId: p.id, delta: 0, reason: 'consume', actor: actorName });
-      addToShopping({ productId: p.id, text: p.name, source: 'assistant', addedBy: actorName });
-      emit('stock', 'shopping');
+      markUsedUp(p.id, actorName);
       return text({ ok: true, product: p.name, on_shopping_list: true });
     },
   );
@@ -179,8 +178,9 @@ export function buildMcpServer(actorName: string) {
     },
     async (a) => {
       const existing = matchProduct(a.name, { code: a.barcode, brand: a.brand });
-      if (existing && existing.score >= 0.9) return text({ exists: true, product: compact(listProducts().find((p) => p.id === existing.productId)!) });
-      const loc = a.location ? (db.prepare('SELECT id FROM locations WHERE lower(name) LIKE lower(?)').get(`%${a.location}%`) as { id: number } | undefined)?.id : undefined;
+      const ex = existing && existing.score >= 0.9 ? listProducts().find((p) => p.id === existing.productId) : undefined;
+      if (ex) return text({ exists: true, product: compact(ex) });
+      const loc = a.location ? (db.prepare(`SELECT id FROM locations WHERE lower(name) LIKE lower(?) ESCAPE '\\'`).get(`%${likeEsc(a.location)}%`) as { id: number } | undefined)?.id : undefined;
       const id = createProduct({ name: a.name, brand: a.brand, size: a.size, locationId: loc ?? null, minQty: a.min_qty, offCode: a.barcode });
       if (a.image_url) {
         const buf = await fetchImage(a.image_url);
@@ -209,18 +209,15 @@ export function buildMcpServer(actorName: string) {
       annotations: RW,
     },
     async (a) => {
+      const loc = a.location ? (db.prepare(`SELECT id FROM locations WHERE lower(name) LIKE lower(?) ESCAPE '\\'`).get(`%${likeEsc(a.location)}%`) as { id: number } | undefined)?.id : undefined;
       const imp = linesToImport(a.kind === 'shelf' ? 'shelf' : 'mcp', a.title, a.items, { shop: a.shop ?? null });
+      if (loc) imp.lines.forEach((l) => ((l as any).locationId = loc));
       const out = createImport(imp, { actor: actorName });
-      if (a.location) {
-        const l = db.prepare('SELECT id FROM locations WHERE lower(name) LIKE lower(?)').get(`%${a.location}%`) as { id: number } | undefined;
-        if (l) db.prepare('UPDATE import_lines SET location_id = ? WHERE import_id = ?').run(l.id, out.id);
-      }
-      a.items.forEach((it, i) => {
-        if (it.best_before) db.prepare('UPDATE import_lines SET best_before = ? WHERE import_id = ? AND sort = ?').run(it.best_before, out.id, i);
-      });
+      if (out.duplicate || out.merged) return text({ import_id: out.id, note: out.merged ? 'Mit einer offenen Bestellung abgeglichen.' : 'Dieser Beleg ist schon importiert.' });
       const lines = db.prepare(`SELECT name, qty, action, product_id, confidence FROM import_lines WHERE import_id = ?`).all(out.id) as any[];
       if (a.apply) {
-        const res = applyImport(out.id, actorName);
+        const st = db.prepare('SELECT status FROM imports WHERE id = ?').get(out.id) as { status: string };
+        const res = st.status === 'review' ? applyImport(out.id, actorName) : { applied: 0 };
         return text({ import_id: out.id, booked: true, ...res });
       }
       return text({
@@ -262,8 +259,9 @@ export function buildMcpServer(actorName: string) {
     async ({ item, to_stock }) => {
       const row = (typeof item === 'number'
         ? db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(item)
-        : db.prepare(`SELECT * FROM shopping_items WHERE checked_at IS NULL AND lower(text) LIKE lower(?) LIMIT 1`).get(`%${item}%`)) as any;
+        : db.prepare(`SELECT * FROM shopping_items WHERE checked_at IS NULL AND lower(text) LIKE lower(?) ESCAPE '\\' LIMIT 1`).get(`%${likeEsc(item)}%`)) as any;
       if (!row) return text({ error: 'nicht auf der Liste' });
+      if (row.checked_at) return text({ ok: true, already_checked: row.text });
       db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ? WHERE id = ?`).run(actorName, row.id);
       if (to_stock && row.product_id) adjustStock({ productId: row.product_id, delta: row.qty ?? 1, reason: 'purchase', actor: actorName });
       emit('shopping');
@@ -402,10 +400,11 @@ export async function handleMcp(req: Request, res: Response) {
   let actorName: string | null = null;
   const secret = req.params.secret as string | undefined;
   if (secret) {
-    if (config.mcpPathSecret && secret === config.mcpPathSecret) actorName = 'Assistent';
+    if (config.mcpPathSecret && safeEqual(secret, config.mcpPathSecret)) actorName = 'Assistent';
     else {
+      // tokens in URLs end up in logs — only MCP-scoped tokens are accepted here
       const a = actorFromBearer(secret);
-      if (a && (a.scope === 'full' || a.scope === 'mcp')) actorName = `${a.name}`;
+      if (a && a.scope === 'mcp') actorName = `${a.name}`;
     }
   } else {
     const auth = req.headers.authorization;

@@ -253,6 +253,7 @@ const migrations: string[] = [
     fetched_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   `,
+  `ALTER TABLE orders ADD COLUMN stock_booked INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 db.exec(`CREATE TABLE IF NOT EXISTS _migrations (id INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`);

@@ -3,11 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { config } from '../config.js';
+import { safeFetch } from './net.js';
 
 const dir = () => path.join(config.dataDir, 'images');
 
 /** Store an image as webp (max 800px) and return the public path `/img/<file>`. */
 export async function saveImage(buf: Buffer, prefix: string): Promise<string> {
+  if (!/^[a-z]\d+$/.test(prefix)) throw new Error('ungültiger Bildname');
   const name = `${prefix}-${crypto.randomBytes(6).toString('hex')}.webp`;
   await sharp(buf, { failOn: 'none' })
     .rotate()
@@ -18,20 +20,12 @@ export async function saveImage(buf: Buffer, prefix: string): Promise<string> {
 }
 
 export async function fetchImage(url: string): Promise<Buffer | null> {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 12000);
   try {
-    const r = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': config.off.userAgent } });
-    if (!r.ok) return null;
-    const type = r.headers.get('content-type') ?? '';
-    if (!type.startsWith('image/')) return null;
-    const ab = await r.arrayBuffer();
-    if (ab.byteLength > 12 * 1024 * 1024) return null;
-    return Buffer.from(ab);
+    const r = await safeFetch(url, { maxBytes: 12 * 1024 * 1024, timeoutMs: 12000, headers: { 'User-Agent': config.off.userAgent } });
+    if (!r.ok || !r.contentType.startsWith('image/')) return null;
+    return r.buf;
   } catch {
     return null;
-  } finally {
-    clearTimeout(t);
   }
 }
 

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { config } from '../config.js';
 import { db, getSetting } from '../db.js';
-import { guestFromToken, randomToken, requireAuth } from '../lib/auth.js';
+import { guestFromToken, randomToken, rateLimited, requireAuth } from '../lib/auth.js';
 import { addClient, emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, listProducts } from '../lib/catalog.js';
 import { notify } from '../lib/notify.js';
@@ -61,12 +61,28 @@ guest.post('/:token/orders', (req, res) => {
   }
   const b = z
     .object({
-      guest_name: z.string().min(1).max(40),
+      guest_name: z.string().trim().min(1).max(40),
       note: z.string().max(300).nullable().optional(),
-      lines: z.array(z.object({ product_id: z.number(), qty: z.number().int().min(1).max(20), options: z.array(z.string()).max(10).default([]) })).min(1).max(30),
+      lines: z.array(z.object({ product_id: z.number(), qty: z.number().int().min(1).max(20), options: z.array(z.string().max(40)).max(10).default([]) })).min(1).max(30),
     })
     .parse(req.body);
+  if (rateLimited(`order:${req.actor!.guestLinkId}`, 15, 10 * 60_000)) {
+    res.status(429).json({ error: 'Gerade sehr viele Bestellungen – kurz durchatmen und gleich nochmal.' });
+    return;
+  }
   const products = new Map(listProducts().filter((p) => p.orderable).map((p) => [p.id, p]));
+  // only lines for orderable products, options only from the product's own choices
+  const lines = b.lines
+    .filter((l) => products.has(l.product_id))
+    .map((l) => {
+      const allowed = new Set(products.get(l.product_id)!.order_options.flatMap((o: any) => o.choices as string[]));
+      return { ...l, options: l.options.filter((o) => allowed.has(o)) };
+    });
+  if (!lines.length) {
+    res.status(400).json({ error: 'Nichts Bestellbares im Warenkorb.' });
+    return;
+  }
+  b.lines = lines;
   const tx = db.transaction(() => {
     const oid = Number(
       db.prepare('INSERT INTO orders (guest_link_id, guest_name, note) VALUES (?, ?, ?)').run(req.actor!.guestLinkId, b.guest_name.trim(), b.note ?? null).lastInsertRowid,
@@ -111,14 +127,14 @@ guest.get('/:token/stock', (req, res) => {
   }
   const allowed: number[] = req.actor!.guestLocations ?? [];
   const locations = db.prepare('SELECT id, name, icon FROM locations ORDER BY sort').all() as any[];
-  const visible = locations.filter((l) => allowed.length === 0 || allowed.includes(l.id));
+  const visible = locations.filter((l) => allowed.includes(l.id));
   const products = listProducts().filter((p) => p.track_mode !== 'none');
   res.json(
     visible.map((l) => ({
       ...l,
       items: products
         .filter((p) => p.stock.some((s) => s.location_id === l.id && s.qty > 0))
-        .map((p) => ({ id: p.id, name: p.name, brand: p.brand, image_path: p.image_path, status: p.status })),
+        .map((p) => ({ id: p.id, name: p.name, brand: p.brand, image_path: p.image_path })),
     })),
   );
 });
@@ -137,6 +153,10 @@ guest.post('/:token/shopping', (req, res) => {
     return;
   }
   const { text } = z.object({ text: z.string().min(1).max(80) }).parse(req.body);
+  if (rateLimited(`gshop:${req.actor!.guestLinkId}`, 30, 60 * 60_000)) {
+    res.status(429).json({ error: 'Für heute reicht’s – danke!' });
+    return;
+  }
   res.json(addToShopping({ text, source: 'guest', addedBy: `Gast: ${req.actor!.name}` }));
 });
 
@@ -158,6 +178,10 @@ guestAdmin.post('/guest-links', (req, res) => {
       days: z.number().int().min(0).max(365).default(2),
     })
     .parse(req.body);
+  if (b.scopes.includes('stock') && b.location_ids.length === 0) {
+    res.status(400).json({ error: 'Bitte mindestens einen Ort freigeben.' });
+    return;
+  }
   const token = randomToken(12);
   db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids, expires_at) VALUES (?, ?, ?, ?, ${b.days ? "datetime('now', ?)" : 'NULL'})`).run(
     ...[token, b.name, JSON.stringify(b.scopes), JSON.stringify(b.location_ids), ...(b.days ? [`+${b.days} days`] : [])],
@@ -192,7 +216,8 @@ guestAdmin.patch('/orders/:id', (req, res) => {
     return;
   }
   db.prepare(`UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id = ?`).run(status, o.id);
-  if (status === 'done' && o.status !== 'done') {
+  if (status === 'done' && !o.stock_booked) {
+    db.prepare('UPDATE orders SET stock_booked = 1 WHERE id = ?').run(o.id);
     const lines = db.prepare('SELECT * FROM order_lines WHERE order_id = ?').all(o.id) as any[];
     for (const l of lines) {
       const p = db.prepare('SELECT track_mode FROM products WHERE id = ?').get(l.product_id) as any;

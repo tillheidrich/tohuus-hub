@@ -28,12 +28,36 @@ export function hashPassword(pw: string): string {
   return `scrypt$${salt.toString('base64')}$${hash.toString('base64')}`;
 }
 
-export function verifyPassword(pw: string, stored: string): boolean {
+export function verifyPassword(pw: string, stored: string): Promise<boolean> {
   const [alg, saltB64, hashB64] = stored.split('$');
-  if (alg !== 'scrypt' || !saltB64 || !hashB64) return false;
-  const hash = crypto.scryptSync(pw, Buffer.from(saltB64, 'base64'), 32, { N: 16384, r: 8, p: 1 });
-  const expected = Buffer.from(hashB64, 'base64');
-  return expected.length === hash.length && crypto.timingSafeEqual(hash, expected);
+  if (alg !== 'scrypt' || !saltB64 || !hashB64) return Promise.resolve(false);
+  return new Promise((resolve) =>
+    crypto.scrypt(pw, Buffer.from(saltB64, 'base64'), 32, { N: 16384, r: 8, p: 1 }, (err, hash) => {
+      if (err) return resolve(false);
+      const expected = Buffer.from(hashB64, 'base64');
+      resolve(expected.length === hash.length && crypto.timingSafeEqual(hash, expected));
+    }),
+  );
+}
+
+export function safeEqual(a: string, b: string) {
+  const x = Buffer.from(a);
+  const y = Buffer.from(b);
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+/** Tiny in-memory fixed-window rate limiter. */
+const buckets = new Map<string, { n: number; reset: number }>();
+export function rateLimited(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const b = buckets.get(key);
+  if (!b || b.reset < now) {
+    buckets.set(key, { n: 1, reset: now + windowMs });
+    if (buckets.size > 5000) for (const [k, v] of buckets) if (v.reset < now) buckets.delete(k);
+    return false;
+  }
+  b.n++;
+  return b.n > max;
 }
 
 const SESSION_DAYS = 365;

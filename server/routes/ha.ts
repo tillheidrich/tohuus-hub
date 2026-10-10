@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { db } from '../db.js';
 import { requireAuth } from '../lib/auth.js';
-import { addToShopping, adjustStock, fmtQty, getProduct, matchProduct } from '../lib/catalog.js';
+import { addToShopping, adjustStock, fmtQty, getProduct, markUsedUp, matchProduct } from '../lib/catalog.js';
 import { overview } from '../lib/overview.js';
 
 /** Home Assistant friendly endpoints: one summary for REST sensors, one action endpoint for rest_command. */
@@ -39,13 +39,14 @@ r.post('/ha/action', (req, res) => {
       action: z.enum(['add_shopping', 'consume', 'used_up', 'restock']),
       product: z.union([z.string(), z.number()]).optional(),
       text: z.string().optional(),
-      qty: z.number().optional(),
+      qty: z.number().positive().max(999).optional(),
     })
     .parse(req.body);
   const actor = req.actor?.name ?? 'Home Assistant';
   const resolve = () => {
     if (typeof b.product === 'number') return getProduct(b.product);
-    if (typeof b.product === 'string' && /^\d+$/.test(b.product.trim())) return getProduct(Number(b.product));
+    // rest_command templates always send strings: "#12" or a pure number string from our own push buttons
+    if (typeof b.product === 'string' && /^#?\d+$/.test(b.product.trim()) && b.action === 'add_shopping' && !b.text) return getProduct(Number(b.product.replace('#', '')));
     const name = String(b.product ?? b.text ?? '');
     const m = name ? matchProduct(name) : null;
     return m && m.score >= 0.6 ? getProduct(m.productId) : undefined;
@@ -62,17 +63,14 @@ r.post('/ha/action', (req, res) => {
   }
   if (b.action === 'consume') res.json(adjustStock({ productId: p.id, delta: -(b.qty ?? 1), reason: 'consume', actor }));
   else if (b.action === 'restock') res.json(adjustStock({ productId: p.id, delta: b.qty ?? 1, reason: 'purchase', actor }));
-  else {
-    db.prepare('UPDATE stock SET qty = 0 WHERE product_id = ?').run(p.id);
-    adjustStock({ productId: p.id, delta: 0, reason: 'consume', actor });
-    res.json(addToShopping({ productId: p.id, text: p.name, source: 'ha', addedBy: actor }));
-  }
+  else res.json(markUsedUp(p.id, actor));
 });
 
-r.get('/ha/package.yaml', (req, res) => {
-  const token = String(req.query.token ?? 'DEIN_STOCKWERK_TOKEN');
-  const webhook = String(req.query.webhook ?? 'stockwerk_events_ÄNDERN');
-  const phone = String(req.query.notify ?? 'notify.mobile_app_dein_iphone');
+r.post('/ha/package.yaml', (req, res) => {
+  const clean = (v: unknown, d: string) => (typeof v === 'string' && /^[\w.\-]+$/.test(v) ? v : d);
+  const token = clean(req.body?.token, 'DEIN_STOCKWERK_TOKEN');
+  const webhook = clean(req.body?.webhook, `stockwerk_${Math.random().toString(36).slice(2, 12)}`);
+  const phone = clean(req.body?.notify, 'notify.mobile_app_dein_iphone');
   const base = config.baseUrl;
   res.type('text/yaml').send(`# Stockwerk ↔ Home Assistant
 # Als Package einbinden (packages/stockwerk.yaml) oder Abschnitte in configuration.yaml übernehmen.
