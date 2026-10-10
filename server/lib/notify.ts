@@ -59,6 +59,9 @@ function mailer() {
     port: config.smtp.port,
     secure: config.smtp.secure,
     auth: config.smtp.user ? { user: config.smtp.user, pass: config.smtp.password } : undefined,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
   return transport;
 }
@@ -133,7 +136,10 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
           html: input.html ?? emailHtml(input.title, input.message, url),
         })
         .then((): [string, boolean] => ['email', true])
-        .catch((): [string, boolean] => ['email', false]),
+        .catch((e: Error): [string, boolean] => {
+          console.warn('[mail]', e.message);
+          return ['email', false];
+        }),
     );
   }
   const results = await Promise.all(jobs);

@@ -30,10 +30,12 @@ import { Shopping } from './pages/Shopping';
 import { Stock } from './pages/Stock';
 import { Today } from './pages/Today';
 import { Avatar, Sheet } from './ui';
+import { applyBrand } from './brand';
 
 export interface Me {
   actor: { name: string; role: string; kind: string; userId?: number };
   household: string;
+  brand?: string;
   features: { vision: boolean; email: boolean };
 }
 
@@ -58,6 +60,7 @@ function Shell({ me }: { me: Me }) {
   const loc = useLocation();
   const ov = useApi<any>('overview', '/overview');
   useEffect(() => connectEvents(), []);
+  const b = applyBrand(me.brand);
   useEffect(() => window.scrollTo(0, 0), [loc.pathname]);
   const c = ov.data?.counts;
   const attention = c ? c.low + c.empty + c.expiring + c.expired : 0;
@@ -76,8 +79,8 @@ function Shell({ me }: { me: Me }) {
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <img src="/icon.svg" alt="" />
-          Stockwerk
+          <img src={b.logo} alt="" />
+          {b.name}
         </div>
         {links.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `navlink ${isActive ? 'active' : ''}`}>

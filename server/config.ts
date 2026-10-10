@@ -33,6 +33,8 @@ export const config = {
     enabled: (env.OFF_ENABLED ?? 'true') === 'true',
   },
   timezone: env.TZ ?? 'Europe/Berlin',
+  /** default look on first start: stockwerk | fredirando */
+  brand: env.BRAND ?? 'stockwerk',
 };
 
 export const visionEnabled = () => Boolean(config.vision.baseUrl && config.vision.model);

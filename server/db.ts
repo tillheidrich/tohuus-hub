@@ -284,3 +284,9 @@ export function setSetting(key: string, value: unknown) {
 }
 
 export const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+export type Brand = 'stockwerk' | 'fredirando';
+export function brand(): Brand {
+  const b = getSetting<string>('brand', config.brand);
+  return b === 'fredirando' ? 'fredirando' : 'stockwerk';
+}

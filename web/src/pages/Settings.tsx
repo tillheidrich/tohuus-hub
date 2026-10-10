@@ -86,6 +86,25 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
           </div>
         </div>
         <div className="field">
+          <label>Marke</label>
+          <div className="row wrap" style={{ gap: 10 }}>
+            {(['stockwerk', 'fredirando'] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                disabled={!admin}
+                className={`who-pick-btn ${s.data?.brand === k ? 'on' : ''}`}
+                onClick={() => patch('/settings', { brand: k }).then(() => { invalidate('me', 'settings'); toast({ text: k === 'fredirando' ? 'Fredirando liefert ab jetzt' : 'Zurück zu Stockwerk' }); })}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', borderRadius: 14, border: `1px solid ${s.data?.brand === k ? 'var(--ink)' : 'var(--line-strong)'}`, background: 'var(--surface)', cursor: 'pointer', fontWeight: 600 }}
+              >
+                <img src={k === 'fredirando' ? '/fredirando.svg' : '/stockwerk-logo.svg'} alt="" style={{ width: 34, height: 34, borderRadius: 10 }} />
+                {k === 'fredirando' ? 'Fredirando' : 'Stockwerk'}
+              </button>
+            ))}
+          </div>
+          <div className="help">Fredirando ist das Lieferdienst-Thema für euer Zuhause: Orange, Gäste-Bar als Restaurant, Bestellstatus mit „Fahrer unterwegs“. App-Symbol auf dem Homescreen danach einmal neu hinzufügen.</div>
+        </div>
+        <div className="field">
           <label>Darstellung</label>
           <Seg value={theme} onChange={applyTheme} options={[['auto', 'Automatisch'], ['light', 'Hell'], ['dark', 'Dunkel']]} />
         </div>

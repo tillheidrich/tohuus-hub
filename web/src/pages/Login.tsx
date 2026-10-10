@@ -2,6 +2,7 @@ import { ArrowRight } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { invalidate, post, useApi } from '../api';
 import { Avatar } from '../ui';
+import { BRANDS, currentBrand } from '../brand';
 
 export function Login() {
   const users = useApi<{ name: string; color: string }[]>('users-public', '/auth/users');
@@ -9,6 +10,8 @@ export function Login() {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const b = BRANDS[currentBrand()];
+  const fredi = currentBrand() === 'fredirando';
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -26,7 +29,7 @@ export function Login() {
     <div className="login">
       <div className="art">
         <div className="brand" style={{ padding: 0 }}>
-          <img src="/icon.svg" alt="" /> Stockwerk
+          <img src={b.logo} alt="" /> {b.name}
         </div>
         <div>
           <div className="shelves">
@@ -35,20 +38,32 @@ export function Login() {
             <i />
           </div>
           <div className="h1" style={{ fontSize: 46, maxWidth: 460 }}>
-            Was im Haus ist.
-            <br />
-            Auf einen Blick.
+            {fredi ? (
+              <>
+                Hunger?
+                <br />
+                Wir liefern.
+              </>
+            ) : (
+              <>
+                Was im Haus ist.
+                <br />
+                Auf einen Blick.
+              </>
+            )}
           </div>
           <p style={{ opacity: 0.7, maxWidth: 420, marginTop: 14 }}>
-            Gefrierschrank, Keller, Vorrat und Haushalt – mit Einkaufsliste, Rezepten und einer Bar für Gäste.
+            {fredi
+              ? 'Vom Keller bis zum Sofa in unter drei Minuten. Mit Vorrat, Einkaufsliste und Rezepten im Hintergrund.'
+              : 'Gefrierschrank, Keller, Vorrat und Haushalt – mit Einkaufsliste, Rezepten und einer Bar für Gäste.'}
           </p>
         </div>
-        <div className="small" style={{ opacity: 0.5 }}>Selbst gehostet · Open Source</div>
+        <div className="small" style={{ opacity: 0.6 }}>{fredi ? 'Familienbetrieb · Lieferung nur im eigenen Haus' : 'Selbst gehostet · Open Source'}</div>
       </div>
       <form className="form" onSubmit={submit}>
         <div className="brand only-mobile" style={{ padding: 0 }}>
-          <img src="/icon.svg" alt="" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 8 }} />
-          Stockwerk
+          <img src={b.logo} alt="" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 8, width: 30, height: 30, borderRadius: 8 }} />
+          {b.name}
         </div>
         <div>
           <div className="eyebrow">Willkommen zurück</div>
@@ -68,7 +83,7 @@ export function Login() {
           {err && <div className="small" style={{ color: 'var(--empty)' }}>{err}</div>}
         </div>
         <button className="btn primary lg" disabled={busy || !pw}>
-          Rein ins Haus <ArrowRight size={18} weight="bold" />
+          {fredi ? 'Los geht’s' : 'Rein ins Haus'} <ArrowRight size={18} weight="bold" />
         </button>
         <p className="small muted">Du bleibst auf diesem Gerät angemeldet.</p>
       </form>

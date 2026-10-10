@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled, visionEnabled } from '../config.js';
-import { db, getSetting, setSetting } from '../db.js';
+import { brand, db, getSetting, setSetting } from '../db.js';
 import {
   SESSION_COOKIE,
   createApiToken,
@@ -86,6 +86,7 @@ r.get('/me', (req, res) => {
   res.json({
     actor,
     household: getSetting('household.name', 'Unser Zuhause'),
+    brand: brand(),
     features: { vision: visionEnabled(), email: smtpEnabled() },
     version: process.env.npm_package_version ?? '0.1.0',
   });
@@ -501,6 +502,7 @@ r.post('/notifications/read', (_req, res) => {
 r.get('/settings', (_req, res) => {
   res.json({
     household: getSetting('household.name', 'Unser Zuhause'),
+    brand: brand(),
     notify: notifySettings(),
     importAutoApply: getSetting('import.autoApply', false),
     baseUrl: config.baseUrl,
@@ -513,6 +515,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
   const b = z
     .object({
       household: z.string().optional(),
+      brand: z.enum(['stockwerk', 'fredirando']).optional(),
       importAutoApply: z.boolean().optional(),
       notify: z
         .object({
@@ -529,6 +532,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
     })
     .parse(req.body);
   if (b.household) setSetting('household.name', b.household);
+  if (b.brand) setSetting('brand', b.brand);
   if (b.importAutoApply !== undefined) setSetting('import.autoApply', b.importAutoApply);
   if (b.notify) {
     const cur = notifySettings();

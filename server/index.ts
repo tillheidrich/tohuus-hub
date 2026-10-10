@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { ZodError } from 'zod';
 import { MulterError } from 'multer';
 import { config } from './config.js';
-import './db.js';
+import { brand } from './db.js';
 import { startScheduler } from './lib/scheduler.js';
 import { handleMcp } from './mcp/server.js';
 import { r as core } from './routes/core.js';
@@ -66,11 +66,34 @@ app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webDir = [path.join(here, 'web'), path.join(here, '../dist/web')].find((d) => fs.existsSync(path.join(d, 'index.html')));
 if (webDir) {
+  // brand-dependent app icons / manifest / title (Stockwerk or the Fredirando house theme)
+  const BRAND_FILES: Record<string, string> = {
+    '/icon.svg': 'fredirando.svg',
+    '/apple-touch-icon.png': 'fredirando-touch.png',
+    '/icon-192.png': 'fredirando-192.png',
+    '/icon-512.png': 'fredirando-512.png',
+  };
+  app.get(Object.keys(BRAND_FILES), (req, res, next) => {
+    if (brand() !== 'fredirando') return next();
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(webDir, BRAND_FILES[req.path]));
+  });
+  app.get('/manifest.webmanifest', (_req, res, next) => {
+    if (brand() !== 'fredirando') return next();
+    const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
+    Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: 'Bestellt. Gebracht. Aus Küche & Keller.', background_color: '#fff8f3', theme_color: '#f2601d' });
+    res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
+  });
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {
     if (p.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } }));
   const html = fs.readFileSync(path.join(webDir, 'index.html'), 'utf8');
-  app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(html));
+  const fredi = html
+    .replace(/<title>.*<\/title>/, '<title>Fredirando</title>')
+    .replace(/content="Stockwerk"/g, 'content="Fredirando"')
+    .replace(/content="#f3f2ee"/g, 'content="#fff8f3"')
+    .replace('<html lang="de">', '<html lang="de" data-brand="fredirando">');
+  app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(brand() === 'fredirando' ? fredi : html));
 }
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

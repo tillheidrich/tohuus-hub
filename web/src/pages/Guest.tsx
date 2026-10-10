@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { connectEvents, qc } from '../api';
 import { Empty, Ic, Seg, Sheet, Thumb, useToast } from '../ui';
+import { BRANDS, applyBrand } from '../brand';
 
 async function gapi(token: string, path: string, body?: unknown) {
   const r = await fetch(`/api/guest/${token}${path}`, {
@@ -45,8 +46,11 @@ export function Guest() {
   }, [scopes, tab]);
   useEffect(() => connectEvents(`/api/guest/${token}/events`), [token]);
   useEffect(() => {
-    document.title = info.data ? `${info.data.household} · Bar` : 'Stockwerk';
+    if (!info.data) return;
+    applyBrand(info.data.brand);
+    document.title = info.data.brand === 'fredirando' ? 'Fredirando' : `${info.data.household} · Bar`;
   }, [info.data]);
+  const fredi = info.data?.brand === 'fredirando';
 
   if (info.isLoading) return <div className="guest"><div className="skel" style={{ height: 120 }} /></div>;
   if (info.error)
@@ -57,25 +61,49 @@ export function Guest() {
     );
   return (
     <div className="guest">
-      <div className="eyebrow">{info.data.household} · {info.data.name}</div>
-      <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? 'Bock auf was?' : tab === 'stock' ? 'Was ist wo?' : 'Was fehlt?'}</h1>
-      <p className="muted" style={{ marginTop: 0 }}>
-        {tab === 'bar' ? 'Getränke, Eis und Snacks – einfach bestellen, wir bringen’s vorbei.' : tab === 'stock' ? 'Ein Blick in die Schränke.' : 'Setz es auf unsere Einkaufsliste.'}
-      </p>
+      {fredi && tab === 'bar' ? (
+        <div className="resto">
+          <div className="cover"><div className="stripe" /></div>
+          <div className="logo"><img src={BRANDS.fredirando.logo} alt="" /></div>
+          <div className="info">
+            <h1>fredirando</h1>
+            <div className="muted small">Küche & Keller · {info.data.household}</div>
+            <div className="facts">
+              <span><span className="stars">★★★★★</span> <b>4,9</b> (Familie)</span>
+              <span>Lieferzeit <b>1–3 Min.</b></span>
+              <span>Liefergebühr <b>0,00 €</b></span>
+              <span>Mindestbestellwert <b>ein Lächeln</b></span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="eyebrow">{info.data.household} · {info.data.name}</div>
+          <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? 'Bock auf was?' : tab === 'stock' ? 'Was ist wo?' : 'Was fehlt?'}</h1>
+          <p className="muted" style={{ marginTop: 0 }}>
+            {tab === 'bar' ? 'Getränke, Eis und Snacks – einfach bestellen, wir bringen’s vorbei.' : tab === 'stock' ? 'Ein Blick in die Schränke.' : 'Setz es auf unsere Einkaufsliste.'}
+          </p>
+        </>
+      )}
       {scopes.length > 1 && (
         <div style={{ margin: '14px 0' }}>
           <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, { bar: 'Bar', stock: 'Vorrat', shopping: 'Einkaufsliste' }[s] ?? s]) as any} />
         </div>
       )}
-      {tab === 'bar' && <GuestBar token={token} />}
+      {tab === 'bar' && <GuestBar token={token} fredi={fredi} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
-      <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>Stockwerk · Haushalt, selbst gehostet</p>
+      <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{fredi ? 'fredirando · ein Familienbetrieb, betrieben mit Stockwerk' : 'Stockwerk · Haushalt, selbst gehostet'}</p>
     </div>
   );
 }
 
-function GuestBar({ token }: { token: string }) {
+const STATUS_TEXT = {
+  plain: { new: 'angekommen', accepted: 'wird gemacht', done: 'kommt!', declined: 'geht gerade nicht' },
+  fredi: { new: 'Bestellung eingegangen', accepted: 'Wird zubereitet', done: 'Geliefert – guten Appetit!', declined: 'Leider gerade nicht lieferbar' },
+} as const;
+
+function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) {
   const menu = useQuery({ queryKey: ['products', 'guest', token], queryFn: () => gapi(token, '/menu') });
   const orders = useQuery({ queryKey: ['orders', 'guest', token], queryFn: () => gapi(token, '/orders'), refetchInterval: 20000 });
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -113,7 +141,7 @@ function GuestBar({ token }: { token: string }) {
       setNote('');
       setCheckout(false);
       qc.invalidateQueries({ queryKey: ['orders', 'guest', token] });
-      toast({ text: 'Bestellung ist raus!' });
+      toast({ text: fredi ? 'Bestellt! Dein Fahrer macht sich gleich auf den Weg.' : 'Bestellung ist raus!' });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     }
@@ -124,13 +152,23 @@ function GuestBar({ token }: { token: string }) {
     <>
       {mine.length > 0 && (
         <div className="list" style={{ marginBottom: 18 }}>
-          {mine.map((o: any) => (
-            <div key={o.id} className="li" style={{ minHeight: 52 }}>
-              <span className={`sdot ${o.status === 'new' ? 'expiring' : o.status === 'declined' ? 'empty' : ''}`} />
-              <div className="grow small">{o.lines.map((l: any) => `${l.qty}× ${l.name}`).join(', ')}</div>
-              <span className="badge">{{ new: 'angekommen', accepted: 'wird gemacht', done: 'kommt!', declined: 'geht gerade nicht' }[o.status as string]}</span>
-            </div>
-          ))}
+          {mine.map((o: any) => {
+            const step = { new: 1, accepted: 2, done: 3, declined: 0 }[o.status as 'new'] ?? 0;
+            return (
+              <div key={o.id} className="li" style={{ minHeight: 52, display: 'block', padding: '12px 14px' }}>
+                <div className="row between">
+                  <b className="small">{(fredi ? STATUS_TEXT.fredi : STATUS_TEXT.plain)[o.status as 'new']}</b>
+                  {fredi && o.status === 'accepted' && <span className="small muted">ca. 2 Min.</span>}
+                </div>
+                <div className="small muted" style={{ marginTop: 2 }}>{o.lines.map((l: any) => `${l.qty}× ${l.name}`).join(', ')}</div>
+                {fredi && o.status !== 'declined' && (
+                  <div className="track">
+                    {[1, 2, 3].map((n) => <i key={n} className={step >= n ? 'on' : ''} />)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
       {groups.map(([g, items]) => (
@@ -156,7 +194,7 @@ function GuestBar({ token }: { token: string }) {
           <div className="grow">
             <b>{count} {count === 1 ? 'Sache' : 'Sachen'}</b>
           </div>
-          <button className="btn" onClick={() => setCheckout(true)}>Bestellen</button>
+          <button className="btn" onClick={() => setCheckout(true)}>{fredi ? 'Zur Kasse' : 'Bestellen'}</button>
         </div>
       )}
       <Sheet open={Boolean(opt)} onClose={() => setOpt(null)} title={opt?.name}>
@@ -225,7 +263,7 @@ function GuestBar({ token }: { token: string }) {
             <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="z. B. Pizza Salami, extra Eiswürfel …" />
           </div>
           <button className="btn primary lg" disabled={!name.trim() || !cart.length} onClick={send}>
-            <Check size={18} weight="bold" /> Abschicken
+            <Check size={18} weight="bold" /> {fredi ? 'Jetzt bestellen · 0,00 €' : 'Abschicken'}
           </button>
         </div>
       </Sheet>
