@@ -97,6 +97,12 @@ export function ProductDetail() {
           <dl className="kv card pad">
             <dt>Standardort</dt>
             <dd>{p.default_location_id ? lname(p.default_location_id) : '—'}</dd>
+            {p.spot && (
+              <>
+                <dt>Genauer Platz</dt>
+                <dd>{p.spot}</dd>
+              </>
+            )}
             <dt>Zählweise</dt>
             <dd>{{ count: 'Stückzahl', level: 'Füllstand (voll/halb/knapp)', none: 'nicht zählen' }[p.track_mode as string]}</dd>
             {p.perWeek && (
@@ -331,6 +337,7 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
     orderable: false,
     order_group: '',
     notes: '',
+    spot: '',
     code: '',
     image_url: '',
   };
@@ -346,6 +353,7 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
         brand: product.brand ?? '',
         size: product.size ?? '',
         notes: product.notes ?? '',
+        spot: product.spot ?? '',
         order_group: product.order_group ?? '',
         code: '',
         image_url: '',
@@ -381,6 +389,7 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
         orderable: f.orderable,
         order_group: f.order_group || null,
         notes: f.notes || null,
+        spot: f.spot || null,
       };
       if (product) {
         await patch(`/products/${product.id}`, body);
@@ -473,6 +482,8 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
               </button>
             ))}
           </div>
+          <input className="input" value={f.spot} onChange={(e) => set('spot', e.target.value)} placeholder="Genauer Platz, z. B. Regal links, oberstes Fach" maxLength={120} />
+          <div className="help">Hilft bei „Wo ist was?“ – auch für Babysitter und Besuch.</div>
         </div>
         <div className="field">
           <label>Wie genau zählen?</label>

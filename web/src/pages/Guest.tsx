@@ -1,4 +1,5 @@
-import { Basket, Check, Coffee, Cookie, IceCream, Martini, Minus, Pizza, Plus } from '@phosphor-icons/react';
+import { Basket, Check, Coffee, Cookie, IceCream, MagnifyingGlass, Martini, Minus, Pizza, Plus } from '@phosphor-icons/react';
+import { FindList, type Found, useDebounce } from './Find';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -79,15 +80,16 @@ export function Guest() {
       ) : (
         <>
           <div className="eyebrow">{info.data.household} · {info.data.name}</div>
-          <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? 'Bock auf was?' : tab === 'stock' ? 'Was ist wo?' : 'Was fehlt?'}</h1>
+          <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? 'Bock auf was?' : tab === 'stock' ? 'Wo ist was?' : 'Was fehlt?'}</h1>
           <p className="muted" style={{ marginTop: 0 }}>
-            {tab === 'bar' ? 'Getränke, Eis und Snacks – einfach bestellen, wir bringen’s vorbei.' : tab === 'stock' ? 'Ein Blick in die Schränke.' : 'Setz es auf unsere Einkaufsliste.'}
+            {tab === 'bar' ? 'Getränke, Eis und Snacks – einfach bestellen, wir bringen’s vorbei.' : tab === 'stock' ? 'Alles, was du im Haus suchen könntest – mit genauem Platz.' : 'Setz es auf unsere Einkaufsliste.'}
           </p>
         </>
       )}
+      {info.data.note && <div className="note-card" style={{ margin: '14px 0' }}>{info.data.note}</div>}
       {scopes.length > 1 && (
         <div style={{ margin: '14px 0' }}>
-          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, { bar: 'Bar', stock: 'Vorrat', shopping: 'Einkaufsliste' }[s] ?? s]) as any} />
+          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, { bar: 'Bar', stock: 'Wo ist was?', shopping: 'Einkaufsliste' }[s] ?? s]) as any} />
         </div>
       )}
       {tab === 'bar' && <GuestBar token={token} fredi={fredi} />}
@@ -272,26 +274,24 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
 }
 
 function GuestStock({ token }: { token: string }) {
-  const q = useQuery({ queryKey: ['stock', 'guest', token], queryFn: () => gapi(token, '/stock') });
+  const [q, setQ] = useState('');
+  const dq = useDebounce(q.trim());
+  const res = useQuery({ queryKey: ['stock', 'guest', token, dq], queryFn: () => gapi(token, `/stock?q=${encodeURIComponent(dq)}`) });
+  const locs = new Map<number, any>((res.data?.locations ?? []).map((l: any) => [l.id, l]));
+  const things: Found[] = (res.data?.things ?? []).map((t: any) => ({ ...t, places: t.place_ids.map((i: number) => locs.get(i)).filter(Boolean) }));
   return (
-    <div className="stack" style={{ gap: 20 }}>
-      {(q.data ?? []).map((l: any) => (
-        <section key={l.id}>
-          <div className="row" style={{ marginBottom: 8 }}>
-            <Ic name={l.icon} />
-            <h3>{l.name}</h3>
-          </div>
-          <div className="list">
-            {l.items.map((p: any) => (
-              <div key={p.id} className="li" style={{ minHeight: 52 }}>
-                <Thumb p={p} size={40} />
-                <div className="grow title">{p.name}</div>
-              </div>
-            ))}
-            {l.items.length === 0 && <div className="li muted small">leer</div>}
-          </div>
-        </section>
-      ))}
+    <div className="stack" style={{ gap: 14 }}>
+      <div className="finder-hero">
+        <MagnifyingGlass size={20} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Wo finde ich … Windeln, Pflaster, Saft" />
+      </div>
+      {res.isLoading ? (
+        <div className="skel" style={{ height: 200 }} />
+      ) : things.length === 0 ? (
+        <div className="card"><Empty icon={<MagnifyingGlass size={24} />} title={dq ? `„${dq}“ finden wir hier nicht` : 'Noch nichts hinterlegt'}>Am besten kurz anrufen oder schreiben.</Empty></div>
+      ) : (
+        <FindList things={things} grouped={!dq} />
+      )}
     </div>
   );
 }

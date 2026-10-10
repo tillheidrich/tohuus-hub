@@ -2455,3 +2455,98 @@ hr.sep {
     font-size: 12px;
   }
 }
+
+.daychips {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.daychips button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 8px 0;
+  font: inherit;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.daychips button:active {
+  transform: scale(0.96);
+}
+.daychips button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.input.sm {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+/* ---------- where is what ---------- */
+.finder-hero {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 6px 6px 6px 16px;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 0.04));
+}
+.finder-hero input {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 17px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  outline: none;
+  color: var(--ink);
+}
+.found {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+}
+.found .where {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--ink-2);
+  align-items: center;
+}
+.found .place {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.found .spot {
+  color: var(--accent);
+  font-weight: 600;
+}
+.found .lhint {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.note-card {
+  white-space: pre-wrap;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: 18px;
+  padding: 14px 16px;
+  line-height: 1.55;
+}

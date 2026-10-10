@@ -111,6 +111,7 @@ export interface Product {
   order_group: string | null;
   order_options: { group: string; choices: string[]; multi: boolean }[];
   notes: string | null;
+  spot: string | null;
   stock: StockEntry[];
   total: number;
   status: Status;
@@ -125,6 +126,7 @@ export interface Location {
   kind: string;
   icon: string;
   sort: number;
+  hint?: string | null;
   product_count?: number;
 }
 export interface Category {

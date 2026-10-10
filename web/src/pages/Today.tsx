@@ -1,4 +1,7 @@
-import { ArrowRight, Basket, ChefHat, ClockCountdown, Martini, Receipt, Warning } from '@phosphor-icons/react';
+import { ArrowRight, Basket, ChefHat, ClockCountdown, ForkKnife, MagnifyingGlass, Martini, Receipt, Warning } from '@phosphor-icons/react';
+import { shiftFrom } from './Week';
+
+const todayDay = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date());
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { fmtQty, invalidate, post, relTime, useApi } from '../api';
@@ -62,6 +65,10 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
           <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>{summary}</p>
         </div>
       </header>
+      <button className="finder-hero" style={{ width: '100%', cursor: 'pointer', marginBottom: 18, color: 'var(--ink-3)', textAlign: 'left' }} onClick={() => nav('/wo')}>
+        <MagnifyingGlass size={20} />
+        <span style={{ padding: '10px 0', fontSize: 16 }}>Wo finde ich …?</span>
+      </button>
 
       <div className="glance">
         <button className={`stat ${c.expired + c.expiring ? 'hot-exp' : ''}`} onClick={() => nav('/bestand?status=expiring')}>
@@ -205,6 +212,11 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
                   <div className="eyebrow">{p.slot === 'mittag' ? 'Mittags' : 'Heute Abend'}{p.cooked ? ' · gekocht' : ''}</div>
                   <b style={{ fontSize: 17 }}>{p.title}</b>
                 </div>
+                {!p.cooked && (
+                  <button className="btn sm" onClick={(ev) => { ev.stopPropagation(); shiftFrom(todayDay(), toast, p.slot); }}>
+                    <ForkKnife size={15} /> Auswärts
+                  </button>
+                )}
               </div>
             ))}
           </div>

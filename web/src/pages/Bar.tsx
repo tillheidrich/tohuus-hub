@@ -1,4 +1,4 @@
-import { Check, Copy, Martini, Plus, QrCode, ShareNetwork, Trash, X } from '@phosphor-icons/react';
+import { Check, Copy, House, Martini, Plus, QrCode, ShareNetwork, Trash, X } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { type Location, type Product, del, fmtQty, invalidate, patch, post, relTime, useApi } from '../api';
@@ -91,7 +91,7 @@ function Links() {
   const locations = useApi<Location[]>('locations', '/locations');
   const [open, setOpen] = useState(false);
   const [qr, setQr] = useState<any>(null);
-  const [f, setF] = useState({ name: 'Grillabend', scopes: ['bar'] as string[], days: 2, location_ids: [] as number[] });
+  const [f, setF] = useState({ name: 'Grillabend', scopes: ['bar'] as string[], days: 2, location_ids: [] as number[], note: '' });
   const toast = useToast();
   const create = async () => {
     const r = await post('/guest-links', f);
@@ -114,7 +114,7 @@ function Links() {
               <div className="grow">
                 <div className="title">{g.name}</div>
                 <div className="sub">
-                  {g.scopes.map((s: string) => ({ bar: 'Bar', stock: 'Vorrat ansehen', shopping: 'Einkaufsliste' })[s]).join(' · ')}
+                  {g.scopes.map((s: string) => ({ bar: 'Bar', stock: 'Wo ist was?', shopping: 'Einkaufsliste' })[s]).join(' · ')}
                   {g.expires_at ? ` · bis ${new Date(g.expires_at.replace(' ', 'T') + 'Z').toLocaleDateString('de-DE')}` : ' · unbefristet'}
                 </div>
               </div>
@@ -132,6 +132,10 @@ function Links() {
       <p className="small muted">Gäste brauchen kein Konto. Sie sehen nur, was du freigibst – nie Mengen, Einkäufe oder andere Räume.</p>
       <Sheet open={open} onClose={() => setOpen(false)} title="Gäste-Link">
         <div className="stack">
+          <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
+            <button className="chip" onClick={() => setF({ ...f, name: 'Grillabend', scopes: ['bar'], days: 2 })}><Martini size={15} /> Party / Besuch</button>
+            <button className="chip" onClick={() => setF({ ...f, name: 'Babysitter', scopes: ['stock', 'shopping'], days: 1, location_ids: (locations.data ?? []).map((l) => l.id) })}><House size={15} /> Babysitter / Familie</button>
+          </div>
           <div className="field">
             <label>Wofür?</label>
             <input className="input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Grillabend, Babysitter, Oma …" />
@@ -139,7 +143,7 @@ function Links() {
           <div className="list">
             {[
               ['bar', 'Bar', 'Getränke, Eis, Snacks bestellen'],
-              ['stock', 'Vorrat ansehen', 'z. B. für Babysitter: was ist im Kühlschrank?'],
+              ['stock', 'Wo ist was?', 'Suche mit Ort und genauem Platz – ohne Mengen. Ideal für Babysitter.'],
               ['shopping', 'Einkaufsliste', 'Sachen auf die Liste setzen'],
             ].map(([k, t, d]) => (
               <div key={k} className="li">
@@ -161,9 +165,17 @@ function Links() {
                   </button>
                 ))}
               </div>
-              <div className="help">Nur die gewählten Orte sind sichtbar – nie Mengen oder Einkäufe.</div>
+              <div className="help">
+                Nur die gewählten Orte sind sichtbar – nie Mengen oder Einkäufe.{' '}
+                <a className="linkish" onClick={() => setF((x) => ({ ...x, location_ids: (locations.data ?? []).map((l) => l.id) }))}>Alle Orte</a>
+              </div>
             </div>
           )}
+          <div className="field">
+            <label>Hinweise für den Gast (optional)</label>
+            <textarea className="input" rows={4} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder={'z. B. Notfall: 0171 …\nSchlafenszeit 19:30, Schnuller liegt im Bett\nWLAN: …'} />
+            <div className="help">Steht oben auf der Gastseite.</div>
+          </div>
           <div className="field">
             <label>Gültig</label>
             <Seg value={String(f.days)} onChange={(v) => setF({ ...f, days: Number(v) })} options={[['1', '1 Tag'], ['2', 'Wochenende'], ['14', '2 Wochen'], ['0', 'immer']]} />

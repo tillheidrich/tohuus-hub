@@ -170,7 +170,10 @@ function Places({ admin }: { admin: boolean }) {
               <button className="thumb" style={{ width: 40, height: 40, cursor: admin ? 'pointer' : 'default', border: 0 }} onClick={() => admin && setIconFor(l)}>
                 <Ic name={l.icon} />
               </button>
-              <input className="input grow" defaultValue={l.name} disabled={!admin} onBlur={(e) => e.target.value !== l.name && patch(`/locations/${l.id}`, { name: e.target.value }).then(() => invalidate('locations', 'overview'))} />
+              <div className="grow stack" style={{ gap: 4 }}>
+                <input className="input" defaultValue={l.name} disabled={!admin} onBlur={(e) => e.target.value !== l.name && patch(`/locations/${l.id}`, { name: e.target.value }).then(() => invalidate('locations', 'overview'))} />
+                <input className="input sm" defaultValue={l.hint ?? ''} disabled={!admin} placeholder="Wegbeschreibung, z. B. Kellertreppe runter, zweite Tür rechts" onBlur={(e) => e.target.value !== (l.hint ?? '') && patch(`/locations/${l.id}`, { hint: e.target.value }).then(() => invalidate('locations', 'find'))} />
+              </div>
               <span className="small muted mono" style={{ width: 30, textAlign: 'right' }}>{l.product_count}</span>
               {admin && (
                 <button className="icon-btn plain" onClick={() => del(`/locations/${l.id}`).then(() => invalidate('locations')).catch((e) => toast({ text: e.message, error: true }))} aria-label="Löschen">

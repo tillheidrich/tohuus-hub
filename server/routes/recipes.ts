@@ -8,7 +8,7 @@ import { deleteImage, fetchImage, saveImage, toVisionJpeg } from '../lib/images.
 import { getRecipe, ingredientCore, listRecipes, logCooked, parseRecipeJsonLd, saveRecipe, suggest } from '../lib/recipes.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
-import { addPlan, autofill, getPlan, planShopping, syncCookidoo, weekDays } from '../lib/plan.js';
+import { addPlan, autofill, getPlan, planShopping, shiftPlan, syncCookidoo, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
 import { safeFetch } from '../lib/net.js';
 
@@ -266,6 +266,10 @@ r.delete('/plan/:id', (req, res) => {
   db.prepare('DELETE FROM meal_plan WHERE id = ?').run(Number(req.params.id));
   emit('recipes');
   res.json({ ok: true });
+});
+r.post('/plan/shift', (req, res) => {
+  const b = z.object({ from: z.string().regex(dayRe), by: z.number().int().min(-7).max(7).default(1), slot: z.enum(['mittag', 'abend']).optional() }).parse(req.body);
+  res.json(shiftPlan(b.from, b.by, b.slot));
 });
 r.post('/plan/autofill', (req, res) => {
   const from = dayRe.test(String(req.body?.from)) ? String(req.body.from) : localDay(0);

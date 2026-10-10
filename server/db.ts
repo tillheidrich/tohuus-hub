@@ -268,6 +268,10 @@ const migrations: string[] = [
   );
   CREATE INDEX meal_plan_day ON meal_plan(day);
   CREATE UNIQUE INDEX meal_plan_ext ON meal_plan(external_id) WHERE external_id IS NOT NULL;`,
+  // [3] "Wo ist was?": exact spot per product, hint per location, note for guests (babysitter)
+  `ALTER TABLE products ADD COLUMN spot TEXT;
+  ALTER TABLE locations ADD COLUMN hint TEXT;
+  ALTER TABLE guest_links ADD COLUMN note TEXT;`,
 ];
 
 db.exec(`CREATE TABLE IF NOT EXISTS _migrations (id INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`);

@@ -57,7 +57,7 @@ export async function enrichOne(id: number, force = false): Promise<boolean> {
 
 /** Re-queue products that still have no image (called on boot and nightly). */
 export function enqueueMissingImages(limit = 40) {
-  const rows = db.prepare(`SELECT id FROM products WHERE image_path IS NULL AND archived = 0
+  const rows = db.prepare(`SELECT id FROM products WHERE image_path IS NULL AND archived = 0 AND (track_mode != 'none' OR off_code IS NOT NULL OR brand IS NOT NULL)
        AND NOT EXISTS (SELECT 1 FROM off_cache c WHERE c.key = 'miss:' || products.id AND c.fetched_at > datetime('now','-7 days'))
        ORDER BY id DESC LIMIT ?`).all(limit) as { id: number }[];
   rows.forEach((r) => enqueueEnrich(r.id));

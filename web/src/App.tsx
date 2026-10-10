@@ -6,6 +6,7 @@ import {
   Gear,
   House,
   Martini,
+  MapPin,
   Package,
   Plus,
   Receipt,
@@ -18,6 +19,7 @@ import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-d
 import { ApiError, connectEvents, useApi } from './api';
 import { Bar } from './pages/Bar';
 import { Cook } from './pages/Cook';
+import { Find } from './pages/Find';
 import { Guest } from './pages/Guest';
 import { ImportReview } from './pages/ImportReview';
 import { Imports } from './pages/Imports';
@@ -70,6 +72,7 @@ function Shell({ me }: { me: Me }) {
     { to: '/bestand', label: 'Bestand', icon: Package, badge: attention || undefined },
     { to: '/einkauf', label: 'Einkauf', icon: Basket, count: c?.shopping },
     { to: '/kochen', label: 'Kochen', icon: ChefHat },
+    { to: '/wo', label: 'Wo ist was?', icon: MapPin },
     { to: '/import', label: 'Importe', icon: Receipt, dot: Boolean(c?.imports) },
     { to: '/bar', label: 'Gäste & Bar', icon: Martini, dot: Boolean(c?.orders) },
     { to: '/einstellungen', label: 'Einstellungen', icon: Gear },
@@ -115,6 +118,7 @@ function Shell({ me }: { me: Me }) {
           <Route path="/import" element={<Imports me={me} />} />
           <Route path="/import/:id" element={<ImportReview />} />
           <Route path="/scan" element={<Scan />} />
+          <Route path="/wo" element={<Find />} />
           <Route path="/bar" element={<Bar />} />
           <Route path="/einstellungen" element={<Settings me={me} />} />
           <Route path="*" element={<Today me={me} onAdd={() => setAdd(true)} />} />

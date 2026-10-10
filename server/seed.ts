@@ -116,14 +116,21 @@ const DEMO: DemoItem[] = [
   ['Zwiebeln', null, null, 'Obst & Gemüse', 1, 1],
   ['Vollkornsandwich', 'REWE Bio', '750g', 'Brot & Backwaren', 2, 1],
   // Haushalt & Drogerie
-  ['Paketband', 'tesa', '66m x 50mm', 'Haushalt', 0, 1, { unit: 'Rolle' }],
+  ['Paketband', 'tesa', '66m x 50mm', 'Haushalt', 0, 1, { unit: 'Rolle', spot: 'Regal neben der Tür, Kiste „Post & Pakete“' }],
   ['Müllbeutel 35l', 'ja!', '25 Stück', 'Haushalt', 1, 1, { unit: 'Rolle' }],
   ['Spülmaschinen-Tabs', 'Finish', '50 Stück', 'Haushalt', 1, 1, { unit: 'Packung' }],
   ['Toilettenpapier', 'Hakle', '8 Rollen', 'Haushalt', 2, 1, { unit: 'Packung' }],
   ['Küchenrolle', 'Zewa', '4 Rollen', 'Haushalt', 1, 1, { unit: 'Packung' }],
   ['Waschmittel Megaperls', 'Persil', '1,04kg', 'Haushalt', 1, 1, { unit: 'Packung' }],
-  ['Batterien AA', 'Varta', '8 Stück', 'Haushalt', 0, 0, { unit: 'Packung' }],
-  ['Zahnpasta', 'elmex', '75ml', 'Drogerie', 2, 1, { unit: 'Tube' }],
+  ['Batterien AA', 'Varta', '8 Stück', 'Haushalt', 0, 0, { unit: 'Packung', spot: 'Oberste Schublade links' }],
+  ['Zahnpasta', 'elmex', '75ml', 'Drogerie', 2, 1, { unit: 'Tube', spot: 'Unterschrank, linke Tür' }],
+  // nicht gezählt – nur „Wo ist was?“
+  ['Fieberthermometer', null, null, 'Drogerie', 0, 0, { track: 'none', spot: 'Spiegelschrank, mittleres Fach' }],
+  ['Pflaster & Verbandszeug', null, null, 'Drogerie', 0, 0, { track: 'none', spot: 'Spiegelschrank, unten – rote Box' }],
+  ['Taschenlampe', null, null, 'Haushalt', 0, 0, { track: 'none', spot: 'Haken rechts neben dem Sicherungskasten' }],
+  ['Sicherungskasten', null, null, 'Haushalt', 0, 0, { track: 'none', spot: 'Hinter der Tür, auf Augenhöhe' }],
+  ['Werkzeugkiste', null, null, 'Haushalt', 0, 0, { track: 'none', spot: 'Unterstes Regal, grüne Kiste' }],
+  ['Wärmflasche', null, null, 'Drogerie', 0, 0, { track: 'none', spot: 'Handtuchregal, ganz oben' }],
   ['Slipeinlagen Daily Protect', 'Always', '40 Stück', 'Drogerie', 1, 1, { unit: 'Packung' }],
 ];
 
@@ -134,6 +141,9 @@ function addDays(d: number) {
 export function seedDemo() {
   if (getSetting('demo.seeded', false)) return;
   if ((db.prepare('SELECT COUNT(*) n FROM products').get() as { n: number }).n > 0) return;
+  const hint = db.prepare('UPDATE locations SET hint = ? WHERE name = ? AND hint IS NULL');
+  hint.run('Kellertreppe runter, erste Tür links. Licht rechts neben der Tür.', 'Keller');
+  hint.run('Neben der Waschküche, Tür mit dem Kalender.', 'Hauswirtschaftsraum');
   const ids = new Map<string, number>();
   for (const [name, brand, size, category, qty, min, o = {}] of DEMO) {
     const id = createProduct({
@@ -146,6 +156,8 @@ export function seedDemo() {
       orderable: Boolean(o.orderable),
       orderGroup: (o.order_group as string) ?? null,
       orderOptions: (o.options as unknown[]) ?? undefined,
+      trackMode: (o.track as 'none' | undefined) ?? undefined,
+      spot: (o.spot as string) ?? null,
     });
     ids.set(name, id);
     if (qty > 0) adjustStock({ productId: id, delta: qty, reason: 'inventory', actor: 'Demo', silent: true });

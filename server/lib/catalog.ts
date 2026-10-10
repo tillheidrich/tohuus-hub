@@ -28,6 +28,7 @@ export interface ProductRow {
   order_group: string | null;
   order_options: string | null;
   notes: string | null;
+  spot: string | null;
   archived: number;
   created_at: string;
   updated_at: string;
@@ -400,6 +401,7 @@ export function createProduct(input: {
   orderGroup?: string | null;
   orderOptions?: unknown[];
   notes?: string | null;
+  spot?: string | null;
   shelfDays?: number | null;
 }): number {
   const categoryId = input.categoryId ?? guessCategory(`${input.brand ?? ''} ${input.name}`);
@@ -407,8 +409,8 @@ export function createProduct(input: {
   const info = db
     .prepare(
       `INSERT INTO products (name, brand, size, category_id, unit, track_mode, default_location_id, min_qty, image_path, image_source,
-        image_credit, off_code, is_staple, orderable, order_group, order_options, notes, shelf_days)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        image_credit, off_code, is_staple, orderable, order_group, order_options, notes, shelf_days, spot)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       input.name.trim(),
@@ -429,6 +431,7 @@ export function createProduct(input: {
       input.orderOptions ? JSON.stringify(input.orderOptions) : null,
       input.notes ?? null,
       input.shelfDays ?? null,
+      input.spot?.trim() || null,
     );
   const id = Number(info.lastInsertRowid);
   if (input.offCode) db.prepare('INSERT OR IGNORE INTO product_codes (code, product_id) VALUES (?, ?)').run(input.offCode, id);

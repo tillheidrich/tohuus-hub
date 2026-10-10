@@ -153,3 +153,14 @@ export async function syncCookidoo(): Promise<{ events: number; added: number; i
   }
   return { events: events.length, added, imported };
 }
+
+/** Push every open entry from `from` onwards by `by` days – "we eat out tonight, everything moves". */
+export function shiftPlan(from: string, by = 1, slot?: string) {
+  const rows = db
+    .prepare(`SELECT id, day FROM meal_plan WHERE day >= ? AND cooked = 0 ${slot ? 'AND slot = ?' : ''}`)
+    .all(...(slot ? [from, slot] : [from])) as { id: number; day: string }[];
+  const upd = db.prepare('UPDATE meal_plan SET day = ? WHERE id = ?');
+  db.transaction(() => rows.forEach((r) => upd.run(weekDays(r.day, by + 1)[by], r.id)))();
+  emit('recipes');
+  return { moved: rows.length };
+}

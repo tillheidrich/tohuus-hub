@@ -6,6 +6,7 @@ import { config } from '../config.js';
 import { db } from '../db.js';
 import { actorFromBearer, safeEqual } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
+import { findThings } from '../lib/find.js';
 import {
   addToShopping,
   adjustStock,
@@ -22,7 +23,7 @@ import { fetchImage, saveImage } from '../lib/images.js';
 import { applyImport, createImport, linesToImport } from '../lib/imports.js';
 import { overview } from '../lib/overview.js';
 import { getRecipe, listRecipes, logCooked, saveRecipe, suggest } from '../lib/recipes.js';
-import { addPlan, autofill, getPlan, planShopping, weekDays } from '../lib/plan.js';
+import { addPlan, autofill, getPlan, planShopping, shiftPlan, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
 import { norm } from '../lib/text.js';
 
@@ -58,6 +59,7 @@ function compact(p: ReturnType<typeof listProducts>[number]) {
     min_qty: p.min_qty || undefined,
     best_before: p.nextExpiry ?? undefined,
     where: p.stock.filter((s) => s.qty > 0).map((s) => `${lname.get(s.location_id)}: ${fmtQty(p, s.qty)}${s.best_before ? ` (MHD ${s.best_before})` : ''}`),
+    spot: p.spot ?? undefined,
   };
 }
 
@@ -403,6 +405,29 @@ export function buildMcpServer(actorName: string) {
   );
 
   s.registerTool(
+    'move_meal',
+    {
+      title: 'Gericht verschieben',
+      description: 'Verschiebt ein geplantes Gericht auf einen anderen Tag (id aus get_meal_plan) oder – mit shift_rest – den ganzen restlichen Plan ab diesem Tag um N Tage, z. B. wenn spontan auswärts gegessen wird. Mit remove=true wird der Eintrag gelöscht.',
+      inputSchema: { id: z.number().optional(), day: z.string().optional().describe('Zieltag YYYY-MM-DD'), shift_rest_from: z.string().optional().describe('YYYY-MM-DD: alles Offene ab hier verschieben'), by: z.number().int().min(-7).max(7).default(1), remove: z.boolean().default(false) },
+      annotations: RW,
+    },
+    async ({ id, day, shift_rest_from, by, remove }) => {
+      if (shift_rest_from) return text(shiftPlan(shift_rest_from, by));
+      if (!id) return text({ error: 'id oder shift_rest_from angeben' });
+      if (remove) {
+        db.prepare('DELETE FROM meal_plan WHERE id = ?').run(id);
+        emit('recipes');
+        return text({ ok: true });
+      }
+      if (!day || !/^\d{4}-\d\d-\d\d$/.test(day)) return text({ error: 'day als YYYY-MM-DD angeben' });
+      const r = db.prepare('UPDATE meal_plan SET day = ? WHERE id = ?').run(day, id);
+      emit('recipes');
+      return text({ ok: r.changes > 0 });
+    },
+  );
+
+  s.registerTool(
     'fill_week',
     { title: 'Woche füllen', description: 'Füllt freie Abende der nächsten 7 Tage mit passenden Rezepten aus dem Vorrat.', inputSchema: {}, annotations: RW },
     async () => text(autofill(localDay(0), 7)),
@@ -414,6 +439,43 @@ export function buildMcpServer(actorName: string) {
     async () => {
       const d = weekDays(localDay(0), 7);
       return text(planShopping(d[0], d[d.length - 1], actorName));
+    },
+  );
+
+  s.registerTool(
+    'where_is',
+    {
+      title: 'Wo ist was?',
+      description: 'Findet, wo etwas im Haus liegt: Ort (Keller, Bad …) und genauer Platz („Regal links, oberstes Fach“). Funktioniert auch für Dinge, die nicht gezählt werden (Fieberthermometer, Werkzeug, Ersatzschlüssel).',
+      inputSchema: { q: z.string().describe('Wonach gesucht wird') },
+      annotations: RO,
+    },
+    async ({ q }) => {
+      const hits = findThings(q).slice(0, 10);
+      return text(hits.length ? hits.map((h) => ({ id: h.id, name: h.name, where: h.places.map((p) => p.name).join(', '), spot: h.spot, location_hint: h.places[0]?.hint ?? null, in_stock: h.in_stock })) : { found: false, hint: 'Nicht hinterlegt – mit set_place eintragen.' });
+    },
+  );
+
+  s.registerTool(
+    'set_place',
+    {
+      title: 'Platz merken',
+      description: 'Merkt sich, wo etwas liegt. Legt den Artikel an, falls es ihn noch nicht gibt (dann ungezählt, z. B. „Fieberthermometer“).',
+      inputSchema: { product: z.union([z.string(), z.number()]), location: z.string().optional().describe('Name des Orts, z. B. Bad'), spot: z.string().max(120).optional().describe('Genauer Platz, z. B. „Spiegelschrank, mittleres Fach“') },
+      annotations: RW,
+    },
+    async ({ product, location, spot }) => {
+      let p = findProduct(product);
+      const loc = location ? (db.prepare('SELECT id, name FROM locations').all() as { id: number; name: string }[]).find((l) => norm(l.name).includes(norm(location)) || norm(location).includes(norm(l.name))) : undefined;
+      if (location && !loc) return text({ error: `Ort „${location}“ gibt es nicht`, hint: 'list_locations' });
+      if (!p) {
+        if (typeof product === 'number') return text({ error: 'Produkt nicht gefunden' });
+        const id = createProduct({ name: product, trackMode: 'none', locationId: loc?.id ?? null, spot: spot ?? null });
+        return text({ created: true, id });
+      }
+      db.prepare('UPDATE products SET spot = COALESCE(?, spot), default_location_id = COALESCE(?, default_location_id), updated_at = datetime(\'now\') WHERE id = ?').run(spot ?? null, loc?.id ?? null, p.id);
+      emit('products');
+      return text({ ok: true, id: p.id });
     },
   );
 

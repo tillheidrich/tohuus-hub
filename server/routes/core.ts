@@ -35,6 +35,7 @@ import { DEFAULT_NOTIFY, notify, notifySettings } from '../lib/notify.js';
 import { lookupBarcode, searchProducts } from '../lib/off.js';
 import { overview } from '../lib/overview.js';
 import { haSettings } from '../lib/plan.js';
+import { findThings } from '../lib/find.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -101,6 +102,10 @@ r.get('/events', (req, res) => addClient(res));
 
 r.get('/overview', (_req, res) => res.json(overview()));
 
+// ---------------------------------------------------------------- where is what
+
+r.get('/find', (req, res) => res.json(findThings(String(req.query.q ?? ''))));
+
 // ---------------------------------------------------------------- locations & categories
 
 r.get('/locations', (_req, res) => {
@@ -121,13 +126,13 @@ r.post('/locations', requireAdmin, (req, res) => {
   res.json({ id: Number(info.lastInsertRowid) });
 });
 r.patch('/locations/:id', requireAdmin, (req, res) => {
-  const b = z.object({ name: z.string().optional(), icon: z.string().optional(), kind: z.string().optional(), sort: z.number().optional() }).parse(req.body);
+  const b = z.object({ name: z.string().optional(), icon: z.string().optional(), kind: z.string().optional(), sort: z.number().optional(), hint: z.string().max(200).nullable().optional() }).parse(req.body);
   const cur = db.prepare('SELECT * FROM locations WHERE id = ?').get(id(req.params.id)) as any;
   if (!cur) {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  db.prepare('UPDATE locations SET name=?, icon=?, kind=?, sort=? WHERE id=?').run(b.name ?? cur.name, b.icon ?? cur.icon, b.kind ?? cur.kind, b.sort ?? cur.sort, cur.id);
+  db.prepare('UPDATE locations SET name=?, icon=?, kind=?, sort=?, hint=? WHERE id=?').run(b.name ?? cur.name, b.icon ?? cur.icon, b.kind ?? cur.kind, b.sort ?? cur.sort, b.hint === undefined ? cur.hint : b.hint?.trim() || null, cur.id);
   emit('stock');
   res.json({ ok: true });
 });
@@ -200,6 +205,7 @@ const productSchema = z.object({
   order_group: z.string().nullable().optional(),
   order_options: z.array(z.object({ group: z.string(), choices: z.array(z.string()), multi: z.boolean().default(false) })).optional(),
   notes: z.string().nullable().optional(),
+  spot: z.string().max(120).nullable().optional(),
   archived: z.boolean().optional(),
   code: z.string().nullable().optional(),
   image_url: z.string().url().nullable().optional(),
@@ -224,6 +230,7 @@ r.post('/products', async (req, res) => {
     orderGroup: b.order_group,
     orderOptions: b.order_options,
     notes: b.notes,
+    spot: b.spot,
     offCode: b.code ?? null,
     shelfDays: b.shelf_days ?? null,
   });
@@ -264,12 +271,13 @@ r.patch('/products/:id', (req, res) => {
     order_group: b.order_group === undefined ? p.order_group : b.order_group,
     order_options: b.order_options === undefined ? p.order_options : JSON.stringify(b.order_options),
     notes: b.notes === undefined ? p.notes : b.notes,
+    spot: b.spot === undefined ? p.spot : b.spot?.trim() || null,
     archived: b.archived === undefined ? p.archived : b.archived ? 1 : 0,
   };
   db.prepare(
     `UPDATE products SET name=@name, brand=@brand, size=@size, category_id=@category_id, unit=@unit, track_mode=@track_mode,
      default_location_id=@default_location_id, min_qty=@min_qty, target_qty=@target_qty, shelf_days=@shelf_days, is_staple=@is_staple,
-     orderable=@orderable, order_group=@order_group, order_options=@order_options, notes=@notes, archived=@archived,
+     orderable=@orderable, order_group=@order_group, order_options=@order_options, notes=@notes, spot=@spot, archived=@archived,
      updated_at=datetime('now') WHERE id=${p.id}`,
   ).run(next);
   if (b.code) db.prepare('INSERT OR REPLACE INTO product_codes (code, product_id) VALUES (?, ?)').run(b.code, p.id);

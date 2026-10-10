@@ -6,6 +6,7 @@ import { guestFromToken, randomToken, rateLimited, requireAuth } from '../lib/au
 import { addClient, emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, listProducts } from '../lib/catalog.js';
 import { notify } from '../lib/notify.js';
+import { findThings } from '../lib/find.js';
 
 /** Public guest API — everything is scoped by the share token. */
 export const guest = Router();
@@ -28,6 +29,7 @@ guest.get('/:token', (req, res) => {
     scopes: req.actor!.guestScopes,
     household: getSetting('household.name', 'Unser Zuhause'),
     brand: brand(),
+    note: (db.prepare('SELECT note FROM guest_links WHERE id = ?').get(req.actor!.guestLinkId) as { note: string | null } | undefined)?.note ?? null,
   });
 });
 
@@ -127,17 +129,18 @@ guest.get('/:token/stock', (req, res) => {
     return;
   }
   const allowed: number[] = req.actor!.guestLocations ?? [];
-  const locations = db.prepare('SELECT id, name, icon FROM locations ORDER BY sort').all() as any[];
-  const visible = locations.filter((l) => allowed.includes(l.id));
-  const products = listProducts().filter((p) => p.track_mode !== 'none');
-  res.json(
-    visible.map((l) => ({
-      ...l,
-      items: products
-        .filter((p) => p.stock.some((s) => s.location_id === l.id && s.qty > 0))
-        .map((p) => ({ id: p.id, name: p.name, brand: p.brand, image_path: p.image_path })),
-    })),
-  );
+  const locations = db.prepare('SELECT id, name, icon, hint FROM locations ORDER BY sort').all() as any[];
+  // never quantities – only what is where, and whether it's there at all
+  const things = findThings(String(req.query.q ?? '').slice(0, 60), allowed.length ? allowed : [-1]).map((t) => ({
+    id: t.id,
+    name: t.name,
+    brand: t.brand,
+    image_path: t.image_path,
+    spot: t.spot,
+    out: t.in_stock === false,
+    place_ids: t.places.map((p) => p.id),
+  }));
+  res.json({ locations: locations.filter((l) => allowed.includes(l.id)), things });
 });
 
 guest.get('/:token/shopping', (req, res) => {
@@ -177,6 +180,7 @@ guestAdmin.post('/guest-links', (req, res) => {
       scopes: z.array(z.enum(['bar', 'stock', 'shopping'])).min(1),
       location_ids: z.array(z.number()).default([]),
       days: z.number().int().min(0).max(365).default(2),
+      note: z.string().max(2000).nullable().optional(),
     })
     .parse(req.body);
   if (b.scopes.includes('stock') && b.location_ids.length === 0) {
@@ -184,8 +188,8 @@ guestAdmin.post('/guest-links', (req, res) => {
     return;
   }
   const token = randomToken(12);
-  db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids, expires_at) VALUES (?, ?, ?, ?, ${b.days ? "datetime('now', ?)" : 'NULL'})`).run(
-    ...[token, b.name, JSON.stringify(b.scopes), JSON.stringify(b.location_ids), ...(b.days ? [`+${b.days} days`] : [])],
+  db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids, note, expires_at) VALUES (?, ?, ?, ?, ?, ${b.days ? "datetime('now', ?)" : 'NULL'})`).run(
+    ...[token, b.name, JSON.stringify(b.scopes), JSON.stringify(b.location_ids), b.note?.trim() || null, ...(b.days ? [`+${b.days} days`] : [])],
   );
   res.json({ token, url: `${config.baseUrl}/g/${token}` });
 });

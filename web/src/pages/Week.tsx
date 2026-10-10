@@ -1,4 +1,4 @@
-import { ArrowsClockwise, Basket, CaretLeft, CaretRight, Check, ChefHat, MagicWand, Plus, X } from '@phosphor-icons/react';
+import { ArrowRight, ArrowsClockwise, Basket, BookOpen, CalendarBlank, CaretLeft, CaretRight, Check, ChefHat, ForkKnife, MagicWand, Plus, Trash, X } from '@phosphor-icons/react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, invalidate, patch, post, useApi } from '../api';
@@ -21,6 +21,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
   const from = addDays(todayStr(), offset * 7);
   const plan = useApi<{ days: string[]; entries: any[] }>(['plan', from], `/plan?from=${from}&days=7`);
   const [pick, setPick] = useState<string | null>(null);
+  const [sel, setSel] = useState<any | null>(null);
   const [busy, setBusy] = useState('');
   const toast = useToast();
   const nav = useNavigate();
@@ -67,7 +68,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
                 <span className="mono">{dt.getDate()}.</span>
               </div>
               {list.map((e) => (
-                <div key={e.id} className={`wmeal ${e.cooked ? 'done' : ''}`} onClick={() => e.recipe_id && nav(`/rezepte/${e.recipe_id}`)}>
+                <div key={e.id} className={`wmeal ${e.cooked ? 'done' : ''}`} onClick={() => setSel(e)}>
                   {e.image_path ? <img src={e.image_path} alt="" loading="lazy" /> : <span className="ph"><ChefHat size={18} /></span>}
                   <div className="grow">
                     <div className="t">{e.title}</div>
@@ -85,7 +86,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
                   <button
                     className="icon-btn sm"
                     aria-label="Entfernen"
-                    onClick={(ev) => { ev.stopPropagation(); api(`/plan/${e.id}`, { method: 'DELETE' }).then(() => invalidate('plan', 'overview')); }}
+                    onClick={(ev) => { ev.stopPropagation(); removeMeal(e, toast); }}
                   >
                     <X size={14} />
                   </button>
@@ -126,6 +127,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
       </div>
 
       <PlanPicker day={pick} onClose={() => setPick(null)} />
+      <MealSheet entry={sel} onClose={() => setSel(null)} onOpen={(id) => nav(`/rezepte/${id}`)} />
     </section>
   );
 }
@@ -187,3 +189,87 @@ function PlanPicker({ day, onClose }: { day: string | null; onClose: () => void 
   );
 }
 
+
+type ToastFn = ReturnType<typeof useToast>;
+
+function removeMeal(e: any, toast: ToastFn) {
+  api(`/plan/${e.id}`, { method: 'DELETE' }).then(() => {
+    invalidate('plan', 'overview');
+    toast({
+      text: `„${e.title}“ aus dem Plan genommen`,
+      action: { label: 'Rückgängig', run: () => post('/plan', { day: e.day, slot: e.slot, recipe_id: e.recipe_id, title: e.title, note: e.note }).then(() => invalidate('plan', 'overview')) },
+    });
+  });
+}
+
+export async function shiftFrom(day: string, toast: ToastFn, slot?: string) {
+  const r = await post('/plan/shift', { from: day, by: 1, slot });
+  invalidate('plan', 'overview');
+  toast({
+    text: r.moved ? `${r.moved} Gerichte rutschen einen Tag nach hinten` : 'Nichts zu verschieben',
+    action: r.moved ? { label: 'Rückgängig', run: () => post('/plan/shift', { from: addDays(day, 1), by: -1, slot }).then(() => invalidate('plan', 'overview')) } : undefined,
+  });
+}
+
+/** Everything you do with a planned dish, one tap away: move, push the rest, drop. */
+function MealSheet({ entry, onClose, onOpen }: { entry: any | null; onClose: () => void; onOpen: (id: number) => void }) {
+  const toast = useToast();
+  const today = todayStr();
+  const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
+  const move = async (day: string) => {
+    const from = entry.day;
+    await patch(`/plan/${entry.id}`, { day });
+    invalidate('plan', 'overview');
+    const id = entry.id;
+    toast({ text: `Verschoben auf ${label(day)}`, action: { label: 'Rückgängig', run: () => patch(`/plan/${id}`, { day: from }).then(() => invalidate('plan', 'overview')) } });
+    onClose();
+  };
+  if (!entry) return <Sheet open={false} onClose={onClose} title="">{null}</Sheet>;
+  return (
+    <Sheet open={!!entry} onClose={onClose} title={entry.title}>
+      <div className="stack">
+        <div className="small muted" style={{ marginTop: -6 }}>{label(entry.day)} · {entry.slot === 'mittag' ? 'mittags' : 'abends'}</div>
+        <div className="action-grid">
+          <button className="action" onClick={() => move(addDays(entry.day < today ? today : entry.day, 1))}>
+            <span className="ic"><ArrowRight size={20} /></span>
+            <b>Auf morgen</b>
+            <span>{label(addDays(entry.day < today ? today : entry.day, 1))}</span>
+          </button>
+          <button className="action" onClick={async () => { await shiftFrom(entry.day, toast, entry.slot); onClose(); }}>
+            <span className="ic"><ForkKnife size={20} /></span>
+            <b>Wir essen auswärts</b>
+            <span>Dieses und alle folgenden Gerichte rutschen einen Tag weiter.</span>
+          </button>
+          {entry.recipe_id && (
+            <button className="action" onClick={() => { onClose(); onOpen(entry.recipe_id); }}>
+              <span className="ic"><BookOpen size={20} /></span>
+              <b>Rezept öffnen</b>
+              <span>Zutaten, Schritte, gekocht melden.</span>
+            </button>
+          )}
+          <button className="action" onClick={() => { removeMeal(entry, toast); onClose(); }}>
+            <span className="ic" style={{ color: 'var(--empty)' }}><Trash size={20} /></span>
+            <b>Aus dem Plan nehmen</b>
+            <span>Das Rezept bleibt in der Sammlung.</span>
+          </button>
+        </div>
+        <div className="eyebrow row" style={{ gap: 6 }}><CalendarBlank size={14} /> Anderer Tag</div>
+        <div className="daychips">
+          {days.map((d) => (
+            <button key={d} className={d === entry.day ? 'on' : ''} disabled={d === entry.day} onClick={() => move(d)}>
+              <b>{d === today ? 'Heute' : WD[new Date(d + 'T12:00:00').getDay()]}</b>
+              <span className="mono">{new Date(d + 'T12:00:00').getDate()}.</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </Sheet>
+  );
+}
+
+function label(d: string) {
+  const t = todayStr();
+  if (d === t) return 'heute';
+  if (d === addDays(t, 1)) return 'morgen';
+  return new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'numeric' });
+}
