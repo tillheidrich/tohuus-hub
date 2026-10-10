@@ -19,9 +19,9 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/today.png" width="240" alt="Today" />
-  <img src="docs/screenshots/import-review.png" width="240" alt="Import review" />
-  <img src="docs/screenshots/guest-bar.png" width="240" alt="Guest bar" />
+  <img src="site/assets/img/today.webp" width="240" alt="Today" />
+  <img src="site/assets/img/where.webp" width="240" alt="Where is what" />
+  <img src="site/assets/img/cook.webp" width="240" alt="Meal plan" />
 </p>
 
 ---
