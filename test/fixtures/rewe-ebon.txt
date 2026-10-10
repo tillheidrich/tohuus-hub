@@ -1,0 +1,26 @@
+               R E W E
+           Musterstraße 1
+            12345 Musterstadt
+       Telefon: 01234 / 567890
+         UID Nr.: DE000000000
+                                     EUR
+SPAGHETTI N.5                      3,98 B
+              2 Stk x     1,99
+BANANE                             2,23 B
+          1,120 kg x    1,99 EUR/kg
+CREMISSIMO VAN.                    3,49 B
+POMMES FRITES                      1,99 B
+TOIL.PAP. 3LG 8R                   2,79 A
+MINERALW.MEDIUM                    5,99 A
+PFAND 3,30 EUR                     3,30 A *
+SCHOKORIEGEL                       0,89 B
+ --------------------------------------
+ SUMME                   EUR     24,66
+ ======================================
+ Geg. EC-Cash            EUR     24,66
+
+Datum:                                 03.10.2026
+Uhrzeit:                             10:42:08 Uhr
+  03.10.2026     10:40     Bon-Nr.:1234
+  Markt:9999     Kasse:3 Bed.:111111
+        Bestellnummer: 123456789

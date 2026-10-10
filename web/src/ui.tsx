@@ -1,0 +1,343 @@
+import {
+  Archive,
+  Bathtub,
+  Bread,
+  Check,
+  Coffee,
+  Cookie,
+  CookingPot,
+  Cube,
+  Drop,
+  Hamburger,
+  IceCream,
+  Minus,
+  Orange,
+  Package,
+  Plus,
+  Snowflake,
+  Sparkle,
+  Tag,
+  Warehouse,
+  WashingMachine,
+  Wine,
+  X,
+  Grains,
+  MagnifyingGlass,
+} from '@phosphor-icons/react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { LEVELS, type Product, type Status, daysUntil, fmtDate, useApi } from './api';
+
+// ------------------------------------------------------------------ icons
+
+function Fridge({ size = 20, weight = 'regular' }: { size?: number; weight?: string }) {
+  const sw = weight === 'bold' ? 22 : weight === 'fill' ? 20 : 16;
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="56" y="24" width="144" height="208" rx="16" fill={weight === 'fill' ? 'currentColor' : 'none'} fillOpacity={0.2} />
+      <line x1="56" y1="104" x2="200" y2="104" />
+      <line x1="88" y1="56" x2="88" y2="76" />
+      <line x1="88" y1="132" x2="88" y2="164" />
+    </svg>
+  );
+}
+
+const ICONS: Record<string, any> = {
+  refrigerator: Fridge,
+  snowflake: Snowflake,
+  archive: Archive,
+  warehouse: Warehouse,
+  'cooking-pot': CookingPot,
+  bath: Bathtub,
+  'washing-machine': WashingMachine,
+  box: Cube,
+  'ice-cream-cone': IceCream,
+  'cup-soda': Drop,
+  milk: Drop,
+  apple: Orange,
+  croissant: Bread,
+  wheat: Grains,
+  cookie: Cookie,
+  sparkles: Sparkle,
+  package: Package,
+  coffee: Coffee,
+  wine: Wine,
+  tag: Tag,
+  food: Hamburger,
+};
+export const ICON_CHOICES = Object.keys(ICONS);
+
+export function Ic({ name, size = 20, weight = 'regular' as const }: { name: string; size?: number; weight?: any }) {
+  const C = ICONS[name] ?? Cube;
+  return <C size={size} weight={weight} />;
+}
+
+// ------------------------------------------------------------------ thumbs & badges
+
+const HUES = ['#e9e3d6', '#dfe9e2', '#e3e6ef', '#efe2dc', '#e8e2ee', '#e2ecec'];
+export function Thumb({ p, size = 52, className = '' }: { p: { name: string; image_path?: string | null }; size?: number; className?: string }) {
+  const [broken, setBroken] = useState(false);
+  const hue = HUES[(p.name.charCodeAt(0) + p.name.length) % HUES.length];
+  return (
+    <div className={`thumb ${className}`} style={className.includes('lg') ? undefined : { width: size, height: size }}>
+      {p.image_path && !broken ? (
+        <img src={p.image_path} alt="" loading="lazy" onError={() => setBroken(true)} />
+      ) : (
+        <div style={{ background: hue, width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: '#3b3a36' }}>
+          <span className="initial" style={className.includes('lg') ? { fontSize: 64 } : undefined}>
+            {p.name.replace(/[^A-Za-zÄÖÜäöü0-9]/g, '').slice(0, 2)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const STATUS_LABEL: Record<Status, string> = {
+  ok: 'da',
+  low: 'knapp',
+  empty: 'alle',
+  expiring: 'bald verbrauchen',
+  expired: 'MHD vorbei',
+  untracked: 'ohne Zählung',
+};
+
+export function StatusBadge({ p, compact = false }: { p: Pick<Product, 'status' | 'nextExpiry'>; compact?: boolean }) {
+  if (p.status === 'ok' || p.status === 'untracked') return null;
+  let label = STATUS_LABEL[p.status];
+  if ((p.status === 'expiring' || p.status === 'expired') && p.nextExpiry) {
+    const d = daysUntil(p.nextExpiry);
+    label = d < 0 ? `seit ${-d} T. drüber` : d === 0 ? 'heute' : d === 1 ? 'morgen' : `in ${d} Tagen`;
+    if (!compact) label = (d < 0 ? 'MHD ' : 'MHD ') + label;
+  }
+  return <span className={`badge ${p.status}`}>{label}</span>;
+}
+
+export function statusText(s: Status) {
+  return STATUS_LABEL[s];
+}
+
+export function Avatar({ name, color = '#2f5bea', size = 30 }: { name: string; color?: string; size?: number }) {
+  return (
+    <span className="avatar" style={{ background: color, width: size, height: size, fontSize: size * 0.42 }}>
+      {name.slice(0, 1).toUpperCase()}
+    </span>
+  );
+}
+
+// ------------------------------------------------------------------ inputs
+
+export function Stepper({ value, onChange, min = 0, label }: { value: number; onChange: (delta: number) => void; min?: number; label?: string }) {
+  return (
+    <div className="stepper" onClick={(e) => e.stopPropagation()}>
+      <button aria-label="weniger" onClick={() => value > min && onChange(-1)} disabled={value <= min}>
+        <Minus size={16} weight="bold" />
+      </button>
+      <span className="val">{label ?? (Number.isInteger(value) ? value : value.toFixed(1))}</span>
+      <button aria-label="mehr" onClick={() => onChange(1)}>
+        <Plus size={16} weight="bold" />
+      </button>
+    </div>
+  );
+}
+
+export function LevelPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="levels" onClick={(e) => e.stopPropagation()}>
+      {LEVELS.map((l, i) => (
+        <button key={l} className={Math.round(value) === i ? 'on' : ''} onClick={() => onChange(i)}>
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label?: string }) {
+  return <button type="button" aria-label={label} aria-pressed={on} className={`toggle ${on ? 'on' : ''}`} onClick={() => onChange(!on)} />;
+}
+
+export function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+  return (
+    <div className="seg">
+      {options.map(([v, l]) => (
+        <button key={v} className={v === value ? 'on' : ''} onClick={() => onChange(v)} type="button">
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ sheet
+
+export function Sheet({ open, onClose, title, children, wide = false, footer }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode; wide?: boolean; footer?: ReactNode }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+  if (!open) return null;
+  return createPortal(
+    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true">
+        <div className="grip" />
+        {title !== undefined && (
+          <div className="sheet-head">
+            <h2>{title}</h2>
+            <button className="icon-btn plain" onClick={onClose} aria-label="Schließen">
+              <X size={20} />
+            </button>
+          </div>
+        )}
+        {children}
+        {footer}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// ------------------------------------------------------------------ toast
+
+type ToastT = { id: number; text: string; error?: boolean; action?: { label: string; run: () => void } };
+const ToastCtx = createContext<(t: Omit<ToastT, 'id'>) => void>(() => {});
+export const useToast = () => useContext(ToastCtx);
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [list, setList] = useState<ToastT[]>([]);
+  const push = useCallback((t: Omit<ToastT, 'id'>) => {
+    const id = Date.now() + Math.random();
+    setList((l) => [...l.slice(-2), { ...t, id }]);
+    setTimeout(() => setList((l) => l.filter((x) => x.id !== id)), t.action ? 5500 : 3200);
+  }, []);
+  return (
+    <ToastCtx.Provider value={push}>
+      {children}
+      {createPortal(
+        <div className="toasts" aria-live="polite">
+          {list.map((t) => (
+            <div key={t.id} className={`toast ${t.error ? 'error' : ''}`}>
+              {!t.error && <Check size={16} weight="bold" />}
+              <span>{t.text}</span>
+              {t.action && (
+                <button
+                  className="act"
+                  onClick={() => {
+                    t.action!.run();
+                    setList((l) => l.filter((x) => x.id !== t.id));
+                  }}
+                >
+                  {t.action.label}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </ToastCtx.Provider>
+  );
+}
+
+// ------------------------------------------------------------------ misc
+
+export function Empty({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
+  return (
+    <div className="empty-state">
+      <div className="art">{icon}</div>
+      <b>{title}</b>
+      {children && <div className="small" style={{ maxWidth: 320 }}>{children}</div>}
+    </div>
+  );
+}
+
+export function Skeleton({ h = 64, n = 4 }: { h?: number; n?: number }) {
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      {Array.from({ length: n }).map((_, i) => (
+        <div key={i} className="skel" style={{ height: h }} />
+      ))}
+    </div>
+  );
+}
+
+export function useDebounced<T>(value: T, ms = 250) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return v;
+}
+
+export function expiryText(d: string | null) {
+  if (!d) return '';
+  const n = daysUntil(d);
+  if (n < 0) return `MHD seit ${-n} T. vorbei`;
+  if (n === 0) return 'MHD heute';
+  if (n === 1) return 'MHD morgen';
+  if (n < 14) return `MHD in ${n} Tagen`;
+  return `MHD ${fmtDate(d)}`;
+}
+
+/** Product search & pick sheet (used by import review, recipes …) */
+export function ProductPicker({ open, onClose, onPick, initial = '', allowCreate = false, onCreate }: {
+  open: boolean;
+  onClose: () => void;
+  onPick: (p: Product) => void;
+  initial?: string;
+  allowCreate?: boolean;
+  onCreate?: (name: string) => void;
+}) {
+  const [q, setQ] = useState(initial);
+  useEffect(() => setQ(initial), [initial, open]);
+  const { data } = useApi<Product[]>('products', open ? '/products' : null);
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (open) setTimeout(() => ref.current?.focus(), 60);
+  }, [open]);
+  const list = useMemo(() => {
+    const n = q.toLowerCase().trim();
+    const all = data ?? [];
+    if (!n) return all.slice(0, 40);
+    const words = n.split(/\s+/);
+    return all.filter((p) => words.every((w) => `${p.brand ?? ''} ${p.name} ${p.size ?? ''}`.toLowerCase().includes(w))).slice(0, 40);
+  }, [q, data]);
+  return (
+    <Sheet open={open} onClose={onClose} title="Produkt wählen">
+      <div className="searchbar" style={{ marginBottom: 12 }}>
+        <MagnifyingGlass size={18} />
+        <input ref={ref} className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Suchen …" />
+      </div>
+      <div className="list">
+        {allowCreate && q.trim() && (
+          <div className="li clickable" onClick={() => onCreate?.(q.trim())}>
+            <div className="thumb" style={{ width: 44, height: 44 }}>
+              <Plus size={18} />
+            </div>
+            <div className="grow">
+              <div className="title">„{q.trim()}“ neu anlegen</div>
+            </div>
+          </div>
+        )}
+        {list.map((p) => (
+          <div key={p.id} className="li clickable" onClick={() => onPick(p)}>
+            <Thumb p={p} size={44} />
+            <div className="grow">
+              <div className="title">{p.name}</div>
+              <div className="sub">{[p.brand, p.size].filter(Boolean).join(' · ')}</div>
+            </div>
+          </div>
+        ))}
+        {list.length === 0 && !allowCreate && <div className="li muted">Nichts gefunden.</div>}
+      </div>
+    </Sheet>
+  );
+}
