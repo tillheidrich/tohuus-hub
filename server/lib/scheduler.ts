@@ -4,6 +4,7 @@ import { fmtQty, listProducts } from './catalog.js';
 import { enqueueMissingImages } from './enrich.js';
 import { emailHtml, notify, notifySettings } from './notify.js';
 import { suggest } from './recipes.js';
+import { haSettings, syncCookidoo } from './plan.js';
 
 function localHour() {
   return Number(new Intl.DateTimeFormat('de-DE', { hour: 'numeric', hour12: false, timeZone: config.timezone }).format(new Date()));
@@ -72,5 +73,11 @@ export function startScheduler() {
   setTimeout(tick, 30_000);
   setInterval(tick, 15 * 60_000);
   setTimeout(() => enqueueMissingImages(), 10_000);
+  const cookidoo = () => {
+    const h = haSettings();
+    if (h.url && h.token) syncCookidoo().then((r) => r.added && console.log('[cookidoo]', r)).catch((e) => console.warn('[cookidoo]', e.message));
+  };
+  setTimeout(cookidoo, 60_000);
+  setInterval(cookidoo, 3 * 3600_000);
   setInterval(() => enqueueMissingImages(), 6 * 3600_000);
 }

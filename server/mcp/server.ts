@@ -22,6 +22,8 @@ import { fetchImage, saveImage } from '../lib/images.js';
 import { applyImport, createImport, linesToImport } from '../lib/imports.js';
 import { overview } from '../lib/overview.js';
 import { getRecipe, listRecipes, logCooked, saveRecipe, suggest } from '../lib/recipes.js';
+import { addPlan, autofill, getPlan, planShopping, weekDays } from '../lib/plan.js';
+import { localDay } from '../lib/catalog.js';
 import { norm } from '../lib/text.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -371,6 +373,47 @@ export function buildMcpServer(actorName: string) {
         }
       }
       return text({ ok: true, consumed: used });
+    },
+  );
+
+  s.registerTool(
+    'get_meal_plan',
+    { title: 'Wochenplan', description: 'Geplante Gerichte der nächsten Tage (inkl. Cookidoo-Wochenplan, falls verbunden).', inputSchema: { days: z.number().min(1).max(28).default(7) }, annotations: RO },
+    async ({ days }) => {
+      const d = weekDays(localDay(0), days);
+      return text(getPlan(d[0], d[d.length - 1]).map((e) => ({ id: e.id, day: e.day, slot: e.slot, title: e.title, recipe_id: e.recipe_id, source: e.source, cooked: Boolean(e.cooked) })));
+    },
+  );
+
+  s.registerTool(
+    'plan_meal',
+    {
+      title: 'Gericht einplanen',
+      description: 'Plant ein Rezept (oder einen freien Titel wie „Pizza bestellen“) für einen Tag ein.',
+      inputSchema: { day: z.string().describe('YYYY-MM-DD'), recipe: z.union([z.string(), z.number()]).optional(), title: z.string().optional(), slot: z.enum(['mittag', 'abend']).default('abend') },
+      annotations: RW,
+    },
+    async ({ day, recipe, title, slot }) => {
+      let rid: number | null = null;
+      if (typeof recipe === 'number') rid = recipe;
+      else if (recipe) rid = listRecipes().find((x) => norm(x.title).includes(norm(recipe)))?.id ?? null;
+      if (recipe && !rid && !title) return text({ error: 'Rezept nicht gefunden', hint: 'list_recipes nutzen oder title setzen' });
+      return text({ id: addPlan({ day, recipe_id: rid, title, slot }) });
+    },
+  );
+
+  s.registerTool(
+    'fill_week',
+    { title: 'Woche füllen', description: 'Füllt freie Abende der nächsten 7 Tage mit passenden Rezepten aus dem Vorrat.', inputSchema: {}, annotations: RW },
+    async () => text(autofill(localDay(0), 7)),
+  );
+
+  s.registerTool(
+    'week_shopping',
+    { title: 'Einkauf für die Woche', description: 'Setzt alle fehlenden Zutaten der geplanten Gerichte der nächsten 7 Tage auf die Einkaufsliste.', inputSchema: {}, annotations: RW },
+    async () => {
+      const d = weekDays(localDay(0), 7);
+      return text(planShopping(d[0], d[d.length - 1], actorName));
     },
   );
 

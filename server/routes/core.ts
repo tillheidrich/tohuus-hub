@@ -34,6 +34,7 @@ import { deleteImage, fetchImage, saveImage } from '../lib/images.js';
 import { DEFAULT_NOTIFY, notify, notifySettings } from '../lib/notify.js';
 import { lookupBarcode, searchProducts } from '../lib/off.js';
 import { overview } from '../lib/overview.js';
+import { haSettings } from '../lib/plan.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -503,6 +504,7 @@ r.get('/settings', (_req, res) => {
   res.json({
     household: getSetting('household.name', 'Unser Zuhause'),
     brand: brand(),
+    ha: { ...haSettings(), token: haSettings().token ? '••••' : '' },
     notify: notifySettings(),
     importAutoApply: getSetting('import.autoApply', false),
     baseUrl: config.baseUrl,
@@ -517,6 +519,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
       household: z.string().optional(),
       brand: z.enum(['stockwerk', 'fredirando']).optional(),
       importAutoApply: z.boolean().optional(),
+      ha: z.object({ url: z.string().url().or(z.literal('')).optional(), token: z.string().max(400).optional(), cookidooCalendar: z.string().max(120).optional() }).optional(),
       notify: z
         .object({
           haWebhookUrl: z.string().optional(),
@@ -533,6 +536,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
     .parse(req.body);
   if (b.household) setSetting('household.name', b.household);
   if (b.brand) setSetting('brand', b.brand);
+  if (b.ha) setSetting('ha', { ...haSettings(), ...Object.fromEntries(Object.entries(b.ha).filter(([k, v]) => !(k === 'token' && v === '••••'))) });
   if (b.importAutoApply !== undefined) setSetting('import.autoApply', b.importAutoApply);
   if (b.notify) {
     const cur = notifySettings();

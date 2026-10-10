@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { api, invalidate, post, useApi } from '../api';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { WeekPlan } from './Week';
 
 export function Cook({ me }: { me: Me }) {
   const [tm, setTm] = useState<'all' | 'tm' | 'no'>('all');
@@ -13,6 +14,7 @@ export function Cook({ me }: { me: Me }) {
   const [q, setQ] = useState('');
   const [importOpen, setImportOpen] = useState(false);
   const nav = useNavigate();
+  const settings = useApi<any>('settings', '/settings');
   const deck = sugg.data ?? [];
   const cur = deck[idx % Math.max(1, deck.length)];
   const next = deck[(idx + 1) % Math.max(1, deck.length)];
@@ -35,6 +37,9 @@ export function Cook({ me }: { me: Me }) {
         </div>
       </header>
 
+      <WeekPlan cookidoo={Boolean(settings.data?.ha?.url && settings.data?.ha?.token)} />
+
+      <h2 style={{ margin: '28px 0 12px' }}>Ideen für heute</h2>
       <div className="row between wrap" style={{ marginBottom: 14 }}>
         <Seg value={tm} onChange={(v) => { setTm(v); setIdx(0); }} options={[['all', 'Alle'], ['tm', 'Thermomix'], ['no', 'Ohne']]} />
         {deck.length > 1 && (

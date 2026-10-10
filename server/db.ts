@@ -254,6 +254,20 @@ const migrations: string[] = [
   );
   `,
   `ALTER TABLE orders ADD COLUMN stock_booked INTEGER NOT NULL DEFAULT 0;`,
+  `CREATE TABLE meal_plan (
+    id INTEGER PRIMARY KEY,
+    day TEXT NOT NULL,
+    slot TEXT NOT NULL DEFAULT 'abend',
+    recipe_id INTEGER REFERENCES recipes(id) ON DELETE SET NULL,
+    title TEXT NOT NULL,
+    note TEXT,
+    source TEXT NOT NULL DEFAULT 'manual',
+    external_id TEXT,
+    cooked INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX meal_plan_day ON meal_plan(day);
+  CREATE UNIQUE INDEX meal_plan_ext ON meal_plan(external_id) WHERE external_id IS NOT NULL;`,
 ];
 
 db.exec(`CREATE TABLE IF NOT EXISTS _migrations (id INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`);

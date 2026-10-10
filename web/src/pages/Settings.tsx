@@ -397,6 +397,7 @@ function Access({ admin }: { admin: boolean }) {
         </div>
         <div className="small muted">Zugang „Home Assistant“ erzeugen – dann bekommst du ein fertiges Package zum Einfügen.</div>
       </div>
+      {admin && s.data && <HaConnection initial={s.data.ha} />}
       {admin && (
         <div className="card pad stack">
           <b>Neuer Zugang</b>
@@ -522,6 +523,55 @@ function Data({ admin }: { admin: boolean }) {
       <p className="small muted">
         Stockwerk ist Open Source (AGPL-3.0). Produktdaten und -bilder teilweise von Open Food Facts (ODbL / CC BY-SA). Nicht mit REWE, Thermomix/Vorwerk oder HelloFresh verbunden.
       </p>
+    </div>
+  );
+}
+
+function HaConnection({ initial }: { initial: { url: string; token: string; cookidooCalendar: string } }) {
+  const [h, setH] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const save = async (sync: boolean) => {
+    setBusy(true);
+    try {
+      await patch('/settings', { ha: h });
+      invalidate('settings');
+      if (sync) {
+        const r = await post('/plan/cookidoo-sync', {});
+        if (r.error) throw new Error(r.error);
+        toast({ text: `Cookidoo: ${r.events} Einträge gelesen, ${r.added} neu im Wochenplan` });
+      } else toast({ text: 'Gespeichert' });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="card pad stack">
+      <div>
+        <b>Cookidoo-Wochenplan über Home Assistant</b>
+        <div className="small muted">
+          Cookidoo hat keine offene Schnittstelle. Die Home-Assistant-Integration „Cookidoo“ liest „Meine Woche“ aber als Kalender aus – Stockwerk holt sich die Gerichte von dort alle drei Stunden in den Wochenplan.
+        </div>
+      </div>
+      <div className="field">
+        <label>Home-Assistant-Adresse</label>
+        <input className="input" value={h.url} onChange={(e) => setH({ ...h, url: e.target.value })} placeholder="https://ha.example.de" inputMode="url" />
+      </div>
+      <div className="field">
+        <label>Langlebiger Zugangstoken</label>
+        <input className="input mono" type="password" value={h.token} onChange={(e) => setH({ ...h, token: e.target.value })} placeholder="In HA: Profil › Sicherheit › Token erstellen" />
+      </div>
+      <div className="field">
+        <label>Kalender-Entität</label>
+        <input className="input mono" value={h.cookidooCalendar} onChange={(e) => setH({ ...h, cookidooCalendar: e.target.value })} />
+        <div className="help">Standard der Integration: calendar.cookidoo_speiseplan</div>
+      </div>
+      <div className="row wrap" style={{ gap: 8 }}>
+        <button className="btn" disabled={busy} onClick={() => save(false)}>Speichern</button>
+        <button className="btn primary" disabled={busy || !h.url || !h.token} onClick={() => save(true)}>Speichern & abgleichen</button>
+      </div>
     </div>
   );
 }

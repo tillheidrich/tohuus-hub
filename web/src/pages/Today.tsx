@@ -191,9 +191,29 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         </div>
       </section>
 
+      {o.planned?.length > 0 && (
+        <section className="section">
+          <div className="section-head">
+            <h2>Heute geplant</h2>
+            <a onClick={() => nav('/kochen')}>Wochenplan</a>
+          </div>
+          <div className="list">
+            {o.planned.map((p: any) => (
+              <div key={p.id} className="plan-today" onClick={() => (p.recipe_id ? nav(`/rezepte/${p.recipe_id}`) : nav('/kochen'))}>
+                {p.image_path ? <img src={p.image_path} alt="" /> : <span className="ph"><ChefHat size={24} /></span>}
+                <div className="grow">
+                  <div className="eyebrow">{p.slot === 'mittag' ? 'Mittags' : 'Heute Abend'}{p.cooked ? ' · gekocht' : ''}</div>
+                  <b style={{ fontSize: 17 }}>{p.title}</b>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="section">
         <div className="section-head">
-          <h2>Was kochen wir?</h2>
+          <h2>{o.planned?.length ? 'Oder lieber …' : 'Was kochen wir?'}</h2>
           <a onClick={() => nav('/kochen')}>Mehr Ideen</a>
         </div>
         {o.tonight.length === 0 ? (

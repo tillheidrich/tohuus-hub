@@ -52,6 +52,8 @@ export function overview() {
     .prepare(`SELECT m.*, p.name, p.unit, p.track_mode FROM movements m JOIN products p ON p.id = m.product_id ORDER BY m.id DESC LIMIT 8`)
     .all();
   const tonight = suggest({ limit: 3 });
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: process.env.TZ ?? 'Europe/Berlin' }).format(new Date());
+  const planned = db.prepare(`SELECT m.id, m.title, m.recipe_id, m.slot, m.cooked, r.image_path FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE day = ? ORDER BY slot`).all(today);
 
   return {
     household: getSetting('household.name', 'Unser Zuhause'),
@@ -72,6 +74,7 @@ export function overview() {
     imports,
     orders: orders.map((o) => ({ ...o, lines: JSON.parse(o.lines) })),
     activity,
+    planned,
     tonight: tonight.map((s) => ({
       id: s.recipe.id,
       title: s.recipe.title,

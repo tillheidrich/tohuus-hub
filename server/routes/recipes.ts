@@ -8,6 +8,8 @@ import { deleteImage, fetchImage, saveImage, toVisionJpeg } from '../lib/images.
 import { getRecipe, ingredientCore, listRecipes, logCooked, parseRecipeJsonLd, saveRecipe, suggest } from '../lib/recipes.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
+import { addPlan, autofill, getPlan, planShopping, syncCookidoo, weekDays } from '../lib/plan.js';
+import { localDay } from '../lib/catalog.js';
 import { safeFetch } from '../lib/net.js';
 
 const rid = (v: unknown) => {
@@ -94,6 +96,7 @@ r.post('/recipes/:id/cooked', (req, res) => {
   const valid = (b.consume ?? []).filter((pid) => db.prepare('SELECT 1 FROM products WHERE id = ?').get(pid));
   db.transaction(() => {
     logCooked(id, actorName(req), b.rating ?? null, b.note ?? null);
+    db.prepare('UPDATE meal_plan SET cooked = 1 WHERE recipe_id = ? AND day = ?').run(id, localDay(0));
     for (const pid of valid) adjustStock({ productId: pid, delta: -1, reason: 'cook', actor: actorName(req), ref: `recipe:${id}` });
   })();
   res.json({ ok: true });
@@ -234,4 +237,49 @@ r.get('/recipes/:id/match', (req, res) => {
       return { ingredient_id: i.id, text: i.text, pantry: Boolean(i.pantry), product: p };
     }),
   );
+});
+
+// ---------------------------------------------------------------- week plan
+
+const dayRe = /^\d{4}-\d\d-\d\d$/;
+r.get('/plan', (req, res) => {
+  const from = dayRe.test(String(req.query.from)) ? String(req.query.from) : localDay(0);
+  const days = weekDays(from, Math.max(1, Math.min(28, Number(req.query.days) || 7)));
+  res.json({ days, entries: getPlan(days[0], days[days.length - 1]) });
+});
+r.post('/plan', (req, res) => {
+  const b = z.object({ day: z.string().regex(dayRe), recipe_id: z.number().nullable().optional(), title: z.string().max(120).optional(), slot: z.enum(['mittag', 'abend']).default('abend'), note: z.string().max(200).nullable().optional() }).parse(req.body);
+  res.json({ id: addPlan(b) });
+});
+r.patch('/plan/:id', (req, res) => {
+  const b = z.object({ day: z.string().regex(dayRe).optional(), cooked: z.boolean().optional() }).parse(req.body);
+  const e = db.prepare('SELECT * FROM meal_plan WHERE id = ?').get(Number(req.params.id)) as any;
+  if (!e) {
+    res.status(404).json({ error: 'not found' });
+    return;
+  }
+  db.prepare('UPDATE meal_plan SET day = ?, cooked = ? WHERE id = ?').run(b.day ?? e.day, b.cooked === undefined ? e.cooked : b.cooked ? 1 : 0, e.id);
+  emit('recipes');
+  res.json({ ok: true });
+});
+r.delete('/plan/:id', (req, res) => {
+  db.prepare('DELETE FROM meal_plan WHERE id = ?').run(Number(req.params.id));
+  emit('recipes');
+  res.json({ ok: true });
+});
+r.post('/plan/autofill', (req, res) => {
+  const from = dayRe.test(String(req.body?.from)) ? String(req.body.from) : localDay(0);
+  res.json(autofill(from, Math.max(1, Math.min(28, Number(req.body?.days) || 7))));
+});
+r.post('/plan/shopping', (req, res) => {
+  const from = dayRe.test(String(req.body?.from)) ? String(req.body.from) : localDay(0);
+  const days = weekDays(from, Math.max(1, Math.min(28, Number(req.body?.days) || 7)));
+  res.json(planShopping(days[0], days[days.length - 1], actorName(req)));
+});
+r.post('/plan/cookidoo-sync', async (_req, res) => {
+  try {
+    res.json(await syncCookidoo());
+  } catch (e) {
+    res.status(502).json({ error: (e as Error).message });
+  }
 });
