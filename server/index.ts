@@ -27,6 +27,9 @@ import { r as kioskRoutes, pub as kioskPublic } from './routes/kiosk.js';
 import { r as kidsRoutes, kid as kidDevice } from './routes/kids.js';
 import { r as onboardRoutes } from './routes/onboard.js';
 import { r as retailRoutes } from './routes/retail.js';
+import { r as haRoutes } from './routes/ha.js';
+import { r as channelsRoutes } from './routes/channels.js';
+import { r as intlRoutes } from './routes/intl.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 ensureBaseData();
@@ -87,6 +90,9 @@ app.use('/api', kioskRoutes);
 app.use('/api', kidsRoutes);
 app.use('/api', onboardRoutes);
 app.use('/api', retailRoutes);
+app.use('/api', haRoutes);
+app.use('/api', channelsRoutes);
+app.use('/api', intlRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

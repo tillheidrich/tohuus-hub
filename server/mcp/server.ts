@@ -34,6 +34,9 @@ import { register as register_kiosk } from './tools-kiosk.js';
 import { register as register_kids } from './tools-kids.js';
 import { register as register_onboard } from './tools-onboard.js';
 import { register as register_retail } from './tools-retail.js';
+import { register as register_ha } from './tools-ha.js';
+import { register as register_channels } from './tools-channels.js';
+import { register as register_intl } from './tools-intl.js';
 import { norm } from '../lib/text.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -516,6 +519,9 @@ export function buildMcpServer(actorName: string) {
   register_kids(s, actorName);
   register_onboard(s, actorName);
   register_retail(s, actorName);
+  register_ha(s, actorName);
+  register_channels(s, actorName);
+  register_intl(s, actorName);
   return s;
 }
 

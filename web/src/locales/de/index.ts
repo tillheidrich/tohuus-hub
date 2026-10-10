@@ -13,6 +13,9 @@ import { kiosk } from './kiosk';
 import { kids } from './kids';
 import { onboard } from './onboard';
 import { retail } from './retail';
+import { ha } from './ha';
+import { channels } from './channels';
+import { intl } from './intl';
 
 
-export const de: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail };
+export const de: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl };

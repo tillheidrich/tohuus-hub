@@ -13,8 +13,11 @@ import { de_kiosk } from './locales/de-kiosk.js';
 import { de_kids } from './locales/de-kids.js';
 import { de_onboard } from './locales/de-onboard.js';
 import { de_retail } from './locales/de-retail.js';
+import { de_ha } from './locales/de-ha.js';
+import { de_channels } from './locales/de-channels.js';
+import { de_intl } from './locales/de-intl.js';
 
-const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail };
+const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl };
 
 const DICTS: Record<string, Record<string, string>> = { en: {}, de };
 const LOCALES: Record<string, string> = { en: 'en-GB', de: 'de-DE' };
