@@ -45,10 +45,12 @@ And because the honest answer to *"what should we cook?"* depends on what's actu
 | **Shopping list** | Live-synced between phones. Low items land on it automatically; tick an item and it goes straight into stock. Share as text. |
 | **Imports** | REWE *Abholavis* / *Lieferavis* / *eBon* parsers (deterministic, tested), digital receipts via QR link, photos, pasted text. Everything goes through a review step: substitutions, refused items, new products, target location. Receipt abbreviations are learned per product. |
 | **Recipes** | Import from any site with schema.org data (Cookidoo: title, image, ingredients), from photos (HelloFresh cards etc.) or text. Thermomix steps with time / temperature / speed. Cooking log, "used up" after cooking, missing ingredients to the shopping list. |
+| **Week plan** | Seven days at a glance: plan a recipe or a free entry ("order pizza"), fill the empty evenings with what fits your stock, and put every missing ingredient of the week on the shopping list in one tap. Cooking a planned dish ticks it off. |
+| **Cookidoo week** | Cookidoo has no public API, but the Home Assistant *Cookidoo* integration exposes "My Week" as a calendar. Give Stockwerk a Home Assistant URL and token and it pulls the planned dishes every three hours, importing recipe, ingredients and photo where it can. |
 | **Guest bar** | Share a link or QR code: guests order drinks, ice cream and snacks from what's actually in stock — with options like oat milk or toppings. You get a push, accept, serve; stock is deducted. Babysitter links can show selected locations read-only. |
 | **Notifications** | Home Assistant webhook, ntfy, any webhook, e-mail. Low / empty / expiring, import waiting, new guest order, daily digest. |
 | **Home Assistant** | REST summary endpoint for dashboard sensors, action endpoint for `rest_command`, generated package with an actionable iOS push ("put on shopping list"). |
-| **MCP** | 16 focused tools for Claude, ChatGPT and other MCP clients: overview, search, update stock, used up, record purchase (with review), shopping list, suggest meals, save recipe, log cooked … |
+| **MCP** | 20 focused tools for Claude, ChatGPT and other MCP clients: overview, search, update stock, used up, record purchase (with review), shopping list, suggest meals, save recipe, log cooked, week plan, shop for the week … |
 | **Language** | German UI (the household it was built for), English docs. UI translations are welcome. |
 | **Your data** | SQLite file, JSON export, no telemetry, no cloud dependency. Runs on a NAS or a small VPS (~60 MB RAM). |
 
@@ -92,6 +94,8 @@ Then, from your phone: send a photo of a receipt or a HelloFresh card and say *"
 - an automation turning Stockwerk webhooks into phone notifications with an *"Auf die Einkaufsliste"* button.
 
 Put the webhook URL into *Settings → Notifications*.
+
+**Cookidoo week plan:** set up the official *Cookidoo* integration in Home Assistant, create a long-lived access token (Profile → Security) and enter both under *Settings → Access & AI → Cookidoo*. The default calendar entity is `calendar.cookidoo_speiseplan`.
 
 ## Supported documents
 
