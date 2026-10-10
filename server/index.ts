@@ -29,6 +29,10 @@ import { r as onboardRoutes } from './routes/onboard.js';
 import { r as retailRoutes } from './routes/retail.js';
 import { r as channelsRoutes, pub as channelsPublic } from './routes/channels.js';
 import { r as intlRoutes } from './routes/intl.js';
+import { r as cook2Routes } from './routes/cook2.js';
+import { r as authRoutes } from './routes/auth.js';
+import { r as spend2Routes } from './routes/spend2.js';
+import { r as printRoutes } from './routes/print.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 ensureBaseData();
@@ -92,6 +96,10 @@ app.use('/api', onboardRoutes);
 app.use('/api', retailRoutes);
 app.use('/api', channelsRoutes);
 app.use('/api', intlRoutes);
+app.use('/api', cook2Routes);
+app.use('/api', authRoutes);
+app.use('/api', spend2Routes);
+app.use('/api', printRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

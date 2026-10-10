@@ -16,5 +16,9 @@ import { retail } from './retail';
 import { ha } from './ha';
 import { channels } from './channels';
 import { intl } from './intl';
+import { cook2 } from './cook2';
+import { auth } from './auth';
+import { spend2 } from './spend2';
+import { print } from './print';
 
-export const sv: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl };
+export const sv: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print };
