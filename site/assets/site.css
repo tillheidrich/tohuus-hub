@@ -36,36 +36,10 @@
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --wrap: 1200px;
   --gutter: 16px;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #111214;
-    --paper-2: #16171a;
-    --surface: #1b1c1f;
-    --surface-2: #232428;
-    --ink: #f1f0ec;
-    --ink-2: #c3c3c0;
-    --ink-3: #8b8c90;
-    --line: rgba(241, 240, 236, 0.08);
-    --line-2: rgba(241, 240, 236, 0.14);
-    --shell: rgba(241, 240, 236, 0.035);
-    --accent: #34c486;
-    --accent-ink: #6fe0ae;
-    --accent-soft: #163428;
-    --low: #e8ac3c;
-    --low-soft: #352a12;
-    --empty: #f0705f;
-    --empty-soft: #3a1c18;
-    --info: #7d9cf0;
-    --info-soft: #1c2440;
-    --code-bg: #0b0c0d;
-    --shadow-soft: 0 1px 1px rgba(0, 0, 0, 0.3), 0 24px 48px -28px rgba(0, 0, 0, 0.8);
-    --shadow-phone: 0 2px 4px rgba(0, 0, 0, 0.3), 0 40px 80px -30px rgba(0, 0, 0, 0.85);
-    --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  }
-}
+/* ToHuus Hub is light by design */
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 96px; }

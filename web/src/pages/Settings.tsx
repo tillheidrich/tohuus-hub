@@ -55,9 +55,9 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
   const [pw, setPw] = useState('');
   const [theme, setTheme] = useState<string>(() => {
     try {
-      return localStorage.getItem('sw.theme') ?? 'auto';
+      return localStorage.getItem('sw.theme') ?? 'light';
     } catch {
-      return 'auto';
+      return 'light';
     }
   });
   const toast = useToast();
@@ -65,7 +65,7 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
   const applyTheme = (th: string) => {
     setTheme(th);
     try {
-      if (th === 'auto') {
+      if (th === 'light') {
         localStorage.removeItem('sw.theme');
         delete document.documentElement.dataset.theme;
       } else {

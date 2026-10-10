@@ -7,6 +7,7 @@ import { addClient, emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, listProducts } from '../lib/catalog.js';
 import { notify } from '../lib/notify.js';
 import { findThings } from '../lib/find.js';
+import { createOrder, listOrders, orderMenu, orderSchema } from '../lib/orders.js';
 import { t } from '../i18n.js';
 
 /** Public guest API — everything is scoped by the share token. */
@@ -42,21 +43,7 @@ guest.get('/:token/menu', (req, res) => {
     res.status(403).json({ error: 'forbidden' });
     return;
   }
-  const items = listProducts()
-    .filter((p) => p.orderable)
-    .map((p) => ({
-      id: p.id,
-      name: p.name,
-      brand: p.brand,
-      image_path: p.image_path,
-      image_credit: p.image_credit,
-      group: p.order_group ?? t('Other'),
-      options: p.order_options,
-      available: p.track_mode === 'none' ? true : p.total > 0,
-      // stock numbers are only shown roughly to guests
-      hint: p.track_mode === 'none' ? null : p.total <= 0 ? t('all gone right now') : p.total <= 2 ? t('only a few left') : null,
-    }));
-  res.json(items);
+  res.json(orderMenu(false));
 });
 
 guest.post('/:token/orders', (req, res) => {
@@ -64,65 +51,24 @@ guest.post('/:token/orders', (req, res) => {
     res.status(403).json({ error: 'forbidden' });
     return;
   }
-  const b = z
-    .object({
-      guest_name: z.string().trim().min(1).max(40),
-      note: z.string().max(300).nullable().optional(),
-      lines: z.array(z.object({ product_id: z.number(), qty: z.number().int().min(1).max(20), options: z.array(z.string().max(40)).max(10).default([]) })).min(1).max(30),
-    })
-    .parse(req.body);
+  const b = orderSchema.parse(req.body);
+  if (!b.guest_name) {
+    res.status(400).json({ error: t('Please tell us your name.') });
+    return;
+  }
   if (rateLimited(`order:${req.actor!.guestLinkId}`, 15, 10 * 60_000)) {
     res.status(429).json({ error: t('Lots of orders right now – take a breath and try again in a moment.') });
     return;
   }
-  const products = new Map(listProducts().filter((p) => p.orderable).map((p) => [p.id, p]));
-  // only lines for orderable products, options only from the product's own choices
-  const lines = b.lines
-    .filter((l) => products.has(l.product_id))
-    .map((l) => {
-      const allowed = new Set(products.get(l.product_id)!.order_options.flatMap((o: any) => o.choices as string[]));
-      return { ...l, options: l.options.filter((o) => allowed.has(o)) };
-    });
-  if (!lines.length) {
-    res.status(400).json({ error: t('Nothing orderable in the basket.') });
-    return;
+  try {
+    res.json({ id: createOrder(b, { guestLinkId: req.actor!.guestLinkId, name: b.guest_name, linkName: req.actor!.name }) });
+  } catch (e) {
+    res.status((e as any).status ?? 500).json({ error: (e as Error).message });
   }
-  b.lines = lines;
-  const tx = db.transaction(() => {
-    const oid = Number(
-      db.prepare('INSERT INTO orders (guest_link_id, guest_name, note) VALUES (?, ?, ?)').run(req.actor!.guestLinkId, b.guest_name.trim(), b.note ?? null).lastInsertRowid,
-    );
-    for (const l of b.lines) {
-      const p = products.get(l.product_id);
-      if (!p) continue;
-      db.prepare('INSERT INTO order_lines (order_id, product_id, name, qty, options) VALUES (?, ?, ?, ?, ?)').run(oid, p.id, p.name, l.qty, JSON.stringify(l.options));
-    }
-    return oid;
-  });
-  const oid = tx();
-  emit('orders');
-  const text = b.lines
-    .map((l) => `${l.qty}× ${products.get(l.product_id)?.name ?? '?'}${l.options.length ? ` (${l.options.join(', ')})` : ''}`)
-    .join(', ');
-  void notify({
-    event: 'order.new',
-    title: t('Order from {name}', { name: b.guest_name }),
-    message: b.note ? t('{items} – “{note}”', { items: text, note: b.note }) : text,
-    path: '/bar',
-    data: { order_id: oid, guest: b.guest_name, link: req.actor!.name, items: b.lines.length },
-  });
-  res.json({ id: oid });
 });
 
 guest.get('/:token/orders', (req, res) => {
-  const rows = db
-    .prepare(
-      `SELECT o.id, o.guest_name, o.status, o.note, o.created_at,
-         (SELECT json_group_array(json_object('name', name, 'qty', qty, 'options', json(options))) FROM order_lines WHERE order_id = o.id) AS lines
-       FROM orders o WHERE guest_link_id = ? ORDER BY id DESC LIMIT 40`,
-    )
-    .all(req.actor!.guestLinkId) as any[];
-  res.json(rows.map((o) => ({ ...o, lines: JSON.parse(o.lines) })));
+  res.json(listOrders('guest_link_id = ?', req.actor!.guestLinkId!));
 });
 
 guest.get('/:token/stock', (req, res) => {
@@ -201,12 +147,24 @@ guestAdmin.delete('/guest-links/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// household members order from the sofa: everything in the house, not just the bar
+guestAdmin.get('/bar/menu', (_req, res) => res.json(orderMenu(true)));
+guestAdmin.get('/bar/my-orders', (req, res) => res.json(listOrders("user_id = ? AND (status IN ('new','accepted') OR updated_at > datetime('now','-6 hours'))", req.actor!.userId ?? -1)));
+guestAdmin.post('/bar/orders', (req, res) => {
+  const b = orderSchema.parse(req.body);
+  try {
+    res.json({ id: createOrder(b, { userId: req.actor!.userId ?? null, name: req.actor!.name }) });
+  } catch (e) {
+    res.status((e as any).status ?? 500).json({ error: (e as Error).message });
+  }
+});
+
 guestAdmin.get('/orders', (req, res) => {
   const all = req.query.all === '1';
   const rows = db
     .prepare(
       `SELECT o.*, g.name AS link_name,
-         (SELECT json_group_array(json_object('product_id', product_id, 'name', name, 'qty', qty, 'options', json(options))) FROM order_lines WHERE order_id = o.id) AS lines
+         (SELECT json_group_array(json_object('product_id', product_id, 'name', name, 'qty', qty, 'options', json(options), 'note', note)) FROM order_lines WHERE order_id = o.id) AS lines
        FROM orders o LEFT JOIN guest_links g ON g.id = o.guest_link_id
        ${all ? '' : "WHERE o.status IN ('new','accepted') OR o.updated_at > datetime('now','-12 hours')"}
        ORDER BY o.id DESC LIMIT 100`,

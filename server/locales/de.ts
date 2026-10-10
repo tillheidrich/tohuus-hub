@@ -121,4 +121,6 @@ export const de: Record<string, string> = {
   "Guest: {name}": "Gast: {name}",
   "Please share at least one location.": "Bitte mindestens einen Ort freigeben.",
   "Order {id}: {status}": "Bestellung {id}: {status}",
+  "all gone": "alle",
+  "Please tell us your name.": "Bitte sag uns deinen Namen.",
 };

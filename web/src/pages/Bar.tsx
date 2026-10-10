@@ -49,7 +49,7 @@ function Orders() {
           <div className="row between">
             <div>
               <b style={{ fontSize: 16 }}>{o.guest_name}</b>
-              <div className="small muted">{[o.link_name, relTime(o.created_at)].filter(Boolean).join(' · ')}</div>
+              <div className="small muted">{[o.link_name ?? (o.user_id ? t('from the sofa') : null), relTime(o.created_at)].filter(Boolean).join(' · ')}</div>
             </div>
             <span className={`badge ${o.status === 'new' ? 'expiring' : o.status === 'accepted' ? 'info' : o.status === 'done' ? 'good' : ''}`}>
               {{ new: t('new'), accepted: t('in progress'), done: t('served'), declined: t('declined') }[o.status as string]}
@@ -60,6 +60,7 @@ function Orders() {
               <li key={i}>
                 <b>{l.qty}×</b> {l.name}
                 {l.options?.length ? <span className="muted"> · {l.options.join(', ')}</span> : null}
+                {l.note ? <span style={{ color: "var(--accent)", fontWeight: 600 }}> · „{l.note}“</span> : null}
               </li>
             ))}
           </ul>

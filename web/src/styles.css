@@ -39,8 +39,9 @@
   color-scheme: light;
 }
 
+/* light by default; dark only when chosen, or "automatic" with a dark system */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root[data-theme='auto'] {
     --paper: #121315;
     --surface: #1b1c1f;
     --surface-2: #232428;
@@ -2108,7 +2109,7 @@ hr.sep {
   --shadow: 0 1px 2px rgba(120, 50, 10, 0.06), 0 10px 26px -14px rgba(160, 70, 20, 0.28);
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-brand='fredirando']:not([data-theme='light']) {
+  :root[data-brand='fredirando'][data-theme='auto'] {
     --paper: #17110e;
     --surface: #211915;
     --surface-2: #2b211c;
@@ -2549,4 +2550,32 @@ hr.sep {
   border-radius: 18px;
   padding: 14px 16px;
   line-height: 1.55;
+}
+.cartbar.in-app {
+  bottom: calc(96px + var(--safe-b));
+}
+@media (min-width: 900px) {
+  .cartbar.in-app {
+    bottom: calc(24px + var(--safe-b));
+    left: calc(50% + 130px);
+  }
+}
+button.tab {
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.li {
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.list > button.li + button.li {
+  border-top: 1px solid var(--line);
 }

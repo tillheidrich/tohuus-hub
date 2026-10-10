@@ -9,7 +9,8 @@ import './styles.css';
 
 try {
   const t = localStorage.getItem('sw.theme');
-  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  // light is the default; dark or "automatic" only when chosen in settings
+  if (t === 'auto' || t === 'dark') document.documentElement.dataset.theme = t;
 } catch {
   /* storage blocked */
 }

@@ -1,5 +1,7 @@
 import {
   Barcode,
+  DotsNine,
+  ForkKnife,
   Basket,
   ChefHat,
   FileArrowUp,
@@ -19,6 +21,7 @@ import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-d
 import { ApiError, connectEvents, useApi } from './api';
 import { Bar } from './pages/Bar';
 import { Cook } from './pages/Cook';
+import { Order } from './pages/Order';
 import { Find } from './pages/Find';
 import { Guest } from './pages/Guest';
 import { ImportReview } from './pages/ImportReview';
@@ -70,8 +73,10 @@ function Shell({ me }: { me: Me }) {
   const c = ov.data?.counts;
   const attention = c ? c.low + c.empty + c.expiring + c.expired : 0;
 
+  const [more, setMore] = useState(false);
   const links = [
     { to: '/', label: t('Today'), icon: House, end: true },
+    { to: '/bestellen', label: t('Order'), icon: ForkKnife },
     { to: '/bestand', label: t('Stock'), icon: Package, badge: attention || undefined },
     { to: '/einkauf', label: t('Shopping'), icon: Basket, count: c?.shopping },
     { to: '/kochen', label: t('Cook'), icon: ChefHat },
@@ -80,6 +85,9 @@ function Shell({ me }: { me: Me }) {
     { to: '/bar', label: t('Guests & Bar'), icon: Martini, dot: Boolean(c?.orders) },
     { to: '/einstellungen', label: t('Settings'), icon: Gear },
   ];
+
+  const moreLinks = links.filter((l) => !['/', '/bestellen', '/einkauf'].includes(l.to));
+  const moreActive = moreLinks.some((l) => loc.pathname.startsWith(l.to)) || loc.pathname.startsWith('/rezepte');
 
   return (
     <div className="shell">
@@ -123,30 +131,48 @@ function Shell({ me }: { me: Me }) {
           <Route path="/scan" element={<Scan />} />
           <Route path="/wo" element={<Find />} />
           <Route path="/bar" element={<Bar />} />
+          <Route path="/bestellen" element={<Order me={me} />} />
           <Route path="/einstellungen" element={<Settings me={me} />} />
           <Route path="*" element={<Today me={me} onAdd={() => setAdd(true)} />} />
         </Routes>
       </main>
 
       <nav className="tabbar">
-        {links.slice(0, 2).map((l) => (
+        {[links[0], links[1]].map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
             <l.icon size={24} weight={loc.pathname === l.to ? 'fill' : 'regular'} />
             {l.label}
-            {l.badge ? <span className="badge-dot">{l.badge}</span> : null}
+            {l.dot ? <span className="badge-dot" /> : null}
           </NavLink>
         ))}
         <button className="fab" aria-label={t('Add')} onClick={() => setAdd(true)}>
           <Plus size={26} weight="bold" />
         </button>
-        {[links[2], links[3]].map((l) => (
-          <NavLink key={l.to} to={l.to} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
-            <l.icon size={24} weight={loc.pathname.startsWith(l.to) ? 'fill' : 'regular'} />
-            {l.label}
-            {l.count ? <span className="badge-dot" style={{ background: 'var(--ink)' }}>{l.count}</span> : null}
-          </NavLink>
-        ))}
+        <NavLink to="/einkauf" className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
+          <Basket size={24} weight={loc.pathname.startsWith('/einkauf') ? 'fill' : 'regular'} />
+          {t('Shopping')}
+          {c?.shopping ? <span className="badge-dot" style={{ background: 'var(--ink)' }}>{c.shopping}</span> : null}
+        </NavLink>
+        <button className={`tab ${moreActive ? 'active' : ''}`} onClick={() => setMore(true)}>
+          <DotsNine size={24} weight={moreActive ? 'fill' : 'regular'} />
+          {t('More')}
+          {attention ? <span className="badge-dot">{attention}</span> : null}
+        </button>
       </nav>
+
+      <Sheet open={more} onClose={() => setMore(false)} title={b.name}>
+        <div className="action-grid">
+          {moreLinks.map((l) => (
+            <button key={l.to} className="action" onClick={() => { setMore(false); nav(l.to); }}>
+              <span className="ic"><l.icon size={22} /></span>
+              <b>{l.label}</b>
+              <span>
+                {l.badge ? t('{n} need attention', { n: l.badge }) : l.dot ? t('Something new') : '\u00a0'}
+              </span>
+            </button>
+          ))}
+        </div>
+      </Sheet>
 
       <Sheet open={add} onClose={() => setAdd(false)} title={t('What would you like to do?')}>
         <div className="action-grid">

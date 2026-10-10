@@ -274,6 +274,9 @@ const migrations: string[] = [
   `ALTER TABLE products ADD COLUMN spot TEXT;
   ALTER TABLE locations ADD COLUMN hint TEXT;
   ALTER TABLE guest_links ADD COLUMN note TEXT;`,
+  // [4] orders from household members + per-line notes ("no ice", "extra hot")
+  `ALTER TABLE order_lines ADD COLUMN note TEXT;
+  ALTER TABLE orders ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;`,
 ];
 
 db.exec(`CREATE TABLE IF NOT EXISTS _migrations (id INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`);

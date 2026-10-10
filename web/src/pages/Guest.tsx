@@ -38,7 +38,16 @@ const ls = {
   },
 };
 
-type CartLine = { key: string; product_id: number; name: string; qty: number; options: string[] };
+type CartLine = { key: string; product_id: number; name: string; qty: number; options: string[]; note: string };
+
+export interface OrderSource {
+  key: string;
+  menu: () => Promise<any[]>;
+  orders: () => Promise<any[]>;
+  send: (body: unknown) => Promise<unknown>;
+  /** household member: name is known, everything in the house is orderable */
+  member?: string;
+}
 
 export function Guest() {
   const { token = '' } = useParams();
@@ -97,7 +106,7 @@ export function Guest() {
           <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s] ?? s]) as any} />
         </div>
       )}
-      {tab === 'bar' && <GuestBar token={token} fredi={fredi} />}
+      {tab === 'bar' && <OrderMenu fredi={fredi} src={{ key: `guest-${token}`, menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
       <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{fredi ? t('fredirando · a family business, powered by ToHuus Hub') : t('ToHuus Hub · your household, self-hosted')}</p>
@@ -110,51 +119,57 @@ const STATUS_TEXT = () => ({
   fredi: { new: t('Order received'), accepted: t('Being prepared'), done: t('Delivered – enjoy your meal!'), declined: t('Sorry, currently unavailable') },
 });
 
-function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) {
-  const menu = useQuery({ queryKey: ['products', 'guest', token], queryFn: () => gapi(token, '/menu') });
-  const orders = useQuery({ queryKey: ['orders', 'guest', token], queryFn: () => gapi(token, '/orders'), refetchInterval: 20000 });
+export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: boolean }) {
+  const menu = useQuery({ queryKey: ['products', 'order-menu', src.key], queryFn: src.menu });
+  const orders = useQuery({ queryKey: ['orders', 'order-menu', src.key], queryFn: src.orders, refetchInterval: 20000 });
+  const [q, setQ] = useState('');
   const [cart, setCart] = useState<CartLine[]>([]);
   const [opt, setOpt] = useState<any>(null);
   const [checkout, setCheckout] = useState(false);
-  const [name, setName] = useState(ls.get('sw.guestName'));
+  const [name, setName] = useState(src.member ?? ls.get('sw.guestName'));
   const [note, setNote] = useState('');
   const [sel, setSel] = useState<Record<string, string[]>>({});
   const toast = useToast();
   const groups = useMemo(() => {
     const m = new Map<string, any[]>();
-    for (const i of menu.data ?? []) {
-      if (!m.has(i.group)) m.set(i.group, []);
-      m.get(i.group)!.push(i);
+    const n = q.trim().toLowerCase();
+    for (const i of (menu.data ?? []).filter((x: any) => !n || `${x.name} ${x.brand ?? ''} ${x.group}`.toLowerCase().includes(n))) {
+      const k = `${i.bar === false ? 'p' : 'b'}|${i.group}`;
+      if (!m.has(k)) m.set(k, []);
+      m.get(k)!.push(i);
     }
     return [...m.entries()];
-  }, [menu.data]);
+  }, [menu.data, q]);
   const qtyOf = (id: number) => cart.filter((c) => c.product_id === id).reduce((s, c) => s + c.qty, 0);
-  const add = (item: any, options: string[] = []) => {
-    const key = `${item.id}|${options.join(',')}`;
-    setCart((c) => (c.some((x) => x.key === key) ? c.map((x) => (x.key === key ? { ...x, qty: x.qty + 1 } : x)) : [...c, { key, product_id: item.id, name: item.name, qty: 1, options }]));
+  const [itemNote, setItemNote] = useState('');
+  const add = (item: any, options: string[] = [], note = '') => {
+    const key = `${item.id}|${options.join(',')}|${note}`;
+    setCart((c) => (c.some((x) => x.key === key) ? c.map((x) => (x.key === key ? { ...x, qty: x.qty + 1 } : x)) : [...c, { key, product_id: item.id, name: item.name, qty: 1, options, note }]));
   };
   const tap = (item: any) => {
     if (!item.available) return;
-    if (item.options?.length) {
-      setSel(Object.fromEntries(item.options.map((o: any) => [o.group, o.multi ? [] : [o.choices[0]]])));
+    // members always get the detail sheet (for a note); guests only when there are options
+    if (item.options?.length || src.member) {
+      setSel(Object.fromEntries((item.options ?? []).map((o: any) => [o.group, o.multi ? [] : [o.choices[0]]])));
+      setItemNote('');
       setOpt(item);
     } else add(item);
   };
   const send = async () => {
-    ls.set('sw.guestName', name);
+    if (!src.member) ls.set('sw.guestName', name);
     try {
-      await gapi(token, '/orders', { guest_name: name, note: note || null, lines: cart.map((c) => ({ product_id: c.product_id, qty: c.qty, options: c.options })) });
+      await src.send({ guest_name: name, note: note || null, lines: cart.map((c) => ({ product_id: c.product_id, qty: c.qty, options: c.options, note: c.note || null })) });
       setCart([]);
       setNote('');
       setCheckout(false);
-      qc.invalidateQueries({ queryKey: ['orders', 'guest', token] });
+      qc.invalidateQueries({ queryKey: ['orders', 'order-menu', src.key] });
       toast({ text: fredi ? t('Ordered! Your driver will be on the way shortly.') : t('Your order is in!') });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     }
   };
   const count = cart.reduce((s, c) => s + c.qty, 0);
-  const mine = (orders.data ?? []).filter((o: any) => !name || o.guest_name === name).slice(0, 5);
+  const mine = (orders.data ?? []).filter((o: any) => src.member || !name || o.guest_name === name).slice(0, 5);
   return (
     <>
       {mine.length > 0 && (
@@ -167,7 +182,7 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
                   <b className="small">{(fredi ? STATUS_TEXT().fredi : STATUS_TEXT().plain)[o.status as 'new']}</b>
                   {fredi && o.status === 'accepted' && <span className="small muted">{t('approx. 2 min')}</span>}
                 </div>
-                <div className="small muted" style={{ marginTop: 2 }}>{o.lines.map((l: any) => `${l.qty}× ${l.name}`).join(', ')}</div>
+                <div className="small muted" style={{ marginTop: 2 }}>{o.lines.length ? o.lines.map((l: any) => `${l.qty}× ${l.name}${l.note ? ` („${l.note}“)` : ''}`).join(', ') : o.note ? `„${o.note}“` : ''}</div>
                 {fredi && o.status !== 'declined' && (
                   <div className="track">
                     {[1, 2, 3].map((n) => <i key={n} className={step >= n ? 'on' : ''} />)}
@@ -178,25 +193,64 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
           })}
         </div>
       )}
-      {groups.map(([g, items]) => (
-        <section key={g} style={{ marginBottom: 22 }}>
-          <h2 style={{ marginBottom: 10 }}>{g}</h2>
-          <div className="menu-grid">
-            {items.map((i: any) => (
-              <button key={i.id} className={`mitem ${i.available ? '' : 'off'}`} onClick={() => tap(i)}>
-                <div className="pic" style={i.image_path ? undefined : { background: groupTint(i.group) }}>
-                  {i.image_path ? <img src={i.image_path} alt="" /> : <GroupIcon group={i.group} name={i.name} />}
-                </div>
-                <div style={{ fontWeight: 650, fontSize: 14, lineHeight: 1.2 }}>{i.name}</div>
-                <div className="small muted">{!i.available ? t('all gone') : i.hint ?? (i.options?.length ? t('with extras') : ' ')}</div>
-                {qtyOf(i.id) > 0 && <span className="qty">{qtyOf(i.id)}</span>}
-              </button>
-            ))}
-          </div>
-        </section>
-      ))}
+      {(menu.data ?? []).length > 8 && (
+        <div className="finder-hero" style={{ marginBottom: 18 }}>
+          <MagnifyingGlass size={20} />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={src.member ? t('What would you like? Coffee, ice cream, crisps …') : t('Search the menu')} />
+        </div>
+      )}
+      {src.member && (
+        <button className="btn block" style={{ marginBottom: 18, justifyContent: 'flex-start' }} onClick={() => setCheckout(true)}>
+          <Plus size={16} weight="bold" /> {t('Special request')}
+          <span className="small muted" style={{ fontWeight: 400 }}>{t('anything that isn’t listed')}</span>
+        </button>
+      )}
+      {menu.isLoading && <div className="skel" style={{ height: 240 }} />}
+      {groups.map(([k, items], gi) => {
+        const pantry = k.startsWith('p|');
+        const g = k.slice(2);
+        const firstPantry = pantry && !groups[gi - 1]?.[0].startsWith('p|');
+        return (
+          <section key={k} style={{ marginBottom: 22 }}>
+            {firstPantry && (
+              <div style={{ margin: '30px 0 14px' }}>
+                <div className="eyebrow">{t('Everything else in the house')}</div>
+                <h2 style={{ margin: '2px 0 0', fontSize: 24 }}>{t('From the pantry')}</h2>
+              </div>
+            )}
+            <h3 style={{ marginBottom: 8 }}>{g}</h3>
+            {pantry ? (
+              <div className="list">
+                {items.map((i: any) => (
+                  <button key={i.id} className="li clickable" style={{ width: '100%', textAlign: 'left', minHeight: 56 }} onClick={() => tap(i)}>
+                    <Thumb p={i} size={40} />
+                    <span className="grow">
+                      <b style={{ display: 'block', fontWeight: 600 }}>{i.name}</b>
+                      {(i.brand || i.hint) && <span className="small muted">{[i.brand, i.hint].filter(Boolean).join(' · ')}</span>}
+                    </span>
+                    {qtyOf(i.id) > 0 ? <span className="count" style={{ fontWeight: 700 }}>{qtyOf(i.id)}×</span> : <Plus size={18} />}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="menu-grid">
+                {items.map((i: any) => (
+                  <button key={i.id} className={`mitem ${i.available ? '' : 'off'}`} onClick={() => tap(i)}>
+                    <div className="pic" style={i.image_path ? undefined : { background: groupTint(i.group) }}>
+                      {i.image_path ? <img src={i.image_path} alt="" /> : <GroupIcon group={i.group} name={i.name} />}
+                    </div>
+                    <div style={{ fontWeight: 650, fontSize: 14, lineHeight: 1.2 }}>{i.name}</div>
+                    <div className="small muted">{!i.available ? t('all gone') : i.hint ?? (i.options?.length ? t('with extras') : ' ')}</div>
+                    {qtyOf(i.id) > 0 && <span className="qty">{qtyOf(i.id)}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })}
       {count > 0 && (
-        <div className="cartbar">
+        <div className={`cartbar ${src.member ? 'in-app' : ''}`}>
           <Basket size={20} />
           <div className="grow">
             <b>{t(count === 1 ? '{n} item' : '{n} items', { n: count })}</b>
@@ -207,7 +261,7 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
       <Sheet open={Boolean(opt)} onClose={() => setOpt(null)} title={opt?.name}>
         {opt && (
           <div className="stack">
-            {opt.options.map((o: any) => (
+            {(opt.options ?? []).map((o: any) => (
               <div key={o.group} className="field">
                 <label>{o.group}</label>
                 <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
@@ -228,10 +282,14 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
                 </div>
               </div>
             ))}
+            <div className="field">
+              <label>{t('Note')}</label>
+              <input className="input" value={itemNote} onChange={(e) => setItemNote(e.target.value)} maxLength={120} placeholder={t('e.g. no ice, extra hot, the big bowl')} />
+            </div>
             <button
               className="btn primary lg"
               onClick={() => {
-                add(opt, Object.values(sel).flat().filter((x) => !['Normal', 'Keins', 'Regular', 'None'].includes(x)));
+                add(opt, Object.values(sel).flat().filter((x) => !['Normal', 'Keins', 'Regular', 'None'].includes(x)), itemNote.trim());
                 setOpt(null);
               }}
             >
@@ -248,6 +306,14 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
                 <div className="grow">
                   <div className="title">{c.name}</div>
                   {c.options.length > 0 && <div className="sub">{c.options.join(', ')}</div>}
+                  <input
+                    className="input sm"
+                    style={{ marginTop: 6 }}
+                    value={c.note}
+                    maxLength={120}
+                    placeholder={t('Note for this item')}
+                    onChange={(e) => setCart((x) => x.map((y) => (y.key === c.key ? { ...y, note: e.target.value } : y)))}
+                  />
                 </div>
                 <div className="stepper">
                   <button onClick={() => setCart((x) => x.map((y) => (y.key === c.key ? { ...y, qty: y.qty - 1 } : y)).filter((y) => y.qty > 0))}>
@@ -261,15 +327,17 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
               </div>
             ))}
           </div>
-          <div className="field">
-            <label>{t('Your name')}</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('so we know where to bring it')} />
-          </div>
+          {!src.member && (
+            <div className="field">
+              <label>{t('Your name')}</label>
+              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('so we know where to bring it')} />
+            </div>
+          )}
           <div className="field">
             <label>{t('Anything else?')}</label>
-            <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('e.g. pepperoni pizza, extra ice cubes …')} />
+            <textarea className="input" rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder={src.member ? t('e.g. on the sofa, with a blanket – and something not on the menu') : t('e.g. pepperoni pizza, extra ice cubes …')} />
           </div>
-          <button className="btn primary lg" disabled={!name.trim() || !cart.length} onClick={send}>
+          <button className="btn primary lg" disabled={!name.trim() || (!cart.length && !(src.member && note.trim()))} onClick={send}>
             <Check size={18} weight="bold" /> {fredi ? t('Order now · {price}', { price: eur(0) }) : t('Send')}
           </button>
         </div>
