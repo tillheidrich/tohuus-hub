@@ -9,6 +9,10 @@ import { party } from './party';
 import { fresh } from './fresh';
 import { shop } from './shop';
 import { home } from './home';
+import { kiosk } from './kiosk';
+import { kids } from './kids';
+import { onboard } from './onboard';
+import { retail } from './retail';
 
 
-export const de: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home };
+export const de: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail };

@@ -30,6 +30,10 @@ import { register as register_party } from './tools-party.js';
 import { register as register_fresh } from './tools-fresh.js';
 import { register as register_shop } from './tools-shop.js';
 import { register as register_home } from './tools-home.js';
+import { register as register_kiosk } from './tools-kiosk.js';
+import { register as register_kids } from './tools-kids.js';
+import { register as register_onboard } from './tools-onboard.js';
+import { register as register_retail } from './tools-retail.js';
 import { norm } from '../lib/text.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -508,6 +512,10 @@ export function buildMcpServer(actorName: string) {
   register_fresh(s, actorName);
   register_shop(s, actorName);
   register_home(s, actorName);
+  register_kiosk(s, actorName);
+  register_kids(s, actorName);
+  register_onboard(s, actorName);
+  register_retail(s, actorName);
   return s;
 }
 

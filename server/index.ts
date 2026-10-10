@@ -23,6 +23,10 @@ import { r as partyRoutes, board as partyBoard } from './routes/party.js';
 import { r as freshRoutes } from './routes/fresh.js';
 import { r as shopRoutes } from './routes/shop.js';
 import { r as homeRoutes } from './routes/home.js';
+import { r as kioskRoutes } from './routes/kiosk.js';
+import { r as kidsRoutes } from './routes/kids.js';
+import { r as onboardRoutes } from './routes/onboard.js';
+import { r as retailRoutes } from './routes/retail.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 ensureBaseData();
@@ -77,6 +81,10 @@ app.use('/api', partyRoutes);
 app.use('/api', freshRoutes);
 app.use('/api', shopRoutes);
 app.use('/api', homeRoutes);
+app.use('/api', kioskRoutes);
+app.use('/api', kidsRoutes);
+app.use('/api', onboardRoutes);
+app.use('/api', retailRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

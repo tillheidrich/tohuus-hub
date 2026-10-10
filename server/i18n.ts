@@ -9,8 +9,12 @@ import { de_party } from './locales/de-party.js';
 import { de_fresh } from './locales/de-fresh.js';
 import { de_shop } from './locales/de-shop.js';
 import { de_home } from './locales/de-home.js';
+import { de_kiosk } from './locales/de-kiosk.js';
+import { de_kids } from './locales/de-kids.js';
+import { de_onboard } from './locales/de-onboard.js';
+import { de_retail } from './locales/de-retail.js';
 
-const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home };
+const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail };
 
 const DICTS: Record<string, Record<string, string>> = { en: {}, de };
 const LOCALES: Record<string, string> = { en: 'en-GB', de: 'de-DE' };
