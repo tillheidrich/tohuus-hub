@@ -3,6 +3,7 @@ import { db, lang, now } from '../db.js';
 import { t } from '../i18n.js';
 import { BASE_LOCATIONS, baseName, categoryIdByKey, type CategoryKey } from './basedata.js';
 import { emit } from './bus.js';
+import { entryExpiry, openDaysFor } from './fresh-shelf.js';
 import { notify, notifySettings } from './notify.js';
 import { nameScore, norm, splitProductName, tokens } from './text.js';
 
@@ -54,7 +55,9 @@ export function productStatus(p: ProductRow, entries: StockEntry[], warnDays = n
   const today = localDay(0);
   const soon = localDay(warnDays);
   const withQty = entries.filter((e) => e.qty > 0);
-  const dated = withQty.filter((e) => e.best_before).map((e) => e.best_before!).sort();
+  // fresh: an opened entry expires at min(best_before, opened + days after opening)
+  const od = withQty.some((e) => e.opened_at) ? openDaysFor(p) : null;
+  const dated = withQty.map((e) => entryExpiry(p, e, od)).filter((d): d is string => Boolean(d)).sort();
   const nextExpiry = dated[0] ?? null;
   let status: Status = 'ok';
   if (p.track_mode === 'none') status = 'untracked';
@@ -167,7 +170,7 @@ export function adjustStock(input: AdjustInput) {
     const delta = input.delta ?? 0;
     if (delta > 0) {
       const existing = db
-        .prepare('SELECT * FROM stock WHERE product_id = ? AND location_id = ? AND IFNULL(best_before, \'\') = IFNULL(?, \'\')')
+        .prepare('SELECT * FROM stock WHERE product_id = ? AND location_id = ? AND opened_at IS NULL AND IFNULL(best_before, \'\') = IFNULL(?, \'\')')
         .get(p.id, locationId, input.bestBefore ?? null) as StockEntry | undefined;
       if (existing) db.prepare('UPDATE stock SET qty = qty + ?, updated_at = ? WHERE id = ?').run(delta, now(), existing.id);
       else
@@ -180,11 +183,11 @@ export function adjustStock(input: AdjustInput) {
       const args: unknown[] = [p.id];
       if (input.locationId) args.push(input.locationId);
       let entries = db
-        .prepare(`SELECT * FROM stock WHERE product_id = ? AND qty > 0 ${where} ORDER BY best_before IS NULL, best_before, id`)
+        .prepare(`SELECT * FROM stock WHERE product_id = ? AND qty > 0 ${where} ORDER BY opened_at IS NULL, best_before IS NULL, best_before, id`)
         .all(...args) as StockEntry[];
       if (entries.length === 0 && input.locationId) {
         entries = db
-          .prepare(`SELECT * FROM stock WHERE product_id = ? AND qty > 0 ORDER BY best_before IS NULL, best_before, id`)
+          .prepare(`SELECT * FROM stock WHERE product_id = ? AND qty > 0 ORDER BY opened_at IS NULL, best_before IS NULL, best_before, id`)
           .all(p.id) as StockEntry[];
       }
       const used = consume(entries, -delta);
@@ -334,7 +337,7 @@ export function matchProduct(name: string, opts: { code?: string | null; brand?:
     .prepare('SELECT product_id FROM product_aliases a JOIN products p ON p.id = a.product_id WHERE alias = ? AND p.archived = 0 ORDER BY hits DESC LIMIT 1')
     .get(n) as { product_id: number } | undefined;
   if (alias) return { productId: alias.product_id, score: 0.99, via: 'alias' };
-  const products = db.prepare('SELECT id, name, brand, size FROM products WHERE archived = 0').all() as Pick<ProductRow, 'id' | 'name' | 'brand' | 'size'>[];
+  const products = db.prepare("SELECT id, name, brand, size FROM products WHERE archived = 0 AND kind != 'leftover'").all() as Pick<ProductRow, 'id' | 'name' | 'brand' | 'size'>[];
   let best: Match | null = null;
   const q = opts.brand ? `${opts.brand} ${name}` : name;
   for (const p of products) {
@@ -494,7 +497,7 @@ export function matchIngredient(core: string): Match | null {
     .prepare('SELECT product_id FROM product_aliases a JOIN products p ON p.id = a.product_id WHERE alias = ? AND p.archived = 0 ORDER BY hits DESC LIMIT 1')
     .get(n) as { product_id: number } | undefined;
   if (alias) return { productId: alias.product_id, score: 0.99, via: 'alias' };
-  const products = db.prepare('SELECT id, name FROM products WHERE archived = 0').all() as { id: number; name: string }[];
+  const products = db.prepare("SELECT id, name FROM products WHERE archived = 0 AND kind != 'leftover'").all() as { id: number; name: string }[];
   let best: Match | null = null;
   for (const p of products) {
     const pt = tokens(p.name);

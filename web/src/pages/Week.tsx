@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, invalidate, patch, post, useApi } from '../api';
 import { locale, t } from '../i18n';
 import { Seg, Sheet, useToast } from '../ui';
+import { ClaimAvatar, CookPicker, usePlanClaims } from '../shop/claims';
 
 /** Short weekday name (Mon, Tue … / Mo, Di …) in the active language. */
 const wd = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale(), { weekday: 'short' });
@@ -24,6 +25,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
   const [offset, setOffset] = useState(0);
   const from = addDays(todayStr(), offset * 7);
   const plan = useApi<{ days: string[]; entries: any[] }>(['plan', from], `/plan?from=${from}&days=7`);
+  const claims = usePlanClaims();
   const [pick, setPick] = useState<string | null>(null);
   const [sel, setSel] = useState<any | null>(null);
   const [busy, setBusy] = useState('');
@@ -79,6 +81,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
                       {[e.slot === 'mittag' ? t('Lunch') : null, e.source === 'cookidoo' ? 'Cookidoo' : e.source === 'suggest' ? t('Suggested') : null, e.thermomix ? 'TM' : null].filter(Boolean).join(' · ')}
                     </div>
                   </div>
+                  <ClaimAvatar claim={claims.get(e.id)} />
                   <button
                     className="icon-btn sm"
                     aria-label={e.cooked ? t('Mark as not cooked') : t('Mark as cooked')}
@@ -130,7 +133,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
       </div>
 
       <PlanPicker day={pick} onClose={() => setPick(null)} />
-      <MealSheet entry={sel} onClose={() => setSel(null)} onOpen={(id) => nav(`/rezepte/${id}`)} />
+      <MealSheet entry={sel} claim={sel ? claims.get(sel.id) : null} onClose={() => setSel(null)} onOpen={(id) => nav(`/rezepte/${id}`)} />
     </section>
   );
 }
@@ -215,7 +218,7 @@ export async function shiftFrom(day: string, toast: ToastFn, slot?: string) {
 }
 
 /** Everything you do with a planned dish, one tap away: move, push the rest, drop. */
-function MealSheet({ entry, onClose, onOpen }: { entry: any | null; onClose: () => void; onOpen: (id: number) => void }) {
+function MealSheet({ entry, claim, onClose, onOpen }: { entry: any | null; claim?: any; onClose: () => void; onOpen: (id: number) => void }) {
   const toast = useToast();
   const today = todayStr();
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
@@ -232,6 +235,7 @@ function MealSheet({ entry, onClose, onOpen }: { entry: any | null; onClose: () 
     <Sheet open={!!entry} onClose={onClose} title={entry.title}>
       <div className="stack">
         <div className="small muted" style={{ marginTop: -6 }}>{label(entry.day)} · {entry.slot === 'mittag' ? t('lunch') : t('dinner')}</div>
+        <CookPicker entryId={entry.id} claim={claim} />
         <div className="action-grid">
           <button className="action" onClick={() => move(addDays(entry.day < today ? today : entry.day, 1))}>
             <span className="ic"><ArrowRight size={20} /></span>

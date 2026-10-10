@@ -1,3 +1,5 @@
+// must run before anything opens the database: applies a staged restore
+import './lib/restore-boot.js';
 import cookieParser from 'cookie-parser';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import fs from 'node:fs';
@@ -15,8 +17,9 @@ import { guest, guestAdmin } from './routes/guest.js';
 import { r as ha } from './routes/ha.js';
 import { r as imports } from './routes/imports.js';
 import { r as recipes } from './routes/recipes.js';
-import { r as dataRoutes } from './routes/data.js';
-import { r as partyRoutes } from './routes/party.js';
+import { r as dataRoutes, pub as dataPublic } from './routes/data.js';
+import { startBackups } from './lib/backup.js';
+import { r as partyRoutes, board as partyBoard } from './routes/party.js';
 import { r as freshRoutes } from './routes/fresh.js';
 import { r as shopRoutes } from './routes/shop.js';
 import { r as homeRoutes } from './routes/home.js';
@@ -37,7 +40,7 @@ app.use((_req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+    "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
   );
   next();
 });
@@ -62,6 +65,8 @@ app.all('/mcp/:secret', handleMcp);
 app.use('/img', express.static(path.join(config.dataDir, 'images'), { maxAge: '30d', immutable: true, fallthrough: false }));
 
 app.use('/api/guest', guest);
+app.use('/api/party-board', partyBoard);
+app.use('/api', dataPublic);
 app.use('/api', core);
 app.use('/api', imports);
 app.use('/api', recipes);
@@ -126,4 +131,5 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 app.listen(config.port, () => {
   console.log(`ToHuus Hub running on :${config.port} (${config.baseUrl})`);
   startScheduler();
+  startBackups();
 });

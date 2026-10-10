@@ -13,12 +13,14 @@ export function Login() {
   const [busy, setBusy] = useState(false);
   const b = BRANDS[currentBrand()];
   const fredi = currentBrand() === 'fredirando';
+  // the household can hide member names on this screen – then everyone types their name
+  const typeName = users.isSuccess && (users.data ?? []).length === 0;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setErr('');
     try {
-      await post('/auth/login', { name: name || users.data?.[0]?.name, password: pw });
+      await post('/auth/login', { name: typeName ? name.trim() : name || users.data?.[0]?.name, password: pw });
       invalidate('me');
     } catch (e) {
       setErr((e as Error).message);
@@ -70,6 +72,12 @@ export function Login() {
           <div className="eyebrow">{t('Welcome back')}</div>
           <h1>{t('Who are you?')}</h1>
         </div>
+        {typeName && (
+          <div className="field">
+            <label htmlFor="login-name">{t('Name')}</label>
+            <input id="login-name" className="input" autoComplete="username" autoCapitalize="none" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          </div>
+        )}
         <div className="who-pick">
           {(users.data ?? []).map((u) => (
             <button type="button" key={u.name} className={(name || users.data?.[0]?.name) === u.name ? 'on' : ''} onClick={() => setName(u.name)}>
@@ -80,10 +88,10 @@ export function Login() {
         </div>
         <div className="field">
           <label htmlFor="pw">{t('Password')}</label>
-          <input id="pw" className="input" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} autoFocus />
+          <input id="pw" className="input" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} autoFocus={!typeName} />
           {err && <div className="small" style={{ color: 'var(--empty)' }}>{err}</div>}
         </div>
-        <button className="btn primary lg" disabled={busy || !pw}>
+        <button className="btn primary lg" disabled={busy || !pw || (typeName && !name.trim())}>
           {fredi ? t('Let’s go') : t('Come on in')} <ArrowRight size={18} weight="bold" />
         </button>
         <p className="small muted">{t('You’ll stay signed in on this device.')}</p>

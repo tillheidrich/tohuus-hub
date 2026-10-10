@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { type Location, type Product, del, fmtQty, invalidate, patch, post, relTime, useApi } from '../api';
 import { Empty, Ic, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { locale, t } from '../i18n';
+import { PartyCard } from './Party';
 
 export function Bar() {
   const [tab, setTab] = useState<'orders' | 'links' | 'menu'>('orders');
@@ -15,6 +16,7 @@ export function Bar() {
           <h1>{t('Guests & bar')}</h1>
         </div>
       </header>
+      <PartyCard />
       <div className="tabs-inline">
         <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}>{t('Orders')}</button>
         <button className={tab === 'links' ? 'on' : ''} onClick={() => setTab('links')}>{t('Guest links')}</button>
@@ -96,6 +98,7 @@ function Links() {
   const [f, setF] = useState({ name: t('Barbecue'), scopes: ['bar'] as string[], days: 2, location_ids: [] as number[], note: '' });
   const toast = useToast();
   const create = async () => {
+    if (f.days === 0 && !confirm(t('A link without expiry keeps working until you revoke it – also if it is forwarded. Create it anyway?'))) return;
     const r = await post('/guest-links', f);
     invalidate('guest-links');
     setOpen(false);
@@ -114,15 +117,23 @@ function Links() {
           {(data ?? []).map((g) => (
             <div key={g.id} className="li">
               <div className="grow">
-                <div className="title">{g.name}</div>
+                <div className="title">{g.name}{!g.expires_at && <> <span className="badge low">{t('no expiry')}</span></>}</div>
                 <div className="sub">
                   {g.scopes.map((s: string) => ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s]).join(' · ')}
-                  {g.expires_at ? ` · ${t('until {date}', { date: new Date(g.expires_at.replace(' ', 'T') + 'Z').toLocaleDateString(locale()) })}` : ` · ${t('no expiry')}`}
+                  {g.expires_at ? ` · ${t('until {date}', { date: new Date(g.expires_at.replace(' ', 'T') + 'Z').toLocaleDateString(locale()) })}` : ''}
+                  {` · ${g.last_seen_at ? t('last used {when}', { when: relTime(g.last_seen_at) }) : t('never used')}`}
                 </div>
               </div>
-              <button className="icon-btn" onClick={() => setQr(g)} aria-label={t('QR code')}>
-                <QrCode size={18} />
-              </button>
+              {g.url ? (
+                <button className="icon-btn" onClick={() => setQr(g)} aria-label={t('QR code')}>
+                  <QrCode size={18} />
+                </button>
+              ) : (
+                // links are stored hashed: the old address can't be shown again, only replaced
+                <button className="btn sm ghost" onClick={() => confirm(t('The current link for “{name}” stops working. Create a new one?', { name: g.name })) && post(`/guest-links/${g.id}/rotate`).then((r) => { invalidate('guest-links'); setQr({ name: g.name, url: r.url }); })}>
+                  {t('New link')}
+                </button>
+              )}
               <button className="icon-btn" onClick={() => del(`/guest-links/${g.id}`).then(() => invalidate('guest-links'))} aria-label={t('Revoke')}>
                 <Trash size={18} />
               </button>

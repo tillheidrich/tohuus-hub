@@ -42,14 +42,15 @@ export function useApi<T = any>(key: string | (string | number)[], path: string 
 
 /** topic → query keys to refresh when the server announces a change */
 const TOPIC_KEYS: Record<string, string[]> = {
-  stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha'],
-  products: ['products', 'product', 'overview', 'shopping'],
+  stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh'],
+  products: ['products', 'product', 'overview', 'shopping', 'fresh'],
   shopping: ['shopping', 'overview'],
   recipes: ['recipes', 'recipe', 'suggest', 'overview', 'plan'],
-  imports: ['imports', 'import', 'overview'],
+  imports: ['imports', 'import', 'overview', 'spending'],
   orders: ['orders', 'overview'],
   notifications: ['notifications'],
   settings: ['settings', 'me'],
+  care: ['care'],
 };
 
 export function connectEvents(url = '/api/events') {

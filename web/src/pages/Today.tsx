@@ -7,6 +7,9 @@ import type { Me } from '../App';
 import { fmtQty, invalidate, post, relTime, useApi } from '../api';
 import { Empty, Ic, Skeleton, StatusBadge, Thumb, useToast } from '../ui';
 import { locale, t } from '../i18n';
+import { FreshToday } from './FreshParts';
+import { CareDueSection } from './Care';
+import { PartyBanner } from './Party';
 
 function greeting() {
   const h = new Date().getHours();
@@ -33,6 +36,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
     );
   }
   const c = o.counts;
+  const att = o.attention.filter((a: any) => !['expiring', 'expired'].includes(a.status));
   const date = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
   const toShop = async (id: number, name: string) => {
     await post('/shopping', { text: name, product_id: id });
@@ -90,9 +94,11 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         </button>
       </div>
 
-      {(o.imports.length > 0 || o.orders.length > 0) && (
+      <PartyBanner />
+      {(o.imports.length > 0 || o.orders.some((x: any) => !x.party_id)) && (
         <div className="stack section" style={{ gap: 8, marginTop: 14 }}>
-          {o.orders.map((ord: any) => (
+          {/* party orders are summed up in the party banner */}
+          {o.orders.filter((x: any) => !x.party_id).map((ord: any) => (
             <div key={`o${ord.id}`} className="banner warn" onClick={() => nav('/bar')}>
               <span className="ic"><Martini size={20} /></span>
               <div className="grow">
@@ -115,12 +121,15 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         </div>
       )}
 
+      <FreshToday />
+      {/* expiring items live in "Eat first" above – here only what's low or out */}
+
       <section className="section">
         <div className="section-head">
           <h2>{t('Needs attention')}</h2>
-          {o.attention.length > 6 && <a onClick={() => nav('/bestand?status=attention')}>{t('All {n}', { n: o.attention.length })}</a>}
+          {att.length > 6 && <a onClick={() => nav('/bestand?status=attention')}>{t('All {n}', { n: att.length })}</a>}
         </div>
-        {o.attention.length === 0 ? (
+        {att.length === 0 ? (
           <div className="card">
             <Empty icon={<Ic name="sparkles" size={26} />} title={t('Nothing to do')}>
               {t('As soon as something runs low or nears its best-before date, it shows up here.')}
@@ -128,7 +137,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
           </div>
         ) : (
           <div className="list">
-            {o.attention.slice(0, 6).map((a: any) => (
+            {att.slice(0, 6).map((a: any) => (
               <div key={a.id} className="li clickable" onClick={() => nav(`/bestand/${a.id}`)}>
                 <Thumb p={a} />
                 <div className="grow">
@@ -158,6 +167,8 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
           </div>
         )}
       </section>
+
+      <CareDueSection />
 
       <section className="section">
         <div className="section-head">

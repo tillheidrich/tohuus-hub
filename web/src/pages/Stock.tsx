@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { type Category, type Location, type Product, fmtQty, invalidate, post, qc, useApi } from '../api';
 import { Empty, Ic, LevelPicker, Skeleton, StatusBadge, Stepper, Thumb, expiryText, useToast } from '../ui';
 import { t } from '../i18n';
+import { QuickCheckButton, WasteCard } from './FreshParts';
 
 // English labels, translated at render time with t()
 const STATUS_FILTERS: [string, string][] = [
@@ -104,6 +105,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
           <h1>{t('Stock')}</h1>
         </div>
         <div className="actions">
+          <QuickCheckButton locationId={ort} />
           <button className="icon-btn" title={t('Group by')} onClick={() => setGroup(group === 'location' ? 'category' : 'location')}>
             <SlidersHorizontal size={18} />
           </button>
@@ -193,6 +195,9 @@ export function Stock({ onNew }: { onNew: () => void }) {
           ))}
         </div>
       )}
+      <div style={{ marginTop: 22 }}>
+        <WasteCard />
+      </div>
       <p className="credit" style={{ marginTop: 24 }}>
         {t('Some product images from Open Food Facts (CC BY-SA), data under ODbL.')}
       </p>

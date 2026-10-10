@@ -3,6 +3,7 @@ import { config, smtpEnabled } from '../config.js';
 import { db, getSetting } from '../db.js';
 import { emit } from './bus.js';
 import { t } from '../i18n.js';
+import { actionsFor, pushDeviceCount, sendPush } from './webpush.js';
 
 export type NotifyEvent =
   | 'stock.low'
@@ -13,6 +14,8 @@ export type NotifyEvent =
   | 'order.status'
   | 'shopping.added'
   | 'digest.daily'
+  | 'care.due'
+  | 'party.ending'
   | 'test';
 
 export interface NotifySettings {
@@ -23,7 +26,7 @@ export interface NotifySettings {
   digestHour: number; // -1 = off
   expiryWarnDays: number;
   autoShoppingList: boolean;
-  events: Record<string, { ha: boolean; webhook: boolean; ntfy: boolean; email: boolean }>;
+  events: Record<string, { ha: boolean; webhook: boolean; ntfy: boolean; email: boolean; push?: boolean }>;
 }
 
 export const DEFAULT_NOTIFY: NotifySettings = {
@@ -35,21 +38,26 @@ export const DEFAULT_NOTIFY: NotifySettings = {
   expiryWarnDays: 3,
   autoShoppingList: true,
   events: {
-    'stock.low': { ha: true, webhook: true, ntfy: true, email: false },
-    'stock.empty': { ha: true, webhook: true, ntfy: true, email: false },
-    'stock.expiring': { ha: true, webhook: true, ntfy: true, email: false },
-    'import.review': { ha: true, webhook: true, ntfy: true, email: false },
-    'order.new': { ha: true, webhook: true, ntfy: true, email: false },
-    'order.status': { ha: false, webhook: true, ntfy: false, email: false },
-    'shopping.added': { ha: false, webhook: true, ntfy: false, email: false },
-    'digest.daily': { ha: true, webhook: true, ntfy: false, email: true },
-    test: { ha: true, webhook: true, ntfy: true, email: true },
+    'stock.low': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    'stock.empty': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    'stock.expiring': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    'import.review': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    'order.new': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    'order.status': { ha: false, webhook: true, ntfy: false, email: false, push: false },
+    'shopping.added': { ha: false, webhook: true, ntfy: false, email: false, push: false },
+    'digest.daily': { ha: true, webhook: true, ntfy: false, email: true, push: false },
+    'care.due': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    'party.ending': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    test: { ha: true, webhook: true, ntfy: true, email: true, push: true },
   },
 };
 
 export function notifySettings(): NotifySettings {
   const s = getSetting<Partial<NotifySettings>>('notify', {});
-  return { ...DEFAULT_NOTIFY, ...s, events: { ...DEFAULT_NOTIFY.events, ...(s.events ?? {}) } };
+  const events = { ...DEFAULT_NOTIFY.events, ...(s.events ?? {}) };
+  // routes saved before Web Push existed get the default for the push column
+  for (const [k, v] of Object.entries(events)) if (v.push === undefined) events[k] = { ...v, push: DEFAULT_NOTIFY.events[k]?.push ?? false };
+  return { ...DEFAULT_NOTIFY, ...s, events };
 }
 
 let transport: ReturnType<typeof nodemailer.createTransport> | null = null;
@@ -121,6 +129,13 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
   const jobs: Promise<[string, boolean]>[] = [];
   if (route.ha && s.haWebhookUrl) jobs.push(post(s.haWebhookUrl, payload).then((ok) => ['ha', ok]));
   if (route.webhook && s.webhookUrl) jobs.push(post(s.webhookUrl, payload).then((ok) => ['webhook', ok]));
+  // Web Push (PWA): an event saved before the channel existed falls back to the default routing
+  if ((route.push ?? DEFAULT_NOTIFY.events[input.event]?.push) && pushDeviceCount() > 0)
+    jobs.push(
+      sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data })
+        .then((ok): [string, boolean] => ['push', ok])
+        .catch((): [string, boolean] => ['push', false]),
+    );
   if (route.ntfy && s.ntfyUrl)
     jobs.push(
       post(s.ntfyUrl, input.message, { Title: encodeHeader(input.title), Click: url, Tags: 'house' }).then((ok) => ['ntfy', ok]),

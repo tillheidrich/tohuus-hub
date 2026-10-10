@@ -142,12 +142,13 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export function guestFromToken(token: string): Actor | null {
+  // guest_links.token holds sha256(token) – the plain token only ever lives in the shared URL
   const row = db
     .prepare(
       `SELECT id, name, scopes, location_ids FROM guest_links
        WHERE token = ? AND revoked = 0 AND (expires_at IS NULL OR expires_at > datetime('now'))`,
     )
-    .get(token) as { id: number; name: string; scopes: string; location_ids: string } | undefined;
+    .get(sha256(token)) as { id: number; name: string; scopes: string; location_ids: string } | undefined;
   if (!row) return null;
   db.prepare(`UPDATE guest_links SET last_seen_at = datetime('now') WHERE id = ?`).run(row.id);
   return {

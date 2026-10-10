@@ -36,6 +36,7 @@ import { lookupBarcode, searchProducts } from '../lib/off.js';
 import { overview } from '../lib/overview.js';
 import { haSettings } from '../lib/plan.js';
 import { findThings } from '../lib/find.js';
+import { buildExport, showNamesOnLogin } from '../lib/data.js';
 import { t } from '../i18n.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
@@ -76,7 +77,8 @@ r.post('/auth/logout', (req, res) => {
 });
 
 r.get('/auth/users', (_req, res) => {
-  // names for the login picker (household-internal app; no emails exposed)
+  // names for the login picker (household-internal app; no emails exposed) – households can hide them
+  if (!showNamesOnLogin()) return void res.json([]);
   res.json(db.prepare('SELECT name, color FROM users ORDER BY id').all());
 });
 
@@ -541,7 +543,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
           digestHour: z.number().int().min(-1).max(23).optional(),
           expiryWarnDays: z.number().int().min(0).max(30).optional(),
           autoShoppingList: z.boolean().optional(),
-          events: z.record(z.string(), z.object({ ha: z.boolean(), webhook: z.boolean(), ntfy: z.boolean(), email: z.boolean() })).optional(),
+          events: z.record(z.string(), z.object({ ha: z.boolean(), webhook: z.boolean(), ntfy: z.boolean(), email: z.boolean(), push: z.boolean().optional() })).optional(),
         })
         .optional(),
     })
@@ -609,9 +611,8 @@ r.delete('/tokens/:id', requireAdmin, (req, res) => {
 });
 
 r.get('/export.json', requireAdmin, (_req, res) => {
-  const tables = ['locations', 'categories', 'products', 'product_codes', 'product_aliases', 'stock', 'shopping_items', 'recipes', 'recipe_ingredients', 'cook_log', 'guest_links', 'settings'];
-  const out: Record<string, unknown> = { exported_at: new Date().toISOString(), app: 'tohuus' };
-  for (const t of tables) out[t] = db.prepare(`SELECT * FROM ${t}`).all();
+  // every household table, never credentials (see server/lib/data.ts)
+  const out = buildExport();
   res.setHeader('Content-Disposition', `attachment; filename="tohuus-export-${new Date().toISOString().slice(0, 10)}.json"`);
   res.json(out);
 });

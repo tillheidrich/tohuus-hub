@@ -47,11 +47,13 @@ export interface OrderSource {
   send: (body: unknown) => Promise<unknown>;
   /** household member: name is known, everything in the house is orderable */
   member?: string;
+  /** party link: pick-up at the counter instead of "we bring it" */
+  party?: boolean;
 }
 
 export function Guest() {
   const { token = '' } = useParams();
-  const info = useQuery({ queryKey: ['guest', token], queryFn: () => gapi(token, '') , retry: false });
+  const info = useQuery({ queryKey: ['orders', 'guest-info', token], queryFn: () => gapi(token, '') , retry: false });
   const scopes: string[] = info.data?.scopes ?? [];
   const [tab, setTab] = useState<'bar' | 'stock' | 'shopping'>('bar');
   useEffect(() => {
@@ -71,7 +73,11 @@ export function Guest() {
   if (info.error)
     return (
       <div className="guest">
-        <Empty icon={<Martini size={26} />} title={t('This link is no longer valid')}>{t('Just ask for a new one.')}</Empty>
+        {info.data?.party ? (
+          <Empty icon={<Martini size={26} />} title={t('The party is over – thanks for coming!')}>{t('Ordering is closed now.')}</Empty>
+        ) : (
+          <Empty icon={<Martini size={26} />} title={t('This link is no longer valid')}>{t('Just ask for a new one.')}</Empty>
+        )}
       </div>
     );
   return (
@@ -82,7 +88,7 @@ export function Guest() {
           <div className="logo"><img src={BRANDS.fredirando.logo} alt="" /></div>
           <div className="info">
             <h1>fredirando</h1>
-            <div className="muted small">{t('Kitchen & cellar')} · {info.data.household}</div>
+            <div className="muted small">{info.data.party ? `${info.data.party.name} · ${t('pick-up at the counter')}` : `${t('Kitchen & cellar')} · ${info.data.household}`}</div>
             <div className="facts">
               <span><span className="stars">★★★★★</span> <b>{num(4.9)}</b> ({t('family')})</span>
               <span>{t('Delivery')} <b>{t('1–3 min')}</b></span>
@@ -96,7 +102,7 @@ export function Guest() {
           <div className="eyebrow">{info.data.household} · {info.data.name}</div>
           <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? t('Fancy something?') : tab === 'stock' ? t('Where is what?') : t('What’s missing?')}</h1>
           <p className="muted" style={{ marginTop: 0 }}>
-            {tab === 'bar' ? t('Drinks, ice cream and snacks – just order and we’ll bring it over.') : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : t('Add it to our shopping list.')}
+            {tab === 'bar' ? (info.data.party ? t('Order here – we’ll call you when it’s ready at the counter.') : t('Drinks, ice cream and snacks – just order and we’ll bring it over.')) : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : t('Add it to our shopping list.')}
           </p>
         </>
       )}
@@ -106,7 +112,7 @@ export function Guest() {
           <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s] ?? s]) as any} />
         </div>
       )}
-      {tab === 'bar' && <OrderMenu fredi={fredi} src={{ key: `guest-${token}`, menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
+      {tab === 'bar' && <OrderMenu fredi={fredi} src={{ key: `guest-${token}`, party: Boolean(info.data.party), menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
       <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{fredi ? t('fredirando · a family business, powered by ToHuus Hub') : t('ToHuus Hub · your household, self-hosted')}</p>
@@ -117,6 +123,8 @@ export function Guest() {
 const STATUS_TEXT = () => ({
   plain: { new: t('received'), accepted: t('on it'), done: t('on its way!'), declined: t('not possible right now') },
   fredi: { new: t('Order received'), accepted: t('Being prepared'), done: t('Delivered – enjoy your meal!'), declined: t('Sorry, currently unavailable') },
+  party: { new: t('received'), accepted: t('being made'), done: t('ready at the counter!'), declined: t('not possible right now') },
+  fredParty: { new: t('Order received'), accepted: t('In the kitchen'), done: t('Ready for pickup – enjoy!'), declined: t('Sorry, currently unavailable') },
 });
 
 export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: boolean }) {
@@ -169,7 +177,8 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
     }
   };
   const count = cart.reduce((s, c) => s + c.qty, 0);
-  const mine = (orders.data ?? []).filter((o: any) => src.member || !name || o.guest_name === name).slice(0, 5);
+  // the server only returns this device's orders (per-device cookie)
+  const mine = (orders.data ?? []).slice(0, 5);
   return (
     <>
       {mine.length > 0 && (
@@ -179,7 +188,7 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
             return (
               <div key={o.id} className="li" style={{ minHeight: 52, display: 'block', padding: '12px 14px' }}>
                 <div className="row between">
-                  <b className="small">{(fredi ? STATUS_TEXT().fredi : STATUS_TEXT().plain)[o.status as 'new']}</b>
+                  <b className="small">{STATUS_TEXT()[src.party ? (fredi ? 'fredParty' : 'party') : fredi ? 'fredi' : 'plain'][o.status as 'new']}</b>
                   {fredi && o.status === 'accepted' && <span className="small muted">{t('approx. 2 min')}</span>}
                 </div>
                 <div className="small muted" style={{ marginTop: 2 }}>{o.lines.length ? o.lines.map((l: any) => `${l.qty}× ${l.name}${l.note ? ` („${l.note}“)` : ''}`).join(', ') : o.note ? `„${o.note}“` : ''}</div>
@@ -240,7 +249,7 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
                       {i.image_path ? <img src={i.image_path} alt="" /> : <GroupIcon group={i.group} name={i.name} />}
                     </div>
                     <div style={{ fontWeight: 650, fontSize: 14, lineHeight: 1.2 }}>{i.name}</div>
-                    <div className="small muted">{!i.available ? t('all gone') : i.hint ?? (i.options?.length ? t('with extras') : ' ')}</div>
+                    <div className="small muted">{!i.available ? (i.hint ?? t('all gone')) : i.hint ?? (i.options?.length ? t('with extras') : ' ')}</div>
                     {qtyOf(i.id) > 0 && <span className="qty">{qtyOf(i.id)}</span>}
                   </button>
                 ))}

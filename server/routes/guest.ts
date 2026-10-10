@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { config } from '../config.js';
 import { brand, db, getSetting, lang } from '../db.js';
-import { guestFromToken, randomToken, rateLimited, requireAuth } from '../lib/auth.js';
+import { guestFromToken, randomToken, rateLimited, requireAuth, sha256 } from '../lib/auth.js';
 import { addClient, emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, listProducts } from '../lib/catalog.js';
 import { notify } from '../lib/notify.js';
 import { findThings } from '../lib/find.js';
 import { createOrder, listOrders, orderMenu, orderSchema } from '../lib/orders.js';
+import { guestClientId, partyForGuest, partyIdForLink, partyMenu } from '../lib/party.js';
 import { t } from '../i18n.js';
 
 /** Public guest API — everything is scoped by the share token. */
@@ -33,6 +34,7 @@ guest.get('/:token', (req, res) => {
     brand: brand(),
     language: lang(),
     note: (db.prepare('SELECT note FROM guest_links WHERE id = ?').get(req.actor!.guestLinkId) as { note: string | null } | undefined)?.note ?? null,
+    party: partyForGuest(req.actor!.guestLinkId, guestClientId(req, res)),
   });
 });
 
@@ -43,7 +45,8 @@ guest.get('/:token/menu', (req, res) => {
     res.status(403).json({ error: 'forbidden' });
     return;
   }
-  res.json(orderMenu(false));
+  const party = partyIdForLink(req.actor!.guestLinkId);
+  res.json(party ? partyMenu(party, guestClientId(req, res)) : orderMenu(false));
 });
 
 guest.post('/:token/orders', (req, res) => {
@@ -56,19 +59,31 @@ guest.post('/:token/orders', (req, res) => {
     res.status(400).json({ error: t('Please tell us your name.') });
     return;
   }
-  if (rateLimited(`order:${req.actor!.guestLinkId}`, 15, 10 * 60_000)) {
+  const cid = guestClientId(req, res);
+  // a party link is shared by many phones: limit per device, with a generous cap for the whole link
+  const limited = partyIdForLink(req.actor!.guestLinkId)
+    ? rateLimited(`order:${req.actor!.guestLinkId}:${cid}`, 15, 10 * 60_000) || rateLimited(`order:${req.actor!.guestLinkId}`, 300, 10 * 60_000)
+    : rateLimited(`order:${req.actor!.guestLinkId}`, 15, 10 * 60_000);
+  if (limited) {
     res.status(429).json({ error: t('Lots of orders right now – take a breath and try again in a moment.') });
     return;
   }
   try {
-    res.json({ id: createOrder(b, { guestLinkId: req.actor!.guestLinkId, name: b.guest_name, linkName: req.actor!.name }) });
+    res.json({ id: createOrder(b, { guestLinkId: req.actor!.guestLinkId, name: b.guest_name, linkName: req.actor!.name, clientId: cid }) });
   } catch (e) {
     res.status((e as any).status ?? 500).json({ error: (e as Error).message });
   }
 });
 
 guest.get('/:token/orders', (req, res) => {
-  res.json(listOrders('guest_link_id = ?', req.actor!.guestLinkId!));
+  // only this device's orders (per-device cookie) – other guests' names and notes stay private
+  res.json(
+    listOrders(
+      "guest_link_id = ? AND client_id = ? AND (status IN ('new','accepted') OR updated_at > datetime('now','-12 hours'))",
+      req.actor!.guestLinkId!,
+      guestClientId(req, res),
+    ),
+  );
 });
 
 guest.get('/:token/stock', (req, res) => {
@@ -118,7 +133,8 @@ guestAdmin.use(requireAuth);
 
 guestAdmin.get('/guest-links', (_req, res) => {
   const rows = db.prepare('SELECT * FROM guest_links WHERE revoked = 0 ORDER BY id DESC').all() as any[];
-  res.json(rows.map((g) => ({ ...g, scopes: JSON.parse(g.scopes), location_ids: JSON.parse(g.location_ids), url: `${config.baseUrl}/g/${g.token}` })));
+  // tokens are stored hashed: the URL is only returned once at creation (or after "new link")
+  res.json(rows.map(({ token: _hash, ...g }) => ({ ...g, scopes: JSON.parse(g.scopes), location_ids: JSON.parse(g.location_ids), url: null })));
 });
 
 guestAdmin.post('/guest-links', (req, res) => {
@@ -137,7 +153,7 @@ guestAdmin.post('/guest-links', (req, res) => {
   }
   const token = randomToken(12);
   db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids, note, expires_at) VALUES (?, ?, ?, ?, ?, ${b.days ? "datetime('now', ?)" : 'NULL'})`).run(
-    ...[token, b.name, JSON.stringify(b.scopes), JSON.stringify(b.location_ids), b.note?.trim() || null, ...(b.days ? [`+${b.days} days`] : [])],
+    ...[sha256(token), b.name, JSON.stringify(b.scopes), JSON.stringify(b.location_ids), b.note?.trim() || null, ...(b.days ? [`+${b.days} days`] : [])],
   );
   res.json({ token, url: `${config.baseUrl}/g/${token}` });
 });

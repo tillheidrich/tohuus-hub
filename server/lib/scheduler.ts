@@ -6,6 +6,8 @@ import { emailHtml, notify, notifySettings } from './notify.js';
 import { suggest } from './recipes.js';
 import { haSettings, syncCookidoo } from './plan.js';
 import { fmtDay, t } from '../i18n.js';
+import { checkCareDue } from './care.js';
+import { startPartyScheduler } from './party.js';
 
 function localHour() {
   return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: config.timezone }).format(new Date()));
@@ -67,9 +69,11 @@ export async function sendDigest(force = false) {
 }
 
 export function startScheduler() {
+  startPartyScheduler();
   const tick = async () => {
     try {
       await checkExpiry();
+      await checkCareDue().catch((e) => console.warn('[care]', (e as Error).message));
       await sendDigest();
     } catch (e) {
       console.warn('[scheduler]', (e as Error).message);

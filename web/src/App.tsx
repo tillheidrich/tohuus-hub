@@ -15,15 +15,24 @@ import {
   Camera,
   TextAa,
   QrCode,
+  Wrench,
+  Coins,
 } from '@phosphor-icons/react';
+import { Care } from './pages/Care';
+import { Spending } from './pages/Spending';
+import { Labels } from './pages/Labels';
+import { QuickAction } from './pages/QuickAction';
 import { useEffect, useState } from 'react';
 import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, connectEvents, useApi } from './api';
 import { Bar } from './pages/Bar';
+import { Check } from './pages/Check';
 import { Cook } from './pages/Cook';
 import { Order } from './pages/Order';
 import { Find } from './pages/Find';
 import { Guest } from './pages/Guest';
+import { PartyBoard, PartyPair } from './pages/Party';
+import { Invite } from './pages/Invite';
 import { ImportReview } from './pages/ImportReview';
 import { Imports } from './pages/Imports';
 import { Login } from './pages/Login';
@@ -49,6 +58,9 @@ export interface Me {
 export function App() {
   const loc = useLocation();
   if (loc.pathname.startsWith('/g/')) return <Routes><Route path="/g/:token" element={<Guest />} /></Routes>;
+  // party kiosk board and TV pairing work without login
+  if (loc.pathname === '/party' || loc.pathname.startsWith('/party/')) return <Routes><Route path="/party" element={<PartyPair />} /><Route path="/party/board/:token" element={<PartyBoard />} /><Route path="*" element={<PartyPair />} /></Routes>;
+  if (loc.pathname.startsWith('/einladung/')) return <Routes><Route path="/einladung/:token" element={<Invite />} /></Routes>;
   return <Authed />;
 }
 
@@ -83,6 +95,9 @@ function Shell({ me }: { me: Me }) {
     { to: '/wo', label: t('Where’s what?'), icon: MapPin },
     { to: '/import', label: t('Imports'), icon: Receipt, dot: Boolean(c?.imports) },
     { to: '/bar', label: t('Guests & Bar'), icon: Martini, dot: Boolean(c?.orders) },
+    { to: '/pflege', label: t('Home & care'), icon: Wrench },
+    { to: '/ausgaben', label: t('Spending'), icon: Coins },
+    { to: '/etiketten', label: t('QR labels'), icon: QrCode },
     { to: '/einstellungen', label: t('Settings'), icon: Gear },
   ];
 
@@ -123,6 +138,8 @@ function Shell({ me }: { me: Me }) {
           <Route path="/" element={<Today me={me} onAdd={() => setAdd(true)} />} />
           <Route path="/bestand" element={<Stock onNew={() => setNewProduct(true)} />} />
           <Route path="/bestand/:id" element={<ProductDetail />} />
+          <Route path="/abgleich" element={<Check />} />
+          <Route path="/abgleich/:id" element={<Check />} />
           <Route path="/einkauf" element={<Shopping />} />
           <Route path="/kochen" element={<Cook me={me} />} />
           <Route path="/rezepte/:id" element={<RecipeDetail />} />
@@ -133,6 +150,10 @@ function Shell({ me }: { me: Me }) {
           <Route path="/bar" element={<Bar />} />
           <Route path="/bestellen" element={<Order me={me} />} />
           <Route path="/einstellungen" element={<Settings me={me} />} />
+          <Route path="/pflege" element={<Care />} />
+          <Route path="/ausgaben" element={<Spending />} />
+          <Route path="/etiketten" element={<Labels />} />
+          <Route path="/q/:code" element={<QuickAction />} />
           <Route path="*" element={<Today me={me} onAdd={() => setAdd(true)} />} />
         </Routes>
       </main>

@@ -1,6 +1,292 @@
 /** Home care: maintenance cycles, spending, QR labels */
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
+import { z } from 'zod';
+import { db } from '../db.js';
+import { fmtDay, t } from '../i18n.js';
 import { requireAuth } from '../lib/auth.js';
+import { emit } from '../lib/bus.js';
+import { addToShopping, adjustStock, getProduct, listProducts, localDay, productView } from '../lib/catalog.js';
+import {
+  CARE_TEMPLATES,
+  UNITS,
+  careLog,
+  careView,
+  codeFor,
+  completeCareTask,
+  createCareTask,
+  deleteCareTask,
+  dueCareTasks,
+  getCareTask,
+  listCareTasks,
+  qrUrl,
+  resolveCode,
+  revokeCode,
+  undoCareTask,
+  updateCareTask,
+  type QrKind,
+} from '../lib/care.js';
+import { priceHistory, pricedProducts, setSpendingTarget, spendingCsv, spendingSummary, spendingTarget } from '../lib/spending.js';
 
 export const r = Router();
 r.use(requireAuth);
+
+const actorName = (req: Request) => req.actor?.name ?? t('Someone');
+const num = (v: unknown) => Number(v);
+const day = z.string().regex(/^\d{4}-\d\d-\d\d$/);
+/** domain errors (invalid interval, missing date …) are the user's input, not a server fault */
+function userError<T>(res: Response, fn: () => T) {
+  try {
+    res.json(fn());
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+}
+
+// ---------------------------------------------------------------- care tasks
+
+const careBody = z.object({
+  name: z.string().max(120).optional(),
+  template: z.string().max(40).nullable().optional(),
+  interval_n: z.number().int().min(1).max(1000).nullable().optional(),
+  interval_unit: z.enum(UNITS as [string, ...string[]]).nullable().optional(),
+  next_due: day.nullable().optional(),
+  last_done: day.nullable().optional(),
+  lead_days: z.number().int().min(0).max(365).nullable().optional(),
+  location_id: z.number().int().nullable().optional(),
+  product_id: z.number().int().nullable().optional(),
+  consume_qty: z.number().min(0).max(100).nullable().optional(),
+  assignee_user_id: z.number().int().nullable().optional(),
+  note: z.string().max(500).nullable().optional(),
+});
+
+r.get('/care', (_req, res) => {
+  const tasks = listCareTasks();
+  const used = new Set(tasks.map((x) => x.template).filter(Boolean));
+  res.json({
+    tasks,
+    templates: CARE_TEMPLATES.map((x) => ({ ...x, added: used.has(x.key) })),
+    users: db.prepare('SELECT id, name, color FROM users ORDER BY id').all(),
+    today: localDay(0),
+  });
+});
+
+r.get('/care/due', (_req, res) => res.json(dueCareTasks()));
+
+r.post('/care', (req, res) => {
+  const b = careBody.parse(req.body);
+  userError(res, () => createCareTask(b as any));
+});
+
+r.get('/care/:id', (req, res) => {
+  const row = getCareTask(num(req.params.id));
+  if (!row) {
+    res.status(404).json({ error: t('Task not found') });
+    return;
+  }
+  res.json({ ...careView(row), log: careLog(row.id) });
+});
+
+r.patch('/care/:id', (req, res) => {
+  const b = careBody.extend({ archived: z.boolean().optional() }).parse(req.body);
+  if (!getCareTask(num(req.params.id))) {
+    res.status(404).json({ error: t('Task not found') });
+    return;
+  }
+  userError(res, () => updateCareTask(num(req.params.id), b as any));
+});
+
+r.delete('/care/:id', (req, res) => {
+  deleteCareTask(num(req.params.id));
+  res.json({ ok: true });
+});
+
+r.post('/care/:id/done', (req, res) => {
+  const b = z.object({ done_on: day.nullable().optional(), next_due: day.nullable().optional(), note: z.string().max(500).nullable().optional() }).parse(req.body ?? {});
+  if (!getCareTask(num(req.params.id))) {
+    res.status(404).json({ error: t('Task not found') });
+    return;
+  }
+  userError(res, () => completeCareTask(num(req.params.id), actorName(req), { doneOn: b.done_on, nextDue: b.next_due, note: b.note }));
+});
+
+r.post('/care/:id/undo', (req, res) => {
+  userError(res, () => undoCareTask(num(req.params.id), actorName(req)));
+});
+
+/** "I'll take care of it" – or let go again. No points, no ranking. */
+r.post('/care/:id/claim', (req, res) => {
+  const { claim } = z.object({ claim: z.boolean() }).parse(req.body);
+  const row = getCareTask(num(req.params.id));
+  if (!row) {
+    res.status(404).json({ error: t('Task not found') });
+    return;
+  }
+  const uid = req.actor?.userId ?? null;
+  if (claim && !uid) {
+    res.status(400).json({ error: t('Only household members can take on a task') });
+    return;
+  }
+  res.json(updateCareTask(row.id, { assignee_user_id: claim ? uid : null }));
+});
+
+// ---------------------------------------------------------------- spending
+
+const month = z.string().regex(/^\d{4}-\d\d$/);
+
+r.get('/spending', (req, res) => {
+  const m = req.query.month ? month.parse(String(req.query.month)) : undefined;
+  res.json(spendingSummary(m));
+});
+
+r.get('/spending/products', (_req, res) => res.json(pricedProducts()));
+
+r.get('/spending/prices/:productId', (req, res) => res.json(priceHistory(num(req.params.productId))));
+
+r.get('/spending/export.csv', (req, res) => {
+  const m = req.query.month ? month.parse(String(req.query.month)) : undefined;
+  res
+    .type('text/csv; charset=utf-8')
+    .setHeader('Content-Disposition', `attachment; filename="tohuus-spending${m ? '-' + m : ''}.csv"`)
+    .send('﻿' + spendingCsv(m));
+});
+
+r.put('/spending/target', (req, res) => {
+  const { target } = z.object({ target: z.number().min(0).max(100000).nullable() }).parse(req.body);
+  setSpendingTarget(target);
+  emit('imports');
+  res.json({ target: spendingTarget() });
+});
+
+// ---------------------------------------------------------------- QR labels
+
+const kind = z.enum(['product', 'location', 'care']);
+
+function labelFor(k: QrKind, id: number) {
+  if (k === 'product') {
+    const p = getProduct(id);
+    return p ? { title: p.name, sub: [p.brand, p.size].filter(Boolean).join(' · ') || null } : null;
+  }
+  if (k === 'location') {
+    const l = db.prepare('SELECT name, hint FROM locations WHERE id = ?').get(id) as { name: string; hint: string | null } | undefined;
+    return l ? { title: l.name, sub: l.hint } : null;
+  }
+  const c = getCareTask(id);
+  if (!c) return null;
+  const every = c.interval_n && c.interval_unit ? intervalText(c.interval_n, c.interval_unit) : null;
+  return { title: c.name, sub: every };
+}
+
+function intervalText(n: number, unit: string) {
+  const one: Record<string, string> = { day: 'every day', week: 'every week', month: 'every month', year: 'every year' };
+  const many: Record<string, string> = { day: 'every {n} days', week: 'every {n} weeks', month: 'every {n} months', year: 'every {n} years' };
+  return n === 1 ? t(one[unit]) : t(many[unit], { n });
+}
+
+/** Get (or create) codes for a set of things – the label sheet prints these. */
+r.post('/qr', (req, res) => {
+  const b = z.object({ kind, ids: z.array(z.number().int()).max(200) }).parse(req.body);
+  const out = [];
+  for (const id of b.ids) {
+    const label = labelFor(b.kind, id);
+    if (!label) continue;
+    const code = codeFor(b.kind, id, actorName(req));
+    out.push({ kind: b.kind, ref_id: id, code, url: qrUrl(code), ...label });
+  }
+  res.json(out);
+});
+
+r.delete('/qr/:code', (req, res) => {
+  res.json({ ok: revokeCode(String(req.params.code)) });
+});
+
+function resolved(code: string) {
+  const row = resolveCode(code);
+  if (!row) return null;
+  if (row.kind === 'product') {
+    const p = getProduct(row.ref_id);
+    if (!p) return null;
+    const v = productView(p);
+    const locs = db.prepare('SELECT id, name, icon, hint FROM locations').all() as { id: number; name: string; icon: string; hint: string | null }[];
+    const lmap = new Map(locs.map((l) => [l.id, l]));
+    const places = [...new Set([...v.stock.filter((s) => s.qty > 0).map((s) => s.location_id), ...(v.default_location_id ? [v.default_location_id] : [])])]
+      .map((id) => lmap.get(id))
+      .filter(Boolean);
+    const onList = Boolean(db.prepare('SELECT 1 FROM shopping_items WHERE product_id = ? AND checked_at IS NULL').get(p.id));
+    return { kind: 'product' as const, code, product: { ...v, places, on_list: onList } };
+  }
+  if (row.kind === 'location') {
+    const l = db.prepare('SELECT id, name, icon, hint FROM locations WHERE id = ?').get(row.ref_id) as any;
+    if (!l) return null;
+    const items = listProducts()
+      .filter((p) => p.stock.some((s) => s.location_id === l.id && s.qty > 0) || (p.track_mode === 'none' && p.default_location_id === l.id))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        brand: p.brand,
+        image_path: p.image_path,
+        unit: p.unit,
+        track_mode: p.track_mode,
+        status: p.status,
+        nextExpiry: p.nextExpiry,
+        spot: p.spot,
+        qty: p.stock.filter((s) => s.location_id === l.id).reduce((s, e) => s + e.qty, 0),
+      }));
+    return { kind: 'location' as const, code, location: l, items };
+  }
+  const c = getCareTask(row.ref_id);
+  if (!c) return null;
+  return { kind: 'care' as const, code, task: { ...careView(c), log: careLog(c.id, 5) } };
+}
+
+r.get('/qr/:code', (req, res) => {
+  const out = resolved(String(req.params.code));
+  if (!out) {
+    res.status(404).json({ error: t('This label is no longer valid.') });
+    return;
+  }
+  res.json(out);
+});
+
+/** One-tap actions from a scanned label. */
+r.post('/qr/:code/action', (req, res) => {
+  const { action } = z.object({ action: z.enum(['take', 'opened', 'list', 'done']) }).parse(req.body);
+  const code = String(req.params.code);
+  const row = resolveCode(code);
+  if (!row) {
+    res.status(404).json({ error: t('This label is no longer valid.') });
+    return;
+  }
+  const actor = actorName(req);
+  let message = '';
+  if (row.kind === 'product') {
+    const p = getProduct(row.ref_id);
+    if (!p) {
+      res.status(404).json({ error: t('Product not found') });
+      return;
+    }
+    if (action === 'take') {
+      adjustStock({ productId: p.id, delta: -1, reason: 'consume', actor, ref: `qr:${code}` });
+      message = t('{name}: one less', { name: p.name });
+    } else if (action === 'opened') {
+      const e = db.prepare('SELECT id FROM stock WHERE product_id = ? AND qty > 0 AND opened_at IS NULL ORDER BY best_before IS NULL, best_before, id LIMIT 1').get(p.id) as { id: number } | undefined;
+      if (e) {
+        db.prepare(`UPDATE stock SET opened_at = ?, updated_at = datetime('now') WHERE id = ?`).run(localDay(0), e.id);
+        emit('stock');
+      }
+      message = e ? t('{name} marked as opened', { name: p.name }) : t('Nothing unopened in stock');
+    } else if (action === 'list') {
+      addToShopping({ productId: p.id, text: p.name, source: 'qr', addedBy: actor });
+      message = t('{name} is on the shopping list', { name: p.name });
+    } else {
+      res.status(400).json({ error: t('Not possible for this label') });
+      return;
+    }
+  } else if (row.kind === 'care' && action === 'done') {
+    const out = completeCareTask(row.ref_id, actor);
+    message = t('Done – next time: {date}', { date: out.task.next_due ? fmtDay(out.task.next_due + 'T12:00:00') : '–' });
+  } else {
+    res.status(400).json({ error: t('Not possible for this label') });
+    return;
+  }
+  res.json({ message, data: resolved(code) });
+});

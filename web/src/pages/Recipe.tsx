@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api, del, invalidate, patch, post, put, relTime, useApi } from '../api';
 import { t } from '../i18n';
 import { Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { type LeftoverChoice, LeftoversField, saveLeftovers } from './FreshParts';
 
 /** Marks a line in the ingredient editor as a pantry staple (always counts as in stock). */
 const stapleMarker = () => t('(pantry)');
@@ -161,10 +162,12 @@ function CookedSheet({ open, onClose, r, match }: { open: boolean; onClose: () =
   const usable = match.filter((x) => x.product && x.product.track_mode === 'count' && x.product.total > 0);
   const [sel, setSel] = useState<number[]>([]);
   const [rating, setRating] = useState<number | null>(null);
+  const [leftovers, setLeftovers] = useState<LeftoverChoice | null>(null);
   const toast = useToast();
-  useEffect(() => setSel([]), [open]);
+  useEffect(() => { setSel([]); setLeftovers(null); }, [open]);
   const save = async () => {
     await post(`/recipes/${r.id}/cooked`, { rating, consume: sel });
+    if (leftovers) await saveLeftovers(r.id, leftovers).catch((e) => toast({ text: (e as Error).message, error: true }));
     invalidate('recipe', 'recipes', 'suggest', 'products', 'overview');
     toast({ text: t('{title} added to your cooking history', { title: r.title }) });
     onClose();
@@ -195,6 +198,7 @@ function CookedSheet({ open, onClose, r, match }: { open: boolean; onClose: () =
             <div className="help">{t("Only tick what's really gone – everything else stays in stock.")}</div>
           </div>
         )}
+        <LeftoversField value={leftovers} onChange={setLeftovers} />
         <button className="btn primary lg" onClick={save}>
           {t('Log it')}
         </button>

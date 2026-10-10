@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { type Category, type Location, type Product, api, del, fmtDate, fmtQty, get, invalidate, patch, post, relTime, useApi } from '../api';
 import { Empty, Ic, LevelPicker, Seg, Sheet, Skeleton, StatusBadge, Stepper, Thumb, Toggle, expiryText, statusText, useDebounced, useToast } from '../ui';
 import { num, t } from '../i18n';
+import { FreshPanel } from './FreshParts';
 
 export function ProductDetail() {
   const { id } = useParams();
@@ -88,12 +89,14 @@ export function ProductDetail() {
                 </div>
               )}
               <div className="row wrap" style={{ marginTop: 14, gap: 8 }}>
-                <button className="btn sm" onClick={usedUp}>{t('Used up')}</button>
-                <button className="btn sm" onClick={toList}><Basket size={15} /> {t('Add to list')}</button>
+                {p.kind !== 'leftover' && <button className="btn sm" onClick={usedUp}>{t('Used up')}</button>}
+                {p.kind !== 'leftover' && <button className="btn sm" onClick={toList}><Basket size={15} /> {t('Add to list')}</button>}
                 <AddBatch p={p} locations={locations.data ?? []} onDone={refresh} />
               </div>
             </div>
           )}
+
+          <FreshPanel p={p} locations={locations.data ?? []} />
 
           <dl className="kv card pad">
             <dt>{t('Default location')}</dt>
@@ -174,6 +177,10 @@ function reasonText(r: string) {
       move: t('moved'),
       undo: t('undone'),
       scan: t('via scan'),
+      waste: t('thrown away'),
+      freeze: t('frozen'),
+      thaw: t('thawed'),
+      leftover: t('leftovers put away'),
     }[r] ?? r
   );
 }

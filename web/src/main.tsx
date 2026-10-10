@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { qc } from './api';
 import { App } from './App';
+import { startOffline } from './shop/offline';
 import { ToastProvider } from './ui';
 import './styles.css';
 
@@ -14,6 +15,9 @@ try {
 } catch {
   /* storage blocked */
 }
+
+// service worker (app shell + shopping list offline, Web Push) and replay of offline changes
+startOffline();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

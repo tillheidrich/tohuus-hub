@@ -2,10 +2,12 @@ import { Bell, Copy, House, Key, Plug, SignOut, Trash, UploadSimple } from '@pho
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../App';
 import { type Category, type Location, api, del, invalidate, patch, post, relTime, useApi } from '../api';
-import { Avatar, ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { lang, setLang, t } from '../i18n';
+import { Backups, Members } from './DataSettings';
+import { HaTodoCard, PushCard } from '../shop/ShopSettings';
 
-type Tab = 'home' | 'places' | 'notify' | 'access' | 'data';
+type Tab = 'home' | 'members' | 'places' | 'notify' | 'access' | 'data';
 
 export function Settings({ me }: { me: Me }) {
   const [tab, setTab] = useState<Tab>('home');
@@ -27,10 +29,11 @@ export function Settings({ me }: { me: Me }) {
         {(
           [
             ['home', t('Household')],
+            ['members', t('Members')],
             ['places', t('Places & categories')],
             ['notify', t('Notifications')],
             ['access', t('Access & AI')],
-            ['data', t('Data')],
+            ['data', t('Data & backups')],
           ] as [Tab, string][]
         ).map(([k, l]) => (
           <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
@@ -39,6 +42,7 @@ export function Settings({ me }: { me: Me }) {
         ))}
       </div>
       {tab === 'home' && <Household me={me} admin={admin} />}
+      {tab === 'members' && <Members me={me} admin={admin} />}
       {tab === 'places' && <Places admin={admin} />}
       {tab === 'notify' && <Notify admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
@@ -49,9 +53,7 @@ export function Settings({ me }: { me: Me }) {
 
 function Household({ me, admin }: { me: Me; admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
-  const users = useApi<any[]>('users', admin ? '/users' : null);
   const [name, setName] = useState('');
-  const [nu, setNu] = useState({ name: '', password: '', role: 'member', color: '#d0603a' });
   const [pw, setPw] = useState('');
   const [theme, setTheme] = useState<string>(() => {
     try {
@@ -127,43 +129,10 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
           <label>{t('Change my password')}</label>
           <div className="row">
             <input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t('new password')} />
-            <button className="btn" disabled={pw.length < 4} onClick={() => patch(`/users/${me.actor.userId}`, { password: pw }).then(() => { setPw(''); toast({ text: t('Password changed') }); })}>{t('Change')}</button>
+            <button className="btn" disabled={pw.length < 8} onClick={() => patch(`/users/${me.actor.userId}`, { password: pw }).then(() => { setPw(''); toast({ text: t('Password changed') }); }).catch((e) => toast({ text: e.message, error: true }))}>{t('Change')}</button>
           </div>
         </div>
       </div>
-      {admin && (
-        <section>
-          <h2 style={{ marginBottom: 10 }}>{t('Members')}</h2>
-          <div className="list">
-            {(users.data ?? []).map((u) => (
-              <div key={u.id} className="li">
-                <Avatar name={u.name} color={u.color} />
-                <div className="grow">
-                  <div className="title">{u.name}</div>
-                  <div className="sub">{u.role === 'admin' ? t('Admin') : t('Member')}</div>
-                </div>
-                {u.id !== me.actor.userId && (
-                  <button className="icon-btn plain" onClick={() => confirm(t('Remove {name}?', { name: u.name })) && del(`/users/${u.id}`).then(() => invalidate('users'))} aria-label={t('Remove')}>
-                    <Trash size={16} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="card pad stack" style={{ marginTop: 10 }}>
-            <b>{t('Add someone')}</b>
-            <div className="grid-2">
-              <input className="input" placeholder={t('Name')} value={nu.name} onChange={(e) => setNu({ ...nu, name: e.target.value })} />
-              <input className="input" placeholder={t('Password')} type="password" value={nu.password} onChange={(e) => setNu({ ...nu, password: e.target.value })} />
-            </div>
-            <div className="row between wrap">
-              <Seg value={nu.role} onChange={(v) => setNu({ ...nu, role: v })} options={[['member', t('Member')], ['admin', t('Admin')]]} />
-              <input type="color" value={nu.color} onChange={(e) => setNu({ ...nu, color: e.target.value })} style={{ width: 44, height: 36, border: 0, background: 'none' }} aria-label={t('Colour')} />
-              <button className="btn primary" disabled={!nu.name || nu.password.length < 4} onClick={() => post('/users', nu).then(() => { setNu({ ...nu, name: '', password: '' }); invalidate('users', 'users-public'); })}>{t('Create')}</button>
-            </div>
-          </div>
-        </section>
-      )}
     </div>
   );
 }
@@ -252,6 +221,7 @@ const EVENT_LABEL: Record<string, string> = {
   'order.status': 'Order status changed',
   'shopping.added': 'New item on the shopping list',
   'digest.daily': 'Daily digest (once a day)',
+  'care.due': 'Home care task due',
 };
 
 function Notify({ admin }: { admin: boolean }) {
@@ -314,6 +284,7 @@ function Notify({ admin }: { admin: boolean }) {
           <Toggle on={n.autoShoppingList} onChange={(v) => setN({ ...n, autoShoppingList: v })} />
         </div>
       </div>
+      <PushCard />
       <section>
         <h2 style={{ marginBottom: 10 }}>{t('What goes where?')}</h2>
         <div className="card" style={{ overflowX: 'auto' }}>
@@ -325,13 +296,14 @@ function Notify({ admin }: { admin: boolean }) {
                 <th>ntfy</th>
                 <th>Webhook</th>
                 <th>{t('Email')}</th>
+                <th>{t('Push')}</th>
               </tr>
             </thead>
             <tbody>
               {Object.keys(EVENT_LABEL).map((ev) => (
                 <tr key={ev}>
                   <td>{t(EVENT_LABEL[ev])}</td>
-                  {['ha', 'ntfy', 'webhook', 'email'].map((ch) => (
+                  {['ha', 'ntfy', 'webhook', 'email', 'push'].map((ch) => (
                     <td key={ch}>
                       <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
                     </td>
@@ -416,6 +388,7 @@ function Access({ admin }: { admin: boolean }) {
         <div className="small muted">{t('Create a “Home Assistant” access – you’ll get a ready-made package to paste in.')}</div>
       </div>
       {admin && s.data && <HaConnection initial={s.data.ha} />}
+      {admin && s.data && <HaTodoCard />}
       {admin && (
         <div className="card pad stack">
           <b>{t('New access')}</b>
@@ -505,6 +478,7 @@ function Data({ admin }: { admin: boolean }) {
   };
   return (
     <div className="stack" style={{ gap: 16 }}>
+      <Backups admin={admin} />
       <div className="card pad stack">
         <div className="row between wrap">
           <div>
@@ -526,7 +500,7 @@ function Data({ admin }: { admin: boolean }) {
       </div>
       <div className="card pad stack">
         <b>{t('Export')}</b>
-        <div className="small muted">{t('Everything as JSON – your data belongs to you.')}</div>
+        <div className="small muted">{t('Everything as JSON – your data belongs to you. Passwords and access keys are never included.')}</div>
         <a className="btn" style={{ alignSelf: 'flex-start' }} href="/api/export.json">{t('Download export')}</a>
       </div>
       {admin && (

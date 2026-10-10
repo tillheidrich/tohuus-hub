@@ -26,9 +26,23 @@ export function addClient(res: Response, guest = false) {
   });
 }
 
-export type Topic = 'stock' | 'products' | 'shopping' | 'recipes' | 'imports' | 'orders' | 'notifications' | 'settings';
+export type Topic = 'stock' | 'products' | 'shopping' | 'recipes' | 'imports' | 'orders' | 'notifications' | 'settings' | 'care';
+
+/** In-process listeners (e.g. the Home Assistant to-do sync reacts to shopping changes). */
+const listeners = new Set<(topics: Topic[]) => void>();
+export function onEmit(fn: (topics: Topic[]) => void) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
 
 export function emit(...topics: Topic[]) {
+  for (const fn of listeners) {
+    try {
+      fn(topics);
+    } catch {
+      /* a listener must never break a write */
+    }
+  }
   const data = JSON.stringify({ topics, at: Date.now() });
   for (const c of clients) {
     if (c.guest && !topics.some((t) => t === 'stock' || t === 'orders' || t === 'shopping' || t === 'products')) continue;
