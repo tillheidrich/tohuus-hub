@@ -13,6 +13,7 @@ import { addPlan, autofill, getPlan, planShopping, shiftPlan, syncCookidoo, week
 import { localDay } from '../lib/catalog.js';
 import { safeFetch } from '../lib/net.js';
 import { t } from '../i18n.js';
+import { activeIngredients, effectiveIngredients } from '../lib/variants.js';
 
 const rid = (v: unknown) => {
   const n = Number(v);
@@ -232,11 +233,12 @@ r.get('/recipes/:id/match', (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
+  // the house version (variant + swap rules): what "used up" and "missing" are about
   res.json(
-    rec.ingredients.map((i: any) => {
+    activeIngredients(effectiveIngredients(rec, rec.ingredients)).map((i) => {
       const m = i.product_id ? { productId: i.product_id, score: 1 } : i.pantry ? null : matchIngredient(ingredientCore(i.text));
       const p = m && m.score >= 0.72 ? (db.prepare('SELECT id, name, unit, track_mode, (SELECT COALESCE(SUM(qty),0) FROM stock WHERE product_id = products.id) AS total FROM products WHERE id = ?').get(m.productId) as any) : null;
-      return { ingredient_id: i.id, text: i.text, pantry: Boolean(i.pantry), product: p };
+      return { ingredient_id: i.id, text: i.text, original: i.original, change: i.change, pantry: Boolean(i.pantry), product: p };
     }),
   );
 });

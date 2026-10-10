@@ -14,6 +14,13 @@ CONF_LIVE_UPDATES: Final = "live_updates"
 CONF_DISPLAY_MODE: Final = "display_mode"
 CONF_DISPLAY_WIDTH: Final = "display_width"
 CONF_DISPLAY_HEIGHT: Final = "display_height"
+CONF_COOKIDOO_SYNC: Final = "cookidoo_sync"
+CONF_COOKIDOO_ENTITY: Final = "cookidoo_entity"
+
+# Cookidoo week plan → ToHuus Hub (the official Cookidoo integration's calendar)
+DEFAULT_COOKIDOO_ENTITY: Final = "calendar.cookidoo_speiseplan"
+COOKIDOO_INTERVAL: Final = timedelta(hours=3)
+COOKIDOO_DAYS: Final = 14
 
 FEATURE_TODO: Final = "todo"
 FEATURE_CALENDARS: Final = "calendars"

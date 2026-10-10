@@ -3,6 +3,7 @@ import { emit } from './bus.js';
 import { listProducts, matchIngredient } from './catalog.js';
 import { notifySettings } from './notify.js';
 import { t } from '../i18n.js';
+import { activeIngredients, changeLabels, effectiveIngredients, variantContext } from './variants.js';
 
 export interface RecipeInput {
   title: string;
@@ -25,6 +26,9 @@ const PANTRY_RE_EN = /\b(salt|black pepper|oil|olive oil|sugar|water|vinegar|flo
 
 /** "salt and pepper" is a basic, "1 red pepper" is a vegetable. */
 const isPantryPepper = (s: string) => /\bpepper\b/i.test(s) && !/^\s*[\d½¼¾]+\s+(\w+\s+)?peppers?\b/i.test(s) && !/\b(bell|red|green|yellow|orange|sweet)\s+peppers?\b/i.test(s);
+
+/** Salt, oil, stock … – always counts as in the house. */
+export const isPantryText = (text: string) => PANTRY_RE.test(text) || PANTRY_RE_EN.test(text) || isPantryPepper(text);
 
 export function saveRecipe(input: RecipeInput, id?: number): number {
   const vals = [
@@ -64,7 +68,7 @@ export function saveRecipe(input: RecipeInput, id?: number): number {
         'INSERT INTO recipe_ingredients (recipe_id, sort, text, qty, unit, product_id, optional, pantry) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       );
       input.ingredients.forEach((ing, i) => {
-        const pantry = ing.pantry ?? (PANTRY_RE.test(ing.text) || PANTRY_RE_EN.test(ing.text) || isPantryPepper(ing.text));
+        const pantry = ing.pantry ?? isPantryText(ing.text);
         let pid = ing.product_id ?? null;
         if (!pid && !pantry) {
           const m = matchIngredient(ingredientCore(ing.text));
@@ -122,6 +126,14 @@ export interface Suggestion {
   missing: string[];
   usesExpiring: string[];
   reasons: string[];
+  /** house version: what is different from the original ("Reis statt Kartoffeln") */
+  swaps: string[];
+  /** expiring products the recipe uses, soonest first */
+  expiring: { product_id: number; name: string; date: string }[];
+  /** missing lines with the product they matched (if any) */
+  missingItems: { text: string; product_id: number | null }[];
+  /** cooking time of the house version */
+  time_min: number | null;
 }
 
 /** Rank recipes by what is in the house now, what expires soon, favourites and how long ago they were cooked. */
@@ -139,14 +151,18 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
   const today = Date.now();
   const out: Suggestion[] = [];
   const warn = notifySettings().expiryWarnDays + 2;
+  const ctx = variantContext();
   for (const r of recipes) {
     if (opts.thermomix === true && !r.thermomix) continue;
     if (opts.thermomix === false && r.thermomix) continue;
-    const ings = (byRecipe.get(r.id) ?? []).filter((i) => !i.optional && !i.pantry);
+    const eff = effectiveIngredients(r, byRecipe.get(r.id) ?? [], ctx);
+    const ings = activeIngredients(eff).filter((i) => !i.optional && !i.pantry);
     if (ings.length === 0) continue;
     let have = 0;
     const missing: string[] = [];
+    const missingItems: Suggestion['missingItems'] = [];
     const usesExpiring: string[] = [];
+    const expiring: Suggestion['expiring'] = [];
     for (const i of ings) {
       let p = i.product_id ? byId.get(i.product_id) : undefined;
       if (!p) {
@@ -156,9 +172,18 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
       const available = p && (p.is_staple || p.track_mode === 'none' || p.total > 0);
       if (available) {
         have++;
-        if (p!.nextExpiry && (new Date(p!.nextExpiry).getTime() - today) / 86400000 <= warn) usesExpiring.push(p!.name);
-      } else missing.push(ingredientCore(i.text));
+        if (p!.nextExpiry && (new Date(p!.nextExpiry).getTime() - today) / 86400000 <= warn && !usesExpiring.includes(p!.name)) {
+          usesExpiring.push(p!.name);
+          expiring.push({ product_id: p!.id, name: p!.name, date: p!.nextExpiry });
+        }
+      } else {
+        missing.push(ingredientCore(i.text));
+        missingItems.push({ text: ingredientCore(i.text), product_id: p?.id ?? null });
+      }
     }
+    expiring.sort((a, b) => a.date.localeCompare(b.date));
+    const swaps = changeLabels(eff, t);
+    const variantTime = ctx.variants.get(r.id)?.time_min ?? null;
     const coverage = have / ings.length;
     const reasons: string[] = [];
     let score = coverage;
@@ -182,7 +207,8 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
     if (missing.length === 0) reasons.unshift(t('everything there'));
     else reasons.unshift(t('missing: {list}', { list: missing.slice(0, 3).join(', ') }));
     if (opts.maxMissing !== undefined && missing.length > opts.maxMissing) continue;
-    out.push({ recipe: r, score: Math.round(score * 100) / 100, have, need: ings.length, missing, usesExpiring, reasons });
+    if (swaps.length) reasons.push(t('our way: {list}', { list: swaps.slice(0, 2).join(', ') }));
+    out.push({ recipe: r, score: Math.round(score * 100) / 100, have, need: ings.length, missing, usesExpiring, reasons, swaps, expiring, missingItems, time_min: variantTime ?? r.time_min ?? null });
   }
   out.sort((a, b) => b.score - a.score);
   return out.slice(0, opts.limit ?? 12);

@@ -55,11 +55,15 @@
           "live_updates": "Liveuppdateringar",
           "display_mode": "Färger för skärmbilden",
           "display_width": "Skärmbildens bredd",
-          "display_height": "Skärmbildens höjd"
+          "display_height": "Skärmbildens höjd",
+          "cookidoo_sync": "Skicka Cookidoo-veckan till ToHuus Hub",
+          "cookidoo_entity": "Cookidoo-kalender"
         },
         "data_description": {
           "live_updates": "Håller en anslutning öppen så att ändringar syns inom en sekund eller två. Utan den frågar Home Assistant varje minut.",
-          "display_mode": "För köksskärmar som visas som bildentiteter."
+          "display_mode": "För köksskärmar som visas som bildentiteter.",
+          "cookidoo_sync": "Läser de planerade rätterna från Cookidoo-integrationen var tredje timme och när kalendern ändras, och lägger in dem i matsedeln i ToHuus Hub.",
+          "cookidoo_entity": "Oftast calendar.cookidoo_speiseplan. Lämna tomt så används den automatiskt så fort den finns."
         }
       }
     }

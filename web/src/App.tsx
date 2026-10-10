@@ -38,6 +38,7 @@ import { Find } from './pages/Find';
 import { Guest } from './pages/Guest';
 import { PartyBoard, PartyPair } from './pages/Party';
 import { Invite } from './pages/Invite';
+import { AuthLanding } from './pages/AuthLanding';
 import { ImportReview } from './pages/ImportReview';
 import { Imports } from './pages/Imports';
 import { Login } from './pages/Login';
@@ -71,6 +72,8 @@ export function App() {
   // party kiosk board and TV pairing work without login
   if (loc.pathname === '/party' || loc.pathname.startsWith('/party/')) return <Routes><Route path="/party" element={<PartyPair />} /><Route path="/party/board/:token" element={<PartyBoard />} /><Route path="*" element={<PartyPair />} /></Routes>;
   if (loc.pathname.startsWith('/einladung/')) return <Routes><Route path="/einladung/:token" element={<Invite />} /></Routes>;
+  // e-mail links: sign-in link, confirm address, new password (area: auth)
+  if (loc.pathname.startsWith('/anmelden/')) return <Routes><Route path="/anmelden/:kind" element={<AuthLanding />} /></Routes>;
   return <Authed />;
 }
 

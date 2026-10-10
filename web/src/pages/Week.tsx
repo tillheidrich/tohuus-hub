@@ -5,6 +5,7 @@ import { api, invalidate, patch, post, useApi } from '../api';
 import { locale, t } from '../i18n';
 import { Seg, Sheet, useToast } from '../ui';
 import { ClaimAvatar, CookPicker, usePlanClaims } from '../shop/claims';
+import { BonButton } from './Bons';
 
 /** Short weekday name (Mon, Tue … / Mo, Di …) in the active language. */
 const wd = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale(), { weekday: 'short' });
@@ -130,6 +131,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
             <ArrowsClockwise size={15} /> {busy === 'cdo' ? t('Checking Cookidoo…') : t('Sync Cookidoo')}
           </button>
         )}
+        <BonButton spec={{ type: 'week', day: from }} label={t('Print week')} />
       </div>
 
       <PlanPicker day={pick} onClose={() => setPick(null)} />

@@ -30,6 +30,7 @@ class ToHuusRuntimeData:
     api: ToHuusApi
     coordinator: ToHuusCoordinator
     info: dict[str, Any] = field(default_factory=dict)
+    cookidoo: Any = None
 
 
 type ToHuusConfigEntry = ConfigEntry[ToHuusRuntimeData]

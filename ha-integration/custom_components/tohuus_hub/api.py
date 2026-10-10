@@ -140,6 +140,10 @@ class ToHuusApi:
         """Drag and drop."""
         return await self.request("POST", f"/todo/{uid}/move", json_body={"previous_uid": previous_uid})
 
+    async def cookidoo(self, body: dict[str, Any]) -> Any:
+        """Send the Cookidoo week (calendar events) to ToHuus Hub."""
+        return await self.request("POST", "/cookidoo", json_body=body)
+
     # ------------------------------------------------------------- services
 
     async def service(self, name: str, data: dict[str, Any] | None = None) -> Any:

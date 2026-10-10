@@ -55,11 +55,15 @@
           "live_updates": "Live updates",
           "display_mode": "Display image colours",
           "display_width": "Display image width",
-          "display_height": "Display image height"
+          "display_height": "Display image height",
+          "cookidoo_sync": "Send the Cookidoo week to ToHuus Hub",
+          "cookidoo_entity": "Cookidoo calendar"
         },
         "data_description": {
           "live_updates": "Keeps a connection open so changes show up within a second or two. Without it, Home Assistant asks every minute.",
-          "display_mode": "For kitchen displays shown as image entities."
+          "display_mode": "For kitchen displays shown as image entities.",
+          "cookidoo_sync": "Reads the planned dishes from the Cookidoo integration every 3 hours and whenever the calendar changes, and puts them into the ToHuus Hub meal plan.",
+          "cookidoo_entity": "Usually calendar.cookidoo_speiseplan. Leave empty to use it automatically as soon as it exists."
         }
       }
     }

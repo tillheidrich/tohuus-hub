@@ -214,7 +214,7 @@ pub.post('/invite/:token', (req, res) => {
       invalid: t('This invitation has expired or was already used.'),
       taken: t('Someone with this name already exists.'),
     });
-    const token = createSession(u.userId);
+    const token = createSession(u.userId, { ua: req.headers['user-agent'], ip: req.ip, method: 'invite' });
     res.cookie(SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: 'lax',

@@ -9,6 +9,7 @@ import { type Category, type Product, api, del, invalidate, patch, post, relTime
 import { t } from '../i18n';
 import { Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { ANIMAL_KEYS, KidAnimal } from './KidArt';
+import { BonButton } from './Bons';
 
 interface Limit {
   id: string;
@@ -83,6 +84,7 @@ export function KidWishesCard({ always = false }: { always?: boolean }) {
                 <div className="sub">{relTime(w.created_at)}</div>
               </div>
               <div className="row" style={{ gap: 6 }}>
+                <BonButton spec={{ type: 'wish', id: w.id }} />
                 <button className="btn sm ghost" disabled={busy === w.id} onClick={() => answer(w, 'decline')}>{t('Not now')}</button>
                 <button className="btn sm primary" disabled={busy === w.id} onClick={() => answer(w, 'approve')}>{t('Approve')}</button>
               </div>

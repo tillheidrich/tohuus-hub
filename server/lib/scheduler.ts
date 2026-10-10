@@ -7,6 +7,7 @@ import { suggest } from './recipes.js';
 import { haSettings, syncCookidoo } from './plan.js';
 import { fmtDay, t } from '../i18n.js';
 import { checkCareDue } from './care.js';
+import { checkBudgets } from './spend2.js';
 import { startPartyScheduler } from './party.js';
 import { startInboxPoller } from './retail-inbox.js';
 
@@ -81,6 +82,7 @@ export function startScheduler() {
     try {
       await checkExpiry();
       await checkCareDue().catch((e) => console.warn('[care]', (e as Error).message));
+      await checkBudgets().catch((e) => console.warn('[budgets]', (e as Error).message));
       await sendDigest();
     } catch (e) {
       console.warn('[scheduler]', (e as Error).message);

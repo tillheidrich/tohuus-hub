@@ -50,7 +50,9 @@ And because the honest answer to *"what should we cook?"* depends on what's actu
 | **Imports** | REWE *Abholavis* / *Lieferavis* / *eBon* parsers (deterministic, tested), digital receipts via QR link, photos, pasted text. Everything goes through a review step: substitutions, refused items, new products, target location. Receipt abbreviations are learned per product. |
 | **Recipes** | Import from any site with schema.org data (Cookidoo: title, image, ingredients), from photos (HelloFresh cards etc.) or text. Thermomix steps with time / temperature / speed. Cooking log, "used up" after cooking, missing ingredients to the shopping list. |
 | **Week plan** | Seven days at a glance: plan a recipe or a free entry ("order pizza"), fill the empty evenings with what fits your stock, and put every missing ingredient of the week on the shopping list in one tap. Cooking a planned dish ticks it off. |
-| **Cookidoo week** | Cookidoo has no public API, but the Home Assistant *Cookidoo* integration exposes "My Week" as a calendar. Give ToHuus Hub a Home Assistant URL and token and it pulls the planned dishes every three hours, importing recipe, ingredients and photo where it can. |
+| **Cookidoo week** | Cookidoo has no public API, but the Home Assistant *Cookidoo* integration exposes "My Week" as a calendar. The ToHuus Hub HA integration sends the planned dishes over every three hours and on every change (no token needed in ToHuus Hub); alternatively ToHuus Hub pulls them with an HA URL and token. Recipes are matched by name or created with their cooking time. |
+| **What do we eat today?** | One decisive screen: today's plan, what works right now, what lacks just one thing (one tap to the list – or "take rice instead"), leftovers first, quick dishes, filters (Thermomix, time, vegetarian, nothing new to buy) and a "you decide for us" button. |
+| **Our way of cooking** | Per recipe, the household's own version without touching the original (rice instead of potatoes, no coriander, a note), plus house-wide swap rules ("oat milk instead of milk") that also apply to imported Cookidoo recipes. Suggestions, cooking and shopping lists use the house version. |
 | **Party mode** | Start a party in two taps: party menu with per-guest limits, a TV board with a join QR and a kitchen view (new → in progress → ready), per-device guest orders, soft reservation of the last bottle, auto end, recap that puts what ran out on the shopping list. |
 | **Order from the sofa** | Household members order anything in the house with per-item notes ("extra hot") or a free-text wish; the others get a push. |
 | **Keeping stock true** | Quick check per room (one tap per item: right / less / empty / gone), opened & frozen items with their own shelf life, leftovers after cooking, "eat first" on Today, consumption estimates, a gentle monthly waste card. |
@@ -65,6 +67,7 @@ And because the honest answer to *"what should we cook?"* depends on what's actu
 | **MCP** | 20 focused tools for Claude, ChatGPT and other MCP clients: overview, search, update stock, used up, record purchase (with review), shopping list, suggest meals, save recipe, log cooked, week plan, shop for the week … |
 | **Where is what** | Every item can carry an exact spot ("left shelf, top compartment") and every room a short direction. Search "where's the plaster?" — or give the babysitter a link with exactly that search plus a note (emergency numbers, bedtime). Works for things you don't count, too: thermometer, fuse box, toolbox. |
 | **Languages** | English and German built in, switchable per household. Notifications, e-mails, demo data and the Home Assistant package follow the language. Adding a language is one dictionary file. |
+| **Sign-in** | Passkeys (Face ID, Touch ID), one-time e-mail links, single sign-on via OpenID Connect (Authentik, Keycloak, Forgejo, Google …), password with optional two-step code, PIN switch on a shared family tablet, device list with "sign out others", alerts on new sign-ins. |
 | **Your data** | SQLite file, JSON export, no telemetry, no cloud dependency. Runs on a NAS or a small VPS (~60 MB RAM). |
 
 ## Quick start
@@ -88,7 +91,9 @@ Open `http://localhost:8080`. Want to look around first? Set `SEED_DEMO=true` be
 | `LANGUAGE` | `en` | Language on first start: `en` or `de`. Changeable under *Settings → Household*. |
 | `BRAND` | `tohuus` | Look on first start: `tohuus` or `fredirando` (a playful home-delivery theme). |
 | `VISION_BASE_URL` / `VISION_API_KEY` / `VISION_MODEL` | – | Optional. Any OpenAI-compatible chat endpoint with image input (Mistral, Ollama + a VL model, vLLM, OpenRouter …). Enables photo imports. |
-| `SMTP_*` | – | Optional e-mail notifications and daily digest. |
+| `SMTP_*` | – | Optional e-mail notifications and daily digest; also enables sign-in links and password reset by e-mail. |
+| `OIDC_ISSUER` / `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` / `OIDC_BUTTON_LABEL` | – | Optional single sign-on (Authentik, Keycloak, Forgejo, Google …). Only seeds *Settings → Members → Single sign-on* on the first start; the UI wins afterwards. See [docs/auth.md](docs/auth.md). |
+| `AUTH_BREAK_GLASS` | `false` | Locked out? `true` allows passwords for everyone and suspends the two-step requirement until removed. |
 | `MCP_PATH_SECRET` | – | Optional fixed MCP path. Tokens created in the app work without it. |
 | `TRUST_PROXY_HOPS` | `1` | Number of reverse proxies in front (for rate limiting by IP). |
 | `TZ` | `Europe/Berlin` | Used for best-before dates and the daily digest. |
@@ -113,7 +118,7 @@ Install the **ToHuus Hub** integration from HACS ([tillheidrich/tohuus-hub-ha](h
 
 Full reference: [docs/home-assistant.md](docs/home-assistant.md). The older YAML package (REST sensors, `rest_command`, actionable push via webhook) is still generated when you create the access – handy without HACS.
 
-**Cookidoo week plan:** set up the official *Cookidoo* integration in Home Assistant, create a long-lived access token (Profile → Security) and enter both under *Settings → Access & AI → Cookidoo*. The default calendar entity is `calendar.cookidoo_speiseplan`.
+**Cookidoo week plan:** set up the official *Cookidoo* integration in Home Assistant. With the ToHuus Hub integration installed, the planned dishes arrive by themselves (every three hours and on every change; calendar choice in the integration options). Without the integration: create a long-lived access token (Profile → Security) and enter it with your HA address under *Settings → Access & AI → Cookidoo*. The default calendar entity is `calendar.cookidoo_speiseplan`.
 
 ## Supported documents
 
@@ -185,7 +190,7 @@ Stack: Node 22, Express 5, better-sqlite3, sharp, MCP TypeScript SDK; React 19, 
 
 ## Security notes
 
-ToHuus Hub is meant for one household. Accounts use scrypt-hashed passwords and long-lived httpOnly sessions; logins are rate-limited; state-changing requests from other origins are rejected; outgoing fetches for user-supplied URLs block private networks. Guest links only expose the bar, selected locations (names, no quantities) or adding to the shopping list. Put it behind HTTPS.
+ToHuus Hub is meant for one household. Members sign in with a passkey, a one-time e-mail link (bound to the device that asked), single sign-on via OpenID Connect, or a password with optional two-step code; a shared kitchen tablet can switch person by PIN. Details: [docs/auth.md](docs/auth.md). Accounts use scrypt-hashed passwords and long-lived httpOnly sessions you can review and end per device; logins are rate-limited; state-changing requests from other origins are rejected; outgoing fetches for user-supplied URLs block private networks. Guest links only expose the bar, selected locations (names, no quantities) or adding to the shopping list. Put it behind HTTPS.
 
 ## Credits & legal
 

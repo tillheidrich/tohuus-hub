@@ -50,6 +50,7 @@ export const DEFAULT_PRIORITIES: Record<string, number> = {
   'care.due': 5,
   'party.ending': 5,
   'kids.wish': 8,
+  'budget.warning': 4,
   test: 5,
 };
 

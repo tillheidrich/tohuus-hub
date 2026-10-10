@@ -17,6 +17,8 @@ export type NotifyEvent =
   | 'care.due'
   | 'party.ending'
   | 'kids.wish'
+  | 'auth.new_device'
+  | 'budget.warning'
   | 'test';
 
 export interface NotifySettings {
@@ -68,6 +70,9 @@ export const DEFAULT_NOTIFY: NotifySettings = {
     'care.due': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'party.ending': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'kids.wish': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    // goes only to the member concerned (their own devices / verified address) – see server/lib/auth-sessions.ts
+    'auth.new_device': { ha: false, webhook: false, ntfy: false, email: true, push: true },
+    'budget.warning': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     test: { ha: true, webhook: true, ntfy: true, email: true, push: true },
   },
 };
@@ -84,7 +89,7 @@ export function notifySettings(): NotifySettings {
 }
 
 let transport: ReturnType<typeof nodemailer.createTransport> | null = null;
-function mailer() {
+export function mailer() {
   if (!smtpEnabled()) return null;
   transport ??= nodemailer.createTransport({
     host: config.smtp.host,

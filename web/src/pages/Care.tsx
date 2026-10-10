@@ -21,6 +21,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { type Location, type Product, del, fmtDate, invalidate, patch, post, useApi } from '../api';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { BonButton } from './Bons';
 import { t } from '../i18n';
 
 export type Unit = 'day' | 'week' | 'month' | 'year';
@@ -419,6 +420,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
         <div className="row wrap" style={{ gap: 8 }}>
           <button className="btn sm" onClick={() => onEdit(task)}>{t('Edit')}</button>
           <button className="btn sm" onClick={() => onLabel(task)}><Printer size={15} /> {t('Label')}</button>
+          <BonButton spec={{ type: 'care', id: task.id }} label={t('Ticket')} />
           <div className="grow" />
           <button className="btn primary" onClick={() => { onClose(); onDone(task); }}>
             <Check size={16} weight="bold" /> {t('Done')}

@@ -5,6 +5,7 @@ import { type Location, type Product, del, fmtQty, invalidate, patch, post, relT
 import { Empty, Ic, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { locale, t } from '../i18n';
 import { PartyCard } from './Party';
+import { BonButton } from './Bons';
 
 export function Bar() {
   const [tab, setTab] = useState<'orders' | 'links' | 'menu'>('orders');
@@ -53,9 +54,12 @@ function Orders() {
               <b style={{ fontSize: 16 }}>{o.guest_name}</b>
               <div className="small muted">{[o.link_name ?? (o.user_id ? t('from the sofa') : null), relTime(o.created_at)].filter(Boolean).join(' · ')}</div>
             </div>
-            <span className={`badge ${o.status === 'new' ? 'expiring' : o.status === 'accepted' ? 'info' : o.status === 'done' ? 'good' : ''}`}>
-              {{ new: t('new'), accepted: t('in progress'), done: t('served'), declined: t('declined') }[o.status as string]}
-            </span>
+            <div className="row" style={{ gap: 8, flex: 'none' }}>
+              <span className={`badge ${o.status === 'new' ? 'expiring' : o.status === 'accepted' ? 'info' : o.status === 'done' ? 'good' : ''}`}>
+                {{ new: t('new'), accepted: t('in progress'), done: t('served'), declined: t('declined') }[o.status as string]}
+              </span>
+              <BonButton spec={{ type: 'order', id: o.id }} />
+            </div>
           </div>
           <ul style={{ margin: '12px 0', paddingLeft: 18, lineHeight: 1.7 }}>
             {o.lines.map((l: any, i: number) => (

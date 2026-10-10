@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ToHuusApi, ToHuusAuthError, ToHuusError
-from .const import DOMAIN, FEATURE_BUTTONS, FEATURE_CALENDARS, FEATURE_DISPLAYS, FEATURE_EVENTS, FEATURE_TODO
+from .const import CONF_COOKIDOO_ENTITY, CONF_COOKIDOO_SYNC, DEFAULT_COOKIDOO_ENTITY, DOMAIN, FEATURE_BUTTONS, FEATURE_CALENDARS, FEATURE_DISPLAYS, FEATURE_EVENTS, FEATURE_TODO
+from .cookidoo import CookidooPush, cookidoo_entity
 from .coordinator import ToHuusConfigEntry, ToHuusCoordinator, ToHuusRuntimeData
 from .entity import feature_enabled
 from .services import async_setup_services
@@ -62,8 +64,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ToHuusConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     coordinator.start_listener()
     entry.async_on_unload(coordinator.stop_listener)
+    _setup_cookidoo(hass, entry, api)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
+
+
+def _setup_cookidoo(hass: HomeAssistant, entry: ToHuusConfigEntry, api: ToHuusApi) -> None:
+    """Push the Cookidoo week plan to ToHuus Hub – now, every 3 hours and when the calendar changes.
+
+    Without an explicit choice the default Cookidoo calendar is used as soon as it shows up (the Cookidoo
+    integration may load after this one).
+    """
+    if not entry.options.get(CONF_COOKIDOO_SYNC, True):
+        return
+
+    def start(entity_id: str) -> None:
+        push = CookidooPush(hass, api, entity_id)
+        entry.runtime_data.cookidoo = push
+        entry.async_on_unload(push.start())
+
+    entity_id = cookidoo_entity(hass, dict(entry.options))
+    if entity_id:
+        start(entity_id)
+        return
+    if entry.options.get(CONF_COOKIDOO_ENTITY):
+        return
+
+    waiting: list[CALLBACK_TYPE] = []
+
+    @callback
+    def _stop_waiting() -> None:
+        while waiting:
+            waiting.pop()()
+
+    @callback
+    def _appeared(event: Event[EventStateChangedData]) -> None:
+        if event.data["new_state"] is not None and entry.runtime_data.cookidoo is None:
+            _stop_waiting()
+            start(DEFAULT_COOKIDOO_ENTITY)
+
+    waiting.append(async_track_state_change_event(hass, [DEFAULT_COOKIDOO_ENTITY], _appeared))
+    entry.async_on_unload(_stop_waiting)
 
 
 def _remove_stale_entities(hass: HomeAssistant, entry: ToHuusConfigEntry) -> None:

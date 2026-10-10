@@ -6,6 +6,7 @@ import { type Category, type Location, api, del, invalidate, patch, post, relTim
 import { ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { LANGUAGE_OPTIONS, lang, setLang, t } from '../i18n';
 import { Backups, Members } from './DataSettings';
+import { MyAccount, SignInAdmin } from './AuthSettings';
 import { HaTodoCard, PushCard } from '../shop/ShopSettings';
 import { InboxSettingsCard } from './Retail';
 import { KidsSettings } from './KidsSettings';
@@ -13,11 +14,13 @@ import { ChannelsSettings, useChannelColumns } from './Channels';
 import { Displays } from './Displays';
 import { RegionCard } from './RegionSettings';
 import { HaCreated, HaIntegrationCard } from './HaIntegration';
+import { CookidooWays } from './CookidooStatus';
+import { PrintSettings } from './Bons';
 
-type Tab = 'home' | 'members' | 'places' | 'notify' | 'access' | 'displays' | 'data';
+type Tab = 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'displays' | 'print' | 'data';
 
 export function Settings({ me }: { me: Me }) {
-  const TABS: Tab[] = ['home', 'members', 'places', 'notify', 'access', 'data'];
+  const TABS: Tab[] = ['home', 'account', 'members', 'places', 'notify', 'access', 'print', 'data'];
   const [tab, setTab] = useState<Tab>(() => {
     const q = new URLSearchParams(location.search).get('tab') as Tab | null;
     return q && TABS.includes(q) ? q : 'home';
@@ -44,11 +47,13 @@ export function Settings({ me }: { me: Me }) {
         {(
           [
             ['home', t('Household')],
+            ['account', t('My account')],
             ['members', t('Members')],
             ['places', t('Places & categories')],
             ['notify', t('Notifications')],
             ['access', t('Access & AI')],
             ['displays', t('Displays')],
+            ['print', t('Printers & tickets')],
             ['data', t('Data & backups')],
           ] as [Tab, string][]
         ).map(([k, l]) => (
@@ -58,12 +63,15 @@ export function Settings({ me }: { me: Me }) {
         ))}
       </div>
       {tab === 'home' && <Household me={me} admin={admin} />}
+      {tab === 'account' && <MyAccount me={me} />}
       {tab === 'members' && <Members me={me} admin={admin} />}
+      {tab === 'members' && admin && <SignInAdmin me={me} />}
       {tab === 'members' && <KidsSettings admin={admin} />}
       {tab === 'places' && <Places admin={admin} />}
       {tab === 'notify' && <Notify admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
       {tab === 'displays' && <Displays admin={admin} />}
+      {tab === 'print' && <PrintSettings admin={admin} />}
       {tab === 'data' && <Data admin={admin} />}
     </div>
   );
@@ -242,6 +250,8 @@ const EVENT_LABEL: Record<string, string> = {
   'digest.daily': 'Daily digest (once a day)',
   'care.due': 'Home care task due',
   'kids.wish': 'A kid wishes for something',
+  'auth.new_device': 'New sign-in on another device (only to that member)',
+  'budget.warning': 'Spending budget at 80 % or reached',
 };
 
 function Notify({ admin }: { admin: boolean }) {
@@ -555,9 +565,10 @@ function HaConnection({ initial }: { initial: { url: string; token: string; cook
       <div>
         <b>{t('Cookidoo meal plan via Home Assistant')}</b>
         <div className="small muted">
-          {t('Cookidoo has no open API. But the Home Assistant “Cookidoo” integration reads “My week” as a calendar – ToHuus Hub pulls the dishes from there into the meal plan every three hours.')}
+          {t('Cookidoo has no open API, but the Home Assistant “Cookidoo” integration shows “My week” as a calendar. There are two ways to get the planned dishes into the meal plan:')}
         </div>
       </div>
+      <CookidooWays />
       <div className="field">
         <label>{t('Home Assistant address')}</label>
         <input className="input" value={h.url} onChange={(e) => setH({ ...h, url: e.target.value })} placeholder="https://ha.example.de" inputMode="url" />

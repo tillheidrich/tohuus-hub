@@ -6,6 +6,8 @@ import { api, invalidate, post, useApi } from '../api';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { t } from '../i18n';
 import { WeekPlan } from './Week';
+import { WhatToEatPanel } from './WhatToEat';
+import { SwapRulesCard } from './RecipeVariant';
 
 export function Cook({ me }: { me: Me }) {
   const [tm, setTm] = useState<'all' | 'tm' | 'no'>('all');
@@ -30,7 +32,7 @@ export function Cook({ me }: { me: Me }) {
       <header className="page-head">
         <div>
           <div className="eyebrow">{(recipes.data?.length ?? 0) === 1 ? t('1 recipe') : t('{n} recipes', { n: recipes.data?.length ?? 0 })}</div>
-          <h1>{t("What's for dinner?")}</h1>
+          <h1>{t('What do we eat today?')}</h1>
         </div>
         <div className="actions">
           <button className="btn primary" onClick={() => setImportOpen(true)}>
@@ -39,9 +41,12 @@ export function Cook({ me }: { me: Me }) {
         </div>
       </header>
 
+      <WhatToEatPanel onAddRecipe={() => setImportOpen(true)} />
+
+      <div style={{ height: 28 }} />
       <WeekPlan cookidoo={Boolean(settings.data?.ha?.url && settings.data?.ha?.token)} />
 
-      <h2 style={{ margin: '28px 0 12px' }}>{t('Ideas for today')}</h2>
+      <h2 style={{ margin: '28px 0 12px' }}>{t('Browse ideas')}</h2>
       <div className="row between wrap" style={{ marginBottom: 14 }}>
         <Seg value={tm} onChange={(v) => { setTm(v); setIdx(0); }} options={[['all', t('All')], ['tm', 'Thermomix'], ['no', t('Without')]]} />
         {deck.length > 1 && (
@@ -111,6 +116,7 @@ export function Cook({ me }: { me: Me }) {
           </div>
         )}
       </section>
+      <SwapRulesCard />
       <RecipeImport open={importOpen} onClose={() => setImportOpen(false)} vision={me.features.vision} />
     </div>
   );

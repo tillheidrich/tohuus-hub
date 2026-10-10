@@ -26,4 +26,11 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ToHuusC
         "api": data.get("api"),
         "displays": data.get("displays"),
         "party": async_redact_data(data.get("party") or {}, TO_REDACT),
+        "cookidoo": {
+            "entity_id": rt.cookidoo.entity_id,
+            "last_result": rt.cookidoo.last_result,
+            "last_error": rt.cookidoo.last_error,
+        }
+        if rt.cookidoo
+        else None,
     }

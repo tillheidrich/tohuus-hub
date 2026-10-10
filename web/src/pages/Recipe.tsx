@@ -1,4 +1,4 @@
-import { ArrowLeft, Basket, Camera, Check, ChefHat, Clock, Heart, Minus, PencilSimple, Trash, Users, X } from '@phosphor-icons/react';
+import { ArrowLeft, Basket, Camera, Check, ChefHat, Clock, Heart, PencilSimple, Trash, Users } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, del, invalidate, patch, post, put, relTime, useApi } from '../api';
@@ -6,6 +6,8 @@ import { t } from '../i18n';
 import { Amounts } from '../RegionAmounts';
 import { Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { type LeftoverChoice, LeftoversField, saveLeftovers } from './FreshParts';
+import { DifferentToday, OurIngredients } from './RecipeVariant';
+import { BonButton } from './Bons';
 
 /** Marks a line in the ingredient editor as a pantry staple (always counts as in stock). */
 const stapleMarker = () => t('(pantry)');
@@ -49,6 +51,7 @@ export function RecipeDetail() {
         <button className="icon-btn" onClick={fav} aria-label={t('Favorite')} style={{ color: r.favorite ? 'var(--empty)' : undefined }}>
           <Heart size={18} weight={r.favorite ? 'fill' : 'regular'} />
         </button>
+        <BonButton spec={{ type: 'recipe', id: r.id }} />
         <button className="btn sm" onClick={() => setEdit(true)}>
           <PencilSimple size={15} /> {t('Edit')}
         </button>
@@ -106,27 +109,7 @@ export function RecipeDetail() {
               ))}
             </div>
           </div>
-          <section>
-            <h3 style={{ marginBottom: 8 }}>{t('Ingredients')}</h3>
-            <div className="list">
-              {r.ingredients.map((i: any) => {
-                const x = m.get(i.id);
-                const have = x?.product && (x.product.total > 0 || x.product.track_mode === 'none');
-                const cls = i.pantry ? 'pantry' : have ? 'have' : 'miss';
-                return (
-                  <div key={i.id} className="ingr">
-                    <span className={`mark ${cls}`}>{cls === 'have' ? <Check size={13} weight="bold" /> : cls === 'miss' ? <X size={12} weight="bold" /> : <Minus size={12} />}</span>
-                    <div className="grow">
-                      <Amounts text={i.text} style={{ fontWeight: 550 }} />
-                      {x?.product && <div className="small muted">{t('In stock: {name}', { name: x.product.name })}</div>}
-                      {Boolean(i.pantry) && <div className="small muted">{t('Pantry staple')}</div>}
-                    </div>
-                  </div>
-                );
-              })}
-              {r.ingredients.length === 0 && <div className="li muted small">{t('No ingredients yet.')}</div>}
-            </div>
-          </section>
+          <OurIngredients r={r} match={match.data ?? []} />
           <section>
             <h3>{t('Instructions')}</h3>
             {r.steps.length === 0 && <p className="muted small">{r.notes ?? t('No steps yet.')}</p>}
@@ -180,6 +163,7 @@ function CookedSheet({ open, onClose, r, match }: { open: boolean; onClose: () =
           <label>{t('How was it?')}</label>
           <Seg value={String(rating ?? 0)} onChange={(v) => setRating(Number(v) || null)} options={[['1', t('meh')], ['3', t('good')], ['5', t('great')]]} />
         </div>
+        <DifferentToday r={r} />
         {usable.length > 0 && (
           <div className="field">
             <label>{t('What did you use up?')}</label>

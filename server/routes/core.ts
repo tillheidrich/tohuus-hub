@@ -8,17 +8,14 @@ import { regionInfo } from '../lib/region.js';
 import {
   SESSION_COOKIE,
   createApiToken,
-  createSession,
   destroySession,
   hashPassword,
   NAME_MAX,
   PASSWORD_MIN,
-  rateLimited,
   requireAdmin,
   sha256,
   requireAuth,
   resolveActor,
-  verifyPassword,
 } from '../lib/auth.js';
 import { addClient, emit } from '../lib/bus.js';
 import {
@@ -52,27 +49,7 @@ const id = (v: unknown) => Number(v);
 
 // ---------------------------------------------------------------- auth
 
-r.post('/auth/login', async (req, res) => {
-  const { name, password } = z.object({ name: z.string().trim().max(NAME_MAX * 2), password: z.string().max(200) }).parse(req.body);
-  if (rateLimited(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimited(`user:${name.toLowerCase()}`, 8, 5 * 60_000)) {
-    res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
-    return;
-  }
-  const u = db.prepare('SELECT * FROM users WHERE lower(name) = lower(?)').get(name.trim()) as any;
-  if (!u || !(await verifyPassword(password, u.password_hash))) {
-    res.status(401).json({ error: t('Name or password is wrong.') });
-    return;
-  }
-  const token = createSession(u.id);
-  res.cookie(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: config.baseUrl.startsWith('https'),
-    maxAge: 365 * 86400000,
-    path: '/',
-  });
-  res.json({ ok: true });
-});
+// password sign-in (with optional two-step code) lives in routes/auth.ts with the other sign-in methods
 
 r.post('/auth/logout', (req, res) => {
   const t = req.cookies?.[SESSION_COOKIE];

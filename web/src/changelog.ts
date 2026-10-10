@@ -19,6 +19,20 @@ export interface ChangeEntry {
 
 export const CHANGELOG: ChangeEntry[] = [
   {
+    id: '2026-10-10.3',
+    title: { en: 'Dinner, spending, sign-in and more', de: 'Abendessen, Ausgaben, Anmeldung und mehr', sv: 'Middag, utgifter, inloggning och mer' },
+    items: [
+      { en: '“What do we eat today?” shows what works with what is at home – and can simply decide for you.', de: '„Was essen wir heute?“ zeigt, was mit dem Vorrat geht – und kann auch einfach für euch entscheiden.', sv: '”Vad äter vi i dag?” visar vad som går med det som finns hemma – och kan bestämma åt er.', to: '/kochen' },
+      { en: 'Your own way of cooking: rice instead of potatoes? Save it once – suggestions and shopping follow your version.', de: 'Eure eigene Art zu kochen: Reis statt Kartoffeln? Einmal speichern – Vorschläge und Einkauf richten sich danach.', sv: 'Ert eget sätt att laga mat: ris i stället för potatis? Spara en gång – förslag och inköp följer er version.', to: '/kochen' },
+      { en: 'Spending with charts for week, month, year and all time, budgets and items you can leave out.', de: 'Ausgaben mit Diagrammen für Woche, Monat, Jahr und gesamt, Budgets und Posten, die nicht mitzählen.', sv: 'Utgifter med diagram för vecka, månad, år och totalt, budgetar och poster som inte räknas.', to: '/ausgaben' },
+      { en: 'Sign in with a passkey, an e-mail link or your own single sign-on.', de: 'Anmelden per Passkey, E-Mail-Link oder eigenem Single Sign-on.', sv: 'Logga in med passkey, e-postlänk eller egen single sign-on.', to: '/einstellungen?tab=account' },
+      { en: 'Receipt-style tickets: print shopping lists, kitchen orders and care tasks on a thermal printer or send them.', de: 'Bons zum Ausdrucken: Einkaufszettel, Küchenbons und Pflege-Aufgaben auf dem Bondrucker oder digital verschicken.', sv: 'Kvitton att skriva ut: inköpslistor, köksorder och skötseluppgifter på kvittoskrivare eller skicka dem.', to: '/einstellungen?tab=print' },
+      { en: 'Telegram: add things to the list by message, get notifications with buttons.', de: 'Telegram: Sachen per Nachricht auf die Liste setzen, Benachrichtigungen mit Knöpfen.', sv: 'Telegram: lägg till saker på listan via meddelande, få aviseringar med knappar.' },
+      { en: 'A real Home Assistant integration with sensors, to-do list, calendars and dashboards – and the Cookidoo week comes in by itself.', de: 'Eine richtige Home-Assistant-Integration mit Sensoren, To-do-Liste, Kalendern und Dashboards – und die Cookidoo-Woche kommt von selbst.', sv: 'En riktig Home Assistant-integration med sensorer, att göra-lista, kalendrar och dashboards – och Cookidoo-veckan kommer av sig själv.' },
+      { en: 'Svenska! And receipts from the UK, the US and Sweden.', de: 'Svenska! Und Bons aus Großbritannien, den USA und Schweden.', sv: 'Svenska! Och kvitton från Storbritannien, USA och Sverige.' },
+    ],
+  },
+  {
     id: '2026-10-10.2',
     title: { en: 'Easier to get started', de: 'Leichter loslegen', sv: 'Enklare att komma igång' },
     items: [

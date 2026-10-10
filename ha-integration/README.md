@@ -52,7 +52,9 @@ Copy `custom_components/tohuus_hub` into your Home Assistant `config/custom_comp
 
 The token only works for the Home Assistant API and the live update stream – it can't read anything else.
 
-**Options** (*Configure* on the integration): switch off parts you don't need (to-do, calendars, display images, buttons, event entity), turn live updates off, and choose colour / greyscale / black-and-white and size for display images.
+**Options** (*Configure* on the integration): switch off parts you don't need (to-do, calendars, display images, buttons, event entity), turn live updates off, choose colour / greyscale / black-and-white and size for display images, and pick the Cookidoo calendar.
+
+**Cookidoo week plan:** if the official *Cookidoo* integration is set up, ToHuus Hub gets the planned dishes automatically – the integration reads `calendar.cookidoo_speiseplan` (or the calendar chosen in the options) for the next 14 days and sends it to ToHuus Hub every 3 hours and whenever the calendar changes. ToHuus Hub needs no Home Assistant token for this. Switch it off in the options if you don't want it.
 
 Requires ToHuus Hub with the v1 integration API (October 2026 or later) and Home Assistant 2024.12 or later.
 

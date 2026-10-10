@@ -8,6 +8,7 @@ import { fmtQty, invalidate, post, relTime, useApi } from '../api';
 import { Empty, Ic, Skeleton, StatusBadge, Thumb, useToast } from '../ui';
 import { locale, t } from '../i18n';
 import { FreshToday } from './FreshParts';
+import { WhatToEatHero } from './WhatToEat';
 import { CareDueSection } from './Care';
 import { PartyBanner } from './Party';
 import { KidWishesCard } from './KidsSettings';
@@ -102,6 +103,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         </button>
       </div>
 
+      <WhatToEatHero />
       <PartyBanner />
       <KidWishesCard />
       {(o.imports.length > 0 || o.orders.some((x: any) => !x.party_id)) && (

@@ -23,6 +23,7 @@ import { t } from '../i18n';
 import { pendingQueue, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, sectionLabel } from '../shop/sections';
 import { Avatar, Empty, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { BonButton } from './Bons';
 
 function storeGet(k: string, d: string) {
   try {
@@ -213,6 +214,7 @@ export function Shopping() {
               <ShareNetwork size={18} />
             </button>
           )}
+          {!inStore && <BonButton spec={{ type: 'shopping', store_id: view?.store?.id ?? null }} />}
           <button className={`btn ${inStore ? '' : 'primary'}`} onClick={() => switchMode(inStore ? 'list' : 'store')}>
             {inStore ? <X size={16} /> : <Storefront size={16} />} {inStore ? t('Leave store') : t('Store mode')}
           </button>

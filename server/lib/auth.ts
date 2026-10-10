@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
-import { db } from '../db.js';
+import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
 
 export interface Actor {
@@ -12,7 +12,73 @@ export interface Actor {
   guestLinkId?: number;
   guestScopes?: string[];
   guestLocations?: number[];
+  /** rowid of the session (cookie sign-ins only) */
+  sessionId?: number;
 }
+
+// Sign-in methods (area: auth): session metadata for the device list, verified e-mail, passkeys,
+// one-time links, shared devices, PIN and TOTP. Secrets end in _secret so exports skip them (lib/data.ts).
+migrate(
+  'auth-1',
+  `ALTER TABLE sessions ADD COLUMN ua TEXT;
+  ALTER TABLE sessions ADD COLUMN ip TEXT;
+  ALTER TABLE sessions ADD COLUMN method TEXT;
+  ALTER TABLE sessions ADD COLUMN device_hash TEXT;
+  ALTER TABLE sessions ADD COLUMN bound INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE sessions ADD COLUMN last_seen_at TEXT;
+  CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
+  ALTER TABLE users ADD COLUMN email_verified_at TEXT;
+  ALTER TABLE users ADD COLUMN webauthn_handle TEXT;
+  ALTER TABLE users ADD COLUMN sso_sub TEXT;
+  ALTER TABLE users ADD COLUMN totp_secret TEXT;
+  ALTER TABLE users ADD COLUMN totp_recovery_secret TEXT;
+  ALTER TABLE users ADD COLUMN totp_last_step INTEGER;
+  ALTER TABLE users ADD COLUMN pin_secret TEXT;
+  CREATE UNIQUE INDEX users_sso_sub ON users(sso_sub) WHERE sso_sub IS NOT NULL;
+  CREATE TABLE auth_tokens (
+    id INTEGER PRIMARY KEY,
+    purpose TEXT NOT NULL CHECK (purpose IN ('magic','verify','reset')),
+    token_hash TEXT NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    email TEXT,
+    nonce_hash TEXT,
+    code TEXT,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    ua TEXT,
+    ip TEXT,
+    approved_at TEXT,
+    used_at TEXT,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX auth_tokens_nonce ON auth_tokens(nonce_hash);
+  CREATE TABLE auth_passkeys (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    public_key BLOB NOT NULL,
+    counter INTEGER NOT NULL DEFAULT 0,
+    transports TEXT NOT NULL DEFAULT '[]',
+    device_type TEXT,
+    backed_up INTEGER NOT NULL DEFAULT 0,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    last_used_at TEXT
+  );
+  CREATE INDEX auth_passkeys_user ON auth_passkeys(user_id);
+  CREATE TABLE auth_device_tokens (
+    device_hash TEXT PRIMARY KEY,
+    shared INTEGER NOT NULL DEFAULT 0,
+    name TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT
+  );
+  CREATE TABLE auth_seen_tokens (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device_hash TEXT NOT NULL,
+    first_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, device_hash)
+  );`,
+);
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -53,6 +119,8 @@ export function safeEqual(a: string, b: string) {
 
 /** Tiny in-memory fixed-window rate limiter. */
 const buckets = new Map<string, { n: number; reset: number }>();
+/** for tests */
+export const resetRateLimits = () => buckets.clear();
 export function rateLimited(key: string, max: number, windowMs: number): boolean {
   const now = Date.now();
   const b = buckets.get(key);
@@ -65,15 +133,36 @@ export function rateLimited(key: string, max: number, windowMs: number): boolean
   return b.n > max;
 }
 
-const SESSION_DAYS = 365;
+export const SESSION_DAYS = 365;
 export const SESSION_COOKIE = 'sw_session';
+/** Long-lived random id per browser: device list, new-device alerts, shared family devices (area: auth). */
+export const DEVICE_COOKIE = 'sw_dev';
 
-export function createSession(userId: number): string {
+export interface SessionMeta {
+  ua?: string | null;
+  ip?: string | null;
+  method?: string;
+  /** sha256 of the browser's device cookie */
+  deviceHash?: string | null;
+  /** only valid together with that device cookie (PIN switch on a shared device) */
+  bound?: boolean;
+  days?: number;
+}
+
+export function createSession(userId: number, meta: SessionMeta = {}): string {
   const token = randomToken(32);
-  db.prepare(`INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, datetime('now', ?))`).run(
+  db.prepare(
+    `INSERT INTO sessions (token_hash, user_id, expires_at, ua, ip, method, device_hash, bound, last_seen_at)
+     VALUES (?, ?, datetime('now', ?), ?, ?, ?, ?, ?, datetime('now'))`,
+  ).run(
     sha256(token),
     userId,
-    `+${SESSION_DAYS} days`,
+    `+${meta.days ?? SESSION_DAYS} days`,
+    meta.ua?.slice(0, 300) ?? null,
+    meta.ip ?? null,
+    meta.method ?? null,
+    meta.deviceHash ?? null,
+    meta.bound ? 1 : 0,
   );
   return token;
 }
@@ -100,16 +189,22 @@ export function actorFromBearer(token: string | undefined): Actor | null {
   return { kind: 'token', name: row.name, role: row.scope === 'full' ? 'admin' : 'member', scope: row.scope };
 }
 
-function actorFromSession(token: string | undefined): Actor | null {
+function actorFromSession(token: string | undefined, deviceToken: string | undefined): Actor | null {
   if (!token) return null;
+  const hash = sha256(token);
   const row = db
     .prepare(
-      `SELECT u.id, u.name, u.role FROM sessions s JOIN users u ON u.id = s.user_id
+      `SELECT u.id, u.name, u.role, s.rowid AS sid, s.bound, s.device_hash,
+              (s.last_seen_at IS NULL OR s.last_seen_at < datetime('now', '-5 minutes')) AS stale
+       FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token_hash = ? AND s.expires_at > datetime('now')`,
     )
-    .get(sha256(token)) as { id: number; name: string; role: 'admin' | 'member' } | undefined;
+    .get(hash) as { id: number; name: string; role: 'admin' | 'member'; sid: number; bound: number; device_hash: string | null; stale: number } | undefined;
   if (!row) return null;
-  return { kind: 'user', userId: row.id, name: row.name, role: row.role };
+  // a PIN session on a shared tablet is worthless without that tablet's device cookie
+  if (row.bound && (!deviceToken || !row.device_hash || !safeEqual(sha256(deviceToken), row.device_hash))) return null;
+  if (row.stale) db.prepare(`UPDATE sessions SET last_seen_at = datetime('now') WHERE token_hash = ?`).run(hash);
+  return { kind: 'user', userId: row.id, name: row.name, role: row.role, sessionId: row.sid };
 }
 
 export function resolveActor(req: Request): Actor | null {
@@ -117,7 +212,7 @@ export function resolveActor(req: Request): Actor | null {
   if (auth?.startsWith('Bearer ')) return actorFromBearer(auth.slice(7).trim());
   const headerToken = req.headers['x-api-key'];
   if (typeof headerToken === 'string') return actorFromBearer(headerToken);
-  return actorFromSession(req.cookies?.[SESSION_COOKIE]);
+  return actorFromSession(req.cookies?.[SESSION_COOKIE], req.cookies?.[DEVICE_COOKIE]);
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {

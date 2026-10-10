@@ -205,7 +205,7 @@ r.get('/ha/v1/info', (req, res) => {
     base_url: config.baseUrl,
     language: lang(),
     scope: req.actor?.kind === 'token' ? req.actor.scope : 'session',
-    features: { todo: true, calendar: true, events: true, displays: true, services: true },
+    features: { todo: true, calendar: true, events: true, displays: true, services: true, cookidoo_push: true },
   });
 });
 

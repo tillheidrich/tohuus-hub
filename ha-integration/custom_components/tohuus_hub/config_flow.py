@@ -12,6 +12,8 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    EntitySelector,
+    EntitySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -26,11 +28,14 @@ from homeassistant.helpers.selector import (
 from .api import ToHuusApi, ToHuusAuthError, ToHuusConnectionError, ToHuusError, ToHuusNotSupportedError, normalize_url
 from .const import (
     ALL_FEATURES,
+    CONF_COOKIDOO_ENTITY,
+    CONF_COOKIDOO_SYNC,
     CONF_DISPLAY_HEIGHT,
     CONF_DISPLAY_MODE,
     CONF_DISPLAY_WIDTH,
     CONF_FEATURES,
     CONF_LIVE_UPDATES,
+    DEFAULT_COOKIDOO_ENTITY,
     DEFAULT_DISPLAY_HEIGHT,
     DEFAULT_DISPLAY_MODE,
     DEFAULT_DISPLAY_WIDTH,
@@ -158,9 +163,11 @@ class ToHuusOptionsFlow(OptionsFlow):
                     **user_input,
                     CONF_DISPLAY_WIDTH: int(user_input[CONF_DISPLAY_WIDTH]),
                     CONF_DISPLAY_HEIGHT: int(user_input[CONF_DISPLAY_HEIGHT]),
+                    CONF_COOKIDOO_ENTITY: user_input.get(CONF_COOKIDOO_ENTITY) or "",
                 }
             )
         o = self.config_entry.options
+        cookidoo = o.get(CONF_COOKIDOO_ENTITY) or (DEFAULT_COOKIDOO_ENTITY if self.hass.states.get(DEFAULT_COOKIDOO_ENTITY) else None)
         size = NumberSelector(NumberSelectorConfig(min=100, max=2400, step=10, mode=NumberSelectorMode.BOX, unit_of_measurement="px"))
         return self.async_show_form(
             step_id="init",
@@ -175,6 +182,8 @@ class ToHuusOptionsFlow(OptionsFlow):
                     ),
                     vol.Required(CONF_DISPLAY_WIDTH, default=o.get(CONF_DISPLAY_WIDTH, DEFAULT_DISPLAY_WIDTH)): size,
                     vol.Required(CONF_DISPLAY_HEIGHT, default=o.get(CONF_DISPLAY_HEIGHT, DEFAULT_DISPLAY_HEIGHT)): size,
+                    vol.Required(CONF_COOKIDOO_SYNC, default=o.get(CONF_COOKIDOO_SYNC, True)): bool,
+                    vol.Optional(CONF_COOKIDOO_ENTITY, description={"suggested_value": cookidoo}): EntitySelector(EntitySelectorConfig(domain="calendar")),
                 }
             ),
         )

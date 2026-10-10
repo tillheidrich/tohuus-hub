@@ -6,7 +6,7 @@ ToHuus Hub talks to Home Assistant in three ways. Use the first; the others exis
 |---|---|---|
 | **Integration** (HACS) | Native entities, actions, events, live updates | Always, if you can install from HACS |
 | YAML package | REST sensors, `rest_command`, webhook push automation | No HACS, or you want the actionable iOS push from the package |
-| Outbound (ToHuus Hub → HA) | Cookidoo week plan from an HA calendar; optional sync with an HA to-do list; notification webhook | Cookidoo only exists in HA; the to-do sync and webhook are superseded by the integration |
+| Outbound (ToHuus Hub → HA) | Cookidoo week plan pulled with an HA token (alternative to the integration's push); optional sync with an HA to-do list; notification webhook | Only without the integration; the integration pushes the Cookidoo week by itself |
 
 The integration lives in its own repository: **[tillheidrich/tohuus-hub-ha](https://github.com/tillheidrich/tohuus-hub-ha)** (source in this repo under [`ha-integration/`](../ha-integration/), MIT licence for HACS friendliness).
 
@@ -18,7 +18,7 @@ The integration lives in its own repository: **[tillheidrich/tohuus-hub-ha](http
 
 A "Home Assistant" token can only call `/api/ha/*` and `/api/events` – nothing else in the API, no MCP.
 
-**Options** (*Configure*): features on/off (to-do, calendars, display images, buttons, event entity – sensors are always on), live updates on/off, display image colours (`color` / `gray` / `bw`) and size. Switching a feature off removes its entities.
+**Options** (*Configure*): features on/off (to-do, calendars, display images, buttons, event entity – sensors are always on), live updates on/off, display image colours (`color` / `gray` / `bw`) and size, Cookidoo week on/off and its calendar entity. Switching a feature off removes its entities.
 
 **Re-authentication:** if the token is revoked, Home Assistant asks for a new one. *Reconfigure* changes the address.
 
@@ -188,7 +188,26 @@ These endpoints stay; they are independent of the integration.
 
 ## Cookidoo
 
-Cookidoo has no public API. The official HA *Cookidoo* integration exposes "My week" as a calendar; ToHuus Hub reads it every three hours (*Settings › Access & AI › Cookidoo*: HA address, long-lived HA token, calendar entity, default `calendar.cookidoo_speiseplan`). This direction (ToHuus Hub → HA) is separate from the integration.
+Cookidoo has no public API. The official HA *Cookidoo* integration exposes "My week" as a calendar entity (default `calendar.cookidoo_speiseplan`, events like "Köttbullar mit Pilzsauce" with the description `Total Time: 4200.0` = seconds). Two ways get it into the ToHuus Hub meal plan:
+
+1. **Integration push (recommended).** The ToHuus Hub integration reads the calendar with `calendar.get_events` for the next 14 days and posts the events to `POST /api/ha/v1/cookidoo` – right after start, every 3 hours and whenever the calendar entity changes (unchanged data is not re-sent). No HA token in ToHuus Hub needed. Options: *Send the Cookidoo week to ToHuus Hub* (on by default) and *Cookidoo calendar* (empty = `calendar.cookidoo_speiseplan` as soon as it exists).
+2. **Pull with an HA token (alternative).** *Settings › Access & AI › Cookidoo*: HA address, long-lived HA token, calendar entity. ToHuus Hub asks Home Assistant every three hours.
+
+Both run the same import:
+
+- each event becomes a meal plan entry with source `cookidoo`, keyed by date + title (`cookidoo:<date>:<normalised title>`) – sending the same week twice changes nothing;
+- the recipe is matched by title; otherwise it is imported from the Cookidoo link in the description (if any) or created as a stub recipe (Thermomix, time from `Total Time`, e.g. `1800.0` → 30 min);
+- a changed time updates the stub; a dish that disappeared from Cookidoo is removed from the plan (only future, uncooked Cookidoo entries in the sent range).
+
+```http
+POST /api/ha/v1/cookidoo
+Authorization: Bearer sw_…            # "Home Assistant" access
+{"entity_id": "calendar.cookidoo_speiseplan", "start": "2026-10-10", "end": "2026-10-23",
+ "events": [{"date": "2026-10-12", "summary": "Köttbullar mit Pilzsauce", "description": "Total Time: 4200.0"}]}
+→ {"events": 1, "added": 1, "updated": 0, "removed": 0, "imported": 0}
+```
+
+`date` may also be given as HA's `start` (`"2026-10-12"` or `{"date": …}` / `{"dateTime": …}`).
 
 ## Publishing (maintainers)
 
