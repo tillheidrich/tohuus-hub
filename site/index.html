@@ -3,59 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ToHuus Hub — Your home. Organized.</title>
-<meta name="description" content="Free, open-source home management you host yourself: what's in the house, where it is, what's for dinner. Stock by room, shared shopping list, receipt imports, week plan, guest bar, Home Assistant and MCP.">
+<title>ToHuus Hub · Let the house do the remembering</title>
+<meta name="description" content="Free, open-source home app you host yourself: what's in the fridge, where the parcel tape lives, what's for dinner. Stock by room, shared shopping list, receipt imports, week plan, order from the sofa, Home Assistant and MCP.">
 <link rel="canonical" href="https://tohuus.heidrich-digital.de/">
 <link rel="alternate" hreflang="en" href="https://tohuus.heidrich-digital.de/">
 <link rel="alternate" hreflang="de" href="https://tohuus.heidrich-digital.de/de/">
 <link rel="alternate" hreflang="x-default" href="https://tohuus.heidrich-digital.de/">
-<meta name="theme-color" content="#f3f2ee">
+<meta name="theme-color" content="#f7f2e8">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ToHuus Hub">
-<meta property="og:title" content="ToHuus Hub — Your home. Organized.">
-<meta property="og:description" content="Free, self-hosted, open-source home management: stock by room, where everything is, what's for dinner.">
+<meta property="og:title" content="ToHuus Hub · Let the house do the remembering">
+<meta property="og:description" content="A free, self-hosted home app for the whole family: what's in the house, where it is, what's for dinner.">
 <meta property="og:url" content="https://tohuus.heidrich-digital.de/">
 <meta property="og:image" content="https://tohuus.heidrich-digital.de/assets/img/og-en.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A drawn house in cross-section next to the words: Let the house do the remembering.">
 <meta property="og:locale" content="en_GB">
 <meta property="og:locale:alternate" content="de_DE">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ToHuus Hub · Let the house do the remembering">
+<meta name="twitter:description" content="A free, self-hosted home app for the whole family: what's in the house, where it is, what's for dinner.">
+<meta name="twitter:image" content="https://tohuus.heidrich-digital.de/assets/img/og-en.png">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/caveat-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css">
 <script>document.documentElement.classList.add('js')</script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus Hub","applicationCategory":"LifestyleApplication","operatingSystem":"Docker, Linux","license":"https://www.gnu.org/licenses/agpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"url":"https://tohuus.heidrich-digital.de/","codeRepository":"https://github.com/tillheidrich/tohuus-hub","inLanguage":["en","de"]}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus Hub","description":"Free, open-source, self-hosted home management: stock by room, where things are, shopping list, receipt imports, week plan, order from the sofa, Home Assistant and MCP.","applicationCategory":"LifestyleApplication","operatingSystem":"Docker, Linux","license":"https://www.gnu.org/licenses/agpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"url":"https://tohuus.heidrich-digital.de/","image":"https://tohuus.heidrich-digital.de/assets/img/og-en.png","codeRepository":"https://github.com/tillheidrich/tohuus-hub","inLanguage":["en","de"],"author":{"@type":"Person","name":"Till Heidrich","url":"https://github.com/tillheidrich"}}
 </script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M8.5 7H17v8.5"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 7"/></symbol>
   <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></symbol>
-  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
-  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></symbol>
-  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
-  <symbol id="i-basket" viewBox="0 0 24 24"><path d="M3.5 9.5h17l-1.7 9.6a1.5 1.5 0 0 1-1.5 1.2H6.7a1.5 1.5 0 0 1-1.5-1.2z"/><path d="m8 9.5 3-5.5M16 9.5 13 4M9.5 13.5v3.5M14.5 13.5v3.5"/></symbol>
-  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
-  <symbol id="i-pot" viewBox="0 0 24 24"><path d="M4 11h16v2.5a6.5 6.5 0 0 1-6.5 6.5h-3A6.5 6.5 0 0 1 4 13.5z"/><path d="M2.5 11h19M8.5 7.5c0-1.2 1-1.6 1-2.8M12.5 7.5c0-1.2 1-1.6 1-2.8"/></symbol>
-  <symbol id="i-glass" viewBox="0 0 24 24"><path d="M5 4h14l-7 8z"/><path d="M12 12v8M8 20h8"/></symbol>
-  <symbol id="i-house" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><circle cx="12" cy="14.5" r="2"/></symbol>
-  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0z"/><path d="M12 16.5V21"/></symbol>
-  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.2-7.5 9.5-4.3-1.3-7.5-5-7.5-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></symbol>
-  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
-  <symbol id="i-lang" viewBox="0 0 24 24"><path d="M4 5.5h9M8.5 3v2.5M6 5.5c0 4 2.7 7 6 8M11 5.5c0 4.2-3 7.7-7 8.8M13 21l4-9 4 9M14.4 18h5.2"/></symbol>
-  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
-  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M8 8.5v7M11 8.5v7M13.5 8.5v7M16 8.5v7"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></symbol>
   <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
-  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></symbol>
-  <symbol id="i-cup" viewBox="0 0 24 24"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5V6M11 3.5V6"/></symbol>
-  <symbol id="i-server" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="7" rx="2"/><rect x="3.5" y="13" width="17" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol>
 </svg>
 
 <a class="skip" href="#main">Skip to content</a>
@@ -63,15 +50,15 @@
 <header class="nav" aria-label="Main">
   <a class="brand" href="./" aria-label="ToHuus Hub home"><img src="assets/favicon.svg" alt="" width="28" height="28">ToHuus Hub</a>
   <nav class="nav-links" aria-label="Sections">
-    <a href="#features">Features</a>
-    <a href="#privacy">Privacy</a>
+    <a href="#day">A day at ours</a>
+    <a href="#self-hosting">Self-hosting</a>
     <a href="#install">Install</a>
   </nav>
   <div class="lang" role="group" aria-label="Language">
     <a href="./" hreflang="en" lang="en" aria-current="true">EN</a>
     <a href="de/" hreflang="de" lang="de">DE</a>
   </div>
-  <a class="nav-gh" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico"><use href="#i-github"/></svg><span>GitHub</span></a>
+  <a class="nav-gh" href="https://github.com/tillheidrich/tohuus-hub" aria-label="ToHuus Hub on GitHub"><svg class="ico"><use href="#i-github"/></svg><span>GitHub</span></a>
 </header>
 
 <main id="main">
@@ -80,301 +67,401 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow reveal"><span class="dot"></span>Free &middot; open source &middot; self-hosted</span>
-      <h1 class="reveal" style="--d:80ms">Your home.<span class="soft">Organized.</span></h1>
-      <p class="lede reveal" style="--d:160ms">What's in the house, where it is, and what's for dinner. One app for the whole family, running on your own server.</p>
-      <div class="btns reveal" style="--d:240ms">
+      <span class="greet reveal">Moin.</span>
+      <h1 class="reveal" style="--d:60ms">Let the house do the <em><span>remembering.</span></em></h1>
+      <p class="lede reveal" style="--d:140ms">ToHuus Hub keeps track of what's in the fridge, where the parcel tape lives and what's for dinner. A free, open-source app for the whole family, running on your own server.</p>
+      <div class="btns reveal" style="--d:220ms">
         <a class="btn btn-primary" href="#install">Install it<span class="btn-ico"><svg class="ico"><use href="#i-arrow"/></svg></span></a>
-        <a class="btn btn-ghost" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico"><use href="#i-github"/></svg>View the code</a>
+        <a class="btn btn-ghost" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico"><use href="#i-github"/></svg>Read the code</a>
       </div>
-      <ul class="facts reveal" style="--d:320ms">
-        <li><svg class="ico"><use href="#i-check"/></svg>AGPL-3.0</li>
-        <li><svg class="ico"><use href="#i-check"/></svg>Docker, ~60 MB RAM</li>
-        <li><svg class="ico"><use href="#i-check"/></svg>No telemetry</li>
-        <li><svg class="ico"><use href="#i-check"/></svg>English &amp; German</li>
+      <p class="platt reveal" style="--d:300ms"><b>Allns an sien Platz.</b><span>Low German for "everything in its place". That's the whole idea.</span></p>
+    </div>
+
+    <div class="house-wrap reveal" style="--d:120ms">
+<!--HOUSE-->
+<svg class="house" viewBox="0 0 640 600" role="group" aria-label="Cross-section of a house. Pick a room to see what ToHuus Hub knows about it." xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="bricks" width="28" height="14" patternUnits="userSpaceOnUse">
+      <rect width="28" height="14" fill="#b4472e"/>
+      <path d="M0 .75H28M0 7.75H28M7 .75v7M21 7.75v7" stroke="#d58a70" stroke-width="1.5" fill="none"/>
+    </pattern>
+    <pattern id="tiles" width="22" height="13" patternUnits="userSpaceOnUse">
+      <rect width="22" height="13" fill="#9a3a24"/>
+      <path d="M0 12.25H22M5.5 0v12.5M16.5 0v12.5" stroke="#c4644b" stroke-width="1.4" fill="none"/>
+      <path d="M0 12.5q5.5-4 11 0t11 0" stroke="#7f2e1b" stroke-width="1" fill="none" opacity=".5"/>
+    </pattern>
+    <pattern id="earth" width="26" height="22" patternUnits="userSpaceOnUse">
+      <rect width="26" height="22" fill="#ece2cf"/>
+      <circle cx="5" cy="6" r="1.6" fill="#d6c6a8"/><circle cx="18" cy="15" r="1.2" fill="#d6c6a8"/><circle cx="21" cy="4" r=".9" fill="#cdbb99"/>
+    </pattern>
+  </defs>
+  <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- ground and garden -->
+    <rect x="0" y="472" width="640" height="128" fill="url(#earth)" stroke="none"/>
+    <path d="M0 472H640" stroke-width="2"/>
+    <path d="M14 472c0-18 14-30 28-28 6-12 26-12 32 2 8-2 12 10 8 26" fill="#a9bd9b"/>
+    <path d="M574 472c-2-14 8-24 20-22 4-10 20-10 26 2 10 0 14 10 12 20" fill="#a9bd9b"/>
+    <path d="M30 462v-6M52 458v-8M600 462v-6" stroke="#6f8b62" stroke-width="1.5"/>
+    <!-- cellar shell -->
+    <rect x="72" y="472" width="496" height="118" fill="#d9d2c4"/>
+    <!-- chimney -->
+    <rect x="446" y="74" width="34" height="96" fill="url(#bricks)"/>
+    <rect x="440" y="66" width="46" height="10" rx="2" fill="#efe6d5"/>
+    <!-- walls -->
+    <rect x="70" y="196" width="500" height="276" fill="url(#bricks)"/>
+    <!-- roof -->
+    <path d="M40 210 320 40 600 210Z" fill="url(#tiles)" stroke-width="2.5"/>
+    <path d="M32 212 320 34 608 212" stroke-width="3"/>
+    <!-- floor slabs -->
+    <rect x="70" y="198" width="500" height="16" fill="#e7dcc8"/>
+    <rect x="70" y="326" width="500" height="16" fill="#e7dcc8"/>
+    <rect x="70" y="454" width="500" height="18" fill="#e7dcc8"/>
+    <rect x="72" y="472" width="496" height="14" fill="#cfc6b6"/>
+  </g>
+
+  <!-- ATTIC -->
+  <g class="room" data-room="attic" tabindex="0" role="button" aria-pressed="false" aria-label="Attic">
+    <path class="bg" d="M122 198 320 86 518 198Z"/>
+    <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M122 198 320 86 518 198Z"/>
+      <circle cx="320" cy="140" r="18" fill="#fff"/><circle cx="320" cy="140" r="12" fill="#dceaf0"/><path d="M320 128v24M308 140h24" stroke="#fff" stroke-width="2.5"/>
+      <rect x="196" y="164" width="46" height="34" rx="2" fill="#e7d3ae"/><path d="M196 172h46M219 164v8"/>
+      <rect x="236" y="178" width="34" height="20" rx="2" fill="#efe0c2"/>
+      <rect x="372" y="166" width="54" height="32" rx="2" fill="#e7d3ae"/><path d="M372 174h54"/>
+      <rect x="392" y="180" width="16" height="12" rx="1.5" fill="#fff" stroke-width="1.5"/>
+      <path d="M150 186c20 6 36 6 52-4" stroke="#6f7a82" stroke-width="1.5"/>
+    </g>
+    <text x="400" y="190.5" text-anchor="middle" font-family="Caveat, cursive" font-weight="600" font-size="12" fill="#1d2a33">3</text>
+    <path class="edge" d="M122 198 320 86 518 198Z"/>
+    <g class="pin"><circle class="ring" cx="462" cy="184" r="8"/><circle cx="462" cy="184" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="462" cy="184" r="3.6"/></g>
+  </g>
+
+  <!-- BATHROOM -->
+  <g class="room" data-room="bath" tabindex="0" role="button" aria-pressed="false" aria-label="Bathroom">
+    <rect class="bg" x="88" y="214" width="214" height="112" rx="3"/>
+    <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="88" y="214" width="214" height="112" rx="3"/>
+      <rect x="110" y="228" width="72" height="46" rx="4" fill="#fff"/><path d="M146 228v46"/><path d="M140 248v6M152 248v6" stroke-width="2.5"/>
+      <path d="M108 294h80c-4 16-18 22-40 22s-36-6-40-22Z" fill="#fff"/><path d="M148 294v-10h10"/>
+      <rect x="238" y="232" width="44" height="44" rx="2" fill="#fff" stroke-width="2"/><rect x="243" y="237" width="34" height="34" fill="#dceaf0" stroke="none"/><path d="M260 236v38M242 254h38" stroke="#fff" stroke-width="3"/><rect x="238" y="232" width="44" height="44" rx="2"/>
+      <rect x="204" y="282" width="16" height="36" rx="2" fill="#dceaf0"/><path d="M200 282h24"/>
+      <path d="M240 300h48v8c0 8-6 12-14 12h-20c-8 0-14-4-14-12Z" fill="#fff"/>
+    </g>
+    <rect class="edge" x="88" y="214" width="214" height="112" rx="3"/>
+    <g class="pin"><circle class="ring" cx="198" cy="242" r="8"/><circle cx="198" cy="242" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="198" cy="242" r="3.6"/></g>
+  </g>
+
+  <!-- UTILITY -->
+  <g class="room" data-room="utility" tabindex="0" role="button" aria-pressed="false" aria-label="Utility room">
+    <rect class="bg" x="314" y="214" width="238" height="112" rx="3"/>
+    <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="314" y="214" width="238" height="112" rx="3"/>
+      <path d="M328 256h126" stroke-width="3"/><path d="M336 256v8M446 256v8"/>
+      <rect x="334" y="226" width="48" height="30" rx="2" fill="#e7d3ae"/><rect x="346" y="236" width="24" height="10" rx="1.5" fill="#fff" stroke-width="1.5"/>
+      <circle cx="400" cy="245" r="11" fill="#e5a93f"/><circle cx="400" cy="245" r="4.5" fill="#fdf8ee"/>
+      <rect x="418" y="234" width="32" height="22" rx="2" fill="#dceaf0"/>
+      <rect x="468" y="252" width="66" height="72" rx="6" fill="#fff"/><path d="M468 266h66"/><circle cx="501" cy="295" r="18" fill="#e2ebee"/><circle cx="501" cy="295" r="11" fill="#fff" stroke-width="1.5"/><path d="M478 259h10" stroke-width="2.5"/>
+      <path d="M344 296h76l-6 28h-64Z" fill="#e7d3ae"/><path d="M354 304h56M356 314h52" stroke-width="1.4"/>
+    </g>
+    <rect class="edge" x="314" y="214" width="238" height="112" rx="3"/>
+    <g class="pin"><circle class="ring" cx="434" cy="286" r="8"/><circle cx="434" cy="286" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="434" cy="286" r="3.6"/></g>
+  </g>
+
+  <!-- KITCHEN -->
+  <g class="room" data-room="kitchen" tabindex="0" role="button" aria-pressed="false" aria-label="Kitchen and fridge">
+    <rect class="bg" x="88" y="342" width="290" height="112" rx="3"/>
+    <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="88" y="342" width="290" height="112" rx="3"/>
+      <rect x="102" y="354" width="58" height="100" rx="7" fill="#fff"/><path d="M102 388h58"/><path d="M151 364v14M151 398v22" stroke-width="2.5"/>
+      <circle cx="115" cy="368" r="3.6" fill="#b4472e" stroke="none"/><circle cx="128" cy="402" r="3.6" fill="#1f4257" stroke="none"/>
+      <rect x="111" y="408" width="20" height="20" fill="#fbe8a6" stroke-width="1.4" transform="rotate(-6 121 418)"/>
+      <rect x="206" y="356" width="76" height="42" rx="2" fill="#fff"/><rect x="211" y="361" width="66" height="32" fill="#dceaf0" stroke="none"/><path d="M244 360v36M210 377h68" stroke="#fff" stroke-width="3"/><rect x="206" y="356" width="76" height="42" rx="2"/>
+      <rect x="176" y="414" width="190" height="40" fill="#e2ebee"/><path d="M172 414h198" stroke-width="3.5"/><path d="M239 418v32M302 418v32M228 432v6M250 432v6M314 432v6"/>
+      <rect x="312" y="394" width="38" height="20" rx="3" fill="#b4472e"/><path d="M306 398h6M350 398h6M318 390h26"/>
+      <path d="M326 386c0-6 4-6 4-12M336 386c0-6 4-6 4-12" stroke="#6f7a82" stroke-width="1.5"/>
+    </g>
+    <rect class="edge" x="88" y="342" width="290" height="112" rx="3"/>
+    <g class="pin"><circle class="ring" cx="182" cy="370" r="8"/><circle cx="182" cy="370" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="182" cy="370" r="3.6"/></g>
+  </g>
+
+  <!-- PANTRY -->
+  <g class="room" data-room="pantry" tabindex="0" role="button" aria-pressed="false" aria-label="Pantry">
+    <rect class="bg" x="390" y="342" width="162" height="112" rx="3"/>
+    <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="390" y="342" width="162" height="112" rx="3"/>
+      <path d="M400 382h142M400 418h142" stroke-width="3"/>
+      <rect x="408" y="360" width="16" height="22" rx="3" fill="#fcecc4"/><path d="M406 360h20"/>
+      <rect x="430" y="364" width="14" height="18" rx="3" fill="#f4ddd2"/><path d="M428 364h18"/>
+      <rect x="452" y="356" width="20" height="26" rx="1.5" fill="#e7d3ae"/>
+      <rect x="476" y="356" width="20" height="26" rx="1.5" fill="#e7d3ae"/>
+      <rect x="504" y="362" width="28" height="20" rx="1.5" fill="#fff"/>
+      <rect x="408" y="400" width="14" height="18" rx="1.5" fill="#b4472e"/><rect x="424" y="400" width="14" height="18" rx="1.5" fill="#b4472e"/>
+      <path d="M460 418v-12l4-6v-6h6v6l4 6v12Z" fill="#dceaf0"/>
+      <rect x="486" y="396" width="26" height="22" rx="1.5" fill="#fff"/><rect x="516" y="402" width="18" height="16" rx="1.5" fill="#fcecc4"/>
+      <path d="M410 454v-16c0-6 4-8 10-8h30c6 0 10 2 10 8v16" fill="#e7d3ae"/><circle cx="424" cy="440" r="4" fill="#d6b98a" stroke-width="1.4"/><circle cx="440" cy="442" r="4" fill="#d6b98a" stroke-width="1.4"/>
+      <path d="M492 454v-22l6-6h18l6 6v22Z" fill="#fff"/>
+    </g>
+    <rect class="edge" x="390" y="342" width="162" height="112" rx="3"/>
+    <g class="pin"><circle class="ring" cx="536" cy="438" r="8"/><circle cx="536" cy="438" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="536" cy="438" r="3.6"/></g>
+  </g>
+
+  <!-- CELLAR: DRINKS -->
+  <g class="room" data-room="drinks" tabindex="0" role="button" aria-pressed="false" aria-label="Cellar, drinks">
+    <rect class="bg" x="88" y="486" width="236" height="92" rx="3"/>
+    <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="88" y="486" width="236" height="92" rx="3"/>
+      <path d="M200 486v10"/><circle cx="200" cy="502" r="6" fill="#fcecc4"/>
+      <path d="M110 532v-12M122 532v-12M134 532v-12M146 532v-12M158 532v-12" stroke-width="3.5"/>
+      <rect x="102" y="532" width="64" height="46" rx="3" fill="#1f4257"/><path d="M112 546h44" stroke="#fff" stroke-width="2"/>
+      <path d="M182 532v-12M194 532v-12M206 532v-12M218 532v-12M230 532v-12" stroke-width="3.5"/>
+      <rect x="174" y="532" width="64" height="46" rx="3" fill="#e5a93f"/><path d="M184 546h44" stroke="#fff" stroke-width="2"/>
+      <rect x="254" y="500" width="56" height="78" rx="2" fill="#efe0c2"/><path d="M254 526h56M254 552h56M282 500v78"/>
+      <circle cx="268" cy="513" r="5" fill="#93361f"/><circle cx="296" cy="539" r="5" fill="#93361f"/><circle cx="268" cy="565" r="5" fill="#2d5b75"/>
+    </g>
+    <rect class="edge" x="88" y="486" width="236" height="92" rx="3"/>
+    <g class="pin"><circle class="ring" cx="126" cy="504" r="8"/><circle cx="126" cy="504" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="126" cy="504" r="3.6"/></g>
+  </g>
+
+  <!-- CELLAR: CHEST FREEZER -->
+  <g class="room" data-room="freezer" tabindex="0" role="button" aria-pressed="false" aria-label="Cellar, chest freezer">
+    <rect class="bg" x="336" y="486" width="216" height="92" rx="3"/>
+    <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="336" y="486" width="216" height="92" rx="3"/>
+      <path d="M444 486v10"/><circle cx="444" cy="502" r="6" fill="#fcecc4"/>
+      <rect x="362" y="526" width="152" height="52" rx="7" fill="#fff"/><path d="M362 538h152"/><rect x="424" y="542" width="30" height="6" rx="3" fill="#e2ebee"/>
+      <path d="M384 556v14M377 559l14 8M391 559l-14 8" stroke="#2d5b75" stroke-width="1.6"/>
+      <circle cx="496" cy="560" r="3" fill="#1d9a63" stroke="none"/>
+    </g>
+    <rect class="edge" x="336" y="486" width="216" height="92" rx="3"/>
+    <g class="pin"><circle class="ring" cx="530" cy="506" r="8"/><circle cx="530" cy="506" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="530" cy="506" r="3.6"/></g>
+  </g>
+</svg>
+<!--/HOUSE-->
+      <p class="house-hint" aria-hidden="true"><i></i>Hover or tap a room</p>
+      <div class="house-note" aria-live="polite"><div class="hn-where"></div><div class="hn-title"></div><ul></ul></div>
+      <ul class="house-list">
+        <li data-room="kitchen" data-where="Kitchen · fridge"><b>14 things in the fridge</b> <span class="warn">Milk is out. Already on the list.</span> <span>Feta: use within 2 days</span> <span>Tonight: gnocchi skillet with tomato</span></li>
+        <li data-room="freezer" data-where="Cellar · chest freezer"><b>9 things, 2 to use soon</b> <span class="warn">Fish fingers: 1 pack left</span> <span>Ice cream is on the sofa menu</span></li>
+        <li data-room="utility" data-where="Upstairs · utility room"><b>Parcel tape</b> <span>Shelf by the door, box "post &amp; parcels"</span> <span>Washing powder: half full</span></li>
+        <li data-room="pantry" data-where="Kitchen · pantry"><b>Pasta, tins and the rest</b> <span>Pasta: 3 packs, oldest gets used first</span> <span class="warn">Tinned tomatoes: running low</span></li>
+        <li data-room="drinks" data-where="Cellar · drinks"><b>2 crates of water</b> <span class="warn">Cola: all gone (the guests noticed)</span> <span>Wine rack: 3 bottles</span></li>
+        <li data-room="bath" data-where="Upstairs · bathroom"><b>The mirror cabinet</b> <span>Plasters: top shelf, left</span> <span class="warn">Toothpaste: 1 left, on the list</span></li>
+        <li data-room="attic" data-where="Attic"><b>Christmas lights</b> <span>Box 3, under the round window</span> <span>Not counted. Just easy to find.</span></li>
       </ul>
     </div>
-    <div class="stack" aria-label="App screenshots">
-      <figure class="phone p-left reveal" style="--d:260ms;margin:0"><div class="screen"><img src="assets/img/cook.webp" alt="Week plan with a dinner suggestion for every evening" width="780" height="1688" loading="eager"></div></figure>
-      <figure class="phone p-main reveal" style="--d:120ms;margin:0"><div class="screen">
-        <picture>
-          <img src="assets/img/today.webp" alt="Today screen: things to use soon, things that are out, the shopping list" width="780" height="1688" fetchpriority="high">
-        </picture>
-      </div></figure>
-      <figure class="phone p-right reveal" style="--d:360ms;margin:0"><div class="screen"><img src="assets/img/stock.webp" alt="Stock list grouped by room with quick plus and minus buttons" width="780" height="1688" loading="eager"></div></figure>
-      <span class="float-tag t1 reveal" style="--d:600ms"><i><svg class="ico"><use href="#i-basket"/></svg></i>Out of milk? It's on the list.</span>
-      <span class="float-tag t2 reveal" style="--d:720ms"><i><svg class="ico"><use href="#i-pin"/></svg></i>Tape: hallway, top drawer</span>
+  </div>
+</section>
+
+<!-- A DAY AT OURS -->
+<section class="section" id="day" style="padding-top:40px">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow reveal">A day at ours</span>
+      <h2 class="reveal">Not a feature list. A Saturday.</h2>
+      <p class="reveal">ToHuus Hub shows up in small moments, the ones where you'd otherwise shout up the stairs. Here's what that looks like on an ordinary weekend.</p>
+    </div>
+
+    <div class="day">
+      <article class="moment">
+        <div class="m-text">
+          <div class="m-time reveal"><b>09:30</b><span>Coffee, notebook</span></div>
+          <h3 class="reveal">"What do we eat this week?"</h3>
+          <p class="reveal">The usual Saturday question. ToHuus Hub fills the empty evenings with recipes that fit what's already in the house: what has to go first, what you like, what you haven't had in a while. One more tap puts every missing ingredient on the shopping list.</p>
+          <p class="reveal">On Wednesday friends ask you out? "We're eating out tonight" moves the rest of the week back by a day.</p>
+          <ul class="m-tags reveal"><li>Week plan</li><li>Ranked by stock &amp; best-before</li><li>Cookidoo week via Home Assistant</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet"></span>
+          <figure class="shot" style="--tilt:-1.8deg"><div class="crop"><img src="assets/img/cook.webp" alt="Week plan with a suggested dinner for every evening" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky br reveal" style="--d:380ms"><small>Wednesday</small>out for pizza. plan just moves.</p>
+        </div>
+      </article>
+
+      <article class="moment flip">
+        <div class="m-text">
+          <div class="m-time reveal"><b>11:20</b><span>Back from REWE</span></div>
+          <h3 class="reveal">Nobody types in the shopping.</h3>
+          <p class="reveal">Upload the pickup notice and the eBon instead. ToHuus Hub reads both, matches the order against the receipt and shows what changed: the substitution, the item that wasn't there, the new product that still needs a shelf. You check it once and it's in stock.</p>
+          <p class="reveal">Receipt photos, QR receipts and pasted text work too. Right now the parsers know REWE; other shops are welcome as contributions.</p>
+          <ul class="m-tags reveal"><li>Order + receipt reconciliation</li><li>Learns receipt abbreviations</li><li>Barcode scan</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet red"></span>
+          <figure class="shot" style="--tilt:1.6deg"><div class="crop"><img src="assets/img/import-review.webp" alt="Import review of a grocery pickup with one substitution and one reduced quantity" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky tl white reveal" style="--d:380ms"><small>Review</small>they swapped the tape. fine.</p>
+        </div>
+      </article>
+
+      <article class="moment">
+        <div class="m-text">
+          <div class="m-time reveal"><b>15:10</b><span>Parcel half packed</span></div>
+          <h3 class="reveal">"Where's the parcel tape?"</h3>
+          <p class="reveal">Every room gets a short direction and every thing can get an exact spot. Type "tape" and the answer is: utility room, shelf by the door, box "post &amp; parcels".</p>
+          <p class="reveal">It works for things you'd never count, too. The thermometer, the fuse box, the spare key.</p>
+          <ul class="m-tags reveal"><li>Where is what</li><li>Exact spots per item</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet honey"></span>
+          <figure class="shot" style="--tilt:-1.2deg"><div class="crop"><img src="assets/img/where.webp" alt="Where is it? search with exact spots for each item" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky tr blue reveal" style="--d:380ms"><small>Utility room</small>box "post &amp; parcels"</p>
+        </div>
+      </article>
+
+      <article class="moment flip">
+        <div class="m-text">
+          <div class="m-time reveal"><b>17:45</b><span>Standing at the open fridge</span></div>
+          <h3 class="reveal">One look, and you know.</h3>
+          <p class="reveal">The Today screen shows the whole house at once: what needs using up, what's gone, what's running low, what's on the list and tonight's best recipe. Finished the yoghurt? One tap.</p>
+          <p class="reveal">Fridge, freezer, pantry and cellar each keep their own list, with best-before per batch. The oldest gets used first.</p>
+          <ul class="m-tags reveal"><li>Today</li><li>Stock by room</li><li>Shared shopping list, live</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet"></span>
+          <figure class="shot" style="--tilt:1.4deg"><div class="crop"><img src="assets/img/today.webp" alt="Today screen: three things to use soon, three that are out, four running low" width="780" height="1688" loading="lazy"></div></figure>
+          <figure class="shot second" aria-hidden="true"><div class="crop"><img src="assets/img/stock.webp" alt="" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky bl reveal" style="--d:380ms"><small>Fridge</small>milk!! (already on the list)</p>
+        </div>
+      </article>
+
+      <article class="moment">
+        <div class="m-text">
+          <div class="m-time reveal"><b>18:30</b><span>Doorbell</span></div>
+          <h3 class="reveal">The babysitter is here.</h3>
+          <p class="reveal">Instead of a page of notes on the counter, she gets a link. It opens exactly the "where is what" search, with your note on top: emergency numbers, bedtime, which story has to be read twice.</p>
+          <p class="reveal">Guest links show names and places, never quantities, and they expire on their own.</p>
+          <ul class="m-tags reveal"><li>Babysitter link</li><li>Read-only</li><li>Your note on top</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet red"></span>
+          <figure class="shot" style="--tilt:-1.6deg"><div class="crop"><img src="assets/img/guest-sitter.webp" alt="Babysitter view with an emergency note and a search for where things are" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky br pink reveal" style="--d:380ms"><small>For the sitter</small>bedtime 7:30. story first!</p>
+        </div>
+      </article>
+
+      <article class="moment flip">
+        <div class="m-text">
+          <div class="m-time reveal"><b>20:15</b><span>Lea, on the sofa</span></div>
+          <h3 class="reveal">"A cappuccino, please. Extra hot."</h3>
+          <p class="reveal">Everyone at home can order from the sofa. Pick from what's actually in the house, add a note to each item, send. The order lands as a push on whoever is in the kitchen, gets served from stock and comes off the count.</p>
+          <p class="reveal">The same menu works for guests at a barbecue, as a link or a QR code. And if you like, the whole app dresses up as "Fredirando", a slightly silly home-delivery service in orange.</p>
+          <ul class="m-tags reveal"><li class="new">New: order from the sofa</li><li>Notes per item</li><li>Guest bar via QR</li></ul>
+        </div>
+        <div class="m-media reveal" style="--d:100ms">
+          <span class="magnet honey"></span>
+          <figure class="shot" style="--tilt:1.8deg"><div class="crop"><img src="assets/img/guest-bar.webp" alt="Menu with cappuccino, espresso and other drinks that are in stock" width="780" height="1688" loading="lazy"></div></figure>
+          <figure class="shot second" aria-hidden="true" style="--tilt:5deg"><div class="crop"><img src="assets/img/fredi-today.webp" alt="" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="sticky bl reveal" style="--d:380ms"><small>Lea · 20:15</small>extra hot, please</p>
+        </div>
+      </article>
     </div>
   </div>
 </section>
 
-<!-- PROBLEM -->
-<section class="section" id="why" style="padding-top:48px">
+<!-- FRIDGE DOOR -->
+<section class="section fridge-sec" id="rules">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow reveal">Why we built it</span>
-      <h2 class="reveal">Three questions, every single day.</h2>
-    </div>
-    <div class="questions">
-      <div class="q reveal"><small>17:45, standing at the fridge</small>What's for dinner?</div>
-      <div class="q reveal" style="--d:120ms"><small>Parcel half packed</small>Where is the tape?</div>
-      <div class="q reveal" style="--d:240ms"><small>Somewhere in aisle four</small>Do we still have milk?</div>
-    </div>
-    <div class="calm">
-      <h3 class="reveal">Less remembering. Fewer arguments.</h3>
-      <div class="reveal" style="--d:120ms">
-        <p>In most homes, one person carries the household in their head: what's running low, what expires on Thursday, which drawer the plasters live in. That's the mental load, and it is tiring.</p>
-        <p>ToHuus Hub moves that knowledge out of one head and into a place everyone can see. It was built with ADHD in mind: few taps, nothing to keep track of yourself, and gentle nudges instead of a wall of data.</p>
-        <ul class="pills"><li>Quick to update</li><li>Good enough beats exact</li><li>Shared by everyone at home</li></ul>
+    <div class="fridge">
+      <div class="fridge-head">
+        <span class="eyebrow reveal">House rules</span>
+        <h2 class="reveal">What's stuck to our fridge door.</h2>
+        <p class="reveal">A few rules we built the app around. They're the reason it still gets used after the first week.</p>
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="section" id="features" style="padding-top:24px">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow reveal">What it does</span>
-      <h2 class="reveal">Stock comes in through what you already have.</h2>
-      <p class="reveal">Most pantry apps die the same way: somebody has to type everything in, nobody does, and the app gets deleted. ToHuus Hub reads receipts, orders and photos instead, and is happy with "half full".</p>
-    </div>
-
-    <div class="features">
-      <article class="feature">
-        <div>
-          <span class="feature-num reveal"><svg class="ico"><use href="#i-sun"/></svg>01 &middot; Today</span>
-          <h3 class="reveal">One screen for the whole house.</h3>
-          <p class="reveal">Open the app and you see what matters right now: what expires soon, what's empty, what's running low, the shopping list, tonight's best recipe, imports waiting for a look and guest orders.</p>
-          <ul class="ticks reveal">
-            <li><svg class="ico"><use href="#i-check"/></svg><span><b>Where can I find &hellip;?</b> Search sits right at the top.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Use something up with one tap, straight from the list.</span></li>
-          </ul>
-        </div>
-        <div class="feature-media reveal"><div class="stage"><div class="stage-core">
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/today.webp" alt="Today screen of ToHuus Hub" width="780" height="1688" loading="lazy"></div></figure>
-        </div></div></div>
-      </article>
-
-      <article class="feature flip">
-        <div>
-          <span class="feature-num reveal"><svg class="ico"><use href="#i-box"/></svg>02 &middot; Stock by room</span>
-          <h3 class="reveal">Fridge, freezer, cellar. At a glance.</h3>
-          <p class="reveal">Every place in your home gets its own list. Fruit, veg and bread are tracked coarsely as full, half, low or empty. Packets and bottles are counted. Coffee from the machine doesn't need counting at all.</p>
-          <ul class="ticks reveal">
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Best-before per batch, and the oldest gets used first.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Move things between rooms, see history and weekly usage.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Barcode scan with the phone camera, product photos from Open Food Facts.</span></li>
-          </ul>
-        </div>
-        <div class="feature-media reveal"><div class="stage amber"><div class="stage-core">
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/stock.webp" alt="Stock list for the fridge with counts and best-before warnings" width="780" height="1688" loading="lazy"></div></figure>
-        </div></div></div>
-      </article>
-
-      <article class="feature">
-        <div>
-          <span class="feature-num reveal"><svg class="ico"><use href="#i-pin"/></svg>03 &middot; Where is what?</span>
-          <h3 class="reveal">"Left shelf, top compartment."</h3>
-          <p class="reveal">Give anything an exact spot, and every room a short direction. Then anyone can search for the plasters, the thermometer, the fuse box or the spare keys, including things you would never count.</p>
-          <ul class="ticks reveal">
-            <li><svg class="ico"><use href="#i-check"/></svg><span><b>Babysitter link:</b> exactly that search, read-only, with your note on top: emergency numbers, bedtime.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Guest links show names and places, never quantities, and expire on their own.</span></li>
-          </ul>
-        </div>
-        <div class="feature-media reveal"><div class="stage blue"><div class="stage-core duo">
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/where.webp" alt="Where is it? list with exact spots" width="780" height="1688" loading="lazy"></div></figure>
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/guest-sitter.webp" alt="Babysitter view with emergency note and search" width="780" height="1688" loading="lazy"></div></figure>
-        </div></div></div>
-      </article>
-
-      <article class="feature flip">
-        <div>
-          <span class="feature-num reveal"><svg class="ico"><use href="#i-basket"/></svg>04 &middot; Shopping list</span>
-          <h3 class="reveal">One list, every phone, live.</h3>
-          <p class="reveal">The list syncs between everyone at home while you shop. Things that run low land on it by themselves. Tick something off and it goes straight back into stock.</p>
-          <ul class="ticks reveal">
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Grouped by category, with who added what.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Share it as plain text when someone else does the run.</span></li>
-          </ul>
-        </div>
-        <div class="feature-media reveal"><div class="stage"><div class="stage-core">
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/shopping.webp" alt="Shared shopping list grouped by category" width="780" height="1688" loading="lazy"></div></figure>
-        </div></div></div>
-      </article>
-
-      <article class="feature">
-        <div>
-          <span class="feature-num reveal"><svg class="ico"><use href="#i-receipt"/></svg>05 &middot; Receipts &amp; orders</span>
-          <h3 class="reveal">Upload the receipt. Skip the typing.</h3>
-          <p class="reveal">ToHuus Hub reads REWE pickup and delivery notices and the eBon, and matches the order against the receipt, so whatever you handed back at pickup doesn't end up in your stock.</p>
-          <ul class="ticks reveal">
-            <li><svg class="ico"><use href="#i-check"/></svg><span>PDFs, digital receipts behind a QR code, photos and pasted text.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span><b>A review step</b> for substitutions, missing items, new products and where things go.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span>It learns your shop's cryptic abbreviations, product by product.</span></li>
-          </ul>
-        </div>
-        <div class="feature-media reveal"><div class="stage"><div class="stage-core">
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/import-review.webp" alt="Import review of a grocery pickup with a substitution and a reduced quantity" width="780" height="1688" loading="lazy"></div></figure>
-          <p class="stage-note">The parsers are deterministic and tested. Other shops are welcome as contributions.</p>
-        </div></div></div>
-      </article>
-
-      <article class="feature flip">
-        <div>
-          <span class="feature-num reveal"><svg class="ico"><use href="#i-pot"/></svg>06 &middot; Recipes &amp; week plan</span>
-          <h3 class="reveal">Dinner, decided by what's actually there.</h3>
-          <p class="reveal">Recipes are ranked by stock, expiry dates, favourites and how long ago you last made them. Fill the empty evenings of the week in one go, and put every missing ingredient on the list with one more tap.</p>
-          <ul class="ticks reveal">
-            <li><svg class="ico"><use href="#i-check"/></svg><span><b>"We're eating out":</b> tonight's meal and everything after it moves back a day.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Import recipes from any site with recipe data, from photos or text. Thermomix steps included.</span></li>
-            <li><svg class="ico"><use href="#i-check"/></svg><span>Already plan in Cookidoo? Your week comes over through Home Assistant every three hours.</span></li>
-          </ul>
-        </div>
-        <div class="feature-media reveal"><div class="stage amber"><div class="stage-core">
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/cook.webp" alt="Week plan with a recipe for each day" width="780" height="1688" loading="lazy"></div></figure>
-        </div></div></div>
-      </article>
-
-      <article class="feature">
-        <div>
-          <span class="feature-num reveal"><svg class="ico"><use href="#i-glass"/></svg>07 &middot; Guest bar</span>
-          <h3 class="reveal">Guests order from the sofa.</h3>
-          <p class="reveal">Share a link or a QR code at the barbecue. Guests pick drinks, ice cream and snacks from what is really in stock, with options like oat milk or toppings. You get a push, accept, serve, and the stock is updated.</p>
-          <ul class="ticks reveal">
-            <li><svg class="ico"><use href="#i-check"/></svg><span><b>Fredirando:</b> an optional, slightly silly home-delivery theme. Orange, "driver on the way", the works.</span></li>
-          </ul>
-        </div>
-        <div class="feature-media reveal"><div class="stage warm"><div class="stage-core duo">
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/guest-bar.webp" alt="Guest bar menu with drinks" width="780" height="1688" loading="lazy"></div></figure>
-          <figure class="phone" style="margin:0"><div class="screen"><img src="assets/img/fredi-today.webp" alt="The app in the orange Fredirando theme" width="780" height="1688" loading="lazy"></div></figure>
-        </div></div></div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- BENTO: connections & privacy -->
-<section class="section" id="privacy" style="padding-top:24px">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow reveal">Connected, on your terms</span>
-      <h2 class="reveal">Talks to your smart home. Answers to you.</h2>
-    </div>
-    <div class="bento">
-      <div class="cell c-mcp reveal"><div class="cell-core">
-        <span class="badge-ico"><svg class="ico"><use href="#i-plug"/></svg></span>
-        <h3>Claude, ChatGPT &amp; co. via MCP</h3>
-        <p>A built-in MCP server with 20 focused tools: check stock, update it, record a purchase, plan the week, save a recipe. Send a photo from your phone and let the assistant file it.</p>
-        <div class="chat" aria-hidden="true">
-          <div class="bubble me"><span class="att"><svg class="ico"><use href="#i-camera"/></svg>freezer.jpg</span><br>Here's the freezer drawer. Put this into ToHuus Hub.</div>
-          <div class="bubble ai">Done. Added 6 items to the freezer, sent to your review queue first.</div>
-        </div>
-      </div></div>
-      <div class="cell c-ha reveal" style="--d:100ms"><div class="cell-core">
-        <span class="badge-ico"><svg class="ico"><use href="#i-house"/></svg></span>
-        <h3>Home Assistant</h3>
-        <p>Generated package with sensors for low, empty and expiring items, a <span class="inline-code">rest_command</span>, and an actionable phone push: "put it on the shopping list".</p>
-      </div></div>
-      <div class="cell c-priv reveal"><div class="cell-core">
-        <span class="badge-ico"><svg class="ico"><use href="#i-shield"/></svg></span>
-        <h3>Your data stays home</h3>
-        <p>One SQLite file on your own machine. JSON export. No telemetry, no account with us, no cloud dependency. Runs on a NAS or a small VPS in the EU.</p>
-        <ul class="kv">
-          <li><span>Storage</span><span>SQLite</span></li>
-          <li><span>Memory</span><span>~60 MB</span></li>
-          <li><span>Tracking</span><span>none</span></li>
-        </ul>
-      </div></div>
-      <div class="cell c-vision reveal" style="--d:100ms"><div class="cell-core">
-        <span class="badge-ico"><svg class="ico"><use href="#i-eye"/></svg></span>
-        <h3>Photo reading is optional</h3>
-        <p>Plug in any OpenAI-compatible vision model, for example Mistral in the EU or Ollama on your own hardware. Or leave it out: everything else works without it, and photos can still reach the app through your assistant.</p>
-        <ul class="kv">
-          <li><span>Vision model</span><span>optional, swappable</span></li>
-          <li><span>Examples</span><span>Mistral, Ollama, vLLM</span></li>
-        </ul>
-      </div></div>
-      <div class="cell c-lang reveal"><div class="cell-core">
-        <span class="badge-ico"><svg class="ico"><use href="#i-lang"/></svg></span>
-        <h3>English &amp; German</h3>
-        <p>Switch per household. Notifications, e-mails and demo data follow. A new language is one dictionary file.</p>
-      </div></div>
-      <div class="cell c-notify reveal" style="--d:100ms"><div class="cell-core">
-        <span class="badge-ico"><svg class="ico"><use href="#i-bell"/></svg></span>
-        <h3>Notifications</h3>
-        <p>Home Assistant, ntfy, any webhook or e-mail. Low, empty, expiring, new guest order, or a daily digest.</p>
-      </div></div>
-      <div class="cell c-scan reveal" style="--d:200ms"><div class="cell-core">
-        <span class="badge-ico"><svg class="ico"><use href="#i-scan"/></svg></span>
-        <h3>Barcodes</h3>
-        <p>Scan with the phone camera, right in the browser. Names and photos come from Open Food Facts.</p>
-      </div></div>
+      <ul class="notes">
+        <li class="note y reveal"><span class="magnet red"></span><h3>Half full is an answer.</h3><p>Fruit, veg and bread are just full, half, low or empty. Packets and bottles get counted. Coffee from the machine isn't tracked at all.</p></li>
+        <li class="note w reveal" style="--d:80ms"><span class="magnet"></span><h3>Nobody types in the shopping.</h3><p>Stock comes in through receipts, orders, photos and the barcode scanner. Typing is the fallback, not the plan.</p></li>
+        <li class="note b reveal" style="--d:160ms"><span class="magnet honey"></span><h3>Nobody keeps it all in their head.</h3><p>Built for brains that forget things: few taps, gentle nudges instead of a wall of data, and it still works on a bad day.</p></li>
+        <li class="note k reveal"><span class="magnet"></span><h3>Guests see names, not numbers.</h3><p>Babysitter and guest links show places and the menu. Quantities, the rest of the house and your settings stay private.</p></li>
+        <li class="note p reveal" style="--d:80ms"><span class="magnet red"></span><h3>It stays in the house.</h3><p>One SQLite file on your own server. No account with us, no telemetry, no cloud in between.</p></li>
+        <li class="note list reveal" style="--d:160ms"><span class="magnet honey"></span><h3>Shopping</h3><ul><li class="done">milk</li><li class="done">parcel tape</li><li>oat milk for Lea</li><li>tinned tomatoes</li></ul><small>The real list lives in the app, on every phone.</small></li>
+      </ul>
     </div>
   </div>
 </section>
 
 <!-- DESKTOP -->
 <section class="section" style="padding-top:24px">
-  <div class="wrap">
-    <div class="section-head center">
-      <span class="eyebrow reveal">Phone, tablet, desktop</span>
-      <h2 class="reveal">At home on every screen.</h2>
-      <p class="reveal">A web app you can add to the home screen. On a laptop or a kitchen tablet it opens up into a calm sidebar layout. Light and dark, following your system.</p>
+  <div class="wrap desk">
+    <div class="desk-text">
+      <span class="eyebrow reveal">Phone, tablet, laptop</span>
+      <h2 class="reveal">Same house, bigger screen.</h2>
+      <p class="reveal">It's a web app. Add it to your phone's home screen, or leave it open on the tablet in the kitchen. On wider screens it opens up into a calm layout with a sidebar.</p>
     </div>
-    <div class="browser reveal"><div class="browser-core">
+    <figure class="browser reveal" style="--d:100ms">
       <div class="browser-bar" aria-hidden="true"><i></i><i></i><i></i><span>home.your-server.example</span></div>
-      <img src="assets/img/desktop.webp" alt="ToHuus Hub on a desktop browser with sidebar navigation" width="1800" height="1157" loading="lazy">
+      <img src="assets/img/desktop.webp" alt="ToHuus Hub in a desktop browser with sidebar navigation" width="1800" height="1157" loading="lazy">
+    </figure>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="section" id="story" style="padding-top:40px">
+  <div class="wrap story">
+    <div class="story-mark reveal">
+      <span class="word" lang="nds">To Huus</span>
+      <span class="gloss">Low German for "at home"</span>
+      <span class="pron">[toː huːs] · Plattdeutsch, spoken along the North Sea and the Baltic</span>
+    </div>
+    <div class="story-text">
+      <span class="eyebrow reveal">How it started</span>
+      <h2 class="reveal">We built it for our own cellar.</h2>
+      <p class="reveal">We're Till and Lea, a family with a small kid in northern Germany. Our house has a fridge, a chest freezer in the cellar, a pantry that's never quite tidy and a utility room where things go to hide.</p>
+      <p class="reveal">For years one of us knew where everything was and what was running out, and the other one asked. That works until it doesn't: the third bottle of ketchup, the parcel tape nobody can find, the "didn't you buy milk?" at six in the evening.</p>
+      <p class="reveal">So we built ToHuus Hub for ourselves, with a lot of help from Claude. The one rule: it has to work on a tired Tuesday, so nobody has to keep it all in their head. Now it runs on a small server at home and everyone in the house uses it.</p>
+      <p class="reveal">It's free and AGPL-licensed. There's no company behind it, no paid tier and nothing to sign up for. If it helps your household too, that makes us happy. Issues and pull requests are welcome.</p>
+      <p class="sig reveal">Till &amp; Lea</p>
+    </div>
+  </div>
+</section>
+
+<!-- SELF-HOSTING -->
+<section class="section" id="self-hosting" style="padding-top:40px">
+  <div class="wrap tech">
+    <div class="tech-text">
+      <span class="eyebrow reveal">For whoever runs the server</span>
+      <h2 class="reveal">Small, boring, yours.</h2>
+      <p class="reveal">One Docker container, one SQLite file. It runs happily on a NAS or a small VPS and never phones home. Anything that talks to the outside world is optional, and you decide whether to switch it on.</p>
+      <div class="chat reveal" style="--d:100ms" aria-label="Example: an AI assistant filing a photo into ToHuus Hub via MCP">
+        <span class="chat-cap">Via MCP, from your phone</span>
+        <div class="bubble me"><span class="att"><svg class="ico"><use href="#i-camera"/></svg>freezer.jpg</span><br>Here's the freezer drawer. Put this into ToHuus Hub.</div>
+        <div class="bubble ai">Done. 6 items for the chest freezer are waiting in your review queue.</div>
+      </div>
+    </div>
+    <div class="receipt-wrap reveal" style="--d:120ms"><div class="receipt">
+      <header><b>ToHuus Hub</b><span>Packing slip · self-hosted</span></header>
+      <dl>
+        <div class="row"><dt>Runs on</dt><dd>Docker, on a NAS or small VPS<small>about 60 MB RAM</small></dd></div>
+        <div class="row"><dt>Your data</dt><dd>One SQLite file<small>plus JSON export</small></dd></div>
+        <div class="row"><dt>Telemetry</dt><dd>None<small>and no account with us</small></dd></div>
+        <div class="row"><dt>Licence</dt><dd>AGPL-3.0</dd></div>
+        <div class="row"><dt>AI assistants</dt><dd>MCP server, 20 tools<small>Claude, ChatGPT and other MCP clients</small></dd></div>
+        <div class="row"><dt>Smart home</dt><dd>Home Assistant<small>sensors, rest_command, actionable push</small></dd></div>
+        <div class="row"><dt>Notifications</dt><dd>HA, ntfy, webhook, e-mail</dd></div>
+        <div class="row"><dt>Languages</dt><dd>English, German<small>a new one is a single file</small></dd></div>
+        <div class="row"><dt>Photo reading</dt><dd>Optional<small>any OpenAI-compatible vision model, e.g. Mistral in the EU or Ollama at home</small></dd></div>
+        <div class="row"><dt>Barcodes</dt><dd>Phone camera<small>product data from Open Food Facts</small></dd></div>
+      </dl>
+      <div class="total"><span>Total</span><span>&euro;0.00</span></div>
+      <p class="thanks">Danke. See you at home.</p>
     </div></div>
   </div>
 </section>
 
-<!-- WHO -->
-<section class="section" id="who" style="padding-top:24px">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow reveal">Who it's for</span>
-      <h2 class="reveal">Made for households first.</h2>
-    </div>
-    <div class="who">
-      <div class="cell primary reveal"><div class="cell-core">
-        <span class="label">Main use</span>
-        <span class="badge-ico"><svg class="ico"><use href="#i-users"/></svg></span>
-        <h3>Families</h3>
-        <p>Two adults, kids, a dog, a cellar full of things. This is the home it was built in and for: shared lists, a week plan, a babysitter link.</p>
-      </div></div>
-      <div class="cell reveal" style="--d:100ms"><div class="cell-core">
-        <span class="label">Works well</span>
-        <span class="badge-ico"><svg class="ico"><use href="#i-house"/></svg></span>
-        <h3>Shared flats</h3>
-        <p>One shopping list, no more three bottles of ketchup. Every flatmate gets an account or a simple guest link.</p>
-      </div></div>
-      <div class="cell reveal" style="--d:200ms"><div class="cell-core">
-        <span class="label">Light use</span>
-        <span class="badge-ico"><svg class="ico"><use href="#i-cup"/></svg></span>
-        <h3>Small caf&eacute;s &amp; snack bars</h3>
-        <p>Stock by storage room and a QR menu can help a small place. To be honest: it is not a POS or a merchandise system, and it doesn't try to be.</p>
-      </div></div>
-    </div>
-  </div>
-</section>
-
 <!-- INSTALL -->
-<section class="section" id="install" style="padding-top:24px">
+<section class="section" id="install" style="padding-top:40px">
   <div class="wrap install">
     <div>
       <span class="eyebrow reveal">Install</span>
-      <h2 class="reveal" style="font-size:clamp(2.2rem,6vw,4rem);margin:20px 0">Up and running in a few minutes.</h2>
-      <p class="reveal" style="color:var(--ink-2);font-size:1.1rem">All you need is Docker, on a NAS at home or a small VPS. No licence key, no account, no cost.</p>
+      <h2 class="reveal">Moved in within a few minutes.</h2>
+      <p class="install-intro reveal">All you need is Docker, on a NAS at home or a small VPS. No licence key, no account, no cost.</p>
       <ol class="steps reveal">
         <li><span><b>Save the compose file</b>Set <code>BASE_URL</code>, your name and a password.</span></li>
         <li><span><b>Start it</b><code>docker compose up -d</code>, then open <code>http://localhost:8080</code>.</span></li>
-        <li><span><b>Look around first?</b>Set <code>SEED_DEMO: "true"</code> before the first start for a demo household.</span></li>
+        <li><span><b>Want to look around first?</b>Set <code>SEED_DEMO: "true"</code> before the first start and you get a demo household.</span></li>
         <li><span><b>Put it behind HTTPS</b>Your usual reverse proxy is fine. Then add it to your phone's home screen.</span></li>
       </ol>
     </div>
     <div class="reveal" style="--d:120ms;min-width:0">
-      <div class="code"><div class="code-core">
+      <div class="code">
         <div class="code-head"><span>docker-compose.yml</span><button class="copy" type="button" data-copy="code-compose" data-done="Copied"><svg class="ico"><use href="#i-copy"/></svg><span>Copy</span></button></div>
 <pre id="code-compose"><span class="k">services:</span>
   <span class="k">tohuus:</span>
@@ -393,40 +480,30 @@
       <span class="k">SEED_DEMO:</span> <span class="s">"false"</span>
       <span class="c"># optional, for photo imports:</span>
       <span class="c"># VISION_BASE_URL: https://api.mistral.ai/v1</span></pre>
-      </div></div>
-      <div class="code"><div class="code-core">
+      </div>
+      <div class="code">
         <div class="code-head"><span>or build from source</span><button class="copy" type="button" data-copy="code-src" data-done="Copied"><svg class="ico"><use href="#i-copy"/></svg><span>Copy</span></button></div>
 <pre id="code-src">git clone https://github.com/tillheidrich/tohuus-hub.git
 cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build</pre>
-      </div></div>
-    </div>
-  </div>
-</section>
-
-<!-- STORY -->
-<section class="section" id="story" style="padding-top:24px">
-  <div class="wrap story">
-    <blockquote class="reveal"><em>To Huus</em> is Low German for &ldquo;at home&rdquo;.</blockquote>
-    <div class="reveal" style="--d:120ms">
-      <p>ToHuus Hub was made by Till and Lea, a family in Germany, for their own kitchen, cellar and freezer. It started because we were tired of the same three questions, and of the small arguments that come with them.</p>
-      <p>It is free and licensed under the AGPL. There is no company behind it, no paid tier and nothing to sign up for. If it helps your household too, that makes us happy. Issues and pull requests are welcome.</p>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- CTA -->
-<section class="section" style="padding-top:0">
+<section class="section" style="padding-top:24px">
   <div class="wrap">
-    <div class="cta-band reveal"><div class="cta-core">
-      <h2>Give your head a break.</h2>
-      <p>Run ToHuus Hub on your own server and let the house remember for you.</p>
+    <div class="door reveal">
+      <span class="greet">Moin.</span>
+      <h2>Come on in.</h2>
+      <p>"Moin" is how the north says hello, at any time of day. Put ToHuus Hub on your own server and let the house do the remembering.</p>
       <div class="btns">
         <a class="btn btn-primary" href="#install">Install it<span class="btn-ico"><svg class="ico"><use href="#i-arrow"/></svg></span></a>
         <a class="btn btn-ghost" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico"><use href="#i-github"/></svg>Star or fork on GitHub</a>
       </div>
-    </div></div>
+    </div>
   </div>
 </section>
 
@@ -437,13 +514,13 @@ docker compose up -d --build</pre>
     <div class="footer-grid">
       <div>
         <a class="brand" href="./"><img src="assets/favicon.svg" alt="" width="28" height="28">ToHuus Hub</a>
-        <p>Your home. Organized. Open-source home management, built by a family, with a lot of help from Claude.</p>
+        <p>Open-source home management from a family in northern Germany, built with a lot of help from Claude.</p>
       </div>
       <div>
         <h4>Project</h4>
         <ul>
           <li><a href="https://github.com/tillheidrich/tohuus-hub">Source code on GitHub</a></li>
-          <li><a href="https://github.com/tillheidrich/tohuus-hub/blob/main/LICENSE">License: AGPL-3.0</a></li>
+          <li><a href="https://github.com/tillheidrich/tohuus-hub/blob/main/LICENSE">Licence: AGPL-3.0</a></li>
           <li><a href="https://github.com/tillheidrich/tohuus-hub/issues">Report an issue</a></li>
         </ul>
       </div>
@@ -451,12 +528,12 @@ docker compose up -d --build</pre>
         <h4>Legal</h4>
         <ul>
           <li><a href="https://heidrich-digital.de/impressum">Imprint (Impressum)</a></li>
-          <li><a href="https://heidrich-digital.de/datenschutz">Privacy policy</a></li>
+          <li><a href="https://heidrich-digital.de/datenschutz">Privacy policy (Datenschutz)</a></li>
           <li><a href="de/" hreflang="de" lang="de">Deutsche Version</a></li>
         </ul>
       </div>
     </div>
-    <p class="fine">This website sets no cookies and loads nothing from third parties. Product data and images in the app come partly from Open Food Facts (ODbL / CC BY-SA). ToHuus Hub is not affiliated with REWE, Vorwerk/Thermomix, Cookidoo or HelloFresh; their names only describe compatible formats.</p>
+    <p class="fine">This website sets no cookies, has no tracking and loads nothing from third parties. Product data and images in the app come partly from Open Food Facts (ODbL / CC BY-SA). ToHuus Hub is not affiliated with REWE, Vorwerk/Thermomix, Cookidoo or HelloFresh; their names only describe compatible formats.</p>
   </div>
 </footer>
 
