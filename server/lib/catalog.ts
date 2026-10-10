@@ -1,5 +1,7 @@
 import { config } from '../config.js';
-import { db, now } from '../db.js';
+import { db, lang, now } from '../db.js';
+import { t } from '../i18n.js';
+import { BASE_LOCATIONS, baseName, categoryIdByKey, type CategoryKey } from './basedata.js';
 import { emit } from './bus.js';
 import { notify, notifySettings } from './notify.js';
 import { nameScore, norm, splitProductName, tokens } from './text.js';
@@ -44,7 +46,8 @@ export interface StockEntry {
   updated_at: string;
 }
 
-export const LEVELS = ['leer', 'knapp', 'halb', 'voll'] as const;
+/** Labels for the four fill levels (0 empty … 3 full) used by track_mode 'level'. */
+export const levelLabels = () => [t('empty'), t('low'), t('half'), t('full')];
 
 export function productStatus(p: ProductRow, entries: StockEntry[], warnDays = notifySettings().expiryWarnDays) {
   const total = entries.reduce((s, e) => s + e.qty, 0);
@@ -137,9 +140,9 @@ export interface AdjustInput {
 /** Change stock. Positive delta adds a (possibly dated) entry, negative consumes oldest-first (FEFO). */
 export function adjustStock(input: AdjustInput) {
   const p = getProduct(input.productId);
-  if (!p) throw new Error('Produkt nicht gefunden');
-  if (input.set !== undefined && (input.set < 0 || !Number.isFinite(input.set))) throw new Error('Menge darf nicht negativ sein');
-  if (input.delta !== undefined && !Number.isFinite(input.delta)) throw new Error('Ungültige Menge');
+  if (!p) throw new Error(t('Product not found'));
+  if (input.set !== undefined && (input.set < 0 || !Number.isFinite(input.set))) throw new Error(t('Quantity must not be negative'));
+  if (input.delta !== undefined && !Number.isFinite(input.delta)) throw new Error(t('Invalid quantity'));
   const before = productStatus(p, stockOf(p.id));
   const tx = db.transaction(() => {
     const locationId = input.locationId ?? p.default_location_id ?? firstLocationId();
@@ -219,7 +222,8 @@ function logMove(productId: number, locationId: number | null, delta: number, in
 export function firstLocationId(): number {
   const r = db.prepare('SELECT id FROM locations ORDER BY sort, id LIMIT 1').get() as { id: number } | undefined;
   if (r) return r.id;
-  return Number(db.prepare(`INSERT INTO locations (name, kind, icon) VALUES ('Vorrat', 'pantry', 'archive')`).run().lastInsertRowid);
+  const pantry = BASE_LOCATIONS.find((l) => l.key === 'pantry')!;
+  return Number(db.prepare(`INSERT INTO locations (name, kind, icon) VALUES (?, 'pantry', 'archive')`).run(baseName(pantry)).lastInsertRowid);
 }
 
 /** React to a status transition: shopping list + notifications. */
@@ -234,11 +238,13 @@ export async function afterStatusChange(p: ProductRow, before: Status, after: St
   const label = [p.brand, p.name].filter(Boolean).join(' ');
   await notify({
     event: after === 'empty' ? 'stock.empty' : 'stock.low',
-    title: after === 'empty' ? `${p.name} ist alle` : `${p.name} wird knapp`,
+    title: after === 'empty' ? t('{name} is out', { name: p.name }) : t('{name} is running low', { name: p.name }),
     message:
-      after === 'empty'
-        ? `${label} ist aufgebraucht${actor ? ` (zuletzt: ${actor})` : ''}.${added ? ' Steht jetzt auf der Einkaufsliste.' : ''}`
-        : `Noch ${fmtQty(p, total)} ${label} da.${added ? ' Steht jetzt auf der Einkaufsliste.' : ''}`,
+      (after === 'empty'
+        ? actor
+          ? t('{label} is used up (last: {actor}).', { label, actor })
+          : t('{label} is used up.', { label })
+        : t('Only {qty} {label} left.', { qty: fmtQty(p, total), label })) + (added ? ' ' + t('It is on the shopping list now.') : ''),
     path: `/bestand/${p.id}`,
     data: { product_id: p.id, name: p.name, brand: p.brand, qty: total, unit: p.unit, status: after, on_shopping_list: added },
     dedupeKey: `${after}:${p.id}`,
@@ -247,8 +253,8 @@ export async function afterStatusChange(p: ProductRow, before: Status, after: St
 }
 
 export function fmtQty(p: Pick<ProductRow, 'track_mode' | 'unit'>, total: number) {
-  if (p.track_mode === 'level') return LEVELS[Math.max(0, Math.min(3, Math.round(total)))];
-  const n = Number.isInteger(total) ? String(total) : total.toFixed(1).replace('.', ',');
+  if (p.track_mode === 'level') return levelLabels()[Math.max(0, Math.min(3, Math.round(total)))];
+  const n = Number.isInteger(total) ? String(total) : lang() === 'de' ? total.toFixed(1).replace('.', ',') : total.toFixed(1);
   return `${n} ${p.unit}`;
 }
 
@@ -350,26 +356,37 @@ export function learnAlias(name: string, productId: number, source = 'manual') {
 
 // ------------------------------------------------------------ creation helpers
 
-const CATEGORY_RULES: [RegExp, string][] = [
-  [/\b(eis|cremissimo|magnum|cornetto|sorbet|eiscreme|milchmäuse|stieleis)\b/i, 'Eis'],
-  [/\b(tk|tiefkühl|nuggets|pommes|fries|frosta|iglo|pizza)\b/i, 'Tiefkühl'],
-  [/\b(cola|mate|limo|saft|wasser|bier|wein|sprite|fanta|multivit|schorle|tonic|kola|citro|zitrone 1l|\d,\d?l\b|0,5l|1l\b|6x1l)\b/i, 'Getränke'],
-  [/\b(banane|apfel|äpfel|birne|kiwi|mirabellen|pflaume|nektarine|trauben|beeren|zitrone|orange|mandarine|avocado)\b/i, 'Obst & Gemüse'],
-  [/\b(gurke|tomate|paprika|zucchini|broccoli|brokkoli|kartoffel|zwiebel|salat|möhre|karotte|champig|pilz|lauch|mais|süßkartoffel)\b/i, 'Obst & Gemüse'],
-  [/\b(käse|cheddar|mozzarella|feta|gouda|leerdammer|joghurt|quark|milch|butter|sahne|fruchtzwerge|dessert|eier|skyr)\b/i, 'Kühlregal'],
-  [/\b(salami|schinken|mortadella|wurst|würst|mett|hähnchen|haehn|pute|fleisch|spicker|frikadell)\b/i, 'Kühlregal'],
-  [/\b(nudel|pasta|gnocchi|eliche|reis|mehl|zucker|haferflocken|linsen|bohnen|konserve|mais|essig|öl|vinegar|gewürz|thymian|kräuter|paprikapulver|salz|pfeffer)\b/i, 'Vorrat'],
-  [/\b(brot|brötchen|sandwich|toast|baguette|ciabatta|gifflar)\b/i, 'Brot & Backwaren'],
-  [/\b(chips|schoko|keks|gummi|bonbon|snack|riegel|pom-bär|sweets|brownie|lovely)\b/i, 'Snacks & Süßes'],
-  [/\b(always|slip|tampon|shampoo|duschgel|zahnpasta|deo|windel|feuchttücher|creme|seife)\b/i, 'Drogerie'],
-  [/\b(packband|paketband|klebeband|müllbeutel|spülmittel|tabs|waschmittel|persil|küchenrolle|toilettenpapier|klopapier|alufolie|frischhaltefolie|batterie|glühbirne|schwamm)\b/i, 'Haushalt'],
+// keyword → stable category key (German receipt words; English words for English-named products)
+const CATEGORY_RULES: [RegExp, CategoryKey][] = [
+  [/\b(eis|cremissimo|magnum|cornetto|sorbet|eiscreme|milchmäuse|stieleis)\b/i, 'icecream'],
+  [/\b(tk|tiefkühl|nuggets|pommes|fries|frosta|iglo|pizza)\b/i, 'frozen'],
+  [/\b(cola|mate|limo|saft|wasser|bier|wein|sprite|fanta|multivit|schorle|tonic|kola|citro|zitrone 1l|\d,\d?l\b|0,5l|1l\b|6x1l)\b/i, 'drinks'],
+  [/\b(banane|apfel|äpfel|birne|kiwi|mirabellen|pflaume|nektarine|trauben|beeren|zitrone|orange|mandarine|avocado)\b/i, 'produce'],
+  [/\b(gurke|tomate|paprika|zucchini|broccoli|brokkoli|kartoffel|zwiebel|salat|möhre|karotte|champig|pilz|lauch|mais|süßkartoffel)\b/i, 'produce'],
+  [/\b(käse|cheddar|mozzarella|feta|gouda|leerdammer|joghurt|quark|milch|butter|sahne|fruchtzwerge|dessert|eier|skyr)\b/i, 'chilled'],
+  [/\b(salami|schinken|mortadella|wurst|würst|mett|hähnchen|haehn|pute|fleisch|spicker|frikadell)\b/i, 'chilled'],
+  [/\b(nudel|pasta|gnocchi|eliche|reis|mehl|zucker|haferflocken|linsen|bohnen|konserve|mais|essig|öl|vinegar|gewürz|thymian|kräuter|paprikapulver|salz|pfeffer)\b/i, 'pantry'],
+  [/\b(brot|brötchen|sandwich|toast|baguette|ciabatta|gifflar)\b/i, 'bakery'],
+  [/\b(chips|schoko|keks|gummi|bonbon|snack|riegel|pom-bär|sweets|brownie|lovely)\b/i, 'snacks'],
+  [/\b(always|slip|tampon|shampoo|duschgel|zahnpasta|deo|windel|feuchttücher|creme|seife)\b/i, 'toiletries'],
+  [/\b(ice cream|gelato|ice lolly|popsicle)\b/i, 'icecream'],
+  [/\b(frozen|fish fingers|chips oven)\b/i, 'frozen'],
+  [/\b(juice|water|beer|wine|soda|lemonade|squash|sparkling)\b/i, 'drinks'],
+  [/\b(bananas?|apples?|pears?|grapes|berries|lemons?|oranges?|avocados?|cucumbers?|tomato(es)?|peppers?|courgettes?|zucchini|broccoli|potato(es)?|onions?|carrots?|mushrooms?|lettuce|leeks?)\b/i, 'produce'],
+  [/\b(cheese|yoghurt|yogurt|milk|cream|eggs|ham|sausages?|chicken|turkey|beef|pork)\b/i, 'chilled'],
+  [/\b(pasta|noodles|rice|flour|sugar|oats|lentils|beans|tinned|canned|vinegar|oil|spices?|herbs|salt)\b/i, 'pantry'],
+  [/\b(bread|rolls|bagels?|wraps)\b/i, 'bakery'],
+  [/\b(crisps|chocolate|biscuits?|cookies?|sweets|candy|gummies)\b/i, 'snacks'],
+  [/\b(toothpaste|shower gel|deodorant|nappies|diapers|wipes|soap|plasters)\b/i, 'toiletries'],
+  [/\b(tape|bin bags|bin liners|washing[- ]up liquid|dishwasher tablets|detergent|kitchen roll|paper towels|toilet paper|foil|cling film|batteries|light bulbs?|sponges?)\b/i, 'household'],
+  [/\b(packband|paketband|klebeband|müllbeutel|spülmittel|tabs|waschmittel|persil|küchenrolle|toilettenpapier|klopapier|alufolie|frischhaltefolie|batterie|glühbirne|schwamm)\b/i, 'household'],
 ];
 
 export function guessCategory(name: string): number | null {
-  for (const [re, cat] of CATEGORY_RULES) {
+  for (const [re, key] of CATEGORY_RULES) {
     if (re.test(name)) {
-      const row = db.prepare('SELECT id FROM categories WHERE name = ?').get(cat) as { id: number } | undefined;
-      if (row) return row.id;
+      const id = categoryIdByKey(key);
+      if (id) return id;
     }
   }
   return null;
@@ -417,7 +434,7 @@ export function createProduct(input: {
       input.brand ?? null,
       input.size ?? null,
       categoryId,
-      input.unit ?? 'Stk',
+      input.unit ?? t('pc'),
       input.trackMode ?? d.track,
       input.locationId ?? d.location,
       input.minQty ?? 0,
@@ -452,8 +469,13 @@ const stem = (t: string) => (t.length > 5 ? t.replace(/(en|n|e|s)$/, '') : t.rep
 // compounds whose head word does not mean the ingredient itself
 const FALSE_COMPOUNDS = new Set(['kokosmilch', 'buttermilch', 'erdnussbutter', 'kraeuterbutter', 'knoblauchbutter', 'sojasauce', 'kokosnussmilch', 'fischstaebchen']);
 
+// English two-word compounds that are not their head word ("coconut milk" is not "milk")
+const FALSE_PHRASES = ['coconut milk', 'coconut cream', 'peanut butter', 'soy sauce', 'fish fingers', 'oat milk', 'almond milk', 'soy milk'];
+
 function tokenHit(ing: string, prod: string) {
   if (ing === prod) return true;
+  // English plurals ("onion" / "onions", "tomato" / "tomatoes")
+  if (prod === ing + 's' || ing === prod + 's' || prod === ing + 'es' || ing === prod + 'es') return true;
   const a = stem(ing);
   const b = stem(prod);
   if (a.length >= 3 && a === b) return true;
@@ -477,6 +499,8 @@ export function matchIngredient(core: string): Match | null {
   for (const p of products) {
     const pt = tokens(p.name);
     if (pt.length === 0) continue;
+    const pn = norm(p.name);
+    if (FALSE_PHRASES.some((f) => pn.includes(f) && !n.includes(f))) continue;
     const hits = it.filter((t) => pt.some((u) => tokenHit(t, u))).length;
     if (hits < it.length) continue;
     const coverage = pt.filter((u) => it.some((t) => tokenHit(t, u))).length / pt.length;

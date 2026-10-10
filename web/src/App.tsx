@@ -33,7 +33,7 @@ import { Stock } from './pages/Stock';
 import { Today } from './pages/Today';
 import { Avatar, Sheet } from './ui';
 import { applyBrand } from './brand';
-import { setLang } from './i18n';
+import { setLang, t } from './i18n';
 
 export interface Me {
   actor: { name: string; role: string; kind: string; userId?: number };
@@ -71,14 +71,14 @@ function Shell({ me }: { me: Me }) {
   const attention = c ? c.low + c.empty + c.expiring + c.expired : 0;
 
   const links = [
-    { to: '/', label: 'Heute', icon: House, end: true },
-    { to: '/bestand', label: 'Bestand', icon: Package, badge: attention || undefined },
-    { to: '/einkauf', label: 'Einkauf', icon: Basket, count: c?.shopping },
-    { to: '/kochen', label: 'Kochen', icon: ChefHat },
-    { to: '/wo', label: 'Wo ist was?', icon: MapPin },
-    { to: '/import', label: 'Importe', icon: Receipt, dot: Boolean(c?.imports) },
-    { to: '/bar', label: 'Gäste & Bar', icon: Martini, dot: Boolean(c?.orders) },
-    { to: '/einstellungen', label: 'Einstellungen', icon: Gear },
+    { to: '/', label: t('Today'), icon: House, end: true },
+    { to: '/bestand', label: t('Stock'), icon: Package, badge: attention || undefined },
+    { to: '/einkauf', label: t('Shopping'), icon: Basket, count: c?.shopping },
+    { to: '/kochen', label: t('Cook'), icon: ChefHat },
+    { to: '/wo', label: t('Where’s what?'), icon: MapPin },
+    { to: '/import', label: t('Imports'), icon: Receipt, dot: Boolean(c?.imports) },
+    { to: '/bar', label: t('Guests & Bar'), icon: Martini, dot: Boolean(c?.orders) },
+    { to: '/einstellungen', label: t('Settings'), icon: Gear },
   ];
 
   return (
@@ -98,7 +98,7 @@ function Shell({ me }: { me: Me }) {
           </NavLink>
         ))}
         <button className="btn primary" style={{ marginTop: 16 }} onClick={() => setAdd(true)}>
-          <Plus size={18} weight="bold" /> Hinzufügen
+          <Plus size={18} weight="bold" /> {t('Add')}
         </button>
         <div className="spacer" />
         <div className="who">
@@ -136,7 +136,7 @@ function Shell({ me }: { me: Me }) {
             {l.badge ? <span className="badge-dot">{l.badge}</span> : null}
           </NavLink>
         ))}
-        <button className="fab" aria-label="Hinzufügen" onClick={() => setAdd(true)}>
+        <button className="fab" aria-label={t('Add')} onClick={() => setAdd(true)}>
           <Plus size={26} weight="bold" />
         </button>
         {[links[2], links[3]].map((l) => (
@@ -148,37 +148,37 @@ function Shell({ me }: { me: Me }) {
         ))}
       </nav>
 
-      <Sheet open={add} onClose={() => setAdd(false)} title="Was möchtest du tun?">
+      <Sheet open={add} onClose={() => setAdd(false)} title={t('What would you like to do?')}>
         <div className="action-grid">
           <button className="action" onClick={() => { setAdd(false); nav('/scan'); }}>
             <span className="ic"><Barcode size={22} /></span>
-            <b>Barcode scannen</b>
-            <span>Rein, raus oder neu anlegen – mit Bild aus Open Food Facts.</span>
+            <b>{t('Scan barcode')}</b>
+            <span>{t('In, out or new – with a picture from Open Food Facts.')}</span>
           </button>
           <button className="action" onClick={() => { setAdd(false); nav('/import?mode=file'); }}>
             <span className="ic"><FileArrowUp size={22} /></span>
-            <b>REWE-PDF / Bon</b>
-            <span>Abholavis, Lieferavis oder eBon hochladen und prüfen.</span>
+            <b>{t('REWE PDF / receipt')}</b>
+            <span>{t('Upload and check a REWE pickup or delivery notice or an eBon.')}</span>
           </button>
           <button className="action" onClick={() => { setAdd(false); nav('/import?mode=photo'); }}>
             <span className="ic"><Camera size={22} /></span>
-            <b>Foto</b>
-            <span>Kassenbon oder Gefrierschrank fotografieren.</span>
+            <b>{t('Photo')}</b>
+            <span>{t('Snap a receipt or your freezer.')}</span>
           </button>
           <button className="action" onClick={() => { setAdd(false); nav('/scan?mode=qr'); }}>
             <span className="ic"><QrCode size={22} /></span>
-            <b>Digitaler Bon</b>
-            <span>QR-Code an der Kasse scannen oder Link einfügen.</span>
+            <b>{t('Digital receipt')}</b>
+            <span>{t('Scan the QR code at the checkout or paste a link.')}</span>
           </button>
           <button className="action" onClick={() => { setAdd(false); setNewProduct(true); }}>
             <span className="ic"><Package size={22} /></span>
-            <b>Produkt anlegen</b>
-            <span>Von Hand, mit Bildsuche.</span>
+            <b>{t('Create product')}</b>
+            <span>{t('By hand, with image search.')}</span>
           </button>
           <button className="action" onClick={() => { setAdd(false); nav('/import?mode=text'); }}>
             <span className="ic"><TextAa size={22} /></span>
-            <b>Liste tippen</b>
-            <span>„2x Milch, Paketband …“ – wird zugeordnet.</span>
+            <b>{t('Type a list')}</b>
+            <span>{t('“2x milk, parcel tape …” – gets matched up.')}</span>
           </button>
         </div>
       </Sheet>

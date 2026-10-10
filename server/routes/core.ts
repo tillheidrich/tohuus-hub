@@ -36,6 +36,7 @@ import { lookupBarcode, searchProducts } from '../lib/off.js';
 import { overview } from '../lib/overview.js';
 import { haSettings } from '../lib/plan.js';
 import { findThings } from '../lib/find.js';
+import { t } from '../i18n.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -48,12 +49,12 @@ const id = (v: unknown) => Number(v);
 r.post('/auth/login', async (req, res) => {
   const { name, password } = z.object({ name: z.string().max(80), password: z.string().max(200) }).parse(req.body);
   if (rateLimited(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimited(`user:${name.toLowerCase()}`, 8, 5 * 60_000)) {
-    res.status(429).json({ error: 'Zu viele Versuche. Bitte ein paar Minuten warten.' });
+    res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
     return;
   }
   const u = db.prepare('SELECT * FROM users WHERE lower(name) = lower(?)').get(name.trim()) as any;
   if (!u || !(await verifyPassword(password, u.password_hash))) {
-    res.status(401).json({ error: 'Name oder Passwort stimmt nicht.' });
+    res.status(401).json({ error: t('Name or password is wrong.') });
     return;
   }
   const token = createSession(u.id);
@@ -87,7 +88,7 @@ r.get('/me', (req, res) => {
   }
   res.json({
     actor,
-    household: getSetting('household.name', 'Unser Zuhause'),
+    household: getSetting('household.name', t('Our home')),
     brand: brand(),
     language: lang(),
     features: { vision: visionEnabled(), email: smtpEnabled() },
@@ -140,7 +141,7 @@ r.patch('/locations/:id', requireAdmin, (req, res) => {
 r.delete('/locations/:id', requireAdmin, (req, res) => {
   const n = (db.prepare('SELECT COUNT(*) n FROM stock WHERE location_id = ? AND qty > 0').get(id(req.params.id)) as { n: number }).n;
   if (n > 0) {
-    res.status(409).json({ error: 'An diesem Ort liegt noch etwas.' });
+    res.status(409).json({ error: t('There is still something stored at this location.') });
     return;
   }
   db.prepare('DELETE FROM locations WHERE id = ?').run(id(req.params.id));
@@ -311,7 +312,7 @@ r.post('/products/:id/image', upload.single('image'), async (req, res) => {
     if (source === 'off') credit = `Open Food Facts · ${req.body.code ?? ''} · CC BY-SA`;
   }
   if (!buf) {
-    res.status(400).json({ error: 'Kein Bild erhalten' });
+    res.status(400).json({ error: t('No image received') });
     return;
   }
   const img = await saveImage(buf, `p${p.id}`);
@@ -336,7 +337,7 @@ r.post('/products/:id/alias', (req, res) => {
 r.post('/products/merge', requireAdmin, (req, res) => {
   const { keep, remove } = z.object({ keep: z.number(), remove: z.number() }).parse(req.body);
   if (keep === remove || !getProduct(keep) || !getProduct(remove)) {
-    res.status(400).json({ error: 'Ungültige Produkte' });
+    res.status(400).json({ error: t('Invalid products') });
     return;
   }
   const tx = db.transaction(() => {
@@ -456,7 +457,7 @@ r.post('/shopping', (req, res) => {
   }
   const out = addToShopping({ productId, text: b.text, qty: b.qty, note: b.note, source: 'manual', addedBy: actorName(req) });
   if (out.created)
-    void notify({ event: 'shopping.added', title: `Einkaufsliste: ${b.text}`, message: `${actorName(req)} hat „${b.text}" auf die Liste gesetzt.`, path: '/einkauf' });
+    void notify({ event: 'shopping.added', title: t('Shopping list: {text}', { text: b.text }), message: t('{actor} added “{text}” to the list.', { actor: actorName(req), text: b.text }), path: '/einkauf' });
   res.json(out);
 });
 
@@ -511,7 +512,7 @@ r.post('/notifications/read', (_req, res) => {
 
 r.get('/settings', (_req, res) => {
   res.json({
-    household: getSetting('household.name', 'Unser Zuhause'),
+    household: getSetting('household.name', t('Our home')),
     brand: brand(),
     language: lang(),
     ha: { ...haSettings(), token: haSettings().token ? '••••' : '' },
@@ -559,7 +560,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
 });
 
 r.post('/settings/test-notification', requireAdmin, async (_req, res) => {
-  const out = await notify({ event: 'test', title: 'Test aus Stockwerk', message: 'Wenn du das liest, kommen Benachrichtigungen an.', path: '/' });
+  const out = await notify({ event: 'test', title: t('Test from Stockwerk'), message: t('If you can read this, notifications are working.'), path: '/' });
   res.json(out);
 });
 
@@ -590,7 +591,7 @@ r.patch('/users/:id', (req, res) => {
 });
 r.delete('/users/:id', requireAdmin, (req, res) => {
   if (req.actor?.userId === id(req.params.id)) {
-    res.status(400).json({ error: 'Du kannst dich nicht selbst löschen.' });
+    res.status(400).json({ error: t('You cannot delete yourself.') });
     return;
   }
   db.prepare('DELETE FROM users WHERE id = ?').run(id(req.params.id));

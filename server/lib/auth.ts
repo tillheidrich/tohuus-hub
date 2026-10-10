@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { db } from '../db.js';
+import { t } from '../i18n.js';
 
 export interface Actor {
   kind: 'user' | 'token' | 'guest';
@@ -124,7 +125,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (actor.kind === 'token' && actor.scope !== 'full') {
     const isHa = req.originalUrl.startsWith('/api/ha/');
     if (actor.scope === 'mcp' || (actor.scope === 'ha' && !isHa)) {
-      res.status(403).json({ error: 'Dieser Zugang ist nur für ' + (actor.scope === 'ha' ? 'Home Assistant' : 'MCP') + ' gedacht.' });
+      res.status(403).json({ error: t('This access is meant for {client} only.', { client: actor.scope === 'ha' ? 'Home Assistant' : 'MCP' }) });
       return;
     }
   }

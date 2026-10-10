@@ -1,6 +1,7 @@
 import { db, getSetting } from '../db.js';
 import { listProducts } from './catalog.js';
 import { suggest } from './recipes.js';
+import { t } from '../i18n.js';
 
 export function overview() {
   const products = listProducts();
@@ -56,7 +57,7 @@ export function overview() {
   const planned = db.prepare(`SELECT m.id, m.title, m.recipe_id, m.slot, m.cooked, r.image_path FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE day = ? ORDER BY slot`).all(today);
 
   return {
-    household: getSetting('household.name', 'Unser Zuhause'),
+    household: getSetting('household.name', t('Our home')),
     counts: {
       products: tracked.length,
       inStock: tracked.filter((p) => p.total > 0).length,

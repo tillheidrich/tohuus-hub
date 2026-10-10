@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi } from '../api';
 import { Empty, Ic, Skeleton, Thumb } from '../ui';
+import { t } from '../i18n';
 
 export interface Found {
   id: number;
@@ -18,31 +19,31 @@ export interface Found {
 export function useDebounce<T>(v: T, ms = 250) {
   const [d, setD] = useState(v);
   useEffect(() => {
-    const t = setTimeout(() => setD(v), ms);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setD(v), ms);
+    return () => clearTimeout(timer);
   }, [v, ms]);
   return d;
 }
 
 /** One row: the thing, the room, the exact spot, how to get there. */
-export function FoundRow({ t, onClick }: { t: Found; onClick?: () => void }) {
-  const out = t.out ?? t.in_stock === false;
+export function FoundRow({ t: it, onClick }: { t: Found; onClick?: () => void }) {
+  const out = it.out ?? it.in_stock === false;
   return (
     <div className={`found ${onClick ? 'clickable' : ''}`} onClick={onClick} style={{ cursor: onClick ? 'pointer' : undefined }}>
-      <Thumb p={t as any} size={52} />
+      <Thumb p={it as any} size={52} />
       <div style={{ minWidth: 0 }}>
         <div className="title" style={{ fontWeight: 650 }}>
-          {t.name} {out && <span className="badge empty" style={{ marginLeft: 6 }}>gerade alle</span>}
+          {it.name} {out && <span className="badge empty" style={{ marginLeft: 6 }}>{t('out right now')}</span>}
         </div>
-        <div className="where" style={{ display: t.places.length || t.spot ? undefined : 'none' }}>
-          {t.places.map((p) => (
+        <div className="where" style={{ display: it.places.length || it.spot ? undefined : 'none' }}>
+          {it.places.map((p) => (
             <span key={p.id} className="place">
               <Ic name={p.icon} size={14} /> {p.name}
             </span>
           ))}
-          {t.spot && <span className="spot">{t.places.length ? '· ' : ''}{t.spot}</span>}
+          {it.spot && <span className="spot">{it.places.length ? '· ' : ''}{it.spot}</span>}
         </div>
-        {t.places[0]?.hint && <div className="lhint">{t.places[0].hint}</div>}
+        {it.places[0]?.hint && <div className="lhint">{it.places[0].hint}</div>}
       </div>
     </div>
   );
@@ -52,17 +53,17 @@ export function FindList({ things, onPick, grouped = false }: { things: Found[];
   if (!grouped)
     return (
       <div className="list">
-        {things.map((t) => (
-          <FoundRow key={t.id} t={t} onClick={onPick ? () => onPick(t) : undefined} />
+        {things.map((x) => (
+          <FoundRow key={x.id} t={x} onClick={onPick ? () => onPick(x) : undefined} />
         ))}
       </div>
     );
   // browsing without a query: room by room, things with an exact spot first
   const groups = new Map<number, { place: Found['places'][number]; items: Found[] }>();
-  for (const t of things)
-    for (const p of t.places.slice(0, 1)) {
+  for (const x of things)
+    for (const p of x.places.slice(0, 1)) {
       if (!groups.has(p.id)) groups.set(p.id, { place: p, items: [] });
-      groups.get(p.id)!.items.push(t);
+      groups.get(p.id)!.items.push(x);
     }
   return (
     <div className="stack" style={{ gap: 22 }}>
@@ -77,8 +78,8 @@ export function FindList({ things, onPick, grouped = false }: { things: Found[];
           <div className="list">
             {items
               .sort((a, b) => Number(Boolean(b.spot)) - Number(Boolean(a.spot)))
-              .map((t) => (
-                <FoundRow key={t.id} t={{ ...t, places: [] }} onClick={onPick ? () => onPick(t) : undefined} />
+              .map((x) => (
+                <FoundRow key={x.id} t={{ ...x, places: [] }} onClick={onPick ? () => onPick(x) : undefined} />
               ))}
           </div>
         </section>
@@ -96,32 +97,32 @@ export function Find() {
   useEffect(() => {
     setSp(dq ? { q: dq } : {}, { replace: true });
   }, [dq, setSp]);
-  const withSpot = useMemo(() => (res.data ?? []).filter((t) => t.spot).length, [res.data]);
+  const withSpot = useMemo(() => (res.data ?? []).filter((x) => x.spot).length, [res.data]);
   return (
     <div>
       <header className="page-head">
         <div>
-          <div className="eyebrow">{withSpot} Dinge mit genauem Platz</div>
-          <h1>Wo ist was?</h1>
+          <div className="eyebrow">{withSpot === 1 ? t('1 thing with an exact spot') : t('{n} things with an exact spot', { n: withSpot })}</div>
+          <h1>{t('Where is it?')}</h1>
         </div>
       </header>
       <div className="finder-hero">
         <MagnifyingGlass size={20} />
-        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Wo finde ich … Paketband, Pflaster, Taschenlampe" />
+        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Where can I find … packing tape, plasters, a torch')} />
       </div>
       <p className="small muted" style={{ margin: '10px 2px 18px' }}>
-        Den genauen Platz trägst du beim Artikel ein („Regal links, oberstes Fach“). Auch Dinge, die nicht gezählt werden, können hier stehen – Fieberthermometer, Sicherungskasten, Ersatzschlüssel.
+        {t('Set the exact spot on the item (“left shelf, top compartment”). Things you don’t count can live here too – thermometer, fuse box, spare keys.')}
       </p>
       {res.isLoading ? (
         <Skeleton n={4} h={70} />
       ) : (res.data ?? []).length === 0 ? (
         <div className="card">
-          <Empty icon={dq ? <MapPin size={26} /> : <Package size={26} />} title={dq ? `„${dq}“ ist nirgends hinterlegt` : 'Noch nichts hinterlegt'}>
-            Leg es als Artikel an (Zählweise „gar nicht“) und trag den Platz ein – oder sag deinem KI-Assistenten „Das Fieberthermometer liegt im Bad, Spiegelschrank“.
+          <Empty icon={dq ? <MapPin size={26} /> : <Package size={26} />} title={dq ? t('“{q}” isn’t stored anywhere', { q: dq }) : t('Nothing stored yet')}>
+            {t('Add it as an item (counting: “Don’t count”) and enter the spot – or tell your AI assistant “The thermometer is in the bathroom mirror cabinet”.')}
           </Empty>
         </div>
       ) : (
-        <FindList things={res.data!} grouped={!dq} onPick={(t) => nav(`/bestand/${t.id}`)} />
+        <FindList things={res.data!} grouped={!dq} onPick={(x) => nav(`/bestand/${x.id}`)} />
       )}
     </div>
   );

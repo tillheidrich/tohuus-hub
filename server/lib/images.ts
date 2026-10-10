@@ -4,12 +4,13 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { config } from '../config.js';
 import { safeFetch } from './net.js';
+import { t } from '../i18n.js';
 
 const dir = () => path.join(config.dataDir, 'images');
 
 /** Store an image as webp (max 800px) and return the public path `/img/<file>`. */
 export async function saveImage(buf: Buffer, prefix: string): Promise<string> {
-  if (!/^[a-z]\d+$/.test(prefix)) throw new Error('ungültiger Bildname');
+  if (!/^[a-z]\d+$/.test(prefix)) throw new Error(t('Invalid image name'));
   const name = `${prefix}-${crypto.randomBytes(6).toString('hex')}.webp`;
   await sharp(buf, { failOn: 'none' })
     .rotate()

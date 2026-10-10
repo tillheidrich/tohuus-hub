@@ -2,9 +2,13 @@ import { ArrowRight, ArrowsClockwise, Basket, BookOpen, CalendarBlank, CaretLeft
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, invalidate, patch, post, useApi } from '../api';
+import { locale, t } from '../i18n';
 import { Seg, Sheet, useToast } from '../ui';
 
-const WD = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+/** Short weekday name (Mon, Tue … / Mo, Di …) in the active language. */
+const wd = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale(), { weekday: 'short' });
+/** Day of month as shown in the plan ("10" / "10."). */
+const dom = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale(), { day: 'numeric' });
 
 function todayStr() {
   return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date());
@@ -49,23 +53,22 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
   return (
     <section className="section">
       <div className="section-head">
-        <h2>Wochenplan</h2>
+        <h2>{t('Meal plan')}</h2>
         <div className="row" style={{ gap: 4 }}>
-          <button className="icon-btn" aria-label="Woche zurück" disabled={offset <= 0} onClick={() => setOffset(offset - 1)}><CaretLeft size={16} /></button>
-          <span className="small muted mono" style={{ minWidth: 92, textAlign: 'center' }}>{offset === 0 ? 'ab heute' : `ab ${new Date(from + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}`}</span>
-          <button className="icon-btn" aria-label="Woche vor" onClick={() => setOffset(offset + 1)}><CaretRight size={16} /></button>
+          <button className="icon-btn" aria-label={t('Previous week')} disabled={offset <= 0} onClick={() => setOffset(offset - 1)}><CaretLeft size={16} /></button>
+          <span className="small muted mono" style={{ minWidth: 92, textAlign: 'center' }}>{offset === 0 ? t('from today') : t('from {date}', { date: new Date(from + 'T12:00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) })}</span>
+          <button className="icon-btn" aria-label={t('Next week')} onClick={() => setOffset(offset + 1)}><CaretRight size={16} /></button>
         </div>
       </div>
 
       <div className="week">
         {days.map((d) => {
           const list = byDay.get(d) ?? [];
-          const dt = new Date(d + 'T12:00:00');
           return (
             <div key={d} className={`wday ${d === today ? 'today' : ''}`}>
               <div className="wd-head">
-                <b>{d === today ? 'Heute' : WD[dt.getDay()]}</b>
-                <span className="mono">{dt.getDate()}.</span>
+                <b>{d === today ? t('Today') : wd(d)}</b>
+                <span className="mono">{dom(d)}</span>
               </div>
               {list.map((e) => (
                 <div key={e.id} className={`wmeal ${e.cooked ? 'done' : ''}`} onClick={() => setSel(e)}>
@@ -73,19 +76,19 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
                   <div className="grow">
                     <div className="t">{e.title}</div>
                     <div className="s">
-                      {[e.slot === 'mittag' ? 'Mittag' : null, e.source === 'cookidoo' ? 'Cookidoo' : e.source === 'suggest' ? 'Vorschlag' : null, e.thermomix ? 'TM' : null].filter(Boolean).join(' · ')}
+                      {[e.slot === 'mittag' ? t('Lunch') : null, e.source === 'cookidoo' ? 'Cookidoo' : e.source === 'suggest' ? t('Suggested') : null, e.thermomix ? 'TM' : null].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                   <button
                     className="icon-btn sm"
-                    aria-label={e.cooked ? 'Nicht gekocht' : 'Gekocht'}
+                    aria-label={e.cooked ? t('Mark as not cooked') : t('Mark as cooked')}
                     onClick={(ev) => { ev.stopPropagation(); patch(`/plan/${e.id}`, { cooked: !e.cooked }).then(() => invalidate('plan')); }}
                   >
                     <Check size={14} weight={e.cooked ? 'bold' : 'regular'} />
                   </button>
                   <button
                     className="icon-btn sm"
-                    aria-label="Entfernen"
+                    aria-label={t('Remove')}
                     onClick={(ev) => { ev.stopPropagation(); removeMeal(e, toast); }}
                   >
                     <X size={14} />
@@ -94,7 +97,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
               ))}
               {d >= today && (
                 <button className="wadd" onClick={() => setPick(d)}>
-                  <Plus size={14} /> {list.length ? 'noch was' : 'planen'}
+                  <Plus size={14} /> {list.length ? t('add more') : t('plan')}
                 </button>
               )}
             </div>
@@ -105,23 +108,23 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
       <div className="row wrap" style={{ gap: 8, marginTop: 12 }}>
         <button className="btn sm" disabled={!!busy} onClick={() => act('fill', async () => {
           const r = await post('/plan/autofill', { from });
-          return r.added ? `${r.added} Abende mit Ideen aus dem Vorrat gefüllt` : 'Alle Abende sind schon verplant';
+          return r.added ? (r.added === 1 ? t('Filled 1 evening with ideas from your pantry') : t('Filled {n} evenings with ideas from your pantry', { n: r.added })) : t('Every evening is already planned');
         })}>
-          <MagicWand size={15} /> {busy === 'fill' ? 'Plane …' : 'Woche füllen'}
+          <MagicWand size={15} /> {busy === 'fill' ? t('Planning…') : t('Fill the week')}
         </button>
         <button className="btn sm" disabled={!!busy || !planned} onClick={() => act('shop', async () => {
           const r = await post('/plan/shopping', { from });
-          return r.added ? `${r.added} Zutaten auf die Einkaufsliste gesetzt` : 'Alles da – nichts fehlt für die Woche';
+          return r.added ? (r.added === 1 ? t('Added 1 ingredient to the shopping list') : t('Added {n} ingredients to the shopping list', { n: r.added })) : t('All set – nothing missing for the week');
         })}>
-          <Basket size={15} /> {busy === 'shop' ? 'Rechne …' : 'Einkauf für die Woche'}
+          <Basket size={15} /> {busy === 'shop' ? t('Calculating…') : t('Shop for the week')}
         </button>
         {cookidoo && (
           <button className="btn sm" disabled={!!busy} onClick={() => act('cdo', async () => {
             const r = await post('/plan/cookidoo-sync', {});
             if (r.error) throw new Error(r.error);
-            return r.added ? `${r.added} Gerichte aus Cookidoo übernommen` : `Cookidoo abgeglichen – ${r.events} Einträge, nichts Neues`;
+            return r.added ? (r.added === 1 ? t('Imported 1 meal from Cookidoo') : t('Imported {n} meals from Cookidoo', { n: r.added })) : t('Cookidoo synced – {n} entries, nothing new', { n: r.events });
           })}>
-            <ArrowsClockwise size={15} /> {busy === 'cdo' ? 'Frage Cookidoo …' : 'Cookidoo abgleichen'}
+            <ArrowsClockwise size={15} /> {busy === 'cdo' ? t('Checking Cookidoo…') : t('Sync Cookidoo')}
           </button>
         )}
       </div>
@@ -150,12 +153,12 @@ function PlanPicker({ day, onClose }: { day: string | null; onClose: () => void 
   };
   const n = q.toLowerCase().trim();
   const hits = n ? (recipes.data ?? []).filter((r) => r.title.toLowerCase().includes(n)).slice(0, 8) : [];
-  const label = day ? new Date(day + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+  const label = day ? new Date(day + 'T12:00:00').toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }) : '';
   return (
-    <Sheet open={!!day} onClose={onClose} title={`Was gibt’s am ${label}?`}>
+    <Sheet open={!!day} onClose={onClose} title={t('What’s on for {day}?', { day: label })}>
       <div className="stack">
-        <Seg value={slot} onChange={setSlot} options={[['abend', 'Abends'], ['mittag', 'Mittags']]} />
-        <input className="input" placeholder="Rezept suchen oder frei eintragen („Pizza bestellen“)" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+        <Seg value={slot} onChange={setSlot} options={[['abend', t('Dinner')], ['mittag', t('Lunch')]]} />
+        <input className="input" placeholder={t('Search recipes or type anything (“order pizza”)')} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
         {n && (
           <div className="list">
             {hits.map((r) => (
@@ -164,20 +167,20 @@ function PlanPicker({ day, onClose }: { day: string | null; onClose: () => void 
               </button>
             ))}
             <button className="li" onClick={() => add({ title: q.trim() })}>
-              <Plus size={18} /> <span className="grow" style={{ textAlign: 'left' }}>„{q.trim()}“ eintragen</span>
+              <Plus size={18} /> <span className="grow" style={{ textAlign: 'left' }}>{t('Add “{text}”', { text: q.trim() })}</span>
             </button>
           </div>
         )}
         {!n && (
           <>
-            <div className="eyebrow">Passt zum Vorrat</div>
+            <div className="eyebrow">{t('Matches your pantry')}</div>
             <div className="list">
               {(sugg.data ?? []).map((s) => (
                 <button key={s.recipe.id} className="li" onClick={() => add({ recipe_id: s.recipe.id })}>
                   <span className="thumb">{s.recipe.image_path ? <img src={s.recipe.image_path} alt="" /> : <ChefHat size={18} />}</span>
                   <span className="grow" style={{ textAlign: 'left' }}>
                     <b style={{ display: 'block' }}>{s.recipe.title}</b>
-                    <span className="small muted">{s.have}/{s.need} da · {s.reasons.slice(0, 2).join(' · ')}</span>
+                    <span className="small muted">{t('{have}/{need} on hand', { have: s.have, need: s.need })} · {s.reasons.slice(0, 2).join(' · ')}</span>
                   </span>
                 </button>
               ))}
@@ -196,8 +199,8 @@ function removeMeal(e: any, toast: ToastFn) {
   api(`/plan/${e.id}`, { method: 'DELETE' }).then(() => {
     invalidate('plan', 'overview');
     toast({
-      text: `„${e.title}“ aus dem Plan genommen`,
-      action: { label: 'Rückgängig', run: () => post('/plan', { day: e.day, slot: e.slot, recipe_id: e.recipe_id, title: e.title, note: e.note }).then(() => invalidate('plan', 'overview')) },
+      text: t('Removed “{title}” from the plan', { title: e.title }),
+      action: { label: t('Undo'), run: () => post('/plan', { day: e.day, slot: e.slot, recipe_id: e.recipe_id, title: e.title, note: e.note }).then(() => invalidate('plan', 'overview')) },
     });
   });
 }
@@ -206,8 +209,8 @@ export async function shiftFrom(day: string, toast: ToastFn, slot?: string) {
   const r = await post('/plan/shift', { from: day, by: 1, slot });
   invalidate('plan', 'overview');
   toast({
-    text: r.moved ? `${r.moved} Gerichte rutschen einen Tag nach hinten` : 'Nichts zu verschieben',
-    action: r.moved ? { label: 'Rückgängig', run: () => post('/plan/shift', { from: addDays(day, 1), by: -1, slot }).then(() => invalidate('plan', 'overview')) } : undefined,
+    text: r.moved ? (r.moved === 1 ? t('1 meal moved back a day') : t('{n} meals moved back a day', { n: r.moved })) : t('Nothing to move'),
+    action: r.moved ? { label: t('Undo'), run: () => post('/plan/shift', { from: addDays(day, 1), by: -1, slot }).then(() => invalidate('plan', 'overview')) } : undefined,
   });
 }
 
@@ -221,44 +224,44 @@ function MealSheet({ entry, onClose, onOpen }: { entry: any | null; onClose: () 
     await patch(`/plan/${entry.id}`, { day });
     invalidate('plan', 'overview');
     const id = entry.id;
-    toast({ text: `Verschoben auf ${label(day)}`, action: { label: 'Rückgängig', run: () => patch(`/plan/${id}`, { day: from }).then(() => invalidate('plan', 'overview')) } });
+    toast({ text: t('Moved to {day}', { day: label(day) }), action: { label: t('Undo'), run: () => patch(`/plan/${id}`, { day: from }).then(() => invalidate('plan', 'overview')) } });
     onClose();
   };
   if (!entry) return <Sheet open={false} onClose={onClose} title="">{null}</Sheet>;
   return (
     <Sheet open={!!entry} onClose={onClose} title={entry.title}>
       <div className="stack">
-        <div className="small muted" style={{ marginTop: -6 }}>{label(entry.day)} · {entry.slot === 'mittag' ? 'mittags' : 'abends'}</div>
+        <div className="small muted" style={{ marginTop: -6 }}>{label(entry.day)} · {entry.slot === 'mittag' ? t('lunch') : t('dinner')}</div>
         <div className="action-grid">
           <button className="action" onClick={() => move(addDays(entry.day < today ? today : entry.day, 1))}>
             <span className="ic"><ArrowRight size={20} /></span>
-            <b>Auf morgen</b>
+            <b>{t('Move to tomorrow')}</b>
             <span>{label(addDays(entry.day < today ? today : entry.day, 1))}</span>
           </button>
           <button className="action" onClick={async () => { await shiftFrom(entry.day, toast, entry.slot); onClose(); }}>
             <span className="ic"><ForkKnife size={20} /></span>
-            <b>Wir essen auswärts</b>
-            <span>Dieses und alle folgenden Gerichte rutschen einen Tag weiter.</span>
+            <b>{t('We’re eating out')}</b>
+            <span>{t('This and every meal after it moves back a day.')}</span>
           </button>
           {entry.recipe_id && (
             <button className="action" onClick={() => { onClose(); onOpen(entry.recipe_id); }}>
               <span className="ic"><BookOpen size={20} /></span>
-              <b>Rezept öffnen</b>
-              <span>Zutaten, Schritte, gekocht melden.</span>
+              <b>{t('Open recipe')}</b>
+              <span>{t('Ingredients, steps, mark as cooked.')}</span>
             </button>
           )}
           <button className="action" onClick={() => { removeMeal(entry, toast); onClose(); }}>
             <span className="ic" style={{ color: 'var(--empty)' }}><Trash size={20} /></span>
-            <b>Aus dem Plan nehmen</b>
-            <span>Das Rezept bleibt in der Sammlung.</span>
+            <b>{t('Remove from plan')}</b>
+            <span>{t('The recipe stays in your collection.')}</span>
           </button>
         </div>
-        <div className="eyebrow row" style={{ gap: 6 }}><CalendarBlank size={14} /> Anderer Tag</div>
+        <div className="eyebrow row" style={{ gap: 6 }}><CalendarBlank size={14} /> {t('Another day')}</div>
         <div className="daychips">
           {days.map((d) => (
             <button key={d} className={d === entry.day ? 'on' : ''} disabled={d === entry.day} onClick={() => move(d)}>
-              <b>{d === today ? 'Heute' : WD[new Date(d + 'T12:00:00').getDay()]}</b>
-              <span className="mono">{new Date(d + 'T12:00:00').getDate()}.</span>
+              <b>{d === today ? t('Today') : wd(d)}</b>
+              <span className="mono">{dom(d)}</span>
             </button>
           ))}
         </div>
@@ -268,8 +271,8 @@ function MealSheet({ entry, onClose, onOpen }: { entry: any | null; onClose: () 
 }
 
 function label(d: string) {
-  const t = todayStr();
-  if (d === t) return 'heute';
-  if (d === addDays(t, 1)) return 'morgen';
-  return new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'numeric' });
+  const td = todayStr();
+  if (d === td) return t('today');
+  if (d === addDays(td, 1)) return t('tomorrow');
+  return new Date(d + 'T12:00:00').toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'numeric' });
 }

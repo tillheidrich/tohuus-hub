@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { type Location, type Product, del, fmtQty, invalidate, patch, post, relTime, useApi } from '../api';
 import { Empty, Ic, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { locale, t } from '../i18n';
 
 export function Bar() {
   const [tab, setTab] = useState<'orders' | 'links' | 'menu'>('orders');
@@ -10,14 +11,14 @@ export function Bar() {
     <div>
       <header className="page-head">
         <div>
-          <div className="eyebrow">Gäste, Babysitter, Grillabend</div>
-          <h1>Gäste & Bar</h1>
+          <div className="eyebrow">{t('Guests, babysitters, barbecues')}</div>
+          <h1>{t('Guests & bar')}</h1>
         </div>
       </header>
       <div className="tabs-inline">
-        <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}>Bestellungen</button>
-        <button className={tab === 'links' ? 'on' : ''} onClick={() => setTab('links')}>Gäste-Links</button>
-        <button className={tab === 'menu' ? 'on' : ''} onClick={() => setTab('menu')}>Bar-Karte</button>
+        <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}>{t('Orders')}</button>
+        <button className={tab === 'links' ? 'on' : ''} onClick={() => setTab('links')}>{t('Guest links')}</button>
+        <button className={tab === 'menu' ? 'on' : ''} onClick={() => setTab('menu')}>{t('Bar menu')}</button>
       </div>
       {tab === 'orders' && <Orders />}
       {tab === 'links' && <Links />}
@@ -36,8 +37,8 @@ function Orders() {
   if (!data?.length)
     return (
       <div className="card">
-        <Empty icon={<Martini size={26} />} title="Keine offenen Bestellungen">
-          Erstell unter „Gäste-Links“ einen Link oder QR-Code – Gäste bestellen dann vom Sofa aus.
+        <Empty icon={<Martini size={26} />} title={t('No open orders')}>
+          {t('Create a link or QR code under “Guest links” – guests can then order from the sofa.')}
         </Empty>
       </div>
     );
@@ -51,7 +52,7 @@ function Orders() {
               <div className="small muted">{[o.link_name, relTime(o.created_at)].filter(Boolean).join(' · ')}</div>
             </div>
             <span className={`badge ${o.status === 'new' ? 'expiring' : o.status === 'accepted' ? 'info' : o.status === 'done' ? 'good' : ''}`}>
-              {{ new: 'neu', accepted: 'in Arbeit', done: 'serviert', declined: 'abgelehnt' }[o.status as string]}
+              {{ new: t('new'), accepted: t('in progress'), done: t('served'), declined: t('declined') }[o.status as string]}
             </span>
           </div>
           <ul style={{ margin: '12px 0', paddingLeft: 18, lineHeight: 1.7 }}>
@@ -62,26 +63,26 @@ function Orders() {
               </li>
             ))}
           </ul>
-          {o.note && <p className="small" style={{ background: 'var(--surface-2)', padding: '8px 10px', borderRadius: 10 }}>„{o.note}“</p>}
+          {o.note && <p className="small" style={{ background: 'var(--surface-2)', padding: '8px 10px', borderRadius: 10 }}>{t('“{note}”', { note: o.note })}</p>}
           {['new', 'accepted'].includes(o.status) && (
             <div className="row">
               <button className="btn ghost danger sm" onClick={() => set(o.id, 'declined')}>
-                <X size={14} /> Ablehnen
+                <X size={14} /> {t('Decline')}
               </button>
               <div className="grow" />
               {o.status === 'new' && (
                 <button className="btn sm" onClick={() => set(o.id, 'accepted')}>
-                  Mach ich
+                  {t('On it')}
                 </button>
               )}
               <button className="btn primary sm" onClick={() => set(o.id, 'done')}>
-                <Check size={14} weight="bold" /> Serviert
+                <Check size={14} weight="bold" /> {t('Served')}
               </button>
             </div>
           )}
         </div>
       ))}
-      <p className="small muted">„Serviert“ zieht gezählte Artikel automatisch vom Bestand ab.</p>
+      <p className="small muted">{t('“Served” automatically deducts counted items from stock.')}</p>
     </div>
   );
 }
@@ -91,7 +92,7 @@ function Links() {
   const locations = useApi<Location[]>('locations', '/locations');
   const [open, setOpen] = useState(false);
   const [qr, setQr] = useState<any>(null);
-  const [f, setF] = useState({ name: 'Grillabend', scopes: ['bar'] as string[], days: 2, location_ids: [] as number[], note: '' });
+  const [f, setF] = useState({ name: t('Barbecue'), scopes: ['bar'] as string[], days: 2, location_ids: [] as number[], note: '' });
   const toast = useToast();
   const create = async () => {
     const r = await post('/guest-links', f);
@@ -103,7 +104,7 @@ function Links() {
   return (
     <div className="stack">
       <button className="btn primary" style={{ alignSelf: 'flex-start' }} onClick={() => setOpen(true)}>
-        <Plus size={16} weight="bold" /> Neuer Gäste-Link
+        <Plus size={16} weight="bold" /> {t('New guest link')}
       </button>
       {isLoading ? (
         <Skeleton n={2} />
@@ -114,41 +115,41 @@ function Links() {
               <div className="grow">
                 <div className="title">{g.name}</div>
                 <div className="sub">
-                  {g.scopes.map((s: string) => ({ bar: 'Bar', stock: 'Wo ist was?', shopping: 'Einkaufsliste' })[s]).join(' · ')}
-                  {g.expires_at ? ` · bis ${new Date(g.expires_at.replace(' ', 'T') + 'Z').toLocaleDateString('de-DE')}` : ' · unbefristet'}
+                  {g.scopes.map((s: string) => ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s]).join(' · ')}
+                  {g.expires_at ? ` · ${t('until {date}', { date: new Date(g.expires_at.replace(' ', 'T') + 'Z').toLocaleDateString(locale()) })}` : ` · ${t('no expiry')}`}
                 </div>
               </div>
-              <button className="icon-btn" onClick={() => setQr(g)} aria-label="QR-Code">
+              <button className="icon-btn" onClick={() => setQr(g)} aria-label={t('QR code')}>
                 <QrCode size={18} />
               </button>
-              <button className="icon-btn" onClick={() => del(`/guest-links/${g.id}`).then(() => invalidate('guest-links'))} aria-label="Widerrufen">
+              <button className="icon-btn" onClick={() => del(`/guest-links/${g.id}`).then(() => invalidate('guest-links'))} aria-label={t('Revoke')}>
                 <Trash size={18} />
               </button>
             </div>
           ))}
-          {(data ?? []).length === 0 && <div className="li muted small">Noch keine Links.</div>}
+          {(data ?? []).length === 0 && <div className="li muted small">{t('No links yet.')}</div>}
         </div>
       )}
-      <p className="small muted">Gäste brauchen kein Konto. Sie sehen nur, was du freigibst – nie Mengen, Einkäufe oder andere Räume.</p>
-      <Sheet open={open} onClose={() => setOpen(false)} title="Gäste-Link">
+      <p className="small muted">{t('Guests don’t need an account. They only see what you share – never quantities, purchases or other rooms.')}</p>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('Guest link')}>
         <div className="stack">
           <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
-            <button className="chip" onClick={() => setF({ ...f, name: 'Grillabend', scopes: ['bar'], days: 2 })}><Martini size={15} /> Party / Besuch</button>
-            <button className="chip" onClick={() => setF({ ...f, name: 'Babysitter', scopes: ['stock', 'shopping'], days: 1, location_ids: (locations.data ?? []).map((l) => l.id) })}><House size={15} /> Babysitter / Familie</button>
+            <button className="chip" onClick={() => setF({ ...f, name: t('Barbecue'), scopes: ['bar'], days: 2 })}><Martini size={15} /> {t('Party / visitors')}</button>
+            <button className="chip" onClick={() => setF({ ...f, name: t('Babysitter'), scopes: ['stock', 'shopping'], days: 1, location_ids: (locations.data ?? []).map((l) => l.id) })}><House size={15} /> {t('Babysitter / family')}</button>
           </div>
           <div className="field">
-            <label>Wofür?</label>
-            <input className="input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Grillabend, Babysitter, Oma …" />
+            <label>{t('What’s it for?')}</label>
+            <input className="input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t('Barbecue, babysitter, grandma …')} />
           </div>
           <div className="list">
             {[
-              ['bar', 'Bar', 'Getränke, Eis, Snacks bestellen'],
-              ['stock', 'Wo ist was?', 'Suche mit Ort und genauem Platz – ohne Mengen. Ideal für Babysitter.'],
-              ['shopping', 'Einkaufsliste', 'Sachen auf die Liste setzen'],
-            ].map(([k, t, d]) => (
+              ['bar', t('Bar'), t('Order drinks, ice cream, snacks')],
+              ['stock', t('Where is what?'), t('Search with room and exact spot – no quantities. Ideal for babysitters.')],
+              ['shopping', t('Shopping list'), t('Add things to the list')],
+            ].map(([k, label, d]) => (
               <div key={k} className="li">
                 <div className="grow">
-                  <div className="title">{t}</div>
+                  <div className="title">{label}</div>
                   <div className="sub">{d}</div>
                 </div>
                 <Toggle on={f.scopes.includes(k)} onChange={() => toggleScope(k)} />
@@ -157,7 +158,7 @@ function Links() {
           </div>
           {f.scopes.includes('stock') && (
             <div className="field">
-              <label>Welche Orte darf der Gast sehen?</label>
+              <label>{t('Which places may the guest see?')}</label>
               <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
                 {(locations.data ?? []).map((l) => (
                   <button key={l.id} className={`chip ${f.location_ids.includes(l.id) ? 'on' : ''}`} onClick={() => setF((x) => ({ ...x, location_ids: x.location_ids.includes(l.id) ? x.location_ids.filter((i) => i !== l.id) : [...x.location_ids, l.id] }))}>
@@ -166,22 +167,22 @@ function Links() {
                 ))}
               </div>
               <div className="help">
-                Nur die gewählten Orte sind sichtbar – nie Mengen oder Einkäufe.{' '}
-                <a className="linkish" onClick={() => setF((x) => ({ ...x, location_ids: (locations.data ?? []).map((l) => l.id) }))}>Alle Orte</a>
+                {t('Only the selected places are visible – never quantities or purchases.')}{' '}
+                <a className="linkish" onClick={() => setF((x) => ({ ...x, location_ids: (locations.data ?? []).map((l) => l.id) }))}>{t('All places')}</a>
               </div>
             </div>
           )}
           <div className="field">
-            <label>Hinweise für den Gast (optional)</label>
-            <textarea className="input" rows={4} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder={'z. B. Notfall: 0171 …\nSchlafenszeit 19:30, Schnuller liegt im Bett\nWLAN: …'} />
-            <div className="help">Steht oben auf der Gastseite.</div>
+            <label>{t('Notes for the guest (optional)')}</label>
+            <textarea className="input" rows={4} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder={t('e.g. Emergency: 0171 …\nBedtime 7:30 pm, dummy is in the cot\nWi-Fi: …')} />
+            <div className="help">{t('Shown at the top of the guest page.')}</div>
           </div>
           <div className="field">
-            <label>Gültig</label>
-            <Seg value={String(f.days)} onChange={(v) => setF({ ...f, days: Number(v) })} options={[['1', '1 Tag'], ['2', 'Wochenende'], ['14', '2 Wochen'], ['0', 'immer']]} />
+            <label>{t('Valid for')}</label>
+            <Seg value={String(f.days)} onChange={(v) => setF({ ...f, days: Number(v) })} options={[['1', t('1 day')], ['2', t('Weekend')], ['14', t('2 weeks')], ['0', t('Forever')]]} />
           </div>
           <button className="btn primary lg" disabled={!f.name || !f.scopes.length || (f.scopes.includes('stock') && !f.location_ids.length)} onClick={create}>
-            Link erstellen
+            {t('Create link')}
           </button>
         </div>
       </Sheet>
@@ -202,16 +203,16 @@ function QrSheet({ item, onClose, toast }: { item: any; onClose: () => void; toa
         <div style={{ width: 240, background: '#fff', padding: 12, borderRadius: 20 }} dangerouslySetInnerHTML={{ __html: svg }} />
         <div className="small muted mono" style={{ wordBreak: 'break-all', textAlign: 'center' }}>{item.url}</div>
         <div className="row" style={{ width: '100%' }}>
-          <button className="btn grow" onClick={() => navigator.clipboard.writeText(item.url).then(() => toast({ text: 'Link kopiert' }))}>
-            <Copy size={16} /> Kopieren
+          <button className="btn grow" onClick={() => navigator.clipboard.writeText(item.url).then(() => toast({ text: t('Link copied') }))}>
+            <Copy size={16} /> {t('Copy')}
           </button>
           {typeof navigator.share === 'function' && (
-            <button className="btn primary grow" onClick={() => navigator.share({ title: item.name, text: 'Bestell dir was – Getränke, Eis, Snacks:', url: item.url }).catch(() => {})}>
-              <ShareNetwork size={16} /> Teilen
+            <button className="btn primary grow" onClick={() => navigator.share({ title: item.name, text: t('Order something – drinks, ice cream, snacks:'), url: item.url }).catch(() => {})}>
+              <ShareNetwork size={16} /> {t('Share')}
             </button>
           )}
         </div>
-        <p className="small muted" style={{ textAlign: 'center' }}>Tipp: QR-Code ausdrucken und an den Kühlschrank hängen.</p>
+        <p className="small muted" style={{ textAlign: 'center' }}>{t('Tip: print the QR code and stick it on the fridge.')}</p>
       </div>
     </Sheet>
   );
@@ -226,14 +227,14 @@ function Menu() {
   const list = (data ?? []).slice().sort((a, b) => Number(b.orderable) - Number(a.orderable));
   return (
     <div className="stack">
-      <p className="small muted" style={{ margin: 0 }}>Was hier eingeschaltet ist, sehen Gäste in der Bar – bei gezählten Artikeln nur, solange etwas da ist.</p>
+      <p className="small muted" style={{ margin: 0 }}>{t('Guests see whatever is switched on here in the bar – counted items only while there’s some left.')}</p>
       <div className="list">
         {list.map((p) => (
           <div key={p.id} className="li">
             <Thumb p={p} size={44} />
             <div className="grow">
               <div className="title">{p.name}</div>
-              <div className="sub">{[p.order_group, p.track_mode === 'none' ? 'immer verfügbar' : `${fmtQty(p, p.total)} da`].filter(Boolean).join(' · ')}</div>
+              <div className="sub">{[p.order_group, p.track_mode === 'none' ? t('always available') : t('{qty} in stock', { qty: fmtQty(p, p.total) })].filter(Boolean).join(' · ')}</div>
             </div>
             <Toggle on={p.orderable} onChange={() => toggle(p)} />
           </div>
@@ -244,5 +245,5 @@ function Menu() {
 }
 
 function defaultGroup(p: Product) {
-  return /eis/i.test(p.name) ? 'Eis' : /cola|mate|wasser|saft|bier|wein|kaffee|tee/i.test(p.name) ? 'Getränke' : 'Snacks';
+  return /eis|ice/i.test(p.name) ? t('Ice cream') : /cola|mate|wasser|water|saft|juice|bier|beer|wein|wine|kaffee|coffee|tee|tea/i.test(p.name) ? t('Drinks') : t('Snacks');
 }

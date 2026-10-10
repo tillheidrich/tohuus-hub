@@ -3,15 +3,17 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { type Location, fmtDate, invalidate, patch, post, qc, useApi } from '../api';
 import { Ic, ProductPicker, Sheet, Skeleton, Stepper, Thumb, useToast } from '../ui';
+import { num, t } from '../i18n';
 
+/** line status (API value) → [English display label, badge class] */
 const STATUS: Record<string, [string, string]> = {
   ok: ['', ''],
-  substitute: ['Ersatzartikel', 'expiring'],
-  unavailable: ['nicht geliefert', 'empty'],
-  reduced: ['weniger als bestellt', 'low'],
-  returned: ['zurückgegeben', 'empty'],
-  extra: ['zusätzlich gekauft', 'info'],
-  deposit: ['Pfand', ''],
+  substitute: ['substitute', 'expiring'],
+  unavailable: ['not delivered', 'empty'],
+  reduced: ['fewer than ordered', 'low'],
+  returned: ['returned', 'empty'],
+  extra: ['bought extra', 'info'],
+  deposit: ['deposit', ''],
 };
 
 export function ImportReview() {
@@ -35,7 +37,7 @@ export function ImportReview() {
 
   if (isLoading || !imp) return <Skeleton n={6} />;
   const readonly = imp.status !== 'review';
-  const lname = (lid: number | null) => locations.data?.find((l) => l.id === lid)?.name ?? 'Ort wählen';
+  const lname = (lid: number | null) => locations.data?.find((l) => l.id === lid)?.name ?? t('Choose location');
   const lic = (lid: number | null) => locations.data?.find((l) => l.id === lid)?.icon ?? 'box';
   const update = async (line: any, body: any) => {
     qc.setQueryData(['import', Number(id)], (old: any) => (old ? { ...old, lines: old.lines.map((l: any) => (l.id === line.id ? { ...l, ...body } : l)) } : old));
@@ -46,7 +48,7 @@ export function ImportReview() {
     setBusy(true);
     try {
       const r = await post(`/imports/${imp.id}/apply`);
-      toast({ text: `${r.applied} Positionen eingebucht${r.created ? `, ${r.created} neue Produkte – Bilder kommen gleich` : ''}` });
+      toast({ text: r.created ? t('{n} items booked in, {m} new products – pictures coming shortly', { n: r.applied, m: r.created }) : t('{n} items booked in', { n: r.applied }) });
       invalidate('imports', 'import', 'overview', 'products', 'shopping');
       nav('/bestand');
     } finally {
@@ -64,9 +66,9 @@ export function ImportReview() {
         <Thumb p={{ name: l.product_name ?? l.name, image_path: l.product_image }} size={44} />
         <div style={{ minWidth: 0 }}>
           <div className="name">{l.name}</div>
-          {l.receipt_name && l.receipt_name !== l.name && <div className="rcpt">Bon: {l.receipt_name}</div>}
+          {l.receipt_name && l.receipt_name !== l.name && <div className="rcpt">{t('Receipt: {name}', { name: l.receipt_name })}</div>}
           <div className="target">
-            {label && <span className={`badge ${cls}`}>{label}</span>}
+            {label && <span className={`badge ${cls}`}>{t(label)}</span>}
             {l.note && <span className="small muted">{l.note}</span>}
           </div>
           {!readonly && !skip && (
@@ -74,17 +76,17 @@ export function ImportReview() {
               {l.action === 'new' ? (
                 <>
                   <button className="pill-btn on" onClick={() => setPick(l)}>
-                    <Sparkle size={12} /> neues Produkt
+                    <Sparkle size={12} /> {t('new product')}
                   </button>
                   {l.product_id && l.product_name && (
                     <button className="pill-btn" onClick={() => update(l, { product_id: l.product_id, action: 'add' })}>
-                      ist es „{l.product_name}“?
+                      {t('is it “{name}”?', { name: l.product_name })}
                     </button>
                   )}
                 </>
               ) : (
                 <button className="pill-btn" onClick={() => setPick(l)}>
-                  → {l.product_name ?? 'zuordnen'}
+                  → {l.product_name ?? t('match')}
                 </button>
               )}
               <button className="pill-btn" onClick={() => setLocFor(l)}>
@@ -99,12 +101,12 @@ export function ImportReview() {
             <>
               {!skip && <Stepper value={l.qty} min={0} onChange={(d) => update(l, { qty: Math.max(0, l.qty + d) })} />}
               <button className="linkish" style={{ color: skip ? 'var(--accent-ink)' : 'var(--ink-3)' }} onClick={() => update(l, { action: skip ? (l.product_id ? 'add' : 'new') : 'skip', qty: skip && l.qty === 0 ? 1 : l.qty })}>
-                {skip ? 'doch übernehmen' : 'überspringen'}
+                {skip ? t('include after all') : t('skip')}
               </button>
             </>
           )}
           {readonly && <span className="mono small">{skip ? '–' : `${l.qty > 0 ? '+' : ''}${l.qty}`}</span>}
-          {l.price != null && l.status !== 'deposit' && <span className="small muted mono">{l.price.toFixed(2).replace('.', ',')} €</span>}
+          {l.price != null && l.status !== 'deposit' && <span className="small muted mono">{num(l.price, 2)} €</span>}
         </div>
       </div>
     );
@@ -113,7 +115,7 @@ export function ImportReview() {
   return (
     <div className={readonly ? '' : 'page-pad-bottom'}>
       <div className="row" style={{ marginBottom: 14 }}>
-        <button className="icon-btn" onClick={() => nav('/import')} aria-label="Zurück">
+        <button className="icon-btn" onClick={() => nav('/import')} aria-label={t('Back')}>
           <ArrowLeft size={18} />
         </button>
       </div>
@@ -124,8 +126,8 @@ export function ImportReview() {
         </div>
         {!readonly && (
           <div className="actions only-desktop">
-            <button className="btn" onClick={() => post(`/imports/${imp.id}/rematch`).then((r) => { invalidate('import'); toast({ text: `${r.matched} weitere zugeordnet` }); })}>
-              <ArrowsClockwise size={16} /> neu zuordnen
+            <button className="btn" onClick={() => post(`/imports/${imp.id}/rematch`).then((r) => { invalidate('import'); toast({ text: t('{n} more matched', { n: r.matched }) }); })}>
+              <ArrowsClockwise size={16} /> {t('re-match')}
             </button>
           </div>
         )}
@@ -135,7 +137,10 @@ export function ImportReview() {
         <div className="banner" style={{ marginBottom: 14, cursor: 'default', background: 'var(--accent-soft)' }}>
           <span className="ic" style={{ color: 'var(--accent-ink)' }}><CheckCircle size={20} weight="fill" /></span>
           <div className="small">
-            <b>Mit dem Kassenbon abgeglichen.</b> Was bei der Abholung zurückgegeben wurde, ist rausgerechnet{meta.finalTotal ? ` – bezahlt: ${String(meta.finalTotal).replace('.', ',')} €` : ''}.
+            <b>{t('Matched with the receipt.')}</b>{' '}
+            {meta.finalTotal
+              ? t('Anything returned at pickup has been taken out – paid: {total} €.', { total: num(Number(meta.finalTotal), 2) })
+              : t('Anything returned at pickup has been taken out.')}
           </div>
         </div>
       )}
@@ -143,21 +148,21 @@ export function ImportReview() {
         <div className="banner" style={{ marginBottom: 14, cursor: 'default' }}>
           <span className="ic"><Info size={20} /></span>
           <div className="small">
-            Das Avis ist noch vorläufig. Lädst du nach der Abholung den <b>eBon</b> hoch, gleicht Stockwerk automatisch ab, was du wirklich mitgenommen hast.
+            {t('This notice is still provisional. Upload the eBon after pickup and Stockwerk will automatically match what you actually took home.')}
           </div>
         </div>
       )}
       {readonly && (
         <div className="banner" style={{ marginBottom: 14, cursor: 'default', background: 'var(--surface-2)' }}>
           <span className="ic"><CheckCircle size={20} /></span>
-          <div className="small">{imp.status === 'applied' ? `Gebucht ${fmtDate(imp.applied_at)}.` : 'Verworfen.'}</div>
+          <div className="small">{imp.status === 'applied' ? t('Booked {date}.', { date: fmtDate(imp.applied_at) }) : t('Discarded.')}</div>
         </div>
       )}
 
       {groups.look.length > 0 && (
         <section style={{ marginBottom: 20 }}>
           <div className="section-head">
-            <h2>Kurz ansehen</h2>
+            <h2>{t('Quick check')}</h2>
             <span className="small muted">{groups.look.length}</span>
           </div>
           <div className="list">
@@ -168,7 +173,7 @@ export function ImportReview() {
       {groups.sure.length > 0 && (
         <section style={{ marginBottom: 20 }}>
           <div className="section-head">
-            <h2>Erkannt</h2>
+            <h2>{t('Recognised')}</h2>
             <span className="small muted">{groups.sure.length}</span>
           </div>
           <div className="list">
@@ -179,7 +184,7 @@ export function ImportReview() {
       {groups.rest.length > 0 && (
         <section>
           <button className="linkish row" onClick={() => setShowRest(!showRest)} style={{ marginBottom: 10 }}>
-            <CaretDown size={14} style={{ transform: showRest ? 'rotate(180deg)' : undefined }} /> {groups.rest.length} nicht übernommen (nicht geliefert, zurückgegeben, Pfand)
+            <CaretDown size={14} style={{ transform: showRest ? 'rotate(180deg)' : undefined }} /> {t('{n} not included (not delivered, returned, deposit)', { n: groups.rest.length })}
           </button>
           {showRest && <div className="list">{groups.rest.map((l: any) => <Line key={l.id} l={l} />)}</div>}
         </section>
@@ -188,11 +193,11 @@ export function ImportReview() {
       {!readonly && (
         <div className="stickybar">
           <button className="btn ghost" onClick={() => post(`/imports/${imp.id}/discard`).then(() => { invalidate('imports', 'overview'); nav('/import'); })}>
-            Verwerfen
+            {t('Discard')}
           </button>
           <div className="grow" />
           <button className="btn primary lg" disabled={busy || count === 0} onClick={apply}>
-            {count} einbuchen
+            {t('Book in {n}', { n: count })}
           </button>
         </div>
       )}
@@ -211,7 +216,7 @@ export function ImportReview() {
           setPick(null);
         }}
       />
-      <Sheet open={Boolean(locFor)} onClose={() => setLocFor(null)} title="Wohin damit?">
+      <Sheet open={Boolean(locFor)} onClose={() => setLocFor(null)} title={t('Where does it go?')}>
         <div className="list">
           {(locations.data ?? []).map((l) => (
             <div key={l.id} className="li clickable" onClick={() => { update(locFor, { location_id: l.id }); setLocFor(null); }}>

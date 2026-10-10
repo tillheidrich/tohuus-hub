@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../App';
 import { type Category, type Location, api, del, invalidate, patch, post, relTime, useApi } from '../api';
 import { Avatar, ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { lang, setLang, t } from '../i18n';
 
 type Tab = 'home' | 'places' | 'notify' | 'access' | 'data';
 
@@ -14,22 +15,22 @@ export function Settings({ me }: { me: Me }) {
       <header className="page-head">
         <div>
           <div className="eyebrow">{me.household}</div>
-          <h1>Einstellungen</h1>
+          <h1>{t('Settings')}</h1>
         </div>
         <div className="actions">
           <button className="btn ghost" onClick={() => post('/auth/logout').then(() => invalidate('me'))}>
-            <SignOut size={16} /> Abmelden
+            <SignOut size={16} /> {t('Sign out')}
           </button>
         </div>
       </header>
       <div className="tabs-inline">
         {(
           [
-            ['home', 'Haushalt'],
-            ['places', 'Orte & Kategorien'],
-            ['notify', 'Benachrichtigungen'],
-            ['access', 'Zugänge & KI'],
-            ['data', 'Daten'],
+            ['home', t('Household')],
+            ['places', t('Places & categories')],
+            ['notify', t('Notifications')],
+            ['access', t('Access & AI')],
+            ['data', t('Data')],
           ] as [Tab, string][]
         ).map(([k, l]) => (
           <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
@@ -61,15 +62,15 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
   });
   const toast = useToast();
   useEffect(() => setName(s.data?.household ?? ''), [s.data]);
-  const applyTheme = (t: string) => {
-    setTheme(t);
+  const applyTheme = (th: string) => {
+    setTheme(th);
     try {
-      if (t === 'auto') {
+      if (th === 'auto') {
         localStorage.removeItem('sw.theme');
         delete document.documentElement.dataset.theme;
       } else {
-        localStorage.setItem('sw.theme', t);
-        document.documentElement.dataset.theme = t;
+        localStorage.setItem('sw.theme', th);
+        document.documentElement.dataset.theme = th;
       }
     } catch {
       /* ignore */
@@ -79,14 +80,14 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
     <div className="stack" style={{ gap: 22 }}>
       <div className="card pad stack">
         <div className="field">
-          <label>Name des Haushalts</label>
+          <label>{t('Household name')}</label>
           <div className="row">
             <input className="input" value={name} onChange={(e) => setName(e.target.value)} disabled={!admin} />
-            {admin && <button className="btn" onClick={() => patch('/settings', { household: name }).then(() => { invalidate('me', 'settings', 'overview'); toast({ text: 'Gespeichert' }); })}>Speichern</button>}
+            {admin && <button className="btn" onClick={() => patch('/settings', { household: name }).then(() => { invalidate('me', 'settings', 'overview'); toast({ text: t('Saved') }); })}>{t('Save')}</button>}
           </div>
         </div>
         <div className="field">
-          <label>Marke</label>
+          <label>{t('Brand')}</label>
           <div className="row wrap" style={{ gap: 10 }}>
             {(['stockwerk', 'fredirando'] as const).map((k) => (
               <button
@@ -94,7 +95,7 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
                 type="button"
                 disabled={!admin}
                 className={`who-pick-btn ${s.data?.brand === k ? 'on' : ''}`}
-                onClick={() => patch('/settings', { brand: k }).then(() => { invalidate('me', 'settings'); toast({ text: k === 'fredirando' ? 'Fredirando liefert ab jetzt' : 'Zurück zu Stockwerk' }); })}
+                onClick={() => patch('/settings', { brand: k }).then(() => { invalidate('me', 'settings'); toast({ text: k === 'fredirando' ? t('Fredirando is now delivering') : t('Back to Stockwerk') }); })}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', borderRadius: 14, border: `1px solid ${s.data?.brand === k ? 'var(--ink)' : 'var(--line-strong)'}`, background: 'var(--surface)', cursor: 'pointer', fontWeight: 600 }}
               >
                 <img src={k === 'fredirando' ? '/fredirando.svg' : '/stockwerk-logo.svg'} alt="" style={{ width: 34, height: 34, borderRadius: 10 }} />
@@ -102,33 +103,47 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
               </button>
             ))}
           </div>
-          <div className="help">Fredirando ist das Lieferdienst-Thema für euer Zuhause: Orange, Gäste-Bar als Restaurant, Bestellstatus mit „Fahrer unterwegs“. App-Symbol auf dem Homescreen danach einmal neu hinzufügen.</div>
+          <div className="help">{t('Fredirando is the delivery-service theme for your home: orange, the guest bar as a restaurant, order status with “driver on the way”. Afterwards, re-add the app icon to your home screen once.')}</div>
         </div>
         <div className="field">
-          <label>Darstellung</label>
-          <Seg value={theme} onChange={applyTheme} options={[['auto', 'Automatisch'], ['light', 'Hell'], ['dark', 'Dunkel']]} />
+          <label>{t('Appearance')}</label>
+          <Seg value={theme} onChange={applyTheme} options={[['auto', t('Automatic')], ['light', t('Light')], ['dark', t('Dark')]]} />
         </div>
         <div className="field">
-          <label>Mein Passwort ändern</label>
+          <label>{t('Language')}</label>
+          <Seg
+            value={(s.data?.language ?? lang()) as string}
+            onChange={(v) => {
+              if (!admin) return;
+              patch('/settings', { language: v }).then(() => {
+                setLang(v);
+                location.reload();
+              });
+            }}
+            options={[['en', 'English'], ['de', 'Deutsch']]}
+          />
+        </div>
+        <div className="field">
+          <label>{t('Change my password')}</label>
           <div className="row">
-            <input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="neues Passwort" />
-            <button className="btn" disabled={pw.length < 4} onClick={() => patch(`/users/${me.actor.userId}`, { password: pw }).then(() => { setPw(''); toast({ text: 'Passwort geändert' }); })}>Ändern</button>
+            <input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t('new password')} />
+            <button className="btn" disabled={pw.length < 4} onClick={() => patch(`/users/${me.actor.userId}`, { password: pw }).then(() => { setPw(''); toast({ text: t('Password changed') }); })}>{t('Change')}</button>
           </div>
         </div>
       </div>
       {admin && (
         <section>
-          <h2 style={{ marginBottom: 10 }}>Mitglieder</h2>
+          <h2 style={{ marginBottom: 10 }}>{t('Members')}</h2>
           <div className="list">
             {(users.data ?? []).map((u) => (
               <div key={u.id} className="li">
                 <Avatar name={u.name} color={u.color} />
                 <div className="grow">
                   <div className="title">{u.name}</div>
-                  <div className="sub">{u.role === 'admin' ? 'Admin' : 'Mitglied'}</div>
+                  <div className="sub">{u.role === 'admin' ? t('Admin') : t('Member')}</div>
                 </div>
                 {u.id !== me.actor.userId && (
-                  <button className="icon-btn plain" onClick={() => confirm(`${u.name} entfernen?`) && del(`/users/${u.id}`).then(() => invalidate('users'))} aria-label="Entfernen">
+                  <button className="icon-btn plain" onClick={() => confirm(t('Remove {name}?', { name: u.name })) && del(`/users/${u.id}`).then(() => invalidate('users'))} aria-label={t('Remove')}>
                     <Trash size={16} />
                   </button>
                 )}
@@ -136,15 +151,15 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
             ))}
           </div>
           <div className="card pad stack" style={{ marginTop: 10 }}>
-            <b>Jemanden hinzufügen</b>
+            <b>{t('Add someone')}</b>
             <div className="grid-2">
-              <input className="input" placeholder="Name" value={nu.name} onChange={(e) => setNu({ ...nu, name: e.target.value })} />
-              <input className="input" placeholder="Passwort" type="password" value={nu.password} onChange={(e) => setNu({ ...nu, password: e.target.value })} />
+              <input className="input" placeholder={t('Name')} value={nu.name} onChange={(e) => setNu({ ...nu, name: e.target.value })} />
+              <input className="input" placeholder={t('Password')} type="password" value={nu.password} onChange={(e) => setNu({ ...nu, password: e.target.value })} />
             </div>
             <div className="row between wrap">
-              <Seg value={nu.role} onChange={(v) => setNu({ ...nu, role: v })} options={[['member', 'Mitglied'], ['admin', 'Admin']]} />
-              <input type="color" value={nu.color} onChange={(e) => setNu({ ...nu, color: e.target.value })} style={{ width: 44, height: 36, border: 0, background: 'none' }} aria-label="Farbe" />
-              <button className="btn primary" disabled={!nu.name || nu.password.length < 4} onClick={() => post('/users', nu).then(() => { setNu({ ...nu, name: '', password: '' }); invalidate('users', 'users-public'); })}>Anlegen</button>
+              <Seg value={nu.role} onChange={(v) => setNu({ ...nu, role: v })} options={[['member', t('Member')], ['admin', t('Admin')]]} />
+              <input type="color" value={nu.color} onChange={(e) => setNu({ ...nu, color: e.target.value })} style={{ width: 44, height: 36, border: 0, background: 'none' }} aria-label={t('Colour')} />
+              <button className="btn primary" disabled={!nu.name || nu.password.length < 4} onClick={() => post('/users', nu).then(() => { setNu({ ...nu, name: '', password: '' }); invalidate('users', 'users-public'); })}>{t('Create')}</button>
             </div>
           </div>
         </section>
@@ -162,8 +177,8 @@ function Places({ admin }: { admin: boolean }) {
   return (
     <div className="stack" style={{ gap: 22 }}>
       <section>
-        <h2 style={{ marginBottom: 6 }}>Orte</h2>
-        <p className="small muted" style={{ marginTop: 0 }}>Die „Stockwerke“ deines Hauses: wo Dinge stehen.</p>
+        <h2 style={{ marginBottom: 6 }}>{t('Locations')}</h2>
+        <p className="small muted" style={{ marginTop: 0 }}>{t('The “floors” of your home: where things live.')}</p>
         <div className="list">
           {(locations.data ?? []).map((l) => (
             <div key={l.id} className="li">
@@ -172,11 +187,11 @@ function Places({ admin }: { admin: boolean }) {
               </button>
               <div className="grow stack" style={{ gap: 4 }}>
                 <input className="input" defaultValue={l.name} disabled={!admin} onBlur={(e) => e.target.value !== l.name && patch(`/locations/${l.id}`, { name: e.target.value }).then(() => invalidate('locations', 'overview'))} />
-                <input className="input sm" defaultValue={l.hint ?? ''} disabled={!admin} placeholder="Wegbeschreibung, z. B. Kellertreppe runter, zweite Tür rechts" onBlur={(e) => e.target.value !== (l.hint ?? '') && patch(`/locations/${l.id}`, { hint: e.target.value }).then(() => invalidate('locations', 'find'))} />
+                <input className="input sm" defaultValue={l.hint ?? ''} disabled={!admin} placeholder={t('Directions, e.g. down the cellar stairs, second door on the right')} onBlur={(e) => e.target.value !== (l.hint ?? '') && patch(`/locations/${l.id}`, { hint: e.target.value }).then(() => invalidate('locations', 'find'))} />
               </div>
               <span className="small muted mono" style={{ width: 30, textAlign: 'right' }}>{l.product_count}</span>
               {admin && (
-                <button className="icon-btn plain" onClick={() => del(`/locations/${l.id}`).then(() => invalidate('locations')).catch((e) => toast({ text: e.message, error: true }))} aria-label="Löschen">
+                <button className="icon-btn plain" onClick={() => del(`/locations/${l.id}`).then(() => invalidate('locations')).catch((e) => toast({ text: e.message, error: true }))} aria-label={t('Delete')}>
                   <Trash size={16} />
                 </button>
               )}
@@ -185,14 +200,14 @@ function Places({ admin }: { admin: boolean }) {
         </div>
         {admin && (
           <div className="row" style={{ marginTop: 10 }}>
-            <input className="input" placeholder="Neuer Ort, z. B. Garage, Truhe im Keller" value={newLoc} onChange={(e) => setNewLoc(e.target.value)} />
-            <button className="btn" disabled={!newLoc} onClick={() => post('/locations', { name: newLoc }).then(() => { setNewLoc(''); invalidate('locations', 'overview'); })}>Hinzu</button>
+            <input className="input" placeholder={t('New place, e.g. garage, chest freezer in the cellar')} value={newLoc} onChange={(e) => setNewLoc(e.target.value)} />
+            <button className="btn" disabled={!newLoc} onClick={() => post('/locations', { name: newLoc }).then(() => { setNewLoc(''); invalidate('locations', 'overview'); })}>{t('Add')}</button>
           </div>
         )}
       </section>
       <section>
-        <h2 style={{ marginBottom: 6 }}>Kategorien</h2>
-        <p className="small muted" style={{ marginTop: 0 }}>Bestimmen, wo neue Produkte landen und wie genau gezählt wird.</p>
+        <h2 style={{ marginBottom: 6 }}>{t('Categories')}</h2>
+        <p className="small muted" style={{ marginTop: 0 }}>{t('Decide where new products go and how precisely they’re counted.')}</p>
         <div className="list">
           {(categories.data ?? []).map((c) => (
             <div key={c.id} className="li wrap" style={{ flexWrap: 'wrap' }}>
@@ -201,21 +216,21 @@ function Places({ admin }: { admin: boolean }) {
                 <div className="title">{c.name}</div>
               </div>
               <select className="input" style={{ width: 'auto', height: 34, fontSize: 13 }} value={c.default_location_id ?? ''} disabled={!admin} onChange={(e) => patch(`/categories/${c.id}`, { default_location_id: e.target.value ? Number(e.target.value) : null }).then(() => invalidate('categories'))}>
-                <option value="">kein Ort</option>
+                <option value="">{t('no place')}</option>
                 {(locations.data ?? []).map((l) => (
                   <option key={l.id} value={l.id}>{l.name}</option>
                 ))}
               </select>
               <select className="input" style={{ width: 'auto', height: 34, fontSize: 13 }} value={c.track_mode} disabled={!admin} onChange={(e) => patch(`/categories/${c.id}`, { track_mode: e.target.value }).then(() => invalidate('categories'))}>
-                <option value="count">Stück</option>
-                <option value="level">Füllstand</option>
-                <option value="none">nicht zählen</option>
+                <option value="count">{t('Pieces')}</option>
+                <option value="level">{t('Fill level')}</option>
+                <option value="none">{t('don’t count')}</option>
               </select>
             </div>
           ))}
         </div>
       </section>
-      <Sheet open={Boolean(iconFor)} onClose={() => setIconFor(null)} title="Symbol wählen">
+      <Sheet open={Boolean(iconFor)} onClose={() => setIconFor(null)} title={t('Choose icon')}>
         <div className="row wrap" style={{ gap: 8 }}>
           {ICON_CHOICES.map((i) => (
             <button key={i} className="icon-btn" style={{ width: 52, height: 52 }} onClick={() => patch(`/locations/${iconFor!.id}`, { icon: i }).then(() => { setIconFor(null); invalidate('locations', 'overview'); })}>
@@ -229,14 +244,14 @@ function Places({ admin }: { admin: boolean }) {
 }
 
 const EVENT_LABEL: Record<string, string> = {
-  'stock.low': 'Etwas wird knapp',
-  'stock.empty': 'Etwas ist alle',
-  'stock.expiring': 'MHD läuft ab',
-  'import.review': 'Import wartet auf Prüfung',
-  'order.new': 'Neue Gäste-Bestellung',
-  'order.status': 'Bestellstatus geändert',
-  'shopping.added': 'Neuer Eintrag auf der Einkaufsliste',
-  'digest.daily': 'Tagesblick (einmal täglich)',
+  'stock.low': 'Something is running low',
+  'stock.empty': 'Something has run out',
+  'stock.expiring': 'Best-before date coming up',
+  'import.review': 'Import waiting for review',
+  'order.new': 'New guest order',
+  'order.status': 'Order status changed',
+  'shopping.added': 'New item on the shopping list',
+  'digest.daily': 'Daily digest (once a day)',
 };
 
 function Notify({ admin }: { admin: boolean }) {
@@ -249,73 +264,73 @@ function Notify({ admin }: { admin: boolean }) {
   const save = async (next = n) => {
     await patch('/settings', { notify: next });
     invalidate('settings');
-    toast({ text: 'Gespeichert' });
+    toast({ text: t('Saved') });
   };
   const setEv = (ev: string, ch: string, v: boolean) => setN((x: any) => ({ ...x, events: { ...x.events, [ev]: { ...x.events[ev], [ch]: v } } }));
   return (
     <div className="stack" style={{ gap: 22 }}>
       <div className="card pad stack">
         <div className="field">
-          <label>Home Assistant – Webhook-URL</label>
+          <label>{t('Home Assistant – webhook URL')}</label>
           <input className="input" value={n.haWebhookUrl} onChange={(e) => setN({ ...n, haWebhookUrl: e.target.value })} placeholder="https://ha.example.de/api/webhook/stockwerk_…" disabled={!admin} />
-          <div className="help">Stockwerk schickt Ereignisse als JSON (title, message, url, data). Eine fertige Automation gibt es unter „Zugänge & KI“.</div>
+          <div className="help">{t('Stockwerk sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “Access & AI”.')}</div>
         </div>
         <div className="field">
-          <label>ntfy-Topic (optional)</label>
-          <input className="input" value={n.ntfyUrl} onChange={(e) => setN({ ...n, ntfyUrl: e.target.value })} placeholder="https://ntfy.sh/mein-geheimes-topic" disabled={!admin} />
+          <label>{t('ntfy topic (optional)')}</label>
+          <input className="input" value={n.ntfyUrl} onChange={(e) => setN({ ...n, ntfyUrl: e.target.value })} placeholder={t('https://ntfy.sh/my-secret-topic')} disabled={!admin} />
         </div>
         <div className="field">
-          <label>Weiterer Webhook (n8n, Node-RED …)</label>
+          <label>{t('Another webhook (n8n, Node-RED …)')}</label>
           <input className="input" value={n.webhookUrl} onChange={(e) => setN({ ...n, webhookUrl: e.target.value })} placeholder="https://…" disabled={!admin} />
         </div>
         <div className="field">
-          <label>E-Mail an</label>
-          <input className="input" value={n.emailTo} onChange={(e) => setN({ ...n, emailTo: e.target.value })} placeholder="wir@example.de, zweite@example.de" disabled={!admin} />
+          <label>{t('Email to')}</label>
+          <input className="input" value={n.emailTo} onChange={(e) => setN({ ...n, emailTo: e.target.value })} placeholder={t('us@example.com, second@example.com')} disabled={!admin} />
         </div>
         <div className="grid-2">
           <div className="field">
-            <label>Tagesblick um</label>
+            <label>{t('Daily digest at')}</label>
             <select className="input" value={n.digestHour} onChange={(e) => setN({ ...n, digestHour: Number(e.target.value) })} disabled={!admin}>
-              <option value={-1}>aus</option>
+              <option value={-1}>{t('off')}</option>
               {Array.from({ length: 24 }).map((_, h) => (
-                <option key={h} value={h}>{h}:00 Uhr</option>
+                <option key={h} value={h}>{t('{h}:00', { h })}</option>
               ))}
             </select>
           </div>
           <div className="field">
-            <label>MHD-Warnung</label>
+            <label>{t('Best-before warning')}</label>
             <select className="input" value={n.expiryWarnDays} onChange={(e) => setN({ ...n, expiryWarnDays: Number(e.target.value) })} disabled={!admin}>
               {[1, 2, 3, 5, 7].map((d) => (
-                <option key={d} value={d}>{d} Tag{d > 1 ? 'e' : ''} vorher</option>
+                <option key={d} value={d}>{t(d === 1 ? '{n} day before' : '{n} days before', { n: d })}</option>
               ))}
             </select>
           </div>
         </div>
         <div className="row between">
           <div>
-            <b>Knappes automatisch auf die Einkaufsliste</b>
-            <div className="small muted">sobald die Mindestmenge unterschritten ist</div>
+            <b>{t('Add low items to the shopping list automatically')}</b>
+            <div className="small muted">{t('as soon as they drop below the minimum')}</div>
           </div>
           <Toggle on={n.autoShoppingList} onChange={(v) => setN({ ...n, autoShoppingList: v })} />
         </div>
       </div>
       <section>
-        <h2 style={{ marginBottom: 10 }}>Was wohin?</h2>
+        <h2 style={{ marginBottom: 10 }}>{t('What goes where?')}</h2>
         <div className="card" style={{ overflowX: 'auto' }}>
           <table className="table">
             <thead>
               <tr>
-                <th>Ereignis</th>
+                <th>{t('Event')}</th>
                 <th>Home Assistant</th>
                 <th>ntfy</th>
                 <th>Webhook</th>
-                <th>E-Mail</th>
+                <th>{t('Email')}</th>
               </tr>
             </thead>
             <tbody>
               {Object.keys(EVENT_LABEL).map((ev) => (
                 <tr key={ev}>
-                  <td>{EVENT_LABEL[ev]}</td>
+                  <td>{t(EVENT_LABEL[ev])}</td>
                   {['ha', 'ntfy', 'webhook', 'email'].map((ch) => (
                     <td key={ch}>
                       <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
@@ -329,15 +344,15 @@ function Notify({ admin }: { admin: boolean }) {
       </section>
       {admin && (
         <div className="row">
-          <button className="btn" onClick={async () => { await save(); const r = await post('/settings/test-notification'); toast({ text: r.channels.length ? `Test gesendet: ${r.channels.join(', ')}` : 'Kein Kanal hat geantwortet – URLs prüfen' }); invalidate('notifications'); }}>
-            <Bell size={16} /> Testen
+          <button className="btn" onClick={async () => { await save(); const r = await post('/settings/test-notification'); toast({ text: r.channels.length ? t('Test sent: {channels}', { channels: r.channels.join(', ') }) : t('No channel responded – check the URLs') }); invalidate('notifications'); }}>
+            <Bell size={16} /> {t('Test')}
           </button>
           <div className="grow" />
-          <button className="btn primary" onClick={() => save()}>Speichern</button>
+          <button className="btn primary" onClick={() => save()}>{t('Save')}</button>
         </div>
       )}
       <section>
-        <h2 style={{ marginBottom: 10 }}>Zuletzt gesendet</h2>
+        <h2 style={{ marginBottom: 10 }}>{t('Recently sent')}</h2>
         <div className="list">
           {(log.data ?? []).slice(0, 12).map((x) => {
             const ch = JSON.parse(x.channels || '[]') as { channel: string; ok: boolean }[];
@@ -345,13 +360,13 @@ function Notify({ admin }: { admin: boolean }) {
               <div key={x.id} className="li" style={{ minHeight: 52 }}>
                 <div className="grow">
                   <div className="title small">{x.title}</div>
-                  <div className="sub">{ch.length ? ch.map((c) => `${c.channel} ${c.ok ? '✓' : '✗'}`).join(' · ') : 'nur in der App'}</div>
+                  <div className="sub">{ch.length ? ch.map((c) => `${c.channel} ${c.ok ? '✓' : '✗'}`).join(' · ') : t('in the app only')}</div>
                 </div>
                 <span className="small muted">{relTime(x.created_at)}</span>
               </div>
             );
           })}
-          {(log.data ?? []).length === 0 && <div className="li muted small">Noch nichts.</div>}
+          {(log.data ?? []).length === 0 && <div className="li muted small">{t('Nothing yet.')}</div>}
         </div>
       </section>
     </div>
@@ -373,21 +388,21 @@ function Access({ admin }: { admin: boolean }) {
     invalidate('tokens');
     if (scope === 'ha') setYaml(await post('/ha/package.yaml', { token: r.token }));
   };
-  const copy = (t: string) => navigator.clipboard.writeText(t).then(() => toast({ text: 'Kopiert' }));
+  const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast({ text: t('Copied') }));
   return (
     <div className="stack" style={{ gap: 22 }}>
       <div className="card pad stack">
         <div className="row">
           <span className="thumb" style={{ width: 44, height: 44 }}><Plug size={22} /></span>
           <div className="grow">
-            <b>Claude, ChatGPT & Co. (MCP)</b>
-            <div className="small muted">Fotos von Bons, Gefrierschrank oder HelloFresh-Karten an den Assistenten schicken – er trägt es hier ein.</div>
+            <b>{t('Claude, ChatGPT & co. (MCP)')}</b>
+            <div className="small muted">{t('Send photos of receipts, your freezer or HelloFresh cards to your assistant – it adds everything here.')}</div>
           </div>
         </div>
         <ol className="small" style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
-          <li>Unten einen Zugang „KI-Assistent“ erzeugen.</li>
-          <li>In Claude: Einstellungen › Connectors › Eigenen Connector hinzufügen. In ChatGPT: Einstellungen › Connectors (Entwicklermodus).</li>
-          <li>Als URL die angezeigte MCP-Adresse eintragen, Authentifizierung: keine.</li>
+          <li>{t('Create an “AI assistant” access below.')}</li>
+          <li>{t('In Claude: Settings › Connectors › Add custom connector. In ChatGPT: Settings › Connectors (developer mode).')}</li>
+          <li>{t('Enter the MCP address shown as the URL, authentication: none.')}</li>
         </ol>
       </div>
       <div className="card pad stack">
@@ -395,30 +410,30 @@ function Access({ admin }: { admin: boolean }) {
           <span className="thumb" style={{ width: 44, height: 44 }}><House size={22} /></span>
           <div className="grow">
             <b>Home Assistant</b>
-            <div className="small muted">Sensoren fürs Dashboard (knapp, MHD, Einkaufsliste, Kochidee), Push aufs Handy mit Knopf „Auf die Liste“.</div>
+            <div className="small muted">{t('Sensors for your dashboard (low stock, best-before, shopping list, meal idea), push notifications to your phone with an “Add to list” button.')}</div>
           </div>
         </div>
-        <div className="small muted">Zugang „Home Assistant“ erzeugen – dann bekommst du ein fertiges Package zum Einfügen.</div>
+        <div className="small muted">{t('Create a “Home Assistant” access – you’ll get a ready-made package to paste in.')}</div>
       </div>
       {admin && s.data && <HaConnection initial={s.data.ha} />}
       {admin && (
         <div className="card pad stack">
-          <b>Neuer Zugang</b>
+          <b>{t('New access')}</b>
           <div className="grid-2">
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name, z. B. Claude Till" />
-            <Seg value={scope} onChange={(v) => { setScope(v); setName(v === 'ha' ? 'Home Assistant' : v === 'mcp' ? 'Claude' : 'Skript'); }} options={[['mcp', 'KI-Assistent'], ['ha', 'Home Assistant'], ['full', 'Voller API-Zugriff']]} />
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('Name, e.g. Claude Till')} />
+            <Seg value={scope} onChange={(v) => { setScope(v); setName(v === 'ha' ? 'Home Assistant' : v === 'mcp' ? 'Claude' : t('Script')); }} options={[['mcp', t('AI assistant')], ['ha', 'Home Assistant'], ['full', t('Full API access')]]} />
           </div>
           <button className="btn primary" onClick={create}>
-            <Key size={16} /> Erzeugen
+            <Key size={16} /> {t('Generate')}
           </button>
         </div>
       )}
       {created && (
         <div className="card pad stack" style={{ borderColor: 'var(--accent)' }}>
-          <b>{created.name}: jetzt kopieren – wird nur einmal angezeigt</b>
+          <b>{t('{name}: copy it now – shown only once', { name: created.name })}</b>
           {created.scope !== 'ha' && (
             <div className="field">
-              <label>MCP-Adresse (URL für Claude / ChatGPT)</label>
+              <label>{t('MCP address (URL for Claude / ChatGPT)')}</label>
               <div className="row">
                 <input className="input mono" readOnly value={`${base}/mcp/${created.token}`} />
                 <button className="icon-btn" onClick={() => copy(`${base}/mcp/${created.token}`)}><Copy size={16} /></button>
@@ -426,7 +441,7 @@ function Access({ admin }: { admin: boolean }) {
             </div>
           )}
           <div className="field">
-            <label>Token (für Authorization: Bearer …)</label>
+            <label>{t('Token (for Authorization: Bearer …)')}</label>
             <div className="row">
               <input className="input mono" readOnly value={created.token} />
               <button className="icon-btn" onClick={() => copy(created.token)}><Copy size={16} /></button>
@@ -434,35 +449,35 @@ function Access({ admin }: { admin: boolean }) {
           </div>
           {yaml && (
             <div className="field">
-              <label>Home-Assistant-Package (packages/stockwerk.yaml)</label>
+              <label>{t('Home Assistant package (packages/stockwerk.yaml)')}</label>
               <div className="codebox">{yaml}</div>
-              <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(yaml)}><Copy size={14} /> YAML kopieren</button>
-              <div className="help">Webhook-ID und notify-Dienst im YAML anpassen und dieselbe Webhook-URL unter „Benachrichtigungen“ eintragen.</div>
+              <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(yaml)}><Copy size={14} /> {t('Copy YAML')}</button>
+              <div className="help">{t('Adjust the webhook ID and notify service in the YAML, and enter the same webhook URL under “Notifications”.')}</div>
             </div>
           )}
         </div>
       )}
       {admin && (
         <section>
-          <h2 style={{ marginBottom: 10 }}>Aktive Zugänge</h2>
+          <h2 style={{ marginBottom: 10 }}>{t('Active access')}</h2>
           <div className="list">
-            {(tokens.data ?? []).map((t) => (
-              <div key={t.id} className="li">
+            {(tokens.data ?? []).map((tk) => (
+              <div key={tk.id} className="li">
                 <div className="grow">
-                  <div className="title">{t.name}</div>
-                  <div className="sub mono">{t.prefix}… · {({ mcp: 'KI-Assistent', ha: 'Home Assistant', full: 'API' } as any)[t.scope]} · {t.last_used_at ? `zuletzt ${relTime(t.last_used_at)}` : 'nie benutzt'}</div>
+                  <div className="title">{tk.name}</div>
+                  <div className="sub mono">{tk.prefix}… · {({ mcp: t('AI assistant'), ha: 'Home Assistant', full: 'API' } as any)[tk.scope]} · {tk.last_used_at ? t('last used {when}', { when: relTime(tk.last_used_at) }) : t('never used')}</div>
                 </div>
-                <button className="icon-btn plain" onClick={() => confirm('Zugang widerrufen?') && del(`/tokens/${t.id}`).then(() => invalidate('tokens'))} aria-label="Widerrufen">
+                <button className="icon-btn plain" onClick={() => confirm(t('Revoke access?')) && del(`/tokens/${tk.id}`).then(() => invalidate('tokens'))} aria-label={t('Revoke')}>
                   <Trash size={16} />
                 </button>
               </div>
             ))}
-            {(tokens.data ?? []).length === 0 && <div className="li muted small">Noch keine Zugänge.</div>}
+            {(tokens.data ?? []).length === 0 && <div className="li muted small">{t('No access yet.')}</div>}
           </div>
         </section>
       )}
       <div className="card pad small muted">
-        Bilderkennung auf dem Server: {s.data?.features?.vision ? `aktiv (${s.data.features.visionModel})` : 'nicht eingerichtet – Fotos laufen dann über deinen KI-Assistenten'} · E-Mail: {s.data?.features?.email ? 'aktiv' : 'nicht eingerichtet'}
+        {t('Image recognition on the server:')} {s.data?.features?.vision ? t('active ({model})', { model: s.data.features.visionModel }) : t('not set up – photos then go through your AI assistant')} · {t('Email:')} {s.data?.features?.email ? t('active') : t('not set up')}
       </div>
     </div>
   );
@@ -480,7 +495,7 @@ function Data({ admin }: { admin: boolean }) {
       fd.append('file', f);
       fd.append('min_count', '3');
       const r = await api('/imports/catalog-csv', { form: fd });
-      toast({ text: `${r.created} Produkte angelegt, ${r.linked} verknüpft (aus ${r.distinct} Artikeln)` });
+      toast({ text: t('{created} products created, {linked} linked (from {distinct} items)', { created: r.created, linked: r.linked, distinct: r.distinct }) });
       invalidate('products', 'overview');
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
@@ -493,38 +508,38 @@ function Data({ admin }: { admin: boolean }) {
       <div className="card pad stack">
         <div className="row between wrap">
           <div>
-            <b>Import ohne Rückfrage</b>
-            <div className="small muted">Bons, bei denen alles sicher erkannt wurde, direkt einbuchen. Ersatzartikel und Neues werden trotzdem vorgelegt.</div>
+            <b>{t('Import without asking')}</b>
+            <div className="small muted">{t('Book receipts straight in when everything was recognised with confidence. Substitutes and new items are still shown for review.')}</div>
           </div>
           <Toggle on={Boolean(s.data?.importAutoApply)} onChange={(v) => patch('/settings', { importAutoApply: v }).then(() => invalidate('settings'))} />
         </div>
       </div>
       <div className="card pad stack">
-        <b>Kaufhistorie importieren (CSV)</b>
+        <b>{t('Import purchase history (CSV)')}</b>
         <div className="small muted">
-          Zum Beispiel aus dem REWE-Datenexport (DSGVO-Auskunft): Artikel, die du mindestens dreimal gekauft hast, werden als Produkte angelegt – inklusive der Bon-Abkürzungen, damit künftige eBons sofort erkannt werden. Es wird kein Bestand gebucht.
+          {t('For example from the REWE data export (GDPR request): items you’ve bought at least three times are created as products – including the receipt abbreviations, so future e-receipts are recognised right away. No stock is booked.')}
         </div>
         <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
         <button className="btn" style={{ alignSelf: 'flex-start' }} disabled={!admin || busy} onClick={() => fileRef.current?.click()}>
-          <UploadSimple size={16} /> {busy ? 'Importiere …' : 'CSV wählen'}
+          <UploadSimple size={16} /> {busy ? t('Importing …') : t('Choose CSV')}
         </button>
       </div>
       <div className="card pad stack">
-        <b>Export</b>
-        <div className="small muted">Alles als JSON – deine Daten gehören dir.</div>
-        <a className="btn" style={{ alignSelf: 'flex-start' }} href="/api/export.json">Export herunterladen</a>
+        <b>{t('Export')}</b>
+        <div className="small muted">{t('Everything as JSON – your data belongs to you.')}</div>
+        <a className="btn" style={{ alignSelf: 'flex-start' }} href="/api/export.json">{t('Download export')}</a>
       </div>
       {admin && (
         <div className="card pad stack">
-          <b>Neu anfangen</b>
-          <div className="small muted">Löscht Produkte, Bestand, Rezepte, Importe und Bestellungen (z. B. die Demo-Daten). Orte, Kategorien, Mitglieder und Zugänge bleiben.</div>
-          <button className="btn danger" style={{ alignSelf: 'flex-start' }} onClick={() => confirm('Wirklich alles löschen?') && post('/demo/reset').then(() => { invalidate('overview', 'products', 'recipes', 'shopping', 'imports'); toast({ text: 'Alles leer – los geht’s' }); })}>
-            <Trash size={16} /> Daten leeren
+          <b>{t('Start over')}</b>
+          <div className="small muted">{t('Deletes products, stock, recipes, imports and orders (e.g. the demo data). Places, categories, members and access stay.')}</div>
+          <button className="btn danger" style={{ alignSelf: 'flex-start' }} onClick={() => confirm(t('Really delete everything?')) && post('/demo/reset').then(() => { invalidate('overview', 'products', 'recipes', 'shopping', 'imports'); toast({ text: t('All clear – off you go') }); })}>
+            <Trash size={16} /> {t('Clear data')}
           </button>
         </div>
       )}
       <p className="small muted">
-        Stockwerk ist Open Source (AGPL-3.0). Produktdaten und -bilder teilweise von Open Food Facts (ODbL / CC BY-SA). Nicht mit REWE, Thermomix/Vorwerk oder HelloFresh verbunden.
+        {t('Stockwerk is open source (AGPL-3.0). Some product data and images from Open Food Facts (ODbL / CC BY-SA). Not affiliated with REWE, Thermomix/Vorwerk or HelloFresh.')}
       </p>
     </div>
   );
@@ -542,8 +557,8 @@ function HaConnection({ initial }: { initial: { url: string; token: string; cook
       if (sync) {
         const r = await post('/plan/cookidoo-sync', {});
         if (r.error) throw new Error(r.error);
-        toast({ text: `Cookidoo: ${r.events} Einträge gelesen, ${r.added} neu im Wochenplan` });
-      } else toast({ text: 'Gespeichert' });
+        toast({ text: t('Cookidoo: {events} entries read, {added} new in the meal plan', { events: r.events, added: r.added }) });
+      } else toast({ text: t('Saved') });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     } finally {
@@ -553,27 +568,27 @@ function HaConnection({ initial }: { initial: { url: string; token: string; cook
   return (
     <div className="card pad stack">
       <div>
-        <b>Cookidoo-Wochenplan über Home Assistant</b>
+        <b>{t('Cookidoo meal plan via Home Assistant')}</b>
         <div className="small muted">
-          Cookidoo hat keine offene Schnittstelle. Die Home-Assistant-Integration „Cookidoo“ liest „Meine Woche“ aber als Kalender aus – Stockwerk holt sich die Gerichte von dort alle drei Stunden in den Wochenplan.
+          {t('Cookidoo has no open API. But the Home Assistant “Cookidoo” integration reads “My week” as a calendar – Stockwerk pulls the dishes from there into the meal plan every three hours.')}
         </div>
       </div>
       <div className="field">
-        <label>Home-Assistant-Adresse</label>
+        <label>{t('Home Assistant address')}</label>
         <input className="input" value={h.url} onChange={(e) => setH({ ...h, url: e.target.value })} placeholder="https://ha.example.de" inputMode="url" />
       </div>
       <div className="field">
-        <label>Langlebiger Zugangstoken</label>
-        <input className="input mono" type="password" value={h.token} onChange={(e) => setH({ ...h, token: e.target.value })} placeholder="In HA: Profil › Sicherheit › Token erstellen" />
+        <label>{t('Long-lived access token')}</label>
+        <input className="input mono" type="password" value={h.token} onChange={(e) => setH({ ...h, token: e.target.value })} placeholder={t('In HA: Profile › Security › Create token')} />
       </div>
       <div className="field">
-        <label>Kalender-Entität</label>
+        <label>{t('Calendar entity')}</label>
         <input className="input mono" value={h.cookidooCalendar} onChange={(e) => setH({ ...h, cookidooCalendar: e.target.value })} />
-        <div className="help">Standard der Integration: calendar.cookidoo_speiseplan</div>
+        <div className="help">{t('Integration default: {entity}', { entity: 'calendar.cookidoo_speiseplan' })}</div>
       </div>
       <div className="row wrap" style={{ gap: 8 }}>
-        <button className="btn" disabled={busy} onClick={() => save(false)}>Speichern</button>
-        <button className="btn primary" disabled={busy || !h.url || !h.token} onClick={() => save(true)}>Speichern & abgleichen</button>
+        <button className="btn" disabled={busy} onClick={() => save(false)}>{t('Save')}</button>
+        <button className="btn primary" disabled={busy || !h.url || !h.token} onClick={() => save(true)}>{t('Save & sync')}</button>
       </div>
     </div>
   );

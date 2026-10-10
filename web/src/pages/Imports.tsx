@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { type Location, api, fmtDate, invalidate, post, useApi } from '../api';
 import { Empty, Ic, Seg, Skeleton, useToast } from '../ui';
+import { num, t } from '../i18n';
 
 export function Imports({ me }: { me: Me }) {
   const [params] = useSearchParams();
@@ -31,7 +32,7 @@ export function Imports({ me }: { me: Me }) {
     invalidate('imports', 'overview', 'products');
     const ok = results.filter((r: any) => r.id);
     if (ok.length === 1) nav(`/import/${ok[0].id}`);
-    else if (ok.length > 1) toast({ text: `${ok.length} Belege importiert${ok.some((r: any) => r.merged) ? ' – Bon mit Bestellung abgeglichen' : ''}` });
+    else if (ok.length > 1) toast({ text: ok.some((r: any) => r.merged) ? t('{n} receipts imported – receipt matched with order', { n: ok.length }) : t('{n} receipts imported', { n: ok.length }) });
   };
   const upload = async (files: FileList | File[]) => {
     if (!files.length) return;
@@ -76,18 +77,18 @@ export function Imports({ me }: { me: Me }) {
     <div>
       <header className="page-head">
         <div>
-          <div className="eyebrow">Einkäufe ins Haus holen</div>
-          <h1>Importe</h1>
+          <div className="eyebrow">{t('Bring your shopping into the house')}</div>
+          <h1>{t('Imports')}</h1>
         </div>
       </header>
 
       <div className="card pad stack">
-        <Seg value={mode} onChange={setMode} options={[['file', 'PDF / Bon'], ['photo', 'Foto'], ['url', 'QR / Link'], ['text', 'Text']]} />
+        <Seg value={mode} onChange={setMode} options={[['file', t('PDF / receipt')], ['photo', t('Photo')], ['url', t('QR / link')], ['text', t('Text')]]} />
         {(mode === 'file' || mode === 'photo') && (
           <>
             {mode === 'photo' && (
               <div className="stack" style={{ gap: 10 }}>
-                <Seg value={photoMode} onChange={setPhotoMode} options={[['receipt', 'Kassenbon'], ['shelf', 'Schrank / Truhe']]} />
+                <Seg value={photoMode} onChange={setPhotoMode} options={[['receipt', t('Receipt')], ['shelf', t('Cupboard / freezer')]]} />
                 {photoMode === 'shelf' && (
                   <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
                     {(locations.data ?? []).map((l) => (
@@ -101,7 +102,7 @@ export function Imports({ me }: { me: Me }) {
                   <div className="banner" style={{ cursor: 'default' }}>
                     <span className="ic"><Robot size={20} /></span>
                     <div className="small">
-                      Auf diesem Server ist kein Bildmodell eingerichtet. Schick das Foto an Claude oder ChatGPT und sag „trag das in Stockwerk ein“ – die Verbindung findest du unter Einstellungen › Zugänge.
+                      {t('No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to Stockwerk” – you’ll find the connection under Settings › Access.')}
                     </div>
                   </div>
                 )}
@@ -124,13 +125,13 @@ export function Imports({ me }: { me: Me }) {
               <div className="empty-state" style={{ padding: 0 }}>
                 <div className="art">{mode === 'photo' ? <Camera size={26} /> : <FileArrowUp size={26} />}</div>
               </div>
-              <b>{busy ? 'Lese …' : mode === 'photo' ? 'Foto aufnehmen oder wählen' : 'PDF hier ablegen oder wählen'}</b>
+              <b>{busy ? t('Reading …') : mode === 'photo' ? t('Take or choose a photo') : t('Drop a PDF here or choose one')}</b>
               <span className="small muted">
                 {mode === 'photo'
                   ? photoMode === 'shelf'
-                    ? 'Erkannte Produkte landen zur Prüfung in einer Liste – nichts wird blind gebucht.'
-                    : 'Bon fotografieren, gerade und ganz drauf.'
-                  : 'REWE Abholavis, Lieferavis und eBon werden direkt erkannt. Avis + eBon derselben Abholung werden automatisch abgeglichen.'}
+                    ? t('Recognised products land in a list for you to check – nothing gets booked blindly.')
+                    : t('Photograph the receipt straight on, with all of it in frame.')
+                  : t('REWE pickup and delivery notices and eBons are recognised directly. A notice and the eBon from the same pickup are matched automatically.')}
               </span>
               <input
                 ref={fileRef}
@@ -147,25 +148,25 @@ export function Imports({ me }: { me: Me }) {
         {mode === 'url' && (
           <div className="stack">
             <div className="field">
-              <label>Link zum digitalen Bon</label>
+              <label>{t('Link to the digital receipt')}</label>
               <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" inputMode="url" />
-              <div className="help">Viele Kassen zeigen einen QR-Code für den digitalen Bon. Scannen geht direkt über „Hinzufügen › Digitaler Bon“.</div>
+              <div className="help">{t('Many checkouts show a QR code for the digital receipt. You can scan it directly via “Add › Digital receipt”.')}</div>
             </div>
             <div className="row">
               <button className="btn" onClick={() => nav('/scan?mode=qr')}>
-                QR scannen
+                {t('Scan QR')}
               </button>
               <button className="btn primary grow" disabled={!url || busy} onClick={sendUrl}>
-                <LinkIcon size={17} /> Bon abrufen
+                <LinkIcon size={17} /> {t('Fetch receipt')}
               </button>
             </div>
           </div>
         )}
         {mode === 'text' && (
           <div className="stack">
-            <textarea className="input" value={text} onChange={(e) => setText(e.target.value)} placeholder={'2x Mio Mio Mate\nPaketband\n3 Dosen Tomaten'} />
+            <textarea className="input" value={text} onChange={(e) => setText(e.target.value)} placeholder={t('2x Mio Mio Mate\nParcel tape\n3 cans of tomatoes')} />
             <button className="btn primary" disabled={!text.trim() || busy} onClick={sendText}>
-              <TextAa size={17} /> Zuordnen
+              <TextAa size={17} /> {t('Match')}
             </button>
           </div>
         )}
@@ -173,14 +174,14 @@ export function Imports({ me }: { me: Me }) {
 
       <section className="section">
         <div className="section-head">
-          <h2>Verlauf</h2>
+          <h2>{t('History')}</h2>
         </div>
         {list.isLoading ? (
           <Skeleton n={3} />
         ) : (list.data ?? []).length === 0 ? (
           <div className="card">
-            <Empty icon={<Receipt size={26} />} title="Noch nichts importiert">
-              Tipp: Die PDFs aus der REWE-App (Abholavis, eBon) einfach hier hochladen – oder vom iPhone über „Teilen“ an Claude schicken.
+            <Empty icon={<Receipt size={26} />} title={t('Nothing imported yet')}>
+              {t('Tip: just upload the PDFs from the REWE app (pickup notice, eBon) here – or send them to Claude from your iPhone via “Share”.')}
             </Empty>
           </div>
         ) : (
@@ -193,11 +194,11 @@ export function Imports({ me }: { me: Me }) {
                 <div className="grow">
                   <div className="title">{i.title}</div>
                   <div className="sub">
-                    {[`${i.lines} Positionen`, i.meta?.finalTotal ? `${String(i.meta.finalTotal).replace('.', ',')} €` : i.total ? `${String(i.total).replace('.', ',')} €` : null, i.meta?.reconciledWith ? 'mit Bon abgeglichen' : null, fmtDate(i.created_at)].filter(Boolean).join(' · ')}
+                    {[i.lines === 1 ? t('1 line') : t('{n} lines', { n: i.lines }), i.meta?.finalTotal ? `${num(Number(i.meta.finalTotal), 2)} €` : i.total ? `${num(Number(i.total), 2)} €` : null, i.meta?.reconciledWith ? t('matched with receipt') : null, fmtDate(i.created_at)].filter(Boolean).join(' · ')}
                   </div>
                 </div>
                 <span className={`badge ${i.status === 'review' ? 'expiring' : i.status === 'applied' ? 'good' : ''}`}>
-                  {{ review: 'prüfen', applied: 'gebucht', discarded: 'verworfen' }[i.status as string]}
+                  {{ review: t('to check'), applied: t('booked'), discarded: t('discarded') }[i.status as string]}
                 </span>
               </div>
             ))}

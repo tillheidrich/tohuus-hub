@@ -6,6 +6,9 @@ import { useParams } from 'react-router-dom';
 import { connectEvents, qc } from '../api';
 import { Empty, Ic, Seg, Sheet, Thumb, useToast } from '../ui';
 import { BRANDS, applyBrand } from '../brand';
+import { locale, num, setLang, t } from '../i18n';
+
+const eur = (n: number) => n.toLocaleString(locale(), { style: 'currency', currency: 'EUR' });
 
 async function gapi(token: string, path: string, body?: unknown) {
   const r = await fetch(`/api/guest/${token}${path}`, {
@@ -14,7 +17,7 @@ async function gapi(token: string, path: string, body?: unknown) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const d = await r.json();
-  if (!r.ok) throw new Error(d.error ?? 'Fehler');
+  if (!r.ok) throw new Error(d.error ?? t('Error'));
   return d;
 }
 
@@ -52,12 +55,14 @@ export function Guest() {
     document.title = info.data.brand === 'fredirando' ? 'Fredirando' : `${info.data.household} · Bar`;
   }, [info.data]);
   const fredi = info.data?.brand === 'fredirando';
+  // Guests see the household's language, not their browser's. Idempotent, so safe during render.
+  if (info.data) setLang(info.data.language);
 
   if (info.isLoading) return <div className="guest"><div className="skel" style={{ height: 120 }} /></div>;
   if (info.error)
     return (
       <div className="guest">
-        <Empty icon={<Martini size={26} />} title="Dieser Link gilt nicht mehr">Frag einfach nochmal nach einem neuen.</Empty>
+        <Empty icon={<Martini size={26} />} title={t('This link is no longer valid')}>{t('Just ask for a new one.')}</Empty>
       </div>
     );
   return (
@@ -68,42 +73,42 @@ export function Guest() {
           <div className="logo"><img src={BRANDS.fredirando.logo} alt="" /></div>
           <div className="info">
             <h1>fredirando</h1>
-            <div className="muted small">Küche & Keller · {info.data.household}</div>
+            <div className="muted small">{t('Kitchen & cellar')} · {info.data.household}</div>
             <div className="facts">
-              <span><span className="stars">★★★★★</span> <b>4,9</b> (Familie)</span>
-              <span>Lieferzeit <b>1–3 Min.</b></span>
-              <span>Liefergebühr <b>0,00 €</b></span>
-              <span>Mindestbestellwert <b>ein Lächeln</b></span>
+              <span><span className="stars">★★★★★</span> <b>{num(4.9)}</b> ({t('family')})</span>
+              <span>{t('Delivery')} <b>{t('1–3 min')}</b></span>
+              <span>{t('Delivery fee')} <b>{eur(0)}</b></span>
+              <span>{t('Minimum order')} <b>{t('a smile')}</b></span>
             </div>
           </div>
         </div>
       ) : (
         <>
           <div className="eyebrow">{info.data.household} · {info.data.name}</div>
-          <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? 'Bock auf was?' : tab === 'stock' ? 'Wo ist was?' : 'Was fehlt?'}</h1>
+          <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? t('Fancy something?') : tab === 'stock' ? t('Where is what?') : t('What’s missing?')}</h1>
           <p className="muted" style={{ marginTop: 0 }}>
-            {tab === 'bar' ? 'Getränke, Eis und Snacks – einfach bestellen, wir bringen’s vorbei.' : tab === 'stock' ? 'Alles, was du im Haus suchen könntest – mit genauem Platz.' : 'Setz es auf unsere Einkaufsliste.'}
+            {tab === 'bar' ? t('Drinks, ice cream and snacks – just order and we’ll bring it over.') : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : t('Add it to our shopping list.')}
           </p>
         </>
       )}
       {info.data.note && <div className="note-card" style={{ margin: '14px 0' }}>{info.data.note}</div>}
       {scopes.length > 1 && (
         <div style={{ margin: '14px 0' }}>
-          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, { bar: 'Bar', stock: 'Wo ist was?', shopping: 'Einkaufsliste' }[s] ?? s]) as any} />
+          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s] ?? s]) as any} />
         </div>
       )}
       {tab === 'bar' && <GuestBar token={token} fredi={fredi} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
-      <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{fredi ? 'fredirando · ein Familienbetrieb, betrieben mit Stockwerk' : 'Stockwerk · Haushalt, selbst gehostet'}</p>
+      <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{fredi ? t('fredirando · a family business, powered by Stockwerk') : t('Stockwerk · your household, self-hosted')}</p>
     </div>
   );
 }
 
-const STATUS_TEXT = {
-  plain: { new: 'angekommen', accepted: 'wird gemacht', done: 'kommt!', declined: 'geht gerade nicht' },
-  fredi: { new: 'Bestellung eingegangen', accepted: 'Wird zubereitet', done: 'Geliefert – guten Appetit!', declined: 'Leider gerade nicht lieferbar' },
-} as const;
+const STATUS_TEXT = () => ({
+  plain: { new: t('received'), accepted: t('on it'), done: t('on its way!'), declined: t('not possible right now') },
+  fredi: { new: t('Order received'), accepted: t('Being prepared'), done: t('Delivered – enjoy your meal!'), declined: t('Sorry, currently unavailable') },
+});
 
 function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) {
   const menu = useQuery({ queryKey: ['products', 'guest', token], queryFn: () => gapi(token, '/menu') });
@@ -143,7 +148,7 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
       setNote('');
       setCheckout(false);
       qc.invalidateQueries({ queryKey: ['orders', 'guest', token] });
-      toast({ text: fredi ? 'Bestellt! Dein Fahrer macht sich gleich auf den Weg.' : 'Bestellung ist raus!' });
+      toast({ text: fredi ? t('Ordered! Your driver will be on the way shortly.') : t('Your order is in!') });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     }
@@ -159,8 +164,8 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
             return (
               <div key={o.id} className="li" style={{ minHeight: 52, display: 'block', padding: '12px 14px' }}>
                 <div className="row between">
-                  <b className="small">{(fredi ? STATUS_TEXT.fredi : STATUS_TEXT.plain)[o.status as 'new']}</b>
-                  {fredi && o.status === 'accepted' && <span className="small muted">ca. 2 Min.</span>}
+                  <b className="small">{(fredi ? STATUS_TEXT().fredi : STATUS_TEXT().plain)[o.status as 'new']}</b>
+                  {fredi && o.status === 'accepted' && <span className="small muted">{t('approx. 2 min')}</span>}
                 </div>
                 <div className="small muted" style={{ marginTop: 2 }}>{o.lines.map((l: any) => `${l.qty}× ${l.name}`).join(', ')}</div>
                 {fredi && o.status !== 'declined' && (
@@ -183,7 +188,7 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
                   {i.image_path ? <img src={i.image_path} alt="" /> : <GroupIcon group={i.group} name={i.name} />}
                 </div>
                 <div style={{ fontWeight: 650, fontSize: 14, lineHeight: 1.2 }}>{i.name}</div>
-                <div className="small muted">{!i.available ? 'gerade alle' : i.hint ?? (i.options?.length ? 'mit Extras' : ' ')}</div>
+                <div className="small muted">{!i.available ? t('all gone') : i.hint ?? (i.options?.length ? t('with extras') : ' ')}</div>
                 {qtyOf(i.id) > 0 && <span className="qty">{qtyOf(i.id)}</span>}
               </button>
             ))}
@@ -194,9 +199,9 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
         <div className="cartbar">
           <Basket size={20} />
           <div className="grow">
-            <b>{count} {count === 1 ? 'Sache' : 'Sachen'}</b>
+            <b>{t(count === 1 ? '{n} item' : '{n} items', { n: count })}</b>
           </div>
-          <button className="btn" onClick={() => setCheckout(true)}>{fredi ? 'Zur Kasse' : 'Bestellen'}</button>
+          <button className="btn" onClick={() => setCheckout(true)}>{fredi ? t('Checkout') : t('Order')}</button>
         </div>
       )}
       <Sheet open={Boolean(opt)} onClose={() => setOpt(null)} title={opt?.name}>
@@ -226,16 +231,16 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
             <button
               className="btn primary lg"
               onClick={() => {
-                add(opt, Object.values(sel).flat().filter((x) => !['Normal', 'Keins'].includes(x)));
+                add(opt, Object.values(sel).flat().filter((x) => !['Normal', 'Keins', 'Regular', 'None'].includes(x)));
                 setOpt(null);
               }}
             >
-              <Plus size={18} weight="bold" /> Dazu
+              <Plus size={18} weight="bold" /> {t('Add to order')}
             </button>
           </div>
         )}
       </Sheet>
-      <Sheet open={checkout} onClose={() => setCheckout(false)} title="Deine Bestellung">
+      <Sheet open={checkout} onClose={() => setCheckout(false)} title={t('Your order')}>
         <div className="stack">
           <div className="list">
             {cart.map((c) => (
@@ -257,15 +262,15 @@ function GuestBar({ token, fredi = false }: { token: string; fredi?: boolean }) 
             ))}
           </div>
           <div className="field">
-            <label>Dein Name</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="damit wir wissen, wohin" />
+            <label>{t('Your name')}</label>
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('so we know where to bring it')} />
           </div>
           <div className="field">
-            <label>Noch was?</label>
-            <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="z. B. Pizza Salami, extra Eiswürfel …" />
+            <label>{t('Anything else?')}</label>
+            <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('e.g. pepperoni pizza, extra ice cubes …')} />
           </div>
           <button className="btn primary lg" disabled={!name.trim() || !cart.length} onClick={send}>
-            <Check size={18} weight="bold" /> {fredi ? 'Jetzt bestellen · 0,00 €' : 'Abschicken'}
+            <Check size={18} weight="bold" /> {fredi ? t('Order now · {price}', { price: eur(0) }) : t('Send')}
           </button>
         </div>
       </Sheet>
@@ -278,17 +283,17 @@ function GuestStock({ token }: { token: string }) {
   const dq = useDebounce(q.trim());
   const res = useQuery({ queryKey: ['stock', 'guest', token, dq], queryFn: () => gapi(token, `/stock?q=${encodeURIComponent(dq)}`) });
   const locs = new Map<number, any>((res.data?.locations ?? []).map((l: any) => [l.id, l]));
-  const things: Found[] = (res.data?.things ?? []).map((t: any) => ({ ...t, places: t.place_ids.map((i: number) => locs.get(i)).filter(Boolean) }));
+  const things: Found[] = (res.data?.things ?? []).map((x: any) => ({ ...x, places: x.place_ids.map((i: number) => locs.get(i)).filter(Boolean) }));
   return (
     <div className="stack" style={{ gap: 14 }}>
       <div className="finder-hero">
         <MagnifyingGlass size={20} />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Wo finde ich … Windeln, Pflaster, Saft" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Where do I find … nappies, plasters, juice')} />
       </div>
       {res.isLoading ? (
         <div className="skel" style={{ height: 200 }} />
       ) : things.length === 0 ? (
-        <div className="card"><Empty icon={<MagnifyingGlass size={24} />} title={dq ? `„${dq}“ finden wir hier nicht` : 'Noch nichts hinterlegt'}>Am besten kurz anrufen oder schreiben.</Empty></div>
+        <div className="card"><Empty icon={<MagnifyingGlass size={24} />} title={dq ? t('We can’t find “{q}” here', { q: dq }) : t('Nothing added yet')}>{t('Best to give us a quick call or message.')}</Empty></div>
       ) : (
         <FindList things={things} grouped={!dq} />
       )}
@@ -298,19 +303,19 @@ function GuestStock({ token }: { token: string }) {
 
 function GuestShopping({ token }: { token: string }) {
   const q = useQuery({ queryKey: ['shopping', 'guest', token], queryFn: () => gapi(token, '/shopping') });
-  const [t, setT] = useState('');
+  const [text, setText] = useState('');
   const toast = useToast();
   const add = async () => {
-    await gapi(token, '/shopping', { text: t });
-    setT('');
+    await gapi(token, '/shopping', { text });
+    setText('');
     qc.invalidateQueries({ queryKey: ['shopping', 'guest', token] });
-    toast({ text: 'Steht auf der Liste – danke!' });
+    toast({ text: t('It’s on the list – thanks!') });
   };
   return (
     <div className="stack">
       <div className="row">
-        <input className="input" value={t} onChange={(e) => setT(e.target.value)} placeholder="z. B. Milch, Windeln …" onKeyDown={(e) => e.key === 'Enter' && t && add()} />
-        <button className="btn primary" disabled={!t} onClick={add}>Hinzu</button>
+        <input className="input" value={text} onChange={(e) => setText(e.target.value)} placeholder={t('e.g. milk, nappies …')} onKeyDown={(e) => e.key === 'Enter' && text && add()} />
+        <button className="btn primary" disabled={!text} onClick={add}>{t('Add')}</button>
       </div>
       <div className="list">
         {(q.data ?? []).map((i: any) => (
@@ -322,8 +327,8 @@ function GuestShopping({ token }: { token: string }) {
 }
 
 function groupTint(g: string) {
-  if (/eis/i.test(g)) return '#f6e6ea';
-  if (/getr|drink|kaffee/i.test(g)) return '#e8e2d8';
+  if (/eis|ice/i.test(g)) return '#f6e6ea';
+  if (/getr|drink|kaffee|coffee/i.test(g)) return '#e8e2d8';
   if (/extern|pizza/i.test(g)) return '#f3e3d6';
   return '#e3ece4';
 }
@@ -331,8 +336,8 @@ function groupTint(g: string) {
 function GroupIcon({ group, name }: { group: string; name: string }) {
   const props = { size: 54, weight: 'duotone' as const, color: '#3b3a36' };
   if (/pizza/i.test(name) || /extern/i.test(group)) return <Pizza {...props} />;
-  if (/eis/i.test(group)) return <IceCream {...props} />;
+  if (/eis|ice/i.test(group)) return <IceCream {...props} />;
   if (/kaffee|cappu|latte|espresso/i.test(name)) return <Coffee {...props} />;
-  if (/getr/i.test(group)) return <Martini {...props} />;
+  if (/getr|drink/i.test(group)) return <Martini {...props} />;
   return <Cookie {...props} />;
 }

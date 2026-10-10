@@ -54,11 +54,11 @@ function compact(p: ReturnType<typeof listProducts>[number]) {
     name: p.name,
     brand: p.brand,
     size: p.size,
-    amount: p.track_mode === 'none' ? 'nicht gezählt' : fmtQty(p, p.total),
+    amount: p.track_mode === 'none' ? 'not tracked' : fmtQty(p, p.total),
     status: p.status,
     min_qty: p.min_qty || undefined,
     best_before: p.nextExpiry ?? undefined,
-    where: p.stock.filter((s) => s.qty > 0).map((s) => `${lname.get(s.location_id)}: ${fmtQty(p, s.qty)}${s.best_before ? ` (MHD ${s.best_before})` : ''}`),
+    where: p.stock.filter((s) => s.qty > 0).map((s) => `${lname.get(s.location_id)}: ${fmtQty(p, s.qty)}${s.best_before ? ` (best before ${s.best_before})` : ''}`),
     spot: p.spot ?? undefined,
   };
 }
@@ -68,16 +68,17 @@ export function buildMcpServer(actorName: string) {
     { name: 'stockwerk', version: '0.1.0' },
     {
       instructions:
-        'Stockwerk ist der Haushaltsbestand einer Familie (Vorräte, Gefrierschrank, Keller, Haushaltswaren), dazu Einkaufsliste, Rezepte und Kochverlauf. ' +
-        'Antworte auf Deutsch. Fotos (Kassenbon, Gefrierschrank, Rezeptkarte) liest DU selbst und übergibst die erkannten Daten strukturiert: ' +
-        'Einkäufe/Bons → record_purchase (standardmäßig zur Prüfung in der App), Rezepte → save_recipe. ' +
-        'Vor Änderungen am Bestand bei unklaren Produktnamen erst search_stock verwenden.',
+        "Stockwerk is a family's household inventory (pantry, freezer, cellar, household supplies), plus shopping list, recipes and cooking history. " +
+        "Answer in the user's language. Product, location and recipe names are stored in the household's language - use them as they are. " +
+        'YOU read photos (receipt, freezer, recipe card) yourself and pass the recognised data in structured form: ' +
+        'purchases/receipts → record_purchase (by default queued for review in the app), recipes → save_recipe. ' +
+        'If a product name is unclear, use search_stock before changing stock.',
     },
   );
 
   s.registerTool(
     'get_overview',
-    { title: 'Überblick', description: 'Was ist knapp, leer oder läuft bald ab, was steht auf der Einkaufsliste, was könnte man heute kochen.', inputSchema: {}, annotations: RO },
+    { title: 'Overview', description: 'What is running low, empty or expiring soon, what is on the shopping list, what could be cooked today.', inputSchema: {}, annotations: RO },
     async () => {
       const o = overview();
       return text({
@@ -95,11 +96,11 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'search_stock',
     {
-      title: 'Bestand durchsuchen',
-      description: 'Sucht Produkte im Bestand. Ohne query: alles (optional gefiltert nach Ort oder Status). Liefert Menge, Ort und MHD.',
+      title: 'Search stock',
+      description: 'Searches products in stock. Without query: everything (optionally filtered by location or status). Returns amount, location and best-before date.',
       inputSchema: {
-        query: z.string().optional().describe('Freitext, z. B. "Eis", "Paketband", "Nudeln"'),
-        location: z.string().optional().describe('Ort, z. B. "Gefrierschrank", "Keller"'),
+        query: z.string().optional().describe('Free text, e.g. "ice cream", "parcel tape", "pasta"'),
+        location: z.string().optional().describe('Location, e.g. "Freezer", "Cellar"'),
         status: z.enum(['low', 'empty', 'expiring', 'expired', 'ok', 'in_stock']).optional(),
       },
       annotations: RO,
@@ -130,21 +131,21 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'update_stock',
     {
-      title: 'Bestand ändern',
+      title: 'Update stock',
       description:
-        'Ändert den Bestand eines Produkts: delta (+2 / -1) oder set (absolute Menge). Bei Füllstand-Produkten (Obst/Gemüse) set 0–3 = leer/knapp/halb/voll.',
+        'Changes the stock of a product: delta (+2 / -1) or set (absolute amount). For fill-level products (fruit/veg) set 0–3 = empty/low/half/full.',
       inputSchema: {
-        product: z.union([z.string(), z.number()]).describe('Produktname oder ID'),
+        product: z.union([z.string(), z.number()]).describe('Product name or ID'),
         delta: z.number().optional(),
         set: z.number().optional(),
         location: z.string().optional(),
-        best_before: z.string().optional().describe('YYYY-MM-DD, nur beim Hinzufügen'),
+        best_before: z.string().optional().describe('YYYY-MM-DD, only when adding'),
       },
       annotations: RW,
     },
     async ({ product, delta, set, location, best_before }) => {
       const p = findProduct(product);
-      if (!p) return text({ error: 'Produkt nicht eindeutig gefunden', candidates: candidates(String(product)), hint: 'create_product verwenden, falls neu.' });
+      if (!p) return text({ error: 'Product not found unambiguously', candidates: candidates(String(product)), hint: 'Use create_product if it is new.' });
       const loc = location ? (db.prepare(`SELECT id FROM locations WHERE lower(name) LIKE lower(?) ESCAPE '\\'`).get(`%${likeEsc(location)}%`) as { id: number } | undefined)?.id : undefined;
       const out = adjustStock({ productId: p.id, locationId: loc ?? null, delta, set, bestBefore: best_before ?? null, reason: 'assistant', actor: actorName });
       return text({ product: p.name, now: fmtQty(p, out.total), status: out.status });
@@ -153,10 +154,10 @@ export function buildMcpServer(actorName: string) {
 
   s.registerTool(
     'mark_used_up',
-    { title: 'Aufgebraucht', description: 'Setzt ein Produkt auf 0 und schreibt es auf die Einkaufsliste.', inputSchema: { product: z.union([z.string(), z.number()]) }, annotations: RW },
+    { title: 'Used up', description: 'Sets a product to 0 and puts it on the shopping list.', inputSchema: { product: z.union([z.string(), z.number()]) }, annotations: RW },
     async ({ product }) => {
       const p = findProduct(product);
-      if (!p) return text({ error: 'nicht gefunden', candidates: candidates(String(product)) });
+      if (!p) return text({ error: 'not found', candidates: candidates(String(product)) });
       markUsedUp(p.id, actorName);
       return text({ ok: true, product: p.name, on_shopping_list: true });
     },
@@ -165,15 +166,15 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'create_product',
     {
-      title: 'Produkt anlegen',
-      description: 'Legt ein neues Produkt an (optional mit Startmenge, Ort, Mindestmenge, Barcode, Bild-URL). Bild wird sonst automatisch über Open Food Facts gesucht.',
+      title: 'Create product',
+      description: 'Creates a new product (optionally with starting amount, location, minimum amount, barcode, image URL). Otherwise an image is looked up automatically via Open Food Facts.',
       inputSchema: {
         name: z.string(),
         brand: z.string().optional(),
         size: z.string().optional(),
         location: z.string().optional(),
         qty: z.number().optional(),
-        min_qty: z.number().optional().describe('ab dieser Menge gilt es als knapp → Einkaufsliste'),
+        min_qty: z.number().optional().describe('below this amount it counts as low → shopping list'),
         barcode: z.string().optional(),
         image_url: z.string().url().optional(),
         best_before: z.string().optional(),
@@ -198,15 +199,15 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'record_purchase',
     {
-      title: 'Einkauf / Bon erfassen',
+      title: 'Record purchase / receipt',
       description:
-        'Erfasst gekaufte oder gefundene Artikel (z. B. von einem Bon-Foto, das du gelesen hast, oder aus einem Foto vom Gefrierschrank). ' +
-        'Standard: landet als Import zur Prüfung in der App (Ersatzartikel etc. können dort korrigiert werden). apply=true bucht sofort.',
+        'Records bought or found items (e.g. from a receipt photo you have read, or from a photo of the freezer). ' +
+        'Default: ends up as an import for review in the app (substitutes etc. can be corrected there). apply=true books it immediately.',
       inputSchema: {
-        title: z.string().describe('z. B. "Aldi-Einkauf 10.10." oder "Inventur Gefrierschrank"'),
+        title: z.string().describe('e.g. "Aldi shopping 10 Oct" or "Freezer stocktake"'),
         shop: z.string().optional(),
         kind: z.enum(['receipt', 'shelf']).default('receipt'),
-        location: z.string().optional().describe('Zielort für alle Artikel (z. B. bei Inventur)'),
+        location: z.string().optional().describe('Target location for all items (e.g. for a stocktake)'),
         items: z.array(z.object({ name: z.string(), brand: z.string().optional(), qty: z.number().default(1), price: z.number().optional(), deposit: z.boolean().optional(), best_before: z.string().optional() })).min(1),
         apply: z.boolean().default(false),
       },
@@ -217,7 +218,7 @@ export function buildMcpServer(actorName: string) {
       const imp = linesToImport(a.kind === 'shelf' ? 'shelf' : 'mcp', a.title, a.items, { shop: a.shop ?? null });
       if (loc) imp.lines.forEach((l) => ((l as any).locationId = loc));
       const out = createImport(imp, { actor: actorName });
-      if (out.duplicate || out.merged) return text({ import_id: out.id, note: out.merged ? 'Mit einer offenen Bestellung abgeglichen.' : 'Dieser Beleg ist schon importiert.' });
+      if (out.duplicate || out.merged) return text({ import_id: out.id, note: out.merged ? 'Matched with an open order.' : 'This receipt has already been imported.' });
       const lines = db.prepare(`SELECT name, qty, action, product_id, confidence FROM import_lines WHERE import_id = ?`).all(out.id) as any[];
       if (a.apply) {
         const st = db.prepare('SELECT status FROM imports WHERE id = ?').get(out.id) as { status: string };
@@ -226,7 +227,7 @@ export function buildMcpServer(actorName: string) {
       }
       return text({
         import_id: out.id,
-        status: 'zur Prüfung in der App',
+        status: 'awaiting review in the app',
         review_url: `${config.baseUrl}/import/${out.id}`,
         recognized: lines.filter((l) => l.action === 'add').length,
         new_products: lines.filter((l) => l.action === 'new').map((l) => l.name),
@@ -236,13 +237,13 @@ export function buildMcpServer(actorName: string) {
 
   s.registerTool(
     'get_shopping_list',
-    { title: 'Einkaufsliste', description: 'Offene Einträge der Einkaufsliste.', inputSchema: {}, annotations: RO },
+    { title: 'Shopping list', description: 'Open items on the shopping list.', inputSchema: {}, annotations: RO },
     async () => text(db.prepare(`SELECT id, text, qty, note, added_by FROM shopping_items WHERE checked_at IS NULL ORDER BY created_at`).all()),
   );
 
   s.registerTool(
     'add_to_shopping_list',
-    { title: 'Auf die Einkaufsliste', description: 'Setzt einen oder mehrere Einträge auf die Einkaufsliste.', inputSchema: { items: z.array(z.string()).min(1) }, annotations: RW },
+    { title: 'Add to shopping list', description: 'Adds one or more items to the shopping list.', inputSchema: { items: z.array(z.string()).min(1) }, annotations: RW },
     async ({ items }) => {
       const out = items.map((t) => {
         const m = matchProduct(t);
@@ -255,8 +256,8 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'check_shopping_item',
     {
-      title: 'Abhaken',
-      description: 'Hakt einen Eintrag der Einkaufsliste ab. to_stock=true bucht ihn zusätzlich in den Bestand.',
+      title: 'Check off',
+      description: 'Checks off an item on the shopping list. to_stock=true also books it into stock.',
       inputSchema: { item: z.union([z.string(), z.number()]), to_stock: z.boolean().default(false) },
       annotations: RW,
     },
@@ -264,7 +265,7 @@ export function buildMcpServer(actorName: string) {
       const row = (typeof item === 'number'
         ? db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(item)
         : db.prepare(`SELECT * FROM shopping_items WHERE checked_at IS NULL AND lower(text) LIKE lower(?) ESCAPE '\\' LIMIT 1`).get(`%${likeEsc(item)}%`)) as any;
-      if (!row) return text({ error: 'nicht auf der Liste' });
+      if (!row) return text({ error: 'not on the list' });
       if (row.checked_at) return text({ ok: true, already_checked: row.text });
       db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ? WHERE id = ?`).run(actorName, row.id);
       if (to_stock && row.product_id) adjustStock({ productId: row.product_id, delta: row.qty ?? 1, reason: 'purchase', actor: actorName });
@@ -276,9 +277,9 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'suggest_meals',
     {
-      title: 'Was kochen wir?',
-      description: 'Schlägt Rezepte vor – nach dem, was da ist, was bald abläuft, Favoriten und wie lange es her ist.',
-      inputSchema: { thermomix: z.boolean().optional(), max_missing: z.number().optional().describe('höchstens so viele fehlende Zutaten'), limit: z.number().default(5) },
+      title: 'What shall we cook?',
+      description: 'Suggests recipes – based on what is in the house, what expires soon, favourites and how long ago they were cooked.',
+      inputSchema: { thermomix: z.boolean().optional(), max_missing: z.number().optional().describe('at most this many missing ingredients'), limit: z.number().default(5) },
       annotations: RO,
     },
     async ({ thermomix, max_missing, limit }) =>
@@ -297,7 +298,7 @@ export function buildMcpServer(actorName: string) {
 
   s.registerTool(
     'list_recipes',
-    { title: 'Rezepte', description: 'Listet Rezepte (optional Suche, nur Thermomix, nur Favoriten).', inputSchema: { query: z.string().optional(), thermomix: z.boolean().optional(), favorites: z.boolean().optional() }, annotations: RO },
+    { title: 'Recipes', description: 'Lists recipes (optional search, Thermomix only, favourites only).', inputSchema: { query: z.string().optional(), thermomix: z.boolean().optional(), favorites: z.boolean().optional() }, annotations: RO },
     async ({ query, thermomix, favorites }) => {
       let list = listRecipes();
       if (query) list = list.filter((r) => norm(`${r.title} ${r.tags.join(' ')}`).includes(norm(query)));
@@ -309,7 +310,7 @@ export function buildMcpServer(actorName: string) {
 
   s.registerTool(
     'get_recipe',
-    { title: 'Rezept lesen', description: 'Komplettes Rezept mit Zutaten, Schritten (inkl. Thermomix-Einstellungen) und Kochverlauf.', inputSchema: { recipe: z.union([z.string(), z.number()]) }, annotations: RO },
+    { title: 'Read recipe', description: 'Full recipe with ingredients, steps (incl. Thermomix settings) and cooking history.', inputSchema: { recipe: z.union([z.string(), z.number()]) }, annotations: RO },
     async ({ recipe }) => {
       let id = Number(recipe);
       if (!id) {
@@ -317,16 +318,16 @@ export function buildMcpServer(actorName: string) {
         id = r?.id ?? 0;
       }
       const r = id ? getRecipe(id) : null;
-      return text(r ?? { error: 'nicht gefunden' });
+      return text(r ?? { error: 'not found' });
     },
   );
 
   s.registerTool(
     'save_recipe',
     {
-      title: 'Rezept speichern',
+      title: 'Save recipe',
       description:
-        'Speichert ein Rezept (z. B. von einem Foto einer HelloFresh-Karte, das du gelesen hast). Thermomix-Schritte mit tm {time, temp, speed}. pantry=true für Basiszutaten (Salz, Öl …).',
+        'Saves a recipe (e.g. from a photo of a HelloFresh card you have read). Thermomix steps with tm {time, temp, speed}. pantry=true for basic ingredients (salt, oil …).',
       inputSchema: {
         title: z.string(),
         description: z.string().optional(),
@@ -356,15 +357,15 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'log_cooked',
     {
-      title: 'Gekocht',
-      description: 'Trägt ein, dass ein Rezept gekocht wurde (für den Kochverlauf). Optional verbrauchte Produkte abziehen.',
+      title: 'Cooked',
+      description: 'Records that a recipe was cooked (for the cooking history). Optionally deducts used-up products.',
       inputSchema: { recipe: z.union([z.string(), z.number()]), rating: z.number().min(1).max(5).optional(), used_up: z.array(z.string()).optional() },
       annotations: RW,
     },
     async ({ recipe, rating, used_up }) => {
       let id = Number(recipe);
       if (!id) id = listRecipes().find((x) => norm(x.title).includes(norm(String(recipe))))?.id ?? 0;
-      if (!id) return text({ error: 'Rezept nicht gefunden' });
+      if (!id) return text({ error: 'Recipe not found' });
       logCooked(id, actorName, rating ?? null);
       const used: string[] = [];
       for (const u of used_up ?? []) {
@@ -380,7 +381,7 @@ export function buildMcpServer(actorName: string) {
 
   s.registerTool(
     'get_meal_plan',
-    { title: 'Wochenplan', description: 'Geplante Gerichte der nächsten Tage (inkl. Cookidoo-Wochenplan, falls verbunden).', inputSchema: { days: z.number().min(1).max(28).default(7) }, annotations: RO },
+    { title: 'Meal plan', description: 'Planned meals for the next days (incl. the Cookidoo week plan, if connected).', inputSchema: { days: z.number().min(1).max(28).default(7) }, annotations: RO },
     async ({ days }) => {
       const d = weekDays(localDay(0), days);
       return text(getPlan(d[0], d[d.length - 1]).map((e) => ({ id: e.id, day: e.day, slot: e.slot, title: e.title, recipe_id: e.recipe_id, source: e.source, cooked: Boolean(e.cooked) })));
@@ -390,8 +391,8 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'plan_meal',
     {
-      title: 'Gericht einplanen',
-      description: 'Plant ein Rezept (oder einen freien Titel wie „Pizza bestellen“) für einen Tag ein.',
+      title: 'Plan a meal',
+      description: 'Plans a recipe (or a free title like "Order pizza") for a day. slot: "mittag" = lunch, "abend" = dinner.',
       inputSchema: { day: z.string().describe('YYYY-MM-DD'), recipe: z.union([z.string(), z.number()]).optional(), title: z.string().optional(), slot: z.enum(['mittag', 'abend']).default('abend') },
       annotations: RW,
     },
@@ -399,7 +400,7 @@ export function buildMcpServer(actorName: string) {
       let rid: number | null = null;
       if (typeof recipe === 'number') rid = recipe;
       else if (recipe) rid = listRecipes().find((x) => norm(x.title).includes(norm(recipe)))?.id ?? null;
-      if (recipe && !rid && !title) return text({ error: 'Rezept nicht gefunden', hint: 'list_recipes nutzen oder title setzen' });
+      if (recipe && !rid && !title) return text({ error: 'Recipe not found', hint: 'use list_recipes or set title' });
       return text({ id: addPlan({ day, recipe_id: rid, title, slot }) });
     },
   );
@@ -407,20 +408,20 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'move_meal',
     {
-      title: 'Gericht verschieben',
-      description: 'Verschiebt ein geplantes Gericht auf einen anderen Tag (id aus get_meal_plan) oder – mit shift_rest – den ganzen restlichen Plan ab diesem Tag um N Tage, z. B. wenn spontan auswärts gegessen wird. Mit remove=true wird der Eintrag gelöscht.',
-      inputSchema: { id: z.number().optional(), day: z.string().optional().describe('Zieltag YYYY-MM-DD'), shift_rest_from: z.string().optional().describe('YYYY-MM-DD: alles Offene ab hier verschieben'), by: z.number().int().min(-7).max(7).default(1), remove: z.boolean().default(false) },
+      title: 'Move meal',
+      description: 'Moves a planned meal to another day (id from get_meal_plan) or – with shift_rest_from – the whole remaining plan from that day by N days, e.g. when eating out spontaneously. With remove=true the entry is deleted.',
+      inputSchema: { id: z.number().optional(), day: z.string().optional().describe('Target day YYYY-MM-DD'), shift_rest_from: z.string().optional().describe('YYYY-MM-DD: move everything open from here on'), by: z.number().int().min(-7).max(7).default(1), remove: z.boolean().default(false) },
       annotations: RW,
     },
     async ({ id, day, shift_rest_from, by, remove }) => {
       if (shift_rest_from) return text(shiftPlan(shift_rest_from, by));
-      if (!id) return text({ error: 'id oder shift_rest_from angeben' });
+      if (!id) return text({ error: 'provide id or shift_rest_from' });
       if (remove) {
         db.prepare('DELETE FROM meal_plan WHERE id = ?').run(id);
         emit('recipes');
         return text({ ok: true });
       }
-      if (!day || !/^\d{4}-\d\d-\d\d$/.test(day)) return text({ error: 'day als YYYY-MM-DD angeben' });
+      if (!day || !/^\d{4}-\d\d-\d\d$/.test(day)) return text({ error: 'provide day as YYYY-MM-DD' });
       const r = db.prepare('UPDATE meal_plan SET day = ? WHERE id = ?').run(day, id);
       emit('recipes');
       return text({ ok: r.changes > 0 });
@@ -429,13 +430,13 @@ export function buildMcpServer(actorName: string) {
 
   s.registerTool(
     'fill_week',
-    { title: 'Woche füllen', description: 'Füllt freie Abende der nächsten 7 Tage mit passenden Rezepten aus dem Vorrat.', inputSchema: {}, annotations: RW },
+    { title: 'Fill the week', description: 'Fills free evenings of the next 7 days with suitable recipes from what is in stock.', inputSchema: {}, annotations: RW },
     async () => text(autofill(localDay(0), 7)),
   );
 
   s.registerTool(
     'week_shopping',
-    { title: 'Einkauf für die Woche', description: 'Setzt alle fehlenden Zutaten der geplanten Gerichte der nächsten 7 Tage auf die Einkaufsliste.', inputSchema: {}, annotations: RW },
+    { title: 'Shopping for the week', description: 'Puts all missing ingredients of the meals planned for the next 7 days on the shopping list.', inputSchema: {}, annotations: RW },
     async () => {
       const d = weekDays(localDay(0), 7);
       return text(planShopping(d[0], d[d.length - 1], actorName));
@@ -445,31 +446,31 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'where_is',
     {
-      title: 'Wo ist was?',
-      description: 'Findet, wo etwas im Haus liegt: Ort (Keller, Bad …) und genauer Platz („Regal links, oberstes Fach“). Funktioniert auch für Dinge, die nicht gezählt werden (Fieberthermometer, Werkzeug, Ersatzschlüssel).',
-      inputSchema: { q: z.string().describe('Wonach gesucht wird') },
+      title: 'Where is what?',
+      description: 'Finds where something is kept in the house: location (cellar, bathroom …) and exact spot ("shelf on the left, top compartment"). Also works for things that are not counted (thermometer, tools, spare keys).',
+      inputSchema: { q: z.string().describe('What to look for') },
       annotations: RO,
     },
     async ({ q }) => {
       const hits = findThings(q).slice(0, 10);
-      return text(hits.length ? hits.map((h) => ({ id: h.id, name: h.name, where: h.places.map((p) => p.name).join(', '), spot: h.spot, location_hint: h.places[0]?.hint ?? null, in_stock: h.in_stock })) : { found: false, hint: 'Nicht hinterlegt – mit set_place eintragen.' });
+      return text(hits.length ? hits.map((h) => ({ id: h.id, name: h.name, where: h.places.map((p) => p.name).join(', '), spot: h.spot, location_hint: h.places[0]?.hint ?? null, in_stock: h.in_stock })) : { found: false, hint: 'Not recorded – add it with set_place.' });
     },
   );
 
   s.registerTool(
     'set_place',
     {
-      title: 'Platz merken',
-      description: 'Merkt sich, wo etwas liegt. Legt den Artikel an, falls es ihn noch nicht gibt (dann ungezählt, z. B. „Fieberthermometer“).',
-      inputSchema: { product: z.union([z.string(), z.number()]), location: z.string().optional().describe('Name des Orts, z. B. Bad'), spot: z.string().max(120).optional().describe('Genauer Platz, z. B. „Spiegelschrank, mittleres Fach“') },
+      title: 'Remember spot',
+      description: 'Remembers where something is kept. Creates the item if it does not exist yet (then untracked, e.g. "thermometer").',
+      inputSchema: { product: z.union([z.string(), z.number()]), location: z.string().optional().describe('Name of the location, e.g. Bathroom'), spot: z.string().max(120).optional().describe('Exact spot, e.g. "mirror cabinet, middle shelf"') },
       annotations: RW,
     },
     async ({ product, location, spot }) => {
       let p = findProduct(product);
       const loc = location ? (db.prepare('SELECT id, name FROM locations').all() as { id: number; name: string }[]).find((l) => norm(l.name).includes(norm(location)) || norm(location).includes(norm(l.name))) : undefined;
-      if (location && !loc) return text({ error: `Ort „${location}“ gibt es nicht`, hint: 'list_locations' });
+      if (location && !loc) return text({ error: `There is no location "${location}"`, hint: 'list_locations' });
       if (!p) {
-        if (typeof product === 'number') return text({ error: 'Produkt nicht gefunden' });
+        if (typeof product === 'number') return text({ error: 'Product not found' });
         const id = createProduct({ name: product, trackMode: 'none', locationId: loc?.id ?? null, spot: spot ?? null });
         return text({ created: true, id });
       }
@@ -481,16 +482,16 @@ export function buildMcpServer(actorName: string) {
 
   s.registerTool(
     'list_locations',
-    { title: 'Orte', description: 'Lagerorte im Haus mit Anzahl Produkte.', inputSchema: {}, annotations: RO },
+    { title: 'Locations', description: 'Storage locations in the house with number of products.', inputSchema: {}, annotations: RO },
     async () => text(overview().locations.map((l: any) => ({ id: l.id, name: l.name, products: l.products, low: l.low, expiring: l.expiring }))),
   );
 
   s.registerTool(
     'product_details',
-    { title: 'Produktdetails', description: 'Details zu einem Produkt inkl. Verlauf der letzten Änderungen.', inputSchema: { product: z.union([z.string(), z.number()]) }, annotations: RO },
+    { title: 'Product details', description: 'Details of a product incl. history of recent changes.', inputSchema: { product: z.union([z.string(), z.number()]) }, annotations: RO },
     async ({ product }) => {
       const p = findProduct(product);
-      if (!p) return text({ error: 'nicht gefunden', candidates: candidates(String(product)) });
+      if (!p) return text({ error: 'not found', candidates: candidates(String(product)) });
       const hist = db.prepare('SELECT delta, reason, actor, created_at FROM movements WHERE product_id = ? ORDER BY id DESC LIMIT 15').all(p.id);
       const v = productView(p);
       return text({ ...compact(v as any), history: hist });
@@ -505,7 +506,7 @@ export async function handleMcp(req: Request, res: Response) {
   let actorName: string | null = null;
   const secret = req.params.secret as string | undefined;
   if (secret) {
-    if (config.mcpPathSecret && safeEqual(secret, config.mcpPathSecret)) actorName = 'Assistent';
+    if (config.mcpPathSecret && safeEqual(secret, config.mcpPathSecret)) actorName = 'Assistant';
     else {
       // tokens in URLs end up in logs — only MCP-scoped tokens are accepted here
       const a = actorFromBearer(secret);

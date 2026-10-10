@@ -6,13 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { fmtQty, invalidate, post, relTime, useApi } from '../api';
 import { Empty, Ic, Skeleton, StatusBadge, Thumb, useToast } from '../ui';
+import { locale, t } from '../i18n';
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 5) return 'Gute Nacht';
-  if (h < 11) return 'Guten Morgen';
-  if (h < 17) return 'Hallo';
-  return 'Guten Abend';
+  if (h < 5) return t('Good night');
+  if (h < 11) return t('Good morning');
+  if (h < 17) return t('Hello');
+  return t('Good evening');
 }
 
 export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
@@ -32,24 +33,24 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
     );
   }
   const c = o.counts;
-  const date = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+  const date = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
   const toShop = async (id: number, name: string) => {
     await post('/shopping', { text: name, product_id: id });
     invalidate('shopping', 'overview');
-    toast({ text: `${name} steht auf der Einkaufsliste` });
+    toast({ text: t('{name} is on the shopping list', { name }) });
   };
   const consume = async (id: number, name: string) => {
     await post('/stock/adjust', { product_id: id, delta: -1, reason: 'consume' });
     invalidate('overview', 'products');
-    toast({ text: `${name}: eins weniger`, action: { label: 'Rückgängig', run: () => post('/stock/adjust', { product_id: id, delta: 1, reason: 'undo' }).then(() => invalidate('overview')) } });
+    toast({ text: t('{name}: one less', { name }), action: { label: t('Undo'), run: () => post('/stock/adjust', { product_id: id, delta: 1, reason: 'undo' }).then(() => invalidate('overview')) } });
   };
   const summary =
     c.empty + c.low + c.expiring + c.expired === 0
-      ? 'Alles im grünen Bereich. Nichts muss heute nachgekauft werden.'
+      ? t('All good. Nothing needs restocking today.')
       : [
-          c.expired + c.expiring ? `${c.expired + c.expiring} ${c.expired + c.expiring === 1 ? 'Sache sollte' : 'Sachen sollten'} bald weg` : null,
-          c.empty ? `${c.empty} ${c.empty === 1 ? 'ist' : 'sind'} alle` : null,
-          c.low ? `${c.low} ${c.low === 1 ? 'wird' : 'werden'} knapp` : null,
+          c.expired + c.expiring ? (c.expired + c.expiring === 1 ? t('1 thing should be used soon') : t('{n} things should be used soon', { n: c.expired + c.expiring })) : null,
+          c.empty ? (c.empty === 1 ? t('1 is out') : t('{n} are out', { n: c.empty })) : null,
+          c.low ? (c.low === 1 ? t('1 is running low') : t('{n} are running low', { n: c.low })) : null,
         ]
           .filter(Boolean)
           .join(', ') + '.';
@@ -67,24 +68,24 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
       </header>
       <button className="finder-hero" style={{ width: '100%', cursor: 'pointer', marginBottom: 18, color: 'var(--ink-3)', textAlign: 'left' }} onClick={() => nav('/wo')}>
         <MagnifyingGlass size={20} />
-        <span style={{ padding: '10px 0', fontSize: 16 }}>Wo finde ich …?</span>
+        <span style={{ padding: '10px 0', fontSize: 16 }}>{t('Where can I find …?')}</span>
       </button>
 
       <div className="glance">
         <button className={`stat ${c.expired + c.expiring ? 'hot-exp' : ''}`} onClick={() => nav('/bestand?status=expiring')}>
-          <span className="l"><ClockCountdown size={16} /> Bald verbrauchen</span>
+          <span className="l"><ClockCountdown size={16} /> {t('Use soon')}</span>
           <span className="v">{c.expired + c.expiring}</span>
         </button>
         <button className={`stat ${c.empty ? 'hot-empty' : ''}`} onClick={() => nav('/bestand?status=empty')}>
-          <span className="l"><Warning size={16} /> Alle</span>
+          <span className="l"><Warning size={16} /> {t('Out')}</span>
           <span className="v">{c.empty}</span>
         </button>
         <button className={`stat ${c.low ? 'hot-low' : ''}`} onClick={() => nav('/bestand?status=low')}>
-          <span className="l"><span className="sdot low" /> Knapp</span>
+          <span className="l"><span className="sdot low" /> {t('Low')}</span>
           <span className="v">{c.low}</span>
         </button>
         <button className="stat" onClick={() => nav('/einkauf')}>
-          <span className="l"><Basket size={16} /> Einkaufsliste</span>
+          <span className="l"><Basket size={16} /> {t('Shopping list')}</span>
           <span className="v">{c.shopping}</span>
         </button>
       </div>
@@ -95,7 +96,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
             <div key={`o${ord.id}`} className="banner warn" onClick={() => nav('/bar')}>
               <span className="ic"><Martini size={20} /></span>
               <div className="grow">
-                <b>Bestellung von {ord.guest_name}</b>
+                <b>{t('Order from {name}', { name: ord.guest_name })}</b>
                 <div className="small muted">{ord.lines.map((l: any) => `${l.qty}× ${l.name}`).join(', ')}</div>
               </div>
               <ArrowRight size={18} />
@@ -106,7 +107,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
               <span className="ic"><Receipt size={20} /></span>
               <div className="grow">
                 <b>{i.title}</b>
-                <div className="small muted">{i.lines} Positionen warten auf einen kurzen Blick</div>
+                <div className="small muted">{i.lines === 1 ? t('1 item waiting for a quick look') : t('{n} items waiting for a quick look', { n: i.lines })}</div>
               </div>
               <ArrowRight size={18} />
             </div>
@@ -116,13 +117,13 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
 
       <section className="section">
         <div className="section-head">
-          <h2>Kümmern</h2>
-          {o.attention.length > 6 && <a onClick={() => nav('/bestand?status=attention')}>Alle {o.attention.length}</a>}
+          <h2>{t('Needs attention')}</h2>
+          {o.attention.length > 6 && <a onClick={() => nav('/bestand?status=attention')}>{t('All {n}', { n: o.attention.length })}</a>}
         </div>
         {o.attention.length === 0 ? (
           <div className="card">
-            <Empty icon={<Ic name="sparkles" size={26} />} title="Nichts zu tun">
-              Sobald etwas knapp wird oder das MHD näher rückt, taucht es hier auf.
+            <Empty icon={<Ic name="sparkles" size={26} />} title={t('Nothing to do')}>
+              {t('As soon as something runs low or nears its best-before date, it shows up here.')}
             </Empty>
           </div>
         ) : (
@@ -133,17 +134,17 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
                 <div className="grow">
                   <div className="title">{a.name}</div>
                   <div className="sub">
-                    {[a.brand, a.track_mode === 'level' ? fmtQty(a, a.total) : a.total > 0 ? `noch ${fmtQty(a, a.total)}` : null].filter(Boolean).join(' · ')}
+                    {[a.brand, a.track_mode === 'level' ? fmtQty(a, a.total) : a.total > 0 ? t('{qty} left', { qty: fmtQty(a, a.total) }) : null].filter(Boolean).join(' · ')}
                   </div>
                 </div>
                 <div className="att-actions" onClick={(e) => e.stopPropagation()}>
                   <StatusBadge p={a} compact />
                   {['low', 'empty'].includes(a.status) ? (
                     onList.has(a.id) ? (
-                      <span className="badge good">auf der Liste</span>
+                      <span className="badge good">{t('on the list')}</span>
                     ) : (
                       <button className="btn sm" onClick={() => toShop(a.id, a.name)}>
-                        <Basket size={15} /> Liste
+                        <Basket size={15} /> {t('List')}
                       </button>
                     )
                   ) : (
@@ -160,8 +161,8 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
 
       <section className="section">
         <div className="section-head">
-          <h2>Stockwerke</h2>
-          <a onClick={() => nav('/bestand')}>Ganzer Bestand</a>
+          <h2>{t('Places')}</h2>
+          <a onClick={() => nav('/bestand')}>{t('All stock')}</a>
         </div>
         <div className="floors">
           {o.locations.map((l: any) => {
@@ -178,7 +179,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
                 </div>
                 <div>
                   <div className="name">{l.name}</div>
-                  <div className="meta">{l.products === 0 ? 'leer' : `${l.products} Produkte`}</div>
+                  <div className="meta">{l.products === 0 ? t('empty') : l.products === 1 ? t('1 product') : t('{n} products', { n: l.products })}</div>
                 </div>
                 <div className="meter" aria-hidden>
                   <i style={{ width: `${(ok / total) * 100}%`, background: 'var(--accent)' }} />
@@ -201,20 +202,20 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
       {o.planned?.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <h2>Heute geplant</h2>
-            <a onClick={() => nav('/kochen')}>Wochenplan</a>
+            <h2>{t('Planned for today')}</h2>
+            <a onClick={() => nav('/kochen')}>{t('Week plan')}</a>
           </div>
           <div className="list">
             {o.planned.map((p: any) => (
               <div key={p.id} className="plan-today" onClick={() => (p.recipe_id ? nav(`/rezepte/${p.recipe_id}`) : nav('/kochen'))}>
                 {p.image_path ? <img src={p.image_path} alt="" /> : <span className="ph"><ChefHat size={24} /></span>}
                 <div className="grow">
-                  <div className="eyebrow">{p.slot === 'mittag' ? 'Mittags' : 'Heute Abend'}{p.cooked ? ' · gekocht' : ''}</div>
+                  <div className="eyebrow">{p.slot === 'mittag' ? t('Lunch') : t('Tonight')}{p.cooked ? ` · ${t('cooked')}` : ''}</div>
                   <b style={{ fontSize: 17 }}>{p.title}</b>
                 </div>
                 {!p.cooked && (
                   <button className="btn sm" onClick={(ev) => { ev.stopPropagation(); shiftFrom(todayDay(), toast, p.slot); }}>
-                    <ForkKnife size={15} /> Auswärts
+                    <ForkKnife size={15} /> {t('Eating out')}
                   </button>
                 )}
               </div>
@@ -225,29 +226,27 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
 
       <section className="section">
         <div className="section-head">
-          <h2>{o.planned?.length ? 'Oder lieber …' : 'Was kochen wir?'}</h2>
-          <a onClick={() => nav('/kochen')}>Mehr Ideen</a>
+          <h2>{o.planned?.length ? t('Or maybe …') : t('What should we cook?')}</h2>
+          <a onClick={() => nav('/kochen')}>{t('More ideas')}</a>
         </div>
         {o.tonight.length === 0 ? (
           <div className="card">
-            <Empty icon={<ChefHat size={26} />} title="Noch keine Rezepte">
-              Rezepte per Foto, Link oder über deinen KI-Assistenten hinzufügen – dann schlägt Stockwerk vor, was mit dem Vorrat geht.
+            <Empty icon={<ChefHat size={26} />} title={t('No recipes yet')}>
+              {t('Add recipes from a photo, a link or your AI assistant – then Stockwerk suggests what you can make with what you have.')}
             </Empty>
           </div>
         ) : (
           <div className="hscroll">
-            {o.tonight.map((t: any) => (
-              <div key={t.id} className="idea" onClick={() => nav(`/rezepte/${t.id}`)}>
-                {t.image_path ? <img className="bg" src={t.image_path} alt="" /> : <div className="pattern" />}
+            {o.tonight.map((r: any) => (
+              <div key={r.id} className="idea" onClick={() => nav(`/rezepte/${r.id}`)}>
+                {r.image_path ? <img className="bg" src={r.image_path} alt="" /> : <div className="pattern" />}
                 <div className="tagrow">
-                  {t.thermomix && <span>Thermomix</span>}
-                  {t.time_min && <span>{t.time_min} Min.</span>}
-                  <span>
-                    {t.have}/{t.need} da
-                  </span>
+                  {r.thermomix && <span>Thermomix</span>}
+                  {r.time_min && <span>{t('{n} min', { n: r.time_min })}</span>}
+                  <span>{t('{have}/{need} in stock', { have: r.have, need: r.need })}</span>
                 </div>
-                <h3>{t.title}</h3>
-                <div className="why">{t.reasons.join(' · ')}</div>
+                <h3>{r.title}</h3>
+                <div className="why">{r.reasons.join(' · ')}</div>
               </div>
             ))}
           </div>
@@ -257,15 +256,19 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
       {o.activity.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <h2>Zuletzt</h2>
+            <h2>{t('Recently')}</h2>
           </div>
           <div className="list">
             {o.activity.slice(0, 5).map((m: any) => (
               <div key={m.id} className="li" style={{ minHeight: 48 }}>
                 <span className={`sdot ${m.delta < 0 ? 'low' : ''}`} />
                 <div className="grow small">
-                  <b>{m.actor ?? 'Jemand'}</b> {m.delta > 0 ? 'hat' : 'hat'}{' '}
-                  {m.track_mode === 'level' ? `${m.name} aktualisiert` : `${Math.abs(m.delta)} × ${m.name} ${m.delta > 0 ? 'eingeräumt' : 'rausgenommen'}`}
+                  <b>{m.actor ?? t('Someone')}</b>{' '}
+                  {m.track_mode === 'level'
+                    ? t('updated {name}', { name: m.name })
+                    : m.delta > 0
+                      ? t('put away {n} × {name}', { n: Math.abs(m.delta), name: m.name })
+                      : t('took out {n} × {name}', { n: Math.abs(m.delta), name: m.name })}
                 </div>
                 <span className="small muted">{relTime(m.created_at)}</span>
               </div>
@@ -276,7 +279,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
 
       <div className="only-mobile" style={{ display: 'block', height: 8 }} />
       <button className="btn block lg only-desktop" style={{ marginTop: 24 }} onClick={onAdd}>
-        Etwas hinzufügen
+        {t('Add something')}
       </button>
     </div>
   );

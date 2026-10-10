@@ -6,6 +6,7 @@ import { fetchImage, saveImage } from './images.js';
 import { safeFetch } from './net.js';
 import { getRecipe, ingredientCore, listRecipes, parseRecipeJsonLd, saveRecipe, suggest } from './recipes.js';
 import { norm, nameScore } from './text.js';
+import { t } from '../i18n.js';
 
 export interface PlanEntry {
   id: number;
@@ -36,10 +37,10 @@ export function addPlan(input: { day: string; recipe_id?: number | null; title?:
   let title = input.title?.trim() ?? '';
   if (input.recipe_id) {
     const r = db.prepare('SELECT title FROM recipes WHERE id = ?').get(input.recipe_id) as { title: string } | undefined;
-    if (!r) throw new Error('Rezept nicht gefunden');
+    if (!r) throw new Error(t('Recipe not found'));
     title ||= r.title;
   }
-  if (!title) throw new Error('Titel fehlt');
+  if (!title) throw new Error(t('Title is missing'));
   const info = db
     .prepare('INSERT INTO meal_plan (day, slot, recipe_id, title, note, source, external_id) VALUES (?, ?, ?, ?, ?, ?, ?)')
     .run(input.day, input.slot ?? 'abend', input.recipe_id ?? null, title, input.note ?? null, input.source ?? 'manual', input.external_id ?? null);
@@ -112,14 +113,14 @@ export function haSettings(): HaSettings {
  */
 export async function syncCookidoo(): Promise<{ events: number; added: number; imported: number; error?: string }> {
   const s = haSettings();
-  if (!s.url || !s.token || !s.cookidooCalendar) return { events: 0, added: 0, imported: 0, error: 'Home Assistant nicht verbunden' };
+  if (!s.url || !s.token || !s.cookidooCalendar) return { events: 0, added: 0, imported: 0, error: t('Home Assistant not connected') };
   const start = localDay(-1);
   const end = localDay(14);
   const r = await fetch(`${s.url.replace(/\/$/, '')}/api/calendars/${encodeURIComponent(s.cookidooCalendar)}?start=${start}T00:00:00&end=${end}T23:59:59`, {
     headers: { Authorization: `Bearer ${s.token}` },
     signal: AbortSignal.timeout(15000),
   });
-  if (!r.ok) return { events: 0, added: 0, imported: 0, error: `Home Assistant antwortet mit ${r.status}` };
+  if (!r.ok) return { events: 0, added: 0, imported: 0, error: t('Home Assistant responded with {status}', { status: r.status }) };
   const events = (await r.json()) as { summary: string; start: { date?: string; dateTime?: string }; description?: string | null; uid?: string | null }[];
   let added = 0;
   let imported = 0;
@@ -146,7 +147,7 @@ export async function syncCookidoo(): Promise<{ events: number; added: number; i
           /* fall through to stub */
         }
       }
-      recipeId ??= saveRecipe({ title: ev.summary, source_type: 'cookidoo', thermomix: true, source_url: url ?? null, notes: 'Aus dem Cookidoo-Wochenplan übernommen – Zutaten per Link-Import ergänzen.' });
+      recipeId ??= saveRecipe({ title: ev.summary, source_type: 'cookidoo', thermomix: true, source_url: url ?? null, notes: t('Taken from the Cookidoo week plan – add ingredients via link import.') });
     }
     addPlan({ day, recipe_id: recipeId, title: ev.summary, source: 'cookidoo', external_id: ext });
     added++;

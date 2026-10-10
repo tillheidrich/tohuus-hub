@@ -1,1 +1,85 @@
-export const app: Record<string, string> = {};
+// German strings for App shell, Login, shared UI (ui.tsx), api.ts formatters and brand.ts
+export const app: Record<string, string> = {
+  // api.ts — fill levels & relative times
+  empty: 'leer',
+  low: 'knapp',
+  half: 'halb',
+  full: 'voll',
+  'just now': 'gerade eben',
+  '{n} min ago': 'vor {n} Min.',
+  '{n} h ago': 'vor {n} Std.',
+  yesterday: 'gestern',
+  '{n} days ago': 'vor {n} Tagen',
+
+  // brand.ts
+  'What’s in the house. At a glance.': 'Was im Haus ist. Auf einen Blick.',
+  'Ordered. Delivered. From kitchen & cellar.': 'Bestellt. Gebracht. Aus Küche & Keller.',
+
+  // ui.tsx — status badges
+  'in stock': 'da',
+  out: 'alle',
+  'use soon': 'bald verbrauchen',
+  'past best-before': 'MHD vorbei',
+  'not counted': 'ohne Zählung',
+  '{n} d over': 'seit {n} T. drüber',
+  today: 'heute',
+  tomorrow: 'morgen',
+  'in {n} days': 'in {n} Tagen',
+  'Best before {n} d over': 'MHD seit {n} T. drüber',
+  'Best before today': 'MHD heute',
+  'Best before tomorrow': 'MHD morgen',
+  'Best before in {n} days': 'MHD in {n} Tagen',
+  'Best before passed {n} d ago': 'MHD seit {n} T. vorbei',
+  'Best before {date}': 'MHD {date}',
+  // ui.tsx — inputs, sheets, picker
+  less: 'weniger',
+  more: 'mehr',
+  Close: 'Schließen',
+  'Choose product': 'Produkt wählen',
+  'Search …': 'Suchen …',
+  'Create “{name}”': '„{name}“ neu anlegen',
+  'Nothing found.': 'Nichts gefunden.',
+
+  // Login
+  'Hungry?': 'Hunger?',
+  'We deliver.': 'Wir liefern.',
+  'What’s in the house.': 'Was im Haus ist.',
+  'At a glance.': 'Auf einen Blick.',
+  'From cellar to couch in under three minutes. Backed by pantry, shopping list and recipes.':
+    'Vom Keller bis zum Sofa in unter drei Minuten. Mit Vorrat, Einkaufsliste und Rezepten im Hintergrund.',
+  'Freezer, cellar, pantry and household – with a shopping list, recipes and a bar for guests.':
+    'Gefrierschrank, Keller, Vorrat und Haushalt – mit Einkaufsliste, Rezepten und einer Bar für Gäste.',
+  'Family business · Delivery to our own house only': 'Familienbetrieb · Lieferung nur im eigenen Haus',
+  'Self-hosted · Open source': 'Selbst gehostet · Open Source',
+  'Welcome back': 'Willkommen zurück',
+  'Who are you?': 'Wer bist du?',
+  Password: 'Passwort',
+  'Let’s go': 'Los geht’s',
+  'Come on in': 'Rein ins Haus',
+  'You’ll stay signed in on this device.': 'Du bleibst auf diesem Gerät angemeldet.',
+
+  // App shell — navigation
+  Today: 'Heute',
+  Stock: 'Bestand',
+  Shopping: 'Einkauf',
+  Cook: 'Kochen',
+  'Where’s what?': 'Wo ist was?',
+  Imports: 'Importe',
+  'Guests & Bar': 'Gäste & Bar',
+  Settings: 'Einstellungen',
+  Add: 'Hinzufügen',
+  // App shell — add action sheet
+  'What would you like to do?': 'Was möchtest du tun?',
+  'Scan barcode': 'Barcode scannen',
+  'In, out or new – with a picture from Open Food Facts.': 'Rein, raus oder neu anlegen – mit Bild aus Open Food Facts.',
+  'REWE PDF / receipt': 'REWE-PDF / Bon',
+  'Upload and check a REWE pickup or delivery notice or an eBon.': 'Abholavis, Lieferavis oder eBon hochladen und prüfen.',
+  Photo: 'Foto',
+  'Snap a receipt or your freezer.': 'Kassenbon oder Gefrierschrank fotografieren.',
+  'Digital receipt': 'Digitaler Bon',
+  'Scan the QR code at the checkout or paste a link.': 'QR-Code an der Kasse scannen oder Link einfügen.',
+  'Create product': 'Produkt anlegen',
+  'By hand, with image search.': 'Von Hand, mit Bildsuche.',
+  'Type a list': 'Liste tippen',
+  '“2x milk, parcel tape …” – gets matched up.': '„2x Milch, Paketband …“ – wird zugeordnet.',
+};

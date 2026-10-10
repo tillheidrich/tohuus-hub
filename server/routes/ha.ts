@@ -5,6 +5,7 @@ import { db } from '../db.js';
 import { requireAuth } from '../lib/auth.js';
 import { addToShopping, adjustStock, fmtQty, getProduct, markUsedUp, matchProduct } from '../lib/catalog.js';
 import { overview } from '../lib/overview.js';
+import { t } from '../i18n.js';
 
 /** Home Assistant friendly endpoints: one summary for REST sensors, one action endpoint for rest_command. */
 export const r = Router();
@@ -58,7 +59,7 @@ r.post('/ha/action', (req, res) => {
   }
   const p = resolve();
   if (!p) {
-    res.status(404).json({ error: 'Produkt nicht gefunden' });
+    res.status(404).json({ error: t('Product not found') });
     return;
   }
   if (b.action === 'consume') res.json(adjustStock({ productId: p.id, delta: -(b.qty ?? 1), reason: 'consume', actor }));
@@ -68,13 +69,13 @@ r.post('/ha/action', (req, res) => {
 
 r.post('/ha/package.yaml', (req, res) => {
   const clean = (v: unknown, d: string) => (typeof v === 'string' && /^[\w.\-]+$/.test(v) ? v : d);
-  const token = clean(req.body?.token, 'DEIN_STOCKWERK_TOKEN');
+  const token = clean(req.body?.token, t('YOUR_STOCKWERK_TOKEN'));
   const webhook = clean(req.body?.webhook, `stockwerk_${Math.random().toString(36).slice(2, 12)}`);
-  const phone = clean(req.body?.notify, 'notify.mobile_app_dein_iphone');
+  const phone = clean(req.body?.notify, t('notify.mobile_app_your_phone'));
   const base = config.baseUrl;
   res.type('text/yaml').send(`# Stockwerk ↔ Home Assistant
-# Als Package einbinden (packages/stockwerk.yaml) oder Abschnitte in configuration.yaml übernehmen.
-# Token: in Stockwerk → Einstellungen → Zugänge → „Home Assistant" erzeugen.
+# ${t('Include as a package (packages/stockwerk.yaml) or copy the sections into configuration.yaml.')}
+# ${t('Token: create one in Stockwerk → Settings → Access → “Home Assistant”.')}
 
 rest:
   - resource: ${base}/api/ha/summary
@@ -82,24 +83,24 @@ rest:
       Authorization: "Bearer ${token}"
     scan_interval: 300
     sensor:
-      - name: "Stockwerk knapp"
+      - name: "${t('Stockwerk low')}"
         unique_id: stockwerk_low
         icon: mdi:package-variant
         value_template: "{{ value_json.low + value_json.empty }}"
         json_attributes: [attention, locations]
-      - name: "Stockwerk läuft ab"
+      - name: "${t('Stockwerk expiring')}"
         unique_id: stockwerk_expiring
         icon: mdi:calendar-alert
         value_template: "{{ value_json.expiring }}"
-      - name: "Stockwerk Einkaufsliste"
+      - name: "${t('Stockwerk shopping list')}"
         unique_id: stockwerk_shopping
         icon: mdi:cart-outline
         value_template: "{{ value_json.shopping }}"
         json_attributes: [shopping_list]
-      - name: "Stockwerk Kochidee"
+      - name: "${t('Stockwerk cooking idea')}"
         unique_id: stockwerk_tonight
         icon: mdi:pot-steam-outline
-        value_template: "{{ value_json.tonight.title if value_json.tonight else 'keine' }}"
+        value_template: "{{ value_json.tonight.title if value_json.tonight else '${t('none')}' }}"
 
 rest_command:
   stockwerk_action:
@@ -111,7 +112,7 @@ rest_command:
     payload: '{"action": "{{ action }}", "product": "{{ product }}", "qty": {{ qty | default(1) }}}'
 
 automation:
-  - alias: "Stockwerk → Push aufs Handy"
+  - alias: "${t('Stockwerk → push to phone')}"
     triggers:
       - trigger: webhook
         webhook_id: ${webhook}
@@ -129,9 +130,9 @@ automation:
             tag: "stockwerk-{{ trigger.json.event }}-{{ trigger.json.data.product_id | default('') }}"
             actions: >
               {% if trigger.json.event in ['stock.low', 'stock.empty'] %}
-              [{"action": "STOCKWERK_SHOP_{{ trigger.json.data.product_id }}", "title": "Auf die Einkaufsliste"}]
+              [{"action": "STOCKWERK_SHOP_{{ trigger.json.data.product_id }}", "title": "${t('Add to shopping list')}"}]
               {% else %}[]{% endif %}
-  - alias: "Stockwerk → Aktion aus Push"
+  - alias: "${t('Stockwerk → action from push')}"
     triggers:
       - trigger: event
         event_type: mobile_app_notification_action

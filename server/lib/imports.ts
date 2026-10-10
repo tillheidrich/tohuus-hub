@@ -20,6 +20,7 @@ import {
 import { enqueueEnrich } from './enrich.js';
 import { notify } from './notify.js';
 import { splitProductName, titleCaseReceipt } from './text.js';
+import { t } from '../i18n.js';
 
 const pexec = promisify(execFile);
 
@@ -66,7 +67,7 @@ function insertLines(importId: number, lines: (ParsedLine & { receiptName?: stri
     const productId = m && m.score >= 0.5 ? m.productId : null;
     let action: 'add' | 'skip' | 'new' = sure ? 'add' : 'new';
     if (SKIP_STATUSES.has(l.status) || l.qty === 0) action = 'skip';
-    const note = [l.note, l.substituteFor ? `Ersatz für: ${l.substituteFor}` : null].filter(Boolean).join(' · ') || null;
+    const note = [l.note, l.substituteFor ? t('Substitute for: {name}', { name: l.substituteFor }) : null].filter(Boolean).join(' · ') || null;
     ins.run(
       importId,
       startSort + i,
@@ -137,8 +138,10 @@ export function createImport(parsed: ParsedImport, opts: CreateImportOptions = {
     const special = parsed.lines.filter((l) => ['substitute', 'unavailable', 'reduced'].includes(l.status)).length;
     void notify({
       event: 'import.review',
-      title: `${parsed.title}: bitte kurz prüfen`,
-      message: `${count} Positionen erkannt${special ? `, davon ${special} mit Ersatz, Fehlmenge oder nicht lieferbar` : ''}.`,
+      title: t('{title}: please check', { title: parsed.title }),
+      message: special
+        ? t('{count} items recognised, {special} of them substituted, short or unavailable.', { count, special })
+        : t('{count} items recognised.', { count }),
       path: `/import/${id}`,
       data: { import_id: id, lines: count, special },
     });
@@ -180,13 +183,13 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
           const receiptName = r.aliases.get(i) ?? null;
           if (kept === 0 && l.qty > 0) {
             db.prepare(`UPDATE import_lines SET status = 'returned', action = 'skip', note = ? WHERE id = ?`).run(
-              [l.note, 'nicht auf dem Bon – bei Abholung zurückgegeben'].filter(Boolean).join(' · '),
+              [l.note, t('not on the receipt – returned at pickup')].filter(Boolean).join(' · '),
               l.id,
             );
           } else if (!l.weightKg && kept < l.qty && !/g geliefert/.test(l.note ?? '')) {
             db.prepare(`UPDATE import_lines SET qty = ?, status = 'reduced', note = ?, receipt_name = ? WHERE id = ?`).run(
               kept,
-              [l.note, `nur ${kept} von ${l.qty} mitgenommen`].filter(Boolean).join(' · '),
+              [l.note, t('only {kept} of {qty} taken', { kept, qty: l.qty })].filter(Boolean).join(' · '),
               receiptName,
               l.id,
             );
@@ -196,25 +199,25 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
         });
         insertLines(
           c.id,
-          r.extras.map((e) => ({ ...e, name: titleCaseReceipt(e.name), receiptName: e.name, note: 'zusätzlich im Markt gekauft' })),
+          r.extras.map((e) => ({ ...e, name: titleCaseReceipt(e.name), receiptName: e.name, note: t('bought additionally in store') })),
           lines.length,
         );
       } else {
         // order already booked: create a correction import
         const corr = db
           .prepare(`INSERT INTO imports (kind, title, ref, shop, total, meta, actor) VALUES ('rewe-ebon', ?, ?, ?, ?, ?, ?)`)
-          .run(`Abgleich mit Bon · ${c.title}`, ebon.ref ?? null, ebon.shop ?? null, ebon.total ?? null, JSON.stringify({ ...ebon.meta, correctionOf: c.id }), opts.actor ?? null);
+          .run(t('Receipt reconciliation · {title}', { title: c.title }), ebon.ref ?? null, ebon.shop ?? null, ebon.total ?? null, JSON.stringify({ ...ebon.meta, correctionOf: c.id }), opts.actor ?? null);
         const corrId = Number(corr.lastInsertRowid);
         const corrLines: (ParsedLine & { receiptName?: string | null; productId?: number | null })[] = [];
         lines.forEach((l, i) => {
           const kept = r.kept.get(i);
           if (kept === undefined || l.action === 'skip') return;
           const diff = (l.status === 'ok' && /g geliefert/.test(l.note ?? '') ? (kept > 0 ? 1 : 0) : kept) - l.qty;
-          if (diff < 0) corrLines.push({ raw: l.raw, name: l.name, qty: diff, status: 'returned', note: 'nicht auf dem Bon – wird wieder abgezogen', productId: l.product_id });
+          if (diff < 0) corrLines.push({ raw: l.raw, name: l.name, qty: diff, status: 'returned', note: t('not on the receipt – will be deducted again'), productId: l.product_id });
           const alias = r.aliases.get(i);
           if (alias && l.product_id) learnAlias(alias, l.product_id, 'rewe-bon');
         });
-        corrLines.push(...r.extras.map((e) => ({ ...e, name: titleCaseReceipt(e.name), receiptName: e.name, note: 'zusätzlich im Markt gekauft' })));
+        corrLines.push(...r.extras.map((e) => ({ ...e, name: titleCaseReceipt(e.name), receiptName: e.name, note: t('bought additionally in store') })));
         insertLines(corrId, corrLines);
         // returned lines are corrections that should be applied, so flip their default action
         db.prepare(`UPDATE import_lines SET action = 'add' WHERE import_id = ? AND status = 'returned' AND product_id IS NOT NULL`).run(corrId);
@@ -227,10 +230,10 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
     const returned = [...r.kept.entries()].filter(([i, k]) => k === 0 && avisLike.lines[i].qty > 0).map(([i]) => avisLike.lines[i].name);
     void notify({
       event: 'import.review',
-      title: `Bon mit Bestellung abgeglichen`,
+      title: t('Receipt matched with order'),
       message:
-        (returned.length ? `Nicht mitgenommen: ${returned.join(', ')}. ` : 'Alles wie bestellt mitgenommen. ') +
-        (r.extras.length ? `Zusätzlich gekauft: ${r.extras.map((e) => titleCaseReceipt(e.name)).join(', ')}.` : ''),
+        (returned.length ? t('Not taken: {list}.', { list: returned.join(', ') }) + ' ' : t('Everything taken as ordered.') + ' ') +
+        (r.extras.length ? t('Also bought: {list}.', { list: r.extras.map((e) => titleCaseReceipt(e.name)).join(', ') }) : ''),
       path: `/import/${c.id}`,
       data: { import_id: c.id, returned, extras: r.extras.map((e) => e.name) },
     });
@@ -241,7 +244,7 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
 
 export function applyImport(id: number, actor: string) {
   const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
-  if (!imp) throw new Error('Import nicht gefunden');
+  if (!imp) throw new Error(t('Import not found'));
   if (imp.status !== 'review') return { applied: 0, created: 0 };
   const lines = db.prepare('SELECT * FROM import_lines WHERE import_id = ? ORDER BY sort').all(id) as any[];
   let applied = 0;

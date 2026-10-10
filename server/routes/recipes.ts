@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { db } from '../db.js';
+import { db, lang } from '../db.js';
 import { requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, matchIngredient } from '../lib/catalog.js';
@@ -11,6 +11,7 @@ import { upload } from './core.js';
 import { addPlan, autofill, getPlan, planShopping, shiftPlan, syncCookidoo, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
 import { safeFetch } from '../lib/net.js';
+import { t } from '../i18n.js';
 
 const rid = (v: unknown) => {
   const n = Number(v);
@@ -75,7 +76,7 @@ r.post('/recipes/:id/image', upload.single('image'), async (req, res) => {
     return;
   }
   if (!req.file) {
-    res.status(400).json({ error: 'Kein Bild' });
+    res.status(400).json({ error: t('No image') });
     return;
   }
   const img = await saveImage(req.file.buffer, `r${id}`);
@@ -132,7 +133,7 @@ r.post('/recipes/import/url', async (req, res) => {
   const { url } = z.object({ url: z.string().url() }).parse(req.body);
   let html: string;
   try {
-    const resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Stockwerk recipe import)', 'Accept-Language': 'de-DE,de' }, maxBytes: 5 * 1024 * 1024 });
+    const resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Stockwerk recipe import)', 'Accept-Language': lang() === 'de' ? 'de-DE,de;q=0.9,en;q=0.5' : 'en-GB,en;q=0.9' }, maxBytes: 5 * 1024 * 1024 });
     html = resp.buf.toString('utf8');
   } catch (e) {
     res.status(502).json({ error: (e as Error).message });
@@ -145,7 +146,7 @@ r.post('/recipes/import/url', async (req, res) => {
     if (parsed) rec = { ...parsed, source_type: 'url', source_url: url };
   }
   if (!rec) {
-    res.status(422).json({ error: 'Auf der Seite wurde kein Rezept gefunden.' });
+    res.status(422).json({ error: t('No recipe was found on that page.') });
     return;
   }
   const imageUrl = rec.image_path;
@@ -164,7 +165,7 @@ function normalizeModelRecipe(j: any) {
   const str = (v: unknown) => (typeof v === 'string' ? v : null);
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
   return {
-    title: str(j.title) ?? 'Rezept',
+    title: str(j.title) ?? t('Recipe'),
     description: str(j.description),
     servings: num(j.servings),
     time_min: num(j.time_min),
@@ -183,18 +184,18 @@ function normalizeModelRecipe(j: any) {
 r.post('/recipes/import/photo', upload.array('files', 6), async (req, res) => {
   const files = (req.files as Express.Multer.File[]) ?? [];
   if (!files.length) {
-    res.status(400).json({ error: 'Keine Fotos' });
+    res.status(400).json({ error: t('No photos') });
     return;
   }
   if (!visionAvailable()) {
-    res.status(501).json({ error: 'Kein Vision-Modell eingerichtet. Tipp: Foto an Claude/ChatGPT schicken und per MCP „Rezept speichern“ lassen.' });
+    res.status(501).json({ error: t('No vision model set up. Tip: send the photo to Claude/ChatGPT and have it “save recipe” via MCP.') });
     return;
   }
   const imgs = await Promise.all(files.map((f) => toVisionJpeg(f.buffer, 1800)));
   const j = await runVision('recipe', { images: imgs });
   const rec = modelRecipe(j);
   if (!rec) {
-    res.status(422).json({ error: 'Auf dem Foto wurde kein Rezept erkannt.' });
+    res.status(422).json({ error: t('No recipe was recognised in the photo.') });
     return;
   }
   const source = /hellofresh/i.test(JSON.stringify(j)) ? 'hellofresh' : 'photo';
@@ -218,7 +219,7 @@ r.post('/recipes/import/text', async (req, res) => {
   }
   const rec = modelRecipe(await runVision('text-recipe', { text }));
   if (!rec) {
-    res.status(422).json({ error: 'Kein Rezept erkannt.' });
+    res.status(422).json({ error: t('No recipe recognised.') });
     return;
   }
   res.json({ id: saveRecipe({ ...rec, source_type: 'own' }) });

@@ -1,4 +1,5 @@
 import { QueryClient, useQuery } from '@tanstack/react-query';
+import { locale, num, t } from './i18n';
 
 export const qc = new QueryClient({
   defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: true, retry: 1 } },
@@ -137,19 +138,20 @@ export interface Category {
   track_mode: 'count' | 'level' | 'none';
 }
 
-export const LEVELS = ['leer', 'knapp', 'halb', 'voll'];
+/** Fill levels (English source text; display via t()) */
+export const LEVELS = ['empty', 'low', 'half', 'full'];
 
 export function fmtQty(p: Pick<Product, 'track_mode' | 'unit'>, total: number) {
-  if (p.track_mode === 'level') return LEVELS[Math.max(0, Math.min(3, Math.round(total)))];
+  if (p.track_mode === 'level') return t(LEVELS[Math.max(0, Math.min(3, Math.round(total)))]);
   if (p.track_mode === 'none') return '';
-  const n = Number.isInteger(total) ? String(total) : total.toFixed(1).replace('.', ',');
+  const n = Number.isInteger(total) ? String(total) : num(total, 1);
   return `${n} ${p.unit}`;
 }
 
 export function fmtDate(d: string | null | undefined, opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }) {
   if (!d) return '';
   const date = new Date(d.length <= 10 ? d + 'T12:00:00' : d.replace(' ', 'T') + (d.includes('Z') ? '' : 'Z'));
-  return date.toLocaleDateString('de-DE', opts);
+  return date.toLocaleDateString(locale(), opts);
 }
 
 export function daysUntil(d: string) {
@@ -160,13 +162,13 @@ export function daysUntil(d: string) {
 }
 
 export function relTime(s: string) {
-  const t = new Date(s.replace(' ', 'T') + 'Z').getTime();
-  const m = Math.round((Date.now() - t) / 60000);
-  if (m < 1) return 'gerade eben';
-  if (m < 60) return `vor ${m} Min.`;
+  const ts = new Date(s.replace(' ', 'T') + 'Z').getTime();
+  const m = Math.round((Date.now() - ts) / 60000);
+  if (m < 1) return t('just now');
+  if (m < 60) return t('{n} min ago', { n: m });
   const h = Math.round(m / 60);
-  if (h < 24) return `vor ${h} Std.`;
+  if (h < 24) return t('{n} h ago', { n: h });
   const d = Math.round(h / 24);
-  if (d === 1) return 'gestern';
-  return `vor ${d} Tagen`;
+  if (d === 1) return t('yesterday');
+  return t('{n} days ago', { n: d });
 }

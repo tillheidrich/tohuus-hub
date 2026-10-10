@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { ZodError } from 'zod';
 import { MulterError } from 'multer';
 import { config } from './config.js';
-import { brand } from './db.js';
+import { brand, lang } from './db.js';
+import { t } from './i18n.js';
 import { startScheduler } from './lib/scheduler.js';
 import { handleMcp } from './mcp/server.js';
 import { r as core } from './routes/core.js';
@@ -81,7 +82,7 @@ if (webDir) {
   app.get('/manifest.webmanifest', (_req, res, next) => {
     if (brand() !== 'fredirando') return next();
     const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
-    Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: 'Bestellt. Gebracht. Aus Küche & Keller.', background_color: '#fff8f3', theme_color: '#f2601d' });
+    Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: t('Ordered. Delivered. From kitchen & cellar.'), background_color: '#fff8f3', theme_color: '#f2601d' });
     res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
   });
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {
@@ -92,25 +93,27 @@ if (webDir) {
     .replace(/<title>.*<\/title>/, '<title>Fredirando</title>')
     .replace(/content="Stockwerk"/g, 'content="Fredirando"')
     .replace(/content="#f3f2ee"/g, 'content="#fff8f3"')
-    .replace('<html lang="de">', '<html lang="de" data-brand="fredirando">');
-  app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(brand() === 'fredirando' ? fredi : html));
+    .replace(/<html lang="[^"]*"/, '<html lang="de" data-brand="fredirando"');
+  // the document language follows the household setting
+  const withLang = (doc: string) => doc.replace(/<html lang="[^"]*"/, `<html lang="${lang()}"`);
+  app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(withLang(brand() === 'fredirando' ? fredi : html)));
 }
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ZodError) {
-    res.status(400).json({ error: 'Ungültige Eingabe', issues: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`) });
+    res.status(400).json({ error: t('Invalid input'), issues: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`) });
     return;
   }
   if (err instanceof MulterError) {
-    res.status(413).json({ error: 'Datei zu groß (max. 15 MB)' });
+    res.status(413).json({ error: t('File too large (max. 15 MB)') });
     return;
   }
-  const msg = (err as Error)?.message ?? 'Fehler';
+  const msg = (err as Error)?.message ?? t('Error');
   console.error('[error]', msg);
   res.status(500).json({ error: msg });
 });
 
 app.listen(config.port, () => {
-  console.log(`Stockwerk läuft auf :${config.port} (${config.baseUrl})`);
+  console.log(`Stockwerk running on :${config.port} (${config.baseUrl})`);
   startScheduler();
 });

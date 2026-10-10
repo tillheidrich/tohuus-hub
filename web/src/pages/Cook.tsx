@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { api, invalidate, post, useApi } from '../api';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { t } from '../i18n';
 import { WeekPlan } from './Week';
 
 export function Cook({ me }: { me: Me }) {
@@ -27,24 +28,24 @@ export function Cook({ me }: { me: Me }) {
     <div>
       <header className="page-head">
         <div>
-          <div className="eyebrow">{recipes.data?.length ?? 0} Rezepte</div>
-          <h1>Was kochen wir?</h1>
+          <div className="eyebrow">{(recipes.data?.length ?? 0) === 1 ? t('1 recipe') : t('{n} recipes', { n: recipes.data?.length ?? 0 })}</div>
+          <h1>{t("What's for dinner?")}</h1>
         </div>
         <div className="actions">
           <button className="btn primary" onClick={() => setImportOpen(true)}>
-            <Plus size={16} weight="bold" /> Rezept
+            <Plus size={16} weight="bold" /> {t('Recipe')}
           </button>
         </div>
       </header>
 
       <WeekPlan cookidoo={Boolean(settings.data?.ha?.url && settings.data?.ha?.token)} />
 
-      <h2 style={{ margin: '28px 0 12px' }}>Ideen für heute</h2>
+      <h2 style={{ margin: '28px 0 12px' }}>{t('Ideas for today')}</h2>
       <div className="row between wrap" style={{ marginBottom: 14 }}>
-        <Seg value={tm} onChange={(v) => { setTm(v); setIdx(0); }} options={[['all', 'Alle'], ['tm', 'Thermomix'], ['no', 'Ohne']]} />
+        <Seg value={tm} onChange={(v) => { setTm(v); setIdx(0); }} options={[['all', t('All')], ['tm', 'Thermomix'], ['no', t('Without')]]} />
         {deck.length > 1 && (
           <button className="linkish row" onClick={() => setIdx(idx + 1)}>
-            <ArrowsClockwise size={14} /> nächste Idee
+            <ArrowsClockwise size={14} /> {t('next idea')}
           </button>
         )}
       </div>
@@ -53,8 +54,8 @@ export function Cook({ me }: { me: Me }) {
         <div className="skel" style={{ height: 420, maxWidth: 420, margin: '0 auto', borderRadius: 26 }} />
       ) : !cur ? (
         <div className="card">
-          <Empty icon={<ChefHat size={26} />} title="Noch keine Vorschläge">
-            Füge ein paar Lieblingsrezepte hinzu – per Link, Foto (z. B. HelloFresh-Karte) oder über Claude/ChatGPT.
+          <Empty icon={<ChefHat size={26} />} title={t('No suggestions yet')}>
+            {t('Add a few favorite recipes – by link, photo (e.g. a HelloFresh card) or via Claude/ChatGPT.')}
           </Empty>
         </div>
       ) : (
@@ -64,26 +65,26 @@ export function Cook({ me }: { me: Me }) {
             <DeckCard key={`${cur.recipe.id}-${idx}`} s={cur} onSwipe={(dir) => (dir > 0 ? nav(`/rezepte/${cur.recipe.id}`) : setIdx(idx + 1))} />
           </div>
           <div className="deck-actions">
-            <button className="round" onClick={() => setIdx(idx + 1)} aria-label="Lieber nicht">
+            <button className="round" onClick={() => setIdx(idx + 1)} aria-label={t('Not this one')}>
               <ThumbsDown size={24} />
             </button>
-            <button className="round yes" onClick={() => nav(`/rezepte/${cur.recipe.id}`)} aria-label="Das kochen wir">
+            <button className="round yes" onClick={() => nav(`/rezepte/${cur.recipe.id}`)} aria-label={t("Let's cook this")}>
               <ThumbsUp size={24} weight="fill" />
             </button>
           </div>
           <p className="small muted" style={{ textAlign: 'center', marginTop: 10 }}>
-            Wischen oder tippen. Sortiert nach Vorrat, Ablaufdaten, Favoriten und wie lange es her ist.
+            {t("Swipe or tap. Sorted by what's in stock, expiry dates, favorites and how long it's been.")}
           </p>
         </>
       )}
 
       <section className="section">
         <div className="section-head">
-          <h2>Rezeptsammlung</h2>
+          <h2>{t('Recipe collection')}</h2>
         </div>
         <div className="searchbar" style={{ marginBottom: 12 }}>
           <MagnifyingGlass size={18} />
-          <input className="input" placeholder="Rezepte durchsuchen" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="input" placeholder={t('Search recipes')} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         {recipes.isLoading ? (
           <Skeleton n={2} h={180} />
@@ -99,7 +100,7 @@ export function Cook({ me }: { me: Me }) {
                 <div className="body">
                   <b>{r.title}</b>
                   <span className="small muted">
-                    {[r.time_min ? `${r.time_min} Min.` : null, r.cook_count ? `${r.cook_count}× gekocht` : 'noch nie gekocht'].filter(Boolean).join(' · ')}
+                    {[r.time_min ? t('{n} min', { n: r.time_min }) : null, r.cook_count ? t('cooked {n}×', { n: r.cook_count }) : t('never cooked')].filter(Boolean).join(' · ')}
                   </span>
                 </div>
               </div>
@@ -143,9 +144,9 @@ function DeckCard({ s, behind = false, onSwipe }: { s: any; behind?: boolean; on
       {r.image_path ? <img className="bg" src={r.image_path} alt="" draggable={false} /> : <div className="pattern" />}
       <div className="row wrap" style={{ gap: 6, marginBottom: 10 }}>
         {r.thermomix && <span className="badge" style={{ background: 'rgba(255,255,255,.18)', color: '#fff' }}>Thermomix</span>}
-        {r.time_min && <span className="badge" style={{ background: 'rgba(255,255,255,.18)', color: '#fff' }}>{r.time_min} Min.</span>}
+        {r.time_min && <span className="badge" style={{ background: 'rgba(255,255,255,.18)', color: '#fff' }}>{t('{n} min', { n: r.time_min })}</span>}
         <span className="badge" style={{ background: s.missing.length ? 'rgba(255,255,255,.18)' : 'var(--accent)', color: '#fff' }}>
-          {s.have}/{s.need} Zutaten da
+          {t('{have}/{need} ingredients on hand', { have: s.have, need: s.need })}
         </span>
       </div>
       <h2>{r.title}</h2>
@@ -164,7 +165,7 @@ function DeckCard({ s, behind = false, onSwipe }: { s: any; behind?: boolean; on
             opacity: Math.min(1, Math.abs(dx) / 110),
           }}
         >
-          {dx > 0 ? 'LECKER' : 'HEUTE NICHT'}
+          {dx > 0 ? t('YUM') : t('NOT TODAY')}
         </div>
       )}
     </div>
@@ -195,25 +196,25 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
     }
   };
   return (
-    <Sheet open={open} onClose={onClose} title="Rezept hinzufügen">
+    <Sheet open={open} onClose={onClose} title={t('Add recipe')}>
       <div className="stack">
-        <Seg value={mode} onChange={setMode} options={[['url', 'Link'], ['photo', 'Foto'], ['text', 'Text'], ['new', 'Leer']]} />
+        <Seg value={mode} onChange={setMode} options={[['url', t('Link')], ['photo', t('Photo')], ['text', t('Text')], ['new', t('Blank')]]} />
         {mode === 'url' && (
           <>
             <div className="field">
-              <label>Link zum Rezept</label>
-              <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://cookidoo.de/recipes/… oder Chefkoch, HelloFresh …" inputMode="url" />
-              <div className="help">Funktioniert mit fast allen Rezeptseiten. Bei Cookidoo kommen Zutaten und Bild mit, die Schritte nur mit Login.</div>
+              <label>{t('Recipe link')}</label>
+              <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t('https://cookidoo.de/recipes/… or Chefkoch, HelloFresh …')} inputMode="url" />
+              <div className="help">{t('Works with almost any recipe site. Cookidoo brings ingredients and the photo along; steps only with a login.')}</div>
             </div>
             <button className="btn primary lg" disabled={!url || busy} onClick={() => run(() => post('/recipes/import/url', { url }))}>
-              <LinkIcon size={18} /> {busy ? 'Lese Rezept …' : 'Importieren'}
+              <LinkIcon size={18} /> {busy ? t('Reading recipe…') : t('Import')}
             </button>
           </>
         )}
         {mode === 'photo' && (
           <>
             <p className="small muted" style={{ margin: 0 }}>
-              Ein oder mehrere Fotos derselben Karte (z. B. HelloFresh Vorder- und Rückseite). {vision ? '' : 'Hinweis: Auf diesem Server ist kein Vision-Modell eingerichtet. Schick das Foto stattdessen an Claude oder ChatGPT – mit der Stockwerk-Verbindung speichern die es direkt hier.'}
+              {t('One or more photos of the same card (e.g. front and back of a HelloFresh card).')} {vision ? '' : t('Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the Stockwerk connection they save it straight here.')}
             </p>
             <input
               ref={fileRef}
@@ -230,21 +231,21 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
               }}
             />
             <button className="btn primary lg" disabled={busy || !vision} onClick={() => fileRef.current?.click()}>
-              <Camera size={18} /> {busy ? 'Lese die Karte …' : 'Fotos wählen'}
+              <Camera size={18} /> {busy ? t('Reading the card…') : t('Choose photos')}
             </button>
           </>
         )}
         {mode === 'text' && (
           <>
-            <textarea className="input" value={text} onChange={(e) => setText(e.target.value)} placeholder="Rezept hier einfügen – Titel, Zutaten, Schritte" />
+            <textarea className="input" value={text} onChange={(e) => setText(e.target.value)} placeholder={t('Paste the recipe here – title, ingredients, steps')} />
             <button className="btn primary lg" disabled={text.length < 10 || busy} onClick={() => run(() => post('/recipes/import/text', { text }))}>
-              <TextAa size={18} /> Übernehmen
+              <TextAa size={18} /> {t('Save recipe')}
             </button>
           </>
         )}
         {mode === 'new' && (
-          <button className="btn primary lg" onClick={() => run(() => post('/recipes', { title: 'Neues Rezept', ingredients: [], steps: [] }))}>
-            Leeres Rezept anlegen
+          <button className="btn primary lg" onClick={() => run(() => post('/recipes', { title: t('New recipe'), ingredients: [], steps: [] }))}>
+            {t('Create blank recipe')}
           </button>
         )}
       </div>

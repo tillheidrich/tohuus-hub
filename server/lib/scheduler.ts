@@ -5,9 +5,10 @@ import { enqueueMissingImages } from './enrich.js';
 import { emailHtml, notify, notifySettings } from './notify.js';
 import { suggest } from './recipes.js';
 import { haSettings, syncCookidoo } from './plan.js';
+import { fmtDay, t } from '../i18n.js';
 
 function localHour() {
-  return Number(new Intl.DateTimeFormat('de-DE', { hour: 'numeric', hour12: false, timeZone: config.timezone }).format(new Date()));
+  return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: config.timezone }).format(new Date()));
 }
 function localDate() {
   return new Intl.DateTimeFormat('sv-SE', { timeZone: config.timezone }).format(new Date());
@@ -18,8 +19,12 @@ async function checkExpiry() {
   for (const p of products) {
     await notify({
       event: 'stock.expiring',
-      title: p.status === 'expired' ? `${p.name}: MHD überschritten` : `${p.name} bald verbrauchen`,
-      message: `${[p.brand, p.name].filter(Boolean).join(' ')} – MHD ${new Date(p.nextExpiry!).toLocaleDateString('de-DE')} (${fmtQty(p, p.total)} da).`,
+      title: p.status === 'expired' ? t('{name}: past best-before date', { name: p.name }) : t('Use up {name} soon', { name: p.name }),
+      message: t('{product} – best before {date} ({qty} left).', {
+        product: [p.brand, p.name].filter(Boolean).join(' '),
+        date: fmtDay(p.nextExpiry!),
+        qty: fmtQty(p, p.total),
+      }),
       path: `/bestand/${p.id}`,
       data: { product_id: p.id, name: p.name, best_before: p.nextExpiry, status: p.status },
       dedupeKey: `exp:${p.id}:${p.nextExpiry}`,
@@ -40,24 +45,24 @@ export async function sendDigest(force = false) {
   const idea = suggest({ limit: 1 })[0];
   if (!force && low.length === 0 && exp.length === 0 && shopping.length === 0) return;
   const parts: string[] = [];
-  if (exp.length) parts.push(`Bald verbrauchen: ${exp.map((p) => p.name).join(', ')}`);
-  if (low.length) parts.push(`Knapp oder alle: ${low.map((p) => p.name).join(', ')}`);
-  if (shopping.length) parts.push(`Einkaufsliste (${shopping.length}): ${shopping.slice(0, 12).map((x) => x.text).join(', ')}`);
-  if (idea) parts.push(`Kochidee: ${idea.recipe.title} – ${idea.reasons.join(', ')}`);
+  if (exp.length) parts.push(t('Use soon: {list}', { list: exp.map((p) => p.name).join(', ') }));
+  if (low.length) parts.push(t('Running low or out: {list}', { list: low.map((p) => p.name).join(', ') }));
+  if (shopping.length) parts.push(t('Shopping list ({count}): {list}', { count: shopping.length, list: shopping.slice(0, 12).map((x) => x.text).join(', ') }));
+  if (idea) parts.push(t('Cooking idea: {title} – {reasons}', { title: idea.recipe.title, reasons: idea.reasons.join(', ') }));
   const list = (title: string, items: string[]) =>
     items.length ? `<h3 style="font-size:14px;margin:16px 0 6px">${title}</h3><ul style="margin:0;padding-left:18px;line-height:1.6">${items.map((i) => `<li>${i.replace(/[<>&]/g, '')}</li>`).join('')}</ul>` : '';
   const extra =
-    list('Bald verbrauchen', exp.map((p) => `${p.name} (MHD ${new Date(p.nextExpiry!).toLocaleDateString('de-DE')})`)) +
-    list('Knapp oder alle', low.map((p) => `${p.name} – ${fmtQty(p, p.total)}`)) +
-    list('Einkaufsliste', shopping.map((x) => x.text)) +
-    (idea ? list('Kochidee für heute', [`${idea.recipe.title} – ${idea.reasons.join(', ')}`]) : '');
+    list(t('Use soon'), exp.map((p) => t('{name} (best before {date})', { name: p.name, date: fmtDay(p.nextExpiry!) }))) +
+    list(t('Running low or out'), low.map((p) => `${p.name} – ${fmtQty(p, p.total)}`)) +
+    list(t('Shopping list'), shopping.map((x) => x.text)) +
+    (idea ? list(t('Cooking idea for today'), [`${idea.recipe.title} – ${idea.reasons.join(', ')}`]) : '');
   await notify({
     event: 'digest.daily',
-    title: 'Tagesblick',
+    title: t('Daily overview'),
     message: parts.join('\n'),
     path: '/',
     data: { low: low.length, expiring: exp.length, shopping: shopping.length, idea: idea?.recipe.title ?? null },
-    html: emailHtml('Tagesblick', 'Das Wichtigste aus dem Haus auf einen Blick.', config.baseUrl, extra),
+    html: emailHtml(t('Daily overview'), t('The most important things at home at a glance.'), config.baseUrl, extra),
   });
 }
 

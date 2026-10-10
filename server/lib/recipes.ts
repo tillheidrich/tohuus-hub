@@ -2,6 +2,7 @@ import { db } from '../db.js';
 import { emit } from './bus.js';
 import { listProducts, matchIngredient } from './catalog.js';
 import { notifySettings } from './notify.js';
+import { t } from '../i18n.js';
 
 export interface RecipeInput {
   title: string;
@@ -20,6 +21,10 @@ export interface RecipeInput {
 }
 
 const PANTRY_RE = /\b(salz|pfeffer|öl|olivenöl|rapsöl|zucker|wasser|essig|mehl|gewürz|paprikapulver|currypulver|brühe|gemüsebrühe|muskat|chili(flocken)?|zimt|backpulver|natron|sojasauce|senf|ketchup)\b/i;
+const PANTRY_RE_EN = /\b(salt|black pepper|oil|olive oil|sugar|water|vinegar|flour|spices?|paprika powder|curry powder|stock|nutmeg|chilli flakes|cinnamon|baking powder|soy sauce|mustard)\b/i;
+
+/** "salt and pepper" is a basic, "1 red pepper" is a vegetable. */
+const isPantryPepper = (s: string) => /\bpepper\b/i.test(s) && !/^\s*[\d½¼¾]+\s+(\w+\s+)?peppers?\b/i.test(s) && !/\b(bell|red|green|yellow|orange|sweet)\s+peppers?\b/i.test(s);
 
 export function saveRecipe(input: RecipeInput, id?: number): number {
   const vals = [
@@ -59,7 +64,7 @@ export function saveRecipe(input: RecipeInput, id?: number): number {
         'INSERT INTO recipe_ingredients (recipe_id, sort, text, qty, unit, product_id, optional, pantry) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       );
       input.ingredients.forEach((ing, i) => {
-        const pantry = ing.pantry ?? PANTRY_RE.test(ing.text);
+        const pantry = ing.pantry ?? (PANTRY_RE.test(ing.text) || PANTRY_RE_EN.test(ing.text) || isPantryPepper(ing.text));
         let pid = ing.product_id ?? null;
         if (!pid && !pantry) {
           const m = matchIngredient(ingredientCore(ing.text));
@@ -78,9 +83,10 @@ export function saveRecipe(input: RecipeInput, id?: number): number {
 export function ingredientCore(text: string) {
   return text
     .replace(/\(.*?\)/g, '')
-    .replace(/^[\d.,/½¼¾\s-]+(g|kg|ml|l|el|tl|stk|stück|prise[n]?|pck|packung(en)?|dosen?|bund|zehen?|scheiben?|becher|gläser|glas|flaschen?|tüten?|handvoll|msp|kugeln?)?\.?\s+/i, '')
+    .replace(/^[\d.,/½¼¾\s-]+(g|kg|ml|l|el|tl|stk|stück|prise[n]?|pck|packung(en)?|dosen?|bund|zehen?|scheiben?|becher|gläser|glas|flaschen?|tüten?|handvoll|msp|kugeln?|tbsp|tsp|pcs?|packs?|packets?|cans?|tins?|bunch(es)?|cloves?|pinch(es)?|slices?|jars?|bottles?|bags?|cups?|handful)?\.?\s+/i, '')
     .split(',')[0]
     .replace(/\s+(zum|für|nach|zum|als|oder)\s.*$/i, '')
+    .replace(/\s+(for|to|or|as)\s.*$/i, '')
     .trim();
 }
 
@@ -157,23 +163,23 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
     let score = coverage;
     if (usesExpiring.length) {
       score += Math.min(0.3, 0.15 * usesExpiring.length);
-      reasons.push(`verbraucht ${usesExpiring.slice(0, 2).join(' & ')}`);
+      reasons.push(t('uses up {list}', { list: usesExpiring.slice(0, 2).join(' & ') }));
     }
     if (r.favorite) {
       score += 0.1;
-      reasons.push('Lieblingsgericht');
+      reasons.push(t('favourite'));
     }
     const days = r.last_cooked ? (today - new Date(r.last_cooked.replace(' ', 'T') + 'Z').getTime()) / 86400000 : null;
     if (days !== null && days < 6) score -= 0.35;
     else if (days === null) {
       score += 0.05;
-      reasons.push('noch nie gekocht');
+      reasons.push(t('never cooked'));
     } else if (days > 30) {
       score += 0.1;
-      reasons.push(`zuletzt vor ${Math.round(days)} Tagen`);
+      reasons.push(t('last cooked {days} days ago', { days: Math.round(days) }));
     }
-    if (missing.length === 0) reasons.unshift('alles da');
-    else reasons.unshift(`fehlt: ${missing.slice(0, 3).join(', ')}`);
+    if (missing.length === 0) reasons.unshift(t('everything there'));
+    else reasons.unshift(t('missing: {list}', { list: missing.slice(0, 3).join(', ') }));
     if (opts.maxMissing !== undefined && missing.length > opts.maxMissing) continue;
     out.push({ recipe: r, score: Math.round(score * 100) / 100, have, need: ings.length, missing, usesExpiring, reasons });
   }
@@ -221,7 +227,7 @@ export function parseRecipeJsonLd(html: string, url: string): RecipeInput | null
     const img = Array.isArray(rec.image) ? rec.image[0] : typeof rec.image === 'object' ? rec.image?.url : rec.image;
     const isCookidoo = /cookidoo\./.test(url);
     return {
-      title: decodeEnt(rec.name ?? 'Rezept'),
+      title: decodeEnt(rec.name ?? t('Recipe')),
       description: rec.description ? decodeEnt(rec.description) : null,
       source_type: isCookidoo ? 'cookidoo' : 'url',
       source_url: url,
@@ -232,7 +238,7 @@ export function parseRecipeJsonLd(html: string, url: string): RecipeInput | null
       steps,
       ingredients: (rec.recipeIngredient ?? []).map((t: string) => ({ text: decodeEnt(t) })),
       image_path: img ? String(img) : null,
-      notes: isCookidoo && steps.length === 0 ? 'Zubereitungsschritte sind bei Cookidoo nur mit Login sichtbar – Rezept dort öffnen.' : null,
+      notes: isCookidoo && steps.length === 0 ? t('Cookidoo only shows the steps after login – open the recipe there.') : null,
     };
   }
   return null;

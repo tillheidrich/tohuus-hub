@@ -27,6 +27,7 @@ import {
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { LEVELS, type Product, type Status, daysUntil, fmtDate, useApi } from './api';
+import { num, t } from './i18n';
 
 // ------------------------------------------------------------------ icons
 
@@ -93,28 +94,30 @@ export function Thumb({ p, size = 52, className = '' }: { p: { name: string; ima
   );
 }
 
+/** English source text; translated on display */
 const STATUS_LABEL: Record<Status, string> = {
-  ok: 'da',
-  low: 'knapp',
-  empty: 'alle',
-  expiring: 'bald verbrauchen',
-  expired: 'MHD vorbei',
-  untracked: 'ohne Zählung',
+  ok: 'in stock',
+  low: 'low',
+  empty: 'out',
+  expiring: 'use soon',
+  expired: 'past best-before',
+  untracked: 'not counted',
 };
 
 export function StatusBadge({ p, compact = false }: { p: Pick<Product, 'status' | 'nextExpiry'>; compact?: boolean }) {
   if (p.status === 'ok' || p.status === 'untracked') return null;
-  let label = STATUS_LABEL[p.status];
+  let label = t(STATUS_LABEL[p.status]);
   if ((p.status === 'expiring' || p.status === 'expired') && p.nextExpiry) {
     const d = daysUntil(p.nextExpiry);
-    label = d < 0 ? `seit ${-d} T. drüber` : d === 0 ? 'heute' : d === 1 ? 'morgen' : `in ${d} Tagen`;
-    if (!compact) label = (d < 0 ? 'MHD ' : 'MHD ') + label;
+    label = compact
+      ? d < 0 ? t('{n} d over', { n: -d }) : d === 0 ? t('today') : d === 1 ? t('tomorrow') : t('in {n} days', { n: d })
+      : d < 0 ? t('Best before {n} d over', { n: -d }) : d === 0 ? t('Best before today') : d === 1 ? t('Best before tomorrow') : t('Best before in {n} days', { n: d });
   }
   return <span className={`badge ${p.status}`}>{label}</span>;
 }
 
 export function statusText(s: Status) {
-  return STATUS_LABEL[s];
+  return t(STATUS_LABEL[s]);
 }
 
 export function Avatar({ name, color = '#2f5bea', size = 30 }: { name: string; color?: string; size?: number }) {
@@ -130,11 +133,11 @@ export function Avatar({ name, color = '#2f5bea', size = 30 }: { name: string; c
 export function Stepper({ value, onChange, min = 0, label }: { value: number; onChange: (delta: number) => void; min?: number; label?: string }) {
   return (
     <div className="stepper" onClick={(e) => e.stopPropagation()}>
-      <button aria-label="weniger" onClick={() => value > min && onChange(-1)} disabled={value <= min}>
+      <button aria-label={t('less')} onClick={() => value > min && onChange(-1)} disabled={value <= min}>
         <Minus size={16} weight="bold" />
       </button>
-      <span className="val">{label ?? (Number.isInteger(value) ? value : value.toFixed(1))}</span>
-      <button aria-label="mehr" onClick={() => onChange(1)}>
+      <span className="val">{label ?? (Number.isInteger(value) ? value : num(value, 1))}</span>
+      <button aria-label={t('more')} onClick={() => onChange(1)}>
         <Plus size={16} weight="bold" />
       </button>
     </div>
@@ -146,7 +149,7 @@ export function LevelPicker({ value, onChange }: { value: number; onChange: (v: 
     <div className="levels" onClick={(e) => e.stopPropagation()}>
       {LEVELS.map((l, i) => (
         <button key={l} className={Math.round(value) === i ? 'on' : ''} onClick={() => onChange(i)}>
-          {l}
+          {t(l)}
         </button>
       ))}
     </div>
@@ -191,7 +194,7 @@ export function Sheet({ open, onClose, title, children, wide = false, footer }: 
         {title !== undefined && (
           <div className="sheet-head">
             <h2>{title}</h2>
-            <button className="icon-btn plain" onClick={onClose} aria-label="Schließen">
+            <button className="icon-btn plain" onClick={onClose} aria-label={t('Close')}>
               <X size={20} />
             </button>
           </div>
@@ -280,11 +283,11 @@ export function useDebounced<T>(value: T, ms = 250) {
 export function expiryText(d: string | null) {
   if (!d) return '';
   const n = daysUntil(d);
-  if (n < 0) return `MHD seit ${-n} T. vorbei`;
-  if (n === 0) return 'MHD heute';
-  if (n === 1) return 'MHD morgen';
-  if (n < 14) return `MHD in ${n} Tagen`;
-  return `MHD ${fmtDate(d)}`;
+  if (n < 0) return t('Best before passed {n} d ago', { n: -n });
+  if (n === 0) return t('Best before today');
+  if (n === 1) return t('Best before tomorrow');
+  if (n < 14) return t('Best before in {n} days', { n });
+  return t('Best before {date}', { date: fmtDate(d) });
 }
 
 /** Product search & pick sheet (used by import review, recipes …) */
@@ -311,10 +314,10 @@ export function ProductPicker({ open, onClose, onPick, initial = '', allowCreate
     return all.filter((p) => words.every((w) => `${p.brand ?? ''} ${p.name} ${p.size ?? ''}`.toLowerCase().includes(w))).slice(0, 40);
   }, [q, data]);
   return (
-    <Sheet open={open} onClose={onClose} title="Produkt wählen">
+    <Sheet open={open} onClose={onClose} title={t('Choose product')}>
       <div className="searchbar" style={{ marginBottom: 12 }}>
         <MagnifyingGlass size={18} />
-        <input ref={ref} className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Suchen …" />
+        <input ref={ref} className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Search …')} />
       </div>
       <div className="list">
         {allowCreate && q.trim() && (
@@ -323,7 +326,7 @@ export function ProductPicker({ open, onClose, onPick, initial = '', allowCreate
               <Plus size={18} />
             </div>
             <div className="grow">
-              <div className="title">„{q.trim()}“ neu anlegen</div>
+              <div className="title">{t('Create “{name}”', { name: q.trim() })}</div>
             </div>
           </div>
         )}
@@ -336,7 +339,7 @@ export function ProductPicker({ open, onClose, onPick, initial = '', allowCreate
             </div>
           </div>
         ))}
-        {list.length === 0 && !allowCreate && <div className="li muted">Nichts gefunden.</div>}
+        {list.length === 0 && !allowCreate && <div className="li muted">{t('Nothing found.')}</div>}
       </div>
     </Sheet>
   );

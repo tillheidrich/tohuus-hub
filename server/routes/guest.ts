@@ -7,6 +7,7 @@ import { addClient, emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, listProducts } from '../lib/catalog.js';
 import { notify } from '../lib/notify.js';
 import { findThings } from '../lib/find.js';
+import { t } from '../i18n.js';
 
 /** Public guest API — everything is scoped by the share token. */
 export const guest = Router();
@@ -14,7 +15,7 @@ export const guest = Router();
 guest.use('/:token', (req, res, next) => {
   const a = guestFromToken(req.params.token);
   if (!a) {
-    res.status(404).json({ error: 'Dieser Link ist abgelaufen oder ungültig.' });
+    res.status(404).json({ error: t('This link has expired or is invalid.') });
     return;
   }
   req.actor = a;
@@ -27,7 +28,7 @@ guest.get('/:token', (req, res) => {
   res.json({
     name: req.actor!.name,
     scopes: req.actor!.guestScopes,
-    household: getSetting('household.name', 'Unser Zuhause'),
+    household: getSetting('household.name', t('Our home')),
     brand: brand(),
     language: lang(),
     note: (db.prepare('SELECT note FROM guest_links WHERE id = ?').get(req.actor!.guestLinkId) as { note: string | null } | undefined)?.note ?? null,
@@ -49,11 +50,11 @@ guest.get('/:token/menu', (req, res) => {
       brand: p.brand,
       image_path: p.image_path,
       image_credit: p.image_credit,
-      group: p.order_group ?? 'Sonstiges',
+      group: p.order_group ?? t('Other'),
       options: p.order_options,
       available: p.track_mode === 'none' ? true : p.total > 0,
       // stock numbers are only shown roughly to guests
-      hint: p.track_mode === 'none' ? null : p.total <= 0 ? 'gerade alle' : p.total <= 2 ? 'nur noch wenige' : null,
+      hint: p.track_mode === 'none' ? null : p.total <= 0 ? t('all gone right now') : p.total <= 2 ? t('only a few left') : null,
     }));
   res.json(items);
 });
@@ -71,7 +72,7 @@ guest.post('/:token/orders', (req, res) => {
     })
     .parse(req.body);
   if (rateLimited(`order:${req.actor!.guestLinkId}`, 15, 10 * 60_000)) {
-    res.status(429).json({ error: 'Gerade sehr viele Bestellungen – kurz durchatmen und gleich nochmal.' });
+    res.status(429).json({ error: t('Lots of orders right now – take a breath and try again in a moment.') });
     return;
   }
   const products = new Map(listProducts().filter((p) => p.orderable).map((p) => [p.id, p]));
@@ -83,7 +84,7 @@ guest.post('/:token/orders', (req, res) => {
       return { ...l, options: l.options.filter((o) => allowed.has(o)) };
     });
   if (!lines.length) {
-    res.status(400).json({ error: 'Nichts Bestellbares im Warenkorb.' });
+    res.status(400).json({ error: t('Nothing orderable in the basket.') });
     return;
   }
   b.lines = lines;
@@ -105,8 +106,8 @@ guest.post('/:token/orders', (req, res) => {
     .join(', ');
   void notify({
     event: 'order.new',
-    title: `Bestellung von ${b.guest_name}`,
-    message: `${text}${b.note ? ` – „${b.note}"` : ''}`,
+    title: t('Order from {name}', { name: b.guest_name }),
+    message: b.note ? t('{items} – “{note}”', { items: text, note: b.note }) : text,
     path: '/bar',
     data: { order_id: oid, guest: b.guest_name, link: req.actor!.name, items: b.lines.length },
   });
@@ -132,14 +133,14 @@ guest.get('/:token/stock', (req, res) => {
   const allowed: number[] = req.actor!.guestLocations ?? [];
   const locations = db.prepare('SELECT id, name, icon, hint FROM locations ORDER BY sort').all() as any[];
   // never quantities – only what is where, and whether it's there at all
-  const things = findThings(String(req.query.q ?? '').slice(0, 60), allowed.length ? allowed : [-1]).map((t) => ({
-    id: t.id,
-    name: t.name,
-    brand: t.brand,
-    image_path: t.image_path,
-    spot: t.spot,
-    out: t.in_stock === false,
-    place_ids: t.places.map((p) => p.id),
+  const things = findThings(String(req.query.q ?? '').slice(0, 60), allowed.length ? allowed : [-1]).map((x) => ({
+    id: x.id,
+    name: x.name,
+    brand: x.brand,
+    image_path: x.image_path,
+    spot: x.spot,
+    out: x.in_stock === false,
+    place_ids: x.places.map((p) => p.id),
   }));
   res.json({ locations: locations.filter((l) => allowed.includes(l.id)), things });
 });
@@ -159,10 +160,10 @@ guest.post('/:token/shopping', (req, res) => {
   }
   const { text } = z.object({ text: z.string().min(1).max(80) }).parse(req.body);
   if (rateLimited(`gshop:${req.actor!.guestLinkId}`, 30, 60 * 60_000)) {
-    res.status(429).json({ error: 'Für heute reicht’s – danke!' });
+    res.status(429).json({ error: t('That’s enough for today – thanks!') });
     return;
   }
-  res.json(addToShopping({ text, source: 'guest', addedBy: `Gast: ${req.actor!.name}` }));
+  res.json(addToShopping({ text, source: 'guest', addedBy: t('Guest: {name}', { name: req.actor!.name }) }));
 });
 
 /** Admin side: links and incoming orders. */
@@ -185,7 +186,7 @@ guestAdmin.post('/guest-links', (req, res) => {
     })
     .parse(req.body);
   if (b.scopes.includes('stock') && b.location_ids.length === 0) {
-    res.status(400).json({ error: 'Bitte mindestens einen Ort freigeben.' });
+    res.status(400).json({ error: t('Please share at least one location.') });
     return;
   }
   const token = randomToken(12);
@@ -231,6 +232,6 @@ guestAdmin.patch('/orders/:id', (req, res) => {
     }
   }
   emit('orders', 'stock');
-  void notify({ event: 'order.status', title: `Bestellung ${o.id}: ${status}`, message: `${o.guest_name}: ${status}`, path: '/bar', data: { order_id: o.id, status } });
+  void notify({ event: 'order.status', title: t('Order {id}: {status}', { id: o.id, status }), message: `${o.guest_name}: ${status}`, path: '/bar', data: { order_id: o.id, status } });
   res.json({ ok: true });
 });

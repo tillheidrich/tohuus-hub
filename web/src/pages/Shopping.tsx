@@ -2,6 +2,7 @@ import { Basket, Check, Plus, ShareNetwork, Trash, X } from '@phosphor-icons/rea
 import { useMemo, useRef, useState } from 'react';
 import { type Category, type Product, del, get, invalidate, patch, post, qc, useApi } from '../api';
 import { Empty, Ic, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { t } from '../i18n';
 
 function storeGet(k: string, d: string) {
   try {
@@ -41,16 +42,16 @@ export function Shopping() {
     for (const i of open) {
       const c = cats.find((x) => x.id === i.category_id);
       const key = c ? String(c.id) : 'x';
-      if (!map.has(key)) map.set(key, { title: c?.name ?? 'Sonstiges', icon: c?.icon ?? 'tag', sort: c ? cats.indexOf(c) : 99, items: [] });
+      if (!map.has(key)) map.set(key, { title: c?.name ?? t('Other'), icon: c?.icon ?? 'tag', sort: c ? cats.indexOf(c) : 99, items: [] });
       map.get(key)!.items.push(i);
     }
     return [...map.values()].sort((a, b) => a.sort - b.sort);
   }, [open, categories.data]);
 
-  const add = async (t: string, productId?: number) => {
-    if (!t.trim()) return;
+  const add = async (txt: string, productId?: number) => {
+    if (!txt.trim()) return;
     setText('');
-    await post('/shopping', { text: t.trim(), product_id: productId ?? null });
+    await post('/shopping', { text: txt.trim(), product_id: productId ?? null });
     invalidate('shopping', 'overview');
     inputRef.current?.focus();
   };
@@ -58,31 +59,31 @@ export function Shopping() {
     qc.setQueryData<any[]>(['shopping'], (old) => old?.map((x) => (x.id === i.id ? { ...x, checked_at: on ? new Date().toISOString() : null } : x)));
     await patch(`/shopping/${i.id}`, { checked: on, to_stock: on && toStock });
     invalidate('shopping', 'overview', 'products');
-    if (on && toStock && i.product_id) toast({ text: `${i.text} eingeräumt` });
+    if (on && toStock && i.product_id) toast({ text: t('{name} put away', { name: i.text }) });
   };
   const share = async () => {
     const txt = await get<string>('/shopping/export.txt');
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Einkaufsliste', text: txt });
+        await navigator.share({ title: t('Shopping list'), text: txt });
         return;
       } catch {
         /* cancelled */
       }
     }
     await navigator.clipboard.writeText(txt);
-    toast({ text: 'Liste kopiert' });
+    toast({ text: t('List copied') });
   };
 
   return (
     <div>
       <header className="page-head">
         <div>
-          <div className="eyebrow">{open.length} offen</div>
-          <h1>Einkauf</h1>
+          <div className="eyebrow">{t('{n} open', { n: open.length })}</div>
+          <h1>{t('Shopping')}</h1>
         </div>
         <div className="actions">
-          <button className="icon-btn" onClick={share} aria-label="Teilen">
+          <button className="icon-btn" onClick={share} aria-label={t('Share')}>
             <ShareNetwork size={18} />
           </button>
         </div>
@@ -94,7 +95,7 @@ export function Shopping() {
           <input
             ref={inputRef}
             className="input"
-            placeholder="Was fehlt? z. B. Paketband"
+            placeholder={t('What’s missing? e.g. packing tape')}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onFocus={() => setFocus(true)}
@@ -104,7 +105,7 @@ export function Shopping() {
           />
         </div>
         <button className="btn primary" style={{ height: 48 }} onClick={() => add(text)} disabled={!text.trim()}>
-          Hinzu
+          {t('Add')}
         </button>
         {focus && suggestions.length > 0 && (
           <div className="suggest-pop">
@@ -113,7 +114,7 @@ export function Shopping() {
                 <Thumb p={p} size={36} />
                 <div className="grow">
                   <div className="title small">{p.name}</div>
-                  <div className="sub">{[p.brand, p.total > 0 ? `${p.total} da` : 'nicht da'].filter(Boolean).join(' · ')}</div>
+                  <div className="sub">{[p.brand, p.total > 0 ? t('{n} in stock', { n: p.total }) : t('not in stock')].filter(Boolean).join(' · ')}</div>
                 </div>
               </div>
             ))}
@@ -123,8 +124,8 @@ export function Shopping() {
 
       <div className="row between card pad" style={{ marginTop: 12, padding: '10px 14px' }}>
         <div className="small">
-          <b>Beim Abhaken einräumen</b>
-          <div className="muted">Abgehakte Produkte landen direkt im Bestand.</div>
+          <b>{t('Put away when checked off')}</b>
+          <div className="muted">{t('Checked-off products go straight into your stock.')}</div>
         </div>
         <Toggle
           on={toStock}
@@ -140,8 +141,8 @@ export function Shopping() {
           <Skeleton n={5} h={58} />
         ) : open.length === 0 ? (
           <div className="card">
-            <Empty icon={<Basket size={26} />} title="Liste ist leer">
-              Was knapp wird, landet automatisch hier. Oder tipp oben einfach los.
+            <Empty icon={<Basket size={26} />} title={t('Your list is empty')}>
+              {t('Anything that runs low lands here automatically. Or just start typing above.')}
             </Empty>
           </div>
         ) : (
@@ -162,9 +163,9 @@ export function Shopping() {
         {done.length > 0 && (
           <section>
             <div className="row between" style={{ marginBottom: 8 }}>
-              <h3 className="muted">Erledigt</h3>
+              <h3 className="muted">{t('Done')}</h3>
               <button className="linkish" onClick={() => post('/shopping/clear-checked').then(() => invalidate('shopping'))}>
-                Aufräumen
+                {t('Clear')}
               </button>
             </div>
             <div className="list">
@@ -181,10 +182,10 @@ export function Shopping() {
 
 function ShopRow({ i, onCheck }: { i: any; onCheck: (i: any, on: boolean) => void }) {
   const on = Boolean(i.checked_at);
-  const sourceLabel: Record<string, string> = { auto: 'knapp geworden', 'used-up': 'aufgebraucht', recipe: 'fürs Rezept', ha: 'Home Assistant', assistant: 'Assistent', guest: 'Gast' };
+  const sourceLabel: Record<string, string> = { auto: t('ran low'), 'used-up': t('used up'), recipe: t('for a recipe'), ha: 'Home Assistant', assistant: t('Assistant'), guest: t('Guest') };
   return (
     <div className={`shop-item ${on ? 'done' : ''}`}>
-      <button className={`check ${on ? 'on' : ''}`} onClick={() => onCheck(i, !on)} aria-label={on ? 'wieder offen' : 'abhaken'}>
+      <button className={`check ${on ? 'on' : ''}`} onClick={() => onCheck(i, !on)} aria-label={on ? t('Mark as open') : t('Check off')}>
         <Check size={15} weight="bold" />
       </button>
       {i.product_id && <Thumb p={{ name: i.text, image_path: i.image_path }} size={38} />}
@@ -198,7 +199,7 @@ function ShopRow({ i, onCheck }: { i: any; onCheck: (i: any, on: boolean) => voi
         </div>
       </div>
       {!on && (
-        <button className="icon-btn plain" onClick={() => del(`/shopping/${i.id}`).then(() => invalidate('shopping', 'overview'))} aria-label="Entfernen">
+        <button className="icon-btn plain" onClick={() => del(`/shopping/${i.id}`).then(() => invalidate('shopping', 'overview'))} aria-label={t('Remove')}>
           <X size={16} />
         </button>
       )}

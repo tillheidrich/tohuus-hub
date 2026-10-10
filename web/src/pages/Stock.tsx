@@ -3,14 +3,16 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { type Category, type Location, type Product, fmtQty, invalidate, post, qc, useApi } from '../api';
 import { Empty, Ic, LevelPicker, Skeleton, StatusBadge, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { t } from '../i18n';
 
+// English labels, translated at render time with t()
 const STATUS_FILTERS: [string, string][] = [
-  ['all', 'Alles'],
-  ['attention', 'Kümmern'],
-  ['expiring', 'Bald verbrauchen'],
-  ['low', 'Knapp'],
-  ['empty', 'Alle'],
-  ['instock', 'Vorhanden'],
+  ['all', 'Everything'],
+  ['attention', 'Needs attention'],
+  ['expiring', 'Use soon'],
+  ['low', 'Low'],
+  ['empty', 'Out'],
+  ['instock', 'In stock'],
 ];
 
 export function Stock({ onNew }: { onNew: () => void }) {
@@ -59,12 +61,12 @@ export function Stock({ onNew }: { onNew: () => void }) {
         const lid = ort ?? p.stock.find((s) => s.qty > 0)?.location_id ?? p.default_location_id;
         const l = locs.find((x) => x.id === lid);
         key = `l${l?.id ?? 0}`;
-        title = l?.name ?? 'Ohne Ort';
+        title = l?.name ?? t('No location');
         icon = l?.icon ?? 'box';
       } else {
         const c = cats.find((x) => x.id === p.category_id);
         key = `c${c?.id ?? 0}`;
-        title = c?.name ?? 'Ohne Kategorie';
+        title = c?.name ?? t('No category');
         icon = c?.icon ?? 'tag';
       }
       if (!map.has(key)) map.set(key, { key, title, icon, items: [] });
@@ -92,19 +94,21 @@ export function Stock({ onNew }: { onNew: () => void }) {
     invalidate('products', 'overview');
   };
 
+  const inHouse = (products.data ?? []).filter((p) => p.total > 0 && p.track_mode !== 'none').length;
+
   return (
     <div>
       <header className="page-head">
         <div>
-          <div className="eyebrow">{(products.data ?? []).filter((p) => p.total > 0 && p.track_mode !== 'none').length} Produkte im Haus</div>
-          <h1>Bestand</h1>
+          <div className="eyebrow">{inHouse === 1 ? t('1 product at home') : t('{n} products at home', { n: inHouse })}</div>
+          <h1>{t('Stock')}</h1>
         </div>
         <div className="actions">
-          <button className="icon-btn" title="Gruppierung" onClick={() => setGroup(group === 'location' ? 'category' : 'location')}>
+          <button className="icon-btn" title={t('Group by')} onClick={() => setGroup(group === 'location' ? 'category' : 'location')}>
             <SlidersHorizontal size={18} />
           </button>
           <button className="btn primary" onClick={onNew}>
-            <Plus size={16} weight="bold" /> <span className="only-desktop">Produkt</span>
+            <Plus size={16} weight="bold" /> <span className="only-desktop">{t('Product')}</span>
           </button>
         </div>
       </header>
@@ -112,11 +116,11 @@ export function Stock({ onNew }: { onNew: () => void }) {
       <div className="stack" style={{ gap: 10, marginBottom: 18 }}>
         <div className="searchbar">
           <MagnifyingGlass size={18} />
-          <input className="input" placeholder="Suchen: Eis, Nudeln, Paketband …" value={q} onChange={(e) => setQ(e.target.value)} type="search" />
+          <input className="input" placeholder={t('Search: ice cream, pasta, packing tape …')} value={q} onChange={(e) => setQ(e.target.value)} type="search" />
         </div>
         <div className="chips">
           <button className={`chip ${!ort ? 'on' : ''}`} onClick={() => setParam('ort', null)}>
-            Überall
+            {t('Everywhere')}
           </button>
           {(locations.data ?? []).map((l) => (
             <button key={l.id} className={`chip ${ort === l.id ? 'on' : ''}`} onClick={() => setParam('ort', ort === l.id ? null : String(l.id))}>
@@ -128,7 +132,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
           {STATUS_FILTERS.map(([k, l]) => (
             <button key={k} className={`chip ${status === k ? 'on' : ''}`} onClick={() => setParam('status', k === 'all' ? null : k)}>
               {k !== 'all' && k !== 'instock' && k !== 'attention' && <span className={`sdot ${k}`} />}
-              {l}
+              {t(l)}
             </button>
           ))}
         </div>
@@ -138,13 +142,13 @@ export function Stock({ onNew }: { onNew: () => void }) {
         <Skeleton n={6} />
       ) : filtered.length === 0 ? (
         <div className="card">
-          <Empty icon={<Package size={26} />} title={q ? `Nichts zu „${q}“` : 'Hier ist nichts'}>
+          <Empty icon={<Package size={26} />} title={q ? t('Nothing for “{q}”', { q }) : t('Nothing here')}>
             {q ? (
               <button className="btn sm" style={{ marginTop: 8 }} onClick={onNew}>
-                „{q}“ anlegen
+                {t('Add “{q}”', { q })}
               </button>
             ) : (
-              'Lade einen REWE-Bon hoch, scanne einen Barcode oder leg Produkte von Hand an.'
+              t('Upload a REWE receipt, scan a barcode or add products by hand.')
             )}
           </Empty>
         </div>
@@ -190,7 +194,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
         </div>
       )}
       <p className="credit" style={{ marginTop: 24 }}>
-        Produktbilder teils von Open Food Facts (CC BY-SA), Daten unter ODbL.
+        {t('Some product images from Open Food Facts (CC BY-SA), data under ODbL.')}
       </p>
     </div>
   );

@@ -1,8 +1,22 @@
+import { t } from './i18n';
+
 export type BrandKey = 'stockwerk' | 'fredirando';
 
 export const BRANDS: Record<BrandKey, { name: string; logo: string; tagline: string }> = {
-  stockwerk: { name: 'Stockwerk', logo: '/stockwerk-logo.svg', tagline: 'Was im Haus ist. Auf einen Blick.' },
-  fredirando: { name: 'Fredirando', logo: '/fredirando.svg', tagline: 'Bestellt. Gebracht. Aus Küche & Keller.' },
+  stockwerk: {
+    name: 'Stockwerk',
+    logo: '/stockwerk-logo.svg',
+    get tagline() {
+      return t('What’s in the house. At a glance.');
+    },
+  },
+  fredirando: {
+    name: 'Fredirando',
+    logo: '/fredirando.svg',
+    get tagline() {
+      return t('Ordered. Delivered. From kitchen & cellar.');
+    },
+  },
 };
 
 export function currentBrand(): BrandKey {

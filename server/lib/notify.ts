@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { config, smtpEnabled } from '../config.js';
 import { db, getSetting } from '../db.js';
 import { emit } from './bus.js';
+import { t } from '../i18n.js';
 
 export type NotifyEvent =
   | 'stock.low'
@@ -81,7 +82,7 @@ export interface NotifyInput {
 
 async function post(url: string, body: unknown, headers: Record<string, string> = {}) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 8000);
+  const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
     const r = await fetch(url, {
       method: 'POST',
@@ -93,7 +94,7 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
   } catch {
     return false;
   } finally {
-    clearTimeout(t);
+    clearTimeout(timer);
   }
 }
 
@@ -171,7 +172,7 @@ export function emailHtml(title: string, message: string, url: string, extra = '
       <h1 style="font-size:20px;margin:0 0 8px;letter-spacing:-0.02em">${esc(title)}</h1>
       <p style="margin:0 0 16px;line-height:1.5;white-space:pre-line">${esc(message)}</p>
       ${extra}
-      <a href="${esc(url)}" style="display:inline-block;background:#1b1d1f;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:600">In Stockwerk öffnen</a>
+      <a href="${esc(url)}" style="display:inline-block;background:#1b1d1f;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:600">${esc(t('Open in Stockwerk'))}</a>
     </div>
   </div></body></html>`;
 }

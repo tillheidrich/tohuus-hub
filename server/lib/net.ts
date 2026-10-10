@@ -6,6 +6,10 @@
 import dns from 'node:dns';
 import net from 'node:net';
 import { Agent, fetch as ufetch } from 'undici';
+import { t } from '../i18n.js';
+
+/** Errors with a user-facing reason (blocked address, too large …), passed through unchanged. */
+class SafeFetchError extends Error {}
 
 function v4ToInt(ip: string) {
   return ip.split('.').reduce((a, b) => (a << 8) + Number(b), 0) >>> 0;
@@ -37,7 +41,7 @@ const agent = new Agent({
       dns.lookup(hostname, { all: true }, (err, addrs) => {
         if (err) return cb(err);
         const list = addrs as dns.LookupAddress[];
-        if (!list.length || list.some((a) => isPrivateIp(a.address))) return cb(new Error('Adresse nicht erlaubt'));
+        if (!list.length || list.some((a) => isPrivateIp(a.address))) return cb(new SafeFetchError(t('Address not allowed')));
         if (opts?.all) return cb(null, list);
         cb(null, list[0].address, list[0].family);
       });
@@ -64,11 +68,11 @@ export async function safeFetch(
   try {
     for (let hop = 0; hop <= (opts.maxRedirects ?? 3); hop++) {
       const u = new URL(current);
-      if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('Nur http(s)-Links');
-      if (u.port && !['80', '443'].includes(u.port)) throw new Error('Port nicht erlaubt');
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new SafeFetchError(t('Only http(s) links'));
+      if (u.port && !['80', '443'].includes(u.port)) throw new SafeFetchError(t('Port not allowed'));
       const host = u.hostname.replace(/^\[|\]$/g, '');
-      if (net.isIP(host) && isPrivateIp(host)) throw new Error('Adresse nicht erlaubt');
-      if (/^(localhost|.*\.local|.*\.internal)$/i.test(host)) throw new Error('Adresse nicht erlaubt');
+      if (net.isIP(host) && isPrivateIp(host)) throw new SafeFetchError(t('Address not allowed'));
+      if (/^(localhost|.*\.local|.*\.internal)$/i.test(host)) throw new SafeFetchError(t('Address not allowed'));
       const r = await ufetch(current, { dispatcher: agent, redirect: 'manual', signal: ctrl.signal, headers: opts.headers });
       if (r.status >= 300 && r.status < 400 && r.headers.get('location')) {
         current = new URL(r.headers.get('location')!, current).toString();
@@ -78,7 +82,7 @@ export async function safeFetch(
       const len = Number(r.headers.get('content-length') ?? 0);
       if (len > maxBytes) {
         await r.body?.cancel();
-        throw new Error('Datei zu groß');
+        throw new SafeFetchError(t('File too large'));
       }
       const chunks: Buffer[] = [];
       let size = 0;
@@ -87,18 +91,17 @@ export async function safeFetch(
           size += chunk.length;
           if (size > maxBytes) {
             ctrl.abort();
-            throw new Error('Datei zu groß');
+            throw new SafeFetchError(t('File too large'));
           }
           chunks.push(Buffer.from(chunk));
         }
       }
       return { status: r.status, ok: r.ok, contentType: r.headers.get('content-type') ?? '', buf: Buffer.concat(chunks), url: current };
     }
-    throw new Error('Zu viele Weiterleitungen');
+    throw new SafeFetchError(t('Too many redirects'));
   } catch (e) {
-    const msg = (e as Error).message;
-    if (/nicht erlaubt|zu groß|Nur http|Weiterleitungen|Port/.test(msg)) throw e;
-    throw new Error('Link nicht erreichbar');
+    if (e instanceof SafeFetchError || (e as { cause?: unknown })?.cause instanceof SafeFetchError) throw e instanceof SafeFetchError ? e : (e as { cause: SafeFetchError }).cause;
+    throw new Error(t('Link not reachable'));
   } finally {
     clearTimeout(timer);
   }

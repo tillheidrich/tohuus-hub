@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { invalidate, post, useApi } from '../api';
 import { Avatar } from '../ui';
 import { BRANDS, currentBrand } from '../brand';
+import { t } from '../i18n';
 
 export function Login() {
   const users = useApi<{ name: string; color: string }[]>('users-public', '/auth/users');
@@ -40,25 +41,25 @@ export function Login() {
           <div className="h1" style={{ fontSize: 46, maxWidth: 460 }}>
             {fredi ? (
               <>
-                Hunger?
+                {t('Hungry?')}
                 <br />
-                Wir liefern.
+                {t('We deliver.')}
               </>
             ) : (
               <>
-                Was im Haus ist.
+                {t('What’s in the house.')}
                 <br />
-                Auf einen Blick.
+                {t('At a glance.')}
               </>
             )}
           </div>
           <p style={{ opacity: 0.7, maxWidth: 420, marginTop: 14 }}>
             {fredi
-              ? 'Vom Keller bis zum Sofa in unter drei Minuten. Mit Vorrat, Einkaufsliste und Rezepten im Hintergrund.'
-              : 'Gefrierschrank, Keller, Vorrat und Haushalt – mit Einkaufsliste, Rezepten und einer Bar für Gäste.'}
+              ? t('From cellar to couch in under three minutes. Backed by pantry, shopping list and recipes.')
+              : t('Freezer, cellar, pantry and household – with a shopping list, recipes and a bar for guests.')}
           </p>
         </div>
-        <div className="small" style={{ opacity: 0.6 }}>{fredi ? 'Familienbetrieb · Lieferung nur im eigenen Haus' : 'Selbst gehostet · Open Source'}</div>
+        <div className="small" style={{ opacity: 0.6 }}>{fredi ? t('Family business · Delivery to our own house only') : t('Self-hosted · Open source')}</div>
       </div>
       <form className="form" onSubmit={submit}>
         <div className="brand only-mobile" style={{ padding: 0 }}>
@@ -66,8 +67,8 @@ export function Login() {
           {b.name}
         </div>
         <div>
-          <div className="eyebrow">Willkommen zurück</div>
-          <h1>Wer bist du?</h1>
+          <div className="eyebrow">{t('Welcome back')}</div>
+          <h1>{t('Who are you?')}</h1>
         </div>
         <div className="who-pick">
           {(users.data ?? []).map((u) => (
@@ -78,14 +79,14 @@ export function Login() {
           ))}
         </div>
         <div className="field">
-          <label htmlFor="pw">Passwort</label>
+          <label htmlFor="pw">{t('Password')}</label>
           <input id="pw" className="input" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} autoFocus />
           {err && <div className="small" style={{ color: 'var(--empty)' }}>{err}</div>}
         </div>
         <button className="btn primary lg" disabled={busy || !pw}>
-          {fredi ? 'Los geht’s' : 'Rein ins Haus'} <ArrowRight size={18} weight="bold" />
+          {fredi ? t('Let’s go') : t('Come on in')} <ArrowRight size={18} weight="bold" />
         </button>
-        <p className="small muted">Du bleibst auf diesem Gerät angemeldet.</p>
+        <p className="small muted">{t('You’ll stay signed in on this device.')}</p>
       </form>
     </div>
   );

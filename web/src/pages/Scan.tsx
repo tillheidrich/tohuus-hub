@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fmtQty, get, invalidate, post } from '../api';
 import { Seg, StatusBadge, Thumb, useToast } from '../ui';
 import { ProductForm } from './Product';
+import { t } from '../i18n';
 
 let detectorPromise: Promise<any> | null = null;
 async function getDetector() {
@@ -56,7 +57,7 @@ export function Scan() {
       ding();
       if (format === 'qr_code' || /^https?:\/\//.test(value)) {
         if (/^https?:\/\//.test(value)) {
-          toast({ text: 'Digitaler Bon erkannt – wird abgerufen …' });
+          toast({ text: t('Digital receipt detected – fetching …') });
           try {
             const r = await post('/imports/url', { url: value });
             invalidate('imports', 'overview');
@@ -65,7 +66,7 @@ export function Scan() {
             toast({ text: (e as Error).message, error: true });
             nav(`/import?mode=url&url=${encodeURIComponent(value)}`);
           }
-        } else toast({ text: `QR-Code: ${value.slice(0, 60)}` });
+        } else toast({ text: t('QR code: {value}', { value: value.slice(0, 60) }) });
         return;
       }
       setCode(value);
@@ -105,7 +106,7 @@ export function Scan() {
         };
         loop();
       } catch (e) {
-        setErr((e as Error).name === 'NotAllowedError' ? 'Kamera-Zugriff wurde nicht erlaubt.' : 'Keine Kamera verfügbar.');
+        setErr((e as Error).name === 'NotAllowedError' ? t('Camera access was not allowed.') : t('No camera available.'));
       }
     })();
     return () => {
@@ -121,7 +122,7 @@ export function Scan() {
     invalidate('products', 'overview');
     const fresh = await get(`/lookup/barcode/${encodeURIComponent(code)}`);
     setHit(fresh);
-    toast({ text: `${p.name}: ${delta > 0 ? 'eingeräumt' : 'rausgenommen'}` });
+    toast({ text: delta > 0 ? t('{name}: put away', { name: p.name }) : t('{name}: taken out', { name: p.name }) });
   };
   const reset = () => {
     setHit(null);
@@ -132,18 +133,18 @@ export function Scan() {
   return (
     <div>
       <div className="row" style={{ marginBottom: 14 }}>
-        <button className="icon-btn" onClick={() => nav(-1)} aria-label="Zurück">
+        <button className="icon-btn" onClick={() => nav(-1)} aria-label={t('Back')}>
           <ArrowLeft size={18} />
         </button>
         <div className="grow" />
-        <Seg value={mode} onChange={(v) => { setMode(v); reset(); }} options={[['product', 'Produkt'], ['qr', 'Digitaler Bon']]} />
+        <Seg value={mode} onChange={(v) => { setMode(v); reset(); }} options={[['product', t('Product')], ['qr', t('Digital receipt')]]} />
       </div>
       <div className="scanner">
         {err ? (
           <div className="empty-state" style={{ color: '#ddd', height: '100%', justifyContent: 'center' }}>
             <CameraSlash size={32} />
             <b style={{ color: '#fff' }}>{err}</b>
-            <span className="small">Barcode unten eintippen geht auch.</span>
+            <span className="small">{t('You can also type the barcode below.')}</span>
           </div>
         ) : (
           <>
@@ -154,12 +155,12 @@ export function Scan() {
         )}
       </div>
       <p className="small muted" style={{ textAlign: 'center' }}>
-        {mode === 'qr' ? 'QR-Code vom Kassendisplay oder Bon in den Rahmen halten.' : 'Barcode in den Rahmen halten – rein, raus oder neu anlegen.'}
+        {mode === 'qr' ? t('Hold the QR code from the checkout display or receipt inside the frame.') : t('Hold the barcode inside the frame – in, out or new.')}
       </p>
       <div className="row" style={{ marginTop: 8 }}>
-        <input className="input" inputMode="numeric" placeholder="EAN eintippen" value={manual} onChange={(e) => setManual(e.target.value)} />
+        <input className="input" inputMode="numeric" placeholder={t('Type EAN')} value={manual} onChange={(e) => setManual(e.target.value)} />
         <button className="btn" disabled={manual.length < 6} onClick={() => { lastRef.current = ''; handleCode(manual, 'ean_13'); }}>
-          Suchen
+          {t('Search')}
         </button>
       </div>
 
@@ -175,22 +176,22 @@ export function Scan() {
                   <div className="title" style={{ fontWeight: 650 }}>{hit.local.name}</div>
                   <div className="small muted">{[hit.local.brand, hit.local.size].filter(Boolean).join(' · ')}</div>
                   <div className="row" style={{ marginTop: 4, gap: 6 }}>
-                    <span className="badge">{fmtQty(hit.local, hit.local.total)} da</span>
+                    <span className="badge">{t('{qty} in stock', { qty: fmtQty(hit.local, hit.local.total) })}</span>
                     <StatusBadge p={hit.local} compact />
                   </div>
                 </div>
               </div>
               <div className="row">
                 <button className="btn lg grow" onClick={() => quick(-1)}>
-                  <Minus size={18} weight="bold" /> Raus
+                  <Minus size={18} weight="bold" /> {t('Take out')}
                 </button>
                 <button className="btn primary lg grow" onClick={() => quick(1)}>
-                  <Plus size={18} weight="bold" /> Rein
+                  <Plus size={18} weight="bold" /> {t('In')}
                 </button>
               </div>
               <div className="row between">
-                <button className="linkish" onClick={() => nav(`/bestand/${hit.local.id}`)}>Details</button>
-                <button className="linkish" onClick={reset}>Nächster Scan</button>
+                <button className="linkish" onClick={() => nav(`/bestand/${hit.local.id}`)}>{t('Details')}</button>
+                <button className="linkish" onClick={reset}>{t('Next scan')}</button>
               </div>
             </div>
           ) : hit.remote ? (
@@ -198,7 +199,7 @@ export function Scan() {
               <div className="row">
                 <Thumb p={{ name: hit.remote.name, image_path: hit.remote.imageSmall }} size={64} />
                 <div className="grow">
-                  <div className="eyebrow">Neu · aus Open Food Facts</div>
+                  <div className="eyebrow">{t('New · from Open Food Facts')}</div>
                   <div className="title" style={{ fontWeight: 650 }}>{hit.remote.name}</div>
                   <div className="small muted">{[hit.remote.brand, hit.remote.quantity].filter(Boolean).join(' · ')}</div>
                 </div>
@@ -207,23 +208,23 @@ export function Scan() {
                 className="btn primary lg"
                 onClick={() => setForm({ name: hit.remote.name, brand: hit.remote.brand ?? '', size: hit.remote.quantity ?? '', code, image_url: hit.remote.image ?? hit.remote.imageSmall ?? '' })}
               >
-                Anlegen und einräumen
+                {t('Create and put away')}
               </button>
-              <button className="linkish" onClick={reset}>Abbrechen</button>
+              <button className="linkish" onClick={reset}>{t('Cancel')}</button>
             </div>
           ) : (
             <div className="stack">
               <div className="row">
                 <div className="thumb" style={{ width: 52, height: 52 }}><Barcode size={24} /></div>
                 <div className="grow">
-                  <div className="title" style={{ fontWeight: 650 }}>Unbekannter Barcode</div>
+                  <div className="title" style={{ fontWeight: 650 }}>{t('Unknown barcode')}</div>
                   <div className="small muted mono">{code}</div>
                 </div>
               </div>
               <button className="btn primary lg" onClick={() => setForm({ code })}>
-                Selbst anlegen
+                {t('Create it yourself')}
               </button>
-              <button className="linkish" onClick={reset}>Abbrechen</button>
+              <button className="linkish" onClick={reset}>{t('Cancel')}</button>
             </div>
           )}
         </div>
@@ -231,7 +232,7 @@ export function Scan() {
       {mode === 'qr' && !hit && (
         <div className="banner" style={{ marginTop: 14, cursor: 'default' }}>
           <span className="ic"><QrCode size={20} /></span>
-          <div className="small">Funktioniert mit Links zu PDF- oder Web-Bons. Lässt sich der Bon nur in einer Händler-App öffnen, dort als PDF teilen und hochladen.</div>
+          <div className="small">{t('Works with links to PDF or web receipts. If the receipt only opens in a retailer app, share it from there as a PDF and upload it.')}</div>
         </div>
       )}
       <ProductForm open={Boolean(form)} onClose={() => { setForm(null); reset(); }} initial={form ?? undefined} />

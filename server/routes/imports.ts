@@ -12,6 +12,7 @@ import { norm, parseGermanNumber, titleCaseReceipt } from '../lib/text.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
 import { safeFetch } from '../lib/net.js';
+import { t } from '../i18n.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -125,10 +126,10 @@ r.post('/imports/upload', upload.array('files', 8), async (req, res) => {
         results.push({ file: f.originalname, ...createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
       } else if (visionAvailable() && text.trim().length > 30) {
         const j = await runVision('text-items', { text: text.slice(0, 12000) });
-        const imp = linesToImport('receipt', `Beleg ${f.originalname}`, cleanLines(j.lines));
+        const imp = linesToImport('receipt', t('Receipt {file}', { file: f.originalname }), cleanLines(j.lines));
         results.push({ file: f.originalname, ...createImport(imp, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
       } else {
-        results.push({ file: f.originalname, error: 'PDF-Format nicht erkannt (unterstützt: REWE Abholavis, Lieferavis, eBon).' });
+        results.push({ file: f.originalname, error: t('PDF format not recognised (supported: REWE pickup notice, delivery notice, eBon).') });
       }
     } else if (f.mimetype.startsWith('image/')) {
       images.push(f);
@@ -138,7 +139,7 @@ r.post('/imports/upload', upload.array('files', 8), async (req, res) => {
   }
   if (images.length) {
     if (!visionAvailable()) {
-      results.push({ error: 'Für Fotos ist kein Vision-Modell eingerichtet. Tipp: Foto an Claude/ChatGPT schicken – über MCP landet es trotzdem hier.' });
+      results.push({ error: t('No vision model is set up for photos. Tip: send the photo to Claude/ChatGPT – via MCP it still ends up here.') });
     } else {
       const dataUrls = await Promise.all(images.map((i) => toVisionJpeg(i.buffer)));
       const task = mode === 'shelf' ? 'shelf' : 'receipt';
@@ -192,10 +193,10 @@ r.post('/imports/url', async (req, res) => {
     }
     if (visionAvailable()) {
       const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
-      res.json(createImport(linesToImport('url', 'Digitaler Bon', lines), { actor: actorName(req), rawText: text }));
+      res.json(createImport(linesToImport('url', t('Digital receipt'), lines), { actor: actorName(req), rawText: text }));
       return;
     }
-    res.status(422).json({ error: 'PDF erkannt, aber Format unbekannt und kein Modell eingerichtet.' });
+    res.status(422).json({ error: t('PDF recognised, but the format is unknown and no model is set up.') });
     return;
   }
   if (type.includes('html') || type.includes('text')) {
@@ -213,11 +214,11 @@ r.post('/imports/url', async (req, res) => {
     }
     if (visionAvailable()) {
       const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
-      res.json(createImport(linesToImport('url', 'Digitaler Bon', lines), { actor: actorName(req) }));
+      res.json(createImport(linesToImport('url', t('Digital receipt'), lines), { actor: actorName(req) }));
       return;
     }
   }
-  res.status(422).json({ error: 'Unter diesem Link wurde kein lesbarer Bon gefunden. Öffne ihn im Browser und lade das PDF hoch.' });
+  res.status(422).json({ error: t('No readable receipt was found at this link. Open it in the browser and upload the PDF.') });
 });
 
 /**
@@ -227,14 +228,14 @@ r.post('/imports/url', async (req, res) => {
  */
 r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
   if (!req.file) {
-    res.status(400).json({ error: 'Keine Datei' });
+    res.status(400).json({ error: t('No file') });
     return;
   }
   const minCount = Number(req.body.min_count ?? 3);
   const text = req.file.buffer.toString('utf8').replace(/^﻿/, '');
   const [head, ...rows] = text.split(/\r?\n/).filter(Boolean);
   if (!head) {
-    res.status(400).json({ error: 'Datei ist leer' });
+    res.status(400).json({ error: t('File is empty') });
     return;
   }
   const sep = head.includes(';') ? ';' : ',';
@@ -243,7 +244,7 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
   const iName = iRaw >= 0 ? iRaw : cols.findIndex((c) => ['name', 'artikel', 'artikel_norm', 'produkt'].includes(c));
   const iCat = cols.indexOf('kategorie');
   if (iName < 0) {
-    res.status(400).json({ error: 'Spalte „Artikel_roh“ oder „name“ fehlt.' });
+    res.status(400).json({ error: t('Column “Artikel_roh” or “name” is missing.') });
     return;
   }
   const counts = new Map<string, { n: number; cat: string | null }>();
@@ -280,7 +281,7 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
         linked++;
         continue;
       }
-      const pid = createProduct({ name, brand, size, notes: `Kaufhistorie: ${n}× gekauft` });
+      const pid = createProduct({ name, brand, size, notes: t('Purchase history: bought {n}×', { n }) });
       learnAlias(bonName, pid, 'catalog');
       created++;
     }
