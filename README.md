@@ -4,6 +4,8 @@
 
 <h1 align="center">ToHuus Hub</h1>
 
+<p align="center"><a href="https://tohuus.heidrich-digital.de">Website</a> · <a href="https://tohuus.heidrich-digital.de/de/">Deutsch</a></p>
+
 <p align="center">
   <b>Your home. Organized.</b><br/>
   Open-source home management: what's in the house, where it is, what's for dinner — with a week plan, a guest bar, Home Assistant and an MCP server built in.
@@ -60,7 +62,7 @@ And because the honest answer to *"what should we cook?"* depends on what's actu
 ## Quick start
 
 ```bash
-git clone https://github.com/tillheidrich/tohuus-hub.git && cd tohuus
+git clone https://github.com/tillheidrich/tohuus-hub.git && cd tohuus-hub
 cp .env.example .env        # set BASE_URL, ADMIN_NAME, ADMIN_PASSWORD
 docker compose up -d --build
 ```

@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ToHuus Hub — Dein Zuhause. Organisiert.</title>
+<meta name="description" content="Kostenlose Open-Source-App für den Haushalt, die du selbst betreibst: was im Haus ist, wo es liegt, was es heute gibt. Vorrat nach Räumen, gemeinsame Einkaufsliste, Bon-Import, Wochenplan, Gäste-Bar, Home Assistant und MCP.">
+<link rel="canonical" href="https://tohuus.heidrich-digital.de/de/">
+<link rel="alternate" hreflang="en" href="https://tohuus.heidrich-digital.de/">
+<link rel="alternate" hreflang="de" href="https://tohuus.heidrich-digital.de/de/">
+<link rel="alternate" hreflang="x-default" href="https://tohuus.heidrich-digital.de/">
+<meta name="theme-color" content="#f3f2ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ToHuus Hub">
+<meta property="og:title" content="ToHuus Hub — Dein Zuhause. Organisiert.">
+<meta property="og:description" content="Kostenlos, selbst gehostet, Open Source: Vorrat nach Räumen, wo was liegt, was es heute gibt.">
+<meta property="og:url" content="https://tohuus.heidrich-digital.de/de/">
+<meta property="og:image" content="https://tohuus.heidrich-digital.de/assets/img/og-de.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="de_DE">
+<meta property="og:locale:alternate" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preload" href="../assets/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/site.css">
+<script>document.documentElement.classList.add('js')</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus Hub","applicationCategory":"LifestyleApplication","operatingSystem":"Docker, Linux","license":"https://www.gnu.org/licenses/agpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"url":"https://tohuus.heidrich-digital.de/de/","codeRepository":"https://github.com/tillheidrich/tohuus-hub","inLanguage":["de","en"]}
+</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M8.5 7H17v8.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 7"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-basket" viewBox="0 0 24 24"><path d="M3.5 9.5h17l-1.7 9.6a1.5 1.5 0 0 1-1.5 1.2H6.7a1.5 1.5 0 0 1-1.5-1.2z"/><path d="m8 9.5 3-5.5M16 9.5 13 4M9.5 13.5v3.5M14.5 13.5v3.5"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+  <symbol id="i-pot" viewBox="0 0 24 24"><path d="M4 11h16v2.5a6.5 6.5 0 0 1-6.5 6.5h-3A6.5 6.5 0 0 1 4 13.5z"/><path d="M2.5 11h19M8.5 7.5c0-1.2 1-1.6 1-2.8M12.5 7.5c0-1.2 1-1.6 1-2.8"/></symbol>
+  <symbol id="i-glass" viewBox="0 0 24 24"><path d="M5 4h14l-7 8z"/><path d="M12 12v8M8 20h8"/></symbol>
+  <symbol id="i-house" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><circle cx="12" cy="14.5" r="2"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0z"/><path d="M12 16.5V21"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.2-7.5 9.5-4.3-1.3-7.5-5-7.5-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-lang" viewBox="0 0 24 24"><path d="M4 5.5h9M8.5 3v2.5M6 5.5c0 4 2.7 7 6 8M11 5.5c0 4.2-3 7.7-7 8.8M13 21l4-9 4 9M14.4 18h5.2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M8 8.5v7M11 8.5v7M13.5 8.5v7M16 8.5v7"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></symbol>
+  <symbol id="i-cup" viewBox="0 0 24 24"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5V6M11 3.5V6"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="7" rx="2"/><rect x="3.5" y="13" width="17" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol>
+</svg>
+
+<a class="skip" href="#main">Zum Inhalt springen</a>
+
+<header class="nav" aria-label="Hauptnavigation">
+  <a class="brand" href="./" aria-label="ToHuus Hub Startseite"><img src="../assets/favicon.svg" alt="" width="28" height="28">ToHuus Hub</a>
+  <nav class="nav-links" aria-label="Abschnitte">
+    <a href="#funktionen">Funktionen</a>
+    <a href="#datenschutz">Datenschutz</a>
+    <a href="#installation">Installation</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Sprache">
+    <a href="../" hreflang="en" lang="en">EN</a>
+    <a href="./" hreflang="de" lang="de" aria-current="true">DE</a>
+  </div>
+  <a class="nav-gh" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico"><use href="#i-github"/></svg><span>GitHub</span></a>
+</header>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>Kostenlos &middot; Open Source &middot; selbst gehostet</span>
+      <h1 class="reveal" style="--d:80ms">Dein Zuhause.<span class="soft">Organisiert.</span></h1>
+      <p class="lede reveal" style="--d:160ms">Was im Haus ist, wo es liegt und was es heute gibt. Eine App für die ganze Familie, auf deinem eigenen Server.</p>
+      <div class="btns reveal" style="--d:240ms">
+        <a class="btn btn-primary" href="#installation">Installieren<span class="btn-ico"><svg class="ico"><use href="#i-arrow"/></svg></span></a>
+        <a class="btn btn-ghost" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico"><use href="#i-github"/></svg>Zum Code</a>
+      </div>
+      <ul class="facts reveal" style="--d:320ms">
+        <li><svg class="ico"><use href="#i-check"/></svg>AGPL-3.0</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Docker, ~60 MB RAM</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Kein Tracking</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Deutsch &amp; Englisch</li>
+      </ul>
+    </div>
+    <div class="stack" aria-label="Screenshots der App">
+      <figure class="phone p-left reveal" style="--d:260ms;margin:0"><div class="screen"><img src="../assets/img/de-cook.webp" alt="Wochenplan mit einem Gericht für jeden Abend" width="780" height="1688" loading="eager"></div></figure>
+      <figure class="phone p-main reveal" style="--d:120ms;margin:0"><div class="screen">
+        <img src="../assets/img/de-today.webp" alt="Heute-Ansicht: was bald weg muss, was alle ist, die Einkaufsliste" width="780" height="1688" fetchpriority="high">
+      </div></figure>
+      <figure class="phone p-right reveal" style="--d:360ms;margin:0"><div class="screen"><img src="../assets/img/de-stock.webp" alt="Bestand nach Räumen mit Plus- und Minus-Knöpfen" width="780" height="1688" loading="eager"></div></figure>
+      <span class="float-tag t1 reveal" style="--d:600ms"><i><svg class="ico"><use href="#i-basket"/></svg></i>Milch alle? Steht schon drauf.</span>
+      <span class="float-tag t2 reveal" style="--d:720ms"><i><svg class="ico"><use href="#i-pin"/></svg></i>Paketband: Flur, oberste Schublade</span>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="section" id="warum" style="padding-top:48px">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow reveal">Warum es das gibt</span>
+      <h2 class="reveal">Drei Fragen. Jeden Tag.</h2>
+    </div>
+    <div class="questions">
+      <div class="q reveal"><small>17:45, vor dem offenen Kühlschrank</small>Was essen wir heute?</div>
+      <div class="q reveal" style="--d:120ms"><small>Paket halb gepackt</small>Wo ist das Paketband?</div>
+      <div class="q reveal" style="--d:240ms"><small>Irgendwo im Supermarkt</small>Haben wir noch Milch?</div>
+    </div>
+    <div class="calm">
+      <h3 class="reveal">Weniger merken. Weniger Diskussionen.</h3>
+      <div class="reveal" style="--d:120ms">
+        <p>In den meisten Haushalten hat eine Person alles im Kopf: was knapp wird, was am Donnerstag abläuft, in welcher Schublade die Pflaster liegen. Das ist Mental Load, und der macht müde.</p>
+        <p>ToHuus Hub holt dieses Wissen aus dem einen Kopf an einen Ort, den alle sehen. Wir haben die App mit ADHS im Hinterkopf gebaut: wenige Klicks, nichts, was du dir selbst merken musst, und kleine Hinweise statt Datenwüste.</p>
+        <ul class="pills"><li>Schnell gepflegt</li><li>Ungefähr reicht</li><li>Für alle im Haus</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="funktionen" style="padding-top:24px">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow reveal">Was die App kann</span>
+      <h2 class="reveal">Der Vorrat kommt über das, was du eh schon hast.</h2>
+      <p class="reveal">Die meisten Vorrats-Apps scheitern gleich: Jemand müsste alles eintippen, keiner macht's, und irgendwann fliegt die App vom Handy. ToHuus Hub liest stattdessen Bons, Bestellungen und Fotos, und „halb voll“ ist eine völlig okaye Angabe.</p>
+    </div>
+
+    <div class="features">
+      <article class="feature">
+        <div>
+          <span class="feature-num reveal"><svg class="ico"><use href="#i-sun"/></svg>01 &middot; Heute</span>
+          <h3 class="reveal">Ein Blick für das ganze Haus.</h3>
+          <p class="reveal">Du machst die App auf und siehst, was gerade zählt: was bald weg muss, was alle ist, was knapp wird, die Einkaufsliste, das passende Rezept für heute Abend, offene Importe und Gäste-Bestellungen.</p>
+          <ul class="ticks reveal">
+            <li><svg class="ico"><use href="#i-check"/></svg><span><b>Wo finde ich &hellip;?</b> Die Suche steht ganz oben.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Etwas verbraucht? Ein Tipp, direkt in der Liste.</span></li>
+          </ul>
+        </div>
+        <div class="feature-media reveal"><div class="stage"><div class="stage-core">
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/de-today.webp" alt="Heute-Ansicht von ToHuus Hub" width="780" height="1688" loading="lazy"></div></figure>
+        </div></div></div>
+      </article>
+
+      <article class="feature flip">
+        <div>
+          <span class="feature-num reveal"><svg class="ico"><use href="#i-box"/></svg>02 &middot; Vorrat nach Räumen</span>
+          <h3 class="reveal">Kühlschrank, Truhe, Keller. Auf einen Blick.</h3>
+          <p class="reveal">Jeder Ort im Haus bekommt seine eigene Liste. Obst, Gemüse und Brot pflegst du grob: voll, halb, wenig, leer. Packungen und Flaschen werden gezählt. Und den Kaffee aus der Maschine musst du gar nicht zählen.</p>
+          <ul class="ticks reveal">
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Mindesthaltbarkeit pro Charge, das Älteste wird zuerst verbraucht.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Umräumen zwischen Orten, Verlauf und Wochenverbrauch.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Barcode mit der Handykamera scannen, Produktfotos von Open Food Facts.</span></li>
+          </ul>
+        </div>
+        <div class="feature-media reveal"><div class="stage amber"><div class="stage-core">
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/de-stock.webp" alt="Bestandsliste mit Mengen und Haltbarkeits-Hinweisen" width="780" height="1688" loading="lazy"></div></figure>
+        </div></div></div>
+      </article>
+
+      <article class="feature">
+        <div>
+          <span class="feature-num reveal"><svg class="ico"><use href="#i-pin"/></svg>03 &middot; Wo ist was?</span>
+          <h3 class="reveal">„Linkes Regal, oberes Fach.“</h3>
+          <p class="reveal">Gib jedem Ding einen genauen Platz und jedem Raum eine kurze Wegbeschreibung. Dann findet jeder die Pflaster, das Fieberthermometer, den Sicherungskasten oder den Ersatzschlüssel. Auch Sachen, die du nie zählen würdest.</p>
+          <ul class="ticks reveal">
+            <li><svg class="ico"><use href="#i-check"/></svg><span><b>Babysitter-Link:</b> genau diese Suche, nur zum Lesen, mit deinem Hinweis obendrauf: Notfallnummern, Schlafenszeit.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Gäste-Links zeigen Namen und Orte, nie Mengen, und laufen von selbst ab.</span></li>
+          </ul>
+        </div>
+        <div class="feature-media reveal"><div class="stage blue"><div class="stage-core duo">
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/de-where.webp" alt="Liste „Wo ist was?“ mit genauen Plätzen" width="780" height="1688" loading="lazy"></div></figure>
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/de-guest-sitter.webp" alt="Babysitter-Ansicht mit Notfall-Hinweis und Suche" width="780" height="1688" loading="lazy"></div></figure>
+        </div></div></div>
+      </article>
+
+      <article class="feature flip">
+        <div>
+          <span class="feature-num reveal"><svg class="ico"><use href="#i-basket"/></svg>04 &middot; Einkaufsliste</span>
+          <h3 class="reveal">Eine Liste, alle Handys, live.</h3>
+          <p class="reveal">Die Liste ist bei allen im Haushalt gleichzeitig aktuell, auch während du im Laden stehst. Was knapp wird, landet von allein drauf. Hakst du etwas ab, wandert es direkt in den Vorrat.</p>
+          <ul class="ticks reveal">
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Nach Kategorien sortiert, und du siehst, wer was eingetragen hat.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Als Text teilen, wenn jemand anderes einkaufen geht.</span></li>
+          </ul>
+        </div>
+        <div class="feature-media reveal"><div class="stage"><div class="stage-core">
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/de-shopping.webp" alt="Gemeinsame Einkaufsliste nach Kategorien" width="780" height="1688" loading="lazy"></div></figure>
+        </div></div></div>
+      </article>
+
+      <article class="feature">
+        <div>
+          <span class="feature-num reveal"><svg class="ico"><use href="#i-receipt"/></svg>05 &middot; Bons &amp; Bestellungen</span>
+          <h3 class="reveal">Bon hochladen. Abtippen sparen.</h3>
+          <p class="reveal">ToHuus Hub liest das REWE-Abhol- und Lieferavis und den eBon und gleicht die Bestellung mit dem Bon ab. Was du bei der Abholung zurückgegeben hast, landet also nicht im Vorrat.</p>
+          <ul class="ticks reveal">
+            <li><svg class="ico"><use href="#i-check"/></svg><span>PDFs, digitale Bons per QR-Code, Fotos und eingefügter Text.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span><b>Ein Prüfschritt</b> für Ersatzartikel, fehlende Posten, neue Produkte und den richtigen Ort.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Die kryptischen Bon-Kürzel lernt die App Produkt für Produkt.</span></li>
+          </ul>
+        </div>
+        <div class="feature-media reveal"><div class="stage"><div class="stage-core">
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/de-import-review.webp" alt="Prüfansicht einer REWE-Abholung mit Ersatzartikel und geänderter Menge" width="780" height="1688" loading="lazy"></div></figure>
+          <p class="stage-note">Die Parser arbeiten fest nach Regeln und sind getestet. Andere Märkte sind als Beitrag herzlich willkommen.</p>
+        </div></div></div>
+      </article>
+
+      <article class="feature flip">
+        <div>
+          <span class="feature-num reveal"><svg class="ico"><use href="#i-pot"/></svg>06 &middot; Rezepte &amp; Wochenplan</span>
+          <h3 class="reveal">Was es gibt, entscheidet der Vorrat.</h3>
+          <p class="reveal">Rezepte werden nach Vorrat, Ablaufdaten, Lieblingen und danach sortiert, wie lange du sie nicht mehr gekocht hast. Füll die freien Abende der Woche auf einmal, und mit einem weiteren Tipp steht alles Fehlende auf der Liste.</p>
+          <ul class="ticks reveal">
+            <li><svg class="ico"><use href="#i-check"/></svg><span><b>„Wir essen auswärts“:</b> das Gericht von heute und alle danach rutschen einen Tag weiter.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Rezepte von Websites mit Rezeptdaten, aus Fotos oder Text übernehmen. Thermomix-Schritte inklusive.</span></li>
+            <li><svg class="ico"><use href="#i-check"/></svg><span>Du planst in Cookidoo? Über Home Assistant kommt deine Woche alle drei Stunden rüber.</span></li>
+          </ul>
+        </div>
+        <div class="feature-media reveal"><div class="stage amber"><div class="stage-core">
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/de-cook.webp" alt="Wochenplan mit einem Rezept pro Tag" width="780" height="1688" loading="lazy"></div></figure>
+        </div></div></div>
+      </article>
+
+      <article class="feature">
+        <div>
+          <span class="feature-num reveal"><svg class="ico"><use href="#i-glass"/></svg>07 &middot; Gäste-Bar</span>
+          <h3 class="reveal">Gäste bestellen vom Sofa aus.</h3>
+          <p class="reveal">Beim Grillabend teilst du einen Link oder QR-Code. Deine Gäste wählen Getränke, Eis und Snacks aus dem, was wirklich da ist, mit Extras wie Hafermilch oder Streuseln. Du bekommst eine Push-Nachricht, nimmst an, servierst, und der Vorrat stimmt wieder.</p>
+          <ul class="ticks reveal">
+            <li><svg class="ico"><use href="#i-check"/></svg><span><b>Fredirando:</b> ein optionales, leicht albernes Lieferdienst-Design. Orange, „Fahrer ist unterwegs“, das volle Programm.</span></li>
+          </ul>
+        </div>
+        <div class="feature-media reveal"><div class="stage warm"><div class="stage-core duo">
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/de-guest-bar.webp" alt="Getränkekarte der Gäste-Bar" width="780" height="1688" loading="lazy"></div></figure>
+          <figure class="phone" style="margin:0"><div class="screen"><img src="../assets/img/fredi-today.webp" alt="Die App im orangen Fredirando-Design" width="780" height="1688" loading="lazy"></div></figure>
+        </div></div></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- BENTO -->
+<section class="section" id="datenschutz" style="padding-top:24px">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow reveal">Vernetzt, zu deinen Bedingungen</span>
+      <h2 class="reveal">Spricht mit deinem Smart Home. Gehört dir.</h2>
+    </div>
+    <div class="bento">
+      <div class="cell c-mcp reveal"><div class="cell-core">
+        <span class="badge-ico"><svg class="ico"><use href="#i-plug"/></svg></span>
+        <h3>Claude, ChatGPT &amp; Co. per MCP</h3>
+        <p>Ein eingebauter MCP-Server mit 20 gezielten Werkzeugen: Vorrat abfragen und ändern, Einkauf erfassen, Woche planen, Rezept speichern. Schick ein Foto vom Handy und lass den Assistenten den Rest erledigen.</p>
+        <div class="chat" aria-hidden="true">
+          <div class="bubble me"><span class="att"><svg class="ico"><use href="#i-camera"/></svg>gefriertruhe.jpg</span><br>Das ist die Schublade aus der Truhe. Trag das bitte in ToHuus Hub ein.</div>
+          <div class="bubble ai">Erledigt. 6 Sachen für die Gefriertruhe liegen zum Prüfen bereit.</div>
+        </div>
+      </div></div>
+      <div class="cell c-ha reveal" style="--d:100ms"><div class="cell-core">
+        <span class="badge-ico"><svg class="ico"><use href="#i-house"/></svg></span>
+        <h3>Home Assistant</h3>
+        <p>Fertiges Paket mit Sensoren für knappe, leere und ablaufende Sachen, einem <span class="inline-code">rest_command</span> und einer Push-Nachricht mit Knopf: „Auf die Einkaufsliste“.</p>
+      </div></div>
+      <div class="cell c-priv reveal"><div class="cell-core">
+        <span class="badge-ico"><svg class="ico"><use href="#i-shield"/></svg></span>
+        <h3>Deine Daten bleiben zu Hause</h3>
+        <p>Eine SQLite-Datei auf deinem eigenen Gerät. JSON-Export. Kein Tracking, kein Konto bei uns, keine Cloud-Abhängigkeit. Läuft auf einem NAS oder einem kleinen Server in der EU.</p>
+        <ul class="kv">
+          <li><span>Speicher</span><span>SQLite</span></li>
+          <li><span>Arbeitsspeicher</span><span>~60 MB</span></li>
+          <li><span>Tracking</span><span>keins</span></li>
+        </ul>
+      </div></div>
+      <div class="cell c-vision reveal" style="--d:100ms"><div class="cell-core">
+        <span class="badge-ico"><svg class="ico"><use href="#i-eye"/></svg></span>
+        <h3>Foto-Erkennung ist freiwillig</h3>
+        <p>Du kannst jedes OpenAI-kompatible Bildmodell anschließen, zum Beispiel Mistral aus der EU oder Ollama auf eigener Hardware. Oder du lässt es weg: Alles andere funktioniert ohne, und Fotos kommen trotzdem über deinen Assistenten rein.</p>
+        <ul class="kv">
+          <li><span>Bildmodell</span><span>optional, austauschbar</span></li>
+          <li><span>Beispiele</span><span>Mistral, Ollama, vLLM</span></li>
+        </ul>
+      </div></div>
+      <div class="cell c-lang reveal"><div class="cell-core">
+        <span class="badge-ico"><svg class="ico"><use href="#i-lang"/></svg></span>
+        <h3>Deutsch &amp; Englisch</h3>
+        <p>Pro Haushalt umschaltbar. Benachrichtigungen, E-Mails und Demodaten ziehen mit. Eine neue Sprache ist eine einzige Datei.</p>
+      </div></div>
+      <div class="cell c-notify reveal" style="--d:100ms"><div class="cell-core">
+        <span class="badge-ico"><svg class="ico"><use href="#i-bell"/></svg></span>
+        <h3>Benachrichtigungen</h3>
+        <p>Home Assistant, ntfy, beliebiger Webhook oder E-Mail. Knapp, leer, läuft ab, neue Gäste-Bestellung oder eine tägliche Zusammenfassung.</p>
+      </div></div>
+      <div class="cell c-scan reveal" style="--d:200ms"><div class="cell-core">
+        <span class="badge-ico"><svg class="ico"><use href="#i-scan"/></svg></span>
+        <h3>Barcodes</h3>
+        <p>Mit der Handykamera scannen, direkt im Browser. Namen und Fotos kommen von Open Food Facts.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DESKTOP -->
+<section class="section" style="padding-top:24px">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="eyebrow reveal">Handy, Tablet, Rechner</span>
+      <h2 class="reveal">Überall zu Hause.</h2>
+      <p class="reveal">Eine Web-App, die du auf den Homescreen legen kannst. Auf dem Laptop oder dem Küchen-Tablet wird daraus ein ruhiges Layout mit Seitenleiste. Hell oder dunkel, wie dein System.</p>
+    </div>
+    <div class="browser reveal"><div class="browser-core">
+      <div class="browser-bar" aria-hidden="true"><i></i><i></i><i></i><span>zuhause.dein-server.example</span></div>
+      <img src="../assets/img/de-desktop.webp" alt="ToHuus Hub im Desktop-Browser mit Seitenleiste" width="1800" height="1157" loading="lazy">
+    </div></div>
+  </div>
+</section>
+
+<!-- WHO -->
+<section class="section" id="fuer-wen" style="padding-top:24px">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow reveal">Für wen</span>
+      <h2 class="reveal">Zuerst für Haushalte gemacht.</h2>
+    </div>
+    <div class="who">
+      <div class="cell primary reveal"><div class="cell-core">
+        <span class="label">Hauptsache</span>
+        <span class="badge-ico"><svg class="ico"><use href="#i-users"/></svg></span>
+        <h3>Familien</h3>
+        <p>Zwei Erwachsene, Kinder, ein Hund, ein Keller voller Zeug. Genau hier ist die App entstanden: gemeinsame Listen, ein Wochenplan, ein Babysitter-Link.</p>
+      </div></div>
+      <div class="cell reveal" style="--d:100ms"><div class="cell-core">
+        <span class="label">Passt gut</span>
+        <span class="badge-ico"><svg class="ico"><use href="#i-house"/></svg></span>
+        <h3>WGs</h3>
+        <p>Eine Einkaufsliste, nie wieder drei Flaschen Ketchup. Alle Mitbewohner bekommen ein Konto oder einen einfachen Gäste-Link.</p>
+      </div></div>
+      <div class="cell reveal" style="--d:200ms"><div class="cell-core">
+        <span class="label">Geht auch</span>
+        <span class="badge-ico"><svg class="ico"><use href="#i-cup"/></svg></span>
+        <h3>Kleine Caf&eacute;s &amp; Imbisse</h3>
+        <p>Vorrat nach Lagerräumen und eine Karte per QR-Code können einem kleinen Laden helfen. Ehrlich gesagt: Kasse oder Warenwirtschaft ist das nicht, und will es auch nicht sein.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section class="section" id="installation" style="padding-top:24px">
+  <div class="wrap install">
+    <div>
+      <span class="eyebrow reveal">Installation</span>
+      <h2 class="reveal" style="font-size:clamp(2.2rem,6vw,4rem);margin:20px 0">In ein paar Minuten läuft's.</h2>
+      <p class="reveal" style="color:var(--ink-2);font-size:1.1rem">Du brauchst nur Docker, auf dem NAS zu Hause oder einem kleinen Server. Kein Lizenzschlüssel, kein Konto, keine Kosten.</p>
+      <ol class="steps reveal">
+        <li><span><b>Compose-Datei speichern</b>Trag <code>BASE_URL</code>, deinen Namen und ein Passwort ein.</span></li>
+        <li><span><b>Starten</b><code>docker compose up -d</code>, dann <code>http://localhost:8080</code> öffnen.</span></li>
+        <li><span><b>Erst mal umschauen?</b>Setz vor dem ersten Start <code>SEED_DEMO: "true"</code>, dann gibt's einen Demo-Haushalt.</span></li>
+        <li><span><b>Hinter HTTPS stellen</b>Dein üblicher Reverse Proxy reicht. Danach die App auf den Homescreen legen.</span></li>
+      </ol>
+    </div>
+    <div class="reveal" style="--d:120ms;min-width:0">
+      <div class="code"><div class="code-core">
+        <div class="code-head"><span>docker-compose.yml</span><button class="copy" type="button" data-copy="code-compose" data-done="Kopiert"><svg class="ico"><use href="#i-copy"/></svg><span>Kopieren</span></button></div>
+<pre id="code-compose"><span class="k">services:</span>
+  <span class="k">tohuus:</span>
+    <span class="k">image:</span> <span class="s">ghcr.io/tillheidrich/tohuus-hub:latest</span>
+    <span class="k">container_name:</span> tohuus-hub
+    <span class="k">restart:</span> unless-stopped
+    <span class="k">ports:</span>
+      - <span class="s">"8080:8080"</span>
+    <span class="k">volumes:</span>
+      - ./data:/data
+    <span class="k">environment:</span>
+      <span class="k">BASE_URL:</span> <span class="s">https://zuhause.example.org</span>
+      <span class="k">ADMIN_NAME:</span> Alex
+      <span class="k">ADMIN_PASSWORD:</span> bitte-aendern
+      <span class="k">LANGUAGE:</span> de          <span class="c"># oder en</span>
+      <span class="k">SEED_DEMO:</span> <span class="s">"false"</span>
+      <span class="c"># optional, für Foto-Importe:</span>
+      <span class="c"># VISION_BASE_URL: https://api.mistral.ai/v1</span></pre>
+      </div></div>
+      <div class="code"><div class="code-core">
+        <div class="code-head"><span>oder aus dem Quellcode bauen</span><button class="copy" type="button" data-copy="code-src" data-done="Kopiert"><svg class="ico"><use href="#i-copy"/></svg><span>Kopieren</span></button></div>
+<pre id="code-src">git clone https://github.com/tillheidrich/tohuus-hub.git
+cd tohuus-hub
+cp .env.example .env
+docker compose up -d --build</pre>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="section" id="geschichte" style="padding-top:24px">
+  <div class="wrap story">
+    <blockquote class="reveal"><em>To Huus</em> ist Plattdeutsch und heißt &bdquo;zu Hause&ldquo;.</blockquote>
+    <div class="reveal" style="--d:120ms">
+      <p>ToHuus Hub haben Till und Lea gebaut, eine Familie aus der Nähe von Hamburg, für ihre eigene Küche, ihren Keller und ihre Gefriertruhe. Angefangen hat es, weil wir die immer gleichen drei Fragen leid waren, und die kleinen Streitereien, die daran hängen.</p>
+      <p>Die App ist kostenlos und steht unter der AGPL. Es gibt keine Firma dahinter, kein Bezahl-Abo und nichts, wofür du dich anmelden musst. Wenn sie auch in deinem Haushalt hilft, freuen wir uns. Issues und Pull Requests sind willkommen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="cta-band reveal"><div class="cta-core">
+      <h2>Gönn deinem Kopf eine Pause.</h2>
+      <p>Lass ToHuus Hub auf deinem eigenen Server laufen, und das Haus merkt sich den Rest.</p>
+      <div class="btns">
+        <a class="btn btn-primary" href="#installation">Installieren<span class="btn-ico"><svg class="ico"><use href="#i-arrow"/></svg></span></a>
+        <a class="btn btn-ghost" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico"><use href="#i-github"/></svg>Auf GitHub ansehen</a>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="./"><img src="../assets/favicon.svg" alt="" width="28" height="28">ToHuus Hub</a>
+        <p>Dein Zuhause. Organisiert. Open-Source-Haushalts-App, gebaut von einer Familie bei Hamburg, mit viel Hilfe von Claude.</p>
+      </div>
+      <div>
+        <h4>Projekt</h4>
+        <ul>
+          <li><a href="https://github.com/tillheidrich/tohuus-hub">Quellcode auf GitHub</a></li>
+          <li><a href="https://github.com/tillheidrich/tohuus-hub/blob/main/LICENSE">Lizenz: AGPL-3.0</a></li>
+          <li><a href="https://github.com/tillheidrich/tohuus-hub/issues">Fehler melden</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Rechtliches</h4>
+        <ul>
+          <li><a href="https://heidrich-digital.de/impressum">Impressum</a></li>
+          <li><a href="https://heidrich-digital.de/datenschutz">Datenschutz</a></li>
+          <li><a href="../" hreflang="en" lang="en">English version</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine">Diese Website setzt keine Cookies und lädt nichts von Dritten. Produktdaten und -bilder in der App stammen teilweise von Open Food Facts (ODbL / CC BY-SA). ToHuus Hub steht in keiner Verbindung zu REWE, Vorwerk/Thermomix, Cookidoo oder HelloFresh; die Namen beschreiben nur kompatible Formate.</p>
+  </div>
+</footer>
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
