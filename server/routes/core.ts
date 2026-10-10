@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled, visionEnabled } from '../config.js';
-import { brand, db, getSetting, setSetting } from '../db.js';
+import { brand, db, getSetting, lang, setSetting } from '../db.js';
 import {
   SESSION_COOKIE,
   createApiToken,
@@ -89,6 +89,7 @@ r.get('/me', (req, res) => {
     actor,
     household: getSetting('household.name', 'Unser Zuhause'),
     brand: brand(),
+    language: lang(),
     features: { vision: visionEnabled(), email: smtpEnabled() },
     version: process.env.npm_package_version ?? '0.1.0',
   });
@@ -512,6 +513,7 @@ r.get('/settings', (_req, res) => {
   res.json({
     household: getSetting('household.name', 'Unser Zuhause'),
     brand: brand(),
+    language: lang(),
     ha: { ...haSettings(), token: haSettings().token ? '••••' : '' },
     notify: notifySettings(),
     importAutoApply: getSetting('import.autoApply', false),
@@ -526,6 +528,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
     .object({
       household: z.string().optional(),
       brand: z.enum(['stockwerk', 'fredirando']).optional(),
+      language: z.enum(['en', 'de']).optional(),
       importAutoApply: z.boolean().optional(),
       ha: z.object({ url: z.string().url().or(z.literal('')).optional(), token: z.string().max(400).optional(), cookidooCalendar: z.string().max(120).optional() }).optional(),
       notify: z
@@ -544,6 +547,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
     .parse(req.body);
   if (b.household) setSetting('household.name', b.household);
   if (b.brand) setSetting('brand', b.brand);
+  if (b.language) setSetting('language', b.language);
   if (b.ha) setSetting('ha', { ...haSettings(), ...Object.fromEntries(Object.entries(b.ha).filter(([k, v]) => !(k === 'token' && v === '••••'))) });
   if (b.importAutoApply !== undefined) setSetting('import.autoApply', b.importAutoApply);
   if (b.notify) {

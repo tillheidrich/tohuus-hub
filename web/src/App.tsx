@@ -33,11 +33,13 @@ import { Stock } from './pages/Stock';
 import { Today } from './pages/Today';
 import { Avatar, Sheet } from './ui';
 import { applyBrand } from './brand';
+import { setLang } from './i18n';
 
 export interface Me {
   actor: { name: string; role: string; kind: string; userId?: number };
   household: string;
   brand?: string;
+  language?: string;
   features: { vision: boolean; email: boolean };
 }
 
@@ -52,7 +54,8 @@ function Authed() {
   if (me.isLoading) return <div style={{ minHeight: '100dvh' }} />;
   if (me.error && (me.error as ApiError).status === 401) return <Login />;
   if (!me.data) return <Login />;
-  return <Shell me={me.data} />;
+  setLang(me.data.language);
+  return <Shell key={me.data.language} me={me.data} />;
 }
 
 function Shell({ me }: { me: Me }) {

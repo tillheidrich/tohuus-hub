@@ -304,6 +304,13 @@ export function setSetting(key: string, value: unknown) {
 export const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
 
 export type Brand = 'stockwerk' | 'fredirando';
+export type Lang = 'en' | 'de';
+export const LANGS: Lang[] = ['en', 'de'];
+export function lang(): Lang {
+  const l = getSetting<string>('language', config.language);
+  return (LANGS as string[]).includes(l) ? (l as Lang) : 'en';
+}
+
 export function brand(): Brand {
   const b = getSetting<string>('brand', config.brand);
   return b === 'fredirando' ? 'fredirando' : 'stockwerk';

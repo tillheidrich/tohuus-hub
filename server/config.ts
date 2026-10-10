@@ -35,6 +35,8 @@ export const config = {
   timezone: env.TZ ?? 'Europe/Berlin',
   /** default look on first start: stockwerk | fredirando */
   brand: env.BRAND ?? 'stockwerk',
+  /** UI and notification language on first start: en | de (changeable in settings) */
+  language: env.LANGUAGE ?? 'en',
 };
 
 export const visionEnabled = () => Boolean(config.vision.baseUrl && config.vision.model);

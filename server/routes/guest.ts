@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { config } from '../config.js';
-import { brand, db, getSetting } from '../db.js';
+import { brand, db, getSetting, lang } from '../db.js';
 import { guestFromToken, randomToken, rateLimited, requireAuth } from '../lib/auth.js';
 import { addClient, emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, listProducts } from '../lib/catalog.js';
@@ -29,6 +29,7 @@ guest.get('/:token', (req, res) => {
     scopes: req.actor!.guestScopes,
     household: getSetting('household.name', 'Unser Zuhause'),
     brand: brand(),
+    language: lang(),
     note: (db.prepare('SELECT note FROM guest_links WHERE id = ?').get(req.actor!.guestLinkId) as { note: string | null } | undefined)?.note ?? null,
   });
 });
