@@ -232,7 +232,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         {o.tonight.length === 0 ? (
           <div className="card">
             <Empty icon={<ChefHat size={26} />} title={t('No recipes yet')}>
-              {t('Add recipes from a photo, a link or your AI assistant – then Stockwerk suggests what you can make with what you have.')}
+              {t('Add recipes from a photo, a link or your AI assistant – then ToHuus Hub suggests what you can make with what you have.')}
             </Empty>
           </div>
         ) : (

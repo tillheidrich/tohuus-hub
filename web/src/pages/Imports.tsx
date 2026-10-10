@@ -102,7 +102,7 @@ export function Imports({ me }: { me: Me }) {
                   <div className="banner" style={{ cursor: 'default' }}>
                     <span className="ic"><Robot size={20} /></span>
                     <div className="small">
-                      {t('No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to Stockwerk” – you’ll find the connection under Settings › Access.')}
+                      {t('No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus Hub” – you’ll find the connection under Settings › Access.')}
                     </div>
                   </div>
                 )}

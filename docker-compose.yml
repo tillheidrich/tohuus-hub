@@ -1,8 +1,8 @@
 services:
-  stockwerk:
-    image: ghcr.io/tillheidrich/stockwerk:latest
+  tohuus:
+    image: ghcr.io/tillheidrich/tohuus-hub:latest
     build: .
-    container_name: stockwerk
+    container_name: tohuus-hub
     restart: unless-stopped
     ports:
       - "8080:8080"

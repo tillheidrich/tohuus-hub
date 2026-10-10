@@ -148,7 +148,7 @@ export function ImportReview() {
         <div className="banner" style={{ marginBottom: 14, cursor: 'default' }}>
           <span className="ic"><Info size={20} /></span>
           <div className="small">
-            {t('This notice is still provisional. Upload the eBon after pickup and Stockwerk will automatically match what you actually took home.')}
+            {t('This notice is still provisional. Upload the eBon after pickup and ToHuus Hub will automatically match what you actually took home.')}
           </div>
         </div>
       )}

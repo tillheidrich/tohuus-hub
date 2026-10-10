@@ -89,17 +89,17 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
         <div className="field">
           <label>{t('Brand')}</label>
           <div className="row wrap" style={{ gap: 10 }}>
-            {(['stockwerk', 'fredirando'] as const).map((k) => (
+            {(['tohuus', 'fredirando'] as const).map((k) => (
               <button
                 key={k}
                 type="button"
                 disabled={!admin}
                 className={`who-pick-btn ${s.data?.brand === k ? 'on' : ''}`}
-                onClick={() => patch('/settings', { brand: k }).then(() => { invalidate('me', 'settings'); toast({ text: k === 'fredirando' ? t('Fredirando is now delivering') : t('Back to Stockwerk') }); })}
+                onClick={() => patch('/settings', { brand: k }).then(() => { invalidate('me', 'settings'); toast({ text: k === 'fredirando' ? t('Fredirando is now delivering') : t('Back to ToHuus Hub') }); })}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', borderRadius: 14, border: `1px solid ${s.data?.brand === k ? 'var(--ink)' : 'var(--line-strong)'}`, background: 'var(--surface)', cursor: 'pointer', fontWeight: 600 }}
               >
-                <img src={k === 'fredirando' ? '/fredirando.svg' : '/stockwerk-logo.svg'} alt="" style={{ width: 34, height: 34, borderRadius: 10 }} />
-                {k === 'fredirando' ? 'Fredirando' : 'Stockwerk'}
+                <img src={k === 'fredirando' ? '/fredirando.svg' : '/tohuus-logo.svg'} alt="" style={{ width: 34, height: 34, borderRadius: 10 }} />
+                {k === 'fredirando' ? 'Fredirando' : 'ToHuus Hub'}
               </button>
             ))}
           </div>
@@ -272,8 +272,8 @@ function Notify({ admin }: { admin: boolean }) {
       <div className="card pad stack">
         <div className="field">
           <label>{t('Home Assistant – webhook URL')}</label>
-          <input className="input" value={n.haWebhookUrl} onChange={(e) => setN({ ...n, haWebhookUrl: e.target.value })} placeholder="https://ha.example.de/api/webhook/stockwerk_…" disabled={!admin} />
-          <div className="help">{t('Stockwerk sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “Access & AI”.')}</div>
+          <input className="input" value={n.haWebhookUrl} onChange={(e) => setN({ ...n, haWebhookUrl: e.target.value })} placeholder="https://ha.example.de/api/webhook/tohuus_…" disabled={!admin} />
+          <div className="help">{t('ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “Access & AI”.')}</div>
         </div>
         <div className="field">
           <label>{t('ntfy topic (optional)')}</label>
@@ -449,7 +449,7 @@ function Access({ admin }: { admin: boolean }) {
           </div>
           {yaml && (
             <div className="field">
-              <label>{t('Home Assistant package (packages/stockwerk.yaml)')}</label>
+              <label>{t('Home Assistant package (packages/tohuus.yaml)')}</label>
               <div className="codebox">{yaml}</div>
               <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(yaml)}><Copy size={14} /> {t('Copy YAML')}</button>
               <div className="help">{t('Adjust the webhook ID and notify service in the YAML, and enter the same webhook URL under “Notifications”.')}</div>
@@ -539,7 +539,7 @@ function Data({ admin }: { admin: boolean }) {
         </div>
       )}
       <p className="small muted">
-        {t('Stockwerk is open source (AGPL-3.0). Some product data and images from Open Food Facts (ODbL / CC BY-SA). Not affiliated with REWE, Thermomix/Vorwerk or HelloFresh.')}
+        {t('ToHuus Hub is open source (AGPL-3.0). Some product data and images from Open Food Facts (ODbL / CC BY-SA). Not affiliated with REWE, Thermomix/Vorwerk or HelloFresh.')}
       </p>
     </div>
   );
@@ -570,7 +570,7 @@ function HaConnection({ initial }: { initial: { url: string; token: string; cook
       <div>
         <b>{t('Cookidoo meal plan via Home Assistant')}</b>
         <div className="small muted">
-          {t('Cookidoo has no open API. But the Home Assistant “Cookidoo” integration reads “My week” as a calendar – Stockwerk pulls the dishes from there into the meal plan every three hours.')}
+          {t('Cookidoo has no open API. But the Home Assistant “Cookidoo” integration reads “My week” as a calendar – ToHuus Hub pulls the dishes from there into the meal plan every three hours.')}
         </div>
       </div>
       <div className="field">

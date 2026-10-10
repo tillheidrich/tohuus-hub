@@ -65,10 +65,10 @@ function compact(p: ReturnType<typeof listProducts>[number]) {
 
 export function buildMcpServer(actorName: string) {
   const s = new McpServer(
-    { name: 'stockwerk', version: '0.1.0' },
+    { name: 'tohuus', version: '0.1.0' },
     {
       instructions:
-        "Stockwerk is a family's household inventory (pantry, freezer, cellar, household supplies), plus shopping list, recipes and cooking history. " +
+        "ToHuus Hub is a family's household inventory (pantry, freezer, cellar, household supplies), plus shopping list, recipes and cooking history. " +
         "Answer in the user's language. Product, location and recipe names are stored in the household's language - use them as they are. " +
         'YOU read photos (receipt, freezer, recipe card) yourself and pass the recognised data in structured form: ' +
         'purchases/receipts → record_purchase (by default queued for review in the app), recipes → save_recipe. ' +

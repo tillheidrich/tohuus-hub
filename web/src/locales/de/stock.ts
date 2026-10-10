@@ -44,7 +44,7 @@ export const stock: Record<string, string> = {
   "What should we cook?": "Was kochen wir?",
   "More ideas": "Mehr Ideen",
   "No recipes yet": "Noch keine Rezepte",
-  "Add recipes from a photo, a link or your AI assistant – then Stockwerk suggests what you can make with what you have.": "Rezepte per Foto, Link oder über deinen KI-Assistenten hinzufügen – dann schlägt Stockwerk vor, was mit dem Vorrat geht.",
+  "Add recipes from a photo, a link or your AI assistant – then ToHuus Hub suggests what you can make with what you have.": "Rezepte per Foto, Link oder über deinen KI-Assistenten hinzufügen – dann schlägt ToHuus Hub vor, was mit dem Vorrat geht.",
   "{n} min": "{n} Min.",
   "{have}/{need} in stock": "{have}/{need} da",
   "Recently": "Zuletzt",

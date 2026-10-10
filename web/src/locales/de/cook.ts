@@ -36,8 +36,8 @@ export const cook: Record<string, string> = {
   Import: 'Importieren',
   'One or more photos of the same card (e.g. front and back of a HelloFresh card).':
     'Ein oder mehrere Fotos derselben Karte (z. B. HelloFresh Vorder- und Rückseite).',
-  'Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the Stockwerk connection they save it straight here.':
-    'Hinweis: Auf diesem Server ist kein Vision-Modell eingerichtet. Schick das Foto stattdessen an Claude oder ChatGPT – mit der Stockwerk-Verbindung speichern die es direkt hier.',
+  'Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the ToHuus Hub connection they save it straight here.':
+    'Hinweis: Auf diesem Server ist kein Vision-Modell eingerichtet. Schick das Foto stattdessen an Claude oder ChatGPT – mit der ToHuus Hub-Verbindung speichern die es direkt hier.',
   'Reading the card…': 'Lese die Karte …',
   'Choose photos': 'Fotos wählen',
   'Paste the recipe here – title, ingredients, steps': 'Rezept hier einfügen – Titel, Zutaten, Schritte',

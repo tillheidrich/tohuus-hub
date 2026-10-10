@@ -177,7 +177,7 @@ r.post('/imports/url', async (req, res) => {
   const { url } = z.object({ url: z.string().url() }).parse(req.body);
   let resp;
   try {
-    resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 Stockwerk' }, timeoutMs: 20000 });
+    resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 ToHuus Hub' }, timeoutMs: 20000 });
   } catch (e) {
     res.status(502).json({ error: (e as Error).message });
     return;

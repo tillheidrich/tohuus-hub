@@ -133,7 +133,7 @@ r.post('/recipes/import/url', async (req, res) => {
   const { url } = z.object({ url: z.string().url() }).parse(req.body);
   let html: string;
   try {
-    const resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Stockwerk recipe import)', 'Accept-Language': lang() === 'de' ? 'de-DE,de;q=0.9,en;q=0.5' : 'en-GB,en;q=0.9' }, maxBytes: 5 * 1024 * 1024 });
+    const resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ToHuus Hub recipe import)', 'Accept-Language': lang() === 'de' ? 'de-DE,de;q=0.9,en;q=0.5' : 'en-GB,en;q=0.9' }, maxBytes: 5 * 1024 * 1024 });
     html = resp.buf.toString('utf8');
   } catch (e) {
     res.status(502).json({ error: (e as Error).message });

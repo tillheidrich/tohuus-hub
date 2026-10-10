@@ -1,6 +1,6 @@
 {
-  "name": "Stockwerk",
-  "short_name": "Stockwerk",
+  "name": "ToHuus Hub",
+  "short_name": "ToHuus Hub",
   "description": "Was im Haus ist. Auf einen Blick.",
   "start_url": "/",
   "display": "standalone",

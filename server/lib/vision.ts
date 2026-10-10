@@ -1,6 +1,6 @@
 /**
  * Optional vision/LLM provider (any OpenAI-compatible chat completions endpoint: Mistral, OpenRouter,
- * Ollama, vLLM …). Stockwerk works without it — then photo imports are not available, but PDF imports,
+ * Ollama, vLLM …). ToHuus Hub works without it — then photo imports are not available, but PDF imports,
  * barcodes, manual entry and MCP (where the assistant does the reading) still are.
  */
 import { config, visionEnabled } from '../config.js';
@@ -68,7 +68,7 @@ export async function runVision(task: VisionTask, input: { images?: string[]; te
         'Content-Type': 'application/json',
         ...(config.vision.apiKey ? { Authorization: `Bearer ${config.vision.apiKey}` } : {}),
         'HTTP-Referer': config.baseUrl,
-        'X-Title': 'Stockwerk',
+        'X-Title': 'ToHuus Hub',
       },
       body: JSON.stringify({
         model: config.vision.model,

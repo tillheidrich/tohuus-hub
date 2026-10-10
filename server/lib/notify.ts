@@ -110,7 +110,7 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
   const route = s.events[input.event] ?? { ha: true, webhook: true, ntfy: false, email: false };
   const url = input.path ? `${config.baseUrl}${input.path}` : config.baseUrl;
   const payload = {
-    source: 'stockwerk',
+    source: 'tohuus',
     event: input.event,
     title: input.title,
     message: input.message,
@@ -132,7 +132,7 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
         .sendMail({
           from: config.smtp.from,
           to: s.emailTo,
-          subject: `Stockwerk · ${input.title}`,
+          subject: `ToHuus Hub · ${input.title}`,
           text: `${input.message}\n\n${url}`,
           html: input.html ?? emailHtml(input.title, input.message, url),
         })
@@ -167,12 +167,12 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 export function emailHtml(title: string, message: string, url: string, extra = '') {
   return `<!doctype html><html><body style="margin:0;background:#f4f2ee;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1b1d1f">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px">
-    <div style="font-weight:700;letter-spacing:-0.02em;font-size:15px;margin-bottom:20px">Stockwerk</div>
+    <div style="font-weight:700;letter-spacing:-0.02em;font-size:15px;margin-bottom:20px">ToHuus Hub</div>
     <div style="background:#fff;border-radius:16px;padding:24px;border:1px solid #e6e2da">
       <h1 style="font-size:20px;margin:0 0 8px;letter-spacing:-0.02em">${esc(title)}</h1>
       <p style="margin:0 0 16px;line-height:1.5;white-space:pre-line">${esc(message)}</p>
       ${extra}
-      <a href="${esc(url)}" style="display:inline-block;background:#1b1d1f;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:600">${esc(t('Open in Stockwerk'))}</a>
+      <a href="${esc(url)}" style="display:inline-block;background:#1b1d1f;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:600">${esc(t('Open in ToHuus Hub'))}</a>
     </div>
   </div></body></html>`;
 }

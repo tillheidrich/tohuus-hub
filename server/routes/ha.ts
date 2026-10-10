@@ -69,13 +69,13 @@ r.post('/ha/action', (req, res) => {
 
 r.post('/ha/package.yaml', (req, res) => {
   const clean = (v: unknown, d: string) => (typeof v === 'string' && /^[\w.\-]+$/.test(v) ? v : d);
-  const token = clean(req.body?.token, t('YOUR_STOCKWERK_TOKEN'));
-  const webhook = clean(req.body?.webhook, `stockwerk_${Math.random().toString(36).slice(2, 12)}`);
+  const token = clean(req.body?.token, t('YOUR_TOHUUS_TOKEN'));
+  const webhook = clean(req.body?.webhook, `tohuus_${Math.random().toString(36).slice(2, 12)}`);
   const phone = clean(req.body?.notify, t('notify.mobile_app_your_phone'));
   const base = config.baseUrl;
-  res.type('text/yaml').send(`# Stockwerk ↔ Home Assistant
-# ${t('Include as a package (packages/stockwerk.yaml) or copy the sections into configuration.yaml.')}
-# ${t('Token: create one in Stockwerk → Settings → Access → “Home Assistant”.')}
+  res.type('text/yaml').send(`# ToHuus Hub ↔ Home Assistant
+# ${t('Include as a package (packages/tohuus.yaml) or copy the sections into configuration.yaml.')}
+# ${t('Token: create one in ToHuus Hub → Settings → Access → “Home Assistant”.')}
 
 rest:
   - resource: ${base}/api/ha/summary
@@ -83,27 +83,27 @@ rest:
       Authorization: "Bearer ${token}"
     scan_interval: 300
     sensor:
-      - name: "${t('Stockwerk low')}"
-        unique_id: stockwerk_low
+      - name: "${t('ToHuus Hub low')}"
+        unique_id: tohuus_low
         icon: mdi:package-variant
         value_template: "{{ value_json.low + value_json.empty }}"
         json_attributes: [attention, locations]
-      - name: "${t('Stockwerk expiring')}"
-        unique_id: stockwerk_expiring
+      - name: "${t('ToHuus Hub expiring')}"
+        unique_id: tohuus_expiring
         icon: mdi:calendar-alert
         value_template: "{{ value_json.expiring }}"
-      - name: "${t('Stockwerk shopping list')}"
-        unique_id: stockwerk_shopping
+      - name: "${t('ToHuus Hub shopping list')}"
+        unique_id: tohuus_shopping
         icon: mdi:cart-outline
         value_template: "{{ value_json.shopping }}"
         json_attributes: [shopping_list]
-      - name: "${t('Stockwerk cooking idea')}"
-        unique_id: stockwerk_tonight
+      - name: "${t('ToHuus Hub cooking idea')}"
+        unique_id: tohuus_tonight
         icon: mdi:pot-steam-outline
         value_template: "{{ value_json.tonight.title if value_json.tonight else '${t('none')}' }}"
 
 rest_command:
-  stockwerk_action:
+  tohuus_action:
     url: ${base}/api/ha/action
     method: POST
     headers:
@@ -112,7 +112,7 @@ rest_command:
     payload: '{"action": "{{ action }}", "product": "{{ product }}", "qty": {{ qty | default(1) }}}'
 
 automation:
-  - alias: "${t('Stockwerk → push to phone')}"
+  - alias: "${t('ToHuus Hub → push to phone')}"
     triggers:
       - trigger: webhook
         webhook_id: ${webhook}
@@ -126,19 +126,19 @@ automation:
           data:
             url: "{{ trigger.json.url }}"
             clickAction: "{{ trigger.json.url }}"
-            group: stockwerk
-            tag: "stockwerk-{{ trigger.json.event }}-{{ trigger.json.data.product_id | default('') }}"
+            group: tohuus
+            tag: "tohuus-{{ trigger.json.event }}-{{ trigger.json.data.product_id | default('') }}"
             actions: >
               {% if trigger.json.event in ['stock.low', 'stock.empty'] %}
-              [{"action": "STOCKWERK_SHOP_{{ trigger.json.data.product_id }}", "title": "${t('Add to shopping list')}"}]
+              [{"action": "TOHUUS_SHOP_{{ trigger.json.data.product_id }}", "title": "${t('Add to shopping list')}"}]
               {% else %}[]{% endif %}
-  - alias: "${t('Stockwerk → action from push')}"
+  - alias: "${t('ToHuus Hub → action from push')}"
     triggers:
       - trigger: event
         event_type: mobile_app_notification_action
-    conditions: "{{ trigger.event.data.action.startswith('STOCKWERK_SHOP_') }}"
+    conditions: "{{ trigger.event.data.action.startswith('TOHUUS_SHOP_') }}"
     actions:
-      - action: rest_command.stockwerk_action
+      - action: rest_command.tohuus_action
         data:
           action: add_shopping
           product: "{{ trigger.event.data.action[15:] | int }}"

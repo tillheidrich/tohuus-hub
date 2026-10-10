@@ -67,7 +67,7 @@ app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webDir = [path.join(here, 'web'), path.join(here, '../dist/web')].find((d) => fs.existsSync(path.join(d, 'index.html')));
 if (webDir) {
-  // brand-dependent app icons / manifest / title (Stockwerk or the Fredirando house theme)
+  // brand-dependent app icons / manifest / title (ToHuus Hub or the Fredirando house theme)
   const BRAND_FILES: Record<string, string> = {
     '/icon.svg': 'fredirando.svg',
     '/apple-touch-icon.png': 'fredirando-touch.png',
@@ -91,7 +91,7 @@ if (webDir) {
   const html = fs.readFileSync(path.join(webDir, 'index.html'), 'utf8');
   const fredi = html
     .replace(/<title>.*<\/title>/, '<title>Fredirando</title>')
-    .replace(/content="Stockwerk"/g, 'content="Fredirando"')
+    .replace(/content="ToHuus Hub"/g, 'content="Fredirando"')
     .replace(/content="#f3f2ee"/g, 'content="#fff8f3"')
     .replace(/<html lang="[^"]*"/, '<html lang="de" data-brand="fredirando"');
   // the document language follows the household setting
@@ -114,6 +114,6 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.listen(config.port, () => {
-  console.log(`Stockwerk running on :${config.port} (${config.baseUrl})`);
+  console.log(`ToHuus Hub running on :${config.port} (${config.baseUrl})`);
   startScheduler();
 });

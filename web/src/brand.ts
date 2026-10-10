@@ -1,13 +1,13 @@
 import { t } from './i18n';
 
-export type BrandKey = 'stockwerk' | 'fredirando';
+export type BrandKey = 'tohuus' | 'fredirando';
 
 export const BRANDS: Record<BrandKey, { name: string; logo: string; tagline: string }> = {
-  stockwerk: {
-    name: 'Stockwerk',
-    logo: '/stockwerk-logo.svg',
+  tohuus: {
+    name: 'ToHuus Hub',
+    logo: '/tohuus-logo.svg',
     get tagline() {
-      return t('What’s in the house. At a glance.');
+      return t('Your home. Organized.');
     },
   },
   fredirando: {
@@ -20,11 +20,11 @@ export const BRANDS: Record<BrandKey, { name: string; logo: string; tagline: str
 };
 
 export function currentBrand(): BrandKey {
-  return document.documentElement.dataset.brand === 'fredirando' ? 'fredirando' : 'stockwerk';
+  return document.documentElement.dataset.brand === 'fredirando' ? 'fredirando' : 'tohuus';
 }
 
 export function applyBrand(b: string | undefined) {
-  const key: BrandKey = b === 'fredirando' ? 'fredirando' : 'stockwerk';
+  const key: BrandKey = b === 'fredirando' ? 'fredirando' : 'tohuus';
   if (key === 'fredirando') document.documentElement.dataset.brand = 'fredirando';
   else delete document.documentElement.dataset.brand;
   document.title = BRANDS[key].name;

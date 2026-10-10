@@ -132,7 +132,7 @@ export function createImport(parsed: ParsedImport, opts: CreateImportOptions = {
   const auto = opts.autoApply ?? getSetting<boolean>('import.autoApply', false);
   const needsReview = (db.prepare(`SELECT COUNT(*) n FROM import_lines WHERE import_id = ? AND (status != 'ok' OR action = 'new')`).get(id) as { n: number }).n;
   if (auto && needsReview === 0) {
-    applyImport(id, opts.actor ?? 'Stockwerk');
+    applyImport(id, opts.actor ?? 'ToHuus Hub');
   } else {
     const count = parsed.lines.filter((l) => l.status !== 'deposit').length;
     const special = parsed.lines.filter((l) => ['substitute', 'unavailable', 'reduced'].includes(l.status)).length;

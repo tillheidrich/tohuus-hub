@@ -1,5 +1,6 @@
 // German strings for App shell, Login, shared UI (ui.tsx), api.ts formatters and brand.ts
 export const app: Record<string, string> = {
+  'Your home. Organized.': 'Dein Zuhause. Organisiert.',
   // api.ts — fill levels & relative times
   empty: 'leer',
   low: 'knapp',

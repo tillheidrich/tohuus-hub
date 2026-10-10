@@ -528,7 +528,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
   const b = z
     .object({
       household: z.string().optional(),
-      brand: z.enum(['stockwerk', 'fredirando']).optional(),
+      brand: z.enum(['tohuus', 'fredirando']).optional(),
       language: z.enum(['en', 'de']).optional(),
       importAutoApply: z.boolean().optional(),
       ha: z.object({ url: z.string().url().or(z.literal('')).optional(), token: z.string().max(400).optional(), cookidooCalendar: z.string().max(120).optional() }).optional(),
@@ -560,7 +560,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
 });
 
 r.post('/settings/test-notification', requireAdmin, async (_req, res) => {
-  const out = await notify({ event: 'test', title: t('Test from Stockwerk'), message: t('If you can read this, notifications are working.'), path: '/' });
+  const out = await notify({ event: 'test', title: t('Test from ToHuus Hub'), message: t('If you can read this, notifications are working.'), path: '/' });
   res.json(out);
 });
 
@@ -610,9 +610,9 @@ r.delete('/tokens/:id', requireAdmin, (req, res) => {
 
 r.get('/export.json', requireAdmin, (_req, res) => {
   const tables = ['locations', 'categories', 'products', 'product_codes', 'product_aliases', 'stock', 'shopping_items', 'recipes', 'recipe_ingredients', 'cook_log', 'guest_links', 'settings'];
-  const out: Record<string, unknown> = { exported_at: new Date().toISOString(), app: 'stockwerk' };
+  const out: Record<string, unknown> = { exported_at: new Date().toISOString(), app: 'tohuus' };
   for (const t of tables) out[t] = db.prepare(`SELECT * FROM ${t}`).all();
-  res.setHeader('Content-Disposition', `attachment; filename="stockwerk-export-${new Date().toISOString().slice(0, 10)}.json"`);
+  res.setHeader('Content-Disposition', `attachment; filename="tohuus-export-${new Date().toISOString().slice(0, 10)}.json"`);
   res.json(out);
 });
 

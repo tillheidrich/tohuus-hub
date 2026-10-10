@@ -214,7 +214,7 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
         {mode === 'photo' && (
           <>
             <p className="small muted" style={{ margin: 0 }}>
-              {t('One or more photos of the same card (e.g. front and back of a HelloFresh card).')} {vision ? '' : t('Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the Stockwerk connection they save it straight here.')}
+              {t('One or more photos of the same card (e.g. front and back of a HelloFresh card).')} {vision ? '' : t('Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the ToHuus Hub connection they save it straight here.')}
             </p>
             <input
               ref={fileRef}

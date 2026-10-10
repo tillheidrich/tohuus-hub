@@ -100,7 +100,7 @@ export function Guest() {
       {tab === 'bar' && <GuestBar token={token} fredi={fredi} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
-      <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{fredi ? t('fredirando · a family business, powered by Stockwerk') : t('Stockwerk · your household, self-hosted')}</p>
+      <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{fredi ? t('fredirando · a family business, powered by ToHuus Hub') : t('ToHuus Hub · your household, self-hosted')}</p>
     </div>
   );
 }

@@ -29,12 +29,12 @@ export const config = {
     from: env.SMTP_FROM ?? '',
   },
   off: {
-    userAgent: env.OFF_USER_AGENT ?? 'Stockwerk/0.1 (https://github.com/tillheidrich/stockwerk)',
+    userAgent: env.OFF_USER_AGENT ?? 'ToHuusHub/0.1 (https://github.com/tillheidrich/tohuus-hub)',
     enabled: (env.OFF_ENABLED ?? 'true') === 'true',
   },
   timezone: env.TZ ?? 'Europe/Berlin',
-  /** default look on first start: stockwerk | fredirando */
-  brand: env.BRAND ?? 'stockwerk',
+  /** default look on first start: tohuus | fredirando */
+  brand: env.BRAND ?? 'tohuus',
   /** UI and notification language on first start: en | de (changeable in settings) */
   language: env.LANGUAGE ?? 'en',
 };

@@ -11,8 +11,8 @@ export const imports: Record<string, string> = {
   Text: 'Text',
   Receipt: 'Kassenbon',
   'Cupboard / freezer': 'Schrank / Truhe',
-  'No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to Stockwerk” – you’ll find the connection under Settings › Access.':
-    'Auf diesem Server ist kein Bildmodell eingerichtet. Schick das Foto an Claude oder ChatGPT und sag „trag das in Stockwerk ein“ – die Verbindung findest du unter Einstellungen › Zugänge.',
+  'No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus Hub” – you’ll find the connection under Settings › Access.':
+    'Auf diesem Server ist kein Bildmodell eingerichtet. Schick das Foto an Claude oder ChatGPT und sag „trag das in ToHuus Hub ein“ – die Verbindung findest du unter Einstellungen › Zugänge.',
   'Reading …': 'Lese …',
   'Take or choose a photo': 'Foto aufnehmen oder wählen',
   'Drop a PDF here or choose one': 'PDF hier ablegen oder wählen',
@@ -62,8 +62,8 @@ export const imports: Record<string, string> = {
   'Anything returned at pickup has been taken out.': 'Was bei der Abholung zurückgegeben wurde, ist rausgerechnet.',
   'Anything returned at pickup has been taken out – paid: {total} €.':
     'Was bei der Abholung zurückgegeben wurde, ist rausgerechnet – bezahlt: {total} €.',
-  'This notice is still provisional. Upload the eBon after pickup and Stockwerk will automatically match what you actually took home.':
-    'Das Avis ist noch vorläufig. Lädst du nach der Abholung den eBon hoch, gleicht Stockwerk automatisch ab, was du wirklich mitgenommen hast.',
+  'This notice is still provisional. Upload the eBon after pickup and ToHuus Hub will automatically match what you actually took home.':
+    'Das Avis ist noch vorläufig. Lädst du nach der Abholung den eBon hoch, gleicht ToHuus Hub automatisch ab, was du wirklich mitgenommen hast.',
   'Booked {date}.': 'Gebucht {date}.',
   'Discarded.': 'Verworfen.',
   'Quick check': 'Kurz ansehen',

@@ -234,7 +234,7 @@ export async function afterStatusChange(p: ProductRow, before: Status, after: St
   const worse = (after === 'low' || after === 'empty') && before !== after && !(before === 'empty' && after === 'low');
   if (!worse) return;
   let added = false;
-  if (s.autoShoppingList) added = addToShopping({ productId: p.id, text: p.name, source: 'auto', addedBy: 'Stockwerk' }).created;
+  if (s.autoShoppingList) added = addToShopping({ productId: p.id, text: p.name, source: 'auto', addedBy: 'ToHuus Hub' }).created;
   const label = [p.brand, p.name].filter(Boolean).join(' ');
   await notify({
     event: after === 'empty' ? 'stock.empty' : 'stock.low',

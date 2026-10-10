@@ -1,5 +1,5 @@
 {
-  "name": "stockwerk",
+  "name": "tohuus-hub",
   "version": "0.1.0",
   "description": "Self-hosted household stock, recipes and guest bar — with Home Assistant and MCP built in.",
   "scripts": {

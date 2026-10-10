@@ -7,7 +7,9 @@ fs.mkdirSync(config.dataDir, { recursive: true });
 fs.mkdirSync(path.join(config.dataDir, 'images'), { recursive: true });
 fs.mkdirSync(path.join(config.dataDir, 'imports'), { recursive: true });
 
-export const db = new Database(path.join(config.dataDir, 'stockwerk.db'));
+// databases created before the rename to ToHuus Hub are called stockwerk.db – keep using them
+const legacyDb = path.join(config.dataDir, 'stockwerk.db');
+export const db = new Database(fs.existsSync(legacyDb) ? legacyDb : path.join(config.dataDir, 'tohuus.db'));
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 db.pragma('busy_timeout = 5000');
@@ -303,7 +305,7 @@ export function setSetting(key: string, value: unknown) {
 
 export const now = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
 
-export type Brand = 'stockwerk' | 'fredirando';
+export type Brand = 'tohuus' | 'fredirando';
 export type Lang = 'en' | 'de';
 export const LANGS: Lang[] = ['en', 'de'];
 export function lang(): Lang {
@@ -313,5 +315,5 @@ export function lang(): Lang {
 
 export function brand(): Brand {
   const b = getSetting<string>('brand', config.brand);
-  return b === 'fredirando' ? 'fredirando' : 'stockwerk';
+  return b === 'fredirando' ? 'fredirando' : 'tohuus';
 }
