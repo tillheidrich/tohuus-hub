@@ -53,7 +53,7 @@ const TOPIC_KEYS: Record<string, string[]> = {
   imports: ['imports', 'import', 'overview', 'spending', 'quality'],
   orders: ['orders', 'overview'],
   notifications: ['notifications'],
-  settings: ['settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me'],
+  settings: ['settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance'],
   care: ['care'],
   away: ['away'],
   tour: ['tour', 'overview', 'products', 'recipes', 'shopping', 'onboarding'],

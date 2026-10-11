@@ -22,6 +22,8 @@ import { PrintSettings } from './Bons';
 import { RecipeImportCenter } from './RecipeImports';
 import { AwayEntryCard } from './Away';
 import { ShareSetupCard, StartModeCard } from './Share';
+import { MenuSettingsCard } from './Menu';
+import { HouseholdAppearanceCard, MyAppearanceCard } from './AppearanceSettings';
 
 type Tab = 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -77,7 +79,9 @@ export function Settings({ me }: { me: Me }) {
       </div>
       {tab === 'home' && <Household me={me} admin={admin} />}
       {tab === 'home' && <AwayEntryCard />}
+      {tab === 'home' && <MenuSettingsCard />}
       {tab === 'account' && <MyPerson me={me} />}
+      {tab === 'account' && <MyAppearanceCard />}
       {tab === 'account' && <MyAccount me={me} />}
       {tab === 'account' && <ShareSetupCard me={me} />}
       {tab === 'members' && <PeopleSection me={me} admin={admin} />}
@@ -100,29 +104,8 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
   const [name, setName] = useState('');
   const [pw, setPw] = useState('');
-  const [theme, setTheme] = useState<string>(() => {
-    try {
-      return localStorage.getItem('sw.theme') ?? 'light';
-    } catch {
-      return 'light';
-    }
-  });
   const toast = useToast();
   useEffect(() => setName(s.data?.household ?? ''), [s.data]);
-  const applyTheme = (th: string) => {
-    setTheme(th);
-    try {
-      if (th === 'light') {
-        localStorage.removeItem('sw.theme');
-        delete document.documentElement.dataset.theme;
-      } else {
-        localStorage.setItem('sw.theme', th);
-        document.documentElement.dataset.theme = th;
-      }
-    } catch {
-      /* ignore */
-    }
-  };
   return (
     <div className="stack" style={{ gap: 22 }}>
       <div className="card pad stack">
@@ -152,10 +135,7 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
           </div>
           <div className="help">{t('Fredirando is the delivery-service theme for your home: orange, the guest bar as a restaurant, order status with “driver on the way”. Afterwards, re-add the app icon to your home screen once.')}</div>
         </div>
-        <div className="field">
-          <label>{t('Appearance')}</label>
-          <Seg value={theme} onChange={applyTheme} options={[['auto', t('Automatic')], ['light', t('Light')], ['dark', t('Dark')]]} />
-        </div>
+        <HouseholdAppearanceCard admin={admin} />
         <div className="field">
           <label>{t('Language')}</label>
           <Seg

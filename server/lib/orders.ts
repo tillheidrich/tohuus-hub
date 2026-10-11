@@ -6,6 +6,8 @@ import { emit } from './bus.js';
 import { adjustStock, listProducts } from './catalog.js';
 import { notify } from './notify.js';
 import { assertAvailable, assertPartyLimits, availableQty, livePartyId, partyIdForLink, partyMenuIds, reservedByProduct } from './party.js';
+import { blockedForGuests, bookIngredients, cleanLineOptions, guestMenu, isPartyOn, orderableIds } from './menu.js';
+import { isGuestUser } from './people-policy.js';
 
 export const orderSchema = z.object({
   guest_name: z.string().trim().min(1).max(40).optional(),
@@ -23,40 +25,37 @@ export const orderSchema = z.object({
 });
 export type OrderInput = z.infer<typeof orderSchema>;
 
-type MenuProduct = ReturnType<typeof listProducts>[number];
-
-function menuItem(p: MenuProduct, group: string, reserved: Map<number, number>) {
-  // soft reservation: open orders already promise part of the stock
-  const left = availableQty(p, reserved);
-  return {
-    id: p.id,
-    name: p.name,
-    brand: p.brand,
-    image_path: p.image_path,
-    image_credit: p.image_credit,
-    group,
-    options: p.order_options,
-    available: left > 0,
-    // stock numbers are only shown roughly
-    hint: p.track_mode === 'none' || !p.orderable ? null : left <= 0 ? t('all gone') : p.track_mode === 'count' && left <= 2 ? t('only a few left') : null,
-    bar: p.orderable,
-  };
-}
-
 /**
- * Guests see the bar menu. Household members additionally get everything that is in the house,
- * grouped by category – "bring me the crisps" works too.
+ * Guests see the order menu (server/lib/menu.ts: groups, availability, stock state). Household members
+ * additionally get everything that is in the house, grouped by category – "bring me the crisps" works too.
+ * `family: false` for permanent guests: they order like members but don't see "only for family" items.
  */
-export function orderMenu(member: boolean) {
+export function orderMenu(member: boolean, opts: { family?: boolean } = {}) {
   const products = listProducts();
   const reserved = reservedByProduct();
-  const bar = products.filter((p) => p.orderable).map((p) => menuItem(p, p.order_group ?? t('Other'), reserved));
+  const bar = guestMenu({ family: opts.family ?? member, party: isPartyOn() }, products, reserved);
   if (!member) return bar;
+  const onBar = new Set(bar.map((b) => b.id));
   const cats = new Map((db.prepare('SELECT id, name, sort FROM categories').all() as { id: number; name: string; sort: number }[]).map((c) => [c.id, c]));
   const rest = products
-    .filter((p) => !p.orderable && p.track_mode !== 'none' && p.total > 0)
+    .filter((p) => !onBar.has(p.id) && p.track_mode !== 'none' && p.total > 0)
     .sort((a, b) => (cats.get(a.category_id ?? -1)?.sort ?? 99) - (cats.get(b.category_id ?? -1)?.sort ?? 99))
-    .map((p) => menuItem(p, cats.get(p.category_id ?? -1)?.name ?? t('Other'), reserved));
+    .map((p) => {
+      // soft reservation: open orders already promise part of the stock
+      const left = availableQty(p, reserved);
+      return {
+        id: p.id,
+        name: p.name,
+        brand: p.brand,
+        image_path: p.image_path,
+        image_credit: p.image_credit,
+        group: cats.get(p.category_id ?? -1)?.name ?? t('Other'),
+        options: [],
+        available: left > 0,
+        hint: null as string | null,
+        bar: false,
+      };
+    });
   return [...bar, ...rest];
 }
 
@@ -70,18 +69,19 @@ export function createOrder(
   const linkParty = partyIdForLink(who.guestLinkId);
   const partyId = linkParty ?? livePartyId();
   const menuIds = linkParty ? partyMenuIds(linkParty) : null;
+  // the menu's availability rules (hidden / only at parties / only for family) – area: menu
+  const family = member && !isGuestUser(who.userId);
+  const blocked = menuIds ? blockedForGuests() : null;
+  const onMenu = menuIds ? null : orderableIds({ family, party: partyId != null });
   const products = new Map(
     listProducts()
-      .filter((p) => (menuIds ? menuIds.has(p.id) : p.orderable || (member && p.track_mode !== 'none')))
+      .filter((p) => (menuIds ? menuIds.has(p.id) && !blocked!.has(p.id) : onMenu!.has(p.id) || (member && p.track_mode !== 'none')))
       .map((p) => [p.id, p]),
   );
   // only orderable products, options only from the product's own choices
   const lines = input.lines
     .filter((l) => products.has(l.product_id))
-    .map((l) => {
-      const allowed = new Set(products.get(l.product_id)!.order_options.flatMap((o: any) => o.choices as string[]));
-      return { ...l, options: l.options.filter((o) => allowed.has(o)), note: l.note?.trim() || null };
-    });
+    .map((l) => ({ ...l, options: cleanLineOptions(products.get(l.product_id)!.order_options, l.options), note: l.note?.trim() || null }));
   // a free-text wish ("a blanket, please") is an order too – for household members
   if (!lines.length && !(member && input.note?.trim())) throw Object.assign(new Error(t('Nothing orderable in the basket.')), { status: 400 });
   const name = (input.guest_name?.trim() || who.name).slice(0, 40);
@@ -140,6 +140,8 @@ export function setOrderStatus(id: number, status: OrderStatus) {
       const p = db.prepare('SELECT track_mode FROM products WHERE id = ?').get(l.product_id) as any;
       if (p && p.track_mode === 'count') adjustStock({ productId: l.product_id, delta: -l.qty, reason: 'order', actor: o.guest_name, ref: `order:${o.id}` });
     }
+    // menu-only items with "ingredients from stock" (cappuccino: milk + coffee) book a small amount each
+    bookIngredients(o.id, o.guest_name);
   }
   emit('orders', 'stock');
   void notify({ event: 'order.status', title: t('Order {id}: {status}', { id: o.id, status }), message: `${o.guest_name}: ${status}`, path: '/bar', data: { order_id: o.id, status } });

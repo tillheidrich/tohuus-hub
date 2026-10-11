@@ -135,6 +135,8 @@ const ACCOUNT: Rule[] = [
 
 const ORDER: Rule[] = [
   read(/^\/bar\/(menu|my-orders)$/),
+  // the order menu (area: menu): reading for every level, editing never
+  read(/^\/menu(\/.*)?$/),
   write(/^\/bar\/orders$/),
   any(/^\/shopping(\/.*)?$/),
   any(/^\/shop\/(list|items|quick-add|parse|checkout|sync|members)(\/.*)?$/),
@@ -196,8 +198,8 @@ const FAMILY_DENY: RegExp[] = [
   /^\/share\/(tokens|inbox)(\/.*)?$/,
   /^\/tour\/.+$/,
 ];
-/** read-only for level family (writes are household administration) */
-const FAMILY_READONLY: RegExp[] = [/^\/share\/(start-mode|staples)(\/.*)?$/, /^\/onboarding(\/.*)?$/, /^\/region(\/.*)?$/, /^\/(locations|categories)(\/.*)?$/, /^\/shop\/(stores|ha-todo)(\/.*)?$/];
+/** read-only for level family (writes are household administration; the order menu included – area: menu) */
+const FAMILY_READONLY: RegExp[] = [/^\/share\/(start-mode|staples)(\/.*)?$/, /^\/onboarding(\/.*)?$/, /^\/region(\/.*)?$/, /^\/(locations|categories)(\/.*)?$/, /^\/shop\/(stores|ha-todo)(\/.*)?$/, /^\/menu(\/.*)?$/];
 
 /** Words that are never for guests, wherever a route puts them (also covers routes added later). */
 const NEVER = /^(spend|spending|budgets?|receipts?|bons?|imports?|backups?|tokens?|restore|export\.json|reset|settings|invites?|webdav)$/;

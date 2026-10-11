@@ -8,13 +8,7 @@ import { startOffline } from './shop/offline';
 import { ToastProvider } from './ui';
 import './styles.css';
 
-try {
-  const t = localStorage.getItem('sw.theme');
-  // light is the default; dark or "automatic" only when chosen in settings
-  if (t === 'auto' || t === 'dark') document.documentElement.dataset.theme = t;
-} catch {
-  /* storage blocked */
-}
+// light / dark: web/public/theme-boot.js already set <html data-theme> before the first paint (see ./theme.ts)
 
 // service worker (app shell + shopping list offline, Web Push) and replay of offline changes
 startOffline();

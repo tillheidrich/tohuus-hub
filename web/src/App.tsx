@@ -22,6 +22,7 @@ import {
   Question,
   Suitcase,
   Heart,
+  CaretRight,
 } from '@phosphor-icons/react';
 import { Help } from './pages/Help';
 import { Onboarding, WhatsNew, useOnboardingRedirect } from './pages/Onboarding';
@@ -42,6 +43,7 @@ import { Check } from './pages/Check';
 import { Cook } from './pages/Cook';
 import { VotePage } from './pages/Plan2';
 import { Order } from './pages/Order';
+import { MenuEditor } from './pages/Menu';
 import { Find } from './pages/Find';
 import { Guest } from './pages/Guest';
 import { PartyBoard, PartyPair } from './pages/Party';
@@ -63,6 +65,7 @@ import { enablePeopleDirectory } from './people/Avatar';
 import { GuestBanner, PausedScreen, guestAllows } from './people/People';
 import { FavouritesPage } from './people/FavouritesPage';
 import { applyBrand } from './brand';
+import { type Appearance, applyAppearance } from './theme';
 import { setLang, t } from './i18n';
 import { setRegion } from './region';
 
@@ -79,6 +82,7 @@ export interface Me {
   brand?: string;
   language?: string;
   features: { vision: boolean; email: boolean };
+  appearance?: Appearance;
 }
 
 export function App() {
@@ -116,6 +120,8 @@ function Shell({ me }: { me: Me }) {
   useEffect(() => connectEvents(), []);
   enablePeopleDirectory();
   const b = applyBrand(me.brand);
+  // light / dark for this member (household default or own choice) – after the brand so the status bar colour matches
+  useEffect(() => applyAppearance(me.appearance), [me.appearance?.theme, me.brand]);
   useEffect(() => window.scrollTo(0, 0), [loc.pathname]);
   const c = ov.data?.counts;
   const attention = c ? c.low + c.empty + c.expiring + c.expired : 0;
@@ -237,6 +243,7 @@ function Shell({ me }: { me: Me }) {
           <Route path="/wo" element={<Find />} />
           <Route path="/bar" element={<Bar />} />
           <Route path="/bestellen" element={<Order me={me} />} />
+          <Route path="/bestellen/karte" element={<MenuEditor me={me} />} />
           <Route path="/einstellungen" element={<Settings me={me} />} />
           <Route path="/pflege" element={<Care />} />
           <Route path="/urlaub" element={<Away me={me} />} />
@@ -281,16 +288,21 @@ function Shell({ me }: { me: Me }) {
           {moreGroups.map((g) => (
             <section key={g.key}>
               <div className="eyebrow more-group-title">{g.title}</div>
-              <div className="action-grid">
-                {g.items.map((l) => (
-                  <button key={l.to} className={`action ${loc.pathname.startsWith(l.to) ? 'current' : ''}`} onClick={() => { setMore(false); nav(l.to); }}>
-                    <span className="ic"><l.icon size={22} /></span>
-                    <b>{l.label}</b>
-                    <span>
-                      {l.badge ? t('{n} need attention', { n: l.badge }) : l.due ? (l.due === 1 ? t('1 thing due') : t('{n} things due', { n: l.due })) : l.dot ? t('Something new') : '\u00a0'}
-                    </span>
-                  </button>
-                ))}
+              <div className="more-list">
+                {g.items.map((l) => {
+                  const meta = l.badge ? t('{n} need attention', { n: l.badge }) : l.due ? (l.due === 1 ? t('1 thing due') : t('{n} things due', { n: l.due })) : l.dot ? t('Something new') : null;
+                  const current = loc.pathname.startsWith(l.to);
+                  return (
+                    <button key={l.to} className={`more-row ${current ? 'current' : ''}`} aria-current={current ? 'page' : undefined} onClick={() => { setMore(false); nav(l.to); }}>
+                      <span className="ic"><l.icon size={20} weight={current ? 'fill' : 'regular'} /></span>
+                      <span className="grow">
+                        <b>{l.label}</b>
+                        {meta && <small className={l.badge ? 'warn' : l.due ? 'due' : ''}>{meta}</small>}
+                      </span>
+                      <CaretRight size={16} className="chev" />
+                    </button>
+                  );
+                })}
               </div>
             </section>
           ))}

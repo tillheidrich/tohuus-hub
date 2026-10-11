@@ -14,6 +14,7 @@ import { emit } from './bus.js';
 import { addToShopping, listProducts } from './catalog.js';
 import { guestTokenHash } from './data.js';
 import { notify } from './notify.js';
+import { blockedForGuests, menuDecor } from './menu.js';
 
 migrate(
   'party-1',
@@ -228,13 +229,17 @@ export function partyMenu(partyId: number, clientId: string | null) {
   const reserved = reservedByProduct();
   const mine = clientId ? orderedByClient(partyId, clientId) : new Map<number, number>();
   const cats = categoryNames();
+  // the order menu's rules: hidden and family-only items never reach party guests (area: menu)
+  const blocked = blockedForGuests();
+  const decor = menuDecor();
   return rows
-    .filter((r) => products.has(r.product_id))
+    .filter((r) => products.has(r.product_id) && !blocked.has(r.product_id))
     .map((r) => {
       const p = products.get(r.product_id)!;
       const left = availableQty(p, reserved);
       const yours = r.max_per_guest ? Math.max(0, r.max_per_guest - (mine.get(p.id) ?? 0)) : Infinity;
       const available = left > 0 && yours > 0;
+      const { maybe_hint, ...extra } = decor(p.id);
       return {
         id: p.id,
         name: p.name,
@@ -242,7 +247,6 @@ export function partyMenu(partyId: number, clientId: string | null) {
         image_path: p.image_path,
         image_credit: p.image_credit,
         group: p.order_group ?? cats.get(p.category_id ?? -1) ?? t('Other'),
-        options: p.order_options,
         available,
         hint:
           left <= 0
@@ -253,9 +257,10 @@ export function partyMenu(partyId: number, clientId: string | null) {
                 ? t('only a few left')
                 : r.max_per_guest
                   ? t('max. {n} per guest', { n: r.max_per_guest })
-                  : null,
+                  : maybe_hint,
         bar: true,
         max_per_guest: r.max_per_guest,
+        ...extra,
       };
     });
 }
@@ -294,8 +299,9 @@ function newPairCode() {
 }
 
 export function defaultMenu(): MenuInput[] {
+  const blocked = blockedForGuests();
   return listProducts()
-    .filter((p) => p.orderable)
+    .filter((p) => p.orderable && !blocked.has(p.id))
     .map((p) => ({ product_id: p.id, max_per_guest: null }));
 }
 

@@ -25,6 +25,7 @@ import { eatFirst } from './fresh.js';
 import { overview } from './overview.js';
 import { liveParty } from './party.js';
 import { getPlan } from './plan.js';
+import { householdAppearance } from './appearance.js';
 
 migrate(
   'kiosk-1',
@@ -478,7 +479,9 @@ export function fragment(d: DisplayData) {
 }
 
 const CSS = `
-:root{--paper:#f3f2ee;--surface:#fff;--surface-2:#ebeae5;--ink:#17181a;--ink-2:#47494e;--ink-3:#85878c;--line:#e0dfd9;--accent:#1d9a63;--accent-soft:#dcf1e6;--empty:#c9382b;--empty-soft:#f8e1dd;--low:#b97c0c;--low-soft:#f7ecd2;--exp:#d4561f;--exp-soft:#fae4d7;--info:#3159c9;--info-soft:#e1e8fa}
+:root{--paper:#f5f2eb;--surface:#fffdf8;--surface-2:#eeeae1;--ink:#1a2321;--ink-2:#44504c;--ink-3:#5e6965;--line:#e5e0d6;--accent:#1e7458;--accent-soft:#ddefe5;--empty:#b8372a;--empty-soft:#f9e3de;--empty-ink:#7d2219;--low:#946000;--low-soft:#f8edd3;--low-ink:#6d4a07;--exp:#ad4614;--exp-soft:#fbe6d9;--info:#2d57b0;--info-soft:#e3eaf8;--hero:#17332b;--hero-ink:#fffdf8;--hero-2:#b9c3be;--fade:rgba(255,253,248,0);--shadow:0 1px 2px rgba(26,35,33,.05),0 8px 24px -12px rgba(26,35,33,.18)}
+html.t-dark{--paper:#0f1513;--surface:#161e1b;--surface-2:#1e2824;--ink:#edefea;--ink-2:#b9c3be;--ink-3:#8a9590;--line:#232d29;--accent:#5cc79a;--accent-soft:#153027;--empty:#f28473;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e8b04a;--low-soft:#33290f;--low-ink:#f0c777;--exp:#f29a63;--exp-soft:#3a2316;--info:#8ea9f2;--info-soft:#1b2440;--hero:#1e2824;--fade:rgba(22,30,27,0);--shadow:0 1px 2px rgba(0,0,0,.3)}
+@media (prefers-color-scheme:dark){html.t-system{--paper:#0f1513;--surface:#161e1b;--surface-2:#1e2824;--ink:#edefea;--ink-2:#b9c3be;--ink-3:#8a9590;--line:#232d29;--accent:#5cc79a;--accent-soft:#153027;--empty:#f28473;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e8b04a;--low-soft:#33290f;--low-ink:#f0c777;--exp:#f29a63;--exp-soft:#3a2316;--info:#8ea9f2;--info-soft:#1b2440;--hero:#1e2824;--fade:rgba(22,30,27,0);--shadow:0 1px 2px rgba(0,0,0,.3)}}
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;font-size:calc(8px + 1.05vmin);-webkit-text-size-adjust:100%;background:var(--paper)}
 body{font-family:'Geist Variable',-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:var(--ink);background:var(--paper);min-height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;cursor:default;-webkit-user-select:none;user-select:none}
@@ -489,15 +492,15 @@ body{font-family:'Geist Variable',-apple-system,'Segoe UI',Roboto,'Helvetica Neu
 .greet{text-align:right}
 .greet b{display:block;font-family:'Bricolage Grotesque Variable','Geist Variable',-apple-system,sans-serif;font-size:2.1rem;font-weight:650;letter-spacing:-.01em}
 .greet span{color:var(--ink-3);font-size:1.15rem}
-.party{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;background:#17181a;color:#fff;border-radius:1.2rem;padding:1rem 1.4rem;margin-bottom:1.2rem}
-.party b{font-size:1.5rem}.party .eyebrow{color:#b9bbbf}
-.btn{display:inline-block;background:#fff;color:#17181a;border-radius:999px;padding:.6rem 1.2rem;font-weight:600;text-decoration:none;font-size:1.05rem}
+.party{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;background:var(--hero);color:var(--hero-ink);border-radius:1.2rem;padding:1rem 1.4rem;margin-bottom:1.2rem}
+.party b{font-size:1.5rem}.party .eyebrow{color:var(--hero-2)}
+.btn{display:inline-block;background:var(--hero-ink);color:var(--hero);border-radius:999px;padding:.6rem 1.2rem;font-weight:600;text-decoration:none;font-size:1.05rem}
 #main{display:-webkit-flex;display:flex;-webkit-flex:1;flex:1;min-height:0;margin:0 -.6rem}
 .col{-webkit-flex:1 1 0;flex:1 1 0;min-width:0;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;padding:0 .6rem}
-.card{position:relative;-webkit-flex:none;flex:none;background:var(--surface);border-radius:1.5rem;padding:1.4rem 1.5rem;margin-bottom:1.2rem;box-shadow:0 1px 2px rgba(40,36,28,.05),0 8px 24px -12px rgba(40,36,28,.18);overflow:hidden;min-height:0}
+.card{position:relative;-webkit-flex:none;flex:none;background:var(--surface);border-radius:1.5rem;padding:1.4rem 1.5rem;margin-bottom:1.2rem;box-shadow:var(--shadow);overflow:hidden;min-height:0}
 .col{overflow:hidden}
 .col .card:last-child{-webkit-flex:1 1 auto;flex:1 1 auto;margin-bottom:0}
-.card:after{content:'';position:absolute;left:0;right:0;bottom:0;height:1.4rem;background:-webkit-linear-gradient(rgba(255,255,255,0),#fff);background:linear-gradient(rgba(255,255,255,0),#fff)}
+.card:after{content:'';position:absolute;left:0;right:0;bottom:0;height:1.4rem;background:-webkit-linear-gradient(var(--fade),var(--surface));background:linear-gradient(var(--fade),var(--surface))}
 h2{font-size:1.05rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600;margin-bottom:1rem}
 h2 .n{display:inline-block;background:var(--surface-2);color:var(--ink-2);border-radius:999px;padding:0 .55rem;margin-left:.3rem;letter-spacing:0}
 .eyebrow{font-size:.95rem;color:var(--ink-3);font-weight:500}
@@ -522,9 +525,9 @@ h2 .n{display:inline-block;background:var(--surface-2);color:var(--ink-2);border
 .dot{-webkit-flex:none;flex:none;width:.8rem;height:.8rem;border-radius:50%;background:var(--ink-3);margin-right:.8rem}
 .dot.overdue{background:var(--empty)}.dot.today{background:var(--exp)}.dot.soon{background:var(--low)}
 .chips{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin:-.25rem}
-.chip{margin:.25rem;border-radius:.8rem;padding:.4rem .8rem;font-size:1.15rem;font-weight:550;background:var(--low-soft);color:#6d4a07}
+.chip{margin:.25rem;border-radius:.8rem;padding:.4rem .8rem;font-size:1.15rem;font-weight:550;background:var(--low-soft);color:var(--low-ink)}
 .chip small{margin-left:.45rem;font-size:.85rem;opacity:.75}
-.chip.empty{background:var(--empty-soft);color:#7d2219}
+.chip.empty{background:var(--empty-soft);color:var(--empty-ink)}
 .big-n{display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;margin-bottom:.8rem}
 .big-n b{font-family:'Bricolage Grotesque Variable','Geist Variable',-apple-system,sans-serif;font-size:3.6rem;line-height:1;font-weight:700;margin-right:.6rem}
 .big-n span{font-size:1.2rem;color:var(--ink-2)}
@@ -567,13 +570,13 @@ function fontFaces() {
 export function pageHtml(token: string, d: DisplayData) {
   const greets = JSON.stringify(['Good morning', 'Good afternoon', 'Good evening', 'Good night'].map((k) => t(k)));
   return `<!doctype html>
-<html lang="${esc(d.language)}" class="l-${esc(d.display.layout)}${d.night ? ' night' : ''}">
+<html lang="${esc(d.language)}" class="l-${esc(d.display.layout)}${d.night ? ' night' : ''} t-${householdAppearance().theme}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#f3f2ee">
+<meta name="theme-color" content="${householdAppearance().theme === 'dark' ? '#0f1513' : '#f5f2eb'}">
 <meta name="robots" content="noindex">
 <title>${esc(d.display.name)} · ${esc(d.household)}</title>
 <noscript><meta http-equiv="refresh" content="60"></noscript>
@@ -596,7 +599,7 @@ ${d.display.widgets.includes('clock') ? `<div><div class="time" id="time">${esc(
 }
 
 export function invalidHtml(language: string) {
-  return `<!doctype html><html lang="${esc(language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(t('Display'))}</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#f3f2ee;color:#17181a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:24px}h1{font-size:28px;margin:0 0 8px}p{color:#85878c;font-size:18px;margin:0}</style></head><body><div><h1>${esc(t('This display link is no longer valid.'))}</h1><p>${esc(t('Create a new link under Settings › Displays.'))}</p></div></body></html>`;
+  return `<!doctype html><html lang="${esc(language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(t('Display'))}</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#f5f2eb;color:#1a2321;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:24px}h1{font-size:28px;margin:0 0 8px}p{color:#5e6965;font-size:18px;margin:0}</style></head><body><div><h1>${esc(t('This display link is no longer valid.'))}</h1><p>${esc(t('Create a new link under Settings › Displays.'))}</p></div></body></html>`;
 }
 
 /**

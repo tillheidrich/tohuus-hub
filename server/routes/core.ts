@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled, visionEnabled } from '../config.js';
+import { appearanceFor } from '../lib/appearance.js';
 import { brand, db, getSetting, lang, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
 import { regionInfo } from '../lib/region.js';
@@ -79,6 +80,7 @@ r.get('/me', (req, res) => {
     language: lang(),
     region: regionInfo(),
     features: { vision: visionEnabled(), email: smtpEnabled() },
+    appearance: appearanceFor(actor.kind === 'user' ? actor.userId : null),
     version: process.env.npm_package_version ?? '0.1.0',
   });
 });
@@ -192,7 +194,7 @@ const productSchema = z.object({
   is_staple: z.boolean().optional(),
   orderable: z.boolean().optional(),
   order_group: z.string().nullable().optional(),
-  order_options: z.array(z.object({ group: z.string(), choices: z.array(z.string()), multi: z.boolean().default(false) })).optional(),
+  order_options: z.array(z.object({ group: z.string(), choices: z.array(z.string()), multi: z.boolean().default(false), required: z.boolean().optional(), default: z.array(z.string()).optional() })).optional(),
   notes: z.string().nullable().optional(),
   spot: z.string().max(120).nullable().optional(),
   archived: z.boolean().optional(),

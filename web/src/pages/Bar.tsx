@@ -6,6 +6,7 @@ import { Empty, Ic, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui'
 import { locale, t } from '../i18n';
 import { PartyCard } from './Party';
 import { BonButton } from './Bons';
+import { EditMenuButton } from './Menu';
 
 export function Bar() {
   const [tab, setTab] = useState<'orders' | 'links' | 'menu'>('orders');
@@ -243,7 +244,10 @@ function Menu() {
   const list = (data ?? []).slice().sort((a, b) => Number(b.orderable) - Number(a.orderable));
   return (
     <div className="stack">
-      <p className="small muted" style={{ margin: 0 }}>{t('Guests see whatever is switched on here in the bar – counted items only while there’s some left.')}</p>
+      <div className="row between wrap" style={{ gap: 8 }}>
+        <p className="small muted" style={{ margin: 0, flex: '1 1 220px' }}>{t('Guests see whatever is switched on here in the bar – counted items only while there’s some left.')}</p>
+        <EditMenuButton className="btn sm" label={t('Groups, pictures & options')} />
+      </div>
       <div className="list">
         {list.map((p) => (
           <div key={p.id} className="li">

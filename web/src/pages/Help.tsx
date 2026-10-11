@@ -1,5 +1,5 @@
 /** In-app help (/hilfe): short how-tos for the things people ask about in week one. Area: onboard. */
-import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, Confetti, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase, UsersThree } from '@phosphor-icons/react';
+import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, Confetti, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase, UsersThree, ForkKnife, CircleHalf } from '@phosphor-icons/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../api';
@@ -45,6 +45,18 @@ export function Help() {
       link: { label: t('Open notification settings'), to: '/einstellungen?tab=notify' },
     },
     {
+      id: 'appearance',
+      icon: <CircleHalf size={20} />,
+      title: t('Light or dark'),
+      lead: t('One appearance for the whole household, or everyone picks their own.'),
+      steps: [
+        t('Settings › Household › Appearance: Light, Dark or “Like the device” (follows each phone’s setting).'),
+        t('Switch on “Let everyone choose for themselves” and each member picks their own under My account.'),
+        t('Kitchen displays follow the household setting.'),
+      ],
+      link: { label: t('Open household settings'), to: '/einstellungen?tab=home' },
+    },
+    {
       id: 'mcp',
       icon: <ChatCircleDots size={20} />,
       title: t('Claude, ChatGPT & co. (MCP)'),
@@ -84,6 +96,20 @@ export function Help() {
         t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.'),
       ],
       link: { label: t('Open guests & bar'), to: '/bar' },
+    },
+    {
+      id: 'karte',
+      icon: <ForkKnife size={20} />,
+      title: t('The order menu: coffee, drinks, snacks'),
+      lead: t('Everything people can order lives in one menu – things from your stock and things that are simply there, like tap water or coffee.'),
+      steps: [
+        t('Order › “Edit menu” (also in Settings › Household and in the party setup).'),
+        t('“Add from stock”: crisps, cola, ice cream – they show “all gone” (or disappear) when they run out, and serving books them out.'),
+        t('“Menu-only item”: tap water, coffee, cappuccino – never counted. Link up to three ingredients from stock (milk, coffee): when one runs low it says “maybe not”.'),
+        t('Choices like size, milk or sugar: single or several, required or optional, with a preselected default.'),
+        t('Who sees it: everyone, only at parties, only for family – or hidden for now. Templates get you started in one tap.'),
+      ],
+      link: { label: t('Open the menu'), to: '/bestellen/karte' },
     },
     {
       id: 'people',

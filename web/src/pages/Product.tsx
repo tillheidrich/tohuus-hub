@@ -66,7 +66,7 @@ export function ProductDetail() {
               {p.size && <span className="badge">{p.size}</span>}
               <StatusBadge p={p} />
               {p.is_staple && <span className="badge info">{t('always stocked')}</span>}
-              {p.orderable && <span className="badge good">{t('in the guest bar')}</span>}
+              {p.orderable && <button className="badge good" onClick={() => nav(`/bestellen/karte?item=${p.id}`)}>{t('on the order menu')}</button>}
             </div>
           </div>
 
@@ -553,14 +553,19 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
           </div>
           <div className="li">
             <div className="grow">
-              <div className="title">{t('In the guest bar')}</div>
-              <div className="sub">{t('Guests can order it through their link.')}</div>
+              <div className="title">{t('On the order menu')}</div>
+              <div className="sub">{t('Family and guests can order it. Pictures, choices and groups are set in the menu.')}</div>
             </div>
-            <Toggle on={f.orderable} onChange={(v) => set('orderable', v)} />
+            <Toggle on={f.orderable} onChange={(v) => set('orderable', v)} label={t('On the order menu')} />
           </div>
           {f.orderable && (
             <div className="li">
               <input className="input" value={f.order_group} onChange={(e) => set('order_group', e.target.value)} placeholder={t('Bar section, e.g. drinks, ice cream, snacks')} />
+              {product?.orderable && (
+                <button className="btn ghost sm" style={{ flex: 'none' }} onClick={() => { onClose(); nav(`/bestellen/karte?item=${product.id}`); }}>
+                  {t('Edit on the menu')}
+                </button>
+              )}
             </div>
           )}
         </div>

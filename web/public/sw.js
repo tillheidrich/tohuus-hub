@@ -1,5 +1,5 @@
 /* ToHuus Hub service worker: app shell + last shopping list offline, Web Push with actions. */
-const VERSION = 'tohuus-v2';
+const VERSION = 'tohuus-v3'; // v3: Nordic redesign (new icons, theme-boot.js)
 const SHELL = `${VERSION}-shell`;
 const DATA = `${VERSION}-data`;
 // things shared into the app (share target) wait here until the /teilen page picks them up – survives SW updates

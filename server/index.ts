@@ -42,6 +42,9 @@ import { r as qualityRoutes } from './routes/quality.js';
 import { r as peopleRoutes, pub as peoplePublic } from './routes/people.js';
 import { r as tourRoutes } from './routes/tour.js';
 import { r as ha2Routes, ha2Guest } from './routes/ha2.js';
+import { r as menuRoutes } from './routes/menu.js';
+import { r as designRoutes } from './routes/design.js';
+import { householdAppearance } from './lib/appearance.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 ensureBaseData();
@@ -123,6 +126,8 @@ app.use('/api', qualityRoutes);
 app.use('/api', peopleRoutes);
 app.use('/api', tourRoutes);
 app.use('/api', ha2Routes);
+app.use('/api', menuRoutes);
+app.use('/api', designRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -136,16 +141,24 @@ if (webDir) {
     '/icon-512.png': 'fredirando-512.png',
     '/icon-maskable-192.png': 'fredirando-maskable-192.png',
     '/icon-maskable-512.png': 'fredirando-maskable-512.png',
+    '/favicon-32.png': 'fredirando-32.png',
+    '/icon-light.svg': 'fredirando-light.svg',
+    '/icon-dark.svg': 'fredirando-dark.svg',
+    '/icon-1024.png': 'fredirando-1024.png',
   };
   app.get(Object.keys(BRAND_FILES), (req, res, next) => {
     if (brand() !== 'fredirando') return next();
     res.setHeader('Cache-Control', 'no-cache');
     res.sendFile(path.join(webDir, BRAND_FILES[req.path]));
   });
-  app.get('/manifest.webmanifest', (_req, res, next) => {
-    if (brand() !== 'fredirando') return next();
+  // manifest per brand and household theme (colours match the --paper token of web/src/styles.css)
+  const PAPER = { tohuus: { light: '#f5f2eb', dark: '#0f1513' }, fredirando: { light: '#fff7f0', dark: '#170f0b' } } as const;
+  app.get('/manifest.webmanifest', (_req, res) => {
     const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
-    Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: t('Ordered. Delivered. From kitchen & pantry.'), background_color: '#fff8f3', theme_color: '#fff8f3' });
+    const b = brand() === 'fredirando' ? 'fredirando' : 'tohuus';
+    const c = PAPER[b][householdAppearance().theme === 'dark' ? 'dark' : 'light'];
+    Object.assign(m, { background_color: c, theme_color: c });
+    if (b === 'fredirando') Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: t('Ordered. Delivered. From kitchen & pantry.') });
     res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
   });
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {
@@ -155,10 +168,12 @@ if (webDir) {
   const fredi = html
     .replace(/<title>.*<\/title>/, '<title>Fredirando</title>')
     .replace(/content="ToHuus Hub"/g, 'content="Fredirando"')
-    .replace(/content="#f3f2ee"/g, 'content="#fff8f3"')
+    .replace(/content="#f5f2eb"/g, 'content="#fff7f0"')
+    .replace(/content="#0f1513"/g, 'content="#170f0b"')
     .replace(/<html lang="[^"]*"/, '<html lang="de" data-brand="fredirando"');
   // the document language follows the household setting
-  const withLang = (doc: string) => doc.replace(/<html lang="[^"]*"/, `<html lang="${lang()}"`);
+  // … and the household theme is known before the first paint (web/public/theme-boot.js reads it)
+  const withLang = (doc: string) => doc.replace(/<html lang="[^"]*"/, `<html lang="${lang()}" data-theme-default="${householdAppearance().theme}"`);
   app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(withLang(brand() === 'fredirando' ? fredi : html)));
 }
 
