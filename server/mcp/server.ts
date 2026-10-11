@@ -41,6 +41,12 @@ import { register as register_cook2 } from './tools-cook2.js';
 import { register as register_auth } from './tools-auth.js';
 import { register as register_spend2 } from './tools-spend2.js';
 import { register as register_print } from './tools-print.js';
+import { register as register_share } from './tools-share.js';
+import { register as register_labels } from './tools-labels.js';
+import { register as register_away } from './tools-away.js';
+import { register as register_plan2 } from './tools-plan2.js';
+import { register as register_recipes2 } from './tools-recipes2.js';
+import { register as register_quality } from './tools-quality.js';
 import { norm } from '../lib/text.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -530,6 +536,12 @@ export function buildMcpServer(actorName: string) {
   register_auth(s, actorName);
   register_spend2(s, actorName);
   register_print(s, actorName);
+  register_share(s, actorName);
+  register_labels(s, actorName);
+  register_away(s, actorName);
+  register_plan2(s, actorName);
+  register_recipes2(s, actorName);
+  register_quality(s, actorName);
   return s;
 }
 

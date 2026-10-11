@@ -83,4 +83,5 @@ export const app: Record<string, string> = {
   'By hand, with image search.': 'Von Hand, mit Bildsuche.',
   'Type a list': 'Liste tippen',
   '“2x milk, parcel tape …” – gets matched up.': '„2x Milch, Paketband …“ – wird zugeordnet.',
+  'Unexpected answer from the server': 'Unerwartete Antwort vom Server',
 };

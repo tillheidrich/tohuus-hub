@@ -33,6 +33,12 @@ import { r as cook2Routes } from './routes/cook2.js';
 import { r as authRoutes, pub as authPublic } from './routes/auth.js';
 import { r as spend2Routes } from './routes/spend2.js';
 import { r as printRoutes } from './routes/print.js';
+import { r as shareRoutes } from './routes/share.js';
+import { r as labelsRoutes } from './routes/labels.js';
+import { r as awayRoutes } from './routes/away.js';
+import { r as plan2Routes } from './routes/plan2.js';
+import { r as recipes2Routes } from './routes/recipes2.js';
+import { r as qualityRoutes } from './routes/quality.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 ensureBaseData();
@@ -101,6 +107,12 @@ app.use('/api', cook2Routes);
 app.use('/api', authRoutes);
 app.use('/api', spend2Routes);
 app.use('/api', printRoutes);
+app.use('/api', shareRoutes);
+app.use('/api', labelsRoutes);
+app.use('/api', awayRoutes);
+app.use('/api', plan2Routes);
+app.use('/api', recipes2Routes);
+app.use('/api', qualityRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

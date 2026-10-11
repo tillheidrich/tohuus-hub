@@ -20,5 +20,11 @@ import { cook2 } from './cook2';
 import { auth } from './auth';
 import { spend2 } from './spend2';
 import { print } from './print';
+import { share } from './share';
+import { labels } from './labels';
+import { away } from './away';
+import { plan2 } from './plan2';
+import { recipes2 } from './recipes2';
+import { quality } from './quality';
 
-export const sv: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print };
+export const sv: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print, ...share, ...labels, ...away, ...plan2, ...recipes2, ...quality };

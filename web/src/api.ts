@@ -23,6 +23,8 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   const isJson = r.headers.get('content-type')?.includes('json');
   const data = isJson ? await r.json() : await r.text();
   if (!r.ok) throw new ApiError(r.status, (isJson && (data as any).error) || r.statusText);
+  // An API answer that is not JSON is never what a caller expects (e.g. the SPA shell for an unknown path)
+  if (!isJson && r.status !== 204 && (r.headers.get('content-type') ?? '').includes('text/html')) throw new ApiError(502, t('Unexpected answer from the server'));
   return data as T;
 }
 
@@ -35,7 +37,9 @@ export const put = <T = any>(p: string, body: unknown) => api<T>(p, { method: 'P
 export function useApi<T = any>(key: string | (string | number)[], path: string | null, opts: { enabled?: boolean } = {}) {
   return useQuery<T>({
     queryKey: Array.isArray(key) ? key : [key],
-    queryFn: () => get<T>(path!),
+    // Several components can share one key while some of them are disabled (path = null). The query keeps
+    // the queryFn of the last observer, so a disabled one must never be the one that fetches.
+    queryFn: path ? () => get<T>(path) : undefined,
     enabled: path !== null && (opts.enabled ?? true),
   });
 }
