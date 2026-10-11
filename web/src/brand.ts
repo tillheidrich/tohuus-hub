@@ -1,32 +1,29 @@
 import { t } from './i18n';
 
-export type BrandKey = 'tohuus' | 'fredirando';
+/**
+ * One brand since wave 6 (Dutch Detail): ToHuus. The former second look (Fredirando) was retired; the household
+ * name stays whatever the household set. Kept as a tiny module so title / logo / tagline live in one place.
+ */
+export type BrandKey = 'tohuus';
 
-export const BRANDS: Record<BrandKey, { name: string; logo: string; tagline: string }> = {
-  tohuus: {
-    name: 'ToHuus Hub',
-    logo: '/tohuus-logo.svg',
-    get tagline() {
-      return t('Your home. Organized.');
-    },
-  },
-  fredirando: {
-    name: 'Fredirando',
-    logo: '/fredirando.svg',
-    get tagline() {
-      return t('Ordered. Delivered. From kitchen & pantry.');
-    },
+export const BRAND = {
+  name: 'ToHuus Hub',
+  logo: '/tohuus-logo.svg',
+  get tagline() {
+    return t('Less on your mind. More at home.');
   },
 };
 
+/** @deprecated single brand – use BRAND */
+export const BRANDS: Record<BrandKey, typeof BRAND> = { tohuus: BRAND };
+
 export function currentBrand(): BrandKey {
-  return document.documentElement.dataset.brand === 'fredirando' ? 'fredirando' : 'tohuus';
+  return 'tohuus';
 }
 
-export function applyBrand(b: string | undefined) {
-  const key: BrandKey = b === 'fredirando' ? 'fredirando' : 'tohuus';
-  if (key === 'fredirando') document.documentElement.dataset.brand = 'fredirando';
-  else delete document.documentElement.dataset.brand;
-  document.title = BRANDS[key].name;
-  return BRANDS[key];
+/** Sets the document title; any old data-brand attribute from a cached page is removed. */
+export function applyBrand(_b?: string) {
+  delete document.documentElement.dataset.brand;
+  document.title = BRAND.name;
+  return BRAND;
 }

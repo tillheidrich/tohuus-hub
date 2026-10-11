@@ -572,6 +572,7 @@ export function createLoginLink(userId: number, by: Actor | undefined, deliver: 
       }),
       { url, label: t('Sign in') },
       t('Afterwards you can add a passkey under Settings › My account, then you won’t need a link any more.'),
+      { eyebrow: t('Sign-in') },
     );
     return { sent: true, email: to, expires_hours: LOGIN_LINK_HOURS };
   }

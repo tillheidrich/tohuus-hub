@@ -60,7 +60,7 @@ guest.post('/:token/orders', (req, res) => {
   }
   const b = orderSchema.parse(req.body);
   if (!b.guest_name) {
-    res.status(400).json({ error: t('Please tell us your name.') });
+    res.status(400).json({ error: t('Please tell us your name.'), need: 'name' });
     return;
   }
   const cid = guestClientId(req, res);
@@ -96,7 +96,7 @@ guest.get('/:token/stock', (req, res) => {
     return;
   }
   const allowed: number[] = req.actor!.guestLocations ?? [];
-  const locations = db.prepare('SELECT id, name, icon, hint FROM locations ORDER BY sort').all() as any[];
+  const locations = db.prepare(`SELECT id, name, icon, hint FROM locations WHERE archived = 0 AND kind != 'unassigned' ORDER BY sort`).all() as any[];
   // never quantities – only what is where, and whether it's there at all
   const things = findThings(String(req.query.q ?? '').slice(0, 60), allowed.length ? allowed : [-1]).map((x) => ({
     id: x.id,
@@ -172,8 +172,14 @@ guestAdmin.get('/bar/menu', (req, res) => res.json(orderMenu(true, { family: !is
 guestAdmin.get('/bar/my-orders', (req, res) => res.json(listOrders("user_id = ? AND (status IN ('new','accepted') OR updated_at > datetime('now','-6 hours'))", req.actor!.userId ?? -1)));
 guestAdmin.post('/bar/orders', (req, res) => {
   const b = orderSchema.parse(req.body);
+  // signed-in people order under their own name; a shared device without a person (kiosk/API token) must say who orders
+  const person = req.actor!.kind === 'user' && Boolean(req.actor!.userId);
+  if (!person && !b.guest_name) {
+    res.status(400).json({ error: t('Please tell us your name.'), need: 'name' });
+    return;
+  }
   try {
-    res.json({ id: createOrder(b, { userId: req.actor!.userId ?? null, name: req.actor!.name }) });
+    res.json({ id: createOrder(b, { userId: person ? req.actor!.userId! : null, name: person ? req.actor!.name : b.guest_name!, linkName: person ? null : req.actor!.name }) });
   } catch (e) {
     res.status((e as any).status ?? 500).json({ error: (e as Error).message });
   }

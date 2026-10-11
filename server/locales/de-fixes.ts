@@ -1,0 +1,57 @@
+/** Wave 6 fixes: mail layout, invitations, guest names, "Where to buy?" (German, du-form). */
+export const de_fixes: Record<string, string> = {
+  'Button not working? Copy this link into your browser:': 'Der Button geht nicht? Kopier diesen Link in deinen Browser:',
+  'your household, self-hosted': 'dein Haushalt, selbst gehostet',
+  'Can order and add to the shopping list': 'Kann bestellen und auf die Einkaufsliste schreiben',
+  'Can order and sees stock and where things are': 'Kann bestellen und sieht den Vorrat und wo was liegt',
+  'Can order and sees stock, recipes and the week plan': 'Kann bestellen und sieht Vorrat, Rezepte und den Wochenplan',
+  'Like family, without settings': 'Wie Familie, ohne Einstellungen',
+  Admin: 'Admin',
+  Member: 'Mitglied',
+  'our household': 'unseren Haushalt',
+  'Hi {name},': 'Hallo {name},',
+  'Hello,': 'Hallo,',
+  '{by} invites you to {household}': '{by} lädt dich zu {household} ein',
+  'Join {household}': 'Komm zu {household}',
+  '{by} invites you to the household app of {household}. The link works once and for {days} days.':
+    '{by} lädt dich in die Haushalts-App von {household} ein. Der Link funktioniert einmal und {days} Tage lang.',
+  '{by} invites you as a guest to {household} – our household app for the shopping list, orders from the sofa and more.':
+    '{by} lädt dich als Gast zu {household} ein – unsere Haushalts-App für die Einkaufsliste, Bestellungen vom Sofa und mehr.',
+  '{by} invites you to {household} – our household app for the shopping list, stock, recipes and everyday things.':
+    '{by} lädt dich zu {household} ein – unsere Haushalts-App für Einkaufsliste, Vorrat, Rezepte und den Alltag.',
+  'Tap the button, pick how you want to sign in (passkey, password or e-mail link) – then you’re in.':
+    'Tipp auf den Button und such dir aus, wie du dich anmeldest (Passkey, Passwort oder E-Mail-Link) – dann bist du drin.',
+  Access: 'Zugang',
+  'Valid until': 'Gültig bis',
+  'Accept invitation': 'Einladung annehmen',
+  'The link works once. If you weren’t expecting this, just ignore this e-mail – nothing happens without the link.':
+    'Der Link funktioniert einmal. Wenn du nicht damit gerechnet hast, ignorier diese E-Mail einfach – ohne den Link passiert nichts.',
+  '{by} typed your address when inviting you. We don’t send anything else unless you join.':
+    '{by} hat deine Adresse beim Einladen eingetragen. Wir schicken dir nichts weiter, solange du nicht beitrittst.',
+  'This invitation is no longer open.': 'Diese Einladung ist nicht mehr offen.',
+  'Please enter your name.': 'Bitte gib deinen Namen ein.',
+  'At least 8 characters, please.': 'Bitte mindestens 8 Zeichen.',
+  'This household signs in without passwords – pick a passkey or an e-mail link.': 'In diesem Haushalt meldet man sich ohne Passwort an – nimm einen Passkey oder einen E-Mail-Link.',
+  'Single sign-on is not set up here.': 'Single Sign-on ist hier nicht eingerichtet.',
+  'Passkeys are switched off in this household.': 'Passkeys sind in diesem Haushalt ausgeschaltet.',
+  'Sign-in links by e-mail aren’t available here.': 'Anmeldelinks per E-Mail gibt es hier nicht.',
+  'You get this because e-mail is switched on for this event under Settings › Notifications.':
+    'Du bekommst diese E-Mail, weil unter Einstellungen › Benachrichtigungen E-Mail für dieses Ereignis an ist.',
+  'Your account': 'Dein Konto',
+  Passkey: 'Passkey',
+  'E-mail address': 'E-Mail-Adresse',
+  Security: 'Sicherheit',
+  '{name}: {error}': '{name}: {error}',
+  Ticket: 'Bon',
+  'at {stores}': 'bei {stores}',
+  'Other stores': 'Andere Läden',
+  Sofa: 'Sofa',
+  optional: 'optional',
+  Stock: 'Vorrat',
+  Receipts: 'Kassenbons',
+  Care: 'Pflege',
+  Party: 'Party',
+  Wish: 'Wunsch',
+  Budget: 'Budget',
+  Test: 'Test',
+};

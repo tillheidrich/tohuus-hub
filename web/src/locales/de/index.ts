@@ -31,6 +31,8 @@ import { tour } from './tour';
 import { ha2 } from './ha2';
 import { menu } from './menu';
 import { design } from './design';
+import { fixes } from './fixes';
+import { places } from './places';
 
 
-export const de: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print, ...share, ...labels, ...away, ...plan2, ...recipes2, ...quality, ...people, ...tour, ...ha2, ...menu, ...design };
+export const de: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print, ...share, ...labels, ...away, ...plan2, ...recipes2, ...quality, ...people, ...tour, ...ha2, ...menu, ...design, ...fixes, ...places };

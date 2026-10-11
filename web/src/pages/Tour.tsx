@@ -8,10 +8,11 @@ import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, u
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { invalidate, post, put, qc, useApi } from '../api';
+import { type HouseholdForm, useHousehold } from '../household';
 import { t } from '../i18n';
 import { Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { useGettingStarted } from './Onboarding';
-import { HouseArt } from '../art';
+import { HomeTiles } from '../art';
 
 // ================================================================== data
 
@@ -65,8 +66,9 @@ interface Step {
 const nav = (to: string) => [`.sidebar a[href="${to}"]`, `.tabbar a[href="${to}"]`];
 const MORE = '.tabbar button.tab';
 
-/** The steps, in the household language (built at render time so t() picks the right dictionary). */
-function steps(): Step[] {
+/** The steps, in the household language (built at render time so t() picks the right dictionary).
+ * The wording follows the household form (area: home): no "who is getting it" alone, no kids outside a family. */
+function steps(form: HouseholdForm = 'family'): Step[] {
   return [
     {
       id: 'today',
@@ -87,14 +89,20 @@ function steps(): Step[] {
       route: '/einkauf',
       targets: nav('/einkauf'),
       title: t('One shopping list for everyone'),
-      body: t('Everyone adds to the same list, and empty things land on it by themselves. Tap an item to say who is getting it – so nothing gets bought twice.'),
+      body:
+        form === 'single'
+          ? t('Empty things land on your list by themselves, sorted by aisle – nothing to keep in your head.')
+          : t('Everyone adds to the same list, and empty things land on it by themselves. Tap an item to say who is getting it – so nothing gets bought twice.'),
     },
     {
       id: 'stock',
       route: '/wo',
       targets: [...nav('/wo'), MORE],
       title: t('Stock and where things are'),
-      body: t('See what is at home, place by place. “Where’s what?” finds the plasters or the spare batteries – handy for anyone looking after the kids, too.'),
+      body:
+        form === 'family'
+          ? t('See what is at home, place by place. “Where’s what?” finds the plasters or the spare batteries – handy for anyone looking after the kids, too.')
+          : t('See what is at home, place by place. “Where’s what?” finds the plasters or the spare batteries in seconds.'),
     },
     {
       id: 'cook',
@@ -108,7 +116,10 @@ function steps(): Step[] {
       route: '/bestellen',
       targets: nav('/bestellen'),
       title: t('Orders and guests'),
-      body: t('Family and guests can order a drink or a snack from what is really there. Guest links work without an account.'),
+      body:
+        form === 'family'
+          ? t('Family and guests can order a drink or a snack from what is really there. Guest links work without an account.')
+          : t('Guests can order a drink or a snack from what is really there. Guest links work without an account.'),
     },
     {
       id: 'receipts',
@@ -239,7 +250,8 @@ interface Rect {
 }
 
 function TourOverlay({ start, onStep, onClose }: { start: number; onStep: (step: number) => void; onClose: (status: 'done' | 'skipped' | 'paused', step: number) => void }) {
-  const all = useMemo(steps, []);
+  const home = useHousehold();
+  const all = useMemo(() => steps(home.form), [home.form]);
   const [i, setI] = useState(Math.min(start, all.length - 1));
   const [rect, setRect] = useState<Rect | null>(null);
   const [viaMore, setViaMore] = useState(false);
@@ -393,7 +405,7 @@ export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => 
     <div className="onb">
       <div className="stack" style={{ gap: 22 }}>
         <header>
-          <HouseArt className="onb-house" />
+          <HomeTiles className="onb-homes" />
           <h1>{t('Welcome home.')}</h1>
           <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
             {t('How would you like to start? You can switch later: demo data can be removed with one tap.')}

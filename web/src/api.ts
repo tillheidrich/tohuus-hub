@@ -135,6 +135,7 @@ export interface Product {
 
 export type DateKind = 'best_before' | 'use_by';
 
+export type Climate = 'ambient' | 'chilled' | 'frozen';
 export interface Location {
   id: number;
   name: string;
@@ -143,7 +144,21 @@ export interface Location {
   sort: number;
   hint?: string | null;
   product_count?: number;
+  /** area: home – tree, climate, archive */
+  parent_id?: number | null;
+  climate?: Climate;
+  archived?: number;
+  owner_user_id?: number | null;
+  owner_name?: string | null;
+  depth?: number;
+  /** "Keller › Gefriertruhe" */
+  path?: string;
+  /** the "not assigned yet" place */
+  system?: boolean;
+  children?: number;
 }
+/** Places someone can pick (not archived; the system place only shows while something is in it). */
+export const pickable = (l: Location) => !l.archived;
 export interface Category {
   id: number;
   name: string;

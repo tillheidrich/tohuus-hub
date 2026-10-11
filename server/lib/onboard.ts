@@ -2,10 +2,11 @@
  * First-run experience: household onboarding (3 skippable, resumable steps), the "getting started"
  * checklist on Today, starter sets per room, and small per-user preferences (e.g. "what's new" seen).
  */
-import { brand, db, defaultBrand, getSetting, lang, migrate, setSetting } from '../db.js';
+import { db, getSetting, lang, migrate, setSetting } from '../db.js';
 import { BASE_LOCATIONS, type CategoryKey, type LocationKey, categoryIdByKey, locationIdByKey } from './basedata.js';
 import { addToShopping, adjustStock, createProduct } from './catalog.js';
 import { emit } from './bus.js';
+import { UNASSIGNED, createPlace, defaultPlace, deletePlace, homeSetup, householdForm, listPlaces, type Climate } from './places.js';
 
 migrate(
   'onboard-1',
@@ -39,8 +40,12 @@ export function setUserPref(userId: number, key: string, value: unknown) {
 
 // ---------------------------------------------------------------- onboarding state (household-wide)
 
-export type OnboardStep = 'home' | 'invite' | 'stock';
-export const STEPS: OnboardStep[] = ['home', 'invite', 'stock'];
+/**
+ * home: name, language, who lives here (household form) · where: "Wie wohnt ihr?" (home preset)
+ * places: "Welche Orte möchtet ihr verwalten?" · spots: optional storage spots · invite · stock
+ */
+export type OnboardStep = 'home' | 'where' | 'places' | 'spots' | 'invite' | 'stock';
+export const STEPS: OnboardStep[] = ['home', 'where', 'places', 'spots', 'invite', 'stock'];
 
 export interface OnboardState {
   /** step the wizard resumes at */
@@ -93,9 +98,11 @@ export function checklist(userId?: number | null) {
   const state = onboardState();
   const defaultNames = ['Our home', 'Unser Zuhause'];
   const name = getSetting<string>('household.name', '');
+  // living alone: nobody to invite – the checklist does not nag about it (area: home)
+  const single = householdForm() === 'single';
   const items: { key: ChecklistKey; done: boolean }[] = [
     { key: 'home', done: state.step !== 'home' || state.closed || (Boolean(name) && !defaultNames.includes(name)) },
-    { key: 'invite', done: count('SELECT COUNT(*) n FROM users') > 1 || safeCount('invites', `SELECT COUNT(*) n FROM invites WHERE revoked = 0 AND (used_at IS NOT NULL OR expires_at > datetime('now'))`) > 0 },
+    ...(single ? [] : [{ key: 'invite' as const, done: count('SELECT COUNT(*) n FROM users') > 1 || safeCount('invites', `SELECT COUNT(*) n FROM invites WHERE revoked = 0 AND (used_at IS NOT NULL OR expires_at > datetime('now'))`) > 0 }]),
     { key: 'stock', done: count(`SELECT COUNT(DISTINCT product_id) n FROM stock WHERE qty > 0${notDemo('product_id', 'products')}`) > 0 },
     { key: 'phone', done: userId ? safeCount('push_subscriptions', 'SELECT COUNT(*) n FROM push_subscriptions WHERE user_id = ?', userId) > 0 : safeCount('push_subscriptions', 'SELECT COUNT(*) n FROM push_subscriptions') > 0 },
     { key: 'recipe', done: count(`SELECT COUNT(*) n FROM recipes WHERE 1${notDemo('id', 'recipes')}`) > 0 },
@@ -114,14 +121,17 @@ const safeCount = (table: string, sql: string, ...args: unknown[]) => (tableExis
 export function gettingStarted(userId?: number | null) {
   const state = onboardState();
   const list = checklist(userId);
-  const rooms = db.prepare('SELECT id, name, kind, icon FROM locations ORDER BY sort, id').all() as { id: number; name: string; kind: string; icon: string }[];
+  const rooms = listPlaces({ all: true })
+    .filter((l) => !l.system)
+    .map((l) => ({ id: l.id, name: l.name, kind: l.kind, icon: l.icon, climate: l.climate, parent_id: l.parent_id, archived: Boolean(l.archived), depth: l.depth, products: l.product_count }));
   return {
     state,
     newHousehold: isNewHousehold(),
     wizardDue: wizardDue(state),
     checklist: list,
     showChecklist: state.started && !state.checklistDismissed && list.done < list.total,
-    household: { name: getSetting('household.name', ''), language: lang(), brand: brand(), brandDefault: defaultBrand() },
+    household: { name: getSetting('household.name', ''), language: lang() },
+    home: homeSetup(),
     rooms,
     counts: {
       members: count('SELECT COUNT(*) n FROM users'),
@@ -135,34 +145,68 @@ export function gettingStarted(userId?: number | null) {
 
 // ---------------------------------------------------------------- rooms (step 1)
 
-/** Keep the chosen rooms, remove unchosen empty ones, add new ones. Rooms with stock are never removed. */
-export function setRooms(input: { keep: number[]; add: string[] }) {
+export interface RoomAdd {
+  name?: string;
+  /** template key (area: home) – brings icon, kind and climate */
+  key?: string | null;
+  icon?: string | null;
+  climate?: Climate | null;
+  parent_id?: number | null;
+}
+
+/**
+ * Keep the chosen places, remove unchosen empty ones, add new ones (from templates: with their key, icon and
+ * climate). Places with stock are never removed, the system place never. An empty selection is allowed.
+ */
+export function setRooms(input: { keep: number[]; add: (string | RoomAdd)[] }) {
   const keep = new Set(input.keep);
-  const all = db.prepare('SELECT id, name FROM locations').all() as { id: number; name: string }[];
+  const all = db.prepare('SELECT id, name, parent_id FROM locations WHERE kind != ?').all(UNASSIGNED) as { id: number; name: string; parent_id: number | null }[];
   const kept: string[] = [];
   const removed: string[] = [];
   const blocked: string[] = [];
   const tx = db.transaction(() => {
+    // storage spots inside a kept place stay with it (step 3 manages them)
+    const keptTree = new Set<number>();
+    const parentOf = new Map(all.map((l) => [l.id, l.parent_id]));
     for (const l of all) {
-      if (keep.has(l.id)) {
-        kept.push(l.name);
+      let p: number | null = l.id;
+      const seen = new Set<number>();
+      while (p != null && !seen.has(p)) {
+        if (keep.has(p)) {
+          keptTree.add(l.id);
+          break;
+        }
+        seen.add(p);
+        p = parentOf.get(p) ?? null;
+      }
+    }
+    for (const l of all) {
+      if (keep.has(l.id) || keptTree.has(l.id)) {
+        if (keep.has(l.id)) kept.push(l.name);
         continue;
       }
       if (count('SELECT COUNT(*) n FROM stock WHERE location_id = ? AND qty > 0', l.id) > 0) {
         blocked.push(l.name);
         continue;
       }
-      db.prepare('DELETE FROM locations WHERE id = ?').run(l.id);
+      deletePlace(l.id);
       removed.push(l.name);
     }
-    let sort = (db.prepare('SELECT COALESCE(MAX(sort), 0) + 1 m FROM locations').get() as { m: number }).m;
-    const names = new Set((db.prepare('SELECT name FROM locations').all() as { name: string }[]).map((x) => x.name.toLowerCase()));
+    // the same name may exist in two rooms ("Regal" in the kitchen and in the cellar), not twice in one
+    const keyOf = (parent: number | null | undefined, name: string) => `${parent ?? 0}|${name.toLowerCase()}`;
+    const names = new Set((db.prepare('SELECT name, parent_id FROM locations').all() as { name: string; parent_id: number | null }[]).map((x) => keyOf(x.parent_id, x.name)));
     for (const raw of input.add) {
-      const name = raw.trim().slice(0, 60);
-      if (!name || names.has(name.toLowerCase())) continue;
-      names.add(name.toLowerCase());
-      db.prepare('INSERT INTO locations (name, kind, icon, sort) VALUES (?, ?, ?, ?)').run(name, 'other', 'box', sort++);
-      kept.push(name);
+      const a: RoomAdd = typeof raw === 'string' ? { name: raw } : raw;
+      const name = (a.name ?? '').trim().slice(0, 60);
+      if ((!name && !a.key) || (name && names.has(keyOf(a.parent_id, name)))) continue;
+      const id = createPlace({ name: name || undefined, key: a.key ?? null, icon: a.icon ?? null, climate: a.climate ?? null, parent_id: a.parent_id ?? null }, { emit: false });
+      const created = (db.prepare('SELECT name FROM locations WHERE id = ?').get(id) as { name: string }).name;
+      if (!name && names.has(keyOf(a.parent_id, created))) {
+        deletePlace(id); // a template that already exists under this parent
+        continue;
+      }
+      names.add(keyOf(a.parent_id, created));
+      kept.push(created);
     }
   });
   tx();
@@ -252,6 +296,8 @@ export const STARTER: Record<LocationKey, StarterItem[]> = {
 };
 
 const itemName = (i: StarterItem) => i[lang()] ?? i.en;
+/** The household's place for a starter room: by key, and for cold rooms any place of that climate ("Gefriertruhe"). */
+const roomId = (key: LocationKey) => locationIdByKey(key) ?? (key === 'freezer' ? defaultPlace('frozen') : key === 'fridge' ? defaultPlace('chilled') : null);
 const findByName = (name: string) => db.prepare('SELECT id FROM products WHERE lower(name) = lower(?) AND archived = 0').get(name) as { id: number } | undefined;
 
 /** Starter sets for the rooms this household actually has, in the household language. */
@@ -259,7 +305,7 @@ export function starterSets() {
   const out: { room: LocationKey; location_id: number; location: string; icon: string; items: { key: string; name: string; on: boolean; exists: boolean }[] }[] = [];
   const seen = new Set<number>();
   for (const base of BASE_LOCATIONS) {
-    const id = locationIdByKey(base.key);
+    const id = roomId(base.key);
     if (!id || seen.has(id)) continue;
     seen.add(id);
     const loc = db.prepare('SELECT name, icon FROM locations WHERE id = ?').get(id) as { name: string; icon: string };
@@ -293,7 +339,7 @@ export function createStarterSet(picks: StarterPick[], actor?: string) {
     for (const pick of picks) {
       const item = STARTER[pick.room]?.find((i) => i.key === pick.key);
       if (!item) continue;
-      const locationId = locationIdByKey(pick.room);
+      const locationId = roomId(pick.room);
       if (!locationId) continue;
       const name = itemName(item);
       const level = Math.max(0, Math.min(3, Math.round(pick.level)));

@@ -1,7 +1,7 @@
 // German UI strings: home care ("Haus & Pflege"), spending ("Ausgaben"), QR labels
 export const home: Record<string, string> = {
   // navigation
-  'Home & care': 'Haus & Pflege',
+  'Home & care': 'Zuhause & Pflege',
   Spending: 'Ausgaben',
   'QR labels': 'QR-Etiketten',
   'Home care task due': 'Pflege-Frist fällig',

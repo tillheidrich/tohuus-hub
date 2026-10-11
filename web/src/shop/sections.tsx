@@ -1,4 +1,4 @@
-import { Bread, Broom, Carrot, Cheese, Cookie, Grains, Snowflake, Sparkle, Tag, Wine } from '@phosphor-icons/react';
+import { Bread, Broom, Carrot, Cheese, Cookie, Grains, Snowflake, Sparkle, Storefront, Tag, Wine } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 import { t } from '../i18n';
 
@@ -17,9 +17,25 @@ export const SECTION_META: Record<string, { label: string; icon: Icon }> = {
 };
 
 export const SECTION_KEYS = Object.keys(SECTION_META);
-export const sectionLabel = (k: string) => t(SECTION_META[k]?.label ?? 'Other');
+/** store mode only: open items somebody marked for another store ("Where to buy?", wave 6) */
+export const ELSEWHERE = 'elsewhere';
+export const sectionLabel = (k: string) => (k === ELSEWHERE ? t('Other stores') : t(SECTION_META[k]?.label ?? 'Other'));
+/** Dutch Detail: each aisle gets a small geometric marker next to its name (never the shape alone). */
+const SHAPES: Record<string, string> = {
+  produce: 'c',
+  bakery: 'a',
+  chilled: 'h',
+  frozen: 'd',
+  pantry: 's',
+  snacks: 'c2',
+  drinks: 'r',
+  drugstore: 's2',
+  household: 't',
+  other: 't2',
+};
+export const SectionShape = ({ k }: { k: string }) => <span className={`shape ${SHAPES[k] ?? 't2'}`} aria-hidden="true" />;
 export const SectionIcon = ({ k, size = 18 }: { k: string; size?: number }) => {
-  const I = SECTION_META[k]?.icon ?? Tag;
+  const I = k === ELSEWHERE ? Storefront : (SECTION_META[k]?.icon ?? Tag);
   return <I size={size} />;
 };
 
@@ -47,6 +63,8 @@ export interface ShopItem {
   pending?: boolean;
   /** discreet / private entry (area: share) */
   share?: import('../pages/Share').ShareInfo;
+  /** "Where to buy?" – only what a person entered; empty = anywhere (wave 6) */
+  buy_at?: string[];
 }
 
 export interface Store {

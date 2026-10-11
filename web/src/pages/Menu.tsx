@@ -6,7 +6,8 @@ import { ArrowDown, ArrowLeft, ArrowUp, Camera, DotsSixVertical, ForkKnife, Ligh
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
-import { type Product, api, del, fmtQty, invalidate, patch, post, put, useApi } from '../api';
+import { type Product, api, del, fmtQty, invalidate, patch, post, put, qc, useApi } from '../api';
+import { householdWord } from '../household';
 import { Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useDebounced, useToast } from '../ui';
 import { t } from '../i18n';
 
@@ -68,7 +69,9 @@ interface MenuData {
 const KEY = ['products', 'menu-editor'];
 const refresh = () => invalidate('products', 'orders');
 
-const availLabel = (a: Availability) => ({ available: t('Everyone'), party: t('Parties'), family: t('Family'), hidden: t('Hidden') })[a];
+/** "Family" only in a family; elsewhere the members are the household or the flat share (area: home). */
+const householdLabel = () => householdWord(qc.getQueryData<Me>(['me'])?.home?.form ?? 'family');
+const availLabel = (a: Availability) => ({ available: t('Everyone'), party: t('Parties'), family: householdLabel(), hidden: t('Hidden') })[a];
 const availHelp = (a: Availability) =>
   ({
     available: t('Everyone who can order sees it – family, guests and parties.'),

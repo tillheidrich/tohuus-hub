@@ -1,17 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs>
-    <linearGradient id="bg-l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b6148"/><stop offset="1" stop-color="#0b6148"/></linearGradient>
-    <radialGradient id="glow-l" cx="0.3" cy="0.12" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
-  </defs>
-  <rect width="1024" height="1024" rx="232" fill="url(#bg-l)"/>
-  <rect width="1024" height="1024" rx="232" fill="url(#glow-l)"/>
+  <defs><clipPath id="clip-l"><rect width="1024" height="1024" rx="232"/></clipPath></defs>
+  <g clip-path="url(#clip-l)">
+    <rect width="1024" height="1024" fill="#176b50"/>
+    <circle cx="1000" cy="1010" r="380" fill="#2c7a5f"/>
+  </g>
   <rect x="3" y="3" width="1018" height="1018" rx="229" fill="none" stroke="#000000" stroke-opacity="0.07" stroke-width="6"/>
-  <g transform="translate(-30.720000000000027 -30.720000000000027) scale(1.06)">
-  
-  <g transform="translate(0 0)">
-    <path d="M214 486 L512 246 L810 486" fill="none" stroke="#f6efe2" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="306" y="516" width="412" height="306" rx="64" fill="#f6efe2"/>
-    <path d="M454 822 V700 a58 58 0 0 1 116 0 V822 Z" fill="#e0583c"/>
+  <g>
+  <g transform="translate(112 132) scale(25)">
+    <path d="M4 28V14L16 4l12 10v14z" fill="#f7f5ef"/>
+    <path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" fill="#e8b865"/>
   </g>
   </g>
 </svg>

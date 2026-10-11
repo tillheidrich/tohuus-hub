@@ -13,7 +13,7 @@ export const app: Record<string, string> = {
   '{n} days ago': 'vor {n} Tagen',
 
   // brand.ts
-  'What’s in the house. At a glance.': 'Was im Haus ist. Auf einen Blick.',
+  'What’s in the house. At a glance.': 'Was zu Hause ist. Auf einen Blick.',
   'Ordered. Delivered. From kitchen & pantry.': 'Bestellt. Gebracht. Aus Küche & Vorrat.',
 
   // ui.tsx — status badges
@@ -44,7 +44,7 @@ export const app: Record<string, string> = {
   // Login
   'Hungry?': 'Hunger?',
   'We deliver.': 'Wir liefern.',
-  'What’s in the house.': 'Was im Haus ist.',
+  'What’s in the house.': 'Was zu Hause ist.',
   'At a glance.': 'Auf einen Blick.',
   'From the shelf to the couch in under three minutes. Backed by pantry, shopping list and recipes.':
     'Vom Regal bis zum Sofa in unter drei Minuten. Mit Vorrat, Einkaufsliste und Rezepten im Hintergrund.',
@@ -56,7 +56,7 @@ export const app: Record<string, string> = {
   'Who are you?': 'Wer bist du?',
   Password: 'Passwort',
   'Let’s go': 'Los geht’s',
-  'Come on in': 'Rein ins Haus',
+  'Come on in': 'Komm rein',
   'You’ll stay signed in on this device.': 'Du bleibst auf diesem Gerät angemeldet.',
 
   // App shell — navigation

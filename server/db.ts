@@ -355,23 +355,20 @@ export function setSettingDefault(key: string) {
   db.prepare('DELETE FROM settings WHERE key = ?').run(key);
 }
 
-/** The instance default look: BRAND from the environment, else ToHuus Hub. */
-export function defaultBrand(): Brand {
-  return config.brand === 'fredirando' ? 'fredirando' : 'tohuus';
-}
-
 /**
- * The look of this household. An explicit admin choice (Settings › Household › Look, key `brand.choice`) wins;
- * without one, BRAND from the environment decides. The older key `brand` is ignored on purpose: onboarding used
- * to store it without anybody choosing, which silently overrode BRAND.
+ * One look for every household since wave 6 (Dutch Detail): ToHuus. BRAND in the environment and the settings keys
+ * `brand` / `brand.choice` are still read harmlessly by old installs but no longer change anything.
  */
-export function brand(): Brand {
-  const choice = getSetting<string | null>('brand.choice', null);
-  return choice === 'tohuus' || choice === 'fredirando' ? choice : defaultBrand();
+export function defaultBrand(): Brand {
+  return 'tohuus';
 }
 
-/** Store an explicit choice. Choosing the instance default removes the override (BRAND applies again). */
-export function chooseBrand(b: Brand) {
-  if (b === defaultBrand()) setSettingDefault('brand.choice');
-  else setSetting('brand.choice', b);
+/** The look of this household – always ToHuus (the former Fredirando variant was retired). */
+export function brand(): Brand {
+  return 'tohuus';
+}
+
+/** Kept for API compatibility: an old client may still send a look; it is ignored and any stored override removed. */
+export function chooseBrand(_b: Brand | string) {
+  setSettingDefault('brand.choice');
 }

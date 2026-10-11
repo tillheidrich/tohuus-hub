@@ -3,6 +3,7 @@ import { HandHeart } from '@phosphor-icons/react';
 import { useMemo } from 'react';
 import type { Me } from '../App';
 import { invalidate, post, useApi } from '../api';
+import { useHousehold } from '../household';
 import { t } from '../i18n';
 import { Avatar, useToast } from '../ui';
 import type { Claim } from './sections';
@@ -27,6 +28,7 @@ export function CookPicker({ entryId, claim }: { entryId: number; claim?: Claim 
   const me = useApi<Me>('me', '/me');
   const members = useApi<{ id: number; name: string; color: string }[]>(['shopping', 'members'], '/shop/members');
   const toast = useToast();
+  const home = useHousehold();
   const set = async (userId: number, on: boolean) => {
     try {
       await post('/claims', { kind: 'plan', id: entryId, on, user_id: userId });
@@ -35,7 +37,8 @@ export function CookPicker({ entryId, claim }: { entryId: number; claim?: Claim 
       toast({ text: (e as Error).message, error: true });
     }
   };
-  if (!members.data?.length) return null;
+  // area: home – nobody to share cooking with when living alone
+  if (!members.data?.length || !home.ui.claims) return null;
   return (
     <div className="stack" style={{ gap: 8 }}>
       <div className="eyebrow row" style={{ gap: 6 }}>

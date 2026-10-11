@@ -105,6 +105,7 @@ export function requestMagicLink(req: Request, res: Response, b: LinkRequest): {
       t('Hi {name}, tap the button to sign in. The link works once and for {min} minutes.', { name: u.name, min: LINK_MINUTES }),
       { url: linkUrl('link', token), label: t('Sign in') },
       t('Requested from {device}. If you didn’t ask for this, ignore this e-mail – nobody can sign in without the link.', { device: deviceLabel(req.headers['user-agent']) }),
+      { eyebrow: t('Sign-in') },
     );
   }
   return { ok: true, code, minutes: LINK_MINUTES };
@@ -196,6 +197,7 @@ export function requestEmailVerification(req: Request, userId: number, email: st
     t('Hi {name}, please confirm that this is your address. Then you can sign in with a link and reset your password by e-mail.', { name: u.name }),
     { url: linkUrl('email', token), label: t('Confirm address') },
     t('If you didn’t ask for this, ignore this e-mail.'),
+    { eyebrow: t('E-mail address') },
   );
   return { sent: true };
 }
@@ -235,6 +237,7 @@ function sendResetMail(u: UserAuthRow, token: string, minutes: number) {
     t('Hi {name}, you can choose a new password with this link. It works once and for {min} minutes.', { name: u.name, min: minutes }),
     { url: linkUrl('password', token), label: t('Choose new password') },
     t('If you didn’t ask for this, ignore this e-mail – your password stays as it is.'),
+    { eyebrow: t('Password') },
   );
 }
 

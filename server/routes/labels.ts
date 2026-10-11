@@ -75,6 +75,7 @@ r.post('/labels/boxes', (req, res) => {
       eat_by: day.nullable().optional(),
       made_on: day.nullable().optional(),
       labelled: z.boolean().optional(),
+      location_id: z.number().int().positive().nullable().optional(),
     })
     .parse(req.body);
   res.json(saveBoxes(b, actorName(req)));

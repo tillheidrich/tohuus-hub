@@ -1,0 +1,58 @@
+/** Wave 6 fixes: mail layout, invitations, guest names, "Where to buy?" (Swedish, du-tilltal). */
+export const sv_fixes: Record<string, string> = {
+  'Button not working? Copy this link into your browser:': 'Fungerar inte knappen? Kopiera länken till din webbläsare:',
+  'your household, self-hosted': 'ditt hushåll, på egen server',
+  'Can order and add to the shopping list': 'Kan beställa och skriva på inköpslistan',
+  'Can order and sees stock and where things are': 'Kan beställa och ser förrådet och var saker finns',
+  'Can order and sees stock, recipes and the week plan': 'Kan beställa och ser förråd, recept och veckoplanen',
+  'Like family, without settings': 'Som familj, utan inställningar',
+  Admin: 'Admin',
+  Member: 'Medlem',
+  'our household': 'vårt hushåll',
+  'Hi {name},': 'Hej {name},',
+  'Hello,': 'Hej,',
+  '{by} invites you to {household}': '{by} bjuder in dig till {household}',
+  'Join {household}': 'Gå med i {household}',
+  '{by} invites you to the household app of {household}. The link works once and for {days} days.':
+    '{by} bjuder in dig till hushållsappen för {household}. Länken fungerar en gång och i {days} dagar.',
+  '{by} invites you as a guest to {household} – our household app for the shopping list, orders from the sofa and more.':
+    '{by} bjuder in dig som gäst till {household} – vår hushållsapp för inköpslistan, beställningar från soffan och mer.',
+  '{by} invites you to {household} – our household app for the shopping list, stock, recipes and everyday things.':
+    '{by} bjuder in dig till {household} – vår hushållsapp för inköpslista, förråd, recept och vardagen.',
+  'Tap the button, pick how you want to sign in (passkey, password or e-mail link) – then you’re in.':
+    'Tryck på knappen och välj hur du vill logga in (passkey, lösenord eller e-postlänk) – sedan är du med.',
+  Access: 'Åtkomst',
+  'Valid until': 'Giltig till',
+  'Accept invitation': 'Tacka ja till inbjudan',
+  'The link works once. If you weren’t expecting this, just ignore this e-mail – nothing happens without the link.':
+    'Länken fungerar en gång. Om du inte väntade dig detta kan du strunta i mejlet – inget händer utan länken.',
+  '{by} typed your address when inviting you. We don’t send anything else unless you join.':
+    '{by} skrev in din adress i inbjudan. Vi skickar inget mer om du inte går med.',
+  'This invitation is no longer open.': 'Den här inbjudan är inte längre öppen.',
+  'Please enter your name.': 'Skriv ditt namn.',
+  'At least 8 characters, please.': 'Minst 8 tecken, tack.',
+  'This household signs in without passwords – pick a passkey or an e-mail link.': 'Det här hushållet loggar in utan lösenord – välj en passkey eller en e-postlänk.',
+  'Single sign-on is not set up here.': 'Single sign-on är inte konfigurerat här.',
+  'Passkeys are switched off in this household.': 'Passkeys är avstängda i det här hushållet.',
+  'Sign-in links by e-mail aren’t available here.': 'Inloggningslänkar via e-post finns inte här.',
+  'You get this because e-mail is switched on for this event under Settings › Notifications.':
+    'Du får det här mejlet eftersom e-post är påslaget för den här händelsen under Inställningar › Aviseringar.',
+  'Your account': 'Ditt konto',
+  Passkey: 'Passkey',
+  'E-mail address': 'E-postadress',
+  Security: 'Säkerhet',
+  '{name}: {error}': '{name}: {error}',
+  Ticket: 'Lapp',
+  'at {stores}': 'hos {stores}',
+  'Other stores': 'Andra butiker',
+  Sofa: 'Soffan',
+  optional: 'valfritt',
+  Stock: 'Förråd',
+  Receipts: 'Kvitton',
+  Care: 'Skötsel',
+  Party: 'Fest',
+  Wish: 'Önskan',
+  Budget: 'Budget',
+  Test: 'Test',
+  '{n} min': '{n} min',
+};

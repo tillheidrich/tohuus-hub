@@ -347,9 +347,11 @@ export function displayData(d: DisplayRow, nowMs = Date.now()): DisplayData {
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ASSET_DIRS = [path.join(here, 'web', 'assets'), path.join(here, '../../dist/web/assets'), path.join(process.cwd(), 'dist/web/assets')];
-const PKG_DIRS = [path.join(process.cwd(), 'node_modules/@fontsource-variable/geist/files'), path.join(here, '../../node_modules/@fontsource-variable/geist/files')];
+/** Pango (sharp text) cannot read WOFF2, so the PNG renderer uses TTF copies of the same OFL fonts (server/assets/fonts). */
+const TTF_DIRS = [path.join(here, '../assets/fonts'), path.join(here, '../server/assets/fonts'), path.join(process.cwd(), 'server/assets/fonts')];
 
-let fontCache: { webGeist: string | null; webDisplay: string | null; file: string | null } | null = null;
+/** UI font Familjen Grotesk (variable), display font Hedvig Letters Serif – both SIL OFL 1.1, emitted by the Vite build. */
+let fontCache: { webUi: string | null; webDisplay: string | null; file: string | null } | null = null;
 function findIn(dirs: string[], re: RegExp) {
   for (const d of dirs) {
     try {
@@ -364,13 +366,13 @@ function findIn(dirs: string[], re: RegExp) {
 /** Font files: web URLs for the HTML page, a file path for the PNG renderer. Missing fonts fall back to system sans. */
 export function fonts() {
   if (fontCache) return fontCache;
-  const geist = findIn(ASSET_DIRS, /^geist-latin-wght-normal.*\.woff2$/);
-  const disp = findIn(ASSET_DIRS, /^bricolage-grotesque-latin-wght-normal.*\.woff2$/);
-  const pkg = geist ? null : findIn(PKG_DIRS, /^geist-latin-wght-normal\.woff2$/);
+  const ui = findIn(ASSET_DIRS, /^familjen-grotesk-latin-wght-normal.*\.woff2$/);
+  const disp = findIn(ASSET_DIRS, /^hedvig-letters-serif-latin-400-normal.*\.woff2$/);
+  const ttf = findIn(TTF_DIRS, /^familjen-grotesk-latin-wght\.ttf$/);
   fontCache = {
-    webGeist: geist ? `/assets/${geist.name}` : null,
+    webUi: ui ? `/assets/${ui.name}` : null,
     webDisplay: disp ? `/assets/${disp.name}` : null,
-    file: geist ? path.join(geist.dir, geist.name) : pkg ? path.join(pkg.dir, pkg.name) : null,
+    file: ttf ? path.join(ttf.dir, ttf.name) : null,
   };
   return fontCache;
 }
@@ -479,39 +481,39 @@ export function fragment(d: DisplayData) {
 }
 
 const CSS = `
-:root{--paper:#f6f3ed;--surface:#ffffff;--surface-2:#eeeae1;--ink:#121715;--ink-2:#44504c;--ink-3:#5e6965;--line:#e5e0d6;--accent:#1e7458;--accent-soft:#ddefe5;--empty:#b8372a;--empty-soft:#f9e3de;--empty-ink:#7d2219;--low:#946000;--low-soft:#f8edd3;--low-ink:#6d4a07;--exp:#ad4614;--exp-soft:#fbe6d9;--info:#2d57b0;--info-soft:#e3eaf8;--hero:#17332b;--hero-ink:#fffdf8;--hero-2:#b9c3be;--fade:rgba(255,253,248,0);--shadow:0 1px 2px rgba(26,35,33,.05),0 8px 24px -12px rgba(26,35,33,.18)}
-html.t-dark{--paper:#111413;--surface:#191d1b;--surface-2:#1e2824;--ink:#edefea;--ink-2:#b9c3be;--ink-3:#8a9590;--line:#232d29;--accent:#5cc79a;--accent-soft:#153027;--empty:#f28473;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e8b04a;--low-soft:#33290f;--low-ink:#f0c777;--exp:#f29a63;--exp-soft:#3a2316;--info:#8ea9f2;--info-soft:#1b2440;--hero:#1e2824;--fade:rgba(22,30,27,0);--shadow:0 1px 2px rgba(0,0,0,.3)}
-@media (prefers-color-scheme:dark){html.t-system{--paper:#111413;--surface:#191d1b;--surface-2:#1e2824;--ink:#edefea;--ink-2:#b9c3be;--ink-3:#8a9590;--line:#232d29;--accent:#5cc79a;--accent-soft:#153027;--empty:#f28473;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e8b04a;--low-soft:#33290f;--low-ink:#f0c777;--exp:#f29a63;--exp-soft:#3a2316;--info:#8ea9f2;--info-soft:#1b2440;--hero:#1e2824;--fade:rgba(22,30,27,0);--shadow:0 1px 2px rgba(0,0,0,.3)}}
+:root{--paper:#f7f5ef;--surface:#fffdf9;--surface-2:#efebe2;--ink:#181d1a;--ink-2:#454d48;--ink-3:#5b635d;--line:#dedcd3;--accent:#176b50;--accent-soft:#e4eee6;--empty:#9e2f24;--empty-soft:#f6e1dc;--empty-ink:#7a2219;--low:#a5502f;--low-soft:#f6e6dd;--low-ink:#7d3b21;--exp:#9a6400;--exp-soft:#f5ead2;--info:#2f5e7a;--info-soft:#e2ecf1;--hero:#104e3c;--hero-ink:#f7f5ef;--hero-2:#c9dccf;--fade:rgba(255,253,249,0);--shadow:none}
+html.t-dark{--paper:#0f1513;--surface:#17201c;--surface-2:#1e2924;--ink:#eef0ea;--ink-2:#b3bdb6;--ink-3:#8f9a93;--line:#28332e;--accent:#74cda2;--accent-soft:#1c3229;--empty:#f08a7a;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e89a78;--low-soft:#3a2418;--low-ink:#f2b79c;--exp:#e4b05a;--exp-soft:#33290f;--exp-ink:#f0c777;--info:#8fb6d4;--info-soft:#1b2a36;--hero:#134a3a;--fade:rgba(23,32,28,0);--shadow:none}
+@media (prefers-color-scheme:dark){html.t-system{--paper:#0f1513;--surface:#17201c;--surface-2:#1e2924;--ink:#eef0ea;--ink-2:#b3bdb6;--ink-3:#8f9a93;--line:#28332e;--accent:#74cda2;--accent-soft:#1c3229;--empty:#f08a7a;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e89a78;--low-soft:#3a2418;--low-ink:#f2b79c;--exp:#e4b05a;--exp-soft:#33290f;--exp-ink:#f0c777;--info:#8fb6d4;--info-soft:#1b2a36;--hero:#134a3a;--fade:rgba(23,32,28,0);--shadow:none}}
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;font-size:calc(8px + 1.05vmin);-webkit-text-size-adjust:100%;background:var(--paper)}
-body{font-family:'Geist Variable',-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:var(--ink);background:var(--paper);min-height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;cursor:default;-webkit-user-select:none;user-select:none}
+body{font-family:'Familjen Grotesk Variable',-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:var(--ink);background:var(--paper);min-height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;cursor:default;-webkit-user-select:none;user-select:none}
 #app{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;height:100vh;padding:2.2rem 2.4rem 1.2rem}
 .top{display:-webkit-flex;display:flex;-webkit-align-items:flex-end;align-items:flex-end;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:1.6rem}
-.time{font-family:'Geist Variable',-apple-system,sans-serif;font-size:5.6rem;font-weight:700;line-height:.9;letter-spacing:-.03em}
+.time{font-family:'Hedvig Letters Serif',Georgia,serif;font-size:5.6rem;font-weight:400;line-height:.9;letter-spacing:-.02em;font-synthesis:none}
 .date{font-size:1.5rem;color:var(--ink-2);margin-top:.5rem;font-weight:500}
 .greet{text-align:right}
-.greet b{display:block;font-family:'Geist Variable',-apple-system,sans-serif;font-size:2.1rem;font-weight:650;letter-spacing:-.01em}
+.greet b{display:block;font-family:'Hedvig Letters Serif',Georgia,serif;font-size:2.1rem;font-weight:400;letter-spacing:-.01em;font-synthesis:none}
 .greet span{color:var(--ink-3);font-size:1.15rem}
-.party{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;background:var(--hero);color:var(--hero-ink);border-radius:1.2rem;padding:1rem 1.4rem;margin-bottom:1.2rem}
+.party{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;background:var(--hero);color:var(--hero-ink);border-radius:.6rem;padding:1rem 1.4rem;margin-bottom:1.2rem}
 .party b{font-size:1.5rem}.party .eyebrow{color:var(--hero-2)}
-.btn{display:inline-block;background:var(--hero-ink);color:var(--hero);border-radius:999px;padding:.6rem 1.2rem;font-weight:600;text-decoration:none;font-size:1.05rem}
+.btn{display:inline-block;background:var(--hero-ink);color:var(--hero);border-radius:.4rem;padding:.6rem 1.2rem;font-weight:600;text-decoration:none;font-size:1.05rem}
 #main{display:-webkit-flex;display:flex;-webkit-flex:1;flex:1;min-height:0;margin:0 -.6rem}
 .col{-webkit-flex:1 1 0;flex:1 1 0;min-width:0;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;padding:0 .6rem}
-.card{position:relative;-webkit-flex:none;flex:none;background:var(--surface);border-radius:1.5rem;padding:1.4rem 1.5rem;margin-bottom:1.2rem;box-shadow:var(--shadow);overflow:hidden;min-height:0}
+.card{position:relative;-webkit-flex:none;flex:none;background:var(--surface);border-radius:.6rem;border:2px solid var(--ink);padding:1.4rem 1.5rem;margin-bottom:1.2rem;box-shadow:var(--shadow);overflow:hidden;min-height:0}
 .col{overflow:hidden}
 .col .card:last-child{-webkit-flex:1 1 auto;flex:1 1 auto;margin-bottom:0}
 .card:after{content:'';position:absolute;left:0;right:0;bottom:0;height:1.4rem;background:-webkit-linear-gradient(var(--fade),var(--surface));background:linear-gradient(var(--fade),var(--surface))}
 h2{font-size:1.05rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600;margin-bottom:1rem}
-h2 .n{display:inline-block;background:var(--surface-2);color:var(--ink-2);border-radius:999px;padding:0 .55rem;margin-left:.3rem;letter-spacing:0}
+h2 .n{display:inline-block;background:var(--ink);color:var(--paper);border-radius:999px;padding:0 .55rem;margin-left:.3rem;letter-spacing:0}
 .eyebrow{font-size:.95rem;color:var(--ink-3);font-weight:500}
 .sub-h{font-size:.95rem;font-weight:600;color:var(--ink-3);margin:1rem 0 .5rem}.sub-h:first-of-type{margin-top:0}
 .meal{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;margin-bottom:.8rem}
 .meal>div{min-width:0}
 .meal .mt{font-size:1.45rem;font-weight:600;line-height:1.2;word-wrap:break-word;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto}
-.meal.big .mt{font-family:'Geist Variable',-apple-system,sans-serif;font-size:1.95rem;font-weight:650;letter-spacing:-.01em;line-height:1.15}
+.meal.big .mt{font-family:'Hedvig Letters Serif',Georgia,serif;font-size:1.95rem;font-weight:400;font-synthesis:none;letter-spacing:-.01em;line-height:1.15}
 .meal.done .mt{color:var(--ink-3)}
-.th{display:inline-block;-webkit-flex:none;flex:none;width:3.2rem;height:3.2rem;border-radius:.8rem;background:var(--surface-2);overflow:hidden;margin-right:1rem}
-.th.lg{width:6rem;height:6rem;border-radius:1.1rem}
+.th{display:inline-block;-webkit-flex:none;flex:none;width:3.2rem;height:3.2rem;border-radius:.4rem;background:var(--surface-2);overflow:hidden;margin-right:1rem}
+.th.lg{width:6rem;height:6rem;border-radius:3rem 3rem .4rem .4rem}
 .th img{width:100%;height:100%;object-fit:cover;display:block}
 .th.none{background:var(--surface-2)}
 .rows{list-style:none}
@@ -520,16 +522,16 @@ h2 .n{display:inline-block;background:var(--surface-2);color:var(--ink-2);border
 .rows .th{width:2.6rem;height:2.6rem;margin-right:.8rem}
 .nm{-webkit-flex:1 1 5em;flex:1 1 5em;min-width:0;padding-right:.6rem;font-size:1.3rem;font-weight:550;line-height:1.2;-webkit-hyphens:auto;hyphens:auto}
 .nm small{display:block;font-size:.9rem;color:var(--ink-3);font-weight:500}
-.pill{-webkit-flex:none;flex:none;margin:.15rem 0 .15rem auto;background:var(--surface-2);color:var(--ink-2);border-radius:999px;padding:.25rem .75rem;font-size:1rem;font-weight:600}
+.pill{-webkit-flex:none;flex:none;margin:.15rem 0 .15rem auto;background:var(--surface-2);color:var(--ink-2);border-radius:.3rem;padding:.25rem .75rem;font-size:1rem;font-weight:600}
 .pill.hot{background:var(--exp-soft);color:var(--exp)}.pill.info{background:var(--info-soft);color:var(--info)}
 .dot{-webkit-flex:none;flex:none;width:.8rem;height:.8rem;border-radius:50%;background:var(--ink-3);margin-right:.8rem}
 .dot.overdue{background:var(--empty)}.dot.today{background:var(--exp)}.dot.soon{background:var(--low)}
 .chips{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin:-.25rem}
-.chip{margin:.25rem;border-radius:.8rem;padding:.4rem .8rem;font-size:1.15rem;font-weight:550;background:var(--low-soft);color:var(--low-ink)}
+.chip{margin:.25rem;border-radius:.3rem;padding:.4rem .8rem;font-size:1.15rem;font-weight:550;background:var(--low-soft);color:var(--low-ink)}
 .chip small{margin-left:.45rem;font-size:.85rem;opacity:.75}
 .chip.empty{background:var(--empty-soft);color:var(--empty-ink)}
 .big-n{display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;margin-bottom:.8rem}
-.big-n b{font-family:'Geist Variable',-apple-system,sans-serif;font-size:3.6rem;line-height:1;font-weight:700;margin-right:.6rem}
+.big-n b{font-family:'Hedvig Letters Serif',Georgia,serif;font-size:3.6rem;line-height:1;font-weight:400;font-synthesis:none;margin-right:.6rem}
 .big-n span{font-size:1.2rem;color:var(--ink-2)}
 .list{list-style:none}
 .list li{font-size:1.35rem;font-weight:500;padding:.4rem 0;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -545,6 +547,7 @@ html.night .dim{opacity:.62}
 html.night.awake .dim{opacity:.15}
 .l-hallway .time{font-size:6.4rem}
 .l-minimal .card{box-shadow:none;border:1px solid var(--line)}
+h2:before{content:'';display:inline-block;width:.55rem;height:.55rem;background:var(--ink);margin-right:.55rem;vertical-align:.1rem}
 @media (orientation:portrait){
  #app{padding:1.8rem 1.6rem 1rem}
  .top{-webkit-flex-direction:column;flex-direction:column;-webkit-align-items:flex-start;align-items:flex-start}
@@ -561,8 +564,8 @@ html.night.awake .dim{opacity:.15}
 function fontFaces() {
   const f = fonts();
   let css = '';
-  if (f.webGeist) css += `@font-face{font-family:'Geist Variable';font-style:normal;font-display:swap;font-weight:100 900;src:url(${f.webGeist}) format('woff2')}`;
-  if (f.webDisplay) css += `@font-face{font-family:'Bricolage Grotesque Variable';font-style:normal;font-display:swap;font-weight:200 800;src:url(${f.webDisplay}) format('woff2')}`;
+  if (f.webUi) css += `@font-face{font-family:'Familjen Grotesk Variable';font-style:normal;font-display:swap;font-weight:400 700;src:url(${f.webUi}) format('woff2')}`;
+  if (f.webDisplay) css += `@font-face{font-family:'Hedvig Letters Serif';font-style:normal;font-display:swap;font-weight:400;src:url(${f.webDisplay}) format('woff2')}`;
   return css;
 }
 
@@ -672,7 +675,7 @@ interface TextOpts {
   lines?: number;
 }
 
-/** Server-side PNG of the minimal layout. Text goes through Pango with the self-hosted Geist font file. */
+/** Server-side PNG of the minimal layout. Text goes through Pango with the self-hosted Familjen Grotesk font file. */
 export async function renderPng(d: DisplayData, o: ImageOpts): Promise<Buffer> {
   const W = Math.round(o.w);
   const H = Math.round(o.h);
@@ -693,7 +696,7 @@ export async function renderPng(d: DisplayData, o: ImageOpts): Promise<Buffer> {
     const markup = `<span foreground="${t0.color ?? ink}" weight="${t0.weight ?? 400}">${pango(clip(str, approx))}</span>`;
     try {
       const img = sharp({
-        text: { text: markup, font: `Geist ${Math.max(6, Math.round(t0.size))}px`, ...(font ? { fontfile: font } : {}), width: Math.max(10, Math.round(t0.maxW)), rgba: true, wrap: 'word', dpi: 72 },
+        text: { text: markup, font: `Familjen Grotesk ${Math.max(6, Math.round(t0.size))}px`, ...(font ? { fontfile: font } : {}), width: Math.max(10, Math.round(t0.maxW)), rgba: true, wrap: 'word', dpi: 72 },
       });
       let { data, info } = await img.png().toBuffer({ resolveWithObject: true });
       const maxH = Math.round(t0.size * 1.3 * lines);

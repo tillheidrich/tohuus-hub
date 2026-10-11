@@ -3,9 +3,9 @@
  * digital receipt (Telegram photo, Matrix image, Gotify text, e-mail with inline PNG) and the automations
  * (new orders → kitchen printer, due care tasks → printer, with quiet hours).
  */
-import nodemailer from 'nodemailer';
+import { APP_NAME, canSendMail, mailHousehold, sendMail } from './mail.js';
 import sharp from 'sharp';
-import { config, smtpEnabled } from '../config.js';
+import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
 import { t } from '../i18n.js';
 import { emit, onEmit } from './bus.js';
@@ -320,20 +320,7 @@ export async function printTicket(spec: TicketSpec, opts: { printer?: Printer | 
 export const SEND_CHANNELS = ['telegram', 'matrix', 'gotify', 'email'] as const;
 export type SendChannel = (typeof SEND_CHANNELS)[number];
 
-let mailTransport: ReturnType<typeof nodemailer.createTransport> | null = null;
-function mailer() {
-  if (!smtpEnabled()) return null;
-  mailTransport ??= nodemailer.createTransport({
-    host: config.smtp.host,
-    port: config.smtp.port,
-    secure: config.smtp.secure,
-    auth: config.smtp.user ? { user: config.smtp.user, pass: config.smtp.password } : undefined,
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 20_000,
-  });
-  return mailTransport;
-}
+const mailer = () => (canSendMail() ? true : null);
 
 export function availableChannels(): Record<SendChannel, boolean> {
   return { telegram: telegramReady(), matrix: matrixReady(), gotify: gotifyReady(), email: Boolean(mailer()) };
@@ -401,7 +388,6 @@ async function sendMatrixImage(png: Buffer, caption: string, size: { w: number; 
   }
 }
 
-const escHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 /**
  * Send a ticket as a digital receipt. Recipients are always the household's own channels or a member's own
@@ -428,16 +414,18 @@ export async function sendTicket(spec: TicketSpec, channel: SendChannel, opts: {
     const png = await renderPng(ticket, paper);
     const text = renderText(ticket, COLS[paper]);
     try {
-      await mailer()!.sendMail({
-        from: config.smtp.from,
+      await sendMail(
         to,
-        subject: `ToHuus Hub · ${caption}`,
-        text,
-        html: `<!doctype html><html><body style="margin:0;background:#f4f2ee;padding:24px 12px;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
-<div style="max-width:${DOTS[paper]}px;margin:0 auto"><img src="cid:ticket" alt="${escHtml(ticket.title)}" width="${DOTS[paper]}" style="display:block;width:100%;height:auto;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)"/>
-<pre style="display:none">${escHtml(text)}</pre></div></body></html>`,
-        attachments: [{ filename: `${ticket.file}.png`, content: png, cid: 'ticket', contentType: 'image/png' }],
-      });
+        {
+          subject: `${mailHousehold() || APP_NAME} · ${caption}`,
+          eyebrow: t('Ticket'),
+          title: ticket.title,
+          preheader: ticket.summary,
+          image: { cid: 'ticket', alt: ticket.title, width: DOTS[paper] },
+          pre: text,
+        },
+        [{ filename: `${ticket.file}.png`, content: png, cid: 'ticket', contentType: 'image/png', contentDisposition: 'inline' }],
+      );
       ok = true;
     } catch (e) {
       console.warn('[print/mail]', (e as Error).message);

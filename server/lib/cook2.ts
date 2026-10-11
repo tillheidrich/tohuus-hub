@@ -3,6 +3,7 @@
  * Buckets: planned today, ready now (house version incl. swaps), one thing missing (with "take X instead"),
  * leftovers first, quick (≤ 20 min). Plus a weighted random pick for the undecided.
  */
+import { climateOf } from './places.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { addToShopping, listProducts, localDay, matchIngredient } from './catalog.js';
 import { eatFirst } from './fresh.js';
@@ -12,6 +13,12 @@ import { ingredientCore, suggest, type Suggestion } from './recipes.js';
 import { norm } from './text.js';
 import { termMatches } from './variants.js';
 import { t } from '../i18n.js';
+
+/** "in the fridge" only when the leftovers really sit in a chilled place (area: home). */
+const frozenOrChilled = (locationId: number | null | undefined) => {
+  const l = locationId ? (db.prepare('SELECT name, kind, icon, climate FROM locations WHERE id = ?').get(locationId) as { name: string; kind: string; icon: string; climate: string | null } | undefined) : undefined;
+  return l ? climateOf(l) : null;
+};
 
 export interface WteFilters {
   /** true = only Thermomix, false = only without, null/undefined = all */
@@ -216,7 +223,9 @@ export function whatToEat(f: WteFilters = {}) {
       days_left: x.days_left,
       why:
         x.days_left === null
-          ? x.qty === 1 ? t('1 portion in the fridge') : t('{n} portions in the fridge', { n: x.qty })
+          ? frozenOrChilled(x.location_id) === 'chilled'
+            ? x.qty === 1 ? t('1 portion in the fridge') : t('{n} portions in the fridge', { n: x.qty })
+            : x.qty === 1 ? t('1 portion') : t('{n} portions', { n: x.qty })
           : [x.qty === 1 ? t('1 portion') : t('{n} portions', { n: x.qty }), x.days_left <= 0 ? t('eat today') : x.days_left === 1 ? t('good until tomorrow') : t('good for {n} more days', { n: x.days_left })].join(' · '),
     }));
 

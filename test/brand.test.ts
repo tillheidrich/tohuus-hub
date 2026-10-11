@@ -1,6 +1,6 @@
 /**
- * Brand precedence: BRAND in the environment is the default, an explicit admin choice in Settings wins,
- * the old `brand` key (stored by onboarding without a choice) is ignored.
+ * One look since wave 6 (Dutch Detail): every household is ToHuus. BRAND in the environment, the old `brand` key
+ * and an explicit `brand.choice` from older versions are all ignored; old clients sending a look get no error.
  */
 import fs from 'node:fs';
 import type { AddressInfo } from 'node:net';
@@ -48,36 +48,26 @@ const call = async (method: string, p: string, body?: unknown) => {
 };
 const choice = () => dbm.getSetting<string | null>('brand.choice', null);
 
-describe('brand precedence', () => {
-  it('BRAND is the default; the old accidental `brand` key is ignored', async () => {
-    dbm.setSetting('brand', 'tohuus'); // what onboarding used to store silently
-    expect(dbm.defaultBrand()).toBe('fredirando');
-    expect(dbm.brand()).toBe('fredirando');
+describe('one brand', () => {
+  it('BRAND=fredirando and old settings keys no longer change the look', async () => {
+    dbm.setSetting('brand', 'fredirando');
+    dbm.setSetting('brand.choice', 'fredirando');
+    expect(dbm.defaultBrand()).toBe('tohuus');
+    expect(dbm.brand()).toBe('tohuus');
     const s = (await call('GET', '/settings')).json;
-    expect(s).toMatchObject({ brand: 'fredirando', brandDefault: 'fredirando' });
+    expect(s).toMatchObject({ brand: 'tohuus', brandDefault: 'tohuus' });
   });
 
-  it('an explicit choice in Settings wins over BRAND; choosing the default removes it', async () => {
-    expect((await call('PATCH', '/settings', { brand: 'tohuus' })).status).toBe(200);
-    expect(choice()).toBe('tohuus');
+  it('an old client choosing a look in Settings is accepted and ignored (stored override removed)', async () => {
+    expect((await call('PATCH', '/settings', { brand: 'fredirando' })).status).toBe(200);
+    expect(choice()).toBeNull();
     expect(dbm.brand()).toBe('tohuus');
     expect((await call('GET', '/settings')).json.brand).toBe('tohuus');
-    await call('PATCH', '/settings', { brand: 'fredirando' });
-    expect(choice()).toBeNull();
-    expect(dbm.brand()).toBe('fredirando');
   });
 
-  it('onboarding stores a look only when it was changed from the one shown', async () => {
-    await call('PUT', '/onboarding/home', { household: 'Rotdornweg', brand: 'fredirando' });
-    expect(choice()).toBeNull();
-    expect(dbm.brand()).toBe('fredirando');
-    await call('PUT', '/onboarding/home', { brand: 'tohuus' });
-    expect(choice()).toBe('tohuus');
+  it('onboarding with a look still works and keeps ToHuus', async () => {
+    expect((await call('PUT', '/onboarding/home', { household: 'Rotdornweg', brand: 'fredirando' })).status).toBe(200);
     expect(dbm.brand()).toBe('tohuus');
-    // sending the look that is shown now (tohuus) keeps the choice
-    await call('PUT', '/onboarding/home', { brand: 'tohuus' });
-    expect(choice()).toBe('tohuus');
-    dbm.chooseBrand('fredirando');
     expect(choice()).toBeNull();
   });
 });

@@ -27,6 +27,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Me } from '../App';
 import { useQuery } from '@tanstack/react-query';
 import { api, del, get, invalidate, patch, post, put, useApi } from '../api';
+import { householdWord, useHousehold } from '../household';
 import { locale, t } from '../i18n';
 import { ANIMAL_KEYS } from '../pages/KidArt';
 import { Seg, Sheet, Skeleton, useToast } from '../ui';
@@ -79,8 +80,10 @@ export function PeopleSection({ me, admin }: { me: Me; admin: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
   const [add, setAdd] = useState<'child' | 'guest' | null>(null);
   const people = q.data?.people ?? [];
+  // area: home – "Family" only where it is one (WG: Flat share, otherwise Household)
+  const home = useHousehold();
   const groups: [string, Person[]][] = [
-    [t('Family'), people.filter((p) => p.kind === 'member')],
+    [householdWord(home.form), people.filter((p) => p.kind === 'member')],
     [t('Children'), people.filter((p) => p.kind === 'child')],
     [t('Permanent guests'), people.filter((p) => p.kind === 'guest')],
   ];

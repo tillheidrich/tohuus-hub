@@ -1,11 +1,11 @@
 {
   "name": "ToHuus Hub",
   "short_name": "ToHuus Hub",
-  "description": "Was im Haus ist. Auf einen Blick.",
+  "description": "Weniger im Kopf. Mehr Zuhause.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fbf8f3",
-  "theme_color": "#f3f2ee",
+  "background_color": "#f7f5ef",
+  "theme_color": "#f7f5ef",
   "icons": [
     {
       "src": "/icon.svg",

@@ -237,10 +237,10 @@ export function ImportReview() {
       <LineFixSheet line={fix} importId={imp.id} onClose={() => setFix(null)} />
       <Sheet open={Boolean(locFor)} onClose={() => setLocFor(null)} title={t('Where does it go?')}>
         <div className="list">
-          {(locations.data ?? []).map((l) => (
+          {(locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => (
             <div key={l.id} className="li clickable" onClick={() => { update(locFor, { location_id: l.id }); setLocFor(null); }}>
               <span className="thumb" style={{ width: 40, height: 40 }}><Ic name={l.icon} /></span>
-              <div className="grow title">{l.name}</div>
+              <div className="grow title">{l.path ?? l.name}</div>
             </div>
           ))}
         </div>

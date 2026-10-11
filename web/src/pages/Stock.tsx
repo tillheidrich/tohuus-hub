@@ -63,9 +63,10 @@ export function Stock({ onNew }: { onNew: () => void }) {
       let icon: string;
       if (group === 'location') {
         const lid = ort ?? p.stock.find((s) => s.qty > 0)?.location_id ?? p.default_location_id;
-        const l = locs.find((x) => x.id === lid);
+        // area: home – no place and the system place "not assigned yet" are one group; nested places show their path
+        const l = locs.find((x) => x.id === lid && !x.system);
         key = `l${l?.id ?? 0}`;
-        title = l?.name ?? t('No location');
+        title = l ? (l.path ?? l.name) : t('Not assigned to a place yet');
         icon = l?.icon ?? 'box';
       } else {
         const c = cats.find((x) => x.id === p.category_id);

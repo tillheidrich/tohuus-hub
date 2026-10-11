@@ -1,6 +1,6 @@
 /** "Wo ist was?" – where things live, for the household and for a babysitter's guest link. */
-import { db } from '../db.js';
 import { listProducts } from './catalog.js';
+import { listPlaces } from './places.js';
 import { norm, nameScore } from './text.js';
 
 export interface FoundThing {
@@ -19,7 +19,8 @@ export interface FoundThing {
  * `locationIds` limits the result (guest links); empty = all locations.
  */
 export function findThings(q = '', locationIds: number[] = []) {
-  const locs = new Map((db.prepare('SELECT id, name, icon, hint FROM locations').all() as any[]).map((l) => [l.id, l]));
+  // nested places read as a path ("Keller › Gefriertruhe") – that is what you need to find something (area: home)
+  const locs = new Map(listPlaces({ all: true }).map((l) => [l.id, { id: l.id, name: l.path, icon: l.icon, hint: l.hint }]));
   const allowed = (id: number | null | undefined) => id != null && locs.has(id) && (locationIds.length === 0 || locationIds.includes(id));
   const n = norm(q);
   const out: (FoundThing & { score: number })[] = [];
@@ -41,7 +42,7 @@ export function findThings(q = '', locationIds: number[] = []) {
       spot: p.spot,
       notes: p.notes,
       in_stock: p.track_mode === 'none' ? null : p.total > 0,
-      places: ids.map((i) => locs.get(i)),
+      places: ids.map((i) => locs.get(i)!),
       score,
     });
   }

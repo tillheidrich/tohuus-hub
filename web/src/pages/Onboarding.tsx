@@ -1,5 +1,6 @@
 /**
- * First-run experience (area: onboard): the 3-step setup for a new household (/willkommen),
+ * First-run experience (area: onboard, places steps: area home): the setup for a new household (/willkommen) –
+ * who lives here, how you live, which places, optional storage spots, invite, first stock –
  * starter sets per room, the "getting started" checklist on Today and the "What's new" sheet.
  */
 import {
@@ -24,17 +25,29 @@ import QRCode from 'qrcode';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
-import { invalidate, patch, post, put, useApi } from '../api';
-import { BRANDS } from '../brand';
+import { type Climate, del, invalidate, patch, post, put, useApi } from '../api';
+import { FORM_HINT, FORM_LABEL, PRESET_LABEL, type HomePreset, type HomeSetup, type HouseholdForm, useHousehold } from '../household';
 import { CHANGELOG, latestChange, unseenChanges } from '../changelog';
 import { LANGUAGE_OPTIONS, lang, locale, pick, setLang, t } from '../i18n';
 import { Ic, LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { StartChoice, useTourInfo } from './Tour';
 import { StaplesPicker } from './Share';
-import { HouseArt } from '../art';
+import { HomeArt, HomeTiles } from '../art';
 
-type Step = 'home' | 'invite' | 'stock';
-const STEPS: Step[] = ['home', 'invite', 'stock'];
+type Step = 'home' | 'where' | 'places' | 'spots' | 'invite' | 'stock';
+const STEPS: Step[] = ['home', 'where', 'places', 'spots', 'invite', 'stock'];
+
+interface Room {
+  id: number;
+  name: string;
+  kind: string;
+  icon: string;
+  climate?: Climate;
+  parent_id?: number | null;
+  archived?: boolean;
+  depth?: number;
+  products?: number;
+}
 
 export interface GettingStarted {
   state: { step: Step; started: boolean; closed: boolean; skipped: boolean; checklistDismissed: boolean; stockPath?: string | null };
@@ -43,8 +56,9 @@ export interface GettingStarted {
   admin: boolean;
   checklist: { items: { key: 'home' | 'invite' | 'stock' | 'phone' | 'recipe'; done: boolean }[]; done: number; total: number };
   showChecklist: boolean;
-  household: { name: string; language: string; brand: string };
-  rooms: { id: number; name: string; kind: string; icon: string }[];
+  household: { name: string; language: string };
+  home?: HomeSetup;
+  rooms: Room[];
   counts: { members: number; products: number; inStock: number; recipes: number; imports: number };
 }
 
@@ -83,6 +97,9 @@ export function useOnboardingRedirect(me: Me) {
 
 // ================================================================== wizard
 
+/** The steps for this household: living alone skips "who else lives here" (area: home). */
+const stepsFor = (form?: HouseholdForm, chosen?: boolean) => STEPS.filter((s) => !(s === 'invite' && chosen && form === 'single'));
+
 export function Onboarding({ me }: { me: Me }) {
   const g = useGettingStarted(me.actor.role === 'admin');
   const [sp] = useSearchParams();
@@ -107,12 +124,20 @@ export function Onboarding({ me }: { me: Me }) {
     );
   if (g.isLoading || !g.data || !step) return <Skeleton n={3} h={90} />;
 
-  const idx = STEPS.indexOf(step);
+  const steps = stepsFor(g.data.home?.form, g.data.home?.form_chosen);
+  const cur: Step = steps.includes(step) ? step : (steps[STEPS.indexOf(step)] ?? 'stock');
+  const idx = steps.indexOf(cur);
   const go = (s: Step) => {
     setStep(s);
     window.scrollTo(0, 0);
     patch('/onboarding', { step: s }).then(() => invalidate('onboarding')).catch(() => {});
   };
+  // the form may change in step 1 – work out next/back from the fresh list each time
+  const next = (from: Step, form?: HouseholdForm) => {
+    const list = stepsFor(form ?? g.data!.home?.form, form ? true : g.data!.home?.form_chosen);
+    go(list[list.indexOf(from) + 1] ?? 'stock');
+  };
+  const back = (from: Step) => go(steps[Math.max(0, steps.indexOf(from) - 1)]);
   const close = async (skipped: boolean, to = '/') => {
     await patch('/onboarding', { closed: true, skipped, started: true }).catch(() => {});
     invalidate('onboarding');
@@ -122,8 +147,8 @@ export function Onboarding({ me }: { me: Me }) {
   return (
     <div className="onb">
       <div className="onb-top">
-        <div className="onb-progress" aria-label={t('Step {n} of {total}', { n: idx + 1, total: STEPS.length })}>
-          {STEPS.map((s, i) => (
+        <div className="onb-progress" aria-label={t('Step {n} of {total}', { n: idx + 1, total: steps.length })}>
+          {steps.map((s, i) => (
             <i key={s} className={i <= idx ? 'on' : ''} />
           ))}
         </div>
@@ -131,79 +156,46 @@ export function Onboarding({ me }: { me: Me }) {
           {t('Skip setup')}
         </button>
       </div>
-      {step === 'home' && <HouseArt className="onb-house" />}
-      <div className="eyebrow">{t('Step {n} of {total}', { n: idx + 1, total: STEPS.length })}</div>
-      {step === 'home' && <StepHome g={g.data} onNext={() => go('invite')} />}
-      {step === 'invite' && <StepInvite onBack={() => go('home')} onNext={() => go('stock')} />}
-      {step === 'stock' && <StepStock onBack={() => go('invite')} onDone={(to) => close(false, to)} />}
+      {cur === 'home' && <HomeTiles className="onb-homes" />}
+      <div className="eyebrow">{t('Step {n} of {total}', { n: idx + 1, total: steps.length })}</div>
+      {cur === 'home' && <StepHome g={g.data} onNext={(form) => next('home', form)} />}
+      {cur === 'where' && <StepWhere g={g.data} onBack={() => back('where')} onNext={() => next('where')} />}
+      {cur === 'places' && <StepPlaces g={g.data} onBack={() => back('places')} onNext={() => next('places')} />}
+      {cur === 'spots' && <StepSpots g={g.data} onBack={() => back('spots')} onNext={() => next('spots')} />}
+      {cur === 'invite' && <StepInvite form={g.data.home?.form ?? 'family'} onBack={() => back('invite')} onNext={() => next('invite')} />}
+      {cur === 'stock' && <StepStock onBack={() => back('stock')} onDone={(to) => close(false, to)} />}
     </div>
   );
 }
 
-// ------------------------------------------------------------------ step 1: home
+// ------------------------------------------------------------------ step 1: name, language, who lives here
 
-interface RoomTpl {
-  key: string;
-  en: string;
-  de: string;
-  /** in the household language */
-  name?: string;
-  icon: string;
-}
-
-function StepHome({ g, onNext }: { g: GettingStarted; onNext: () => void }) {
-  const tpls = useApi<RoomTpl[]>(['onboarding', 'rooms'], '/onboarding/room-templates');
+function StepHome({ g, onNext }: { g: GettingStarted; onNext: (form?: HouseholdForm) => void }) {
   const [name, setName] = useState(g.household.name);
-  const [keep, setKeep] = useState<Set<number>>(() => new Set(g.rooms.map((r) => r.id)));
-  const [extra, setExtra] = useState<{ name: string; icon: string; on: boolean }[]>([]);
-  const [own, setOwn] = useState('');
+  const [form, setForm] = useState<HouseholdForm | null>(g.home?.form_chosen ? g.home.form : null);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
-
-  // base rooms that this household doesn't have (any more) – offered as chips, off by default
-  const missing = useMemo(() => {
-    const names = new Set(g.rooms.map((r) => r.name.toLowerCase()));
-    const kinds = new Set(g.rooms.map((r) => r.kind));
-    return (tpls.data ?? []).filter((x) => !kinds.has(x.key) && !names.has(x.en.toLowerCase()) && !names.has(x.de.toLowerCase()) && !names.has((x.name ?? x.en).toLowerCase()));
-  }, [tpls.data, g.rooms]);
-  useEffect(() => {
-    setExtra((cur) => {
-      const have = new Set(cur.map((c) => c.name));
-      return [...cur, ...missing.map((m) => ({ name: m.name ?? pick(m), icon: m.icon, on: false })).filter((m) => !have.has(m.name))];
-    });
-  }, [missing]);
-
   const setSetting = (body: Record<string, string>) => patch('/settings', body);
-  const addOwn = () => {
-    const n = own.trim();
-    if (!n) return;
-    if (!extra.some((x) => x.name.toLowerCase() === n.toLowerCase()) && !g.rooms.some((r) => r.name.toLowerCase() === n.toLowerCase()))
-      setExtra([...extra, { name: n, icon: 'box', on: true }]);
-    setOwn('');
-  };
   const next = async () => {
     setBusy(true);
     try {
-      await put('/onboarding/home', {
-        household: name.trim() || undefined,
-        rooms: { keep: [...keep], add: extra.filter((x) => x.on).map((x) => x.name) },
-      });
-      invalidate('me', 'settings', 'overview', 'locations', 'onboarding');
-      onNext();
+      await put('/onboarding/home', { household: name.trim() || undefined, ...(form ? { form } : {}) });
+      invalidate('me', 'settings', 'overview', 'onboarding');
+      onNext(form ?? undefined);
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     } finally {
       setBusy(false);
     }
   };
-  const roomCount = keep.size + extra.filter((x) => x.on).length;
+  const forms: HouseholdForm[] = ['single', 'couple', 'family', 'shared'];
 
   return (
     <div className="stack" style={{ gap: 22 }}>
       <header>
         <h1>{t('Welcome home.')}</h1>
         <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
-          {t('Three short steps and your household is ready. You can change everything later in Settings.')}
+          {t('A few short steps and your household is ready. Everything can be skipped and changed later in Settings.')}
         </p>
       </header>
 
@@ -225,81 +217,24 @@ function StepHome({ g, onNext }: { g: GettingStarted; onNext: () => void }) {
             options={LANGUAGE_OPTIONS}
           />
         </div>
-        <div className="field">
-          <label>{t('Look')}</label>
-          <div className="onb-brands">
-            {(['tohuus', 'fredirando'] as const).map((k) => (
-              <button
-                key={k}
-                type="button"
-                className={`onb-brand ${g.household.brand === k ? 'on' : ''}`}
-                onClick={() => setSetting({ brand: k }).then(() => invalidate('me', 'settings', 'onboarding'))}
-              >
-                <img src={BRANDS[k].logo} alt="" />
-                <span>
-                  <b>{BRANDS[k].name}</b>
-                  <span className="small muted">{k === 'fredirando' ? t('Playful, like a delivery service') : t('Calm and clear')}</span>
-                </span>
-                {g.household.brand === k && <CheckCircle size={20} weight="fill" className="onb-brand-check" />}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       <section>
-        <h2>{t('Which places do you have?')}</h2>
-        <p className="small muted" style={{ margin: '4px 0 12px' }}>{t('Tap to switch off what you don’t have. Places can hold food and non-food alike.')}</p>
-        <div className="onb-chips">
-          {g.rooms.map((r) => {
-            const on = keep.has(r.id);
-            return (
-              <button
-                key={r.id}
-                type="button"
-                className={`chip onb-chip ${on ? 'on' : ''}`}
-                aria-pressed={on}
-                onClick={() => {
-                  const n = new Set(keep);
-                  if (on) n.delete(r.id);
-                  else n.add(r.id);
-                  setKeep(n);
-                }}
-              >
-                <Ic name={r.icon} size={16} /> {r.name}
-              </button>
-            );
-          })}
-          {extra.map((x, i) => (
-            <button
-              key={x.name}
-              type="button"
-              className={`chip onb-chip ${x.on ? 'on' : ''}`}
-              aria-pressed={x.on}
-              onClick={() => setExtra(extra.map((y, j) => (j === i ? { ...y, on: !y.on } : y)))}
-            >
-              <Ic name={x.icon} size={16} /> {x.name}
+        <h2>{t('Who lives here?')}</h2>
+        <p className="small muted" style={{ margin: '4px 0 12px' }}>{t('The app adapts what it shows and suggests. Nothing is locked – you can switch any time.')}</p>
+        <div className="onb-paths onb-forms">
+          {forms.map((f) => (
+            <button key={f} type="button" className={`action ${form === f ? 'on' : ''}`} aria-pressed={form === f} onClick={() => setForm(form === f ? null : f)}>
+              <b>{t(FORM_LABEL[f])}</b>
+              <span>{t(FORM_HINT[f])}</span>
             </button>
           ))}
-        </div>
-        <div className="row" style={{ marginTop: 12 }}>
-          <input
-            className="input"
-            value={own}
-            onChange={(e) => setOwn(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addOwn()}
-            placeholder={t('Add your own, e.g. hallway cupboard, shelf above the fridge')}
-            maxLength={60}
-          />
-          <button className="btn" disabled={!own.trim()} onClick={addOwn}>
-            <Plus size={16} /> {t('Add')}
-          </button>
         </div>
       </section>
 
       <div className="onb-foot">
-        <span className="small muted">{roomCount === 1 ? t('1 place') : t('{n} places', { n: roomCount })}</span>
-        <button className="btn primary lg" disabled={busy || roomCount === 0} onClick={next}>
+        <span />
+        <button className="btn primary lg" disabled={busy} onClick={next}>
           {t('Next')} <ArrowRight size={18} />
         </button>
       </div>
@@ -307,9 +242,305 @@ function StepHome({ g, onNext }: { g: GettingStarted; onNext: () => void }) {
   );
 }
 
-// ------------------------------------------------------------------ step 2: invite
+// ------------------------------------------------------------------ step 2: how do you live?
 
-function StepInvite({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function StepWhere({ g, onBack, onNext }: { g: GettingStarted; onBack: () => void; onNext: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const choose = async (preset: HomePreset | null) => {
+    setBusy(true);
+    try {
+      await put('/onboarding/where', { preset });
+      invalidate('me', 'onboarding');
+      onNext();
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const presets: HomePreset[] = ['flat', 'terraced', 'house', 'shared', 'other'];
+  return (
+    <div className="stack" style={{ gap: 22 }}>
+      <header>
+        <h1>{t('How do you live?')}</h1>
+        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>{t('Only for suggestions and the picture of your home. Your places are always your own.')}</p>
+      </header>
+      <div className="onb-paths onb-presets">
+        {presets.map((p) => (
+          <button key={p} type="button" className={`action ${g.home?.preset === p ? 'on' : ''}`} aria-pressed={g.home?.preset === p} disabled={busy} onClick={() => choose(p)}>
+            {p !== 'other' && <HomeArt preset={p} className="onb-preset-art" />}
+            <b>{t(PRESET_LABEL[p])}</b>
+          </button>
+        ))}
+      </div>
+      <div className="onb-foot">
+        <button className="btn ghost" onClick={onBack}>
+          <ArrowLeft size={16} /> {t('Back')}
+        </button>
+        <button className="btn lg" disabled={busy} onClick={() => choose(null)}>
+          {t('Skip')} <ArrowRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ step 3: which places?
+
+interface PlaceTpl {
+  key: string;
+  name: string;
+  en: string;
+  de: string;
+  sv: string;
+  icon: string;
+  climate: Climate;
+}
+
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+const tplMatches = (x: PlaceTpl, name: string) => [x.name, x.en, x.de, x.sv].some((n) => sameName(n, name));
+
+function StepPlaces({ g, onBack, onNext }: { g: GettingStarted; onBack: () => void; onNext: () => void }) {
+  const preset = g.home?.preset ?? null;
+  const tpls = useApi<PlaceTpl[]>(['onboarding', 'place-tpl', preset ?? 'none'], `/onboarding/place-templates${preset ? `?preset=${preset}` : ''}`);
+  const roots = g.rooms.filter((r) => (r.depth ?? 0) === 0 && !r.archived);
+  const [keep, setKeep] = useState<Set<number>>(() => new Set(roots.map((r) => r.id)));
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [own, setOwn] = useState<string[]>([]);
+  const [ownText, setOwnText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  // suggestions for this way of living that the household doesn't have yet – all off: nothing is created unasked
+  const suggestions = useMemo(() => (tpls.data ?? []).filter((x) => !g.rooms.some((r) => tplMatches(x, r.name))), [tpls.data, g.rooms]);
+  const toggle = <T,>(set: Set<T>, v: T) => {
+    const n = new Set(set);
+    if (n.has(v)) n.delete(v);
+    else n.add(v);
+    return n;
+  };
+  const addOwn = () => {
+    const n = ownText.trim();
+    if (!n) return;
+    const tpl = suggestions.find((x) => tplMatches(x, n));
+    if (tpl) setPicked(new Set(picked).add(tpl.key));
+    else if (!own.some((o) => sameName(o, n)) && !g.rooms.some((r) => sameName(r.name, n))) setOwn([...own, n]);
+    setOwnText('');
+  };
+  const count = keep.size + picked.size + own.length;
+  const removedWithStock = roots.filter((r) => !keep.has(r.id) && (r.products ?? 0) > 0);
+  const next = async () => {
+    setBusy(true);
+    try {
+      await put('/onboarding/places', {
+        keep: [...keep],
+        add: [...suggestions.filter((x) => picked.has(x.key)).map((x) => ({ key: x.key })), ...own.map((name) => ({ name }))],
+      });
+      invalidate('locations', 'overview', 'onboarding', 'boxes');
+      onNext();
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="stack" style={{ gap: 22 }}>
+      <header>
+        <h1>{t('Which places do you want to manage?')}</h1>
+        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
+          {t('Pick only what you really have. No place at all is fine too – things then show up under “not assigned yet”.')}
+        </p>
+      </header>
+      {tpls.isLoading ? (
+        <Skeleton n={2} h={44} />
+      ) : (
+        <div className="onb-chips">
+          {roots.map((r) => (
+            <button key={r.id} type="button" className={`chip onb-chip ${keep.has(r.id) ? 'on' : ''}`} aria-pressed={keep.has(r.id)} onClick={() => setKeep(toggle(keep, r.id))}>
+              <Ic name={r.icon} size={16} /> {r.name}
+            </button>
+          ))}
+          {suggestions.map((x) => (
+            <button key={x.key} type="button" className={`chip onb-chip ${picked.has(x.key) ? 'on' : ''}`} aria-pressed={picked.has(x.key)} onClick={() => setPicked(toggle(picked, x.key))}>
+              <Ic name={x.icon} size={16} /> {x.name}
+            </button>
+          ))}
+          {own.map((n) => (
+            <button key={n} type="button" className="chip onb-chip on" aria-pressed onClick={() => setOwn(own.filter((o) => o !== n))}>
+              <Ic name="box" size={16} /> {n} <X size={12} />
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="row">
+        <input
+          className="input"
+          value={ownText}
+          onChange={(e) => setOwnText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && addOwn()}
+          placeholder={t('Add your own, e.g. hallway cupboard, shelf above the fridge')}
+          maxLength={60}
+        />
+        <button className="btn" disabled={!ownText.trim()} onClick={addOwn}>
+          <Plus size={16} /> {t('Add')}
+        </button>
+      </div>
+      {removedWithStock.length > 0 && (
+        <p className="small muted" style={{ margin: 0 }}>{t('Places that still hold something stay – you can archive them later in Settings.')}</p>
+      )}
+      <div className="onb-foot">
+        <button className="btn ghost" onClick={onBack}>
+          <ArrowLeft size={16} /> {t('Back')}
+        </button>
+        <span className="small muted">{count === 0 ? t('No places – that’s fine') : count === 1 ? t('1 place') : t('{n} places', { n: count })}</span>
+        <button className="btn primary lg" disabled={busy} onClick={next}>
+          {t('Next')} <ArrowRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ step 4 (optional): storage spots
+
+const CLIMATE_WORD: Record<Climate, string> = { ambient: 'Room temperature', chilled: 'Chilled', frozen: 'Freezing' };
+
+function StepSpots({ g, onBack, onNext }: { g: GettingStarted; onBack: () => void; onNext: () => void }) {
+  const tpls = useApi<PlaceTpl[]>(['onboarding', 'spot-tpl'], '/onboarding/place-templates?spots=1');
+  const roots = g.rooms.filter((r) => (r.depth ?? 0) === 0 && !r.archived);
+  const childrenOf = (id: number) => g.rooms.filter((r) => r.parent_id === id && !r.archived);
+  /** pending: parent id → spots to add */
+  const [pending, setPending] = useState<Record<number, { key?: string; name: string; climate?: Climate | null; icon: string }[]>>({});
+  const [text, setText] = useState<Record<number, string>>({});
+  const [climate, setClimate] = useState<Record<number, Climate | ''>>({});
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  const add = (parent: number, s: { key?: string; name: string; climate?: Climate | null; icon: string }) => {
+    const list = pending[parent] ?? [];
+    if (list.some((x) => sameName(x.name, s.name)) || childrenOf(parent).some((c) => sameName(c.name, s.name))) return;
+    setPending({ ...pending, [parent]: [...list, s] });
+  };
+  const drop = (parent: number, name: string) => setPending({ ...pending, [parent]: (pending[parent] ?? []).filter((x) => x.name !== name) });
+  const removeExisting = (r: Room) =>
+    del(`/locations/${r.id}`)
+      .then(() => invalidate('onboarding', 'locations'))
+      .catch((e) => toast({ text: (e as Error).message, error: true }));
+  const n = Object.values(pending).reduce((s, l) => s + l.length, 0);
+  const next = async () => {
+    setBusy(true);
+    try {
+      const add = Object.entries(pending).flatMap(([parent, list]) => list.map((s) => ({ key: s.key ?? null, name: s.name, climate: s.climate ?? null, parent_id: Number(parent) })));
+      await put('/onboarding/spots', { add });
+      invalidate('locations', 'overview', 'onboarding', 'boxes');
+      onNext();
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="stack" style={{ gap: 22 }}>
+      <header>
+        <h1>{t('Where are your things kept?')}</h1>
+        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
+          {t('Optional: shelves, cupboards and devices inside your places – e.g. the fridge in the kitchenette or the chest freezer in the cellar.')}
+        </p>
+      </header>
+      {roots.length === 0 ? (
+        <div className="card pad small muted">{t('You have not picked any places – skip this step, or go back and pick some.')}</div>
+      ) : (
+        roots.map((r) => {
+          const have = childrenOf(r.id);
+          const list = pending[r.id] ?? [];
+          const offer = (tpls.data ?? []).filter((x) => !tplMatches(x, r.name) && !have.some((c) => tplMatches(x, c.name)) && !list.some((p) => p.key === x.key));
+          return (
+            <div key={r.id} className="card pad stack onb-room" style={{ gap: 10 }}>
+              <div className="row" style={{ gap: 8 }}>
+                <span className="thumb" style={{ width: 36, height: 36 }}><Ic name={r.icon} size={18} /></span>
+                <b className="grow">{r.name}</b>
+              </div>
+              {(have.length > 0 || list.length > 0) && (
+                <div className="onb-chips">
+                  {have.map((c) => (
+                    <button key={c.id} type="button" className="chip onb-chip on" onClick={() => (c.products ?? 0) === 0 && removeExisting(c)} title={(c.products ?? 0) > 0 ? t('There is still something stored at this location.') : t('Remove')}>
+                      <Ic name={c.icon} size={14} /> {c.name} {(c.products ?? 0) === 0 && <X size={12} />}
+                    </button>
+                  ))}
+                  {list.map((s) => (
+                    <button key={s.name} type="button" className="chip onb-chip on" onClick={() => drop(r.id, s.name)}>
+                      <Ic name={s.icon} size={14} /> {s.name} <X size={12} />
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="onb-chips">
+                {offer.map((x) => (
+                  <button key={x.key} type="button" className="chip onb-chip" onClick={() => add(r.id, { key: x.key, name: x.name, icon: x.icon, climate: x.climate })}>
+                    <Plus size={12} /> {x.name}
+                  </button>
+                ))}
+              </div>
+              <div className="row wrap" style={{ gap: 8 }}>
+                <input
+                  className="input grow"
+                  style={{ minWidth: 160 }}
+                  value={text[r.id] ?? ''}
+                  maxLength={60}
+                  placeholder={t('Own, e.g. top shelf, Jonas’ compartment')}
+                  onChange={(e) => setText({ ...text, [r.id]: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (text[r.id] ?? '').trim()) {
+                      add(r.id, { name: (text[r.id] ?? '').trim(), climate: climate[r.id] || null, icon: climate[r.id] === 'frozen' ? 'snowflake' : climate[r.id] === 'chilled' ? 'refrigerator' : 'box' });
+                      setText({ ...text, [r.id]: '' });
+                    }
+                  }}
+                />
+                <select className="input sm" style={{ width: 'auto' }} aria-label={t('Climate')} value={climate[r.id] ?? ''} onChange={(e) => setClimate({ ...climate, [r.id]: e.target.value as Climate | '' })}>
+                  <option value="">{t('detect from the name')}</option>
+                  {(['ambient', 'chilled', 'frozen'] as Climate[]).map((c) => (
+                    <option key={c} value={c}>{t(CLIMATE_WORD[c])}</option>
+                  ))}
+                </select>
+                <button
+                  className="btn"
+                  disabled={!(text[r.id] ?? '').trim()}
+                  onClick={() => {
+                    add(r.id, { name: (text[r.id] ?? '').trim(), climate: climate[r.id] || null, icon: climate[r.id] === 'frozen' ? 'snowflake' : climate[r.id] === 'chilled' ? 'refrigerator' : 'box' });
+                    setText({ ...text, [r.id]: '' });
+                  }}
+                >
+                  <Plus size={16} /> {t('Add')}
+                </button>
+              </div>
+            </div>
+          );
+        })
+      )}
+      <div className="card pad onb-anytime">
+        <b>{t('You can add or change anything at any time.')}</b>
+        <p className="small muted" style={{ margin: '4px 0 0' }}>{t('Settings › Places: rename, sort, nest, archive – and set what is chilled or frozen.')}</p>
+      </div>
+      <div className="onb-foot">
+        <button className="btn ghost" onClick={onBack}>
+          <ArrowLeft size={16} /> {t('Back')}
+        </button>
+        <button className={`btn lg ${n > 0 ? 'primary' : ''}`} disabled={busy} onClick={next}>
+          {n > 0 ? t('Next') : t('Skip for now')} <ArrowRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ step 5: invite (not for one-person households)
+
+function StepInvite({ form, onBack, onNext }: { form: HouseholdForm; onBack: () => void; onNext: () => void }) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<{ name: string; url: string } | null>(null);
@@ -338,7 +569,11 @@ function StepInvite({ onBack, onNext }: { onBack: () => void; onNext: () => void
       <header>
         <h1>{t('Who else lives here?')}</h1>
         <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
-          {t('Shared lists only work when everyone can add to them. Your partner gets a personal link and picks their own password.')}
+          {form === 'couple'
+            ? t('Shared lists only work when everyone can add to them. Your partner gets a personal link and picks their own password.')
+            : form === 'shared'
+              ? t('Shared lists only work when everyone can add to them. Each flatmate gets a personal link and picks their own password.')
+              : t('Shared lists only work when everyone can add to them. Everyone gets a personal link and picks their own password.')}
         </p>
       </header>
 
@@ -584,10 +819,19 @@ const CHECK_TEXT: Record<string, { title: string; to: string }> = {
   recipe: { title: 'Save a first recipe', to: '/kochen' },
 };
 
+/** Who to invite, in the household's own words (area: home) – a one-person household never sees this item. */
+const INVITE_TITLE: Record<HouseholdForm, string> = {
+  single: 'Invite someone',
+  couple: 'Invite your partner',
+  family: 'Invite your family',
+  shared: 'Invite your flatmates',
+};
+
 /** "3 of 5 done" – disappears when everything is done or when dismissed. Admins only. */
 export function ChecklistCard({ me }: { me: Me }) {
   const admin = me.actor.role === 'admin';
   const g = useGettingStarted(admin);
+  const home = useHousehold();
   const nav = useNavigate();
   if (!admin || !g.data?.showChecklist) return null;
   const c = g.data.checklist;
@@ -610,7 +854,7 @@ export function ChecklistCard({ me }: { me: Me }) {
         {c.items.map((i) => (
           <button key={i.key} className={`onb-check-item ${i.done ? 'done' : ''}`} disabled={i.done} onClick={() => nav(CHECK_TEXT[i.key].to)}>
             {i.done ? <CheckCircle size={20} weight="fill" /> : <Circle size={20} />}
-            <span className="grow">{t(CHECK_TEXT[i.key].title)}</span>
+            <span className="grow">{t(i.key === 'invite' ? INVITE_TITLE[home.form] : CHECK_TEXT[i.key].title)}</span>
             {!i.done && <ArrowRight size={16} />}
           </button>
         ))}

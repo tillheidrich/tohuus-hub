@@ -75,11 +75,11 @@ export const fresh: Record<string, string> = {
     'Aus {n} Einkäufen – Verbrauch wird selten gebucht, daher grob. Der Bestand wird nie automatisch geändert.',
   '{n} days after opening': '{n} Tage nach dem Öffnen',
   'Shelf life': 'Haltbarkeit',
-  'Take {name} out of the freezer': '{name} aus dem Gefrierschrank nehmen',
+  'Take {name} out of the freezer': '{name} aus dem Gefrierfach nehmen',
   'Freeze {name}': '{name} einfrieren',
   'Goes back where it came from, to be eaten within 1–2 days.': 'Kommt zurück an seinen Platz und sollte innerhalb von 1–2 Tagen gegessen werden.',
   'Keeps about {n} days in the freezer – the best-before date is set accordingly.':
-    'Hält im Gefrierschrank etwa {n} Tage – das MHD wird entsprechend gesetzt.',
+    'Hält im Gefrierfach etwa {n} Tage – das MHD wird entsprechend gesetzt.',
   'Thawed – eat by {date}': 'Aufgetaut – essen bis {date}',
   'Frozen – keeps until {date}': 'Eingefroren – hält bis {date}',
   'Noted. Thanks for logging it.': 'Notiert. Danke fürs Eintragen.',
@@ -90,7 +90,7 @@ export const fresh: Record<string, string> = {
   'No rule – keeps until best-before': 'Keine Regel – hält bis zum MHD',
   'Used for warnings once a pack is opened. 0 = no limit after opening.':
     'Wird für Hinweise genutzt, sobald eine Packung angebrochen ist. 0 = keine Grenze nach dem Öffnen.',
-  'Days in the freezer': 'Tage im Gefrierschrank',
+  'Days in the freezer': 'Tage im Gefrierfach',
   'thrown away': 'weggeworfen',
   frozen: 'eingefroren',
   thawed: 'aufgetaut',
@@ -105,7 +105,7 @@ export const fresh: Record<string, string> = {
   No: 'Nein',
   Yes: 'Ja',
   Fridge: 'Kühlschrank',
-  Freezer: 'Gefrierschrank',
+  Freezer: 'Gefrierfach',
   'They show up under “Eat me first” – best within 3 days.': 'Sie erscheinen unter „Zuerst essen“ – am besten innerhalb von 3 Tagen.',
-  'Keeps about 3 months in the freezer.': 'Hält im Gefrierschrank etwa 3 Monate.',
+  'Keeps about 3 months in the freezer.': 'Hält im Gefrierfach etwa 3 Monate.',
 };

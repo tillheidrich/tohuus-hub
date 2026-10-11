@@ -2,6 +2,7 @@
  * Share area: things shared into the app (PWA share target, iPhone shortcut), discreet/private shopping items
  * and the start mode "only what runs out". Privacy primitives live in share-core.ts (importable everywhere).
  */
+import { hasClimate } from './places.js';
 import { db, lang } from '../db.js';
 import { t } from '../i18n.js';
 import { randomToken, sha256 } from './auth.js';
@@ -361,9 +362,12 @@ export function staplesPicker() {
   }[];
   const anyMarked = marked.length > 0;
   const used = new Set<number>();
-  const groups = GROUPS.map((g) => ({
+  // groups follow the places the household really has: no freezer group without a frozen place (area: home)
+  const freezer = hasClimate('frozen');
+  const fridge = hasClimate('chilled');
+  const groups = GROUPS.filter((g) => g.key !== 'freezer' || freezer).map((g) => ({
     key: g.key,
-    label: g.label(),
+    label: g.key === 'fridge' && !fridge ? t('Milk, cheese & co.') : g.label(),
     items: staples()
       .filter((s) => g.cats.includes(s.cat))
       .map((s) => {

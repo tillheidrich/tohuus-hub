@@ -2,6 +2,7 @@ import { ArrowRight, ArrowsClockwise, Basket, BookOpen, CalendarBlank, CaretLeft
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, invalidate, patch, post, useApi } from '../api';
+import { useHousehold } from '../household';
 import { locale, t } from '../i18n';
 import { Seg, Sheet, useToast } from '../ui';
 import { ClaimAvatar, CookPicker, usePlanClaims } from '../shop/claims';
@@ -158,6 +159,7 @@ function PlanPicker({ day, mark, onClose }: { day: string | null; mark: import('
   const [slot, setSlot] = useState<'abend' | 'mittag'>('abend');
   const [servings, setServings] = useState<number | null>(null);
   const [vote, setVote] = useState(false);
+  const home = useHousehold(); // area: home – a vote needs more than one person
   const toast = useToast();
   const add = async (body: { recipe_id?: number; title?: string }) => {
     try {
@@ -214,9 +216,11 @@ function PlanPicker({ day, mark, onClose }: { day: string | null; mark: import('
                 </button>
               ))}
             </div>
-            <button className="btn ghost block" onClick={() => setVote(true)}>
-              <UsersThree size={16} /> {t('Can’t decide? Let everyone vote')}
-            </button>
+            {home.ui.votes && (
+              <button className="btn ghost block" onClick={() => setVote(true)}>
+                <UsersThree size={16} /> {t('Can’t decide? Let everyone vote')}
+              </button>
+            )}
           </>
         )}
       </div>

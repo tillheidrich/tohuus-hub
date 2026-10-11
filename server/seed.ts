@@ -9,14 +9,23 @@ import { adjustStock, createProduct } from './lib/catalog.js';
 import { NAME_MAX, PASSWORD_MIN, hashPassword, randomToken } from './lib/auth.js';
 import { BASE_CATEGORIES, BASE_LOCATIONS, baseName, categoryIdByKey, locationIdByKey, type CategoryKey } from './lib/basedata.js';
 import { saveRecipe } from './lib/recipes.js';
+import { linkCategoryDefaults } from './lib/places.js';
 import { captureDemo } from './lib/demo.js';
 
-/** Base locations and categories, named in the household language at creation time. */
-export function ensureBaseData() {
-  if ((db.prepare('SELECT COUNT(*) n FROM locations').get() as { n: number }).n === 0) {
-    const ins = db.prepare('INSERT INTO locations (name, kind, icon, sort) VALUES (?, ?, ?, ?)');
-    BASE_LOCATIONS.forEach((l, i) => ins.run(baseName(l), l.key, l.icon, i));
-  }
+/** The seven neutral base places (fridge, freezer, pantry …) – only for the demo and tests, never unasked. */
+export function ensureBasePlaces() {
+  if ((db.prepare(`SELECT COUNT(*) n FROM locations WHERE kind != 'unassigned'`).get() as { n: number }).n > 0) return;
+  const ins = db.prepare('INSERT INTO locations (name, kind, icon, sort, climate) VALUES (?, ?, ?, ?, ?)');
+  BASE_LOCATIONS.forEach((l, i) => ins.run(baseName(l), l.key, l.icon, i, l.key === 'freezer' ? 'frozen' : l.key === 'fridge' ? 'chilled' : 'ambient'));
+  linkCategoryDefaults();
+}
+
+/**
+ * Base categories, the first admin and the household name. `places: true` also creates the base places –
+ * a new household (server start) does not get them: onboarding asks which places it has (area: home).
+ */
+export function ensureBaseData(opts: { places?: boolean } = {}) {
+  if (opts.places !== false) ensureBasePlaces();
   if ((db.prepare('SELECT COUNT(*) n FROM categories').get() as { n: number }).n === 0) {
     const ins = db.prepare('INSERT INTO categories (name, icon, default_location_id, track_mode, sort) VALUES (?, ?, ?, ?, ?)');
     BASE_CATEGORIES.forEach((c, i) => ins.run(baseName(c), c.icon, locationIdByKey(c.loc), c.track, i));
@@ -355,6 +364,8 @@ function addDays(d: number) {
 export function seedDemo(opts: { force?: boolean } = {}): boolean {
   if (getSetting('demo.seeded', false) && !opts.force) return false;
   if ((db.prepare('SELECT COUNT(*) n FROM products').get() as { n: number }).n > 0) return false;
+  // the demo household lives in the neutral base places; a household that already picked its own keeps them
+  ensureBasePlaces();
   captureDemo(seedDemoRows);
   setSetting('demo.seeded', true);
   return true;

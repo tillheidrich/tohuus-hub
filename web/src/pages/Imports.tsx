@@ -93,9 +93,9 @@ export function Imports({ me }: { me: Me }) {
                 <Seg value={photoMode} onChange={setPhotoMode} options={[['receipt', t('Receipt')], ['shelf', t('Cupboard / freezer')]]} />
                 {photoMode === 'shelf' && (
                   <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
-                    {(locations.data ?? []).map((l) => (
+                    {(locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => (
                       <button key={l.id} className={`chip ${loc === l.id ? 'on' : ''}`} onClick={() => setLoc(l.id)}>
-                        <Ic name={l.icon} size={15} /> {l.name}
+                        <Ic name={l.icon} size={15} /> {l.path ?? l.name}
                       </button>
                     ))}
                   </div>

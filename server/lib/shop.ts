@@ -7,6 +7,7 @@ import { BASE_CATEGORIES } from './basedata.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, guessCategory, matchProduct } from './catalog.js';
 import { norm, tokens } from './text.js';
+import { fitsStore, itemBuyAt } from './buyat.js';
 import { type ShareInfo, type Viewer, applyShareView, realProductId } from './share-core.js';
 import {
   CATEGORY_SECTION,
@@ -24,6 +25,9 @@ import {
 } from './shopparse.js';
 
 export * from './shopparse.js';
+
+/** Pseudo section in store mode: open items marked for other stores (wave 6, "Where to buy?"). */
+export const ELSEWHERE = 'elsewhere';
 
 migrate(
   'shop-1',
@@ -230,6 +234,8 @@ export interface ShopItem {
   claim: { user_id: number; name: string; color: string } | null;
   /** discreet / private entry (area: share) */
   share?: ShareInfo;
+  /** "Where to buy?" – only what a person entered (item, else its product); empty = anywhere (wave 6) */
+  buy_at: string[];
 }
 
 export function claimsOf(kind: 'shopping' | 'plan') {
@@ -246,15 +252,20 @@ export function claimsOf(kind: 'shopping' | 'plan') {
 export function shoppingItems(viewer?: Viewer): ShopItem[] {
   const rows = db
     .prepare(
-      `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit,
+      `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit, p.buy_at AS product_buy_at,
          (SELECT COALESCE(SUM(qty),0) FROM stock st WHERE st.product_id = s.product_id) AS in_stock
        FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id
        WHERE s.checked_at IS NULL OR s.in_basket = 1 OR s.checked_at > datetime('now', '-1 day')
        ORDER BY s.checked_at IS NOT NULL, s.created_at DESC`,
     )
-    .all() as Omit<ShopItem, 'section' | 'claim'>[];
+    .all() as (Omit<ShopItem, 'section' | 'claim' | 'buy_at'> & { buy_at: string | null; product_buy_at: string | null })[];
   const claims = claimsOf('shopping');
-  return applyShareView(rows, viewer, claims).map((r) => ({ ...r, section: sectionOf(r), claim: claims.get(r.id) ?? null }));
+  return applyShareView(rows, viewer, claims).map(({ product_buy_at, ...r }) => ({
+    ...r,
+    buy_at: itemBuyAt({ buy_at: r.buy_at, product_buy_at }),
+    section: sectionOf(r),
+    claim: claims.get(r.id) ?? null,
+  }));
 }
 
 /** Everything the store view needs: open items grouped in the store's walking order, the basket, recently done. */
@@ -266,11 +277,15 @@ export function storeView(storeId?: number | null, viewer?: Viewer) {
   const open = items.filter((i) => !i.checked_at);
   const basket = items.filter((i) => i.checked_at && i.in_basket);
   const done = items.filter((i) => i.checked_at && !i.in_basket);
-  const sections = sortBySections(
-    [...new Set(open.map((i) => i.section))].map((key) => ({ key, items: open.filter((i) => i.section === key) })),
+  // in a store: things somebody marked for another store ("dm", "weekly market") wait at the end, not in the aisles
+  const here = store ? open.filter((i) => fitsStore(i.buy_at, store.name)) : open;
+  const elsewhere = store ? open.filter((i) => !fitsStore(i.buy_at, store.name)) : [];
+  const sections: { key: string; items: ShopItem[] }[] = sortBySections(
+    [...new Set(here.map((i) => i.section))].map((key) => ({ key, items: here.filter((i) => i.section === key) })),
     order,
     (g) => g.key,
   );
+  if (elsewhere.length) sections.push({ key: ELSEWHERE, items: elsewhere });
   return { store, stores, order, sections, basket, done, open: open.length };
 }
 

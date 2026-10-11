@@ -2,7 +2,8 @@ import { config } from '../config.js';
 import { db, lang, now } from '../db.js';
 import { commaDecimal } from '../languages.js';
 import { t } from '../i18n.js';
-import { BASE_LOCATIONS, baseName, categoryIdByKey, type CategoryKey } from './basedata.js';
+import { categoryIdByKey, type CategoryKey } from './basedata.js';
+import { unassignedId, usablePlace } from './places.js';
 import { regionCategoryRules } from './region-categories.js';
 import { emit } from './bus.js';
 import { dateKindOf, entryExpiry, openDaysFor } from './fresh-shelf.js';
@@ -159,7 +160,7 @@ export function adjustStock(input: AdjustInput) {
   if (input.delta !== undefined && !Number.isFinite(input.delta)) throw new Error(t('Invalid quantity'));
   const before = productStatus(p, stockOf(p.id));
   const tx = db.transaction(() => {
-    const locationId = input.locationId ?? p.default_location_id ?? firstLocationId();
+    const locationId = input.locationId ?? usablePlace(p.default_location_id) ?? firstLocationId();
     if (input.set !== undefined) {
       // set total at a location (inventory / level mode)
       const entries = db.prepare('SELECT * FROM stock WHERE product_id = ? AND location_id = ?').all(p.id, locationId) as StockEntry[];
@@ -233,11 +234,12 @@ function logMove(productId: number, locationId: number | null, delta: number, in
   );
 }
 
+/**
+ * Where stock goes when neither the caller nor the product names a place: the system place
+ * "Not assigned to a place yet" (area: home) – never a guessed fridge and never an invented pantry.
+ */
 export function firstLocationId(): number {
-  const r = db.prepare('SELECT id FROM locations ORDER BY sort, id LIMIT 1').get() as { id: number } | undefined;
-  if (r) return r.id;
-  const pantry = BASE_LOCATIONS.find((l) => l.key === 'pantry')!;
-  return Number(db.prepare(`INSERT INTO locations (name, kind, icon) VALUES (?, 'pantry', 'archive')`).run(baseName(pantry)).lastInsertRowid);
+  return unassignedId()!;
 }
 
 /** React to a status transition: shopping list + notifications. */

@@ -4,7 +4,8 @@ import { browserSupportsWebAuthn, browserSupportsWebAuthnAutofill, startAuthenti
 import { useEffect, useRef, useState } from 'react';
 import { ApiError, invalidate, post, useApi } from '../api';
 import { Avatar } from '../ui';
-import { BRANDS, applyBrand, currentBrand } from '../brand';
+import { BRAND, applyBrand } from '../brand';
+import { BrandMark, HomeTiles } from '../art';
 import { setLang, t } from '../i18n';
 
 type Method = 'passkey' | 'link' | 'password' | 'sso';
@@ -62,11 +63,9 @@ export function Login() {
   // the sign-in screen speaks the household's language and wears its look
   useEffect(() => {
     if (!o) return;
-    if (o.brand) applyBrand(o.brand);
+    applyBrand();
     if (setLang(o.language)) rerender((n) => n + 1);
-  }, [o?.language, o?.brand]);
-  const b = BRANDS[currentBrand()];
-  const fredi = currentBrand() === 'fredirando';
+  }, [o?.language]);
   const webauthn = typeof window !== 'undefined' && browserSupportsWebAuthn();
 
   const users = o?.users ?? [];
@@ -297,7 +296,7 @@ export function Login() {
             {error}
             <button className={`btn lg ${anyButton ? '' : 'primary'}`} disabled={busy || !pw || !who || (step === 'code' && code.trim().length < 6)}>
               {anyButton ? <Key size={18} /> : null}
-              {anyButton ? t('Sign in with password') : fredi ? t('Let’s go') : t('Come on in')} {!anyButton && <ArrowRight size={18} weight="bold" />}
+              {anyButton ? t('Sign in with password') : t('Come on in')} {!anyButton && <ArrowRight size={18} weight="bold" />}
             </button>
           </form>
         )}
@@ -321,42 +320,25 @@ export function Login() {
   return (
     <div className="login">
       <div className="art">
-        <div className="brand" style={{ padding: 0 }}>
-          <img src={b.logo} alt="" /> {b.name}
+        <span className="disc" aria-hidden="true" />
+        <span className="half" aria-hidden="true" />
+        <div className="brand">
+          <BrandMark className="on-block" /> {BRAND.name}
         </div>
-        <div>
-          <div className="shelves">
-            <i />
-            <i />
-            <i />
-          </div>
-          <div className="h1" style={{ fontSize: 46, maxWidth: 460 }}>
-            {fredi ? (
-              <>
-                {t('Hungry?')}
-                <br />
-                {t('We deliver.')}
-              </>
-            ) : (
-              <>
-                {t('What’s in the house.')}
-                <br />
-                {t('At a glance.')}
-              </>
-            )}
-          </div>
-          <p style={{ opacity: 0.7, maxWidth: 420, marginTop: 14 }}>
-            {fredi
-              ? t('From the shelf to the couch in under three minutes. Backed by pantry, shopping list and recipes.')
-              : t('Fridge, freezer, pantry and household – with a shopping list, recipes and a bar for guests.')}
-          </p>
+        <div className="login-hero">
+          <p className="eyebrow label-sq">{t('Open source · on your own server')}</p>
+          <h1 className="login-h1">
+            {t('Less on your mind.')}
+            <br />
+            <span className="hl">{t('More at home.')}</span>
+          </h1>
+          <p className="login-lede">{t('Flat, shared flat, terraced house or house: ToHuus brings shopping, supplies and recipes together.')}</p>
         </div>
-        <div className="small" style={{ opacity: 0.6 }}>{fredi ? t('Family business · Delivery to our own house only') : t('Self-hosted · Open source')}</div>
+        <HomeTiles className="login-homes" labels={false} />
       </div>
       <div className="form">
-        <div className="brand only-mobile" style={{ padding: 0 }}>
-          <img src={b.logo} alt="" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 8, width: 30, height: 30, borderRadius: 8 }} />
-          {b.name}
+        <div className="brand only-mobile-flex">
+          <BrandMark /> {BRAND.name}
         </div>
         {body}
       </div>

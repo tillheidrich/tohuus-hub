@@ -204,14 +204,14 @@ describe('start over', () => {
     expect(out.tables).not.toContain('users');
   });
 
-  it('places are reset to neutral defaults only when chosen', async () => {
+  it('places are reset only when chosen – and then none are invented (area: home)', async () => {
     db.prepare(`INSERT INTO locations (name, kind) VALUES ('Keller', 'cellar')`).run();
     await tour.resetData({ scopes: ['stock'] });
     expect(count('locations', "name = 'Keller'")).toBe(1);
     await tour.resetData({ scopes: ['stock'], places: true });
-    const names = (db.prepare('SELECT name FROM locations ORDER BY sort').all() as { name: string }[]).map((l) => l.name);
-    expect(names).toEqual(['Kühlschrank', 'Gefrierfach', 'Vorratsschrank', 'Vorratsregal', 'Küche', 'Bad', 'Putzschrank']);
+    expect(count('locations')).toBe(0);
     expect(count('categories')).toBeGreaterThan(5);
+    seed.ensureBasePlaces(); // the following tests expect the base places
   });
 
   it('accepts the typed confirmation word in the household language and in English', async () => {

@@ -89,7 +89,7 @@ describe('ticket renderers', () => {
     expect(text.split('\n').every((l) => [...l].length <= 48)).toBe(true);
   });
 
-  it('kitchen ticket shows order number, options and per-item notes; Fredirando turns it into a delivery note', async () => {
+  it('kitchen ticket shows order number, options and per-item notes; an old Fredirando choice no longer changes it', async () => {
     const id = orders.createOrder({ note: 'and a blanket', lines: [{ product_id: coffee, qty: 2, options: ['Oat'], note: 'extra hot' }] }, { userId: 1, name: 'Lea' });
     let lines = svgText(tickets.renderSvg(await tickets.buildTicket({ type: 'order', id }, 58), 58).svg);
     expect(lines).toContain('KITCHEN TICKET');
@@ -103,10 +103,10 @@ describe('ticket renderers', () => {
     setSetting('brand.choice', 'fredirando');
     lines = svgText(tickets.renderSvg(await tickets.buildTicket({ type: 'order', id }, 58), 58).svg);
     setSetting('brand.choice', 'tohuus');
-    expect(lines[0]).toBe('FREDIRANDO');
-    expect(lines).toContain('DELIVERY NOTE');
-    expect(lines).toContain('Delivery to');
-    expect(lines).toContain('Sofa');
+    // one brand since wave 6: the retired Fredirando look no longer turns it into a delivery note
+    expect(lines[0]).toBe('TOHUUS HUB');
+    expect(lines).toContain('KITCHEN TICKET');
+    expect(lines).not.toContain('DELIVERY NOTE');
   });
 
   it('missing records are a 404', async () => {

@@ -20,10 +20,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Me } from '../App';
 import { type Product, ApiError, get, invalidate, patch, post, qc, useApi } from '../api';
+import { useHousehold } from '../household';
 import { t } from '../i18n';
 import { pendingQueue, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
-import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, sectionLabel } from '../shop/sections';
-import { Avatar, Empty, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, SectionShape, sectionLabel } from '../shop/sections';
+import { ItemBuyAt } from '../shop/BuyAt';
+import { Avatar, Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { EmptyArt } from '../art';
 import { BonButton } from './Bons';
 import { useOutOfHouse } from './Ha2';
 import { ComposerVisibility, ItemPrivacy, ShareMark, type Visibility, VisibilityPanel, addHiddenText, readClipboard, shareSubline } from './Share';
@@ -96,6 +99,7 @@ export function Shopping() {
   const [ordering, setOrdering] = useState(false);
   const [newStore, setNewStore] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [doneBag, setDoneBag] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const inStore = mode === 'store';
@@ -191,6 +195,7 @@ export function Shopping() {
       const r = await post<{ items: number; booked: number }>('/shop/checkout', { store_id: storeId, to_stock: toStock });
       refresh();
       invalidate('products');
+      setDoneBag(true); // a small full bag, once – only after a real checkout
       toast({
         text: r.booked
           ? r.booked === 1
@@ -239,25 +244,22 @@ export function Shopping() {
   const openItems = view ? view.sections.flatMap((s) => s.items) : [];
   const onList = new Set(openItems.map((i) => i.product_id).filter(Boolean));
 
+  const seen = useSeen(view);
+  const claimMe = (i: ShopItem) => run({ type: 'claim', id: i.id, on: true });
+  const total = view?.open ?? 0;
+
   return (
-    <div className={inStore ? 'shop-store-mode' : ''}>
-      <header className="page-head">
-        <div>
-          <div className="eyebrow">{inStore && view?.store ? t('At {store}', { store: view.store.name }) : t('{n} open', { n: view?.open ?? 0 })}</div>
+    <div className={`shop ${inStore ? 'shop-store-mode' : ''}`}>
+      <header className="shop-head">
+        <div className="shop-title">
           <h1>{inStore ? t('In the store') : t('Shopping')}</h1>
+          <span className="count-badge" aria-label={t('{n} open', { n: total })}>{total}</span>
         </div>
-        <div className="actions">
-          {!inStore && (
-            <button className="icon-btn" onClick={share} aria-label={t('Share')}>
-              <ShareNetwork size={18} />
-            </button>
-          )}
-          {!inStore && <BonButton spec={{ type: 'shopping', store_id: view?.store?.id ?? null }} />}
-          <button className={`btn ${inStore ? '' : 'primary'}`} onClick={() => switchMode(inStore ? 'list' : 'store')}>
-            {inStore ? <X size={16} /> : <Storefront size={16} />} {inStore ? t('Leave store') : t('Store mode')}
-          </button>
+        <div className="shop-tools">
+          <Seg value={mode} onChange={(m) => switchMode(m)} options={[['list', t('List')], ['store', t('In the store')]]} label={t('Store mode')} />
         </div>
       </header>
+      {inStore && view?.store && <p className="eyebrow shop-at">{t('At {store}', { store: view.store.name })}</p>}
 
       {(!offline.online || offline.pending > 0) && (
         <div className="shop-offline" role="status">
@@ -275,7 +277,7 @@ export function Shopping() {
       )}
 
       {inStore && view && (
-        <div className="chips shop-stores" style={{ marginBottom: 12 }}>
+        <div className="chips shop-stores">
           {view.stores.map((s) => (
             <button key={s.id} className={`chip ${s.id === storeId ? 'on' : ''}`} onClick={() => pickStore(s.id)}>
               <Storefront size={14} /> {s.name}
@@ -287,48 +289,53 @@ export function Shopping() {
         </div>
       )}
 
-      <div className="composer" style={{ position: 'relative' }}>
-        <div className="searchbar grow">
-          <Plus size={18} />
-          <input
-            ref={inputRef}
-            className="input"
-            placeholder={t('e.g. 2 milk, packing tape and 3 cans of tomatoes')}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onFocus={() => setFocus(true)}
-            onBlur={() => setTimeout(() => setFocus(false), 150)}
-            onKeyDown={(e) => e.key === 'Enter' && add(text)}
-            enterKeyHint="done"
-            style={{ paddingRight: 92 }}
-          />
-          {/* area: share – paste a copied list in one tap; make the next item discreet / private */}
-          <div className="share-in">
-            <button type="button" className="icon-btn plain" onClick={paste} aria-label={t('Paste from clipboard')} title={t('Paste from clipboard')}>
-              <ClipboardText size={18} />
-            </button>
-            <ComposerVisibility value={vis} open={visOpen} onToggle={() => setVisOpen((o) => !o)} />
-          </div>
-        </div>
-        <button className="btn primary" style={{ height: 48 }} onClick={() => add(text)} disabled={!text.trim()}>
-          {t('Add')}
-        </button>
-        {focus && suggestions.length > 0 && (
-          <div className="suggest-pop">
-            {suggestions.map((p) => (
-              <div key={p.id} className="li clickable" style={{ minHeight: 52 }} onMouseDown={() => add(p.name, p.id)}>
-                <Thumb p={p} size={36} />
-                <div className="grow">
-                  <div className="title small">{p.name}</div>
-                  <div className="sub">{[p.brand, p.total > 0 ? t('{n} in stock', { n: p.total }) : t('not in stock')].filter(Boolean).join(' · ')}</div>
+      {inStore ? (
+        <p className="shop-store-note">
+          <Storefront size={16} /> {t('Sorted by aisle · works without a connection, too')}
+        </p>
+      ) : (
+        <div className="composer">
+          <label className="add-field">
+            <span className="sr-only">{t('Item')}</span>
+            <input
+              ref={inputRef}
+              placeholder={t('e.g. 2 milk, packing tape and 3 cans of tomatoes')}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onFocus={() => setFocus(true)}
+              onBlur={() => setTimeout(() => setFocus(false), 150)}
+              onKeyDown={(e) => e.key === 'Enter' && add(text)}
+              enterKeyHint="done"
+              autoComplete="off"
+            />
+            {/* area: share – paste a copied list in one tap; make the next item discreet / private */}
+            <span className="share-in">
+              <button type="button" className="icon-btn plain" onClick={paste} aria-label={t('Paste from clipboard')} title={t('Paste from clipboard')}>
+                <ClipboardText size={18} />
+              </button>
+              <ComposerVisibility value={vis} open={visOpen} onToggle={() => setVisOpen((o) => !o)} />
+            </span>
+          </label>
+          <button className="add-btn" onClick={() => add(text)} disabled={!text.trim()} aria-label={t('Add')}>
+            <Plus size={22} weight="bold" />
+          </button>
+          {focus && suggestions.length > 0 && (
+            <div className="suggest-pop">
+              {suggestions.map((p) => (
+                <div key={p.id} className="li clickable" style={{ minHeight: 52 }} onMouseDown={() => add(p.name, p.id)}>
+                  <Thumb p={p} size={36} />
+                  <div className="grow">
+                    <div className="title small">{p.name}</div>
+                    <div className="sub">{[p.brand, p.total > 0 ? t('{n} in stock', { n: p.total }) : t('not in stock')].filter(Boolean).join(' · ')}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-      {visOpen && (
+      {visOpen && !inStore && (
         <VisibilityPanel
           value={vis}
           onChange={(v) => {
@@ -339,16 +346,15 @@ export function Shopping() {
         />
       )}
 
-      {!inStore && <ForecastHints onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
-
       {!inStore && (
-        <div className="row between card pad" style={{ marginTop: 12, padding: '10px 14px' }}>
-          <div className="small">
+        <div className="shop-setting">
+          <span>
             <b>{t('Put away when checked off')}</b>
-            <div className="muted">{t('Checked-off products go straight into your stock.')}</div>
-          </div>
+            <span className="muted">{t('Checked-off products go straight into your stock.')}</span>
+          </span>
           <Toggle
             on={toStock}
+            label={t('Put away when checked off')}
             onChange={(v) => {
               setToStock(v);
               storeSet('sw.toStock', v ? '1' : '0');
@@ -357,35 +363,34 @@ export function Shopping() {
         </div>
       )}
 
-      <div className="stack" style={{ marginTop: 18, gap: inStore ? 22 : 18 }}>
+      {!inStore && <ForecastHints onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
+
+      <div className="shop-groups">
         {q.isLoading && !view ? (
           <Skeleton n={5} h={inStore ? 68 : 58} />
         ) : q.error && !view ? (
           <div className="card">
-            <Empty icon={<WifiSlash size={26} />} title={t('The list couldn’t be loaded')}>
+            <Empty icon={<WifiSlash size={26} />} title={t('The list couldn’t be loaded')} action={{ label: t('Try again'), onClick: () => q.refetch() }}>
               {t('Check the connection and try again.')}
-              <div style={{ marginTop: 10 }}>
-                <button className="btn sm" onClick={() => q.refetch()}>{t('Try again')}</button>
-              </div>
             </Empty>
           </div>
         ) : !view || (view.open === 0 && view.basket.length === 0) ? (
-          <div className="card">
-            <Empty icon={<Basket size={26} />} art="list" title={inStore ? t('Nothing left to get') : t('Your list is empty')}>
+          <div className="shop-empty">
+            <Empty icon={<Basket size={26} />} art={inStore ? 'bag' : 'list'} title={inStore ? t('Nothing left to get') : t('Your list is empty')}>
               {inStore ? t('Everything is in the basket or bought.') : t('Anything that runs low lands here automatically. Or just start typing above.')}
             </Empty>
           </div>
         ) : (
           view.sections.map((g) => (
-            <section key={g.key}>
-              <div className={`shop-sec-head ${inStore ? 'big' : ''}`}>
-                <SectionIcon k={g.key} size={inStore ? 20 : 17} />
-                <h3>{sectionLabel(g.key)}</h3>
+            <section key={g.key} className="group" aria-label={sectionLabel(g.key)}>
+              <h2 className="group-h">
+                <SectionShape k={g.key} />
+                <span className="grow">{sectionLabel(g.key)}</span>
                 <span className="n">{g.items.length}</span>
-              </div>
-              <div className="list">
+              </h2>
+              <div className="group-list">
                 {g.items.map((i) => (
-                  <ShopRow key={i.id} i={i} big={inStore} onCheck={tick} onMore={() => setSel(i)} />
+                  <ShopRow key={i.id} i={i} big={inStore} fresh={!seen.has(i.id)} onCheck={tick} onMore={() => setSel(i)} onClaim={!inStore && !i.claim && i.id > 0 && !me.data?.actor.houseGuest ? () => claimMe(i) : undefined} />
                 ))}
               </div>
             </section>
@@ -399,15 +404,15 @@ export function Shopping() {
         )}
 
         {inStore && view && view.basket.length > 0 && (
-          <section>
-            <div className="shop-sec-head big">
-              <ShoppingCart size={20} />
-              <h3>{t('In the basket')}</h3>
-              <span className="n">{view.basket.length}</span>
+          <section className="receipt basket" aria-labelledby="basket-h">
+            <div className="receipt-h">
+              <b id="basket-h">
+                <ShoppingCart size={18} /> {t('In the basket')} · {view.basket.length}
+              </b>
             </div>
-            <div className="list shop-basket">
+            <div className="done-list">
               {view.basket.map((i) => (
-                <ShopRow key={i.id} i={i} big onCheck={tick} />
+                <ShopRow key={i.id} i={i} big fresh={!seen.has(i.id)} onCheck={tick} />
               ))}
             </div>
           </section>
@@ -424,19 +429,30 @@ export function Shopping() {
         )}
 
         {!inStore && view && view.done.length > 0 && (
-          <section>
-            <div className="row between" style={{ marginBottom: 8 }}>
-              <h3 className="muted">{t('Done')}</h3>
+          <section className="receipt" aria-labelledby="done-h">
+            <div className="receipt-h">
+              <b id="done-h">
+                {t('Done')} · {view.done.length}
+              </b>
               <button className="linkish" onClick={() => post('/shopping/clear-checked').then(refresh)}>
-                {t('Clear')}
+                {t('Clear the list')}
               </button>
             </div>
-            <div className="list">
+            <div className="done-list">
               {view.done.map((i) => (
-                <ShopRow key={i.id} i={i} onCheck={tick} />
+                <ShopRow key={i.id} i={i} fresh={!seen.has(i.id)} onCheck={tick} />
               ))}
             </div>
+            {toStock && view.done.some((i) => i.product_id) && <p className="receipt-foot">{t('Checked-off products are already in your stock.')}</p>}
           </section>
+        )}
+        {!inStore && view && view.open + view.done.length > 0 && (
+          <div className="shop-more">
+            <button className="btn ghost sm" onClick={share}>
+              <ShareNetwork size={16} /> {t('Share')}
+            </button>
+            <BonButton spec={{ type: 'shopping', store_id: view?.store?.id ?? null }} label={t('Ticket')} className="btn ghost sm" />
+          </div>
         )}
       </div>
 
@@ -456,11 +472,18 @@ export function Shopping() {
               <span className="muted">{t('Put into stock')}</span>
             </label>
           </div>
-          <button className="btn primary" disabled={busy || !offline.online} onClick={checkout}>
-            <Check size={16} weight="bold" /> {busy ? t('Putting away …') : t('Done shopping')}
+          <button className="btn primary lg" disabled={busy || !offline.online} onClick={checkout}>
+            <Check size={18} weight="bold" /> {busy ? t('Putting away …') : t('Done shopping')}
           </button>
         </div>
       )}
+      {doneBag && (
+        <div className="done-bag" aria-hidden="true" onAnimationEnd={() => setDoneBag(false)}>
+          <EmptyArt name="bag" />
+        </div>
+      )}
+
+      {!inStore && view && view.open > 0 && <WhoGetsWhat view={view} />}
 
       <QuickAddSheet rows={preview} onClose={() => setPreview(null)} onDone={() => { setPreview(null); setText(''); refresh(); }} />
       <ItemSheet item={sel} me={me.data} onClose={() => setSel(null)} run={run} />
@@ -468,6 +491,61 @@ export function Shopping() {
       <NewStoreSheet open={newStore} onClose={() => setNewStore(false)} onCreated={(s) => { pickStore(s.id); refresh(); }} />
     </div>
   );
+}
+
+/** Desktop side panel: who said "I'll get it" for what – just so nobody buys twice (no points, no ranking). */
+function WhoGetsWhat({ view }: { view: ShopView }) {
+  const items = view.sections.flatMap((s) => s.items);
+  const by = new Map<string, { color: string; names: string[] }>();
+  const open: string[] = [];
+  for (const i of items) {
+    if (!i.claim) open.push(i.text);
+    else {
+      const e = by.get(i.claim.name) ?? { color: i.claim.color, names: [] };
+      e.names.push(i.text);
+      by.set(i.claim.name, e);
+    }
+  }
+  return (
+    <aside className="shop-side" aria-label={t('Who gets what')}>
+      <h2 className="eyebrow label-sq">{t('Who gets what')}</h2>
+      <div className="tiles">
+        {[...by].map(([name, e]) => (
+          <div key={name} className="tile">
+            <Avatar name={name} color={e.color} size={30} />
+            <div className="grow">
+              <b>{name}</b>
+              <span>{e.names.join(', ')}</span>
+            </div>
+          </div>
+        ))}
+        {open.length > 0 && (
+          <div className="tile open">
+            <span className="tile-dot" aria-hidden="true" />
+            <div className="grow">
+              <b>{t('Still open')}</b>
+              <span>{open.join(', ')}</span>
+            </div>
+          </div>
+        )}
+      </div>
+      <p className="small muted">{t('The list is up to date on every phone at the same time.')}</p>
+    </aside>
+  );
+}
+
+/** Ids that were already on screen: only rows that arrive later get the small "new row" motion. */
+function useSeen(view: ShopView | undefined) {
+  const ref = useRef<Set<number> | null>(null);
+  const prev = ref.current;
+  const all = view ? [...view.sections.flatMap((s) => s.items), ...view.basket, ...view.done].map((i) => i.id) : [];
+  const shown = prev ?? new Set(all);
+  useEffect(() => {
+    if (!view) return;
+    ref.current = new Set(all);
+  });
+  if (!view) return new Set<number>();
+  return prev ? new Set([...shown].filter((id) => all.includes(id) && prev.has(id))) : shown;
 }
 
 /** Optimistic move between open / basket / done. */
@@ -492,38 +570,52 @@ function moveLocal(v: ShopView, id: number, on: boolean, basket: boolean): ShopV
   };
 }
 
-function ShopRow({ i, big = false, onCheck, onMore }: { i: ShopItem; big?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void }) {
+function ShopRow({ i, big = false, fresh = false, onCheck, onMore, onClaim }: { i: ShopItem; big?: boolean; fresh?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void; onClaim?: () => void }) {
   const on = Boolean(i.checked_at);
+  const [checking, setChecking] = useState(false);
   const sourceLabel: Record<string, string> = { auto: t('ran low'), 'used-up': t('used up'), recipe: t('for a recipe'), ha: 'Home Assistant', assistant: t('Assistant'), guest: t('Guest'), share: t('shared') };
   const qty = i.qty && i.qty !== 1 ? `${String(i.qty).replace('.', ',')}× ` : '';
-  const sub = [shareSubline(i.share), i.note, big ? null : i.brand, big ? null : (sourceLabel[i.source] ?? null), !big && !i.share && i.added_by && i.source === 'manual' ? i.added_by : null].filter(Boolean).join(' · ');
-  const body = (
-    <>
-      <span className={`check ${on ? 'on' : ''}`} aria-hidden>
-        <Check size={big ? 19 : 15} weight="bold" />
-      </span>
-      {i.product_id && <Thumb p={{ name: i.text, image_path: i.image_path }} size={big ? 44 : 38} />}
-      <div className="grow" style={{ textAlign: 'left', minWidth: 0 }}>
-        <div className="title">
-          <ShareMark s={i.share} size={big ? 16 : 13} />
-          {qty}
-          {i.text}
-        </div>
-        {(sub || i.claim) && (
-          <div className="sub">
-            {i.claim && !big ? t('{name} is getting it', { name: i.claim.name }) + (sub ? ' · ' : '') : ''}
-            {sub}
-          </div>
-        )}
-      </div>
-    </>
-  );
+  const sub = [shareSubline(i.share), i.note, i.buy_at?.length ? t('at {stores}', { stores: i.buy_at.join(', ') }) : null, big ? null : i.brand, big ? null : (sourceLabel[i.source] ?? null), !big && !i.share && i.added_by && i.source === 'manual' ? i.added_by : null].filter(Boolean).join(' · ');
+  // the tick shows at once; the row glides on to "done" right after (briefing: 140–220 ms), never blocking
+  const toggle = () => {
+    if (on || checking) return onCheck(i, !on);
+    const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return onCheck(i, true);
+    setChecking(true);
+    setTimeout(() => onCheck(i, true), 170);
+  };
+  const ticked = on || checking;
   return (
-    <div className={`shop-item ${on ? 'done' : ''} ${big ? 'big' : ''} ${i.pending ? 'pending' : ''}`}>
-      <button className="shop-hit" onClick={() => onCheck(i, !on)} aria-label={on ? t('Mark as open') : t('Check off')} aria-pressed={on}>
-        {body}
+    <div className={`shop-item ${on ? 'done' : ''} ${checking ? 'is-checking' : ''} ${big ? 'big' : ''} ${i.pending ? 'pending' : ''} ${fresh ? 'row-in' : ''}`}>
+      <button className="shop-hit" onClick={toggle} role="checkbox" aria-checked={ticked} aria-label={`${i.text}: ${on ? t('Mark as open') : t('Check off')}`}>
+        <span className={`check ${ticked ? 'on' : ''}`} aria-hidden>
+          <Check size={big ? 18 : 15} weight="bold" />
+        </span>
+        {i.product_id && big && <Thumb p={{ name: i.text, image_path: i.image_path }} size={44} />}
+        <span className="grow txt">
+          <span className="title">
+            <ShareMark s={i.share} size={big ? 16 : 13} />
+            {qty}
+            {i.text}
+          </span>
+          {(sub || i.claim) && (
+            <span className="sub">
+              {i.claim && !big && on ? i.claim.name + (sub ? ' · ' : '') : ''}
+              {sub}
+            </span>
+          )}
+        </span>
       </button>
-      {i.claim && <Avatar name={i.claim.name} color={i.claim.color} size={big ? 30 : 26} />}
+      {i.claim && !on && (
+        <span className="who" title={t('{name} is getting it', { name: i.claim.name })}>
+          <Avatar name={i.claim.name} color={i.claim.color} size={big ? 32 : 30} />
+        </span>
+      )}
+      {onClaim && !on && (
+        <button className="btn sm claim-btn" onClick={onClaim}>
+          {t('I’ll get it')}
+        </button>
+      )}
       {onMore && !on && (
         <button className="icon-btn plain" onClick={onMore} aria-label={t('More')}>
           <DotsThree size={20} weight="bold" />
@@ -602,6 +694,8 @@ function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me;
   // ha2: whoever Home Assistant sees out of the house can pick it up on the way
   const out = useOutOfHouse(Boolean(item) && !me?.actor.houseGuest);
   const toast = useToast();
+  // area: home – living alone: no "who takes care of it"
+  const home = useHousehold();
   if (!item) return <Sheet open={false} onClose={onClose}>{null}</Sheet>;
   const myId = me?.actor.userId;
   const claimFor = async (userId: number | null) => {
@@ -630,6 +724,7 @@ function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me;
   return (
     <Sheet open onClose={onClose} title={item.text}>
       <div className="stack">
+        {home.ui.claims && (<>
         <div className="eyebrow row" style={{ gap: 6 }}><HandHeart size={14} /> {t('Who takes care of it?')}</div>
         <div className="who-pick">
           {(members.data ?? []).map((m) => {
@@ -644,6 +739,7 @@ function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me;
           })}
         </div>
         <div className="small muted">{t('Just so nobody buys it twice. No points, no ranking.')}</div>
+        </>)}
         <div className="eyebrow">{t('Aisle')}</div>
         <div className="chips" style={{ flexWrap: 'wrap' }}>
           {SECTION_KEYS.map((k) => (
@@ -652,6 +748,7 @@ function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me;
             </button>
           ))}
         </div>
+        <ItemBuyAt item={item} />
         <ItemPrivacy item={item} me={me} members={members.data ?? []} onDone={onClose} />
         <button className="btn danger" style={{ alignSelf: 'flex-start' }} onClick={async () => { await run({ type: 'delete', id: item.id }); onClose(); }}>
           <Trash size={16} /> {t('Remove from the list')}

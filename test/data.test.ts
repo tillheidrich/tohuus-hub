@@ -100,8 +100,10 @@ describe('invites', () => {
     expect(data.pendingInvites()).toHaveLength(0);
   });
   it('refuse names that are taken', () => {
-    const inv = data.createInvite({ name: 'Till', role: 'member' });
-    expect(() => data.acceptInvite(inv.token, { password: 'whatever123' }, msgs)).toThrow('taken');
+    // since wave 6 an invitation for a name that exists is refused right away (server/lib/invites.ts)
+    expect(() => data.createInvite({ name: 'Till', role: 'member' })).toThrow();
+    const inv = data.createInvite({ name: '', role: 'member' });
+    expect(() => data.acceptInvite(inv.token, { name: 'Till', password: 'whatever123' }, msgs)).toThrow('taken');
     expect(data.acceptInvite(inv.token, { name: 'Till 2', password: 'whatever123' }, msgs).name).toBe('Till 2');
   });
 });

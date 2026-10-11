@@ -6,28 +6,24 @@ import {
   ArrowCounterClockwise,
   CheckCircle,
   CloudArrowUp,
-  Copy,
   Database,
   DownloadSimple,
-  ShareNetwork,
-  Trash,
   UploadSimple,
   UserPlus,
   Warning,
 } from '@phosphor-icons/react';
-import QRCode from 'qrcode';
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../App';
-import { api, del, invalidate, patch, post, put, useApi } from '../api';
-import { Avatar, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { api, invalidate, patch, post, put, useApi } from '../api';
+import { Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { locale, t } from '../i18n';
+import { InviteLinkSheet, InviteList, InviteSheet, type InviteItem, type InviteLink } from './Invites';
 
 const COLORS = ['#2f5bea', '#d0603a', '#1d9a63', '#8e44ad', '#c2185b', '#b97c0c'];
 
 /** SQLite "YYYY-MM-DD HH:MM:SS" (UTC) or ISO → Date */
 const toDate = (s: string) => new Date(s.includes('T') ? s : `${s.replace(' ', 'T')}Z`);
 const fmtWhen = (s: string) => toDate(s).toLocaleString(locale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-const fmtDay = (s: string) => toDate(s).toLocaleDateString(locale(), { day: 'numeric', month: 'long' });
 function fmtSize(b: number) {
   if (b < 1024 * 1024) return t('{n} KB', { n: Math.max(1, Math.round(b / 1024)) });
   return t('{n} MB', { n: (b / 1024 / 1024).toLocaleString(locale(), { maximumFractionDigits: 1 }) });
@@ -35,22 +31,13 @@ function fmtSize(b: number) {
 
 // ================================================================== members
 
-interface Invite {
-  id: number;
-  name: string;
-  role: 'admin' | 'member';
-  color: string;
-  created_by: string | null;
-  created_at: string;
-  expires_at: string;
-}
-
 export function Members({ me, admin }: { me: Me; admin: boolean }) {
   const users = useApi<any[]>('users', admin ? '/users' : null);
-  const invites = useApi<Invite[]>('invites', admin ? '/invites' : null);
+  const invites = useApi<InviteItem[]>('invites', admin ? '/invites' : null);
+  const inviteOpts = useApi<{ mail: boolean }>('invites-options', admin ? '/invites/options' : null);
   const ds = useApi<{ showNames: boolean }>('data-settings', '/data/settings');
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [link, setLink] = useState<{ name: string; url: string; expires_at: string } | null>(null);
+  const [link, setLink] = useState<InviteLink | null>(null);
   const toast = useToast();
 
   if (!admin)
@@ -69,30 +56,15 @@ export function Members({ me, admin }: { me: Me; admin: boolean }) {
         </div>
         {/* everybody (members, guests, children) is listed and edited in "Our household" above (area: people) */}
         <p className="small muted" style={{ margin: 0 }}>
-          {users.error ? (users.error as Error).message : t('Family members get a personal link and choose their own password, passkey or e-mail sign-in.')}
+          {users.error ? (users.error as Error).message : t('Everyone you invite gets a personal link and picks their own passkey, password or e-mail sign-in.')}
         </p>
       </section>
 
       {(invites.data ?? []).length > 0 && (
         <section>
-          <h2 style={{ marginBottom: 6 }}>{t('Waiting for a reply')}</h2>
-          <p className="small muted" style={{ marginTop: 0 }}>{t('For safety, an invitation link is only shown once. Lost it? Withdraw it and invite again.')}</p>
-          <div className="list">
-            {(invites.data ?? []).map((i) => (
-              <div key={i.id} className="li">
-                <Avatar name={i.name} color={i.color} />
-                <div className="grow">
-                  <div className="title">{i.name}</div>
-                  <div className="sub">
-                    {i.role === 'admin' ? t('Admin') : t('Member')} · {t('valid until {date}', { date: fmtDay(i.expires_at) })}
-                  </div>
-                </div>
-                <button className="btn sm ghost" onClick={() => del(`/invites/${i.id}`).then(() => invalidate('invites'))}>
-                  {t('Withdraw')}
-                </button>
-              </div>
-            ))}
-          </div>
+          <h2 style={{ marginBottom: 6 }}>{t('Invitations')}</h2>
+          <p className="small muted" style={{ marginTop: 0 }}>{t('For safety, a link is only shown once. Lost it? Make a new link – the old one stops working.')}</p>
+          <InviteList items={invites.data ?? []} mail={Boolean(inviteOpts.data?.mail)} onLink={setLink} />
         </section>
       )}
 
@@ -124,104 +96,8 @@ export function Members({ me, admin }: { me: Me; admin: boolean }) {
           invalidate('invites');
         }}
       />
-      <LinkSheet item={link} onClose={() => setLink(null)} />
+      <InviteLinkSheet item={link} onClose={() => setLink(null)} />
     </div>
-  );
-}
-
-function InviteSheet({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (r: { name: string; url: string; expires_at: string }) => void }) {
-  const [f, setF] = useState({ name: '', role: 'member' as 'member' | 'admin', color: COLORS[1] });
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-  useEffect(() => {
-    if (open) {
-      setF({ name: '', role: 'member', color: COLORS[Math.floor(Math.random() * COLORS.length)] });
-      setErr('');
-    }
-  }, [open]);
-  const create = async () => {
-    setBusy(true);
-    setErr('');
-    try {
-      const r = await post('/invites', f);
-      onCreated({ name: f.name, url: r.url, expires_at: r.expires_at });
-    } catch (e) {
-      setErr((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <Sheet open={open} onClose={onClose} title={t('Invite someone')}>
-      <div className="stack">
-        <p className="small muted" style={{ margin: 0 }}>
-          {t('You get a personal link. Whoever opens it picks their own password – nobody has to pass passwords around. The link works once and for 7 days.')}
-        </p>
-        <div className="field">
-          <label htmlFor="inv-name">{t('Name')}</label>
-          <input id="inv-name" className="input" value={f.name} maxLength={40} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t('e.g. Lea')} autoFocus />
-        </div>
-        <div className="field">
-          <label>{t('Role')}</label>
-          <Seg value={f.role} onChange={(v) => setF({ ...f, role: v })} options={[['member', t('Member')], ['admin', t('Admin')]]} />
-          <div className="help">{f.role === 'admin' ? t('Admins can also change settings, members and backups.') : t('Members can use everything day to day, but not change settings.')}</div>
-        </div>
-        <div className="field">
-          <label>{t('Colour')}</label>
-          <div className="row" style={{ gap: 10 }}>
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={`data-swatch ${f.color === c ? 'on' : ''}`}
-                style={{ background: c }}
-                onClick={() => setF({ ...f, color: c })}
-                aria-label={c}
-              />
-            ))}
-          </div>
-        </div>
-        {err && <div className="small" style={{ color: 'var(--empty)' }}>{err}</div>}
-        <button className="btn primary lg" disabled={busy || !f.name.trim()} onClick={create}>
-          {busy ? t('Creating …') : t('Create invitation')}
-        </button>
-      </div>
-    </Sheet>
-  );
-}
-
-function LinkSheet({ item, onClose }: { item: { name: string; url: string; expires_at: string } | null; onClose: () => void }) {
-  const [svg, setSvg] = useState('');
-  const toast = useToast();
-  useEffect(() => {
-    setSvg('');
-    if (item?.url) QRCode.toString(item.url, { type: 'svg', margin: 1, color: { dark: '#17181a', light: '#ffffff' } }).then(setSvg);
-  }, [item?.url]);
-  if (!item) return null;
-  const share = typeof navigator !== 'undefined' && 'share' in navigator;
-  return (
-    <Sheet open onClose={onClose} title={t('Invitation for {name}', { name: item.name })}>
-      <div className="stack" style={{ alignItems: 'stretch' }}>
-        <div className="data-qr" dangerouslySetInnerHTML={{ __html: svg }} />
-        <div className="small muted mono" style={{ wordBreak: 'break-all', textAlign: 'center' }}>{item.url}</div>
-        <div className="row" style={{ gap: 8 }}>
-          <button className="btn grow" onClick={() => navigator.clipboard.writeText(item.url).then(() => toast({ text: t('Link copied') }))}>
-            <Copy size={16} /> {t('Copy link')}
-          </button>
-          {share && (
-            <button
-              className="btn primary grow"
-              onClick={() => navigator.share({ title: t('Invitation'), text: t('Join our household app – set your own password here:'), url: item.url }).catch(() => {})}
-            >
-              <ShareNetwork size={16} /> {t('Share')}
-            </button>
-          )}
-        </div>
-        <p className="small muted" style={{ textAlign: 'center', margin: 0 }}>
-          {t('Scan with the phone, or send the link. Valid until {date}, works once. It is shown only now.', { date: fmtDay(item.expires_at) })}
-        </p>
-      </div>
-    </Sheet>
   );
 }
 

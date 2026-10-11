@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowsClockwise, CalendarCheck, Check, ChefHat, ForkKnife, H
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { del, invalidate, patch, post, put, useApi } from '../api';
+import { useHousehold } from '../household';
 import { locale, t } from '../i18n';
 import { Avatar, Empty, Seg, Sheet, Skeleton, Stepper, Toggle, useToast } from '../ui';
 import { SwipeDeck, type SwipeDir } from './SwipeDeck';
@@ -380,7 +381,10 @@ export function VotesCard() {
   const votes = useApi<VoteView[]>(['plan', 'votes'], '/plan2/votes?all=1');
   const [start, setStart] = useState(false);
   const nav = useNavigate();
+  const home = useHousehold();
   const list = votes.data ?? [];
+  // area: home – living alone there is nobody to vote with (open votes still show)
+  if (!home.ui.votes && !list.length) return null;
   return (
     <section className="section">
       <div className="section-head">

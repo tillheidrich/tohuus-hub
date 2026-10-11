@@ -1,0 +1,18 @@
+{
+ "freezer": 2,
+ "fridge": 1,
+ "frozen": [
+  2,
+  8,
+  9
+ ],
+ "counts": {
+  "locations": 11,
+  "stock": 5,
+  "products": 5,
+  "guest_links": 1,
+  "care_tasks": 1,
+  "fresh_confirmations": 1,
+  "categories": 11
+ }
+}

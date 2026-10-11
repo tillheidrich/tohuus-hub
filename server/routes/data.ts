@@ -5,9 +5,9 @@ import path from 'node:path';
 import multer from 'multer';
 import { z } from 'zod';
 import { config } from '../config.js';
-import { db, setSetting } from '../db.js';
+import { setSetting } from '../db.js';
 import { t } from '../i18n.js';
-import { NAME_MAX, PASSWORD_MIN, SESSION_COOKIE, createSession, rateLimited, requireAdmin, requireAuth } from '../lib/auth.js';
+import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import {
   RestoreError,
@@ -23,13 +23,12 @@ import {
   testWebdav,
   webdavSettings,
 } from '../lib/backup.js';
-import { InviteError, acceptInvite, createInvite, findInvite, inviteContext, pendingInvites, rotateGuestLink, showNamesOnLogin } from '../lib/data.js';
+import { rotateGuestLink, showNamesOnLogin } from '../lib/data.js';
 
 export const r = Router();
 r.use(requireAuth);
 
 const actorName = (req: any) => req.actor?.name ?? '';
-const inviteUrl = (token: string) => `${config.baseUrl}/einladung/${token}`;
 
 // ---------------------------------------------------------------- household security settings
 
@@ -165,70 +164,7 @@ r.delete('/restore/pending', requireAdmin, (_req, res) => {
   res.json({ ok: true });
 });
 
-// ---------------------------------------------------------------- invites
+// ---------------------------------------------------------------- invites: server/routes/invites.ts (wave 6)
 
-r.get('/invites', requireAdmin, (_req, res) => res.json(pendingInvites()));
-
-r.post('/invites', requireAdmin, (req, res) => {
-  const b = z
-    .object({ name: z.string().trim().min(1).max(NAME_MAX), role: z.enum(['admin', 'member']).default('member'), color: z.string().max(20).optional() })
-    .parse(req.body);
-  if (db.prepare('SELECT 1 FROM users WHERE lower(name) = lower(?)').get(b.name)) {
-    res.status(409).json({ error: t('Someone with this name already exists.') });
-    return;
-  }
-  const inv = createInvite({ ...b, createdBy: actorName(req) });
-  res.json({ ...inv, url: inviteUrl(inv.token) });
-});
-
-r.delete('/invites/:id', requireAdmin, (req, res) => {
-  db.prepare('UPDATE invites SET revoked = 1 WHERE id = ?').run(Number(req.params.id));
-  res.json({ ok: true });
-});
-
-// ---------------------------------------------------------------- public: accept an invite (mounted before auth)
-
+/** Public routes of this area (mounted before auth). Invitations moved to server/routes/invites.ts. */
 export const pub = Router();
-
-pub.get('/invite/:token', (req, res) => {
-  if (rateLimited(`invite:${req.ip}`, 30, 10 * 60_000)) {
-    res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
-    return;
-  }
-  const inv = findInvite(String(req.params.token));
-  if (!inv) {
-    res.status(404).json({ error: t('This invitation has expired or was already used.') });
-    return;
-  }
-  res.json({ name: inv.name, role: inv.role, color: inv.color, expires_at: inv.expires_at, ...inviteContext() });
-});
-
-pub.post('/invite/:token', (req, res) => {
-  if (rateLimited(`invite:${req.ip}`, 30, 10 * 60_000)) {
-    res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
-    return;
-  }
-  const b = z.object({ name: z.string().trim().max(NAME_MAX).optional(), password: z.string().min(PASSWORD_MIN).max(200) }).parse(req.body);
-  try {
-    const u = acceptInvite(String(req.params.token), b, {
-      invalid: t('This invitation has expired or was already used.'),
-      taken: t('Someone with this name already exists.'),
-    });
-    const token = createSession(u.userId, { ua: req.headers['user-agent'], ip: req.ip, method: 'invite' });
-    res.cookie(SESSION_COOKIE, token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: config.baseUrl.startsWith('https'),
-      maxAge: 365 * 86400000,
-      path: '/',
-    });
-    emit('settings');
-    res.json({ ok: true, name: u.name });
-  } catch (e) {
-    if (e instanceof InviteError) {
-      res.status(e.status).json({ error: e.message });
-      return;
-    }
-    throw e;
-  }
-});

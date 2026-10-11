@@ -23,6 +23,7 @@ import {
   Suitcase,
   Heart,
   CaretRight,
+  MagnifyingGlass,
 } from '@phosphor-icons/react';
 import { Help } from './pages/Help';
 import { Onboarding, WhatsNew, useOnboardingRedirect } from './pages/Onboarding';
@@ -65,6 +66,7 @@ import { enablePeopleDirectory } from './people/Avatar';
 import { GuestBanner, PausedScreen, guestAllows } from './people/People';
 import { FavouritesPage } from './people/FavouritesPage';
 import { applyBrand } from './brand';
+import { BrandMark } from './art';
 import { type Appearance, applyAppearance } from './theme';
 import { setLang, t } from './i18n';
 import { setRegion } from './region';
@@ -83,6 +85,8 @@ export interface Me {
   language?: string;
   features: { vision: boolean; email: boolean };
   appearance?: Appearance;
+  /** household form and home preset (area: home) */
+  home?: import('./household').HomeSetup;
 }
 
 export function App() {
@@ -119,7 +123,7 @@ function Shell({ me }: { me: Me }) {
   const ov = useApi<any>('overview', '/overview');
   useEffect(() => connectEvents(), []);
   enablePeopleDirectory();
-  const b = applyBrand(me.brand);
+  applyBrand();
   // light / dark for this member (household default or own choice) – after the brand so the status bar colour matches
   useEffect(() => applyAppearance(me.appearance), [me.appearance?.theme, me.brand]);
   useEffect(() => window.scrollTo(0, 0), [loc.pathname]);
@@ -138,7 +142,7 @@ function Shell({ me }: { me: Me }) {
   const groups: { key: string; title: string; items: NavItem[] }[] = [
     {
       key: 'home',
-      title: t('Around the house'),
+      title: t('Around the home'),
       items: [
         { to: '/bestand', label: t('Stock'), icon: Package, badge: attention || undefined },
         { to: '/wo', label: t('Where’s what?'), icon: MapPin },
@@ -184,8 +188,8 @@ function Shell({ me }: { me: Me }) {
     <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `navlink ${isActive ? 'active' : ''}`}>
       <l.icon size={20} />
       {l.label}
-      {l.badge ? <span className="badge expiring" style={{ marginLeft: 'auto' }}>{l.badge}</span> : null}
-      {l.due ? <span className="badge low" style={{ marginLeft: 'auto' }}>{l.due}</span> : null}
+      {l.badge ? <span className="nbadge" aria-label={t('{n} need attention', { n: l.badge })}>{l.badge}</span> : null}
+      {l.due ? <span className="nbadge" aria-label={l.due === 1 ? t('1 thing due') : t('{n} things due', { n: l.due })}>{l.due}</span> : null}
       {l.count ? <span className="count">{l.count}</span> : null}
       {l.dot ? <span className="dot" /> : null}
     </NavLink>
@@ -196,20 +200,28 @@ function Shell({ me }: { me: Me }) {
 
   return (
     <div className="shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <img src={b.logo} alt="" />
-          {b.name}
-        </div>
-        {guestAllows(gl, '/') && navLink(today)}
-        {groups.map((g) => (
-          <div key={g.key} className="nav-group">
-            <div className="nav-group-title">{g.title}</div>
-            {g.items.map(navLink)}
-          </div>
-        ))}
+      <aside className="sidebar" aria-label={t('Main navigation')}>
+        <NavLink to={guestAllows(gl, '/') ? '/' : '/einkauf'} className="brand">
+          <BrandMark />
+          <span>ToHuus</span>
+        </NavLink>
+        {guestAllows(gl, '/wo') && (
+          <button className="side-search" onClick={() => nav('/wo')}>
+            <MagnifyingGlass size={18} />
+            <span>{t('Where can I find …?')}</span>
+          </button>
+        )}
+        <nav className="side-nav">
+          {guestAllows(gl, '/') && navLink(today)}
+          {groups.map((g) => (
+            <div key={g.key} className="nav-group">
+              <div className="nav-group-title">{g.title}</div>
+              {g.items.map(navLink)}
+            </div>
+          ))}
+        </nav>
         {guestAllows(gl, '/bestand') && (
-          <button className="btn primary" style={{ marginTop: 16 }} onClick={() => setAdd(true)}>
+          <button className="btn primary side-add" onClick={() => setAdd(true)}>
             <Plus size={18} weight="bold" /> {t('Add')}
           </button>
         )}
@@ -217,15 +229,16 @@ function Shell({ me }: { me: Me }) {
         <div className="who">
           <Avatar name={me.actor.name} personKey={me.actor.userId ? `u${me.actor.userId}` : null} />
           <div className="grow">
-            <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{me.actor.name}</div>
-            <div>{me.household}</div>
+            <b>{me.actor.name}</b>
+            <span>{me.household}</span>
           </div>
         </div>
       </aside>
 
-      <main className="main">
+      <main className="main" id="main">
         <TourHost me={me} />
         <GuestBanner me={me} />
+        <div key={loc.pathname} className="page-fade">
         <Routes>
           <Route path="/" element={<Today me={me} onAdd={() => setAdd(true)} />} />
           <Route path="/bestand" element={<Stock onNew={() => setNewProduct(true)} />} />
@@ -256,9 +269,10 @@ function Shell({ me }: { me: Me }) {
           <Route path="/teilen" element={<ShareLanding me={me} />} />
           <Route path="*" element={<Today me={me} onAdd={() => setAdd(true)} />} />
         </Routes>
+        </div>
       </main>
 
-      <nav className="tabbar">
+      <nav className="tabbar" aria-label={t('Navigation')}>
         {[today, order].filter((l) => guestAllows(gl, l.to)).map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
             <l.icon size={24} weight={loc.pathname === l.to ? 'fill' : 'regular'} />
@@ -268,22 +282,22 @@ function Shell({ me }: { me: Me }) {
         ))}
         {guestAllows(gl, '/bestand') && (
           <button className="fab" aria-label={t('Add')} onClick={() => setAdd(true)}>
-            <Plus size={26} weight="bold" />
+            <Plus size={24} weight="bold" />
           </button>
         )}
         <NavLink to="/einkauf" className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
           <Basket size={24} weight={loc.pathname.startsWith('/einkauf') ? 'fill' : 'regular'} />
           {t('Shopping')}
-          {c?.shopping ? <span className="badge-dot" style={{ background: 'var(--ink)' }}>{c.shopping}</span> : null}
+          {c?.shopping ? <span className="badge-dot">{c.shopping}</span> : null}
         </NavLink>
         <button className={`tab ${moreActive ? 'active' : ''}`} onClick={() => setMore(true)}>
           <DotsNine size={24} weight={moreActive ? 'fill' : 'regular'} />
           {t('More')}
-          {attention ? <span className="badge-dot">{attention}</span> : due ? <span className="badge-dot" style={{ background: 'var(--low)' }}>{due}</span> : null}
+          {attention ? <span className="badge-dot">{attention}</span> : due ? <span className="badge-dot">{due}</span> : null}
         </button>
       </nav>
 
-      <Sheet open={more} onClose={() => setMore(false)} title={b.name}>
+      <Sheet open={more} onClose={() => setMore(false)} title={t('More')}>
         <div className="more-groups">
           {moreGroups.map((g) => (
             <section key={g.key}>
@@ -324,7 +338,7 @@ function Shell({ me }: { me: Me }) {
           <button className="action" onClick={() => { setAdd(false); nav('/import?mode=photo'); }}>
             <span className="ic"><Camera size={22} /></span>
             <b>{t('Photo')}</b>
-            <span>{t('Snap a receipt or your freezer.')}</span>
+            <span>{t('Snap a receipt or a shelf.')}</span>
           </button>
           <button className="action" onClick={() => { setAdd(false); nav('/scan?mode=qr'); }}>
             <span className="ic"><QrCode size={22} /></span>

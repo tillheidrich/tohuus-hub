@@ -152,7 +152,7 @@ function Links() {
         <div className="stack">
           <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
             <button className="chip" onClick={() => setF({ ...f, name: t('Barbecue'), scopes: ['bar'], days: 2 })}><Martini size={15} /> {t('Party / visitors')}</button>
-            <button className="chip" onClick={() => setF({ ...f, name: t('Babysitter'), scopes: ['stock', 'shopping'], days: 1, location_ids: (locations.data ?? []).map((l) => l.id) })}><House size={15} /> {t('Babysitter / family')}</button>
+            <button className="chip" onClick={() => setF({ ...f, name: t('Babysitter'), scopes: ['stock', 'shopping'], days: 1, location_ids: (locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => l.id) })}><House size={15} /> {t('Babysitter / family')}</button>
           </div>
           <div className="field">
             <label>{t('What’s it for?')}</label>
@@ -177,7 +177,7 @@ function Links() {
             <div className="field">
               <label>{t('Which places may the guest see?')}</label>
               <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
-                {(locations.data ?? []).map((l) => (
+                {(locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => (
                   <button key={l.id} className={`chip ${f.location_ids.includes(l.id) ? 'on' : ''}`} onClick={() => setF((x) => ({ ...x, location_ids: x.location_ids.includes(l.id) ? x.location_ids.filter((i) => i !== l.id) : [...x.location_ids, l.id] }))}>
                     <Ic name={l.icon} size={15} /> {l.name}
                   </button>
@@ -185,7 +185,7 @@ function Links() {
               </div>
               <div className="help">
                 {t('Only the selected places are visible – never quantities or purchases.')}{' '}
-                <a className="linkish" onClick={() => setF((x) => ({ ...x, location_ids: (locations.data ?? []).map((l) => l.id) }))}>{t('All places')}</a>
+                <a className="linkish" onClick={() => setF((x) => ({ ...x, location_ids: (locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => l.id) }))}>{t('All places')}</a>
               </div>
             </div>
           )}

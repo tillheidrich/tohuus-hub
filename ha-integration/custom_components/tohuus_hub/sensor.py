@@ -191,7 +191,10 @@ SENSORS: tuple[ToHuusSensorDescription, ...] = (
 async def async_setup_entry(hass: HomeAssistant, entry: ToHuusConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Sensors are always on – they are the core of the integration."""
     coordinator = entry.runtime_data.coordinator
-    async_add_entities(ToHuusSensor(coordinator, d) for d in SENSORS)
+    # households without a frozen place get no frozen-portions sensor (older servers don't send the flag: keep it)
+    boxes = (coordinator.data or {}).get("boxes") or {}
+    skip = {"frozen_portions"} if boxes.get("has_freezer") is False else set()
+    async_add_entities(ToHuusSensor(coordinator, d) for d in SENSORS if d.key not in skip)
 
 
 class ToHuusSensor(ToHuusEntity, SensorEntity):

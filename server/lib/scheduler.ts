@@ -2,7 +2,7 @@ import { config } from '../config.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { fmtQty, listProducts } from './catalog.js';
 import { enqueueMissingImages } from './enrich.js';
-import { emailHtml, notify, notifySettings } from './notify.js';
+import { notify, notifySettings } from './notify.js';
 import { suggest } from './recipes.js';
 import { haSettings, syncCookidoo } from './plan.js';
 import { fmtDay, t } from '../i18n.js';
@@ -61,20 +61,20 @@ export async function sendDigest(force = false) {
   if (low.length) parts.push(t('Running low or out: {list}', { list: low.map((p) => p.name).join(', ') }));
   if (shopping.length) parts.push(t('Shopping list ({count}): {list}', { count: shopping.length, list: shopping.slice(0, 12).map((x) => x.text).join(', ') }));
   if (idea) parts.push(t('Cooking idea: {title} – {reasons}', { title: idea.recipe.title, reasons: idea.reasons.join(', ') }));
-  const list = (title: string, items: string[]) =>
-    items.length ? `<h3 style="font-size:14px;margin:16px 0 6px">${title}</h3><ul style="margin:0;padding-left:18px;line-height:1.6">${items.map((i) => `<li>${i.replace(/[<>&]/g, '')}</li>`).join('')}</ul>` : '';
-  const extra =
-    list(t('Use soon'), exp.map((p) => t('{name} (best before {date})', { name: p.name, date: fmtDay(p.nextExpiry!) }))) +
-    list(t('Running low or out'), low.map((p) => `${p.name} – ${fmtQty(p, p.total)}`)) +
-    list(t('Shopping list'), shopping.map((x) => x.text)) +
-    (idea ? list(t('Cooking idea for today'), [`${idea.recipe.title} – ${idea.reasons.join(', ')}`]) : '');
+  // e-mail: the same content as short checklists in the shared mail layout
+  const sections = [
+    { title: t('Use soon'), items: exp.map((p) => t('{name} (best before {date})', { name: p.name, date: fmtDay(p.nextExpiry!) })) },
+    { title: t('Running low or out'), items: low.map((p) => `${p.name} – ${fmtQty(p, p.total)}`) },
+    { title: t('Shopping list'), items: shopping.map((x) => x.text) },
+    ...(idea ? [{ title: t('Cooking idea for today'), items: [`${idea.recipe.title} – ${idea.reasons.join(', ')}`] }] : []),
+  ];
   await notify({
     event: 'digest.daily',
     title: t('Daily overview'),
     message: parts.join('\n'),
     path: '/',
     data: { low: low.length, expiring: exp.length, shopping: shopping.length, idea: idea?.recipe.title ?? null },
-    html: emailHtml(t('Daily overview'), t('The most important things at home at a glance.'), config.baseUrl, extra),
+    mail: { paragraphs: [t('The most important things at home at a glance.')], sections },
   });
 }
 

@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { type Location, type Product, del, fmtDate, invalidate, patch, post, useApi } from '../api';
+import { useHousehold } from '../household';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
@@ -353,6 +354,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
   onLabel: (t: CareTask) => void;
 }) {
   const detail = useApi<CareTask>(['care', 'task', task?.id ?? 0], task ? `/care/${task.id}` : null);
+  const home = useHousehold(); // area: home – no "I'll take care of it" when living alone
   const toast = useToast();
   if (!task) return null;
   const mine = Boolean(me?.actor.userId && task.assignee_user_id === me.actor.userId);
@@ -391,7 +393,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
             </div>
           </div>
         )}
-        <div className="row between care-claim">
+        {home.ui.claims && <div className="row between care-claim">
           <div>
             <b>{t('I’ll take care of it')}</b>
             <div className="small muted">
@@ -399,7 +401,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
             </div>
           </div>
           <Toggle on={mine} onChange={claim} label={t('I’ll take care of it')} />
-        </div>
+        </div>}
         {log.length > 0 && (
           <div>
             <div className="eyebrow" style={{ marginBottom: 6 }}>{t('History')}</div>
@@ -547,7 +549,7 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
           <label>{t('Where (optional)')}</label>
           <select className="input" value={f.location_id ?? ''} onChange={(e) => set({ location_id: e.target.value ? Number(e.target.value) : null })}>
             <option value="">—</option>
-            {(locations.data ?? []).map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+            {(locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => <option key={l.id} value={l.id}>{l.path ?? l.name}</option>)}
           </select>
         </div>
         <div className="field">

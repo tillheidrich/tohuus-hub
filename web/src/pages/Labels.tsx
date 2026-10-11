@@ -49,7 +49,7 @@ export function Labels() {
       kind === 'product'
         ? (products.data ?? []).map((p) => ({ id: p.id, title: p.name, sub: [p.brand, p.size].filter(Boolean).join(' · '), thumb: p }))
         : kind === 'location'
-          ? (locations.data ?? []).map((l) => ({ id: l.id, title: l.name, sub: l.hint ?? '', icon: <Ic name={l.icon} /> }))
+          ? (locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => ({ id: l.id, title: l.path ?? l.name, sub: l.hint ?? '', icon: <Ic name={l.icon} /> }))
           : (care.data?.tasks ?? []).map((c) => {
               const I = careIcon(c.template);
               return { id: c.id, title: c.name, sub: c.location?.name ?? '', icon: <I size={20} /> };

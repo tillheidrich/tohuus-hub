@@ -11,8 +11,8 @@
   var resolved = pref === 'system' ? (mq && mq.matches ? 'dark' : 'light') : pref;
   d.setAttribute('data-theme', resolved);
   d.setAttribute('data-theme-pref', pref);
-  var fredi = d.getAttribute('data-brand') === 'fredirando';
-  var paper = resolved === 'dark' ? (fredi ? '#150e0a' : '#111413') : (fredi ? '#fbf5ee' : '#f6f3ed');
+  // same values as --canvas in web/src/styles.css (one brand: ToHuus, "Dutch Detail")
+  var paper = resolved === 'dark' ? '#0f1513' : '#f7f5ef';
   var metas = document.querySelectorAll('meta[name="theme-color"]');
   for (var i = 0; i < metas.length; i++) { metas[i].setAttribute('content', paper); metas[i].removeAttribute('media'); }
 })();

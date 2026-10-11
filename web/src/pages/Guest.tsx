@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { connectEvents, qc } from '../api';
 import { Empty, Ic, Seg, Sheet, Thumb, useToast } from '../ui';
-import { BRANDS, applyBrand } from '../brand';
+import { applyBrand } from '../brand';
 import { locale, num, setLang, t } from '../i18n';
 import { money, setRegion } from '../region';
 
@@ -19,7 +19,7 @@ async function gapi(token: string, path: string, body?: unknown) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const d = await r.json();
-  if (!r.ok) throw new Error(d.error ?? t('Error'));
+  if (!r.ok) throw Object.assign(new Error(d.error ?? t('Error')), { need: d.need });
   return d;
 }
 
@@ -39,6 +39,11 @@ const ls = {
     }
   },
 };
+
+/** Guests say once per device who they are – every order carries a name (wave 6). */
+const NAME_KEY = 'tohuus.guestName';
+export const guestNameGet = () => (ls.get(NAME_KEY) || ls.get('sw.guestName')).trim().slice(0, 40);
+export const guestNameSet = (v: string) => ls.set(NAME_KEY, v.trim().slice(0, 40));
 
 type CartLine = { key: string; product_id: number; name: string; qty: number; options: string[]; note: string };
 
@@ -64,10 +69,9 @@ export function Guest() {
   useEffect(() => connectEvents(`/api/guest/${token}/events`), [token]);
   useEffect(() => {
     if (!info.data) return;
-    applyBrand(info.data.brand);
-    document.title = info.data.brand === 'fredirando' ? 'Fredirando' : `${info.data.household} · Bar`;
+    applyBrand();
+    document.title = `${info.data.household} · Bar`;
   }, [info.data]);
-  const fredi = info.data?.brand === 'fredirando';
   // Guests see the household's language, not their browser's. Idempotent, so safe during render.
   if (info.data) {
     setLang(info.data.language);
@@ -87,40 +91,23 @@ export function Guest() {
     );
   return (
     <div className="guest">
-      {fredi && tab === 'bar' ? (
-        <div className="resto">
-          <div className="cover"><div className="stripe" /></div>
-          <div className="logo"><img src={BRANDS.fredirando.logo} alt="" /></div>
-          <div className="info">
-            <h1>fredirando</h1>
-            <div className="muted small">{info.data.party ? `${info.data.party.name} · ${t('pick-up at the counter')}` : `${t('Kitchen & pantry')} · ${info.data.household}`}</div>
-            <div className="facts">
-              <span><span className="stars">★★★★★</span> <b>{num(4.9)}</b> ({t('family')})</span>
-              <span>{t('Delivery')} <b>{t('1–3 min')}</b></span>
-              <span>{t('Delivery fee')} <b>{eur(0)}</b></span>
-              <span>{t('Minimum order')} <b>{t('a smile')}</b></span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
+      <>
           <div className="eyebrow">{info.data.household} · {info.data.name}</div>
           <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? t('Fancy something?') : tab === 'stock' ? t('Where is what?') : t('What’s missing?')}</h1>
           <p className="muted" style={{ marginTop: 0 }}>
             {tab === 'bar' ? (info.data.party ? t('Order here – we’ll call you when it’s ready at the counter.') : t('Drinks, ice cream and snacks – just order and we’ll bring it over.')) : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : t('Add it to our shopping list.')}
           </p>
-        </>
-      )}
+      </>
       {info.data.note && <div className="note-card" style={{ margin: '14px 0' }}>{info.data.note}</div>}
       {scopes.length > 1 && (
         <div style={{ margin: '14px 0' }}>
           <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s] ?? s]) as any} />
         </div>
       )}
-      {tab === 'bar' && <OrderMenu fredi={fredi} src={{ key: `guest-${token}`, party: Boolean(info.data.party), menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
+      {tab === 'bar' && <OrderMenu src={{ key: `guest-${token}`, party: Boolean(info.data.party), menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
-      <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{fredi ? t('fredirando · a family business, powered by ToHuus Hub') : t('ToHuus Hub · your household, self-hosted')}</p>
+      <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{t('ToHuus Hub · your household, self-hosted')}</p>
     </div>
   );
 }
@@ -139,7 +126,16 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
   const [cart, setCart] = useState<CartLine[]>([]);
   const [opt, setOpt] = useState<any>(null);
   const [checkout, setCheckout] = useState(false);
-  const [name, setName] = useState(src.member ?? ls.get('sw.guestName'));
+  const [name, setName] = useState(src.member ?? guestNameGet());
+  // no name yet on this device: ask right away (once), and again whenever the server asks for one
+  const [askName, setAskName] = useState(!src.member && !guestNameGet());
+  const saveName = (v: string) => {
+    const n = v.trim().slice(0, 40);
+    if (!n) return;
+    setName(n);
+    guestNameSet(n);
+    setAskName(false);
+  };
   const [note, setNote] = useState('');
   const [sel, setSel] = useState<Record<string, string[]>>({});
   const toast = useToast();
@@ -170,7 +166,13 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
     } else add(item);
   };
   const send = async () => {
-    if (!src.member) ls.set('sw.guestName', name);
+    if (!src.member) {
+      if (!name.trim()) {
+        setAskName(true);
+        return;
+      }
+      guestNameSet(name);
+    }
     try {
       await src.send({ guest_name: name, note: note || null, lines: cart.map((c) => ({ product_id: c.product_id, qty: c.qty, options: c.options, note: c.note || null })) });
       setCart([]);
@@ -179,6 +181,7 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
       qc.invalidateQueries({ queryKey: ['orders', 'order-menu', src.key] });
       toast({ text: fredi ? t('Ordered! Your driver will be on the way shortly.') : t('Your order is in!') });
     } catch (e) {
+      if ((e as any).need === 'name') setAskName(true);
       toast({ text: (e as Error).message, error: true });
     }
   };
@@ -187,6 +190,22 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
   const mine = (orders.data ?? []).slice(0, 5);
   return (
     <>
+      {!src.member && (
+        <div className="row between card pad" style={{ marginBottom: 14, padding: '10px 14px', gap: 10 }}>
+          <div className="small grow" style={{ minWidth: 0 }}>
+            {name.trim() ? (
+              <>
+                <span className="muted">{t('Ordering as')}</span> <b>{name.trim()}</b>
+              </>
+            ) : (
+              <b>{t('Tell us your name first – so we know whose order it is.')}</b>
+            )}
+          </div>
+          <button className={`btn sm ${name.trim() ? '' : 'primary'}`} onClick={() => setAskName(true)}>
+            {name.trim() ? t('Change') : t('Enter name')}
+          </button>
+        </div>
+      )}
       {mine.length > 0 && (
         <div className="list" style={{ marginBottom: 18 }}>
           {mine.map((o: any) => {
@@ -353,8 +372,9 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
           </div>
           {!src.member && (
             <div className="field">
-              <label>{t('Your name')}</label>
-              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('so we know where to bring it')} />
+              <label htmlFor="order-name">{t('Your name')}</label>
+              <input id="order-name" className="input" value={name} maxLength={40} autoComplete="given-name" onChange={(e) => setName(e.target.value)} placeholder={t('so we know where to bring it')} />
+              {!name.trim() && <div className="help">{t('Without a name we can’t send the order.')}</div>}
             </div>
           )}
           <div className="field">
@@ -366,7 +386,36 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
           </button>
         </div>
       </Sheet>
+      {!src.member && <NameSheet open={askName} initial={name} onClose={() => setAskName(false)} onSave={saveName} />}
     </>
+  );
+}
+
+/** "Who's ordering?" – asked once per device, remembered, changeable from the bar at the top. */
+function NameSheet({ open, initial, onClose, onSave }: { open: boolean; initial: string; onClose: () => void; onSave: (name: string) => void }) {
+  const [v, setV] = useState(initial);
+  useEffect(() => {
+    if (open) setV(initial);
+  }, [open, initial]);
+  return (
+    <Sheet open={open} onClose={onClose} title={t('Who’s ordering?')}>
+      <form
+        className="stack"
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSave(v);
+        }}
+      >
+        <p className="muted" style={{ margin: 0 }}>{t('Your name goes with every order, so the kitchen knows whose it is. This phone remembers it.')}</p>
+        <div className="field">
+          <label htmlFor="guest-name">{t('Your name')}</label>
+          <input id="guest-name" className="input" value={v} maxLength={40} autoComplete="given-name" autoFocus onChange={(e) => setV(e.target.value)} placeholder={t('e.g. Mila')} />
+        </div>
+        <button className="btn primary lg" disabled={!v.trim()}>
+          <Check size={18} weight="bold" /> {t('That’s me')}
+        </button>
+      </form>
+    </Sheet>
   );
 }
 

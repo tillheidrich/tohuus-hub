@@ -15,7 +15,8 @@ import { locale, t } from '../i18n.js';
 import { emit } from './bus.js';
 import { adjustStock, getProduct, localDay, type ProductRow } from './catalog.js';
 import * as pos from './escpos.js';
-import { FreshError, addLeftovers, confirm, freeze, freezerLocationId, fridgeLocationId, isFreezer } from './fresh.js';
+import { FreshError, addLeftovers, confirm, freeze, freezerLocationId, fridgeLocationId } from './fresh.js';
+import { frozenIds, placesWithClimate, unassignedId } from './places.js';
 import { DEFAULT_FREEZER_DAYS, addDays, thawDaysFor } from './fresh-shelf.js';
 import { addPlan } from './plan.js';
 import { escposFor, findPrinter, listPrinters, type Printer } from './print.js';
@@ -240,8 +241,8 @@ export type BoxView = ReturnType<typeof view>;
 
 // ------------------------------------------------------------------ stock helpers
 
-const freezerIds = () =>
-  new Set((db.prepare('SELECT id, name, kind, icon FROM locations').all() as { id: number; name: string; kind: string; icon: string }[]).filter(isFreezer).map((l) => l.id));
+/** Frozen places by climate (area: home), not by name. */
+const freezerIds = () => frozenIds();
 
 /** Box portions and product stock are the same unit: leftover portions, or pieces of a counted product. */
 function commensurate(p: ProductRow | undefined): p is ProductRow {
@@ -335,7 +336,7 @@ export function reconcile(today = localDay(0)) {
         if (deficitF <= 0) break;
         if (surplusOut >= b.portions_left) {
           // its portions are outside the freezer now → thawed elsewhere
-          const to = rows.find((r) => !fz.has(r.location_id))?.location_id ?? fridgeLocationId();
+          const to = rows.find((r) => !fz.has(r.location_id))?.location_id ?? fridgeLocationId() ?? unassignedId();
           thawed.run(to, addDays(today, thawDaysFor(b.name, p.kind)), today, now(), b.id);
           surplusOut -= b.portions_left;
           nClaim += b.portions_left;
@@ -441,6 +442,8 @@ export interface SaveInput {
   eat_by?: string | null;
   made_on?: string | null;
   labelled?: boolean;
+  /** the concrete place (area: home) – with several fridges or freezers; default: the one used last */
+  location_id?: number | null;
 }
 
 const dayRe = /^\d{4}-\d\d-\d\d$/;
@@ -483,14 +486,14 @@ export function saveBoxes(input: SaveInput, actor?: string) {
         locationId = row.find((r) => (input.place === 'freezer' ? where.includes(r.location_id) : !fz.has(r.location_id)))?.location_id ?? null;
         if (!locationId) {
           // not there yet: book it in
-          const r = addLeftovers({ name: product.name, recipeId: product.recipe_id ?? null, portions: input.portions, where: input.place, actor });
+          const r = addLeftovers({ name: product.name, recipeId: product.recipe_id ?? null, portions: input.portions, where: input.place, actor, locationId: input.location_id });
           productId = r.product_id;
           locationId = r.location_id;
           retagStock(r.product_id, r.location_id, r.best_before, eatBy);
         }
       } else {
         try {
-          const r = addLeftovers({ recipeId: recipe?.id ?? null, name, portions: input.portions, where: input.place, actor });
+          const r = addLeftovers({ recipeId: recipe?.id ?? null, name, portions: input.portions, where: input.place, actor, locationId: input.location_id });
           productId = r.product_id;
           locationId = r.location_id;
           retagStock(r.product_id, r.location_id, r.best_before, eatBy);
@@ -504,11 +507,17 @@ export function saveBoxes(input: SaveInput, actor?: string) {
       const outside = stockSum(p.id, `AND location_id NOT IN (${[...fz].join(',') || '0'})`);
       const inside = stockSum(p.id) - outside;
       if (input.place === 'freezer') {
-        const to = freezerLocationId();
+        const to = freezerLocationId(input.location_id);
         if (!to) throw new LabelError(t('There is no freezer location yet – add one in Settings.'));
         if (outside > 0) {
           const qty = p.track_mode === 'count' ? Math.min(input.portions, outside) : null;
-          const r = freeze(p.id, { qty, actor });
+          let r: ReturnType<typeof freeze>;
+          try {
+            r = freeze(p.id, { qty, actor, locationId: to });
+          } catch (e) {
+            if (e instanceof FreshError) throw new LabelError(e.message, e.status);
+            throw e;
+          }
           locationId = r.location_id;
           retagStock(p.id, r.location_id, r.best_before, eatBy);
         } else if (inside > 0) {
@@ -521,8 +530,9 @@ export function saveBoxes(input: SaveInput, actor?: string) {
       } else {
         locationId =
           (db.prepare(`SELECT location_id FROM stock WHERE product_id = ? AND qty > 0 AND location_id NOT IN (${[...fz].join(',') || '0'}) ORDER BY best_before IS NULL, best_before LIMIT 1`).pluck().get(p.id) as number | undefined) ??
-          fridgeLocationId() ??
-          p.default_location_id;
+          fridgeLocationId(input.location_id) ??
+          p.default_location_id ??
+          unassignedId();
         if (outside <= 0 && p.track_mode === 'count' && locationId) bookIn({ product_id: p.id, location_id: locationId, eat_by: eatBy, place: 'fridge' }, input.portions, 'leftover', actor);
       }
       if (locationId) confirm(p.id, locationId, actor);
@@ -563,7 +573,7 @@ export function boxAction(code: string, action: BoxAction, opts: { portions?: nu
       if (b.place !== 'freezer') throw new LabelError(t('This is not in the freezer.'));
       const p = b.product_id ? (getProduct(b.product_id) as (ProductRow & { kind?: string }) | undefined) : undefined;
       const eatBy = addDays(today, thawDaysFor(b.name, b.source === 'leftover' ? 'leftover' : p?.kind));
-      const to = fridgeLocationId() ?? (p?.default_location_id && !freezerIds().has(p.default_location_id) ? p.default_location_id : null) ?? b.location_id!;
+      const to = fridgeLocationId() ?? (p?.default_location_id && !freezerIds().has(p.default_location_id) ? p.default_location_id : null) ?? unassignedId()!;
       moveUnits(b, to, 'fridge', eatBy, b.portions_left, 'thaw', opts.actor);
       db.prepare(`UPDATE label_boxes SET place = 'fridge', location_id = ?, eat_by = ?, thawed_on = ?, undo = ?, updated_at = ? WHERE id = ?`).run(to, eatBy, today, snapshot, now(), b.id);
       message = t('Thawed – eat by {date}', { date: fmtDay(eatBy) });
@@ -653,7 +663,7 @@ export function fmtDay(d: string, withYear?: boolean) {
 }
 
 const portionsText = (n: number) => (n === 1 ? t('1 portion') : t('{n} portions', { n: Number.isInteger(n) ? n : n.toFixed(1) }));
-const placeText = (p: Place) => (p === 'freezer' ? t('Freezer compartment') : t('Fridge'));
+const placeText = (p: Place) => (p === 'freezer' ? t('Frozen') : t('Chilled'));
 
 function wrapWords(text: string, maxChars: number, maxLines: number): string[] {
   const words = text.split(/\s+/).filter(Boolean);
@@ -862,7 +872,8 @@ function labelTicket(b: BoxView): Ticket {
     { k: 'text', text: b.name, size: 'xl', bold: true, fit: true },
     ...(b.eat_by ? [{ k: 'kv' as const, left: t('Eat by'), right: fmtDay(b.eat_by), bold: true }] : []),
     { k: 'kv', left: fmtDay(b.made_on), right: portionsText(b.portions) },
-    { k: 'kv', left: placeText(b.place), right: b.made_by ?? '' },
+    // the real place ("Gefriertruhe", "Kühlschrank WG"); the generic word only when there is none (area: home)
+    { k: 'kv', left: b.location && b.location !== t('Not assigned to a place yet') ? b.location : placeText(b.place), right: b.made_by ?? '' },
     { k: 'qr', url: b.url, caption: prettyCode(b.code) },
   ];
   return { type: 'note', title: b.name, file: 'label', blocks, summary: b.name };
@@ -918,6 +929,8 @@ export async function printBoxes(codes: string[], opts: { printer?: number | str
 export function labelsMeta() {
   const fz = freezerLocationId();
   const fr = fridgeLocationId();
+  // every chilled and frozen place, so a WG with two fridges can pick one (default: the one used last)
+  const places = { chilled: placesWithClimate('chilled'), frozen: placesWithClimate('frozen') };
   const name = (id: number | null) => (id ? ((db.prepare('SELECT name FROM locations WHERE id = ?').pluck().get(id) as string | undefined) ?? null) : null);
   return {
     types: BOX_TYPES.map((k) => ({ key: k, label: t(TYPE_LABEL[k]), fridge: SHELF[k].fridge, freezer: SHELF[k].freezer })),
@@ -925,6 +938,9 @@ export function labelsMeta() {
     has_fridge: fr !== null,
     freezer_name: name(fz),
     fridge_name: name(fr),
+    freezer_id: fz,
+    fridge_id: fr,
+    places,
     printers: listPrinters().map((p) => ({ id: p.id, name: p.name, paper: p.paper, mode: p.mode })),
     layouts: Object.entries(LAYOUTS).map(([k, l]) => ({ key: k, per_page: l.cols * l.rows, w: l.w, h: l.h })),
   };

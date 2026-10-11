@@ -21,7 +21,7 @@ function readPref(): ThemePref {
 
 /** the colour the browser chrome / iOS status bar should take: the page background */
 function syncThemeColor() {
-  const paper = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim();
+  const paper = getComputedStyle(document.documentElement).getPropertyValue('--canvas').trim();
   if (!paper) return;
   document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
     m.setAttribute('content', paper);
@@ -60,6 +60,6 @@ export function applyAppearance(a: Appearance | undefined | null) {
   else syncThemeColor();
 }
 
-/** re-read colours after the brand (Fredirando) switched the palette */
+/** re-read colours (kept for callers; there is only one brand now) */
 export const refreshThemeColor = syncThemeColor;
 export const currentThemePref = () => pref;

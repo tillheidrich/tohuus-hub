@@ -96,7 +96,7 @@ export async function alertNewDevice(userId: number, ua: string | null, method: 
     channels.push({ channel: 'push', ok });
   }
   if (route.email && u.email && u.email_verified_at && mailAvailable()) {
-    await sendAuthMail(u.email, `${householdName()} · ${title}`, title, message, { url, label: t('Check my devices') });
+    await sendAuthMail(u.email, `${householdName()} · ${title}`, title, message, { url, label: t('Check my devices') }, '', { eyebrow: t('Security') });
     channels.push({ channel: 'email', ok: true });
   }
   db.prepare('INSERT INTO notifications (event, title, body, payload, channels) VALUES (?, ?, ?, ?, ?)').run(

@@ -3,6 +3,8 @@ import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled, visionEnabled } from '../config.js';
 import { appearanceFor } from '../lib/appearance.js';
+import { homeSetup } from '../lib/places.js';
+import { r as placesRoutes } from './places.js';
 import { brand, chooseBrand, db, defaultBrand, getSetting, lang, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
 import { regionInfo } from '../lib/region.js';
@@ -81,6 +83,8 @@ r.get('/me', (req, res) => {
     region: regionInfo(),
     features: { vision: visionEnabled(), email: smtpEnabled() },
     appearance: appearanceFor(actor.kind === 'user' ? actor.userId : null),
+    // household form and home preset (area: home) – the UI adapts its defaults and wording to it
+    home: homeSetup(),
     version: process.env.npm_package_version ?? '0.1.0',
   });
 });
@@ -99,44 +103,9 @@ r.get('/find', (req, res) => res.json(findThings(String(req.query.q ?? ''))));
 
 // ---------------------------------------------------------------- locations & categories
 
-r.get('/locations', (_req, res) => {
-  res.json(
-    db
-      .prepare(
-        `SELECT l.*, (SELECT COUNT(DISTINCT s.product_id) FROM stock s WHERE s.location_id = l.id AND s.qty > 0) AS product_count
-         FROM locations l ORDER BY sort, id`,
-      )
-      .all(),
-  );
-});
-r.post('/locations', requireAdmin, (req, res) => {
-  const b = z.object({ name: z.string().min(1), kind: z.string().default('other'), icon: z.string().default('box') }).parse(req.body);
-  const max = (db.prepare('SELECT COALESCE(MAX(sort),0)+1 m FROM locations').get() as { m: number }).m;
-  const info = db.prepare('INSERT INTO locations (name, kind, icon, sort) VALUES (?, ?, ?, ?)').run(b.name, b.kind, b.icon, max);
-  emit('stock');
-  res.json({ id: Number(info.lastInsertRowid) });
-});
-r.patch('/locations/:id', requireAdmin, (req, res) => {
-  const b = z.object({ name: z.string().optional(), icon: z.string().optional(), kind: z.string().optional(), sort: z.number().optional(), hint: z.string().max(200).nullable().optional() }).parse(req.body);
-  const cur = db.prepare('SELECT * FROM locations WHERE id = ?').get(id(req.params.id)) as any;
-  if (!cur) {
-    res.status(404).json({ error: 'not found' });
-    return;
-  }
-  db.prepare('UPDATE locations SET name=?, icon=?, kind=?, sort=?, hint=? WHERE id=?').run(b.name ?? cur.name, b.icon ?? cur.icon, b.kind ?? cur.kind, b.sort ?? cur.sort, b.hint === undefined ? cur.hint : b.hint?.trim() || null, cur.id);
-  emit('stock');
-  res.json({ ok: true });
-});
-r.delete('/locations/:id', requireAdmin, (req, res) => {
-  const n = (db.prepare('SELECT COUNT(*) n FROM stock WHERE location_id = ? AND qty > 0').get(id(req.params.id)) as { n: number }).n;
-  if (n > 0) {
-    res.status(409).json({ error: t('There is still something stored at this location.') });
-    return;
-  }
-  db.prepare('DELETE FROM locations WHERE id = ?').run(id(req.params.id));
-  emit('stock');
-  res.json({ ok: true });
-});
+// /locations, /home/setup: routes/places.ts (area: home: tree, climate, archive, order) – mounted here so the
+// locations API stays part of the core router
+r.use(placesRoutes);
 
 r.get('/categories', (_req, res) => res.json(db.prepare('SELECT * FROM categories ORDER BY sort, id').all()));
 r.post('/categories', requireAdmin, (req, res) => {

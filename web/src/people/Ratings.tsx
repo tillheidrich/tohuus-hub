@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { get, invalidate, post, put, useApi } from '../api';
+import { useHousehold } from '../household';
 import type { Me } from '../App';
 import { t } from '../i18n';
 import { Empty, Sheet, Skeleton, useToast } from '../ui';
@@ -209,6 +210,7 @@ export function Favourites() {
   const q = useApi<FavResp>(['people', 'favourites'], '/people/favourites');
   const [person, setPerson] = useState<string | null>(null);
   const nav = useNavigate();
+  const home = useHousehold();
   if (q.isLoading) return <Skeleton n={3} h={120} />;
   if (q.error || !q.data) return <div className="card pad small" style={{ color: 'var(--empty)' }}>{(q.error as Error)?.message ?? t('Error')}</div>;
   const d = q.data;
@@ -234,7 +236,7 @@ export function Favourites() {
         <>
           {d.family.length > 0 && (
             <section>
-              <h2 style={{ marginBottom: 10 }}>{t('Family all-time favourites')}</h2>
+              <h2 style={{ marginBottom: 10 }}>{home.form === 'family' ? t('Family all-time favourites') : t('All-time favourites')}</h2>
               <div className="fav-grid">
                 {d.family.map((c) => (
                   <RecipeTile key={c.recipe_id} c={c} faces={faces} />

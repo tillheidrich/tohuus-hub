@@ -75,7 +75,7 @@ r.post('/kids/wishes/:id', (req, res) => {
 
 r.get('/kids/places', (_req, res) => {
   const photos = locationPhotos();
-  res.json((db.prepare('SELECT id, name, icon, hint FROM locations ORDER BY sort, id').all() as any[]).map((l) => ({ ...l, photo: photos.get(l.id) ?? null })));
+  res.json((db.prepare(`SELECT id, name, icon, hint FROM locations WHERE archived = 0 AND kind != 'unassigned' ORDER BY sort, id`).all() as any[]).map((l) => ({ ...l, photo: photos.get(l.id) ?? null })));
 });
 
 r.post('/kids/places/:id/photo', requireAdmin, upload.single('image'), async (req, res) => {

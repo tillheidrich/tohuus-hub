@@ -1,5 +1,5 @@
 // Renders the brand images for Home Assistant / HACS from the ToHuus Hub app icon.
-// Run from the ToHuus Hub repository root (it needs `sharp` and the Geist font from node_modules):
+// Run from the ToHuus Hub repository root (it needs `sharp` and server/assets/fonts/hedvig-letters-sans-latin-400.ttf):
 //   node ha-integration/scripts/render_brand.mjs
 // Writes custom_components/tohuus_hub/{icon,logo}.png (+ dark/@2x variants under brands/) for the
 // home-assistant/brands pull request.
@@ -12,7 +12,9 @@ const ha = path.join(root, 'ha-integration');
 const svg = fs.readFileSync(path.join(root, 'web/public/icon-light.svg'));
 // the app icon's viewBox width (1024 since the 2026-10 redesign) decides the render density
 const vbw = Number(/viewBox="0 0 (\d+)/.exec(svg.toString())?.[1] ?? 32);
-const font = path.join(root, 'node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2');
+// wordmark in the brand face (Dutch Detail, wave 6): Hedvig Letters Sans 400, SIL OFL 1.1
+// (Pango reads TTF, not WOFF2 – the TTF copy lives in server/assets/fonts)
+const font = path.join(root, 'server/assets/fonts/hedvig-letters-sans-latin-400.ttf');
 const comp = path.join(ha, 'custom_components/tohuus_hub');
 const brands = path.join(ha, 'brands/custom_integrations/tohuus_hub');
 fs.mkdirSync(brands, { recursive: true });
@@ -24,8 +26,8 @@ async function logo(size, color) {
   const mark = await icon(size);
   const text = await sharp({
     text: {
-      text: `<span foreground="${color}" font_weight="800">ToHuus Hub</span>`,
-      font: `Geist ${Math.round(size * 0.42)}px`,
+      text: `<span foreground="${color}" font_weight="400">ToHuus Hub</span>`,
+      font: `Hedvig Letters Sans ${Math.round(size * 0.42)}px`,
       ...(fs.existsSync(font) ? { fontfile: font } : {}),
       rgba: true,
       dpi: 72,
@@ -47,13 +49,13 @@ async function logo(size, color) {
 
 const out = {
   [path.join(comp, 'icon.png')]: await icon(256),
-  [path.join(comp, 'logo.png')]: await logo(256, '#0b6148'),
+  [path.join(comp, 'logo.png')]: await logo(256, '#176b50'),
   [path.join(brands, 'icon.png')]: await icon(256),
   [path.join(brands, 'icon@2x.png')]: await icon(512),
-  [path.join(brands, 'logo.png')]: await logo(256, '#0b6148'),
-  [path.join(brands, 'logo@2x.png')]: await logo(512, '#0b6148'),
-  [path.join(brands, 'dark_logo.png')]: await logo(256, '#f3f1ec'),
-  [path.join(brands, 'dark_logo@2x.png')]: await logo(512, '#f3f1ec'),
+  [path.join(brands, 'logo.png')]: await logo(256, '#176b50'),
+  [path.join(brands, 'logo@2x.png')]: await logo(512, '#176b50'),
+  [path.join(brands, 'dark_logo.png')]: await logo(256, '#eef0ea'),
+  [path.join(brands, 'dark_logo@2x.png')]: await logo(512, '#eef0ea'),
 };
 for (const [file, buf] of Object.entries(out)) {
   fs.writeFileSync(file, buf);

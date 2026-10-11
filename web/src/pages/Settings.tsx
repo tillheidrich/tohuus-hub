@@ -2,8 +2,8 @@ import { Bell, Copy, Key, Plug, Question, SignOut, Trash, UploadSimple } from '@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../App';
-import { type Category, type Location, api, del, invalidate, patch, post, relTime, useApi } from '../api';
-import { ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { api, del, invalidate, patch, post, relTime, useApi } from '../api';
+import { Seg, Skeleton, Toggle, useToast } from '../ui';
 import { LANGUAGE_OPTIONS, lang, setLang, t } from '../i18n';
 import { Backups, Members } from './DataSettings';
 import { DataReset, TourButton } from './Tour';
@@ -24,6 +24,8 @@ import { AwayEntryCard } from './Away';
 import { ShareSetupCard, StartModeCard } from './Share';
 import { MenuSettingsCard } from './Menu';
 import { HouseholdAppearanceCard, MyAppearanceCard } from './AppearanceSettings';
+import { CategorySettings, HouseholdFormCard, PlacesSettings } from './PlacesSettings';
+import { useHousehold } from '../household';
 
 type Tab = 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -93,8 +95,9 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'members' && <PeopleSection me={me} admin={admin} />}
       {tab === 'members' && <Members me={me} admin={admin} />}
       {tab === 'members' && admin && <SignInAdmin me={me} />}
-      {tab === 'members' && <KidsSettings admin={admin} />}
-      {tab === 'places' && <Places admin={admin} />}
+      {tab === 'members' && <KidsSection admin={admin} />}
+      {tab === 'places' && <PlacesSettings admin={admin} />}
+      {tab === 'places' && <CategorySettings admin={admin} />}
       {tab === 'notify' && <Notify admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
       {tab === 'ha' && <Ha2Settings admin={admin} />}
@@ -122,25 +125,6 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
             {admin && <button className="btn" onClick={() => patch('/settings', { household: name }).then(() => { invalidate('me', 'settings', 'overview'); toast({ text: t('Saved') }); })}>{t('Save')}</button>}
           </div>
         </div>
-        <div className="field">
-          <label>{t('Brand')}</label>
-          <div className="row wrap" style={{ gap: 10 }}>
-            {(['tohuus', 'fredirando'] as const).map((k) => (
-              <button
-                key={k}
-                type="button"
-                disabled={!admin}
-                className={`who-pick-btn ${s.data?.brand === k ? 'on' : ''}`}
-                onClick={() => patch('/settings', { brand: k }).then(() => { invalidate('me', 'settings'); toast({ text: k === 'fredirando' ? t('Fredirando is now delivering') : t('Back to ToHuus Hub') }); })}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', borderRadius: 14, border: `1px solid ${s.data?.brand === k ? 'var(--ink)' : 'var(--line-strong)'}`, background: 'var(--surface)', cursor: 'pointer', fontWeight: 600 }}
-              >
-                <img src={k === 'fredirando' ? '/fredirando.svg' : '/tohuus-logo.svg'} alt="" style={{ width: 34, height: 34, borderRadius: 10 }} />
-                {k === 'fredirando' ? 'Fredirando' : 'ToHuus Hub'}
-              </button>
-            ))}
-          </div>
-          <div className="help">{t('Fredirando is the delivery-service theme for your home: orange, the guest bar as a restaurant, order status with “driver on the way”. Afterwards, re-add the app icon to your home screen once.')}</div>
-        </div>
         <HouseholdAppearanceCard admin={admin} />
         <div className="field">
           <label>{t('Language')}</label>
@@ -164,83 +148,9 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
           </div>
         </div>
       </div>
+      <HouseholdFormCard admin={admin} />
       <RegionCard admin={admin} />
       <StartModeCard admin={admin} />
-    </div>
-  );
-}
-
-function Places({ admin }: { admin: boolean }) {
-  const locations = useApi<Location[]>('locations', '/locations');
-  const categories = useApi<Category[]>('categories', '/categories');
-  const [newLoc, setNewLoc] = useState('');
-  const [iconFor, setIconFor] = useState<Location | null>(null);
-  const toast = useToast();
-  return (
-    <div className="stack" style={{ gap: 22 }}>
-      <section>
-        <h2 style={{ marginBottom: 6 }}>{t('Locations')}</h2>
-        <p className="small muted" style={{ marginTop: 0 }}>{t('The “floors” of your home: where things live.')}</p>
-        <div className="list">
-          {(locations.data ?? []).map((l) => (
-            <div key={l.id} className="li">
-              <button className="thumb" style={{ width: 40, height: 40, cursor: admin ? 'pointer' : 'default', border: 0 }} onClick={() => admin && setIconFor(l)}>
-                <Ic name={l.icon} />
-              </button>
-              <div className="grow stack" style={{ gap: 4 }}>
-                <input className="input" defaultValue={l.name} disabled={!admin} onBlur={(e) => e.target.value !== l.name && patch(`/locations/${l.id}`, { name: e.target.value }).then(() => invalidate('locations', 'overview'))} />
-                <input className="input sm" defaultValue={l.hint ?? ''} disabled={!admin} placeholder={t('Directions, e.g. in the hallway, second door on the right')} onBlur={(e) => e.target.value !== (l.hint ?? '') && patch(`/locations/${l.id}`, { hint: e.target.value }).then(() => invalidate('locations', 'find'))} />
-              </div>
-              <span className="small muted mono" style={{ width: 30, textAlign: 'right' }}>{l.product_count}</span>
-              {admin && (
-                <button className="icon-btn plain" onClick={() => del(`/locations/${l.id}`).then(() => invalidate('locations')).catch((e) => toast({ text: e.message, error: true }))} aria-label={t('Delete')}>
-                  <Trash size={16} />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        {admin && (
-          <div className="row" style={{ marginTop: 10 }}>
-            <input className="input" placeholder={t('New place, e.g. hallway cupboard, shelf above the fridge')} value={newLoc} onChange={(e) => setNewLoc(e.target.value)} />
-            <button className="btn" disabled={!newLoc} onClick={() => post('/locations', { name: newLoc }).then(() => { setNewLoc(''); invalidate('locations', 'overview'); })}>{t('Add')}</button>
-          </div>
-        )}
-      </section>
-      <section>
-        <h2 style={{ marginBottom: 6 }}>{t('Categories')}</h2>
-        <p className="small muted" style={{ marginTop: 0 }}>{t('Decide where new products go and how precisely they’re counted.')}</p>
-        <div className="list">
-          {(categories.data ?? []).map((c) => (
-            <div key={c.id} className="li wrap" style={{ flexWrap: 'wrap' }}>
-              <span className="thumb" style={{ width: 40, height: 40 }}><Ic name={c.icon} /></span>
-              <div className="grow" style={{ minWidth: 120 }}>
-                <div className="title">{c.name}</div>
-              </div>
-              <select className="input" style={{ width: 'auto', height: 34, fontSize: 13 }} value={c.default_location_id ?? ''} disabled={!admin} onChange={(e) => patch(`/categories/${c.id}`, { default_location_id: e.target.value ? Number(e.target.value) : null }).then(() => invalidate('categories'))}>
-                <option value="">{t('no place')}</option>
-                {(locations.data ?? []).map((l) => (
-                  <option key={l.id} value={l.id}>{l.name}</option>
-                ))}
-              </select>
-              <select className="input" style={{ width: 'auto', height: 34, fontSize: 13 }} value={c.track_mode} disabled={!admin} onChange={(e) => patch(`/categories/${c.id}`, { track_mode: e.target.value }).then(() => invalidate('categories'))}>
-                <option value="count">{t('Pieces')}</option>
-                <option value="level">{t('Fill level')}</option>
-                <option value="none">{t('don’t count')}</option>
-              </select>
-            </div>
-          ))}
-        </div>
-      </section>
-      <Sheet open={Boolean(iconFor)} onClose={() => setIconFor(null)} title={t('Choose icon')}>
-        <div className="row wrap" style={{ gap: 8 }}>
-          {ICON_CHOICES.map((i) => (
-            <button key={i} className="icon-btn" style={{ width: 52, height: 52 }} onClick={() => patch(`/locations/${iconFor!.id}`, { icon: i }).then(() => { setIconFor(null); invalidate('locations', 'overview'); })}>
-              <Ic name={i} size={24} />
-            </button>
-          ))}
-        </div>
-      </Sheet>
     </div>
   );
 }
@@ -587,5 +497,17 @@ function HaConnection({ initial }: { initial: { url: string; token: string; cook
         <button className="btn primary" disabled={busy || !h.url || !h.token} onClick={() => save(true)}>{t('Save & sync')}</button>
       </div>
     </div>
+  );
+}
+
+/** Kids only where the household form says so (area: home) – one tap shows it anyway, nothing is locked. */
+function KidsSection({ admin }: { admin: boolean }) {
+  const home = useHousehold();
+  const [show, setShow] = useState(false);
+  if (home.ui.kids || show) return <KidsSettings admin={admin} />;
+  return (
+    <button className="linkish" style={{ marginTop: 12 }} onClick={() => setShow(true)}>
+      {t('Children in the household? Show the kids section')}
+    </button>
   );
 }

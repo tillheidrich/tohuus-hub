@@ -2,27 +2,13 @@
  * Data area: secret-free export, guest-link token hashing, member invites.
  * Backups and restore live in ./backup.ts.
  */
-import { brand, db, getSetting, lang, migrate } from '../db.js';
-import { hashPassword, randomToken, sha256 } from './auth.js';
+import { db, getSetting } from '../db.js';
+import { randomToken, sha256 } from './auth.js';
 
 // ---------------------------------------------------------------- schema
 
-migrate(
-  'data-1',
-  `CREATE TABLE invites (
-    id INTEGER PRIMARY KEY,
-    token_hash TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin','member')),
-    color TEXT NOT NULL DEFAULT '#2f5bea',
-    created_by TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    expires_at TEXT NOT NULL,
-    used_at TEXT,
-    used_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    revoked INTEGER NOT NULL DEFAULT 0
-  );`,
-);
+// The invites table and everything about invitations live in ./invites.ts since wave 6 (re-exported below).
+export { INVITE_DAYS, InviteError, acceptInvite, createInvite, findInvite, inviteContext, pendingInvites, type InviteRow } from './invites.js';
 
 // ---------------------------------------------------------------- guest link tokens
 
@@ -117,70 +103,6 @@ export function buildExport() {
   }
   out.tables = tables;
   return out;
-}
-
-// ---------------------------------------------------------------- invites
-
-export const INVITE_DAYS = 7;
-
-export function createInvite(b: { name: string; role: 'admin' | 'member'; color?: string; createdBy?: string }) {
-  const token = randomToken(24);
-  const info = db
-    .prepare(`INSERT INTO invites (token_hash, name, role, color, created_by, expires_at) VALUES (?, ?, ?, ?, ?, datetime('now', ?))`)
-    .run(sha256(token), b.name.trim(), b.role, b.color ?? '#2f5bea', b.createdBy ?? null, `+${INVITE_DAYS} days`);
-  const row = db.prepare('SELECT expires_at FROM invites WHERE id = ?').get(info.lastInsertRowid) as { expires_at: string };
-  return { id: Number(info.lastInsertRowid), token, expires_at: row.expires_at };
-}
-
-export interface InviteRow {
-  id: number;
-  name: string;
-  role: 'admin' | 'member';
-  color: string;
-  expires_at: string;
-}
-
-export function findInvite(token: string): InviteRow | undefined {
-  if (!token || token.length > 100) return undefined;
-  return db
-    .prepare(
-      `SELECT id, name, role, color, expires_at FROM invites
-       WHERE token_hash = ? AND revoked = 0 AND used_at IS NULL AND expires_at > datetime('now')`,
-    )
-    .get(sha256(token)) as InviteRow | undefined;
-}
-
-export function pendingInvites() {
-  return db
-    .prepare(
-      `SELECT id, name, role, color, created_by, created_at, expires_at FROM invites
-       WHERE revoked = 0 AND used_at IS NULL AND expires_at > datetime('now') ORDER BY id DESC`,
-    )
-    .all();
-}
-
-export class InviteError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
-}
-
-/** Redeem an invite: creates the member with their own password. One-time; atomic. */
-export function acceptInvite(token: string, b: { name?: string; password: string }, msgs: { invalid: string; taken: string }): { userId: number; name: string } {
-  return db.transaction(() => {
-    const inv = findInvite(token);
-    if (!inv) throw new InviteError(404, msgs.invalid);
-    const name = (b.name?.trim() || inv.name).slice(0, 40);
-    if (db.prepare('SELECT 1 FROM users WHERE lower(name) = lower(?)').get(name)) throw new InviteError(409, msgs.taken);
-    const info = db.prepare('INSERT INTO users (name, password_hash, role, color) VALUES (?, ?, ?, ?)').run(name, hashPassword(b.password), inv.role, inv.color);
-    const userId = Number(info.lastInsertRowid);
-    db.prepare(`UPDATE invites SET used_at = datetime('now'), used_by_user_id = ? WHERE id = ?`).run(userId, inv.id);
-    return { userId, name };
-  })();
-}
-
-export function inviteContext() {
-  return { household: getSetting('household.name', ''), brand: brand(), language: lang() };
 }
 
 // ---------------------------------------------------------------- login screen

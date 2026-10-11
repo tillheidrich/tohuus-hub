@@ -8,6 +8,7 @@ import { FreshPanel } from './FreshParts';
 import { PutAwayButton } from './Leftovers';
 import { DateKindField } from './Retail';
 import { RunsOutRow } from './Share';
+import { ProductBuyAt } from '../shop/BuyAt';
 
 export function ProductDetail() {
   const { id } = useParams();
@@ -15,6 +16,8 @@ export function ProductDetail() {
   const toast = useToast();
   const { data: p, isLoading } = useApi<any>(['product', Number(id)], `/products/${id}`);
   const locations = useApi<Location[]>('locations', '/locations');
+  // area: home – "freeze" only where the household has a frozen place
+  const hasFreezer = (locations.data ?? []).some((l) => l.climate === 'frozen' && !l.archived);
   const categories = useApi<Category[]>('categories', '/categories');
   const [edit, setEdit] = useState(false);
   const [img, setImg] = useState(false);
@@ -97,10 +100,10 @@ export function ProductDetail() {
                 <AddBatch p={p} locations={locations.data ?? []} onDone={refresh} />
                 {p.track_mode !== 'none' && (
                   <PutAwayButton
-                    preset={{ product_id: p.id, name: p.name, image_path: p.image_path, place: p.kind === 'leftover' ? 'fridge' : 'freezer', portions: p.track_mode === 'count' && p.total > 0 ? Math.min(p.total, p.kind === 'leftover' ? p.total : 1) : 1 }}
-                    title={p.kind === 'leftover' ? t('Label leftovers') : t('Portion, freeze, label')}
+                    preset={{ product_id: p.id, name: p.name, image_path: p.image_path, place: p.kind === 'leftover' || !hasFreezer ? 'fridge' : 'freezer', portions: p.track_mode === 'count' && p.total > 0 ? Math.min(p.total, p.kind === 'leftover' ? p.total : 1) : 1 }}
+                    title={p.kind === 'leftover' || !hasFreezer ? t('Label leftovers') : t('Portion, freeze, label')}
                   >
-                    <Tag size={15} /> {p.kind === 'leftover' ? t('Label') : t('Freeze & label')}
+                    <Tag size={15} /> {p.kind === 'leftover' || !hasFreezer ? t('Label') : t('Freeze & label')}
                   </PutAwayButton>
                 )}
               </div>
@@ -109,6 +112,7 @@ export function ProductDetail() {
 
           <FreshPanel p={p} locations={locations.data ?? []} />
           <RunsOutRow p={p} />
+          <ProductBuyAt p={p} />
 
           <dl className="kv card pad">
             <dt>{t('Default location')}</dt>
@@ -224,8 +228,8 @@ function StockEntryRow({ s, p, lname, locations, onChange }: { s: any; p: any; l
           onChange={(e) => patch(`/stock/${s.id}`, { location_id: Number(e.target.value) }).then(onChange)}
           aria-label={t('Location')}
         >
-          {locations.map((l) => (
-            <option key={l.id} value={l.id}>{l.name}</option>
+          {locations.filter((l) => !l.archived || l.id === s.location_id).map((l) => (
+            <option key={l.id} value={l.id}>{l.path ?? l.name}</option>
           ))}
         </select>
       )}
@@ -251,9 +255,9 @@ function AddBatch({ p, locations, onDone }: { p: any; locations: Location[]; onD
           <div className="field">
             <label>{t('Where to?')}</label>
             <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
-              {locations.map((l) => (
+              {locations.filter((l) => !l.archived && !l.system).map((l) => (
                 <button key={l.id} className={`chip ${loc === l.id ? 'on' : ''}`} onClick={() => setLoc(l.id)}>
-                  <Ic name={l.icon} size={15} /> {l.name}
+                  <Ic name={l.icon} size={15} /> {l.path ?? l.name}
                 </button>
               ))}
             </div>
@@ -499,9 +503,9 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
         <div className="field">
           <label>{t('Where does it live?')}</label>
           <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
-            {(locations.data ?? []).map((l) => (
+            {(locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => (
               <button key={l.id} type="button" className={`chip ${f.default_location_id === l.id ? 'on' : ''}`} onClick={() => set('default_location_id', l.id)}>
-                <Ic name={l.icon} size={15} /> {l.name}
+                <Ic name={l.icon} size={15} /> {l.path ?? l.name}
               </button>
             ))}
           </div>

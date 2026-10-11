@@ -84,7 +84,8 @@ export function createOrder(
     .map((l) => ({ ...l, options: cleanLineOptions(products.get(l.product_id)!.order_options, l.options), note: l.note?.trim() || null }));
   // a free-text wish ("a blanket, please") is an order too – for household members
   if (!lines.length && !(member && input.note?.trim())) throw Object.assign(new Error(t('Nothing orderable in the basket.')), { status: 400 });
-  const name = (input.guest_name?.trim() || who.name).slice(0, 40);
+  // a signed-in member always orders under their own name; guests and shared devices under the name they typed
+  const name = (who.userId ? who.name : input.guest_name?.trim() || who.name).slice(0, 40);
   const oid = db.transaction(() => {
     // guests can't be promised the last bottle twice; party links also respect "max per guest"
     if (!member) assertAvailable(lines, products);

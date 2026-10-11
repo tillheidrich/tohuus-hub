@@ -24,8 +24,24 @@ import {
   X,
   Grains,
   MagnifyingGlass,
+  // place icons (area: home)
+  Rows,
+  Stairs,
+  Dresser,
+  PottedPlant,
+  Desk,
+  CoatHanger,
+  Garage,
+  Couch,
+  Bed,
+  Door,
+  HouseSimple,
+  Basket,
+  Toolbox,
+  Lockers,
+  Jar,
 } from '@phosphor-icons/react';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { LEVELS, type Product, type Status, daysUntil, fmtDate, useApi } from './api';
 import { num, t } from './i18n';
@@ -40,6 +56,21 @@ function Fridge({ size = 20, weight = 'regular' }: { size?: number; weight?: str
       <line x1="56" y1="104" x2="200" y2="104" />
       <line x1="88" y1="56" x2="88" y2="76" />
       <line x1="88" y1="132" x2="88" y2="164" />
+    </svg>
+  );
+}
+
+/** A chest freezer: a low wide box with a lid line and a snowflake mark (area: home). */
+function ChestFreezer({ size = 20, weight = 'regular' }: { size?: number; weight?: string }) {
+  const sw = weight === 'bold' ? 22 : weight === 'fill' ? 20 : 16;
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="24" y="88" width="208" height="128" rx="14" fill={weight === 'fill' ? 'currentColor' : 'none'} fillOpacity={0.2} />
+      <line x1="24" y1="120" x2="232" y2="120" />
+      <line x1="104" y1="104" x2="152" y2="104" />
+      <line x1="128" y1="146" x2="128" y2="190" />
+      <line x1="108" y1="156" x2="148" y2="180" />
+      <line x1="148" y1="156" x2="108" y2="180" />
     </svg>
   );
 }
@@ -66,6 +97,23 @@ const ICONS: Record<string, any> = {
   wine: Wine,
   tag: Tag,
   food: Hamburger,
+  // places (area: home)
+  shelf: Rows,
+  cellar: Stairs,
+  'chest-freezer': ChestFreezer,
+  drawer: Dresser,
+  balcony: PottedPlant,
+  desk: Desk,
+  wardrobe: CoatHanger,
+  garage: Garage,
+  couch: Couch,
+  bed: Bed,
+  door: Door,
+  house: HouseSimple,
+  basket: Basket,
+  toolbox: Toolbox,
+  lockers: Lockers,
+  jar: Jar,
 };
 export const ICON_CHOICES = Object.keys(ICONS);
 
@@ -164,11 +212,24 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
   return <button type="button" aria-label={label} aria-pressed={on} className={`toggle ${on ? 'on' : ''}`} onClick={() => onChange(!on)} />;
 }
 
-export function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+export function Seg<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label?: string }) {
+  // an ink indicator slides under the active option (briefing: category switch 160–240 ms)
+  const ref = useRef<HTMLDivElement>(null);
+  const [ind, setInd] = useState<{ x: number; w: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current?.querySelector<HTMLButtonElement>('button.on');
+    if (!el) return setInd(null);
+    const measure = () => setInd({ x: el.offsetLeft, w: el.offsetWidth });
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [value, options.length]);
   return (
-    <div className="seg">
+    <div className={`seg ${ind ? 'measured' : ''}`} ref={ref} role="group" aria-label={label}>
+      {ind && <span className="seg-ind" aria-hidden="true" style={{ width: ind.w, transform: `translateX(${ind.x}px)` }} />}
       {options.map(([v, l]) => (
-        <button key={v} className={v === value ? 'on' : ''} onClick={() => onChange(v)} type="button">
+        <button key={v} className={v === value ? 'on' : ''} aria-pressed={v === value} onClick={() => onChange(v)} type="button">
           {l}
         </button>
       ))}

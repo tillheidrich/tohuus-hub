@@ -3,6 +3,7 @@
  * Everything here is read by one integration poll (/api/ha/v1/state) or called by HA services/entities.
  * Keep the response shapes backwards compatible within v1 – the integration ships separately.
  */
+import { hasClimate } from './places.js';
 import type { Response } from 'express';
 import { config } from '../config.js';
 import { db, getSetting, lang, migrate, setSetting } from '../db.js';
@@ -369,6 +370,8 @@ export function haState() {
     boxes: {
       fridge_portions: boxes.counts.fridge_portions,
       freezer_portions: boxes.counts.freezer_portions,
+      /** false: the household has no frozen place – the integration then leaves out the frozen-portions sensor (area: home) */
+      has_freezer: hasClimate('frozen'),
       items: listBoxes({ status: 'active', limit: 30 }).map((b) => ({ code: b.code, name: b.name, place: b.place, portions: b.left, eat_by: b.eat_by, days_left: b.days_left, state: b.state, url: b.url })),
       thaw: boxes.thaw.map((x) => ({ day: x.day, slot: x.slot, meal: x.title, code: x.box.code, name: x.box.name })),
     },

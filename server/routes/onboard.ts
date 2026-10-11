@@ -1,7 +1,7 @@
 /** Onboarding, help, what's new, polish */
 import { Router } from 'express';
 import { z } from 'zod';
-import { brand, chooseBrand, db, setSetting } from '../db.js';
+import { db, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
@@ -17,6 +17,7 @@ import {
   updateOnboardState,
 } from '../lib/onboard.js';
 import { BASE_LOCATIONS, baseName } from '../lib/basedata.js';
+import { CLIMATES, FORMS, PRESETS, homePreset, setHomeSetup, templatesFor } from '../lib/places.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -50,24 +51,71 @@ r.post('/onboarding/checklist/dismiss', (_req, res) => {
   res.json(updateOnboardState({ checklistDismissed: true }));
 });
 
-/** Step 1: household name, language, look and rooms in one go. */
+const STEP_NEXT: Record<string, string> = { home: 'where', where: 'places', places: 'spots', spots: 'invite', invite: 'stock' };
+/** Move the stored step on – never backwards (another device may already be further). */
+function advance(from: string) {
+  const cur = onboardState().step;
+  return updateOnboardState({ started: true, step: (cur === from ? STEP_NEXT[from] ?? cur : cur) as any });
+}
+
+const roomAdd = z.union([
+  z.string().max(60),
+  z.object({
+    name: z.string().max(60).optional(),
+    key: z.string().max(40).nullable().optional(),
+    icon: z.string().max(40).nullable().optional(),
+    climate: z.enum(CLIMATES).nullable().optional(),
+    parent_id: z.number().int().positive().nullable().optional(),
+  }),
+]);
+const rooms = z.object({ keep: z.array(z.number().int()).max(300), add: z.array(roomAdd).max(40).default([]) });
+
+/** Step 1: household name, language and who lives here (household form). Rooms are still accepted (older clients). */
 r.put('/onboarding/home', requireAdmin, (req, res) => {
   const b = z
     .object({
       household: z.string().trim().min(1).max(60).optional(),
       language: z.enum(LANG_CODES).optional(),
-      brand: z.enum(['tohuus', 'fredirando']).optional(),
-      rooms: z.object({ keep: z.array(z.number().int()).max(60), add: z.array(z.string().max(60)).max(20).default([]) }).optional(),
+      form: z.enum(FORMS).nullable().optional(),
+      preset: z.enum(PRESETS).nullable().optional(),
+      rooms: rooms.optional(),
     })
     .parse(req.body ?? {});
   if (b.household) setSetting('household.name', b.household);
   if (b.language) setSetting('language', b.language);
-  // only a real change counts as a choice – sending the look that is already shown stores nothing
-  if (b.brand && b.brand !== brand()) chooseBrand(b.brand);
-  const rooms = b.rooms ? setRooms(b.rooms) : null;
-  const state = updateOnboardState({ started: true, step: onboardState().step === 'home' ? 'invite' : onboardState().step });
+  if (b.form !== undefined || b.preset !== undefined) setHomeSetup({ form: b.form, preset: b.preset });
+  const out = b.rooms ? setRooms(b.rooms) : null;
+  const state = advance('home');
   emit('settings', 'stock');
-  res.json({ ok: true, rooms, state });
+  res.json({ ok: true, rooms: out, state });
+});
+
+/** Step 2: "Wie wohnt ihr?" – null = skipped. Only steers suggestions and the illustration. */
+r.put('/onboarding/where', requireAdmin, (req, res) => {
+  const b = z.object({ preset: z.enum(PRESETS).nullable() }).parse(req.body ?? {});
+  setHomeSetup({ preset: b.preset });
+  res.json({ ok: true, state: advance('where') });
+});
+
+/** Step 3: "Welche Orte möchtet ihr verwalten?" – free multi-select, an empty selection is fine. */
+r.put('/onboarding/places', requireAdmin, (req, res) => {
+  const b = rooms.parse(req.body ?? {});
+  const out = setRooms(b as any);
+  res.json({ ok: true, rooms: out, state: advance('places') });
+});
+
+/** Step 4 (optional): storage spots inside the chosen places (shelves, devices …). */
+r.put('/onboarding/spots', requireAdmin, (req, res) => {
+  const b = z.object({ add: z.array(roomAdd).max(60).default([]) }).parse(req.body ?? {});
+  const keep = (db.prepare(`SELECT id FROM locations`).all() as { id: number }[]).map((x) => x.id);
+  const out = setRooms({ keep, add: b.add as any });
+  res.json({ ok: true, rooms: out, state: advance('spots') });
+});
+
+/** Suggestions for step 3 (by preset) and step 4 (`?spots=1`). */
+r.get('/onboarding/place-templates', (req, res) => {
+  const p = z.enum(PRESETS).nullable().catch(null).parse(req.query.preset ?? homePreset());
+  res.json(templatesFor(p, req.query.spots === '1'));
 });
 
 /** Base rooms that could be added back as chips (`name` in the household language, en/de for matching renamed rooms). */

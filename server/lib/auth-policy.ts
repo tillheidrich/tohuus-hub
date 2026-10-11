@@ -2,10 +2,10 @@
  * Sign-in methods (area: auth): household policy, SSO configuration, e-mail delivery and small helpers
  * shared by magic links, passkeys, OIDC, sessions and TOTP.
  */
-import { config, smtpEnabled } from '../config.js';
+import { config } from '../config.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { t } from '../i18n.js';
-import { mailer } from './notify.js';
+import { APP_NAME, canSendMail, mailHousehold, sendMail, type MailContent } from './mail.js';
 
 // ---------------------------------------------------------------- policy
 
@@ -108,47 +108,31 @@ export const SECRET_MASK = '••••••••';
 
 // ---------------------------------------------------------------- e-mail
 
-export interface OutgoingMail {
-  to: string;
-  subject: string;
-  text: string;
-  html: string;
-}
-/** Tests (and future transports) can hook in here instead of SMTP. */
-export const mailHook: { send?: (m: OutgoingMail) => Promise<void> | void } = {};
+export type { OutgoingMail } from './mail.js';
+/** Tests (and future transports) can hook in here instead of SMTP – the same object as in ./mail.ts. */
+export { mailHook } from './mail.js';
 
-export const mailAvailable = () => smtpEnabled() || Boolean(mailHook.send);
+export const mailAvailable = () => canSendMail();
 
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
-
-export function authMailHtml(title: string, message: string, button?: { url: string; label: string }, footer = '') {
-  return `<!doctype html><html><body style="margin:0;background:#f4f2ee;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1b1d1f">
-  <div style="max-width:520px;margin:0 auto;padding:32px 20px">
-    <div style="font-weight:700;letter-spacing:-0.02em;font-size:15px;margin-bottom:20px">${esc(householdName())}</div>
-    <div style="background:#fff;border-radius:16px;padding:24px;border:1px solid #e6e2da">
-      <h1 style="font-size:20px;margin:0 0 8px;letter-spacing:-0.02em">${esc(title)}</h1>
-      <p style="margin:0 0 18px;line-height:1.5;white-space:pre-line">${esc(message)}</p>
-      ${button ? `<a href="${esc(button.url)}" style="display:inline-block;background:#1b1d1f;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:600">${esc(button.label)}</a>` : ''}
-      ${footer ? `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#6b6a66;white-space:pre-line">${esc(footer)}</p>` : ''}
-    </div>
-  </div></body></html>`;
+/**
+ * Fire-and-forget: callers must not await (response time must not reveal whether an address is known).
+ * Rendered in the shared mail layout (server/lib/mail.ts).
+ */
+export function sendAuthMail(
+  to: string,
+  subject: string,
+  title: string,
+  message: string,
+  button?: { url: string; label: string },
+  footer = '',
+  extra: Partial<MailContent> = {},
+) {
+  return sendMail(to, { subject, title, eyebrow: t('Your account'), paragraphs: [message], button: button ?? null, footnote: footer || null, ...extra }).catch((e: Error) =>
+    console.warn('[auth mail]', e.message),
+  );
 }
 
-/** Fire-and-forget: callers must not await (response time must not reveal whether an address is known). */
-export function sendAuthMail(to: string, subject: string, title: string, message: string, button?: { url: string; label: string }, footer = '') {
-  const mail: OutgoingMail = {
-    to,
-    subject,
-    text: `${message}\n\n${button ? `${button.label}: ${button.url}\n\n` : ''}${footer}`.trim(),
-    html: authMailHtml(title, message, button, footer),
-  };
-  const job = mailHook.send
-    ? Promise.resolve(mailHook.send(mail))
-    : mailer()?.sendMail({ from: config.smtp.from, ...mail }).then(() => undefined);
-  return Promise.resolve(job).catch((e: Error) => console.warn('[auth mail]', e.message));
-}
-
-export const householdName = () => getSetting<string>('household.name', '') || 'ToHuus Hub';
+export const householdName = () => mailHousehold() || APP_NAME;
 
 // ---------------------------------------------------------------- helpers
 

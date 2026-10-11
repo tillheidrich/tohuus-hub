@@ -5,7 +5,7 @@
  */
 import { db, getSetting, now, setSetting } from '../db.js';
 import { t } from '../i18n.js';
-import { locationIdByKey } from './basedata.js';
+import { climateOf, defaultPlace, frozenIds, placeOfClimate, rememberPlace, unassignedId } from './places.js';
 import { emit } from './bus.js';
 import { adjustStock, createProduct, getProduct, listProducts, localDay, type ProductRow, type StockEntry } from './catalog.js';
 import {
@@ -55,20 +55,24 @@ interface Loc {
   name: string;
   kind: string;
   icon: string;
+  climate?: string | null;
+  archived?: number;
 }
-const allLocations = () => db.prepare('SELECT id, name, kind, icon FROM locations ORDER BY sort, id').all() as Loc[];
-const FREEZER_RE = /(freez|gefrier|tiefk|\btk\b)/i;
+const allLocations = () => db.prepare('SELECT id, name, kind, icon, climate, archived FROM locations ORDER BY sort, id').all() as Loc[];
 
+/** A frozen place (area: home: the climate decides, not the name; undecided places are detected like before). */
 export function isFreezer(l: Loc | undefined | null) {
-  return Boolean(l && (l.kind === 'freezer' || l.icon === 'snowflake' || FREEZER_RE.test(l.name)));
+  return Boolean(l && climateOf(l) === 'frozen');
 }
-export function freezerLocationId(): number | null {
-  return locationIdByKey('freezer') ?? allLocations().find(isFreezer)?.id ?? null;
+/** The freezer to use: the explicitly chosen one, else the one used last, else the first. null = the household has none. */
+export function freezerLocationId(preferred?: number | null): number | null {
+  return defaultPlace('frozen', preferred);
 }
-export function fridgeLocationId(): number | null {
-  return locationIdByKey('fridge') ?? allLocations().find((l) => l.kind === 'fridge' || /(fridge|kühlschrank)/i.test(l.name))?.id ?? null;
+/** The fridge to use – same rules; with several fridges (WG) the one used last. */
+export function fridgeLocationId(preferred?: number | null): number | null {
+  return defaultPlace('chilled', preferred);
 }
-const freezerIds = () => new Set(allLocations().filter(isFreezer).map((l) => l.id));
+const freezerIds = () => frozenIds();
 
 // ------------------------------------------------------------ confirmations / quick check
 
@@ -107,7 +111,10 @@ export const STALE_DAYS = 14;
 
 export function checkLocations(nowMs = Date.now()) {
   const rows = checkRows();
-  return allLocations().map((l) => {
+  // archived places and "not assigned yet" only while something is still there (area: home)
+  const counts = new Map<number, number>();
+  for (const r of rows) counts.set(r.location_id, (counts.get(r.location_id) ?? 0) + 1);
+  return allLocations().filter((l) => (counts.get(l.id) ?? 0) > 0 || (!l.archived && l.kind !== 'unassigned')).map((l) => {
     const here = rows.filter((r) => r.location_id === l.id);
     const lastCheck = here.map((r) => r.confirmed_at).filter(Boolean).sort().pop() ?? null;
     const oldestSeen = here.map(seenAt).sort()[0] ?? null;
@@ -249,10 +256,12 @@ function cleanup(productId: number) {
 }
 
 /** Move into the freezer with a freezer best-before (default +3 months, per-product override). */
-export function freeze(productId: number, opts: { qty?: number | null; entryId?: number | null; actor?: string } = {}) {
+export function freeze(productId: number, opts: { qty?: number | null; entryId?: number | null; actor?: string; locationId?: number | null } = {}) {
   const p = product(productId);
-  const to = freezerLocationId();
+  if (opts.locationId && !placeOfClimate(opts.locationId, 'frozen')) throw new FreshError(t('That place is not a frozen place.'));
+  const to = freezerLocationId(opts.locationId);
   if (!to) throw new FreshError(t('There is no freezer location yet – add one in Settings.'));
+  rememberPlace(to);
   const fz = freezerIds();
   const entries = pickEntry(p, (x) => !fz.has(x.location_id), opts.entryId);
   const available = entries.reduce((s, e) => s + e.qty, 0);
@@ -288,7 +297,7 @@ export function thaw(productId: number, opts: { qty?: number | null; entryId?: n
   let left = opts.qty && opts.qty > 0 ? Math.min(opts.qty, available) : defaultQty;
   const days = thawDaysFor(p.name, p.kind);
   const eatBy = addDays(localDay(0), days);
-  const fallback = fridgeLocationId() ?? (p.default_location_id && !fz.has(p.default_location_id) ? p.default_location_id : null);
+  const fallback = fridgeLocationId() ?? (p.default_location_id && !fz.has(p.default_location_id) ? p.default_location_id : null) ?? unassignedId();
   let moved = 0;
   let target: number | null = null;
   db.transaction(() => {
@@ -329,7 +338,7 @@ function archiveEmptyLeftover(p: FreshProduct) {
   }
 }
 
-export function addLeftovers(input: { recipeId?: number | null; name?: string | null; portions: number; where: 'fridge' | 'freezer'; actor?: string }) {
+export function addLeftovers(input: { recipeId?: number | null; name?: string | null; portions: number; where: 'fridge' | 'freezer'; actor?: string; locationId?: number | null }) {
   if (!(input.portions > 0)) throw new FreshError(t('Invalid quantity'));
   const recipe = input.recipeId
     ? (db.prepare('SELECT id, title, image_path FROM recipes WHERE id = ?').get(input.recipeId) as { id: number; title: string; image_path: string | null } | undefined)
@@ -337,8 +346,13 @@ export function addLeftovers(input: { recipeId?: number | null; name?: string | 
   if (input.recipeId && !recipe) throw new FreshError(t('Recipe not found'), 404);
   const name = (input.name?.trim() || recipe?.title || '').trim();
   if (!name) throw new FreshError(t('Name the leftovers'));
-  const locationId = input.where === 'freezer' ? freezerLocationId() : fridgeLocationId();
-  if (!locationId) throw new FreshError(input.where === 'freezer' ? t('There is no freezer location yet – add one in Settings.') : t('There is no fridge location yet – add one in Settings.'));
+  const climate = input.where === 'freezer' ? 'frozen' : 'chilled';
+  if (input.locationId && !placeOfClimate(input.locationId, climate))
+    throw new FreshError(input.where === 'freezer' ? t('That place is not a frozen place.') : t('That place is not a chilled place.'));
+  // frozen needs a frozen place; chilled without any fridge keeps them where nothing is assigned yet (one-room flat)
+  const locationId = input.where === 'freezer' ? freezerLocationId(input.locationId) : (fridgeLocationId(input.locationId) ?? unassignedId());
+  if (!locationId) throw new FreshError(t('There is no freezer location yet – add one in Settings.'));
+  rememberPlace(locationId);
   const existing = (recipe
     ? db.prepare("SELECT id FROM products WHERE kind = 'leftover' AND recipe_id = ? ORDER BY archived, id DESC LIMIT 1").get(recipe.id)
     : db.prepare("SELECT id FROM products WHERE kind = 'leftover' AND lower(name) = lower(?) ORDER BY archived, id DESC LIMIT 1").get(name)) as { id: number } | undefined;
@@ -347,7 +361,7 @@ export function addLeftovers(input: { recipeId?: number | null; name?: string | 
     pid = existing.id;
     db.prepare('UPDATE products SET archived = 0, name = ? WHERE id = ?').run(name, pid);
   } else {
-    pid = createProduct({ name, unit: t('portions'), trackMode: 'count', locationId: fridgeLocationId(), imagePath: recipe?.image_path ?? null });
+    pid = createProduct({ name, unit: t('portions'), trackMode: 'count', locationId: fridgeLocationId() ?? null, imagePath: recipe?.image_path ?? null });
     db.prepare("UPDATE products SET kind = 'leftover', recipe_id = ?, category_id = NULL WHERE id = ?").run(recipe?.id ?? null, pid);
   }
   const bb = addDays(localDay(0), input.where === 'freezer' ? DEFAULT_FREEZER_DAYS : LEFTOVER_FRIDGE_DAYS);

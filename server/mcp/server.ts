@@ -53,6 +53,7 @@ import { register as register_people } from './tools-people.js';
 import { register as register_tour } from './tools-tour.js';
 import { register as register_ha2 } from './tools-ha2.js';
 import { register as register_menu } from './tools-menu.js';
+import { register as register_places } from './tools-places.js';
 import { norm } from '../lib/text.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -96,7 +97,7 @@ export function buildMcpServer(actorName: string) {
     { name: 'tohuus', version: '0.1.0' },
     {
       instructions:
-        "ToHuus Hub is a family's household inventory (fridge, freezer, pantry, household supplies), plus shopping list, recipes and cooking history. " +
+        "ToHuus Hub is a household's inventory (whatever places they have – see get_home_setup; never assume a fridge or freezer), plus shopping list, recipes and cooking history. " +
         "Answer in the user's language. Product, location and recipe names are stored in the household's language - use them as they are. " +
         'YOU read photos (receipt, freezer, recipe card) yourself and pass the recognised data in structured form: ' +
         'purchases/receipts → record_purchase (by default queued for review in the app), recipes → save_recipe. ' +
@@ -507,8 +508,14 @@ export function buildMcpServer(actorName: string) {
 
   s.registerTool(
     'list_locations',
-    { title: 'Locations', description: 'Storage locations in the house with number of products.', inputSchema: {}, annotations: RO },
-    async () => text(overview().locations.map((l: any) => ({ id: l.id, name: l.name, products: l.products, low: l.low, expiring: l.expiring }))),
+    {
+      title: 'Locations',
+      description: 'Places in the home where things are kept (rooms, shelves, devices), with their climate (ambient, chilled, frozen), the path inside other places and the number of products.',
+      inputSchema: {},
+      annotations: RO,
+    },
+    async () =>
+      text(overview().locations.map((l: any) => ({ id: l.id, name: l.name, path: l.path, climate: l.climate, products: l.products, low: l.low, expiring: l.expiring, archived: l.archived ? true : undefined }))),
   );
 
   s.registerTool(
@@ -523,6 +530,7 @@ export function buildMcpServer(actorName: string) {
     },
   );
 
+  register_places(s, actorName);
   register_data(s, actorName);
   register_party(s, actorName);
   register_fresh(s, actorName);

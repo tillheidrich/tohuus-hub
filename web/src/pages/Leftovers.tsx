@@ -64,12 +64,24 @@ export interface Box {
   can_undo: boolean;
 }
 
+interface MetaPlace {
+  id: number;
+  name: string;
+  path: string;
+  icon: string;
+  owner_name: string | null;
+}
+
 interface Meta {
   types: { key: string; label: string; fridge: number; freezer: number }[];
   has_freezer: boolean;
   has_fridge: boolean;
   freezer_name: string | null;
   fridge_name: string | null;
+  /** area: home – default place per climate (the one used last) and all of them, for a WG with two fridges */
+  freezer_id?: number | null;
+  fridge_id?: number | null;
+  places?: { chilled: MetaPlace[]; frozen: MetaPlace[] };
   printers: { id: number; name: string; paper: number; mode: string }[];
   layouts: { key: string; per_page: number; w: number; h: number }[];
 }
@@ -229,7 +241,7 @@ export async function runLabelOutput(boxes: Box[], mode: LabelMode, toast: Toast
   }
 }
 
-export async function saveBoxes(body: BoxPreset & { portions: number; place: Place; boxes?: number; type?: string | null; eat_by?: string | null; labelled?: boolean }) {
+export async function saveBoxes(body: BoxPreset & { portions: number; place: Place; boxes?: number; type?: string | null; eat_by?: string | null; labelled?: boolean; location_id?: number | null }) {
   const out = await post<Box[]>('/labels/boxes', body);
   refresh();
   return out;
@@ -272,6 +284,16 @@ export function SaveBoxSheet({ open, onClose, preset, title }: { open: boolean; 
   const autoDate = shelf ? addDays(localToday(), place === 'freezer' ? shelf.freezer : shelf.fridge) : null;
   const date = eatBy ?? autoDate;
   const noFreezer = meta.data && !meta.data.has_freezer;
+  // area: home – only climates the household really has; with several places of one climate, pick one
+  const [placeId, setPlaceId] = useState<number | null>(null);
+  const climatePlaces = (place === 'freezer' ? meta.data?.places?.frozen : meta.data?.places?.chilled) ?? [];
+  const defaultId = place === 'freezer' ? meta.data?.freezer_id : meta.data?.fridge_id;
+  const chosenId = placeId && climatePlaces.some((p) => p.id === placeId) ? placeId : (defaultId ?? null);
+  const placeOptions: [Place, string][] = [['fridge', t('Chilled')]];
+  if (!noFreezer) placeOptions.push(['freezer', t('Freezing')]);
+  useEffect(() => {
+    if (noFreezer && place === 'freezer') setPlace('fridge');
+  }, [noFreezer, place]);
 
   const save = async () => {
     if (!name.trim() && !preset.recipe_id && !preset.product_id && !preset.plan_id) {
@@ -288,6 +310,7 @@ export function SaveBoxSheet({ open, onClose, preset, title }: { open: boolean; 
         portions,
         boxes,
         place,
+        location_id: climatePlaces.length > 1 ? chosenId : null,
         type: kind,
         eat_by: eatBy,
         labelled: mode !== 'none',
@@ -323,17 +346,20 @@ export function SaveBoxSheet({ open, onClose, preset, title }: { open: boolean; 
             </div>
             <div className="field grow" style={{ margin: 0 }}>
               <label>{t('Where?')}</label>
-              <Seg<Place>
-                value={place}
-                onChange={(p) => {
-                  if (p === 'freezer' && noFreezer) {
-                    toast({ text: t('There is no freezer location yet – add one in Settings.'), error: true });
-                    return;
-                  }
-                  setPlace(p);
-                }}
-                options={[['fridge', t('Fridge')], ['freezer', t('Freezer compartment')]]}
-              />
+              {placeOptions.length > 1 ? (
+                <Seg<Place> value={place} onChange={setPlace} options={placeOptions} />
+              ) : (
+                <div className="small muted" style={{ paddingTop: 8 }}>
+                  {meta.data?.fridge_name ?? t('Chilled')}
+                </div>
+              )}
+              {climatePlaces.length > 1 && (
+                <select className="input sm" style={{ marginTop: 8 }} aria-label={t('Which one?')} value={chosenId ?? ''} onChange={(e) => setPlaceId(Number(e.target.value))}>
+                  {climatePlaces.map((p) => (
+                    <option key={p.id} value={p.id}>{p.owner_name ? `${p.path} (${p.owner_name})` : p.path}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
           <div className="field" style={{ margin: 0 }}>

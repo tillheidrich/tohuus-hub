@@ -62,7 +62,7 @@ export function RecipeDetail() {
           <ArrowLeft size={18} />
         </button>
         <div className="grow" />
-        <button className="icon-btn" onClick={fav} aria-label={t('Favorite')} style={{ color: r.favorite ? 'var(--empty)' : undefined }}>
+        <button className={`icon-btn ${r.favorite ? 'heart-on' : ''}`} onClick={fav} aria-label={t('Favorite')} aria-pressed={Boolean(r.favorite)}>
           <Heart size={18} weight={r.favorite ? 'fill' : 'regular'} />
         </button>
         <BonButton spec={{ type: 'recipe', id: r.id }} />

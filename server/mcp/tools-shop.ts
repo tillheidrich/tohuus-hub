@@ -70,7 +70,7 @@ export function register(s: McpServer, actorName: string) {
     'shopping_by_aisle',
     {
       title: 'Shopping list by aisle',
-      description: "Open shopping items grouped by store section, in the walking order learned for a store (e.g. 'REWE', 'Aldi'). Also shows who takes care of what.",
+      description: "Open shopping items grouped by store section, in the walking order learned for a store (e.g. 'REWE', 'Aldi'). Also shows who takes care of what and where an item should be bought (buy_at, set by people). With a store, items marked for other stores come last in the section 'elsewhere'.",
       inputSchema: { store: z.string().optional().describe('store name; default order when omitted') },
       annotations: RO,
     },
@@ -82,7 +82,7 @@ export function register(s: McpServer, actorName: string) {
         stores: v.stores.map((x) => x.name),
         sections: v.sections.map((g) => ({
           section: g.key,
-          items: g.items.map((i) => ({ id: i.id, text: i.text, qty: i.qty ?? undefined, note: i.note ?? undefined, taken_care_of_by: i.claim?.name })),
+          items: g.items.map((i) => ({ id: i.id, text: i.text, qty: i.qty ?? undefined, note: i.note ?? undefined, taken_care_of_by: i.claim?.name, buy_at: i.buy_at.length ? i.buy_at : undefined })),
         })),
         in_basket: v.basket.map((i) => i.text),
       });

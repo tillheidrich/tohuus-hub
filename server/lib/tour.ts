@@ -437,7 +437,7 @@ export async function resetData(opts: { scopes: Scope[]; places?: boolean }) {
     // marks of rows that are gone
     const cleared = plan.filter((p) => p.where === '1').map((p) => p.table);
     if (cleared.length) db.prepare(`DELETE FROM demo_rows WHERE tbl IN (${cleared.map(() => '?').join(', ')})`).run(...cleared);
-    if (opts.places) ensureBaseData(); // fresh neutral base places and categories
+    if (opts.places) ensureBaseData({ places: false }); // fresh base categories; places are picked again, none are invented (area: home)
   })();
   liveDemoRows(); // drop stale marks (cascaded rows)
   emit('stock', 'products', 'shopping', 'recipes', 'imports', 'orders', 'notifications', 'settings', 'care', 'tour');

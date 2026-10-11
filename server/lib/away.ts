@@ -18,7 +18,8 @@ import { emit } from './bus.js';
 import { listCareTasks } from './care.js';
 import { addToShopping, adjustStock, getProduct, listProducts, matchIngredient, matchProduct } from './catalog.js';
 import { categoryKeyOf, entryExpiry, openDaysFor } from './fresh-shelf.js';
-import { freeze, isFreezer, wasteProduct } from './fresh.js';
+import { freeze, wasteProduct } from './fresh.js';
+import { frozenIds, hasClimate } from './places.js';
 import { getRecipe, ingredientCore, suggest } from './recipes.js';
 import { norm } from './text.js';
 import { activeIngredients, effectiveIngredients, variantContext } from './variants.js';
@@ -271,10 +272,8 @@ export function members() {
 type Products = ReturnType<typeof listProducts>;
 type Prod = Products[number] & { kind?: string; recipe_id?: number | null };
 
-function freezerIdSet() {
-  const locs = db.prepare('SELECT id, name, kind, icon FROM locations').all() as { id: number; name: string; kind: string; icon: string }[];
-  return new Set(locs.filter((l) => isFreezer(l)).map((l) => l.id));
-}
+/** Frozen places by climate (area: home). */
+const freezerIdSet = () => frozenIds();
 
 /** First expiry of what is NOT in the freezer, per product. */
 function outsideFreezer(products: Products) {
@@ -301,6 +300,8 @@ const canFreeze = (p: Prod) => p.kind === 'leftover' || (['chilled', 'bakery'].i
 
 /** What would go off before the return – soonest first. */
 export function useUpList(trip: TripRow, today = awayDay(0), products: Products = listProducts()) {
+  // "freeze it" only where the household has a frozen place – never an invented freezer (area: home)
+  const freezer = hasClimate('frozen');
   return outsideFreezer(products)
     .filter((x) => x.use_by >= today && x.use_by <= trip.end_day)
     .sort((a, b) => a.use_by.localeCompare(b.use_by))
@@ -317,7 +318,7 @@ export function useUpList(trip: TripRow, today = awayDay(0), products: Products 
       /** expires only once you're gone – before that it's still fine */
       while_away: x.use_by >= trip.start_day,
       leftover: x.p.kind === 'leftover',
-      can_freeze: canFreeze(x.p),
+      can_freeze: freezer && canFreeze(x.p),
     }));
 }
 
@@ -352,7 +353,7 @@ export function checklist(trip: TripRow, today = awayDay(0)): CheckItem[] {
   if (perishables.length)
     items.push({
       key: 'fridge',
-      text: t('Use up or freeze what would go off'),
+      text: hasClimate('frozen') ? t('Use up or freeze what would go off') : t('Use up what would go off'),
       detail: perishables
         .slice(0, 5)
         .map((x) => x.name)
@@ -781,7 +782,7 @@ export function createSitterLink(tripId: number) {
   const trip = needTrip(tripId);
   if (trip.sitter_link_id) db.prepare('UPDATE guest_links SET revoked = 1 WHERE id = ?').run(trip.sitter_link_id);
   const s = parseObj<SitterNotes>(trip.sitter, {});
-  const locations = (db.prepare('SELECT id FROM locations ORDER BY sort, id').all() as { id: number }[]).map((l) => l.id);
+  const locations = (db.prepare(`SELECT id FROM locations WHERE archived = 0 AND kind != 'unassigned' ORDER BY sort, id`).all() as { id: number }[]).map((l) => l.id);
   const token = randomToken(12);
   const info = db
     .prepare(`INSERT INTO guest_links (token, name, scopes, location_ids, note, expires_at) VALUES (?, ?, '["stock"]', ?, ?, ?)`)

@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
-import { config, smtpEnabled } from '../config.js';
+import { config } from '../config.js';
+import { APP_NAME, canSendMail, mailHousehold, sendMail, smtpTransport, type MailContent } from './mail.js';
 import { db, getSetting } from '../db.js';
 import { emit } from './bus.js';
 import { t } from '../i18n.js';
@@ -60,6 +60,26 @@ export function setPersonalRouter(fn: PersonalRouter | null) {
   personalRouter = fn;
 }
 
+/** Small label at the top of the mail's ticket card, per event (English source text, translated at send time). */
+const EVENT_EYEBROW: Partial<Record<NotifyEvent, string>> = {
+  'stock.low': 'Stock',
+  'stock.empty': 'Stock',
+  'stock.expiring': 'Use soon',
+  'import.review': 'Receipts',
+  'order.new': 'Order',
+  'order.status': 'Order',
+  'shopping.added': 'Shopping list',
+  'digest.daily': 'Daily overview',
+  'care.due': 'Care',
+  'party.ending': 'Party',
+  'kids.wish': 'Wish',
+  'auth.new_device': 'Security',
+  'budget.warning': 'Budget',
+  'plan.vote': 'Meal plan',
+  'plan.rotation': 'Meal plan',
+  test: 'Test',
+};
+
 export const DEFAULT_NOTIFY: NotifySettings = {
   haWebhookUrl: '',
   webhookUrl: '',
@@ -101,20 +121,8 @@ export function notifySettings(): NotifySettings {
   return { ...DEFAULT_NOTIFY, ...s, events };
 }
 
-let transport: ReturnType<typeof nodemailer.createTransport> | null = null;
-export function mailer() {
-  if (!smtpEnabled()) return null;
-  transport ??= nodemailer.createTransport({
-    host: config.smtp.host,
-    port: config.smtp.port,
-    secure: config.smtp.secure,
-    auth: config.smtp.user ? { user: config.smtp.user, pass: config.smtp.password } : undefined,
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 20_000,
-  });
-  return transport;
-}
+/** The shared SMTP transport (server/lib/mail.ts) – kept under its old name for callers that only check "is mail set up". */
+export const mailer = () => smtpTransport();
 
 export interface NotifyInput {
   event: NotifyEvent;
@@ -126,7 +134,8 @@ export interface NotifyInput {
   /** suppress repeats with the same key for this many hours */
   dedupeKey?: string;
   dedupeHours?: number;
-  html?: string;
+  /** richer e-mail content (sections, rows …) on top of title + message; rendered in the shared mail layout */
+  mail?: Partial<MailContent>;
   /** goes out even while the household is away (away mode keeps everything else quiet) */
   urgent?: boolean;
 }
@@ -199,17 +208,17 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
             return [c.name, false];
           }),
       );
-  const m = mailer();
-  if (route.email && m && s.emailTo) {
+  if (route.email && canSendMail() && s.emailTo) {
     jobs.push(
-      m
-        .sendMail({
-          from: config.smtp.from,
-          to: s.emailTo,
-          subject: `ToHuus Hub · ${input.title}`,
-          text: `${input.message}\n\n${url}`,
-          html: input.html ?? emailHtml(input.title, input.message, url),
-        })
+      sendMail(s.emailTo, {
+        subject: `${mailHousehold() || APP_NAME} · ${input.title}`,
+        eyebrow: t(EVENT_EYEBROW[input.event] ?? 'Notification'),
+        title: input.title,
+        paragraphs: [input.message],
+        button: { url, label: t('Open in ToHuus Hub') },
+        reason: t('You get this because e-mail is switched on for this event under Settings › Notifications.'),
+        ...input.mail,
+      })
         .then((): [string, boolean] => ['email', true])
         .catch((e: Error): [string, boolean] => {
           console.warn('[mail]', e.message);
@@ -234,19 +243,4 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
 function encodeHeader(s: string) {
   // ntfy accepts RFC 2047 encoded headers for non-ASCII titles
   return /^[\x20-\x7e]*$/.test(s) ? s : `=?UTF-8?B?${Buffer.from(s).toString('base64')}?=`;
-}
-
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
-
-export function emailHtml(title: string, message: string, url: string, extra = '') {
-  return `<!doctype html><html><body style="margin:0;background:#f4f2ee;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1b1d1f">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px">
-    <div style="font-weight:700;letter-spacing:-0.02em;font-size:15px;margin-bottom:20px">ToHuus Hub</div>
-    <div style="background:#fff;border-radius:16px;padding:24px;border:1px solid #e6e2da">
-      <h1 style="font-size:20px;margin:0 0 8px;letter-spacing:-0.02em">${esc(title)}</h1>
-      <p style="margin:0 0 16px;line-height:1.5;white-space:pre-line">${esc(message)}</p>
-      ${extra}
-      <a href="${esc(url)}" style="display:inline-block;background:#1b1d1f;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:600">${esc(t('Open in ToHuus Hub'))}</a>
-    </div>
-  </div></body></html>`;
 }

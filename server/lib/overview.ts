@@ -1,13 +1,15 @@
 import { db, getSetting } from '../db.js';
 import { recipeImageSql } from './recipe-images.js';
 import { listProducts } from './catalog.js';
+import { listPlaces } from './places.js';
 import { suggest } from './recipes.js';
 import { t } from '../i18n.js';
 import { notPrivate } from './share-core.js';
 
 export function overview() {
   const products = listProducts();
-  const locations = db.prepare('SELECT * FROM locations ORDER BY sort, id').all() as any[];
+  // tree order; archived places and "not assigned yet" only while something is stored there (area: home)
+  const locations = listPlaces() as any[];
   const tracked = products.filter((p) => p.track_mode !== 'none');
   const watched = (p: (typeof products)[number]) => p.min_qty > 0 || p.track_mode === 'level';
   const attention = tracked

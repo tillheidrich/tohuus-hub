@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { ZodError } from 'zod';
 import { MulterError } from 'multer';
 import { config } from './config.js';
-import { brand, lang } from './db.js';
+import { lang } from './db.js';
 import { t } from './i18n.js';
 import { startScheduler } from './lib/scheduler.js';
 import { handleMcp } from './mcp/server.js';
@@ -44,10 +44,13 @@ import { r as tourRoutes } from './routes/tour.js';
 import { r as ha2Routes, ha2Guest } from './routes/ha2.js';
 import { r as menuRoutes } from './routes/menu.js';
 import { r as designRoutes } from './routes/design.js';
+import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
+import { r as buyAtRoutes } from './routes/buyat.js';
 import { householdAppearance } from './lib/appearance.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
-ensureBaseData();
+// a new household gets no places unasked – onboarding asks which ones it has (area: home); the demo brings its own
+ensureBaseData({ places: false });
 if (config.seedDemo) seedDemo();
 
 const app = express();
@@ -95,6 +98,7 @@ app.use('/api/party-board', partyBoard);
 app.use(kioskPublic);
 app.use('/api/kid', kidDevice);
 app.use('/api', dataPublic);
+app.use('/api', invitesPublic);
 app.use('/api', channelsPublic);
 app.use('/api', authPublic);
 app.use('/api', peoplePublic);
@@ -129,53 +133,29 @@ app.use('/api', tourRoutes);
 app.use('/api', ha2Routes);
 app.use('/api', menuRoutes);
 app.use('/api', designRoutes);
+app.use('/api', invitesRoutes);
+app.use('/api', buyAtRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webDir = [path.join(here, 'web'), path.join(here, '../dist/web')].find((d) => fs.existsSync(path.join(d, 'index.html')));
 if (webDir) {
-  // brand-dependent app icons / manifest / title (ToHuus Hub or the Fredirando house theme)
-  const BRAND_FILES: Record<string, string> = {
-    '/icon.svg': 'fredirando.svg',
-    '/apple-touch-icon.png': 'fredirando-touch.png',
-    '/icon-192.png': 'fredirando-192.png',
-    '/icon-512.png': 'fredirando-512.png',
-    '/icon-maskable-192.png': 'fredirando-maskable-192.png',
-    '/icon-maskable-512.png': 'fredirando-maskable-512.png',
-    '/favicon-32.png': 'fredirando-32.png',
-    '/icon-light.svg': 'fredirando-light.svg',
-    '/icon-dark.svg': 'fredirando-dark.svg',
-    '/icon-1024.png': 'fredirando-1024.png',
-  };
-  app.get(Object.keys(BRAND_FILES), (req, res, next) => {
-    if (brand() !== 'fredirando') return next();
-    res.setHeader('Cache-Control', 'no-cache');
-    res.sendFile(path.join(webDir, BRAND_FILES[req.path]));
-  });
-  // manifest per brand and household theme (colours match the --paper token of web/src/styles.css)
-  const PAPER = { tohuus: { light: '#f6f3ed', dark: '#111413' }, fredirando: { light: '#fbf5ee', dark: '#150e0a' } } as const;
+  // manifest per household theme (colours match the --canvas token of web/src/styles.css; one brand: ToHuus)
+  const CANVAS = { light: '#f7f5ef', dark: '#0f1513' } as const;
   app.get('/manifest.webmanifest', (_req, res) => {
     const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
-    const b = brand() === 'fredirando' ? 'fredirando' : 'tohuus';
-    const c = PAPER[b][householdAppearance().theme === 'dark' ? 'dark' : 'light'];
-    Object.assign(m, { background_color: c, theme_color: c });
-    if (b === 'fredirando') Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: t('Ordered. Delivered. From kitchen & pantry.') });
+    const c = CANVAS[householdAppearance().theme === 'dark' ? 'dark' : 'light'];
+    Object.assign(m, { background_color: c, theme_color: c, description: t('Less on your mind. More at home.') });
     res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
   });
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {
     if (p.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } }));
   const html = fs.readFileSync(path.join(webDir, 'index.html'), 'utf8');
-  const fredi = html
-    .replace(/<title>.*<\/title>/, '<title>Fredirando</title>')
-    .replace(/content="ToHuus Hub"/g, 'content="Fredirando"')
-    .replace(/content="#f6f3ed"/g, 'content="#fbf5ee"')
-    .replace(/content="#111413"/g, 'content="#150e0a"')
-    .replace(/<html lang="[^"]*"/, '<html lang="de" data-brand="fredirando"');
   // the document language follows the household setting
   // … and the household theme is known before the first paint (web/public/theme-boot.js reads it)
   const withLang = (doc: string) => doc.replace(/<html lang="[^"]*"/, `<html lang="${lang()}" data-theme-default="${householdAppearance().theme}"`);
-  app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(withLang(brand() === 'fredirando' ? fredi : html)));
+  app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(withLang(html)));
 }
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

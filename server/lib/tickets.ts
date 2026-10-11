@@ -118,7 +118,17 @@ const SECTION_LABEL: Record<string, string> = {
   drugstore: 'Drugstore',
   household: 'Household',
   other: 'Other',
+  elsewhere: 'Other stores',
 };
+
+/** One store every open item was marked for ("Where to buy?") – then the slip may name it. Otherwise none. */
+export function commonStore(lists: string[][]): string | null {
+  if (!lists.length || lists.some((l) => !l.length)) return null;
+  const [first, ...rest] = lists;
+  const n = (s: string) => s.trim().toLowerCase();
+  const hit = first.find((s) => rest.every((l) => l.some((x) => n(x) === n(s))));
+  return hit ?? null;
+}
 
 const household = () => getSetting<string>('household.name', '') || t('Our home');
 const fredi = () => brand() === 'fredirando';
@@ -154,9 +164,12 @@ class NotFound extends Error {
 }
 
 function shoppingTicket(spec: TicketSpec): Ticket {
+  // the store only sorts the aisles; which store an item is for comes from "Where to buy?" alone (set by people)
   const v = storeView(spec.store_id ?? null);
+  const open = v.sections.flatMap((s) => s.items);
   const meta: [string, string][] = [];
-  if (v.store) meta.push([t('Store'), v.store.name]);
+  const shared = commonStore(open.map((i) => i.buy_at));
+  if (shared) meta.push([t('Store'), shared]);
   meta.push([t('Items'), String(v.open)]);
   const body: Block[] = [];
   if (!v.open) body.push({ k: 'text', text: t('The shopping list is empty.'), align: 'center' });
@@ -164,7 +177,9 @@ function shoppingTicket(spec: TicketSpec): Ticket {
     body.push({ k: 'text', text: t(SECTION_LABEL[s.key] ?? 'Other').toLocaleUpperCase(locale()), size: 's', bold: true });
     for (const i of s.items) {
       const q = i.qty && i.qty !== 1 ? `${num(i.qty)} ` : '';
-      body.push({ k: 'check', text: `${q}${i.product_name ?? i.text}`, sub: i.note && !/^\d/.test(i.note) ? i.note : null });
+      const where = !shared && i.buy_at.length ? t('at {stores}', { stores: i.buy_at.join(', ') }) : null;
+      const note = i.note && !/^\d/.test(i.note) ? i.note : null;
+      body.push({ k: 'check', text: `${q}${i.product_name ?? i.text}`, sub: [note, where].filter(Boolean).join(' · ') || null });
     }
     body.push({ k: 'space', h: 6 });
   }
@@ -187,14 +202,13 @@ interface OrderRow {
   guest_link_id: number | null;
 }
 
-/** Who may be named on the ticket: members always, guests only outside a party or when the party shows names. */
+/**
+ * Who ordered. Every order carries a name since wave 6 (guests must give one), and the kitchen ticket is for the
+ * people preparing it – so the name is always printed, also at parties (the public party board still follows the
+ * party's "show names" switch).
+ */
 export function orderWho(o: OrderRow): { name: string | null; sofa: boolean } {
-  if (o.user_id) return { name: o.guest_name, sofa: true };
-  if (o.party_id) {
-    const p = db.prepare('SELECT show_names FROM parties WHERE id = ?').get(o.party_id) as { show_names: number } | undefined;
-    return { name: p?.show_names ? o.guest_name : null, sofa: false };
-  }
-  return { name: o.guest_name, sofa: false };
+  return { name: o.guest_name?.trim() || null, sofa: Boolean(o.user_id) };
 }
 
 function orderTicket(spec: TicketSpec): Ticket {

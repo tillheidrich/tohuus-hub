@@ -1,7 +1,7 @@
 // German strings for the first-run experience: setup wizard, starter sets, checklist, what's new, help, navigation groups, empty states
 export const onboard: Record<string, string> = {
   // navigation groups
-  'Around the house': 'Rund ums Haus',
+  'Around the house': 'Rund ums Zuhause',
   'Kitchen & shopping': 'Küche & Einkauf',
   Manage: 'Verwaltung',
   Help: 'Hilfe',

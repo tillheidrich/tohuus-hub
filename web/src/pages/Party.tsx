@@ -119,7 +119,6 @@ export function PartyCard() {
   const recent = useApi<any[]>(['orders', 'parties'], '/parties');
   const [start, setStart] = useState(false);
   const [recapId, setRecapId] = useState<number | null>(null);
-  const fredi = currentBrand() === 'fredirando';
   if (cur.isLoading) return <div className="skel" style={{ height: 120, marginBottom: 18 }} />;
   if (cur.error) return null;
   const p = cur.data;
@@ -134,8 +133,8 @@ export function PartyCard() {
             <Confetti size={34} weight="duotone" />
           </div>
           <div className="grow">
-            <div className="eyebrow">{fredi ? t('Delivery night') : t('Party mode')}</div>
-            <h2 style={{ margin: '2px 0 4px' }}>{fredi ? t('Fredirando opens the kitchen') : t('Having people over?')}</h2>
+            <div className="eyebrow">{t('Party mode')}</div>
+            <h2 style={{ margin: '2px 0 4px' }}>{t('Having people over?')}</h2>
             <p className="small muted" style={{ margin: 0, maxWidth: 520 }}>
               {t('Guests scan a QR code, order from your party menu and pick up at the counter. The TV shows what’s being made. It ends by itself.')}
             </p>
@@ -431,7 +430,6 @@ function MenuEditor({ items, onChange }: { items: MenuItem[]; onChange: (i: Menu
 }
 
 function StartSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const fredi = currentBrand() === 'fredirando';
   const products = useApi<Product[]>('products', open ? '/products' : null);
   const templates = useApi<any[]>(['orders', 'party-templates'], open ? '/party-templates' : null);
   const [name, setName] = useState('');
@@ -445,11 +443,11 @@ function StartSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const toast = useToast();
   useEffect(() => {
     if (!open) return;
-    setName(fredi ? t('Fredirando night') : t('Party'));
+    setName(t('Party'));
     setItems(null);
     setTpl(null);
     setEditMenu(false);
-  }, [open, fredi]);
+  }, [open]);
   const barDefault = useMemo(() => (products.data ?? []).filter((p) => p.orderable).map((p) => ({ product_id: p.id, max_per_guest: null })), [products.data]);
   const menu = items ?? barDefault;
   const pickTemplate = (x: any) => {
@@ -476,7 +474,7 @@ function StartSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
     <Sheet
       open={open}
       onClose={onClose}
-      title={fredi ? t('Open the kitchen') : t('Start a party')}
+      title={t('Start a party')}
       footer={
         <div className="sheet-foot">
           <button className="btn primary lg block" disabled={busy || !menu.length || !name.trim()} onClick={start}>
@@ -888,14 +886,13 @@ export function PartyBoard() {
       </div>
     );
   if (!d) return null;
-  const fredi = d.brand === 'fredirando';
   if (d.ended)
     return (
       <div className="board board-thanks">
         <div className="board-center">
           <Confetti size={96} weight="duotone" className="thanks-art" />
           <div className="eyebrow">{d.party.name}</div>
-          <h1>{fredi ? t('Kitchen’s closed – thanks for coming!') : t('Thanks for coming!')}</h1>
+          <h1>{t('Thanks for coming!')}</h1>
           <p className="muted">{t('The party is over. Get home safely.')}</p>
         </div>
       </div>
@@ -933,7 +930,7 @@ export function PartyBoard() {
           <ArrowsOut size={18} />
         </button>
       </div>
-      {view === 'guest' ? <GuestBoard d={d} fredi={fredi} now={now} /> : <KitchenBoard d={d} fredi={fredi} now={now} onChange={() => q.refetch()} />}
+      {view === 'guest' ? <GuestBoard d={d} now={now} /> : <KitchenBoard d={d} now={now} onChange={() => q.refetch()} />}
     </div>
   );
 }
@@ -943,8 +940,8 @@ function orderLabel(o: BoardOrder) {
 }
 const linesText = (o: BoardOrder) => o.lines.map((l) => `${l.qty}× ${l.name}`).join(', ');
 
-function GuestBoard({ d, fredi, now }: { d: BoardData; fredi: boolean; now: number }) {
-  const svg = useQrSvg(d.join_url, fredi ? '#2a1d16' : '#17181a');
+function GuestBoard({ d, now }: { d: BoardData; now: number }) {
+  const svg = useQrSvg(d.join_url, '#17181a');
   const orders = d.orders ?? [];
   const making = orders.filter((o) => o.status === 'accepted' || o.status === 'new');
   const ready = orders.filter((o) => o.status === 'done').slice(-8).reverse();
@@ -966,14 +963,14 @@ function GuestBoard({ d, fredi, now }: { d: BoardData; fredi: boolean; now: numb
           <div className="qr" dangerouslySetInnerHTML={{ __html: svg }} />
         </div>
         <div className="gb-scan">
-          <b>{fredi ? t('Scan & order') : t('Scan & order')}</b>
-          <span>{fredi ? t('Fredirando delivers to the counter') : t('Pick it up at the counter when it’s ready')}</span>
+          <b>{t('Scan & order')}</b>
+          <span>{t('Pick it up at the counter when it’s ready')}</span>
         </div>
         <div className="gb-host mono">{host}</div>
       </section>
       <section className="gb-main">
         <header className="gb-head">
-          <div className="eyebrow">{fredi ? 'fredirando' : d.household}</div>
+          <div className="eyebrow">{d.household}</div>
           <h1>{d.party.name}</h1>
           <div className="gb-meta">
             <span><Clock size={18} /> {new Date(now).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}</span>
@@ -982,7 +979,7 @@ function GuestBoard({ d, fredi, now }: { d: BoardData; fredi: boolean; now: numb
         </header>
         {ready.length > 0 && (
           <div className="gb-ready">
-            <div className="lbl">{fredi ? t('Ready for pickup') : t('Ready at the counter')}</div>
+            <div className="lbl">{t('Ready at the counter')}</div>
             <div className="chips-row">
               {ready.map((o) => (
                 <span key={o.id} className="ready-chip">
@@ -1007,7 +1004,7 @@ function GuestBoard({ d, fredi, now }: { d: BoardData; fredi: boolean; now: numb
           <div className="gb-empty">{t('The menu is on your phone – just scan the code.')}</div>
         )}
         <div className="gb-ticker" aria-live="polite">
-          <span className="lbl">{fredi ? t('In the kitchen') : t('Being made')}</span>
+          <span className="lbl">{t('Being made')}</span>
           <div className="track">
             {making.length === 0 ? (
               <span className="muted">{t('Nothing in the works – what would you like?')}</span>
@@ -1027,14 +1024,14 @@ function GuestBoard({ d, fredi, now }: { d: BoardData; fredi: boolean; now: numb
   );
 }
 
-function KitchenBoard({ d, fredi, now, onChange }: { d: BoardData; fredi: boolean; now: number; onChange: () => void }) {
+function KitchenBoard({ d, now, onChange }: { d: BoardData; now: number; onChange: () => void }) {
   const orders = d.orders ?? [];
   const toast = useToast();
   const [busy, setBusy] = useState<number | null>(null);
   const cols: { key: 'new' | 'accepted' | 'done'; title: string }[] = [
     { key: 'new', title: t('New') },
-    { key: 'accepted', title: fredi ? t('In the kitchen') : t('In progress') },
-    { key: 'done', title: fredi ? t('Ready for pickup') : t('Ready') },
+    { key: 'accepted', title: t('In progress') },
+    { key: 'done', title: t('Ready') },
   ];
   const move = async (o: BoardOrder, status: string) => {
     if (!d.member) return;
