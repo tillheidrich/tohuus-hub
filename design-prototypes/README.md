@@ -1,6 +1,6 @@
 # ToHuus Hub – Stilprototypen (Phase 2)
 
-Drei gerenderte Stilrichtungen für denselben Inhalt, alle im festen Grün-Schwarz. Unterschiedlich sind Komposition, Typografie und wie viel illustriert wird. Die App (`web/`, `server/`, `site/`) ist unverändert. Erst nach Tills Auswahl geht es weiter mit Phase 3 (Tokens + Pilot „Heute“/„Einkauf“).
+Drei gerenderte Stilrichtungen (A–C) und eine Mischung (D) für denselben Inhalt, alle im festen Grün-Schwarz. Unterschiedlich sind Komposition, Typografie und wie viel illustriert wird. Die App (`web/`, `server/`, `site/`) ist unverändert. Erst nach Tills Auswahl geht es weiter mit Phase 3 (Tokens + Pilot „Heute“/„Einkauf“).
 
 Alles ist reines HTML/CSS/SVG plus etwas Vanilla-JS, ohne Build-Schritt. Zum Ansehen den Ordner über einen lokalen Server öffnen (z. B. `python3 -m http.server` im Ordner `design-prototypes/`, dann `index.html`). Über `file://` gehen die Seiten auch, nur die Website-Vorschau in Variante A braucht für das Dark-Theme im iframe einen Server.
 
@@ -11,19 +11,20 @@ Alles ist reines HTML/CSS/SVG plus etwas Vanilla-JS, ohne Build-Schritt. Zum Ans
 | `a-nordic-editorial/` | `heute.html`, `einkauf.html`, `hero.html`, `style.css` |
 | `b-little-house/` | dieselben drei Seiten + `illustrations.js` (alle Zeichnungen als Code) |
 | `c-dutch-detail/` | dieselben drei Seiten |
+| `d-nordic-dutch/` | dieselben drei Seiten + `brand.js` (Umschalter für Fredirando und die Überschriften-Serif) |
 | `shared/base.css` | Reset, fixe Markenpalette, Motion-Tokens, Reduced-Motion, Fokus |
 | `shared/fonts.css` | `@font-face` für die lokalen WOFF2 |
 | `shared/chrome.js` | Sidebar (ab 1024 px) und Tabbar mit der echten Navigation aus `web/src/App.tsx` |
 | `shared/proto.js` | Mikrointeraktionen (WAAPI) und Theme-Umschalter |
 | `shared/icons.js` | Pfaddaten der Phosphor-Icons, die die App schon nutzt (MIT) |
 | `boards/` | HTML-Quellen der Präsentationsboards |
-| `renders/` | alle PNGs (siehe unten) |
+| `renders/` | alle Renders als WebP (Qualität 82) |
 | `fonts/` | WOFF2 (latin + latin-ext) und je eine Lizenzdatei |
 | `assets/` | zwei Rezeptfotos aus `server/assets/demo-recipes` mit `CREDITS.md` |
 
-URL-Parameter für alle App-Seiten: `?theme=dark`, `?store=1` (Einkauf im „Im Laden“-Modus), `?motion=reduce`.
+URL-Parameter für alle App-Seiten: `?theme=dark`, `?store=1` (Einkauf im „Im Laden“-Modus), `?motion=reduce`. Nur in D zusätzlich: `?brand=fredirando` und `?serif=bree`.
 
-## Die drei Varianten
+## Die Varianten
 
 ### A – Nordic Editorial
 Ruhig und redaktionell. Statt Kartenstapeln gibt es Haarlinien und nummerierte Prioritäten („Heute zuerst“ 1–2–3) und pro Screen genau eine grüne Handlung. Die Einkaufsliste ist eine durchgehende Liste mit Gruppen-Überschriften, ohne Kästen. Illustriert wird kaum: eine feine Linien-Sonne zur Tageszeit und im Hero eine einlinige Skyline aus Wohnung, WG, Reihenhaus und Haus. Neben dem Hero zeigt ein Handy die echte „Heute“-Seite (iframe).
@@ -41,6 +42,19 @@ Schrift: Familjen Grotesk + Bree Serif. Icons: Phosphor Regular.
 ### C – Dutch Detail
 Grafisch mutiger. Der grüne Kopfblock trägt Kreisflächen und eine Datumskachel in Bogenform, auf der ein kleiner Vogel sitzt. Die Prioritäten stehen auf einem „Ticket“ mit Stanzkerben und Abrisslinie. Das Rezeptfoto ist als Bogenfenster beschnitten, dazu ein Stempel „Alles da“. „Erledigt“ sieht aus wie ein Kassenbon mit Zackenrand. Kategorien werden mit geometrischen Formen markiert (Kreis, Halbkreis, Quadrat, Dreieck), daneben steht immer der Name. Die Navigation ist eine schwarze, schwebende Leiste, auf dem Desktop eine schwarze Sidebar. „Im Laden“ ist ein Segment-Schalter mit gleitendem Indikator. Im Hero stehen vier flache Hauskacheln versetzt nebeneinander, die Katze sitzt auf dem Reihenhausdach.
 Schrift: Hedvig Letters Sans nur für Marke und Begrüßung („Moin, Till!“), Hedvig Letters Serif für redaktionelle Titel, Familjen Grotesk für UI und Fließtext. Hedvig gibt es nur in einem Schnitt (400), deshalb taugt sie nicht als UI-Schrift. Familjen hat 400–700 und bleibt auch in langen Listen gut lesbar.
+
+### D – Nordic Dutch (Mischung aus A und C)
+Entstanden aus Tills Frage, wie eine Mischung aus Dutch Detail und Nordic Editorial aussähe. Die Basis ist A: Haarlinien statt Kartenstapel, nummerierte Prioritäten, genau eine grüne Handlung pro Screen, viel Luft, helle Tabbar mit Plus als Kontur, helle Sidebar, Familjen Grotesk für alles Bedienbare. Aus C kommen nur vier Signaturen:
+1. **Bogenform**: die Datumskachel als Bogen mit dem kleinen Vogel (hier als Kontur, nicht auf grüner Fläche) und das bogenförmig beschnittene Rezeptfoto mit dem Stempel „Alles da“
+2. **Ticket** mit Stanzkerben und Abrisslinie für „Heute zuerst“
+3. **Kassenbon** mit Zackenrand für „Erledigt“, darunter die Zeile „Abgehakte Produkte sind schon im Bestand.“
+4. **Versetzte Hauskacheln** im Website-Hero (Wohnung, WG, Reihenhaus, Haus), nur in Palettenfarben
+
+Weggelassen, weil es C laut macht: der grüne Kopfblock, die schwarze schwebende Navigationsleiste, die schwarze Sidebar, die Formmarker statt Icons, der Segment-Schalter und der Gelbton außerhalb der Palette.
+
+**Überschriften-Serif:** Beide Kandidaten sind gerendert, Hedvig Letters Serif (`d-nordic-dutch-heute-mobile.webp`) und Bree Serif (`d-nordic-dutch-heute-mobile-bree.webp`). Ich empfehle Hedvig Letters Serif. Sie ist feiner und ruhiger als Bree und konkurriert nicht mit der fetten Grotesk der Bedienelemente; so bleibt die Überschrift leise und die Handlung deutlich. Ihre leicht kalligrafische, skandinavische Form passt zu Bogen, Ticket und Stempel. Mit Bree kippen genau diese Details ins Niedliche. Der Preis: Hedvig hat nur einen Schnitt (400) und braucht mindestens rund 20 px. Darum steht sie nur in H1, Abschnitts- und Rezepttiteln, Datum und Hero. Wer es freundlicher will, schaltet mit `?serif=bree` um.
+
+**Fredirando:** Fredirando nutzt dasselbe System, jetzt in Grün statt Orange. Geblieben sind Name, Bildmarke (abgerundetes Haus mit Lieferstrichen, nun auf ToHuus-Grün) und die kleingeschriebene, fette Wortmarke in Familjen Grotesk (`?brand=fredirando`, Renders `d-nordic-dutch-heute-*-fredirando*.webp`).
 
 ## Schriften und Lizenzen
 
@@ -98,7 +112,7 @@ Alles läuft mit CSS und WAAPI aus `shared/proto.js`, ohne Bibliothek. Animiert 
 | „Im Laden“ (C) | Segment-Indikator gleitet, Liste blendet über | 200 ms / 180 ms |
 | Reduced Motion | keine Transforms; Zustände wechseln sofort, nur 120 ms Überblendung | – |
 
-Die Motion-Frames auf den Boards (`*-motion-*.png`) sind angehaltene Animationen aus der echten Seite (`Animation.currentTime`), keine nachgebauten Grafiken.
+Die Motion-Frames auf den Boards (`*-motion-*.webp`) sind angehaltene Animationen aus der echten Seite (`Animation.currentTime`), keine nachgebauten Grafiken.
 
 ## Barrierefreiheit (Stand Prototyp)
 
@@ -123,4 +137,5 @@ Die Motion-Frames auf den Boards (`*-motion-*.png`) sind angehaltene Animationen
 - Copy-Vorschlag: „Rund ums Haus“ → „Rund ums Zuhause“, „Haus & Pflege“ → „Zuhause & Pflege“. In den Prototypen ist er schon umgesetzt, in der App noch nicht.
 - Die Mengen pro Ort („23 Produkte“) und „Zuletzt“-Einträge sind Beispieldaten. In der App kommen sie aus der API.
 - „Demo ansehen“ zeigt auf einen Anker. Ob es eine öffentliche Demo-Instanz geben soll oder der Link zur Tour-Sektion führt, ist offen.
-- Die Renders sind 2× PNG, zusammen etwa 41 MB. Vor dem Commit eventuell verlustarm komprimieren.
+- Boards: `board-compare.webp` vergleicht A, C und D nebeneinander. Der frühere Vergleich A–B–C liegt als `board-compare-abc.webp` daneben.
+- Fredirando im echten Code: Die Orange-Tokens in `web/src/styles.css` (`[data-brand='fredirando']`) und die Logo-Dateien in `web/public/fredirando*` müssen in Phase 3 auf Grün umgestellt werden.
