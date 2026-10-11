@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heute · B Little House · ToHuus</title>
+<link rel="stylesheet" href="style.css">
+<script>window.TH_BRAND = '<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 16.5 16 7.5l10 9V27H6z" fill="var(--primary-soft)" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.5 27v-6a2.5 2.5 0 0 1 5 0v6" fill="var(--primary)"/><path d="M21 11.5V7h3v7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>ToHuus</span>';</script>
+</head>
+<body data-page="heute">
+<div class="shell">
+  <main class="main" id="main">
+    <header class="today-top">
+      <div class="greet">
+        <p class="eyebrow">Sonntag, 11. Oktober</p>
+        <h1 class="h1">Moin, Till!</h1>
+        <p class="lede">Drei Sachen heute, dann ist Ruhe.</p>
+      </div>
+      <div class="scene" data-illo="window"></div>
+    </header>
+
+    <div class="today-grid">
+      <section aria-labelledby="prio-h">
+        <div class="card prio">
+          <div class="prio-h"><h2 class="h2" id="prio-h">Heute zuerst</h2></div>
+          <ul>
+            <li>
+              <span class="vig" data-illo="yoghurt"></span>
+              <div>
+                <b>Joghurt bis morgen essen</b>
+                <span class="meta"><span class="warn"><i data-icon="clock" data-size="15"></i>Noch 1 Tag haltbar</span>· Kühlschrank</span>
+              </div>
+              <button class="btn-text press act">Eins gegessen</button>
+            </li>
+            <li>
+              <span class="vig" data-illo="milk"></span>
+              <div>
+                <b>Milch ist alle</b>
+                <span class="meta">Kühlschrank · <span class="ok"><i data-icon="check" data-size="14" data-w="bold"></i>steht auf der Liste</span></span>
+              </div>
+            </li>
+            <li>
+              <span class="vig" data-illo="basket"></span>
+              <div>
+                <b>Einkaufsliste: 4 offen</b>
+                <span class="meta">Lea holt 2 · Zahnpasta hat noch niemand</span>
+              </div>
+            </li>
+          </ul>
+          <div class="next"><a class="btn btn-primary press" href="einkauf.html">Einkauf öffnen<i data-icon="arrow" data-size="18"></i></a></div>
+        </div>
+
+        <div class="sec-head only-desk"><h2 class="h2">Eure Orte</h2><a href="#">Ganzer Bestand</a></div>
+        <nav class="places only-desk" aria-label="Orte">
+          <a class="card place press" href="#"><span data-illo="kitchen"></span><b>Küchenzeile</b><span>23 Produkte</span></a>
+          <a class="card place press" href="#"><span data-illo="fridge"></span><b>Kühlschrank</b><span>12 Produkte</span></a>
+          <a class="card place press" href="#"><span data-illo="shelf"></span><b>Regal im Flur</b><span>6 Produkte</span></a>
+          <a class="card place press" href="#"><span data-illo="bath"></span><b>Badschrank</b><span>9 Produkte</span></a>
+        </nav>
+      </section>
+
+      <section aria-labelledby="rec-h">
+        <div class="sec-head"><h2 class="h2" id="rec-h">Was kochen wir heute?</h2><a href="#">Mehr Ideen</a></div>
+        <article class="card recipe">
+          <div class="recipe-photo">
+            <img src="../assets/gnocchi-skillet.webp" alt="Gnocchi in der Pfanne mit Tomaten und Mozzarella">
+            <button class="heart press" data-heart aria-pressed="false" aria-label="Zu den Lieblingen"><i data-icon="heart" data-size="22"></i></button>
+          </div>
+          <div class="recipe-body">
+            <h3>Gnocchi-Pfanne mit Tomate &amp; Mozzarella</h3>
+            <p class="fit"><span class="ok scribble"><i data-icon="check" data-size="16" data-w="bold"></i>Alles da</span><span>25 Min. · 2 Portionen</span></p>
+          </div>
+          <a class="alt" href="#">
+            <img src="../assets/pancakes.webp" alt="">
+            <div><b>Pfannkuchen</b><span><em>Es fehlt nur Milch</em> · steht schon auf der Liste</span></div>
+            <i data-icon="caret" data-size="18"></i>
+          </a>
+        </article>
+      </section>
+    </div>
+    <div class="view-row"><span>Ansicht</span><button class="press" data-theme-toggle aria-label="Dunkles Design"><i data-icon="moon" data-size="18"></i>Dunkel</button></div>
+  </main>
+</div>
+<script src="../shared/chrome.js"></script>
+<script src="illustrations.js"></script>
+<script src="../shared/icons.js"></script>
+<script src="../shared/proto.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heute · A Nordic Editorial · ToHuus</title>
+<link rel="stylesheet" href="style.css">
+<script>window.TH_BRAND = '<svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 15.5 16 6l11 9.5V27H5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 27v-6.5h5V27" fill="#176B50"/></svg><span>ToHuus</span>';</script>
+</head>
+<body data-page="heute">
+<div class="shell">
+  <main class="main" id="main">
+    <header class="today-head">
+      <div>
+        <p class="eyebrow">Sonntag, 11. Oktober</p>
+        <h1 class="h1">Moin, Till!</h1>
+        <p class="lede">Drei Dinge für heute. Der Rest kann warten.</p>
+      </div>
+      <div class="head-tools">
+        <button class="icon-btn press only-mob" data-theme-toggle aria-label="Dunkles Design"><i data-icon="moon" data-size="20"></i></button>
+        <svg class="tod only-mob" viewBox="0 0 64 44" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M18 34a14 14 0 0 1 28 0"/><path d="M32 12v-6M14.5 19.5l-4-4M49.5 19.5l4-4M8 31H4M60 31h-4"/><path d="M2 38h60"/><path d="M10 42h18M36 42h22" opacity=".55"/>
+        </svg>
+        <a class="btn btn-ghost btn-small press only-desk" href="#"><i data-icon="plus" data-size="18"></i>Hinzufügen</a>
+      </div>
+    </header>
+
+    <div class="today-grid">
+      <section aria-labelledby="prio-h">
+        <div class="prio">
+          <div class="prio-title"><span id="prio-h">Heute zuerst</span><span class="tnum">3</span></div>
+          <ol>
+            <li>
+              <div>
+                <b>Joghurt bis morgen essen</b>
+                <span class="meta"><span class="warn"><i data-icon="clock" data-size="15" data-w="regular"></i>Noch 1 Tag haltbar</span>· Kühlschrank</span>
+              </div>
+              <button class="btn-text press act">Eins gegessen</button>
+            </li>
+            <li>
+              <div>
+                <b>Milch ist alle</b>
+                <span class="meta">Kühlschrank · <span class="tag-on"><i data-icon="check" data-size="14" data-w="bold"></i>steht auf der Liste</span></span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <b>Einkaufsliste: 4 offen</b>
+                <span class="meta">Lea holt 2 · Zahnpasta hat noch niemand</span>
+              </div>
+            </li>
+          </ol>
+          <div class="next">
+            <a class="btn btn-primary press" href="einkauf.html">Einkauf öffnen<i data-icon="arrow" data-size="18" data-w="regular"></i></a>
+          </div>
+        </div>
+
+        <div class="sec-head only-desk"><h2 class="h2">Eure Orte</h2><a href="#">Ganzer Bestand</a></div>
+        <nav class="places only-desk" aria-label="Orte">
+          <a href="#"><b>Küchenzeile</b><span>23 Produkte</span></a>
+          <a href="#"><b>Kühlschrank</b><span>12 Produkte</span></a>
+          <a href="#"><b>Regal im Flur</b><span>6 Produkte</span></a>
+          <a href="#"><b>Badschrank</b><span>9 Produkte</span></a>
+        </nav>
+        <div class="sec-head only-desk"><h2 class="h2">Zuletzt</h2></div>
+        <ul class="recent only-desk">
+          <li><span class="av l" aria-hidden="true">L</span><span><b>Lea</b> hat 2 × Mozzarella eingeräumt</span><time>vor 2 Std.</time></li>
+          <li><span class="av i" aria-hidden="true">I</span><span><b>Oma Inge</b> hat Äpfel auf die Liste gesetzt</span><time>gestern</time></li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="rec-h">
+        <div class="sec-head"><h2 class="h2" id="rec-h">Was kochen wir heute?</h2><a href="#">Mehr Ideen</a></div>
+        <article class="recipe">
+          <div class="recipe-photo">
+            <img src="../assets/gnocchi-skillet.webp" alt="Gnocchi in der Pfanne mit Tomaten und Mozzarella">
+            <button class="heart press" data-heart aria-pressed="false" aria-label="Zu den Lieblingen"><i data-icon="heart" data-size="22" data-w="regular"></i></button>
+          </div>
+          <div class="recipe-body">
+            <h3>Gnocchi-Pfanne mit Tomate &amp; Mozzarella</h3>
+            <p class="fit"><strong><i data-icon="check" data-size="16" data-w="bold"></i>Alles da</strong><span>25 Min. · 2 Portionen</span></p>
+          </div>
+          <a class="alt" href="#">
+            <img src="../assets/pancakes.webp" alt="">
+            <div><b>Pfannkuchen</b><span><em>Es fehlt nur Milch</em> · steht schon auf der Liste</span></div>
+            <i data-icon="caret" data-size="18" data-w="regular"></i>
+          </a>
+        </article>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="../shared/chrome.js"></script>
+<script src="../shared/icons.js"></script>
+<script src="../shared/proto.js"></script>
+</body>
+</html>

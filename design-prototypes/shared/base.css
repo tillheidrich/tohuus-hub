@@ -1,0 +1,48 @@
+@import url('fonts.css');
+/* Gemeinsame Basis aller drei Varianten: Reset, Markenpalette (fix), Motion-Tokens, A11y.
+   Varianten überschreiben nur Typografie, Radien, Komposition und ihre Dark-Palette. */
+:root {
+  --canvas: #F7F5EF; --surface: #FFFDF9; --ink: #181D1A; --ink-2: #545C56; --ink-3: #6B726C;
+  --primary: #176B50; --primary-dark: #104E3C; --primary-soft: #E4EEE6; --on-primary: #FFFDF9;
+  --sage: #A5BAA9; --sand: #EDE4D5; --clay: #C56B4B; --warning: #9A6400; --line: #DEDCD3;
+  --primary-text: #176B50; /* grün als Text */
+  --focus: #176B50;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
+  --t-press: 110ms; --t-fast: 160ms; --t-base: 200ms; --t-slow: 320ms;
+  --icon-weight: regular;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: var(--canvas); color: var(--ink); font-size: 16px; line-height: 1.5; }
+img, svg { display: block; max-width: 100%; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; }
+h1, h2, h3, p, ul, ol { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Button gedrückt: 0.98, 110 ms */
+.press { transition: transform var(--t-press) var(--ease-out), background-color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out); }
+.press:active { transform: scale(0.98); }
+
+/* Checkbox-Grundmechanik (Optik je Variante) */
+.check .mark { opacity: 0; transform: scale(0.4); transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+.row.is-checking .check .mark, .row.is-done .check .mark { opacity: 1; transform: none; }
+.row { transition: background-color var(--t-base) var(--ease-out); }
+[hidden] { display: none !important; }
+
+/* Reduced Motion: transformbasierte Bewegung aus, Zustände bleiben sichtbar */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .press:active { transform: none; }
+}
+.force-reduce *, .force-reduce *::before, .force-reduce *::after { transition-duration: 0.01ms !important; }
+
+/* Desktop-/Mobile-Schalter */
+@media (max-width: 1023.98px) { .only-desk { display: none !important; } }
+@media (min-width: 1024px) { .only-mob { display: none !important; } }

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Website-Hero · A Nordic Editorial · ToHuus</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .site-nav { display: flex; align-items: center; gap: 28px; max-width: 1200px; margin: 0 auto; padding: 18px 20px; }
+  .site-nav .brand { margin-right: auto; }
+  .site-nav ul { display: none; gap: 24px; font-size: 15px; }
+  .site-nav ul a { text-decoration: none; color: var(--ink-2); }
+  .site-nav ul a:hover { color: var(--ink); }
+  .gh-link { display: none; align-items: center; gap: 6px; font-size: 15px; text-decoration: none; color: var(--ink-2); }
+  .menu-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: var(--r-m); }
+  .hero { max-width: 1200px; margin: 0 auto; padding: 24px 20px 48px; display: grid; gap: 40px; }
+  .hero .eyebrow { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); }
+  .hero .eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--ink); }
+  .hero h1 { font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 1.08; letter-spacing: -0.015em; margin-top: 18px; }
+  .hero h1 span { display: block; color: var(--primary-text); }
+  .hero .lede { font-size: 18px; line-height: 1.55; color: var(--ink-2); max-width: 44ch; margin-top: 18px; }
+  .ctas { display: grid; gap: 10px; margin-top: 26px; }
+  .ctas .btn { height: 50px; }
+  .demo-link { display: inline-flex; align-items: center; gap: 8px; height: 44px; font-weight: 600; color: var(--primary-text); text-decoration: none; justify-self: start; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 18px; font-size: 14px; color: var(--ink-2); }
+  .facts span { display: inline-flex; align-items: center; gap: 6px; }
+  .skyline { margin-top: 36px; color: var(--ink); }
+  .skyline svg { width: 100%; height: auto; }
+  .skyline figcaption { position: relative; height: 22px; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+  .skyline figcaption span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+  .device { justify-self: center; width: 290px; border-radius: 34px; border: 1px solid var(--line); background: var(--surface); padding: 10px; box-shadow: 0 30px 60px -30px rgba(24,29,26,.25); }
+  .device-screen { border-radius: 25px; overflow: hidden; width: 270px; height: 584px; position: relative; }
+  .device iframe { border: 0; width: 390px; height: 844px; transform: scale(0.6923); transform-origin: 0 0; position: absolute; inset: 0; }
+  .device-cap { text-align: center; font-size: 13px; color: var(--ink-2); margin-top: 12px; }
+  @media (min-width: 1024px) {
+    .site-nav { padding: 22px 40px; }
+    .site-nav ul, .gh-link { display: flex; }
+    .menu-btn { display: none; }
+    .hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 56px; padding: 40px 40px 64px; align-items: start; }
+    .hero h1 { font-size: 54px; margin-top: 22px; }
+    .ctas { display: flex; align-items: center; gap: 12px; }
+    .device { margin-top: -6px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-nav">
+  <a class="brand" href="#"><svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 15.5 16 6l11 9.5V27H5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 27v-6.5h5V27" fill="#176B50"/></svg><span>ToHuus</span></a>
+  <ul aria-label="Hauptnavigation"><li><a href="#">Alltag</a></li><li><a href="#">Kochen</a></li><li><a href="#">Vorrat</a></li><li><a href="#">Familie</a></li><li><a href="#">Selbst hosten</a></li></ul>
+  <a class="gh-link" href="https://github.com/tillheidrich/tohuus-hub"><i data-icon="github" data-size="18"></i>GitHub</a>
+  <button class="icon-btn press" data-theme-toggle aria-label="Dunkles Design"><i data-icon="moon" data-size="20"></i></button>
+  <button class="menu-btn press" aria-label="Menü"><i data-icon="dots3" data-size="22"></i></button>
+</header>
+<main class="hero">
+  <div>
+    <p class="eyebrow">Open Source · auf deinem Server</p>
+    <h1>Weniger im Kopf. <span>Mehr Zuhause.</span></h1>
+    <p class="lede">Ob Wohnung, WG, Reihenhaus oder Haus: ToHuus bringt Einkauf, Vorräte und Rezepte zusammen.</p>
+    <div class="ctas">
+      <a class="btn btn-primary press" href="#installieren"><i data-icon="download" data-size="18" data-w="regular"></i>Installieren</a>
+      <a class="btn btn-ghost press" href="https://github.com/tillheidrich/tohuus-hub"><i data-icon="github" data-size="18" data-w="regular"></i>Code ansehen</a>
+      <a class="demo-link press" href="#demo"><i data-icon="play" data-size="20" data-w="regular"></i>Demo ansehen</a>
+    </div>
+    <p class="facts"><span><i data-icon="check" data-size="14" data-w="bold"></i>Kostenlos, AGPL</span><span><i data-icon="check" data-size="14" data-w="bold"></i>Kein Konto, kein Tracking</span><span><i data-icon="check" data-size="14" data-w="bold"></i>Läuft auf NAS oder kleinem Server</span></p>
+    <figure class="skyline" style="margin-left:0;margin-right:0">
+      <svg viewBox="0 0 640 150" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Linienzeichnung: Wohnhaus mit Wohnungen, Altbau-WG, drei Reihenhäuser und ein freistehendes Haus nebeneinander">
+        <path d="M0 140h640"/>
+        <!-- Wohnung im Mehrfamilienhaus -->
+        <path d="M14 140V22h128v118M10 22h136"/>
+        <g stroke-width="1.2"><path d="M28 36h18v16H28zM62 36h18v16H62zM96 36h18v16H96zM28 64h18v16H28zM96 64h18v16H96zM28 92h18v16H28zM62 92h18v16H62zM96 92h18v16H96z"/></g>
+        <rect x="62" y="64" width="18" height="16" fill="var(--primary-soft)" stroke-width="1.2"/>
+        <path d="M58 82h26M64 82v-4M78 82v-4" stroke-width="1.2"/><path d="M71 78c-3-4-2-8 0-10 2 2 3 6 0 10z" fill="var(--primary)" stroke="none"/>
+        <path d="M68 140v-22h18v22" /><path d="M120 22v-8h10v8" stroke-width="1.2"/>
+        <!-- WG im Altbau -->
+        <path d="M172 140V40h116v100M168 40h124M172 52h116" />
+        <g stroke-width="1.2"><path d="M186 82V66a7 7 0 0 1 14 0v16zM223 82V66a7 7 0 0 1 14 0v16zM260 82V66a7 7 0 0 1 14 0v16zM186 116v-16a7 7 0 0 1 14 0v16zM260 116v-16a7 7 0 0 1 14 0v16z"/></g>
+        <path d="M220 140v-30a10 10 0 0 1 20 0v30"/><path d="M244 116v10" stroke-width="1.2"/><circle cx="247" cy="118" r=".8" fill="currentColor"/><circle cx="247" cy="122" r=".8" fill="currentColor"/><circle cx="247" cy="126" r=".8" fill="currentColor"/>
+        <!-- Reihenhäuser -->
+        <path d="M312 140V82l25-24 25 24 25-24 25 24 25-24 25 24v58M362 82v58M412 82v58"/>
+        <path d="M322 140v-24h12v24M372 140v-24h12v24M422 140v-24h12v24" stroke-width="1.2"/>
+        <path d="M342 98h12v10h-12zM392 98h12v10h-12zM442 98h12v10h-12z" stroke-width="1.2"/>
+        <path d="M398 76V62h8v22" stroke-width="1.2"/>
+        <!-- Haus -->
+        <path d="M492 140V88l46-38 46 38v52M484 94l54-44 54 44"/>
+        <path d="M512 140v-28h16v28" /><path d="M548 104h22v16h-22zM559 104v16" stroke-width="1.2"/>
+        <path d="M612 140v-26M612 114c-14 0-16-26 0-30 16 4 14 30 0 30z" stroke-width="1.2"/>
+        <path d="M600 140c0-6 4-8 6-8M624 140c0-6-4-8-6-8" stroke-width="1.2"/>
+      </svg>
+      <figcaption aria-hidden="true"><span style="left:12.2%">Wohnung</span><span style="left:35.9%">WG</span><span style="left:60.5%">Reihenhaus</span><span style="left:84%">Haus</span></figcaption>
+    </figure>
+  </div>
+  <figure style="margin:0">
+    <div class="device"><div class="device-screen"><iframe src="heute.html" title="Vorschau: ToHuus „Heute“" tabindex="-1" loading="eager"></iframe></div></div>
+    <figcaption class="device-cap">„Heute“ auf dem Handy, echte Oberfläche</figcaption>
+  </figure>
+</main>
+<script src="../shared/icons.js"></script>
+<script src="../shared/proto.js"></script>
+</body>
+</html>

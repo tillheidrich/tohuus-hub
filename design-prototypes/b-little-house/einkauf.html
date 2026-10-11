@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Einkauf · B Little House · ToHuus</title>
+<link rel="stylesheet" href="style.css">
+<script>window.TH_BRAND = '<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 16.5 16 7.5l10 9V27H6z" fill="var(--primary-soft)" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.5 27v-6a2.5 2.5 0 0 1 5 0v6" fill="var(--primary)"/><path d="M21 11.5V7h3v7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>ToHuus</span>';</script>
+</head>
+<body data-page="einkauf">
+<div class="shell">
+  <main class="main" id="main">
+    <div class="shop-grid">
+      <div>
+        <header class="shop-head">
+          <span class="tote" data-illo="tote"></span>
+          <div>
+            <p class="eyebrow"><span data-open-count class="tnum">4</span> offen</p>
+            <h1 class="h1" data-store-label data-on="Im Laden" data-off="Einkauf">Einkauf</h1>
+          </div>
+          <button class="store-btn press" data-store-toggle aria-pressed="false"><i data-icon="store" data-size="18"></i><span data-store-label data-on="Fertig" data-off="Im Laden">Im Laden</span></button>
+        </header>
+
+        <form class="add" data-add-form>
+          <label><i data-icon="search" data-size="18"></i><span class="sr-only">Artikel</span><input type="text" placeholder="z. B. 2 Milch, Paketband" autocomplete="off"></label>
+          <button class="press" type="submit" aria-label="Hinzufügen"><i data-icon="plus" data-size="22" data-w="bold"></i></button>
+        </form>
+        <div class="setting"><span>Beim Abhaken einräumen</span><span class="switch" role="switch" aria-checked="true" aria-label="Beim Abhaken einräumen"></span></div>
+        <p class="store-note"><i data-icon="store" data-size="16" data-w="regular"></i>Nach Gängen sortiert · funktioniert auch ohne Netz</p>
+
+        <section class="card group" data-group data-keep aria-label="Obst &amp; Gemüse">
+          <h2 class="group-h"><i data-icon="carrot" data-size="18"></i>Obst &amp; Gemüse <span data-count>1</span></h2>
+          <div class="list" data-list="obst" data-store-fade>
+            <div class="row" data-home="obst">
+              <button class="check press" data-check role="checkbox" aria-checked="false" aria-label="Äpfel abhaken"><span class="box"><svg class="mark" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+              <div><b>Äpfel</b><span class="meta">1 kg · von Oma Inge</span></div>
+              <div class="who"><span class="av l" title="Lea holt’s">L</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card group" data-group aria-label="Kühlregal">
+          <h2 class="group-h"><i data-icon="drop" data-size="18"></i>Kühlregal <span data-count>1</span></h2>
+          <div class="list" data-list="kuehl" data-store-fade>
+            <div class="row" data-home="kuehl">
+              <button class="check press" data-check role="checkbox" aria-checked="false" aria-label="Milch abhaken"><span class="box"><svg class="mark" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+              <div><b>Milch</b><span class="meta">2 Liter · ist alle</span></div>
+              <div class="who"><span class="av l" title="Lea holt’s">L</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card group" data-group aria-label="Drogerie">
+          <h2 class="group-h"><i data-icon="sparkle" data-size="18"></i>Drogerie <span data-count>1</span></h2>
+          <div class="list" data-list="drogerie" data-store-fade>
+            <div class="row" data-home="drogerie">
+              <button class="check press" data-check role="checkbox" aria-checked="false" aria-label="Zahnpasta abhaken"><span class="box"><svg class="mark" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+              <div><b>Zahnpasta</b><span class="meta">für Kinder · Mila</span></div>
+              <button class="claim press">Ich hol’s</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card group" data-group data-keep aria-label="Sonstiges">
+          <h2 class="group-h"><i data-icon="tag" data-size="18"></i>Sonstiges <span data-count>1</span></h2>
+          <div class="list" data-list="sonstiges" data-store-fade>
+            <div class="row" data-home="sonstiges">
+              <button class="check press" data-check role="checkbox" aria-checked="false" aria-label="Paketband abhaken"><span class="box"><svg class="mark" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+              <div><b>Paketband</b><span class="meta">tesa · Regal im Flur</span></div>
+              <div class="who"><span class="av" title="Till holt’s">T</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="done-wrap card group" aria-labelledby="done-h">
+          <div class="done-h"><h2 class="h2" id="done-h">Erledigt · <span data-done-count>2</span></h2><button class="press">Liste leeren</button></div>
+          <div class="done-list" data-done-list>
+            <div class="row is-done" data-home="sonstiges">
+              <button class="check press" data-check role="checkbox" aria-checked="true" aria-label="Brot wieder öffnen"><span class="box"><svg class="mark" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+              <div><b>Brot</b><span class="meta">Lea · eingeräumt</span></div><span></span>
+            </div>
+            <div class="row is-done" data-home="sonstiges">
+              <button class="check press" data-check role="checkbox" aria-checked="true" aria-label="Kaffee wieder öffnen"><span class="box"><svg class="mark" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+              <div><b>Kaffee</b><span class="meta">Till · eingeräumt</span></div><span></span>
+            </div>
+          </div>
+        </section>
+        <button class="btn btn-primary press finish"><i data-icon="check" data-size="18" data-w="bold"></i>Einkauf fertig</button>
+      </div>
+
+      <aside class="shop-side card only-desk" aria-label="Wer holt was">
+        <h3>Wer holt was</h3>
+        <ul class="whois">
+          <li><span class="av l">L</span><div><b>Lea</b><span>Äpfel, Milch</span></div></li>
+          <li><span class="av">T</span><div><b>Till</b><span>Paketband</span></div></li>
+          <li><span class="av" style="background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink-3)"></span><div><b>Noch offen</b><span>Zahnpasta</span></div></li>
+        </ul>
+        <div class="bag" data-illo="tote"></div>
+        <p class="bag-cap">Die Liste ist auf allen Handys gleichzeitig aktuell.</p>
+      </aside>
+    </div>
+  </main>
+</div>
+<template id="row-tpl">
+  <div class="row">
+    <button class="check press" data-check role="checkbox" aria-checked="false" aria-label="Abhaken"><span class="box"><svg class="mark" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+    <div><b data-name></b><span class="meta">gerade eben · Till</span></div>
+    <button class="claim press">Ich hol’s</button>
+  </div>
+</template>
+<script src="../shared/chrome.js"></script>
+<script src="illustrations.js"></script>
+<script src="../shared/icons.js"></script>
+<script src="../shared/proto.js"></script>
+</body>
+</html>

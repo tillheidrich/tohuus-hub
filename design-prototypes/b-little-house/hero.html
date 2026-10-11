@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Website-Hero · B Little House · ToHuus</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .site-nav { display: flex; align-items: center; gap: 26px; max-width: 1240px; margin: 0 auto; padding: 16px 16px; }
+  .site-nav .brand { margin-right: auto; padding-left: 0; }
+  .site-nav ul { display: none; gap: 22px; font-size: 15px; }
+  .site-nav ul a { text-decoration: none; color: var(--ink-2); }
+  .site-nav .btn { height: 42px; padding: 0 16px; font-size: 15px; }
+  .nav-gh { display: none; }
+  .hero { max-width: 1240px; margin: 0 auto; padding: 18px 16px 0; display: grid; gap: 22px; position: relative; }
+  .hero h1 { font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 1.1; letter-spacing: -0.01em; }
+  .hero h1 em { font-style: normal; position: relative; white-space: nowrap; }
+  .hero h1 em::after { content: ''; position: absolute; left: -2%; right: -2%; bottom: -6px; height: 12px; background: no-repeat center / 100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M2 8c30-4 62-6 98-5 34 1 66 2 98-1' fill='none' stroke='%23176B50' stroke-width='3' stroke-linecap='round' opacity='.8'/%3E%3C/svg%3E"); }
+  .hero .lede { font-size: 18px; line-height: 1.55; color: var(--ink-2); margin-top: 18px; max-width: 42ch; }
+  .ctas { display: grid; gap: 10px; margin-top: 24px; }
+  .ctas .btn { height: 50px; }
+  .demo { display: inline-flex; align-items: center; gap: 8px; height: 44px; color: var(--primary-text); font-weight: 600; text-decoration: none; }
+  .facts { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; color: var(--ink-2); }
+  .facts span { display: inline-flex; gap: 6px; align-items: center; }
+  .street { margin: 0 -16px; }
+  .street svg { width: 100%; height: auto; }
+  .street-cap { font-size: 14px; color: var(--ink-2); text-align: center; padding: 6px 16px 24px; }
+  @media (min-width: 1024px) {
+    .site-nav { padding: 22px 40px; }
+    .site-nav ul, .nav-gh { display: flex; }
+    .nav-gh { align-items: center; gap: 6px; color: var(--ink-2); text-decoration: none; font-size: 15px; }
+    .hero { max-width: none; display: block; min-height: calc(100dvh - 86px); padding: 0; overflow: hidden; }
+    .hero .copy { position: relative; z-index: 2; max-width: 500px; margin-left: max(40px, calc(50vw - 600px)); padding-top: 38px; }
+    .hero h1 { font-size: 54px; }
+    .ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+    .street { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; }
+    .street-cap { position: absolute; right: 40px; bottom: 8px; padding: 0; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-nav">
+  <a class="brand" href="#"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 16.5 16 7.5l10 9V27H6z" fill="var(--primary-soft)" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.5 27v-6a2.5 2.5 0 0 1 5 0v6" fill="var(--primary)"/><path d="M21 11.5V7h3v7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>ToHuus</span></a>
+  <ul aria-label="Hauptnavigation"><li><a href="#">Alltag</a></li><li><a href="#">Kochen</a></li><li><a href="#">Vorrat</a></li><li><a href="#">Familie</a></li><li><a href="#">Selbst hosten</a></li></ul>
+  <a class="nav-gh" href="https://github.com/tillheidrich/tohuus-hub"><i data-icon="github" data-size="18"></i>GitHub</a>
+  <button class="icon-btn press" data-theme-toggle aria-label="Dunkles Design"><i data-icon="moon" data-size="20"></i></button>
+  <a class="btn btn-primary press" href="#installieren">Installieren</a>
+</header>
+<main class="hero">
+  <div class="copy">
+    <h1>Weniger im Kopf. Mehr <em>Zuhause.</em></h1>
+    <p class="lede">Ob Wohnung, WG, Reihenhaus oder Haus: ToHuus bringt Einkauf, Vorräte und Rezepte zusammen.</p>
+    <div class="ctas">
+      <a class="btn btn-primary press" href="#installieren"><i data-icon="download" data-size="18"></i>Installieren</a>
+      <a class="btn btn-ghost press" href="https://github.com/tillheidrich/tohuus-hub"><i data-icon="github" data-size="18"></i>Code ansehen</a>
+      <a class="demo press" href="#demo"><i data-icon="play" data-size="20"></i>Demo ansehen</a>
+    </div>
+    <p class="facts"><span><i data-icon="check" data-size="14" data-w="bold"></i>Kostenlos, AGPL</span><span><i data-icon="check" data-size="14" data-w="bold"></i>Kein Konto, kein Tracking</span><span><i data-icon="check" data-size="14" data-w="bold"></i>Läuft auf NAS oder kleinem Server</span></p>
+  </div>
+  <figure class="street" style="margin-top:0;margin-bottom:0">
+    <div data-illo="ensemble"></div>
+    <figcaption class="street-cap">Eine Straße, vier Arten zu wohnen. Jede sieht in ToHuus nur ihre eigenen Orte.</figcaption>
+  </figure>
+</main>
+<script src="illustrations.js"></script>
+<script>/* Mobil: Himmel zuschneiden, damit die Häuser größer erscheinen */
+(function(){var sv=document.querySelector('.street svg');function f(){sv.setAttribute('viewBox',innerWidth<1024?'0 120 1280 500':'0 0 1280 620');}f();addEventListener('resize',f);})();</script>
+<script src="../shared/icons.js"></script>
+<script src="../shared/proto.js"></script>
+</body>
+</html>
