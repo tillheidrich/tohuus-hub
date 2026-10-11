@@ -41,6 +41,7 @@ import { r as recipes2Routes } from './routes/recipes2.js';
 import { r as qualityRoutes } from './routes/quality.js';
 import { r as peopleRoutes } from './routes/people.js';
 import { r as tourRoutes } from './routes/tour.js';
+import { r as ha2Routes } from './routes/ha2.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 ensureBaseData();
@@ -117,6 +118,7 @@ app.use('/api', recipes2Routes);
 app.use('/api', qualityRoutes);
 app.use('/api', peopleRoutes);
 app.use('/api', tourRoutes);
+app.use('/api', ha2Routes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

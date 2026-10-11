@@ -29,6 +29,7 @@ import { de_recipes2 } from './locales/de-recipes2.js';
 import { de_quality } from './locales/de-quality.js';
 import { de_people } from './locales/de-people.js';
 import { de_tour } from './locales/de-tour.js';
+import { de_ha2 } from './locales/de-ha2.js';
 import { sv as svBase } from './locales/sv.js';
 import { sv_data } from './locales/sv-data.js';
 import { sv_party } from './locales/sv-party.js';
@@ -54,10 +55,11 @@ import { sv_recipes2 } from './locales/sv-recipes2.js';
 import { sv_quality } from './locales/sv-quality.js';
 import { sv_people } from './locales/sv-people.js';
 import { sv_tour } from './locales/sv-tour.js';
+import { sv_ha2 } from './locales/sv-ha2.js';
 
-const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour };
+const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2 };
 
-const sv = { ...svBase, ...sv_data, ...sv_party, ...sv_fresh, ...sv_shop, ...sv_home, ...sv_kiosk, ...sv_kids, ...sv_onboard, ...sv_retail, ...sv_ha, ...sv_channels, ...sv_intl, ...sv_cook2, ...sv_auth, ...sv_spend2, ...sv_print, ...sv_share, ...sv_labels, ...sv_away, ...sv_plan2, ...sv_recipes2, ...sv_quality, ...sv_people, ...sv_tour };
+const sv = { ...svBase, ...sv_data, ...sv_party, ...sv_fresh, ...sv_shop, ...sv_home, ...sv_kiosk, ...sv_kids, ...sv_onboard, ...sv_retail, ...sv_ha, ...sv_channels, ...sv_intl, ...sv_cook2, ...sv_auth, ...sv_spend2, ...sv_print, ...sv_share, ...sv_labels, ...sv_away, ...sv_plan2, ...sv_recipes2, ...sv_quality, ...sv_people, ...sv_tour, ...sv_ha2 };
 
 const DICTS: Record<Lang, Record<string, string>> = { en: {}, de, sv };
 
