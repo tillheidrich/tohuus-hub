@@ -1,3 +1,7 @@
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { db, getSetting, lang, setSetting } from './db.js';
 import { t } from './i18n.js';
@@ -436,11 +440,35 @@ function seedDemoRows() {
   );
 }
 
-type DemoRecipe = [recipe: Parameters<typeof saveRecipe>[0], cookedDaysAgo: number[]];
+/** `image`: a photo slug in server/assets/demo-recipes (credits in CREDITS.md there). */
+type DemoRecipe = [recipe: Parameters<typeof saveRecipe>[0], cookedDaysAgo: number[], image: string];
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+/** Demo recipe photos ship with the app: server/assets in dev (tsx) and next to dist/ in the build/Docker image. */
+const DEMO_PHOTO_DIRS = [
+  path.join(here, 'assets/demo-recipes'),
+  path.join(here, '../server/assets/demo-recipes'),
+  path.join(process.cwd(), 'server/assets/demo-recipes'),
+];
+
+/** Copy a demo photo into the image store, named like uploaded recipe images (`/img/r<id>-<hash>.webp`). */
+function demoRecipeImage(recipeId: number, slug: string): string | null {
+  const src = DEMO_PHOTO_DIRS.map((d) => path.join(d, `${slug}.webp`)).find((f) => fs.existsSync(f));
+  if (!src) return null; // photos missing (e.g. a trimmed build) – the recipe just shows the placeholder
+  const name = `r${recipeId}-${crypto.randomBytes(6).toString('hex')}.webp`;
+  try {
+    fs.copyFileSync(src, path.join(config.dataDir, 'images', name));
+    return `/img/${name}`;
+  } catch {
+    return null;
+  }
+}
 
 function seedRecipes() {
-  for (const [r, cookedDaysAgo] of ({ en: RECIPES_EN, sv: RECIPES_SV, de: RECIPES_DE } as const)[lang()]) {
+  for (const [r, cookedDaysAgo, image] of ({ en: RECIPES_EN, sv: RECIPES_SV, de: RECIPES_DE } as const)[lang()]) {
     const id = saveRecipe(r);
+    const img = demoRecipeImage(id, image);
+    if (img) db.prepare('UPDATE recipes SET image_path = ? WHERE id = ?').run(img, id);
     for (const d of cookedDaysAgo)
       db.prepare(`INSERT INTO cook_log (recipe_id, cooked_at, actor) VALUES (?, datetime('now', ?), 'Demo')`).run(id, `-${d} days`);
   }
@@ -471,6 +499,7 @@ const RECIPES_DE: DemoRecipe[] = [
       ],
     },
     [12, 40],
+    'gnocchi-skillet',
   ],
   [
     {
@@ -498,6 +527,7 @@ const RECIPES_DE: DemoRecipe[] = [
       ],
     },
     [45],
+    'sweet-potato-curry',
   ],
   [
     {
@@ -524,6 +554,7 @@ const RECIPES_DE: DemoRecipe[] = [
       ],
     },
     [5],
+    'spaghetti-bolognese',
   ],
   [
     {
@@ -547,6 +578,7 @@ const RECIPES_DE: DemoRecipe[] = [
       ],
     },
     [],
+    'roast-vegetables-feta',
   ],
   [
     {
@@ -571,6 +603,7 @@ const RECIPES_DE: DemoRecipe[] = [
       ],
     },
     [20],
+    'pancakes',
   ],
   [
     {
@@ -592,6 +625,7 @@ const RECIPES_DE: DemoRecipe[] = [
       ],
     },
     [60],
+    'creamed-spinach-egg',
   ],
   [
     {
@@ -616,6 +650,7 @@ const RECIPES_DE: DemoRecipe[] = [
       ],
     },
     [],
+    'lentil-dal',
   ],
   [
     {
@@ -634,6 +669,7 @@ const RECIPES_DE: DemoRecipe[] = [
       steps: [{ text: 'Ofen auf 200 °C vorheizen, Nuggets und Pommes nach Packung backen (ca. 20 Min.), Mais erwärmen.' }],
     },
     [9],
+    'nuggets-fries',
   ],
 ];
 
@@ -663,6 +699,7 @@ const RECIPES_EN: DemoRecipe[] = [
       ],
     },
     [12, 40],
+    'gnocchi-skillet',
   ],
   [
     {
@@ -690,6 +727,7 @@ const RECIPES_EN: DemoRecipe[] = [
       ],
     },
     [45],
+    'sweet-potato-curry',
   ],
   [
     {
@@ -716,6 +754,7 @@ const RECIPES_EN: DemoRecipe[] = [
       ],
     },
     [5],
+    'spaghetti-bolognese',
   ],
   [
     {
@@ -739,6 +778,7 @@ const RECIPES_EN: DemoRecipe[] = [
       ],
     },
     [],
+    'roast-vegetables-feta',
   ],
   [
     {
@@ -763,6 +803,7 @@ const RECIPES_EN: DemoRecipe[] = [
       ],
     },
     [20],
+    'pancakes',
   ],
   [
     {
@@ -784,6 +825,7 @@ const RECIPES_EN: DemoRecipe[] = [
       ],
     },
     [60],
+    'creamed-spinach-egg',
   ],
   [
     {
@@ -808,6 +850,7 @@ const RECIPES_EN: DemoRecipe[] = [
       ],
     },
     [],
+    'lentil-dal',
   ],
   [
     {
@@ -826,6 +869,7 @@ const RECIPES_EN: DemoRecipe[] = [
       steps: [{ text: 'Preheat the oven to 200 °C, bake the nuggets and fries according to the packet (approx. 20 min), warm the sweetcorn.' }],
     },
     [9],
+    'nuggets-fries',
   ],
 ];
 
@@ -855,6 +899,7 @@ const RECIPES_SV: DemoRecipe[] = [
       ],
     },
     [12, 40],
+    'gnocchi-skillet',
   ],
   [
     {
@@ -882,6 +927,7 @@ const RECIPES_SV: DemoRecipe[] = [
       ],
     },
     [45],
+    'sweet-potato-curry',
   ],
   [
     {
@@ -908,6 +954,7 @@ const RECIPES_SV: DemoRecipe[] = [
       ],
     },
     [5],
+    'spaghetti-bolognese',
   ],
   [
     {
@@ -931,6 +978,7 @@ const RECIPES_SV: DemoRecipe[] = [
       ],
     },
     [],
+    'roast-vegetables-feta',
   ],
   [
     {
@@ -955,6 +1003,7 @@ const RECIPES_SV: DemoRecipe[] = [
       ],
     },
     [20],
+    'pancakes',
   ],
   [
     {
@@ -976,6 +1025,7 @@ const RECIPES_SV: DemoRecipe[] = [
       ],
     },
     [60],
+    'creamed-spinach-egg',
   ],
   [
     {
@@ -1000,6 +1050,7 @@ const RECIPES_SV: DemoRecipe[] = [
       ],
     },
     [],
+    'lentil-dal',
   ],
   [
     {
@@ -1018,5 +1069,6 @@ const RECIPES_SV: DemoRecipe[] = [
       steps: [{ text: 'Sätt ugnen på 200 °C, grädda nuggets och pommes enligt förpackningen (ca 20 min) och värm majsen.' }],
     },
     [9],
+    'nuggets-fries',
   ],
 ];

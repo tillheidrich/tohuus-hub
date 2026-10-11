@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils t
 WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+# demo recipe photos (copied into the image store when the demo is seeded)
+COPY --from=build /app/server/assets ./server/assets
 COPY package.json ./
 RUN mkdir -p /data && chown node:node /data
 USER node

@@ -2,7 +2,7 @@
  * Builds the marketing site (site/index.html in English, site/de/index.html in German) from one template.
  * Run from the repo root:  node site/src/build.mjs
  *
- * Screenshots: drop PNGs into site/assets/shots/<name>-light.png and <name>-dark.png (390 px wide phone
+ * Screenshots: drop PNGs into site/assets/shots/<lang>/<name>-light.png and <name>-dark.png (390 px wide phone
  * screens, any height; they are shown top-aligned). Until a file exists, the phone frame shows a calm
  * placeholder. Names: today, shopping, cook, plan-vote, recipe, stock, labels, spending, receipts, people,
  * away, ha-dashboard, order, tour.
@@ -300,8 +300,8 @@ const phone = (c, name, extra = '') => `<div class="phone${extra}" aria-hidden="
         <div class="screen">
           <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
           <span class="ph-label" aria-hidden="true">${c.phLabel}</span>
-          <img class="light-only" data-shot src="${c.base}assets/shots/${name}-light.png" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="${c.base}assets/shots/${name}-dark.png" alt="" loading="lazy" decoding="async" width="390" height="844">
+          <img class="light-only" data-shot src="${c.base}assets/shots/${c.lang}/${name}-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          <img class="dark-only" data-shot src="${c.base}assets/shots/${c.lang}/${name}-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
         </div>
       </div>`;
 

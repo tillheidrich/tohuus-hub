@@ -13,6 +13,7 @@ import { emit } from './bus.js';
 import { createBackup } from './backup.js';
 import { exportTables } from './data.js';
 import { columnsOf, demoMarkCount, liveDemoRows, markDemo } from './demo.js';
+import { deleteImage } from './images.js';
 import { getUserPref, setUserPref } from './onboard.js';
 import { demoSignatures, ensureBaseData } from '../seed.js';
 
@@ -369,6 +370,7 @@ export function removeDemo(opts: { includeUsed?: boolean } = {}) {
   const deleted: Record<string, number> = {};
   const items = orderChildrenFirst([...live.keys()].map((table) => ({ table })));
   const sig = demoSignatures();
+  const images: string[] = []; // photos of deleted demo recipes, removed once the rows are gone
   db.transaction(() => {
     for (const { table } of items) {
       const cols = columnsOf(table);
@@ -384,7 +386,11 @@ export function removeDemo(opts: { includeUsed?: boolean } = {}) {
           if (row?.product_id != null && used.products.has(row.product_id)) continue;
           if (row?.recipe_id != null && used.recipes.has(row.recipe_id)) continue;
         }
-        n += db.prepare(`DELETE FROM "${table}" WHERE rowid = ?`).run(id).changes;
+        const img =
+          table === 'recipes' ? (db.prepare('SELECT image_path FROM recipes WHERE rowid = ?').get(id) as { image_path: string | null } | undefined)?.image_path : null;
+        const gone = db.prepare(`DELETE FROM "${table}" WHERE rowid = ?`).run(id).changes;
+        n += gone;
+        if (gone && img) images.push(img);
         db.prepare('DELETE FROM demo_rows WHERE tbl = ? AND row_id = ?').run(table, id);
       }
       if (n) deleted[table] = n;
@@ -392,6 +398,7 @@ export function removeDemo(opts: { includeUsed?: boolean } = {}) {
     const hints = db.prepare(`UPDATE locations SET hint = NULL WHERE hint IN (${sig.hints.map(() => '?').join(', ')})`).run(...sig.hints).changes;
     if (hints) deleted.location_hints = hints;
   })();
+  images.forEach((p) => deleteImage(p));
   // what stays was used – it is the household's own now, so it no longer counts as demo
   const left = liveDemoRows();
   const kept = { products: left.get('products')?.length ?? 0, recipes: left.get('recipes')?.length ?? 0 };
