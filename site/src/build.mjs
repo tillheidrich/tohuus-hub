@@ -9,6 +9,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { houseSvg } from './house.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const SITE = 'https://tohuus.heidrich-digital.de/';
@@ -83,6 +84,9 @@ const COPY = {
       cta: 'Installieren', code: 'Code ansehen',
       facts: ['Kostenlos, AGPL', 'Kein Konto, kein Tracking', 'Läuft auf NAS oder kleinem Server'],
       n1: ['Milch ist alle', 'steht schon auf der Liste'], n2: ['Jonas holt’s', 'Hafermilch, Brot, Kaffee'],
+      houseLabel: 'Gezeichnetes Reihenhaus im Querschnitt: Küche mit Kühlschrank und Küchenschrank, Flur mit Haustür und Kommode, Bad mit Spiegelschrank, Wohnzimmer und Dachboden mit beschrifteten Kisten.',
+      partsH: 'Was ToHuus Hub über euer Zuhause weiß',
+      parts: [['Kühlschrank', 'Joghurt bis morgen essen'], ['Küchenschrank', 'Nudeln werden knapp'], ['Flur, Kommode', 'Paketband, oberste Schublade'], ['Bad, Spiegelschrank', 'Pflaster, zweites Fach']],
     },
     worries: {
       eyebrow: 'Mental Load', h2: 'Die Fragen, die sonst eine Person im Kopf hat.',
@@ -90,7 +94,7 @@ const COPY = {
       list: ['Haben wir noch Milch?', 'Was essen wir heute?', 'Wer holt das?', 'Wo ist das Paketband?', 'Ist der Joghurt noch gut?', 'Hast du das schon gekauft?', 'Was brauchen wir für Samstag?', 'Wann war der Wasserfilter dran?'],
     },
     chapters: [
-      { id: 'alltag', eyebrow: 'Alltag', h2: 'Ein Blick am Morgen reicht.', intro: '„Heute“ zeigt auf einer Seite, was weg muss, was alle ist und was es abends gibt. Die Einkaufsliste ist auf allen Handys gleichzeitig aktuell.', shots: ['shopping'], points: [
+      { id: 'alltag', eyebrow: 'Alltag', h2: 'Ein Blick am Morgen reicht.', intro: '„Heute“ zeigt auf einer Seite, was weg muss, was alle ist und was es abends gibt. Die Einkaufsliste ist auf allen Handys gleichzeitig aktuell.', shots: ['today', 'shopping'], points: [
         ['home', 'Heute', 'Zuerst essen, alle, knapp, heute Abend. Mehr steht da nicht, und mehr braucht es an den meisten Tagen nicht.'],
         ['hand', 'Einkaufsliste mit „Ich hol’s“', 'Wer etwas übernimmt, tippt drauf. Dann kauft keiner doppelt. Im Laden sortiert sich die Liste nach Gängen, auch ohne Netz.'],
         ['eyeoff', 'Diskrete Einträge', 'Manches muss nicht jede und jeder sehen. Private Einträge erscheinen nur bei dir, das Geschenk für Samstag bleibt eine Überraschung.'],
@@ -196,6 +200,9 @@ const COPY = {
       cta: 'Install it', code: 'Read the code',
       facts: ['Free, AGPL', 'No account, no tracking', 'Runs on a NAS or small server'],
       n1: ['Out of milk', 'already on the list'], n2: ['Jonas is on it', 'oat milk, bread, coffee'],
+      houseLabel: 'Drawing of a terraced house in cross-section: kitchen with fridge and cupboard, hallway with front door and drawers, bathroom with mirror cabinet, living room and an attic with labelled boxes.',
+      partsH: 'What ToHuus Hub knows about your home',
+      parts: [['Fridge', 'Eat the yoghurt by tomorrow'], ['Kitchen cupboard', 'Pasta is running low'], ['Hallway drawers', 'Parcel tape, top drawer'], ['Bathroom cabinet', 'Plasters, second shelf']],
     },
     worries: {
       eyebrow: 'Mental load', h2: 'The questions one person usually carries around.',
@@ -203,7 +210,7 @@ const COPY = {
       list: ['Do we still have milk?', 'What are we eating tonight?', 'Who is getting that?', 'Where is the parcel tape?', 'Is the yoghurt still good?', 'Did you already buy it?', 'What do we need for Saturday?', 'When was the water filter due?'],
     },
     chapters: [
-      { id: 'everyday', eyebrow: 'Everyday', h2: 'One look in the morning is enough.', intro: '“Today” shows on one page what needs eating, what has run out and what is for dinner. The shopping list is current on every phone at once.', shots: ['shopping'], points: [
+      { id: 'everyday', eyebrow: 'Everyday', h2: 'One look in the morning is enough.', intro: '“Today” shows on one page what needs eating, what has run out and what is for dinner. The shopping list is current on every phone at once.', shots: ['today', 'shopping'], points: [
         ['home', 'Today', 'Eat first, run out, running low, tonight. That is all it shows, and on most days that is all you need.'],
         ['hand', 'Shopping list with “I’ll get it”', 'Whoever takes something taps it, so nobody buys it twice. In the shop the list sorts itself by aisle, even without signal.'],
         ['eyeoff', 'Discreet items', 'Not everything is for everyone. Private items only show up for you, so Saturday’s present stays a surprise.'],
@@ -309,7 +316,7 @@ const chapter = (c, ch, i) => `
 <section class="chapter${ch.flip ? ' flip' : ''}" id="${ch.id}" aria-labelledby="${ch.id}-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">${ch.eyebrow}</span>
+      <span class="eyebrow step reveal"><b>${i + 1}</b>${ch.eyebrow}</span>
       <h2 class="reveal" id="${ch.id}-h" style="--d:60ms">${ch.h2}</h2>
       <p class="intro reveal" style="--d:120ms">${ch.intro}</p>
       <ul class="points">
@@ -339,8 +346,8 @@ function page(c) {
 <link rel="alternate" hreflang="en" href="${SITE}">
 <link rel="alternate" hreflang="de" href="${SITE}de/">
 <link rel="alternate" hreflang="x-default" href="${SITE}">
-<meta name="theme-color" content="#f5f2eb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f1513" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f3ed" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111413" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ToHuus Hub">
@@ -360,7 +367,6 @@ function page(c) {
 <link rel="icon" href="${b}assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="${b}assets/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="${b}assets/apple-touch-icon.png">
-<link rel="preload" href="${b}assets/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${b}assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${b}assets/site.css">
 <script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';d.setAttribute('data-theme',t);document.addEventListener('error',function(e){var x=e.target;if(x&&x.hasAttribute&&x.hasAttribute('data-shot'))x.remove()},true)})()</script>
@@ -402,9 +408,17 @@ ${c.nav.map(([h, l]) => `      <a href="${h}">${l}</a>`).join('\n')}
       <p class="small reveal" style="--d:280ms">${c.hero.facts.map((f) => `<span>${ico('check')}${f}</span>`).join('')}</p>
     </div>
     <div class="hero-visual reveal" style="--d:120ms">
-      <div class="note n1"><b><span class="dot"></span>${c.hero.n1[0]}</b><small>${c.hero.n1[1]}</small></div>
-      ${phone(c, 'today')}
-      <div class="note n2"><b>${c.hero.n2[0]}</b><small>${c.hero.n2[1]}</small></div>
+      <div class="house-stage">
+        <div class="note n1"><b><span class="dot"></span>${c.hero.n1[0]}</b><small>${c.hero.n1[1]}</small></div>
+        ${houseSvg({ label: c.hero.houseLabel })}
+        <div class="note n2"><b>${c.hero.n2[0]}</b><small>${c.hero.n2[1]}</small></div>
+      </div>
+      <div class="parts">
+        <p class="parts-h">${c.hero.partsH}</p>
+        <ol class="parts-list">
+${c.hero.parts.map(([w, s], k) => `          <li data-n="${k + 1}" tabindex="0"><span class="pn">${k + 1}</span><span><b>${w}</b>${s}</span></li>`).join('\n')}
+        </ol>
+      </div>
     </div>
   </div>
 </section>
@@ -552,4 +566,6 @@ fs.writeFileSync(path.join(ROOT, 'index.html'), page(COPY.en));
 fs.mkdirSync(path.join(ROOT, 'de'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'de/index.html'), page(COPY.de));
 fs.mkdirSync(path.join(ROOT, 'assets/shots'), { recursive: true });
+fs.mkdirSync(path.join(ROOT, 'assets/img'), { recursive: true });
+for (const m of ['light', 'dark']) fs.writeFileSync(path.join(ROOT, `assets/img/house-${m}.svg`), houseSvg({ label: 'ToHuus Hub', mode: m }) + '\n');
 console.log('built site/index.html and site/de/index.html');

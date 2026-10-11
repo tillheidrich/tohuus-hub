@@ -23,6 +23,7 @@ import { fetchImage, saveImage } from '../lib/images.js';
 import { applyImport, createImport, linesToImport } from '../lib/imports.js';
 import { overview } from '../lib/overview.js';
 import { getRecipe, listRecipes, logCooked, saveRecipe, suggest } from '../lib/recipes.js';
+import { setRecipeImageUrl } from '../lib/recipes2.js';
 import { addPlan, autofill, getPlan, planShopping, shiftPlan, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
 import { register as register_data } from './tools-data.js';
@@ -373,10 +374,7 @@ export function buildMcpServer(actorName: string) {
     },
     async (a) => {
       const id = saveRecipe(a as any);
-      if (a.image_url) {
-        const buf = await fetchImage(a.image_url);
-        if (buf) db.prepare('UPDATE recipes SET image_path = ? WHERE id = ?').run(await saveImage(buf, `r${id}`), id);
-      }
+      if (a.image_url) await setRecipeImageUrl(id, a.image_url, { wait: true });
       return text({ id, url: `${config.baseUrl}/rezepte/${id}` });
     },
   );

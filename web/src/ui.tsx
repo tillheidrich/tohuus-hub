@@ -1,3 +1,4 @@
+import { EmptyArt, type ArtName } from './art';
 import {
   Archive,
   Bathtub,
@@ -269,10 +270,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 // ------------------------------------------------------------------ misc
 
 /** Empty state. `action` is the single, obvious next step (rendered as a button). */
-export function Empty({ icon, title, children, action }: { icon: ReactNode; title: string; children?: ReactNode; action?: { label: string; onClick: () => void; icon?: ReactNode } }) {
+export function Empty({ icon, art, title, children, action }: { icon: ReactNode; /** assembly-manual drawing instead of the icon (src/art.tsx) */ art?: ArtName; title: string; children?: ReactNode; action?: { label: string; onClick: () => void; icon?: ReactNode } }) {
   return (
-    <div className="empty-state">
-      <div className="art">{icon}</div>
+    <div className={`empty-state${art ? ' has-art' : ''}`}>
+      {art ? <div className="art-ill"><EmptyArt name={art} /></div> : <div className="art">{icon}</div>}
       <b>{title}</b>
       {children && <div className="small" style={{ maxWidth: 320 }}>{children}</div>}
       {action && (

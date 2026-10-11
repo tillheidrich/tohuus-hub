@@ -879,7 +879,7 @@ export function BoxLabels({ initialCodes }: { initialCodes: string[] }) {
         <div className="card"><Empty icon={<QrCode size={26} />} title={t('Could not load')} /></div>
       ) : all.length === 0 ? (
         <div className="card">
-          <Empty icon={<BowlFood size={26} />} title={t('No leftovers or frozen portions yet')} action={{ label: t('Put something away'), onClick: () => setAdd(true) }}>
+          <Empty icon={<BowlFood size={26} />} art="fridge" title={t('No leftovers or frozen portions yet')} action={{ label: t('Put something away'), onClick: () => setAdd(true) }}>
             {t('After cooking, tap “Leftovers” – or freeze something from stock. Each container gets its own label here.')}
           </Empty>
         </div>

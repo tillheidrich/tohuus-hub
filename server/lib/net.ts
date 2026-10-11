@@ -112,7 +112,8 @@ export async function safeFetch(
     throw new SafeFetchError(t('Too many redirects'));
   } catch (e) {
     if (e instanceof SafeFetchError || (e as { cause?: unknown })?.cause instanceof SafeFetchError) throw e instanceof SafeFetchError ? e : (e as { cause: SafeFetchError }).cause;
-    throw new Error(t('Link not reachable'));
+    // keep the low-level cause (DNS, refused, timeout …) for logs; the message stays user-facing
+    throw new Error(t('Link not reachable'), { cause: e });
   } finally {
     clearTimeout(timer);
   }

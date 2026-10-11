@@ -351,8 +351,27 @@ export function lang(): Lang {
   return isLang(l) ? l : 'en';
 }
 
+export function setSettingDefault(key: string) {
+  db.prepare('DELETE FROM settings WHERE key = ?').run(key);
+}
+
+/** The instance default look: BRAND from the environment, else ToHuus Hub. */
+export function defaultBrand(): Brand {
+  return config.brand === 'fredirando' ? 'fredirando' : 'tohuus';
+}
+
+/**
+ * The look of this household. An explicit admin choice (Settings › Household › Look, key `brand.choice`) wins;
+ * without one, BRAND from the environment decides. The older key `brand` is ignored on purpose: onboarding used
+ * to store it without anybody choosing, which silently overrode BRAND.
+ */
 export function brand(): Brand {
-  // BRAND set in the environment is the instance's identity and wins; otherwise the household setting decides
-  const b = process.env.BRAND ? config.brand : getSetting<string>('brand', config.brand);
-  return b === 'fredirando' ? 'fredirando' : 'tohuus';
+  const choice = getSetting<string | null>('brand.choice', null);
+  return choice === 'tohuus' || choice === 'fredirando' ? choice : defaultBrand();
+}
+
+/** Store an explicit choice. Choosing the instance default removes the override (BRAND applies again). */
+export function chooseBrand(b: Brand) {
+  if (b === defaultBrand()) setSettingDefault('brand.choice');
+  else setSetting('brand.choice', b);
 }

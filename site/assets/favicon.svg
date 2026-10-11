@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <style>.d{display:none}@media (prefers-color-scheme: dark){.l{display:none}.d{display:inline}}</style>
-  <g class="l"><rect width="1024" height="1024" rx="232" fill="#efe8db"/><g transform="translate(-61 -61) scale(1.12)">
+  <g class="l"><rect width="1024" height="1024" rx="232" fill="#0b6148"/><g transform="translate(-61 -61) scale(1.12)">
   
   <g transform="translate(0 0)">
-    <path d="M214 486 L512 246 L810 486" fill="none" stroke="#1e5e4b" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="306" y="516" width="412" height="306" rx="64" fill="#1e5e4b"/>
-    <path d="M454 822 V700 a58 58 0 0 1 116 0 V822 Z" fill="#d2553c"/>
+    <path d="M214 486 L512 246 L810 486" fill="none" stroke="#f6efe2" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="306" y="516" width="412" height="306" rx="64" fill="#f6efe2"/>
+    <path d="M454 822 V700 a58 58 0 0 1 116 0 V822 Z" fill="#e0583c"/>
   </g></g></g>
-  <g class="d"><rect width="1024" height="1024" rx="232" fill="#0c1210"/><g transform="translate(-61 -61) scale(1.12)">
+  <g class="d"><rect width="1024" height="1024" rx="232" fill="#111413"/><g transform="translate(-61 -61) scale(1.12)">
   
   <g transform="translate(0 0)">
-    <path d="M214 486 L512 246 L810 486" fill="none" stroke="#efeadf" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="306" y="516" width="412" height="306" rx="64" fill="#efeadf"/>
-    <path d="M454 822 V700 a58 58 0 0 1 116 0 V822 Z" fill="#ef7a62"/>
+    <path d="M214 486 L512 246 L810 486" fill="none" stroke="#5fd0a0" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="306" y="516" width="412" height="306" rx="64" fill="#5fd0a0"/>
+    <path d="M454 822 V700 a58 58 0 0 1 116 0 V822 Z" fill="#f07a62"/>
   </g></g></g>
 </svg>

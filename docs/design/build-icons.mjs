@@ -1,7 +1,7 @@
 /**
  * Generates every ToHuus Hub / Fredirando icon (SVG + PNG) from one geometry.
  * Run from the repo root:  node docs/design/build-icons.mjs
- * Design notes: docs/design/2026-10-11-nordic-direction.md ("Icon").
+ * Design notes: docs/design/2026-10-11-ikea-direction.md ("Icons"), geometry from 2026-10-11-nordic-direction.md.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,14 +10,16 @@ import sharp from 'sharp';
 const PUB = 'web/public';
 const SITE = 'site/assets';
 
+// IKEA-inspired direction (docs/design/2026-10-11-ikea-direction.md): flat colour fields, no gradients or glow.
+// ToHuus: a solid spruce tile with a birch-white house and a lingon door. Dark: charcoal tile, spruce-mint house.
 const PAL = {
   tohuus: {
-    light: { bg: ['#fbf8f2', '#efe8db'], edge: '#1a2321', mark: '#1e5e4b', dot: '#d2553c', door: null },
-    dark: { bg: ['#16201c', '#0c1210'], edge: '#ffffff', mark: '#efeadf', dot: '#ef7a62', door: null },
+    light: { bg: ['#0b6148', '#0b6148'], edge: '#000000', mark: '#f6efe2', dot: '#e0583c', door: null },
+    dark: { bg: ['#111413', '#111413'], edge: '#ffffff', mark: '#5fd0a0', dot: '#f07a62', door: null },
   },
   fredirando: {
-    light: { bg: ['#fff8f1', '#fbe6d4'], edge: '#7a3a14', mark: '#e8561a', dot: '#2a1d16', door: null, speed: true },
-    dark: { bg: ['#241812', '#140c08'], edge: '#ffffff', mark: '#ff7a3d', dot: '#fbefe7', door: null, speed: true },
+    light: { bg: ['#c9480e', '#c9480e'], edge: '#000000', mark: '#fff6ee', dot: '#23170f', door: null, speed: true },
+    dark: { bg: ['#150e0a', '#150e0a'], edge: '#ffffff', mark: '#ff7a3d', dot: '#fbefe7', door: null, speed: true },
   },
 };
 
@@ -45,7 +47,7 @@ function iconSvg(brand, theme, { rounded = true, scale = 1.06, id = 'a' } = {}) 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="bg-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg[0]}"/><stop offset="1" stop-color="${c.bg[1]}"/></linearGradient>
-    <radialGradient id="glow-${id}" cx="0.3" cy="0.12" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="${theme === 'dark' ? 0.06 : 0.55}"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glow-${id}" cx="0.3" cy="0.12" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
   </defs>
   <rect width="1024" height="1024" rx="${rx}" fill="url(#bg-${id})"/>
   <rect width="1024" height="1024" rx="${rx}" fill="url(#glow-${id})"/>

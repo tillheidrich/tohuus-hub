@@ -10,6 +10,7 @@
  * Plus Home Assistant: away state for a binary sensor, presence in ("everyone away > 24 h" → suggestion only).
  */
 import { config } from '../config.js';
+import { recipeImageSql } from './recipe-images.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { fmtDay, t } from '../i18n.js';
 import { randomToken, sha256 } from './auth.js';
@@ -673,7 +674,7 @@ export function bookBack(tripId: number, lines: { id: number; qty: number }[], a
 
 export function kitchenMeals(tripId: number) {
   return db
-    .prepare(`SELECT m.id, m.day, m.slot, m.title, m.recipe_id, r.image_path FROM away_meals m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE m.trip_id = ? ORDER BY m.day, m.slot, m.id`)
+    .prepare(`SELECT m.id, m.day, m.slot, m.title, m.recipe_id, ${recipeImageSql('r')} AS image_path FROM away_meals m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE m.trip_id = ? ORDER BY m.day, m.slot, m.id`)
     .all(tripId) as { id: number; day: string; slot: string; title: string; recipe_id: number | null; image_path: string | null }[];
 }
 

@@ -3,7 +3,7 @@ import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled, visionEnabled } from '../config.js';
 import { appearanceFor } from '../lib/appearance.js';
-import { brand, db, getSetting, lang, setSetting } from '../db.js';
+import { brand, chooseBrand, db, defaultBrand, getSetting, lang, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
 import { regionInfo } from '../lib/region.js';
 import {
@@ -510,6 +510,7 @@ r.get('/settings', (req, res) => {
   res.json({
     household: getSetting('household.name', t('Our home')),
     brand: brand(),
+    brandDefault: defaultBrand(),
     language: lang(),
     ha: { ...haSettings(), token: haSettings().token ? '••••' : '' },
     notify: notifySettings(),
@@ -544,7 +545,8 @@ r.patch('/settings', requireAdmin, (req, res) => {
     })
     .parse(req.body);
   if (b.household) setSetting('household.name', b.household);
-  if (b.brand) setSetting('brand', b.brand);
+  // the explicit choice in Settings wins over BRAND (choosing the default removes the override)
+  if (b.brand) chooseBrand(b.brand);
   if (b.language) setSetting('language', b.language);
   if (b.ha) setSetting('ha', { ...haSettings(), ...Object.fromEntries(Object.entries(b.ha).filter(([k, v]) => !(k === 'token' && v === '••••'))) });
   if (b.importAutoApply !== undefined) setSetting('import.autoApply', b.importAutoApply);

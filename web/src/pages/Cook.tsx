@@ -66,7 +66,7 @@ export function Cook({ me }: { me: Me }) {
         <div className="skel" style={{ height: 420, maxWidth: 420, margin: '0 auto', borderRadius: 26 }} />
       ) : !cur ? (
         <div className="card">
-          <Empty icon={<ChefHat size={26} />} title={t('No suggestions yet')} action={(recipes.data?.length ?? 0) === 0 ? { label: t('Add a recipe'), icon: <Plus size={14} weight="bold" />, onClick: () => setImportOpen(true) } : undefined}>
+          <Empty icon={<ChefHat size={26} />} art="book" title={t('No suggestions yet')} action={(recipes.data?.length ?? 0) === 0 ? { label: t('Add a recipe'), icon: <Plus size={14} weight="bold" />, onClick: () => setImportOpen(true) } : undefined}>
             {t('Add a few favorite recipes – by link, photo (e.g. a HelloFresh card) or via Claude/ChatGPT.')}
           </Empty>
         </div>

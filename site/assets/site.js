@@ -8,7 +8,7 @@
   var meta = document.querySelectorAll('meta[name="theme-color"]');
   function paint(t) {
     d.setAttribute('data-theme', t);
-    for (var i = 0; i < meta.length; i++) { meta[i].setAttribute('content', t === 'dark' ? '#0f1513' : '#f5f2eb'); meta[i].removeAttribute('media'); }
+    for (var i = 0; i < meta.length; i++) { meta[i].setAttribute('content', t === 'dark' ? '#111413' : '#f6f3ed'); meta[i].removeAttribute('media'); }
     if (btn) btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
   }
   paint(d.getAttribute('data-theme') || 'light');
@@ -33,6 +33,17 @@
   } else {
     els.forEach(function (el) { el.classList.add('in'); });
   }
+
+  // parts list under the house: pointing at a part highlights its number in the drawing
+  document.querySelectorAll('.parts-list li[data-n]').forEach(function (li) {
+    var n = li.getAttribute('data-n');
+    var g = document.querySelector('.hz .hz-call[data-n="' + n + '"]');
+    if (!g) return;
+    var on = function () { g.classList.add('on'); li.classList.add('on'); };
+    var off = function () { g.classList.remove('on'); li.classList.remove('on'); };
+    li.addEventListener('mouseenter', on); li.addEventListener('mouseleave', off);
+    li.addEventListener('focus', on); li.addEventListener('blur', off);
+  });
 
   // copy buttons
   document.querySelectorAll('[data-copy]').forEach(function (b) {

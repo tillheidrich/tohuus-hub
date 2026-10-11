@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="bg-d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241812"/><stop offset="1" stop-color="#140c08"/></linearGradient>
-    <radialGradient id="glow-d" cx="0.3" cy="0.12" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.06"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="bg-d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#150e0a"/><stop offset="1" stop-color="#150e0a"/></linearGradient>
+    <radialGradient id="glow-d" cx="0.3" cy="0.12" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
   </defs>
   <rect width="1024" height="1024" rx="232" fill="url(#bg-d)"/>
   <rect width="1024" height="1024" rx="232" fill="url(#glow-d)"/>

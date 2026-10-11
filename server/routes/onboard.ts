@@ -1,7 +1,7 @@
 /** Onboarding, help, what's new, polish */
 import { Router } from 'express';
 import { z } from 'zod';
-import { db, setSetting } from '../db.js';
+import { brand, chooseBrand, db, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
@@ -62,7 +62,8 @@ r.put('/onboarding/home', requireAdmin, (req, res) => {
     .parse(req.body ?? {});
   if (b.household) setSetting('household.name', b.household);
   if (b.language) setSetting('language', b.language);
-  if (b.brand) setSetting('brand', b.brand);
+  // only a real change counts as a choice – sending the look that is already shown stores nothing
+  if (b.brand && b.brand !== brand()) chooseBrand(b.brand);
   const rooms = b.rooms ? setRooms(b.rooms) : null;
   const state = updateOnboardState({ started: true, step: onboardState().step === 'home' ? 'invite' : onboardState().step });
   emit('settings', 'stock');

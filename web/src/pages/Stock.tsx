@@ -149,6 +149,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
         <div className="card">
           <Empty
             icon={<Package size={26} />}
+            art={q ? undefined : 'shelf'}
             title={q ? t('Nothing for “{q}”', { q }) : (products.data ?? []).length === 0 ? t('Nothing in stock yet') : t('Nothing here')}
             action={!q && (products.data ?? []).length === 0 ? { label: t('Add typical staples'), onClick: () => setStarter(true) } : undefined}
           >

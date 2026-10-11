@@ -5,7 +5,8 @@ import { langInfo } from '../languages.js';
 import { requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, matchIngredient } from '../lib/catalog.js';
-import { deleteImage, fetchImage, saveImage, toVisionJpeg } from '../lib/images.js';
+import { deleteImage, saveImage, toVisionJpeg } from '../lib/images.js';
+import { setRecipeImageUrl } from '../lib/recipes2.js';
 import { getRecipe, ingredientCore, listRecipes, logCooked, parseRecipeJsonLd, saveRecipe, suggest } from '../lib/recipes.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
@@ -133,15 +134,9 @@ r.post('/recipes/:id/shopping', (req, res) => {
   res.json({ added, missing });
 });
 
+/** Keep the photo link (shown right away, retried by the queue, browser fallback) and try to store it now. */
 async function attachImage(id: number, url: string | null | undefined) {
-  if (!url || !/^https?:/.test(url)) return;
-  const buf = await fetchImage(url);
-  if (!buf) {
-    db.prepare('UPDATE recipes SET image_path = NULL WHERE id = ?').run(id);
-    return;
-  }
-  const img = await saveImage(buf, `r${id}`);
-  db.prepare('UPDATE recipes SET image_path = ? WHERE id = ?').run(img, id);
+  if (await setRecipeImageUrl(id, url, { wait: true })) emit('recipes');
 }
 
 r.post('/recipes/import/url', async (req, res) => {

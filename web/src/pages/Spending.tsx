@@ -275,7 +275,7 @@ export function Spending() {
         <div className="card"><Empty icon={<Coins size={26} />} title={t('Could not load')}>{(error as Error)?.message}</Empty></div>
       ) : !s.has_data ? (
         <div className="card">
-          <Empty icon={<Receipt size={26} />} title={t('No receipts yet')} action={{ label: t('Upload a receipt'), onClick: () => nav('/import?mode=file') }}>
+          <Empty icon={<Receipt size={26} />} art="receipt" title={t('No receipts yet')} action={{ label: t('Upload a receipt'), onClick: () => nav('/import?mode=file') }}>
             {t('Spending appears here as soon as you apply a receipt or an order under Imports. Prices come straight from the receipt.')}{' '}
             <button className="linkish" onClick={() => setExpense('new')}>{t('Or add an expense without a receipt.')}</button>
           </Empty>

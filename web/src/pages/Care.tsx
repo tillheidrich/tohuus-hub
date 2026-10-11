@@ -268,7 +268,7 @@ export function Care() {
 
       {tasks.length === 0 ? (
         <div className="card">
-          <Empty icon={<Wrench size={26} />} title={t('No tasks yet')}>
+          <Empty icon={<Wrench size={26} />} art="calendar" title={t('No tasks yet')}>
             {t('Pick a few from the suggestions below – one tap each. You can adjust the interval later.')}
           </Empty>
         </div>

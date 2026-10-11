@@ -193,7 +193,7 @@ Every variable the server reads. Only `BASE_URL` and the admin account matter fo
 | `ADMIN_PASSWORD` | random | Password for that account. If empty, a random one is printed to the log once. |
 | `LANGUAGE` | `en` | UI language on first start: `en`, `de` or `sv`. Changeable under *Settings › Household*. |
 | `REGION` | from `LANGUAGE` | Where the household shops on first start: `DE`, `AT`, `CH`, `GB`, `IE`, `US`, `SE`, `DK`, `NO`, `NL`. Default: `de` → DE, `en` → GB, `sv` → SE. |
-| `BRAND` | `tohuus` | Look: `tohuus` or `fredirando`. When set, it wins over the household setting under *Settings › Household › Brand*. When unset, the household setting decides. |
+| `BRAND` | `tohuus` | Default look: `tohuus` or `fredirando`. An admin's explicit choice under *Settings › Household › Brand* wins over it; choosing the default there again removes the override. |
 | `SEED_DEMO` | `false` | `true` loads the demo household once, on a start when there are no products yet. Demo rows are marked and removable. |
 | `TZ` | `Europe/Berlin` | Time zone for best-before dates, the daily digest and the nightly backup. |
 | `TRUST_PROXY_HOPS` | `1` | Number of reverse proxies in front, for rate limiting by client IP. |

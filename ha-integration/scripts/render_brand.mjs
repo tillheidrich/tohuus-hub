@@ -24,7 +24,7 @@ async function logo(size, color) {
   const mark = await icon(size);
   const text = await sharp({
     text: {
-      text: `<span foreground="${color}" font_weight="600">ToHuus Hub</span>`,
+      text: `<span foreground="${color}" font_weight="800">ToHuus Hub</span>`,
       font: `Geist ${Math.round(size * 0.42)}px`,
       ...(fs.existsSync(font) ? { fontfile: font } : {}),
       rgba: true,
@@ -47,13 +47,13 @@ async function logo(size, color) {
 
 const out = {
   [path.join(comp, 'icon.png')]: await icon(256),
-  [path.join(comp, 'logo.png')]: await logo(256, '#1e5e4b'),
+  [path.join(comp, 'logo.png')]: await logo(256, '#0b6148'),
   [path.join(brands, 'icon.png')]: await icon(256),
   [path.join(brands, 'icon@2x.png')]: await icon(512),
-  [path.join(brands, 'logo.png')]: await logo(256, '#1e5e4b'),
-  [path.join(brands, 'logo@2x.png')]: await logo(512, '#1e5e4b'),
-  [path.join(brands, 'dark_logo.png')]: await logo(256, '#efeadf'),
-  [path.join(brands, 'dark_logo@2x.png')]: await logo(512, '#efeadf'),
+  [path.join(brands, 'logo.png')]: await logo(256, '#0b6148'),
+  [path.join(brands, 'logo@2x.png')]: await logo(512, '#0b6148'),
+  [path.join(brands, 'dark_logo.png')]: await logo(256, '#f3f1ec'),
+  [path.join(brands, 'dark_logo@2x.png')]: await logo(512, '#f3f1ec'),
 };
 for (const [file, buf] of Object.entries(out)) {
   fs.writeFileSync(file, buf);

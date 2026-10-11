@@ -153,7 +153,7 @@ if (webDir) {
     res.sendFile(path.join(webDir, BRAND_FILES[req.path]));
   });
   // manifest per brand and household theme (colours match the --paper token of web/src/styles.css)
-  const PAPER = { tohuus: { light: '#f5f2eb', dark: '#0f1513' }, fredirando: { light: '#fff7f0', dark: '#170f0b' } } as const;
+  const PAPER = { tohuus: { light: '#f6f3ed', dark: '#111413' }, fredirando: { light: '#fbf5ee', dark: '#150e0a' } } as const;
   app.get('/manifest.webmanifest', (_req, res) => {
     const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
     const b = brand() === 'fredirando' ? 'fredirando' : 'tohuus';
@@ -169,8 +169,8 @@ if (webDir) {
   const fredi = html
     .replace(/<title>.*<\/title>/, '<title>Fredirando</title>')
     .replace(/content="ToHuus Hub"/g, 'content="Fredirando"')
-    .replace(/content="#f5f2eb"/g, 'content="#fff7f0"')
-    .replace(/content="#0f1513"/g, 'content="#170f0b"')
+    .replace(/content="#f6f3ed"/g, 'content="#fbf5ee"')
+    .replace(/content="#111413"/g, 'content="#150e0a"')
     .replace(/<html lang="[^"]*"/, '<html lang="de" data-brand="fredirando"');
   // the document language follows the household setting
   // … and the household theme is known before the first paint (web/public/theme-boot.js reads it)

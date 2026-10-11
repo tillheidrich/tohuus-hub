@@ -3,33 +3,39 @@
 @import '@fontsource-variable/bricolage-grotesque';
 
 /*
- * ToHuus Hub design tokens – "Fjord & Oat" (Nordic direction, docs/design/2026-10-11-nordic-direction.md).
+ * ToHuus Hub design tokens – "Birch & Spruce" (IKEA-inspired functional direction,
+ * docs/design/2026-10-11-ikea-direction.md; supersedes the softer "Fjord & Oat" values).
+ * Flat surfaces, crisp 1px lines, one strong primary (spruce), a warm birch neutral, bold Geist headings.
  * Light is the base; <html data-theme="dark"> (set by web/public/theme-boot.js and src/theme.ts) swaps the palette.
  * Components only ever use these variables, so light, dark and the Fredirando brand follow automatically.
  */
 :root {
-  /* surfaces: oat paper, warm white cards, two sunken steps */
-  --paper: #f5f2eb;
-  --surface: #fffdf8;
-  --surface-2: #eeeae1;
-  --surface-3: #e4dfd4;
-  /* ink: spruce-black text in three strengths (all AA on paper and surface) */
-  --ink: #1a2321;
-  --ink-2: #44504c;
-  --ink-3: #5e6965;
-  --line: #e5e0d6;
-  --line-strong: #d2ccbf;
-  /* brand: deep spruce for primary actions; lingon is the small warm signature (icon dot, illustrations) */
-  --brand: #1e5e4b;
+  /* surfaces: birch-white page, plain white cards (like a product shot on a plain background), two birch wells */
+  --paper: #f6f3ed;
+  --surface: #ffffff;
+  --surface-2: #efe9de;
+  --surface-3: #e4dccd;
+  /* ink: near-black text in three strengths (all AA on paper, surface and surface-2) */
+  --ink: #121715;
+  --ink-2: #3c4542;
+  --ink-3: #5a6360;
+  --line: #ddd6c9;
+  --line-strong: #8f8676;
+  /* brand: one strong spruce for "do this"; lingon is the small warm signature (door, illustrations) */
+  --brand: #0b6148;
   --brand-ink: #ffffff;
-  --brand-soft: #dcebe4;
-  --lingon: #d2553c;
+  --brand-soft: #d9ece3;
+  --lingon: #d4482f;
+  /* birch: the warm wood neutral for wells, tags and illustration fills */
+  --birch: #ead9bb;
+  --birch-soft: #f4ead8;
+  --birch-ink: #6e5230;
   /* accent = "all good / in stock" */
   --accent: #1e7458;
   --accent-ink: #155c44;
   --accent-soft: #ddefe5;
   --on-accent: #ffffff;
-  /* status */
+  /* status (solid price-tag fills use --on-status for their text) */
   --empty: #b8372a;
   --empty-soft: #f9e3de;
   --low: #946000;
@@ -38,8 +44,9 @@
   --exp-soft: #fbe6d9;
   --info: #2d57b0;
   --info-soft: #e3eaf8;
-  /* soft tints for placeholder thumbs and tiles (oat, sage, fjord, clay, heather, mist) */
-  --tint-1: #ece4d4;
+  --on-status: #ffffff;
+  /* soft tints for placeholder thumbs and tiles (birch, sage, fjord, clay, heather, mist) */
+  --tint-1: #efe3cc;
   --tint-2: #dfeae2;
   --tint-3: #e1e7f0;
   --tint-4: #f1e1d8;
@@ -47,23 +54,23 @@
   --tint-6: #dfecec;
   --tint-ink: #3b4441;
   /* deep spruce behind photo cards that have no picture yet */
-  --hero: #17332b;
+  --hero: #12322a;
   --thumb-bg: #ffffff;
-  /* overlays and depth: shadows tinted with the ink hue, very diffuse */
-  --scrim: rgba(16, 24, 21, 0.42);
-  --glass: color-mix(in srgb, var(--paper) 80%, transparent);
-  --shadow-sm: 0 1px 2px rgba(26, 35, 33, 0.05);
-  --shadow: 0 1px 2px rgba(26, 35, 33, 0.04), 0 12px 32px -16px rgba(26, 35, 33, 0.18);
-  --shadow-lg: 0 30px 70px -24px rgba(16, 24, 21, 0.34);
-  /* shape */
-  --r-xs: 8px;
-  --r-sm: 12px;
-  --r: 18px;
-  --r-lg: 26px;
+  /* overlays and depth: flat by default; only floating layers (sheets, menus, toasts) get a shadow */
+  --scrim: rgba(14, 20, 18, 0.46);
+  --glass: color-mix(in srgb, var(--paper) 88%, transparent);
+  --shadow-sm: none;
+  --shadow: 0 1px 0 rgba(18, 23, 21, 0.04);
+  --shadow-lg: 0 24px 60px -24px rgba(14, 20, 18, 0.36);
+  /* shape: friendly but squarer than before; pills stay for buttons, search and filter chips */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r: 14px;
+  --r-lg: 20px;
   --r-pill: 999px;
-  /* type */
+  /* type: one bold, clear sans for everything (Geist, OFL); mono for amounts */
   --font: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --display: 'Bricolage Grotesque Variable', 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --display: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
   /* motion: one soft curve, short durations */
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -81,25 +88,28 @@
   color-scheme: light;
 }
 
-/* dark: "polar night" – deep spruce-black, never pure black; depth through surface steps, not shadows */
+/* dark: neutral charcoal with a hint of spruce, never pure black; depth through surface steps and hairlines */
 :root[data-theme='dark'] {
-  --paper: #0f1513;
-  --surface: #161e1b;
-  --surface-2: #1e2824;
-  --surface-3: #28332e;
-  --ink: #edefea;
-  --ink-2: #b9c3be;
-  --ink-3: #8a9590;
-  --line: #232d29;
-  --line-strong: #33403a;
-  --brand: #6fd1a8;
-  --brand-ink: #0d1a15;
-  --brand-soft: #173329;
-  --lingon: #ef7a62;
+  --paper: #111413;
+  --surface: #191d1b;
+  --surface-2: #212624;
+  --surface-3: #2b312e;
+  --ink: #f3f1ec;
+  --ink-2: #c0c6c2;
+  --ink-3: #8f9894;
+  --line: #2a302d;
+  --line-strong: #6a746f;
+  --brand: #5fd0a0;
+  --brand-ink: #0b1a14;
+  --brand-soft: #17342a;
+  --lingon: #f07a62;
+  --birch: #3d3427;
+  --birch-soft: #2a251d;
+  --birch-ink: #e6d2ae;
   --accent: #5cc79a;
   --accent-ink: #8be0bb;
   --accent-soft: #153027;
-  --on-accent: #0d1a15;
+  --on-accent: #0b1a14;
   --empty: #f28473;
   --empty-soft: #3a1d19;
   --low: #e8b04a;
@@ -108,7 +118,8 @@
   --exp-soft: #3a2316;
   --info: #8ea9f2;
   --info-soft: #1b2440;
-  --tint-1: #2a2820;
+  --on-status: #111413;
+  --tint-1: #2c2820;
   --tint-2: #1f2b24;
   --tint-3: #1f2632;
   --tint-4: #2e231e;
@@ -116,11 +127,11 @@
   --tint-6: #1d2b2b;
   --tint-ink: #d5dcd8;
   --hero: #142621;
-  --thumb-bg: #e9ece8;
-  --scrim: rgba(3, 6, 5, 0.62);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.7);
-  --shadow-lg: 0 30px 70px -24px rgba(0, 0, 0, 0.8);
+  --thumb-bg: #eceae5;
+  --scrim: rgba(3, 5, 4, 0.64);
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lg: 0 24px 60px -24px rgba(0, 0, 0, 0.8);
   color-scheme: dark;
 }
 
@@ -2189,37 +2200,41 @@ hr.sep {
 
 /* ------------------------------------------------------------ brand: Fredirando (house delivery theme) */
 
+/* Fredirando keeps its delivery orange as the one strong primary; birch neutrals are warmed towards apricot */
 :root[data-brand='fredirando'] {
-  --paper: #fff7f0;
-  --surface: #fffdfb;
-  --surface-2: #fbeee4;
-  --surface-3: #f5e0d1;
-  --ink: #2a1d16;
-  --ink-2: #5c4639;
-  --ink-3: #7a6252;
-  --line: #f1e2d6;
-  --line-strong: #e4cfbf;
+  --paper: #fbf5ee;
+  --surface: #ffffff;
+  --surface-2: #f6ebe0;
+  --surface-3: #eedccc;
+  --ink: #23170f;
+  --ink-2: #57412f;
+  --ink-3: #745b49;
+  --line: #ecdccd;
+  --line-strong: #9b806b;
   --accent: #1e7458;
   --accent-ink: #155c44;
   --accent-soft: #ddefe5;
   --brand: #c9480e;
   --brand-ink: #ffffff;
   --brand-soft: #fde4d4;
-  --lingon: #f2601d;
+  --lingon: #c9480e;
+  --birch: #f1d9bd;
+  --birch-soft: #fbeedf;
+  --birch-ink: #7a4a22;
   --tint-ink: #4a362a;
   --hero: #2a1d16;
-  --shadow: 0 1px 2px rgba(120, 50, 10, 0.05), 0 12px 30px -16px rgba(160, 70, 20, 0.26);
+  --shadow: 0 1px 0 rgba(120, 50, 10, 0.05);
 }
 :root[data-brand='fredirando'][data-theme='dark'] {
-  --paper: #170f0b;
-  --surface: #211712;
-  --surface-2: #2b1f19;
-  --surface-3: #362820;
+  --paper: #150e0a;
+  --surface: #1f1611;
+  --surface-2: #2a1e18;
+  --surface-3: #35271f;
   --ink: #fbefe7;
   --ink-2: #dcc8bb;
-  --ink-3: #a68f81;
-  --line: #31241d;
-  --line-strong: #46352b;
+  --ink-3: #a99283;
+  --line: #33251d;
+  --line-strong: #836a59;
   --accent: #5cc79a;
   --accent-ink: #8be0bb;
   --accent-soft: #153027;
@@ -2227,9 +2242,12 @@ hr.sep {
   --brand-ink: #1a0e08;
   --brand-soft: #3d2216;
   --lingon: #ff7a3d;
+  --birch: #45311f;
+  --birch-soft: #2c1f16;
+  --birch-ink: #f1d6b6;
   --tint-ink: #ecdcd0;
   --hero: #2b1f19;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.7);
+  --shadow: none;
 }
 [data-brand='fredirando'] .fab {
   box-shadow: 0 0 0 4px var(--paper), 0 12px 26px -10px color-mix(in srgb, var(--brand) 75%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -7822,10 +7840,10 @@ h2,
   padding: 8px 7px;
 }
 .ap-swatch .l {
-  background: #f5f2eb;
+  background: #f6f3ed;
 }
 .ap-swatch .d {
-  background: #0f1513;
+  background: #111413;
 }
 .ap-swatch.light .d,
 .ap-swatch.dark .l {
@@ -7849,23 +7867,23 @@ h2,
   border-radius: 99px;
 }
 .ap-swatch .l .bar {
-  background: #1a2321;
+  background: #121715;
 }
 .ap-swatch .l .card {
-  background: #fffdf8;
+  background: #ffffff;
   box-shadow: 0 1px 2px rgba(26, 35, 33, 0.12);
 }
 .ap-swatch .l .pill {
-  background: #1e5e4b;
+  background: #0b6148;
 }
 .ap-swatch .d .bar {
-  background: #edefea;
+  background: #f3f1ec;
 }
 .ap-swatch .d .card {
-  background: #1e2824;
+  background: #212624;
 }
 .ap-swatch .d .pill {
-  background: #6fd1a8;
+  background: #5fd0a0;
 }
 .ap-allow {
   margin-top: 8px;
@@ -8120,4 +8138,383 @@ h2,
 }
 .plan-today .btn {
   flex: none;
+}
+
+/* ---------- photos ---------- */
+.recipe-photos-why { margin: 0; padding-left: 18px; display: grid; gap: 2px; overflow-wrap: anywhere; }
+
+/* ---------- ikea (functional direction: flat surfaces, crisp lines, bold type, price tags, manual drawings) ---------- */
+/* see docs/design/2026-10-11-ikea-direction.md – overrides the softer Nordic pass above without touching it */
+
+/* type: one bold, clear sans; hierarchy through weight and size, not through a second family */
+h1,
+.h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(28px, 7.6vw, 38px);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  font-variation-settings: normal;
+}
+h2,
+.h2 {
+  font-weight: 750;
+  font-size: 19px;
+  letter-spacing: -0.022em;
+  font-variation-settings: normal;
+}
+h3 {
+  font-weight: 700;
+}
+.eyebrow {
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--ink-2);
+}
+.num,
+.stat .v,
+.bigqty {
+  font-family: var(--font);
+  font-weight: 800;
+}
+[data-brand='fredirando'] h1,
+[data-brand='fredirando'] .h1 {
+  font-weight: 850;
+}
+
+/* surfaces: flat white on birch-white, 1px lines; shadows only for things that float */
+.card,
+.list,
+.more-list,
+.stat,
+.finder-hero {
+  box-shadow: none;
+  border-color: var(--line);
+}
+.card,
+.list,
+.more-list {
+  border-radius: var(--r);
+}
+.finder-hero {
+  border-radius: var(--r-pill);
+  border-color: var(--line-strong);
+}
+.li .title {
+  font-weight: 650;
+}
+.navlink.active {
+  box-shadow: inset 3px 0 0 var(--brand);
+  background: var(--surface);
+  font-weight: 650;
+}
+.brand img {
+  box-shadow: none;
+}
+
+/* buttons: bold pills, flat fills */
+.btn {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.btn.primary:hover {
+  background: color-mix(in srgb, var(--brand) 86%, var(--ink));
+}
+.btn:not(.primary):not(.accent):not(.ghost):hover {
+  border-color: var(--ink);
+}
+.icon-btn {
+  border-color: var(--line-strong);
+}
+.icon-btn.plain {
+  border-color: transparent;
+}
+.input,
+select.input,
+textarea.input {
+  border-radius: var(--r-sm);
+}
+.searchbar .input {
+  border-radius: var(--r-pill);
+}
+.input:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--brand);
+}
+
+/* filter chips: outlined pills, selected = solid ink */
+.chip {
+  font-weight: 650;
+  color: var(--ink);
+}
+.chip.on .n {
+  opacity: 0.85;
+}
+.seg {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.seg button.on {
+  box-shadow: 0 0 0 1px var(--line-strong);
+  font-weight: 700;
+}
+.tabs-inline button {
+  font-weight: 650;
+}
+.tabs-inline button.on {
+  border-bottom-width: 3px;
+}
+
+/* price tags: counts, expiry and status read like a tag with a punched hole */
+.badge {
+  height: 22px;
+  padding: 0 8px 0 15px;
+  border-radius: 3px 5px 5px 3px;
+  clip-path: polygon(6px 0, 100% 0, 100% 100%, 6px 100%, 0 50%);
+  font-weight: 750;
+  letter-spacing: 0.005em;
+  position: relative;
+  background: var(--birch);
+  color: var(--birch-ink);
+}
+.badge::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+.badge.empty,
+.badge.expired {
+  background: var(--empty);
+  color: var(--on-status);
+}
+.badge.low {
+  background: var(--low);
+  color: var(--on-status);
+}
+.badge.expiring {
+  background: var(--exp);
+  color: var(--on-status);
+}
+.badge.ok,
+.badge.good {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.badge.info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.tab .badge-dot,
+.chip .n {
+  font-weight: 800;
+}
+
+/* Today: the glance tiles read like a clear info-graphic (label, then one big number) */
+.glance {
+  gap: 8px;
+}
+.stat {
+  border-radius: var(--r);
+  padding: 12px 14px;
+  min-height: 92px;
+}
+.stat .v {
+  font-size: 40px;
+  letter-spacing: -0.045em;
+}
+.stat .l {
+  color: var(--ink);
+  font-weight: 650;
+}
+.stat.hot-empty {
+  border-color: color-mix(in srgb, var(--empty) 45%, var(--line));
+  background: color-mix(in srgb, var(--empty-soft) 55%, var(--surface));
+}
+.stat.hot-exp {
+  border-color: color-mix(in srgb, var(--exp) 45%, var(--line));
+  background: color-mix(in srgb, var(--exp-soft) 55%, var(--surface));
+}
+.stat.hot-low {
+  border-color: color-mix(in srgb, var(--low) 45%, var(--line));
+  background: color-mix(in srgb, var(--low-soft) 55%, var(--surface));
+}
+.stat:hover {
+  border-color: var(--ink-3);
+}
+
+/* icon wells: squarer, on birch */
+.action .ic,
+.banner .ic {
+  border-radius: var(--r-sm);
+}
+.more-row .ic {
+  border-radius: var(--r-sm);
+  background: var(--birch-soft);
+  color: var(--ink);
+}
+.more-row.current .ic {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+.action {
+  border-radius: var(--r);
+  box-shadow: none;
+}
+.banner {
+  border-radius: var(--r);
+}
+
+/* tab bar: solid paper with a crisp line; the + button is a flat spruce disc */
+.tabbar {
+  background: var(--glass);
+  border-top: 1px solid var(--line);
+}
+.tab {
+  font-weight: 650;
+}
+.tab.active {
+  color: var(--ink);
+}
+.tab.active svg {
+  color: var(--brand);
+}
+.fab,
+[data-brand='fredirando'] .fab {
+  box-shadow: 0 0 0 4px var(--paper);
+}
+
+/* sheets and toasts float, so they keep a shadow; corners a little squarer */
+.sheet {
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+@media (min-width: 720px) {
+  .sheet {
+    border-radius: var(--r-lg);
+  }
+}
+.toast {
+  border-radius: var(--r);
+}
+.thumb {
+  border-radius: var(--r-sm);
+}
+.skel {
+  border-radius: var(--r-sm);
+}
+
+/* assembly-manual drawings (src/art.tsx): one ink weight, flat token fills */
+.ia {
+  display: block;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+.ia .w {
+  fill: var(--surface);
+}
+.ia .b {
+  fill: var(--birch);
+}
+.ia .p {
+  fill: var(--brand);
+}
+.ia .l {
+  fill: var(--lingon);
+}
+.ia .k {
+  fill: var(--ink);
+  stroke: none;
+}
+.ia .thin,
+.ia .ia-hatch {
+  stroke-width: 1.25;
+}
+.ia .ia-ghost {
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+.ia .ia-hatch {
+  stroke: var(--ink-3);
+}
+.ia .ia-dash {
+  stroke-dasharray: 3 3;
+  stroke-width: 1.5;
+  fill: var(--surface);
+}
+.ia .ia-arrow {
+  stroke: var(--brand);
+  stroke-width: 2;
+}
+.ia .ia-check {
+  stroke: var(--brand);
+  stroke-width: 3;
+}
+.ia .ia-call circle {
+  stroke-width: 1.5;
+}
+.ia .ia-n {
+  fill: var(--ink);
+  stroke: none;
+  font: 800 9.5px/1 var(--font);
+}
+.empty-state.has-art {
+  gap: 8px;
+  padding-top: 24px;
+}
+.empty-state .art-ill {
+  width: 136px;
+  margin-bottom: 6px;
+}
+.empty-state b {
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+.empty-state .art {
+  border-radius: var(--r);
+  background: var(--birch-soft);
+  color: var(--ink);
+}
+
+/* the house motif on Today, in onboarding and at the tour start */
+.today-house {
+  width: 92px;
+  flex: none;
+  margin: 2px 0 0 auto;
+}
+.page-head:has(.today-house) {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+@media (max-width: 380px) {
+  .today-house {
+    width: 72px;
+  }
+}
+.onb-house {
+  width: 132px;
+  margin: 4px 0 14px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .today-house .ia-call,
+  .onb-house .ia-call {
+    animation: ia-pop 520ms var(--ease) 260ms both;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+@keyframes ia-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
 }

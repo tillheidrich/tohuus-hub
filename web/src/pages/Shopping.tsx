@@ -371,7 +371,7 @@ export function Shopping() {
           </div>
         ) : !view || (view.open === 0 && view.basket.length === 0) ? (
           <div className="card">
-            <Empty icon={<Basket size={26} />} title={inStore ? t('Nothing left to get') : t('Your list is empty')}>
+            <Empty icon={<Basket size={26} />} art="list" title={inStore ? t('Nothing left to get') : t('Your list is empty')}>
               {inStore ? t('Everything is in the basket or bought.') : t('Anything that runs low lands here automatically. Or just start typing above.')}
             </Empty>
           </div>

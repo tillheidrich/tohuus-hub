@@ -105,7 +105,7 @@ Everything runs in the server process on timers:
 | receipt inbox (IMAP) | every 10 minutes | `lib/retail-inbox.ts` |
 | party end, guest-level overrides | own timers | `lib/party.ts`, `lib/people.ts` |
 | Telegram long polling | continuous, when configured | `lib/telegram.ts` |
-| recipe photo downloads | small throttled queue, resumed on start | `lib/recipes2.ts` |
+| recipe photo downloads | small throttled queue, resumed on start, retry endpoint, browser fallback; display falls back to the link (`lib/recipe-images.ts`) | `lib/recipes2.ts` |
 
 Times use `TZ`. Notifications go through `notify()` in `lib/notify.ts`, which routes each event to the channels switched on for it, respects quiet hours during a trip, and de-duplicates repeats.
 

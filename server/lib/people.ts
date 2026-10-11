@@ -8,6 +8,7 @@
  * Person keys: 'u<users.id>' and 'k<kid_profiles.id>'.
  */
 import type { Request, Response } from 'express';
+import { recipeImageSql } from './recipe-images.js';
 import { config } from '../config.js';
 import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
@@ -438,7 +439,7 @@ interface FavRow {
 export function favourites(viewer?: Actor | null) {
   const people = listPeople(viewer);
   const keys = new Set(people.map((p) => p.key));
-  const recipes = new Map((db.prepare('SELECT id, title, image_path FROM recipes').all() as FavRow[]).map((r) => [r.id, r]));
+  const recipes = new Map((db.prepare(`SELECT id, title, ${recipeImageSql('recipes')} AS image_path FROM recipes`).all() as FavRow[]).map((r) => [r.id, r]));
   const cooked = new Map((db.prepare('SELECT recipe_id, COUNT(*) n FROM cook_log GROUP BY recipe_id').all() as { recipe_id: number; n: number }[]).map((r) => [r.recipe_id, r.n]));
   const ratings = (db.prepare('SELECT recipe_id, person, value FROM recipe_ratings').all() as { recipe_id: number; person: string; value: number }[]).filter((r) => keys.has(r.person) && recipes.has(r.recipe_id));
   const agg = new Map<number, { sum: number; n: number; loved: string[] }>();
@@ -493,14 +494,14 @@ export function personProfile(key: string, viewer?: Actor | null) {
   if (!person) throw httpError(404, t('Person not found.'));
   const rows = db
     .prepare(
-      `SELECT rr.recipe_id, rr.value, r.title, r.image_path,
+      `SELECT rr.recipe_id, rr.value, r.title, ${recipeImageSql('r')} AS image_path,
          (SELECT COUNT(*) FROM people_meals m WHERE m.recipe_id = rr.recipe_id AND m.person = rr.person) AS meals
        FROM recipe_ratings rr JOIN recipes r ON r.id = rr.recipe_id WHERE rr.person = ? ORDER BY rr.value DESC, rr.updated_at DESC`,
     )
     .all(key) as { recipe_id: number; value: number; title: string; image_path: string | null; meals: number }[];
   const most = db
     .prepare(
-      `SELECT m.recipe_id, r.title, r.image_path, COUNT(*) AS meals, (SELECT value FROM recipe_ratings x WHERE x.recipe_id = m.recipe_id AND x.person = m.person) AS value
+      `SELECT m.recipe_id, r.title, ${recipeImageSql('r')} AS image_path, COUNT(*) AS meals, (SELECT value FROM recipe_ratings x WHERE x.recipe_id = m.recipe_id AND x.person = m.person) AS value
        FROM people_meals m JOIN recipes r ON r.id = m.recipe_id WHERE m.person = ? GROUP BY m.recipe_id ORDER BY meals DESC, MAX(m.at) DESC LIMIT 6`,
     )
     .all(key) as { recipe_id: number; title: string; image_path: string | null; meals: number; value: number | null }[];

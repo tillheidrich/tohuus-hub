@@ -479,18 +479,18 @@ export function fragment(d: DisplayData) {
 }
 
 const CSS = `
-:root{--paper:#f5f2eb;--surface:#fffdf8;--surface-2:#eeeae1;--ink:#1a2321;--ink-2:#44504c;--ink-3:#5e6965;--line:#e5e0d6;--accent:#1e7458;--accent-soft:#ddefe5;--empty:#b8372a;--empty-soft:#f9e3de;--empty-ink:#7d2219;--low:#946000;--low-soft:#f8edd3;--low-ink:#6d4a07;--exp:#ad4614;--exp-soft:#fbe6d9;--info:#2d57b0;--info-soft:#e3eaf8;--hero:#17332b;--hero-ink:#fffdf8;--hero-2:#b9c3be;--fade:rgba(255,253,248,0);--shadow:0 1px 2px rgba(26,35,33,.05),0 8px 24px -12px rgba(26,35,33,.18)}
-html.t-dark{--paper:#0f1513;--surface:#161e1b;--surface-2:#1e2824;--ink:#edefea;--ink-2:#b9c3be;--ink-3:#8a9590;--line:#232d29;--accent:#5cc79a;--accent-soft:#153027;--empty:#f28473;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e8b04a;--low-soft:#33290f;--low-ink:#f0c777;--exp:#f29a63;--exp-soft:#3a2316;--info:#8ea9f2;--info-soft:#1b2440;--hero:#1e2824;--fade:rgba(22,30,27,0);--shadow:0 1px 2px rgba(0,0,0,.3)}
-@media (prefers-color-scheme:dark){html.t-system{--paper:#0f1513;--surface:#161e1b;--surface-2:#1e2824;--ink:#edefea;--ink-2:#b9c3be;--ink-3:#8a9590;--line:#232d29;--accent:#5cc79a;--accent-soft:#153027;--empty:#f28473;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e8b04a;--low-soft:#33290f;--low-ink:#f0c777;--exp:#f29a63;--exp-soft:#3a2316;--info:#8ea9f2;--info-soft:#1b2440;--hero:#1e2824;--fade:rgba(22,30,27,0);--shadow:0 1px 2px rgba(0,0,0,.3)}}
+:root{--paper:#f6f3ed;--surface:#ffffff;--surface-2:#eeeae1;--ink:#121715;--ink-2:#44504c;--ink-3:#5e6965;--line:#e5e0d6;--accent:#1e7458;--accent-soft:#ddefe5;--empty:#b8372a;--empty-soft:#f9e3de;--empty-ink:#7d2219;--low:#946000;--low-soft:#f8edd3;--low-ink:#6d4a07;--exp:#ad4614;--exp-soft:#fbe6d9;--info:#2d57b0;--info-soft:#e3eaf8;--hero:#17332b;--hero-ink:#fffdf8;--hero-2:#b9c3be;--fade:rgba(255,253,248,0);--shadow:0 1px 2px rgba(26,35,33,.05),0 8px 24px -12px rgba(26,35,33,.18)}
+html.t-dark{--paper:#111413;--surface:#191d1b;--surface-2:#1e2824;--ink:#edefea;--ink-2:#b9c3be;--ink-3:#8a9590;--line:#232d29;--accent:#5cc79a;--accent-soft:#153027;--empty:#f28473;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e8b04a;--low-soft:#33290f;--low-ink:#f0c777;--exp:#f29a63;--exp-soft:#3a2316;--info:#8ea9f2;--info-soft:#1b2440;--hero:#1e2824;--fade:rgba(22,30,27,0);--shadow:0 1px 2px rgba(0,0,0,.3)}
+@media (prefers-color-scheme:dark){html.t-system{--paper:#111413;--surface:#191d1b;--surface-2:#1e2824;--ink:#edefea;--ink-2:#b9c3be;--ink-3:#8a9590;--line:#232d29;--accent:#5cc79a;--accent-soft:#153027;--empty:#f28473;--empty-soft:#3a1d19;--empty-ink:#f6a597;--low:#e8b04a;--low-soft:#33290f;--low-ink:#f0c777;--exp:#f29a63;--exp-soft:#3a2316;--info:#8ea9f2;--info-soft:#1b2440;--hero:#1e2824;--fade:rgba(22,30,27,0);--shadow:0 1px 2px rgba(0,0,0,.3)}}
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;font-size:calc(8px + 1.05vmin);-webkit-text-size-adjust:100%;background:var(--paper)}
 body{font-family:'Geist Variable',-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:var(--ink);background:var(--paper);min-height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;cursor:default;-webkit-user-select:none;user-select:none}
 #app{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;height:100vh;padding:2.2rem 2.4rem 1.2rem}
 .top{display:-webkit-flex;display:flex;-webkit-align-items:flex-end;align-items:flex-end;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:1.6rem}
-.time{font-family:'Bricolage Grotesque Variable','Geist Variable',-apple-system,sans-serif;font-size:5.6rem;font-weight:700;line-height:.9;letter-spacing:-.03em}
+.time{font-family:'Geist Variable',-apple-system,sans-serif;font-size:5.6rem;font-weight:700;line-height:.9;letter-spacing:-.03em}
 .date{font-size:1.5rem;color:var(--ink-2);margin-top:.5rem;font-weight:500}
 .greet{text-align:right}
-.greet b{display:block;font-family:'Bricolage Grotesque Variable','Geist Variable',-apple-system,sans-serif;font-size:2.1rem;font-weight:650;letter-spacing:-.01em}
+.greet b{display:block;font-family:'Geist Variable',-apple-system,sans-serif;font-size:2.1rem;font-weight:650;letter-spacing:-.01em}
 .greet span{color:var(--ink-3);font-size:1.15rem}
 .party{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;background:var(--hero);color:var(--hero-ink);border-radius:1.2rem;padding:1rem 1.4rem;margin-bottom:1.2rem}
 .party b{font-size:1.5rem}.party .eyebrow{color:var(--hero-2)}
@@ -508,7 +508,7 @@ h2 .n{display:inline-block;background:var(--surface-2);color:var(--ink-2);border
 .meal{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;margin-bottom:.8rem}
 .meal>div{min-width:0}
 .meal .mt{font-size:1.45rem;font-weight:600;line-height:1.2;word-wrap:break-word;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto}
-.meal.big .mt{font-family:'Bricolage Grotesque Variable','Geist Variable',-apple-system,sans-serif;font-size:1.95rem;font-weight:650;letter-spacing:-.01em;line-height:1.15}
+.meal.big .mt{font-family:'Geist Variable',-apple-system,sans-serif;font-size:1.95rem;font-weight:650;letter-spacing:-.01em;line-height:1.15}
 .meal.done .mt{color:var(--ink-3)}
 .th{display:inline-block;-webkit-flex:none;flex:none;width:3.2rem;height:3.2rem;border-radius:.8rem;background:var(--surface-2);overflow:hidden;margin-right:1rem}
 .th.lg{width:6rem;height:6rem;border-radius:1.1rem}
@@ -529,7 +529,7 @@ h2 .n{display:inline-block;background:var(--surface-2);color:var(--ink-2);border
 .chip small{margin-left:.45rem;font-size:.85rem;opacity:.75}
 .chip.empty{background:var(--empty-soft);color:var(--empty-ink)}
 .big-n{display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;margin-bottom:.8rem}
-.big-n b{font-family:'Bricolage Grotesque Variable','Geist Variable',-apple-system,sans-serif;font-size:3.6rem;line-height:1;font-weight:700;margin-right:.6rem}
+.big-n b{font-family:'Geist Variable',-apple-system,sans-serif;font-size:3.6rem;line-height:1;font-weight:700;margin-right:.6rem}
 .big-n span{font-size:1.2rem;color:var(--ink-2)}
 .list{list-style:none}
 .list li{font-size:1.35rem;font-weight:500;padding:.4rem 0;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -576,7 +576,7 @@ export function pageHtml(token: string, d: DisplayData) {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="${householdAppearance().theme === 'dark' ? '#0f1513' : '#f5f2eb'}">
+<meta name="theme-color" content="${householdAppearance().theme === 'dark' ? '#111413' : '#f6f3ed'}">
 <meta name="robots" content="noindex">
 <title>${esc(d.display.name)} · ${esc(d.household)}</title>
 <noscript><meta http-equiv="refresh" content="60"></noscript>
@@ -599,7 +599,7 @@ ${d.display.widgets.includes('clock') ? `<div><div class="time" id="time">${esc(
 }
 
 export function invalidHtml(language: string) {
-  return `<!doctype html><html lang="${esc(language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(t('Display'))}</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#f5f2eb;color:#1a2321;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:24px}h1{font-size:28px;margin:0 0 8px}p{color:#5e6965;font-size:18px;margin:0}</style></head><body><div><h1>${esc(t('This display link is no longer valid.'))}</h1><p>${esc(t('Create a new link under Settings › Displays.'))}</p></div></body></html>`;
+  return `<!doctype html><html lang="${esc(language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(t('Display'))}</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#f6f3ed;color:#121715;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:24px}h1{font-size:28px;margin:0 0 8px}p{color:#5e6965;font-size:18px;margin:0}</style></head><body><div><h1>${esc(t('This display link is no longer valid.'))}</h1><p>${esc(t('Create a new link under Settings › Displays.'))}</p></div></body></html>`;
 }
 
 /**

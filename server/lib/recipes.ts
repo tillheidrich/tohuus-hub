@@ -7,6 +7,7 @@ import { activeIngredients, changeLabels, effectiveIngredients, variantContext }
 import { peopleSignals } from './people-signals.js';
 import { awayDay, useUpWindow } from './away-state.js';
 import { cleanText, durationMinutes, findRecipeNode, imageUrl, ingredientLines, instructionSteps, jsonLdBlocks, oneLine, recipeTags, yieldServings } from './recipe-jsonld.js';
+import { displayImage } from './recipe-images.js';
 
 export interface RecipeInput {
   title: string;
@@ -107,7 +108,16 @@ export function getRecipe(id: number) {
 }
 
 function decode(r: any) {
-  return { ...r, thermomix: Boolean(r.thermomix), favorite: Boolean(r.favorite), tags: JSON.parse(r.tags), steps: JSON.parse(r.steps) };
+  // image_path is what the app shows: the stored photo, or – until it is downloaded – the photo link (area recipes2)
+  return {
+    ...r,
+    image_path: displayImage(r),
+    image_local: Boolean(r.image_path),
+    thermomix: Boolean(r.thermomix),
+    favorite: Boolean(r.favorite),
+    tags: JSON.parse(r.tags),
+    steps: JSON.parse(r.steps),
+  };
 }
 
 export function listRecipes() {

@@ -12,6 +12,7 @@
  *   entry; the week's shopping, "used up" after cooking and the recipe view opened from the entry scale with it.
  */
 import { config } from '../config.js';
+import { recipeImageSql } from './recipe-images.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
@@ -197,7 +198,7 @@ export function baseServings(recipeId: number | null | undefined): number | null
 
 export function getEntry(id: number) {
   const e = db
-    .prepare('SELECT m.*, r.image_path, r.servings AS recipe_servings FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE m.id = ?')
+    .prepare(`SELECT m.*, ${recipeImageSql('r')} AS image_path, r.servings AS recipe_servings FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE m.id = ?`)
     .get(id) as any;
   if (!e) return null;
   const base = baseServings(e.recipe_id);
@@ -244,7 +245,7 @@ export interface Template {
 export function listTemplates(): Template[] {
   const rows = db.prepare('SELECT * FROM plan_templates ORDER BY name COLLATE NOCASE').all() as Omit<Template, 'items'>[];
   const items = db
-    .prepare('SELECT i.*, r.image_path FROM plan_template_items i LEFT JOIN recipes r ON r.id = i.recipe_id ORDER BY i.weekday, i.slot DESC, i.id')
+    .prepare(`SELECT i.*, ${recipeImageSql('r')} AS image_path FROM plan_template_items i LEFT JOIN recipes r ON r.id = i.recipe_id ORDER BY i.weekday, i.slot DESC, i.id`)
     .all() as (TemplateItem & { template_id: number })[];
   return rows.map((r) => ({ ...r, items: items.filter((i) => i.template_id === r.id).map(({ template_id: _x, ...i }) => i) }));
 }
@@ -536,7 +537,7 @@ const voterKeys = (v: VoteRow) => {
 export function candidateIdeas() {
   const today = localDay(0);
   const suggestions = suggest({ limit: 10 }).map((s) => ({ recipe_id: s.recipe.id, title: s.recipe.title, image_path: s.recipe.image_path, source: 'suggest', why: s.reasons.slice(0, 2).join(' · ') }));
-  const favourites = (db.prepare('SELECT id, title, image_path FROM recipes WHERE favorite = 1 ORDER BY title COLLATE NOCASE LIMIT 30').all() as any[]).map((r) => ({
+  const favourites = (db.prepare(`SELECT id, title, ${recipeImageSql('recipes')} AS image_path FROM recipes WHERE favorite = 1 ORDER BY title COLLATE NOCASE LIMIT 30`).all() as any[]).map((r) => ({
     recipe_id: r.id,
     title: r.title,
     image_path: r.image_path,
@@ -545,7 +546,7 @@ export function candidateIdeas() {
   }));
   const cookidoo = (
     db
-      .prepare("SELECT m.recipe_id, m.title, r.image_path, m.day FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE m.source = 'cookidoo' AND m.day >= ? AND m.cooked = 0 ORDER BY m.day LIMIT 14")
+      .prepare(`SELECT m.recipe_id, m.title, ${recipeImageSql('r')} AS image_path, m.day FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE m.source = 'cookidoo' AND m.day >= ? AND m.cooked = 0 ORDER BY m.day LIMIT 14`)
       .all(today) as any[]
   ).map((r) => ({ recipe_id: r.recipe_id, title: r.title, image_path: r.image_path, source: 'cookidoo', why: r.day }));
   return { suggestions, favourites, cookidoo };
@@ -650,7 +651,7 @@ export function getVote(id: number, actor: { userId?: number; role?: string } = 
   const allDone = keys.length > 0 && keys.every((k) => p.done(k));
   const revealed = vote.status === 'closed' || allDone;
   const cands = db
-    .prepare('SELECT c.*, r.image_path, r.time_min, r.thermomix FROM plan_vote_candidates c LEFT JOIN recipes r ON r.id = c.recipe_id WHERE c.vote_id = ? ORDER BY c.sort')
+    .prepare(`SELECT c.*, ${recipeImageSql('r')} AS image_path, r.time_min, r.thermomix FROM plan_vote_candidates c LEFT JOIN recipes r ON r.id = c.recipe_id WHERE c.vote_id = ? ORDER BY c.sort`)
     .all(id) as any[];
   const me = actorKey(actor);
   const voterKey = forVoter && canVoteFor(forVoter, vote, members, actor) ? forVoter : me && keys.includes(me) ? me : null;

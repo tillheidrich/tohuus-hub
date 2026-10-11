@@ -12,7 +12,7 @@
   d.setAttribute('data-theme', resolved);
   d.setAttribute('data-theme-pref', pref);
   var fredi = d.getAttribute('data-brand') === 'fredirando';
-  var paper = resolved === 'dark' ? (fredi ? '#170f0b' : '#0f1513') : (fredi ? '#fff7f0' : '#f5f2eb');
+  var paper = resolved === 'dark' ? (fredi ? '#150e0a' : '#111413') : (fredi ? '#fbf5ee' : '#f6f3ed');
   var metas = document.querySelectorAll('meta[name="theme-color"]');
   for (var i = 0; i < metas.length; i++) { metas[i].setAttribute('content', paper); metas[i].removeAttribute('media'); }
 })();

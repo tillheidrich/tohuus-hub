@@ -69,7 +69,7 @@ export function Recognition() {
         </div>
       ) : !stats.data || stats.data.imports === 0 ? (
         <div className="card">
-          <Empty icon={<Receipt size={26} />} title={t('No receipts yet')} action={{ label: t('Import a receipt'), onClick: () => nav('/import') }}>
+          <Empty icon={<Receipt size={26} />} art="receipt" title={t('No receipts yet')} action={{ label: t('Import a receipt'), onClick: () => nav('/import') }}>
             {t('Once a few receipts are in, you see here how many lines were recognised without anybody having to correct them.')}
           </Empty>
         </div>

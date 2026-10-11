@@ -50,7 +50,7 @@ const TOPIC_KEYS: Record<string, string[]> = {
   stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh', 'onboarding', 'away', 'boxes', 'share'],
   products: ['products', 'product', 'overview', 'shopping', 'fresh', 'onboarding', 'boxes', 'share'],
   shopping: ['shopping', 'overview'],
-  recipes: ['recipes', 'recipe', 'suggest', 'overview', 'plan', 'onboarding', 'people'],
+  recipes: ['recipes', 'recipe', 'suggest', 'overview', 'plan', 'onboarding', 'people', 'recipe-photos'],
   imports: ['imports', 'import', 'overview', 'spending', 'quality'],
   orders: ['orders', 'overview'],
   notifications: ['notifications'],

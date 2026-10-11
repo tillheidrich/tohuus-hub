@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { fmtQty, invalidate, post, relTime, useApi } from '../api';
 import { Empty, Ic, Skeleton, StatusBadge, Thumb, useToast } from '../ui';
+import { HouseArt } from '../art';
 import { locale, t } from '../i18n';
 import { FreshToday } from './FreshParts';
 import { BoxesToday, PutAwayButton } from './Leftovers';
@@ -82,6 +83,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
           </h1>
           <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>{summary}</p>
         </div>
+        <HouseArt className="today-house" />
       </header>
       <ChecklistCard me={me} />
       <button className="finder-hero" style={{ width: '100%', cursor: 'pointer', marginBottom: 18, color: 'var(--ink-3)', textAlign: 'left' }} onClick={() => nav('/wo')}>
@@ -150,6 +152,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
           <div className="card">
             <Empty
               icon={<Ic name="archive" size={26} />}
+              art="shelf"
               title={t('Your home is still empty')}
               action={{ label: t('Add typical staples'), icon: <ListChecks size={16} />, onClick: () => setStarter(true) }}
             >
@@ -167,7 +170,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         </div>
         {att.length === 0 ? (
           <div className="card">
-            <Empty icon={<Ic name="sparkles" size={26} />} title={t('Nothing to do')}>
+            <Empty icon={<Ic name="sparkles" size={26} />} art="done" title={t('Nothing to do')}>
               {t('As soon as something runs low or nears its best-before date, it shows up here.')}
             </Empty>
           </div>
@@ -281,7 +284,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         </div>
         {o.tonight.length === 0 ? (
           <div className="card">
-            <Empty icon={<ChefHat size={26} />} title={t('No recipes yet')} action={{ label: t('Add a recipe'), onClick: () => nav('/kochen?add=1') }}>
+            <Empty icon={<ChefHat size={26} />} art="book" title={t('No recipes yet')} action={{ label: t('Add a recipe'), onClick: () => nav('/kochen?add=1') }}>
               {t('Add recipes from a photo, a link or your AI assistant – then ToHuus Hub suggests what you can make with what you have.')}
             </Empty>
           </div>

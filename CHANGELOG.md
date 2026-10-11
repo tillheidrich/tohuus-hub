@@ -25,10 +25,12 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Changed
 
-- `BRAND` set in the environment now wins over the household setting. Onboarding no longer stores the default brand, so an instance started with `BRAND=fredirando` no longer shows ToHuus Hub.
+- Brand: `BRAND` in the environment is the default look; an admin's explicit choice in *Settings › Household › Brand* wins over it (new key `brand.choice`; choosing the default again removes it). The old `brand` key is ignored, because onboarding used to store it without anyone choosing. Onboarding only stores a look that was actually changed.
+- Recipe photos: links are kept on the recipe and shown right away until the local copy is downloaded; URL import, Cookidoo week sync and MCP use the same photo queue as file imports. Downloads look like a browser (User-Agent, Accept, Referer of the recipe page), wait up to 25 s, retry with backoff and log one line per host and reason. Cookidoo photos are fetched as 876×720 instead of 4000+ px originals (less memory on small servers).
 
 ### Fixed
 
+- Imported recipe photos that never arrived: *Settings › Recipes* shows loaded / waiting / failed with the reason, **Load missing photos** retries them all, and **Load photos through this browser** fetches them in the browser when the server is blocked (`POST /api/recipes/import/images/retry`, `GET /api/recipes/import/images/missing`, `POST /api/recipes/import/images/:id`).
 - Security review: guest-policy bypass through upper-case paths, SSRF through IPv6 addresses, guest gating in Telegram, a denial of service on the share endpoint, TOTP, CSV injection, the CSRF check. Regression tests in `test/security-wave5.test.ts`.
 - The MCP path secret is shown to admins only; guests can no longer print care tickets; plan templates no longer copy vote notes and box notes.
 - White screen after filling the week.

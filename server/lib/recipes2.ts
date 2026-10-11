@@ -22,7 +22,8 @@ import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { matchIngredient } from './catalog.js';
-import { deleteImage, fetchImage } from './images.js';
+import { deleteImage, fetchImageDetailed, warnImage } from './images.js';
+import { downloadCandidates } from './recipe-images.js';
 import { ingredientCore, isPantryText } from './recipes.js';
 import {
   cleanText,
@@ -51,6 +52,9 @@ migrate(
   ALTER TABLE recipe_ingredients ADD COLUMN section TEXT;
   ALTER TABLE recipe_ingredients ADD COLUMN orig TEXT;`,
 );
+
+// why a photo could not be downloaded (shown in Settings › Recipes, so nobody has to read server logs)
+migrate('recipes2-photos-1', `ALTER TABLE recipes ADD COLUMN image_error TEXT;`);
 
 export const MAX_BULK = 1000;
 /** Long side of stored recipe photos – sharp enough for a tablet, small enough for a NAS. */
@@ -355,23 +359,103 @@ function pump() {
 }
 
 async function downloadOne(id: number) {
-  const row = db.prepare('SELECT image_url FROM recipes WHERE id = ?').get(id) as { image_url: string | null } | undefined;
+  const row = db.prepare('SELECT image_url, image_path, source_url FROM recipes WHERE id = ?').get(id) as { image_url: string | null; image_path: string | null; source_url: string | null } | undefined;
   if (!row?.image_url) return;
-  const buf = await fetchImage(row.image_url);
+  let reason = '';
   let ok = false;
-  if (buf) ok = await setRecipeImage(id, buf).catch(() => false);
+  for (const url of downloadCandidates(row.image_url)) {
+    const r = await fetchImageDetailed(url, { referer: row.source_url, quiet: true });
+    if (r.ok) {
+      try {
+        ok = await setRecipeImage(id, r.buf);
+      } catch (e) {
+        reason = `image could not be read (${(e as Error).message.slice(0, 80)})`;
+      }
+      if (ok) break;
+    } else reason = r.reason;
+  }
   if (ok) {
     imageStats.done++;
-    db.prepare('UPDATE recipes SET image_tries = 0 WHERE id = ?').run(id);
+    db.prepare('UPDATE recipes SET image_tries = 0, image_error = NULL WHERE id = ?').run(id);
     softEmit();
   } else {
     imageStats.failed++;
-    db.prepare('UPDATE recipes SET image_tries = image_tries + 1 WHERE id = ?').run(id);
+    warnImage(row.image_url, reason || 'failed');
+    db.prepare('UPDATE recipes SET image_tries = image_tries + 1, image_error = ? WHERE id = ?').run((reason || 'failed').slice(0, 200), id);
   }
 }
 
+/** Queue numbers of this process plus what the database says (survives restarts). */
 export function imageQueueStatus() {
-  return { pending: queue.length + running, done: imageStats.done, failed: imageStats.failed };
+  const c = db
+    .prepare(
+      `SELECT COUNT(*) AS with_url,
+              SUM(image_path IS NOT NULL) AS loaded,
+              SUM(image_path IS NULL AND image_tries < 3) AS waiting,
+              SUM(image_path IS NULL AND image_tries >= 3) AS gave_up
+       FROM recipes WHERE image_url IS NOT NULL`,
+    )
+    .get() as { with_url: number; loaded: number | null; waiting: number | null; gave_up: number | null };
+  const reasons = db
+    .prepare(`SELECT image_error AS reason, COUNT(*) AS n FROM recipes WHERE image_url IS NOT NULL AND image_path IS NULL AND image_error IS NOT NULL GROUP BY image_error ORDER BY n DESC LIMIT 5`)
+    .all() as { reason: string; n: number }[];
+  return {
+    /** in the download queue of this process right now */
+    pending: queue.length + running,
+    /** downloaded / failed since the server started */
+    done: imageStats.done,
+    failed: imageStats.failed,
+    /** recipes that came with a photo link */
+    total: c.with_url,
+    /** of those: stored locally */
+    loaded: c.loaded ?? 0,
+    /** no local copy yet, will be tried (again) */
+    waiting: c.waiting ?? 0,
+    /** no local copy after 3 tries – needs "load missing photos" or the browser */
+    failed_total: c.gave_up ?? 0,
+    reasons,
+  };
+}
+
+/** "Load missing photos": every recipe with a photo link but no local copy gets 3 fresh tries. */
+export function retryImages(): number {
+  const rows = db.prepare('SELECT id FROM recipes WHERE image_url IS NOT NULL AND image_path IS NULL ORDER BY id').all() as { id: number }[];
+  db.prepare('UPDATE recipes SET image_tries = 0 WHERE image_url IS NOT NULL AND image_path IS NULL').run();
+  rows.forEach((r) => queueImage(r.id));
+  return rows.length;
+}
+
+/** Recipes whose photo is not stored yet (for the browser fallback): id + the URL to load. */
+export function missingImages(limit = 2000): { id: number; title: string; urls: string[] }[] {
+  const rows = db.prepare('SELECT id, title, image_url FROM recipes WHERE image_url IS NOT NULL AND image_path IS NULL ORDER BY id LIMIT ?').all(limit) as { id: number; title: string; image_url: string }[];
+  return rows.map((r) => ({ id: r.id, title: r.title, urls: downloadCandidates(r.image_url).filter((u) => u.startsWith('https://')) }));
+}
+
+/** A photo the browser loaded for us (only fills a missing one – never replaces a stored or hand-picked photo). */
+export async function storeFetchedImage(id: number, buf: Buffer): Promise<'stored' | 'exists' | 'not_found'> {
+  const row = db.prepare('SELECT image_path FROM recipes WHERE id = ?').get(id) as { image_path: string | null } | undefined;
+  if (!row) return 'not_found';
+  if (row.image_path) return 'exists';
+  if (!(await setRecipeImage(id, buf))) return 'not_found';
+  db.prepare('UPDATE recipes SET image_tries = 0, image_error = NULL WHERE id = ?').run(id);
+  imageStats.done++;
+  softEmit();
+  return 'stored';
+}
+
+/**
+ * Give a recipe a photo by link (URL import, Cookidoo week sync, MCP): the link is kept as `image_url`, so the
+ * app shows it right away and the queue/retry/browser fallback all work. `wait` downloads it before returning.
+ */
+export async function setRecipeImageUrl(id: number, url: string | null | undefined, opts: { wait?: boolean } = {}): Promise<boolean> {
+  if (!url || !/^https?:\/\//i.test(url) || url.length > 2000) return false;
+  db.prepare('UPDATE recipes SET image_url = ?, image_tries = 0, image_error = NULL WHERE id = ?').run(url, id);
+  if (opts.wait) {
+    await downloadOne(id).catch(() => {});
+    return Boolean((db.prepare('SELECT image_path FROM recipes WHERE id = ?').get(id) as { image_path: string | null } | undefined)?.image_path);
+  }
+  queueImage(id);
+  return false;
 }
 
 /** Resolves when the photo queue is empty (tests, MCP "wait" option). */

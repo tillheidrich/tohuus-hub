@@ -208,7 +208,7 @@ export function Away({ me }: { me: Me }) {
             <TripDetail key={shownId} id={shownId} onEdit={(tr) => setEdit(tr)} onClosed={() => setOpenId(null)} />
           ) : (
             <div className="card away-empty">
-              <Empty icon={<AirplaneTilt size={28} />} title={t('Going away?')} action={{ label: t('Plan a trip'), icon: <Plus size={16} />, onClick: () => setEdit('new') }}>
+              <Empty icon={<AirplaneTilt size={28} />} art="suitcase" title={t('Going away?')} action={{ label: t('Plan a trip'), icon: <Plus size={16} />, onClick: () => setEdit('new') }}>
                 {t('Enter the dates once. In the days before, ToHuus Hub suggests meals that use up what would go off and stops putting fresh things on the list. While you’re away, only urgent notifications come through. On the way back, a welcome-home list is ready.')}
               </Empty>
             </div>

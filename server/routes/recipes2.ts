@@ -16,6 +16,9 @@ import {
   getSession,
   imageQueueStatus,
   MAX_BULK,
+  missingImages,
+  retryImages,
+  storeFetchedImage,
   normalizeRecipe,
   previewOf,
   recipeList,
@@ -154,6 +157,31 @@ r.get('/recipes/import/jobs/:id', (req, res) => {
 });
 
 r.get('/recipes/import/images', (_req, res) => res.json(imageQueueStatus()));
+
+/** "Load missing photos": fresh tries for every recipe with a photo link but no stored photo. */
+r.post('/recipes/import/images/retry', canImport, (_req, res) => {
+  const queued = retryImages();
+  res.json({ queued, ...imageQueueStatus() });
+});
+
+/** Browser fallback: which photos are missing and where they are (the page loads them and sends them back). */
+r.get('/recipes/import/images/missing', canImport, (req, res) => {
+  res.json(missingImages(Math.max(1, Math.min(2000, Number(req.query.limit) || 2000))));
+});
+
+const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 1, fields: 2 } });
+/** Browser fallback: one photo the browser loaded – only fills a missing photo, never replaces one. */
+r.post('/recipes/import/images/:id', canImport, photoUpload.single('image'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0 || !req.file) return fail(res, new Error(t('No image')));
+  try {
+    const out = await storeFetchedImage(id, req.file.buffer);
+    if (out === 'not_found') return void res.status(404).json({ error: 'not found' });
+    res.json({ status: out });
+  } catch (e) {
+    fail(res, e, 422);
+  }
+});
 
 // ---------------------------------------------------------------- AI template
 

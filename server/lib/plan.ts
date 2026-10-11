@@ -1,8 +1,9 @@
 /** Weekly meal plan: manual entries, auto-fill from suggestions, Cookidoo "Meine Woche" via Home Assistant. */
 import { db, getSetting, lang } from '../db.js';
+import { recipeImageSql } from './recipe-images.js';
 import { emit } from './bus.js';
 import { addToShopping, localDay, matchIngredient } from './catalog.js';
-import { fetchImage, saveImage } from './images.js';
+import { setRecipeImageUrl } from './recipes2.js';
 import { safeFetch } from './net.js';
 import { getRecipe, ingredientCore, listRecipes, parseRecipeJsonLd, saveRecipe, suggest } from './recipes.js';
 import { norm, nameScore } from './text.js';
@@ -30,7 +31,7 @@ export function weekDays(from: string, n = 7) {
 export function getPlan(from: string, to: string) {
   return db
     .prepare(
-      `SELECT m.*, r.image_path, r.thermomix, r.time_min, r.servings AS recipe_servings,
+      `SELECT m.*, ${recipeImageSql('r')} AS image_path, r.thermomix, r.time_min, r.servings AS recipe_servings,
               (SELECT v.servings FROM recipe_variants v WHERE v.recipe_id = m.recipe_id) AS variant_servings
        FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id
        WHERE day >= ? AND day <= ? ORDER BY day, slot`,
@@ -223,8 +224,8 @@ export async function importCookidooEvents(input: CookidooEvent[], range: { star
           const rec = parseRecipeJsonLd(page.buf.toString('utf8'), url);
           if (rec) {
             recipeId = saveRecipe({ ...rec, image_path: null, time_min: rec.time_min ?? minutes });
-            const img = rec.image_path ? await fetchImage(rec.image_path) : null;
-            if (img) db.prepare('UPDATE recipes SET image_path = ? WHERE id = ?').run(await saveImage(img, `r${recipeId}`), recipeId);
+            // photo link kept on the recipe: shown at once, downloaded by the photo queue (retry + browser fallback)
+            await setRecipeImageUrl(recipeId, rec.image_path);
             imported++;
           }
         } catch {

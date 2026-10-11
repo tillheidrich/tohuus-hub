@@ -31,6 +31,7 @@ import { LANGUAGE_OPTIONS, lang, locale, pick, setLang, t } from '../i18n';
 import { Ic, LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { StartChoice, useTourInfo } from './Tour';
 import { StaplesPicker } from './Share';
+import { HouseArt } from '../art';
 
 type Step = 'home' | 'invite' | 'stock';
 const STEPS: Step[] = ['home', 'invite', 'stock'];
@@ -130,6 +131,7 @@ export function Onboarding({ me }: { me: Me }) {
           {t('Skip setup')}
         </button>
       </div>
+      {step === 'home' && <HouseArt className="onb-house" />}
       <div className="eyebrow">{t('Step {n} of {total}', { n: idx + 1, total: STEPS.length })}</div>
       {step === 'home' && <StepHome g={g.data} onNext={() => go('invite')} />}
       {step === 'invite' && <StepInvite onBack={() => go('home')} onNext={() => go('stock')} />}

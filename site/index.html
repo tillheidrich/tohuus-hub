@@ -9,8 +9,8 @@
 <link rel="alternate" hreflang="en" href="https://tohuus.heidrich-digital.de/">
 <link rel="alternate" hreflang="de" href="https://tohuus.heidrich-digital.de/de/">
 <link rel="alternate" hreflang="x-default" href="https://tohuus.heidrich-digital.de/">
-<meta name="theme-color" content="#f5f2eb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f1513" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f3ed" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111413" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ToHuus Hub">
@@ -30,7 +30,6 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="preload" href="assets/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css">
 <script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';d.setAttribute('data-theme',t);document.addEventListener('error',function(e){var x=e.target;if(x&&x.hasAttribute&&x.hasAttribute('data-shot'))x.remove()},true)})()</script>
@@ -76,16 +75,139 @@
       <p class="small reveal" style="--d:280ms"><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Free, AGPL</span><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>No account, no tracking</span><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Runs on a NAS or small server</span></p>
     </div>
     <div class="hero-visual reveal" style="--d:120ms">
-      <div class="note n1"><b><span class="dot"></span>Out of milk</b><small>already on the list</small></div>
-      <div class="phone" aria-hidden="true" data-shot-name="today">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/today-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/today-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+      <div class="house-stage">
+        <div class="note n1"><b><span class="dot"></span>Out of milk</b><small>already on the list</small></div>
+        <svg class="hz" viewBox="0 0 640 520" role="img" aria-label="Drawing of a terraced house in cross-section: kitchen with fridge and cupboard, hallway with front door and drawers, bathroom with mirror cabinet, living room and an attic with labelled boxes." xmlns="http://www.w3.org/2000/svg">
+  <!-- neighbours (terraced): only hinted -->
+  <g class="hz-ghost">
+    <path d="M0 150 72 200M640 150 568 200"/>
+    <rect x="16" y="282" width="44" height="58" rx="2"/><path d="M38 282v58"/>
+    <rect x="16" y="396" width="44" height="76" rx="2"/>
+    <rect x="580" y="282" width="44" height="58" rx="2"/><path d="M602 282v58"/>
+    <rect x="580" y="396" width="44" height="76" rx="2"/>
+  </g>
+
+  <!-- chimney, walls, roof in section -->
+  <rect x="408" y="62" width="36" height="72" class="b"/>
+  <rect x="402" y="56" width="48" height="10" rx="2" class="w"/>
+  <rect x="80" y="200" width="480" height="300" class="wall"/>
+  <path d="M56 214 320 40 584 214Z" class="p hz-roof"/>
+  <path d="M112 210 320 72 528 210Z" class="w"/>
+
+  <!-- attic: round window, a shelf of labelled boxes -->
+  <circle cx="320" cy="130" r="22" class="glass"/>
+  <path class="thin" d="M320 108v44M298 130h44"/>
+  <circle cx="320" cy="130" r="22"/>
+  <rect x="196" y="190" width="248" height="6" rx="1" class="b"/>
+  <rect x="212" y="158" width="46" height="32" rx="2" class="b"/>
+  <rect x="222" y="167" width="20" height="12" rx="1" class="w"/><path class="thin" d="M226 171h12M226 175h8"/>
+  <rect x="266" y="170" width="32" height="20" rx="2" class="w"/>
+  <rect x="384" y="154" width="48" height="36" rx="2" class="b"/>
+  <rect x="394" y="164" width="20" height="12" rx="1" class="w"/><path class="thin" d="M398 168h12M398 172h8"/>
+  <path d="M340 190v-18h28v18" class="soft"/>
+
+  <!-- rooms -->
+  <rect x="96" y="222" width="166" height="130" class="w"/>
+  <rect x="276" y="222" width="268" height="130" class="w"/>
+  <rect x="96" y="366" width="140" height="122" class="w"/>
+  <rect x="250" y="366" width="294" height="122" class="w"/>
+
+  <!-- bathroom: mirror cabinet, basin, towel -->
+  <rect x="134" y="240" width="80" height="52" rx="2" class="b"/>
+  <rect x="139" y="245" width="33" height="42" rx="1" class="glass"/>
+  <rect x="176" y="245" width="33" height="42" rx="1" class="glass"/>
+  <path class="thin" d="M150 252l10 10M187 252l10 10"/>
+  <path d="M134 308h80c-3 15-18 21-40 21s-37-6-40-21Z" class="w"/>
+  <path d="M174 308v-9h11"/>
+  <rect x="166" y="329" width="16" height="23" class="w"/>
+  <path d="M228 262h26"/>
+  <path d="M232 262h18v42h-18Z" class="soft"/>
+
+  <!-- living room: sofa, wall shelf, TV on a sideboard -->
+  <rect x="306" y="248" width="112" height="5" rx="1" class="b"/>
+  <rect x="314" y="226" width="8" height="22" class="b"/><rect x="324" y="230" width="8" height="18" class="l"/><rect x="334" y="228" width="8" height="20" class="w"/>
+  <path d="M380 248l4-14h16l4 14Z" class="b"/><path class="thin" d="M392 234c-6-8-2-14 0-16M392 234c6-8 3-13 1-15"/>
+  <rect x="298" y="286" width="150" height="24" rx="4" class="p"/>
+  <rect x="298" y="304" width="150" height="30" rx="4" class="p"/>
+  <rect x="290" y="296" width="18" height="38" rx="4" class="p"/>
+  <rect x="438" y="296" width="18" height="38" rx="4" class="p"/>
+  <path d="M302 334v18M444 334v18"/>
+  <rect x="468" y="250" width="64" height="40" rx="3" class="tv"/>
+  <path d="M500 290v14"/>
+  <rect x="464" y="304" width="72" height="48" rx="2" class="b"/>
+  <path class="thin" d="M500 304v48"/>
+
+  <!-- hallway: front door, coat hooks, chest of drawers -->
+  <rect x="110" y="390" width="54" height="98" rx="2" class="l"/>
+  <rect x="122" y="402" width="30" height="18" rx="1" class="glass"/>
+  <circle cx="155" cy="442" r="3" class="k"/>
+  <path d="M178 388h52M208 388v6M222 388v6"/>
+  <path d="M208 394l-8 34h18l-4-34" class="soft"/>
+  <rect x="176" y="438" width="54" height="50" rx="2" class="b"/>
+  <path class="thin" d="M176 454h54M176 471h54"/>
+  <path d="M199 446h8M199 462h8M199 479h8"/>
+
+  <!-- kitchen: fridge, wall cupboard, counter with pot, window, plant -->
+  <rect x="264" y="380" width="66" height="108" rx="5" class="w"/>
+  <path d="M264 420h66"/>
+  <path d="M320 390v18M320 430v26" class="hz-handle"/>
+  <circle cx="279" cy="470" r="4" class="l"/>
+  <rect x="276" y="434" width="18" height="18" class="b" transform="rotate(-6 285 443)"/>
+  <rect x="350" y="380" width="120" height="38" rx="2" class="b"/>
+  <path class="thin" d="M390 380v38M430 380v38"/>
+  <path d="M384 396v6M436 396v6"/>
+  <rect x="484" y="380" width="46" height="44" rx="2" class="glass"/>
+  <path class="thin" d="M507 380v44M484 402h46"/>
+  <rect x="484" y="380" width="46" height="44" rx="2"/>
+  <rect x="344" y="440" width="190" height="48" class="b"/>
+  <path class="thin" d="M392 444v44M440 444v44M488 444v44"/>
+  <path d="M338 440h202" class="hz-top"/>
+  <path d="M446 440v-16h40v16" class="l"/>
+  <path d="M440 428h6M486 428h6"/>
+  <path class="hz-steam" d="M458 416c0-6 5-6 5-12M472 416c0-6 5-6 5-12"/>
+  <path d="M356 440l3-14h16l3 14Z" class="w"/><path class="thin" d="M367 426c-8-10-2-18 1-20M367 426c7-9 4-16 0-19"/>
+
+  <!-- ground -->
+  <path d="M0 500h640" class="hz-ground"/>
+  <path class="hz-hatch" d="M4 514l10-12M20 514l10-12M36 514l10-12M52 514l10-12M68 514l10-12M84 514l10-12M100 514l10-12M116 514l10-12M132 514l10-12M148 514l10-12M164 514l10-12M180 514l10-12M196 514l10-12M212 514l10-12M228 514l10-12M244 514l10-12M260 514l10-12M276 514l10-12M292 514l10-12M308 514l10-12M324 514l10-12M340 514l10-12M356 514l10-12M372 514l10-12M388 514l10-12M404 514l10-12M420 514l10-12M436 514l10-12M452 514l10-12M468 514l10-12M484 514l10-12M500 514l10-12M516 514l10-12M532 514l10-12M548 514l10-12M564 514l10-12M580 514l10-12M596 514l10-12M612 514l10-12M628 514l10-12"/>
+
+  <!-- part numbers -->
+  
+  <g class="hz-call" data-n="1">
+    
+    <circle cx="297" cy="402" r="15" class="w"/>
+    <text x="297" y="408" text-anchor="middle" class="hz-n">1</text>
+  </g>
+  
+  <g class="hz-call" data-n="2">
+    
+    <circle cx="410" cy="399" r="15" class="w"/>
+    <text x="410" y="405" text-anchor="middle" class="hz-n">2</text>
+  </g>
+  
+  <g class="hz-call" data-n="3">
+    
+    <circle cx="188" cy="414" r="15" class="w"/>
+    <text x="188" y="420" text-anchor="middle" class="hz-n">3</text>
+  </g>
+  
+  <g class="hz-call" data-n="4">
+    <path class="hz-lead" d="M116 266L134 266"/>
+    <circle cx="116" cy="266" r="15" class="w"/>
+    <text x="116" y="272" text-anchor="middle" class="hz-n">4</text>
+  </g>
+</svg>
+        <div class="note n2"><b>Jonas is on it</b><small>oat milk, bread, coffee</small></div>
       </div>
-      <div class="note n2"><b>Jonas is on it</b><small>oat milk, bread, coffee</small></div>
+      <div class="parts">
+        <p class="parts-h">What ToHuus Hub knows about your home</p>
+        <ol class="parts-list">
+          <li data-n="1" tabindex="0"><span class="pn">1</span><span><b>Fridge</b>Eat the yoghurt by tomorrow</span></li>
+          <li data-n="2" tabindex="0"><span class="pn">2</span><span><b>Kitchen cupboard</b>Pasta is running low</span></li>
+          <li data-n="3" tabindex="0"><span class="pn">3</span><span><b>Hallway drawers</b>Parcel tape, top drawer</span></li>
+          <li data-n="4" tabindex="0"><span class="pn">4</span><span><b>Bathroom cabinet</b>Plasters, second shelf</span></li>
+        </ol>
+      </div>
     </div>
   </div>
 </section>
@@ -113,7 +235,7 @@
 <section class="chapter" id="everyday" aria-labelledby="everyday-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">Everyday</span>
+      <span class="eyebrow step reveal"><b>1</b>Everyday</span>
       <h2 class="reveal" id="everyday-h" style="--d:60ms">One look in the morning is enough.</h2>
       <p class="intro reveal" style="--d:120ms">“Today” shows on one page what needs eating, what has run out and what is for dinner. The shopping list is current on every phone at once.</p>
       <ul class="points">
@@ -124,6 +246,14 @@
       </ul>
     </div>
     <div class="phones reveal" style="--d:100ms">
+      <div class="phone" aria-hidden="true" data-shot-name="today">
+        <div class="screen">
+          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
+          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
+          <img class="light-only" data-shot src="assets/shots/en/today-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          <img class="dark-only" data-shot src="assets/shots/en/today-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+        </div>
+      </div>
       <div class="phone" aria-hidden="true" data-shot-name="shopping">
         <div class="screen">
           <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
@@ -139,7 +269,7 @@
 <section class="chapter flip" id="cooking" aria-labelledby="cooking-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">Cooking</span>
+      <span class="eyebrow step reveal"><b>2</b>Cooking</span>
       <h2 class="reveal" id="cooking-h" style="--d:60ms">What are we eating tonight? Decided in a minute.</h2>
       <p class="intro reveal" style="--d:120ms">ToHuus Hub suggests what fits what you have and plans the week with you. Anyone who wants to can vote.</p>
       <ul class="points">
@@ -173,7 +303,7 @@
 <section class="chapter" id="recipes" aria-labelledby="recipes-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">Recipes</span>
+      <span class="eyebrow step reveal"><b>3</b>Recipes</span>
       <h2 class="reveal" id="recipes-h" style="--d:60ms">Your version, not the internet’s.</h2>
       <p class="intro reveal" style="--d:120ms">Recipes come from wherever you already keep them. Then you cook them the way your household does.</p>
       <ul class="points">
@@ -199,7 +329,7 @@
 <section class="chapter flip" id="stock" aria-labelledby="stock-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">Stock</span>
+      <span class="eyebrow step reveal"><b>4</b>Stock</span>
       <h2 class="reveal" id="stock-h" style="--d:60ms">Stock without a spreadsheet.</h2>
       <p class="intro reveal" style="--d:120ms">Nobody has to count pasta. Start with what runs out and leave the rest.</p>
       <ul class="points">
@@ -233,7 +363,7 @@
 <section class="chapter" id="receipts" aria-labelledby="receipts-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">Receipts & spending</span>
+      <span class="eyebrow step reveal"><b>5</b>Receipts & spending</span>
       <h2 class="reveal" id="receipts-h" style="--d:60ms">The receipt puts things away.</h2>
       <p class="intro reveal" style="--d:120ms">Digital receipts and orders bring your stock up to date. Typing is the fallback, not the plan.</p>
       <ul class="points">
@@ -267,7 +397,7 @@
 <section class="chapter flip" id="family" aria-labelledby="family-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">Family & guests</span>
+      <span class="eyebrow step reveal"><b>6</b>Family & guests</span>
       <h2 class="reveal" id="family-h" style="--d:60ms">For everyone at home. Including the ones just visiting.</h2>
       <p class="intro reveal" style="--d:120ms">Everyone has their face in the app. Kids need no account, guests only see what you share.</p>
       <ul class="points">
@@ -302,7 +432,7 @@
 <section class="chapter" id="away" aria-labelledby="away-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">Away</span>
+      <span class="eyebrow step reveal"><b>7</b>Away</span>
       <h2 class="reveal" id="away-h" style="--d:60ms">Holidays without forgotten yoghurt.</h2>
       <p class="intro reveal" style="--d:120ms">Tell ToHuus Hub when you are away. It plans the rest around the trip.</p>
       <ul class="points">
@@ -327,7 +457,7 @@
 <section class="chapter flip" id="home-assistant" aria-labelledby="home-assistant-h">
   <div class="wrap chapter-grid">
     <div class="chapter-copy">
-      <span class="eyebrow reveal">Smart home</span>
+      <span class="eyebrow step reveal"><b>8</b>Smart home</span>
       <h2 class="reveal" id="home-assistant-h" style="--d:60ms">Home Assistant, both ways.</h2>
       <p class="intro reveal" style="--d:120ms">If you already have automations, ToHuus Hub joins in instead of replacing them.</p>
       <ul class="points">

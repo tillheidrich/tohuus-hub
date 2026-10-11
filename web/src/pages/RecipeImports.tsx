@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, get, invalidate, post } from '../api';
 import { lang, t } from '../i18n';
 import { Empty, Seg, Sheet, Skeleton, useDebounced, useToast } from '../ui';
+import { RecipePhotosCard } from './RecipePhotos';
 
 interface PreviewItem {
   index: number;
@@ -51,6 +52,7 @@ export function RecipeImportCenter() {
   const [aiOpen, setAiOpen] = useState(false);
   return (
     <div className="stack" style={{ gap: 16 }}>
+      <RecipePhotosCard />
       <OpenRecipeSearch />
       <FileImportCard
         icon={<FileArrowUp size={20} />}

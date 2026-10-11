@@ -11,6 +11,7 @@ import { invalidate, post, put, qc, useApi } from '../api';
 import { t } from '../i18n';
 import { Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { useGettingStarted } from './Onboarding';
+import { HouseArt } from '../art';
 
 // ================================================================== data
 
@@ -392,6 +393,7 @@ export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => 
     <div className="onb">
       <div className="stack" style={{ gap: 22 }}>
         <header>
+          <HouseArt className="onb-house" />
           <h1>{t('Welcome home.')}</h1>
           <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
             {t('How would you like to start? You can switch later: demo data can be removed with one tap.')}

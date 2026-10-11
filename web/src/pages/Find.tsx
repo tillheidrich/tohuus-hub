@@ -117,7 +117,7 @@ export function Find() {
         <Skeleton n={4} h={70} />
       ) : (res.data ?? []).length === 0 ? (
         <div className="card">
-          <Empty icon={dq ? <MapPin size={26} /> : <Package size={26} />} title={dq ? t('“{q}” isn’t stored anywhere', { q: dq }) : t('Nothing stored yet')}>
+          <Empty icon={dq ? <MapPin size={26} /> : <Package size={26} />} art={dq ? undefined : 'shelf'} title={dq ? t('“{q}” isn’t stored anywhere', { q: dq }) : t('Nothing stored yet')}>
             {t('Add it as an item (counting: “Don’t count”) and enter the spot – or tell your AI assistant “The thermometer is in the bathroom mirror cabinet”.')}
           </Empty>
         </div>

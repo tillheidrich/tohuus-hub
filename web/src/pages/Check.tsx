@@ -64,7 +64,7 @@ function CheckIndex() {
         <div className="card"><Empty icon={<X size={26} />} title={t('Could not load')}>{(error as Error).message}</Empty></div>
       ) : places.length === 0 ? (
         <div className="card">
-          <Empty icon={<ClipboardText size={26} />} title={t('Nothing to check')} action={{ label: t('Add typical staples'), onClick: () => setStarter(true) }}>{t('As soon as something is in stock, you can check it here.')}</Empty>
+          <Empty icon={<ClipboardText size={26} />} art="shelf" title={t('Nothing to check')} action={{ label: t('Add typical staples'), onClick: () => setStarter(true) }}>{t('As soon as something is in stock, you can check it here.')}</Empty>
           <StarterSheet open={starter} onClose={() => setStarter(false)} />
         </div>
       ) : (

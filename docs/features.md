@@ -160,7 +160,7 @@ Settings tabs: Household (Haushalt), My account (Mein Konto), Members (Mitgliede
 ## Appearance, language and region
 
 - **Household look**: light, dark or like the device, and whether members may choose their own. *Settings › Household › Appearance (Einstellungen › Haushalt › Darstellung)*. Personal choice: *Settings › My account › Appearance*.
-- **Brand**: ToHuus Hub or Fredirando. *Settings › Household › Brand (Marke)*. If `BRAND` is set in the environment, it wins.
+- **Brand**: ToHuus Hub or Fredirando. `BRAND` in the environment sets the default; an admin's explicit choice in *Settings › Household › Brand (Marke)* wins over it (stored as `brand.choice`; choosing the default again removes it).
 - **Language**: English, Deutsch, Svenska. *Settings › Household › Language (Sprache)*
 - **Region**: currency, number and date format, units shown in recipes, first day of the week, Open Food Facts country, store presets. *Settings › Household › Region*
 

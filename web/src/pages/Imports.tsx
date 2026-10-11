@@ -191,7 +191,7 @@ export function Imports({ me }: { me: Me }) {
           <Skeleton n={3} />
         ) : (list.data ?? []).length === 0 ? (
           <div className="card">
-            <Empty icon={<Receipt size={26} />} title={t('Nothing imported yet')}>
+            <Empty icon={<Receipt size={26} />} art="receipt" title={t('Nothing imported yet')}>
               {t('Tip: just upload the PDFs from the REWE app (pickup notice, eBon) here – or send them to Claude from your iPhone via “Share”.')}
             </Empty>
           </div>

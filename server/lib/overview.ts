@@ -1,4 +1,5 @@
 import { db, getSetting } from '../db.js';
+import { recipeImageSql } from './recipe-images.js';
 import { listProducts } from './catalog.js';
 import { suggest } from './recipes.js';
 import { t } from '../i18n.js';
@@ -56,7 +57,7 @@ export function overview() {
     .all();
   const tonight = suggest({ limit: 3 });
   const today = new Intl.DateTimeFormat('sv-SE', { timeZone: process.env.TZ ?? 'Europe/Berlin' }).format(new Date());
-  const planned = db.prepare(`SELECT m.id, m.title, m.recipe_id, m.slot, m.cooked, m.note, r.image_path FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE day = ? ORDER BY slot`).all(today);
+  const planned = db.prepare(`SELECT m.id, m.title, m.recipe_id, m.slot, m.cooked, m.note, ${recipeImageSql('r')} AS image_path FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE day = ? ORDER BY slot`).all(today);
 
   return {
     household: getSetting('household.name', t('Our home')),

@@ -100,9 +100,9 @@ describe('ticket renderers', () => {
     expect(lines).toContain('„extra hot“');
     expect(lines.join(' ')).toContain('Wish: and a blanket');
     expect(lines).toContain('Lea');
-    setSetting('brand', 'fredirando');
+    setSetting('brand.choice', 'fredirando');
     lines = svgText(tickets.renderSvg(await tickets.buildTicket({ type: 'order', id }, 58), 58).svg);
-    setSetting('brand', 'tohuus');
+    setSetting('brand.choice', 'tohuus');
     expect(lines[0]).toBe('FREDIRANDO');
     expect(lines).toContain('DELIVERY NOTE');
     expect(lines).toContain('Delivery to');
