@@ -47,6 +47,8 @@ import { register as register_away } from './tools-away.js';
 import { register as register_plan2 } from './tools-plan2.js';
 import { register as register_recipes2 } from './tools-recipes2.js';
 import { register as register_quality } from './tools-quality.js';
+import { register as register_people } from './tools-people.js';
+import { register as register_tour } from './tools-tour.js';
 import { norm } from '../lib/text.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -542,6 +544,8 @@ export function buildMcpServer(actorName: string) {
   register_plan2(s, actorName);
   register_recipes2(s, actorName);
   register_quality(s, actorName);
+  register_people(s, actorName);
+  register_tour(s, actorName);
   return s;
 }
 
