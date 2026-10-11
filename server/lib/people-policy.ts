@@ -207,9 +207,12 @@ const NEVER = /^(spend|spending|budgets?|receipts?|bons?|imports?|backups?|token
 const matches = (rules: Rule[], method: string, path: string) =>
   rules.some(([m, re]) => (m === '*' || (m === 'GET' ? method === 'GET' || method === 'HEAD' : method !== 'GET' && method !== 'HEAD')) && re.test(path));
 
-/** Normalise "/api/shopping/3?x=1" → "/shopping/3". */
+/**
+ * Normalise "/api/shopping/3?x=1" → "/shopping/3". Lower-cased because Express routes match case-insensitively
+ * ("/api/SPENDING" reaches the "/spending" route) – the rules below must see the same path the router does.
+ */
 export function apiPath(url: string) {
-  const p = url.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+  const p = url.split('?')[0].split('#')[0].toLowerCase().replace(/\/+$/, '') || '/';
   return p.startsWith('/api/') ? p.slice(4) : p === '/api' ? '/' : p;
 }
 

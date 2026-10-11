@@ -320,10 +320,14 @@ export function backfillLegacyDemo(): number {
 function touched(live: Map<string, number[]>) {
   const demoMov = new Set(live.get('movements') ?? []);
   const demoCook = new Set(live.get('cook_log') ?? []);
+  const demoOrders = new Set(live.get('orders') ?? []);
   const products = new Set<number>();
   for (const id of live.get('products') ?? []) {
     const mov = db.prepare('SELECT rowid id FROM movements WHERE product_id = ?').all(id) as { id: number }[];
     if (mov.some((m) => !demoMov.has(m.id))) products.add(id);
+    // menu-only items (coffee, cappuccino …) never move stock – having ordered them means they are in use
+    const ordered = db.prepare('SELECT order_id FROM order_lines WHERE product_id = ?').all(id) as { order_id: number }[];
+    if (ordered.some((o) => !demoOrders.has(o.order_id))) products.add(id);
   }
   const recipes = new Set<number>();
   for (const id of live.get('recipes') ?? []) {

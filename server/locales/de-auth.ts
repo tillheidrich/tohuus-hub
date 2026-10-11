@@ -57,6 +57,7 @@ export const de_auth: Record<string, string> = {
   'Please pick a PIN that is harder to guess.': 'Bitte nimm eine PIN, die schwerer zu erraten ist.',
   'Add a password, passkey or e-mail address first – otherwise you could not sign in any more.':
     'Leg zuerst ein Passwort, einen Passkey oder eine E-Mail-Adresse an – sonst könntest du dich nicht mehr anmelden.',
+  'Turn off two-step sign-in first.': 'Schalte die Zwei-Schritt-Anmeldung zuerst aus.',
   'Set up two-step sign-in for yourself first.': 'Richte die Zwei-Schritt-Anmeldung zuerst für dich selbst ein.',
   'Turn on another way to sign in first (SSO, passkeys or e-mail links).': 'Schalte zuerst einen anderen Anmeldeweg ein (SSO, Passkeys oder E-Mail-Links).',
   'Enter the issuer URL first.': 'Trag zuerst die Issuer-URL ein.',

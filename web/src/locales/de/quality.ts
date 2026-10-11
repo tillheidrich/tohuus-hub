@@ -73,6 +73,7 @@ export const quality: Record<string, string> = {
   'of the lines on the last {n} receipts were recognised without a correction.': 'der Zeilen auf den letzten {n} Bons wurden ohne Korrektur erkannt.',
   '{n} lines came from rules you taught': '{n} Zeilen kamen aus euren gelernten Regeln',
   '{n} lines were corrected': '{n} Zeilen wurden korrigiert',
+  '{n} lines were new or not recognised': '{n} Zeilen waren neu oder nicht erkannt',
   'Nothing had to be corrected.': 'Nichts musste korrigiert werden.',
   'Recent receipts': 'Letzte Bons',
   'Learned from your corrections': 'Aus euren Korrekturen gelernt',

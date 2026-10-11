@@ -141,7 +141,7 @@ export const plan2: Record<string, string> = {
   'Swipe deck: arrow left = no, arrow right = yes': 'Kartenstapel: Pfeil links = nein, Pfeil rechts = ja',
   Voted: 'Abgestimmt',
   'Can’t decide? Let everyone vote': 'Keine Idee? Lasst alle abstimmen',
-  Match: 'Treffer',
+  'Everyone wants it': 'Wollen alle',
   'Tap the next name above.': 'Tipp oben auf den nächsten Namen.',
   // notification events (Settings)
   'Family food vote started or decided': 'Familienabstimmung gestartet oder entschieden',

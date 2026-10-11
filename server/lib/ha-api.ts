@@ -146,7 +146,8 @@ export function todoItems(): TodoItem[] {
 
 function shopItem(uid: string) {
   const id = Number(uid);
-  const it = Number.isInteger(id) ? (db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(id) as ShopRow | undefined) : undefined;
+  // private entries are invisible to Home Assistant – so it can't change or delete them by guessing an id either
+  const it = Number.isInteger(id) ? (db.prepare(`SELECT * FROM shopping_items WHERE id = ? AND ${notPrivate()}`).get(id) as ShopRow | undefined) : undefined;
   if (!it) throw new HaApiError(404, t('Item not found'));
   return it;
 }
@@ -185,7 +186,7 @@ export function todoUpdate(uid: string, b: { summary?: string; status?: 'needs_a
 }
 
 export function todoDelete(uids: string[]) {
-  const del = db.prepare('DELETE FROM shopping_items WHERE id = ?');
+  const del = db.prepare(`DELETE FROM shopping_items WHERE id = ? AND ${notPrivate()}`);
   const delPos = db.prepare('DELETE FROM ha_todo_pos WHERE item_id = ?');
   let n = 0;
   db.transaction(() => {

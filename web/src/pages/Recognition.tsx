@@ -16,6 +16,7 @@ interface Stats {
   share: number | null;
   learned: number;
   corrected: number;
+  unknown?: number;
   stores: { store: string | null; imports: number; lines: number; share: number | null; learned: number; corrected: number }[];
   recent: { id: number; shop: string | null; created_at: string; lines: number; share: number | null }[];
   rules: number;
@@ -84,6 +85,7 @@ export function Recognition() {
               {[
                 stats.data.learned ? t('{n} lines came from rules you taught', { n: stats.data.learned }) : null,
                 stats.data.corrected ? t('{n} lines were corrected', { n: stats.data.corrected }) : null,
+                stats.data.unknown ? t('{n} lines were new or not recognised', { n: stats.data.unknown }) : null,
               ]
                 .filter(Boolean)
                 .join(' · ') || t('Nothing had to be corrected.')}

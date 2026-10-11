@@ -73,6 +73,7 @@ export const quality: Record<string, string> = {
   'of the lines on the last {n} receipts were recognised without a correction.': 'av raderna på de senaste {n} kvittona kändes igen utan rättelse.',
   '{n} lines came from rules you taught': '{n} rader kom från era inlärda regler',
   '{n} lines were corrected': '{n} rader rättades',
+  '{n} lines were new or not recognised': '{n} rader var nya eller kändes inte igen',
   'Nothing had to be corrected.': 'Inget behövde rättas.',
   'Recent receipts': 'Senaste kvitton',
   'Learned from your corrections': 'Inlärt från era rättelser',

@@ -6636,7 +6636,8 @@ button.li {
   margin: 0 auto;
 }
 .p2-vote .deck {
-  height: min(420px, 52vh);
+  /* header, voter chips and the tab bar take ~520px on a phone – keep the yes/no buttons above the tab bar */
+  height: min(420px, max(260px, calc(100svh - 520px)));
 }
 .p2-vote-li .grow {
   min-width: 0;
@@ -8111,4 +8112,12 @@ h2,
   .menu-item .menu-arrows .icon-btn {
     width: 32px;
   }
+}
+
+/* ---------- review fixes ---------- */
+.plan-today .grow {
+  min-width: 0;
+}
+.plan-today .btn {
+  flex: none;
 }

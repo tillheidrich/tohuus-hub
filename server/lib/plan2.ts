@@ -267,7 +267,7 @@ export function saveWeekAsTemplate(input: { name: string; from: string; template
       db.prepare('DELETE FROM plan_template_items WHERE template_id = ?').run(id);
     } else id = Number(db.prepare('INSERT INTO plan_templates (name, created_by) VALUES (?, ?)').run(name, actor ?? null).lastInsertRowid);
     const ins = db.prepare('INSERT INTO plan_template_items (template_id, weekday, slot, recipe_id, title, note, servings) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    for (const e of entries) ins.run(id, weekdayOf(e.day), e.slot, e.recipe_id, e.title, e.source === 'suggest' ? null : e.note, e.servings ?? null);
+    for (const e of entries) ins.run(id, weekdayOf(e.day), e.slot, e.recipe_id, e.title, e.source === 'suggest' || e.source === 'vote' || String(e.note ?? '').startsWith('box:') ? null : e.note, e.servings ?? null);
   })();
   emit('recipes');
   return getTemplate(id!)!;

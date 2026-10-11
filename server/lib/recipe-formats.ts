@@ -383,7 +383,9 @@ function classify(o: any): Found | null {
   }
   const nested = findRecipeNode(o);
   if (nested) return { format: 'schema', obj: nested };
-  if (o.name || o.title) return { format: 'schema', obj: o };
+  // our own shape (and what the AI prompt asks for) uses `title`; schema.org uses `name`
+  if (o.title) return { format: 'tohuus', obj: o };
+  if (o.name) return { format: 'schema', obj: o };
   return null;
 }
 

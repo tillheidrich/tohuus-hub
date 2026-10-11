@@ -591,6 +591,8 @@ export function recognitionStats(limit = 20) {
     share: share(total),
     learned: total.learned,
     corrected: total.corrected,
+    /** lines that were neither recognised nor corrected (e.g. booked as a new product) */
+    unknown: total.lines - total.auto - total.corrected,
     stores: [...byStore.values()]
       .map((s) => ({ store: s.store, imports: s.imports, lines: s.lines, share: share(s), learned: s.learned, corrected: s.corrected }))
       .sort((a, b) => b.lines - a.lines),

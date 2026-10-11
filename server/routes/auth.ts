@@ -333,7 +333,15 @@ r.patch(
 r.delete('/auth/passkeys/:id', wrap((req) => ({ ok: deletePasskey(me(req), String(req.params.id)) })));
 
 // two-step sign-in
-r.post('/auth/me/totp/setup', wrap((req) => beginTotpSetup(me(req))));
+r.post(
+  '/auth/me/totp/setup',
+  wrap((req) => {
+    const id = me(req);
+    // replacing a running second factor needs a current code: turn it off first (/auth/me/totp/disable)
+    if (userById(id)?.totp_secret) throw new AuthError(409, t('Turn off two-step sign-in first.'));
+    return beginTotpSetup(id);
+  }),
+);
 r.post(
   '/auth/me/totp/enable',
   wrap((req) => {

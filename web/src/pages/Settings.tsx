@@ -1,5 +1,5 @@
 import { Bell, Copy, Key, Plug, Question, SignOut, Trash, UploadSimple } from '@phosphor-icons/react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import type { Me } from '../App';
 import { type Category, type Location, api, del, invalidate, patch, post, relTime, useApi } from '../api';
@@ -28,12 +28,18 @@ import { HouseholdAppearanceCard, MyAppearanceCard } from './AppearanceSettings'
 type Tab = 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
 export function Settings({ me }: { me: Me }) {
-  const TABS: Tab[] = ['home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'print', 'recipes', 'data'];
-  const [tab, setTab] = useState<Tab>(() => {
-    const q = new URLSearchParams(location.search).get('tab') as Tab | null;
+  const TABS: Tab[] = ['home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'displays', 'print', 'recipes', 'data'];
+  const tabFrom = (search: string): Tab => {
+    const q = new URLSearchParams(search).get('tab') as Tab | null;
     if (me.actor.houseGuest) return 'account';
     return q && TABS.includes(q) ? q : 'home';
-  });
+  };
+  const loc = useLocation();
+  const [tab, setTab] = useState<Tab>(() => tabFrom(loc.search));
+  // links to another tab while Settings is already open (demo banner, share card …) only change the URL
+  useEffect(() => {
+    if (new URLSearchParams(loc.search).get('tab')) setTab(tabFrom(loc.search));
+  }, [loc.search]);
   const nav = useNavigate();
   const admin = me.actor.role === 'admin';
   return (
@@ -72,7 +78,7 @@ export function Settings({ me }: { me: Me }) {
           // permanent guests: only their own account (area: people)
           .filter(([k]) => !me.actor.houseGuest || k === 'account')
           .map(([k, l]) => (
-          <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
+          <button key={k} className={tab === k ? 'on' : ''} onClick={() => { setTab(k); nav({ search: `?tab=${k}` }, { replace: true }); }}>
             {l}
           </button>
         ))}
@@ -81,9 +87,9 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'home' && <AwayEntryCard />}
       {tab === 'home' && <MenuSettingsCard />}
       {tab === 'account' && <MyPerson me={me} />}
-      {tab === 'account' && <MyAppearanceCard />}
+      {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
       {tab === 'account' && <MyAccount me={me} />}
-      {tab === 'account' && <ShareSetupCard me={me} />}
+      {tab === 'account' && !me.actor.houseGuest && <ShareSetupCard me={me} />}
       {tab === 'members' && <PeopleSection me={me} admin={admin} />}
       {tab === 'members' && <Members me={me} admin={admin} />}
       {tab === 'members' && admin && <SignInAdmin me={me} />}

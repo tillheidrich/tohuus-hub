@@ -193,7 +193,7 @@ export function TourHost({ me }: { me: Me }) {
 
   return (
     <>
-      {d && d.demo.rows > 0 && !loc.pathname.startsWith('/willkommen') && <DemoBanner admin={admin} />}
+      {d && d.demo.rows > 0 && !me.actor.houseGuest && !loc.pathname.startsWith('/willkommen') && <DemoBanner admin={admin} />}
       {open !== null && (
         <TourOverlay
           start={open}

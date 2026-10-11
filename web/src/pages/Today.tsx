@@ -16,6 +16,7 @@ import { AwayBanner } from './Away';
 import { KidWishesCard } from './KidsSettings';
 import { ChecklistCard, StarterSheet } from './Onboarding';
 import { StartModeHint } from './Share';
+import { guestAllows } from '../people/People';
 import { useState } from 'react';
 import { ListChecks } from '@phosphor-icons/react';
 
@@ -33,6 +34,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
   const nav = useNavigate();
   const toast = useToast();
   const [starter, setStarter] = useState(false);
+  const gl = me.actor.houseGuest?.level;
   const onList = new Set((shopping.data ?? []).filter((s) => !s.checked_at && s.product_id).map((s) => s.product_id));
 
   if (isLoading || !o) {
@@ -106,10 +108,11 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         </button>
       </div>
 
-      <WhatToEatHero />
-      <PartyBanner />
-      <AwayBanner />
-      <KidWishesCard />
+      {/* permanent guests (area: people) only get the cards their level opens – the server refuses the rest */}
+      {guestAllows(gl, '/kochen') && <WhatToEatHero />}
+      {!gl && <PartyBanner />}
+      {guestAllows(gl, '/urlaub') && <AwayBanner />}
+      {!gl && <KidWishesCard />}
       {(o.imports.length > 0 || o.orders.some((x: any) => !x.party_id)) && (
         <div className="stack section" style={{ gap: 8, marginTop: 14 }}>
           {/* party orders are summed up in the party banner */}
@@ -138,8 +141,8 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
 
       <FreshToday />
       <BoxesToday />
-      <StartModeHint />
-      <CareDueSection />
+      {!gl && <StartModeHint />}
+      {guestAllows(gl, '/pflege') && <CareDueSection />}
       {/* expiring items live in "Eat first" above – here only what's low or out */}
 
       {emptyHome ? (
@@ -262,7 +265,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
                     <ForkKnife size={15} /> {t('Eating out')}
                   </button>
                 )}
-                {p.cooked && !String(p.note ?? '').startsWith('box:') && (
+                {Boolean(p.cooked) && !String(p.note ?? '').startsWith('box:') && (
                   <PutAwayButton preset={{ name: p.title, recipe_id: p.recipe_id ?? null, plan_id: p.id, image_path: p.image_path ?? null }} />
                 )}
               </div>

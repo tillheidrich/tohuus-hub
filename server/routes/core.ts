@@ -506,7 +506,7 @@ r.post('/notifications/read', (_req, res) => {
 
 // ---------------------------------------------------------------- settings / admin
 
-r.get('/settings', (_req, res) => {
+r.get('/settings', (req, res) => {
   res.json({
     household: getSetting('household.name', t('Our home')),
     brand: brand(),
@@ -516,7 +516,8 @@ r.get('/settings', (_req, res) => {
     importAutoApply: getSetting('import.autoApply', false),
     baseUrl: config.baseUrl,
     features: { vision: visionEnabled(), email: smtpEnabled(), visionModel: config.vision.model || null },
-    mcpPath: config.mcpPathSecret ? `${config.baseUrl}/mcp/${config.mcpPathSecret}` : null,
+    // the path secret grants MCP access – only admins get to see it
+    mcpPath: config.mcpPathSecret && req.actor?.role === 'admin' ? `${config.baseUrl}/mcp/${config.mcpPathSecret}` : null,
   });
 });
 

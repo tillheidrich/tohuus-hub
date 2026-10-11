@@ -365,6 +365,14 @@ describe('other apps', () => {
     expect([x.created, y.updated]).toEqual([1, 1]);
   });
 
+  it('labels the plain title/ingredients/steps shape (own export, AI prompt) as ToHuus Hub, not schema.org', () => {
+    const own = fmt.detectText(JSON.stringify({ recipes: [{ title: 'Kürbissuppe', ingredients: ['1 Hokkaido'], steps: ['Kochen.'] }] }));
+    expect(own.format).toBe('tohuus');
+    expect(own.recipes[0].title).toBe('Kürbissuppe');
+    const schema = fmt.detectText(JSON.stringify({ name: 'Soup', description: 'x' }));
+    expect(schema.format).toBe('schema');
+  });
+
   it('Mealie, KitchenOwl, Grocy, TheMealDB JSON and CSV', () => {
     const mealie = fmt.detectText(
       JSON.stringify({

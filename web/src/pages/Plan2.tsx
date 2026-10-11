@@ -830,7 +830,7 @@ function VoteResult({ v }: { v: VoteView }) {
                 {r.planned_entry_id ? ` · ${t('in the plan')}` : ''}
               </span>
             </span>
-            {r.match && <span className="badge good">{t('Match')}</span>}
+            {r.match && <span className="badge good">{t('Everyone wants it')}</span>}
           </button>
         ))}
       </div>

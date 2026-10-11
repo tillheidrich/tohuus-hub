@@ -71,7 +71,8 @@ app.use((_req, res, next) => {
 const ownOrigin = new URL(config.baseUrl).origin;
 app.use('/api', (req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-  if (req.path.startsWith('/guest/') || req.headers.authorization || req.headers['x-api-key']) return next();
+  // only Bearer/x-api-key requests are token-authenticated (resolveActor never falls back to the cookie for them)
+  if (req.path.startsWith('/guest/') || req.headers.authorization?.startsWith('Bearer ') || typeof req.headers['x-api-key'] === 'string') return next();
   const origin = req.headers.origin;
   const site = req.headers['sec-fetch-site'];
   if (origin === ownOrigin || site === 'same-origin' || (!origin && !site)) return next();

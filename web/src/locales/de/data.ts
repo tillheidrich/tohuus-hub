@@ -113,4 +113,7 @@ export const data: Record<string, string> = {
     'Ein Link ohne Ablaufdatum funktioniert, bis du ihn widerrufst – auch wenn er weitergeleitet wird. Trotzdem erstellen?',
   'The current link for “{name}” stops working. Create a new one?': 'Der bisherige Link für „{name}“ funktioniert dann nicht mehr. Neuen erstellen?',
   'New link': 'Neuer Link',
+  'Family members get a personal link and choose their own password, passkey or e-mail sign-in.': 'Familienmitglieder bekommen einen persönlichen Link und wählen selbst Passwort, Passkey oder Anmeldung per E-Mail.',
+  'Babysitter': 'Babysitter',
+  'Home Assistant': 'Home Assistant',
 };

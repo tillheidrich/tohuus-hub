@@ -91,6 +91,13 @@ describe('demo data', () => {
     expect(tour.startChoice().due).toBe(true);
   });
 
+  it('demo stock and recipes do not tick off the household’s first steps', async () => {
+    const onboard = await import('../server/lib/onboard');
+    const items = onboard.checklist().items;
+    expect(items.find((i) => i.key === 'stock')?.done).toBe(false);
+    expect(items.find((i) => i.key === 'recipe')?.done).toBe(false);
+  });
+
   it('removes exactly the demo rows – own entries and used demo things stay', () => {
     const own = catalog.createProduct({ name: 'Hafermilch' });
     catalog.adjustStock({ productId: own, delta: 2, reason: 'inventory', actor: 'Lea', silent: true });
@@ -130,6 +137,19 @@ describe('demo data', () => {
     tour.removeDemo({ includeUsed: true });
     expect((db.prepare('SELECT name FROM products').all() as { name: string }[]).map((p) => p.name)).toEqual(['Butter']);
     expect(count('recipes')).toBe(0);
+  });
+
+  it('keeps demo menu items the household has ordered (they never move stock)', () => {
+    db.prepare('DELETE FROM products').run();
+    expect(seed.seedDemo({ force: true })).toBe(true);
+    const item = db.prepare(`SELECT id, name FROM products WHERE orderable = 1 AND track_mode = 'none' ORDER BY id LIMIT 1`).get() as { id: number; name: string };
+    expect(item).toBeTruthy();
+    const order = Number(db.prepare(`INSERT INTO orders (guest_name, status) VALUES ('Lea', 'done')`).run().lastInsertRowid);
+    db.prepare('INSERT INTO order_lines (order_id, product_id, name) VALUES (?, ?, ?)').run(order, item.id, item.name);
+    expect(tour.demoStatus().used.products).toBe(1);
+    tour.removeDemo();
+    expect((db.prepare('SELECT name FROM products').all() as { name: string }[]).map((p) => p.name)).toEqual([item.name]);
+    db.prepare('DELETE FROM orders').run();
   });
 
   it('ignores stale marks when a rowid is reused by a real row', () => {

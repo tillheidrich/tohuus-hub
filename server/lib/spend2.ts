@@ -815,8 +815,10 @@ export function exportRows(r: Range | null, tag?: string) {
 
 export function exportCsv(r: Range | null, tag?: string) {
   const esc = (v: unknown) => {
-    const s = v == null ? '' : String(v);
-    return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    let s = v == null ? '' : String(v);
+    // spreadsheet formula injection: text from receipts/expenses that starts like a formula is kept as text
+    if (/^[=+\-@\t\r]/.test(s) && !/^[-+]?\d+([.,]\d+)?$/.test(s)) s = `'${s}`;
+    return /[;"\n\r\t]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const head = [
     t('Date'),

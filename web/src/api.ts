@@ -2,7 +2,8 @@ import { QueryClient, useQuery } from '@tanstack/react-query';
 import { locale, num, t } from './i18n';
 
 export const qc = new QueryClient({
-  defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: true, retry: 1 } },
+  // a 4xx (not allowed, not found) won't change on a retry – only network / server errors are retried once
+  defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: true, retry: (n, e) => n < 1 && !(((e as { status?: number }).status ?? 0) >= 400 && ((e as { status?: number }).status ?? 0) < 500) } },
 });
 
 export class ApiError extends Error {
@@ -46,14 +47,14 @@ export function useApi<T = any>(key: string | (string | number)[], path: string 
 
 /** topic → query keys to refresh when the server announces a change */
 const TOPIC_KEYS: Record<string, string[]> = {
-  stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh', 'onboarding', 'away'],
-  products: ['products', 'product', 'overview', 'shopping', 'fresh', 'onboarding'],
+  stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh', 'onboarding', 'away', 'boxes', 'share'],
+  products: ['products', 'product', 'overview', 'shopping', 'fresh', 'onboarding', 'boxes', 'share'],
   shopping: ['shopping', 'overview'],
   recipes: ['recipes', 'recipe', 'suggest', 'overview', 'plan', 'onboarding', 'people'],
   imports: ['imports', 'import', 'overview', 'spending', 'quality'],
   orders: ['orders', 'overview'],
   notifications: ['notifications'],
-  settings: ['settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance'],
+  settings: ['settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share'],
   care: ['care'],
   away: ['away'],
   tour: ['tour', 'overview', 'products', 'recipes', 'shopping', 'onboarding'],

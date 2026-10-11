@@ -4,6 +4,8 @@ import multer from 'multer';
 import { z } from 'zod';
 import { rateLimited, requireAdmin, requireAuth, resolveActor } from '../lib/auth.js';
 import { t } from '../i18n.js';
+import { houseGuestFor, isHouseGuest } from '../lib/people-policy.js';
+import { db } from '../db.js';
 import {
   addHidden,
   classifyShare,
@@ -18,6 +20,7 @@ import {
   setMode,
   setPrivacy,
   setRunsOut,
+  shareRow,
   shareTextToList,
   staplesPicker,
   startModeInfo,
@@ -68,8 +71,17 @@ r.patch('/share/items/:id', (req, res) => {
   const m = onlyMembers(req, res);
   if (!m) return;
   const b = z.object(Privacy).parse(req.body);
+  const itemId = Number(req.params.id);
+  const s = shareRow(itemId);
+  // an orphaned entry (owner removed) is only for admins to deal with – revealing it would show someone's private item
+  if (s && s.owner_id === null && req.actor?.role !== 'admin') return void res.status(403).json({ error: t('Only the person who added it can change this.') });
+  // permanent guests only hide what they added themselves, never a family member's entry
+  if (!s && isHouseGuest(req.actor)) {
+    const it = db.prepare('SELECT added_by FROM shopping_items WHERE id = ?').get(itemId) as { added_by: string | null } | undefined;
+    if (it && it.added_by !== m.name) return void res.status(403).json({ error: t('Only the person who added it can change this.') });
+  }
   try {
-    res.json(setPrivacy(Number(req.params.id), b, m));
+    res.json(setPrivacy(itemId, b, m));
   } catch (e) {
     fail(res, e);
   }
@@ -170,6 +182,8 @@ pub.post('/api/share/text', express.text({ type: ['text/plain', 'text/*'], limit
   const token = auth?.startsWith('Bearer ') ? auth.slice(7).trim() : typeof req.headers['x-api-key'] === 'string' ? req.headers['x-api-key'] : null;
   const user = userFromShareToken(token);
   if (!user) return void res.status(401).json({ error: t('Unknown or revoked shortcut key.') });
+  // a member who became a paused permanent guest keeps the key, but not the access (area: people)
+  if (houseGuestFor(user.userId)?.level === 'paused') return void res.status(403).json({ error: t('Your access is paused at the moment.'), guest: true });
   if (rateLimited(`share-text:${user.tokenId}`, 120, 60 * 60_000)) return void res.status(429).json({ error: t('Too many requests – try again later.') });
   const body = typeof req.body === 'string' ? { text: req.body } : (req.body ?? {});
   const b = z
@@ -184,6 +198,20 @@ pub.post('/api/share/text', express.text({ type: ['text/plain', 'text/*'], limit
 });
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 10 } });
+/** Not signed in: files are read and thrown away (no 120 MB per request in memory for anonymous posts), text fields still arrive. */
+const discard = multer({
+  storage: {
+    _handleFile: (_req: any, file: any, cb: any) => {
+      file.stream.on('end', () => cb(null, { size: 0 })).on('error', cb).resume();
+    },
+    _removeFile: (_req: any, _file: any, cb: any) => cb(null),
+  },
+  limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 10 },
+});
+const signedIn = (req: any) => {
+  const a = resolveActor(req);
+  return Boolean(a && a.kind === 'user' && a.userId);
+};
 
 /**
  * Share target fallback: normally the service worker takes the POST and keeps files on the device. If it isn't
@@ -194,7 +222,7 @@ pub.post('/teilen/empfangen', (req, res, next) => {
   const site = req.headers['sec-fetch-site'];
   if (site === 'cross-site' || site === 'same-site') return void res.status(403).send(t('Request from another site'));
   next();
-}, upload.array('files', 8), (req, res) => {
+}, (req, res, next) => (signedIn(req) ? upload : discard).array('files', 8)(req, res, next), (req, res) => {
   const str = (v: unknown) => (typeof v === 'string' ? v.slice(0, 10000) : '');
   const title = str(req.body?.title);
   const text = str(req.body?.text);
@@ -203,7 +231,7 @@ pub.post('/teilen/empfangen', (req, res, next) => {
   const q = new URLSearchParams();
   if (files.length) {
     const actor = resolveActor(req);
-    if (!actor || actor.kind !== 'user' || !actor.userId) {
+    if (!actor || actor.kind !== 'user' || !actor.userId || files.some((f) => !f.buffer)) {
       q.set('error', 'signin');
     } else {
       q.set('inbox', putInbox({ userId: actor.userId, title, text, url, files: files.map((f) => ({ name: f.originalname, type: f.mimetype, buf: f.buffer })) }));
