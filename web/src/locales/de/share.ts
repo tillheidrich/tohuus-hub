@@ -1,1 +1,150 @@
-export const share: Record<string, string> = {};
+export const share: Record<string, string> = {
+  // share landing (/teilen)
+  'This share has expired. Please share it again.': 'Das Geteilte ist nicht mehr da. Bitte teile es noch einmal.',
+  'The browser didn’t allow reading the clipboard. Long-press the field and paste instead.': 'Der Browser lässt die Zwischenablage nicht lesen. Halte lange ins Eingabefeld und füge dort ein.',
+  'The clipboard is empty.': 'Die Zwischenablage ist leer.',
+  'No list items found in the clipboard.': 'In der Zwischenablage steht nichts, was auf die Liste passt.',
+  'Something went wrong': 'Da ist etwas schiefgegangen',
+  'Nothing could be read from it.': 'Daraus ließ sich nichts lesen.',
+  'Recipe saved': 'Rezept gespeichert',
+  'Shared with {app}': 'Mit {app} geteilt',
+  'Where should it go?': 'Wohin damit?',
+  'Share something': 'Etwas teilen',
+  Paste: 'Einfügen',
+  'Paste from clipboard': 'Aus der Zwischenablage einfügen',
+  'You were signed out, so the files couldn’t be kept. Please share them again.': 'Du warst abgemeldet, deshalb konnten die Dateien nicht aufbewahrt werden. Bitte teile sie noch einmal.',
+  'Nothing was shared': 'Nichts geteilt',
+  'Share a WhatsApp list, a recipe link or a receipt photo from another app – or copy a list and paste it here.':
+    'Teile eine WhatsApp-Liste, einen Rezeptlink oder ein Bonfoto aus einer anderen App – oder kopiere eine Liste und füge sie hier ein.',
+  'Import as receipt': 'Als Bon einlesen',
+  'Save as recipe': 'Als Rezept speichern',
+  'Reading photos needs a vision model (Settings → Access & AI). PDFs from REWE and most supermarkets work without one.':
+    'Fotos lesen braucht ein Bildmodell (Einstellungen → Zugänge & KI). PDFs von REWE und den meisten Supermärkten gehen auch ohne.',
+  'Import recipe': 'Rezept übernehmen',
+  'To the shopping list': 'Auf die Einkaufsliste',
+  'Edit text': 'Text bearbeiten',
+  'Shared text': 'Geteilter Text',
+  'No list items found in the text. Edit it above, or pick one of the other options.': 'Im Text steht nichts, was auf die Liste passt. Bearbeite ihn oben oder nimm eine der anderen Möglichkeiten.',
+  shared: 'geteilt',
+
+  // discreet / private
+  Discreet: 'Diskret',
+  'Only me': 'Nur ich',
+  'Who sees it?': 'Wer sieht es?',
+  'Added – only you can see it': 'Hinzugefügt – nur du siehst es',
+  'Added discreetly': 'Diskret hinzugefügt',
+  '{n} added discreetly': '{n} diskret hinzugefügt',
+  'Only you and {n} more': 'Nur du und {n} weitere',
+  'Only you': 'Nur du',
+  'Others see “{placeholder}”': 'Andere sehen „{placeholder}“',
+  'Shown to you because you’re shopping': 'Wird dir gezeigt, weil du einkaufst',
+  'Shared with you by {name}': 'Von {name} mit dir geteilt',
+  Private: 'Privat',
+  'Only you see the next item. It never shows up in Home Assistant, Telegram, displays or printed lists.':
+    'Den nächsten Eintrag siehst nur du. Er taucht nie in Home Assistant, Telegram, auf Displays oder gedruckten Listen auf.',
+  'Everyone sees a neutral placeholder like “Drugstore item”. Only you see the real name.': 'Alle sehen einen neutralen Platzhalter wie „Drogerie-Artikel“. Den echten Namen siehst nur du.',
+  'Make the next item discreet or private.': 'Mach den nächsten Eintrag diskret oder privat.',
+  '{name} shared this with you. Only {name} can change who sees it.': '{name} hat das mit dir geteilt. Nur {name} kann ändern, wer es sieht.',
+  '{name} added this discreetly and lets whoever shops see it. Please keep it to yourself.': '{name} hat das diskret eingetragen und zeigt es der Person, die einkauft. Bitte behalt es für dich.',
+  'Added discreetly. Tap “Me” above or open the store view to see what it is.': 'Diskret eingetragen. Tipp oben auf „Ich“ oder öffne die Laden-Ansicht, um zu sehen, was es ist.',
+  'Added discreetly. You can still tick it off when it’s bought.': 'Diskret eingetragen. Abhaken kannst du es trotzdem, wenn es gekauft ist.',
+  'Visible to everyone again': 'Wieder für alle sichtbar',
+  'Only you can see it now': 'Jetzt siehst nur du es',
+  'Now discreet': 'Jetzt diskret',
+  'Also visible to (optional):': 'Außerdem sichtbar für (optional):',
+  'What others see, e.g. “Drugstore item”': 'Was andere sehen, z. B. „Drogerie-Artikel“',
+  'What others see': 'Was andere sehen',
+  'Show to whoever shops': 'Der Person zeigen, die einkauft',
+  'The person with the store view open, or who said “I’ll get it”, sees the real name.': 'Wer die Laden-Ansicht offen hat oder „Ich kümmere mich“ gesagt hat, sieht den echten Namen.',
+  'Never shown in Home Assistant, Telegram, displays, printed lists, guest links or to assistants.': 'Nie sichtbar in Home Assistant, Telegram, auf Displays, gedruckten Listen, Gastlinks oder für Assistenten.',
+
+  // iPhone shortcut
+  'Copying isn’t allowed here – select the text and copy it by hand.': 'Kopieren ist hier nicht erlaubt – markiere den Text und kopiere ihn von Hand.',
+  'Key removed – the shortcut stops working': 'Schlüssel entfernt – der Kurzbefehl funktioniert nicht mehr',
+  'Share into {app} from other apps': 'Aus anderen Apps an {app} teilen',
+  'Send a WhatsApp list, a recipe link or a receipt photo straight to the shopping list or the imports.':
+    'Schick eine WhatsApp-Liste, einen Rezeptlink oder ein Bonfoto direkt auf die Einkaufsliste oder in die Importe.',
+  'Android and computer': 'Android und Computer',
+  'Install the app (browser menu → “Add to home screen” or “Install”). After that, {app} shows up in the share menu of every app.':
+    'Installiere die App (Browsermenü → „Zum Startbildschirm“ oder „Installieren“). Danach steht {app} im Teilen-Menü jeder App.',
+  'iPhone and iPad': 'iPhone und iPad',
+  'iOS doesn’t offer the share menu to web apps. A shortcut with your personal key does the job – it can only put things on the shopping list.':
+    'iOS bietet Web-Apps das Teilen-Menü nicht an. Ein Kurzbefehl mit deinem persönlichen Schlüssel übernimmt das – er kann nur Dinge auf die Einkaufsliste setzen.',
+  'Your key (shown only once)': 'Dein Schlüssel (wird nur einmal angezeigt)',
+  'Open the Shortcuts app → “+” → name it “To the list”.': 'Öffne die App Kurzbefehle → „+“ → nenn ihn „Auf die Liste“.',
+  'Tap the “i” (details) → turn on “Show in Share Sheet”, accept Text and URLs.': 'Tipp auf das „i“ (Details) → „Im Share-Sheet anzeigen“ einschalten, Text und URLs annehmen.',
+  'Add the action “Get Contents of URL” with this address:': 'Füge die Aktion „Inhalte von URL abrufen“ mit dieser Adresse hinzu:',
+  'Method: POST. Headers: “Authorization” = “Bearer ” followed by your key. Request body: JSON with a text field “text” = Shortcut Input.':
+    'Methode: POST. Header: „Authorization“ = „Bearer “ und dahinter dein Schlüssel. Hauptteil der Anfrage: JSON mit dem Textfeld „text“ = Kurzbefehleingabe.',
+  'Optional: add “Show Notification” with the result – it tells you what was added.': 'Optional: „Mitteilung anzeigen“ mit dem Ergebnis hinzufügen – dann siehst du, was dazugekommen ist.',
+  'Done: in WhatsApp, select a message → Share → “To the list”.': 'Fertig: In WhatsApp eine Nachricht markieren → Teilen → „Auf die Liste“.',
+  'I’ve copied it': 'Hab ich kopiert',
+  'Create a key for the iPhone shortcut': 'Schlüssel für den iPhone-Kurzbefehl erstellen',
+  'not used yet': 'noch nicht benutzt',
+  'Remove key': 'Schlüssel entfernen',
+  'Tip: copied a list? The shopping list has a paste button next to the input field.': 'Tipp: Liste kopiert? Auf der Einkaufsliste gibt es neben dem Eingabefeld einen Einfügen-Knopf.',
+
+  // start mode "only what runs out"
+  '1 thing is tracked': '1 Sache wird verfolgt',
+  '{n} things are tracked': '{n} Sachen werden verfolgt',
+  'Tap what regularly runs out at your place. Only these are tracked – no counting, no warnings for anything else. We assume you have them now; tap “low” when one runs low and it lands on the shopping list.':
+    'Tipp an, was bei euch regelmäßig ausgeht. Nur das wird verfolgt – kein Zählen, keine Warnungen für alles andere. Wir gehen davon aus, dass es gerade da ist; tipp auf „knapp“, wenn etwas zur Neige geht, dann landet es auf der Einkaufsliste.',
+  'Bought more than once': 'Mehrmals gekauft',
+  'Your own': 'Eigene',
+  'Missing something? Mark any product as “runs out regularly” on its page – Today also suggests what you bought more than once.':
+    'Fehlt etwas? Markiere ein Produkt auf seiner Seite als „geht regelmäßig aus“ – „Heute“ schlägt dir außerdem vor, was du mehrmals gekauft hast.',
+  'Track this 1 thing': 'Diese 1 Sache verfolgen',
+  'Track these {n} things': 'Diese {n} Sachen verfolgen',
+  'Everything is tracked again – nothing was lost': 'Alles wird wieder verfolgt – nichts ist verloren gegangen',
+  'Only what runs out is tracked now': 'Jetzt wird nur verfolgt, was ausgeht',
+  'What should be tracked?': 'Was soll verfolgt werden?',
+  'Starting small helps: track only the things that regularly run out. You can switch to everything at any time – nothing is deleted.':
+    'Klein anfangen hilft: Verfolge nur, was regelmäßig ausgeht. Du kannst jederzeit auf alles umstellen – es wird nichts gelöscht.',
+  'Couldn’t load the setting.': 'Die Einstellung konnte nicht geladen werden.',
+  'Only admins can change this.': 'Das können nur Admins ändern.',
+  'Only what runs out': 'Nur was ausgeht',
+  '{n} things are tracked. Everything else is simply not counted and never warned about.': '{n} Sachen werden verfolgt. Alles andere wird einfach nicht gezählt und nie angemahnt.',
+  'Everything in stock is tracked, with warnings when it runs low or should be used.': 'Alles im Bestand wird verfolgt, mit Hinweisen, wenn es knapp wird oder bald weg muss.',
+  'Choose what runs out': 'Auswählen, was ausgeht',
+  'What runs out at your place?': 'Was geht bei euch aus?',
+  'Saving the list doesn’t change the mode. Switch to “Only what runs out” above when you’re ready.': 'Speichern ändert den Modus nicht. Stell oben auf „Nur was ausgeht“ um, wenn du so weit bist.',
+  '{name} is tracked now': '{name} wird jetzt verfolgt',
+  '1 thing is tracked.': '1 Sache wird verfolgt.',
+  '{n} things are tracked.': '{n} Sachen werden verfolgt.',
+  'Bought more than once – track it too?': 'Mehrmals gekauft – auch verfolgen?',
+  'Runs out regularly': 'Geht regelmäßig aus',
+  'Tracked – you’ll be reminded when it runs low.': 'Wird verfolgt – du bekommst einen Hinweis, wenn es knapp wird.',
+  'Not tracked right now: your household only tracks what runs out.': 'Gerade nicht verfolgt: Euer Haushalt verfolgt nur, was ausgeht.',
+  'Used by the start mode “only what runs out”.': 'Zählt für den Startmodus „Nur was ausgeht“.',
+  'Only track what runs out': 'Nur verfolgen, was ausgeht',
+  'Milk, coffee, toilet paper … tap what regularly runs out. Nothing else gets counted. You can switch to everything later.':
+    'Milch, Kaffee, Klopapier … tipp an, was regelmäßig ausgeht. Sonst wird nichts gezählt. Auf alles umstellen kannst du später.',
+
+  // help
+  'Share into the app': 'In die App teilen',
+  'A list in WhatsApp, a recipe link, a receipt photo: send it here instead of typing it.': 'Eine Liste in WhatsApp, ein Rezeptlink, ein Bonfoto: Schick es hierher, statt es abzutippen.',
+  'Android and computer: install the app once. Then pick it in any app’s share menu – a list goes to the shopping list in one tap, a recipe link to the recipes, a photo or PDF to the imports.':
+    'Android und Computer: Installiere die App einmal. Dann wählst du sie im Teilen-Menü jeder App – eine Liste kommt mit einem Tipp auf die Einkaufsliste, ein Rezeptlink zu den Rezepten, ein Foto oder PDF in die Importe.',
+  'Chat messages are cleaned up by themselves: times, names, bullets and check boxes disappear, “2 milk, bread and tape” becomes three items.':
+    'Chatnachrichten werden von selbst aufgeräumt: Uhrzeiten, Namen, Aufzählungszeichen und Kästchen verschwinden, aus „2 Milch, Brot und Paketband“ werden drei Einträge.',
+  'iPhone: iOS doesn’t offer the share menu to web apps. Settings › My account › “Create a key for the iPhone shortcut” – the steps are shown right there.':
+    'iPhone: iOS bietet Web-Apps das Teilen-Menü nicht an. Einstellungen › Mein Konto › „Schlüssel für den iPhone-Kurzbefehl erstellen“ – die Schritte stehen direkt dort.',
+  'Copied a list? The paste button next to the input field on the shopping list takes it in one tap.': 'Liste kopiert? Der Einfügen-Knopf neben dem Eingabefeld der Einkaufsliste übernimmt sie mit einem Tipp.',
+  'Set up sharing': 'Teilen einrichten',
+  'Discreet and private items': 'Diskrete und private Einträge',
+  'Some things don’t need an audience – a present, something from the pharmacy.': 'Manches braucht kein Publikum – ein Geschenk, etwas aus der Apotheke.',
+  'Tap the eye next to the input field before adding: “Discreet” shows everyone a neutral placeholder like “Drugstore item”, “Only me” hides it from everyone else.':
+    'Tipp vor dem Hinzufügen auf das Auge neben dem Eingabefeld: „Diskret“ zeigt allen einen neutralen Platzhalter wie „Drogerie-Artikel“, „Nur ich“ blendet es für alle anderen aus.',
+  'Already on the list? Open it with “…” and change “Who sees it?”. You can let selected members see a private item.':
+    'Steht es schon auf der Liste? Öffne es über „…“ und ändere „Wer sieht es?“. Private Einträge kannst du einzelnen Mitgliedern zeigen.',
+  'Discreet items can show their real name to whoever shops – the person with the store view open or who said “I’ll get it”.':
+    'Diskrete Einträge können der Person, die einkauft, den echten Namen zeigen – wer die Laden-Ansicht offen hat oder „Ich kümmere mich“ gesagt hat.',
+  'Real names never reach Home Assistant, Telegram, displays, printed lists, guest links or AI assistants.': 'Echte Namen landen nie in Home Assistant, Telegram, auf Displays, gedruckten Listen, Gastlinks oder bei KI-Assistenten.',
+  'Open the shopping list': 'Einkaufsliste öffnen',
+  'The calmest way to start: only the things that regularly run out are tracked.': 'Der ruhigste Einstieg: Verfolgt wird nur, was regelmäßig ausgeht.',
+  'Settings › Household › “What should be tracked?” › “Only what runs out”, then tap your staples.': 'Einstellungen › Haushalt › „Was soll verfolgt werden?“ › „Nur was ausgeht“, dann deine Grundsachen antippen.',
+  'Everything else is simply not counted – no warnings, no reminders. Receipts still come in as before.': 'Alles andere wird einfach nicht gezählt – keine Warnungen, keine Erinnerungen. Bons kommen weiter wie gewohnt rein.',
+  'Bought something on two different days? Today suggests tracking it too.': 'An zwei verschiedenen Tagen gekauft? „Heute“ schlägt vor, es auch zu verfolgen.',
+  'Switch to “Everything” at any time – nothing is deleted.': 'Jederzeit auf „Alles“ umstellen – es wird nichts gelöscht.',
+  'Open household settings': 'Haushaltseinstellungen öffnen',
+};

@@ -27,7 +27,8 @@ r.use(requireAuth);
 
 startPrintAutomations();
 
-const fail = (res: Response, e: unknown) => res.status((e as any).status ?? 500).json({ error: (e as Error).message });
+const fail = (res: Response, e: unknown) =>
+  e instanceof z.ZodError ? res.status(400).json({ error: t('Invalid input') }) : res.status((e as any).status ?? 500).json({ error: (e as Error).message });
 
 const idNum = z.coerce.number().int().positive();
 const specSchema = z.object({
@@ -48,6 +49,8 @@ const NEEDS_ID = new Set(['order', 'care', 'wish', 'recipe']);
 function spec(req: Request, src: Record<string, unknown>): TicketSpec {
   const s = specSchema.parse(src);
   if (NEEDS_ID.has(s.type) && !s.id) throw Object.assign(new Error(t('Which one? An id is missing.')), { status: 400 });
+  // permanent guests never see care tasks, so they can't print or send them either
+  if (s.type === 'care' && req.actor?.houseGuest) throw Object.assign(new Error('forbidden'), { status: 403 });
   return { ...s, from: req.actor?.name ?? null };
 }
 
@@ -126,6 +129,8 @@ r.post('/print/print', async (req, res) => {
 
 r.post('/print/send', async (req, res) => {
   try {
+    // sending tickets to members (mail/Telegram) is for the household, not for permanent guests
+    if (req.actor?.houseGuest) return res.status(403).json({ error: 'forbidden' });
     const s = spec(req, req.body ?? {});
     const b = z
       .object({ channel: z.enum(SEND_CHANNELS), member_id: idNum.nullable().optional(), paper: paperSchema })

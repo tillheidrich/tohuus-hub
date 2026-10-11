@@ -33,4 +33,12 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ToHuusC
         }
         if rt.cookidoo
         else None,
+        "bridge": {
+            "supported": rt.bridge.supported,
+            "watching": rt.bridge.config,
+            "last_sync": rt.bridge.last_sync.isoformat() if rt.bridge.last_sync else None,
+            "last_error": rt.bridge.last_error,
+        }
+        if rt.bridge
+        else None,
     }

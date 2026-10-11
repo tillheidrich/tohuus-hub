@@ -1,5 +1,5 @@
 /** Weekly meal plan: manual entries, auto-fill from suggestions, Cookidoo "Meine Woche" via Home Assistant. */
-import { db, getSetting } from '../db.js';
+import { db, getSetting, lang } from '../db.js';
 import { emit } from './bus.js';
 import { addToShopping, localDay, matchIngredient } from './catalog.js';
 import { fetchImage, saveImage } from './images.js';
@@ -8,6 +8,8 @@ import { getRecipe, ingredientCore, listRecipes, parseRecipeJsonLd, saveRecipe, 
 import { norm, nameScore } from './text.js';
 import { t } from '../i18n.js';
 import { activeIngredients, effectiveIngredients, variantContext } from './variants.js';
+import { scaleText, servingsFactor, sumAmounts } from './scale.js';
+import { nobodyHomeOn } from './away-state.js';
 
 export interface PlanEntry {
   id: number;
@@ -28,10 +30,20 @@ export function weekDays(from: string, n = 7) {
 export function getPlan(from: string, to: string) {
   return db
     .prepare(
-      `SELECT m.*, r.image_path, r.thermomix, r.time_min FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id
+      `SELECT m.*, r.image_path, r.thermomix, r.time_min, r.servings AS recipe_servings,
+              (SELECT v.servings FROM recipe_variants v WHERE v.recipe_id = m.recipe_id) AS variant_servings
+       FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id
        WHERE day >= ? AND day <= ? ORDER BY day, slot`,
     )
-    .all(from, to) as (PlanEntry & { image_path: string | null; thermomix: number; time_min: number | null })[];
+    .all(from, to) as (PlanEntry & {
+      image_path: string | null;
+      thermomix: number;
+      time_min: number | null;
+      /** one-off servings for this entry (plan2), null = as usual */
+      servings?: number | null;
+      recipe_servings: number | null;
+      variant_servings: number | null;
+    })[];
 }
 
 export function addPlan(input: { day: string; recipe_id?: number | null; title?: string; slot?: string; note?: string | null; source?: string; external_id?: string | null }) {
@@ -55,10 +67,11 @@ export function autofill(from: string, days = 7) {
   const existing = getPlan(range[0], range[range.length - 1]);
   const used = new Set(existing.map((e) => e.recipe_id).filter(Boolean));
   const taken = new Set(existing.filter((e) => e.slot === 'abend').map((e) => e.day));
-  const pool = suggest({ limit: 50 }).filter((s) => !used.has(s.recipe.id));
+  // never plan a dish someone in the household is allergic to (area: people)
+  const pool = suggest({ limit: 50 }).filter((s) => !used.has(s.recipe.id) && !s.warnings?.length);
   let added = 0;
   for (const day of range) {
-    if (taken.has(day) || day < localDay(0)) continue;
+    if (taken.has(day) || day < localDay(0) || nobodyHomeOn(day)) continue; // away mode: nobody home, no dinner
     const next = pool.shift();
     if (!next) break;
     addPlan({ day, recipe_id: next.recipe.id, source: 'suggest', note: next.reasons.slice(0, 2).join(' · ') });
@@ -72,11 +85,15 @@ export function planShopping(from: string, to: string, actor: string) {
   const entries = getPlan(from, to).filter((e) => e.recipe_id && !e.cooked);
   const products = db.prepare('SELECT p.id, p.name, p.track_mode, p.is_staple, (SELECT COALESCE(SUM(qty),0) FROM stock s WHERE s.product_id = p.id) AS total FROM products p').all() as any[];
   const byId = new Map(products.map((p) => [p.id, p]));
-  const need = new Map<string, { text: string; productId: number | null; recipes: Set<string> }>();
+  const need = new Map<string, { text: string; productId: number | null; recipes: Set<string>; lines: string[] }>();
   const ctx = variantContext();
+  const decimal = lang() === 'en' ? '.' : ',';
   for (const e of entries) {
     const r = getRecipe(e.recipe_id!);
     if (!r) continue;
+    // one-off servings on the plan entry ("for 6 instead of 4") scale the amounts; base = house servings, else recipe
+    const factor = servingsFactor(e.servings, e.variant_servings || e.recipe_servings);
+    const label = e.servings && factor !== 1 ? `${r.title} (${e.servings})` : r.title;
     // the house version counts: "Reis statt Kartoffeln" puts rice on the list
     for (const i of activeIngredients(effectiveIngredients(r, r.ingredients, ctx))) {
       if (i.pantry || i.optional) continue;
@@ -85,13 +102,16 @@ export function planShopping(from: string, to: string, actor: string) {
       const p = m && m.score >= 0.72 ? byId.get(m.productId) : null;
       if (p && (p.is_staple || p.track_mode === 'none' || p.total > 0)) continue;
       const key = p ? `p${p.id}` : norm(core);
-      if (!need.has(key)) need.set(key, { text: p ? p.name : core, productId: p?.id ?? null, recipes: new Set() });
-      need.get(key)!.recipes.add(r.title);
+      if (!need.has(key)) need.set(key, { text: p ? p.name : core, productId: p?.id ?? null, recipes: new Set(), lines: [] });
+      need.get(key)!.recipes.add(label);
+      need.get(key)!.lines.push(scaleText(i.text, factor, decimal));
     }
   }
   let added = 0;
   for (const n of need.values()) {
-    const out = addToShopping({ productId: n.productId, text: n.text, note: `Wochenplan: ${[...n.recipes].join(', ')}`, source: 'recipe', addedBy: actor });
+    const sum = sumAmounts(n.lines, decimal);
+    const note = [t('Week plan: {list}', { list: [...n.recipes].join(', ') }), sum.label].filter(Boolean).join(' · ');
+    const out = addToShopping({ productId: n.productId, text: n.text, qty: sum.count && sum.count > 1 ? sum.count : null, note, source: 'recipe', addedBy: actor });
     if (out.created) added++;
   }
   return { added, needed: need.size };

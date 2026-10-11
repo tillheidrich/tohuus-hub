@@ -6,14 +6,19 @@ import { db, lang } from '../db.js';
 
 export type TrackModeBase = 'count' | 'level' | 'none';
 
+/**
+ * Neutral defaults that fit a flat as well as a house – no cellar, stairs or separate chest freezer assumed.
+ * `legacy` lists names (and `legacyKinds` kinds) that earlier versions created for the same purpose, so
+ * existing households keep working with the places they already have. Their rows are never renamed.
+ */
 export const BASE_LOCATIONS = [
-  { key: 'fridge', en: 'Fridge', de: 'Kühlschrank', sv: 'Kylskåp', icon: 'refrigerator' },
-  { key: 'freezer', en: 'Freezer', de: 'Gefrierschrank', sv: 'Frys', icon: 'snowflake' },
-  { key: 'pantry', en: 'Pantry', de: 'Vorratsschrank', sv: 'Skafferi', icon: 'archive' },
-  { key: 'cellar', en: 'Cellar', de: 'Keller', sv: 'Källare', icon: 'warehouse' },
-  { key: 'kitchen', en: 'Kitchen', de: 'Küche', sv: 'Kök', icon: 'cooking-pot' },
-  { key: 'bathroom', en: 'Bathroom', de: 'Bad', sv: 'Badrum', icon: 'bath' },
-  { key: 'utility', en: 'Utility room', de: 'Hauswirtschaftsraum', sv: 'Tvättstuga', icon: 'washing-machine' },
+  { key: 'fridge', en: 'Fridge', de: 'Kühlschrank', sv: 'Kylskåp', icon: 'refrigerator', legacy: [] as string[], legacyKinds: [] as string[] },
+  { key: 'freezer', en: 'Freezer', de: 'Gefrierfach', sv: 'Frys', icon: 'snowflake', legacy: ['Gefrierschrank'], legacyKinds: [] as string[] },
+  { key: 'pantry', en: 'Pantry', de: 'Vorratsschrank', sv: 'Skafferi', icon: 'archive', legacy: [] as string[], legacyKinds: [] as string[] },
+  { key: 'shelf', en: 'Storage shelf', de: 'Vorratsregal', sv: 'Förrådshylla', icon: 'box', legacy: ['Cellar', 'Keller', 'Källare'], legacyKinds: ['cellar'] },
+  { key: 'kitchen', en: 'Kitchen', de: 'Küche', sv: 'Kök', icon: 'cooking-pot', legacy: [] as string[], legacyKinds: [] as string[] },
+  { key: 'bathroom', en: 'Bathroom', de: 'Bad', sv: 'Badrum', icon: 'bath', legacy: [] as string[], legacyKinds: [] as string[] },
+  { key: 'utility', en: 'Cleaning cupboard', de: 'Putzschrank', sv: 'Städskåp', icon: 'sparkles', legacy: ['Utility room', 'Hauswirtschaftsraum', 'Tvättstuga'], legacyKinds: [] as string[] },
 ] as const;
 
 export type LocationKey = (typeof BASE_LOCATIONS)[number]['key'];
@@ -21,7 +26,7 @@ export type LocationKey = (typeof BASE_LOCATIONS)[number]['key'];
 export const BASE_CATEGORIES = [
   { key: 'icecream', en: 'Ice cream', de: 'Eis', sv: 'Glass', icon: 'ice-cream-cone', loc: 'freezer', track: 'count' },
   { key: 'frozen', en: 'Frozen', de: 'Tiefkühl', sv: 'Fryst', icon: 'snowflake', loc: 'freezer', track: 'count' },
-  { key: 'drinks', en: 'Drinks', de: 'Getränke', sv: 'Dryck', icon: 'cup-soda', loc: 'cellar', track: 'count' },
+  { key: 'drinks', en: 'Drinks', de: 'Getränke', sv: 'Dryck', icon: 'cup-soda', loc: 'shelf', track: 'count' },
   { key: 'chilled', en: 'Chilled', de: 'Kühlregal', sv: 'Kylvaror', icon: 'milk', loc: 'fridge', track: 'count' },
   { key: 'produce', en: 'Fruit & veg', de: 'Obst & Gemüse', sv: 'Frukt & grönt', icon: 'apple', loc: 'kitchen', track: 'level' },
   { key: 'bakery', en: 'Bread & bakery', de: 'Brot & Backwaren', sv: 'Bröd & bakverk', icon: 'croissant', loc: 'kitchen', track: 'level' },
@@ -59,5 +64,13 @@ export function locationIdByKey(key: LocationKey): number | null {
   const row = db
     .prepare('SELECT id FROM locations WHERE name IN (?, ?, ?) OR kind = ? ORDER BY name IN (?, ?, ?) DESC, sort, id LIMIT 1')
     .get(...baseNames(l), l.key, ...baseNames(l)) as { id: number } | undefined;
-  return row?.id ?? null;
+  if (row) return row.id;
+  // places created by earlier versions for the same purpose (e.g. "Keller" for the storage shelf)
+  const names: string[] = [...l.legacy];
+  const kinds: string[] = [...l.legacyKinds];
+  if (!names.length && !kinds.length) return null;
+  const old = db
+    .prepare(`SELECT id FROM locations WHERE name IN (${names.map(() => '?').join(', ') || "''"}) OR kind IN (${kinds.map(() => '?').join(', ') || "''"}) ORDER BY sort, id LIMIT 1`)
+    .get(...names, ...kinds) as { id: number } | undefined;
+  return old?.id ?? null;
 }

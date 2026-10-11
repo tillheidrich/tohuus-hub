@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '../db.js';
 import { claim, findStore, quickAdd, storeView, userByName } from '../lib/shop.js';
 import { norm } from '../lib/text.js';
+import { notPrivate } from '../lib/share-core.js';
 
 const text = (v: unknown) => ({ content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 1) }] });
 const RO = { readOnlyHint: true, openWorldHint: false };
@@ -48,7 +49,7 @@ export function register(s: McpServer, actorName: string) {
       if (id === null) {
         const n = norm(String(item));
         if (kind === 'shopping') {
-          const rows = db.prepare('SELECT id, text FROM shopping_items WHERE checked_at IS NULL').all() as { id: number; text: string }[];
+          const rows = db.prepare(`SELECT id, text FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()}`).all() as { id: number; text: string }[];
           id = (rows.find((r) => norm(r.text) === n) ?? rows.find((r) => norm(r.text).includes(n) || n.includes(norm(r.text))))?.id ?? null;
         } else {
           const rows = db.prepare(`SELECT id, title FROM meal_plan WHERE day >= date('now', '-1 day') ORDER BY day`).all() as { id: number; title: string }[];

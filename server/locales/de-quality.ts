@@ -1,1 +1,21 @@
-export const de_quality: Record<string, string> = {};
+export const de_quality: Record<string, string> = {
+  'Please enter a store name.': 'Bitte gib den Namen des Geschäfts ein.',
+  'Rule not found': 'Regel nicht gefunden',
+  'Unknown unit': 'Unbekannte Einheit',
+  'The pack size must be between 1 and 1000.': 'Die Packungsgröße muss zwischen 1 und 1000 liegen.',
+  'ignored as you taught it': 'weggelassen, wie ihr es beigebracht habt',
+  'The file {file} is attached.': 'Die Datei {file} ist angehängt.',
+  // what the anonymisation removed
+  'store address': 'Adresse des Geschäfts',
+  'phone numbers': 'Telefonnummern',
+  'tax and VAT numbers': 'Steuer- und USt-IdNummern',
+  'card and account numbers': 'Karten- und Kontonummern',
+  'loyalty card numbers, points and balances': 'Kundenkarten-Nummern, Punkte und Guthaben',
+  names: 'Namen',
+  'e-mail addresses': 'E-Mail-Adressen',
+  'personal links': 'persönliche Links',
+  'TSE signature and transaction data': 'TSE-Signatur und Transaktionsdaten',
+  'receipt, till and branch numbers': 'Bon-, Kassen- und Filialnummern',
+  'exact dates (moved to the 1st of the month)': 'genaue Daten (auf den Monatsersten verschoben)',
+  'exact times (rounded to the hour)': 'genaue Uhrzeiten (auf die volle Stunde gerundet)',
+};

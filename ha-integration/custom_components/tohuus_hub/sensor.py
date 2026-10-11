@@ -21,7 +21,7 @@ from .coordinator import ToHuusConfigEntry, ToHuusCoordinator
 from .entity import ToHuusEntity
 
 # list attributes can get long – keep them out of the recorder database
-LIST_ATTRS = frozenset({"items", "tasks", "orders", "wishes", "reasons", "tomorrow"})
+LIST_ATTRS = frozenset({"items", "tasks", "orders", "wishes", "reasons", "tomorrow", "thaw"})
 MAX_ITEMS = 25
 
 
@@ -140,6 +140,18 @@ SENSORS: tuple[ToHuusSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_count("eat_first"),
         attrs_fn=lambda d: {"items": (d.get("eat_first") or [])[:MAX_ITEMS], "leftovers": (d.get("counts") or {}).get("leftovers", 0)},
+    ),
+    ToHuusSensorDescription(
+        key="frozen_portions",
+        translation_key="frozen_portions",
+        icon="mdi:snowflake",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: (d.get("boxes") or {}).get("freezer_portions", 0),
+        attrs_fn=lambda d: {
+            "items": [b for b in ((d.get("boxes") or {}).get("items") or []) if b.get("place") == "freezer"][:MAX_ITEMS],
+            "fridge_portions": (d.get("boxes") or {}).get("fridge_portions", 0),
+            "thaw": (d.get("boxes") or {}).get("thaw") or [],
+        },
     ),
     ToHuusSensorDescription(
         key="tonight",

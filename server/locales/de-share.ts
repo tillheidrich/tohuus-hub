@@ -1,1 +1,22 @@
-export const de_share: Record<string, string> = {};
+export const de_share: Record<string, string> = {
+  // neutral placeholders for discreet items (stored in the household language)
+  'Drugstore item': 'Drogerie-Artikel',
+  'Household item': 'Haushaltsartikel',
+  'Personal item': 'Persönlicher Artikel',
+  'Nothing to add': 'Nichts zum Hinzufügen',
+  'Only the person who added it can change this.': 'Das kann nur ändern, wer es eingetragen hat.',
+  'Added: {list}': 'Hinzugefügt: {list}',
+  '{n} added: {list}': '{n} hinzugefügt: {list}',
+  'That looks like a recipe – open ToHuus Hub to import it.': 'Das sieht nach einem Rezept aus – öffne ToHuus Hub, um es zu übernehmen.',
+  'Only a link – open ToHuus Hub to decide what to do with it.': 'Nur ein Link – öffne ToHuus Hub und entscheide dort, was damit passiert.',
+  'I didn’t find anything to add.': 'Ich habe nichts zum Hinzufügen gefunden.',
+  'Kitchen cupboard': 'Küchenschrank',
+  'Bread, fruit & veg': 'Brot, Obst & Gemüse',
+  Bathroom: 'Bad',
+  'Cleaning & household': 'Putzen & Haushalt',
+  'Only for signed-in members.': 'Nur für angemeldete Mitglieder.',
+  'This share has expired. Please share it again.': 'Das Geteilte ist nicht mehr da. Bitte teile es noch einmal.',
+  'You already have 10 shortcuts. Remove one first.': 'Du hast schon 10 Kurzbefehle. Entferne erst einen.',
+  'Unknown or revoked shortcut key.': 'Unbekannter oder entfernter Kurzbefehl-Schlüssel.',
+  'Too many requests – try again later.': 'Zu viele Anfragen – versuch es später noch einmal.',
+};

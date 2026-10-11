@@ -1,10 +1,11 @@
-import { ArrowLeft, ArrowsClockwise, CaretDown, CheckCircle, Info, Sparkle } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowsClockwise, CaretDown, CheckCircle, Info, PencilSimple, Sparkle } from '@phosphor-icons/react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { type Location, fmtDate, invalidate, patch, post, qc, useApi } from '../api';
 import { Ic, ProductPicker, Sheet, Skeleton, Stepper, Thumb, useToast } from '../ui';
 import { num, t } from '../i18n';
 import { money } from '../region';
+import { GradeBadge, LineFixSheet, RecognitionCard, useRecognition } from './QualityReport';
 
 /** line status (API value) → [English display label, badge class] */
 const STATUS: Record<string, [string, string]> = {
@@ -27,6 +28,9 @@ export function ImportReview() {
   const [locFor, setLocFor] = useState<any>(null);
   const [showRest, setShowRest] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [fix, setFix] = useState<any>(null);
+  const rec = useRecognition(Number(id));
+  const gradeOf = (lid: number) => rec.data?.lines.find((x) => x.id === lid)?.grade;
 
   const groups = useMemo(() => {
     const lines = imp?.lines ?? [];
@@ -42,8 +46,10 @@ export function ImportReview() {
   const lic = (lid: number | null) => locations.data?.find((l) => l.id === lid)?.icon ?? 'box';
   const update = async (line: any, body: any) => {
     qc.setQueryData(['import', Number(id)], (old: any) => (old ? { ...old, lines: old.lines.map((l: any) => (l.id === line.id ? { ...l, ...body } : l)) } : old));
-    await patch(`/imports/${imp.id}/lines/${line.id}`, body);
-    invalidate('import');
+    const r = await patch(`/imports/${imp.id}/lines/${line.id}`, body);
+    // corrections are remembered for the next receipts (quality)
+    if (r?.learned?.some((k: string) => ['product', 'ignore', 'qty', 'unit'].includes(k))) toast({ text: t('Got it – remembered for the next receipts.') });
+    invalidate('import', 'quality');
   };
   const apply = async () => {
     setBusy(true);
@@ -62,14 +68,16 @@ export function ImportReview() {
   const Line = ({ l }: { l: any }) => {
     const [label, cls] = STATUS[l.status] ?? ['', ''];
     const skip = l.action === 'skip';
+    const grade = gradeOf(l.id);
     return (
-      <div className={`rv-line ${skip ? 'skip' : ''}`}>
+      <div className={`rv-line ${skip ? 'skip' : ''} ${!readonly && !skip && grade === 'unmatched' && l.action === 'new' ? 'q-unmatched' : ''}`}>
         <Thumb p={{ name: l.product_name ?? l.name, image_path: l.product_image }} size={44} />
         <div style={{ minWidth: 0 }}>
           <div className="name">{l.name}</div>
           {l.receipt_name && l.receipt_name !== l.name && <div className="rcpt">{t('Receipt: {name}', { name: l.receipt_name })}</div>}
           <div className="target">
             {label && <span className={`badge ${cls}`}>{t(label)}</span>}
+            {!skip && <GradeBadge grade={grade} />}
             {l.note && <span className="small muted">{l.note}</span>}
           </div>
           {!readonly && !skip && (
@@ -92,6 +100,9 @@ export function ImportReview() {
               )}
               <button className="pill-btn" onClick={() => setLocFor(l)}>
                 <Ic name={lic(l.location_id)} size={12} /> {lname(l.location_id)}
+              </button>
+              <button className="pill-btn" onClick={() => setFix(l)} aria-label={t('Correct this line')}>
+                <PencilSimple size={12} /> {t('correct')}
               </button>
             </div>
           )}
@@ -160,6 +171,12 @@ export function ImportReview() {
         </div>
       )}
 
+      {imp.kind !== 'shelf' && (
+        <div style={{ marginBottom: 16 }}>
+          <RecognitionCard importId={imp.id} readonly={readonly} />
+        </div>
+      )}
+
       {groups.look.length > 0 && (
         <section style={{ marginBottom: 20 }}>
           <div className="section-head">
@@ -217,6 +234,7 @@ export function ImportReview() {
           setPick(null);
         }}
       />
+      <LineFixSheet line={fix} importId={imp.id} onClose={() => setFix(null)} />
       <Sheet open={Boolean(locFor)} onClose={() => setLocFor(null)} title={t('Where does it go?')}>
         <div className="list">
           {(locations.data ?? []).map((l) => (

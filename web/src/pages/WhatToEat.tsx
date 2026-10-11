@@ -6,6 +6,7 @@ import { ArrowRight, ArrowsClockwise, Basket, BowlFood, CalendarCheck, Camera, C
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { invalidate, post, useApi } from '../api';
+import { FreezerBucket, type FreezerItem } from './Leftovers';
 import { t } from '../i18n';
 import { Sheet, useToast } from '../ui';
 
@@ -219,6 +220,8 @@ export function WhatToEatPanel({ onAddRecipe }: { onAddRecipe: () => void }) {
         </Bucket>
       )}
 
+      <FreezerBucket items={(d as { from_freezer?: FreezerItem[] }).from_freezer} />
+
       {d.ready.length > 0 && (
         <Bucket title={t('Works right now')} hint={t('everything is in the house')}>
           <div className="hscroll">
@@ -268,7 +271,7 @@ function Bucket({ title, hint, children }: { title: string; hint?: string; child
 function PlannedCard({ p }: { p: Planned }) {
   const nav = useNavigate();
   return (
-    <div className="plan-today wte-planned" onClick={() => (p.recipe_id ? nav(`/rezepte/${p.recipe_id}`) : nav('/kochen'))}>
+    <div className="plan-today wte-planned" onClick={() => (p.recipe_id ? nav(`/rezepte/${p.recipe_id}?plan=${p.id}`) : nav('/kochen'))}>
       {p.image_path ? <img src={p.image_path} alt="" /> : <span className="ph"><CalendarCheck size={24} /></span>}
       <div className="grow">
         <div className="eyebrow">

@@ -7,8 +7,9 @@ import { Empty, Ic, Seg, Skeleton, Thumb, useToast } from '../ui';
 import { t } from '../i18n';
 import type { CareTask } from './Care';
 import { careIcon } from './Care';
+import { BoxLabels } from './Leftovers';
 
-type Kind = 'product' | 'location' | 'care';
+type Kind = 'product' | 'location' | 'care' | 'boxes';
 type Size = 'small' | 'large';
 interface Label {
   kind: Kind;
@@ -20,7 +21,7 @@ interface Label {
   img?: string;
 }
 
-const KIND_HINT: Record<Kind, string> = {
+const KIND_HINT: Record<Exclude<Kind, 'boxes'>, string> = {
   product: 'Scan: took one, opened, on the list, where is it',
   location: 'Scan: what’s in here',
   care: 'Scan: mark as done',
@@ -29,7 +30,7 @@ const KIND_HINT: Record<Kind, string> = {
 /** Printable A4 sheet of QR labels. Codes are random ids mapped on the server; scanning needs a household login. */
 export function Labels() {
   const [sp, setSp] = useSearchParams();
-  const kind = (['product', 'location', 'care'].includes(sp.get('kind') ?? '') ? sp.get('kind') : 'product') as Kind;
+  const kind = (['product', 'location', 'care', 'boxes'].includes(sp.get('kind') ?? '') ? sp.get('kind') : 'product') as Kind;
   const preselect = Number(sp.get('id')) || null;
   const [size, setSize] = useState<Size>('small');
   const [sel, setSel] = useState<Set<number>>(new Set(preselect ? [preselect] : []));
@@ -105,12 +106,15 @@ export function Labels() {
       </header>
       <div className="no-print">
         <div className="tabs-inline">
-          {(['product', 'location', 'care'] as Kind[]).map((k) => (
+          {(['product', 'location', 'care', 'boxes'] as Kind[]).map((k) => (
             <button key={k} className={kind === k ? 'on' : ''} onClick={() => setSp({ kind: k }, { replace: true })}>
-              {{ product: t('Products'), location: t('Places'), care: t('Care tasks') }[k]}
+              {{ product: t('Products'), location: t('Places'), care: t('Care tasks'), boxes: t('Leftovers & frozen') }[k]}
             </button>
           ))}
         </div>
+        {/* leftover & freezer containers: own list, sticker sheets as PDF, thermal printing (area: labels) */}
+        {kind === 'boxes' && <BoxLabels initialCodes={(sp.get('codes') ?? '').split(',').filter(Boolean)} />}
+        {kind !== 'boxes' && (<>
         <p className="small muted" style={{ margin: '0 2px 14px' }}>
           {t(KIND_HINT[kind])}. {t('The code only contains a random id – it opens ToHuus Hub, and only household members who are logged in can use it.')}
         </p>
@@ -158,6 +162,7 @@ export function Labels() {
             <Printer size={16} /> {t('Print')}
           </button>
         </div>
+        </>)}
       </div>
 
       {labels.length > 0 && (
@@ -171,7 +176,7 @@ export function Labels() {
                 <div className="qr-txt">
                   <b>{l.title}</b>
                   {l.sub && <span>{l.sub}</span>}
-                  <small>{t(KIND_HINT[l.kind])}</small>
+                  <small>{l.kind !== 'boxes' && t(KIND_HINT[l.kind])}</small>
                 </div>
               </div>
             ))}

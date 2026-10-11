@@ -25,6 +25,8 @@ import type { ChannelMessage } from './notify.js';
 import { overview } from './overview.js';
 import { formatItem, parseQuickAdd, quickAdd } from './shop.js';
 import { runVision, visionAvailable } from './vision.js';
+import { notPrivate } from './share-core.js';
+import { houseGuestFor, levelRank, type HouseGuest } from './people-policy.js';
 
 migrate(
   'channels-1',
@@ -246,7 +248,9 @@ async function sendToChat(c: ChatRow, html: string, keyboard?: Keyboard | null) 
 }
 
 function notifyChats(opts: { userId?: number } = {}) {
-  return (db.prepare(`SELECT * FROM channel_chats WHERE channel = 'telegram' AND notify = 1 ${opts.userId ? "AND user_id = ? AND kind = 'private'" : ''} ORDER BY id`).all(...(opts.userId ? [opts.userId] : [])) as ChatRow[]).filter(
+  // household-wide messages never reach permanent guests' private chats (same rule as Web Push, area: people)
+  const where = opts.userId ? "AND user_id = ? AND kind = 'private'" : "AND NOT (kind = 'private' AND user_id IN (SELECT id FROM users WHERE kind = 'guest'))";
+  return (db.prepare(`SELECT * FROM channel_chats WHERE channel = 'telegram' AND notify = 1 ${where} ORDER BY id`).all(...(opts.userId ? [opts.userId] : [])) as ChatRow[]).filter(
     (c) => !(c.kind === 'private' && c.user_id == null),
   );
 }
@@ -331,6 +335,20 @@ export function parseCommand(text: string, botName = ''): { cmd: Command; arg: s
   return { cmd: ALIASES[m[1].toLowerCase()] ?? 'unknown', arg: (m[3] ?? '').trim() };
 }
 
+/** A private chat of a permanent guest (area: people): the guest's visibility level applies here too. */
+const guestOf = (chat: ChatRow): HouseGuest | null => (chat.kind === 'private' && chat.user_id ? houseGuestFor(chat.user_id) : null);
+/** What a guest level opens up in the chat: the list for everyone, /wo from "stock", /kochen from "recipes", /heute only "family". */
+export function guestMayCommand(g: HouseGuest | null, cmd: Command | 'import' | 'action'): boolean {
+  if (!g) return true;
+  if (g.level === 'paused') return false;
+  if (cmd === 'import' || cmd === 'action') return false;
+  if (cmd === 'where') return levelRank(g.level) >= levelRank('stock');
+  if (cmd === 'cook') return levelRank(g.level) >= levelRank('recipes');
+  if (cmd === 'today') return g.level === 'family';
+  return true;
+}
+const guestNo = (g: HouseGuest) => esc(g.level === 'paused' ? t('Your access is paused at the moment.') : t('This part of the app is not shared with you.'));
+
 function actorFor(chat: ChatRow, from?: TgUser): string {
   if (chat.kind === 'private') return userName(chat.user_id) ?? 'Telegram';
   if (from) {
@@ -362,7 +380,7 @@ export function helpText(kind: 'private' | 'group') {
 }
 
 export function listText() {
-  const items = db.prepare('SELECT text, qty, note FROM shopping_items WHERE checked_at IS NULL ORDER BY created_at').all() as { text: string; qty: number | null; note: string | null }[];
+  const items = db.prepare(`SELECT text, qty, note FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} ORDER BY created_at`).all() as { text: string; qty: number | null; note: string | null }[];
   if (!items.length) return esc(t('The shopping list is empty.'));
   const shown = items.slice(0, 60).map((i) => `• ${esc(formatItem(i))}${i.note && !/^\d/.test(i.note) ? ` <i>(${esc(i.note)})</i>` : ''}`);
   if (items.length > 60) shown.push(esc(t('… and {n} more', { n: items.length - 60 })));
@@ -545,6 +563,10 @@ async function onMessage(m: TgMessage) {
   }
   db.prepare('UPDATE channel_chats SET last_seen_at = ? WHERE id = ?').run(now(), chat.id);
   const actor = actorFor(chat, m.from);
+  const guest = guestOf(chat);
+  if (guest?.level === 'paused') return send(chatId, guestNo(guest));
+  if (guest && (m.photo?.length || m.document) && !guestMayCommand(guest, 'import')) return send(chatId, guestNo(guest));
+  if (guest && cmd && !guestMayCommand(guest, cmd.cmd)) return send(chatId, guestNo(guest));
   try {
     if (m.photo?.length) {
       if (rateLimited(`tg-import:${chatId}`, 10, 60 * 60_000)) return send(chatId, esc(t('That was a lot at once – give me a minute.')));
@@ -586,6 +608,8 @@ async function onCallback(q: TgCallback) {
   const chat = msg ? linkedChat(msg.chat.id) : null;
   if (!chat || !msg) return answer(t('This chat isn’t connected to ToHuus Hub.'));
   if (rateLimited(`tg:${chat.chat_id}`, 30, 60_000)) return answer(t('That was a lot at once – give me a minute.'));
+  const guest = guestOf(chat);
+  if (guest && !guestMayCommand(guest, 'action')) return answer(guest.level === 'paused' ? t('Your access is paused at the moment.') : t('This part of the app is not shared with you.'));
   const m = (q.data ?? '').match(/^a:([a-z-]+):(\d+)$/);
   if (!m || !isNotifyAction(m[1])) return answer(t('This button is no longer valid.'));
   const action = m[1];

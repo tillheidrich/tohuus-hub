@@ -1,5 +1,6 @@
 import { Basket, Check, Coffee, Cookie, IceCream, MagnifyingGlass, Martini, Minus, Pizza, Plus } from '@phosphor-icons/react';
 import { FindList, type Found, useDebounce } from './Find';
+import { GuestVoice } from './Ha2';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -92,7 +93,7 @@ export function Guest() {
           <div className="logo"><img src={BRANDS.fredirando.logo} alt="" /></div>
           <div className="info">
             <h1>fredirando</h1>
-            <div className="muted small">{info.data.party ? `${info.data.party.name} · ${t('pick-up at the counter')}` : `${t('Kitchen & cellar')} · ${info.data.household}`}</div>
+            <div className="muted small">{info.data.party ? `${info.data.party.name} · ${t('pick-up at the counter')}` : `${t('Kitchen & pantry')} · ${info.data.household}`}</div>
             <div className="facts">
               <span><span className="stars">★★★★★</span> <b>{num(4.9)}</b> ({t('family')})</span>
               <span>{t('Delivery')} <b>{t('1–3 min')}</b></span>
@@ -160,9 +161,10 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
   };
   const tap = (item: any) => {
     if (!item.available) return;
-    // members always get the detail sheet (for a note); guests only when there are options
-    if (item.options?.length || src.member) {
-      setSel(Object.fromEntries((item.options ?? []).map((o: any) => [o.group, o.multi ? [] : [o.choices[0]]])));
+    // members always get the detail sheet (for a note); guests when there are options or the item asks for a note
+    if (item.options?.length || src.member || item.ask_note) {
+      // preselected choices come from the menu (area: menu); older menus preselect the first single choice
+      setSel(Object.fromEntries((item.options ?? []).map((o: any) => [o.group, Array.isArray(o.default) ? o.default : o.multi ? [] : [o.choices[0]]])));
       setItemNote('');
       setOpt(item);
     } else add(item);
@@ -260,7 +262,7 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
                       {i.image_path ? <img src={i.image_path} alt="" /> : <GroupIcon group={i.group} name={i.name} />}
                     </div>
                     <div style={{ fontWeight: 650, fontSize: 14, lineHeight: 1.2 }}>{i.name}</div>
-                    <div className="small muted">{!i.available ? (i.hint ?? t('all gone')) : i.hint ?? (i.options?.length ? t('with extras') : ' ')}</div>
+                    <div className="small muted">{!i.available ? (i.hint ?? t('all gone')) : i.hint ?? (i.description || (i.options?.length ? t('with extras') : ' '))}</div>
                     {qtyOf(i.id) > 0 && <span className="qty">{qtyOf(i.id)}</span>}
                   </button>
                 ))}
@@ -281,9 +283,10 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
       <Sheet open={Boolean(opt)} onClose={() => setOpt(null)} title={opt?.name}>
         {opt && (
           <div className="stack">
+            {opt.description && <p className="muted" style={{ margin: 0 }}>{opt.description}</p>}
             {(opt.options ?? []).map((o: any) => (
               <div key={o.group} className="field">
-                <label>{o.group}</label>
+                <label>{o.group}{o.required === false && <span className="muted" style={{ fontWeight: 400 }}> · {t('optional')}</span>}</label>
                 <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
                   {o.choices.map((c: string) => {
                     const on = sel[o.group]?.includes(c);
@@ -292,7 +295,7 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
                         key={c}
                         className={`chip ${on ? 'on' : ''}`}
                         onClick={() =>
-                          setSel((s) => ({ ...s, [o.group]: o.multi ? (on ? s[o.group].filter((x) => x !== c) : [...(s[o.group] ?? []), c]) : [c] }))
+                          setSel((s) => ({ ...s, [o.group]: o.multi ? (on ? s[o.group].filter((x) => x !== c) : [...(s[o.group] ?? []), c]) : on && o.required === false ? [] : [c] }))
                         }
                       >
                         {c}
@@ -303,11 +306,12 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
               </div>
             ))}
             <div className="field">
-              <label>{t('Note')}</label>
-              <input className="input" value={itemNote} onChange={(e) => setItemNote(e.target.value)} maxLength={120} placeholder={t('e.g. no ice, extra hot, the big bowl')} />
+              <label>{opt.note_hint || t('Note')}</label>
+              <input className="input" value={itemNote} onChange={(e) => setItemNote(e.target.value)} maxLength={120} placeholder={t('e.g. no ice, extra hot, the big bowl')} autoFocus={Boolean(opt.ask_note && !opt.options?.length)} />
             </div>
             <button
               className="btn primary lg"
+              disabled={(opt.options ?? []).some((o: any) => o.required && !(sel[o.group] ?? []).length)}
               onClick={() => {
                 add(opt, Object.values(sel).flat().filter((x) => !['Normal', 'Keins', 'Regular', 'None'].includes(x)), itemNote.trim());
                 setOpt(null);
@@ -385,6 +389,7 @@ function GuestStock({ token }: { token: string }) {
       ) : (
         <FindList things={things} grouped={!dq} />
       )}
+      {!dq && <GuestVoice token={token} />}
     </div>
   );
 }
@@ -415,14 +420,14 @@ function GuestShopping({ token }: { token: string }) {
 }
 
 function groupTint(g: string) {
-  if (/eis|ice/i.test(g)) return '#f6e6ea';
-  if (/getr|drink|kaffee|coffee/i.test(g)) return '#e8e2d8';
-  if (/extern|pizza/i.test(g)) return '#f3e3d6';
-  return '#e3ece4';
+  if (/eis|ice/i.test(g)) return 'var(--tint-5)';
+  if (/getr|drink|kaffee|coffee/i.test(g)) return 'var(--tint-1)';
+  if (/extern|pizza/i.test(g)) return 'var(--tint-4)';
+  return 'var(--tint-2)';
 }
 
 function GroupIcon({ group, name }: { group: string; name: string }) {
-  const props = { size: 54, weight: 'duotone' as const, color: '#3b3a36' };
+  const props = { size: 54, weight: 'duotone' as const, color: 'var(--tint-ink)' };
   if (/pizza/i.test(name) || /extern/i.test(group)) return <Pizza {...props} />;
   if (/eis|ice/i.test(group)) return <IceCream {...props} />;
   if (/kaffee|cappu|latte|espresso/i.test(name)) return <Coffee {...props} />;

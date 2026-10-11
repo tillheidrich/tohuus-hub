@@ -138,3 +138,11 @@ complete_care_task:
       selector:
         text:
     config_entry_id: *entry
+
+report_presence:
+  fields:
+    everyone_away:
+      required: true
+      selector:
+        boolean:
+    config_entry_id: *entry

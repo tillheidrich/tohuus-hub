@@ -254,7 +254,7 @@ describe('household region', () => {
   it('Swedish base names are known', async () => {
     const { BASE_LOCATIONS, BASE_CATEGORIES } = await import('../server/lib/basedata');
     expect(BASE_LOCATIONS.find((l) => l.key === 'fridge')?.sv).toBe('Kylskåp');
-    expect(BASE_LOCATIONS.find((l) => l.key === 'utility')?.sv).toBe('Tvättstuga');
+    expect(BASE_LOCATIONS.find((l) => l.key === 'utility')?.sv).toBe('Städskåp');
     expect(BASE_CATEGORIES.every((c) => c.sv.length > 0)).toBe(true);
   });
 });

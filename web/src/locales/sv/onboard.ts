@@ -21,7 +21,7 @@ export const onboard: Record<string, string> = {
   'Calm and clear': 'Lugnt och tydligt',
   'Which places do you have?': 'Vilka platser har ni?',
   'Tap to switch off what you don’t have. Places can hold food and non-food alike.': 'Tryck för att stänga av det ni inte har. En plats kan rymma både mat och annat.',
-  'Add your own, e.g. garage, chest freezer': 'Lägg till egen, t.ex. garage, frysbox',
+  'Add your own, e.g. hallway cupboard, shelf above the fridge': 'Lägg till egen, t.ex. hallskåpet, hyllan ovanför kylskåpet',
   '1 place': '1 plats',
   '{n} places': '{n} platser',
   Next: 'Nästa',

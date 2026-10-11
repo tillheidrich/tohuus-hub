@@ -13,6 +13,7 @@ import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
 import { safeFetch } from '../lib/net.js';
 import { fmtDay, t } from '../i18n.js';
+import { recordCorrection } from '../lib/quality.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -67,6 +68,8 @@ r.patch('/imports/:id/lines/:lineId', (req, res) => {
       qty: z.number().optional(),
       name: z.string().optional(),
       best_before: z.string().nullable().optional(),
+      unit: z.string().max(12).nullable().optional(),
+      price: z.number().min(-9999).max(9999).nullable().optional(),
     })
     .parse(req.body);
   const l = db
@@ -79,7 +82,7 @@ r.patch('/imports/:id/lines/:lineId', (req, res) => {
   const productId = b.product_id === undefined ? l.product_id : b.product_id;
   let action = b.action ?? l.action;
   if (b.product_id && !b.action && l.action === 'new') action = 'add';
-  db.prepare('UPDATE import_lines SET action=?, product_id=?, location_id=?, qty=?, name=?, best_before=?, confidence=? WHERE id=?').run(
+  db.prepare('UPDATE import_lines SET action=?, product_id=?, location_id=?, qty=?, name=?, best_before=?, confidence=?, unit=?, price=? WHERE id=?').run(
     action,
     productId,
     b.location_id === undefined ? l.location_id : b.location_id,
@@ -87,10 +90,14 @@ r.patch('/imports/:id/lines/:lineId', (req, res) => {
     b.name ?? l.name,
     b.best_before === undefined ? l.best_before : b.best_before,
     b.product_id ? 1 : l.confidence,
+    b.unit === undefined ? l.unit : b.unit,
+    b.price === undefined ? l.price : b.price,
     l.id,
   );
+  // corrections become household rules for the next receipts (quality.ts)
+  const { learned } = recordCorrection(l, { ...b, action: b.action ?? (action !== l.action ? action : undefined) }, actorName(req));
   emit('imports');
-  res.json({ ok: true });
+  res.json({ ok: true, learned });
 });
 
 r.post('/imports/:id/apply', (req, res) => res.json(applyImport(Number(req.params.id), actorName(req))));

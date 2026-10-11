@@ -67,7 +67,7 @@ export const de: Record<string, string> = {
   "Cookidoo only shows the steps after login – open the recipe there.": "Zubereitungsschritte sind bei Cookidoo nur mit Login sichtbar – Rezept dort öffnen.",
   "No JSON answer from the model": "Keine JSON-Antwort vom Modell",
   "No vision model configured (VISION_BASE_URL / VISION_MODEL)": "Kein Vision-Modell konfiguriert (VISION_BASE_URL / VISION_MODEL)",
-  "Ordered. Delivered. From kitchen & cellar.": "Bestellt. Gebracht. Aus Küche & Keller.",
+  "Ordered. Delivered. From kitchen & pantry.": "Bestellt. Gebracht. Aus Küche & Vorrat.",
   "Invalid input": "Ungültige Eingabe",
   "File too large (max. 15 MB)": "Datei zu groß (max. 15 MB)",
   "Error": "Fehler",

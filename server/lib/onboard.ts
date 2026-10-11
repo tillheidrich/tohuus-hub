@@ -84,6 +84,10 @@ export function wizardDue(state = onboardState()) {
 
 export type ChecklistKey = 'home' | 'invite' | 'stock' | 'phone' | 'recipe';
 
+/** Demo rows (area: tour) don't tick off the household's own first steps. */
+const notDemo = (col: string, table: string) =>
+  db.prepare(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'demo_rows'`).get() ? ` AND ${col} NOT IN (SELECT row_id FROM demo_rows WHERE tbl = '${table}')` : '';
+
 /** The five things that make the app useful in week one – derived from data, nothing to tick by hand. */
 export function checklist(userId?: number | null) {
   const state = onboardState();
@@ -92,9 +96,9 @@ export function checklist(userId?: number | null) {
   const items: { key: ChecklistKey; done: boolean }[] = [
     { key: 'home', done: state.step !== 'home' || state.closed || (Boolean(name) && !defaultNames.includes(name)) },
     { key: 'invite', done: count('SELECT COUNT(*) n FROM users') > 1 || safeCount('invites', `SELECT COUNT(*) n FROM invites WHERE revoked = 0 AND (used_at IS NOT NULL OR expires_at > datetime('now'))`) > 0 },
-    { key: 'stock', done: count('SELECT COUNT(DISTINCT product_id) n FROM stock WHERE qty > 0') > 0 },
+    { key: 'stock', done: count(`SELECT COUNT(DISTINCT product_id) n FROM stock WHERE qty > 0${notDemo('product_id', 'products')}`) > 0 },
     { key: 'phone', done: userId ? safeCount('push_subscriptions', 'SELECT COUNT(*) n FROM push_subscriptions WHERE user_id = ?', userId) > 0 : safeCount('push_subscriptions', 'SELECT COUNT(*) n FROM push_subscriptions') > 0 },
-    { key: 'recipe', done: count('SELECT COUNT(*) n FROM recipes') > 0 },
+    { key: 'recipe', done: count(`SELECT COUNT(*) n FROM recipes WHERE 1${notDemo('id', 'recipes')}`) > 0 },
   ];
   const done = items.filter((i) => i.done).length;
   return { items, done, total: items.length };
@@ -239,7 +243,7 @@ export const STARTER: Record<LocationKey, StarterItem[]> = {
     { key: 'sponges', en: 'Sponges', de: 'Schwämme', sv: 'Disksvampar', cat: 'household' },
     { key: 'cleaner', en: 'All-purpose cleaner', de: 'Allzweckreiniger', sv: 'Allrengöringsmedel', cat: 'household' },
   ],
-  cellar: [
+  shelf: [
     { key: 'water', en: 'Sparkling water', de: 'Mineralwasser', sv: 'Kolsyrat vatten', cat: 'drinks', on: true },
     { key: 'juice', en: 'Juice', de: 'Saft', sv: 'Juice', cat: 'drinks' },
     { key: 'beer', en: 'Beer', de: 'Bier', sv: 'Öl', cat: 'drinks' },

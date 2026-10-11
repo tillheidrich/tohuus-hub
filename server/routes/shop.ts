@@ -24,6 +24,7 @@ import {
   setStoreOrder,
   storeView,
 } from '../lib/shop.js';
+import { realProductId } from '../lib/share-core.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
 import { NOTIFY_ACTIONS, runNotifyAction } from '../lib/notify-actions.js';
@@ -42,7 +43,8 @@ const fail = (res: any, e: unknown) => res.status((e as any).status ?? 500).json
 
 r.get('/shop/list', (req, res) => {
   const store = req.query.store ? num(req.query.store) : null;
-  res.json({ ...storeView(store), sectionKeys: SECTIONS });
+  // discreet entries: the owner sees the real name; whoever shops may too, if the owner allows it (area: share)
+  res.json({ ...storeView(store, { userId: userId(req), shopping: req.query.mode === 'store' }), sectionKeys: SECTIONS });
 });
 
 r.get('/shop/stores', (_req, res) => res.json(listStores()));
@@ -82,7 +84,8 @@ r.post('/shop/items/:id/check', (req, res) => {
   const wasOpen = it.checked_at == null;
   db.prepare(`UPDATE shopping_items SET checked_at = ${b.on ? "datetime('now')" : 'NULL'}, checked_by = ?, in_basket = 0 WHERE id = ?`).run(b.on ? actorName(req) : null, it.id);
   let booked = false;
-  if (b.on && wasOpen && b.to_stock && it.product_id) booked = bookPurchase(it.product_id, it.qty, actorName(req));
+  const pid = realProductId(it);
+  if (b.on && wasOpen && b.to_stock && pid) booked = bookPurchase(pid, it.qty, actorName(req));
   emit('shopping', ...(booked ? (['stock'] as const) : []));
   res.json({ ok: true, booked });
 });

@@ -65,7 +65,7 @@ export function Invite() {
             <i />
           </div>
           <div className="h1" style={{ fontSize: 46, maxWidth: 460 }}>{info.data?.household || b.name}</div>
-          <p style={{ opacity: 0.7, maxWidth: 420, marginTop: 14 }}>{t('Freezer, cellar, pantry and household – with a shopping list, recipes and a bar for guests.')}</p>
+          <p style={{ opacity: 0.7, maxWidth: 420, marginTop: 14 }}>{t('Fridge, freezer, pantry and household – with a shopping list, recipes and a bar for guests.')}</p>
         </div>
         <div className="small" style={{ opacity: 0.6 }}>{t('Self-hosted · Open source')}</div>
       </div>

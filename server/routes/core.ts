@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled, visionEnabled } from '../config.js';
+import { appearanceFor } from '../lib/appearance.js';
 import { brand, db, getSetting, lang, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
 import { regionInfo } from '../lib/region.js';
@@ -35,11 +36,13 @@ import { deleteImage, fetchImage, saveImage } from '../lib/images.js';
 import { DEFAULT_NOTIFY, notify, notifySettings } from '../lib/notify.js';
 import { lookupBarcode, searchProducts } from '../lib/off.js';
 import { overview } from '../lib/overview.js';
+import { guestSafeOverview } from '../lib/people-policy.js';
 import { haSettings } from '../lib/plan.js';
 import { findThings } from '../lib/find.js';
 import { buildExport, showNamesOnLogin } from '../lib/data.js';
 import { t } from '../i18n.js';
 import { setDateKind } from '../lib/retail.js';
+import { applyShareView, notPrivate, realProductId } from '../lib/share-core.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -77,6 +80,7 @@ r.get('/me', (req, res) => {
     language: lang(),
     region: regionInfo(),
     features: { vision: visionEnabled(), email: smtpEnabled() },
+    appearance: appearanceFor(actor.kind === 'user' ? actor.userId : null),
     version: process.env.npm_package_version ?? '0.1.0',
   });
 });
@@ -87,7 +91,7 @@ r.get('/events', (req, res) => addClient(res));
 
 // ---------------------------------------------------------------- overview
 
-r.get('/overview', (_req, res) => res.json(overview()));
+r.get('/overview', (req, res) => res.json(guestSafeOverview(req.actor, overview())));
 
 // ---------------------------------------------------------------- where is what
 
@@ -190,7 +194,7 @@ const productSchema = z.object({
   is_staple: z.boolean().optional(),
   orderable: z.boolean().optional(),
   order_group: z.string().nullable().optional(),
-  order_options: z.array(z.object({ group: z.string(), choices: z.array(z.string()), multi: z.boolean().default(false) })).optional(),
+  order_options: z.array(z.object({ group: z.string(), choices: z.array(z.string()), multi: z.boolean().default(false), required: z.boolean().optional(), default: z.array(z.string()).optional() })).optional(),
   notes: z.string().nullable().optional(),
   spot: z.string().max(120).nullable().optional(),
   archived: z.boolean().optional(),
@@ -424,7 +428,7 @@ r.get('/lookup/match', (req, res) => {
 
 // ---------------------------------------------------------------- shopping list
 
-r.get('/shopping', (_req, res) => {
+r.get('/shopping', (req, res) => {
   const items = db
     .prepare(
       `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit,
@@ -433,8 +437,9 @@ r.get('/shopping', (_req, res) => {
        WHERE s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day')
        ORDER BY s.checked_at IS NOT NULL, s.created_at DESC`,
     )
-    .all();
-  res.json(items);
+    .all() as { id: number; text: string; product_id: number | null; note: string | null }[];
+  // discreet / private entries (area: share): real names only for their owner
+  res.json(applyShareView(items, { userId: req.actor?.userId ?? null }));
 });
 
 r.post('/shopping', (req, res) => {
@@ -462,8 +467,9 @@ r.patch('/shopping/:id', (req, res) => {
     db.prepare(`UPDATE shopping_items SET checked_at = ${b.checked ? "datetime('now')" : 'NULL'}, checked_by = ? WHERE id = ?`).run(b.checked ? actorName(req) : null, it.id);
   if (b.text !== undefined || b.qty !== undefined || b.note !== undefined)
     db.prepare('UPDATE shopping_items SET text = ?, qty = ?, note = ? WHERE id = ?').run(b.text ?? it.text, b.qty === undefined ? it.qty : b.qty, b.note === undefined ? it.note : b.note, it.id);
-  if (b.checked && wasOpen && b.to_stock && it.product_id) {
-    adjustStock({ productId: it.product_id, delta: it.qty ?? 1, reason: 'purchase', actor: actorName(req) });
+  const pid = realProductId(it);
+  if (b.checked && wasOpen && b.to_stock && pid) {
+    adjustStock({ productId: pid, delta: it.qty ?? 1, reason: 'purchase', actor: actorName(req) });
   }
   emit('shopping');
   res.json({ ok: true });
@@ -482,7 +488,8 @@ r.post('/shopping/clear-checked', (_req, res) => {
 });
 
 r.get('/shopping/export.txt', (_req, res) => {
-  const items = db.prepare('SELECT text, qty FROM shopping_items WHERE checked_at IS NULL ORDER BY created_at').all() as { text: string; qty: number | null }[];
+  // shared with others (WhatsApp …): private entries stay out, discreet ones keep their placeholder
+  const items = db.prepare(`SELECT text, qty FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} ORDER BY created_at`).all() as { text: string; qty: number | null }[];
   res.type('text/plain').send(items.map((i) => `- ${i.qty && i.qty !== 1 ? i.qty + '× ' : ''}${i.text}`).join('\n'));
 });
 
@@ -499,7 +506,7 @@ r.post('/notifications/read', (_req, res) => {
 
 // ---------------------------------------------------------------- settings / admin
 
-r.get('/settings', (_req, res) => {
+r.get('/settings', (req, res) => {
   res.json({
     household: getSetting('household.name', t('Our home')),
     brand: brand(),
@@ -509,7 +516,8 @@ r.get('/settings', (_req, res) => {
     importAutoApply: getSetting('import.autoApply', false),
     baseUrl: config.baseUrl,
     features: { vision: visionEnabled(), email: smtpEnabled(), visionModel: config.vision.model || null },
-    mcpPath: config.mcpPathSecret ? `${config.baseUrl}/mcp/${config.mcpPathSecret}` : null,
+    // the path secret grants MCP access – only admins get to see it
+    mcpPath: config.mcpPathSecret && req.actor?.role === 'admin' ? `${config.baseUrl}/mcp/${config.mcpPathSecret}` : null,
   });
 });
 
@@ -612,13 +620,4 @@ r.get('/export.json', requireAdmin, (_req, res) => {
   res.json(out);
 });
 
-r.post('/demo/reset', requireAdmin, (_req, res) => {
-  const tx = db.transaction(() => {
-    for (const t of ['order_lines', 'orders', 'import_lines', 'imports', 'cook_log', 'recipe_ingredients', 'recipes', 'shopping_items', 'movements', 'stock', 'product_aliases', 'product_codes', 'products', 'guest_links', 'notifications'])
-      db.prepare(`DELETE FROM ${t}`).run();
-    setSetting('demo.seeded', true);
-  });
-  tx();
-  emit('stock', 'products', 'shopping', 'recipes', 'imports', 'orders');
-  res.json({ ok: true });
-});
+// POST /demo/reset moved to routes/tour.ts (scoped reset with automatic backup; the old path is an alias there)

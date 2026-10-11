@@ -15,6 +15,7 @@ from .conftest import API, URL, load
 async def test_user_flow(hass: HomeAssistant, aioclient_mock) -> None:
     aioclient_mock.get(f"{API}/info", json=load("info.json"))
     aioclient_mock.get(f"{API}/state", json=load("state.json"))
+    aioclient_mock.post(f"{API}/bridge/sync", json={"config": {}, "ops": []})
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_URL: "tohuus.local:8080/", CONF_TOKEN: " sw_test ", CONF_VERIFY_SSL: True})

@@ -1,1 +1,117 @@
-export const quality: Record<string, string> = {};
+export const quality: Record<string, string> = {
+  // review page: recognition report
+  learned: 'gelernt',
+  likely: 'wahrscheinlich',
+  'not recognised': 'nicht erkannt',
+  'recognised from the receipt header': 'am Briefkopf des Bons erkannt',
+  'recognised from the web address or company name': 'an Webadresse oder Firmenname erkannt',
+  'recognised from the layout': 'am Aufbau des Dokuments erkannt',
+  'learned from your correction (detected: {store})': 'aus deiner Korrektur gelernt (erkannt war: {store})',
+  'learned from your correction': 'aus deiner Korrektur gelernt',
+  'corrected by you': 'von dir korrigiert',
+  'read by the image model': 'vom Bildmodell gelesen',
+  Recognition: 'Erkennung',
+  '{n} of {m} lines recognised automatically': '{n} von {m} Zeilen automatisch erkannt',
+  'No product lines': 'Keine Artikelzeilen',
+  'learned from your corrections: {n}': 'aus deinen Korrekturen gelernt: {n}',
+  'recognised: {n}': 'erkannt: {n}',
+  'likely, please check: {n}': 'wahrscheinlich, bitte kurz prüfen: {n}',
+  'not recognised: {n}': 'nicht erkannt: {n}',
+  'Store unknown': 'Geschäft unbekannt',
+  change: 'ändern',
+  'set store': 'Geschäft angeben',
+  'The lines add up to the receipt total ({total}).': 'Die Zeilen ergeben genau die Bonsumme ({total}).',
+  'The lines add up to {sum}, the receipt says {total} – a line may be missing or misread.':
+    'Die Zeilen ergeben {sum}, auf dem Bon stehen {total} – vielleicht fehlt eine Zeile oder wurde falsch gelesen.',
+  'Includes a discount on the whole purchase: {amount}': 'Enthält einen Rabatt auf den ganzen Einkauf: {amount}',
+  'Learned from your corrections: 1 rule': 'Aus deinen Korrekturen gelernt: 1 Regel',
+  'Learned from your corrections: {n} rules': 'Aus deinen Korrekturen gelernt: {n} Regeln',
+  'Corrections you make here are remembered for this household – next time the same receipt line is recognised on its own.':
+    'Was du hier korrigierst, merkt sich euer Haushalt – beim nächsten Mal wird dieselbe Bonzeile von selbst erkannt.',
+  'Help improve recognition': 'Erkennung verbessern helfen',
+  'Store saved – receipts like this one will be recognised as {store}.': 'Geschäft gespeichert – solche Bons werden künftig als {store} erkannt.',
+  'Store saved.': 'Geschäft gespeichert.',
+  'Which store is this?': 'Welches Geschäft ist das?',
+  'Or type the name': 'Oder Namen eintippen',
+  'e.g. farm shop at the market': 'z. B. Hofladen am Markt',
+  'This import has no receipt text, so the store is only set for this import.':
+    'Zu diesem Import gibt es keinen Bontext – das Geschäft gilt deshalb nur für diesen Import.',
+  // fixture
+  'This turns the receipt into an anonymised test file for the ToHuus Hub project, so receipts from this store are read better for everyone. Nothing is sent automatically – you decide whether to download it, open a prefilled GitHub issue or an e-mail.':
+    'Daraus wird eine anonymisierte Testdatei für das ToHuus-Hub-Projekt, damit Bons aus diesem Geschäft für alle besser gelesen werden. Es wird nichts automatisch verschickt – du entscheidest, ob du sie herunterlädst, als vorausgefülltes GitHub-Issue öffnest oder per E-Mail schickst.',
+  'Include product names': 'Produktnamen mitschicken',
+  'How you named the products (e.g. “Oat milk”) helps to learn abbreviations. Leave it off if your product names are personal.':
+    'Wie ihr die Produkte nennt (z. B. „Haferdrink“), hilft beim Lernen von Abkürzungen. Lass es aus, wenn eure Produktnamen persönlich sind.',
+  'Removed or changed:': 'Entfernt oder verändert:',
+  'nothing personal found': 'nichts Persönliches gefunden',
+  'Prices, quantities and the store chain stay – that is what the parser needs.': 'Preise, Mengen und die Handelskette bleiben – genau das braucht die Erkennung.',
+  'There is no receipt text for this import (photo), so the file is rebuilt from the recognised lines.':
+    'Zu diesem Import gibt es keinen Bontext (Foto), deshalb wird die Datei aus den erkannten Zeilen nachgebaut.',
+  'After anonymising, the receipt reads slightly differently ({a} → {b} lines). That is fine – the maintainer sees it in the file.':
+    'Nach dem Anonymisieren liest sich der Bon etwas anders ({a} → {b} Zeilen). Das ist in Ordnung – das steht für die Entwickler mit in der Datei.',
+  'I read the preview and there is nothing personal left in it.': 'Ich habe die Vorschau gelesen, es steht nichts Persönliches mehr drin.',
+  'GitHub issue': 'GitHub-Issue',
+  'The receipt is too long for a link – download the file first and attach it to the issue or e-mail.':
+    'Der Bon ist zu lang für einen Link – lade die Datei zuerst herunter und häng sie an das Issue oder die E-Mail an.',
+  'The e-mail opens without a recipient – the project address is in the README.': 'Die E-Mail öffnet sich ohne Empfänger – die Projektadresse steht in der README.',
+  // correcting a line
+  'Please enter a valid number.': 'Bitte gib eine gültige Zahl ein.',
+  'Got it – this line now counts as {n} per pack, also on the next receipts.': 'Alles klar – diese Zeile zählt jetzt als {n} pro Packung, auch auf den nächsten Bons.',
+  'Got it – remembered for the next receipts.': 'Alles klar – für die nächsten Bons gemerkt.',
+  'Correct this line': 'Zeile korrigieren',
+  correct: 'korrigieren',
+  'A pack of 10 eggs on one line? Enter 10 – it is remembered as the pack size.': '10er-Packung Eier in einer Zeile? Gib 10 ein – das wird als Packungsgröße gemerkt.',
+  'Price on the receipt': 'Preis auf dem Bon',
+  pcs: 'Stk',
+  pack: 'Pck',
+  // recognition page
+  'Receipt recognition': 'Bon-Erkennung',
+  'Could not load the numbers.': 'Die Zahlen konnten nicht geladen werden.',
+  'Import a receipt': 'Bon importieren',
+  'Once a few receipts are in, you see here how many lines were recognised without anybody having to correct them.':
+    'Sobald ein paar Bons drin sind, siehst du hier, wie viele Zeilen erkannt wurden, ohne dass jemand korrigieren musste.',
+  'of the lines on the last {n} receipts were recognised without a correction.': 'der Zeilen auf den letzten {n} Bons wurden ohne Korrektur erkannt.',
+  '{n} lines came from rules you taught': '{n} Zeilen kamen aus euren gelernten Regeln',
+  '{n} lines were corrected': '{n} Zeilen wurden korrigiert',
+  '{n} lines were new or not recognised': '{n} Zeilen waren neu oder nicht erkannt',
+  'Nothing had to be corrected.': 'Nichts musste korrigiert werden.',
+  'Recent receipts': 'Letzte Bons',
+  'Learned from your corrections': 'Aus euren Korrekturen gelernt',
+  '1 rule': '1 Regel',
+  '{n} rules': '{n} Regeln',
+  'Nothing learned yet': 'Noch nichts gelernt',
+  'When you correct a line while checking an import – another product, a pack of 10, “skip the carrier bag” – ToHuus Hub remembers it for this household and does it on its own next time.':
+    'Wenn du beim Prüfen eines Imports eine Zeile korrigierst – anderes Produkt, 10er-Packung, „Tragetasche weglassen“ –, merkt sich ToHuus Hub das für euren Haushalt und macht es beim nächsten Mal von selbst.',
+  'used {n}×': '{n}× genutzt',
+  'Rules stay in this household. Nothing is shared – unless you send an anonymised receipt yourself via “Help improve recognition” in an import.':
+    'Die Regeln bleiben in eurem Haushalt. Es wird nichts geteilt – außer du schickst selbst einen anonymisierten Bon über „Erkennung verbessern helfen“ in einem Import.',
+  'is {store}': 'ist {store}',
+  skipped: 'wird weggelassen',
+  'counts as {n}': 'zählt als {n}',
+  'only at {store}': 'nur bei {store}',
+  'at every store': 'in jedem Geschäft',
+  'Forgotten. The next receipts are read without this rule.': 'Vergessen. Die nächsten Bons werden ohne diese Regel gelesen.',
+  'Learned rule': 'Gelernte Regel',
+  'Store name': 'Name des Geschäfts',
+  'Skip this line': 'Diese Zeile weglassen',
+  'For carrier bags, vouchers and things that never go into stock.': 'Für Tragetaschen, Gutscheine und alles, was nie in den Bestand gehört.',
+  'One receipt line counts as': 'Eine Bonzeile zählt als',
+  'At every store': 'In jedem Geschäft',
+  'Learned at {store}.': 'Gelernt bei {store}.',
+  'Applies everywhere.': 'Gilt überall.',
+  'Last used {date}.': 'Zuletzt genutzt am {date}.',
+  'Not used yet.': 'Noch nicht genutzt.',
+  'Forget this rule': 'Regel vergessen',
+  // help
+  'Receipts are read better over time': 'Bons werden mit der Zeit besser gelesen',
+  'When you correct a receipt line while checking an import, ToHuus Hub remembers it for your household.':
+    'Wenn du beim Prüfen eines Imports eine Bonzeile korrigierst, merkt sich ToHuus Hub das für euren Haushalt.',
+  'Another product, a pack of 10 counted as one, “skip the carrier bag”: just correct it once in the review.':
+    'Anderes Produkt, 10er-Packung als eins gezählt, „Tragetasche weglassen“: einfach einmal beim Prüfen korrigieren.',
+  'Next time the same line is filled in on its own and marked “learned”.': 'Beim nächsten Mal wird dieselbe Zeile von selbst ausgefüllt und als „gelernt“ markiert.',
+  'Imports › Recognition shows how many lines were recognised without a correction, per store, and lists the learned rules to change or forget.':
+    'Importe › Erkennung zeigt, wie viele Zeilen ohne Korrektur erkannt wurden, je Geschäft, und listet die gelernten Regeln zum Ändern oder Vergessen.',
+  '“Help improve recognition” in an import makes an anonymised test file for the project. Nothing is sent automatically – you download it or open a prefilled issue or e-mail yourself.':
+    '„Erkennung verbessern helfen“ in einem Import erstellt eine anonymisierte Testdatei für das Projekt. Nichts wird automatisch verschickt – du lädst sie selbst herunter oder öffnest ein vorausgefülltes Issue oder eine E-Mail.',
+  'Open recognition': 'Erkennung öffnen',
+};

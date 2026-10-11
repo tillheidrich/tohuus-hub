@@ -8,6 +8,8 @@ from typing import Final
 DOMAIN: Final = "tohuus_hub"
 MANUFACTURER: Final = "ToHuus Hub"
 API_VERSION: Final = 1
+# keep in step with manifest.json
+VERSION: Final = "0.2.0"
 
 CONF_FEATURES: Final = "features"
 CONF_LIVE_UPDATES: Final = "live_updates"
@@ -16,6 +18,12 @@ CONF_DISPLAY_WIDTH: Final = "display_width"
 CONF_DISPLAY_HEIGHT: Final = "display_height"
 CONF_COOKIDOO_SYNC: Final = "cookidoo_sync"
 CONF_COOKIDOO_ENTITY: Final = "cookidoo_entity"
+CONF_BRIDGE: Final = "bridge"
+
+# Two-way bridge ("what Home Assistant already does"): safety-net interval, the rest is event-driven
+BRIDGE_INTERVAL: Final = timedelta(minutes=5)
+# fired after an NFC tag scan was forwarded to ToHuus Hub (result of its quick action)
+EVENT_TAG_RESULT: Final = "tohuus_hub_tag"
 
 # Cookidoo week plan → ToHuus Hub (the official Cookidoo integration's calendar)
 DEFAULT_COOKIDOO_ENTITY: Final = "calendar.cookidoo_speiseplan"
@@ -65,3 +73,4 @@ SERVICE_PLAN_MEAL: Final = "plan_meal"
 SERVICE_ORDER: Final = "order"
 SERVICE_APPROVE_KID_WISH: Final = "approve_kid_wish"
 SERVICE_COMPLETE_CARE_TASK: Final = "complete_care_task"
+SERVICE_REPORT_PRESENCE: Final = "report_presence"

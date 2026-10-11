@@ -33,6 +33,7 @@ import { type Product, connectEvents, fmtQty, invalidate, patch, post, put, useA
 import { BRANDS, applyBrand, currentBrand } from '../brand';
 import { locale, setLang, t } from '../i18n';
 import { Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { EditMenuButton } from './Menu';
 
 // ------------------------------------------------------------------ shared
 
@@ -424,6 +425,7 @@ function MenuEditor({ items, onChange }: { items: MenuItem[]; onChange: (i: Menu
         {q.trim() && hits.length === 0 && <div className="small muted" style={{ marginTop: 8 }}>{t('Nothing in stock matches “{q}”.', { q: q.trim() })}</div>}
       </div>
       <p className="small muted" style={{ margin: 0 }}>{t('Tap “no limit” to set a maximum per guest, e.g. 2 ice creams for each child.')}</p>
+      <EditMenuButton className="btn ghost sm" label={t('Edit the menu itself – pictures, choices, coffee …')} />
     </div>
   );
 }

@@ -1,0 +1,42 @@
+                    EDEKA
+          EDEKA Center Muster e.K.
+             Musterstraße 12
+             99999 Musterstadt
+            Tel.: 01234 567890
+          USt-IdNr.: DE999999999
+                                          EUR
+Hafermilch Barista 1l                   1,79 A
+Bio Bananen                             1,64 A
+  0,548 kg x 2,99 EUR/kg
+Apfel Elstar lose                       1,45 A
+  Handeingabe 0,486 kg x 2,99 EUR/kg
+Joghurt Natur 3,8% 500g                 2,58 A
+  2 Stk x 1,29
+Mineralwasser Medium 6x1,5l             3,49 B
+Pfand 6 x 0,25                          1,50 B
+Spülmaschinentabs 40St                  4,99 B
+Rabatt 20%                             -1,00 B
+Leergut                                -2,25 B
+Tragetasche Papier                      0,20 B
+----------------------------------------------
+Posten: 10
+SUMME EUR                              14,39
+----------------------------------------------
+Geg. Girocard EUR                      14,39
+Karte: girocard  Nr. ############4321 0001
+Terminal-ID: 55443322   Trace-Nr.: 012345
+Steuer %      Netto    Steuer    Brutto
+A=  7,0%       6,98      0,49      7,47
+B= 19,0%       5,81      1,11      6,92
+DeutschlandCard Nr.: 3083 7012 3456 7890
+Gesammelte Punkte: 7   Punktestand: 1.234
+Es bediente Sie: Erika Mustermann
+TSE-Transaktion: 1234567
+TSE-Signaturzähler: 7654321
+TSE-Start: 2026-10-08T17:41:12.000
+TSE-Stop: 2026-10-08T17:43:55.000
+TSE-Seriennummer: 9f8e7d6c5b4a39281706f5e4d3c2b1a0
+TSE-Signatur: MEUCIQD9aZ0bX1cY2dW3eV4fU5gT6hS7iR8jQ9kP0lO1mN2oM3pL4qK5rJ6sI7tH8uG9vF0wE1xD2yC3zB4aA5bZ6cY7dX8eW9fV0g
+08.10.2026  17:43   Bon-Nr.: 4711  Kasse: 3  Bed.: 205
+Vielen Dank für Ihren Einkauf!
+www.edeka.de

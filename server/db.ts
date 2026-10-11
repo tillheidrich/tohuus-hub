@@ -295,8 +295,29 @@ migrations.forEach((sql, i) => {
  * A name runs exactly once; never edit the SQL of a name that has shipped – add 'party-2' instead.
  */
 db.exec(`CREATE TABLE IF NOT EXISTS _migrations_named (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+let preMigrationBackupDone = false;
+/** Before the first pending migration of an existing household, keep a copy of the database (shows up as a manual backup). */
+function preMigrationBackup() {
+  if (preMigrationBackupDone) return;
+  preMigrationBackupDone = true;
+  try {
+    const hasUsers = db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'").get() && db.prepare('SELECT 1 FROM users LIMIT 1').get();
+    if (!hasUsers) return;
+    const dir = path.join(config.dataDir, 'backups');
+    fs.mkdirSync(dir, { recursive: true });
+    const p = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date());
+    const [day, time] = p.split(' ');
+    const file = path.join(dir, `tohuus-${day}-${time.replace(/:/g, '')}-manual.db`);
+    if (!fs.existsSync(file)) db.exec(`VACUUM INTO '${file.replace(/'/g, "''")}'`);
+    console.log(`[db] backup before migrations: ${path.basename(file)}`);
+  } catch (e) {
+    console.warn('[db] backup before migrations failed', e);
+  }
+}
+
 export function migrate(name: string, sql: string) {
   if (db.prepare('SELECT 1 FROM _migrations_named WHERE name = ?').get(name)) return;
+  preMigrationBackup();
   db.transaction(() => {
     db.exec(sql);
     db.prepare('INSERT INTO _migrations_named (name) VALUES (?)').run(name);

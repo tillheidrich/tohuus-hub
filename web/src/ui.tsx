@@ -75,7 +75,8 @@ export function Ic({ name, size = 20, weight = 'regular' as const }: { name: str
 
 // ------------------------------------------------------------------ thumbs & badges
 
-const HUES = ['#e9e3d6', '#dfe9e2', '#e3e6ef', '#efe2dc', '#e8e2ee', '#e2ecec'];
+// soft tints from the design tokens (they switch with light / dark)
+const HUES = ['var(--tint-1)', 'var(--tint-2)', 'var(--tint-3)', 'var(--tint-4)', 'var(--tint-5)', 'var(--tint-6)'];
 export function Thumb({ p, size = 52, className = '' }: { p: { name: string; image_path?: string | null }; size?: number; className?: string }) {
   const [broken, setBroken] = useState(false);
   const hue = HUES[(p.name.charCodeAt(0) + p.name.length) % HUES.length];
@@ -84,7 +85,7 @@ export function Thumb({ p, size = 52, className = '' }: { p: { name: string; ima
       {p.image_path && !broken ? (
         <img src={p.image_path} alt="" loading="lazy" onError={() => setBroken(true)} />
       ) : (
-        <div style={{ background: hue, width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: '#3b3a36' }}>
+        <div style={{ background: hue, width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: 'var(--tint-ink)' }}>
           <span className="initial" style={className.includes('lg') ? { fontSize: 64 } : undefined}>
             {p.name.replace(/[^A-Za-zÄÖÜäöü0-9]/g, '').slice(0, 2)}
           </span>
@@ -127,13 +128,8 @@ export function statusText(s: Status) {
   return t(STATUS_LABEL[s]);
 }
 
-export function Avatar({ name, color = '#2f5bea', size = 30 }: { name: string; color?: string; size?: number }) {
-  return (
-    <span className="avatar" style={{ background: color, width: size, height: size, fontSize: size * 0.42 }}>
-      {name.slice(0, 1).toUpperCase()}
-    </span>
-  );
-}
+/** One avatar for every person: photo, animal or initials (area: people – web/src/people/Avatar.tsx). */
+export { Avatar } from './people/Avatar';
 
 // ------------------------------------------------------------------ inputs
 
@@ -188,9 +184,23 @@ export function Sheet({ open, onClose, title, children, wide = false, footer }: 
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    // keyboard-aware: the sheet never grows taller than what is visible above the on-screen keyboard
+    const vv = window.visualViewport;
+    const fit = () => {
+      if (!vv) return;
+      document.documentElement.style.setProperty('--vvh', `${Math.round(vv.height)}px`);
+      document.documentElement.style.setProperty('--vvt', `${Math.round(vv.offsetTop)}px`);
+    };
+    fit();
+    vv?.addEventListener('resize', fit);
+    vv?.addEventListener('scroll', fit);
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
+      vv?.removeEventListener('resize', fit);
+      vv?.removeEventListener('scroll', fit);
+      document.documentElement.style.removeProperty('--vvh');
+      document.documentElement.style.removeProperty('--vvt');
     };
   }, [open, onClose]);
   if (!open) return null;

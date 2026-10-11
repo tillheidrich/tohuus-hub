@@ -67,32 +67,10 @@ export function Members({ me, admin }: { me: Me; admin: boolean }) {
             <UserPlus size={16} /> {t('Invite someone')}
           </button>
         </div>
-        {users.isLoading ? (
-          <Skeleton n={2} />
-        ) : users.error ? (
-          <div className="card pad small" style={{ color: 'var(--empty)' }}>{(users.error as Error).message}</div>
-        ) : (
-          <div className="list">
-            {(users.data ?? []).map((u) => (
-              <div key={u.id} className="li">
-                <Avatar name={u.name} color={u.color} />
-                <div className="grow">
-                  <div className="title">{u.name}{u.id === me.actor.userId ? ` · ${t('you')}` : ''}</div>
-                  <div className="sub">{u.role === 'admin' ? t('Admin') : t('Member')}</div>
-                </div>
-                {u.id !== me.actor.userId && (
-                  <button
-                    className="icon-btn plain"
-                    onClick={() => confirm(t('Remove {name}?', { name: u.name })) && del(`/users/${u.id}`).then(() => invalidate('users', 'users-public'))}
-                    aria-label={t('Remove')}
-                  >
-                    <Trash size={16} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* everybody (members, guests, children) is listed and edited in "Our household" above (area: people) */}
+        <p className="small muted" style={{ margin: 0 }}>
+          {users.error ? (users.error as Error).message : t('Family members get a personal link and choose their own password, passkey or e-mail sign-in.')}
+        </p>
       </section>
 
       {(invites.data ?? []).length > 0 && (

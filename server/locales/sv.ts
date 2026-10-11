@@ -67,7 +67,7 @@ export const sv: Record<string, string> = {
   'Cookidoo only shows the steps after login – open the recipe there.': 'Cookidoo visar stegen bara efter inloggning – öppna receptet där.',
   'No JSON answer from the model': 'Inget JSON-svar från modellen',
   'No vision model configured (VISION_BASE_URL / VISION_MODEL)': 'Ingen bildmodell konfigurerad (VISION_BASE_URL / VISION_MODEL)',
-  'Ordered. Delivered. From kitchen & cellar.': 'Beställt. Levererat. Från kök & källare.',
+  'Ordered. Delivered. From kitchen & pantry.': 'Beställt. Levererat. Från kök & skafferi.',
   'Invalid input': 'Ogiltig inmatning',
   'File too large (max. 15 MB)': 'Filen är för stor (max 15 MB)',
   Error: 'Fel',

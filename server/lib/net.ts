@@ -19,18 +19,29 @@ const V4_BLOCK: [string, number][] = [
   ['192.0.0.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['224.0.0.0', 3],
 ];
 
+/**
+ * IPv6 ranges that are local or can lead to an IPv4 address: unspecified/loopback/IPv4-compatible (::/96),
+ * NAT64 (64:ff9b::/96, 64:ff9b:1::/48), 6to4 (2002::/16), unique local, link local, multicast.
+ * IPv4-mapped addresses (::ffff:a.b.c.d – also in their hex form ::ffff:7f00:1, which is how `new URL()`
+ * normalises them) are checked against the IPv4 list by net.BlockList itself.
+ */
+const V6_BLOCK: [string, number][] = [['::', 96], ['64:ff9b::', 96], ['64:ff9b:1::', 48], ['2002::', 16], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8]];
+const BLOCK = new net.BlockList();
+for (const [base, bits] of V4_BLOCK) BLOCK.addSubnet(base, bits, 'ipv4');
+for (const [base, bits] of V6_BLOCK) BLOCK.addSubnet(base, bits, 'ipv6');
+
 export function isPrivateIp(ip: string): boolean {
   if (net.isIPv4(ip)) {
     const n = v4ToInt(ip);
     return V4_BLOCK.some(([base, bits]) => (n >>> (32 - bits)) === (v4ToInt(base) >>> (32 - bits)));
   }
   if (net.isIPv6(ip)) {
-    const l = ip.toLowerCase();
-    if (l === '::' || l === '::1') return true;
-    const mapped = l.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mapped) return isPrivateIp(mapped[1]);
-    if (/^f[cd]/.test(l) || /^fe[89ab]/.test(l) || /^ff/.test(l)) return true;
-    return false;
+    const l = ip.toLowerCase().replace(/%.*$/, '');
+    try {
+      return BLOCK.check(l, 'ipv6');
+    } catch {
+      return true;
+    }
   }
   return true;
 }

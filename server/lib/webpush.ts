@@ -7,6 +7,8 @@ import webpush from 'web-push';
 import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
 import { t } from '../i18n.js';
+// users.kind (permanent guests) must exist before sendPush filters on it
+import './people-policy.js';
 
 migrate(
   'shop-push-1',
@@ -94,10 +96,14 @@ export function actionsFor(event: string, data: Record<string, unknown> = {}): {
 }
 
 /** Send to every subscribed device (optionally only one member's). Dead subscriptions are removed. */
-export async function sendPush(msg: PushMessage, opts: { userId?: number } = {}): Promise<boolean> {
-  const subs = db
-    .prepare(`SELECT * FROM push_subscriptions ${opts.userId ? 'WHERE user_id = ?' : ''}`)
+export async function sendPush(msg: PushMessage, opts: { userId?: number; excludeUserIds?: number[] } = {}): Promise<boolean> {
+  // ha2: members whose notifications go through Home Assistant instead are left out
+  const skip = new Set(opts.excludeUserIds ?? []);
+  let subs = db
+    // household-wide messages never reach permanent guests' devices (area: people) – only messages addressed to them
+    .prepare(`SELECT * FROM push_subscriptions ${opts.userId ? 'WHERE user_id = ?' : "WHERE user_id IS NULL OR user_id NOT IN (SELECT id FROM users WHERE kind = 'guest')"}`)
     .all(...(opts.userId ? [opts.userId] : [])) as { id: number; endpoint: string; p256dh: string; auth: string; fails: number }[];
+  if (skip.size) subs = subs.filter((s) => !skip.has((s as { user_id?: number | null }).user_id ?? -1));
   if (subs.length === 0) return false;
   const v = vapidKeys();
   const payload = JSON.stringify(msg);

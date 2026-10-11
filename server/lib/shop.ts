@@ -7,6 +7,7 @@ import { BASE_CATEGORIES } from './basedata.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, guessCategory, matchProduct } from './catalog.js';
 import { norm, tokens } from './text.js';
+import { type ShareInfo, type Viewer, applyShareView, realProductId } from './share-core.js';
 import {
   CATEGORY_SECTION,
   type AisleModel,
@@ -69,7 +70,7 @@ function categorySection(categoryId: number | null | undefined): Section | null 
     if (c) {
       key = BASE_CATEGORIES.find((b) => b.en === c.name || b.de === c.name || b.sv === c.name)?.key ?? null;
       if (!key) {
-        // custom category: guess from its name ("Getränke Keller" → drinks)
+        // custom category: guess from its name ("Getränke Regal" → drinks)
         const g = guessCategory(c.name);
         const gc = g ? (db.prepare('SELECT name FROM categories WHERE id = ?').get(g) as { name: string } | undefined) : undefined;
         key = gc ? (BASE_CATEGORIES.find((b) => b.en === gc.name || b.de === gc.name || b.sv === gc.name)?.key ?? null) : null;
@@ -227,6 +228,8 @@ export interface ShopItem {
   in_stock: number;
   section: Section;
   claim: { user_id: number; name: string; color: string } | null;
+  /** discreet / private entry (area: share) */
+  share?: ShareInfo;
 }
 
 export function claimsOf(kind: 'shopping' | 'plan') {
@@ -236,7 +239,11 @@ export function claimsOf(kind: 'shopping' | 'plan') {
   return new Map(rows.map((r) => [r.ref_id, { user_id: r.user_id, name: r.name, color: r.color }]));
 }
 
-export function shoppingItems(): ShopItem[] {
+/**
+ * The list as one viewer may see it. Without a viewer (tickets, MCP, displays) private items are left out and
+ * discreet ones stay neutral placeholders; a signed-in member sees their own entries by their real name.
+ */
+export function shoppingItems(viewer?: Viewer): ShopItem[] {
   const rows = db
     .prepare(
       `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit,
@@ -247,15 +254,15 @@ export function shoppingItems(): ShopItem[] {
     )
     .all() as Omit<ShopItem, 'section' | 'claim'>[];
   const claims = claimsOf('shopping');
-  return rows.map((r) => ({ ...r, section: sectionOf(r), claim: claims.get(r.id) ?? null }));
+  return applyShareView(rows, viewer, claims).map((r) => ({ ...r, section: sectionOf(r), claim: claims.get(r.id) ?? null }));
 }
 
 /** Everything the store view needs: open items grouped in the store's walking order, the basket, recently done. */
-export function storeView(storeId?: number | null) {
+export function storeView(storeId?: number | null, viewer?: Viewer) {
   const stores = listStores();
   const store = (storeId ? stores.find((s) => s.id === storeId) : null) ?? null;
   const order = store?.order ?? [...SECTIONS];
-  const items = shoppingItems();
+  const items = shoppingItems(viewer);
   const open = items.filter((i) => !i.checked_at);
   const basket = items.filter((i) => i.checked_at && i.in_basket);
   const done = items.filter((i) => i.checked_at && !i.in_basket);
@@ -299,9 +306,10 @@ export function checkout(input: { storeId?: number | null; toStock: boolean; act
   let booked = 0;
   db.transaction(() => {
     for (const it of items) {
-      if (input.toStock && it.product_id) {
+      const pid = realProductId(it);
+      if (input.toStock && pid) {
         try {
-          if (bookPurchase(it.product_id, it.qty, input.actor)) booked++;
+          if (bookPurchase(pid, it.qty, input.actor)) booked++;
         } catch {
           /* product vanished – nothing to book */
         }
@@ -455,7 +463,8 @@ export function replayOps(ops: OfflineOp[], actor: { name: string; userId?: numb
         if (it) {
           const wasOpen = it.checked_at == null;
           db.prepare(`UPDATE shopping_items SET checked_at = ${op.on ? "datetime('now')" : 'NULL'}, checked_by = ?, in_basket = 0 WHERE id = ?`).run(op.on ? actor.name : null, op.id);
-          if (op.on && wasOpen && op.to_stock && it.product_id) bookPurchase(it.product_id, it.qty, actor.name);
+          const pid = realProductId(it);
+          if (op.on && wasOpen && op.to_stock && pid) bookPurchase(pid, it.qty, actor.name);
           emit('shopping');
         }
       } else if (op.type === 'delete') {

@@ -23,6 +23,7 @@ from .const import (
     SERVICE_MARK_USED_UP,
     SERVICE_ORDER,
     SERVICE_PLAN_MEAL,
+    SERVICE_REPORT_PRESENCE,
 )
 from .coordinator import ToHuusConfigEntry
 
@@ -40,6 +41,7 @@ ATTR_NAME = "name"
 ATTR_WISH_ID = "wish_id"
 ATTR_APPROVE = "approve"
 ATTR_TASK = "task"
+ATTR_EVERYONE_AWAY = "everyone_away"
 
 # product: a name ("Milk"), an id (12) or "#12"
 PRODUCT = vol.Any(cv.positive_int, cv.string)
@@ -86,6 +88,7 @@ SCHEMAS: dict[str, vol.Schema] = {
     ),
     SERVICE_APPROVE_KID_WISH: vol.Schema({**BASE, vol.Required(ATTR_WISH_ID): cv.positive_int, vol.Optional(ATTR_APPROVE, default=True): cv.boolean}),
     SERVICE_COMPLETE_CARE_TASK: vol.Schema({**BASE, vol.Required(ATTR_TASK): vol.Any(cv.positive_int, cv.string)}),
+    SERVICE_REPORT_PRESENCE: vol.Schema({**BASE, vol.Required(ATTR_EVERYONE_AWAY): cv.boolean}),
 }
 
 
@@ -132,6 +135,9 @@ def _payload(service: str, data: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         return "approve_kid_wish", {"id": data[ATTR_WISH_ID], "approve": data[ATTR_APPROVE]}
     if service == SERVICE_COMPLETE_CARE_TASK:
         return "complete_care_task", {"task": data[ATTR_TASK]}
+    if service == SERVICE_REPORT_PRESENCE:
+        # away mode: only ever a suggestion in ToHuus Hub ("everyone away > 24 h – start away mode?")
+        return "report_presence", {"everyone_away": data[ATTR_EVERYONE_AWAY]}
     raise ServiceValidationError(f"unknown service {service}")
 
 

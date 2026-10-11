@@ -10,6 +10,8 @@ import { findThings } from '../lib/find.js';
 import { createOrder, listOrders, orderMenu, orderSchema, setOrderStatus } from '../lib/orders.js';
 import { guestClientId, partyForGuest, partyIdForLink, partyMenu } from '../lib/party.js';
 import { t } from '../i18n.js';
+import { notPrivate } from '../lib/share-core.js';
+import { isHouseGuest } from '../lib/people-policy.js';
 
 /** Public guest API — everything is scoped by the share token. */
 export const guest = Router();
@@ -113,7 +115,7 @@ guest.get('/:token/shopping', (req, res) => {
     res.status(403).json({ error: 'forbidden' });
     return;
   }
-  res.json(db.prepare('SELECT id, text, qty, checked_at FROM shopping_items WHERE checked_at IS NULL ORDER BY created_at DESC').all());
+  res.json(db.prepare(`SELECT id, text, qty, checked_at FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} ORDER BY created_at DESC`).all());
 });
 
 guest.post('/:token/shopping', (req, res) => {
@@ -166,7 +168,7 @@ guestAdmin.delete('/guest-links/:id', (req, res) => {
 });
 
 // household members order from the sofa: everything in the house, not just the bar
-guestAdmin.get('/bar/menu', (_req, res) => res.json(orderMenu(true)));
+guestAdmin.get('/bar/menu', (req, res) => res.json(orderMenu(true, { family: !isHouseGuest(req.actor) })));
 guestAdmin.get('/bar/my-orders', (req, res) => res.json(listOrders("user_id = ? AND (status IN ('new','accepted') OR updated_at > datetime('now','-6 hours'))", req.actor!.userId ?? -1)));
 guestAdmin.post('/bar/orders', (req, res) => {
   const b = orderSchema.parse(req.body);

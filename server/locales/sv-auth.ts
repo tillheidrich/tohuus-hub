@@ -57,6 +57,7 @@ export const sv_auth: Record<string, string> = {
   'Please pick a PIN that is harder to guess.': 'Välj en pinkod som är svårare att gissa.',
   'Add a password, passkey or e-mail address first – otherwise you could not sign in any more.':
     'Lägg först till ett lösenord, en nyckel eller en e-postadress – annars kan du inte logga in längre.',
+  'Turn off two-step sign-in first.': 'Stäng av tvåstegsinloggningen först.',
   'Set up two-step sign-in for yourself first.': 'Ställ först in tvåstegsinloggning för dig själv.',
   'Turn on another way to sign in first (SSO, passkeys or e-mail links).': 'Slå först på ett annat sätt att logga in (SSO, nycklar eller e-postlänkar).',
   'Enter the issuer URL first.': 'Ange issuer-URL:en först.',

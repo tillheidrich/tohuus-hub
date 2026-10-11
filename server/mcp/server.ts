@@ -42,6 +42,7 @@ import { register as register_auth } from './tools-auth.js';
 import { register as register_spend2 } from './tools-spend2.js';
 import { register as register_print } from './tools-print.js';
 import { register as register_share } from './tools-share.js';
+import { notPrivate } from '../lib/share-core.js';
 import { register as register_labels } from './tools-labels.js';
 import { register as register_away } from './tools-away.js';
 import { register as register_plan2 } from './tools-plan2.js';
@@ -50,6 +51,7 @@ import { register as register_quality } from './tools-quality.js';
 import { register as register_people } from './tools-people.js';
 import { register as register_tour } from './tools-tour.js';
 import { register as register_ha2 } from './tools-ha2.js';
+import { register as register_menu } from './tools-menu.js';
 import { norm } from '../lib/text.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -93,7 +95,7 @@ export function buildMcpServer(actorName: string) {
     { name: 'tohuus', version: '0.1.0' },
     {
       instructions:
-        "ToHuus Hub is a family's household inventory (pantry, freezer, cellar, household supplies), plus shopping list, recipes and cooking history. " +
+        "ToHuus Hub is a family's household inventory (fridge, freezer, pantry, household supplies), plus shopping list, recipes and cooking history. " +
         "Answer in the user's language. Product, location and recipe names are stored in the household's language - use them as they are. " +
         'YOU read photos (receipt, freezer, recipe card) yourself and pass the recognised data in structured form: ' +
         'purchases/receipts → record_purchase (by default queued for review in the app), recipes → save_recipe. ' +
@@ -125,7 +127,7 @@ export function buildMcpServer(actorName: string) {
       description: 'Searches products in stock. Without query: everything (optionally filtered by location or status). Returns amount, location and best-before date.',
       inputSchema: {
         query: z.string().optional().describe('Free text, e.g. "ice cream", "parcel tape", "pasta"'),
-        location: z.string().optional().describe('Location, e.g. "Freezer", "Cellar"'),
+        location: z.string().optional().describe('Location, e.g. "Freezer", "Pantry"'),
         status: z.enum(['low', 'empty', 'expiring', 'expired', 'ok', 'in_stock']).optional(),
       },
       annotations: RO,
@@ -263,7 +265,7 @@ export function buildMcpServer(actorName: string) {
   s.registerTool(
     'get_shopping_list',
     { title: 'Shopping list', description: 'Open items on the shopping list.', inputSchema: {}, annotations: RO },
-    async () => text(db.prepare(`SELECT id, text, qty, note, added_by FROM shopping_items WHERE checked_at IS NULL ORDER BY created_at`).all()),
+    async () => text(db.prepare(`SELECT id, text, qty, note, added_by FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} ORDER BY created_at`).all()),
   );
 
   s.registerTool(
@@ -288,8 +290,8 @@ export function buildMcpServer(actorName: string) {
     },
     async ({ item, to_stock }) => {
       const row = (typeof item === 'number'
-        ? db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(item)
-        : db.prepare(`SELECT * FROM shopping_items WHERE checked_at IS NULL AND lower(text) LIKE lower(?) ESCAPE '\\' LIMIT 1`).get(`%${likeEsc(item)}%`)) as any;
+        ? db.prepare(`SELECT * FROM shopping_items WHERE id = ? AND ${notPrivate()}`).get(item)
+        : db.prepare(`SELECT * FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} AND lower(text) LIKE lower(?) ESCAPE '\\' LIMIT 1`).get(`%${likeEsc(item)}%`)) as any;
       if (!row) return text({ error: 'not on the list' });
       if (row.checked_at) return text({ ok: true, already_checked: row.text });
       db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ? WHERE id = ?`).run(actorName, row.id);
@@ -472,7 +474,7 @@ export function buildMcpServer(actorName: string) {
     'where_is',
     {
       title: 'Where is what?',
-      description: 'Finds where something is kept in the house: location (cellar, bathroom …) and exact spot ("shelf on the left, top compartment"). Also works for things that are not counted (thermometer, tools, spare keys).',
+      description: 'Finds where something is kept at home: location (pantry, bathroom …) and exact spot ("shelf on the left, top compartment"). Also works for things that are not counted (thermometer, tools, spare keys).',
       inputSchema: { q: z.string().describe('What to look for') },
       annotations: RO,
     },
@@ -548,6 +550,7 @@ export function buildMcpServer(actorName: string) {
   register_people(s, actorName);
   register_tour(s, actorName);
   register_ha2(s, actorName);
+  register_menu(s, actorName);
   return s;
 }
 

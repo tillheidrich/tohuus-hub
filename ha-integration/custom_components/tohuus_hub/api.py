@@ -144,6 +144,18 @@ class ToHuusApi:
         """Send the Cookidoo week (calendar events) to ToHuus Hub."""
         return await self.request("POST", "/cookidoo", json_body=body)
 
+    # ------------------------------------------------------------- two-way bridge
+
+    async def bridge_sync(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Snapshots, capabilities and acknowledgements in – watch config and operations out."""
+        data = await self.request("POST", "/bridge/sync", json_body=body)
+        return data if isinstance(data, dict) else {}
+
+    async def bridge_tag(self, body: dict[str, Any]) -> dict[str, Any]:
+        """An NFC tag was scanned in Home Assistant."""
+        data = await self.request("POST", "/bridge/tag", json_body=body)
+        return data if isinstance(data, dict) else {}
+
     # ------------------------------------------------------------- services
 
     async def service(self, name: str, data: dict[str, Any] | None = None) -> Any:

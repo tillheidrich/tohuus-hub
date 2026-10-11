@@ -14,7 +14,7 @@ export const BRANDS: Record<BrandKey, { name: string; logo: string; tagline: str
     name: 'Fredirando',
     logo: '/fredirando.svg',
     get tagline() {
-      return t('Ordered. Delivered. From kitchen & cellar.');
+      return t('Ordered. Delivered. From kitchen & pantry.');
     },
   },
 };

@@ -28,6 +28,7 @@ from homeassistant.helpers.selector import (
 from .api import ToHuusApi, ToHuusAuthError, ToHuusConnectionError, ToHuusError, ToHuusNotSupportedError, normalize_url
 from .const import (
     ALL_FEATURES,
+    CONF_BRIDGE,
     CONF_COOKIDOO_ENTITY,
     CONF_COOKIDOO_SYNC,
     CONF_DISPLAY_HEIGHT,
@@ -184,6 +185,7 @@ class ToHuusOptionsFlow(OptionsFlow):
                     vol.Required(CONF_DISPLAY_HEIGHT, default=o.get(CONF_DISPLAY_HEIGHT, DEFAULT_DISPLAY_HEIGHT)): size,
                     vol.Required(CONF_COOKIDOO_SYNC, default=o.get(CONF_COOKIDOO_SYNC, True)): bool,
                     vol.Optional(CONF_COOKIDOO_ENTITY, description={"suggested_value": cookidoo}): EntitySelector(EntitySelectorConfig(domain="calendar")),
+                    vol.Required(CONF_BRIDGE, default=o.get(CONF_BRIDGE, True)): bool,
                 }
             ),
         )

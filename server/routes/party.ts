@@ -137,7 +137,7 @@ board.post('/pair', (req, res) => {
 
 const memberOf = (req: any) => {
   const a = resolveActor(req);
-  return Boolean(a && a.kind !== 'guest' && (a.kind === 'user' || a.scope === 'full'));
+  return Boolean(a && a.kind !== 'guest' && !a.houseGuest && (a.kind === 'user' || a.scope === 'full'));
 };
 
 board.get('/:display', (req, res) => {

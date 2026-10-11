@@ -9,6 +9,7 @@ import { db, getSetting, setSetting } from '../db.js';
 import { emit, onEmit } from './bus.js';
 import { haSettings } from './plan.js';
 import { formatItem, quickAdd } from './shop.js';
+import { isMasked, notPrivate } from './share-core.js';
 import { t } from '../i18n.js';
 
 export interface HaTodoSettings {
@@ -80,7 +81,8 @@ async function doSync() {
     const links = db.prepare('SELECT * FROM shop_ha_links').all() as { ha_uid: string; item_id: number; summary: string; ha_status: string }[];
     const byUid = new Map(links.map((l) => [l.ha_uid, l]));
     const linkedItems = new Set(links.map((l) => l.item_id));
-    const item = (id: number) => db.prepare('SELECT id, text, qty, checked_at FROM shopping_items WHERE id = ?').get(id) as { id: number; text: string; qty: number | null; checked_at: string | null } | undefined;
+    // private entries (area: share) don't exist for Home Assistant; discreet ones only as their placeholder
+    const item = (id: number) => db.prepare(`SELECT id, text, qty, checked_at FROM shopping_items WHERE id = ? AND ${notPrivate()}`).get(id) as { id: number; text: string; qty: number | null; checked_at: string | null } | undefined;
 
     // 1. HA → here
     for (const ri of remote) {
@@ -136,8 +138,14 @@ async function doSync() {
         db.prepare(`UPDATE shop_ha_links SET ha_status = 'needs_action' WHERE ha_uid = ?`).run(l.ha_uid);
         out.updated++;
       }
+      // made discreet after it was synced: replace the real name in HA by the placeholder
+      if (it && isMasked(it.id) && l.summary !== formatItem(it)) {
+        await call('update_item', { entity_id: s.entity, item: l.ha_uid, rename: formatItem(it) });
+        db.prepare('UPDATE shop_ha_links SET summary = ? WHERE ha_uid = ?').run(formatItem(it), l.ha_uid);
+        out.updated++;
+      }
     }
-    const open = db.prepare('SELECT id, text, qty FROM shopping_items WHERE checked_at IS NULL').all() as { id: number; text: string; qty: number | null }[];
+    const open = db.prepare(`SELECT id, text, qty FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()}`).all() as { id: number; text: string; qty: number | null }[];
     const missing = open.filter((o) => !linkedItems.has(o.id));
     if (missing.length) {
       for (const m of missing) await call('add_item', { entity_id: s.entity, item: formatItem(m) });

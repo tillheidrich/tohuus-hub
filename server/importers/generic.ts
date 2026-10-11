@@ -12,7 +12,12 @@
  *   Joghurt        0,49 x 2    0,98 A                   inline quantity (Lidl)
  *     0,512 kg x 2,99 EUR/kg                            weighed goods
  *   Pfand 0,25 / Leergut -0,75                          deposit (kept, status 'deposit')
- *   Rabatt / Coupon / Preisvorteil / Lidl Plus  -0,30   discount → folded into the previous item
+ *   Rabatt / Coupon / Preisvorteil / Lidl Plus  -0,30   discount → folded into the item it belongs to (previous
+ *                                                     item, same tax code, or the item named in the discount)
+ *   Rabattsammler 5% auf den Einkauf  -0,36           discount on the whole purchase → meta.receiptDiscount
+ *   Storno <name> -0,79 / <name> -0,79                void of an item above → the item is removed again
+ *   Rückgabe <name> -1,25  (-1 x 1,25)                return of an earlier purchase → own line, status 'returned'
+ *   Handeingabe 0,486 kg x 2,99 EUR/kg                hand-weighed goods; "1,234 kg * 1,99 €/kg" also works
  *   SUMME | Summe EUR | zu zahlen | Gesamtbetrag        total – parsing of items stops here
  *   A= 19,0 %  /  B 7%  /  1 19,00 %                    tax table → VAT rate per item (food = 7 %)
  *
@@ -55,12 +60,13 @@ const STORES: StoreDef[] = [
   { key: 'rossmann', name: 'Rossmann', header: /\brossmann\b/i, anywhere: /rossmann\.de/i, drugstore: true },
   { key: 'mueller', name: 'Müller', header: /\bm(?:ü|ue)ller\b.*\b(?:drogerie|handels)/i, anywhere: /mueller\.de/i, drugstore: true },
   { key: 'budni', name: 'Budni', header: /\bbudni(?:kowsky)?\b/i, drugstore: true },
-  { key: 'lidl', name: 'Lidl', header: /\blidl\b/i, anywhere: /lidl\.de|lidl plus/i },
-  { key: 'aldi-sued', name: 'Aldi Süd', header: /\baldi\s*s(?:ü|ue|u)d\b/i, anywhere: /aldi-sued\.de/i },
+  { key: 'lidl', name: 'Lidl', header: /\blidl\b/i, anywhere: /lidl\.de|lidl plus|lidl vertriebs/i },
+  // ALDI SÜD invoices as "ALDI SE & Co. KG", Aldi Nord as "ALDI GmbH & Co. KG" (regional companies)
+  { key: 'aldi-sued', name: 'Aldi Süd', header: /\baldi\s*s(?:ü|ue|u)d\b|\baldi\s+se\b/i, anywhere: /aldi-sued\.de/i },
   { key: 'aldi-nord', name: 'Aldi Nord', header: /\baldi\b/i, anywhere: /aldi-nord\.de/i },
-  { key: 'netto', name: 'Netto', header: /\bnetto\b(?=.*marken|\s*$|\s+(?:filiale|city|stavenhagen))/im, anywhere: /netto-online\.de/i },
+  { key: 'netto', name: 'Netto', header: /\bnetto\b(?=.*marken|\s*$|\s+(?:filiale|city|stavenhagen))/im, anywhere: /netto-online\.de|netto marken-discount/i },
   { key: 'edeka', name: 'Edeka', header: /\be\s?d\s?e\s?k\s?a\b|\bmarktkauf\b/i, anywhere: /edeka\.de/i },
-  { key: 'kaufland', name: 'Kaufland', header: /\bkaufland\b/i, anywhere: /kaufland\.de/i },
+  { key: 'kaufland', name: 'Kaufland', header: /\bkaufland\b/i, anywhere: /kaufland\.de|kaufland card/i },
   { key: 'penny', name: 'Penny', header: /\bp\s?e\s?n\s?n\s?y\b/i, anywhere: /penny\.de/i },
   { key: 'norma', name: 'Norma', header: /\bnorma\b/i },
   { key: 'globus', name: 'Globus', header: /\bglobus\b/i },
@@ -68,15 +74,28 @@ const STORES: StoreDef[] = [
   { key: 'rewe', name: 'REWE', header: /\bR\s?E\s?W\s?E\b/ },
 ];
 
-export function detectStore(text: string): { key: StoreKey; name: string; drugstore: boolean } | null {
+export interface DetectedStore {
+  key: StoreKey;
+  name: string;
+  drugstore: boolean;
+  /** how it was recognised: shop name in the header, or a web address / company name further down */
+  via: 'header' | 'text';
+}
+
+/** Display name of a store key (for the recognition report). */
+export function storeName(key: string): string | null {
+  return STORES.find((s) => s.key === key)?.name ?? null;
+}
+
+export function detectStore(text: string): DetectedStore | null {
   const header = text
     .split('\n')
     .map((l) => l.trim())
     .filter(Boolean)
     .slice(0, 8)
     .join('\n');
-  for (const s of STORES) if (s.header.test(header)) return { key: s.key, name: s.name, drugstore: Boolean(s.drugstore) };
-  for (const s of STORES) if (s.anywhere?.test(text)) return { key: s.key, name: s.name, drugstore: Boolean(s.drugstore) };
+  for (const s of STORES) if (s.header.test(header)) return { key: s.key, name: s.name, drugstore: Boolean(s.drugstore), via: 'header' };
+  for (const s of STORES) if (s.anywhere?.test(text)) return { key: s.key, name: s.name, drugstore: Boolean(s.drugstore), via: 'text' };
   return null;
 }
 
@@ -102,13 +121,23 @@ const itemRe = (sep: string) =>
 const ITEM_STRICT = itemRe('\\s{2,}');
 const ITEM_LOOSE = itemRe('\\s+');
 /** "2 x 0,99" or "2 Stk x 0,99" (optionally with the line total) */
-const QTY = new RegExp(`^\\s*(\\d{1,3})\\s*(?:Stk\\.?|St\\.?|Stück)?\\s*[x×*]\\s*(${P})(?:\\s*(?:EUR|€))?(?:\\s+(${P})(?:\\s*(?:EUR|€))?${TAX})?\\s*$`, 'i');
-/** "0,512 kg x 2,99 EUR/kg" (optionally with the line total) */
-const WEIGHT = new RegExp(`^\\s*(\\d{1,3},\\d{3})\\s*kg\\s*[x×*]\\s*(\\d{1,4},\\d\\d)\\s*(?:EUR|€)?\\s*/\\s*kg(?:\\s+(${P})(?:\\s*(?:EUR|€))?${TAX})?\\s*$`, 'i');
+const QTY = new RegExp(`^\\s*(-?\\d{1,3})\\s*(?:Stk\\.?|St\\.?|Stück)?\\s*[x×*]\\s*(${P})(?:\\s*(?:EUR|€))?(?:\\s+(${P})(?:\\s*(?:EUR|€))?${TAX})?\\s*$`, 'i');
+/** "0,512 kg x 2,99 EUR/kg", "Handeingabe 0,486 kg x 2,99 EUR/kg", "1,234 kg * 1,99 €/kg" (optionally with the line total) */
+const WEIGHT = new RegExp(`^\\s*(?:handeingabe|hand|waage|gewicht:?)?\\s*(\\d{1,3},\\d{2,3})\\s*kg\\s*(?:[x×*]\\s*)?(\\d{1,4},\\d\\d)\\s*(?:EUR|€)?\\s*/\\s*kg(?:\\s+(${P})(?:\\s*(?:EUR|€))?${TAX})?\\s*$`, 'i');
 const TOTAL = new RegExp(`^\\s*(?:summe|zu\\s+zahlen|gesamtbetrag|gesamtsumme|gesamt|total|endbetrag)\\b[^\\d\\n-]*(${P})`, 'i');
 const NOT_AN_ITEM =
-  /^(?:zwischensumme|summe|total|gesamt|zu zahlen|bar|r(?:ü|ue)ckgeld|gegeben|ec[- ]?(?:karte|cash|zahlung)|girocard|karten?zahlung|kreditkarte|visa|mastercard|maestro|v pay|kontaktlos|mwst|ust|steuer|netto|brutto|posten|betrag|zahlung|wechselgeld|payback|punkte|datum|uhrzeit|bon[- ]?nr|beleg|kasse|filiale|tse|signatur|seriennr|terminal|trace|genehmigung|tel|fax|www|steuer-?nr|ust-?id)\b/i;
+  /^(?:zwischensumme|summe|total|gesamt|zu zahlen|bar|r(?:ü|ue)ckgeld|gegeben|ec[- ]?(?:karte|cash|zahlung)|girocard|karten?zahlung|kreditkarte|visa|mastercard|maestro|v pay|kontaktlos|mwst|ust|steuer|netto|brutto|posten|betrag|zahlung|wechselgeld|payback|punkte|datum|uhrzeit|bon[- ]?nr|beleg|kasse|filiale|tse|signatur|seriennr|terminal|trace|genehmigung|tel|fax|www|steuer-?nr|ust-?id|handeingabe|kunden-?nr|kundennummer|karten-?nr|kartennr|e-?mail|es bediente)\b/i;
 const DEPOSIT = /pfand|leergut|einweg|mehrweg|flaschenr(?:ü|ue)ck/i;
+/** a cashier void of an item above */
+const VOID = /^(?:storno|stornierung|sofortstorno|zeilenstorno|void)\b[\s:.-]*/i;
+/** a customer return of something bought earlier */
+const RETURN = /^(?:r(?:ü|ue)ckgabe|retoure|umtausch|r(?:ü|ue)cknahme)\b[\s:.-]*/i;
+/** discounts on the whole purchase, not on one item */
+const WHOLE_DISCOUNT =
+  /auf\s+(?:den|ihren|deinen|dein|ihr|alles|den\s+gesamten)\s+einkauf|einkaufsrabatt|gesamtrabatt|rabattsammler|mitarbeiterrabatt|bonrabatt|warenkorb|auf\s+alles\b/i;
+/** words in a discount line that say nothing about which item it belongs to */
+const DISCOUNT_WORDS =
+  /\b(?:rabatt|coupon|preisvorteil|aktion|angebot|sofortrabatt|mengenrabatt|nachlass|lidl|plus|app|k-?card|card|payback|deutschlandcard|f(?:ü|ue)r|auf|und|mit|der|die|das)\b|\d+\s*%|\d+/gi;
 
 /** Tax table: "A= 19,0%", "B 7%", "1  19,00 %", "MwSt 2 7%" → code → rate. */
 function readTaxTable(text: string): Map<string, number> {
@@ -161,6 +190,8 @@ function readItems(rows: string[], item: RegExp, tax: Map<string, number>) {
   const lines: GenericLine[] = [];
   let total: number | null = null;
   let discounts = 0;
+  let receiptDiscount = 0;
+  const taxOf = new WeakMap<GenericLine, string>();
   let pendingName: string | null = null;
   let pending: Pending | null = null;
   let started = false;
@@ -178,6 +209,7 @@ function readItems(rows: string[], item: RegExp, tax: Map<string, number>) {
       status: isDeposit ? 'deposit' : 'ok',
       vatRate: code && tax.has(code) ? tax.get(code)! : null,
     };
+    if (code) taxOf.set(l, code);
     // quantity / weight printed BEFORE the item (Kaufland, Netto)
     if (pending) {
       if (pending.qty && pending.unitPrice != null && near(pending.qty * pending.unitPrice, price)) {
@@ -209,7 +241,7 @@ function readItems(rows: string[], item: RegExp, tax: Map<string, number>) {
       }
       continue;
     }
-    const last = lines[lines.length - 1];
+    const last = lines[lines.length - 1] as GenericLine | undefined;
     // weighed goods
     const w = line.match(WEIGHT);
     if (w) {
@@ -232,6 +264,15 @@ function readItems(rows: string[], item: RegExp, tax: Map<string, number>) {
     if (q) {
       const qty = Number(q[1]);
       const unit = money(q[2]);
+      if (qty < 0) {
+        // "-1 x 1,25" under a return line
+        if (last && last.status === 'returned' && near(Math.abs(qty) * unit, Math.abs(last.price ?? NaN))) {
+          last.qty = qty;
+          last.unitPrice = unit;
+          last.raw += ' | ' + trimmed;
+        }
+        continue;
+      }
       if (q[3] && pendingName) {
         push(pendingName, money(q[3]), `${pendingName} | ${trimmed}`, q[4], qty, unit);
       } else if (last && last.qty === 1 && near(qty * unit, last.price ?? NaN)) {
@@ -244,17 +285,59 @@ function readItems(rows: string[], item: RegExp, tax: Map<string, number>) {
     const m = line.match(item);
     if (m && /[A-Za-zÄÖÜäöüß]/.test(m[1]) && !NOT_AN_ITEM.test(m[1].trim())) {
       // leading article numbers (Aldi, some Edeka tills)
-      const name = m[1].trim().replace(/^\d{4,8}\s+(?=\S*[A-Za-zÄÖÜäöü])/, '');
+      let name = m[1].trim().replace(/^\d{4,8}\s+(?=\S*[A-Za-zÄÖÜäöü])/, '');
       const price = money(m[6]);
-      const inlineQty = m[2] ? Number(m[2]) : m[5] ? Number(m[5]) : null;
-      const inlineUnit = m[3] ? money(m[3]) : m[4] ? money(m[4]) : null;
+      let inlineQty = m[2] ? Number(m[2]) : m[5] ? Number(m[5]) : null;
+      let inlineUnit = m[3] ? money(m[3]) : m[4] ? money(m[4]) : null;
+      // "Pfand 6 x 0,25   1,50": quantity glued to the name with single spaces
+      const glued = !inlineQty ? name.match(new RegExp(`^(.*?[A-Za-zÄÖÜäöü.])\\s+(\\d{1,3})\\s*[x×*]\\s*(${P})$`)) : null;
+      if (glued && near(Number(glued[2]) * money(glued[3]), price)) {
+        name = glued[1].trim();
+        inlineQty = Number(glued[2]);
+        inlineUnit = money(glued[3]);
+      }
       if (!DEPOSIT.test(name) && price < 0) {
-        // discounts (Rabatt, Coupon, Preisvorteil, Lidl Plus …) and voids belong to the item above them
-        if (last && last.status !== 'deposit') {
-          last.price = Math.round(((last.price ?? 0) + price) * 100) / 100;
-          last.note = [last.note, `${name} ${m[6]}`].filter(Boolean).join(' · ');
-          last.raw += ' | ' + trimmed;
+        const code = m[7]?.replace(/\*/g, '').toUpperCase();
+        const core = name.replace(VOID, '').replace(RETURN, '').trim();
+        const sameItem = (l: GenericLine) => l.status === 'ok' && (l.price ?? 0) > 0 && l.name.toLowerCase() === core.toLowerCase();
+        const isVoid = VOID.test(name) || (!RETURN.test(name) && last != null && sameItem(last) && near(last.unitPrice ?? NaN, -price));
+        if (isVoid) {
+          // cashier void: take the item off again (one piece of it)
+          const idx = lines.map((l, i) => [l, i] as const).reverse().find(([l]) => sameItem(l) && (near(l.price ?? NaN, -price) || near(l.unitPrice ?? NaN, -price)))?.[1];
+          if (idx != null) {
+            const l = lines[idx];
+            if (l.qty > 1 && near(l.unitPrice ?? NaN, -price)) {
+              l.qty -= 1;
+              l.price = Math.round(((l.price ?? 0) + price) * 100) / 100;
+              l.raw += ' | ' + trimmed;
+            } else lines.splice(idx, 1);
+            continue;
+          }
         }
+        if (RETURN.test(name)) {
+          // a return of an earlier purchase: its own line, not booked in by default
+          push(core || name, price, trimmed, m[7], -1, -price);
+          const l = lines[lines.length - 1];
+          l.status = 'returned';
+          l.unitPrice = Math.abs(price);
+          continue;
+        }
+        // discounts (Rabatt, Coupon, Preisvorteil, Lidl Plus …): find the item they belong to
+        const fits = (l: GenericLine | undefined) => l != null && l.status === 'ok' && (l.price ?? 0) + price >= -0.001;
+        const words = name.replace(DISCOUNT_WORDS, ' ').toLowerCase().split(/[^a-zäöüß]+/).filter((w) => w.length >= 4);
+        let target: GenericLine | undefined;
+        if (!WHOLE_DISCOUNT.test(name)) {
+          if (words.length) target = [...lines].reverse().find((l) => fits(l) && words.some((w) => l.name.toLowerCase().includes(w)));
+          if (!target && fits(last) && (!code || !taxOf.get(last!) || taxOf.get(last!) === code)) target = last;
+          // a different tax code than the item above: the nearest item with that code (only right after items –
+          // coupons printed after the deposit block apply to the whole purchase)
+          if (!target && code && last?.status === 'ok') target = [...lines].reverse().find((l) => fits(l) && taxOf.get(l) === code);
+        }
+        if (target) {
+          target.price = Math.round(((target.price ?? 0) + price) * 100) / 100;
+          target.note = [target.note, `${name} ${m[6]}`].filter(Boolean).join(' · ');
+          target.raw += ' | ' + trimmed;
+        } else receiptDiscount = Math.round((receiptDiscount + price) * 100) / 100;
         discounts += price;
         continue;
       }
@@ -263,10 +346,10 @@ function readItems(rows: string[], item: RegExp, tax: Map<string, number>) {
       continue;
     }
     // a name without a price: the quantity line with the total follows (Kaufland)
-    if (/[A-Za-zÄÖÜäöü]{3,}/.test(trimmed) && !/\d,\d\d/.test(trimmed) && trimmed.length <= 60 && !NOT_AN_ITEM.test(trimmed)) pendingName = trimmed;
+    if (/[A-Za-zÄÖÜäöü]{3,}/.test(trimmed) && !/\d,\d\d/.test(trimmed) && trimmed.length <= 60 && !NOT_AN_ITEM.test(trimmed) && !VOID.test(trimmed)) pendingName = trimmed;
     else pendingName = null;
   }
-  return { lines, total, discounts: Math.round(discounts * 100) / 100 };
+  return { lines, total, discounts: Math.round(discounts * 100) / 100, receiptDiscount };
 }
 
 export interface GenericOptions {
@@ -284,7 +367,7 @@ export function parseGenericReceipt(text: string, opts: GenericOptions = {}): Pa
   const { lines, total } = res;
   const goods = lines.filter((l) => l.status !== 'deposit');
   if (goods.length === 0) return null;
-  const sum = Math.round(lines.reduce((s, l) => s + (l.price ?? 0), 0) * 100) / 100;
+  const sum = Math.round((lines.reduce((s, l) => s + (l.price ?? 0), 0) + res.receiptDiscount) * 100) / 100;
   const sumMatches = total != null && near(sum, total, 0.021);
   const store = detectStore(clean);
   // every till receipt has a total; without it (or without a store and a matching sum) it is probably
@@ -304,7 +387,17 @@ export function parseGenericReceipt(text: string, opts: GenericOptions = {}): Pa
     ref: date ? `rcpt-${store?.key ?? 'x'}-${date.iso}-${date.time ?? ''}-${bon ?? ''}-${total ?? sum}` : null,
     date: date ? `${date.iso}${date.time ? ' ' + date.time : ''}` : null,
     total: total ?? sum,
-    meta: { store: store?.key ?? null, drugstore: Boolean(store?.drugstore), bonNr: bon, sumMatches, itemsSum: sum, discounts: res.discounts, parser: 'generic' },
+    meta: {
+      store: store?.key ?? null,
+      storeVia: store?.via ?? null,
+      drugstore: Boolean(store?.drugstore),
+      bonNr: bon,
+      sumMatches,
+      itemsSum: sum,
+      discounts: res.discounts,
+      receiptDiscount: res.receiptDiscount || null,
+      parser: 'generic',
+    },
     lines,
   };
 }

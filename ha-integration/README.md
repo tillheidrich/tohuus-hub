@@ -18,6 +18,7 @@ No YAML, no REST sensors, no webhooks. Everything stays in your network.
 | `sensor.tohuus_hub_products_low` / `_products_empty` | Count, with the products as attribute `items`. |
 | `sensor.tohuus_hub_expiring_soon` | Best-before soon or past. |
 | `sensor.tohuus_hub_eat_first` | What should be eaten first, leftovers included. |
+| `sensor.tohuus_hub_frozen_portions` | Frozen portions in labelled containers; `thaw` lists planned meals to take out of the freezer. |
 | `sensor.tohuus_hub_shopping_list` | Number of open items, names as `items`. |
 | `sensor.tohuus_hub_open_orders` | Open orders from the sofa or the party. |
 | `sensor.tohuus_hub_care_due` / `_next_care_task` | Tasks due (list in `tasks`) / timestamp of the next one. |
@@ -57,6 +58,24 @@ The token only works for the Home Assistant API and the live update stream – i
 **Cookidoo week plan:** if the official *Cookidoo* integration is set up, ToHuus Hub gets the planned dishes automatically – the integration reads `calendar.cookidoo_speiseplan` (or the calendar chosen in the options) for the next 14 days and sends it to ToHuus Hub every 3 hours and whenever the calendar changes. ToHuus Hub needs no Home Assistant token for this. Switch it off in the options if you don't want it.
 
 Requires ToHuus Hub with the v1 integration API (October 2026 or later) and Home Assistant 2024.12 or later.
+
+## Already doing this in Home Assistant? (two-way bridge, 0.2.0+)
+
+If your household already keeps its shopping list in Bring!, the built-in shopping list or Todoist, plans meals in Mealie or a local calendar, or gets messages through the companion app, nothing needs doing twice. The integration tells ToHuus Hub what Home Assistant has, and ToHuus Hub proposes per topic who leads (*Settings › Home Assistant › What does Home Assistant already do for you?*):
+
+| Topic | Home Assistant side | Modes |
+|---|---|---|
+| Shopping list | any to-do list (shopping list, Bring!, Todoist, Local To-do, Cookidoo) | both ways · Home Assistant leads · ToHuus leads |
+| Meal plan | calendars (Mealie, Local Calendar, a family calendar) | Home Assistant leads (import) · ToHuus leads (export) · both |
+| Care tasks | a to-do list | due tasks appear there; ticking one off completes it in ToHuus Hub |
+| Who is home | `person.*` | used for "who gets it" and away mode |
+| Notifications | `notify.mobile_app_*` | per member instead of the browser push |
+| NFC tags | `tag_scanned` | a scan runs the quick action of a ToHuus QR label (one taken, onto the list, opened, done) |
+| Voice commands | entities exposed to Assist / Alexa / Google | listed with example phrases on the babysitter page (never locks, alarms, cameras, garage doors) |
+
+How it works: the integration posts snapshots of the entities ToHuus Hub watches to `/api/ha/v1/bridge/sync` and runs the operations it gets back (add / update / remove to-do items, create / delete calendar events, notify), acknowledging each one. It syncs at start, every 5 minutes, when a watched entity changes and right after a change in ToHuus Hub (server-sent `bridge` event). Conflicts: the leading side wins; in "both ways" the later change wins. ToHuus Hub's own to-do and calendar entities are never used as sync targets, events it writes carry a marker so nothing bounces back, and entries marked discreet in ToHuus Hub never leave it. After a scan, `tohuus_hub_tag` (`tag_id`, `ok`, `message`) is fired so an automation can say what happened.
+
+Turn the bridge off in the options (*Two-way sync with ToHuus Hub*) if you don't want ToHuus Hub to see your lists, calendars and people.
 
 ## Actions
 
@@ -139,7 +158,7 @@ What it looks like (text description until screenshots are added):
 The older setup (REST sensors from `/api/ha/summary`, `rest_command` and a webhook automation) keeps working, but you don't need it any more:
 
 - Remove the `packages/tohuus.yaml` package (or the `rest:` / `rest_command:` sections you copied).
-- In ToHuus Hub, turn off *Settings › Access & AI › Shopping list in Home Assistant* – the integration's to-do entity talks to ToHuus Hub directly, so the old two-way sync with a separate HA list is not needed (running both would duplicate items).
+- In ToHuus Hub, turn off *Settings › Access & AI › Shopping list in Home Assistant* – the integration's to-do entity talks to ToHuus Hub directly. If you want a separate HA list (Bring!, the built-in list) kept in step, use *Settings › Home Assistant* instead: it takes over the old sync's links.
 - The webhook in *Settings › Notifications › Home Assistant* is optional now – `tohuus_hub_event` delivers the same events. Keep it only if you rely on the actionable phone push from the package.
 
 ## Troubleshooting

@@ -1,4 +1,4 @@
-"""Binary sensors: party running, something expired."""
+"""Binary sensors: party running, something expired, away mode."""
 
 from __future__ import annotations
 
@@ -42,6 +42,21 @@ BINARY_SENSORS: tuple[ToHuusBinaryDescription, ...] = (
         icon="mdi:food-off-outline",
         is_on_fn=lambda d: (d.get("counts") or {}).get("expired", 0) > 0,
         attrs_fn=lambda d: {"items": [i.get("name") for i in (d.get("expiring") or []) if i.get("status") == "expired"][:25]},
+    ),
+    # away mode (trip) – on while the trip is running; older ToHuus Hubs without "away" stay off
+    ToHuusBinaryDescription(
+        key="away_mode",
+        translation_key="away_mode",
+        icon="mdi:bag-suitcase-outline",
+        is_on_fn=lambda d: bool((d.get("away") or {}).get("active")),
+        attrs_fn=lambda d: {
+            "state": (d.get("away") or {}).get("state", "home"),
+            "trip": ((d.get("away") or {}).get("trip") or {}).get("name"),
+            "start": ((d.get("away") or {}).get("trip") or {}).get("start"),
+            "end": ((d.get("away") or {}).get("trip") or {}).get("end"),
+            "quiet": bool((d.get("away") or {}).get("quiet")),
+            "suggest_start": bool((d.get("away") or {}).get("suggest_start")),
+        },
     ),
 )
 

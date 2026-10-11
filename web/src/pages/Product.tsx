@@ -1,11 +1,13 @@
-import { ArrowLeft, Basket, Camera, Check, ImageSquare, MagnifyingGlass, PencilSimple, Trash, ArrowsClockwise } from '@phosphor-icons/react';
+import { ArrowLeft, Basket, Camera, Check, ImageSquare, MagnifyingGlass, PencilSimple, Trash, ArrowsClockwise, Tag } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { type Category, type DateKind, type Location, type Product, api, del, fmtDate, fmtQty, get, invalidate, patch, post, relTime, useApi } from '../api';
 import { Empty, Ic, LevelPicker, Seg, Sheet, Skeleton, StatusBadge, Stepper, Thumb, Toggle, expiryText, statusText, useDebounced, useToast } from '../ui';
 import { num, t } from '../i18n';
 import { FreshPanel } from './FreshParts';
+import { PutAwayButton } from './Leftovers';
 import { DateKindField } from './Retail';
+import { RunsOutRow } from './Share';
 
 export function ProductDetail() {
   const { id } = useParams();
@@ -64,7 +66,7 @@ export function ProductDetail() {
               {p.size && <span className="badge">{p.size}</span>}
               <StatusBadge p={p} />
               {p.is_staple && <span className="badge info">{t('always stocked')}</span>}
-              {p.orderable && <span className="badge good">{t('in the guest bar')}</span>}
+              {p.orderable && <button className="badge good" onClick={() => nav(`/bestellen/karte?item=${p.id}`)}>{t('on the order menu')}</button>}
             </div>
           </div>
 
@@ -93,11 +95,20 @@ export function ProductDetail() {
                 {p.kind !== 'leftover' && <button className="btn sm" onClick={usedUp}>{t('Used up')}</button>}
                 {p.kind !== 'leftover' && <button className="btn sm" onClick={toList}><Basket size={15} /> {t('Add to list')}</button>}
                 <AddBatch p={p} locations={locations.data ?? []} onDone={refresh} />
+                {p.track_mode !== 'none' && (
+                  <PutAwayButton
+                    preset={{ product_id: p.id, name: p.name, image_path: p.image_path, place: p.kind === 'leftover' ? 'fridge' : 'freezer', portions: p.track_mode === 'count' && p.total > 0 ? Math.min(p.total, p.kind === 'leftover' ? p.total : 1) : 1 }}
+                    title={p.kind === 'leftover' ? t('Label leftovers') : t('Portion, freeze, label')}
+                  >
+                    <Tag size={15} /> {p.kind === 'leftover' ? t('Label') : t('Freeze & label')}
+                  </PutAwayButton>
+                )}
               </div>
             </div>
           )}
 
           <FreshPanel p={p} locations={locations.data ?? []} />
+          <RunsOutRow p={p} />
 
           <dl className="kv card pad">
             <dt>{t('Default location')}</dt>
@@ -542,14 +553,19 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
           </div>
           <div className="li">
             <div className="grow">
-              <div className="title">{t('In the guest bar')}</div>
-              <div className="sub">{t('Guests can order it through their link.')}</div>
+              <div className="title">{t('On the order menu')}</div>
+              <div className="sub">{t('Family and guests can order it. Pictures, choices and groups are set in the menu.')}</div>
             </div>
-            <Toggle on={f.orderable} onChange={(v) => set('orderable', v)} />
+            <Toggle on={f.orderable} onChange={(v) => set('orderable', v)} label={t('On the order menu')} />
           </div>
           {f.orderable && (
             <div className="li">
               <input className="input" value={f.order_group} onChange={(e) => set('order_group', e.target.value)} placeholder={t('Bar section, e.g. drinks, ice cream, snacks')} />
+              {product?.orderable && (
+                <button className="btn ghost sm" style={{ flex: 'none' }} onClick={() => { onClose(); nav(`/bestellen/karte?item=${product.id}`); }}>
+                  {t('Edit on the menu')}
+                </button>
+              )}
             </div>
           )}
         </div>

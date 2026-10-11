@@ -1,4 +1,4 @@
-import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Plus, TextAa, ThumbsDown, ThumbsUp } from '@phosphor-icons/react';
+import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Plus, TextAa } from '@phosphor-icons/react';
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
@@ -6,6 +6,8 @@ import { api, invalidate, post, useApi } from '../api';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { t } from '../i18n';
 import { WeekPlan } from './Week';
+import { SwipeDeck } from './SwipeDeck';
+import { VotesCard } from './Plan2';
 import { WhatToEatPanel } from './WhatToEat';
 import { SwapRulesCard } from './RecipeVariant';
 
@@ -35,6 +37,9 @@ export function Cook({ me }: { me: Me }) {
           <h1>{t('What do we eat today?')}</h1>
         </div>
         <div className="actions">
+          <button className="btn ghost" onClick={() => nav('/lieblinge')}>
+            <Heart size={16} /> {t('Favourites')}
+          </button>
           <button className="btn primary" onClick={() => setImportOpen(true)}>
             <Plus size={16} weight="bold" /> {t('Recipe')}
           </button>
@@ -45,6 +50,7 @@ export function Cook({ me }: { me: Me }) {
 
       <div style={{ height: 28 }} />
       <WeekPlan cookidoo={Boolean(settings.data?.ha?.url && settings.data?.ha?.token)} />
+      <VotesCard />
 
       <h2 style={{ margin: '28px 0 12px' }}>{t('Browse ideas')}</h2>
       <div className="row between wrap" style={{ marginBottom: 14 }}>
@@ -66,21 +72,19 @@ export function Cook({ me }: { me: Me }) {
         </div>
       ) : (
         <>
-          <div className="deck">
-            {next && next !== cur && <DeckCard s={next} behind />}
-            <DeckCard key={`${cur.recipe.id}-${idx}`} s={cur} onSwipe={(dir) => (dir > 0 ? nav(`/rezepte/${cur.recipe.id}`) : setIdx(idx + 1))} />
-          </div>
-          <div className="deck-actions">
-            <button className="round" onClick={() => setIdx(idx + 1)} aria-label={t('Not this one')}>
-              <ThumbsDown size={24} />
-            </button>
-            <button className="round yes" onClick={() => nav(`/rezepte/${cur.recipe.id}`)} aria-label={t("Let's cook this")}>
-              <ThumbsUp size={24} weight="fill" />
-            </button>
-          </div>
-          <p className="small muted" style={{ textAlign: 'center', marginTop: 10 }}>
-            {t("Swipe or tap. Sorted by what's in stock, expiry dates, favorites and how long it's been.")}
-          </p>
+          <SwipeDeck
+            cards={[cur, next].filter((x, i) => x && (i === 0 || x !== cur)).map((s) => ({
+              key: `${s.recipe.id}-${idx}`,
+              title: s.recipe.title,
+              image: s.recipe.image_path,
+              sub: s.reasons.join(' · '),
+              badges: [s.recipe.thermomix ? 'Thermomix' : null, s.recipe.time_min ? t('{n} min', { n: s.recipe.time_min }) : null].filter(Boolean) as string[],
+              accentBadge: t('{have}/{need} ingredients on hand', { have: s.have, need: s.need }),
+            }))}
+            stamps={{ yes: t('YUM'), no: t('NOT TODAY') }}
+            onSwipe={(dir) => (dir === 'yes' ? nav(`/rezepte/${cur.recipe.id}`) : setIdx(idx + 1))}
+            hint={t("Swipe or tap. Sorted by what's in stock, expiry dates, favorites and how long it's been.")}
+          />
         </>
       )}
 
@@ -118,65 +122,6 @@ export function Cook({ me }: { me: Me }) {
       </section>
       <SwapRulesCard />
       <RecipeImport open={importOpen} onClose={() => setImportOpen(false)} vision={me.features.vision} />
-    </div>
-  );
-}
-
-function DeckCard({ s, behind = false, onSwipe }: { s: any; behind?: boolean; onSwipe?: (dir: number) => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const start = useRef<{ x: number; y: number } | null>(null);
-  const [dx, setDx] = useState(0);
-  const r = s.recipe;
-  const onDown = (e: React.PointerEvent) => {
-    if (behind) return;
-    start.current = { x: e.clientX, y: e.clientY };
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-  };
-  const onMove = (e: React.PointerEvent) => {
-    if (!start.current) return;
-    setDx(e.clientX - start.current.x);
-  };
-  const onUp = () => {
-    if (!start.current) return;
-    start.current = null;
-    if (Math.abs(dx) > 110) {
-      const dir = Math.sign(dx);
-      setDx(dir * 600);
-      setTimeout(() => onSwipe?.(dir), 180);
-    } else setDx(0);
-  };
-  const style: React.CSSProperties = behind
-    ? { transform: 'scale(0.94) translateY(14px)', opacity: 0.7 }
-    : { transform: `translateX(${dx}px) rotate(${dx / 22}deg)`, transition: start.current ? 'none' : undefined };
-  return (
-    <div ref={ref} className="dcard" style={style} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-      {r.image_path ? <img className="bg" src={r.image_path} alt="" draggable={false} /> : <div className="pattern" />}
-      <div className="row wrap" style={{ gap: 6, marginBottom: 10 }}>
-        {r.thermomix && <span className="badge" style={{ background: 'rgba(255,255,255,.18)', color: '#fff' }}>Thermomix</span>}
-        {r.time_min && <span className="badge" style={{ background: 'rgba(255,255,255,.18)', color: '#fff' }}>{t('{n} min', { n: r.time_min })}</span>}
-        <span className="badge" style={{ background: s.missing.length ? 'rgba(255,255,255,.18)' : 'var(--accent)', color: '#fff' }}>
-          {t('{have}/{need} ingredients on hand', { have: s.have, need: s.need })}
-        </span>
-      </div>
-      <h2>{r.title}</h2>
-      <p style={{ margin: '8px 0 0', opacity: 0.85, fontSize: 14 }}>{s.reasons.join(' · ')}</p>
-      {dx !== 0 && !behind && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 20,
-            [dx > 0 ? 'left' : 'right']: 20,
-            padding: '6px 12px',
-            borderRadius: 10,
-            fontWeight: 800,
-            letterSpacing: '.06em',
-            border: '2px solid #fff',
-            opacity: Math.min(1, Math.abs(dx) / 110),
-          }}
-        >
-          {dx > 0 ? t('YUM') : t('NOT TODAY')}
-        </div>
-      )}
     </div>
   );
 }
@@ -257,6 +202,9 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
             {t('Create blank recipe')}
           </button>
         )}
+        <button className="linkish small" style={{ alignSelf: 'center' }} onClick={() => { onClose(); nav('/einstellungen?tab=recipes'); }}>
+          {t('More ways: open recipe database, other apps, any AI, file')}
+        </button>
       </div>
     </Sheet>
   );

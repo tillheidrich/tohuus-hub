@@ -31,6 +31,7 @@ class ToHuusRuntimeData:
     coordinator: ToHuusCoordinator
     info: dict[str, Any] = field(default_factory=dict)
     cookidoo: Any = None
+    bridge: Any = None
 
 
 type ToHuusConfigEntry = ConfigEntry[ToHuusRuntimeData]
@@ -56,6 +57,8 @@ class ToHuusCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.live = False
         # event entities subscribe here to show the latest notification
         self.event_callbacks: set[Callable[[dict[str, Any]], None]] = set()
+        # the two-way bridge: ToHuus Hub asks for a sync after a local change
+        self.bridge_callback: Callable[[dict[str, Any]], None] | None = None
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
@@ -98,6 +101,8 @@ class ToHuusCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             await self.async_request_refresh()
                     elif event == "tohuus":
                         self._fire(data)
+                    elif event == "bridge" and self.bridge_callback:
+                        self.bridge_callback(data)
             except asyncio.CancelledError:
                 raise
             except ToHuusAuthError:

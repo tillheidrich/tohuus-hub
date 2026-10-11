@@ -48,6 +48,7 @@ import { OIDC_COOKIE, OIDC_COOKIE_PATH, OidcError, callbackUrl, finishOidc, reso
 import { beginTotpSetup, checkSecondFactor, disableTotp, finishTotpSetup, recoveryLeft } from '../lib/auth-totp.js';
 import { showNamesOnLogin } from '../lib/data.js';
 import { emit } from '../lib/bus.js';
+import { loginFaces } from '../lib/people-faces.js';
 
 export const pub = Router();
 export const r = Router();
@@ -96,6 +97,7 @@ pub.get(
     const email = mailAvailable();
     const dev = deviceInfo(req);
     const showNames = showNamesOnLogin();
+    const faces = showNames ? loginFaces() : new Map();
     const users = showNames
       ? (db.prepare('SELECT id, name, color, role, password_hash, email_verified_at, sso_sub FROM users ORDER BY id').all() as any[]).map((u) => {
           const methods: string[] = [];
@@ -103,7 +105,7 @@ pub.get(
           if (p.magicLink && email && u.email_verified_at) methods.push('link');
           if (hasPassword(u) && (p.passwordFor === 'all' || u.role === 'admin')) methods.push('password');
           if (sso && u.sso_sub) methods.push('sso');
-          return { name: u.name, color: u.color, methods };
+          return { name: u.name, color: u.color, methods, face: faces.get(u.name) ?? null };
         })
       : [];
     return {
@@ -331,7 +333,15 @@ r.patch(
 r.delete('/auth/passkeys/:id', wrap((req) => ({ ok: deletePasskey(me(req), String(req.params.id)) })));
 
 // two-step sign-in
-r.post('/auth/me/totp/setup', wrap((req) => beginTotpSetup(me(req))));
+r.post(
+  '/auth/me/totp/setup',
+  wrap((req) => {
+    const id = me(req);
+    // replacing a running second factor needs a current code: turn it off first (/auth/me/totp/disable)
+    if (userById(id)?.totp_secret) throw new AuthError(409, t('Turn off two-step sign-in first.'));
+    return beginTotpSetup(id);
+  }),
+);
 r.post(
   '/auth/me/totp/enable',
   wrap((req) => {

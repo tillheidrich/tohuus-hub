@@ -4,6 +4,9 @@ import { listProducts, matchIngredient } from './catalog.js';
 import { notifySettings } from './notify.js';
 import { t } from '../i18n.js';
 import { activeIngredients, changeLabels, effectiveIngredients, variantContext } from './variants.js';
+import { peopleSignals } from './people-signals.js';
+import { awayDay, useUpWindow } from './away-state.js';
+import { cleanText, durationMinutes, findRecipeNode, imageUrl, ingredientLines, instructionSteps, jsonLdBlocks, oneLine, recipeTags, yieldServings } from './recipe-jsonld.js';
 
 export interface RecipeInput {
   title: string;
@@ -134,6 +137,10 @@ export interface Suggestion {
   missingItems: { text: string; product_id: number | null }[];
   /** cooking time of the house version */
   time_min: number | null;
+  /** away mode: products it uses that would expire before the household is back */
+  useUpAway?: string[];
+  /** allergy warnings for people in the household (area: people) */
+  warnings?: string[];
 }
 
 /** Rank recipes by what is in the house now, what expires soon, favourites and how long ago they were cooked. */
@@ -152,6 +159,10 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
   const out: Suggestion[] = [];
   const warn = notifySettings().expiryWarnDays + 2;
   const ctx = variantContext();
+  const people = peopleSignals();
+  // away mode "use it up": in the days before a trip, what would go off while away counts extra
+  const away = useUpWindow();
+  const awayToday = awayDay(0);
   for (const r of recipes) {
     if (opts.thermomix === true && !r.thermomix) continue;
     if (opts.thermomix === false && r.thermomix) continue;
@@ -163,6 +174,7 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
     const missingItems: Suggestion['missingItems'] = [];
     const usesExpiring: string[] = [];
     const expiring: Suggestion['expiring'] = [];
+    const useUpAway: string[] = [];
     for (const i of ings) {
       let p = i.product_id ? byId.get(i.product_id) : undefined;
       if (!p) {
@@ -176,6 +188,7 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
           usesExpiring.push(p!.name);
           expiring.push({ product_id: p!.id, name: p!.name, date: p!.nextExpiry });
         }
+        if (away && p!.nextExpiry && p!.nextExpiry >= awayToday && p!.nextExpiry <= away.until && !useUpAway.includes(p!.name)) useUpAway.push(p!.name);
       } else {
         missing.push(ingredientCore(i.text));
         missingItems.push({ text: ingredientCore(i.text), product_id: p?.id ?? null });
@@ -190,6 +203,11 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
     if (usesExpiring.length) {
       score += Math.min(0.3, 0.15 * usesExpiring.length);
       reasons.push(t('uses up {list}', { list: usesExpiring.slice(0, 2).join(' & ') }));
+    }
+    if (useUpAway.length) {
+      score += Math.min(0.4, 0.2 * useUpAway.length);
+      const extra = useUpAway.filter((n) => !usesExpiring.includes(n));
+      if (extra.length) reasons.push(t('uses up {list} before the trip', { list: extra.slice(0, 2).join(' & ') }));
     }
     if (r.favorite) {
       score += 0.1;
@@ -208,7 +226,12 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
     else reasons.unshift(t('missing: {list}', { list: missing.slice(0, 3).join(', ') }));
     if (opts.maxMissing !== undefined && missing.length > opts.maxMissing) continue;
     if (swaps.length) reasons.push(t('our way: {list}', { list: swaps.slice(0, 2).join(', ') }));
-    out.push({ recipe: r, score: Math.round(score * 100) / 100, have, need: ings.length, missing, usesExpiring, reasons, swaps, expiring, missingItems, time_min: variantTime ?? r.time_min ?? null });
+    // per-person ratings, likes/dislikes, allergies – gently (area: people)
+    const sig = people.forRecipe(r.id, activeIngredients(eff).map((i) => i.text));
+    score += sig.boost;
+    reasons.push(...sig.reasons);
+    if (sig.warnings.length) reasons.unshift(...sig.warnings);
+    out.push({ warnings: sig.warnings, recipe: r, score: Math.round(score * 100) / 100, have, need: ings.length, missing, usesExpiring, reasons, swaps, expiring, missingItems, time_min: variantTime ?? r.time_min ?? null, useUpAway });
   }
   out.sort((a, b) => b.score - a.score);
   return out.slice(0, opts.limit ?? 12);
@@ -219,52 +242,28 @@ export function logCooked(recipeId: number, actor?: string, rating?: number | nu
   emit('recipes');
 }
 
-/** schema.org Recipe JSON-LD extraction (works for most recipe sites; Cookidoo exposes ingredients but not steps). */
+/** schema.org Recipe JSON-LD extraction (works for most recipe sites; Cookidoo exposes ingredients but not steps).
+ * Parsing lives in recipe-jsonld.ts (area recipes2): @graph, mainEntity, HowToSection, ImageObject, ISO durations, yields. */
 export function parseRecipeJsonLd(html: string, url: string): RecipeInput | null {
-  const blocks = [...html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]);
-  for (const b of blocks) {
-    let data: any;
-    try {
-      data = JSON.parse(b.trim());
-    } catch {
-      continue;
-    }
-    const nodes: any[] = Array.isArray(data) ? data : data['@graph'] ? data['@graph'] : [data];
-    const rec = nodes.find((n) => n && (n['@type'] === 'Recipe' || (Array.isArray(n['@type']) && n['@type'].includes('Recipe'))));
+  for (const block of jsonLdBlocks(html)) {
+    const rec = findRecipeNode(block);
     if (!rec) continue;
-    const decodeEnt = (s: string) =>
-      String(s)
-        .replace(/&frac12;/g, '½').replace(/&frac14;/g, '¼').replace(/&frac34;/g, '¾')
-        .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
-        .replace(/<[^>]+>/g, '').trim();
-    const instr = rec.recipeInstructions;
-    const steps: { text: string }[] = [];
-    const walk = (x: any) => {
-      if (!x) return;
-      if (typeof x === 'string') x.split(/\n+/).forEach((t) => t.trim() && steps.push({ text: decodeEnt(t) }));
-      else if (Array.isArray(x)) x.forEach(walk);
-      else if (x.itemListElement) walk(x.itemListElement);
-      else if (x.text) steps.push({ text: decodeEnt(x.text) });
-    };
-    walk(instr);
-    const dur = (s?: string) => {
-      const m = s?.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
-      return m ? Number(m[1] ?? 0) * 60 + Number(m[2] ?? 0) || null : null;
-    };
-    const img = Array.isArray(rec.image) ? rec.image[0] : typeof rec.image === 'object' ? rec.image?.url : rec.image;
+    const steps = instructionSteps(rec.recipeInstructions);
     const isCookidoo = /cookidoo\./.test(url);
+    const prep = durationMinutes(rec.prepTime);
+    const cook = durationMinutes(rec.cookTime);
     return {
-      title: decodeEnt(rec.name ?? t('Recipe')),
-      description: rec.description ? decodeEnt(rec.description) : null,
+      title: oneLine(rec.name) || t('Recipe'),
+      description: rec.description ? cleanText(rec.description) || null : null,
       source_type: isCookidoo ? 'cookidoo' : 'url',
       source_url: url,
-      servings: parseInt(String(Array.isArray(rec.recipeYield) ? rec.recipeYield[0] : rec.recipeYield ?? ''), 10) || null,
-      time_min: dur(rec.totalTime) ?? dur(rec.cookTime),
+      servings: yieldServings(rec.recipeYield),
+      time_min: durationMinutes(rec.totalTime) ?? (prep || cook ? (prep ?? 0) + (cook ?? 0) : null),
       thermomix: isCookidoo || /thermomix|stufe\s?\d/i.test(JSON.stringify(rec)),
-      tags: [rec.recipeCategory, rec.recipeCuisine].flat().filter(Boolean).map(String).slice(0, 4),
+      tags: recipeTags(rec.recipeCategory, rec.recipeCuisine).slice(0, 4),
       steps,
-      ingredients: (rec.recipeIngredient ?? []).map((t: string) => ({ text: decodeEnt(t) })),
-      image_path: img ? String(img) : null,
+      ingredients: ingredientLines(rec.recipeIngredient ?? rec.ingredients).map((text) => ({ text })),
+      image_path: imageUrl(rec.image),
       notes: isCookidoo && steps.length === 0 ? t('Cookidoo only shows the steps after login – open the recipe there.') : null,
     };
   }

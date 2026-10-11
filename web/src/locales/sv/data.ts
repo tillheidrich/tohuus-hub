@@ -113,4 +113,7 @@ export const data: Record<string, string> = {
     'En länk utan slutdatum fungerar tills du återkallar den – även om den skickas vidare. Skapa den ändå?',
   'The current link for “{name}” stops working. Create a new one?': 'Den nuvarande länken för ”{name}” slutar fungera. Skapa en ny?',
   'New link': 'Ny länk',
+  'Family members get a personal link and choose their own password, passkey or e-mail sign-in.': 'Familjemedlemmar får en personlig länk och väljer själva lösenord, passkey eller inloggning via e-post.',
+  'Babysitter': 'Barnvakt',
+  'Home Assistant': 'Home Assistant',
 };
