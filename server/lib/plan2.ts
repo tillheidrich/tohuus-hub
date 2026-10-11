@@ -21,6 +21,8 @@ import { nobodyHomeOn } from './away-state.js';
 import { addPlan, getPlan, weekDays } from './plan.js';
 import { suggest } from './recipes.js';
 import { servingsFactor } from './scale.js';
+// recipe_ratings (area: people) must exist before a ballot can count as a first rating
+import './people-policy.js';
 
 migrate(
   'plan2-1',
@@ -734,6 +736,14 @@ export async function castBallots(id: number, voter: string, ballots: { candidat
       else up.run(id, b.candidate_id, voter, b.value);
     }
   })();
+  // "really want it" counts as a first rating for that person (area: people) – never overwrites a real rating
+  const person = voter.replace(':', '');
+  if (/^[uk]\d+$/.test(person))
+    for (const b of ballots) {
+      if (b.value !== 2) continue;
+      const rid = (db.prepare('SELECT recipe_id FROM plan_vote_candidates WHERE id = ?').get(b.candidate_id) as { recipe_id: number | null } | undefined)?.recipe_id;
+      if (rid) db.prepare(`INSERT OR IGNORE INTO recipe_ratings (recipe_id, person, value, source) VALUES (?, ?, 5, 'vote')`).run(rid, person);
+    }
   await maybeFinish(id);
   emit('recipes');
   return getVote(id, actor, voter)!;

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '../db.js';
 import { t } from '../i18n.js';
 import { guestFromToken, requireAdmin, requireAuth } from '../lib/auth.js';
+import { isHouseGuest } from '../lib/people-policy.js';
 import {
   TAG_ACTIONS,
   applyProposals,
@@ -44,6 +45,11 @@ startHa2();
 
 export const r = Router();
 r.use(requireAuth);
+// who is home, notification routing and HA's devices are household matters – never for permanent guests
+r.use('/ha2', (req, res, next) => {
+  if (isHouseGuest(req.actor as any)) return void res.status(403).json({ error: t('Not available for guests') });
+  next();
+});
 
 const h =
   (fn: (req: Request, res: Response) => unknown | Promise<unknown>) =>
@@ -151,7 +157,7 @@ r.put(
   '/ha2/voice/settings',
   requireAdmin,
   h((req) => {
-    setVoiceSettings(z.object({ assistant: z.enum(ASSISTANTS) }).parse(req.body));
+    setVoiceSettings(z.object({ assistant: z.enum(ASSISTANTS), sitter_default: z.boolean() }).partial().parse(req.body));
     return voiceView();
   }),
 );

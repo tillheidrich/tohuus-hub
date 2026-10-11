@@ -117,6 +117,7 @@ export const ha2: Record<string, string> = {
   'If something doesn’t react, the normal switch still works.': 'Om något inte reagerar fungerar den vanliga strömbrytaren ändå.',
   'Already using Bring!, Mealie or the HA app for some of this? Settings › Home Assistant shows what Home Assistant already does and keeps it in step – take over the suggestions with one tap.':
     'Använder ni redan Bring!, Mealie eller HA-appen för en del av det här? Inställningar › Home Assistant visar vad Home Assistant redan gör och håller det i takt – använd förslagen med ett tryck.',
-  'Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands, then switch them on for the link.':
-    'Röstkommandon för barnvakten (lampor, persienner, musik – aldrig lås eller kameror): Inställningar › Home Assistant › Röstkommandon, slå sedan på dem för länken.',
+  'Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.': 'Röstkommandon för barnvakten (lampor, persienner, musik – aldrig lås eller kameror): Inställningar › Home Assistant › Röstkommandon. De visas på barnvakts- och husvaktslänkar; stäng av dem per länk om du vill.',
+  'On for every babysitter and house-sitter link unless switched off below': 'På för varje barnvakts- och husvaktslänk, om du inte stänger av den nedan',
+  'out and about': 'ute',
 };

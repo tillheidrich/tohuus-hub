@@ -152,7 +152,7 @@ describe('guest policy (pure)', () => {
   });
 
   it('level "recipes": + recipes, plan, votes and ratings', () => {
-    for (const p of ['/recipes', '/recipes/3', '/plan', '/cook2/what-to-eat', '/people', '/people/favourites', '/people/person/k1', '/people/recipes/3/ratings', '/votes', '/plan2/rotations'])
+    for (const p of ['/recipes', '/recipes/3', '/plan', '/cook2/what-to-eat', '/people', '/people/favourites', '/people/person/k1', '/people/recipes/3/ratings', '/plan2/votes', '/plan2/week'])
       expect(may('recipes', 'GET', p), p).toBe(true);
     expect(may('recipes', 'PUT', '/people/recipes/3/ratings')).toBe(true);
     for (const p of ['/parties', '/orders', '/guest-links', '/kids']) expect(may('recipes', 'GET', p), p).toBe(false);
@@ -170,6 +170,46 @@ describe('guest policy (pure)', () => {
 
   it('private areas are closed on every level, also under new route names', () => {
     for (const l of ['order', 'stock', 'recipes', 'family'] as const) for (const p of always) expect(may(l, 'GET', p), `${l} ${p}`).toBe(false);
+  });
+
+  it('classifies the routes added this wave (share, plan2, labels, away, recipes2, quality, tour)', () => {
+    // share: quick add for everyone with a list, never tokens / start mode / staples
+    expect(may('order', 'POST', '/share/parse')).toBe(true);
+    expect(may('order', 'POST', '/share/items')).toBe(true);
+    expect(may('order', 'GET', '/share/items/mine')).toBe(true);
+    for (const l of ['order', 'recipes', 'family'] as const) {
+      expect(may(l, 'GET', '/share/tokens'), l).toBe(false);
+      expect(may(l, 'PUT', '/share/start-mode'), l).toBe(false);
+      expect(may(l, 'PUT', '/share/staples'), l).toBe(false);
+    }
+    expect(may('order', 'GET', '/share/start-mode')).toBe(false);
+    // plan2: votes and the week from "recipes" on, templates and rotation only like family
+    expect(may('stock', 'GET', '/plan2/votes')).toBe(false);
+    expect(may('recipes', 'GET', '/plan2/week')).toBe(true);
+    expect(may('recipes', 'POST', '/plan2/votes/3/ballots')).toBe(true);
+    expect(may('recipes', 'GET', '/plan2/members')).toBe(true);
+    expect(may('recipes', 'PUT', '/plan2/rotation')).toBe(false);
+    expect(may('recipes', 'POST', '/plan2/templates')).toBe(false);
+    expect(may('family', 'PUT', '/plan2/rotation')).toBe(true);
+    // labels: boxes from "stock" on
+    expect(may('order', 'GET', '/labels/boxes')).toBe(false);
+    expect(may('stock', 'POST', '/labels/boxes/AB12/action')).toBe(true);
+    expect(may('stock', 'POST', '/labels/print')).toBe(false);
+    // away, quality: never
+    for (const l of ['order', 'stock', 'recipes', 'family'] as const) {
+      expect(may(l, 'GET', '/away/summary'), l).toBe(false);
+      expect(may(l, 'POST', '/away/trips/1/sitter-link'), l).toBe(false);
+      expect(may(l, 'GET', '/quality/stats'), l).toBe(false);
+      expect(may(l, 'GET', '/recipes/export.json'), l).toBe(false);
+      expect(may(l, 'POST', '/tour/reset'), l).toBe(false);
+      // the tour itself is per person
+      expect(may(l, 'GET', '/tour'), l).toBe(true);
+      expect(may(l, 'PUT', '/tour'), l).toBe(true);
+    }
+    // recipe imports are recipes, not receipts
+    expect(may('recipes', 'POST', '/recipes/import/paste')).toBe(true);
+    expect(may('recipes', 'GET', '/recipes/open/search')).toBe(true);
+    expect(may('stock', 'POST', '/recipes/import/paste')).toBe(false);
   });
 
   it('"paused": nothing but who am I and sign out', () => {
@@ -404,6 +444,18 @@ describe('children, pictures, ratings', () => {
     // remove a rating
     await admin.put(`/api/people/recipes/${other}/ratings`, { person: child, value: null });
     expect((await admin.get(`/api/people/person/${child}`)).json.dislikes).toEqual([]);
+  });
+
+  it('discreet and private entries: a guest is never treated as owner or shopper', async () => {
+    const { canSee } = await import('../server/lib/share-core');
+    const lea = (db.prepare(`SELECT id FROM users WHERE name = 'Lea'`).get() as { id: number }).id;
+    const discreet = { owner_id: lea, visibility: 'discreet' as const, share_with: '[]', reveal: 1 };
+    const priv = { owner_id: lea, visibility: 'private' as const, share_with: JSON.stringify([guestId]), reveal: 0 };
+    expect(canSee(discreet, { userId: guestId, shopping: true }, guestId)).toEqual({ visible: true, real: false, revealed: false });
+    expect(canSee(priv, { userId: guestId }).visible).toBe(false);
+    // family members still get the normal rules
+    const till = (db.prepare(`SELECT id FROM users WHERE name = 'Till'`).get() as { id: number }).id;
+    expect(canSee(discreet, { userId: till, shopping: true }).real).toBe(true);
   });
 
   it('a guest rates only for herself', async () => {

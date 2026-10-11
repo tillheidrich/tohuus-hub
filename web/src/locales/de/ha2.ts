@@ -117,6 +117,7 @@ export const ha2: Record<string, string> = {
   'If something doesn’t react, the normal switch still works.': 'Wenn etwas nicht reagiert, geht der normale Schalter trotzdem.',
   'Already using Bring!, Mealie or the HA app for some of this? Settings › Home Assistant shows what Home Assistant already does and keeps it in step – take over the suggestions with one tap.':
     'Ihr nutzt schon Bring!, Mealie oder die HA-App für einiges davon? Einstellungen › Home Assistant zeigt, was Home Assistant schon macht, und hält es im Gleichschritt – Vorschläge mit einem Tipp übernehmen.',
-  'Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands, then switch them on for the link.':
-    'Sprachbefehle für den Babysitter (Licht, Rollos, Musik – nie Schlösser oder Kameras): Einstellungen › Home Assistant › Sprachbefehle, dann für den Link einschalten.',
+  'Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.': 'Sprachbefehle für den Babysitter (Licht, Rollos, Musik – nie Schlösser oder Kameras): Einstellungen › Home Assistant › Sprachbefehle. Sie erscheinen auf Babysitter- und Haushüter-Links; pro Link abschaltbar.',
+  'On for every babysitter and house-sitter link unless switched off below': 'An für jeden Babysitter- und Haushüter-Link, außer du schaltest ihn unten ab',
+  'out and about': 'unterwegs',
 };

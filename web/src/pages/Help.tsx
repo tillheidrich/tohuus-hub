@@ -1,5 +1,5 @@
 /** In-app help (/hilfe): short how-tos for the things people ask about in week one. Area: onboard. */
-import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, Confetti, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase } from '@phosphor-icons/react';
+import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, Confetti, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase, UsersThree } from '@phosphor-icons/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../api';
@@ -81,9 +81,23 @@ export function Help() {
         t('Show it on the TV: open {url}/party on the TV and type the 4-digit code from “Show on TV”.', { url: base.replace(/^https?:\/\//, '') }),
         t('Guests scan the QR code and order; you get a push and tap “Ready”. Stock is booked by itself.'),
         t('For the babysitter: Guests & Bar › Guest links – share chosen places read-only, with a note.'),
-        t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands, then switch them on for the link.'),
+        t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.'),
       ],
       link: { label: t('Open guests & bar'), to: '/bar' },
+    },
+    {
+      id: 'people',
+      icon: <UsersThree size={20} />,
+      title: t('People: pictures, children, permanent guests, favourites'),
+      lead: t('Everyone in the household with a picture – children without a login, regular guests with just the access they need.'),
+      steps: [
+        t('Settings › Members › “Our household”: tap a person for a photo (crop it square, or take one), an animal or initials, and what they like, don’t like and are allergic to.'),
+        t('“Add a child”: name, optional year of birth, allergies. Children never sign in; parents rate dishes for them, and kid mode uses the same profile.'),
+        t('“Add a permanent guest” (grandma, a regular babysitter) and choose what they see: ordering & shopping list, + stock, + recipes & plan, or like family. Settings, spending, receipts, backups and care notes stay hidden.'),
+        t('“For a while” changes it for a weekend or pauses it – it switches back by itself. “Send login link” mails a one-time link, or shows a link and QR code when e-mail is not set up.'),
+        t('After cooking, one tap per person: not for me, okay, loved it. Allergies warn on dishes and are never planned automatically; ratings and dislikes nudge suggestions. Cook › Favourites shows the family favourites and each person’s.'),
+      ],
+      link: { label: t('Open members'), to: '/einstellungen?tab=members' },
     },
     {
       id: 'plan',

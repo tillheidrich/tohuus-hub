@@ -37,4 +37,5 @@ export const de_ha2: Record<string, string> = {
   'The Home Assistant app is on one phone – its owner can get ToHuus messages there instead of a browser push.': 'Die Home-Assistant-App ist auf einem Handy – wem es gehört, kann ToHuus-Nachrichten dort statt als Browser-Push bekommen.',
   '{n} devices and scenes are reachable by voice – they can go on the babysitter page.': '{n} Geräte und Szenen sind per Sprache erreichbar – sie können auf die Babysitter-Seite.',
   'Nothing exposed to a voice assistant yet – the voice guide can be filled by hand.': 'Noch nichts für einen Sprachassistenten freigegeben – die Sprachhilfe lässt sich auch von Hand füllen.',
+  'Not available for guests': 'Für Gäste nicht verfügbar',
 };

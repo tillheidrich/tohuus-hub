@@ -179,6 +179,29 @@ describe('shopping list ⇄ HA to-do (database)', () => {
     expect(db.prepare("SELECT 1 FROM shopping_items WHERE text = 'Milk'").get()).toBeUndefined();
   });
 
+  it('private items never leave ToHuus, discreet ones only as their placeholder', () => {
+    const add = (text: string, vis: 'private' | 'discreet', real: string) => {
+      const id = Number(db.prepare('INSERT INTO shopping_items (text) VALUES (?)').run(text).lastInsertRowid);
+      db.prepare('INSERT INTO share_items (item_id, owner_id, visibility, real_text) VALUES (?, NULL, ?, ?)').run(id, vis, real);
+      return id;
+    };
+    const priv = add('Personal item', 'private', 'Birthday present');
+    const disc = add('Drugstore item', 'discreet', 'Pregnancy test');
+    ha2.syncEntity('shopping', E, { items: [] });
+    const ops = ha2.takeOps();
+    expect(ops.map((o) => (o.op as any).item)).toEqual(['Drugstore item']);
+    expect(JSON.stringify(ops)).not.toMatch(/Birthday|Pregnancy|Personal item/);
+    ha2.ackOps([{ id: ops[0].id, ok: true, uid: 'd1' }]);
+    // HA renames the placeholder – the placeholder stays (the real name lives in share_items)
+    ha2.syncEntity('shopping', E, { items: [{ uid: 'd1', summary: 'Something else', status: 'needs_action' }], last_updated: new Date(Date.now() + 1000).toISOString() });
+    expect((db.prepare('SELECT text FROM shopping_items WHERE id = ?').get(disc) as any).text).toBe('Drugstore item');
+    // an item that turns private is removed in HA
+    db.prepare("UPDATE share_items SET visibility = 'private' WHERE item_id = ?").run(disc);
+    ha2.syncEntity('shopping', E, { items: [{ uid: 'd1', summary: 'Drugstore item', status: 'needs_action' }] });
+    expect(ha2.takeOps().map((o) => o.op)).toContainEqual({ kind: 'todo', service: 'remove_item', entity_id: E, uid: 'd1' });
+    expect(db.prepare('SELECT 1 FROM shopping_items WHERE id = ?').get(priv)).toBeTruthy();
+  });
+
   it('never syncs with ToHuus Hub’s own to-do entity', () => {
     const s = ha2.setHa2Settings({ shopping: { mode: 'two_way', entities: ['todo.tohuus_hub_shopping_list', E] } });
     expect(s.shopping.entities).toEqual([E]);
@@ -359,8 +382,21 @@ describe('voice commands', () => {
     const id = voice.addManual({ name: 'Leselampe', domain: 'light', area: 'Kinderzimmer', phrases: ['Alexa, Leselampe an'] });
     expect(voice.voiceItems().find((v) => v.id === id)!.phrases).toEqual(['Alexa, Leselampe an']);
     const link = Number(db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES ('x', 'Sitter', '["stock"]', '[1]')`).run().lastInsertRowid);
+    // babysitter / house-sitter links ("where is what") show it by default, other links never by default
+    expect(voice.guestVoice(link)!.items.map((i) => i.name)).toEqual(expect.arrayContaining(['Wohnzimmer Licht', 'Leselampe']));
+    const bar = Number(db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES ('y', 'Party', '["bar"]', '[]')`).run().lastInsertRowid);
+    expect(voice.guestVoice(bar)).toBeNull();
+    voice.setVoiceLink(link, false);
     expect(voice.guestVoice(link)).toBeNull();
     voice.setVoiceLink(link, true);
-    expect(voice.guestVoice(link)!.items.map((i) => i.name)).toEqual(expect.arrayContaining(['Wohnzimmer Licht', 'Leselampe']));
+    voice.setVoiceSettings({ sitter_default: false });
+    expect(voice.guestVoice(link)).not.toBeNull();
+    const later = Number(db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES ('z', 'Sitter 2', '["stock"]', '[1]')`).run().lastInsertRowid);
+    expect(voice.guestVoice(later)).toBeNull();
+    // hidden entries and entries that turned unsafe disappear from the guest page
+    const lamp = voice.voiceItems().find((v) => v.name === 'Leselampe')!;
+    voice.updateItem(lamp.id, { hidden: true });
+    expect(voice.guestVoice(link)!.items.map((i) => i.name)).not.toContain('Leselampe');
+    expect(() => voice.updateItem(lamp.id, { name: 'Garagentor' })).toThrow();
   });
 });

@@ -37,4 +37,5 @@ export const sv_ha2: Record<string, string> = {
   'The Home Assistant app is on one phone – its owner can get ToHuus messages there instead of a browser push.': 'Home Assistant-appen finns på en telefon – ägaren kan få ToHuus-meddelanden där i stället för som webbpush.',
   '{n} devices and scenes are reachable by voice – they can go on the babysitter page.': '{n} enheter och scener går att styra med rösten – de kan visas på barnvaktssidan.',
   'Nothing exposed to a voice assistant yet – the voice guide can be filled by hand.': 'Inget är delat med en röstassistent än – röstguiden kan fyllas i för hand.',
+  'Not available for guests': 'Inte tillgängligt för gäster',
 };

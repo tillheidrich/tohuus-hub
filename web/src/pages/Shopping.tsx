@@ -25,6 +25,7 @@ import { pendingQueue, shopOp, useOfflineState, useWakeLock } from '../shop/offl
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, sectionLabel } from '../shop/sections';
 import { Avatar, Empty, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { BonButton } from './Bons';
+import { useOutOfHouse } from './Ha2';
 import { ComposerVisibility, ItemPrivacy, ShareMark, type Visibility, VisibilityPanel, addHiddenText, readClipboard, shareSubline } from './Share';
 
 function storeGet(k: string, d: string) {
@@ -598,6 +599,8 @@ function QuickAddSheet({ rows, onClose, onDone }: { rows: any[] | null; onClose:
 
 function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me; onClose: () => void; run: (op: any) => Promise<boolean> }) {
   const members = useApi<{ id: number; name: string; color: string }[]>(['shopping', 'members'], item ? '/shop/members' : null);
+  // ha2: whoever Home Assistant sees out of the house can pick it up on the way
+  const out = useOutOfHouse(Boolean(item) && !me?.actor.houseGuest);
   const toast = useToast();
   if (!item) return <Sheet open={false} onClose={onClose}>{null}</Sheet>;
   const myId = me?.actor.userId;
@@ -635,6 +638,7 @@ function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me;
               <button key={m.id} className={on ? 'on' : ''} onClick={() => claimFor(on ? null : m.id)}>
                 <Avatar name={m.name} color={m.color} size={34} />
                 <span>{m.id === myId ? t('Me') : m.name}</span>
+                {out.has(m.id) && <span className="small muted">{t('out and about')}</span>}
               </button>
             );
           })}

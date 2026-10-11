@@ -9,9 +9,9 @@
 import { ArrowRight, CheckCircle, DeviceMobile, Monitor, WarningCircle } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { post } from '../api';
+import { get, post } from '../api';
 import { BRANDS, currentBrand } from '../brand';
-import { t } from '../i18n';
+import { setLang, t } from '../i18n';
 
 const tokenFromHash = () => decodeURIComponent(location.hash.replace(/^#/, ''));
 /** one request per token, even when React runs effects twice (dev) – the tokens are single use */
@@ -66,6 +66,13 @@ function Result({ ok, title, text, action = true }: { ok: boolean; title: string
 
 export function AuthLanding() {
   const { kind = '' } = useParams();
+  // these pages open without a session: follow the household language, not the browser's (area: people)
+  const [, rerender] = useState(0);
+  useEffect(() => {
+    get<{ language?: string }>('/auth/options')
+      .then((o) => setLang(o.language) && rerender((n) => n + 1))
+      .catch(() => {});
+  }, []);
   return <Frame>{kind === 'person' ? <PersonLinkPage /> : kind === 'link' ? <LinkPage /> : kind === 'email' ? <EmailPage /> : kind === 'password' ? <PasswordPage /> : <Result ok={false} title={t('This link doesn’t work.')} />}</Frame>;
 }
 

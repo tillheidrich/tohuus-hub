@@ -72,10 +72,10 @@ The older *Settings › Access & AI › Shopping list in Home Assistant* sync (T
 
 | Topic | HA side | Modes | Notes |
 |---|---|---|---|
-| Shopping list | to-do lists (`shopping_list`, Bring!, Todoist, Local To-do, Cookidoo), several possible | `two_way` (default proposal), `from_ha` (HA leads), `to_ha` (ToHuus leads), `off` | quantities as `2 Milk` ⇄ qty, ticks both ways, dedupe by normalised name, discreet entries never leave ToHuus |
+| Shopping list | to-do lists (`shopping_list`, Bring!, Todoist, Local To-do, Cookidoo), several possible | `two_way` (default proposal), `from_ha` (HA leads), `to_ha` (ToHuus leads), `off` | quantities as `2 Milk` ⇄ qty, ticks both ways, dedupe by normalised name; private entries (`share_items`, area share) never leave ToHuus and a linked one that turns private is removed in HA; discreet entries only travel as their neutral placeholder and a rename from HA never overwrites it |
 | Meal plan | calendars (Mealie, Local Calendar, family calendar) | `from_ha` (default), `to_ha`, `two_way` | events we write carry `[tohuus:meal:<id>]` → recognised, never re-imported; the Cookidoo calendar is excluded (own import); moving/removing exported events needs the integration (HA has no REST delete) |
 | Care tasks | one to-do list | `to_ha` | due tasks (overdue/today) appear; ticking one off completes it (next date calculated), the item is then removed |
-| Who is home | `person.*` → members (mapping editable) | on/off | `presence()`, `isHome(userId)`, `everyoneAway()` and `onPresence(fn)` in `server/lib/ha2.ts` for other modules (away mode, claims) |
+| Who is home | `person.*` → members (mapping editable) | on/off | `presence()`, `isHome(userId)`, `everyoneAway()` and `onPresence(fn)` in `server/lib/ha2.ts` for other modules: feeds away mode's presence (`setPresence` in `away.ts`, only a suggestion), and the "who takes care of it?" picker on the shopping list marks members who are out (they can pick it up on the way) |
 | Notifications | `notify.mobile_app_*` | per member | members with an HA app service get notifications there and no Web Push (`setPersonalRouter` hook in `notify.ts`) |
 | NFC tags | `tag_scanned` (integration only) | on/off | unknown tags are listed; map a tag to a QR label + action (`take`, `list`, `opened`, `done`); result fired as `tohuus_hub_tag` |
 | Voice commands | exposed entities (Assist / Alexa / Google) | – | babysitter page, see below |
@@ -99,15 +99,18 @@ ToHuus Hub's own entities (`todo.tohuus_hub_*`, `calendar.tohuus_hub_*`) are nev
 | PATCH | `/api/ha2/settings` | `{shopping|meals|care: {mode, entities}, presence: {enabled, map}, notify: {userId: service}, tags: {enabled}, transport}` (admin) |
 | POST | `/api/ha2/apply-proposals`, `/api/ha2/detect`, `/api/ha2/sync` | take over suggestions / look again / sync now |
 | GET | `/api/ha2/presence` | who is home, everyone away |
+| GET/PUT/POST/PATCH/DELETE | `/api/ha2/voice`, `/api/ha2/voice/settings` (`{assistant, sitter_default}`), `/api/ha2/voice/entities`, `/api/ha2/voice/import-exposed`, `/api/ha2/voice/items[/:id]`, `/api/ha2/voice/links/:id` (`{on}`) | voice command guide (writes: admin) |
 | GET/PATCH/DELETE | `/api/ha2/tags[/:id]` | seen tags, mapping to a QR label + action |
 | GET | `/api/ha/v1/bridge/config` | what the integration should watch |
 | POST | `/api/ha/v1/bridge/sync`, `/api/ha/v1/bridge/tag` | integration bridge (HA token) |
+
+All `/api/ha2*` routes are closed to permanent guests (presence and notification routing are household matters) and to the Home Assistant token.
 
 MCP: `get_home_assistant_sync`, `sync_home_assistant_now`, `who_is_home`, `list_voice_commands`.
 
 ### Voice commands on the babysitter page
 
-*Settings › Home Assistant › Voice commands for the babysitter page*: choose the assistant (Alexa, Google, Siri, HA Assist), take over everything exposed to it ("Take over what Alexa can reach"), pick from HA, or add entries by hand (works without HA). Example phrases are generated per kind and language ("Alexa, schalte Wohnzimmer Licht ein"); own phrases per entry override them; entries can be hidden. Switch the section on per guest link (links with "Where is what?"); the guest page shows it below the search (`GET /api/guest/:token/voice`).
+*Settings › Home Assistant › Voice commands for the babysitter page*: choose the assistant (Alexa, Google, Siri, HA Assist), take over everything exposed to it ("Take over what Alexa can reach"), pick from HA, or add entries by hand (works without HA). Example phrases are generated per kind and language ("Alexa, schalte Wohnzimmer Licht ein"); own phrases per entry override them; entries can be hidden. The section is on for every babysitter and house-sitter link ("Where is what?" links, including the away-mode house-sitter link) unless switched off for that link; the default itself can be switched off (`sitter_default`), then it is per link only. Other links (bar/party) never show it by default. The guest page shows it below the search (`GET /api/guest/:token/voice`, public, token-checked).
 
 Safety: only `light`, `switch`, `cover`, `climate`, `fan`, `media_player`, `scene` and `script` (scripts only when picked explicitly, never by "take over"); never `lock`, `alarm_control_panel`, `camera`, `person`, `device_tracker` and the like, no covers of class garage/gate/door, and nothing whose name sounds like a lock, alarm, camera, gate or garage – also for hand-made entries and on every read.
 

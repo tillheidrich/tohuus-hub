@@ -33,16 +33,22 @@ migrate(
    );`,
 );
 
+// a row in ha2_voice_links is an explicit choice per link (on / off); links without one follow the default
+migrate('ha2-voice-2', `ALTER TABLE ha2_voice_links ADD COLUMN shown INTEGER NOT NULL DEFAULT 1;`);
+
 export const ASSISTANTS = ['alexa', 'google', 'siri', 'assist'] as const;
 export type Assistant = (typeof ASSISTANTS)[number];
 
 export interface VoiceSettings {
   assistant: Assistant;
+  /** babysitter and house-sitter links ("Where is what?") show the section unless switched off for that link */
+  sitter_default: boolean;
 }
-export const voiceSettings = (): VoiceSettings => ({ assistant: 'alexa', ...getSetting<Partial<VoiceSettings>>('ha2.voice', {}) });
+export const voiceSettings = (): VoiceSettings => ({ assistant: 'alexa', sitter_default: true, ...getSetting<Partial<VoiceSettings>>('ha2.voice', {}) });
 export function setVoiceSettings(s: Partial<VoiceSettings>) {
   const next = { ...voiceSettings(), ...s };
   if (!ASSISTANTS.includes(next.assistant)) next.assistant = 'alexa';
+  next.sitter_default = next.sitter_default !== false;
   setSetting('ha2.voice', next);
   return next;
 }
@@ -195,17 +201,36 @@ export const deleteItem = (id: number) => db.prepare('DELETE FROM ha2_voice WHER
 
 // ---------------------------------------------------------------- per guest link
 
-export const voiceLinks = () => (db.prepare('SELECT guest_link_id FROM ha2_voice_links').all() as { guest_link_id: number }[]).map((r) => r.guest_link_id);
+/** Links that show "where is what" (scope stock) – babysitter and house-sitter links. */
+const isSitterLink = (scopes: string) => {
+  try {
+    return (JSON.parse(scopes) as string[]).includes('stock');
+  } catch {
+    return false;
+  }
+};
+
+/** Is the voice section shown on this guest link? Explicit choice first, else the default for sitter links. */
+export function voiceOnLink(linkId: number): boolean {
+  const row = db.prepare('SELECT shown FROM ha2_voice_links WHERE guest_link_id = ?').get(linkId) as { shown: number } | undefined;
+  if (row) return Boolean(row.shown);
+  const link = db.prepare('SELECT scopes FROM guest_links WHERE id = ?').get(linkId) as { scopes: string } | undefined;
+  return Boolean(link && voiceSettings().sitter_default && isSitterLink(link.scopes));
+}
+
+/** Ids of active guest links that show the section. */
+export const voiceLinks = () =>
+  (db.prepare('SELECT id FROM guest_links WHERE revoked = 0').all() as { id: number }[]).map((r) => r.id).filter((id) => voiceOnLink(id));
+
 export function setVoiceLink(linkId: number, on: boolean) {
   if (!db.prepare('SELECT 1 FROM guest_links WHERE id = ?').get(linkId)) throw new VoiceError(t('Not found'));
-  if (on) db.prepare('INSERT OR IGNORE INTO ha2_voice_links (guest_link_id) VALUES (?)').run(linkId);
-  else db.prepare('DELETE FROM ha2_voice_links WHERE guest_link_id = ?').run(linkId);
+  db.prepare('INSERT INTO ha2_voice_links (guest_link_id, shown) VALUES (?, ?) ON CONFLICT(guest_link_id) DO UPDATE SET shown = excluded.shown').run(linkId, on ? 1 : 0);
   return on;
 }
 
 /** What a guest link shows – null when the section is off for this link or empty. */
 export function guestVoice(linkId: number) {
-  if (!db.prepare('SELECT 1 FROM ha2_voice_links WHERE guest_link_id = ?').get(linkId)) return null;
+  if (!voiceOnLink(linkId)) return null;
   const a = voiceSettings().assistant;
   const items = voiceItems().map(({ id, name, area, domain, phrases }) => ({ id, name, area, domain, phrases }));
   if (!items.length) return null;

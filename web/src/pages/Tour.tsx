@@ -164,7 +164,8 @@ export function TourHost({ me }: { me: Me }) {
 
   // new members get the tour once (resumes after a reload); never on top of the setup
   useEffect(() => {
-    if (auto.current || !d?.tour || open !== null) return;
+    // permanent guests (area: people) only see a few pages – the household tour would walk them into closed ones
+    if (auto.current || !d?.tour || open !== null || me.actor.houseGuest) return;
     if (d.start.due || loc.pathname.startsWith('/willkommen') || (admin && (!g.data || g.data.wizardDue))) return;
     if (d.tour.status !== 'new' && d.tour.status !== 'active') return;
     auto.current = true;

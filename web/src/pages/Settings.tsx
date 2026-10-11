@@ -45,7 +45,7 @@ export function Settings({ me }: { me: Me }) {
           <button className="btn ghost" onClick={() => nav('/hilfe')}>
             <Question size={16} /> {t('Help')}
           </button>
-          <TourButton />
+          {!me.actor.houseGuest && <TourButton />}
           <button className="btn ghost" onClick={() => post('/auth/logout').then(() => invalidate('me'))}>
             <SignOut size={16} /> {t('Sign out')}
           </button>

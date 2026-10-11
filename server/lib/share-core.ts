@@ -11,6 +11,7 @@
  * with `notPrivate()`. Only the user-aware views (shopping list of a signed-in member) put the real name back.
  */
 import { db, getSetting, migrate, setSetting } from '../db.js';
+import { isGuestUser } from './people-policy.js';
 
 migrate(
   'share-1',
@@ -111,6 +112,8 @@ export function canSee(row: Pick<ShareRow, 'owner_id' | 'visibility' | 'share_wi
   const uid = viewer?.userId ?? null;
   if (!uid) return { visible: row.visibility !== 'private' || row.owner_id === null, real: false, revealed: false };
   if (row.owner_id === uid) return { visible: true, real: true, revealed: false };
+  // permanent guests (area: people) never see real names of others' entries, and never others' private ones
+  if (isGuestUser(uid)) return { visible: row.visibility !== 'private', real: false, revealed: false };
   if (row.visibility === 'private') {
     if (parseIds(row.share_with).includes(uid)) return { visible: true, real: true, revealed: false };
     // an orphaned private item (owner removed) stays visible as a placeholder so someone can remove it

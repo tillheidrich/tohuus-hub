@@ -546,6 +546,10 @@ export function VoiceCard({ admin }: { admin: boolean }) {
       )}
       <div className="field">
         <label>{t('Shown on these guest links')}</label>
+        <div className="row between" style={{ gap: 12, marginBottom: 8 }}>
+          <span className="small muted">{t('On for every babysitter and house-sitter link unless switched off below')}</span>
+          <Toggle on={d.settings.sitter_default !== false} onChange={(on) => admin && call(() => put('/ha2/voice/settings', { sitter_default: on }))} label={t('On for every babysitter and house-sitter link unless switched off below')} />
+        </div>
         {sitterLinks.length === 0 ? (
           <div className="small muted">{t('No babysitter link yet. Create one under Guests & Bar › Guest links with “Where is what?”.')}</div>
         ) : (
@@ -728,4 +732,12 @@ export function GuestVoice({ token }: { token: string }) {
       <p className="small muted">{t('If something doesn’t react, the normal switch still works.')}</p>
     </section>
   );
+}
+
+// ================================================================== presence for other pages
+
+/** Members Home Assistant sees out of the house (for "who gets it?": whoever is out can pick it up on the way). */
+export function useOutOfHouse(enabled = true): Set<number> {
+  const q = useApi<{ people: { user_id: number | null; home: boolean }[] }>(['ha2', 'presence'], enabled ? '/ha2/presence' : null);
+  return new Set((q.data?.people ?? []).filter((p) => p.user_id && !p.home).map((p) => p.user_id as number));
 }

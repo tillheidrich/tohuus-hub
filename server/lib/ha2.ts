@@ -28,6 +28,7 @@ import { addPlan, haSettings } from './plan.js';
 import { FreshError, markOpened } from './fresh.js';
 import { isSafe } from './ha2-safety.js';
 import { formatItem } from './shop.js';
+import { isMasked, notPrivate } from './share-core.js';
 import { norm } from './text.js';
 import { reconcile, type Fields, type LocalItem, type LocalOp, type RemoteItem, type RemoteOp, type SyncMode, type Link } from './ha2-engine.js';
 
@@ -369,18 +370,13 @@ interface Adapter {
 
 // ---------------------------------------------------------------- shopping list ⇄ to-do
 
-let privateCol: string | null | undefined;
-/** Discreet entries (area "share") never leave ToHuus – whatever the column ends up being called. */
-function privateColumn(): string | null {
-  if (privateCol !== undefined && privateCol !== null) return privateCol;
-  // private entries of the share area live in share_items (discreet ones only carry a neutral placeholder text)
-  if (db.prepare(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'share_items'`).get()) {
-    privateCol = `(id IN (SELECT item_id FROM share_items WHERE visibility = 'private'))`;
-    return privateCol;
-  }
-  const cols = (db.prepare('PRAGMA table_info(shopping_items)').all() as { name: string }[]).map((c) => c.name);
-  privateCol = ['private', 'discreet', 'is_private', 'is_discreet'].find((c) => cols.includes(c)) ?? null;
-  return privateCol;
+/**
+ * Privacy (area "share", server/lib/share-core.ts): private entries never leave ToHuus – they are flagged here so
+ * the engine never creates them in HA and removes a linked twin when an entry turns private. Discreet entries only carry their neutral placeholder in shopping_items, so that is all HA ever sees; a
+ * rename coming from HA never overwrites the placeholder (the real name lives in share_items).
+ */
+function privateColumn(): string {
+  return `(NOT ${notPrivate('id')})`;
 }
 
 const shopFields = (r: { text: string; qty: number | null; checked_at: string | null }): Fields => ({ title: r.text, qty: r.qty && r.qty > 0 ? r.qty : 1, done: Boolean(r.checked_at) });
@@ -402,7 +398,7 @@ const shopping: Adapter = {
     const pc = privateColumn();
     const rows = db
       .prepare(
-        `SELECT id, text, qty, checked_at, created_at${pc ? `, ${pc} AS priv` : ', 0 AS priv'} FROM shopping_items
+        `SELECT id, text, qty, checked_at, created_at, ${pc} AS priv FROM shopping_items
          WHERE checked_at IS NULL OR checked_at > datetime('now', '-1 day')`,
       )
       .all() as { id: number; text: string; qty: number | null; checked_at: string | null; created_at: string; priv: number | null }[];
@@ -431,7 +427,7 @@ const shopping: Adapter = {
       return null;
     }
     const p = op.patch;
-    if (p.title !== undefined && String(p.title).trim()) db.prepare('UPDATE shopping_items SET text = ? WHERE id = ?').run(String(p.title).trim().slice(0, 200), id);
+    if (p.title !== undefined && String(p.title).trim() && !isMasked(id)) db.prepare('UPDATE shopping_items SET text = ? WHERE id = ?').run(String(p.title).trim().slice(0, 200), id);
     if (p.qty !== undefined) db.prepare('UPDATE shopping_items SET qty = ? WHERE id = ?').run(Number(p.qty) > 0 && Number(p.qty) !== 1 ? Number(p.qty) : null, id);
     if (p.done === true) db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = 'Home Assistant', in_basket = 0 WHERE id = ? AND checked_at IS NULL`).run(id);
     if (p.done === false) db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(id);
@@ -1287,7 +1283,5 @@ export function ha2Overview() {
   };
 }
 
-/** Test hook: forget cached schema lookups. */
-export const _resetForTests = () => {
-  privateCol = undefined;
-};
+/** Test hook (kept for older tests – nothing is cached any more). */
+export const _resetForTests = () => {};

@@ -126,6 +126,9 @@ const ACCOUNT: Rule[] = [
   // own push devices (a guest only receives messages addressed to them, see webpush.ts)
   any(/^\/push\/(key|subscribe|unsubscribe|devices|action|test)(\/.*)?$/),
   read(/^\/people\/directory$/),
+  // the product tour is per person (area: tour); starting it for the household is admin-only anyway
+  read(/^\/tour$/),
+  ['W', /^\/tour$/],
   // one's own picture, colour and likes
   any(/^\/people\/me(\/.*)?$/),
 ];
@@ -141,6 +144,10 @@ const ORDER: Rule[] = [
   // the shopping list's "already in the house" hints and the product picker
   read(/^\/products$/),
   read(/^\/fresh\/forecast$/),
+  // share area: quick add from text / the share sheet onto the shopping list, and one's own entries
+  write(/^\/share\/(parse|items)$/),
+  ['W', /^\/share\/items\/\d+$/],
+  read(/^\/share\/items\/mine$/),
 ];
 
 const STOCK: Rule[] = [
@@ -152,14 +159,18 @@ const STOCK: Rule[] = [
   any(/^\/fresh(\/.*)?$/),
   any(/^\/lookup(\/.*)?$/),
   any(/^\/qr(\/.*)?$/),
+  // freezer & leftover boxes (area: labels) – using them, not printing sheets
+  read(/^\/labels\/(meta|summary|guess|boxes)(\/[^/]+)?$/),
+  any(/^\/labels\/boxes(\/[^/]+(\/(action|undo|plan))?)?$/),
 ];
 
 const RECIPES: Rule[] = [
   any(/^\/recipes(\/.*)?$/),
   any(/^\/plan(\/.*)?$/),
   any(/^\/cook2(\/.*)?$/),
-  // week plan 2.0 (rotations, family votes) – mounted by the plan2 area
-  any(/^\/(plan2|votes?|rotations?)(\/.*)?$/),
+  // week plan 2.0 (area: plan2): see the week, take part in family votes – templates & rotation stay with the family
+  read(/^\/plan2\/(week|members|vote-ideas)$/),
+  any(/^\/plan2\/votes(\/.*)?$/),
   read(/^\/people$/),
   any(/^\/people\/(recipes|favourites|person)(\/.*)?$/),
 ];
@@ -179,9 +190,14 @@ const FAMILY_DENY: RegExp[] = [
   /^\/ha(\/.*)?$/,
   /^\/kids(\/.*)?$/,
   /^\/people\/admin(\/.*)?$/,
+  // receipt recognition feedback (area: quality) and trips incl. babysitter links (area: away)
+  /^\/quality(\/.*)?$/,
+  /^\/away(\/.*)?$/,
+  /^\/share\/(tokens|inbox)(\/.*)?$/,
+  /^\/tour\/.+$/,
 ];
 /** read-only for level family (writes are household administration) */
-const FAMILY_READONLY: RegExp[] = [/^\/onboarding(\/.*)?$/, /^\/region(\/.*)?$/, /^\/(locations|categories)(\/.*)?$/, /^\/shop\/(stores|ha-todo)(\/.*)?$/];
+const FAMILY_READONLY: RegExp[] = [/^\/share\/(start-mode|staples)(\/.*)?$/, /^\/onboarding(\/.*)?$/, /^\/region(\/.*)?$/, /^\/(locations|categories)(\/.*)?$/, /^\/shop\/(stores|ha-todo)(\/.*)?$/];
 
 /** Words that are never for guests, wherever a route puts them (also covers routes added later). */
 const NEVER = /^(spend|spending|budgets?|receipts?|bons?|imports?|backups?|tokens?|restore|export\.json|reset|settings|invites?|webdav)$/;
@@ -201,7 +217,9 @@ export function guestMay(level: EffectiveLevel, method: string, url: string): bo
   const path = apiPath(url);
   if (matches(BASE, m, path)) return true;
   if (level === 'paused') return false;
-  if (path.split('/').some((seg) => NEVER.test(seg))) return false;
+  // recipe imports are adding recipes, not receipts – they follow the recipe rules below
+  const recipeImport = /^\/recipes\/(import|open)(\/.*)?$/.test(path);
+  if (!recipeImport && path.split('/').some((seg) => NEVER.test(seg))) return false;
   if (matches(ACCOUNT, m, path)) return true;
   if (level === 'family') {
     if (FAMILY_DENY.some((re) => re.test(path))) return false;
@@ -222,6 +240,12 @@ export const LEVEL_AREAS: Record<EffectiveLevel, string[]> = {
 };
 
 export const levelRank = (l: EffectiveLevel) => (l === 'paused' ? 0 : GUEST_LEVELS.indexOf(l) + 1);
+
+/** Is this user id a permanent guest? (for code that only has a user id, e.g. share-core's discreet items) */
+export function isGuestUser(userId: number | null | undefined) {
+  if (!userId) return false;
+  return (db.prepare('SELECT kind FROM users WHERE id = ?').get(userId) as { kind: string } | undefined)?.kind === 'guest';
+}
 
 /** Minimal actor shape (structural – avoids importing auth.ts). */
 interface ActorLike {
