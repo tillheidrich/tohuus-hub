@@ -7,7 +7,7 @@ import { Empty, Ic, Seg, Skeleton, Thumb, useToast } from '../ui';
 import { t } from '../i18n';
 import type { CareTask } from './Care';
 import { careIcon } from './Care';
-import { BoxLabels } from './Leftovers';
+import { BoxLabels, useLabelsMeta } from './Leftovers';
 
 type Kind = 'product' | 'location' | 'care' | 'boxes';
 type Size = 'small' | 'large';
@@ -37,6 +37,7 @@ export function Labels() {
   const [q, setQ] = useState('');
   const [labels, setLabels] = useState<Label[]>([]);
   const [busy, setBusy] = useState(false);
+  const labelsMeta = useLabelsMeta();
   const toast = useToast();
   const nav = useNavigate();
 
@@ -96,6 +97,8 @@ export function Labels() {
     if (l.length) setTimeout(() => window.print(), 150);
   };
 
+  // a home without a frozen place: the tab says "Leftovers" (area: home, review wave 6)
+  const noFreezer = labelsMeta.data ? !labelsMeta.data.has_freezer : false;
   return (
     <div className="rise">
       <header className="page-head no-print">
@@ -108,7 +111,7 @@ export function Labels() {
         <div className="tabs-inline">
           {(['product', 'location', 'care', 'boxes'] as Kind[]).map((k) => (
             <button key={k} className={kind === k ? 'on' : ''} onClick={() => setSp({ kind: k }, { replace: true })}>
-              {{ product: t('Products'), location: t('Places'), care: t('Care tasks'), boxes: t('Leftovers & frozen') }[k]}
+              {{ product: t('Products'), location: t('Places'), care: t('Care tasks'), boxes: noFreezer ? t('Leftovers') : t('Leftovers & frozen') }[k]}
             </button>
           ))}
         </div>

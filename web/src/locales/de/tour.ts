@@ -6,7 +6,7 @@ export const tour: Record<string, string> = {
     'Was ausgeht, was bald gegessen werden sollte und was geplant ist. An den meisten Tagen reicht ein kurzer Blick hierher.',
   'Adding things takes seconds': 'Etwas eintragen dauert Sekunden',
   'Scan a barcode, upload a receipt, take a photo or just type “2 milk, parcel tape”. Nobody has to type in the whole house.':
-    'Barcode scannen, Kassenbon hochladen, Foto machen oder einfach „2 Milch, Paketband“ tippen. Niemand muss das ganze Haus abtippen.',
+    'Barcode scannen, Kassenbon hochladen, Foto machen oder einfach „2 Milch, Paketband“ tippen. Niemand muss den ganzen Haushalt abtippen.',
   'One shopping list for everyone': 'Eine Einkaufsliste für alle',
   'Everyone adds to the same list, and empty things land on it by themselves. Tap an item to say who is getting it – so nothing gets bought twice.':
     'Alle schreiben auf dieselbe Liste, und was leer ist, landet von selbst darauf. Tipp einen Eintrag an und sag, wer ihn holt – so wird nichts doppelt gekauft.',

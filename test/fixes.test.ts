@@ -285,14 +285,24 @@ describe('invitations', () => {
     expect(again.sent).toBe(true);
   });
 
-  it('applies the guest level and confirms the invited address', () => {
-    const inv = invites.createInvite({ name: 'Oma Inge', email: 'inge@example.org', kind: 'guest', guestLevel: 'recipes' });
+  it('applies the guest level and confirms the invited address', async () => {
+    const inv = invites.createInvite({ name: 'Oma Inge', email: 'inge@example.org', kind: 'guest', guestLevel: 'recipes', send: true });
+    await new Promise((r) => setTimeout(r, 10)); // the mail goes out asynchronously
     const u = invites.acceptInvite(inv.token, { method: 'email', email: 'inge@example.org' }, msgs);
     const row = db.prepare('SELECT kind, guest_level, role, email, email_verified_at, password_hash FROM users WHERE id = ?').get(u.userId) as any;
     expect(row).toMatchObject({ kind: 'guest', guest_level: 'recipes', role: 'member', email: 'inge@example.org' });
     expect(row.email_verified_at).toBeTruthy();
     expect(row.password_hash.startsWith('scrypt$')).toBe(false);
     expect(u.verifyEmail).toBeNull();
+  });
+
+  it('does not confirm an address the link was never mailed to (review wave 6)', () => {
+    const inv = invites.createInvite({ name: 'Handed Over', email: 'typo@example.org' });
+    const u = invites.acceptInvite(inv.token, { method: 'passkey' }, msgs);
+    const row = db.prepare('SELECT email, email_verified_at FROM users WHERE id = ?').get(u.userId) as any;
+    expect(row.email).toBe('typo@example.org');
+    expect(row.email_verified_at).toBeNull();
+    expect(u.verifyEmail).toBe('typo@example.org');
   });
 
   it('lets the invitee pick the name when none was given, and checks names', () => {

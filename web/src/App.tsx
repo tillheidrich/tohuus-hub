@@ -33,7 +33,7 @@ import { Spending } from './pages/Spending';
 import { Labels } from './pages/Labels';
 import { QuickAction } from './pages/QuickAction';
 import { Away } from './pages/Away';
-import { SaveBoxSheet } from './pages/Leftovers';
+import { SaveBoxSheet, useLabelsMeta } from './pages/Leftovers';
 import { ShareLanding } from './pages/Share';
 import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
@@ -116,6 +116,8 @@ function Authed() {
 
 function Shell({ me }: { me: Me }) {
   const [add, setAdd] = useState(false);
+  // only asked while the plus sheet is open: no frozen place → the entry says "Leftovers" (review wave 6)
+  const boxMeta = useLabelsMeta(add && (!me.actor.houseGuest || ['stock', 'recipes', 'family'].includes(me.actor.houseGuest.level)));
   const [newProduct, setNewProduct] = useState(false);
   const [putAway, setPutAway] = useState(false);
   const nav = useNavigate();
@@ -352,7 +354,7 @@ function Shell({ me }: { me: Me }) {
           </button>
           <button className="action" onClick={() => { setAdd(false); setPutAway(true); }}>
             <span className="ic"><BowlFood size={22} /></span>
-            <b>{t('Leftovers & freezing')}</b>
+            <b>{boxMeta.data && !boxMeta.data.has_freezer ? t('Leftovers') : t('Leftovers & freezing')}</b>
             <span>{t('Put away with date, eat-by and a QR label.')}</span>
           </button>
           <button className="action" onClick={() => { setAdd(false); nav('/import?mode=text'); }}>

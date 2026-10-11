@@ -660,6 +660,8 @@ function BoxRow({ b, onClick, right }: { b: Box; onClick?: () => void; right?: R
 /** Today: take out of the freezer for a planned meal, frozen portions that should go soon, and the evening "put away" prompt. */
 export function BoxesToday() {
   const { data } = useApi<Summary>(['boxes', 'summary'], '/labels/summary');
+  // no frozen place in this home: the evening prompt doesn't talk about freezing (area: home, review wave 6)
+  const meta = useLabelsMeta();
   const planned = useApi<any>('overview', '/overview');
   const nav = useNavigate();
   const toast = useToast();
@@ -707,7 +709,7 @@ export function BoxesToday() {
       {evening && (
         <div className="lb-prompt" style={{ marginTop: data.thaw.length || frozenSoon.length ? 12 : 0 }}>
           <BowlFood size={18} />
-          <span className="grow small">{t('Leftovers or something to freeze?')}</span>
+          <span className="grow small">{meta.data && !meta.data.has_freezer ? t('Leftovers?') : t('Leftovers or something to freeze?')}</span>
           <PutAwayButton
             preset={tonight ? { name: tonight.title, recipe_id: tonight.recipe_id ?? null, plan_id: tonight.id, image_path: tonight.image_path ?? null } : {}}
             className="btn sm"

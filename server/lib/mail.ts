@@ -335,7 +335,8 @@ export const canSendMail = () => smtpEnabled() || Boolean(mailHook.send);
  */
 export function sendMail(to: string, content: MailContent, attachments: Attachment[] = []): Promise<void> {
   const r = renderMail(content);
-  const mail: OutgoingMail = { to, subject: r.subject, text: r.text, html: r.html, attachments: [logoAttachment(), ...attachments] };
+  // household / person names end up in the subject: never let a line break reach a mail header
+  const mail: OutgoingMail = { to: to.replace(/[\r\n]+/g, ''), subject: r.subject.replace(/[\r\n\t]+/g, ' ').trim(), text: r.text, html: r.html, attachments: [logoAttachment(), ...attachments] };
   if (mailHook.send) return Promise.resolve(mailHook.send(mail)).then(() => undefined);
   const tr = smtpTransport();
   if (!tr) return Promise.reject(new Error('SMTP is not configured'));

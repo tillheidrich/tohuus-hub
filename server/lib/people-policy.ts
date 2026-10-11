@@ -134,7 +134,9 @@ const ACCOUNT: Rule[] = [
 ];
 
 const ORDER: Rule[] = [
-  read(/^\/bar\/(menu|my-orders)$/),
+  // "Treats" page (wave 6): helpers/requests answer [] for guests, reasons are static; thanks only for one's own order
+  read(/^\/bar\/(menu|my-orders|helpers|requests|reasons)$/),
+  write(/^\/bar\/orders\/\d+\/thanks$/),
   // the order menu (area: menu): reading for every level, editing never
   read(/^\/menu(\/.*)?$/),
   write(/^\/bar\/orders$/),

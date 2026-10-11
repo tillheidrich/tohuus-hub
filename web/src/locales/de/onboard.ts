@@ -32,7 +32,7 @@ export const onboard: Record<string, string> = {
   'Their name': 'Name',
   'Skip for now': 'Erst mal überspringen',
   'Get stock in – the easy way': 'Bestand rein – ganz einfach',
-  'Nobody has to type in the whole house. Pick one way to start – the rest comes in with your next shopping.': 'Niemand muss das ganze Haus abtippen. Such dir einen Weg für den Anfang aus – der Rest kommt mit dem nächsten Einkauf.',
+  'Nobody has to type in the whole house. Pick one way to start – the rest comes in with your next shopping.': 'Niemand muss den ganzen Haushalt abtippen. Such dir einen Weg für den Anfang aus – der Rest kommt mit dem nächsten Einkauf.',
   'Start with typical staples': 'Mit typischen Vorräten starten',
   'Pasta, rice, toilet paper … one tap per room, with a rough fill level.': 'Nudeln, Reis, Klopapier … ein Tipp pro Raum, mit grobem Füllstand.',
   'Upload a receipt or REWE PDF': 'Kassenbon oder REWE-PDF hochladen',

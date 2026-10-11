@@ -54,7 +54,10 @@ export function Cook({ me }: { me: Me }) {
 
       <h2 style={{ margin: '28px 0 12px' }}>{t('Browse ideas')}</h2>
       <div className="row between wrap" style={{ marginBottom: 14 }}>
-        <Seg value={tm} onChange={(v) => { setTm(v); setIdx(0); }} options={[['all', t('All')], ['tm', 'Thermomix'], ['no', t('Without')]]} />
+        {/* Thermomix filter only for households that actually have Thermomix recipes */}
+        {(recipes.data ?? []).some((r) => r.thermomix) && (
+  <Seg value={tm} onChange={(v) => { setTm(v); setIdx(0); }} options={[['all', t('All')], ['tm', 'Thermomix'], ['no', t('Without')]]} />
+        )}
         {deck.length > 1 && (
           <button className="linkish row" onClick={() => setIdx(idx + 1)}>
             <ArrowsClockwise size={14} /> {t('next idea')}

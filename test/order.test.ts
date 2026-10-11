@@ -125,3 +125,14 @@ describe('thanks', () => {
     expect(orders.requestsFor(lea).find((o) => o.id === id)?.thanked_at).toBeTruthy();
   });
 });
+
+describe('permanent guests on the treats page (review wave 6)', () => {
+  it('may load helpers, requests and reasons (empty for them) and thank for their own order', async () => {
+    const { guestMay } = await import('../server/lib/people-policy');
+    for (const p of ['/api/bar/helpers', '/api/bar/requests', '/api/bar/reasons', '/api/bar/menu', '/api/bar/my-orders']) expect(guestMay('order', 'GET', p)).toBe(true);
+    expect(guestMay('order', 'POST', '/api/bar/orders/12/thanks')).toBe(true);
+    // answering other people's requests stays with the household
+    expect(guestMay('order', 'PATCH', '/api/orders/12')).toBe(false);
+    expect(guestMay('order', 'GET', '/api/orders')).toBe(false);
+  });
+});

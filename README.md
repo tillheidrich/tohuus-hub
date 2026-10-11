@@ -22,7 +22,7 @@
 
 ## What it is
 
-ToHuus Hub is a self-hosted household app for one family. It keeps track of what is in the house and where it is, plans what to eat, keeps the shopping list, and handles guests, trips and the small recurring jobs nobody remembers.
+ToHuus Hub is a self-hosted household app for people who live alone, as a couple, as a family or in a shared flat. It keeps track of what is at home and where it is, plans what to eat, keeps the shopping list, and handles guests, trips and the small recurring jobs nobody remembers.
 
 Your receipts, order confirmations and recipe links are already digital. ToHuus Hub reads them, so the stock fills itself and the spending overview builds itself. You do not have to type in your pantry. The point is to take some of the mental load off whoever usually keeps all of this in their head: what is running out, what we eat tonight, where the plasters are, when the water filter is due.
 
@@ -134,7 +134,7 @@ A built-in MCP server with **106 tools** for Claude, ChatGPT and other MCP clien
 ### Look, language and region
 
 - Light and dark mode. An admin sets the household default (light, dark or like the device) and can let every member choose their own.
-- Two looks: ToHuus Hub and Fredirando, a playful home-delivery theme.
+- One look ("Dutch Detail": green and black, Familjen Grotesk and Hedvig Letters), light and dark, chosen for everyone by an admin or per person if allowed.
 - English, German and Swedish UI, notifications and demo data. Adding a language is one dictionary file per area.
 - Regions (DE, AT, CH, GB, IE, US, SE, DK, NO, NL) set currency, number and date format, units shown in recipes, first day of the week and which receipts and stores to expect, independent of the UI language.
 
@@ -193,7 +193,7 @@ Every variable the server reads. Only `BASE_URL` and the admin account matter fo
 | `ADMIN_PASSWORD` | random | Password for that account. If empty, a random one is printed to the log once. |
 | `LANGUAGE` | `en` | UI language on first start: `en`, `de` or `sv`. Changeable under *Settings › Household*. |
 | `REGION` | from `LANGUAGE` | Where the household shops on first start: `DE`, `AT`, `CH`, `GB`, `IE`, `US`, `SE`, `DK`, `NO`, `NL`. Default: `de` → DE, `en` → GB, `sv` → SE. |
-| `BRAND` | `tohuus` | Default look: `tohuus` or `fredirando`. An admin's explicit choice under *Settings › Household › Brand* wins over it; choosing the default there again removes the override. |
+| `BRAND` | none | No longer used (there is only one look since 2026-10-11). Old values are ignored. |
 | `SEED_DEMO` | `false` | `true` loads the demo household once, on a start when there are no products yet. Demo rows are marked and removable. |
 | `TZ` | `Europe/Berlin` | Time zone for best-before dates, the daily digest and the nightly backup. |
 | `TRUST_PROXY_HOPS` | `1` | Number of reverse proxies in front, for rate limiting by client IP. |
@@ -254,7 +254,7 @@ npm run typecheck    # tsc
 npm run build        # web → dist/web, server → dist/server.mjs
 ```
 
-Stack: Node 22, Express 5, better-sqlite3, sharp, zod, the MCP TypeScript SDK. Web: React 19, React Router, TanStack Query, vanilla CSS with design tokens, Phosphor icons, Bricolage Grotesque, Geist and Geist Mono (self-hosted). Barcode scanning uses `barcode-detector` with the zxing WASM file served locally. PDFs are read with `pdftotext` from poppler (in the Docker image).
+Stack: Node 22, Express 5, better-sqlite3, sharp, zod, the MCP TypeScript SDK. Web: React 19, React Router, TanStack Query, vanilla CSS with design tokens, Phosphor icons, Familjen Grotesk and Hedvig Letters Sans/Serif (self-hosted). Barcode scanning uses `barcode-detector` with the zxing WASM file served locally. PDFs are read with `pdftotext` from poppler (in the Docker image).
 
 The test suite has 455 tests in 32 files (October 2026). CI runs tests and the build on every push.
 
@@ -290,7 +290,7 @@ AGPL-3.0-or-later. See [LICENSE](LICENSE). The Home Assistant integration in [`h
 - Product data and images partly from [Open Food Facts](https://openfoodfacts.org) (database ODbL, images CC BY-SA), shown with attribution in the app.
 - Demo recipe photos from [Unsplash](https://unsplash.com) under the Unsplash License. Photographers are listed in [server/assets/demo-recipes/CREDITS.md](server/assets/demo-recipes/CREDITS.md).
 - Recipe search uses [TheMealDB](https://www.themealdb.com) (free public API).
-- Fonts: Bricolage Grotesque and Geist (SIL Open Font License). Icons: Phosphor (MIT).
+- Fonts: Familjen Grotesk and Hedvig Letters (SIL Open Font License, licence texts in web/public/fonts). Icons: Phosphor (MIT).
 - ToHuus Hub is not affiliated with REWE, Vorwerk, Thermomix, Cookidoo, HelloFresh, Bring!, Mealie or any store named here. Their names only describe compatible formats.
 
 Built by [Till Heidrich](https://github.com/tillheidrich), with a lot of help from Claude.

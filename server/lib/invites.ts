@@ -227,7 +227,8 @@ export function renewInvite(id: number, opts: { deliver: 'email' | 'link'; email
     if (!mailAvailable()) throw new InviteError(400, t('E-mail is not set up on this server (SMTP).'));
   }
   const token = randomToken(24);
-  db.prepare(`UPDATE invites SET token_hash = ?, email = ?, expires_at = datetime('now', ?) WHERE id = ?`).run(sha256(token), email, `+${INVITE_DAYS} days`, id);
+  // sent_at belongs to the mailed link: a new link handed over by hand has not been mailed (deliver() sets it again)
+  db.prepare(`UPDATE invites SET token_hash = ?, email = ?, expires_at = datetime('now', ?), sent_at = NULL WHERE id = ?`).run(sha256(token), email, `+${INVITE_DAYS} days`, id);
   if (opts.deliver === 'email') void deliver(id, token);
   emit('settings');
   return { id, url: inviteUrl(token), expires_at: rowById(id)!.expires_at, sent: opts.deliver === 'email', email };
@@ -282,13 +283,14 @@ export interface InviteRow {
   email: string | null;
   message: string | null;
   created_by: string | null;
+  sent_at?: string | null;
 }
 
 export function findInvite(token: string): InviteRow | undefined {
   if (!token || token.length > 100) return undefined;
   return db
     .prepare(
-      `SELECT id, name, role, color, expires_at, kind, guest_level, email, message, created_by FROM invites
+      `SELECT id, name, role, color, expires_at, kind, guest_level, email, message, created_by, sent_at FROM invites
        WHERE token_hash = ? AND revoked = 0 AND used_at IS NULL AND expires_at > datetime('now')`,
     )
     .get(sha256(token)) as InviteRow | undefined;
@@ -358,7 +360,9 @@ export function acceptInvite(token: string, b: AcceptInput, msgs: { invalid: str
       if (emailTaken(email)) {
         if (method === 'email') throw new InviteError(409, t('Another member already uses this address.'));
         email = null;
-      } else verified = Boolean(inv.email && email === inv.email);
+      // confirmed only when this very link went to that address by mail (a link handed over by hand proves nothing
+      // about the mailbox – the admin may have mistyped it); otherwise the caller sends a confirmation mail
+      } else verified = Boolean(inv.email && email === inv.email && inv.sent_at);
     }
     const hash = method === 'password' ? hashPassword(b.password!) : `none$${randomToken(12)}`;
     const guest = inv.kind === 'guest';

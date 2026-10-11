@@ -3,579 +3,592 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ToHuus Hub · When shopping goes digital, you should get something out of it</title>
-<meta name="description" content="Free, open-source home app on your own server: shared shopping list, what to eat tonight, stock, receipts and spending, family and guests, Home Assistant and AI assistants.">
+<title>ToHuus Hub · Less on your mind. More at home.</title>
+<meta name="description" content="Free, open-source app for every kind of home, on your own server: shared shopping list, stock, recipes and meal plan, treats for everyday life, guests and parties, receipts and spending, Home Assistant and AI assistants. For a flat, a flat share, a terraced house or a house.">
 <link rel="canonical" href="https://tohuus.heidrich-digital.de/">
 <link rel="alternate" hreflang="en" href="https://tohuus.heidrich-digital.de/">
 <link rel="alternate" hreflang="de" href="https://tohuus.heidrich-digital.de/de/">
 <link rel="alternate" hreflang="x-default" href="https://tohuus.heidrich-digital.de/">
-<meta name="theme-color" content="#f6f3ed" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#111413" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f5ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1513" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ToHuus Hub">
-<meta property="og:title" content="ToHuus Hub · When shopping goes digital, you should get something out of it">
-<meta property="og:description" content="Free, open-source home app on your own server: shared shopping list, what to eat tonight, stock, receipts and spending, family and guests, Home Assistant and AI assistants.">
+<meta property="og:title" content="ToHuus Hub · Less on your mind. More at home.">
+<meta property="og:description" content="Free, open-source app for every kind of home, on your own server: shared shopping list, stock, recipes and meal plan, treats for everyday life, guests and parties, receipts and spending, Home Assistant and AI assistants. For a flat, a flat share, a terraced house or a house.">
 <meta property="og:url" content="https://tohuus.heidrich-digital.de/">
 <meta property="og:image" content="https://tohuus.heidrich-digital.de/assets/img/og-en.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="The ToHuus Hub icon, a small house with a red door, next to the sentence: When shopping goes digital, you should get something out of it.">
+<meta property="og:image:alt" content="The ToHuus mark, the line “Less on your mind. More at home.” and four drawn homes: a flat, a flat share, a terraced house and a house.">
 <meta property="og:locale" content="en_GB">
 <meta property="og:locale:alternate" content="de_DE">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ToHuus Hub · When shopping goes digital, you should get something out of it">
-<meta name="twitter:description" content="Free, open-source home app on your own server: shared shopping list, what to eat tonight, stock, receipts and spending, family and guests, Home Assistant and AI assistants.">
+<meta name="twitter:title" content="ToHuus Hub · Less on your mind. More at home.">
+<meta name="twitter:description" content="Free, open-source app for every kind of home, on your own server: shared shopping list, stock, recipes and meal plan, treats for everyday life, guests and parties, receipts and spending, Home Assistant and AI assistants. For a flat, a flat share, a terraced house or a house.">
 <meta name="twitter:image" content="https://tohuus.heidrich-digital.de/assets/img/og-en.png">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="preload" href="assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';d.setAttribute('data-theme',t);document.addEventListener('error',function(e){var x=e.target;if(x&&x.hasAttribute&&x.hasAttribute('data-shot'))x.remove()},true)})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';d.setAttribute('data-theme',t)})()</script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus Hub","description":"Free, open-source home app on your own server: shared shopping list, what to eat tonight, stock, receipts and spending, family and guests, Home Assistant and AI assistants.","applicationCategory":"LifestyleApplication","operatingSystem":"Docker, Linux","license":"https://www.gnu.org/licenses/agpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"url":"https://tohuus.heidrich-digital.de/","image":"https://tohuus.heidrich-digital.de/assets/img/og-en.png","codeRepository":"https://github.com/tillheidrich/tohuus-hub","inLanguage":["en","de"],"author":{"@type":"Person","name":"Till Heidrich","url":"https://github.com/tillheidrich"}}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus Hub","description":"Free, open-source app for every kind of home, on your own server: shared shopping list, stock, recipes and meal plan, treats for everyday life, guests and parties, receipts and spending, Home Assistant and AI assistants. For a flat, a flat share, a terraced house or a house.","applicationCategory":"LifestyleApplication","operatingSystem":"Docker, Linux","license":"https://www.gnu.org/licenses/agpl-3.0.html","isAccessibleForFree":true,"url":"https://tohuus.heidrich-digital.de/","image":"https://tohuus.heidrich-digital.de/assets/img/og-en.png","codeRepository":"https://github.com/tillheidrich/tohuus-hub","inLanguage":["en","de"],"author":{"@type":"Person","name":"Till Heidrich","url":"https://github.com/tillheidrich"}}
 </script>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M8.5 7H17v8.5"/></symbol><symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 9v10.5h12V9"/><path d="M10 19.5v-5h4v5"/></symbol><symbol id="i-basket" viewBox="0 0 24 24"><path d="M4 9.5h16l-1.6 9a1.5 1.5 0 0 1-1.5 1.2H7.1a1.5 1.5 0 0 1-1.5-1.2Z"/><path d="m8.5 9.5 3-5.5M15.5 9.5l-3-5.5M9.5 13.5v3M14.5 13.5v3"/></symbol><symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12"/><path d="M11 11V5a1.5 1.5 0 0 1 3 0v6"/><path d="M14 11V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-.5a6 6 0 0 1-4.6-2.2L4 15a1.5 1.5 0 0 1 2.3-1.9L8 15"/></symbol><symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.6 9.6 0 0 1 12 6c5 0 8.5 4.2 9.5 6-.4.8-1.4 2.2-2.8 3.5M6.6 7.6C4.7 8.9 3.3 10.7 2.5 12c1 1.8 4.5 6 9.5 6 1.6 0 3-.4 4.2-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol><symbol id="i-box" viewBox="0 0 24 24"><path d="M4 7.5 12 3.5l8 4v9l-8 4-8-4Z"/><path d="M4 7.5l8 4 8-4M12 11.5v9"/></symbol><symbol id="i-pot" viewBox="0 0 24 24"><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4Z"/><path d="M2 10h20M9 6.5c0-1 1-1.5 1-2.5M13 6.5c0-1 1-1.5 1-2.5"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.4-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3c0 5.6-7.5 10-7.5 10Z"/></symbol><symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.6-3.3 3-5.2 6-5.2s5.4 1.9 6 5.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M16.5 14.3c2.4.2 4 1.8 4.5 4.6"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 19.5h15"/></symbol><symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 7h12l-3.5-3.5M17 17H5l3.5 3.5"/></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M5 20h14M6 8h12"/><path d="M6 8 3 14a3 3 0 0 0 6 0Zm12 0-3 6a3 3 0 0 0 6 0Z"/></symbol><symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4.5 17a8 8 0 1 1 15 0"/><path d="M12 13l3.5-3.5"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12V4.5h7.5l9.5 9.5-7.5 7.5Z"/><circle cx="8" cy="9" r="1.4"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s6.5-6 6.5-11.2a6.5 6.5 0 0 0-13 0C5.5 15 12 21 12 21Z"/><circle cx="12" cy="10" r="2.4"/></symbol><symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2.4-1.6-2.4 1.6-2.4-1.6-2.4 1.6L6 20.5Z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.5c.6 4 2.5 6 6.5 6.5-4 .6-5.9 2.5-6.5 6.5-.6-4-2.5-5.9-6.5-6.5 4-.5 5.9-2.5 6.5-6.5Z"/><path d="M18.5 15.5c.3 1.6 1 2.4 2.5 2.5-1.5.2-2.2 1-2.5 2.5-.3-1.5-1-2.3-2.5-2.5 1.5-.1 2.2-.9 2.5-2.5Z"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><path d="m3.8 6.5 1 1 1.8-2M3.8 12l1 1 1.8-2M3.8 17.5l1 1 1.8-2"/></symbol><symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c.8 1.3 2 2 3.5 2s2.7-.7 3.5-2M9 9.5h.01M15 9.5h.01"/></symbol><symbol id="i-child" viewBox="0 0 24 24"><circle cx="12" cy="6" r="2.6"/><path d="M8 21v-5.5L6 13l3-3.5h6l3 3.5-2 2.5V21"/></symbol><symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8.5-8.5M16 7l2.5 2.5M14 9l2 2"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/></symbol><symbol id="i-party" viewBox="0 0 24 24"><path d="M4 20 8.5 7.5l8 8Z"/><path d="M14 4.5c.5 1.5 0 2.5-1 3.5M19.5 10c-1.5-.5-2.5 0-3.5 1M17.5 4h.01M20 6.5h.01"/></symbol><symbol id="i-suitcase" viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5v2M3.5 12.5h17"/></symbol><symbol id="i-moonstar" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z"/></symbol><symbol id="i-door" viewBox="0 0 24 24"><path d="M6 20.5V4.5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16M3.5 20.5h17"/><path d="M14.5 12h.01"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 0 1 13-5l2 2M19.5 12a7.5 7.5 0 0 1-13 5l-2-2"/><path d="M19.5 4.5V9H15M4.5 19.5V15H9"/></symbol><symbol id="i-package" viewBox="0 0 24 24"><path d="M4 7.5 12 3.5l8 4v9l-8 4-8-4Z"/><path d="m8 5.5 8 4v3.5"/></symbol><symbol id="i-tv" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M8.5 20.5h7"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="M20.5 3.5 3.5 10.5l7 3 3 7Z"/><path d="m10.5 13.5 4-4"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3 5 13.5h6L10 21l8-10.5h-6Z"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5Z"/></symbol><symbol id="i-server" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/><path d="M8 7.5h.01M8 16.5h.01"/></symbol><symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="2.5"/><path d="M5 6v12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5Z"/></symbol><symbol id="i-code" viewBox="0 0 24 24"><path d="m8.5 7-5 5 5 5M15.5 7l5 5-5 5"/></symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-arrow" viewBox="0 0 256 256"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path></symbol><symbol id="i-github" viewBox="0 0 256 256"><path d="M208.31,75.68A59.78,59.78,0,0,0,202.93,28,8,8,0,0,0,196,24a59.75,59.75,0,0,0-48,24H124A59.75,59.75,0,0,0,76,24a8,8,0,0,0-6.93,4,59.78,59.78,0,0,0-5.38,47.68A58.14,58.14,0,0,0,56,104v8a56.06,56.06,0,0,0,48.44,55.47A39.8,39.8,0,0,0,96,192v8H72a24,24,0,0,1-24-24A40,40,0,0,0,8,136a8,8,0,0,0,0,16,24,24,0,0,1,24,24,40,40,0,0,0,40,40H96v16a8,8,0,0,0,16,0V192a24,24,0,0,1,48,0v40a8,8,0,0,0,16,0V192a39.8,39.8,0,0,0-8.44-24.53A56.06,56.06,0,0,0,216,112v-8A58.14,58.14,0,0,0,208.31,75.68ZM200,112a40,40,0,0,1-40,40H112a40,40,0,0,1-40-40v-8a41.74,41.74,0,0,1,6.9-22.48A8,8,0,0,0,80,73.83a43.81,43.81,0,0,1,.79-33.58,43.88,43.88,0,0,1,32.32,20.06A8,8,0,0,0,119.82,64h32.35a8,8,0,0,0,6.74-3.69,43.87,43.87,0,0,1,32.32-20.06A43.81,43.81,0,0,1,192,73.83a8.09,8.09,0,0,0,1,7.65A41.72,41.72,0,0,1,200,104Z"></path></symbol><symbol id="i-copy" viewBox="0 0 256 256"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"></path></symbol><symbol id="i-sun" viewBox="0 0 256 256"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"></path></symbol><symbol id="i-moon" viewBox="0 0 256 256"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"></path></symbol><symbol id="i-check" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path></symbol><symbol id="i-home" viewBox="0 0 256 256"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"></path></symbol><symbol id="i-hand" viewBox="0 0 256 256"><path d="M188,48a27.75,27.75,0,0,0-12,2.71V44a28,28,0,0,0-54.65-8.6A28,28,0,0,0,80,60v64l-3.82-6.13a28,28,0,0,0-48.6,27.82c16,33.77,28.93,57.72,43.72,72.69C86.24,233.54,103.2,240,128,240a88.1,88.1,0,0,0,88-88V76A28,28,0,0,0,188,48Zm12,104a72.08,72.08,0,0,1-72,72c-20.38,0-33.51-4.88-45.33-16.85C69.44,193.74,57.26,171,41.9,138.58a6.36,6.36,0,0,0-.3-.58,12,12,0,0,1,20.79-12,1.76,1.76,0,0,0,.14.23l18.67,30A8,8,0,0,0,96,152V60a12,12,0,0,1,24,0v60a8,8,0,0,0,16,0V44a12,12,0,0,1,24,0v76a8,8,0,0,0,16,0V76a12,12,0,0,1,24,0Z"></path></symbol><symbol id="i-eyeoff" viewBox="0 0 256 256"><path d="M53.92,34.62A8,8,0,1,0,42.08,45.38L61.32,66.55C25,88.84,9.38,123.2,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208a127.11,127.11,0,0,0,52.07-10.83l22,24.21a8,8,0,1,0,11.84-10.76Zm47.33,75.84,41.67,45.85a32,32,0,0,1-41.67-45.85ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.16,133.16,0,0,1,25,128c4.69-8.79,19.66-33.39,47.35-49.38l18,19.75a48,48,0,0,0,63.66,70l14.73,16.2A112,112,0,0,1,128,192Zm6-95.43a8,8,0,0,1,3-15.72,48.16,48.16,0,0,1,38.77,42.64,8,8,0,0,1-7.22,8.71,6.39,6.39,0,0,1-.75,0,8,8,0,0,1-8-7.26A32.09,32.09,0,0,0,134,96.57Zm113.28,34.69c-.42.94-10.55,23.37-33.36,43.8a8,8,0,1,1-10.67-11.92A132.77,132.77,0,0,0,231.05,128a133.15,133.15,0,0,0-23.12-30.77C185.67,75.19,158.78,64,128,64a118.37,118.37,0,0,0-19.36,1.57A8,8,0,1,1,106,49.79,134,134,0,0,1,128,48c34.88,0,66.57,13.26,91.66,38.35,18.83,18.83,27.3,37.62,27.65,38.41A8,8,0,0,1,247.31,131.26Z"></path></symbol><symbol id="i-store" viewBox="0 0 256 256"><path d="M232,96a7.89,7.89,0,0,0-.3-2.2L217.35,43.6A16.07,16.07,0,0,0,202,32H54A16.07,16.07,0,0,0,38.65,43.6L24.31,93.8A7.89,7.89,0,0,0,24,96h0v16a40,40,0,0,0,16,32v72a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V144a40,40,0,0,0,16-32V96ZM54,48H202l11.42,40H42.61Zm50,56h48v8a24,24,0,0,1-48,0Zm-16,0v8a24,24,0,0,1-35.12,21.26,7.88,7.88,0,0,0-1.82-1.06A24,24,0,0,1,40,112v-8ZM200,208H56V151.2a40.57,40.57,0,0,0,8,.8,40,40,0,0,0,32-16,40,40,0,0,0,64,0,40,40,0,0,0,32,16,40.57,40.57,0,0,0,8-.8Zm4.93-75.8a8.08,8.08,0,0,0-1.8,1.05A24,24,0,0,1,168,112v-8h48v8A24,24,0,0,1,204.93,132.2Z"></path></symbol><symbol id="i-pot" viewBox="0 0 256 256"><path d="M88,48V16a8,8,0,0,1,16,0V48a8,8,0,0,1-16,0Zm40,8a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0V48A8,8,0,0,0,128,56Zm32,0a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0V48A8,8,0,0,0,160,56Zm92.8,46.4L224,124v60a32,32,0,0,1-32,32H64a32,32,0,0,1-32-32V124L3.2,102.4a8,8,0,0,1,9.6-12.8L32,104V80a8,8,0,0,1,8-8H216a8,8,0,0,1,8,8v24l19.2-14.4a8,8,0,0,1,9.6,12.8ZM208,88H48v96a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16Z"></path></symbol><symbol id="i-calendar" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"></path></symbol><symbol id="i-heart" viewBox="0 0 256 256"><path d="M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z"></path></symbol><symbol id="i-download" viewBox="0 0 256 256"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"></path></symbol><symbol id="i-swap" viewBox="0 0 256 256"><path d="M213.66,181.66l-32,32a8,8,0,0,1-11.32-11.32L188.69,184H48a8,8,0,0,1,0-16H188.69l-18.35-18.34a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,213.66,181.66Zm-139.32-64a8,8,0,0,0,11.32-11.32L67.31,88H208a8,8,0,0,0,0-16H67.31L85.66,53.66A8,8,0,0,0,74.34,42.34l-32,32a8,8,0,0,0,0,11.32Z"></path></symbol><symbol id="i-scale" viewBox="0 0 256 256"><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"></path></symbol><symbol id="i-gauge" viewBox="0 0 256 256"><path d="M207.06,72.67A111.24,111.24,0,0,0,128,40h-.4C66.07,40.21,16,91,16,153.13V176a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V152A111.25,111.25,0,0,0,207.06,72.67ZM224,176H119.71l54.76-75.3a8,8,0,0,0-12.94-9.42L99.92,176H32V153.13c0-3.08.15-6.12.43-9.13H56a8,8,0,0,0,0-16H35.27c10.32-38.86,44-68.24,84.73-71.66V80a8,8,0,0,0,16,0V56.33A96.14,96.14,0,0,1,221,128H200a8,8,0,0,0,0,16h23.67c.21,2.65.33,5.31.33,8Z"></path></symbol><symbol id="i-qr" viewBox="0 0 256 256"><path d="M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm0,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48ZM200,40H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-64,72V144a8,8,0,0,1,16,0v32a8,8,0,0,1-16,0Zm80-16a8,8,0,0,1-8,8H184v40a8,8,0,0,1-8,8H144a8,8,0,0,1,0-16h24V144a8,8,0,0,1,16,0v8h24A8,8,0,0,1,216,160Zm0,32v16a8,8,0,0,1-16,0V192a8,8,0,0,1,16,0Z"></path></symbol><symbol id="i-pin" viewBox="0 0 256 256"><path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"></path></symbol><symbol id="i-receipt" viewBox="0 0 256 256"><path d="M72,104a8,8,0,0,1,8-8h96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,104Zm8,40h96a8,8,0,0,0,0-16H80a8,8,0,0,0,0,16ZM232,56V208a8,8,0,0,1-11.58,7.15L192,200.94l-28.42,14.21a8,8,0,0,1-7.16,0L128,200.94,99.58,215.15a8,8,0,0,1-7.16,0L64,200.94,35.58,215.15A8,8,0,0,1,24,208V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Zm-16,0H40V195.06l20.42-10.22a8,8,0,0,1,7.16,0L96,199.06l28.42-14.22a8,8,0,0,1,7.16,0L160,199.06l28.42-14.22a8,8,0,0,1,7.16,0L216,195.06Z"></path></symbol><symbol id="i-sparkle" viewBox="0 0 256 256"><path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"></path></symbol><symbol id="i-chart" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"></path></symbol><symbol id="i-list" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H128a8,8,0,0,1,0-16h88A8,8,0,0,1,224,128ZM128,72h88a8,8,0,0,0,0-16H128a8,8,0,0,0,0,16Zm88,112H128a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16ZM82.34,42.34,56,68.69,45.66,58.34A8,8,0,0,0,34.34,69.66l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,82.34,42.34Zm0,64L56,132.69,45.66,122.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Zm0,64L56,196.69,45.66,186.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Z"></path></symbol><symbol id="i-smile" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,176,108Zm-1.07,48c-10.29,17.79-27.4,28-46.93,28s-36.63-10.2-46.92-28a8,8,0,1,1,13.84-8c7.47,12.91,19.21,20,33.08,20s25.61-7.1,33.07-20a8,8,0,0,1,13.86,8Z"></path></symbol><symbol id="i-child" viewBox="0 0 256 256"><path d="M92,140a12,12,0,1,1,12-12A12,12,0,0,1,92,140Zm72-24a12,12,0,1,0,12,12A12,12,0,0,0,164,116Zm-12.27,45.23a45,45,0,0,1-47.46,0,8,8,0,0,0-8.54,13.54,61,61,0,0,0,64.54,0,8,8,0,0,0-8.54-13.54ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88.11,88.11,0,0,0-84.09-87.91C120.32,56.38,120,71.88,120,72a8,8,0,0,0,16,0,8,8,0,0,1,16,0,24,24,0,0,1-48,0c0-.73.13-14.3,8.46-30.63A88,88,0,1,0,216,128Z"></path></symbol><symbol id="i-key" viewBox="0 0 256 256"><path d="M216.57,39.43A80,80,0,0,0,83.91,120.78L28.69,176A15.86,15.86,0,0,0,24,187.31V216a16,16,0,0,0,16,16H72a8,8,0,0,0,8-8V208H96a8,8,0,0,0,8-8V184h16a8,8,0,0,0,5.66-2.34l9.56-9.57A79.73,79.73,0,0,0,160,176h.1A80,80,0,0,0,216.57,39.43ZM224,98.1c-1.09,34.09-29.75,61.86-63.89,61.9H160a63.7,63.7,0,0,1-23.65-4.51,8,8,0,0,0-8.84,1.68L116.69,168H96a8,8,0,0,0-8,8v16H72a8,8,0,0,0-8,8v16H40V187.31l58.83-58.82a8,8,0,0,0,1.68-8.84A63.72,63.72,0,0,1,96,95.92c0-34.14,27.81-62.8,61.9-63.89A64,64,0,0,1,224,98.1ZM192,76a12,12,0,1,1-12-12A12,12,0,0,1,192,76Z"></path></symbol><symbol id="i-mic" viewBox="0 0 256 256"><path d="M128,176a48.05,48.05,0,0,0,48-48V64a48,48,0,0,0-96,0v64A48.05,48.05,0,0,0,128,176ZM96,64a32,32,0,0,1,64,0v64a32,32,0,0,1-64,0Zm40,143.6V240a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,1,48,128a8,8,0,0,1,16,0,64,64,0,0,0,128,0,8,8,0,0,1,16,0A80.11,80.11,0,0,1,136,207.6Z"></path></symbol><symbol id="i-party" viewBox="0 0 256 256"><path d="M111.49,52.63a15.8,15.8,0,0,0-26,5.77L33,202.78A15.83,15.83,0,0,0,47.76,224a16,16,0,0,0,5.46-1l144.37-52.5a15.8,15.8,0,0,0,5.78-26Zm-8.33,135.21-35-35,13.16-36.21,58.05,58.05Zm-55,20,14-38.41,24.45,24.45ZM156,168.64,87.36,100l13-35.87,91.43,91.43ZM160,72a37.8,37.8,0,0,1,3.84-15.58C169.14,45.83,179.14,40,192,40c6.7,0,11-2.29,13.65-7.21A22,22,0,0,0,208,23.94,8,8,0,0,1,224,24c0,12.86-8.52,32-32,32-6.7,0-11,2.29-13.65,7.21A22,22,0,0,0,176,72.06,8,8,0,0,1,160,72ZM136,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm101.66,82.34a8,8,0,1,1-11.32,11.31l-16-16a8,8,0,0,1,11.32-11.32Zm4.87-42.75-24,8a8,8,0,0,1-5.06-15.18l24-8a8,8,0,0,1,5.06,15.18Z"></path></symbol><symbol id="i-suitcase" viewBox="0 0 256 256"><path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm64,24V200H96V72ZM40,72H80V200H40ZM216,200H176V72h40V200Z"></path></symbol><symbol id="i-moonstar" viewBox="0 0 256 256"><path d="M240,96a8,8,0,0,1-8,8H216v16a8,8,0,0,1-16,0V104H184a8,8,0,0,1,0-16h16V72a8,8,0,0,1,16,0V88h16A8,8,0,0,1,240,96ZM144,56h8v8a8,8,0,0,0,16,0V56h8a8,8,0,0,0,0-16h-8V32a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16Zm72.77,97a8,8,0,0,1,1.43,8A96,96,0,1,1,95.07,37.8a8,8,0,0,1,10.6,9.06A88.07,88.07,0,0,0,209.14,150.33,8,8,0,0,1,216.77,153Zm-19.39,14.88c-1.79.09-3.59.14-5.38.14A104.11,104.11,0,0,1,88,64c0-1.79,0-3.59.14-5.38A80,80,0,1,0,197.38,167.86Z"></path></symbol><symbol id="i-door" viewBox="0 0 256 256"><path d="M232,216H208V40a16,16,0,0,0-16-16H64A16,16,0,0,0,48,40V216H24a8,8,0,0,0,0,16H232a8,8,0,0,0,0-16ZM64,40H192V216H64Zm104,92a12,12,0,1,1-12-12A12,12,0,0,1,168,132Z"></path></symbol><symbol id="i-refresh" viewBox="0 0 256 256"><path d="M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z"></path></symbol><symbol id="i-package" viewBox="0 0 256 256"><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"></path></symbol><symbol id="i-tv" viewBox="0 0 256 256"><path d="M216,64H147.31l34.35-34.34a8,8,0,1,0-11.32-11.32L128,60.69,85.66,18.34A8,8,0,0,0,74.34,29.66L108.69,64H40A16,16,0,0,0,24,80V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64ZM40,80H144V200H40ZM216,200H160V80h56V200Zm-16-84a12,12,0,1,1-12-12A12,12,0,0,1,200,116Zm0,48a12,12,0,1,1-12-12A12,12,0,0,1,200,164Z"></path></symbol><symbol id="i-send" viewBox="0 0 256 256"><path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z"></path></symbol><symbol id="i-chat" viewBox="0 0 256 256"><path d="M128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"></path></symbol><symbol id="i-bolt" viewBox="0 0 256 256"><path d="M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z"></path></symbol><symbol id="i-server" viewBox="0 0 256 256"><path d="M208,136H48a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V152A16,16,0,0,0,208,136Zm0,64H48V152H208v48Zm0-160H48A16,16,0,0,0,32,56v48a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V56A16,16,0,0,0,208,40Zm0,64H48V56H208v48ZM192,80a12,12,0,1,1-12-12A12,12,0,0,1,192,80Zm0,96a12,12,0,1,1-12-12A12,12,0,0,1,192,176Z"></path></symbol><symbol id="i-db" viewBox="0 0 256 256"><path d="M128,24C74.17,24,32,48.6,32,80v96c0,31.4,42.17,56,96,56s96-24.6,96-56V80C224,48.6,181.83,24,128,24Zm80,104c0,9.62-7.88,19.43-21.61,26.92C170.93,163.35,150.19,168,128,168s-42.93-4.65-58.39-13.08C55.88,147.43,48,137.62,48,128V111.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64ZM69.61,53.08C85.07,44.65,105.81,40,128,40s42.93,4.65,58.39,13.08C200.12,60.57,208,70.38,208,80s-7.88,19.43-21.61,26.92C170.93,115.35,150.19,120,128,120s-42.93-4.65-58.39-13.08C55.88,99.43,48,89.62,48,80S55.88,60.57,69.61,53.08ZM186.39,202.92C170.93,211.35,150.19,216,128,216s-42.93-4.65-58.39-13.08C55.88,195.43,48,185.62,48,176V159.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64V176C208,185.62,200.12,195.43,186.39,202.92Z"></path></symbol><symbol id="i-lock" viewBox="0 0 256 256"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"></path></symbol><symbol id="i-camera" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"></path></symbol><symbol id="i-globe" viewBox="0 0 256 256"><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"></path></symbol><symbol id="i-code" viewBox="0 0 256 256"><path d="M69.12,94.15,28.5,128l40.62,33.85a8,8,0,1,1-10.24,12.29l-48-40a8,8,0,0,1,0-12.29l48-40a8,8,0,0,1,10.24,12.3Zm176,27.7-48-40a8,8,0,1,0-10.24,12.3L227.5,128l-40.62,33.85a8,8,0,1,0,10.24,12.29l48-40a8,8,0,0,0,0-12.29ZM162.73,32.48a8,8,0,0,0-10.25,4.79l-64,176a8,8,0,0,0,4.79,10.26A8.14,8.14,0,0,0,96,224a8,8,0,0,0,7.52-5.27l64-176A8,8,0,0,0,162.73,32.48Z"></path></symbol><symbol id="i-mail" viewBox="0 0 256 256"><path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM203.43,64,128,133.15,52.57,64ZM216,192H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z"></path></symbol><symbol id="i-zoom" viewBox="0 0 256 256"><path d="M152,112a8,8,0,0,1-8,8H120v24a8,8,0,0,1-16,0V120H80a8,8,0,0,1,0-16h24V80a8,8,0,0,1,16,0v24h24A8,8,0,0,1,152,112Zm77.66,117.66a8,8,0,0,1-11.32,0l-50.06-50.07a88.11,88.11,0,1,1,11.31-11.31l50.07,50.06A8,8,0,0,1,229.66,229.66ZM112,184a72,72,0,1,0-72-72A72.08,72.08,0,0,0,112,184Z"></path></symbol><symbol id="i-play" viewBox="0 0 256 256"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"></path></symbol><symbol id="i-user" viewBox="0 0 256 256"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></symbol><symbol id="i-barcode" viewBox="0 0 256 256"><path d="M232,48V88a8,8,0,0,1-16,0V56H184a8,8,0,0,1,0-16h40A8,8,0,0,1,232,48ZM72,200H40V168a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H72a8,8,0,0,0,0-16Zm152-40a8,8,0,0,0-8,8v32H184a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V168A8,8,0,0,0,224,160ZM32,96a8,8,0,0,0,8-8V56H72a8,8,0,0,0,0-16H32a8,8,0,0,0-8,8V88A8,8,0,0,0,32,96ZM80,80a8,8,0,0,0-8,8v80a8,8,0,0,0,16,0V88A8,8,0,0,0,80,80Zm104,88V88a8,8,0,0,0-16,0v80a8,8,0,0,0,16,0ZM144,80a8,8,0,0,0-8,8v80a8,8,0,0,0,16,0V88A8,8,0,0,0,144,80Zm-32,0a8,8,0,0,0-8,8v80a8,8,0,0,0,16,0V88A8,8,0,0,0,112,80Z"></path></symbol><symbol id="i-gift" viewBox="0 0 256 256"><path d="M230.33,141.06a24.34,24.34,0,0,0-18.61-4.77C230.5,117.33,240,98.48,240,80c0-26.47-21.29-48-47.46-48A47.58,47.58,0,0,0,156,48.75,47.58,47.58,0,0,0,119.46,32C93.29,32,72,53.53,72,80c0,11,3.24,21.69,10.06,33a31.87,31.87,0,0,0-14.75,8.4L44.69,144H16A16,16,0,0,0,0,160v40a16,16,0,0,0,16,16H120a7.93,7.93,0,0,0,1.94-.24l64-16a6.94,6.94,0,0,0,1.19-.4L226,182.82l.44-.2a24.6,24.6,0,0,0,3.93-41.56ZM119.46,48A31.15,31.15,0,0,1,148.6,67a8,8,0,0,0,14.8,0,31.15,31.15,0,0,1,29.14-19C209.59,48,224,62.65,224,80c0,19.51-15.79,41.58-45.66,63.9l-11.09,2.55A28,28,0,0,0,140,112H100.68C92.05,100.36,88,90.12,88,80,88,62.65,102.41,48,119.46,48ZM16,160H40v40H16Zm203.43,8.21-38,16.18L119,200H56V155.31l22.63-22.62A15.86,15.86,0,0,1,89.94,128H140a12,12,0,0,1,0,24H112a8,8,0,0,0,0,16h32a8.32,8.32,0,0,0,1.79-.2l67-15.41.31-.08a8.6,8.6,0,0,1,6.3,15.9Z"></path></symbol><symbol id="i-bell" viewBox="0 0 256 256"><path d="M168,224a8,8,0,0,1-8,8H96a8,8,0,1,1,0-16h64A8,8,0,0,1,168,224Zm53.85-32A15.8,15.8,0,0,1,208,200H48a16,16,0,0,1-13.8-24.06C39.75,166.38,48,139.34,48,104a80,80,0,1,1,160,0c0,35.33,8.26,62.38,13.81,71.94A15.89,15.89,0,0,1,221.84,192ZM208,184c-7.73-13.27-16-43.95-16-80a64,64,0,1,0-128,0c0,36.06-8.28,66.74-16,80Z"></path></symbol><symbol id="i-users" viewBox="0 0 256 256"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path></symbol><symbol id="i-robot" viewBox="0 0 256 256"><path d="M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48Zm16,144a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V80A16,16,0,0,1,56,64H200a16,16,0,0,1,16,16Zm-52-56H92a28,28,0,0,0,0,56h72a28,28,0,0,0,0-56Zm-24,16v24H116V152ZM80,164a12,12,0,0,1,12-12h8v24H92A12,12,0,0,1,80,164Zm84,12h-8V152h8a12,12,0,0,1,0,24ZM72,108a12,12,0,1,1,12,12A12,12,0,0,1,72,108Zm88,0a12,12,0,1,1,12,12A12,12,0,0,1,160,108Z"></path></symbol><symbol id="i-translate" viewBox="0 0 256 256"><path d="M247.15,212.42l-56-112a8,8,0,0,0-14.31,0l-21.71,43.43A88,88,0,0,1,108,126.93,103.65,103.65,0,0,0,135.69,64H160a8,8,0,0,0,0-16H104V32a8,8,0,0,0-16,0V48H32a8,8,0,0,0,0,16h87.63A87.76,87.76,0,0,1,96,116.35a87.74,87.74,0,0,1-19-31,8,8,0,1,0-15.08,5.34A103.63,103.63,0,0,0,84,127a87.55,87.55,0,0,1-52,17,8,8,0,0,0,0,16,103.46,103.46,0,0,0,64-22.08,104.18,104.18,0,0,0,51.44,21.31l-26.6,53.19a8,8,0,0,0,14.31,7.16L148.94,192h70.11l13.79,27.58A8,8,0,0,0,240,224a8,8,0,0,0,7.15-11.58ZM156.94,176,184,121.89,211.05,176Z"></path></symbol><symbol id="i-terminal" viewBox="0 0 256 256"><path d="M128,128a8,8,0,0,1-3,6.25l-40,32a8,8,0,1,1-10-12.5L107.19,128,75,102.25a8,8,0,1,1,10-12.5l40,32A8,8,0,0,1,128,128Zm48,24H136a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm56-96V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Z"></path></symbol></svg>
 <a class="skip" href="#main">Skip to content</a>
 
-<header class="nav">
-  <div class="nav-in">
-    <a class="brand" href="./" aria-label="ToHuus Hub home"><img src="assets/favicon-light.svg" alt="" width="30" height="30">ToHuus Hub</a>
-    <nav class="nav-links" aria-label="Main">
-      <a href="#everyday">Everyday</a>
-      <a href="#cooking">Cooking</a>
-      <a href="#stock">Stock</a>
-      <a href="#family">Family</a>
-      <a href="#self-hosting">Self-hosting</a>
-    </nav>
-    <div class="lang" role="group" aria-label="Language">
-      <a class="pill" href="./" hreflang="en" lang="en" aria-current="true">EN</a>
-      <a class="pill" href="de/" hreflang="de" lang="de">DE</a>
-    </div>
-    <button class="pill theme-btn" type="button" aria-label="Light or dark"><svg class="ico sun" aria-hidden="true"><use href="#i-sun"/></svg><svg class="ico moon" aria-hidden="true"><use href="#i-moon"/></svg></button>
-    <a class="pill nav-gh" href="https://github.com/tillheidrich/tohuus-hub" aria-label="GitHub"><svg class="ico" aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span></a>
+<header class="nav-wrap">
+<div class="nav">
+  <a class="brand" href="./" aria-label="ToHuus Hub home"><svg class="mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 28V14L16 4l12 10v14z" class="mk-house"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" class="mk-door"/></svg><span>ToHuus</span></a>
+  <nav class="nav-links" aria-label="Main">
+    <a href="#home">Home</a>
+    <a href="#everyday">Everyday</a>
+    <a href="#treats">Treats</a>
+    <a href="#cooking">Cooking</a>
+    <a href="#stock">Stock</a>
+    <a href="#self-hosting">Self-hosting</a>
+  </nav>
+  <a class="nav-gh" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-github"/></svg><span>GitHub</span></a>
+  <div class="lang" role="group" aria-label="Language">
+    <a href="./" hreflang="en" lang="en" aria-current="true">EN</a>
+    <a href="de/" hreflang="de" lang="de">DE</a>
   </div>
+  <button class="icon-btn theme-btn" type="button" aria-label="Dark theme" aria-pressed="false"><svg class="ico moon" aria-hidden="true" focusable="false"><use href="#i-moon"/></svg><svg class="ico sun" aria-hidden="true" focusable="false"><use href="#i-sun"/></svg></button>
+</div>
 </header>
 
 <main id="main">
 
-<section class="hero">
+<section class="hero" aria-labelledby="hero-h">
   <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow reveal">Open source · on your server</span>
-      <h1 class="reveal" style="--d:60ms">When shopping goes digital, you should <em class="mark">get something out of it.</em></h1>
-      <p class="lede reveal" style="--d:140ms">Receipts, orders, recipes and the shopping list are digital already. ToHuus Hub turns them into one calm overview for everyone at home, so nobody has to keep it all in their head.</p>
-      <div class="btns reveal" style="--d:220ms">
-        <a class="btn btn-primary" href="#install">Install it<span class="btn-ico"><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></span></a>
-        <a class="btn btn-ghost" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico" aria-hidden="true"><use href="#i-github"/></svg>Read the code</a>
+    <div class="hero-copy">
+      <p class="label">Open source · on your server</p>
+      <h1 id="hero-h">Less on your mind.<br><span class="hl">More at home.</span></h1>
+      <p class="lede">Flat, flat share, terraced house or house: ToHuus brings shopping, supplies and recipes together.</p>
+      <div class="ctas">
+        <a class="btn primary" href="#install">Install it<span class="tail"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-download"/></svg></span></a>
+        <a class="btn" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-github"/></svg>Read the code</a>
+        <a class="link-play" href="#tour"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-play"/></svg>Take the tour</a>
       </div>
-      <p class="small reveal" style="--d:280ms"><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Free, AGPL</span><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>No account, no tracking</span><span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Runs on a NAS or small server</span></p>
+      <ul class="facts"><li>Free, AGPL-3.0</li><li>No account, no tracking</li><li>Runs on a NAS or small server</li></ul>
     </div>
-    <div class="hero-visual reveal" style="--d:120ms">
-      <div class="house-stage">
-        <div class="note n1"><b><span class="dot"></span>Out of milk</b><small>already on the list</small></div>
-        <svg class="hz" viewBox="0 0 640 520" role="img" aria-label="Drawing of a terraced house in cross-section: kitchen with fridge and cupboard, hallway with front door and drawers, bathroom with mirror cabinet, living room and an attic with labelled boxes." xmlns="http://www.w3.org/2000/svg">
-  <!-- neighbours (terraced): only hinted -->
-  <g class="hz-ghost">
-    <path d="M0 150 72 200M640 150 568 200"/>
-    <rect x="16" y="282" width="44" height="58" rx="2"/><path d="M38 282v58"/>
-    <rect x="16" y="396" width="44" height="76" rx="2"/>
-    <rect x="580" y="282" width="44" height="58" rx="2"/><path d="M602 282v58"/>
-    <rect x="580" y="396" width="44" height="76" rx="2"/>
-  </g>
-
-  <!-- chimney, walls, roof in section -->
-  <rect x="408" y="62" width="36" height="72" class="b"/>
-  <rect x="402" y="56" width="48" height="10" rx="2" class="w"/>
-  <rect x="80" y="200" width="480" height="300" class="wall"/>
-  <path d="M56 214 320 40 584 214Z" class="p hz-roof"/>
-  <path d="M112 210 320 72 528 210Z" class="w"/>
-
-  <!-- attic: round window, a shelf of labelled boxes -->
-  <circle cx="320" cy="130" r="22" class="glass"/>
-  <path class="thin" d="M320 108v44M298 130h44"/>
-  <circle cx="320" cy="130" r="22"/>
-  <rect x="196" y="190" width="248" height="6" rx="1" class="b"/>
-  <rect x="212" y="158" width="46" height="32" rx="2" class="b"/>
-  <rect x="222" y="167" width="20" height="12" rx="1" class="w"/><path class="thin" d="M226 171h12M226 175h8"/>
-  <rect x="266" y="170" width="32" height="20" rx="2" class="w"/>
-  <rect x="384" y="154" width="48" height="36" rx="2" class="b"/>
-  <rect x="394" y="164" width="20" height="12" rx="1" class="w"/><path class="thin" d="M398 168h12M398 172h8"/>
-  <path d="M340 190v-18h28v18" class="soft"/>
-
-  <!-- rooms -->
-  <rect x="96" y="222" width="166" height="130" class="w"/>
-  <rect x="276" y="222" width="268" height="130" class="w"/>
-  <rect x="96" y="366" width="140" height="122" class="w"/>
-  <rect x="250" y="366" width="294" height="122" class="w"/>
-
-  <!-- bathroom: mirror cabinet, basin, towel -->
-  <rect x="134" y="240" width="80" height="52" rx="2" class="b"/>
-  <rect x="139" y="245" width="33" height="42" rx="1" class="glass"/>
-  <rect x="176" y="245" width="33" height="42" rx="1" class="glass"/>
-  <path class="thin" d="M150 252l10 10M187 252l10 10"/>
-  <path d="M134 308h80c-3 15-18 21-40 21s-37-6-40-21Z" class="w"/>
-  <path d="M174 308v-9h11"/>
-  <rect x="166" y="329" width="16" height="23" class="w"/>
-  <path d="M228 262h26"/>
-  <path d="M232 262h18v42h-18Z" class="soft"/>
-
-  <!-- living room: sofa, wall shelf, TV on a sideboard -->
-  <rect x="306" y="248" width="112" height="5" rx="1" class="b"/>
-  <rect x="314" y="226" width="8" height="22" class="b"/><rect x="324" y="230" width="8" height="18" class="l"/><rect x="334" y="228" width="8" height="20" class="w"/>
-  <path d="M380 248l4-14h16l4 14Z" class="b"/><path class="thin" d="M392 234c-6-8-2-14 0-16M392 234c6-8 3-13 1-15"/>
-  <rect x="298" y="286" width="150" height="24" rx="4" class="p"/>
-  <rect x="298" y="304" width="150" height="30" rx="4" class="p"/>
-  <rect x="290" y="296" width="18" height="38" rx="4" class="p"/>
-  <rect x="438" y="296" width="18" height="38" rx="4" class="p"/>
-  <path d="M302 334v18M444 334v18"/>
-  <rect x="468" y="250" width="64" height="40" rx="3" class="tv"/>
-  <path d="M500 290v14"/>
-  <rect x="464" y="304" width="72" height="48" rx="2" class="b"/>
-  <path class="thin" d="M500 304v48"/>
-
-  <!-- hallway: front door, coat hooks, chest of drawers -->
-  <rect x="110" y="390" width="54" height="98" rx="2" class="l"/>
-  <rect x="122" y="402" width="30" height="18" rx="1" class="glass"/>
-  <circle cx="155" cy="442" r="3" class="k"/>
-  <path d="M178 388h52M208 388v6M222 388v6"/>
-  <path d="M208 394l-8 34h18l-4-34" class="soft"/>
-  <rect x="176" y="438" width="54" height="50" rx="2" class="b"/>
-  <path class="thin" d="M176 454h54M176 471h54"/>
-  <path d="M199 446h8M199 462h8M199 479h8"/>
-
-  <!-- kitchen: fridge, wall cupboard, counter with pot, window, plant -->
-  <rect x="264" y="380" width="66" height="108" rx="5" class="w"/>
-  <path d="M264 420h66"/>
-  <path d="M320 390v18M320 430v26" class="hz-handle"/>
-  <circle cx="279" cy="470" r="4" class="l"/>
-  <rect x="276" y="434" width="18" height="18" class="b" transform="rotate(-6 285 443)"/>
-  <rect x="350" y="380" width="120" height="38" rx="2" class="b"/>
-  <path class="thin" d="M390 380v38M430 380v38"/>
-  <path d="M384 396v6M436 396v6"/>
-  <rect x="484" y="380" width="46" height="44" rx="2" class="glass"/>
-  <path class="thin" d="M507 380v44M484 402h46"/>
-  <rect x="484" y="380" width="46" height="44" rx="2"/>
-  <rect x="344" y="440" width="190" height="48" class="b"/>
-  <path class="thin" d="M392 444v44M440 444v44M488 444v44"/>
-  <path d="M338 440h202" class="hz-top"/>
-  <path d="M446 440v-16h40v16" class="l"/>
-  <path d="M440 428h6M486 428h6"/>
-  <path class="hz-steam" d="M458 416c0-6 5-6 5-12M472 416c0-6 5-6 5-12"/>
-  <path d="M356 440l3-14h16l3 14Z" class="w"/><path class="thin" d="M367 426c-8-10-2-18 1-20M367 426c7-9 4-16 0-19"/>
-
-  <!-- ground -->
-  <path d="M0 500h640" class="hz-ground"/>
-  <path class="hz-hatch" d="M4 514l10-12M20 514l10-12M36 514l10-12M52 514l10-12M68 514l10-12M84 514l10-12M100 514l10-12M116 514l10-12M132 514l10-12M148 514l10-12M164 514l10-12M180 514l10-12M196 514l10-12M212 514l10-12M228 514l10-12M244 514l10-12M260 514l10-12M276 514l10-12M292 514l10-12M308 514l10-12M324 514l10-12M340 514l10-12M356 514l10-12M372 514l10-12M388 514l10-12M404 514l10-12M420 514l10-12M436 514l10-12M452 514l10-12M468 514l10-12M484 514l10-12M500 514l10-12M516 514l10-12M532 514l10-12M548 514l10-12M564 514l10-12M580 514l10-12M596 514l10-12M612 514l10-12M628 514l10-12"/>
-
-  <!-- part numbers -->
-  
-  <g class="hz-call" data-n="1">
-    
-    <circle cx="297" cy="402" r="15" class="w"/>
-    <text x="297" y="408" text-anchor="middle" class="hz-n">1</text>
-  </g>
-  
-  <g class="hz-call" data-n="2">
-    
-    <circle cx="410" cy="399" r="15" class="w"/>
-    <text x="410" y="405" text-anchor="middle" class="hz-n">2</text>
-  </g>
-  
-  <g class="hz-call" data-n="3">
-    
-    <circle cx="188" cy="414" r="15" class="w"/>
-    <text x="188" y="420" text-anchor="middle" class="hz-n">3</text>
-  </g>
-  
-  <g class="hz-call" data-n="4">
-    <path class="hz-lead" d="M116 266L134 266"/>
-    <circle cx="116" cy="266" r="15" class="w"/>
-    <text x="116" y="272" text-anchor="middle" class="hz-n">4</text>
-  </g>
-</svg>
-        <div class="note n2"><b>Jonas is on it</b><small>oat milk, bread, coffee</small></div>
+    <div class="hero-art">
+    <div class="home-tiles" role="img" aria-label="Four drawn homes: a flat in an apartment block, a flat share in an old building with three doorbells, terraced houses with a cat on the roof and a detached house with a tree.">
+      <div class="home-tile ht-flat">
+        <svg class="ia" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <rect x="46" y="58" width="108" height="150" class="f-pd"/>
+      <rect x="40" y="52" width="120" height="8" class="f-k"/>
+      <g class="f-ps"><rect x="60" y="74" width="16" height="18"/><rect x="92" y="74" width="16" height="18"/><rect x="124" y="74" width="16" height="18"/><rect x="60" y="106" width="16" height="18"/><rect x="124" y="106" width="16" height="18"/><rect x="60" y="138" width="16" height="18"/><rect x="92" y="138" width="16" height="18"/><rect x="124" y="138" width="16" height="18"/></g>
+      <rect x="92" y="106" width="16" height="18" class="f-m"/>
+      <path d="M100 124c-5-4-5-10 0-14 5 4 5 10 0 14z" class="f-p"/>
+      <rect x="96" y="121" width="8" height="5" class="f-c"/>
+      <rect x="88" y="124" width="24" height="3" class="f-k"/>
+      <rect x="88" y="174" width="24" height="34" class="f-m"/>
+      <rect x="134" y="38" width="10" height="14" class="f-k"/>
+        </svg><span class="tag">Flat</span>
       </div>
-      <div class="parts">
-        <p class="parts-h">What ToHuus Hub knows about your home</p>
-        <ol class="parts-list">
-          <li data-n="1" tabindex="0"><span class="pn">1</span><span><b>Fridge</b>Eat the yoghurt by tomorrow</span></li>
-          <li data-n="2" tabindex="0"><span class="pn">2</span><span><b>Kitchen cupboard</b>Pasta is running low</span></li>
-          <li data-n="3" tabindex="0"><span class="pn">3</span><span><b>Hallway drawers</b>Parcel tape, top drawer</span></li>
-          <li data-n="4" tabindex="0"><span class="pn">4</span><span><b>Bathroom cabinet</b>Plasters, second shelf</span></li>
-        </ol>
+      <div class="home-tile ht-shared">
+        <svg class="ia" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <rect x="34" y="70" width="132" height="140" class="f-k"/>
+      <rect x="28" y="62" width="144" height="10" class="f-pd"/>
+      <path d="M52 118V98a9 9 0 0 1 18 0v20zM91 118V98a9 9 0 0 1 18 0v20zM52 160v-20a9 9 0 0 1 18 0v20zM130 160v-20a9 9 0 0 1 18 0v20z" class="f-s"/>
+      <path d="M130 118V98a9 9 0 0 1 18 0v20z" class="f-c"/>
+      <path d="M86 210v-34a14 14 0 0 1 28 0v34z" class="f-p"/>
+      <rect x="118" y="174" width="12" height="22" rx="1" class="f-s"/>
+      <g class="f-k"><circle cx="124" cy="179" r="1.6"/><circle cx="124" cy="185" r="1.6"/><circle cx="124" cy="191" r="1.6"/></g>
+      <g class="f-m"><circle cx="40" cy="62" r="3"/><circle cx="56" cy="64" r="3"/><circle cx="72" cy="62" r="3"/></g>
+        </svg><span class="tag">Flat share</span>
       </div>
+      <div class="home-tile ht-terraced">
+        <svg class="ia" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <path d="M22 110l30-30 30 30v100H22z" class="f-p"/>
+      <path d="M82 110l30-30 30 30v100H82z" class="f-k"/>
+      <path d="M142 110l30-30 30 30v100h-60z" class="f-pd"/>
+      <rect x="44" y="166" width="16" height="44" class="f-m"/>
+      <rect x="104" y="166" width="16" height="44" class="f-s"/>
+      <rect x="164" y="166" width="16" height="44" class="f-m"/>
+      <g class="f-w"><rect x="44" y="124" width="16" height="16"/><rect x="104" y="124" width="16" height="16"/><rect x="164" y="124" width="16" height="16"/></g>
+      <rect x="122" y="70" width="10" height="24" class="f-k"/>
+      <path d="M58 76a9 9 0 0 1 18 0v8H58z" class="f-k"/>
+      <path d="M60 70l2-8 5 6zM74 70l-2-8-5 6z" class="f-k"/>
+      <path d="M76 82c8 0 10-8 6-12" class="s-k3"/>
+      <circle cx="64" cy="73" r="1.4" class="f-m"/><circle cx="70" cy="73" r="1.4" class="f-m"/>
+        </svg><span class="tag">Terraced house</span>
+      </div>
+      <div class="home-tile ht-house">
+        <svg class="ia" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <circle cx="150" cy="58" r="22" class="f-m"/>
+      <path d="M34 112l56-48 56 48z" class="f-p"/>
+      <rect x="46" y="112" width="88" height="98" class="f-s s-k3"/>
+      <path d="M78 210v-36a12 12 0 0 1 24 0v36z" class="f-k"/>
+      <rect x="58" y="130" width="18" height="18" class="f-w s-k3"/>
+      <rect x="104" y="130" width="18" height="18" class="f-w s-k3"/>
+      <circle cx="164" cy="176" r="16" class="f-g"/>
+      <rect x="162" y="190" width="4" height="20" class="f-k"/>
+        </svg><span class="tag">House</span>
+      </div>
+    </div>
     </div>
   </div>
 </section>
 
 <section class="worries" aria-labelledby="worries-h">
-  <div class="wrap">
-    <div class="lead">
-      <span class="eyebrow reveal">Mental load</span>
-      <h2 class="reveal" id="worries-h" style="--d:60ms; margin-top:16px">The questions one person usually carries around.</h2>
-      <p class="lead reveal" style="--d:120ms">In many families one person knows what is missing, what needs eating and where the parcel tape lives. ToHuus Hub takes that part over, so you can share it, or stop thinking about it altogether.</p>
+  <div class="wrap worries-grid">
+    <div>
+      <p class="label reveal">Mental load</p>
+      <h2 class="reveal" id="worries-h">The questions one person usually carries around.</h2>
+      <p class="intro reveal">Usually one person knows what is missing, what needs eating and where the parcel tape lives. In families, in couples and in flat shares alike. ToHuus takes that part over, so you can share it, or stop thinking about it altogether.</p>
     </div>
-    <ul class="bubbles" role="list">
-      <li class="bubble reveal" style="--d:80ms; list-style:none"><s>Do we still have milk?</s></li>
-      <li class="bubble reveal" style="--d:130ms; list-style:none"><s>What are we eating tonight?</s></li>
-      <li class="bubble reveal" style="--d:180ms; list-style:none"><s>Who is getting that?</s></li>
-      <li class="bubble reveal" style="--d:230ms; list-style:none"><s>Where is the parcel tape?</s></li>
-      <li class="bubble reveal" style="--d:280ms; list-style:none"><s>Is the yoghurt still good?</s></li>
-      <li class="bubble reveal" style="--d:330ms; list-style:none"><s>Did you already buy it?</s></li>
-      <li class="bubble reveal" style="--d:380ms; list-style:none"><s>What do we need for Saturday?</s></li>
-      <li class="bubble reveal" style="--d:430ms; list-style:none"><s>When was the water filter due?</s></li>
-    </ul>
+    <div class="receipt reveal" aria-label="On your mind">
+      <div class="receipt-h"><b>On your mind</b><span aria-hidden="true">ToHuus</span></div>
+      <ul>
+        <li><s>Do we still have milk?</s><svg class="ico ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></li>
+        <li><s>What are we eating tonight?</s><svg class="ico ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></li>
+        <li><s>Who is getting that?</s><svg class="ico ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></li>
+        <li><s>Where is the parcel tape?</s><svg class="ico ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></li>
+        <li><s>Is the yoghurt still good?</s><svg class="ico ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></li>
+        <li><s>Did you already buy it?</s><svg class="ico ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></li>
+        <li><s>What do we need for Saturday?</s><svg class="ico ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></li>
+        <li><s>When was the water filter due?</s><svg class="ico ok" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></li>
+      </ul>
+      <p class="receipt-f">Now in ToHuus</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="home" aria-labelledby="home-h">
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">01</span><span class="label">Home, not house</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="home-h">For every kind of home, as it really is.</h2>
+        <p class="intro reveal">On first start ToHuus asks who lives with you. That only shapes suggestions. Nothing is locked, and you can switch any time.</p>
+        <ul class="forms">
+          <li class="reveal" style="--d:60ms"><span class="shape c" aria-hidden="true"></span><b>Just me</b><span>No votes and no “who is getting it”, just your lists.</span></li>
+          <li class="reveal" style="--d:110ms"><span class="shape h" aria-hidden="true"></span><b>The two of us</b><span>Shared lists and votes for dinner, no kids section.</span></li>
+          <li class="reveal" style="--d:160ms"><span class="shape s" aria-hidden="true"></span><b>Family</b><span>Everything, including kids and guests.</span></li>
+          <li class="reveal" style="--d:210ms"><span class="shape t" aria-hidden="true"></span><b>Flat share</b><span>Shared and personal places, no family wording.</span></li>
+        </ul>
+        <h3 class="reveal">Only the places you really have.</h3>
+        <p class="reveal">ToHuus does not assume a fridge, a cellar or a chest freezer. You name your places yourselves, nest, sort and archive them. Anything without a place shows up under “not assigned to a place yet”. That is fine too.</p>
+        <ul class="chips reveal"><li>Kitchenette</li><li>Shared fridge</li><li>Jonas’ shelf</li><li>Hallway shelf</li><li>Chest freezer in the cellar</li><li class="none">Not assigned to a place yet</li></ul>
+      </div>
+      <div class="ch-visual two reveal">
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/home-light.webp" alt="Settings, household section: choose just me, the two of us, family or flat share" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/home-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/places-light.webp" alt="Settings, places section: self-named places with the number of things in each" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/places-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
+      </div>
+    </div>
   </div>
 </section>
 
 <section class="chapter" id="everyday" aria-labelledby="everyday-h">
-  <div class="wrap chapter-grid">
-    <div class="chapter-copy">
-      <span class="eyebrow step reveal"><b>1</b>Everyday</span>
-      <h2 class="reveal" id="everyday-h" style="--d:60ms">One look in the morning is enough.</h2>
-      <p class="intro reveal" style="--d:120ms">“Today” shows on one page what needs eating, what has run out and what is for dinner. The shopping list is current on every phone at once.</p>
-      <ul class="points">
-        <li class="reveal" style="--d:120ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span><div><b>Today</b><span>Eat first, run out, running low, tonight. That is all it shows, and on most days that is all you need.</span></div></li>
-        <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-hand"/></svg></span><div><b>Shopping list with “I’ll get it”</b><span>Whoever takes something taps it, so nobody buys it twice. In the shop the list sorts itself by aisle, even without signal.</span></div></li>
-        <li class="reveal" style="--d:240ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-eyeoff"/></svg></span><div><b>Discreet items</b><span>Not everything is for everyone. Private items only show up for you, so Saturday’s present stays a surprise.</span></div></li>
-        <li class="reveal" style="--d:300ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></span><div><b>Ticked means put away</b><span>What you tick off in the shop goes straight into stock.</span></div></li>
-      </ul>
-    </div>
-    <div class="phones reveal" style="--d:100ms">
-      <div class="phone" aria-hidden="true" data-shot-name="today">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/today-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/today-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">02</span><span class="label">Everyday</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="everyday-h">One look in the morning is enough.</h2>
+        <p class="intro reveal">“Today” shows on one page what comes first, and exactly one next step. The shopping list is current on every phone at once.</p>
+        <ul class="points">
+          <li class="reveal" style="--d:60ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-home"/></svg></span><div><b>Today first</b><span>At most four lines from your real data: what needs eating, what has run out, what is on the list. No dashboard tiles.</span></div></li>
+          <li class="reveal" style="--d:100ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-hand"/></svg></span><div><b>Shopping list with “I’ll get it”</b><span>Whoever takes something taps it, so nobody buys it twice. In the shop the list sorts itself by aisle, even without signal.</span></div></li>
+          <li class="reveal" style="--d:140ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-store"/></svg></span><div><b>“Where to buy?”</b><span>On a product you set where you get it, say the chemist or the weekly market. The list shows it right next to the item. The app never fills this in by itself.</span></div></li>
+          <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-eyeoff"/></svg></span><div><b>Discreet items</b><span>Others see private items only as a neutral placeholder, or not at all. Saturday’s present stays a surprise.</span></div></li>
+          <li class="reveal" style="--d:220ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></span><div><b>Ticked means put away</b><span>What you tick off in the shop goes straight into stock, if you have it set up that way.</span></div></li>
+        </ul>
       </div>
-      <div class="phone" aria-hidden="true" data-shot-name="shopping">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/shopping-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/shopping-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+      <div class="ch-visual reveal two">
+        
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/today-light.webp" alt="Today page with the green header block and the Today first ticket" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/today-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/shopping-light.webp" alt="Shopping list with groups, I’ll-get-it buttons and the add field" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/shopping-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="treats" id="treats" aria-labelledby="treats-h">
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">03</span><span class="label">Treats</span></div>
+    <div class="treats-block">
+      <span class="disc" aria-hidden="true"></span><span class="half" aria-hidden="true"></span>
+      <div class="treats-copy">
+        <h2 class="reveal" id="treats-h">Do each other a good turn.</h2>
+        <div class="tale reveal">
+          <p>It is half past seven and Lea is putting Mila to bed. Tonight it takes a while. Between two pages of the bedtime story she taps “Something sweet”, then vanilla ice cream.</p>
+          <p>Till’s phone buzzes: “Lea asks you for something”. One tap on “I’ll bring it”. By the time she comes out of the kids’ room the ice cream is waiting, spoon included. The evening feels a little shorter after that.</p>
         </div>
+        <p class="after reveal">That is what Treats is for. Whoever is stuck, with bedtime, ill in bed or after a long day, asks for a small something from what is in the house. Someone else brings it.</p>
+      </div>
+      <div class="treats-phone reveal"><figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/order-light.webp" alt="Treats page: What would you like?, below it a wish from Lea with I’ll bring it and Can’t right now" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/order-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure></div>
+    </div>
+    <div class="treats-grid">
+      <div class="ticket wish reveal">
+        <div class="ticket-top">
+          <p class="label">How a wish travels</p>
+          <ol class="wish-steps">
+            <li><b>Lea asks for something</b><span>Something sweet, something to drink, a snack or a free-text wish. Plus a note like “with a spoon, please”.</span></li>
+            <li><b>The message goes out</b><span>If Lea asked one person, only their phone buzzes. Otherwise everyone who can right now hears about it.</span></li>
+            <li><b>“I’ll bring it” or “Can’t right now”</b><span>One tap in the notification, with a short reason like “In a few minutes” if needed.</span></li>
+          </ol>
+        </div>
+        <div class="tear" aria-hidden="true"></div>
+        <p class="thanks"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-heart"/></svg><span>Then a small thank you. Once, only to the person who brought it. No points, no tally of who did what.</span></p>
+      </div>
+      <div class="modes">
+        <h3 class="reveal">The same for visitors and parties</h3>
+        <ul class="doors">
+          <li class="door d1 reveal" style="--d:0ms"><b>For you</b><span>For everyone who lives here. If you live alone, this part simply does not show up.</span></li>
+          <li class="door d2 reveal" style="--d:60ms"><b>Guests</b><span>Visitors, the babysitter or grandparents get a link or QR code and ask for something from what is in the house. With their name, so it is clear whose coffee it is.</span></li>
+          <li class="door d3 reveal" style="--d:120ms"><b>Party</b><span>The TV shows a QR code to join and what is ready. The kitchen gets its own view, and the party ends by itself.</span></li>
+        </ul>
+        <p class="menu-note reveal">You decide what is on the menu: things from stock, or menu-only items like tap water or a cappuccino.</p>
       </div>
     </div>
   </div>
 </section>
 
 <section class="chapter flip" id="cooking" aria-labelledby="cooking-h">
-  <div class="wrap chapter-grid">
-    <div class="chapter-copy">
-      <span class="eyebrow step reveal"><b>2</b>Cooking</span>
-      <h2 class="reveal" id="cooking-h" style="--d:60ms">What are we eating tonight? Decided in a minute.</h2>
-      <p class="intro reveal" style="--d:120ms">ToHuus Hub suggests what fits what you have and plans the week with you. Anyone who wants to can vote.</p>
-      <ul class="points">
-        <li class="reveal" style="--d:120ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-pot"/></svg></span><div><b>What works right now?</b><span>What you can cook now, what lacks just one thing and what needs using up. Or one tap on “You decide for us”.</span></div></li>
-        <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg></span><div><b>Week plan</b><span>Free evenings fill up with fitting recipes, rotating over several weeks if you like. Whatever the week is missing goes on the list in one tap.</span></div></li>
-        <li class="reveal" style="--d:240ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-heart"/></svg></span><div><b>Vote together</b><span>Everyone swipes through suggestions on their own. You cook what several people like. No ranking, no debate at the stove.</span></div></li>
-        <li class="reveal" style="--d:300ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-scale"/></svg></span><div><b>Servings for one evening</b><span>Guests on Friday? The amount changes for that evening only, the recipe stays as it is.</span></div></li>
-      </ul>
-    </div>
-    <div class="phones reveal" style="--d:100ms">
-      <div class="phone" aria-hidden="true" data-shot-name="cook">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/cook-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/cook-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">04</span><span class="label">Cooking</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="cooking-h">What are we eating tonight? Decided in a minute.</h2>
+        <p class="intro reveal">ToHuus suggests what fits what you have and plans the week with you. Anyone who wants to can vote.</p>
+        <ul class="points">
+          <li class="reveal" style="--d:60ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pot"/></svg></span><div><b>What works right now?</b><span>What you can cook now, what lacks just one thing and what needs using up. Or one tap on “You decide for us”.</span></div></li>
+          <li class="reveal" style="--d:100ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-calendar"/></svg></span><div><b>Week plan</b><span>Free evenings fill up with fitting recipes, rotating over several weeks if you like. Whatever the week is missing goes on the list in one tap.</span></div></li>
+          <li class="reveal" style="--d:140ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-heart"/></svg></span><div><b>Vote together</b><span>Everyone says no, yes or super on their own phone, or one phone goes round the table. No ranking, no debate at the stove.</span></div></li>
+          <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-scale"/></svg></span><div><b>Servings per evening</b><span>Bolognese for six instead of four? The amount applies to that evening, to the shopping and to what comes out of stock after cooking. The recipe stays as it is.</span></div></li>
+        </ul>
       </div>
-      <div class="phone" aria-hidden="true" data-shot-name="plan-vote">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/plan-vote-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/plan-vote-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+      <div class="ch-visual reveal two">
+        
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/cook-light.webp" alt="What do we eat today page with suggestions from stock" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/cook-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/plan-vote-light.webp" alt="A vote on recipes for the weekend" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/plan-vote-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
       </div>
     </div>
   </div>
 </section>
 
 <section class="chapter" id="recipes" aria-labelledby="recipes-h">
-  <div class="wrap chapter-grid">
-    <div class="chapter-copy">
-      <span class="eyebrow step reveal"><b>3</b>Recipes</span>
-      <h2 class="reveal" id="recipes-h" style="--d:60ms">Your version, not the internet’s.</h2>
-      <p class="intro reveal" style="--d:120ms">Recipes come from wherever you already keep them. Then you cook them the way your household does.</p>
-      <ul class="points">
-        <li class="reveal" style="--d:120ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg></span><div><b>Import from almost anywhere</b><span>Recipe sites, open recipe databases, other recipe apps, a photo or plain text. English recipes work too, and cups and ounces turn into grams if you cook metric.</span></div></li>
-        <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><div><b>Cookidoo and Thermomix</b><span>Your Cookidoo week comes in through Home Assistant. Thermomix steps keep time, temperature and speed.</span></div></li>
-        <li class="reveal" style="--d:240ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg></span><div><b>The house version</b><span>Rice instead of potatoes, no coriander, oat milk instead of milk. Set it once and it applies to suggestions, cooking and the shopping list.</span></div></li>
-        <li class="reveal" style="--d:300ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-smile"/></svg></span><div><b>Who liked it?</b><span>Everyone can rate recipes and keep favourites. That makes for better suggestions, not a competition.</span></div></li>
-      </ul>
-    </div>
-    <div class="phones reveal" style="--d:100ms">
-      <div class="phone" aria-hidden="true" data-shot-name="recipe">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/recipe-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/recipe-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">05</span><span class="label">Recipes</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="recipes-h">Your version, not the internet’s.</h2>
+        <p class="intro reveal">Recipes come from wherever you already keep them. Then you cook them the way your household does.</p>
+        <ul class="points">
+          <li class="reveal" style="--d:60ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-download"/></svg></span><div><b>From other apps</b><span>Any recipe page with structured data, plus Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl, Grocy and CSV. With a vision model, photos and plain text too.</span></div></li>
+          <li class="reveal" style="--d:100ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-translate"/></svg></span><div><b>Units that fit</b><span>Cups, ounces and pounds become grams and millilitres if you cook metric. German and Swedish households get the ingredient lines translated, without any translation service.</span></div></li>
+          <li class="reveal" style="--d:140ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-robot"/></svg></span><div><b>With any AI</b><span>A ready-made prompt to copy: put a photo or a cookbook page into the chat, paste the answer back into ToHuus.</span></div></li>
+          <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg></span><div><b>Cookidoo via Home Assistant</b><span>Your Cookidoo week comes in through Home Assistant. Thermomix steps keep time, temperature and speed.</span></div></li>
+          <li class="reveal" style="--d:220ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-swap"/></svg></span><div><b>The house version</b><span>Rice instead of potatoes, no coriander, oat milk instead of milk. Set it once and it applies to suggestions, cooking and the shopping list. The original stays untouched.</span></div></li>
+          <li class="reveal" style="--d:260ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-zoom"/></svg></span><div><b>Photos you can zoom into</b><span>One tap opens a photo full screen, and then you can zoom in.</span></div></li>
+          <li class="reveal" style="--d:300ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-smile"/></svg></span><div><b>Who liked it?</b><span>Everyone rates recipes and keeps favourites. Dislikes and allergies feed into suggestions, and a dish with an allergen is never planned automatically.</span></div></li>
+        </ul>
+      </div>
+      <div class="ch-visual reveal with-arch">
+        <figure class="arch-card">
+          <div class="arch"><img src="assets/img/recipe-gnocchi.webp" alt="Gnocchi with tomato and mozzarella in a pan" loading="lazy" decoding="async" width="560" height="659"></div>
+          <span class="stamp" aria-hidden="true">House<br>version</span>
+        </figure>
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/recipe-light.webp" alt="Recipe page with photo, ratings and the cooked button" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/recipe-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
       </div>
     </div>
   </div>
 </section>
 
 <section class="chapter flip" id="stock" aria-labelledby="stock-h">
-  <div class="wrap chapter-grid">
-    <div class="chapter-copy">
-      <span class="eyebrow step reveal"><b>4</b>Stock</span>
-      <h2 class="reveal" id="stock-h" style="--d:60ms">Stock without a spreadsheet.</h2>
-      <p class="intro reveal" style="--d:120ms">Nobody has to count pasta. Start with what runs out and leave the rest.</p>
-      <ul class="points">
-        <li class="reveal" style="--d:120ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-list"/></svg></span><div><b>“Only what runs out”</b><span>A start mode for anyone who does not want an inventory: ToHuus Hub only keeps track of what needs buying again.</span></div></li>
-        <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-gauge"/></svg></span><div><b>Half full is an answer</b><span>Fruit and bread are full, half, low or empty. Packs get counted, coffee from the machine not at all.</span></div></li>
-        <li class="reveal" style="--d:240ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-tag"/></svg></span><div><b>Labels for leftovers and the freezer</b><span>Leftovers and frozen food get a date and a QR label with their compartment. Scan, one tap, and it is out of stock.</span></div></li>
-        <li class="reveal" style="--d:300ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg></span><div><b>Where is what?</b><span>Every item can have an exact spot. Type “plasters” and you know which shelf.</span></div></li>
-      </ul>
-    </div>
-    <div class="phones reveal" style="--d:100ms">
-      <div class="phone" aria-hidden="true" data-shot-name="stock">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/stock-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/stock-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">06</span><span class="label">Stock</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="stock-h">Stock without a spreadsheet.</h2>
+        <p class="intro reveal">Nobody has to count pasta. Start with what runs out and leave the rest.</p>
+        <ul class="points">
+          <li class="reveal" style="--d:60ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-list"/></svg></span><div><b>“Only what runs out”</b><span>A start mode for anyone who does not want an inventory. Switch to everything later without losing anything.</span></div></li>
+          <li class="reveal" style="--d:100ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-gauge"/></svg></span><div><b>Half full is an answer</b><span>Fruit and bread are full, half, low or empty. Packs get counted, some things not at all.</span></div></li>
+          <li class="reveal" style="--d:140ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-qr"/></svg></span><div><b>Labels for leftovers</b><span>A box of leftovers is put away in two taps, with a date, a short code and a QR label. Scanning it opens eat, thaw, throw away or plan.</span></div></li>
+          <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pin"/></svg></span><div><b>Where is what?</b><span>Every item can have an exact spot. Type “plasters” and you know which shelf.</span></div></li>
+          <li class="reveal" style="--d:220ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-barcode"/></svg></span><div><b>Scan a barcode</b><span>Product name and photo come from Open Food Facts.</span></div></li>
+        </ul>
       </div>
-      <div class="phone" aria-hidden="true" data-shot-name="labels">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/labels-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/labels-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+      <div class="ch-visual reveal two">
+        
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/stock-light.webp" alt="Stock by place with amounts and filters" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/stock-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/labels-light.webp" alt="QR labels for products and leftovers" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/labels-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
       </div>
     </div>
   </div>
 </section>
 
 <section class="chapter" id="receipts" aria-labelledby="receipts-h">
-  <div class="wrap chapter-grid">
-    <div class="chapter-copy">
-      <span class="eyebrow step reveal"><b>5</b>Receipts & spending</span>
-      <h2 class="reveal" id="receipts-h" style="--d:60ms">The receipt puts things away.</h2>
-      <p class="intro reveal" style="--d:120ms">Digital receipts and orders bring your stock up to date. Typing is the fallback, not the plan.</p>
-      <ul class="points">
-        <li class="reveal" style="--d:120ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-receipt"/></svg></span><div><b>Receipts from many shops</b><span>German eBons and pickup notes, receipts from Lidl, Aldi, dm and others, plus UK, US and Swedish formats. As PDF, photo, QR code or through your own receipt inbox.</span></div></li>
-        <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-sparkle"/></svg></span><div><b>Learns from corrections</b><span>Fix once what a receipt abbreviation stands for, and ToHuus Hub recognises the item by itself next time.</span></div></li>
-        <li class="reveal" style="--d:240ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></span><div><b>Check, don’t guess</b><span>Every import goes through a short review: substitutions, missing items, new products.</span></div></li>
-        <li class="reveal" style="--d:300ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-chart"/></svg></span><div><b>Spending without a ledger</b><span>Monthly totals by shop and category, straight from the receipts. And a hint when something got more expensive.</span></div></li>
-      </ul>
-    </div>
-    <div class="phones reveal" style="--d:100ms">
-      <div class="phone" aria-hidden="true" data-shot-name="receipts">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/receipts-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/receipts-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">07</span><span class="label">Receipts & spending</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="receipts-h">The receipt puts things away.</h2>
+        <p class="intro reveal">Digital receipts and orders bring your stock up to date. Typing is the fallback, not the plan.</p>
+        <ul class="points">
+          <li class="reveal" style="--d:60ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-receipt"/></svg></span><div><b>Receipts from many shops</b><span>German eBons and pickup notes, receipts from Lidl, Aldi, dm and others, plus UK, US and Swedish formats. As PDF, photo, QR code or through your own receipt inbox.</span></div></li>
+          <li class="reveal" style="--d:100ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-sparkle"/></svg></span><div><b>Learns from corrections</b><span>Fix once what a receipt abbreviation stands for, and it applies to the next receipt from that shop. You can see the rules and delete them.</span></div></li>
+          <li class="reveal" style="--d:140ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></span><div><b>Check, don’t guess</b><span>Every import goes through a short review: substitutions, missing items, new products.</span></div></li>
+          <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chart"/></svg></span><div><b>Spending without a ledger</b><span>Totals per week, month or year, by shop and category, straight from the receipts. Budgets and CSV export too.</span></div></li>
+        </ul>
       </div>
-      <div class="phone" aria-hidden="true" data-shot-name="spending">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/spending-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/spending-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+      <div class="ch-visual reveal two">
+        
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/receipts-light.webp" alt="Imports: receipts as PDF, photo, QR link or text, with the history below" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/receipts-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/spending-light.webp" alt="Monthly spending, worked out from the receipts" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/spending-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
       </div>
     </div>
   </div>
 </section>
 
-<section class="chapter flip" id="family" aria-labelledby="family-h">
-  <div class="wrap chapter-grid">
-    <div class="chapter-copy">
-      <span class="eyebrow step reveal"><b>6</b>Family & guests</span>
-      <h2 class="reveal" id="family-h" style="--d:60ms">For everyone at home. Including the ones just visiting.</h2>
-      <p class="intro reveal" style="--d:120ms">Everyone has their face in the app. Kids need no account, guests only see what you share.</p>
-      <ul class="points">
-        <li class="reveal" style="--d:120ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-smile"/></svg></span><div><b>Faces, not name lists</b><span>A photo or an animal avatar, so even kids can see who is getting what.</span></div></li>
-        <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-child"/></svg></span><div><b>Kids without a login</b><span>A tablet becomes a kids’ screen: wish for something, look up where things are. No password, a parent PIN to leave.</span></div></li>
-        <li class="reveal" style="--d:240ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></span><div><b>Permanent guests with levels</b><span>Grandparents or flatmates see as much as you want: ordering only, stock, recipes or everything. Switch it for a weekend if you need to.</span></div></li>
-        <li class="reveal" style="--d:300ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-mic"/></svg></span><div><b>Babysitter link with voice commands</b><span>A link shows where things are, with your note on top. With Home Assistant the sitter can also use voice for the lights and so on.</span></div></li>
-        <li class="reveal" style="--d:360ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-party"/></svg></span><div><b>Party and order mode</b><span>Guests scan a QR code and order from what is actually there. The TV shows what is ready. On normal days, that is how someone orders a coffee from the sofa.</span></div></li>
-      </ul>
-    </div>
-    <div class="phones reveal" style="--d:100ms">
-      <div class="phone" aria-hidden="true" data-shot-name="people">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/people-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/people-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+<section class="chapter flip" id="together" aria-labelledby="together-h">
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">08</span><span class="label">Flatmates, family, guests</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="together-h">For everyone who lives here. And for the ones just visiting.</h2>
+        <p class="intro reveal">Everyone has their own account and their face in the app. Guests only see what you share.</p>
+        <ul class="points">
+          <li class="reveal" style="--d:60ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mail"/></svg></span><div><b>Invite by e-mail or link</b><span>Whoever joins gets a personal link, by e-mail or as a QR code. They sign in with a passkey, a password or an e-mail link. The link works once and for seven days.</span></div></li>
+          <li class="reveal" style="--d:100ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-key"/></svg></span><div><b>Permanent guests with levels</b><span>The aunt, the babysitter or a flatmate’s partner see as much as you want: treats only, stock too, recipes too, or the whole day to day. Settings and spending stay with you.</span></div></li>
+          <li class="reveal" style="--d:140ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-user"/></svg></span><div><b>Guests with names</b><span>Anyone asking for something through a guest link types their name once. The phone remembers it.</span></div></li>
+          <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-child"/></svg></span><div><b>Kids without a login</b><span>In families a tablet becomes a kids’ screen: wish for something, look up where things are. Every wish waits for a parent.</span></div></li>
+          <li class="reveal" style="--d:220ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg></span><div><b>Babysitter link</b><span>A link shows where things are, with your note on top. With Home Assistant, selected voice commands work too. Locks, alarms and cameras are never on the list.</span></div></li>
+        </ul>
       </div>
-      <div class="phone" aria-hidden="true" data-shot-name="order">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/order-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/order-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+      <div class="ch-visual reveal">
+        
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/members-light.webp" alt="Household members with family, children and permanent guests" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/members-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
       </div>
     </div>
   </div>
 </section>
 
 <section class="chapter" id="away" aria-labelledby="away-h">
-  <div class="wrap chapter-grid">
-    <div class="chapter-copy">
-      <span class="eyebrow step reveal"><b>7</b>Away</span>
-      <h2 class="reveal" id="away-h" style="--d:60ms">Holidays without forgotten yoghurt.</h2>
-      <p class="intro reveal" style="--d:120ms">Tell ToHuus Hub when you are away. It plans the rest around the trip.</p>
-      <ul class="points">
-        <li class="reveal" style="--d:120ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-pot"/></svg></span><div><b>Use it up before</b><span>In the days before, suggestions empty the fridge. Nothing fresh goes on the list.</span></div></li>
-        <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-moonstar"/></svg></span><div><b>Quiet while away</b><span>While you are gone, only urgent notifications come through.</span></div></li>
-        <li class="reveal" style="--d:240ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-door"/></svg></span><div><b>Coming home</b><span>Milk, bread and what tomorrow’s breakfast needs: the welcome list is ready before you unlock the door.</span></div></li>
-      </ul>
-    </div>
-    <div class="phones reveal" style="--d:100ms">
-      <div class="phone" aria-hidden="true" data-shot-name="away">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/away-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/away-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">09</span><span class="label">Away</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="away-h">Holidays without forgotten yoghurt.</h2>
+        <p class="intro reveal">Tell ToHuus when you are away. It plans the rest around the trip.</p>
+        <ul class="points">
+          <li class="reveal" style="--d:60ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pot"/></svg></span><div><b>Use it up before</b><span>In the days before, suggestions use up what would otherwise go off. Nothing fresh goes on the list.</span></div></li>
+          <li class="reveal" style="--d:100ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-suitcase"/></svg></span><div><b>Packing list</b><span>What comes along from stock is booked out, and back in after the trip.</span></div></li>
+          <li class="reveal" style="--d:140ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-moonstar"/></svg></span><div><b>Quiet while away</b><span>While you are gone, only urgent notifications come through and automatic shopping suggestions pause.</span></div></li>
+          <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-door"/></svg></span><div><b>Coming home</b><span>The welcome list is ready before you unlock the door, along with a look at what expired in the meantime.</span></div></li>
+        </ul>
+      </div>
+      <div class="ch-visual reveal">
+        
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/away-light.webp" alt="Away mode with the trip, use-up days and packing list" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/away-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
       </div>
     </div>
   </div>
 </section>
 
 <section class="chapter flip" id="home-assistant" aria-labelledby="home-assistant-h">
-  <div class="wrap chapter-grid">
-    <div class="chapter-copy">
-      <span class="eyebrow step reveal"><b>8</b>Smart home</span>
-      <h2 class="reveal" id="home-assistant-h" style="--d:60ms">Home Assistant, both ways.</h2>
-      <p class="intro reveal" style="--d:120ms">If you already have automations, ToHuus Hub joins in instead of replacing them.</p>
-      <ul class="points">
-        <li class="reveal" style="--d:120ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-package"/></svg></span><div><b>Installed via HACS</b><span>A native integration with ready-made dashboards.</span></div></li>
-        <li class="reveal" style="--d:180ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><div><b>Two directions</b><span>Shopping list as a to-do list for Assist, meal plan and home care as calendars, sensors for tonight, low stock and what is due. And what you already automate in Home Assistant reports back into the app.</span></div></li>
-        <li class="reveal" style="--d:240ms"><span class="pi"><svg class="ico" aria-hidden="true"><use href="#i-tv"/></svg></span><div><b>Kitchen display</b><span>An old tablet or the TV shows the day. Dimmed at night, dark mode included.</span></div></li>
-      </ul>
-    </div>
-    <div class="phones reveal" style="--d:100ms">
-      <div class="phone" aria-hidden="true" data-shot-name="ha-dashboard">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/ha-dashboard-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/ha-dashboard-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
+  <div class="wrap">
+    <div class="ch-head reveal"><span class="ch-no">10</span><span class="label">Smart home</span></div>
+    <div class="ch-grid">
+      <div class="ch-copy">
+        <h2 class="reveal" id="home-assistant-h">Home Assistant, both ways.</h2>
+        <p class="intro reveal">If you already have automations, ToHuus joins in instead of replacing them.</p>
+        <ul class="points">
+          <li class="reveal" style="--d:60ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-package"/></svg></span><div><b>Installed via HACS</b><span>A dedicated integration with ready-made dashboards, MIT licensed.</span></div></li>
+          <li class="reveal" style="--d:100ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg></span><div><b>Two ways, per topic</b><span>Shopping list as a to-do list for Assist, meal plan and home care as calendars, sensors for tonight and low stock. Per topic you decide whether ToHuus syncs with a list or calendar you already have in Home Assistant.</span></div></li>
+          <li class="reveal" style="--d:140ms"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-tv"/></svg></span><div><b>Kitchen display</b><span>An old tablet or the TV shows the day, dark mode included. E-ink frames get a ready-made picture.</span></div></li>
+        </ul>
+      </div>
+      <div class="ch-visual reveal">
+        
+        <figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/ha-dashboard-light.webp" alt="Settings, Home Assistant section" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/ha-dashboard-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure>
       </div>
     </div>
   </div>
 </section>
 
-<section class="chapter" aria-labelledby="everywhere-h">
+<section class="chapter everywhere" aria-labelledby="everywhere-h">
   <div class="wrap">
-    <span class="eyebrow reveal">Wherever you are</span>
-    <h2 class="reveal" id="everywhere-h" style="--d:60ms; margin:16px 0 14px">Telegram, Shortcuts, AI assistants.</h2>
-    <p class="intro reveal" style="--d:120ms">Things land where you already type or talk.</p>
-    <div class="panel-grid">
-      <div class="panel reveal">
-        <span class="pi" style="display:inline-grid"><svg class="ico" aria-hidden="true"><use href="#i-chat"/></svg></span>
+    <div class="ch-head reveal"><span class="ch-no">11</span><span class="label">Wherever you are</span></div>
+    <h2 class="reveal" id="everywhere-h">Telegram, Shortcuts, AI assistants.</h2>
+    <p class="intro reveal">Things land where you already type or talk.</p>
+    <div class="panels">
+      <article class="panel big reveal">
+        <span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chat"/></svg></span>
         <h3>AI assistants via MCP</h3>
-        <p>Claude, ChatGPT and other assistants connect straight to your household. A photo of the freezer is enough.</p>
+        <p>Claude, ChatGPT and other assistants connect straight to your household. A photo of the receipt is enough.</p>
         <div class="chat" aria-hidden="true">
-          <div class="m me"><span class="file"><svg class="ico" aria-hidden="true"><use href="#i-camera"/></svg>freezer.jpg</span><br>Please add this to ToHuus Hub.</div>
-          <div class="m it">Done. 6 items for the freezer are waiting in your review list.</div>
+          <div class="m me"><span class="file"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-camera"/></svg>receipt.jpg</span>Please add this to ToHuus.</div>
+          <div class="m it">Done. The items are waiting in your review list.</div>
         </div>
-      </div>
-      <div class="panel reveal" style="--d:80ms"><span class="pi" style="display:inline-grid"><svg class="ico" aria-hidden="true"><use href="#i-send"/></svg></span><h3>Telegram</h3><p>Write “2 milk, bread” in the chat and it is on the list. Notifications arrive there too. Gotify and Matrix work as well.</p></div>
-      <div class="panel reveal" style="--d:140ms"><span class="pi" style="display:inline-grid"><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg></span><h3>iPhone Shortcut and sharing</h3><p>A Shortcut adds things to the list with Siri. Share recipes and receipts to ToHuus Hub straight from other apps.</p></div>
+      </article>
+      <article class="panel reveal"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-send"/></svg></span><h3>Telegram and friends</h3><p>Write “2 milk, bread” in the chat and it is on the list. Notifications also come by push, Gotify, Matrix, ntfy or e-mail.</p></article>
+      <article class="panel reveal"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mail"/></svg></span><h3>E-mail in the ToHuus look</h3><p>Invitations, sign-in links and the daily digest arrive as calm e-mails with a plain-text version, readable in light and dark.</p></article>
+      <article class="panel reveal"><span class="pi"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bolt"/></svg></span><h3>Shortcuts and sharing</h3><p>An iPhone Shortcut adds things to the list. On Android and desktop ToHuus shows up in the share menu, for recipes, lists and receipts.</p></article>
     </div>
   </div>
 </section>
 
-<section class="chapter" id="self-hosting" aria-labelledby="host-h">
+<section class="chapter host" id="self-hosting" aria-labelledby="host-h">
   <div class="wrap">
-    <div class="host">
-      <span class="eyebrow">Privacy & self-hosting</span>
-      <h2 id="host-h">It stays at home.</h2>
-      <p class="intro">One Docker container, one SQLite file. No account with us, no tracking, nothing phones home. Everything that talks to the outside world is optional.</p>
-      <div class="facts">
-        <div class="fact"><svg class="ico" aria-hidden="true"><use href="#i-server"/></svg><div><b>Runs almost anywhere</b><span>Docker on a NAS or a small VPS.</span></div></div>
-        <div class="fact"><svg class="ico" aria-hidden="true"><use href="#i-db"/></svg><div><b>Your data</b><span>One SQLite file, JSON export, nightly backups, optionally to WebDAV or Nextcloud.</span></div></div>
-        <div class="fact"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg><div><b>Sign-in</b><span>Passkeys, e-mail link, OpenID Connect, PIN on the family tablet.</span></div></div>
-        <div class="fact"><svg class="ico" aria-hidden="true"><use href="#i-camera"/></svg><div><b>Reading photos</b><span>Optional, with a model of your choice. Locally too, for example with Ollama.</span></div></div>
-        <div class="fact"><svg class="ico" aria-hidden="true"><use href="#i-globe"/></svg><div><b>Languages</b><span>English, German and Swedish. Each new one is a single file.</span></div></div>
-        <div class="fact"><svg class="ico" aria-hidden="true"><use href="#i-code"/></svg><div><b>Open source</b><span>AGPL-3.0. No company behind it, no subscription.</span></div></div>
+    <div class="ch-head reveal"><span class="ch-no">12</span><span class="label">Privacy & self-hosting</span></div>
+    <div class="host-grid">
+      <div>
+        <h2 class="reveal" id="host-h">It stays with you.</h2>
+        <p class="intro reveal">One Docker container, one SQLite file. No account with us, no tracking, nothing phones home. Everything that talks to the outside world is optional.</p>
+        <dl class="facts-list">
+          <div class="reveal"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-server"/></svg><dt>Runs almost anywhere</dt><dd>Docker on a NAS or a small VPS.</dd></div>
+          <div class="reveal"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-db"/></svg><dt>Your data</dt><dd>One SQLite file, JSON export, nightly backups, optionally to WebDAV or Nextcloud. A backup runs before every database migration.</dd></div>
+          <div class="reveal"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-lock"/></svg><dt>Sign-in</dt><dd>Passkeys, password with a second factor, e-mail link, OpenID Connect and a PIN on the shared tablet.</dd></div>
+          <div class="reveal"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-camera"/></svg><dt>Reading photos</dt><dd>Optional, with a model of your choice through an OpenAI-compatible API. Locally too, for example with Ollama.</dd></div>
+          <div class="reveal"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-globe"/></svg><dt>Languages and regions</dt><dd>English, German and Swedish. The region sets currency, date format and which receipts to expect.</dd></div>
+          <div class="reveal"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-sun"/></svg><dt>Light and dark</dt><dd>The household picks light, dark or like the device. If you like, everyone decides for themselves.</dd></div>
+          <div class="reveal"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-code"/></svg><dt>Licences</dt><dd>The app is licensed under the <a href="https://github.com/tillheidrich/tohuus-hub/blob/main/LICENSE">AGPL-3.0</a>, the Home Assistant integration under <a href="https://github.com/tillheidrich/tohuus-hub/blob/main/ha-integration/LICENSE">MIT</a>. No company behind it, no subscription.</dd></div>
+        </dl>
       </div>
-      <div class="install" id="install">
-        <div>
-          <h3 style="color:#fffdf8; margin-bottom:18px">Install</h3>
+      <div class="ticket install reveal" id="install">
+        <div class="ticket-top">
+          <h3>Install</h3>
           <ol class="steps">
-            <li><span><b>Save the compose file</b>Fill in <code>BASE_URL</code>, your name and a password.</span></li>
-            <li><span><b>Start it</b><code>docker compose up -d</code>, then open <code>http://localhost:8080</code>.</span></li>
-            <li><span><b>Empty or demo</b>On first start you choose to begin empty or to look around first.</span></li>
-            <li><span><b>Put HTTPS in front</b>Your usual reverse proxy is enough. Then add the app to your home screen.</span></li>
+            <li><b>Get it and set it up</b><span>In <code>.env</code> you fill in <code>BASE_URL</code>, your name and a password. Every other option is listed with comments in <code>.env.example</code>.</span></li>
+            <li><b>Start it</b><span>Run <code>docker compose up -d --build</code>, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.</span></li>
+            <li><b>Empty or demo</b><span>On first start you choose to begin empty or to look around with demo data first. One tap removes it later.</span></li>
+            <li><b>Put HTTPS in front</b><span>Your usual reverse proxy is enough. Passkeys and the share menu need HTTPS. Then add the app to your home screen.</span></li>
           </ol>
         </div>
+        <div class="tear" aria-hidden="true"></div>
         <div class="code">
-          <div class="code-head"><span>docker-compose.yml</span><button class="copy" type="button" data-copy="code-compose" data-done="Copied"><svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div>
-<pre id="code-compose"><span class="k">services:</span>
-  <span class="k">tohuus:</span>
-    <span class="k">image:</span> <span class="s">ghcr.io/tillheidrich/tohuus-hub:latest</span>
-    <span class="k">restart:</span> unless-stopped
-    <span class="k">ports:</span>
-      - <span class="s">"8080:8080"</span>
-    <span class="k">volumes:</span>
-      - ./data:/data
-    <span class="k">environment:</span>
-      <span class="k">BASE_URL:</span> <span class="s">https://home.example.org</span>
-      <span class="k">ADMIN_NAME:</span> Alex
-      <span class="k">ADMIN_PASSWORD:</span> change-me
-      <span class="k">LANGUAGE:</span> en <span class="c"># or de, sv</span></pre>
+          <div class="code-head"><span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg>Terminal</span><button class="btn sm copy" type="button" data-copy="code-sh" data-done="Copied"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+<pre id="code-sh"><span class="k">git clone</span> https://github.com/tillheidrich/tohuus-hub.git
+<span class="k">cd</span> tohuus-hub
+<span class="k">cp</span> .env.example .env
+<span class="k">docker compose up</span> -d --build</pre>
+          <div class="code-head"><span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-code"/></svg>.env</span><button class="btn sm copy" type="button" data-copy="code-env" data-done="Copied"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+<pre id="code-env"><span class="k">BASE_URL</span>=<span class="s">https://home.example.org</span>
+<span class="k">ADMIN_NAME</span>=Alex
+<span class="k">ADMIN_PASSWORD</span>=change-me
+<span class="k">LANGUAGE</span>=en <span class="c"># en, de or sv</span>
+<span class="k">TZ</span>=Europe/Berlin</pre>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="tour" id="tour" aria-labelledby="tour-h">
+  <div class="wrap">
+    <div class="block">
+      <span class="disc" aria-hidden="true"></span><span class="half" aria-hidden="true"></span>
+      <div class="block-copy">
+        <p class="label on-block"><svg class="ia-bird" viewBox="0 0 30 20" aria-hidden="true" focusable="false"><path d="M27 11c-1-6-7-9-12-7L8 1l2 6c-2 5 2 9 9 9 5 0 8-2 8-5z" class="b-body"/><path d="M27 11c-1-6-7-9-12-7L8 1l2 6c-2 5 2 9 9 9 5 0 8-2 8-5z" class="b-line"/><circle cx="21" cy="8" r="1.3" class="b-eye"/><path d="M27 9l3 1-3 1" class="b-beak"/><path d="M16 16v4M20 16v4" class="b-line"/></svg>Tour</p>
+        <h2 id="tour-h">Want to look around first? Use the demo data.</h2>
+        <p>The tour walks you through the important places, right on the real pages. Afterwards the demo data is gone with one tap.</p>
+        <div class="ctas">
+          <a class="btn on-block-primary" href="#install">Install it<span class="tail"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-download"/></svg></span></a>
+          <a class="btn on-block-ghost" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-github"/></svg>View on GitHub</a>
+        </div>
+      </div>
+      <div class="block-phone"><figure class="phone">
+          <div class="screen">
+            <img class="light-only" src="assets/shots/en/tour-light.webp" alt="The tour explains the shopping list on the real page" loading="lazy" decoding="async" width="390" height="844">
+            <img class="dark-only" src="assets/shots/en/tour-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
+          </div>
+        </figure></div>
     </div>
   </div>
 </section>
 
 <section class="story" aria-labelledby="story-h">
   <div class="wrap story-grid">
-    <div class="word reveal" id="story-h">To Huus<small>Low German for “at home”. Spoken along the North Sea and the Baltic.</small></div>
-    <div class="reveal" style="--d:80ms">
-      <p>ToHuus Hub was built for an ordinary family life: a fridge, a freezer compartment, a pantry shelf that is never quite tidy and a cupboard where things like to disappear.</p>
-      <p>For years one person knew where everything was and what was running out, and the other one asked. The one rule while building it: it has to work on a tired Tuesday.</p>
-      <p>It is free and licensed under the AGPL. Issues and pull requests are welcome, and so are translations.</p>
+    <p class="word reveal" id="story-h">To Huus<small>Low German for “at home”. Spoken along the North Sea and the Baltic.</small></p>
+    <div class="reveal">
+      <p>ToHuus started in an ordinary family routine. One person knew where everything was and what was running out, the other one asked. The one rule while building it: it has to work on a tired Tuesday.</p>
+      <p>It is built for every kind of home, the studio flat without a freezer just as much as the flat share where everyone has their own shelf in the fridge.</p>
+      <p>It is free and open source. Issues and pull requests are welcome, and so are translations.</p>
       <p class="sig">Till & Lea</p>
-    </div>
-  </div>
-</section>
-
-<section class="cta" aria-labelledby="cta-h">
-  <div class="wrap">
-    <div class="cta-card">
-      <div>
-        <h2 id="cta-h">Want to look around first? Use the demo data.</h2>
-        <p style="color:var(--ink-2); max-width:52ch; margin:16px 0 26px">The tour shows you the important places in two minutes, right on the real pages. Afterwards the demo data is gone with one tap.</p>
-        <div class="btns">
-          <a class="btn btn-primary" href="#install">Install it<span class="btn-ico"><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></span></a>
-          <a class="btn btn-ghost" href="https://github.com/tillheidrich/tohuus-hub"><svg class="ico" aria-hidden="true"><use href="#i-github"/></svg>View on GitHub</a>
-        </div>
-      </div>
-      <div class="phones"><div class="phone" aria-hidden="true" data-shot-name="tour">
-        <div class="screen">
-          <div class="ph" aria-hidden="true"><i class="t1"></i><i class="t2"></i><i class="c1"></i><div class="row"><i></i><i></i></div><i class="c2"></i><i class="acc"></i><i class="tab"></i></div>
-          <span class="ph-label" aria-hidden="true">Screenshot coming</span>
-          <img class="light-only" data-shot src="assets/shots/en/tour-light.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          <img class="dark-only" data-shot src="assets/shots/en/tour-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-        </div>
-      </div></div>
     </div>
   </div>
 </section>
@@ -586,14 +599,15 @@
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="brand" href="./"><img src="assets/favicon-light.svg" alt="" width="30" height="30">ToHuus Hub</a>
-        <p style="margin:12px 0 0; max-width:40ch">Open-source home app, built by a family with a lot of help from Claude.</p>
+        <a class="brand" href="./"><svg class="mark" width="26" height="26" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 28V14L16 4l12 10v14z" class="mk-house"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" class="mk-door"/></svg><span>ToHuus</span></a>
+        <p>Open-source app for every kind of home, built by a family with a lot of help from Claude.</p>
       </div>
       <div>
         <h4>Project</h4>
         <ul>
           <li><a href="https://github.com/tillheidrich/tohuus-hub">Source code on GitHub</a></li>
-          <li><a href="https://github.com/tillheidrich/tohuus-hub/blob/main/LICENSE">Licence: AGPL-3.0</a></li>
+          <li><a href="https://github.com/tillheidrich/tohuus-hub/blob/main/LICENSE">App licence: AGPL-3.0</a></li>
+          <li><a href="https://github.com/tillheidrich/tohuus-hub/blob/main/ha-integration/LICENSE">HA integration licence: MIT</a></li>
           <li><a href="https://github.com/tillheidrich/tohuus-hub/issues">Report a bug</a></li>
         </ul>
       </div>
@@ -606,9 +620,17 @@
         </ul>
       </div>
     </div>
-    <p class="fine">This website sets no cookies, does not track you and loads nothing from third parties. Product data and images in the app come partly from Open Food Facts (ODbL / CC BY-SA). ToHuus Hub is not affiliated with REWE, Vorwerk/Thermomix, Cookidoo, HelloFresh, Telegram or Apple; the names only describe compatible formats and services.</p>
+    <p class="fine">This website sets no cookies, does not track you and loads nothing from third parties. Fonts: Familjen Grotesk and Hedvig Letters (SIL Open Font License), served locally. Icons: Phosphor (MIT). Recipe photo: Max Griss on Unsplash. Product data and images in the app come partly from Open Food Facts (ODbL / CC BY-SA). ToHuus Hub is not affiliated with REWE, Vorwerk/Thermomix, Cookidoo, Telegram, Apple or the apps and shops named here. The names only describe compatible formats and services.</p>
   </div>
 </footer>
+
+<nav class="rail" aria-label="Quick navigation">
+  <a href="#everyday"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-home"/></svg><span>Everyday</span></a>
+  <a href="#treats"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-gift"/></svg><span>Treats</span></a>
+  <a href="#install" class="plus"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-download"/></svg><span>Install</span></a>
+  <a href="#cooking"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pot"/></svg><span>Cooking</span></a>
+  <a href="#tour"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-play"/></svg><span>Tour</span></a>
+</nav>
 
 <script src="assets/site.js" defer></script>
 </body>

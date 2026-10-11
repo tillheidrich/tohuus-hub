@@ -920,7 +920,10 @@ onPresence(() => {
 
 function routeNotification(msg: ChannelMessage) {
   const map = ha2Settings().notify;
-  const entries = Object.entries(map).filter(([, svc]) => svc && /^[\w.]+$/.test(svc));
+  // a message for one person (toUserId) reaches only that person's HA app; `null` = for nobody (guest without account)
+  const all = Object.entries(map).filter(([, svc]) => svc && /^[\w.]+$/.test(svc));
+  if (msg.toUserId === null) return null;
+  const entries = msg.toUserId === undefined ? all : all.filter(([uid]) => Number(uid) === msg.toUserId);
   if (!entries.length || !activeTransport()) return null;
   for (const [, svc] of entries)
     enqueue('notify', `notify.${svc}`, {
