@@ -73,7 +73,7 @@ export function RecipeDetail() {
       <div className="pd" style={{ gridTemplateColumns: undefined }}>
         <div className="stack">
           <div className="recipe-hero">
-            {r.image_path ? <img src={r.image_path} alt="" /> : <ChefHat size={40} />}
+            {r.image_path ? <img src={r.image_path} alt={r.title} data-zoom="" /> : <ChefHat size={40} />}
             <button className="icon-btn" style={{ position: 'absolute', right: 12, bottom: 12 }} onClick={() => fileRef.current?.click()} aria-label={t('Photo')}>
               <Camera size={18} />
             </button>

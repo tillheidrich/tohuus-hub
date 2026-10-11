@@ -84,7 +84,7 @@ export function Thumb({ p, size = 52, className = '' }: { p: { name: string; ima
   return (
     <div className={`thumb ${className}`} style={className.includes('lg') ? undefined : { width: size, height: size }}>
       {p.image_path && !broken ? (
-        <img src={p.image_path} alt="" loading="lazy" onError={() => setBroken(true)} />
+        <img src={p.image_path} alt={className.includes('lg') ? p.name : ''} loading="lazy" onError={() => setBroken(true)} {...(className.includes('lg') ? { 'data-zoom': '' } : {})} />
       ) : (
         <div style={{ background: hue, width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: 'var(--tint-ink)' }}>
           <span className="initial" style={className.includes('lg') ? { fontSize: 64 } : undefined}>

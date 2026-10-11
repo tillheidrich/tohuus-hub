@@ -264,6 +264,7 @@ function MealSheet({ entry, claim, onClose, onOpen }: { entry: any | null; claim
   return (
     <Sheet open={!!entry} onClose={onClose} title={entry.title}>
       <div className="stack">
+        {entry.image_path && <img className="meal-sheet-img" src={entry.image_path} alt={entry.title} data-zoom="" />}
         <div className="small muted" style={{ marginTop: -6 }}>{label(entry.day)} · {entry.slot === 'mittag' ? t('lunch') : t('dinner')}</div>
         <CookPicker entryId={entry.id} claim={claim} />
         <EntryServings entry={entry} />

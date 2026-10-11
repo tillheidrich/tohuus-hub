@@ -6,6 +6,7 @@ import { qc } from './api';
 import { App } from './App';
 import { startOffline } from './shop/offline';
 import { ToastProvider } from './ui';
+import { Lightbox } from './zoom';
 import './styles.css';
 
 // light / dark: web/public/theme-boot.js already set <html data-theme> before the first paint (see ./theme.ts)
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ToastProvider>
           <App />
+          <Lightbox />
         </ToastProvider>
       </BrowserRouter>
     </QueryClientProvider>

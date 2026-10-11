@@ -789,7 +789,7 @@ export function PlanBoxPicks({ day, slot, onDone }: { day: string | null; slot: 
       <div className="list">
         {data.slice(0, 6).map((b) => (
           <button key={b.code} className="li" onClick={() => pick(b)}>
-            {b.image_path ? <span className="thumb"><img src={b.image_path} alt="" /></span> : <span className={`lb-ic sm ${b.place}`}>{b.place === 'freezer' ? <Snowflake size={18} /> : <BowlFood size={18} />}</span>}
+            {b.image_path ? <span className="thumb"><img src={b.image_path} alt={b.name ?? ''} data-zoom="" /></span> : <span className={`lb-ic sm ${b.place}`}>{b.place === 'freezer' ? <Snowflake size={18} /> : <BowlFood size={18} />}</span>}
             <span className="grow" style={{ textAlign: 'left', minWidth: 0 }}>
               <b style={{ display: 'block' }}>{b.place === 'freezer' ? t('Use the frozen {name}', { name: b.name }) : t('Eat up {name}', { name: b.name })}</b>
               <span className="small muted">{[portionsText(b.left), eatByText(b)].filter(Boolean).join(' · ')}</span>
