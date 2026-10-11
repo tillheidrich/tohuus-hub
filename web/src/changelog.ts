@@ -19,6 +19,23 @@ export interface ChangeEntry {
 
 export const CHANGELOG: ChangeEntry[] = [
   {
+    id: '2026-10-11',
+    title: { en: 'A fresh look and a lot more for the whole family', de: 'Neuer Look und viel mehr für die ganze Familie', sv: 'Nytt utseende och mycket mer för hela familjen' },
+    items: [
+      { en: 'New design, light or dark – everyone can choose if the admin allows it.', de: 'Neues Design, hell oder dunkel – wenn der Admin es erlaubt, für jeden einzeln.', sv: 'Ny design, ljus eller mörk – var och en kan välja om admin tillåter det.', to: '/einstellungen?tab=account' },
+      { en: 'Profile pictures, children without their own login, and permanent guests who only see what you allow.', de: 'Profilbilder, Kinder ohne eigenen Login und feste Gäste, die nur sehen, was du freigibst.', sv: 'Profilbilder, barn utan eget konto och fasta gäster som bara ser det du tillåter.', to: '/einstellungen?tab=members' },
+      { en: 'Rate dishes per person and see everyone’s favourites.', de: 'Gerichte pro Person bewerten und die Lieblinge aller sehen.', sv: 'Betygsätt rätter per person och se allas favoriter.', to: '/lieblinge' },
+      { en: '“Who wants what?” – vote on dinner, secretly or together, and see the matches.', de: '„Wer will was?“ – übers Essen abstimmen, geheim oder gemeinsam, und die Treffer sehen.', sv: '”Vem vill ha vad?” – rösta om middagen, i hemlighet eller tillsammans.', to: '/kochen' },
+      { en: 'Cook for more people just once: servings per planned meal, the shopping list follows.', de: 'Einmal für mehr Leute kochen: Portionen pro geplantem Essen, der Einkauf rechnet mit.', sv: 'Laga till fler en gång: portioner per planerad måltid, inköpslistan följer med.', to: '/kochen' },
+      { en: 'Week plans that rotate over several weeks.', de: 'Wochenpläne, die über mehrere Wochen rotieren.', sv: 'Veckoplaner som roterar över flera veckor.', to: '/kochen' },
+      { en: 'Leftovers and freezer labels with QR code – scan to see what is inside and until when.', de: 'Reste- und Einfrier-Etiketten mit QR-Code – scannen und sehen, was drin ist und bis wann.', sv: 'Etiketter för rester och frys med QR-kod.', to: '/etiketten' },
+      { en: 'Trip mode: use things up before you leave, packing list, holiday kitchen and a welcome-home list.', de: 'Urlaubsmodus: vorher aufbrauchen, Packliste, Ferienküche und Einkauf für die Rückkehr.', sv: 'Reseläge: använd upp innan ni åker, packlista, semesterkök och hemkomstlista.', to: '/urlaub' },
+      { en: 'Share lists from WhatsApp straight into the app, and add discreet items only you can see.', de: 'Listen aus WhatsApp direkt in die App teilen und diskrete Einträge, die nur du siehst.', sv: 'Dela listor från WhatsApp direkt till appen och lägg till diskreta saker.', to: '/einkauf' },
+      { en: 'Edit the order menu yourself – coffee, drinks, snacks, with options and notes.', de: 'Die Bestell-Karte selbst bearbeiten – Kaffee, Getränke, Snacks, mit Optionen und Notizen.', sv: 'Redigera beställningsmenyn själv – kaffe, drycker, snacks.', to: '/bestellen/karte' },
+      { en: 'Bring recipes from other apps, websites in English and German, or any AI.', de: 'Rezepte aus anderen Apps, englischen und deutschen Webseiten oder von jeder KI übernehmen.', sv: 'Ta med recept från andra appar, webbplatser eller valfri AI.', to: '/einstellungen?tab=recipes' },
+    ],
+  },
+  {
     id: '2026-10-10.3',
     title: { en: 'Dinner, spending, sign-in and more', de: 'Abendessen, Ausgaben, Anmeldung und mehr', sv: 'Middag, utgifter, inloggning och mer' },
     items: [

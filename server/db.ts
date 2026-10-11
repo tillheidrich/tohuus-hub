@@ -305,7 +305,7 @@ function preMigrationBackup() {
     if (!hasUsers) return;
     const dir = path.join(config.dataDir, 'backups');
     fs.mkdirSync(dir, { recursive: true });
-    const p = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date());
+    const p = new Intl.DateTimeFormat('sv-SE', { timeZone: process.env.TZ || 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date());
     const [day, time] = p.split(' ');
     const file = path.join(dir, `tohuus-${day}-${time.replace(/:/g, '')}-manual.db`);
     if (!fs.existsSync(file)) db.exec(`VACUUM INTO '${file.replace(/'/g, "''")}'`);

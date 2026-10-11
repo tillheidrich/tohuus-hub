@@ -1,0 +1,87 @@
+# Changelog
+
+ToHuus Hub is developed in waves: each wave adds a set of feature areas, then gets a review pass. Dates are when the wave landed on `main`. The package version is still `0.1.0`; the Home Assistant integration has its own changelog in [ha-integration/CHANGELOG.md](ha-integration/CHANGELOG.md).
+
+## Wave 5 (2026-10-11)
+
+### Added
+
+- **Sharing into the app** (area `share`): web share target for Android and desktop, an iPhone Shortcut with a personal key that can only add to the shopping list, a landing page that sends shared text, links, photos and PDFs to the list, a recipe import or a receipt import. WhatsApp and Signal message prefixes are stripped.
+- **Discreet and private shopping items**: "discreet" shows others a neutral placeholder, "only me" hides the item from everyone else. The real name never reaches Home Assistant, Telegram, displays, tickets, guest links, digests or MCP.
+- **Start mode "only what runs out"**: track only the staples that regularly run out, switch to everything any time.
+- **Leftover and freezer labels** (area `labels`): put a box away in two taps, short code and QR label (A4 sticker sheets, thermal label printers, PNG), scan to eat, thaw, throw away, plan or undo; every action books stock.
+- **Trips** (area `away`): use up before leaving, packing list with stock items booked out and back, checklist, quiet notifications and paused shopping suggestions, holiday kitchen, house-sitter link, welcome-home list, check of what expired, Home Assistant presence suggestion.
+- **Week plan 2** (area `plan2`): plan templates and a rotation of up to six weeks, family food votes (secret or together mode, kids vote without a login), day marks (away, eating out), servings per plan entry that scale shopping and stock booking.
+- **Recipe import and export** (area `recipes2`): bulk JSON endpoint, files from Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl, Grocy, TheMealDB, HTML and CSV with a preview, an AI prompt template for any chat, TheMealDB search with ingredient lines translated to the household language and units, JSON export in the import format, idempotent re-import, a background photo queue.
+- **Receipt recognition** (area `quality`): rules learned from corrections in the review (per store, visible and deletable), store recognition by VAT id, a recognition report per import and statistics, "Help improve recognition" with anonymised receipt fixtures that are never sent automatically. The generic German parser learned many more line structures (quantity lines before the item, discounts naming another item, voids, returns, the Lidl digital deposit receipt).
+- **People** (area `people`): one list of members, children and permanent guests; profile pictures (photo, drawn animal or initials); likes, dislikes and allergies that steer suggestions; per-person recipe ratings and family favourites; permanent guests with four levels (order, stock, recipes, family) and temporary overrides, enforced on the server; login links an admin can hand out.
+- **Tour, demo data and reset** (area `tour`): a guided tour, "start empty" or "explore with demo data" on first start, demo rows recorded precisely and removable, "start over" for chosen areas with an automatic backup first and a schema-driven split of tables.
+- **Home Assistant two-way** (area `ha2`): per topic, Home Assistant or ToHuus Hub is the source, or both: shopping list with HA to-do lists, meal plan with HA calendars, due care tasks to a to-do list, presence, notifications through the companion app, NFC tags as quick actions. A voice command guide for the babysitter page with a hard safety filter. Requires the HA integration 0.2.0 or the REST fallback.
+- **Order menu editor** (area `menu`): groups, items from stock and menu-only items with ingredients booked per serving, templates and suggestions.
+- **Nordic redesign** (area `design`): warm paper tones, one brand colour, light and dark mode, a household default with optional personal choice, new cottage icon for both brands. Rationale in [docs/design/2026-10-11-nordic-direction.md](docs/design/2026-10-11-nordic-direction.md).
+- **Automatic backup before migrations**: before the first pending schema migration on an existing household, the database is copied into the backups folder.
+- Demo recipes now have photos (Unsplash, credited in `server/assets/demo-recipes/CREDITS.md`); the website shows real app screenshots per language in light and dark.
+- MCP: 106 tools in total.
+
+### Changed
+
+- `BRAND` set in the environment now wins over the household setting. Onboarding no longer stores the default brand, so an instance started with `BRAND=fredirando` no longer shows ToHuus Hub.
+
+### Fixed
+
+- Security review: guest-policy bypass through upper-case paths, SSRF through IPv6 addresses, guest gating in Telegram, a denial of service on the share endpoint, TOTP, CSV injection, the CSRF check. Regression tests in `test/security-wave5.test.ts`.
+- The MCP path secret is shown to admins only; guests can no longer print care tickets; plan templates no longer copy vote notes and box notes.
+- White screen after filling the week.
+
+## Wave 4 (2026-10-10)
+
+### Added
+
+- **What do we eat today?** (area `cook2`): planned today, ready now, one thing missing with "take X instead", leftovers first, quick dishes, filters, and a weighted random pick.
+- **House versions of recipes**: per-recipe changes that never touch the original, and house-wide swap rules; suggestions, cooking and shopping use the house version.
+- **Cookidoo push from Home Assistant**: the HA integration sends the Cookidoo week; no HA token needed in ToHuus Hub.
+- **Spending analytics** (area `spend2`): week, month, year and all-time charts, budgets with forecast and warnings, manual expenses, tags, exclusions, export.
+- **Sign-in** (area `auth`): one-time e-mail links bound to the asking browser, passkeys, single sign-on with OpenID Connect, TOTP, PIN switch on shared devices, device list, new-sign-in alerts, `AUTH_BREAK_GLASS`. See [docs/auth.md](docs/auth.md).
+- **Tickets and thermal printers** (area `print`): receipt-style tickets for shopping lists, kitchen orders, care tasks, kid wishes, recipe cards and the week plan, printed over ESC/POS or sent to Telegram, Matrix, Gotify or e-mail, with automations.
+
+## Wave 3 (2026-10-10)
+
+### Added
+
+- **Home Assistant integration** for HACS (area `ha`, integration 0.1.0): shopping list as a to-do list, meal plan and care calendars, sensors, buttons, display images, events, actions, live updates, two dashboards. See [docs/home-assistant.md](docs/home-assistant.md).
+- **More channels** (area `channels`): Telegram (two-way), Gotify, Matrix.
+- **Regions** (area `intl`): currency, number and date format, units shown in recipes, first day of the week; UK, US and Swedish receipt parsers.
+- Swedish UI. Light app icons.
+
+## Wave 2 (2026-10-10)
+
+### Added
+
+- **Kitchen and wall displays** (area `kiosk`): token links with three layouts and night dimming that run on old tablets, a PNG for e-ink frames and Home Assistant.
+- **Kid mode** (area `kids`): kid profiles with drawn animals, paired tablets, picture wishes with parent approval, whitelists, daily limits, quiet hours, read-aloud, "where is" with place photos.
+- **Onboarding** (area `onboard`): a three-step setup for new households, starter sets per room, a getting-started checklist, grouped navigation, "what's new", a help page.
+- **Retail** (area `retail`): IMAP receipt inbox, a generic German receipt parser (Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm, Rossmann and more), best-before versus use-by, estimated value of wasted food.
+- README comparison table; fonts for e-ink rendering in the Docker image.
+
+## Wave 1 (2026-10-10)
+
+### Added
+
+- **Party mode** (area `party`): start in two taps, party menu with limits, TV board with guest and kitchen views and a pairing code, per-device guest orders, soft reservation, automatic end, recap to the shopping list, templates.
+- **Data** (area `data`): export without secrets, hashed guest tokens, nightly backups with rotation, restore, WebDAV off-site copy, member invites, optional hidden login names.
+- **Keeping stock fresh** (area `fresh`): quick check per place, opened, frozen and thawed with shelf life, leftovers after cooking, "eat me first" on Today, consumption forecast, waste insights.
+- **Store mode** (area `shop`): learned aisle order, offline use with a replay queue, "I'll take care of it" claims, natural-language quick add, Web Push, Home Assistant to-do sync.
+- **Home care and spending** (area `home`): care tasks from templates, spending from receipts with price history, printable QR labels with quick actions.
+- The structure for feature areas: named migrations, one router per area, MCP tool modules, locale fragments; research reports in `docs/research/`.
+
+## Before the waves (2026-10-10)
+
+- First working version (then called Stockwerk): stock with places and fill levels, shopping list, REWE order notices and eBons, photo imports, recipes, guest bar, MCP server, Docker.
+- Security hardening and review fixes.
+- Fredirando home-delivery theme and brand switch.
+- Week plan with shopping for the week; Cookidoo week through Home Assistant.
+- "Where is what" with exact spots and the babysitter link; moving the week plan.
+- English-first UI and server strings, German as a bundled translation.
+- Renamed to ToHuus Hub; existing `stockwerk.db` files are picked up automatically.
+- Website (English and German) on GitHub Pages, CI, Docker image workflow.
+- Order from the sofa; light design by default.

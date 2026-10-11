@@ -1,0 +1,139 @@
+# Recipe import and export
+
+ToHuus Hub takes recipes from wherever a family keeps them. All bulk paths end in the same function (`bulkImport()` in [`server/lib/recipes2.ts`](../server/lib/recipes2.ts)), so a recipe looks the same no matter how it came in, and an export can be imported again without changes.
+
+Importing is for members, admins and full-access tokens. Permanent guests at level `recipes` or `family` may import as well, but they only see the *Cook* screen, not *Settings › Recipes*. Guest links can never import.
+
+## Ways in
+
+| Source | Where | Notes |
+|---|---|---|
+| A link to a recipe page | *Cook › + Recipe › Link (Kochen › + Rezept › Link)* | Reads the schema.org `Recipe` data most recipe sites publish (JSON-LD, including `@graph`, `HowToSection`, ISO durations). Pages without it are read by the vision model, if one is configured. Sites that block the request get a clear message. |
+| Photos (up to 6, e.g. front and back of a HelloFresh card) | *Cook › + Recipe › Photo* | Needs a vision model (`VISION_*`). Without one, send the photo to your AI assistant over MCP. |
+| Text | *Cook › + Recipe › Text* | Needs a vision model, which also reads text. |
+| Blank | *Cook › + Recipe › Blank* | Type it in. |
+| A file from another app | *Settings › Recipes › Import from another app (Einstellungen › Rezepte › Aus einer anderen App importieren)* | Format is detected; see the table below. Files up to 100 MB. You get a preview and pick which recipes to import. |
+| A JSON file | *Settings › Recipes › Import file (Datei importieren)* | Our own export or any schema.org JSON. |
+| Any AI chat | *Settings › Recipes › Import with any AI (Mit jeder KI importieren)* | Copy a ready-made prompt, give the chat a photo, a cookbook page or text, paste the answer back. See [AI template](#ai-template). |
+| TheMealDB | *Settings › Recipes › Find recipes in an open database (Rezepte in einer offenen Datenbank finden)* | Free public database in English. Search with English words. |
+| Cookidoo week plan | Home Assistant | Through the Home Assistant Cookidoo integration. See [home-assistant.md](home-assistant.md#cookidoo). |
+| Share menu | *Share (Teilen) › Save as recipe* | A shared link or text. |
+| MCP | `save_recipe`, `recipes_import_bulk`, `recipes_search_open`, `recipes_import_open` | See [mcp.md](mcp.md). |
+| HTTP API | `POST /api/recipes/import/bulk` | See [Bulk JSON](#bulk-json). |
+
+### Formats from other apps
+
+| App | What to upload |
+|---|---|
+| ToHuus Hub | `recipes.json` from *Export recipes* |
+| Mealie | a recipe JSON, the zip export, or a `database.json` backup |
+| Tandoor | the export zip (a zip of zips with `recipe.json`) |
+| Paprika | `.paprikarecipes` (a zip of gzipped JSON) |
+| Nextcloud Cookbook | a zip of the recipe folders (`recipe.json` + `full.jpg`) |
+| KitchenOwl | the export JSON |
+| Grocy | recipes, recipe positions and products as returned by the Grocy API |
+| TheMealDB | its JSON |
+| Any web page | saved HTML with JSON-LD |
+| CSV | one row per recipe; columns are matched by name in English, German or Swedish: `name`/`title`, `description`, `ingredients`, `instructions`/`steps`, `servings`/`yield`, `time`, `prep time`, `cook time`, `url`, `image`, `tags`/`category`, `id`, `thermomix` |
+
+Photos inside a file (Paprika, Nextcloud, Tandoor, Mealie zip) are stored right away. Photo links are downloaded in the background through the same network-safe fetch as everything else, scaled to at most 1600 px on the long side. A failed photo never fails the recipe; it is retried on the next start, at most three times.
+
+### Open recipe database (TheMealDB)
+
+Ingredient lines are translated into the household language with a small built-in dictionary and converted to the region's units (cups, oz and lb become g and ml in metric regions; spoons become EL/TL or msk/tsk). The English line stays visible as "original". Steps stay in English; nothing is sent to a translation service.
+
+### Cookidoo
+
+Cookidoo has no public API. With the Home Assistant *Cookidoo* integration, its "My Week" shows up as a calendar, and ToHuus Hub turns the planned dishes into plan entries. A dish is matched to an existing recipe by name. Otherwise ToHuus Hub reads the public Cookidoo page the calendar entry links to (title, photo, ingredients), or creates a stub with the title and cooking time that you can complete later with a link import. Cookidoo recipes imported through the bulk paths without steps are marked `instructions_available: false`: the steps stay on Cookidoo, and the recipe page links there.
+
+## Re-importing
+
+Importing the same recipes again updates them instead of creating duplicates. A recipe is matched by `source_type` plus `external_id`, then by its link. Sources that usually bring no id of their own (Mealie, Tandoor, Paprika, Nextcloud, KitchenOwl, Grocy, CSV, plain JSON, AI) are matched by title; the preview says "update" for those.
+
+An update replaces the original recipe only (title, ingredients, steps, times and so on). These stay as they are: the household's own version and swap rules, ratings and the cooking log, the favourite flag, notes, and a photo you picked by hand.
+
+## Bulk JSON
+
+`POST /api/recipes/import/bulk` with a session cookie or `Authorization: Bearer <full-access token>`. The body is an array of recipes, or an object with `recipes`, `items`, `data` or `@graph` holding the array, or a single recipe. At most 1000 recipes per request. The import runs synchronously and answers:
+
+```json
+{ "created": 2, "updated": 1, "images": 3, "failed": 0, "errors": [], "ids": [41, 42, 17] }
+```
+
+Each `errors` entry has `index`, `title` and `error`.
+
+### Recipe shape
+
+A schema.org `Recipe` with a few extensions. Only `name` is required, plus at least ingredients, steps or a `url`.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `name` (or `title`) | string | Title, up to 200 characters. |
+| `description` | string | Short text. |
+| `image` | URL, ImageObject or array | Photo to download. |
+| `recipeYield` | string, number or array | "4 servings", "Serves 4", 4. |
+| `totalTime`, `prepTime`, `cookTime` | ISO 8601 duration or minutes | `PT1H15M`. Total wins; otherwise prep + cook. |
+| `recipeIngredient` | string[] | One line per ingredient as written. Up to 150. |
+| `ingredients_structured` | object[] | Optional. Same order as `recipeIngredient`: `section`, `name`, `amount` (number), `unit`, `note`, `original`. Without `recipeIngredient`, lines are built from these. |
+| `recipeInstructions` | string, string[], HowToStep[] or HowToSection[] | Steps. Sections become step headings. Up to 120 steps. |
+| `keywords`, `recipeCategory`, `recipeCuisine`, `tags` | string or string[] | Tags. |
+| `collections` | string[] | Collections (up to 8), also used as tags. |
+| `nutrition` | NutritionInformation | Kept as is. |
+| `url` | URL | Source link. |
+| `source_type` | string | Where it came from, e.g. `url`, `cookidoo`, `mealie`, `ai`, `json`. Detected when missing. |
+| `external_id` | string | The source's own id, for re-imports. |
+| `thermomix` | boolean | Detected from Cookidoo links and steps like "Stufe 2" or "Varoma" when missing. |
+| `instructions_available` | boolean | `false` when steps live elsewhere (Cookidoo). |
+| `notes` | string | Household notes. |
+| `favorite` | boolean | Mark as favourite. |
+
+### Example
+
+```json
+[
+  {
+    "@type": "Recipe",
+    "name": "Creamy tomato pasta",
+    "description": "Quick weekday pasta.",
+    "recipeYield": "4 servings",
+    "totalTime": "PT25M",
+    "recipeIngredient": ["400 g pasta", "1 can chopped tomatoes (400 g)", "100 ml cream", "1 onion", "1 garlic clove", "salt, pepper"],
+    "ingredients_structured": [
+      { "section": null, "name": "pasta", "amount": 400, "unit": "g", "note": null },
+      { "section": null, "name": "chopped tomatoes", "amount": 1, "unit": "can", "note": "400 g" },
+      { "section": null, "name": "cream", "amount": 100, "unit": "ml", "note": null },
+      { "section": null, "name": "onion", "amount": 1, "unit": null, "note": null },
+      { "section": null, "name": "garlic clove", "amount": 1, "unit": null, "note": null },
+      { "section": null, "name": "salt, pepper", "amount": null, "unit": null, "note": null }
+    ],
+    "recipeInstructions": [
+      { "@type": "HowToStep", "text": "Cook the pasta." },
+      { "@type": "HowToStep", "text": "Fry onion and garlic, add tomatoes and cream, simmer 10 minutes." },
+      { "@type": "HowToStep", "text": "Mix with the pasta and season." }
+    ],
+    "keywords": "pasta, vegetarian, quick",
+    "recipeCategory": "Main course",
+    "source_type": "ai",
+    "external_id": null,
+    "thermomix": false
+  }
+]
+```
+
+```bash
+curl -X POST https://your-host/api/recipes/import/bulk \
+  -H "Authorization: Bearer sw_…" -H "Content-Type: application/json" \
+  --data @recipes.json
+```
+
+## AI template
+
+*Import with any AI* shows a prompt in the household language (English, German or Swedish) that contains the example above. It asks the chat to answer with only a JSON array in that shape, keep the recipe's language, invent nothing, split ingredients into amount, unit, name and note, use `HowToSection` for recipes with parts, keep Thermomix settings in the step text, and set `source_type: "ai"`.
+
+Paste the whole answer back. Code fences and chatter around the JSON are stripped. You get the same preview as for a file.
+
+The prompt and the example are also available as JSON at `GET /api/recipes/import/ai-template`.
+
+## Export
+
+*Settings › Recipes › Export recipes (Rezepte exportieren)* downloads all recipes as one JSON file in the shape above (`GET /api/recipes/export.json`, optional `?ids=1,2,3`; MCP: `recipes_export`). Recipes without an outside source get `external_id: "tohuus-<id>"`, so importing the file into the same or another ToHuus Hub updates instead of duplicating. The household's own versions and ratings are not part of the export.
