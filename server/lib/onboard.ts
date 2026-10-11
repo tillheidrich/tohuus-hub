@@ -2,7 +2,7 @@
  * First-run experience: household onboarding (3 skippable, resumable steps), the "getting started"
  * checklist on Today, starter sets per room, and small per-user preferences (e.g. "what's new" seen).
  */
-import { db, getSetting, lang, migrate, setSetting } from '../db.js';
+import { brand, db, getSetting, lang, migrate, setSetting } from '../db.js';
 import { BASE_LOCATIONS, type CategoryKey, type LocationKey, categoryIdByKey, locationIdByKey } from './basedata.js';
 import { addToShopping, adjustStock, createProduct } from './catalog.js';
 import { emit } from './bus.js';
@@ -121,7 +121,7 @@ export function gettingStarted(userId?: number | null) {
     wizardDue: wizardDue(state),
     checklist: list,
     showChecklist: state.started && !state.checklistDismissed && list.done < list.total,
-    household: { name: getSetting('household.name', ''), language: lang(), brand: getSetting('brand', 'tohuus') },
+    household: { name: getSetting('household.name', ''), language: lang(), brand: brand() },
     rooms,
     counts: {
       members: count('SELECT COUNT(*) n FROM users'),

@@ -352,6 +352,7 @@ export function lang(): Lang {
 }
 
 export function brand(): Brand {
-  const b = getSetting<string>('brand', config.brand);
+  // BRAND set in the environment is the instance's identity and wins; otherwise the household setting decides
+  const b = process.env.BRAND ? config.brand : getSetting<string>('brand', config.brand);
   return b === 'fredirando' ? 'fredirando' : 'tohuus';
 }
