@@ -74,7 +74,7 @@ const householdLabel = () => householdWord(qc.getQueryData<Me>(['me'])?.home?.fo
 const availLabel = (a: Availability) => ({ available: t('Everyone'), party: t('Parties'), family: householdLabel(), hidden: t('Hidden') })[a];
 const availHelp = (a: Availability) =>
   ({
-    available: t('Everyone who can order sees it – family, guests and parties.'),
+    available: t('Everyone sees it – your household, guests and parties.'),
     party: t('Only while a party is on – handy for the sparkling wine.'),
     family: t('Only household members see it, not guests.'),
     hidden: t('Nobody sees it right now. It stays here for later.'),
@@ -97,16 +97,16 @@ export function MenuSettingsCard() {
   return (
     <div className="card pad stack" style={{ marginTop: 22 }}>
       <div>
-        <h3 style={{ margin: 0 }}>{t('Order & guests')}</h3>
+        <h3 style={{ margin: 0 }}>{t('Treats & guests')}</h3>
         <p className="small muted" style={{ margin: '4px 0 0' }}>
-          {m.data ? t('{n} things on the order menu – drinks, coffee, snacks and whatever else you offer.', { n: m.data.count }) : t('Drinks, coffee, snacks and whatever else you offer.')}
+          {m.data ? t('{n} things on the menu – tea, ice cream, snacks and whatever else you offer each other and your guests.', { n: m.data.count }) : t('Drinks, coffee, snacks and whatever else you offer.')}
         </p>
       </div>
       <div className="row wrap" style={{ gap: 8 }}>
         <button className="btn" onClick={() => nav('/bestellen/karte')}>
           <PencilSimple size={16} /> {t('Edit menu')}
         </button>
-        <button className="btn ghost" onClick={() => nav('/bar')}>{t('Guests & bar')}</button>
+        <button className="btn ghost" onClick={() => nav('/bestellen')}>{t('Open Treats')}</button>
       </div>
     </div>
   );
@@ -204,11 +204,11 @@ export function MenuEditor({ me }: { me: Me }) {
         <div>
           <div className="eyebrow">
             <button className="linkish menu-back" onClick={() => nav('/bestellen')}>
-              <ArrowLeft size={14} /> {t('Order')}
+              <ArrowLeft size={14} /> {t('Treats')}
             </button>
           </div>
           <h1>{t('The menu')}</h1>
-          <p className="muted" style={{ margin: '6px 0 0' }}>{t('What the family, guests and parties can order. Changes show up right away.')}</p>
+          <p className="muted" style={{ margin: '6px 0 0' }}>{t('The little things your household can ask each other for – and what guests and parties see. Changes show up right away.')}</p>
         </div>
       </header>
 

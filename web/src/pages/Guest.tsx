@@ -113,9 +113,10 @@ export function Guest() {
 }
 
 const STATUS_TEXT = () => ({
-  plain: { new: t('received'), accepted: t('on it'), done: t('on its way!'), declined: t('not possible right now') },
+  // warm status lines, the same wording as at home (area: order)
+  plain: { new: t('Received'), accepted: t('Coming right up'), done: t('On its way to you'), declined: t('Not right now') },
   fredi: { new: t('Order received'), accepted: t('Being prepared'), done: t('Delivered – enjoy your meal!'), declined: t('Sorry, currently unavailable') },
-  party: { new: t('received'), accepted: t('being made'), done: t('ready at the counter!'), declined: t('not possible right now') },
+  party: { new: t('Received'), accepted: t('Being made'), done: t('Ready at the counter'), declined: t('Not right now') },
   fredParty: { new: t('Order received'), accepted: t('In the kitchen'), done: t('Ready for pickup – enjoy!'), declined: t('Sorry, currently unavailable') },
 });
 

@@ -64,10 +64,12 @@ import { sv_menu } from './locales/sv-menu.js';
 import { sv_design } from './locales/sv-design.js';
 import { sv_fixes } from './locales/sv-fixes.js';
 import { sv_places } from './locales/sv-places.js';
+import { de_order } from './locales/de-order.js';
+import { sv_order } from './locales/sv-order.js';
 
-const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes };
+const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order };
 
-const sv = { ...svBase, ...sv_data, ...sv_party, ...sv_fresh, ...sv_shop, ...sv_home, ...sv_kiosk, ...sv_kids, ...sv_onboard, ...sv_retail, ...sv_ha, ...sv_channels, ...sv_intl, ...sv_cook2, ...sv_auth, ...sv_spend2, ...sv_print, ...sv_share, ...sv_labels, ...sv_away, ...sv_plan2, ...sv_recipes2, ...sv_quality, ...sv_people, ...sv_tour, ...sv_ha2, ...sv_menu, ...sv_design, ...sv_places, ...sv_fixes };
+const sv = { ...svBase, ...sv_data, ...sv_party, ...sv_fresh, ...sv_shop, ...sv_home, ...sv_kiosk, ...sv_kids, ...sv_onboard, ...sv_retail, ...sv_ha, ...sv_channels, ...sv_intl, ...sv_cook2, ...sv_auth, ...sv_spend2, ...sv_print, ...sv_share, ...sv_labels, ...sv_away, ...sv_plan2, ...sv_recipes2, ...sv_quality, ...sv_people, ...sv_tour, ...sv_ha2, ...sv_menu, ...sv_design, ...sv_places, ...sv_fixes, ...sv_order };
 
 const DICTS: Record<Lang, Record<string, string>> = { en: {}, de, sv };
 

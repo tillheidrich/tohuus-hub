@@ -49,13 +49,13 @@ It runs as one Docker container with a SQLite file. No account with us, no telem
     <td><img src="site/assets/shots/en/plan-vote-light.webp" width="200" alt="Family food vote" /></td>
     <td><img src="site/assets/shots/en/stock-light.webp" width="200" alt="Stock" /></td>
     <td><img src="site/assets/shots/en/people-light.webp" width="200" alt="People" /></td>
-    <td><img src="site/assets/shots/en/order-light.webp" width="200" alt="Order" /></td>
+    <td><img src="site/assets/shots/en/order-light.webp" width="200" alt="Treats" /></td>
   </tr>
   <tr>
     <td align="center">Food vote</td>
     <td align="center">Stock</td>
     <td align="center">People</td>
-    <td align="center">Order</td>
+    <td align="center">Treats</td>
   </tr>
 </table>
 
@@ -72,7 +72,7 @@ A complete reference with where each feature sits in the app is in [docs/feature
 - **Store mode**: grouped by aisle, the order is learned per store, works offline, "I'll get it" claims, natural-language quick add ("2 l milk, bread").
 - **Discreet items**: mark an entry "discreet" and everyone else sees a neutral placeholder such as "Drugstore item", or "only me" so nobody else sees it at all. The real name never reaches Home Assistant, Telegram, displays, printed lists, guest links or AI assistants.
 - **Share into the app**: installed as a web app on Android or desktop, ToHuus Hub appears in the share menu. Share a WhatsApp list, a recipe link or a receipt photo. On iPhone, a Shortcut with a personal key does the same for the shopping list.
-- **Order from the sofa**: members order anything that is in the house, with a note ("extra hot"). The others get a push.
+- **Treats (Verwöhnen)**: do each other a good turn. Whoever is stuck with bedtime, ill in bed or working late asks for "vanilla ice cream, please" or "tea with honey" – the others get a push with "I'll bring it" or "Can't right now". No points, no ranking, just a private thanks.
 - **Home care**: water filter, smoke detectors, descaling, tyres, passport expiry. Templates, reminders, one tap to mark done.
 - **Receipt-style tickets** for shopping lists, kitchen orders, care tasks and recipe cards, printed on an ESC/POS thermal printer or sent to Telegram, Matrix, Gotify or e-mail.
 - **Kitchen and wall displays** that also run on old tablets, plus a PNG for e-ink frames.
@@ -109,8 +109,8 @@ A complete reference with where each feature sits in the app is in [docs/feature
 - **Profile pictures**: a photo, a drawn animal or initials.
 - **Kids without a login**: a paired kid tablet shows pictures of what a child may wish for. Every wish waits for a parent.
 - **Permanent guests** (the aunt who is often there, a regular babysitter) sign in with their own account at one of four levels, with temporary overrides. See [docs/guests-and-permissions.md](docs/guests-and-permissions.md).
-- **Guest bar and party mode**: a link or QR code lets guests order from what is actually there. A party adds a TV board with a join QR, a kitchen view and an automatic end.
-- **Order menu editor**: decide what can be ordered, from stock or menu-only (tap water, cappuccino), with optional ingredients that are booked out per serving.
+- **Guests and party mode**: the same mechanics for visitors, the babysitter and grandparents – a link or QR code lets guests ask for what is actually there. A party adds a TV board with a join QR, a kitchen view and an automatic end.
+- **Menu editor**: decide what the household, guests and parties can ask for, from stock or menu-only (tap water, cappuccino), with optional ingredients that are booked out per serving.
 - **Babysitter link**: read-only "where is what" for chosen places, with a note (emergency numbers, bedtime) and an optional list of voice commands the sitter may use. Locks, alarms, cameras and garage doors are never on that list.
 
 ### Trips

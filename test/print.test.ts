@@ -92,7 +92,8 @@ describe('ticket renderers', () => {
   it('kitchen ticket shows order number, options and per-item notes; an old Fredirando choice no longer changes it', async () => {
     const id = orders.createOrder({ note: 'and a blanket', lines: [{ product_id: coffee, qty: 2, options: ['Oat'], note: 'extra hot' }] }, { userId: 1, name: 'Lea' });
     let lines = svgText(tickets.renderSvg(await tickets.buildTicket({ type: 'order', id }, 58), 58).svg);
-    expect(lines).toContain('KITCHEN TICKET');
+    // a wish from home is a "please bring" slip (area: order); guest and party orders stay kitchen tickets
+    expect(lines).toContain('PLEASE BRING');
     expect(lines).toContain(`#${String(id).padStart(3, '0')}`);
     expect(lines).toContain('2×');
     expect(lines).toContain('Cappuccino');
@@ -105,7 +106,7 @@ describe('ticket renderers', () => {
     setSetting('brand.choice', 'tohuus');
     // one brand since wave 6: the retired Fredirando look no longer turns it into a delivery note
     expect(lines[0]).toBe('TOHUUS HUB');
-    expect(lines).toContain('KITCHEN TICKET');
+    expect(lines).toContain('PLEASE BRING');
     expect(lines).not.toContain('DELIVERY NOTE');
   });
 

@@ -1,5 +1,5 @@
 /** In-app help (/hilfe): short how-tos for the things people ask about in week one. Area: onboard. */
-import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, Confetti, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase, UsersThree, ForkKnife, CircleHalf } from '@phosphor-icons/react';
+import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, Confetti, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase, UsersThree, ForkKnife, CircleHalf, HandHeart } from '@phosphor-icons/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../api';
@@ -84,26 +84,40 @@ export function Help() {
       link: { label: t('Open access settings'), to: '/einstellungen?tab=access' },
     },
     {
+      id: 'treats',
+      icon: <HandHeart size={20} />,
+      title: t('Treats: doing each other a good turn'),
+      lead: t('Stuck on the sofa, in bed or with bedtime? Ask for a little something – someone at home brings it.'),
+      steps: [
+        t('Treats › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey.'),
+        t('“How would you like it?” is a note for the person bringing it. “Who brings it?” asks one person – or whoever can.'),
+        t('The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Lea is bringing it”.'),
+        t('Once it’s there you can say thanks. Nobody keeps score – no points, no list of who brought what.'),
+        t('Living alone? Then the page is just for guests and parties.'),
+      ],
+      link: { label: t('Open Treats'), to: '/bestellen' },
+    },
+    {
       id: 'guests',
       icon: <Confetti size={20} />,
       title: t('Guests, party & babysitter'),
-      lead: t('Guests order from what is really there – no app, no account.'),
+      lead: t('Guests ask for what is really there – no app, no account.'),
       steps: [
-        t('Guests & Bar › “Start a party”: pick the menu, the party ends by itself.'),
+        t('Treats › Party › “Start a party”: pick the menu, the party ends by itself.'),
         t('Show it on the TV: open {url}/party on the TV and type the 4-digit code from “Show on TV”.', { url: base.replace(/^https?:\/\//, '') }),
         t('Guests scan the QR code and order; you get a push and tap “Ready”. Stock is booked by itself.'),
-        t('For the babysitter: Guests & Bar › Guest links – share chosen places read-only, with a note.'),
+        t('Visitors, the babysitter or grandparents: Treats › Guests – a link with what they may ask for, chosen places read-only and a note.'),
         t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.'),
       ],
-      link: { label: t('Open guests & bar'), to: '/bar' },
+      link: { label: t('Open guests'), to: '/bestellen?mode=guests' },
     },
     {
       id: 'karte',
       icon: <ForkKnife size={20} />,
-      title: t('The order menu: coffee, drinks, snacks'),
-      lead: t('Everything people can order lives in one menu – things from your stock and things that are simply there, like tap water or coffee.'),
+      title: t('The menu: tea, ice cream, snacks'),
+      lead: t('Everything people can ask for lives in one menu – things from your stock and things that are simply there, like tap water or tea.'),
       steps: [
-        t('Order › “Edit menu” (also in Settings › Household and in the party setup).'),
+        t('Treats › “Edit menu” (also in Settings › Household and in the party setup).'),
         t('“Add from stock”: crisps, cola, ice cream – they show “all gone” (or disappear) when they run out, and serving books them out.'),
         t('“Menu-only item”: tap water, coffee, cappuccino – never counted. Link up to three ingredients from stock (milk, coffee): when one runs low it says “maybe not”.'),
         t('Choices like size, milk or sugar: single or several, required or optional, with a preselected default.'),

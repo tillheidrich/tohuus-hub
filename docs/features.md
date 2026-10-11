@@ -8,10 +8,10 @@ Admins see every settings tab. Members see most of them read-only. Permanent gue
 
 | Group | Pages |
 |---|---|
-| Tab bar | Today (Heute), Order (Bestellen), Shopping (Einkauf), More (Mehr) |
+| Tab bar | Today (Heute), Treats (Verwöhnen), Shopping (Einkauf), More (Mehr) |
 | Around the house (Rund ums Haus) | Stock (Bestand), Where's what? (Wo ist was?), Quick stock check (Schnell-Abgleich), Home & care (Haus & Pflege), Trip / away (Urlaub / unterwegs) |
 | Kitchen & shopping (Küche & Einkauf) | Shopping (Einkauf), Cook (Kochen), Favourites (Lieblinge), Imports (Importe), Spending (Ausgaben) |
-| Guests (Gäste) | Order (Bestellen), Guests & Bar (Gäste & Bar) |
+| Treats & guests (Verwöhnen & Gäste) | Treats (Verwöhnen), Guests & party (Gäste & Party) |
 | Manage (Verwaltung) | QR labels (QR-Etiketten), Settings (Einstellungen), Help (Hilfe) |
 
 Settings tabs: Household (Haushalt), My account (Mein Konto), Members (Mitglieder), Places & categories (Orte & Kategorien), Notifications (Benachrichtigungen), Access & AI (Zugänge & KI), Home Assistant, Displays, Printers & tickets (Drucker & Bons), Recipes (Rezepte), Data & backups (Daten & Sicherung).
@@ -56,7 +56,7 @@ Settings tabs: Household (Haushalt), My account (Mein Konto), Members (Mitgliede
 
 - An exact spot per item ("left shelf, top compartment") and a short direction per room. *Stock › a product*
 - Search across stock and things you never count (thermometer, fuse box, toolbox). *Where's what? (Wo ist was?)*
-- Share it read-only with a babysitter: see [Guests](#guests-orders-and-party).
+- Share it read-only with a babysitter: see [Guests](#treats-guests-and-party).
 
 ## Leftovers and freezer labels
 
@@ -119,15 +119,19 @@ Settings tabs: Household (Haushalt), My account (Mein Konto), Members (Mitgliede
 - **After**: a *Welcome-home list (Willkommen-Liste)* with the usual fresh things and a check of what expired while away; *What came back? (Was ist zurückgekommen?)* for packed stock items.
 - With Home Assistant: "everyone away for more than 24 hours" suggests a trip (it never starts one by itself).
 
-## Guests, orders and party
+## Treats, guests and party
 
-- **Order from the sofa**: members order anything that is in the house, with a note or a free-text wish. *Order (Bestellen)*
-- **Order menu editor**: groups, items from stock (marked "out" when empty) and menu-only items (tap water, cappuccino) with up to three ingredients from stock that are booked out per serving; templates and suggestions. *Order › Edit menu (Bestellen › Karte bearbeiten)*, or *Settings › Household › Order & guests (Bestellen & Gäste)*
-- **Order board**: accept, in progress, ready, served; stock is booked out when served. *Guests & Bar (Gäste & Bar)*
-- **Guest links**: a link or QR code that works without an account. Each link opens one or more of: ordering from the bar, read-only "where is what" for chosen places with a note, adding to the shopping list. Optional expiry, revoke any time. *Guests & Bar › Guest links (Gäste & Bar › Gäste-Links)*
+Treats (DE „Verwöhnen“, SV „Ompyssling“) is about doing each other a good turn. One page, three modes: *For me* (everyday, the default for couples, families and flat shares), *Guests* and *Party*. A household that lives alone only sees Guests and Party.
+
+- **Ask for a little something**: someone stuck with bedtime, a sick partner, someone working late asks for "vanilla ice cream, please" or "tea with honey" from the sofa or from bed. Big tiles: something sweet, something to drink, something to nibble, from the fridge (only from real stock in a place of kind fridge), everything that's here, or a free wish. A note ("How would you like it?") and an optional "Who brings it?" (one person or whoever can). *Treats › For me (Verwöhnen › Für mich)*
+- **One-tap answers**: the others get a push (or Telegram message) with "I'll bring it" / "Can't right now"; declining can carry a short reason ("In a few minutes", "It's all gone", "I'm not home", "My hands are full"). Chosen person: only their phone rings. The asker sees warm status lines: "Coming right up – Lea is bringing it", "Brought by Lea", "Not right now – in a few minutes". *Treats › For me › For you (Für dich)*
+- **A private thanks**: once it's there, the asker can say thanks; it reaches only the bringer. No points, no ranking, no list of who brought what.
+- **Order menu editor**: groups, items from stock (marked "out" when empty) and menu-only items (tap water, cappuccino) with up to three ingredients from stock that are booked out per serving; templates and suggestions. *Treats › Edit menu (Verwöhnen › Karte bearbeiten)*, or *Settings › Household › Treats & guests (Verwöhnen & Gäste)*
+- **Board**: everything that comes in from home, guests and the party – accept, in progress, brought/served, can't right now; stock is booked out when served. *Guests & party (Gäste & Party)*
+- **Guest links**: a link or QR code that works without an account. Presets for visitors, the babysitter and grandparents. Each link opens one or more of: asking for something from the menu, read-only "where is what" for chosen places with a note, adding to the shopping list. Optional expiry, revoke any time. *Treats › Guests (Verwöhnen › Gäste)*
 - **Babysitter link**: a guest link with "where is what", a note (emergency numbers, bedtime) and, if switched on, a voice command guide (see [home-assistant.md](home-assistant.md#voice-commands-on-the-babysitter-page)).
-- **Party mode**: start in two taps, a party menu with per-guest limits, a TV board with a join QR and a kitchen view (new, in progress, ready), soft reservation of the last bottle, automatic end, a recap that puts what ran out on the list, templates. *Guests & Bar › Party*
-- **Kitchen tickets**: new orders can print on a kitchen printer automatically. *Settings › Printers & tickets*
+- **Party mode**: start in two taps, a party menu with per-guest limits, a TV board with a join QR and a kitchen view (new, in progress, ready), soft reservation of the last bottle, automatic end, a recap that puts what ran out on the list, templates. *Treats › Party (Verwöhnen › Party)*
+- **Kitchen tickets**: new orders can print on a kitchen printer automatically; a wish from home prints as a "Please bring" slip with who it is for. *Settings › Printers & tickets*
 
 ## Family and people
 

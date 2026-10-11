@@ -68,7 +68,9 @@ const CHAR = 0.602; // advance of DejaVu Sans Mono per em
 
 // ---------------------------------------------------------------- helpers
 
-const xml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+// control characters are not allowed in XML: one in a guest's name used to make librsvg fail the whole ticket
+const xml = (s: string) =>
+  s.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g, '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 /** Word wrap for a monospace column count; very long words are split. */
 export function wrap(text: string, cols: number): string[] {
@@ -200,6 +202,7 @@ interface OrderRow {
   user_id: number | null;
   party_id: number | null;
   guest_link_id: number | null;
+  for_user_id?: number | null;
 }
 
 /**
@@ -218,13 +221,17 @@ function orderTicket(spec: TicketSpec): Ticket {
   const who = orderWho(o);
   const no = `#${String(o.id).padStart(3, '0')}`;
   const time = new Intl.DateTimeFormat(locale(), { timeZone: config.timezone, hour: '2-digit', minute: '2-digit' }).format(sqlDate(o.created_at));
-  const title = fredi() ? t('Delivery note') : t('Kitchen ticket');
+  // a household request ("bring me a vanilla ice cream") is a wish slip, not a kitchen order
+  const home = !o.guest_link_id && !o.party_id;
+  const title = fredi() ? t('Delivery note') : home ? t('Please bring') : t('Kitchen ticket');
   const meta: [string, string][] = [
-    [t('Order'), no],
-    [t('Ordered at'), time],
+    [home ? t('Wish') : t('Order'), no],
+    [home ? t('Asked at') : t('Ordered at'), time],
   ];
   if (fredi()) meta.push([t('Delivery to'), who.sofa ? t('Sofa') : (who.name ?? t('Guest'))]);
-  else if (who.name) meta.push([who.sofa ? t('From') : t('Guest'), who.name]);
+  else if (who.name) meta.push([home ? t('For') : who.sofa ? t('From') : t('Guest'), who.name]);
+  const asked = home && o.for_user_id ? (db.prepare('SELECT name FROM users WHERE id = ?').get(o.for_user_id) as { name: string } | undefined)?.name : null;
+  if (asked) meta.push([t('Who brings it'), asked]);
   const body: Block[] = [{ k: 'text', text: no, size: 'xl', bold: true, align: 'center' }, { k: 'space', h: 4 }];
   for (const l of lines) {
     let opts: string[] = [];
@@ -245,7 +252,7 @@ function orderTicket(spec: TicketSpec): Ticket {
     title,
     file: fredi() ? 'delivery-note' : 'kitchen-ticket',
     summary: `${title} ${no}`,
-    blocks: [...header(title, meta), ...body, ...footer(appUrl('/bar'), t('Open the order board'), fredi() ? t('Thanks for ordering with Fredirando!') : undefined)],
+    blocks: [...header(title, meta), ...body, ...footer(appUrl(home ? '/bestellen' : '/bar'), home ? t('Open in the app') : t('Open the order board'), fredi() ? t('Thanks for ordering with Fredirando!') : undefined)],
   };
 }
 

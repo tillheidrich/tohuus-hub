@@ -2,7 +2,7 @@ import {
   Barcode,
   BowlFood,
   DotsNine,
-  ForkKnife,
+  HandHeart,
   Basket,
   ChefHat,
   FileArrowUp,
@@ -136,7 +136,7 @@ function Shell({ me }: { me: Me }) {
   useOnboardingRedirect(me);
   type NavItem = { to: string; label: string; icon: any; end?: boolean; badge?: number; count?: number; dot?: boolean; due?: number };
   const today: NavItem = { to: '/', label: t('Today'), icon: House, end: true };
-  const order: NavItem = { to: '/bestellen', label: t('Order'), icon: ForkKnife };
+  const order: NavItem = { to: '/bestellen', label: t('Treats'), icon: HandHeart };
   const shopping: NavItem = { to: '/einkauf', label: t('Shopping'), icon: Basket, count: c?.shopping };
   // grouped navigation: the same groups in the desktop sidebar and the mobile "More" sheet
   const groups: { key: string; title: string; items: NavItem[] }[] = [
@@ -164,8 +164,8 @@ function Shell({ me }: { me: Me }) {
     },
     {
       key: 'guests',
-      title: t('Guests'),
-      items: [order, { to: '/bar', label: t('Guests & Bar'), icon: Martini, dot: Boolean(c?.orders) }],
+      title: t('Treats & guests'),
+      items: [order, { to: '/bar', label: t('Guests & party'), icon: Martini, dot: Boolean(c?.orders) }],
     },
     {
       key: 'admin',

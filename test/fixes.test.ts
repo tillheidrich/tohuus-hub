@@ -307,6 +307,8 @@ describe('invitations', () => {
     setAuthPolicy({ passwordFor: 'admins' });
     const member = invites.createInvite({ name: 'No Password' });
     expect(() => invites.acceptInvite(member.token, { method: 'password', password: 'abcdefgh1' }, msgs)).toThrow();
+    // leaving the method out must not get around the rule (review wave 6)
+    expect(() => invites.acceptInvite(member.token, { password: 'abcdefgh1' }, msgs)).toThrow();
     const admin = invites.createInvite({ name: 'Admin Pw', role: 'admin' });
     expect(invites.acceptInvite(admin.token, { method: 'password', password: 'abcdefgh1' }, msgs).name).toBe('Admin Pw');
     setAuthPolicy({ passwordFor: 'all' });

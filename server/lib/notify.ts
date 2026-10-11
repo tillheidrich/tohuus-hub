@@ -66,8 +66,8 @@ const EVENT_EYEBROW: Partial<Record<NotifyEvent, string>> = {
   'stock.empty': 'Stock',
   'stock.expiring': 'Use soon',
   'import.review': 'Receipts',
-  'order.new': 'Order',
-  'order.status': 'Order',
+  'order.new': 'Treats',
+  'order.status': 'Treats',
   'shopping.added': 'Shopping list',
   'digest.daily': 'Daily overview',
   'care.due': 'Care',
@@ -94,7 +94,8 @@ export const DEFAULT_NOTIFY: NotifySettings = {
     'stock.expiring': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'import.review': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'order.new': { ha: true, webhook: true, ntfy: true, email: false, push: true },
-    'order.status': { ha: false, webhook: true, ntfy: false, email: false, push: false },
+    // goes only to the person who asked ("Lea is bringing it") – guests have no account and get nothing
+    'order.status': { ha: false, webhook: true, ntfy: false, email: false, push: true, telegram: false, gotify: false, matrix: false },
     'shopping.added': { ha: false, webhook: true, ntfy: false, email: false, push: false },
     'digest.daily': { ha: true, webhook: true, ntfy: false, email: true, push: false },
     'care.due': { ha: true, webhook: true, ntfy: true, email: false, push: true },
@@ -138,6 +139,8 @@ export interface NotifyInput {
   mail?: Partial<MailContent>;
   /** goes out even while the household is away (away mode keeps everything else quiet) */
   urgent?: boolean;
+  /** Web Push only to this member's devices; `null` = to nobody (e.g. a guest without an account). Other channels are household-wide. */
+  toUserId?: number | null;
 }
 
 async function post(url: string, body: unknown, headers: Record<string, string> = {}) {
@@ -187,9 +190,9 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
   // ha2: members who chose "via Home Assistant" get the push through their HA companion app instead
   const personal = (route.push ?? DEFAULT_NOTIFY.events[input.event]?.push) && personalRouter ? personalRouter({ ...input, url }) : null;
   if (personal?.job) jobs.push(personal.job.then((ok): [string, boolean] => ['ha_app', ok]).catch((): [string, boolean] => ['ha_app', false]));
-  if ((route.push ?? DEFAULT_NOTIFY.events[input.event]?.push) && pushDeviceCount() > 0)
+  if ((route.push ?? DEFAULT_NOTIFY.events[input.event]?.push) && pushDeviceCount() > 0 && input.toUserId !== null)
     jobs.push(
-      sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { excludeUserIds: personal?.skipPushUsers })
+      sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { userId: input.toUserId, excludeUserIds: personal?.skipPushUsers })
         .then((ok): [string, boolean] => ['push', ok])
         .catch((): [string, boolean] => ['push', false]),
     );

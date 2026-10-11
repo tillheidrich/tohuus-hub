@@ -41,13 +41,13 @@ export interface InviteLink {
 type Access = 'member' | 'admin' | 'guest';
 const LEVELS = () =>
   [
-    ['order', t('Order & shopping list')],
+    ['order', t('Treats & shopping list')],
     ['stock', t('+ Stock')],
     ['recipes', t('+ Recipes')],
     ['family', t('Like family')],
   ] as [string, string][];
 const LEVEL_HELP: Record<string, string> = {
-  order: 'Can order from the sofa and add to the shopping list.',
+  order: 'Can ask for treats from the menu and add to the shopping list.',
   stock: 'Also sees the stock and where things are.',
   recipes: 'Also sees recipes, the week plan and votes.',
   family: 'Everything day to day – but no settings, spending or backups.',

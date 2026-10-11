@@ -143,6 +143,8 @@ const ORDER: Rule[] = [
   read(/^\/shop\/stores(\/.*)?$/),
   ['W', /^\/shop\/stores\/\d+$/],
   any(/^\/claims(\/.*)?$/),
+  // "Where to buy?" in the shopping item sheet (wave 6): the picker's chips – writes go via /shop/items/:id/buy-at
+  read(/^\/buy-at\/suggestions$/),
   // the shopping list's "already in the house" hints and the product picker
   read(/^\/products$/),
   read(/^\/fresh\/forecast$/),

@@ -115,11 +115,11 @@ function steps(form: HouseholdForm = 'family'): Step[] {
       id: 'orders',
       route: '/bestellen',
       targets: nav('/bestellen'),
-      title: t('Orders and guests'),
+      title: form === 'single' ? t('Guests & party') : t('Treats'),
       body:
-        form === 'family'
-          ? t('Family and guests can order a drink or a snack from what is really there. Guest links work without an account.')
-          : t('Guests can order a drink or a snack from what is really there. Guest links work without an account.'),
+        form === 'single'
+          ? t('Guests can ask for a drink or a snack from what is really there. Guest links work without an account.')
+          : t('Ask each other for a little something – tea with honey, the ice cream from the freezer – and someone at home brings it. Guests and parties work the same way.'),
     },
     {
       id: 'receipts',

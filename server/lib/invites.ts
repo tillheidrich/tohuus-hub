@@ -341,7 +341,8 @@ export function acceptInvite(token: string, b: AcceptInput, msgs: { invalid: str
     const allowed = signInMethods(inv.kind, inv.role);
     if (method === 'password') {
       if (!b.password || b.password.length < 8) throw new InviteError(400, t('At least 8 characters, please.'));
-      if (!allowed.password && b.method) throw new InviteError(400, t('This household signs in without passwords – pick a passkey or an e-mail link.'));
+      // also without an explicit method: an omitted method must not get around "passwords only for admins"
+      if (!allowed.password) throw new InviteError(400, t('This household signs in without passwords – pick a passkey or an e-mail link.'));
     }
     if (method === 'sso' && !allowed.sso) throw new InviteError(400, t('Single sign-on is not set up here.'));
     if (method === 'passkey' && !allowed.passkey) throw new InviteError(400, t('Passkeys are switched off in this household.'));

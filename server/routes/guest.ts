@@ -7,7 +7,7 @@ import { guestFromToken, randomToken, rateLimited, requireAuth, sha256 } from '.
 import { addClient } from '../lib/bus.js';
 import { addToShopping, listProducts } from '../lib/catalog.js';
 import { findThings } from '../lib/find.js';
-import { createOrder, listOrders, orderMenu, orderSchema, setOrderStatus } from '../lib/orders.js';
+import { DECLINE_REASONS, createOrder, helpers, listOrders, orderMenu, orderSchema, requestsFor, setOrderStatus, thankOrder } from '../lib/orders.js';
 import { guestClientId, partyForGuest, partyIdForLink, partyMenu } from '../lib/party.js';
 import { t } from '../i18n.js';
 import { notPrivate } from '../lib/share-core.js';
@@ -185,6 +185,20 @@ guestAdmin.post('/bar/orders', (req, res) => {
   }
 });
 
+// "Who brings it?": the other household members (no permanent guests)
+guestAdmin.get('/bar/helpers', (req, res) => res.json(isHouseGuest(req.actor) ? [] : helpers(req.actor!.userId ?? null)));
+// what the others asked for and I could bring (addressed to me or to whoever can)
+guestAdmin.get('/bar/requests', (req, res) => res.json(req.actor!.userId && !isHouseGuest(req.actor) ? requestsFor(req.actor!.userId) : []));
+guestAdmin.get('/bar/reasons', (_req, res) => res.json(DECLINE_REASONS));
+// a tiny private "thanks" – only from the person who asked, only once, no counter anywhere
+guestAdmin.post('/bar/orders/:id/thanks', (req, res) => {
+  try {
+    res.json(thankOrder(Number(req.params.id), req.actor!.userId ?? -1));
+  } catch (e) {
+    res.status((e as any).status ?? 500).json({ error: (e as Error).message });
+  }
+});
+
 guestAdmin.get('/orders', (req, res) => {
   const all = req.query.all === '1';
   const rows = db
@@ -200,9 +214,9 @@ guestAdmin.get('/orders', (req, res) => {
 });
 
 guestAdmin.patch('/orders/:id', (req, res) => {
-  const { status } = z.object({ status: z.enum(['new', 'accepted', 'done', 'declined']) }).parse(req.body);
+  const { status, reason } = z.object({ status: z.enum(['new', 'accepted', 'done', 'declined']), reason: z.string().max(80).nullable().optional() }).parse(req.body);
   // one place for status changes: stock booking + notification live in setOrderStatus()
-  const o = setOrderStatus(Number(req.params.id), status);
+  const o = setOrderStatus(Number(req.params.id), status, { by: { userId: req.actor!.userId ?? null, name: req.actor!.name }, reason });
   if (!o) {
     res.status(404).json({ error: 'not found' });
     return;

@@ -652,7 +652,7 @@ export function planBox(code: string, day: string, slot: 'mittag' | 'abend' = 'a
 
 // ------------------------------------------------------------------ label rendering
 
-const xml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+const xml = (s: string) => s.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g, '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const FONT = 'DejaVu Sans, Liberation Sans, Arial, sans-serif';
 const MONO = 'DejaVu Sans Mono, Liberation Mono, monospace';
 

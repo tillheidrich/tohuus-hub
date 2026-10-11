@@ -33,5 +33,6 @@ import { menu } from './menu';
 import { design } from './design';
 import { fixes } from './fixes';
 import { places } from './places';
+import { order } from './order';
 
-export const sv: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print, ...share, ...labels, ...away, ...plan2, ...recipes2, ...quality, ...people, ...tour, ...ha2, ...menu, ...design, ...fixes, ...places };
+export const sv: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print, ...share, ...labels, ...away, ...plan2, ...recipes2, ...quality, ...people, ...tour, ...ha2, ...menu, ...design, ...fixes, ...places, ...order };

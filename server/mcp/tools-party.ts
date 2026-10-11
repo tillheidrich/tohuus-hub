@@ -99,12 +99,13 @@ export function register(s: McpServer, actorName: string) {
     'set_order_status',
     {
       title: 'Set order status',
-      description: 'Moves an order (party or sofa) along: accepted = being made, done = served/ready (books counted items out of stock), declined.',
-      inputSchema: { order_id: z.number().int(), status: z.enum(['new', 'accepted', 'done', 'declined']) },
+      description:
+        'Moves an order along – a household request ("bring me a vanilla ice cream"), a guest order or a party order: accepted = "I’ll bring it" / being made, done = brought / ready (books counted items out of stock), declined = can’t right now (optional short reason, shown to the person who asked).',
+      inputSchema: { order_id: z.number().int(), status: z.enum(['new', 'accepted', 'done', 'declined']), reason: z.string().max(80).optional().describe('Short reason when declining, e.g. "In a few minutes"') },
       annotations: RW,
     },
-    async ({ order_id, status }) => {
-      const o = setOrderStatus(order_id, status);
+    async ({ order_id, status, reason }) => {
+      const o = setOrderStatus(order_id, status, { by: { name: actorName }, reason });
       return text(o ? { ok: true, order_id, status } : { error: 'Order not found' });
     },
   );

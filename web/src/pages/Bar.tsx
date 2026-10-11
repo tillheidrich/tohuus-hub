@@ -1,4 +1,4 @@
-import { Check, Copy, House, Martini, Plus, QrCode, ShareNetwork, Trash, X } from '@phosphor-icons/react';
+import { Check, Copy, Heart, House, Martini, Plus, QrCode, ShareNetwork, Trash, X } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { type Location, type Product, del, fmtQty, invalidate, patch, post, relTime, useApi } from '../api';
@@ -14,15 +14,15 @@ export function Bar() {
     <div>
       <header className="page-head">
         <div>
-          <div className="eyebrow">{t('Guests, babysitters, barbecues')}</div>
-          <h1>{t('Guests & bar')}</h1>
+          <div className="eyebrow">{t('Everything that comes in')}</div>
+          <h1>{t('Guests & party')}</h1>
         </div>
       </header>
       <PartyCard />
       <div className="tabs-inline">
-        <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}>{t('Orders')}</button>
+        <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}>{t('Board')}</button>
         <button className={tab === 'links' ? 'on' : ''} onClick={() => setTab('links')}>{t('Guest links')}</button>
-        <button className={tab === 'menu' ? 'on' : ''} onClick={() => setTab('menu')}>{t('Bar menu')}</button>
+        <button className={tab === 'menu' ? 'on' : ''} onClick={() => setTab('menu')}>{t('Menu')}</button>
       </div>
       {tab === 'orders' && <Orders />}
       {tab === 'links' && <Links />}
@@ -31,8 +31,11 @@ export function Bar() {
   );
 }
 
-function Orders() {
-  const { data, isLoading } = useApi<any[]>('orders', '/orders');
+/** The board: everything asked for at home, by guests and at the party. `filter` narrows it (area: order). */
+export function Orders({ filter, empty }: { filter?: (o: any) => boolean; empty?: string } = {}) {
+  const all = useApi<any[]>('orders', '/orders');
+  const isLoading = all.isLoading;
+  const data = filter ? all.data?.filter(filter) : all.data;
   const set = async (id: number, status: string) => {
     await patch(`/orders/${id}`, { status });
     invalidate('orders', 'overview', 'products');
@@ -41,8 +44,8 @@ function Orders() {
   if (!data?.length)
     return (
       <div className="card">
-        <Empty icon={<Martini size={26} />} title={t('No open orders')}>
-          {t('Create a link or QR code under “Guest links” – guests can then order from the sofa.')}
+        <Empty icon={<Martini size={26} />} title={t('Nothing open right now')}>
+          {empty ?? t('Wishes from home, guests and the party show up here.')}
         </Empty>
       </div>
     );
@@ -53,11 +56,18 @@ function Orders() {
           <div className="row between">
             <div>
               <b style={{ fontSize: 16 }}>{o.guest_name}</b>
-              <div className="small muted">{[o.link_name ?? (o.user_id ? t('from the sofa') : null), relTime(o.created_at)].filter(Boolean).join(' · ')}</div>
+              <div className="small muted">
+                {[o.party_id ? t('Party') : (o.link_name ?? t('at home')), o.for_user_id ? t('asked {name}', { name: o.for_name ?? '' }) : null, relTime(o.created_at)].filter(Boolean).join(' · ')}
+              </div>
+              {(o.by_name || o.reason) && (
+                <div className="small" style={{ marginTop: 2 }}>
+                  <b>{o.status === 'declined' ? (o.reason ? t('Not right now – {reason}', { reason: t(o.reason) }) : t('Not right now')) : o.status === 'done' ? t('Brought by {name}', { name: o.by_name }) : t('{name} is on it', { name: o.by_name })}</b>
+                </div>
+              )}
             </div>
             <div className="row" style={{ gap: 8, flex: 'none' }}>
               <span className={`badge ${o.status === 'new' ? 'expiring' : o.status === 'accepted' ? 'info' : o.status === 'done' ? 'good' : ''}`}>
-                {{ new: t('new'), accepted: t('in progress'), done: t('served'), declined: t('declined') }[o.status as string]}
+                {{ new: t('new'), accepted: t('in progress'), done: o.party_id || o.guest_link_id ? t('served') : t('brought'), declined: t('not now') }[o.status as string]}
               </span>
               <BonButton spec={{ type: 'order', id: o.id }} />
             </div>
@@ -75,16 +85,16 @@ function Orders() {
           {['new', 'accepted'].includes(o.status) && (
             <div className="row">
               <button className="btn ghost danger sm" onClick={() => set(o.id, 'declined')}>
-                <X size={14} /> {t('Decline')}
+                <X size={14} /> {o.guest_link_id || o.party_id ? t('Decline') : t('Can’t right now')}
               </button>
               <div className="grow" />
               {o.status === 'new' && (
                 <button className="btn sm" onClick={() => set(o.id, 'accepted')}>
-                  {t('On it')}
+                  {o.guest_link_id || o.party_id ? t('On it') : t('I’ll bring it')}
                 </button>
               )}
               <button className="btn primary sm" onClick={() => set(o.id, 'done')}>
-                <Check size={14} weight="bold" /> {t('Served')}
+                <Check size={14} weight="bold" /> {o.guest_link_id || o.party_id ? t('Served') : t('Brought it')}
               </button>
             </div>
           )}
@@ -95,7 +105,7 @@ function Orders() {
   );
 }
 
-function Links() {
+export function Links() {
   const { data, isLoading } = useApi<any[]>('guest-links', '/guest-links');
   const locations = useApi<Location[]>('locations', '/locations');
   const [open, setOpen] = useState(false);
@@ -124,7 +134,7 @@ function Links() {
               <div className="grow">
                 <div className="title">{g.name}{!g.expires_at && <> <span className="badge low">{t('no expiry')}</span></>}</div>
                 <div className="sub">
-                  {g.scopes.map((s: string) => ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s]).join(' · ')}
+                  {g.scopes.map((s: string) => ({ bar: t('Ask for something'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s]).join(' · ')}
                   {g.expires_at ? ` · ${t('until {date}', { date: new Date(g.expires_at.replace(' ', 'T') + 'Z').toLocaleDateString(locale()) })}` : ''}
                   {` · ${g.last_seen_at ? t('last used {when}', { when: relTime(g.last_seen_at) }) : t('never used')}`}
                 </div>
@@ -151,8 +161,9 @@ function Links() {
       <Sheet open={open} onClose={() => setOpen(false)} title={t('Guest link')}>
         <div className="stack">
           <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
-            <button className="chip" onClick={() => setF({ ...f, name: t('Barbecue'), scopes: ['bar'], days: 2 })}><Martini size={15} /> {t('Party / visitors')}</button>
-            <button className="chip" onClick={() => setF({ ...f, name: t('Babysitter'), scopes: ['stock', 'shopping'], days: 1, location_ids: (locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => l.id) })}><House size={15} /> {t('Babysitter / family')}</button>
+            <button className="chip" onClick={() => setF({ ...f, name: t('Visit'), scopes: ['bar'], days: 2 })}><Martini size={15} /> {t('Visitors')}</button>
+            <button className="chip" onClick={() => setF({ ...f, name: t('Babysitter'), scopes: ['bar', 'stock', 'shopping'], days: 1, location_ids: (locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => l.id) })}><House size={15} /> {t('Babysitter')}</button>
+            <button className="chip" onClick={() => setF({ ...f, name: t('Grandparents'), scopes: ['bar', 'stock'], days: 14, location_ids: (locations.data ?? []).filter((l) => !l.archived && !l.system).map((l) => l.id) })}><Heart size={15} /> {t('Grandparents')}</button>
           </div>
           <div className="field">
             <label>{t('What’s it for?')}</label>
@@ -160,7 +171,7 @@ function Links() {
           </div>
           <div className="list">
             {[
-              ['bar', t('Bar'), t('Order drinks, ice cream, snacks')],
+              ['bar', t('Ask for something'), t('Drinks, ice cream, snacks – from your menu for guests')],
               ['stock', t('Where is what?'), t('Search with room and exact spot – no quantities. Ideal for babysitters.')],
               ['shopping', t('Shopping list'), t('Add things to the list')],
             ].map(([k, label, d]) => (
@@ -224,7 +235,7 @@ function QrSheet({ item, onClose, toast }: { item: any; onClose: () => void; toa
             <Copy size={16} /> {t('Copy')}
           </button>
           {typeof navigator.share === 'function' && (
-            <button className="btn primary grow" onClick={() => navigator.share({ title: item.name, text: t('Order something – drinks, ice cream, snacks:'), url: item.url }).catch(() => {})}>
+            <button className="btn primary grow" onClick={() => navigator.share({ title: item.name, text: t('Fancy something? Drinks, ice cream, snacks:'), url: item.url }).catch(() => {})}>
               <ShareNetwork size={16} /> {t('Share')}
             </button>
           )}
@@ -245,7 +256,7 @@ function Menu() {
   return (
     <div className="stack">
       <div className="row between wrap" style={{ gap: 8 }}>
-        <p className="small muted" style={{ margin: 0, flex: '1 1 220px' }}>{t('Guests see whatever is switched on here in the bar – counted items only while there’s some left.')}</p>
+        <p className="small muted" style={{ margin: 0, flex: '1 1 220px' }}>{t('Guests see whatever is switched on here – counted items only while there’s some left.')}</p>
         <EditMenuButton className="btn sm" label={t('Groups, pictures & options')} />
       </div>
       <div className="list">

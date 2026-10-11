@@ -8,9 +8,9 @@ import { t } from '../i18n.js';
 import { addToShopping, getProduct } from './catalog.js';
 import { completeCareTask, getCareTask } from './care.js';
 import { answerWish } from './kids.js';
-import { setOrderStatus } from './orders.js';
+import { orderKind, setOrderStatus } from './orders.js';
 
-export const NOTIFY_ACTIONS = ['shop-add', 'order-accept', 'order-done', 'kid-approve', 'kid-decline', 'care-done'] as const;
+export const NOTIFY_ACTIONS = ['shop-add', 'order-accept', 'order-done', 'order-decline', 'kid-approve', 'kid-decline', 'care-done'] as const;
 export type NotifyAction = (typeof NOTIFY_ACTIONS)[number];
 export const isNotifyAction = (s: unknown): s is NotifyAction => typeof s === 'string' && (NOTIFY_ACTIONS as readonly string[]).includes(s);
 
@@ -19,6 +19,7 @@ export const ACTION_KEY: Record<NotifyAction, string> = {
   'shop-add': 'product_id',
   'order-accept': 'order_id',
   'order-done': 'order_id',
+  'order-decline': 'order_id',
   'kid-approve': 'wish_id',
   'kid-decline': 'wish_id',
   'care-done': 'care_task_id',
@@ -66,17 +67,32 @@ export function runNotifyAction(action: NotifyAction, data: Record<string, unkno
       on_shopping_list: r.on_shopping_list,
     };
   }
-  const o = db.prepare('SELECT id, status FROM orders WHERE id = ?').get(ref) as { id: number; status: string } | undefined;
+  const o = db.prepare('SELECT id, status, user_id, guest_link_id, party_id FROM orders WHERE id = ?').get(ref) as
+    | { id: number; status: string; user_id: number | null; guest_link_id: number | null; party_id: number | null }
+    | undefined;
   if (!o) throw httpError(404, 'not found');
+  const kind = orderKind(o);
+  const by = { userId: actorUserId(actor), name: actor };
+  const open = o.status === 'new' || o.status === 'accepted';
   if (action === 'order-accept') {
-    if (o.status === 'new') setOrderStatus(o.id, 'accepted');
+    if (o.status === 'new') setOrderStatus(o.id, 'accepted', { by });
     const status = o.status === 'new' ? 'accepted' : o.status;
-    return { ok: true, summary: o.status === 'new' ? t('Accepted by {name}', { name: actor }) : statusText(o.status), status };
+    return { ok: true, summary: o.status === 'new' ? (kind === 'home' ? t('{name} is bringing it', { name: actor }) : t('Accepted by {name}', { name: actor })) : statusText(o.status), status, kind };
+  }
+  if (action === 'order-decline') {
+    if (open) setOrderStatus(o.id, 'declined', { by });
+    return { ok: true, summary: open ? t('{name} can’t right now', { name: actor }) : statusText(o.status), status: open ? 'declined' : o.status, kind };
   }
   // order-done
-  if (o.status === 'new' || o.status === 'accepted') setOrderStatus(o.id, 'done');
-  const status = o.status === 'new' || o.status === 'accepted' ? 'done' : o.status;
-  return { ok: true, summary: status === 'done' && o.status !== 'done' ? t('Served by {name}', { name: actor }) : statusText(o.status), status };
+  if (open) setOrderStatus(o.id, 'done', { by });
+  const status = open ? 'done' : o.status;
+  return { ok: true, summary: status === 'done' && o.status !== 'done' ? (kind === 'home' ? t('Brought by {name}', { name: actor }) : t('Served by {name}', { name: actor })) : statusText(o.status), status, kind };
+}
+
+/** A notification button only knows the actor's display name; map it back to a member when it is unique. */
+function actorUserId(name: string): number | null {
+  const rows = db.prepare('SELECT id FROM users WHERE name = ? COLLATE NOCASE').all(name) as { id: number }[];
+  return rows.length === 1 ? rows[0].id : null;
 }
 
 function statusText(status: string) {

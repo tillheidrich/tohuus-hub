@@ -294,18 +294,19 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
         {!gl && <PartyBanner />}
         {guestAllows(gl, '/urlaub') && <AwayBanner />}
         {!gl && <KidWishesCard />}
-        {(o.imports.length > 0 || o.orders.some((x: any) => !x.party_id)) && (
+        {(o.imports.length > 0 || o.orders.some((x: any) => !x.party_id && x.user_id !== me.actor.userId)) && (
           <div className="stack today-banners">
             {/* party orders are summed up in the party banner */}
             {o.orders
-              .filter((x: any) => !x.party_id)
+              // my own wishes aren't news to me (they show on „Verwöhnen“)
+              .filter((x: any) => !x.party_id && x.user_id !== me.actor.userId)
               .map((ord: any) => (
-                <div key={`o${ord.id}`} className="banner warn" onClick={() => nav('/bar')}>
+                <div key={`o${ord.id}`} className="banner warn" onClick={() => nav(ord.guest_link_id ? '/bar' : '/bestellen')}>
                   <span className="ic">
                     <Martini size={20} />
                   </span>
                   <div className="grow">
-                    <b>{t('Order from {name}', { name: ord.guest_name })}</b>
+                    <b>{ord.guest_link_id ? t('Order from {name}', { name: ord.guest_name }) : t('{name} would love something', { name: ord.guest_name })}</b>
                     <div className="small muted">{ord.lines.map((l: any) => `${l.qty}× ${l.name}`).join(', ')}</div>
                   </div>
                   <ArrowRight size={18} />

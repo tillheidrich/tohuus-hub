@@ -575,6 +575,10 @@ function StepInvite({ form, onBack, onNext }: { form: HouseholdForm; onBack: () 
               ? t('Shared lists only work when everyone can add to them. Each flatmate gets a personal link and picks their own password.')
               : t('Shared lists only work when everyone can add to them. Everyone gets a personal link and picks their own password.')}
         </p>
+        {/* area: order – the everyday side of having the others in the app */}
+        <p className="small muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
+          {t('Bonus: under “Treats” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it.')}
+        </p>
       </header>
 
       {link ? (

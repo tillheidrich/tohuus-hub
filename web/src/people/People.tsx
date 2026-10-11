@@ -56,7 +56,7 @@ export const PERSON_COLORS = ['#2f5bea', '#d0603a', '#1d9a63', '#8e44ad', '#c218
 
 /** English source text; shown via t() */
 export const LEVELS: { key: GuestLevel; title: string; text: string }[] = [
-  { key: 'order', title: 'Order & shopping list', text: 'Can order from the sofa and use the shopping list. Sees nothing else.' },
+  { key: 'order', title: 'Treats & shopping list', text: 'Can ask for treats from the menu and use the shopping list. Sees nothing else.' },
   { key: 'stock', title: '+ Stock & where is what', text: 'Also sees what is in the house and where things are, and can take things out.' },
   { key: 'recipes', title: '+ Recipes & week plan', text: 'Also sees recipes, the week plan and what to eat, and can rate dishes.' },
   { key: 'family', title: 'Like family', text: 'Everything day to day – but no settings, members, spending or receipts.' },
