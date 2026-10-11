@@ -57,13 +57,15 @@
           "display_width": "Skärmbildens bredd",
           "display_height": "Skärmbildens höjd",
           "cookidoo_sync": "Skicka Cookidoo-veckan till ToHuus Hub",
-          "cookidoo_entity": "Cookidoo-kalender"
+          "cookidoo_entity": "Cookidoo-kalender",
+          "bridge": "Tvåvägssynk med ToHuus Hub"
         },
         "data_description": {
           "live_updates": "Håller en anslutning öppen så att ändringar syns inom en sekund eller två. Utan den frågar Home Assistant varje minut.",
           "display_mode": "För köksskärmar som visas som bildentiteter.",
           "cookidoo_sync": "Läser de planerade rätterna från Cookidoo-integrationen var tredje timme och när kalendern ändras, och lägger in dem i matsedeln i ToHuus Hub.",
-          "cookidoo_entity": "Oftast calendar.cookidoo_speiseplan. Lämna tomt så används den automatiskt så fort den finns."
+          "cookidoo_entity": "Oftast calendar.cookidoo_speiseplan. Lämna tomt så används den automatiskt så fort den finns.",
+          "bridge": "Låter ToHuus Hub se era att göra-listor, kalendrar, personer, aviseringstjänster och röststyrda enheter, synkar de listor och kalendrar du väljer i ToHuus Hub (Inställningar › Home Assistant) åt båda hållen, skickar aviseringar via companion-appen och använder NFC-taggar som snabbåtgärder."
         }
       }
     }
@@ -118,6 +120,9 @@
       "eat_first": {
         "name": "Ät först"
       },
+      "frozen_portions": {
+        "name": "Frysta portioner"
+      },
       "tonight": {
         "name": "I kväll"
       },
@@ -141,6 +146,9 @@
       },
       "something_expired": {
         "name": "Något har gått ut"
+      },
+      "away_mode": {
+        "name": "Bortaläge"
       }
     },
     "todo": {
@@ -371,6 +379,20 @@
         "task": {
           "name": "Uppgift",
           "description": "Uppgiftens namn eller nummer."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Behövs bara om du har mer än en ToHuus Hub."
+        }
+      }
+    },
+    "report_presence": {
+      "name": "Rapportera närvaro",
+      "description": "Talar om för ToHuus Hub om alla är borta (t.ex. från zone.home eller en persongrupp). Efter mer än 24 timmar föreslår ToHuus Hub att starta bortaläget – det startar aldrig av sig självt.",
+      "fields": {
+        "everyone_away": {
+          "name": "Alla borta",
+          "description": "På när ingen är hemma."
         },
         "config_entry_id": {
           "name": "ToHuus Hub",

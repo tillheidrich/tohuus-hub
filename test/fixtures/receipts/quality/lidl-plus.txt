@@ -1,0 +1,26 @@
+                         Lidl
+            Lidl Vertriebs-GmbH & Co. KG
+                 Musterstrasse 5
+                 99999 Musterstadt
+                                              EUR
+Rispentomaten                              1,49 A
+Paprika rot lose                           1,35 A
+   0,452 kg x 2,99 EUR/kg
+Skyr Natur 450g          1,19 x  3         3,57 A
+Preisvorteil                              -0,60 A
+Vollkorntoast 500g                         1,09 A
+Apfelschorle 1,5l                          0,79 B
+Pfand 0,25 EUR                             0,25 B
+Pfandrückgabe                             -1,00 B
+Lidl Plus Coupon 10% Obst                 -0,28 A
+------------------------------------------------
+zu zahlen                                  6,66
+Kartenzahlung                              6,66
+Lidl Plus Kunden-Nr. 1234 5678 9012 3456
+------------------------------------------------
+MWST%       MWST   +   Netto   =  Brutto
+A  7 %      0,43       6,19       6,62
+B 19 %      0,01       0,03       0,04
+------------------------------------------------
+TSE-Transaktion 87654   TSE-Signatur 7Hk2Lm9Pq4Rs8Tv1Wx3Yz5Ab7Cd9Ef1Gh3Ij5Kl7Mn9
+09.10.26  12:17   Filiale 1234  Kasse 3  Bon-Nr 4712

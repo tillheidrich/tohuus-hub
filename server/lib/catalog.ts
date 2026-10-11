@@ -7,7 +7,9 @@ import { regionCategoryRules } from './region-categories.js';
 import { emit } from './bus.js';
 import { dateKindOf, entryExpiry, openDaysFor } from './fresh-shelf.js';
 import { notify, notifySettings } from './notify.js';
+import { skipAutoShopping } from './away-state.js';
 import { nameScore, norm, splitProductName, tokens } from './text.js';
+import { isTrackedProduct } from './share-core.js';
 
 export type TrackMode = 'count' | 'level' | 'none';
 export type Status = 'ok' | 'low' | 'empty' | 'expiring' | 'expired' | 'untracked';
@@ -35,6 +37,8 @@ export interface ProductRow {
   notes: string | null;
   spot: string | null;
   archived: number;
+  /** "runs out regularly" – tracked in the start mode "only what runs out" (column added by the share module) */
+  runs_out?: number;
   /** 'best_before' | 'use_by' | null (automatic by name) – column added by the retail module */
   date_kind?: string | null;
   created_at: string;
@@ -71,6 +75,8 @@ export function productStatus(p: ProductRow, entries: StockEntry[], warnDays = n
     if (nextExpiry < today) status = 'expired';
     else if (nextExpiry <= soon) status = 'expiring';
   }
+  // start mode "only what runs out" (area: share): everything else is neither counted nor warned about
+  if (p.track_mode !== 'none' && !isTrackedProduct(p)) status = 'untracked';
   // best-before past → "check it"; use-by past → "don't eat anymore"
   return { total, status, nextExpiry, dateKind: dateKindOf(p) };
 }
@@ -242,7 +248,8 @@ export async function afterStatusChange(p: ProductRow, before: Status, after: St
   const worse = (after === 'low' || after === 'empty') && before !== after && !(before === 'empty' && after === 'low');
   if (!worse) return;
   let added = false;
-  if (s.autoShoppingList) added = addToShopping({ productId: p.id, text: p.name, source: 'auto', addedBy: 'ToHuus Hub' }).created;
+  // away mode: no perishables that would go off before the return, nothing while nobody is home
+  if (s.autoShoppingList && !skipAutoShopping(p)) added = addToShopping({ productId: p.id, text: p.name, source: 'auto', addedBy: 'ToHuus Hub' }).created;
   const label = [p.brand, p.name].filter(Boolean).join(' ');
   await notify({
     event: after === 'empty' ? 'stock.empty' : 'stock.low',

@@ -22,6 +22,7 @@ import { enqueueEnrich } from './enrich.js';
 import { notify } from './notify.js';
 import { splitProductName, titleCaseReceipt } from './text.js';
 import { t } from '../i18n.js';
+import { applyRulesAfterReconcile, applyRulesToImport, applyStoreRule } from './quality.js';
 
 const pexec = promisify(execFile);
 
@@ -110,6 +111,8 @@ export function createImport(parsed: ParsedImport, opts: CreateImportOptions = {
     const merged = tryReconcileWithOrder(parsed, opts);
     if (merged) return merged;
   }
+  // a store the household corrected once is recognised from then on (quality.ts)
+  applyStoreRule(parsed, opts.rawText);
   const info = db
     .prepare(
       `INSERT INTO imports (kind, title, ref, shop, total, source_file, raw_text, meta, actor) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -130,6 +133,8 @@ export function createImport(parsed: ParsedImport, opts: CreateImportOptions = {
     id,
     parsed.lines.map((l) => ({ ...l, receiptName: parsed.kind === 'rewe-ebon' || parsed.kind === 'receipt' ? l.name : null })),
   );
+  // learned household rules first (product, pack size, unit, ignore) – quality.ts
+  applyRulesToImport(id);
   emit('imports');
   const auto = opts.autoApply ?? getSetting<boolean>('import.autoApply', false);
   const needsReview = (db.prepare(`SELECT COUNT(*) n FROM import_lines WHERE import_id = ? AND (status != 'ok' OR action = 'new')`).get(id) as { n: number }).n;
@@ -228,6 +233,7 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
       db.prepare('UPDATE imports SET meta = ? WHERE id = ?').run(JSON.stringify(meta2), c.id);
     });
     tx();
+    applyRulesAfterReconcile(c.id);
     emit('imports');
     const returned = [...r.kept.entries()].filter(([i, k]) => k === 0 && avisLike.lines[i].qty > 0).map(([i]) => avisLike.lines[i].name);
     void notify({

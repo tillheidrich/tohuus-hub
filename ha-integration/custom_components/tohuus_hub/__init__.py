@@ -11,7 +11,8 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ToHuusApi, ToHuusAuthError, ToHuusError
-from .const import CONF_COOKIDOO_ENTITY, CONF_COOKIDOO_SYNC, DEFAULT_COOKIDOO_ENTITY, DOMAIN, FEATURE_BUTTONS, FEATURE_CALENDARS, FEATURE_DISPLAYS, FEATURE_EVENTS, FEATURE_TODO
+from .bridge import Bridge
+from .const import CONF_BRIDGE, CONF_COOKIDOO_ENTITY, CONF_COOKIDOO_SYNC, DEFAULT_COOKIDOO_ENTITY, DOMAIN, FEATURE_BUTTONS, FEATURE_CALENDARS, FEATURE_DISPLAYS, FEATURE_EVENTS, FEATURE_TODO
 from .cookidoo import CookidooPush, cookidoo_entity
 from .coordinator import ToHuusConfigEntry, ToHuusCoordinator, ToHuusRuntimeData
 from .entity import feature_enabled
@@ -65,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ToHuusConfigEntry) -> bo
     coordinator.start_listener()
     entry.async_on_unload(coordinator.stop_listener)
     _setup_cookidoo(hass, entry, api)
+    _setup_bridge(hass, entry, api, coordinator)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
 
@@ -105,6 +107,16 @@ def _setup_cookidoo(hass: HomeAssistant, entry: ToHuusConfigEntry, api: ToHuusAp
 
     waiting.append(async_track_state_change_event(hass, [DEFAULT_COOKIDOO_ENTITY], _appeared))
     entry.async_on_unload(_stop_waiting)
+
+
+def _setup_bridge(hass: HomeAssistant, entry: ToHuusConfigEntry, api: ToHuusApi, coordinator: ToHuusCoordinator) -> None:
+    """Two-way sync of what Home Assistant already does (lists, calendars, people, tags) – ToHuus Hub decides per topic."""
+    if not entry.options.get(CONF_BRIDGE, True):
+        return
+    bridge = Bridge(hass, api)
+    entry.runtime_data.bridge = bridge
+    coordinator.bridge_callback = lambda data: bridge.request_sync("event", capabilities=bool(data.get("capabilities")))
+    entry.async_on_unload(bridge.start())
 
 
 def _remove_stale_entities(hass: HomeAssistant, entry: ToHuusConfigEntry) -> None:

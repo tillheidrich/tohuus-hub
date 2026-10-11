@@ -12,12 +12,15 @@ import { randomToken } from './auth.js';
 import { addInterval, completeCareTask, findCareTask, listCareTasks, type IntervalUnit } from './care.js';
 import { addToShopping, adjustStock, fmtQty, getProduct, listProducts, localDay, markUsedUp, matchProduct } from './catalog.js';
 import { eatFirst } from './fresh.js';
+import { boxesSummary, listBoxes } from './labels.js';
 import { listWishes } from './kids.js';
 import { listDisplays } from './kiosk.js';
 import { liveParty, partyView } from './party.js';
 import { addPlan, getPlan } from './plan.js';
 import { suggest } from './recipes.js';
 import { quickAdd } from './shop.js';
+import { notPrivate } from './share-core.js';
+import { haAway } from './away.js';
 
 export const HA_API_VERSION = 1;
 
@@ -102,7 +105,7 @@ function shopRows(): ShopRow[] {
     .prepare(
       `SELECT s.id, s.product_id, s.text, s.qty, s.note, s.source, s.added_by, s.checked_at, s.created_at, h.pos
        FROM shopping_items s LEFT JOIN ha_todo_pos h ON h.item_id = s.id
-       WHERE s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day')`,
+       WHERE (s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day')) AND ${notPrivate('s.id')}`,
     )
     .all() as ShopRow[];
 }
@@ -306,6 +309,7 @@ export function haState() {
   const nextCare = care.filter((c) => c.next_due).sort((a, b) => a.next_due!.localeCompare(b.next_due!))[0] ?? null;
 
   const eat = eatFirst({ limit: 20 });
+  const boxes = boxesSummary();
   const today = localDay(0);
   const planned = getPlan(today, today);
   const tonightPlan = planned.find((p) => p.slot === 'abend') ?? planned[0] ?? null;
@@ -343,6 +347,8 @@ export function haState() {
       care_overdue: due.filter((c) => c.state === 'overdue').length,
       eat_first: eat.length,
       leftovers: eat.filter((e) => e.kind === 'leftover').length,
+      frozen_boxes: boxes.counts.freezer,
+      leftover_boxes: boxes.counts.fridge,
       kid_wishes: wishes.length,
       imports_to_review: imports,
     },
@@ -358,6 +364,13 @@ export function haState() {
       next: nextCare ? { id: nextCare.id, name: nextCare.name, next_due: nextCare.next_due, state: nextCare.state } : null,
     },
     eat_first: eat.map((e) => ({ id: e.id, name: e.name, kind: e.kind, use_by: e.use_by, days_left: e.days_left, qty: e.qty, unit: e.unit, opened: e.opened, image_url: absUrl(e.image_path) })),
+    /** leftover & freezer containers (area: labels): everything put away, what to take out for a planned meal */
+    boxes: {
+      fridge_portions: boxes.counts.fridge_portions,
+      freezer_portions: boxes.counts.freezer_portions,
+      items: listBoxes({ status: 'active', limit: 30 }).map((b) => ({ code: b.code, name: b.name, place: b.place, portions: b.left, eat_by: b.eat_by, days_left: b.days_left, state: b.state, url: b.url })),
+      thaw: boxes.thaw.map((x) => ({ day: x.day, slot: x.slot, meal: x.title, code: x.box.code, name: x.box.name })),
+    },
     tonight: tonightPlan
       ? { source: 'plan', title: tonightPlan.title, recipe_id: tonightPlan.recipe_id, slot: tonightPlan.slot, cooked: Boolean(tonightPlan.cooked), image_url: absUrl(tonightPlan.image_path), url: tonightPlan.recipe_id ? `${config.baseUrl}/rezepte/${tonightPlan.recipe_id}` : `${config.baseUrl}/kochen` }
       : idea
@@ -370,6 +383,8 @@ export function haState() {
       : { status: 'off' },
     kid_wishes: wishes.map((w) => ({ id: w.id, kid: w.kid_name, name: w.name, qty: w.qty, created_at: w.created_at, image_url: absUrl(w.image_path) })),
     displays,
+    /** away mode (trip): state home | planned | before | away | back – for a binary sensor "away" */
+    away: haAway(),
   };
 }
 
@@ -473,6 +488,13 @@ function wire() {
       }
     }
   });
+}
+
+/** Push a custom event to every connected integration (ha2: `bridge` = "please sync now"). Returns the number of listeners. */
+export function sendHaEvent(event: string, data: unknown) {
+  const line = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const c of clients) c.res.write(line);
+  return clients.size;
 }
 
 const MAX_HA_CLIENTS = 20;

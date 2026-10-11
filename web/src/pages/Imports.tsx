@@ -181,6 +181,11 @@ export function Imports({ me }: { me: Me }) {
       <section className="section">
         <div className="section-head">
           <h2>{t('History')}</h2>
+          {(list.data ?? []).length > 0 && (
+            <button className="linkish small" onClick={() => nav('/import/quality')}>
+              {t('Recognition')} ›
+            </button>
+          )}
         </div>
         {list.isLoading ? (
           <Skeleton n={3} />

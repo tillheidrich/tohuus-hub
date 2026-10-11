@@ -57,13 +57,15 @@
           "display_width": "Display image width",
           "display_height": "Display image height",
           "cookidoo_sync": "Send the Cookidoo week to ToHuus Hub",
-          "cookidoo_entity": "Cookidoo calendar"
+          "cookidoo_entity": "Cookidoo calendar",
+          "bridge": "Two-way sync with ToHuus Hub"
         },
         "data_description": {
           "live_updates": "Keeps a connection open so changes show up within a second or two. Without it, Home Assistant asks every minute.",
           "display_mode": "For kitchen displays shown as image entities.",
           "cookidoo_sync": "Reads the planned dishes from the Cookidoo integration every 3 hours and whenever the calendar changes, and puts them into the ToHuus Hub meal plan.",
-          "cookidoo_entity": "Usually calendar.cookidoo_speiseplan. Leave empty to use it automatically as soon as it exists."
+          "cookidoo_entity": "Usually calendar.cookidoo_speiseplan. Leave empty to use it automatically as soon as it exists.",
+          "bridge": "Lets ToHuus Hub see your to-do lists, calendars, people, notify services and voice-exposed devices, keep the lists and calendars you choose in ToHuus Hub (Settings › Home Assistant) in sync both ways, send notifications through the companion app and use NFC tag scans as quick actions."
         }
       }
     }
@@ -118,6 +120,9 @@
       "eat_first": {
         "name": "Eat first"
       },
+      "frozen_portions": {
+        "name": "Frozen portions"
+      },
       "tonight": {
         "name": "Tonight"
       },
@@ -141,6 +146,9 @@
       },
       "something_expired": {
         "name": "Something expired"
+      },
+      "away_mode": {
+        "name": "Away mode"
       }
     },
     "todo": {
@@ -371,6 +379,20 @@
         "task": {
           "name": "Task",
           "description": "Task name or number."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Only needed if you have more than one ToHuus Hub."
+        }
+      }
+    },
+    "report_presence": {
+      "name": "Report presence",
+      "description": "Tells ToHuus Hub whether everyone is away (e.g. from zone.home or a person group). After more than 24 hours away, ToHuus Hub suggests starting away mode – it never starts it by itself.",
+      "fields": {
+        "everyone_away": {
+          "name": "Everyone away",
+          "description": "On when nobody is at home."
         },
         "config_entry_id": {
           "name": "ToHuus Hub",

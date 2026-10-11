@@ -45,6 +45,8 @@ export interface ShopItem {
   claim: Claim | null;
   /** queued offline, not on the server yet */
   pending?: boolean;
+  /** discreet / private entry (area: share) */
+  share?: import('../pages/Share').ShareInfo;
 }
 
 export interface Store {

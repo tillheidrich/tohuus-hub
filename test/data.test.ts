@@ -19,7 +19,7 @@ beforeAll(async () => {
   backup = await import('../server/lib/backup');
   const { db } = dbm;
   db.prepare(`INSERT INTO users (name, role, password_hash) VALUES ('Till', 'admin', ?)`).run(auth.hashPassword('test1234'));
-  db.prepare(`INSERT INTO locations (name) VALUES ('Keller')`).run();
+  db.prepare(`INSERT INTO locations (name) VALUES ('Flurschrank')`).run();
   db.prepare(`INSERT INTO products (name) VALUES ('Milch')`).run();
   db.prepare(`INSERT INTO meal_plan (day, title) VALUES ('2026-10-10', 'Pasta')`).run();
   dbm.setSetting('ha', { url: 'https://ha.example', token: 'HA-SECRET-TOKEN', cookidooCalendar: 'calendar.x' });

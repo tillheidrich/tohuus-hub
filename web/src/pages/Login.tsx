@@ -12,7 +12,7 @@ export interface AuthOptions {
   language?: string;
   brand?: string;
   showNames: boolean;
-  users: { name: string; color: string; methods: Method[] }[];
+  users: { name: string; color: string; methods: Method[]; face?: import('../people/Avatar').Face | null }[];
   methods: { password: boolean; passwordAdminsOnly: boolean; magicLink: boolean; passkeys: boolean; reset: boolean };
   sso: { label: string } | null;
   shared: { name: string | null; members: { name: string; color: string }[] } | null;
@@ -227,7 +227,7 @@ export function Login() {
             <div className="who-pick">
               {o.shared.members.map((u) => (
                 <button type="button" key={u.name} onClick={() => { setName(u.name); setPin(''); setErr(''); setStep('pin'); }}>
-                  <Avatar name={u.name} color={u.color} />
+                  <Avatar name={u.name} color={u.color} face={users.find((x) => x.name === u.name)?.face} />
                   {u.name}
                 </button>
               ))}
@@ -239,7 +239,7 @@ export function Login() {
           <div className="who-pick">
             {users.map((u) => (
               <button type="button" key={u.name} className={selected?.name === u.name ? 'on' : ''} onClick={() => { setName(u.name); setErr(''); setCode(''); setStep('main'); }}>
-                <Avatar name={u.name} color={u.color} />
+                <Avatar name={u.name} color={u.color} face={u.face} />
                 {u.name}
               </button>
             ))}
@@ -347,8 +347,8 @@ export function Login() {
           </div>
           <p style={{ opacity: 0.7, maxWidth: 420, marginTop: 14 }}>
             {fredi
-              ? t('From cellar to couch in under three minutes. Backed by pantry, shopping list and recipes.')
-              : t('Freezer, cellar, pantry and household – with a shopping list, recipes and a bar for guests.')}
+              ? t('From the shelf to the couch in under three minutes. Backed by pantry, shopping list and recipes.')
+              : t('Fridge, freezer, pantry and household – with a shopping list, recipes and a bar for guests.')}
           </p>
         </div>
         <div className="small" style={{ opacity: 0.6 }}>{fredi ? t('Family business · Delivery to our own house only') : t('Self-hosted · Open source')}</div>

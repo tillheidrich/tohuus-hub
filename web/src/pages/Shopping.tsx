@@ -4,6 +4,7 @@ import {
   ArrowsDownUp,
   Basket,
   Check,
+  ClipboardText,
   CloudArrowUp,
   DotsThree,
   HandHeart,
@@ -24,6 +25,7 @@ import { pendingQueue, shopOp, useOfflineState, useWakeLock } from '../shop/offl
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, sectionLabel } from '../shop/sections';
 import { Avatar, Empty, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { BonButton } from './Bons';
+import { ComposerVisibility, ItemPrivacy, ShareMark, type Visibility, VisibilityPanel, addHiddenText, readClipboard, shareSubline } from './Share';
 
 function storeGet(k: string, d: string) {
   try {
@@ -79,7 +81,9 @@ export function Shopping() {
   const me = useApi<Me>('me', '/me');
   const [storeId, setStoreId] = useState<number | null>(() => Number(storeGet('sw.shop.store', '0')) || null);
   const [mode, setMode] = useState<'list' | 'store'>(() => (storeGet('sw.shop.mode', 'list') === 'store' ? 'store' : 'list'));
-  const q = useApi<ShopView>(['shopping', 'store', storeId ?? 0], `/shop/list${storeId ? `?store=${storeId}` : ''}`);
+  // mode=store: discreet items whose owner allows it show their real name to whoever shops (area: share)
+  const listQs = new URLSearchParams({ ...(storeId ? { store: String(storeId) } : {}), ...(mode === 'store' ? { mode: 'store' } : {}) }).toString();
+  const q = useApi<ShopView>(['shopping', 'store', storeId ?? 0, mode], `/shop/list${listQs ? `?${listQs}` : ''}`);
   const products = useApi<Product[]>('products', '/products');
   const offline = useOfflineState();
   const view = useMemo(() => overlay(q.data, me.data), [q.data, me.data, offline.pending]);
@@ -129,9 +133,25 @@ export function Shopping() {
     return (products.data ?? []).filter((p) => `${p.brand ?? ''} ${p.name}`.toLowerCase().includes(n)).slice(0, 6);
   }, [text, products.data]);
 
+  const [vis, setVis] = useState<Visibility>('all');
+  const [visOpen, setVisOpen] = useState(false);
   const add = async (txt: string, productId?: number) => {
     const s = txt.trim();
     if (!s) return;
+    if (vis !== 'all') {
+      // discreet / private: straight to the server, the real name never enters the shared list
+      try {
+        const r = await addHiddenText(s, vis);
+        setText('');
+        setVis('all');
+        setVisOpen(false);
+        refresh();
+        toast({ text: vis === 'private' ? t('Added – only you can see it') : r.added.length === 1 ? t('Added discreetly') : t('{n} added discreetly', { n: r.added.length }) });
+      } catch (e) {
+        toast({ text: e instanceof ApiError ? e.message : t('No connection – try again when you’re back online'), error: true });
+      }
+      return;
+    }
     if (!productId && looksMulti(s) && navigator.onLine) {
       try {
         const rows = await post<any[]>('/shop/parse', { text: s });
@@ -181,6 +201,23 @@ export function Shopping() {
       toast({ text: e instanceof ApiError ? e.message : t('No connection – try again when you’re back online'), error: true });
     } finally {
       setBusy(false);
+    }
+  };
+
+  /** One tap: a list copied from WhatsApp, a note or an e-mail goes through the same preview as typed text. */
+  const paste = async () => {
+    const txt = await readClipboard();
+    if (txt === null) return toast({ text: t('The browser didn’t allow reading the clipboard. Long-press the field and paste instead.'), error: true });
+    if (!txt) return toast({ text: t('The clipboard is empty.'), error: true });
+    try {
+      const r = await post<{ text: string; items: any[] }>('/share/parse', { text: txt });
+      if (!r.items.length) return toast({ text: t('No list items found in the clipboard.'), error: true });
+      if (vis !== 'all') return add(r.text);
+      setPreview(r.items.map((x) => ({ ...x, include: !x.on_list || Boolean(x.qty), link: x.confident })));
+    } catch {
+      // offline: put it into the field, the normal add handles it
+      setText(txt.trim().slice(0, 2000));
+      inputRef.current?.focus();
     }
   };
 
@@ -262,7 +299,15 @@ export function Shopping() {
             onBlur={() => setTimeout(() => setFocus(false), 150)}
             onKeyDown={(e) => e.key === 'Enter' && add(text)}
             enterKeyHint="done"
+            style={{ paddingRight: 92 }}
           />
+          {/* area: share – paste a copied list in one tap; make the next item discreet / private */}
+          <div className="share-in">
+            <button type="button" className="icon-btn plain" onClick={paste} aria-label={t('Paste from clipboard')} title={t('Paste from clipboard')}>
+              <ClipboardText size={18} />
+            </button>
+            <ComposerVisibility value={vis} open={visOpen} onToggle={() => setVisOpen((o) => !o)} />
+          </div>
         </div>
         <button className="btn primary" style={{ height: 48 }} onClick={() => add(text)} disabled={!text.trim()}>
           {t('Add')}
@@ -281,6 +326,17 @@ export function Shopping() {
           </div>
         )}
       </div>
+
+      {visOpen && (
+        <VisibilityPanel
+          value={vis}
+          onChange={(v) => {
+            setVis(v);
+            setVisOpen(false);
+            inputRef.current?.focus();
+          }}
+        />
+      )}
 
       {!inStore && <ForecastHints onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
 
@@ -437,9 +493,9 @@ function moveLocal(v: ShopView, id: number, on: boolean, basket: boolean): ShopV
 
 function ShopRow({ i, big = false, onCheck, onMore }: { i: ShopItem; big?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void }) {
   const on = Boolean(i.checked_at);
-  const sourceLabel: Record<string, string> = { auto: t('ran low'), 'used-up': t('used up'), recipe: t('for a recipe'), ha: 'Home Assistant', assistant: t('Assistant'), guest: t('Guest') };
+  const sourceLabel: Record<string, string> = { auto: t('ran low'), 'used-up': t('used up'), recipe: t('for a recipe'), ha: 'Home Assistant', assistant: t('Assistant'), guest: t('Guest'), share: t('shared') };
   const qty = i.qty && i.qty !== 1 ? `${String(i.qty).replace('.', ',')}× ` : '';
-  const sub = [i.note, big ? null : i.brand, big ? null : (sourceLabel[i.source] ?? null), !big && i.added_by && i.source === 'manual' ? i.added_by : null].filter(Boolean).join(' · ');
+  const sub = [shareSubline(i.share), i.note, big ? null : i.brand, big ? null : (sourceLabel[i.source] ?? null), !big && !i.share && i.added_by && i.source === 'manual' ? i.added_by : null].filter(Boolean).join(' · ');
   const body = (
     <>
       <span className={`check ${on ? 'on' : ''}`} aria-hidden>
@@ -448,6 +504,7 @@ function ShopRow({ i, big = false, onCheck, onMore }: { i: ShopItem; big?: boole
       {i.product_id && <Thumb p={{ name: i.text, image_path: i.image_path }} size={big ? 44 : 38} />}
       <div className="grow" style={{ textAlign: 'left', minWidth: 0 }}>
         <div className="title">
+          <ShareMark s={i.share} size={big ? 16 : 13} />
           {qty}
           {i.text}
         </div>
@@ -591,6 +648,7 @@ function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me;
             </button>
           ))}
         </div>
+        <ItemPrivacy item={item} me={me} members={members.data ?? []} onDone={onClose} />
         <button className="btn danger" style={{ alignSelf: 'flex-start' }} onClick={async () => { await run({ type: 'delete', id: item.id }); onClose(); }}>
           <Trash size={16} /> {t('Remove from the list')}
         </button>

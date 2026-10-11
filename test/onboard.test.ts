@@ -59,14 +59,14 @@ describe('onboarding state', () => {
 describe('rooms', () => {
   it('keeps chosen rooms, removes unchosen empty ones and adds new ones', () => {
     const before = db.prepare('SELECT id, name FROM locations ORDER BY sort').all() as { id: number; name: string }[];
-    const cellar = before.find((l) => l.name === 'Keller')!;
-    const keep = before.filter((l) => l.id !== cellar.id).map((l) => l.id);
+    const shelf = before.find((l) => l.name === 'Vorratsregal')!;
+    const keep = before.filter((l) => l.id !== shelf.id).map((l) => l.id);
     const out = ob.setRooms({ keep, add: ['Garage', ' garage ', ''] });
-    expect(out.removed).toEqual(['Keller']);
+    expect(out.removed).toEqual(['Vorratsregal']);
     const names = (db.prepare('SELECT name FROM locations').all() as { name: string }[]).map((l) => l.name);
     expect(names).toContain('Garage');
     expect(names.filter((n) => n.toLowerCase() === 'garage')).toHaveLength(1);
-    expect(names).not.toContain('Keller');
+    expect(names).not.toContain('Vorratsregal');
   });
 
   it('never removes a room that still has stock', () => {
@@ -85,7 +85,7 @@ describe('starter sets', () => {
     const sets = ob.starterSets();
     const rooms = sets.map((s) => s.room);
     expect(rooms).toContain('pantry');
-    expect(rooms).not.toContain('cellar'); // removed above
+    expect(rooms).not.toContain('shelf'); // removed above
     const pantry = sets.find((s) => s.room === 'pantry')!;
     expect(pantry.items.map((i) => i.name)).toContain('Nudeln');
     expect(pantry.items.find((i) => i.key === 'pasta')?.on).toBe(true);

@@ -27,7 +27,7 @@ beforeAll(async () => {
   orders = await import('../server/lib/orders');
   party = await import('../server/lib/party');
   auth = await import('../server/lib/auth');
-  db.prepare(`INSERT INTO locations (name, kind, icon) VALUES ('Cellar', 'cellar', 'archive')`).run();
+  db.prepare(`INSERT INTO locations (name, kind, icon) VALUES ('Hallway cupboard', 'other', 'archive')`).run();
   beer = catalog.createProduct({ name: 'Beer', trackMode: 'count', orderable: true, orderGroup: 'Drinks' });
   crisps = catalog.createProduct({ name: 'Crisps', trackMode: 'count', orderable: false });
   water = catalog.createProduct({ name: 'Tap water', trackMode: 'none', orderable: true, orderGroup: 'Drinks' });

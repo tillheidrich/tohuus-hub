@@ -14,6 +14,7 @@ import {
   FileArrowUp,
   ListChecks,
   Plus,
+  Repeat,
   ShareNetwork,
   Sparkle,
   UserPlus,
@@ -28,6 +29,8 @@ import { BRANDS } from '../brand';
 import { CHANGELOG, latestChange, unseenChanges } from '../changelog';
 import { LANGUAGE_OPTIONS, lang, locale, pick, setLang, t } from '../i18n';
 import { Ic, LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { StartChoice, useTourInfo } from './Tour';
+import { StaplesPicker } from './Share';
 
 type Step = 'home' | 'invite' | 'stock';
 const STEPS: Step[] = ['home', 'invite', 'stock'];
@@ -84,13 +87,17 @@ export function Onboarding({ me }: { me: Me }) {
   const [sp] = useSearchParams();
   const [step, setStep] = useState<Step | null>(null);
   const nav = useNavigate();
+  // area tour: on a fresh instance the admin first picks "start empty" or "explore with demo data"
+  const tour = useTourInfo();
+  const choosing = Boolean(tour.data?.start.due);
   useEffect(() => {
-    if (step || !g.data) return;
+    if (step || !g.data || choosing) return;
     const q = sp.get('step') as Step | null;
     setStep(q && STEPS.includes(q) ? q : g.data.state.step ?? 'home');
     if (!g.data.state.started) patch('/onboarding', { started: true }).then(() => invalidate('onboarding')).catch(() => {});
-  }, [g.data, sp, step]);
+  }, [g.data, sp, step, choosing]);
 
+  if (me.actor.role === 'admin' && choosing) return <StartChoice onDone={(c) => (c === 'demo' ? nav('/') : invalidate('onboarding'))} />;
   if (me.actor.role !== 'admin')
     return (
       <div className="card pad small muted" style={{ maxWidth: 520 }}>
@@ -279,7 +286,7 @@ function StepHome({ g, onNext }: { g: GettingStarted; onNext: () => void }) {
             value={own}
             onChange={(e) => setOwn(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addOwn()}
-            placeholder={t('Add your own, e.g. garage, chest freezer')}
+            placeholder={t('Add your own, e.g. hallway cupboard, shelf above the fridge')}
             maxLength={60}
           />
           <button className="btn" disabled={!own.trim()} onClick={addOwn}>
@@ -381,6 +388,8 @@ function StepInvite({ onBack, onNext }: { onBack: () => void; onNext: () => void
 
 function StepStock({ onBack, onDone }: { onBack: () => void; onDone: (to: string) => void }) {
   const [starter, setStarter] = useState(false);
+  // start mode "only what runs out" (area: share)
+  const [runsOut, setRunsOut] = useState(false);
   const pick = (path: 'receipt' | 'scan', to: string) => {
     patch('/onboarding', { stockPath: path }).catch(() => {});
     onDone(to);
@@ -393,8 +402,15 @@ function StepStock({ onBack, onDone }: { onBack: () => void; onDone: (to: string
           {t('Nobody has to type in the whole house. Pick one way to start – the rest comes in with your next shopping.')}
         </p>
       </header>
-      {!starter ? (
+      {runsOut ? (
+        <StaplesPicker switchMode onSaved={() => onDone('/')} onCancel={() => setRunsOut(false)} />
+      ) : !starter ? (
         <div className="onb-paths">
+          <button className="action" onClick={() => setRunsOut(true)}>
+            <span className="ic"><Repeat size={22} /></span>
+            <b>{t('Only track what runs out')}</b>
+            <span>{t('Milk, coffee, toilet paper … tap what regularly runs out. Nothing else gets counted. You can switch to everything later.')}</span>
+          </button>
           <button className="action" onClick={() => setStarter(true)}>
             <span className="ic"><ListChecks size={22} /></span>
             <b>{t('Start with typical staples')}</b>
@@ -414,7 +430,7 @@ function StepStock({ onBack, onDone }: { onBack: () => void; onDone: (to: string
       ) : (
         <StarterPicker onSaved={() => onDone('/')} onCancel={() => setStarter(false)} />
       )}
-      {!starter && (
+      {!starter && !runsOut && (
         <div className="onb-foot">
           <button className="btn ghost" onClick={onBack}>
             <ArrowLeft size={16} /> {t('Back')}

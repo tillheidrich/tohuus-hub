@@ -16,7 +16,7 @@ Return ONLY JSON: {"shop": string|null, "date": "YYYY-MM-DD"|null, "total": numb
 "lines": [{"name": string, "qty": number, "price": number|null, "deposit": boolean}]}
 Rules: one entry per item line. qty = number of items (1 for goods sold by weight). Bottle deposits / returns as deposit=true.
 Leave out discounts, totals, payment and tax lines. Keep the names exactly as printed.`,
-  shelf: `You see a photo from a household (e.g. freezer, fridge, pantry shelf, cellar).
+  shelf: `You see a photo from a household (e.g. freezer, fridge, pantry shelf, storage shelf).
 List the recognisable products. Return ONLY JSON:
 {"lines": [{"name": string, "brand": string|null, "qty": number, "confidence": number}]}
 qty = visible number of packs (estimate cautiously). confidence 0..1. Do not invent anything that cannot be seen.`,

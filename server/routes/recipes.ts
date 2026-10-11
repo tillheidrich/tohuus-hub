@@ -46,7 +46,8 @@ r.get('/recipes/suggest', (req, res) => {
   const tm = req.query.thermomix === '1' ? true : req.query.thermomix === '0' ? false : null;
   res.json(suggest({ thermomix: tm, limit: Number(req.query.limit ?? 20) }));
 });
-r.get('/recipes/:id', (req, res) => {
+r.get('/recipes/:id', (req, res, next) => {
+  if (!/^\d+$/.test(req.params.id)) return next(); // e.g. /recipes/export.json (area recipes2)
   const rec = getRecipe(Number(req.params.id));
   if (!rec) {
     res.status(404).json({ error: 'not found' });
@@ -95,12 +96,24 @@ r.post('/recipes/:id/cooked', (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  const b = z.object({ rating: z.number().min(1).max(5).nullable().optional(), note: z.string().max(500).nullable().optional(), consume: z.array(z.number()).max(40).optional() }).parse(req.body ?? {});
-  const valid = (b.consume ?? []).filter((pid) => db.prepare('SELECT 1 FROM products WHERE id = ?').get(pid));
+  const b = z
+    .object({
+      rating: z.number().min(1).max(5).nullable().optional(),
+      note: z.string().max(500).nullable().optional(),
+      consume: z.array(z.number()).max(40).optional(),
+      // plan2: scaled amounts ("for 6 instead of 4" → 3 cans instead of 2) and the plan entry that was cooked
+      consume_qty: z.array(z.object({ product_id: z.number().int(), qty: z.number().positive().max(100) })).max(40).optional(),
+      plan_entry_id: z.number().int().positive().nullable().optional(),
+    })
+    .parse(req.body ?? {});
+  const amounts = new Map<number, number>((b.consume ?? []).map((pid) => [pid, 1]));
+  for (const c of b.consume_qty ?? []) amounts.set(c.product_id, c.qty);
+  const valid = [...amounts].filter(([pid]) => db.prepare('SELECT 1 FROM products WHERE id = ?').get(pid));
   db.transaction(() => {
     logCooked(id, actorName(req), b.rating ?? null, b.note ?? null);
-    db.prepare('UPDATE meal_plan SET cooked = 1 WHERE recipe_id = ? AND day = ?').run(id, localDay(0));
-    for (const pid of valid) adjustStock({ productId: pid, delta: -1, reason: 'cook', actor: actorName(req), ref: `recipe:${id}` });
+    if (b.plan_entry_id) db.prepare('UPDATE meal_plan SET cooked = 1 WHERE id = ? AND recipe_id = ?').run(b.plan_entry_id, id);
+    else db.prepare('UPDATE meal_plan SET cooked = 1 WHERE recipe_id = ? AND day = ?').run(id, localDay(0));
+    for (const [pid, qty] of valid) adjustStock({ productId: pid, delta: -qty, reason: 'cook', actor: actorName(req), ref: `recipe:${id}` });
   })();
   res.json({ ok: true });
 });
@@ -135,8 +148,13 @@ r.post('/recipes/import/url', async (req, res) => {
   const { url } = z.object({ url: z.string().url() }).parse(req.body);
   let html: string;
   try {
-    const resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ToHuus Hub recipe import)', 'Accept-Language': langInfo(lang()).acceptLanguage }, maxBytes: 5 * 1024 * 1024 });
+    const resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ToHuus Hub recipe import)', Accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8', 'Accept-Language': langInfo(lang()).acceptLanguage }, maxBytes: 5 * 1024 * 1024 });
     html = resp.buf.toString('utf8');
+    // a blocked request (403/402/429 …) is not "no recipe on the page" (area recipes2)
+    if (!resp.ok && !/application\/ld\+json/i.test(html)) {
+      res.status(502).json({ error: t('The site refused the request (HTTP {status}). Copy the recipe text, or use “Import with any AI”.', { status: resp.status }) });
+      return;
+    }
   } catch (e) {
     res.status(502).json({ error: (e as Error).message });
     return;

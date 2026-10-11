@@ -8,11 +8,14 @@ import { fmtQty, invalidate, post, relTime, useApi } from '../api';
 import { Empty, Ic, Skeleton, StatusBadge, Thumb, useToast } from '../ui';
 import { locale, t } from '../i18n';
 import { FreshToday } from './FreshParts';
+import { BoxesToday, PutAwayButton } from './Leftovers';
 import { WhatToEatHero } from './WhatToEat';
 import { CareDueSection } from './Care';
 import { PartyBanner } from './Party';
+import { AwayBanner } from './Away';
 import { KidWishesCard } from './KidsSettings';
 import { ChecklistCard, StarterSheet } from './Onboarding';
+import { StartModeHint } from './Share';
 import { useState } from 'react';
 import { ListChecks } from '@phosphor-icons/react';
 
@@ -105,6 +108,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
 
       <WhatToEatHero />
       <PartyBanner />
+      <AwayBanner />
       <KidWishesCard />
       {(o.imports.length > 0 || o.orders.some((x: any) => !x.party_id)) && (
         <div className="stack section" style={{ gap: 8, marginTop: 14 }}>
@@ -133,6 +137,8 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
       )}
 
       <FreshToday />
+      <BoxesToday />
+      <StartModeHint />
       <CareDueSection />
       {/* expiring items live in "Eat first" above – here only what's low or out */}
 
@@ -245,7 +251,7 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
           </div>
           <div className="list">
             {o.planned.map((p: any) => (
-              <div key={p.id} className="plan-today" onClick={() => (p.recipe_id ? nav(`/rezepte/${p.recipe_id}`) : nav('/kochen'))}>
+              <div key={p.id} className="plan-today" onClick={() => (p.recipe_id ? nav(`/rezepte/${p.recipe_id}?plan=${p.id}`) : nav('/kochen'))}>
                 {p.image_path ? <img src={p.image_path} alt="" /> : <span className="ph"><ChefHat size={24} /></span>}
                 <div className="grow">
                   <div className="eyebrow">{p.slot === 'mittag' ? t('Lunch') : t('Tonight')}{p.cooked ? ` · ${t('cooked')}` : ''}</div>
@@ -255,6 +261,9 @@ export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
                   <button className="btn sm" onClick={(ev) => { ev.stopPropagation(); shiftFrom(todayDay(), toast, p.slot); }}>
                     <ForkKnife size={15} /> {t('Eating out')}
                   </button>
+                )}
+                {p.cooked && !String(p.note ?? '').startsWith('box:') && (
+                  <PutAwayButton preset={{ name: p.title, recipe_id: p.recipe_id ?? null, plan_id: p.id, image_path: p.image_path ?? null }} />
                 )}
               </div>
             ))}

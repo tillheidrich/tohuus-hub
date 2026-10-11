@@ -9,7 +9,10 @@ import { fmtDay, t } from '../i18n.js';
 import { checkCareDue } from './care.js';
 import { checkBudgets } from './spend2.js';
 import { startPartyScheduler } from './party.js';
+import { startPeopleScheduler } from './people.js';
 import { startInboxPoller } from './retail-inbox.js';
+import { notPrivate } from './share-core.js';
+import { rotationTick } from './plan2.js';
 
 function localHour() {
   return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: config.timezone }).format(new Date()));
@@ -50,7 +53,7 @@ export async function sendDigest(force = false) {
   const products = listProducts();
   const low = products.filter((p) => (p.min_qty > 0 || p.track_mode === 'level') && ['low', 'empty'].includes(p.status));
   const exp = products.filter((p) => ['expiring', 'expired'].includes(p.status));
-  const shopping = db.prepare('SELECT text FROM shopping_items WHERE checked_at IS NULL').all() as { text: string }[];
+  const shopping = db.prepare(`SELECT text FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()}`).all() as { text: string }[];
   const idea = suggest({ limit: 1 })[0];
   if (!force && low.length === 0 && exp.length === 0 && shopping.length === 0) return;
   const parts: string[] = [];
@@ -76,6 +79,7 @@ export async function sendDigest(force = false) {
 }
 
 export function startScheduler() {
+  startPeopleScheduler();
   startPartyScheduler();
   startInboxPoller();
   const tick = async () => {
@@ -83,6 +87,7 @@ export function startScheduler() {
       await checkExpiry();
       await checkCareDue().catch((e) => console.warn('[care]', (e as Error).message));
       await checkBudgets().catch((e) => console.warn('[budgets]', (e as Error).message));
+      await rotationTick().catch((e) => console.warn('[rotation]', (e as Error).message));
       await sendDigest();
     } catch (e) {
       console.warn('[scheduler]', (e as Error).message);

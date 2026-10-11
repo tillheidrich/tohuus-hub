@@ -21,7 +21,7 @@
     <path d="M14 472c0-18 14-30 28-28 6-12 26-12 32 2 8-2 12 10 8 26" fill="#a9bd9b"/>
     <path d="M574 472c-2-14 8-24 20-22 4-10 20-10 26 2 10 0 14 10 12 20" fill="#a9bd9b"/>
     <path d="M30 462v-6M52 458v-8M600 462v-6" stroke="#6f8b62" stroke-width="1.5"/>
-    <!-- cellar shell -->
+    <!-- lower floor shell -->
     <rect x="72" y="472" width="496" height="118" fill="#d9d2c4"/>
     <!-- chimney -->
     <rect x="446" y="74" width="34" height="96" fill="url(#bricks)"/>
@@ -124,7 +124,7 @@
     <g class="pin"><circle class="ring" cx="536" cy="438" r="8"/><circle cx="536" cy="438" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="536" cy="438" r="3.6"/></g>
   </g>
 
-  <!-- CELLAR: DRINKS -->
+  <!-- LOWER FLOOR: DRINKS -->
   <g class="room" data-room="drinks" tabindex="0" role="button" aria-pressed="false" aria-label="{{drinks}}">
     <rect class="bg" x="88" y="486" width="236" height="92" rx="3"/>
     <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -141,7 +141,7 @@
     <g class="pin"><circle class="ring" cx="126" cy="504" r="8"/><circle cx="126" cy="504" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="126" cy="504" r="3.6"/></g>
   </g>
 
-  <!-- CELLAR: CHEST FREEZER -->
+  <!-- LOWER FLOOR: FREEZER -->
   <g class="room" data-room="freezer" tabindex="0" role="button" aria-pressed="false" aria-label="{{freezer}}">
     <rect class="bg" x="336" y="486" width="216" height="92" rx="3"/>
     <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

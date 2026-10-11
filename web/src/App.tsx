@@ -1,5 +1,6 @@
 import {
   Barcode,
+  BowlFood,
   DotsNine,
   ForkKnife,
   Basket,
@@ -19,13 +20,19 @@ import {
   Coins,
   ClipboardText,
   Question,
+  Suitcase,
+  Heart,
 } from '@phosphor-icons/react';
 import { Help } from './pages/Help';
 import { Onboarding, WhatsNew, useOnboardingRedirect } from './pages/Onboarding';
+import { TourHost } from './pages/Tour';
 import { Care } from './pages/Care';
 import { Spending } from './pages/Spending';
 import { Labels } from './pages/Labels';
 import { QuickAction } from './pages/QuickAction';
+import { Away } from './pages/Away';
+import { SaveBoxSheet } from './pages/Leftovers';
+import { ShareLanding } from './pages/Share';
 import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { KidMode, kidLock } from './pages/Kids';
@@ -33,6 +40,7 @@ import { ApiError, connectEvents, useApi } from './api';
 import { Bar } from './pages/Bar';
 import { Check } from './pages/Check';
 import { Cook } from './pages/Cook';
+import { VotePage } from './pages/Plan2';
 import { Order } from './pages/Order';
 import { Find } from './pages/Find';
 import { Guest } from './pages/Guest';
@@ -40,6 +48,7 @@ import { PartyBoard, PartyPair } from './pages/Party';
 import { Invite } from './pages/Invite';
 import { AuthLanding } from './pages/AuthLanding';
 import { ImportReview } from './pages/ImportReview';
+import { Recognition } from './pages/Recognition';
 import { Imports } from './pages/Imports';
 import { Login } from './pages/Login';
 import { ProductDetail, ProductForm } from './pages/Product';
@@ -50,12 +59,22 @@ import { Shopping } from './pages/Shopping';
 import { Stock } from './pages/Stock';
 import { Today } from './pages/Today';
 import { Avatar, Sheet } from './ui';
+import { enablePeopleDirectory } from './people/Avatar';
+import { GuestBanner, PausedScreen, guestAllows } from './people/People';
+import { FavouritesPage } from './people/FavouritesPage';
 import { applyBrand } from './brand';
 import { setLang, t } from './i18n';
 import { setRegion } from './region';
 
 export interface Me {
-  actor: { name: string; role: string; kind: string; userId?: number };
+  actor: {
+    name: string;
+    role: string;
+    kind: string;
+    userId?: number;
+    /** permanent guest (area: people): what they may see right now */
+    houseGuest?: { level: 'order' | 'stock' | 'recipes' | 'family' | 'paused'; base: string; override: { level: string; until: string } | null } | null;
+  };
   household: string;
   brand?: string;
   language?: string;
@@ -90,17 +109,19 @@ function Authed() {
 function Shell({ me }: { me: Me }) {
   const [add, setAdd] = useState(false);
   const [newProduct, setNewProduct] = useState(false);
+  const [putAway, setPutAway] = useState(false);
   const nav = useNavigate();
   const loc = useLocation();
   const ov = useApi<any>('overview', '/overview');
   useEffect(() => connectEvents(), []);
+  enablePeopleDirectory();
   const b = applyBrand(me.brand);
   useEffect(() => window.scrollTo(0, 0), [loc.pathname]);
   const c = ov.data?.counts;
   const attention = c ? c.low + c.empty + c.expiring + c.expired : 0;
 
   const [more, setMore] = useState(false);
-  const careDue = useApi<any[]>(['care', 'due'], '/care/due');
+  const careDue = useApi<any[]>(['care', 'due'], me.actor.houseGuest ? null : '/care/due');
   const due = careDue.data?.length ?? 0;
   useOnboardingRedirect(me);
   type NavItem = { to: string; label: string; icon: any; end?: boolean; badge?: number; count?: number; dot?: boolean; due?: number };
@@ -117,6 +138,7 @@ function Shell({ me }: { me: Me }) {
         { to: '/wo', label: t('Where’s what?'), icon: MapPin },
         { to: '/abgleich', label: t('Quick stock check'), icon: ClipboardText },
         { to: '/pflege', label: t('Home & care'), icon: Wrench, due: due || undefined },
+        { to: '/urlaub', label: t('Trip / away'), icon: Suitcase },
       ],
     },
     {
@@ -125,6 +147,7 @@ function Shell({ me }: { me: Me }) {
       items: [
         shopping,
         { to: '/kochen', label: t('Cook'), icon: ChefHat },
+        { to: '/lieblinge', label: t('Favourites'), icon: Heart },
         { to: '/import', label: t('Imports'), icon: Receipt, dot: Boolean(c?.imports) },
         { to: '/ausgaben', label: t('Spending'), icon: Coins },
       ],
@@ -144,6 +167,9 @@ function Shell({ me }: { me: Me }) {
       ],
     },
   ];
+  // permanent guests only see what their level opens (area: people; the server enforces the same rule)
+  const gl = me.actor.houseGuest?.level;
+  if (gl) for (const g of groups) g.items = g.items.filter((l) => guestAllows(gl, l.to));
   const onTabbar = ['/', '/bestellen', '/einkauf'];
   const moreGroups = groups.map((g) => ({ ...g, items: g.items.filter((l) => !onTabbar.includes(l.to)) })).filter((g) => g.items.length);
   const moreLinks = moreGroups.flatMap((g) => g.items);
@@ -159,6 +185,9 @@ function Shell({ me }: { me: Me }) {
     </NavLink>
   );
 
+  if (gl === 'paused') return <PausedScreen me={me} />;
+  if (gl && !guestAllows(gl, loc.pathname)) return <Navigate to={guestAllows(gl, '/') ? '/' : '/einkauf'} replace />;
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -166,19 +195,21 @@ function Shell({ me }: { me: Me }) {
           <img src={b.logo} alt="" />
           {b.name}
         </div>
-        {navLink(today)}
+        {guestAllows(gl, '/') && navLink(today)}
         {groups.map((g) => (
           <div key={g.key} className="nav-group">
             <div className="nav-group-title">{g.title}</div>
             {g.items.map(navLink)}
           </div>
         ))}
-        <button className="btn primary" style={{ marginTop: 16 }} onClick={() => setAdd(true)}>
-          <Plus size={18} weight="bold" /> {t('Add')}
-        </button>
+        {guestAllows(gl, '/bestand') && (
+          <button className="btn primary" style={{ marginTop: 16 }} onClick={() => setAdd(true)}>
+            <Plus size={18} weight="bold" /> {t('Add')}
+          </button>
+        )}
         <div className="spacer" />
         <div className="who">
-          <Avatar name={me.actor.name} />
+          <Avatar name={me.actor.name} personKey={me.actor.userId ? `u${me.actor.userId}` : null} />
           <div className="grow">
             <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{me.actor.name}</div>
             <div>{me.household}</div>
@@ -187,6 +218,8 @@ function Shell({ me }: { me: Me }) {
       </aside>
 
       <main className="main">
+        <TourHost me={me} />
+        <GuestBanner me={me} />
         <Routes>
           <Route path="/" element={<Today me={me} onAdd={() => setAdd(true)} />} />
           <Route path="/bestand" element={<Stock onNew={() => setNewProduct(true)} />} />
@@ -196,7 +229,9 @@ function Shell({ me }: { me: Me }) {
           <Route path="/einkauf" element={<Shopping />} />
           <Route path="/kochen" element={<Cook me={me} />} />
           <Route path="/rezepte/:id" element={<RecipeDetail />} />
+          <Route path="/abstimmung/:id" element={<VotePage />} />
           <Route path="/import" element={<Imports me={me} />} />
+          <Route path="/import/quality" element={<Recognition />} />
           <Route path="/import/:id" element={<ImportReview />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/wo" element={<Find />} />
@@ -204,26 +239,31 @@ function Shell({ me }: { me: Me }) {
           <Route path="/bestellen" element={<Order me={me} />} />
           <Route path="/einstellungen" element={<Settings me={me} />} />
           <Route path="/pflege" element={<Care />} />
+          <Route path="/urlaub" element={<Away me={me} />} />
           <Route path="/ausgaben" element={<Spending />} />
           <Route path="/etiketten" element={<Labels />} />
           <Route path="/q/:code" element={<QuickAction />} />
           <Route path="/willkommen" element={<Onboarding me={me} />} />
           <Route path="/hilfe" element={<Help />} />
+          <Route path="/lieblinge" element={<FavouritesPage />} />
+          <Route path="/teilen" element={<ShareLanding me={me} />} />
           <Route path="*" element={<Today me={me} onAdd={() => setAdd(true)} />} />
         </Routes>
       </main>
 
       <nav className="tabbar">
-        {[today, order].map((l) => (
+        {[today, order].filter((l) => guestAllows(gl, l.to)).map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
             <l.icon size={24} weight={loc.pathname === l.to ? 'fill' : 'regular'} />
             {l.label}
             {l.dot ? <span className="badge-dot" /> : null}
           </NavLink>
         ))}
-        <button className="fab" aria-label={t('Add')} onClick={() => setAdd(true)}>
-          <Plus size={26} weight="bold" />
-        </button>
+        {guestAllows(gl, '/bestand') && (
+          <button className="fab" aria-label={t('Add')} onClick={() => setAdd(true)}>
+            <Plus size={26} weight="bold" />
+          </button>
+        )}
         <NavLink to="/einkauf" className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
           <Basket size={24} weight={loc.pathname.startsWith('/einkauf') ? 'fill' : 'regular'} />
           {t('Shopping')}
@@ -284,6 +324,11 @@ function Shell({ me }: { me: Me }) {
             <b>{t('Create product')}</b>
             <span>{t('By hand, with image search.')}</span>
           </button>
+          <button className="action" onClick={() => { setAdd(false); setPutAway(true); }}>
+            <span className="ic"><BowlFood size={22} /></span>
+            <b>{t('Leftovers & freezing')}</b>
+            <span>{t('Put away with date, eat-by and a QR label.')}</span>
+          </button>
           <button className="action" onClick={() => { setAdd(false); nav('/import?mode=text'); }}>
             <span className="ic"><TextAa size={22} /></span>
             <b>{t('Type a list')}</b>
@@ -292,6 +337,7 @@ function Shell({ me }: { me: Me }) {
         </div>
       </Sheet>
       <ProductForm open={newProduct} onClose={() => setNewProduct(false)} />
+      <SaveBoxSheet open={putAway} onClose={() => setPutAway(false)} preset={{}} />
       <WhatsNew me={me} />
     </div>
   );

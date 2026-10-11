@@ -2,6 +2,8 @@
 const VERSION = 'tohuus-v2';
 const SHELL = `${VERSION}-shell`;
 const DATA = `${VERSION}-data`;
+// things shared into the app (share target) wait here until the /teilen page picks them up – survives SW updates
+const SHARE = 'tohuus-share';
 const SHELL_URLS = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/apple-touch-icon.png'];
 // API reads the app needs to show the shopping list without a connection (network first, cache as fallback)
 const API_CACHED = [/^\/api\/me$/, /^\/api\/shop\/list/, /^\/api\/shop\/stores$/, /^\/api\/shopping$/, /^\/api\/categories$/, /^\/api\/overview$/, /^\/api\/claims/, /^\/api\/shop\/members$/];
@@ -19,7 +21,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => !k.startsWith(VERSION) && k !== SHARE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -46,8 +48,50 @@ async function cacheFirst(req) {
   return res;
 }
 
+// ------------------------------------------------------------------ share target
+
+/**
+ * "Share → ToHuus Hub" on Android / desktop Chrome posts multipart form data here. Text and files are kept in a
+ * dedicated cache on the device (nothing leaves it yet) and the app opens /teilen, which reads them back.
+ * If anything goes wrong, the request falls through to the server, which handles the same form as a fallback.
+ */
+async function receiveShare(req) {
+  const fallback = req.clone();
+  try {
+    const form = await req.formData();
+    const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8).padEnd(6, '0')}`;
+    const str = (k) => (typeof form.get(k) === 'string' ? String(form.get(k)).slice(0, 20000) : '');
+    const files = form.getAll('files').filter((f) => f && typeof f === 'object' && 'arrayBuffer' in f).slice(0, 8);
+    const cache = await caches.open(SHARE);
+    // keep the cache small: shares older than a day are forgotten
+    const keys = await cache.keys();
+    const cutoff = Date.now() - 86400000;
+    await Promise.all(
+      keys.map(async (k) => {
+        const m = /\/__share\/([a-z0-9]+)\//.exec(new URL(k.url).pathname);
+        const at = m ? parseInt(m[1].slice(0, -6), 36) : 0;
+        if (!at || at < cutoff) await cache.delete(k);
+      }),
+    );
+    const meta = { title: str('title'), text: str('text'), url: str('url'), files: [] };
+    for (let n = 0; n < files.length; n++) {
+      const f = files[n];
+      meta.files.push({ n, name: f.name || `file-${n + 1}`, type: f.type || 'application/octet-stream', size: f.size || 0 });
+      await cache.put(`/__share/${id}/${n}`, new Response(f, { headers: { 'Content-Type': f.type || 'application/octet-stream' } }));
+    }
+    await cache.put(`/__share/${id}/meta`, new Response(JSON.stringify(meta), { headers: { 'Content-Type': 'application/json' } }));
+    return Response.redirect(`/teilen?share=${id}`, 303);
+  } catch {
+    return fetch(fallback);
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  if (req.method === 'POST' && new URL(req.url).pathname === '/teilen/empfangen') {
+    event.respondWith(receiveShare(req));
+    return;
+  }
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;

@@ -8,6 +8,7 @@
  */
 import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
+import { captureDemo } from './demo.js';
 import { t } from '../i18n.js';
 import { hashPassword, randomToken, sha256, verifyPassword } from './auth.js';
 import { emit } from './bus.js';
@@ -443,8 +444,8 @@ export function setLocationPhoto(locationId: number, imagePath: string | null) {
 // ---------------------------------------------------------------- demo
 
 /** Demo households get one kid profile ("Mika") with a sensible rule set. Never a real child's name. */
-export function seedKidsDemo() {
-  if (!config.seedDemo || !getSetting('demo.seeded', false) || getSetting('kids.demo', false)) return;
+export function seedKidsDemo(force = false) {
+  if ((!config.seedDemo && !force) || !getSetting('demo.seeded', false) || (getSetting('kids.demo', false) && !force)) return;
   if ((db.prepare('SELECT COUNT(*) n FROM kid_profiles').get() as { n: number }).n > 0) return;
   const base = defaultRulesNow();
   const icecream = (db.prepare(`SELECT id FROM categories WHERE icon = 'ice-cream-cone' ORDER BY id LIMIT 1`).get() as { id: number } | undefined)?.id;
@@ -458,13 +459,16 @@ export function seedKidsDemo() {
     ],
   };
   const find = findThings('').filter((x) => /pflaster|plaster|zahnpasta|toothpaste/i.test(x.name)).map((x) => x.id);
-  db.prepare('INSERT INTO kid_profiles (name, color, avatar, age_band, speak, rules, find_ids) VALUES (?, ?, ?, ?, 1, ?, ?)').run(
-    'Mika',
-    '#f2a33a',
-    'fox',
-    'pre',
-    JSON.stringify(rulesSchema.parse(rules)),
-    JSON.stringify(find),
+  // marked as demo (area: tour) so "Remove demo data" takes it away again
+  captureDemo(() =>
+    db.prepare('INSERT INTO kid_profiles (name, color, avatar, age_band, speak, rules, find_ids) VALUES (?, ?, ?, ?, 1, ?, ?)').run(
+      'Mika',
+      '#f2a33a',
+      'fox',
+      'pre',
+      JSON.stringify(rulesSchema.parse(rules)),
+      JSON.stringify(find),
+    ),
   );
   setSetting('kids.demo', true);
 }

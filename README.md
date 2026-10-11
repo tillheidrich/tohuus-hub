@@ -44,7 +44,7 @@ And because the honest answer to *"what should we cook?"* depends on what's actu
 | | |
 |---|---|
 | **Today** | One screen: what expires, what's empty, what's low, the shopping list, tonight's best recipe, pending imports and guest orders. |
-| **Floors** | Fridge, freezer, pantry, cellar, bathroom, utility room — every location at a glance, with health meter and product photos. |
+| **Places** | Fridge, freezer compartment, kitchen cupboard, shelf, bathroom cabinet — whatever your home has, every place at a glance, with health meter and product photos. |
 | **Stock** | Search, filter by location and status, +/- right in the list, best-before per batch, FEFO consumption, move between locations, history and weekly usage. |
 | **Shopping list** | Live-synced between phones. Low items land on it automatically; tick an item and it goes straight into stock. Share as text. |
 | **Imports** | REWE *Abholavis* / *Lieferavis* / *eBon* parsers (deterministic, tested), digital receipts via QR link, photos, pasted text. Everything goes through a review step: substitutions, refused items, new products, target location. Receipt abbreviations are learned per product. |
@@ -78,7 +78,7 @@ cp .env.example .env        # set BASE_URL, ADMIN_NAME, ADMIN_PASSWORD
 docker compose up -d --build
 ```
 
-Open `http://localhost:8080`. Want to look around first? Set `SEED_DEMO=true` before the first start for a demo household (freezer, cellar, drinks bar, recipes).
+Open `http://localhost:8080`. Want to look around first? Set `SEED_DEMO=true` before the first start for a demo household (fridge, freezer, drinks bar, recipes) – or simply pick “Explore with demo data first” on the first start. Demo rows are marked and can be removed in one go under Settings › Data & backups.
 
 ### Configuration
 
@@ -86,7 +86,7 @@ Open `http://localhost:8080`. Want to look around first? Set `SEED_DEMO=true` be
 |---|---|---|
 | `BASE_URL` | `http://localhost:8080` | Public URL — used for links in notifications, guest links and MCP. |
 | `ADMIN_NAME` / `ADMIN_PASSWORD` | `Admin` / random | First account, created on first start. More members in *Settings*. |
-| `SEED_DEMO` | `false` | Demo data on first start (in the chosen language). |
+| `SEED_DEMO` | `false` | Demo data on first start (in the chosen language). Without it, the admin is asked on the first start: “Start empty” or “Explore with demo data first”. Either way the demo is marked and removable. |
 | `REGION` | from `LANGUAGE` | Where the household shops, on first start: `DE`, `AT`, `CH`, `GB`, `IE`, `US`, `SE`, `DK`, `NO`, `NL` (default: `de` → DE, `en` → GB, `sv` → SE). Changeable under *Settings → Household → Region*. |
 | `LANGUAGE` | `en` | Language on first start: `en` or `de`. Changeable under *Settings → Household*. |
 | `BRAND` | `tohuus` | Look on first start: `tohuus` or `fredirando` (a playful home-delivery theme). |

@@ -1,0 +1,25 @@
+Netto Marken-Discount
+Netto Marken-Discount Stiftung & Co. KG
+Filiale 8123 Musterstadt
+Musterweg 4
+99999 Musterstadt
+                                     EUR
+      2 x 0,89
+Gurke Bio                          1,78 A
+  0,734 kg x 1,99 EUR/kg
+Kartoffeln festkochend             1,46 A
+      3 x 0,65
+Pudding Vanille                    1,95 A
+Mengenrabatt                      -0,30 A
+Kaffee Crema 1kg                  12,99 A
+Duschgel Sensitive                 1,25 B
+Rückgabe Duschgel Sensitive       -1,25 B
+     -1 x 1,25
+Pfandrückgabe                     -0,75 B
+Summe [EUR]                       17,13
+Kartenzahlung girocard            17,13
+PAYBACK Karten-Nr.: ##########5678
+Punktestand: 2.345 Punkte
+Ihr Netto-App Rabatt wurde berücksichtigt
+UST-ID: DE888888888
+07.10.2026 09:31:44  Kasse 2  Beleg 5521

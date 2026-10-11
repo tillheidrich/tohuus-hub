@@ -33,15 +33,15 @@ import { r as cook2Routes } from './routes/cook2.js';
 import { r as authRoutes, pub as authPublic } from './routes/auth.js';
 import { r as spend2Routes } from './routes/spend2.js';
 import { r as printRoutes } from './routes/print.js';
-import { r as shareRoutes } from './routes/share.js';
+import { r as shareRoutes, pub as sharePublic } from './routes/share.js';
 import { r as labelsRoutes } from './routes/labels.js';
 import { r as awayRoutes } from './routes/away.js';
 import { r as plan2Routes } from './routes/plan2.js';
 import { r as recipes2Routes } from './routes/recipes2.js';
 import { r as qualityRoutes } from './routes/quality.js';
-import { r as peopleRoutes } from './routes/people.js';
+import { r as peopleRoutes, pub as peoplePublic } from './routes/people.js';
 import { r as tourRoutes } from './routes/tour.js';
-import { r as ha2Routes } from './routes/ha2.js';
+import { r as ha2Routes, ha2Guest } from './routes/ha2.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 ensureBaseData();
@@ -83,13 +83,17 @@ app.all('/mcp/:secret', handleMcp);
 
 app.use('/img', express.static(path.join(config.dataDir, 'images'), { maxAge: '30d', immutable: true, fallthrough: false }));
 
+// iPhone shortcut (personal list token) and the share-target fallback – before the routers that require a session
+app.use(sharePublic);
 app.use('/api/guest', guest);
+app.use('/api/guest', ha2Guest);
 app.use('/api/party-board', partyBoard);
 app.use(kioskPublic);
 app.use('/api/kid', kidDevice);
 app.use('/api', dataPublic);
 app.use('/api', channelsPublic);
 app.use('/api', authPublic);
+app.use('/api', peoplePublic);
 app.use('/api', core);
 app.use('/api', imports);
 app.use('/api', recipes);
@@ -141,7 +145,7 @@ if (webDir) {
   app.get('/manifest.webmanifest', (_req, res, next) => {
     if (brand() !== 'fredirando') return next();
     const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
-    Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: t('Ordered. Delivered. From kitchen & cellar.'), background_color: '#fff8f3', theme_color: '#fff8f3' });
+    Object.assign(m, { name: 'Fredirando', short_name: 'Fredirando', description: t('Ordered. Delivered. From kitchen & pantry.'), background_color: '#fff8f3', theme_color: '#fff8f3' });
     res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
   });
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {

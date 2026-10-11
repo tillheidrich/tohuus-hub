@@ -20,6 +20,8 @@ import {
   thawDaysFor,
 } from './fresh-shelf.js';
 import { notifySettings } from './notify.js';
+import { skipAutoShopping } from './away-state.js';
+import { isTrackedProduct, stockMode } from './share-core.js';
 
 export { entryExpiry, openDaysFor } from './fresh-shelf.js';
 
@@ -182,6 +184,8 @@ export function applyCheck(input: { productId: number; locationId: number; actio
 const NUDGE_KEY = 'fresh.nudgeDismissedUntil';
 
 export function nudge(nowMs = Date.now()) {
+  // start mode "only what runs out": nobody is asked to count rooms
+  if (stockMode() === 'staples') return null;
   const until = getSetting<string | null>(NUDGE_KEY, null);
   if (until && until > new Date(nowMs).toISOString()) return null;
   const cand = checkLocations(nowMs)
@@ -385,6 +389,8 @@ export function eatFirst(opts: { limit?: number } = {}) {
     const first = dated[0];
     const leftover = p.kind === 'leftover';
     if (!leftover && (!first || first.d! > soon)) continue;
+    // start mode "only what runs out" (area: share): no expiry nagging for untracked things – leftovers still count
+    if (!leftover && !isTrackedProduct(p)) continue;
     out.push({
       id: p.id,
       name: p.name,
@@ -493,6 +499,8 @@ export function forecastAll(withinDays = 7) {
   const items = [];
   for (const p of listProducts() as (ReturnType<typeof listProducts>[number] & FreshExtra)[]) {
     if (p.track_mode !== 'count' || p.kind === 'leftover' || p.total <= 0) continue;
+    if (!isTrackedProduct(p)) continue; // start mode "only what runs out"
+    if (skipAutoShopping(p)) continue; // away mode: no perishables before the trip, nothing while nobody is home
     const f = forecastFrom(movesOf(p.id), p.total);
     if (!f || f.days_left > withinDays) continue;
     items.push({

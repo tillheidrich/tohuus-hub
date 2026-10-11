@@ -6,6 +6,7 @@
 import { db, getSetting, setSetting } from '../db.js';
 import { addToShopping, listProducts, localDay, matchIngredient } from './catalog.js';
 import { eatFirst } from './fresh.js';
+import { listBoxes } from './labels.js';
 import { getPlan } from './plan.js';
 import { ingredientCore, suggest, type Suggestion } from './recipes.js';
 import { norm } from './text.js';
@@ -43,6 +44,8 @@ export interface WteItem {
   missing: { text: string; product_id: number | null; alternatives: WteAlt[] }[];
   swaps: string[];
   why: string;
+  /** allergy warnings (area: people) */
+  warnings: string[];
 }
 
 export interface WteLeftover {
@@ -145,7 +148,9 @@ function whenText(date: string) {
 /** One line: why this one, today. */
 function whyFor(s: Suggestion) {
   const parts: string[] = [];
-  const e = s.expiring[0];
+  // away mode: "use it up before the trip" beats the usual reasons
+  if (s.useUpAway?.length) parts.push(t('uses up {name} before the trip', { name: s.useUpAway[0] }));
+  const e = s.expiring.find((x) => !s.useUpAway?.includes(x.name));
   if (e) parts.push(t('uses {name}, {when}', { name: e.name, when: whenText(e.date) }));
   if (s.missing.length === 1) parts.push(t('only {name} is missing', { name: s.missing[0] }));
   if (s.swaps.length && parts.length < 2) parts.push(t('your way: {list}', { list: s.swaps[0] }));
@@ -177,7 +182,9 @@ function toItem(s: Suggestion, products: Products, withAlternatives: boolean): W
     need: s.need,
     missing: s.missingItems.map((m) => ({ ...m, alternatives: withAlternatives ? alternativesFor(m.text, m.product_id, products) : [] })),
     swaps: s.swaps,
-    why: whyFor(s),
+    // an allergy warning always comes first in the one line the card shows
+    why: s.warnings?.length ? [s.warnings[0], whyFor(s)].join(' · ') : whyFor(s),
+    warnings: s.warnings ?? [],
   };
 }
 
@@ -244,6 +251,11 @@ export function whatToEat(f: WteFilters = {}) {
     ready: readyS.slice(0, 8).map((s) => toItem(s, products, false)),
     one_missing: oneS.slice(0, 6).map((s) => toItem(s, products, true)),
     leftovers,
+    // frozen containers that should be eaten in the next two weeks (area: labels)
+    from_freezer: listBoxes({ status: 'active', place: 'freezer' })
+      .filter((b) => b.state !== 'ok')
+      .slice(0, 4)
+      .map((b) => ({ code: b.code, name: b.name, image_path: b.image_path, left: b.left, eat_by: b.eat_by, days_left: b.days_left })),
     quick: quickS.slice(0, 6).map((s) => toItem(s, products, s.missing.length > 0)),
     more: Math.max(0, readyS.length - 8) + Math.max(0, oneS.length - 6),
     cookidoo: getSetting<{ at?: string } | null>('cookidoo.push', null),
@@ -263,9 +275,10 @@ export function pickMeal(w: WhatToEat, exclude: string[] = [], rnd: () => number
     ...w.ready.slice(0, 5).map((item, i) => ({ item, bucket: 'ready' as const, weight: Math.max(0.3, item.score) * 2 + (5 - i) * 0.15 })),
     ...w.one_missing.slice(0, 3).map((item) => ({ item, bucket: 'one_missing' as const, weight: Math.max(0.2, item.score) * 0.7 })),
   ];
-  let pool = cands.filter((c) => !exclude.includes(c.item.key));
-  const cycled = pool.length === 0 && cands.length > 0;
-  if (cycled) pool = cands;
+  let pool = cands.filter((c) => !exclude.includes(c.item.key) && !(c.item.kind === 'recipe' && c.item.warnings?.length));
+  const safe = cands.filter((c) => !(c.item.kind === 'recipe' && c.item.warnings?.length));
+  const cycled = pool.length === 0 && safe.length > 0;
+  if (cycled) pool = safe;
   if (!pool.length) return null;
   const sum = pool.reduce((a, c) => a + c.weight, 0);
   let x = rnd() * sum;

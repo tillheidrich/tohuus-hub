@@ -10,6 +10,7 @@ import { findThings } from '../lib/find.js';
 import { createOrder, listOrders, orderMenu, orderSchema, setOrderStatus } from '../lib/orders.js';
 import { guestClientId, partyForGuest, partyIdForLink, partyMenu } from '../lib/party.js';
 import { t } from '../i18n.js';
+import { notPrivate } from '../lib/share-core.js';
 
 /** Public guest API — everything is scoped by the share token. */
 export const guest = Router();
@@ -113,7 +114,7 @@ guest.get('/:token/shopping', (req, res) => {
     res.status(403).json({ error: 'forbidden' });
     return;
   }
-  res.json(db.prepare('SELECT id, text, qty, checked_at FROM shopping_items WHERE checked_at IS NULL ORDER BY created_at DESC').all());
+  res.json(db.prepare(`SELECT id, text, qty, checked_at FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} ORDER BY created_at DESC`).all());
 });
 
 guest.post('/:token/shopping', (req, res) => {

@@ -1,0 +1,14 @@
+ROSSMANN
+Dirk Rossmann GmbH
+Filiale 2345 Musterstadt
+                                         EUR
+ISANA Zahnpasta Sensitive              2,55 A
+   3 x 0,85
+Babydream Feuchttücher 4x80            4,95 A
+enerBiO Haferdrink 1l                  1,29 B
+10% auf den Einkauf (App-Coupon)      -0,74 A
+Summe                                  8,05
+Steuer  A 19%   5,71  1,09
+Steuer  B  7%   1,21  0,08
+E-Mail: max.mustermann@example.com
+02.10.2026 14:22 Bon-Nr. 31

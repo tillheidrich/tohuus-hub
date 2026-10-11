@@ -1,0 +1,24 @@
+ALDI SÜD
+ALDI SE & Co. KG
+Musterweg 3, 99999 Musterstadt
+                                          EUR
+ 81234  Bio Bananen                     1,79 A
+ 40010  Möhren lose                     0,94 A
+        Handeingabe
+        0,628 kg x 1,49 EUR/kg
+ 27110  Frische Vollmilch 3,5%          2,97 A
+        3 x       0,99
+ 33301  Mozzarella 125g                 0,79 A
+ 33301  Mozzarella 125g                -0,79 A
+        Storno
+ 55120  Toilettenpapier 8x150           3,29 B
+ 99001  Pfand                           1,50 B
+        6 x       0,25
+ 99002  Leergut                        -0,75 B
+                                     -------
+ Summe                                  9,74
+ Kartenzahlung girocard                 9,74
+ Kartennr. ************1234
+ A = 7,0 %     Netto 5,33   MwSt 0,37
+ B = 19,0 %    Netto 3,41   MwSt 0,65
+ 09.10.2026 17:05 Uhr  Kasse 4  Bon 9921

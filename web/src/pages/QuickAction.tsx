@@ -5,10 +5,16 @@ import { type ApiError, fmtDate, fmtQty, invalidate, post, useApi } from '../api
 import { Empty, Ic, Skeleton, StatusBadge, Thumb, useToast } from '../ui';
 import { t } from '../i18n';
 import { type CareTask, careIcon, dueLabel, intervalLabel } from './Care';
+import { BoxQuick, isBoxCode } from './Leftovers';
 
 /** Mini action page behind a scanned QR label: /q/<code>. Requires a household login (handled by the app shell). */
 export function QuickAction() {
   const { code = '' } = useParams();
+  // leftover / freezer containers have short 8-character codes (area: labels)
+  return isBoxCode(code) ? <BoxQuick key={code} code={code} /> : <PlaceQuickAction key={code} code={code} />;
+}
+
+function PlaceQuickAction({ code }: { code: string }) {
   const { data, isLoading, error } = useApi<any>(['qr', code], `/qr/${encodeURIComponent(code)}`);
   const toast = useToast();
   const nav = useNavigate();

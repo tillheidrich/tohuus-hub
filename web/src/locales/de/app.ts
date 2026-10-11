@@ -14,7 +14,7 @@ export const app: Record<string, string> = {
 
   // brand.ts
   'What’s in the house. At a glance.': 'Was im Haus ist. Auf einen Blick.',
-  'Ordered. Delivered. From kitchen & cellar.': 'Bestellt. Gebracht. Aus Küche & Keller.',
+  'Ordered. Delivered. From kitchen & pantry.': 'Bestellt. Gebracht. Aus Küche & Vorrat.',
 
   // ui.tsx — status badges
   'in stock': 'da',
@@ -46,10 +46,10 @@ export const app: Record<string, string> = {
   'We deliver.': 'Wir liefern.',
   'What’s in the house.': 'Was im Haus ist.',
   'At a glance.': 'Auf einen Blick.',
-  'From cellar to couch in under three minutes. Backed by pantry, shopping list and recipes.':
-    'Vom Keller bis zum Sofa in unter drei Minuten. Mit Vorrat, Einkaufsliste und Rezepten im Hintergrund.',
-  'Freezer, cellar, pantry and household – with a shopping list, recipes and a bar for guests.':
-    'Gefrierschrank, Keller, Vorrat und Haushalt – mit Einkaufsliste, Rezepten und einer Bar für Gäste.',
+  'From the shelf to the couch in under three minutes. Backed by pantry, shopping list and recipes.':
+    'Vom Regal bis zum Sofa in unter drei Minuten. Mit Vorrat, Einkaufsliste und Rezepten im Hintergrund.',
+  'Fridge, freezer, pantry and household – with a shopping list, recipes and a bar for guests.':
+    'Kühlschrank, Gefrierfach, Vorrat und Haushalt – mit Einkaufsliste, Rezepten und einer Bar für Gäste.',
   'Family business · Delivery to our own house only': 'Familienbetrieb · Lieferung nur im eigenen Haus',
   'Self-hosted · Open source': 'Selbst gehostet · Open Source',
   'Welcome back': 'Willkommen zurück',
@@ -76,7 +76,7 @@ export const app: Record<string, string> = {
   'REWE PDF / receipt': 'REWE-PDF / Bon',
   'Upload and check a REWE pickup or delivery notice or an eBon.': 'Abholavis, Lieferavis oder eBon hochladen und prüfen.',
   Photo: 'Foto',
-  'Snap a receipt or your freezer.': 'Kassenbon oder Gefrierschrank fotografieren.',
+  'Snap a receipt or your freezer.': 'Kassenbon oder Gefrierfach fotografieren.',
   'Digital receipt': 'Digitaler Bon',
   'Scan the QR code at the checkout or paste a link.': 'QR-Code an der Kasse scannen oder Link einfügen.',
   'Create product': 'Produkt anlegen',

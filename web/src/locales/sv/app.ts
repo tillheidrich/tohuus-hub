@@ -14,7 +14,7 @@ export const app: Record<string, string> = {
 
   // brand.ts
   'What’s in the house. At a glance.': 'Vad som finns hemma. I en blick.',
-  'Ordered. Delivered. From kitchen & cellar.': 'Beställt. Levererat. Från kök & källare.',
+  'Ordered. Delivered. From kitchen & pantry.': 'Beställt. Levererat. Från kök & skafferi.',
 
   // ui.tsx — status badges
   'in stock': 'finns',
@@ -46,10 +46,10 @@ export const app: Record<string, string> = {
   'We deliver.': 'Vi levererar.',
   'What’s in the house.': 'Vad som finns hemma.',
   'At a glance.': 'I en blick.',
-  'From cellar to couch in under three minutes. Backed by pantry, shopping list and recipes.':
-    'Från källaren till soffan på under tre minuter. Med skafferi, inköpslista och recept i bakgrunden.',
-  'Freezer, cellar, pantry and household – with a shopping list, recipes and a bar for guests.':
-    'Frys, källare, skafferi och hushåll – med inköpslista, recept och en bar för gäster.',
+  'From the shelf to the couch in under three minutes. Backed by pantry, shopping list and recipes.':
+    'Från hyllan till soffan på under tre minuter. Med skafferi, inköpslista och recept i bakgrunden.',
+  'Fridge, freezer, pantry and household – with a shopping list, recipes and a bar for guests.':
+    'Kylskåp, frys, skafferi och hushåll – med inköpslista, recept och en bar för gäster.',
   'Family business · Delivery to our own house only': 'Familjeföretag · Leverans bara inom huset',
   'Self-hosted · Open source': 'Egen server · Öppen källkod',
   'Welcome back': 'Välkommen tillbaka',

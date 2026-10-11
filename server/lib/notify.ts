@@ -4,6 +4,7 @@ import { db, getSetting } from '../db.js';
 import { emit } from './bus.js';
 import { t } from '../i18n.js';
 import { actionsFor, pushDeviceCount, sendPush } from './webpush.js';
+import { quietWhileAway } from './away-state.js';
 
 export type NotifyEvent =
   | 'stock.low'
@@ -19,6 +20,8 @@ export type NotifyEvent =
   | 'kids.wish'
   | 'auth.new_device'
   | 'budget.warning'
+  | 'plan.vote'
+  | 'plan.rotation'
   | 'test';
 
 export interface NotifySettings {
@@ -50,6 +53,13 @@ export function registerNotifyChannel(c: ExtraChannel) {
   extraChannels.set(c.name, c);
 }
 
+/** Per-member delivery override (ha2: push through Home Assistant's companion app instead of Web Push). */
+type PersonalRouter = (msg: ChannelMessage) => { skipPushUsers: number[]; job: Promise<boolean> | null } | null;
+let personalRouter: PersonalRouter | null = null;
+export function setPersonalRouter(fn: PersonalRouter | null) {
+  personalRouter = fn;
+}
+
 export const DEFAULT_NOTIFY: NotifySettings = {
   haWebhookUrl: '',
   webhookUrl: '',
@@ -73,6 +83,9 @@ export const DEFAULT_NOTIFY: NotifySettings = {
     // goes only to the member concerned (their own devices / verified address) – see server/lib/auth-sessions.ts
     'auth.new_device': { ha: false, webhook: false, ntfy: false, email: true, push: true },
     'budget.warning': { ha: true, webhook: true, ntfy: true, email: false, push: true },
+    // family food votes (started / result) and the quiet weekly rotation fill (plan2)
+    'plan.vote': { ha: false, webhook: true, ntfy: true, email: false, push: true },
+    'plan.rotation': { ha: false, webhook: true, ntfy: false, email: false, push: false },
     test: { ha: true, webhook: true, ntfy: true, email: true, push: true },
   },
 };
@@ -114,6 +127,8 @@ export interface NotifyInput {
   dedupeKey?: string;
   dedupeHours?: number;
   html?: string;
+  /** goes out even while the household is away (away mode keeps everything else quiet) */
+  urgent?: boolean;
 }
 
 async function post(url: string, body: unknown, headers: Record<string, string> = {}) {
@@ -134,7 +149,9 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
   }
 }
 
-export async function notify(input: NotifyInput): Promise<{ channels: string[]; skipped?: boolean }> {
+export async function notify(input: NotifyInput): Promise<{ channels: string[]; skipped?: boolean; quiet?: boolean }> {
+  // away mode: only urgent things while nobody is around to act on "milk is low"
+  if (quietWhileAway(input.event, input.urgent)) return { channels: [], skipped: true, quiet: true };
   if (input.dedupeKey) {
     const hours = input.dedupeHours ?? 20;
     const recent = db
@@ -158,9 +175,12 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
   if (route.ha && s.haWebhookUrl) jobs.push(post(s.haWebhookUrl, payload).then((ok) => ['ha', ok]));
   if (route.webhook && s.webhookUrl) jobs.push(post(s.webhookUrl, payload).then((ok) => ['webhook', ok]));
   // Web Push (PWA): an event saved before the channel existed falls back to the default routing
+  // ha2: members who chose "via Home Assistant" get the push through their HA companion app instead
+  const personal = (route.push ?? DEFAULT_NOTIFY.events[input.event]?.push) && personalRouter ? personalRouter({ ...input, url }) : null;
+  if (personal?.job) jobs.push(personal.job.then((ok): [string, boolean] => ['ha_app', ok]).catch((): [string, boolean] => ['ha_app', false]));
   if ((route.push ?? DEFAULT_NOTIFY.events[input.event]?.push) && pushDeviceCount() > 0)
     jobs.push(
-      sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data })
+      sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { excludeUserIds: personal?.skipPushUsers })
         .then((ok): [string, boolean] => ['push', ok])
         .catch((): [string, boolean] => ['push', false]),
     );

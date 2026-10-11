@@ -239,7 +239,7 @@ export const STARTER: Record<LocationKey, StarterItem[]> = {
     { key: 'sponges', en: 'Sponges', de: 'Schwämme', sv: 'Disksvampar', cat: 'household' },
     { key: 'cleaner', en: 'All-purpose cleaner', de: 'Allzweckreiniger', sv: 'Allrengöringsmedel', cat: 'household' },
   ],
-  cellar: [
+  shelf: [
     { key: 'water', en: 'Sparkling water', de: 'Mineralwasser', sv: 'Kolsyrat vatten', cat: 'drinks', on: true },
     { key: 'juice', en: 'Juice', de: 'Saft', sv: 'Juice', cat: 'drinks' },
     { key: 'beer', en: 'Beer', de: 'Bier', sv: 'Öl', cat: 'drinks' },

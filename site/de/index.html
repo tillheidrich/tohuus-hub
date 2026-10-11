@@ -102,7 +102,7 @@
     <path d="M14 472c0-18 14-30 28-28 6-12 26-12 32 2 8-2 12 10 8 26" fill="#a9bd9b"/>
     <path d="M574 472c-2-14 8-24 20-22 4-10 20-10 26 2 10 0 14 10 12 20" fill="#a9bd9b"/>
     <path d="M30 462v-6M52 458v-8M600 462v-6" stroke="#6f8b62" stroke-width="1.5"/>
-    <!-- cellar shell -->
+    <!-- lower floor shell -->
     <rect x="72" y="472" width="496" height="118" fill="#d9d2c4"/>
     <!-- chimney -->
     <rect x="446" y="74" width="34" height="96" fill="url(#bricks)"/>
@@ -205,8 +205,8 @@
     <g class="pin"><circle class="ring" cx="536" cy="438" r="8"/><circle cx="536" cy="438" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="536" cy="438" r="3.6"/></g>
   </g>
 
-  <!-- CELLAR: DRINKS -->
-  <g class="room" data-room="drinks" tabindex="0" role="button" aria-pressed="false" aria-label="Keller, Getränke">
+  <!-- LOWER FLOOR: DRINKS -->
+  <g class="room" data-room="drinks" tabindex="0" role="button" aria-pressed="false" aria-label="Getränke">
     <rect class="bg" x="88" y="486" width="236" height="92" rx="3"/>
     <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="88" y="486" width="236" height="92" rx="3"/>
@@ -222,8 +222,8 @@
     <g class="pin"><circle class="ring" cx="126" cy="504" r="8"/><circle cx="126" cy="504" r="8.5" fill="#fff" stroke="#b4472e" stroke-width="1.5"/><circle class="dot" cx="126" cy="504" r="3.6"/></g>
   </g>
 
-  <!-- CELLAR: CHEST FREEZER -->
-  <g class="room" data-room="freezer" tabindex="0" role="button" aria-pressed="false" aria-label="Keller, Gefriertruhe">
+  <!-- LOWER FLOOR: FREEZER -->
+  <g class="room" data-room="freezer" tabindex="0" role="button" aria-pressed="false" aria-label="Gefrierfach">
     <rect class="bg" x="336" y="486" width="216" height="92" rx="3"/>
     <g fill="none" stroke="#1d2a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="336" y="486" width="216" height="92" rx="3"/>
@@ -241,11 +241,11 @@
       <div class="house-note" aria-live="polite"><div class="hn-where"></div><div class="hn-title"></div><ul></ul></div>
       <ul class="house-list">
         <li data-room="kitchen" data-where="Küche · Kühlschrank"><b>14 Sachen im Kühlschrank</b> <span class="warn">Milch ist alle. Steht schon auf der Liste.</span> <span>Pesto: seit Dienstag offen, zuerst essen</span> <span>Heute: Gnocchi-Pfanne mit Tomate</span></li>
-        <li data-room="freezer" data-where="Keller · Gefriertruhe"><b>9 Sachen, 2 bald fällig</b> <span class="warn">Fischstäbchen: noch 1 Packung</span> <span>Chili-Reste, eingefroren mit neuem Datum</span> <span>Eis steht auf der Sofa-Karte</span></li>
-        <li data-room="utility" data-where="Oben · Hauswirtschaftsraum"><b>Paketband</b> <span>Regal neben der Tür, Kiste „Post &amp; Pakete“</span> <span>QR-Etikett auf der Kiste: scannen, ein Tipp</span> <span class="warn">Wasserfilter: diese Woche fällig</span></li>
+        <li data-room="freezer" data-where="Gefrierfach"><b>9 Sachen, 2 bald fällig</b> <span class="warn">Fischstäbchen: noch 1 Packung</span> <span>Chili-Reste, eingefroren mit neuem Datum</span> <span>Eis steht auf der Sofa-Karte</span></li>
+        <li data-room="utility" data-where="Hauswirtschaftsraum"><b>Paketband</b> <span>Regal neben der Tür, Kiste „Post &amp; Pakete“</span> <span>QR-Etikett auf der Kiste: scannen, ein Tipp</span> <span class="warn">Wasserfilter: diese Woche fällig</span></li>
         <li data-room="pantry" data-where="Küche · Speisekammer"><b>Nudeln, Dosen und der Rest</b> <span>Nudeln: 3 Packungen, die älteste zuerst</span> <span class="warn">Dosentomaten: werden knapp</span></li>
-        <li data-room="drinks" data-where="Keller · Getränke"><b>2 Kisten Wasser</b> <span class="warn">Cola: nach der Party alle, steht auf der Liste</span> <span>Weinregal: 3 Flaschen</span></li>
-        <li data-room="bath" data-where="Oben · Bad"><b>Der Spiegelschrank</b> <span>Pflaster: oberstes Fach, links</span> <span class="warn">Zahnpasta: noch 1, steht auf der Liste</span> <span>Rauchmelder testen: einmal im Jahr</span></li>
+        <li data-room="drinks" data-where="Vorratsregal · Getränke"><b>2 Kisten Wasser</b> <span class="warn">Cola: nach der Party alle, steht auf der Liste</span> <span>Weinregal: 3 Flaschen</span></li>
+        <li data-room="bath" data-where="Bad"><b>Der Spiegelschrank</b> <span>Pflaster: oberstes Fach, links</span> <span class="warn">Zahnpasta: noch 1, steht auf der Liste</span> <span>Rauchmelder testen: einmal im Jahr</span></li>
         <li data-room="attic" data-where="Dachboden"><b>Lichterketten</b> <span>Kiste 3, unterm runden Fenster</span> <span>Nicht gezählt. Nur schnell gefunden.</span></li>
       </ul>
     </div>
@@ -258,7 +258,7 @@
     <div class="head">
       <span class="eyebrow reveal">Ein Wochenende bei uns</span>
       <h2 class="reveal">Keine Feature-Liste. Ein Wochenende.</h2>
-      <p class="reveal">ToHuus Hub hilft in den kleinen Momenten, in denen du sonst die Treppe hochrufen würdest. So sieht das an einem ganz normalen Samstag und Sonntag aus.</p>
+      <p class="reveal">ToHuus Hub hilft in den kleinen Momenten, in denen du sonst ins Nebenzimmer rufen würdest. So sieht das an einem ganz normalen Samstag und Sonntag aus.</p>
     </div>
 
     <div class="day">
@@ -329,7 +329,7 @@
           <div class="m-time reveal"><b>17:45</b><span>Vor dem offenen Kühlschrank</span></div>
           <h3 class="reveal">Ein Blick, und du weißt Bescheid.</h3>
           <p class="reveal">Die Heute-Ansicht zeigt das ganze Haus auf einmal: was weg muss, was alle ist, was knapp wird, was auf der Liste steht und welches Rezept heute am besten passt. Joghurt leer? Ein Tipp.</p>
-          <p class="reveal">Angebrochenes läuft nach eigener Uhr. Das Pesto-Glas von Dienstag und das Chili, das vom Donnerstag übrig ist, stehen unter „Zuerst essen“. Und was in die Gefriertruhe wandert, bekommt ein neues Datum, statt still abzulaufen.</p>
+          <p class="reveal">Angebrochenes läuft nach eigener Uhr. Das Pesto-Glas von Dienstag und das Chili, das vom Donnerstag übrig ist, stehen unter „Zuerst essen“. Und was ins Gefrierfach wandert, bekommt ein neues Datum, statt still abzulaufen.</p>
           <ul class="m-tags reveal"><li>Heute</li><li>Zuerst essen</li><li>Angebrochen, eingefroren, Reste</li><li>MHD pro Charge</li></ul>
         </div>
         <div class="m-media reveal" style="--d:100ms">
@@ -458,8 +458,8 @@
     </div>
     <div class="story-text">
       <span class="eyebrow reveal">Wie alles anfing</span>
-      <h2 class="reveal">Gebaut für unseren eigenen Keller.</h2>
-      <p class="reveal">Wir sind Till und Lea, eine Familie mit kleinem Kind in Norddeutschland. In unserem Haus gibt es einen Kühlschrank, eine Gefriertruhe im Keller, eine Speisekammer, die nie ganz aufgeräumt ist, und einen Hauswirtschaftsraum, in dem Dinge gern verschwinden.</p>
+      <h2 class="reveal">Gebaut für unser eigenes Zuhause.</h2>
+      <p class="reveal">Wir sind Till und Lea, eine Familie mit kleinem Kind in Norddeutschland. In unserem Zuhause gibt es einen Kühlschrank, ein Gefrierfach, eine Speisekammer, die nie ganz aufgeräumt ist, und einen Schrank, in dem Dinge gern verschwinden.</p>
       <p class="reveal">Jahrelang wusste einer von uns, wo alles liegt und was zur Neige geht, und der andere hat gefragt. Das klappt, bis es nicht mehr klappt: die dritte Flasche Ketchup, das Paketband, das keiner findet, das „Hast du nicht Milch gekauft?“ um sechs Uhr abends.</p>
       <p class="reveal">Also haben wir uns ToHuus Hub selbst gebaut, mit viel Hilfe von Claude. Die eine Regel: Es muss an einem müden Dienstag funktionieren, damit keiner mehr alles im Kopf haben muss. Heute läuft es auf einem kleinen Server bei uns zu Hause, und alle im Haus nutzen es.</p>
       <p class="reveal">Es ist kostenlos und steht unter der AGPL. Es gibt keine Firma dahinter, kein Bezahl-Abo und nichts, wofür du dich anmelden musst. Wenn es auch deinem Haushalt hilft, freut uns das. Issues und Pull Requests sind willkommen.</p>
@@ -477,8 +477,8 @@
       <p class="reveal">Ein Docker-Container, eine SQLite-Datei. Läuft entspannt auf einem NAS oder einem kleinen VPS und telefoniert nicht nach Hause. Alles, was mit der Außenwelt spricht, ist optional, und du entscheidest, ob du es einschaltest.</p>
       <div class="chat reveal" style="--d:100ms" aria-label="Beispiel: Ein KI-Assistent trägt per MCP ein Foto in ToHuus Hub ein">
         <span class="chat-cap">Per MCP, vom Handy aus</span>
-        <div class="bubble me"><span class="att"><svg class="ico"><use href="#i-camera"/></svg>gefrierfach.jpg</span><br>Hier ist die Schublade aus der Truhe. Trag das bitte in ToHuus Hub ein.</div>
-        <div class="bubble ai">Erledigt. 6 Sachen für die Gefriertruhe warten in deiner Prüfliste.</div>
+        <div class="bubble me"><span class="att"><svg class="ico"><use href="#i-camera"/></svg>gefrierfach.jpg</span><br>Hier ist die Schublade aus dem Gefrierfach. Trag das bitte in ToHuus Hub ein.</div>
+        <div class="bubble ai">Erledigt. 6 Sachen fürs Gefrierfach warten in deiner Prüfliste.</div>
       </div>
     </div>
     <div class="receipt-wrap reveal" style="--d:120ms"><div class="receipt">

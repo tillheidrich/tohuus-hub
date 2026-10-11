@@ -5,6 +5,7 @@ import { type Category, type Location, type Product, fmtQty, invalidate, post, q
 import { Empty, Ic, LevelPicker, Skeleton, StatusBadge, Stepper, Thumb, expiryText, useToast } from '../ui';
 import { t } from '../i18n';
 import { QuickCheckButton, WasteCard } from './FreshParts';
+import { BoxesStock } from './Leftovers';
 import { StarterSheet } from './Onboarding';
 
 // English labels, translated at render time with t()
@@ -163,6 +164,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
         </div>
       ) : (
         <div className="stack" style={{ gap: 22 }}>
+          {!q && !ort && status === 'all' && <BoxesStock />}
           {groups.map((g) => (
             <section key={g.key}>
               <div className="row" style={{ marginBottom: 8, gap: 8, color: 'var(--ink-2)' }}>

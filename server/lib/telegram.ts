@@ -25,6 +25,7 @@ import type { ChannelMessage } from './notify.js';
 import { overview } from './overview.js';
 import { formatItem, parseQuickAdd, quickAdd } from './shop.js';
 import { runVision, visionAvailable } from './vision.js';
+import { notPrivate } from './share-core.js';
 
 migrate(
   'channels-1',
@@ -362,7 +363,7 @@ export function helpText(kind: 'private' | 'group') {
 }
 
 export function listText() {
-  const items = db.prepare('SELECT text, qty, note FROM shopping_items WHERE checked_at IS NULL ORDER BY created_at').all() as { text: string; qty: number | null; note: string | null }[];
+  const items = db.prepare(`SELECT text, qty, note FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} ORDER BY created_at`).all() as { text: string; qty: number | null; note: string | null }[];
   if (!items.length) return esc(t('The shopping list is empty.'));
   const shown = items.slice(0, 60).map((i) => `• ${esc(formatItem(i))}${i.note && !/^\d/.test(i.note) ? ` <i>(${esc(i.note)})</i>` : ''}`);
   if (items.length > 60) shown.push(esc(t('… and {n} more', { n: items.length - 60 })));

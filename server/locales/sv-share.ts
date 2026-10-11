@@ -1,1 +1,22 @@
-export const sv_share: Record<string, string> = {};
+export const sv_share: Record<string, string> = {
+  // neutral placeholders for discreet items (stored in the household language)
+  'Drugstore item': 'Hygienartikel',
+  'Household item': 'Hushållsartikel',
+  'Personal item': 'Personlig sak',
+  'Nothing to add': 'Inget att lägga till',
+  'Only the person who added it can change this.': 'Bara den som lade till det kan ändra det här.',
+  'Added: {list}': 'Tillagt: {list}',
+  '{n} added: {list}': '{n} tillagda: {list}',
+  'That looks like a recipe – open ToHuus Hub to import it.': 'Det ser ut som ett recept – öppna ToHuus Hub för att hämta det.',
+  'Only a link – open ToHuus Hub to decide what to do with it.': 'Bara en länk – öppna ToHuus Hub och bestäm där vad som ska hända med den.',
+  'I didn’t find anything to add.': 'Jag hittade inget att lägga till.',
+  'Kitchen cupboard': 'Köksskåp',
+  'Bread, fruit & veg': 'Bröd, frukt & grönt',
+  Bathroom: 'Badrum',
+  'Cleaning & household': 'Städ & hushåll',
+  'Only for signed-in members.': 'Bara för inloggade medlemmar.',
+  'This share has expired. Please share it again.': 'Det du delade finns inte kvar. Dela det igen.',
+  'You already have 10 shortcuts. Remove one first.': 'Du har redan 10 genvägar. Ta bort en först.',
+  'Unknown or revoked shortcut key.': 'Okänd eller borttagen genvägsnyckel.',
+  'Too many requests – try again later.': 'För många förfrågningar – försök igen senare.',
+};

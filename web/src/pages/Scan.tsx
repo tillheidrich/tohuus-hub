@@ -56,6 +56,12 @@ export function Scan() {
       lastRef.current = value;
       ding();
       if (format === 'qr_code' || /^https?:\/\//.test(value)) {
+        // our own QR labels (places, products, care tasks, leftover containers) open their action page
+        const own = /^https?:\/\/[^/]+\/q\/([A-Za-z0-9_-]{6,40})\/?$/.exec(value);
+        if (own) {
+          nav(`/q/${own[1]}`);
+          return;
+        }
         if (/^https?:\/\//.test(value)) {
           toast({ text: t('Digital receipt detected – fetching …') });
           try {
@@ -95,7 +101,7 @@ export function Scan() {
             busy = true;
             try {
               const codes = await det.detect(v);
-              const c = codes.find((x: any) => (mode === 'qr' ? x.format === 'qr_code' : x.format !== 'qr_code'));
+              const c = codes.find((x: any) => (mode === 'qr' ? x.format === 'qr_code' : x.format !== 'qr_code' || /\/q\/[A-Za-z0-9_-]{6,40}\/?$/.test(x.rawValue)));
               if (c) await handleCode(c.rawValue, c.format);
             } catch {
               /* frame error */

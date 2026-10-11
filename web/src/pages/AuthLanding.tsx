@@ -66,7 +66,49 @@ function Result({ ok, title, text, action = true }: { ok: boolean; title: string
 
 export function AuthLanding() {
   const { kind = '' } = useParams();
-  return <Frame>{kind === 'link' ? <LinkPage /> : kind === 'email' ? <EmailPage /> : kind === 'password' ? <PasswordPage /> : <Result ok={false} title={t('This link doesn’t work.')} />}</Frame>;
+  return <Frame>{kind === 'person' ? <PersonLinkPage /> : kind === 'link' ? <LinkPage /> : kind === 'email' ? <EmailPage /> : kind === 'password' ? <PasswordPage /> : <Result ok={false} title={t('This link doesn’t work.')} />}</Frame>;
+}
+
+/**
+ * /anmelden/person#token – a sign-in link an admin sent or showed as a QR code (area: people).
+ * One tap (not automatic): link scanners in mail programs must not use it up.
+ */
+function PersonLinkPage() {
+  const [token] = useState(tokenFromHash);
+  const [state, setState] = useState<'ready' | 'busy' | 'done' | 'error'>('ready');
+  const [err, setErr] = useState('');
+  const [name, setName] = useState('');
+  useEffect(() => {
+    history.replaceState(null, '', location.pathname);
+  }, []);
+  const go = () => {
+    setState('busy');
+    once(`person:${token}`, () => post<{ status: string; name: string }>('/people/login/open', { token }))
+      .then((r) => {
+        setName(r.name);
+        setState('done');
+        setTimeout(() => location.replace('/'), 900);
+      })
+      .catch((e) => {
+        setErr((e as Error).message);
+        setState('error');
+      });
+  };
+  if (!token) return <Result ok={false} title={t('This link doesn’t work.')} />;
+  if (state === 'error') return <Result ok={false} title={t('This link doesn’t work any more.')} text={`${err} ${t('Ask someone from the household for a new one.')}`} />;
+  if (state === 'done') return <Result ok title={t('Welcome, {name}!', { name })} text={t('You are signed in on this device.')} />;
+  return (
+    <div className="stack" style={{ gap: 16 }}>
+      <div>
+        <div className="eyebrow">{t('Sign-in link')}</div>
+        <h1>{t('Sign in on this device')}</h1>
+      </div>
+      <p className="muted" style={{ margin: 0 }}>{t('Someone from the household sent you this link. It works once – afterwards you stay signed in on this device.')}</p>
+      <button className="btn primary lg" disabled={state === 'busy'} onClick={go}>
+        <DeviceMobile size={18} /> {t('Sign in')}
+      </button>
+    </div>
+  );
 }
 
 function LinkPage() {

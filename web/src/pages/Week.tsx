@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowsClockwise, Basket, BookOpen, CalendarBlank, CaretLeft, CaretRight, Check, ChefHat, ForkKnife, MagicWand, Plus, Trash, X } from '@phosphor-icons/react';
+import { ArrowRight, ArrowsClockwise, Basket, BookOpen, CalendarBlank, CaretLeft, CaretRight, Check, ChefHat, ForkKnife, MagicWand, Plus, Trash, UsersThree, X } from '@phosphor-icons/react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, invalidate, patch, post, useApi } from '../api';
@@ -6,6 +6,8 @@ import { locale, t } from '../i18n';
 import { Seg, Sheet, useToast } from '../ui';
 import { ClaimAvatar, CookPicker, usePlanClaims } from '../shop/claims';
 import { BonButton } from './Bons';
+import { DayMarkChips, EntryServings, markLabel, RotationButton, StartVoteSheet, useWeekOverlay } from './Plan2';
+import { MealBoxAction, PlanBoxPicks } from './Leftovers';
 
 /** Short weekday name (Mon, Tue … / Mo, Di …) in the active language. */
 const wd = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale(), { weekday: 'short' });
@@ -26,6 +28,8 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
   const [offset, setOffset] = useState(0);
   const from = addDays(todayStr(), offset * 7);
   const plan = useApi<{ days: string[]; entries: any[] }>(['plan', from], `/plan?from=${from}&days=7`);
+  const overlay = useWeekOverlay(from);
+  const marks = useMemo(() => new Map((overlay.data?.marks ?? []).map((m) => [m.day, m])), [overlay.data]);
   const claims = usePlanClaims();
   const [pick, setPick] = useState<string | null>(null);
   const [sel, setSel] = useState<any | null>(null);
@@ -68,18 +72,24 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
         {days.map((d) => {
           const list = byDay.get(d) ?? [];
           return (
-            <div key={d} className={`wday ${d === today ? 'today' : ''}`}>
+            <div key={d} className={`wday ${d === today ? 'today' : ''} ${marks.has(d) ? 'p2-marked' : ''}`}>
               <div className="wd-head">
                 <b>{d === today ? t('Today') : wd(d)}</b>
                 <span className="mono">{dom(d)}</span>
               </div>
+              {marks.has(d) && <div className="p2-daymark">{markLabel(marks.get(d)!)}{marks.get(d)!.note ? ` · ${marks.get(d)!.note}` : ''}</div>}
               {list.map((e) => (
                 <div key={e.id} className={`wmeal ${e.cooked ? 'done' : ''}`} onClick={() => setSel(e)}>
                   {e.image_path ? <img src={e.image_path} alt="" loading="lazy" /> : <span className="ph"><ChefHat size={18} /></span>}
                   <div className="grow">
                     <div className="t">{e.title}</div>
                     <div className="s">
-                      {[e.slot === 'mittag' ? t('Lunch') : null, e.source === 'cookidoo' ? 'Cookidoo' : e.source === 'suggest' ? t('Suggested') : null, e.thermomix ? 'TM' : null].filter(Boolean).join(' · ')}
+                      {[
+                        e.slot === 'mittag' ? t('Lunch') : null,
+                        e.source === 'cookidoo' ? 'Cookidoo' : e.source === 'suggest' ? t('Suggested') : e.source === 'rotation' ? t('Rotation') : e.source === 'vote' ? t('Voted') : null,
+                        e.thermomix ? 'TM' : null,
+                        e.servings && e.servings !== (e.variant_servings || e.recipe_servings) ? t('for {n}', { n: e.servings }) : null,
+                      ].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                   <ClaimAvatar claim={claims.get(e.id)} />
@@ -131,26 +141,30 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
             <ArrowsClockwise size={15} /> {busy === 'cdo' ? t('Checking Cookidoo…') : t('Sync Cookidoo')}
           </button>
         )}
+        <RotationButton from={from} overlay={overlay.data} />
         <BonButton spec={{ type: 'week', day: from }} label={t('Print week')} />
       </div>
 
-      <PlanPicker day={pick} onClose={() => setPick(null)} />
-      <MealSheet entry={sel} claim={sel ? claims.get(sel.id) : null} onClose={() => setSel(null)} onOpen={(id) => nav(`/rezepte/${id}`)} />
+      <PlanPicker day={pick} mark={pick ? marks.get(pick) ?? null : null} onClose={() => setPick(null)} />
+      <MealSheet entry={sel ? plan.data?.entries.find((x) => x.id === sel.id) ?? sel : null} claim={sel ? claims.get(sel.id) : null} onClose={() => setSel(null)} onOpen={(id) => nav(`/rezepte/${id}?plan=${sel?.id ?? ''}`)} />
     </section>
   );
 }
 
-function PlanPicker({ day, onClose }: { day: string | null; onClose: () => void }) {
+function PlanPicker({ day, mark, onClose }: { day: string | null; mark: import('./Plan2').DayMark | null; onClose: () => void }) {
   const sugg = useApi<any[]>(['suggest', 'plan'], day ? '/recipes/suggest?limit=8' : null);
   const recipes = useApi<any[]>('recipes', day ? '/recipes' : null);
   const [q, setQ] = useState('');
   const [slot, setSlot] = useState<'abend' | 'mittag'>('abend');
+  const [servings, setServings] = useState<number | null>(null);
+  const [vote, setVote] = useState(false);
   const toast = useToast();
   const add = async (body: { recipe_id?: number; title?: string }) => {
     try {
-      await post('/plan', { day, slot, ...body });
-      invalidate('plan', 'overview');
+      await post('/plan2/entries', { day, slot, servings: body.recipe_id ? servings : null, ...body });
+      invalidate('plan', 'overview', 'shopping');
       setQ('');
+      setServings(null);
       onClose();
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
@@ -162,7 +176,16 @@ function PlanPicker({ day, onClose }: { day: string | null; onClose: () => void 
   return (
     <Sheet open={!!day} onClose={onClose} title={t('What’s on for {day}?', { day: label })}>
       <div className="stack">
+        {day && <DayMarkChips day={day} mark={mark} />}
         <Seg value={slot} onChange={setSlot} options={[['abend', t('Dinner')], ['mittag', t('Lunch')]]} />
+        <div className="p2-forn" role="group" aria-label={t('For how many?')}>
+          <span className="small muted">{t('For')}</span>
+          {[null, 2, 3, 4, 5, 6, 8].map((n) => (
+            <button key={n ?? 'usual'} className={servings === n ? 'on' : ''} onClick={() => setServings(n)}>
+              {n === null ? t('as usual') : n}
+            </button>
+          ))}
+        </div>
         <input className="input" placeholder={t('Search recipes or type anything (“order pizza”)')} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
         {n && (
           <div className="list">
@@ -178,6 +201,7 @@ function PlanPicker({ day, onClose }: { day: string | null; onClose: () => void 
         )}
         {!n && (
           <>
+            <PlanBoxPicks day={day} slot={slot} onDone={() => { setQ(''); onClose(); }} />
             <div className="eyebrow">{t('Matches your pantry')}</div>
             <div className="list">
               {(sugg.data ?? []).map((s) => (
@@ -190,9 +214,13 @@ function PlanPicker({ day, onClose }: { day: string | null; onClose: () => void 
                 </button>
               ))}
             </div>
+            <button className="btn ghost block" onClick={() => setVote(true)}>
+              <UsersThree size={16} /> {t('Can’t decide? Let everyone vote')}
+            </button>
           </>
         )}
       </div>
+      {day && <StartVoteSheet open={vote} day={day} onClose={() => { setVote(false); onClose(); }} />}
     </Sheet>
   );
 }
@@ -205,7 +233,7 @@ function removeMeal(e: any, toast: ToastFn) {
     invalidate('plan', 'overview');
     toast({
       text: t('Removed “{title}” from the plan', { title: e.title }),
-      action: { label: t('Undo'), run: () => post('/plan', { day: e.day, slot: e.slot, recipe_id: e.recipe_id, title: e.title, note: e.note }).then(() => invalidate('plan', 'overview')) },
+      action: { label: t('Undo'), run: () => post('/plan2/entries', { day: e.day, slot: e.slot, recipe_id: e.recipe_id, title: e.title, note: e.note, servings: e.servings ?? null }).then(() => invalidate('plan', 'overview')) },
     });
   });
 }
@@ -238,6 +266,7 @@ function MealSheet({ entry, claim, onClose, onOpen }: { entry: any | null; claim
       <div className="stack">
         <div className="small muted" style={{ marginTop: -6 }}>{label(entry.day)} · {entry.slot === 'mittag' ? t('lunch') : t('dinner')}</div>
         <CookPicker entryId={entry.id} claim={claim} />
+        <EntryServings entry={entry} />
         <div className="action-grid">
           <button className="action" onClick={() => move(addDays(entry.day < today ? today : entry.day, 1))}>
             <span className="ic"><ArrowRight size={20} /></span>
@@ -256,6 +285,7 @@ function MealSheet({ entry, claim, onClose, onOpen }: { entry: any | null; claim
               <span>{t('Ingredients, steps, mark as cooked.')}</span>
             </button>
           )}
+          <MealBoxAction entry={entry} onClose={onClose} />
           <button className="action" onClick={() => { removeMeal(entry, toast); onClose(); }}>
             <span className="ic" style={{ color: 'var(--empty)' }}><Trash size={20} /></span>
             <b>{t('Remove from plan')}</b>

@@ -1,5 +1,6 @@
 import { Basket, Check, Coffee, Cookie, IceCream, MagnifyingGlass, Martini, Minus, Pizza, Plus } from '@phosphor-icons/react';
 import { FindList, type Found, useDebounce } from './Find';
+import { GuestVoice } from './Ha2';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -92,7 +93,7 @@ export function Guest() {
           <div className="logo"><img src={BRANDS.fredirando.logo} alt="" /></div>
           <div className="info">
             <h1>fredirando</h1>
-            <div className="muted small">{info.data.party ? `${info.data.party.name} · ${t('pick-up at the counter')}` : `${t('Kitchen & cellar')} · ${info.data.household}`}</div>
+            <div className="muted small">{info.data.party ? `${info.data.party.name} · ${t('pick-up at the counter')}` : `${t('Kitchen & pantry')} · ${info.data.household}`}</div>
             <div className="facts">
               <span><span className="stars">★★★★★</span> <b>{num(4.9)}</b> ({t('family')})</span>
               <span>{t('Delivery')} <b>{t('1–3 min')}</b></span>
@@ -385,6 +386,7 @@ function GuestStock({ token }: { token: string }) {
       ) : (
         <FindList things={things} grouped={!dq} />
       )}
+      {!dq && <GuestVoice token={token} />}
     </div>
   );
 }

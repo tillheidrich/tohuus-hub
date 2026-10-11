@@ -6,7 +6,7 @@ ToHuus Hub talks to Home Assistant in three ways. Use the first; the others exis
 |---|---|---|
 | **Integration** (HACS) | Native entities, actions, events, live updates | Always, if you can install from HACS |
 | YAML package | REST sensors, `rest_command`, webhook push automation | No HACS, or you want the actionable iOS push from the package |
-| Outbound (ToHuus Hub → HA) | Cookidoo week plan pulled with an HA token (alternative to the integration's push); optional sync with an HA to-do list; notification webhook | Only without the integration; the integration pushes the Cookidoo week by itself |
+| Outbound (ToHuus Hub → HA) | Cookidoo week plan pulled with an HA token (alternative to the integration's push); two-way topics (shopping list, meal plan, care, presence, notifications) via HA's REST API; notification webhook | Only without the integration; the integration does all of this by itself |
 
 The integration lives in its own repository: **[tillheidrich/tohuus-hub-ha](https://github.com/tillheidrich/tohuus-hub-ha)** (source in this repo under [`ha-integration/`](../ha-integration/), MIT licence for HACS friendliness).
 
@@ -36,6 +36,7 @@ One device "ToHuus Hub" per ToHuus Hub instance (model = household name). Entity
 | `sensor.tohuus_hub_products_empty` | count | `items` |
 | `sensor.tohuus_hub_expiring_soon` | count (best before soon or past) | `items` |
 | `sensor.tohuus_hub_eat_first` | count | `items` [{name, kind (`product`/`leftover`), use_by, days_left, qty, unit, opened}], `leftovers` |
+| `sensor.tohuus_hub_frozen_portions` | portions | `items` [{code, name, place, portions, eat_by, days_left, state, url}] (freezer only), `fridge_portions`, `thaw` [{day, slot, meal, code, name}] – planned meals to take out of the freezer |
 | `sensor.tohuus_hub_shopping_list` | open items | `items` (names) |
 | `sensor.tohuus_hub_open_orders` | new + accepted orders | `orders`, `new` |
 | `sensor.tohuus_hub_care_due` | tasks overdue, today or soon | `tasks` [{id, name, state, next_due, days, location, assignee}], `overdue` |
@@ -64,6 +65,51 @@ The to-do entity works directly against ToHuus Hub (no copy in HA):
 - **Delete**: removes the item in ToHuus Hub.
 
 The older *Settings › Access & AI › Shopping list in Home Assistant* sync (ToHuus Hub copying the list into an HA `todo` entity such as the built-in shopping list) is not needed with the integration – leave it off, otherwise the list exists twice.
+
+## What Home Assistant already does – two-way per topic
+
+*Settings › Home Assistant* answers "what does Home Assistant already do for you?". With the integration (0.2.0+) or an HA address + long-lived token (*Settings › Access & AI › Cookidoo*), ToHuus Hub reads what HA has (to-do lists with platform, calendars, people, `notify` services, voice-exposed devices), proposes a mode per topic, and *Take over the suggestions* applies them. Nothing has to be done twice: whatever runs in HA stays there and is mirrored.
+
+| Topic | HA side | Modes | Notes |
+|---|---|---|---|
+| Shopping list | to-do lists (`shopping_list`, Bring!, Todoist, Local To-do, Cookidoo), several possible | `two_way` (default proposal), `from_ha` (HA leads), `to_ha` (ToHuus leads), `off` | quantities as `2 Milk` ⇄ qty, ticks both ways, dedupe by normalised name, discreet entries never leave ToHuus |
+| Meal plan | calendars (Mealie, Local Calendar, family calendar) | `from_ha` (default), `to_ha`, `two_way` | events we write carry `[tohuus:meal:<id>]` → recognised, never re-imported; the Cookidoo calendar is excluded (own import); moving/removing exported events needs the integration (HA has no REST delete) |
+| Care tasks | one to-do list | `to_ha` | due tasks (overdue/today) appear; ticking one off completes it (next date calculated), the item is then removed |
+| Who is home | `person.*` → members (mapping editable) | on/off | `presence()`, `isHome(userId)`, `everyoneAway()` and `onPresence(fn)` in `server/lib/ha2.ts` for other modules (away mode, claims) |
+| Notifications | `notify.mobile_app_*` | per member | members with an HA app service get notifications there and no Web Push (`setPersonalRouter` hook in `notify.ts`) |
+| NFC tags | `tag_scanned` (integration only) | on/off | unknown tags are listed; map a tag to a QR label + action (`take`, `list`, `opened`, `done`); result fired as `tohuus_hub_tag` |
+| Voice commands | exposed entities (Assist / Alexa / Google) | – | babysitter page, see below |
+
+ToHuus Hub's own entities (`todo.tohuus_hub_*`, `calendar.tohuus_hub_*`) are never sync targets. The older *Shopping list in Home Assistant* sync (`shop.haTodo`) is switched off and its links are taken over when the shopping topic is saved.
+
+### Sync engine
+
+`server/lib/ha2-engine.ts` is pure and generic (tests in `test/ha2.test.ts`); `server/lib/ha2.ts` holds the topic adapters (shopping, meals, care), the outbox and both transports.
+
+- **Links** (`ha2_links`): local id (row id + creation time, so reused ids never inherit a link) ⇄ HA uid, plus the fields at the last sync (`base`). Three-way merge per field: changed only on one side → copied to the other.
+- **Conflicts** (both sides changed a field): `from_ha` → HA wins, `to_ha` → ToHuus wins, `two_way` → last writer wins. Local change times come from SQLite triggers (`ha2_touch`), the remote time is the entity's `last_updated`.
+- **Deletions**: tombstones. Deleted here → removed in HA and not re-imported while HA still shows it; edited in HA after the deletion → comes back. Deleted in HA → deleted here (shopping: only open items), unless edited here afterwards.
+- **Creation direction** by mode; done items are never created on the other side; unlinked items with the same key are linked instead of duplicated.
+- **Outbox** (`ha2_outbox`): operations for HA (`todo` add/update/remove, `calendar` create/delete, `notify`), acknowledged with the new uid; un-acknowledged ops are re-sent after 3 minutes (not notifications).
+- **Transports**: *integration* (preferred, when it synced within 15 min) – `POST /api/ha/v1/bridge/sync` with `{version, capabilities?, todo: {entity: {items, last_updated}}, calendar: {…}, persons, acks}` → `{config: {todo, calendar: [{entity_id, start, end}], persons, tags, want_capabilities}, ops: [{id, topic, op}]}`; a local change sends the server-sent event `bridge` so the integration syncs within ~2 s. *rest* – ToHuus calls `todo.get_items` / `add_item` / … and `/api/calendars/<entity>` itself every 3 minutes and after local changes.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/ha2` | overview: settings, transport, capabilities, proposals, status per topic/entity, presence |
+| PATCH | `/api/ha2/settings` | `{shopping|meals|care: {mode, entities}, presence: {enabled, map}, notify: {userId: service}, tags: {enabled}, transport}` (admin) |
+| POST | `/api/ha2/apply-proposals`, `/api/ha2/detect`, `/api/ha2/sync` | take over suggestions / look again / sync now |
+| GET | `/api/ha2/presence` | who is home, everyone away |
+| GET/PATCH/DELETE | `/api/ha2/tags[/:id]` | seen tags, mapping to a QR label + action |
+| GET | `/api/ha/v1/bridge/config` | what the integration should watch |
+| POST | `/api/ha/v1/bridge/sync`, `/api/ha/v1/bridge/tag` | integration bridge (HA token) |
+
+MCP: `get_home_assistant_sync`, `sync_home_assistant_now`, `who_is_home`, `list_voice_commands`.
+
+### Voice commands on the babysitter page
+
+*Settings › Home Assistant › Voice commands for the babysitter page*: choose the assistant (Alexa, Google, Siri, HA Assist), take over everything exposed to it ("Take over what Alexa can reach"), pick from HA, or add entries by hand (works without HA). Example phrases are generated per kind and language ("Alexa, schalte Wohnzimmer Licht ein"); own phrases per entry override them; entries can be hidden. Switch the section on per guest link (links with "Where is what?"); the guest page shows it below the search (`GET /api/guest/:token/voice`).
+
+Safety: only `light`, `switch`, `cover`, `climate`, `fan`, `media_player`, `scene` and `script` (scripts only when picked explicitly, never by "take over"); never `lock`, `alarm_control_panel`, `camera`, `person`, `device_tracker` and the like, no covers of class garage/gate/door, and nothing whose name sounds like a lock, alarm, camera, gate or garage – also for hand-made entries and on every read.
 
 ## Actions
 

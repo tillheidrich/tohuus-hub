@@ -127,13 +127,8 @@ export function statusText(s: Status) {
   return t(STATUS_LABEL[s]);
 }
 
-export function Avatar({ name, color = '#2f5bea', size = 30 }: { name: string; color?: string; size?: number }) {
-  return (
-    <span className="avatar" style={{ background: color, width: size, height: size, fontSize: size * 0.42 }}>
-      {name.slice(0, 1).toUpperCase()}
-    </span>
-  );
-}
+/** One avatar for every person: photo, animal or initials (area: people – web/src/people/Avatar.tsx). */
+export { Avatar } from './people/Avatar';
 
 // ------------------------------------------------------------------ inputs
 

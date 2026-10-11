@@ -8,6 +8,7 @@ import { del, invalidate, patch, post, put, useApi } from '../api';
 import { t } from '../i18n';
 import { Amounts } from '../RegionAmounts';
 import { Seg, Sheet, Toggle, useToast } from '../ui';
+import { scaleLine } from '../scale';
 
 interface Change {
   kind: 'swap' | 'remove' | 'add';
@@ -50,7 +51,9 @@ const refresh = () => invalidate('recipe', 'recipes', 'suggest', 'swaprules');
 
 // ------------------------------------------------------------------ ingredients: "bei uns" vs original
 
-export function OurIngredients({ r, match }: { r: any; match: any[] }) {
+/** `factor` scales the shown amounts (servings stepper on the recipe page); matching keeps the stored text. */
+export function OurIngredients({ r, match, factor = 1 }: { r: any; match: any[]; factor?: number }) {
+  const sc = (text: string) => (factor === 1 ? text : scaleLine(text, factor));
   const v = useVariant(r.id);
   const [mode, setMode] = useState<'ours' | 'orig'>('ours');
   const [edit, setEdit] = useState(false);
@@ -98,12 +101,12 @@ export function OurIngredients({ r, match }: { r: any; match: any[] }) {
               <div className="grow">
                 {i.change === 'swap' ? (
                   <div className="var-swap">
-                    <s>{i.original}</s> <ArrowRight size={13} /> <b>{i.text}</b>
+                    <s>{i.original}</s> <ArrowRight size={13} /> <b>{sc(i.text)}</b>
                   </div>
                 ) : i.change === 'remove' ? (
                   <s className="muted">{i.original}</s>
                 ) : (
-                  <Amounts text={i.text} style={{ fontWeight: 550 }} />
+                  <Amounts text={sc(i.text)} style={{ fontWeight: 550 }} />
                 )}
                 <div className="small muted">
                   {[
@@ -134,17 +137,37 @@ export function OurIngredients({ r, match }: { r: any; match: any[] }) {
               <span className="mark pantry">
                 <Minus size={12} />
               </span>
-              <Amounts className="grow" text={i.text} style={{ fontWeight: 550 }} />
+              <Amounts className="grow" text={sc(i.text)} style={{ fontWeight: 550 }} />
             </div>
           ))}
         {r.ingredients.length === 0 && eff.length === 0 && <div className="li muted small">{t('No ingredients yet.')}</div>}
       </div>
       {v.isError && <div className="small muted" style={{ marginTop: 6 }}>{t('Could not load your version of this recipe.')}</div>}
       {r.ingredients.length > 0 && (
-        <button className="btn sm ghost" style={{ marginTop: 8 }} onClick={() => setEdit(true)}>
-          <Swap size={15} /> {differs ? t('Edit our way') : t('We cook it differently …')}
-        </button>
+        <div className="row wrap" style={{ gap: 6, marginTop: 8 }}>
+          <button className="btn sm ghost" onClick={() => setEdit(true)}>
+            <Swap size={15} /> {differs ? t('Edit our way') : t('We cook it differently …')}
+          </button>
+          {variant && (
+            <button
+              className="btn sm ghost"
+              onClick={async () => {
+                if (!confirm(t('Back to the original recipe? Your changes for this recipe are removed.'))) return;
+                try {
+                  await del(`/cook2/recipes/${r.id}/variant`);
+                  refresh();
+                  toast({ text: t('Back to the original – {title} is cooked as written again.', { title: r.title }) });
+                } catch (e) {
+                  toast({ text: (e as Error).message, error: true });
+                }
+              }}
+            >
+              {t('Back to original')}
+            </button>
+          )}
+        </div>
       )}
+      {variant && r.source_type === 'cookidoo' && <div className="small muted" style={{ marginTop: 6 }}>{t('Your way stays when the Cookidoo week syncs again – the original is never changed.')}</div>}
       {v.data && <VariantSheet open={edit} onClose={() => setEdit(false)} r={r} view={v.data} />}
     </section>
   );

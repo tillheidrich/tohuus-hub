@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
+import { guestMay, houseGuestFor, type HouseGuest } from './people-policy.js';
 
 export interface Actor {
   kind: 'user' | 'token' | 'guest';
@@ -14,6 +15,8 @@ export interface Actor {
   guestLocations?: number[];
   /** rowid of the session (cookie sign-ins only) */
   sessionId?: number;
+  /** permanent guest (area: people) – visibility level enforced in requireAuth */
+  houseGuest?: HouseGuest | null;
 }
 
 // Sign-in methods (area: auth): session metadata for the device list, verified e-mail, passkeys,
@@ -204,7 +207,8 @@ function actorFromSession(token: string | undefined, deviceToken: string | undef
   // a PIN session on a shared tablet is worthless without that tablet's device cookie
   if (row.bound && (!deviceToken || !row.device_hash || !safeEqual(sha256(deviceToken), row.device_hash))) return null;
   if (row.stale) db.prepare(`UPDATE sessions SET last_seen_at = datetime('now') WHERE token_hash = ?`).run(hash);
-  return { kind: 'user', userId: row.id, name: row.name, role: row.role, sessionId: row.sid };
+  const houseGuest = houseGuestFor(row.id);
+  return { kind: 'user', userId: row.id, name: row.name, role: houseGuest ? 'member' : row.role, sessionId: row.sid, ...(houseGuest ? { houseGuest } : {}) };
 }
 
 export function resolveActor(req: Request): Actor | null {
@@ -228,6 +232,11 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
       res.status(403).json({ error: t('This access is meant for {client} only.', { client: actor.scope === 'ha' ? 'Home Assistant' : 'MCP' }) });
       return;
     }
+  }
+  // permanent guests: one central visibility rule for every route group (server/lib/people-policy.ts)
+  if (actor.houseGuest && !guestMay(actor.houseGuest.level, req.method, req.originalUrl)) {
+    res.status(403).json({ error: actor.houseGuest.level === 'paused' ? t('Your access is paused at the moment.') : t('This part of the app is not shared with you.'), guest: true });
+    return;
   }
   req.actor = actor;
   next();

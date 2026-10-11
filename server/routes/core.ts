@@ -35,11 +35,13 @@ import { deleteImage, fetchImage, saveImage } from '../lib/images.js';
 import { DEFAULT_NOTIFY, notify, notifySettings } from '../lib/notify.js';
 import { lookupBarcode, searchProducts } from '../lib/off.js';
 import { overview } from '../lib/overview.js';
+import { guestSafeOverview } from '../lib/people-policy.js';
 import { haSettings } from '../lib/plan.js';
 import { findThings } from '../lib/find.js';
 import { buildExport, showNamesOnLogin } from '../lib/data.js';
 import { t } from '../i18n.js';
 import { setDateKind } from '../lib/retail.js';
+import { applyShareView, notPrivate, realProductId } from '../lib/share-core.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -87,7 +89,7 @@ r.get('/events', (req, res) => addClient(res));
 
 // ---------------------------------------------------------------- overview
 
-r.get('/overview', (_req, res) => res.json(overview()));
+r.get('/overview', (req, res) => res.json(guestSafeOverview(req.actor, overview())));
 
 // ---------------------------------------------------------------- where is what
 
@@ -424,7 +426,7 @@ r.get('/lookup/match', (req, res) => {
 
 // ---------------------------------------------------------------- shopping list
 
-r.get('/shopping', (_req, res) => {
+r.get('/shopping', (req, res) => {
   const items = db
     .prepare(
       `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit,
@@ -433,8 +435,9 @@ r.get('/shopping', (_req, res) => {
        WHERE s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day')
        ORDER BY s.checked_at IS NOT NULL, s.created_at DESC`,
     )
-    .all();
-  res.json(items);
+    .all() as { id: number; text: string; product_id: number | null; note: string | null }[];
+  // discreet / private entries (area: share): real names only for their owner
+  res.json(applyShareView(items, { userId: req.actor?.userId ?? null }));
 });
 
 r.post('/shopping', (req, res) => {
@@ -462,8 +465,9 @@ r.patch('/shopping/:id', (req, res) => {
     db.prepare(`UPDATE shopping_items SET checked_at = ${b.checked ? "datetime('now')" : 'NULL'}, checked_by = ? WHERE id = ?`).run(b.checked ? actorName(req) : null, it.id);
   if (b.text !== undefined || b.qty !== undefined || b.note !== undefined)
     db.prepare('UPDATE shopping_items SET text = ?, qty = ?, note = ? WHERE id = ?').run(b.text ?? it.text, b.qty === undefined ? it.qty : b.qty, b.note === undefined ? it.note : b.note, it.id);
-  if (b.checked && wasOpen && b.to_stock && it.product_id) {
-    adjustStock({ productId: it.product_id, delta: it.qty ?? 1, reason: 'purchase', actor: actorName(req) });
+  const pid = realProductId(it);
+  if (b.checked && wasOpen && b.to_stock && pid) {
+    adjustStock({ productId: pid, delta: it.qty ?? 1, reason: 'purchase', actor: actorName(req) });
   }
   emit('shopping');
   res.json({ ok: true });
@@ -482,7 +486,8 @@ r.post('/shopping/clear-checked', (_req, res) => {
 });
 
 r.get('/shopping/export.txt', (_req, res) => {
-  const items = db.prepare('SELECT text, qty FROM shopping_items WHERE checked_at IS NULL ORDER BY created_at').all() as { text: string; qty: number | null }[];
+  // shared with others (WhatsApp …): private entries stay out, discreet ones keep their placeholder
+  const items = db.prepare(`SELECT text, qty FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} ORDER BY created_at`).all() as { text: string; qty: number | null }[];
   res.type('text/plain').send(items.map((i) => `- ${i.qty && i.qty !== 1 ? i.qty + '× ' : ''}${i.text}`).join('\n'));
 });
 
@@ -612,13 +617,4 @@ r.get('/export.json', requireAdmin, (_req, res) => {
   res.json(out);
 });
 
-r.post('/demo/reset', requireAdmin, (_req, res) => {
-  const tx = db.transaction(() => {
-    for (const t of ['order_lines', 'orders', 'import_lines', 'imports', 'cook_log', 'recipe_ingredients', 'recipes', 'shopping_items', 'movements', 'stock', 'product_aliases', 'product_codes', 'products', 'guest_links', 'notifications'])
-      db.prepare(`DELETE FROM ${t}`).run();
-    setSetting('demo.seeded', true);
-  });
-  tx();
-  emit('stock', 'products', 'shopping', 'recipes', 'imports', 'orders');
-  res.json({ ok: true });
-});
+// POST /demo/reset moved to routes/tour.ts (scoped reset with automatic backup; the old path is an alias there)

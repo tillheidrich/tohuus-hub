@@ -2,6 +2,7 @@ import { db, getSetting } from '../db.js';
 import { listProducts } from './catalog.js';
 import { suggest } from './recipes.js';
 import { t } from '../i18n.js';
+import { notPrivate } from './share-core.js';
 
 export function overview() {
   const products = listProducts();
@@ -46,7 +47,7 @@ export function overview() {
   });
 
   const shopping = db
-    .prepare(`SELECT s.id, s.text, s.source, p.image_path FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id WHERE s.checked_at IS NULL ORDER BY s.created_at DESC`)
+    .prepare(`SELECT s.id, s.text, s.source, p.image_path FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id WHERE s.checked_at IS NULL AND ${notPrivate('s.id')} ORDER BY s.created_at DESC`)
     .all() as any[];
   const imports = db.prepare(`SELECT id, kind, title, created_at, (SELECT COUNT(*) FROM import_lines l WHERE l.import_id = i.id) AS lines FROM imports i WHERE status = 'review' ORDER BY id DESC`).all();
   const orders = db.prepare(`SELECT o.*, (SELECT json_group_array(json_object('name', name, 'qty', qty, 'options', json(options))) FROM order_lines WHERE order_id = o.id) AS lines FROM orders o WHERE status IN ('new','accepted') ORDER BY id DESC`).all() as any[];
@@ -55,7 +56,7 @@ export function overview() {
     .all();
   const tonight = suggest({ limit: 3 });
   const today = new Intl.DateTimeFormat('sv-SE', { timeZone: process.env.TZ ?? 'Europe/Berlin' }).format(new Date());
-  const planned = db.prepare(`SELECT m.id, m.title, m.recipe_id, m.slot, m.cooked, r.image_path FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE day = ? ORDER BY slot`).all(today);
+  const planned = db.prepare(`SELECT m.id, m.title, m.recipe_id, m.slot, m.cooked, m.note, r.image_path FROM meal_plan m LEFT JOIN recipes r ON r.id = m.recipe_id WHERE day = ? ORDER BY slot`).all(today);
 
   return {
     household: getSetting('household.name', t('Our home')),

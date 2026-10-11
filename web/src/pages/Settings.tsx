@@ -6,23 +6,30 @@ import { type Category, type Location, api, del, invalidate, patch, post, relTim
 import { ICON_CHOICES, Ic, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { LANGUAGE_OPTIONS, lang, setLang, t } from '../i18n';
 import { Backups, Members } from './DataSettings';
+import { DataReset, TourButton } from './Tour';
 import { MyAccount, SignInAdmin } from './AuthSettings';
 import { HaTodoCard, PushCard } from '../shop/ShopSettings';
 import { InboxSettingsCard } from './Retail';
 import { KidsSettings } from './KidsSettings';
+import { MyPerson, PeopleSection } from '../people/People';
 import { ChannelsSettings, useChannelColumns } from './Channels';
 import { Displays } from './Displays';
 import { RegionCard } from './RegionSettings';
 import { HaCreated, HaIntegrationCard } from './HaIntegration';
+import { Ha2Settings } from './Ha2';
 import { CookidooWays } from './CookidooStatus';
 import { PrintSettings } from './Bons';
+import { RecipeImportCenter } from './RecipeImports';
+import { AwayEntryCard } from './Away';
+import { ShareSetupCard, StartModeCard } from './Share';
 
-type Tab = 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'displays' | 'print' | 'data';
+type Tab = 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
 export function Settings({ me }: { me: Me }) {
-  const TABS: Tab[] = ['home', 'account', 'members', 'places', 'notify', 'access', 'print', 'data'];
+  const TABS: Tab[] = ['home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'print', 'recipes', 'data'];
   const [tab, setTab] = useState<Tab>(() => {
     const q = new URLSearchParams(location.search).get('tab') as Tab | null;
+    if (me.actor.houseGuest) return 'account';
     return q && TABS.includes(q) ? q : 'home';
   });
   const nav = useNavigate();
@@ -38,6 +45,7 @@ export function Settings({ me }: { me: Me }) {
           <button className="btn ghost" onClick={() => nav('/hilfe')}>
             <Question size={16} /> {t('Help')}
           </button>
+          <TourButton />
           <button className="btn ghost" onClick={() => post('/auth/logout').then(() => invalidate('me'))}>
             <SignOut size={16} /> {t('Sign out')}
           </button>
@@ -52,26 +60,37 @@ export function Settings({ me }: { me: Me }) {
             ['places', t('Places & categories')],
             ['notify', t('Notifications')],
             ['access', t('Access & AI')],
+            ['ha', 'Home Assistant'],
             ['displays', t('Displays')],
             ['print', t('Printers & tickets')],
+            ['recipes', t('Recipes')],
             ['data', t('Data & backups')],
           ] as [Tab, string][]
-        ).map(([k, l]) => (
+        )
+          // permanent guests: only their own account (area: people)
+          .filter(([k]) => !me.actor.houseGuest || k === 'account')
+          .map(([k, l]) => (
           <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
             {l}
           </button>
         ))}
       </div>
       {tab === 'home' && <Household me={me} admin={admin} />}
+      {tab === 'home' && <AwayEntryCard />}
+      {tab === 'account' && <MyPerson me={me} />}
       {tab === 'account' && <MyAccount me={me} />}
+      {tab === 'account' && <ShareSetupCard me={me} />}
+      {tab === 'members' && <PeopleSection me={me} admin={admin} />}
       {tab === 'members' && <Members me={me} admin={admin} />}
       {tab === 'members' && admin && <SignInAdmin me={me} />}
       {tab === 'members' && <KidsSettings admin={admin} />}
       {tab === 'places' && <Places admin={admin} />}
       {tab === 'notify' && <Notify admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
+      {tab === 'ha' && <Ha2Settings admin={admin} />}
       {tab === 'displays' && <Displays admin={admin} />}
       {tab === 'print' && <PrintSettings admin={admin} />}
+      {tab === 'recipes' && <RecipeImportCenter />}
       {tab === 'data' && <Data admin={admin} />}
     </div>
   );
@@ -160,6 +179,7 @@ function Household({ me, admin }: { me: Me; admin: boolean }) {
         </div>
       </div>
       <RegionCard admin={admin} />
+      <StartModeCard admin={admin} />
     </div>
   );
 }
@@ -183,7 +203,7 @@ function Places({ admin }: { admin: boolean }) {
               </button>
               <div className="grow stack" style={{ gap: 4 }}>
                 <input className="input" defaultValue={l.name} disabled={!admin} onBlur={(e) => e.target.value !== l.name && patch(`/locations/${l.id}`, { name: e.target.value }).then(() => invalidate('locations', 'overview'))} />
-                <input className="input sm" defaultValue={l.hint ?? ''} disabled={!admin} placeholder={t('Directions, e.g. down the cellar stairs, second door on the right')} onBlur={(e) => e.target.value !== (l.hint ?? '') && patch(`/locations/${l.id}`, { hint: e.target.value }).then(() => invalidate('locations', 'find'))} />
+                <input className="input sm" defaultValue={l.hint ?? ''} disabled={!admin} placeholder={t('Directions, e.g. in the hallway, second door on the right')} onBlur={(e) => e.target.value !== (l.hint ?? '') && patch(`/locations/${l.id}`, { hint: e.target.value }).then(() => invalidate('locations', 'find'))} />
               </div>
               <span className="small muted mono" style={{ width: 30, textAlign: 'right' }}>{l.product_count}</span>
               {admin && (
@@ -196,7 +216,7 @@ function Places({ admin }: { admin: boolean }) {
         </div>
         {admin && (
           <div className="row" style={{ marginTop: 10 }}>
-            <input className="input" placeholder={t('New place, e.g. garage, chest freezer in the cellar')} value={newLoc} onChange={(e) => setNewLoc(e.target.value)} />
+            <input className="input" placeholder={t('New place, e.g. hallway cupboard, shelf above the fridge')} value={newLoc} onChange={(e) => setNewLoc(e.target.value)} />
             <button className="btn" disabled={!newLoc} onClick={() => post('/locations', { name: newLoc }).then(() => { setNewLoc(''); invalidate('locations', 'overview'); })}>{t('Add')}</button>
           </div>
         )}
@@ -252,6 +272,8 @@ const EVENT_LABEL: Record<string, string> = {
   'kids.wish': 'A kid wishes for something',
   'auth.new_device': 'New sign-in on another device (only to that member)',
   'budget.warning': 'Spending budget at 80 % or reached',
+  'plan.vote': 'Family food vote started or decided',
+  'plan.rotation': 'Next week filled from the rotation',
 };
 
 function Notify({ admin }: { admin: boolean }) {
@@ -524,15 +546,7 @@ function Data({ admin }: { admin: boolean }) {
         <div className="small muted">{t('Everything as JSON – your data belongs to you. Passwords and access keys are never included.')}</div>
         <a className="btn" style={{ alignSelf: 'flex-start' }} href="/api/export.json">{t('Download export')}</a>
       </div>
-      {admin && (
-        <div className="card pad stack">
-          <b>{t('Start over')}</b>
-          <div className="small muted">{t('Deletes products, stock, recipes, imports and orders (e.g. the demo data). Places, categories, members and access stay.')}</div>
-          <button className="btn danger" style={{ alignSelf: 'flex-start' }} onClick={() => confirm(t('Really delete everything?')) && post('/demo/reset').then(() => { invalidate('overview', 'products', 'recipes', 'shopping', 'imports'); toast({ text: t('All clear – off you go') }); })}>
-            <Trash size={16} /> {t('Clear data')}
-          </button>
-        </div>
-      )}
+      <DataReset admin={admin} />
       <p className="small muted">
         {t('ToHuus Hub is open source (AGPL-3.0). Some product data and images from Open Food Facts (ODbL / CC BY-SA). Not affiliated with REWE, Thermomix/Vorwerk or HelloFresh.')}
       </p>

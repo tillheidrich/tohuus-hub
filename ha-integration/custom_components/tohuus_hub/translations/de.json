@@ -57,13 +57,15 @@
           "display_width": "Breite des Display-Bilds",
           "display_height": "Höhe des Display-Bilds",
           "cookidoo_sync": "Cookidoo-Woche an ToHuus Hub senden",
-          "cookidoo_entity": "Cookidoo-Kalender"
+          "cookidoo_entity": "Cookidoo-Kalender",
+          "bridge": "Zwei-Wege-Abgleich mit ToHuus Hub"
         },
         "data_description": {
           "live_updates": "Hält eine Verbindung offen, damit Änderungen nach ein, zwei Sekunden ankommen. Ohne fragt Home Assistant jede Minute nach.",
           "display_mode": "Für Küchen-Displays als Bild-Entitäten.",
           "cookidoo_sync": "Liest die geplanten Gerichte alle 3 Stunden und bei jeder Änderung aus der Cookidoo-Integration und trägt sie in den Wochenplan von ToHuus Hub ein.",
-          "cookidoo_entity": "Meist calendar.cookidoo_speiseplan. Leer lassen, dann wird er automatisch genommen, sobald es ihn gibt."
+          "cookidoo_entity": "Meist calendar.cookidoo_speiseplan. Leer lassen, dann wird er automatisch genommen, sobald es ihn gibt.",
+          "bridge": "ToHuus Hub sieht eure To-do-Listen, Kalender, Personen, Benachrichtigungsdienste und per Sprache erreichbaren Geräte, gleicht die in ToHuus Hub (Einstellungen › Home Assistant) gewählten Listen und Kalender in beide Richtungen ab, schickt Benachrichtigungen über die Companion-App und nutzt NFC-Tag-Scans als Schnellaktionen."
         }
       }
     }
@@ -118,6 +120,9 @@
       "eat_first": {
         "name": "Zuerst essen"
       },
+      "frozen_portions": {
+        "name": "Eingefrorene Portionen"
+      },
       "tonight": {
         "name": "Heute Abend"
       },
@@ -141,6 +146,9 @@
       },
       "something_expired": {
         "name": "Etwas ist abgelaufen"
+      },
+      "away_mode": {
+        "name": "Urlaubsmodus"
       }
     },
     "todo": {
@@ -371,6 +379,20 @@
         "task": {
           "name": "Aufgabe",
           "description": "Name oder Nummer der Aufgabe."
+        },
+        "config_entry_id": {
+          "name": "ToHuus Hub",
+          "description": "Nur nötig, wenn du mehr als ein ToHuus Hub hast."
+        }
+      }
+    },
+    "report_presence": {
+      "name": "Anwesenheit melden",
+      "description": "Sagt ToHuus Hub, ob alle weg sind (z. B. aus zone.home oder einer Personengruppe). Nach mehr als 24 Stunden schlägt ToHuus Hub vor, den Urlaubsmodus zu starten – von selbst startet er nie.",
+      "fields": {
+        "everyone_away": {
+          "name": "Alle weg",
+          "description": "An, wenn niemand zu Hause ist."
         },
         "config_entry_id": {
           "name": "ToHuus Hub",

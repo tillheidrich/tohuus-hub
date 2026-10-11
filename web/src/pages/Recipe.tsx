@@ -1,13 +1,17 @@
-import { ArrowLeft, Basket, Camera, Check, ChefHat, Clock, Heart, PencilSimple, Trash, Users } from '@phosphor-icons/react';
+import { ArrowLeft, Basket, Camera, Check, ChefHat, Clock, Heart, PencilSimple, Trash } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, del, invalidate, patch, post, put, relTime, useApi } from '../api';
 import { t } from '../i18n';
 import { Amounts } from '../RegionAmounts';
-import { Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
-import { type LeftoverChoice, LeftoversField, saveLeftovers } from './FreshParts';
-import { DifferentToday, OurIngredients } from './RecipeVariant';
+import { Seg, Sheet, Skeleton, Stepper, Toggle, useToast } from '../ui';
+import { type LeftoverChoice, LeftoversField } from './FreshParts';
+import { LabelModePick, runLabelOutput, saveBoxes, useLabelMode, useLabelsMeta } from './Leftovers';
+import { DifferentToday, OurIngredients, useVariant } from './RecipeVariant';
+import { RecipeServings, scaledConsumption } from './RecipeServings';
 import { BonButton } from './Bons';
+import { MealRatings, RecipePeopleRatings, mealRating, saveMealRatings, type MealEntry } from '../people/Ratings';
+import { OriginalIngredients, SOURCE_LABELS, StepsElsewhere, stepsElsewhere } from './RecipeImports';
 
 /** Marks a line in the ingredient editor as a pantry staple (always counts as in stock). */
 const stapleMarker = () => t('(pantry)');
@@ -23,7 +27,17 @@ export function RecipeDetail() {
   const [cooked, setCooked] = useState(false);
   const [edit, setEdit] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // servings: opened from a plan entry → its one-off servings; base = our servings (variant), else the recipe's
+  const [sp] = useSearchParams();
+  const planId = Number(sp.get('plan')) || null;
+  const entry = useApi<any>(['plan', 'entry', planId ?? 0], planId ? `/plan2/entries/${planId}` : null);
+  const variant = useVariant(Number(id));
+  const [servings, setServings] = useState<number | null>(null);
+  useEffect(() => setServings(entry.data && entry.data.recipe_id === Number(id) ? entry.data.servings ?? null : null), [entry.data?.id, entry.data?.servings, id]);
   if (isLoading || !r) return <Skeleton h={200} n={2} />;
+  const base: number | null = variant.data?.variant?.servings || r.servings || null;
+  const factor = servings && base ? servings / base : 1;
+  const planEntry = entry.data && entry.data.recipe_id === r.id ? entry.data : null;
   const m = new Map((match.data ?? []).map((x) => [x.ingredient_id, x]));
   const missing = (match.data ?? []).filter((x) => !x.pantry && (!x.product || x.product.total <= 0 && x.product.track_mode !== 'none'));
   const fav = async () => {
@@ -80,6 +94,7 @@ export function RecipeDetail() {
               </a>
             )}
           </div>
+          <RecipePeopleRatings recipeId={r.id} />
           {r.log.length > 0 && (
             <div className="small muted">
               {r.log[0].actor ? t('Last cooked {when} by {name}', { when: relTime(r.log[0].cooked_at), name: r.log[0].actor }) : t('Last cooked {when}', { when: relTime(r.log[0].cooked_at) })}
@@ -99,22 +114,21 @@ export function RecipeDetail() {
                   <Clock size={12} /> {t('{n} min', { n: r.time_min })}
                 </span>
               )}
-              {r.servings && (
-                <span className="badge">
-                  <Users size={12} /> {r.servings === 1 ? t('1 serving') : t('{n} servings', { n: r.servings })}
-                </span>
-              )}
               {r.tags.map((tag: string) => (
                 <span key={tag} className="badge">{tag}</span>
               ))}
             </div>
           </div>
-          <OurIngredients r={r} match={match.data ?? []} />
+          <RecipeServings base={base} value={servings} onChange={setServings} entry={planEntry} />
+          <OurIngredients r={r} match={match.data ?? []} factor={factor} />
+          <OriginalIngredients r={r} />
           <section>
             <h3>{t('Instructions')}</h3>
-            {r.steps.length === 0 && <p className="muted small">{r.notes ?? t('No steps yet.')}</p>}
+            {r.steps.length === 0 && (stepsElsewhere(r) ? <StepsElsewhere r={r} /> : <p className="muted small">{r.notes ?? t('No steps yet.')}</p>)}
             {r.steps.map((s: any, n: number) => (
-              <div key={n} className="step">
+              <div key={n}>
+              {s.section && s.section !== r.steps[n - 1]?.section && <h4 className="eyebrow" style={{ margin: '14px 0 6px' }}>{s.section}</h4>}
+              <div className="step">
                 <span className="n">{n + 1}</span>
                 <div>
                   <Amounts text={s.text} />
@@ -127,42 +141,54 @@ export function RecipeDetail() {
                   )}
                 </div>
               </div>
+              </div>
             ))}
             {r.notes && r.steps.length > 0 && <p className="small muted">{r.notes}</p>}
           </section>
         </div>
       </div>
-      <CookedSheet open={cooked} onClose={() => setCooked(false)} r={r} match={match.data ?? []} />
+      <CookedSheet open={cooked} onClose={() => setCooked(false)} r={r} match={match.data ?? []} factor={factor} planEntryId={planEntry?.id ?? null} />
       <RecipeEditor open={edit} onClose={() => setEdit(false)} r={r} />
     </div>
   );
 }
 
 function sourceLabel(s: string) {
-  return ({ hellofresh: 'HelloFresh', cookidoo: 'Cookidoo', url: t('From the web'), photo: t('From a photo'), own: t('House recipe'), family: t('Family recipe') } as Record<string, string>)[s] ?? t('Recipe');
+  return ({ hellofresh: 'HelloFresh', cookidoo: 'Cookidoo', url: t('From the web'), photo: t('From a photo'), own: t('House recipe'), family: t('Family recipe'), ai: t('Via AI'), json: t('From a file'), csv: t('From a file'), ...SOURCE_LABELS } as Record<string, string>)[s] ?? t('Recipe');
 }
 
-function CookedSheet({ open, onClose, r, match }: { open: boolean; onClose: () => void; r: any; match: any[] }) {
-  const usable = match.filter((x) => x.product && x.product.track_mode === 'count' && x.product.total > 0);
+function CookedSheet({ open, onClose, r, match, factor = 1, planEntryId = null }: { open: boolean; onClose: () => void; r: any; match: any[]; factor?: number; planEntryId?: number | null }) {
+  // one row per product; the amount follows the servings ("for 6 instead of 4" → 3 cans instead of 2)
+  const usable = scaledConsumption(match, factor);
   const [sel, setSel] = useState<number[]>([]);
-  const [rating, setRating] = useState<number | null>(null);
+  const [qty, setQty] = useState<Record<number, number>>({});
+  const [meal, setMeal] = useState<MealEntry[]>([]);
   const [leftovers, setLeftovers] = useState<LeftoverChoice | null>(null);
   const toast = useToast();
-  useEffect(() => { setSel([]); setLeftovers(null); }, [open]);
+  // leftovers become labelled containers (area: labels) – the label choice is remembered per device
+  const nav = useNavigate();
+  const labelsMeta = useLabelsMeta(open && Boolean(leftovers));
+  const [labelMode, setLabelMode] = useLabelMode(labelsMeta.data);
+  useEffect(() => { setSel([]); setLeftovers(null); setQty({}); setMeal([]); }, [open]);
   const save = async () => {
-    await post(`/recipes/${r.id}/cooked`, { rating, consume: sel });
-    if (leftovers) await saveLeftovers(r.id, leftovers).catch((e) => toast({ text: (e as Error).message, error: true }));
-    invalidate('recipe', 'recipes', 'suggest', 'products', 'overview');
-    toast({ text: t('{title} added to your cooking history', { title: r.title }) });
+    // per-person ratings (area: people) – the cook log keeps the household mean as meh / good / great
+    await saveMealRatings(r.id, meal).catch((e) => toast({ text: (e as Error).message, error: true }));
+    await post(`/recipes/${r.id}/cooked`, { rating: mealRating(meal), consume_qty: sel.map((pid) => ({ product_id: pid, qty: qty[pid] ?? usable.find((x) => x.product.id === pid)?.qty ?? 1 })), plan_entry_id: planEntryId });
+    const boxes = leftovers
+      ? await saveBoxes({ recipe_id: r.id, plan_id: planEntryId ?? null, portions: leftovers.portions, place: leftovers.where, labelled: labelMode !== 'none' }).catch((e) => {
+          toast({ text: (e as Error).message, error: true });
+          return null;
+        })
+      : null;
+    invalidate('recipe', 'recipes', 'suggest', 'products', 'overview', 'plan');
+    if (boxes?.length) void runLabelOutput(boxes, labelMode, toast, nav);
+    else toast({ text: t('{title} added to your cooking history', { title: r.title }) });
     onClose();
   };
   return (
     <Sheet open={open} onClose={onClose} title={t('Enjoy your meal!')}>
       <div className="stack">
-        <div className="field">
-          <label>{t('How was it?')}</label>
-          <Seg value={String(rating ?? 0)} onChange={(v) => setRating(Number(v) || null)} options={[['1', t('meh')], ['3', t('good')], ['5', t('great')]]} />
-        </div>
+        <MealRatings recipeId={r.id} value={meal} onChange={setMeal} />
         <DifferentToday r={r} />
         {usable.length > 0 && (
           <div className="field">
@@ -175,8 +201,16 @@ function CookedSheet({ open, onClose, r, match }: { open: boolean; onClose: () =
                   </span>
                   <div className="grow">
                     <div className="title small">{x.product.name}</div>
-                    <div className="sub">{t('{n} {unit} left · −1', { n: x.product.total, unit: x.product.unit })}</div>
+                    <div className="sub">{t('{n} {unit} left', { n: x.product.total, unit: x.product.unit })}{sel.includes(x.product.id) ? '' : ` · −${qty[x.product.id] ?? x.qty}`}</div>
                   </div>
+                  {sel.includes(x.product.id) && (
+                    <Stepper
+                      value={qty[x.product.id] ?? x.qty}
+                      min={1}
+                      label={`−${qty[x.product.id] ?? x.qty}`}
+                      onChange={(d) => setQty((q) => ({ ...q, [x.product.id]: Math.max(1, Math.min(x.product.total, (q[x.product.id] ?? x.qty) + d)) }))}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -184,6 +218,7 @@ function CookedSheet({ open, onClose, r, match }: { open: boolean; onClose: () =
           </div>
         )}
         <LeftoversField value={leftovers} onChange={setLeftovers} />
+        {leftovers && <LabelModePick value={labelMode} onChange={setLabelMode} meta={labelsMeta.data} />}
         <button className="btn primary lg" onClick={save}>
           {t('Log it')}
         </button>

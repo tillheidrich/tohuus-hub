@@ -5,6 +5,7 @@ import { adjustStock, createProduct } from './lib/catalog.js';
 import { NAME_MAX, PASSWORD_MIN, hashPassword, randomToken } from './lib/auth.js';
 import { BASE_CATEGORIES, BASE_LOCATIONS, baseName, categoryIdByKey, locationIdByKey, type CategoryKey } from './lib/basedata.js';
 import { saveRecipe } from './lib/recipes.js';
+import { captureDemo } from './lib/demo.js';
 
 /** Base locations and categories, named in the household language at creation time. */
 export function ensureBaseData() {
@@ -53,7 +54,7 @@ const DEMO: DemoItem[] = [
   ['Frikadelle', null, null, 'chilled', 4, 2, { orderable: true, order_group: 'Snacks', options: [{ group: 'Saucen', choices: ['Senf', 'Ketchup', 'Mayo'], multi: true }] }],
   ['Chips Paprika', 'Funny-frisch', '175g', 'snacks', 3, 1, { orderable: true, order_group: 'Snacks', unit: 'Tüte' }],
   ['Milchmäuse', 'Choceur', '210g', 'snacks', 2, 1, { orderable: true, order_group: 'Snacks', unit: 'Packung' }],
-  // drinks in the cellar
+  // drinks on the storage shelf
   ['Mio Mio Mate', 'Mio Mio', '0,5l', 'drinks', 7, 4, { orderable: true, order_group: 'Getränke', unit: 'Flasche' }],
   ['Mio Mio Cola', 'Mio Mio', '0,5l', 'drinks', 3, 4, { orderable: true, order_group: 'Getränke', unit: 'Flasche' }],
   ['Mildes Frühstück Multivitamin', 'Valensina', '1l', 'drinks', 5, 2, { unit: 'Flasche' }],
@@ -213,8 +214,8 @@ const EN: Record<string, string> = {
   'Hinter der Tür, auf Augenhöhe': 'Behind the door, at eye level',
   'Unterstes Regal, grüne Kiste': 'Bottom shelf, green box',
   'Handtuchregal, ganz oben': 'Towel shelf, right at the top',
-  'Kellertreppe runter, erste Tür links. Licht rechts neben der Tür.': 'Down the cellar stairs, first door on the left. Light switch to the right of the door.',
-  'Neben der Waschküche, Tür mit dem Kalender.': 'Next to the laundry, the door with the calendar.',
+  'Im Flur, das Regal links neben der Garderobe. Getränke unten, Vorräte oben.': 'In the hallway, the shelf left of the coat rack. Drinks at the bottom, supplies at the top.',
+  'Unter der Spüle, linke Tür.': 'Under the sink, left door.',
   Grillabend: 'Barbecue night',
 };
 
@@ -317,8 +318,8 @@ const SV: Record<string, string> = {
   'Hinter der Tür, auf Augenhöhe': 'Bakom dörren, i ögonhöjd',
   'Unterstes Regal, grüne Kiste': 'Nedersta hyllan, gröna lådan',
   'Handtuchregal, ganz oben': 'Handdukshyllan, högst upp',
-  'Kellertreppe runter, erste Tür links. Licht rechts neben der Tür.': 'Ner för källartrappan, första dörren till vänster. Lysknappen till höger om dörren.',
-  'Neben der Waschküche, Tür mit dem Kalender.': 'Bredvid tvättstugan, dörren med kalendern.',
+  'Im Flur, das Regal links neben der Garderobe. Getränke unten, Vorräte oben.': 'I hallen, hyllan till vänster om klädhängaren. Dryck längst ner, förråd högst upp.',
+  'Unter der Spüle, linke Tür.': 'Under diskbänken, vänstra dörren.',
   Grillabend: 'Grillkväll',
 };
 
@@ -342,12 +343,57 @@ function addDays(d: number) {
   return new Date(Date.now() + d * 86400000).toISOString().slice(0, 10);
 }
 
-export function seedDemo() {
-  if (getSetting('demo.seeded', false)) return;
-  if ((db.prepare('SELECT COUNT(*) n FROM products').get() as { n: number }).n > 0) return;
+/**
+ * The demo household. Runs once (SEED_DEMO on the first start, or "Explore with demo data" in the app);
+ * `force` seeds again after the demo was removed, as long as the household has no products.
+ * Every inserted row is marked as demo (server/lib/demo.ts), so it can be removed again precisely.
+ */
+export function seedDemo(opts: { force?: boolean } = {}): boolean {
+  if (getSetting('demo.seeded', false) && !opts.force) return false;
+  if ((db.prepare('SELECT COUNT(*) n FROM products').get() as { n: number }).n > 0) return false;
+  captureDemo(seedDemoRows);
+  setSetting('demo.seeded', true);
+  return true;
+}
+
+/** Location hints the demo sets (current and earlier versions, all languages) – cleared again on removal. */
+export const DEMO_HINTS_DE = [
+  'Im Flur, das Regal links neben der Garderobe. Getränke unten, Vorräte oben.',
+  'Unter der Spüle, linke Tür.',
+  // earlier demo versions
+  'Kellertreppe runter, erste Tür links. Licht rechts neben der Tür.',
+  'Neben der Waschküche, Tür mit dem Kalender.',
+];
+const LEGACY_HINTS = [
+  'Down the cellar stairs, first door on the left. Light switch to the right of the door.',
+  'Next to the laundry, the door with the calendar.',
+  'Ner för källartrappan, första dörren till vänster. Lysknappen till höger om dörren.',
+  'Bredvid tvättstugan, dörren med kalendern.',
+];
+
+/** What the demo seed creates, in every language – used to recognise demo data seeded before rows were marked. */
+export function demoSignatures() {
+  const all = (s: string) => [...new Set([s, EN[s] ?? s, SV[s] ?? s])];
+  const sizes = (s: string | null) => {
+    if (!s) return [null];
+    const en = s.replace(/(\d),(\d)/g, '$1.$2').replace(/\bStück\b/, 'pcs').replace(/\bRollen\b/, 'rolls');
+    const sv = s.replace(/Stück/, 'st').replace(/Rollen/, 'rullar');
+    return [...new Set([s, en, sv])];
+  };
+  return {
+    entries: DEMO.length,
+    products: DEMO.flatMap(([name, brand, size]) => all(name).map((n) => ({ name: n, brand, sizes: sizes(size) }))),
+    recipes: [...RECIPES_DE, ...RECIPES_EN, ...RECIPES_SV].map(([r]) => r.title),
+    shopping: ['Paketband', 'Erdbeer-Eis', 'Mini Pizza Pomodori vegan', 'Geschenkpapier'].flatMap(all),
+    guestLinks: all('Grillabend'),
+    hints: [...DEMO_HINTS_DE.flatMap(all), ...LEGACY_HINTS],
+  };
+}
+
+function seedDemoRows() {
   const hint = db.prepare('UPDATE locations SET hint = ? WHERE id = ? AND hint IS NULL');
-  hint.run(tr('Kellertreppe runter, erste Tür links. Licht rechts neben der Tür.'), locationIdByKey('cellar'));
-  hint.run(tr('Neben der Waschküche, Tür mit dem Kalender.'), locationIdByKey('utility'));
+  hint.run(tr('Im Flur, das Regal links neben der Garderobe. Getränke unten, Vorräte oben.'), locationIdByKey('shelf'));
+  hint.run(tr('Unter der Spüle, linke Tür.'), locationIdByKey('utility'));
   // keyed by the German demo name (the source of truth), whatever language the rows were created in
   const ids = new Map<string, number>();
   for (const [name, brand, size, category, qty, min, o = {}] of DEMO) {
@@ -388,7 +434,6 @@ export function seedDemo() {
     randomToken(12),
     tr('Grillabend'),
   );
-  setSetting('demo.seeded', true);
 }
 
 type DemoRecipe = [recipe: Parameters<typeof saveRecipe>[0], cookedDaysAgo: number[]];
@@ -575,7 +620,7 @@ const RECIPES_DE: DemoRecipe[] = [
   [
     {
       title: 'Nuggets-Teller mit Süßkartoffel-Pommes',
-      description: 'Der Freitags-Retter. Alles aus dem Gefrierschrank.',
+      description: 'Der Freitags-Retter. Alles aus dem Gefrierfach.',
       source_type: 'own',
       servings: 3,
       time_min: 25,
