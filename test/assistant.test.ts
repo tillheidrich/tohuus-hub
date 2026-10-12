@@ -291,11 +291,21 @@ describe('with a model (fake)', () => {
     const t1 = await till.req('POST', '/api/assistant/transcribe', undefined, f);
     expect(t1.json).toEqual({ text: 'Butter' });
     // voice = transcribe + chat (second call is the chat, which answers without tools)
-    model([() => ({ role: 'assistant', content: 'Zucker' }), () => ({ role: 'assistant', content: 'Notiert.' })]);
+    model([() => ({ role: 'assistant', content: 'Wie viel Kaffee haben wir noch?' }), () => ({ role: 'assistant', content: 'Notiert.' })]);
     const f2 = new FormData();
     f2.append('audio', new Blob([Buffer.from('fake-audio')], { type: 'audio/webm' }), 'memo.webm');
     const v = await till.req('POST', '/api/assistant/voice', undefined, f2);
-    expect(v.json).toMatchObject({ text: 'Zucker', reply: 'Notiert.', mode: 'ai' });
+    expect(v.json).toMatchObject({ text: 'Wie viel Kaffee haben wir noch?', reply: 'Notiert.', mode: 'ai' });
+    // a spoken bare list ("Bananen und Haferflocken.") goes onto the list without a model call for the answer
+    let calls = 0;
+    model([() => (calls++, { role: 'assistant', content: 'Bananen und Haferflocken.' }), () => (calls++, { role: 'assistant', content: 'Sind nicht auf der Liste. Soll ich sie hinzufügen?' })]);
+    const f3 = new FormData();
+    f3.append('audio', new Blob([Buffer.from('fake-audio')], { type: 'audio/webm' }), 'memo.webm');
+    const v3 = await till.req('POST', '/api/assistant/voice', undefined, f3);
+    expect(v3.json.mode).toBe('basic');
+    expect(calls).toBe(1);
+    expect(v3.json.actions.map((a: any) => a.kind)).toContain('list_add');
+    expect(openTexts()).toEqual(expect.arrayContaining(['Bananen', 'Haferflocken']));
     const bad = new FormData();
     bad.append('audio', new Blob([Buffer.from('x')], { type: 'application/pdf' }), 'x.pdf');
     expect((await till.req('POST', '/api/assistant/transcribe', undefined, bad)).status).toBe(415);

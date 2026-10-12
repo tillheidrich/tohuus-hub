@@ -93,7 +93,9 @@ describe('assistant eval (scripted model)', () => {
       process.env.AI_API_KEY = 'sk-eval';
       const log = { tools: [] as string[][], system: [] as string[] };
       ai.setAiFetch(scriptedModel(c, log) as any);
-      const out = await assistant.chatOnce({ message: c.prompt, user });
+      // voice: the recording already counted as the message (like POST /api/assistant/voice)
+      const allowance = (c as any).voice ? (await import('../server/lib/limits')).consumeAssistant() : undefined;
+      const out = await assistant.chatOnce({ message: c.prompt, user, ...(allowance ? { allowance } : {}) });
       expect(out.mode, c.id).toBe(c.mode);
       if (c.mode === 'basic') expect(log.tools, `${c.id}: no model call`).toEqual([]);
       for (const tool of c.tools ?? []) expect(log.tools.flat(), `${c.id}: offers ${tool}`).toContain(tool);

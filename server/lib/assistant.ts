@@ -207,7 +207,9 @@ export async function chatOnce(input: {
   // model and without counting; everything else – questions, cooking, vague parts – goes to the model when there is one
   const intent = parseIntent(message);
   const simple = fullyUnderstood(intent);
-  const allowance = aiEnabled('text') && !(simple && !input.allowance) ? (input.allowance ?? consumeAssistant()) : null;
+  // a bare list of products ("Bananen und Haferflocken") means "put these on the list" – also when it was spoken:
+  // the recording already counted (input.allowance), but the answer still comes from the built-in reader
+  const allowance = aiEnabled('text') && !simple ? (input.allowance ?? consumeAssistant()) : null;
   const overQuota = Boolean(allowance && !allowance.ok);
   if (overQuota && intent.kind === 'unknown') throw assistantQuotaError();
   const conversationId = openConversation(input.conversationId, input.user, message);
@@ -232,7 +234,7 @@ export async function chatOnce(input: {
       }
     }
   } else {
-    out = { reply: basicReply(message, ctx), mode: 'basic' };
+    out = { reply: basicReply(message, ctx), mode: 'basic', ...(input.allowance ? { remaining: input.allowance.remaining } : {}) };
   }
   store(conversationId, 'assistant', out.reply, { actions: ctx.actions, mode: out.mode, tokens: out.usage?.total ?? 0 });
   return {

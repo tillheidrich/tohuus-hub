@@ -3,6 +3,8 @@
 // mode: 'basic' = answered without a model; 'ai' = needs the model. tools: what the model must be offered.
 export const CASES = [
   { id: 'list-simple', prompt: 'Milch, 2 Paprika und Brot', mode: 'basic', actions: ['list_add'] },
+  { id: 'bare-list', prompt: 'Bananen und Haferflocken', mode: 'basic', actions: ['list_add'] },
+  { id: 'bare-list-spoken', prompt: 'Joghurt und Äpfel.', mode: 'basic', actions: ['list_add'], voice: true },
   { id: 'used-up', prompt: 'Milch ist alle', mode: 'basic', actions: ['stock_used_up'] },
   { id: 'purchase', prompt: 'Hab bei Aldi Milch, Eier und Brot für 12,40 gekauft', mode: 'basic', actions: ['log_purchase'] },
   { id: 'remember', prompt: 'Merk dir, dass wir Hafermilch trinken', mode: 'basic', actions: ['remember'] },
