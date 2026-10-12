@@ -21,6 +21,7 @@ import { getUserPref, setUserPref } from './onboard.js';
 import { PURCHASE_DAY } from './spending.js';
 import { clearChecked, tickItem } from './shopping-trust.js';
 import './share-core.js';
+import { wasteHints } from './hhforms.js';
 
 export const SUBSTITUTES = ['exact', 'ok', 'ask'] as const;
 export type Substitute = (typeof SUBSTITUTES)[number];
@@ -66,13 +67,19 @@ export function lastBoughtFor(productIds: number[]): Map<number, LastBought> {
 }
 
 /** Extra fields for list rows: substitute rule, photo, what was last bought. Rows keep everything they had. */
-export function decorateItems<T extends { product_id: number | null; substitute?: string | null; photo_path?: string | null }>(rows: T[]) {
+export function decorateItems<T extends { product_id: number | null; substitute?: string | null; photo_path?: string | null; owner_user_id?: number | null }>(rows: T[]) {
   const last = lastBoughtFor(rows.map((r) => r.product_id ?? 0));
+  const waste = wasteHints(rows.map((r) => r.product_id ?? 0).filter(Boolean));
+  const names = new Map((db.prepare('SELECT id, name FROM users').all() as { id: number; name: string }[]).map((u) => [u.id, u.name]));
   return rows.map((r) => ({
     ...r,
     substitute: isSubstitute(r.substitute) ? r.substitute : null,
     photo_path: r.photo_path ?? null,
     last_bought: r.product_id ? (last.get(r.product_id) ?? null) : null,
+    // WG: a personal row ("für Mika"); null = shared
+    owner: r.owner_user_id && names.has(r.owner_user_id) ? { id: r.owner_user_id, name: names.get(r.owner_user_id)! } : null,
+    // "Spinat 3× weggeworfen – lieber 250 g?" (hhforms.ts)
+    size_hint: r.product_id ? (waste.get(r.product_id) ?? null) : null,
   }));
 }
 

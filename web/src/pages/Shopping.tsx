@@ -32,6 +32,7 @@ import '../shop/list2.css';
 import { AtStoreChips, EstimateLine, type GuardHint, type ListInfo, GuardSheet, ListTabs, ManageListSheet, NewListSheet, UsualsButton, UsualsGrid, guardCheck } from '../shop/fill';
 import { TripsBar, useTrips } from '../shop/together';
 import { ImportListSheet } from '../shop/bridges';
+import { CareCheckSheet, LunchboxSuggestion, OwnerChips } from '../shop/forms';
 import { ListViewSheet, RecentDone, SyncLine, cacheView, cachedView, readLocalPrefs, useListPrefs } from '../shop/trust';
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, SectionShape, sectionLabel } from '../shop/sections';
 import { ItemBuyAt } from '../shop/BuyAt';
@@ -120,6 +121,7 @@ export function Shopping() {
   const [manageList, setManageList] = useState(false);
   const [usualsOpen, setUsualsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [careOpen, setCareOpen] = useState(false);
   const [guardAsk, setGuardAsk] = useState<{ text: string; productId?: number; hints: GuardHint[] } | null>(null);
   const prefs = useListPrefs();
   // list2 C: who is shopping right now (ticks make a trip – nobody switches a mode on)
@@ -212,13 +214,14 @@ export function Shopping() {
     // double-purchase guard: on the list already, bought a moment ago, plenty in stock? (lists.ts) – never blocks
     if (!opts.force) {
       const hints = await guardCheck(s, productId ?? null);
-      const serious = hints.filter((h) => h.kind !== 'on_list');
+      const serious = hints.filter((h) => h.kind === 'bought' || h.kind === 'stock');
       if (serious.length) {
         setGuardAsk({ text: s, productId, hints });
         return;
       }
-      const onIt = hints.find((h) => h.kind === 'on_list');
-      if (onIt) toast({ text: `${s}: ${onIt.text}` });
+      // "steht schon drauf …" and "lieber 250 g?" are worth a line, not a question
+      const note = hints.find((h) => h.kind === 'on_list') ?? hints.find((h) => h.kind === 'waste');
+      if (note) toast({ text: note.kind === 'on_list' ? `${s}: ${note.text}` : note.text });
     }
     setText('');
     await run({ type: 'add', text: s, product_id: productId ?? null, list_id: listId || null });
@@ -336,6 +339,7 @@ export function Shopping() {
   }, [view, trips.data]);
   const ticked = view ? view.basket.length + view.done.length : 0;
   const currentList = view?.lists?.find((l) => l.id === listId);
+  listNames = new Map((view?.lists ?? []).map((l) => [l.id, l.name]));
 
   const seen = useSeen(view);
   const claimMe = (i: ShopItem) => run({ type: 'claim', id: i.id, on: true });
@@ -368,6 +372,13 @@ export function Shopping() {
         <p className="handover-note">
           <b>{t('Handover')}:</b> {currentList.note}
         </p>
+      )}
+      {currentList?.kind === 'care' && !inStore && (
+        <div className="row" style={{ marginTop: 10 }}>
+          <button className="btn sm" onClick={() => setCareOpen(true)}>
+            {t('Fridge check before the visit')}
+          </button>
+        </div>
       )}
 
       {inStore && view && (
@@ -465,6 +476,7 @@ export function Shopping() {
       )}
       {!inStore && usualsOpen && <UsualsGrid onClose={() => setUsualsOpen(false)} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id, list_id: listId || null })} />}
 
+      {!inStore && listId === 0 && <LunchboxSuggestion />}
       {!inStore && listId === 0 && <Suggestions onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
 
       <div className="shop-groups">
@@ -490,6 +502,11 @@ export function Shopping() {
                 <span className="grow">{groupLabel(g.key)}</span>
                 <span className="n">{g.items.filter((i) => !i.checked_at).length}</span>
               </h2>
+              {g.key.startsWith('list:') && view?.lists?.find((l) => `list:${l.id}` === g.key)?.note && (
+                <p className="handover-note small">
+                  <b>{t('Handover')}:</b> {view.lists.find((l) => `list:${l.id}` === g.key)!.note}
+                </p>
+              )}
               <div className="group-list">
                 {g.items.map((i) => (
                   <ShopRow
@@ -600,6 +617,7 @@ export function Shopping() {
       <NewStoreSheet open={newStore} onClose={() => setNewStore(false)} onCreated={(s) => { pickStore(s.id); refresh(); }} />
       <ListViewSheet open={viewOpen} onClose={() => setViewOpen(false)} />
       <ImportListSheet open={importOpen} listId={listId} onClose={() => setImportOpen(false)} />
+      {currentList?.kind === 'care' && <CareCheckSheet listId={currentList.id} open={careOpen} onClose={() => setCareOpen(false)} />}
     </div>
   );
 }
@@ -659,7 +677,9 @@ export function OfflineStore({ onSignIn }: { onSignIn: () => void }) {
   );
 }
 
-const groupLabel = (k: string) => (k.startsWith('taken:') ? t('{name} is getting these', { name: k.slice(6) }) : sectionLabel(k));
+let listNames = new Map<number, string>();
+const groupLabel = (k: string) =>
+  k.startsWith('taken:') ? t('{name} is getting these', { name: k.slice(6) }) : k.startsWith('list:') ? (listNames.get(Number(k.slice(5))) ?? t('Other list')) : sectionLabel(k);
 
 /** Open rows of each aisle first, then the ticked ones of that aisle – in the place they were. */
 function inPlace(v: ShopView): { key: string; items: ShopItem[] }[] {
@@ -763,6 +783,8 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
     store ? substituteLine(i.substitute) : null,
     i.buy_at?.length ? t('at {stores}', { stores: i.buy_at.join(', ') }) : null,
     store && !i.note ? lastBoughtLine(i) : null,
+    i.owner ? t('for {name}', { name: i.owner.name }) : null,
+    !store ? i.size_hint : null,
     big ? null : i.brand,
     big || i.share ? null : originLabel(origin, i.added_by),
   ]
@@ -947,6 +969,7 @@ function ItemSheet({ item, me, lists, onClose, run }: { item: ShopItem | null; m
           ))}
         </div>
         <ItemBuyAt item={item} />
+        {(home.form === 'shared' || item.owner) && <OwnerChips item={item} members={members.data ?? []} />}
         {lists.length > 1 && (
           <>
             <div className="eyebrow">{t('On which list?')}</div>

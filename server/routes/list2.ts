@@ -15,6 +15,7 @@ import '../lib/list-jobs.js';
 import { createAppPassword, listAppPasswords, revokeAppPassword } from '../lib/caldav.js';
 import { addLines, checkout } from '../lib/shop.js';
 import { parseListExport } from '../lib/list-import.js';
+import { addLunchbox, careCheck, careMissing, careSpent, lunchbox, lunchboxDue, setItemOwner, setLunchbox, splitImport, wgBalance } from '../lib/hhforms.js';
 import { uploadQuota } from '../lib/plans.js';
 import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeItemPhoto, restoreItem, setItemPhoto, setListPrefs, updateItem } from '../lib/list2.js';
 import { t } from '../i18n.js';
@@ -300,4 +301,71 @@ r.post(
     );
     return { format: parsed.format, added: added.filter((a) => a.created).length, already: added.filter((a) => !a.created).length, skippedChecked: parsed.items.length - rows.length };
   }),
+);
+
+// ---------------------------------------------------------------- G: household forms
+
+const month = (v: unknown) => (typeof v === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(v) ? v : new Date().toISOString().slice(0, 7));
+
+/** WG: a row for one person ("für Mika") or shared (null). */
+r.post(
+  '/list/items/:id/owner',
+  wrap((req) => {
+    const b = z.object({ owner_user_id: z.number().int().positive().nullable() }).parse(req.body);
+    return setItemOwner(num(req.params.id), b.owner_user_id);
+  }),
+);
+/** Receipt: who paid, which lines are personal (WG) or for a cared-for household (care list). */
+r.post(
+  '/imports/:id/split',
+  wrap((req) => {
+    if (req.actor?.houseGuest) throw Object.assign(new Error('forbidden'), { status: 403 });
+    const b = z
+      .object({
+        paid_by: z.number().int().positive().nullable().optional(),
+        lines: z.array(z.object({ id: z.number().int(), for_user_id: z.number().int().positive().nullable().optional(), for_list_id: z.number().int().positive().nullable().optional() })).max(500).optional(),
+      })
+      .parse(req.body);
+    return splitImport(num(req.params.id), { paidBy: b.paid_by, lines: b.lines?.map((l) => ({ id: l.id, forUserId: l.for_user_id, forListId: l.for_list_id })) });
+  }),
+);
+/** WG balance of a month from receipts – sentences, never payments. */
+r.get('/wg/balance', (req, res) => {
+  if (req.actor?.houseGuest) return void res.status(403).json({ error: 'forbidden' });
+  res.json(wgBalance(month(req.query.month)));
+});
+
+/** Mitversorgen: fridge check before a visit, "fehlt" onto that list, spent for them this month. */
+r.get(
+  '/care/:id/check',
+  wrap((req) => careCheck(num(req.params.id))),
+);
+r.post(
+  '/care/:id/missing',
+  wrap((req) => {
+    const b = z.object({ names: z.array(z.string().min(1).max(200)).max(60) }).parse(req.body);
+    return careMissing(num(req.params.id), b.names, actorName(req));
+  }),
+);
+r.get(
+  '/care/:id/spent',
+  wrap((req) => careSpent(num(req.params.id), month(req.query.month))),
+);
+
+/** Families: lunchbox regulars with a holiday pause. */
+r.get('/list/lunchbox', (_req, res) => res.json({ ...lunchbox(), due: lunchboxDue() }));
+r.put('/list/lunchbox', (req, res) => {
+  const b = z
+    .object({
+      enabled: z.boolean().optional(),
+      items: z.array(z.string().min(1).max(80)).max(30).optional(),
+      weekday: z.number().int().min(0).max(6).optional(),
+      pausedUntil: z.string().regex(/^\d{4}-\d\d-\d\d$/).nullable().optional(),
+    })
+    .parse(req.body);
+  res.json(setLunchbox(b));
+});
+r.post(
+  '/list/lunchbox/add',
+  wrap((req) => addLunchbox(actorName(req))),
 );

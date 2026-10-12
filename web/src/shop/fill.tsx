@@ -27,7 +27,7 @@ export interface Estimate {
 }
 
 export interface GuardHint {
-  kind: 'on_list' | 'bought' | 'stock';
+  kind: 'on_list' | 'bought' | 'stock' | 'waste';
   text: string;
   itemId?: number;
 }

@@ -49,4 +49,10 @@ export const de_list2: Record<string, string> = {
   'Only reminders (VTODO) with a title': 'Nur Erinnerungen (VTODO) mit Titel',
   'Purchase history · {shop}': 'Einkaufshistorie · {shop}',
   'Nothing to import': 'Nichts zum Übernehmen',
+  // G – household forms
+  'Member not found': 'Mitglied nicht gefunden',
+  'No lunchbox items yet': 'Noch nichts für die Brotdose eingetragen',
+  pieces: 'Stück',
+  '{name} thrown away {n}× – rather {size}?': '{name} {n}× weggeworfen – lieber {size}?',
+  '{name} thrown away {n}× – a smaller pack?': '{name} {n}× weggeworfen – lieber eine kleinere Packung?',
 };

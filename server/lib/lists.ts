@@ -22,6 +22,7 @@ import { historySince } from './limits.js';
 import { lastBoughtFor } from './list2.js';
 import { lastPurchase, purchaseEvents, rhythmList, sensitiveProductIds } from './rhythm.js';
 import { fmtWhen } from './shopping-trust.js';
+import { wasteHints } from './hhforms.js';
 import { config } from '../config.js';
 
 const err = (message: string, status = 400) => Object.assign(new Error(message), { status });
@@ -134,7 +135,7 @@ export function usuals(limit = 60): Usual[] {
 // ------------------------------------------------------------------ double-purchase guard
 
 export interface GuardHint {
-  kind: 'on_list' | 'bought' | 'stock';
+  kind: 'on_list' | 'bought' | 'stock' | 'waste';
   /** one line for people: "steht schon drauf (Mira, gestern)" */
   text: string;
   itemId?: number;
@@ -202,6 +203,8 @@ export function guard(input: { text?: string | null; productId?: number | null; 
   const maintained = db.prepare(`SELECT 1 FROM movements WHERE product_id = ? AND delta < 0 AND reason != 'undo' AND created_at > datetime('now', '-30 days') LIMIT 1`).get(pid);
   const total = (db.prepare('SELECT COALESCE(SUM(qty), 0) t FROM stock WHERE product_id = ?').get(pid) as { t: number }).t;
   if (p && p.track_mode === 'count' && maintained && total > 0) out.push({ kind: 'stock', qty: total, text: t('{n} in stock', { n: Math.round(total * 10) / 10 }) });
+  const waste = wasteHints([pid]).get(pid);
+  if (waste) out.push({ kind: 'waste', text: waste });
   return out;
 }
 

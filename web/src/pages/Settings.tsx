@@ -32,6 +32,7 @@ import { AssistantPrivacyCard } from './Memory';
 import { MyListViewCard } from '../shop/trust';
 import { NotifyMine } from './NotifyMine';
 import { CalDavCard } from '../shop/bridges';
+import { LunchboxCard } from '../shop/forms';
 import { ModulesCard } from './Modules';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
@@ -99,6 +100,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'plan' && cloud && <CloudAccountCard />}
       {tab === 'home' && <Household me={me} admin={admin} />}
       {tab === 'home' && <ModulesCard admin={admin} />}
+      {tab === 'home' && <LunchboxCard />}
       {tab === 'home' && <AwayEntryCard />}
       {tab === 'home' && <MenuSettingsCard />}
       {tab === 'account' && <MyPerson me={me} />}

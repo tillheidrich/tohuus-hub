@@ -20,6 +20,8 @@ export const SECTION_KEYS = Object.keys(SECTION_META);
 /** store mode only: open items somebody marked for another store ("Where to buy?", wave 6) */
 export const ELSEWHERE = 'elsewhere';
 export const sectionLabel = (k: string) => (k === ELSEWHERE ? t('Other stores') : t(SECTION_META[k]?.label ?? 'Other'));
+/** list2: a list somebody shops for, as its own section in the store ('list:<id>') */
+export const isListSection = (k: string) => k.startsWith('list:');
 /** Dutch Detail: each aisle gets a small geometric marker next to its name (never the shape alone). */
 const SHAPES: Record<string, string> = {
   produce: 'c',
@@ -75,6 +77,10 @@ export interface ShopItem {
   last_bought?: LastBought | null;
   /** list it belongs to (null = the main list) */
   list_id?: number | null;
+  /** WG: a personal row */
+  owner?: { id: number; name: string } | null;
+  /** "Spinat 3× weggeworfen – lieber 250 g?" */
+  size_hint?: string | null;
 }
 
 export type Substitute = 'exact' | 'ok' | 'ask';

@@ -309,7 +309,11 @@ export function storeView(storeId?: number | null, viewer?: Viewer, opts: { list
   // list2: one list at a time (0 = the main list); 'all' for everything
   const listId = opts.listId ?? 0;
   const all = shoppingItems(viewer);
-  const items = listId === 'all' ? all : all.filter((i) => (i.list_id ?? 0) === listId);
+  // the main list also carries the lists for a household somebody looks after ("für Oma"), as their own section
+  const care = listId === 0 ? new Map(listLists().filter((l) => l.kind === 'care').map((l) => [l.id, l])) : new Map();
+  const items = (listId === 'all' ? all : all.filter((i) => (i.list_id ?? 0) === listId || care.has(i.list_id ?? -1))).map((i) =>
+    i.list_id && care.has(i.list_id) ? { ...i, section: `list:${i.list_id}` as Section } : i,
+  );
   const open = items.filter((i) => !i.checked_at);
   const basket = items.filter((i) => i.checked_at && i.in_basket);
   const done = items.filter((i) => i.checked_at && !i.in_basket);
@@ -321,7 +325,13 @@ export function storeView(storeId?: number | null, viewer?: Viewer, opts: { list
     order,
     (g) => g.key,
   );
+  // care lists after the aisles: own section per household, never mixed into the aisles
+  const careKeys = sections.filter((x) => x.key.startsWith('list:'));
+  const aisles = sections.filter((x) => !x.key.startsWith('list:'));
+  sections.length = 0;
+  sections.push(...aisles);
   if (elsewhere.length) sections.push({ key: ELSEWHERE, items: elsewhere });
+  sections.push(...careKeys);
   return {
     store,
     stores,
