@@ -1,0 +1,106 @@
+/* drag & drop (web/src/dnd.ts) – lift, placeholder, drop markers */
+html.dnd-dragging,
+html.dnd-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  cursor: grabbing !important;
+}
+.dnd-pressing {
+  transition: transform 300ms var(--ease-out);
+  transform: scale(0.985);
+}
+.dnd-ghost {
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 0 var(--stroke) var(--ink), 0 18px 40px -16px rgba(24, 29, 26, 0.45);
+  opacity: 0.96;
+  transition: none;
+  will-change: transform;
+}
+.dnd-src {
+  opacity: 0.35;
+}
+[data-drop].dnd-over {
+  outline: 2px dashed var(--primary);
+  outline-offset: 4px;
+  border-radius: var(--r-sm);
+}
+[data-drop-row].dnd-before {
+  box-shadow: inset 0 3px 0 var(--primary);
+}
+[data-drop-row].dnd-after {
+  box-shadow: inset 0 -3px 0 var(--primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dnd-pressing {
+    transition: none;
+    transform: none;
+  }
+}
+.week-drop-zones {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--tabbar-h, 64px) + var(--safe-b, 0px) + 16px);
+  z-index: 150;
+  display: flex;
+  gap: 10px;
+}
+.wdz {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 56px;
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: 0 0 0 var(--stroke) var(--ink), var(--shadow-float);
+  font-weight: 600;
+}
+.wdz.dnd-over {
+  background: var(--primary-soft);
+}
+@media (min-width: 960px) {
+  .week-drop-zones {
+    bottom: 20px;
+    left: 50%;
+    right: auto;
+    width: 460px;
+    transform: translateX(-50%);
+  }
+}
+/* the assistant button would sit on the drop zones */
+html.dnd-dragging .assist-fab {
+  visibility: hidden;
+}
+/* "Heute" in my order */
+.today-cards.arranging {
+  gap: 12px;
+}
+.arrange-card {
+  border-radius: var(--r);
+  box-shadow: 0 0 0 1px var(--line);
+  background: var(--canvas);
+  touch-action: pan-y;
+}
+.arrange-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 8px 0 12px;
+  cursor: grab;
+}
+.arrange-body {
+  max-height: 120px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.8;
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+.arrange-toggle {
+  display: block;
+  margin: 18px auto 0;
+  min-height: 44px;
+}

@@ -9,6 +9,9 @@ import { ClaimAvatar, CookPicker, usePlanClaims } from '../shop/claims';
 import { BonButton } from './Bons';
 import { DayMarkChips, EntryServings, markLabel, RotationButton, StartVoteSheet, useWeekOverlay } from './Plan2';
 import { MealBoxAction, PlanBoxPicks } from './Leftovers';
+import { useDrag } from '../dnd';
+import '../dnd.css';
+import { qc } from '../api';
 
 /** Short weekday name (Mon, Tue … / Mo, Di …) in the active language. */
 const wd = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale(), { weekday: 'short' });
@@ -45,6 +48,35 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
     return m;
   }, [plan.data]);
   const planned = plan.data?.entries.length ?? 0;
+  // list2 H: drag a meal onto another day; resting on "next week" turns the page so any later day is reachable
+  const [dragging, setDragging] = useState(false);
+  const moveMeal = async (e: any, day: string) => {
+    if (!day || day === e.day) return;
+    const prev = e.day;
+    qc.setQueryData(['plan', from], (old: any) => (old ? { ...old, entries: old.entries.map((x: any) => (x.id === e.id ? { ...x, day } : x)) } : old));
+    try {
+      await patch(`/plan/${e.id}`, { day });
+      invalidate('plan', 'overview');
+      toast({ text: t('Moved to {day}', { day: label(day) }), action: { label: t('Undo'), run: () => void patch(`/plan/${e.id}`, { day: prev }).then(() => invalidate('plan', 'overview')) } });
+    } catch (err) {
+      invalidate('plan');
+      toast({ text: (err as Error).message, error: true });
+    }
+  };
+  const drag = useDrag({
+    onStart: () => setDragging(true),
+    onEnd: () => setDragging(false),
+    onHover: (k) => {
+      if (k === 'week:+1') setOffset((o) => o + 1);
+      if (k === 'week:-1') setOffset((o) => Math.max(0, o - 1));
+    },
+    onDrop: (payload, d) => {
+      const e = payload as any;
+      if (d.target.startsWith('day:')) void moveMeal(e, d.target.slice(4));
+      else if (d.target === 'week:+1') void moveMeal(e, addDays(e.day, 7));
+      else if (d.target === 'week:-1') void moveMeal(e, addDays(e.day, -7) < today ? today : addDays(e.day, -7));
+    },
+  });
 
   const act = async (key: string, fn: () => Promise<string>) => {
     setBusy(key);
@@ -73,14 +105,14 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
         {days.map((d) => {
           const list = byDay.get(d) ?? [];
           return (
-            <div key={d} className={`wday ${d === today ? 'today' : ''} ${marks.has(d) ? 'p2-marked' : ''}`}>
+            <div key={d} className={`wday ${d === today ? 'today' : ''} ${marks.has(d) ? 'p2-marked' : ''}`} data-drop={d >= today ? `day:${d}` : undefined}>
               <div className="wd-head">
                 <b>{d === today ? t('Today') : wd(d)}</b>
                 <span className="mono">{dom(d)}</span>
               </div>
               {marks.has(d) && <div className="p2-daymark">{markLabel(marks.get(d)!)}{marks.get(d)!.note ? ` · ${marks.get(d)!.note}` : ''}</div>}
               {list.map((e) => (
-                <div key={e.id} className={`wmeal ${e.cooked ? 'done' : ''}`} onClick={() => setSel(e)}>
+                <div key={e.id} className={`wmeal ${e.cooked ? 'done' : ''}`} onClick={() => setSel(e)} data-drop-row={e.id} {...drag(String(e.id), e)}>
                   {e.image_path ? <img src={e.image_path} alt="" loading="lazy" /> : <span className="ph"><ChefHat size={18} /></span>}
                   <div className="grow">
                     <div className="t">{e.title}</div>
@@ -96,6 +128,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
                   <ClaimAvatar claim={claims.get(e.id)} />
                   <button
                     className="icon-btn sm"
+                    data-no-drag
                     aria-label={e.cooked ? t('Mark as not cooked') : t('Mark as cooked')}
                     onClick={(ev) => { ev.stopPropagation(); patch(`/plan/${e.id}`, { cooked: !e.cooked }).then(() => invalidate('plan')); }}
                   >
@@ -103,6 +136,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
                   </button>
                   <button
                     className="icon-btn sm"
+                    data-no-drag
                     aria-label={t('Remove')}
                     onClick={(ev) => { ev.stopPropagation(); removeMeal(e, toast); }}
                   >
@@ -119,6 +153,19 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
           );
         })}
       </div>
+
+      {dragging && (
+        <div className="week-drop-zones" aria-hidden="true">
+          {offset > 0 && (
+            <div className="wdz" data-drop="week:-1">
+              <CaretLeft size={16} /> {t('Previous week')}
+            </div>
+          )}
+          <div className="wdz" data-drop="week:+1">
+            {t('Next week')} <CaretRight size={16} />
+          </div>
+        </div>
+      )}
 
       <div className="row wrap" style={{ gap: 8, marginTop: 12 }}>
         <button className="btn sm" disabled={!!busy} onClick={() => act('fill', async () => {
@@ -298,6 +345,9 @@ function MealSheet({ entry, claim, onClose, onOpen }: { entry: any | null; claim
           </button>
         </div>
         <div className="eyebrow row" style={{ gap: 6 }}><CalendarBlank size={14} /> {t('Another day')}</div>
+        <button className="btn ghost sm" style={{ alignSelf: 'flex-start' }} onClick={() => move(addDays(entry.day, 7))}>
+          {t('Same day next week')} <ArrowRight size={14} />
+        </button>
         <div className="daychips">
           {days.map((d) => (
             <button key={d} className={d === entry.day ? 'on' : ''} disabled={d === entry.day} onClick={() => move(d)}>

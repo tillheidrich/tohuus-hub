@@ -268,6 +268,8 @@ export interface ShopItem {
   origin: string;
   /** list2: which list (null = main) */
   list_id?: number | null;
+  /** list2: manual order inside the aisle (drag & drop) */
+  sort_key?: number | null;
 }
 
 export function claimsOf(kind: 'shopping' | 'plan') {
@@ -301,6 +303,39 @@ export function shoppingItems(viewer?: Viewer): ShopItem[] {
   }));
 }
 
+/** Order inside a section: a dragged row's sort_key, else newest first (the old order). */
+export const rowKey = (i: { sort_key?: number | null; created_at: string }) =>
+  i.sort_key ?? -Date.parse(i.created_at.replace(' ', 'T') + (i.created_at.includes('Z') ? '' : 'Z')) / 1000;
+
+/**
+ * Drag & drop (list2 H): put a row before / after another one, into another aisle (remembered for next time, like
+ * the aisle chips) or onto another list.
+ */
+export function placeItem(itemId: number, p: { neighborId?: number | null; after?: boolean; section?: Section | null; listId?: number | null }) {
+  const it = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(itemId) as any;
+  if (!it) throw Object.assign(new Error('not found'), { status: 404 });
+  if (p.listId != null && (it.list_id ?? 0) !== p.listId) {
+    if (p.listId !== 0 && !db.prepare('SELECT 1 FROM shopping_lists WHERE id = ? AND archived = 0').get(p.listId)) throw Object.assign(new Error('list not found'), { status: 404 });
+    db.prepare('UPDATE shopping_items SET list_id = ? WHERE id = ?').run(p.listId || null, itemId);
+  }
+  if (p.section && isSection(p.section) && sectionOf(it) !== p.section) setItemSection(itemId, p.section);
+  if (p.neighborId) {
+    const me = shoppingItems().find((x) => x.id === itemId);
+    const peers = shoppingItems()
+      .filter((x) => !x.checked_at && x.id !== itemId && (x.list_id ?? 0) === (me?.list_id ?? 0) && x.section === me?.section)
+      .sort((a, b) => rowKey(a) - rowKey(b));
+    const at = peers.findIndex((x) => x.id === p.neighborId);
+    if (at >= 0) {
+      const k = rowKey(peers[at]);
+      const other = p.after ? peers[at + 1] : peers[at - 1];
+      const key = other ? (k + rowKey(other)) / 2 : p.after ? k + 1 : k - 1;
+      db.prepare(`UPDATE shopping_items SET sort_key = ?, updated_at = datetime('now') WHERE id = ?`).run(key, itemId);
+    }
+  }
+  emit('shopping');
+  return { ok: true };
+}
+
 /** Everything the store view needs: open items grouped in the store's walking order, the basket, recently done. */
 export function storeView(storeId?: number | null, viewer?: Viewer, opts: { listId?: number | 'all' } = {}) {
   const stores = listStores();
@@ -320,8 +355,9 @@ export function storeView(storeId?: number | null, viewer?: Viewer, opts: { list
   // in a store: things somebody marked for another store ("dm", "weekly market") wait at the end, not in the aisles
   const here = store ? open.filter((i) => fitsStore(i.buy_at, store.name)) : open;
   const elsewhere = store ? open.filter((i) => !fitsStore(i.buy_at, store.name)) : [];
+  // list2: rows somebody dragged keep their place (sort_key); the rest stays newest first
   const sections: { key: string; items: ShopItem[] }[] = sortBySections(
-    [...new Set(here.map((i) => i.section))].map((key) => ({ key, items: here.filter((i) => i.section === key) })),
+    [...new Set(here.map((i) => i.section))].map((key) => ({ key, items: here.filter((i) => i.section === key).sort((a, b) => rowKey(a) - rowKey(b)) })),
     order,
     (g) => g.key,
   );

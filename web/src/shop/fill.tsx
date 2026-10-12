@@ -46,7 +46,7 @@ export function ListTabs({ lists, value, onChange, onNew, onManage }: { lists: L
   return (
     <div className="list-tabs chips" role="tablist" aria-label={t('Lists')}>
       {lists.map((l) => (
-        <button key={l.id} role="tab" aria-selected={l.id === value} className={`chip ${l.id === value ? 'on' : ''}`} onClick={() => onChange(l.id)}>
+        <button key={l.id} role="tab" aria-selected={l.id === value} className={`chip ${l.id === value ? 'on' : ''}`} onClick={() => onChange(l.id)} data-drop={l.id === value ? undefined : `list:${l.id}`}>
           {l.name}
           {l.open ? <span className="chip-n">{l.open}</span> : null}
         </button>

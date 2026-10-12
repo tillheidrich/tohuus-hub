@@ -29,6 +29,8 @@ import { originLabel, rhythmLine } from '../origin';
 import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
 import { ItemEditor, lastBoughtLine, substituteLine } from '../shop/ItemEditor';
 import '../shop/list2.css';
+import { useDrag } from '../dnd';
+import '../dnd.css';
 import { AtStoreChips, EstimateLine, type GuardHint, type ListInfo, GuardSheet, ListTabs, ManageListSheet, NewListSheet, UsualsButton, UsualsGrid, guardCheck } from '../shop/fill';
 import { TripsBar, useTrips } from '../shop/together';
 import { ImportListSheet } from '../shop/bridges';
@@ -124,6 +126,36 @@ export function Shopping() {
   const [careOpen, setCareOpen] = useState(false);
   const [guardAsk, setGuardAsk] = useState<{ text: string; productId?: number; hints: GuardHint[] } | null>(null);
   const prefs = useListPrefs();
+  // list2 H: drag a row to another place, aisle or list (menu alternative in the row sheet)
+  const drag = useDrag({
+    onDrop: (payload, d) => {
+      const i = payload as ShopItem;
+      const [kind, key] = [d.target.slice(0, d.target.indexOf(':')), d.target.slice(d.target.indexOf(':') + 1)];
+      if (kind === 'list') return void place(i, { list_id: Number(key) });
+      if (kind !== 'section') return;
+      if (key.startsWith('list:')) return void place(i, { list_id: Number(key.slice(5)) });
+      if (key === 'elsewhere' && !d.row) return;
+      void place(i, { section: SECTION_KEYS.includes(key) ? key : null, neighbor_id: d.row ? Number(d.row) : null, after: d.after });
+    },
+  });
+  const place = async (i: ShopItem, body: { section?: string | null; neighbor_id?: number | null; after?: boolean; list_id?: number }) => {
+    // the way back: the row before it in its aisle, its aisle, its list
+    const sec = view?.sections.find((x) => x.items.some((y) => y.id === i.id));
+    const idx = sec?.items.findIndex((y) => y.id === i.id) ?? -1;
+    const prev = idx > 0 ? sec!.items[idx - 1] : sec?.items[idx + 1];
+    const undo = { section: SECTION_KEYS.includes(i.section) ? i.section : null, neighbor_id: prev?.id ?? null, after: idx > 0, list_id: i.list_id ?? 0 };
+    try {
+      await post(`/list/items/${i.id}/place`, body);
+      invalidate('shopping');
+      toast({
+        text: body.list_id !== undefined ? t('Moved to {list}', { list: view?.lists?.find((l) => l.id === body.list_id)?.name ?? '' }) : body.section && body.section !== i.section ? t('Moved to {section} – remembered for next time', { section: sectionLabel(body.section) }) : t('Moved'),
+        action: { label: t('Undo'), run: () => void post(`/list/items/${i.id}/place`, undo).then(() => invalidate('shopping')) },
+      });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+
   // list2 C: who is shopping right now (ticks make a trip – nobody switches a mode on)
   const trips = useTrips(!me.data?.actor.houseGuest);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -496,7 +528,7 @@ export function Shopping() {
           </div>
         ) : (
           groups.map((g) => (
-            <section key={g.key} className={`group ${g.key.startsWith('taken:') ? 'taken' : ''}`} aria-label={groupLabel(g.key)}>
+            <section key={g.key} className={`group ${g.key.startsWith('taken:') ? 'taken' : ''}`} aria-label={groupLabel(g.key)} data-drop={g.key.startsWith('taken:') ? undefined : `section:${g.key}`}>
               <h2 className="group-h">
                 <SectionShape k={g.key} />
                 <span className="grow">{groupLabel(g.key)}</span>
@@ -518,6 +550,7 @@ export function Shopping() {
                     onCheck={tick}
                     onMore={() => setSel(i)}
                     onClaim={!inStore && !i.claim && i.id > 0 && !me.data?.actor.houseGuest ? () => claimMe(i) : undefined}
+                    drag={me.data?.actor.houseGuest ? undefined : drag(String(i.id), i)}
                   />
                 ))}
               </div>
@@ -612,7 +645,7 @@ export function Shopping() {
       <NewListSheet open={newList} onClose={() => setNewList(false)} onCreated={(l) => pickList(l.id)} />
       <ManageListSheet list={manageList ? (currentList ?? null) : null} onClose={() => setManageList(false)} onDeleted={() => pickList(0)} />
       <QuickAddSheet listId={listId} rows={preview} onClose={() => setPreview(null)} onDone={() => { setPreview(null); setText(''); refresh(); }} />
-      <ItemSheet item={sel} me={me.data} lists={view?.lists ?? []} onClose={() => setSel(null)} run={run} />
+      <ItemSheet item={sel} me={me.data} lists={view?.lists ?? []} siblings={sel ? (view?.sections.find((x) => x.items.some((y) => y.id === sel.id))?.items ?? []) : []} onPlace={place} onClose={() => setSel(null)} run={run} />
       {view?.store && <OrderSheet open={ordering} store={view.store} present={view.sections.map((s) => s.key)} onClose={() => setOrdering(false)} />}
       <NewStoreSheet open={newStore} onClose={() => setNewStore(false)} onCreated={(s) => { pickStore(s.id); refresh(); }} />
       <ListViewSheet open={viewOpen} onClose={() => setViewOpen(false)} />
@@ -770,7 +803,7 @@ function moveLocal(v: ShopView, id: number, on: boolean, basket: boolean): ShopV
   };
 }
 
-function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore, onClaim }: { i: ShopItem; big?: boolean; store?: boolean; fresh?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void; onClaim?: () => void }) {
+function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore, onClaim, drag }: { i: ShopItem; big?: boolean; store?: boolean; fresh?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void; onClaim?: () => void; drag?: Record<string, unknown> }) {
   const on = Boolean(i.checked_at);
   const [checking, setChecking] = useState(false);
   // every row shows where it came from (product rule): `origin` from the server, older servers: source + added_by
@@ -804,7 +837,7 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
   const ticked = on || checking;
   const pic = i.photo_path ?? (big && i.product_id ? i.image_path : null);
   return (
-    <div className={`shop-item ${on ? 'done' : ''} ${checking ? 'is-checking' : ''} ${big ? 'big' : ''} ${i.pending ? 'pending' : ''} ${fresh ? 'row-in' : ''}`}>
+    <div className={`shop-item ${on ? 'done' : ''} ${checking ? 'is-checking' : ''} ${big ? 'big' : ''} ${i.pending ? 'pending' : ''} ${fresh ? 'row-in' : ''}`} data-drop-row={!on && i.id > 0 ? i.id : undefined} {...(!on && i.id > 0 ? drag : {})}>
       <button className="shop-hit" onClick={toggle} role="checkbox" aria-checked={ticked} aria-label={`${i.text}: ${on ? t('Mark as open') : t('Check off')}`}>
         <span className={`check ${ticked ? 'on' : ''}`} aria-hidden>
           <Check size={big ? 18 : 15} weight="bold" />
@@ -908,7 +941,7 @@ function QuickAddSheet({ rows, onClose, onDone, listId = 0 }: { rows: any[] | nu
   );
 }
 
-function ItemSheet({ item, me, lists, onClose, run }: { item: ShopItem | null; me?: Me; lists: ListInfo[]; onClose: () => void; run: (op: any) => Promise<boolean> }) {
+function ItemSheet({ item, me, lists, siblings, onPlace, onClose, run }: { item: ShopItem | null; me?: Me; lists: ListInfo[]; siblings: ShopItem[]; onPlace: (i: ShopItem, body: { neighbor_id?: number | null; after?: boolean }) => Promise<void>; onClose: () => void; run: (op: any) => Promise<boolean> }) {
   const members = useApi<{ id: number; name: string; color: string }[]>(['shopping', 'members'], item ? '/shop/members' : null);
   // ha2: whoever Home Assistant sees out of the house can pick it up on the way
   const out = useOutOfHouse(Boolean(item) && !me?.actor.houseGuest);
@@ -960,6 +993,18 @@ function ItemSheet({ item, me, lists, onClose, run }: { item: ShopItem | null; m
         </div>
         <div className="small muted">{t('Just so nobody buys it twice. No points, no ranking.')}</div>
         </>)}
+        {siblings.length > 1 && (
+          <div className="row" style={{ gap: 8 }}>
+            <span className="eyebrow grow">{t('Order in the aisle')}</span>
+            {/* the menu way for what drag & drop does */}
+            <button className="btn ghost sm" disabled={siblings[0]?.id === item.id} onClick={() => { const k = siblings.findIndex((x) => x.id === item.id); void onPlace(item, { neighbor_id: siblings[k - 1].id, after: false }); onClose(); }}>
+              <ArrowUp size={14} /> {t('Up')}
+            </button>
+            <button className="btn ghost sm" disabled={siblings[siblings.length - 1]?.id === item.id} onClick={() => { const k = siblings.findIndex((x) => x.id === item.id); void onPlace(item, { neighbor_id: siblings[k + 1].id, after: true }); onClose(); }}>
+              <ArrowDown size={14} /> {t('Down')}
+            </button>
+          </div>
+        )}
         <div className="eyebrow">{t('Aisle')}</div>
         <div className="chips" style={{ flexWrap: 'wrap' }}>
           {SECTION_KEYS.map((k) => (

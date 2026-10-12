@@ -13,7 +13,8 @@ import { PERSON_EVENTS, memberEmail, personPrefs, presence, setPersonPrefs, setP
 import { activeTrips, addToTrip, endTrip, setTripPrivate, tripPrivate } from '../lib/trips.js';
 import '../lib/list-jobs.js';
 import { createAppPassword, listAppPasswords, revokeAppPassword } from '../lib/caldav.js';
-import { addLines, checkout } from '../lib/shop.js';
+import { SECTIONS, addLines, checkout, placeItem } from '../lib/shop.js';
+import { getUserPref, setUserPref } from '../lib/onboard.js';
 import { parseListExport } from '../lib/list-import.js';
 import { addLunchbox, careCheck, careMissing, careSpent, lunchbox, lunchboxDue, setItemOwner, setLunchbox, splitImport, wgBalance } from '../lib/hhforms.js';
 import { uploadQuota } from '../lib/plans.js';
@@ -369,3 +370,27 @@ r.post(
   '/list/lunchbox/add',
   wrap((req) => addLunchbox(actorName(req))),
 );
+
+// ---------------------------------------------------------------- H: drag & drop
+
+/** Put a row before/after another one, into another aisle (remembered) or onto another list. */
+r.post(
+  '/list/items/:id/place',
+  wrap((req) => {
+    const b = z
+      .object({ neighbor_id: z.number().int().nullable().optional(), after: z.boolean().optional(), section: z.enum(SECTIONS).nullable().optional(), list_id: z.number().int().min(0).nullable().optional() })
+      .parse(req.body);
+    return placeItem(num(req.params.id), { neighborId: b.neighbor_id ?? null, after: b.after, section: b.section ?? null, listId: b.list_id ?? null });
+  }),
+);
+
+/** Order of the cards on "Heute", per person. */
+const TODAY_CARDS = ['rhythm', 'list', 'still', 'cook', 'money', 'notices', 'pulse'] as const;
+r.get('/list/today-order', (req, res) => res.json({ order: userId(req) ? getUserPref<string[]>(userId(req)!, 'today.order', []) : [] }));
+r.put('/list/today-order', (req, res) => {
+  const b = z.object({ order: z.array(z.enum(TODAY_CARDS)).max(TODAY_CARDS.length) }).parse(req.body);
+  const uid = userId(req);
+  if (!uid) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  setUserPref(uid, 'today.order', [...new Set(b.order)]);
+  res.json({ order: [...new Set(b.order)] });
+});

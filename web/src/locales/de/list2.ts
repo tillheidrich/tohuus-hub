@@ -103,7 +103,6 @@ export const list2: Record<string, string> = {
   'once a day': 'einmal am Tag',
   'needs a confirmed e-mail': 'braucht eine bestätigte E-Mail',
   '“Only at home” needs the iPhone app or Home Assistant to know where you are; until then everything comes.': '„Nur zu Hause“ braucht die iPhone-App oder Home Assistant, um zu wissen, wo du bist – bis dahin kommt alles.',
-  'Quiet hours': 'Ruhezeiten',
   'No phone or browser messages – the summary waits anyway.': 'Keine Nachrichten aufs Handy oder in den Browser – die Zusammenfassung wartet sowieso.',
   'On the lock screen': 'Auf dem Sperrbildschirm',
   'Show the text': 'Text zeigen',
@@ -197,4 +196,13 @@ export const list2: Record<string, string> = {
   Thursday: 'Donnerstag',
   Friday: 'Freitag',
   Saturday: 'Samstag',
+  // H – drag & drop
+  Down: 'Runter',
+  Up: 'Hoch',
+  Moved: 'Verschoben',
+  'Arrange cards': 'Karten anordnen',
+  'Hold and drag': 'Halten und ziehen',
+  'Order saved': 'Reihenfolge gespeichert',
+  'Same day next week': 'Gleicher Tag nächste Woche',
+  'Order in the aisle': 'Reihenfolge im Gang',
 };

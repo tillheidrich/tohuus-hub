@@ -50,3 +50,8 @@ migrate(
    );
    CREATE INDEX IF NOT EXISTS list_tick_log_user ON list_tick_log(user_id, at);`,
 );
+
+migrate(
+  'list2-5-sort',
+  `ALTER TABLE shopping_items ADD COLUMN sort_key REAL;`,
+);
