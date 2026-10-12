@@ -1,5 +1,6 @@
 /**
- * Builds the marketing site (site/index.html in English, site/de/index.html in German) from one template.
+ * Builds the marketing site (site/index.html in English, site/de/index.html in German) from one template, plus the
+ * legal pages from legal.mjs (site/privacy.html, site/terms.html, site/de/datenschutz.html, site/de/nutzungsbedingungen.html).
  * Run from the repo root:  node site/src/build.mjs
  *
  * Product frame and wording: docs/plan-2026-10-12.md and the strategy "ToHuus merkt sich, was zu Hause fehlt"
@@ -21,12 +22,18 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as Ph from '@phosphor-icons/react/ssr';
 import { homeTiles, brandMark, bird } from './art.mjs';
+import { legalCopy } from './legal.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const SITE = 'https://tohuus.heidrich-digital.de/';
 const GH = 'https://github.com/tillheidrich/tohuus-hub';
 /** Required provider line (Impressum). The only place where the en dash is allowed. */
 const PROVIDER = 'Till Heidrich – Content Creation';
+/** Contact data of the provider for the legal pages (Datenschutz, Nutzungsbedingungen). */
+const CONTACT = { MAIL: 'mail@tillheidrich.de', PHONE: '0157 73953819', ADDRESS: ['Rotdornweg 17', '21255 Tostedt'], CLOUD: 'https://cloud.tohuus.heidrich-digital.de' };
+const LEGAL = legalCopy({ PROVIDER, SITE, GH, ...CONTACT });
+/** Draft status shown on top of every legal page until the owner decides on a legal review. */
+const LEGAL_STATUS = { de: 'Stand: 12.10.2026 · Entwurf, rechtlich noch nicht geprüft', en: 'As of 12 October 2026 · Draft, not yet legally reviewed' };
 
 // ---------------------------------------------------------------- icons (Phosphor regular, like the app)
 const ICONS = {
@@ -59,7 +66,7 @@ const COPY = {
     ogAlt: 'Das ToHuus-Zeichen, der Satz „Damit nicht einer alles im Kopf haben muss.“ und vier gezeichnete Wohnformen.',
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
-    ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren' },
+    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren' },
     nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
@@ -215,7 +222,7 @@ const COPY = {
     foot: {
       about: 'ToHuus ist ein Angebot von Heidrich Digital.', provider: `Anbieter: ${PROVIDER}`,
       project: 'Projekt', legal: 'Rechtliches', code: 'Quellcode auf GitHub', license: 'Lizenz App: AGPL-3.0', licenseHa: 'Lizenz HA-Integration: MIT', issues: 'Fehler melden',
-      imprint: 'Impressum', privacy: 'Datenschutz', otherLang: 'English version',
+      imprint: 'Impressum', privacy: 'Datenschutz', terms: 'Nutzungsbedingungen', otherLang: 'English version',
       fine: 'Diese Website setzt keine Cookies, trackt nicht und lädt nichts von Dritten. Schriften: Familjen Grotesk und Hedvig Letters (SIL Open Font License), lokal ausgeliefert. Icons: Phosphor (MIT). Die Bildschirmfotos zeigen einen Demo-Haushalt mit ausgedachten Namen und Bons. ToHuus steht in keiner Verbindung zu REWE, Lidl, Aldi, Vorwerk/Thermomix, Apple oder den anderen genannten Läden und Diensten. Die Namen beschreiben nur kompatible Formate und Dienste.',
     },
   },
@@ -226,7 +233,7 @@ const COPY = {
     ogAlt: 'The ToHuus mark, the line “So one person doesn’t have to keep it all in their head.” and four drawn homes.',
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
-    ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install' },
+    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install' },
     nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
@@ -382,7 +389,7 @@ const COPY = {
     foot: {
       about: 'ToHuus is offered by Heidrich Digital.', provider: `Provider: ${PROVIDER}`,
       project: 'Project', legal: 'Legal', code: 'Source code on GitHub', license: 'App licence: AGPL-3.0', licenseHa: 'HA integration licence: MIT', issues: 'Report a bug',
-      imprint: 'Imprint', privacy: 'Privacy', otherLang: 'Deutsche Version',
+      imprint: 'Imprint', privacy: 'Privacy', terms: 'Terms of use', otherLang: 'Deutsche Version',
       fine: 'This website sets no cookies, does not track you and loads nothing from third parties. Fonts: Familjen Grotesk and Hedvig Letters (SIL Open Font License), served locally. Icons: Phosphor (MIT). The screenshots show a demo household with invented names and receipts. ToHuus is not affiliated with Tesco, REWE, Lidl, Aldi, Vorwerk/Thermomix, Apple or the other shops and services named here. The names only describe compatible formats and services.',
     },
   },
@@ -412,6 +419,103 @@ const device = (inner, cls = '') => `<figure class="device${cls}">
 
 const label = (t, cls = '') => `<p class="label${cls}">${t}</p>`;
 
+/** Document head and site header, shared by the home page and the legal pages. */
+const pageTop = (c, m, b = c.base) => `<!doctype html>
+<html lang="${c.lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${m.title}</title>
+<meta name="description" content="${m.desc}">
+<link rel="canonical" href="${m.url}">
+<link rel="alternate" hreflang="en" href="${m.alt.en}">
+<link rel="alternate" hreflang="de" href="${m.alt.de}">
+<link rel="alternate" hreflang="x-default" href="${m.alt.en}">
+<meta name="theme-color" content="#f7f5ef">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ToHuus">
+<meta property="og:title" content="${m.title}">
+<meta property="og:description" content="${m.desc}">
+<meta property="og:url" content="${m.url}">
+<meta property="og:image" content="${SITE}assets/img/og-${c.lang}.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${c.ogAlt}">
+<meta property="og:locale" content="${c.locale}">
+<meta property="og:locale:alternate" content="${c.alt}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${m.title}">
+<meta name="twitter:description" content="${m.desc}">
+<meta name="twitter:image" content="${SITE}assets/img/og-${c.lang}.png">
+<link rel="icon" href="${b}assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="${b}assets/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="${b}assets/apple-touch-icon.png">
+<link rel="preload" href="${b}assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="${b}assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="${b}assets/site.css">
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
+${m.ld ? `<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus","description":"${c.desc}","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web, Docker","license":"https://www.gnu.org/licenses/agpl-3.0.html","url":"${c.url}","image":"${SITE}assets/img/og-${c.lang}.png","codeRepository":"${GH}","inLanguage":["en","de"],"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}}
+</script>
+` : ''}</head>
+<body${m.bodyClass ? ` class="${m.bodyClass}"` : ''}>
+${sprite}
+<a class="skip" href="#main">${c.skip}</a>
+
+<header class="nav-wrap">
+<div class="nav">
+  <a class="brand" href="./" aria-label="${c.homeLabel}">${brandMark(28)}<span>ToHuus</span></a>
+  <nav class="nav-links" aria-label="${c.navLabel}">
+${c.nav.map(([href, l]) => `    <a href="${m.navBase}${href}">${l}</a>`).join('\n')}
+  </nav>
+  <div class="lang" role="group" aria-label="${c.langLabel}">
+    <a href="${m.enHref}" hreflang="en" lang="en"${c.lang === 'en' ? ' aria-current="true"' : ''}>EN</a>
+    <a href="${m.deHref}" hreflang="de" lang="de"${c.lang === 'de' ? ' aria-current="true"' : ''}>DE</a>
+  </div>
+  <button class="icon-btn theme-btn" type="button" aria-label="${c.themeLabel}" aria-pressed="false">${ico('moon', 'ico moon')}${ico('sun', 'ico sun')}</button>
+</div>
+</header>
+
+`;
+
+/** Site footer, shared by the home page and the legal pages. */
+const pageFoot = (c, m) => `<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="./">${brandMark(26)}<span>ToHuus</span></a>
+        <p>${c.foot.about}<br>${c.foot.provider}</p>
+      </div>
+      <div>
+        <h4>${c.foot.project}</h4>
+        <ul>
+          <li><a href="${GH}">${c.foot.code}</a></li>
+          <li><a href="${GH}/blob/main/LICENSE">${c.foot.license}</a></li>
+          <li><a href="${GH}/blob/main/ha-integration/LICENSE">${c.foot.licenseHa}</a></li>
+          <li><a href="${GH}/issues">${c.foot.issues}</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>${c.foot.legal}</h4>
+        <ul>
+          <li><a href="https://heidrich-digital.de/impressum">${c.foot.imprint}</a></li>
+          <li><a href="${LEGAL[c.lang].privacy.file}">${c.foot.privacy}</a></li>
+          <li><a href="${LEGAL[c.lang].terms.file}">${c.foot.terms}</a></li>
+          <li><a href="${m.otherHref}" hreflang="${c.otherLang}">${c.foot.otherLang}</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine">${c.foot.fine}</p>
+  </div>
+</footer>`;
+
+/** Per-page values for the home page of a language. */
+const homeMeta = (c) => ({
+  title: c.title, desc: c.desc, url: c.url, alt: { en: SITE, de: `${SITE}de/` }, ld: true, navBase: '',
+  enHref: c.lang === 'en' ? './' : '../', deHref: c.lang === 'de' ? './' : 'de/', otherHref: c.other,
+});
+
 function page(c) {
   const b = c.base;
   const id = c.ids;
@@ -427,64 +531,8 @@ function page(c) {
   const S = c.host;
   const Y = c.why;
   const Q = c.faq;
-  return `<!doctype html>
-<html lang="${c.lang}">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>${c.title}</title>
-<meta name="description" content="${c.desc}">
-<link rel="canonical" href="${c.url}">
-<link rel="alternate" hreflang="en" href="${SITE}">
-<link rel="alternate" hreflang="de" href="${SITE}de/">
-<link rel="alternate" hreflang="x-default" href="${SITE}">
-<meta name="theme-color" content="#f7f5ef">
-<meta name="color-scheme" content="light dark">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="ToHuus">
-<meta property="og:title" content="${c.title}">
-<meta property="og:description" content="${c.desc}">
-<meta property="og:url" content="${c.url}">
-<meta property="og:image" content="${SITE}assets/img/og-${c.lang}.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="${c.ogAlt}">
-<meta property="og:locale" content="${c.locale}">
-<meta property="og:locale:alternate" content="${c.alt}">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${c.title}">
-<meta name="twitter:description" content="${c.desc}">
-<meta name="twitter:image" content="${SITE}assets/img/og-${c.lang}.png">
-<link rel="icon" href="${b}assets/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="${b}assets/favicon-32.png" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="${b}assets/apple-touch-icon.png">
-<link rel="preload" href="${b}assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="${b}assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="${b}assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus","description":"${c.desc}","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web, Docker","license":"https://www.gnu.org/licenses/agpl-3.0.html","url":"${c.url}","image":"${SITE}assets/img/og-${c.lang}.png","codeRepository":"${GH}","inLanguage":["en","de"],"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}}
-</script>
-</head>
-<body>
-${sprite}
-<a class="skip" href="#main">${c.skip}</a>
-
-<header class="nav-wrap">
-<div class="nav">
-  <a class="brand" href="./" aria-label="${c.homeLabel}">${brandMark(28)}<span>ToHuus</span></a>
-  <nav class="nav-links" aria-label="${c.navLabel}">
-${c.nav.map(([href, l]) => `    <a href="${href}">${l}</a>`).join('\n')}
-  </nav>
-  <div class="lang" role="group" aria-label="${c.langLabel}">
-    <a href="${c.lang === 'en' ? './' : '../'}" hreflang="en" lang="en"${c.lang === 'en' ? ' aria-current="true"' : ''}>EN</a>
-    <a href="${c.lang === 'de' ? './' : 'de/'}" hreflang="de" lang="de"${c.lang === 'de' ? ' aria-current="true"' : ''}>DE</a>
-  </div>
-  <button class="icon-btn theme-btn" type="button" aria-label="${c.themeLabel}" aria-pressed="false">${ico('moon', 'ico moon')}${ico('sun', 'ico sun')}</button>
-</div>
-</header>
-
-<main id="main">
+  const m = homeMeta(c);
+  return `${pageTop(c, m)}<main id="main">
 
 <section class="hero" aria-labelledby="hero-h">
   <div class="wrap hero-grid">
@@ -714,34 +762,7 @@ ${Q.list.map(([q, a]) => `      <details class="reveal"><summary>${q}${ico('plus
 
 </main>
 
-<footer class="foot">
-  <div class="wrap">
-    <div class="foot-grid">
-      <div>
-        <a class="brand" href="./">${brandMark(26)}<span>ToHuus</span></a>
-        <p>${c.foot.about}<br>${c.foot.provider}</p>
-      </div>
-      <div>
-        <h4>${c.foot.project}</h4>
-        <ul>
-          <li><a href="${GH}">${c.foot.code}</a></li>
-          <li><a href="${GH}/blob/main/LICENSE">${c.foot.license}</a></li>
-          <li><a href="${GH}/blob/main/ha-integration/LICENSE">${c.foot.licenseHa}</a></li>
-          <li><a href="${GH}/issues">${c.foot.issues}</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>${c.foot.legal}</h4>
-        <ul>
-          <li><a href="https://heidrich-digital.de/impressum">${c.foot.imprint}</a></li>
-          <li><a href="https://heidrich-digital.de/datenschutz">${c.foot.privacy}</a></li>
-          <li><a href="${c.other}" hreflang="${c.otherLang}">${c.foot.otherLang}</a></li>
-        </ul>
-      </div>
-    </div>
-    <p class="fine">${c.foot.fine}</p>
-  </div>
-</footer>
+${pageFoot(c, m)}
 
 <nav class="rail" aria-label="${c.railLabel}">
 ${c.rail.map(([href, l, i]) => `  <a href="${href}">${ico(i)}<span>${l}</span></a>`).join('\n')}
@@ -753,20 +774,89 @@ ${c.rail.map(([href, l, i]) => `  <a href="${href}">${ico(i)}<span>${l}</span></
 `;
 }
 
+/** One legal page (privacy or terms) in the site's design. `kind` is 'privacy' or 'terms'. */
+function legalPage(c, kind) {
+  const d = LEGAL[c.lang][kind];
+  const otherKind = kind === 'privacy' ? 'terms' : 'privacy';
+  const pair = (lang) => `${SITE}${lang === 'de' ? 'de/' : ''}${LEGAL[lang][kind].file}`;
+  const m = {
+    title: d.title, desc: d.desc, url: pair(c.lang), alt: { en: pair('en'), de: pair('de') }, ld: false, navBase: './',
+    bodyClass: 'legal-page',
+    enHref: c.lang === 'en' ? d.file : `../${LEGAL.en[kind].file}`, deHref: c.lang === 'de' ? d.file : `de/${LEGAL.de[kind].file}`,
+    otherHref: c.lang === 'en' ? `de/${LEGAL.de[kind].file}` : `../${LEGAL.en[kind].file}`,
+  };
+  const other = LEGAL[c.lang][otherKind];
+  return `${pageTop(c, m)}
+<main id="main" class="legal">
+
+<section class="legal-head" aria-labelledby="legal-h">
+  <div class="wrap">
+    ${label(c.legalLabel)}
+    <h1 id="legal-h">${d.h1}</h1>
+    <p class="legal-status">${LEGAL_STATUS[c.lang]}</p>
+    ${d.note ? `<p class="legal-note">${d.note}</p>` : ''}
+  </div>
+</section>
+
+<div class="wrap legal-grid">
+  <nav class="legal-toc" aria-labelledby="toc-h">
+    <p class="label" id="toc-h">${c.tocLabel}</p>
+    <ol>
+${d.sections.map((x, k) => `      <li><a href="#${x.id}"><span>${k + 1}</span>${x.h}</a></li>`).join('\n')}
+    </ol>
+    <p class="legal-links"><a href="${other.file}">${other.h1}${ico('arrow')}</a><a href="./">${c.back}${ico('arrow')}</a></p>
+  </nav>
+  <div class="legal-body">
+    <div class="legal-summary" role="group" aria-label="${d.summaryH}">
+      <p class="legal-summary-h">${d.summaryH}</p>
+      <ul>${d.summary.map((x) => `<li>${ico('check')}<span>${x}</span></li>`).join('')}</ul>
+    </div>
+${d.sections.map((x, k) => `    <section id="${x.id}" aria-labelledby="${x.id}-h">
+      <h2 id="${x.id}-h"><span class="legal-no">${k + 1}</span>${x.h}</h2>
+      ${x.body}
+    </section>`).join('\n')}
+  </div>
+</div>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="${c.base}assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
+
 // guards: house style (no em or en dashes, except in the required provider line) and no family names
-for (const c of Object.values(COPY)) {
-  const s = (JSON.stringify(c) + page(c).replace(sprite, '')).split(PROVIDER).join('');
-  if (s.includes('—')) throw new Error(`em dash in ${c.lang} page`);
-  if (s.includes('–')) throw new Error(`en dash in ${c.lang} page`);
-  const text = page(c).replace(sprite, '').split(PROVIDER).join('').replace(/https?:\/\/[^\s"'<)]+/g, '').replace(/heidrich-digital|Heidrich Digital/g, '');
+const LEGAL_KINDS = ['privacy', 'terms'];
+const checkText = (html, where, tillCount, extra = '') => {
+  const s = html.replace(sprite, '').split(PROVIDER).join('');
+  const all = s + extra.split(PROVIDER).join('');
+  if (all.includes('—')) throw new Error(`em dash in ${where}`);
+  if (all.includes('–')) throw new Error(`en dash in ${where}`);
+  const text = s.replace(/https?:\/\/[^\s"'<)]+/g, '').replace(/mailto:[^\s"'<)]+/g, '').replace(/[\w.+-]+@[\w.-]+/g, '').replace(/heidrich-digital|Heidrich Digital/g, '');
   const bad = text.match(/\b(Lea|Felix|Heidrich|Mila)\b/);
-  if (bad) throw new Error(`family name "${bad[0]}" in ${c.lang} page`);
-  if ((text.match(/\bTill\b/g) ?? []).length !== 1) throw new Error(`"Till" must appear exactly once (signature) in ${c.lang} page`);
+  if (bad) throw new Error(`family name "${bad[0]}" in ${where}`);
+  if ((text.match(/\bTill\b/g) ?? []).length !== tillCount) throw new Error(`"Till" must appear exactly ${tillCount}× in ${where}`);
+};
+for (const c of Object.values(COPY)) {
+  checkText(page(c), `${c.lang} page`, 1, JSON.stringify(c));
+  for (const kind of LEGAL_KINDS) {
+    const html = legalPage(c, kind);
+    checkText(html, `${c.lang} ${kind} page`, 0);
+    if (!html.includes(LEGAL_STATUS[c.lang])) throw new Error(`draft status line missing on ${c.lang} ${kind} page`);
+    // every in-page link points at a section that exists
+    for (const [, id] of html.matchAll(/href="#([^"]+)"/g)) if (id !== 'main' && !html.includes(`id="${id}"`)) throw new Error(`broken anchor #${id} in ${c.lang} ${kind} page`);
+  }
 }
 fs.writeFileSync(path.join(ROOT, 'index.html'), page(COPY.en));
 fs.mkdirSync(path.join(ROOT, 'de'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'de/index.html'), page(COPY.de));
-console.log('built site/index.html and site/de/index.html');
+for (const c of Object.values(COPY)) for (const kind of LEGAL_KINDS) {
+  fs.writeFileSync(path.join(ROOT, c.lang === 'de' ? 'de' : '', LEGAL[c.lang][kind].file), legalPage(c, kind));
+}
+console.log(`built site/index.html, site/de/index.html and the legal pages (${LEGAL_KINDS.map((k) => `${LEGAL.en[k].file}, de/${LEGAL.de[k].file}`).join(', ')})`);
 
 /*
  * Refreshing the screenshots (Playwright + sharp in a scratch folder outside the repo):
