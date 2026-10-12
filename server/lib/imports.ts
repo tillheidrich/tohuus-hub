@@ -264,7 +264,7 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
 
 export function applyImport(id: number, actor: string) {
   const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
-  if (!imp) throw userError(t('Import not found'));
+  if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
   if (imp.status !== 'review') return { applied: 0, created: 0 };
   const lines = db.prepare('SELECT * FROM import_lines WHERE import_id = ? ORDER BY sort').all(id) as any[];
   let applied = 0;
