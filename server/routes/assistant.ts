@@ -22,6 +22,7 @@ import { deleteMemory, isSensitive, listMemory, MemoryError, remember } from '..
 import { healthConsent, requireHealthConsent } from '../lib/health-consent.js';
 import { healthShareAllowed } from '../lib/people-signals.js';
 import { visionAvailable } from '../lib/vision.js';
+import { aiStateFor } from './ai-settings.js';
 
 export const r = Router();
 
@@ -37,8 +38,17 @@ function fail(res: any, e: unknown) {
   throw e;
 }
 
-r.get('/assistant/status', requireAuth, (_req, res) => {
-  res.json({ ai: aiEnabled('text'), voice: aiEnabled('audio'), receiptsAi: visionAvailable(), healthShare: healthShareAllowed(), healthConsent: healthConsent(), language: lang() });
+r.get('/assistant/status', requireAuth, (req, res) => {
+  res.json({
+    ai: aiEnabled('text'),
+    voice: aiEnabled('audio'),
+    receiptsAi: visionAvailable(),
+    // the switches behind it (ai-policy.ts): configured, household, mcp, mine, effective, reason
+    aiState: aiStateFor(req.actor?.userId),
+    healthShare: healthShareAllowed(),
+    healthConsent: healthConsent(),
+    language: lang(),
+  });
 });
 
 r.post('/assistant/chat', requireAuth, async (req, res) => {

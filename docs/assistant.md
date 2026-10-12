@@ -56,6 +56,26 @@ Also `POST /api/assistant/undo` with body `{ "undo": "<token>" }`. → `{ ok: tr
 - `GET /api/assistant/status` → `{ ai, voice, receiptsAi, healthShare, healthConsent, language }` – what the UI can offer.
 - `GET /api/assistant/settings` → `{ healthShare, healthConsent }`; `PATCH` (admins) `{ healthShare: boolean }`. Also in `GET/PATCH /api/settings` as `ai.healthShare`.
 
+### Switching AI off (`ai.enabled`, `ai.mine`, children, MCP)
+
+Four switches, enforced centrally in `server/lib/ai.ts` (`chat()`, `transcribe()`) and `server/lib/vision.ts` (`runVision()`) via `server/lib/ai-policy.ts`. While one of them applies, **no request at all** goes to a model; a call fails with `AiError` code `ai.disabled` (HTTP 403, `{ error, code: 'ai.disabled' }`), and `aiEnabled()` / `visionAvailable()` answer `false`, so every feature takes its path without a model (assistant basic mode, OCR for receipts, the simple recipe text reader).
+
+| Switch | Where | Who changes it | Default |
+|---|---|---|---|
+| Household `ai.enabled` | setting | admins | on (only meaningful when a model is configured) |
+| Person `ai.mine` | `user_prefs` of that member | only that member; never shown to others | on |
+| Child | `kid_profiles.ai_off` | parents (admins and members, not permanent guests) via `PUT /api/kids/:id/ai { enabled }` | on |
+| MCP for the household's own assistants `mcp.enabled` | setting | admins | on; independent from the built-in AI (no model is called for MCP); off ⇒ `/mcp` answers 403 |
+
+The person is taken from the request (`requireAuth` runs the rest of the request inside `runAsAiActor`), the child from the paired kid tablet (`/api/kid/:token/*`). A kid tablet can never change its switch: there is no route for it, `GET /api/kid/:token` only returns `ai: { enabled, locked: true }` for the locked display "von deinen Eltern ausgeschaltet".
+
+- `GET /api/ai/settings` → `{ configured: { text, vision, audio }, household, mcp, mine, effective, reason: null|'no_model'|'household'|'person'|'parents', admin, kids?: [{ id, name, ai }] }` (`kids` for adult members only).
+- `PATCH /api/ai/settings` `{ household?, mcp? }` (admins, else 403) and/or `{ mine? }` (the caller, for themselves) → the state as above.
+- `GET /api/assistant/status` additionally returns `aiState` (same object without `admin`/`kids`); `ai`, `voice` and `receiptsAi` are the effective values for the caller.
+- `GET /api/instance` → `features.ai: { configured, household, mcp }`; `features.assistant/voice/receiptsAi` are `configured && household`.
+
+Basic mode while AI is off answers sentences it does not understand with "KI ist aus – ich verstehe einfache Sätze wie „Milch ist alle und 2 Paprika“".
+
 ### Health data: one-time consent (`consent`)
 
 Allergies and health notes are special categories of personal data (Art. 9 GDPR). The **first** one a household stores

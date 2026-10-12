@@ -38,8 +38,9 @@ import { de_order } from './locales/de-order.js';
 import { de_assistant } from './locales/de-assistant.js';
 import { de_rhythm } from './locales/de-rhythm.js';
 import { de_money } from './locales/de-money.js';
+import { de_core } from './locales/de-core.js';
 
-const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order, ...de_assistant, ...de_rhythm, ...de_money };
+const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order, ...de_assistant, ...de_rhythm, ...de_money, ...de_core };
 
 const DICTS: Record<Lang, Record<string, string>> = { en: {}, de };
 

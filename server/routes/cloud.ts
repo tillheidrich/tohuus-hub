@@ -74,6 +74,7 @@ const legal = () => ({
   terms: process.env.LEGAL_TERMS_URL || null,
   imprint: process.env.LEGAL_IMPRINT_URL || null,
 });
+import { householdAiOn, mcpOn } from '../lib/ai-policy.js';
 const aiConfigured = () => Boolean(process.env.AI_API_KEY) || visionEnabled();
 
 // ================================================================= instance (both modes)
@@ -98,7 +99,13 @@ instance.get('/instance', (_req, res) => {
       oidc: !cloudMode() && ssoReady(),
     },
     signup: cloudMode() && config.signupOpen,
-    features: { assistant: aiConfigured(), voice: aiConfigured(), receiptsAi: aiConfigured(), billingApple: cloudMode() },
+    features: (() => {
+      // household switches (ai-policy.ts) – only known inside a household; the sign-in page sees the instance
+      const household = inHousehold ? householdAiOn() : true;
+      const mcp = inHousehold ? mcpOn() : true;
+      const on = aiConfigured() && household;
+      return { assistant: on, voice: on, receiptsAi: on, billingApple: cloudMode(), ai: { configured: aiConfigured(), household, mcp } };
+    })(),
     legal: legal(),
   });
 });

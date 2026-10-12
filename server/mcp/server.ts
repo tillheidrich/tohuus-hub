@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { db } from '../db.js';
 import { actorFromBearer, safeEqual } from '../lib/auth.js';
+import { mcpOn } from '../lib/ai-policy.js';
 import { emit } from '../lib/bus.js';
 import { findThings } from '../lib/find.js';
 import {
@@ -615,6 +616,11 @@ export async function handleMcp(req: Request, res: Response) {
   }
   if (!actorName) {
     res.status(401).json({ jsonrpc: '2.0', error: { code: -32001, message: 'Unauthorized' }, id: null });
+    return;
+  }
+  // the household switched MCP off for its own assistants (Settings › Access & AI) – ai-policy.ts
+  if (!mcpOn()) {
+    res.status(403).json({ jsonrpc: '2.0', error: { code: -32003, message: 'MCP access is switched off for this household' }, id: null });
     return;
   }
   if (req.method !== 'POST') {

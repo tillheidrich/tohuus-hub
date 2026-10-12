@@ -29,6 +29,7 @@ import { useHousehold } from '../household';
 import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
 import { AssistantPrivacyCard } from './Memory';
+import { AiSwitchesCard } from './AiSettings';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -107,6 +108,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'places' && <PlacesSettings admin={admin} />}
       {tab === 'places' && <CategorySettings admin={admin} />}
       {tab === 'notify' && <Notify admin={admin} />}
+      {tab === 'access' && <AiSwitchesCard />}
       {tab === 'access' && <AssistantPrivacyCard admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
       {tab === 'ha' && <Ha2Settings admin={admin} />}

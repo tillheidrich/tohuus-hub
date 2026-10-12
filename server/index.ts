@@ -50,6 +50,8 @@ import { r as designRoutes } from './routes/design.js';
 import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
 import { r as buyAtRoutes } from './routes/buyat.js';
 import { r as featureRoutes } from './routes/features.js';
+import { r as aiSettingsRoutes } from './routes/ai-settings.js';
+import { AiError } from './lib/ai.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
@@ -171,6 +173,7 @@ app.use('/api', invitesRoutes);
 app.use('/api', buyAtRoutes);
 app.use('/api', billingRoutes);
 app.use('/api', featureRoutes);
+app.use('/api', aiSettingsRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -213,6 +216,10 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   }
   if (err instanceof UsageLimitError) {
     res.status(err.status).json(err.toJSON());
+    return;
+  }
+  if (err instanceof AiError) {
+    res.status(err.status).json({ error: err.message, code: err.code });
     return;
   }
   if (err instanceof MulterError) {
