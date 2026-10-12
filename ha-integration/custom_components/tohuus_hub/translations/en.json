@@ -3,31 +3,53 @@
     "step": {
       "user": {
         "title": "Connect ToHuus Hub",
-        "description": "In ToHuus Hub open Settings › Access & AI › New access, choose \"Home Assistant\" and copy the token. Enter the address you open ToHuus Hub with.",
+        "description": "Where does your ToHuus run?",
+        "menu_options": {
+          "cloud": "ToHuus Cloud",
+          "own_server": "Own server (self-hosted)"
+        }
+      },
+      "cloud": {
+        "title": "ToHuus Cloud",
+        "description": "In the ToHuus app open Settings › Home Assistant and tap \"Connect Home Assistant\". Enter the code shown there (valid 10 minutes). Home Assistant then connects to {url} by itself, nothing at home has to be reachable from the internet.",
+        "data": {
+          "code": "Code from the app"
+        },
+        "data_description": {
+          "code": "Eight characters, e.g. ABCD-EFGH. Upper or lower case does not matter."
+        }
+      },
+      "own_server": {
+        "title": "Own ToHuus Hub",
+        "description": "Enter the address Home Assistant reaches your ToHuus Hub at, plus the code from Settings › Home Assistant › \"Connect Home Assistant\". Instead of a code you can paste a token from Settings › Access & AI › New access › \"Home Assistant\".",
         "data": {
           "url": "Address",
-          "token": "Access token",
+          "code": "Code from the app",
+          "token": "Token instead of code",
           "verify_ssl": "Verify SSL certificate"
         },
         "data_description": {
-          "url": "For example http://192.168.1.20:8080 or https://home.example.com",
-          "token": "Starts with sw_ – shown only once when you create it.",
+          "url": "For example http://192.168.1.20:8080",
+          "code": "Eight characters, valid 10 minutes, works once.",
+          "token": "Starts with sw_. Only needed without a code.",
           "verify_ssl": "Turn off only for self-signed certificates."
         }
       },
       "reauth_confirm": {
-        "title": "New access token",
-        "description": "ToHuus Hub at {url} no longer accepts the token. Create a new \"Home Assistant\" access and paste it here.",
+        "title": "Connect again",
+        "description": "ToHuus Hub at {url} no longer accepts the access. Create a new code in ToHuus (Settings › Home Assistant › \"Connect Home Assistant\") or paste a new token.",
         "data": {
-          "token": "Access token"
+          "code": "Code from the app",
+          "token": "Token instead of code"
         }
       },
       "reconfigure": {
         "title": "Change ToHuus Hub address",
-        "description": "Leave the token empty to keep the current one.",
+        "description": "Leave code and token empty to keep the current access. Moving to ToHuus Cloud: enter {cloud_url} and a code from the cloud household.",
         "data": {
           "url": "Address",
-          "token": "Access token",
+          "code": "Code from the app",
+          "token": "Token instead of code",
           "verify_ssl": "Verify SSL certificate"
         }
       }
@@ -36,7 +58,11 @@
       "cannot_connect": "Can't reach ToHuus Hub at this address.",
       "invalid_auth": "The token was rejected. Create a new \"Home Assistant\" access in ToHuus Hub.",
       "not_supported": "This ToHuus Hub is too old for the integration. Update ToHuus Hub first.",
-      "unknown": "Unexpected error."
+      "unknown": "Unexpected error.",
+      "invalid_code": "This code is not valid (any more). Create a new one in the app and enter it within 10 minutes.",
+      "too_many_attempts": "Too many attempts. Wait a few minutes and create a new code.",
+      "code_or_token": "Enter the code from the app (or a token).",
+      "pairing_not_supported": "This ToHuus Hub does not know codes yet. Update it, or paste a token instead."
     },
     "abort": {
       "already_configured": "This ToHuus Hub is already set up.",
@@ -58,14 +84,18 @@
           "display_height": "Display image height",
           "cookidoo_sync": "Send the Cookidoo week to ToHuus Hub",
           "cookidoo_entity": "Cookidoo calendar",
-          "bridge": "Two-way sync with ToHuus Hub"
+          "bridge": "Two-way sync with ToHuus Hub",
+          "notify_services": "Send ToHuus notifications to",
+          "notify_events": "Which notifications"
         },
         "data_description": {
           "live_updates": "Keeps a connection open so changes show up within a second or two. Without it, Home Assistant asks every minute.",
           "display_mode": "For kitchen displays shown as image entities.",
           "cookidoo_sync": "Reads the planned dishes from the Cookidoo integration every 3 hours and whenever the calendar changes, and puts them into the ToHuus Hub meal plan.",
           "cookidoo_entity": "Usually calendar.cookidoo_speiseplan. Leave empty to use it automatically as soon as it exists.",
-          "bridge": "Lets ToHuus Hub see your to-do lists, calendars, people, notify services and voice-exposed devices, keep the lists and calendars you choose in ToHuus Hub (Settings › Home Assistant) in sync both ways, send notifications through the companion app and use NFC tag scans as quick actions."
+          "bridge": "Lets ToHuus Hub see your to-do lists, calendars, people, notify services and voice-exposed devices (names and areas only, for the house info cards for babysitters and guests), keep the lists and calendars you choose in ToHuus Hub (Settings › Home Assistant) in sync both ways, send notifications through the companion app and use NFC tag scans as quick actions. Who leads per topic: the \"who leads\" selects of this device.",
+          "notify_services": "Notify services, e.g. notify.mobile_app_… or a TV/speaker. Home Assistant receives the notifications over the live connection and passes them on. Leave empty if ToHuus already sends them per person (Settings › Home Assistant › Notifications).",
+          "notify_events": "Only these kinds go to the services above."
         }
       }
     }
@@ -91,6 +121,22 @@
       "options": {
         "lunch": "Lunch",
         "dinner": "Dinner"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "stock_low": "Running low",
+        "stock_empty": "Run out",
+        "stock_expiring": "Best before soon",
+        "import_review": "Receipt waiting for review",
+        "order_new": "New order",
+        "order_status": "Order status",
+        "shopping_added": "Added to the shopping list",
+        "digest_daily": "Daily summary",
+        "care_due": "Care task due",
+        "party_ending": "Party ending",
+        "kids_wish": "Kid wish",
+        "test": "Test"
       }
     }
   },
@@ -138,6 +184,15 @@
       },
       "receipts_to_review": {
         "name": "Receipts to review"
+      },
+      "due": {
+        "name": "Due to buy"
+      },
+      "spending_month": {
+        "name": "Spent this month"
+      },
+      "spending_week": {
+        "name": "Spent this week"
       }
     },
     "binary_sensor": {
@@ -200,6 +255,35 @@
               "test": "Test"
             }
           }
+        }
+      }
+    },
+    "select": {
+      "leader_shopping": {
+        "name": "Shopping list: who leads",
+        "state": {
+          "both": "Both",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Off"
+        }
+      },
+      "leader_meals": {
+        "name": "Meal plan: who leads",
+        "state": {
+          "both": "Both",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Off"
+        }
+      },
+      "leader_care": {
+        "name": "Care tasks: who leads",
+        "state": {
+          "both": "Both",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Off"
         }
       }
     }

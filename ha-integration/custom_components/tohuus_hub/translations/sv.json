@@ -3,31 +3,53 @@
     "step": {
       "user": {
         "title": "Anslut ToHuus Hub",
-        "description": "Öppna Inställningar › Åtkomst & AI › Ny åtkomst i ToHuus Hub, välj \"Home Assistant\" och kopiera token. Ange adressen du öppnar ToHuus Hub med.",
+        "description": "Var körs ditt ToHuus?",
+        "menu_options": {
+          "cloud": "ToHuus Cloud",
+          "own_server": "Egen server (självhostad)"
+        }
+      },
+      "cloud": {
+        "title": "ToHuus Cloud",
+        "description": "Öppna Inställningar › Home Assistant i ToHuus-appen och tryck på \"Anslut Home Assistant\". Ange koden som visas där (giltig i 10 minuter). Home Assistant ansluter sedan själv till {url}, inget hemma behöver nås från internet.",
+        "data": {
+          "code": "Kod från appen"
+        },
+        "data_description": {
+          "code": "Åtta tecken, t.ex. ABCD-EFGH. Stora eller små bokstäver spelar ingen roll."
+        }
+      },
+      "own_server": {
+        "title": "Egen ToHuus Hub",
+        "description": "Ange adressen där Home Assistant når din ToHuus Hub och koden från Inställningar › Home Assistant › \"Anslut Home Assistant\". I stället för en kod kan du klistra in en token från Inställningar › Åtkomst & AI › Ny åtkomst › \"Home Assistant\".",
         "data": {
           "url": "Adress",
-          "token": "Åtkomsttoken",
+          "code": "Kod från appen",
+          "token": "Token i stället för kod",
           "verify_ssl": "Verifiera SSL-certifikat"
         },
         "data_description": {
-          "url": "Till exempel http://192.168.1.20:8080 eller https://hem.example.se",
-          "token": "Börjar med sw_ – visas bara en gång när den skapas.",
-          "verify_ssl": "Stäng bara av för självsignerade certifikat."
+          "url": "Till exempel http://192.168.1.20:8080",
+          "code": "Åtta tecken, giltig i 10 minuter, fungerar en gång.",
+          "token": "Börjar med sw_. Behövs bara utan kod.",
+          "verify_ssl": "Stäng av bara för självsignerade certifikat."
         }
       },
       "reauth_confirm": {
-        "title": "Ny åtkomsttoken",
-        "description": "ToHuus Hub på {url} godtar inte längre token. Skapa en ny \"Home Assistant\"-åtkomst och klistra in den här.",
+        "title": "Anslut igen",
+        "description": "ToHuus Hub på {url} godtar inte längre åtkomsten. Skapa en ny kod i ToHuus (Inställningar › Home Assistant › \"Anslut Home Assistant\") eller klistra in en ny token.",
         "data": {
-          "token": "Åtkomsttoken"
+          "code": "Kod från appen",
+          "token": "Token i stället för kod"
         }
       },
       "reconfigure": {
-        "title": "Ändra adress till ToHuus Hub",
-        "description": "Lämna token tom för att behålla den nuvarande.",
+        "title": "Ändra adressen till ToHuus Hub",
+        "description": "Lämna kod och token tomma för att behålla nuvarande åtkomst. Flytt till ToHuus Cloud: ange {cloud_url} och en kod från molnhushållet.",
         "data": {
           "url": "Adress",
-          "token": "Åtkomsttoken",
+          "code": "Kod från appen",
+          "token": "Token i stället för kod",
           "verify_ssl": "Verifiera SSL-certifikat"
         }
       }
@@ -36,7 +58,11 @@
       "cannot_connect": "ToHuus Hub går inte att nå på den här adressen.",
       "invalid_auth": "Token avvisades. Skapa en ny \"Home Assistant\"-åtkomst i ToHuus Hub.",
       "not_supported": "Den här ToHuus Hub är för gammal för integrationen. Uppdatera ToHuus Hub först.",
-      "unknown": "Oväntat fel."
+      "unknown": "Oväntat fel.",
+      "invalid_code": "Koden är inte (längre) giltig. Skapa en ny i appen och ange den inom 10 minuter.",
+      "too_many_attempts": "För många försök. Vänta några minuter och skapa en ny kod.",
+      "code_or_token": "Ange koden från appen (eller en token).",
+      "pairing_not_supported": "Den här ToHuus Hub känner inte till koder än. Uppdatera den eller använd en token."
     },
     "abort": {
       "already_configured": "Den här ToHuus Hub är redan konfigurerad.",
@@ -58,14 +84,18 @@
           "display_height": "Skärmbildens höjd",
           "cookidoo_sync": "Skicka Cookidoo-veckan till ToHuus Hub",
           "cookidoo_entity": "Cookidoo-kalender",
-          "bridge": "Tvåvägssynk med ToHuus Hub"
+          "bridge": "Tvåvägssynk med ToHuus Hub",
+          "notify_services": "Skicka ToHuus-aviseringar till",
+          "notify_events": "Vilka aviseringar"
         },
         "data_description": {
           "live_updates": "Håller en anslutning öppen så att ändringar syns inom en sekund eller två. Utan den frågar Home Assistant varje minut.",
           "display_mode": "För köksskärmar som visas som bildentiteter.",
           "cookidoo_sync": "Läser de planerade rätterna från Cookidoo-integrationen var tredje timme och när kalendern ändras, och lägger in dem i matsedeln i ToHuus Hub.",
           "cookidoo_entity": "Oftast calendar.cookidoo_speiseplan. Lämna tomt så används den automatiskt så fort den finns.",
-          "bridge": "Låter ToHuus Hub se era att göra-listor, kalendrar, personer, aviseringstjänster och röststyrda enheter, synkar de listor och kalendrar du väljer i ToHuus Hub (Inställningar › Home Assistant) åt båda hållen, skickar aviseringar via companion-appen och använder NFC-taggar som snabbåtgärder."
+          "bridge": "Låter ToHuus Hub se era att göra-listor, kalendrar, personer, aviseringstjänster och röststyrda enheter, synkar de listor och kalendrar du väljer i ToHuus Hub (Inställningar › Home Assistant) åt båda hållen, skickar aviseringar via companion-appen och använder NFC-taggar som snabbåtgärder.",
+          "notify_services": "Aviseringstjänster, t.ex. notify.mobile_app_… eller en tv/högtalare. Lämna tomt om ToHuus redan skickar dem per person.",
+          "notify_events": "Bara dessa typer går till tjänsterna ovan."
         }
       }
     }
@@ -91,6 +121,22 @@
       "options": {
         "lunch": "Lunch",
         "dinner": "Middag"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "stock_low": "Snart slut",
+        "stock_empty": "Slut",
+        "stock_expiring": "Bäst före snart",
+        "import_review": "Kvitto väntar på granskning",
+        "order_new": "Ny beställning",
+        "order_status": "Beställningsstatus",
+        "shopping_added": "Lagt på inköpslistan",
+        "digest_daily": "Daglig sammanfattning",
+        "care_due": "Skötseluppgift förfaller",
+        "party_ending": "Festen slutar",
+        "kids_wish": "Barnets önskan",
+        "test": "Test"
       }
     }
   },
@@ -138,6 +184,15 @@
       },
       "receipts_to_review": {
         "name": "Kvitton att granska"
+      },
+      "due": {
+        "name": "Dags att köpa"
+      },
+      "spending_month": {
+        "name": "Utgifter denna månad"
+      },
+      "spending_week": {
+        "name": "Utgifter denna vecka"
       }
     },
     "binary_sensor": {
@@ -200,6 +255,35 @@
               "test": "Test"
             }
           }
+        }
+      }
+    },
+    "select": {
+      "leader_shopping": {
+        "name": "Inköpslista: vem styr",
+        "state": {
+          "both": "Båda",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Av"
+        }
+      },
+      "leader_meals": {
+        "name": "Veckomeny: vem styr",
+        "state": {
+          "both": "Båda",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Av"
+        }
+      },
+      "leader_care": {
+        "name": "Skötseluppgifter: vem styr",
+        "state": {
+          "both": "Båda",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Av"
         }
       }
     }

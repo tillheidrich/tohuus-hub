@@ -33,7 +33,7 @@ A "Home Assistant" token can only call `/api/ha/*` and `/api/events` – nothing
 
 Codes live in memory (hashed, one per household); in ToHuus Cloud the code also routes to its household, the token is created there and carries the household's routing prefix. The iPhone app can show the same code (call `start`, poll `status`).
 
-**Options** (*Configure*): features on/off (to-do, calendars, display images, buttons, event entity – sensors are always on), live updates on/off, display image colours (`color` / `gray` / `bw`) and size, Cookidoo week on/off and its calendar entity. Switching a feature off removes its entities.
+**Options** (*Configure*): notify services + kinds (0.3: ToHuus notifications from the live stream are passed to `notify.*` services – don't combine with per-member routing in *Settings › Home Assistant*, or they arrive twice), features on/off (to-do, calendars, display images, buttons, event entity – sensors are always on), live updates on/off, display image colours (`color` / `gray` / `bw`) and size, Cookidoo week on/off and its calendar entity. Switching a feature off removes its entities.
 
 **Re-authentication:** if the token is revoked, Home Assistant asks for a new one. *Reconfigure* changes the address.
 
@@ -43,6 +43,9 @@ One device "ToHuus Hub" per ToHuus Hub instance (model = household name). Entity
 
 | Entity | State | Attributes |
 |---|---|---|
+| `sensor.tohuus_hub_due` (0.3) | rhythm suggestions due now | `items` [{name, every_days, last_bought, due_on, label}] |
+| `sensor.tohuus_hub_spending_month` / `_spending_week` (0.3) | money spent (monetary, unit = household currency) | `week`, `month`, `budget`, `budget_left`, `budget_state` (month sensor) |
+| `select.tohuus_hub_leader_shopping` / `_meals` / `_care` (0.3, bridge on) | who leads: `both` / `home_assistant` / `tohuus` / `off` (the modes the topic offers) | `entities` (HA lists/calendars taking part) |
 | `todo.tohuus_hub_shopping_list` | open items | – (to-do items: summary, status, description = "2× · note") |
 | `calendar.tohuus_hub_meal_plan` | on while today has a planned meal | next meal: `recipe_id`, `slot`, `image_url` |
 | `calendar.tohuus_hub_care_tasks` | on on the next due day | – |
