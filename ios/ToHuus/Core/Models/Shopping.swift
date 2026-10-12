@@ -9,14 +9,12 @@ struct ShopList: Codable, Sendable {
     @Lossy var basket: [ShopItem]
     @Lossy var done: [ShopItem]
     var open: Int?
-    /// several lists (e.g. "Drogerie", "Für Oma"): all lists and the one shown – missing on servers with one list
+    /// several lists (`GET /api/shop/list?list=<id>`, 0 = main): all lists and the one shown
     @Lossy var lists: [ListRef]
-    var list: ListRef?
-    /// who is out shopping right now ("Sam kauft gerade ein") and the add-on requests for that trip
-    @Lossy var shoppers: [Shopper]
-    @Lossy var requests: [AddonRequest]
-    /// expected total from known prices
+    var listId: FlexID?
+    /// expected total from the latest receipt prices
     var estimate: Estimate?
+    var serverTime: String?
 
     static let empty = ShopList()
 
@@ -30,58 +28,99 @@ struct ShopList: Codable, Sendable {
         _basket = Lossy(wrappedValue: basket)
         _done = Lossy(wrappedValue: done)
         _lists = Lossy(wrappedValue: [])
-        _shoppers = Lossy(wrappedValue: [])
-        _requests = Lossy(wrappedValue: [])
     }
 
-    /// Expected total: the server's estimate, else the sum of the prices the rows carry.
+    /// Expected total: the server's estimate, else the last receipt prices the rows carry.
     var expected: Estimate? {
-        if let estimate, estimate.total != nil { return estimate }
-        let items = openItems + basket
-        let priced = items.compactMap { i in i.price.map { $0 * (i.qty ?? 1) } }
+        if let estimate, (estimate.total ?? 0) > 0 { return estimate }
+        let items = openItems
+        let priced = items.compactMap { i in i.lastBought?.price.map { $0 * (i.qty ?? 1) } }
         guard !priced.isEmpty else { return nil }
-        return Estimate(total: priced.reduce(0, +), known: priced.count, count: items.count, currency: nil)
+        return Estimate(total: priced.reduce(0, +), priced: priced.count, unpriced: items.count - priced.count)
+    }
+
+    /// the list shown, from `lists`
+    var currentList: ListRef? {
+        let id = listId?.value ?? "0"
+        return lists.first { $0.id.value == id }
     }
 
     var openItems: [ShopItem] { sections.flatMap(\.items) }
     var openCount: Int { openItems.count }
 }
 
+/// `GET /api/list/lists` – id 0 = the main list; kind main|store|gifts|care|other
 struct ListRef: Codable, Sendable, Identifiable, Hashable {
     var id: FlexID
     var name: String
+    var kind: String?
+    var note: String?
     var open: Int?
+    var isMain: Bool { id.value == "0" || kind == "main" }
 }
 
-/// A member who is out shopping (live shopping together).
-struct Shopper: Codable, Sendable, Identifiable, Hashable {
-    var userId: Int?
-    var name: String
-    var store: String?
-    var storeId: Int?
-    var since: String?
-    var me: Bool?
-    var id: String { userId.map(String.init) ?? name }
-}
-
-/// "Bringst du noch … mit?" – a wish for someone's current trip.
-struct AddonRequest: Codable, Sendable, Identifiable, Hashable {
+/// `GET /api/shop/trips` – someone is out shopping (trips start by themselves from ticks in a shop).
+struct Trip: Codable, Sendable, Identifiable, Hashable {
     var id: Int
-    var text: String
-    var by: String?
-    var to: String?
-    /// open | accepted | declined
-    var status: String?
-    var at: String?
-    var isOpen: Bool { status == nil || status == "open" }
+    var user: Person
+    var store: StoreRef?
+    var startedAt: String?
+    var lastAt: String?
+    var mine: Bool?
+    @Lossy var basket: [Row]
+    @Lossy var addOns: [AddOn]
+
+    struct Person: Codable, Sendable, Hashable {
+        var id: Int?
+        var name: String
+        var color: String?
+    }
+
+    struct Row: Codable, Sendable, Hashable, Identifiable {
+        var id: Int
+        var text: String
+        var qty: Double?
+    }
+
+    /// "Bringst du noch … mit?" – a list row on that trip; `id` is the `request_id` for addon-accept/-decline
+    struct AddOn: Codable, Sendable, Hashable, Identifiable {
+        var id: Int
+        var text: String
+        var from: String?
+        var done: Bool?
+    }
+
+    static func == (a: Trip, b: Trip) -> Bool { a.id == b.id && a.lastAt == b.lastAt && a.addOns == b.addOns }
+    func hash(into h: inout Hasher) { h.combine(id) }
+
+    var isMine: Bool { mine == true }
+    var openAddOns: [AddOn] { addOns.filter { $0.done != true } }
 }
 
+/// `GET /api/list/estimate` / `estimate` in the list: latest receipt price × qty, unpriced rows counted, never guessed.
 struct Estimate: Codable, Sendable, Hashable {
     var total: Double?
-    /// rows with a known price / all rows
-    var known: Int?
-    var count: Int?
+    var priced: Int?
+    var unpriced: Int?
+    var unpricedNames: [String]?
+    var since: String?
     var currency: String?
+
+    init(total: Double?, priced: Int?, unpriced: Int?) {
+        self.total = total
+        self.priced = priced
+        self.unpriced = unpriced
+    }
+}
+
+/// `last_bought` on a list row (from receipts)
+struct LastBought: Codable, Sendable, Hashable {
+    var name: String?
+    var size: String?
+    var imagePath: String?
+    var shop: String?
+    var day: String?
+    var price: Double?
 }
 
 struct StoreRef: Codable, Sendable, Identifiable, Hashable {
@@ -89,6 +128,10 @@ struct StoreRef: Codable, Sendable, Identifiable, Hashable {
     var name: String
     var order: [String]?
     var trips: Int?
+    /// coordinates a person entered (for the store-arrival hint on the phone)
+    var lat: Double?
+    var lon: Double?
+    var radiusM: Double?
 }
 
 struct ShopSection: Codable, Sendable, Identifiable {
@@ -126,13 +169,15 @@ struct ShopItem: Codable, Sendable, Identifiable, Equatable {
     var origin: String?
     /// queued locally, not yet on the server
     var pending: Bool?
-    /// substitute rule: any | ask | none (and an optional note "lieber Hafermilch")
+    /// substitute rule: exact ("genau dieses") | ok ("Ersatz ok") | ask ("vorher fragen")
     var substitute: String?
-    var substituteNote: String?
     /// photo of the wanted product (signed image path)
-    var photo: String?
-    /// last known price per unit (for the expected total)
-    var price: Double?
+    var photoPath: String?
+    var lastBought: LastBought?
+    var listId: Int?
+    /// "Spinat 3× weggeworfen – lieber 250 g?", "am günstigsten bei Aldi: 1,99 €"
+    var sizeHint: String?
+    var priceHint: String?
 
     struct Claim: Codable, Sendable, Equatable {
         var userId: Int?

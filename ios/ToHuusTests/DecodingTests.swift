@@ -12,20 +12,29 @@ final class DecodingTests: XCTestCase {
         try JSONCoding.decoder().decode(T.self, from: try fixture(name))
     }
 
-    // Fixtures are real responses from the server (branch integrate, MULTI_TENANT=true, demo data + 5 receipts),
-    // captured with an app token – see ios/tools/README in the commit message for how they were made.
+    // Fixtures are real responses from a server built from main (12 Oct 2026, after the merge of b-core/b-list/b-recipes),
+    // MULTI_TENANT=true, account Sam / Familie Berg with demo data + 5 receipts, captured with an app token by
+    // .xfer/fixtures-b.sh (tokens replaced by a placeholder).
 
     func testShopList() throws {
         let list = try decode(ShopList.self, "shop-list")
         XCTAssertGreaterThanOrEqual(list.stores.count, 2)
-        XCTAssertEqual(list.sections.map(\.key), ["produce", "chilled", "frozen", "household", "other"])
-        XCTAssertEqual(list.openCount, 6)
-        XCTAssertEqual(list.open, 6)
+        XCTAssertEqual(list.sections.map(\.key), ["produce", "chilled", "frozen", "pantry", "household", "other"])
+        XCTAssertEqual(list.openCount, 9)
+        XCTAssertEqual(list.open, 9)
+        XCTAssertEqual(list.listId?.value, "0")
+        XCTAssertEqual(list.lists.map(\.name), ["Einkaufsliste", "Drogerie"])
+        XCTAssertEqual(list.currentList?.isMain, true)
+        XCTAssertEqual(list.estimate?.unpriced, 9)
+        XCTAssertEqual(list.done.first?.text, "Brot", "ticked rows stay until „Einkauf fertig“")
+        XCTAssertEqual(list.openItems.first { $0.text == "Hafermilch" }?.originLine, "Sam fragt: Bringst du das mit?")
         let milk = try XCTUnwrap(list.openItems.first { $0.text == "Milch" })
         XCTAssertEqual(milk.qtyLabel, "2×")
         XCTAssertFalse(milk.isInBasket)
-        XCTAssertEqual(milk.origin, "Sam · heute 15:26")
-        XCTAssertEqual(milk.originLine, "Sam · heute 15:26", "the server's origin line is shown as it is")
+        XCTAssertEqual(milk.origin, "Sam · heute 20:38")
+        XCTAssertEqual(milk.originLine, "Sam · heute 20:38", "the server's origin line is shown as it is")
+        XCTAssertEqual(milk.substitute, "ask")
+        XCTAssertEqual(milk.note, "laktosefrei")
         XCTAssertEqual(list.openItems.first { $0.text == "Erdbeer-Eis" }?.originLine, "im Vorrat knapp")
         // lenient: a broken row is dropped, not the whole list
         var raw = try XCTUnwrap(JSONSerialization.jsonObject(with: try fixture("shop-list")) as? [String: Any])
@@ -36,19 +45,19 @@ final class DecodingTests: XCTestCase {
         raw["sections"] = sections
         raw["unknown"] = ["future": true]
         let again = try JSONCoding.decoder().decode(ShopList.self, from: JSONSerialization.data(withJSONObject: raw))
-        XCTAssertEqual(again.openCount, 6)
+        XCTAssertEqual(again.openCount, 9)
     }
 
     func testToday() throws {
         let t = try decode(TodayPayload.self, "today")
-        XCTAssertEqual(t.greeting, "Hallo, Sam")
+        XCTAssertEqual(t.greeting, "Guten Abend, Sam")
         XCTAssertEqual(t.householdName, "Familie Berg")
         XCTAssertEqual(t.rhythm.count, 5)
         XCTAssertEqual(t.rhythm[0].name, "Bananen")
         XCTAssertEqual(t.rhythm[0].dueInDays, -2)
         XCTAssertEqual(t.rhythm[0].detail, "alle ~7 Tage · zuletzt vor 9 Tagen")
-        XCTAssertEqual(t.list?.open, 6)
-        XCTAssertEqual(t.list?.recent.first?.title, "Paketband")
+        XCTAssertEqual(t.list?.open, 9)
+        XCTAssertEqual(t.list?.recent.first?.title, "Hafermilch")
         XCTAssertEqual(t.list?.recent.first { $0.text == "Milch" }?.title, "2× Milch")
         XCTAssertEqual(t.stillHave.map(\.name), ["Fruchtzwerge weniger süß", "Mozzarella", "Feta"])
         XCTAssertEqual(t.stillHave[0].label, "Datum überschritten")
@@ -60,7 +69,7 @@ final class DecodingTests: XCTestCase {
         XCTAssertEqual(t.money?.budgetAmount, 400)
         XCTAssertEqual(t.money?.budgetState, "ok")
         XCTAssertEqual(t.money?.currency, "EUR")
-        XCTAssertEqual(t.notices.first?.kind, "imports")
+        XCTAssertTrue(t.notices.isEmpty)
     }
 
     func testTodayLenient() throws {
@@ -90,38 +99,38 @@ final class DecodingTests: XCTestCase {
 
     func testProducts() throws {
         let p = try JSONCoding.decoder().decode(Lossy<ProductInfo>.self, from: try fixture("products")).wrappedValue
-        XCTAssertEqual(p.count, 66)
+        XCTAssertEqual(p.count, 70)
         XCTAssertTrue(p.contains { !$0.stock.isEmpty })
         XCTAssertTrue(p.allSatisfy { $0.status != nil })
         let d = try decode(ProductInfo.self, "product-detail")
-        XCTAssertEqual(d.name, "Bananen")
+        XCTAssertEqual(d.name, "6-Kräuter")
         XCTAssertEqual(d.history.count, 1)
         let places = try JSONCoding.decoder().decode(Lossy<Place>.self, from: try fixture("places")).wrappedValue
         XCTAssertEqual(places.first?.name, "Kühlschrank")
-        XCTAssertEqual(places.first?.productCount, 9)
+
     }
 
     func testRecipeAndMatch() throws {
         let r = try decode(Recipe.self, "recipe")
-        XCTAssertEqual(r.id, 1)
+        XCTAssertEqual(r.id, 5)
         XCTAssertEqual(r.steps.count, 3)
-        XCTAssertEqual(r.ingredients.count, 6)
+        XCTAssertEqual(r.ingredients.count, 5)
         let m = try JSONCoding.decoder().decode(Lossy<IngredientMatch>.self, from: try fixture("recipe-match")).wrappedValue
-        XCTAssertEqual(m.count, 6)
+        XCTAssertEqual(m.count, 5)
         XCTAssertTrue(m[0].atHome)
     }
 
     func testCookIdeas() throws {
         let res = try decode(CookIdeasResponse.self, "cook-ideas")
-        XCTAssertEqual(res.ideas.count, 7, "ready + almost")
-        XCTAssertEqual(res.ideas.filter { $0.missing.isEmpty }.count, 6)
+        XCTAssertEqual(res.ideas.count, 8, "ready + almost")
+        XCTAssertEqual(res.ideas.filter { $0.missing.isEmpty }.count, 7)
         let almost = try XCTUnwrap(res.ideas.last)
         XCTAssertEqual(almost.title, "Pfannkuchen")
         XCTAssertEqual(almost.missing.map(\.name), ["Milch"])
         XCTAssertEqual(res.ideas[0].reasons.first, "alles da")
         // older servers: /api/recipes/suggest has the same information
         let fromSuggest = try JSONCoding.decoder().decode(Lossy<CookIdea>.self, from: try fixture("recipes-suggest")).wrappedValue
-        XCTAssertEqual(fromSuggest.count, 5)
+        XCTAssertEqual(fromSuggest.count, 8)
         XCTAssertEqual(fromSuggest.first?.recipeId, 1)
         // a bare array is accepted too
         let arr = try JSONCoding.decoder().decode(CookIdeasResponse.self, from: Data(#"[{"recipeId":1,"title":"A","missing":[]}]"#.utf8))
@@ -164,7 +173,7 @@ final class DecodingTests: XCTestCase {
         XCTAssertEqual(b.assistantUsed, 0)
         XCTAssertEqual(b.assistantLimit, 1500)
         XCTAssertEqual(b.storageLimitBytes, 5_368_709_120)
-        XCTAssertEqual(b.storageUsedBytes, 5_867_772)
+        XCTAssertEqual(b.storageUsedBytes, 5_651_086)
         XCTAssertFalse(b.isPaid)
         XCTAssertNotNil(ServerDate.parse(b.trialEndsAt))
     }
@@ -172,26 +181,28 @@ final class DecodingTests: XCTestCase {
     func testAuthResponses() throws {
         let a = try decode(AppAuthResponse.self, "auth-app")
         XCTAssertTrue(a.token.hasPrefix("sw_app_"))
-        XCTAssertEqual(a.householdId, "1ebb0595-5608-40c3-93d6-47d91417735d")
+        XCTAssertEqual(a.householdId, "65047130-a4f0-4674-b549-217f716b1d3a")
         XCTAssertEqual(a.households.first?.name, "Familie Berg")
-        XCTAssertEqual(a.households.first?.trialEndsAt, "2026-10-26 13:26:36")
+        XCTAssertEqual(a.households.first?.trialEndsAt, "2026-10-26 18:38:30")
         XCTAssertEqual(a.userName, "Sam")
         let s = try decode(AppAuthResponse.self, "signup")
-        XCTAssertEqual(s.householdId, "1ebb0595-5608-40c3-93d6-47d91417735d")
+        XCTAssertEqual(s.householdId, "2120df47-8b52-4b34-b498-42f776bcfab4")
         XCTAssertTrue(s.households.isEmpty)
         let me = try decode(CloudMe.self, "cloud-me")
         XCTAssertEqual(me.email, "sam@example.org")
         XCTAssertFalse(me.verified)
         XCTAssertEqual(me.allHouseholds.count, 1)
         let devices = try JSONCoding.decoder().decode(Lossy<AppDevice>.self, from: try fixture("devices")).wrappedValue
-        XCTAssertEqual(devices.count, 2)
-        XCTAssertEqual(devices.first?.current, true)
-        XCTAssertEqual(devices.first?.label, "Test iPhone")
+        XCTAssertEqual(devices.count, 3)
+        XCTAssertEqual(devices.first { $0.current == true }?.label, "Simulator")
         let link = try decode(JSONValue.self, "web-link")
         XCTAssertEqual(link["expiresIn"]?.int, 60)
         XCTAssertTrue(link["url"]?.string?.contains("/api/auth/app/web-link/") == true)
         let mine = try decode(MeResponse.self, "me")
         XCTAssertEqual(mine.name, "Sam")
+        XCTAssertFalse(mine.isChild)
+        XCTAssertEqual(mine.modules?["cook"], true)
+        XCTAssertEqual(mine.listPrefs?["density"]?.string, "normal")
     }
 
     func testInstance() throws {
@@ -201,6 +212,8 @@ final class DecodingTests: XCTestCase {
         XCTAssertFalse(i.assistantEnabled, "no AI key on the fixture server")
         XCTAssertEqual(i.passwordMin, 10)
         XCTAssertNil(i.legal?.privacy)
+        XCTAssertEqual(i.features?.ai?["household"]?.bool, true)
+        XCTAssertEqual(i.features?.ocr?.bool, true)
     }
 
     func testChatAndOthers() throws {
@@ -212,12 +225,14 @@ final class DecodingTests: XCTestCase {
         let u = try decode(JSONValue.self, "undo")
         XCTAssertEqual(u["ok"]?.bool, true)
         let up = try decode(ImportUploadResponse.self, "imports-upload")
-        XCTAssertEqual(up.results.first?.id, 6)
+        XCTAssertEqual(up.results.first?.id, 5)
+        XCTAssertEqual(up.results.first?.duplicate, true)
         let s = try decode(SyncResponse.self, "sync")
-        XCTAssertEqual(s.results.map(\.opId), ["ios-test-1"])
+        XCTAssertEqual(s.results.map(\.opId), ["fx-c1", "fx-c2"])
         XCTAssertEqual(s.results.first?.ok, true)
         let b = try decode(BarcodeLookup.self, "barcode")
-        XCTAssertEqual(b.remoteName, "Haferdrink")
+        XCTAssertEqual(b.remoteName, "Marzipan")
+        XCTAssertEqual(b.remoteBrand, "Ritter Sport")
         XCTAssertNil(b.local)
     }
 

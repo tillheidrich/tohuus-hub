@@ -182,7 +182,7 @@ export async function memberEmail(userId: number): Promise<string | null> {
   // accounts.ts only in the cloud and only here (keeps notify.ts → notify-prefs.ts free of the directory)
   const { accountsDb } = await import('./accounts.js');
   const a = accountsDb()
-    .prepare('SELECT a.email, a.email_verified_at FROM memberships m JOIN accounts a ON a.id = m.account_id WHERE m.household_id = ? AND m.user_id = ?')
+    .prepare('SELECT a.email, a.verified_at AS email_verified_at FROM memberships m JOIN accounts a ON a.id = m.account_id WHERE m.household_id = ? AND m.user_id = ?')
     .get(h.id, userId) as { email: string; email_verified_at: string | null } | undefined;
   return a?.email && a.email_verified_at ? a.email : null;
 }

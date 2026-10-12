@@ -7,6 +7,7 @@ struct ProductDetailView: View {
     @State private var error: String?
     @State private var busy = false
     @State private var toast: String?
+    @State private var prices: [ShopPrice] = []
 
     var body: some View {
         ScrollView {
@@ -16,6 +17,7 @@ struct ProductDetailView: View {
                     amountCard(p)
                     if !p.stock.isEmpty { stockCard(p) }
                     actions(p)
+                    if !prices.isEmpty { pricesCard }
                     if !p.history.isEmpty { historyCard(p) }
                 } else if let error {
                     ErrorBanner(message: error) { Task { await load() } }
@@ -39,10 +41,29 @@ struct ProductDetailView: View {
         }
     }
 
+    /// GET /api/prices/product/:id – from the household's own receipts, cheapest first
+    private var pricesCard: some View {
+        Card(title: L("Prices from your receipts"), systemImage: "eurosign") {
+            ForEach(Array(prices.prefix(5).enumerated()), id: \.offset) { i, p in
+                HStack {
+                    Text(p.shop ?? "–").fontWeight(i == 0 ? .semibold : .regular)
+                    Spacer()
+                    VStack(alignment: .trailing) {
+                        Text(Money.format(p.price)).fontWeight(i == 0 ? .semibold : .regular)
+                        Text([p.baseLabel, ServerDate.shortDay(p.day)].compactMap { $0 }.joined(separator: " · "))
+                            .font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                }
+                .font(.subheadline)
+            }
+        }
+    }
+
     private func load() async {
         do {
             product = try await store.api.product(productId)
             error = nil
+            prices = (try? await store.api.prices(product: productId)) ?? []
         } catch {
             self.error = APIError.from(error).localizedDescription
         }

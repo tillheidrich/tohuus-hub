@@ -18,7 +18,7 @@ struct PendingOp: Codable, Sendable, Equatable {
     /// add: the temporary (negative) id of the row shown until the server confirms; ignored by the server
     var localId: Int?
     /// add: the list it belongs to when the household has several (ignored by servers with one list)
-    var listId: String?
+    var listId: Int?
 
     enum CodingKeys: String, CodingKey {
         case opId = "op_id", type, text, productId = "product_id", qty, id, on, storeId = "store_id", toStock = "to_stock", localId = "local_id"

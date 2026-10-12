@@ -20,6 +20,8 @@ struct NotifyPrefs: Decodable, Sendable, Equatable {
         var label: String?
         var on: Bool
         var locked = false
+        /// "nur wenn ich zu Hause bin"
+        var homeOnly = false
         var id: String { key }
 
         var title: String { label ?? NotifyPrefs.title(for: key) }
@@ -42,9 +44,12 @@ struct NotifyPrefs: Decodable, Sendable, Equatable {
         let c = try decoder.container(keyedBy: AnyKey.self)
         let ev = c.first(JSONValue.self, "events", "prefs") ?? .null
         events = Self.parseEvents(ev)
+        // real shape: `quiet: { from, to } | null`; older shape: `quietHours: { enabled, from, to }`
         if let q = c.first(JSONValue.self, "quietHours", "quiet") {
             quietHours = QuietHours(enabled: q["enabled"]?.bool ?? true, from: q.first("from", "start")?.string ?? "22:00",
                                     to: q.first("to", "end")?.string ?? "07:00")
+        } else if c.contains(AnyKey("quiet")) {
+            quietHours = QuietHours(enabled: false, from: "22:00", to: "07:00")
         }
     }
 
@@ -52,8 +57,10 @@ struct NotifyPrefs: Decodable, Sendable, Equatable {
         if let arr = v.array {
             return arr.compactMap { e in
                 guard let key = e.first("event", "key", "id")?.string else { return nil }
+                // `apns` is the iPhone channel (`push` = the browser)
                 return EventPref(key: key, label: e.first("label", "title")?.string,
-                                 on: e.first("push", "on", "enabled", "apns")?.bool ?? false, locked: e["locked"]?.bool ?? false)
+                                 on: e.first("apns", "on", "enabled", "push")?.bool ?? false, locked: e["locked"]?.bool ?? false,
+                                 homeOnly: e["homeOnly"]?.bool ?? false)
             }
         }
         if let obj = v.object {
@@ -78,8 +85,10 @@ struct NotifyPrefs: Decodable, Sendable, Equatable {
     /// German/English titles for the server's event keys (the server may send its own `label`).
     static func title(for key: String) -> String {
         switch key {
-        case "shopping.addon", "shop.addon": return L("Someone asks for something extra while I'm shopping")
-        case "shopping.live", "shop.live": return L("Someone is out shopping")
+        case "trip.addon", "shopping.addon": return L("Someone asks for something extra while I'm shopping")
+        case "trip.started", "shopping.live": return L("Someone is out shopping")
+        case "plan.reminder": return L("What's planned for today")
+        case "guest.order": return L("A guest wishes for something")
         case "shopping.added": return L("Something was added to the list")
         case "rhythm.due", "shopping.due": return L("Probably due (ToHuus remembers)")
         case "stock.low": return L("Running low")

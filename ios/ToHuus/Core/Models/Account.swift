@@ -26,6 +26,10 @@ struct InstanceInfo: Decodable, Sendable {
         var voice: JSONValue?
         var receiptsAi: JSONValue?
         var billingApple: JSONValue?
+        /// { configured, household, mcp }
+        var ai: JSONValue?
+        /// text recognition on the server
+        var ocr: JSONValue?
     }
 
     struct Legal: Decodable, Sendable {
@@ -91,6 +95,10 @@ struct MeResponse: Decodable, Sendable {
     var household: String?
     var language: String?
     var version: String?
+    /// "Was nutzen wir?" { stock, cook, money, treats, homeinfo, guests, ha }
+    var modules: [String: Bool]?
+    /// { density: compact|normal|large, fontScale }
+    var listPrefs: JSONValue?
 
     var name: String? { actor?["name"]?.string }
     var role: String? { actor?["role"]?.string }
@@ -119,6 +127,13 @@ struct BillingStatus: Decodable, Sendable {
     var trialEndsAt: String?
     var renewsAt: String?
     var source: String?
+    var expiresAt: String?
+    var autoRenew: Bool?
+    /// monthly | yearly
+    var period: String?
+    var manageUrl: String?
+    /// personal e-mail reminder before a yearly renewal
+    var reminder: JSONValue?
     var limits: JSONValue?
     var usage: JSONValue?
     var products: JSONValue?

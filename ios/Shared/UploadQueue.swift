@@ -10,6 +10,8 @@ struct PendingUpload: Codable, Identifiable, Sendable, Equatable {
     var url: String?
     var text: String?
     var createdAt: Date = Date()
+    /// a Cookidoo link in ToHuus Cloud: the app shows the confirm sheet (ingredients only) instead of sending it
+    var confirm: Bool?
 
     struct QueuedFile: Codable, Sendable, Equatable {
         var storedName: String
@@ -70,7 +72,7 @@ struct ShareUploader: Sendable {
     let session: SessionInfo
     let token: String
 
-    enum UploadError: Error { case offline, server(String) }
+    enum UploadError: Error { case offline, server(String), needsConfirm }
 
     private func request(_ path: String, method: String = "POST") -> URLRequest {
         var req = URLRequest(url: session.serverURL.appendingPathComponent(path))
@@ -92,7 +94,10 @@ struct ShareUploader: Sendable {
         }
         let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
         if !(200..<300).contains(code) {
-            let msg = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
+            let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            // Cookidoo in ToHuus Cloud: never fetched, the person confirms title + ingredients in the app
+            if code == 409, obj?["code"] as? String == "cookidoo_confirm" { throw UploadError.needsConfirm }
+            let msg = obj?["error"] as? String
             throw UploadError.server(msg ?? "HTTP \(code)")
         }
     }
@@ -116,7 +121,10 @@ struct ShareUploader: Sendable {
         case .receiptURL, .recipeURL:
             var req = request(item.kind == .receiptURL ? "api/imports/url" : "api/recipes/import/url")
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            let body = try JSONSerialization.data(withJSONObject: ["url": item.url ?? ""])
+            var json: [String: Any] = ["url": item.url ?? ""]
+            // social links: the share-sheet caption often is the recipe
+            if item.kind == .recipeURL, let t = item.text, !t.isEmpty { json["text"] = t }
+            let body = try JSONSerialization.data(withJSONObject: json)
             try await send(req, body: body)
         }
     }

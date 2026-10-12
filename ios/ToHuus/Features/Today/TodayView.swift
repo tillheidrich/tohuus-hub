@@ -89,9 +89,9 @@ struct TodayView: View {
                         ForEach(t.notices) { n in noticeRow(n) }
                         if !t.rhythm.isEmpty { dueCard(t.rhythm) }
                         listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])
-                        if !t.stillHave.isEmpty { stillHaveCard(t.stillHave) }
-                        if let cook = t.cookToday, cook.recipeId != nil || cook.title != nil { cookCard(cook) }
-                        if let money = t.money { moneyCard(money) }
+                        if !t.stillHave.isEmpty && app.moduleOn("stock") { stillHaveCard(t.stillHave) }
+                        if let cook = t.cookToday, cook.recipeId != nil || cook.title != nil, app.moduleOn("cook") { cookCard(cook) }
+                        if let money = t.money, app.moduleOn("money") { moneyCard(money) }
                     } else if model.limited || !store.isOnline {
                         listCard(open: store.list.openCount, recent: [])
                     } else if model.loading {

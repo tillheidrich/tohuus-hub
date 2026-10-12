@@ -28,6 +28,16 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         }
     }
 
+    /// the module that switches this area off ("Was nutzen wir?"); nil = always there
+    var module: String? {
+        switch self {
+        case .pantry: return "stock"
+        case .cooking: return "cook"
+        case .money: return "money"
+        default: return nil
+        }
+    }
+
     static func from(_ s: String?) -> AppArea? {
         guard let s else { return nil }
         return AppArea(rawValue: s)
@@ -75,8 +85,9 @@ struct MainTabView: View {
             #endif
         }
         .onChange(of: app.requestedTab) { _, t in applyRequestedTab(t) }
+        .onChange(of: app.modules) { _, _ in if !visible(area) { area = .today } }
         .onChange(of: app.addRequest) { _, _ in area = .shopping }
-        .onChange(of: app.searchRequest) { _, _ in if area != .cooking && area != .pantry { area = .pantry } }
+        .onChange(of: app.searchRequest) { _, _ in if area != .cooking && area != .pantry { area = visible(.pantry) ? .pantry : .cooking } }
         .sheet(isPresented: $app.showAssistant) {
             AssistantSheet(store: store)
         }
@@ -85,6 +96,9 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $app.showPaywall) {
             PaywallView()
+        }
+        .sheet(item: Binding(get: { store.cookidooDraft }, set: { store.cookidooDraft = $0 })) { d in
+            CookidooConfirmView(store: store, request: d) { _ in store.cookidooDraft = nil }
         }
         .fullScreenCover(isPresented: $app.showKitchen) {
             KitchenModeView(store: store)
@@ -102,15 +116,21 @@ struct MainTabView: View {
                 .tabItem { Label(AppArea.shopping.title, systemImage: AppArea.shopping.icon) }
                 .badge(store.list.openCount)
                 .tag(AppArea.shopping)
-            PantryView(store: store)
-                .tabItem { Label(AppArea.pantry.title, systemImage: AppArea.pantry.icon) }
-                .tag(AppArea.pantry)
-            CookingView(store: store)
-                .tabItem { Label(AppArea.cooking.title, systemImage: AppArea.cooking.icon) }
-                .tag(AppArea.cooking)
-            MoneyView(store: store)
-                .tabItem { Label(AppArea.money.title, systemImage: AppArea.money.icon) }
-                .tag(AppArea.money)
+            if visible(.pantry) {
+                PantryView(store: store)
+                    .tabItem { Label(AppArea.pantry.title, systemImage: AppArea.pantry.icon) }
+                    .tag(AppArea.pantry)
+            }
+            if visible(.cooking) {
+                CookingView(store: store)
+                    .tabItem { Label(AppArea.cooking.title, systemImage: AppArea.cooking.icon) }
+                    .tag(AppArea.cooking)
+            }
+            if visible(.money) {
+                MoneyView(store: store)
+                    .tabItem { Label(AppArea.money.title, systemImage: AppArea.money.icon) }
+                    .tag(AppArea.money)
+            }
         }
         .overlay(alignment: .bottomTrailing) {
             // always there: without a model the assistant still reads the common sentences (basic mode)
@@ -126,7 +146,7 @@ struct MainTabView: View {
         NavigationSplitView {
             List(selection: Binding<AppArea?>(get: { area }, set: { if let a = $0 { area = a } })) {
                 Section {
-                    ForEach(AppArea.allCases.filter { $0 != .more }) { a in
+                    ForEach(AppArea.allCases.filter { $0 != .more && visible($0) }) { a in
                         NavigationLink(value: a) {
                             Label(a.title, systemImage: a.icon)
                                 .badge(a == .shopping ? store.list.openCount : 0)
@@ -135,12 +155,14 @@ struct MainTabView: View {
                 }
                 Section {
                     NavigationLink(value: AppArea.more) { Label(AppArea.more.title, systemImage: AppArea.more.icon) }
-                    Button {
-                        app.showKitchen = true
-                    } label: {
-                        Label(L("Kitchen mode"), systemImage: "frying.pan")
+                    if visible(.cooking) {
+                        Button {
+                            app.showKitchen = true
+                        } label: {
+                            Label(L("Kitchen mode"), systemImage: "frying.pan")
+                        }
+                        .keyboardShortcut("k", modifiers: [.command, .shift])
                     }
-                    .keyboardShortcut("k", modifiers: [.command, .shift])
                 }
             }
             .navigationTitle(app.activeHousehold?.name ?? "ToHuus")
@@ -176,9 +198,12 @@ struct MainTabView: View {
 }
 
 extension MainTabView {
+    func visible(_ a: AppArea) -> Bool { a.module.map { app.moduleOn($0) } ?? true }
+
     func applyRequestedTab(_ t: String?) {
         guard let t else { return }
-        area = AppArea.from(t) ?? .today
+        let a = AppArea.from(t) ?? .today
+        area = visible(a) ? a : .today
         app.requestedTab = nil
     }
 }

@@ -53,6 +53,20 @@ struct StoreArrivalView: View {
                     if !arrival.shops.isEmpty { Text(L("Swipe to remove a shop.")) }
                 }
 
+                let known = store.list.stores.filter { s in s.lat != nil && s.lon != nil && !arrival.shops.contains { $0.storeId == s.id } }
+                if !known.isEmpty {
+                    Section {
+                        ForEach(known) { s in
+                            HStack {
+                                Label(s.name, systemImage: "mappin")
+                                Spacer()
+                                Button(L("Use")) { arrival.addKnown(s) }.buttonStyle(.bordered).controlSize(.small)
+                            }
+                        }
+                    } header: {
+                        Text(L("Shops with a place in ToHuus"))
+                    }
+                }
                 Section {
                     if !store.list.stores.isEmpty {
                         Picker(L("Shop"), selection: $storeId) {

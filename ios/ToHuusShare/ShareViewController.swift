@@ -103,6 +103,7 @@ final class ShareModel: ObservableObject {
             payload = files.map(\.data)
         case .receiptURL, .recipeURL:
             item.url = url?.absoluteString
+            if kind == .recipeURL, let text, !text.isEmpty, text != url?.absoluteString { item.text = String(text.prefix(4000)) }
         case .text:
             item.text = text
         }
@@ -112,6 +113,10 @@ final class ShareModel: ObservableObject {
         } catch ShareUploader.UploadError.offline {
             UploadQueue.enqueue(item, fileData: payload)
             state = .done(L("No connection – ToHuus sends it as soon as you open the app."))
+        } catch ShareUploader.UploadError.needsConfirm {
+            item.confirm = true
+            UploadQueue.enqueue(item)
+            state = .done(L("A Cookidoo recipe – open ToHuus to confirm the ingredients."))
         } catch ShareUploader.UploadError.server(let message) {
             state = .failed(message)
         } catch {

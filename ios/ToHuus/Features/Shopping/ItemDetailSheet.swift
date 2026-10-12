@@ -8,7 +8,6 @@ struct ItemDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var note = ""
     @State private var substitute = "unset"
-    @State private var substituteNote = ""
     @State private var photo: PhotosPickerItem?
     @State private var photoMissing = false
     @State private var busy = false
@@ -28,25 +27,33 @@ struct ItemDetailSheet: View {
                 Section {
                     Picker(L("If it's not there"), selection: $substitute) {
                         Text(L("Not set")).tag("unset")
-                        Text(L("Any substitute is fine")).tag("any")
+                        Text(L("Substitute is fine")).tag("ok")
                         Text(L("Ask first")).tag("ask")
-                        Text(L("No substitute")).tag("none")
-                    }
-                    if substitute == "any" || substitute == "ask" {
-                        TextField(L("Rather … (optional)"), text: $substituteNote)
+                        Text(L("Exactly this one")).tag("exact")
                     }
                 } header: {
                     Text(L("Substitute"))
+                } footer: {
+                    Text(L("A wish like “rather oat milk” goes into the note."))
                 }
                 Section {
-                    if let p = item.photo {
+                    if let p = item.photoPath {
                         RemoteImage(url: store.api.imageURL(p), api: store.api)
                             .frame(height: 160)
                             .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
                     }
                     if item.id > 0 {
                         PhotosPicker(selection: $photo, matching: .images) {
-                            Label(item.photo == nil ? L("Add a photo of the product") : L("Replace the photo"), systemImage: "camera")
+                            Label(item.photoPath == nil ? L("Add a photo of the product") : L("Replace the photo"), systemImage: "camera")
+                        }
+                        if item.photoPath != nil {
+                            Button(L("Remove the photo"), role: .destructive) {
+                                Task {
+                                    try? await store.api.deleteItemPhoto(item.id)
+                                    await store.refreshList()
+                                    dismiss()
+                                }
+                            }
                         }
                     }
                     if photoMissing {
@@ -70,7 +77,6 @@ struct ItemDetailSheet: View {
             .onAppear {
                 note = item.note ?? ""
                 substitute = item.substitute ?? "unset"
-                substituteNote = item.substituteNote ?? ""
             }
             .onChange(of: photo) { _, p in
                 guard let p else { return }
@@ -85,9 +91,7 @@ struct ItemDetailSheet: View {
         defer { busy = false }
         do {
             let n = note.trimmingCharacters(in: .whitespaces)
-            let sn = substituteNote.trimmingCharacters(in: .whitespaces)
-            try await store.api.updateItem(item.id, note: n.isEmpty ? nil : n, substitute: substitute == "unset" ? nil : substitute,
-                                           substituteNote: sn.isEmpty ? nil : sn)
+            try await store.api.updateItem(item.id, note: n.isEmpty ? nil : n, substitute: substitute == "unset" ? nil : substitute)
             store.touch("shopping")
             await store.refreshList()
             dismiss()

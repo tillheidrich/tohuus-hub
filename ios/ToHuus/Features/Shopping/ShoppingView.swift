@@ -11,13 +11,19 @@ struct ShoppingView: View {
     @State private var showReceipt = false
     @State private var showPaperList = false
     @State private var detailItem: ShopItem?
-    @State private var showWish = false
+    @State private var wishTrip: Trip?
     @State private var wishText = ""
+    @State private var showRecent = false
+    @State private var showUsuals = false
+    @State private var showOffers = false
+    @State private var guardText: String?
+    @State private var guardMessage = ""
+    @State private var tripPrivate = false
     @State private var newListName = ""
     @State private var showNewList = false
     @State private var listsSupported = false
     @State private var dropSection: String?
-    @AppStorage("list.density") private var densityRaw = ListDensity.standard.rawValue
+    @AppStorage("list.density") private var densityRaw = ListDensity.normal.rawValue
     @AppStorage("list.fontScale") private var fontScale = 1.0
     @FocusState private var inputFocused: Bool
 
@@ -27,8 +33,9 @@ struct ShoppingView: View {
         let text: String
     }
 
-    private var density: ListDensity { ListDensity(rawValue: densityRaw) ?? .standard }
-    private var others: [Shopper] { store.shoppers.filter { $0.me != true && $0.name != app.userName } }
+    private var density: ListDensity { ListDensity(rawValue: densityRaw) ?? .normal }
+    private var others: [Trip] { store.trips.filter { !$0.isMine } }
+    private var myTrip: Trip? { store.trips.first { $0.isMine } }
 
     var body: some View {
         NavigationStack {
@@ -69,7 +76,6 @@ struct ShoppingView: View {
                         Button {
                             Task {
                                 await store.checkout(toStock: true)
-                                try? await store.api.stopLive()
                                 Haptics.success()
                             }
                         } label: {
@@ -81,31 +87,8 @@ struct ShoppingView: View {
                         Text(LF("In the basket (%d) – crossed out until you're done", store.list.basket.count))
                     }
                 }
-                if !shopMode && !store.list.done.isEmpty {
-                    Section {
-                        ForEach(store.list.done) { item in row(item) }
-                    } header: {
-                        HStack {
-                            Text(L("Recently done"))
-                            Spacer()
-                            Button(L("Clear")) { Task { await store.clearDone() } }.font(.footnote)
-                        }
-                    }
-                }
-                if let est = store.list.expected, let total = est.total {
-                    Section {
-                        LabeledContent {
-                            Text("≈ " + Money.format(total, currency: est.currency)).font(.headline)
-                        } label: {
-                            VStack(alignment: .leading) {
-                                Text(L("Expected total"))
-                                if let known = est.known, let count = est.count, known < count {
-                                    Text(LF("prices known for %d of %d things", known, count)).font(.caption).foregroundStyle(Theme.ink3)
-                                }
-                            }
-                        }
-                    }
-                }
+                doneSection
+                estimateSection
                 Color.clear.frame(height: 72).listRowBackground(Color.clear)
             }
             .listStyle(.insetGrouped)
@@ -115,7 +98,7 @@ struct ShoppingView: View {
             .refreshable {
                 await store.flush()
                 await store.refreshList()
-                await store.refreshLive()
+                await store.refreshTrips()
                 await loadSuggestions()
             }
             .navigationTitle(title)
@@ -128,13 +111,23 @@ struct ShoppingView: View {
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }
             .sheet(isPresented: $showPaperList) { PaperListSheet(store: store) }
             .sheet(item: $detailItem) { item in ItemDetailSheet(item: item, store: store) }
-            .alert(L("A wish for the trip"), isPresented: $showWish) {
+            .alert(wishTrip.map { LF("A wish for %@", $0.user.name) } ?? L("A wish for the trip"),
+                   isPresented: Binding(get: { wishTrip != nil }, set: { if !$0 { wishTrip = nil } })) {
                 TextField(L("e.g. oat milk"), text: $wishText)
                 Button(L("Send")) { sendWish() }
-                Button(L("Cancel"), role: .cancel) { wishText = "" }
+                Button(L("Cancel"), role: .cancel) { wishText = ""; wishTrip = nil }
             } message: {
                 Text(L("The person shopping gets it right away and answers “I'll get it” or “Can't do it”."))
             }
+            .alert(L("Add anyway?"), isPresented: Binding(get: { guardText != nil }, set: { if !$0 { guardText = nil } })) {
+                Button(L("Add")) { if let t = guardText { Task { await store.add(text: t) } }; guardText = nil }
+                Button(L("Cancel"), role: .cancel) { guardText = nil }
+            } message: {
+                Text(guardMessage)
+            }
+            .sheet(isPresented: $showRecent) { RecentDoneSheet(store: store) }
+            .sheet(isPresented: $showUsuals) { UsualsSheet(store: store) }
+            .sheet(isPresented: $showOffers) { OffersView(store: store) }
             .alert(L("New list"), isPresented: $showNewList) {
                 TextField(L("Name, e.g. Drugstore"), text: $newListName)
                 Button(L("Create")) { createList() }
@@ -142,9 +135,12 @@ struct ShoppingView: View {
             }
             .task(id: store.revision("shopping")) {
                 await loadSuggestions()
-                await store.refreshLive()
+                await store.refreshTrips()
             }
-            .task { listsSupported = (try? await store.api.shopLists()) != nil }
+            .task {
+                listsSupported = (try? await store.api.shopLists()) != nil
+                tripPrivate = (try? await store.api.tripPrivacy()) ?? false
+            }
             .onChange(of: app.requestedStore, initial: true) { _, id in
                 guard let id else { return }
                 app.requestedStore = nil
@@ -166,44 +162,76 @@ struct ShoppingView: View {
         }
     }
 
+    @ViewBuilder private var doneSection: some View {
+        if !shopMode && !store.list.done.isEmpty {
+            Section {
+                ForEach(store.list.done) { item in row(item) }
+                Button(L("Finish shopping")) {
+                    Task { await store.checkout(toStock: true); Haptics.success() }
+                }
+                .font(.subheadline.weight(.semibold))
+            } header: {
+                HStack {
+                    Text(L("Ticked – crossed out until you finish"))
+                    Spacer()
+                    Button(L("Recently done")) { showRecent = true }.font(.footnote)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var estimateSection: some View {
+        if let est = store.list.expected, let total = est.total {
+            Section {
+                LabeledContent {
+                    Text("≈ " + Money.format(total, currency: est.currency)).font(.headline)
+                } label: {
+                    VStack(alignment: .leading) {
+                        Text(L("Expected total"))
+                        if let priced = est.priced, let unpriced = est.unpriced, unpriced > 0 {
+                            Text(LF("prices known for %d of %d things", priced, priced + unpriced)).font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private var title: String {
         if shopMode { return store.list.store?.name ?? L("In the shop") }
-        if let l = store.list.list, store.list.lists.count > 1 { return l.name }
+        if let l = store.list.currentList, store.list.lists.count > 1, !l.isMain { return l.name }
         return L("Shopping")
     }
 
     // MARK: live shopping together
 
+    /// Shopping together: trips start by themselves from ticks in a shop (GET /api/shop/trips).
     @ViewBuilder private var liveSection: some View {
-        let open = store.addonRequests.filter(\.isOpen)
-        if !others.isEmpty || (shopMode && !open.isEmpty) {
+        let mine = myTrip?.openAddOns ?? []
+        if !others.isEmpty || !mine.isEmpty {
             Section {
-                ForEach(others) { s in
+                ForEach(others) { trip in
                     HStack(spacing: Theme.Space.s3) {
                         Image(systemName: "figure.walk.motion").foregroundStyle(Theme.primaryText)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(s.store.map { LF("%@ is shopping at %@", s.name, $0) } ?? LF("%@ is shopping right now", s.name))
+                            Text(trip.store.map { LF("%@ is shopping at %@", trip.user.name, $0.name) } ?? LF("%@ is shopping right now", trip.user.name))
                                 .font(.subheadline.weight(.semibold))
-                            if let since = ServerDate.relative(s.since) { Text(since).font(.caption).foregroundStyle(Theme.ink3) }
+                            Text(tripLine(trip)).font(.caption).foregroundStyle(Theme.ink3)
                         }
                         Spacer(minLength: 0)
-                        if !shopMode {
-                            Button(L("Add a wish")) { showWish = true }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                        }
+                        Button(L("Add a wish")) { wishTrip = trip }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                     }
                 }
-                if shopMode {
-                    ForEach(open) { r in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(r.by.map { LF("%@ asks: %@", $0, r.text) } ?? r.text).font(.subheadline)
-                            HStack {
-                                Button(L("I'll get it")) { Task { await answer(r, accept: true) } }.buttonStyle(.borderedProminent)
-                                Button(L("Can't do it")) { Task { await answer(r, accept: false) } }.buttonStyle(.bordered)
-                            }
-                            .controlSize(.small)
+                ForEach(mine) { a in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(a.from.map { LF("%@ asks: %@", $0, a.text) } ?? a.text).font(.subheadline)
+                        HStack {
+                            Button(L("I'll get it")) { Task { await answer(a, accept: true) } }.buttonStyle(.borderedProminent)
+                            Button(L("Can't do it")) { Task { await answer(a, accept: false) } }.buttonStyle(.bordered)
                         }
+                        .controlSize(.small)
                     }
                 }
             }
@@ -211,44 +239,47 @@ struct ShoppingView: View {
         }
     }
 
+    private func tripLine(_ t: Trip) -> String {
+        var parts: [String] = []
+        if !t.basket.isEmpty { parts.append(LF("%d in the basket", t.basket.count)) }
+        if let since = ServerDate.relative(t.startedAt) { parts.append(LF("since %@", since)) }
+        return parts.joined(separator: " · ")
+    }
+
     private func sendWish() {
         let text = wishText.trimmingCharacters(in: .whitespaces)
+        let trip = wishTrip
         wishText = ""
-        guard !text.isEmpty else { return }
+        wishTrip = nil
+        guard !text.isEmpty, let trip else { return }
         Task {
             do {
-                try await store.api.requestAddon(text)
+                try await store.api.addToTrip(trip.id, text: text)
                 Haptics.success()
-                await store.refreshList()
-                await store.refreshLive()
-            } catch APIError.notFound {
-                // no live shopping on this server: the wish simply goes on the list
+            } catch {
+                // the trip just ended: the wish simply goes on the list
                 await store.add(text: text)
-            } catch {}
+            }
+            await store.refreshList()
+            await store.refreshTrips()
         }
     }
 
-    private func answer(_ r: AddonRequest, accept: Bool) async {
-        try? await store.api.answerAddon(r.id, accept: accept)
+    private func answer(_ a: Trip.AddOn, accept: Bool) async {
+        try? await store.api.answerAddon(a.id, accept: accept)
         Haptics.tick()
         await store.refreshList()
-        await store.refreshLive()
+        await store.refreshTrips()
     }
 
     private func enterShop(_ id: Int?) {
         shopMode = true
-        Task {
-            await store.setStore(id, shopMode: true)
-            try? await store.api.startLive(storeId: id)
-        }
+        Task { await store.setStore(id, shopMode: true) }
     }
 
     private func leaveShop() {
         shopMode = false
-        Task {
-            await store.setStore(nil, shopMode: false)
-            try? await store.api.stopLive()
-        }
+        Task { await store.setStore(nil, shopMode: false) }
     }
 
     // MARK: rows
@@ -279,6 +310,9 @@ struct ShoppingView: View {
                     if let sub = substituteLine(item) {
                         Label(sub, systemImage: "arrow.triangle.swap").font(.caption).foregroundStyle(Theme.ink2)
                     }
+                    if !checked, let hint = item.sizeHint ?? item.priceHint, density != .compact {
+                        Label(hint, systemImage: item.sizeHint != nil ? "lightbulb" : "eurosign").font(.caption).foregroundStyle(Theme.ink2)
+                    }
                     if density != .compact || shopMode {
                         if !shopMode {
                             Text(checked ? doneLine(item) : item.originLine).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1)
@@ -288,7 +322,7 @@ struct ShoppingView: View {
                     }
                 }
                 Spacer(minLength: 0)
-                if let path = item.photo ?? item.imagePath, !shopMode || item.photo != nil, density != .compact {
+                if let path = item.photoPath ?? item.imagePath, !shopMode || item.photoPath != nil, density != .compact {
                     RemoteImage(url: store.api.imageURL(path), api: store.api)
                         .frame(width: 36 * fontScale, height: 36 * fontScale)
                         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
@@ -316,6 +350,16 @@ struct ShoppingView: View {
         }
         .contextMenu {
             Button { detailItem = item } label: { Label(L("Note, substitute, photo"), systemImage: "square.and.pencil") }
+            if item.isChecked && item.id > 0 {
+                Button { Task { await restore(item) } } label: { Label(L("Put back"), systemImage: "arrow.uturn.backward") }
+            }
+            if !item.isChecked && item.id > 0 && store.list.lists.count > 1 {
+                Menu {
+                    ForEach(store.list.lists.filter { $0.id.value != (store.list.listId?.value ?? "0") }) { l in
+                        Button(l.name) { Task { await moveToList(item.id, l) } }
+                    }
+                } label: { Label(L("To another list"), systemImage: "list.bullet") }
+            }
             if !item.isChecked && item.id > 0 {
                 Menu {
                     ForEach(ShopSectionKey.all, id: \.self) { key in
@@ -331,11 +375,23 @@ struct ShoppingView: View {
 
     private func substituteLine(_ item: ShopItem) -> String? {
         switch item.substitute {
-        case "any": return item.substituteNote.map { LF("Substitute OK: %@", $0) } ?? L("Any substitute is fine")
+        case "ok": return L("Substitute is fine")
         case "ask": return L("Ask before taking a substitute")
-        case "none": return L("No substitute")
-        default: return item.substituteNote.map { LF("Substitute OK: %@", $0) }
+        case "exact": return L("Exactly this one")
+        default: return nil
         }
+    }
+
+    private func restore(_ item: ShopItem) async {
+        _ = try? await store.api.restoreItem(item.id)
+        Haptics.tick()
+        await store.refreshList()
+    }
+
+    private func moveToList(_ id: Int, _ l: ListRef) async {
+        try? await store.api.moveItemToList(id, listId: l.id.int ?? 0)
+        Haptics.tick()
+        await store.refreshList()
     }
 
     private func doneLine(_ item: ShopItem) -> String {
@@ -444,8 +500,17 @@ struct ShoppingView: View {
         preview = []
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         Haptics.tick()
-        Task { await store.add(text: text) }
         inputFocused = true
+        Task {
+            // "laut Bon vorgestern gekauft", "im Vorrat 2": ask once, never block (offline: just add)
+            let single = QuickAddParser.fragments(text).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count == 1
+            if single, store.isOnline, let hints = try? await store.api.guardHints(text: text), let ask = hints.first(where: \.asks) {
+                guardMessage = ask.text
+                guardText = text
+                return
+            }
+            await store.add(text: text)
+        }
     }
 
     /// Shows what will be added (the local copy of the server parser).
@@ -509,6 +574,11 @@ struct ShoppingView: View {
 
     // MARK: lists
 
+    private func setPrivate(_ on: Bool) {
+        tripPrivate = on
+        Task { try? await store.api.setTripPrivacy(on) }
+    }
+
     private func createList() {
         let name = newListName.trimmingCharacters(in: .whitespaces)
         newListName = ""
@@ -529,6 +599,7 @@ struct ShoppingView: View {
                 } label: {
                     Label(L("At home"), systemImage: shopMode ? "house" : "checkmark")
                 }
+                Toggle(L("My shopping stays private"), isOn: Binding(get: { tripPrivate }, set: { setPrivate($0) }))
                 Section(L("I'm in the shop")) {
                     ForEach(store.list.stores) { s in
                         Button {
@@ -556,7 +627,7 @@ struct ShoppingView: View {
                             Task { await store.setList(l.id.value) }
                         } label: {
                             Label(l.open.map { "\(l.name) (\($0))" } ?? l.name,
-                                  systemImage: store.list.list?.id == l.id ? "checkmark" : "list.bullet")
+                                  systemImage: (store.list.listId?.value ?? "0") == l.id.value ? "checkmark" : "list.bullet")
                         }
                     }
                     if listsSupported {
@@ -576,6 +647,10 @@ struct ShoppingView: View {
             Menu {
                 Button { showReceipt = true } label: { Label(L("Add receipt"), systemImage: "doc.text.viewfinder") }
                 Button { showPaperList = true } label: { Label(L("Photograph a paper list"), systemImage: "list.bullet.rectangle") }
+                Divider()
+                Button { showUsuals = true } label: { Label(L("Our usuals"), systemImage: "star") }
+                Button { showRecent = true } label: { Label(L("Recently done"), systemImage: "clock.arrow.circlepath") }
+                Button { showOffers = true } label: { Label(L("Offers"), systemImage: "tag") }
             } label: {
                 Image(systemName: "doc.text.viewfinder")
             }
@@ -597,13 +672,13 @@ struct ItemDrag {
 
 /// Mehr › So sieht die Liste aus: row density and text size (this device only).
 enum ListDensity: String, CaseIterable, Identifiable {
-    case compact, standard, large
+    case compact, normal, large
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .compact: return L("Compact")
-        case .standard: return L("Standard")
+        case .normal: return L("Standard")
         case .large: return L("Large")
         }
     }
@@ -614,7 +689,8 @@ enum ListDensity: String, CaseIterable, Identifiable {
 }
 
 struct ListDisplaySettingsView: View {
-    @AppStorage("list.density") private var densityRaw = ListDensity.standard.rawValue
+    @Environment(AppModel.self) private var app
+    @AppStorage("list.density") private var densityRaw = ListDensity.normal.rawValue
     @AppStorage("list.fontScale") private var fontScale = 1.0
 
     var body: some View {
@@ -626,7 +702,7 @@ struct ListDisplaySettingsView: View {
                 .pickerStyle(.segmented)
                 VStack(alignment: .leading) {
                     Text(L("Text size"))
-                    Slider(value: $fontScale, in: 0.85...1.5, step: 0.05) {
+                    Slider(value: $fontScale, in: 0.9...1.4, step: 0.05) {
                         Text(L("Text size"))
                     } minimumValueLabel: {
                         Image(systemName: "textformat.size.smaller")
@@ -635,7 +711,7 @@ struct ListDisplaySettingsView: View {
                     }
                 }
             } footer: {
-                Text(L("Only on this device. The text also follows the iPhone's text size."))
+                Text(L("Saved for you on every device. The text also follows the iPhone's text size."))
             }
             Section(L("Preview")) {
                 HStack(spacing: Theme.Space.s3) {
@@ -650,5 +726,23 @@ struct ListDisplaySettingsView: View {
             }
         }
         .navigationTitle(L("How the list looks"))
+        .onChange(of: densityRaw) { _, _ in save() }
+        .onChange(of: fontScale) { _, _ in save() }
+    }
+}
+
+extension ListDisplaySettingsView {
+    /// PUT /api/list/prefs – per person, so the web app and other devices follow
+    func save() {
+        let d = densityRaw, f = fontScale
+        Task { try? await app.api?.setListPrefs(density: d, fontScale: f) }
+    }
+}
+
+/// Takes the person's list prefs from /api/me (listPrefs) into the local settings the list reads.
+enum ListPrefsSync {
+    static func adopt(_ p: JSONValue) {
+        if let d = p["density"]?.string, ListDensity(rawValue: d) != nil { UserDefaults.standard.set(d, forKey: "list.density") }
+        if let f = p["fontScale"]?.double, (0.9...1.4).contains(f) { UserDefaults.standard.set(f, forKey: "list.fontScale") }
     }
 }

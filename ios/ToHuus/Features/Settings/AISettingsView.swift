@@ -1,8 +1,27 @@
 import SwiftUI
 
-/// Mehr › Mit oder ohne KI: what the household has, the personal switch, and the locked state children see.
+/// GET /api/ai/settings → { configured, household, mcp, mine, effective, reason, admin, kids?: [{ id, name, ai }] }
+struct AISettings: Decodable, Sendable {
+    var household: Bool?
+    var mcp: Bool?
+    var mine: Bool?
+    var effective: Bool?
+    var reason: String?
+    var admin: Bool?
+    var kids: [Kid]?
+
+    struct Kid: Decodable, Sendable, Identifiable, Hashable {
+        var id: Int
+        var name: String
+        var ai: Bool
+    }
+}
+
+/// Mehr › Mit oder ohne KI: the personal switch, the household switch (admins), children (parents), and the locked state.
 struct AISettingsView: View {
     @Environment(AppModel.self) private var app
+    @State private var settings: AISettings?
+    @State private var error: String?
 
     var body: some View {
         Form {
@@ -12,12 +31,38 @@ struct AISettingsView: View {
                     Label(L("Switched off for you by an adult in the household."), systemImage: "lock.fill")
                         .foregroundStyle(Theme.ink2)
                 } else {
-                    Toggle(L("Use AI for me"), isOn: Binding(get: { app.personalAI }, set: { on in Task { await app.setPersonalAI(on) } }))
-                        .disabled(!app.aiAvailable)
+                    Toggle(L("Use AI for me"), isOn: Binding(get: { settings?.mine ?? app.personalAI }, set: { on in
+                        settings?.mine = on
+                        Task { await app.setPersonalAI(on); await load() }
+                    }))
+                    .disabled(!app.aiAvailable)
                 }
             } footer: {
                 Text(app.aiLocked ? L("You can still use everything else – the list, “Sprechen” with simple sentences, recipes.")
-                                  : L("Only for you. The others decide for themselves; admins switch it off for the whole household in the web app."))
+                                  : L("Only for you. The others decide for themselves."))
+            }
+            if settings?.admin == true {
+                Section {
+                    Toggle(L("AI for the whole household"), isOn: Binding(get: { settings?.household ?? true }, set: { on in
+                        Task { await patch(household: on) }
+                    }))
+                    Toggle(L("Own assistants (Claude, ChatGPT) may read the household"), isOn: Binding(get: { settings?.mcp ?? true }, set: { on in
+                        Task { await patch(mcp: on) }
+                    }))
+                } header: {
+                    Text(L("Household (admins)"))
+                }
+            }
+            if let kids = settings?.kids, !kids.isEmpty {
+                Section {
+                    ForEach(kids) { k in
+                        Toggle(k.name, isOn: Binding(get: { k.ai }, set: { on in Task { await setKid(k, on) } }))
+                    }
+                } header: {
+                    Text(L("Children"))
+                } footer: {
+                    Text(L("A child's tablet shows AI as locked when you switch it off here."))
+                }
             }
             Section {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
@@ -32,8 +77,41 @@ struct AISettingsView: View {
                 }
                 HelpLink(slug: "ki-an-oder-aus", title: L("More about AI in ToHuus"))
             }
+            if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
         }
         .navigationTitle(L("With or without AI"))
-        .task { await app.loadAIState() }
+        .task {
+            await app.loadAIState()
+            await load()
+        }
+    }
+
+    private func load() async {
+        guard let api = app.api else { return }
+        settings = try? await api.get("api/ai/settings", as: AISettings.self)
+    }
+
+    private func patch(household: Bool? = nil, mcp: Bool? = nil) async {
+        guard let api = app.api else { return }
+        var body: [String: Any] = [:]
+        if let household { body["household"] = household }
+        if let mcp { body["mcp"] = mcp }
+        do {
+            _ = try await api.send("PATCH", "api/ai/settings", json: body, as: Ignored.self)
+            await app.loadAIState()
+            await load()
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
+    }
+
+    private func setKid(_ k: AISettings.Kid, _ on: Bool) async {
+        guard let api = app.api else { return }
+        do {
+            _ = try await api.send("PUT", "api/kids/\(k.id)/ai", json: ["enabled": on], as: Ignored.self)
+            await load()
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
     }
 }

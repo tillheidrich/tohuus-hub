@@ -91,6 +91,15 @@ final class StoreArrival: NSObject {
         manager?.requestLocation()
     }
 
+    /// A shop whose coordinates someone typed into ToHuus (GET /api/shop/stores → lat, lon, radius_m).
+    func addKnown(_ store: StoreRef) {
+        guard let lat = store.lat, let lon = store.lon, !shops.contains(where: { $0.storeId == store.id }) else { return }
+        ensureManager()
+        shops.append(SavedShop(name: store.name, storeId: store.id, latitude: lat, longitude: lon, radius: store.radiusM ?? 150))
+        save()
+        syncRegions()
+    }
+
     func remove(_ shop: SavedShop) {
         shops.removeAll { $0.id == shop.id }
         save()

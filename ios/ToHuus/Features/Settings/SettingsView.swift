@@ -49,6 +49,11 @@ struct SettingsView: View {
                     }
                     NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
                 }
+                if app.moduleOn("homeinfo") {
+                    Section {
+                        NavigationLink { HouseGuideView() } label: { Label(L("House info"), systemImage: "house") }
+                    }
+                }
                 Section(L("Knowing")) {
                     NavigationLink { HowItWorksView() } label: { Label(L("How ToHuus works"), systemImage: "lightbulb") }
                     NavigationLink { FactsView() } label: { Label(L("Good to know"), systemImage: "book") }
@@ -56,6 +61,18 @@ struct SettingsView: View {
                 }
                 Section(L("Plan & storage")) {
                     LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free") : L("Own server – everything included")))
+                    if let b = app.billing, b.isPaid {
+                        if let r = ServerDate.parse(b.renewsAt) {
+                            LabeledContent(L("Renews on"), value: r.formatted(date: .abbreviated, time: .omitted))
+                        } else if let e = ServerDate.parse(b.expiresAt) {
+                            LabeledContent(L("Ends on"), value: e.formatted(date: .abbreviated, time: .omitted))
+                        }
+                        if b.period == "yearly" {
+                            Toggle(L("E-mail me 3 days before it renews"), isOn: Binding(
+                                get: { b.reminder?.bool ?? b.reminder?["enabled"]?.bool ?? false },
+                                set: { on in Task { _ = try? await app.api?.send("PATCH", "api/billing/reminder", json: ["enabled": on], as: Ignored.self); await app.refreshBilling() } }))
+                        }
+                    }
                     if let used = app.billing?.assistantUsed {
                         LabeledContent(L("Assistant this month"), value: app.billing?.assistantLimit.map { "\(used) / \($0)" } ?? "\(used)")
                     }
@@ -69,7 +86,11 @@ struct SettingsView: View {
                     if app.purchasesAvailable {
                         Button(app.billing?.isPaid == true ? L("Manage plan") : L("See plans")) { app.showPaywall = true; if !embedded { dismiss() } }
                         if app.billing?.source == "apple" || app.billing?.isPaid == true {
-                            Button(L("Manage subscription")) { manageSubscriptions = true }
+                            Button(L("Manage subscription")) {
+                                // Apple's sheet; the plain link when it can't be shown (e.g. the subscription is on another Apple account)
+                                if UIApplication.shared.connectedScenes.first is UIWindowScene { manageSubscriptions = true }
+                                else if let u = URL(string: app.billing?.manageUrl ?? "https://apps.apple.com/account/subscriptions") { UIApplication.shared.open(u) }
+                            }
                         }
                     }
                 }

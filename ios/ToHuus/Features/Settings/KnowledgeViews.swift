@@ -16,13 +16,22 @@ enum Help {
         ("vorrat", L("Pantry (optional)")),
         ("kochen", L("Cooking with what's at home")),
         ("rezepte-importieren", L("Taking over recipes")),
+        ("cookidoo", L("Cookidoo recipes")),
         ("geld", L("Money: groceries and household")),
+        ("gemeinsam-einkaufen", L("Shopping together")),
+        ("benachrichtigungen", L("Notifications")),
         ("sprechen", L("Speak")),
         ("ki-an-oder-aus", L("With or without AI")),
+        ("hausinfo", L("House info for guests and sitters")),
+        ("hausinfo-codes", L("Sharing codes safely")),
         ("haushalt-teilen", L("Sharing the household")),
+        ("erinnerungen-spiegeln", L("Mirror to Apple Reminders")),
         ("wer-sieht-was", L("Who sees what?")),
         ("daten-export", L("Taking your data with you")),
         ("gut-zu-wissen", L("Good to know")),
+        ("datenschutz-kurz", L("Privacy in short")),
+        ("abo-und-kuendigen", L("Subscription and cancelling")),
+        ("fragen", L("Frequent questions")),
     ]
 }
 
@@ -91,14 +100,22 @@ struct HowItWorksView: View {
     }
 }
 
-/// GET /api/facts – "Gut zu wissen": short facts with their source (server: branch b-recipes/b-core).
+/// GET /api/facts?lang= (public) → { version, retrieved, help, facts: [{ id, topic, title, text, tohuus, sources: [{ title, publisher, url, retrieved, note? }] }] }
 struct Fact: Decodable, Sendable, Identifiable, Hashable {
     var id: String
     var title: String
     var text: String?
-    var source: String?
-    var sourceUrl: String?
+    /// what ToHuus does with it
+    var tohuus: String?
     var topic: String?
+    var sources: [Source] = []
+
+    struct Source: Decodable, Sendable, Hashable {
+        var title: String?
+        var publisher: String?
+        var url: String?
+        var label: String { [publisher, title].compactMap { $0 }.joined(separator: ": ") }
+    }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: AnyKey.self)
@@ -108,12 +125,14 @@ struct Fact: Decodable, Sendable, Identifiable, Hashable {
         title = t
         id = c.first(FlexID.self, "id", "slug")?.value ?? t
         text = c.first(String.self, "text", "body", "summary")
-        if let src = c.first(JSONValue.self, "source") {
-            source = src.string ?? src.first("name", "title")?.string
-            sourceUrl = src.first("url", "link")?.string
-        }
-        sourceUrl = sourceUrl ?? c.first(String.self, "sourceUrl", "url", "link")
+        tohuus = c.first(String.self, "tohuus")
         topic = c.first(String.self, "topic", "area", "category")
+        if let list = try? c.decode(Lossy<Source>.self, forKey: AnyKey("sources")), !list.wrappedValue.isEmpty {
+            sources = list.wrappedValue
+        } else if let one = c.first(JSONValue.self, "source") {
+            sources = [Source(title: one.string ?? one.first("title", "name")?.string, publisher: one["publisher"]?.string,
+                              url: one.first("url", "link")?.string ?? c.first(String.self, "sourceUrl"))]
+        }
     }
 }
 
@@ -152,11 +171,12 @@ struct FactsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(f.title).font(.headline)
                         if let t = f.text { Text(t).font(.subheadline).foregroundStyle(Theme.ink2) }
-                        if let s = f.source {
-                            if let u = f.sourceUrl.flatMap(URL.init(string:)) {
-                                Link(LF("Source: %@", s), destination: u).font(.caption)
+                        if let t = f.tohuus { Label(t, systemImage: "house").font(.caption).foregroundStyle(Theme.primaryText) }
+                        ForEach(f.sources, id: \.self) { src in
+                            if let u = src.url.flatMap(URL.init(string:)) {
+                                Link(LF("Source: %@", src.label), destination: u).font(.caption)
                             } else {
-                                Text(LF("Source: %@", s)).font(.caption).foregroundStyle(Theme.ink3)
+                                Text(LF("Source: %@", src.label)).font(.caption).foregroundStyle(Theme.ink3)
                             }
                         }
                     }
@@ -173,7 +193,8 @@ struct FactsView: View {
     private func load() async {
         guard let api = app.api else { return }
         do {
-            facts = try await api.get("api/facts", as: FactsResponse.self).facts
+            let lang = Locale.current.language.languageCode?.identifier == "en" ? "en" : "de"
+            facts = try await api.get("api/facts", query: [URLQueryItem(name: "lang", value: lang)], as: FactsResponse.self).facts
             state = .ready
         } catch APIError.notFound {
             state = .missing

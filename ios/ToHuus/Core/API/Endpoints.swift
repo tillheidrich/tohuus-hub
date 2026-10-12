@@ -67,7 +67,7 @@ extension APIClient {
 
     func shopList(storeId: Int? = nil, shopMode: Bool = false, listId: String? = nil) async throws -> Data {
         var q: [URLQueryItem] = []
-        if let listId { q.append(URLQueryItem(name: "list", value: listId)) }
+        if let listId, listId != "0" { q.append(URLQueryItem(name: "list", value: listId)) }
         if let storeId { q.append(URLQueryItem(name: "store", value: String(storeId))) }
         if shopMode { q.append(URLQueryItem(name: "mode", value: "store")) }
         return try await getData("api/shop/list", query: q)
@@ -87,47 +87,100 @@ extension APIClient {
         _ = try await send("POST", "api/shop/checkout", json: body, as: Ignored.self)
     }
 
-    // MARK: live shopping together, several lists, row details (server: branch b-list; tolerant until it is on main)
+    // MARK: shopping list 2 (docs/shopping-list.md)
 
-    /// GET /api/shop/live → { shoppers: [...], requests: [...] }
-    func shopLive() async throws -> ShopList { try await get("api/shop/live") }
-    /// POST /api/shop/live/start { store_id } – "Sam kauft gerade ein"
-    func startLive(storeId: Int?) async throws {
-        var body: [String: Any] = [:]
+    /// GET /api/shop/trips – who is out shopping, their basket and the "Bringst du noch …?" rows
+    func trips() async throws -> [Trip] { try await get("api/shop/trips", as: Lossy<Trip>.self).wrappedValue }
+    /// POST /api/shop/trips/:id/add { text } – a wish for that trip (the shopper gets `trip.addon`)
+    func addToTrip(_ tripId: Int, text: String) async throws {
+        _ = try await send("POST", "api/shop/trips/\(tripId)/add", json: ["text": text], as: Ignored.self)
+    }
+    /// "Mein Einkauf bleibt privat"
+    func tripPrivacy() async throws -> Bool { try await get("api/shop/trips/privacy", as: JSONValue.self)["private"]?.bool ?? false }
+    func setTripPrivacy(_ on: Bool) async throws { _ = try await send("PUT", "api/shop/trips/privacy", json: ["private": on], as: Ignored.self) }
+    /// answer a wish on my trip: push action addon-accept / addon-decline with the row id as request_id
+    func answerAddon(_ rowId: Int, accept: Bool) async throws {
+        _ = try await send("POST", "api/push/action", json: NotifyKit.actionBody(accept ? "addon-accept" : "addon-decline", data: ["request_id": String(rowId)]),
+                           as: Ignored.self)
+    }
+
+    /// POST /api/list/finish { store_id?, to_stock } – "Einkauf fertig"; older servers: /api/shop/checkout
+    func finishShopping(storeId: Int?, toStock: Bool) async throws {
+        var body: [String: Any] = ["to_stock": toStock]
         if let storeId { body["store_id"] = storeId }
-        _ = try await send("POST", "api/shop/live/start", json: body, as: Ignored.self)
-    }
-    func stopLive() async throws { _ = try await send("POST", "api/shop/live/stop", json: [:], as: Ignored.self) }
-    /// POST /api/shop/live/requests { text } – a wish for the current trip
-    func requestAddon(_ text: String) async throws { _ = try await send("POST", "api/shop/live/requests", json: ["text": text], as: Ignored.self) }
-    /// POST /api/shop/live/requests/:id { answer: accept|decline } (also reachable as push action addon-accept/-decline)
-    func answerAddon(_ id: Int, accept: Bool) async throws {
-        _ = try await send("POST", "api/shop/live/requests/\(id)", json: ["answer": accept ? "accept" : "decline"], as: Ignored.self)
+        do {
+            _ = try await send("POST", "api/list/finish", json: body, as: Ignored.self)
+        } catch APIError.notFound {
+            try await checkout(storeId: storeId, toStock: toStock)
+        }
     }
 
-    /// GET /api/shop/lists → [{ id, name, open }]
-    func shopLists() async throws -> [ListRef] { try await get("api/shop/lists", as: Lossy<ListRef>.self).wrappedValue }
-    func createShopList(name: String) async throws { _ = try await send("POST", "api/shop/lists", json: ["name": name], as: Ignored.self) }
-
-    /// PATCH /api/shopping/:id { note, substitute, substitute_note } (servers without substitute keep the note)
-    func updateItem(_ id: Int, note: String?, substitute: String?, substituteNote: String?) async throws {
-        var body: [String: Any] = ["note": note.map { $0 as Any } ?? NSNull()]
-        if let substitute { body["substitute"] = substitute }
-        body["substitute_note"] = substituteNote.map { $0 as Any } ?? NSNull()
-        _ = try await send("PATCH", "api/shopping/\(id)", json: body, as: Ignored.self)
+    /// GET /api/list/recent – "Zuletzt erledigt"
+    func recentDone(days: Int = 7) async throws -> [ShopItem] {
+        try await get("api/list/recent", query: [URLQueryItem(name: "days", value: String(days))], as: Lossy<ShopItem>.self).wrappedValue
+    }
+    /// POST /api/list/items/:id/restore → { restored: unticked|copied|open }
+    func restoreItem(_ id: Int) async throws -> String? {
+        try await send("POST", "api/list/items/\(id)/restore", as: JSONValue.self)["restored"]?.string
     }
 
-    /// POST /api/shopping/:id/photo (multipart `photo`)
+    /// GET /api/list/lists → [{ id, name, kind, note, open }] (id 0 = main)
+    func shopLists() async throws -> [ListRef] { try await get("api/list/lists", as: Lossy<ListRef>.self).wrappedValue }
+    func createShopList(name: String, kind: String = "other") async throws {
+        _ = try await send("POST", "api/list/lists", json: ["name": name, "kind": kind], as: Ignored.self)
+    }
+    func moveItemToList(_ id: Int, listId: Int) async throws {
+        _ = try await send("POST", "api/list/items/\(id)/move", json: ["list_id": listId], as: Ignored.self)
+    }
+
+    /// PATCH /api/list/items/:id { note, substitute: exact|ok|ask|null }
+    func updateItem(_ id: Int, note: String?, substitute: String?) async throws {
+        _ = try await send("PATCH", "api/list/items/\(id)",
+                           json: ["note": note.map { $0 as Any } ?? NSNull(), "substitute": substitute.map { $0 as Any } ?? NSNull()], as: Ignored.self)
+    }
+
+    /// POST /api/list/items/:id/photo (multipart `image`) → { photo_path }
     func uploadItemPhoto(_ id: Int, jpeg: Data) async throws {
         var mp = Multipart()
-        mp.addFile("photo", filename: "item.jpg", mimeType: "image/jpeg", data: jpeg)
-        _ = try await upload("api/shopping/\(id)/photo", multipart: mp, as: Ignored.self)
+        mp.addFile("image", filename: "item.jpg", mimeType: "image/jpeg", data: jpeg)
+        _ = try await upload("api/list/items/\(id)/photo", multipart: mp, as: Ignored.self)
+    }
+    func deleteItemPhoto(_ id: Int) async throws { _ = try await send("DELETE", "api/list/items/\(id)/photo", as: Ignored.self) }
+
+    /// GET /api/list/guard?text= → hints before adding ("laut Bon vorgestern gekauft", "im Vorrat 2")
+    func guardHints(text: String) async throws -> [GuardHint] {
+        try await get("api/list/guard", query: [URLQueryItem(name: "text", value: text)], as: GuardResponse.self).hints
+    }
+    /// GET /api/list/usuals – "Unsere Üblichen"
+    func usuals() async throws -> [Usual] { try await get("api/list/usuals", as: Lossy<Usual>.self).wrappedValue }
+    /// GET/PUT /api/list/prefs { density: compact|normal|large, fontScale: 0.9–1.4 }
+    func listPrefs() async throws -> JSONValue { try await get("api/list/prefs") }
+    func setListPrefs(density: String, fontScale: Double) async throws {
+        _ = try await send("PUT", "api/list/prefs", json: ["density": density, "fontScale": (fontScale * 100).rounded() / 100], as: Ignored.self)
     }
 
     /// POST /api/shop/items/:id/section { section } – drag & drop between aisles
     func moveItem(_ id: Int, section: String) async throws {
         _ = try await send("POST", "api/shop/items/\(id)/section", json: ["section": section], as: Ignored.self)
     }
+
+    // MARK: offers & prices
+
+    func offers() async throws -> [Offer] { try await get("api/offers", as: Lossy<Offer>.self).wrappedValue }
+    /// POST /api/offers/scan (multipart `image`, a flyer photo) → { via, offers }
+    func scanOffers(jpeg: Data) async throws -> [Offer] {
+        var mp = Multipart()
+        mp.addFile("image", filename: "flyer.jpg", mimeType: "image/jpeg", data: jpeg)
+        let r = try await upload("api/offers/scan", multipart: mp, as: JSONValue.self, timeout: 120)
+        let data = try JSONEncoder().encode(r["offers"] ?? .array([]))
+        return (try? JSONCoding.decoder().decode(Lossy<Offer>.self, from: data).wrappedValue) ?? []
+    }
+    func addOffer(_ id: Int) async throws { _ = try await send("POST", "api/offers/\(id)/add", as: Ignored.self) }
+    func deleteOffer(_ id: Int) async throws { _ = try await send("DELETE", "api/offers/\(id)", as: Ignored.self) }
+    func cheapest() async throws -> [CheapestProduct] {
+        try await get("api/prices/cheapest", query: [URLQueryItem(name: "limit", value: "12")], as: Lossy<CheapestProduct>.self).wrappedValue
+    }
+    func prices(product id: Int) async throws -> [ShopPrice] { try await get("api/prices/product/\(id)", as: Lossy<ShopPrice>.self).wrappedValue }
 
     func clearChecked() async throws { _ = try await send("POST", "api/shopping/clear-checked", as: Ignored.self) }
 
@@ -232,17 +285,10 @@ extension APIClient {
         return try await upload("api/imports/upload", multipart: mp, timeout: 180)
     }
 
-    /// POST /api/imports/text { lines, source: 'ocr-device', kind: 'receipt'|'list' } – text the iPhone read itself
-    /// (Apple Vision), so receipts work without AI. Server side: branch b-core.
-    func importText(lines: [String], kind: String) async throws -> ImportUploadResponse {
-        let r = try await send("POST", "api/imports/text", json: ["lines": lines, "source": "ocr-device", "kind": kind], as: JSONValue.self)
-        // { results: [...] } or a single import { id, title, … }
-        if let data = try? JSONEncoder().encode(r), let list = try? JSONCoding.decoder().decode(ImportUploadResponse.self, from: data), !list.results.isEmpty {
-            return list
-        }
-        let one = ImportResult(file: nil, id: r.first("id", "importId")?.int, error: r["error"]?.string, title: r.first("title", "shop", "store")?.string,
-                               duplicate: r["duplicate"]?.bool, lines: r["lines"])
-        return ImportUploadResponse(results: [one])
+    /// POST /api/imports/lines { lines, source: 'ocr-device', mode } – text Apple Vision read on the iPhone.
+    /// receipt → an import in review; list → suggested items.
+    func importLines(_ lines: [String], mode: String) async throws -> LinesImport {
+        try await send("POST", "api/imports/lines", json: ["lines": lines, "source": "ocr-device", "mode": mode])
     }
 
     func applyImport(_ id: Int) async throws { _ = try await send("POST", "api/imports/\(id)/apply", as: Ignored.self) }
@@ -251,15 +297,14 @@ extension APIClient {
 // MARK: push & notification settings
 
 extension APIClient {
-    /// POST /api/push/apns { token, environment: 'sandbox'|'production', device, bundle } (server: branch b-list)
+    /// POST /api/push/apns { token, environment: 'sandbox'|'production', device }
     func registerAPNs(token: String, environment: String, device: String) async throws {
-        _ = try await send("POST", "api/push/apns", json: ["token": token, "environment": environment, "device": device,
-                                                           "bundle": Bundle.main.bundleIdentifier ?? "de.heidrichdigital.tohuus"], as: Ignored.self)
+        _ = try await send("POST", "api/push/apns", json: ["token": token, "environment": environment, "device": device], as: Ignored.self)
     }
 
-    /// DELETE /api/push/apns { token } – on sign-out or when notifications are switched off on this device.
+    /// DELETE /api/push/apns/:id (the token itself works as id) – on sign-out.
     func unregisterAPNs(token: String) async throws {
-        _ = try await send("DELETE", "api/push/apns", json: ["token": token], as: Ignored.self)
+        _ = try await send("DELETE", "api/push/apns/\(token)", as: Ignored.self)
     }
 
     /// Plain decoding (no snake-case conversion): event keys such as "auth.new_device" must stay as they are.
@@ -282,7 +327,8 @@ extension APIClient {
     /// Saves one switch: personal prefs when the server has them, else the push column of the household matrix (admins).
     func setNotifyPref(_ key: String, on: Bool, prefs: NotifyPrefs) async throws {
         if !prefs.household {
-            _ = try await send("PATCH", "api/notify/prefs", json: ["events": [key: on]], as: Ignored.self)
+            // PUT /api/notify/prefs { events: { key: { apns } } } – `apns` is the iPhone channel
+            _ = try await send("PUT", "api/notify/prefs", json: ["events": [key: ["apns": on]]], as: Ignored.self)
             return
         }
         var row = prefs.raw[key]?.object ?? [:]
@@ -292,9 +338,17 @@ extension APIClient {
         _ = try await send("PATCH", "api/settings", json: ["notify": ["events": [key: obj]]], as: Ignored.self)
     }
 
+    /// PUT /api/notify/prefs { quiet: { from, to } | null }
     func setQuietHours(_ q: NotifyPrefs.QuietHours) async throws {
-        _ = try await send("PATCH", "api/notify/prefs", json: ["quietHours": ["enabled": q.enabled, "from": q.from, "to": q.to]], as: Ignored.self)
+        let quiet: Any = q.enabled ? ["from": q.from, "to": q.to] : NSNull()
+        _ = try await send("PUT", "api/notify/prefs", json: ["quiet": quiet], as: Ignored.self)
     }
+
+    /// "Nur wenn ich zu Hause bin": POST /api/notify/presence { home, source: 'app' }
+    func setPresence(home: Bool) async throws {
+        _ = try await send("POST", "api/notify/presence", json: ["home": home, "source": "app"], as: Ignored.self)
+    }
+    func setHomeOnly(_ keys: [String]) async throws { _ = try await send("PUT", "api/notify/prefs", json: ["homeOnly": keys], as: Ignored.self) }
 }
 
 /// Body of POST /api/shop/sync

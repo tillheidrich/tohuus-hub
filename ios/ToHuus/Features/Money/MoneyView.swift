@@ -7,6 +7,7 @@ struct MoneyView: View {
     @State private var overview: MoneyOverview?
     @State private var error: String?
     @State private var loading = false
+    @State private var cheapest: [CheapestProduct] = []
     @State private var showReceipt = false
 
     private var monthKey: String {
@@ -29,6 +30,7 @@ struct MoneyView: View {
                         if !o.byShop.isEmpty { barChart(L("By shop"), "storefront", o.byShop, o.currency) }
                         if !o.priceChanges.isEmpty { priceCard(o) }
                         if !o.hints.isEmpty { hintsCard(o) }
+                        if !cheapest.isEmpty { cheapestCard }
                         if o.total == nil && o.byCategory.isEmpty {
                             EmptyStateView(systemImage: "doc.text", title: L("No receipts this month yet."),
                                            message: L("Add a receipt photo or forward your e-receipts – ToHuus does the rest."))
@@ -54,12 +56,30 @@ struct MoneyView: View {
         }
     }
 
+    /// GET /api/prices/cheapest – products you bought in two or more shops, where they were cheapest
+    private var cheapestCard: some View {
+        Card(title: L("Where it was cheaper"), systemImage: "arrow.down.circle") {
+            ForEach(cheapest.prefix(6)) { c in
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(c.name).font(.subheadline)
+                        Text(c.shops.prefix(3).map { "\($0.shop ?? "–") \(Money.format($0.price))" }.joined(separator: " · "))
+                            .font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                    Spacer()
+                    if let s = c.saving, s > 0 { Text("−" + Money.format(s)).font(.subheadline).foregroundStyle(Theme.primaryText) }
+                }
+            }
+        }
+    }
+
     private func load() async {
         loading = true
         defer { loading = false }
         do {
             overview = try await store.api.moneyOverview(month: monthKey)
             error = nil
+            cheapest = (try? await store.api.cheapest()) ?? []
         } catch APIError.notFound {
             overview = nil
             error = L("This server can't show the money overview yet.")

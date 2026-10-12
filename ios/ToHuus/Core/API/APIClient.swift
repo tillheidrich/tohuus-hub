@@ -76,6 +76,24 @@ final class APIClient: Sendable {
         }
     }
 
+    /// For answers that carry meaning in a 4xx body (409 `cookidoo_confirm` with a draft): status and body, no throwing
+    /// on HTTP errors (401 still signs out).
+    func sendRaw(_ method: String, _ path: String, json: [String: Any], timeout: TimeInterval = 60) async throws -> (status: Int, body: JSONValue) {
+        var req = try request(method, path, timeout: timeout)
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let data: Data
+        let resp: URLResponse
+        do {
+            (data, resp) = try await session.upload(for: req, from: try JSONSerialization.data(withJSONObject: json))
+        } catch {
+            throw APIError.from(error)
+        }
+        let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        if status == 401, token != nil { onUnauthorized(); throw APIError.unauthorized }
+        let body = (try? JSONCoding.decoder().decode(JSONValue.self, from: data)) ?? .null
+        return (status, body)
+    }
+
     func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         if T.self == Ignored.self, let v = Ignored() as? T { return v }
         do {

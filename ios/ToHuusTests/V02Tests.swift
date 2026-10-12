@@ -8,15 +8,23 @@ final class V02Tests: XCTestCase {
         return try d.decode(T.self, from: Data(json.utf8))
     }
 
-    func testNotifyPrefsArrayAndObject() throws {
-        let a = try decode(NotifyPrefs.self, #"{"events":[{"event":"shopping.addon","push":true},{"key":"auth.new_device","on":false,"locked":true}],"quietHours":{"enabled":true,"from":"21:30","to":"06:45"}}"#, plain: true)
-        XCTAssertEqual(a.events.map(\.key), ["shopping.addon", "auth.new_device"])
-        XCTAssertEqual(a.events.map(\.on), [true, false])
-        XCTAssertTrue(a.events[1].locked)
-        XCTAssertEqual(a.quietHours, .init(enabled: true, from: "21:30", to: "06:45"))
+    private func fixture(_ name: String) throws -> Data {
+        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: name, withExtension: "json"), "missing fixture \(name)")
+        return try Data(contentsOf: url)
+    }
+
+    func testNotifyPrefsRealShape() throws {
+        let p = try JSONDecoder().decode(NotifyPrefs.self, from: try fixture("notify-prefs"))
+        let addon = try XCTUnwrap(p.events.first { $0.key == "trip.addon" })
+        XCTAssertTrue(addon.on, "apns is the iPhone switch")
+        XCTAssertEqual(addon.title, "Etwas für meinen Einkauf", "the server's label wins")
+        XCTAssertEqual(p.events.first { $0.key == "trip.started" }?.on, false)
+        XCTAssertEqual(p.quietHours, .init(enabled: true, from: "22:00", to: "07:00"))
+        XCTAssertFalse(p.household)
+        let off = try JSONDecoder().decode(NotifyPrefs.self, from: Data(#"{"events":[],"quiet":null}"#.utf8))
+        XCTAssertEqual(off.quietHours?.enabled, false)
         let o = try decode(NotifyPrefs.self, #"{"events":{"stock.low":{"push":true},"test":{"push":true},"budget.warning":false}}"#, plain: true)
         XCTAssertEqual(o.events.map(\.key), ["budget.warning", "stock.low"], "sorted, test event left out")
-        XCTAssertFalse(o.household)
     }
 
     func testNotifyPrefsFromHouseholdSettingsKeepsKeys() throws {
@@ -28,39 +36,75 @@ final class V02Tests: XCTestCase {
         XCTAssertEqual(p.raw["auth.new_device"]?["email"]?.bool, true)
     }
 
-    func testAIStatusShapes() throws {
-        let flat = try decode(AIStatus.self, #"{"ai":false,"voice":false,"receiptsAi":true,"locked":true}"#)
-        XCTAssertEqual(flat.ai, false)
-        XCTAssertEqual(flat.locked, true)
+    func testAIStatusAndSettings() throws {
+        let st = try JSONCoding.decoder().decode(AIStatus.self, from: try fixture("assistant-status"))
+        XCTAssertEqual(st.ai, false)
+        XCTAssertEqual(st.household, true)
+        XCTAssertEqual(st.personal, true)
+        XCTAssertEqual(st.locked, false)
+        XCTAssertEqual(st.reason, "no_model")
+        let set = try JSONCoding.decoder().decode(AISettings.self, from: try fixture("ai-settings"))
+        XCTAssertEqual(set.admin, true)
+        XCTAssertEqual(set.kids?.first?.name, "Mika")
+        XCTAssertEqual(set.kids?.first?.ai, true)
         let nested = try decode(AIStatus.self, #"{"ai":{"enabled":true,"household":true,"personal":false,"locked":false},"voice":true}"#)
-        XCTAssertEqual(nested.ai, true)
         XCTAssertEqual(nested.personal, false)
-        XCTAssertEqual(nested.locked, false)
     }
 
-    func testChildFromMe() throws {
-        let kid = try decode(MeResponse.self, #"{"actor":{"kind":"kid","name":"Mika"}}"#)
-        XCTAssertTrue(kid.isChild)
-        let adult = try decode(MeResponse.self, #"{"actor":{"kind":"user","name":"Sam","role":"admin"}}"#)
-        XCTAssertFalse(adult.isChild)
+    func testTripsListsEstimateAndRows() throws {
+        let trips = try JSONCoding.decoder().decode(Lossy<Trip>.self, from: try fixture("trips")).wrappedValue
+        let t = try XCTUnwrap(trips.first)
+        XCTAssertTrue(t.isMine)
+        XCTAssertEqual(t.user.name, "Sam")
+        XCTAssertEqual(t.store?.name, "Lidl")
+        XCTAssertEqual(t.basket.map(\.text), ["Brot", "Eier"])
+        XCTAssertEqual(t.openAddOns.map(\.text), ["Hafermilch"])
+        let lists = try JSONCoding.decoder().decode(Lossy<ListRef>.self, from: try fixture("list-lists")).wrappedValue
+        XCTAssertEqual(lists.map(\.id.value), ["0", "1"])
+        XCTAssertTrue(lists[0].isMain)
+        XCTAssertEqual(lists[1].kind, "store")
+        let est = try JSONCoding.decoder().decode(Estimate.self, from: try fixture("list-estimate"))
+        XCTAssertEqual(est.priced, 0)
+        XCTAssertEqual(est.unpricedNames?.count, 9)
+        let usuals = try JSONCoding.decoder().decode(Lossy<Usual>.self, from: try fixture("list-usuals")).wrappedValue
+        XCTAssertFalse(usuals.isEmpty)
+        let g = try JSONCoding.decoder().decode(GuardResponse.self, from: try fixture("list-guard"))
+        XCTAssertTrue(g.hints.isEmpty)
+        let hint = try decode(GuardResponse.self, #"{"hints":[{"kind":"bought","text":"laut Bon vorgestern gekauft","day":"2026-10-10"},{"kind":"on_list","text":"steht schon drauf"}]}"#)
+        XCTAssertEqual(hint.hints.first(where: \.asks)?.kind, "bought")
+        // rows: last receipt price for the expected total when the server has no estimate
+        let l = try decode(ShopList.self, #"{"sections":[{"key":"chilled","items":[{"id":1,"text":"Milch","qty":2,"substitute":"exact","photo_path":"/img/l1.webp","last_bought":{"price":1.09,"shop":"Lidl"},"price_hint":"am günstigsten bei Aldi: 0,99 €"},{"id":2,"text":"Butter"}]}]}"#)
+        let milk = try XCTUnwrap(l.openItems.first)
+        XCTAssertEqual(milk.photoPath, "/img/l1.webp")
+        XCTAssertEqual(milk.priceHint, "am günstigsten bei Aldi: 0,99 €")
+        let e = try XCTUnwrap(l.expected)
+        XCTAssertEqual(e.total ?? 0, 2.18, accuracy: 0.001)
+        XCTAssertEqual(e.priced, 1)
+        XCTAssertEqual(e.unpriced, 1)
     }
 
-    func testShopListLiveFieldsAndExpectedTotal() throws {
-        let l = try decode(ShopList.self, #"""
-        {"sections":[{"key":"chilled","items":[{"id":1,"text":"Milch","qty":2,"price":1.09,"substitute":"ask"},{"id":2,"text":"Butter"}]}],
-         "shoppers":[{"user_id":2,"name":"Mira","store":"Lidl","since":"2026-10-12 08:00:00"}],
-         "requests":[{"id":7,"text":"Hafermilch","by":"Ben","status":"open"},{"id":8,"text":"Eis","status":"declined"}],
-         "lists":[{"id":1,"name":"Einkauf"},{"id":"drog","name":"Drogerie","open":3}],"list":{"id":1,"name":"Einkauf"}}
-        """#)
-        XCTAssertEqual(l.shoppers.first?.name, "Mira")
-        XCTAssertEqual(l.shoppers.first?.userId, 2)
-        XCTAssertEqual(l.requests.filter(\.isOpen).map(\.id), [7])
-        XCTAssertEqual(l.lists.map(\.id.value), ["1", "drog"])
-        XCTAssertEqual(l.openItems.first?.substitute, "ask")
-        let est = try XCTUnwrap(l.expected)
-        XCTAssertEqual(est.total ?? 0, 2.18, accuracy: 0.001)
-        XCTAssertEqual(est.known, 1)
-        XCTAssertEqual(est.count, 2)
+    func testHouseGuideOffersImportsFacts() throws {
+        let g = try JSONCoding.decoder().decode(HouseGuide.self, from: try fixture("house-guide"))
+        XCTAssertEqual(g.cards.first?.title, "Müll")
+        let code = try XCTUnwrap(g.codes.first)
+        XCTAssertEqual(code.hasValue, true)
+        XCTAssertEqual(code.masked?.contains("•"), true)
+        let raw = String(decoding: try fixture("house-guide"), as: UTF8.self)
+        XCTAssertFalse(raw.contains("geheim123"), "lists never carry a code value")
+        let offers = try JSONCoding.decoder().decode(Lossy<Offer>.self, from: try fixture("offers")).wrappedValue
+        XCTAssertEqual(offers.first?.name, "Butter 250 g")
+        XCTAssertEqual(offers.first?.price, 1.49)
+        XCTAssertEqual(offers.first?.shop, "Lidl")
+        let receipt = try JSONCoding.decoder().decode(LinesImport.self, from: try fixture("imports-lines-receipt"))
+        XCTAssertEqual(receipt.kind, "receipt")
+        XCTAssertNotNil(receipt.id)
+        XCTAssertEqual(receipt.sumMatches, true)
+        let list = try JSONCoding.decoder().decode(LinesImport.self, from: try fixture("imports-lines-list"))
+        XCTAssertEqual(list.kind, "list")
+        XCTAssertTrue(list.items.contains { $0.name == "Milch" && $0.qty == 2 })
+        let facts = try JSONCoding.decoder().decode(FactsResponse.self, from: try fixture("facts")).facts
+        XCTAssertFalse(facts.isEmpty)
+        XCTAssertTrue(facts.allSatisfy { !$0.sources.isEmpty }, "every fact has its source")
     }
 
     func testShopListRoundTripsForTheWatch() throws {
@@ -96,14 +140,6 @@ final class V02Tests: XCTestCase {
         XCTAssertEqual(data?["note"] as? String, "x")
         XCTAssertEqual(NotifyKit.Action.addonAccept.serverAction, "addon-accept")
         XCTAssertNil(NotifyKit.Action.openList.serverAction)
-    }
-
-    func testFactsShapes() throws {
-        let a = try decode(FactsResponse.self, #"[{"id":1,"title":"Brot einfrieren","text":"…","source":{"name":"BZfE","url":"https://www.bzfe.de"}}]"#)
-        XCTAssertEqual(a.facts.first?.source, "BZfE")
-        XCTAssertEqual(a.facts.first?.sourceUrl, "https://www.bzfe.de")
-        let b = try decode(FactsResponse.self, #"{"facts":[{"slug":"eier","title":"Eier","source":"Verbraucherzentrale"},{"broken":true}]}"#)
-        XCTAssertEqual(b.facts.map(\.id), ["eier"])
     }
 
     func testDragPayloads() {

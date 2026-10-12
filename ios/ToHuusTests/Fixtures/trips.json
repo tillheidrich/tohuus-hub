@@ -1,0 +1,1 @@
+[{"id":1,"user":{"id":1,"name":"Sam","color":"#2f5bea"},"store":{"id":4,"name":"Lidl"},"startedAt":"2026-10-12 18:46:11","lastAt":"2026-10-12 18:46:11","mine":true,"basket":[{"id":6,"text":"Brot","qty":null},{"id":9,"text":"Eier","qty":6}],"addOns":[{"id":11,"text":"Hafermilch","from":"Sam","done":false}]}]

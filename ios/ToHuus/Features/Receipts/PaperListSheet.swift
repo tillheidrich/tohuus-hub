@@ -77,7 +77,14 @@ struct PaperListSheet: View {
         defer { reading = false }
         var all: [String] = []
         for img in images { all += (try? await DeviceOCR.lines(in: img)) ?? [] }
-        let items = DeviceOCR.listItems(all)
+        var items = DeviceOCR.listItems(all)
+        // the server's list reader (same parser as quick add) when it is there; the local filter otherwise
+        if !items.isEmpty, let r = try? await store.api.importLines(items, mode: "list"), r.kind == "list", !r.items.isEmpty {
+            items = r.items.map { i in
+                guard let q = i.qty, q != 1 else { return i.name }
+                return (q.rounded() == q ? String(Int(q)) : String(q)) + " " + i.name
+            }
+        }
         lines = items.map { Line(text: $0) }
         error = items.isEmpty ? L("No text found on the photo. Try again in better light.") : nil
     }

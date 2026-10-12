@@ -15,9 +15,11 @@ final class ServerStore: HouseholdStore {
     private(set) var shopMode = false
     /// several lists: the one shown (nil = the main list)
     private(set) var listId: String? = SharedConfig.defaults.string(forKey: "list.current")
-    /// live shopping data from GET /api/shop/live when the list itself doesn't carry it; nil = server has no live
-    private(set) var live: ShopList?
-    private(set) var liveSupported = true
+    /// who is out shopping (GET /api/shop/trips); false once the server answered 404
+    private(set) var trips: [Trip] = []
+    /// a shared Cookidoo link waiting for the person to confirm title + ingredients (cloud never reads Cookidoo)
+    var cookidooDraft: CookidooDraftRequest?
+    private(set) var tripsSupported = true
 
     private var snapshot: ShopList = .empty
     private var ops: [PendingOp] = []
@@ -60,9 +62,9 @@ final class ServerStore: HouseholdStore {
                     continue
                 }
                 for t in topics { self.revisions[t, default: 0] += 1 }
-                if topics.contains("shopping") || topics.contains("products") || topics.contains("live") {
+                if topics.contains("shopping") || topics.contains("products") {
                     await self.refreshList()
-                    await self.refreshLive()
+                    await self.refreshTrips()
                 }
             }
         }
@@ -76,21 +78,17 @@ final class ServerStore: HouseholdStore {
     // MARK: list
 
     func setList(_ id: String?) async {
-        listId = id
+        listId = id == "0" ? nil : id
         SharedConfig.defaults.set(id, forKey: "list.current")
         await refreshList()
     }
 
-    /// Who is shopping and the wishes for that trip (from the list payload or GET /api/shop/live).
-    var shoppers: [Shopper] { list.shoppers.isEmpty ? (live?.shoppers ?? []) : list.shoppers }
-    var addonRequests: [AddonRequest] { list.requests.isEmpty ? (live?.requests ?? []) : list.requests }
-
-    func refreshLive() async {
-        guard liveSupported, list.shoppers.isEmpty, list.requests.isEmpty else { return }
+    func refreshTrips() async {
+        guard tripsSupported else { return }
         do {
-            live = try await api.shopLive()
+            trips = try await api.trips()
         } catch APIError.notFound {
-            liveSupported = false
+            tripsSupported = false
         } catch {}
     }
 
@@ -179,7 +177,7 @@ final class ServerStore: HouseholdStore {
         let parts = QuickAddParser.fragments(trimmed).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         for part in parts.isEmpty ? [trimmed] : parts {
             var op = PendingOp.add(part, localId: nextLocalId)
-            op.listId = listId
+            op.listId = listId.flatMap(Int.init)
             nextLocalId -= 1
             ops = OpQueueLogic.enqueue(op, into: ops)
         }
@@ -241,9 +239,11 @@ final class ServerStore: HouseholdStore {
     func checkout(toStock: Bool) async {
         await flush()
         do {
-            try await api.checkout(storeId: storeId, toStock: toStock)
+            // "Einkauf fertig": ticked rows leave the list and the person's trip ends (older servers: checkout)
+            try await api.finishShopping(storeId: storeId, toStock: toStock)
             touch("shopping", "stock")
             await refreshList()
+            await refreshTrips()
         } catch {
             lastError = APIError.from(error).localizedDescription
         }
@@ -263,6 +263,11 @@ final class ServerStore: HouseholdStore {
         guard let token = api.token else { return }
         let uploader = ShareUploader(session: session, token: token)
         for item in UploadQueue.all() {
+            if item.confirm == true {
+                cookidooDraft = CookidooDraftRequest(url: item.url ?? "", text: item.text)
+                UploadQueue.remove(id: item.id)
+                continue
+            }
             let files = item.files.compactMap { UploadQueue.data(for: $0) }
             do {
                 try await uploader.upload(item, files: files)
@@ -270,6 +275,9 @@ final class ServerStore: HouseholdStore {
                 touch("imports", "recipes")
             } catch ShareUploader.UploadError.offline {
                 return
+            } catch ShareUploader.UploadError.needsConfirm {
+                cookidooDraft = CookidooDraftRequest(url: item.url ?? "", text: item.text)
+                UploadQueue.remove(id: item.id)
             } catch {
                 // the server refused it (format, quota): keep nothing that can never succeed
                 UploadQueue.remove(id: item.id)

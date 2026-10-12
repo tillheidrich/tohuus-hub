@@ -56,6 +56,7 @@ struct CookingView: View {
     @State private var selectedRecipe: Int?
     @FocusState private var searchFocused: Bool
     @State private var dropTarget: String?
+    @State private var showImport = false
     @State private var model = CookModel()
     @State private var tab = 0
     @State private var search = ""
@@ -84,7 +85,16 @@ struct CookingView: View {
             .onGeometryChangeCompat { w in width = w }
             .navigationTitle(L("Cooking"))
             .navigationDestination(for: Int.self) { id in RecipeDetailView(recipeId: id, store: store) }
+            .sheet(isPresented: $showImport) { RecipeImportSheet(store: store) }
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showImport = true
+                    } label: {
+                        Label(L("Add recipe"), systemImage: "plus")
+                    }
+                    .hoverEffect(.highlight)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         app.showKitchen = true

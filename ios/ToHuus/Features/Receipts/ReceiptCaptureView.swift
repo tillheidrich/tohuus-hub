@@ -154,8 +154,9 @@ struct ReceiptCaptureView: View {
             do {
                 uploading = true
                 defer { uploading = false }
-                let r = try await store.api.importText(lines: lines, kind: "receipt")
-                results = r.results + results
+                let r = try await store.api.importLines(lines, mode: "receipt")
+                let note = r.sumMatches == false ? L("The total doesn't add up – please check the lines in the web app.") : nil
+                results = [ImportResult(file: nil, id: r.id, error: note, title: r.title ?? L("Receipt"), duplicate: nil, lines: nil)] + results
                 store.touch("imports")
                 Haptics.success()
                 return

@@ -47,28 +47,40 @@ final class AppModel {
     /// this member's own switch (server when it knows one, else kept on this device)
     private(set) var personalAI: Bool = SharedConfig.defaults.object(forKey: "ai.personal") as? Bool ?? true
 
-    /// AI is off for this member: the household or the server has none, they switched it off, or a parent did.
-    var aiLocked: Bool { isChild && (aiStatus?.locked ?? true) || aiStatus?.locked == true }
-    var aiAvailable: Bool { (instance?.assistantEnabled ?? true) && (aiStatus?.ai ?? instance?.assistantEnabled ?? false) && (aiStatus?.household ?? true) }
-    var aiOn: Bool { aiAvailable && personalAI && !aiLocked }
+    /// AI switched off for this person by someone else (parents) – shown locked, not changeable here
+    var aiLocked: Bool { aiStatus?.locked == true || aiStatus?.reason == "parents" }
+    /// the household has a model and its AI switch is on (whatever this person chose)
+    var aiAvailable: Bool {
+        (instance?.assistantEnabled ?? true) && aiStatus?.reason != "no_model" && aiStatus?.reason != "household" && (aiStatus?.household ?? true)
+    }
+    /// effective for this person (the server's `ai`), falling back to the switches when the server is older
+    var aiOn: Bool { aiStatus?.ai ?? (aiAvailable && personalAI && !aiLocked) }
     var receiptAIOn: Bool { aiOn && (aiStatus?.receiptsAi ?? instance?.features?.receiptsAi?.bool ?? false) }
     var voiceAIOn: Bool { aiOn && (aiStatus?.voice ?? instance?.voiceEnabled ?? false) }
 
+    /// "Was nutzen wir?" – switched-off areas disappear (GET /api/me → modules). The list always stays.
+    private(set) var modules: [String: Bool] = [:]
+    func moduleOn(_ key: String) -> Bool { modules[key] ?? true }
+
     func loadAIState() async {
         guard let api else { return }
-        if let me = try? await api.me() { isChild = me.isChild }
+        if let me = try? await api.me() {
+            isChild = me.isChild
+            if let m = me.modules { modules = m }
+            if let p = me.listPrefs { ListPrefsSync.adopt(p) }
+        }
         if let s: AIStatus = try? await api.get("api/assistant/status") {
             aiStatus = s
             if let p = s.personal { personalAI = p; SharedConfig.defaults.set(p, forKey: Self.personalAIKey) }
         }
     }
 
-    /// PATCH /api/assistant/personal { ai } – a server without it keeps the choice on this device only.
+    /// PATCH /api/ai/settings { mine } – a server without it keeps the choice on this device only.
     func setPersonalAI(_ on: Bool) async {
         personalAI = on
         SharedConfig.defaults.set(on, forKey: Self.personalAIKey)
         guard let api else { return }
-        _ = try? await api.send("PATCH", "api/assistant/personal", json: ["ai": on], as: Ignored.self)
+        _ = try? await api.send("PATCH", "api/ai/settings", json: ["mine": on], as: Ignored.self)
         await loadAIState()
     }
 
