@@ -1,0 +1,129 @@
+/**
+ * Settings › "Abo & Speicher" (ToHuus Cloud only, plan 2026-10-12): plan, trial end, storage used vs quota,
+ * assistant usage – from GET /api/billing/status. Honest about where to subscribe (the iPhone app for now).
+ * Plus export (GET /api/cloud/export) and deleting the account (DELETE /api/cloud/account) with confirmation.
+ * Self-hosted servers never show any of this (Settings hides the tab).
+ */
+import { DownloadSimple, Trash } from '@phosphor-icons/react';
+import { useState } from 'react';
+import { del, invalidate } from '../api';
+import { type Billing, useBilling } from '../data';
+import { locale, t } from '../i18n';
+import { Sheet, Skeleton, useToast } from '../ui';
+
+const PLAN_LABEL: Record<Billing['plan'], string> = {
+  free: 'Free',
+  trial: 'Trial (everything included)',
+  haushalt: 'Haushalt',
+  plus: 'Plus',
+  selfhost: 'Self-hosted',
+};
+
+const fmtDay = (d?: string | null) => (d ? new Date(d.length <= 10 ? `${d}T12:00:00` : d).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+const mb = (n: number) => (n >= 1024 ? `${(n / 1024).toLocaleString(locale(), { maximumFractionDigits: 1 })} GB` : `${Math.round(n).toLocaleString(locale())} MB`);
+
+export function BillingCard() {
+  const b = useBilling();
+  if (b.isLoading) return <Skeleton n={1} h={160} />;
+  const s = b.data;
+  if (!s) return <div className="card pad small muted">{t('The plan details aren’t available on this server yet.')}</div>;
+  const usedMb = s.storage?.usedBytes != null ? s.storage.usedBytes / 1048576 : (s.usage?.storageMb ?? null);
+  const quotaMb = s.storage?.quotaBytes != null ? s.storage.quotaBytes / 1048576 : (s.limits?.storageMb ?? null);
+  const pct = usedMb != null && quotaMb ? Math.min(100, Math.round((usedMb / quotaMb) * 100)) : null;
+  const msgs = s.limits?.assistantPerMonth;
+  return (
+    <section className="card pad stack" aria-labelledby="plan-h" style={{ marginBottom: 16 }}>
+      <h2 id="plan-h" style={{ margin: 0 }}>
+        {t('Plan & storage')}
+      </h2>
+      <dl className="plan-facts">
+        <dt>{t('Plan')}</dt>
+        <dd>{t(PLAN_LABEL[s.plan] ?? s.plan)}</dd>
+        {s.plan === 'trial' && s.trialEndsAt && (
+          <>
+            <dt>{t('Trial ends')}</dt>
+            <dd>{fmtDay(s.trialEndsAt)}</dd>
+          </>
+        )}
+        {s.renewsAt && (
+          <>
+            <dt>{t('Renews')}</dt>
+            <dd>{fmtDay(s.renewsAt)}</dd>
+          </>
+        )}
+        {msgs != null && (
+          <>
+            <dt>{t('Assistant')}</dt>
+            <dd>{t('{used} of {max} messages this month', { used: s.usage?.assistantThisMonth ?? 0, max: msgs })}</dd>
+          </>
+        )}
+      </dl>
+      {usedMb != null && (
+        <div className="storage stack" style={{ gap: 6 }}>
+          <div className="row between">
+            <b>{t('Storage')}</b>
+            <span className="small muted">{quotaMb ? t('{used} of {quota}', { used: mb(usedMb), quota: mb(quotaMb) }) : mb(usedMb)}</span>
+          </div>
+          {pct != null && (
+            <div className={`bar ${pct >= 95 ? 'full' : ''}`} role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={t('Storage used')}>
+              <i style={{ width: `${pct}%` }} />
+            </div>
+          )}
+          {pct != null && pct >= 95 && <p className="small" style={{ margin: 0 }}>{t('Storage is full: new photos and receipt files can’t be saved. Nothing gets deleted.')}</p>}
+        </div>
+      )}
+      <p className="small muted" style={{ margin: 0 }}>
+        {t('Subscriptions are bought in the ToHuus iPhone app for now – one per household, everyone in it benefits. When a subscription ends, the household goes back to Free and nothing is deleted.')}
+      </p>
+    </section>
+  );
+}
+
+export function CloudAccountCard() {
+  const [confirm, setConfirm] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const word = t('DELETE');
+  const remove = async () => {
+    setBusy(true);
+    try {
+      await del('/cloud/account');
+      invalidate('me');
+      location.href = '/';
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="card pad stack" aria-labelledby="acc-h">
+      <h2 id="acc-h" style={{ margin: 0 }}>
+        {t('Your data')}
+      </h2>
+      <p className="small muted" style={{ margin: 0 }}>{t('Download everything ToHuus has stored for your household – lists, products, recipes, receipts – as a file.')}</p>
+      <a className="btn" href="/api/cloud/export" download>
+        <DownloadSimple size={16} /> {t('Export data')}
+      </a>
+      <div style={{ borderTop: "1px solid var(--line)" }} />
+      <p className="small muted" style={{ margin: 0 }}>
+        {t('Deleting your account removes your access. If you are the last member of a household, the household and all its data are deleted for good.')}
+      </p>
+      <button className="btn danger" onClick={() => setConfirm(true)}>
+        <Trash size={16} /> {t('Delete account')}
+      </button>
+      <Sheet open={confirm} onClose={() => setConfirm(false)} title={t('Delete account?')}>
+        <div className="stack">
+          <p style={{ margin: 0 }}>{t('This can’t be undone. Export your data first if you want to keep it.')}</p>
+          <label className="field">
+            <span>{t('Type {word} to confirm', { word })}</span>
+            <input className="input" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
+          </label>
+          <button className="btn danger lg" disabled={busy || typed.trim().toUpperCase() !== word.toUpperCase()} onClick={remove}>
+            <Trash size={16} /> {busy ? t('Deleting …') : t('Delete account for good')}
+          </button>
+        </div>
+      </Sheet>
+    </section>
+  );
+}

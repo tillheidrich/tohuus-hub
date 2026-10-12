@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fmtQty, invalidate, post, useApi } from '../api';
 import { t } from '../i18n';
-import { Empty, Ic, LevelPicker, Skeleton, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { Empty, LevelPicker, Skeleton, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { StarterSheet } from './Onboarding';
 
 export const WASTE_REASONS: [string, string][] = [

@@ -2,7 +2,8 @@ import { MagnifyingGlass, MapPin, Package } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi } from '../api';
-import { Empty, Ic, Skeleton, Thumb } from '../ui';
+import { Empty, Skeleton, Thumb } from '../ui';
+import { Ic } from '../placeicons';
 import { t } from '../i18n';
 
 export interface Found {

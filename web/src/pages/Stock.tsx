@@ -2,7 +2,8 @@ import { MagnifyingGlass, Package, Plus, SlidersHorizontal } from '@phosphor-ico
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { type Category, type Location, type Product, fmtQty, invalidate, post, qc, useApi } from '../api';
-import { Empty, Ic, LevelPicker, Skeleton, StatusBadge, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { Empty, LevelPicker, Skeleton, StatusBadge, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { t } from '../i18n';
 import { QuickCheckButton, WasteCard } from './FreshParts';
 import { BoxesStock } from './Leftovers';
@@ -106,7 +107,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
       <header className="page-head">
         <div>
           <div className="eyebrow">{inHouse === 1 ? t('1 product at home') : t('{n} products at home', { n: inHouse })}</div>
-          <h1>{t('Stock')}</h1>
+          <h1>{t('Pantry')}</h1>
         </div>
         <div className="actions">
           <QuickCheckButton locationId={ort} />

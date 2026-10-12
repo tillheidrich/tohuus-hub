@@ -10,7 +10,8 @@ import { type Category, type Climate, type Location, del, invalidate, patch, pos
 import { HomeArt } from '../art';
 import { FORM_HINT, FORM_LABEL, PRESET_LABEL, type HomePreset, type HouseholdForm, useHousehold } from '../household';
 import { t } from '../i18n';
-import { Empty, Ic, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { Ic } from '../placeicons';
 
 /** English source texts for the three climates – the words the UI uses everywhere. */
 export const CLIMATE_LABEL: Record<Climate, string> = { ambient: 'Room temperature', chilled: 'Chilled', frozen: 'Freezing' };

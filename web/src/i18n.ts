@@ -5,13 +5,26 @@
  * Add a language: list it in server/languages.ts, create web/src/locales/<code>/ fragments and register them below.
  */
 import { LANGUAGES, isLang, localeOf, toLang, type Lang } from '../../server/languages';
-import { de } from './locales/de/index';
 
 export type { Lang };
 /** Supported languages with their native names – for language pickers (Settings, onboarding). */
 export { LANGUAGES };
 export const LANGUAGE_OPTIONS = LANGUAGES.map((l) => [l.code, l.name] as [Lang, string]);
-const DICTS: Record<Lang, Record<string, string>> = { en: {}, de };
+const DICTS: Record<Lang, Record<string, string> | null> = { en: {}, de: null };
+/**
+ * Dictionaries are separate chunks (the German one is ~100 kB gzip): main.tsx waits for the active one before the
+ * first render, a later language switch loads it and re-renders the app (event `tohuus:lang`).
+ */
+const LOADERS: Partial<Record<Lang, () => Promise<Record<string, string>>>> = { de: () => import('./locales/de/index').then((m) => m.de) };
+const pending: Partial<Record<Lang, Promise<void>>> = {};
+export function loadDict(l: Lang = current): Promise<void> {
+  if (DICTS[l]) return Promise.resolve();
+  return (pending[l] ??= (LOADERS[l]?.() ?? Promise.resolve({})).then((d) => {
+    DICTS[l] = d;
+    window.dispatchEvent(new CustomEvent('tohuus:lang', { detail: l }));
+  }));
+}
+export const dictReady = (l: Lang = current) => Boolean(DICTS[l]);
 
 let current: Lang = (() => {
   try {
@@ -29,6 +42,7 @@ export function setLang(l: string | undefined | null) {
   if (next === current) return false;
   current = next;
   document.documentElement.lang = next;
+  void loadDict(next);
   try {
     localStorage.setItem('sw.lang', next);
   } catch {
@@ -44,7 +58,7 @@ export const locale = () => localeOf(current);
 export const pick = (o: { en: string } & Partial<Record<Lang, string>>) => o[current] ?? o.en;
 
 export function t(en: string, vars?: Record<string, string | number | null | undefined>) {
-  let s = DICTS[current][en] ?? en;
+  let s = DICTS[current]?.[en] ?? en;
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v ?? ''));
   return s;
 }

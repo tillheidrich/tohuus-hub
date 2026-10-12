@@ -11,19 +11,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { connectEvents, invalidate } from '../api';
 import { applyBrand } from '../brand';
 import { locale, setLang, t } from '../i18n';
-import { Ic } from '../ui';
+import { Ic } from '../placeicons';
 import { KidAnimal, KidArt, KidPicture } from './KidArt';
 
 // ------------------------------------------------------------------ device lock
 
-const LOCK = 'sw.kidLock';
-export function kidLock(): string | null {
-  try {
-    return localStorage.getItem(LOCK);
-  } catch {
-    return null;
-  }
-}
+import { LOCK, kidLock } from '../kidlock';
+export { kidLock };
 function setKidLock(token: string | null) {
   try {
     if (token) localStorage.setItem(LOCK, token);

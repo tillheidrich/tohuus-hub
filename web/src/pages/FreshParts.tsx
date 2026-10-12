@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type Location, daysUntil, fmtDate, fmtQty, invalidate, patch, post, useApi } from '../api';
 import { num, t } from '../i18n';
-import { Ic, Seg, Sheet, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { Seg, Sheet, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { WASTE_REASONS, sinceText } from './Check';
 import { WasteValueLine } from './Retail';
 

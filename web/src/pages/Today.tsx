@@ -1,23 +1,15 @@
-import { ArrowRight, Basket, CaretRight, ChefHat, Check, ForkKnife, ListChecks, MagnifyingGlass, Martini, Receipt } from '@phosphor-icons/react';
-import { type ReactNode, useState } from 'react';
+import { ArrowRight, Basket, Camera, Check, ChefHat, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
-import { fmtQty, invalidate, post, relTime, useApi } from '../api';
-import { Bird } from '../art';
+import { post, qc } from '../api';
+import { assistantAvailable, openAssistant } from '../assistant/Fab';
+import { type CookToday, type Notice, type RhythmItem, type StillHave, type Today as TodayData, TODAY_KEY, useToday } from '../data';
 import { locale, t } from '../i18n';
-import { guestAllows } from '../people/People';
-import type { ShopView } from '../shop/sections';
-import { Empty, StatusBadge, useToast } from '../ui';
-import { AwayBanner } from './Away';
-import { CareDueSection } from './Care';
-import { KidWishesCard } from './KidsSettings';
-import { BoxesToday, PutAwayButton } from './Leftovers';
-import { ChecklistCard, StarterSheet } from './Onboarding';
-import { PartyBanner } from './Party';
-import { StartModeHint } from './Share';
-import { shiftFrom } from './Week';
-
-const todayDay = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date());
+import { originLine, rhythmLine } from '../origin';
+import { guestAllows } from '../people/access';
+import { money } from '../region';
+import { Avatar, Empty, expiryText, useToast } from '../ui';
 
 function greeting() {
   const h = new Date().getHours();
@@ -27,431 +19,359 @@ function greeting() {
   return t('Good evening');
 }
 
-type Mark = 'soon' | 'out' | 'low' | 'list' | 'ok';
-interface TicketRow {
-  key: string;
-  mark: Mark;
-  title: string;
-  meta: ReactNode;
-  action?: ReactNode;
-  onOpen?: () => void;
-}
+/** Optimistic edit of the cached /today answer (the server confirms via SSE). */
+const patchToday = (fn: (d: TodayData) => TodayData) => qc.setQueryData<TodayData>(TODAY_KEY, (d) => (d ? fn(d) : d));
 
 /**
- * Today ("Heute") in the Dutch Detail language: a green header block with the date arch and the bird, then ONE
- * prioritised ticket ("Today first") built from real data with one sensible next step, then a recipe suggestion
- * (arched photo + stamp only when the data supports it). Everything else follows below, quieter.
+ * Heute (plan 2026-10-12): one request (`/api/today`), at most five calm cards in a fixed order –
+ * Fällig · Liste · Das habt ihr noch · Heute kochen? · Geld. Each card hides when it has nothing to say,
+ * except "Fällig", which then invites the three ways in: share a receipt, photo of the paper list, just say it.
  */
-export function Today({ me, onAdd }: { me: Me; onAdd: () => void }) {
-  const { data: o, isLoading, error, refetch } = useApi<any>('overview', '/overview');
-  const shop = useApi<ShopView>(['shopping', 'today'], '/shop/list');
+export function Today({ me }: { me: Me }) {
+  const q = useToday();
   const nav = useNavigate();
-  const toast = useToast();
-  const [starter, setStarter] = useState(false);
   const gl = me.actor.houseGuest?.level;
+  const d = q.data;
+  const now = new Date();
+  const date = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
-  if (isLoading) {
+  const head = (
+    <header className="today-head">
+      <div className="grow">
+        <div className="eyebrow">{date}</div>
+        <h1 className="greet">
+          {d?.greeting ?? `${greeting()}, ${me.actor.name}!`}
+        </h1>
+      </div>
+      {guestAllows(gl, '/bestand') && (
+        <button className="icon-btn" onClick={() => window.dispatchEvent(new Event('tohuus:add'))} aria-label={t('Add')} title={t('Add')}>
+          <Plus size={20} />
+        </button>
+      )}
+      <button className="avatar-btn" onClick={() => nav('/mehr')} aria-label={t('More: settings, people, guests …')} title={t('More')}>
+        <Avatar name={me.actor.name} personKey={me.actor.userId ? `u${me.actor.userId}` : null} size={40} />
+      </button>
+    </header>
+  );
+
+  if (q.isLoading) {
     return (
-      <div className="today" aria-busy="true">
-        <div className="day-block skel-block" />
-        <div className="ticket ticket-skel">
-          <div className="skel" style={{ height: 22, width: '40%' }} />
-          <div className="skel" style={{ height: 52 }} />
-          <div className="skel" style={{ height: 52 }} />
-          <div className="skel" style={{ height: 50 }} />
+      <div className="today2" aria-busy="true">
+        {head}
+        {[120, 96, 140].map((h, i) => (
+          <div key={i} className="hcard">
+            <div className="skel" style={{ height: 18, width: '35%' }} />
+            <div className="skel" style={{ height: h - 40, marginTop: 12 }} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (q.error || !d) {
+    return (
+      <div className="today2">
+        {head}
+        <div className="hcard">
+          <Empty icon={<Receipt size={26} />} title={t('Today couldn’t be loaded')} action={{ label: t('Try again'), onClick: () => q.refetch() }}>
+            {t('Check the connection and try again.')}
+          </Empty>
         </div>
       </div>
     );
   }
-  if (error || !o) {
-    return (
-      <div className="card">
-        <Empty icon={<Receipt size={26} />} title={t('Today couldn’t be loaded')} action={{ label: t('Try again'), onClick: () => refetch() }}>
-          {t('Check the connection and try again.')}
-        </Empty>
-      </div>
-    );
-  }
-
-  const c = o.counts;
-  const now = new Date();
-  const day = now.toLocaleDateString(locale(), { day: 'numeric' }).replace('.', '');
-  const month = now.toLocaleDateString(locale(), { month: 'short' });
-  const fullDate = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
-  const weekday = now.toLocaleDateString(locale(), { weekday: 'long' });
-  const placeName = (id: number | null | undefined) => (o.locations as any[]).find((l) => l.id === id)?.name as string | undefined;
-  const openItems = shop.data ? shop.data.sections.flatMap((s) => s.items) : [];
-  const onList = new Set(openItems.map((i) => i.product_id).filter(Boolean));
-  const emptyHome = c.products === 0;
-
-  const toShop = async (id: number, name: string) => {
-    await post('/shopping', { text: name, product_id: id });
-    invalidate('shopping', 'overview');
-    toast({ text: t('{name} is on the shopping list', { name }) });
-  };
-  const consume = async (id: number, name: string) => {
-    await post('/stock/adjust', { product_id: id, delta: -1, reason: 'consume' });
-    invalidate('overview', 'products');
-    toast({ text: t('{name}: one less', { name }), action: { label: t('Undo'), run: () => post('/stock/adjust', { product_id: id, delta: 1, reason: 'undo' }).then(() => invalidate('overview')) } });
-  };
-
-  // ---- the ticket: real to-dos, most urgent first, never more than four rows
-  const att: any[] = o.attention;
-  const soon = att.filter((a) => a.status === 'expired' || a.status === 'expiring');
-  const out = att.filter((a) => a.status === 'empty');
-  const low = att.filter((a) => a.status === 'low');
-  const rows: TicketRow[] = [];
-  const where = (a: any) => placeName(a.location_id);
-  for (const a of soon.slice(0, 2)) {
-    rows.push({
-      key: `s${a.id}`,
-      mark: 'soon',
-      title: a.name,
-      meta: (
-        <>
-          <StatusBadge p={a} compact />
-          {where(a) && <span>{where(a)}</span>}
-        </>
-      ),
-      action:
-        a.track_mode === 'count' && a.total > 0 ? (
-          <button className="btn sm" onClick={() => consume(a.id, a.name)}>
-            {t('Used one')}
-          </button>
-        ) : undefined,
-      onOpen: () => nav(`/bestand/${a.id}`),
-    });
-  }
-  for (const a of [...out.slice(0, 2), ...low.slice(0, 1)]) {
-    if (rows.length >= 3) break;
-    const listed = onList.has(a.id);
-    rows.push({
-      key: `o${a.id}`,
-      mark: a.status === 'empty' ? 'out' : 'low',
-      title: a.status === 'empty' ? t('{name} is out', { name: a.name }) : t('{name} is running low', { name: a.name }),
-      meta: (
-        <>
-          {where(a) ? <span>{where(a)}</span> : a.total > 0 ? <span>{t('{qty} left', { qty: fmtQty(a, a.total) })}</span> : null}
-          {listed && (
-            <span className="ok">
-              <Check size={14} weight="bold" /> {t('on the list')}
-            </span>
-          )}
-        </>
-      ),
-      action: listed ? undefined : (
-        <button className="btn sm" onClick={() => toShop(a.id, a.name)}>
-          <Basket size={15} /> {t('Put on the list')}
-        </button>
-      ),
-      onOpen: () => nav(`/bestand/${a.id}`),
-    });
-  }
-  const open = shop.data?.open ?? c.shopping;
-  if (open > 0) {
-    const byWho = new Map<string, number>();
-    let nobody = 0;
-    for (const i of openItems) {
-      if (i.claim) byWho.set(i.claim.name, (byWho.get(i.claim.name) ?? 0) + 1);
-      else nobody++;
-    }
-    const parts = [...byWho].slice(0, 2).map(([name, n]) => t('{name} gets {n}', { name, n }));
-    if (byWho.size && nobody) parts.push(nobody === 1 ? t('1 still unclaimed') : t('{n} still unclaimed', { n: nobody }));
-    rows.push({
-      key: 'list',
-      mark: 'list',
-      title: t('Shopping list: {n} open', { n: open }),
-      meta: parts.length ? <span>{parts.join(' · ')}</span> : <span>{openItems.slice(0, 3).map((i) => i.text).join(', ')}</span>,
-      onOpen: () => nav('/einkauf'),
-    });
-  }
-  const more = Math.max(0, att.length - rows.filter((r) => r.mark !== 'list').length);
-  // one sensible next step for this situation
-  const next = emptyHome
-    ? { label: t('Add typical staples'), run: () => setStarter(true) }
-    : open > 0 && guestAllows(gl, '/einkauf')
-      ? { label: t('Open the shopping list'), run: () => nav('/einkauf') }
-      : att.length > 0
-        ? { label: t('Look at the stock'), run: () => nav('/bestand?status=attention') }
-        : guestAllows(gl, '/kochen')
-          ? { label: t('What should we cook?'), run: () => nav('/kochen') }
-          : null;
-
-  const summary = emptyHome
-    ? t('Nothing in stock yet – let’s change that in a minute.')
-    : rows.length === 0
-      ? t('All good. Nothing needs restocking today.')
-      : rows.length === 1
-        ? t('{weekday}. One thing today, then it’s quiet.', { weekday })
-        : t('{weekday}. {n} things today, then it’s quiet.', { weekday, n: rows.length });
-
-  // ---- recipe suggestion: photo in an arch, a stamp only when the data really says so
-  const top = o.tonight[0];
-  const alts: any[] = o.tonight.slice(1, 3);
-  const stamp = (r: any) =>
-    r && r.need > 0 && r.missing?.length === 0 ? (
-      <span className="stamp" aria-label={t('Everything at home')}>
-        <span>
-          <Check size={20} weight="bold" />
-          {t('All there')}
-        </span>
-      </span>
-    ) : null;
-  const missingLine = (r: any) =>
-    r.missing?.length === 1 ? (
-      <>
-        <em>{t('Only {name} missing', { name: r.missing[0] })}</em>
-        {r.missingItems?.[0]?.product_id && onList.has(r.missingItems[0].product_id) ? ` · ${t('already on the list')}` : ''}
-      </>
-    ) : r.missing?.length === 0 && r.need > 0 ? (
-      t('All there')
-    ) : (
-      t('{have}/{need} at home', { have: r.have, need: r.need })
-    );
-  const places = (o.locations as any[]).filter((l) => l.kind !== 'unassigned' && !l.parent_id && !l.archived).slice(0, 4);
 
   return (
-    <div className="today">
-      <header className="day-block">
-        <span className="disc" aria-hidden="true" />
-        <span className="half" aria-hidden="true" />
-        <div className="day-top">
-          <div className="grow">
-            <h1 className="greet">
-              {greeting()}, {me.actor.name}!
-            </h1>
-            <p className="day-sub">{summary}</p>
-          </div>
-          <div className="date-tile" role="img" aria-label={fullDate}>
-            <Bird className="date-bird" />
-            <b>{day}</b>
-            <span>{month}</span>
-          </div>
-        </div>
-      </header>
+    <div className="today2">
+      {head}
+      {d.notices.length > 0 && <Notices list={d.notices} />}
+      <div className="today-cards">
+        <DueCard items={d.rhythm} legacy={d.legacy} />
+        {guestAllows(gl, '/einkauf') && <ListCard d={d} />}
+        {d.stillHave.length > 0 && <StillHaveCard items={d.stillHave} />}
+        {guestAllows(gl, '/kochen') && d.cookToday && <CookCard c={d.cookToday} />}
+        {guestAllows(gl, '/geld') && d.money && <MoneyCard m={d.money} />}
+      </div>
+    </div>
+  );
+}
 
-      <section className="ticket" aria-labelledby="today-first">
-        <div className="ticket-h">
-          <h2 className="eyebrow label-sq" id="today-first">{t('Today first')}</h2>
-          {more > 0 && guestAllows(gl, '/bestand') && (
-            <button className="linkish" onClick={() => nav('/bestand?status=attention')}>
-              {t('All {n}', { n: att.length })} <CaretRight size={14} />
-            </button>
-          )}
-        </div>
-        {rows.length === 0 ? (
-          <div className="ticket-calm">
-            <span className="mk ok" aria-hidden="true" />
-            <div>
-              <b>{emptyHome ? t('Your home is still empty') : t('Nothing urgent')}</b>
-              <span className="meta">
-                {emptyHome ? t('One tap per place – pasta, rice, toilet paper … Or upload a receipt or scan barcodes with the plus button.') : t('As soon as something runs low or nears its best-before date, it shows up here.')}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <ul>
-            {rows.map((r) => (
-              <li key={r.key} className="row-in">
-                <span className={`mk ${r.mark}`} aria-hidden="true" />
-                <div className="grow">
-                  <button className="t-title" onClick={r.onOpen}>
-                    {r.title}
-                  </button>
-                  <span className="meta">{r.meta}</span>
-                  {r.action && <div className="t-act">{r.action}</div>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {next && (
-          <>
-            <div className="tear" aria-hidden="true" />
-            <div className="next">
-              <button className="btn primary lg block" onClick={next.run}>
-                {emptyHome ? <ListChecks size={18} /> : null}
-                {next.label}
-                <span className="tail">
-                  <ArrowRight size={18} />
-                </span>
-              </button>
-            </div>
-          </>
-        )}
-      </section>
+function CardHead({ title, shape, link }: { title: string; shape: string; link?: { label: string; to: string } }) {
+  const nav = useNavigate();
+  return (
+    <div className="hcard-h">
+      <h2>
+        <span className={`shape ${shape}`} aria-hidden="true" />
+        {title}
+      </h2>
+      {link && (
+        <button className="linkish" onClick={() => nav(link.to)}>
+          {link.label} <ArrowRight size={14} />
+        </button>
+      )}
+    </div>
+  );
+}
 
-      <div className="today-rest">
-        <ChecklistCard me={me} />
-        {guestAllows(gl, '/wo') && (
-          <button className="finder only-mobile-flex" onClick={() => nav('/wo')}>
-            <MagnifyingGlass size={20} />
-            <span>{t('Where can I find …?')}</span>
-          </button>
-        )}
+// ------------------------------------------------------------------ 1 · Fällig
 
-        {/* permanent guests (area: people) only get the cards their level opens – the server refuses the rest */}
-        {!gl && <PartyBanner />}
-        {guestAllows(gl, '/urlaub') && <AwayBanner />}
-        {!gl && <KidWishesCard />}
-        {(o.imports.length > 0 || o.orders.some((x: any) => !x.party_id && x.user_id !== me.actor.userId)) && (
-          <div className="stack today-banners">
-            {/* party orders are summed up in the party banner */}
-            {o.orders
-              // my own wishes aren't news to me (they show on „Verwöhnen“)
-              .filter((x: any) => !x.party_id && x.user_id !== me.actor.userId)
-              .map((ord: any) => (
-                <div key={`o${ord.id}`} className="banner warn" onClick={() => nav(ord.guest_link_id ? '/bar' : '/bestellen')}>
-                  <span className="ic">
-                    <Martini size={20} />
-                  </span>
-                  <div className="grow">
-                    <b>{ord.guest_link_id ? t('Order from {name}', { name: ord.guest_name }) : t('{name} would love something', { name: ord.guest_name })}</b>
-                    <div className="small muted">{ord.lines.map((l: any) => `${l.qty}× ${l.name}`).join(', ')}</div>
-                  </div>
-                  <ArrowRight size={18} />
-                </div>
-              ))}
-            {o.imports.map((i: any) => (
-              <div key={`i${i.id}`} className="banner" onClick={() => nav(`/import/${i.id}`)}>
-                <span className="ic">
-                  <Receipt size={20} />
-                </span>
-                <div className="grow">
-                  <b>{i.title}</b>
-                  <div className="small muted">{i.lines === 1 ? t('1 item waiting for a quick look') : t('{n} items waiting for a quick look', { n: i.lines })}</div>
-                </div>
-                <ArrowRight size={18} />
+function DueCard({ items, legacy }: { items: RhythmItem[]; legacy?: boolean }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState<number | null>(null);
+  const act = async (r: RhythmItem, kind: 'accept' | 'dismiss') => {
+    setBusy(r.productId);
+    try {
+      await post(`/rhythm/${r.productId}/${kind}`);
+      patchToday((x) => ({ ...x, rhythm: x.rhythm.filter((y) => y.productId !== r.productId), list: kind === 'accept' ? { ...x.list, open: x.list.open + 1 } : x.list }));
+      qc.invalidateQueries({ queryKey: ['shopping'] });
+      toast({ text: kind === 'accept' ? t('{name} is on the shopping list', { name: r.name }) : t('Okay – ToHuus asks again later.') });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <section className="hcard due" aria-labelledby="h-due">
+      <div className="hcard-h">
+        <h2 id="h-due">
+          <span className="shape c" aria-hidden="true" />
+          {t('Due')}
+        </h2>
+      </div>
+      {items.length === 0 ? (
+        <EntryLevels legacy={legacy} />
+      ) : (
+        <ul className="hrows">
+          {items.slice(0, 4).map((r) => (
+            <li key={r.productId} className="hrow due-row">
+              <div className="grow">
+                <b>{r.name}</b>
+                <span className="meta">{rhythmLine(r.everyDays, r.lastBought)}</span>
               </div>
-            ))}
-          </div>
-        )}
-
-        <BoxesToday />
-        {!gl && <StartModeHint />}
-        {guestAllows(gl, '/pflege') && <CareDueSection />}
-
-        {o.planned?.length > 0 && (
-          <section className="section">
-            <div className="section-head">
-              <h2>{t('Planned for today')}</h2>
-              <a onClick={() => nav('/kochen')}>{t('Week plan')}</a>
-            </div>
-            <div className="list">
-              {o.planned.map((p: any) => (
-                <div key={p.id} className="plan-today" onClick={() => (p.recipe_id ? nav(`/rezepte/${p.recipe_id}?plan=${p.id}`) : nav('/kochen'))}>
-                  {p.image_path ? <img src={p.image_path} alt="" /> : <span className="ph"><ChefHat size={24} /></span>}
-                  <div className="grow">
-                    <div className="eyebrow">
-                      {p.slot === 'mittag' ? t('Lunch') : t('Tonight')}
-                      {p.cooked ? ` · ${t('cooked')}` : ''}
-                    </div>
-                    <b>{p.title}</b>
-                  </div>
-                  {!p.cooked && (
-                    <button
-                      className="btn sm"
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        shiftFrom(todayDay(), toast, p.slot);
-                      }}
-                    >
-                      <ForkKnife size={15} /> {t('Eating out')}
-                    </button>
-                  )}
-                  {Boolean(p.cooked) && !String(p.note ?? '').startsWith('box:') && <PutAwayButton preset={{ name: p.title, recipe_id: p.recipe_id ?? null, plan_id: p.id, image_path: p.image_path ?? null }} />}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {!emptyHome && places.length > 0 && guestAllows(gl, '/bestand') && (
-          <section className="section only-desktop-block">
-            <div className="section-head">
-              <h2>{t('Your places')}</h2>
-              <a onClick={() => nav('/bestand')}>{t('All stock')}</a>
-            </div>
-            <nav className="doors" aria-label={t('Places')}>
-              {places.map((l) => (
-                <button key={l.id} className="door" onClick={() => nav(`/bestand?ort=${l.id}`)}>
-                  <b>{l.name}</b>
-                  <span>{l.products === 0 ? t('empty') : l.products === 1 ? t('1 product') : t('{n} products', { n: l.products })}</span>
+              <div className="due-act">
+                <button className="btn sm primary" disabled={busy === r.productId} onClick={() => act(r, 'accept')}>
+                  <Basket size={15} /> {t('Put on the list')}
                 </button>
-              ))}
-            </nav>
-          </section>
-        )}
+                <button className="btn sm" disabled={busy === r.productId} onClick={() => act(r, 'dismiss')}>
+                  {t('Still have it')}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
-        {o.activity.length > 0 && (
-          <section className="section">
-            <div className="section-head">
-              <h2>{t('Recently')}</h2>
-            </div>
-            <ul className="recent">
-              {o.activity.slice(0, 5).map((m: any) => (
-                <li key={m.id}>
-                  <span className={`sdot ${m.delta < 0 ? 'low' : ''}`} />
-                  <span className="grow">
-                    <b>{m.actor ?? t('Someone')}</b>{' '}
-                    {m.track_mode === 'level'
-                      ? t('updated {name}', { name: m.name })
-                      : m.delta > 0
-                        ? t('put away {n} × {name}', { n: Math.abs(m.delta), name: m.name })
-                        : t('took out {n} × {name}', { n: Math.abs(m.delta), name: m.name })}
-                  </span>
-                  <span className="muted">{relTime(m.created_at)}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-        {emptyHome && (
-          <button className="btn block lg only-desktop-flex" style={{ marginTop: 24 }} onClick={onAdd}>
-            {t('Add something')}
+/** Empty "Fällig": the three ways to give ToHuus something to remember – whatever the household's digital level. */
+function EntryLevels({ legacy }: { legacy?: boolean }) {
+  const nav = useNavigate();
+  const canTalk = assistantAvailable();
+  return (
+    <div className="entry">
+      <p className="meta">
+        {legacy
+          ? t('Nothing due yet. The more receipts and ticked-off shopping ToHuus sees, the better it knows what you run out of.')
+          : t('Nothing due right now. ToHuus remembers how often you buy things – from receipts and from ticking off the list.')}
+      </p>
+      <div className="entry-grid">
+        <button className="entry-tile" onClick={() => nav('/import?mode=file')}>
+          <Receipt size={22} />
+          <b>{t('Share a receipt')}</b>
+          <span>{t('eBon, PDF, delivery')}</span>
+        </button>
+        <button className="entry-tile" onClick={() => nav('/import?mode=photo')}>
+          <Camera size={22} />
+          <b>{t('Photo of the list')}</b>
+          <span>{t('paper receipt or note')}</span>
+        </button>
+        {canTalk ? (
+          <button className="entry-tile" onClick={() => openAssistant()}>
+            <Microphone size={22} />
+            <b>{t('Just say it')}</b>
+            <span>{t('“Milk is out”')}</span>
+          </button>
+        ) : (
+          <button className="entry-tile" onClick={() => nav('/import?mode=text')}>
+            <TextAa size={22} />
+            <b>{t('Just type it')}</b>
+            <span>{t('“milk, bread, coffee”')}</span>
           </button>
         )}
       </div>
-
-      {guestAllows(gl, '/kochen') && (
-        <section className="today-recipe" aria-labelledby="today-cook">
-          <div className="section-head">
-            <h2 id="today-cook">{o.planned?.length ? t('Or maybe …') : t('What should we cook?')}</h2>
-            <a onClick={() => nav('/kochen')}>{t('More ideas')}</a>
-          </div>
-          {!top ? (
-            <div className="card">
-              <Empty icon={<ChefHat size={26} />} art="book" title={t('No recipes yet')} action={{ label: t('Add a recipe'), onClick: () => nav('/kochen?add=1') }}>
-                {t('Add recipes from a photo, a link or your AI assistant – then ToHuus Hub suggests what you can make with what you have.')}
-              </Empty>
-            </div>
-          ) : (
-            <>
-              <button className="arch-wrap" onClick={() => nav(`/rezepte/${top.id}`)} aria-label={top.title}>
-                <span className="arch">{top.image_path ? <img src={top.image_path} alt="" loading="lazy" /> : <span className="arch-ph" aria-hidden="true"><ChefHat size={44} /></span>}</span>
-                {stamp(top)}
-              </button>
-              <div className={`recipe-body ${stamp(top) ? 'has-stamp' : ''}`}>
-                <h3 className="recipe-title" onClick={() => nav(`/rezepte/${top.id}`)}>
-                  {top.title}
-                </h3>
-                <p>{[top.time_min ? t('{n} min', { n: top.time_min }) : null, top.thermomix ? 'Thermomix' : null].filter(Boolean).join(' · ')}{top.time_min || top.thermomix ? ' · ' : ''}{missingLine(top)}</p>
-              </div>
-              {alts.map((r) => (
-                <button key={r.id} className="alt" onClick={() => nav(`/rezepte/${r.id}`)}>
-                  {r.image_path ? <img src={r.image_path} alt="" loading="lazy" /> : <span className="alt-ph" aria-hidden="true" />}
-                  <span className="grow">
-                    <b>{r.title}</b>
-                    <span>{missingLine(r)}</span>
-                  </span>
-                  <CaretRight size={18} />
-                </button>
-              ))}
-            </>
-          )}
-        </section>
-      )}
-      <StarterSheet open={starter} onClose={() => setStarter(false)} />
     </div>
+  );
+}
+
+// ------------------------------------------------------------------ 2 · Liste
+
+function ListCard({ d }: { d: TodayData }) {
+  const nav = useNavigate();
+  const open = d.list.open;
+  return (
+    <section className="hcard" aria-labelledby="h-list">
+      <div className="hcard-h">
+        <h2 id="h-list">
+          <span className="shape s" aria-hidden="true" />
+          {t('List')}
+        </h2>
+        <button className="linkish" onClick={() => nav('/einkauf')}>
+          {t('Open')} <ArrowRight size={14} />
+        </button>
+      </div>
+      <button className="list-sum" onClick={() => nav('/einkauf')}>
+        <span className="big">{open}</span>
+        <span>{open === 1 ? t('thing on the list') : t('things on the list')}</span>
+      </button>
+      {d.list.recent.length > 0 && (
+        <ul className="hrows quiet">
+          {d.list.recent.slice(0, 3).map((r) => (
+            <li key={r.id} className="hrow">
+              <span className="dotmk" aria-hidden="true" />
+              <div className="grow">
+                <b>{r.name}</b>
+                <span className="meta">{originLine(r.origin, r.by, r.at)}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open === 0 && d.list.recent.length === 0 && <p className="meta">{t('The list is empty. Everyone in the household can add to it – it updates live.')}</p>}
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ 3 · Das habt ihr noch
+
+function StillHaveCard({ items }: { items: StillHave[] }) {
+  const nav = useNavigate();
+  return (
+    <section className="hcard" aria-labelledby="h-still">
+      <CardHead title={t('Still at home – use soon')} shape="h" link={{ label: t('Pantry'), to: '/bestand?status=attention' }} />
+      <ul className="hrows">
+        {items.slice(0, 3).map((s, i) => {
+          const id = s.productId ?? s.id;
+          const when = s.note ?? expiryText(s.nextExpiry ?? s.expiresOn ?? null);
+          return (
+            <li key={id ?? i} className="hrow">
+              <span className={`mk ${s.status === 'expired' ? 'out' : 'soon'}`} aria-hidden="true" />
+              <button className="grow plain-row" onClick={() => id && nav(`/bestand/${id}`)}>
+                <b>{s.name}</b>
+                <span className="meta">{[when, s.location].filter(Boolean).join(' · ')}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ 4 · Heute kochen?
+
+function CookCard({ c }: { c: CookToday }) {
+  const nav = useNavigate();
+  const toast = useToast();
+  const [done, setDone] = useState(false);
+  const missing = c.missing.map((m) => (typeof m === 'string' ? { name: m, productId: null } : m));
+  const addMissing = async () => {
+    try {
+      await post('/shop/quick-add', { items: missing.map((m) => ({ name: m.name, product_id: m.productId ?? null })) });
+      setDone(true);
+      qc.invalidateQueries({ queryKey: ['today'] });
+      qc.invalidateQueries({ queryKey: ['shopping'] });
+      toast({ text: missing.length === 1 ? t('{name} is on the shopping list', { name: missing[0].name }) : t('{n} things are on the shopping list', { n: missing.length }) });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  return (
+    <section className="hcard cook" aria-labelledby="h-cook">
+      <CardHead title={t('Cook today?')} shape="a" link={{ label: t('More ideas'), to: '/kochen' }} />
+      <button className="cook-main" onClick={() => nav(`/rezepte/${c.recipeId}`)}>
+        <span className="cook-img">{c.image ? <img src={c.image} alt="" loading="lazy" /> : <ChefHat size={28} aria-hidden="true" />}</span>
+        <span className="grow">
+          <b>{c.title}</b>
+          <span className="meta">
+            {missing.length === 0 ? (
+              <span className="ok">
+                <Check size={14} weight="bold" /> {t('Everything is at home')}
+              </span>
+            ) : (
+              t('Missing: {list}', { list: missing.map((m) => m.name).join(', ') })
+            )}
+            {c.timeMin ? ` · ${t('{n} min', { n: c.timeMin })}` : ''}
+          </span>
+        </span>
+      </button>
+      {missing.length > 0 && (
+        <button className="btn sm" disabled={done} onClick={addMissing}>
+          {done ? <Check size={15} weight="bold" /> : <Basket size={15} />} {done ? t('On the list') : missing.length === 1 ? t('Put it on the list') : t('Put the missing on the list')}
+        </button>
+      )}
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ 5 · Geld
+
+function MoneyCard({ m }: { m: NonNullable<TodayData['money']> }) {
+  const nav = useNavigate();
+  const month = new Date().toLocaleDateString(locale(), { month: 'long' });
+  const pct = m.budget && m.month != null ? Math.min(100, Math.round((m.month / m.budget) * 100)) : null;
+  const over = m.budget != null && m.month != null && m.month > m.budget;
+  const cur = m.currency ? { currency: m.currency } : {};
+  return (
+    <section className="hcard money" aria-labelledby="h-money">
+      <CardHead title={t('Money')} shape="t" link={{ label: t('Details'), to: '/geld' }} />
+      <button className="money-glance" onClick={() => nav('/geld')}>
+        <span>
+          <span className="meta">{t('This week')}</span>
+          <b>{m.week != null ? money(m.week, { digits: 0, ...cur }) : '–'}</b>
+        </span>
+        <span>
+          <span className="meta">{month}</span>
+          <b>{m.month != null ? money(m.month, { digits: 0, ...cur }) : '–'}</b>
+        </span>
+      </button>
+      {pct != null && (
+        <div className="budget">
+          <div className={`bar ${over ? 'over' : ''}`} role="img" aria-label={t('{pct} % of the budget', { pct })}>
+            <i style={{ width: `${pct}%` }} />
+          </div>
+          <span className="meta">
+            {over ? t('{amount} over the budget of {budget}', { amount: money(m.month! - m.budget!, { digits: 0, ...cur }), budget: money(m.budget, { digits: 0, ...cur }) }) : t('{left} left of {budget}', { left: money(m.budget! - (m.month ?? 0), { digits: 0, ...cur }), budget: money(m.budget, { digits: 0, ...cur }) })}
+          </span>
+        </div>
+      )}
+      {m.month === 0 && <p className="meta">{t('Share a receipt and ToHuus shows where the money for food and household goes.')}</p>}
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ notices
+
+function Notices({ list }: { list: Notice[] }) {
+  const nav = useNavigate();
+  return (
+    <ul className="notices">
+      {list.slice(0, 3).map((n, i) => {
+        const o = typeof n === 'string' ? { text: n } : n;
+        const text = o.kind === 'import' ? t('Receipt “{title}” is waiting for a quick look', { title: o.text }) : o.kind === 'order' ? t('{name} would love something', { name: o.text }) : o.text;
+        return (
+          <li key={i}>
+            {'to' in o && o.to ? (
+              <button className="notice" onClick={() => nav(o.to!)}>
+                <span className="grow">{text}</span>
+                <ArrowRight size={16} />
+              </button>
+            ) : (
+              <div className="notice">{text}</div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }

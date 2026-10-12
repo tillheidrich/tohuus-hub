@@ -1,20 +1,47 @@
 /* ToHuus Hub service worker: app shell + last shopping list offline, Web Push with actions. */
-const VERSION = 'tohuus-v3'; // v3: Nordic redesign (new icons, theme-boot.js)
+const VERSION = 'tohuus-v4'; // v4: code-split app (lazy route chunks precached from /asset-manifest.json)
 const SHELL = `${VERSION}-shell`;
 const DATA = `${VERSION}-data`;
 // things shared into the app (share target) wait here until the /teilen page picks them up – survives SW updates
 const SHARE = 'tohuus-share';
 const SHELL_URLS = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/apple-touch-icon.png'];
 // API reads the app needs to show the shopping list without a connection (network first, cache as fallback)
-const API_CACHED = [/^\/api\/me$/, /^\/api\/shop\/list/, /^\/api\/shop\/stores$/, /^\/api\/shopping$/, /^\/api\/categories$/, /^\/api\/overview$/, /^\/api\/claims/, /^\/api\/shop\/members$/];
+const API_CACHED = [/^\/api\/me$/, /^\/api\/today$/, /^\/api\/instance$/, /^\/api\/shop\/list/, /^\/api\/shop\/stores$/, /^\/api\/shopping$/, /^\/api\/categories$/, /^\/api\/overview$/, /^\/api\/claims/, /^\/api\/shop\/members$/];
+
+/** Hashed files of the current build (written by vite.config.ts). Every route is its own chunk since v4, so
+ * they are all cached up front – otherwise a page never opened online (e.g. the shopping list) would not open offline. */
+async function buildFiles() {
+  try {
+    const r = await fetch('/asset-manifest.json', { cache: 'no-store' });
+    if (!r.ok) return [];
+    return (await r.json()).files ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function precache() {
+  const c = await caches.open(SHELL);
+  await Promise.all(SHELL_URLS.map((u) => c.add(new Request(u, { cache: 'reload' })).catch(() => null)));
+  const files = await buildFiles();
+  // already cached hashed files stay (same name = same content); a failed file is fetched again on first use
+  await Promise.all(files.map(async (u) => ((await c.match(u)) ? null : c.add(u).catch(() => null))));
+  return files;
+}
+
+/** Drop hashed files from older builds so the cache doesn't grow with every update. */
+async function prune(files) {
+  if (!files.length) return;
+  const keep = new Set(files);
+  const c = await caches.open(SHELL);
+  for (const req of await c.keys()) {
+    const p = new URL(req.url).pathname;
+    if (p.startsWith('/assets/') && !keep.has(p)) await c.delete(req);
+  }
+}
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(SHELL)
-      .then((c) => Promise.all(SHELL_URLS.map((u) => c.add(new Request(u, { cache: 'reload' })).catch(() => null))))
-      .then(() => self.skipWaiting()),
-  );
+  event.waitUntil(precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -22,6 +49,8 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => !k.startsWith(VERSION) && k !== SHARE).map((k) => caches.delete(k))))
+      .then(() => buildFiles())
+      .then(prune)
       .then(() => self.clients.claim()),
   );
 });
@@ -37,6 +66,19 @@ async function networkFirst(req, cacheName) {
     if (hit) return hit;
     throw e;
   }
+}
+
+/** Unhashed static files (theme-boot.js, dict-preload.js, icons): answer from the cache, refresh in the background. */
+async function staleWhileRevalidate(req) {
+  const cache = await caches.open(SHELL);
+  const hit = await cache.match(req);
+  const fresh = fetch(req)
+    .then((res) => {
+      if (res.ok) cache.put(req, res.clone());
+      return res;
+    })
+    .catch(() => hit);
+  return hit || fresh;
 }
 
 async function cacheFirst(req) {
@@ -115,7 +157,9 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-  if (url.pathname.startsWith('/assets/') || /\.(js|css|woff2?|svg|png|wasm)$/.test(url.pathname)) event.respondWith(cacheFirst(req));
+  // hashed build files never change under the same name; everything else may (theme-boot.js, dict-preload.js …)
+  if (url.pathname.startsWith('/assets/')) event.respondWith(cacheFirst(req));
+  else if (/\.(js|css|woff2?|svg|png|wasm|json)$/.test(url.pathname) && url.pathname !== '/asset-manifest.json') event.respondWith(staleWhileRevalidate(req));
 });
 
 self.addEventListener('message', (event) => {

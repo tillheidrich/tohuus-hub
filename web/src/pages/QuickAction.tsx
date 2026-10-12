@@ -2,7 +2,8 @@ import { ArrowRight, Basket, Check, Drop, HandGrabbing, MapPin, QrCode } from '@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { type ApiError, fmtDate, fmtQty, invalidate, post, useApi } from '../api';
-import { Empty, Ic, Skeleton, StatusBadge, Thumb, useToast } from '../ui';
+import { Empty, Skeleton, StatusBadge, Thumb, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { t } from '../i18n';
 import { type CareTask, careIcon, dueLabel, intervalLabel } from './Care';
 import { BoxQuick, isBoxCode } from './Leftovers';

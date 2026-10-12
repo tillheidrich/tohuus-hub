@@ -1,0 +1,216 @@
+/**
+ * Aggregated reads for the new five-tab app (plan 2026-10-12): `/api/today`, `/api/instance`, `/api/billing/status`.
+ * Every hook degrades gracefully: when the server does not have the endpoint yet (404), it falls back to the
+ * endpoints that already exist, or reports "not available" so the UI hides the section.
+ */
+import { useQuery } from '@tanstack/react-query';
+import { ApiError, get } from './api';
+
+// ------------------------------------------------------------------ helpers
+
+/** 404 / 405 / an HTML answer → the endpoint does not exist on this server (yet). */
+export const missing = (e: unknown) => e instanceof ApiError && (e.status === 404 || e.status === 405 || e.status === 501);
+/**
+ * Endpoints this server doesn't have, remembered for the browser session (sessionStorage) so a reload or a tab
+ * switch doesn't ask again. A server update shows up in a new tab or after the session ends.
+ */
+const SS_KEY = 'sw.missingApi';
+const MISSING = new Set<string>(
+  (() => {
+    try {
+      return JSON.parse(sessionStorage.getItem(SS_KEY) ?? '[]') as string[];
+    } catch {
+      return [];
+    }
+  })(),
+);
+const base = (p: string) => p.split('?')[0];
+export const isMissing = (path: string) => MISSING.has(base(path));
+export function markMissing(path: string) {
+  MISSING.add(base(path));
+  try {
+    sessionStorage.setItem(SS_KEY, JSON.stringify([...MISSING]));
+  } catch {
+    /* ignore */
+  }
+}
+export async function getOr<T>(path: string, fallback: () => Promise<T> | T): Promise<T> {
+  if (isMissing(path)) return fallback();
+  try {
+    return await get<T>(path);
+  } catch (e) {
+    if (!missing(e)) throw e;
+    markMissing(path);
+    return fallback();
+  }
+}
+
+// ------------------------------------------------------------------ /api/instance
+
+export interface Instance {
+  name: string;
+  mode: 'cloud' | 'selfhost';
+  version?: string;
+  signup: boolean;
+  auth?: { password?: boolean; magicLink?: boolean; passkey?: boolean; oidc?: boolean };
+  features: { assistant?: boolean; voice?: boolean; receiptsAi?: boolean; billingApple?: boolean };
+  legal?: { privacy?: string; terms?: string; imprint?: string };
+  /** false when the server has no /api/instance yet (before the cloud merge) */
+  known: boolean;
+}
+
+const SELFHOST: Instance = { name: 'ToHuus', mode: 'selfhost', signup: false, features: {}, known: false };
+
+export function useInstance() {
+  return useQuery<Instance>({
+    queryKey: ['instance'],
+    queryFn: () => getOr<Instance>('/instance', () => SELFHOST).then((i) => ({ ...SELFHOST, ...i, features: i.features ?? {}, known: i !== SELFHOST })),
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
+// ------------------------------------------------------------------ /api/billing/status
+
+export interface Billing {
+  plan: 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
+  trialEndsAt?: string | null;
+  renewsAt?: string | null;
+  source?: 'apple' | 'none';
+  limits?: { historyDays?: number | null; assistantPerMonth?: number | null; storageMb?: number | null; [k: string]: unknown };
+  usage?: { assistantThisMonth?: number; storageMb?: number; storageBytes?: number; [k: string]: unknown };
+  storage?: { usedBytes?: number; quotaBytes?: number | null };
+}
+
+export function useBilling(enabled = true) {
+  return useQuery<Billing | null>({
+    queryKey: ['billing'],
+    queryFn: () => getOr<Billing | null>('/billing/status', () => null),
+    enabled,
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+/** Assistant messages left this month; null = unlimited / unknown. */
+export function assistantLeft(b: Billing | null | undefined): number | null {
+  const lim = b?.limits?.assistantPerMonth;
+  if (lim == null || b?.plan === 'selfhost') return null;
+  return Math.max(0, lim - (b?.usage?.assistantThisMonth ?? 0));
+}
+
+// ------------------------------------------------------------------ /api/today
+
+export type Origin = 'receipts' | 'ticks' | 'both' | string;
+export interface RhythmItem {
+  productId: number;
+  name: string;
+  everyDays: number;
+  lastBought: string | null;
+  dueOn: string | null;
+  confidence: 'low' | 'medium' | 'high';
+  origin: Origin;
+}
+export interface ListChange {
+  id: number;
+  name: string;
+  origin: string | null;
+  at: string;
+  by?: string | null;
+}
+export interface StillHave {
+  productId?: number;
+  id?: number;
+  name: string;
+  nextExpiry?: string | null;
+  expiresOn?: string | null;
+  status?: string;
+  location?: string | null;
+  note?: string | null;
+}
+export interface CookToday {
+  recipeId: number;
+  title: string;
+  image: string | null;
+  missing: (string | { name: string; productId?: number | null })[];
+  timeMin?: number | null;
+}
+export interface MoneyGlance {
+  week: number | null;
+  month: number | null;
+  budget: number | null;
+  currency?: string;
+}
+export type Notice = string | { kind?: string; text: string; to?: string | null };
+export interface Today {
+  greeting?: string;
+  household?: string;
+  rhythm: RhythmItem[];
+  list: { open: number; recent: ListChange[] };
+  stillHave: StillHave[];
+  cookToday: CookToday | null;
+  money: MoneyGlance | null;
+  notices: Notice[];
+  counts?: { attention?: number; products?: number };
+  /** true when built from the old endpoints (server without /api/today) */
+  legacy?: boolean;
+}
+
+const tryGet = <T>(p: string) => get<T>(p).catch(() => null);
+
+/** Before the features merge: the same shape from /overview, /shopping and /spend/stats (three calls, in parallel). */
+async function legacyToday(): Promise<Today> {
+  const now = new Date();
+  const ymd = new Intl.DateTimeFormat('sv-SE').format(now);
+  const [o, items, spend] = await Promise.all([get<any>('/overview'), tryGet<any[]>('/shopping'), tryGet<any>(`/spend/stats?period=month&date=${ymd}`)]);
+  const open = (items ?? []).filter((i) => !i.checked_at);
+  const recent: ListChange[] = [...open]
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+    .slice(0, 3)
+    .map((i) => ({ id: i.id, name: i.product_name ?? i.text, origin: i.source === 'manual' ? null : i.source, by: i.added_by, at: i.created_at }));
+  const att: any[] = o.attention ?? [];
+  const top = o.tonight?.[0];
+  // week total from the month timeline (days of the current ISO week)
+  let week: number | null = null;
+  if (spend?.timeline) {
+    const d = new Date(now);
+    const mondayOffset = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - mondayOffset);
+    const from = new Intl.DateTimeFormat('sv-SE').format(d);
+    week = (spend.timeline as any[]).filter((x) => x.from >= from && x.to <= ymd).reduce((a, x) => a + (x.total ?? 0), 0);
+  }
+  const notices: Notice[] = [];
+  for (const i of o.imports ?? []) notices.push({ kind: 'import', text: i.title, to: `/import/${i.id}` });
+  for (const x of o.orders ?? []) if (!x.party_id) notices.push({ kind: 'order', text: x.guest_name, to: x.guest_link_id ? '/bar' : '/bestellen' });
+  return {
+    household: o.household,
+    rhythm: [],
+    list: { open: open.length || o.counts?.shopping || 0, recent },
+    stillHave: att
+      .filter((a) => a.status === 'expiring' || a.status === 'expired')
+      .slice(0, 3)
+      .map((a) => ({ productId: a.id, name: a.name, nextExpiry: a.nextExpiry, status: a.status })),
+    cookToday: top ? { recipeId: top.id, title: top.title, image: top.image_path ?? null, missing: top.missing ?? [], timeMin: top.time_min ?? null } : null,
+    money: spend ? { week, month: spend.total ?? 0, budget: (spend.budgets as any[] | undefined)?.find((b) => !b.category && b.period === 'month')?.amount ?? null, currency: spend.currency } : null,
+    notices,
+    counts: { attention: att.length, products: o.counts?.products },
+    legacy: true,
+  };
+}
+
+export const TODAY_KEY = ['today'];
+export function useToday(enabled = true) {
+  return useQuery<Today>({
+    queryKey: TODAY_KEY,
+    queryFn: () =>
+      getOr<Today>('/today', legacyToday).then((d) => ({
+        ...d,
+        rhythm: d.rhythm ?? [],
+        list: d.list ?? { open: 0, recent: [] },
+        stillHave: d.stillHave ?? [],
+        notices: d.notices ?? [],
+      })),
+    enabled,
+    staleTime: 30_000,
+  });
+}
