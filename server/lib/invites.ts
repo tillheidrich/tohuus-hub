@@ -162,7 +162,7 @@ const levelLabel = (l: string | null) =>
 const roleLabel = (r: Pick<Row, 'kind' | 'role' | 'guest_level'>) => (r.kind === 'guest' ? t('Guest') : r.role === 'admin' ? t('Admin') : t('Member'));
 
 const fmtDay = (sql: string) =>
-  new Date(sql.replace(' ', 'T') + 'Z').toLocaleDateString(lang() === 'en' ? 'en-GB' : lang() === 'sv' ? 'sv-SE' : 'de-DE', { day: 'numeric', month: 'long', timeZone: config.timezone });
+  new Date(sql.replace(' ', 'T') + 'Z').toLocaleDateString(lang() === 'en' ? 'en-GB' : 'de-DE', { day: 'numeric', month: 'long', timeZone: config.timezone });
 
 /** The invitation mail in the shared layout. */
 function inviteMail(r: Row, token: string) {

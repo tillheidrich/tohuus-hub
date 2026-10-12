@@ -237,7 +237,8 @@ describe('base data and lookups', () => {
     for (const l of BASE_LOCATIONS) expect(`${l.en} ${l.de} ${l.sv}`).not.toMatch(words);
     expect(Object.keys(STARTER)).not.toContain('cellar');
     const sig = seed.demoSignatures();
-    expect(JSON.stringify(sig.hints.slice(0, 2 * 3))).not.toMatch(words);
+    // two current hints × two languages (en, de)
+    expect(JSON.stringify(sig.hints.slice(0, 2 * 2))).not.toMatch(words);
   });
 });
 

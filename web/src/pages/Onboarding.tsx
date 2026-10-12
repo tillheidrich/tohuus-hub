@@ -293,13 +293,12 @@ interface PlaceTpl {
   name: string;
   en: string;
   de: string;
-  sv: string;
   icon: string;
   climate: Climate;
 }
 
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
-const tplMatches = (x: PlaceTpl, name: string) => [x.name, x.en, x.de, x.sv].some((n) => sameName(n, name));
+const tplMatches = (x: PlaceTpl, name: string) => [x.name, x.en, x.de].some((n) => sameName(n, name));
 
 function StepPlaces({ g, onBack, onNext }: { g: GettingStarted; onBack: () => void; onNext: () => void }) {
   const preset = g.home?.preset ?? null;

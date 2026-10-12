@@ -19,7 +19,7 @@ server/
   mcp/server.ts      MCP endpoint and the core tools
   mcp/tools-<area>.ts  MCP tools per area
   importers/         receipt parsers: rewe.ts, generic.ts (German tills), intl.ts (UK, US, SE)
-  locales/           de-<area>.ts, sv-<area>.ts
+  locales/           de-<area>.ts
   assets/            demo recipe photos (see CREDITS.md)
 web/
   public/            icons, manifest, service worker (sw.js), theme-boot.js, zxing WASM
@@ -27,7 +27,7 @@ web/
   src/api.ts         fetch helpers, useApi() on TanStack Query, the server-sent-events client
   src/pages/         screens and settings cards
   src/people/, src/shop/   larger areas with several components
-  src/locales/de/, src/locales/sv/   web dictionaries per area
+  src/locales/de/    web dictionaries per area
   src/styles.css     design tokens and all styles (see docs/design/)
   src/changelog.ts   the in-app "What's new"
 ha-integration/      the Home Assistant custom integration (Python, MIT), published as tillheidrich/tohuus-hub-ha
@@ -38,7 +38,7 @@ docs/                this documentation, research notes, design notes
 
 ## Areas
 
-Most features are an "area" with the same shape: `server/routes/<area>.ts`, `server/lib/<area>.ts`, `server/mcp/tools-<area>.ts`, `server/locales/{de,sv}-<area>.ts`, `web/src/locales/{de,sv}/<area>.ts`, pages under `web/src/pages/`, and `test/<area>.test.ts`. Current areas: core (stock, products, places, shopping, settings), imports, recipes, guest, data, party, fresh, shop, home (care, spending, QR), kiosk, kids, onboard, retail, ha, channels, intl, cook2, auth, spend2, print, share, labels, away, plan2, recipes2, quality, people, tour, ha2, menu, design.
+Most features are an "area" with the same shape: `server/routes/<area>.ts`, `server/lib/<area>.ts`, `server/mcp/tools-<area>.ts`, `server/locales/de-<area>.ts`, `web/src/locales/de/<area>.ts`, pages under `web/src/pages/`, and `test/<area>.test.ts`. Current areas: core (stock, products, places, shopping, settings), imports, recipes, guest, data, party, fresh, shop, home (care, spending, QR), kiosk, kids, onboard, retail, ha, channels, intl, cook2, auth, spend2, print, share, labels, away, plan2, recipes2, quality, people, tour, ha2, menu, design.
 
 Two areas have no MCP tools on purpose: `auth` and `ha` (their modules exist but register nothing).
 
@@ -113,8 +113,8 @@ Times use `TZ`. Notifications go through `notify()` in `lib/notify.ts`, which ro
 
 The English text is the key everywhere: `t('Shopping list')`, with placeholders `t('{n} items', { n })`.
 
-- Server strings (notifications, e-mails, API errors): `server/i18n.ts`, dictionaries `server/locales/de-<area>.ts` and `sv-<area>.ts`, merged per language. The language is the household setting.
-- Web strings: `web/src/i18n.ts`, dictionaries `web/src/locales/de/<area>.ts` and `sv/<area>.ts`, registered in each folder's `index.ts`.
+- Server strings (notifications, e-mails, API errors): `server/i18n.ts`, dictionaries `server/locales/de-<area>.ts`, merged per language. The language is the household setting (`en` or `de`; Swedish was removed as a UI language in October 2026, the region Sweden stays).
+- Web strings: `web/src/i18n.ts`, dictionaries `web/src/locales/de/<area>.ts`, registered in each folder's `index.ts`.
 - A missing translation falls back to English.
 - To add a language: add it to `server/languages.ts`, add dictionary files on both sides and register them. `test/languages.test.ts` checks the setup.
 - The region (currency, units, number format, receipts) is separate from the language: `server/lib/region.ts`, `web/src/region.ts`.

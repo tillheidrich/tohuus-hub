@@ -6,13 +6,12 @@
  */
 import { LANGUAGES, isLang, localeOf, toLang, type Lang } from '../../server/languages';
 import { de } from './locales/de/index';
-import { sv } from './locales/sv/index';
 
 export type { Lang };
 /** Supported languages with their native names – for language pickers (Settings, onboarding). */
 export { LANGUAGES };
 export const LANGUAGE_OPTIONS = LANGUAGES.map((l) => [l.code, l.name] as [Lang, string]);
-const DICTS: Record<Lang, Record<string, string>> = { en: {}, de, sv };
+const DICTS: Record<Lang, Record<string, string>> = { en: {}, de };
 
 let current: Lang = (() => {
   try {
@@ -41,7 +40,7 @@ export function setLang(l: string | undefined | null) {
 export const lang = () => current;
 /** BCP-47 locale for Intl / toLocaleDateString */
 export const locale = () => localeOf(current);
-/** Pick the active language from a { en, de, sv? } record (changelog, base data), English as fallback. */
+/** Pick the active language from a { en, de? } record (changelog, base data), English as fallback. */
 export const pick = (o: { en: string } & Partial<Record<Lang, string>>) => o[current] ?? o.en;
 
 export function t(en: string, vars?: Record<string, string | number | null | undefined>) {

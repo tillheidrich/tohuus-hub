@@ -1,6 +1,8 @@
 /**
- * Base locations and categories, in the household languages (English, German, Swedish).
+ * Base locations and categories, in the household languages (English, German).
  * Rows in the DB only store the display name, so lookups by "kind" go through both names.
+ * The `sv` column is data only: Swedish was a UI language until October 2026 – the names still let lookups find
+ * rows created back then, and the migration `lang-sv-removed-1` (server/lib/places.ts) renames them to English.
  */
 import { db, lang } from '../db.js';
 
@@ -39,13 +41,10 @@ export const BASE_CATEGORIES = [
 
 export type CategoryKey = (typeof BASE_CATEGORIES)[number]['key'];
 
-/** Name of a base row in the active household language (en, de, sv). */
-export const baseName = (row: { en: string; de: string; sv?: string }) => {
-  const l = lang() as string;
-  return l === 'de' ? row.de : l === 'sv' && row.sv ? row.sv : row.en;
-};
+/** Name of a base row in the active household language (en, de). */
+export const baseName = (row: { en: string; de: string }) => (lang() === 'de' ? row.de : row.en);
 
-/** All names a base row may carry in the database (households switch languages). */
+/** All names a base row may carry in the database (households switch languages; sv from before October 2026). */
 export const baseNames = (row: { en: string; de: string; sv?: string }) => [row.en, row.de, row.sv ?? row.en];
 
 /** Category id for a stable key, found by its name in the active language first, then the other one. */

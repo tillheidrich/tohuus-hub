@@ -260,7 +260,7 @@ describe('English sources', () => {
     expect(tr.translateIngredient('1 lb', 'Minced Beef', 'de', 'metric').text).toBe('450 g Rinderhackfleisch');
     expect(tr.translateIngredient('3 cloves', 'Garlic, minced', 'de', 'metric').text).toBe('3 Zehen Knoblauch, fein gehackt');
     expect(tr.translateIngredient('2 large', 'Eggs', 'de', 'metric').text).toBe('2 Eier, groß');
-    expect(tr.translateIngredient('8 oz', 'Cheddar Cheese', 'sv', 'metric').text).toBe('230 g cheddar');
+    expect(tr.translateIngredient('8 oz', 'Cheddar Cheese', 'en', 'metric').text).toBe('230 g Cheddar Cheese');
     expect(tr.translateIngredient('1 cup', 'Rice', 'en', 'us')).toMatchObject({ text: '1 cup Rice', orig: null });
     expect(tr.translateIngredient('To taste', 'Salt', 'de', 'metric').text).toBe('Salz, nach Geschmack');
     expect(tr.translateName('free-range eggs', 'de')).toBe('Freilandei');

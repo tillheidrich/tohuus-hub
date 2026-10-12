@@ -130,7 +130,7 @@ curl -X POST https://your-host/api/recipes/import/bulk \
 
 ## AI template
 
-*Import with any AI* shows a prompt in the household language (English, German or Swedish) that contains the example above. It asks the chat to answer with only a JSON array in that shape, keep the recipe's language, invent nothing, split ingredients into amount, unit, name and note, use `HowToSection` for recipes with parts, keep Thermomix settings in the step text, and set `source_type: "ai"`.
+*Import with any AI* shows a prompt in the household language (English or German) that contains the example above. It asks the chat to answer with only a JSON array in that shape, keep the recipe's language, invent nothing, split ingredients into amount, unit, name and note, use `HowToSection` for recipes with parts, keep Thermomix settings in the step text, and set `source_type: "ai"`.
 
 Paste the whole answer back. Code fences and chatter around the JSON are stripped. You get the same preview as for a file.
 

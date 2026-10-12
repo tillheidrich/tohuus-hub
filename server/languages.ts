@@ -7,14 +7,13 @@
 export const LANGUAGES = [
   { code: 'en', name: 'English', locale: 'en-GB', acceptLanguage: 'en-GB,en;q=0.9' },
   { code: 'de', name: 'Deutsch', locale: 'de-DE', acceptLanguage: 'de-DE,de;q=0.9,en;q=0.5' },
-  { code: 'sv', name: 'Svenska', locale: 'sv-SE', acceptLanguage: 'sv-SE,sv;q=0.9,en;q=0.5' },
 ] as const;
 
 export type Lang = (typeof LANGUAGES)[number]['code'];
 export const LANG_CODES = LANGUAGES.map((l) => l.code) as [Lang, ...Lang[]];
 
 export const isLang = (v: unknown): v is Lang => typeof v === 'string' && (LANG_CODES as string[]).includes(v);
-/** Any string (setting, browser language like "sv-FI") → a supported language, English as fallback. */
+/** Any string (setting, browser language like "de-AT") → a supported language, English as fallback. */
 export const toLang = (v: string | null | undefined): Lang => {
   const base = (v ?? '').toLowerCase().split(/[-_]/)[0];
   return isLang(base) ? base : 'en';

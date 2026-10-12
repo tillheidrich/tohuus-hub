@@ -36,7 +36,7 @@ If several photos belong to one recipe, merge them.`,
 
 /** Tasks whose output is free text for the household (not copied from a printed source). */
 const WRITE_IN_LANGUAGE: VisionTask[] = ['recipe', 'text-recipe', 'shelf', 'product'];
-const LANGUAGE_NAMES: Record<string, string> = { en: 'English', de: 'German', sv: 'Swedish' };
+const LANGUAGE_NAMES: Record<string, string> = { en: 'English', de: 'German' };
 
 function prompt(task: VisionTask) {
   // currency, decimal mark and receipt vocabulary of the household region (region-hints.ts)

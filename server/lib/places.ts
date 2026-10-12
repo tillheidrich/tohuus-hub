@@ -12,6 +12,7 @@
  * created on demand, never illustrated and hidden while it is empty.
  */
 import { db, getSetting, migrate, setSetting } from '../db.js';
+import { config } from '../config.js';
 import type Database from 'better-sqlite3';
 import { t } from '../i18n.js';
 import { BASE_CATEGORIES, BASE_LOCATIONS, baseName, baseNames, categoryIdByKey, locationIdByKey, type LocationKey } from './basedata.js';
@@ -260,6 +261,7 @@ export interface PlaceTemplate {
   key: string;
   en: string;
   de: string;
+  /** data only – Swedish names from before October 2026, for recognising and renaming old rows */
   sv: string;
   icon: string;
   climate: Climate;
@@ -302,6 +304,23 @@ export const PLACE_TEMPLATES: PlaceTemplate[] = [
   { key: 'wardrobe', en: 'Wardrobe', de: 'Kleiderschrank', sv: 'Garderob', icon: 'wardrobe', climate: 'ambient', kind: 'cupboard', spot: true },
 ];
 
+// Swedish is no longer a UI language (October 2026; the region Sweden stays). A household that ran in Swedish
+// switches to English, and the base places, place templates and base categories it got with Swedish names get
+// their English names back. Only exact base names are touched – anything a person renamed stays as it is.
+{
+  const q = (v: string) => `'${v.replace(/'/g, "''")}'`;
+  const wasSv = `(EXISTS (SELECT 1 FROM settings WHERE key = 'language' AND value = '"sv"')${
+    config.language.toLowerCase().split(/[-_]/)[0] === 'sv' ? ` OR NOT EXISTS (SELECT 1 FROM settings WHERE key = 'language')` : ''
+  })`;
+  const places = PLACE_TEMPLATES.filter((x) => x.sv !== x.en).map(
+    (x) => `UPDATE locations SET name = ${q(x.en)} WHERE name = ${q(x.sv)} AND ${wasSv};`,
+  );
+  const cats = BASE_CATEGORIES.map(
+    (c) => `UPDATE categories SET name = ${q(c.en)} WHERE name = ${q(c.sv)} AND ${wasSv} AND NOT EXISTS (SELECT 1 FROM categories WHERE name = ${q(c.en)});`,
+  );
+  migrate('lang-sv-removed-1', [...places, ...cats, `UPDATE settings SET value = '"en"' WHERE key = 'language' AND value = '"sv"';`].join('\n'));
+}
+
 export const PRESETS = ['flat', 'terraced', 'house', 'shared', 'other'] as const;
 export type HomePreset = (typeof PRESETS)[number];
 
@@ -326,7 +345,7 @@ export function templatesFor(preset: HomePreset | null, spots = false) {
   return keys
     .map(tplByKey)
     .filter((x): x is PlaceTemplate => Boolean(x))
-    .map((x) => ({ key: x.key, name: tplName(x), en: x.en, de: x.de, sv: x.sv, icon: x.icon, climate: x.climate }));
+    .map((x) => ({ key: x.key, name: tplName(x), en: x.en, de: x.de, icon: x.icon, climate: x.climate }));
 }
 
 // ------------------------------------------------------------------ household form and home preset

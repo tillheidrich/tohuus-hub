@@ -317,7 +317,7 @@ function FileImportCard({ icon, title, text, onStaged, apps = false }: { icon: R
 
 export function AiImportSheet({ open, onClose, onStaged }: { open: boolean; onClose: () => void; onStaged: (s: Staged) => void }) {
   const [tpl, setTpl] = useState<{ prompts: Record<string, string>; example: unknown } | null>(null);
-  const [plang, setPlang] = useState<'en' | 'de' | 'sv'>(() => (lang() === 'de' ? 'de' : lang() === 'sv' ? 'sv' : 'en'));
+  const [plang, setPlang] = useState<'en' | 'de'>(() => (lang() === 'de' ? 'de' : 'en'));
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -352,7 +352,7 @@ export function AiImportSheet({ open, onClose, onStaged }: { open: boolean; onCl
           <li>{t('Copy the whole answer and paste it below.')}</li>
         </ol>
         <div className="row between wrap" style={{ gap: 8 }}>
-          <Seg value={plang} onChange={setPlang} options={[['de', 'Deutsch'], ['en', 'English'], ['sv', 'Svenska']]} />
+          <Seg value={plang} onChange={setPlang} options={[['de', 'Deutsch'], ['en', 'English']]} />
           <button className="btn sm" disabled={!tpl} onClick={() => tpl && copy(tpl.prompts[plang])}>
             <Copy size={15} /> {t('Copy prompt')}
           </button>

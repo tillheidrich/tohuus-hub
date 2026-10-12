@@ -3,502 +3,502 @@
  *
  * A small built-in dictionary of common ingredients (no cloud translation) plus measure conversion:
  * cups / oz / lb / fl oz / pints → g / ml when the household region uses metric units; spoons become
- * EL/TL (German) or msk/tsk (Swedish). The original English line is always kept next to the translation.
+ * EL/TL (German). The original English line is always kept next to the translation.
  */
 
-type Target = 'de' | 'sv';
+type Target = 'de';
 
-// en | de | sv  (singular forms; plurals are handled by the matcher)
+// en | de  (singular forms; plurals are handled by the matcher)
 const DICT_SRC = `
-all-purpose flour|Weizenmehl|vetemjöl
-plain flour|Weizenmehl|vetemjöl
-self-raising flour|Mehl mit Backpulver|självjäsande mjöl
-self raising flour|Mehl mit Backpulver|självjäsande mjöl
-bread flour|Brotmehl|vetemjöl special
-wholemeal flour|Vollkornmehl|fullkornsmjöl
-whole wheat flour|Vollkornmehl|fullkornsmjöl
-cornflour|Speisestärke|majsstärkelse
-cornstarch|Speisestärke|majsstärkelse
-flour|Mehl|mjöl
-caster sugar|feiner Zucker|strösocker
-granulated sugar|Zucker|strösocker
-brown sugar|brauner Zucker|farinsocker
-dark brown sugar|dunkler brauner Zucker|mörkt farinsocker
-light brown sugar|heller brauner Zucker|ljust farinsocker
-icing sugar|Puderzucker|florsocker
-powdered sugar|Puderzucker|florsocker
-demerara sugar|Rohrzucker|råsocker
-muscovado sugar|Muscovado-Zucker|muscovadosocker
-sugar|Zucker|socker
-honey|Honig|honung
-maple syrup|Ahornsirup|lönnsirap
-golden syrup|Zuckersirup|ljus sirap
-treacle|Melasse|mörk sirap
-molasses|Melasse|melass
-baking powder|Backpulver|bakpulver
-baking soda|Natron|bikarbonat
-bicarbonate of soda|Natron|bikarbonat
-yeast|Hefe|jäst
-dried yeast|Trockenhefe|torrjäst
-vanilla extract|Vanilleextrakt|vaniljextrakt
-vanilla essence|Vanillearoma|vaniljarom
-vanilla|Vanille|vanilj
-cocoa powder|Kakaopulver|kakao
-cocoa|Kakao|kakao
-dark chocolate|Zartbitterschokolade|mörk choklad
-milk chocolate|Vollmilchschokolade|mjölkchoklad
-white chocolate|weiße Schokolade|vit choklad
-chocolate chips|Schokotropfen|chokladknappar
-chocolate|Schokolade|choklad
-salt|Salz|salt
-sea salt|Meersalz|havssalt
-black pepper|schwarzer Pfeffer|svartpeppar
-pepper|Pfeffer|peppar
-white pepper|weißer Pfeffer|vitpeppar
-butter|Butter|smör
-unsalted butter|ungesalzene Butter|osaltat smör
-salted butter|gesalzene Butter|saltat smör
-margarine|Margarine|margarin
-olive oil|Olivenöl|olivolja
-extra virgin olive oil|natives Olivenöl extra|extra jungfru olivolja
-vegetable oil|Pflanzenöl|neutral olja
-sunflower oil|Sonnenblumenöl|solrosolja
-rapeseed oil|Rapsöl|rapsolja
-canola oil|Rapsöl|rapsolja
-sesame oil|Sesamöl|sesamolja
-coconut oil|Kokosöl|kokosolja
-oil|Öl|olja
-milk|Milch|mjölk
-whole milk|Vollmilch|standardmjölk
-skimmed milk|Magermilch|lättmjölk
-semi-skimmed milk|fettarme Milch|mellanmjölk
-buttermilk|Buttermilch|kärnmjölk
-coconut milk|Kokosmilch|kokosmjölk
-almond milk|Mandelmilch|mandeldryck
-oat milk|Haferdrink|havredryck
-cream|Sahne|grädde
-double cream|Schlagsahne|vispgrädde
-heavy cream|Schlagsahne|vispgrädde
-whipping cream|Schlagsahne|vispgrädde
-single cream|Kochsahne|matlagningsgrädde
-sour cream|Saure Sahne|gräddfil
-creme fraiche|Crème fraîche|crème fraiche
-crème fraîche|Crème fraîche|crème fraiche
-yogurt|Joghurt|yoghurt
-yoghurt|Joghurt|yoghurt
-greek yogurt|griechischer Joghurt|grekisk yoghurt
-plain yogurt|Naturjoghurt|naturell yoghurt
-egg|Ei|ägg
-eggs|Eier|ägg
-onions|Zwiebeln|lökar
-red onions|rote Zwiebeln|rödlökar
-carrots|Karotten|morötter
-potatoes|Kartoffeln|potatisar
-tomatoes|Tomaten|tomater
-apples|Äpfel|äpplen
-lemons|Zitronen|citroner
-limes|Limetten|limefrukter
-shallots|Schalotten|schalottenlökar
-bananas|Bananen|bananer
-spring onions|Frühlingszwiebeln|salladslökar
-garlic cloves|Knoblauchzehen|vitlöksklyftor
-red peppers|rote Paprika|röda paprikor
-mushroom caps|Pilzköpfe|svamphattar
-egg yolk|Eigelb|äggula
-egg white|Eiweiß|äggvita
-free-range egg|Freilandei|frigående ägg
-cheese|Käse|ost
-cheddar cheese|Cheddar|cheddar
-cheddar|Cheddar|cheddar
-parmesan cheese|Parmesan|parmesan
-parmesan|Parmesan|parmesan
-mozzarella|Mozzarella|mozzarella
-feta cheese|Feta|fetaost
-feta|Feta|fetaost
-cream cheese|Frischkäse|färskost
-ricotta|Ricotta|ricotta
-mascarpone|Mascarpone|mascarpone
-goat cheese|Ziegenkäse|getost
-gruyere|Gruyère|gruyère
-gruyère|Gruyère|gruyère
-cottage cheese|Hüttenkäse|keso
-halloumi|Halloumi|halloumi
-water|Wasser|vatten
-cold water|kaltes Wasser|kallt vatten
-hot water|heißes Wasser|hett vatten
-boiling water|kochendes Wasser|kokande vatten
-ice|Eis|is
-chicken stock|Hühnerbrühe|kycklingbuljong
-chicken broth|Hühnerbrühe|kycklingbuljong
-beef stock|Rinderbrühe|köttbuljong
-beef broth|Rinderbrühe|köttbuljong
-vegetable stock|Gemüsebrühe|grönsaksbuljong
-vegetable broth|Gemüsebrühe|grönsaksbuljong
-stock cube|Brühwürfel|buljongtärning
-stock|Brühe|buljong
-white wine|Weißwein|vitt vin
-red wine|Rotwein|rött vin
-dry white wine|trockener Weißwein|torrt vitt vin
-beer|Bier|öl
-white wine vinegar|Weißweinessig|vitvinsvinäger
-red wine vinegar|Rotweinessig|rödvinsvinäger
-balsamic vinegar|Balsamico-Essig|balsamvinäger
-cider vinegar|Apfelessig|äppelcidervinäger
-apple cider vinegar|Apfelessig|äppelcidervinäger
-rice vinegar|Reisessig|risvinäger
-vinegar|Essig|vinäger
-soy sauce|Sojasauce|soja
-dark soy sauce|dunkle Sojasauce|mörk soja
-light soy sauce|helle Sojasauce|ljus soja
-fish sauce|Fischsauce|fisksås
-oyster sauce|Austernsauce|ostronsås
-worcestershire sauce|Worcestersauce|worcestershiresås
-hot sauce|scharfe Sauce|het sås
-tabasco sauce|Tabasco|tabasco
-sriracha|Sriracha|sriracha
-tomato ketchup|Ketchup|ketchup
-ketchup|Ketchup|ketchup
-mayonnaise|Mayonnaise|majonnäs
-mustard|Senf|senap
-dijon mustard|Dijon-Senf|dijonsenap
-english mustard|scharfer Senf|stark senap
-wholegrain mustard|grober Senf|grov senap
-tomato puree|Tomatenmark|tomatpuré
-tomato paste|Tomatenmark|tomatpuré
-passata|passierte Tomaten|passerade tomater
-chopped tomatoes|gehackte Tomaten|krossade tomater
-canned tomatoes|Dosentomaten|krossade tomater
-plum tomatoes|Eiertomaten|plommontomater
-cherry tomatoes|Kirschtomaten|körsbärstomater
-tomato|Tomate|tomat
-sun-dried tomatoes|getrocknete Tomaten|soltorkade tomater
-onion|Zwiebel|lök
-red onion|rote Zwiebel|rödlök
-white onion|weiße Zwiebel|gul lök
-brown onion|Zwiebel|gul lök
-yellow onion|Zwiebel|gul lök
-spring onion|Frühlingszwiebel|salladslök
-green onion|Frühlingszwiebel|salladslök
-scallion|Frühlingszwiebel|salladslök
-shallot|Schalotte|schalottenlök
-leek|Lauch|purjolök
-garlic|Knoblauch|vitlök
-garlic clove|Knoblauchzehe|vitlöksklyfta
-ginger|Ingwer|ingefära
-fresh ginger|frischer Ingwer|färsk ingefära
-ground ginger|gemahlener Ingwer|malen ingefära
-chilli|Chili|chili
-chili|Chili|chili
-red chilli|rote Chili|röd chili
-green chilli|grüne Chili|grön chili
-chilli powder|Chilipulver|chilipulver
-chili powder|Chilipulver|chilipulver
-chilli flakes|Chiliflocken|chiliflakes
-red pepper flakes|Chiliflocken|chiliflakes
-cayenne pepper|Cayennepfeffer|cayennepeppar
-paprika|Paprikapulver|paprikapulver
-smoked paprika|geräuchertes Paprikapulver|rökt paprikapulver
-cumin|Kreuzkümmel|spiskummin
-ground cumin|gemahlener Kreuzkümmel|malen spiskummin
-cumin seeds|Kreuzkümmelsamen|hel spiskummin
-coriander|Koriander|koriander
-ground coriander|gemahlener Koriander|malen koriander
-coriander leaves|Korianderblätter|färsk koriander
-cilantro|Koriander|färsk koriander
-turmeric|Kurkuma|gurkmeja
-garam masala|Garam Masala|garam masala
-curry powder|Currypulver|curry
-curry paste|Currypaste|currypasta
-red curry paste|rote Currypaste|röd currypasta
-green curry paste|grüne Currypaste|grön currypasta
-cinnamon|Zimt|kanel
-ground cinnamon|gemahlener Zimt|malen kanel
-cinnamon stick|Zimtstange|kanelstång
-nutmeg|Muskatnuss|muskotnöt
-cloves|Gewürznelken|kryddnejlikor
-allspice|Piment|kryddpeppar
-cardamom|Kardamom|kardemumma
-star anise|Sternanis|stjärnanis
-fennel seeds|Fenchelsamen|fänkålsfrön
-mustard seeds|Senfsaat|senapsfrön
-bay leaf|Lorbeerblatt|lagerblad
-bay leaves|Lorbeerblätter|lagerblad
-thyme|Thymian|timjan
-fresh thyme|frischer Thymian|färsk timjan
-dried thyme|getrockneter Thymian|torkad timjan
-rosemary|Rosmarin|rosmarin
-oregano|Oregano|oregano
-dried oregano|getrockneter Oregano|torkad oregano
-basil|Basilikum|basilika
-basil leaves|Basilikumblätter|basilikablad
-parsley|Petersilie|persilja
-flat-leaf parsley|glatte Petersilie|bladpersilja
-mint|Minze|mynta
-mint leaves|Minzblätter|myntablad
-dill|Dill|dill
-chives|Schnittlauch|gräslök
-sage|Salbei|salvia
-tarragon|Estragon|dragon
-mixed herbs|gemischte Kräuter|örtkryddor
-italian seasoning|italienische Kräuter|italiensk örtblandning
-lemon|Zitrone|citron
-lemon juice|Zitronensaft|citronsaft
-lemon zest|Zitronenschale|citronskal
-lime|Limette|lime
-lime juice|Limettensaft|limesaft
-orange|Orange|apelsin
-orange juice|Orangensaft|apelsinjuice
-orange zest|Orangenschale|apelsinskal
-apple|Apfel|äpple
-pear|Birne|päron
-banana|Banane|banan
-strawberry|Erdbeere|jordgubbe
-raspberry|Himbeere|hallon
-blueberry|Heidelbeere|blåbär
-blackberry|Brombeere|björnbär
-cherry|Kirsche|körsbär
-peach|Pfirsich|persika
-apricot|Aprikose|aprikos
-dried apricots|getrocknete Aprikosen|torkade aprikoser
-plum|Pflaume|plommon
-mango|Mango|mango
-pineapple|Ananas|ananas
-grape|Weintraube|vindruva
-raisins|Rosinen|russin
-sultanas|Sultaninen|sultanrussin
-dates|Datteln|dadlar
-coconut|Kokosnuss|kokos
-desiccated coconut|Kokosraspeln|riven kokos
-avocado|Avocado|avokado
-potato|Kartoffel|potatis
-sweet potato|Süßkartoffel|sötpotatis
-new potatoes|neue Kartoffeln|färskpotatis
-carrot|Karotte|morot
-celery|Staudensellerie|blekselleri
-celery stick|Selleriestange|selleristjälk
-celeriac|Knollensellerie|rotselleri
-parsnip|Pastinake|palsternacka
-beetroot|Rote Bete|rödbeta
-beet|Rote Bete|rödbeta
-turnip|Rübe|rova
-radish|Radieschen|rädisa
-cucumber|Gurke|gurka
-courgette|Zucchini|zucchini
-zucchini|Zucchini|zucchini
-aubergine|Aubergine|aubergine
-eggplant|Aubergine|aubergine
-pumpkin|Kürbis|pumpa
-butternut squash|Butternut-Kürbis|butternutpumpa
-squash|Kürbis|pumpa
-red pepper|rote Paprika|röd paprika
-green pepper|grüne Paprika|grön paprika
-yellow pepper|gelbe Paprika|gul paprika
-bell pepper|Paprika|paprika
-red bell pepper|rote Paprika|röd paprika
-sweet pepper|Paprika|paprika
-broccoli|Brokkoli|broccoli
-cauliflower|Blumenkohl|blomkål
-cabbage|Kohl|vitkål
-red cabbage|Rotkohl|rödkål
-savoy cabbage|Wirsing|savojkål
-brussels sprouts|Rosenkohl|brysselkål
-kale|Grünkohl|grönkål
-spinach|Spinat|spenat
-baby spinach|Babyspinat|babyspenat
-lettuce|Salat|sallad
-rocket|Rucola|ruccola
-arugula|Rucola|ruccola
-watercress|Brunnenkresse|vattenkrasse
-asparagus|Spargel|sparris
-green beans|grüne Bohnen|haricots verts
-peas|Erbsen|ärtor
-frozen peas|TK-Erbsen|frysta ärtor
-sweetcorn|Mais|majs
-corn|Mais|majs
-mushroom|Pilz|svamp
-mushrooms|Champignons|champinjoner
-button mushrooms|Champignons|champinjoner
-chestnut mushrooms|braune Champignons|skogschampinjoner
-shiitake mushrooms|Shiitake-Pilze|shiitakesvamp
-olive|Olive|oliv
-black olives|schwarze Oliven|svarta oliver
-green olives|grüne Oliven|gröna oliver
-capers|Kapern|kapris
-fennel|Fenchel|fänkål
-artichoke|Artischocke|kronärtskocka
-bean sprouts|Sojasprossen|böngroddar
-pak choi|Pak Choi|pak choi
-bok choy|Pak Choi|pak choi
-rice|Reis|ris
-basmati rice|Basmatireis|basmatiris
-long grain rice|Langkornreis|långkornigt ris
-jasmine rice|Jasminreis|jasminris
-arborio rice|Risottoreis|arborioris
-risotto rice|Risottoreis|risottoris
-brown rice|Naturreis|fullkornsris
-pasta|Nudeln|pasta
-spaghetti|Spaghetti|spaghetti
-penne|Penne|penne
-fusilli|Fusilli|fusilli
-tagliatelle|Tagliatelle|tagliatelle
-linguine|Linguine|linguine
-lasagne sheets|Lasagneplatten|lasagneplattor
-macaroni|Makkaroni|makaroner
-egg noodles|Eiernudeln|äggnudlar
-rice noodles|Reisnudeln|risnudlar
-noodles|Nudeln|nudlar
-couscous|Couscous|couscous
-bulgur|Bulgur|bulgur
-quinoa|Quinoa|quinoa
-oats|Haferflocken|havregryn
-rolled oats|Haferflocken|havregryn
-porridge oats|Haferflocken|havregryn
-breadcrumbs|Semmelbrösel|ströbröd
-bread|Brot|bröd
-white bread|Weißbrot|vitt bröd
-baguette|Baguette|baguette
-pitta bread|Pitabrot|pitabröd
-tortillas|Tortillas|tortillabröd
-flour tortillas|Weizentortillas|vetetortillas
-puff pastry|Blätterteig|smördeg
-shortcrust pastry|Mürbeteig|mördeg
-filo pastry|Filoteig|filodeg
-chicken|Hähnchen|kyckling
-chicken breast|Hähnchenbrust|kycklingbröst
-chicken breasts|Hähnchenbrustfilets|kycklingbröst
-chicken thighs|Hähnchenschenkel|kycklinglår
-chicken thigh|Hähnchenschenkel|kycklinglår
-chicken legs|Hähnchenkeulen|kycklingklubbor
-chicken wings|Hähnchenflügel|kycklingvingar
-whole chicken|ganzes Hähnchen|hel kyckling
-turkey|Pute|kalkon
-duck|Ente|anka
-duck breast|Entenbrust|ankbröst
-beef|Rindfleisch|nötkött
-minced beef|Rinderhackfleisch|nötfärs
-ground beef|Rinderhackfleisch|nötfärs
-beef mince|Rinderhackfleisch|nötfärs
-steak|Steak|biff
-sirloin steak|Rumpsteak|ryggbiff
-stewing beef|Rindergulasch|grytbitar av nöt
-pork|Schweinefleisch|fläskkött
-pork chops|Schweinekoteletts|fläskkotletter
-pork belly|Schweinebauch|sidfläsk
-pork shoulder|Schweineschulter|fläskbog
-pork tenderloin|Schweinefilet|fläskfilé
-minced pork|Schweinehackfleisch|fläskfärs
-ground pork|Schweinehackfleisch|fläskfärs
-lamb|Lamm|lamm
-lamb mince|Lammhackfleisch|lammfärs
-minced lamb|Lammhackfleisch|lammfärs
-lamb shoulder|Lammschulter|lammbog
-leg of lamb|Lammkeule|lammstek
-bacon|Speck|bacon
-streaky bacon|Frühstücksspeck|bacon
-pancetta|Pancetta|pancetta
-ham|Schinken|skinka
-sausages|Würstchen|korv
-sausage|Wurst|korv
-chorizo|Chorizo|chorizo
-salami|Salami|salami
-fish|Fisch|fisk
-salmon|Lachs|lax
-salmon fillet|Lachsfilet|laxfilé
-smoked salmon|Räucherlachs|rökt lax
-cod|Kabeljau|torsk
-haddock|Schellfisch|kolja
-tuna|Thunfisch|tonfisk
-tinned tuna|Thunfisch aus der Dose|tonfisk på burk
-mackerel|Makrele|makrill
-sardines|Sardinen|sardiner
-anchovies|Sardellen|sardeller
-anchovy fillets|Sardellenfilets|sardellfiléer
-prawns|Garnelen|räkor
-king prawns|Riesengarnelen|jätteräkor
-shrimp|Garnelen|räkor
-mussels|Miesmuscheln|blåmusslor
-clams|Venusmuscheln|musslor
-squid|Tintenfisch|bläckfisk
-crab|Krebsfleisch|krabba
-white fish|weißer Fisch|vit fisk
-tofu|Tofu|tofu
-firm tofu|fester Tofu|fast tofu
-lentils|Linsen|linser
-red lentils|rote Linsen|röda linser
-green lentils|grüne Linsen|gröna linser
-chickpeas|Kichererbsen|kikärtor
-kidney beans|Kidneybohnen|kidneybönor
-black beans|schwarze Bohnen|svarta bönor
-cannellini beans|weiße Bohnen|vita bönor
-white beans|weiße Bohnen|vita bönor
-butter beans|Butterbohnen|smörbönor
-baked beans|Baked Beans|bakade bönor
-almonds|Mandeln|mandlar
-ground almonds|gemahlene Mandeln|mandelmjöl
-flaked almonds|Mandelblättchen|mandelspån
-walnuts|Walnüsse|valnötter
-hazelnuts|Haselnüsse|hasselnötter
-pecans|Pekannüsse|pekannötter
-peanuts|Erdnüsse|jordnötter
-cashew nuts|Cashewkerne|cashewnötter
-cashews|Cashewkerne|cashewnötter
-pine nuts|Pinienkerne|pinjenötter
-pistachios|Pistazien|pistaschmandlar
-peanut butter|Erdnussbutter|jordnötssmör
-sesame seeds|Sesam|sesamfrön
-sunflower seeds|Sonnenblumenkerne|solrosfrön
-pumpkin seeds|Kürbiskerne|pumpafrön
-chia seeds|Chiasamen|chiafrön
-flaxseed|Leinsamen|linfrö
-jam|Marmelade|sylt
-strawberry jam|Erdbeermarmelade|jordgubbssylt
-gelatine|Gelatine|gelatin
-custard|Vanillesoße|vaniljsås
-ice cream|Eiscreme|glass
+all-purpose flour|Weizenmehl
+plain flour|Weizenmehl
+self-raising flour|Mehl mit Backpulver
+self raising flour|Mehl mit Backpulver
+bread flour|Brotmehl
+wholemeal flour|Vollkornmehl
+whole wheat flour|Vollkornmehl
+cornflour|Speisestärke
+cornstarch|Speisestärke
+flour|Mehl
+caster sugar|feiner Zucker
+granulated sugar|Zucker
+brown sugar|brauner Zucker
+dark brown sugar|dunkler brauner Zucker
+light brown sugar|heller brauner Zucker
+icing sugar|Puderzucker
+powdered sugar|Puderzucker
+demerara sugar|Rohrzucker
+muscovado sugar|Muscovado-Zucker
+sugar|Zucker
+honey|Honig
+maple syrup|Ahornsirup
+golden syrup|Zuckersirup
+treacle|Melasse
+molasses|Melasse
+baking powder|Backpulver
+baking soda|Natron
+bicarbonate of soda|Natron
+yeast|Hefe
+dried yeast|Trockenhefe
+vanilla extract|Vanilleextrakt
+vanilla essence|Vanillearoma
+vanilla|Vanille
+cocoa powder|Kakaopulver
+cocoa|Kakao
+dark chocolate|Zartbitterschokolade
+milk chocolate|Vollmilchschokolade
+white chocolate|weiße Schokolade
+chocolate chips|Schokotropfen
+chocolate|Schokolade
+salt|Salz
+sea salt|Meersalz
+black pepper|schwarzer Pfeffer
+pepper|Pfeffer
+white pepper|weißer Pfeffer
+butter|Butter
+unsalted butter|ungesalzene Butter
+salted butter|gesalzene Butter
+margarine|Margarine
+olive oil|Olivenöl
+extra virgin olive oil|natives Olivenöl extra
+vegetable oil|Pflanzenöl
+sunflower oil|Sonnenblumenöl
+rapeseed oil|Rapsöl
+canola oil|Rapsöl
+sesame oil|Sesamöl
+coconut oil|Kokosöl
+oil|Öl
+milk|Milch
+whole milk|Vollmilch
+skimmed milk|Magermilch
+semi-skimmed milk|fettarme Milch
+buttermilk|Buttermilch
+coconut milk|Kokosmilch
+almond milk|Mandelmilch
+oat milk|Haferdrink
+cream|Sahne
+double cream|Schlagsahne
+heavy cream|Schlagsahne
+whipping cream|Schlagsahne
+single cream|Kochsahne
+sour cream|Saure Sahne
+creme fraiche|Crème fraîche
+crème fraîche|Crème fraîche
+yogurt|Joghurt
+yoghurt|Joghurt
+greek yogurt|griechischer Joghurt
+plain yogurt|Naturjoghurt
+egg|Ei
+eggs|Eier
+onions|Zwiebeln
+red onions|rote Zwiebeln
+carrots|Karotten
+potatoes|Kartoffeln
+tomatoes|Tomaten
+apples|Äpfel
+lemons|Zitronen
+limes|Limetten
+shallots|Schalotten
+bananas|Bananen
+spring onions|Frühlingszwiebeln
+garlic cloves|Knoblauchzehen
+red peppers|rote Paprika
+mushroom caps|Pilzköpfe
+egg yolk|Eigelb
+egg white|Eiweiß
+free-range egg|Freilandei
+cheese|Käse
+cheddar cheese|Cheddar
+cheddar|Cheddar
+parmesan cheese|Parmesan
+parmesan|Parmesan
+mozzarella|Mozzarella
+feta cheese|Feta
+feta|Feta
+cream cheese|Frischkäse
+ricotta|Ricotta
+mascarpone|Mascarpone
+goat cheese|Ziegenkäse
+gruyere|Gruyère
+gruyère|Gruyère
+cottage cheese|Hüttenkäse
+halloumi|Halloumi
+water|Wasser
+cold water|kaltes Wasser
+hot water|heißes Wasser
+boiling water|kochendes Wasser
+ice|Eis
+chicken stock|Hühnerbrühe
+chicken broth|Hühnerbrühe
+beef stock|Rinderbrühe
+beef broth|Rinderbrühe
+vegetable stock|Gemüsebrühe
+vegetable broth|Gemüsebrühe
+stock cube|Brühwürfel
+stock|Brühe
+white wine|Weißwein
+red wine|Rotwein
+dry white wine|trockener Weißwein
+beer|Bier
+white wine vinegar|Weißweinessig
+red wine vinegar|Rotweinessig
+balsamic vinegar|Balsamico-Essig
+cider vinegar|Apfelessig
+apple cider vinegar|Apfelessig
+rice vinegar|Reisessig
+vinegar|Essig
+soy sauce|Sojasauce
+dark soy sauce|dunkle Sojasauce
+light soy sauce|helle Sojasauce
+fish sauce|Fischsauce
+oyster sauce|Austernsauce
+worcestershire sauce|Worcestersauce
+hot sauce|scharfe Sauce
+tabasco sauce|Tabasco
+sriracha|Sriracha
+tomato ketchup|Ketchup
+ketchup|Ketchup
+mayonnaise|Mayonnaise
+mustard|Senf
+dijon mustard|Dijon-Senf
+english mustard|scharfer Senf
+wholegrain mustard|grober Senf
+tomato puree|Tomatenmark
+tomato paste|Tomatenmark
+passata|passierte Tomaten
+chopped tomatoes|gehackte Tomaten
+canned tomatoes|Dosentomaten
+plum tomatoes|Eiertomaten
+cherry tomatoes|Kirschtomaten
+tomato|Tomate
+sun-dried tomatoes|getrocknete Tomaten
+onion|Zwiebel
+red onion|rote Zwiebel
+white onion|weiße Zwiebel
+brown onion|Zwiebel
+yellow onion|Zwiebel
+spring onion|Frühlingszwiebel
+green onion|Frühlingszwiebel
+scallion|Frühlingszwiebel
+shallot|Schalotte
+leek|Lauch
+garlic|Knoblauch
+garlic clove|Knoblauchzehe
+ginger|Ingwer
+fresh ginger|frischer Ingwer
+ground ginger|gemahlener Ingwer
+chilli|Chili
+chili|Chili
+red chilli|rote Chili
+green chilli|grüne Chili
+chilli powder|Chilipulver
+chili powder|Chilipulver
+chilli flakes|Chiliflocken
+red pepper flakes|Chiliflocken
+cayenne pepper|Cayennepfeffer
+paprika|Paprikapulver
+smoked paprika|geräuchertes Paprikapulver
+cumin|Kreuzkümmel
+ground cumin|gemahlener Kreuzkümmel
+cumin seeds|Kreuzkümmelsamen
+coriander|Koriander
+ground coriander|gemahlener Koriander
+coriander leaves|Korianderblätter
+cilantro|Koriander
+turmeric|Kurkuma
+garam masala|Garam Masala
+curry powder|Currypulver
+curry paste|Currypaste
+red curry paste|rote Currypaste
+green curry paste|grüne Currypaste
+cinnamon|Zimt
+ground cinnamon|gemahlener Zimt
+cinnamon stick|Zimtstange
+nutmeg|Muskatnuss
+cloves|Gewürznelken
+allspice|Piment
+cardamom|Kardamom
+star anise|Sternanis
+fennel seeds|Fenchelsamen
+mustard seeds|Senfsaat
+bay leaf|Lorbeerblatt
+bay leaves|Lorbeerblätter
+thyme|Thymian
+fresh thyme|frischer Thymian
+dried thyme|getrockneter Thymian
+rosemary|Rosmarin
+oregano|Oregano
+dried oregano|getrockneter Oregano
+basil|Basilikum
+basil leaves|Basilikumblätter
+parsley|Petersilie
+flat-leaf parsley|glatte Petersilie
+mint|Minze
+mint leaves|Minzblätter
+dill|Dill
+chives|Schnittlauch
+sage|Salbei
+tarragon|Estragon
+mixed herbs|gemischte Kräuter
+italian seasoning|italienische Kräuter
+lemon|Zitrone
+lemon juice|Zitronensaft
+lemon zest|Zitronenschale
+lime|Limette
+lime juice|Limettensaft
+orange|Orange
+orange juice|Orangensaft
+orange zest|Orangenschale
+apple|Apfel
+pear|Birne
+banana|Banane
+strawberry|Erdbeere
+raspberry|Himbeere
+blueberry|Heidelbeere
+blackberry|Brombeere
+cherry|Kirsche
+peach|Pfirsich
+apricot|Aprikose
+dried apricots|getrocknete Aprikosen
+plum|Pflaume
+mango|Mango
+pineapple|Ananas
+grape|Weintraube
+raisins|Rosinen
+sultanas|Sultaninen
+dates|Datteln
+coconut|Kokosnuss
+desiccated coconut|Kokosraspeln
+avocado|Avocado
+potato|Kartoffel
+sweet potato|Süßkartoffel
+new potatoes|neue Kartoffeln
+carrot|Karotte
+celery|Staudensellerie
+celery stick|Selleriestange
+celeriac|Knollensellerie
+parsnip|Pastinake
+beetroot|Rote Bete
+beet|Rote Bete
+turnip|Rübe
+radish|Radieschen
+cucumber|Gurke
+courgette|Zucchini
+zucchini|Zucchini
+aubergine|Aubergine
+eggplant|Aubergine
+pumpkin|Kürbis
+butternut squash|Butternut-Kürbis
+squash|Kürbis
+red pepper|rote Paprika
+green pepper|grüne Paprika
+yellow pepper|gelbe Paprika
+bell pepper|Paprika
+red bell pepper|rote Paprika
+sweet pepper|Paprika
+broccoli|Brokkoli
+cauliflower|Blumenkohl
+cabbage|Kohl
+red cabbage|Rotkohl
+savoy cabbage|Wirsing
+brussels sprouts|Rosenkohl
+kale|Grünkohl
+spinach|Spinat
+baby spinach|Babyspinat
+lettuce|Salat
+rocket|Rucola
+arugula|Rucola
+watercress|Brunnenkresse
+asparagus|Spargel
+green beans|grüne Bohnen
+peas|Erbsen
+frozen peas|TK-Erbsen
+sweetcorn|Mais
+corn|Mais
+mushroom|Pilz
+mushrooms|Champignons
+button mushrooms|Champignons
+chestnut mushrooms|braune Champignons
+shiitake mushrooms|Shiitake-Pilze
+olive|Olive
+black olives|schwarze Oliven
+green olives|grüne Oliven
+capers|Kapern
+fennel|Fenchel
+artichoke|Artischocke
+bean sprouts|Sojasprossen
+pak choi|Pak Choi
+bok choy|Pak Choi
+rice|Reis
+basmati rice|Basmatireis
+long grain rice|Langkornreis
+jasmine rice|Jasminreis
+arborio rice|Risottoreis
+risotto rice|Risottoreis
+brown rice|Naturreis
+pasta|Nudeln
+spaghetti|Spaghetti
+penne|Penne
+fusilli|Fusilli
+tagliatelle|Tagliatelle
+linguine|Linguine
+lasagne sheets|Lasagneplatten
+macaroni|Makkaroni
+egg noodles|Eiernudeln
+rice noodles|Reisnudeln
+noodles|Nudeln
+couscous|Couscous
+bulgur|Bulgur
+quinoa|Quinoa
+oats|Haferflocken
+rolled oats|Haferflocken
+porridge oats|Haferflocken
+breadcrumbs|Semmelbrösel
+bread|Brot
+white bread|Weißbrot
+baguette|Baguette
+pitta bread|Pitabrot
+tortillas|Tortillas
+flour tortillas|Weizentortillas
+puff pastry|Blätterteig
+shortcrust pastry|Mürbeteig
+filo pastry|Filoteig
+chicken|Hähnchen
+chicken breast|Hähnchenbrust
+chicken breasts|Hähnchenbrustfilets
+chicken thighs|Hähnchenschenkel
+chicken thigh|Hähnchenschenkel
+chicken legs|Hähnchenkeulen
+chicken wings|Hähnchenflügel
+whole chicken|ganzes Hähnchen
+turkey|Pute
+duck|Ente
+duck breast|Entenbrust
+beef|Rindfleisch
+minced beef|Rinderhackfleisch
+ground beef|Rinderhackfleisch
+beef mince|Rinderhackfleisch
+steak|Steak
+sirloin steak|Rumpsteak
+stewing beef|Rindergulasch
+pork|Schweinefleisch
+pork chops|Schweinekoteletts
+pork belly|Schweinebauch
+pork shoulder|Schweineschulter
+pork tenderloin|Schweinefilet
+minced pork|Schweinehackfleisch
+ground pork|Schweinehackfleisch
+lamb|Lamm
+lamb mince|Lammhackfleisch
+minced lamb|Lammhackfleisch
+lamb shoulder|Lammschulter
+leg of lamb|Lammkeule
+bacon|Speck
+streaky bacon|Frühstücksspeck
+pancetta|Pancetta
+ham|Schinken
+sausages|Würstchen
+sausage|Wurst
+chorizo|Chorizo
+salami|Salami
+fish|Fisch
+salmon|Lachs
+salmon fillet|Lachsfilet
+smoked salmon|Räucherlachs
+cod|Kabeljau
+haddock|Schellfisch
+tuna|Thunfisch
+tinned tuna|Thunfisch aus der Dose
+mackerel|Makrele
+sardines|Sardinen
+anchovies|Sardellen
+anchovy fillets|Sardellenfilets
+prawns|Garnelen
+king prawns|Riesengarnelen
+shrimp|Garnelen
+mussels|Miesmuscheln
+clams|Venusmuscheln
+squid|Tintenfisch
+crab|Krebsfleisch
+white fish|weißer Fisch
+tofu|Tofu
+firm tofu|fester Tofu
+lentils|Linsen
+red lentils|rote Linsen
+green lentils|grüne Linsen
+chickpeas|Kichererbsen
+kidney beans|Kidneybohnen
+black beans|schwarze Bohnen
+cannellini beans|weiße Bohnen
+white beans|weiße Bohnen
+butter beans|Butterbohnen
+baked beans|Baked Beans
+almonds|Mandeln
+ground almonds|gemahlene Mandeln
+flaked almonds|Mandelblättchen
+walnuts|Walnüsse
+hazelnuts|Haselnüsse
+pecans|Pekannüsse
+peanuts|Erdnüsse
+cashew nuts|Cashewkerne
+cashews|Cashewkerne
+pine nuts|Pinienkerne
+pistachios|Pistazien
+peanut butter|Erdnussbutter
+sesame seeds|Sesam
+sunflower seeds|Sonnenblumenkerne
+pumpkin seeds|Kürbiskerne
+chia seeds|Chiasamen
+flaxseed|Leinsamen
+jam|Marmelade
+strawberry jam|Erdbeermarmelade
+gelatine|Gelatine
+custard|Vanillesoße
+ice cream|Eiscreme
 `;
 
-const DICT = new Map<string, [string, string]>();
+const DICT = new Map<string, string>();
 for (const line of DICT_SRC.split('\n')) {
-  const [en, de, sv] = line.split('|').map((s) => s?.trim());
-  if (en && de && sv) DICT.set(en.toLowerCase(), [de, sv]);
+  const [en, de] = line.split('|').map((s) => s?.trim());
+  if (en && de) DICT.set(en.toLowerCase(), de);
 }
 const KEYS = [...DICT.keys()].sort((a, b) => b.length - a.length);
 export const dictionarySize = () => DICT.size;
 
 /** Preparation notes after the ingredient ("chopped" → "gehackt"). */
-const PREP: [RegExp, string, string][] = [
-  [/\bfinely chopped\b/i, 'fein gehackt', 'finhackad'],
-  [/\broughly chopped\b/i, 'grob gehackt', 'grovhackad'],
-  [/\bchopped\b/i, 'gehackt', 'hackad'],
-  [/\bdiced\b/i, 'gewürfelt', 'tärnad'],
-  [/\bcubed\b/i, 'gewürfelt', 'tärnad'],
-  [/\bthinly sliced\b/i, 'in dünnen Scheiben', 'tunt skivad'],
-  [/\bsliced\b/i, 'in Scheiben', 'skivad'],
-  [/\bminced\b/i, 'fein gehackt', 'finhackad'],
-  [/\bcrushed\b/i, 'zerdrückt', 'krossad'],
-  [/\bgrated\b/i, 'gerieben', 'riven'],
-  [/\bpeeled\b/i, 'geschält', 'skalad'],
-  [/\bbeaten\b/i, 'verquirlt', 'uppvispad'],
-  [/\bmelted\b/i, 'geschmolzen', 'smält'],
-  [/\bsoftened\b/i, 'weich', 'rumsvarm'],
-  [/\bshredded\b/i, 'in Streifen', 'strimlad'],
-  [/\bjuiced\b/i, 'ausgepresst', 'pressad'],
-  [/\bzested\b/i, 'Schale abgerieben', 'rivet skal'],
-  [/\bto taste\b/i, 'nach Geschmack', 'efter smak'],
-  [/\bto serve\b/i, 'zum Servieren', 'till servering'],
-  [/\bfor frying\b/i, 'zum Braten', 'till stekning'],
-  [/\bfor greasing\b/i, 'zum Einfetten', 'till smörjning'],
-  [/\bfor garnish\b/i, 'zum Garnieren', 'till garnering'],
-  [/\boptional\b/i, 'optional', 'valfritt'],
+const PREP: [RegExp, string][] = [
+  [/\bfinely chopped\b/i, 'fein gehackt'],
+  [/\broughly chopped\b/i, 'grob gehackt'],
+  [/\bchopped\b/i, 'gehackt'],
+  [/\bdiced\b/i, 'gewürfelt'],
+  [/\bcubed\b/i, 'gewürfelt'],
+  [/\bthinly sliced\b/i, 'in dünnen Scheiben'],
+  [/\bsliced\b/i, 'in Scheiben'],
+  [/\bminced\b/i, 'fein gehackt'],
+  [/\bcrushed\b/i, 'zerdrückt'],
+  [/\bgrated\b/i, 'gerieben'],
+  [/\bpeeled\b/i, 'geschält'],
+  [/\bbeaten\b/i, 'verquirlt'],
+  [/\bmelted\b/i, 'geschmolzen'],
+  [/\bsoftened\b/i, 'weich'],
+  [/\bshredded\b/i, 'in Streifen'],
+  [/\bjuiced\b/i, 'ausgepresst'],
+  [/\bzested\b/i, 'Schale abgerieben'],
+  [/\bto taste\b/i, 'nach Geschmack'],
+  [/\bto serve\b/i, 'zum Servieren'],
+  [/\bfor frying\b/i, 'zum Braten'],
+  [/\bfor greasing\b/i, 'zum Einfetten'],
+  [/\bfor garnish\b/i, 'zum Garnieren'],
+  [/\boptional\b/i, 'optional'],
 ];
-const SIZE: [RegExp, string, string][] = [
-  [/\blarge\b/i, 'groß', 'stor'],
-  [/\bmedium\b/i, 'mittelgroß', 'medelstor'],
-  [/\bsmall\b/i, 'klein', 'liten'],
-  [/\bfresh\b/i, 'frisch', 'färsk'],
-  [/\bdried\b/i, 'getrocknet', 'torkad'],
-  [/\bfrozen\b/i, 'TK', 'fryst'],
-  [/\bground\b/i, 'gemahlen', 'malen'],
+const SIZE: [RegExp, string][] = [
+  [/\blarge\b/i, 'groß'],
+  [/\bmedium\b/i, 'mittelgroß'],
+  [/\bsmall\b/i, 'klein'],
+  [/\bfresh\b/i, 'frisch'],
+  [/\bdried\b/i, 'getrocknet'],
+  [/\bfrozen\b/i, 'TK'],
+  [/\bground\b/i, 'gemahlen'],
 ];
 
 const singular = (w: string) =>
@@ -507,7 +507,7 @@ const singular = (w: string) =>
 /** Translate an ingredient name; returns null when nothing in the dictionary fits. */
 export function translateName(name: string, to: Target): string | null {
   const n = name.toLowerCase().replace(/\s+/g, ' ').trim();
-  const pick = (k: string) => DICT.get(k)![to === 'de' ? 0 : 1];
+  const pick = (k: string) => DICT.get(k)!;
   if (DICT.has(n)) return pick(n);
   const sg = n.split(' ').map(singular).join(' ');
   if (DICT.has(sg)) return pick(sg);
@@ -520,8 +520,8 @@ export function translateName(name: string, to: Target): string | null {
     // translate known size words, keep the rest in English in brackets (the original is shown anyway)
     let words = rest;
     const adj: string[] = [];
-    for (const [r, de, sv] of SIZE) if (r.test(words)) {
-      adj.push(to === 'de' ? de : sv);
+    for (const [r, de] of SIZE) if (r.test(words)) {
+      adj.push(de);
       words = words.replace(r, ' ').replace(/\s+/g, ' ').trim();
     }
     const extra = words.replace(/^[-,\s]+|[-,\s]+$/g, '');
@@ -619,27 +619,27 @@ export function parseMeasure(s: string): Parsed {
 
 const roundSmart = (v: number) => (v >= 200 ? Math.round(v / 10) * 10 : v >= 50 ? Math.round(v / 5) * 5 : v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
 
-const UNIT_WORDS: Record<string, { de: [string, string]; sv: [string, string] }> = {
-  tbsp: { de: ['EL', 'EL'], sv: ['msk', 'msk'] },
-  tsp: { de: ['TL', 'TL'], sv: ['tsk', 'tsk'] },
-  clove: { de: ['Zehe', 'Zehen'], sv: ['klyfta', 'klyftor'] },
-  can: { de: ['Dose', 'Dosen'], sv: ['burk', 'burkar'] },
-  pinch: { de: ['Prise', 'Prisen'], sv: ['nypa', 'nypor'] },
-  dash: { de: ['Spritzer', 'Spritzer'], sv: ['skvätt', 'skvättar'] },
-  handful: { de: ['Handvoll', 'Handvoll'], sv: ['näve', 'nävar'] },
-  slice: { de: ['Scheibe', 'Scheiben'], sv: ['skiva', 'skivor'] },
-  bunch: { de: ['Bund', 'Bund'], sv: ['knippe', 'knippen'] },
-  sprig: { de: ['Zweig', 'Zweige'], sv: ['kvist', 'kvistar'] },
-  stick: { de: ['Stange', 'Stangen'], sv: ['stång', 'stänger'] },
-  pack: { de: ['Packung', 'Packungen'], sv: ['förpackning', 'förpackningar'] },
-  jar: { de: ['Glas', 'Gläser'], sv: ['burk', 'burkar'] },
-  piece: { de: ['Stück', 'Stück'], sv: ['st', 'st'] },
-  cup: { de: ['Tasse', 'Tassen'], sv: ['kopp', 'koppar'] },
-  oz: { de: ['oz', 'oz'], sv: ['oz', 'oz'] },
-  lb: { de: ['lb', 'lb'], sv: ['lb', 'lb'] },
-  floz: { de: ['fl oz', 'fl oz'], sv: ['fl oz', 'fl oz'] },
-  pint: { de: ['Pint', 'Pints'], sv: ['pint', 'pint'] },
-  quart: { de: ['Quart', 'Quarts'], sv: ['quart', 'quart'] },
+const UNIT_WORDS: Record<string, { de: [string, string] }> = {
+  tbsp: { de: ['EL', 'EL'] },
+  tsp: { de: ['TL', 'TL'] },
+  clove: { de: ['Zehe', 'Zehen'] },
+  can: { de: ['Dose', 'Dosen'] },
+  pinch: { de: ['Prise', 'Prisen'] },
+  dash: { de: ['Spritzer', 'Spritzer'] },
+  handful: { de: ['Handvoll', 'Handvoll'] },
+  slice: { de: ['Scheibe', 'Scheiben'] },
+  bunch: { de: ['Bund', 'Bund'] },
+  sprig: { de: ['Zweig', 'Zweige'] },
+  stick: { de: ['Stange', 'Stangen'] },
+  pack: { de: ['Packung', 'Packungen'] },
+  jar: { de: ['Glas', 'Gläser'] },
+  piece: { de: ['Stück', 'Stück'] },
+  cup: { de: ['Tasse', 'Tassen'] },
+  oz: { de: ['oz', 'oz'] },
+  lb: { de: ['lb', 'lb'] },
+  floz: { de: ['fl oz', 'fl oz'] },
+  pint: { de: ['Pint', 'Pints'] },
+  quart: { de: ['Quart', 'Quarts'] },
 };
 
 /** Metric conversion of a parsed amount (null when the unit is already fine or unknown). */
@@ -687,11 +687,11 @@ export interface TranslatedLine {
 
 /**
  * One English ingredient (measure + name, as TheMealDB has them) → line in the household language.
- * lang 'en' only converts units (when metric); 'de'/'sv' translate known words too.
+ * lang 'en' only converts units (when metric); 'de' translates known words too.
  */
 export function translateIngredient(measure: string, name: string, lang: string, units: 'metric' | 'us'): TranslatedLine {
   const origLine = [measure.trim(), name.trim()].filter(Boolean).join(' ');
-  const target: Target | null = lang === 'de' || lang === 'sv' ? lang : null;
+  const target: Target | null = lang === 'de' ? 'de' : null;
   const p = parseMeasure(measure);
   // notes in the measure ("chopped", "to taste") or in the name ("Onion, chopped")
   const [baseName, ...noteParts] = name.split(',');
@@ -711,7 +711,7 @@ export function translateIngredient(measure: string, name: string, lang: string,
     const one = qty !== null && qty <= 1 && !unit ? translateName(nameOut.split(' ').map(singular).join(' '), target) : null;
     const tr = one ?? translateName(nameOut, target);
     if (tr) nameOut = tr;
-    for (const [re, de, sv] of [...PREP, ...SIZE]) if (re.test(notes)) notes = notes.replace(re, target === 'de' ? de : sv);
+    for (const [re, de] of [...PREP, ...SIZE]) if (re.test(notes)) notes = notes.replace(re, de);
   }
   let unitWord: string | null = unit;
   if (unit && UNIT_WORDS[unit]) {
@@ -725,21 +725,21 @@ export function translateIngredient(measure: string, name: string, lang: string,
 }
 
 /** Category / area words from TheMealDB → tags in the household language. */
-const TAGS: Record<string, [string, string]> = {
-  beef: ['Rind', 'Nötkött'], chicken: ['Hähnchen', 'Kyckling'], dessert: ['Dessert', 'Efterrätt'], lamb: ['Lamm', 'Lamm'],
-  miscellaneous: ['Verschiedenes', 'Blandat'], pasta: ['Pasta', 'Pasta'], pork: ['Schwein', 'Fläsk'], seafood: ['Meeresfrüchte', 'Skaldjur'],
-  side: ['Beilage', 'Tillbehör'], starter: ['Vorspeise', 'Förrätt'], vegan: ['Vegan', 'Vegan'], vegetarian: ['Vegetarisch', 'Vegetariskt'],
-  breakfast: ['Frühstück', 'Frukost'], goat: ['Ziege', 'Get'],
-  american: ['Amerikanisch', 'Amerikanskt'], british: ['Britisch', 'Brittiskt'], canadian: ['Kanadisch', 'Kanadensiskt'], chinese: ['Chinesisch', 'Kinesiskt'],
-  croatian: ['Kroatisch', 'Kroatiskt'], dutch: ['Niederländisch', 'Holländskt'], egyptian: ['Ägyptisch', 'Egyptiskt'], filipino: ['Philippinisch', 'Filippinskt'],
-  french: ['Französisch', 'Franskt'], greek: ['Griechisch', 'Grekiskt'], indian: ['Indisch', 'Indiskt'], irish: ['Irisch', 'Irländskt'],
-  italian: ['Italienisch', 'Italienskt'], jamaican: ['Jamaikanisch', 'Jamaicanskt'], japanese: ['Japanisch', 'Japanskt'], kenyan: ['Kenianisch', 'Kenyanskt'],
-  malaysian: ['Malaysisch', 'Malaysiskt'], mexican: ['Mexikanisch', 'Mexikanskt'], moroccan: ['Marokkanisch', 'Marockanskt'], polish: ['Polnisch', 'Polskt'],
-  portuguese: ['Portugiesisch', 'Portugisiskt'], russian: ['Russisch', 'Ryskt'], spanish: ['Spanisch', 'Spanskt'], thai: ['Thailändisch', 'Thailändskt'],
-  tunisian: ['Tunesisch', 'Tunisiskt'], turkish: ['Türkisch', 'Turkiskt'], ukrainian: ['Ukrainisch', 'Ukrainskt'], vietnamese: ['Vietnamesisch', 'Vietnamesiskt'],
+const TAGS: Record<string, string> = {
+  beef: 'Rind', chicken: 'Hähnchen', dessert: 'Dessert', lamb: 'Lamm',
+  miscellaneous: 'Verschiedenes', pasta: 'Pasta', pork: 'Schwein', seafood: 'Meeresfrüchte',
+  side: 'Beilage', starter: 'Vorspeise', vegan: 'Vegan', vegetarian: 'Vegetarisch',
+  breakfast: 'Frühstück', goat: 'Ziege',
+  american: 'Amerikanisch', british: 'Britisch', canadian: 'Kanadisch', chinese: 'Chinesisch',
+  croatian: 'Kroatisch', dutch: 'Niederländisch', egyptian: 'Ägyptisch', filipino: 'Philippinisch',
+  french: 'Französisch', greek: 'Griechisch', indian: 'Indisch', irish: 'Irisch',
+  italian: 'Italienisch', jamaican: 'Jamaikanisch', japanese: 'Japanisch', kenyan: 'Kenianisch',
+  malaysian: 'Malaysisch', mexican: 'Mexikanisch', moroccan: 'Marokkanisch', polish: 'Polnisch',
+  portuguese: 'Portugiesisch', russian: 'Russisch', spanish: 'Spanisch', thai: 'Thailändisch',
+  tunisian: 'Tunesisch', turkish: 'Türkisch', ukrainian: 'Ukrainisch', vietnamese: 'Vietnamesisch',
 };
 export function translateTag(tag: string, lang: string): string {
   const e = TAGS[tag.toLowerCase().trim()];
-  if (!e || (lang !== 'de' && lang !== 'sv')) return tag;
-  return e[lang === 'de' ? 0 : 1];
+  if (!e || lang !== 'de') return tag;
+  return e;
 }

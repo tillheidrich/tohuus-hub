@@ -34,44 +34,11 @@ import { de_menu } from './locales/de-menu.js';
 import { de_design } from './locales/de-design.js';
 import { de_fixes } from './locales/de-fixes.js';
 import { de_places } from './locales/de-places.js';
-import { sv as svBase } from './locales/sv.js';
-import { sv_data } from './locales/sv-data.js';
-import { sv_party } from './locales/sv-party.js';
-import { sv_fresh } from './locales/sv-fresh.js';
-import { sv_shop } from './locales/sv-shop.js';
-import { sv_home } from './locales/sv-home.js';
-import { sv_kiosk } from './locales/sv-kiosk.js';
-import { sv_kids } from './locales/sv-kids.js';
-import { sv_onboard } from './locales/sv-onboard.js';
-import { sv_retail } from './locales/sv-retail.js';
-import { sv_ha } from './locales/sv-ha.js';
-import { sv_channels } from './locales/sv-channels.js';
-import { sv_intl } from './locales/sv-intl.js';
-import { sv_cook2 } from './locales/sv-cook2.js';
-import { sv_auth } from './locales/sv-auth.js';
-import { sv_spend2 } from './locales/sv-spend2.js';
-import { sv_print } from './locales/sv-print.js';
-import { sv_share } from './locales/sv-share.js';
-import { sv_labels } from './locales/sv-labels.js';
-import { sv_away } from './locales/sv-away.js';
-import { sv_plan2 } from './locales/sv-plan2.js';
-import { sv_recipes2 } from './locales/sv-recipes2.js';
-import { sv_quality } from './locales/sv-quality.js';
-import { sv_people } from './locales/sv-people.js';
-import { sv_tour } from './locales/sv-tour.js';
-import { sv_ha2 } from './locales/sv-ha2.js';
-import { sv_menu } from './locales/sv-menu.js';
-import { sv_design } from './locales/sv-design.js';
-import { sv_fixes } from './locales/sv-fixes.js';
-import { sv_places } from './locales/sv-places.js';
 import { de_order } from './locales/de-order.js';
-import { sv_order } from './locales/sv-order.js';
 
 const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order };
 
-const sv = { ...svBase, ...sv_data, ...sv_party, ...sv_fresh, ...sv_shop, ...sv_home, ...sv_kiosk, ...sv_kids, ...sv_onboard, ...sv_retail, ...sv_ha, ...sv_channels, ...sv_intl, ...sv_cook2, ...sv_auth, ...sv_spend2, ...sv_print, ...sv_share, ...sv_labels, ...sv_away, ...sv_plan2, ...sv_recipes2, ...sv_quality, ...sv_people, ...sv_tour, ...sv_ha2, ...sv_menu, ...sv_design, ...sv_places, ...sv_fixes, ...sv_order };
-
-const DICTS: Record<Lang, Record<string, string>> = { en: {}, de, sv };
+const DICTS: Record<Lang, Record<string, string>> = { en: {}, de };
 
 export function t(en: string, vars?: Record<string, string | number | null | undefined>) {
   let s = DICTS[lang()]?.[en] ?? en;

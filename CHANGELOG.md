@@ -2,6 +2,12 @@
 
 ToHuus Hub is developed in waves: each wave adds a set of feature areas, then gets a review pass. Dates are when the wave landed on `main`. The package version is still `0.1.0`; the Home Assistant integration has its own changelog in [ha-integration/CHANGELOG.md](ha-integration/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+- **Swedish removed as UI language; region Sweden stays.** The app, notifications and demo data are English or German. The region Sweden (SEK, Swedish receipts from ICA, Coop, Willys and others, Swedish product names from Open Food Facts, Swedish stores in store mode) is unchanged. A household that ran in Swedish switches to English on update (migration `lang-sv-removed-1`), and its base places and categories that still carry their Swedish default names get their English names back; renamed places, products and recipes stay as they are.
+
 ## Wave 5 (2026-10-11)
 
 ### Added

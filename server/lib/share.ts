@@ -317,7 +317,6 @@ interface Staple {
   key: string;
   en: string;
   de: string;
-  sv?: string;
   cat: string;
   on?: boolean;
 }

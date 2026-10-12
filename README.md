@@ -26,7 +26,7 @@ ToHuus Hub is a self-hosted household app for people who live alone, as a couple
 
 Your receipts, order confirmations and recipe links are already digital. ToHuus Hub reads them, so the stock fills itself and the spending overview builds itself. You do not have to type in your pantry. The point is to take some of the mental load off whoever usually keeps all of this in their head: what is running out, what we eat tonight, where the plasters are, when the water filter is due.
 
-*To Huus* is Low German for "at home". The app speaks English, German and Swedish.
+*To Huus* is Low German for "at home". The app speaks English and German.
 
 It runs as one Docker container with a SQLite file. No account with us, no telemetry, no cloud service required.
 
@@ -135,7 +135,7 @@ A built-in MCP server with **106 tools** for Claude, ChatGPT and other MCP clien
 
 - Light and dark mode. An admin sets the household default (light, dark or like the device) and can let every member choose their own.
 - One look ("Dutch Detail": green and black, Familjen Grotesk and Hedvig Letters), light and dark, chosen for everyone by an admin or per person if allowed.
-- English, German and Swedish UI, notifications and demo data. Adding a language is one dictionary file per area.
+- English and German UI, notifications and demo data; regions (currency, units, receipts) are separate, Sweden included. Adding a language is one dictionary file per area.
 - Regions (DE, AT, CH, GB, IE, US, SE, DK, NO, NL) set currency, number and date format, units shown in recipes, first day of the week and which receipts and stores to expect, independent of the UI language.
 
 ### Sign-in
@@ -191,8 +191,8 @@ Every variable the server reads. Only `BASE_URL` and the admin account matter fo
 | `DATA_DIR` | `./data` (`/data` in Docker) | Where the database, images, imports and backups are stored. |
 | `ADMIN_NAME` | `Admin` | First account, created when there are no users yet. |
 | `ADMIN_PASSWORD` | random | Password for that account. If empty, a random one is printed to the log once. |
-| `LANGUAGE` | `en` | UI language on first start: `en`, `de` or `sv`. Changeable under *Settings › Household*. |
-| `REGION` | from `LANGUAGE` | Where the household shops on first start: `DE`, `AT`, `CH`, `GB`, `IE`, `US`, `SE`, `DK`, `NO`, `NL`. Default: `de` → DE, `en` → GB, `sv` → SE. |
+| `LANGUAGE` | `en` | UI language on first start: `en` or `de`. Changeable under *Settings › Household*. |
+| `REGION` | from `LANGUAGE` | Where the household shops on first start: `DE`, `AT`, `CH`, `GB`, `IE`, `US`, `SE`, `DK`, `NO`, `NL`. Default: `de` → DE, `en` → GB. |
 | `BRAND` | none | No longer used (there is only one look since 2026-10-11). Old values are ignored. |
 | `SEED_DEMO` | `false` | `true` loads the demo household once, on a start when there are no products yet. Demo rows are marked and removable. |
 | `TZ` | `Europe/Berlin` | Time zone for best-before dates, the daily digest and the nightly backup. |
@@ -265,7 +265,7 @@ Features are grouped into areas (party, fresh, shop, labels, away, plan2, recipe
 - `server/routes/<area>.ts`: an Express router, mounted under `/api` in `server/index.ts`.
 - `server/lib/<area>.ts`: the logic, plus its tables through a named migration.
 - `server/mcp/tools-<area>.ts`: MCP tools, registered in `server/mcp/server.ts`.
-- `server/locales/de-<area>.ts`, `sv-<area>.ts` and `web/src/locales/de/<area>.ts`, `sv/<area>.ts`: translations keyed by the English source text.
+- `server/locales/de-<area>.ts` and `web/src/locales/de/<area>.ts`: translations keyed by the English source text.
 - `web/src/pages/…`: the screens.
 - `test/<area>.test.ts`.
 
@@ -277,7 +277,7 @@ More: [docs/architecture.md](docs/architecture.md). Design decisions and tokens:
 
 Issues and pull requests are welcome. Receipt parsers for more stores are especially useful: see `server/importers/` and the synthetic fixtures in `test/fixtures/`. If you send a real receipt, use *Help improve recognition* in the import review so it is anonymised first.
 
-For a pull request: add tests next to the area you change, keep migrations append-only, add the English string in code and its German and Swedish translations in the locale files, and run `npm test` and `npm run typecheck`.
+For a pull request: add tests next to the area you change, keep migrations append-only, add the English string in code and its German translation in the locale files, and run `npm test` and `npm run typecheck`.
 
 ToHuus Hub is written by its maintainer together with AI coding agents (Claude). Every feature lands with tests and is used daily by a real family. If something looks off, open an issue.
 

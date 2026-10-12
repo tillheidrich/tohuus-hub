@@ -729,7 +729,7 @@ export const SCHEMA_EXAMPLE = [
 
 const SHAPE = JSON.stringify(SCHEMA_EXAMPLE, null, 2);
 
-export const AI_PROMPTS: Record<'en' | 'de' | 'sv', string> = {
+export const AI_PROMPTS: Record<'en' | 'de', string> = {
   en: `Convert the recipe(s) I give you (text, photo, screenshot or cookbook page) into JSON for my recipe app.
 
 Rules:
@@ -754,18 +754,6 @@ ${SHAPE}
 - totalTime als ISO-8601-Dauer (PT1H15M). recipeYield als Text („4 Portionen“).
 - Thermomix-Rezepte: "thermomix": true und Zeit/Temperatur/Stufe im Schritttext lassen.
 - source_type: "ai"; external_id: null; image nur, wenn es eine echte Bild-URL gibt.`,
-  sv: `Gör om receptet eller recepten jag ger dig (text, foto, skärmbild eller kokbokssida) till JSON för min recept-app.
-
-Regler:
-- Svara ENDAST med en JSON-array, utan förklaringar och utan markdown-kodblock.
-- Ett objekt per recept, exakt i den här formen (schema.org Recipe):
-${SHAPE}
-- Behåll receptets språk. Hitta inte på något: utelämna fält (eller null) när källan inte säger det.
-- recipeIngredient: en rad per ingrediens som den står ("2 dl mjöl"). ingredients_structured: samma rader i samma ordning, uppdelade i amount (tal), unit, name och note; "section" för rubriker som "Till såsen".
-- recipeInstructions: ett HowToStep per steg. Använd HowToSection-objekt ({"@type":"HowToSection","name":"…","itemListElement":[…]}) när receptet har delar.
-- totalTime som ISO 8601-längd (PT1H15M). recipeYield som text ("4 portioner").
-- Thermomix-recept: "thermomix": true och behåll tid/temperatur/hastighet i stegtexten.
-- source_type: "ai"; external_id: null; image bara om det finns en riktig bild-URL.`,
 };
 
 /** Strip ```json fences and chatter around the JSON an assistant answered with. */

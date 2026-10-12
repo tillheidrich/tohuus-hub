@@ -121,7 +121,7 @@ Settings tabs: Household (Haushalt), My account (Mein Konto), Members (Mitgliede
 
 ## Treats, guests and party
 
-Treats (DE „Verwöhnen“, SV „Ompyssling“) is about doing each other a good turn. One page, three modes: *For me* (everyday, the default for couples, families and flat shares), *Guests* and *Party*. A household that lives alone only sees Guests and Party.
+Treats (DE „Verwöhnen“) is about doing each other a good turn. One page, three modes: *For me* (everyday, the default for couples, families and flat shares), *Guests* and *Party*. A household that lives alone only sees Guests and Party.
 
 - **Ask for a little something**: someone stuck with bedtime, a sick partner, someone working late asks for "vanilla ice cream, please" or "tea with honey" from the sofa or from bed. Big tiles: something sweet, something to drink, something to nibble, from the fridge (only from real stock in a place of kind fridge), everything that's here, or a free wish. A note ("How would you like it?") and an optional "Who brings it?" (one person or whoever can). *Treats › For me (Verwöhnen › Für mich)*
 - **One-tap answers**: the others get a push (or Telegram message) with "I'll bring it" / "Can't right now"; declining can carry a short reason ("In a few minutes", "It's all gone", "I'm not home", "My hands are full"). Chosen person: only their phone rings. The asker sees warm status lines: "Coming right up – Lea is bringing it", "Brought by Lea", "Not right now – in a few minutes". *Treats › For me › For you (Für dich)*
@@ -165,7 +165,7 @@ Treats (DE „Verwöhnen“, SV „Ompyssling“) is about doing each other a go
 
 - **Household look**: light, dark or like the device, and whether members may choose their own. *Settings › Household › Appearance (Einstellungen › Haushalt › Darstellung)*. Personal choice: *Settings › My account › Appearance*.
 - **Brand**: ToHuus Hub or Fredirando. `BRAND` in the environment sets the default; an admin's explicit choice in *Settings › Household › Brand (Marke)* wins over it (stored as `brand.choice`; choosing the default again removes it).
-- **Language**: English, Deutsch, Svenska. *Settings › Household › Language (Sprache)*
+- **Language**: English, Deutsch. *Settings › Household › Language (Sprache)*
 - **Region**: currency, number and date format, units shown in recipes, first day of the week, Open Food Facts country, store presets. *Settings › Household › Region*
 
 ## Sign-in and account
