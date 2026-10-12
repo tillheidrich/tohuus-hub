@@ -102,12 +102,12 @@ function CookIdeas() {
   return (
     <section className="ideas" aria-labelledby="h-ideas">
       <h2 id="h-ideas">{t('You can cook this today')}</h2>
-      <div className="idea-strip">
+      <div className="cidea-strip">
         {q.data.slice(0, 8).map((i) => {
           const miss = (i.missing ?? []).map((m) => (typeof m === 'string' ? m : m.name));
           return (
-            <article key={i.recipeId} className="idea">
-              <button className="idea-img" onClick={() => nav(`/rezepte/${i.recipeId}`)} aria-label={i.title}>
+            <article key={i.recipeId} className="cidea">
+              <button className="cidea-img" onClick={() => nav(`/rezepte/${i.recipeId}`)} aria-label={i.title}>
                 {i.image ? <img src={i.image} alt="" loading="lazy" /> : <ChefHat size={30} aria-hidden="true" />}
               </button>
               <b>{i.title}</b>

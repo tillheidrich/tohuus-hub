@@ -10,9 +10,16 @@ export function originLabel(origin: string | null | undefined, by?: string | nul
   switch (origin) {
     case 'rhythm':
     case 'remembered':
+      return t('ToHuus remembered');
     case 'auto':
     case 'stock':
-      return t('ToHuus remembered');
+      return t('ran low');
+    case 'used-up':
+      return t('used up');
+    case 'guest':
+      return by ? t('wish from {name}', { name: by }) : t('Guest');
+    case 'share':
+      return t('shared');
     case 'receipt':
     case 'receipts':
     case 'import':

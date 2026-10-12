@@ -107,7 +107,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
       <header className="page-head">
         <div>
           <div className="eyebrow">{inHouse === 1 ? t('1 product at home') : t('{n} products at home', { n: inHouse })}</div>
-          <h1>{t('Stock')}</h1>
+          <h1>{t('Pantry')}</h1>
         </div>
         <div className="actions">
           <QuickCheckButton locationId={ort} />

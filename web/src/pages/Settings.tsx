@@ -26,15 +26,18 @@ import { MenuSettingsCard } from './Menu';
 import { HouseholdAppearanceCard, MyAppearanceCard } from './AppearanceSettings';
 import { CategorySettings, HouseholdFormCard, PlacesSettings } from './PlacesSettings';
 import { useHousehold } from '../household';
+import { useInstance } from '../data';
+import { BillingCard, CloudAccountCard } from './Billing';
 
-type Tab = 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
+type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
 export function Settings({ me }: { me: Me }) {
-  const TABS: Tab[] = ['home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'displays', 'print', 'recipes', 'data'];
+  const cloud = useInstance().data?.mode === 'cloud';
+  const TABS: Tab[] = ['plan', 'home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'displays', 'print', 'recipes', 'data'];
   const tabFrom = (search: string): Tab => {
     const q = new URLSearchParams(search).get('tab') as Tab | null;
     if (me.actor.houseGuest) return 'account';
-    return q && TABS.includes(q) ? q : 'home';
+    return q && TABS.includes(q) && (q !== 'plan' || cloud) ? q : 'home';
   };
   const loc = useLocation();
   const [tab, setTab] = useState<Tab>(() => tabFrom(loc.search));
@@ -64,6 +67,7 @@ export function Settings({ me }: { me: Me }) {
       <div className="tabs-inline">
         {(
           [
+            ...(cloud ? ([['plan', t('Plan & storage')]] as [Tab, string][]) : []),
             ['home', t('Household')],
             ['account', t('My account')],
             ['members', t('Members')],
@@ -85,6 +89,8 @@ export function Settings({ me }: { me: Me }) {
           </button>
         ))}
       </div>
+      {tab === 'plan' && cloud && <BillingCard />}
+      {tab === 'plan' && cloud && <CloudAccountCard />}
       {tab === 'home' && <Household me={me} admin={admin} />}
       {tab === 'home' && <AwayEntryCard />}
       {tab === 'home' && <MenuSettingsCard />}

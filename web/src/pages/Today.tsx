@@ -171,7 +171,7 @@ function EntryLevels({ legacy }: { legacy?: boolean }) {
       <p className="meta">
         {legacy
           ? t('Nothing due yet. The more receipts and ticked-off shopping ToHuus sees, the better it knows what you run out of.')
-          : t('Nothing due right now. ToHuus merkt sich, how often you buy things – from receipts and from ticking off the list.')}
+          : t('Nothing due right now. ToHuus remembers how often you buy things – from receipts and from ticking off the list.')}
       </p>
       <div className="entry-grid">
         <button className="entry-tile" onClick={() => nav('/import?mode=file')}>

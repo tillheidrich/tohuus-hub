@@ -189,7 +189,7 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
         <div className="assist-log" ref={list} aria-live="polite">
           {msgs.length === 0 && (
             <div className="assist-hello">
-              <p>{t('Tell me what’s missing, what you’d like to cook or what you want to know about your shopping. ToHuus merkt sich the rest.')}</p>
+              <p>{t('Tell me what’s missing, what you’d like to cook or what you want to know about your shopping. ToHuus remembers the rest.')}</p>
             </div>
           )}
           {msgs.map((m) => (
@@ -258,7 +258,7 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
                   className="input"
                   rows={1}
                   value={text}
-                  placeholder={t('e.g. “Milk is out, and we need something for Sunday”')}
+                  placeholder={t('e.g. “Milk is out”')}
                   aria-label={t('Message')}
                   onChange={(e) => setText(e.target.value)}
                   onKeyDown={(e) => {

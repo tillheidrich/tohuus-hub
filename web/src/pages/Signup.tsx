@@ -64,7 +64,7 @@ export function Signup() {
         <div className="login-hero">
           <p className="eyebrow label-sq">ToHuus Cloud</p>
           <h1 className="login-h1">
-            {t('ToHuus merkt sich,')}
+            {t('ToHuus remembers')}
             <br />
             <span className="hl">{t('what’s missing at home.')}</span>
           </h1>

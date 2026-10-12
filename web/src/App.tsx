@@ -350,7 +350,7 @@ function AddSheet({ open, onClose, onNewProduct, onPutAway }: { open: boolean; o
         <button className="action" onClick={go(() => nav('/import?mode=file'))}>
           <span className="ic"><FileArrowUp size={22} /></span>
           <b>{t('Share a receipt')}</b>
-          <span>{t('eBon, REWE PDF or a delivery notice – ToHuus merkt sich, what you bought.')}</span>
+          <span>{t('eBon, REWE PDF or a delivery notice – ToHuus remembers what you bought.')}</span>
         </button>
         <button className="action" onClick={go(() => nav('/import?mode=photo'))}>
           <span className="ic"><Camera size={22} /></span>
