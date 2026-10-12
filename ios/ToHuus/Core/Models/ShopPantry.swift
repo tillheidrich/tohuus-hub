@@ -170,6 +170,8 @@ struct ProductExtra: Decodable, Sendable {
     var kind: String?
     var isStaple: Bool?
     var dateKind: String?
+    /// "Open Food Facts · 4000… · CC BY-SA" when the picture came from there
+    var imageCredit: String?
 
     /// products.buy_at arrives as raw JSON text (web BuyAt.tsx parseBuyAt)
     var stores: [String] {
@@ -357,4 +359,20 @@ enum LabelCode {
         let up = code.uppercased()
         return up.count == 8 && up.allSatisfy { allowed.contains($0) }
     }
+}
+
+// MARK: - product images
+
+/// GET /api/lookup/search – one Open Food Facts / Open Products Facts product (server/lib/off.ts OffProduct)
+struct OffHit: Decodable, Sendable, Identifiable, Hashable {
+    var code: String
+    var name: String
+    var brand: String?
+    var quantity: String?
+    var image: String?
+    var imageSmall: String?
+    /// the server's own similarity (about 0…1.2); below 0.4 it is mostly something else
+    var score: Double?
+    var id: String { code }
+    var fits: Bool { (score ?? 1) >= 0.4 && (imageSmall ?? image) != nil }
 }

@@ -197,4 +197,26 @@ extension APIClient {
         let safe = code.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? code
         return try await get("api/qr/\(safe)")
     }
+
+    // MARK: product images (web Product.tsx ImageSheet)
+
+    /// GET /api/lookup/search?q= → Open Food Facts / Open Products Facts hits (name, brand, image, imageSmall)
+    func searchOFF(_ q: String) async throws -> [OffHit] {
+        try await get("api/lookup/search", query: [URLQueryItem(name: "q", value: q)], as: Lossy<OffHit>.self).wrappedValue
+    }
+
+    /// POST /api/products/:id/image with `url` (+ `code`) – the server fetches the picture and keeps the OFF credit
+    func setProductImage(_ id: Int, url: String, code: String?) async throws {
+        var mp = Multipart()
+        mp.addField("url", url)
+        if let code, !code.isEmpty { mp.addField("code", code) }
+        _ = try await upload("api/products/\(id)/image", multipart: mp, as: Ignored.self)
+    }
+
+    /// POST /api/products (new product by hand or from a scan); `image_url` from Open Food Facts, else the server
+    /// looks for a picture itself. Returns the new id.
+    func createProductFull(_ body: [String: Any]) async throws -> Int? {
+        let r: JSONValue = try await send("POST", "api/products", json: body)
+        return r["id"]?.int
+    }
 }

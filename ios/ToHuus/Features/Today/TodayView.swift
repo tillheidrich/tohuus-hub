@@ -158,6 +158,7 @@ struct TodayView: View {
                 .font(.footnote).foregroundStyle(Theme.ink2)
             ForEach(showAllDue ? items : Array(items.prefix(3))) { item in
                 HStack(spacing: Theme.Space.s3) {
+                    ProductThumb(path: item.image, api: store.api, size: 40)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(item.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
                         if !item.detail.isEmpty { Text(item.detail).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1) }

@@ -13,6 +13,7 @@ struct ProductDetailView: View {
     @State private var toast: String?
     @State private var prices: [ShopPrice] = []
     @State private var showEdit = false
+    @State private var showImage = false
     @State private var showBatch = false
     @State private var showBuyAt = false
     @State private var dateEntry: FreshProduct.Entry?
@@ -53,6 +54,12 @@ struct ProductDetailView: View {
                 }
             }
         }
+        .sheet(isPresented: $showImage) {
+            if let p = product {
+                ProductImageSheet(productId: p.id, name: p.name, brand: p.brand, currentPath: p.imagePath, credit: extra.imageCredit,
+                                  store: store) { Task { await load() } }
+            }
+        }
         .sheet(isPresented: $showBatch) {
             if let p = product {
                 AddBatchSheet(product: p, places: places, store: store) { msg in
@@ -69,6 +76,9 @@ struct ProductDetailView: View {
         }
         .onAppear {
             #if DEBUG
+            if UserDefaults.standard.bool(forKey: "debugProductImage") {
+                Task { try? await Task.sleep(nanoseconds: 1_200_000_000); showImage = true }
+            }
             if UserDefaults.standard.bool(forKey: "debugProductEdit") {
                 Task { try? await Task.sleep(nanoseconds: 1_200_000_000); showEdit = true }
             }
@@ -128,9 +138,20 @@ struct ProductDetailView: View {
 
     private func header(_ p: ProductInfo) -> some View {
         HStack(spacing: Theme.Space.s4) {
-            RemoteImage(url: store.api.imageURL(p.imagePath), api: store.api, placeholder: "shippingbox")
-                .frame(width: 84, height: 84)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
+            Button { showImage = true } label: {
+                RemoteImage(url: store.api.imageURL(p.imagePath), api: store.api, placeholder: "camera")
+                    .frame(width: 84, height: 84)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                    .overlay(alignment: .bottomTrailing) {
+                        Image(systemName: p.imagePath == nil ? "plus" : "camera.fill")
+                            .font(.caption2.weight(.bold)).foregroundStyle(Theme.onPrimary)
+                            .frame(width: 24, height: 24).background(Theme.primary, in: Circle())
+                            .overlay(Circle().stroke(Theme.canvas, lineWidth: 2))
+                            .offset(x: 4, y: 4)
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(p.imagePath == nil ? L("Add a picture") : L("Change the picture"))
             VStack(alignment: .leading, spacing: 4) {
                 Text(p.name).font(Theme.title(Theme.FontSize.h2))
                 let sub = [p.brand, categories.first { $0.id == p.categoryId }?.name].compactMap { $0 }.joined(separator: " · ")

@@ -310,6 +310,12 @@ struct ShoppingView: View {
 
     // MARK: rows
 
+    /// picture next to the row: bigger in the shop, smaller in the compact list, never above 56 pt
+    private var thumbSize: CGFloat {
+        let base: CGFloat = shopMode ? 44 : (density == .compact ? 28 : 36)
+        return min(56, base * fontScale)
+    }
+
     @ViewBuilder
     private func row(_ item: ShopItem) -> some View {
         let checked = item.isChecked
@@ -321,6 +327,9 @@ struct ShoppingView: View {
                 Image(systemName: checked ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: (shopMode ? 30 : 24) * fontScale))
                     .foregroundStyle(checked ? Theme.primary : Theme.lineStrong)
+                // own photo of the row first, else the product picture (decision 1.0: rows show it when there is one)
+                ProductThumb(path: item.photoPath ?? item.imagePath, api: store.api, size: thumbSize)
+                    .opacity(checked ? 0.5 : 1)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         if let q = item.qtyLabel { Text(q).foregroundStyle(Theme.primaryText).fontWeight(.semibold) }
@@ -340,7 +349,7 @@ struct ShoppingView: View {
                         Label(hint, systemImage: item.sizeHint != nil ? "lightbulb" : "eurosign").font(.caption).foregroundStyle(Theme.ink2)
                     }
                     if let share = item.share, !checked {
-                        Label(share.subline, systemImage: share.icon).labelStyle(ShopTightLabelStyle()).font(.caption).foregroundStyle(Theme.ink2).lineLimit(1)
+                        Label(share.subline, systemImage: share.icon).labelStyle(ShopTightLabelStyle()).font(.caption).foregroundStyle(Theme.ink2).lineLimit(2)
                     }
                     if !checked, let claim = item.claim, (me?.claimsOn ?? true) {
                         Label(claimLine(claim), systemImage: "hand.raised.fill").labelStyle(ShopTightLabelStyle())
@@ -351,11 +360,6 @@ struct ShoppingView: View {
                     }
                 }
                 Spacer(minLength: 0)
-                if let path = item.photoPath ?? item.imagePath, !shopMode || item.photoPath != nil, density != .compact {
-                    RemoteImage(url: store.api.imageURL(path), api: store.api)
-                        .frame(width: 36 * fontScale, height: 36 * fontScale)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
-                }
             }
             .padding(.vertical, shopMode ? 10 : density.verticalPadding)
             .contentShape(Rectangle())
@@ -607,9 +611,13 @@ struct ShoppingView: View {
                                 await store.refreshList()
                             }
                         } label: {
-                            Label(s.name, systemImage: "plus")
+                            HStack(spacing: 6) {
+                                ProductThumb(path: s.image, api: store.api, size: 26)
+                                Image(systemName: "plus").imageScale(.small)
+                                Text(s.name).lineLimit(1)
+                            }
                                 .font(.subheadline)
-                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                .padding(.leading, s.image == nil ? 12 : 5).padding(.trailing, 12).padding(.vertical, s.image == nil ? 8 : 5)
                                 .background(Theme.primarySoft, in: Capsule())
                                 .foregroundStyle(Theme.primaryText)
                         }

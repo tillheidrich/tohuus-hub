@@ -222,5 +222,21 @@
   "“%@” is planned for tomorrow.": "„%@“ ist für morgen eingeplant.",
   "“%@” is used up and on the list.": "„%@“ ist aufgebraucht und steht auf der Liste.",
   "“%@” is used up.": "„%@“ ist aufgebraucht.",
-  "%d of %d chosen": "%d von %d ausgewählt"
+  "%d of %d chosen": "%d von %d ausgewählt",
+  "Add a picture": "Bild hinzufügen",
+  "Another photo": "Anderes Foto",
+  "Change the picture": "Bild ändern",
+  "Choose from Photos": "Aus Fotos wählen",
+  "Name it the way you say it at home. ToHuus finds a picture by itself if you don't choose one.": "Nenn es so, wie ihr es zu Hause sagt. Wählst du kein Bild, sucht ToHuus selbst eins.",
+  "No pictures found. Try fewer words or the brand.": "Keine Bilder gefunden. Versuch es mit weniger Wörtern oder der Marke.",
+  "Or a picture from Open Food Facts": "Oder ein Bild aus Open Food Facts",
+  "Picture from Open Food Facts?": "Bild aus Open Food Facts?",
+  "Pictures from Open Food Facts, free under CC BY-SA. ToHuus notes where the picture comes from.": "Bilder aus Open Food Facts, frei unter CC BY-SA. ToHuus merkt sich, woher das Bild kommt.",
+  "Product picture": "Produktbild",
+  "Remove the picture": "Bild entfernen",
+  "Search Open Food Facts": "In Open Food Facts suchen",
+  "Take a photo": "Foto aufnehmen",
+  "Take your own photo": "Eigenes Foto",
+  "Tap one to use its picture. Free under CC BY-SA.": "Tipp eins an, um sein Bild zu nehmen. Frei unter CC BY-SA.",
+  "Use the picture of %@": "Bild von %@ nehmen"
 }

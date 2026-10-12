@@ -66,6 +66,7 @@ struct PantryView: View {
     @AppStorage("pantry.group") private var groupRaw = PantryGrouping.none.rawValue
     @State private var category: Int?
     @State private var showCheck = false
+    @State private var showNew = false
     @State private var showFind = false
     @State private var showLeftovers = false
     @State private var showLabelScan = false
@@ -125,11 +126,28 @@ struct PantryView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        showNew = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel(L("New product"))
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
                         showScanner = true
                     } label: {
                         Image(systemName: "barcode.viewfinder")
                     }
                     .accessibilityLabel(L("Scan barcode"))
+                }
+            }
+            .sheet(isPresented: $showNew) {
+                NewProductSheet(code: nil, lookup: nil, places: model.places, categories: model.categories, store: store) { newId in
+                    showNew = false
+                    Task {
+                        await model.load(store.api)
+                        if let newId { open(newId) }
+                    }
                 }
             }
             .sheet(isPresented: $showCheck) { QuickCheckView(store: store) }
@@ -145,6 +163,7 @@ struct PantryView: View {
                 if d.bool(forKey: "debugCheck") { showCheck = true }
                 if d.bool(forKey: "debugFind") { showFind = true }
                 if d.bool(forKey: "debugLeftovers") { showLeftovers = true }
+                if d.bool(forKey: "debugNewProduct") { showNew = true }
                 if let code = d.string(forKey: "debugLabel") { scannedLabel = ScannedLabel(raw: code) }
                 if d.integer(forKey: "debugProduct") > 0 {
                     try? await Task.sleep(nanoseconds: 600_000_000)
@@ -158,7 +177,7 @@ struct PantryView: View {
                 }
             }
             .sheet(item: Binding(get: { scanned.map { ScanResult(lookup: $0, code: scannedCode) } }, set: { if $0 == nil { scanned = nil } })) { r in
-                NewProductSheet(result: r, store: store) { newId in
+                NewProductSheet(code: r.code, lookup: r.lookup, places: model.places, categories: model.categories, store: store) { newId in
                     scanned = nil
                     Task {
                         await model.load(store.api)
@@ -326,63 +345,6 @@ struct ProductRow: View {
             if let s = product.statusLabel { StatusPill(text: s, status: product.status) }
         }
         .padding(.vertical, 2)
-    }
-}
-
-/// A scanned code that isn't in the household yet: create it (data from Open Food Facts when found).
-struct NewProductSheet: View {
-    let result: ScanResult
-    let store: ServerStore
-    let done: (Int?) -> Void
-    @State private var name = ""
-    @State private var brand = ""
-    @State private var qty = 1
-    @State private var busy = false
-    @State private var error: String?
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    if let img = result.lookup.remoteImage {
-                        RemoteImage(url: URL(string: img), api: nil).frame(height: 140).clipShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
-                    }
-                    TextField(L("Name"), text: $name)
-                    TextField(L("Brand"), text: $brand)
-                    Stepper(LF("%d at home", qty), value: $qty, in: 0...99)
-                } footer: {
-                    Text(result.lookup.remoteName == nil ? L("This code is unknown. Give it a name and ToHuus will recognise it next time.")
-                         : L("Found in Open Food Facts."))
-                }
-                if let error { Text(error).foregroundStyle(Theme.empty) }
-            }
-            .navigationTitle(L("New product"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { done(nil) } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(L("Save")) { Task { await save() } }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || busy)
-                }
-            }
-            .onAppear {
-                name = result.lookup.remoteName ?? ""
-                brand = result.lookup.remoteBrand ?? ""
-            }
-        }
-        .presentationDetents([.medium, .large])
-    }
-
-    private func save() async {
-        busy = true
-        defer { busy = false }
-        do {
-            let id = try await store.api.createProduct(name: name, brand: brand.isEmpty ? nil : brand, code: result.code,
-                                                      imageURL: result.lookup.remoteImage, initialQty: qty > 0 ? Double(qty) : nil)
-            store.touch("products", "stock")
-            done(id)
-        } catch {
-            self.error = APIError.from(error).localizedDescription
-        }
     }
 }
 

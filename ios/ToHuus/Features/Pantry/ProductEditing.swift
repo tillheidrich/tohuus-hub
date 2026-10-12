@@ -20,8 +20,8 @@ struct ProductEditSheet: View {
     @State private var minQty = 0
     @State private var unit = ""
     @State private var notes = ""
-    @State private var photo: PhotosPickerItem?
-    @State private var newImage: UIImage?
+    @State private var imagePath: String?
+    @State private var showImage = false
     @State private var busy = false
     @State private var error: String?
 
@@ -31,19 +31,15 @@ struct ProductEditSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    HStack(spacing: Theme.Space.s3) {
-                        Group {
-                            if let newImage {
-                                Image(uiImage: newImage).resizable().scaledToFill()
-                            } else {
-                                RemoteImage(url: store.api.imageURL(product.imagePath), api: store.api, placeholder: "shippingbox")
-                            }
+                    Button { showImage = true } label: {
+                        HStack(spacing: Theme.Space.s3) {
+                            RemoteImage(url: store.api.imageURL(imagePath), api: store.api, placeholder: "shippingbox")
+                                .frame(width: 64, height: 64)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
+                            Label(imagePath == nil ? L("Add a picture") : L("Change the picture"), systemImage: "camera")
+                            Spacer(minLength: 0)
                         }
-                        .frame(width: 64, height: 64)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
-                        PhotosPicker(selection: $photo, matching: .images) {
-                            Label(product.imagePath == nil && newImage == nil ? L("Add a photo") : L("Change the photo"), systemImage: "camera")
-                        }
+                        .contentShape(Rectangle())
                     }
                     TextField(L("Name"), text: $name)
                     TextField(L("Brand"), text: $brand)
@@ -102,10 +98,13 @@ struct ProductEditSheet: View {
                 }
             }
             .onAppear(perform: fill)
-            .onChange(of: photo) { _, p in
-                guard let p else { return }
-                Task {
-                    if let d = try? await p.loadTransferable(type: Data.self), let img = UIImage(data: d) { newImage = img }
+            .sheet(isPresented: $showImage) {
+                ProductImageSheet(productId: product.id, name: product.name, brand: product.brand, currentPath: imagePath,
+                                  credit: extra.imageCredit, store: store) {
+                    Task {
+                        if let (p, _) = try? await store.api.productFull(product.id) { imagePath = p.imagePath }
+                        saved()
+                    }
                 }
             }
         }
@@ -121,6 +120,7 @@ struct ProductEditSheet: View {
 
     private func fill() {
         name = product.name
+        imagePath = product.imagePath
         brand = product.brand ?? ""
         categoryId = product.categoryId
         placeId = product.defaultLocationId
@@ -150,9 +150,6 @@ struct ProductEditSheet: View {
             if !f.isEmpty {
                 let body = try JSONSerialization.data(withJSONObject: f)
                 try await store.api.patchProduct(product.id, body: body)
-            }
-            if let img = newImage, let jpeg = img.resizedForUpload().jpegData(compressionQuality: 0.8) {
-                try await store.api.uploadProductImage(product.id, jpeg: jpeg)
             }
             Haptics.success()
             store.touch("products", "stock")

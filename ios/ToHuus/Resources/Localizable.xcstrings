@@ -1140,6 +1140,23 @@
         }
       }
     },
+    "Add a picture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a picture"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild hinzufügen"
+          }
+        }
+      }
+    },
     "Add a receipt photo or forward your e-receipts – ToHuus does the rest.": {
       "extractionState": "manual",
       "localizations": {
@@ -1616,6 +1633,23 @@
         }
       }
     },
+    "Another photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another photo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anderes Foto"
+          }
+        }
+      }
+    },
     "Another shop": {
       "extractionState": "manual",
       "localizations": {
@@ -2058,19 +2092,19 @@
         }
       }
     },
-    "Change the photo": {
+    "Change the picture": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Change the photo"
+            "value": "Change the picture"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Foto ändern"
+            "value": "Bild ändern"
           }
         }
       }
@@ -2224,6 +2258,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wähl links ein Rezept."
+          }
+        }
+      }
+    },
+    "Choose from Photos": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose from Photos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Fotos wählen"
           }
         }
       }
@@ -5237,6 +5288,23 @@
         }
       }
     },
+    "Name it the way you say it at home. ToHuus finds a picture by itself if you don't choose one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name it the way you say it at home. ToHuus finds a picture by itself if you don't choose one."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenn es so, wie ihr es zu Hause sagt. Wählst du kein Bild, sucht ToHuus selbst eins."
+          }
+        }
+      }
+    },
     "Name of your household, e.g. Familie Berg": {
       "extractionState": "manual",
       "localizations": {
@@ -5675,6 +5743,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kein bestimmter Laden"
+          }
+        }
+      }
+    },
+    "No pictures found. Try fewer words or the brand.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pictures found. Try fewer words or the brand."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Bilder gefunden. Versuch es mit weniger Wörtern oder der Marke."
           }
         }
       }
@@ -6699,6 +6784,23 @@
         }
       }
     },
+    "Or a picture from Open Food Facts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or a picture from Open Food Facts"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oder ein Bild aus Open Food Facts"
+          }
+        }
+      }
+    },
     "Or open the kitchen mode: big week plan, recipe step by step, list to tick.": {
       "extractionState": "manual",
       "localizations": {
@@ -7103,6 +7205,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zettel abfotografieren"
+          }
+        }
+      }
+    },
+    "Picture from Open Food Facts?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picture from Open Food Facts?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild aus Open Food Facts?"
+          }
+        }
+      }
+    },
+    "Pictures from Open Food Facts, free under CC BY-SA. ToHuus notes where the picture comes from.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pictures from Open Food Facts, free under CC BY-SA. ToHuus notes where the picture comes from."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilder aus Open Food Facts, frei unter CC BY-SA. ToHuus merkt sich, woher das Bild kommt."
           }
         }
       }
@@ -7562,6 +7698,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wohl fällig: %@"
+          }
+        }
+      }
+    },
+    "Product picture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product picture"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Produktbild"
           }
         }
       }
@@ -8178,6 +8331,23 @@
         }
       }
     },
+    "Remove the picture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the picture"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild entfernen"
+          }
+        }
+      }
+    },
     "Remove “%@”?": {
       "extractionState": "manual",
       "localizations": {
@@ -8531,6 +8701,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suchen"
+          }
+        }
+      }
+    },
+    "Search Open Food Facts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Open Food Facts"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Open Food Facts suchen"
           }
         }
       }
@@ -9606,6 +9793,23 @@
         }
       }
     },
+    "Take a photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto aufnehmen"
+          }
+        }
+      }
+    },
     "Take a photo of the list": {
       "extractionState": "manual",
       "localizations": {
@@ -9636,6 +9840,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Übernehmen"
+          }
+        }
+      }
+    },
+    "Take your own photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take your own photo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigenes Foto"
           }
         }
       }
@@ -9721,6 +9942,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tipp auf einen Laden, um seine Gänge zu sortieren. Im Laden folgt die Liste dieser Reihenfolge."
+          }
+        }
+      }
+    },
+    "Tap one to use its picture. Free under CC BY-SA.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap one to use its picture. Free under CC BY-SA."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipp eins an, um sein Bild zu nehmen. Frei unter CC BY-SA."
           }
         }
       }
@@ -10979,6 +11217,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bald verbrauchen"
+          }
+        }
+      }
+    },
+    "Use the picture of %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the picture of %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild von %@ nehmen"
           }
         }
       }

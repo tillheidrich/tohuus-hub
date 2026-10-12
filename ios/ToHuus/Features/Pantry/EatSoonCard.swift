@@ -30,20 +30,22 @@ struct EatSoonCard: View {
 
     private func row(_ i: StillHaveItem) -> some View {
         HStack(spacing: Theme.Space.s3) {
-            VStack(alignment: .leading, spacing: 2) {
+            ProductThumb(path: i.image, api: store.api, size: 40)
+            // date under the name: long German names and large text never push it out of the card
+            VStack(alignment: .leading, spacing: 3) {
                 Text(i.name).font(.subheadline).foregroundStyle(Theme.ink).lineLimit(2)
+                if let label = i.label ?? ServerDate.shortDay(i.date) {
+                    if i.kind == "probably" {
+                        Text(label).font(.caption).foregroundStyle(Theme.ink3)
+                    } else {
+                        StatusPill(text: label, status: (i.daysLeft ?? 1) < 0 ? "expired" : "expiring")
+                    }
+                }
                 if confirmed.contains(i.id) {
                     Label(L("still there"), systemImage: "checkmark").font(.caption).foregroundStyle(Theme.primaryText)
                 }
             }
             Spacer(minLength: 0)
-            if let label = i.label ?? ServerDate.shortDay(i.date) {
-                if i.kind == "probably" {
-                    Text(label).font(.caption).foregroundStyle(Theme.ink3)
-                } else {
-                    StatusPill(text: label, status: (i.daysLeft ?? 1) < 0 ? "expired" : "expiring").fixedSize()
-                }
-            }
             if busy.contains(i.id) {
                 ProgressView().frame(width: 44, height: 44)
             } else {
