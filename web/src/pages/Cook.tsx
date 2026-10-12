@@ -1,4 +1,4 @@
-import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Plus, TextAa } from '@phosphor-icons/react';
+import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Package, Plus, TextAa } from '@phosphor-icons/react';
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
@@ -6,12 +6,14 @@ import { useQuery } from '@tanstack/react-query';
 import { api, invalidate, post, useApi } from '../api';
 import { getOr, imgSrc } from '../data';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
-import { t } from '../i18n';
+import { lang, t } from '../i18n';
 import { WeekPlan } from './Week';
 import { SwipeDeck } from './SwipeDeck';
 import { VotesCard } from './Plan2';
 import { WhatToEatPanel } from './WhatToEat';
 import { SwapRulesCard } from './RecipeVariant';
+import { RecipePackageSheet } from './RecipePackage';
+import { HowTo } from '../help';
 
 type View = 'ideas' | 'week' | 'recipes';
 const VIEW_KEY = 'sw.kitchen.view';
@@ -97,7 +99,8 @@ function CookIdeas() {
   if (!q.data?.length) return null;
   const addMissing = async (i: Idea) => {
     const miss = (i.missing ?? []).map((m) => ({ name: missName(m), productId: typeof m === 'string' ? null : (m.productId ?? null) }));
-    await post('/shop/quick-add', { items: miss.map((m) => ({ name: m.name, product_id: m.productId ?? null })) });
+    // through the recipe: every row keeps its line as note ("für Curry: 2 Hähnchenbrustfilets")
+    await post(`/recipes/${i.recipeId}/shopping`, { only: miss.map((m) => m.name) });
     setAdded(new Set(added).add(i.recipeId));
     invalidate('shopping', 'today');
     toast({ text: miss.length === 1 ? t('{name} is on the shopping list', { name: miss[0].name }) : t('{n} things are on the shopping list', { n: miss.length }) });
@@ -189,26 +192,61 @@ function WeekView() {
   );
 }
 
+/** "mit: Hähnchen, Paprika" / "with: chicken" → ingredient search (no stock keeping needed). */
+const WITH_RE = /^\s*(mit|with)\s*:\s*(.+)$/i;
+export const ingredientTerms = (q: string) => {
+  const m = q.match(WITH_RE);
+  return m ? m[2].split(/[,;]| und | and /i).map((x) => x.trim()).filter(Boolean).slice(0, 6) : null;
+};
+
+interface IngredientHit {
+  id: number;
+  matched: string[];
+  missing: string[];
+}
+
 function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean } }) {
   const [q, setQ] = useState('');
+  const [pkgOpen, setPkgOpen] = useState(false);
   const nav = useNavigate();
+  const terms = ingredientTerms(q);
+  const termKey = terms?.join(',') ?? '';
+  const hits = useQuery<IngredientHit[]>({
+    queryKey: ['recipes', 'with', termKey],
+    queryFn: () => api<IngredientHit[]>(`/recipes/search?with=${encodeURIComponent(termKey)}`),
+    enabled: Boolean(termKey),
+  });
   const list = useMemo(() => {
+    const all = recipes.data ?? [];
+    if (terms) {
+      const byId = new Map(all.map((r) => [r.id, r]));
+      return (hits.data ?? []).map((h) => ({ ...byId.get(h.id), hit: h })).filter((r) => r.id);
+    }
     const n = q.toLowerCase().trim();
-    return (recipes.data ?? []).filter((r) => !n || `${r.title} ${r.tags.join(' ')}`.toLowerCase().includes(n));
-  }, [recipes.data, q]);
+    return all.filter((r) => !n || `${r.title} ${r.tags.join(' ')}`.toLowerCase().includes(n));
+  }, [recipes.data, q, hits.data, termKey]);
   return (
     <section>
-      <div className="searchbar" style={{ marginBottom: 12 }}>
+      <div className="searchbar" style={{ marginBottom: 8 }}>
         <MagnifyingGlass size={18} />
-        <input className="input" placeholder={t('Search recipes')} aria-label={t('Search recipes')} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input" placeholder={t('Search recipes – or “with: chicken, peppers”')} aria-label={t('Search recipes')} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      {recipes.isLoading ? (
+      <div className="row between wrap" style={{ gap: 8, marginBottom: 12 }}>
+        <button className="linkish" onClick={() => setQ(lang() === 'de' ? 'mit: ' : 'with: ')}>
+          {t('Search by ingredients')}
+        </button>
+        <button className="btn sm" onClick={() => setPkgOpen(true)}>
+          <Package size={16} /> {t('Upload recipe package')}
+        </button>
+      </div>
+      {terms && <p className="small muted" style={{ margin: '0 0 10px' }}>{t('Recipes with {list} – most matches first. Nothing needs to be in stock for this.', { list: terms.join(', ') })}</p>}
+      {recipes.isLoading || (terms && hits.isLoading) ? (
         <Skeleton n={2} h={180} />
       ) : list.length === 0 ? (
         <div className="card pad small muted">{q ? t('No recipe matches “{q}”.', { q }) : t('Your recipes will show up here.')}</div>
       ) : (
         <div className="rgrid">
-          {list.map((r) => (
+          {list.map((r: any) => (
             <button key={r.id} className="rcard" onClick={() => nav(`/rezepte/${r.id}`)}>
               <div className="img">
                 {r.image_path ? <img src={r.image_path} alt="" loading="lazy" /> : <ChefHat size={30} />}
@@ -218,7 +256,11 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
               <div className="body">
                 <b>{r.title}</b>
                 <span className="small muted">
-                  {[r.time_min ? t('{n} min', { n: r.time_min }) : null, r.cook_count ? t('cooked {n}×', { n: r.cook_count }) : t('never cooked')].filter(Boolean).join(' · ')}
+                  {r.hit
+                    ? r.hit.missing.length
+                      ? t('with {have} · without {missing}', { have: r.hit.matched.join(', '), missing: r.hit.missing.join(', ') })
+                      : t('with {have}', { have: r.hit.matched.join(', ') })
+                    : [r.time_min ? t('{n} min', { n: r.time_min }) : null, r.cook_count ? t('cooked {n}×', { n: r.cook_count }) : t('never cooked')].filter(Boolean).join(' · ')}
                 </span>
               </div>
             </button>
@@ -226,6 +268,10 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
         </div>
       )}
       <SwapRulesCard />
+      <div style={{ marginTop: 8 }}>
+        <HowTo slug="rezepte-importieren" />
+      </div>
+      <RecipePackageSheet open={pkgOpen} onClose={() => setPkgOpen(false)} />
     </section>
   );
 }

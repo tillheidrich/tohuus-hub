@@ -8,6 +8,7 @@ Importing is for members, admins and full-access tokens. Permanent guests at lev
 
 | Source | Where | Notes |
 |---|---|---|
+| A ToHuus recipe package (zip with `rezepte.json` + `bilder/`, or the JSON) | *Cook › Recipes › Upload recipe package (Kochen › Rezepte › Rezeptpaket hochladen)* | The open bulk format with photos and appliance steps – see [recipe-package.md](recipe-package.md). Also the export (`GET /api/recipes/package.zip`). |
 | A link to a recipe page | *Cook › + Recipe › Link (Kochen › + Rezept › Link)* | Reads the schema.org `Recipe` data most recipe sites publish (JSON-LD, including `@graph`, `HowToSection`, ISO durations). Pages without it are read by the vision model, if one is configured. Sites that block the request get a clear message. |
 | Photos (up to 6, e.g. front and back of a HelloFresh card) | *Cook › + Recipe › Photo* | Needs a vision model (`VISION_*`). Without one, send the photo to your AI assistant over MCP. |
 | Text | *Cook › + Recipe › Text* | Needs a vision model, which also reads text. |

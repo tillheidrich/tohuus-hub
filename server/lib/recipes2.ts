@@ -120,7 +120,7 @@ const slug = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p
 const cookidooId = (url: string | null) => url?.match(/cookidoo\.[a-z.]+\/.*?\/(r\d+)(?:[/?#]|$)/i)?.[1] ?? null;
 
 /** Sources that often bring no id of their own: re-import matches them by title (the preview shows update). */
-const TITLE_KEYED = new Set(['mealie', 'tandoor', 'paprika', 'nextcloud', 'kitchenowl', 'grocy', 'csv', 'json', 'ai']);
+const TITLE_KEYED = new Set(['mealie', 'tandoor', 'paprika', 'nextcloud', 'kitchenowl', 'grocy', 'csv', 'json', 'ai', 'package']);
 
 /** Format a number for an ingredient line ("0.5" → "½", "1.25" → "1,25" in German). */
 export function fmtAmount(n: number, lang = 'en'): string {
@@ -181,7 +181,14 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
   const time_min = total ?? (prep || cook ? (prep ?? 0) + (cook ?? 0) : null);
   const instrFlag = x.instructions_available;
   const instructions_available = instrFlag === false || instrFlag === 'false' || instrFlag === 0 ? false : !(steps.length === 0 && source_type === 'cookidoo');
-  const thermomix = typeof x.thermomix === 'boolean' ? x.thermomix : source_type === 'cookidoo' || /thermomix|\bstufe\s?\d|\bvaroma\b/i.test(JSON.stringify(steps).slice(0, 20000));
+  // a package names its appliances (tohuus.devices, tohuus.device per step): "Stufe 2" on a stand mixer is not a Thermomix
+  const devices = [...(Array.isArray(x.tohuus?.devices) ? x.tohuus.devices : []), ...steps.map((st) => st.tm?.device)].filter((d): d is string => typeof d === 'string' && Boolean(d.trim()));
+  const thermomix =
+    typeof x.thermomix === 'boolean'
+      ? x.thermomix
+      : devices.length
+        ? devices.some((d) => /thermomix|\btm\s?[4-7]\b/i.test(d))
+        : source_type === 'cookidoo' || /thermomix|\bstufe\s?\d|\bvaroma\b/i.test(JSON.stringify(steps).slice(0, 20000));
   if (ingredients.length === 0 && steps.length === 0 && !source_url) throw userError(t('The recipe has neither ingredients nor steps'));
   return {
     title,
@@ -572,10 +579,24 @@ export interface PreviewItem {
   source_type: string;
   translated: boolean;
   existing_id: number | null;
+  /** a recipe of the same name that this import would NOT update (possible duplicate – preselected off) */
+  similar_id: number | null;
+  /** photo comes inside the file */
+  has_photo: boolean;
+  /** steps carry appliance settings (Thermomix or another device) */
+  devices: string[];
 }
 
+const titleKey = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
 export function previewOf(recs: ImportRecipe[], session?: string): PreviewItem[] {
-  return recs.map((r, index) => ({
+  const byTitle = new Map<string, number>();
+  for (const row of db.prepare('SELECT id, title FROM recipes ORDER BY id').all() as { id: number; title: string }[]) if (!byTitle.has(titleKey(row.title))) byTitle.set(titleKey(row.title), row.id);
+  return recs.map((r, index) => {
+    const existing_id = findExisting(r);
+    const same = byTitle.get(titleKey(r.title)) ?? null;
+    const devices = [...new Set(r.steps.map((s) => s.tm?.device ?? (s.tm ? (r.thermomix ? 'Thermomix' : '') : '')).filter(Boolean) as string[])];
+    return {
     index,
     title: r.title,
     image: r.image_data && session ? `/api/recipes/import/session/${session}/image/${index}` : r.image_url,
@@ -584,8 +605,12 @@ export function previewOf(recs: ImportRecipe[], session?: string): PreviewItem[]
     instructions_available: r.instructions_available,
     source_type: r.source_type,
     translated: r.ingredients.some((i) => i.orig),
-    existing_id: findExisting(r),
-  }));
+    existing_id,
+    similar_id: existing_id ? null : same,
+    has_photo: Boolean(r.image_data),
+    devices,
+  };
+  });
 }
 
 interface Session {
@@ -653,7 +678,23 @@ export const getJob = (id: string) => jobs.get(id) ?? null;
 const isoDuration = (min: number | null) => (min ? `PT${Math.floor(min / 60) ? Math.floor(min / 60) + 'H' : ''}${min % 60 ? (min % 60) + 'M' : ''}` : undefined);
 
 /** Recipes in the import shape (schema.org + extensions) – feeding this file back in is a no-op update. */
-export function exportRecipes(ids?: number[]) {
+export interface ExportOptions {
+  /** recipe package (docs/recipe-package.md): steps carry `tohuus` blocks, photos are files in the package */
+  package?: boolean;
+  /** package: relative photo path for a recipe (null → photo link if there is one) */
+  imageFor?: (id: number, title: string, imagePath: string | null) => string | null;
+}
+
+/** A step's appliance settings in the package shape. */
+const tohuusBlock = (tm: NonNullable<LdStep['tm']>) => ({
+  ...(tm.device ? { device: tm.device } : {}),
+  ...(tm.time ? { time: tm.time } : {}),
+  ...(tm.temp ? { temperature: tm.temp } : {}),
+  ...(tm.speed ? { speed: tm.speed } : {}),
+  ...(tm.mode ? { mode: tm.mode } : {}),
+});
+
+export function exportRecipes(ids?: number[], opts: ExportOptions = {}) {
   const rows = (ids?.length ? db.prepare(`SELECT * FROM recipes WHERE id IN (${ids.map(() => '?').join(',')}) ORDER BY id`).all(...ids) : db.prepare('SELECT * FROM recipes ORDER BY id').all()) as any[];
   const ingStmt = db.prepare('SELECT * FROM recipe_ingredients WHERE recipe_id = ? ORDER BY sort');
   return rows.map((r) => {
@@ -662,7 +703,7 @@ export function exportRecipes(ids?: number[]) {
     const collections = JSON.parse(r.collections || '[]') as string[];
     const tags = (JSON.parse(r.tags || '[]') as string[]).filter((x) => !collections.includes(x));
     const hasSections = steps.some((s) => s.section);
-    const howTo = (s: LdStep) => ({ '@type': 'HowToStep', text: s.text, ...(s.tm ? { tm: s.tm } : {}) });
+    const howTo = (s: LdStep) => ({ '@type': 'HowToStep', text: s.text, ...(s.tm ? (opts.package ? { tohuus: tohuusBlock(s.tm) } : { tm: s.tm }) : {}) });
     const instructions = hasSections
       ? steps.reduce<any[]>((acc, s) => {
           const last = acc[acc.length - 1];
@@ -671,7 +712,8 @@ export function exportRecipes(ids?: number[]) {
           return acc;
         }, [])
       : steps.map(howTo);
-    const image = r.image_url ?? (r.image_path ? `${config.baseUrl}${r.image_path}` : undefined);
+    const image = opts.package ? (opts.imageFor?.(r.id, r.title, r.image_path) ?? r.image_url ?? undefined) : (r.image_url ?? (r.image_path ? `${config.baseUrl}${r.image_path}` : undefined));
+    const devices = [...new Set(steps.map((s) => s.tm?.device).filter((d): d is string => Boolean(d)))];
     const ownType = !r.ext_id && !r.source_url;
     return {
       '@context': 'https://schema.org',
@@ -694,6 +736,7 @@ export function exportRecipes(ids?: number[]) {
       instructions_available: r.instructions_available !== 0,
       favorite: Boolean(r.favorite),
       ...(r.notes ? { notes: r.notes } : {}),
+      ...(opts.package && (devices.length || r.thermomix) ? { tohuus: { devices: devices.length ? devices : ['Thermomix'] } } : {}),
     };
   });
 }

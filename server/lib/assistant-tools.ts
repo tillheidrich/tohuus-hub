@@ -5,6 +5,7 @@
  * Tool results that go back to the model pass the same privacy filter as MCP (people-signals.ts): no private list
  * items, no names behind per-person reasons, no health data without the household's consent.
  */
+import { recipeToShopping } from './recipe-list.js';
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
 import { localeOf } from '../languages.js';
@@ -337,27 +338,12 @@ export function planMeal(ctx: ToolCtx, input: { day?: string | null; recipe?: st
 export function recipeToList(ctx: ToolCtx, recipe: string | number) {
   const rec = findRecipe(recipe);
   if (!rec) return { error: t('No recipe called “{name}” was found.', { name: String(recipe) }) };
-  const s = suggest({ limit: 999 }).find((x) => x.recipe.id === rec.id);
-  const missing = s?.missing ?? [];
-  const created: number[] = [];
-  const names: string[] = [];
-  for (const m of missing) {
-    const match = matchIngredient(m);
-    const r = addToShopping({
-      productId: match && match.score >= 0.72 ? match.productId : null,
-      text: m,
-      note: rec.title,
-      source: 'recipe',
-      addedBy: ctx.actor,
-      origin: { kind: 'recipe', recipe: rec.title, recipeId: rec.id },
-    });
-    if (r.created) {
-      created.push(r.id);
-      names.push(m);
-    }
-  }
+  // each row keeps its ingredient line ("für Curry: 2 Hähnchenbrustfilets"), amounts merge only when safe (recipe-list.ts)
+  const out = recipeToShopping(rec.id, { actor: ctx.actor });
+  const created = out?.created ?? [];
+  const names = out?.names ?? [];
   if (created.length) record(ctx, 'recipe_to_list', t('Put {items} on the list for {title}', { items: joinNames(names), title: rec.title }), { kind: 'delete_items', ids: created });
-  return { recipe: rec.title, added: names, nothing_missing: missing.length === 0 };
+  return { recipe: rec.title, added: names, nothing_missing: (out?.missing.length ?? 0) === 0 };
 }
 
 export function moneySummary(input: { month?: string | null; shop?: string | null; category?: string | null }) {

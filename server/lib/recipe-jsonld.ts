@@ -10,7 +10,23 @@
 export interface LdStep {
   text: string;
   section?: string | null;
-  tm?: { time?: string | null; temp?: string | null; speed?: string | null } | null;
+  /**
+   * Appliance settings of this step (Thermomix or any other device). `device` and `mode` come from the ToHuus
+   * recipe package (`tohuus` block on a HowToStep, docs/recipe-package.md); older data has time/temp/speed only.
+   */
+  tm?: { time?: string | null; temp?: string | null; speed?: string | null; device?: string | null; mode?: string | null } | null;
+}
+
+/** Appliance settings from `tm` ({time,temp,speed}) or the package's `tohuus` block ({device,time,temperature,speed,mode}). */
+export function deviceSettings(x: any): LdStep['tm'] {
+  const src = x?.tohuus && typeof x.tohuus === 'object' ? x.tohuus : x?.tm && typeof x.tm === 'object' ? x.tm : null;
+  if (!src) return null;
+  const s = (v: unknown, max = 60) => (v === null || v === undefined || v === '' ? null : oneLine(String(v)).slice(0, max) || null);
+  const out = { time: s(src.time), temp: s(src.temp ?? src.temperature), speed: s(src.speed), device: s(src.device, 80), mode: s(src.mode) };
+  if (!out.time && !out.temp && !out.speed && !out.mode) return null;
+  if (!out.device) delete (out as any).device;
+  if (!out.mode) delete (out as any).mode;
+  return out;
 }
 
 export interface LdIngredient {
@@ -172,8 +188,8 @@ export function instructionSteps(v: unknown): LdStep[] {
     const text = cleanText(x.text ?? x.description ?? x.name ?? '');
     if (!text) return;
     const step: LdStep = { text: text.replace(/\n+/g, ' '), section };
-    const tm = x.tm;
-    if (tm && typeof tm === 'object' && (tm.time || tm.temp || tm.speed)) step.tm = { time: tm.time ? String(tm.time) : null, temp: tm.temp ? String(tm.temp) : null, speed: tm.speed != null ? String(tm.speed) : null };
+    const tm = deviceSettings(x);
+    if (tm) step.tm = tm;
     steps.push(step);
   };
   walk(v, null, 0);

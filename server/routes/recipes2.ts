@@ -6,7 +6,8 @@ import { lang } from '../db.js';
 import { t, userError } from '../i18n.js';
 import { requireAuth } from '../lib/auth.js';
 import { lookupMealDb, mealToRecipe, randomMealDb, searchMealDb } from '../lib/open-recipes.js';
-import { detectFile, detectText, FORMAT_LABELS } from '../lib/recipe-formats.js';
+import { FORMAT_LABELS } from '../lib/recipe-formats.js';
+import { detectAny, detectAnyText, existingRecipeIds, exportPackage, PACKAGE_EXAMPLE, PACKAGE_FORMAT, PACKAGE_LIMITS, PACKAGE_PROMPTS, PACKAGE_VERSION } from '../lib/recipe-package.js';
 import {
   AI_PROMPTS,
   bulkImport,
@@ -28,7 +29,7 @@ import {
   type ImportError,
   type ImportRecipe,
 } from '../lib/recipes2.js';
-import { uploadQuota } from '../lib/plans.js';
+import { QuotaError, uploadQuota } from '../lib/plans.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -44,7 +45,10 @@ function canImport(req: Request, res: Response, next: NextFunction) {
 }
 
 const bigUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024, files: 1, fields: 10 } });
-const fail = (res: Response, e: unknown, status = 400) => res.status(status).json({ error: e instanceof z.ZodError ? t('Invalid input') : (e as Error).message });
+const fail = (res: Response, e: unknown, status = 400) => {
+  if (e instanceof QuotaError) return res.status(413).json(e.toJSON());
+  return res.status((e as any)?.status === 413 ? 413 : status).json({ error: e instanceof z.ZodError ? t('Invalid input') : (e as Error).message });
+};
 
 // ---------------------------------------------------------------- bulk (synchronous) & export
 
@@ -71,9 +75,30 @@ r.get('/recipes/export.json', (req, res) => {
   res.type('application/json').send(JSON.stringify(out, null, 1));
 });
 
+/** The recipe package (zip: rezepte.json + bilder/), same shape as the import – docs/recipe-package.md. */
+r.get('/recipes/package.zip', (req, res) => {
+  const ids = String(req.query.ids ?? '')
+    .split(',')
+    .map(Number)
+    .filter((n) => Number.isInteger(n) && n > 0)
+    .slice(0, 5000);
+  const pick = ids.length ? existingRecipeIds(ids) : undefined;
+  if (ids.length && !pick?.length) return void res.status(404).json({ error: t('Recipe not found.') });
+  const out = exportPackage(pick, { images: req.query.images !== '0' });
+  res.setHeader('Content-Disposition', `attachment; filename="tohuus-rezeptpaket-${new Date().toISOString().slice(0, 10)}.zip"`);
+  res.setHeader('X-Recipes', String(out.recipes));
+  res.setHeader('X-Images', String(out.images));
+  res.type('application/zip').send(out.zip);
+});
+
+/** Everything an app or a person needs to build a package: prompt for their own AI, example, limits. */
+r.get('/recipes/package/template', (_req, res) => {
+  res.json({ format: PACKAGE_FORMAT, version: PACKAGE_VERSION, prompts: PACKAGE_PROMPTS, example: PACKAGE_EXAMPLE, limits: PACKAGE_LIMITS, language: lang(), help: 'https://tohuus.heidrich-digital.de/hilfe/rezeptpaket.html' });
+});
+
 // ---------------------------------------------------------------- staged import with preview & progress
 
-function staged(res: Response, format: string, recipes: ImportRecipe[], errors: ImportError[]) {
+function staged(res: Response, format: string, recipes: ImportRecipe[], errors: ImportError[], warnings: string[] = []) {
   if (recipes.length > MAX_BULK) {
     errors.push({ index: MAX_BULK, title: null, error: t('Only the first {n} recipes are imported.', { n: MAX_BULK }) });
     recipes = recipes.slice(0, MAX_BULK);
@@ -88,14 +113,16 @@ function staged(res: Response, format: string, recipes: ImportRecipe[], errors: 
     updates: preview.filter((p) => p.existing_id).length,
     recipes: preview,
     errors,
+    warnings,
   });
 }
 
 /** Upload a file (any supported app export) or send {text} (pasted JSON from an AI, CSV …) → preview. */
 r.post('/recipes/import/detect', canImport, bigUpload.single('file'), uploadQuota, (req, res) => {
   try {
-    const d = req.file ? detectFile(req.file.buffer, req.file.originalname) : detectText(z.object({ text: z.string().min(2).max(4_000_000) }).parse(req.body).text);
-    staged(res, d.format, d.recipes, d.errors);
+    // a ToHuus recipe package first, then every other app's format – one pipeline (recipe-package.ts)
+    const d = req.file ? detectAny(req.file.buffer, req.file.originalname) : detectAnyText(z.object({ text: z.string().min(2).max(4_000_000) }).parse(req.body).text);
+    staged(res, d.format, d.recipes, d.errors, d.warnings ?? []);
   } catch (e) {
     fail(res, e, 422);
   }

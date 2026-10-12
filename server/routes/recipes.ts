@@ -16,6 +16,7 @@ import { safeFetch } from '../lib/net.js';
 import { t } from '../i18n.js';
 import { activeIngredients, effectiveIngredients } from '../lib/variants.js';
 import { uploadQuota } from '../lib/plans.js';
+import { recipeToShopping, searchByIngredients } from '../lib/recipe-list.js';
 
 const rid = (v: unknown) => {
   const n = Number(v);
@@ -37,7 +38,7 @@ const recipeSchema = z.object({
   tags: z.array(z.string()).optional(),
   favorite: z.boolean().optional(),
   notes: z.string().nullable().optional(),
-  steps: z.array(z.object({ text: z.string(), tm: z.object({ time: z.string().nullable().optional(), temp: z.string().nullable().optional(), speed: z.string().nullable().optional() }).nullable().optional() })).optional(),
+  steps: z.array(z.object({ text: z.string(), section: z.string().nullable().optional(), tm: z.object({ time: z.string().nullable().optional(), temp: z.string().nullable().optional(), speed: z.string().nullable().optional(), device: z.string().max(80).nullable().optional(), mode: z.string().max(60).nullable().optional() }).nullable().optional() })).optional(),
   ingredients: z
     .array(z.object({ text: z.string(), qty: z.number().nullable().optional(), unit: z.string().nullable().optional(), product_id: z.number().nullable().optional(), optional: z.boolean().optional(), pantry: z.boolean().optional() }))
     .optional(),
@@ -47,6 +48,15 @@ r.get('/recipes', (_req, res) => res.json(listRecipes()));
 r.get('/recipes/suggest', (req, res) => {
   const tm = req.query.thermomix === '1' ? true : req.query.thermomix === '0' ? false : null;
   res.json(suggest({ thermomix: tm, limit: Number(req.query.limit ?? 20) }));
+});
+/** "mit: Hähnchen, Paprika" – recipes by ingredients, over the recipe text only (no stock keeping). */
+r.get('/recipes/search', (req, res) => {
+  const terms = String(req.query.with ?? '')
+    .split(/[,;]/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+  res.json(searchByIngredients(terms));
 });
 r.get('/recipes/:id', (req, res, next) => {
   if (!/^\d+$/.test(req.params.id)) return next(); // e.g. /recipes/export.json (area recipes2)
@@ -120,19 +130,22 @@ r.post('/recipes/:id/cooked', (req, res) => {
   res.json({ ok: true });
 });
 
+/**
+ * Missing ingredients onto the list. Each row keeps its line as note ("für Curry: 2 Hähnchenbrustfilets"); a row that
+ * is already open gets the line added, amounts merge only when the units are safe (recipe-list.ts).
+ * Body (optional): `servings` (scales the lines), `only` (ingredient names to add, e.g. from cook ideas).
+ */
 r.post('/recipes/:id/shopping', (req, res) => {
   const rec = getRecipe(Number(req.params.id));
   if (!rec) {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  const missing = suggest({ limit: 999 }).find((s) => s.recipe.id === rec.id)?.missing ?? [];
-  let added = 0;
-  for (const m of missing) {
-    const match = matchIngredient(m);
-    if (addToShopping({ productId: match && match.score >= 0.72 ? match.productId : null, text: m, note: rec.title, source: 'recipe', addedBy: actorName(req) }).created) added++;
-  }
-  res.json({ added, missing });
+  const b = z.object({ servings: z.number().positive().max(100).nullable().optional(), only: z.array(z.string().max(200)).max(60).optional() }).parse(req.body ?? {});
+  const base = (db.prepare('SELECT servings FROM recipe_variants WHERE recipe_id = ?').get(rec.id) as { servings: number | null } | undefined)?.servings || rec.servings;
+  const factor = b.servings && base ? b.servings / base : 1;
+  const out = recipeToShopping(rec.id, { factor, actor: actorName(req), title: factor !== 1 && b.servings ? `${rec.title} (${b.servings})` : rec.title, only: b.only })!;
+  res.json({ added: out.added, missing: out.missing, ids: out.created });
 });
 
 /** Keep the photo link (shown right away, retried by the queue, browser fallback) and try to store it now. */

@@ -19,7 +19,7 @@ export interface RecipeInput {
   time_min?: number | null;
   thermomix?: boolean;
   tags?: string[];
-  steps?: { text: string; tm?: { time?: string | null; temp?: string | null; speed?: string | null } | null }[];
+  steps?: { text: string; section?: string | null; tm?: { time?: string | null; temp?: string | null; speed?: string | null; device?: string | null; mode?: string | null } | null }[];
   favorite?: boolean;
   notes?: string | null;
   ingredients?: { text: string; qty?: number | null; unit?: string | null; product_id?: number | null; optional?: boolean; pantry?: boolean }[];

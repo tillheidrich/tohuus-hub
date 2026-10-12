@@ -9,7 +9,8 @@ import { getRecipe, ingredientCore, listRecipes, parseRecipeJsonLd, saveRecipe, 
 import { norm, nameScore } from './text.js';
 import { t, userError } from '../i18n.js';
 import { activeIngredients, effectiveIngredients, variantContext } from './variants.js';
-import { scaleText, servingsFactor, sumAmounts } from './scale.js';
+import { scaleText, servingsFactor } from './scale.js';
+import { addRecipeLine, type RecipeLine } from './recipe-list.js';
 import { nobodyHomeOn } from './away-state.js';
 import { featureOff } from './tenancy.js';
 
@@ -87,7 +88,7 @@ export function planShopping(from: string, to: string, actor: string) {
   const entries = getPlan(from, to).filter((e) => e.recipe_id && !e.cooked);
   const products = db.prepare('SELECT p.id, p.name, p.track_mode, p.is_staple, (SELECT COALESCE(SUM(qty),0) FROM stock s WHERE s.product_id = p.id) AS total FROM products p').all() as any[];
   const byId = new Map(products.map((p) => [p.id, p]));
-  const need = new Map<string, { text: string; productId: number | null; recipes: Set<string>; lines: string[] }>();
+  const need = new Map<string, { text: string; productId: number | null; recipeId: number; lines: RecipeLine[] }>();
   const ctx = variantContext();
   const decimal = lang() === 'en' ? '.' : ',';
   for (const e of entries) {
@@ -104,17 +105,16 @@ export function planShopping(from: string, to: string, actor: string) {
       const p = m && m.score >= 0.72 ? byId.get(m.productId) : null;
       if (p && (p.is_staple || p.track_mode === 'none' || p.total > 0)) continue;
       const key = p ? `p${p.id}` : norm(core);
-      if (!need.has(key)) need.set(key, { text: p ? p.name : core, productId: p?.id ?? null, recipes: new Set(), lines: [] });
-      need.get(key)!.recipes.add(label);
-      need.get(key)!.lines.push(scaleText(i.text, factor, decimal));
+      if (!need.has(key)) need.set(key, { text: p ? p.name : core, productId: p?.id ?? null, recipeId: r.id, lines: [] });
+      // the row keeps the ingredient line: "für Bolognese (6): 750 g Hackfleisch" (recipe-list.ts)
+      need.get(key)!.lines.push({ recipe: label, line: scaleText(i.text, factor, decimal) });
     }
   }
   let added = 0;
   for (const n of need.values()) {
-    const sum = sumAmounts(n.lines, decimal);
-    const note = [t('Week plan: {list}', { list: [...n.recipes].join(', ') }), sum.label].filter(Boolean).join(' · ');
-    const out = addToShopping({ productId: n.productId, text: n.text, qty: sum.count && sum.count > 1 ? sum.count : null, note, source: 'recipe', addedBy: actor });
-    if (out.created) added++;
+    let created = false;
+    for (const line of n.lines) if (addRecipeLine({ productId: n.productId, text: n.text, line, recipeId: n.recipeId, actor }).created) created = true;
+    if (created) added++;
   }
   return { added, needed: need.size };
 }
