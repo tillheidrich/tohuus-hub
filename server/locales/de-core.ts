@@ -49,4 +49,36 @@ export const de_core: Record<string, string> = {
   '{client} is now connected to ToHuus': '{client} ist jetzt mit ToHuus verbunden',
   '{client} wants to use your household on your behalf. You can end this at any time in Settings › Access & AI.':
     '{client} möchte in deinem Namen auf euren Haushalt zugreifen. Du kannst das jederzeit unter Einstellungen › Zugang & KI beenden.',
+
+  // account mails and cloud account errors (routes/cloud.ts) – all of a mail in one language
+  'Sign in to ToHuus': 'Bei ToHuus anmelden',
+  'Tap the button to sign in. The link works once and for 15 minutes.': 'Tipp auf den Knopf, um dich anzumelden. Der Link funktioniert einmal und 15 Minuten lang.',
+  'Please confirm your e-mail address': 'Bitte bestätige deine E-Mail-Adresse',
+  'Confirm your address': 'Adresse bestätigen',
+  'Tap the button to confirm this address for ToHuus Cloud.': 'Tipp auf den Knopf, um diese Adresse für ToHuus Cloud zu bestätigen.',
+  'Tap the button to choose a new password. The link works once and for one hour.': 'Tipp auf den Knopf, um ein neues Passwort zu wählen. Der Link funktioniert einmal und eine Stunde lang.',
+  'New password': 'Neues Passwort',
+  'You are not a member of this household.': 'Du gehörst nicht zu diesem Haushalt.',
+  'E-mail or password is wrong.': 'E-Mail oder Passwort stimmt nicht.',
+  'New sign-ups are closed at the moment.': 'Neue Anmeldungen sind gerade geschlossen.',
+  'There is already an account with this address – please sign in.': 'Mit dieser Adresse gibt es schon ein Konto – bitte melde dich an.',
+  'Not available in ToHuus Cloud.': 'In ToHuus Cloud nicht verfügbar.',
+  'You are already a member of this household.': 'Du gehörst schon zu diesem Haushalt.',
+  'Only admins of this household can delete it.': 'Nur Admins dieses Haushalts können ihn löschen.',
+  'Please type the name of the household to confirm.': 'Bitte tipp zur Bestätigung den Namen des Haushalts ein.',
+  'No household selected.': 'Kein Haushalt ausgewählt.',
+  'Please confirm your e-mail address first.': 'Bitte bestätige zuerst deine E-Mail-Adresse.',
+  'The current password is wrong.': 'Das aktuelle Passwort stimmt nicht.',
+  'In ToHuus Cloud people join by invitation.': 'In ToHuus Cloud kommen Leute per Einladung dazu.',
+  'Everyone changes their own password under My account.': 'Jede Person ändert ihr Passwort selbst unter Mein Konto.',
+  Admin: 'Admin',
+  Passkey: 'Passkey',
+  'Your ToHuus account is deleted': 'Dein ToHuus-Konto ist gelöscht',
+  'Account deleted': 'Konto gelöscht',
+  'Your account and your sign-in are gone. Households where you were the only member were deleted with everything in them; in shared households you left, and the others keep their list.':
+    'Dein Konto und deine Anmeldung sind weg. Haushalte, in denen nur du warst, wurden mit allem darin gelöscht; aus gemeinsamen Haushalten bist du ausgetreten, die anderen behalten ihre Liste.',
+  'If you have a subscription through Apple, cancel it in the App Store as well – deleting the account does not end it.':
+    'Hast du ein Abo über Apple, kündige es bitte auch im App Store – das Löschen des Kontos beendet es nicht.',
+  'If this was not you, write to us right away.': 'Warst du das nicht? Dann schreib uns bitte sofort.',
+  'ToHuus Cloud': 'ToHuus Cloud',
 };

@@ -400,6 +400,38 @@ describe('cloud accounts', () => {
     expect((await c.get('/api/shopping')).status).toBe(401);
   });
 
+  it('account mails speak the account’s language: a German signup gets no English template text (verify, link, reset, deleted)', async () => {
+    const ENGLISH = ['Please confirm your e-mail address', 'Confirm your address', 'Tap the button', 'Your account', 'Button not working', 'your household, self-hosted', 'Confirm address', 'Your sign-in link', 'Sign in to ToHuus', 'Set a new password', 'New password', 'account is deleted', 'Account deleted', 'If this was not you'];
+    const c = new Client();
+    mails.length = 0;
+    const r = await c.post('/api/cloud/signup', { email: 'sprache@example.org', password: 'geheim1234', name: 'Mira', householdName: 'Familie Berg', form: 'family', lang: 'de', region: 'DE' });
+    expect(r.status, r.text).toBe(200);
+    expect((accounts.accountByEmail('sprache@example.org') as any).lang).toBe('de');
+    await new Client().post('/api/auth/link', { email: 'sprache@example.org' });
+    await new Client().post('/api/auth/reset', { email: 'sprache@example.org' });
+    await new Promise((res) => setTimeout(res, 100));
+    const mine = mails.filter((m) => m.to === 'sprache@example.org');
+    expect(mine.length).toBe(3);
+    for (const m of mine) for (const e of ENGLISH) expect(m.text, e).not.toContain(e);
+    expect(mine[0].text).toContain('Adresse bestätigen');
+    expect(mine.some((m) => m.text.includes('Bei ToHuus anmelden'))).toBe(true);
+    expect(mine.some((m) => m.text.includes('Neues Passwort'))).toBe(true);
+    // deleting the account confirms it – in German as well
+    mails.length = 0;
+    expect((await c.req('DELETE', '/api/cloud/account', { password: 'geheim1234' })).status).toBe(200);
+    await new Promise((res) => setTimeout(res, 100));
+    const gone = mails.find((m) => m.to === 'sprache@example.org');
+    expect(gone?.text).toContain('Konto gelöscht');
+    expect(gone?.text).toContain('App Store');
+    for (const e of ENGLISH) expect(gone!.text, e).not.toContain(e);
+    // an English account in the same instance still gets English
+    mails.length = 0;
+    const en = new Client();
+    expect((await en.post('/api/cloud/signup', { email: 'english@example.org', password: 'geheim1234', name: 'Sam', householdName: 'Sam home', form: 'single', lang: 'en', region: 'GB' })).status).toBe(200);
+    await new Promise((res) => setTimeout(res, 100));
+    expect(mails.find((m) => m.to === 'english@example.org')?.text).toContain('Confirm your address');
+  });
+
   it('app tokens: member rights in the chosen household, X-Household must be a membership, devices revocable', async () => {
     const r = await new Client().post('/api/auth/app', { email: 'markera@example.org', password: 'geheim1234', device: 'iPhone A' });
     expect(r.status, r.text).toBe(200);

@@ -10,7 +10,7 @@ import nodemailer from 'nodemailer';
 import type { Attachment } from 'nodemailer/lib/mailer/index.js';
 import { config, smtpEnabled } from '../config.js';
 import { db, getSetting, lang, onDbReady } from '../db.js';
-import { t } from '../i18n.js';
+import { currentLang, t } from '../i18n.js';
 
 // The app was called "Stockwerk" before it became ToHuus Hub. A household that still carries the old app name as
 // its own name gets the neutral default back (it is an app name, not a household name) – once.
@@ -88,7 +88,13 @@ const escMulti = (s: string) => esc(s).replace(/\r?\n/g, '<br>');
 
 /** The household's own name, or empty when none is set (the old app name never counts as one). */
 export function mailHousehold(): string {
-  const n = String(getSetting<string>('household.name', '') ?? '').trim();
+  let n = '';
+  try {
+    n = String(getSetting<string>('household.name', '') ?? '').trim();
+  } catch {
+    // cloud account mails outside a household (sign-in link, reset, account deleted): no household name
+    return '';
+  }
   return n && !OLD_NAME.test(n) ? n : '';
 }
 
@@ -171,7 +177,7 @@ export function renderMail(c: MailContent): RenderedMail {
   ].join('');
   const closing = c.button || c.footnote;
   const html = `<!doctype html>
-<html lang="${esc(lang())}" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="${esc(currentLang())}" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -232,7 +238,7 @@ ${c.footnote ? `<p class="muted" style="margin:14px 0 0;font-family:${FONT_UI};f
     : ''
 }
 <tr><td align="center" style="padding:20px 18px 0;font-family:${FONT_UI};font-size:12px;line-height:1.6;color:${C.ink3}" class="muted">
-${c.reason ? `${escMulti(c.reason)}<br>` : ''}${esc(household ? `${household} · ${APP_NAME}` : APP_NAME)} · ${esc(t('your household, self-hosted'))}
+${c.reason ? `${escMulti(c.reason)}<br>` : ''}${esc(household ? `${household} · ${APP_NAME}` : APP_NAME)} · ${esc(config.multiTenant ? t('ToHuus Cloud') : t('your household, self-hosted'))}
 </td></tr>
 </table>
 </td></tr>
@@ -263,7 +269,7 @@ export function renderText(c: MailContent, household = mailHousehold()): string 
   if (c.footnote) out.push(c.footnote, '');
   out.push('--');
   if (c.reason) out.push(c.reason);
-  out.push(`${household ? `${household} · ` : ''}${APP_NAME} · ${t('your household, self-hosted')}`);
+  out.push(`${household ? `${household} · ` : ''}${APP_NAME} · ${config.multiTenant ? t('ToHuus Cloud') : t('your household, self-hosted')}`);
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
 }
 

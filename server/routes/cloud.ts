@@ -31,6 +31,7 @@ import { AuthError } from '../lib/auth-sessions.js';
 import { canSendMail } from '../lib/mail.js';
 import { emit } from '../lib/bus.js';
 import { buildExport } from '../lib/data.js';
+import { inAccountLang } from '../lib/account-mail.js';
 import { InviteError, acceptInvite, findInvite } from '../lib/invites.js';
 import { setHomeSetup } from '../lib/places.js';
 import { REGIONS, defaultRegionCode, regionInfo, setRegion } from '../lib/region.js';
@@ -316,10 +317,12 @@ async function sendCloudSignInLink(email: string) {
   const a = acc.accountByEmail(email);
   if (!a) return;
   const token = acc.createAuthLink('magic', a.id, 15);
-  await sendAuthMail(a.email, t('Your sign-in link'), t('Sign in to ToHuus'), t('Tap the button to sign in. The link works once and for 15 minutes.'), {
-    url: `${config.baseUrl}/anmelden/link#${token}`,
-    label: t('Sign in'),
-  });
+  await inAccountLang(a.lang, () =>
+    sendAuthMail(a.email, t('Your sign-in link'), t('Sign in to ToHuus'), t('Tap the button to sign in. The link works once and for 15 minutes.'), {
+      url: `${config.baseUrl}/anmelden/link#${token}`,
+      label: t('Sign in'),
+    }),
+  );
 }
 
 async function cloudPasswordCheck(req: Request, emailRaw: string, password: string): Promise<number> {
@@ -394,11 +397,13 @@ async function createHouseholdFor(accountId: number, input: { householdName: str
 async function sendVerifyMail(accountId: number, email: string, householdId: string | null) {
   const acc = await A();
   const token = acc.createAuthLink('verify', accountId, 3 * 24 * 60);
+  // the whole mail in the account's language (stored at signup) – subject, text, button and footer alike
+  const accountLang = acc.accountById(accountId)?.lang ?? null;
   const send = () =>
-    sendAuthMail(email, t('Please confirm your e-mail address'), t('Confirm your address'), t('Tap the button to confirm this address for ToHuus Cloud.'), {
+    inAccountLang(accountLang, () => sendAuthMail(email, t('Please confirm your e-mail address'), t('Confirm your address'), t('Tap the button to confirm this address for ToHuus Cloud.'), {
       url: `${config.baseUrl}/anmelden/email#${token}`,
       label: t('Confirm address'),
-    });
+    }));
   if (householdId) await runInHousehold({ id: householdId, via: 'mail' }, send);
   else await send();
 }
@@ -498,10 +503,12 @@ cloudPub.post(
     const a = EMAIL_RE.test(email) ? acc.accountByEmail(email) : undefined;
     if (a && canSendMail()) {
       const token = acc.createAuthLink('magic', a.id, 15);
-      void sendAuthMail(a.email, t('Your sign-in link'), t('Sign in to ToHuus'), t('Tap the button to sign in. The link works once and for 15 minutes.'), {
-        url: `${config.baseUrl}/anmelden/link#${token}`,
-        label: t('Sign in'),
-      });
+      void inAccountLang(a.lang, () =>
+        sendAuthMail(a.email, t('Your sign-in link'), t('Sign in to ToHuus'), t('Tap the button to sign in. The link works once and for 15 minutes.'), {
+          url: `${config.baseUrl}/anmelden/link#${token}`,
+          label: t('Sign in'),
+        }),
+      );
     }
     return sameAnswer();
   }),
@@ -546,10 +553,12 @@ cloudPub.post(
     const a = EMAIL_RE.test(email) ? acc.accountByEmail(email) : undefined;
     if (a && canSendMail()) {
       const token = acc.createAuthLink('reset', a.id, 60);
-      void sendAuthMail(a.email, t('Set a new password'), t('Set a new password'), t('Tap the button to choose a new password. The link works once and for one hour.'), {
-        url: `${config.baseUrl}/anmelden/password#${token}`,
-        label: t('New password'),
-      });
+      void inAccountLang(a.lang, () =>
+        sendAuthMail(a.email, t('Set a new password'), t('Set a new password'), t('Tap the button to choose a new password. The link works once and for one hour.'), {
+          url: `${config.baseUrl}/anmelden/password#${token}`,
+          label: t('New password'),
+        }),
+      );
     }
     return sameAnswer();
   }),
@@ -768,6 +777,19 @@ cloud.delete(
     }
     acc.accountsDb().prepare('DELETE FROM accounts WHERE id = ?').run(a.id);
     res.clearCookie(SESSION_COOKIE, { path: '/' });
+    // confirmation, in the account's language (the address is gone from our side once this is sent)
+    if (canSendMail())
+      void inAccountLang(a.lang, () =>
+        sendAuthMail(
+          a.email,
+          t('Your ToHuus account is deleted'),
+          t('Account deleted'),
+          t('Your account and your sign-in are gone. Households where you were the only member were deleted with everything in them; in shared households you left, and the others keep their list.'),
+          undefined,
+          t('If this was not you, write to us right away.'),
+          { paragraphs: [t('Your account and your sign-in are gone. Households where you were the only member were deleted with everything in them; in shared households you left, and the others keep their list.'), t('If you have a subscription through Apple, cancel it in the App Store as well – deleting the account does not end it.')] },
+        ),
+      );
     return { ok: true, deleted: shredded, left };
   }),
 );
