@@ -6,6 +6,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Added
 
+- **UI layout audit** `scripts/ui-audit.mjs` ([docs/ui-audit.md](docs/ui-audit.md)): Playwright sweep over every route, settings tab and main sheet at 390/768/1280, light and dark and with a 20 px browser text size; reports text running out of its box, text on icons, labels wrapping under icons, cut text without „…“, things past the screen edge or under the Sprechen button, with screenshots.
 - **Assistant writes recipes**: "ein Rezept für Kinder" gets a simple recipe (servings, ingredients with amounts, steps) and the offer to save it (`recipe_save_adapted` after a yes) or to put missing items on the list.
 - **AI keeps answering when Mistral is busy**: on 429/5xx/timeouts the client tries `mistral-medium-3.1`, then `mistral-large-2512` (vision: `mistral-large-4-0`) – still pinned to Mistral in the EU. `AI_MODEL_FALLBACKS` overrides (`-` = off). Questions the built-in reader cannot answer get "Der Assistent ist gerade ausgelastet" instead of "nicht verstanden".
 - **Cloud: photos and receipt files off-site** – with `BACKUP_S3_*`, after the nightly database copies, `images/` and `imports/` of every household are synced incrementally to `<prefix>/<uuid>/files/…`, still encrypted with the household key (manifest per household, local deletions deleted remotely, bounded per night by `BACKUP_FILES_MAX_*`, continued the next night). Restore with `node dist/restore-files.mjs <uuid>` (`npm run restore-files`); `/betrieb` shows the last sync (counts only); deleting a household removes `files/` too. S3 requests use their own dispatcher, so a MinIO in a private network works. docs/cloud.md.
@@ -90,6 +91,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Web layout sweep** (text running over boxes, labels on icons): all type sizes in `rem`, so the browser/OS text size applies (the in-app size stacks on it); long German words hyphenate instead of running out; buttons, badges and pill buttons wrap long labels inside; list titles up to two lines; the tab bar count sits on the icon's corner instead of the glyph; the notification matrix header no longer overlaps; settings tabs wrap on desktop and scroll the open tab into view on phones, scrolling chip/tab rows fade at the edge; darker scrim behind recipe idea titles; Heute centred on tablets; placeholders end in „…“.
 - "Clear checked" no longer deletes ticked items: they are hidden and stay purchase signals (`cleared_at`).
 - Un-ticking an item now takes back the stock its tick booked (app, store mode, offline replay, MCP, Home Assistant).
 - A receipt applied within 3 days of a tick that booked the same product no longer books it twice.
