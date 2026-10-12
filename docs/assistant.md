@@ -48,7 +48,7 @@ Multipart `audio` plus optional `conversationId` → `{ text, conversationId, re
 
 ### `POST /api/assistant/undo/:token`
 
-→ `{ ok: true, summary, already? }`. Tokens live 24 hours and only work for the person whose message caused the action (404 otherwise).
+Also `POST /api/assistant/undo` with body `{ "undo": "<token>" }`. → `{ ok: true, summary, already? }`. Tokens live 24 hours and only work for the person whose message caused the action (404 otherwise).
 
 ### Conversations, status, consent
 
@@ -93,7 +93,13 @@ Outward the app says "ToHuus merkt sich …"; the word "Gedächtnis" stays inter
 
 ## Limits
 
-Before every model call `consumeAssistant()` ([`limits.ts`](../server/lib/limits.ts)) counts one message. Today it always allows; after the cloud branch it becomes `plans.consume('assistant')` (Free 20, Haushalt 100, Plus 1 500 fair use per month). When the allowance is used up, the answer comes from the built-in reader with a short note.
+Before every model call `consumeAssistant()` ([`limits.ts`](../server/lib/limits.ts) → `plans.consume('assistant')`) counts one message per household: Free 20, Haushalt 100, Plus/trial 1 500 a month; self-hosted unlimited. A voice message counts once (transcription and answer together), `/transcribe` alone counts once.
+
+- **Used up**: what the built-in reader understands (lists, "Milch ist alle", a told purchase …) still works and answers with `mode: "basic"` – no model call. Anything else answers **HTTP 402** `{ "error": "…", "code": "quota.assistant", "remaining": 0 }`.
+- **Plus fair use** over 1 500: still answered by the model, but shorter; the answer carries `"throttled": true`.
+- AI receipt reads (photos, receipt text) count against `receiptAiPerDay` (`consume('receiptAi')`); over it, HTTP 429 `{ error, code: "quota.receiptAi", remaining: 0 }`. Receipts themselves stay unlimited (PDF parsers need no AI).
+
+Recordings are never stored: they stay in memory for the transcription and are dropped (no storage quota involved).
 
 ## Configuration
 

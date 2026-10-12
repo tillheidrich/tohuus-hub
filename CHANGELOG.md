@@ -16,6 +16,10 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 - **Today in one call** (`GET /api/today`, [docs/api-today.md](docs/api-today.md)), **money overview** (`GET /api/money/overview`: by category, shop and week, vs. last month, price changes with price per kg/l, saving hints from own data only) and **cook ideas** (`GET /api/cook/ideas`: ready now or 1–2 missing, counting what the rhythm says is probably at home, allergy-safe on the server).
 - **One AI client** (`server/lib/ai.ts`): OpenRouter by default, pinned to Mistral (EU, no fallbacks, no data collection); `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL_TEXT`, `AI_MODEL_VISION`, `AI_MODEL_VISION_HARD`, `AI_MODEL_AUDIO`; the older `VISION_*` keep working. Receipt photos that don't add up get a second try with the stronger model; receipt text goes out without card, loyalty and TSE data. A startup check warns when the vision model cannot read images.
 - MCP: 114 tools in total.
+- **App web link** `POST /api/auth/app/web-link`: a one-time, 60-second link that signs the iPhone app's web view in with a cookie session for the same member and household.
+- **Household form "carer"** ("ich versorge noch jemanden mit") in signup, onboarding and settings.
+- **Compression without a proxy**: the build writes `.br`/`.gz` next to the web files (`scripts/precompress.mjs`) and the server sends them by `Accept-Encoding`; JSON and text API answers above 1 kB are gzipped. ETags stay.
+- Assistant quota: HTTP 402 `{ code: 'quota.assistant', remaining: 0 }` when the month's messages are used up (simple list sentences keep working without a model); AI receipt reads count per day (`quota.receiptAi`, HTTP 429). Undo also as `POST /api/assistant/undo` `{ undo }`.
 
 ### Changed
 

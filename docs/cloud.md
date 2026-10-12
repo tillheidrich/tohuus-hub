@@ -51,7 +51,7 @@ DATA_DIR/
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
 | `APPLE_ENVIRONMENTS` | – | accepted StoreKit environments, default `Production,Sandbox` (TestFlight is Sandbox) |
 | `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`) |
-| `AI_*` | – | assistant (see the plan; owned by the assistant work) |
+| `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU) |
 
 `ADMIN_NAME`/`ADMIN_PASSWORD`, `SEED_DEMO`, `MCP_PATH_SECRET`, `OIDC_*` and `DB_ENCRYPTION_KEY` are self-host only
 and ignored in the cloud.
@@ -129,6 +129,13 @@ Storage counts the household's files on every write/delete plus the database siz
 Over quota, uploads get HTTP 413 with `key: "storage.full"`; nothing is deleted. Apple purchases arrive through
 `POST /api/billing/apple/transaction` (from the app) and `POST /api/billing/apple/notifications` (App Store Server
 Notifications v2 – set this URL in App Store Connect). Both verify the JWS chain to the embedded Apple Root CA G3.
+
+## App web link
+
+`POST /api/auth/app/web-link` (only with an app token, `Authorization: Bearer sw_app_…`, body `{ next?: "/path" }`) →
+`{ url, expiresIn: 60 }`. Opening `url` once (60 s, single use) signs that browser – the app's `WKWebView` – in with a
+cookie session for the same member and household and redirects to `next` (a relative path, default `/`). Works in
+both modes. The links live in process memory (sign-in material, not household data).
 
 ## Known gaps (TODO)
 
