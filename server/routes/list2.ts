@@ -10,6 +10,7 @@ import { checkout } from '../lib/shop.js';
 import { uploadQuota } from '../lib/plans.js';
 import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeItemPhoto, restoreItem, setItemPhoto, setListPrefs, updateItem } from '../lib/list2.js';
 import { t } from '../i18n.js';
+import { LIST_KINDS, createList, deleteList, estimate, guard, listFilter, listLists, moveItemToList, updateList, usuals } from '../lib/lists.js';
 import { upload } from './core.js';
 
 export const r = Router();
@@ -100,3 +101,52 @@ r.post(
     return finishShopping({ checkout: () => checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req) }) });
   }),
 );
+
+// ---------------------------------------------------------------- B: the list fills itself
+
+r.get('/list/lists', (_req, res) => res.json(listLists()));
+r.post(
+  '/list/lists',
+  wrap((req) => {
+    const b = z.object({ name: z.string().min(1).max(60), kind: z.enum(LIST_KINDS).optional(), note: z.string().max(1000).nullable().optional() }).parse(req.body);
+    return createList(b);
+  }),
+);
+r.patch(
+  '/list/lists/:id',
+  wrap((req) => {
+    const b = z.object({ name: z.string().min(1).max(60).optional(), kind: z.enum(LIST_KINDS).optional(), note: z.string().max(1000).nullable().optional() }).parse(req.body);
+    return updateList(num(req.params.id), b);
+  }),
+);
+r.delete(
+  '/list/lists/:id',
+  wrap((req) => deleteList(num(req.params.id))),
+);
+/** Move a row to another list (0 = main). */
+r.post(
+  '/list/items/:id/move',
+  wrap((req) => {
+    const b = z.object({ list_id: z.number().int().min(0) }).parse(req.body);
+    return moveItemToList(num(req.params.id), b.list_id);
+  }),
+);
+
+/** "Unsere Üblichen": everything ever bought, most frequent first. */
+r.get('/list/usuals', (req, res) => res.json(usuals(Math.min(120, Number(req.query.limit) || 60))));
+
+/** Before adding: already on the list? bought recently? in stock? */
+r.get('/list/guard', (req, res) => {
+  const pid = Number(req.query.product_id) || null;
+  const text = typeof req.query.text === 'string' ? req.query.text.slice(0, 200) : '';
+  res.json({ hints: guard({ text, productId: pid }) });
+});
+
+/** Expected total of a list from the latest receipt prices. */
+r.get('/list/estimate', (req, res) => {
+  const listId = req.query.list === 'all' ? 'all' : Number(req.query.list) || 0;
+  const rows = db
+    .prepare(`SELECT s.product_id, s.qty, s.text, s.id FROM shopping_items s WHERE s.checked_at IS NULL ${listId === 'all' ? '' : `AND ${listFilter(listId)}`} AND s.id NOT IN (SELECT item_id FROM share_items)`)
+    .all() as { product_id: number | null; qty: number | null; text: string }[];
+  res.json(estimate(rows));
+});

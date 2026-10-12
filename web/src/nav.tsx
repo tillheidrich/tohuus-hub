@@ -38,7 +38,7 @@ export const TABS: Tab[] = [
     icon: Basket,
     prefetch: () => {
       load.shopping();
-      warm(['shopping', 'store', 0, 'list'], '/shop/list');
+      warm(['shopping', 'store', 0, 'list', 0, 0], '/shop/list');
     },
   },
   {

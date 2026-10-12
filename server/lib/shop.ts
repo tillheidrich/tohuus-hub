@@ -26,6 +26,7 @@ import {
 } from './shopparse.js';
 import { ScopedMap } from './tenancy.js';
 import { decorateItems } from './list2.js';
+import { estimate, listLists } from './lists.js';
 
 export * from './shopparse.js';
 
@@ -241,6 +242,8 @@ export interface ShopItem {
   buy_at: string[];
   /** where the row comes from: "Mira · today 14:05", "remembers: every ~9 days", "from recipe X" (shopping-trust.ts) */
   origin: string;
+  /** list2: which list (null = main) */
+  list_id?: number | null;
 }
 
 export function claimsOf(kind: 'shopping' | 'plan') {
@@ -275,11 +278,14 @@ export function shoppingItems(viewer?: Viewer): ShopItem[] {
 }
 
 /** Everything the store view needs: open items grouped in the store's walking order, the basket, recently done. */
-export function storeView(storeId?: number | null, viewer?: Viewer) {
+export function storeView(storeId?: number | null, viewer?: Viewer, opts: { listId?: number | 'all' } = {}) {
   const stores = listStores();
   const store = (storeId ? stores.find((s) => s.id === storeId) : null) ?? null;
   const order = store?.order ?? [...SECTIONS];
-  const items = shoppingItems(viewer);
+  // list2: one list at a time (0 = the main list); 'all' for everything
+  const listId = opts.listId ?? 0;
+  const all = shoppingItems(viewer);
+  const items = listId === 'all' ? all : all.filter((i) => (i.list_id ?? 0) === listId);
   const open = items.filter((i) => !i.checked_at);
   const basket = items.filter((i) => i.checked_at && i.in_basket);
   const done = items.filter((i) => i.checked_at && !i.in_basket);
@@ -292,7 +298,20 @@ export function storeView(storeId?: number | null, viewer?: Viewer) {
     (g) => g.key,
   );
   if (elsewhere.length) sections.push({ key: ELSEWHERE, items: elsewhere });
-  return { store, stores, order, sections, basket, done, open: open.length, serverTime: new Date().toISOString() };
+  return {
+    store,
+    stores,
+    order,
+    sections,
+    basket,
+    done,
+    open: open.length,
+    listId,
+    lists: listLists(),
+    // expected total from the latest receipt prices; rows without a price are counted, never guessed (lists.ts)
+    estimate: estimate(store ? here : open),
+    serverTime: new Date().toISOString(),
+  };
 }
 
 // ------------------------------------------------------------------ basket / checkout
@@ -425,7 +444,7 @@ export interface QuickAddLine {
   product_id?: number | null;
 }
 
-export function addLines(lines: QuickAddLine[], actor: string, source = 'manual') {
+export function addLines(lines: QuickAddLine[], actor: string, source = 'manual', listId: number | null = null) {
   const out: { id: number; text: string; created: boolean }[] = [];
   for (const l of lines) {
     const name = l.name.trim();
@@ -436,7 +455,7 @@ export function addLines(lines: QuickAddLine[], actor: string, source = 'manual'
     const note = l.amount ?? (l.unit && l.qty ? l.unit : null);
     // what somebody typed stays the row's name; the product is only linked in the background (list2.ts)
     const text = name || p?.name || '';
-    const r = addToShopping({ productId, text, qty: l.qty ?? null, note, source, addedBy: actor });
+    const r = addToShopping({ productId, text, qty: l.qty ?? null, note, source, addedBy: actor, listId });
     if (!r.created && l.qty) {
       // already on the list: raise the quantity instead of a duplicate
       db.prepare('UPDATE shopping_items SET qty = MAX(COALESCE(qty, 1), ?) WHERE id = ?').run(l.qty, r.id);
@@ -448,19 +467,20 @@ export function addLines(lines: QuickAddLine[], actor: string, source = 'manual'
 }
 
 /** Parse, match confidently and add in one step (MCP, HA, voice). */
-export function quickAdd(text: string, actor: string, source = 'manual') {
+export function quickAdd(text: string, actor: string, source = 'manual', listId: number | null = null) {
   const preview = previewQuickAdd(text);
   return addLines(
     preview.map((p) => ({ name: p.name, qty: p.qty, unit: p.unit, amount: p.amount, product_id: p.confident ? p.product!.id : null })),
     actor,
     source,
+    listId,
   );
 }
 
 // ------------------------------------------------------------------ offline replay
 
 export type OfflineOp =
-  | { op_id: string; type: 'add'; text: string; product_id?: number | null; qty?: number | null }
+  | { op_id: string; type: 'add'; text: string; product_id?: number | null; qty?: number | null; list_id?: number | null }
   | { op_id: string; type: 'basket'; id: number; on: boolean; store_id?: number | null }
   | { op_id: string; type: 'check'; id: number; on: boolean; to_stock?: boolean }
   | { op_id: string; type: 'delete'; id: number }
@@ -477,8 +497,8 @@ export function replayOps(ops: OfflineOp[], actor: { name: string; userId?: numb
     try {
       const exists = (id: number) => Boolean(db.prepare('SELECT 1 FROM shopping_items WHERE id = ?').get(id));
       if (op.type === 'add') {
-        if (op.product_id) addLines([{ name: op.text, qty: op.qty ?? null, product_id: op.product_id }], actor.name);
-        else quickAdd(op.text, actor.name);
+        if (op.product_id) addLines([{ name: op.text, qty: op.qty ?? null, product_id: op.product_id }], actor.name, 'manual', op.list_id ?? null);
+        else quickAdd(op.text, actor.name, 'manual', op.list_id ?? null);
       } else if (op.type === 'basket') {
         if (exists(op.id)) setBasket(op.id, op.on, actor.name, op.store_id ?? null);
       } else if (op.type === 'check') {

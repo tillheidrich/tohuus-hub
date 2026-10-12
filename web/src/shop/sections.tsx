@@ -106,4 +106,7 @@ export interface ShopView {
   open: number;
   /** when the server answered (list2: "zuletzt abgeglichen") */
   serverTime?: string;
+  listId?: number | 'all';
+  lists?: import('./fill').ListInfo[];
+  estimate?: import('./fill').Estimate;
 }

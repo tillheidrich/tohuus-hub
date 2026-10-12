@@ -42,8 +42,10 @@ const fail = (res: any, e: unknown) => res.status((e as any).status ?? 500).json
 
 r.get('/shop/list', (req, res) => {
   const store = req.query.store ? num(req.query.store) : null;
+  // list2: ?list=<id> (0 = main list, default) or ?list=all
+  const listId = req.query.list === 'all' ? 'all' : Number(req.query.list) || 0;
   // discreet entries: the owner sees the real name; whoever shops may too, if the owner allows it (area: share)
-  res.json({ ...storeView(store, { userId: userId(req), shopping: req.query.mode === 'store' }), sectionKeys: SECTIONS });
+  res.json({ ...storeView(store, { userId: userId(req), shopping: req.query.mode === 'store' }, { listId }), sectionKeys: SECTIONS });
 });
 
 r.get('/shop/stores', (_req, res) => res.json(listStores()));
@@ -122,9 +124,10 @@ r.post('/shop/quick-add', (req, res) => {
           }),
         )
         .max(50),
+      list_id: z.number().int().min(0).nullable().optional(),
     })
     .parse(req.body);
-  res.json({ added: addLines(b.items, actorName(req)) });
+  res.json({ added: addLines(b.items, actorName(req), 'manual', b.list_id ?? null) });
 });
 
 // ---------------------------------------------------------------- claims ("I'll take care of it")
@@ -151,7 +154,7 @@ r.get('/shop/members', (_req, res) => res.json(db.prepare('SELECT id, name, colo
 // ---------------------------------------------------------------- offline replay
 
 const OpSchema = z.discriminatedUnion('type', [
-  z.object({ op_id: z.string().min(4).max(80), type: z.literal('add'), text: z.string().min(1).max(2000), product_id: z.number().nullable().optional(), qty: z.number().nullable().optional() }),
+  z.object({ op_id: z.string().min(4).max(80), type: z.literal('add'), text: z.string().min(1).max(2000), product_id: z.number().nullable().optional(), qty: z.number().nullable().optional(), list_id: z.number().int().min(0).nullable().optional() }),
   z.object({ op_id: z.string().min(4).max(80), type: z.literal('basket'), id: z.number(), on: z.boolean(), store_id: z.number().nullable().optional() }),
   z.object({ op_id: z.string().min(4).max(80), type: z.literal('check'), id: z.number(), on: z.boolean(), to_stock: z.boolean().optional() }),
   z.object({ op_id: z.string().min(4).max(80), type: z.literal('delete'), id: z.number() }),

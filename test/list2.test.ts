@@ -210,3 +210,73 @@ describe('per person and sync', () => {
     expect(s.json.lastChange).toBeTruthy();
   });
 });
+
+describe('B: several lists', () => {
+  it('keeps rows per list, filters the view and moves rows back when a list goes', async () => {
+    const diy = await req('POST', '/api/list/lists', { name: 'Baumarkt', kind: 'store' });
+    expect(diy.status).toBe(200);
+    const lid = diy.json.id;
+    // the same text on two lists is two rows
+    const a = await req('POST', '/api/shopping', { text: 'Schrauben', list_id: lid });
+    const b = await req('POST', '/api/shopping', { text: 'Schrauben' });
+    expect(a.json.id).not.toBe(b.json.id);
+    await req('POST', '/api/shop/quick-add', { items: [{ name: 'Dübel' }], list_id: lid });
+    await req('POST', '/api/shop/sync', { ops: [{ op_id: 'op-list-1', type: 'add', text: 'Kabelbinder', list_id: lid }] });
+    const v = (await req('GET', `/api/shop/list?list=${lid}`)).json;
+    expect(allRows(v).map((x: any) => x.text).sort()).toEqual(['Dübel', 'Kabelbinder', 'Schrauben']);
+    expect(v.lists.find((l: any) => l.id === lid).open).toBe(3);
+    const main = await listView();
+    expect(allRows(main).some((x: any) => x.text === 'Dübel')).toBe(false);
+    expect(main.lists[0]).toMatchObject({ id: 0, kind: 'main' });
+    // move one row to the main list, then remove the list: the rest follows
+    expect((await req('POST', `/api/list/items/${a.json.id}/move`, { list_id: 0 })).status).toBe(200);
+    expect((await req('DELETE', `/api/list/lists/${lid}`)).status).toBe(200);
+    const after = allRows(await listView()).map((x: any) => x.text);
+    expect(after).toEqual(expect.arrayContaining(['Dübel', 'Kabelbinder']));
+    expect((await req('GET', '/api/list/lists')).json.some((l: any) => l.id === lid)).toBe(false);
+  });
+});
+
+describe('B: usuals, guard, expected total', () => {
+  it('lists usuals by frequency', async () => {
+    const coffee = catalog.createProduct({ name: 'Kaffee' });
+    const bread = catalog.createProduct({ name: 'Toastbrot' });
+    const day = (n: number) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+    for (const n of [30, 20, 10]) receipt([{ name: 'KAFFEE', productId: coffee, price: 5.99 }], { shop: 'REWE', day: day(n) });
+    receipt([{ name: 'TOAST', productId: bread, price: 1.49 }], { shop: 'REWE', day: day(5) });
+    const u = (await req('GET', '/api/list/usuals')).json as any[];
+    const iC = u.findIndex((x) => x.productId === coffee);
+    const iB = u.findIndex((x) => x.productId === bread);
+    expect(iC).toBeGreaterThanOrEqual(0);
+    expect(iC).toBeLessThan(iB);
+    expect(u[iC].count).toBe(3);
+  });
+
+  it('warns before buying twice: on the list, bought recently, in stock', async () => {
+    const butter = catalog.createProduct({ name: 'Butter' });
+    receipt([{ name: 'BUTTER', productId: butter, price: 2.29 }], { shop: 'Aldi', day: new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10) });
+    let g = (await req('GET', `/api/list/guard?product_id=${butter}`)).json.hints as any[];
+    expect(g.map((h) => h.kind)).toEqual(['bought']);
+    expect(g[0].text).toBe('laut Bon vorgestern gekauft');
+    db.prepare(`INSERT INTO shopping_items (product_id, text, added_by, created_at) VALUES (?, 'Butter', 'Sam', datetime('now', '-1 day'))`).run(butter);
+    g = (await req('GET', `/api/list/guard?text=Butter`)).json.hints as any[];
+    expect(g[0].kind).toBe('on_list');
+    expect(g[0].text).toMatch(/^steht schon drauf \(Sam, gestern \d\d:\d\d\)$/);
+    // stock counts only when somebody keeps it up to date
+    const eggs = catalog.createProduct({ name: 'Eier' });
+    catalog.adjustStock({ productId: eggs, delta: 4, reason: 'manual' });
+    expect((await req('GET', `/api/list/guard?product_id=${eggs}`)).json.hints).toEqual([]);
+    catalog.adjustStock({ productId: eggs, delta: -2, reason: 'consume' });
+    expect((await req('GET', `/api/list/guard?product_id=${eggs}`)).json.hints).toEqual([{ kind: 'stock', qty: 2, text: 'im Vorrat 2' }]);
+  });
+
+  it('expects a total from receipt prices and never guesses the rest', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    const coffee = (db.prepare(`SELECT id FROM products WHERE name = 'Kaffee'`).get() as { id: number }).id;
+    catalog.addToShopping({ productId: coffee, text: 'Kaffee', qty: 2 });
+    catalog.addToShopping({ text: 'Blumen' });
+    const e = (await req('GET', '/api/list/estimate')).json;
+    expect(e).toMatchObject({ total: 11.98, priced: 1, unpriced: 1, unpricedNames: ['Blumen'] });
+    expect((await listView()).estimate).toMatchObject({ total: 11.98, unpriced: 1 });
+  });
+});

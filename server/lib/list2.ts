@@ -11,7 +11,8 @@
  * Tables: columns on shopping_items (migration 'list2-1'); per-person preferences live in user_prefs (onboard.ts).
  * Imports catalog, spending and images only – shop.ts imports `decorateItems` from here.
  */
-import { db, migrate } from '../db.js';
+import { db } from '../db.js';
+import './list-schema.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { addToShopping, getProduct } from './catalog.js';
@@ -20,13 +21,6 @@ import { getUserPref, setUserPref } from './onboard.js';
 import { PURCHASE_DAY } from './spending.js';
 import { clearChecked, tickItem } from './shopping-trust.js';
 import './share-core.js';
-
-migrate(
-  'list2-1',
-  `ALTER TABLE shopping_items ADD COLUMN substitute TEXT;
-   ALTER TABLE shopping_items ADD COLUMN photo_path TEXT;
-   ALTER TABLE shopping_items ADD COLUMN updated_at TEXT;`,
-);
 
 export const SUBSTITUTES = ['exact', 'ok', 'ask'] as const;
 export type Substitute = (typeof SUBSTITUTES)[number];

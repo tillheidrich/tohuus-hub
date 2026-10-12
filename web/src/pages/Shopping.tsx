@@ -28,6 +28,7 @@ import { originLabel, rhythmLine } from '../origin';
 import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
 import { ItemEditor, lastBoughtLine, substituteLine } from '../shop/ItemEditor';
 import '../shop/list2.css';
+import { AtStoreChips, EstimateLine, type GuardHint, type ListInfo, GuardSheet, ListTabs, ManageListSheet, NewListSheet, UsualsButton, UsualsGrid, guardCheck } from '../shop/fill';
 import { ListViewSheet, RecentDone, SyncLine, cacheView, cachedView, readLocalPrefs, useListPrefs } from '../shop/trust';
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, SectionShape, sectionLabel } from '../shop/sections';
 import { ItemBuyAt } from '../shop/BuyAt';
@@ -91,9 +92,14 @@ export function Shopping() {
   const me = useApi<Me>('me', '/me');
   const [storeId, setStoreId] = useState<number | null>(() => Number(storeGet('sw.shop.store', '0')) || null);
   const [mode, setMode] = useState<'list' | 'store'>(() => (storeGet('sw.shop.mode', 'list') === 'store' ? 'store' : 'list'));
+  // list2: one list at a time; "Ich bin bei Lidl" sorts the list by that store without the store view
+  const [listId, setListId] = useState<number>(() => Number(storeGet('sw.shop.list', '0')) || 0);
+  const [atStore, setAtStore] = useState<number | null>(() => Number(storeGet('sw.shop.at', '0')) || null);
+  const effStore = mode === 'store' ? storeId : atStore;
   // mode=store: discreet items whose owner allows it show their real name to whoever shops (area: share)
-  const listQs = new URLSearchParams({ ...(storeId ? { store: String(storeId) } : {}), ...(mode === 'store' ? { mode: 'store' } : {}) }).toString();
-  const q = useApi<ShopView>(['shopping', 'store', storeId ?? 0, mode], `/shop/list${listQs ? `?${listQs}` : ''}`);
+  const listQs = new URLSearchParams({ ...(effStore ? { store: String(effStore) } : {}), ...(mode === 'store' ? { mode: 'store' } : {}), ...(listId ? { list: String(listId) } : {}) }).toString();
+  const qKey = ['shopping', 'store', storeId ?? 0, mode, listId, mode === 'store' ? 0 : (atStore ?? 0)];
+  const q = useApi<ShopView>(qKey, `/shop/list${listQs ? `?${listQs}` : ''}`);
   const products = useApi<Product[]>('products', '/products');
   const offline = useOfflineState();
   const view = useMemo(() => overlay(q.data, me.data), [q.data, me.data, offline.pending]);
@@ -107,6 +113,10 @@ export function Shopping() {
   const [busy, setBusy] = useState(false);
   const [doneBag, setDoneBag] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
+  const [newList, setNewList] = useState(false);
+  const [manageList, setManageList] = useState(false);
+  const [usualsOpen, setUsualsOpen] = useState(false);
+  const [guardAsk, setGuardAsk] = useState<{ text: string; productId?: number; hints: GuardHint[] } | null>(null);
   const prefs = useListPrefs();
   const inputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
@@ -127,6 +137,18 @@ export function Shopping() {
     setStoreId(id);
     storeSet('sw.shop.store', String(id ?? 0));
   };
+  const pickList = (id: number) => {
+    setListId(id);
+    storeSet('sw.shop.list', String(id));
+  };
+  const pickAt = (id: number | null) => {
+    setAtStore(id);
+    storeSet('sw.shop.at', String(id ?? 0));
+  };
+  // a list that was removed meanwhile
+  useEffect(() => {
+    if (view?.lists && listId && !view.lists.some((l) => l.id === listId)) pickList(0);
+  }, [view?.lists, listId]);
   const switchMode = (m: 'list' | 'store') => {
     setMode(m);
     storeSet('sw.shop.mode', m);
@@ -153,7 +175,7 @@ export function Shopping() {
 
   const [vis, setVis] = useState<Visibility>('all');
   const [visOpen, setVisOpen] = useState(false);
-  const add = async (txt: string, productId?: number) => {
+  const add = async (txt: string, productId?: number, opts: { force?: boolean } = {}) => {
     const s = txt.trim();
     if (!s) return;
     if (vis !== 'all') {
@@ -181,15 +203,26 @@ export function Shopping() {
         /* fall through: add as typed */
       }
     }
+    // double-purchase guard: on the list already, bought a moment ago, plenty in stock? (lists.ts) – never blocks
+    if (!opts.force) {
+      const hints = await guardCheck(s, productId ?? null);
+      const serious = hints.filter((h) => h.kind !== 'on_list');
+      if (serious.length) {
+        setGuardAsk({ text: s, productId, hints });
+        return;
+      }
+      const onIt = hints.find((h) => h.kind === 'on_list');
+      if (onIt) toast({ text: `${s}: ${onIt.text}` });
+    }
     setText('');
-    await run({ type: 'add', text: s, product_id: productId ?? null });
+    await run({ type: 'add', text: s, product_id: productId ?? null, list_id: listId || null });
     inputRef.current?.focus();
   };
 
   const tick = async (i: ShopItem, on: boolean) => {
     if (i.id < 0) return;
     if (inStore) {
-      qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, on, true) : old));
+      qc.setQueryData<ShopView>(qKey, (old) => (old ? moveLocal(old, i.id, on, true) : old));
       await run({ type: 'basket', id: i.id, on, store_id: storeId });
       // five seconds to take a slip back – also offline (the undo is queued like the tick)
       if (on)
@@ -198,14 +231,14 @@ export function Shopping() {
           action: {
             label: t('Undo'),
             run: () => {
-              qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, false, true) : old));
+              qc.setQueryData<ShopView>(qKey, (old) => (old ? moveLocal(old, i.id, false, true) : old));
               void run({ type: 'basket', id: i.id, on: false, store_id: storeId });
             },
           },
         });
       return;
     }
-    qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, on, false) : old));
+    qc.setQueryData<ShopView>(qKey, (old) => (old ? moveLocal(old, i.id, on, false) : old));
     const sent = await run({ type: 'check', id: i.id, on, to_stock: on && toStock });
     if (sent && on) {
       if (toStock && i.product_id) invalidate('products');
@@ -215,7 +248,7 @@ export function Shopping() {
         action: {
           label: t('Undo'),
           run: () => {
-            qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, false, false) : old));
+            qc.setQueryData<ShopView>(qKey, (old) => (old ? moveLocal(old, i.id, false, false) : old));
             // the same un-tick as tapping the row again: the server takes back exactly what the tick booked into stock
             void run({ type: 'check', id: i.id, on: false }).then(() => invalidate('products', 'today'));
           },
@@ -283,6 +316,7 @@ export function Shopping() {
   // ticked rows stay where they were, struck through, until "Einkauf fertig" (list2) – nothing jumps under a thumb
   const groups = useMemo(() => (view ? inPlace(view) : []), [view]);
   const ticked = view ? view.basket.length + view.done.length : 0;
+  const currentList = view?.lists?.find((l) => l.id === listId);
 
   const seen = useSeen(view);
   const claimMe = (i: ShopItem) => run({ type: 'claim', id: i.id, on: true });
@@ -304,7 +338,17 @@ export function Shopping() {
       </header>
       {inStore && view?.store && <p className="eyebrow shop-at">{t('At {store}', { store: view.store.name })}</p>}
 
+      {view?.lists && !me.data?.actor.houseGuest && (
+        <ListTabs lists={view.lists} value={listId} onChange={pickList} onNew={() => setNewList(true)} onManage={() => setManageList(true)} />
+      )}
       <SyncLine updatedAt={q.dataUpdatedAt} />
+      {!inStore && view && <AtStoreChips stores={view.stores} value={atStore} onChange={pickAt} />}
+      {view && <EstimateLine e={view.estimate} />}
+      {currentList?.kind === 'care' && currentList.note && (
+        <p className="handover-note">
+          <b>{t('Handover')}:</b> {currentList.note}
+        </p>
+      )}
 
       {inStore && view && (
         <div className="chips shop-stores">
@@ -394,7 +438,14 @@ export function Shopping() {
         </div>
       )}
 
-      {!inStore && <Suggestions onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
+      {!inStore && !usualsOpen && (
+        <div className="row" style={{ marginTop: 12 }}>
+          <UsualsButton onClick={() => setUsualsOpen(true)} />
+        </div>
+      )}
+      {!inStore && usualsOpen && <UsualsGrid onClose={() => setUsualsOpen(false)} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id, list_id: listId || null })} />}
+
+      {!inStore && listId === 0 && <Suggestions onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
 
       <div className="shop-groups">
         {q.isLoading && !view ? (
@@ -505,8 +556,19 @@ export function Shopping() {
 
       {!inStore && view && view.open > 0 && <WhoGetsWhat view={view} />}
 
-      <QuickAddSheet rows={preview} onClose={() => setPreview(null)} onDone={() => { setPreview(null); setText(''); refresh(); }} />
-      <ItemSheet item={sel} me={me.data} onClose={() => setSel(null)} run={run} />
+      <GuardSheet
+        ask={guardAsk}
+        onNo={() => setGuardAsk(null)}
+        onYes={() => {
+          const g = guardAsk;
+          setGuardAsk(null);
+          if (g) void add(g.text, g.productId, { force: true });
+        }}
+      />
+      <NewListSheet open={newList} onClose={() => setNewList(false)} onCreated={(l) => pickList(l.id)} />
+      <ManageListSheet list={manageList ? (currentList ?? null) : null} onClose={() => setManageList(false)} onDeleted={() => pickList(0)} />
+      <QuickAddSheet listId={listId} rows={preview} onClose={() => setPreview(null)} onDone={() => { setPreview(null); setText(''); refresh(); }} />
+      <ItemSheet item={sel} me={me.data} lists={view?.lists ?? []} onClose={() => setSel(null)} run={run} />
       {view?.store && <OrderSheet open={ordering} store={view.store} present={view.sections.map((s) => s.key)} onClose={() => setOrdering(false)} />}
       <NewStoreSheet open={newStore} onClose={() => setNewStore(false)} onCreated={(s) => { pickStore(s.id); refresh(); }} />
       <ListViewSheet open={viewOpen} onClose={() => setViewOpen(false)} />
@@ -731,7 +793,7 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
 
 // ------------------------------------------------------------------ sheets
 
-function QuickAddSheet({ rows, onClose, onDone }: { rows: any[] | null; onClose: () => void; onDone: () => void }) {
+function QuickAddSheet({ rows, onClose, onDone, listId = 0 }: { rows: any[] | null; onClose: () => void; onDone: () => void; listId?: number }) {
   const [list, setList] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
@@ -742,6 +804,7 @@ function QuickAddSheet({ rows, onClose, onDone }: { rows: any[] | null; onClose:
     try {
       const r = await post<{ added: { created: boolean }[] }>('/shop/quick-add', {
         items: chosen.map((x) => ({ name: x.name, qty: x.qty, unit: x.unit, amount: x.amount, product_id: x.link && x.product ? x.product.id : null })),
+        list_id: listId || null,
       });
       const n = r.added.filter((a) => a.created).length;
       toast({ text: n === 1 ? t('1 item added') : t('{n} items added', { n }) });
@@ -793,7 +856,7 @@ function QuickAddSheet({ rows, onClose, onDone }: { rows: any[] | null; onClose:
   );
 }
 
-function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me; onClose: () => void; run: (op: any) => Promise<boolean> }) {
+function ItemSheet({ item, me, lists, onClose, run }: { item: ShopItem | null; me?: Me; lists: ListInfo[]; onClose: () => void; run: (op: any) => Promise<boolean> }) {
   const members = useApi<{ id: number; name: string; color: string }[]>(['shopping', 'members'], item ? '/shop/members' : null);
   // ha2: whoever Home Assistant sees out of the house can pick it up on the way
   const out = useOutOfHouse(Boolean(item) && !me?.actor.houseGuest);
@@ -854,6 +917,32 @@ function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me;
           ))}
         </div>
         <ItemBuyAt item={item} />
+        {lists.length > 1 && (
+          <>
+            <div className="eyebrow">{t('On which list?')}</div>
+            <div className="chips" style={{ flexWrap: 'wrap' }}>
+              {lists.map((l) => (
+                <button
+                  key={l.id}
+                  className={`chip ${(item.list_id ?? 0) === l.id ? 'on' : ''}`}
+                  onClick={async () => {
+                    if ((item.list_id ?? 0) === l.id) return;
+                    try {
+                      await post(`/list/items/${item.id}/move`, { list_id: l.id });
+                      invalidate('shopping');
+                      toast({ text: t('Moved to {list}', { list: l.name }) });
+                      onClose();
+                    } catch (e) {
+                      toast({ text: (e as Error).message, error: true });
+                    }
+                  }}
+                >
+                  {l.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <ItemPrivacy item={item} me={me} members={members.data ?? []} onDone={onClose} />
         <button className="btn danger" style={{ alignSelf: 'flex-start' }} onClick={async () => { await run({ type: 'delete', id: item.id }); onClose(); }}>
           <Trash size={16} /> {t('Remove from the list')}

@@ -418,13 +418,13 @@ r.get('/shopping', (req, res) => {
 });
 
 r.post('/shopping', (req, res) => {
-  const b = z.object({ text: z.string().min(1), product_id: z.number().nullable().optional(), qty: z.number().nullable().optional(), note: z.string().nullable().optional() }).parse(req.body);
+  const b = z.object({ text: z.string().min(1), product_id: z.number().nullable().optional(), qty: z.number().nullable().optional(), note: z.string().nullable().optional(), list_id: z.number().int().min(0).nullable().optional() }).parse(req.body);
   let productId = b.product_id ?? null;
   if (!productId) {
     const m = matchProduct(b.text);
     if (m && m.score >= 0.8) productId = m.productId;
   }
-  const out = addToShopping({ productId, text: b.text, qty: b.qty, note: b.note, source: 'manual', addedBy: actorName(req) });
+  const out = addToShopping({ productId, text: b.text, qty: b.qty, note: b.note, source: 'manual', addedBy: actorName(req), listId: b.list_id ?? null });
   if (out.created)
     void notify({ event: 'shopping.added', title: t('Shopping list: {text}', { text: b.text }), message: t('{actor} added “{text}” to the list.', { actor: actorName(req), text: b.text }), path: '/einkauf' });
   res.json(out);
