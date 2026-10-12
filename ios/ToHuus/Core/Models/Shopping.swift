@@ -9,6 +9,14 @@ struct ShopList: Codable, Sendable {
     @Lossy var basket: [ShopItem]
     @Lossy var done: [ShopItem]
     var open: Int?
+    /// several lists (e.g. "Drogerie", "Für Oma"): all lists and the one shown – missing on servers with one list
+    @Lossy var lists: [ListRef]
+    var list: ListRef?
+    /// who is out shopping right now ("Sam kauft gerade ein") and the add-on requests for that trip
+    @Lossy var shoppers: [Shopper]
+    @Lossy var requests: [AddonRequest]
+    /// expected total from known prices
+    var estimate: Estimate?
 
     static let empty = ShopList()
 
@@ -21,10 +29,59 @@ struct ShopList: Codable, Sendable {
         _sections = Lossy(wrappedValue: sections)
         _basket = Lossy(wrappedValue: basket)
         _done = Lossy(wrappedValue: done)
+        _lists = Lossy(wrappedValue: [])
+        _shoppers = Lossy(wrappedValue: [])
+        _requests = Lossy(wrappedValue: [])
+    }
+
+    /// Expected total: the server's estimate, else the sum of the prices the rows carry.
+    var expected: Estimate? {
+        if let estimate, estimate.total != nil { return estimate }
+        let items = openItems + basket
+        let priced = items.compactMap { i in i.price.map { $0 * (i.qty ?? 1) } }
+        guard !priced.isEmpty else { return nil }
+        return Estimate(total: priced.reduce(0, +), known: priced.count, count: items.count, currency: nil)
     }
 
     var openItems: [ShopItem] { sections.flatMap(\.items) }
     var openCount: Int { openItems.count }
+}
+
+struct ListRef: Codable, Sendable, Identifiable, Hashable {
+    var id: FlexID
+    var name: String
+    var open: Int?
+}
+
+/// A member who is out shopping (live shopping together).
+struct Shopper: Codable, Sendable, Identifiable, Hashable {
+    var userId: Int?
+    var name: String
+    var store: String?
+    var storeId: Int?
+    var since: String?
+    var me: Bool?
+    var id: String { userId.map(String.init) ?? name }
+}
+
+/// "Bringst du noch … mit?" – a wish for someone's current trip.
+struct AddonRequest: Codable, Sendable, Identifiable, Hashable {
+    var id: Int
+    var text: String
+    var by: String?
+    var to: String?
+    /// open | accepted | declined
+    var status: String?
+    var at: String?
+    var isOpen: Bool { status == nil || status == "open" }
+}
+
+struct Estimate: Codable, Sendable, Hashable {
+    var total: Double?
+    /// rows with a known price / all rows
+    var known: Int?
+    var count: Int?
+    var currency: String?
 }
 
 struct StoreRef: Codable, Sendable, Identifiable, Hashable {
@@ -69,6 +126,13 @@ struct ShopItem: Codable, Sendable, Identifiable, Equatable {
     var origin: String?
     /// queued locally, not yet on the server
     var pending: Bool?
+    /// substitute rule: any | ask | none (and an optional note "lieber Hafermilch")
+    var substitute: String?
+    var substituteNote: String?
+    /// photo of the wanted product (signed image path)
+    var photo: String?
+    /// last known price per unit (for the expected total)
+    var price: Double?
 
     struct Claim: Codable, Sendable, Equatable {
         var userId: Int?
@@ -116,6 +180,8 @@ struct ShopItem: Codable, Sendable, Identifiable, Equatable {
 }
 
 enum ShopSectionKey {
+    /// the server's aisle keys (server/lib/shopparse.ts SECTIONS)
+    static let all = ["produce", "bakery", "chilled", "frozen", "pantry", "snacks", "drinks", "drugstore", "household", "other"]
     static func label(_ key: String) -> String {
         switch key {
         case "produce": return L("Fruit & vegetables")

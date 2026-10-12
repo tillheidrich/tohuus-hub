@@ -13,6 +13,11 @@ final class ServerStore: HouseholdStore {
     private(set) var lastSynced: Date?
     private(set) var storeId: Int?
     private(set) var shopMode = false
+    /// several lists: the one shown (nil = the main list)
+    private(set) var listId: String? = SharedConfig.defaults.string(forKey: "list.current")
+    /// live shopping data from GET /api/shop/live when the list itself doesn't carry it; nil = server has no live
+    private(set) var live: ShopList?
+    private(set) var liveSupported = true
 
     private var snapshot: ShopList = .empty
     private var ops: [PendingOp] = []
@@ -55,7 +60,10 @@ final class ServerStore: HouseholdStore {
                     continue
                 }
                 for t in topics { self.revisions[t, default: 0] += 1 }
-                if topics.contains("shopping") || topics.contains("products") { await self.refreshList() }
+                if topics.contains("shopping") || topics.contains("products") || topics.contains("live") {
+                    await self.refreshList()
+                    await self.refreshLive()
+                }
             }
         }
     }
@@ -67,6 +75,25 @@ final class ServerStore: HouseholdStore {
 
     // MARK: list
 
+    func setList(_ id: String?) async {
+        listId = id
+        SharedConfig.defaults.set(id, forKey: "list.current")
+        await refreshList()
+    }
+
+    /// Who is shopping and the wishes for that trip (from the list payload or GET /api/shop/live).
+    var shoppers: [Shopper] { list.shoppers.isEmpty ? (live?.shoppers ?? []) : list.shoppers }
+    var addonRequests: [AddonRequest] { list.requests.isEmpty ? (live?.requests ?? []) : list.requests }
+
+    func refreshLive() async {
+        guard liveSupported, list.shoppers.isEmpty, list.requests.isEmpty else { return }
+        do {
+            live = try await api.shopLive()
+        } catch APIError.notFound {
+            liveSupported = false
+        } catch {}
+    }
+
     func setStore(_ id: Int?, shopMode: Bool) async {
         storeId = id
         self.shopMode = shopMode
@@ -75,10 +102,10 @@ final class ServerStore: HouseholdStore {
 
     func refreshList() async {
         do {
-            let data = try await api.shopList(storeId: storeId, shopMode: shopMode)
+            let data = try await api.shopList(storeId: storeId, shopMode: shopMode, listId: listId)
             let decoded = try api.decode(ShopList.self, from: data)
             snapshot = decoded
-            if storeId == nil && !shopMode { cache.saveSnapshot(data) }
+            if storeId == nil && !shopMode && listId == nil { cache.saveSnapshot(data) }
             isOnline = true
             lastError = nil
             lastSynced = Date()
@@ -92,7 +119,7 @@ final class ServerStore: HouseholdStore {
 
     private func rebuild() {
         list = OpQueueLogic.apply(ops, to: snapshot)
-        if !shopMode && storeId == nil {
+        if !shopMode && storeId == nil && listId == nil {
             publishWidgetSnapshot()
             PhoneWatchBridge.shared.publish(list: list, nextDue: nextDue, household: householdName)
         }
@@ -151,7 +178,8 @@ final class ServerStore: HouseholdStore {
         // one op per fragment, so each row can be ticked or removed on its own while offline
         let parts = QuickAddParser.fragments(trimmed).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         for part in parts.isEmpty ? [trimmed] : parts {
-            let op = PendingOp.add(part, localId: nextLocalId)
+            var op = PendingOp.add(part, localId: nextLocalId)
+            op.listId = listId
             nextLocalId -= 1
             ops = OpQueueLogic.enqueue(op, into: ops)
         }
