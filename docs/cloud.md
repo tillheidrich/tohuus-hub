@@ -52,6 +52,8 @@ DATA_DIR/
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |
 | `APPLE_SANDBOX_ACCOUNTS` | – | comma-separated e-mails of TestFlight testers: Sandbox purchases count only for households with one of these accounts |
 | `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`) |
+| `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_TOPIC`, `APNS_ENV` | – | iPhone push – [notifications.md](notifications.md#iphone-push-apns-serverlibapnsts) |
+| `OPERATOR_TOKEN` | – | ≥ 24 characters: opens `GET /api/operator/pulse` (anonymous weekly-question counts of households that chose to share – [shopping-list.md](shopping-list.md#j--friends--family-measurement)) |
 | `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU) |
 
 `ADMIN_NAME`/`ADMIN_PASSWORD`, `SEED_DEMO`, `MCP_PATH_SECRET`, `OIDC_*` and `DB_ENCRYPTION_KEY` are self-host only
@@ -132,7 +134,7 @@ manual household use the same endpoint with a session.
 | `ADMIN_PASSWORD`, demo seeding at start, `MCP_PATH_SECRET`, OIDC | instance-wide, no household |
 | household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead |
 
-Kept: guest links, displays, kid tablets, party board, web push, MCP with household tokens, the HACS integration,
+Kept: guest links, displays, kid tablets, party board, web push, iPhone push (APNs), the CalDAV bridge (app passwords carry the household prefix), MCP with household tokens, the HACS integration,
 exports (`GET /api/cloud/export`, household admins only, needs a confirmed e-mail).
 
 ## Plans and quotas
