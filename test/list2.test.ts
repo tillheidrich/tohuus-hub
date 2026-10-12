@@ -284,15 +284,18 @@ describe('B: usuals, guard, expected total', () => {
 describe('H: drag & drop on the server', () => {
   it('places a row before / after another, into another aisle and onto another list', async () => {
     db.prepare('DELETE FROM shopping_items').run();
-    const a = catalog.addToShopping({ text: 'Äpfel' });
+    const a = catalog.addToShopping({ text: 'Bananen' });
     const b = catalog.addToShopping({ text: 'Birnen' });
     const c = catalog.addToShopping({ text: 'Kiwis' });
+    db.prepare(`UPDATE shopping_items SET created_at = datetime('now', '-3 minutes') WHERE id = ?`).run(a.id);
+    db.prepare(`UPDATE shopping_items SET created_at = datetime('now', '-2 minutes') WHERE id = ?`).run(b.id);
+    db.prepare(`UPDATE shopping_items SET created_at = datetime('now', '-1 minutes') WHERE id = ?`).run(c.id);
     const order = async () => (await listView()).sections.find((s: any) => s.key === 'produce').items.map((i: any) => i.text);
-    expect(await order()).toEqual(['Kiwis', 'Birnen', 'Äpfel']);
+    expect(await order()).toEqual(['Kiwis', 'Birnen', 'Bananen']);
     expect((await req('POST', `/api/list/items/${a.id}/place`, { neighbor_id: c.id, after: false })).status).toBe(200);
-    expect(await order()).toEqual(['Äpfel', 'Kiwis', 'Birnen']);
+    expect(await order()).toEqual(['Bananen', 'Kiwis', 'Birnen']);
     await req('POST', `/api/list/items/${c.id}/place`, { neighbor_id: b.id, after: true });
-    expect(await order()).toEqual(['Äpfel', 'Birnen', 'Kiwis']);
+    expect(await order()).toEqual(['Bananen', 'Birnen', 'Kiwis']);
     await req('POST', `/api/list/items/${b.id}/place`, { section: 'snacks' });
     expect((await listView()).sections.find((s: any) => s.key === 'snacks').items.map((i: any) => i.text)).toEqual(['Birnen']);
     const lid = (await req('POST', '/api/list/lists', { name: 'Markt' })).json.id;
