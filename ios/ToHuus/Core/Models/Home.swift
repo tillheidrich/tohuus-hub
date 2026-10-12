@@ -529,6 +529,7 @@ struct AssistantAction: Decodable, Sendable, Identifiable, Hashable {
 
 struct ImportUploadResponse: Decodable, Sendable {
     @Lossy var results: [ImportResult]
+    init(results: [ImportResult]) { _results = Lossy(wrappedValue: results) }
 }
 
 struct ImportResult: Decodable, Sendable, Identifiable, Hashable {

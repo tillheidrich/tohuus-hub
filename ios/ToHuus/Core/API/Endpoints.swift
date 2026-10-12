@@ -65,8 +65,9 @@ extension APIClient {
 
     // MARK: shopping
 
-    func shopList(storeId: Int? = nil, shopMode: Bool = false) async throws -> Data {
+    func shopList(storeId: Int? = nil, shopMode: Bool = false, listId: String? = nil) async throws -> Data {
         var q: [URLQueryItem] = []
+        if let listId { q.append(URLQueryItem(name: "list", value: listId)) }
         if let storeId { q.append(URLQueryItem(name: "store", value: String(storeId))) }
         if shopMode { q.append(URLQueryItem(name: "mode", value: "store")) }
         return try await getData("api/shop/list", query: q)
@@ -84,6 +85,48 @@ extension APIClient {
         var body: [String: Any] = ["to_stock": toStock]
         if let storeId { body["store_id"] = storeId }
         _ = try await send("POST", "api/shop/checkout", json: body, as: Ignored.self)
+    }
+
+    // MARK: live shopping together, several lists, row details (server: branch b-list; tolerant until it is on main)
+
+    /// GET /api/shop/live → { shoppers: [...], requests: [...] }
+    func shopLive() async throws -> ShopList { try await get("api/shop/live") }
+    /// POST /api/shop/live/start { store_id } – "Sam kauft gerade ein"
+    func startLive(storeId: Int?) async throws {
+        var body: [String: Any] = [:]
+        if let storeId { body["store_id"] = storeId }
+        _ = try await send("POST", "api/shop/live/start", json: body, as: Ignored.self)
+    }
+    func stopLive() async throws { _ = try await send("POST", "api/shop/live/stop", json: [:], as: Ignored.self) }
+    /// POST /api/shop/live/requests { text } – a wish for the current trip
+    func requestAddon(_ text: String) async throws { _ = try await send("POST", "api/shop/live/requests", json: ["text": text], as: Ignored.self) }
+    /// POST /api/shop/live/requests/:id { answer: accept|decline } (also reachable as push action addon-accept/-decline)
+    func answerAddon(_ id: Int, accept: Bool) async throws {
+        _ = try await send("POST", "api/shop/live/requests/\(id)", json: ["answer": accept ? "accept" : "decline"], as: Ignored.self)
+    }
+
+    /// GET /api/shop/lists → [{ id, name, open }]
+    func shopLists() async throws -> [ListRef] { try await get("api/shop/lists", as: Lossy<ListRef>.self).wrappedValue }
+    func createShopList(name: String) async throws { _ = try await send("POST", "api/shop/lists", json: ["name": name], as: Ignored.self) }
+
+    /// PATCH /api/shopping/:id { note, substitute, substitute_note } (servers without substitute keep the note)
+    func updateItem(_ id: Int, note: String?, substitute: String?, substituteNote: String?) async throws {
+        var body: [String: Any] = ["note": note.map { $0 as Any } ?? NSNull()]
+        if let substitute { body["substitute"] = substitute }
+        body["substitute_note"] = substituteNote.map { $0 as Any } ?? NSNull()
+        _ = try await send("PATCH", "api/shopping/\(id)", json: body, as: Ignored.self)
+    }
+
+    /// POST /api/shopping/:id/photo (multipart `photo`)
+    func uploadItemPhoto(_ id: Int, jpeg: Data) async throws {
+        var mp = Multipart()
+        mp.addFile("photo", filename: "item.jpg", mimeType: "image/jpeg", data: jpeg)
+        _ = try await upload("api/shopping/\(id)/photo", multipart: mp, as: Ignored.self)
+    }
+
+    /// POST /api/shop/items/:id/section { section } – drag & drop between aisles
+    func moveItem(_ id: Int, section: String) async throws {
+        _ = try await send("POST", "api/shop/items/\(id)/section", json: ["section": section], as: Ignored.self)
     }
 
     func clearChecked() async throws { _ = try await send("POST", "api/shopping/clear-checked", as: Ignored.self) }
@@ -159,8 +202,11 @@ extension APIClient {
 
     // MARK: assistant
 
-    func chat(_ message: String, conversationId: String?) async throws -> ChatResponse {
+    /// `basic: true` asks for the built-in reader only (AI switched off for this member; servers that don't know the
+    /// field ignore it and decide by their own switches).
+    func chat(_ message: String, conversationId: String?, basic: Bool = false) async throws -> ChatResponse {
         var body: [String: Any] = ["message": message]
+        if basic { body["mode"] = "basic" }
         if let conversationId { body["conversationId"] = conversationId }
         return try await send("POST", "api/assistant/chat", json: body, timeout: 90)
     }
@@ -184,6 +230,19 @@ extension APIClient {
         for f in files { mp.addFile("files", filename: f.name, mimeType: f.mime, data: f.data) }
         mp.addField("mode", "auto")
         return try await upload("api/imports/upload", multipart: mp, timeout: 180)
+    }
+
+    /// POST /api/imports/text { lines, source: 'ocr-device', kind: 'receipt'|'list' } – text the iPhone read itself
+    /// (Apple Vision), so receipts work without AI. Server side: branch b-core.
+    func importText(lines: [String], kind: String) async throws -> ImportUploadResponse {
+        let r = try await send("POST", "api/imports/text", json: ["lines": lines, "source": "ocr-device", "kind": kind], as: JSONValue.self)
+        // { results: [...] } or a single import { id, title, … }
+        if let data = try? JSONEncoder().encode(r), let list = try? JSONCoding.decoder().decode(ImportUploadResponse.self, from: data), !list.results.isEmpty {
+            return list
+        }
+        let one = ImportResult(file: nil, id: r.first("id", "importId")?.int, error: r["error"]?.string, title: r.first("title", "shop", "store")?.string,
+                               duplicate: r["duplicate"]?.bool, lines: r["lines"])
+        return ImportUploadResponse(results: [one])
     }
 
     func applyImport(_ id: Int) async throws { _ = try await send("POST", "api/imports/\(id)/apply", as: Ignored.self) }

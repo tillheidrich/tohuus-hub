@@ -6,7 +6,11 @@ import VisionKit
 /// "Bon hinzufügen": document camera, photos or files → POST /api/imports/upload (multipart field `files`).
 struct ReceiptCaptureView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var app
     let store: ServerStore
+    /// read photos on the iPhone first (Apple Vision) – always when the household has no AI for receipts
+    @State private var readOnDevice = true
+    @State private var showPaperList = false
     @State private var showScanner = false
     @State private var showFiles = false
     @State private var photoItems: [PhotosPickerItem] = []
@@ -23,6 +27,17 @@ struct ReceiptCaptureView: View {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
                     Text(L("Receipts show ToHuus what you bought, what it cost and how often. Paper, photo, PDF or e-receipt – all fine."))
                         .foregroundStyle(Theme.ink2)
+                    Toggle(isOn: $readOnDevice) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("Read photos on this iPhone"))
+                            Text(app.receiptAIOn ? L("Only the recognised text goes to ToHuus, not the photo.")
+                                                 : L("Without AI ToHuus reads the photo here and sends only the text."))
+                                .font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    .disabled(!app.receiptAIOn)
+                    .onAppear { if !app.receiptAIOn { readOnDevice = true } else { readOnDevice = SharedConfig.defaults.object(forKey: "ocr.device") as? Bool ?? false } }
+                    .onChange(of: readOnDevice) { _, on in SharedConfig.defaults.set(on, forKey: "ocr.device") }
                     if VNDocumentCameraViewController.isSupported {
                         Button {
                             showScanner = true
@@ -41,6 +56,12 @@ struct ReceiptCaptureView: View {
                         Label(L("Choose PDF or file"), systemImage: "folder")
                     }
                     .buttonStyle(SecondaryButtonStyle())
+                    Button {
+                        showPaperList = true
+                    } label: {
+                        Label(L("Photograph a paper list"), systemImage: "list.bullet.rectangle")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
                     if uploading {
                         HStack { ProgressView(); Text(L("Reading the receipt …")).foregroundStyle(Theme.ink2) }
                     }
@@ -53,13 +74,11 @@ struct ReceiptCaptureView: View {
             .navigationTitle(L("Add receipt"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { dismiss() } } }
+            .sheet(isPresented: $showPaperList) { PaperListSheet(store: store) }
             .fullScreenCover(isPresented: $showScanner) {
                 DocumentScanner { images in
                     showScanner = false
-                    let files = images.enumerated().compactMap { i, img -> UploadFile? in
-                        img.jpegData(compressionQuality: 0.8).map { ("receipt-\(i + 1).jpg", "image/jpeg", $0) }
-                    }
-                    if !files.isEmpty { Task { await upload(files) } }
+                    Task { await handle(images) }
                 } onCancel: {
                     showScanner = false
                 }
@@ -79,15 +98,12 @@ struct ReceiptCaptureView: View {
             .onChange(of: photoItems) { _, items in
                 guard !items.isEmpty else { return }
                 Task {
-                    var files: [UploadFile] = []
-                    for (i, item) in items.enumerated() {
-                        if let data = try? await item.loadTransferable(type: Data.self) {
-                            let img = UIImage(data: data)?.jpegData(compressionQuality: 0.8) ?? data
-                            files.append(("photo-\(i + 1).jpg", "image/jpeg", img))
-                        }
+                    var images: [UIImage] = []
+                    for item in items {
+                        if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) { images.append(img) }
                     }
                     photoItems = []
-                    await upload(files)
+                    await handle(images)
                 }
             }
         }
@@ -120,6 +136,40 @@ struct ReceiptCaptureView: View {
                 }
             }
         }
+    }
+
+    /// Photos: read on the device and send the text (POST /api/imports/text), or upload the pictures.
+    private func handle(_ images: [UIImage]) async {
+        guard !images.isEmpty else { return }
+        if readOnDevice || !app.receiptAIOn {
+            uploading = true
+            error = nil
+            var lines: [String] = []
+            for img in images { lines += (try? await DeviceOCR.lines(in: img)) ?? [] }
+            uploading = false
+            if lines.isEmpty {
+                error = L("No text found on the photo. Try again in better light.")
+                return
+            }
+            do {
+                uploading = true
+                defer { uploading = false }
+                let r = try await store.api.importText(lines: lines, kind: "receipt")
+                results = r.results + results
+                store.touch("imports")
+                Haptics.success()
+                return
+            } catch APIError.notFound {
+                // server without device text import yet: send the pictures after all
+            } catch {
+                self.error = APIError.from(error).localizedDescription
+                return
+            }
+        }
+        let files = images.enumerated().compactMap { i, img -> UploadFile? in
+            img.jpegData(compressionQuality: 0.8).map { ("receipt-\(i + 1).jpg", "image/jpeg", $0) }
+        }
+        await upload(files)
     }
 
     private func upload(_ files: [UploadFile]) async {

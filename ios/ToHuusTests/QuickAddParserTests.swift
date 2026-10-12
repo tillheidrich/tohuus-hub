@@ -69,3 +69,25 @@ final class QuickAddParserTests: XCTestCase {
         XCTAssertTrue(QuickAddParser.parse("   ").isEmpty)
     }
 }
+
+/// On-device OCR post-processing (Apple Vision boxes → lines, paper list → items).
+final class DeviceOCRTests: XCTestCase {
+    private func frag(_ t: String, x: CGFloat, y: CGFloat, h: CGFloat = 0.02) -> DeviceOCR.Fragment {
+        DeviceOCR.Fragment(text: t, box: CGRect(x: x, y: y, width: 0.2, height: h))
+    }
+
+    func testMergesItemAndPriceOnOneLine() {
+        let lines = DeviceOCR.merge([
+            frag("1,29", x: 0.8, y: 0.700),
+            frag("Milch 1,5%", x: 0.1, y: 0.705),
+            frag("LIDL", x: 0.4, y: 0.9),
+            frag("Brot", x: 0.1, y: 0.65),
+        ])
+        XCTAssertEqual(lines, ["LIDL", "Milch 1,5%  1,29", "Brot"])
+    }
+
+    func testPaperListDropsHeadingsBulletsAndPrices() {
+        let items = DeviceOCR.listItems(["Einkaufsliste:", "- Milch", "• 2 Brot", "[x] Eier", "12.10.", "3,50 €", "Bananen"])
+        XCTAssertEqual(items, ["Milch", "2 Brot", "Eier", "Bananen"])
+    }
+}
