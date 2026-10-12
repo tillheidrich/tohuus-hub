@@ -12,7 +12,7 @@ import { recipeImageSql } from './recipe-images.js';
 import { config } from '../config.js';
 import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
-import { NAME_MAX, randomToken, rateLimited, sha256, type Actor } from './auth.js';
+import { NAME_MAX, randomToken, rateLimited, rateLimitedGlobal, sha256, type Actor } from './auth.js';
 import { EMAIL_RE, householdName, mailAvailable, normEmail, sendAuthMail } from './auth-policy.js';
 import { AuthError, startSession } from './auth-sessions.js';
 import { emit } from './bus.js';
@@ -21,6 +21,7 @@ import { createKid, deleteKid, updateKid } from './kids.js';
 import { ANIMALS, parseFace, type Face } from './people-faces.js';
 import { GUEST_LEVELS, LEVEL_AREAS, effectiveLevel, expireOverrides, isGuestLevel, isHouseGuest, type EffectiveLevel, type GuestLevel, type GuestOverride } from './people-policy.js';
 import { peopleSignals, prefsOf, type PersonPrefs } from './people-signals.js';
+import { syncMembership } from './membership-sync.js';
 import { forEachHousehold } from './cloud-jobs.js';
 
 // children: optional birth year and the shared picture model (kid_profiles comes from kids.ts, imported above)
@@ -320,6 +321,8 @@ export function setKind(id: number, kind: 'member' | 'guest', by: Actor | undefi
   } else {
     db.prepare(`UPDATE users SET kind = 'member', guest_override = NULL WHERE id = ?`).run(id);
   }
+  // ToHuus Cloud: accounts.db mirrors the role (household switcher) – never let it go stale
+  syncMembership(id);
   emit('settings');
   return getPerson(`u${id}`)!;
 }
@@ -344,6 +347,7 @@ export function setGuestAccess(id: number, patch: { level?: GuestLevel; override
     const o: GuestOverride = { level: patch.override.level, until: toSql(until), set_by: by?.name ?? null };
     db.prepare('UPDATE users SET guest_override = ? WHERE id = ?').run(JSON.stringify(o), id);
   }
+  syncMembership(id);
   emit('settings');
   return getPerson(`u${id}`)!;
 }
@@ -578,7 +582,7 @@ export function createLoginLink(userId: number, by: Actor | undefined, deliver: 
 }
 
 export function openLoginLink(req: Request, res: Response, token: string) {
-  if (rateLimited(`people-link:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+  if (rateLimitedGlobal(`people-link:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
   if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) throw new AuthError(410, t('This link has expired or was already used.'));
   const row = db
     .prepare(`SELECT * FROM people_login_links WHERE token_hash = ? AND used_at IS NULL AND expires_at > datetime('now')`)

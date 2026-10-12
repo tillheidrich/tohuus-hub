@@ -40,6 +40,9 @@ const bearerOf = (req: Request): string | null => {
   return typeof k === 'string' ? k.trim() : null;
 };
 
+/** Sign-in, signup, e-mail links, password reset, app sign-in: account level, no household from the request. */
+const PRE_AUTH = /^\/api\/(auth\/(login|logout|link|link\/open|email\/verify|reset|reset\/check|reset\/confirm|app|options)|cloud\/signup)\/?$/;
+
 /** Every string in the path, the query and the top level of a JSON body that carries a household routing prefix. */
 function prefixedSlugs(req: Request, includeBody: boolean): string[] {
   const out = new Set<string>();
@@ -115,7 +118,8 @@ export function cloudContext(req: Request, res: Response, next: NextFunction) {
       // 2b/3. tokens in the URL or body, signed image URLs
       // 4. cookie session
       const sess = sessionByToken(req.cookies?.[SESSION_COOKIE]);
-      const slugs = prefixedSlugs(req, !sess);
+      // account-level sign-in routes never run inside a household picked from the query or body (rate limits, M1)
+      const slugs = PRE_AUTH.test(req.path) ? [] : prefixedSlugs(req, !sess);
       const hs = typeof req.query.h === 'string' && req.path.startsWith('/img/') ? req.query.h : null;
       if (hs) slugs.push(hs);
       const homes = [...new Set(slugs.map((s) => householdBySlug(s)?.id).filter((x): x is string => Boolean(x)))];

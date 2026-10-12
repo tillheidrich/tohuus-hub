@@ -19,7 +19,7 @@ import {
   SESSION_COOKIE,
   hashPassword,
   randomToken,
-  rateLimited,
+  rateLimitedGlobal,
   resolveActor,
   safeEqual,
   sha256,
@@ -38,6 +38,7 @@ import { currentHousehold, runInHousehold } from '../lib/tenancy.js';
 import { currentPlan } from '../lib/plans.js';
 import * as accountsModule from '../lib/accounts.js';
 import * as cloudAuthModule from '../lib/cloud-auth.js';
+import { householdPerson, isHouseholdAdmin, syncMembership } from '../lib/membership-sync.js';
 
 export const instance = Router();
 export const appAuth = Router();
@@ -116,7 +117,7 @@ const appReq = z.object({
 function selfhostAppUser(req: Request, b: z.infer<typeof appReq>) {
   if (b.password !== undefined) {
     const who = (b.email || b.name || '').trim();
-    if (rateLimited(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimited(`user:${who.toLowerCase()}`, 8, 5 * 60_000))
+    if (rateLimitedGlobal(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimitedGlobal(`user:${who.toLowerCase()}`, 8, 5 * 60_000))
       throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     return (async () => {
       const u = who.includes('@') ? userByVerifiedEmail(normEmail(who)) : userByName(who);
@@ -125,7 +126,7 @@ function selfhostAppUser(req: Request, b: z.infer<typeof appReq>) {
       if (authPolicy().passwordFor === 'admins' && u.role !== 'admin') throw new AuthError(403, t('Passwords are switched off in this household. Please sign in another way.'));
       if (u.totp_secret) {
         if (!b.code) throw new AuthError(401, t('Enter the code from your authenticator app.'), { needCode: true });
-        if (rateLimited(`totp:${u.id}`, 5, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+        if (rateLimitedGlobal(`totp:${u.id}`, 5, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
         if (!checkSecondFactor(u.id, b.code)) throw new AuthError(401, t('That code didn’t work.'), { needCode: true });
       }
       return u.id;
@@ -274,9 +275,41 @@ function currentTokenHash(req: Request) {
 
 // ================================================================= cloud: accounts
 
+/**
+ * Destructive account actions (delete the account or a household) need the password; an account without one
+ * (e-mail links only) confirms with a fresh e-mail link: the first call sends it, opening it within 15 minutes
+ * makes the session fresh, and the call is repeated.
+ */
+async function confirmAccount(req: Request, accountId: number, password: string | undefined) {
+  const acc = await A();
+  const a = acc.accountById(accountId)!;
+  if (a.password_hash?.startsWith('scrypt$')) {
+    if (rateLimitedGlobal(`confirm:${accountId}`, 8, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (!password || !(await verifyPassword(password, a.password_hash))) throw new AuthError(400, t('Please confirm with your password.'), { needPassword: true });
+    return;
+  }
+  const id = (await CA()).cloudIdentity(req);
+  const s = id?.sessionId ? (acc.accountsDb().prepare('SELECT method, created_at FROM sessions WHERE id = ?').get(id.sessionId) as { method: string; created_at: string } | undefined) : undefined;
+  if (s && /link|email/.test(s.method) && Date.parse(s.created_at.replace(' ', 'T') + 'Z') > Date.now() - 15 * 60_000) return;
+  await sendCloudSignInLink(a.email);
+  throw new AuthError(400, t('We sent you an e-mail. Open the link in it, then try again within 15 minutes.'), { needEmailConfirm: true });
+}
+
+async function sendCloudSignInLink(email: string) {
+  if (rateLimitedGlobal(`link:${email}`, 3, 15 * 60_000) || !canSendMail()) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+  const acc = await A();
+  const a = acc.accountByEmail(email);
+  if (!a) return;
+  const token = acc.createAuthLink('magic', a.id, 15);
+  await sendAuthMail(a.email, t('Your sign-in link'), t('Sign in to ToHuus'), t('Tap the button to sign in. The link works once and for 15 minutes.'), {
+    url: `${config.baseUrl}/anmelden/link#${token}`,
+    label: t('Sign in'),
+  });
+}
+
 async function cloudPasswordCheck(req: Request, emailRaw: string, password: string): Promise<number> {
   const email = normEmail(emailRaw);
-  if (rateLimited(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimited(`acct:${email}`, 8, 5 * 60_000))
+  if (rateLimitedGlobal(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimitedGlobal(`acct:${email}`, 8, 5 * 60_000))
     throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
   const a = (await A()).accountByEmail(email);
   const ok = await verifyPassword(password, a?.password_hash?.startsWith('scrypt$') ? a.password_hash : DUMMY_HASH);
@@ -374,7 +407,7 @@ cloudPub.post(
     const b = signupReq.parse(req.body ?? {});
     const email = normEmail(b.email);
     if (!EMAIL_RE.test(email)) throw new AuthError(400, t('That doesn’t look like an e-mail address.'));
-    if (rateLimited(`signup-ip:${req.ip}`, 5, 60 * 60_000) || rateLimited(`signup-mail:${email}`, 3, 60 * 60_000))
+    if (rateLimitedGlobal(`signup-ip:${req.ip}`, 5, 60 * 60_000) || rateLimitedGlobal(`signup-mail:${email}`, 3, 60 * 60_000))
       throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const acc = await A();
     if (acc.accountByEmail(email)) throw new AuthError(409, t('There is already an account with this address – please sign in.'));
@@ -445,7 +478,7 @@ cloudPub.post(
   wrap(async (req) => {
     const b = z.object({ email: z.string().trim().max(254).optional(), name: z.string().trim().max(254).optional() }).parse(req.body ?? {});
     const email = normEmail(b.email || b.name || '');
-    if (rateLimited(`link-ip:${req.ip}`, 10, 15 * 60_000) || rateLimited(`link:${email}`, 3, 15 * 60_000)) return sameAnswer();
+    if (rateLimitedGlobal(`link-ip:${req.ip}`, 10, 15 * 60_000) || rateLimitedGlobal(`link:${email}`, 3, 15 * 60_000)) return sameAnswer();
     const acc = await A();
     const a = EMAIL_RE.test(email) ? acc.accountByEmail(email) : undefined;
     if (a && canSendMail()) {
@@ -461,7 +494,7 @@ cloudPub.post(
 cloudPub.post(
   '/auth/link/open',
   wrap(async (req, res) => {
-    if (rateLimited(`link-open:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`link-open:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const acc = await A();
     const accountId = acc.consumeAuthLink('magic', tokenReq.parse(req.body ?? {}).token);
     if (!accountId) throw new AuthError(410, t('This link has expired or was already used.'));
@@ -474,7 +507,7 @@ cloudPub.post(
 cloudPub.post(
   '/auth/email/verify',
   wrap(async (req) => {
-    if (rateLimited(`verify:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`verify:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const acc = await A();
     const accountId = acc.consumeAuthLink('verify', tokenReq.parse(req.body ?? {}).token);
     if (!accountId) throw new AuthError(410, t('This link has expired or was already used.'));
@@ -493,7 +526,7 @@ cloudPub.post(
   wrap(async (req) => {
     const b = z.object({ email: z.string().trim().max(254).optional(), name: z.string().trim().max(254).optional() }).parse(req.body ?? {});
     const email = normEmail(b.email || b.name || '');
-    if (rateLimited(`reset-ip:${req.ip}`, 10, 15 * 60_000) || rateLimited(`reset:${email}`, 3, 60 * 60_000)) return sameAnswer();
+    if (rateLimitedGlobal(`reset-ip:${req.ip}`, 10, 15 * 60_000) || rateLimitedGlobal(`reset:${email}`, 3, 60 * 60_000)) return sameAnswer();
     const acc = await A();
     const a = EMAIL_RE.test(email) ? acc.accountByEmail(email) : undefined;
     if (a && canSendMail()) {
@@ -509,7 +542,7 @@ cloudPub.post(
 cloudPub.post(
   '/auth/reset/check',
   wrap(async (req) => {
-    if (rateLimited(`reset-open:${req.ip}`, 20, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`reset-open:${req.ip}`, 20, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const { token } = tokenReq.parse(req.body ?? {});
     const acc = await A();
     const row = /^[A-Za-z0-9_-]{20,100}$/.test(token)
@@ -549,7 +582,7 @@ cloudPub.get('/auth/users', (_req, res) => res.json([]));
 cloudPub.post(
   '/invite/:token',
   wrap(async (req, res) => {
-    if (rateLimited(`invite:${req.ip}`, 30, 10 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`invite:${req.ip}`, 30, 10 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const h = currentHousehold();
     if (!h) throw new AuthError(404, t('This invitation has expired or was already used.'));
     const b = z
@@ -572,7 +605,7 @@ cloudPub.post(
       if (existing) accountId = await cloudPasswordCheck(req, email, b.password);
       else {
         if (b.password.length < CLOUD_PASSWORD_MIN) throw new AuthError(400, t('At least {n} characters, please.', { n: CLOUD_PASSWORD_MIN }));
-        if (rateLimited(`signup-ip:${req.ip}`, 5, 60 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+        if (rateLimitedGlobal(`signup-ip:${req.ip}`, 5, 60 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
         accountId = acc.createAccount(email, hashPassword(b.password), b.name || null, lang()).id;
       }
     }
@@ -631,7 +664,7 @@ cloud.post(
         memberName: z.string().trim().max(NAME_MAX).optional(),
       })
       .parse(req.body ?? {});
-    if (rateLimited(`hh-create:${id.accountId}`, 5, 24 * 3600_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`hh-create:${id.accountId}`, 5, 24 * 3600_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const acc = await A();
     const a = acc.accountById(id.accountId)!;
     const l = b.lang ?? (isLang(a.lang ?? '') ? a.lang! : lang());
@@ -661,10 +694,12 @@ cloud.delete(
     const acc = await A();
     const hid = String(req.params.id);
     const m = acc.membership(id.accountId, hid);
-    if (!m || m.role !== 'admin') throw new AuthError(403, t('Only admins of this household can delete it.'));
+    // the household database decides (a demoted admin or a permanent guest must not shred it), not the mirror
+    if (!m || !isHouseholdAdmin(householdPerson(hid, m.user_id))) throw new AuthError(403, t('Only admins of this household can delete it.'));
     const h = acc.getHousehold(hid)!;
-    const b = z.object({ confirm: z.string().max(80) }).parse(req.body ?? {});
+    const b = z.object({ confirm: z.string().max(80), password: z.string().max(200).optional() }).parse(req.body ?? {});
     if (b.confirm.trim() !== h.name.trim()) throw new AuthError(400, t('Please type the name of the household to confirm.'));
+    await confirmAccount(req, id.accountId, b.password);
     acc.shredHousehold(hid);
     return { ok: true };
   }),
@@ -682,22 +717,28 @@ cloud.delete(
     const acc = await A();
     const a = acc.accountById(id.accountId)!;
     const b = z.object({ password: z.string().max(200).optional(), confirm: z.string().max(254).optional() }).parse(req.body ?? {});
-    const ok = b.password ? await verifyPassword(b.password, a.password_hash?.startsWith('scrypt$') ? a.password_hash : DUMMY_HASH) : normEmail(b.confirm ?? '') === a.email;
-    if (!ok) throw new AuthError(400, t('Please confirm with your password or your e-mail address.'));
+    await confirmAccount(req, a.id, b.password);
     const shredded: string[] = [];
     const left: string[] = [];
     for (const m of acc.membershipsOf(a.id)) {
-      const others = acc.membersOf(m.household_id).filter((x) => x.account_id !== a.id);
-      if (!others.length) {
+      // who else really belongs: a current membership and a member row (not a permanent guest) in the household
+      const others = acc
+        .membersOf(m.household_id)
+        .filter((x) => x.account_id !== a.id && (!x.expires_at || Date.parse(x.expires_at.replace(' ', 'T') + 'Z') > Date.now()))
+        .map((x) => ({ ...x, person: householdPerson(m.household_id, x.user_id) }))
+        .filter((x) => x.person);
+      const full = others.filter((x) => x.person!.kind !== 'guest');
+      // nobody left who could run the household (guests never inherit it) → crypto-shred
+      if (!full.length) {
         acc.shredHousehold(m.household_id);
         shredded.push(m.household_id);
         continue;
       }
-      if (m.role === 'admin' && !others.some((x) => x.role === 'admin')) {
-        const heir = others.find((x) => x.role === 'member') ?? others[0];
-        acc.addMembership({ accountId: heir.account_id, householdId: m.household_id, userId: heir.user_id, role: 'admin', guestLevel: null, expiresAt: heir.expires_at });
+      if (isHouseholdAdmin(householdPerson(m.household_id, m.user_id)) && !full.some((x) => isHouseholdAdmin(x.person))) {
+        const heir = full[0];
         runInHousehold({ id: m.household_id, via: 'account-delete' }, () => {
-          db.prepare(`UPDATE users SET role = 'admin', kind = 'member' WHERE id = ?`).run(heir.user_id);
+          db.prepare(`UPDATE users SET role = 'admin' WHERE id = ?`).run(heir.user_id);
+          syncMembership(heir.user_id);
         });
       }
       runInHousehold({ id: m.household_id, via: 'account-delete' }, () => {
@@ -723,7 +764,8 @@ cloud.get(
     const a = acc.accountById(id.accountId)!;
     if (!a.verified_at) throw new AuthError(403, t('Please confirm your e-mail address first.'));
     const m = acc.membership(id.accountId, h.id);
-    if (!m || m.role === 'guest') throw new AuthError(403, 'forbidden');
+    // the whole household database: admins only (as /api/export.json in self-host), judged by the household row
+    if (!m || !isHouseholdAdmin(householdPerson(h.id, m.user_id))) throw new AuthError(403, t('Only admins can export the household.'));
     const out = buildExport();
     res.setHeader('Content-Disposition', `attachment; filename="tohuus-export-${new Date().toISOString().slice(0, 10)}.json"`);
     res.setHeader('Cache-Control', 'no-store');

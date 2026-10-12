@@ -2,7 +2,7 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { lang } from '../db.js';
-import { rateLimited, requireAdmin, requireAuth } from '../lib/auth.js';
+import { rateLimited, rateLimitedGlobal, requireAdmin, requireAuth } from '../lib/auth.js';
 import { addClient } from '../lib/bus.js';
 import {
   DISPLAY_JS,
@@ -85,7 +85,7 @@ r.delete('/displays/:id', requireAdmin, (req, res) => {
  */
 export const pub = Router();
 
-const tooMany = (req: any) => rateLimited(`display:${req.ip}`, 600, 10 * 60_000);
+const tooMany = (req: any) => rateLimitedGlobal(`display:${req.ip}`, 600, 10 * 60_000);
 const noStore = (res: Response) => res.setHeader('Cache-Control', 'no-store');
 /** A read-only page may be shown inside Home Assistant dashboards (webpage/iframe card). */
 const allowFraming = (res: Response) => {

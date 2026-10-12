@@ -535,9 +535,11 @@ describe('crypto', () => {
     expect(fs.readFileSync(bfile).subarray(0, 16).toString('latin1')).not.toBe('SQLite format 3\0');
     const copy = path.join(os.tmpdir(), `tohuus-shred-${Date.now()}.db`);
     fs.copyFileSync(bfile, copy);
-    expect((await B.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'wrong name' })).status).toBe(400);
-    expect((await A.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'Elsewhere' })).status).toBe(403);
-    const del = await B.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'Elsewhere' });
+    expect((await B.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'wrong name', password: 'geheim1234' })).status).toBe(400);
+    expect((await A.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'Elsewhere', password: 'geheim1234' })).status).toBe(403);
+    // the name alone is not enough: the password confirms
+    expect((await B.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'Elsewhere' })).status).toBe(400);
+    const del = await B.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'Elsewhere', password: 'geheim1234' });
     expect(del.status, del.text).toBe(200);
     expect(fs.existsSync(path.join(dir, 'households', hB))).toBe(false);
     expect(fs.existsSync(bdir)).toBe(false);

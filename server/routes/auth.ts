@@ -11,7 +11,7 @@ import { Router, type NextFunction, type Request, type Response } from 'express'
 import { z } from 'zod';
 import { brand, db, lang } from '../db.js';
 import { t } from '../i18n.js';
-import { NAME_MAX, PASSWORD_MIN, hashPassword, rateLimited, requireAdmin, requireAuth, resolveActor, verifyPassword } from '../lib/auth.js';
+import { NAME_MAX, PASSWORD_MIN, hashPassword, rateLimited, rateLimitedGlobal, requireAdmin, requireAuth, resolveActor, verifyPassword } from '../lib/auth.js';
 import {
   SECRET_MASK,
   authPolicy,
@@ -126,7 +126,7 @@ pub.post(
     const { name, password, code } = z
       .object({ name: z.string().trim().max(NAME_MAX * 2), password: z.string().max(200), code: z.string().trim().max(20).optional() })
       .parse(req.body);
-    if (rateLimited(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimited(`user:${name.toLowerCase()}`, 8, 5 * 60_000))
+    if (rateLimitedGlobal(`ip:${req.ip}`, 10, 5 * 60_000) || rateLimited(`user:${name.toLowerCase()}`, 8, 5 * 60_000))
       throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const u = userByName(name);
     const ok = await verifyPassword(password, u && hasPassword(u) ? u.password_hash : DUMMY_HASH);
@@ -159,7 +159,7 @@ pub.post(
 pub.post(
   '/auth/link/poll',
   wrap((req, res) => {
-    if (rateLimited(`link-poll:${req.ip}`, 400, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`link-poll:${req.ip}`, 400, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     return pollMagicLink(req, res);
   }),
 );
@@ -171,7 +171,7 @@ pub.post('/auth/reset', wrap((req) => requestPasswordReset(req, linkReq.parse(re
 pub.post(
   '/auth/reset/check',
   wrap((req) => {
-    if (rateLimited(`reset-open:${req.ip}`, 20, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`reset-open:${req.ip}`, 20, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     return checkResetToken(z.object({ token: z.string().max(200) }).parse(req.body).token);
   }),
 );
@@ -189,7 +189,7 @@ pub.post(
   '/auth/passkey/options',
   wrap(async (req, res) => {
     if (!authPolicy().passkeys) throw new AuthError(403, t('Passkeys are switched off in this household.'));
-    if (rateLimited(`passkey:${req.ip}`, 30, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`passkey:${req.ip}`, 30, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const { options, key } = await authenticationOptions();
     res.cookie(PASSKEY_COOKIE, key, { ...cookieBase(), maxAge: 5 * 60_000, path: PASSKEY_PATH });
     return options;
@@ -199,7 +199,7 @@ pub.post(
   '/auth/passkey/verify',
   wrap(async (req, res) => {
     if (!authPolicy().passkeys) throw new AuthError(403, t('Passkeys are switched off in this household.'));
-    if (rateLimited(`passkey:${req.ip}`, 30, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    if (rateLimitedGlobal(`passkey:${req.ip}`, 30, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const response = z.object({ id: z.string().max(1024), rawId: z.string().max(1024), type: z.string(), response: z.record(z.string(), z.any()) }).passthrough().parse(req.body?.response);
     const key = req.cookies?.[PASSKEY_COOKIE];
     res.clearCookie(PASSKEY_COOKIE, { path: PASSKEY_PATH });
@@ -232,7 +232,7 @@ pub.get('/auth/oidc/start', async (req, res) => {
       if (a?.kind !== 'user' || !a.userId) return toLogin(res, 'sso_state');
       linkUserId = a.userId;
     }
-    if (rateLimited(`oidc:${req.ip}`, 30, 5 * 60_000)) return toLogin(res, 'sso_failed');
+    if (rateLimitedGlobal(`oidc:${req.ip}`, 30, 5 * 60_000)) return toLogin(res, 'sso_failed');
     const { url, state } = await startOidc(linkUserId);
     res.cookie(OIDC_COOKIE, state, { ...cookieBase(), maxAge: 10 * 60_000, path: OIDC_COOKIE_PATH });
     res.redirect(302, url);

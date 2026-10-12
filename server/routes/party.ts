@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { brand, lang } from '../db.js';
 import { t } from '../i18n.js';
-import { rateLimited, requireAuth, resolveActor } from '../lib/auth.js';
+import { rateLimited, rateLimitedGlobal, requireAuth, resolveActor } from '../lib/auth.js';
 import { addClient } from '../lib/bus.js';
 import {
   boardData,
@@ -127,7 +127,7 @@ export const board = Router();
 
 board.post('/pair', (req, res) => {
   const { code } = z.object({ code: z.string().regex(/^\d{4}$/) }).parse(req.body);
-  if (rateLimited(`pair:${req.ip}`, 10, 10 * 60_000) || rateLimited('pair:all', 60, 10 * 60_000)) {
+  if (rateLimitedGlobal(`pair:${req.ip}`, 10, 10 * 60_000) || rateLimitedGlobal('pair:all', 60, 10 * 60_000)) {
     return void res.status(429).json({ error: t('Too many attempts – please wait a few minutes.') });
   }
   const token = pairWithCode(code);

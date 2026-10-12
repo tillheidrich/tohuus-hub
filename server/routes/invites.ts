@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { t } from '../i18n.js';
-import { NAME_MAX, PASSWORD_MIN, rateLimited, requireAdmin, requireAuth } from '../lib/auth.js';
+import { NAME_MAX, PASSWORD_MIN, rateLimited, rateLimitedGlobal, requireAdmin, requireAuth } from '../lib/auth.js';
 import { requestEmailVerification } from '../lib/auth-links.js';
 import { startSession } from '../lib/auth-sessions.js';
 import { emit } from '../lib/bus.js';
@@ -71,7 +71,7 @@ export const pub = Router();
 const invalidMsg = () => t('This invitation has expired or was already used.');
 
 pub.get('/invite/:token', (req, res) => {
-  if (rateLimited(`invite:${req.ip}`, 30, 10 * 60_000)) return void res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
+  if (rateLimitedGlobal(`invite:${req.ip}`, 30, 10 * 60_000)) return void res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
   const inv = findInvite(String(req.params.token));
   if (!inv) return void res.status(404).json({ error: invalidMsg() });
   res.setHeader('Cache-Control', 'no-store');
@@ -79,7 +79,7 @@ pub.get('/invite/:token', (req, res) => {
 });
 
 pub.post('/invite/:token', (req, res) => {
-  if (rateLimited(`invite:${req.ip}`, 30, 10 * 60_000)) return void res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
+  if (rateLimitedGlobal(`invite:${req.ip}`, 30, 10 * 60_000)) return void res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.') });
   const b = z
     .object({
       name: z.string().trim().max(NAME_MAX).optional(),

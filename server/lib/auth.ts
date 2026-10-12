@@ -134,9 +134,11 @@ export function safeEqual(a: string, b: string) {
 const buckets = new Map<string, { n: number; reset: number }>();
 /** for tests */
 export const resetRateLimits = () => buckets.clear();
-export function rateLimited(key: string, max: number, windowMs: number): boolean {
-  // cloud: inside a household the buckets are per household (user ids and names repeat across households)
-  const h = config.multiTenant ? currentHousehold() : null;
+export function rateLimited(key: string, max: number, windowMs: number, scope: 'household' | 'global' = 'household'): boolean {
+  // cloud: inside a household the buckets are per household (user ids and names repeat across households);
+  // account-level and pre-auth limits (sign-in, signup, links, reset) are global – a household prefix smuggled into
+  // the request must never open a fresh bucket
+  const h = config.multiTenant && scope === 'household' ? currentHousehold() : null;
   if (h) key = `${h.id}|${key}`;
   const now = Date.now();
   const b = buckets.get(key);
@@ -148,6 +150,9 @@ export function rateLimited(key: string, max: number, windowMs: number): boolean
   b.n++;
   return b.n > max;
 }
+
+/** Account-level / pre-auth rate limit: never per household. */
+export const rateLimitedGlobal = (key: string, max: number, windowMs: number) => rateLimited(`g|${key}`, max, windowMs, 'global');
 
 export const SESSION_DAYS = 365;
 export const SESSION_COOKIE = 'sw_session';

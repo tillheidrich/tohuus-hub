@@ -11,7 +11,7 @@ import type { Request, Response } from 'express';
 import { config } from '../config.js';
 import { db } from '../db.js';
 import { t } from '../i18n.js';
-import { hashPassword, randomToken, rateLimited, safeEqual, sha256 } from './auth.js';
+import { hashPassword, randomToken, rateLimited, rateLimitedGlobal, safeEqual, sha256 } from './auth.js';
 import { EMAIL_RE, authPolicy, cookieBase, deviceLabel, householdName, mailAvailable, normEmail, sendAuthMail, userById, userByName, userByVerifiedEmail, type UserAuthRow } from './auth-policy.js';
 import { AuthError, startSession } from './auth-sessions.js';
 
@@ -120,7 +120,7 @@ export type LinkOpenResult = { status: 'signed_in' } | { status: 'confirm'; name
 
 /** The link was opened. Same browser → signed in. Another device → confirm with the code. */
 export function openMagicLink(req: Request, res: Response, token: string): LinkOpenResult {
-  if (rateLimited(`link-open:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+  if (rateLimitedGlobal(`link-open:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
   const row = findToken('magic', token);
   if (!row) throw expired();
   const u = userById(row.user_id);
@@ -139,7 +139,7 @@ export function openMagicLink(req: Request, res: Response, token: string): LinkO
  * where = 'here' signs in this device, 'there' lets the asking device in (it is polling).
  */
 export function confirmMagicLink(req: Request, res: Response, token: string, code: string, where: 'here' | 'there'): { status: 'signed_in' | 'approved' } {
-  if (rateLimited(`link-open:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+  if (rateLimitedGlobal(`link-open:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
   const row = findToken('magic', token);
   if (!row || !row.code) throw expired();
   if (!/^\d{4}$/.test(code) || !safeEqual(code, row.code)) {
@@ -210,7 +210,7 @@ export function pendingEmail(userId: number): string | null {
 }
 
 export function verifyEmail(req: Request, token: string): { email: string; name: string } {
-  if (rateLimited(`verify-open:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+  if (rateLimitedGlobal(`verify-open:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
   const row = findToken('verify', token);
   if (!row?.email) throw expired();
   return db.transaction(() => {
@@ -275,7 +275,7 @@ export function checkResetToken(token: string): { name: string } {
 
 /** Set the new password, sign out everywhere; sign in here unless the member uses two-step sign-in. */
 export function confirmPasswordReset(req: Request, res: Response, token: string, password: string): { status: 'signed_in' | 'done' } {
-  if (rateLimited(`reset-open:${req.ip}`, 20, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+  if (rateLimitedGlobal(`reset-open:${req.ip}`, 20, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
   const row = findToken('reset', token);
   if (!row) throw expired();
   if (!consume(row.id)) throw expired();
