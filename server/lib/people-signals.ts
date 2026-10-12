@@ -6,7 +6,7 @@
  *  - dislikes: −0.06 per person who dislikes an ingredient (max −0.15), likes +0.03 (max +0.06)
  *  - allergies: a warning on the dish and −1 on the score (autofill never plans it)
  */
-import { db } from '../db.js';
+import { db, getSetting } from '../db.js';
 import { t } from '../i18n.js';
 import { norm } from './text.js';
 import './people-policy.js';
@@ -204,4 +204,77 @@ export function peopleSignals(): PeopleSignals {
     console.warn('[people] signals', (e as Error).message);
     return { forRecipe: () => NONE };
   }
+}
+
+// ---------------------------------------------------------------- what an assistant may see (Art. 9 GDPR)
+
+/**
+ * Health data (allergies, children's birth years, anything flagged sensitive) only goes to a language model – the
+ * built-in assistant or an MCP client – when the household switched on `ai.health_share` (default off).
+ */
+export function healthShareAllowed(): boolean {
+  return getSetting<boolean>('ai.health_share', false) === true;
+}
+
+export interface AssistantRedactor {
+  /** the household agreed to share health data with the assistant */
+  consent: boolean;
+  /** neutral wording for per-person suggestion reasons (allergy warnings, "loved by Mila", "Ben doesn't like …") */
+  text(s: string): string;
+  /** the same for every string inside a JSON-like value */
+  deep<T>(v: T): T;
+  /** a person for the assistant: allergies and birth year only with consent */
+  person<P extends { birth_year?: number | null; prefs?: PersonPrefs | null; allergies?: string[] }>(p: P): P;
+  /** suggestion reasons without names or health details */
+  reasons(reasons: string[], warnings?: string[]): string[];
+}
+
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** template "{name} is allergic: {allergen}" → a regex that finds it inside longer text (also inside JSON strings) */
+function templateRe(tpl: string) {
+  const body = esc(tpl).replace(/\\\{(\w+)\\\}/g, '[^"·\\n]+?');
+  return new RegExp(`(?<=^|["\\n]|· |, )${body}(?=$|["\\n]| · |, )`, 'g');
+}
+
+/**
+ * The filter every assistant surface uses (MCP tools, the in-app assistant's context). Per-person reasons are
+ * replaced by neutral ones in every case – names of children and who-likes-what stay at home; allergy warnings
+ * become "not suitable for at least one person" unless the household consented.
+ */
+export function redactForAssistant(consent = healthShareAllowed()): AssistantRedactor {
+  const both = (en: string) => [...new Set([en, t(en)])];
+  const allergyRes = both('{name} is allergic: {allergen}').map(templateRe);
+  const lovedRes = both('loved by {names}').map(templateRe);
+  const dislikeRes = both('{name} doesn’t like {item}').map(templateRe);
+  const unsuitable = t('not suitable for at least one person');
+  const text = (s: string) => {
+    let out = s;
+    if (!consent) for (const re of allergyRes) out = out.replace(re, unsuitable);
+    for (const re of lovedRes) out = out.replace(re, t('a favourite at home'));
+    for (const re of dislikeRes) out = out.replace(re, t('not everyone likes it'));
+    return out;
+  };
+  const deep = <T,>(v: T): T => {
+    if (typeof v === 'string') return text(v) as T;
+    if (Array.isArray(v)) return v.map((x) => deep(x)) as T;
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deep(x)])) as T;
+    return v;
+  };
+  return {
+    consent,
+    text,
+    deep,
+    person(p) {
+      if (consent) return p;
+      const { birth_year: _b, allergies: _a, ...rest } = p as any;
+      if (rest.prefs) rest.prefs = { ...rest.prefs, allergies: [] };
+      return rest;
+    },
+    reasons(reasons, warnings = []) {
+      const warn = new Set(warnings);
+      const out = reasons.filter((r) => consent || !warn.has(r)).map(text);
+      if (!consent && warnings.length && !out.includes(unsuitable)) out.unshift(unsuitable);
+      return [...new Set(out)];
+    },
+  };
 }

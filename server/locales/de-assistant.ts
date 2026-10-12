@@ -1,0 +1,101 @@
+/** German strings of the assistant, what ToHuus remembers, the AI client and the "Heute" aggregate. */
+export const de_assistant: Record<string, string> = {
+  // AI client (ai.ts)
+  'No AI model is set up (AI_API_KEY / AI_MODEL_*).': 'Es ist kein KI-Modell eingerichtet (AI_API_KEY / AI_MODEL_*).',
+  'No speech model is set up (AI_MODEL_AUDIO).': 'Es ist kein Sprachmodell eingerichtet (AI_MODEL_AUDIO).',
+  'The AI service did not accept the key. Please check AI_API_KEY.': 'Der KI-Dienst hat den Schlüssel nicht angenommen. Bitte prüf AI_API_KEY.',
+  'The AI service is busy right now. Please try again in a moment.': 'Der KI-Dienst ist gerade ausgelastet. Versuch es bitte gleich noch mal.',
+  'The AI service could not handle this request.': 'Der KI-Dienst konnte mit dieser Anfrage nichts anfangen.',
+  'The AI service is not reachable right now.': 'Der KI-Dienst ist gerade nicht erreichbar.',
+  'The AI service took too long to answer.': 'Der KI-Dienst hat zu lange gebraucht.',
+  'The AI service sent an answer that could not be read.': 'Die Antwort des KI-Dienstes war nicht lesbar.',
+  'The recording is empty.': 'Die Aufnahme ist leer.',
+  'No recording received (field "audio").': 'Keine Aufnahme angekommen (Feld „audio“).',
+  'This audio format is not supported. Please use m4a, mp3, wav, ogg, webm or flac.': 'Dieses Audioformat geht leider nicht. Bitte m4a, mp3, wav, ogg, webm oder flac verwenden.',
+  'I didn’t catch anything. Please try again.': 'Ich hab nichts verstanden. Versuch es bitte noch mal.',
+
+  // conversations
+  'Conversation not found': 'Unterhaltung nicht gefunden',
+  'Please write or say something.': 'Schreib oder sag einfach etwas.',
+  'The assistant messages for this month are used up.': 'Die Nachrichten an den Assistenten sind für diesen Monat aufgebraucht.',
+  'Done.': 'Erledigt.',
+  'This can no longer be undone.': 'Das lässt sich nicht mehr rückgängig machen.',
+  and: 'und',
+
+  // actions (shown with an undo button)
+  'Put {items} on the list': '{items} auf die Liste gesetzt',
+  'Took {items} off the list': '{items} von der Liste genommen',
+  'Ticked off {items}': '{items} abgehakt',
+  '{name} is used up and on the list': '{name} ist alle und steht auf der Liste',
+  'Planned {title} for {day}': '{title} für {day} eingeplant',
+  'Put {items} on the list for {title}': '{items} für {title} auf die Liste gesetzt',
+  'Remembered: {text}': 'Gemerkt: {text}',
+  'Forgotten: {text}': 'Vergessen: {text}',
+  'Noted {items} at {shop} for {total}': '{items} bei {shop} für {total} eingetragen',
+  'Noted {items} at {shop}': '{items} bei {shop} eingetragen',
+  'a purchase': 'einen Einkauf',
+  'Purchase at {shop}': 'Einkauf bei {shop}',
+  Purchase: 'Einkauf',
+  Assistant: 'Assistent',
+
+  // tool answers
+  'ToHuus does not know this product yet.': 'Dieses Produkt kennt ToHuus noch nicht.',
+  'Which day? Please give a date.': 'Für welchen Tag? Gib bitte ein Datum an.',
+  'No recipe called “{name}” was found.': 'Ein Rezept „{name}“ gibt es noch nicht.',
+  'What was bought?': 'Was wurde gekauft?',
+  'Nothing matching was found.': 'Dazu hab ich nichts gefunden.',
+
+  // replies of the built-in reader (no model)
+  '{items} – on the list.': '{items} – steht auf der Liste.',
+  '{items} was already on it.': '{items} stand schon drauf.',
+  '{item} is on the list.': '{item} steht auf der Liste.',
+  'For the rest I need a few more words, or the list.': 'Für den Rest brauch ich ein paar Worte mehr – oder schreib es direkt auf die Liste.',
+  'I don’t know “{q}” yet. Shall I put it on the list?': '„{q}“ kenne ich noch nicht. Soll es auf die Liste?',
+  'Bought {day} according to the receipt': 'Laut Bon am {day} gekauft',
+  'Ticked off the list {day}': 'Am {day} auf der Liste abgehakt',
+  'In stock: {amount}': 'Im Vorrat: {amount}',
+  'probably still there (you buy it every ~{n} days)': 'vermutlich noch da (ihr kauft es alle ~{n} Tage)',
+  'probably due again (every ~{n} days)': 'vermutlich bald wieder fällig (alle ~{n} Tage)',
+  'it is on the list': 'es steht auf der Liste',
+  '{name}: I can’t tell from receipts or the list yet.': '{name}: Aus Bons und Liste kann ich das noch nicht sagen.',
+  'Noted: {items} at {shop} for {total}.': 'Eingetragen: {items} bei {shop} für {total}.',
+  'Noted: {items} at {shop}.': 'Eingetragen: {items} bei {shop}.',
+  'Probably due: {items}. Shall I put them on the list?': 'Vermutlich fällig: {items}. Soll ich das auf die Liste setzen?',
+  'Nothing seems due right now.': 'Gerade ist nichts fällig.',
+  'On the list: {items}.': 'Auf der Liste: {items}.',
+  'The list is empty.': 'Die Liste ist leer.',
+  'Works with what is at home: {list}.': 'Mit dem, was da ist, geht: {list}.',
+  'Almost: {list}.': 'Fast: {list}.',
+  'No recipe fits what is at home yet.': 'Zu dem, was da ist, passt noch kein Rezept.',
+  'This month so far {total}, {left} left of the budget.': 'Diesen Monat bisher {total}, vom Budget sind noch {left} übrig.',
+  'This month so far {total}.': 'Diesen Monat bisher {total}.',
+  'Got it, ToHuus remembers that.': 'Alles klar, ToHuus merkt sich das.',
+  'Forgotten.': 'Vergessen.',
+  'I understand short things like “milk, 2 peppers and bread”, “milk is out”, “do we still have eggs?” or “bought milk and bread at Aldi for 12.40”.':
+    'Ich verstehe kurze Sachen wie „Milch, 2 Paprika und Brot“, „Milch ist alle“, „Haben wir noch Eier?“ oder „Hab bei Aldi Milch und Brot für 12,40 gekauft“.',
+  'I didn’t get that. Try something like “milk, 2 peppers and bread” or “what can we cook?”.': 'Das hab ich nicht verstanden. Versuch es mit „Milch, 2 Paprika und Brot“ oder „Was können wir kochen?“.',
+
+  // what ToHuus remembers (memory.ts)
+  'What should ToHuus remember?': 'Was soll sich ToHuus merken?',
+  'ToHuus already remembers a lot. Please delete something first.': 'ToHuus merkt sich schon sehr viel. Lösch bitte erst etwas.',
+
+  // privacy filter (people-signals.ts)
+  'not suitable for at least one person': 'für mindestens eine Person ungeeignet',
+  'a favourite at home': 'ein Liebling bei euch',
+  'not everyone likes it': 'nicht alle mögen es',
+
+  // "Heute" (today.ts)
+  Hello: 'Hallo',
+  '{greeting}, {name}': '{greeting}, {name}',
+  'every ~{n} days · last {day}': 'alle ~{n} Tage · zuletzt {day}',
+  'ticked · {name}, {when}': 'abgehakt · {name}, {when}',
+  'eat soon': 'bald essen',
+  'past its date': 'Datum überschritten',
+  '{n} days left': 'noch {n} Tage',
+  'bought {day}': 'gekauft am {day}',
+  'planned for today': 'für heute geplant',
+  '1 receipt is waiting for a quick look': 'Ein Bon wartet auf einen kurzen Blick',
+  '{n} receipts are waiting for a quick look': '{n} Bons warten auf einen kurzen Blick',
+  'Budget for this month is used up': 'Das Budget für diesen Monat ist aufgebraucht',
+  '{left} left in this month’s budget': 'Noch {left} im Budget für diesen Monat',
+};

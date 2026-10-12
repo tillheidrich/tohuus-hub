@@ -479,6 +479,8 @@ r.get('/settings', (req, res) => {
     ha: { ...haSettings(), token: haSettings().token ? '••••' : '' },
     notify: notifySettings(),
     importAutoApply: getSetting('import.autoApply', false),
+    // Art. 9 GDPR: allergies and children's birth years go to an AI only with this consent (default off)
+    ai: { healthShare: getSetting<boolean>('ai.health_share', false) === true },
     baseUrl: config.baseUrl,
     features: { vision: visionAvailable(), email: smtpEnabled(), visionModel: visionModel() },
     // the path secret grants MCP access – only admins get to see it
@@ -493,6 +495,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
       brand: z.enum(['tohuus', 'fredirando']).optional(),
       language: z.enum(LANG_CODES).optional(),
       importAutoApply: z.boolean().optional(),
+      ai: z.object({ healthShare: z.boolean().optional() }).optional(),
       ha: z.object({ url: z.string().url().or(z.literal('')).optional(), token: z.string().max(400).optional(), cookidooCalendar: z.string().max(120).optional() }).optional(),
       notify: z
         .object({
@@ -514,6 +517,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
   if (b.language) setSetting('language', b.language);
   if (b.ha) setSetting('ha', { ...haSettings(), ...Object.fromEntries(Object.entries(b.ha).filter(([k, v]) => !(k === 'token' && v === '••••'))) });
   if (b.importAutoApply !== undefined) setSetting('import.autoApply', b.importAutoApply);
+  if (b.ai?.healthShare !== undefined) setSetting('ai.health_share', b.ai.healthShare);
   if (b.notify) {
     const cur = notifySettings();
     setSetting('notify', { ...cur, ...b.notify, events: { ...cur.events, ...(b.notify.events ?? {}) } });

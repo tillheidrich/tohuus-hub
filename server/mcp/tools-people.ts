@@ -3,6 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { db } from '../db.js';
 import { favourites, findPersonKey, listPeople, personProfile, ratePerson, recipeRatings } from '../lib/people.js';
+import { healthShareAllowed } from '../lib/people-signals.js';
 
 const text = (v: unknown) => ({ content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 1) }] });
 const fail = (msg: string) => ({ ...text(`Error: ${msg}`), isError: true });
@@ -23,24 +24,29 @@ export function register(s: McpServer, actorName: string) {
     {
       title: 'People in the household',
       description:
-        'Everybody in the household: members, permanent guests (with what they can see) and children (no login). ' +
-        'Includes likes, dislikes and allergies per person – respect allergies when suggesting meals.',
+        'Everybody in the household: members, permanent guests (with what they can see) and children (no login), with likes and dislikes. ' +
+        'Allergies and birth years are health data: they are only included when the household allowed sharing them with AI ' +
+        '(health_data_shared). Without that, meal suggestions from ToHuus already leave out what someone must not eat.',
       inputSchema: {},
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    async () =>
-      text(
-        listPeople().map((p) => ({
+    async () => {
+      // Art. 9 GDPR: allergies and children's birth years only with the household's consent (ai.health_share)
+      const share = healthShareAllowed();
+      return text({
+        health_data_shared: share,
+        people: listPeople().map((p) => ({
           key: p.key,
           name: p.name,
           kind: p.kind,
-          ...(p.birth_year ? { birth_year: p.birth_year } : {}),
+          ...(share && p.birth_year ? { birth_year: p.birth_year } : {}),
           ...(p.guest ? { guest_access: p.guest.level, guest_access_until_utc: p.guest.override?.until ?? null } : {}),
           likes: p.prefs?.likes ?? [],
           dislikes: p.prefs?.dislikes ?? [],
-          allergies: p.prefs?.allergies ?? [],
+          ...(share ? { allergies: p.prefs?.allergies ?? [] } : {}),
         })),
-      ),
+      });
+    },
   );
 
   s.registerTool(
@@ -95,7 +101,7 @@ export function register(s: McpServer, actorName: string) {
           okay: slim(p.okay),
           does_not_like: slim(p.dislikes),
           cooked_for_them_most: p.most_cooked.map((m) => ({ id: m.recipe_id, title: m.title, times: m.meals })),
-          allergies: p.person.prefs?.allergies ?? [],
+          ...(healthShareAllowed() ? { allergies: p.person.prefs?.allergies ?? [] } : {}),
         });
       }
       const f = favourites();

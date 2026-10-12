@@ -46,6 +46,7 @@ import { r as menuRoutes } from './routes/menu.js';
 import { r as designRoutes } from './routes/design.js';
 import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
 import { r as buyAtRoutes } from './routes/buyat.js';
+import { r as featureRoutes } from './routes/features.js';
 import { householdAppearance } from './lib/appearance.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
@@ -61,7 +62,7 @@ app.use(cookieParser());
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'same-origin');
-  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader(
     'Content-Security-Policy',
@@ -135,6 +136,7 @@ app.use('/api', menuRoutes);
 app.use('/api', designRoutes);
 app.use('/api', invitesRoutes);
 app.use('/api', buyAtRoutes);
+app.use('/api', featureRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

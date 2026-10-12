@@ -97,6 +97,8 @@ export interface CreateImportOptions {
   sourceFile?: string | null;
   rawText?: string | null;
   autoApply?: boolean;
+  /** no "please check" notification (the person just told the assistant about this purchase) */
+  silent?: boolean;
 }
 
 /**
@@ -141,7 +143,7 @@ export function createImport(parsed: ParsedImport, opts: CreateImportOptions = {
   const needsReview = (db.prepare(`SELECT COUNT(*) n FROM import_lines WHERE import_id = ? AND (status != 'ok' OR action = 'new')`).get(id) as { n: number }).n;
   if (auto && needsReview === 0) {
     applyImport(id, opts.actor ?? 'ToHuus Hub');
-  } else {
+  } else if (!opts.silent) {
     const count = parsed.lines.filter((l) => l.status !== 'deposit').length;
     const special = parsed.lines.filter((l) => ['substitute', 'unavailable', 'reduced'].includes(l.status)).length;
     void notify({
