@@ -43,6 +43,16 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 - **Swedish removed as UI language; region Sweden stays.** The app, notifications and demo data are English or German. The region Sweden (SEK, Swedish receipts from ICA, Coop, Willys and others, Swedish product names from Open Food Facts, Swedish stores in store mode) is unchanged. A household that ran in Swedish switches to English on update (migration `lang-sv-removed-1`), and its base places and categories that still carry their Swedish default names get their English names back; renamed places, products and recipes stay as they are.
 
+### Security (review 12 Oct 2026)
+
+- Household deletion and the cloud export are decided by the household's own `users` row (role, kind, guest level); the `memberships` mirror in accounts.db is kept in sync on every role or kind change. Export is for admins only.
+- Account deletion never hands a household to a permanent guest or an expired membership; with nobody else to run it, the household is shredded. Deleting the account or a household needs the password (or a fresh e-mail link for password-less accounts).
+- Sign-in, signup, e-mail link, reset and invite rate limits are global; a household prefix in the query or body no longer opens a fresh bucket, and sign-in routes never take a household from the request.
+- Crypto-shredding: `secure_delete` on all databases, a shred log applied when accounts.db is opened (also after a restore), the wrapped key scrubbed from local accounts backups, S3 copies of the household deleted.
+- AI recipe/product imports count against a daily allowance (Free 10, Haushalt 40, Plus 100); model input capped at 50 kB.
+- StoreKit: Production only by default, Sandbox for tester accounts (`APPLE_SANDBOX_ACCOUNTS`); a late, older transaction never shortens a later expiry; the iPhone app refuses purchases without a household.
+- Smaller: capped web links, invite checked before an account is created (and `CLOUD_SIGNUP` respected), no internals in 500 answers in production (reference id in the log), a 40-megapixel limit for every image decode, API gzip off the event loop, large JSON writes count against storage, an atomic self-host encryption swap with recovery of a missing database.
+
 ### Fixed
 
 - "Clear checked" no longer deletes ticked items: they are hidden and stay purchase signals (`cleared_at`).

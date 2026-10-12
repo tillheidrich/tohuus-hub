@@ -49,7 +49,8 @@ DATA_DIR/
 | `SSE_MAX_TOTAL` | – | live-update connections over all households (5000; 200 per household) |
 | `LEGAL_PRIVACY_URL`, `LEGAL_TERMS_URL`, `LEGAL_IMPRINT_URL` | – | shown by the apps via `/api/instance` |
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
-| `APPLE_ENVIRONMENTS` | – | accepted StoreKit environments, default `Production,Sandbox` (TestFlight is Sandbox) |
+| `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |
+| `APPLE_SANDBOX_ACCOUNTS` | – | comma-separated e-mails of TestFlight testers: Sandbox purchases count only for households with one of these accounts |
 | `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`) |
 | `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU) |
 
@@ -96,14 +97,27 @@ manual household use the same endpoint with a session.
 
 ## Deleting
 
-- `DELETE /api/cloud/households/:id` (admin of that household, body `{ confirm: "<household name>" }`):
+- `DELETE /api/cloud/households/:id` (an admin of that household *according to the household database* – the
+  `memberships` mirror in accounts.db is never trusted for this –, body `{ confirm: "<household name>", password }`):
   crypto-shredding first (the wrapped key is set to NULL in the same transaction that removes memberships and
-  detaches sessions/tokens), then the folder and its backups are removed.
-- `DELETE /api/cloud/account` (body `{ password }` or `{ confirm: "<e-mail>" }`): households the account has to
-  itself are shredded; in shared households the person leaves (if they were the last admin, the longest member
-  becomes admin). Required by App Store guideline 5.1.1(v).
-- Off-site copies in S3 are encrypted with the destroyed key; let the bucket's lifecycle rule expire them (set one,
-  e.g. 60 days).
+  detaches sessions/tokens), then the folder and its local backups are removed.
+- `DELETE /api/cloud/account` (body `{ password }`): households the account has to itself – or where only permanent
+  guests would remain – are shredded; in shared households the person leaves, and if they were the last admin the
+  longest-standing *member* becomes admin (never a guest, never an expired membership). Required by App Store
+  guideline 5.1.1(v).
+- Accounts without a password (e-mail links only) confirm both with a fresh sign-in link: the first call sends it
+  (`400`, `needEmailConfirm: true`), and within 15 minutes after opening it the call goes through.
+- What a shred removes, and what is left:
+  - accounts.db and every household database run with `PRAGMA secure_delete = ON`; after the shred the WAL is
+    checkpointed, so the wrapped key does not linger in freed pages.
+  - The household id goes into `DATA_DIR/shred-log.jsonl` (ids and times, no keys). When accounts.db is opened –
+    also after restoring an older copy that still has the key – every logged household is shredded again.
+  - The wrapped key is scrubbed from the local accounts backups (`backups/_accounts/*.db`).
+  - With `BACKUP_S3_*` the household's S3 objects are listed and deleted right away.
+  - **Remaining retention:** copies of accounts.db already uploaded to S3 (`_accounts/…`) still carry the wrapped
+    key until they expire – without the household's own backups they unlock nothing, but set a lifecycle rule
+    (e.g. 60 days) and keep bucket versioning off or short. Copies of the volume made outside ToHuus (snapshots)
+    are out of its reach.
 
 ## What is off in the cloud
 
@@ -119,14 +133,17 @@ manual household use the same endpoint with a session.
 | household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead |
 
 Kept: guest links, displays, kid tablets, party board, web push, MCP with household tokens, the HACS integration,
-exports (`GET /api/cloud/export`, needs a confirmed e-mail).
+exports (`GET /api/cloud/export`, household admins only, needs a confirmed e-mail).
 
 ## Plans and quotas
 
 `server/lib/plans.ts` (exact limits there and in the plan doc): Free 250 MB / 60 days history / 20 assistant
 messages a month, Haushalt 2 GB / full history / 100, Plus 5 GB / 1 500 (throttled, not blocked), trial = Plus.
-Storage counts the household's files on every write/delete plus the database size; it is recounted nightly.
-Over quota, uploads get HTTP 413 with `key: "storage.full"`; nothing is deleted. Apple purchases arrive through
+AI reads per day: receipts 15 / 40 / 60 (`quota.receiptAi`), recipe and product imports 10 / 40 / 100
+(`quota.importAi`, HTTP 429); text sent to a model is capped at 50 kB.
+Storage counts the household's files on every write/delete plus the database size (measured on every check); it is
+recounted nightly. Over quota, uploads and JSON writes above 64 kB get HTTP 413 with `key: "storage.full"`; small
+everyday writes still work and nothing is deleted. Apple purchases arrive through
 `POST /api/billing/apple/transaction` (from the app) and `POST /api/billing/apple/notifications` (App Store Server
 Notifications v2 – set this URL in App Store Connect). Both verify the JWS chain to the embedded Apple Root CA G3.
 
