@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
-import { config, smtpEnabled, visionEnabled } from '../config.js';
+import { config, smtpEnabled } from '../config.js';
+import { visionAvailable, visionModel } from '../lib/vision.js';
 import { appearanceFor } from '../lib/appearance.js';
 import { homeSetup } from '../lib/places.js';
 import { r as placesRoutes } from './places.js';
@@ -81,7 +82,7 @@ r.get('/me', (req, res) => {
     brand: brand(),
     language: lang(),
     region: regionInfo(),
-    features: { vision: visionEnabled(), email: smtpEnabled() },
+    features: { vision: visionAvailable(), email: smtpEnabled() },
     appearance: appearanceFor(actor.kind === 'user' ? actor.userId : null),
     // household form and home preset (area: home) – the UI adapts its defaults and wording to it
     home: homeSetup(),
@@ -485,7 +486,7 @@ r.get('/settings', (req, res) => {
     notify: notifySettings(),
     importAutoApply: getSetting('import.autoApply', false),
     baseUrl: config.baseUrl,
-    features: { vision: visionEnabled(), email: smtpEnabled(), visionModel: config.vision.model || null },
+    features: { vision: visionAvailable(), email: smtpEnabled(), visionModel: visionModel() },
     // the path secret grants MCP access – only admins get to see it
     mcpPath: config.mcpPathSecret && req.actor?.role === 'admin' ? `${config.baseUrl}/mcp/${config.mcpPathSecret}` : null,
   });
