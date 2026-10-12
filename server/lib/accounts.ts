@@ -195,6 +195,8 @@ function shredRows(d: DB, id: string) {
     d.prepare('UPDATE sessions SET household_id = NULL WHERE household_id = ?').run(id);
     d.prepare('UPDATE app_tokens SET household_id = NULL WHERE household_id = ?').run(id);
     d.prepare('DELETE FROM usage_counters WHERE household_id = ?').run(id);
+    // Apple is the seller and keeps the purchase records; we keep nothing about a deleted household
+    d.prepare('DELETE FROM billing_transactions WHERE household_id = ?').run(id);
   })();
   try {
     d.pragma('wal_checkpoint(TRUNCATE)');
@@ -218,6 +220,7 @@ function scrubAccountBackups(id: string) {
       try {
         b.pragma('secure_delete = ON');
         b.prepare('UPDATE households SET wrapped_dek = NULL WHERE id = ?').run(id);
+        b.prepare('DELETE FROM billing_transactions WHERE household_id = ?').run(id);
         b.exec('VACUUM');
       } finally {
         b.close();
@@ -442,6 +445,17 @@ export function sessionByToken(token: string | undefined | null): SessionRow | u
     d.prepare(`UPDATE sessions SET last_seen_at = datetime('now') WHERE id = ?`).run(row.id);
   return row;
 }
+/**
+ * Daily: expired sessions and used or expired e-mail links leave accounts.db (privacy policy: sessions are kept only
+ * while they are valid). App tokens are not touched – they are revoked by the person under "devices".
+ */
+export function cleanupAccounts(): { sessions: number; links: number } {
+  const d = accountsDb();
+  const sessions = d.prepare(`DELETE FROM sessions WHERE expires_at <= datetime('now')`).run().changes;
+  const links = d.prepare(`DELETE FROM auth_links WHERE expires_at <= datetime('now', '-1 day') OR used_at <= datetime('now', '-1 day')`).run().changes;
+  return { sessions, links };
+}
+
 export const destroyCloudSession = (token: string) => accountsDb().prepare('DELETE FROM sessions WHERE token_hash = ?').run(sha256(token));
 export const setSessionHousehold = (sessionId: number, householdId: string | null) =>
   accountsDb().prepare('UPDATE sessions SET household_id = ? WHERE id = ?').run(householdId, sessionId);

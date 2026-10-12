@@ -13,7 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '../config.js';
 import { db } from '../db.js';
-import { accountsDb, allHouseholds, householdBackupDir, householdDir } from './accounts.js';
+import { accountsDb, allHouseholds, cleanupAccounts, householdBackupDir, householdDir } from './accounts.js';
 import { planRotation, type BackupKind } from './backup.js';
 import { recountStorage } from './plans.js';
 import { runInHousehold } from './tenancy.js';
@@ -176,6 +176,9 @@ export async function runNightly(force = false) {
   let uploaded = 0;
   const s3 = s3Config();
   try {
+    // expired sessions and old e-mail links go before the copy is made (they never reach a backup again)
+    const gone = cleanupAccounts();
+    if (gone.sessions || gone.links) console.log(`[accounts] removed ${gone.sessions} expired session(s), ${gone.links} old link(s)`);
     const acc = backupAccounts('nightly');
     if (s3) uploaded += Number(await uploadS3(acc, `_accounts/${path.basename(acc)}`, s3).catch((e) => (console.warn('[cloud-backup] accounts upload', (e as Error).message), false)));
     for (const h of allHouseholds()) {
@@ -215,6 +218,14 @@ export function startCloudBackups() {
       console.warn('[cloud-backup]', (e as Error).message);
     }
   };
+  // expired sessions also go right after a start (the nightly run may be a day away)
+  setTimeout(() => {
+    try {
+      cleanupAccounts();
+    } catch (e) {
+      console.warn('[accounts] cleanup', (e as Error).message);
+    }
+  }, 60_000).unref?.();
   setTimeout(tick, 90_000).unref?.();
   setInterval(tick, 15 * 60_000).unref?.();
 }

@@ -120,7 +120,7 @@ export function legalCopy(k) {
           ['Sprachaufnahmen', 'Werden nicht gespeichert.'],
           ['Sitzungen mit IP-Adresse und Gerätekennung', 'Bis du dich abmeldest, das Gerät entfernst oder die Sitzung nach 180 Tagen abläuft.'],
           ['Zähler für Anmeldeversuche', 'Im Arbeitsspeicher, höchstens eine Stunde.'],
-          ['Kaufbelege von Apple', 'Transaktionsnummer, Produkt und Laufzeit bewahren wir auch nach dem Löschen des Haushalts auf, solange gesetzliche Aufbewahrungspflichten das verlangen, höchstens zehn Jahre. Sie enthalten keine Inhalte des Haushalts und keinen Namen.'],
+          ['Kaufbelege von Apple', 'Bis der Haushalt gelöscht wird, dann löschen wir sie mit. Verkäufer ist Apple, die Kaufbelege führt Apple. Aus den Sicherungskopien der Kontoverwaltung verschwinden sie mit deren Ablauf.'],
           ['Nach dem Ende eines Abos', 'Wird nichts gelöscht. Der Haushalt geht auf den Tarif Free zurück.'],
         ]) },
 
@@ -359,7 +359,7 @@ export function legalCopy(k) {
           ['Voice recordings', 'Not stored.'],
           ['Sessions with IP address and user agent', 'Until you sign out, remove the device or the session expires after 180 days.'],
           ['Counters for sign-in attempts', 'In memory, one hour at most.'],
-          ['Purchase records from Apple', 'We keep the transaction number, product and term after the household is deleted for as long as statutory retention duties require, ten years at most. They contain no household content and no name.'],
+          ['Purchase records from Apple', 'Until the household is deleted, then we delete them too. Apple is the seller and keeps the purchase records. They disappear from the backups of the account database as those expire.'],
           ['After a subscription ends', 'Nothing is deleted. The household goes back to the Free plan.'],
         ]) },
 

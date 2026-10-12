@@ -257,3 +257,37 @@ describe('review: AI imports count against the plan', () => {
     }
   });
 });
+
+describe('accounts.db keeps nothing it no longer needs', () => {
+  it('shredding a household deletes its Apple purchase rows', async () => {
+    const A = new Client();
+    const h = await signup(A, 'buyer@example.org', 'Buyer', 'Buyer Home');
+    await verify('buyer@example.org');
+    const d = accounts.accountsDb();
+    d.prepare(`INSERT INTO billing_transactions (household_id, transaction_id, product_id, plan) VALUES (?, 'tx-buyer-1', 'cloud.plus.monthly', 'plus')`).run(h);
+    d.prepare(`INSERT INTO billing_transactions (household_id, transaction_id, product_id, plan) VALUES ('other', 'tx-other-1', 'cloud.plus.monthly', 'plus')`).run();
+    const del = await A.req('DELETE', `/api/cloud/households/${h}`, { confirm: 'Buyer Home', password: 'geheim1234' });
+    expect(del.status, del.text).toBe(200);
+    expect(d.prepare('SELECT COUNT(*) AS n FROM billing_transactions WHERE household_id = ?').get(h)).toEqual({ n: 0 });
+    expect(d.prepare(`SELECT COUNT(*) AS n FROM billing_transactions WHERE household_id = 'other'`).get()).toEqual({ n: 1 });
+  });
+
+  it('the daily cleanup removes expired sessions and old e-mail links, never app tokens or live sessions', async () => {
+    const A = new Client();
+    await signup(A, 'tidy@example.org', 'Tidy', 'Tidy Home');
+    const d = accounts.accountsDb();
+    const acc = accounts.accountByEmail('tidy@example.org')!.id;
+    const live = (d.prepare('SELECT COUNT(*) AS n FROM sessions WHERE account_id = ?').get(acc) as { n: number }).n;
+    expect(live).toBeGreaterThan(0);
+    d.prepare(`INSERT INTO sessions (token_hash, account_id, expires_at, last_seen_at) VALUES ('old-session', ?, datetime('now', '-1 day'), datetime('now', '-200 days'))`).run(acc);
+    d.prepare(`INSERT INTO auth_links (purpose, token_hash, account_id, expires_at) VALUES ('verify', 'old-link', ?, datetime('now', '-3 days'))`).run(acc);
+    const tokens = (d.prepare('SELECT COUNT(*) AS n FROM app_tokens').get() as { n: number }).n;
+    const r = accounts.cleanupAccounts();
+    expect(r.sessions).toBeGreaterThanOrEqual(1);
+    expect(r.links).toBeGreaterThanOrEqual(1);
+    expect(d.prepare(`SELECT COUNT(*) AS n FROM sessions WHERE token_hash = 'old-session'`).get()).toEqual({ n: 0 });
+    expect((d.prepare('SELECT COUNT(*) AS n FROM sessions WHERE account_id = ?').get(acc) as { n: number }).n).toBe(live);
+    expect((d.prepare('SELECT COUNT(*) AS n FROM app_tokens').get() as { n: number }).n).toBe(tokens);
+    expect((await A.get('/api/me')).status).toBe(200);
+  });
+});
