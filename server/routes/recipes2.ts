@@ -28,6 +28,7 @@ import {
   type ImportError,
   type ImportRecipe,
 } from '../lib/recipes2.js';
+import { uploadQuota } from '../lib/plans.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -91,7 +92,7 @@ function staged(res: Response, format: string, recipes: ImportRecipe[], errors: 
 }
 
 /** Upload a file (any supported app export) or send {text} (pasted JSON from an AI, CSV …) → preview. */
-r.post('/recipes/import/detect', canImport, bigUpload.single('file'), (req, res) => {
+r.post('/recipes/import/detect', canImport, bigUpload.single('file'), uploadQuota, (req, res) => {
   try {
     const d = req.file ? detectFile(req.file.buffer, req.file.originalname) : detectText(z.object({ text: z.string().min(2).max(4_000_000) }).parse(req.body).text);
     staged(res, d.format, d.recipes, d.errors);
@@ -171,7 +172,7 @@ r.get('/recipes/import/images/missing', canImport, (req, res) => {
 
 const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 1, fields: 2 } });
 /** Browser fallback: one photo the browser loaded – only fills a missing photo, never replaces one. */
-r.post('/recipes/import/images/:id', canImport, photoUpload.single('image'), async (req, res) => {
+r.post('/recipes/import/images/:id', canImport, photoUpload.single('image'), uploadQuota, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0 || !req.file) return fail(res, new Error(t('No image')));
   try {

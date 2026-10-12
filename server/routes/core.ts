@@ -45,6 +45,7 @@ import { buildExport, showNamesOnLogin } from '../lib/data.js';
 import { t } from '../i18n.js';
 import { setDateKind } from '../lib/retail.js';
 import { applyShareView, notPrivate, realProductId } from '../lib/share-core.js';
+import { uploadQuota } from '../lib/plans.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -259,7 +260,7 @@ r.delete('/products/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-r.post('/products/:id/image', upload.single('image'), async (req, res) => {
+r.post('/products/:id/image', upload.single('image'), uploadQuota, async (req, res) => {
   const p = getProduct(id(req.params.id));
   if (!p) {
     res.status(404).json({ error: 'not found' });

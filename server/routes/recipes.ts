@@ -15,6 +15,7 @@ import { localDay } from '../lib/catalog.js';
 import { safeFetch } from '../lib/net.js';
 import { t } from '../i18n.js';
 import { activeIngredients, effectiveIngredients } from '../lib/variants.js';
+import { uploadQuota } from '../lib/plans.js';
 
 const rid = (v: unknown) => {
   const n = Number(v);
@@ -73,7 +74,7 @@ r.delete('/recipes/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-r.post('/recipes/:id/image', upload.single('image'), async (req, res) => {
+r.post('/recipes/:id/image', upload.single('image'), uploadQuota, async (req, res) => {
   const id = rid(req.params.id);
   if (!id) {
     res.status(404).json({ error: 'not found' });
@@ -196,7 +197,7 @@ function normalizeModelRecipe(j: any) {
 }
 
 /** One or more photos of a recipe card (e.g. HelloFresh front + back) → one recipe. */
-r.post('/recipes/import/photo', upload.array('files', 6), async (req, res) => {
+r.post('/recipes/import/photo', upload.array('files', 6), uploadQuota, async (req, res) => {
   const files = (req.files as Express.Multer.File[]) ?? [];
   if (!files.length) {
     res.status(400).json({ error: t('No photos') });

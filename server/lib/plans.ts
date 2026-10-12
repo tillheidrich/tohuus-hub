@@ -12,6 +12,7 @@
  * Self-host: everything unlimited (optional STORAGE_QUOTA_MB), nothing is counted in accounts.db.
  * All of them work inside the current household context (request or job).
  */
+import type { NextFunction, Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '../config.js';
@@ -249,4 +250,24 @@ export function recountStorage(householdId: string) {
   const dir = acc().householdDir(householdId);
   const files = dirBytes(path.join(dir, 'images')) + dirBytes(path.join(dir, 'imports'));
   acc().setStorageBytes(householdId, files);
+}
+
+/**
+ * Middleware for every upload route (after multer): 413 when the files do not fit into the storage quota,
+ * 429 when the daily upload allowance is used up. Self-host: only STORAGE_QUOTA_MB (if set) applies.
+ */
+export function uploadQuota(req: Request, res: Response, next: NextFunction) {
+  try {
+    const many = req.files ? (Array.isArray(req.files) ? req.files : Object.values(req.files).flat()) : [];
+    const files = [...many, ...(req.file ? [req.file] : [])];
+    // nothing can be stored without a household; the route itself answers the unauthenticated request
+    if (!files.length || (cloud() && !currentHousehold())) return next();
+    const bytes = files.reduce((a, f) => a + (f.size ?? f.buffer?.length ?? 0), 0);
+    const s = checkStorage(bytes);
+    if (!s.ok) return void res.status(413).json(new QuotaError(s.usedBytes, s.quotaBytes!).toJSON());
+    if (!consume('upload', files.length).ok) return void res.status(429).json({ error: t('Too many uploads today – please try again tomorrow.'), key: 'uploads.daily' });
+    next();
+  } catch (e) {
+    next(e);
+  }
 }

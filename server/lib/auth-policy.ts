@@ -88,7 +88,8 @@ export function seedSsoFromEnv(env = process.env) {
     autoCreate: env.OIDC_AUTO_CREATE === 'true',
   } satisfies SsoConfig);
 }
-seedSsoFromEnv();
+// OIDC is a self-host feature (cloud accounts sign in against accounts.db)
+if (!config.multiTenant) seedSsoFromEnv();
 
 export function ssoConfig(): SsoConfig {
   return { ...DEFAULT_SSO, ...getSetting<Partial<SsoConfig>>('auth.sso', {}) };

@@ -11,7 +11,7 @@
  * A system place (kind 'unassigned', "Noch keinem Ort zugewiesen") takes stock that has no place yet. It is
  * created on demand, never illustrated and hidden while it is empty.
  */
-import { db, getSetting, migrate, setSetting } from '../db.js';
+import { db, getSetting, migrate, onDbReady, setSetting } from '../db.js';
 import { config } from '../config.js';
 import type Database from 'better-sqlite3';
 import { t } from '../i18n.js';
@@ -94,7 +94,7 @@ function breakCycles(handle: Database.Database) {
   }
 }
 
-normalizeLocations();
+onDbReady(normalizeLocations);
 
 // ------------------------------------------------------------------ the system place for stock without a place
 

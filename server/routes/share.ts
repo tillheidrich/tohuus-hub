@@ -26,6 +26,7 @@ import {
   startModeInfo,
   userFromShareToken,
 } from '../lib/share.js';
+import { uploadQuota } from '../lib/plans.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -222,7 +223,7 @@ pub.post('/teilen/empfangen', (req, res, next) => {
   const site = req.headers['sec-fetch-site'];
   if (site === 'cross-site' || site === 'same-site') return void res.status(403).send(t('Request from another site'));
   next();
-}, (req, res, next) => (signedIn(req) ? upload : discard).array('files', 8)(req, res, next), (req, res) => {
+}, (req, res, next) => (signedIn(req) ? upload : discard).array('files', 8)(req, res, next), uploadQuota, (req, res) => {
   const str = (v: unknown) => (typeof v === 'string' ? v.slice(0, 10000) : '');
   const title = str(req.body?.title);
   const text = str(req.body?.text);

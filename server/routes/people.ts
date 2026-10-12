@@ -31,6 +31,7 @@ import {
   updateChild,
 } from '../lib/people.js';
 import { GUEST_LEVELS, LEVEL_AREAS, isHouseGuest } from '../lib/people-policy.js';
+import { uploadQuota } from '../lib/plans.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -101,6 +102,7 @@ const editRoutes = (prefix: string) => {
   r.post(
     `${prefix}/photo`,
     upload.single('image'),
+    uploadQuota,
     wrap(async (req) => {
       const k = key(req);
       if (!canEditPerson(req.actor, k)) throw forbidden();
