@@ -280,3 +280,30 @@ describe('B: usuals, guard, expected total', () => {
     expect((await listView()).estimate).toMatchObject({ total: 11.98, unpriced: 1 });
   });
 });
+
+describe('H: drag & drop on the server', () => {
+  it('places a row before / after another, into another aisle and onto another list', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    const a = catalog.addToShopping({ text: 'Äpfel' });
+    const b = catalog.addToShopping({ text: 'Birnen' });
+    const c = catalog.addToShopping({ text: 'Kiwis' });
+    const order = async () => (await listView()).sections.find((s: any) => s.key === 'produce').items.map((i: any) => i.text);
+    expect(await order()).toEqual(['Kiwis', 'Birnen', 'Äpfel']);
+    expect((await req('POST', `/api/list/items/${a.id}/place`, { neighbor_id: c.id, after: false })).status).toBe(200);
+    expect(await order()).toEqual(['Äpfel', 'Kiwis', 'Birnen']);
+    await req('POST', `/api/list/items/${c.id}/place`, { neighbor_id: b.id, after: true });
+    expect(await order()).toEqual(['Äpfel', 'Birnen', 'Kiwis']);
+    await req('POST', `/api/list/items/${b.id}/place`, { section: 'snacks' });
+    expect((await listView()).sections.find((s: any) => s.key === 'snacks').items.map((i: any) => i.text)).toEqual(['Birnen']);
+    const lid = (await req('POST', '/api/list/lists', { name: 'Markt' })).json.id;
+    await req('POST', `/api/list/items/${c.id}/place`, { list_id: lid });
+    expect(allRows((await req('GET', `/api/shop/list?list=${lid}`)).json).map((i: any) => i.text)).toEqual(['Kiwis']);
+  });
+
+  it('keeps the order of the Heute cards per person', async () => {
+    expect((await req('GET', '/api/list/today-order')).json).toEqual({ order: [] });
+    expect((await req('PUT', '/api/list/today-order', { order: ['money', 'list', 'list'] })).json).toEqual({ order: ['money', 'list'] });
+    expect((await req('PUT', '/api/list/today-order', { order: ['nope'] })).status).toBe(400);
+    expect((await req('GET', '/api/list/today-order')).json.order).toEqual(['money', 'list']);
+  });
+});

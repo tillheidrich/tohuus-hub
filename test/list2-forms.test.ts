@@ -239,3 +239,21 @@ describe('I: prices from own receipts and offers', () => {
     expect((await req('GET', '/api/offers')).json).toEqual([]);
   });
 });
+
+describe('J: weekly question (opt-in, household-local)', () => {
+  it('asks only when switched on, on Sunday/Monday, once per week', async () => {
+    const p = await import('../server/lib/pulse');
+    expect((await req('GET', '/api/pulse')).json).toMatchObject({ enabled: false, share: false, question: null });
+    expect((await req('POST', '/api/pulse', { answer: '1-2' })).status).toBe(409);
+    expect((await req('PUT', '/api/pulse/settings', { enabled: true })).json).toEqual({ enabled: true, share: false });
+    expect(p.pulseState('2026-10-18').question).toEqual({ week: '2026-W42', options: ['0', '1-2', '3-5', 'more'] });
+    expect(p.pulseState('2026-10-19').question?.week).toBe('2026-W42');
+    expect(p.pulseState('2026-10-21').question).toBeNull();
+    await p.answerPulse('3-5', null, '2026-10-18');
+    expect(p.pulseState('2026-10-19').question).toBeNull();
+    expect(p.pulseState('2026-10-19').history).toEqual([{ week: '2026-W42', answer: '3-5' }]);
+    // self-host: nothing leaves the household, the operator view is empty and closed without a token
+    expect(await p.pulseAggregate()).toEqual([]);
+    expect(p.operatorAllowed('Bearer x')).toBe(false);
+  });
+});

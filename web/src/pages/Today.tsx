@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { invalidate, post, put, qc, useApi } from '../api';
 import { useDrag } from '../dnd';
+import { PulseCard, usePulse } from '../pulse';
 import '../dnd.css';
 import { assistantAvailable, openAssistant } from '../assistant/Fab';
 import { type CookToday, imgSrc, type Notice, type RhythmItem, type StillHave, type Today as TodayData, TODAY_KEY, useToday } from '../data';
@@ -34,6 +35,8 @@ export function Today({ me }: { me: Me }) {
   const nav = useNavigate();
   const gl = me.actor.houseGuest?.level;
   const d = q.data;
+  // list2 J: the weekly F&F question (opt-in, only Sunday/Monday)
+  const pulse = usePulse(!gl);
   const now = new Date();
   const date = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -93,6 +96,7 @@ export function Today({ me }: { me: Me }) {
           ['still', d.stillHave.length > 0 ? <StillHaveCard items={d.stillHave} /> : null],
           ['cook', guestAllows(gl, '/kochen') && d.cookToday ? <CookCard c={d.cookToday} /> : null],
           ['money', guestAllows(gl, '/geld') && d.money ? <MoneyCard m={d.money} /> : null],
+          ['pulse', pulse.data?.question ? <PulseCard pulse={pulse.data} /> : null],
         ]}
         canArrange={!gl && Boolean(me.actor.userId)}
       />

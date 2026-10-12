@@ -16,6 +16,7 @@ import { createAppPassword, listAppPasswords, revokeAppPassword } from '../lib/c
 import { SECTIONS, addLines, checkout, placeItem } from '../lib/shop.js';
 import { getUserPref, setUserPref } from '../lib/onboard.js';
 import { parseListExport } from '../lib/list-import.js';
+import { PULSE_ANSWERS, answerPulse, operatorAllowed, pulseAggregate, pulseState, setPulseSettings } from '../lib/pulse.js';
 import { cheapestOverview, pricesFor } from '../lib/prices.js';
 import { type OfferDraft, activeOffers, addOffer, deleteOffer, parseOfferLines, readOfferImage, readOfferLink, saveOffers } from '../lib/offers.js';
 import { addLunchbox, careCheck, careMissing, careSpent, lunchbox, lunchboxDue, setItemOwner, setLunchbox, splitImport, wgBalance } from '../lib/hhforms.js';
@@ -433,3 +434,30 @@ r.delete(
   '/offers/:id',
   wrap((req) => deleteOffer(num(req.params.id))),
 );
+
+// ---------------------------------------------------------------- J: friends & family measurement (opt-in)
+
+r.get('/pulse', (req, res) => {
+  if (req.actor?.houseGuest) return void res.json({ enabled: false, share: false, question: null, history: [] });
+  res.json(pulseState());
+});
+r.post(
+  '/pulse',
+  wrap(async (req) => {
+    if (req.actor?.houseGuest) throw Object.assign(new Error('forbidden'), { status: 403 });
+    const b = z.object({ answer: z.enum(PULSE_ANSWERS) }).parse(req.body);
+    return answerPulse(b.answer, userId(req));
+  }),
+);
+r.put('/pulse/settings', requireAdmin, (req, res) => {
+  const b = z.object({ enabled: z.boolean().optional(), share: z.boolean().optional() }).parse(req.body);
+  res.json(setPulseSettings(b));
+});
+
+/** Operator view (cloud): only the anonymous distribution of households that chose to share. OPERATOR_TOKEN. */
+export const pub = Router();
+pub.get('/operator/pulse', async (req, res) => {
+  if (!operatorAllowed(req.headers.authorization)) return void res.status(401).json({ error: 'unauthorized' });
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await pulseAggregate());
+});
