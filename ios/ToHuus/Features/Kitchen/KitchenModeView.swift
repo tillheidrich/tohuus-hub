@@ -8,6 +8,7 @@ struct KitchenModeView: View {
     let store: ServerStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var part: Part = .week
     @State private var plan: PlanResponse?
     @State private var recipeId: Int?
@@ -40,10 +41,16 @@ struct KitchenModeView: View {
                     Button(L("Close")) { dismiss() }.keyboardShortcut(.cancelAction)
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Label(L("Screen stays on"), systemImage: "sun.max.fill")
-                        .labelStyle(.titleAndIcon)
-                        .font(.footnote)
-                        .foregroundStyle(Theme.ink3)
+                    Group {
+                        if sizeClass == .regular {
+                            Label(L("Screen stays on"), systemImage: "sun.max.fill").labelStyle(.titleAndIcon)
+                        } else {
+                            Image(systemName: "sun.max.fill")
+                        }
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(Theme.ink3)
+                    .accessibilityLabel(L("Screen stays on"))
                 }
             }
             .task(id: store.revision("recipes")) { await load() }
