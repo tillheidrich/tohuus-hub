@@ -6388,6 +6388,34 @@ html.board-mode body {
   min-width: 0;
   font-size: 13px;
 }
+.ha-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: var(--r-sm, 10px);
+  background: var(--accent-soft);
+}
+.ha-pair .btn {
+  align-self: flex-start;
+  min-height: 44px;
+}
+.ha-pair-code {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  user-select: all;
+}
+.ha-pair-done {
+  flex-direction: row;
+  align-items: center;
+  color: var(--accent-ink);
+}
+.ha-pair-start {
+  align-self: flex-start;
+  min-height: 44px;
+}
 
 /* ---------- spend2 ---------- */
 .sp2-controls {

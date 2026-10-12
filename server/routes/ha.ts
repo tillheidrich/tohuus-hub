@@ -12,6 +12,9 @@ import { getDisplay, displayPng } from '../lib/kiosk.js';
 import { createOrder } from '../lib/orders.js';
 import { autofill } from '../lib/plan.js';
 import { checkInbox } from '../lib/retail-inbox.js';
+import { rhythmDue } from '../lib/rhythm.js';
+import { moneyGlance } from '../lib/money.js';
+import { TOPICS, TOPIC_MODES, ha2Settings, setHa2Settings } from '../lib/ha2.js';
 import {
   HA_API_VERSION,
   HaApiError,
@@ -211,8 +214,36 @@ r.get('/ha/v1/info', (req, res) => {
 
 r.get('/ha/v1/state', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json(haState());
+  res.json({ ...haState(), ...haExtras() });
 });
+
+/** Added in 0.3 of the integration: what ToHuus suggests now (purchase rhythm), money glance, who leads per topic. */
+function haExtras() {
+  const due = rhythmDue(25);
+  const m = moneyGlance();
+  const s = ha2Settings();
+  return {
+    due: due.map((x) => ({ product_id: x.productId, name: x.name, every_days: x.everyDays, last_bought: x.lastBought, due_on: x.dueOn, origin: x.origin, label: x.label })),
+    money: { currency: m.currency, week: m.week, month: m.month, budget: m.budget },
+    sync: Object.fromEntries(TOPICS.map((tp) => [tp, { mode: s[tp].mode, modes: TOPIC_MODES[tp], entities: s[tp].entities }])),
+  };
+}
+
+/** Who leads per topic, set from Home Assistant (select entities): off | two_way | from_ha | to_ha. */
+r.post(
+  '/ha/v1/bridge/leader',
+  h((req) => {
+    // a household matter: the Home Assistant access (created by an admin) or an admin, not every member
+    if (!(req.actor?.kind === 'token' || req.actor?.role === 'admin')) throw new HaApiError(403, 'forbidden');
+    const b = z.object({ topic: z.string(), mode: z.string() }).parse(req.body);
+    if (!(TOPICS as string[]).includes(b.topic)) throw new HaApiError(400, t('Unknown topic'));
+    const topic = b.topic as (typeof TOPICS)[number];
+    if (!(TOPIC_MODES[topic] as string[]).includes(b.mode)) throw new HaApiError(400, t('This mode is not available for this topic'));
+    const cur = ha2Settings()[topic];
+    const next = setHa2Settings({ [topic]: { ...cur, mode: b.mode } } as any);
+    return { topic, mode: next[topic].mode, entities: next[topic].entities };
+  }),
+);
 
 /** Live updates for the integration: `change` (topics) and `tohuus` (notification events). */
 r.get('/ha/v1/events', (_req, res) => addHaClient(res));

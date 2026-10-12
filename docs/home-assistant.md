@@ -13,10 +13,25 @@ The integration lives in its own repository: **[tillheidrich/tohuus-hub-ha](http
 ## Set up the integration
 
 1. Home Assistant › HACS › ⋮ › *Custom repositories* › `https://github.com/tillheidrich/tohuus-hub-ha`, type *Integration*. Download **ToHuus Hub**, restart Home Assistant.
-2. ToHuus Hub › *Settings › Access & AI › New access* › **Home Assistant** › *Generate*. Copy the token (`sw_…`, shown once).
-3. Home Assistant › *Settings › Devices & services › Add integration › ToHuus Hub*: address (as Home Assistant reaches it, e.g. `http://192.168.1.20:8080`) and token.
+2. ToHuus › *Settings › Home Assistant* (or *Access & AI › Home Assistant*) › **Connect Home Assistant**. ToHuus shows a short code (`ABCD-EFGH`, valid 10 minutes, single use).
+3. Home Assistant › *Settings › Devices & services › Add integration › ToHuus Hub* › choose **ToHuus Cloud** (`https://cloud.tohuus.heidrich-digital.de`) or **Own server** (address as Home Assistant reaches it, e.g. `http://192.168.1.20:8080`) and enter the code.
 
-A "Home Assistant" token can only call `/api/ha/*` and `/api/events` – nothing else in the API, no MCP.
+Home Assistant only connects *out* (HTTPS + server-sent events). Nothing in the home needs to be reachable from the internet, and the cloud never calls into Home Assistant.
+
+The manual way still works: *Own server › Token instead of code*, with a token from *Settings › Access & AI › New access › Home Assistant* (`sw_…`, shown once).
+
+A "Home Assistant" token can only call `/api/ha/*` and `/api/events` – nothing else in the API, no MCP. It is listed (and revocable) under *Access & AI*, named "Home Assistant · <name of the HA installation>".
+
+### Pairing API
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/api/ha/pair/start` | household admin (cookie session or app token) | → `{code: "ABCD-EFGH", expires_at, expires_in: 600}`; an older unused code of the household stops working. Rate limit 20/hour/household. |
+| GET | `/api/ha/pair/status` | household admin | → `{state: "none" \| "pending" \| "claimed", expires_at?, device?, claimed_at?}` (claimed is kept 15 minutes, for the "connected" tick) |
+| DELETE | `/api/ha/pair` | household admin | cancel the waiting code |
+| POST | `/api/ha/pair/claim` | **public** | `{code, name?}` → `{token, api, instance_id, household, base_url, mode: "cloud" \| "selfhost"}`. Code is case-insensitive, dashes/spaces ignored, alphabet without 0/O/1/I/L. 404 `{code: "invalid_code"}`, 410 `{code: "gone"}` (household deleted), 429 `{code: "too_many_attempts"}` (10 per 10 min per address, 300 per 10 min overall). |
+
+Codes live in memory (hashed, one per household); in ToHuus Cloud the code also routes to its household, the token is created there and carries the household's routing prefix. The iPhone app can show the same code (call `start`, poll `status`).
 
 **Options** (*Configure*): features on/off (to-do, calendars, display images, buttons, event entity – sensors are always on), live updates on/off, display image colours (`color` / `gray` / `bw`) and size, Cookidoo week on/off and its calendar entity. Switching a feature off removes its entities.
 
@@ -214,7 +229,8 @@ The integration uses a small, versioned API that other tools can use too. Authen
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/api/ha/v1/info` | `api`, `instance_id` (stable per installation), `household`, `base_url`, `language`, `scope`, `features` |
-| GET | `/api/ha/v1/state` | everything above in one call: `counts`, `low`, `empty`, `expiring`, `shopping`, `todo`, `orders`, `care` {due, next}, `eat_first`, `tonight`, `tomorrow`, `next_meal`, `party`, `kid_wishes`, `displays` |
+| GET | `/api/ha/v1/state` | everything above in one call: `counts`, `low`, `empty`, `expiring`, `shopping`, `todo`, `orders`, `care` {due, next}, `eat_first`, `tonight`, `tomorrow`, `next_meal`, `party`, `kid_wishes`, `displays`; since integration 0.3: `due` [{product_id, name, every_days, last_bought, due_on, origin, label}] (purchase rhythm suggestions, sensitive products never), `money` {currency, week, month, budget} and `sync` {shopping\|meals\|care: {mode, modes, entities}} |
+| POST | `/api/ha/v1/bridge/leader` | `{topic: shopping\|meals\|care, mode}` – who leads per topic (`two_way` both, `from_ha` Home Assistant, `to_ha` ToHuus, `off`); HA token or admin |
 | GET | `/api/ha/v1/events` | server-sent events: `hello`, `change` ({topics}), `tohuus` (notification) |
 | GET | `/api/ha/v1/todo` | `{items: [{uid, summary, status, description, product_id, qty, …}]}` |
 | POST | `/api/ha/v1/todo` | `{summary, description?}` → `{items: [{uid, summary, created}]}` |

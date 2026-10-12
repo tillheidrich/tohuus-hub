@@ -307,6 +307,32 @@ describe('cloud isolation', () => {
     expect((await mcp(forged, call)).status).toBe(401);
   });
 
+  it('Home Assistant pairing: the code is routed to its own household, single use', async () => {
+    const s = await A.post('/api/ha/pair/start');
+    expect(s.status, s.text).toBe(200);
+    // B's status never shows A's code
+    expect((await B.get('/api/ha/pair/status')).json.state).toBe('none');
+    const anon = new Client();
+    const c = await anon.post('/api/ha/pair/claim', { code: s.json.code, name: 'HA' });
+    expect(c.status, c.text).toBe(200);
+    expect(c.json.mode).toBe('cloud');
+    expect(c.json.token).toMatch(new RegExp(`^sw_${accounts.getHousehold(hA)!.slug}_`));
+    const st = await new Client().get('/api/ha/v1/state', { authorization: `Bearer ${c.json.token}` });
+    expect(st.status, st.text).toBe(200);
+    expect(st.text).toContain('MARKERA-shop');
+    // the HA token cannot reach anything outside /api/ha
+    expect((await new Client().get('/api/shopping', { authorization: `Bearer ${c.json.token}` })).status).toBe(403);
+    // used once – gone
+    expect((await new Client().post('/api/ha/pair/claim', { code: s.json.code })).status).toBe(404);
+    // B pairs its own household: its token sees nothing of A
+    const sb = await B.post('/api/ha/pair/start');
+    const cb = await new Client().post('/api/ha/pair/claim', { code: sb.json.code });
+    expect(cb.status, cb.text).toBe(200);
+    const stB = await new Client().get('/api/ha/v1/state', { authorization: `Bearer ${cb.json.token}` });
+    expect(stB.status).toBe(200);
+    expect(stB.text).not.toContain('MARKERA');
+  });
+
   it('guest links resolve to their own household only', async () => {
     expect(guestTokenA).toMatch(/^h[a-z2-7]{10}_/);
     const g = await new Client().get(`/api/guest/${guestTokenA}/shopping`);
