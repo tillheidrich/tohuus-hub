@@ -19,6 +19,31 @@ versions): hide it.
 | "Abo verwalten" | `AppStore.showManageSubscriptions(in:)`, fallback `manageUrl` |
 | `POST /api/cloud/import`, `GET /api/cloud/import` | moving a self-hosted household into the cloud – web only for now ([cloud.md](cloud.md#moving-a-self-hosted-household-in)) |
 
+## Passkeys (cloud) – new, server ready
+
+The server side is done; the app does not use it yet. One passkey per account signs in to all households of the
+account ([cloud.md](cloud.md#passkeys-for-accounts)). RP-ID = the cloud host `cloud.tohuus.heidrich-digital.de`.
+
+**App setup** (not changed on this branch): add the associated domain `webcredentials:cloud.tohuus.heidrich-digital.de`
+to the ToHuus target's entitlements (`com.apple.developer.associated-domains`). The server serves
+`GET /.well-known/apple-app-site-association` → `{ "webcredentials": { "apps": ["FVS7WVTQ67.de.heidrichdigital.tohuus"] } }`.
+Use `ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: "cloud.tohuus.heidrich-digital.de")`.
+Binary fields are base64url (no padding) in both directions. Only when `GET /api/instance` → `auth.passkey` is `true`
+and `mode` is `cloud` (self-hosted servers have their own host and member passkeys).
+
+| Step | Endpoint | Body → answer |
+|---|---|---|
+| sign-in options | `POST /api/auth/passkey/options` | `{ client: "ios" }` → `{ options: { challenge, rpId, timeout, userVerification: "required" }, key }` (`allowCredentials` empty or missing: usernameless) |
+| sign-in | `POST /api/auth/passkey/verify` | `{ key, device: "iPhone von Mira", household?: "<uuid>", response: { id, rawId, type: "public-key", response: { clientDataJSON, authenticatorData, signature, userHandle }, clientExtensionResults: {} } }` → `{ token: "sw_app_…", account, user, households, household }` (same shape as `POST /api/auth/app`) |
+| list | `GET /api/auth/passkeys` (app token) | → `[{ id, name, device_type, backed_up, created_at, last_used_at }]` |
+| register: options | `POST /api/auth/passkeys/options` (app token) | `{ password }` → creation options `{ challenge, rp: { id, name }, user: { id, name, displayName }, pubKeyCredParams, excludeCredentials, authenticatorSelection }`; `400 { needPassword: true }` without/with a wrong password. Accounts without a password register on the web (e-mail confirmation) |
+| register | `POST /api/auth/passkeys` (app token) | `{ name?: "iPhone", response: { id, rawId, type: "public-key", response: { clientDataJSON, attestationObject, transports? }, clientExtensionResults: {} } }` → `{ id }`; `409` already saved |
+| rename / delete | `PATCH /api/auth/passkeys/:id { name }`, `DELETE /api/auth/passkeys/:id` | → `{ ok }` |
+
+Errors: `400` "That took too long" (challenge gone – start again), `401` passkey unknown/removed or the check
+failed, `429` too many attempts (verify: 10 per 5 min per address, 8 per account). Map `ASAuthorizationError.canceled`
+to silence, like the web app.
+
 ## AI switches and kid lock ([assistant.md](assistant.md#switching-ai-off-aienabled-aimine-children-mcp))
 
 | Endpoint | Notes |

@@ -9,7 +9,7 @@ The binding product and API contract is [plan-2026-10-12.md](plan-2026-10-12.md)
 
 ```
 DATA_DIR/
-  accounts.db                     accounts, households, memberships, sessions, app tokens, billing, usage (encrypted)
+  accounts.db                     accounts, account passkeys, households, memberships, sessions, app tokens, billing, usage (encrypted)
   households/<uuid>/tohuus.db     one household (encrypted with its own key)
   households/<uuid>/images/       photos, AES-256-GCM per file
   households/<uuid>/imports/      receipt files, AES-256-GCM per file
@@ -31,7 +31,7 @@ DATA_DIR/
   every household database when it is opened.
 - **Module state** that holds household data is kept per household (`perHousehold`, `ScopedMap`, `ScopedSet`);
   background queues remember the household of each entry; server-sent events are per household.
-- **Accounts**: e-mail + scrypt password, e-mail links. A membership maps an account to a `users.id` inside the
+- **Accounts**: e-mail + scrypt password, e-mail links, passkeys (per account, [below](#passkeys-for-accounts)). A membership maps an account to a `users.id` inside the
   household database, so every feature sees the same `Actor` as in self-host.
 
 ## Environment
@@ -40,7 +40,7 @@ DATA_DIR/
 |---|---|---|
 | `MULTI_TENANT=true` | yes | cloud mode |
 | `TOHUUS_MASTER_KEY` | yes | 32 random bytes, base64 (`openssl rand -base64 32`). Environment only – never on the data volume. Without it the server refuses to start. |
-| `BASE_URL` | yes | public URL of the cloud (links, signed image URLs, passkey RP-ID later) |
+| `BASE_URL` | yes | public URL of the cloud (links, signed image URLs; its host is the passkey RP-ID, its origin the expected passkey origin – changing the host makes existing passkeys useless) |
 | `DATA_DIR` | – | default `./data` (`/data` in the image) |
 | `SMTP_*` | recommended | verification, sign-in and reset mails |
 | `CLOUD_SIGNUP=false` | – | close signups (existing accounts keep working) |
@@ -49,6 +49,7 @@ DATA_DIR/
 | `SSE_MAX_TOTAL` | – | live-update connections over all households (5000; 200 per household) |
 | `LEGAL_PRIVACY_URL`, `LEGAL_TERMS_URL`, `LEGAL_IMPRINT_URL` | – | shown by the apps via `/api/instance` |
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
+| `APPLE_APP_IDS` | – | comma-separated `<TeamID>.<bundle id>` for `webcredentials` in `/.well-known/apple-app-site-association`, default `FVS7WVTQ67.de.heidrichdigital.tohuus` |
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |
 | `APPLE_SANDBOX_ACCOUNTS` | – | comma-separated e-mails of TestFlight testers: Sandbox purchases count only for households with one of these accounts |
 | `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`) |
@@ -107,8 +108,8 @@ manual household use the same endpoint with a session.
   detaches sessions/tokens), then the folder and its local backups are removed.
 - `DELETE /api/cloud/account` (body `{ password }`): households the account has to itself – or where only permanent
   guests would remain – are shredded; in shared households the person leaves, and if they were the last admin the
-  longest-standing *member* becomes admin (never a guest, never an expired membership). Required by App Store
-  guideline 5.1.1(v).
+  longest-standing *member* becomes admin (never a guest, never an expired membership). The account's passkeys
+  and WebAuthn user handle are deleted with it. Required by App Store guideline 5.1.1(v).
 - Accounts without a password (e-mail links only) confirm both with a fresh sign-in link: the first call sends it
   (`400`, `needEmailConfirm: true`), and within 15 minutes after opening it the call goes through.
 - What a shred removes, and what is left:
@@ -134,7 +135,7 @@ manual household use the same endpoint with a session.
 | IMAP receipt inbox | per-household mailbox polling |
 | restore from file, WebDAV backup settings | replaced by the cloud backups |
 | `ADMIN_PASSWORD`, demo seeding at start, `MCP_PATH_SECRET`, OIDC | instance-wide, no household |
-| household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead |
+| household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead (account passkeys exist, see below) |
 
 Kept: guest links, displays, kid tablets, party board, web push, iPhone push (APNs), the CalDAV bridge (app passwords carry the household prefix), MCP with household tokens, the HACS integration,
 exports (`GET /api/cloud/export`, household admins only, needs a confirmed e-mail).
@@ -154,6 +155,46 @@ Notifications v2 – set this URL in App Store Connect). Both verify the JWS cha
 ## Passwords
 
 New cloud account passwords need 10 characters (signup, reset, change, invite with a new account); self-hosted members 8. `/api/instance` → `auth.passwordMin` tells the apps which applies.
+
+## Passkeys for accounts
+
+Code: `server/lib/cloud-passkeys.ts` (store, challenges), routes in `server/routes/cloud.ts`; the WebAuthn ceremony
+helpers are shared with the self-host member passkeys (`server/lib/auth-passkeys.ts`, `@simplewebauthn/server`).
+
+- **Per account, not per household**: `account_passkeys (id, account_id → accounts ON DELETE CASCADE, public_key,
+  counter, transports, device_type, backed_up, name, created_at, last_used_at)` and `account_webauthn (account_id,
+  handle)` in `accounts.db` (created on first use). One passkey signs in to the account and with it to every
+  household of the account. Household databases never hold cloud passkeys.
+- **RP-ID** = host of `BASE_URL`, **origin** = `BASE_URL`. Discoverable credentials (resident key required), user
+  verification required, attestation `none`. Challenges are single use, 5 minutes, in process memory (a restart only
+  means "try again").
+- **Register** (signed in, cookie session or app token): `POST /api/auth/passkeys/options { password }` – a fresh
+  password check as for deleting a household (`confirmAccount`: wrong/missing → `400 { needPassword: true }`;
+  accounts without a password confirm with a fresh e-mail link → `400 { needEmailConfirm: true }`) → WebAuthn
+  creation options (`rp.id`, `user.name` = account e-mail, `excludeCredentials`). Then
+  `POST /api/auth/passkeys { response, name? }` → `{ id }` (`409` if that credential is already saved).
+- **List / rename / delete**: `GET /api/auth/passkeys` → `[{ id, name, device_type, backed_up, created_at,
+  last_used_at }]`; `PATCH /api/auth/passkeys/:id { name }` and `DELETE /api/auth/passkeys/:id` → `{ ok }` (`false`
+  for an id of another account). `GET /api/auth/me` (settings screen) carries the account's passkeys,
+  `policy.passkeys: true`, `has_password` (the account's) and `confirm: 'password' | 'email'`.
+- **Sign in** (usernameless): `POST /api/auth/passkey/options` → the request options JSON, challenge key in the
+  cookie `sw_wa` (path `/api/auth/passkey`, 5 minutes); `POST /api/auth/passkey/verify { response }` → cookie
+  session (`method: 'passkey'`, first household) and `{ ok: true }`. **App**: `POST /api/auth/passkey/options
+  { client: 'ios' }` → `{ options, key }`; `POST /api/auth/passkey/verify { response, key, device, household? }` →
+  `{ token: 'sw_app_…', account, user, households, household }` (as `POST /api/auth/app`).
+- **Checks**: the credential must exist and belong to an existing account; signature, challenge, origin, RP-ID,
+  user verification and the signature counter (no going back) are verified; a `userHandle` that is not the
+  account's own is refused (`401`).
+- **Rate limits** (like password sign-in): options 30 per 5 minutes per IP; verify 10 per 5 minutes per IP and 8 per
+  5 minutes per account (`429`).
+- **Apple**: `GET /.well-known/apple-app-site-association` (cloud only, JSON, no redirect, cached 1 hour) →
+  `{ "webcredentials": { "apps": ["FVS7WVTQ67.de.heidrichdigital.tohuus"] } }` (`APPLE_APP_IDS`). The app needs the
+  associated domain `webcredentials:<cloud host>` – [ios-api-0.2.md](ios-api-0.2.md#passkeys-cloud-new-server-ready).
+- `/api/instance` → `auth.passkey: true` and `/api/auth/options` → `methods.passkeys: true` in the cloud. The web app
+  uses the same screens as self-host (sign-in button and autofill on the e-mail field, *Einstellungen › Mein Konto
+  › Passkeys*; adding one asks for the password first).
+- A password reset or change does not remove passkeys (they are a separate credential); deleting the account does.
+  Test: `test/cloud-passkeys.test.ts` (software authenticator, P-256).
 
 ## E-mail language
 
@@ -225,7 +266,6 @@ Never shown: household names, people, lists, receipts, conversations, e-mail add
 
 ## Known gaps (TODO)
 
-- Passkeys for cloud accounts (one RP-ID = the cloud host) are not wired yet; the endpoints answer 404.
 - The magic link signs in the browser that opens it (no cross-device code confirmation as in self-host).
 - Images are not part of the nightly database copies; no S3 copy of images yet.
 - No admin back office (support lookups, manual plan changes) – use accounts.db with the master key.

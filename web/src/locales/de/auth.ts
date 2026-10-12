@@ -191,4 +191,8 @@ export const auth: Record<string, string> = {
   'Link account': 'Verknüpfen',
   'Clear PIN': 'PIN löschen',
   'Single sign-on is not set up.': 'Single Sign-on ist nicht eingerichtet.',
+  // ToHuus Cloud: account passkeys
+  'Add passkey': 'Passkey hinzufügen',
+  'A passkey signs you in to all your households. Please confirm with your password.':
+    'Ein Passkey meldet dich in all deinen Haushalten an. Bitte bestätige mit deinem Passwort.',
 };
