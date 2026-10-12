@@ -1,5 +1,10 @@
 # iPhone, iPad and Apple Watch app 0.2 – what the app expects from the server
 
+> **Superseded for names:** since build 3 the app uses the real endpoints listed in [ios-api-0.2.md](ios-api-0.2.md)
+> (trips, `/api/list/*`, `/api/ai/settings`, `/api/imports/lines`, `DELETE /api/push/apns/:id`, notify prefs with `apns`,
+> Hausinfo, Cookidoo confirm, offers, prices, modules). The sections below describe the original 0.2 assumptions and
+> the parts that are still true (targets, watch, store-arrival hint, APNs payload).
+
 Version 0.2.0 (build 2) of the native app (`ios/`). This page lists every endpoint the app calls that was **not** on
 `main` when it was built, with the exact shape it sends and the shapes it accepts. All of them are optional: when the
 server answers 404 the app hides the feature (or falls back as described) – nothing breaks on older servers.
