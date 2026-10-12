@@ -120,6 +120,33 @@ describe('chat', () => {
     expect(calls).toHaveLength(3);
   });
 
+  it('moves on to another Mistral model when the first one is rate-limited', async () => {
+    process.env.AI_API_KEY = 'k';
+    fake([() => ({ status: 429, text: 'busy' }), () => ({ status: 429, text: 'busy' }), () => ({ status: 429, text: 'busy' }), answer('from medium')]);
+    const r = await ai.chat({ messages: [{ role: 'user', content: 'x' }], backoffMs: 1 });
+    expect(r.content).toBe('from medium');
+    expect(calls.map((c) => c.body.model)).toEqual(['mistralai/mistral-small-2603', 'mistralai/mistral-small-2603', 'mistralai/mistral-small-2603', 'mistralai/mistral-medium-3.1']);
+    // still pinned to Mistral in the EU
+    expect(calls[3].body.provider).toEqual({ order: ['mistral'], allow_fallbacks: false, data_collection: 'deny' });
+    // a bad key is not "busy": no other model is tried
+    calls.length = 0;
+    fake([() => ({ status: 401, text: 'no' })]);
+    await expect(ai.chat({ messages: [{ role: 'user', content: 'x' }], backoffMs: 1 })).rejects.toMatchObject({ code: 'auth' });
+    expect(calls).toHaveLength(1);
+    // an explicitly chosen model and AI_MODEL_FALLBACKS=- switch it off
+    calls.length = 0;
+    fake([() => ({ status: 429, text: 'busy' })]);
+    await expect(ai.chat({ model: 'mistralai/mistral-large-4-0', messages: [{ role: 'user', content: 'x' }], retries: 0 })).rejects.toMatchObject({ code: 'rate_limited' });
+    expect(calls).toHaveLength(1);
+    process.env.AI_MODEL_FALLBACKS = '-';
+    calls.length = 0;
+    await expect(ai.chat({ messages: [{ role: 'user', content: 'x' }], retries: 0 })).rejects.toMatchObject({ code: 'rate_limited' });
+    expect(calls).toHaveLength(1);
+    delete process.env.AI_MODEL_FALLBACKS;
+    // another endpoint (own server): no fallbacks unless configured
+    expect(ai.fallbackModels('text', 'x', { AI_BASE_URL: 'http://ollama.local/v1', AI_API_KEY: 'k' } as any)).toEqual([]);
+  });
+
   it('maps errors cleanly and does not retry a bad key', async () => {
     process.env.AI_API_KEY = 'k';
     fake([() => ({ status: 401, text: 'no' })]);

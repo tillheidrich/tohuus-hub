@@ -31,6 +31,29 @@ export const DEFAULT_MODELS = {
 
 export type ModelKind = 'text' | 'vision' | 'visionHard' | 'audio';
 
+/**
+ * Other Mistral models tried in turn when the configured one is rate-limited or down upstream (OpenRouter shares
+ * Mistral's limits between all its customers, so a busy evening can answer 429 for minutes). Still Mistral, still
+ * pinned to the EU provider. `AI_MODEL_FALLBACKS` (comma-separated, `-` = none) overrides the list for text and vision;
+ * only used with the default OpenRouter setup or when set explicitly.
+ */
+export const DEFAULT_FALLBACKS: Record<ModelKind, string[]> = {
+  text: ['mistralai/mistral-medium-3.1', 'mistralai/mistral-large-2512'],
+  vision: ['mistralai/mistral-medium-3.1', 'mistralai/mistral-large-4-0'],
+  visionHard: ['mistralai/mistral-medium-3.1'],
+  audio: [],
+};
+
+export function fallbackModels(kind: ModelKind, primary: string, env: NodeJS.ProcessEnv = process.env): string[] {
+  const raw = (env.AI_MODEL_FALLBACKS ?? '').trim();
+  const cfg = aiConfig(env);
+  let list: string[];
+  if (raw === '-') list = [];
+  else if (raw) list = kind === 'audio' ? [] : raw.split(',').map((x) => x.trim()).filter(Boolean);
+  else list = cfg?.openrouter ? DEFAULT_FALLBACKS[kind] : [];
+  return list.filter((m) => m !== primary);
+}
+
 export interface AiConfig {
   baseUrl: string;
   apiKey: string;
@@ -247,17 +270,27 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
   const timeoutMs = opts.timeoutMs ?? (kind === 'vision' || kind === 'visionHard' ? 120_000 : 60_000);
   const retries = opts.retries ?? 2;
   const backoff = opts.backoffMs ?? 600;
+  // an explicitly chosen model (opts.model) is not swapped; otherwise other Mistral models step in when it is busy
+  const chain = [model, ...(opts.model ? [] : fallbackModels(kind, model))];
   let last: unknown;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    if (attempt > 0) await sleep(backoff * 2 ** (attempt - 1));
-    try {
-      const res = await once(cfg, body, timeoutMs);
-      aiUsageHook.record?.(res.model, res.usage);
-      return res;
-    } catch (e) {
-      last = e;
-      if (!retryable(e) || attempt === retries) break;
+  for (const [i, m] of chain.entries()) {
+    const b = m === model ? body : { ...body, model: m };
+    // the first model gets the full retries; a fallback one try plus one retry, so the person is not kept waiting
+    const tries = i === 0 ? retries : Math.min(1, retries);
+    for (let attempt = 0; attempt <= tries; attempt++) {
+      if (attempt > 0) await sleep(backoff * 2 ** (attempt - 1));
+      try {
+        const res = await once(cfg, b, timeoutMs);
+        aiUsageHook.record?.(res.model, res.usage);
+        return res;
+      } catch (e) {
+        last = e;
+        if (!retryable(e) || attempt === tries) break;
+      }
     }
+    // only "busy / down / slow" moves on to the next model; a wrong request or key would fail there too
+    if (!retryable(last)) break;
+    if (i < chain.length - 1) console.warn(`[ai] ${m} unavailable (${(last as AiError).code}), trying ${chain[i + 1]}`);
   }
   throw last instanceof AiError ? last : new AiError(t('The AI service is not reachable right now.'), 'upstream', 502, String((last as Error)?.message ?? last));
 }

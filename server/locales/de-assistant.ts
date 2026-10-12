@@ -4,6 +4,7 @@ export const de_assistant: Record<string, string> = {
   'No AI model is set up (AI_API_KEY / AI_MODEL_*).': 'Es ist kein KI-Modell eingerichtet (AI_API_KEY / AI_MODEL_*).',
   'No speech model is set up (AI_MODEL_AUDIO).': 'Es ist kein Sprachmodell eingerichtet (AI_MODEL_AUDIO).',
   'The AI service did not accept the key. Please check AI_API_KEY.': 'Der KI-Dienst hat den Schlüssel nicht angenommen. Bitte prüf AI_API_KEY.',
+  'The assistant is busy right now. Please try again in a moment.': 'Der Assistent ist gerade ausgelastet. Versuch es bitte gleich noch mal.',
   'The AI service is busy right now. Please try again in a moment.': 'Der KI-Dienst ist gerade ausgelastet. Versuch es bitte gleich noch mal.',
   'The AI service could not handle this request.': 'Der KI-Dienst konnte mit dieser Anfrage nichts anfangen.',
   'The AI service is not reachable right now.': 'Der KI-Dienst ist gerade nicht erreichbar.',

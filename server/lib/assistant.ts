@@ -234,7 +234,11 @@ export async function chatOnce(input: {
         if (!(e instanceof AiError)) throw e;
         console.warn('[assistant] model failed, using the built-in reader:', e.code, e.detail ?? e.message);
         // writes the model already made stay (they are in actions); otherwise the built-in reader helps
-        out = { reply: ctx.actions.length ? t('Done.') : basicReply(message, ctx), mode: 'basic', remaining: allowance.remaining };
+        // a question the built-in reader cannot answer ("ein Rezept für Kinder") gets an honest "busy, try again"
+        // instead of "I did not understand"
+        const busy = e.code === 'rate_limited' || e.code === 'upstream' || e.code === 'timeout';
+        const reply = ctx.actions.length ? t('Done.') : busy && intent.kind === 'unknown' ? t('The assistant is busy right now. Please try again in a moment.') : basicReply(message, ctx);
+        out = { reply, mode: 'basic', remaining: allowance.remaining };
       }
     }
   } else {
