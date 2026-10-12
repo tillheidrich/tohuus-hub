@@ -9,6 +9,7 @@ import { addToShopping, adjustStock, getProduct, guessCategory, matchProduct } f
 import { norm, tokens } from './text.js';
 import { fitsStore, itemBuyAt } from './buyat.js';
 import { type ShareInfo, type Viewer, applyShareView, realProductId } from './share-core.js';
+import { afterUntick, bookTick, originOf, removeItem, tickItem } from './shopping-trust.js';
 import {
   CATEGORY_SECTION,
   type AisleModel,
@@ -236,6 +237,8 @@ export interface ShopItem {
   share?: ShareInfo;
   /** "Where to buy?" – only what a person entered (item, else its product); empty = anywhere (wave 6) */
   buy_at: string[];
+  /** where the row comes from: "Lea · today 14:05", "remembers: every ~9 days", "from recipe X" (shopping-trust.ts) */
+  origin: string;
 }
 
 export function claimsOf(kind: 'shopping' | 'plan') {
@@ -255,14 +258,15 @@ export function shoppingItems(viewer?: Viewer): ShopItem[] {
       `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit, p.buy_at AS product_buy_at,
          (SELECT COALESCE(SUM(qty),0) FROM stock st WHERE st.product_id = s.product_id) AS in_stock
        FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id
-       WHERE s.checked_at IS NULL OR s.in_basket = 1 OR s.checked_at > datetime('now', '-1 day')
+       WHERE s.cleared_at IS NULL AND (s.checked_at IS NULL OR s.in_basket = 1 OR s.checked_at > datetime('now', '-1 day'))
        ORDER BY s.checked_at IS NOT NULL, s.created_at DESC`,
     )
-    .all() as (Omit<ShopItem, 'section' | 'claim' | 'buy_at'> & { buy_at: string | null; product_buy_at: string | null })[];
+    .all() as (Omit<ShopItem, 'section' | 'claim' | 'buy_at' | 'origin'> & { buy_at: string | null; product_buy_at: string | null; origin_detail: string | null })[];
   const claims = claimsOf('shopping');
   return applyShareView(rows, viewer, claims).map(({ product_buy_at, ...r }) => ({
     ...r,
     buy_at: itemBuyAt({ buy_at: r.buy_at, product_buy_at }),
+    origin: originOf(r),
     section: sectionOf(r),
     claim: claims.get(r.id) ?? null,
   }));
@@ -301,6 +305,7 @@ export function setBasket(itemId: number, on: boolean, actor: string, storeId?: 
     if (storeId) recordTick(storeId, sectionOf(it));
   } else {
     db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(itemId);
+    afterUntick(itemId, actor);
   }
   emit('shopping');
   return { ok: true };
@@ -322,9 +327,9 @@ export function checkout(input: { storeId?: number | null; toStock: boolean; act
   db.transaction(() => {
     for (const it of items) {
       const pid = realProductId(it);
-      if (input.toStock && pid) {
+      if (input.toStock && pid && !(it.stock_booked > 0)) {
         try {
-          if (bookPurchase(pid, it.qty, input.actor)) booked++;
+          if (bookTick(it, input.actor)) booked++;
         } catch {
           /* product vanished – nothing to book */
         }
@@ -474,17 +479,9 @@ export function replayOps(ops: OfflineOp[], actor: { name: string; userId?: numb
       } else if (op.type === 'basket') {
         if (exists(op.id)) setBasket(op.id, op.on, actor.name, op.store_id ?? null);
       } else if (op.type === 'check') {
-        const it = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(op.id) as any;
-        if (it) {
-          const wasOpen = it.checked_at == null;
-          db.prepare(`UPDATE shopping_items SET checked_at = ${op.on ? "datetime('now')" : 'NULL'}, checked_by = ?, in_basket = 0 WHERE id = ?`).run(op.on ? actor.name : null, op.id);
-          const pid = realProductId(it);
-          if (op.on && wasOpen && op.to_stock && pid) bookPurchase(pid, it.qty, actor.name);
-          emit('shopping');
-        }
+        if (exists(op.id)) tickItem(op.id, op.on, actor.name, { toStock: op.to_stock });
       } else if (op.type === 'delete') {
-        db.prepare('DELETE FROM shopping_items WHERE id = ?').run(op.id);
-        emit('shopping');
+        removeItem(op.id);
       } else if (op.type === 'claim') {
         if (exists(op.id)) claim('shopping', op.id, actor.userId ?? null, op.on);
       }

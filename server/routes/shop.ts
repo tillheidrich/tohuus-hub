@@ -9,7 +9,6 @@ import { haTodoSettings, haTodoStatus, setHaTodoSettings, startHaTodoSync, syncH
 import {
   SECTIONS,
   addLines,
-  bookPurchase,
   checkout,
   claim,
   createStore,
@@ -24,7 +23,7 @@ import {
   setStoreOrder,
   storeView,
 } from '../lib/shop.js';
-import { realProductId } from '../lib/share-core.js';
+import { tickItem } from '../lib/shopping-trust.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
 import { NOTIFY_ACTIONS, runNotifyAction } from '../lib/notify-actions.js';
@@ -81,13 +80,9 @@ r.post('/shop/items/:id/check', (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  const wasOpen = it.checked_at == null;
-  db.prepare(`UPDATE shopping_items SET checked_at = ${b.on ? "datetime('now')" : 'NULL'}, checked_by = ?, in_basket = 0 WHERE id = ?`).run(b.on ? actorName(req) : null, it.id);
-  let booked = false;
-  const pid = realProductId(it);
-  if (b.on && wasOpen && b.to_stock && pid) booked = bookPurchase(pid, it.qty, actorName(req));
-  emit('shopping', ...(booked ? (['stock'] as const) : []));
-  res.json({ ok: true, booked });
+  // un-ticking takes back exactly what the tick booked (shopping-trust.ts)
+  const out = tickItem(it.id, b.on, actorName(req), { toStock: b.to_stock });
+  res.json({ ok: true, booked: out.booked, unbooked: out.unbooked });
 });
 
 r.post('/shop/items/:id/section', (req, res) => {

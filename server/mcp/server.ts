@@ -44,6 +44,7 @@ import { register as register_spend2 } from './tools-spend2.js';
 import { register as register_print } from './tools-print.js';
 import { register as register_share } from './tools-share.js';
 import { notPrivate } from '../lib/share-core.js';
+import { tickItem } from '../lib/shopping-trust.js';
 import { register as register_labels } from './tools-labels.js';
 import { register as register_away } from './tools-away.js';
 import { register as register_plan2 } from './tools-plan2.js';
@@ -296,10 +297,9 @@ export function buildMcpServer(actorName: string) {
         : db.prepare(`SELECT * FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} AND lower(text) LIKE lower(?) ESCAPE '\\' LIMIT 1`).get(`%${likeEsc(item)}%`)) as any;
       if (!row) return text({ error: 'not on the list' });
       if (row.checked_at) return text({ ok: true, already_checked: row.text });
-      db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ? WHERE id = ?`).run(actorName, row.id);
-      if (to_stock && row.product_id) adjustStock({ productId: row.product_id, delta: row.qty ?? 1, reason: 'purchase', actor: actorName });
-      emit('shopping');
-      return text({ ok: true, checked: row.text });
+      // books like a tick in the app, so un-ticking later takes the booking back (shopping-trust.ts)
+      const out = tickItem(row.id, true, actorName, { toStock: to_stock });
+      return text({ ok: true, checked: row.text, booked: out.booked });
     },
   );
 

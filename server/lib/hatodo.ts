@@ -11,6 +11,7 @@ import { haSettings } from './plan.js';
 import { formatItem, quickAdd } from './shop.js';
 import { isMasked, notPrivate } from './share-core.js';
 import { t } from '../i18n.js';
+import { afterUntick } from './shopping-trust.js';
 
 export interface HaTodoSettings {
   enabled: boolean;
@@ -104,6 +105,7 @@ async function doSync() {
         changedHere = true;
       } else if (ri.status === 'needs_action' && link.ha_status === 'completed' && it?.checked_at) {
         db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(it.id);
+        afterUntick(it.id, 'Home Assistant');
         out.updated++;
         changedHere = true;
       }

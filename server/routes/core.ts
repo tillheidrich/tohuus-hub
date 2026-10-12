@@ -45,7 +45,8 @@ import { findThings } from '../lib/find.js';
 import { buildExport, showNamesOnLogin } from '../lib/data.js';
 import { t } from '../i18n.js';
 import { setDateKind } from '../lib/retail.js';
-import { applyShareView, notPrivate, realProductId } from '../lib/share-core.js';
+import { applyShareView, notPrivate } from '../lib/share-core.js';
+import { clearChecked, removeItem, tickItem, withOrigin } from '../lib/shopping-trust.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -404,12 +405,12 @@ r.get('/shopping', (req, res) => {
       `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit,
          (SELECT COALESCE(SUM(qty),0) FROM stock st WHERE st.product_id = s.product_id) AS in_stock
        FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id
-       WHERE s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day')
+       WHERE s.cleared_at IS NULL AND (s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day'))
        ORDER BY s.checked_at IS NOT NULL, s.created_at DESC`,
     )
-    .all() as { id: number; text: string; product_id: number | null; note: string | null }[];
-  // discreet / private entries (area: share): real names only for their owner
-  res.json(applyShareView(items, { userId: req.actor?.userId ?? null }));
+    .all() as { id: number; text: string; product_id: number | null; note: string | null; source: string; added_by: string | null; created_at: string; origin_detail: string | null }[];
+  // discreet / private entries (area: share): real names only for their owner; every row says where it came from
+  res.json(withOrigin(applyShareView(items, { userId: req.actor?.userId ?? null })));
 });
 
 r.post('/shopping', (req, res) => {
@@ -432,29 +433,22 @@ r.patch('/shopping/:id', (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  const wasOpen = it.checked_at == null;
-  if (b.checked !== undefined)
-    db.prepare(`UPDATE shopping_items SET checked_at = ${b.checked ? "datetime('now')" : 'NULL'}, checked_by = ? WHERE id = ?`).run(b.checked ? actorName(req) : null, it.id);
   if (b.text !== undefined || b.qty !== undefined || b.note !== undefined)
     db.prepare('UPDATE shopping_items SET text = ?, qty = ?, note = ? WHERE id = ?').run(b.text ?? it.text, b.qty === undefined ? it.qty : b.qty, b.note === undefined ? it.note : b.note, it.id);
-  const pid = realProductId(it);
-  if (b.checked && wasOpen && b.to_stock && pid) {
-    adjustStock({ productId: pid, delta: it.qty ?? 1, reason: 'purchase', actor: actorName(req) });
-  }
+  // ticking may book into stock; un-ticking takes exactly that booking back (shopping-trust.ts)
+  const out = b.checked !== undefined ? tickItem(it.id, b.checked, actorName(req), { toStock: b.to_stock }) : null;
   emit('shopping');
-  res.json({ ok: true });
+  res.json({ ok: true, booked: out?.booked ?? false, unbooked: out?.unbooked ?? false });
 });
 
 r.delete('/shopping/:id', (req, res) => {
-  db.prepare('DELETE FROM shopping_items WHERE id = ?').run(id(req.params.id));
-  emit('shopping');
+  // a ticked row is only hidden: it stays a purchase signal for the rhythm
+  removeItem(id(req.params.id));
   res.json({ ok: true });
 });
 
 r.post('/shopping/clear-checked', (_req, res) => {
-  db.prepare('DELETE FROM shopping_items WHERE checked_at IS NOT NULL').run();
-  emit('shopping');
-  res.json({ ok: true });
+  res.json({ ok: true, cleared: clearChecked() });
 });
 
 r.get('/shopping/export.txt', (_req, res) => {

@@ -22,6 +22,7 @@ import { suggest } from './recipes.js';
 import { quickAdd } from './shop.js';
 import { notPrivate } from './share-core.js';
 import { haAway } from './away.js';
+import { afterUntick } from './shopping-trust.js';
 
 export const HA_API_VERSION = 1;
 
@@ -181,6 +182,7 @@ export function todoUpdate(uid: string, b: { summary?: string; status?: 'needs_a
     db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ?, in_basket = 0 WHERE id = ?`).run(actor, it.id);
   } else if (b.status === 'needs_action' && it.checked_at) {
     db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(it.id);
+    afterUntick(it.id, actor);
   }
   emit('shopping');
   return todoItems().find((x) => x.uid === String(it.id))!;
