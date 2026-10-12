@@ -97,6 +97,7 @@ struct AssistantSheet: View {
     @State private var model = AssistantModel()
     @State private var dictation = Dictation()
     @State private var showPaywall = false
+    @State private var openRecipe: RecipeRef?
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -126,6 +127,12 @@ struct AssistantSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { dismiss() } } }
             .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(item: $openRecipe) { ref in
+                NavigationStack {
+                    RecipeDetailView(recipeId: ref.id, store: store)
+                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { openRecipe = nil } } }
+                }
+            }
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
@@ -176,6 +183,10 @@ struct AssistantSheet: View {
                         Text(a.summary ?? a.kind ?? "").font(.caption)
                             .strikethrough(m.undone.contains(a.id))
                         Spacer(minLength: 4)
+                        if a.kind == "recipe_save_adapted", let rid = a.recipeId, !m.undone.contains(a.id) {
+                            Button(LC("Open")) { openRecipe = RecipeRef(id: rid) }
+                                .font(.caption.weight(.semibold))
+                        }
                         if a.undo != nil && !m.undone.contains(a.id) {
                             Button(L("Undo")) { Task { await model.undo(a, in: m, store: store) } }
                                 .font(.caption.weight(.semibold))

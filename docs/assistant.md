@@ -36,7 +36,7 @@ All need a signed-in member (cookie or app token). Errors: `{ error }` (AI error
 }
 ```
 
-Action kinds: `list_add`, `list_remove`, `list_check`, `stock_used_up`, `plan_meal`, `recipe_to_list`, `log_purchase`, `remember`, `forget`.
+Action kinds: `list_add`, `list_remove`, `list_check`, `stock_used_up`, `plan_meal`, `recipe_to_list`, `log_purchase`, `remember`, `forget`. `recipe_save_adapted` also carries `recipe_id` (the saved recipe), so the apps can open it from the chip.
 
 ### `POST /api/assistant/transcribe`
 
