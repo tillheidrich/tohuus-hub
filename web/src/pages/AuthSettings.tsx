@@ -42,6 +42,8 @@ interface AccountInfo {
   device: { shared: boolean; name: string | null };
   mail: boolean;
   policy: { magicLink: boolean; passkeys: boolean; passwordFor: 'all' | 'admins'; requireTotpAdmins: boolean; pinSwitch: boolean };
+  /** ToHuus Cloud only: how adding a passkey is confirmed (account password, or a fresh e-mail link) */
+  confirm?: 'password' | 'email';
 }
 
 interface SessionRow {
@@ -137,12 +139,17 @@ function Passkeys({ a }: { a: AccountInfo }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [rename, setRename] = useState<{ id: string; name: string } | null>(null);
+  // ToHuus Cloud: a new passkey reaches every household of the account – confirm with the password first
+  const [ask, setAsk] = useState(false);
+  const [pw, setPw] = useState('');
   const supported = browserSupportsWebAuthn();
-  const add = async () => {
+  const add = async (password?: string) => {
     setBusy(true);
     setErr('');
     try {
-      const optionsJSON = await post('/auth/passkeys/options');
+      const optionsJSON = await post('/auth/passkeys/options', password ? { password } : {});
+      setAsk(false);
+      setPw('');
       const response = await startRegistration({ optionsJSON });
       await post('/auth/passkeys', { response, name: deviceGuess() });
       invalidate('auth-me', 'auth-options');
@@ -160,7 +167,7 @@ function Passkeys({ a }: { a: AccountInfo }) {
       hint={t('Sign in with Face ID, Touch ID, Windows Hello or the device PIN – nothing to type, nothing to phish.')}
       aside={
         supported ? (
-          <button className="btn sm primary" disabled={busy} onClick={add}>
+          <button className="btn sm primary" disabled={busy} onClick={() => (a.confirm === 'password' ? (setErr(''), setAsk(true)) : add())}>
             {t('Add')}
           </button>
         ) : undefined
@@ -196,7 +203,21 @@ function Passkeys({ a }: { a: AccountInfo }) {
           ))}
         </div>
       )}
-      {err && <div className="small auth-error">{err}</div>}
+      {err && !ask && <div className="small auth-error">{err}</div>}
+      <Sheet open={ask} onClose={() => setAsk(false)} title={t('Add passkey')}>
+        <form
+          className="stack"
+          onSubmit={(e) => {
+            e.preventDefault();
+            add(pw);
+          }}
+        >
+          <div className="small muted">{t('A passkey signs you in to all your households. Please confirm with your password.')}</div>
+          <input className="input" type="password" autoComplete="current-password" placeholder={t('Password')} value={pw} onChange={(e) => setPw(e.target.value)} autoFocus />
+          {err && <div className="small auth-error">{err}</div>}
+          <button className="btn primary lg" disabled={busy || !pw}>{t('Continue')}</button>
+        </form>
+      </Sheet>
       <Sheet open={Boolean(rename)} onClose={() => setRename(null)} title={t('Rename passkey')}>
         {rename && (
           <form

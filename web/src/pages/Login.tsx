@@ -281,7 +281,7 @@ export function Login() {
                   className="input"
                   type={o?.cloud ? 'email' : 'text'}
                   inputMode={o?.cloud ? 'email' : undefined}
-                  autoComplete={o?.cloud ? 'email' : 'username webauthn'}
+                  autoComplete={o?.cloud ? 'email webauthn' : 'username webauthn'}
                   autoCapitalize="none"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
