@@ -125,17 +125,47 @@ final class AppModel {
     }
 
     private func open(session s: SessionInfo, token: String) {
+        WatchHost.app = self
         store?.stopEvents()
         let api = APIClient(baseURL: s.serverURL, token: token, householdId: s.householdId) { [weak self] in
             Task { @MainActor in self?.handleUnauthorized() }
         }
         let st = ServerStore(api: api, householdKey: s.householdId ?? s.serverURL.host() ?? "default")
+        st.householdName = activeHousehold?.name
         store = st
         st.startEvents()
         Task {
             await st.refreshList()
             await st.flush()
             await st.drainUploadQueue(session: s)
+            await PhoneWatchBridge.shared.handOverSession(api: api)
+        }
+    }
+
+    // MARK: watch
+
+    /// The watch got paired, installed the app or finished activating: send the session and the list.
+    func watchBecameAvailable() {
+        guard phase == .signedIn, let store else { return }
+        PhoneWatchBridge.shared.publish(list: store.list, nextDue: store.nextDue, household: activeHousehold?.name)
+        Task { await PhoneWatchBridge.shared.handOverSession(api: store.api) }
+    }
+
+    func receiveWatchOps(_ ops: [PendingOp]) async {
+        await store?.enqueueRemote(ops)
+    }
+
+    /// A notification button (here, on the watch or from a background launch): POST /api/push/action.
+    @discardableResult
+    func runNotificationAction(_ action: String, data: [String: String]) async -> String? {
+        guard let api else { return nil }
+        do {
+            let r = try await api.send("POST", "api/push/action", json: NotifyKit.actionBody(action, data: data), as: JSONValue.self)
+            store?.touch("shopping", "stock")
+            await store?.refreshList()
+            return r["summary"]?.string
+        } catch {
+            return APIError.from(error).localizedDescription
         }
     }
 
@@ -143,6 +173,7 @@ final class AppModel {
         guard var s = session, let token = SessionInfo.token, s.householdId != h.id.value else { return }
         s.householdId = h.id.value
         s.save()
+        PhoneWatchBridge.shared.forgetWatchToken()
         session = s
         open(session: s, token: token)
         Task { await refreshBilling() }
@@ -183,6 +214,7 @@ final class AppModel {
     }
 
     func signOut(message: String? = nil) {
+        PhoneWatchBridge.shared.signOut()
         store?.stopEvents()
         store = nil
         SessionInfo.clear()

@@ -6,6 +6,8 @@ struct WidgetSnapshot: Codable, Sendable, Equatable {
     var items: [String]
     var household: String?
     var updatedAt: Date
+    /// what ToHuus remembers as probably due next (watch complication, Smart Stack)
+    var nextDue: String? = nil
 
     static let placeholder = WidgetSnapshot(open: 3, items: ["Milch", "Brot", "Bananen"], household: nil, updatedAt: Date())
 

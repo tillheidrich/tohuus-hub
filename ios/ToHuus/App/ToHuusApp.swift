@@ -14,6 +14,7 @@ struct ToHuusApp: App {
         tab.shadowColor = UIColor(hex: 0xDEDCD3)
         UITabBar.appearance().standardAppearance = tab
         UITabBar.appearance().scrollEdgeAppearance = tab
+        PhoneWatchBridge.shared.activate()
     }
 
     var body: some Scene {

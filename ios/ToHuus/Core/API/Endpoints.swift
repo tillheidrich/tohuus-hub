@@ -24,6 +24,14 @@ extension APIClient {
         ])
     }
 
+    /// A second app token for another device of the same member (the watch). Self-hosted servers allow it with the app
+    /// token; ToHuus Cloud may answer 401 (then the watch uses the iPhone's token).
+    func mintDeviceToken(device: String, household: String?) async throws -> AppAuthResponse {
+        var body: [String: Any] = ["device": device]
+        if let household { body["household"] = household }
+        return try await send("POST", "api/auth/app", json: body)
+    }
+
     func me() async throws -> MeResponse { try await get("api/me") }
     func cloudMe() async throws -> CloudMe { try await get("api/cloud/me") }
     func devices() async throws -> [AppDevice] { try await get("api/auth/app/devices", as: Lossy<AppDevice>.self).wrappedValue }

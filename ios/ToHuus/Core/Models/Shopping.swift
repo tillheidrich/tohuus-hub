@@ -1,7 +1,7 @@
 import Foundation
 
 /// GET /api/shop/list – the list in the store's walking order.
-struct ShopList: Decodable, Sendable {
+struct ShopList: Codable, Sendable {
     var store: StoreRef?
     @Lossy var stores: [StoreRef]
     var order: [String]?
@@ -27,14 +27,14 @@ struct ShopList: Decodable, Sendable {
     var openCount: Int { openItems.count }
 }
 
-struct StoreRef: Decodable, Sendable, Identifiable, Hashable {
+struct StoreRef: Codable, Sendable, Identifiable, Hashable {
     var id: Int
     var name: String
     var order: [String]?
     var trips: Int?
 }
 
-struct ShopSection: Decodable, Sendable, Identifiable {
+struct ShopSection: Codable, Sendable, Identifiable {
     var key: String
     @Lossy var items: [ShopItem]
     var id: String { key }
@@ -45,7 +45,7 @@ struct ShopSection: Decodable, Sendable, Identifiable {
     }
 }
 
-struct ShopItem: Decodable, Sendable, Identifiable, Equatable {
+struct ShopItem: Codable, Sendable, Identifiable, Equatable {
     var id: Int
     var productId: Int?
     var text: String
@@ -70,7 +70,7 @@ struct ShopItem: Decodable, Sendable, Identifiable, Equatable {
     /// queued locally, not yet on the server
     var pending: Bool?
 
-    struct Claim: Decodable, Sendable, Equatable {
+    struct Claim: Codable, Sendable, Equatable {
         var userId: Int?
         var name: String?
         var color: String?

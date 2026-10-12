@@ -137,6 +137,10 @@ struct Lossy<T: Decodable & Sendable>: Decodable, Sendable {
     }
 }
 
+extension Lossy: Encodable where T: Encodable {
+    func encode(to encoder: Encoder) throws { try wrappedValue.encode(to: encoder) }
+}
+
 extension KeyedDecodingContainer {
     func decode<T>(_ type: Lossy<T>.Type, forKey key: Key) throws -> Lossy<T> {
         (try? decodeIfPresent(type, forKey: key)) ?? Lossy(wrappedValue: [])

@@ -34,6 +34,8 @@ targets:
         embed: true
       - target: ToHuusWidget
         embed: true
+      - target: ToHuusWatch
+        embed: true
       - sdk: StoreKit.framework
       - sdk: VisionKit.framework
       - sdk: Speech.framework
@@ -41,6 +43,8 @@ targets:
       path: ToHuus/Info.plist
       properties:
         CFBundleDisplayName: ToHuus
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [de, en]
         UILaunchScreen:
@@ -78,6 +82,7 @@ targets:
     sources:
       - path: ToHuusShare
       - path: Shared
+        excludes: [WatchLink.swift, NotifyKit.swift]
       - path: ToHuus/Resources/Localizable.xcstrings
       - path: ToHuus/Resources/PrivacyInfo.xcprivacy
         buildPhase: resources
@@ -85,6 +90,8 @@ targets:
       path: ToHuusShare/Info.plist
       properties:
         CFBundleDisplayName: ToHuus
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [de, en]
         NSExtension:
@@ -114,6 +121,7 @@ targets:
     sources:
       - path: ToHuusWidget
       - path: Shared
+        excludes: [WatchLink.swift, NotifyKit.swift]
       - path: ToHuus/Resources/Localizable.xcstrings
       - path: ToHuus/Resources/PrivacyInfo.xcprivacy
         buildPhase: resources
@@ -124,6 +132,8 @@ targets:
       path: ToHuusWidget/Info.plist
       properties:
         CFBundleDisplayName: ToHuus
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [de, en]
         NSExtension:
@@ -137,6 +147,83 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus.widget
         INFOPLIST_FILE: ToHuusWidget/Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) WIDGET_EXTENSION"
+        APPLICATION_EXTENSION_API_ONLY: true
+  # ---------------- Apple Watch (same naming as Equilo: .watchkitapp / .watchkitapp.watchwidgets) ----------------
+  ToHuusWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: ToHuusWatch
+      - path: Shared
+        excludes: [UploadQueue.swift]
+      - path: ToHuus/Core/API
+        excludes: [EventStream.swift]
+      - path: ToHuus/Core/Models
+      - path: ToHuus/Core/Offline
+      - path: ToHuus/Resources/Localizable.xcstrings
+      - path: ToHuus/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
+    dependencies:
+      - target: ToHuusWatchWidgets
+        embed: true
+    entitlements:
+      path: ToHuusWatch/ToHuusWatch.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.de.heidrichdigital.tohuus
+    settings:
+      base:
+        PRODUCT_NAME: "ToHuus Watch App"
+        PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus.watchkitapp
+        TARGETED_DEVICE_FAMILY: "4"
+        GENERATE_INFOPLIST_FILE: true
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_CFBundleDisplayName: ToHuus
+        INFOPLIST_KEY_WKApplication: true
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: de.heidrichdigital.tohuus
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: false
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "ToHuus uses the microphone when you dictate something for the list."
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) WATCH_APP"
+  ToHuusWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: ToHuusWatchWidgets
+      - path: Shared/WidgetSnapshot.swift
+      - path: Shared/SharedConfig.swift
+      - path: Shared/Keychain.swift
+      - path: ToHuus/Resources/Localizable.xcstrings
+      - path: ToHuus/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: ToHuusWatchWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: ToHuus
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [de, en]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: ToHuusWatchWidgets/ToHuusWatchWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.de.heidrichdigital.tohuus
+    settings:
+      base:
+        # ".complication" was already taken at Apple for Equilo (05.10.2026) – ".watchwidgets" worked
+        PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus.watchkitapp.watchwidgets
+        TARGETED_DEVICE_FAMILY: "4"
+        INFOPLIST_FILE: ToHuusWatchWidgets/Info.plist
         GENERATE_INFOPLIST_FILE: false
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) WIDGET_EXTENSION"
         APPLICATION_EXTENSION_API_ONLY: true
@@ -168,3 +255,9 @@ schemes:
         - ToHuusTests
     archive:
       config: Release
+  ToHuusWatch:
+    build:
+      targets:
+        ToHuusWatch: all
+    run:
+      config: Debug

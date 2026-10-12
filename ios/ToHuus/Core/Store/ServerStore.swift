@@ -92,7 +92,35 @@ final class ServerStore: HouseholdStore {
 
     private func rebuild() {
         list = OpQueueLogic.apply(ops, to: snapshot)
-        if !shopMode && storeId == nil { publishWidgetSnapshot() }
+        if !shopMode && storeId == nil {
+            publishWidgetSnapshot()
+            PhoneWatchBridge.shared.publish(list: list, nextDue: nextDue, household: householdName)
+        }
+    }
+
+    /// what ToHuus remembers as probably due next (set by Heute; shown on the watch complication)
+    var nextDue: String? {
+        didSet { if nextDue != oldValue { rebuild() } }
+    }
+    var householdName: String?
+
+    /// Ticks and additions made on the watch while it had no network of its own. They join this queue (op ids keep a
+    /// second delivery harmless) and are acknowledged to the watch right away – the iPhone keeps them from here.
+    func enqueueRemote(_ remote: [PendingOp]) async {
+        guard !remote.isEmpty else { return }
+        let known = Set(ops.map(\.opId))
+        for var op in remote where !known.contains(op.opId) {
+            if op.type == .add {
+                op.localId = nextLocalId
+                nextLocalId -= 1
+            }
+            ops = OpQueueLogic.enqueue(op, into: ops)
+        }
+        cache.saveOps(ops)
+        rebuild()
+        PhoneWatchBridge.shared.publish(list: list, nextDue: nextDue, household: householdName, ackOps: remote.map(\.opId))
+        touch("shopping")
+        await flush()
     }
 
     @ObservationIgnored private var lastWidget: WidgetSnapshot?

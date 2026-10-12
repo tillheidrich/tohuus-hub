@@ -15,6 +15,7 @@ final class TodayModel {
         defer { loading = false }
         do {
             today = try await store.api.today()
+            store.nextDue = today?.rhythm.first { ($0.dueInDays ?? 1) <= 0 && $0.onList != true }?.name
             limited = false
             error = nil
         } catch APIError.notFound {
