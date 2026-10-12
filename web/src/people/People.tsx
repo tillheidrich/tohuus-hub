@@ -849,21 +849,7 @@ export function PausedScreen({ me }: { me: Me }) {
   );
 }
 
-/** Which app paths a permanent guest may open (mirrors server/lib/people-policy.ts). */
-export function guestAllows(level: EffectiveLevel | undefined, path: string) {
-  if (!level) return true;
-  if (level === 'paused') return false;
-  const ORDER = ['/bestellen', '/einkauf', '/einstellungen', '/hilfe'];
-  const STOCK = ['/', '/bestand', '/wo', '/abgleich', '/scan', '/q/'];
-  const RECIPES = ['/kochen', '/rezepte', '/lieblinge'];
-  const FAMILY_DENY = ['/import', '/ausgaben', '/pflege', '/etiketten', '/willkommen', '/urlaub'];
-  const starts = (list: string[]) => list.some((p) => (p === '/' ? path === '/' : p.endsWith('/') ? path.startsWith(p) : path === p || path.startsWith(`${p}/`)));
-  if (level === 'family') return !starts(FAMILY_DENY);
-  if (starts(ORDER)) return true;
-  if ((level === 'stock' || level === 'recipes') && starts(STOCK)) return true;
-  if (level === 'recipes' && starts(RECIPES)) return true;
-  return false;
-}
+export { guestAllows } from './access';
 
 /** A tiny line for guests at the top of their home screen. */
 export function GuestBanner({ me }: { me: Me }): ReactNode {

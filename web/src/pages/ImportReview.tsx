@@ -2,7 +2,8 @@ import { ArrowLeft, ArrowsClockwise, CaretDown, CheckCircle, Info, PencilSimple,
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { type Location, fmtDate, invalidate, patch, post, qc, useApi } from '../api';
-import { Ic, ProductPicker, Sheet, Skeleton, Stepper, Thumb, useToast } from '../ui';
+import { ProductPicker, Sheet, Skeleton, Stepper, Thumb, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { num, t } from '../i18n';
 import { money } from '../region';
 import { GradeBadge, LineFixSheet, RecognitionCard, useRecognition } from './QualityReport';

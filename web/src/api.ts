@@ -3,7 +3,9 @@ import { locale, num, t } from './i18n';
 
 export const qc = new QueryClient({
   // a 4xx (not allowed, not found) won't change on a retry – only network / server errors are retried once
-  defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: true, retry: (n, e) => n < 1 && !(((e as { status?: number }).status ?? 0) >= 400 && ((e as { status?: number }).status ?? 0) < 500) } },
+  // Server-sent events (/api/events) invalidate what changed, so data can stay fresh for a while: switching tabs
+  // shows the cache instantly instead of refetching everything (plan 2026-10-12, speed).
+  defaultOptions: { queries: { staleTime: 120_000, gcTime: 10 * 60_000, refetchOnWindowFocus: true, retry: (n, e) => n < 1 && !(((e as { status?: number }).status ?? 0) >= 400 && ((e as { status?: number }).status ?? 0) < 500) } },
 });
 
 export class ApiError extends Error {
@@ -47,14 +49,14 @@ export function useApi<T = any>(key: string | (string | number)[], path: string 
 
 /** topic → query keys to refresh when the server announces a change */
 const TOPIC_KEYS: Record<string, string[]> = {
-  stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh', 'onboarding', 'away', 'boxes', 'share'],
-  products: ['products', 'product', 'overview', 'shopping', 'fresh', 'onboarding', 'boxes', 'share'],
-  shopping: ['shopping', 'overview'],
-  recipes: ['recipes', 'recipe', 'suggest', 'overview', 'plan', 'onboarding', 'people', 'recipe-photos'],
-  imports: ['imports', 'import', 'overview', 'spending', 'quality'],
-  orders: ['orders', 'overview'],
+  stock: ['today', 'rhythm', 'cook', 'overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh', 'onboarding', 'away', 'boxes', 'share'],
+  products: ['today', 'products', 'product', 'overview', 'shopping', 'fresh', 'onboarding', 'boxes', 'share'],
+  shopping: ['today', 'rhythm', 'shopping', 'overview'],
+  recipes: ['today', 'cook', 'recipes', 'recipe', 'suggest', 'overview', 'plan', 'onboarding', 'people', 'recipe-photos'],
+  imports: ['today', 'money', 'rhythm', 'imports', 'import', 'overview', 'spending', 'quality'],
+  orders: ['today', 'orders', 'overview'],
   notifications: ['notifications'],
-  settings: ['settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share'],
+  settings: ['billing', 'settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share'],
   care: ['care'],
   away: ['away'],
   tour: ['tour', 'overview', 'products', 'recipes', 'shopping', 'onboarding'],

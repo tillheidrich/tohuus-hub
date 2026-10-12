@@ -29,71 +29,14 @@ import { type Climate, del, invalidate, patch, post, put, useApi } from '../api'
 import { FORM_HINT, FORM_LABEL, PRESET_LABEL, type HomePreset, type HomeSetup, type HouseholdForm, useHousehold } from '../household';
 import { CHANGELOG, latestChange, unseenChanges } from '../changelog';
 import { LANGUAGE_OPTIONS, lang, locale, pick, setLang, t } from '../i18n';
-import { Ic, LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { StartChoice, useTourInfo } from './Tour';
 import { StaplesPicker } from './Share';
 import { HomeArt, HomeTiles } from '../art';
 
-type Step = 'home' | 'where' | 'places' | 'spots' | 'invite' | 'stock';
-const STEPS: Step[] = ['home', 'where', 'places', 'spots', 'invite', 'stock'];
-
-interface Room {
-  id: number;
-  name: string;
-  kind: string;
-  icon: string;
-  climate?: Climate;
-  parent_id?: number | null;
-  archived?: boolean;
-  depth?: number;
-  products?: number;
-}
-
-export interface GettingStarted {
-  state: { step: Step; started: boolean; closed: boolean; skipped: boolean; checklistDismissed: boolean; stockPath?: string | null };
-  newHousehold: boolean;
-  wizardDue: boolean;
-  admin: boolean;
-  checklist: { items: { key: 'home' | 'invite' | 'stock' | 'phone' | 'recipe'; done: boolean }[]; done: number; total: number };
-  showChecklist: boolean;
-  household: { name: string; language: string };
-  home?: HomeSetup;
-  rooms: Room[];
-  counts: { members: number; products: number; inStock: number; recipes: number; imports: number };
-}
-
-export const useGettingStarted = (enabled = true) => useApi<GettingStarted>('onboarding', enabled ? '/onboarding' : null);
-
-const REDIRECT_KEY = 'sw.onb.redirected';
-const ss = {
-  get: (k: string) => {
-    try {
-      return sessionStorage.getItem(k);
-    } catch {
-      return null;
-    }
-  },
-  set: (k: string, v: string) => {
-    try {
-      sessionStorage.setItem(k, v);
-    } catch {
-      /* ignore */
-    }
-  },
-};
-
-/** Opens the setup once per browser session for an admin of a brand-new household. */
-export function useOnboardingRedirect(me: Me) {
-  const admin = me.actor.role === 'admin';
-  const g = useGettingStarted(admin);
-  const nav = useNavigate();
-  const loc = useLocation();
-  useEffect(() => {
-    if (!g.data?.wizardDue || loc.pathname !== '/' || ss.get(REDIRECT_KEY)) return;
-    ss.set(REDIRECT_KEY, '1');
-    nav('/willkommen', { replace: true });
-  }, [g.data?.wizardDue, loc.pathname, nav]);
-}
+import { type GettingStarted, type Room, type Step, STEPS, useGettingStarted, useOnboardingRedirect } from '../onboarding-state';
+export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
 
 // ================================================================== wizard
 

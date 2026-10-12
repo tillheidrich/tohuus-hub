@@ -2,7 +2,8 @@ import { ArrowLeft, Basket, Camera, Check, ImageSquare, MagnifyingGlass, PencilS
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { type Category, type DateKind, type Location, type Product, api, del, fmtDate, fmtQty, get, invalidate, patch, post, relTime, useApi } from '../api';
-import { Empty, Ic, LevelPicker, Seg, Sheet, Skeleton, StatusBadge, Stepper, Thumb, Toggle, expiryText, statusText, useDebounced, useToast } from '../ui';
+import { Empty, LevelPicker, Seg, Sheet, Skeleton, StatusBadge, Stepper, Thumb, Toggle, expiryText, statusText, useDebounced, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { num, t } from '../i18n';
 import { FreshPanel } from './FreshParts';
 import { PutAwayButton } from './Leftovers';

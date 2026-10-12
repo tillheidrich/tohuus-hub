@@ -2,7 +2,8 @@ import { Check, Copy, Heart, House, Martini, Plus, QrCode, ShareNetwork, Trash, 
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { type Location, type Product, del, fmtQty, invalidate, patch, post, relTime, useApi } from '../api';
-import { Empty, Ic, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { locale, t } from '../i18n';
 import { PartyCard } from './Party';
 import { BonButton } from './Bons';

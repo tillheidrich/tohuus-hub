@@ -7,6 +7,8 @@ import { Avatar } from '../ui';
 import { BRAND, applyBrand } from '../brand';
 import { BrandMark, HomeTiles } from '../art';
 import { setLang, t } from '../i18n';
+import { useNavigate } from 'react-router-dom';
+import { useInstance } from '../data';
 
 type Method = 'passkey' | 'link' | 'password' | 'sso';
 export interface AuthOptions {
@@ -341,8 +343,24 @@ export function Login() {
           <BrandMark /> {BRAND.name}
         </div>
         {body}
+        <SignupHint />
       </div>
     </div>
+  );
+}
+
+/** ToHuus Cloud only: a way to a new household (GET /api/instance → signup). Self-hosted servers show nothing. */
+function SignupHint() {
+  const inst = useInstance();
+  const nav = useNavigate();
+  if (inst.data?.mode !== 'cloud' || !inst.data.signup) return null;
+  return (
+    <p className="small muted signup-hint">
+      {t('New to ToHuus?')}{' '}
+      <button className="linkish" onClick={() => nav('/signup')}>
+        {t('Create a household')}
+      </button>
+    </p>
   );
 }
 
