@@ -54,7 +54,7 @@ export interface MemoryRow {
  */
 const SENSITIVE_STEMS = [
   // health and body
-  'allerg', 'unvertr', 'intoler', 'krank', 'diabet', 'zucker krank', 'zoeliak', 'zöliak', 'celiac', 'coeliac', 'laktoseintol', 'lactose intol',
+  'allerg', 'unvertr', 'intoler', 'vertragt kein', 'vertraegt kein', 'vertraegt nicht', 'vertragt nicht', 'laktose', 'lactose', 'krank', 'diabet', 'zucker krank', 'zoeliak', 'zöliak', 'celiac', 'coeliac', 'laktoseintol', 'lactose intol',
   'histamin', 'fructose', 'fruktose', 'gluten', 'nuss allerg', 'anaphyl', 'epipen', 'asthma', 'neurodermit', 'ekzem', 'eczema',
   'migraen', 'migrän', 'migrain', 'depress', 'angststoer', 'angststör', 'anxiety', 'adhs', 'adhd', 'autis', 'demenz', 'dementia',
   'krebs', 'cancer', 'tumor', 'chemo', 'herzkrank', 'herzinfarkt', 'herzfehler', 'heart disease', 'blutdruck', 'blood pressure', 'cholester', 'schwanger', 'pregnan', 'stillen', 'breastfeed',

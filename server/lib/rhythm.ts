@@ -30,6 +30,13 @@ migrate(
    CREATE INDEX IF NOT EXISTS import_lines_product ON import_lines(product_id);`,
 );
 
+// GET /api/today reads recent movements and receipts by status on every call
+migrate(
+  'rhythm-2-indexes',
+  `CREATE INDEX IF NOT EXISTS movements_created ON movements(created_at);
+   CREATE INDEX IF NOT EXISTS imports_status ON imports(status);`,
+);
+
 export type Confidence = 'low' | 'medium' | 'high';
 
 export interface Rhythm {

@@ -4,6 +4,7 @@
  */
 import { Router } from 'express';
 import { z } from 'zod';
+import { t } from '../i18n.js';
 import { checkVisionModel } from '../lib/ai.js';
 import { requireAuth } from '../lib/auth.js';
 import { cookIdeas } from '../lib/cookideas.js';
@@ -20,7 +21,9 @@ r.get('/today', requireAuth, (req: any, res) => {
 });
 
 r.get('/money/overview', requireAuth, (req, res) => {
-  const month = z.string().regex(/^\d{4}-\d\d$/).optional().parse(req.query.month || undefined);
+  const m = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional().safeParse(req.query.month || undefined);
+  if (!m.success) return void res.status(400).json({ error: t('Month must look like 2026-10') });
+  const month = m.data;
   try {
     res.json(moneyOverview(month));
   } catch (e) {
