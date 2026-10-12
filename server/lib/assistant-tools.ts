@@ -56,6 +56,8 @@ export interface AssistantAction {
   kind: string;
   summary: string;
   undo?: string;
+  /** what the action made, so the apps can open it (recipe_save_adapted → the new recipe) */
+  recipe_id?: number;
 }
 
 type Undo =
@@ -69,13 +71,13 @@ type Undo =
   | { kind: 'purchase'; importId: number; expenseId: number | null; ticked: number[] }
   | { kind: 'unmerge' | 'delete_recipe' | 'delete_house_cards' | 'stock_add'; [k: string]: unknown };
 
-export function record(ctx: ToolCtx, kind: string, summary: string, undo: Undo | null) {
+export function record(ctx: ToolCtx, kind: string, summary: string, undo: Undo | null, ref?: { recipe_id?: number }) {
   let token: string | undefined;
   if (undo) {
     token = crypto.randomBytes(16).toString('hex');
     db.prepare('INSERT INTO assistant_undo (token, user_id, kind, summary, payload) VALUES (?, ?, ?, ?, ?)').run(token, ctx.userId, kind, summary, JSON.stringify(undo));
   }
-  ctx.actions.push({ kind, summary, ...(token ? { undo: token } : {}) });
+  ctx.actions.push({ kind, summary, ...(token ? { undo: token } : {}), ...(ref?.recipe_id ? { recipe_id: ref.recipe_id } : {}) });
 }
 
 export class UndoError extends Error {
@@ -557,7 +559,7 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
         // Hausinfo: finished, member-visible cards only; codes never (house-guide.ts scrubs code values as well)
         return typeof a.query === 'string' && a.query.trim() ? searchGuide(a.query, 6) : guideOverviewForAi();
       default: {
-        const area = runAreaTool({ actor: ctx.actor, userId: ctx.userId, record: (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null) }, name, a);
+        const area = runAreaTool({ actor: ctx.actor, userId: ctx.userId, record: (kind, summary, undo, ref) => record(ctx, kind, summary, undo as Undo | null, ref) }, name, a);
         return area === undefined ? { error: `unknown tool ${name}` } : area;
       }
     }

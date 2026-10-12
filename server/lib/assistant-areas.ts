@@ -130,7 +130,7 @@ export interface AreaCtx {
   actor: string;
   userId: number | null;
   /** records an action with an undo payload (assistant-tools.ts) */
-  record: (kind: string, summary: string, undo: Record<string, unknown> | null) => void;
+  record: (kind: string, summary: string, undo: Record<string, unknown> | null, ref?: { recipe_id?: number }) => void;
 }
 
 const sameThing = (s: string) =>
@@ -227,7 +227,7 @@ export function recipeSaveAdapted(ctx: AreaCtx, a: { from?: string; title?: stri
     notes: a.note ? String(a.note).slice(0, 2000) : null,
   });
   emit('recipes');
-  ctx.record('recipe_save_adapted', t('Saved {title} as a new recipe', { title }), { kind: 'delete_recipe', id });
+  ctx.record('recipe_save_adapted', t('Saved {title} as a new recipe', { title }), { kind: 'delete_recipe', id }, { recipe_id: id });
   return { saved: title, id };
 }
 

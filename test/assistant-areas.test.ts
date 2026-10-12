@@ -23,7 +23,7 @@ beforeAll(async () => {
 
 const ctxOf = () => {
   const ctx = { actor: 'Mira', userId: 1, actions: [] as any[] };
-  return { ctx, area: { actor: 'Mira', userId: 1, record: (k: string, s: string, u: any) => tools.record(ctx as any, k, s, u) } };
+  return { ctx, area: { actor: 'Mira', userId: 1, record: (k: string, s: string, u: any, ref?: { recipe_id?: number }) => tools.record(ctx as any, k, s, u, ref) } };
 };
 
 describe('per-screen tools', () => {
@@ -46,6 +46,8 @@ describe('per-screen tools', () => {
     const out = areas.recipeSaveAdapted(area, { from: 'Lasagne', title: 'Lasagne vegetarisch', ingredients: ['500 g Linsen'], steps: ['Schichten.'] }) as any;
     expect(db.prepare('SELECT description FROM recipes WHERE id = ?').get(out.id)).toEqual({ description: expect.stringMatching(/^(Adapted from|Angepasst aus) Lasagne$/) });
     expect((db.prepare(`SELECT COUNT(*) n FROM recipes WHERE title = 'Lasagne'`).get() as any).n).toBe(1);
+    // the action carries the new recipe so the apps can open it from the chip
+    expect(ctx.actions[0]).toMatchObject({ kind: 'recipe_save_adapted', recipe_id: out.id });
     tools.runUndo(ctx.actions[0].undo, 1);
     expect(db.prepare('SELECT 1 FROM recipes WHERE id = ?').get(out.id)).toBeUndefined();
   });
