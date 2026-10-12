@@ -26,9 +26,11 @@ Object.assign(process.env, {
   BASE_URL: base,
   LANGUAGE: 'en',
   TRUST_PROXY_HOPS: '1',
+  // list2 J: the operator's view of the anonymous weekly-question counts
+  OPERATOR_TOKEN: 'op-' + crypto.randomBytes(24).toString('hex'),
 });
 
-const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store'];
+const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip'];
 const mails: { to: string; text: string }[] = [];
 
 let ipSeq = 1;
@@ -135,6 +137,19 @@ beforeAll(async () => {
       db.prepare(`INSERT INTO shopping_items (product_id, text, checked_at, cleared_at) VALUES (?, 'MARKERA-prod', ?, ?)`).run(pid, `${day} 10:00:00`, `${day} 11:00:00`);
     }
   });
+  // list2 (12 Oct 2026): a care list with a note and a row, an offer, lunchbox items, a CalDAV password, an iPhone,
+  // a shopping trip from two ticks – every new GET route is part of the sweep below
+  const careList = await A.post('/api/list/lists', { name: 'MARKERA-list', kind: 'care', note: 'MARKERA-note' });
+  expect(careList.status, careList.text).toBe(200);
+  expect((await A.post('/api/shopping', { text: 'MARKERA-listitem', list_id: careList.json.id })).status).toBe(200);
+  expect((await A.post('/api/offers/scan', { text: 'Lidl\nMARKERA-offer 1,99 €' })).status).toBe(200);
+  expect((await A.req('PUT', '/api/list/lunchbox', { enabled: true, items: ['MARKERA-lunch'] })).status).toBe(200);
+  expect((await A.post('/api/caldav/passwords', { label: 'MARKERA-caldav' })).status).toBe(200);
+  expect((await A.post('/api/push/apns', { token: 'ab'.repeat(32), device: 'MARKERA-phone' })).status).toBe(200);
+  for (const n of [1, 2]) {
+    const it = await A.post('/api/shopping', { text: `MARKERA-trip ${n}` });
+    expect((await A.post(`/api/shop/items/${it.json.id}/basket`, { on: true })).status).toBe(200);
+  }
 }, 60_000);
 
 afterAll(() => {
@@ -200,6 +215,8 @@ describe('cloud isolation', () => {
       expect(routes, r).toContain(r);
     const seen = new Set(a.found.map((f) => f.path));
     for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/memory', '/api/assistant/conversations']) expect(seen, r).toContain(r);
+    // list2: the new household-data routes show A's markers to A (so the B sweep below really checks them)
+    for (const r of ['/api/list/lists', '/api/offers', '/api/list/lunchbox', '/api/caldav/passwords', '/api/push/apns', '/api/shop/trips', '/api/shop/list']) expect(seen, r).toContain(r);
     const b = await sweep(B);
     console.log(`[sweep] routes=${a.routes} A:200=${a.ok} A:markers=${a.found.length} B:200=${b.ok}`, [...new Set(a.found.map((f) => f.path))].slice(0, 12).join(" "));
     expect(b.ok).toBeGreaterThan(50);
@@ -375,6 +392,46 @@ describe('cloud isolation', () => {
     const viaB = await B.get(`/api/guest/${guestTokenA}`);
     expect(viaB.json?.name).toBe('MARKERA-guest');
     expect((await B.get('/api/shopping')).text).not.toContain('MARKERA');
+  });
+});
+
+describe('list2 bridges in the cloud', () => {
+  it('a CalDAV password opens only its own household; garbage and other households get 401', async () => {
+    const pw = (await A.post('/api/caldav/passwords', { label: 'iPhone' })).json;
+    expect(pw.password).toMatch(/^h[a-z2-7]{10}_/);
+    const dav = (password: string, p = '/caldav/c/', depth = '1') =>
+      new Client().req('PROPFIND', p, undefined, { authorization: 'Basic ' + Buffer.from(`x:${password}`).toString('base64'), depth });
+    const own = await dav(pw.password);
+    expect(own.status).toBe(207);
+    expect(own.text).toContain('MARKERA-list');
+    const pwB = (await B.post('/api/caldav/passwords', { label: 'iPhone' })).json;
+    const other = await dav(pwB.password);
+    expect(other.status).toBe(207);
+    expect(other.text).not.toContain('MARKERA');
+    expect((await dav(pwB.password, `/caldav/c/${(await A.get('/api/list/lists')).json.find((l: any) => l.name === 'MARKERA-list').id}/`)).status).toBe(404);
+    expect((await dav('garbage')).status).toBe(401);
+    // A's password with B's routing prefix finds nothing
+    const forged = pw.password.replace(/^h[a-z2-7]{10}/, pwB.password.slice(0, 11));
+    expect((await dav(forged)).status).toBe(401);
+  });
+
+  it('the operator sees only the anonymous weekly-question counts of households that chose to share', async () => {
+    const op = (token?: string) => new Client().get('/api/operator/pulse', token ? { authorization: `Bearer ${token}` } : {});
+    expect((await op()).status).toBe(401);
+    expect((await op('wrong-token-wrong-token-wrong')).status).toBe(401);
+    await A.req('PUT', '/api/pulse/settings', { enabled: true, share: true });
+    await B.req('PUT', '/api/pulse/settings', { enabled: true, share: false });
+    expect((await A.post('/api/pulse', { answer: '3-5' })).status).toBe(200);
+    expect((await B.post('/api/pulse', { answer: 'more' })).status).toBe(200);
+    // A changes the answer: the count moves, it does not double
+    expect((await A.post('/api/pulse', { answer: '1-2' })).status).toBe(200);
+    const agg = await op(process.env.OPERATOR_TOKEN);
+    expect(agg.status).toBe(200);
+    expect(agg.json).toHaveLength(1);
+    expect(agg.json[0].counts).toEqual({ '0': 0, '1-2': 1, '3-5': 0, more: 0 });
+    expect(agg.json[0].total).toBe(1);
+    expect(agg.text).not.toContain(hA);
+    expect(agg.text).not.toContain(hB);
   });
 });
 

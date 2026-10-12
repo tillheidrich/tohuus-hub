@@ -57,6 +57,8 @@ import { r as moveRoutes } from './routes/move.js';
 import { requestCounter } from './lib/operator.js';
 import { startRenewalReminders } from './lib/renewals.js';
 import { AiError } from './lib/ai.js';
+import { r as list2Routes, pub as list2Public } from './routes/list2.js';
+import { caldav } from './lib/caldav.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
@@ -119,6 +121,9 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // OAuth 2.1 for MCP: metadata, client registration, consent, tokens (routes/oauth.ts)
 app.use(oauthPub);
+// CalDAV bridge for Apple Reminders / Nextcloud Tasks (list2): /caldav/*, /.well-known/caldav – Basic auth with an
+// app-specific password, outside /api (no cookies, no CSRF) – lib/caldav.ts
+app.use(caldav);
 
 // MCP (Claude, ChatGPT, …) — stateless Streamable HTTP
 app.all('/mcp', handleMcp);
@@ -151,6 +156,7 @@ app.use('/api', invitesPublic);
 app.use('/api', channelsPublic);
 app.use('/api', authPublic);
 app.use('/api', peoplePublic);
+app.use('/api', list2Public);
 app.use('/api', core);
 app.use('/api', imports);
 app.use('/api', recipes);
@@ -189,6 +195,7 @@ app.use('/api', featureRoutes);
 app.use('/api', aiSettingsRoutes);
 app.use('/api', oauthRoutes);
 app.use('/api', moveRoutes);
+app.use('/api', list2Routes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

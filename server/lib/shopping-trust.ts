@@ -54,6 +54,26 @@ export interface TickRow {
   booked_import_id?: number | null;
 }
 
+/**
+ * Tick listeners (list2, trips.ts): somebody ticked an item on (`on`) – who, which item, in which store if known.
+ * A registry instead of an import keeps this module free of the trip/notification code.
+ */
+type TickListener = (e: { itemId: number; actor: string; storeId?: number | null }) => void;
+const tickListeners = new Set<TickListener>();
+export function onTick(fn: TickListener) {
+  tickListeners.add(fn);
+  return () => tickListeners.delete(fn);
+}
+export function announceTick(e: { itemId: number; actor: string; storeId?: number | null }) {
+  for (const fn of tickListeners) {
+    try {
+      fn(e);
+    } catch (err) {
+      console.warn('[tick]', (err as Error).message);
+    }
+  }
+}
+
 const row = (id: number) => db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(id) as TickRow | undefined;
 
 const totalOf = (productId: number) => (db.prepare('SELECT COALESCE(SUM(qty),0) t FROM stock WHERE product_id = ?').get(productId) as { t: number }).t;
@@ -94,7 +114,7 @@ export function afterUntick(itemId: number, actor: string) {
  * Tick or un-tick one item. `toStock` books a fresh tick into stock; un-ticking reverses that booking.
  * Returns what happened to stock.
  */
-export function tickItem(itemId: number, on: boolean, actor: string, opts: { toStock?: boolean; keepBasket?: boolean } = {}) {
+export function tickItem(itemId: number, on: boolean, actor: string, opts: { toStock?: boolean; keepBasket?: boolean; storeId?: number | null } = {}) {
   const it = row(itemId);
   if (!it) throw Object.assign(new Error(t('Item not found')), { status: 404 });
   const wasOpen = it.checked_at == null;
@@ -108,12 +128,16 @@ export function tickItem(itemId: number, on: boolean, actor: string, opts: { toS
     if (!on && !wasOpen) unbooked = unbookTick(it, actor);
   })();
   emit('shopping', ...(booked || unbooked ? (['stock'] as const) : []));
+  if (on && wasOpen) announceTick({ itemId: it.id, actor, storeId: opts.storeId ?? null });
   return { ok: true, booked, unbooked };
 }
 
 /** "Clear checked": hide ticked rows from every list, keep them for the purchase rhythm. */
-export function clearChecked() {
-  const n = db.prepare(`UPDATE shopping_items SET cleared_at = datetime('now'), in_basket = 0 WHERE checked_at IS NOT NULL AND cleared_at IS NULL`).run().changes;
+export function clearChecked(onlyBy?: string | null) {
+  // list2: while someone else is shopping too, "Einkauf fertig" only clears the own ticks (trips.ts)
+  const n = onlyBy
+    ? db.prepare(`UPDATE shopping_items SET cleared_at = datetime('now'), in_basket = 0 WHERE checked_at IS NOT NULL AND cleared_at IS NULL AND checked_by = ?`).run(onlyBy).changes
+    : db.prepare(`UPDATE shopping_items SET cleared_at = datetime('now'), in_basket = 0 WHERE checked_at IS NOT NULL AND cleared_at IS NULL`).run().changes;
   db.prepare(`DELETE FROM claims WHERE kind = 'shopping' AND ref_id IN (SELECT id FROM shopping_items WHERE cleared_at IS NOT NULL)`).run();
   emit('shopping');
   return n;
@@ -160,7 +184,9 @@ export function takeTickBooking(productId: number, purchaseDay: string, qty: num
 // ------------------------------------------------------------------ origin
 
 export interface OriginDetail {
-  kind?: 'rhythm' | 'recipe' | 'assistant' | 'plan';
+  kind?: 'rhythm' | 'recipe' | 'assistant' | 'plan' | 'trip';
+  /** list2: who asked "Bringst du noch … mit?" */
+  from?: string;
   everyDays?: number;
   recipe?: string;
   recipeId?: number;
@@ -203,6 +229,7 @@ export function originOf(it: { source?: string | null; added_by?: string | null;
   const src = it.source ?? 'manual';
   if (src === 'rhythm' || d?.kind === 'rhythm')
     return d?.everyDays ? t('remembers: every ~{n} days', { n: Math.round(d.everyDays) }) : t('remembers: bought regularly');
+  if (src === 'trip' || d?.kind === 'trip') return d?.from ? t('{name} asked: can you bring it?', { name: d.from }) : t('for the shopping trip');
   if (src === 'assistant' || d?.kind === 'assistant') return d?.for ? t('from the assistant, for {name}', { name: d.for }) : t('from the assistant');
   if (d?.recipe) return t('from recipe {title}', { title: d.recipe });
   if (src === 'recipe') return t('from a recipe');

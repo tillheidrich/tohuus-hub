@@ -1,8 +1,11 @@
-import { ArrowRight, Basket, Camera, Check, ChefHat, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
+import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
-import { post, qc } from '../api';
+import { invalidate, post, put, qc, useApi } from '../api';
+import { useDrag } from '../dnd';
+import { PulseCard, usePulse } from '../pulse';
+import '../dnd.css';
 import { assistantAvailable, openAssistant } from '../assistant/Fab';
 import { type CookToday, imgSrc, type Notice, type RhythmItem, type StillHave, type Today as TodayData, TODAY_KEY, useToday } from '../data';
 import { locale, t } from '../i18n';
@@ -32,6 +35,8 @@ export function Today({ me }: { me: Me }) {
   const nav = useNavigate();
   const gl = me.actor.houseGuest?.level;
   const d = q.data;
+  // list2 J: the weekly F&F question (opt-in, only Sunday/Monday)
+  const pulse = usePulse(!gl);
   const now = new Date();
   const date = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -84,13 +89,17 @@ export function Today({ me }: { me: Me }) {
     <div className="today2">
       {head}
       {d.notices.length > 0 && <Notices list={d.notices} />}
-      <div className="today-cards">
-        <DueCard items={d.rhythm} legacy={d.legacy} />
-        {guestAllows(gl, '/einkauf') && <ListCard d={d} />}
-        {d.stillHave.length > 0 && <StillHaveCard items={d.stillHave} />}
-        {guestAllows(gl, '/kochen') && d.cookToday && <CookCard c={d.cookToday} />}
-        {guestAllows(gl, '/geld') && d.money && <MoneyCard m={d.money} />}
-      </div>
+      <TodayCards
+        cards={[
+          ['rhythm', <DueCard items={d.rhythm} legacy={d.legacy} />],
+          ['list', guestAllows(gl, '/einkauf') ? <ListCard d={d} /> : null],
+          ['still', d.stillHave.length > 0 ? <StillHaveCard items={d.stillHave} /> : null],
+          ['cook', guestAllows(gl, '/kochen') && d.cookToday ? <CookCard c={d.cookToday} /> : null],
+          ['money', guestAllows(gl, '/geld') && d.money ? <MoneyCard m={d.money} /> : null],
+          ['pulse', pulse.data?.question ? <PulseCard pulse={pulse.data} /> : null],
+        ]}
+        canArrange={!gl && Boolean(me.actor.userId)}
+      />
     </div>
   );
 }
@@ -385,5 +394,76 @@ function Notices({ list }: { list: Notice[] }) {
         );
       })}
     </ul>
+  );
+}
+
+/** The cards of "Heute" in the person's own order (list2 H): drag in "Anordnen", or up / down as the menu way. */
+function TodayCards({ cards, canArrange }: { cards: [string, ReactNode][]; canArrange: boolean }) {
+  const saved = useApi<{ order: string[] }>(['today', 'order'], canArrange ? '/list/today-order' : null);
+  const [arrange, setArrange] = useState(false);
+  const toast = useToast();
+  const order = saved.data?.order ?? [];
+  const pos = (k: string) => {
+    const i = order.indexOf(k);
+    return i < 0 ? 100 + cards.findIndex((c) => c[0] === k) : i;
+  };
+  const shown = cards.filter((c) => c[1]).sort((a, b) => pos(a[0]) - pos(b[0]));
+  const save = async (next: string[], undo: string[]) => {
+    qc.setQueryData(['today', 'order'], { order: next });
+    try {
+      await put('/list/today-order', { order: next });
+      toast({ text: t('Order saved'), action: { label: t('Undo'), run: () => void put('/list/today-order', { order: undo }).then(() => invalidate('today')) } });
+    } catch (e) {
+      invalidate('today');
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  const keys = shown.map((c) => c[0]);
+  const move = (k: string, to: number) => {
+    const rest = keys.filter((x) => x !== k);
+    rest.splice(Math.max(0, Math.min(rest.length, to)), 0, k);
+    void save(rest, keys);
+  };
+  const drag = useDrag({
+    disabled: !arrange,
+    onDrop: (payload, d) => {
+      const k = payload as string;
+      if (!d.row || d.row === k) return;
+      const rest = keys.filter((x) => x !== k);
+      const at = rest.indexOf(d.row);
+      move(k, d.after ? at + 1 : at);
+    },
+  });
+  return (
+    <>
+      <div className={`today-cards ${arrange ? 'arranging' : ''}`} data-drop="cards:today">
+        {shown.map(([k, node], i) =>
+          arrange ? (
+            <div key={k} className="arrange-card" data-drop-row={k} {...drag(k, k)}>
+              <div className="arrange-bar">
+                <DotsSixVertical size={18} aria-hidden="true" />
+                <span className="grow small">{t('Hold and drag')}</span>
+                <button className="icon-btn sm" data-no-drag disabled={i === 0} onClick={() => move(k, i - 1)} aria-label={t('Up')}>
+                  <ArrowUp size={14} />
+                </button>
+                <button className="icon-btn sm" data-no-drag disabled={i === shown.length - 1} onClick={() => move(k, i + 1)} aria-label={t('Down')}>
+                  <ArrowDown size={14} />
+                </button>
+              </div>
+              <div className="arrange-body" aria-hidden="true">
+                {node}
+              </div>
+            </div>
+          ) : (
+            <Fragment key={k}>{node}</Fragment>
+          ),
+        )}
+      </div>
+      {canArrange && shown.length > 1 && (
+        <button className="linkish arrange-toggle" onClick={() => setArrange((a) => !a)}>
+          {arrange ? t('Done') : t('Arrange cards')}
+        </button>
+      )}
+    </>
   );
 }

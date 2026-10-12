@@ -76,7 +76,7 @@ export function register(s: McpServer, actorName: string) {
     },
     async ({ store }) => {
       const st = findStore(store ?? null);
-      const v = storeView(st?.id ?? null);
+      const v = storeView(st?.id ?? null, undefined, { listId: 'all' });
       return text({
         store: v.store?.name ?? null,
         stores: v.stores.map((x) => x.name),

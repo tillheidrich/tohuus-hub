@@ -21,9 +21,11 @@ import {
   setBasket,
   setItemSection,
   setStoreOrder,
+  setStorePlace,
   storeView,
 } from '../lib/shop.js';
 import { tickItem } from '../lib/shopping-trust.js';
+import { activeTrips, endTrip } from '../lib/trips.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
 import { NOTIFY_ACTIONS, runNotifyAction } from '../lib/notify-actions.js';
@@ -42,8 +44,10 @@ const fail = (res: any, e: unknown) => res.status((e as any).status ?? 500).json
 
 r.get('/shop/list', (req, res) => {
   const store = req.query.store ? num(req.query.store) : null;
+  // list2: ?list=<id> (0 = main list, default) or ?list=all
+  const listId = req.query.list === 'all' ? 'all' : Number(req.query.list) || 0;
   // discreet entries: the owner sees the real name; whoever shops may too, if the owner allows it (area: share)
-  res.json({ ...storeView(store, { userId: userId(req), shopping: req.query.mode === 'store' }), sectionKeys: SECTIONS });
+  res.json({ ...storeView(store, { userId: userId(req), shopping: req.query.mode === 'store' }, { listId }), sectionKeys: SECTIONS });
 });
 
 r.get('/shop/stores', (_req, res) => res.json(listStores()));
@@ -52,9 +56,19 @@ r.post('/shop/stores', (req, res) => {
   res.json(createStore(b.name));
 });
 r.patch('/shop/stores/:id', (req, res) => {
-  const b = z.object({ name: z.string().min(1).max(60).optional(), order: z.array(z.string()).max(30).optional() }).parse(req.body);
+  const b = z
+    .object({
+      name: z.string().min(1).max(60).optional(),
+      order: z.array(z.string()).max(30).optional(),
+      // list2: where the store is – entered by a person, only for the optional iPhone arrival hint
+      lat: z.number().min(-90).max(90).nullable().optional(),
+      lon: z.number().min(-180).max(180).nullable().optional(),
+      radius_m: z.number().int().min(30).max(2000).nullable().optional(),
+    })
+    .parse(req.body);
   if (b.name) renameStore(num(req.params.id), b.name);
   if (b.order) setStoreOrder(num(req.params.id), b.order);
+  if (b.lat !== undefined || b.lon !== undefined || b.radius_m !== undefined) setStorePlace(num(req.params.id), b);
   res.json({ ok: true });
 });
 r.delete('/shop/stores/:id', (req, res) => {
@@ -74,14 +88,14 @@ r.post('/shop/items/:id/basket', (req, res) => {
 
 /** Normal tick (outside the store): checked, optionally straight into stock – same as before. */
 r.post('/shop/items/:id/check', (req, res) => {
-  const b = z.object({ on: z.boolean(), to_stock: z.boolean().optional() }).parse(req.body);
+  const b = z.object({ on: z.boolean(), to_stock: z.boolean().optional(), store_id: z.number().nullable().optional() }).parse(req.body);
   const it = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(num(req.params.id)) as any;
   if (!it) {
     res.status(404).json({ error: 'not found' });
     return;
   }
   // un-ticking takes back exactly what the tick booked (shopping-trust.ts)
-  const out = tickItem(it.id, b.on, actorName(req), { toStock: b.to_stock });
+  const out = tickItem(it.id, b.on, actorName(req), { toStock: b.to_stock, storeId: b.store_id ?? null });
   res.json({ ok: true, booked: out.booked, unbooked: out.unbooked });
 });
 
@@ -98,7 +112,9 @@ r.post('/shop/items/:id/section', (req, res) => {
 /** "Done shopping": basket → stock, learn the aisle order. */
 r.post('/shop/checkout', (req, res) => {
   const b = z.object({ store_id: z.number().nullable().optional(), to_stock: z.boolean().default(true) }).parse(req.body);
-  res.json(checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req) }));
+  const out = checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req), onlyOwn: activeTrips(userId(req)).some((tr) => !tr.mine) });
+  endTrip(userId(req));
+  res.json(out);
 });
 
 // ---------------------------------------------------------------- quick add
@@ -122,9 +138,10 @@ r.post('/shop/quick-add', (req, res) => {
           }),
         )
         .max(50),
+      list_id: z.number().int().min(0).nullable().optional(),
     })
     .parse(req.body);
-  res.json({ added: addLines(b.items, actorName(req)) });
+  res.json({ added: addLines(b.items, actorName(req), 'manual', b.list_id ?? null) });
 });
 
 // ---------------------------------------------------------------- claims ("I'll take care of it")
@@ -151,9 +168,9 @@ r.get('/shop/members', (_req, res) => res.json(db.prepare('SELECT id, name, colo
 // ---------------------------------------------------------------- offline replay
 
 const OpSchema = z.discriminatedUnion('type', [
-  z.object({ op_id: z.string().min(4).max(80), type: z.literal('add'), text: z.string().min(1).max(2000), product_id: z.number().nullable().optional(), qty: z.number().nullable().optional() }),
+  z.object({ op_id: z.string().min(4).max(80), type: z.literal('add'), text: z.string().min(1).max(2000), product_id: z.number().nullable().optional(), qty: z.number().nullable().optional(), list_id: z.number().int().min(0).nullable().optional() }),
   z.object({ op_id: z.string().min(4).max(80), type: z.literal('basket'), id: z.number(), on: z.boolean(), store_id: z.number().nullable().optional() }),
-  z.object({ op_id: z.string().min(4).max(80), type: z.literal('check'), id: z.number(), on: z.boolean(), to_stock: z.boolean().optional() }),
+  z.object({ op_id: z.string().min(4).max(80), type: z.literal('check'), id: z.number(), on: z.boolean(), to_stock: z.boolean().optional(), store_id: z.number().nullable().optional() }),
   z.object({ op_id: z.string().min(4).max(80), type: z.literal('delete'), id: z.number() }),
   z.object({ op_id: z.string().min(4).max(80), type: z.literal('claim'), id: z.number(), on: z.boolean() }),
 ]);

@@ -38,7 +38,7 @@ export const TABS: Tab[] = [
     icon: Basket,
     prefetch: () => {
       load.shopping();
-      warm(['shopping', 'store', 0, 'list'], '/shop/list');
+      warm(['shopping', 'store', 0, 'list', 0, 0], '/shop/list');
     },
   },
   {
@@ -70,7 +70,7 @@ export interface MoreGroup {
 }
 
 /** Everything that is not one of the five tabs, grouped. Labels are translated at call time. */
-export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolean }): MoreGroup[] {
+export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolean; modules?: Record<string, boolean> }): MoreGroup[] {
   const groups: MoreGroup[] = [
     {
       key: 'home',
@@ -116,9 +116,26 @@ export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolea
     },
   ];
   return groups
-    .map((g) => ({ ...g, items: g.items.filter((l) => (!l.cloud || opts.cloud) && guestAllows(opts.guest as never, l.to.split('?')[0])) }))
+    .map((g) => ({ ...g, items: g.items.filter((l) => (!l.cloud || opts.cloud) && guestAllows(opts.guest as never, l.to.split('?')[0]) && moduleAllows(opts.modules, l.to)) }))
     .filter((g) => g.items.length);
 }
+
+/** "Was nutzt ihr?" (list2): which switchable area a path belongs to (null = always there). */
+export function moduleOfPath(path: string): string | null {
+  const p = path.split('?')[0];
+  if (p.startsWith('/bestand') || p.startsWith('/abgleich') || p === '/wo' || p.startsWith('/scan')) return 'stock';
+  if (p.startsWith('/kochen') || p.startsWith('/rezepte')) return 'cook';
+  if (p.startsWith('/geld') || p.startsWith('/ausgaben')) return 'money';
+  if (p.startsWith('/bestellen')) return 'treats';
+  if (p.startsWith('/bar')) return 'guests';
+  if (p.startsWith('/pflege')) return 'homeinfo';
+  if (path.includes('tab=ha')) return 'ha';
+  return null;
+}
+export const moduleAllows = (mods: Record<string, boolean> | undefined, path: string) => {
+  const m = moduleOfPath(path);
+  return !m || !mods || mods[m] !== false;
+};
 
 /** Paths that belong to a tab (for the active state on sub pages such as /rezepte/12 or /bestand/4). */
 export function tabFor(path: string): string {

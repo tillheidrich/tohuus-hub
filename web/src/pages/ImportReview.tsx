@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowsClockwise, CaretDown, CheckCircle, Info, PencilSimple, Sparkle } from '@phosphor-icons/react';
+import { WhoPaidPanel } from '../shop/forms';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { type Location, fmtDate, invalidate, patch, post, qc, useApi } from '../api';
@@ -145,6 +146,9 @@ export function ImportReview() {
           </div>
         )}
       </header>
+
+      {/* list2 G: WG – who paid and for whom; care lists – lines for the household you shop for */}
+      <WhoPaidPanel imp={imp} />
 
       {meta.reconciledWith && (
         <div className="banner" style={{ marginBottom: 14, cursor: 'default', background: 'var(--accent-soft)' }}>

@@ -39,7 +39,7 @@ export function More({ me }: { me: Me }) {
   const nav = useNavigate();
   const loc = useLocation();
   const inst = useInstance();
-  const groups = moreGroups({ guest: me.actor.houseGuest?.level, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud' });
+  const groups = moreGroups({ guest: me.actor.houseGuest?.level, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: me.modules });
   return (
     <div className="more-page">
       <header className="more-me">

@@ -81,8 +81,18 @@ export async function sendDigest(force = false) {
   });
 }
 
+/** Extra jobs per household round, registered by area modules (list2: personal digests, rhythm due, week plan). */
+export const householdJobs: { name: string; run: () => Promise<unknown> | unknown }[] = [];
+
 /** One scheduler round for the current household (expiry, care, budgets, rotation, daily digest). */
 export async function householdTick() {
+  for (const j of householdJobs) {
+    try {
+      await j.run();
+    } catch (e) {
+      console.warn(`[${j.name}]`, (e as Error).message);
+    }
+  }
   try {
     await checkExpiry();
     await checkCareDue().catch((e) => console.warn('[care]', (e as Error).message));
