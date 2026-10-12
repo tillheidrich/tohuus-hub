@@ -257,6 +257,31 @@ describe('cloud isolation', () => {
     expect((await new Client().get(signed!.replace(/h=h[a-z2-7]{10}/, `h=${slugB}`))).status).not.toBe(200);
   });
 
+  it('image references in HTML (displays) are signed for the household', async () => {
+    const images = await import('../server/lib/images');
+    const slugA = accounts.getHousehold(hA)!.slug;
+    const html = tenancy.runInHousehold(hA, () => images.signImagesInHtml('<img src="/img/p1-abc.webp"> <img src="/img/p2-def.webp">'));
+    expect(html).toMatch(new RegExp(`src="/img/p1-abc\\.webp\\?h=${slugA}&e=\\d+&s=[\\w-]+"`));
+    expect(html.match(/\?h=/g)).toHaveLength(2);
+  });
+
+  it('MCP tokens work only for their own household', async () => {
+    const t = await A.post('/api/tokens', { name: 'Claude', scope: 'mcp' });
+    expect(t.status, t.text).toBe(200);
+    const mcp = (token: string, body: unknown) =>
+      new Client().req('POST', '/mcp', body, { authorization: `Bearer ${token}`, accept: 'application/json, text/event-stream' });
+    const init = { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 't', version: '1' } } };
+    expect((await mcp(t.json.token, init)).status).toBe(200);
+    const call = { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'get_shopping_list', arguments: {} } };
+    const r = await mcp(t.json.token, call);
+    expect(r.status, r.text).toBe(200);
+    expect(r.text).toContain('MARKERA-shop');
+    // the same random part routed to household B is worthless
+    const slugB = accounts.getHousehold(hB)!.slug;
+    const forged = t.json.token.replace(/^sw_h[a-z2-7]{10}_/, `sw_${slugB}_`);
+    expect((await mcp(forged, call)).status).toBe(401);
+  });
+
   it('guest links resolve to their own household only', async () => {
     expect(guestTokenA).toMatch(/^h[a-z2-7]{10}_/);
     const g = await new Client().get(`/api/guest/${guestTokenA}/shopping`);

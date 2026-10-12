@@ -55,6 +55,7 @@ import { register as register_ha2 } from './tools-ha2.js';
 import { register as register_menu } from './tools-menu.js';
 import { register as register_places } from './tools-places.js';
 import { norm } from '../lib/text.js';
+import { signImagesInHtml } from '../lib/images.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 const text = (v: unknown) => ({ content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 1) }] });
@@ -104,6 +105,18 @@ export function buildMcpServer(actorName: string) {
         'If a product name is unclear, use search_stock before changing stock.',
     },
   );
+  // image references in tool results become absolute, short-lived signed URLs (/img needs authentication)
+  const register = s.registerTool.bind(s) as (...a: any[]) => any;
+  (s as any).registerTool = (name: string, cfg: unknown, handler: (...a: any[]) => any) =>
+    register(name, cfg, async (...args: any[]) => {
+      const out = await handler(...args);
+      try {
+        for (const c of out?.content ?? []) if (c?.type === 'text' && typeof c.text === 'string' && c.text.includes('/img/')) c.text = signImagesInHtml(c.text, true);
+      } catch {
+        /* leave unsigned */
+      }
+      return out;
+    });
 
   s.registerTool(
     'get_overview',

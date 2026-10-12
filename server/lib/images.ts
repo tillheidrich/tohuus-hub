@@ -279,6 +279,8 @@ function signValue(v: unknown, depth = 0): unknown {
   if (typeof v === 'string') {
     if (v.startsWith('/img/') && imageFile(v)) return signImageUrl(v);
     if (v.startsWith(`${base()}/img/`) && imageFile(v.slice(base().length))) return base() + signImageUrl(v.slice(base().length));
+    // HTML fragments inside JSON (display widgets)
+    if (v.includes('/img/') && v.includes('<')) return signImagesInHtml(v);
     return v;
   }
   if (depth > 12 || !v || typeof v !== 'object') return v;
@@ -290,10 +292,10 @@ function signValue(v: unknown, depth = 0): unknown {
 }
 
 /** Replace `/img/…` references in HTML (displays, printed pages) with signed URLs. */
-export const signImagesInHtml = (html: string) => html.replace(IMG_IN_TEXT, (_m, pre: string, url: string) => {
+export const signImagesInHtml = (html: string, absolute = false) => html.replace(IMG_IN_TEXT, (_m, pre: string, url: string) => {
   const abs = url.startsWith('http');
   const p = abs ? url.slice(url.indexOf('/img/')) : url;
-  return pre + (abs ? url.slice(0, url.indexOf('/img/')) : '') + signImageUrl(p);
+  return pre + (abs ? url.slice(0, url.indexOf('/img/')) : absolute ? base() : '') + signImageUrl(p);
 });
 
 /**
