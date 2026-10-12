@@ -9,21 +9,41 @@ import { ApiError, get } from './api';
 // ------------------------------------------------------------------ helpers
 
 /** 404 / 405 / an HTML answer → the endpoint does not exist on this server (yet). */
-export const missing = (e: unknown) => e instanceof ApiError && (e.status === 404 || e.status === 405 || e.status === 502 || e.status === 501);
-const MISSING = new Set<string>();
-/** Remembers per page load that an endpoint is missing, so we don't ask again on every tab switch. */
+export const missing = (e: unknown) => e instanceof ApiError && (e.status === 404 || e.status === 405 || e.status === 501);
+/**
+ * Endpoints this server doesn't have, remembered for the browser session (sessionStorage) so a reload or a tab
+ * switch doesn't ask again. A server update shows up in a new tab or after the session ends.
+ */
+const SS_KEY = 'sw.missingApi';
+const MISSING = new Set<string>(
+  (() => {
+    try {
+      return JSON.parse(sessionStorage.getItem(SS_KEY) ?? '[]') as string[];
+    } catch {
+      return [];
+    }
+  })(),
+);
+const base = (p: string) => p.split('?')[0];
+export const isMissing = (path: string) => MISSING.has(base(path));
+export function markMissing(path: string) {
+  MISSING.add(base(path));
+  try {
+    sessionStorage.setItem(SS_KEY, JSON.stringify([...MISSING]));
+  } catch {
+    /* ignore */
+  }
+}
 export async function getOr<T>(path: string, fallback: () => Promise<T> | T): Promise<T> {
-  if (MISSING.has(path)) return fallback();
+  if (isMissing(path)) return fallback();
   try {
     return await get<T>(path);
   } catch (e) {
     if (!missing(e)) throw e;
-    MISSING.add(path.split('?')[0]);
+    markMissing(path);
     return fallback();
   }
 }
-export const isMissing = (path: string) => MISSING.has(path);
-export const markMissing = (path: string) => MISSING.add(path);
 
 // ------------------------------------------------------------------ /api/instance
 

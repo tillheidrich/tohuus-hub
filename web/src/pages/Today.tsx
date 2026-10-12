@@ -84,11 +84,13 @@ export function Today({ me }: { me: Me }) {
     <div className="today2">
       {head}
       {d.notices.length > 0 && <Notices list={d.notices} />}
-      <DueCard items={d.rhythm} legacy={d.legacy} />
-      {guestAllows(gl, '/einkauf') && <ListCard d={d} />}
-      {d.stillHave.length > 0 && <StillHaveCard items={d.stillHave} />}
-      {guestAllows(gl, '/kochen') && d.cookToday && <CookCard c={d.cookToday} />}
-      {guestAllows(gl, '/geld') && d.money && <MoneyCard m={d.money} />}
+      <div className="today-cards">
+        <DueCard items={d.rhythm} legacy={d.legacy} />
+        {guestAllows(gl, '/einkauf') && <ListCard d={d} />}
+        {d.stillHave.length > 0 && <StillHaveCard items={d.stillHave} />}
+        {guestAllows(gl, '/kochen') && d.cookToday && <CookCard c={d.cookToday} />}
+        {guestAllows(gl, '/geld') && d.money && <MoneyCard m={d.money} />}
+      </div>
     </div>
   );
 }

@@ -17,6 +17,18 @@ export interface ChangeEntry {
 
 export const CHANGELOG: ChangeEntry[] = [
   {
+    id: '2026-10-12',
+    title: { en: 'Faster, five tabs and “Today” at a glance', de: 'Schneller, fünf Tabs und „Heute“ auf einen Blick' },
+    items: [
+      { en: 'The app opens much faster: each page loads only when you need it.', de: 'Die App startet deutlich schneller: Jede Seite lädt erst, wenn du sie brauchst.' },
+      { en: 'Five tabs at the bottom – Today, Shopping, Pantry, Cook, Money. Everything else is behind your picture on “Today”.', de: 'Fünf Tabs unten – Heute, Einkauf, Vorrat, Kochen, Geld. Alles andere findest du über dein Bild auf „Heute“.', to: '/mehr' },
+      { en: '“Today” shows what is due, the list, what to use soon, an idea for dinner and this week’s spending.', de: '„Heute“ zeigt, was fällig ist, die Liste, was weg muss, eine Idee fürs Essen und was die Woche gekostet hat.', to: '/' },
+      { en: 'Every item on the list says where it came from, and a tick can be undone right away.', de: 'Jeder Eintrag auf der Liste zeigt, woher er kommt, und ein Haken lässt sich sofort zurücknehmen.', to: '/einkauf' },
+      { en: 'New: “Money” – per month, shop and category, with your budget.', de: 'Neu: „Geld“ – pro Monat, Laden und Kategorie, mit eurem Budget.', to: '/geld' },
+      { en: 'Cooking is one page now: ideas from what is at home, the week plan and your recipes.', de: 'Kochen ist jetzt eine Seite: Ideen aus dem, was da ist, Wochenplan und eure Rezepte.', to: '/kochen' },
+    ],
+  },
+  {
     id: '2026-10-11',
     title: { en: 'A fresh look and a lot more for the whole family', de: 'Neuer Look und viel mehr für die ganze Familie' },
     items: [
