@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { config, smtpEnabled } from '../config.js';
 import { visionAvailable, visionModel } from '../lib/vision.js';
 import { appearanceFor } from '../lib/appearance.js';
-import { homeSetup } from '../lib/places.js';
+import { homeSetup, localizeBaseNames } from '../lib/places.js';
 import { r as placesRoutes } from './places.js';
 import { brand, chooseBrand, db, defaultBrand, getSetting, lang, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
@@ -515,7 +515,10 @@ r.patch('/settings', requireAdmin, (req, res) => {
   if (b.household) setSetting('household.name', b.household);
   // the explicit choice in Settings wins over BRAND (choosing the default removes the override)
   if (b.brand) chooseBrand(b.brand);
-  if (b.language) setSetting('language', b.language);
+  if (b.language) {
+    setSetting('language', b.language);
+    localizeBaseNames();
+  }
   if (b.ha) setSetting('ha', { ...haSettings(), ...Object.fromEntries(Object.entries(b.ha).filter(([k, v]) => !(k === 'token' && v === '••••'))) });
   if (b.importAutoApply !== undefined) setSetting('import.autoApply', b.importAutoApply);
   if (b.ai?.healthShare !== undefined) setSetting('ai.health_share', b.ai.healthShare);

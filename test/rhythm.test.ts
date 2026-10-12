@@ -155,6 +155,16 @@ describe('data sources', () => {
     expect(r.status).toBe(200);
     const m = r.json.find((x: any) => x.productId === milk);
     for (const k of ['productId', 'name', 'everyDays', 'lastBought', 'dueOn', 'confidence', 'origin', 'suggested']) expect(m).toHaveProperty(k);
+    // the same line as on "Heute": a weekday within six days, else "vor n Tagen"
+    const weekday = new Date(day(-5) + 'T12:00:00Z').toLocaleDateString('de-DE', { weekday: 'long', timeZone: 'UTC' });
+    expect(m.label).toBe(`alle ~5 Tage · zuletzt ${weekday}`);
+    expect(r.json.find((x: any) => x.productId === coffee).label).toMatch(/^alle ~\d+ Tage · zuletzt vor 8 Tagen$/);
+    // the product's picture
+    db.prepare(`UPDATE products SET image_path = '/img/p${milk}-abcdef.webp' WHERE id = ?`).run(milk);
+    expect((await req('GET', '/api/rhythm')).json.find((x: any) => x.productId === milk).image).toBe(`/img/p${milk}-abcdef.webp`);
+    const today = (await req('GET', '/api/today')).json;
+    const card = today.rhythm.find((x: any) => x.productId === milk);
+    if (card) expect(card.image).toBe(`/img/p${milk}-abcdef.webp`);
   });
 
   it('accept puts it on the list with its origin', async () => {

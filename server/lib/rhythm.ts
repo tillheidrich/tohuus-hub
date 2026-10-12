@@ -11,7 +11,8 @@
  * Tables (migration 'rhythm-1'): rhythm_state – dismissals per product.
  */
 import { config } from '../config.js';
-import { db, migrate } from '../db.js';
+import { db, lang, migrate } from '../db.js';
+import { localeOf } from '../languages.js';
 import { t } from '../i18n.js';
 import { addToShopping, getProduct } from './catalog.js';
 import { historySince } from './limits.js';
@@ -151,7 +152,28 @@ export interface RhythmItem {
   /** two dismissals: quiet until bought again */
   muted: boolean;
   count: number;
+  /** "alle ~5 Tage · zuletzt Mittwoch" / "… · zuletzt vor 9 Tagen" – the same line as on "Heute" */
+  label: string;
 }
+
+/** "last Wednesday" within the past six days, else "9 days ago". */
+export function lastBoughtText(lastBought: string, refDay: string): string {
+  const ago = dayNum(refDay) - dayNum(lastBought);
+  if (ago <= 0) return t('today');
+  if (ago <= 6) return new Date(lastBought + 'T12:00:00Z').toLocaleDateString(localeOf(lang()), { weekday: 'long', timeZone: 'UTC' });
+  return t('{n} days ago', { n: ago });
+}
+
+/** "gekauft am Dienstag" / "gekauft vor 9 Tagen" / "heute gekauft" for "Das habt ihr noch". */
+export function boughtText(lastBought: string, refDay: string): string {
+  const ago = dayNum(refDay) - dayNum(lastBought);
+  if (ago <= 0) return t('bought today');
+  if (ago <= 6) return t('bought {day}', { day: lastBoughtText(lastBought, refDay) });
+  return t('bought {n} days ago', { n: ago });
+}
+
+export const rhythmLabel = (everyDays: number, lastBought: string, refDay: string) =>
+  t('every ~{n} days · last {day}', { n: Math.max(1, Math.round(everyDays)), day: lastBoughtText(lastBought, refDay) });
 
 const today = () => new Intl.DateTimeFormat('sv-SE', { timeZone: config.timezone }).format(new Date());
 
@@ -228,6 +250,7 @@ export function rhythmList(opts: { refDay?: string; productId?: number } = {}): 
       onList: onList.has(pid),
       muted,
       count: r.count,
+      label: rhythmLabel(r.everyDays, r.lastBought, ref),
     });
   }
   return out.sort((a, b) => Number(b.suggested) - Number(a.suggested) || a.dueInDays - b.dueInDays || a.name.localeCompare(b.name));

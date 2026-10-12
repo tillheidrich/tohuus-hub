@@ -10,7 +10,7 @@ import { adjustStock, createProduct } from './lib/catalog.js';
 import { NAME_MAX, PASSWORD_MIN, hashPassword, randomToken } from './lib/auth.js';
 import { BASE_CATEGORIES, BASE_LOCATIONS, baseName, categoryIdByKey, locationIdByKey, type CategoryKey } from './lib/basedata.js';
 import { saveRecipe } from './lib/recipes.js';
-import { linkCategoryDefaults } from './lib/places.js';
+import { linkCategoryDefaults, localizeBaseNames } from './lib/places.js';
 import { captureDemo } from './lib/demo.js';
 
 /** The seven neutral base places (fridge, freezer, pantry …) – only for the demo and tests, never unasked. */
@@ -263,6 +263,8 @@ export function seedDemo(opts: { force?: boolean } = {}): boolean {
   if ((db.prepare('SELECT COUNT(*) n FROM products').get() as { n: number }).n > 0) return false;
   // the demo household lives in the neutral base places; a household that already picked its own keeps them
   ensureBasePlaces();
+  // a German household gets German base names (places/categories may have been created while it was still English)
+  localizeBaseNames();
   captureDemo(seedDemoRows);
   setSetting('demo.seeded', true);
   return true;

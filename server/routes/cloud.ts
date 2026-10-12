@@ -50,6 +50,9 @@ const A = async () => accountsModule;
 const CA = async () => cloudAuthModule;
 
 const DUMMY_HASH = hashPassword('not-a-real-password-either');
+/** cloud accounts reach every household of a person on the internet: 10 characters (self-host members: PASSWORD_MIN = 8) */
+export const CLOUD_PASSWORD_MIN = 10;
+export const passwordMin = () => (cloudMode() ? CLOUD_PASSWORD_MIN : PASSWORD_MIN);
 
 const wrap =
   (fn: (req: Request, res: Response) => unknown) =>
@@ -86,6 +89,8 @@ instance.get('/instance', (_req, res) => {
     region: inHousehold ? regionInfo().code : defaultRegionCode(config.language),
     auth: {
       password: true,
+      /** minimum password length for new passwords (cloud accounts 10, self-hosted members 8) */
+      passwordMin: passwordMin(),
       magicLink: canSendMail() && (cloudMode() || authPolicy().magicLink),
       // passkeys: one RP-ID per cloud host – not wired for cloud accounts yet (docs/cloud.md)
       passkey: !cloudMode() && authPolicy().passkeys,
@@ -352,7 +357,7 @@ async function sendVerifyMail(accountId: number, email: string, householdId: str
 
 const signupReq = z.object({
   email: z.string().trim().max(254),
-  password: z.string().min(PASSWORD_MIN).max(200),
+  password: z.string().min(CLOUD_PASSWORD_MIN).max(200),
   name: z.string().trim().min(1).max(NAME_MAX),
   householdName: z.string().trim().min(1).max(60),
   form: z.enum(PLAN_FORMS).default('family'),
@@ -517,7 +522,7 @@ cloudPub.post(
 cloudPub.post(
   '/auth/reset/confirm',
   wrap(async (req, res) => {
-    const b = z.object({ token: z.string().max(200), password: z.string().min(PASSWORD_MIN).max(200) }).parse(req.body ?? {});
+    const b = z.object({ token: z.string().max(200), password: z.string().min(CLOUD_PASSWORD_MIN).max(200) }).parse(req.body ?? {});
     const acc = await A();
     const accountId = acc.consumeAuthLink('reset', b.token);
     if (!accountId) throw new AuthError(410, t('This link has expired or was already used.'));
@@ -562,10 +567,11 @@ cloudPub.post(
     if (!accountId) {
       const email = normEmail(b.email ?? '');
       if (!EMAIL_RE.test(email)) throw new AuthError(400, t('That doesn’t look like an e-mail address.'));
-      if (!b.password || b.password.length < PASSWORD_MIN) throw new AuthError(400, t('At least 8 characters, please.'));
+      if (!b.password) throw new AuthError(400, t('At least {n} characters, please.', { n: CLOUD_PASSWORD_MIN }));
       const existing = acc.accountByEmail(email);
       if (existing) accountId = await cloudPasswordCheck(req, email, b.password);
       else {
+        if (b.password.length < CLOUD_PASSWORD_MIN) throw new AuthError(400, t('At least {n} characters, please.', { n: CLOUD_PASSWORD_MIN }));
         if (rateLimited(`signup-ip:${req.ip}`, 5, 60 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
         accountId = acc.createAccount(email, hashPassword(b.password), b.name || null, lang()).id;
       }
@@ -742,7 +748,7 @@ cloud.post(
   '/auth/me/password',
   wrap(async (req) => {
     const id = await identity(req);
-    const b = z.object({ current: z.string().max(200).optional(), password: z.string().min(PASSWORD_MIN).max(200) }).parse(req.body ?? {});
+    const b = z.object({ current: z.string().max(200).optional(), password: z.string().min(CLOUD_PASSWORD_MIN).max(200) }).parse(req.body ?? {});
     const acc = await A();
     const a = acc.accountById(id.accountId)!;
     if (a.password_hash?.startsWith('scrypt$') && !(await verifyPassword(b.current ?? '', a.password_hash))) throw new AuthError(400, t('The current password is wrong.'));

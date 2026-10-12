@@ -577,9 +577,22 @@ img {
     bottom: 28px;
   }
 }
-/* nothing important may hide under the assistant button */
+/* scrolled: a round mic only */
+.assist-fab.compact {
+  width: 52px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+}
+/* nothing important may hide under the assistant button: the page ends below it (button 52px + 14px above the tab
+   bar on phones, 28px from the bottom on wide screens, plus a gap) */
 .main {
   scroll-padding-bottom: calc(var(--tabbar-h) + 90px);
+}
+@media (min-width: 960px) {
+  .main {
+    padding-bottom: 112px;
+  }
 }
 .skip-link {
   position: absolute;

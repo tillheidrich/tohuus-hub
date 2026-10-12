@@ -52,6 +52,8 @@ export const de_assistant: Record<string, string> = {
   '{items} – on the list.': '{items} – steht auf der Liste.',
   '{items} was already on it.': '{items} stand schon drauf.',
   '{item} is on the list.': '{item} steht auf der Liste.',
+  'What do you need for {what}?': 'Was braucht ihr für {what}?',
+  'What else do you need?': 'Was braucht ihr noch?',
   'For the rest I need a few more words, or the list.': 'Für den Rest brauch ich ein paar Worte mehr – oder schreib es direkt auf die Liste.',
   'I don’t know “{q}” yet. Shall I put it on the list?': '„{q}“ kenne ich noch nicht. Soll es auf die Liste?',
   'Bought {day} according to the receipt': 'Laut Bon am {day} gekauft',

@@ -550,3 +550,25 @@ export function homeSnapshot() {
     has_freezer: hasClimate('frozen'),
   };
 }
+
+/**
+ * Base places and categories still carrying their default name in the other UI language get the name of the current
+ * language (a household that started in English and switched to German, or the demo seeded in German). Only exact
+ * default names are touched, never a name a person chose, and never when the target name exists already.
+ */
+export function localizeBaseNames(): number {
+  const de = getSetting<string>('language', config.language) === 'de';
+  let n = 0;
+  const rename = (table: 'locations' | 'categories', rows: readonly { en: string; de: string }[]) => {
+    for (const r of rows) {
+      const [from, to] = de ? [r.en, r.de] : [r.de, r.en];
+      if (from === to) continue;
+      if (db.prepare(`SELECT 1 FROM ${table} WHERE name = ?`).get(to)) continue;
+      n += db.prepare(`UPDATE ${table} SET name = ? WHERE name = ?`).run(to, from).changes;
+    }
+  };
+  rename('locations', PLACE_TEMPLATES);
+  rename('categories', BASE_CATEGORIES);
+  if (n) emit('settings', 'stock');
+  return n;
+}

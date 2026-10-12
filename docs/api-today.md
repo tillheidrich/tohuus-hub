@@ -22,7 +22,7 @@ Authentication: session cookie or `Authorization: Bearer sw_app_…`. Permanent 
       "dueInDays": 0,                           // negative = overdue
       "confidence": "medium",                   // low (≥3 purchases) | medium (≥5) | high (≥8)
       "origin": "receipts",                     // receipts | ticks | both
-      "label": "alle ~5 Tage · zuletzt Mittwoch"
+      "label": "alle ~5 Tage · zuletzt Mittwoch"  // weekday within 6 days, else "zuletzt vor 9 Tagen"; same field on /api/rhythm
     }
   ],
 

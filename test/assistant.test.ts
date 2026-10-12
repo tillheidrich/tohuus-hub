@@ -90,9 +90,32 @@ describe('reading without a model (pure)', () => {
     expect(p('Wir brauchen noch Eier und Butter')).toMatchObject({ kind: 'add', items: [{ name: 'Eier' }, { name: 'Butter' }] });
     expect(p('add milk and bread to the list')).toMatchObject({ kind: 'add', items: [{ name: 'Milk' }, { name: 'Bread' }] });
   });
+  it('several clauses in one sentence', () => {
+    const names = (x: any) => x.items.map((i: any) => `${i.qty ?? 1}×${i.name}${i.usedUp ? '!' : ''}`);
+    const cases: [string, string[], string[]?][] = [
+      ['Milch ist alle und 2 Paprika', ['1×Milch!', '2×Paprika']],
+      ['Wir brauchen Eier, Butter und was für Sonntag', ['1×Eier', '1×Butter'], ['was für Sonntag']],
+      ['Klopapier ist alle und Spüli fast leer', ['1×Klopapier!', '1×Spüli']],
+      ['need milk and 2 peppers', ['1×Milk', '2×Peppers']],
+      ['Die Eier sind alle, Brot fehlt\nund 3 Dosen Tomaten', ['1×Eier!', '1×Brot', '3×Tomaten']],
+      ['Kein Kaffee mehr & Zucker sowie Mehl', ['1×Kaffee!', '1×Zucker', '1×Mehl']],
+      ["we're out of eggs, and toilet paper is almost empty", ['1×Eggs!', '1×Toilet paper']],
+      ['Setz Butter auf die Liste und Käse ist leer', ['1×Butter', '1×Käse!']],
+      ['Wir brauchen 1,5 l Milch und Brot', ['1×Milch', '1×Brot']],
+      ['Shampoo is empty. Buy bin bags', ['1×Shampoo!', '1×Bin bags']],
+    ];
+    for (const [text, want, vague] of cases) {
+      const r = p(text) as any;
+      expect(r.kind, text).toBe('add');
+      expect(names(r), text).toEqual(want);
+      expect(r.vague, text).toEqual(vague ?? []);
+    }
+    expect(p('Wir müssen morgen früh zum Arzt fahren').kind).toBe('unknown');
+  });
+
   it('used up, questions, purchases', () => {
-    expect(p('Milch ist alle, und wir brauchen was für Sonntag')).toMatchObject({ kind: 'used_up', item: 'Milch', rest: 'und wir brauchen was für Sonntag' });
-    expect(p("We're out of milk")).toMatchObject({ kind: 'used_up', item: 'milk' });
+    expect(p('Milch ist alle, und wir brauchen was für Sonntag')).toMatchObject({ kind: 'add', items: [{ name: 'Milch', usedUp: true }], vague: ['was für Sonntag'] });
+    expect(p("We're out of milk")).toMatchObject({ kind: 'add', items: [{ name: 'Milk', usedUp: true }] });
     expect(p('Haben wir noch Eier?')).toEqual({ kind: 'find', query: 'Eier' });
     expect(p('do we still have eggs?')).toEqual({ kind: 'find', query: 'eggs' });
     expect(p('Hab bei Aldi Milch, Eier und Brot für 12,40 gekauft')).toMatchObject({ kind: 'purchase', shop: 'Aldi', total: 12.4, when: 'today', items: [{ name: 'Milch' }, { name: 'Eier' }, { name: 'Brot' }] });
@@ -124,6 +147,19 @@ describe('without a model configured', () => {
     const u = await till.req('POST', `/api/assistant/undo/${r.json.actions[0].undo}`);
     expect(u.json.ok).toBe(true);
     expect(openTexts()).toEqual([]);
+  });
+
+  it('several clauses: used up plus more, and a question back for the vague part', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    const r = await till.chat('Milch ist alle und 2 Paprika');
+    expect(openTexts()).toEqual(['Milch', 'Paprika']);
+    expect(r.json.actions.map((a: any) => a.kind)).toEqual(['stock_used_up', 'list_add']);
+    for (const a of r.json.actions) await till.req('POST', '/api/assistant/undo', { undo: a.undo });
+    expect(openTexts()).toEqual([]);
+    const v = await till.chat('Wir brauchen Eier, Butter und was für Sonntag');
+    expect(openTexts()).toEqual(['Eier', 'Butter']);
+    expect(v.json.reply).toMatch(/Was braucht ihr für Sonntag\?$/);
+    await till.req('POST', `/api/assistant/undo/${v.json.actions[0].undo}`);
   });
 
   it('"Milch ist alle" puts it on the list (and undo takes it off again)', async () => {

@@ -43,13 +43,21 @@ export function AssistantFab() {
       window.removeEventListener('tohuus:assistant-gone', gone);
     };
   }, []);
+  // compact round mic once the page is scrolled – the label "Sagen" only at the top
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const on = () => setCompact(window.scrollY > 48);
+    on();
+    window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, []);
   const available = hasAssistant(inst.data);
   if (!available && !open) return null;
   return (
     <>
       {available && (
         <button
-          className="assist-fab"
+          className={compact ? 'assist-fab compact' : 'assist-fab'}
           onClick={() => {
             setSeed({});
             setOpen(true);
@@ -60,7 +68,7 @@ export function AssistantFab() {
           aria-haspopup="dialog"
         >
           <Microphone size={22} weight="fill" />
-          <span>{t('Say it')}</span>
+          {!compact && <span>{t('Say it')}</span>}
         </button>
       )}
       {open && (

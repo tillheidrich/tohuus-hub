@@ -85,10 +85,12 @@ export function Invite() {
     if (d?.household) document.title = `${d.household} · ${BRAND.name}`;
   }, [d?.household]);
 
-  const tooShort = pw.length > 0 && pw.length < 8;
+  // the server's rule (cloud accounts 10, self-hosted members 8)
+  const minPw = cloud ? 10 : 8;
+  const tooShort = pw.length > 0 && pw.length < minPw;
   const mismatch = pw2.length > 0 && pw !== pw2;
   const emailOk = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(email.trim());
-  const ready = Boolean(name.trim()) && (cloud ? emailOk && pw.length >= 8 && pw === pw2 : method === 'password' ? pw.length >= 8 && pw === pw2 : method === 'email' ? emailOk : Boolean(method));
+  const ready = Boolean(name.trim()) && (cloud ? emailOk && pw.length >= minPw && pw === pw2 : method === 'password' ? pw.length >= minPw && pw === pw2 : method === 'email' ? emailOk : Boolean(method));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,7 +241,7 @@ export function Invite() {
                       {show ? <EyeSlash size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <div className="help" style={tooShort ? { color: 'var(--empty)' } : undefined}>{t('At least 8 characters. A short sentence is easy to remember.')}</div>
+                  <div className="help" style={tooShort ? { color: 'var(--empty)' } : undefined}>{t('At least {n} characters. A short sentence is easy to remember.', { n: minPw })}</div>
                 </div>
                 <div className="field">
                   <label htmlFor="inv-pw2">{t('Repeat password')}</label>

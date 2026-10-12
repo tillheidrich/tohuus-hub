@@ -20,6 +20,9 @@ export const de_rhythm: Record<string, string> = {
   'shared from another app': 'aus einer anderen App geteilt',
   'from a guest link': 'über einen Gästelink',
   'added {when}': 'hinzugefügt {when}',
+  '{n} days ago': 'vor {n} Tagen',
+  'bought today': 'heute gekauft',
+  'bought {n} days ago': 'vor {n} Tagen gekauft',
   'today {time}': 'heute {time}',
   'yesterday {time}': 'gestern {time}',
 };

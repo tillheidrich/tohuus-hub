@@ -290,16 +290,24 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
   switch (intent.kind) {
     case 'add': {
       if (!intent.items.length) break;
-      const r = listAdd(ctx, quickItems(intent.items));
+      const added: string[] = [];
+      const already: string[] = [];
+      // "ist alle": stock to zero and onto the list; everything else just onto the list
+      for (const it of intent.items.filter((i) => i.usedUp)) added.push(stockUsedUp(ctx, it.name).product ?? it.name);
+      const rest = intent.items.filter((i) => !i.usedUp);
+      if (rest.length) {
+        const r = listAdd(ctx, quickItems(rest));
+        added.push(...r.added);
+        already.push(...r.already_on_list);
+      }
       const parts: string[] = [];
-      if (r.added.length) parts.push(t('{items} – on the list.', { items: joinList(r.added) }));
-      if (r.already_on_list.length) parts.push(t('{items} was already on it.', { items: joinList(r.already_on_list) }));
+      if (added.length) parts.push(t('{items} – on the list.', { items: joinList(added) }));
+      if (already.length) parts.push(t('{items} was already on it.', { items: joinList(already) }));
+      for (const v of intent.vague) {
+        const m = v.match(/\b(?:für|fuer|for)\s+(.+)$/i);
+        parts.push(m ? t('What do you need for {what}?', { what: m[1] }) : t('What else do you need?'));
+      }
       return parts.join(' ');
-    }
-    case 'used_up': {
-      const r = stockUsedUp(ctx, intent.item);
-      const first = t('{item} is on the list.', { item: r.product ?? intent.item });
-      return intent.rest ? `${first} ${t('For the rest I need a few more words, or the list.')}` : first;
     }
     case 'find': {
       const f = stockFind(intent.query) as any;

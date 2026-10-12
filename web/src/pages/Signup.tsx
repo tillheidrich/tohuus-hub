@@ -29,10 +29,11 @@ export function Signup() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const legal = inst.data?.legal;
+  const minPw = inst.data?.auth?.passwordMin ?? 10;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr('');
-    if (pw.length < 10) return setErr(t('Please use at least 10 characters for the password.'));
+    if (pw.length < minPw) return setErr(t('Please use at least {n} characters for the password.', { n: minPw }));
     setBusy(true);
     try {
       await post('/cloud/signup', {
@@ -84,8 +85,8 @@ export function Signup() {
           </div>
           <div className="field">
             <label htmlFor="su-pw">{t('Password')}</label>
-            <input id="su-pw" className="input" type="password" autoComplete="new-password" minLength={10} required value={pw} onChange={(e) => setPw(e.target.value)} />
-            <div className="help">{t('At least 10 characters.')}</div>
+            <input id="su-pw" className="input" type="password" autoComplete="new-password" minLength={minPw} required value={pw} onChange={(e) => setPw(e.target.value)} />
+            <div className="help">{t('At least {n} characters.', { n: minPw })}</div>
           </div>
           <div className="field">
             <label htmlFor="su-name">{t('Your name')}</label>

@@ -10,7 +10,7 @@ import { recipeImageSql } from './recipe-images.js';
 import { cookToday, probablyAtHome } from './cookideas.js';
 import { eatFirst } from './fresh.js';
 import { moneyGlance, fmtMoney } from './money.js';
-import { rhythmList, type RhythmItem } from './rhythm.js';
+import { boughtText, rhythmList, type RhythmItem } from './rhythm.js';
 import { applyShareView, notPrivate } from './share-core.js';
 import { fmtWhen, originOf } from './shopping-trust.js';
 import { today as todayDay } from './spend2.js';
@@ -39,7 +39,7 @@ function rhythmCard(r: RhythmItem, locale: string) {
     dueInDays: r.dueInDays,
     confidence: r.confidence,
     origin: r.origin,
-    label: t('every ~{n} days · last {day}', { n: Math.max(1, Math.round(r.everyDays)), day: WEEKDAY(r.lastBought, locale) }),
+    label: r.label,
   };
 }
 
@@ -75,7 +75,8 @@ export function todayAggregate(viewer?: TodayViewer | null) {
     still.push({
       productId: e.id,
       name: e.name,
-      image: e.image_path,
+      // a leftover box without its own photo shows the dish it came from
+      image: e.image_path ?? (e.recipe_id ? ((db.prepare(`SELECT ${recipeImageSql('r')} AS img FROM recipes r WHERE r.id = ?`).get(e.recipe_id) as { img: string | null } | undefined)?.img ?? null) : null),
       kind: e.kind === 'leftover' ? 'leftover' : 'expiring',
       useBy: e.use_by,
       daysLeft: e.days_left,
@@ -85,7 +86,7 @@ export function todayAggregate(viewer?: TodayViewer | null) {
   for (const r of rhythm.filter((x) => likely.has(x.productId)).sort((a, b) => b.lastBought.localeCompare(a.lastBought))) {
     if (still.length >= 5) break;
     if (still.some((s) => s.productId === r.productId)) continue;
-    still.push({ productId: r.productId, name: r.name, image: r.image, kind: 'probably', useBy: null, daysLeft: null, label: t('bought {day}', { day: WEEKDAY(r.lastBought, locale) }) });
+    still.push({ productId: r.productId, name: r.name, image: r.image, kind: 'probably', useBy: null, daysLeft: null, label: boughtText(r.lastBought, day) });
   }
 
   // cook today: the plan first, else an idea from what is at home
