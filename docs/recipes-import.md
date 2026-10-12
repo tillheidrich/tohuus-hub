@@ -8,7 +8,9 @@ Importing is for members, admins and full-access tokens. Permanent guests at lev
 
 | Source | Where | Notes |
 |---|---|---|
+| A ToHuus recipe package (zip with `rezepte.json` + `bilder/`, or the JSON) | *Cook › Recipes › Upload recipe package (Kochen › Rezepte › Rezeptpaket hochladen)* | The open bulk format with photos and appliance steps – see [recipe-package.md](recipe-package.md). Also the export (`GET /api/recipes/package.zip`). |
 | A link to a recipe page | *Cook › + Recipe › Link (Kochen › + Rezept › Link)* | Reads the schema.org `Recipe` data most recipe sites publish (JSON-LD, including `@graph`, `HowToSection`, ISO durations). Pages without it are read by the vision model, if one is configured. Sites that block the request get a clear message. |
+| A post on Instagram, TikTok, Pinterest or YouTube | *Share › Save as recipe*, or paste the link in *Cook › + Recipe › Link* | Only what is public without a login: the caption that is shared along, oEmbed/og metadata, a public schema.org card (Pinterest). A caption with a recipe is read by the model (counted as `importAi`); without AI it is split by hand. A video without recipe text becomes a stub with title, link and the public still image. See [AI and social imports](#ai-and-social-imports). |
 | Photos (up to 6, e.g. front and back of a HelloFresh card) | *Cook › + Recipe › Photo* | Needs a vision model (`VISION_*`). Without one, send the photo to your AI assistant over MCP. |
 | Text | *Cook › + Recipe › Text* | Needs a vision model, which also reads text. |
 | Blank | *Cook › + Recipe › Blank* | Type it in. |
@@ -47,6 +49,18 @@ Ingredient lines are translated into the household language with a small built-i
 ### Cookidoo
 
 Cookidoo has no public API. With the Home Assistant *Cookidoo* integration, its "My Week" shows up as a calendar, and ToHuus Hub turns the planned dishes into plan entries. A dish is matched to an existing recipe by name. Otherwise ToHuus Hub reads the public Cookidoo page the calendar entry links to (title, photo, ingredients), or creates a stub with the title and cooking time that you can complete later with a link import. Cookidoo recipes imported through the bulk paths without steps are marked `instructions_available: false`: the steps stay on Cookidoo, and the recipe page links there.
+
+## AI and social imports
+
+All model calls go through `server/lib/vision.ts` → `server/lib/ai.ts` (central AI switch, Mistral pin) and count
+against the plan's `importAi` allowance (HTTP 429 `quota.importAi` when used up). Code: `server/lib/recipe-ai-import.ts`.
+
+| Path | Model? | What happens |
+|---|---|---|
+| Link to a recipe site (`POST /api/recipes/import/url` `{ url }`) | only as fallback | schema.org JSON-LD first; pages without it are read by the text model. Answer `{ id, ai }`. |
+| Social link (`POST /api/recipes/import/url` `{ url, text? }` or `POST /api/recipes/import/social` `{ url, text? }`) | only for a caption with a recipe | `text` = what the share sheet brought along. Public data only: YouTube/TikTok oEmbed, og:title/og:description/og:image, a public JSON-LD recipe. Login walls are detected and ignored; no comments, feeds or anything behind a login. Answer `{ id, platform, incomplete, ai, existed }` – `incomplete: true` = title, link and still image only; `existed: true` = this post was saved before (tracking parameters removed). |
+| Photos (`POST /api/recipes/import/photo`, multipart `files` ≤ 6) | yes | cookbook page, handwritten note, screenshot, photo of a Thermomix or other appliance display → ingredients, steps and appliance steps (`tm: { device, time, temp, speed, mode }`). |
+| Cookidoo in ToHuus Cloud | never contacts Cookidoo | `POST /api/recipes/import/url` answers **409** `{ code: "cookidoo_confirm", draft }`. The app shows the draft (`POST /api/recipes/import/cookidoo/draft` `{ url, text? }` → `{ url, external_id, title, ingredients: [] }`, the title from the shared text), the person pastes the ingredients or lets ToHuus read their own screenshot (`POST /api/recipes/import/cookidoo/read`, multipart `files` ≤ 4 → `{ title, ingredients, servings }`, needs AI, nothing saved), then saves (`POST /api/recipes/import/cookidoo` `{ url, title, ingredients[], servings?, time_min? }` → `{ id, created }`). Stored: title, link, ingredients, `instructions_available: false`, no steps, no photo. The recipe page offers "Zum Kochen in Cookidoo öffnen" and suggests an own photo of the dish. Every other import path drops Cookidoo steps and photos in the cloud as well. Self-hosted servers keep the public-page import described above. |
 
 ## Re-importing
 

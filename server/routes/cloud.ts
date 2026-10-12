@@ -32,6 +32,7 @@ import { canSendMail } from '../lib/mail.js';
 import { emit } from '../lib/bus.js';
 import { buildExport } from '../lib/data.js';
 import { inAccountLang } from '../lib/account-mail.js';
+import { exportCodes } from '../lib/house-guide.js';
 import { InviteError, acceptInvite, findInvite } from '../lib/invites.js';
 import { setHomeSetup } from '../lib/places.js';
 import { REGIONS, defaultRegionCode, regionInfo, setRegion } from '../lib/region.js';
@@ -806,7 +807,9 @@ cloud.get(
     const m = acc.membership(id.accountId, h.id);
     // the whole household database: admins only (as /api/export.json in self-host), judged by the household row
     if (!m || !isHouseholdAdmin(householdPerson(h.id, m.user_id))) throw new AuthError(403, t('Only admins can export the household.'));
-    const out = buildExport({ viewer: m.user_id });
+    const out: Record<string, unknown> = buildExport({ viewer: m.user_id });
+    // Hausinfo codes only when the admin ticks "with codes" (?codes=1) – house-guide.ts
+    if (req.query.codes === '1') out.house_codes = exportCodes();
     res.setHeader('Content-Disposition', `attachment; filename="tohuus-export-${new Date().toISOString().slice(0, 10)}.json"`);
     res.setHeader('Cache-Control', 'no-store');
     return { ...out, plan: currentPlan() };

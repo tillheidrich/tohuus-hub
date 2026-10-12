@@ -236,3 +236,20 @@ export function guestVoice(linkId: number) {
   if (!items.length) return null;
   return { assistant: a, assistant_name: assistantName(a), items };
 }
+
+// ---------------------------------------------------------------- Hausinfo (house-guide.ts)
+
+/** Scenes and scripts are routines ("Alexa, gute Nacht") – the guide shows them apart from single devices. */
+export const isRoutineDomain = (domain: string) => domain === 'scene' || domain === 'script' || domain === 'automation';
+
+/** The voice list grouped by area (rooms first in their order, then "everywhere"), each item marked device/routine. */
+export function voiceByArea(items: Pick<VoiceItem, 'id' | 'name' | 'area' | 'domain' | 'phrases'>[]) {
+  const groups = new Map<string, { area: string | null; items: (Pick<VoiceItem, 'id' | 'name' | 'area' | 'domain' | 'phrases'> & { kind: 'device' | 'routine' })[] }>();
+  for (const i of items) {
+    const k = i.area ?? '';
+    if (!groups.has(k)) groups.set(k, { area: i.area ?? null, items: [] });
+    groups.get(k)!.items.push({ ...i, kind: isRoutineDomain(i.domain) ? 'routine' : 'device' });
+  }
+  return [...groups.values()].sort((a, b) => (a.area === null ? 1 : b.area === null ? -1 : a.area.localeCompare(b.area)));
+}
+

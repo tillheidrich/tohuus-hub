@@ -59,6 +59,8 @@ import { startRenewalReminders } from './lib/renewals.js';
 import { AiError } from './lib/ai.js';
 import { r as list2Routes, pub as list2Public } from './routes/list2.js';
 import { caldav } from './lib/caldav.js';
+import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
+import { r as factsRoutes } from './routes/facts.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
@@ -135,6 +137,7 @@ app.get('/img/:name', serveImage);
 app.use('/img', (_req, res) => void res.status(404).end());
 
 app.use('/api', instance);
+app.use('/api', factsRoutes);
 app.use('/api', appAuth);
 app.use('/api', billingPublic);
 if (config.multiTenant) {
@@ -148,6 +151,7 @@ if (config.multiTenant) {
 app.use(sharePublic);
 app.use('/api/guest', guest);
 app.use('/api/guest', ha2Guest);
+app.use('/api/guest', houseGuest);
 app.use('/api/party-board', partyBoard);
 app.use(kioskPublic);
 app.use('/api/kid', kidDevice);
@@ -196,6 +200,7 @@ app.use('/api', aiSettingsRoutes);
 app.use('/api', oauthRoutes);
 app.use('/api', moveRoutes);
 app.use('/api', list2Routes);
+app.use('/api', houseGuideRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

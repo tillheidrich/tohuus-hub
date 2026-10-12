@@ -5,6 +5,9 @@
  * Tool results that go back to the model pass the same privacy filter as MCP (people-signals.ts): no private list
  * items, no names behind per-person reasons, no health data without the household's consent.
  */
+import { recipeToShopping } from './recipe-list.js';
+import { AREA_TOOL_DEFS, AREA_TOOLS_BY_TOPIC, runAreaTool, undoArea } from './assistant-areas.js';
+import { guideOverviewForAi, searchGuide } from './house-guide.js';
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
 import { localeOf } from '../languages.js';
@@ -63,9 +66,10 @@ type Undo =
   | { kind: 'delete_plan'; id: number }
   | { kind: 'forget'; id: number }
   | { kind: 'restore_memory'; rows: MemoryRow[] }
-  | { kind: 'purchase'; importId: number; expenseId: number | null; ticked: number[] };
+  | { kind: 'purchase'; importId: number; expenseId: number | null; ticked: number[] }
+  | { kind: 'unmerge' | 'delete_recipe' | 'delete_house_cards' | 'stock_add'; [k: string]: unknown };
 
-function record(ctx: ToolCtx, kind: string, summary: string, undo: Undo | null) {
+export function record(ctx: ToolCtx, kind: string, summary: string, undo: Undo | null) {
   let token: string | undefined;
   if (undo) {
     token = crypto.randomBytes(16).toString('hex');
@@ -130,6 +134,9 @@ export function runUndo(token: string, userId: number | null, isAdmin = false) {
         }
         for (const id of u.ticked) db.prepare(`UPDATE shopping_items SET checked_at = NULL, checked_by = NULL WHERE id = ? AND stock_booked IS NULL`).run(id);
         break;
+      default:
+        // area tools (assistant-areas.ts): merged duplicates, adapted recipes, drafted Hausinfo cards, photo stock
+        undoArea(u);
     }
     db.prepare(`UPDATE assistant_undo SET used_at = datetime('now') WHERE token = ?`).run(token);
   })();
@@ -337,27 +344,12 @@ export function planMeal(ctx: ToolCtx, input: { day?: string | null; recipe?: st
 export function recipeToList(ctx: ToolCtx, recipe: string | number) {
   const rec = findRecipe(recipe);
   if (!rec) return { error: t('No recipe called “{name}” was found.', { name: String(recipe) }) };
-  const s = suggest({ limit: 999 }).find((x) => x.recipe.id === rec.id);
-  const missing = s?.missing ?? [];
-  const created: number[] = [];
-  const names: string[] = [];
-  for (const m of missing) {
-    const match = matchIngredient(m);
-    const r = addToShopping({
-      productId: match && match.score >= 0.72 ? match.productId : null,
-      text: m,
-      note: rec.title,
-      source: 'recipe',
-      addedBy: ctx.actor,
-      origin: { kind: 'recipe', recipe: rec.title, recipeId: rec.id },
-    });
-    if (r.created) {
-      created.push(r.id);
-      names.push(m);
-    }
-  }
+  // each row keeps its ingredient line ("für Curry: 2 Hähnchenbrustfilets"), amounts merge only when safe (recipe-list.ts)
+  const out = recipeToShopping(rec.id, { actor: ctx.actor });
+  const created = out?.created ?? [];
+  const names = out?.names ?? [];
   if (created.length) record(ctx, 'recipe_to_list', t('Put {items} on the list for {title}', { items: joinNames(names), title: rec.title }), { kind: 'delete_items', ids: created });
-  return { recipe: rec.title, added: names, nothing_missing: missing.length === 0 };
+  return { recipe: rec.title, added: names, nothing_missing: (out?.missing.length ?? 0) === 0 };
 }
 
 export function moneySummary(input: { month?: string | null; shop?: string | null; category?: string | null }) {
@@ -478,6 +470,8 @@ export const TOOL_DEFS: ToolDef[] = [
   fn('log_purchase', 'Record a purchase the person tells about.', { shop: { type: 'string' }, total: { type: 'number' }, date: { type: 'string' }, items: arr(obj({ name: { type: 'string' }, qty: { type: 'number' }, price: { type: 'number' } }, ['name'])) }, ['items']),
   fn('remember', 'Remember a household fact or preference – only when asked ("merk dir …").', { text: { type: 'string' }, kind: { type: 'string', enum: ['fact', 'preference', 'routine'] } }, ['text']),
   fn('forget', 'Forget something remembered (id or text).', { text: { type: 'string' }, id: { type: 'integer' } }),
+  fn('house_info', 'How things work at home (Hausinfo): voice commands, routines, heating, blinds, bins, TV, fuse box, numbers. Never codes.', { query: { type: 'string' } }),
+  ...AREA_TOOL_DEFS,
 ];
 
 const TOOLS_BY_TOPIC: Record<string, string[]> = {
@@ -487,8 +481,10 @@ const TOOLS_BY_TOPIC: Record<string, string[]> = {
 };
 
 /** Only the tools a message can need (fewer tokens, fewer wrong calls). */
-export function toolsFor(topics: string[]): ToolDef[] {
-  const names = new Set(['remember', 'forget', ...topics.flatMap((t) => TOOLS_BY_TOPIC[t] ?? [])]);
+export function toolsFor(topics: string[], screen = false): ToolDef[] {
+  // the per-screen tools (assistant-areas.ts) come with a screen context; stock, house and guests always bring theirs
+  const area = (t: string) => (screen || ['stock', 'house', 'guests'].includes(t) ? (AREA_TOOLS_BY_TOPIC[t] ?? []) : []);
+  const names = new Set(['remember', 'forget', ...topics.flatMap((t) => [...(TOOLS_BY_TOPIC[t] ?? []), ...area(t)])]);
   return TOOL_DEFS.filter((d) => names.has(d.function.name));
 }
 
@@ -557,8 +553,13 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
         return rememberTool(ctx, a);
       case 'forget':
         return forgetTool(ctx, a);
-      default:
-        return { error: `unknown tool ${name}` };
+      case 'house_info':
+        // Hausinfo: finished, member-visible cards only; codes never (house-guide.ts scrubs code values as well)
+        return typeof a.query === 'string' && a.query.trim() ? searchGuide(a.query, 6) : guideOverviewForAi();
+      default: {
+        const area = runAreaTool({ actor: ctx.actor, userId: ctx.userId, record: (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null) }, name, a);
+        return area === undefined ? { error: `unknown tool ${name}` } : area;
+      }
     }
   })();
   return red.deep(out);

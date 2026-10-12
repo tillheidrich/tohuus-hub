@@ -1,6 +1,7 @@
 import { Basket, Check, Coffee, Cookie, IceCream, MagnifyingGlass, Martini, Minus, Pizza, Plus } from '@phosphor-icons/react';
 import { FindList, type Found, useDebounce } from './Find';
 import { GuestVoice } from './Ha2';
+import { GuestHouse } from './HouseGuide';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -62,8 +63,9 @@ export interface OrderSource {
 export function Guest() {
   const { token = '' } = useParams();
   const info = useQuery({ queryKey: ['orders', 'guest-info', token], queryFn: () => gapi(token, '') , retry: false });
-  const scopes: string[] = info.data?.scopes ?? [];
-  const [tab, setTab] = useState<'bar' | 'stock' | 'shopping'>('bar');
+  // Hausinfo is its own tab when something is shared with this link (house-guide.ts)
+  const scopes: string[] = [...(info.data?.scopes ?? []), ...(info.data?.house_guide ? ['house'] : [])];
+  const [tab, setTab] = useState<'bar' | 'stock' | 'shopping' | 'house'>('bar');
   useEffect(() => {
     if (scopes.length && !scopes.includes(tab)) setTab(scopes[0] as any);
   }, [scopes, tab]);
@@ -94,20 +96,21 @@ export function Guest() {
     <div className="guest">
       <>
           <div className="eyebrow">{info.data.household} · {info.data.name}</div>
-          <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? t('Fancy something?') : tab === 'stock' ? t('Where is what?') : t('What’s missing?')}</h1>
+          <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? t('Fancy something?') : tab === 'stock' ? t('Where is what?') : tab === 'house' ? t('How things work here') : t('What’s missing?')}</h1>
           <p className="muted" style={{ marginTop: 0 }}>
-            {tab === 'bar' ? (info.data.party ? t('Order here – we’ll call you when it’s ready at the counter.') : t('Drinks, ice cream and snacks – just order and we’ll bring it over.')) : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : t('Add it to our shopping list.')}
+            {tab === 'bar' ? (info.data.party ? t('Order here – we’ll call you when it’s ready at the counter.') : t('Drinks, ice cream and snacks – just order and we’ll bring it over.')) : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : tab === 'house' ? t('Voice commands, tips and important numbers – stays readable without a connection once opened.') : t('Add it to our shopping list.')}
           </p>
       </>
       {info.data.note && <div className="note-card" style={{ margin: '14px 0' }}>{info.data.note}</div>}
       {scopes.length > 1 && (
         <div style={{ margin: '14px 0' }}>
-          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list') } as Record<string, string>)[s] ?? s]) as any} />
+          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list'), house: t('House info') } as Record<string, string>)[s] ?? s]) as any} />
         </div>
       )}
       {tab === 'bar' && <OrderMenu src={{ key: `guest-${token}`, party: Boolean(info.data.party), menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
+      {tab === 'house' && <GuestHouse token={token} household={info.data.household} />}
       <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{t('ToHuus Hub · your household, self-hosted')}</p>
     </div>
   );
@@ -435,10 +438,20 @@ function GuestStock({ token }: { token: string }) {
       </div>
       {res.isLoading ? (
         <div className="skel" style={{ height: 200 }} />
-      ) : things.length === 0 ? (
+      ) : things.length === 0 && !(res.data?.house ?? []).length ? (
         <div className="card"><Empty icon={<MagnifyingGlass size={24} />} title={dq ? t('We can’t find “{q}” here', { q: dq }) : t('Nothing added yet')}>{t('Best to give us a quick call or message.')}</Empty></div>
       ) : (
-        <FindList things={things} grouped={!dq} />
+        <>
+          {(res.data?.house ?? []).map((h: any, i: number) => (
+            <div key={`h${i}`} className="card pad hg-hit">
+              <b>{h.title}</b>
+              {h.area && <span className="small muted"> · {h.area}</span>}
+              <p style={{ margin: '4px 0 0' }}>{h.how}</p>
+              {h.what && <p className="small muted" style={{ margin: '2px 0 0' }}>{h.what}</p>}
+            </div>
+          ))}
+          {things.length > 0 && <FindList things={things} grouped={!dq} />}
+        </>
       )}
       {!dq && <GuestVoice token={token} />}
     </div>

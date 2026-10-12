@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "retrieved": "2026-10-12",
+  "facts": [
+    {
+      "id": "food-waste-households",
+      "topic": "food-waste",
+      "title": { "de": "Der größte Teil fällt zu Hause an", "en": "Most of it happens at home" },
+      "text": {
+        "de": "2020 fielen in Deutschland rund 11 Millionen Tonnen Lebensmittelabfälle an. Rund 59 Prozent davon, 6,5 Millionen Tonnen, kamen aus privaten Haushalten – knapp 78 kg pro Kopf. Schalen und Knochen sind mitgezählt.",
+        "en": "In 2020 Germany produced about 11 million tonnes of food waste. About 59 percent of it, 6.5 million tonnes, came from private households – just under 78 kg per person. Peels and bones are included."
+      },
+      "tohuus": {
+        "de": "ToHuus merkt sich, was ihr gekauft habt, und zeigt auf „Heute“, was bald weg sollte – ohne dass ihr einen Vorrat pflegen müsst.",
+        "en": "ToHuus remembers what you bought and shows on “Today” what should be used soon – without keeping a stock list."
+      },
+      "sources": [
+        { "title": "Essen für die Tonne: 11 Mio. Tonnen Lebensmittel", "publisher": "Umweltbundesamt", "url": "https://www.umweltbundesamt.de/themen/essen-fuer-die-tonne-11-mio-tonnen-lebensmittel", "retrieved": "2026-10-12", "note": "Zahlen für 2020, wie 2022 an die EU-Kommission gemeldet." }
+      ]
+    },
+    {
+      "id": "food-waste-avoidable",
+      "topic": "food-waste",
+      "title": { "de": "Etwa 40 Prozent wären vermeidbar", "en": "About 40 percent could be avoided" },
+      "text": {
+        "de": "Im Haushaltstagebuch der GfK für das Bundesernährungsministerium kamen 2020 rund 56 kg Lebensmittelabfall pro Person und Jahr zusammen. Etwa 40 Prozent davon galten als vermeidbar.",
+        "en": "In the GfK household diary study for the German food ministry, households threw away about 56 kg of food per person in 2020. About 40 percent of it counted as avoidable."
+      },
+      "tohuus": {
+        "de": "„Daraus könnt ihr heute kochen“ fängt bei dem an, was schon da ist – erst danach kommt, was fehlt.",
+        "en": "“You can cook this today” starts with what is already there – only then with what is missing."
+      },
+      "sources": [
+        { "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)", "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt", "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf", "retrieved": "2026-10-12", "note": "Tagebuchstudie mit rund 6 000 Haushalten; andere Methode als die EU-Meldung, daher kleinere Menge." }
+      ]
+    },
+    {
+      "id": "food-waste-household-size",
+      "topic": "food-waste",
+      "title": { "de": "Allein wirft man pro Kopf mehr weg", "en": "Living alone means more waste per person" },
+      "text": {
+        "de": "Pro Person warfen Einpersonenhaushalte 2020 rund 79 kg weg, Zweipersonenhaushalte rund 59 kg und Haushalte mit drei und mehr Personen rund 44 kg.",
+        "en": "Per person, single households threw away about 79 kg in 2020, two-person households about 59 kg and households of three or more about 44 kg."
+      },
+      "tohuus": {
+        "de": "ToHuus ist für Singles genauso gebaut wie für Familien: Portionen lassen sich direkt eintippen, und die Einkaufsliste rechnet mit.",
+        "en": "ToHuus works for singles just as for families: type the servings directly and the shopping list follows."
+      },
+      "sources": [
+        { "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)", "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt", "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "food-waste-fruit-veg-bread",
+      "topic": "food-waste",
+      "title": { "de": "Obst, Gemüse und Brot vorneweg", "en": "Fruit, vegetables and bread first" },
+      "text": {
+        "de": "Frisches Obst und Gemüse machen rund ein Drittel der vermeidbaren Abfälle aus, Brot und Backwaren etwa 13 Prozent.",
+        "en": "Fresh fruit and vegetables make up about a third of avoidable household waste, bread and baked goods about 13 percent."
+      },
+      "tohuus": {
+        "de": "Die Kochideen bevorzugen Rezepte mit dem, was bald weg muss – und zeigen, was davon schon da ist.",
+        "en": "Cook ideas prefer recipes that use what has to go soon – and show what of it is already there."
+      },
+      "sources": [
+        { "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)", "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt", "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "food-waste-wrong-amount",
+      "topic": "shopping-list",
+      "title": { "de": "Falsche Menge gekauft", "en": "Bought the wrong amount" },
+      "text": {
+        "de": "Bei rund 13 Prozent der vermeidbaren Abfälle war zu viel oder eine zu große Packung gekauft worden (7 Prozent falsche Menge, 6 Prozent zu große Packung).",
+        "en": "Around 13 percent of avoidable waste came from buying too much or too large a pack (7 percent wrong amount, 6 percent pack too large)."
+      },
+      "tohuus": {
+        "de": "Aus dem Rezept kommt die Zeile mit auf die Liste („für Curry: 2 Hähnchenbrustfilets“), und Mengen werden nur zusammengezählt, wenn die Einheiten passen.",
+        "en": "From a recipe, the line goes onto the list (“for curry: 2 chicken breasts”), and amounts are only added up when the units match."
+      },
+      "sources": [
+        { "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020", "publisher": "Zu gut für die Tonne! (BMEL)", "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "food-waste-cost",
+      "topic": "food-waste",
+      "title": { "de": "Rund 137 Euro im Jahr", "en": "About 137 euros a year" },
+      "text": {
+        "de": "Die vermeidbaren Lebensmittelabfälle eines durchschnittlichen Haushalts waren 2020 rund 137 Euro im Jahr wert.",
+        "en": "The avoidable food waste of an average household was worth about 137 euros a year in 2020."
+      },
+      "tohuus": {
+        "de": "Unter „Geld“ seht ihr, was Lebensmittel und Haushalt euch wirklich kosten – aus euren eigenen Kassenbons.",
+        "en": "Under “Money” you see what food and household really cost you – from your own receipts."
+      },
+      "sources": [
+        { "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020", "publisher": "Zu gut für die Tonne! (BMEL)", "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "best-before-vs-use-by",
+      "topic": "dates",
+      "title": { "de": "Mindestens haltbar ist nicht „sofort weg“", "en": "Best before is not “bin it”" },
+      "text": {
+        "de": "Nach dem Mindesthaltbarkeitsdatum („mindestens haltbar bis“) sind richtig gelagerte, ungeöffnete Lebensmittel oft noch gut – Aussehen, Geruch und Geschmack entscheiden. Nach dem Verbrauchsdatum („zu verbrauchen bis“), etwa bei Hackfleisch oder frischem Fisch, soll man sie nicht mehr essen.",
+        "en": "After the best-before date, properly stored, unopened food is often still fine – look, smell and taste decide. After the use-by date, for example on minced meat or fresh fish, it should not be eaten any more."
+      },
+      "tohuus": {
+        "de": "ToHuus unterscheidet beide Daten: „mindestens haltbar“ ist ein Hinweis zum Prüfen, „zu verbrauchen bis“ eine echte Grenze.",
+        "en": "ToHuus tells the two apart: best before is a hint to check, use by is a real limit."
+      },
+      "sources": [
+        { "title": "Mindesthaltbarkeitsdatum (MHD) ist nicht gleich Verbrauchsdatum", "publisher": "Verbraucherzentrale", "url": "https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/mindesthaltbarkeitsdatum-mhd-ist-nicht-gleich-verbrauchsdatum-13452", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "best-before-small-share",
+      "topic": "dates",
+      "title": { "de": "Am Datum liegt es selten", "en": "The date is rarely the reason" },
+      "text": {
+        "de": "Ein abgelaufenes Mindesthaltbarkeitsdatum war 2020 nur bei rund 5 Prozent der vermeidbaren Haushaltsabfälle der Hauptgrund. Viel häufiger war etwas verdorben (36 Prozent) oder es war zu viel gekocht (17 Prozent).",
+        "en": "An expired best-before date was the main reason for only about 5 percent of avoidable household waste in 2020. Much more often food had gone off (36 percent) or too much had been cooked (17 percent)."
+      },
+      "tohuus": {
+        "de": "Reste lassen sich beim Kochen als Box festhalten – ToHuus erinnert daran, bevor sie hinten im Kühlschrank verschwinden.",
+        "en": "Leftovers can be noted as a box after cooking – ToHuus reminds you before they disappear at the back of the fridge."
+      },
+      "sources": [
+        { "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020", "publisher": "Zu gut für die Tonne! (BMEL)", "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "shopping-list-tip",
+      "topic": "shopping-list",
+      "title": { "de": "Der Einkaufszettel hilft", "en": "The shopping list helps" },
+      "text": {
+        "de": "Die Verbraucherzentrale nennt den Einkaufszettel als einen der einfachsten Wege, weniger Lebensmittel wegzuwerfen: kaufen, was gebraucht wird, statt was gerade im Angebot liegt.",
+        "en": "The German consumer advice centres name the shopping list as one of the easiest ways to throw away less food: buy what is needed, not what happens to be on offer."
+      },
+      "tohuus": {
+        "de": "Eine gemeinsame Liste für alle, jede Zeile mit Herkunft – und Vorschläge aus eurem Kaufrhythmus, die erst nach einem Ja draufkommen.",
+        "en": "One shared list for everyone, every row with its origin – and suggestions from your purchase rhythm that only go on after a yes."
+      },
+      "sources": [
+        { "title": "Lebensmittel wertschätzen und vor der Tonne bewahren", "publisher": "Verbraucherzentrale", "url": "https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/lebensmittel-wertschaetzen-und-vor-der-tonne-bewahren-59543", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "mental-load",
+      "topic": "mental-load",
+      "title": { "de": "Wer denkt an alles?", "en": "Who keeps track of everything?" },
+      "text": {
+        "de": "Nach einer Auswertung des WSI (Hans-Böckler-Stiftung, 2023) liegt die geschätzte Wahrscheinlichkeit, die Alltagsorganisation überwiegend zu übernehmen, bei erwerbstätigen Frauen bei 62 Prozent, bei Männern bei 20 Prozent; bei Frauen mit Kindern bei 74 Prozent. Es sind Modellwerte aus einer Befragung von rund 2 200 Erwerbspersonen, keine Auszählung.",
+        "en": "According to an analysis by the WSI (Hans Böckler Foundation, 2023), the estimated probability of mainly doing the everyday organising is 62 percent for employed women and 20 percent for men; 74 percent for women with children. These are model values from a survey of about 2,200 people in work, not a head count."
+      },
+      "tohuus": {
+        "de": "Alle tragen zur selben Liste bei, ToHuus merkt sich den Rest. Niemand muss etwas pflegen oder „zuständig“ sein.",
+        "en": "Everyone adds to the same list, ToHuus remembers the rest. Nobody has to keep anything up to date or be “in charge”."
+      },
+      "sources": [
+        { "title": "Pressemitteilung: Alltagsorganisation bei Paaren und Familien (WSI Report Nr. 87)", "publisher": "Hans-Böckler-Stiftung / WSI", "url": "https://www.boeckler.de/de/pressemitteilungen-2675-alltagsorganisation-bei-paaren-und-familien-51349.htm", "retrieved": "2026-10-12", "note": "Lott, Bünger: Mental Load – Frauen tragen die überwiegende Last, WSI Report 87, August 2023." }
+      ]
+    },
+    {
+      "id": "stockpile-days",
+      "topic": "stockpiling",
+      "title": { "de": "Vorrat für zehn Tage", "en": "Supplies for ten days" },
+      "text": {
+        "de": "Das Bundesamt für Bevölkerungsschutz empfiehlt, sich möglichst zehn Tage selbst versorgen zu können – schon drei Tage helfen sehr. Beim Wasser rechnet es mit 2 Litern pro Person und Tag, davon 0,5 Liter zum Kochen.",
+        "en": "The German Federal Office of Civil Protection recommends being able to look after yourselves for ten days if possible – even three days help a lot. For water it counts 2 litres per person and day, 0.5 litres of it for cooking."
+      },
+      "tohuus": {
+        "de": "Vorrat ist in ToHuus freiwillig. Wer einen hält, sieht, was bald ersetzt werden sollte – ohne Pflicht zum Pflegen.",
+        "en": "Keeping stock is optional in ToHuus. If you do, you see what should be replaced soon – without having to maintain it."
+      },
+      "sources": [
+        { "title": "Vorsorgen für Krisen und Katastrophen (Ratgeber)", "publisher": "Bundesamt für Bevölkerungsschutz und Katastrophenhilfe (BBK)", "url": "https://www.bbk.bund.de/SharedDocs/Downloads/DE/Mediathek/Publikationen/Buergerinformationen/Ratgeber/ratgeber-notfallvorsorge.pdf?__blob=publicationFile", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "unit-price",
+      "topic": "unit-prices",
+      "title": { "de": "Der Grundpreis gilt pro Kilo oder Liter", "en": "The unit price is per kilo or litre" },
+      "text": {
+        "de": "Händler müssen bei verpackter Ware neben dem Gesamtpreis den Grundpreis angeben – seit der neuen Preisangabenverordnung je 1 Kilogramm oder 1 Liter. Nur bei loser Ware darf es auch je 100 Gramm oder 100 Milliliter sein.",
+        "en": "Shops must show the unit price next to the total price of packaged goods – under the current German price indication rules per 1 kilogram or 1 litre. Only loose goods may use 100 grams or 100 millilitres."
+      },
+      "tohuus": {
+        "de": "Bei Preisänderungen rechnet ToHuus aus euren Bons den Preis pro Kilo oder Liter – so fallen kleinere Packungen zum alten Preis auf.",
+        "en": "For price changes, ToHuus works out the price per kilo or litre from your receipts – so smaller packs at the old price stand out."
+      },
+      "sources": [
+        { "title": "Preisangabenverordnung (PAngV) § 4 Pflicht zur Angabe des Grundpreises", "publisher": "Bundesministerium der Justiz – gesetze-im-internet.de", "url": "https://www.gesetze-im-internet.de/pangv_2022/__4.html", "retrieved": "2026-10-12" },
+        { "title": "Preisangabenverordnung (PAngV) § 5 Mengeneinheit für die Angabe des Grundpreises", "publisher": "Bundesministerium der Justiz – gesetze-im-internet.de", "url": "https://www.gesetze-im-internet.de/pangv_2022/__5.html", "retrieved": "2026-10-12" }
+      ]
+    },
+    {
+      "id": "food-prices",
+      "topic": "prices",
+      "title": { "de": "Lebensmittel wurden deutlich teurer", "en": "Food got a lot more expensive" },
+      "text": {
+        "de": "Nahrungsmittel kosteten 2023 im Jahresdurchschnitt 12,4 Prozent mehr als 2022 – nachdem sie 2022 schon um 13,4 Prozent gestiegen waren. Die Inflationsrate insgesamt lag 2023 bei 5,9 Prozent.",
+        "en": "On annual average, food cost 12.4 percent more in 2023 than in 2022 – after rising by 13.4 percent in 2022 already. Overall inflation in 2023 was 5.9 percent."
+      },
+      "tohuus": {
+        "de": "ToHuus zeigt nicht den Durchschnitt, sondern eure eigenen Preisänderungen – bei den Dingen, die ihr wirklich kauft.",
+        "en": "ToHuus shows not the average but your own price changes – for the things you actually buy."
+      },
+      "sources": [
+        { "title": "Press release No. 020 of 16 January 2024: Inflation rate at +5.9% in 2023", "publisher": "Statistisches Bundesamt (Destatis)", "url": "https://www.destatis.de/EN/Press/2024/01/PE24_020_611.html", "retrieved": "2026-10-12" }
+      ]
+    }
+  ]
+}

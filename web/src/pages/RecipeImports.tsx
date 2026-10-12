@@ -21,8 +21,12 @@ interface PreviewItem {
   source_type: string;
   translated: boolean;
   existing_id: number | null;
+  /** same title, but not the recipe this would update – possible duplicate, preselected off */
+  similar_id?: number | null;
+  has_photo?: boolean;
+  devices?: string[];
 }
-interface Staged {
+export interface Staged {
   session: string;
   format: string;
   format_label: string;
@@ -30,6 +34,7 @@ interface Staged {
   updates: number;
   recipes: PreviewItem[];
   errors: { index: number; title: string | null; error: string }[];
+  warnings?: string[];
 }
 interface JobState {
   total: number;
@@ -243,7 +248,7 @@ const APP_HINTS: [string, string][] = [
   ['CSV', 'columns name, ingredients, instructions, servings, time, url, image, tags'],
 ];
 
-function FileImportCard({ icon, title, text, onStaged, apps = false }: { icon: React.ReactNode; title: string; text: string; onStaged: (s: Staged) => void; apps?: boolean }) {
+export function FileImportCard({ icon, title, text, onStaged, apps = false, hint }: { icon: React.ReactNode; title: string; text: string; onStaged: (s: Staged) => void; apps?: boolean; hint?: string }) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
@@ -302,7 +307,7 @@ function FileImportCard({ icon, title, text, onStaged, apps = false }: { icon: R
       >
         <FileArrowUp size={26} />
         <b>{busy ? t('Reading the file…') : t('Choose file')}</b>
-        <span className="small muted">{apps ? t('zip, JSON, .paprikarecipes or CSV – up to 100 MB') : t('JSON – up to 1000 recipes')}</span>
+        <span className="small muted">{hint ?? (apps ? t('zip, JSON, .paprikarecipes or CSV – up to 100 MB') : t('JSON – up to 1000 recipes'))}</span>
       </div>
       {error && (
         <div className="small" style={{ color: 'var(--empty)' }}>
@@ -398,7 +403,8 @@ export function ImportPreviewSheet({ staged, onClose }: { staged: Staged | null;
   const timer = useRef<number | null>(null);
   const nav = useNavigate();
   useEffect(() => {
-    setSel(new Set(staged?.recipes.map((r) => r.index) ?? []));
+    // possible duplicates (same name, different source) start unticked – nothing is doubled by accident
+    setSel(new Set(staged?.recipes.filter((r) => !r.similar_id).map((r) => r.index) ?? []));
     setJob(null);
     setError(null);
   }, [staged]);
@@ -483,6 +489,19 @@ export function ImportPreviewSheet({ staged, onClose }: { staged: Staged | null;
                 .filter(Boolean)
                 .join(' · ')}
             </div>
+            {(staged.warnings?.length ?? 0) > 0 && (
+              <details className="small">
+                <summary className="linkish pkg-warn">
+                  <WarningCircle size={14} /> {staged.warnings!.length === 1 ? t('1 note') : t('{n} notes', { n: staged.warnings!.length })}
+                </summary>
+                <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                  {staged.warnings!.slice(0, 50).map((w, n) => (
+                    <li key={n} className="muted">{w}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+            {staged.recipes.some((r) => r.similar_id) && <div className="small muted">{t('Recipes with the same name are already here. They are not ticked – tick them if you want them twice.')}</div>}
             {staged.errors.length > 0 && <ErrorList errors={staged.errors} title={staged.errors.length === 1 ? t('1 entry can’t be imported') : t('{n} entries can’t be imported', { n: staged.errors.length })} />}
             {staged.recipes.length > 1 && (
               <div className="row between">
@@ -509,12 +528,14 @@ export function ImportPreviewSheet({ staged, onClose }: { staged: Staged | null;
                           r.ingredients === 1 ? t('1 ingredient') : t('{n} ingredients', { n: r.ingredients }),
                           r.instructions_available ? (r.steps === 1 ? t('1 step') : t('{n} steps', { n: r.steps })) : t('Steps in Cookidoo'),
                           r.translated ? t('translated') : null,
+                          r.has_photo ? t('with photo') : null,
+                          r.devices?.length ? r.devices.join(', ') : null,
                         ]
                           .filter(Boolean)
                           .join(' · ')}
                       </div>
                     </div>
-                    {r.existing_id ? <span className="badge">{t('update')}</span> : <span className="badge good">{t('new')}</span>}
+                    {r.existing_id ? <span className="badge">{t('update')}</span> : r.similar_id ? <span className="badge maybe">{t('already here?')}</span> : <span className="badge good">{t('new')}</span>}
                   </div>
                 ))}
                 {staged.recipes.length > SHOW_MAX && <div className="li small muted">{t('… and {n} more', { n: staged.recipes.length - SHOW_MAX })}</div>}
@@ -578,10 +599,11 @@ export function StepsElsewhere({ r }: { r: any }) {
       <b>{t('Steps in {app}', { app })}</b>
       <div className="small muted">{t('The steps are only available in {app}. Ingredients, planning and shopping work here as usual.', { app })}</div>
       {r.source_url && (
-        <a className="btn" style={{ alignSelf: 'flex-start' }} href={r.source_url} target="_blank" rel="noreferrer">
-          <ArrowSquareOut size={16} /> {t('Open in {app}', { app })}
+        <a className="btn primary" style={{ alignSelf: 'flex-start' }} href={r.source_url} target="_blank" rel="noreferrer">
+          <ArrowSquareOut size={16} /> {r.source_type === 'cookidoo' ? t('Open in Cookidoo to cook') : t('Open in {app}', { app })}
         </a>
       )}
+      {r.source_type === 'cookidoo' && !r.image_path && <div className="small muted">{t('Tip: take a photo of your own dish next time – then you will recognise it in the list.')}</div>}
     </div>
   );
 }

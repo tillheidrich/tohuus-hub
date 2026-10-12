@@ -3,11 +3,12 @@
  * included). Opened from a plan entry it starts with that entry's one-off servings and can save a change back.
  * A permanent change belongs in "Our way" (variant servings); this stays a one-off.
  */
-import { CalendarBlank, Users } from '@phosphor-icons/react';
+import { CalendarBlank, Minus, Plus, Users } from '@phosphor-icons/react';
+import { useEffect, useState } from 'react';
 import { invalidate, patch } from '../api';
 import { locale, t } from '../i18n';
 import { leadingAmount } from '../scale';
-import { Stepper, useToast } from '../ui';
+import { useToast } from '../ui';
 
 export function RecipeServings({ base, value, onChange, entry }: { base: number | null; value: number | null; onChange: (v: number | null) => void; entry: any | null }) {
   const toast = useToast();
@@ -64,7 +65,38 @@ export function RecipeServings({ base, value, onChange, entry }: { base: number 
           </div>
         )}
       </div>
-      <Stepper value={cur ?? base} min={1} onChange={step} />
+      <ServingsInput value={cur ?? base} onStep={step} onSet={(n) => onChange(n === base ? null : n)} />
+    </div>
+  );
+}
+
+/** − [ 6 ] + : the number can be typed directly ("for 7"), the buttons still work. */
+function ServingsInput({ value, onStep, onSet }: { value: number; onStep: (d: number) => void; onSet: (n: number) => void }) {
+  const [text, setText] = useState(String(value));
+  useEffect(() => setText(String(value)), [value]);
+  const commit = () => {
+    const n = Math.round(Number(text.replace(',', '.')));
+    if (Number.isFinite(n) && n >= 1 && n <= 60) onSet(n);
+    else setText(String(value));
+  };
+  return (
+    <div className="stepper" onClick={(e) => e.stopPropagation()}>
+      <button aria-label={t('less')} onClick={() => onStep(-1)} disabled={value <= 1}>
+        <Minus size={16} weight="bold" />
+      </button>
+      <input
+        className="servings-input"
+        inputMode="numeric"
+        aria-label={t('Servings')}
+        value={text}
+        onChange={(e) => setText(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+        onFocus={(e) => e.target.select()}
+      />
+      <button aria-label={t('more')} onClick={() => onStep(1)} disabled={value >= 60}>
+        <Plus size={16} weight="bold" />
+      </button>
     </div>
   );
 }

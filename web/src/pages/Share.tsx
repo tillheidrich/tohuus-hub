@@ -235,9 +235,16 @@ export function ShareLanding({ me }: { me: Me }) {
 
   const importRecipeUrl = (url: string) =>
     run(`recipe:${url}`, async () => {
-      const r = await post<{ id: number }>('/recipes/import/url', { url });
+      // the caption that came along with an Instagram/TikTok/… share is the recipe text (recipe-ai-import.ts)
+      const r = await post<{ id: number; incomplete?: boolean }>('/recipes/import/url', { url, text: payload?.text ?? null }).catch(async (e) => {
+        if ((e as { code?: string }).code !== 'cookidoo_confirm') throw e;
+        // ToHuus Cloud: Cookidoo recipes are confirmed by hand in the cook screen
+        await done(`/kochen?add=1&cookidoo=${encodeURIComponent(url)}`);
+        return null;
+      });
+      if (!r) return;
       invalidate('recipes');
-      toast({ text: t('Recipe saved') });
+      toast({ text: r.incomplete ? t('The post had no recipe text – the link and photo are saved. Add the ingredients, or a photo of the recipe.') : t('Recipe saved') });
       await done(`/rezepte/${r.id}`);
     });
 

@@ -1,17 +1,20 @@
-import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Plus, TextAa } from '@phosphor-icons/react';
-import { useMemo, useRef, useState } from 'react';
+import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Package, Plus, TextAa } from '@phosphor-icons/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { useQuery } from '@tanstack/react-query';
-import { api, invalidate, post, useApi } from '../api';
+import { ApiError, api, invalidate, post, useApi } from '../api';
 import { getOr, imgSrc } from '../data';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
-import { t } from '../i18n';
+import { lang, t } from '../i18n';
 import { WeekPlan } from './Week';
 import { SwipeDeck } from './SwipeDeck';
 import { VotesCard } from './Plan2';
 import { WhatToEatPanel } from './WhatToEat';
 import { SwapRulesCard } from './RecipeVariant';
+import { RecipePackageSheet } from './RecipePackage';
+import { CookidooSheet, type CookidooDraft } from './CookidooSheet';
+import { HowTo } from '../help';
 
 type View = 'ideas' | 'week' | 'recipes';
 const VIEW_KEY = 'sw.kitchen.view';
@@ -40,7 +43,14 @@ export function Kitchen({ me }: { me: Me }) {
       /* ignore */
     }
   };
-  const [importOpen, setImportOpen] = useState(() => sp.get('add') === '1');
+  const [importOpen, setImportOpen] = useState(() => sp.get('add') === '1' && !sp.get('cookidoo'));
+  // shared Cookidoo link in the cloud (Share page) → confirm title + ingredients here
+  const [ckDraft, setCkDraft] = useState<CookidooDraft | null>(null);
+  useEffect(() => {
+    const u = sp.get('cookidoo');
+    if (u) post<CookidooDraft>('/recipes/import/cookidoo/draft', { url: u }).then(setCkDraft).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const nav = useNavigate();
   const recipes = useApi<any[]>('recipes', '/recipes');
   return (
@@ -66,6 +76,7 @@ export function Kitchen({ me }: { me: Me }) {
       {view === 'week' && <WeekView />}
       {view === 'recipes' && <RecipesView recipes={recipes} />}
       <RecipeImport open={importOpen} onClose={() => setImportOpen(false)} vision={me.features.vision} />
+      <CookidooSheet draft={ckDraft} onClose={() => setCkDraft(null)} vision={me.features.vision} />
     </div>
   );
 }
@@ -97,7 +108,8 @@ function CookIdeas() {
   if (!q.data?.length) return null;
   const addMissing = async (i: Idea) => {
     const miss = (i.missing ?? []).map((m) => ({ name: missName(m), productId: typeof m === 'string' ? null : (m.productId ?? null) }));
-    await post('/shop/quick-add', { items: miss.map((m) => ({ name: m.name, product_id: m.productId ?? null })) });
+    // through the recipe: every row keeps its line as note ("für Curry: 2 Hähnchenbrustfilets")
+    await post(`/recipes/${i.recipeId}/shopping`, { only: miss.map((m) => m.name) });
     setAdded(new Set(added).add(i.recipeId));
     invalidate('shopping', 'today');
     toast({ text: miss.length === 1 ? t('{name} is on the shopping list', { name: miss[0].name }) : t('{n} things are on the shopping list', { n: miss.length }) });
@@ -189,26 +201,61 @@ function WeekView() {
   );
 }
 
+/** "mit: Hähnchen, Paprika" / "with: chicken" → ingredient search (no stock keeping needed). */
+const WITH_RE = /^\s*(mit|with)\s*:\s*(.+)$/i;
+export const ingredientTerms = (q: string) => {
+  const m = q.match(WITH_RE);
+  return m ? m[2].split(/[,;]| und | and /i).map((x) => x.trim()).filter(Boolean).slice(0, 6) : null;
+};
+
+interface IngredientHit {
+  id: number;
+  matched: string[];
+  missing: string[];
+}
+
 function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean } }) {
   const [q, setQ] = useState('');
+  const [pkgOpen, setPkgOpen] = useState(false);
   const nav = useNavigate();
+  const terms = ingredientTerms(q);
+  const termKey = terms?.join(',') ?? '';
+  const hits = useQuery<IngredientHit[]>({
+    queryKey: ['recipes', 'with', termKey],
+    queryFn: () => api<IngredientHit[]>(`/recipes/search?with=${encodeURIComponent(termKey)}`),
+    enabled: Boolean(termKey),
+  });
   const list = useMemo(() => {
+    const all = recipes.data ?? [];
+    if (terms) {
+      const byId = new Map(all.map((r) => [r.id, r]));
+      return (hits.data ?? []).map((h) => ({ ...byId.get(h.id), hit: h })).filter((r) => r.id);
+    }
     const n = q.toLowerCase().trim();
-    return (recipes.data ?? []).filter((r) => !n || `${r.title} ${r.tags.join(' ')}`.toLowerCase().includes(n));
-  }, [recipes.data, q]);
+    return all.filter((r) => !n || `${r.title} ${r.tags.join(' ')}`.toLowerCase().includes(n));
+  }, [recipes.data, q, hits.data, termKey]);
   return (
     <section>
-      <div className="searchbar" style={{ marginBottom: 12 }}>
+      <div className="searchbar" style={{ marginBottom: 8 }}>
         <MagnifyingGlass size={18} />
-        <input className="input" placeholder={t('Search recipes')} aria-label={t('Search recipes')} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input" placeholder={t('Search recipes – or “with: chicken, peppers”')} aria-label={t('Search recipes')} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      {recipes.isLoading ? (
+      <div className="row between wrap" style={{ gap: 8, marginBottom: 12 }}>
+        <button className="linkish" onClick={() => setQ(lang() === 'de' ? 'mit: ' : 'with: ')}>
+          {t('Search by ingredients')}
+        </button>
+        <button className="btn sm" onClick={() => setPkgOpen(true)}>
+          <Package size={16} /> {t('Upload recipe package')}
+        </button>
+      </div>
+      {terms && <p className="small muted" style={{ margin: '0 0 10px' }}>{t('Recipes with {list} – most matches first. Nothing needs to be in stock for this.', { list: terms.join(', ') })}</p>}
+      {recipes.isLoading || (terms && hits.isLoading) ? (
         <Skeleton n={2} h={180} />
       ) : list.length === 0 ? (
         <div className="card pad small muted">{q ? t('No recipe matches “{q}”.', { q }) : t('Your recipes will show up here.')}</div>
       ) : (
         <div className="rgrid">
-          {list.map((r) => (
+          {list.map((r: any) => (
             <button key={r.id} className="rcard" onClick={() => nav(`/rezepte/${r.id}`)}>
               <div className="img">
                 {r.image_path ? <img src={r.image_path} alt="" loading="lazy" /> : <ChefHat size={30} />}
@@ -218,7 +265,11 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
               <div className="body">
                 <b>{r.title}</b>
                 <span className="small muted">
-                  {[r.time_min ? t('{n} min', { n: r.time_min }) : null, r.cook_count ? t('cooked {n}×', { n: r.cook_count }) : t('never cooked')].filter(Boolean).join(' · ')}
+                  {r.hit
+                    ? r.hit.missing.length
+                      ? t('with {have} · without {missing}', { have: r.hit.matched.join(', '), missing: r.hit.missing.join(', ') })
+                      : t('with {have}', { have: r.hit.matched.join(', ') })
+                    : [r.time_min ? t('{n} min', { n: r.time_min }) : null, r.cook_count ? t('cooked {n}×', { n: r.cook_count }) : t('never cooked')].filter(Boolean).join(' · ')}
                 </span>
               </div>
             </button>
@@ -226,6 +277,7 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
         </div>
       )}
       <SwapRulesCard />
+      <RecipePackageSheet open={pkgOpen} onClose={() => setPkgOpen(false)} />
     </section>
   );
 }
@@ -235,20 +287,25 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
   const [url, setUrl] = useState('');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [cookidoo, setCookidoo] = useState<CookidooDraft | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const nav = useNavigate();
   const toast = useToast();
-  const done = (id: number) => {
+  const done = (r: { id: number; incomplete?: boolean; existed?: boolean }) => {
     invalidate('recipes', 'suggest');
     onClose();
-    nav(`/rezepte/${id}`);
+    if (r.incomplete) toast({ text: t('The post had no recipe text – the link and photo are saved. Add the ingredients, or a photo of the recipe.') });
+    else if (r.existed) toast({ text: t('You saved this one before.') });
+    nav(`/rezepte/${r.id}`);
   };
-  const run = async (fn: () => Promise<{ id: number }>) => {
+  const run = async (fn: () => Promise<{ id: number; incomplete?: boolean; existed?: boolean }>) => {
     setBusy(true);
     try {
-      done((await fn()).id);
+      done(await fn());
     } catch (e) {
-      toast({ text: (e as Error).message, error: true });
+      // ToHuus Cloud: a Cookidoo link is confirmed by hand (title + ingredients), nothing is fetched from Cookidoo
+      if (e instanceof ApiError && e.code === 'cookidoo_confirm') setCookidoo(await post<CookidooDraft>('/recipes/import/cookidoo/draft', { url }).catch(() => ({ url, title: '', ingredients: [] })));
+      else toast({ text: (e as Error).message, error: true });
     } finally {
       setBusy(false);
     }
@@ -261,8 +318,8 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
           <>
             <div className="field">
               <label>{t('Recipe link')}</label>
-              <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t('https://cookidoo.de/recipes/… or Chefkoch, HelloFresh …')} inputMode="url" />
-              <div className="help">{t('Works with almost any recipe site. Cookidoo brings ingredients and the photo along; steps only with a login.')}</div>
+              <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t('Recipe site, Instagram, TikTok, Pinterest, YouTube …')} inputMode="url" />
+              <div className="help">{t('Works with almost any recipe site and with posts from Instagram, TikTok, Pinterest and YouTube (only what is public). Cookidoo keeps name, link and ingredients.')}</div>
             </div>
             <button className="btn primary lg" disabled={!url || busy} onClick={() => run(() => post('/recipes/import/url', { url }))}>
               <LinkIcon size={18} /> {busy ? t('Reading recipe…') : t('Import')}
@@ -272,7 +329,7 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
         {mode === 'photo' && (
           <>
             <p className="small muted" style={{ margin: 0 }}>
-              {t('One or more photos of the same card (e.g. front and back of a HelloFresh card).')} {vision ? '' : t('Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the ToHuus Hub connection they save it straight here.')}
+              {t('A cookbook page, a handwritten note, a screenshot or the display of your Thermomix or oven – several photos of the same recipe are merged.')} {vision ? '' : t('Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the ToHuus Hub connection they save it straight here.')}
             </p>
             <input
               ref={fileRef}
@@ -309,7 +366,9 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
         <button className="linkish small" style={{ alignSelf: 'center' }} onClick={() => { onClose(); nav('/einstellungen?tab=recipes'); }}>
           {t('More ways: open recipe database, other apps, any AI, file')}
         </button>
+        <HowTo slug="rezepte-importieren" className="small" />
       </div>
+      <CookidooSheet draft={cookidoo} onClose={() => { setCookidoo(null); onClose(); }} vision={vision} />
     </Sheet>
   );
 }

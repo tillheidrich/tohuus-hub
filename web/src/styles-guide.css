@@ -1,0 +1,476 @@
+/*
+ * Styles for the October 2026 "guide" build: help links ("So geht's"), recipe package, Hausinfo, Gut zu wissen,
+ * "So funktioniert ToHuus", cook mode and the per-screen "Sprechen" hint. Tokens only (styles.css), light + dark.
+ */
+.howto {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  color: var(--primary-text);
+  text-decoration: none;
+}
+.howto:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* recipe package */
+.pkg-card {
+  display: grid;
+  gap: 12px;
+}
+.pkg-card .pkg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pkg-prompt {
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: auto;
+}
+.pkg-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.pkg-warn {
+  color: var(--low);
+}
+.badge.maybe {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.tm .tm-device {
+  font-weight: 700;
+}
+
+/* cook mode */
+.cookmode {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--canvas);
+  color: var(--ink);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+}
+.cookmode-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cookmode-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-l, 20px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cookmode-body {
+  overflow: auto;
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+.cookmode-note {
+  border-left: 4px solid var(--primary);
+  background: var(--primary-soft);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.cookmode-step {
+  font-size: clamp(22px, 5.4vw, 32px);
+  line-height: 1.35;
+}
+.cookmode-count {
+  font-size: var(--fs-s);
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.cookmode-foot {
+  display: flex;
+  gap: 10px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+.cookmode-foot .btn {
+  flex: 1;
+  min-height: 56px;
+}
+.servings-input {
+  width: 64px;
+  text-align: center;
+  font-weight: 700;
+  min-height: 44px;
+}
+
+/* Hausinfo */
+.hg-tools {
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.hg-search {
+  flex: 1 1 200px;
+  max-width: 360px;
+}
+@media (max-width: 600px) {
+  .hg-search {
+    max-width: none;
+  }
+}
+.hg {
+  display: grid;
+  gap: 22px;
+}
+.hg-section {
+  display: grid;
+  gap: 10px;
+}
+.hg-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-l, 20px);
+  margin: 0;
+}
+.hg-cards,
+.hg-codes {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+}
+.hg-card,
+.hg-code {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+.hg-card.draft {
+  border-style: dashed;
+}
+.hg-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hg-ic {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  flex: none;
+}
+.hg-card.t-contact .hg-ic {
+  background: var(--empty-soft);
+  color: var(--empty);
+}
+.hg-card p {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+.hg-say {
+  font-weight: 600;
+  color: var(--ink);
+}
+.hg-phone {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary-text);
+  text-decoration: none;
+}
+.hg-code {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+}
+.hg-code-ic {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--sand);
+  color: var(--on-accent-fixed);
+  flex: none;
+}
+.hg-code-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.hg-code-actions .btn {
+  min-height: 44px;
+}
+.hg-secret {
+  margin-top: 6px;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.hg-secret code {
+  font: inherit;
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 2px 8px;
+  overflow-wrap: anywhere;
+}
+.hg-qr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.hg-qr svg {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+}
+.hg-voice-group {
+  display: grid;
+  gap: 6px;
+}
+.hg-voice {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.hg-voice li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.hg-admin {
+  margin-top: 22px;
+}
+.hg-tpl {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 44px;
+}
+.hg-vis {
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.hg-vis legend {
+  font-weight: 700;
+  padding: 0 4px;
+}
+.hg-vis label.row {
+  min-height: 44px;
+}
+.hg-hit p {
+  overflow-wrap: anywhere;
+}
+
+/* Hausinfo: A4 sheet */
+.hg-print-wrap {
+  display: grid;
+  gap: 14px;
+}
+.hg-print-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.hg-print {
+  background: #fffdf9;
+  color: #181d1a;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 210mm;
+  font-size: 14px;
+}
+.hg-print h1 {
+  margin: 0 0 12px;
+  color: #181d1a;
+}
+.hg-print h2 {
+  font-size: 16px;
+  margin: 16px 0 6px;
+  border-bottom: 1.5px solid #181d1a;
+  padding-bottom: 2px;
+  color: #181d1a;
+}
+.hg-print dl {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.hg-print dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hg-print dt {
+  font-weight: 700;
+}
+.hg-print dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.hg-print ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.hg-print-numbers dd {
+  font-size: 18px;
+  font-weight: 700;
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body:has(.hg-print) .sidebar,
+  body:has(.hg-print) .tabbar,
+  body:has(.hg-print) .toasts,
+  body:has(.hg-print) .no-print,
+  body:has(.hg-print) .assistant-fab,
+  body:has(.hg-print) .credit,
+  body:has(.hg-print) .guest > :not(.hg-print-wrap) {
+    display: none !important;
+  }
+  body:has(.hg-print) {
+    background: #fffdf9 !important;
+  }
+  .hg-print {
+    border: 0;
+    padding: 0;
+    max-width: none;
+  }
+}
+
+.route-help {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0 8px;
+}
+
+/* So funktioniert ToHuus / Gut zu wissen */
+.explain-list,
+.facts-list {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.explain-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-l, 20px);
+  margin: 0 0 8px;
+}
+.explain-ic {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  flex: none;
+}
+.explain-card ul {
+  margin: 0 0 6px;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+.fact h2 {
+  font-size: var(--fs-l, 20px);
+  margin: 0 0 6px;
+}
+.fact p {
+  margin: 0 0 10px;
+}
+.fact-tohuus {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: var(--primary-soft);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.fact-tohuus svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--primary-text);
+}
+.fact-sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: var(--fs-s);
+}
+.fact-sources a {
+  color: var(--primary-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* per-screen "Sprechen" entry */
+.area-assist {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0 0;
+  padding-top: 14px;
+  border-top: 1.5px dashed var(--line);
+}
+.area-assist-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-s);
+  font-weight: 700;
+  color: var(--primary-text);
+}
+.area-assist .chip {
+  min-height: 44px;
+  white-space: normal;
+  text-align: left;
+}

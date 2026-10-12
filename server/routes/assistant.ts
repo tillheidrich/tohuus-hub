@@ -21,7 +21,12 @@ import { emit } from '../lib/bus.js';
 import { deleteMemory, isSensitive, listMemory, MemoryError, remember } from '../lib/memory.js';
 import { healthConsent, requireHealthConsent } from '../lib/health-consent.js';
 import { healthShareAllowed } from '../lib/people-signals.js';
-import { visionAvailable } from '../lib/vision.js';
+import { runVision, visionAvailable } from '../lib/vision.js';
+import { applyStockSuggestions, CONTEXTS, stockSuggestions } from '../lib/assistant-areas.js';
+import { record as recordAction, type ToolCtx } from '../lib/assistant-tools.js';
+import { toVisionJpeg } from '../lib/images.js';
+import { localDay } from '../lib/catalog.js';
+import { uploadQuota } from '../lib/plans.js';
 import { aiStateFor } from './ai-settings.js';
 
 export const r = Router();
@@ -52,9 +57,9 @@ r.get('/assistant/status', requireAuth, (req, res) => {
 });
 
 r.post('/assistant/chat', requireAuth, async (req, res) => {
-  const b = z.object({ message: z.string().min(1).max(2000), conversationId: z.string().max(64).nullable().optional() }).parse(req.body);
+  const b = z.object({ message: z.string().min(1).max(2000), conversationId: z.string().max(64).nullable().optional(), context: z.enum(CONTEXTS).nullable().optional() }).parse(req.body);
   try {
-    res.json(await chatOnce({ message: b.message, conversationId: b.conversationId ?? null, user: userOf(req) }));
+    res.json(await chatOnce({ message: b.message, conversationId: b.conversationId ?? null, user: userOf(req), context: b.context ?? null }));
   } catch (e) {
     fail(res, e);
   }
@@ -90,7 +95,8 @@ r.post('/assistant/voice', requireAuth, audioUpload.single('audio'), async (req,
       return;
     }
     const conversationId = typeof req.body?.conversationId === 'string' && req.body.conversationId ? req.body.conversationId : null;
-    res.json({ text, ...(await chatOnce({ message: text, conversationId, user: userOf(req), allowance })) });
+    const context = (CONTEXTS as readonly string[]).includes(req.body?.context) ? (req.body.context as (typeof CONTEXTS)[number]) : null;
+    res.json({ text, ...(await chatOnce({ message: text, conversationId, user: userOf(req), allowance, context })) });
   } catch (e) {
     fail(res, e);
   }
@@ -164,3 +170,33 @@ r.delete('/memory/:id', requireAuth, (req, res) => {
     fail(res, e);
   }
 });
+
+// ---------------------------------------------------------------- area help: photo of fridge / cupboard (assistant-areas.ts)
+
+const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 4, fields: 4 } });
+
+/** A photo of the fridge or a cupboard → stock suggestions with estimated best-before. Nothing is saved. */
+r.post('/assistant/photo', requireAuth, photoUpload.array('files', 4), uploadQuota, async (req, res) => {
+  try {
+    const files = (req.files as Express.Multer.File[]) ?? [];
+    if (!files.length) throw new AssistantError(t('No photos'));
+    if (!visionAvailable()) throw new AssistantError(t('Reading photos needs AI.'), 501);
+    const imgs = await Promise.all(files.map((f) => toVisionJpeg(f.buffer, 1600)));
+    const j = await runVision('shelf', { images: imgs });
+    res.json({ suggestions: stockSuggestions(j, localDay(0)), estimate: true });
+  } catch (e) {
+    fail(res, e);
+  }
+});
+
+/** Apply the suggestions the person ticked: added to stock, one undo for all. */
+r.post('/assistant/stock-apply', requireAuth, (req, res) => {
+  const b = z
+    .object({ items: z.array(z.object({ name: z.string().min(1).max(80), qty: z.number().positive().max(50), best_before: z.string().max(10).nullable().optional(), product_id: z.number().int().nullable().optional() })).min(1).max(40) })
+    .parse(req.body);
+  const u = userOf(req);
+  const ctx: ToolCtx = { actor: u.name, userId: u.userId, actions: [] };
+  const out = applyStockSuggestions({ actor: u.name, userId: u.userId, record: (kind, summary, undo) => recordAction(ctx, kind, summary, undo as any) }, b.items);
+  res.json({ ...out, actions: ctx.actions });
+});
+

@@ -53,7 +53,7 @@ for (const c of CASES) {
   calls = [];
   const t0 = Date.now();
   try {
-    const out = await assistant.chatOnce({ message: c.prompt, user: { userId: user.id, name: user.name } });
+    const out = await assistant.chatOnce({ message: c.prompt, user: { userId: user.id, name: user.name }, context: c.context ?? null });
     console.log(`\n■ ${c.id} (${out.mode}, expected ${c.mode}, ${Date.now() - t0} ms)\n  > ${c.prompt}\n  < ${out.reply}`);
     for (const x of calls) console.log(`    ${x}`);
     for (const a of out.actions) console.log(`    ✓ ${a.kind}: ${a.summary}`);

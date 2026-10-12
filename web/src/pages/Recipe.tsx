@@ -1,4 +1,5 @@
-import { ArrowLeft, Basket, Camera, Check, ChefHat, Clock, Heart, PencilSimple, Trash } from '@phosphor-icons/react';
+import { ArrowLeft, Basket, Camera, Check, ChefHat, Clock, CookingPot, Heart, PencilSimple, Trash } from '@phosphor-icons/react';
+import { CookMode, DeviceChips } from './CookMode';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, del, invalidate, patch, post, put, relTime, useApi } from '../api';
@@ -26,6 +27,7 @@ export function RecipeDetail() {
   const match = useApi<any[]>(['recipe', Number(id), 'match'], `/recipes/${id}/match`);
   const [cooked, setCooked] = useState(false);
   const [edit, setEdit] = useState(false);
+  const [cookMode, setCookMode] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   // servings: opened from a plan entry → its one-off servings; base = our servings (variant), else the recipe's
   const [sp] = useSearchParams();
@@ -45,7 +47,7 @@ export function RecipeDetail() {
     invalidate('recipe', 'recipes');
   };
   const toList = async () => {
-    const res = await post(`/recipes/${r.id}/shopping`);
+    const res = await post(`/recipes/${r.id}/shopping`, servings ? { servings } : {});
     invalidate('shopping', 'overview');
     toast({ text: res.added ? (res.added === 1 ? t('Added 1 ingredient to the shopping list') : t('Added {n} ingredients to the shopping list', { n: res.added })) : t('Everything is already here or on the list') });
   };
@@ -80,6 +82,11 @@ export function RecipeDetail() {
             <input ref={fileRef} hidden type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
           </div>
           <div className="card pad stack" style={{ gap: 10 }}>
+            {r.steps.length > 0 && (
+              <button className="btn lg block" onClick={() => setCookMode(true)}>
+                <CookingPot size={18} /> {t('Start cooking')}
+              </button>
+            )}
             <button className="btn accent lg block" onClick={() => setCooked(true)}>
               <Check size={18} weight="bold" /> {t('Cooked it!')}
             </button>
@@ -132,13 +139,7 @@ export function RecipeDetail() {
                 <span className="n">{n + 1}</span>
                 <div>
                   <Amounts text={s.text} />
-                  {s.tm && (s.tm.time || s.tm.temp || s.tm.speed) && (
-                    <div className="tm">
-                      {s.tm.time && <span>{s.tm.time}</span>}
-                      {s.tm.temp && <span>{s.tm.temp}</span>}
-                      {s.tm.speed && <span>{t('Speed {n}', { n: String(s.tm.speed).replace(SPEED_RE, '') })}</span>}
-                    </div>
-                  )}
+                  <DeviceChips tm={s.tm} />
                 </div>
               </div>
               </div>
@@ -149,6 +150,7 @@ export function RecipeDetail() {
       </div>
       <CookedSheet open={cooked} onClose={() => setCooked(false)} r={r} match={match.data ?? []} factor={factor} planEntryId={planEntry?.id ?? null} />
       <RecipeEditor open={edit} onClose={() => setEdit(false)} r={r} />
+      {cookMode && <CookMode r={r} houseNote={variant.data?.variant?.note ?? null} onClose={() => setCookMode(false)} onDone={() => { setCookMode(false); setCooked(true); }} />}
     </div>
   );
 }
@@ -240,7 +242,14 @@ function RecipeEditor({ open, onClose, r }: { open: boolean; onClose: () => void
       thermomix: r.thermomix,
       tags: r.tags.join(', '),
       ingredients: r.ingredients.map((i: any) => (i.pantry ? `${i.text} ${stapleMarker()}` : i.text)).join('\n'),
-      steps: r.steps.map((s: any) => (s.tm && (s.tm.time || s.tm.temp || s.tm.speed) ? `${s.text} [${[s.tm.time, s.tm.temp, s.tm.speed && t('Speed {n}', { n: String(s.tm.speed).replace(SPEED_RE, '') })].filter(Boolean).join(' / ')}]` : s.text)).join('\n'),
+      // appliance settings as "[Backofen: 10 Min. / 200 °C / Umluft]" – device and mode survive editing
+      steps: r.steps
+        .map((s: any) =>
+          s.tm && (s.tm.time || s.tm.temp || s.tm.speed || s.tm.mode)
+            ? `${s.text} [${s.tm.device ? `${s.tm.device}: ` : ''}${[s.tm.time, s.tm.temp, s.tm.speed && t('Speed {n}', { n: String(s.tm.speed).replace(SPEED_RE, '') }), s.tm.mode].filter(Boolean).join(' / ')}]`
+            : s.text,
+        )
+        .join('\n'),
       notes: r.notes ?? '',
       source_url: r.source_url ?? '',
     });
@@ -259,11 +268,14 @@ function RecipeEditor({ open, onClose, r }: { open: boolean; onClose: () => void
       .map((l: string) => {
         const mm = l.match(/\[(.+)\]\s*$/);
         if (!mm) return { text: l };
-        const parts = mm[1].split('/').map((x) => x.trim());
         const tm: any = {};
+        const dev = mm[1].match(/^\s*([^:\d/][^:/]{0,40}):\s*(.*)$/);
+        if (dev) tm.device = dev[1].trim();
+        const parts = (dev ? dev[2] : mm[1]).split('/').map((x) => x.trim()).filter(Boolean);
         for (const p of parts) {
           if (/°|varoma/i.test(p)) tm.temp = p;
-          else if (/stufe|speed|linkslauf|sanftrühr|reverse|gentle stir/i.test(p)) tm.speed = p.replace(SPEED_RE, '');
+          else if (/stufe|speed/i.test(p)) tm.speed = p.replace(SPEED_RE, '');
+          else if (/linkslauf|sanftrühr|reverse|gentle stir|umluft|heißluft|ober.?\s*und\s*unterhitze|ober-\/unterhitze|grill|knet|teig|dough|fan|turbo/i.test(p)) tm.mode = p;
           else tm.time = p;
         }
         return { text: l.replace(/\s*\[.+\]\s*$/, ''), tm };
