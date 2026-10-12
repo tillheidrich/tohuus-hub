@@ -303,7 +303,7 @@ function currentTokenHash(req: Request) {
  * (e-mail links only) confirms with a fresh e-mail link: the first call sends it, opening it within 15 minutes
  * makes the session fresh, and the call is repeated.
  */
-export async function confirmAccount(req: Request, accountId: number, password: string | undefined, apple?: { identityToken?: string; nonce?: string }) {
+export async function confirmAccount(req: Request, accountId: number, password: string | undefined, apple?: { identityToken?: string; nonce?: string }, code?: string) {
   const acc = await A();
   const a = acc.accountById(accountId)!;
   // an account linked to Apple can confirm with a fresh Sign in with Apple in the app (same Apple ID)
@@ -317,6 +317,13 @@ export async function confirmAccount(req: Request, accountId: number, password: 
     if (rateLimitedGlobal(`confirm:${accountId}`, 8, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     if (!password || !(await verifyPassword(password, a.password_hash))) throw new AuthError(400, t('Please confirm with your password.'), { needPassword: true });
     return;
+  }
+  // the iPhone app has no browser session: it types the 6-digit code from the confirmation mail instead
+  if (code) {
+    const r = (await import('../lib/cloud-codes.js')).useSignInCode(accountId, code.replace(/\s+/g, ''));
+    if (r.ok) return;
+    if (r.reason === 'expired') throw new AuthError(410, t('This code has run out. Ask for a new mail.'), { needEmailConfirm: true });
+    throw new AuthError(400, t('That code doesn’t match. Check the mail and try again.'), { needEmailConfirm: true });
   }
   const id = (await CA()).cloudIdentity(req);
   const s = id?.sessionId ? (acc.accountsDb().prepare('SELECT method, created_at FROM sessions WHERE id = ?').get(id.sessionId) as { method: string; created_at: string } | undefined) : undefined;
@@ -879,9 +886,11 @@ cloud.delete(
         /** Apple-linked accounts: a fresh Sign in with Apple instead of the password */
         appleIdentityToken: z.string().max(8000).optional(),
         appleNonce: z.string().max(200).optional(),
+        /** accounts without a password, in the app: the code from the confirmation mail */
+        code: z.string().max(20).optional(),
       })
       .parse(req.body ?? {});
-    await confirmAccount(req, a.id, b.password, { identityToken: b.appleIdentityToken, nonce: b.appleNonce });
+    await confirmAccount(req, a.id, b.password, { identityToken: b.appleIdentityToken, nonce: b.appleNonce }, b.code);
     const shredded: string[] = [];
     const left: string[] = [];
     for (const m of acc.membershipsOf(a.id)) {

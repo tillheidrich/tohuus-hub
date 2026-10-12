@@ -73,6 +73,7 @@ class Client {
 const sha = (s: string) => crypto.createHash('sha256').update(s).digest('hex');
 let apple: Awaited<ReturnType<typeof generateKeyPair>>;
 let stranger: Awaited<ReturnType<typeof generateKeyPair>>;
+const mails: { to: string; text: string }[] = [];
 let accounts: typeof import('../server/lib/accounts');
 let appleLib: typeof import('../server/lib/cloud-apple');
 
@@ -108,7 +109,7 @@ async function token(o: TokenOpts = {}) {
 
 beforeAll(async () => {
   const mail = await import('../server/lib/mail');
-  mail.mailHook.send = () => undefined;
+  mail.mailHook.send = (m) => void mails.push({ to: m.to, text: m.text });
   await import('../server/index');
   accounts = await import('../server/lib/accounts');
   appleLib = await import('../server/lib/cloud-apple');
@@ -252,6 +253,34 @@ describe('Sign in with Apple – app', () => {
     expect(again.status).toBe(200);
     expect(again.json.created).toBe(true);
     expect(again.json.account.id).not.toBe(benId);
+  });
+});
+
+describe('account deletion in the app without a password', () => {
+  it('confirms with the code from the confirmation mail', async () => {
+    const c = new Client();
+    const r = await c.post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam-code', email: 'samcode@privaterelay.appleid.com' }), device: 'iPhone' });
+    expect(r.status, r.text).toBe(200);
+    const auth = { authorization: `Bearer ${r.json.token}` };
+    const d0 = await c.del('/api/cloud/account', {}, auth);
+    expect(d0.status).toBe(400);
+    expect(d0.json.needEmailConfirm).toBe(true);
+    const mail = mails.filter((m) => m.to === 'samcode@privaterelay.appleid.com').at(-1)!;
+    const code = mail.text.match(/(\d{3}) (\d{3})/)!.slice(1).join('');
+    const wrong = await c.del('/api/cloud/account', { code: code === '000000' ? '111111' : '000000' }, auth);
+    expect(wrong.status).toBe(400);
+    const ok = await c.del('/api/cloud/account', { code: `${code.slice(0, 3)} ${code.slice(3)}` }, auth);
+    expect(ok.status, ok.text).toBe(200);
+    expect(accounts.accountByEmail('samcode@privaterelay.appleid.com')).toBeUndefined();
+  });
+
+  it('a password account cannot skip the password with a code', async () => {
+    const c = new Client();
+    const s = await c.post('/api/cloud/signup', { email: 'ben.pw@example.org', password: 'correct horse battery', name: 'Ben', householdName: 'Bens', form: 'single', lang: 'en' });
+    expect(s.status).toBe(200);
+    const d = await c.del('/api/cloud/account', { code: '123456' });
+    expect(d.status).toBe(400);
+    expect(d.json.needPassword).toBe(true);
   });
 });
 
