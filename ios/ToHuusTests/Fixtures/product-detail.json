@@ -1,0 +1,3 @@
+{ "id": 4, "name": "Vollmilch", "track_mode": "count", "unit": "Stück", "stock": [], "total": 0, "status": "empty", "nextExpiry": null,
+  "codes": ["4001234"], "history": [ { "id": 77, "product_id": 4, "delta": -1, "reason": "consume", "actor": "Lea", "created_at": "2026-10-11 08:00:00" } ],
+  "aliases": [], "perWeek": 3.5 }

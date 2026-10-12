@@ -1,0 +1,207 @@
+import Foundation
+import Observation
+
+/// Household data from a ToHuus server: the offline-capable shopping list and live refresh via SSE.
+@MainActor
+@Observable
+final class ServerStore: HouseholdStore {
+    let api: APIClient
+    private(set) var list: ShopList = .empty
+    private(set) var isOnline = true
+    private(set) var lastError: String?
+    private(set) var lastSynced: Date?
+    private(set) var storeId: Int?
+    private(set) var shopMode = false
+
+    private var snapshot: ShopList = .empty
+    private var ops: [PendingOp] = []
+    private var revisions: [String: Int] = [:]
+    private var nextLocalId = -1
+    private let cache: ShoppingCache
+    @ObservationIgnored private var eventsTask: Task<Void, Never>?
+    @ObservationIgnored private var flushing = false
+
+    var pendingCount: Int { ops.count }
+
+    init(api: APIClient, householdKey: String) {
+        self.api = api
+        cache = ShoppingCache(householdKey: householdKey)
+        ops = cache.loadOps()
+        if let cached = cache.loadSnapshot() { snapshot = cached }
+        nextLocalId = min(-1, (ops.compactMap(\.localId).min() ?? 0) - 1)
+        rebuild()
+    }
+
+    func revision(_ topic: String) -> Int { revisions[topic, default: 0] + revisions["*", default: 0] }
+
+    func touch(_ topics: String...) {
+        for t in topics { revisions[t, default: 0] += 1 }
+    }
+
+    // MARK: live updates
+
+    func startEvents() {
+        guard eventsTask == nil else { return }
+        let stream = EventStream(client: api).topics()
+        eventsTask = Task { [weak self] in
+            for await topics in stream {
+                guard let self else { return }
+                self.isOnline = true
+                if topics.contains("*") {
+                    self.revisions["*", default: 0] += 1
+                    await self.flush()
+                    await self.refreshList()
+                    continue
+                }
+                for t in topics { self.revisions[t, default: 0] += 1 }
+                if topics.contains("shopping") || topics.contains("products") { await self.refreshList() }
+            }
+        }
+    }
+
+    func stopEvents() {
+        eventsTask?.cancel()
+        eventsTask = nil
+    }
+
+    // MARK: list
+
+    func setStore(_ id: Int?, shopMode: Bool) async {
+        storeId = id
+        self.shopMode = shopMode
+        await refreshList()
+    }
+
+    func refreshList() async {
+        do {
+            let data = try await api.shopList(storeId: storeId, shopMode: shopMode)
+            let decoded = try api.decode(ShopList.self, from: data)
+            snapshot = decoded
+            if storeId == nil && !shopMode { cache.saveSnapshot(data) }
+            isOnline = true
+            lastError = nil
+            lastSynced = Date()
+            rebuild()
+        } catch let e as APIError {
+            if e.isOffline { isOnline = false } else { lastError = e.localizedDescription }
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    private func rebuild() {
+        list = OpQueueLogic.apply(ops, to: snapshot)
+    }
+
+    private func enqueue(_ op: PendingOp) async {
+        ops = OpQueueLogic.enqueue(op, into: ops)
+        cache.saveOps(ops)
+        rebuild()
+        await flush()
+    }
+
+    func add(text: String) async {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        // one op per fragment, so each row can be ticked or removed on its own while offline
+        let parts = QuickAddParser.fragments(trimmed).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        for part in parts.isEmpty ? [trimmed] : parts {
+            let op = PendingOp.add(part, localId: nextLocalId)
+            nextLocalId -= 1
+            ops = OpQueueLogic.enqueue(op, into: ops)
+        }
+        cache.saveOps(ops)
+        rebuild()
+        touch("shopping")
+        await flush()
+    }
+
+    func addProduct(_ productId: Int, name: String) async {
+        let op = PendingOp.add(name, productId: productId, localId: nextLocalId)
+        nextLocalId -= 1
+        await enqueue(op)
+    }
+
+    func setChecked(_ item: ShopItem, _ on: Bool) async {
+        await enqueue(.check(item.id, on: on, toStock: true))
+    }
+
+    func setInBasket(_ item: ShopItem, _ on: Bool, storeId: Int?) async {
+        await enqueue(.basket(item.id, on: on, storeId: storeId))
+    }
+
+    func delete(_ item: ShopItem) async {
+        await enqueue(.delete(item.id))
+    }
+
+    /// Sends queued changes via POST /api/shop/sync (op ids make retries harmless), then reloads the list.
+    func flush() async {
+        guard !flushing, !ops.isEmpty else { return }
+        flushing = true
+        defer { flushing = false }
+        let batch = Array(ops.prefix(200))
+        do {
+            let res = try await api.sync(batch)
+            var answered = Set(res.results.map(\.opId))
+            // a server that answered at all has seen every op in the batch
+            if answered.isEmpty { answered = Set(batch.map(\.opId)) }
+            ops = OpQueueLogic.remove(answered: answered, from: ops)
+            cache.saveOps(ops)
+            isOnline = true
+            touch("shopping")
+            await refreshList()
+        } catch let e as APIError {
+            if e.isOffline { isOnline = false }
+            else if case .server(let status, _) = e, (400..<500).contains(status) {
+                // a malformed batch would block the queue forever – drop it
+                ops = OpQueueLogic.remove(answered: Set(batch.map(\.opId)), from: ops)
+                cache.saveOps(ops)
+                rebuild()
+            } else {
+                lastError = e.localizedDescription
+            }
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    func checkout(toStock: Bool) async {
+        await flush()
+        do {
+            try await api.checkout(storeId: storeId, toStock: toStock)
+            touch("shopping", "stock")
+            await refreshList()
+        } catch {
+            lastError = APIError.from(error).localizedDescription
+        }
+    }
+
+    func clearDone() async {
+        do {
+            try await api.clearChecked()
+            await refreshList()
+        } catch {
+            lastError = APIError.from(error).localizedDescription
+        }
+    }
+
+    /// Sends files shared via the share extension while the app was closed or offline.
+    func drainUploadQueue(session: SessionInfo) async {
+        guard let token = api.token else { return }
+        let uploader = ShareUploader(session: session, token: token)
+        for item in UploadQueue.all() {
+            let files = item.files.compactMap { UploadQueue.data(for: $0) }
+            do {
+                try await uploader.upload(item, files: files)
+                UploadQueue.remove(id: item.id)
+                touch("imports", "recipes")
+            } catch ShareUploader.UploadError.offline {
+                return
+            } catch {
+                // the server refused it (format, quota): keep nothing that can never succeed
+                UploadQueue.remove(id: item.id)
+                lastError = (error as? ShareUploader.UploadError).map { if case .server(let m) = $0 { return m } else { return "" } }
+            }
+        }
+    }
+}

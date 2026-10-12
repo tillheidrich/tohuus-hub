@@ -1,0 +1,3 @@
+{ "conversationId": 17, "reply": "Milch steht auf der Liste. Für Sonntag hätte ich Pfannkuchen.", "actions": [
+  { "kind": "list.add", "summary": "Milch auf die Liste", "undo": { "op": "list.remove", "id": 12 } },
+  { "kind": "plan.add", "summary": "Pfannkuchen für Sonntag geplant" } ] }

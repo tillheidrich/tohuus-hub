@@ -1,0 +1,10 @@
+[
+  { "id": 4, "name": "Vollmilch", "brand": "Weihenstephan", "size": "1 l", "category_id": 3, "unit": "Stück", "track_mode": "count", "default_location_id": 2,
+    "min_qty": 1, "target_qty": 2, "shelf_days": null, "image_path": "p4.webp", "image_source": "off", "image_credit": null, "off_code": "4001234",
+    "is_staple": true, "orderable": false, "order_group": null, "order_options": [], "notes": null, "spot": "Kühlschrank Tür", "archived": false,
+    "created_at": "2026-01-01 10:00:00", "updated_at": "2026-10-01 10:00:00",
+    "stock": [ { "id": 1, "product_id": 4, "location_id": 2, "qty": 1, "best_before": "2026-10-15", "opened_at": null, "updated_at": "2026-10-10 10:00:00" } ],
+    "total": 1, "status": "low", "nextExpiry": "2026-10-15", "dateKind": "best_before" },
+  { "id": 5, "name": "Spülmittel", "brand": null, "unit": "Flasche", "track_mode": "level", "stock": [], "total": 2, "status": "ok", "nextExpiry": null, "dateKind": null },
+  { "id": 6, "name": "Salz", "track_mode": "none", "stock": [], "total": 0, "status": "untracked" }
+]

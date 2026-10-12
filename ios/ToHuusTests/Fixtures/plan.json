@@ -1,0 +1,2 @@
+{ "days": ["2026-10-12", "2026-10-13"], "entries": [ { "id": 1, "day": "2026-10-12", "slot": "abend", "recipe_id": 3, "title": "Spinatlasagne",
+  "note": null, "source": "manual", "external_id": null, "cooked": 0, "created_at": "2026-10-10 10:00:00", "image_path": "r3.webp", "thermomix": 0 } ] }

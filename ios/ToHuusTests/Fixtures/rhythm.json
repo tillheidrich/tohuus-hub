@@ -1,0 +1,2 @@
+[ { "productId": 4, "name": "Vollmilch", "everyDays": 4.5, "lastBought": "2026-10-08", "dueOn": "2026-10-12", "confidence": "high", "origin": "both", "suggested": true },
+  { "productId": "nope", "name": "Kaputt" } ]

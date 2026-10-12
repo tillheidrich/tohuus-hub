@@ -1,0 +1,5 @@
+{ "ideas": [
+  { "recipeId": 3, "title": "Spinatlasagne", "image": "r3.webp", "missing": [], "have": 5, "need": 5, "timeMin": 60, "reasons": ["Sahne muss weg"] },
+  { "recipeId": 4, "title": "Pfannkuchen", "image": null, "missing": ["Eier"], "have": 3, "need": 4 },
+  { "title": "kaputt ohne id" }
+] }

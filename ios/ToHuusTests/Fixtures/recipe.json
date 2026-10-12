@@ -1,0 +1,6 @@
+{ "id": 3, "title": "Spinatlasagne", "description": null, "image_path": "https://example.org/lasagne.jpg", "image_local": false, "source_type": "url",
+  "source_url": "https://example.org/lasagne", "servings": 4, "time_min": 60, "thermomix": false, "tags": ["vegetarisch"], "favorite": true,
+  "steps": [ { "text": "Ofen vorheizen." }, { "text": "Schichten.", "tm": { "time": null, "temp": null, "speed": null } } ],
+  "ingredients": [ { "id": 31, "recipe_id": 3, "sort": 0, "text": "250 g Lasagneplatten", "qty": 250, "unit": "g", "product_id": null, "optional": 0, "pantry": 0 },
+                   { "id": 32, "recipe_id": 3, "sort": 1, "text": "Salz", "qty": null, "unit": null, "product_id": 6, "optional": 0, "pantry": 1 } ],
+  "log": [] }

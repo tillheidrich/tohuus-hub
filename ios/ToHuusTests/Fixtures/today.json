@@ -1,0 +1,14 @@
+{
+  "greeting": "Guten Morgen, Till",
+  "household": "Familie Heidrich",
+  "rhythm": [
+    { "productId": 4, "name": "Vollmilch", "everyDays": 4.5, "lastBought": "2026-10-08", "dueOn": "2026-10-12", "confidence": "high", "origin": "both" },
+    { "productId": 8, "name": "Kaffee", "everyDays": 14, "lastBought": "2026-09-28", "dueOn": "2026-10-12", "confidence": "medium", "origin": "receipts" }
+  ],
+  "list": { "open": 3, "recent": [ { "id": 12, "name": "Milch", "origin": "Lea", "at": "2026-10-12 07:10:00" }, { "id": "x13", "name": "Joghurt", "origin": "merkt sich", "at": "2026-10-12 07:11:00" } ] },
+  "stillHave": [ { "productId": 11, "name": "Sahne", "date": "2026-10-13", "qty": 1 }, "Spinat" ],
+  "cookToday": { "recipeId": 3, "title": "Spinatlasagne", "image": "r3.webp", "missing": ["Lasagneplatten", { "name": "Ricotta" }] },
+  "money": { "week": 61.4, "month": 212.9, "budget": 600 },
+  "notices": ["2 Bons warten auf Prüfung", { "text": "Testphase endet in 3 Tagen", "kind": "trial" }],
+  "somethingNew": true
+}

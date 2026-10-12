@@ -1,0 +1,140 @@
+{
+  "identifier": "C8B0E82C-2309-4A31-A021-A538A1C51E40",
+  "nonRenewingSubscriptions": [],
+  "products": [],
+  "settings": {
+    "_applicationInternalID": "",
+    "_developerTeamID": "",
+    "_failTransactionsEnabled": false,
+    "_locale": "de",
+    "_storefront": "DEU",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [
+    {
+      "id": "21600001",
+      "localizations": [
+        {
+          "description": "ToHuus",
+          "displayName": "ToHuus",
+          "locale": "de"
+        }
+      ],
+      "name": "ToHuus",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "59.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "6700000004",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Assistent im Alltag, 5 GB",
+              "displayName": "Plus (jährlich)",
+              "locale": "de"
+            },
+            {
+              "description": "Assistant every day, 5 GB",
+              "displayName": "Plus (yearly)",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "de.heidrichdigital.tohuus.plus.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "plus.yearly",
+          "subscriptionGroupID": "21600001",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "5.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "6700000003",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Assistent im Alltag, 5 GB",
+              "displayName": "Plus (monatlich)",
+              "locale": "de"
+            },
+            {
+              "description": "Assistant every day, 5 GB",
+              "displayName": "Plus (monthly)",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "de.heidrichdigital.tohuus.plus.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "plus.monthly",
+          "subscriptionGroupID": "21600001",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "34.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "6700000002",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Ganze Historie, 2 GB",
+              "displayName": "Haushalt (jährlich)",
+              "locale": "de"
+            },
+            {
+              "description": "Full history, 2 GB",
+              "displayName": "Household (yearly)",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "de.heidrichdigital.tohuus.haushalt.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "haushalt.yearly",
+          "subscriptionGroupID": "21600001",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "3.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "6700000001",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Ganze Historie, 2 GB",
+              "displayName": "Haushalt (monatlich)",
+              "locale": "de"
+            },
+            {
+              "description": "Full history, 2 GB",
+              "displayName": "Household (monthly)",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "de.heidrichdigital.tohuus.haushalt.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "haushalt.monthly",
+          "subscriptionGroupID": "21600001",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

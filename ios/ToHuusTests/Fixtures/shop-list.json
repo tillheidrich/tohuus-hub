@@ -1,0 +1,28 @@
+{
+  "store": null,
+  "stores": [{ "id": 1, "name": "REWE", "order": ["produce", "bakery", "chilled"], "trips": 3 }, { "id": 2, "name": "Aldi", "order": [], "trips": 0 }],
+  "order": ["produce", "bakery", "chilled", "frozen", "pantry", "snacks", "drinks", "drugstore", "household", "other"],
+  "sections": [
+    { "key": "chilled", "items": [
+      { "id": 12, "product_id": 4, "text": "Milch", "qty": 2, "note": null, "source": "manual", "added_by": "Lea", "checked_at": null, "checked_by": null,
+        "in_basket": 0, "created_at": "2026-10-12 07:10:00", "product_name": "Vollmilch", "brand": "Weihenstephan", "image_path": "p4.webp",
+        "category_id": 3, "unit": "Stück", "in_stock": 0, "section": "chilled", "claim": { "user_id": 2, "name": "Till", "color": "#176b50" }, "buy_at": [] },
+      { "id": 13, "product_id": null, "text": "Joghurt", "qty": null, "note": null, "source": "rhythm", "added_by": "ToHuus", "checked_at": null,
+        "checked_by": null, "in_basket": 0, "created_at": "2026-10-12 07:11:00", "product_name": null, "brand": null, "image_path": null,
+        "category_id": null, "unit": null, "in_stock": 0, "section": "chilled", "claim": null, "buy_at": [], "unknown_future_field": { "x": 1 } }
+    ]},
+    { "key": "other", "items": [
+      { "id": 14, "product_id": null, "text": "Paketband", "qty": null, "note": "Sonntag", "source": "recipe", "added_by": "Till", "checked_at": null,
+        "checked_by": null, "in_basket": false, "created_at": "2026-10-11T19:00:00Z", "section": "other", "claim": null, "buy_at": ["dm"],
+        "share": { "kind": "discreet" } },
+      { "id": "broken" }
+    ]}
+  ],
+  "basket": [],
+  "done": [
+    { "id": 9, "product_id": 7, "text": "Brot", "qty": 1, "note": null, "source": "manual", "added_by": "Lea", "checked_at": "2026-10-12 06:00:00",
+      "checked_by": "Lea", "in_basket": 0, "created_at": "2026-10-11 18:00:00", "section": "bakery", "claim": null, "buy_at": [] }
+  ],
+  "open": 3,
+  "sectionKeys": ["produce", "bakery", "chilled", "frozen", "pantry", "snacks", "drinks", "drugstore", "household", "other"]
+}

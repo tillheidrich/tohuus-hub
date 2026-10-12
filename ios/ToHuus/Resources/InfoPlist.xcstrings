@@ -1,0 +1,108 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus"
+          }
+        }
+      }
+    },
+    "CFBundleName": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus nutzt die Kamera für Barcodes, Kassenbons und den QR-Code deines eigenen Servers."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus uses the camera to scan barcodes, receipts and the QR code of your own server."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus nutzt das Mikrofon, wenn du mit dem Assistenten sprichst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus uses the microphone when you speak to the assistant."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was du sagst, wird auf deinem iPhone in Text umgewandelt, damit der Assistent dich versteht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your words are turned into text on your iPhone so the assistant can understand them."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus kann Bilder in deiner Fotomediathek sichern."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus can save images to your photo library."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

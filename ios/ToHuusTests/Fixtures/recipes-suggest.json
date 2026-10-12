@@ -1,0 +1,3 @@
+[ { "recipe": { "id": 3, "title": "Spinatlasagne", "image_path": "r3.webp", "time_min": 60, "tags": [] }, "score": 0.9, "have": 4, "need": 5,
+    "missing": ["Lasagneplatten"], "usesExpiring": ["Sahne"], "reasons": ["uses Sahne"], "swaps": [], "expiring": [],
+    "missingItems": [ { "text": "Lasagneplatten", "product_id": null } ], "time_min": 60 } ]

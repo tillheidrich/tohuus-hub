@@ -1,0 +1,3 @@
+[ { "ingredient_id": 31, "text": "250 g Lasagneplatten", "original": null, "change": null, "pantry": false, "product": null },
+  { "ingredient_id": 32, "text": "Salz", "pantry": true, "product": { "id": 6, "name": "Salz", "unit": "Stück", "track_mode": "none", "total": 0 } },
+  { "ingredient_id": 33, "text": "Spinat", "pantry": false, "product": { "id": 9, "name": "Spinat", "unit": "g", "track_mode": "count", "total": 300 } } ]

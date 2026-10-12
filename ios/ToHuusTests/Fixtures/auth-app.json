@@ -1,0 +1,3 @@
+{ "token": "sw_app_abc123", "account": { "id": 1, "email": "till@example.org", "name": "Till" }, "user": { "id": 2, "name": "Till", "role": "admin" },
+  "households": [ { "id": "6b1f9d2e-0f7a-4b8e-9c1d-2a3b4c5d6e7f", "name": "Familie Heidrich", "role": "admin", "plan": "trial" }, { "id": 42, "name": "Oma" } ],
+  "household": "6b1f9d2e-0f7a-4b8e-9c1d-2a3b4c5d6e7f" }
