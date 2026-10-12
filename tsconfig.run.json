@@ -1,0 +1,15 @@
+{
+  "//": "for running TypeScript directly with tsx (npm run dev, scripts): without the type-only `paths` entry for better-sqlite3, which would make tsx load the .d.ts at run time",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "types": ["node"]
+  }
+}

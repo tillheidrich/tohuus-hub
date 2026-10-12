@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "description": "Self-hosted household stock, recipes and guest bar \u2014 with Home Assistant and MCP built in.",
   "scripts": {
-    "dev": "tsx watch server/index.ts",
+    "dev": "tsx --tsconfig tsconfig.run.json watch server/index.ts",
     "dev:web": "vite",
     "build": "vite build && node scripts/precompress.mjs dist/web && esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/server.mjs --packages=external && esbuild scripts/restore-check.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/restore-check.mjs --packages=external",
     "start": "node dist/server.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p .",
-    "restore-check": "tsx scripts/restore-check.ts"
+    "restore-check": "tsx --tsconfig tsconfig.run.json scripts/restore-check.ts",
+    "assistant-eval": "tsx --tsconfig tsconfig.run.json scripts/assistant-eval.mjs"
   },
   "license": "AGPL-3.0-or-later",
   "dependencies": {

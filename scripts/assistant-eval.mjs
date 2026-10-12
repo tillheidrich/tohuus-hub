@@ -2,8 +2,8 @@
 // each reply, the tools the model called and the actions – for reading by hand. Nothing leaves this machine except
 // the model calls themselves; the household is a throw-away demo in a temp folder.
 //
-//   AI_API_KEY=sk-or-… npx tsx scripts/assistant-eval.mjs            (OpenRouter → Mistral, the defaults)
-//   AI_API_KEY=… AI_MODEL_TEXT=mistralai/mistral-small-2603 npx tsx scripts/assistant-eval.mjs pancake-evening
+//   AI_API_KEY=sk-or-… npm run assistant-eval                         (OpenRouter → Mistral, the defaults)
+//   AI_API_KEY=… AI_MODEL_TEXT=mistralai/mistral-small-2603 npm run assistant-eval -- pancake-evening
 //
 // Optional: LANGUAGE=en for English answers; pass case ids to run only those.
 import fs from 'node:fs';
