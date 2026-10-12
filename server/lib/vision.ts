@@ -14,7 +14,7 @@ import { lang } from '../db.js';
 import { t, userError } from '../i18n.js';
 import { visionRegionHint as regionHint } from './region-hints.js';
 
-export type VisionTask = 'receipt' | 'shelf' | 'recipe' | 'product' | 'text-recipe' | 'text-items';
+export type VisionTask = 'receipt' | 'shelf' | 'recipe' | 'product' | 'text-recipe' | 'text-items' | 'offer';
 
 const PROMPTS: Record<VisionTask, string> = {
   receipt: `You are reading a till receipt or an order confirmation from a grocery store or drugstore.
@@ -37,6 +37,11 @@ If several photos belong to one recipe, merge them.`,
   'text-recipe': `Convert the following recipe text to JSON: {"title": string, "description": string|null, "servings": number|null,
 "time_min": number|null, "thermomix": boolean, "tags": string[], "ingredients": [{"text": string, "qty": number|null, "unit": string|null, "pantry": boolean}],
 "steps": [{"text": string, "tm": {"time": string|null, "temp": string|null, "speed": string|null}|null}]}. Return ONLY JSON.`,
+  // list2 I: a photo of a flyer page or a shared offer (never fetched from feeds)
+  offer: `You see a supermarket flyer page or a price tag with offers. Return ONLY JSON:
+{"shop": string|null, "valid_from": "YYYY-MM-DD"|null, "valid_to": "YYYY-MM-DD"|null,
+"offers": [{"name": string, "brand": string|null, "size": string|null, "price": number, "regular_price": number|null}]}
+One entry per offered product with its offer price. Keep names as printed. Leave out anything without a price.`,
   'text-items': `Convert the following text (shopping list, note, receipt text) to JSON: {"lines": [{"name": string, "qty": number, "price": number|null}]}. Return ONLY JSON.`,
 };
 

@@ -55,4 +55,17 @@ export const de_list2: Record<string, string> = {
   pieces: 'Stück',
   '{name} thrown away {n}× – rather {size}?': '{name} {n}× weggeworfen – lieber {size}?',
   '{name} thrown away {n}× – a smaller pack?': '{name} {n}× weggeworfen – lieber eine kleinere Packung?',
+  // I – prices and offers
+  'cheapest at {shop}: {price}': 'am günstigsten bei {shop}: {price}',
+  'at {shop} last {price}': 'bei {shop} zuletzt {price}',
+  'Photos of flyers need text recognition on the server. Type or paste the offer instead.': 'Fotos von Prospekten brauchen Texterkennung auf dem Server. Tipp oder füg das Angebot stattdessen ein.',
+  'Only a picture or a PDF of the flyer can be read. Take a photo of the page instead.': 'Nur ein Bild oder PDF vom Prospekt lässt sich lesen. Mach lieber ein Foto von der Seite.',
+  '{name} is on your list': '{name} steht auf eurer Liste',
+  '{name} is on offer and due for you now': '{name} ist im Angebot und bei euch jetzt fällig',
+  '{name} is on offer and due for you in {n} days': '{name} ist im Angebot und bei euch in {n} Tagen fällig',
+  'usually {price} at {shop}': 'sonst {price} bei {shop}',
+  'only today': 'nur heute',
+  'until {date}': 'bis {date}',
+  'Offer not found': 'Angebot nicht gefunden',
+  'On offer: {what}': 'Im Angebot: {what}',
 };

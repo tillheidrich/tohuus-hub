@@ -81,6 +81,8 @@ export interface ShopItem {
   owner?: { id: number; name: string } | null;
   /** "Spinat 3× weggeworfen – lieber 250 g?" */
   size_hint?: string | null;
+  /** "bei Lidl zuletzt 1,19 €" from the household's receipts */
+  price_hint?: string | null;
 }
 
 export type Substitute = 'exact' | 'ok' | 'ask';

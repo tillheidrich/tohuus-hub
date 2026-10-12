@@ -17,6 +17,7 @@ import { locale, t } from '../i18n';
 import { money } from '../region';
 import { Empty } from '../ui';
 import { WgBalanceCard } from '../shop/forms';
+import { CheapestCard } from '../shop/offers';
 
 interface Part {
   name: string;
@@ -174,6 +175,8 @@ export function Money() {
           {d.priceChanges.length > 0 && <PriceChanges list={d.priceChanges} fmt={fmt} />}
           {/* list2 G: shared flat – who is ahead this month */}
           <WgBalanceCard month={month} />
+          {/* list2 I: where it is cheapest, from the household's own receipts */}
+          <CheapestCard />
           {d.hints.length > 0 && (
             <section className="hcard" aria-labelledby="h-hints">
               <div className="hcard-h">

@@ -16,6 +16,8 @@ import { createAppPassword, listAppPasswords, revokeAppPassword } from '../lib/c
 import { SECTIONS, addLines, checkout, placeItem } from '../lib/shop.js';
 import { getUserPref, setUserPref } from '../lib/onboard.js';
 import { parseListExport } from '../lib/list-import.js';
+import { cheapestOverview, pricesFor } from '../lib/prices.js';
+import { type OfferDraft, activeOffers, addOffer, deleteOffer, parseOfferLines, readOfferImage, readOfferLink, saveOffers } from '../lib/offers.js';
 import { addLunchbox, careCheck, careMissing, careSpent, lunchbox, lunchboxDue, setItemOwner, setLunchbox, splitImport, wgBalance } from '../lib/hhforms.js';
 import { uploadQuota } from '../lib/plans.js';
 import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeItemPhoto, restoreItem, setItemPhoto, setListPrefs, updateItem } from '../lib/list2.js';
@@ -394,3 +396,40 @@ r.put('/list/today-order', (req, res) => {
   setUserPref(uid, 'today.order', [...new Set(b.order)]);
   res.json({ order: [...new Set(b.order)] });
 });
+
+// ---------------------------------------------------------------- I: offers from own data + flyer photo
+
+/** Where is it cheapest – from the household's own receipts only. */
+r.get('/prices/cheapest', (req, res) => {
+  if (req.actor?.houseGuest) return void res.status(403).json({ error: 'forbidden' });
+  res.json(cheapestOverview(Math.min(40, Number(req.query.limit) || 12)));
+});
+r.get('/prices/product/:id', (req, res) => {
+  if (req.actor?.houseGuest) return void res.status(403).json({ error: 'forbidden' });
+  res.json(pricesFor([num(req.params.id)]).get(num(req.params.id)) ?? []);
+});
+
+/** A flyer photo (multipart `image`), a shared link to an image/PDF (`url`) or pasted text (`text`). */
+r.post(
+  '/offers/scan',
+  upload.single('image'),
+  uploadQuota,
+  wrap(async (req, res) => {
+    let read: { via: string; offers: OfferDraft[] };
+    if (req.file) read = await readOfferImage(req.file.buffer);
+    else if (typeof req.body?.url === 'string' && /^https?:\/\//.test(req.body.url)) read = await readOfferLink(req.body.url.slice(0, 2000));
+    else if (typeof req.body?.text === 'string' && req.body.text.trim()) read = { via: 'text', offers: parseOfferLines(req.body.text.slice(0, 20_000).split(/\r?\n/)) };
+    else return void res.status(400).json({ error: t('Nothing to import') });
+    const ids = saveOffers(read.offers, read.via, actorName(req));
+    return { via: read.via, offers: activeOffers(ids) };
+  }),
+);
+r.get('/offers', (_req, res) => res.json(activeOffers()));
+r.post(
+  '/offers/:id/add',
+  wrap((req) => addOffer(num(req.params.id), actorName(req))),
+);
+r.delete(
+  '/offers/:id',
+  wrap((req) => deleteOffer(num(req.params.id))),
+);

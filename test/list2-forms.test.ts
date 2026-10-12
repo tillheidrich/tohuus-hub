@@ -173,3 +173,69 @@ describe('package size from the waste history', () => {
     expect(g).toContain('waste');
   });
 });
+
+describe('I: prices from own receipts and offers', () => {
+  it('knows the cheapest shop and the base price', async () => {
+    const pr = await import('../server/lib/prices');
+    expect(pr.sizeAmount('500 g')).toEqual({ amount: 0.5, unit: 'kg' });
+    expect(pr.sizeAmount('6x1,5l')).toEqual({ amount: 9, unit: 'l' });
+    const pid = catalog.createProduct({ name: 'Butter', size: '250 g' });
+    const mk = (shop: string, price: number, ago: number) => {
+      const imp = imports.linesToImport('receipt', shop, [{ name: 'BUTTER', qty: 1, price }], { shop, date: new Date(Date.now() - ago * 86400000).toISOString().slice(0, 10) });
+      const out = imports.createImport(imp, { actor: 'Mira', autoApply: false, silent: true });
+      db.prepare(`UPDATE import_lines SET product_id = ?, action = 'add' WHERE import_id = ?`).run(pid, out.id);
+      db.prepare(`UPDATE imports SET status = 'applied' WHERE id = ?`).run(out.id);
+    };
+    mk('REWE', 2.49, 10);
+    mk('Aldi', 1.99, 5);
+    mk('REWE', 2.29, 2);
+    const list = pr.pricesFor([pid]).get(pid)!;
+    expect(list.map((x) => [x.shop, x.price])).toEqual([
+      ['Aldi', 1.99],
+      ['REWE', 2.29],
+    ]);
+    expect(list[0].base).toEqual({ value: 7.96, unit: 'kg' });
+    const ch = (await req('GET', '/api/prices/cheapest')).json;
+    expect(ch.find((c: any) => c.productId === pid)).toMatchObject({ name: 'Butter', saving: 0.3 });
+    const { id } = catalog.addToShopping({ productId: pid, text: 'Butter' });
+    const row = rows((await req('GET', '/api/shop/list')).json).find((x: any) => x.id === id);
+    expect(row.price_hint).toMatch(/^am günstigsten bei Aldi: 1,99\s€$/);
+  });
+
+  it('reads offers from pasted flyer text and matches them with list and rhythm', async () => {
+    const o = await import('../server/lib/offers');
+    const lines = ['LIDL – Angebote gültig vom 13.10. bis 18.10.', 'Kaffee Crema 1 kg', '9,99 €', 'Bananen je kg 1,29 statt 1,79', 'Ohne Preis hier'];
+    const drafts = o.parseOfferLines(lines, '2026-10-12');
+    expect(drafts).toEqual([
+      { name: 'Kaffee Crema 1 kg', price: 9.99, regular_price: null, size: null, shop: 'Lidl', valid_from: '2026-10-13', valid_to: '2026-10-18' },
+      { name: 'Bananen kg', price: 1.29, regular_price: 1.79, size: null, shop: 'Lidl', valid_from: '2026-10-13', valid_to: '2026-10-18' },
+    ]);
+    // coffee is bought every 7 days, last time 4 days ago → due in 3 days
+    const coffee = catalog.createProduct({ name: 'Kaffee Crema' });
+    for (const ago of [18, 11, 4]) {
+      const day = new Date(Date.now() - ago * 86400000).toISOString().slice(0, 10);
+      db.prepare(`INSERT INTO shopping_items (product_id, text, checked_at, cleared_at) VALUES (?, 'Kaffee', ?, ?)`).run(coffee, `${day} 10:00:00`, `${day} 11:00:00`);
+    }
+    const next = new Date(Date.now() + 6 * 86400000);
+    const until = `${String(next.getDate()).padStart(2, '0')}.${String(next.getMonth() + 1).padStart(2, '0')}.`;
+    const scan = await req('POST', '/api/offers/scan', { text: `Lidl gültig bis ${until}\nKaffee Crema 9,99 €` });
+    expect(scan.status, scan.text).toBe(200);
+    const off = scan.json.offers[0];
+    expect(off).toMatchObject({ name: 'Kaffee Crema', price: 9.99, shop: 'Lidl', productId: coffee, due: true });
+    expect(off.hints[0]).toBe('Kaffee Crema ist im Angebot und bei euch in 3 Tagen fällig');
+    const add = await req('POST', `/api/offers/${off.id}/add`);
+    const item = db.prepare('SELECT text, note, buy_at FROM shopping_items WHERE id = ?').get(add.json.itemId) as any;
+    expect(item.text).toBe('Kaffee Crema');
+    expect(item.note).toMatch(/^Im Angebot: Lidl 9,99\s€ bis \d\d\.\d\d\.$/);
+    expect(JSON.parse(item.buy_at)).toEqual(['Lidl']);
+    expect((await req('GET', '/api/offers')).json.find((x: any) => x.id === off.id)).toMatchObject({ added: true, onList: true });
+    // a photo needs OCR (merged later) or a vision model – neither here
+    const fd = new FormData();
+    fd.append('image', new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3])], { type: 'image/jpeg' }), 'flyer.jpg');
+    const photo = await fetch(base + '/api/offers/scan', { method: 'POST', headers: { cookie, origin: base }, body: fd });
+    expect(photo.status).toBe(422);
+    // expired offers disappear on their own
+    db.prepare(`UPDATE offers SET valid_to = '2020-01-01'`).run();
+    expect((await req('GET', '/api/offers')).json).toEqual([]);
+  });
+});

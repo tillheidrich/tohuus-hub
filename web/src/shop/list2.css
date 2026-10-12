@@ -486,3 +486,60 @@
 .wg-balance .neg {
   color: var(--ink);
 }
+
+/* I: offers and prices */
+.offers {
+  margin-top: 14px;
+}
+.offers .suggest-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.offers .suggest-h .linkish {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+}
+.offer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  border-top: 1px solid var(--line);
+}
+.offer b {
+  display: block;
+  font-weight: 600;
+  font-size: var(--fs-s);
+}
+.offer .grow > span {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+.offer-price {
+  min-width: 64px;
+  font-family: var(--display);
+  font-size: var(--fs-l);
+}
+.offer.hot .offer-price {
+  color: var(--primary);
+}
+.cheap-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cheap-list b {
+  display: block;
+}
+.cheap-list span {
+  font-size: var(--fs-s);
+  color: var(--ink-2);
+}

@@ -22,6 +22,7 @@ import { PURCHASE_DAY } from './spending.js';
 import { clearChecked, tickItem } from './shopping-trust.js';
 import './share-core.js';
 import { wasteHints } from './hhforms.js';
+import { priceHints } from './prices.js';
 
 export const SUBSTITUTES = ['exact', 'ok', 'ask'] as const;
 export type Substitute = (typeof SUBSTITUTES)[number];
@@ -70,6 +71,7 @@ export function lastBoughtFor(productIds: number[]): Map<number, LastBought> {
 export function decorateItems<T extends { product_id: number | null; substitute?: string | null; photo_path?: string | null; owner_user_id?: number | null }>(rows: T[]) {
   const last = lastBoughtFor(rows.map((r) => r.product_id ?? 0));
   const waste = wasteHints(rows.map((r) => r.product_id ?? 0).filter(Boolean));
+  const prices = priceHints(rows.filter((r) => !(r as { checked_at?: string | null }).checked_at).map((r) => r.product_id ?? 0));
   const names = new Map((db.prepare('SELECT id, name FROM users').all() as { id: number; name: string }[]).map((u) => [u.id, u.name]));
   return rows.map((r) => ({
     ...r,
@@ -80,6 +82,8 @@ export function decorateItems<T extends { product_id: number | null; substitute?
     owner: r.owner_user_id && names.has(r.owner_user_id) ? { id: r.owner_user_id, name: names.get(r.owner_user_id)! } : null,
     // "Spinat 3× weggeworfen – lieber 250 g?" (hhforms.ts)
     size_hint: r.product_id ? (waste.get(r.product_id) ?? null) : null,
+    // "bei Lidl zuletzt 1,19 €" / "am günstigsten bei Aldi: 1,99 €" – from the household's own receipts (prices.ts)
+    price_hint: r.product_id ? (prices.get(r.product_id) ?? null) : null,
   }));
 }
 

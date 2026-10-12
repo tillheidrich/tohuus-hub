@@ -35,6 +35,7 @@ import { AtStoreChips, EstimateLine, type GuardHint, type ListInfo, GuardSheet, 
 import { TripsBar, useTrips } from '../shop/together';
 import { ImportListSheet } from '../shop/bridges';
 import { CareCheckSheet, LunchboxSuggestion, OwnerChips } from '../shop/forms';
+import { OfferScanSheet, OffersStrip } from '../shop/offers';
 import { ListViewSheet, RecentDone, SyncLine, cacheView, cachedView, readLocalPrefs, useListPrefs } from '../shop/trust';
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, SectionShape, sectionLabel } from '../shop/sections';
 import { ItemBuyAt } from '../shop/BuyAt';
@@ -124,6 +125,7 @@ export function Shopping() {
   const [usualsOpen, setUsualsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [careOpen, setCareOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
   const [guardAsk, setGuardAsk] = useState<{ text: string; productId?: number; hints: GuardHint[] } | null>(null);
   const prefs = useListPrefs();
   // list2 H: drag a row to another place, aisle or list (menu alternative in the row sheet)
@@ -509,6 +511,7 @@ export function Shopping() {
       {!inStore && usualsOpen && <UsualsGrid onClose={() => setUsualsOpen(false)} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id, list_id: listId || null })} />}
 
       {!inStore && listId === 0 && <LunchboxSuggestion />}
+      {!inStore && listId === 0 && !me.data?.actor.houseGuest && <OffersStrip onScan={() => setOfferOpen(true)} />}
       {!inStore && listId === 0 && <Suggestions onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
 
       <div className="shop-groups">
@@ -649,6 +652,7 @@ export function Shopping() {
       {view?.store && <OrderSheet open={ordering} store={view.store} present={view.sections.map((s) => s.key)} onClose={() => setOrdering(false)} />}
       <NewStoreSheet open={newStore} onClose={() => setNewStore(false)} onCreated={(s) => { pickStore(s.id); refresh(); }} />
       <ListViewSheet open={viewOpen} onClose={() => setViewOpen(false)} />
+      <OfferScanSheet open={offerOpen} onClose={() => setOfferOpen(false)} />
       <ImportListSheet open={importOpen} listId={listId} onClose={() => setImportOpen(false)} />
       {currentList?.kind === 'care' && <CareCheckSheet listId={currentList.id} open={careOpen} onClose={() => setCareOpen(false)} />}
     </div>
@@ -818,6 +822,7 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
     store && !i.note ? lastBoughtLine(i) : null,
     i.owner ? t('for {name}', { name: i.owner.name }) : null,
     !store ? i.size_hint : null,
+    i.price_hint,
     big ? null : i.brand,
     big || i.share ? null : originLabel(origin, i.added_by),
   ]

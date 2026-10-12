@@ -205,4 +205,17 @@ export const list2: Record<string, string> = {
   'Order saved': 'Reihenfolge gespeichert',
   'Same day next week': 'Gleicher Tag nächste Woche',
   'Order in the aisle': 'Reihenfolge im Gang',
+  // I – offers and prices
+  'A flyer page, a price tag or a shared offer – ToHuus checks it against your list and what is due. Nothing is fetched from offer sites.': 'Eine Prospektseite, ein Preisschild oder ein geteiltes Angebot – ToHuus gleicht es mit eurer Liste und dem ab, was fällig ist. Von Angebotsseiten wird nichts geholt.',
+  'An offer': 'Ein Angebot',
+  'Last price per shop from your receipts.': 'Letzter Preis pro Laden aus euren Bons.',
+  'Link to a flyer picture or PDF': 'Link zu einem Prospektbild oder PDF',
+  'No prices found – try a sharper photo or paste the text.': 'Keine Preise gefunden – versuch ein schärferes Foto oder füg den Text ein.',
+  Offers: 'Angebote',
+  'Photograph a flyer page': 'Prospektseite fotografieren',
+  Read: 'Lesen',
+  'Read the text': 'Text lesen',
+  'Share or photograph an offer': 'Angebot teilen oder fotografieren',
+  'Where it’s cheapest': 'Wo ist es am günstigsten',
+  '…or paste: “Lidl until 18.10. coffee 9,99 €”': '…oder einfügen: „Lidl bis 18.10. Kaffee 9,99 €“',
 };
