@@ -2,6 +2,9 @@ import SwiftUI
 
 /// "Mehr": account, household, plan & storage, devices, sign out, delete account, legal, web settings.
 struct SettingsView: View {
+    let store: ServerStore
+    /// iPad sidebar: shown as an area, not as a sheet (no "Done")
+    var embedded = false
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
     @State private var devices: [AppDevice] = []
@@ -97,7 +100,9 @@ struct SettingsView: View {
             }
             .navigationTitle(L("More"))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
+            .toolbar {
+                if !embedded { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
+            }
             .task { await load() }
             .confirmationDialog(L("Sign out on this iPhone?"), isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button(L("Sign out"), role: .destructive) { dismiss(); app.signOut() }

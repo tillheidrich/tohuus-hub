@@ -13,11 +13,11 @@ settings:
     TOHUUS_TEAM_ID: "FVS7WVTQ67"  # Till Heidrich (Individual) – same team as Equilo
     DEVELOPMENT_TEAM: "$(TOHUUS_TEAM_ID)"
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.2.0"
+    CURRENT_PROJECT_VERSION: "2"
     SWIFT_VERSION: "6.0"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-    TARGETED_DEVICE_FAMILY: "1"
+    TARGETED_DEVICE_FAMILY: "1,2"
     SWIFT_EMIT_LOC_STRINGS: false
     LOCALIZATION_PREFERS_STRING_CATALOGS: true
     ENABLE_USER_SCRIPT_SANDBOXING: true
@@ -46,7 +46,9 @@ targets:
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        UIRequiresFullScreen: true
+        # iPad: every orientation, Split View, Slide Over and Stage Manager (no UIRequiresFullScreen)
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIApplicationSupportsMultipleScenes: false
         ITSAppUsesNonExemptEncryption: false
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true   # http://localhost and LAN addresses for self-hosted servers / development

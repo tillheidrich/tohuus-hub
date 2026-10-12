@@ -20,6 +20,15 @@ final class AppModel {
     var showPaywall = false
     /// set by deep links (tohuus://shopping from the widget)
     var requestedTab: String?
+    /// iPad kitchen mode (big week plan, recipe step by step, list to tick)
+    var showKitchen = false
+    /// ⌘N: focus the "what's missing" field on the list
+    private(set) var addRequest = 0
+    /// ⌘F: search (pantry, or recipes while cooking)
+    private(set) var searchRequest = 0
+
+    func requestAdd() { addRequest += 1 }
+    func requestSearch() { searchRequest += 1 }
 
     private static let householdsKey = "session.households"
     private static let userKey = "session.user"

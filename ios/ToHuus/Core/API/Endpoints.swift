@@ -138,6 +138,8 @@ extension APIClient {
         if let title { body["title"] = title }
         _ = try await send("POST", "api/plan", json: body, as: Ignored.self)
     }
+    func movePlan(_ id: Int, day: String) async throws { _ = try await send("PATCH", "api/plan/\(id)", json: ["day": day], as: Ignored.self) }
+    func setPlanCooked(_ id: Int, _ cooked: Bool) async throws { _ = try await send("PATCH", "api/plan/\(id)", json: ["cooked": cooked], as: Ignored.self) }
     func deletePlan(_ id: Int) async throws { _ = try await send("DELETE", "api/plan/\(id)", as: Ignored.self) }
     func planToList(from: String, days: Int = 7) async throws { _ = try await send("POST", "api/plan/shopping", json: ["from": from, "days": days], as: Ignored.self) }
 

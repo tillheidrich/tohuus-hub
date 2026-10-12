@@ -92,6 +92,13 @@ struct ShoppingView: View {
             .overlay(alignment: .bottom) { undoBar }
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }
             .task(id: store.revision("shopping")) { await loadSuggestions() }
+            .onChange(of: app.addRequest) { _, _ in
+                if shopMode {
+                    shopMode = false
+                    Task { await store.setStore(nil, shopMode: false) }
+                }
+                inputFocused = true
+            }
         }
     }
 
@@ -135,6 +142,7 @@ struct ShoppingView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .hoverEffect(.highlight)
         .accessibilityValue(checked ? L("done") : L("open"))
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {

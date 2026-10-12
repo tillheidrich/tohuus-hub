@@ -31,10 +31,28 @@ final class CookModel {
         try? await api.deletePlan(e.id)
         await load(api)
     }
+
+    /// Drag & drop (or the "Move to" menu) in the week plan: PATCH /api/plan/:id { day }.
+    func movePlan(_ id: Int, to day: String, api: APIClient) async {
+        guard let entry = plan?.entries.first(where: { $0.id == id }), entry.day != day else { return }
+        if let i = plan?.entries.firstIndex(where: { $0.id == id }) { plan?.entries[i].day = day }
+        do {
+            try await api.movePlan(id, day: day)
+            Haptics.tick()
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
+        await load(api)
+    }
 }
 
 struct CookingView: View {
     let store: ServerStore
+    @Environment(AppModel.self) private var app
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var selectedRecipe: Int?
+    @FocusState private var searchFocused: Bool
+    @State private var dropTarget: String?
     @State private var model = CookModel()
     @State private var tab = 0
     @State private var search = ""
@@ -42,6 +60,56 @@ struct CookingView: View {
 
     var body: some View {
         NavigationStack {
+            HStack(spacing: 0) {
+                column
+                    .frame(maxWidth: sizeClass == .regular ? 440 : .infinity)
+                if sizeClass == .regular {
+                    Divider()
+                    Group {
+                        if let selectedRecipe {
+                            RecipeDetailView(recipeId: selectedRecipe, store: store).id(selectedRecipe)
+                        } else {
+                            EmptyStateView(systemImage: "fork.knife", title: L("Choose a recipe on the left."),
+                                           message: L("Or open the kitchen mode: big week plan, recipe step by step, list to tick."))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .canvasBackground()
+                }
+            }
+            .navigationTitle(L("Cooking"))
+            .navigationDestination(for: Int.self) { id in RecipeDetailView(recipeId: id, store: store) }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        app.showKitchen = true
+                    } label: {
+                        Label(L("Kitchen mode"), systemImage: "frying.pan")
+                    }
+                    .hoverEffect(.highlight)
+                }
+            }
+            .onChange(of: app.searchRequest) { _, _ in
+                tab = 2
+                searchFocused = true
+            }
+        }
+    }
+
+    /// Opens a recipe: next to the list on wide screens, pushed on the iPhone.
+    @ViewBuilder
+    private func recipeLink<Label: View>(_ id: Int, @ViewBuilder label: () -> Label) -> some View {
+        if sizeClass == .regular {
+            Button { selectedRecipe = id } label: { label() }
+                .buttonStyle(.plain)
+                .hoverEffect(.highlight)
+        } else {
+            NavigationLink(value: id) { label() }
+                .buttonStyle(.plain)
+        }
+    }
+
+    private var column: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
                     Picker("", selection: $tab) {
@@ -61,8 +129,6 @@ struct CookingView: View {
                 .padding(.bottom, 80)
             }
             .canvasBackground()
-            .navigationTitle(L("Cooking"))
-            .navigationDestination(for: Int.self) { id in RecipeDetailView(recipeId: id, store: store) }
             .refreshable { await model.load(store.api) }
             .task(id: store.revision("recipes") + store.revision("stock")) { await model.load(store.api) }
             .overlay(alignment: .bottom) {
@@ -72,7 +138,6 @@ struct CookingView: View {
                         .task { try? await Task.sleep(nanoseconds: 2_500_000_000); self.toast = nil }
                 }
             }
-        }
     }
 
     @ViewBuilder private var ideas: some View {
@@ -93,7 +158,7 @@ struct CookingView: View {
     }
 
     private func ideaCard(_ idea: CookIdea) -> some View {
-        NavigationLink(value: idea.recipeId) {
+        recipeLink(idea.recipeId) {
             HStack(spacing: Theme.Space.s3) {
                 RemoteImage(url: store.api.imageURL(idea.image), api: store.api, placeholder: "fork.knife")
                     .frame(width: 76, height: 76)
@@ -120,9 +185,9 @@ struct CookingView: View {
             }
             .padding(Theme.Space.s3)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
-            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(selectedRecipe == idea.recipeId && sizeClass == .regular ? Theme.primary : Theme.line, lineWidth: 1))
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
     }
 
     @ViewBuilder private var week: some View {
@@ -137,26 +202,40 @@ struct CookingView: View {
                     ForEach(entries) { e in
                         HStack {
                             if let rid = e.recipeId {
-                                NavigationLink(value: rid) { Text(e.title).foregroundStyle(Theme.ink) }
+                                recipeLink(rid) { Text(e.title).foregroundStyle(Theme.ink) }
                             } else {
                                 Text(e.title)
                             }
                             Spacer()
                             if e.isCooked { Image(systemName: "checkmark").foregroundStyle(Theme.primaryText) }
                             Menu {
+                                Menu {
+                                    ForEach(plan.days.filter { $0 != e.day }, id: \.self) { d in
+                                        Button(ServerDate.shortDay(d) ?? d) { Task { await model.movePlan(e.id, to: d, api: store.api) } }
+                                    }
+                                } label: { Label(L("Move to"), systemImage: "arrow.left.arrow.right") }
                                 Button(role: .destructive) {
                                     Task { await model.removePlan(e, api: store.api) }
                                 } label: { Label(L("Remove"), systemImage: "trash") }
                             } label: {
-                                Image(systemName: "ellipsis").foregroundStyle(Theme.ink3).frame(width: 30, height: 30)
+                                Image(systemName: "ellipsis").foregroundStyle(Theme.ink3).frame(width: 44, height: 44)
                             }
+                            .accessibilityLabel(LF("Options for %@", e.title))
                         }
                         .font(Theme.rowFont)
+                        .draggable(PlanDrag(id: e.id).payload) {
+                            Text(e.title).padding(8).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.sm))
+                        }
                     }
                 }
                 .padding(Theme.Space.s3)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+                .background(dropTarget == day ? Theme.primarySoft : Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+                .dropDestination(for: String.self) { items, _ in
+                    guard let id = items.compactMap(PlanDrag.init(payload:)).first?.id else { return false }
+                    Task { await model.movePlan(id, to: day, api: store.api) }
+                    return true
+                } isTargeted: { on in dropTarget = on ? day : (dropTarget == day ? nil : dropTarget) }
             }
             Button {
                 Task {
@@ -171,7 +250,8 @@ struct CookingView: View {
                 Label(L("Missing for the week → list"), systemImage: "cart.badge.plus")
             }
             .buttonStyle(SecondaryButtonStyle())
-            Text(L("Plan a meal from the recipe page or ask the assistant.")).font(.footnote).foregroundStyle(Theme.ink3)
+            Text(L("Drag a meal to another day, or use the … menu. Plan a meal from the recipe page or ask the assistant."))
+                .font(.footnote).foregroundStyle(Theme.ink3)
         } else if model.loading {
             ProgressView().frame(maxWidth: .infinity)
         }
@@ -179,6 +259,7 @@ struct CookingView: View {
 
     @ViewBuilder private var recipeList: some View {
         TextField(L("Search recipes"), text: $search)
+            .focused($searchFocused)
             .padding(10)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
             .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(Theme.line, lineWidth: 1))
@@ -188,7 +269,7 @@ struct CookingView: View {
         }
         LazyVStack(alignment: .leading, spacing: 0) {
             ForEach(list) { r in
-                NavigationLink(value: r.id) {
+                recipeLink(r.id) {
                     HStack(spacing: Theme.Space.s3) {
                         RemoteImage(url: store.api.imageURL(r.imagePath), api: store.api, placeholder: "fork.knife")
                             .frame(width: 44, height: 44)
@@ -198,10 +279,21 @@ struct CookingView: View {
                         if r.favorite?.bool == true { Image(systemName: "heart.fill").foregroundStyle(Theme.clay) }
                     }
                     .padding(.vertical, 8)
+                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
                 Divider()
             }
         }
+    }
+}
+
+/// Drag payload for a week-plan entry ("tohuus-plan:<id>"), so other text dropped on a day is ignored.
+struct PlanDrag {
+    let id: Int
+    var payload: String { "tohuus-plan:\(id)" }
+    init(id: Int) { self.id = id }
+    init?(payload: String) {
+        guard payload.hasPrefix("tohuus-plan:"), let n = Int(payload.dropFirst(12)) else { return nil }
+        id = n
     }
 }

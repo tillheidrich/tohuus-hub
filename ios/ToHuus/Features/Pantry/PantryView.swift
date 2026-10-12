@@ -42,6 +42,11 @@ final class PantryModel {
 
 struct PantryView: View {
     let store: ServerStore
+    @Environment(AppModel.self) private var app
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var searching = false
+    /// regular width: the product shown next to the list
+    @State private var selected: Int?
     @State private var model = PantryModel()
     @State private var search = ""
     @State private var place: Int?
@@ -53,26 +58,22 @@ struct PantryView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            List {
-                filterBar
-                if let error = model.error {
-                    ErrorBanner(message: error) { Task { await model.load(store.api) } }.listRowBackground(Color.clear)
+            HStack(spacing: 0) {
+                list
+                    .frame(maxWidth: sizeClass == .regular ? 400 : .infinity)
+                if sizeClass == .regular {
+                    Divider()
+                    Group {
+                        if let selected {
+                            ProductDetailView(productId: selected, store: store).id(selected)
+                        } else {
+                            EmptyStateView(systemImage: "cabinet", title: L("Choose something on the left."))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .canvasBackground()
                 }
-                let items = model.filtered(search: search, place: place, onlyAttention: attention)
-                if items.isEmpty && !model.loading {
-                    EmptyStateView(systemImage: "cabinet", title: search.isEmpty ? L("Nothing here yet.") : L("Nothing found."),
-                                   message: L("Receipts and ticks fill the pantry by themselves – no need to count."))
-                        .listRowBackground(Color.clear)
-                }
-                ForEach(items) { p in
-                    NavigationLink(value: p.id) { ProductRow(product: p, api: store.api) }
-                }
-                Color.clear.frame(height: 72).listRowBackground(Color.clear)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .canvasBackground()
-            .searchable(text: $search, prompt: L("Search the pantry"))
             .navigationTitle(L("Pantry"))
             .navigationDestination(for: Int.self) { id in ProductDetailView(productId: id, store: store) }
             .toolbar {
@@ -85,8 +86,6 @@ struct PantryView: View {
                     .accessibilityLabel(L("Scan barcode"))
                 }
             }
-            .refreshable { await model.load(store.api) }
-            .task(id: store.revision("stock") + store.revision("products")) { await model.load(store.api) }
             .sheet(isPresented: $showScanner) {
                 ScannerSheet(title: L("Scan barcode"), symbologies: [.ean13, .ean8, .upce, .code128]) { code in
                     Task { await lookup(code) }
@@ -97,11 +96,48 @@ struct PantryView: View {
                     scanned = nil
                     Task {
                         await model.load(store.api)
-                        if let newId { path.append(newId) }
+                        if let newId { open(newId) }
                     }
                 }
             }
         }
+    }
+
+    private func open(_ id: Int) {
+        if sizeClass == .regular { selected = id } else { path.append(id) }
+    }
+
+    private var list: some View {
+            List {
+                filterBar
+                if let error = model.error {
+                    ErrorBanner(message: error) { Task { await model.load(store.api) } }.listRowBackground(Color.clear)
+                }
+                let items = model.filtered(search: search, place: place, onlyAttention: attention)
+                if items.isEmpty && !model.loading {
+                    EmptyStateView(systemImage: "cabinet", title: search.isEmpty ? L("Nothing here yet.") : L("Nothing found."),
+                                   message: L("Receipts and ticks fill the pantry by themselves – no need to count."))
+                        .listRowBackground(Color.clear)
+                }
+                ForEach(items) { p in
+                    if sizeClass == .regular {
+                        Button { selected = p.id } label: { ProductRow(product: p, api: store.api).contentShape(Rectangle()) }
+                            .buttonStyle(.plain)
+                            .listRowBackground(selected == p.id ? Theme.primarySoft : Color.clear)
+                            .hoverEffect(.highlight)
+                    } else {
+                        NavigationLink(value: p.id) { ProductRow(product: p, api: store.api) }
+                    }
+                }
+                Color.clear.frame(height: 72).listRowBackground(Color.clear)
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .canvasBackground()
+            .searchable(text: $search, isPresented: $searching, prompt: L("Search the pantry"))
+            .onChange(of: app.searchRequest) { _, _ in searching = true }
+            .refreshable { await model.load(store.api) }
+            .task(id: store.revision("stock") + store.revision("products")) { await model.load(store.api) }
     }
 
     private var filterBar: some View {
@@ -135,7 +171,7 @@ struct PantryView: View {
         do {
             let r = try await store.api.lookupBarcode(code)
             if let local = r.local {
-                path.append(local.id)
+                open(local.id)
             } else {
                 scannedCode = code
                 scanned = r

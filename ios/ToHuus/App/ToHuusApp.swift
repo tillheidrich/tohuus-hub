@@ -37,6 +37,20 @@ struct ToHuusApp: App {
                 }
                 .onOpenURL { url in handle(url) }
         }
+        .commands {
+            // hardware keyboard on iPad (and iPhone): ⌘N adds to the list, ⌘F searches
+            CommandGroup(after: .newItem) {
+                Button(L("Add to the list")) { app.requestAdd() }
+                    .keyboardShortcut("n", modifiers: .command)
+                    .disabled(app.phase != .signedIn)
+                Button(L("Search")) { app.requestSearch() }
+                    .keyboardShortcut("f", modifiers: .command)
+                    .disabled(app.phase != .signedIn)
+                Button(L("Speak")) { app.showAssistant = true }
+                    .keyboardShortcut("k", modifiers: .command)
+                    .disabled(app.phase != .signedIn)
+            }
+        }
     }
 
     /// tohuus://assistant, tohuus://shopping (widget) and the other tabs
@@ -45,7 +59,8 @@ struct ToHuusApp: App {
         guard app.phase == .signedIn else { return }
         switch url.host() {
         case "assistant": app.showAssistant = true
-        case "shopping", "today", "pantry", "cooking", "money": app.requestedTab = url.host()
+        case "shopping", "today", "pantry", "cooking", "money", "more": app.requestedTab = url.host()
+        case "kitchen": app.showKitchen = true
         default: break
         }
     }
