@@ -1,0 +1,25 @@
+/** German strings of the purchase rhythm and the origin line under every shopping list row. */
+export const de_rhythm: Record<string, string> = {
+  'No purchase rhythm for this product yet': 'Für dieses Produkt gibt es noch keinen Einkaufsrhythmus',
+  // origin of a list row (shopping-trust.ts)
+  'remembers: every ~{n} days': 'merkt sich: alle ~{n} Tage',
+  'remembers: bought regularly': 'merkt sich: wird regelmäßig gekauft',
+  'from the assistant': 'vom Assistenten',
+  'from the assistant, for {name}': 'vom Assistenten, für {name}',
+  'from recipe {title}': 'aus Rezept {title}',
+  'from a recipe': 'aus einem Rezept',
+  'for the meal plan': 'für den Wochenplan',
+  'running low in stock': 'im Vorrat knapp',
+  'used up · {name}, {when}': 'aufgebraucht · {name}, {when}',
+  'used up': 'aufgebraucht',
+  'for the trip': 'für die Reise',
+  'for home care': 'für Haus & Pflege',
+  'after the party': 'nach der Party',
+  'via Home Assistant': 'über Home Assistant',
+  'via Telegram': 'über Telegram',
+  'shared from another app': 'aus einer anderen App geteilt',
+  'from a guest link': 'über einen Gästelink',
+  'added {when}': 'hinzugefügt {when}',
+  'today {time}': 'heute {time}',
+  'yesterday {time}': 'gestern {time}',
+};

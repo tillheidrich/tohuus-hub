@@ -32,6 +32,7 @@ import { isMasked, notPrivate } from './share-core.js';
 import { norm } from './text.js';
 import { reconcile, type Fields, type LocalItem, type LocalOp, type RemoteItem, type RemoteOp, type SyncMode, type Link } from './ha2-engine.js';
 import { featureOff, householdId } from './tenancy.js';
+import { afterUntick } from './shopping-trust.js';
 
 migrate(
   'ha2-1',
@@ -432,7 +433,10 @@ const shopping: Adapter = {
     if (p.title !== undefined && String(p.title).trim() && !isMasked(id)) db.prepare('UPDATE shopping_items SET text = ? WHERE id = ?').run(String(p.title).trim().slice(0, 200), id);
     if (p.qty !== undefined) db.prepare('UPDATE shopping_items SET qty = ? WHERE id = ?').run(Number(p.qty) > 0 && Number(p.qty) !== 1 ? Number(p.qty) : null, id);
     if (p.done === true) db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = 'Home Assistant', in_basket = 0 WHERE id = ? AND checked_at IS NULL`).run(id);
-    if (p.done === false) db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(id);
+    if (p.done === false) {
+      db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(id);
+      afterUntick(id, 'Home Assistant');
+    }
     return null;
   },
   ops(op, entity) {

@@ -317,7 +317,16 @@ export function moveStock(productId: number, from: number, to: number, qty: numb
 
 // ------------------------------------------------------------ shopping
 
-export function addToShopping(input: { productId?: number | null; text: string; qty?: number | null; note?: string | null; source?: string; addedBy?: string }) {
+export function addToShopping(input: {
+  productId?: number | null;
+  text: string;
+  qty?: number | null;
+  note?: string | null;
+  source?: string;
+  addedBy?: string;
+  /** where it came from, shown under the row (shopping-trust.ts: rhythm interval, recipe title …) */
+  origin?: Record<string, unknown> | null;
+}) {
   if (input.productId) {
     const open = db.prepare('SELECT id FROM shopping_items WHERE product_id = ? AND checked_at IS NULL').get(input.productId) as { id: number } | undefined;
     if (open) return { id: open.id, created: false };
@@ -325,9 +334,13 @@ export function addToShopping(input: { productId?: number | null; text: string; 
     const open = db.prepare('SELECT id FROM shopping_items WHERE lower(text) = lower(?) AND checked_at IS NULL').get(input.text) as { id: number } | undefined;
     if (open) return { id: open.id, created: false };
   }
-  const info = db
-    .prepare('INSERT INTO shopping_items (product_id, text, qty, note, source, added_by) VALUES (?, ?, ?, ?, ?, ?)')
-    .run(input.productId ?? null, input.text, input.qty ?? null, input.note ?? null, input.source ?? 'manual', input.addedBy ?? null);
+  const info = input.origin
+    ? db
+        .prepare('INSERT INTO shopping_items (product_id, text, qty, note, source, added_by, origin_detail) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .run(input.productId ?? null, input.text, input.qty ?? null, input.note ?? null, input.source ?? 'manual', input.addedBy ?? null, JSON.stringify(input.origin))
+    : db
+        .prepare('INSERT INTO shopping_items (product_id, text, qty, note, source, added_by) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(input.productId ?? null, input.text, input.qty ?? null, input.note ?? null, input.source ?? 'manual', input.addedBy ?? null);
   emit('shopping');
   return { id: Number(info.lastInsertRowid), created: true };
 }

@@ -81,7 +81,7 @@ export interface SpendLine {
   note: string | null;
 }
 
-const PURCHASE_DAY = `CASE WHEN json_extract(i.meta, '$.date') GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'
+export const PURCHASE_DAY = `CASE WHEN json_extract(i.meta, '$.date') GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'
   THEN substr(json_extract(i.meta, '$.date'), 1, 10) ELSE substr(COALESCE(i.applied_at, i.created_at), 1, 10) END`;
 
 /** All paid lines from applied imports (not: unavailable items, items returned at pickup). */

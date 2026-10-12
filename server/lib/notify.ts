@@ -87,7 +87,9 @@ export const DEFAULT_NOTIFY: NotifySettings = {
   emailTo: '',
   digestHour: 17,
   expiryWarnDays: 3,
-  autoShoppingList: true,
+  // off by default since Oct 2026: derived items are suggestions, never silently on the list (shopping-trust.ts keeps it
+  // on for households that already maintained their stock before)
+  autoShoppingList: false,
   events: {
     'stock.low': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'stock.empty': { ha: true, webhook: true, ntfy: true, email: false, push: true },

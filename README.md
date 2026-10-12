@@ -197,9 +197,12 @@ Every variable the server reads. Only `BASE_URL` and the admin account matter fo
 | `SEED_DEMO` | `false` | `true` loads the demo household once, on a start when there are no products yet. Demo rows are marked and removable. |
 | `TZ` | `Europe/Berlin` | Time zone for best-before dates, the daily digest and the nightly backup. |
 | `TRUST_PROXY_HOPS` | `1` | Number of reverse proxies in front, for rate limiting by client IP. |
-| `VISION_BASE_URL` | none | Any OpenAI-compatible endpoint with image input (Mistral, Ollama with a vision model, vLLM, OpenRouter). Enables photo and text imports. |
-| `VISION_API_KEY` | none | API key for that endpoint. |
-| `VISION_MODEL` | none | Model name. Vision is on when both URL and model are set. |
+| `AI_API_KEY` | none | Turns on the assistant, voice and receipt photos. With only this set, ToHuus uses OpenRouter pinned to Mistral (EU, no fallbacks, no data collection). See [docs/assistant.md](docs/assistant.md). |
+| `AI_BASE_URL` | `https://openrouter.ai/api/v1` | Any OpenAI-compatible endpoint (Mistral, Ollama, vLLM …). The provider pin is only sent to OpenRouter. |
+| `AI_MODEL_TEXT` / `AI_MODEL_VISION` | `mistralai/mistral-small-2603` | Assistant and photo models. |
+| `AI_MODEL_VISION_HARD` | `mistralai/mistral-large-4-0` | Second try for receipts whose lines don't add up. |
+| `AI_MODEL_AUDIO` | `mistralai/voxtral-small-24b-2507` | Speech to text for the assistant's microphone. |
+| `VISION_BASE_URL` / `VISION_API_KEY` / `VISION_MODEL` | none | Older setting for photo and text imports; used when no `AI_*` is set. |
 | `SMTP_HOST` | none | Mail server. With `SMTP_FROM` it enables e-mail notifications, the digest, sign-in links and password reset. |
 | `SMTP_PORT` | `587` | Mail server port. |
 | `SMTP_SECURE` | `false` | `true` for implicit TLS (port 465). |

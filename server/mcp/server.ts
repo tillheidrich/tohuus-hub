@@ -44,6 +44,9 @@ import { register as register_spend2 } from './tools-spend2.js';
 import { register as register_print } from './tools-print.js';
 import { register as register_share } from './tools-share.js';
 import { notPrivate } from '../lib/share-core.js';
+import { tickItem } from '../lib/shopping-trust.js';
+import { redactForAssistant } from '../lib/people-signals.js';
+import { register as register_features } from './tools-features.js';
 import { register as register_labels } from './tools-labels.js';
 import { register as register_away } from './tools-away.js';
 import { register as register_plan2 } from './tools-plan2.js';
@@ -76,6 +79,23 @@ function candidates(q: string) {
     .map((p) => ({ id: p.id, name: p.name, brand: p.brand }));
 }
 
+/**
+ * Every tool answer passes the assistant filter (people-signals.ts): per-person suggestion reasons become neutral,
+ * allergy warnings become "not suitable for at least one person" unless the household allowed sharing health data.
+ */
+function withAssistantFilter(s: McpServer): McpServer {
+  const register = s.registerTool.bind(s) as (...a: any[]) => any;
+  (s as any).registerTool = (name: string, cfg: unknown, handler: (...a: any[]) => any) =>
+    register(name, cfg, async (...args: any[]) => {
+      const out = await handler(...args);
+      const red = redactForAssistant();
+      if (out && Array.isArray(out.content))
+        return { ...out, content: out.content.map((c: any) => (c?.type === 'text' && typeof c.text === 'string' ? { ...c, text: red.text(c.text) } : c)) };
+      return out;
+    });
+  return s;
+}
+
 function compact(p: ReturnType<typeof listProducts>[number]) {
   const locs = db.prepare('SELECT id, name FROM locations').all() as { id: number; name: string }[];
   const lname = new Map(locs.map((l) => [l.id, l.name]));
@@ -94,7 +114,7 @@ function compact(p: ReturnType<typeof listProducts>[number]) {
 }
 
 export function buildMcpServer(actorName: string) {
-  const s = new McpServer(
+  const s = withAssistantFilter(new McpServer(
     { name: 'tohuus', version: '0.1.0' },
     {
       instructions:
@@ -104,7 +124,7 @@ export function buildMcpServer(actorName: string) {
         'purchases/receipts → record_purchase (by default queued for review in the app), recipes → save_recipe. ' +
         'If a product name is unclear, use search_stock before changing stock.',
     },
-  );
+  ));
   // image references in tool results become absolute, short-lived signed URLs (/img needs authentication)
   const register = s.registerTool.bind(s) as (...a: any[]) => any;
   (s as any).registerTool = (name: string, cfg: unknown, handler: (...a: any[]) => any) =>
@@ -309,10 +329,9 @@ export function buildMcpServer(actorName: string) {
         : db.prepare(`SELECT * FROM shopping_items WHERE checked_at IS NULL AND ${notPrivate()} AND lower(text) LIKE lower(?) ESCAPE '\\' LIMIT 1`).get(`%${likeEsc(item)}%`)) as any;
       if (!row) return text({ error: 'not on the list' });
       if (row.checked_at) return text({ ok: true, already_checked: row.text });
-      db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ? WHERE id = ?`).run(actorName, row.id);
-      if (to_stock && row.product_id) adjustStock({ productId: row.product_id, delta: row.qty ?? 1, reason: 'purchase', actor: actorName });
-      emit('shopping');
-      return text({ ok: true, checked: row.text });
+      // books like a tick in the app, so un-ticking later takes the booking back (shopping-trust.ts)
+      const out = tickItem(row.id, true, actorName, { toStock: to_stock });
+      return text({ ok: true, checked: row.text, booked: out.booked });
     },
   );
 
@@ -324,8 +343,9 @@ export function buildMcpServer(actorName: string) {
       inputSchema: { thermomix: z.boolean().optional(), max_missing: z.number().optional().describe('at most this many missing ingredients'), limit: z.number().default(5) },
       annotations: RO,
     },
-    async ({ thermomix, max_missing, limit }) =>
-      text(
+    async ({ thermomix, max_missing, limit }) => {
+      const red = redactForAssistant();
+      return text(
         suggest({ thermomix: thermomix ?? null, maxMissing: max_missing, limit }).map((x) => ({
           id: x.recipe.id,
           title: x.recipe.title,
@@ -333,9 +353,11 @@ export function buildMcpServer(actorName: string) {
           time_min: x.recipe.time_min,
           have: `${x.have}/${x.need}`,
           missing: x.missing,
-          why: x.reasons,
+          // reasons without names; allergy warnings neutral unless the household allowed sharing health data
+          why: red.reasons(x.reasons, x.warnings),
         })),
-      ),
+      );
+    },
   );
 
   s.registerTool(
@@ -570,6 +592,7 @@ export function buildMcpServer(actorName: string) {
   register_tour(s, actorName);
   register_ha2(s, actorName);
   register_menu(s, actorName);
+  register_features(s, actorName);
   return s;
 }
 
