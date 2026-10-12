@@ -58,6 +58,8 @@ export function openDbFile(file: string, key: Buffer | null, opts: Database.Opti
 }
 
 function tune(d: DB) {
+  // deleted rows are overwritten on disk (a removed member, a cleared list stays gone in the file too)
+  d.pragma('secure_delete = ON');
   d.pragma('journal_mode = WAL');
   d.pragma('foreign_keys = ON');
   d.pragma('busy_timeout = 5000');

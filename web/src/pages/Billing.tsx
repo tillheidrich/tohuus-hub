@@ -6,7 +6,7 @@
  */
 import { DownloadSimple, Trash } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { del, invalidate } from '../api';
+import { api, invalidate, useApi } from '../api';
 import { type Billing, useBilling } from '../data';
 import { locale, t } from '../i18n';
 import { Sheet, Skeleton, useToast } from '../ui';
@@ -93,15 +93,19 @@ export function BillingCard() {
 }
 
 export function CloudAccountCard() {
+  const me = useApi<{ actor: { role: string } }>('me', '/me');
+  const admin = me.data?.actor?.role === 'admin';
   const [confirm, setConfirm] = useState(false);
   const [typed, setTyped] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const toast = useToast();
   const word = t('DELETE');
   const remove = async () => {
     setBusy(true);
     try {
-      await del('/cloud/account');
+      // the server asks for the password; accounts without one get a confirmation link by e-mail first
+      await api('/cloud/account', { method: 'DELETE', body: { password } });
       invalidate('me');
       location.href = '/';
     } catch (e) {
@@ -115,9 +119,13 @@ export function CloudAccountCard() {
         {t('Your data')}
       </h2>
       <p className="small muted" style={{ margin: 0 }}>{t('Download everything ToHuus has stored for your household – lists, products, recipes, receipts – as a file.')}</p>
-      <a className="btn" href="/api/cloud/export" download>
-        <DownloadSimple size={16} /> {t('Export data')}
-      </a>
+      {admin ? (
+        <a className="btn" href="/api/cloud/export" download>
+          <DownloadSimple size={16} /> {t('Export data')}
+        </a>
+      ) : (
+        <p className="small muted" style={{ margin: 0 }}>{t('An admin of the household can export its data.')}</p>
+      )}
       <div style={{ borderTop: "1px solid var(--line)" }} />
       <p className="small muted" style={{ margin: 0 }}>
         {t('Deleting your account removes your access. If you are the last member of a household, the household and all its data are deleted for good.')}
@@ -131,6 +139,11 @@ export function CloudAccountCard() {
           <label className="field">
             <span>{t('Type {word} to confirm', { word })}</span>
             <input className="input" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
+          </label>
+          <label className="field">
+            <span>{t('Your password')}</span>
+            <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+            <span className="help">{t('Signed in without a password? Leave it empty – you get a confirmation link by e-mail.')}</span>
           </label>
           <button className="btn danger lg" disabled={busy || typed.trim().toUpperCase() !== word.toUpperCase()} onClick={remove}>
             <Trash size={16} /> {busy ? t('Deleting …') : t('Delete account for good')}

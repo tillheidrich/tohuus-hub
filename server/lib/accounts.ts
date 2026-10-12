@@ -137,6 +137,8 @@ export function accountsDb(): DB {
   if (!config.multiTenant) throw new Error('accounts.db is only used in cloud mode (MULTI_TENANT=true)');
   fs.mkdirSync(config.dataDir, { recursive: true });
   const d = openDbFile(accountsFile(), accountsDbKey());
+  // freed pages are overwritten: a destroyed household key does not linger in the file (crypto-shredding)
+  d.pragma('secure_delete = ON');
   d.pragma('journal_mode = WAL');
   d.pragma('foreign_keys = ON');
   d.pragma('busy_timeout = 5000');
@@ -150,7 +152,80 @@ export function accountsDb(): DB {
     })();
   });
   adb = d;
+  applyShredLog(d);
   return d;
+}
+
+// ---------------------------------------------------------------- shred log
+
+/**
+ * Household ids (and when) that were crypto-shredded – no keys, kept outside accounts.db. A restored accounts.db
+ * from before a deletion still carries that household's wrapped key; the log is applied when accounts.db is opened,
+ * so a shredded household never comes back.
+ */
+export const shredLogFile = () => path.join(config.dataDir, 'shred-log.jsonl');
+
+export function shreddedIds(): string[] {
+  try {
+    return fs
+      .readFileSync(shredLogFile(), 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => (JSON.parse(l) as { id: string }).id)
+      .filter((x) => typeof x === 'string');
+  } catch {
+    return [];
+  }
+}
+
+function applyShredLog(d: DB) {
+  for (const id of shreddedIds()) {
+    const row = d.prepare('SELECT wrapped_dek FROM households WHERE id = ?').get(id) as { wrapped_dek: string | null } | undefined;
+    if (!row || row.wrapped_dek == null) continue;
+    console.warn(`[accounts] household ${id.slice(0, 8)} was deleted after this accounts.db was saved – shredding it again`);
+    shredRows(d, id);
+    for (const dir of [householdDir(id), householdBackupDir(id)]) fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+function shredRows(d: DB, id: string) {
+  d.transaction(() => {
+    d.prepare(`UPDATE households SET wrapped_dek = NULL, deleted_at = COALESCE(deleted_at, datetime('now')), name = '', slug = CASE WHEN slug LIKE 'x%' THEN slug ELSE 'x' || slug END WHERE id = ?`).run(id);
+    d.prepare('DELETE FROM memberships WHERE household_id = ?').run(id);
+    d.prepare('UPDATE sessions SET household_id = NULL WHERE household_id = ?').run(id);
+    d.prepare('UPDATE app_tokens SET household_id = NULL WHERE household_id = ?').run(id);
+    d.prepare('DELETE FROM usage_counters WHERE household_id = ?').run(id);
+  })();
+  try {
+    d.pragma('wal_checkpoint(TRUNCATE)');
+  } catch {
+    /* busy – the next checkpoint overwrites it */
+  }
+}
+
+/** Remove the wrapped key of a shredded household from the local accounts.db backups as well. */
+function scrubAccountBackups(id: string) {
+  const dir = path.join(config.dataDir, 'backups', '_accounts');
+  let files: string[] = [];
+  try {
+    files = fs.readdirSync(dir).filter((f) => f.endsWith('.db'));
+  } catch {
+    return;
+  }
+  for (const f of files) {
+    try {
+      const b = openDbFile(path.join(dir, f), accountsDbKey());
+      try {
+        b.pragma('secure_delete = ON');
+        b.prepare('UPDATE households SET wrapped_dek = NULL WHERE id = ?').run(id);
+        b.exec('VACUUM');
+      } finally {
+        b.close();
+      }
+    } catch (e) {
+      console.warn(`[accounts] could not scrub ${f}: ${(e as Error).message}`);
+    }
+  }
 }
 
 /** tests: close accounts.db so a fresh one can be opened */
@@ -231,17 +306,17 @@ export function createHouseholdRow(input: { name: string; form?: string | null; 
  */
 export function shredHousehold(id: string) {
   const d = accountsDb();
-  d.transaction(() => {
-    d.prepare(`UPDATE households SET wrapped_dek = NULL, deleted_at = datetime('now'), name = '', slug = 'x' || slug WHERE id = ?`).run(id);
-    d.prepare('DELETE FROM memberships WHERE household_id = ?').run(id);
-    d.prepare('UPDATE sessions SET household_id = NULL WHERE household_id = ?').run(id);
-    d.prepare('UPDATE app_tokens SET household_id = NULL WHERE household_id = ?').run(id);
-    d.prepare('DELETE FROM usage_counters WHERE household_id = ?').run(id);
-  })();
+  fs.appendFileSync(shredLogFile(), JSON.stringify({ id, at: new Date().toISOString() }) + '\n');
+  shredRows(d, id);
   slugCache.delete(id);
   closeHouseholdDb(id);
   dropHouseholdState(id);
   for (const dir of [householdDir(id), householdBackupDir(id)]) fs.rmSync(dir, { recursive: true, force: true });
+  scrubAccountBackups(id);
+  // off-site copies of this household (S3) go as well
+  void import('./cloud-backup.js')
+    .then((m) => m.deleteS3Household(id))
+    .catch((e) => console.warn(`[accounts] S3 delete for ${id.slice(0, 8)}: ${(e as Error).message}`));
 }
 
 /** Households opened in the last `days` days (scheduler, backups). */

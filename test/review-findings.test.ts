@@ -187,3 +187,43 @@ describe('review: the heir of a household is a member, never a guest', () => {
     expect((await K.get('/api/users')).status).toBe(200);
   });
 });
+
+describe('review: crypto-shredding leaves no way back', () => {
+  it('a restored accounts.db from before the deletion is shredded again from the shred log', async () => {
+    const A = new Client();
+    const h = await signup(A, 'gone@example.org', 'Gone', 'Gone Home');
+    await verify('gone@example.org');
+    const before = accounts.accountsDb().prepare('SELECT wrapped_dek FROM households WHERE id = ?').get(h) as { wrapped_dek: string };
+    const del = await A.req('DELETE', `/api/cloud/households/${h}`, { confirm: 'Gone Home', password: 'geheim1234' });
+    expect(del.status, del.text).toBe(200);
+    expect(fs.readFileSync(accounts.shredLogFile(), 'utf8')).toContain(h);
+    expect(fs.readFileSync(accounts.shredLogFile(), 'utf8')).not.toContain(before.wrapped_dek);
+    // "restore" an older accounts.db that still has the key
+    accounts.accountsDb().prepare('UPDATE households SET wrapped_dek = ?, deleted_at = NULL WHERE id = ?').run(before.wrapped_dek, h);
+    accounts.closeAccountsDb();
+    expect((accounts.accountsDb().prepare('SELECT wrapped_dek FROM households WHERE id = ?').get(h) as { wrapped_dek: string | null }).wrapped_dek).toBeNull();
+    expect(accounts.accountsDb().pragma('secure_delete', { simple: true })).toBe(1);
+  });
+
+  it('S3 copies of a shredded household are listed and deleted', async () => {
+    const cb = await import('../server/lib/cloud-backup');
+    const calls: { method: string; url: string }[] = [];
+    const id = '0f0e0d0c-1111-4222-8333-444455556666';
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async (url: any, init: any = {}) => {
+      calls.push({ method: init.method ?? 'GET', url: String(url) });
+      if ((init.method ?? 'GET') === 'GET')
+        return new Response(`<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>tohuus/${id}/a.db</Key></Contents><Contents><Key>tohuus/${id}/b.db</Key></Contents></ListBucketResult>`, { status: 200 });
+      return new Response(null, { status: 204 });
+    }) as typeof fetch;
+    try {
+      const n = await cb.deleteS3Household(id, { endpoint: 'https://s3.example.org', bucket: 'b', region: 'eu', accessKey: 'k', secretKey: 's', prefix: 'tohuus' });
+      expect(n).toBe(2);
+      expect(calls[0].url).toContain('list-type=2');
+      expect(calls[0].url).toContain(`prefix=tohuus%2F${id}%2F`);
+      expect(calls.filter((c) => c.method === 'DELETE').map((c) => c.url.split('/').pop())).toEqual(['a.db', 'b.db']);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+});

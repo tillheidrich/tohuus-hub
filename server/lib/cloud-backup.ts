@@ -106,14 +106,19 @@ const hex = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest
 const enc = (s: string) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
 
 /** Signed request headers for a path-style S3 request (exported for tests). */
-export function signS3(c: S3Config, method: string, key: string, body: Buffer, now = new Date()) {
-  const url = new URL(`${c.endpoint}/${c.bucket}/${key.split('/').map(enc).join('/')}`);
+export function signS3(c: S3Config, method: string, key: string, body: Buffer, now = new Date(), query: Record<string, string> = {}) {
+  const url = new URL(key ? `${c.endpoint}/${c.bucket}/${key.split('/').map(enc).join('/')}` : `${c.endpoint}/${c.bucket}`);
+  const canonicalQuery = Object.keys(query)
+    .sort()
+    .map((k) => `${enc(k)}=${enc(query[k])}`)
+    .join('&');
+  url.search = canonicalQuery;
   const amzDate = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const dateStamp = amzDate.slice(0, 8);
   const payloadHash = hex(body);
   const headers: Record<string, string> = { host: url.host, 'x-amz-content-sha256': payloadHash, 'x-amz-date': amzDate };
   const signedHeaders = Object.keys(headers).sort().join(';');
-  const canonical = [method, url.pathname, '', ...Object.keys(headers).sort().map((h) => `${h}:${headers[h]}`), '', signedHeaders, payloadHash].join('\n');
+  const canonical = [method, url.pathname, canonicalQuery, ...Object.keys(headers).sort().map((h) => `${h}:${headers[h]}`), '', signedHeaders, payloadHash].join('\n');
   const scope = `${dateStamp}/${c.region}/s3/aws4_request`;
   const toSign = ['AWS4-HMAC-SHA256', amzDate, scope, hex(canonical)].join('\n');
   const kSigning = hmac(hmac(hmac(hmac(`AWS4${c.secretKey}`, dateStamp), c.region), 's3'), 'aws4_request');
@@ -132,6 +137,31 @@ export async function uploadS3(file: string, key: string, c = s3Config()): Promi
   await r.body?.cancel();
   if (!r.ok) throw new Error(`S3 upload failed with status ${r.status}`);
   return true;
+}
+
+/** Delete every off-site object of a household (crypto-shredding: the copies are unreadable anyway, now gone). */
+export async function deleteS3Household(id: string, c = s3Config()): Promise<number> {
+  if (!c || !/^[0-9a-f-]{36}$/.test(id)) return 0;
+  let removed = 0;
+  let token: string | undefined;
+  for (let page = 0; page < 50; page++) {
+    const q: Record<string, string> = { 'list-type': '2', prefix: `${c.prefix}/${id}/` };
+    if (token) q['continuation-token'] = token;
+    const l = signS3(c, 'GET', '', Buffer.alloc(0), new Date(), q);
+    const r = await fetch(l.url, { headers: l.headers, signal: AbortSignal.timeout(60_000) });
+    const xml = await r.text();
+    if (!r.ok) throw new Error(`S3 list failed with status ${r.status}`);
+    const keys = [...xml.matchAll(/<Key>([^<]+)<\/Key>/g)].map((m) => m[1].replace(/&amp;/g, '&'));
+    for (const key of keys) {
+      const d = signS3(c, 'DELETE', key, Buffer.alloc(0));
+      const res = await fetch(d.url, { method: 'DELETE', headers: d.headers, signal: AbortSignal.timeout(60_000) });
+      await res.body?.cancel();
+      if (res.ok || res.status === 404) removed++;
+    }
+    token = xml.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/)?.[1];
+    if (!token || !/<IsTruncated>true<\/IsTruncated>/.test(xml)) break;
+  }
+  return removed;
 }
 
 // ---------------------------------------------------------------- nightly job

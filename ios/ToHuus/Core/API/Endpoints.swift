@@ -28,7 +28,7 @@ extension APIClient {
     func cloudMe() async throws -> CloudMe { try await get("api/cloud/me") }
     func devices() async throws -> [AppDevice] { try await get("api/auth/app/devices", as: Lossy<AppDevice>.self).wrappedValue }
     func revokeDevice(_ id: String) async throws { _ = try await send("DELETE", "api/auth/app/devices/\(id)", as: Ignored.self) }
-    /// DELETE /api/cloud/account, confirmed with the password (the server also accepts `{ confirm: "<e-mail>" }`).
+    /// DELETE /api/cloud/account, confirmed with the password (accounts without a password get an e-mail link first: 400 with needEmailConfirm).
     func deleteCloudAccount(password: String) async throws {
         _ = try await send("DELETE", "api/cloud/account", json: ["password": password], as: Ignored.self)
     }
