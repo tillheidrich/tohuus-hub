@@ -13,6 +13,7 @@ import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { norm } from './text.js';
+import { currentAiActor } from './ai-policy.js';
 
 migrate(
   'memory-1',
@@ -31,6 +32,14 @@ migrate(
    CREATE INDEX IF NOT EXISTS ai_memory_scope ON ai_memory(scope, person);`,
 );
 
+// "nur für mich": a row only its author (users.id) sees – in the app, in their assistant, in MCP as them – never other
+// members and never the admin export (docs/guests-and-permissions.md › "Privacy inside a household")
+migrate('memory-private-1', `ALTER TABLE ai_memory ADD COLUMN private_to INTEGER;`);
+
+/** whose private rows the current request may see: the signed-in person (requireAuth / MCP OAuth), else nobody's */
+const viewerNow = (): number | null => currentAiActor()?.userId ?? null;
+const visibleTo = (viewer: number | null) => (r: { private_to?: number | null }) => r.private_to == null || (viewer != null && r.private_to === viewer);
+
 export type MemoryScope = 'household' | 'person';
 export type MemoryKind = 'fact' | 'preference' | 'routine';
 export type MemorySource = 'user' | 'assistant' | 'derived';
@@ -46,6 +55,7 @@ export interface MemoryRow {
   created_by: string | null;
   created_at: string;
   confirmed_at: string | null;
+  private_to?: number | null;
 }
 
 /**
@@ -100,6 +110,8 @@ export interface RememberInput {
   createdBy?: string | null;
   /** a person said it themselves (or confirmed what the assistant proposed) */
   confirmed?: boolean;
+  /** "nur für mich": only this member (users.id) sees the row */
+  privateTo?: number | null;
 }
 
 /** Store one thing; the same text again only refreshes it. */
@@ -108,7 +120,8 @@ export function remember(input: RememberInput): MemoryRow {
   if (text.length < 2) throw new MemoryError(t('What should ToHuus remember?'));
   const scope: MemoryScope = input.scope ?? (input.person ? 'person' : 'household');
   const person = scope === 'person' ? (input.person ?? null) : null;
-  const existing = (db.prepare('SELECT * FROM ai_memory WHERE scope = ? AND IFNULL(person, \'\') = IFNULL(?, \'\')').all(scope, person) as MemoryRow[]).find(
+  const privateTo = input.privateTo ?? null;
+  const existing = (db.prepare('SELECT * FROM ai_memory WHERE scope = ? AND IFNULL(person, \'\') = IFNULL(?, \'\') AND IFNULL(private_to, 0) = IFNULL(?, 0)').all(scope, person, privateTo) as MemoryRow[]).find(
     (r) => fold(r.text) === fold(text),
   );
   const confirmed = input.confirmed ?? input.source !== 'derived';
@@ -121,24 +134,25 @@ export function remember(input: RememberInput): MemoryRow {
   const id = Number(
     db
       .prepare(
-        `INSERT INTO ai_memory (scope, person, kind, text, source, sensitive, created_by, confirmed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ${confirmed ? "datetime('now')" : 'NULL'})`,
+        `INSERT INTO ai_memory (scope, person, kind, text, source, sensitive, created_by, private_to, confirmed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ${confirmed ? "datetime('now')" : 'NULL'})`,
       )
-      .run(scope, person, input.kind ?? 'fact', text, input.source ?? 'user', isSensitive(text) ? 1 : 0, input.createdBy ?? null).lastInsertRowid,
+      .run(scope, person, input.kind ?? 'fact', text, input.source ?? 'user', isSensitive(text) ? 1 : 0, input.createdBy ?? null, privateTo).lastInsertRowid,
   );
   emit('settings');
   return getMemory(id)!;
 }
 
 /** Forget by id or by text (best match). Returns the removed rows so they can be restored. */
-export function forget(ref: number | string): MemoryRow[] {
+export function forget(ref: number | string, viewer: number | null = viewerNow()): MemoryRow[] {
   let rows: MemoryRow[] = [];
+  const may = visibleTo(viewer);
   if (typeof ref === 'number') {
     const r = getMemory(ref);
-    if (r) rows = [r];
+    if (r && may(r)) rows = [r];
   } else {
     const q = fold(ref);
     if (q.length < 2) return [];
-    const all = db.prepare('SELECT * FROM ai_memory').all() as MemoryRow[];
+    const all = (db.prepare('SELECT * FROM ai_memory').all() as MemoryRow[]).filter(may);
     const exact = all.filter((r) => fold(r.text) === q);
     rows = exact.length ? exact : all.filter((r) => fold(r.text).includes(q) || q.includes(fold(r.text)));
     // "vergiss das mit der Hafermilch": the telling words of the request (5+ letters, not filler) are enough
@@ -156,20 +170,21 @@ export function forget(ref: number | string): MemoryRow[] {
 /** Put removed rows back (undo). */
 export function restoreMemory(rows: MemoryRow[]) {
   const ins = db.prepare(
-    'INSERT OR IGNORE INTO ai_memory (id, scope, person, kind, text, source, sensitive, created_by, created_at, confirmed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT OR IGNORE INTO ai_memory (id, scope, person, kind, text, source, sensitive, created_by, created_at, confirmed_at, private_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
   );
-  for (const r of rows) ins.run(r.id, r.scope, r.person, r.kind, r.text, r.source, r.sensitive, r.created_by, r.created_at, r.confirmed_at);
+  for (const r of rows) ins.run(r.id, r.scope, r.person, r.kind, r.text, r.source, r.sensitive, r.created_by, r.created_at, r.confirmed_at, r.private_to ?? null);
   emit('settings');
 }
 
-export function listMemory(opts: { includeSensitive?: boolean } = {}) {
-  const rows = db.prepare('SELECT * FROM ai_memory ORDER BY scope, kind, id').all() as MemoryRow[];
-  return (opts.includeSensitive ? rows : rows.filter((r) => !r.sensitive)).map((r) => ({ ...r, sensitive: Boolean(r.sensitive) }));
+export function listMemory(opts: { includeSensitive?: boolean; viewer?: number | null } = {}) {
+  const viewer = opts.viewer !== undefined ? opts.viewer : viewerNow();
+  const rows = (db.prepare('SELECT * FROM ai_memory ORDER BY scope, kind, id').all() as MemoryRow[]).filter(visibleTo(viewer));
+  return (opts.includeSensitive ? rows : rows.filter((r) => !r.sensitive)).map((r) => ({ ...r, sensitive: Boolean(r.sensitive), onlyMe: r.private_to != null }));
 }
 
-export function deleteMemory(id: number) {
+export function deleteMemory(id: number, viewer: number | null = viewerNow()) {
   const r = getMemory(id);
-  if (!r) throw new MemoryError(t('Not found'), 404);
+  if (!r || !visibleTo(viewer)(r)) throw new MemoryError(t('Not found'), 404);
   db.prepare('DELETE FROM ai_memory WHERE id = ?').run(id);
   emit('settings');
   return r;

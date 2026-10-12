@@ -4,7 +4,7 @@
  * ToHuus Hub works without it — then photo imports are not available, but PDF imports, barcodes, manual entry
  * and MCP (where the assistant does the reading) still are.
  */
-import { aiConfig, aiEnabled, chat, extractJson, type ContentPart } from './ai.js';
+import { aiConfig, aiEnabled, assertAiAllowed, chat, extractJson, type ContentPart } from './ai.js';
 import { redactReceipt } from './redact.js';
 import { consumeImportAi, consumeReceiptAi } from './limits.js';
 
@@ -84,6 +84,8 @@ async function ask(task: VisionTask, content: ContentPart[], kind: 'vision' | 'v
 }
 
 export async function runVision(task: VisionTask, input: { images?: string[]; text?: string }): Promise<any> {
+  // AI switched off (household, person, child): refused before any quota is counted or anything is sent
+  assertAiAllowed();
   if (!visionAvailable()) throw userError(t('No vision model configured (VISION_BASE_URL / VISION_MODEL)'));
   // reading receipts and shelves with AI is rate-limited per plan (plans.ts receiptAiPerDay); recipes are not
   // every AI read counts against the plan (plans.ts): receipts and shelves per day, recipe and product imports per day

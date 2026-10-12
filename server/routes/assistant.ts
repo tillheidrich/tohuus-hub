@@ -22,6 +22,7 @@ import { deleteMemory, isSensitive, listMemory, MemoryError, remember } from '..
 import { healthConsent, requireHealthConsent } from '../lib/health-consent.js';
 import { healthShareAllowed } from '../lib/people-signals.js';
 import { visionAvailable } from '../lib/vision.js';
+import { aiStateFor } from './ai-settings.js';
 
 export const r = Router();
 
@@ -37,8 +38,17 @@ function fail(res: any, e: unknown) {
   throw e;
 }
 
-r.get('/assistant/status', requireAuth, (_req, res) => {
-  res.json({ ai: aiEnabled('text'), voice: aiEnabled('audio'), receiptsAi: visionAvailable(), healthShare: healthShareAllowed(), healthConsent: healthConsent(), language: lang() });
+r.get('/assistant/status', requireAuth, (req, res) => {
+  res.json({
+    ai: aiEnabled('text'),
+    voice: aiEnabled('audio'),
+    receiptsAi: visionAvailable(),
+    // the switches behind it (ai-policy.ts): configured, household, mcp, mine, effective, reason
+    aiState: aiStateFor(req.actor?.userId),
+    healthShare: healthShareAllowed(),
+    healthConsent: healthConsent(),
+    language: lang(),
+  });
 });
 
 r.post('/assistant/chat', requireAuth, async (req, res) => {
@@ -126,7 +136,7 @@ r.patch('/assistant/settings', requireAuth, requireAdmin, (req, res) => {
 
 // ---------------------------------------------------------------- what ToHuus remembers
 
-r.get('/memory', requireAuth, (_req, res) => res.json(listMemory({ includeSensitive: true })));
+r.get('/memory', requireAuth, (req, res) => res.json(listMemory({ includeSensitive: true, viewer: req.actor?.userId ?? null })));
 r.post('/memory', requireAuth, (req: any, res) => {
   const b = z
     .object({
@@ -134,19 +144,21 @@ r.post('/memory', requireAuth, (req: any, res) => {
       kind: z.enum(['fact', 'preference', 'routine']).optional(),
       person: z.string().max(20).nullable().optional(),
       consent: z.boolean().optional(),
+      /** "nur für mich": only the author sees it (not other members, not the admin export) */
+      onlyMe: z.boolean().optional(),
     })
     .parse(req.body);
   try {
     // a health note (allergy, intolerance …) is Art. 9 data: the household confirms once before the first one is kept
     if (isSensitive(b.text)) requireHealthConsent({ consent: b.consent, by: `${req.actor?.name ?? '?'} (#${req.actor?.userId ?? '?'})` });
-    res.json(remember({ text: b.text, kind: b.kind, person: b.person ?? null, source: 'user', createdBy: req.actor?.name ?? null }));
+    res.json(remember({ text: b.text, kind: b.kind, person: b.person ?? null, source: 'user', createdBy: req.actor?.name ?? null, privateTo: b.onlyMe && req.actor?.userId ? req.actor.userId : null }));
   } catch (e) {
     fail(res, e);
   }
 });
 r.delete('/memory/:id', requireAuth, (req, res) => {
   try {
-    deleteMemory(Number(req.params.id));
+    deleteMemory(Number(req.params.id), req.actor?.userId ?? null);
     res.json({ ok: true });
   } catch (e) {
     fail(res, e);

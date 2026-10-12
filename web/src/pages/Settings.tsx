@@ -29,6 +29,8 @@ import { useHousehold } from '../household';
 import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
 import { AssistantPrivacyCard } from './Memory';
+import { AiSwitchesCard, ConnectAssistantCard } from './AiSettings';
+import { MoveInCard, MoveOutCard } from './MoveSettings';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -107,6 +109,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'places' && <PlacesSettings admin={admin} />}
       {tab === 'places' && <CategorySettings admin={admin} />}
       {tab === 'notify' && <Notify admin={admin} />}
+      {tab === 'access' && <AiSwitchesCard />}
       {tab === 'access' && <AssistantPrivacyCard admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
       {tab === 'ha' && <Ha2Settings admin={admin} />}
@@ -326,20 +329,7 @@ function Access({ admin }: { admin: boolean }) {
   const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast({ text: t('Copied') }));
   return (
     <div className="stack" style={{ gap: 22 }}>
-      <div className="card pad stack">
-        <div className="row">
-          <span className="thumb" style={{ width: 44, height: 44 }}><Plug size={22} /></span>
-          <div className="grow">
-            <b>{t('Claude, ChatGPT & co. (MCP)')}</b>
-            <div className="small muted">{t('Send photos of receipts, your freezer or HelloFresh cards to your assistant – it adds everything here.')}</div>
-          </div>
-        </div>
-        <ol className="small" style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
-          <li>{t('Create an “AI assistant” access below.')}</li>
-          <li>{t('In Claude: Settings › Connectors › Add custom connector. In ChatGPT: Settings › Connectors (developer mode).')}</li>
-          <li>{t('Enter the MCP address shown as the URL, authentication: none.')}</li>
-        </ol>
-      </div>
+      <ConnectAssistantCard />
       <HaIntegrationCard base={base} />
       {admin && s.data && <HaConnection initial={s.data.ha} />}
       {admin && s.data && <HaTodoCard />}
@@ -406,6 +396,7 @@ function Access({ admin }: { admin: boolean }) {
 
 function Data({ admin }: { admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
+  const cloud = useInstance().data?.mode === 'cloud';
   const fileRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -426,6 +417,7 @@ function Data({ admin }: { admin: boolean }) {
   };
   return (
     <div className="stack" style={{ gap: 16 }}>
+      {cloud ? <MoveInCard admin={admin} /> : <MoveOutCard admin={admin} />}
       <Backups admin={admin} />
       <div className="card pad stack">
         <div className="row between wrap">

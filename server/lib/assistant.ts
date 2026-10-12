@@ -12,7 +12,8 @@
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
 import { t } from '../i18n.js';
-import { addUsage, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
+import { aiOffReason } from './ai-policy.js';
+import { addUsage, aiConfigured, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
 import { buildContext, topicsOf } from './assistant-context.js';
 import { parseIntent, type Intent } from './assistant-parse.js';
 import {
@@ -367,6 +368,8 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
     default:
       break;
   }
+  // AI switched off (household, person, child) while a model exists: say so plainly
+  if (aiConfigured('text') && aiOffReason()) return t('AI is off – I understand simple sentences like “milk is out and 2 peppers”.');
   return !aiEnabled('text')
     ? t('I understand short things like “milk, 2 peppers and bread”, “milk is out”, “do we still have eggs?” or “bought milk and bread at Aldi for 12.40”.')
     : t('I didn’t get that. Try something like “milk, 2 peppers and bread” or “what can we cook?”.');

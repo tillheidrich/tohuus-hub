@@ -20,6 +20,8 @@ interface MemoryRow {
   sensitive: boolean;
   created_by: string | null;
   created_at: string;
+  /** "nur für mich": only the author sees it */
+  onlyMe?: boolean;
 }
 
 const KIND: Record<MemoryRow['kind'], string> = { fact: 'Fact', preference: 'Preference', routine: 'Habit' };
@@ -28,13 +30,14 @@ export function MemoryPage() {
   const q = useApi<MemoryRow[]>('memory', '/memory');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [onlyMe, setOnlyMe] = useState(false);
   const toast = useToast();
   const { withConsent, sheet } = useHealthConsent();
   const add = async () => {
     if (text.trim().length < 2) return;
     setBusy(true);
     try {
-      const body = { text: text.trim() };
+      const body = { text: text.trim(), ...(onlyMe ? { onlyMe: true } : {}) };
       const saved = await withConsent((consent) => post('/memory', consent ? { ...body, consent } : body));
       if (saved === null) return;
       setText('');
@@ -49,7 +52,7 @@ export function MemoryPage() {
     try {
       await del(`/memory/${m.id}`);
       invalidate('memory');
-      toast({ text: t('Forgotten: {text}', { text: m.text }), action: { label: t('Undo'), run: () => post('/memory', { text: m.text, kind: m.kind, person: m.person }).then(() => invalidate('memory')) } });
+      toast({ text: t('Forgotten: {text}', { text: m.text }), action: { label: t('Undo'), run: () => post('/memory', { text: m.text, kind: m.kind, person: m.person, ...(m.onlyMe ? { onlyMe: true } : {}) }).then(() => invalidate('memory')) } });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     }
@@ -76,6 +79,10 @@ export function MemoryPage() {
         <button className="btn primary" disabled={busy || text.trim().length < 2}>
           <Plus size={16} weight="bold" /> {t('Remember')}
         </button>
+        <label className="row small" style={{ gap: 8, minHeight: 44, alignItems: 'center', flexBasis: '100%' }}>
+          <input type="checkbox" checked={onlyMe} onChange={(e) => setOnlyMe(e.target.checked)} style={{ width: 20, height: 20 }} />
+          {t('Only for me – the others don’t see it')}
+        </label>
       </form>
       {q.isLoading ? (
         <Skeleton n={3} h={56} />
@@ -92,7 +99,7 @@ export function MemoryPage() {
               <div className="grow">
                 <b>{m.text}</b>
                 <span className="meta">
-                  {[t(KIND[m.kind] ?? m.kind), m.sensitive ? t('sensitive – stays with you unless allowed') : null, m.created_by, relTime(m.created_at)].filter(Boolean).join(' · ')}
+                  {[t(KIND[m.kind] ?? m.kind), m.onlyMe ? t('only for me') : null, m.sensitive ? t('sensitive – stays with you unless allowed') : null, m.created_by, relTime(m.created_at)].filter(Boolean).join(' · ')}
                 </span>
               </div>
               <button className="icon-btn plain" onClick={() => remove(m)} aria-label={t('Forget “{text}”', { text: m.text })} title={t('Forget')}>

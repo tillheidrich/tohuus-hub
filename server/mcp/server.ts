@@ -5,6 +5,9 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { db } from '../db.js';
 import { actorFromBearer, safeEqual } from '../lib/auth.js';
+import { mcpOn, runAsAiActor, runWithHealthScope } from '../lib/ai-policy.js';
+import { accessFromToken, type OAuthAccess } from '../lib/oauth.js';
+import { currentHousehold } from '../lib/tenancy.js';
 import { emit } from '../lib/bus.js';
 import { findThings } from '../lib/find.js';
 import {
@@ -113,7 +116,7 @@ function compact(p: ReturnType<typeof listProducts>[number]) {
   };
 }
 
-export function buildMcpServer(actorName: string) {
+export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } = {}) {
   const s = withAssistantFilter(new McpServer(
     { name: 'tohuus', version: '0.1.0' },
     {
@@ -125,6 +128,12 @@ export function buildMcpServer(actorName: string) {
         'If a product name is unclear, use search_stock before changing stock.',
     },
   ));
+  // OAuth scope mcp:read: tools that are not marked read-only are not offered at all (fail closed)
+  if (opts.readOnly) {
+    const reg = s.registerTool.bind(s) as (...a: any[]) => any;
+    (s as any).registerTool = (name: string, cfg: any, handler: (...a: any[]) => any) =>
+      cfg?.annotations?.readOnlyHint === true ? reg(name, cfg, handler) : { enable() {}, disable() {}, remove() {}, update() {}, enabled: false };
+  }
   // image references in tool results become absolute, short-lived signed URLs (/img needs authentication)
   const register = s.registerTool.bind(s) as (...a: any[]) => any;
   (s as any).registerTool = (name: string, cfg: unknown, handler: (...a: any[]) => any) =>
@@ -597,9 +606,18 @@ export function buildMcpServer(actorName: string) {
 }
 
 /** Express handler: stateless Streamable HTTP. Auth via Bearer token or secret path segment. */
+/** 401 for MCP: tell OAuth clients where to find the authorization server (MCP authorization spec, RFC 9728). */
+function unauthorized(res: Response, error?: 'invalid_token') {
+  res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${config.baseUrl}/.well-known/oauth-protected-resource"${error ? `, error="${error}"` : ''}`);
+  res.status(401).json({ jsonrpc: '2.0', error: { code: -32001, message: 'Unauthorized' }, id: null });
+}
+
 export async function handleMcp(req: Request, res: Response) {
   let actorName: string | null = null;
+  let oauth: OAuthAccess | null = null;
   const secret = req.params.secret as string | undefined;
+  const auth = req.headers.authorization;
+  const bearer = auth?.startsWith('Bearer ') ? auth.slice(7).trim() : null;
   if (secret) {
     // the instance-wide path secret only exists for a self-hosted household (it names no household in the cloud)
     if (config.mcpPathSecret && !config.multiTenant && safeEqual(secret, config.mcpPathSecret)) actorName = 'Assistant';
@@ -608,25 +626,34 @@ export async function handleMcp(req: Request, res: Response) {
       const a = actorFromBearer(secret);
       if (a && a.scope === 'mcp') actorName = `${a.name}`;
     }
-  } else {
-    const auth = req.headers.authorization;
-    const a = auth?.startsWith('Bearer ') ? actorFromBearer(auth.slice(7).trim()) : null;
+  } else if (bearer && !(config.multiTenant && !currentHousehold())) {
+    const a = actorFromBearer(bearer);
     if (a && (a.scope === 'full' || a.scope === 'mcp')) actorName = a.name;
+    else {
+      // OAuth 2.1 access token of a connection (routes/oauth.ts)
+      oauth = accessFromToken(bearer);
+      if (oauth) actorName = `${oauth.clientName} (${oauth.userName})`;
+    }
   }
-  if (!actorName) {
-    res.status(401).json({ jsonrpc: '2.0', error: { code: -32001, message: 'Unauthorized' }, id: null });
+  if (!actorName) return unauthorized(res, bearer ? 'invalid_token' : undefined);
+  // the household switched MCP off for its own assistants (Settings › Access & AI) – ai-policy.ts
+  if (!mcpOn()) {
+    res.status(403).json({ jsonrpc: '2.0', error: { code: -32003, message: 'MCP access is switched off for this household' }, id: null });
     return;
   }
   if (req.method !== 'POST') {
     res.status(405).set('Allow', 'POST').json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed' }, id: null });
     return;
   }
-  const server = buildMcpServer(actorName);
+  // OAuth scopes: mcp:read → read-only tools only; without mcp:health no allergies or children's details
+  const readOnly = Boolean(oauth && !oauth.scopes.includes('mcp:write'));
+  const health = !oauth || oauth.scopes.includes('mcp:health');
+  const server = buildMcpServer(actorName, { readOnly });
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   res.on('close', () => {
     void transport.close();
     void server.close();
   });
   await server.connect(transport);
-  await transport.handleRequest(req, res, req.body);
+  await runWithHealthScope(health, () => runAsAiActor({ userId: oauth?.userId ?? null }, () => transport.handleRequest(req, res, req.body)));
 }

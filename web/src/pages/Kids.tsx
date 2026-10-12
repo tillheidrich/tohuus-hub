@@ -4,6 +4,7 @@
  * The tablet stays here (see `kidLock`) until a parent enters the PIN or removes the tablet.
  * No points, no stars, no ranking.
  */
+import { KidAiLocked } from './AiSettings';
 import { CaretLeft, Check, Clock, CloudSun, Hourglass, Lock, MagnifyingGlass, Moon, Smiley, SpeakerHigh, SpeakerSlash, SunHorizon, ThumbsUp, X } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -318,6 +319,7 @@ export function KidMode() {
         </div>
       )}
 
+      <KidAiLocked enabled={(d as any).ai?.enabled !== false} />
       {exit && <ExitPad token={token} hasPin={kid.has_pin} onClose={() => setExit(false)} onDone={() => { setKidLock(null); nav('/'); }} />}
     </div>
   );

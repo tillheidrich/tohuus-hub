@@ -83,6 +83,7 @@ const AuthLanding = page(() => import('./pages/AuthLanding'), 'AuthLanding');
 const Login = page(() => import('./pages/Login'), 'Login');
 const Signup = page(() => import('./pages/Signup'), 'Signup');
 const MemoryPage = page(() => import('./pages/Memory'), 'MemoryPage');
+const Operator = page(() => import('./pages/Operator'), 'Operator');
 
 const Blank = () => <div style={{ minHeight: '100dvh' }} />;
 const PageLoading = () => (
@@ -127,6 +128,12 @@ function Authed() {
         <Login />
       </Suspense>
     );
+  }
+  // back to an assistant's connection request (/oauth/authorize) after signing in
+  const next = new URLSearchParams(location.search).get('next');
+  if (next && next.startsWith('/oauth/authorize?')) {
+    window.location.replace(next);
+    return <Blank />;
   }
   setLang(me.data!.language);
   setRegion((me.data as { region?: Parameters<typeof setRegion>[0] }).region);
@@ -269,6 +276,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/geld" element={<Money />} />
               <Route path="/mehr" element={<More me={me} />} />
               <Route path="/merkt-sich" element={<MemoryPage />} />
+              <Route path="/betrieb" element={<Operator />} />
               <Route path="/import" element={<Imports me={me} />} />
               <Route path="/import/quality" element={<Recognition />} />
               <Route path="/import/:id" element={<ImportReview />} />

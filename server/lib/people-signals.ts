@@ -10,6 +10,7 @@ import { db, getSetting } from '../db.js';
 import { t } from '../i18n.js';
 import { norm } from './text.js';
 import './people-policy.js';
+import { healthScopeAllows } from './ai-policy.js';
 
 export interface PersonPrefs {
   likes: string[];
@@ -213,6 +214,8 @@ export function peopleSignals(): PeopleSignals {
  * built-in assistant or an MCP client – when the household switched on `ai.health_share` (default off).
  */
 export function healthShareAllowed(): boolean {
+  // an MCP connection without the scope "Allergien und Kinderdaten" never gets them (oauth.ts)
+  if (!healthScopeAllows()) return false;
   return getSetting<boolean>('ai.health_share', false) === true;
 }
 

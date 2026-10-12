@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { cleanupGrants } from './oauth.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { fmtQty, listProducts } from './catalog.js';
 import { enqueueMissingImages } from './enrich.js';
@@ -88,6 +89,12 @@ export async function householdTick() {
     await checkBudgets().catch((e) => console.warn('[budgets]', (e as Error).message));
     await rotationTick().catch((e) => console.warn('[rotation]', (e as Error).message));
     await sendDigest();
+    // OAuth for MCP: unused codes and long-dead connections go (oauth.ts)
+    try {
+      cleanupGrants();
+    } catch (e) {
+      console.warn('[oauth]', (e as Error).message);
+    }
   } catch (e) {
     console.warn('[scheduler]', (e as Error).message);
   }

@@ -19,6 +19,7 @@
  */
 import crypto from 'node:crypto';
 import { t } from '../i18n.js';
+import { aiOffReason, type AiOffReason } from './ai-policy.js';
 
 export const OPENROUTER = 'https://openrouter.ai/api/v1';
 export const DEFAULT_MODELS = {
@@ -81,9 +82,34 @@ export function aiConfig(env: NodeJS.ProcessEnv = process.env): AiConfig | null 
 
 export const isOpenRouter = (baseUrl: string) => /(^|\/\/)([a-z0-9-]+\.)*openrouter\.ai(\/|$|:)/i.test(baseUrl);
 
-/** Is a model of this kind configured? */
-export function aiEnabled(kind: ModelKind = 'text'): boolean {
+/** Is a model of this kind configured (environment only, whatever the household chose)? */
+export function aiConfigured(kind: ModelKind = 'text'): boolean {
   return Boolean(aiConfig()?.models[kind]);
+}
+
+/**
+ * May a model of this kind be used for the current request? Configured AND the household, the person and – on a
+ * kid tablet – the parents allow it (ai-policy.ts). Every caller that offers an AI path asks this first.
+ */
+export function aiEnabled(kind: ModelKind = 'text'): boolean {
+  return aiConfigured(kind) && aiOffReason() === null;
+}
+
+/** The error every model call answers with while AI is switched off (household, person or child). */
+export function aiDisabledError(reason: AiOffReason): AiError {
+  const msg =
+    reason === 'parents'
+      ? t('AI was switched off by your parents.')
+      : reason === 'person'
+        ? t('You switched AI off for yourself (Settings › Access & AI).')
+        : t('AI is switched off for this household (Settings › Access & AI).');
+  return new AiError(msg, 'ai.disabled', 403, reason);
+}
+
+/** Throws `ai.disabled` when a switch is off – the central gate in front of every model request. */
+export function assertAiAllowed() {
+  const off = aiOffReason();
+  if (off) throw aiDisabledError(off);
 }
 
 /** The provider pin for OpenRouter (EU / Mistral only, no training on the data). Empty for other endpoints. */
@@ -93,6 +119,9 @@ export function providerPin(baseUrl: string): Record<string, unknown> {
 
 // ------------------------------------------------------------------ transport (replaceable in tests)
 
+/** Cloud operator statistics (operator.ts): tokens per day and model – no household, no person. */
+export const aiUsageHook: { record?: (model: string, usage: Usage) => void } = {};
+
 export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
 let fetchImpl: FetchLike | null = null;
 /** Tests: answer requests without the network. Pass null to restore the real fetch. */
@@ -101,7 +130,7 @@ export function setAiFetch(f: FetchLike | null) {
 }
 const doFetch: FetchLike = (url, init) => (fetchImpl ?? fetch)(url, init);
 
-export type AiErrorCode = 'not_configured' | 'timeout' | 'rate_limited' | 'auth' | 'bad_request' | 'upstream' | 'bad_response';
+export type AiErrorCode = 'ai.disabled' | 'not_configured' | 'timeout' | 'rate_limited' | 'auth' | 'bad_request' | 'upstream' | 'bad_response';
 
 export class AiError extends Error {
   constructor(
@@ -200,6 +229,8 @@ export function mistralSafe(messages: ChatMessage[]): ChatMessage[] {
 
 /** One chat completion with timeout, retries with backoff and clean errors. */
 export async function chat(opts: ChatOptions): Promise<ChatResult> {
+  // AI switched off (household, person, child): not a single request leaves the server
+  assertAiAllowed();
   const cfg = aiConfig();
   const kind = opts.kind ?? 'text';
   const model = opts.model ?? cfg?.models[kind] ?? null;
@@ -220,7 +251,9 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     if (attempt > 0) await sleep(backoff * 2 ** (attempt - 1));
     try {
-      return await once(cfg, body, timeoutMs);
+      const res = await once(cfg, body, timeoutMs);
+      aiUsageHook.record?.(res.model, res.usage);
+      return res;
     } catch (e) {
       last = e;
       if (!retryable(e) || attempt === retries) break;
@@ -335,6 +368,7 @@ const LANGUAGE_NAMES: Record<string, string> = { en: 'English', de: 'German' };
 
 /** Speech to text with the audio model (Voxtral): an `input_audio` content part in a chat completion. */
 export async function transcribe(audio: Buffer, format: string, language = 'de'): Promise<{ text: string; usage: Usage; model: string }> {
+  assertAiAllowed();
   if (!aiEnabled('audio')) throw new AiError(t('No speech model is set up (AI_MODEL_AUDIO).'), 'not_configured', 503);
   if (!audio.length) throw new AiError(t('The recording is empty.'), 'bad_request', 400);
   const res = await chat({
@@ -367,6 +401,8 @@ export async function checkVisionModel(): Promise<string | null> {
   const cfg = aiConfig();
   const model = cfg?.models.vision;
   if (!cfg || !model || !cfg.openrouter) return null;
+  // self-host with AI switched off: not even the model list is fetched
+  if (aiOffReason() === 'household') return null;
   try {
     const r = await doFetch(`${cfg.baseUrl}/models`, { method: 'GET', headers: cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {} });
     if (!r.ok) return null;

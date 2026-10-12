@@ -26,9 +26,11 @@ import {
   pairDevice,
   revokeDevice,
   seedKidsDemo,
+  setKidAi,
   setLocationPhoto,
   updateKid,
 } from '../lib/kids.js';
+import { runAsAiActor } from '../lib/ai-policy.js';
 import { rulesSchema } from '../lib/kids-rules.js';
 import { config } from '../config.js';
 import { uploadQuota } from '../lib/plans.js';
@@ -130,6 +132,20 @@ r.patch('/kids/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// AI for a child: parents (admins and members, never permanent guests – requireAuth already closes /kids for them)
+r.put('/kids/:id/ai', (req, res) => {
+  if (req.actor?.kind !== 'user' || req.actor.houseGuest) {
+    res.status(403).json({ error: 'forbidden' });
+    return;
+  }
+  const { enabled } = z.object({ enabled: z.boolean() }).parse(req.body);
+  try {
+    res.json(setKidAi(num(req.params.id), enabled));
+  } catch (e) {
+    fail(res, e);
+  }
+});
+
 r.delete('/kids/:id', requireAdmin, (req, res) => {
   deleteKid(num(req.params.id));
   res.json({ ok: true });
@@ -160,7 +176,8 @@ kid.use('/:token', (req, res, next) => {
     return;
   }
   (req as any).kidDevice = d;
-  next();
+  // the child's AI switch applies to everything the tablet starts (ai-policy.ts)
+  runAsAiActor({ kidId: d.kid.id }, next);
 });
 
 kid.get('/:token', (req, res) => {

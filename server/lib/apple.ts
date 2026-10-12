@@ -118,6 +118,11 @@ export interface AppleNotification {
 export interface AppleRenewal {
   originalTransactionId?: string;
   autoRenewProductId?: string;
+  /** 1 = renews automatically, 0 = switched off by the customer */
+  autoRenewStatus?: number;
+  /** when the next renewal will be charged (ms) */
+  renewalDate?: number;
+  productId?: string;
   gracePeriodExpiresDate?: number;
   expirationIntent?: number;
 }

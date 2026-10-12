@@ -5,6 +5,7 @@ import { t } from '../i18n.js';
 import { guestMay, houseGuestFor, type HouseGuest } from './people-policy.js';
 import { currentHousehold, tokenPrefix } from './tenancy.js';
 import { config } from '../config.js';
+import { runAsAiActor } from './ai-policy.js';
 
 export interface Actor {
   kind: 'user' | 'token' | 'guest';
@@ -272,7 +273,8 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     return;
   }
   req.actor = actor;
-  next();
+  // the AI switches of this person apply to everything this request starts (ai-policy.ts)
+  runAsAiActor({ userId: actor.userId ?? null }, next);
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {

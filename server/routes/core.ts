@@ -577,19 +577,20 @@ r.delete('/users/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-r.get('/tokens', requireAdmin, (_req, res) => res.json(db.prepare('SELECT id, name, prefix, scope, created_at, last_used_at FROM api_tokens ORDER BY id DESC').all()));
+// machine accesses only: a member's app/device tokens are theirs (GET /api/auth/app/devices), never listed for admins
+r.get('/tokens', requireAdmin, (_req, res) => res.json(db.prepare(`SELECT id, name, prefix, scope, created_at, last_used_at FROM api_tokens WHERE scope != 'app' ORDER BY id DESC`).all()));
 r.post('/tokens', requireAdmin, (req, res) => {
   const b = z.object({ name: z.string().min(1), scope: z.enum(['full', 'ha', 'mcp']).default('full') }).parse(req.body);
   res.json(createApiToken(b.name, b.scope));
 });
 r.delete('/tokens/:id', requireAdmin, (req, res) => {
-  db.prepare('DELETE FROM api_tokens WHERE id = ?').run(id(req.params.id));
+  db.prepare(`DELETE FROM api_tokens WHERE id = ? AND scope != 'app'`).run(id(req.params.id));
   res.json({ ok: true });
 });
 
-r.get('/export.json', requireAdmin, (_req, res) => {
-  // every household table, never credentials (see server/lib/data.ts)
-  const out = buildExport();
+r.get('/export.json', requireAdmin, (req, res) => {
+  // every household table, never credentials, never other members' personal rows (see server/lib/data.ts)
+  const out = buildExport({ viewer: req.actor?.userId ?? null });
   res.setHeader('Content-Disposition', `attachment; filename="tohuus-export-${new Date().toISOString().slice(0, 10)}.json"`);
   res.json(out);
 });

@@ -1,7 +1,7 @@
 /**
  * Restore drill for ToHuus Cloud backups: picks a random household backup (or the one given), unlocks it with the
  * keys (TOHUUS_MASTER_KEY → accounts.db → wrapped household key) and runs PRAGMA integrity_check. Also checks the
- * newest accounts.db backup. Nothing is written; exit code 0 = all good.
+ * newest accounts.db backup. Only a stamp is written (backups/.last-restore-check, for /betrieb); exit code 0 = all good.
  *
  *   DATA_DIR=/data TOHUUS_MASTER_KEY=… node dist/restore-check.mjs [householdUuid] [backupFile]
  *   (dev: npx tsx scripts/restore-check.ts)
@@ -44,6 +44,17 @@ const newest = (dir: string) =>
         .map((f) => path.join(dir, f))
     : [];
 
+/** what the operator page shows as "last restore check" (backups/.last-restore-check) – the only file written */
+function finish(ok: boolean): never {
+  try {
+    fs.mkdirSync(backups, { recursive: true });
+    fs.writeFileSync(path.join(backups, '.last-restore-check'), JSON.stringify({ ok, at: new Date().toISOString() }));
+  } catch {
+    /* read-only data dir: the check itself still counts */
+  }
+  process.exit(ok ? 0 : 1);
+}
+
 function main() {
   let ok = true;
   const accountsKey = accountsDbKey();
@@ -59,21 +70,21 @@ function main() {
   const h = wanted ? households.find((x) => x.id === wanted) : withBackups[Math.floor(Math.random() * withBackups.length)];
   if (!h) {
     console.log(wanted ? `household ${wanted} not found` : 'no household backups yet');
-    process.exit(wanted ? 1 : ok ? 0 : 1);
+    finish(wanted ? false : ok);
   }
   const file = process.argv[3] ?? newest(path.join(backups, h.id))[Math.floor(Math.random() * Math.max(1, newest(path.join(backups, h.id)).length))];
   if (!file) {
     console.log(`household ${h.id}: no backup`);
-    process.exit(1);
+    finish(false);
   }
   const keys = keysFrom(unwrapDek(h.wrapped_dek, h.id));
   ok = check(`household ${h.id.slice(0, 8)}`, file, keys.db) && ok;
-  process.exit(ok ? 0 : 1);
+  finish(ok);
 }
 
 try {
   main();
 } catch (e) {
   console.error('restore check failed:', (e as Error).message);
-  process.exit(1);
+  finish(false);
 }

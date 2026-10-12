@@ -307,6 +307,59 @@ describe('cloud isolation', () => {
     expect((await mcp(forged, call)).status).toBe(401);
   });
 
+  it('OAuth for MCP: tokens are routed to the chosen household; B never reaches A, forged prefixes fail', async () => {
+    const REDIRECT = 'https://claude.ai/api/mcp/auth_callback';
+    const raw = (method: string, p: string, body: string | undefined, headers: Record<string, string>) =>
+      fetch(base + p, { method, redirect: 'manual', headers: { 'x-forwarded-for': '10.9.9.9', ...headers }, body, dispatcher: local });
+    const reg = await new Client().post('/oauth/register', { client_name: 'Claude', redirect_uris: [REDIRECT] });
+    expect(reg.status, reg.text).toBe(201);
+    const clientId = reg.json.client_id;
+    const verifier = crypto.randomBytes(32).toString('base64url');
+    const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+    const q = new URLSearchParams({ response_type: 'code', client_id: clientId, redirect_uri: REDIRECT, code_challenge: challenge, code_challenge_method: 'S256', scope: 'mcp:read mcp:write', state: 'st' });
+    // not signed in → sign-in page; A signed in → consent for A's household only
+    expect((await new Client().get(`/oauth/authorize?${q}`)).status).toBe(302);
+    const page = await A.get(`/oauth/authorize?${q}`);
+    expect(page.status, page.text).toBe(200);
+    expect(page.text).toContain(`value="${hA}"`);
+    expect(page.text).not.toContain(hB);
+    const cookie = [...A.cookies].map(([k, v]) => `${k}=${v}`).join('; ');
+    const post = (household: string) =>
+      raw('POST', '/oauth/authorize', new URLSearchParams({ ...Object.fromEntries(q), household, access: 'write', decision: 'allow' }).toString(), { 'content-type': 'application/x-www-form-urlencoded', cookie, origin: base });
+    // A cannot pick B's household
+    expect((await post(hB)).status).toBe(403);
+    const ok = await post(hA);
+    expect(ok.status).toBe(302);
+    const code = new URL(ok.headers.get('location')!).searchParams.get('code')!;
+    const slugA = accounts.getHousehold(hA)!.slug;
+    const slugB = accounts.getHousehold(hB)!.slug;
+    expect(code.startsWith(`sw_${slugA}_`)).toBe(true);
+    const tok = (body: Record<string, string>) => raw('POST', '/oauth/token', new URLSearchParams(body).toString(), { 'content-type': 'application/x-www-form-urlencoded' }).then(async (r) => ({ status: r.status, json: (await r.json()) as any }));
+    // the same code with B's routing prefix is unknown there
+    const forgedCode = await tok({ grant_type: 'authorization_code', code: code.replace(slugA, slugB), client_id: clientId, redirect_uri: REDIRECT, code_verifier: verifier });
+    expect(forgedCode.json.error).toBe('invalid_grant');
+    const t = await tok({ grant_type: 'authorization_code', code, client_id: clientId, redirect_uri: REDIRECT, code_verifier: verifier });
+    expect(t.status, JSON.stringify(t.json)).toBe(200);
+    const mcp = (token: string, body: unknown) => new Client().req('POST', '/mcp', body, { authorization: `Bearer ${token}`, accept: 'application/json, text/event-stream' });
+    const call = { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'get_shopping_list', arguments: {} } };
+    const r = await mcp(t.json.access_token, call);
+    expect(r.status, r.text).toBe(200);
+    expect(r.text).toContain('MARKERA-shop');
+    const forged = await mcp(t.json.access_token.replace(slugA, slugB), call);
+    expect(forged.status).toBe(401);
+    expect(forged.text).not.toContain('MARKERA');
+    const noAuth = await new Client().req('POST', '/mcp', call, { accept: 'application/json, text/event-stream' });
+    expect(noAuth.status).toBe(401);
+    // B's connections list never shows A's connection; A's does
+    expect((await B.get('/api/oauth/connections')).json.connections).toEqual([]);
+    const conns = (await A.get('/api/oauth/connections')).json.connections;
+    expect(conns).toHaveLength(1);
+    expect((await B.req('DELETE', `/api/oauth/connections/${conns[0].id}`)).status).toBe(404);
+    // refresh works through the prefix, and the forged refresh token does not
+    expect((await tok({ grant_type: 'refresh_token', refresh_token: t.json.refresh_token.replace(slugA, slugB), client_id: clientId })).json.error).toBe('invalid_grant');
+    expect((await tok({ grant_type: 'refresh_token', refresh_token: t.json.refresh_token, client_id: clientId })).status).toBe(200);
+  });
+
   it('guest links resolve to their own household only', async () => {
     expect(guestTokenA).toMatch(/^h[a-z2-7]{10}_/);
     const g = await new Client().get(`/api/guest/${guestTokenA}/shopping`);
@@ -345,6 +398,38 @@ describe('cloud accounts', () => {
     expect((await c.get('/api/me')).json.actor.name).toBe('MarkerATill');
     await c.post('/api/auth/logout');
     expect((await c.get('/api/shopping')).status).toBe(401);
+  });
+
+  it('account mails speak the account’s language: a German signup gets no English template text (verify, link, reset, deleted)', async () => {
+    const ENGLISH = ['Please confirm your e-mail address', 'Confirm your address', 'Tap the button', 'Your account', 'Button not working', 'your household, self-hosted', 'Confirm address', 'Your sign-in link', 'Sign in to ToHuus', 'Set a new password', 'New password', 'account is deleted', 'Account deleted', 'If this was not you'];
+    const c = new Client();
+    mails.length = 0;
+    const r = await c.post('/api/cloud/signup', { email: 'sprache@example.org', password: 'geheim1234', name: 'Mira', householdName: 'Familie Berg', form: 'family', lang: 'de', region: 'DE' });
+    expect(r.status, r.text).toBe(200);
+    expect((accounts.accountByEmail('sprache@example.org') as any).lang).toBe('de');
+    await new Client().post('/api/auth/link', { email: 'sprache@example.org' });
+    await new Client().post('/api/auth/reset', { email: 'sprache@example.org' });
+    await new Promise((res) => setTimeout(res, 100));
+    const mine = mails.filter((m) => m.to === 'sprache@example.org');
+    expect(mine.length).toBe(3);
+    for (const m of mine) for (const e of ENGLISH) expect(m.text, e).not.toContain(e);
+    expect(mine[0].text).toContain('Adresse bestätigen');
+    expect(mine.some((m) => m.text.includes('Bei ToHuus anmelden'))).toBe(true);
+    expect(mine.some((m) => m.text.includes('Neues Passwort'))).toBe(true);
+    // deleting the account confirms it – in German as well
+    mails.length = 0;
+    expect((await c.req('DELETE', '/api/cloud/account', { password: 'geheim1234' })).status).toBe(200);
+    await new Promise((res) => setTimeout(res, 100));
+    const gone = mails.find((m) => m.to === 'sprache@example.org');
+    expect(gone?.text).toContain('Konto gelöscht');
+    expect(gone?.text).toContain('App Store');
+    for (const e of ENGLISH) expect(gone!.text, e).not.toContain(e);
+    // an English account in the same instance still gets English
+    mails.length = 0;
+    const en = new Client();
+    expect((await en.post('/api/cloud/signup', { email: 'english@example.org', password: 'geheim1234', name: 'Sam', householdName: 'Sam home', form: 'single', lang: 'en', region: 'GB' })).status).toBe(200);
+    await new Promise((res) => setTimeout(res, 100));
+    expect(mails.find((m) => m.to === 'english@example.org')?.text).toContain('Confirm your address');
   });
 
   it('app tokens: member rights in the chosen household, X-Household must be a membership, devices revocable', async () => {
@@ -486,6 +571,59 @@ describe('plans and quotas', () => {
     expect(r.json.quotaBytes).toBe(250 * 1024 * 1024);
     expect((await A.get(productImage)).status).toBe(200);
     accounts.setStorageBytes(hA, 0);
+  });
+});
+
+describe('operator page (/betrieb)', () => {
+  it('only OPERATOR_EMAILS, only after a fresh password, only aggregates; actions are logged', async () => {
+    process.env.OPERATOR_EMAILS = 'op@example.org, other-op@example.org';
+    process.env.AI_PRICE_PER_MTOK = '1,2';
+    const op = new Client();
+    await signup(op, 'op@example.org', 'Ops', 'Ops home', 'single');
+    // everybody else: the same 404 as for an unknown route
+    expect((await A.get('/api/operator/status')).status).toBe(404);
+    expect((await new Client().get('/api/operator/overview')).status).toBe(404);
+    expect((await op.get('/api/operator/status')).json).toMatchObject({ operator: true, unlocked: false });
+    expect((await op.get('/api/operator/overview')).json.code).toBe('operator.locked');
+    expect((await op.post('/api/operator/unlock', { password: 'falsch-falsch' })).status).toBe(403);
+    expect((await op.post('/api/operator/unlock', { password: 'geheim1234' })).status).toBe(200);
+    const operator = await import('../server/lib/operator');
+    const ai = await import('../server/lib/ai');
+    ai.aiUsageHook.record!('mistralai/mistral-small-2603', { prompt: 1_000_000, completion: 500_000, total: 1_500_000 });
+    operator.countRequest(500);
+    const ov = await op.get('/api/operator/overview');
+    expect(ov.status, ov.text).toBe(200);
+    expect(ov.json.households.total).toBeGreaterThanOrEqual(3);
+    expect(ov.json.accounts).toBeGreaterThanOrEqual(3);
+    expect(ov.json.storage.top[0]).toEqual({ id: expect.stringMatching(/^[0-9a-f-]{36}$/), bytes: expect.any(Number) });
+    const today = new Date().toISOString().slice(0, 10);
+    const day = ov.json.ai.perDay.find((d: any) => d.day === today);
+    expect(day.tokens).toBeGreaterThanOrEqual(1_500_000);
+    expect(day.cost).toBeGreaterThanOrEqual(2); // 1 M in × 1 + 0.5 M out × 2 per million tokens
+    expect(ov.json.errors.last24h.errors).toBeGreaterThanOrEqual(1);
+    expect(ov.json.system.memory.rssBytes).toBeGreaterThan(0);
+    // never household content: no household or person names, no e-mail addresses
+    for (const m of [...MARKERS, 'Elsewhere', 'Bea', 'Ops home', '@example.org']) expect(ov.text, m).not.toContain(m);
+    // actions
+    expect((await op.post(`/api/operator/households/${hB}/trial`, { days: 30 })).status).toBe(200);
+    expect(tenancy.runInHousehold(hB, () => plans.currentPlan())).toBe('trial');
+    expect((await op.post(`/api/operator/households/${hB}/plan`, { plan: 'plus', until: '2099-12-31', note: 'App Review demo' })).status).toBe(200);
+    expect(tenancy.runInHousehold(hB, () => plans.currentPlan())).toBe('plus');
+    mails.length = 0;
+    expect((await op.post('/api/operator/password-reset', { email: 'b@example.org' })).status).toBe(200);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mails.some((m) => m.to === 'b@example.org')).toBe(true);
+    const throwaway = await signup(new Client(), 'weg@example.org', 'Weg', 'Weg home', 'single');
+    expect((await op.req('DELETE', `/api/operator/households/${throwaway}`, { confirm: 'nope' })).status).toBe(400);
+    expect((await op.req('DELETE', `/api/operator/households/${throwaway}`, { confirm: throwaway })).status).toBe(200);
+    expect(accounts.getHousehold(throwaway)).toBeUndefined();
+    const audit = (await op.get('/api/operator/audit')).json;
+    expect(audit.map((a: any) => a.action)).toEqual(expect.arrayContaining(['unlock', 'unlock.failed', 'household.trial', 'household.plan', 'account.password-reset', 'household.delete']));
+    expect(JSON.stringify(audit)).not.toContain('b@example.org');
+    // back to Free for the tests after this one
+    expect((await op.post(`/api/operator/households/${hB}/plan`, { plan: 'free' })).status).toBe(200);
+    delete process.env.OPERATOR_EMAILS;
+    expect((await op.get('/api/operator/status')).status).toBe(404);
   });
 });
 
