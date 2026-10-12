@@ -72,7 +72,15 @@ function insertLines(importId: number, lines: (ParsedLine & { receiptName?: stri
     const productId = m && m.score >= 0.5 ? m.productId : null;
     let action: 'add' | 'skip' | 'new' = sure ? 'add' : 'new';
     if (SKIP_STATUSES.has(l.status) || l.qty === 0) action = 'skip';
-    const note = [l.note, l.substituteFor ? t('Substitute for: {name}', { name: l.substituteFor }) : null].filter(Boolean).join(' · ') || null;
+    const note =
+      [
+        l.note,
+        l.substituteFor ? t('Substitute for: {name}', { name: l.substituteFor }) : null,
+        l.depositFor ? t('Deposit for: {name}', { name: l.depositFor }) : null,
+        l.ocrConfidence != null && l.ocrConfidence < 0.75 ? t('Read unclearly – please check') : null,
+      ]
+        .filter(Boolean)
+        .join(' · ') || null;
     ins.run(
       importId,
       startSort + i,

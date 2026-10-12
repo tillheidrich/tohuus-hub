@@ -1,0 +1,57 @@
+                  Muster
+            Beispielweg 1
+             12345 Musterstadt
+            Tel. 01234-56789
+
+                                  EUR
+Paul.Spezi0,33l DS               0,95 B
+Pfand                            0,25*B
+Actimel Kids                     3,99 A
+Posten: 3                   ----------
+
+SUMME          ¤               5,19
+EC-Cash                 ¤          5,19
+
+MwSt           NETTO        MwSt    UMSATZ
+A 7%             3,73       0,26      3,99
+B 19%            1,01       0,19      1,20
+
+  Für Ihren Einkauf von 4,94 Euro auf
+    rabattfähige Artikel hätten Sie
+         2 PAYBACK ° P erhalten!
+* Position nicht rabattberechtigt
+
+
+
+
+          0000000000000000000000
+
+   Es bediente Sie:
+   Frau X.
+
+Datum Uhrzeit Filiale Pos Bed Bon
+01.10.26 17:00 0000001 101 10000001
+
+
+    Steuernummer: 00 / 000 / 00000
+
+TSE Transaktionsnummer: 000000
+TSE Seriennummer: 00000000000000000000000
+Signaturzähler: 0000000
+ **************************************
+ ****        Terminalbeleg         ****
+ **************************************
+        -K-U-N-D-E-N-B-E-L-E-G-
+               Edeka Markt
+             Beispielweg 1
+              12345 Musterstadt
+Terminal-ID :                   00000000
+              Kartenzahlung
+                kontaktlos
+                 girocard
+      EUR 5,19
+
+PAN                  ###############0000
+Datum 01.10.26                  16:59 Uhr
+Zahlung erfolgt
+        BITTE BELEG AUFBEWAHREN

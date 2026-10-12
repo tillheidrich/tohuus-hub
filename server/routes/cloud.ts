@@ -75,6 +75,7 @@ const legal = () => ({
   imprint: process.env.LEGAL_IMPRINT_URL || null,
 });
 import { householdAiOn, mcpOn } from '../lib/ai-policy.js';
+import { ocrAvailable } from '../lib/ocr.js';
 const aiConfigured = () => Boolean(process.env.AI_API_KEY) || visionEnabled();
 
 // ================================================================= instance (both modes)
@@ -104,7 +105,7 @@ instance.get('/instance', (_req, res) => {
       const household = inHousehold ? householdAiOn() : true;
       const mcp = inHousehold ? mcpOn() : true;
       const on = aiConfigured() && household;
-      return { assistant: on, voice: on, receiptsAi: on, billingApple: cloudMode(), ai: { configured: aiConfigured(), household, mcp } };
+      return { assistant: on, voice: on, receiptsAi: on, billingApple: cloudMode(), ai: { configured: aiConfigured(), household, mcp }, ocr: ocrAvailable() };
     })(),
     legal: legal(),
   });
