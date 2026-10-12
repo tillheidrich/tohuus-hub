@@ -141,6 +141,11 @@ export function forget(ref: number | string): MemoryRow[] {
     const all = db.prepare('SELECT * FROM ai_memory').all() as MemoryRow[];
     const exact = all.filter((r) => fold(r.text) === q);
     rows = exact.length ? exact : all.filter((r) => fold(r.text).includes(q) || q.includes(fold(r.text)));
+    // "vergiss das mit der Hafermilch": the telling words of the request (5+ letters, not filler) are enough
+    if (!rows.length) {
+      const words = q.split(' ').filter((w) => w.length >= 5 && !/^(bitte|nicht|immer|wieder|please|about|thing)$/.test(w));
+      if (words.length) rows = all.filter((r) => fold(r.text).split(' ').some((x) => x.length >= 5 && words.some((w) => x.startsWith(w) || w.startsWith(x))));
+    }
     if (rows.length > 3) rows = []; // too vague – ask instead of wiping half the list
   }
   for (const r of rows) db.prepare('DELETE FROM ai_memory WHERE id = ?').run(r.id);

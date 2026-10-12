@@ -257,7 +257,7 @@ describe('with a model (fake)', () => {
         return { role: 'assistant', content: 'Eier und Brot stehen auf der Liste.' };
       },
     ]);
-    const r = await till.chat('Wir brauchen 10 Eier und Brot');
+    const r = await till.chat('Wir brauchen was fürs Frühstück, 10 Eier und Brot');
     expect(r.json).toMatchObject({ mode: 'ai', reply: 'Eier und Brot stehen auf der Liste.', usage: { total: 240 } });
     expect(r.json.actions[0].kind).toBe('list_add');
     expect(r.json.actions[0].undo).toMatch(/^[0-9a-f]{32}$/);
@@ -265,7 +265,9 @@ describe('with a model (fake)', () => {
     expect(bodies[0].messages[0].role).toBe('system');
     expect(bodies[0].messages[0].content).toMatch(/Du bist ToHuus/);
     expect(bodies[0].messages[0].content).toMatch(/Brot beim Bäcker/);
-    expect(bodies[0].tools.map((t: any) => t.function.name)).toEqual(expect.arrayContaining(['list_add', 'stock_find', 'log_purchase', 'cook_ideas', 'money_summary', 'remember', 'forget']));
+    expect(bodies[0].tools.map((t: any) => t.function.name)).toEqual(expect.arrayContaining(['list_add', 'check_at_home', 'stock_find', 'cook_ideas', 'remember', 'forget']));
+    // only the tools this message can need
+    expect(bodies[0].tools.map((t: any) => t.function.name)).not.toContain('money_summary');
     expect(bodies[0].provider).toEqual({ order: ['mistral'], allow_fallbacks: false, data_collection: 'deny' });
     await till.req('POST', `/api/assistant/undo/${r.json.actions[0].undo}`);
   });

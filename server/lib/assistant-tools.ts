@@ -15,6 +15,8 @@ import { cookIdeas } from './cookideas.js';
 import { createImport, linesToImport } from './imports.js';
 import { forget, remember, restoreMemory, type MemoryRow } from './memory.js';
 import { moneyOverview, fmtMoney } from './money.js';
+import { historySince } from './limits.js';
+import { isDeposit, shopName, spendLines } from './spending.js';
 import { addPlan } from './plan.js';
 import { redactForAssistant } from './people-signals.js';
 import { listRecipes, suggest } from './recipes.js';
@@ -445,74 +447,71 @@ export function logPurchase(ctx: ToolCtx, input: { shop?: string | null; total?:
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object', properties, required, additionalProperties: false });
 const str = (description: string) => ({ type: 'string', description });
 
+const arr = (items: Record<string, unknown>) => ({ type: 'array', items });
+const strs = arr({ type: 'string' });
+const fn = (name: string, description: string, properties: Record<string, unknown> = {}, required: string[] = []): ToolDef => ({
+  type: 'function',
+  function: { name, description, parameters: obj(properties, required) },
+});
+
+/** Kept short on purpose: every byte here is sent with every model call. */
 export const TOOL_DEFS: ToolDef[] = [
-  { type: 'function', function: { name: 'list_show', description: 'Show the open shopping list with where each item came from.', parameters: obj({}) } },
-  {
-    type: 'function',
-    function: {
-      name: 'list_add',
-      description: 'Put items on the shared shopping list. Use the words the person used; qty only when they said a number.',
-      parameters: obj({ items: { type: 'array', items: obj({ name: str('item, e.g. "Milch"'), qty: { type: 'number' }, note: str('e.g. "laktosefrei", "für Sonntag"') }, ['name']) } }, ['items']),
-    },
-  },
-  { type: 'function', function: { name: 'list_remove', description: 'Take items off the shopping list (not bought, just not needed).', parameters: obj({ items: { type: 'array', items: { type: 'string' } } }, ['items']) } },
-  {
-    type: 'function',
-    function: {
-      name: 'list_check',
-      description: 'Tick items off the shopping list because they were bought.',
-      parameters: obj({ items: { type: 'array', items: { type: 'string' } }, to_stock: { type: 'boolean', description: 'also book into stock (only if the household keeps stock)' } }, ['items']),
-    },
-  },
-  { type: 'function', function: { name: 'stock_find', description: 'Do we still have X? Answers from stock (when kept up to date), the purchase rhythm and the last receipt or tick.', parameters: obj({ query: str('product') }, ['query']) } },
-  { type: 'function', function: { name: 'stock_used_up', description: 'Something is used up / empty ("Milch ist alle"): sets it to zero and puts it on the list.', parameters: obj({ item: str('product') }, ['item']) } },
-  { type: 'function', function: { name: 'rhythm_due', description: 'What is probably due to buy now, from the purchase rhythm. Only suggest – add after the person agrees.', parameters: obj({}) } },
-  {
-    type: 'function',
-    function: {
-      name: 'cook_ideas',
-      description: 'Recipes that work with what is at home now or with one or two things missing. Unsuitable dishes are already filtered out.',
-      parameters: obj({ max_missing: { type: 'integer', minimum: 0, maximum: 2 } }),
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'plan_meal',
-      description: 'Put a meal into the week plan.',
-      parameters: obj({ day: str('YYYY-MM-DD, or heute/morgen/weekday'), recipe: str('recipe title or id'), title: str('free title when it is no recipe, e.g. "Pizza bestellen"'), slot: { type: 'string', enum: ['mittag', 'abend'] } }, ['day']),
-    },
-  },
-  { type: 'function', function: { name: 'recipe_to_list', description: 'Put the missing ingredients of a recipe on the list.', parameters: obj({ recipe: str('recipe title or id') }, ['recipe']) } },
-  {
-    type: 'function',
-    function: {
-      name: 'money_summary',
-      description: 'Spending on food and household: month total, budget, per shop and category, price changes and saving hints from the own receipts.',
-      parameters: obj({ month: str('YYYY-MM, default this month'), shop: str('filter by shop'), category: str('filter by category') }),
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'log_purchase',
-      description: 'Record a purchase the person tells about ("Hab bei Aldi Milch, Eier und Brot für 12,40 gekauft"). Counts for spending and the purchase rhythm.',
-      parameters: obj(
-        { shop: str('shop'), total: { type: 'number', description: 'total paid' }, date: str('YYYY-MM-DD or heute/gestern'), items: { type: 'array', items: obj({ name: { type: 'string' }, qty: { type: 'number' }, price: { type: 'number' } }, ['name']) } },
-        ['items'],
-      ),
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'remember',
-      description: 'Remember a household fact, preference or routine – only when the person asks for it ("merk dir …").',
-      parameters: obj({ text: str('short sentence'), kind: { type: 'string', enum: ['fact', 'preference', 'routine'] } }, ['text']),
-    },
-  },
-  { type: 'function', function: { name: 'forget', description: 'Forget something ToHuus remembers (by id from the context or by text).', parameters: obj({ text: { type: 'string' }, id: { type: 'integer' } }) } },
+  fn('list_show', 'Open shopping list.'),
+  fn('list_add', 'Put items on the shopping list.', { items: arr(obj({ name: { type: 'string' }, qty: { type: 'number' }, note: { type: 'string' } }, ['name'])) }, ['items']),
+  fn('list_remove', 'Take items off the list (not needed).', { items: strs }, ['items']),
+  fn('list_check', 'Tick items off the list (bought).', { items: strs }, ['items']),
+  fn('stock_find', 'Do we still have X? Stock, purchase rhythm, last purchase.', { query: { type: 'string' } }, ['query']),
+  fn('check_at_home', 'For several ingredients: in stock, probably at home (bought recently) or probably missing.', { items: strs }, ['items']),
+  fn('stock_used_up', 'X is used up: set to zero and put on the list.', { item: { type: 'string' } }, ['item']),
+  fn('rhythm_due', 'What is probably due to buy (suggest, add only after a yes).'),
+  fn('cook_ideas', 'Saved recipes that work with what is at home (0–2 missing). Unsuitable dishes are already filtered.', { max_missing: { type: 'integer' } }),
+  fn('known_prices', 'Last prices the household paid for items (from its receipts); null = unknown.', { items: strs }, ['items']),
+  fn('plan_meal', 'Put a meal into the week plan.', { day: str('YYYY-MM-DD, heute, morgen or weekday'), recipe: str('recipe title'), title: str('free title'), slot: { type: 'string', enum: ['mittag', 'abend'] } }, ['day']),
+  fn('recipe_to_list', 'Missing ingredients of a saved recipe onto the list.', { recipe: { type: 'string' } }, ['recipe']),
+  fn('money_summary', 'Spending this month (or YYYY-MM): total, budget, shops, categories, price changes, hints.', { month: { type: 'string' }, shop: { type: 'string' }, category: { type: 'string' } }),
+  fn('log_purchase', 'Record a purchase the person tells about.', { shop: { type: 'string' }, total: { type: 'number' }, date: { type: 'string' }, items: arr(obj({ name: { type: 'string' }, qty: { type: 'number' }, price: { type: 'number' } }, ['name'])) }, ['items']),
+  fn('remember', 'Remember a household fact or preference – only when asked ("merk dir …").', { text: { type: 'string' }, kind: { type: 'string', enum: ['fact', 'preference', 'routine'] } }, ['text']),
+  fn('forget', 'Forget something remembered (id or text).', { text: { type: 'string' }, id: { type: 'integer' } }),
 ];
+
+const TOOLS_BY_TOPIC: Record<string, string[]> = {
+  shopping: ['list_show', 'list_add', 'list_remove', 'list_check', 'stock_find', 'check_at_home', 'stock_used_up', 'rhythm_due', 'log_purchase'],
+  cooking: ['cook_ideas', 'check_at_home', 'list_add', 'known_prices', 'plan_meal', 'recipe_to_list'],
+  money: ['money_summary', 'known_prices', 'log_purchase'],
+};
+
+/** Only the tools a message can need (fewer tokens, fewer wrong calls). */
+export function toolsFor(topics: string[]): ToolDef[] {
+  const names = new Set(['remember', 'forget', ...topics.flatMap((t) => TOOLS_BY_TOPIC[t] ?? [])]);
+  return TOOL_DEFS.filter((d) => names.has(d.function.name));
+}
+
+/** Several ingredients at once: what is in stock, probably at home (rhythm, bought recently), or probably missing. */
+export function checkAtHome(items: string[]) {
+  return items.slice(0, 30).map((raw) => {
+    const item = String(raw).trim();
+    const p = productFor(item);
+    if (!p) return { item, status: 'unknown' as const };
+    const f = stockFind(p.name) as any;
+    const inStock = f.stock && f.stock.status !== 'empty' && f.stock.status !== 'untracked' && f.stock.kept_up_to_date;
+    if (inStock) return { item, status: 'in_stock' as const, detail: f.stock.amount, on_list: f.on_list };
+    if (f.rhythm?.probably_at_home) return { item, status: 'probably_at_home' as const, detail: `bought ${f.last_bought?.day ?? ''}, usually every ~${f.rhythm.every_days} days`, on_list: f.on_list };
+    if (f.last_bought) return { item, status: 'probably_missing' as const, detail: `last bought ${f.last_bought.day}`, on_list: f.on_list };
+    return { item, status: f.stock && f.stock.status !== 'empty' ? ('in_stock' as const) : ('unknown' as const), on_list: f.on_list };
+  });
+}
+
+/** What the household last paid for these items (receipts within the history window); null when never bought. */
+export function knownPrices(items: string[]) {
+  const lines = spendLines({ since: historySince() ?? undefined }).filter((l) => l.product_id && !isDeposit(l) && l.price > 0 && l.qty > 0);
+  return items.slice(0, 30).map((raw) => {
+    const item = String(raw).trim();
+    const p = productFor(item);
+    const mine = p ? lines.filter((l) => l.product_id === p.id).sort((a, b) => b.day.localeCompare(a.day)) : [];
+    const last = mine[0];
+    return last ? { item, price: fmtMoney(Math.round((last.price / last.qty) * 100) / 100), shop: shopName(last.shop), day: last.day } : { item, price: null };
+  });
+}
 
 /** Run one tool call from the model; the result is filtered before it goes back. */
 export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
@@ -532,6 +531,10 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
         return stockFind(String(a.query ?? ''));
       case 'stock_used_up':
         return stockUsedUp(ctx, String(a.item ?? ''));
+      case 'check_at_home':
+        return checkAtHome(Array.isArray(a.items) ? a.items.map(String) : []);
+      case 'known_prices':
+        return knownPrices(Array.isArray(a.items) ? a.items.map(String) : []);
       case 'rhythm_due':
         return rhythmDueTool();
       case 'cook_ideas':

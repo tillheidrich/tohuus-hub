@@ -13,7 +13,7 @@ import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
 import { t } from '../i18n.js';
 import { addUsage, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
-import { buildContext } from './assistant-context.js';
+import { buildContext, topicsOf } from './assistant-context.js';
 import { parseIntent, type Intent } from './assistant-parse.js';
 import {
   cookIdeasTool,
@@ -28,7 +28,7 @@ import {
   runTool,
   stockFind,
   stockUsedUp,
-  TOOL_DEFS,
+  toolsFor,
   type AssistantAction,
   type ToolCtx,
 } from './assistant-tools.js';
@@ -168,32 +168,24 @@ export function deleteAllConversations(user: AssistantUser) {
 
 // ------------------------------------------------------------------ the prompt
 
-const PROMPT_DE = `Du bist ToHuus, der Einkaufs- und Haushaltsassistent dieses Haushalts. Du hilfst bei drei Dingen:
-1. Einkauf: merkst dir, was fehlt, führst die gemeinsame Einkaufsliste, sagst, was vermutlich fällig ist.
-2. Kochen: schlägst vor, was sich aus dem kochen lässt, was da ist, und planst die Woche, wenn jemand das möchte.
-3. Geld: sagst, was Lebensmittel und Haushalt kosten, pro Laden und Kategorie, und gibst ruhige Spartipps aus den eigenen Bons.
-Regeln:
-- Antworte auf Deutsch, in der Du-Form, kurz und freundlich – meist ein bis drei Sätze. Kein Marketing, keine Emojis.
-- Nutze die Werkzeuge für alles, was Liste, Vorrat, Plan, Geld oder Erinnerungen betrifft. Erfinde keine Daten.
-- Schreibe nur, wenn die Person es will. Abgeleitete Dinge (Rhythmus) schlägst du vor und setzt sie erst nach einem Ja auf die Liste.
-- "Merk dir …" → remember. Speichere sonst nichts über Personen.
-- Keine medizinischen, Ernährungs- oder Gesundheitsratschläge. Behaupte nie, etwas sei "allergenfrei" oder für jemanden unbedenklich. Rezeptideen von ToHuus sind schon vorgefiltert; sag nicht, warum etwas fehlt.
-- Wenn etwas nicht geht, sag es ehrlich und kurz.`;
+const PROMPT_DE = `Du bist ToHuus, der Einkaufs- und Haushaltsassistent dieses Haushalts: Einkaufsliste, was zu Hause ist, was ihr kochen könnt, was es kostet.
+- Antworte auf Deutsch, Du-Form, kurz und warm (1–3 Sätze, Listen nur für Vorschläge). Keine Emojis, kein Marketing.
+- Daten (Liste, Vorrat, Preise, Pläne) nur aus den Werkzeugen, nie erfinden.
+- Wer "wir brauchen was für X" sagt (z. B. Pfannkuchen-Abend): überleg dir die üblichen Zutaten, prüf sie mit check_at_home und setz nur, was vermutlich fehlt, mit list_add auf die Liste. Sag kurz, was du draufgesetzt hast und was du als vorhanden angenommen hast.
+- Kochideen: erst cook_ideas. Ist nichts da oder der Vorrat leer, schlag trotzdem 2–3 einfache, günstige Alltagsgerichte vor. Kosten nur aus known_prices; sonst sag, dass es eine grobe Schätzung ist, ohne genaue Zahlen vorzutäuschen. Biete an, die Zutaten auf die Liste zu setzen.
+- Vorschläge aus dem Kaufrhythmus erst nach einem Ja auf die Liste. "Merk dir …" → remember, sonst nichts über Personen speichern.
+- Keine medizinischen oder Ernährungsratschläge, nie "allergenfrei" behaupten. Rezepte von ToHuus sind schon gefiltert; sag nicht, warum etwas fehlt.`;
 
-const PROMPT_EN = `You are ToHuus, this household's shopping and household assistant. You help with three things:
-1. Shopping: remember what is missing, keep the shared shopping list, say what is probably due.
-2. Cooking: suggest what can be cooked from what is at home, plan the week when someone wants that.
-3. Money: say what food and household cost, per shop and category, and give calm saving hints from the household's own receipts.
-Rules:
-- Answer in English, short and friendly – usually one to three sentences. No marketing, no emojis.
-- Use the tools for anything about the list, stock, plan, money or things to remember. Never make up data.
-- Only write when the person wants it. Derived things (rhythm) are suggestions; put them on the list only after a yes.
-- "Remember …" → remember. Do not store anything else about people.
-- No medical, nutrition or health advice. Never claim something is "allergen-free" or safe for someone. ToHuus already filters recipe ideas; do not say why something is left out.
-- If something does not work, say so briefly and honestly.`;
+const PROMPT_EN = `You are ToHuus, this household's shopping and household assistant: shopping list, what is at home, what to cook, what it costs.
+- Answer in English, short and warm (1–3 sentences, lists only for suggestions). No emojis, no marketing.
+- Data (list, stock, prices, plans) only from the tools, never made up.
+- "We need something for X" (e.g. a pancake evening): think of the usual ingredients, check them with check_at_home and put only what is probably missing on the list with list_add. Say briefly what you added and what you assumed is at home.
+- Cooking ideas: first cook_ideas. If there is nothing or the pantry is empty, still suggest 2–3 simple, cheap everyday meals. Costs only from known_prices; otherwise say it is a rough estimate without pretending precision. Offer to put the ingredients on the list.
+- Rhythm suggestions go on the list only after a yes. "Remember …" → remember; store nothing else about people.
+- No medical or nutrition advice, never claim "allergen-free". ToHuus already filters recipes; do not say why something is left out.`;
 
 export function systemPrompt(contextText: string) {
-  return `${lang() === 'de' ? PROMPT_DE : PROMPT_EN}\n\n--- ${lang() === 'de' ? 'Lage im Haushalt' : 'Household right now'} ---\n${contextText}`;
+  return `${lang() === 'de' ? PROMPT_DE : PROMPT_EN}\n\n${contextText}`;
 }
 
 // ------------------------------------------------------------------ chat
@@ -211,17 +203,20 @@ export async function chatOnce(input: {
   if (input.conversationId && !ownConversation(input.conversationId, input.user)) throw new AssistantError(t('Conversation not found'), 404);
   // count before anything is stored: over the allowance, what the built-in reader understands still works (it costs
   // no model call); anything else answers HTTP 402 { code: 'quota.assistant' }
-  const allowance = aiEnabled('text') ? (input.allowance ?? consumeAssistant()) : null;
+  // what the built-in reader fully understands (lists, "ist alle", a told purchase, "merk dir") is answered without a
+  // model and without counting; everything else – questions, cooking, vague parts – goes to the model when there is one
+  const intent = parseIntent(message);
+  const simple = fullyUnderstood(intent);
+  const allowance = aiEnabled('text') && !(simple && !input.allowance) ? (input.allowance ?? consumeAssistant()) : null;
   const overQuota = Boolean(allowance && !allowance.ok);
-  if (overQuota && parseIntent(message).kind === 'unknown')
-    throw assistantQuotaError();
+  if (overQuota && intent.kind === 'unknown') throw assistantQuotaError();
   const conversationId = openConversation(input.conversationId, input.user, message);
   const prior = history(conversationId);
   store(conversationId, 'user', message);
   const ctx: ToolCtx = { actor: input.user.name, userId: input.user.userId, actions: [] };
 
   let out: { reply: string; mode: 'ai' | 'basic'; usage?: Usage; remaining?: number | null; throttled?: boolean };
-  if (allowance) {
+  if (allowance && !(simple && overQuota)) {
     if (overQuota) {
       out = { reply: basicReply(message, ctx), mode: 'basic', remaining: 0 };
     } else {
@@ -251,12 +246,25 @@ export async function chatOnce(input: {
   };
 }
 
+/** Sentences the built-in reader handles completely – no model needed. */
+export function fullyUnderstood(intent: Intent): boolean {
+  if (intent.kind === 'add') return intent.vague.length === 0;
+  return ['purchase', 'remember', 'forget', 'list'].includes(intent.kind);
+}
+
+/** The prompt for one message: only the context lines and tools its topics need. Exported for tests. */
+export function promptFor(message: string, user: AssistantUser) {
+  const topics = topicsOf(message);
+  const context = buildContext({ purpose: 'assistant', viewer: { userId: user.userId, name: user.name }, topics });
+  return { system: systemPrompt(context.text), tools: toolsFor(topics), topics };
+}
+
 async function modelReply(message: string, prior: ChatMessage[], ctx: ToolCtx, user: AssistantUser, maxTokens = 600) {
-  const context = buildContext({ purpose: 'assistant', viewer: { userId: user.userId, name: user.name } });
-  const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt(context.text) }, ...prior, { role: 'user', content: message }];
+  const p = promptFor([...prior.filter((m) => m.role === 'user').slice(-2).map((m) => String(m.content)), message].join(' '), user);
+  const messages: ChatMessage[] = [{ role: 'system', content: p.system }, ...prior, { role: 'user', content: message }];
   let usage = zeroUsage();
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const res = await chat({ kind: 'text', messages, tools: TOOL_DEFS, temperature: 0.3, maxTokens });
+    const res = await chat({ kind: 'text', messages, tools: p.tools, temperature: 0.3, maxTokens });
     usage = addUsage(usage, res.usage);
     if (!res.toolCalls.length) return { reply: res.content.trim() || t('Done.'), usage };
     messages.push({ role: 'assistant', content: res.content || null, tool_calls: res.toolCalls });

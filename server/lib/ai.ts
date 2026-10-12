@@ -17,6 +17,7 @@
  * Nothing here knows about households, privacy or plans: callers redact (people-signals.ts) and count
  * (limits.ts) before they call. Tests replace the network with setAiFetch().
  */
+import crypto from 'node:crypto';
 import { t } from '../i18n.js';
 
 export const OPENROUTER = 'https://openrouter.ai/api/v1';
@@ -183,6 +184,20 @@ export interface ChatOptions {
 
 const zeroUsage = (): Usage => ({ prompt: 0, completion: 0, total: 0 });
 
+/**
+ * Mistral only takes tool-call ids of exactly nine letters/digits and no `null` content next to tool calls; other
+ * providers in between (OpenRouter) may hand out longer ids. Ids are mapped deterministically, so the assistant's
+ * call and the tool's answer still match.
+ */
+export function mistralSafe(messages: ChatMessage[]): ChatMessage[] {
+  const fix = (id: string) => (/^[A-Za-z0-9]{9}$/.test(id) ? id : crypto.createHash('sha256').update(id).digest('base64').replace(/[^A-Za-z0-9]/g, '').slice(0, 9).padEnd(9, '0'));
+  return messages.map((m) => ({
+    ...m,
+    ...(m.tool_calls ? { content: m.content ?? '', tool_calls: m.tool_calls.map((c) => ({ ...c, id: fix(c.id) })) } : {}),
+    ...(m.tool_call_id ? { tool_call_id: fix(m.tool_call_id) } : {}),
+  }));
+}
+
 /** One chat completion with timeout, retries with backoff and clean errors. */
 export async function chat(opts: ChatOptions): Promise<ChatResult> {
   const cfg = aiConfig();
@@ -191,7 +206,7 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
   if (!cfg || !model) throw new AiError(t('No AI model is set up (AI_API_KEY / AI_MODEL_*).'), 'not_configured', 503);
   const body: Record<string, unknown> = {
     model,
-    messages: opts.messages,
+    messages: /mistral|voxtral|pixtral|ministral|codestral/i.test(model) ? mistralSafe(opts.messages) : opts.messages,
     temperature: opts.temperature ?? 0.2,
     ...(opts.maxTokens ? { max_tokens: opts.maxTokens } : {}),
     ...(opts.tools?.length ? { tools: opts.tools, tool_choice: 'auto' } : {}),

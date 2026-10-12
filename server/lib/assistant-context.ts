@@ -22,7 +22,21 @@ export interface ContextViewer {
   name?: string | null;
 }
 
-export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: ContextViewer | null }) {
+/** What a message is about – decides which context lines and tools the model gets (smaller prompts). */
+export type Topic = 'shopping' | 'cooking' | 'money';
+export const ALL_TOPICS: Topic[] = ['shopping', 'cooking', 'money'];
+
+export function topicsOf(message: string): Topic[] {
+  const m = message.toLowerCase();
+  const out = new Set<Topic>();
+  if (/koch|essen|rezept|zutat|ingredient|gericht|abend|mittag|frühstück|fruehstueck|backen|pfannkuchen|nudel|suppe|cook|recipe|dinner|lunch|breakfast|meal|bake|eat\b/.test(m)) out.add('cooking');
+  if (/euro|€|\bgeld|ausgegeben|ausgaben|kost|budget|preis|teurer|günstig|guenstig|billig|spar|money|spent|spend|price|cheap|cost/.test(m)) out.add('money');
+  if (/liste|kauf|brauch|alle\b|leer|haben wir|noch da|einkauf|fehlt|fällig|faellig|besorg|list|buy|need|out of|bought|shop|due\b/.test(m)) out.add('shopping');
+  return out.size ? [...out] : [...ALL_TOPICS];
+}
+
+export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: ContextViewer | null; topics?: Topic[] }) {
+  const topics = new Set(opts.topics ?? ALL_TOPICS);
   const consent = healthShareAllowed();
   const red = redactForAssistant(consent);
   const day = today();
@@ -51,6 +65,10 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
   } catch {
     money = null;
   }
+  const pantry = db
+    .prepare(`SELECT p.name FROM products p WHERE p.archived = 0 AND (SELECT COALESCE(SUM(qty),0) FROM stock s WHERE s.product_id = p.id) > 0 ORDER BY p.updated_at DESC LIMIT 25`)
+    .all() as { name: string }[];
+  const recipeCount = (db.prepare('SELECT COUNT(*) n FROM recipes').get() as { n: number }).n;
   const data = {
     household: getSetting('household.name', t('Our home')),
     today: day,
@@ -64,15 +82,19 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
     week,
     money,
   };
+  const has = (x: Topic) => topics.has(x);
   const lines: string[] = [
-    `Household: ${data.household}. Today: ${day}.${data.viewer ? ` Talking to: ${data.viewer}.` : ''}`,
-    `People: ${people.map((p: any) => `${p.name} (${p.kind}${p.likes.length ? `, likes ${p.likes.join(', ')}` : ''}${p.dislikes.length ? `, dislikes ${p.dislikes.join(', ')}` : ''}${p.allergies?.length ? `, allergies ${p.allergies.join(', ')}` : ''})`).join('; ') || '–'}`,
-    consent ? 'Health data: shared by the household.' : 'Health data of the people is not shared with you. ToHuus filters unsuitable recipes itself.',
-    `Shopping list (open): ${list.join(', ') || 'empty'}`,
-    `Probably due (purchase rhythm): ${due.map((d) => `${d.name} (every ~${d.everyDays} days)`).join(', ') || 'nothing'}`,
-    `Meal plan next 7 days: ${week.map((w) => `${w.day} ${w.slot}: ${w.title}`).join('; ') || 'nothing planned'}`,
-    money ? `Money: this week ${fmtMoney(money.week)}, this month ${fmtMoney(money.month)}${money.budget ? `, monthly budget ${fmtMoney(money.budget.amount)} (${fmtMoney(money.budget.left)} left)` : ''}` : '',
-    memory.length ? `ToHuus remembers: ${memory.map((m) => `[${m.id}] ${m.text}`).join(' | ')}` : '',
+    `Household: ${data.household}, ${people.length} people. Today: ${day}.${data.viewer ? ` Talking to: ${data.viewer}.` : ''}`,
+    has('cooking')
+      ? `People: ${people.map((p: any) => `${p.name}${p.likes.length ? ` likes ${p.likes.join(', ')}` : ''}${p.dislikes.length ? `; dislikes ${p.dislikes.join(', ')}` : ''}${p.allergies?.length ? `; allergies ${p.allergies.join(', ')}` : ''}`).join(' | ')}`
+      : '',
+    has('cooking') && !consent ? 'Health data is not shared with you; ToHuus filters unsuitable recipes itself.' : '',
+    has('shopping') ? `List: ${list.join(', ') || 'empty'}` : '',
+    has('shopping') && due.length ? `Probably due: ${due.map((d) => d.name).join(', ')}` : '',
+    has('cooking') ? `In stock (as recorded): ${pantry.map((p) => p.name).join(', ') || 'nothing recorded'}. Saved recipes: ${recipeCount}.` : '',
+    has('cooking') && week.length ? `Plan: ${week.map((w) => `${w.day} ${w.slot}: ${w.title}`).join('; ')}` : '',
+    has('money') && money ? `Money: week ${fmtMoney(money.week)}, month ${fmtMoney(money.month)}${money.budget ? `, budget ${fmtMoney(money.budget.amount)} (${fmtMoney(money.budget.left)} left)` : ''}` : '',
+    memory.length ? `Remembered: ${memory.map((m) => `[${m.id}] ${m.text}`).join(' | ')}` : '',
   ].filter(Boolean);
   return { data, text: red.text(lines.join('\n')) };
 }
