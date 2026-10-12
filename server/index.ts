@@ -55,6 +55,7 @@ import { pub as oauthPub, r as oauthRoutes } from './routes/oauth.js';
 import { r as operatorRoutes } from './routes/operator.js';
 import { r as moveRoutes } from './routes/move.js';
 import { requestCounter } from './lib/operator.js';
+import { startRenewalReminders } from './lib/renewals.js';
 import { AiError } from './lib/ai.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
@@ -258,5 +259,6 @@ export const server = app.listen(config.port, () => {
   console.log(`ToHuus Hub running on :${config.port} (${config.baseUrl})`);
   startScheduler();
   if (config.multiTenant) startCloudBackups();
+  if (config.multiTenant) startRenewalReminders();
   else startBackups();
 });

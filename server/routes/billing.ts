@@ -21,6 +21,8 @@ import {
 } from '../lib/apple.js';
 import { APPLE_PRODUCTS, checkStorage, currentPlan, limits, usage } from '../lib/plans.js';
 import { currentHousehold } from '../lib/tenancy.js';
+import { APPLE_MANAGE_URL, recordRenewal, reminderWanted, renewalOf } from '../lib/renewals.js';
+import { db } from '../db.js';
 
 export const r = Router();
 export const pub = Router();
@@ -33,11 +35,20 @@ export function billingStatus() {
   const l = limits();
   const st = checkStorage(0);
   const h: HouseholdRow | undefined = config.multiTenant ? getHousehold(currentHousehold()!.id) : undefined;
+  const apple = h?.plan_source === 'apple' && (plan === 'haushalt' || plan === 'plus');
+  const ren = apple && h ? renewalOf(h.id) : undefined;
   return {
     plan,
     trialEndsAt: plan === 'trial' ? (h?.trial_ends_at ?? null) : null,
-    renewsAt: h?.plan_source === 'apple' && (plan === 'haushalt' || plan === 'plus') ? h.plan_expires_at : null,
-    source: h?.plan_source === 'apple' ? 'apple' : 'none',
+    // the next charge (App Store renewal info), else the end of the paid period; null when it will not renew
+    renewsAt: apple ? (ren ? (ren.auto_renew ? (ren.renews_at ?? h!.plan_expires_at) : null) : h!.plan_expires_at) : null,
+    /** paid until (also when it will not renew) */
+    expiresAt: apple ? h!.plan_expires_at : null,
+    autoRenew: apple ? (ren ? Boolean(ren.auto_renew) : null) : null,
+    period: apple ? (ren?.period ?? (h!.plan_product ? (APPLE_PRODUCTS[h!.plan_product]?.period ?? null) : null)) : null,
+    /** "Abo verwalten": Apple's subscription management (the app opens it with showManageSubscriptions) */
+    manageUrl: apple ? APPLE_MANAGE_URL : null,
+    source: h?.plan_source === 'apple' ? 'apple' : h?.plan_source === 'operator' ? 'operator' : 'none',
     limits: {
       historyDays: l.historyDays,
       assistantPerMonth: nullIfInf(l.assistantPerMonth),
@@ -70,7 +81,18 @@ const wrap =
     }
   };
 
-r.get('/billing/status', requireAuth, (_req, res) => res.json(billingStatus()));
+r.get('/billing/status', requireAuth, (req, res) => res.json({ ...billingStatus(), reminder: reminderWanted(req.actor?.userId) }));
+
+/** Personal: the e-mail 3 days before a yearly renewal (admins get it; default on). */
+r.patch('/billing/reminder', requireAuth, (req, res) => {
+  const { enabled } = z.object({ enabled: z.boolean() }).parse(req.body ?? {});
+  if (!req.actor?.userId) return void res.status(400).json({ error: 'no person' });
+  db.prepare(
+    `INSERT INTO user_prefs (user_id, key, value, updated_at) VALUES (?, 'billing.reminder', ?, datetime('now'))
+     ON CONFLICT(user_id, key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  ).run(req.actor.userId, JSON.stringify(enabled));
+  res.json({ reminder: enabled });
+});
 
 /** Sandbox (TestFlight) purchases count only for households with a tester account (APPLE_SANDBOX_ACCOUNTS). */
 function sandboxTester(householdId: string | null) {
@@ -151,6 +173,13 @@ pub.post(
     if (n.data?.signedRenewalInfo) renewal = await verifyAppleJws<AppleRenewal>(n.data.signedRenewalInfo);
     const hid = tx?.appAccountToken?.toLowerCase() ?? null;
     const h = hid ? getHousehold(hid) : undefined;
+    // the next renewal date and auto-renew state (subscription trust: renewsAt, reminder 3 days before yearly renewals)
+    if (h && renewal && (!h.original_transaction_id || !renewal.originalTransactionId || renewal.originalTransactionId === h.original_transaction_id || n.notificationType === 'SUBSCRIBED'))
+      recordRenewal(h.id, {
+        productId: renewal.autoRenewProductId ?? renewal.productId ?? tx?.productId ?? null,
+        renewsAtMs: renewal.renewalDate ?? tx?.expiresDate ?? null,
+        autoRenew: renewal.autoRenewStatus === undefined ? n.notificationType !== 'EXPIRED' : renewal.autoRenewStatus === 1,
+      });
     if (tx && h) {
       const ours = !h.original_transaction_id || h.original_transaction_id === tx.originalTransactionId;
       switch (n.notificationType) {

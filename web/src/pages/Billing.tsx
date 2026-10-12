@@ -6,10 +6,10 @@
  */
 import { DownloadSimple, Trash } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { api, invalidate, useApi } from '../api';
+import { api, invalidate, patch, useApi } from '../api';
 import { type Billing, useBilling } from '../data';
 import { locale, t } from '../i18n';
-import { Sheet, Skeleton, useToast } from '../ui';
+import { Sheet, Skeleton, Toggle, useToast } from '../ui';
 
 const PLAN_LABEL: Record<Billing['plan'], string> = {
   free: 'Free',
@@ -49,7 +49,13 @@ export function BillingCard() {
         {s.renewsAt && (
           <>
             <dt>{t('Renews')}</dt>
-            <dd>{fmtDay(s.renewsAt)}</dd>
+            <dd>{s.period === 'yearly' ? t('{date} (yearly)', { date: fmtDay(s.renewsAt) }) : s.period === 'monthly' ? t('{date} (monthly)', { date: fmtDay(s.renewsAt) }) : fmtDay(s.renewsAt)}</dd>
+          </>
+        )}
+        {!s.renewsAt && s.autoRenew === false && s.expiresAt && (
+          <>
+            <dt>{t('Ends')}</dt>
+            <dd>{t('{date} – will not renew', { date: fmtDay(s.expiresAt) })}</dd>
           </>
         )}
         {msgs != null && (
@@ -83,6 +89,20 @@ export function BillingCard() {
             </div>
           )}
           {pct != null && pct >= 95 && <p className="small" style={{ margin: 0 }}>{t('Storage is full: new photos and receipt files can’t be saved. Nothing gets deleted.')}</p>}
+        </div>
+      )}
+      {s.manageUrl && (
+        <div className="stack" style={{ gap: 10 }}>
+          <a className="btn" style={{ alignSelf: 'flex-start' }} href={s.manageUrl} target="_blank" rel="noopener noreferrer">
+            {t('Manage subscription')}
+          </a>
+          <div className="row between" style={{ gap: 16, alignItems: 'flex-start' }}>
+            <div>
+              <b>{t('Reminder before the yearly renewal')}</b>
+              <div className="small muted">{t('An e-mail 3 days before Apple charges the next year.')}</div>
+            </div>
+            <Toggle on={s.reminder !== false} onChange={(v) => patch('/billing/reminder', { enabled: v }).then(() => invalidate('billing'))} label={t('Reminder before the yearly renewal')} />
+          </div>
         </div>
       )}
       <p className="small muted" style={{ margin: 0 }}>

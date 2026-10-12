@@ -94,4 +94,12 @@ export const core: Record<string, string> = {
     'Auf deinem eigenen Server: Einstellungen › Daten › Umzug in die ToHuus Cloud. Dann hier die Datei auswählen. Das geht in einem neuen, leeren Haushalt.',
   'Your password': 'Dein Passwort',
   'Choose move file': 'Umzugsdatei auswählen',
+  // subscriptions
+  '{date} (yearly)': '{date} (jährlich)',
+  '{date} (monthly)': '{date} (monatlich)',
+  Ends: 'Endet',
+  '{date} – will not renew': '{date} – verlängert sich nicht',
+  'Manage subscription': 'Abo verwalten',
+  'Reminder before the yearly renewal': 'Erinnerung vor der Jahresverlängerung',
+  'An e-mail 3 days before Apple charges the next year.': 'Eine E-Mail 3 Tage, bevor Apple das nächste Jahr abbucht.',
 };

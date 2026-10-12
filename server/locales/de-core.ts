@@ -88,4 +88,15 @@ export const de_core: Record<string, string> = {
   'No file received': 'Keine Datei angekommen',
   'This household is not empty. Create a new household for the move, then import there.':
     'Dieser Haushalt ist nicht leer. Leg für den Umzug einen neuen Haushalt an und importier dort.',
+  // subscriptions (renewals.ts)
+  'Your ToHuus subscription renews on {date}': 'Dein ToHuus-Abo verlängert sich am {date}',
+  'Renewal in 3 days': 'Verlängerung in 3 Tagen',
+  Subscription: 'Abo',
+  'Your yearly subscription {plan} renews automatically on {date} for {price}. Apple charges it.':
+    'Dein Jahresabo {plan} verlängert sich am {date} automatisch für {price}. Apple bucht den Betrag ab.',
+  'Nothing to do if you want to keep it. To end or change it: in the App Store under your Apple account › Subscriptions.':
+    'Wenn du es behalten willst, musst du nichts tun. Kündigen oder ändern: im App Store unter deinem Apple-Account › Abonnements.',
+  'Manage subscription': 'Abo verwalten',
+  'You get this because you are an admin of this household. Switch it off in Settings › Plan & storage.':
+    'Du bekommst das, weil du Admin dieses Haushalts bist. Abschalten unter Einstellungen › Abo & Speicher.',
 };

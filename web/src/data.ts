@@ -76,7 +76,14 @@ export interface Billing {
   plan: 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
   trialEndsAt?: string | null;
   renewsAt?: string | null;
-  source?: 'apple' | 'none';
+  expiresAt?: string | null;
+  autoRenew?: boolean | null;
+  period?: 'monthly' | 'yearly' | null;
+  /** Apple's subscription management (https://apps.apple.com/account/subscriptions) when the plan comes from the App Store */
+  manageUrl?: string | null;
+  /** personal: e-mail 3 days before a yearly renewal */
+  reminder?: boolean;
+  source?: 'apple' | 'operator' | 'none';
   limits?: { historyDays?: number | null; assistantPerMonth?: number | null; assistantThrottleOnly?: boolean; uploadsPerDay?: number | null; receiptAiPerDay?: number | null; storageBytes?: number | null; [k: string]: unknown };
   usage?: { assistantThisMonth?: number; uploadsToday?: number; receiptAiToday?: number; storageBytes?: number; [k: string]: unknown };
 }

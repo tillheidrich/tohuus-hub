@@ -165,6 +165,12 @@ Account mails – address confirmation, sign-in link, password reset, account de
 cookie session for the same member and household and redirects to `next` (a relative path, default `/`). Works in
 both modes. The links live in process memory (sign-in material, not household data).
 
+## Subscriptions: renewal date, "Abo verwalten", reminder
+
+- `GET /api/billing/status` also returns `renewsAt` (the next charge from the App Store renewal info – `signedRenewalInfo.renewalDate` – or the end of the paid period; `null` when auto-renew is off), `expiresAt` (paid until), `autoRenew` (true/false/null), `period` (`monthly`/`yearly`), `manageUrl` and `reminder` (the caller's own choice). `source` can now also be `operator` (granted on `/betrieb`).
+- **"Abo verwalten"**: `manageUrl` is `https://apps.apple.com/account/subscriptions` (Apple's subscription management) whenever the plan comes from the App Store. The web app links to it; the iPhone app should call `AppStore.showManageSubscriptions(in:)` and fall back to that URL.
+- **Reminder**: App Store Server Notifications v2 store the renewal date and auto-renew state per household (`billing_renewals` in `accounts.db`, `server/lib/renewals.ts`). An hourly job e-mails the household's admins **3 days before a yearly renewal**, once per renewal date, in each account's language, with the "Abo verwalten" link – unless the household switched e-mail off for the event `billing.renewal` (notification settings) or the admin switched it off for themselves: `PATCH /api/billing/reminder { enabled }` (`user_prefs billing.reminder`, default on). Monthly plans get no reminder. Test: `test/cloud-billing.test.ts` with fake signed notifications.
+
 ## Moving a self-hosted household in
 
 **On the own server** (*Einstellungen › Daten › Umzug in die ToHuus Cloud*, admins): `GET /api/move/file?secrets=0|1` downloads `tohuus-umzug-<date>.zip` (`server/lib/move.ts`, ZIP via `server/lib/zip.ts`):
