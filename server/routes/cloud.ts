@@ -296,7 +296,7 @@ function currentTokenHash(req: Request) {
  * (e-mail links only) confirms with a fresh e-mail link: the first call sends it, opening it within 15 minutes
  * makes the session fresh, and the call is repeated.
  */
-async function confirmAccount(req: Request, accountId: number, password: string | undefined) {
+export async function confirmAccount(req: Request, accountId: number, password: string | undefined) {
   const acc = await A();
   const a = acc.accountById(accountId)!;
   if (a.password_hash?.startsWith('scrypt$')) {

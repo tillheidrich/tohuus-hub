@@ -30,6 +30,7 @@ import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
 import { AssistantPrivacyCard } from './Memory';
 import { AiSwitchesCard, ConnectAssistantCard } from './AiSettings';
+import { MoveInCard, MoveOutCard } from './MoveSettings';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -395,6 +396,7 @@ function Access({ admin }: { admin: boolean }) {
 
 function Data({ admin }: { admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
+  const cloud = useInstance().data?.mode === 'cloud';
   const fileRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -415,6 +417,7 @@ function Data({ admin }: { admin: boolean }) {
   };
   return (
     <div className="stack" style={{ gap: 16 }}>
+      {cloud ? <MoveInCard admin={admin} /> : <MoveOutCard admin={admin} />}
       <Backups admin={admin} />
       <div className="card pad stack">
         <div className="row between wrap">

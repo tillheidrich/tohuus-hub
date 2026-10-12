@@ -82,4 +82,10 @@ export const de_core: Record<string, string> = {
   'If this was not you, write to us right away.': 'Warst du das nicht? Dann schreib uns bitte sofort.',
   'ToHuus Cloud': 'ToHuus Cloud',
   'Please confirm your password again.': 'Bitte bestätige dein Passwort noch einmal.',
+  // cloud move (routes/move.ts)
+  'Only admins can do this.': 'Das können nur Admins.',
+  'A move is already running.': 'Ein Umzug läuft schon.',
+  'No file received': 'Keine Datei angekommen',
+  'This household is not empty. Create a new household for the move, then import there.':
+    'Dieser Haushalt ist nicht leer. Leg für den Umzug einen neuen Haushalt an und importier dort.',
 };

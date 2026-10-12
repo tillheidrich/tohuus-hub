@@ -80,4 +80,18 @@ export const core: Record<string, string> = {
   'Reset link sent': 'Link zum Zurücksetzen geschickt',
   'Send reset link': 'Link zum Zurücksetzen schicken',
   'Audit log': 'Protokoll',
+  // move to the cloud
+  'Move to ToHuus Cloud': 'Umzug in die ToHuus Cloud',
+  'One file with everything of your household – list, stock, recipes, receipts, photos. Create a new household in ToHuus Cloud and import the file there. Sign-ins, devices, tokens and links stay here; conversations with the assistant and what others marked “only for me” as well.':
+    'Eine Datei mit allem aus eurem Haushalt – Liste, Vorrat, Rezepte, Bons, Fotos. Leg in der ToHuus Cloud einen neuen Haushalt an und importier die Datei dort. Anmeldungen, Geräte, Zugänge und Links bleiben hier, ebenso Gespräche mit dem Assistenten und was andere als „nur für mich“ markiert haben.',
+  'Take the codes from the house info along (door, alarm, Wi-Fi)': 'Codes aus der Hausinfo mitnehmen (Tür, Alarm, WLAN)',
+  'Download move file': 'Umzugsdatei herunterladen',
+  'Bring a household from your own server': 'Haushalt vom eigenen Server übernehmen',
+  'Done: {rows} entries, {images} photos, {files} receipt files. {people} people without a sign-in yet – invite them under Members.':
+    'Fertig: {rows} Einträge, {images} Fotos, {files} Bon-Dateien. {people} Personen haben noch keine Anmeldung – lad sie unter Mitglieder ein.',
+  'Moving in … {p} %': 'Zieht ein … {p} %',
+  'On your own server: Settings › Data › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household.':
+    'Auf deinem eigenen Server: Einstellungen › Daten › Umzug in die ToHuus Cloud. Dann hier die Datei auswählen. Das geht in einem neuen, leeren Haushalt.',
+  'Your password': 'Dein Passwort',
+  'Choose move file': 'Umzugsdatei auswählen',
 };

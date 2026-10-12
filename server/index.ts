@@ -53,6 +53,7 @@ import { r as featureRoutes } from './routes/features.js';
 import { r as aiSettingsRoutes } from './routes/ai-settings.js';
 import { pub as oauthPub, r as oauthRoutes } from './routes/oauth.js';
 import { r as operatorRoutes } from './routes/operator.js';
+import { r as moveRoutes } from './routes/move.js';
 import { requestCounter } from './lib/operator.js';
 import { AiError } from './lib/ai.js';
 import { householdAppearance } from './lib/appearance.js';
@@ -186,6 +187,7 @@ app.use('/api', billingRoutes);
 app.use('/api', featureRoutes);
 app.use('/api', aiSettingsRoutes);
 app.use('/api', oauthRoutes);
+app.use('/api', moveRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));

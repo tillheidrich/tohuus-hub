@@ -165,6 +165,27 @@ Account mails – address confirmation, sign-in link, password reset, account de
 cookie session for the same member and household and redirects to `next` (a relative path, default `/`). Works in
 both modes. The links live in process memory (sign-in material, not household data).
 
+## Moving a self-hosted household in
+
+**On the own server** (*Einstellungen › Daten › Umzug in die ToHuus Cloud*, admins): `GET /api/move/file?secrets=0|1` downloads `tohuus-umzug-<date>.zip` (`server/lib/move.ts`, ZIP via `server/lib/zip.ts`):
+
+| Entry | Content |
+|---|---|
+| `manifest.json` | `{ format: 'tohuus-move', version: 1, createdAt, app, includeSecrets, counts, parts }` |
+| `export.json` | the household export of `data.ts` (`buildExport({ viewer: <admin> })`): no sessions, no tokens, no credential columns, no OAuth tables, no `*_secrets` tables, no other member's conversations, personal settings or "nur für mich" memory |
+| `images/<name>` | every stored image, decrypted |
+| `imports/<name>` | receipt files the imports point to |
+| `parts/<key>.json` | extra parts registered with `registerMovePart()`. Parts marked `sensitive` (Hausinfo codes) only when the admin ticks "Codes aus der Hausinfo mitnehmen" (`secrets=1`); `GET /api/move/info` lists the parts |
+
+**In the cloud** (*Einstellungen › Daten › Haushalt vom eigenen Server übernehmen*, shown to admins of an empty household): `POST /api/cloud/import` (multipart `file` + `password`) → `202 { state: 'running' }`; `GET /api/cloud/import` → `{ state: 'idle'|'running'|'done'|'failed', progress, empty?, summary?: { tables, rows, images, files, people: { mapped, created }, parts, skippedTables, foreignKeyIssues }, error?, code? }`.
+
+- Admins only, with a **fresh password check** (as for deleting a household). Max. `MOVE_MAX_MB` (default 300) upload, 3× that unpacked, 50 000 entries.
+- Only into a **new, empty household** (no products, recipes, imports, list rows, no second member) – `409 move.not_empty` otherwise. Photos and files must fit the plan's storage quota (`413 move.quota`).
+- The work runs after the answer, inside that household's context, into its encrypted database; images and receipt files are stored encrypted with the household key.
+- **People** are mapped by e-mail, then by name; the importing admin stands in for the first admin of the old household if nobody matched. Everyone else becomes a person without a sign-in (`password_hash '!'`) – invite them under *Mitglieder*. All `user_id`-like columns and `u<id>` person keys are rewritten.
+- Never imported: users rows as such, sessions, tokens, invites, guest links, kid tablet pairings, push subscriptions, assistant conversations, OAuth, the old server's settings (HA, Telegram, IMAP, backups, printers, sign-in policy) and the household name, language, region and AI/MCP switches (the cloud household keeps its own; the consent for health data must be given again).
+- Test: `test/move.test.ts` (a real self-hosted household in a child process → cloud import, isolation from another household).
+
 ## Operator page (`/betrieb`)
 
 Cloud only. Who: accounts whose e-mail address is listed in `OPERATOR_EMAILS` (comma-separated); everyone else gets a plain 404 on every `/api/operator/*` route. Then a **fresh password check** (`POST /api/operator/unlock { password }`, valid 10 minutes for that session or app token, 5 tries per 15 minutes). Code: `server/lib/operator.ts`, `server/routes/operator.ts`, page `web/src/pages/Operator.tsx`.
