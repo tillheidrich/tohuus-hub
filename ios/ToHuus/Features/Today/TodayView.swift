@@ -89,7 +89,7 @@ struct TodayView: View {
                         ForEach(t.notices) { n in noticeRow(n) }
                         if !t.rhythm.isEmpty { dueCard(t.rhythm) }
                         listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])
-                        if !t.stillHave.isEmpty && app.moduleOn("stock") { stillHaveCard(t.stillHave) }
+                        if !t.stillHave.isEmpty && app.moduleOn("stock") { EatSoonCard(items: t.stillHave, store: store) }
                         if let cook = t.cookToday, cook.recipeId != nil || cook.title != nil, app.moduleOn("cook") { cookCard(cook) }
                         if let money = t.money, app.moduleOn("money") { moneyCard(money) }
                     } else if model.limited || !store.isOnline {
@@ -216,24 +216,6 @@ struct TodayView: View {
             }
         }
         .buttonStyle(.plain)
-    }
-
-    private func stillHaveCard(_ items: [StillHaveItem]) -> some View {
-        Card(title: L("You still have"), systemImage: "leaf") {
-            ForEach(items.prefix(6)) { i in
-                HStack {
-                    Text(i.name).font(.subheadline)
-                    Spacer()
-                    if let label = i.label ?? ServerDate.shortDay(i.date) {
-                        if i.kind == "probably" {
-                            Text(label).font(.caption).foregroundStyle(Theme.ink3)
-                        } else {
-                            StatusPill(text: label, status: (i.daysLeft ?? 1) < 0 ? "expired" : "expiring")
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private func cookCard(_ cook: TodayPayload.CookToday) -> some View {

@@ -4,10 +4,18 @@ struct ProductDetailView: View {
     let productId: Int
     let store: ServerStore
     @State private var product: ProductInfo?
+    @State private var extra = ProductExtra()
+    @State private var fresh: FreshProduct?
+    @State private var places: [Place] = []
+    @State private var categories: [ProductCategory] = []
     @State private var error: String?
     @State private var busy = false
     @State private var toast: String?
     @State private var prices: [ShopPrice] = []
+    @State private var showEdit = false
+    @State private var showBatch = false
+    @State private var showBuyAt = false
+    @State private var dateEntry: FreshProduct.Entry?
 
     var body: some View {
         ScrollView {
@@ -15,8 +23,9 @@ struct ProductDetailView: View {
                 if let p = product {
                     header(p)
                     amountCard(p)
-                    if !p.stock.isEmpty { stockCard(p) }
+                    batchesCard(p)
                     actions(p)
+                    whereCard(p)
                     if !prices.isEmpty { pricesCard }
                     if !p.history.isEmpty { historyCard(p) }
                 } else if let error {
@@ -31,12 +40,45 @@ struct ProductDetailView: View {
         .canvasBackground()
         .navigationTitle(product?.name ?? "")
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: store.revision("stock")) { await load() }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(L("Edit")) { showEdit = true }.disabled(product == nil)
+            }
+        }
+        .task(id: store.revision("stock") + store.revision("products")) { await load() }
+        .sheet(isPresented: $showEdit) {
+            if let p = product {
+                ProductEditSheet(product: p, extra: extra, places: places, categories: categories, store: store) {
+                    Task { await load() }
+                }
+            }
+        }
+        .sheet(isPresented: $showBatch) {
+            if let p = product {
+                AddBatchSheet(product: p, places: places, store: store) { msg in
+                    toast = msg
+                    Task { await load() }
+                }
+            }
+        }
+        .sheet(isPresented: $showBuyAt) {
+            if let p = product { ProductBuyAtSheet(product: p, stores: extra.stores, store: store) { Task { await load() } } }
+        }
+        .sheet(item: $dateEntry) { e in
+            BatchDateSheet(entry: e, store: store) { Task { await load() } }
+        }
+        .onAppear {
+            #if DEBUG
+            if UserDefaults.standard.bool(forKey: "debugProductEdit") {
+                Task { try? await Task.sleep(nanoseconds: 1_200_000_000); showEdit = true }
+            }
+            #endif
+        }
         .overlay(alignment: .bottom) {
             if let toast {
                 Text(toast).font(.subheadline).padding(12).background(Theme.ink, in: Capsule()).foregroundStyle(Theme.canvas)
                     .padding(.bottom, 24)
-                    .task { try? await Task.sleep(nanoseconds: 2_500_000_000); self.toast = nil }
+                    .task(id: toast) { try? await Task.sleep(nanoseconds: 2_500_000_000); self.toast = nil }
             }
         }
     }
@@ -60,13 +102,28 @@ struct ProductDetailView: View {
     }
 
     private func load() async {
+        let api = store.api
         do {
-            product = try await store.api.product(productId)
+            let (p, x) = try await api.productFull(productId)
+            product = p
+            extra = x
             error = nil
-            prices = (try? await store.api.prices(product: productId)) ?? []
+            async let f = try? api.freshProduct(productId)
+            async let pl = try? api.places()
+            async let c = try? api.categories()
+            async let pr = try? api.prices(product: productId)
+            fresh = await f
+            places = await pl ?? places
+            categories = await c ?? categories
+            prices = await pr ?? []
         } catch {
             self.error = APIError.from(error).localizedDescription
         }
+    }
+
+    private func placeName(_ id: Int?) -> String {
+        guard let id else { return L("No place") }
+        return places.first { $0.id == id }.map { $0.path ?? $0.name } ?? L("No place")
     }
 
     private func header(_ p: ProductInfo) -> some View {
@@ -76,7 +133,8 @@ struct ProductDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
             VStack(alignment: .leading, spacing: 4) {
                 Text(p.name).font(Theme.title(Theme.FontSize.h2))
-                if let b = p.brand { Text(b).foregroundStyle(Theme.ink2) }
+                let sub = [p.brand, categories.first { $0.id == p.categoryId }?.name].compactMap { $0 }.joined(separator: " · ")
+                if !sub.isEmpty { Text(sub).foregroundStyle(Theme.ink2) }
                 if let s = p.statusLabel { StatusPill(text: s, status: p.status) }
             }
         }
@@ -96,33 +154,86 @@ struct ProductDetailView: View {
                 HStack {
                     Button { Task { await adjust(-1) } } label: { Image(systemName: "minus.circle.fill").font(.title) }
                         .disabled((p.total ?? 0) <= 0 || busy)
+                        .accessibilityLabel(L("One less"))
                     Spacer()
                     Text(p.amountLabel).font(.title2.weight(.semibold)).monospacedDigit()
                     Spacer()
                     Button { Task { await adjust(1) } } label: { Image(systemName: "plus.circle.fill").font(.title) }
                         .disabled(busy)
+                        .accessibilityLabel(L("One more"))
                 }
                 .foregroundStyle(Theme.primary)
+                if let m = p.minQty, m > 0 {
+                    Text(LF("Keep at least %@", String(format: "%g", m))).font(.caption).foregroundStyle(Theme.ink3)
+                }
             } else {
                 Text(L("This product isn't counted – ToHuus just remembers when you buy it.")).font(.subheadline).foregroundStyle(Theme.ink2)
             }
-            if let spot = p.spot { Label(spot, systemImage: "mappin").font(.subheadline).foregroundStyle(Theme.ink2) }
             if let w = p.perWeek { Text(LF("About %@ per week", String(format: "%.1f", w))).font(.caption).foregroundStyle(Theme.ink3) }
         }
     }
 
-    private func stockCard(_ p: ProductInfo) -> some View {
-        Card(title: L("Best before"), systemImage: "calendar") {
-            ForEach(p.stock) { e in
-                HStack {
-                    Text(String(format: "%g", e.qty ?? 0)).monospacedDigit()
-                    Spacer()
-                    Text(ServerDate.shortDay(e.bestBefore) ?? L("no date")).foregroundStyle(Theme.ink2)
-                    if e.openedAt != nil { Text(L("opened")).font(.caption).foregroundStyle(Theme.warning) }
-                }
-                .font(.subheadline)
+    /// Batches: where, how many, best before, opened / frozen – with the actions per batch
+    private func batchesCard(_ p: ProductInfo) -> some View {
+        Card(title: L("Where and until when"), systemImage: "calendar") {
+            let entries = fresh?.entries ?? p.stock.map {
+                FreshProduct.Entry(id: $0.id, locationId: $0.locationId, qty: $0.qty, bestBefore: $0.bestBefore, openedAt: $0.openedAt)
+            }
+            if entries.isEmpty {
+                Text(L("Nothing at home right now.")).font(.subheadline).foregroundStyle(Theme.ink3)
+            }
+            ForEach(entries) { e in batchRow(p, e) }
+            if p.isTracked {
+                Button { showBatch = true } label: { Label(L("Put some away – with date and place"), systemImage: "plus") }
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.top, 2)
             }
         }
+    }
+
+    private func batchRow(_ p: ProductInfo, _ e: FreshProduct.Entry) -> some View {
+        HStack(alignment: .center, spacing: Theme.Space.s3) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(placeName(e.locationId)).font(.subheadline.weight(.semibold))
+                HStack(spacing: 6) {
+                    Text(dateLine(e)).font(.caption).foregroundStyle(Theme.ink2)
+                    if e.inFreezer == true { StatusPill(text: L("frozen"), status: nil) }
+                    if e.openedAt != nil { StatusPill(text: L("opened"), status: "expiring") }
+                }
+            }
+            Spacer(minLength: 0)
+            Text(String(format: "%g", e.qty ?? 0)).font(.subheadline).monospacedDigit()
+            Menu {
+                Button { dateEntry = e } label: { Label(L("Change the date"), systemImage: "calendar") }
+                if e.openedAt == nil && e.inFreezer != true {
+                    Button { Task { await freshAct(p, "open", e) } } label: { Label(L("Opened"), systemImage: "drop") }
+                }
+                if e.inFreezer == true {
+                    Button { Task { await freshAct(p, "thaw", e) } } label: { Label(L("Thaw"), systemImage: "sun.max") }
+                } else if fresh?.hasFreezer == true {
+                    Button { Task { await freshAct(p, "freeze", e) } } label: { Label(L("Freeze"), systemImage: "snowflake") }
+                }
+                let others = places.filter { $0.id != e.locationId && $0.system != true }
+                if !others.isEmpty {
+                    Menu {
+                        ForEach(others) { pl in
+                            Button(pl.path ?? pl.name) { Task { await move(e, to: pl) } }
+                        }
+                    } label: { Label(L("Move to"), systemImage: "arrow.right.square") }
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle").font(.title3).foregroundStyle(Theme.primaryText)
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel(LF("Actions for %@", placeName(e.locationId)))
+        }
+    }
+
+    private func dateLine(_ e: FreshProduct.Entry) -> String {
+        if let u = e.useBy ?? e.bestBefore, let d = ServerDate.shortDay(u) {
+            return e.openedAt != nil || e.inFreezer == true ? LF("use by %@", d) : LF("best before %@", d)
+        }
+        return L("no date")
     }
 
     private func actions(_ p: ProductInfo) -> some View {
@@ -146,6 +257,44 @@ struct ProductDetailView: View {
         .disabled(busy)
     }
 
+    /// Where it lives, the exact spot, how it is counted and where to buy it
+    private func whereCard(_ p: ProductInfo) -> some View {
+        Card(title: L("Details"), systemImage: "info.circle") {
+            detailRow(L("Usually kept in"), placeName(p.defaultLocationId))
+            if let spot = p.spot, !spot.isEmpty { detailRow(L("Exact spot"), spot) }
+            detailRow(L("Counting"), trackLabel(p.trackMode))
+            if let n = p.notes, !n.isEmpty { detailRow(L("Note"), n) }
+            Divider()
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L("Where to buy?")).font(.caption).foregroundStyle(Theme.ink3)
+                    Text(extra.stores.isEmpty ? L("Anywhere – no shop set") : extra.stores.joined(separator: " · "))
+                        .font(.subheadline.weight(extra.stores.isEmpty ? .regular : .semibold))
+                        .foregroundStyle(extra.stores.isEmpty ? Theme.ink3 : Theme.ink)
+                }
+                Spacer()
+                Button(extra.stores.isEmpty ? L("Add shop") : L("Change")) { showBuyAt = true }
+                    .buttonStyle(.bordered).controlSize(.small)
+            }
+        }
+    }
+
+    private func detailRow(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label).font(.subheadline).foregroundStyle(Theme.ink2)
+            Spacer(minLength: 12)
+            Text(value).font(.subheadline).multilineTextAlignment(.trailing)
+        }
+    }
+
+    private func trackLabel(_ m: String?) -> String {
+        switch m {
+        case "level": return L("Fill level")
+        case "none": return L("Not counted")
+        default: return L("Pieces")
+        }
+    }
+
     private func historyCard(_ p: ProductInfo) -> some View {
         Card(title: L("History"), systemImage: "clock") {
             ForEach(p.history.prefix(8)) { m in
@@ -161,6 +310,8 @@ struct ProductDetailView: View {
             }
         }
     }
+
+    // MARK: actions
 
     private func adjust(_ delta: Double) async {
         busy = true
@@ -181,6 +332,32 @@ struct ProductDetailView: View {
         } catch { self.error = APIError.from(error).localizedDescription }
     }
 
+    private func freshAct(_ p: ProductInfo, _ action: String, _ e: FreshProduct.Entry) async {
+        busy = true
+        defer { busy = false }
+        do {
+            let r = try await store.api.freshAction(p.id, action, entryId: e.id, qty: action == "open" ? nil : e.qty)
+            Haptics.success()
+            switch action {
+            case "open": toast = r.useBy.flatMap { ServerDate.shortDay($0) }.map { LF("Opened – use by %@", $0) } ?? L("Marked as opened")
+            case "freeze": toast = r.bestBefore.flatMap { ServerDate.shortDay($0) }.map { LF("Frozen – keeps until %@", $0) } ?? L("Frozen")
+            default: toast = r.eatBy.flatMap { ServerDate.shortDay($0) }.map { LF("Thawed – eat by %@", $0) } ?? L("Thawed")
+            }
+            store.touch("stock")
+            await load()
+        } catch { toast = APIError.from(error).localizedDescription }
+    }
+
+    private func move(_ e: FreshProduct.Entry, to place: Place) async {
+        do {
+            try await store.api.patchBatch(e.id, locationId: place.id)
+            Haptics.tick()
+            toast = LF("Moved to %@", place.name)
+            store.touch("stock")
+            await load()
+        } catch { toast = APIError.from(error).localizedDescription }
+    }
+
     private func usedUp() async {
         busy = true
         defer { busy = false }
@@ -192,5 +369,15 @@ struct ProductDetailView: View {
             await store.refreshList()
             await load()
         } catch { self.error = APIError.from(error).localizedDescription }
+    }
+}
+
+extension FreshProduct.Entry {
+    init(id: Int, locationId: Int?, qty: Double?, bestBefore: String?, openedAt: String?) {
+        self.id = id
+        self.locationId = locationId
+        self.qty = qty
+        self.bestBefore = bestBefore
+        self.openedAt = openedAt
     }
 }

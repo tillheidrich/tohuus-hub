@@ -23,6 +23,15 @@ struct ShoppingView: View {
     @State private var showNewList = false
     @State private var listsSupported = false
     @State private var dropSection: String?
+    // 0.3 parity: claims, discreet adding, paste, forecast, list & shop settings
+    @State private var me: MeLite?
+    @State private var visibility: RowVisibility = .all
+    @State private var forecast: [ForecastItem] = []
+    @State private var showPaste = false
+    @State private var showShopSettings = false
+    @State private var manageList: ListRef?
+    @State private var shareText: ShareText?
+    @State private var toast: String?
     @AppStorage("list.density") private var densityRaw = ListDensity.normal.rawValue
     @AppStorage("list.fontScale") private var fontScale = 1.0
     @FocusState private var inputFocused: Bool
@@ -44,6 +53,7 @@ struct ShoppingView: View {
                 if !shopMode {
                     addSection
                     if !suggestions.isEmpty { suggestionStrip }
+                    if !forecast.isEmpty { forecastSection }
                 }
                 if let err = store.lastError {
                     ErrorBanner(message: err) { Task { await store.refreshList() } }
@@ -128,18 +138,34 @@ struct ShoppingView: View {
             .sheet(isPresented: $showRecent) { RecentDoneSheet(store: store) }
             .sheet(isPresented: $showUsuals) { UsualsSheet(store: store) }
             .sheet(isPresented: $showOffers) { OffersView(store: store) }
+            .sheet(isPresented: $showPaste) { PasteListSheet(store: store) }
+            .sheet(isPresented: $showShopSettings) { ShopSettingsSheet(store: store) }
+            .sheet(item: $manageList) { l in ManageListSheet(list: l, store: store) }
+            .sheet(item: $shareText) { t in ShopActivitySheet(items: [t.text]).presentationDetents([.medium, .large]) }
+            .overlay(alignment: .top) { toastView }
             .alert(L("New list"), isPresented: $showNewList) {
                 TextField(L("Name, e.g. Drugstore"), text: $newListName)
                 Button(L("Create")) { createList() }
                 Button(L("Cancel"), role: .cancel) { newListName = "" }
             }
-            .task(id: store.revision("shopping")) {
+            .task(id: store.revision("shopping") + store.revision("stock")) {
                 await loadSuggestions()
+                await loadForecast()
                 await store.refreshTrips()
             }
             .task {
                 listsSupported = (try? await store.api.shopLists()) != nil
                 tripPrivate = (try? await store.api.tripPrivacy()) ?? false
+                me = try? await store.api.meLite()
+                #if DEBUG
+                let d = UserDefaults.standard
+                if d.bool(forKey: "debugShopSettings") { showShopSettings = true }
+                if d.bool(forKey: "debugPaste") { showPaste = true }
+                if d.bool(forKey: "debugItemSheet") {
+                    try? await Task.sleep(nanoseconds: 800_000_000)
+                    detailItem = store.list.openItems.first
+                }
+                #endif
             }
             .onChange(of: app.requestedStore, initial: true) { _, id in
                 guard let id else { return }
@@ -313,12 +339,15 @@ struct ShoppingView: View {
                     if !checked, let hint = item.sizeHint ?? item.priceHint, density != .compact {
                         Label(hint, systemImage: item.sizeHint != nil ? "lightbulb" : "eurosign").font(.caption).foregroundStyle(Theme.ink2)
                     }
-                    if density != .compact || shopMode {
-                        if !shopMode {
-                            Text(checked ? doneLine(item) : item.originLine).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1)
-                        } else if let claim = item.claim?.name {
-                            Text(LF("%@ takes care of it", claim)).font(.caption).foregroundStyle(Theme.ink3)
-                        }
+                    if let share = item.share, !checked {
+                        Label(share.subline, systemImage: share.icon).font(.caption).foregroundStyle(Theme.ink2).lineLimit(1)
+                    }
+                    if !checked, let claim = item.claim, (me?.claimsOn ?? true) {
+                        Label(claimLine(claim), systemImage: "hand.raised.fill")
+                            .font(.caption.weight(.semibold)).foregroundStyle(Theme.primaryText).lineLimit(1)
+                    }
+                    if density != .compact && !shopMode {
+                        Text(checked ? doneLine(item) : item.originLine).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1)
                     }
                 }
                 Spacer(minLength: 0)
@@ -335,6 +364,17 @@ struct ShoppingView: View {
         .hoverEffect(.highlight)
         .accessibilityValue(checked ? L("done") : L("open"))
         .draggable(ItemDrag(id: item.id).payload)
+        .swipeActions(edge: .leading) {
+            if !item.isChecked && item.id > 0 && (me?.claimsOn ?? true) {
+                let mine = item.claim != nil && item.claim?.userId == me?.userId
+                Button {
+                    Task { await claim(item, on: !mine) }
+                } label: {
+                    Label(mine ? L("Release") : L("I'll get it"), systemImage: mine ? "hand.raised.slash" : "hand.raised.fill")
+                }
+                .tint(mine ? Theme.ink3 : Theme.primary)
+            }
+        }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 Task { await store.delete(item) }
@@ -349,7 +389,14 @@ struct ShoppingView: View {
             .tint(Theme.info)
         }
         .contextMenu {
-            Button { detailItem = item } label: { Label(L("Note, substitute, photo"), systemImage: "square.and.pencil") }
+            Button { detailItem = item } label: { Label(L("Edit row"), systemImage: "square.and.pencil") }
+            if !item.isChecked && item.id > 0 && (me?.claimsOn ?? true) {
+                if item.claim != nil && item.claim?.userId == me?.userId {
+                    Button { Task { await claim(item, on: false) } } label: { Label(L("Release"), systemImage: "hand.raised.slash") }
+                } else {
+                    Button { Task { await claim(item, on: true) } } label: { Label(L("I'll get it"), systemImage: "hand.raised.fill") }
+                }
+            }
             if item.isChecked && item.id > 0 {
                 Button { Task { await restore(item) } } label: { Label(L("Put back"), systemImage: "arrow.uturn.backward") }
             }
@@ -482,7 +529,26 @@ struct ShoppingView: View {
                     .onChange(of: input) { _, new in Task { await updatePreview(new) } }
                 if !input.isEmpty {
                     Button(L("Add"), action: submit).fontWeight(.semibold)
+                } else {
+                    Button { showPaste = true } label: { Image(systemName: "doc.on.clipboard") }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel(L("Paste a list"))
                 }
+                Menu {
+                    Picker(L("Who sees it?"), selection: $visibility) {
+                        ForEach(RowVisibility.allCases) { v in Label(v.title, systemImage: v.icon).tag(v) }
+                    }
+                } label: {
+                    Image(systemName: visibility == .all ? "eye" : (visibility == .private ? "lock.fill" : "eye.slash.fill"))
+                        .foregroundStyle(visibility == .all ? Theme.ink3 : Theme.primaryText)
+                        .frame(width: 32, height: 32)
+                }
+                .accessibilityLabel(L("Who sees it?"))
+                .accessibilityValue(visibility.title)
+            }
+            if visibility != .all {
+                Label(visibility.explanation, systemImage: visibility.icon)
+                    .font(.caption).foregroundStyle(Theme.primaryText)
             }
             if preview.count > 1 || preview.first.map({ $0.qty != nil || $0.amount != nil }) == true {
                 Text(preview.map { p in
@@ -501,6 +567,12 @@ struct ShoppingView: View {
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         Haptics.tick()
         inputFocused = true
+        if visibility != .all {
+            let vis = visibility
+            visibility = .all
+            Task { await addHidden(text, vis) }
+            return
+        }
         Task {
             // "laut Bon vorgestern gekauft", "im Vorrat 2": ask once, never block (offline: just add)
             let single = QuickAddParser.fragments(text).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count == 1
@@ -633,6 +705,9 @@ struct ShoppingView: View {
                     if listsSupported {
                         Button { showNewList = true } label: { Label(L("New list"), systemImage: "plus") }
                     }
+                    if let l = store.list.currentList, !l.isMain {
+                        Button { manageList = l } label: { Label(L("Rename or remove this list"), systemImage: "pencil") }
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Text(title).font(.headline)
@@ -651,6 +726,10 @@ struct ShoppingView: View {
                 Button { showUsuals = true } label: { Label(L("Our usuals"), systemImage: "star") }
                 Button { showRecent = true } label: { Label(L("Recently done"), systemImage: "clock.arrow.circlepath") }
                 Button { showOffers = true } label: { Label(L("Offers"), systemImage: "tag") }
+                Divider()
+                Button { showPaste = true } label: { Label(L("Paste a list"), systemImage: "doc.on.clipboard") }
+                Button { Task { await shareList() } } label: { Label(L("Share the list"), systemImage: "square.and.arrow.up") }
+                Button { showShopSettings = true } label: { Label(L("Shops & aisles"), systemImage: "storefront") }
             } label: {
                 Image(systemName: "doc.text.viewfinder")
             }
@@ -745,4 +824,117 @@ enum ListPrefsSync {
         if let d = p["density"]?.string, ListDensity(rawValue: d) != nil { UserDefaults.standard.set(d, forKey: "list.density") }
         if let f = p["fontScale"]?.double, (0.9...1.4).contains(f) { UserDefaults.standard.set(f, forKey: "list.fontScale") }
     }
+}
+
+// MARK: - 0.3 parity: claims, discreet adding, forecast, share
+
+/// Text handed to the share sheet ("Liste teilen").
+struct ShareText: Identifiable {
+    let text: String
+    var id: String { text }
+}
+
+extension ShoppingView {
+    fileprivate func claimLine(_ c: ShopItem.Claim) -> String {
+        if let mine = me?.userId, c.userId == mine { return L("You'll get it") }
+        return LF("%@ gets it", c.name ?? "–")
+    }
+
+    /// "Ich hol's" / release (POST /api/claims) – just so nobody buys it twice
+    fileprivate func claim(_ item: ShopItem, on: Bool) async {
+        Haptics.tick()
+        do {
+            try await store.api.claimItem(item.id, on: on)
+            store.touch("shopping")
+            await store.refreshList()
+        } catch {
+            show(APIError.from(error).localizedDescription)
+        }
+    }
+
+    /// discreet / only me: straight to the server, the real name never enters the shared list (or the offline queue)
+    fileprivate func addHidden(_ text: String, _ vis: RowVisibility) async {
+        do {
+            let n = try await store.api.addHidden(text: text, visibility: vis)
+            Haptics.success()
+            show(vis == .private ? L("Added – only you can see it") : (n > 1 ? LF("%d added discreetly", n) : L("Added discreetly")))
+            await store.refreshList()
+        } catch {
+            input = text
+            show(APIError.from(error).isOffline ? L("No connection – try again when you're back online") : APIError.from(error).localizedDescription)
+        }
+    }
+
+    fileprivate func loadForecast() async {
+        guard app.moduleOn("stock"), let r = try? await store.api.forecast(within: 7) else { forecast = []; return }
+        let open = Set(store.list.openItems.compactMap(\.productId))
+        forecast = r.items.filter { $0.onShoppingList != true && !open.contains($0.productId) }.prefix(6).map { $0 }
+    }
+
+    /// "Wird bald knapp" – estimates from usage and purchases; never changes stock, one tap puts it on the list
+    fileprivate var forecastSection: some View {
+        Section {
+            ForEach(forecast) { f in
+                HStack(spacing: Theme.Space.s3) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(f.name).font(.subheadline)
+                        Text(f.line).font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                    Spacer(minLength: 0)
+                    Button {
+                        Task {
+                            await store.addProduct(f.productId, name: f.name)
+                            forecast.removeAll { $0.productId == f.productId }
+                            Haptics.tick()
+                        }
+                    } label: {
+                        Image(systemName: "plus").font(.body.weight(.semibold)).foregroundStyle(Theme.onPrimary)
+                            .frame(width: 34, height: 34).background(Theme.primary, in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(LF("Put %@ on the list", f.name))
+                }
+            }
+        } header: {
+            Text(L("Running low soon"))
+        } footer: {
+            Text(L("An estimate from past purchases and usage. Your stock is never changed by it."))
+        }
+    }
+
+    /// GET /api/shopping/export.txt → share sheet (private rows stay out, discreet ones keep their placeholder)
+    fileprivate func shareList() async {
+        do {
+            let text = try await store.api.exportList()
+            guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { show(L("The list is empty.")); return }
+            shareText = ShareText(text: (store.list.currentList?.name ?? L("Shopping list")) + "\n" + text)
+        } catch {
+            show(APIError.from(error).localizedDescription)
+        }
+    }
+
+    fileprivate func show(_ text: String) { toast = text }
+
+    @ViewBuilder fileprivate var toastView: some View {
+        if let toast {
+            Text(toast)
+                .font(.subheadline)
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .background(Theme.ink, in: Capsule())
+                .foregroundStyle(Theme.canvas)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .task(id: toast) {
+                    try? await Task.sleep(nanoseconds: 2_500_000_000)
+                    self.toast = nil
+                }
+        }
+    }
+}
+
+/// UIActivityViewController for plain text (copy, Messages, WhatsApp …).
+struct ShopActivitySheet: UIViewControllerRepresentable {
+    let items: [Any]
+    func makeUIViewController(context: Context) -> UIActivityViewController { UIActivityViewController(activityItems: items, applicationActivities: nil) }
+    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }
