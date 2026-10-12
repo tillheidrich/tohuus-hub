@@ -31,7 +31,7 @@ struct EatSoonCard: View {
     private func row(_ i: StillHaveItem) -> some View {
         HStack(spacing: Theme.Space.s3) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(i.name).font(.subheadline).foregroundStyle(Theme.ink)
+                Text(i.name).font(.subheadline).foregroundStyle(Theme.ink).lineLimit(2)
                 if confirmed.contains(i.id) {
                     Label(L("still there"), systemImage: "checkmark").font(.caption).foregroundStyle(Theme.primaryText)
                 }
@@ -41,7 +41,7 @@ struct EatSoonCard: View {
                 if i.kind == "probably" {
                     Text(label).font(.caption).foregroundStyle(Theme.ink3)
                 } else {
-                    StatusPill(text: label, status: (i.daysLeft ?? 1) < 0 ? "expired" : "expiring")
+                    StatusPill(text: label, status: (i.daysLeft ?? 1) < 0 ? "expired" : "expiring").fixedSize()
                 }
             }
             if busy.contains(i.id) {

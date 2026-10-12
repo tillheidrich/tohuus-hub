@@ -18,8 +18,6 @@
   "1 thing": "1 Ding",
   "A list from a message or a note. You choose what goes on the list.": "Eine Liste aus einer Nachricht oder Notiz. Du wählst aus, was auf die Liste kommt.",
   "Actions for %@": "Aktionen für %@",
-  "Add %d": "%d eintragen",
-  "Add 1": "1 eintragen",
   "Add a photo": "Foto hinzufügen",
   "Add a shop, e.g. Edeka": "Laden hinzufügen, z. B. Edeka",
   "Add shop": "Laden angeben",
@@ -223,5 +221,6 @@
   "“%@” is planned for today.": "„%@“ ist für heute eingeplant.",
   "“%@” is planned for tomorrow.": "„%@“ ist für morgen eingeplant.",
   "“%@” is used up and on the list.": "„%@“ ist aufgebraucht und steht auf der Liste.",
-  "“%@” is used up.": "„%@“ ist aufgebraucht."
+  "“%@” is used up.": "„%@“ ist aufgebraucht.",
+  "%d of %d chosen": "%d von %d ausgewählt"
 }

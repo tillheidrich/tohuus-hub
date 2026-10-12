@@ -92,7 +92,7 @@ struct ItemDetailSheet: View {
                 Task { await upload(p) }
             }
         }
-        .presentationDetents([.large, .medium])
+        .presentationDetents([.large])
     }
 
     // MARK: sections

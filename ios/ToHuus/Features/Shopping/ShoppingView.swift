@@ -340,10 +340,10 @@ struct ShoppingView: View {
                         Label(hint, systemImage: item.sizeHint != nil ? "lightbulb" : "eurosign").font(.caption).foregroundStyle(Theme.ink2)
                     }
                     if let share = item.share, !checked {
-                        Label(share.subline, systemImage: share.icon).font(.caption).foregroundStyle(Theme.ink2).lineLimit(1)
+                        Label(share.subline, systemImage: share.icon).labelStyle(ShopTightLabelStyle()).font(.caption).foregroundStyle(Theme.ink2).lineLimit(1)
                     }
                     if !checked, let claim = item.claim, (me?.claimsOn ?? true) {
-                        Label(claimLine(claim), systemImage: "hand.raised.fill")
+                        Label(claimLine(claim), systemImage: "hand.raised.fill").labelStyle(ShopTightLabelStyle())
                             .font(.caption.weight(.semibold)).foregroundStyle(Theme.primaryText).lineLimit(1)
                     }
                     if density != .compact && !shopMode {

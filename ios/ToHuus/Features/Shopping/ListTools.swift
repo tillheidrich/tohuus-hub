@@ -59,6 +59,8 @@ struct PasteListSheet: View {
                         }
                     } header: {
                         Text(L("Found"))
+                    } footer: {
+                        Text(LF("%d of %d chosen", chosen.count, lines.count))
                     }
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
@@ -68,7 +70,7 @@ struct PasteListSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(chosen.count == 1 ? L("Add 1") : LF("Add %d", chosen.count)) { Task { await add() } }
+                    Button(L("Add")) { Task { await add() } }
                         .disabled(chosen.isEmpty || busy)
                 }
             }

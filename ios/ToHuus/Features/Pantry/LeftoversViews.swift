@@ -41,6 +41,12 @@ struct LeftoversSheet: View {
                     }
                     Toggle(L("Set my own eat-by date"), isOn: $hasEatBy.animation())
                     if hasEatBy { DatePicker(L("Eat by"), selection: $eatBy, in: Date()..., displayedComponents: .date) }
+                } header: {
+                    Text(L("Put leftovers away"))
+                } footer: {
+                    Text(hasEatBy ? L("You set the date yourself.") : L("ToHuus suggests an eat-by date from what it is."))
+                }
+                Section {
                     Button {
                         Task { await save() }
                     } label: {
@@ -50,10 +56,6 @@ struct LeftoversSheet: View {
                     .disabled(busy || name.trimmingCharacters(in: .whitespaces).isEmpty)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
-                } header: {
-                    Text(L("Put leftovers away"))
-                } footer: {
-                    Text(hasEatBy ? L("You set the date yourself.") : L("ToHuus suggests an eat-by date from what it is."))
                 }
                 if !created.isEmpty {
                     Section {
