@@ -443,3 +443,27 @@
   font-weight: 600;
   overflow-wrap: anywhere;
 }
+
+/* per-screen "Sprechen" entry */
+.area-assist {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0 0;
+  padding-top: 14px;
+  border-top: 1.5px dashed var(--line);
+}
+.area-assist-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-s);
+  font-weight: 700;
+  color: var(--primary-text);
+}
+.area-assist .chip {
+  min-height: 44px;
+  white-space: normal;
+  text-align: left;
+}

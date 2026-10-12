@@ -17,6 +17,7 @@ import { setRegion } from './region';
 import { type Appearance, applyAppearance } from './theme';
 import { Avatar, Sheet, Skeleton } from './ui';
 import { RouteHelp } from './help';
+import { AreaAssist } from './assistant/AreaAssist';
 
 export interface Me {
   actor: {
@@ -297,6 +298,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="*" element={<Today me={me} />} />
             </Routes>
           </Suspense>
+          <AreaAssist path={loc.pathname} />
           <RouteHelp path={loc.pathname} />
         </div>
       </main>

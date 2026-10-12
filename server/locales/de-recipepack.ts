@@ -20,4 +20,17 @@ export const de_recipepack: Record<string, string> = {
   'Reading photos needs AI. Copy the ingredients and paste them instead.': 'Fotos lesen geht nur mit KI. Kopier die Zutaten und füg sie ein.',
   'Cookidoo recipes are kept as title, link and ingredients – please confirm them.': 'Cookidoo-Rezepte bleiben hier als Name, Link und Zutaten – bitte bestätig sie.',
   'Import failed.': 'Import fehlgeschlagen.',
+  // assistant help per screen (assistant-areas.ts)
+  Other: 'Sonstiges',
+  'Merged {n} duplicates on the list': '{n} Doppelte auf der Liste zusammengeführt',
+  'No saved recipe with that name – use the usual ingredients.': 'Kein gespeichertes Rezept mit diesem Namen – nimm die üblichen Zutaten.',
+  'A title and the ingredients are needed.': 'Es braucht einen Titel und die Zutaten.',
+  'Adapted from {title}': 'Angepasst aus {title}',
+  'Saved {title} as a new recipe': '{title} als neues Rezept gespeichert',
+  'Only part of the history is available on this plan.': 'Mit diesem Tarif ist nur ein Teil des Verlaufs da.',
+  'Only admins can add house info cards.': 'Hausinfo-Karten können nur Admins anlegen.',
+  '{n} house info cards drafted – check them under House info': '{n} Hausinfo-Karten entworfen – schau sie unter Hausinfo durch',
+  'Added {items} to stock': '{items} in den Vorrat gelegt',
+  'No photos': 'Keine Fotos',
+  'Reading photos needs AI.': 'Fotos lesen geht nur mit KI.',
 };

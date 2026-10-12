@@ -99,6 +99,34 @@ Run in-process on the library functions (never over HTTP). Results going back to
 | `log_purchase` | a told purchase: receipt in review (dated, counts for the rhythm at once, no prices) plus a manual expense with the total; ticks matching list rows | removes receipt, expense, ticks |
 | `remember` / `forget` | what ToHuus remembers | forget / restore |
 
+## Help per screen (`context`)
+
+The apps send which screen the assistant was opened from: `POST /api/assistant/chat` and `/voice` take
+`context: 'shopping' | 'stock' | 'cook' | 'money' | 'house' | 'guests'` (optional). The screen adds its topics, a
+short instruction to the system prompt and its own tools (`server/lib/assistant-areas.ts`); without `context`
+nothing changes. Only with AI on – the built-in reader answers as before. Everything is a suggestion first; every
+write comes back in `actions` with an undo token. Art. 9 filter, quotas and the guest rules apply as for every
+message (guests never reach `/assistant`).
+
+| Screen | What it helps with | Tools |
+|---|---|---|
+| `shopping` | merge duplicates and sort by category (after a yes), "Was brauche ich für Lasagne?", substitutes | `list_tidy` (`apply`), `recipe_get`, `check_at_home`, `list_add` |
+| `stock` | "Was muss bald weg?", a photo of the fridge or a cupboard | `use_soon`, `stock_find`; photo: see below |
+| `cook` | week plan from what is there, adapt a recipe (vegetarian, for 6, no oven) as a **new** recipe, substitutes, leftovers | `cook_ideas`, `plan_meal`, `recipe_get`, `recipe_save_adapted`, `use_soon` |
+| `money` | monthly review in plain words, saving hints from own receipts, "Warum war der Oktober teurer?" | `money_summary`, `money_compare` |
+| `house` | "Wir haben Alexa und Hue im Wohnzimmer" → Hausinfo cards as **drafts** (admins); never codes | `house_info`, `house_draft_cards` |
+| `guests` | shopping for a party, amounts per guest count (as an estimate) | `check_at_home`, `list_add`, `known_prices` |
+
+Undo kinds added: `unmerge`, `delete_recipe`, `delete_house_cards`, `stock_add`.
+
+Photo of the fridge/cupboard (stock screen, needs a vision model, counted as `receiptAi` like shelf photos):
+
+- `POST /api/assistant/photo` multipart `files` (≤ 4) → `{ suggestions: [{ name, qty, best_before, confidence, product_id }], estimate: true }` – `best_before` is read from the package or estimated (`days_left`), nothing is saved.
+- `POST /api/assistant/stock-apply` `{ items: [{ name, qty, best_before?, product_id? }] }` → `{ added, actions: [{ kind: 'stock_add', summary, undo }] }`.
+
+Eval: the per-screen cases are in `scripts/assistant-eval-cases.mjs` (field `context`) and run offline in
+`test/assistant-eval.test.ts`, which also checks that a Hausinfo code never appears in anything sent to the model.
+
 ## What the model is told
 
 `buildContext({ purpose, viewer })`: household name, date, who is talking; people with likes and dislikes; the open list without private items; what is due by rhythm; the week plan; money this week/month and the budget; what ToHuus remembers (without sensitive rows). Allergies, children's birth years and sensitive memory only with the household's consent `ai.health_share` (default off). Per-person reasons are always neutral ("für mindestens eine Person ungeeignet", "ein Liebling bei euch").

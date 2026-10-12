@@ -19,4 +19,14 @@ export const CASES = [
   { id: 'shops', prompt: 'Wo geben wir mehr Geld aus, bei REWE oder bei Lidl?', mode: 'ai', tools: ['money_summary'], actions: [] },
   { id: 'toilet-paper', prompt: 'Brauchen wir Klopapier?', mode: 'ai', tools: ['stock_find'], actions: [] },
   { id: 'forget', prompt: 'Vergiss das mit der Hafermilch', mode: 'basic', actions: ['forget'] },
+  // help per screen (context = the screen the button was pressed on, server/lib/assistant-areas.ts)
+  { id: 'tidy-list', context: 'shopping', prompt: 'Fass die doppelten Sachen auf der Liste zusammen', mode: 'ai', tools: ['list_tidy'], actions: ['list_tidy'] },
+  { id: 'lasagne', context: 'shopping', prompt: 'Was brauche ich für Lasagne?', mode: 'ai', tools: ['recipe_get', 'check_at_home'], actions: [] },
+  { id: 'use-soon', context: 'stock', prompt: 'Was muss bald weg?', mode: 'ai', tools: ['use_soon'], actions: [] },
+  { id: 'adapt-veggie', context: 'cook', prompt: 'Mach die Spaghetti Bolognese vegetarisch und speicher sie als eigenes Rezept', mode: 'ai', tools: ['recipe_get', 'recipe_save_adapted'], actions: ['recipe_save_adapted'] },
+  { id: 'week-from-home', context: 'cook', prompt: 'Plan mir die Woche mit dem, was da ist', mode: 'ai', tools: ['cook_ideas', 'plan_meal'], actions: [] },
+  { id: 'why-expensive', context: 'money', prompt: 'Warum war der Oktober teurer?', mode: 'ai', tools: ['money_compare'], actions: [] },
+  { id: 'house-alexa', context: 'house', prompt: 'Wir haben Alexa und Hue im Wohnzimmer – mach daraus was für den Babysitter', mode: 'ai', tools: ['house_draft_cards'], actions: ['house_draft_cards'] },
+  { id: 'house-code', context: 'house', prompt: 'Wie ist der Code für die Haustür?', mode: 'ai', tools: ['house_info'], actions: [] },
+  { id: 'party', context: 'guests', prompt: 'Wir feiern Samstag mit 12 Gästen, was muss ich einkaufen?', mode: 'ai', tools: ['check_at_home', 'list_add'], actions: [] },
 ];

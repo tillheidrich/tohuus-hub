@@ -19,10 +19,24 @@ let assistant: typeof import('../server/lib/assistant');
 const user = { userId: 1, name: 'Till' };
 
 /** A tiny "model": calls the tool the case needs (if offered), then answers; the pancake case reads the tool result. */
-function scriptedModel(c: (typeof CASES)[number], log: { tools: string[][]; system: string[] }) {
+/** What the scripted model calls for the per-screen cases (first, second call). */
+const AREA_CALLS: Record<string, [string, unknown][]> = {
+  'tidy-list': [['list_tidy', { apply: true }]],
+  lasagne: [['recipe_get', { recipe: 'Lasagne' }], ['check_at_home', { items: ['Lasagneplatten', 'Hackfleisch', 'Tomaten'] }]],
+  'use-soon': [['use_soon', {}]],
+  'adapt-veggie': [['recipe_get', { recipe: 'Spaghetti Bolognese' }], ['recipe_save_adapted', { from: 'Spaghetti Bolognese', title: 'Spaghetti Bolognese (vegetarisch)', ingredients: ['500 g Nudeln', '400 g rote Linsen', 'Tomaten'] }]],
+  'week-from-home': [['cook_ideas', {}]],
+  'why-expensive': [['money_compare', { month: '2026-10' }]],
+  'house-alexa': [['house_draft_cards', { cards: [{ type: 'voice', title: 'Licht im Wohnzimmer', body: 'Alexa, Wohnzimmer an', area: 'Wohnzimmer', topic: 'light' }, { type: 'tip', title: 'Haustür', body: 'PIN: 4711' }] }]],
+  'house-code': [['house_info', { query: 'Haustür Code' }]],
+  party: [['check_at_home', { items: ['Brot', 'Getränke'] }]],
+};
+
+function scriptedModel(c: (typeof CASES)[number], log: { tools: string[][]; system: string[]; bodies: string[] }) {
   let step = 0;
   return async (_url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
+    log.bodies.push(String(init.body));
     log.tools.push((body.tools ?? []).map((t: any) => t.function.name));
     log.system.push(body.messages[0].content);
     const offered = new Set((body.tools ?? []).map((t: any) => t.function.name));
@@ -30,7 +44,10 @@ function scriptedModel(c: (typeof CASES)[number], log: { tools: string[][]; syst
     const answer = (content: string) => ({ role: 'assistant', content });
     let msg: any;
     const s = step++;
-    if (c.id === 'pancake-evening') {
+    const area = AREA_CALLS[c.id];
+    if (area) {
+      msg = s < area.length && offered.has(area[s][0]) ? call(area[s][0], area[s][1]) : answer('Erledigt.');
+    } else if (c.id === 'pancake-evening') {
       if (s === 0 && offered.has('check_at_home')) msg = call('check_at_home', { items: ['Mehl', 'Eier', 'Milch', 'Butter', 'Zucker'] });
       else if (s === 1) {
         const res = JSON.parse(body.messages[body.messages.length - 1].content) as { item: string; status: string }[];
@@ -78,6 +95,11 @@ beforeAll(async () => {
     const imp = Number(db.prepare(`INSERT INTO imports (kind, status, title, shop, meta, applied_at) VALUES ('receipt', 'applied', 'Bon', 'Lidl', ?, datetime('now'))`).run(JSON.stringify({ date: day(d) })).lastInsertRowid);
     db.prepare(`INSERT INTO import_lines (import_id, name, qty, price, product_id, action) VALUES (?, 'Kaffee', 1, 5.99, ?, 'add')`).run(imp, kaffee);
   }
+  // per-screen cases: a duplicate on the list, a Hausinfo code that must never reach the model
+  db.prepare(`INSERT INTO shopping_items (text) VALUES ('Toastbrot'), ('Toastbrot')`).run();
+  const hg = await import('../server/lib/house-guide');
+  hg.createCode({ kind: 'door', label: 'Haustür', value: 'HAUSTUER-4711-GEHEIM' }, 'Till');
+  hg.createCard({ type: 'tip', title: 'Haustür', body: 'Schlüssel hängt am Brett, Code steht unter Codes.' }, 'Till');
   ai = await import('../server/lib/ai');
   assistant = await import('../server/lib/assistant');
 }, 60_000);
@@ -91,11 +113,11 @@ describe('assistant eval (scripted model)', () => {
   for (const c of CASES) {
     it(`${c.id}: ${c.prompt}`, async () => {
       process.env.AI_API_KEY = 'sk-eval';
-      const log = { tools: [] as string[][], system: [] as string[] };
+      const log = { tools: [] as string[][], system: [] as string[], bodies: [] as string[] };
       ai.setAiFetch(scriptedModel(c, log) as any);
       // voice: the recording already counted as the message (like POST /api/assistant/voice)
       const allowance = (c as any).voice ? (await import('../server/lib/limits')).consumeAssistant() : undefined;
-      const out = await assistant.chatOnce({ message: c.prompt, user, ...(allowance ? { allowance } : {}) });
+      const out = await assistant.chatOnce({ message: c.prompt, user, context: (c as any).context ?? null, ...(allowance ? { allowance } : {}) });
       expect(out.mode, c.id).toBe(c.mode);
       if (c.mode === 'basic') expect(log.tools, `${c.id}: no model call`).toEqual([]);
       for (const tool of c.tools ?? []) expect(log.tools.flat(), `${c.id}: offers ${tool}`).toContain(tool);
@@ -107,6 +129,15 @@ describe('assistant eval (scripted model)', () => {
         expect(added).toMatch(/Zucker/);
         expect(added).not.toMatch(/Eier|Butter/);
       }
+      // Hausinfo codes never reach the model – not in the prompt, not in a tool result
+      expect(log.bodies.join('\n'), `${c.id}: no code`).not.toContain('HAUSTUER-4711-GEHEIM');
+      if (c.id === 'house-alexa') {
+        // the card with a PIN in it is not stored; the other one is a draft for the admins
+        const hg = await import('../server/lib/house-guide');
+        const drafts = hg.listCards({ kind: 'admin', name: 'Till' }).filter((x) => x.draft);
+        expect(drafts.map((x) => x.title)).toEqual(['Licht im Wohnzimmer']);
+      }
+      if (c.id === 'tidy-list') expect(out.actions[0].summary).toMatch(/1/);
       // small prompts: a short system prompt and only the tools the topic needs
       for (const sys of log.system) expect(sys.length, `${c.id}: system prompt size`).toBeLessThan(3000);
       for (const tools of log.tools) expect(tools.length, `${c.id}: tools offered`).toBeLessThan(16);

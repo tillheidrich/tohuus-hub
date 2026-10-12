@@ -24,8 +24,10 @@ Rules: one entry per item line. qty = number of items (1 for goods sold by weigh
 Leave out discounts, totals, payment and tax lines. Keep the names exactly as printed.`,
   shelf: `You see a photo from a household (e.g. freezer, fridge, pantry shelf, storage shelf).
 List the recognisable products. Return ONLY JSON:
-{"lines": [{"name": string, "brand": string|null, "qty": number, "confidence": number}]}
-qty = visible number of packs (estimate cautiously). confidence 0..1. Do not invent anything that cannot be seen.`,
+{"lines": [{"name": string, "brand": string|null, "qty": number, "confidence": number, "best_before": "YYYY-MM-DD"|null, "days_left": number|null}]}
+qty = visible number of packs (estimate cautiously). confidence 0..1. best_before only if a date is readable; otherwise
+days_left = a cautious estimate of how many days it typically keeps from now (fresh produce short, tins long), or null.
+Do not invent anything that cannot be seen.`,
   recipe: `You are reading a recipe from one or more photos or screenshots: a recipe card (e.g. HelloFresh), a cookbook page,
 a handwritten note, a screenshot from an app or website, or a photo of a Thermomix or other kitchen appliance display.
 Return ONLY JSON: {"title": string, "description": string|null, "servings": number|null, "time_min": number|null,
