@@ -27,6 +27,7 @@ import { del, invalidate, patch, post, put, relTime, useApi } from '../api';
 import { Avatar, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { t } from '../i18n';
 import { PinPad, cancelled } from './Login';
+import { useInstance } from '../data';
 
 interface AccountInfo {
   name: string;
@@ -91,6 +92,7 @@ function Section({ icon, title, hint, children, aside }: { icon: React.ReactNode
 
 export function MyAccount({ me }: { me: Me }) {
   const q = useApi<AccountInfo>('auth-me', '/auth/me');
+  const inst = useInstance();
   const toast = useToast();
   useEffect(() => {
     const s = new URLSearchParams(location.search).get('sso');
@@ -102,13 +104,15 @@ export function MyAccount({ me }: { me: Me }) {
   if (q.isLoading) return <Skeleton n={4} h={96} />;
   if (q.error || !q.data) return <div className="card pad small auth-error">{q.error ? errText(q.error) : t('Error')}</div>;
   const a = q.data;
+  const cloud = inst.data?.mode === 'cloud';
   return (
     <div className="stack" style={{ gap: 14 }}>
       <SignInSummary a={a} />
       {a.policy.passkeys && <Passkeys a={a} />}
       <EmailCard a={a} />
       <PasswordCard a={a} />
-      <TotpCard a={a} />
+      {/* two-step sign-in is self-hosted only; cloud accounts use passkeys and the e-mail code */}
+      {!cloud && <TotpCard a={a} />}
       {a.sso && <SsoCard sso={a.sso} />}
       {a.policy.pinSwitch && <PinCard a={a} />}
       <Devices a={a} admin={me.actor.role === 'admin'} />

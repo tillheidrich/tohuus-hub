@@ -7,7 +7,7 @@ import { t } from './i18n';
 export type BrandKey = 'tohuus';
 
 export const BRAND = {
-  name: 'ToHuus Hub',
+  name: 'ToHuus',
   logo: '/tohuus-logo.svg',
   get tagline() {
     return t('Less on your mind. More at home.');
