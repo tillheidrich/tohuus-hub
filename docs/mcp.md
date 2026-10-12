@@ -52,7 +52,7 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 
 ## Tools
 
-114 tools, grouped by area. Source: `server/mcp/server.ts` (core) and `server/mcp/tools-<area>.ts`.
+114+ tools (the exact list: `tools/list`), grouped by area. Source: `server/mcp/server.ts` (core) and `server/mcp/tools-<area>.ts`.
 
 ### Core (23)
 
@@ -81,6 +81,10 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 | `set_place` | Remember where something is |
 | `list_locations` | Places with product counts |
 | `product_details` | A product with recent history |
+
+### Lists, usuals, trips and offers (6)
+
+`list_lists`, `create_list`, `usual_items`, `check_before_adding` (on a list / bought recently / at home), `shopping_trips` (who is shopping now; private trips never), `current_offers` (offers the household saved). All read-only except `create_list`, so a read-only OAuth connection gets five of them.
 
 ### Keeping stock fresh (6)
 

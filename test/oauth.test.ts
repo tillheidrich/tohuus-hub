@@ -233,6 +233,13 @@ describe('authorize and token', () => {
     expect(names).toContain('get_shopping_list');
     expect(names).not.toContain('add_to_shopping_list');
     expect(names.length).toBeGreaterThan(20);
+    // list2 tools: the read ones are offered, creating a list is not
+    for (const n of ['list_lists', 'usual_items', 'check_before_adding', 'shopping_trips', 'current_offers']) expect(names).toContain(n);
+    expect(names).not.toContain('create_list');
+    const lists = JSON.parse((await mcp(t.access_token, 'tools/call', { name: 'list_lists', arguments: {} })).json.result.content[0].text);
+    expect(lists[0]).toMatchObject({ list_id: 0 });
+    const g = JSON.parse((await mcp(t.access_token, 'tools/call', { name: 'check_before_adding', arguments: { item: 'Milch' } })).json.result.content[0].text);
+    expect(g.item).toBe('Milch');
   });
 
   it('refresh tokens rotate; using an old one again revokes the connection', async () => {

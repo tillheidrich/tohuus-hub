@@ -60,6 +60,7 @@ import { register as register_tour } from './tools-tour.js';
 import { register as register_ha2 } from './tools-ha2.js';
 import { register as register_menu } from './tools-menu.js';
 import { register as register_places } from './tools-places.js';
+import { register as register_list2 } from './tools-list2.js';
 import { register as register_house } from './tools-house.js';
 import { norm } from '../lib/text.js';
 import { signImagesInHtml } from '../lib/images.js';
@@ -576,6 +577,8 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
   );
 
   register_places(s, actorName);
+
+  register_list2(s, actorName);
   register_house(s, actorName);
   register_data(s, actorName);
   register_party(s, actorName);
