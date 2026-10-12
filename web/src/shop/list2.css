@@ -1,0 +1,152 @@
+/* Shopping list 2 (12 Oct 2026): ticked rows in place, sync line, recently done, densities, item editor.
+   Loaded with the shopping chunk only. Tokens from styles.css (Dutch Detail). */
+
+/* ticked rows stay where they are, struck through, until "Einkauf fertig" */
+.shop-item.done .title {
+  font-weight: 400;
+  color: var(--ink-2);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+.shop-item.done .sub {
+  opacity: 0.75;
+}
+.shop-item.done .thumb {
+  opacity: 0.55;
+}
+.shop-item .thumb.own-photo {
+  box-shadow: 0 0 0 var(--stroke) var(--ink);
+}
+
+/* densities (per person) */
+.shop.dens-compact .shop-item,
+.shop.dens-compact .shop-hit {
+  min-height: 48px;
+}
+.shop.dens-compact .shop-hit {
+  gap: 10px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.shop.dens-compact .shop-hit .sub {
+  display: none;
+}
+.shop.dens-compact .shop-groups {
+  gap: 18px;
+}
+.shop.dens-large .shop-item,
+.shop.dens-large .shop-hit {
+  min-height: 76px;
+}
+.shop.dens-large .shop-hit .title {
+  font-size: calc(var(--fs-row) + 2px);
+}
+.shop.dens-large .check {
+  width: 30px;
+  height: 30px;
+}
+
+/* "zuletzt abgeglichen vor 3 s" */
+.sync-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+  min-height: 20px;
+}
+.sync-line.ok svg {
+  color: var(--primary);
+}
+.sync-line.off,
+.sync-line.warn {
+  color: var(--ink);
+}
+.sync-line .badge-off {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.sync-line.warn {
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--warning-soft);
+  font-size: var(--fs-s);
+}
+
+/* "zuletzt erledigt" */
+.recent-done {
+  border-top: 1px solid var(--line);
+}
+.recent-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 2px;
+  background: none;
+  border: 0;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.recent-h .caret {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.recent-done.open .caret {
+  transform: rotate(180deg);
+}
+.recent-list > * + * {
+  border-top: 1px dashed var(--line);
+}
+.recent-row .btn {
+  flex: none;
+}
+
+/* item editor */
+.item-editor .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ie-qty {
+  gap: 10px;
+  align-items: center;
+}
+.ie-n {
+  min-width: 28px;
+  text-align: center;
+  font-size: var(--fs-l);
+}
+.ie-photo {
+  gap: 12px;
+  align-items: center;
+}
+.ie-last {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--primary-soft);
+}
+.ie-sub .chip {
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-h .caret {
+    transition: none;
+  }
+}

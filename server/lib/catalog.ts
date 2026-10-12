@@ -360,6 +360,11 @@ export function matchProduct(name: string, opts: { code?: string | null; brand?:
     if (r) return { productId: r.product_id, score: 1, via: 'code' };
   }
   const n = norm(name);
+  // exact name first (list input fidelity, 12 Oct 2026): "Milch" is the product called "Milch", not a learned look-alike
+  const exact = db
+    .prepare(`SELECT id FROM products WHERE archived = 0 AND kind != 'leftover' AND (lower(name) = lower(?) OR lower(trim(COALESCE(brand, '') || ' ' || name)) = lower(?)) ORDER BY id LIMIT 1`)
+    .get(name.trim(), name.trim()) as { id: number } | undefined;
+  if (exact) return { productId: exact.id, score: 1, via: 'alias' };
   const alias = db
     .prepare('SELECT product_id FROM product_aliases a JOIN products p ON p.id = a.product_id WHERE alias = ? AND p.archived = 0 ORDER BY hits DESC LIMIT 1')
     .get(n) as { product_id: number } | undefined;

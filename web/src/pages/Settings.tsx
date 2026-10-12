@@ -29,6 +29,7 @@ import { useHousehold } from '../household';
 import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
 import { AssistantPrivacyCard } from './Memory';
+import { MyListViewCard } from '../shop/trust';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -98,6 +99,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'home' && <MenuSettingsCard />}
       {tab === 'account' && <MyPerson me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
+      {tab === 'account' && me.actor.userId && <MyListViewCard />}
       {tab === 'account' && <MyAccount me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <ShareSetupCard me={me} />}
       {tab === 'members' && <PeopleSection me={me} admin={admin} />}

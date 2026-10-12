@@ -25,6 +25,7 @@ import {
   tripSequence,
 } from './shopparse.js';
 import { ScopedMap } from './tenancy.js';
+import { decorateItems } from './list2.js';
 
 export * from './shopparse.js';
 
@@ -264,7 +265,7 @@ export function shoppingItems(viewer?: Viewer): ShopItem[] {
     )
     .all() as (Omit<ShopItem, 'section' | 'claim' | 'buy_at' | 'origin'> & { buy_at: string | null; product_buy_at: string | null; origin_detail: string | null })[];
   const claims = claimsOf('shopping');
-  return applyShareView(rows, viewer, claims).map(({ product_buy_at, ...r }) => ({
+  return decorateItems(applyShareView(rows, viewer, claims)).map(({ product_buy_at, ...r }) => ({
     ...r,
     buy_at: itemBuyAt({ buy_at: r.buy_at, product_buy_at }),
     origin: originOf(r),
@@ -291,7 +292,7 @@ export function storeView(storeId?: number | null, viewer?: Viewer) {
     (g) => g.key,
   );
   if (elsewhere.length) sections.push({ key: ELSEWHERE, items: elsewhere });
-  return { store, stores, order, sections, basket, done, open: open.length };
+  return { store, stores, order, sections, basket, done, open: open.length, serverTime: new Date().toISOString() };
 }
 
 // ------------------------------------------------------------------ basket / checkout
@@ -433,7 +434,8 @@ export function addLines(lines: QuickAddLine[], actor: string, source = 'manual'
     if (productId && !getProduct(productId)) productId = null;
     const p = productId ? getProduct(productId) : null;
     const note = l.amount ?? (l.unit && l.qty ? l.unit : null);
-    const text = p ? p.name : name;
+    // what somebody typed stays the row's name; the product is only linked in the background (list2.ts)
+    const text = name || p?.name || '';
     const r = addToShopping({ productId, text, qty: l.qty ?? null, note, source, addedBy: actor });
     if (!r.created && l.qty) {
       // already on the list: raise the quantity instead of a duplicate

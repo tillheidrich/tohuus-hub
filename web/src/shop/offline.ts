@@ -19,6 +19,8 @@ const listeners = new Set<() => void>();
 let queue: QueuedOp[] = read();
 let online = typeof navigator === 'undefined' ? true : navigator.onLine;
 let flushing = false;
+/** the server said 401 while replaying: keep the queue, stop retrying until the next sign-in (list2) */
+let signedOut = false;
 
 function read(): QueuedOp[] {
   try {
@@ -77,8 +79,15 @@ export async function shopOp(op: OpInput): Promise<boolean> {
   }
 }
 
-export async function flush() {
-  if (flushing || queue.length === 0 || !navigator.onLine) return;
+/** Queue a change without trying the server first (store view while signed out). */
+export function queueOp(op: OpInput) {
+  queue.push({ ...op, op_id: opId() } as QueuedOp);
+  write();
+}
+
+export async function flush(opts: { force?: boolean } = {}) {
+  if (opts.force) signedOut = false;
+  if (flushing || queue.length === 0 || !navigator.onLine || signedOut) return;
   flushing = true;
   write();
   try {
@@ -91,7 +100,8 @@ export async function flush() {
   } catch (e) {
     if (e instanceof ApiError && e.status === 400) queue = []; // malformed old entries – drop rather than loop forever
     if (e instanceof ApiError && e.status === 401) {
-      /* signed out – keep the queue until the next login */
+      // signed out – keep the queue until the next sign-in (flush({ force: true }) after it)
+      signedOut = true;
     }
   } finally {
     flushing = false;

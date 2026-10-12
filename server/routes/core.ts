@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { config, smtpEnabled } from '../config.js';
 import { visionAvailable, visionModel } from '../lib/vision.js';
 import { appearanceFor } from '../lib/appearance.js';
+import { listPrefs } from '../lib/list2.js';
 import { homeSetup, localizeBaseNames } from '../lib/places.js';
 import { r as placesRoutes } from './places.js';
 import { brand, chooseBrand, db, defaultBrand, getSetting, lang, setSetting } from '../db.js';
@@ -88,6 +89,8 @@ r.get('/me', (req, res) => {
     appearance: appearanceFor(actor.kind === 'user' ? actor.userId : null),
     // household form and home preset (area: home) – the UI adapts its defaults and wording to it
     home: homeSetup(),
+    // list2: density and text size of this member (shop/prefs.ts applies them at start)
+    listPrefs: listPrefs(actor.kind === 'user' ? actor.userId : null),
     version: process.env.npm_package_version ?? '0.1.0',
   });
 });

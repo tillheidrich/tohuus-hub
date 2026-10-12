@@ -16,6 +16,7 @@ import { Today } from './pages/Today';
 import { setRegion } from './region';
 import { type Appearance, applyAppearance } from './theme';
 import { Avatar, Sheet, Skeleton } from './ui';
+import { type ListPrefs, applyListPrefs, readLocalPrefs } from './shop/prefs';
 
 export interface Me {
   actor: {
@@ -83,6 +84,7 @@ const AuthLanding = page(() => import('./pages/AuthLanding'), 'AuthLanding');
 const Login = page(() => import('./pages/Login'), 'Login');
 const Signup = page(() => import('./pages/Signup'), 'Signup');
 const MemoryPage = page(() => import('./pages/Memory'), 'MemoryPage');
+const OfflineStore = page(load.shopping, 'OfflineStore');
 
 const Blank = () => <div style={{ minHeight: '100dvh' }} />;
 const PageLoading = () => (
@@ -111,8 +113,16 @@ function Authed() {
   const loc = useLocation();
   const me = useApi<Me>('me', '/me');
   const inst = useInstance();
+  const [signIn, setSignIn] = useState(false);
   if (me.isLoading) return <Blank />;
   const out = (me.error && (me.error as ApiError).status === 401) || !me.data;
+  // list2: the session ran out while somebody is in the store – the last list keeps working, sign-in comes at sync
+  if (out && !signIn && loc.pathname.startsWith('/einkauf') && storeListCached())
+    return (
+      <Suspense fallback={<Blank />}>
+        <OfflineStore onSignIn={() => setSignIn(true)} />
+      </Suspense>
+    );
   if (out) {
     // ToHuus Cloud: open sign-up (GET /api/instance → mode 'cloud', signup true)
     const canSignup = inst.data?.mode === 'cloud' && inst.data.signup;
@@ -131,6 +141,15 @@ function Authed() {
   setLang(me.data!.language);
   setRegion((me.data as { region?: Parameters<typeof setRegion>[0] }).region);
   return <Shell key={me.data!.language} me={me.data!} />;
+}
+
+/** A list from the store view is kept on this device (shop/trust.tsx) – without importing the shop chunk. */
+function storeListCached() {
+  try {
+    return localStorage.getItem('sw.shop.mode') === 'store' && Boolean(localStorage.getItem('sw.shop.cache'));
+  } catch {
+    return false;
+  }
 }
 
 /** Deferred mounting for things that are never needed for the first paint (tour, "What's new"). */
@@ -158,6 +177,8 @@ function Shell({ me }: { me: Me }) {
   applyBrand();
   // light / dark for this member (household default or own choice) – after the brand so the status bar colour matches
   useEffect(() => applyAppearance(me.appearance), [me.appearance?.theme, me.brand]);
+  // list2: the member's own text size and list density, on every device
+  useEffect(() => applyListPrefs((me as Me & { listPrefs?: ListPrefs }).listPrefs ?? readLocalPrefs()), [me]);
   useEffect(() => window.scrollTo(0, 0), [loc.pathname]);
   // "+" from anywhere (Heute header, Vorrat, assistant): window event, so pages don't need a prop
   useEffect(() => {

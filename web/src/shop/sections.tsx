@@ -65,6 +65,28 @@ export interface ShopItem {
   share?: import('../pages/Share').ShareInfo;
   /** "Where to buy?" – only what a person entered; empty = anywhere (wave 6) */
   buy_at?: string[];
+  /** where the row comes from (server-worded) */
+  origin?: string | null;
+  /** substitute rule: exactly this one / a substitute is fine / ask first (list2) */
+  substitute?: Substitute | null;
+  /** a photo somebody took for this row ("this one!") */
+  photo_path?: string | null;
+  /** what the receipts say was bought last time */
+  last_bought?: LastBought | null;
+  /** list it belongs to (null = the main list) */
+  list_id?: number | null;
+}
+
+export type Substitute = 'exact' | 'ok' | 'ask';
+export const SUBSTITUTE_LABEL: Record<Substitute, string> = { exact: 'Exactly this one', ok: 'Substitute is fine', ask: 'Ask first' };
+
+export interface LastBought {
+  name: string;
+  size: string | null;
+  image_path: string | null;
+  shop: string | null;
+  day: string;
+  price: number | null;
 }
 
 export interface Store {
@@ -82,4 +104,6 @@ export interface ShopView {
   basket: ShopItem[];
   done: ShopItem[];
   open: number;
+  /** when the server answered (list2: "zuletzt abgeglichen") */
+  serverTime?: string;
 }

@@ -12,6 +12,7 @@ import {
   ShareNetwork,
   ShoppingCart,
   Storefront,
+  TextAa,
   Trash,
   WifiSlash,
   X,
@@ -24,7 +25,10 @@ import { useHousehold } from '../household';
 import { t } from '../i18n';
 import { getOr } from '../data';
 import { originLabel, rhythmLine } from '../origin';
-import { pendingQueue, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
+import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
+import { ItemEditor, lastBoughtLine, substituteLine } from '../shop/ItemEditor';
+import '../shop/list2.css';
+import { ListViewSheet, RecentDone, SyncLine, cacheView, cachedView, readLocalPrefs, useListPrefs } from '../shop/trust';
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, SectionShape, sectionLabel } from '../shop/sections';
 import { ItemBuyAt } from '../shop/BuyAt';
 import { Avatar, Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
@@ -102,10 +106,17 @@ export function Shopping() {
   const [newStore, setNewStore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [doneBag, setDoneBag] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const prefs = useListPrefs();
   const inputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const inStore = mode === 'store';
   useWakeLock(inStore);
+
+  // the last list we had stays on this device: the store view keeps working when the session runs out mid-shop
+  useEffect(() => cacheView(q.data, q.dataUpdatedAt), [q.data, q.dataUpdatedAt]);
+  // a sign-in after an expired session: send what was ticked meanwhile
+  useEffect(() => void flush({ force: true }), []);
 
   // a remembered store that was deleted in the meantime
   useEffect(() => {
@@ -180,6 +191,18 @@ export function Shopping() {
     if (inStore) {
       qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, on, true) : old));
       await run({ type: 'basket', id: i.id, on, store_id: storeId });
+      // five seconds to take a slip back – also offline (the undo is queued like the tick)
+      if (on)
+        toast({
+          text: t('{name} ticked off', { name: i.text }),
+          action: {
+            label: t('Undo'),
+            run: () => {
+              qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, false, true) : old));
+              void run({ type: 'basket', id: i.id, on: false, store_id: storeId });
+            },
+          },
+        });
       return;
     }
     qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, on, false) : old));
@@ -201,13 +224,14 @@ export function Shopping() {
     }
   };
 
+  /** "Einkauf fertig": ticked rows leave the list (they stay in "Zuletzt erledigt"), a basket goes into stock. */
   const checkout = async () => {
-    if (!view?.basket.length) return;
+    if (!view || (view.basket.length === 0 && view.done.length === 0)) return;
     setBusy(true);
     try {
-      const r = await post<{ items: number; booked: number }>('/shop/checkout', { store_id: storeId, to_stock: toStock });
+      const r = await post<{ cleared: number; basket: number; booked: number }>('/list/finish', { store_id: inStore ? storeId : null, to_stock: toStock });
       refresh();
-      invalidate('products');
+      invalidate('products', 'today');
       setDoneBag(true); // a small full bag, once – only after a real checkout
       toast({
         text: r.booked
@@ -256,13 +280,16 @@ export function Shopping() {
 
   const openItems = view ? view.sections.flatMap((s) => s.items) : [];
   const onList = new Set(openItems.map((i) => i.product_id).filter(Boolean));
+  // ticked rows stay where they were, struck through, until "Einkauf fertig" (list2) – nothing jumps under a thumb
+  const groups = useMemo(() => (view ? inPlace(view) : []), [view]);
+  const ticked = view ? view.basket.length + view.done.length : 0;
 
   const seen = useSeen(view);
   const claimMe = (i: ShopItem) => run({ type: 'claim', id: i.id, on: true });
   const total = view?.open ?? 0;
 
   return (
-    <div className={`shop ${inStore ? 'shop-store-mode' : ''}`}>
+    <div className={`shop ${inStore ? 'shop-store-mode' : ''} dens-${prefs.density}`}>
       <header className="shop-head">
         <div className="shop-title">
           <h1>{inStore ? t('In the store') : t('Shopping')}</h1>
@@ -270,24 +297,14 @@ export function Shopping() {
         </div>
         <div className="shop-tools">
           <Seg value={mode} onChange={(m) => switchMode(m)} options={[['list', t('List')], ['store', t('In the store')]]} label={t('Store mode')} />
+          <button className="icon-btn plain" onClick={() => setViewOpen(true)} aria-label={t('How the list looks for me')} title={t('How the list looks for me')}>
+            <TextAa size={20} />
+          </button>
         </div>
       </header>
       {inStore && view?.store && <p className="eyebrow shop-at">{t('At {store}', { store: view.store.name })}</p>}
 
-      {(!offline.online || offline.pending > 0) && (
-        <div className="shop-offline" role="status">
-          {offline.online ? <CloudArrowUp size={18} /> : <WifiSlash size={18} />}
-          <span>
-            {!offline.online
-              ? offline.pending === 1
-                ? t('Offline – 1 change will sync')
-                : offline.pending
-                  ? t('Offline – {n} changes will sync', { n: offline.pending })
-                  : t('Offline – changes will sync')
-              : t('Syncing {n} changes …', { n: offline.pending })}
-          </span>
-        </div>
-      )}
+      <SyncLine updatedAt={q.dataUpdatedAt} />
 
       {inStore && view && (
         <div className="chips shop-stores">
@@ -334,8 +351,9 @@ export function Shopping() {
           </button>
           {focus && suggestions.length > 0 && (
             <div className="suggest-pop">
+              {/* what you typed stays the name – a product only links it (list2) */}
               {suggestions.map((p) => (
-                <div key={p.id} className="li clickable" style={{ minHeight: 52 }} onMouseDown={() => add(p.name, p.id)}>
+                <div key={p.id} className="li clickable" style={{ minHeight: 52 }} onMouseDown={() => add(text.trim() && !looksMulti(text) ? text : p.name, p.id)}>
                   <Thumb p={p} size={36} />
                   <div className="grow">
                     <div className="title small">{p.name}</div>
@@ -387,23 +405,32 @@ export function Shopping() {
               {t('Check the connection and try again.')}
             </Empty>
           </div>
-        ) : !view || (view.open === 0 && view.basket.length === 0) ? (
+        ) : !view || (view.open === 0 && ticked === 0) ? (
           <div className="shop-empty">
             <Empty icon={<Basket size={26} />} art={inStore ? 'bag' : 'list'} title={inStore ? t('Nothing left to get') : t('Your list is empty')}>
               {inStore ? t('Everything is in the basket or bought.') : t('Anything that runs low lands here automatically. Or just start typing above.')}
             </Empty>
           </div>
         ) : (
-          view.sections.map((g) => (
+          groups.map((g) => (
             <section key={g.key} className="group" aria-label={sectionLabel(g.key)}>
               <h2 className="group-h">
                 <SectionShape k={g.key} />
                 <span className="grow">{sectionLabel(g.key)}</span>
-                <span className="n">{g.items.length}</span>
+                <span className="n">{g.items.filter((i) => !i.checked_at).length}</span>
               </h2>
               <div className="group-list">
                 {g.items.map((i) => (
-                  <ShopRow key={i.id} i={i} big={inStore} fresh={!seen.has(i.id)} onCheck={tick} onMore={() => setSel(i)} onClaim={!inStore && !i.claim && i.id > 0 && !me.data?.actor.houseGuest ? () => claimMe(i) : undefined} />
+                  <ShopRow
+                    key={i.id}
+                    i={i}
+                    big={inStore || prefs.density === 'large'}
+                    store={inStore}
+                    fresh={!seen.has(i.id)}
+                    onCheck={tick}
+                    onMore={() => setSel(i)}
+                    onClaim={!inStore && !i.claim && i.id > 0 && !me.data?.actor.houseGuest ? () => claimMe(i) : undefined}
+                  />
                 ))}
               </div>
             </section>
@@ -416,21 +443,6 @@ export function Shopping() {
           </button>
         )}
 
-        {inStore && view && view.basket.length > 0 && (
-          <section className="receipt basket" aria-labelledby="basket-h">
-            <div className="receipt-h">
-              <b id="basket-h">
-                <ShoppingCart size={18} /> {t('In the basket')} · {view.basket.length}
-              </b>
-            </div>
-            <div className="done-list">
-              {view.basket.map((i) => (
-                <ShopRow key={i.id} i={i} big fresh={!seen.has(i.id)} onCheck={tick} />
-              ))}
-            </div>
-          </section>
-        )}
-
         {!inStore && view && view.basket.length > 0 && (
           <div className="banner" onClick={() => switchMode('store')}>
             <span className="ic"><ShoppingCart size={18} /></span>
@@ -441,24 +453,6 @@ export function Shopping() {
           </div>
         )}
 
-        {!inStore && view && view.done.length > 0 && (
-          <section className="receipt" aria-labelledby="done-h">
-            <div className="receipt-h">
-              <b id="done-h">
-                {t('Done')} · {view.done.length}
-              </b>
-              <button className="linkish" onClick={() => post('/shopping/clear-checked').then(refresh)}>
-                {t('Clear the list')}
-              </button>
-            </div>
-            <div className="done-list">
-              {view.done.map((i) => (
-                <ShopRow key={i.id} i={i} fresh={!seen.has(i.id)} onCheck={tick} />
-              ))}
-            </div>
-            {toStock && view.done.some((i) => i.product_id) && <p className="receipt-foot">{t('Checked-off products are already in your stock.')}</p>}
-          </section>
-        )}
         {!inStore && view && view.open + view.done.length > 0 && (
           <div className="shop-more">
             <button className="btn ghost sm" onClick={share}>
@@ -467,23 +461,36 @@ export function Shopping() {
             <BonButton spec={{ type: 'shopping', store_id: view?.store?.id ?? null }} label={t('Ticket')} className="btn ghost sm" />
           </div>
         )}
+        <RecentDone />
       </div>
 
-      {inStore && view && view.basket.length > 0 && (
+      {view && ticked > 0 && (inStore || view.done.length > 0) && (
         <div className="shop-checkout">
           <div className="grow small">
-            <b>{view.basket.length === 1 ? t('1 item in the basket') : t('{n} items in the basket', { n: view.basket.length })}</b>
-            <label className="row" style={{ gap: 8, marginTop: 4 }}>
-              <Toggle
-                on={toStock}
-                onChange={(v) => {
-                  setToStock(v);
-                  storeSet('sw.toStock', v ? '1' : '0');
-                }}
-                label={t('Put into stock')}
-              />
-              <span className="muted">{t('Put into stock')}</span>
-            </label>
+            <b>
+              {inStore
+                ? view.basket.length === 1
+                  ? t('1 item in the basket')
+                  : t('{n} items in the basket', { n: view.basket.length })
+                : view.done.length === 1
+                  ? t('1 ticked off')
+                  : t('{n} ticked off', { n: view.done.length })}
+            </b>
+            {inStore ? (
+              <label className="row" style={{ gap: 8, marginTop: 4 }}>
+                <Toggle
+                  on={toStock}
+                  onChange={(v) => {
+                    setToStock(v);
+                    storeSet('sw.toStock', v ? '1' : '0');
+                  }}
+                  label={t('Put into stock')}
+                />
+                <span className="muted">{t('Put into stock')}</span>
+              </label>
+            ) : (
+              <div className="muted">{t('Stays struck through until you’re done.')}</div>
+            )}
           </div>
           <button className="btn primary lg" disabled={busy || !offline.online} onClick={checkout}>
             <Check size={18} weight="bold" /> {busy ? t('Putting away …') : t('Done shopping')}
@@ -502,8 +509,76 @@ export function Shopping() {
       <ItemSheet item={sel} me={me.data} onClose={() => setSel(null)} run={run} />
       {view?.store && <OrderSheet open={ordering} store={view.store} present={view.sections.map((s) => s.key)} onClose={() => setOrdering(false)} />}
       <NewStoreSheet open={newStore} onClose={() => setNewStore(false)} onCreated={(s) => { pickStore(s.id); refresh(); }} />
+      <ListViewSheet open={viewOpen} onClose={() => setViewOpen(false)} />
     </div>
   );
+}
+
+/**
+ * The store view when the session ran out mid-shop (list2): the last list from this device, ticks are queued and
+ * sent after the next sign-in. Nothing else of the app is reachable until then.
+ */
+export function OfflineStore({ onSignIn }: { onSignIn: () => void }) {
+  const cached = useMemo(() => cachedView(), []);
+  const off = useOfflineState();
+  const [, setN] = useState(0);
+  useWakeLock(true);
+  const view = useMemo(() => (cached ? overlay(cached.view, undefined) : undefined), [cached, off.pending]);
+  const density = readLocalPrefs().density;
+  if (!cached || !view) return null;
+  const tick = (i: ShopItem, on: boolean) => {
+    if (i.id < 0) return;
+    queueOp({ type: 'basket', id: i.id, on, store_id: view.store?.id ?? null });
+    setN((n) => n + 1);
+  };
+  return (
+    <div className={`shop shop-store-mode dens-${density}`} style={{ padding: '16px 16px 120px' }}>
+      <header className="shop-head">
+        <div className="shop-title">
+          <h1>{t('In the store')}</h1>
+          <span className="count-badge">{view.open}</span>
+        </div>
+      </header>
+      <SyncLine updatedAt={cached.at} signedOut />
+      <div className="shop-groups">
+        {inPlace(view).map((g) => (
+          <section key={g.key} className="group" aria-label={sectionLabel(g.key)}>
+            <h2 className="group-h">
+              <SectionShape k={g.key} />
+              <span className="grow">{sectionLabel(g.key)}</span>
+              <span className="n">{g.items.filter((i) => !i.checked_at).length}</span>
+            </h2>
+            <div className="group-list">
+              {g.items.map((i) => (
+                <ShopRow key={i.id} i={i} big store onCheck={tick} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+      <div className="shop-checkout">
+        <div className="grow small">
+          <b>{t('Not signed in')}</b>
+          <div className="muted">{t('Ticks are kept on this phone and sent after signing in.')}</div>
+        </div>
+        <button className="btn primary lg" onClick={onSignIn}>
+          {t('Sign in to sync')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Open rows of each aisle first, then the ticked ones of that aisle – in the place they were. */
+function inPlace(v: ShopView): { key: string; items: ShopItem[] }[] {
+  const ticked = [...v.basket, ...v.done];
+  const keys = v.sections.map((s) => s.key);
+  const order = v.order ?? [];
+  const extra = [...new Set(ticked.map((i) => i.section).filter((k) => !keys.includes(k)))].sort((a, b) => ((order.indexOf(a) + 99) % 99) - ((order.indexOf(b) + 99) % 99));
+  return [...keys, ...extra].map((key) => ({
+    key,
+    items: [...(v.sections.find((s) => s.key === key)?.items ?? []), ...ticked.filter((i) => i.section === key)],
+  }));
 }
 
 /** Desktop side panel: who said "I'll get it" for what – just so nobody buys twice (no points, no ranking). */
@@ -583,29 +658,44 @@ function moveLocal(v: ShopView, id: number, on: boolean, basket: boolean): ShopV
   };
 }
 
-function ShopRow({ i, big = false, fresh = false, onCheck, onMore, onClaim }: { i: ShopItem; big?: boolean; fresh?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void; onClaim?: () => void }) {
+function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore, onClaim }: { i: ShopItem; big?: boolean; store?: boolean; fresh?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void; onClaim?: () => void }) {
   const on = Boolean(i.checked_at);
   const [checking, setChecking] = useState(false);
   // every row shows where it came from (product rule): `origin` from the server, older servers: source + added_by
-  const origin = (i as ShopItem & { origin?: string | null }).origin ?? (i.source === 'manual' ? null : i.source);
+  const origin = i.origin ?? (i.source === 'manual' ? null : i.source);
   const qty = i.qty && i.qty !== 1 ? `${String(i.qty).replace('.', ',')}× ` : '';
-  const sub = [shareSubline(i.share), i.note, i.buy_at?.length ? t('at {stores}', { stores: i.buy_at.join(', ') }) : null, big ? null : i.brand, big || i.share ? null : originLabel(origin, i.added_by)].filter(Boolean).join(' · ');
-  // the tick shows at once; the row glides on to "done" right after (briefing: 140–220 ms), never blocking
+  // in the store: the note, the substitute rule and what was bought last time matter more than who added it
+  const sub = [
+    shareSubline(i.share),
+    i.note,
+    store ? substituteLine(i.substitute) : null,
+    i.buy_at?.length ? t('at {stores}', { stores: i.buy_at.join(', ') }) : null,
+    store && !i.note ? lastBoughtLine(i) : null,
+    big ? null : i.brand,
+    big || i.share ? null : originLabel(origin, i.added_by),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  // the tick shows at once; never blocking (briefing: 140–220 ms)
   const toggle = () => {
     if (on || checking) return onCheck(i, !on);
     const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) return onCheck(i, true);
     setChecking(true);
-    setTimeout(() => onCheck(i, true), 170);
+    setTimeout(() => {
+      onCheck(i, true);
+      setChecking(false);
+    }, 170);
   };
   const ticked = on || checking;
+  const pic = i.photo_path ?? (big && i.product_id ? i.image_path : null);
   return (
     <div className={`shop-item ${on ? 'done' : ''} ${checking ? 'is-checking' : ''} ${big ? 'big' : ''} ${i.pending ? 'pending' : ''} ${fresh ? 'row-in' : ''}`}>
       <button className="shop-hit" onClick={toggle} role="checkbox" aria-checked={ticked} aria-label={`${i.text}: ${on ? t('Mark as open') : t('Check off')}`}>
         <span className={`check ${ticked ? 'on' : ''}`} aria-hidden>
           <Check size={big ? 18 : 15} weight="bold" />
         </span>
-        {i.product_id && big && <Thumb p={{ name: i.text, image_path: i.image_path }} size={44} />}
+        {pic && <Thumb p={{ name: i.text, image_path: pic }} size={big ? 44 : 36} className={i.photo_path ? 'own-photo' : ''} />}
         <span className="grow txt">
           <span className="title">
             <ShareMark s={i.share} size={big ? 16 : 13} />
@@ -738,6 +828,7 @@ function ItemSheet({ item, me, onClose, run }: { item: ShopItem | null; me?: Me;
   return (
     <Sheet open onClose={onClose} title={item.text}>
       <div className="stack">
+        <ItemEditor item={item} />
         {home.ui.claims && (<>
         <div className="eyebrow row" style={{ gap: 6 }}><HandHeart size={14} /> {t('Who takes care of it?')}</div>
         <div className="who-pick">
