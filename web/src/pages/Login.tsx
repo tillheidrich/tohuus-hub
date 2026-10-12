@@ -9,6 +9,7 @@ import { BrandMark, HomeTiles } from '../art';
 import { setLang, t } from '../i18n';
 import { useNavigate } from 'react-router-dom';
 import { useInstance } from '../data';
+import { AppleButton, appleError } from './AppleSignIn';
 
 type Method = 'passkey' | 'link' | 'password' | 'sso';
 export interface AuthOptions {
@@ -60,7 +61,8 @@ export function Login() {
   const [err, setErr] = useState(() => {
     const k = new URLSearchParams(location.search).get('auth_error');
     if (k) history.replaceState(null, '', location.pathname);
-    return k ? t(SSO_ERRORS[k] ?? SSO_ERRORS.sso_failed) : '';
+    if (k) return t(SSO_ERRORS[k] ?? SSO_ERRORS.sso_failed);
+    return appleError();
   });
   const [busy, setBusy] = useState(false);
   const [, rerender] = useState(0);
@@ -250,8 +252,9 @@ export function Login() {
           </div>
         )}
 
-        {anyButton && (
+        {(anyButton || o.cloud) && (
           <div className="stack auth-methods">
+            {o.cloud && <AppleButton />}
             {passkeyOk && (
               <button type="button" className="btn primary lg" disabled={busy} onClick={() => run(async () => { await passkeySignIn(); invalidate('me'); })}>
                 <Fingerprint size={20} /> {t('Sign in with passkey')}

@@ -1,4 +1,5 @@
 import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Package, Plus, TextAa } from '@phosphor-icons/react';
+import { DemoTag, useDemoMarks } from './Samples';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
@@ -218,6 +219,7 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
   const [q, setQ] = useState('');
   const [pkgOpen, setPkgOpen] = useState(false);
   const nav = useNavigate();
+  const demo = useDemoMarks();
   const terms = ingredientTerms(q);
   const termKey = terms?.join(',') ?? '';
   const hits = useQuery<IngredientHit[]>({
@@ -263,7 +265,9 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
                 {r.favorite && <Heart className="fav" size={20} weight="fill" />}
               </div>
               <div className="body">
-                <b>{r.title}</b>
+                <b>
+                  {r.title} <DemoTag on={demo.recipes.has(r.id)} />
+                </b>
                 <span className="small muted">
                   {r.hit
                     ? r.hit.missing.length

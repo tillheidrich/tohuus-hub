@@ -13,13 +13,14 @@ import { t } from '../i18n';
 import { Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { useGettingStarted } from './Onboarding';
 import { HomeTiles } from '../art';
+import './account.css';
 
 // ================================================================== data
 
 export interface TourInfo {
   tour: { status: 'new' | 'active' | 'paused' | 'done' | 'skipped'; step: number } | null;
   admin: boolean;
-  demo: { rows: number; products: number; recipes: number; used: { products: number; recipes: number } };
+  demo: { rows: number; products: number; recipes: number; used: { products: number; recipes: number }; since?: string | null; nudge?: boolean };
   start: { choice: string | null; due: boolean };
 }
 
@@ -204,7 +205,6 @@ export function TourHost({ me }: { me: Me }) {
 
   return (
     <>
-      {d && d.demo.rows > 0 && !me.actor.houseGuest && !loc.pathname.startsWith('/willkommen') && <DemoBanner admin={admin} />}
       {open !== null && (
         <TourOverlay
           start={open}
@@ -217,25 +217,6 @@ export function TourHost({ me }: { me: Me }) {
         />
       )}
     </>
-  );
-}
-
-function DemoBanner({ admin }: { admin: boolean }) {
-  const navigate = useNavigate();
-  return (
-    <div className="demo-banner" role="status">
-      <Flask size={16} weight="duotone" />
-      <span className="grow">
-        <b>{t('Demo data')}</b> – {t('remove it when you’re ready.')}
-      </span>
-      {admin ? (
-        <button className="linkish" onClick={() => navigate('/einstellungen?tab=data#demo')}>
-          {t('Remove')}
-        </button>
-      ) : (
-        <span className="small muted">{t('An admin can remove it.')}</span>
-      )}
-    </div>
   );
 }
 
@@ -384,7 +365,11 @@ function TourOverlay({ start, onStep, onClose }: { start: number; onStep: (step:
 
 // ================================================================== first start (shown in /willkommen)
 
-/** "Start empty" (recommended) or "Explore with demo data first". */
+/**
+ * Asked once after a household is created (web onboarding; the iPhone app asks the same after sign-up):
+ * "Möchtest du Beispieldaten, um ToHuus kennenzulernen?" – Ja loads the marked sample household, Nein starts empty.
+ * Either way it can be changed later in Settings › Data.
+ */
 export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => void }) {
   const [busy, setBusy] = useState<'empty' | 'demo' | null>(null);
   const toast = useToast();
@@ -392,6 +377,8 @@ export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => 
     setBusy(choice);
     try {
       await post('/tour/start', { choice });
+      // also the queries of pages that are not on screen: Today's redirect must not see the old "wizard due"
+      await Promise.all([qc.refetchQueries({ queryKey: ['onboarding'], type: 'all' }), qc.refetchQueries({ queryKey: ['tour'], type: 'all' })]);
       await qc.invalidateQueries();
       onDone(choice);
     } catch (e) {
@@ -402,33 +389,26 @@ export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => 
   };
   return (
     <div className="onb">
-      <div className="stack" style={{ gap: 22 }}>
+      <div className="stack demo-ask" style={{ gap: 22 }}>
         <header>
           <HomeTiles className="onb-homes" />
-          <h1>{t('Welcome home.')}</h1>
+          <div className="eyebrow">{t('Welcome')}</div>
+          <h1>{t('Would you like sample data to get to know ToHuus?')}</h1>
           <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
-            {t('How would you like to start? You can switch later: demo data can be removed with one tap.')}
+            {t('A filled-in example household: a list, things at home and a few recipes. Each sample is marked, and you remove them all with one tap.')}
           </p>
         </header>
-        <div className="onb-paths">
-          <button className="action tour-choice" disabled={busy !== null} onClick={() => choose('empty')}>
-            <span className="ic">
-              <House size={22} />
-            </span>
-            <b>
-              {t('Start empty')} <span className="badge tour-rec">{t('recommended for your household')}</span>
-            </b>
-            <span>{t('Say who belongs to it and start with your list – in a minute. Nothing to clean up later.')}</span>
+        <div className="demo-ask-actions">
+          <button className="btn primary lg" disabled={busy !== null} onClick={() => choose('demo')}>
+            <Flask size={18} /> {t('Yes, with samples')}
           </button>
-          <button className="action tour-choice" disabled={busy !== null} onClick={() => choose('demo')}>
-            <span className="ic">
-              <Flask size={22} />
-            </span>
-            <b>{t('Explore with demo data first')}</b>
-            <span>{t('A filled-in example household with stock, recipes and a shopping list – marked as demo, removable any time.')}</span>
+          <button className="btn lg" disabled={busy !== null} onClick={() => choose('empty')}>
+            <House size={18} /> {t('No, start empty')}
           </button>
         </div>
-        {busy && <p className="small muted">{busy === 'demo' ? t('Filling the demo household …') : t('One moment …')}</p>}
+        <p className="small muted" aria-live="polite">
+          {busy === 'demo' ? t('Filling the sample household …') : busy ? t('One moment …') : t('You can change this later in the settings.')}
+        </p>
       </div>
     </div>
   );

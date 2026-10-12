@@ -1,0 +1,81 @@
+/* Package D (1.0): Sign in with Apple button, quiet "Beispiel" tags, the sample-data question and reminder. */
+
+/* Apple's button guidelines: black on light, white on dark, Apple logo + "Mit Apple anmelden", same size as the
+   other buttons, no other colours. */
+.apple-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: var(--radius, 10px);
+  border: 1px solid #000;
+  background: #000;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  width: 100%;
+}
+.apple-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: -2px;
+}
+.apple-btn:hover {
+  background: #1c1c1e;
+}
+.apple-btn:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+:root[data-theme='dark'] .apple-btn {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+:root[data-theme='dark'] .apple-btn:hover {
+  background: #f2f2f2;
+}
+.apple-or {
+  margin: 4px 0;
+}
+
+/* sample rows: a small tag, no colour shouting */
+.demo-tag {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* first start: "Möchtest du Beispieldaten …?" */
+.demo-ask {
+  max-width: 560px;
+}
+.demo-ask .demo-ask-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.demo-ask .demo-ask-actions .btn {
+  flex: 1 1 200px;
+}
+
+/* Today: the gentle reminder, once */
+.demo-nudge .row {
+  flex-wrap: wrap;
+}

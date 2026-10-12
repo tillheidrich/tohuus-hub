@@ -33,19 +33,19 @@ export const tour: Record<string, string> = {
   'Skip tour': 'Tour überspringen',
   'Let’s go': 'Los geht’s',
   // demo banner & first start
-  'Demo data': 'Demo-Daten',
+  'Demo data': 'Beispieldaten',
   'remove it when you’re ready.': 'entfern sie, wenn du so weit bist.',
   'An admin can remove it.': 'Ein Admin kann sie entfernen.',
   'How would you like to start? You can switch later: demo data can be removed with one tap.':
-    'Wie möchtest du anfangen? Du kannst später wechseln: Demo-Daten lassen sich mit einem Tipp entfernen.',
+    'Wie möchtest du anfangen? Du kannst später wechseln: Beispieldaten lassen sich mit einem Tipp entfernen.',
   'Start empty': 'Leer starten',
   'recommended for your household': 'empfohlen für deinen Haushalt',
   'Name your home, pick your places and add your first things. Nothing to clean up later.':
     'Benenne dein Zuhause, wähl deine Orte und trag die ersten Sachen ein. Später muss nichts aufgeräumt werden.',
-  'Explore with demo data first': 'Erst mit Demo-Daten umsehen',
+  'Explore with demo data first': 'Erst mit Beispieldaten umsehen',
   'A filled-in example household with stock, recipes and a shopping list – marked as demo, removable any time.':
-    'Ein gefüllter Beispielhaushalt mit Vorrat, Rezepten und Einkaufsliste – als Demo markiert, jederzeit entfernbar.',
-  'Filling the demo household …': 'Der Demo-Haushalt wird gefüllt …',
+    'Ein gefüllter Beispielhaushalt mit Vorrat, Rezepten und Einkaufsliste – als Beispiel markiert, jederzeit entfernbar.',
+  'Filling the demo household …': 'Der Beispielhaushalt wird gefüllt …',
   'One moment …': 'Einen Moment …',
   // help & settings entry points
   'Take the tour': 'Tour starten',
@@ -56,22 +56,22 @@ export const tour: Record<string, string> = {
   'Start the tour': 'Tour starten',
   // Settings › Data
   'Could not load the data overview.': 'Die Datenübersicht konnte nicht geladen werden.',
-  'Demo data removed – {n} things you used stay': 'Demo-Daten entfernt – {n} Sachen, die ihr benutzt habt, bleiben',
-  'Demo data removed': 'Demo-Daten entfernt',
-  'Demo data loaded – it is marked and can be removed any time': 'Demo-Daten geladen – sie sind markiert und jederzeit entfernbar',
-  'Look around with demo data': 'Mit Demo-Daten umsehen',
+  'Demo data removed – {n} things you used stay': 'Beispieldaten entfernt – {n} Sachen, die ihr benutzt habt, bleiben',
+  'Demo data removed': 'Beispieldaten entfernt',
+  'Demo data loaded – it is marked and can be removed any time': 'Beispieldaten geladen – sie sind markiert und jederzeit entfernbar',
+  'Look around with demo data': 'Mit Beispieldaten umsehen',
   'Your household is still empty. Load an example household to try things out – everything it adds is marked and can be removed in one go.':
     'Dein Haushalt ist noch leer. Lade einen Beispielhaushalt zum Ausprobieren – alles, was er anlegt, ist markiert und lässt sich in einem Rutsch entfernen.',
   'Loading …': 'Wird geladen …',
-  'Load demo data': 'Demo-Daten laden',
+  'Load demo data': 'Beispieldaten laden',
   'The example household is still here: {p} products and {r} recipes, plus their stock, history and list entries. Removing it only deletes what the demo added – nothing you entered yourself.':
-    'Der Beispielhaushalt ist noch da: {p} Produkte und {r} Rezepte, dazu Vorrat, Verlauf und Listeneinträge. Beim Entfernen verschwindet nur, was die Demo angelegt hat – nichts, was du selbst eingetragen hast.',
-  'Remove demo data': 'Demo-Daten entfernen',
+    'Der Beispielhaushalt ist noch da: {p} Produkte und {r} Rezepte, dazu Vorrat, Verlauf und Listeneinträge. Beim Entfernen verschwindet nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast.',
+  'Remove demo data': 'Beispieldaten entfernen',
   'This removes {p} demo products and {r} demo recipes with their stock, history and list entries. Members, places, settings and everything you added yourself stay.':
-    'Das entfernt {p} Demo-Produkte und {r} Demo-Rezepte mit Vorrat, Verlauf und Listeneinträgen. Mitglieder, Orte, Einstellungen und alles, was du selbst angelegt hast, bleiben.',
-  'Also remove demo things you have used': 'Auch benutzte Demo-Sachen entfernen',
+    'Das entfernt {p} Beispielprodukte und {r} Beispielrezepte mit Vorrat, Verlauf und Listeneinträgen. Mitglieder, Orte, Einstellungen und alles, was du selbst angelegt hast, bleiben.',
+  'Also remove demo things you have used': 'Auch benutzte Beispielsachen entfernen',
   '{n} demo products or recipes were used since (stock changed, cooked or planned). By default they stay, because they are probably yours now.':
-    '{n} Demo-Produkte oder -Rezepte wurden inzwischen benutzt (Bestand geändert, gekocht oder eingeplant). Sie bleiben standardmäßig, weil sie jetzt vermutlich eure sind.',
+    '{n} Beispielprodukte oder -Rezepte wurden inzwischen benutzt (Bestand geändert, gekocht oder eingeplant). Sie bleiben standardmäßig, weil sie jetzt vermutlich eure sind.',
   'Removing …': 'Wird entfernt …',
   DELETE: 'LÖSCHEN',
   'Pick what to clear. A backup is made first, so you can go back.': 'Wähl aus, was geleert werden soll. Vorher wird eine Sicherung gemacht, du kannst also zurück.',
@@ -107,5 +107,5 @@ export const tour: Record<string, string> = {
   'Everything household data': 'Alle Haushaltsdaten',
   'All of the above plus care tasks, notifications and other household entries': 'Alles oben plus Pflegeaufgaben, Benachrichtigungen und übrige Haushaltseinträge',
   '“Remove demo data” deletes only what the demo added. “Start over” clears the areas you pick – after an automatic backup.':
-    '„Demo-Daten entfernen“ löscht nur, was die Demo angelegt hat. „Neu anfangen“ leert die Bereiche, die du auswählst – nach einer automatischen Sicherung.',
+    '„Beispieldaten entfernen“ löscht nur, was die Beispiele angelegt haben. „Neu anfangen“ leert die Bereiche, die du auswählst – nach einer automatischen Sicherung.',
 };

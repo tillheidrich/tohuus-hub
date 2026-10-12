@@ -36,7 +36,6 @@ import { Ic } from '../placeicons';
 import { StartChoice, useTourInfo } from './Tour';
 import { StaplesPicker } from './Share';
 
-import { useInstance } from '../data';
 import { type GettingStarted, type Room, type Step, STEPS, useGettingStarted, useOnboardingRedirect } from '../onboarding-state';
 import { StepModules } from './Modules';
 export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
@@ -71,18 +70,13 @@ export function Onboarding({ me }: { me: Me }) {
   const tour = useTourInfo();
   const choosing = Boolean(tour.data?.start.due);
   const legacy = sp.get('step') as Step | null;
-  const cloud = useInstance().data?.mode === 'cloud';
-  useEffect(() => {
-    if (cloud && choosing && me.actor.role === 'admin') post('/tour/start', { choice: 'empty' }).then(() => invalidate('tour', 'onboarding')).catch(() => {});
-  }, [cloud, choosing, me.actor.role]);
   useEffect(() => {
     if (step || !g.data || choosing) return;
     setStep(FROM_SERVER[legacy ?? g.data.state.step] ?? 'who');
     if (!g.data.state.started) patch('/onboarding', { started: true }).then(() => invalidate('onboarding')).catch(() => {});
   }, [g.data, legacy, step, choosing]);
 
-  // ToHuus Cloud: a new household starts empty – no demo choice, straight to "Wer gehört dazu?"
-  if (me.actor.role === 'admin' && choosing && cloud) return <Skeleton n={3} h={90} />;
+  // a new household is asked once: "Möchtest du Beispieldaten, um ToHuus kennenzulernen?" (Ja / Nein)
   if (me.actor.role === 'admin' && choosing) return <StartChoice onDone={(c) => (c === 'demo' ? nav('/') : invalidate('onboarding'))} />;
   if (me.actor.role !== 'admin')
     return (
