@@ -295,6 +295,7 @@ struct CookingView: View {
                             .frame(width: 44, height: 44)
                             .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
                         Text(r.title).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
+                        SampleTag(on: app.sampleMarks.recipes.contains(r.id))
                         Spacer()
                         if r.favorite?.bool == true { Image(systemName: "heart.fill").foregroundStyle(Theme.clay) }
                     }

@@ -35,6 +35,23 @@
         }
       }
     },
+    "%@ for receipts and photos": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ for receipts and photos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ für Bons und Fotos"
+          }
+        }
+      }
+    },
     "%@ is shopping at %@": {
       "extractionState": "manual",
       "localizations": {
@@ -116,6 +133,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d %% günstiger als monatlich"
+          }
+        }
+      }
+    },
+    "%d assistant messages a month": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d assistant messages a month"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Nachrichten an den Assistenten im Monat"
+          }
+        }
+      }
+    },
+    "%d assistant messages a month – after that slower, never blocked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d assistant messages a month – after that slower, never blocked"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Nachrichten an den Assistenten im Monat – danach langsamer, nie gesperrt"
           }
         }
       }
@@ -290,6 +341,23 @@
         }
       }
     },
+    "%d sample products and %d sample recipes are marked “Sample”. Removing them only deletes what the samples added – nothing you entered yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d sample products and %d sample recipes are marked “Sample”. Removing them only deletes what the samples added – nothing you entered yourself."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Beispielprodukte und %d Beispielrezepte sind mit „Beispiel“ markiert. Beim Entfernen verschwindet nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast."
+          }
+        }
+      }
+    },
     "%d servings": {
       "extractionState": "manual",
       "localizations": {
@@ -375,40 +443,6 @@
         }
       }
     },
-    "1,500 assistant messages a month (fair use)": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1,500 assistant messages a month (fair use)"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1.500 Nachrichten an den Assistenten im Monat (fair genutzt)"
-          }
-        }
-      }
-    },
-    "100 assistant messages a month": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "100 assistant messages a month"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "100 Nachrichten an den Assistenten im Monat"
-          }
-        }
-      }
-    },
     "14 days of Plus for free, then Free unless you choose a plan. Nothing renews by itself.": {
       "extractionState": "manual",
       "localizations": {
@@ -426,19 +460,19 @@
         }
       }
     },
-    "2 GB for receipts and photos": {
+    "14 days with everything, without payment details. Then Free, unless you choose a plan.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "2 GB for receipts and photos"
+            "value": "14 days with everything, without payment details. Then Free, unless you choose a plan."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "2 GB für Bons und Fotos"
+            "value": "14 Tage mit allem, ohne Zahlungsdaten. Danach Free, außer du wählst einen Plan."
           }
         }
       }
@@ -460,19 +494,19 @@
         }
       }
     },
-    "5 GB for receipts and photos": {
+    "6-digit code": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "5 GB for receipts and photos"
+            "value": "6-digit code"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "5 GB für Bons und Fotos"
+            "value": "6-stelliger Code"
           }
         }
       }
@@ -545,6 +579,23 @@
         }
       }
     },
+    "A filled-in example household: a list, things at home and a few recipes. Each sample is marked, and you remove them all with one tap.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A filled-in example household: a list, things at home and a few recipes. Each sample is marked, and you remove them all with one tap."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein gefüllter Beispielhaushalt: eine Liste, Sachen im Haus und ein paar Rezepte. Jedes Beispiel ist markiert, und mit einem Tipp sind alle wieder weg."
+          }
+        }
+      }
+    },
     "A guest wishes for something": {
       "extractionState": "manual",
       "localizations": {
@@ -558,6 +609,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gäste wünschen sich etwas"
+          }
+        }
+      }
+    },
+    "A look back at every month": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A look back at every month"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Rückblick auf jeden Monat"
           }
         }
       }
@@ -970,23 +1038,6 @@
         }
       }
     },
-    "Address, e.g. tohuus.example.de": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Address, e.g. tohuus.example.de"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adresse, z. B. tohuus.example.de"
-          }
-        }
-      }
-    },
     "All": {
       "extractionState": "manual",
       "localizations": {
@@ -1085,6 +1136,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Betrag"
+          }
+        }
+      }
+    },
+    "An admin of your household can remove the sample data.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An admin of your household can remove the sample data."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Admin deines Haushalts kann die Beispieldaten entfernen."
           }
         }
       }
@@ -1225,6 +1293,23 @@
         }
       }
     },
+    "Billing period": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Billing period"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrechnung"
+          }
+        }
+      }
+    },
     "Brand": {
       "extractionState": "manual",
       "localizations": {
@@ -1327,6 +1412,23 @@
         }
       }
     },
+    "By creating an account you accept the terms and the privacy policy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By creating an account you accept the terms and the privacy policy."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit dem Konto akzeptierst du die Nutzungsbedingungen und die Datenschutzerklärung."
+          }
+        }
+      }
+    },
     "By shop": {
       "extractionState": "manual",
       "localizations": {
@@ -1425,6 +1527,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Änderungen, die noch nicht gesendet wurden, gehen verloren."
+          }
+        }
+      }
+    },
+    "Check the connection and try again. Nothing is bought without your confirmation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the connection and try again. Nothing is bought without your confirmation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüf die Verbindung und versuch es noch einmal. Ohne deine Bestätigung wird nichts gekauft."
           }
         }
       }
@@ -1633,19 +1752,36 @@
         }
       }
     },
-    "Code from your authenticator app": {
+    "Code by e-mail": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Code from your authenticator app"
+            "value": "Code by e-mail"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Code aus deiner Authenticator-App"
+            "value": "Code per E-Mail"
+          }
+        }
+      }
+    },
+    "Code from the e-mail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code from the e-mail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code aus der E-Mail"
           }
         }
       }
@@ -1667,53 +1803,36 @@
         }
       }
     },
-    "Connect": {
+    "Confirm with Apple and delete": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect"
+            "value": "Confirm with Apple and delete"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verbinden"
+            "value": "Mit Apple bestätigen und löschen"
           }
         }
       }
     },
-    "Connected households and lists": {
+    "Connected households and shared lists": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connected households and lists"
+            "value": "Connected households and shared lists"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verbundene Haushalte und Listen"
-          }
-        }
-      }
-    },
-    "Continue with ToHuus Cloud": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue with ToHuus Cloud"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weiter mit ToHuus Cloud"
+            "value": "Verbundene Haushalte und geteilte Listen"
           }
         }
       }
@@ -1901,6 +2020,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anlegen"
+          }
+        }
+      }
+    },
+    "Create account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create account"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto erstellen"
           }
         }
       }
@@ -2211,6 +2347,23 @@
         }
       }
     },
+    "Ends on %@ – it will not renew.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ends on %@ – it will not renew."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endet am %@ – es verlängert sich nicht."
+          }
+        }
+      }
+    },
     "Enjoy your meal!": {
       "extractionState": "manual",
       "localizations": {
@@ -2262,6 +2415,23 @@
         }
       }
     },
+    "Everything included for %d more days (until %@). After that Free – nothing is charged automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything included for %d more days (until %@). After that Free – nothing is charged automatically."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %d Tage alles inklusive (bis %@). Danach Free – es wird nichts automatisch abgebucht."
+          }
+        }
+      }
+    },
     "Everything is at home.": {
       "extractionState": "manual",
       "localizations": {
@@ -2279,19 +2449,19 @@
         }
       }
     },
-    "Everything is included on your own server.": {
+    "Everything is included for this household.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everything is included on your own server."
+            "value": "Everything is included for this household."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auf deinem eigenen Server ist alles dabei."
+            "value": "Für diesen Haushalt ist alles inklusive."
           }
         }
       }
@@ -2309,6 +2479,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alles, was für die Woche fehlt, steht auf der Liste."
+          }
+        }
+      }
+    },
+    "Everything you added yourself stays.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything you added yourself stays."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles, was du selbst eingetragen hast, bleibt."
           }
         }
       }
@@ -2377,6 +2564,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Familie mit Kindern"
+          }
+        }
+      }
+    },
+    "Filling the sample household …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filling the sample household …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Beispielhaushalt wird gefüllt …"
           }
         }
       }
@@ -2483,6 +2687,23 @@
         }
       }
     },
+    "Forgot your password? Sign in with a code from an e-mail, then set a new one in the web app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgot your password? Sign in with a code from an e-mail, then set a new one in the web app."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort vergessen? Melde dich mit einem Code aus einer E-Mail an und leg danach in der Web-App ein neues fest."
+          }
+        }
+      }
+    },
     "Found in Open Food Facts.": {
       "extractionState": "manual",
       "localizations": {
@@ -2530,6 +2751,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Freie Sätze an den Assistenten, Fotos von Bons und Kühlschrank auf dem Server lesen, Kochhilfe aus dem, was da ist."
+          }
+        }
+      }
+    },
+    "Free stays free – the list, stock and recipes always work.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free stays free – the list, stock and recipes always work."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free bleibt kostenlos – Liste, Vorrat und Rezepte funktionieren immer."
           }
         }
       }
@@ -2615,23 +2853,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Obst & Gemüse"
-          }
-        }
-      }
-    },
-    "Full history: prices, spending, savings review": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Full history: prices, spending, savings review"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ganze Historie: Preise, Ausgaben, Spar-Rückblick"
           }
         }
       }
@@ -2891,6 +3112,40 @@
         }
       }
     },
+    "Household “%@”": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household “%@”"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haushalt „%@“"
+          }
+        }
+      }
+    },
+    "Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your Apple ID. An active App Store subscription must be cancelled in your Apple Account settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your Apple ID. An active App Store subscription must be cancelled in your Apple Account settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haushalte, zu denen nur du gehörst, werden mit allen Daten gelöscht. Aus geteilten Haushalten trittst du nur aus – die anderen behalten alles. Bestätige mit deiner Apple-ID. Ein laufendes App-Store-Abo kündigst du in den Einstellungen deines Apple-Accounts."
+          }
+        }
+      }
+    },
     "Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your password. An active App Store subscription must be cancelled in your Apple Account settings.": {
       "extractionState": "manual",
       "localizations": {
@@ -2904,6 +3159,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Haushalte, zu denen nur du gehörst, werden mit allen Daten gelöscht. Aus gemeinsamen Haushalten trittst du nur aus – die anderen behalten alles. Bestätige mit deinem Passwort. Ein laufendes App-Store-Abo kündigst du in den Einstellungen deines Apple Accounts."
+          }
+        }
+      }
+    },
+    "Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. We send you a code by e-mail to confirm. An active App Store subscription must be cancelled in your Apple Account settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. We send you a code by e-mail to confirm. An active App Store subscription must be cancelled in your Apple Account settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haushalte, zu denen nur du gehörst, werden mit allen Daten gelöscht. Aus geteilten Haushalten trittst du nur aus – die anderen behalten alles. Zur Bestätigung schicken wir dir einen Code per E-Mail. Ein laufendes App-Store-Abo kündigst du in den Einstellungen deines Apple-Accounts."
           }
         }
       }
@@ -2938,23 +3210,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "So sieht die Liste aus"
-          }
-        }
-      }
-    },
-    "I already have an account": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I already have an account"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ich habe schon ein Konto"
           }
         }
       }
@@ -3023,6 +3278,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ich bin im Laden"
+          }
+        }
+      }
+    },
+    "If %@ has an account, the mail is on its way. Check the spam folder too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If %@ has an account, the mail is on its way. Check the spam folder too."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn es zu %@ ein Konto gibt, ist die Mail unterwegs. Schau auch im Spam-Ordner nach."
           }
         }
       }
@@ -3248,6 +3520,23 @@
         }
       }
     },
+    "Keep for now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep for now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erst mal behalten"
+          }
+        }
+      }
+    },
     "Kitchen mode": {
       "extractionState": "manual",
       "localizations": {
@@ -3465,6 +3754,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abo verwalten"
+          }
+        }
+      }
+    },
+    "Members, places, settings and everything you added yourself stay.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Members, places, settings and everything you added yourself stay."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitglieder, Orte, Einstellungen und alles, was du selbst eingetragen hast, bleiben."
           }
         }
       }
@@ -3741,23 +4047,6 @@
         }
       }
     },
-    "Name or e-mail": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name or e-mail"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name oder E-Mail"
-          }
-        }
-      }
-    },
     "Name, e.g. Drugstore": {
       "extractionState": "manual",
       "localizations": {
@@ -3805,23 +4094,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Braucht Aufmerksamkeit"
-          }
-        }
-      }
-    },
-    "New here? Set up your household in a minute. Every new household gets 14 days of Plus, without payment details.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New here? Set up your household in a minute. Every new household gets 14 days of Plus, without payment details."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Neu hier? Leg euren Haushalt in einer Minute an. Jeder neue Haushalt bekommt 14 Tage Plus – ohne Zahlungsdaten."
           }
         }
       }
@@ -4145,6 +4417,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Auf dem Foto war kein Text zu finden. Versuch es bei besserem Licht noch mal."
+          }
+        }
+      }
+    },
+    "No, start empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No, start empty"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nein, leer starten"
           }
         }
       }
@@ -4744,6 +5033,23 @@
         }
       }
     },
+    "Or create the account with your e-mail address:": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or create the account with your e-mail address:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oder leg das Konto mit deiner E-Mail-Adresse an:"
+          }
+        }
+      }
+    },
     "Or open the kitchen mode: big week plan, recipe step by step, list to tick.": {
       "extractionState": "manual",
       "localizations": {
@@ -4778,6 +5084,23 @@
         }
       }
     },
+    "Our home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Our home"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unser Zuhause"
+          }
+        }
+      }
+    },
     "Our usuals": {
       "extractionState": "manual",
       "localizations": {
@@ -4808,23 +5131,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eigene Assistenten (Claude, ChatGPT) dürfen den Haushalt lesen"
-          }
-        }
-      }
-    },
-    "Own server": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Own server"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eigener Server"
           }
         }
       }
@@ -4927,23 +5233,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Party endet bald"
-          }
-        }
-      }
-    },
-    "Passkeys, e-mail links and SSO work in the web app. In the app, sign in with your password.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passkeys, e-mail links and SSO work in the web app. In the app, sign in with your password."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passkeys, E-Mail-Links und SSO gehen in der Web-App. In der App meldest du dich mit deinem Passwort an."
           }
         }
       }
@@ -5220,23 +5509,6 @@
         }
       }
     },
-    "Plus for free until %@. After that Free – nothing is charged automatically.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plus for free until %@. After that Free – nothing is charged automatically."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plus geschenkt bis %@. Danach Free – es wird nichts automatisch abgebucht."
-          }
-        }
-      }
-    },
     "Preview": {
       "extractionState": "manual",
       "localizations": {
@@ -5284,6 +5556,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preisänderungen"
+          }
+        }
+      }
+    },
+    "Price not available right now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price not available right now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preis gerade nicht verfügbar"
           }
         }
       }
@@ -5611,6 +5900,23 @@
         }
       }
     },
+    "Ready for your own things?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready for your own things?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereit für deine eigenen Sachen?"
+          }
+        }
+      }
+    },
     "Receipt": {
       "extractionState": "manual",
       "localizations": {
@@ -5815,6 +6121,40 @@
         }
       }
     },
+    "Remove sample data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove sample data"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispieldaten entfernen"
+          }
+        }
+      }
+    },
+    "Remove sample data?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove sample data?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispieldaten entfernen?"
+          }
+        }
+      }
+    },
     "Remove the photo": {
       "extractionState": "manual",
       "localizations": {
@@ -5951,6 +6291,74 @@
         }
       }
     },
+    "Sample": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispiel"
+          }
+        }
+      }
+    },
+    "Sample data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample data"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispieldaten"
+          }
+        }
+      }
+    },
+    "Sample data removed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample data removed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispieldaten entfernt"
+          }
+        }
+      }
+    },
+    "Sample data removed – %d things you used stay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample data removed – %d things you used stay"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispieldaten entfernt – %d Sachen, die ihr benutzt habt, bleiben"
+          }
+        }
+      }
+    },
     "Save": {
       "extractionState": "manual",
       "localizations": {
@@ -6015,23 +6423,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gespeicherte Läden"
-          }
-        }
-      }
-    },
-    "Scan QR code": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scan QR code"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "QR scannen"
           }
         }
       }
@@ -6185,6 +6576,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Senden"
+          }
+        }
+      }
+    },
+    "Send a new code": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a new code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuen Code schicken"
+          }
+        }
+      }
+    },
+    "Send code": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code schicken"
+          }
+        }
+      }
+    },
+    "Send me a code": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send me a code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code per E-Mail schicken"
           }
         }
       }
@@ -6474,6 +6916,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anmelden"
+          }
+        }
+      }
+    },
+    "Sign in with Apple didn’t work. Please try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with Apple didn’t work. Please try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anmeldung mit Apple hat nicht geklappt. Versuch es bitte noch einmal."
+          }
+        }
+      }
+    },
+    "Sign in with a code from an e-mail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with a code from an e-mail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Code aus einer E-Mail anmelden"
+          }
+        }
+      }
+    },
+    "Sign in with passkey": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with passkey"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Passkey anmelden"
           }
         }
       }
@@ -7107,6 +7600,40 @@
         }
       }
     },
+    "That didn't work. Please try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That didn't work. Please try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das hat nicht geklappt. Versuch es bitte noch einmal."
+          }
+        }
+      }
+    },
+    "That took too long. Please try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That took too long. Please try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das hat zu lange gedauert. Versuch es bitte noch einmal."
+          }
+        }
+      }
+    },
     "That's all for this month": {
       "extractionState": "manual",
       "localizations": {
@@ -7141,19 +7668,19 @@
         }
       }
     },
-    "The assistant in everyday use: week plan from the pantry, monthly analysis": {
+    "The App Store prices can’t be loaded right now.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The assistant in everyday use: week plan from the pantry, monthly analysis"
+            "value": "The App Store prices can’t be loaded right now."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Assistent im Alltag: Wochenplan aus dem Vorrat, Monatsauswertung"
+            "value": "Die Preise aus dem App Store lassen sich gerade nicht laden."
           }
         }
       }
@@ -7175,23 +7702,6 @@
         }
       }
     },
-    "The easiest way: we run the server and store your household encrypted. Free to start.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The easiest way: we run the server and store your household encrypted. Free to start."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Am einfachsten: Wir betreiben den Server und speichern euren Haushalt verschlüsselt. Kostenlos starten."
-          }
-        }
-      }
-    },
     "The help pages open on tohuus.heidrich-digital.de.": {
       "extractionState": "manual",
       "localizations": {
@@ -7205,6 +7715,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die Hilfe öffnet sich auf tohuus.heidrich-digital.de."
+          }
+        }
+      }
+    },
+    "The last %d days in view": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last %d days in view"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die letzten %d Tage im Blick"
           }
         }
       }
@@ -7256,6 +7783,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das Rezept ist in ToHuus."
+          }
+        }
+      }
+    },
+    "The sample data has done its job. Remove it now – everything you added yourself stays.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sample data has done its job. Remove it now – everything you added yourself stays."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Beispieldaten haben ihren Zweck erfüllt. Entfern sie jetzt – alles, was du selbst eingetragen hast, bleibt."
           }
         }
       }
@@ -7362,6 +7906,23 @@
         }
       }
     },
+    "The whole history: prices, spending, what you buy how often": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The whole history: prices, spending, what you buy how often"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die ganze Geschichte: Preise, Ausgaben, was ihr wie oft kauft"
+          }
+        }
+      }
+    },
     "These switches apply to the whole household (only admins can change them). Personal switches come with the next server update.": {
       "extractionState": "manual",
       "localizations": {
@@ -7447,6 +8008,23 @@
         }
       }
     },
+    "This passkey isn’t known here. It may have been removed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This passkey isn’t known here. It may have been removed."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Passkey kennen wir nicht. Vielleicht wurde er entfernt."
+          }
+        }
+      }
+    },
     "This product isn't counted – ToHuus just remembers when you buy it.": {
       "extractionState": "manual",
       "localizations": {
@@ -7528,23 +8106,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das kennt dieser Server noch nicht. Ist er aktuell?"
-          }
-        }
-      }
-    },
-    "This server is too old for the app. Please update ToHuus on the server.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This server is too old for the app. Please update ToHuus on the server."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieser Server ist zu alt für die App. Bitte aktualisiere ToHuus auf dem Server."
           }
         }
       }
@@ -7668,23 +8229,6 @@
         }
       }
     },
-    "ToHuus could not reach this server. Check the address and that the server is running.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ToHuus could not reach this server. Check the address and that the server is running."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ToHuus erreicht diesen Server nicht. Prüf die Adresse und ob der Server läuft."
-          }
-        }
-      }
-    },
     "ToHuus may not use the microphone. You can allow it in Settings.": {
       "extractionState": "manual",
       "localizations": {
@@ -7736,19 +8280,19 @@
         }
       }
     },
-    "ToHuus remembers what is missing at home, what you can cook and where the money goes.": {
+    "ToHuus remembers what’s missing at home.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus remembers what is missing at home, what you can cook and where the money goes."
+            "value": "ToHuus remembers what’s missing at home."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus merkt sich, was zu Hause fehlt, was ihr kochen könnt und wohin das Geld geht."
+            "value": "ToHuus merkt sich, was zu Hause fehlt."
           }
         }
       }
@@ -7906,6 +8450,23 @@
         }
       }
     },
+    "Up to %d receipt photos read a day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to %d receipt photos read a day"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis zu %d Bonfotos am Tag auslesen"
+          }
+        }
+      }
+    },
     "Use": {
       "extractionState": "manual",
       "localizations": {
@@ -8025,6 +8586,40 @@
         }
       }
     },
+    "We send you an e-mail with a code. Type it in here – it works once and for 10 minutes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We send you an e-mail with a code. Type it in here – it works once and for 10 minutes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir schicken dir eine E-Mail mit einem Code. Gib ihn hier ein – er gilt einmal und 10 Minuten lang."
+          }
+        }
+      }
+    },
+    "We sent you an e-mail with a 6-digit code. Type it in to delete the account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sent you an e-mail with a 6-digit code. Type it in to delete the account."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir haben dir eine E-Mail mit einem 6-stelligen Code geschickt. Gib ihn ein, um das Konto zu löschen."
+          }
+        }
+      }
+    },
     "Web settings": {
       "extractionState": "manual",
       "localizations": {
@@ -8076,19 +8671,36 @@
         }
       }
     },
-    "Welcome to ToHuus": {
+    "Week plan from what you have at home": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Welcome to ToHuus"
+            "value": "Week plan from what you have at home"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Willkommen bei ToHuus"
+            "value": "Wochenplan aus dem, was zu Hause ist"
+          }
+        }
+      }
+    },
+    "Welcome": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen"
           }
         }
       }
@@ -8382,6 +8994,23 @@
         }
       }
     },
+    "Without a password": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a password"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Passwort"
+          }
+        }
+      }
+    },
     "Works without AI": {
       "extractionState": "manual",
       "localizations": {
@@ -8395,6 +9024,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geht ohne KI"
+          }
+        }
+      }
+    },
+    "Would you like sample data to get to know ToHuus?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Would you like sample data to get to know ToHuus?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Möchtest du Beispieldaten, um ToHuus kennenzulernen?"
           }
         }
       }
@@ -8433,6 +9079,23 @@
         }
       }
     },
+    "Yes, with samples": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, with samples"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, mit Beispielen"
+          }
+        }
+      }
+    },
     "You": {
       "extractionState": "manual",
       "localizations": {
@@ -8446,6 +9109,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du"
+          }
+        }
+      }
+    },
+    "You can change this later in the settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can change this later in the settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das kannst du später in den Einstellungen ändern."
           }
         }
       }
@@ -8535,23 +9215,6 @@
         }
       }
     },
-    "You run ToHuus yourself (Docker, Home Assistant). Everything is included.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You run ToHuus yourself (Docker, Home Assistant). Everything is included."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du betreibst ToHuus selbst (Docker, Home Assistant). Alles ist dabei."
-          }
-        }
-      }
-    },
     "You still have": {
       "extractionState": "manual",
       "localizations": {
@@ -8616,23 +9279,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dein aktueller Plan"
-          }
-        }
-      }
-    },
-    "Your household's plan": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your household's plan"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plan eures Haushalts"
           }
         }
       }

@@ -19,6 +19,8 @@ struct InstanceInfo: Decodable, Sendable {
         var passkey: JSONValue?
         var oidc: JSONValue?
         var passwordMin: Int?
+        /// ToHuus Cloud: Sign in with Apple on the web (the app can always use it in the cloud)
+        var apple: JSONValue?
     }
 
     struct Features: Decodable, Sendable {
@@ -64,6 +66,8 @@ struct AppAuthResponse: Decodable, Sendable {
     var user: JSONValue?
     @Lossy var households: [HouseholdRef]
     var household: JSONValue?
+    /// Sign in with Apple: a new account and household were created (the app asks about sample data)
+    var created: Bool?
 
     /// The active household: an id string/number or an object with `id`.
     var householdId: String? {
@@ -138,6 +142,8 @@ struct BillingStatus: Decodable, Sendable {
     var usage: JSONValue?
     var products: JSONValue?
     var storage: JSONValue?
+    /// what each plan includes: `{ free, haushalt, plus }` with the fields of `limits` (cloud)
+    var plans: JSONValue?
 
     var planLabel: String {
         switch plan {

@@ -302,6 +302,7 @@ struct ShoppingView: View {
                         Text(item.productName ?? item.text)
                             .strikethrough(checked)
                             .foregroundStyle(checked ? Theme.ink3 : Theme.ink)
+                        SampleTag(on: app.sampleMarks.shopping.contains(item.id))
                         if let note = item.note, item.source != "recipe", !note.isEmpty {
                             Text(note).foregroundStyle(Theme.ink3)
                         }

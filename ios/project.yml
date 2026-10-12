@@ -13,8 +13,8 @@ settings:
     TOHUUS_TEAM_ID: "FVS7WVTQ67"  # individual team – same as Equilo
     DEVELOPMENT_TEAM: "$(TOHUUS_TEAM_ID)"
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "0.2.0"
-    CURRENT_PROJECT_VERSION: "4"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "5"
     SWIFT_VERSION: "6.0"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     TARGETED_DEVICE_FAMILY: "1,2"
@@ -59,7 +59,7 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: de.heidrichdigital.tohuus
             CFBundleURLSchemes: [tohuus]
-        NSCameraUsageDescription: "ToHuus uses the camera to scan barcodes, receipts and the QR code of your own server."
+        NSCameraUsageDescription: "ToHuus uses the camera to scan barcodes, receipts and paper lists."
         NSMicrophoneUsageDescription: "ToHuus uses the microphone when you speak to the assistant."
         NSSpeechRecognitionUsageDescription: "Your words are turned into text on your iPhone so the assistant can understand them."
         NSPhotoLibraryAddUsageDescription: "ToHuus can save images to your photo library."
@@ -72,6 +72,10 @@ targets:
           - group.de.heidrichdigital.tohuus
         # APNs: Xcode switches this to "production" when exporting for TestFlight/App Store
         aps-environment: development
+        # Sign in with Apple (enable the capability for de.heidrichdigital.tohuus in the developer account)
+        com.apple.developer.applesignin: [Default]
+        # passkeys of ToHuus Cloud accounts (served: /.well-known/apple-app-site-association)
+        com.apple.developer.associated-domains: ["webcredentials:cloud.tohuus.heidrich-digital.de"]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus

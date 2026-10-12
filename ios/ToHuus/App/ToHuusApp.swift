@@ -80,6 +80,10 @@ struct RootView: View {
             case .signedIn:
                 if let store = app.store {
                     MainTabView(store: store)
+                        // a new household is asked once about sample data (package D)
+                        .sheet(isPresented: Binding(get: { app.askSampleData }, set: { app.askSampleData = $0 })) {
+                            SampleQuestionView().interactiveDismissDisabled()
+                        }
                 } else {
                     ProgressView()
                 }

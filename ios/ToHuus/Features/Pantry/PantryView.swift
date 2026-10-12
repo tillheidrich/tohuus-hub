@@ -203,6 +203,8 @@ struct ScanResult: Identifiable {
 struct ProductRow: View {
     let product: ProductInfo
     let api: APIClient
+    /// optional: rows can show up where the app model is not in the environment
+    @Environment(AppModel.self) private var app: AppModel?
 
     var body: some View {
         HStack(spacing: Theme.Space.s3) {
@@ -210,7 +212,10 @@ struct ProductRow: View {
                 .frame(width: 44, height: 44)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
             VStack(alignment: .leading, spacing: 2) {
-                Text(product.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
+                HStack(spacing: 6) {
+                    Text(product.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
+                    SampleTag(on: app?.sampleMarks.products.contains(product.id) == true)
+                }
                 Text([product.brand, product.amountLabel].compactMap { $0 }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(Theme.ink3)
             }

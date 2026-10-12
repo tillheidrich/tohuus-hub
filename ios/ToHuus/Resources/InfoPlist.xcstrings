@@ -41,13 +41,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus nutzt die Kamera für Barcodes, Kassenbons und den QR-Code deines eigenen Servers."
+            "value": "ToHuus nutzt die Kamera für Barcodes, Kassenbons und Einkaufszettel."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus uses the camera to scan barcodes, receipts and the QR code of your own server."
+            "value": "ToHuus uses the camera to scan barcodes, receipts and paper lists."
           }
         }
       }

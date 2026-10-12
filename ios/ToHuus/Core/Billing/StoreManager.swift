@@ -17,6 +17,9 @@ final class StoreManager {
     private(set) var products: [Product] = []
     private(set) var purchasing: String?
     private(set) var loadError: String?
+    /// the App Store answered (products may still be empty: sandbox without the products, no connection)
+    private(set) var loaded = false
+    private(set) var loading = false
     var message: String?
 
     @ObservationIgnored private var updates: Task<Void, Never>?
@@ -33,7 +36,9 @@ final class StoreManager {
     }
 
     func loadProducts() async {
-        guard products.isEmpty else { return }
+        guard products.isEmpty, !loading else { return }
+        loading = true
+        defer { loading = false; loaded = true }
         do {
             products = try await Product.products(for: Self.productIds).sorted { $0.price < $1.price }
             loadError = nil
@@ -41,6 +46,9 @@ final class StoreManager {
             loadError = error.localizedDescription
         }
     }
+
+    /// products did not come (sandbox, no connection): the paywall says so instead of spinning
+    var productsMissing: Bool { loaded && !loading && products.isEmpty }
 
     func product(plan: String, yearly: Bool) -> Product? {
         products.first { $0.id == "de.heidrichdigital.tohuus.\(plan).\(yearly ? "yearly" : "monthly")" }
