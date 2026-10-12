@@ -115,7 +115,8 @@ export function Signup() {
           </button>
           <p className="small muted">
             {t('By signing up you accept the terms and the privacy notice.')}{' '}
-            {legal?.terms && <a className="linkish" href={legal.terms} target="_blank" rel="noreferrer">{t('Terms')}</a>}{' '}
+            {legal?.terms && <a className="linkish" href={legal.terms} target="_blank" rel="noreferrer">{t('Terms')}</a>}
+            {legal?.terms && legal?.privacy ? ' · ' : ' '}
             {legal?.privacy && <a className="linkish" href={legal.privacy} target="_blank" rel="noreferrer">{t('Privacy')}</a>}
           </p>
           <a className="linkish" href="/">

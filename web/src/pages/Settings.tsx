@@ -44,7 +44,8 @@ export function Settings({ me }: { me: Me }) {
   // links to another tab while Settings is already open (demo banner, share card …) only change the URL
   useEffect(() => {
     if (new URLSearchParams(loc.search).get('tab')) setTab(tabFrom(loc.search));
-  }, [loc.search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loc.search, cloud]);
   const nav = useNavigate();
   const admin = me.actor.role === 'admin';
   return (

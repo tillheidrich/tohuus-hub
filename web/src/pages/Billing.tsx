@@ -32,7 +32,7 @@ export function BillingCard() {
   const pct = usedMb != null && quotaMb ? Math.min(100, Math.round((usedMb / quotaMb) * 100)) : null;
   const msgs = s.limits?.assistantPerMonth;
   return (
-    <section className="card pad stack" aria-labelledby="plan-h">
+    <section className="card pad stack" aria-labelledby="plan-h" style={{ marginBottom: 16 }}>
       <h2 id="plan-h" style={{ margin: 0 }}>
         {t('Plan & storage')}
       </h2>
