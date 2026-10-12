@@ -205,26 +205,23 @@ describe('review: crypto-shredding leaves no way back', () => {
     expect(accounts.accountsDb().pragma('secure_delete', { simple: true })).toBe(1);
   });
 
-  it('S3 copies of a shredded household are listed and deleted', async () => {
+  it('S3 copies of a shredded household are listed and deleted (database copies and files/)', async () => {
     const cb = await import('../server/lib/cloud-backup');
-    const calls: { method: string; url: string }[] = [];
+    const { startFakeS3 } = await import('./helpers/fake-s3');
+    const s3 = await startFakeS3({ pageSize: 2 });
     const id = '0f0e0d0c-1111-4222-8333-444455556666';
-    const g = globalThis as any;
-    const realFetch = g.fetch;
-    g.fetch = (async (url: any, init: any = {}) => {
-      calls.push({ method: init.method ?? 'GET', url: String(url) });
-      if ((init.method ?? 'GET') === 'GET')
-        return new Response(`<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>tohuus/${id}/a.db</Key></Contents><Contents><Key>tohuus/${id}/b.db</Key></Contents></ListBucketResult>`, { status: 200 });
-      return new Response(null, { status: 204 });
-    });
+    const other = '0f0e0d0c-1111-4222-8333-777788889999';
     try {
-      const n = await cb.deleteS3Household(id, { endpoint: 'https://s3.example.org', bucket: 'b', region: 'eu', accessKey: 'k', secretKey: 's', prefix: 'tohuus' });
-      expect(n).toBe(2);
-      expect(calls[0].url).toContain('list-type=2');
-      expect(calls[0].url).toContain(`prefix=tohuus%2F${id}%2F`);
-      expect(calls.filter((c) => c.method === 'DELETE').map((c) => c.url.split('/').pop())).toEqual(['a.db', 'b.db']);
+      for (const k of [`tohuus/${id}/a.db`, `tohuus/${id}/b.db`, `tohuus/${id}/files/images/p1-aa.webp`, `tohuus/${other}/c.db`]) s3.objects.set(k, Buffer.from('x'));
+      const n = await cb.deleteS3Household(id, s3.config());
+      expect(n).toBe(3);
+      expect(s3.calls[0].query).toContain('list-type=2');
+      expect(s3.calls[0].query).toContain(`prefix=tohuus%2F${id}%2F`);
+      expect(s3.calls.every((c) => c.signed)).toBe(true);
+      expect(s3.calls.filter((c) => c.method === 'DELETE').map((c) => c.key.split('/').pop())).toEqual(['a.db', 'b.db', 'p1-aa.webp']);
+      expect([...s3.objects.keys()]).toEqual([`tohuus/${other}/c.db`]);
     } finally {
-      g.fetch = realFetch;
+      await s3.close();
     }
   });
 });

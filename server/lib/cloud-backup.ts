@@ -5,10 +5,10 @@
  * DATA_DIR/backups/<uuid>/ – the copy stays encrypted with the household key (SQLCipher), so a backup is only
  * readable together with the master key and accounts.db. Retention: 7 daily + 4 weekly. accounts.db is backed up
  * the same way into DATA_DIR/backups/_accounts/. Optionally every new file is uploaded to S3-compatible object
- * storage (Hetzner Object Storage …) when BACKUP_S3_* is set – plain fetch with AWS Signature V4.
- * Images are not part of these snapshots (they are encrypted files; back up the volume or the object storage).
+ * storage (Hetzner Object Storage …) when BACKUP_S3_* is set – plain fetch with AWS Signature V4 (s3.ts).
+ * Images and receipt files are not part of these snapshots; with S3 they are synced incrementally after the
+ * database copies (offsite-files.ts), still encrypted with the household key.
  */
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '../config.js';
@@ -17,6 +17,9 @@ import { accountsDb, allHouseholds, cleanupAccounts, householdBackupDir, househo
 import { planRotation, type BackupKind } from './backup.js';
 import { recountStorage } from './plans.js';
 import { runInHousehold } from './tenancy.js';
+import { deleteObject, listObjects, putObject, s3Config } from './s3.js';
+import { syncBudget, syncHouseholdFiles } from './offsite-files.js';
+import { cleanupSignInCodes } from './cloud-codes.js';
 
 export const CLOUD_KEEP = { daily: 7, weekly: 4, manual: 3, preRestore: 0 };
 const NIGHTLY_HOUR = 3;
@@ -78,90 +81,85 @@ export function backupAccounts(kind: BackupKind = 'nightly') {
   return vacuumInto(accountsDb(), ACCOUNTS_BACKUP_DIR(), kind);
 }
 
-// ---------------------------------------------------------------- S3-compatible upload (AWS Signature V4)
+// ---------------------------------------------------------------- S3-compatible upload (server/lib/s3.ts)
 
-export interface S3Config {
-  endpoint: string;
-  bucket: string;
-  region: string;
-  accessKey: string;
-  secretKey: string;
-  prefix: string;
-}
-export function s3Config(env = process.env): S3Config | null {
-  const endpoint = (env.BACKUP_S3_ENDPOINT ?? '').replace(/\/+$/, '');
-  if (!endpoint || !env.BACKUP_S3_BUCKET || !env.BACKUP_S3_ACCESS_KEY || !env.BACKUP_S3_SECRET_KEY) return null;
-  return {
-    endpoint,
-    bucket: env.BACKUP_S3_BUCKET,
-    region: env.BACKUP_S3_REGION || 'us-east-1',
-    accessKey: env.BACKUP_S3_ACCESS_KEY,
-    secretKey: env.BACKUP_S3_SECRET_KEY,
-    prefix: (env.BACKUP_S3_PREFIX ?? 'tohuus').replace(/^\/+|\/+$/g, ''),
-  };
-}
-
-const hmac = (key: Buffer | string, s: string) => crypto.createHmac('sha256', key).update(s).digest();
-const hex = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest('hex');
-const enc = (s: string) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
-
-/** Signed request headers for a path-style S3 request (exported for tests). */
-export function signS3(c: S3Config, method: string, key: string, body: Buffer, now = new Date(), query: Record<string, string> = {}) {
-  const url = new URL(key ? `${c.endpoint}/${c.bucket}/${key.split('/').map(enc).join('/')}` : `${c.endpoint}/${c.bucket}`);
-  const canonicalQuery = Object.keys(query)
-    .sort()
-    .map((k) => `${enc(k)}=${enc(query[k])}`)
-    .join('&');
-  url.search = canonicalQuery;
-  const amzDate = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const dateStamp = amzDate.slice(0, 8);
-  const payloadHash = hex(body);
-  const headers: Record<string, string> = { host: url.host, 'x-amz-content-sha256': payloadHash, 'x-amz-date': amzDate };
-  const signedHeaders = Object.keys(headers).sort().join(';');
-  const canonical = [method, url.pathname, canonicalQuery, ...Object.keys(headers).sort().map((h) => `${h}:${headers[h]}`), '', signedHeaders, payloadHash].join('\n');
-  const scope = `${dateStamp}/${c.region}/s3/aws4_request`;
-  const toSign = ['AWS4-HMAC-SHA256', amzDate, scope, hex(canonical)].join('\n');
-  const kSigning = hmac(hmac(hmac(hmac(`AWS4${c.secretKey}`, dateStamp), c.region), 's3'), 'aws4_request');
-  const signature = crypto.createHmac('sha256', kSigning).update(toSign).digest('hex');
-  return {
-    url: url.toString(),
-    headers: { ...headers, Authorization: `AWS4-HMAC-SHA256 Credential=${c.accessKey}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}` },
-  };
-}
+export { s3Config, signS3, type S3Config } from './s3.js';
 
 export async function uploadS3(file: string, key: string, c = s3Config()): Promise<boolean> {
   if (!c) return false;
-  const body = fs.readFileSync(file);
-  const { url, headers } = signS3(c, 'PUT', `${c.prefix}/${key}`, body);
-  const r = await fetch(url, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/octet-stream' }, body, signal: AbortSignal.timeout(10 * 60_000) });
-  await r.body?.cancel();
-  if (!r.ok) throw new Error(`S3 upload failed with status ${r.status}`);
+  await putObject(c, key, fs.readFileSync(file));
   return true;
 }
 
-/** Delete every off-site object of a household (crypto-shredding: the copies are unreadable anyway, now gone). */
+/**
+ * Delete every off-site object of a household – database copies and `files/` (crypto-shredding: the copies are
+ * unreadable anyway, now they are gone).
+ */
 export async function deleteS3Household(id: string, c = s3Config()): Promise<number> {
   if (!c || !/^[0-9a-f-]{36}$/.test(id)) return 0;
+  // collect first, then delete: listing and deleting the same pages at once can skip keys on some servers
+  const keys: string[] = [];
+  for await (const o of listObjects(c, `${c.prefix}/${id}/`)) keys.push(o.key);
   let removed = 0;
-  let token: string | undefined;
-  for (let page = 0; page < 50; page++) {
-    const q: Record<string, string> = { 'list-type': '2', prefix: `${c.prefix}/${id}/` };
-    if (token) q['continuation-token'] = token;
-    const l = signS3(c, 'GET', '', Buffer.alloc(0), new Date(), q);
-    const r = await fetch(l.url, { headers: l.headers, signal: AbortSignal.timeout(60_000) });
-    const xml = await r.text();
-    if (!r.ok) throw new Error(`S3 list failed with status ${r.status}`);
-    const keys = [...xml.matchAll(/<Key>([^<]+)<\/Key>/g)].map((m) => m[1].replace(/&amp;/g, '&'));
-    for (const key of keys) {
-      const d = signS3(c, 'DELETE', key, Buffer.alloc(0));
-      const res = await fetch(d.url, { method: 'DELETE', headers: d.headers, signal: AbortSignal.timeout(60_000) });
-      await res.body?.cancel();
-      if (res.ok || res.status === 404) removed++;
-    }
-    token = xml.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/)?.[1];
-    if (!token || !/<IsTruncated>true<\/IsTruncated>/.test(xml)) break;
-  }
+  for (const key of keys) if (await deleteObject(c, key).catch(() => false)) removed++;
   return removed;
+}
+
+// ---------------------------------------------------------------- images and receipt files (off-site)
+
+const fileSyncStamp = () => path.join(config.dataDir, 'backups', '.last-file-sync');
+const fileSyncCursor = () => path.join(config.dataDir, 'backups', '.file-sync-cursor');
+
+export interface FileSyncSummary {
+  households: number;
+  uploaded: number;
+  deleted: number;
+  bytes: number;
+  pending: number;
+  errors: number;
+}
+
+/**
+ * After the database copies: images/ and imports/ of every household go to `<prefix>/<uuid>/files/…`, encrypted as
+ * they are on disk. Bounded per night (BACKUP_FILES_MAX_*); the household where the budget ran out starts the next
+ * night, so nobody waits behind one big household for long. Writes counts only to backups/.last-file-sync.
+ */
+export async function syncAllFiles(c = s3Config(), budget = syncBudget()): Promise<FileSyncSummary | null> {
+  if (!c) return null;
+  const sum: FileSyncSummary = { households: 0, uploaded: 0, deleted: 0, bytes: 0, pending: 0, errors: 0 };
+  const list = allHouseholds().map((h) => h.id);
+  let cursor = '';
+  try {
+    cursor = fs.readFileSync(fileSyncCursor(), 'utf8').trim();
+  } catch {
+    /* start at the beginning */
+  }
+  const at = Math.max(0, list.indexOf(cursor));
+  const order = [...list.slice(at), ...list.slice(0, at)];
+  let next = '';
+  for (const id of order) {
+    const r = await syncHouseholdFiles(c, id, { household: householdDir(id), backup: householdBackupDir(id) }, budget).catch((e) => {
+      console.warn(`[cloud-backup] files ${id.slice(0, 8)}: ${(e as Error).message}`);
+      return { uploaded: 0, deleted: 0, bytes: 0, pending: 0, errors: 1 };
+    });
+    // deleted while we were uploading: the shred's S3 delete may have run before our last upload – once more
+    if (!fs.existsSync(householdDir(id))) {
+      await deleteS3Household(id, c).catch(() => 0);
+      continue;
+    }
+    sum.households++;
+    sum.uploaded += r.uploaded;
+    sum.deleted += r.deleted;
+    sum.bytes += r.bytes;
+    sum.pending += r.pending;
+    sum.errors += r.errors;
+    if (r.pending && !next && (budget.files <= 0 || budget.bytes <= 0)) next = id;
+    await new Promise((res) => setTimeout(res, process.env.VITEST ? 0 : 20));
+  }
+  fs.mkdirSync(path.dirname(fileSyncStamp()), { recursive: true });
+  fs.writeFileSync(fileSyncCursor(), next);
+  fs.writeFileSync(fileSyncStamp(), JSON.stringify({ ok: sum.errors === 0, ...sum }));
+  return sum;
 }
 
 // ---------------------------------------------------------------- nightly job
@@ -170,14 +168,16 @@ const lastFile = () => path.join(config.dataDir, 'backups', '.last-nightly');
 let running = false;
 
 export async function runNightly(force = false) {
-  if (running) return { households: 0, uploaded: 0 };
+  if (running) return { households: 0, uploaded: 0, files: null };
   running = true;
   let households = 0;
   let uploaded = 0;
+  let files: FileSyncSummary | null = null;
   const s3 = s3Config();
   try {
     // expired sessions and old e-mail links go before the copy is made (they never reach a backup again)
     const gone = cleanupAccounts();
+    cleanupSignInCodes();
     if (gone.sessions || gone.links) console.log(`[accounts] removed ${gone.sessions} expired session(s), ${gone.links} old link(s)`);
     const acc = backupAccounts('nightly');
     if (s3) uploaded += Number(await uploadS3(acc, `_accounts/${path.basename(acc)}`, s3).catch((e) => (console.warn('[cloud-backup] accounts upload', (e as Error).message), false)));
@@ -195,10 +195,15 @@ export async function runNightly(force = false) {
     }
     fs.mkdirSync(path.dirname(lastFile()), { recursive: true });
     fs.writeFileSync(lastFile(), localParts().day);
+    if (s3)
+      files = await syncAllFiles(s3).catch((e) => {
+        console.warn('[cloud-backup] files', (e as Error).message);
+        return null;
+      });
   } finally {
     running = false;
   }
-  return { households, uploaded };
+  return { households, uploaded, files };
 }
 
 export function startCloudBackups() {
@@ -214,6 +219,7 @@ export function startCloudBackups() {
     try {
       const r = await runNightly();
       console.log(`[cloud-backup] nightly: ${r.households} household(s) backed up${s3Config() ? `, ${r.uploaded} file(s) uploaded` : ''}`);
+      if (r.files) console.log(`[cloud-backup] files: ${r.files.uploaded} up, ${r.files.deleted} deleted, ${r.files.pending} left for tomorrow, ${r.files.errors} error(s)`);
     } catch (e) {
       console.warn('[cloud-backup]', (e as Error).message);
     }

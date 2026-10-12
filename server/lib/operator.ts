@@ -117,7 +117,7 @@ export const auditLog = (limit = 100) =>
 
 // ------------------------------------------------------------------ overview
 
-function readStamp(file: string): { at: string | null; ok?: boolean; day?: string } {
+function readStamp(file: string): { at: string | null; ok?: boolean; day?: string; [count: string]: unknown } {
   try {
     const raw = fs.readFileSync(file, 'utf8').trim();
     const st = fs.statSync(file);
@@ -216,6 +216,8 @@ export function overview() {
     backups: {
       lastNightly: readStamp(path.join(backupsDir, '.last-nightly')),
       lastRestoreCheck: readStamp(path.join(backupsDir, '.last-restore-check')),
+      // images and receipt files to S3: counts only (households, uploaded, deleted, bytes, pending, errors)
+      lastFileSync: readStamp(path.join(backupsDir, '.last-file-sync')),
       s3: Boolean(s3Config()),
     },
     system: {
