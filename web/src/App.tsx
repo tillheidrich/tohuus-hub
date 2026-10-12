@@ -128,6 +128,12 @@ function Authed() {
       </Suspense>
     );
   }
+  // back to an assistant's connection request (/oauth/authorize) after signing in
+  const next = new URLSearchParams(location.search).get('next');
+  if (next && next.startsWith('/oauth/authorize?')) {
+    window.location.replace(next);
+    return <Blank />;
+  }
   setLang(me.data!.language);
   setRegion((me.data as { region?: Parameters<typeof setRegion>[0] }).region);
   return <Shell key={me.data!.language} me={me.data!} />;

@@ -29,7 +29,7 @@ import { useHousehold } from '../household';
 import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
 import { AssistantPrivacyCard } from './Memory';
-import { AiSwitchesCard } from './AiSettings';
+import { AiSwitchesCard, ConnectAssistantCard } from './AiSettings';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -328,20 +328,7 @@ function Access({ admin }: { admin: boolean }) {
   const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast({ text: t('Copied') }));
   return (
     <div className="stack" style={{ gap: 22 }}>
-      <div className="card pad stack">
-        <div className="row">
-          <span className="thumb" style={{ width: 44, height: 44 }}><Plug size={22} /></span>
-          <div className="grow">
-            <b>{t('Claude, ChatGPT & co. (MCP)')}</b>
-            <div className="small muted">{t('Send photos of receipts, your freezer or HelloFresh cards to your assistant – it adds everything here.')}</div>
-          </div>
-        </div>
-        <ol className="small" style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
-          <li>{t('Create an “AI assistant” access below.')}</li>
-          <li>{t('In Claude: Settings › Connectors › Add custom connector. In ChatGPT: Settings › Connectors (developer mode).')}</li>
-          <li>{t('Enter the MCP address shown as the URL, authentication: none.')}</li>
-        </ol>
-      </div>
+      <ConnectAssistantCard />
       <HaIntegrationCard base={base} />
       {admin && s.data && <HaConnection initial={s.data.ha} />}
       {admin && s.data && <HaTodoCard />}

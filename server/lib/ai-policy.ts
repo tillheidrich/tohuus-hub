@@ -79,3 +79,16 @@ export function aiOffReason(actor: AiActor | undefined = als.getStore()): AiOffR
 }
 
 export const aiAllowed = (actor?: AiActor) => aiOffReason(actor ?? als.getStore()) === null;
+
+// ------------------------------------------------------------------ health data per MCP connection
+
+const healthAls = new AsyncLocalStorage<{ allowed: boolean }>();
+/**
+ * Run an MCP request of an OAuth connection: without the scope "mcp:health" (Allergien und Kinderdaten) the
+ * household's health-data switch counts as off for everything this request does (people-signals.ts).
+ */
+export function runWithHealthScope<T>(allowed: boolean, fn: () => T): T {
+  return healthAls.run({ allowed }, fn);
+}
+/** false when the current MCP connection was not granted health data */
+export const healthScopeAllows = () => healthAls.getStore()?.allowed !== false;

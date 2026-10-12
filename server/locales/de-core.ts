@@ -19,4 +19,34 @@ export const de_core: Record<string, string> = {
     'Fotos kann dieser Server nicht lesen (keine Texterkennung, keine KI). Lad das PDF hoch oder tipp die Sachen ab.',
   'No receipt lines were recognised in the photo. A sharper photo in good light, flat and straight, helps.':
     'Auf dem Foto wurden keine Bonzeilen erkannt. Ein schärferes Foto bei gutem Licht, glatt und gerade, hilft.',
+
+  // OAuth for MCP (routes/oauth.ts, account-mail.ts)
+  Allow: 'Erlauben',
+  Cancel: 'Abbrechen',
+  Allowed: 'Erlaubt',
+  Read: 'Lesen',
+  'Read and change': 'Lesen und ändern',
+  'Open settings': 'Einstellungen öffnen',
+  'Allergies and children’s details': 'Allergien und Kinderdaten',
+  'Also put things on the list, book receipts, save recipes.': 'Auch Sachen auf die Liste setzen, Bons buchen, Rezepte speichern.',
+  'Connect {client} with ToHuus?': '{client} mit ToHuus verbinden?',
+  'Guests and children cannot connect assistants, and the household may have switched MCP access off. Ask an adult of your household.':
+    'Gäste und Kinder können keine Assistenten verbinden, und vielleicht ist der MCP-Zugriff im Haushalt ausgeschaltet. Frag einen Erwachsenen aus eurem Haushalt.',
+  'Household: {name}': 'Haushalt: {name}',
+  'If this was not you, end the connection in Settings › Access & AI and change your password.':
+    'Warst du das nicht? Dann beende die Verbindung unter Einstellungen › Zugang & KI und ändere dein Passwort.',
+  'New connection': 'Neue Verbindung',
+  'Not possible with this account': 'Mit diesem Konto nicht möglich',
+  'Off unless you tick it. Even then only if your household allows sharing health data with AI.':
+    'Aus, solange du es nicht ankreuzt. Auch dann nur, wenn euer Haushalt Gesundheitsdaten für KI freigegeben hat.',
+  'See the list, what is at home, recipes and spending.': 'Die Liste sehen, was da ist, Rezepte und Ausgaben.',
+  'The app that sent you here is unknown to ToHuus, or its return address does not match. Start connecting again in the app.':
+    'Die App, die dich hierher geschickt hat, kennt ToHuus nicht, oder ihre Rücksprungadresse passt nicht. Starte das Verbinden in der App noch mal.',
+  'This connection request is not valid': 'Diese Verbindungsanfrage ist ungültig',
+  'What may it do?': 'Was darf er?',
+  'Which household?': 'Welcher Haushalt?',
+  '{client} can now use your household on your behalf.': '{client} kann jetzt in deinem Namen auf euren Haushalt zugreifen.',
+  '{client} is now connected to ToHuus': '{client} ist jetzt mit ToHuus verbunden',
+  '{client} wants to use your household on your behalf. You can end this at any time in Settings › Access & AI.':
+    '{client} möchte in deinem Namen auf euren Haushalt zugreifen. Du kannst das jederzeit unter Einstellungen › Zugang & KI beenden.',
 };

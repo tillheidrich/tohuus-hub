@@ -2,6 +2,7 @@
  * Server-side strings (notifications, e-mails, API errors shown in the UI).
  * The English text is the key; translations live in server/locales/<lang>.ts.
  */
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { lang } from './db.js';
 import { localeOf, type Lang } from './languages.js';
 import { de as deBase } from './locales/de.js';
@@ -44,13 +45,21 @@ const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_
 
 const DICTS: Record<Lang, Record<string, string>> = { en: {}, de };
 
+// a fixed language for one piece of work (account mails go out in the account's language, whatever the household speaks)
+const langAls = new AsyncLocalStorage<Lang>();
+export function withLang<T>(l: string | null | undefined, fn: () => T): T {
+  return l && l in DICTS ? langAls.run(l as Lang, fn) : fn();
+}
+/** the language t() uses right now */
+export const currentLang = (): Lang => langAls.getStore() ?? lang();
+
 export function t(en: string, vars?: Record<string, string | number | null | undefined>) {
-  let s = DICTS[lang()]?.[en] ?? en;
+  let s = DICTS[currentLang()]?.[en] ?? en;
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v ?? ''));
   return s;
 }
 
-export const locale = () => localeOf(lang());
+export const locale = () => localeOf(currentLang());
 export const fmtDay = (d: string | Date) => new Date(d).toLocaleDateString(locale());
 
 /** An error whose message is meant for the person (already translated): shown as is, also in production. */

@@ -307,6 +307,59 @@ describe('cloud isolation', () => {
     expect((await mcp(forged, call)).status).toBe(401);
   });
 
+  it('OAuth for MCP: tokens are routed to the chosen household; B never reaches A, forged prefixes fail', async () => {
+    const REDIRECT = 'https://claude.ai/api/mcp/auth_callback';
+    const raw = (method: string, p: string, body: string | undefined, headers: Record<string, string>) =>
+      fetch(base + p, { method, redirect: 'manual', headers: { 'x-forwarded-for': '10.9.9.9', ...headers }, body, dispatcher: local });
+    const reg = await new Client().post('/oauth/register', { client_name: 'Claude', redirect_uris: [REDIRECT] });
+    expect(reg.status, reg.text).toBe(201);
+    const clientId = reg.json.client_id;
+    const verifier = crypto.randomBytes(32).toString('base64url');
+    const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+    const q = new URLSearchParams({ response_type: 'code', client_id: clientId, redirect_uri: REDIRECT, code_challenge: challenge, code_challenge_method: 'S256', scope: 'mcp:read mcp:write', state: 'st' });
+    // not signed in → sign-in page; A signed in → consent for A's household only
+    expect((await new Client().get(`/oauth/authorize?${q}`)).status).toBe(302);
+    const page = await A.get(`/oauth/authorize?${q}`);
+    expect(page.status, page.text).toBe(200);
+    expect(page.text).toContain(`value="${hA}"`);
+    expect(page.text).not.toContain(hB);
+    const cookie = [...A.cookies].map(([k, v]) => `${k}=${v}`).join('; ');
+    const post = (household: string) =>
+      raw('POST', '/oauth/authorize', new URLSearchParams({ ...Object.fromEntries(q), household, access: 'write', decision: 'allow' }).toString(), { 'content-type': 'application/x-www-form-urlencoded', cookie, origin: base });
+    // A cannot pick B's household
+    expect((await post(hB)).status).toBe(403);
+    const ok = await post(hA);
+    expect(ok.status).toBe(302);
+    const code = new URL(ok.headers.get('location')!).searchParams.get('code')!;
+    const slugA = accounts.getHousehold(hA)!.slug;
+    const slugB = accounts.getHousehold(hB)!.slug;
+    expect(code.startsWith(`sw_${slugA}_`)).toBe(true);
+    const tok = (body: Record<string, string>) => raw('POST', '/oauth/token', new URLSearchParams(body).toString(), { 'content-type': 'application/x-www-form-urlencoded' }).then(async (r) => ({ status: r.status, json: (await r.json()) as any }));
+    // the same code with B's routing prefix is unknown there
+    const forgedCode = await tok({ grant_type: 'authorization_code', code: code.replace(slugA, slugB), client_id: clientId, redirect_uri: REDIRECT, code_verifier: verifier });
+    expect(forgedCode.json.error).toBe('invalid_grant');
+    const t = await tok({ grant_type: 'authorization_code', code, client_id: clientId, redirect_uri: REDIRECT, code_verifier: verifier });
+    expect(t.status, JSON.stringify(t.json)).toBe(200);
+    const mcp = (token: string, body: unknown) => new Client().req('POST', '/mcp', body, { authorization: `Bearer ${token}`, accept: 'application/json, text/event-stream' });
+    const call = { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'get_shopping_list', arguments: {} } };
+    const r = await mcp(t.json.access_token, call);
+    expect(r.status, r.text).toBe(200);
+    expect(r.text).toContain('MARKERA-shop');
+    const forged = await mcp(t.json.access_token.replace(slugA, slugB), call);
+    expect(forged.status).toBe(401);
+    expect(forged.text).not.toContain('MARKERA');
+    const noAuth = await new Client().req('POST', '/mcp', call, { accept: 'application/json, text/event-stream' });
+    expect(noAuth.status).toBe(401);
+    // B's connections list never shows A's connection; A's does
+    expect((await B.get('/api/oauth/connections')).json.connections).toEqual([]);
+    const conns = (await A.get('/api/oauth/connections')).json.connections;
+    expect(conns).toHaveLength(1);
+    expect((await B.req('DELETE', `/api/oauth/connections/${conns[0].id}`)).status).toBe(404);
+    // refresh works through the prefix, and the forged refresh token does not
+    expect((await tok({ grant_type: 'refresh_token', refresh_token: t.json.refresh_token.replace(slugA, slugB), client_id: clientId })).json.error).toBe('invalid_grant');
+    expect((await tok({ grant_type: 'refresh_token', refresh_token: t.json.refresh_token, client_id: clientId })).status).toBe(200);
+  });
+
   it('guest links resolve to their own household only', async () => {
     expect(guestTokenA).toMatch(/^h[a-z2-7]{10}_/);
     const g = await new Client().get(`/api/guest/${guestTokenA}/shopping`);

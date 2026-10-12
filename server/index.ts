@@ -51,6 +51,7 @@ import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
 import { r as buyAtRoutes } from './routes/buyat.js';
 import { r as featureRoutes } from './routes/features.js';
 import { r as aiSettingsRoutes } from './routes/ai-settings.js';
+import { pub as oauthPub, r as oauthRoutes } from './routes/oauth.js';
 import { AiError } from './lib/ai.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
@@ -108,6 +109,9 @@ app.use('/api', (req, res, next) => {
 });
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// OAuth 2.1 for MCP: metadata, client registration, consent, tokens (routes/oauth.ts)
+app.use(oauthPub);
 
 // MCP (Claude, ChatGPT, …) — stateless Streamable HTTP
 app.all('/mcp', handleMcp);
@@ -174,6 +178,7 @@ app.use('/api', buyAtRoutes);
 app.use('/api', billingRoutes);
 app.use('/api', featureRoutes);
 app.use('/api', aiSettingsRoutes);
+app.use('/api', oauthRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
