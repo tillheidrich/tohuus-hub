@@ -49,7 +49,7 @@ Authentication: session cookie or `Authorization: Bearer sw_app_…`. Permanent 
       "kind": "expiring",                       // expiring | leftover | probably
       "useBy": "2026-10-13",                    // null for kind "probably"
       "daysLeft": 1,                            // null for kind "probably"
-      "label": "noch 1 Tag"                    // "bald essen", "heute", "Datum überschritten", "gekauft am Dienstag"
+      "label": "noch 1 Tag"                    // "bald essen", "heute", "Datum überschritten", "gekauft am Dienstag", "vor 9 Tagen gekauft"
     }
   ],
 

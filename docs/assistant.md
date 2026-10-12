@@ -10,7 +10,7 @@ Code: [`server/lib/assistant.ts`](../server/lib/assistant.ts) (conversation, mod
 |---|---|---|
 | When | `AI_API_KEY` (or the older `VISION_*`) is set | self-hosted without a key, the monthly allowance is used up, or the model is not reachable |
 | `mode` in the answer | `ai` | `basic` |
-| What works | free conversation, tool calling over everything below | the common sentences: lists ("Milch, 2 Paprika und Brot", "Setz Butter auf die Liste", "add milk to the list"), "Milch ist alle", "Haben wir noch Eier?", "Hab bei Aldi Milch, Eier und Brot für 12,40 gekauft", "Was ist fällig?", "Was steht auf der Liste?", "Was kochen wir?", "Was haben wir ausgegeben?", "Merk dir …", "Vergiss …" |
+| What works | free conversation, tool calling over everything below | the common sentences, also several in one ("Milch ist alle und 2 Paprika", "Klopapier ist alle und Spüli fast leer", "Wir brauchen Eier, Butter und was für Sonntag" → Eier and Butter on the list, then "Was braucht ihr für Sonntag?"): lists ("Milch, 2 Paprika und Brot", "Setz Butter auf die Liste", "add milk to the list"), "Milch ist alle", "Haben wir noch Eier?", "Hab bei Aldi Milch, Eier und Brot für 12,40 gekauft", "Was ist fällig?", "Was steht auf der Liste?", "Was kochen wir?", "Was haben wir ausgegeben?", "Merk dir …", "Vergiss …" |
 
 If the model fails mid-way, writes it already made stay (they are in `actions`, with undo); otherwise the built-in reader answers instead of an error.
 

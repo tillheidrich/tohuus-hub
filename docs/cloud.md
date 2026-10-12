@@ -130,6 +130,10 @@ Over quota, uploads get HTTP 413 with `key: "storage.full"`; nothing is deleted.
 `POST /api/billing/apple/transaction` (from the app) and `POST /api/billing/apple/notifications` (App Store Server
 Notifications v2 – set this URL in App Store Connect). Both verify the JWS chain to the embedded Apple Root CA G3.
 
+## Passwords
+
+New cloud account passwords need 10 characters (signup, reset, change, invite with a new account); self-hosted members 8. `/api/instance` → `auth.passwordMin` tells the apps which applies.
+
 ## App web link
 
 `POST /api/auth/app/web-link` (only with an app token, `Authorization: Bearer sw_app_…`, body `{ next?: "/path" }`) →
