@@ -28,7 +28,7 @@ Object.assign(process.env, {
   TRUST_PROXY_HOPS: '1',
 });
 
-const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store'];
+const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-house', 'MARKERA-code'];
 const mails: { to: string; text: string }[] = [];
 
 let ipSeq = 1;
@@ -128,6 +128,11 @@ beforeAll(async () => {
   const chat = await A.post('/api/assistant/chat', { message: 'MARKERA-chat' });
   expect(chat.status, chat.text).toBe(200);
   expect((await A.post('/api/spend/expenses', { amount: 9.5, store: 'MARKERA-store' })).status).toBe(200);
+  // Hausinfo: a card and a code (its value must never come out of any GET route – not even for A)
+  expect((await A.post('/api/house-guide/cards', { title: 'MARKERA-house Licht', body: 'Alexa, Licht an', type: 'voice', topic: 'light', area: 'Flur' })).status).toBe(200);
+  const code = await A.post('/api/house-guide/codes', { kind: 'door', label: 'MARKERA-code Haustür', value: 'MARKERA-secret-4711' });
+  expect(code.status, code.text).toBe(200);
+  houseCodeA = code.json.id;
   const { db } = await import('../server/db');
   tenancy.runInHousehold(hA, () => {
     for (const d of [21, 14, 7]) {
@@ -136,6 +141,8 @@ beforeAll(async () => {
     }
   });
 }, 60_000);
+
+let houseCodeA = 0;
 
 afterAll(() => {
   app?.server?.close?.();
@@ -173,6 +180,7 @@ const fill = (p: string) => p.replace(/:(\w+)\??/g, (_m, name) => (/token|secret
 async function sweep(c: Client) {
   const routes = getRoutes().filter((p) => !SKIP.test(p) && !p.includes('*') && !p.includes('('));
   const found: { path: string; marker: string; status: number }[] = [];
+  const leaks: string[] = [];
   let ok = 0;
   for (const r of routes) {
     const url = fill(r);
@@ -184,8 +192,9 @@ async function sweep(c: Client) {
     }
     if (res.status === 200) ok++;
     for (const m of MARKERS) if (res.text.toLowerCase().includes(m.toLowerCase())) found.push({ path: url, marker: m, status: res.status });
+    if (res.text.includes('MARKERA-secret')) leaks.push(url);
   }
-  return { routes: routes.length, ok, found };
+  return { routes: routes.length, ok, found, leaks };
 }
 
 describe('cloud isolation', () => {
@@ -200,10 +209,18 @@ describe('cloud isolation', () => {
       expect(routes, r).toContain(r);
     const seen = new Set(a.found.map((f) => f.path));
     for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/memory', '/api/assistant/conversations']) expect(seen, r).toContain(r);
+    // Hausinfo GET routes are part of the walk; A sees its cards, nobody ever gets a code value from a GET
+    for (const r of ['/api/house-guide', '/api/house-guide/templates', '/api/house-guide/links/:id', '/api/house-guide/codes/:id/views', '/api/house-guide/log', '/api/guest/:token/house', '/api/facts'])
+      expect(routes, r).toContain(r);
+    expect(seen).toContain('/api/house-guide');
+    expect(a.leaks).toEqual([]);
     const b = await sweep(B);
     console.log(`[sweep] routes=${a.routes} A:200=${a.ok} A:markers=${a.found.length} B:200=${b.ok}`, [...new Set(a.found.map((f) => f.path))].slice(0, 12).join(" "));
     expect(b.ok).toBeGreaterThan(50);
     expect(b.found).toEqual([]);
+    expect(b.leaks).toEqual([]);
+    // B cannot reveal A's code by id either
+    expect((await B.post(`/api/house-guide/codes/${houseCodeA}/reveal`, {})).status).toBe(404);
     // and without any session nothing leaks either
     const anon = await sweep(new Client());
     expect(anon.found).toEqual([]);

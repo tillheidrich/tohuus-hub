@@ -43,6 +43,7 @@ import { guestSafeOverview } from '../lib/people-policy.js';
 import { haSettings } from '../lib/plan.js';
 import { findThings } from '../lib/find.js';
 import { buildExport, showNamesOnLogin } from '../lib/data.js';
+import { exportCodes } from '../lib/house-guide.js';
 import { t } from '../i18n.js';
 import { setDateKind } from '../lib/retail.js';
 import { applyShareView, notPrivate } from '../lib/share-core.js';
@@ -587,9 +588,10 @@ r.delete('/tokens/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-r.get('/export.json', requireAdmin, (_req, res) => {
-  // every household table, never credentials (see server/lib/data.ts)
-  const out = buildExport();
+r.get('/export.json', requireAdmin, (req, res) => {
+  // every household table, never credentials (see server/lib/data.ts); Hausinfo codes only when ticked (?codes=1)
+  const out: Record<string, unknown> = buildExport();
+  if (req.query.codes === '1') out.house_codes = exportCodes();
   res.setHeader('Content-Disposition', `attachment; filename="tohuus-export-${new Date().toISOString().slice(0, 10)}.json"`);
   res.json(out);
 });

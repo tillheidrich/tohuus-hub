@@ -5,6 +5,7 @@
  * After: welcome-home list, what expired while away, booking stock back.
  */
 import {
+  Info,
   AirplaneTilt,
   ArrowCounterClockwise,
   ArrowRight,
@@ -861,6 +862,7 @@ function MealSheet({ id, day, onClose }: { id: number; day: string | null; onClo
 
 function SitterTab({ id, tr, careSoon }: { id: number; tr: Trip; careSoon: any[] }) {
   const toast = useToast();
+  const nav = useNavigate();
   const [s, setS] = useState(tr.sitter);
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -951,6 +953,7 @@ function SitterTab({ id, tr, careSoon }: { id: number; tr: Trip; careSoon: any[]
                 .join(' · ')}
             </div>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn" onClick={() => nav(`/hausinfo?link=${tr.sitter_link!.id}`)}><Info size={16} /> {t('House info for this link')}</button>
               <button className="btn" disabled={busy} onClick={create}><ArrowCounterClockwise size={16} /> {t('New link')}</button>
               <button className="btn ghost" onClick={() => del(`/away/trips/${id}/sitter-link`).then(() => invalidate('away')).catch(fail(toast))}>{t('End link')}</button>
             </div>

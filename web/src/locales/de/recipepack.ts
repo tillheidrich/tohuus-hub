@@ -1,6 +1,5 @@
 /** Recipe package, cook mode, ingredient search, help links (area: recipes2, October 2026) */
 export const recipepack: Record<string, string> = {
-  'How it works': 'So geht’s',
   'Recipe package': 'Rezeptpaket',
   'Upload recipe package': 'Rezeptpaket hochladen',
   'Many recipes at once: a zip with rezepte.json and the photos in bilder/, or just the JSON. You see everything first and pick what comes in. Recipes stay in your household.':

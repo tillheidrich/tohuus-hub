@@ -6,6 +6,7 @@
  * items, no names behind per-person reasons, no health data without the household's consent.
  */
 import { recipeToShopping } from './recipe-list.js';
+import { guideOverviewForAi, searchGuide } from './house-guide.js';
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
 import { localeOf } from '../languages.js';
@@ -464,6 +465,7 @@ export const TOOL_DEFS: ToolDef[] = [
   fn('log_purchase', 'Record a purchase the person tells about.', { shop: { type: 'string' }, total: { type: 'number' }, date: { type: 'string' }, items: arr(obj({ name: { type: 'string' }, qty: { type: 'number' }, price: { type: 'number' } }, ['name'])) }, ['items']),
   fn('remember', 'Remember a household fact or preference – only when asked ("merk dir …").', { text: { type: 'string' }, kind: { type: 'string', enum: ['fact', 'preference', 'routine'] } }, ['text']),
   fn('forget', 'Forget something remembered (id or text).', { text: { type: 'string' }, id: { type: 'integer' } }),
+  fn('house_info', 'How things work at home (Hausinfo): voice commands, routines, heating, blinds, bins, TV, fuse box, numbers. Never codes.', { query: { type: 'string' } }),
 ];
 
 const TOOLS_BY_TOPIC: Record<string, string[]> = {
@@ -543,6 +545,9 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
         return rememberTool(ctx, a);
       case 'forget':
         return forgetTool(ctx, a);
+      case 'house_info':
+        // Hausinfo: finished, member-visible cards only; codes never (house-guide.ts scrubs code values as well)
+        return typeof a.query === 'string' && a.query.trim() ? searchGuide(a.query, 6) : guideOverviewForAi();
       default:
         return { error: `unknown tool ${name}` };
     }

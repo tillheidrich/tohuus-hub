@@ -77,6 +77,7 @@ export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolea
       title: t('Around the home'),
       items: [
         { to: '/wo', label: t('Where’s what?'), icon: 'MapPin' },
+        { to: '/hausinfo', label: t('House info'), icon: 'Info' },
         { to: '/abgleich', label: t('Quick stock check'), icon: 'ClipboardText' },
         { to: '/pflege', label: t('Home & care'), icon: 'Wrench' },
         { to: '/urlaub', label: t('Trip / away'), icon: 'Suitcase' },

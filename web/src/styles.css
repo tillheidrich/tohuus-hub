@@ -7139,7 +7139,8 @@ button.li {
 .bon-job:last-child { border-bottom: 0; }
 .bon-print-root { display: none; }
 @media print {
-  body > *:not(.bon-print-root) { display: none !important; }
+  /* only while a ticket is being printed – other print views (labels, Hausinfo) keep the page */
+  body:has(> .bon-print-root) > *:not(.bon-print-root) { display: none !important; }
   html, body { background: #fffdf9 !important; margin: 0 !important; padding: 0 !important; }
   .bon-print-root { display: block !important; }
   .bon-print-root img { display: block; margin: 0 auto; height: auto; }

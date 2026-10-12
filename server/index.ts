@@ -50,6 +50,7 @@ import { r as designRoutes } from './routes/design.js';
 import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
 import { r as buyAtRoutes } from './routes/buyat.js';
 import { r as featureRoutes } from './routes/features.js';
+import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
@@ -128,6 +129,7 @@ if (config.multiTenant) {
 app.use(sharePublic);
 app.use('/api/guest', guest);
 app.use('/api/guest', ha2Guest);
+app.use('/api/guest', houseGuest);
 app.use('/api/party-board', partyBoard);
 app.use(kioskPublic);
 app.use('/api/kid', kidDevice);
@@ -171,6 +173,7 @@ app.use('/api', invitesRoutes);
 app.use('/api', buyAtRoutes);
 app.use('/api', billingRoutes);
 app.use('/api', featureRoutes);
+app.use('/api', houseGuideRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
