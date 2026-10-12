@@ -50,6 +50,11 @@ r.get('/assistant/status', requireAuth, (req, res) => {
     receiptsAi: visionAvailable(),
     // the switches behind it (ai-policy.ts): configured, household, mcp, mine, effective, reason
     aiState: aiStateFor(req.actor?.userId),
+    // flat copies for the iPhone app 0.2 (docs/ios-api-0.2.md)
+    ...(() => {
+      const a = aiStateFor(req.actor?.userId);
+      return { household: a.household, personal: a.mine, locked: false, reason: a.reason };
+    })(),
     healthShare: healthShareAllowed(),
     healthConsent: healthConsent(),
     language: lang(),

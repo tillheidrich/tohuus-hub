@@ -56,6 +56,8 @@ The app registers its device token after the person allowed notifications:
 | `DELETE /api/push/apns/:id` | | `{ ok }` (id or the token itself) |
 | `POST /api/push/apns/test` | | `{ sent }` |
 
+Payload: `{ aps: { alert, sound, thread-id: <event>, category? }, event, path, url: 'tohuus://shopping|today|pantry|cooking|money|more', data? }`. Categories with buttons: `TOHUUS_ADDON` for `trip.addon` (`data.request_id` = the list row; `POST /api/push/action` `addon-accept` / `addon-decline` – decline keeps the row on the list and only drops the claim), `TOHUUS_DUE` for `rhythm.due` (`data.product_id` when one product is due; `shop-add`). `data` carries ids only, as strings. The app side: [ios-api-0.2.md](ios-api-0.2.md).
+
 Server configuration (environment only; the key is never written to the data volume):
 
 | Variable | Meaning |

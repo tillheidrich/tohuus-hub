@@ -192,10 +192,33 @@ export interface ApnsMessage {
   /** same key = replaces the earlier notification on the phone */
   collapseId?: string;
   urgent?: boolean;
+  /** ids for the notification buttons (request_id, product_id …) – never names or text */
+  data?: Record<string, unknown>;
 }
 
+/** Notification categories the iPhone app registers buttons for (docs/ios-api-0.2.md). */
+const CATEGORY: Record<string, string> = { 'trip.addon': 'TOHUUS_ADDON', 'rhythm.due': 'TOHUUS_DUE' };
+/** app deep links for the main paths */
+const DEEP: [RegExp, string][] = [
+  [/^\/einkauf/, 'tohuus://shopping'],
+  [/^\/bestand|^\/vorrat/, 'tohuus://pantry'],
+  [/^\/kochen/, 'tohuus://cooking'],
+  [/^\/geld/, 'tohuus://money'],
+  [/^\/mehr|^\/einstellungen/, 'tohuus://more'],
+  [/^\/$/, 'tohuus://today'],
+];
+
 export function apnsPayload(m: ApnsMessage) {
-  return { aps: { alert: { title: m.title.slice(0, 120), body: m.body.slice(0, 400) }, sound: 'default', 'thread-id': m.event }, event: m.event, path: m.path ?? '/' };
+  const path = m.path ?? '/';
+  const category = CATEGORY[m.event];
+  const data = m.data ? Object.fromEntries(Object.entries(m.data).filter(([, v]) => typeof v === 'number' || typeof v === 'string').map(([k, v]) => [k, String(v)])) : undefined;
+  return {
+    aps: { alert: { title: m.title.slice(0, 120), body: m.body.slice(0, 400) }, sound: 'default', 'thread-id': m.event, ...(category ? { category } : {}) },
+    event: m.event,
+    path,
+    url: DEEP.find(([re]) => re.test(path))?.[1] ?? 'tohuus://today',
+    ...(data && Object.keys(data).length ? { data } : {}),
+  };
 }
 
 const DEAD = new Set(['BadDeviceToken', 'Unregistered', 'DeviceTokenNotForTopic', 'ExpiredToken']);

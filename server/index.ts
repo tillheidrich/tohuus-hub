@@ -55,6 +55,7 @@ import { r as aiSettingsRoutes } from './routes/ai-settings.js';
 import { pub as oauthPub, r as oauthRoutes } from './routes/oauth.js';
 import { r as operatorRoutes } from './routes/operator.js';
 import { r as moveRoutes } from './routes/move.js';
+import { r as iosCompat } from './routes/ios-compat.js';
 import { requestCounter } from './lib/operator.js';
 import { startRenewalReminders } from './lib/renewals.js';
 import { AiError } from './lib/ai.js';
@@ -203,6 +204,8 @@ app.use('/api', aiSettingsRoutes);
 app.use('/api', oauthRoutes);
 app.use('/api', moveRoutes);
 app.use('/api', list2Routes);
+// names the iPhone app 0.2 was built against (docs/ios-api-0.2.md) – thin aliases
+app.use('/api', iosCompat);
 app.use('/api', houseGuideRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 

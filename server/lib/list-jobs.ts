@@ -46,7 +46,7 @@ export async function rhythmJob(nowMs = Date.now()) {
     path: '/einkauf',
     dedupeKey: `rhythm:${l.day}`,
     dedupeHours: 20,
-    data: { products: due.map((d) => d.productId) },
+    data: { products: due.map((d) => d.productId), ...(due.length === 1 ? { product_id: due[0].productId } : {}) },
   });
 }
 

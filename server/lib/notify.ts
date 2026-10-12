@@ -9,6 +9,15 @@ import { sendApns } from './apns.js';
 import { personEventOf, queueDigest, recipients, textFor } from './notify-prefs.js';
 import { eventHidden } from './modules.js';
 
+/** ids the iPhone buttons need (TOHUUS_ADDON: request_id = the list row; TOHUUS_DUE: product_id) – ids only. */
+function apnsData(input: { event: string; data?: Record<string, unknown> }): Record<string, unknown> | undefined {
+  const d = input.data ?? {};
+  const out: Record<string, unknown> = {};
+  if (input.event === 'trip.addon' && d.item_id != null) out.request_id = d.item_id;
+  for (const k of ['product_id', 'trip_id', 'store_id', 'order_id', 'wish_id']) if (typeof d[k] === 'number' || typeof d[k] === 'string') out[k] = d[k];
+  return Object.keys(out).length ? out : undefined;
+}
+
 export type NotifyEvent =
   | 'stock.low'
   | 'stock.empty'
@@ -228,7 +237,7 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
         );
     for (const [ids, text] of byPreview(recipients(pe, 'apns', aud), input))
       jobs.push(
-        sendApns(ids, { title: text.title, body: text.body, path: input.path, event: input.event, collapseId: input.dedupeKey, urgent: input.urgent })
+        sendApns(ids, { title: text.title, body: text.body, path: input.path, event: input.event, collapseId: input.dedupeKey, urgent: input.urgent, data: apnsData(input) })
           .then((n): [string, boolean] => ['apns', n > 0])
           .catch((): [string, boolean] => ['apns', false]),
       );
@@ -254,7 +263,7 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
         : (db.prepare(`SELECT id FROM users WHERE COALESCE(kind, 'member') != 'guest'`).all() as { id: number }[]).map((r) => r.id).filter((id) => !skip.has(id));
       for (const [group, text] of byPreview(ids, input))
         jobs.push(
-          sendApns(group, { title: text.title, body: text.body, path: input.path, event: input.event, collapseId: input.dedupeKey, urgent: input.urgent })
+          sendApns(group, { title: text.title, body: text.body, path: input.path, event: input.event, collapseId: input.dedupeKey, urgent: input.urgent, data: apnsData(input) })
             .then((n): [string, boolean] => ['apns', n > 0])
             .catch((): [string, boolean] => ['apns', false]),
         );

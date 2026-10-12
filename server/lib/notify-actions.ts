@@ -4,13 +4,14 @@
  */
 import { config } from '../config.js';
 import { db } from '../db.js';
+import { emit } from './bus.js';
 import { t } from '../i18n.js';
 import { addToShopping, getProduct } from './catalog.js';
 import { completeCareTask, getCareTask } from './care.js';
 import { answerWish } from './kids.js';
 import { orderKind, setOrderStatus } from './orders.js';
 
-export const NOTIFY_ACTIONS = ['shop-add', 'order-accept', 'order-done', 'order-decline', 'kid-approve', 'kid-decline', 'care-done'] as const;
+export const NOTIFY_ACTIONS = ['shop-add', 'order-accept', 'order-done', 'order-decline', 'kid-approve', 'kid-decline', 'care-done', 'addon-accept', 'addon-decline'] as const;
 export type NotifyAction = (typeof NOTIFY_ACTIONS)[number];
 export const isNotifyAction = (s: unknown): s is NotifyAction => typeof s === 'string' && (NOTIFY_ACTIONS as readonly string[]).includes(s);
 
@@ -23,6 +24,9 @@ export const ACTION_KEY: Record<NotifyAction, string> = {
   'kid-approve': 'wish_id',
   'kid-decline': 'wish_id',
   'care-done': 'care_task_id',
+  // "Bringst du noch … mit?" (trip add-on): the list row id
+  'addon-accept': 'request_id',
+  'addon-decline': 'request_id',
 };
 
 const httpError = (status: number, msg: string) => Object.assign(new Error(msg), { status });
@@ -45,6 +49,17 @@ export function runNotifyAction(action: NotifyAction, data: Record<string, unkno
         ? t('Allowed by {name}', { name: actor })
         : t('Declined by {name}', { name: actor });
     return { ok: true, summary, ...r };
+  }
+  if (action === 'addon-accept' || action === 'addon-decline') {
+    const row = db.prepare(`SELECT id, text, checked_at, origin_detail FROM shopping_items WHERE id = ? AND source = 'trip'`).get(ref) as
+      | { id: number; text: string; checked_at: string | null; origin_detail: string | null }
+      | undefined;
+    if (!row) throw httpError(404, 'not found');
+    if (action === 'addon-accept') return { ok: true, summary: t('{name} brings it', { name: actor }) };
+    // "Geht nicht": the row stays on the list for everyone, only the claim for this trip goes
+    db.prepare(`DELETE FROM claims WHERE kind = 'shopping' AND ref_id = ?`).run(row.id);
+    emit('shopping');
+    return { ok: true, summary: t('Stays on the list – {name} can’t bring it', { name: actor }) };
   }
   if (action === 'shop-add') {
     const p = getProduct(ref);

@@ -99,4 +99,6 @@ export const de_core: Record<string, string> = {
   'Manage subscription': 'Abo verwalten',
   'You get this because you are an admin of this household. Switch it off in Settings › Plan & storage.':
     'Du bekommst das, weil du Admin dieses Haushalts bist. Abschalten unter Einstellungen › Abo & Speicher.',
+  '{name} brings it': '{name} bringt es mit',
+  'Stays on the list – {name} can’t bring it': 'Bleibt auf der Liste – {name} kann es nicht mitbringen',
 };
