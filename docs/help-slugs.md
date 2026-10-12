@@ -36,3 +36,12 @@ The web app keeps the same list in `web/src/help.ts` (`HELP_SLUGS`) – a test c
 | `daten-export` | Deine Daten mitnehmen | Export, recipe package, deleting the household | Mehr › Daten |
 | `home-assistant` | Home Assistant | Integration, voice list, sitter instructions | Mehr › Home Assistant |
 | `gut-zu-wissen` | Gut zu wissen | The facts section and its sources | Mehr › Gut zu wissen |
+| `gemeinsam-einkaufen` | Gemeinsam einkaufen | Live list in the shop, claims, "Bringst du noch … mit?", trips | Einkauf |
+| `benachrichtigungen` | Benachrichtigungen | Per person and event, iPhone/browser/e-mail summary, quiet hours | Settings › Notifications |
+| `claude-chatgpt` | Mit Claude oder ChatGPT verbinden | MCP address, OAuth sign-in and consent, what the assistant sees | Settings › Access & AI |
+| `erinnerungen-spiegeln` | Apple Erinnerungen oder Nextcloud spiegeln | CalDAV password, setup on the iPhone, Nextcloud/DAVx⁵ | Settings › My account |
+| `umzug-in-die-cloud` | Vom eigenen Server in die Cloud | Move file, import into a new cloud household, what stays behind | Settings › Data |
+| `selbst-hosten` | Selbst hosten mit Docker | Docker, keys, own AI key, backups | Website |
+| `datenschutz-kurz` | Datenschutz kurz erklärt | What is stored where, AI, deletion | Website, settings |
+| `abo-und-kuendigen` | Abo und Kündigen | Plans, App Store, "Abo verwalten", renewal reminder | Settings › Plan & storage |
+| `fragen` | Häufige Fragen | FAQ | Website |

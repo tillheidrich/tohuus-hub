@@ -149,8 +149,8 @@ export function helpCopy(k) {
             'Bestellt ihr bei REWE, teilst du Abhol- oder Lieferavis und eBon als PDF mit ToHuus, zum Beispiel aus der Mail-App über „Teilen“. ToHuus gleicht beides ab und bucht, was wirklich mitkam. Auch EDEKA und Kaufland geben PDF-Bons aus.',
           )],
           ['Papierbons', p(
-            'Fotografier den Bon in der App. Mit KI liest ToHuus ihn über Mistral.',
-            `<span class="soon-tag">Kommt bald</span> Texterkennung ohne KI: Der Text des Fotos wird direkt auf dem Server gelesen, kein Sprachmodell ist beteiligt. Bis das fertig ist, braucht ein Foto die KI oder du tippst den Bon als Text ein.`,
+            'Fotografier den Bon in der App. ToHuus liest den Text zuerst selbst auf dem Server (Texterkennung ohne KI) und prüft, ob die Zeilen die Summe ergeben. Nur wenn das nicht aufgeht und die KI an ist, liest Mistral das Foto noch einmal.',
+            'Ist die KI aus, bleibt es bei der Texterkennung. Unscharf gelesene Zeilen sind markiert, du korrigierst sie in der Prüfung. Auf dem iPhone kann die App den Text auch direkt auf dem Gerät erkennen und schickt dann nur den Text.',
           )],
           ['Links und Text', p('Steckt ein digitaler Bon hinter einem QR-Code oder Link, füg den Link ein. Text aus einer Mail kannst du auch einfach einfügen.')],
           ['Prüfen vor dem Buchen', p(
@@ -291,22 +291,22 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             '<b>KI-Assistenten über MCP</b> (Claude, ChatGPT) haben einen eigenen Schalter.',
           ), p('Ist die KI aus, geht keine einzige Anfrage an ein Sprachmodell. ToHuus sagt dann an den passenden Stellen, dass sie aus ist.')],
           ['Gesundheitsdaten', p('Allergien und Angaben zu Kindern gehen nur an ein Sprachmodell, wenn ein Admin das ausdrücklich einschaltet. Ohne das filtert ToHuus ungeeignete Gerichte trotzdem, nur eben auf dem Server.')],
-          ['Texterkennung ohne KI', p(`<span class="soon-tag">Kommt bald</span> Bon-Fotos werden dann direkt auf dem Server gelesen, ohne Sprachmodell. Das ist weniger genau als die KI, aber es verlässt den Server nicht.`)],
+          ['Texterkennung ohne KI', p('Bon-Fotos und Fotos von Zetteln liest ToHuus direkt auf dem Server, ohne Sprachmodell. Das ist manchmal weniger genau als die KI, aber das Foto verlässt den Server nicht. Mit KI wird die Texterkennung zuerst versucht, das Modell nur, wenn die Summe nicht stimmt.')],
         ],
         related: ['sprechen', 'kassenbons', 'datenschutz-kurz'],
       },
       {
-        slug: 'hausinfo', group: 'people', title: 'Hausinfo für Gäste und Babysitter', soon: true,
+        slug: 'hausinfo', group: 'people', title: 'Hausinfo für Gäste und Babysitter',
         desc: 'Karten mit allem, was jemand wissen muss, der auf euer Zuhause aufpasst.',
         sections: [
-          ['Was geplant ist', p('Die Hausinfo sammelt auf Karten, was Babysitter, Großeltern oder Haushüter wissen müssen: Sprachbefehle für Licht und Rollläden, Abläufe wie das Zubettgehen, Tipps und was im Notfall zu tun ist. Vorlagen helfen beim Anfangen.')],
+          ['Karten', p('Die Hausinfo (Mehr › Hausinfo) sammelt auf Karten, was Babysitter, Großeltern oder Haushüter wissen müssen: Sprachbefehle für Licht und Rollläden, Abläufe wie das Zubettgehen, Tipps und wichtige Nummern. Vorlagen helfen beim Anfangen. Pro Karte legst du fest, wer sie sieht: Mitglieder, Gäste je nach Stufe, Babysitter- und Gast-Links.')],
           ['Sprachbefehle aus Home Assistant', p('Mit Home Assistant übernimmt ToHuus die Geräte, die ihr für Alexa, Google oder Assist freigegeben habt, mit Beispielsätzen. Nur Namen und Räume, nie Schlösser, Alarmanlagen, Kameras oder Garagentore.')],
-          ['Was heute schon geht', p('Der <a href="babysitter.html">Babysitter-Link</a> mit „Wo ist was?“, einer Notiz und den Sprachbefehlen.')],
+          ['Für Gäste', p('Auf dem <a href="babysitter.html">Babysitter-Link</a> erscheint die Hausinfo als eigener Bereich, auch offline lesbar und als A4-Blatt zum Ausdrucken.')],
         ],
         related: ['babysitter', 'hausinfo-codes', 'gaeste'],
       },
       {
-        slug: 'hausinfo-codes', group: 'people', title: 'Codes sicher teilen', soon: true,
+        slug: 'hausinfo-codes', group: 'people', title: 'Codes sicher teilen',
         desc: 'Türcode, WLAN, Alarmanlage: wie ToHuus Codes behandelt.',
         sections: [
           ['Codes sind Geheimnisse', ul(
@@ -314,7 +314,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Ihr seht, wann ein Code angezeigt wurde.',
             'Codes gehen nie an eine KI, nie an KI-Assistenten über MCP, nie an Home Assistant, nie in Benachrichtigungen, Protokolle oder Exporte.',
           )],
-          ['Bis dahin', p('Schreib Codes nicht in Notizen von Gast-Links. Gib sie lieber persönlich weiter.')],
+          ['So geht es', p('Codes legst du unter Hausinfo › Codes an. Sie sind verdeckt, bis jemand auf „Anzeigen“ tippt, und jedes Anzeigen wird protokolliert. Auf einem Gast-Link kannst du einen Code bis zu einem Datum freigeben. Beim Umzug in die Cloud kommen Codes nur mit, wenn du das ausdrücklich ankreuzt.')],
         ],
         related: ['hausinfo', 'babysitter', 'wer-sieht-was'],
       },
@@ -438,8 +438,8 @@ cards:
           ['Worum es geht', p('Über das offene Protokoll MCP verbindest du Claude, ChatGPT oder einen anderen Assistenten mit deinem Haushalt. Dann kannst du dort zum Beispiel ein Foto vom Kühlschrank schicken und sagen: „Setz auf die Liste, was fehlt.“')],
           ['Die Adresse', k.code('mcp-url', 'MCP', `${k.CLOUD}/mcp`), p('Selbst gehostet ist es die Adresse deines Servers mit <code>/mcp</code> am Ende.')],
           ['Anmelden', p(
-            `<span class="soon-tag">Kommt bald</span> In der ToHuus Cloud meldest du dich beim Verbinden mit deinem ToHuus-Konto an (OAuth). Du siehst, welcher Haushalt verbunden wird, und kannst den Zugang jederzeit widerrufen.`,
-            'Heute: Einstellungen › Zugänge & KI › Neuer Zugang › KI-Assistent. Du bekommst eine Adresse mit einem Schlüssel darin. Behandle sie wie ein Passwort.',
+            'Beim Verbinden meldest du dich mit deinem ToHuus-Konto an (OAuth). Du wählst den Haushalt und was der Assistent darf: lesen oder lesen und ändern, Allergien und Kinderdaten nur, wenn du das ankreuzt. Unter Einstellungen › Zugänge & KI siehst du jede Verbindung und kannst sie beenden.',
+            'Für Home Assistant und ältere Apps gibt es weiter einen Zugang mit Schlüssel in der Adresse: Einstellungen › Zugänge & KI › Neuer Zugang › KI-Assistent. Behandle ihn wie ein Passwort.',
           )],
           ['In Claude und ChatGPT', ul(
             'Claude: Einstellungen › Connectors › Eigenen Connector hinzufügen, Adresse einfügen.',
@@ -455,11 +455,15 @@ cards:
         related: ['ki-an-oder-aus', 'datenschutz-kurz', 'rezeptpaket'],
       },
       {
-        slug: 'erinnerungen-spiegeln', group: 'connect', title: 'Apple Erinnerungen oder Nextcloud spiegeln', soon: true,
+        slug: 'erinnerungen-spiegeln', group: 'connect', title: 'Apple Erinnerungen oder Nextcloud spiegeln',
         desc: 'Die Einkaufsliste zusätzlich in einer anderen Listen-App, über CalDAV.',
         sections: [
-          ['Was geplant ist', p('ToHuus spiegelt die Einkaufsliste über CalDAV in eine Aufgabenliste, etwa in Nextcloud Tasks oder in Apps, die CalDAV-Listen lesen. Abhaken auf der einen Seite hakt auf der anderen ab. Die Anleitung steht hier, sobald es live ist.')],
-          ['Heute über Home Assistant', ol(
+          ['So geht es', p('ToHuus ist selbst ein CalDAV-Server: Jede eurer Listen erscheint als eigene Erinnerungsliste. Abhaken, Hinzufügen und Umbenennen gehen in beide Richtungen.'), ol(
+            'In ToHuus: Einstellungen › Mein Konto › Die Liste in der Erinnerungen-App › Passwort erstellen. Server, Benutzername und Passwort werden einmal angezeigt.',
+            'Auf dem iPhone: Einstellungen › Apps › Erinnerungen › Accounts › Account hinzufügen › Andere › CalDAV-Account hinzufügen, die drei Angaben eintragen.',
+            'Erinnerungen öffnen: Deine ToHuus-Listen stehen unter dem neuen Account.',
+          ), p('Nextcloud Tasks, DAVx⁵ oder Thunderbird nehmen die volle Adresse mit <code>/caldav/</code> am Ende. Jedes Passwort lässt sich einzeln widerrufen.')],
+          ['Oder über Home Assistant', ol(
             'In Home Assistant die Integration „CalDAV“ mit deinem Nextcloud-Konto einrichten. Deine Aufgabenlisten erscheinen dort als To-do-Listen.',
             'Die ToHuus-Integration verbinden (siehe <a href="home-assistant.html">Home Assistant</a>).',
             'In ToHuus unter Einstellungen › Home Assistant bei „Einkaufsliste“ die Nextcloud-Liste wählen und „beide“ einstellen.',
@@ -469,15 +473,20 @@ cards:
         related: ['home-assistant', 'gemeinsam-einkaufen'],
       },
       {
-        slug: 'umzug-in-die-cloud', pair: 'move-to-the-cloud', group: 'account', title: 'Vom eigenen Server in die Cloud', soon: true,
+        slug: 'umzug-in-die-cloud', pair: 'move-to-the-cloud', group: 'account', title: 'Vom eigenen Server in die Cloud',
         desc: 'Einen selbst gehosteten Haushalt in die ToHuus Cloud mitnehmen.',
         sections: [
-          ['Was geplant ist', p('Ein Umzug in einem Rutsch: Du exportierst auf deinem Server und importierst in einen neuen Cloud-Haushalt, mit Liste, Rezepten, Bons, Rhythmus und Fotos. Die Anleitung steht hier, sobald das live ist.')],
-          ['Was du heute schon tun kannst', ul(
-            'Rezepte: als <a href="rezeptpaket.html">Rezeptpaket</a> exportieren und im Cloud-Haushalt importieren. Das geht schon jetzt vollständig, mit Fotos.',
-            'Alles andere: Einstellungen › Daten & Sicherung › Export herunterladen. Die JSON-Datei hebst du auf, bis der Import in der Cloud da ist.',
-            'Home Assistant: in der Integration „Neu konfigurieren“ wählen und auf die Cloud umstellen, sobald der Haushalt dort ist.',
-          )],
+          ['In einem Rutsch', ol(
+            'Auf deinem Server: Einstellungen › Daten › Umzug in die ToHuus Cloud › Umzugsdatei herunterladen. Darin sind Liste, Vorrat, Rezepte, Bons, Rhythmus und Fotos.',
+            'In der ToHuus Cloud einen neuen Haushalt anlegen.',
+            'Dort: Einstellungen › Daten › Haushalt vom eigenen Server übernehmen, Passwort eingeben, Datei wählen.',
+          ), p('Leute werden über E-Mail oder Namen zugeordnet. Wer noch kein Cloud-Konto hat, steht als Person drin und bekommt eine Einladung von dir.')],
+          ['Was nicht mitkommt', ul(
+            'Anmeldungen, Geräte, Zugänge und Links: die richtest du in der Cloud neu ein.',
+            'Gespräche mit dem Assistenten und was andere als „nur für mich“ markiert haben.',
+            'Codes aus der Hausinfo nur, wenn du „Codes mitnehmen“ ankreuzt.',
+            'Die Einwilligung für Gesundheitsdaten gibt ihr in der Cloud neu.',
+          ), p('Home Assistant: in der Integration „Neu konfigurieren“ wählen und auf die Cloud umstellen.')],
         ],
         related: ['daten-export', 'selbst-hosten', 'rezeptpaket'],
       },
@@ -627,7 +636,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         desc: 'E-receipts, PDF, photos and text: how receipts get into ToHuus and what happens to them.',
         sections: [
           ['Digital receipts', p('Share an e-receipt or order PDF with ToHuus, for example from your mail app. For REWE in Germany, ToHuus matches the order with the receipt and books what was actually delivered.')],
-          ['Paper receipts', p('Take a photo in the app. With AI, ToHuus reads it through Mistral.', `<span class="soon-tag">Coming soon</span> Text recognition without AI: the photo is read on our server, with no language model involved.`)],
+          ['Paper receipts', p('Take a photo in the app. ToHuus first reads the text itself on the server (text recognition without AI) and checks that the lines add up to the total. Only if they do not and AI is on, Mistral reads the photo again.', 'With AI off it stays with text recognition. Lines read unclearly are marked, you correct them in the check.')],
           ['Check before booking', p('Every receipt waits for a check first. Anything ToHuus could not read with confidence is marked. Correct a line and ToHuus remembers it for that shop. Before receipt text goes to the AI, card and loyalty numbers, TSE data and the address are removed.')],
           ['Which shops', p('REWE is tested best. Other German chains, UK, US and Swedish receipts have parsers tested with synthetic receipts. Anonymised real receipts help: every check has “Help improve recognition”. Nothing is sent by itself.')],
         ],
@@ -750,7 +759,7 @@ cards:
         desc: 'Connect your household to the AI assistant you already use, through MCP.',
         sections: [
           ['The address', k.code('mcp-url-en', 'MCP', `${k.CLOUD}/mcp`), p('Self-hosted, it is your server’s address with <code>/mcp</code> at the end.')],
-          ['Signing in', p(`<span class="soon-tag">Coming soon</span> In ToHuus Cloud you sign in with your ToHuus account when connecting (OAuth), see which household is connected and can revoke it at any time.`, 'Today: Settings › Access & AI › New access › AI assistant gives you an address with a key in it. Treat it like a password.')],
+          ['Signing in', p('When connecting you sign in with your ToHuus account (OAuth), choose the household and what the assistant may do: read, or read and change; allergies and details about children only if you tick it. Settings › Access & AI lists every connection, and you can end it there.', 'For Home Assistant and older apps there is still an access with a key in the address: Settings › Access & AI › New access › AI assistant. Treat it like a password.')],
           ['In Claude and ChatGPT', ul('Claude: Settings › Connectors › Add custom connector, paste the address.', 'ChatGPT: Settings › Connectors (developer mode on some plans), paste the address.')],
           ['What the assistant may see', ul(
             'Your household’s list, stock, recipes, week plan and spending.',
@@ -762,11 +771,11 @@ cards:
         related: ['ai-on-or-off', 'privacy-in-short'],
       },
       {
-        slug: 'move-to-the-cloud', pair: 'umzug-in-die-cloud', group: 'account', title: 'From your own server to the cloud', soon: true,
+        slug: 'move-to-the-cloud', pair: 'umzug-in-die-cloud', group: 'account', title: 'From your own server to the cloud',
         desc: 'Taking a self-hosted household into ToHuus Cloud.',
         sections: [
-          ['What is planned', p('A move in one go: export on your server and import into a new cloud household, with list, recipes, receipts, rhythm and photos. The guide goes here once it is live.')],
-          ['What you can do today', ul('Recipes: export them as a <a href="recipe-pack.html">recipe pack</a> and import it in the cloud household. That already works fully, photos included.', 'Everything else: Settings › Data & backups › Download export. Keep the JSON file until the cloud import is ready.')],
+          ['In one go', ol('On your server: Settings › Data › Move to ToHuus Cloud › Download move file. It holds list, stock, recipes, receipts, rhythm and photos.', 'In ToHuus Cloud, create a new household.', 'There: Settings › Data › Bring a household from your own server, enter your password, choose the file.'), p('People are matched by e-mail or name; anyone without a cloud account yet appears as a person you can invite.')],
+          ['What stays behind', ul('Sign-ins, devices, accesses and links.', 'Conversations with the assistant and what others marked “only for me”.', 'House info codes, unless you tick “take the codes along”.')],
         ],
         related: ['self-hosting', 'recipe-pack'],
       },

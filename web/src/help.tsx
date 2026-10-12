@@ -30,6 +30,15 @@ export const HELP_SLUGS = [
   'daten-export',
   'home-assistant',
   'gut-zu-wissen',
+  'gemeinsam-einkaufen',
+  'benachrichtigungen',
+  'claude-chatgpt',
+  'erinnerungen-spiegeln',
+  'umzug-in-die-cloud',
+  'selbst-hosten',
+  'datenschutz-kurz',
+  'abo-und-kuendigen',
+  'fragen',
 ] as const;
 export type HelpSlug = (typeof HELP_SLUGS)[number];
 
