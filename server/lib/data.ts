@@ -45,7 +45,7 @@ export const EXPORT_FORMAT = 'tohuus-export';
 export const EXPORT_VERSION = 2;
 
 /** Tables that never leave the server (credentials, sessions, one-time links, caches). */
-const SKIP_TABLE = /^(sqlite_|_migrations)|^(sessions|api_tokens|invites|off_cache)$|(^|_)(tokens?|secrets?|push_subscriptions?)$/i;
+const SKIP_TABLE = /^(sqlite_|_migrations|oauth_)|^(sessions|api_tokens|invites|off_cache)$|(^|_)(tokens?|secrets?|push_subscriptions?)$/i;
 /** Columns that are credentials, wherever they appear. */
 const SECRET_COLUMN = /(^|_)(token|token_hash|password|password_hash|secret|api_key|apikey|p256dh|auth_key)$/i;
 /** Keys inside settings values (and settings keys themselves) that hold credentials or secret URLs. */
@@ -73,8 +73,26 @@ function schemaInfo() {
   return { core, named };
 }
 
-/** Full household export without any credentials. */
-export function buildExport() {
+/**
+ * Rows that belong to one person only (docs/guests-and-permissions.md › "Privacy inside a household"): another
+ * member's assistant conversations, their "nur für mich" memory and their personal settings never end up in the
+ * export of whoever downloads it (also not an admin's). `viewer` = users.id of the person exporting.
+ */
+function personalFilter(name: string, viewer: number | null): ((r: Record<string, unknown>) => boolean) | null {
+  if (name === 'assistant_conversations' || name === 'assistant_undo' || name === 'user_prefs') return (r) => viewer != null && r.user_id === viewer;
+  if (name === 'assistant_messages') {
+    const own = new Set(
+      viewer == null ? [] : (db.prepare('SELECT id FROM assistant_conversations WHERE user_id = ?').all(viewer) as { id: string }[]).map((x) => x.id),
+    );
+    return (r) => own.has(String(r.conversation_id));
+  }
+  if (name === 'ai_memory') return (r) => r.private_to == null || (viewer != null && r.private_to === viewer);
+  return null;
+}
+
+/** Full household export without any credentials and without other members' personal rows. */
+export function buildExport(opts: { viewer?: number | null } = {}) {
+  const viewer = opts.viewer ?? null;
   const out: Record<string, unknown> = {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
@@ -84,7 +102,9 @@ export function buildExport() {
   };
   const tables: Record<string, unknown[]> = {};
   for (const name of exportTables()) {
-    const rows = db.prepare(`SELECT * FROM "${name}"`).all() as Record<string, unknown>[];
+    let rows = db.prepare(`SELECT * FROM "${name}"`).all() as Record<string, unknown>[];
+    const keep = personalFilter(name, viewer);
+    if (keep) rows = rows.filter(keep);
     if (name === 'settings') {
       tables.settings = rows
         .filter((r) => !SECRET_KEY.test(String(r.key)))

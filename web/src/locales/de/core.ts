@@ -28,4 +28,6 @@ export const core: Record<string, string> = {
   'Sign in to ToHuus, choose what the assistant may do, confirm.': 'Bei ToHuus anmelden, auswählen, was der Assistent darf, bestätigen.',
   'End connection': 'Verbindung beenden',
   'No assistant connected yet.': 'Noch kein Assistent verbunden.',
+  'Only for me – the others don’t see it': 'Nur für mich – die anderen sehen das nicht',
+  'only for me': 'nur für mich',
 };

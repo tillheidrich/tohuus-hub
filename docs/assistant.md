@@ -127,6 +127,8 @@ The system prompt is German (du-Form) or English, by household language.
 
 ## What ToHuus remembers
 
+A row can be personal: `POST /api/memory { text, onlyMe: true }` ("Nur für mich") – then only its author sees it, in the app, in their own assistant and in their own MCP connection; other members, the admin export and plain MCP tokens never do. Rows carry `onlyMe: boolean`.
+
 Table `ai_memory`: `scope` household|person, `person` (key like `u2`/`k1`), `kind` fact|preference|routine, `text`, `source` user|assistant|derived, `sensitive` (word-list classifier: health, diet for medical reasons, pregnancy, medication, religion, politics, sexuality, origin, union), `created_by`, `confirmed_at`. Max 300 rows.
 
 - `GET /api/memory` → all rows (including sensitive ones – it is the household's own data), `POST /api/memory` `{ text, kind?, person?, consent? }` (409 `health_consent` for the first sensitive note, see above), `DELETE /api/memory/:id`.

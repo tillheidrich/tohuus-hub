@@ -784,7 +784,7 @@ cloud.get(
     const m = acc.membership(id.accountId, h.id);
     // the whole household database: admins only (as /api/export.json in self-host), judged by the household row
     if (!m || !isHouseholdAdmin(householdPerson(h.id, m.user_id))) throw new AuthError(403, t('Only admins can export the household.'));
-    const out = buildExport();
+    const out = buildExport({ viewer: m.user_id });
     res.setHeader('Content-Disposition', `attachment; filename="tohuus-export-${new Date().toISOString().slice(0, 10)}.json"`);
     res.setHeader('Cache-Control', 'no-store');
     return { ...out, plan: currentPlan() };

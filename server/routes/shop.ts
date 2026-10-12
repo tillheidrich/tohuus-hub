@@ -185,9 +185,10 @@ r.post('/push/unsubscribe', (req, res) => {
   res.json({ ok: true });
 });
 
-r.get('/push/devices', (req, res) => res.json(listDevices(req.actor?.role === 'admin' ? undefined : (userId(req) ?? -1))));
+// each person sees their own push devices only (also admins – devices are personal)
+r.get('/push/devices', (req, res) => res.json(listDevices(userId(req) ?? -1)));
 r.delete('/push/devices/:id', (req, res) => {
-  deleteDevice(num(req.params.id), req.actor?.role === 'admin' ? undefined : (userId(req) ?? -1));
+  deleteDevice(num(req.params.id), userId(req) ?? -1);
   res.json({ ok: true });
 });
 
