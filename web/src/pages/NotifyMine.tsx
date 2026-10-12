@@ -30,7 +30,7 @@ interface Prefs {
 const COLS: { key: 'apns' | 'push' | 'digest'; label: string; icon: typeof Bell }[] = [
   { key: 'apns', label: 'iPhone', icon: DeviceMobile },
   { key: 'push', label: 'Browser', icon: Monitor },
-  { key: 'digest', label: 'E-mail summary', icon: EnvelopeSimple },
+  { key: 'digest', label: 'E-mail', icon: EnvelopeSimple },
 ];
 
 export function NotifyMine() {
@@ -73,8 +73,8 @@ export function NotifyMine() {
           ? null
           : t('switch on below')
         : p.channels.digest.email
-          ? t('once a day')
-          : t('needs a confirmed e-mail');
+          ? t('summary once a day')
+          : t('summary – needs a confirmed address');
 
   return (
     <section className="card pad stack notify-mine" aria-labelledby="nm-h">

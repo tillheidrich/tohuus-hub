@@ -413,8 +413,13 @@ export function bookPurchase(productId: number, qty: number | null, actor: strin
 }
 
 /** "Done shopping": everything in the basket leaves the basket; products go into stock if wanted. Learns the aisle order. */
-export function checkout(input: { storeId?: number | null; toStock: boolean; actor: string }) {
-  const items = db.prepare('SELECT * FROM shopping_items WHERE in_basket = 1 AND checked_at IS NOT NULL').all() as any[];
+export function checkout(input: { storeId?: number | null; toStock: boolean; actor: string; onlyOwn?: boolean }) {
+  // list2: two people shopping at once – each checks out their own basket
+  const items = (
+    input.onlyOwn
+      ? db.prepare('SELECT * FROM shopping_items WHERE in_basket = 1 AND checked_at IS NOT NULL AND checked_by = ?').all(input.actor)
+      : db.prepare('SELECT * FROM shopping_items WHERE in_basket = 1 AND checked_at IS NOT NULL').all()
+  ) as any[];
   let booked = 0;
   db.transaction(() => {
     for (const it of items) {

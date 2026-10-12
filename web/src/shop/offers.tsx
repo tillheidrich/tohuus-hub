@@ -57,18 +57,16 @@ function OfferRow({ o }: { o: Offer }) {
 }
 
 /** Shopping page: current offers (only what somebody brought in) and the way to add one. */
-export function OffersStrip({ onScan }: { onScan: () => void }) {
+export function OffersStrip() {
   const q = useApi<Offer[]>(['shopping', 'offers'], '/offers');
   const list = q.data ?? [];
+  if (!list.length) return null;
   return (
     <section className="offers" aria-labelledby="offers-h">
       <div className="suggest-h">
         <h2 id="offers-h" className="eyebrow">
           {t('Offers')}
         </h2>
-        <button className="linkish" onClick={onScan}>
-          <Camera size={14} /> {t('Share or photograph an offer')}
-        </button>
       </div>
       {list.slice(0, 6).map((o) => (
         <OfferRow key={o.id} o={o} />

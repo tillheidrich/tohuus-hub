@@ -13,6 +13,7 @@ import {
   ShareNetwork,
   ShoppingCart,
   Storefront,
+  Tag,
   TextAa,
   Trash,
   WifiSlash,
@@ -302,7 +303,7 @@ export function Shopping() {
 
   /** "Einkauf fertig": ticked rows leave the list (they stay in "Zuletzt erledigt"), a basket goes into stock. */
   const checkout = async () => {
-    if (!view || (view.basket.length === 0 && view.done.length === 0)) return;
+    if (!view || ticked === 0) return;
     setBusy(true);
     try {
       const r = await post<{ cleared: number; basket: number; booked: number }>('/list/finish', { store_id: inStore ? storeId : null, to_stock: toStock });
@@ -364,14 +365,21 @@ export function Shopping() {
     const g = inPlace(view);
     if (!shoppers.size) return g;
     const taken = (i: ShopItem) => !i.checked_at && i.claim && shoppers.has(i.claim.user_id);
-    const out = g.map((x) => ({ ...x, items: x.items.filter((i) => !taken(i)) })).filter((x) => x.items.length);
+    // what is already in another shopper's basket shows in their trip card, not in my aisles
+    const theirs = new Set([...shoppers.values()]);
+    const inTheirBasket = (i: ShopItem) => Boolean(i.checked_at && (i as ShopItem & { checked_by?: string | null }).checked_by && theirs.has((i as ShopItem & { checked_by?: string | null }).checked_by!));
+    const out = g.map((x) => ({ ...x, items: x.items.filter((i) => !taken(i) && !inTheirBasket(i)) })).filter((x) => x.items.length);
     for (const [uid, name] of shoppers) {
       const items = g.flatMap((x) => x.items).filter((i) => taken(i) && i.claim!.user_id === uid);
       if (items.length) out.push({ key: `taken:${name}`, items });
     }
     return out;
   }, [view, trips.data]);
-  const ticked = view ? view.basket.length + view.done.length : 0;
+  const shopperNames = new Set((trips.data ?? []).filter((x) => !x.mine).map((x) => x.user.name));
+  const mineOnly = (xs: ShopItem[]) => xs.filter((i) => !shopperNames.has((i as ShopItem & { checked_by?: string | null }).checked_by ?? ''));
+  const myBasket = view ? mineOnly(view.basket) : [];
+  const myDone = view ? mineOnly(view.done) : [];
+  const ticked = myBasket.length + myDone.length;
   const currentList = view?.lists?.find((l) => l.id === listId);
   listNames = new Map((view?.lists ?? []).map((l) => [l.id, l.name]));
 
@@ -504,14 +512,19 @@ export function Shopping() {
       )}
 
       {!inStore && !usualsOpen && (
-        <div className="row" style={{ marginTop: 12 }}>
+        <div className="row wrap" style={{ marginTop: 12, gap: 4 }}>
           <UsualsButton onClick={() => setUsualsOpen(true)} />
+          {listId === 0 && !me.data?.actor.houseGuest && (
+            <button className="btn ghost sm" onClick={() => setOfferOpen(true)}>
+              <Tag size={16} /> {t('Offer')}
+            </button>
+          )}
         </div>
       )}
       {!inStore && usualsOpen && <UsualsGrid onClose={() => setUsualsOpen(false)} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id, list_id: listId || null })} />}
 
       {!inStore && listId === 0 && <LunchboxSuggestion />}
-      {!inStore && listId === 0 && !me.data?.actor.houseGuest && <OffersStrip onScan={() => setOfferOpen(true)} />}
+      {!inStore && listId === 0 && !me.data?.actor.houseGuest && <OffersStrip />}
       {!inStore && listId === 0 && <Suggestions onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
 
       <div className="shop-groups">
@@ -567,7 +580,7 @@ export function Shopping() {
           </button>
         )}
 
-        {!inStore && view && view.basket.length > 0 && (
+        {!inStore && view && view.basket.length > 0 && !shopperNames.size && (
           <div className="banner" onClick={() => switchMode('store')}>
             <span className="ic"><ShoppingCart size={18} /></span>
             <div className="grow small">
@@ -595,17 +608,17 @@ export function Shopping() {
         <RecentDone />
       </div>
 
-      {view && ticked > 0 && (inStore || view.done.length > 0) && (
+      {view && ticked > 0 && (inStore || myDone.length > 0) && (
         <div className="shop-checkout">
           <div className="grow small">
             <b>
               {inStore
-                ? view.basket.length === 1
+                ? myBasket.length === 1
                   ? t('1 item in the basket')
-                  : t('{n} items in the basket', { n: view.basket.length })
-                : view.done.length === 1
+                  : t('{n} items in the basket', { n: myBasket.length })
+                : myDone.length === 1
                   ? t('1 ticked off')
-                  : t('{n} ticked off', { n: view.done.length })}
+                  : t('{n} ticked off', { n: myDone.length })}
             </b>
             {inStore ? (
               <label className="row" style={{ gap: 8, marginTop: 4 }}>
@@ -724,7 +737,10 @@ function inPlace(v: ShopView): { key: string; items: ShopItem[] }[] {
   const keys = v.sections.map((s) => s.key);
   const order = v.order ?? [];
   const extra = [...new Set(ticked.map((i) => i.section).filter((k) => !keys.includes(k)))].sort((a, b) => ((order.indexOf(a) + 99) % 99) - ((order.indexOf(b) + 99) % 99));
-  return [...keys, ...extra].map((key) => ({
+  // ticked rows of an aisle that has no open row left go with the aisles, before other stores and care lists
+  const tail = keys.filter((k) => k === 'elsewhere' || k.startsWith('list:'));
+  const head = keys.filter((k) => !tail.includes(k));
+  return [...head, ...extra.filter((k) => !k.startsWith('list:')), ...tail, ...extra.filter((k) => k.startsWith('list:'))].map((key) => ({
     key,
     items: [...(v.sections.find((s) => s.key === key)?.items ?? []), ...ticked.filter((i) => i.section === key)],
   }));

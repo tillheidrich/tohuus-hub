@@ -25,7 +25,7 @@ import {
   storeView,
 } from '../lib/shop.js';
 import { tickItem } from '../lib/shopping-trust.js';
-import { endTrip } from '../lib/trips.js';
+import { activeTrips, endTrip } from '../lib/trips.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
 import { NOTIFY_ACTIONS, runNotifyAction } from '../lib/notify-actions.js';
@@ -112,7 +112,7 @@ r.post('/shop/items/:id/section', (req, res) => {
 /** "Done shopping": basket → stock, learn the aisle order. */
 r.post('/shop/checkout', (req, res) => {
   const b = z.object({ store_id: z.number().nullable().optional(), to_stock: z.boolean().default(true) }).parse(req.body);
-  const out = checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req) });
+  const out = checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req), onlyOwn: activeTrips(userId(req)).some((tr) => !tr.mine) });
   endTrip(userId(req));
   res.json(out);
 });

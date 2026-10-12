@@ -228,6 +228,24 @@ describe('C: shopping together', () => {
     expect((await sam('GET', '/api/shop/trips')).json).toEqual([]);
   });
 
+  it('two people shopping at once: "Einkauf fertig" only finishes the own ticks', async () => {
+    const x = catalog.addToShopping({ text: 'Nudeln' });
+    const y = catalog.addToShopping({ text: 'Reis' });
+    const z = catalog.addToShopping({ text: 'Mehl' });
+    const w = catalog.addToShopping({ text: 'Zucker' });
+    await sam('POST', `/api/shop/items/${x.id}/basket`, { on: true });
+    await sam('POST', `/api/shop/items/${y.id}/basket`, { on: true });
+    await mira('POST', `/api/shop/items/${z.id}/basket`, { on: true });
+    await mira('POST', `/api/shop/items/${w.id}/basket`, { on: true });
+    await sam('PUT', '/api/shop/trips/privacy', { private: false });
+    expect((await mira('GET', '/api/shop/trips')).json.map((t: any) => t.user.name).sort()).toEqual(['Mira', 'Sam']);
+    const fin = await mira('POST', '/api/list/finish', { to_stock: false });
+    expect(fin.json.basket).toBe(2);
+    const left = db.prepare('SELECT text FROM shopping_items WHERE in_basket = 1 AND cleared_at IS NULL ORDER BY text').all() as { text: string }[];
+    expect(left.map((r) => r.text)).toEqual(['Nudeln', 'Reis']);
+    await sam('POST', '/api/list/finish', { to_stock: false });
+  });
+
   it('stores carry optional coordinates typed in by a person', async () => {
     const lidl = (await mira('GET', '/api/shop/stores')).json.find((s: any) => s.name === 'Lidl');
     expect(lidl).toMatchObject({ lat: null, lon: null, radius_m: null });

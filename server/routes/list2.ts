@@ -111,7 +111,9 @@ r.post(
   '/list/finish',
   wrap((req) => {
     const b = z.object({ store_id: z.number().nullable().optional(), to_stock: z.boolean().default(true) }).parse(req.body ?? {});
-    const out = finishShopping({ checkout: () => checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req) }) });
+    // someone else is shopping right now: only my own ticks and basket are done
+    const others = activeTrips(userId(req)).some((tr) => !tr.mine);
+    const out = finishShopping({ checkout: () => checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req), onlyOwn: others }), onlyBy: others ? actorName(req) : null });
     endTrip(userId(req));
     return out;
   }),

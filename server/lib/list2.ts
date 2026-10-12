@@ -197,9 +197,9 @@ export function restoreItem(id: number, actor: string) {
  * One button for "done": ticked rows leave the list (they stay purchase signals), a basket is booked into stock the
  * same way the store checkout does. Callers pass the checkout of shop.ts so this module does not import it.
  */
-export function finishShopping(opts: { checkout: () => { items: number; booked: number }; }) {
+export function finishShopping(opts: { checkout: () => { items: number; booked: number }; onlyBy?: string | null }) {
   const basket = opts.checkout();
-  const cleared = clearChecked();
+  const cleared = clearChecked(opts.onlyBy ?? null);
   return { cleared, basket: basket.items, booked: basket.booked };
 }
 

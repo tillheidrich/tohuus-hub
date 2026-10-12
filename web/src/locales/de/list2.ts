@@ -233,4 +233,7 @@ export const list2: Record<string, string> = {
   '“How often did someone have to ask ‘Do we still have …?’” – one tap on “Heute”.': '„Wie oft musste jemand fragen ‚Haben wir noch …?‘“ – ein Tipp auf „Heute“.',
   'Share the answer anonymously': 'Antwort anonym teilen',
   'Only a count per week and answer – no name, no household. Off by default.': 'Nur eine Zählung pro Woche und Antwort – kein Name, kein Haushalt. Standardmäßig aus.',
+  'summary once a day': 'Zusammenfassung einmal am Tag',
+  'summary – needs a confirmed address': 'Zusammenfassung – braucht eine bestätigte Adresse',
+  Offer: 'Angebot',
 };

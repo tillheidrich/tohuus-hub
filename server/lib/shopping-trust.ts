@@ -133,8 +133,11 @@ export function tickItem(itemId: number, on: boolean, actor: string, opts: { toS
 }
 
 /** "Clear checked": hide ticked rows from every list, keep them for the purchase rhythm. */
-export function clearChecked() {
-  const n = db.prepare(`UPDATE shopping_items SET cleared_at = datetime('now'), in_basket = 0 WHERE checked_at IS NOT NULL AND cleared_at IS NULL`).run().changes;
+export function clearChecked(onlyBy?: string | null) {
+  // list2: while someone else is shopping too, "Einkauf fertig" only clears the own ticks (trips.ts)
+  const n = onlyBy
+    ? db.prepare(`UPDATE shopping_items SET cleared_at = datetime('now'), in_basket = 0 WHERE checked_at IS NOT NULL AND cleared_at IS NULL AND checked_by = ?`).run(onlyBy).changes
+    : db.prepare(`UPDATE shopping_items SET cleared_at = datetime('now'), in_basket = 0 WHERE checked_at IS NOT NULL AND cleared_at IS NULL`).run().changes;
   db.prepare(`DELETE FROM claims WHERE kind = 'shopping' AND ref_id IN (SELECT id FROM shopping_items WHERE cleared_at IS NOT NULL)`).run();
   emit('shopping');
   return n;
