@@ -140,7 +140,7 @@ struct AppleSignInButton: View {
     @State private var busy = false
 
     var body: some View {
-        SignInWithAppleButton(kind == .signIn ? .signIn : .signUp) { req in
+        SignInWithAppleButton(kind == .signIn ? .signIn : .continue) { req in
             nonce = AppleNonce.make()
             req.requestedScopes = [.fullName, .email]
             req.nonce = AppleNonce.sha256(nonce)
@@ -368,7 +368,7 @@ struct SignUpView: View {
         Form {
             Section {
                 AppleSignInButton(kind: .signUp, error: $error)
-                    .listRowInsets(EdgeInsets())
+                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
                     .listRowBackground(Color.clear)
             } footer: {
                 Text(L("Or create the account with your e-mail address:"))

@@ -37,6 +37,14 @@ extension AppModel {
 
     /// Reads /api/tour; asks the sample-data question when the household has not answered it (admins).
     func refreshSamples(askIfDue: Bool = false) async {
+        #if DEBUG
+        // simulator check of the tags and the reminder against a server without the sample endpoints
+        if UserDefaults.standard.bool(forKey: "debugSampleMarks") {
+            tour = TourInfo(admin: true, demo: .init(rows: 1, products: 51, recipes: 8, since: nil, nudge: true), start: .init(choice: "demo", due: false))
+            sampleMarks = DemoMarks(products: Array(0...3000), recipes: Array(0...3000), shopping: Array(0...3000))
+            return
+        }
+        #endif
         guard isCloud || session != nil, let api else { return }
         guard let t = try? await api.tourInfo() else { return }
         tour = t
