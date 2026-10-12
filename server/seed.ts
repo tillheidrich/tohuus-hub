@@ -338,10 +338,10 @@ function seedDemoRows() {
   db.prepare('UPDATE products SET is_staple = 1 WHERE id = ?').run(ids.get('Zwiebeln'));
   // shopping list
   const shop = db.prepare('INSERT INTO shopping_items (product_id, text, source, added_by) VALUES (?, ?, ?, ?)');
-  shop.run(ids.get('Paketband'), tr('Paketband'), 'manual', 'Till');
+  shop.run(ids.get('Paketband'), tr('Paketband'), 'manual', 'Jonas');
   shop.run(ids.get('Erdbeer-Eis'), tr('Erdbeer-Eis'), 'auto', 'ToHuus Hub');
   shop.run(ids.get('Mini Pizza Pomodori vegan'), tr('Mini Pizza Pomodori vegan'), 'auto', 'ToHuus Hub');
-  shop.run(null, tr('Geschenkpapier'), 'manual', 'Lea');
+  shop.run(null, tr('Geschenkpapier'), 'manual', 'Mira');
   seedRecipes();
   db.prepare(`INSERT INTO guest_links (token, name, scopes, expires_at) VALUES (?, ?, '["bar"]', datetime('now', '+30 days'))`).run(
     randomToken(12),

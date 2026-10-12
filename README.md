@@ -34,32 +34,28 @@ It runs as one Docker container with a SQLite file. No account with us, no telem
 
 <table>
   <tr>
-    <td><img src="site/assets/shots/en/today-light.webp" width="200" alt="Today" /></td>
-    <td><img src="site/assets/shots/en/shopping-light.webp" width="200" alt="Shopping list" /></td>
-    <td><img src="site/assets/shots/en/cook-light.webp" width="200" alt="What do we eat today" /></td>
-    <td><img src="site/assets/shots/en/recipe-light.webp" width="200" alt="Recipe" /></td>
+    <td><img src="site/assets/shots/en/today-480.webp" width="200" alt="Today" /></td>
+    <td><img src="site/assets/shots/en/shopping-480.webp" width="200" alt="Shopping list" /></td>
+    <td><img src="site/assets/shots/en/cook-480.webp" width="200" alt="Cook" /></td>
   </tr>
   <tr>
     <td align="center">Today</td>
     <td align="center">Shopping</td>
     <td align="center">Cook</td>
-    <td align="center">Recipe</td>
   </tr>
   <tr>
-    <td><img src="site/assets/shots/en/plan-vote-light.webp" width="200" alt="Family food vote" /></td>
-    <td><img src="site/assets/shots/en/stock-light.webp" width="200" alt="Stock" /></td>
-    <td><img src="site/assets/shots/en/people-light.webp" width="200" alt="People" /></td>
-    <td><img src="site/assets/shots/en/order-light.webp" width="200" alt="Treats" /></td>
+    <td><img src="site/assets/shots/en/money-480.webp" width="200" alt="Money" /></td>
+    <td><img src="site/assets/shots/en/import-480.webp" width="200" alt="Imports" /></td>
+    <td><img src="site/assets/shots/en/today-dark-480.webp" width="200" alt="Today in dark mode" /></td>
   </tr>
   <tr>
-    <td align="center">Food vote</td>
-    <td align="center">Stock</td>
-    <td align="center">People</td>
-    <td align="center">Treats</td>
+    <td align="center">Money</td>
+    <td align="center">Receipts</td>
+    <td align="center">Dark</td>
   </tr>
 </table>
 
-Dark versions and more screens (trips, labels, receipts, spending, Home Assistant dashboard, tour) are in [`site/assets/shots/en/`](site/assets/shots/en/).
+The screenshots show a demo household with invented names and receipts. German versions are in [`site/assets/shots/de/`](site/assets/shots/de/).
 
 ## Features
 

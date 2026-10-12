@@ -3,7 +3,7 @@
   var d = document.documentElement;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // light / dark: follows the device until you pick one; the choice is remembered on this device only
+  // light / dark: light by default; a choice is remembered on this device only
   var btn = document.querySelector('.theme-btn');
   var meta = document.querySelectorAll('meta[name="theme-color"]');
   function paint(t) {
@@ -17,12 +17,6 @@
     try { localStorage.setItem('tohuus.site.theme', t); } catch (e) { /* private mode */ }
     paint(t);
   });
-  if (window.matchMedia) {
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    var follow = function (e) { var s = null; try { s = localStorage.getItem('tohuus.site.theme'); } catch (x) {} if (!s) paint(e.matches ? 'dark' : 'light'); };
-    if (mq.addEventListener) mq.addEventListener('change', follow);
-  }
-
   // reveals
   var els = document.querySelectorAll('.reveal');
   if ('IntersectionObserver' in window && !reduce) {

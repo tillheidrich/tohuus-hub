@@ -2,15 +2,18 @@
  * Builds the marketing site (site/index.html in English, site/de/index.html in German) from one template.
  * Run from the repo root:  node site/src/build.mjs
  *
- * Design: "Dutch Detail" (docs/design/2026-10-11-dutch-detail-system.md): same tokens, fonts and icons as the app.
- * Signature elements on the page: the green block with circles, the ticket with punch notches, the receipt with a
- * zigzag edge, the arch photo with a stamp, the floating black bar (mobile) and the offset housing-form tiles.
- * Fonts: site/assets/fonts (woff2 copied from the pinned @fontsource packages, OFL licences next to them).
- * Icons: Phosphor (regular), rendered into an inline sprite at build time, like the app.
+ * Product frame and wording: docs/plan-2026-10-12.md and the strategy "ToHuus merkt sich, was zu Hause fehlt"
+ * (12.10.2026). ToHuus is the shopping and household assistant of a home: Einkauf, Kochen, Geld. Outward verb
+ * "merkt sich", never "Gedächtnis"; "KI" is never the promise; data claims only where they can be checked.
+ * No real names of the maker's family anywhere (copy, alt texts, screenshots). Demo people: Sam, Mira, Jonas.
  *
- * Screenshots: real screens from the app, 390 px wide phone viewport at 2x, saved as
- * site/assets/shots/<lang>/<name>-<light|dark>.webp (780 px wide, webp q80). The slots in use are listed in SHOTS
- * below; the build fails if one is missing. How they are made: see the comment at the end of this file.
+ * Design: "Dutch Detail" (docs/design/2026-10-11-dutch-detail-system.md): same tokens, fonts and icons as the app.
+ * Signature elements: the illustrated homes, the green block with circles, the ticket with punch notches, the
+ * receipt with a zigzag edge, arches. Fonts: site/assets/fonts (OFL). Icons: Phosphor, inline sprite at build time.
+ *
+ * Screenshots: real screens of the web app with invented demo data, 390x844 at 3x, saved as
+ * site/assets/shots/<lang>/<name>-<480|960>.webp. The slots are listed in SHOTS; the build fails if one is missing.
+ * How they are made: see the comment at the end of this file.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,18 +25,17 @@ import { homeTiles, brandMark, bird } from './art.mjs';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const SITE = 'https://tohuus.heidrich-digital.de/';
 const GH = 'https://github.com/tillheidrich/tohuus-hub';
+/** Required provider line (Impressum). The only place where the en dash is allowed. */
+const PROVIDER = 'Till Heidrich – Content Creation';
 
 // ---------------------------------------------------------------- icons (Phosphor regular, like the app)
 const ICONS = {
-  arrow: 'ArrowRight', github: 'GithubLogo', copy: 'Copy', sun: 'Sun', moon: 'Moon', check: 'Check', home: 'House',
-  hand: 'Hand', eyeoff: 'EyeSlash', store: 'Storefront', pot: 'CookingPot', calendar: 'CalendarBlank', heart: 'Heart',
-  download: 'DownloadSimple', swap: 'ArrowsLeftRight', scale: 'Scales', gauge: 'Gauge', qr: 'QrCode', pin: 'MapPin',
-  receipt: 'Receipt', sparkle: 'Sparkle', chart: 'ChartBar', list: 'ListChecks', smile: 'Smiley', child: 'Baby',
-  key: 'Key', mic: 'Microphone', party: 'Confetti', suitcase: 'Suitcase', moonstar: 'MoonStars', door: 'Door',
-  refresh: 'ArrowsClockwise', package: 'Package', tv: 'Television', send: 'PaperPlaneTilt', chat: 'ChatCircle',
-  bolt: 'Lightning', server: 'HardDrives', db: 'Database', lock: 'LockSimple', camera: 'Camera', globe: 'Globe',
-  code: 'Code', mail: 'EnvelopeSimple', zoom: 'MagnifyingGlassPlus', play: 'Play', user: 'User', barcode: 'Barcode',
-  gift: 'HandHeart', bell: 'BellSimple', users: 'Users', robot: 'Robot', translate: 'Translate', terminal: 'TerminalWindow',
+  arrow: 'ArrowRight', github: 'GithubLogo', apple: 'AppleLogo', copy: 'Copy', sun: 'Sun', moon: 'Moon', check: 'Check',
+  basket: 'Basket', pot: 'CookingPot', wallet: 'Wallet', receipt: 'Receipt', camera: 'Camera', mic: 'Microphone',
+  lock: 'LockSimple', key: 'Key', trash: 'Trash', server: 'HardDrives', cloud: 'Cloud', eyeoff: 'EyeSlash', db: 'Database',
+  robot: 'Robot', package: 'Package', refresh: 'ArrowsClockwise', send: 'PaperPlaneTilt', mail: 'EnvelopeSimple',
+  terminal: 'TerminalWindow', code: 'Code', export: 'Export', plus: 'Plus', caret: 'CaretDown', printer: 'Printer',
+  phone: 'DeviceMobile', globe: 'Globe', chart: 'ChartBar', list: 'ListChecks', store: 'Storefront', sparkle: 'Sparkle',
 };
 const symbol = (id, name) => {
   const C = Ph[`${name}Icon`] || Ph[name];
@@ -52,420 +54,379 @@ const ico = (n, cls = 'ico') => {
 const COPY = {
   de: {
     lang: 'de', locale: 'de_DE', alt: 'en_GB', url: `${SITE}de/`, base: '../', other: '../', otherLang: 'en',
-    title: 'ToHuus Hub · Weniger im Kopf. Mehr Zuhause.',
-    desc: 'Kostenlose Open-Source-App für jedes Zuhause, auf deinem eigenen Server: gemeinsame Einkaufsliste, Vorrat, Rezepte und Wochenplan, Verwöhnen für Alltag, Gäste und Partys, Bons und Ausgaben, Home Assistant und KI-Assistenten. Für Wohnung, WG, Reihenhaus oder Haus.',
-    ogAlt: 'Das ToHuus-Zeichen, der Satz „Weniger im Kopf. Mehr Zuhause.“ und vier gezeichnete Wohnformen: Wohnung, WG, Reihenhaus und Haus.',
+    title: 'ToHuus · Merkt sich, was zu Hause fehlt',
+    desc: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet, aus euren Kassenbons und eurer Liste. Für iPhone und im Browser, in der ToHuus Cloud oder auf dem eigenen Server.',
+    ogAlt: 'Das ToHuus-Zeichen, der Satz „Damit nicht einer alles im Kopf haben muss.“ und vier gezeichnete Wohnformen.',
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
-    ids: { home: 'zuhause', treats: 'verwoehnen', install: 'installieren', host: 'selbst-hosten', tour: 'tour' },
-    nav: [['#zuhause', 'Zuhause'], ['#alltag', 'Alltag'], ['#verwoehnen', 'Verwöhnen'], ['#kochen', 'Kochen'], ['#vorrat', 'Vorrat'], ['#selbst-hosten', 'Selbst hosten']],
-    rail: [['#alltag', 'Alltag', 'home'], ['#verwoehnen', 'Verwöhnen', 'gift'], ['#installieren', 'Installieren', 'download'], ['#kochen', 'Kochen', 'pot'], ['#tour', 'Tour', 'play']],
-    themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Hub Startseite', langLabel: 'Sprache',
-    copy: 'Kopieren', copied: 'Kopiert',
+    themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
+    ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren' },
+    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten']],
+    rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
-      label: 'Open Source · auf deinem Server',
-      h1: 'Weniger im Kopf.<br><span class="hl">Mehr Zuhause.</span>',
-      lede: 'Ob Wohnung, WG, Reihenhaus oder Haus: ToHuus bringt Einkauf, Vorräte und Rezepte zusammen.',
-      cta: 'Installieren', code: 'Code ansehen', tour: 'Tour ansehen',
-      facts: ['Kostenlos, AGPL-3.0', 'Kein Konto, kein Tracking', 'Läuft auf NAS oder kleinem Server'],
+      label: 'Einkaufs- und Haushaltsassistent',
+      h1: 'Damit nicht einer alles <span class="hl">im Kopf</span> haben muss.',
+      lede: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet. Dafür reichen eure Kassenbons und eure gemeinsame Liste.',
+      ios: 'Für iPhone', iosSub: 'bald in TestFlight', gh: 'Selbst hosten auf GitHub',
+      facts: ['Server in Deutschland (Hetzner)', 'Kein Tracking, keine Werbung', 'Selbst hosten kostenlos'],
       tiles: { flat: 'Wohnung', shared: 'WG', terraced: 'Reihenhaus', house: 'Haus' },
-      tilesLabel: 'Vier gezeichnete Wohnformen: eine Wohnung im Mehrfamilienhaus, eine Altbau-WG mit drei Klingeln, Reihenhäuser mit einer Katze auf dem Dach und ein freistehendes Haus mit Baum.',
+      tilesLabel: 'Vier gezeichnete Wohnformen: eine Wohnung, eine WG, Reihenhäuser und ein Haus.',
+      shot: 'ToHuus auf dem iPhone, Seite Heute: Hackfleisch und Haferflocken sind fällig, mit dem Hinweis „merkt sich: alle ~20 Tage, zuletzt vor 19 Tagen“, darunter die gemeinsame Liste mit Einträgen von Mira und Sam.',
     },
-    worries: {
-      label: 'Mental Load', h2: 'Die Fragen, die sonst eine Person im Kopf hat.',
-      p: 'Meistens weiß eine Person, was fehlt, was weg muss und wo das Paketband liegt. Das ist in Familien so, bei Paaren und in WGs. ToHuus übernimmt diesen Teil. Dann könnt ihr ihn euch teilen oder gar nicht mehr daran denken.',
-      bonTitle: 'Im Kopf', bonFoot: 'Jetzt in ToHuus',
-      list: ['Haben wir noch Milch?', 'Was essen wir heute?', 'Wer holt das?', 'Wo ist das Paketband?', 'Ist der Joghurt noch gut?', 'Hast du das schon gekauft?', 'Was brauchen wir für Samstag?', 'Wann war der Wasserfilter dran?'],
+    ask: {
+      label: 'Haben wir noch …?', h2: 'Meistens weiß es nur eine Person.',
+      p: 'Ob noch Kaffee da ist, was diese Woche gekocht wird und wann das Waschmittel alle ist, weiß in vielen Haushalten genau einer. Die anderen fragen nach oder kaufen doppelt. ToHuus nimmt diesen Teil aus dem Kopf und legt ihn dorthin, wo alle nachsehen können.',
+      p2: 'Danach wissen alle, was fehlt, und keiner muss es sich merken.',
+      bonTitle: 'Im Kopf', bonFoot: 'Steht jetzt in ToHuus',
+      list: ['Haben wir noch Kaffee?', 'Was essen wir heute?', 'Ist noch Milch da?', 'Hast du Klopapier mitgebracht?', 'Brauchen wir was für Sonntag?', 'Was hat der Einkauf diesen Monat gekostet?'],
     },
-    home: {
-      label: 'Zuhause, nicht Haus', h2: 'Für jedes Zuhause, so wie es wirklich ist.',
-      intro: 'Beim Start fragt ToHuus, wer bei euch wohnt. Daraus werden nur Vorschläge. Gesperrt wird nichts, und umstellen könnt ihr jederzeit.',
-      forms: [['c', 'Allein', 'Keine Abstimmungen und kein „Wer holt’s?“, nur deine Listen.'], ['h', 'Zu zweit', 'Gemeinsame Listen und Abstimmen übers Essen, ohne Kinderbereich.'], ['s', 'Familie', 'Alles, auch Kinder und Gäste.'], ['t', 'WG', 'Gemeinsame und eigene Orte, ohne Familien-Wörter.']],
-      placesH: 'Nur die Orte, die ihr wirklich habt.',
-      placesP: 'Kühlschrank, Keller oder Gefriertruhe setzt ToHuus nicht voraus. Ihr benennt eure Orte selbst, verschachtelt, sortiert und archiviert sie. Was noch keinen Ort hat, steht unter „Noch keinem Ort zugewiesen“. Auch das ist in Ordnung.',
-      chips: ['Küchenzeile', 'WG-Kühlschrank', 'Fach von Jonas', 'Regal im Flur', 'Gefriertruhe im Keller'], chipNone: 'Noch keinem Ort zugewiesen',
-      shots: [['home', 'Einstellungen, Bereich Haushalt: Auswahl Allein, Zu zweit, Familie oder WG'], ['places', 'Einstellungen, Bereich Orte: selbst benannte Orte mit Anzahl der Dinge']],
-    },
-    everyday: { id: 'alltag', label: 'Alltag', h2: 'Ein Blick am Morgen reicht.', intro: '„Heute“ zeigt auf einer Seite, was zuerst dran ist, und genau einen nächsten Schritt. Die Einkaufsliste ist auf allen Handys gleichzeitig aktuell.', shots: [['today', 'Startseite Heute mit grünem Kopfblock und dem Ticket Heute zuerst'], ['shopping', 'Einkaufsliste mit Gruppen, Ich-hol’s-Knöpfen und Hinzufügen-Feld']], points: [
-      ['home', 'Heute zuerst', 'Höchstens vier Zeilen aus euren echten Daten: was weg muss, was alle ist, was auf der Liste steht. Keine Kennzahlen-Kacheln.'],
-      ['hand', 'Einkaufsliste mit „Ich hol’s“', 'Wer etwas übernimmt, tippt drauf. Dann kauft keiner doppelt. Im Laden sortiert sich die Liste nach Gängen, auch ohne Netz.'],
-      ['store', '„Wo kaufen?“', 'Am Produkt legst du fest, wo es das gibt, etwa in der Drogerie oder auf dem Wochenmarkt. Die Liste zeigt es direkt daneben. Die App trägt hier nie selbst etwas ein.'],
-      ['eyeoff', 'Diskrete Einträge', 'Private Einträge sehen die anderen nur als neutralen Platzhalter oder gar nicht. Das Geschenk für Samstag bleibt eine Überraschung.'],
-      ['check', 'Abhaken heißt eingeräumt', 'Was du im Laden abhakst, landet direkt im Vorrat, wenn ihr das so eingestellt habt.'],
-    ] },
-    treats: {
-      label: 'Verwöhnen', h2: 'Einander was Gutes tun.',
-      story: [
-        'Es ist halb acht, und Lea bringt Mila ins Bett. Heute dauert es. Zwischen zwei Seiten Vorlesen tippt sie auf „Was Süßes“ und dann auf Vanilleeis.',
-        'Bei Till brummt das Handy: „Lea fragt dich nach was“. Ein Tipp auf „Ich bring’s“. Als sie aus dem Kinderzimmer kommt, steht das Eis schon da, mit Löffel. Der Abend ist danach nicht mehr ganz so lang.',
+    jobs: {
+      label: 'Was ToHuus macht', h2: 'Einkauf, Kochen und Geld hängen zusammen.',
+      intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei.',
+      list: [
+        { id: 'einkauf', no: '1', label: 'Einkauf', h3: 'ToHuus merkt sich, was fehlt.', shot: 'shopping',
+          alt: 'Einkaufsliste in ToHuus: oben Vorschläge wie Hackfleisch mit „merkt sich: alle ~12 Tage“, darunter nach Bereichen sortierte Einträge mit Ich-hol’s-Knopf und Herkunft wie „Mira, heute“.',
+          p: 'Aus euren Bons und dem, was ihr auf der Liste abhakt, sieht ToHuus, wie oft ihr etwas kauft. Ist es wieder so weit, erscheint es als Vorschlag mit Grund. Einen Vorrat müsst ihr dafür nicht führen.',
+          points: ['Eine Liste, auf allen Handys gleichzeitig aktuell', 'Wer etwas übernimmt, tippt auf „Ich hol’s“', 'Im Laden nach Gängen sortiert, auch ohne Netz'] },
+        { id: 'kochen', no: '2', label: 'Kochen', h3: 'Daraus könnt ihr heute kochen.', shot: 'cook',
+          alt: 'Seite Kochen: „Daraus könnt ihr heute kochen“ mit Gnocchi-Pfanne und Ofengemüse mit Feta, beide mit „Alles da“, dazu Filter mit und ohne Thermomix.',
+          p: 'Der Kochplaner fängt bei dem an, was zu Hause ist. Er zeigt, was sofort geht, wo nur eine Zutat fehlt und was bald weg muss. Wer mag, plant die Woche, und was dafür fehlt, kommt mit einem Tipp auf die Liste.',
+          points: ['Rezepte von Hand, per Link oder aus anderen Apps', 'Mit und ohne Thermomix, Allergien werden beim Vorschlagen berücksichtigt'] },
+        { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
+          alt: 'Seite Geld für September 2026: 215,81 Euro ausgegeben, 17 Euro mehr als im Vormonat, darunter ein Wochenverlauf und Balken nach Kategorie.',
+          p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
+          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Ein Budget, wenn ihr eins wollt', 'Export als CSV'] },
       ],
-      after: 'Dafür ist Verwöhnen da. Wer gerade festsitzt, beim Zubettbringen, krank im Bett oder nach einem langen Tag, wünscht sich eine Kleinigkeit aus dem, was da ist. Jemand anderes bringt sie.',
-      ticketH: 'So läuft ein Wunsch',
+    },
+    levels: {
+      label: 'Einstieg', h2: 'Egal, wie digital ihr schon einkauft.',
+      intro: 'Wenn der Einkauf digitaler wird, solltest du auch etwas davon haben. ToHuus arbeitet mit dem, was ihr ohnehin habt. Für den Anfang reicht einer dieser Wege.',
+      shot: 'import', alt: 'Seite Importe: Bons als PDF, Foto, QR-Link oder Text, darunter der Verlauf mit gebuchten Bons von REWE und Aldi.',
+      list: [
+        ['receipt', 'Lieferdienst und eBon', 'Bestellt ihr bei REWE oder bekommt ihr digitale Bons, kommen Bestellung und Bon als PDF herein. ToHuus gleicht beides ab und bucht, was wirklich geliefert wurde.'],
+        ['camera', 'Bon fotografieren', 'Bei Aldi, Lidl oder auf Papier reicht ein Foto vom Bon. Was ToHuus nicht sicher lesen kann, legt es dir zum Prüfen vor, bevor etwas gebucht wird.'],
+        ['mic', 'Einfach sprechen', 'Du tippst auf „Sprechen“ und sagst: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt es auf die Liste und sagt dir, was er eingetragen hat. Jeder Schritt lässt sich zurücknehmen.'],
+      ],
+    },
+    how: {
+      label: 'So merkt es sich', h2: 'Ihr entscheidet, was auf die Liste kommt.',
+      intro: 'ToHuus macht Vorschläge und schreibt nie still etwas auf eure Liste. Jede Zeile zeigt, woher sie kommt.',
       steps: [
-        ['Lea wünscht sich was', 'Was Süßes, was zu trinken, was zum Knabbern oder ein freier Wunsch. Dazu eine Notiz wie „mit Löffel, bitte“.'],
-        ['Die Nachricht geht los', 'Hat Lea jemanden gefragt, brummt nur dessen Handy. Sonst bekommen alle Bescheid, die gerade können.'],
-        ['„Ich bring’s“ oder „Geht gerade nicht“', 'Ein Tipp in der Nachricht reicht, auf Wunsch mit kurzem Grund wie „Gleich, in ein paar Minuten“.'],
+        ['Einkäufe sammeln', 'Jeder Bon und jedes Häkchen auf der Liste zählt als Einkauf. Mehr Pflege braucht es nicht.'],
+        ['Rhythmus erkennen', 'Nach ein paar Wochen sieht ToHuus zum Beispiel, dass ihr Haferflocken etwa alle 20 Tage kauft.'],
+        ['Vorschlagen', 'Ist es wieder so weit, erscheint ein Vorschlag mit seinem Grund. Ein Tipp setzt ihn auf die Liste.'],
+        ['Zurückhalten', '„Haben wir noch“ schiebt den Vorschlag auf. Lehnt ihr ihn zweimal ab, fragt ToHuus nicht mehr.'],
       ],
-      thanks: 'Danach ein kleines Danke. Einmal, nur an die Person, die es gebracht hat. Keine Punkte, keine Liste, wer wie oft.',
-      shot: ['order', 'Seite Verwöhnen: Was hättest du gern?, darunter ein Wunsch von Lea mit Ich bring’s und Geht gerade nicht'],
-      modesH: 'Dasselbe für Besuch und Partys',
-      modes: [
-        ['Für euch', 'Für alle, die hier wohnen. Wer allein wohnt, bekommt diesen Teil gar nicht erst angezeigt.'],
-        ['Gäste', 'Besuch, Babysitter oder Großeltern bekommen einen Link oder QR-Code und wünschen sich etwas aus dem, was da ist. Mit Namen, damit klar ist, für wen der Kaffee ist.'],
-        ['Party', 'Der Fernseher zeigt den QR-Code zum Mitmachen und was fertig ist. Die Küche hat ihre eigene Ansicht, und die Party endet von selbst.'],
-      ],
-      menu: 'Was auf der Karte steht, legt ihr fest: aus dem Vorrat oder nur auf der Karte, wie Leitungswasser oder Cappuccino.',
+      cardTitle: 'Einkaufsliste', cardSub: 'mit Herkunft',
+      rows: [['Mozzarella', 'merkt sich: alle ~9 Tage', 'rhythm'], ['Backpapier', 'Mira · heute 16:41', 'person'], ['2× Haferdrink', 'Mira · heute 16:41', 'person'], ['Paketband', 'Jonas · gestern', 'person'], ['Tomaten, stückig', 'aus dem Wochenplan', 'plan']],
+      cardFoot: 'Keine Zeile ohne Absender',
     },
-    chapters: [
-      { id: 'kochen', label: 'Kochen', h2: 'Was essen wir heute? In einer Minute entschieden.', intro: 'ToHuus schlägt vor, was zu eurem Vorrat passt, und plant die Woche mit euch. Wer mag, stimmt mit ab.', shots: [['cook', 'Seite Was essen wir heute? mit Vorschlägen aus dem Vorrat'], ['plan-vote', 'Abstimmung über Rezepte fürs Wochenende']], flip: true, points: [
-        ['pot', 'Was geht sofort?', 'Was jetzt kochbar ist, wo nur eine Sache fehlt und was weg muss. Oder ein Tipp auf „Entscheidet ihr für uns“.'],
-        ['calendar', 'Wochenplan', 'Freie Abende füllen sich mit passenden Rezepten, auf Wunsch im Wechsel über mehrere Wochen. Was der Woche fehlt, kommt mit einem Tipp auf die Liste.'],
-        ['heart', 'Gemeinsam abstimmen', 'Alle sagen auf dem eigenen Handy nein, ja oder super, oder ein Handy geht reihum. Ohne Rangliste und ohne Diskussion am Herd.'],
-        ['scale', 'Portionen pro Abend', 'Bolognese für sechs statt vier? Die Menge gilt für diesen Abend, für den Einkauf und für das, was nach dem Kochen aus dem Vorrat geht. Das Rezept bleibt, wie es ist.'],
-      ] },
-      { id: 'rezepte', label: 'Rezepte', h2: 'Eure Version, nicht die aus dem Internet.', intro: 'Rezepte kommen von dort, wo ihr sie schon habt. Gekocht wird dann so, wie es bei euch üblich ist.', shots: [['recipe', 'Rezeptseite mit Foto, Bewertungen und Gekocht-Knopf']], arch: { alt: 'Gnocchi-Pfanne mit Tomate und Mozzarella', stamp: 'Eure<br>Version' }, points: [
-        ['download', 'Aus anderen Apps', 'Jede Rezeptseite mit strukturierten Daten, dazu Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl, Grocy und CSV. Mit einem Bildmodell auch Fotos und Text.'],
-        ['translate', 'Englische Seiten', 'Die Zutaten kommen auf Deutsch an, Cups und Ounces werden zu Gramm und Millilitern. Die Schritte bleiben im Original, und nichts geht an einen Übersetzungsdienst.'],
-        ['robot', 'Mit jeder KI', 'Eine fertige Vorlage zum Kopieren: Foto oder Kochbuchseite in den Chat, Antwort zurück in ToHuus.'],
-        ['refresh', 'Cookidoo über Home Assistant', 'Eure Cookidoo-Woche kommt über Home Assistant herein. Thermomix-Schritte behalten Zeit, Temperatur und Stufe.'],
-        ['swap', 'Die Hausversion', 'Reis statt Kartoffeln, ohne Koriander, Hafermilch statt Milch. Einmal festgelegt, gilt es für Vorschläge, Kochen und Einkaufsliste. Das Original bleibt unberührt.'],
-        ['zoom', 'Fotos zum Reinzoomen', 'Ein Tipp aufs Foto öffnet es bildschirmfüllend, dann lässt es sich vergrößern.'],
-        ['smile', 'Wem schmeckt’s?', 'Jede Person bewertet Rezepte und sammelt Lieblinge. Abneigungen und Allergien fließen in die Vorschläge ein, ein Gericht mit Allergen wird nie automatisch eingeplant.'],
-      ] },
-      { id: 'vorrat', label: 'Vorrat', h2: 'Vorrat ohne Tabelle.', intro: 'Niemand muss Nudeln zählen. Fang mit dem an, was euch ausgeht, und lass den Rest weg.', shots: [['stock', 'Bestand nach Orten mit Mengen und Filtern'], ['labels', 'QR-Etiketten für Produkte und Reste']], flip: true, points: [
-        ['list', '„Nur was ausgeht“', 'Ein Startmodus für alle ohne Lust auf Inventur. Später lässt sich auf alles umstellen, ohne etwas zu verlieren.'],
-        ['gauge', 'Halb voll ist eine Antwort', 'Obst und Brot sind voll, halb, wenig oder leer. Packungen werden gezählt, manches gar nicht.'],
-        ['qr', 'Etiketten für Reste', 'Eine Dose Reste ist in zwei Tipps verstaut, mit Datum, Kurzcode und QR-Etikett. Scannen öffnet essen, auftauen, wegwerfen oder einplanen.'],
-        ['pin', 'Wo ist was?', 'Jedes Ding kann einen genauen Platz haben. Tipp „Pflaster“ ein, und du weißt, welches Fach.'],
-        ['barcode', 'Barcode scannen', 'Produktname und Foto kommen aus Open Food Facts.'],
-      ] },
-      { id: 'bons', label: 'Bons & Ausgaben', h2: 'Der Bon räumt mit ein.', intro: 'Digitale Bons und Bestellungen bringen den Vorrat auf Stand. Abtippen ist der Notnagel, nicht der Plan.', shots: [['receipts', 'Importe: Bons als PDF, Foto, QR-Link oder Text, darunter der Verlauf'], ['spending', 'Ausgaben im Monat, aus den Bons berechnet']], points: [
-        ['receipt', 'Bons aus vielen Läden', 'eBons und Abholscheine von REWE, Bons von Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm, Rossmann und anderen. Als PDF, Foto, QR-Code oder über ein eigenes Bon-Postfach.'],
-        ['sparkle', 'Lernt aus Korrekturen', 'Korrigierst du einmal, wofür eine Bon-Abkürzung steht, gilt das beim nächsten Bon aus diesem Laden. Die Regeln kannst du ansehen und löschen.'],
-        ['check', 'Prüfen statt raten', 'Jeder Import geht über eine kurze Prüfliste: Ersatzartikel, Fehlendes, neue Produkte.'],
-        ['chart', 'Ausgaben ohne Haushaltsbuch', 'Summen nach Woche, Monat oder Jahr, nach Laden und Kategorie, direkt aus den Bons. Dazu Budgets und CSV-Export.'],
-      ] },
-      { id: 'gemeinsam', label: 'Mitbewohner, Familie, Gäste', h2: 'Für alle, die hier wohnen. Und für die, die nur zu Besuch sind.', intro: 'Jede Person hat ein eigenes Konto und ihr Gesicht in der App. Gäste sehen nur, was ihr freigebt.', shots: [['members', 'Mitglieder des Haushalts mit Familie, Kindern und festen Gästen']], flip: true, points: [
-        ['mail', 'Einladen per Mail oder Link', 'Wer dazukommt, bekommt einen persönlichen Link, per E-Mail oder als QR-Code. Angemeldet wird mit Passkey, Passwort oder E-Mail-Link. Der Link gilt einmal und sieben Tage lang.'],
-        ['key', 'Feste Gäste mit Stufen', 'Die Tante, der Babysitter oder die Freundin aus der WG sehen so viel, wie ihr wollt: nur Verwöhnen, auch den Vorrat, auch Rezepte oder den ganzen Alltag. Einstellungen und Ausgaben bleiben bei euch.'],
-        ['user', 'Gäste mit Namen', 'Wer über einen Gäste-Link etwas möchte, trägt einmal den Namen ein. Das Handy merkt ihn sich.'],
-        ['child', 'Kinder ohne Login', 'In Familien wird ein Tablet zum Kinderbildschirm: sich etwas wünschen, nachsehen, wo etwas ist. Jeder Wunsch wartet auf ein Elternteil.'],
-        ['mic', 'Babysitter-Link', 'Ein Link zeigt, wo was ist, mit deiner Notiz obendrauf. Mit Home Assistant gehen auch ausgewählte Sprachbefehle. Schlösser, Alarm und Kameras sind nie dabei.'],
-      ] },
-      { id: 'unterwegs', label: 'Unterwegs', h2: 'Urlaub ohne vergessenen Joghurt.', intro: 'Sag ToHuus, wann ihr weg seid. Den Rest plant es um die Reise herum.', shots: [['away', 'Urlaubsmodus mit Reise, Aufbrauchen und Packliste']], points: [
-        ['pot', 'Vorher aufbrauchen', 'In den Tagen davor kommen Gerichte, die aufbrauchen, was sonst schlecht wird. Nichts Frisches landet mehr auf der Liste.'],
-        ['suitcase', 'Packliste', 'Was aus dem Vorrat mitkommt, wird ausgebucht und nach der Reise wieder eingebucht.'],
-        ['moonstar', 'Ruhe unterwegs', 'Während ihr weg seid, kommen nur dringende Hinweise, und automatische Einkaufsvorschläge machen Pause.'],
-        ['door', 'Ankommen', 'Die Willkommensliste steht, bevor ihr die Tür aufschließt. Dazu ein Blick darauf, was inzwischen abgelaufen ist.'],
-      ] },
-      { id: 'home-assistant', label: 'Smart Home', h2: 'Home Assistant, in beide Richtungen.', intro: 'Wenn ihr schon Automationen habt, macht ToHuus mit, statt sie zu ersetzen.', shots: [['ha-dashboard', 'Einstellungen, Bereich Home Assistant']], flip: true, points: [
-        ['package', 'Über HACS installiert', 'Eine eigene Integration mit fertigen Dashboards, unter MIT-Lizenz.'],
-        ['refresh', 'Zwei Richtungen, pro Thema', 'Einkaufsliste als To-do-Liste für Assist, Wochenplan und Pflege als Kalender, Sensoren für heute Abend und Knappes. Pro Thema legst du fest, ob ToHuus mit einer Liste oder einem Kalender abgleicht, den ihr in Home Assistant schon habt.'],
-        ['tv', 'Küchen-Display', 'Ein altes Tablet oder der Fernseher zeigt den Tag, auch dunkel. Für E-Ink-Rahmen gibt es ein fertiges Bild.'],
-      ] },
-    ],
-    everywhere: {
-      label: 'Überall dabei', h2: 'Telegram, Kurzbefehl, KI-Assistent.', p: 'Dinge landen dort, wo ihr ohnehin schon tippt oder sprecht.',
-      ai: ['KI-Assistenten über MCP', 'Claude, ChatGPT und andere Assistenten verbinden sich direkt mit eurem Haushalt. Ein Foto vom Bon reicht.', 'bon.jpg', 'Trag das bitte in ToHuus ein.', 'Erledigt. Die Artikel warten in deiner Prüfliste.'],
-      tg: ['Telegram und Co.', 'Schreib „2 Milch, Brot“ in den Chat, und es steht auf der Liste. Hinweise kommen auch per Push, Gotify, Matrix, ntfy oder E-Mail.'],
-      mail: ['E-Mails im ToHuus-Look', 'Einladungen, Anmeldelinks und die tägliche Übersicht kommen als ruhige Mail mit Textfassung, hell und dunkel lesbar.'],
-      sc: ['Kurzbefehl und Teilen', 'Ein iPhone-Kurzbefehl setzt Dinge auf die Liste. Auf Android und am Rechner taucht ToHuus im Teilen-Menü auf, für Rezepte, Listen und Bons.'],
+    who: {
+      label: 'Für wen', h2: 'Für jeden Haushalt, in dem eingekauft wird.',
+      intro: 'Beim Start fragt ToHuus nur, wer dazugehört. Danach richtet sich, was ihr seht.',
+      forms: [
+        ['c', 'Allein', 'Du musst dir nichts merken, und am Monatsende siehst du, was Essen und Haushalt gekostet haben.'],
+        ['h', 'Zu zweit', 'Beide wissen, was fehlt. Keiner muss den anderen fragen, ob noch Kaffee da ist.'],
+        ['s', 'Familie', 'Alle schreiben auf dieselbe Liste. Kinder und feste Gäste sehen nur, was ihr freigebt.'],
+        ['t', 'WG', 'Gemeinsames kommt auf eine Liste, private Einträge sehen die anderen nicht.'],
+        ['a', 'Mitversorgen', 'Wer für Eltern oder Großeltern mit einkauft, verbindet die beiden Haushalte und sieht, was dort fehlt.'],
+      ],
+      note: 'ToHuus setzt keinen Keller, keine Gefriertruhe und keinen Thermomix voraus. Ihr legt fest, welche Orte es bei euch gibt.',
+    },
+    ways: {
+      label: 'Zwei Wege', h2: 'In der ToHuus Cloud oder auf deinem eigenen Server.',
+      intro: 'Es ist dieselbe App mit demselben Code. Der Unterschied ist, wer den Server betreibt.',
+      cols: ['ToHuus Cloud', 'Selbst hosten'],
+      rows: [
+        ['Für wen', 'Alle, die einfach anfangen wollen', 'Alle mit eigenem Server, NAS oder Home Assistant'],
+        ['Apps', 'iPhone-App und im Browser, auch auf Android', 'iPhone-App mit deinem Server verbunden, dazu der Browser'],
+        ['Daten', 'Server in Deutschland (Hetzner), jeder Haushalt mit eigenem Schlüssel verschlüsselt', 'Auf deinem Server, auf Wunsch verschlüsselt'],
+        ['Bon-Fotos und Assistent', 'Dabei, mit Kontingent je nach Tarif', 'Mit eigenem KI-Schlüssel oder ganz ohne'],
+        ['Home Assistant', 'Über die HACS-Integration', 'Voll, dazu Bon-Postfach, Telegram und Bon-Drucker im eigenen Netz'],
+        ['Kosten', 'Free, Haushalt oder Plus', 'Kostenlos, AGPL-3.0'],
+      ],
+    },
+    prices: {
+      label: 'Preise', h2: 'Ein Abo pro Haushalt.',
+      intro: 'Mitglieder und Gäste zahlen nie. Jeder neue Haushalt in der Cloud nutzt 14 Tage lang Plus, ohne Zahlungsdaten. Endet ein Abo, geht der Haushalt auf Free zurück, und nichts wird gelöscht.',
+      per: '/ Monat', or: 'oder', year: '/ Jahr', storage: 'Speicher',
+      plans: [
+        { name: 'Free', price: '0 €', sub: 'für immer', storage: '250 MB', items: ['Gemeinsame Liste mit Einkaufsmodus', 'Bons ohne Limit', 'Merkt sich 60 Tage zurück', 'Rezepte von Hand oder per Link', '20 Nachrichten an den Assistenten im Monat'] },
+        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick', 'Verbundene Haushalte zum Mitversorgen', 'Import aus Screenshots und Fotos von Papierlisten', '100 Nachrichten im Monat'] },
+        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
+        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'iPhone-App und Browser'], host: true },
+      ],
+      note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Bezahlt wird in der iPhone-App über Apple.',
+    },
+    privacy: {
+      label: 'Datenschutz und Sicherheit', h2: 'Eure Bons arbeiten für euch, nicht für Marktforschung.',
+      intro: 'Hier steht nur, was sich prüfen lässt. Wie die Cloud aufgebaut ist, steht offen im Quellcode und in der Dokumentation.',
+      facts: [
+        ['server', 'Server in Deutschland', 'Die ToHuus Cloud läuft auf Servern von Hetzner in Deutschland.'],
+        ['key', 'Jeder Haushalt mit eigenem Schlüssel', 'Jeder Haushalt hat eine eigene, verschlüsselte Datenbank mit eigenem Schlüssel. Fotos und Bon-Dateien sind ebenfalls verschlüsselt.'],
+        ['eyeoff', 'Kein Tracking, keine Werbung', 'Eure Bons werden weder verkauft noch für Werbung ausgewertet. Auch diese Website setzt keine Cookies.'],
+        ['robot', 'KI nur über Mistral', 'Bon-Fotos, Spracheingaben und der Assistent laufen über OpenRouter zu Mistral, einem Anbieter aus Frankreich. Jede Anfrage ist auf Mistral festgelegt, ohne Ausweichen auf andere Anbieter, und geht laut OpenRouter nur an Anbieter, die keine Nutzerdaten sammeln. Sprachaufnahmen werden nicht gespeichert.'],
+        ['lock', 'Sensible Angaben bleiben zu Hause', 'Allergien und Angaben zu Kindern gehen nur an ein Sprachmodell, wenn ihr das ausdrücklich einschaltet.'],
+        ['trash', 'Wenn ihr löscht', 'Löscht ihr den Haushalt, wird zuerst sein Schlüssel vernichtet, dann folgen die Daten und ihre Sicherungen. Sicherungskopien der Kontoverwaltung laufen nach ihrer Frist ab.'],
+      ],
+      link: 'Technische Details zur Cloud', linkHref: `${GH}/blob/main/docs/cloud.md`,
     },
     host: {
-      label: 'Privatsphäre & Selbst hosten', h2: 'Bleibt bei euch.',
-      p: 'Ein Docker-Container, eine SQLite-Datei. Kein Konto bei uns, kein Tracking, nichts telefoniert nach Hause. Alles, was mit der Außenwelt spricht, ist optional.',
+      label: 'Selbst hosten', h2: 'Für alle mit eigenem Server.',
+      p: 'Ein Docker-Container und eine SQLite-Datei, kostenlos unter AGPL-3.0. Die iPhone-App verbindet sich mit deinem Server, im Browser läuft ToHuus als Web-App. Ein Konto bei uns brauchst du dafür nicht.',
       facts: [
-        ['server', 'Läuft fast überall', 'Docker auf einem NAS oder einem kleinen VPS.'],
-        ['db', 'Eure Daten', 'Eine SQLite-Datei, Export als JSON, nächtliche Backups, auf Wunsch nach WebDAV oder Nextcloud. Vor jeder Datenbank-Migration läuft ein Backup.'],
-        ['lock', 'Anmelden', 'Passkeys, Passwort mit zweitem Faktor, E-Mail-Link, OpenID Connect und eine PIN am geteilten Tablet.'],
-        ['camera', 'Fotos lesen', 'Optional, mit einem Modell deiner Wahl über eine OpenAI-kompatible Schnittstelle. Auch lokal, zum Beispiel mit Ollama.'],
-        ['globe', 'Sprachen und Regionen', 'Deutsch, Englisch und Schwedisch. Die Region legt Währung, Datumsformat und die erwarteten Bons fest.'],
-        ['sun', 'Hell und dunkel', 'Der Haushalt wählt hell, dunkel oder wie das Gerät. Auf Wunsch entscheidet jede Person selbst.'],
+        ['refresh', 'Home Assistant in beide Richtungen', 'Einkaufsliste als To-do-Liste für Assist, Sensoren für Fälliges und den Wochenplan als Kalender. Installiert über HACS, die Integration steht unter MIT-Lizenz.'],
+        ['mail', 'Bon-Postfach, Telegram, Drucker', 'Bons kommen per Mail herein, „2 Milch, Brot“ im Chat landet auf der Liste, und ein Bon-Drucker in der Küche druckt sie aus.'],
+        ['robot', 'KI optional', 'Mit einem Schlüssel für OpenRouter oder jeden OpenAI-kompatiblen Dienst, auch lokal. Ohne Schlüssel läuft alles außer Bon-Fotos und dem Assistenten.'],
+        ['db', 'Eure Daten', 'Eine SQLite-Datei, auf Wunsch verschlüsselt, mit nächtlichen Sicherungen und Export als JSON.'],
+        ['code', 'KI-Assistenten über MCP', 'Claude, ChatGPT und andere Assistenten verbinden sich über MCP direkt mit eurem Haushalt.'],
       ],
-      licenceH: 'Lizenzen',
-      licence: 'Die App steht unter der <a href="' + GH + '/blob/main/LICENSE">AGPL-3.0</a>, die Home-Assistant-Integration unter <a href="' + GH + '/blob/main/ha-integration/LICENSE">MIT</a>. Keine Firma dahinter, kein Abo.',
       installH: 'Installation', steps: [
         ['Holen und einstellen', 'In <code>.env</code> trägst du <code>BASE_URL</code>, deinen Namen und ein Passwort ein. Alle weiteren Optionen stehen kommentiert in <code>.env.example</code>.'],
         ['Starten', 'Mit <code>docker compose up -d --build</code>, dann <code>http://localhost:8080</code> öffnen. Die Daten liegen in <code>./data</code>.'],
         ['Leer oder mit Demo', 'Beim ersten Start wählst du, ob du leer anfängst oder dich erst mit Demo-Daten umsiehst. Die sind später mit einem Tipp wieder weg.'],
-        ['HTTPS davor', 'Dein üblicher Reverse Proxy reicht. Passkeys und das Teilen-Menü brauchen HTTPS. Danach die App auf den Homescreen legen.'],
+        ['HTTPS davor', 'Dein üblicher Reverse Proxy reicht. Danach die iPhone-App mit der Adresse verbinden oder die Web-App auf den Startbildschirm legen.'],
       ],
-      envComment: '# en, de oder sv',
+      envComment: '# en oder de',
     },
-    tour: { label: 'Tour', h2: 'Erst mal umsehen? Mit Demo-Daten.', p: 'Die Tour führt dich direkt auf den echten Seiten durch die wichtigsten Stellen. Danach sind die Demo-Daten mit einem Tipp wieder weg.', a: 'Installieren', b: 'Auf GitHub ansehen', shot: 'Die Tour erklärt die Einkaufsliste direkt auf der echten Seite' },
-    story: {
-      word: 'To Huus', wordSub: 'Plattdeutsch für „zu Hause“. Gesprochen an Nord- und Ostsee.',
+    why: {
+      label: 'Warum es ToHuus gibt', word: 'To Huus', wordSub: 'Plattdeutsch für „zu Hause“.',
       ps: [
-        'Angefangen hat ToHuus in einem ganz normalen Familienalltag. Eine Person wusste, wo alles liegt und was zur Neige geht, die andere hat gefragt. Die eine Regel beim Bauen: Es muss an einem müden Dienstag funktionieren.',
-        'Gebaut ist es für jedes Zuhause, für die Einzimmerwohnung ohne Gefrierfach genauso wie für die WG, in der jede Person ihr eigenes Fach im Kühlschrank hat.',
-        'Es ist kostenlos und quelloffen. Issues und Pull Requests sind willkommen, Übersetzungen auch.',
+        'Ich habe ToHuus für unseren eigenen Haushalt gebaut. Bei uns wusste nur eine Person, was noch im Kühlschrank ist, was diese Woche gekocht wird und ob noch Kaffee da ist, und alle anderen haben gefragt. Das wollte ich ändern, ohne dass dafür jemand eine Tabelle pflegen muss.',
+        'Den Code haben zum größten Teil KI-Agenten geschrieben. Mein Teil war, zu entscheiden, was ToHuus können soll, es bei uns im Alltag zu testen und alles wieder rauszuwerfen, was in einem echten Haushalt nicht funktioniert. Das war ehrlich gesagt eine ganze Menge.',
+        'Wenn der Einkauf ohnehin digitaler wird, solltest du auch etwas davon haben. Jetzt testen die ersten Familien ToHuus, und ich bin gespannt, was davon in ihrem Alltag bleibt.',
       ],
-      sig: 'Till & Lea',
+      sig: 'Till',
+    },
+    faq: {
+      label: 'Fragen', h2: 'Was oft gefragt wird.',
+      list: [
+        ['Muss ich alles abtippen?', 'Nein. Bons kommen als PDF oder Foto herein, beim Selbsthosten auch über ein eigenes Mail-Postfach. Was ihr auf der Liste abhakt, zählt ebenfalls als Einkauf. Einen Vorrat müsst ihr nicht pflegen.'],
+        ['Funktioniert das ohne REWE?', 'Ja. ToHuus liest auch Bons von Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm und Rossmann, Papierbons per Foto. Wer gar keine Bons sammeln will, hakt einfach auf der Liste ab.'],
+        ['Gibt es ToHuus für Android?', 'Eine eigene Android-App gibt es nicht. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst, auf Android genauso wie am Rechner.'],
+        ['Wann kommt die iPhone-App?', 'Sie kommt bald in TestFlight, zuerst für einen kleinen Kreis von Testhaushalten. Wer selbst hostet, kann die Web-App schon heute nutzen.'],
+        ['Brauche ich dafür KI?', 'Nein. Liste, Vorschläge, Kochplaner und Ausgaben funktionieren ohne. Ein Sprachmodell braucht es nur für Fotos von Papierbons und für den Assistenten.'],
+        ['Brauche ich einen Thermomix?', 'Nein. Der Kochplaner zeigt Rezepte mit und ohne Thermomix, und ihr könnt danach filtern.'],
+        ['Wer zahlt, wenn wir zu viert sind?', 'Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder, Gäste und verbundene Haushalte zahlen nichts.'],
+        ['Was passiert, wenn ich das Abo kündige?', 'Der Haushalt geht auf Free zurück. Gelöscht wird nichts. Ihr seht dann die letzten 60 Tage, und der Assistent hat 20 Nachrichten im Monat.'],
+        ['Was passiert mit meinen Daten, wenn ich lösche?', 'Zuerst wird der Schlüssel des Haushalts vernichtet, damit ist die Datenbank nicht mehr lesbar. Danach werden die Dateien und die Sicherungen des Haushalts gelöscht. Sicherungskopien der Kontoverwaltung, die noch den verschlüsselten Schlüssel enthalten, laufen nach ihrer Frist ab.'],
+        ['Ist ToHuus ein Familienkalender?', 'Nein. ToHuus kümmert sich um Einkauf, Kochen und das Geld dafür. Termine, Aufgaben mit Zuständigkeiten oder Punkte gibt es bewusst nicht.'],
+      ],
     },
     foot: {
-      about: 'Open-Source-App für jedes Zuhause, von einer Familie gebaut, mit viel Hilfe von Claude.',
+      about: 'ToHuus ist ein Angebot von Heidrich Digital.', provider: `Anbieter: ${PROVIDER}`,
       project: 'Projekt', legal: 'Rechtliches', code: 'Quellcode auf GitHub', license: 'Lizenz App: AGPL-3.0', licenseHa: 'Lizenz HA-Integration: MIT', issues: 'Fehler melden',
       imprint: 'Impressum', privacy: 'Datenschutz', otherLang: 'English version',
-      fine: 'Diese Website setzt keine Cookies, trackt nicht und lädt nichts von Dritten. Schriften: Familjen Grotesk und Hedvig Letters (SIL Open Font License), lokal ausgeliefert. Icons: Phosphor (MIT). Rezeptfoto: Max Griss auf Unsplash. Produktdaten und -bilder in der App stammen teilweise von Open Food Facts (ODbL / CC BY-SA). ToHuus Hub steht in keiner Verbindung zu REWE, Vorwerk/Thermomix, Cookidoo, Telegram, Apple oder den genannten Apps und Läden. Die Namen beschreiben nur kompatible Formate und Dienste.',
+      fine: 'Diese Website setzt keine Cookies, trackt nicht und lädt nichts von Dritten. Schriften: Familjen Grotesk und Hedvig Letters (SIL Open Font License), lokal ausgeliefert. Icons: Phosphor (MIT). Die Bildschirmfotos zeigen einen Demo-Haushalt mit ausgedachten Namen und Bons. ToHuus steht in keiner Verbindung zu REWE, Lidl, Aldi, Vorwerk/Thermomix, Apple oder den anderen genannten Läden und Diensten. Die Namen beschreiben nur kompatible Formate und Dienste.',
     },
   },
   en: {
     lang: 'en', locale: 'en_GB', alt: 'de_DE', url: SITE, base: '', other: 'de/', otherLang: 'de',
-    title: 'ToHuus Hub · Less on your mind. More at home.',
-    desc: 'Free, open-source app for every kind of home, on your own server: shared shopping list, stock, recipes and meal plan, treats for everyday life, guests and parties, receipts and spending, Home Assistant and AI assistants. For a flat, a flat share, a terraced house or a house.',
-    ogAlt: 'The ToHuus mark, the line “Less on your mind. More at home.” and four drawn homes: a flat, a flat share, a terraced house and a house.',
+    title: 'ToHuus · Remembers what your home is missing',
+    desc: 'ToHuus remembers for your household what is there, what is missing and what it costs, from your receipts and your list. For iPhone and the browser, in ToHuus Cloud or on your own server.',
+    ogAlt: 'The ToHuus mark, the line “So one person doesn’t have to keep it all in their head.” and four drawn homes.',
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
-    ids: { home: 'home', treats: 'treats', install: 'install', host: 'self-hosting', tour: 'tour' },
-    nav: [['#home', 'Home'], ['#everyday', 'Everyday'], ['#treats', 'Treats'], ['#cooking', 'Cooking'], ['#stock', 'Stock'], ['#self-hosting', 'Self-hosting']],
-    rail: [['#everyday', 'Everyday', 'home'], ['#treats', 'Treats', 'gift'], ['#install', 'Install', 'download'], ['#cooking', 'Cooking', 'pot'], ['#tour', 'Tour', 'play']],
-    themeLabel: 'Dark theme', homeLabel: 'ToHuus Hub home', langLabel: 'Language',
-    copy: 'Copy', copied: 'Copied',
+    themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
+    ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install' },
+    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting']],
+    rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
-      label: 'Open source · on your server',
-      h1: 'Less on your mind.<br><span class="hl">More at home.</span>',
-      lede: 'Flat, flat share, terraced house or house: ToHuus brings shopping, supplies and recipes together.',
-      cta: 'Install it', code: 'Read the code', tour: 'Take the tour',
-      facts: ['Free, AGPL-3.0', 'No account, no tracking', 'Runs on a NAS or small server'],
+      label: 'Shopping and household assistant',
+      h1: 'So one person doesn’t have to keep it all <span class="hl">in their head.</span>',
+      lede: 'ToHuus remembers for your household what is there, what is missing and what it costs. Your receipts and your shared list are all it needs.',
+      ios: 'For iPhone', iosSub: 'soon on TestFlight', gh: 'Self-host from GitHub',
+      facts: ['Servers in Germany (Hetzner)', 'No tracking, no ads', 'Self-hosting is free'],
       tiles: { flat: 'Flat', shared: 'Flat share', terraced: 'Terraced house', house: 'House' },
-      tilesLabel: 'Four drawn homes: a flat in an apartment block, a flat share in an old building with three doorbells, terraced houses with a cat on the roof and a detached house with a tree.',
+      tilesLabel: 'Four drawn homes: a flat, a flat share, terraced houses and a house.',
+      shot: 'ToHuus on the iPhone, Today page: beef mince and porridge oats are due, with the note “remembers: every ~20 days, last 19 days ago”, below it the shared list with items from Mira and Sam.',
     },
-    worries: {
-      label: 'Mental load', h2: 'The questions one person usually carries around.',
-      p: 'Usually one person knows what is missing, what needs eating and where the parcel tape lives. In families, in couples and in flat shares alike. ToHuus takes that part over, so you can share it, or stop thinking about it altogether.',
+    ask: {
+      label: 'Do we still have …?', h2: 'Usually only one person knows.',
+      p: 'Whether there is coffee left, what is for dinner this week and when the detergent runs out: in many households exactly one person knows. Everyone else asks or buys it twice. ToHuus takes that part out of one head and puts it where everybody can look.',
+      p2: 'Then everyone knows what is missing, and nobody has to remember it.',
       bonTitle: 'On your mind', bonFoot: 'Now in ToHuus',
-      list: ['Do we still have milk?', 'What are we eating tonight?', 'Who is getting that?', 'Where is the parcel tape?', 'Is the yoghurt still good?', 'Did you already buy it?', 'What do we need for Saturday?', 'When was the water filter due?'],
+      list: ['Do we still have coffee?', 'What are we eating tonight?', 'Is there any milk left?', 'Did you get toilet roll?', 'Do we need anything for Sunday?', 'What did the shopping cost this month?'],
     },
-    home: {
-      label: 'Home, not house', h2: 'For every kind of home, as it really is.',
-      intro: 'On first start ToHuus asks who lives with you. That only shapes suggestions. Nothing is locked, and you can switch any time.',
-      forms: [['c', 'Just me', 'No votes and no “who is getting it”, just your lists.'], ['h', 'The two of us', 'Shared lists and votes for dinner, no kids section.'], ['s', 'Family', 'Everything, including kids and guests.'], ['t', 'Flat share', 'Shared and personal places, no family wording.']],
-      placesH: 'Only the places you really have.',
-      placesP: 'ToHuus does not assume a fridge, a cellar or a chest freezer. You name your places yourselves, nest, sort and archive them. Anything without a place shows up under “not assigned to a place yet”. That is fine too.',
-      chips: ['Kitchenette', 'Shared fridge', 'Jonas’ shelf', 'Hallway shelf', 'Chest freezer in the cellar'], chipNone: 'Not assigned to a place yet',
-      shots: [['home', 'Settings, household section: choose just me, the two of us, family or flat share'], ['places', 'Settings, places section: self-named places with the number of things in each']],
-    },
-    everyday: { id: 'everyday', label: 'Everyday', h2: 'One look in the morning is enough.', intro: '“Today” shows on one page what comes first, and exactly one next step. The shopping list is current on every phone at once.', shots: [['today', 'Today page with the green header block and the Today first ticket'], ['shopping', 'Shopping list with groups, I’ll-get-it buttons and the add field']], points: [
-      ['home', 'Today first', 'At most four lines from your real data: what needs eating, what has run out, what is on the list. No dashboard tiles.'],
-      ['hand', 'Shopping list with “I’ll get it”', 'Whoever takes something taps it, so nobody buys it twice. In the shop the list sorts itself by aisle, even without signal.'],
-      ['store', '“Where to buy?”', 'On a product you set where you get it, say the chemist or the weekly market. The list shows it right next to the item. The app never fills this in by itself.'],
-      ['eyeoff', 'Discreet items', 'Others see private items only as a neutral placeholder, or not at all. Saturday’s present stays a surprise.'],
-      ['check', 'Ticked means put away', 'What you tick off in the shop goes straight into stock, if you have it set up that way.'],
-    ] },
-    treats: {
-      label: 'Treats', h2: 'Do each other a good turn.',
-      story: [
-        'It is half past seven and Lea is putting Mila to bed. Tonight it takes a while. Between two pages of the bedtime story she taps “Something sweet”, then vanilla ice cream.',
-        'Till’s phone buzzes: “Lea asks you for something”. One tap on “I’ll bring it”. By the time she comes out of the kids’ room the ice cream is waiting, spoon included. The evening feels a little shorter after that.',
+    jobs: {
+      label: 'What ToHuus does', h2: 'Shopping, cooking and money belong together.',
+      intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three.',
+      list: [
+        { id: 'shopping', no: '1', label: 'Shopping', h3: 'ToHuus remembers what is missing.', shot: 'shopping',
+          alt: 'Shopping list in ToHuus: suggestions at the top such as beef mince with “remembers: every ~12 days”, below it items sorted by section with an I’ll-get-it button and where they came from, like “Mira, today”.',
+          p: 'From your receipts and what you tick off the list, ToHuus learns how often you buy things. When something is due again, it shows up as a suggestion with its reason. You do not have to keep a stock list for that.',
+          points: ['One list, up to date on every phone at once', 'Whoever takes something taps “I’ll get it”', 'Sorted by aisle in the shop, even without signal'] },
+        { id: 'cooking', no: '2', label: 'Cooking', h3: 'You can cook this today.', shot: 'cook',
+          alt: 'Cook page: “You can cook this today” with a gnocchi skillet and roast vegetables with feta, both marked “everything is at home”, plus filters with and without Thermomix.',
+          p: 'The cook planner starts with what is at home. It shows what works right now, where only one ingredient is missing and what should be used soon. Plan the week if you like, and whatever it needs goes on the list in one tap.',
+          points: ['Recipes by hand, from a link or from other apps', 'With or without a Thermomix, and allergies are taken into account'] },
+        { id: 'money', no: '3', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
+          alt: 'Money page for September 2026: £215.81 spent, £17 more than the month before, with a weekly line and bars by category below.',
+          p: 'Every receipt counts. ToHuus shows what a month cost, in which shop and for which category, and compares it with the month before. You do not need to keep a ledger.',
+          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'A budget, if you want one', 'CSV export'] },
       ],
-      after: 'That is what Treats is for. Whoever is stuck, with bedtime, ill in bed or after a long day, asks for a small something from what is in the house. Someone else brings it.',
-      ticketH: 'How a wish travels',
+    },
+    levels: {
+      label: 'Getting started', h2: 'However digital your shopping already is.',
+      intro: 'If shopping is going digital anyway, you should get something out of it too. ToHuus works with what you already have. One of these is enough to start.',
+      shot: 'import', alt: 'Imports page: receipts as PDF, photo, QR link or text, with the history of booked receipts from Tesco and Aldi below.',
+      list: [
+        ['receipt', 'Delivery and e-receipts', 'If you order groceries online or get digital receipts, the order and the receipt come in as a PDF. ToHuus matches them and books what was actually delivered.'],
+        ['camera', 'Snap the receipt', 'For a paper receipt, a photo is enough. Anything ToHuus cannot read with confidence is shown to you for a check before it is booked.'],
+        ['mic', 'Just speak', 'Tap “Speak” and say: “We are out of milk, and we need something for Sunday.” The assistant puts it on the list and tells you what it added. Every step can be undone.'],
+      ],
+    },
+    how: {
+      label: 'How it remembers', h2: 'You decide what goes on the list.',
+      intro: 'ToHuus makes suggestions and never quietly writes on your list. Every line shows where it came from.',
       steps: [
-        ['Lea asks for something', 'Something sweet, something to drink, a snack or a free-text wish. Plus a note like “with a spoon, please”.'],
-        ['The message goes out', 'If Lea asked one person, only their phone buzzes. Otherwise everyone who can right now hears about it.'],
-        ['“I’ll bring it” or “Can’t right now”', 'One tap in the notification, with a short reason like “In a few minutes” if needed.'],
+        ['Collect purchases', 'Every receipt and every tick on the list counts as a purchase. No more upkeep than that.'],
+        ['Spot the rhythm', 'After a few weeks ToHuus sees, for example, that you buy porridge oats about every 20 days.'],
+        ['Suggest', 'When it is due again, a suggestion appears with its reason. One tap puts it on the list.'],
+        ['Hold back', '“Still have it” postpones the suggestion. Turn it down twice and ToHuus stops asking.'],
       ],
-      thanks: 'Then a small thank you. Once, only to the person who brought it. No points, no tally of who did what.',
-      shot: ['order', 'Treats page: What would you like?, below it a wish from Lea with I’ll bring it and Can’t right now'],
-      modesH: 'The same for visitors and parties',
-      modes: [
-        ['For you', 'For everyone who lives here. If you live alone, this part simply does not show up.'],
-        ['Guests', 'Visitors, the babysitter or grandparents get a link or QR code and ask for something from what is in the house. With their name, so it is clear whose coffee it is.'],
-        ['Party', 'The TV shows a QR code to join and what is ready. The kitchen gets its own view, and the party ends by itself.'],
-      ],
-      menu: 'You decide what is on the menu: things from stock, or menu-only items like tap water or a cappuccino.',
+      cardTitle: 'Shopping list', cardSub: 'with origins',
+      rows: [['Mozzarella', 'remembers: every ~9 days', 'rhythm'], ['Baking paper', 'Mira · today 16:41', 'person'], ['2× Oat drink', 'Mira · today 16:41', 'person'], ['Parcel tape', 'Jonas · yesterday', 'person'], ['Chopped tomatoes', 'from the week plan', 'plan']],
+      cardFoot: 'No line without a sender',
     },
-    chapters: [
-      { id: 'cooking', label: 'Cooking', h2: 'What are we eating tonight? Decided in a minute.', intro: 'ToHuus suggests what fits what you have and plans the week with you. Anyone who wants to can vote.', shots: [['cook', 'What do we eat today page with suggestions from stock'], ['plan-vote', 'A vote on recipes for the weekend']], flip: true, points: [
-        ['pot', 'What works right now?', 'What you can cook now, what lacks just one thing and what needs using up. Or one tap on “You decide for us”.'],
-        ['calendar', 'Week plan', 'Free evenings fill up with fitting recipes, rotating over several weeks if you like. Whatever the week is missing goes on the list in one tap.'],
-        ['heart', 'Vote together', 'Everyone says no, yes or super on their own phone, or one phone goes round the table. No ranking, no debate at the stove.'],
-        ['scale', 'Servings per evening', 'Bolognese for six instead of four? The amount applies to that evening, to the shopping and to what comes out of stock after cooking. The recipe stays as it is.'],
-      ] },
-      { id: 'recipes', label: 'Recipes', h2: 'Your version, not the internet’s.', intro: 'Recipes come from wherever you already keep them. Then you cook them the way your household does.', shots: [['recipe', 'Recipe page with photo, ratings and the cooked button']], arch: { alt: 'Gnocchi with tomato and mozzarella in a pan', stamp: 'House<br>version' }, points: [
-        ['download', 'From other apps', 'Any recipe page with structured data, plus Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl, Grocy and CSV. With a vision model, photos and plain text too.'],
-        ['translate', 'Units that fit', 'Cups, ounces and pounds become grams and millilitres if you cook metric. German and Swedish households get the ingredient lines translated, without any translation service.'],
-        ['robot', 'With any AI', 'A ready-made prompt to copy: put a photo or a cookbook page into the chat, paste the answer back into ToHuus.'],
-        ['refresh', 'Cookidoo via Home Assistant', 'Your Cookidoo week comes in through Home Assistant. Thermomix steps keep time, temperature and speed.'],
-        ['swap', 'The house version', 'Rice instead of potatoes, no coriander, oat milk instead of milk. Set it once and it applies to suggestions, cooking and the shopping list. The original stays untouched.'],
-        ['zoom', 'Photos you can zoom into', 'One tap opens a photo full screen, and then you can zoom in.'],
-        ['smile', 'Who liked it?', 'Everyone rates recipes and keeps favourites. Dislikes and allergies feed into suggestions, and a dish with an allergen is never planned automatically.'],
-      ] },
-      { id: 'stock', label: 'Stock', h2: 'Stock without a spreadsheet.', intro: 'Nobody has to count pasta. Start with what runs out and leave the rest.', shots: [['stock', 'Stock by place with amounts and filters'], ['labels', 'QR labels for products and leftovers']], flip: true, points: [
-        ['list', '“Only what runs out”', 'A start mode for anyone who does not want an inventory. Switch to everything later without losing anything.'],
-        ['gauge', 'Half full is an answer', 'Fruit and bread are full, half, low or empty. Packs get counted, some things not at all.'],
-        ['qr', 'Labels for leftovers', 'A box of leftovers is put away in two taps, with a date, a short code and a QR label. Scanning it opens eat, thaw, throw away or plan.'],
-        ['pin', 'Where is what?', 'Every item can have an exact spot. Type “plasters” and you know which shelf.'],
-        ['barcode', 'Scan a barcode', 'Product name and photo come from Open Food Facts.'],
-      ] },
-      { id: 'receipts', label: 'Receipts & spending', h2: 'The receipt puts things away.', intro: 'Digital receipts and orders bring your stock up to date. Typing is the fallback, not the plan.', shots: [['receipts', 'Imports: receipts as PDF, photo, QR link or text, with the history below'], ['spending', 'Monthly spending, worked out from the receipts']], points: [
-        ['receipt', 'Receipts from many shops', 'German eBons and pickup notes, receipts from Lidl, Aldi, dm and others, plus UK, US and Swedish formats. As PDF, photo, QR code or through your own receipt inbox.'],
-        ['sparkle', 'Learns from corrections', 'Fix once what a receipt abbreviation stands for, and it applies to the next receipt from that shop. You can see the rules and delete them.'],
-        ['check', 'Check, don’t guess', 'Every import goes through a short review: substitutions, missing items, new products.'],
-        ['chart', 'Spending without a ledger', 'Totals per week, month or year, by shop and category, straight from the receipts. Budgets and CSV export too.'],
-      ] },
-      { id: 'together', label: 'Flatmates, family, guests', h2: 'For everyone who lives here. And for the ones just visiting.', intro: 'Everyone has their own account and their face in the app. Guests only see what you share.', shots: [['members', 'Household members with family, children and permanent guests']], flip: true, points: [
-        ['mail', 'Invite by e-mail or link', 'Whoever joins gets a personal link, by e-mail or as a QR code. They sign in with a passkey, a password or an e-mail link. The link works once and for seven days.'],
-        ['key', 'Permanent guests with levels', 'The aunt, the babysitter or a flatmate’s partner see as much as you want: treats only, stock too, recipes too, or the whole day to day. Settings and spending stay with you.'],
-        ['user', 'Guests with names', 'Anyone asking for something through a guest link types their name once. The phone remembers it.'],
-        ['child', 'Kids without a login', 'In families a tablet becomes a kids’ screen: wish for something, look up where things are. Every wish waits for a parent.'],
-        ['mic', 'Babysitter link', 'A link shows where things are, with your note on top. With Home Assistant, selected voice commands work too. Locks, alarms and cameras are never on the list.'],
-      ] },
-      { id: 'away', label: 'Away', h2: 'Holidays without forgotten yoghurt.', intro: 'Tell ToHuus when you are away. It plans the rest around the trip.', shots: [['away', 'Away mode with the trip, use-up days and packing list']], points: [
-        ['pot', 'Use it up before', 'In the days before, suggestions use up what would otherwise go off. Nothing fresh goes on the list.'],
-        ['suitcase', 'Packing list', 'What comes along from stock is booked out, and back in after the trip.'],
-        ['moonstar', 'Quiet while away', 'While you are gone, only urgent notifications come through and automatic shopping suggestions pause.'],
-        ['door', 'Coming home', 'The welcome list is ready before you unlock the door, along with a look at what expired in the meantime.'],
-      ] },
-      { id: 'home-assistant', label: 'Smart home', h2: 'Home Assistant, both ways.', intro: 'If you already have automations, ToHuus joins in instead of replacing them.', shots: [['ha-dashboard', 'Settings, Home Assistant section']], flip: true, points: [
-        ['package', 'Installed via HACS', 'A dedicated integration with ready-made dashboards, MIT licensed.'],
-        ['refresh', 'Two ways, per topic', 'Shopping list as a to-do list for Assist, meal plan and home care as calendars, sensors for tonight and low stock. Per topic you decide whether ToHuus syncs with a list or calendar you already have in Home Assistant.'],
-        ['tv', 'Kitchen display', 'An old tablet or the TV shows the day, dark mode included. E-ink frames get a ready-made picture.'],
-      ] },
-    ],
-    everywhere: {
-      label: 'Wherever you are', h2: 'Telegram, Shortcuts, AI assistants.', p: 'Things land where you already type or talk.',
-      ai: ['AI assistants via MCP', 'Claude, ChatGPT and other assistants connect straight to your household. A photo of the receipt is enough.', 'receipt.jpg', 'Please add this to ToHuus.', 'Done. The items are waiting in your review list.'],
-      tg: ['Telegram and friends', 'Write “2 milk, bread” in the chat and it is on the list. Notifications also come by push, Gotify, Matrix, ntfy or e-mail.'],
-      mail: ['E-mail in the ToHuus look', 'Invitations, sign-in links and the daily digest arrive as calm e-mails with a plain-text version, readable in light and dark.'],
-      sc: ['Shortcuts and sharing', 'An iPhone Shortcut adds things to the list. On Android and desktop ToHuus shows up in the share menu, for recipes, lists and receipts.'],
+    who: {
+      label: 'Who it is for', h2: 'For every household that does a food shop.',
+      intro: 'On first start ToHuus only asks who belongs to the household. What you see follows from that.',
+      forms: [
+        ['c', 'Just me', 'Nothing to remember, and at the end of the month you see what food and household cost.'],
+        ['h', 'The two of us', 'Both of you know what is missing. Nobody has to ask whether there is coffee left.'],
+        ['s', 'Family', 'Everyone writes on the same list. Children and regular guests only see what you share.'],
+        ['t', 'Flat share', 'Shared things go on one list, and the others do not see private items.'],
+        ['a', 'Looking after someone', 'If you shop for parents or grandparents too, connect the two households and see what is missing there.'],
+      ],
+      note: 'ToHuus does not assume a cellar, a chest freezer or a Thermomix. You decide which places your home has.',
+    },
+    ways: {
+      label: 'Two ways', h2: 'In ToHuus Cloud or on your own server.',
+      intro: 'It is the same app with the same code. The difference is who runs the server.',
+      cols: ['ToHuus Cloud', 'Self-hosted'],
+      rows: [
+        ['Who for', 'Anyone who just wants to start', 'Anyone with a server, a NAS or Home Assistant'],
+        ['Apps', 'iPhone app and the browser, Android included', 'iPhone app connected to your server, plus the browser'],
+        ['Data', 'Servers in Germany (Hetzner), every household encrypted with its own key', 'On your server, encrypted if you like'],
+        ['Receipt photos and assistant', 'Included, with an allowance per plan', 'With your own AI key, or without'],
+        ['Home Assistant', 'Through the HACS integration', 'Fully, plus receipt inbox, Telegram and receipt printer on your network'],
+        ['Cost', 'Free, Household or Plus', 'Free, AGPL-3.0'],
+      ],
+    },
+    prices: {
+      label: 'Pricing', h2: 'One subscription per household.',
+      intro: 'Members and guests never pay. Every new household in the cloud gets 14 days of Plus, no payment details needed. When a subscription ends, the household goes back to Free and nothing is deleted.',
+      per: '/ month', or: 'or', year: '/ year', storage: 'Storage',
+      plans: [
+        { name: 'Free', price: '€0', sub: 'for good', storage: '250 MB', items: ['Shared list with shop mode', 'Unlimited receipts', 'Remembers 60 days back', 'Recipes by hand or from a link', '20 assistant messages a month'] },
+        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices, spending and review', 'Connected households for looking after someone', 'Import from screenshots and photos of paper lists', '100 messages a month'] },
+        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', '1,500 messages a month'], mark: '14 days to try' },
+        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'iPhone app and browser'], host: true },
+      ],
+      note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. Payment runs through Apple in the iPhone app.',
+    },
+    privacy: {
+      label: 'Privacy and security', h2: 'Your receipts work for you, not for market research.',
+      intro: 'This lists only what can be checked. How the cloud is built is described openly in the source code and the documentation.',
+      facts: [
+        ['server', 'Servers in Germany', 'ToHuus Cloud runs on Hetzner servers in Germany.'],
+        ['key', 'Every household with its own key', 'Every household has its own encrypted database with its own key. Photos and receipt files are encrypted too.'],
+        ['eyeoff', 'No tracking, no ads', 'Your receipts are neither sold nor analysed for advertising. This website sets no cookies either.'],
+        ['robot', 'AI only through Mistral', 'Receipt photos, voice input and the assistant go through OpenRouter to Mistral, a provider based in France. Every request is pinned to Mistral with no fallback to other providers, and according to OpenRouter only goes to providers that do not collect user data. Voice recordings are not stored.'],
+        ['lock', 'Sensitive details stay at home', 'Allergies and details about children only go to a language model if you explicitly switch that on.'],
+        ['trash', 'When you delete', 'When you delete the household, its key is destroyed first, then the data and its backups follow. Backup copies of the account directory expire after their retention period.'],
+      ],
+      link: 'Technical details about the cloud', linkHref: `${GH}/blob/main/docs/cloud.md`,
     },
     host: {
-      label: 'Privacy & self-hosting', h2: 'It stays with you.',
-      p: 'One Docker container, one SQLite file. No account with us, no tracking, nothing phones home. Everything that talks to the outside world is optional.',
+      label: 'Self-hosting', h2: 'For everyone with their own server.',
+      p: 'One Docker container and one SQLite file, free under the AGPL-3.0. The iPhone app connects to your server, and in the browser ToHuus runs as a web app. You do not need an account with us.',
       facts: [
-        ['server', 'Runs almost anywhere', 'Docker on a NAS or a small VPS.'],
-        ['db', 'Your data', 'One SQLite file, JSON export, nightly backups, optionally to WebDAV or Nextcloud. A backup runs before every database migration.'],
-        ['lock', 'Sign-in', 'Passkeys, password with a second factor, e-mail link, OpenID Connect and a PIN on the shared tablet.'],
-        ['camera', 'Reading photos', 'Optional, with a model of your choice through an OpenAI-compatible API. Locally too, for example with Ollama.'],
-        ['globe', 'Languages and regions', 'English, German and Swedish. The region sets currency, date format and which receipts to expect.'],
-        ['sun', 'Light and dark', 'The household picks light, dark or like the device. If you like, everyone decides for themselves.'],
+        ['refresh', 'Home Assistant, both ways', 'The shopping list as a to-do list for Assist, sensors for what is due and the week plan as a calendar. Installed via HACS, the integration is MIT licensed.'],
+        ['mail', 'Receipt inbox, Telegram, printer', 'Receipts arrive by e-mail, “2 milk, bread” in a chat lands on the list, and a receipt printer in the kitchen prints it.'],
+        ['robot', 'AI is optional', 'With a key for OpenRouter or any OpenAI-compatible service, local ones included. Without a key everything works except receipt photos and the assistant.'],
+        ['db', 'Your data', 'One SQLite file, encrypted if you like, with nightly backups and JSON export.'],
+        ['code', 'AI assistants via MCP', 'Claude, ChatGPT and other assistants connect straight to your household through MCP.'],
       ],
-      licenceH: 'Licences',
-      licence: 'The app is licensed under the <a href="' + GH + '/blob/main/LICENSE">AGPL-3.0</a>, the Home Assistant integration under <a href="' + GH + '/blob/main/ha-integration/LICENSE">MIT</a>. No company behind it, no subscription.',
       installH: 'Install', steps: [
         ['Get it and set it up', 'In <code>.env</code> you fill in <code>BASE_URL</code>, your name and a password. Every other option is listed with comments in <code>.env.example</code>.'],
         ['Start it', 'Run <code>docker compose up -d --build</code>, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.'],
         ['Empty or demo', 'On first start you choose to begin empty or to look around with demo data first. One tap removes it later.'],
-        ['Put HTTPS in front', 'Your usual reverse proxy is enough. Passkeys and the share menu need HTTPS. Then add the app to your home screen.'],
+        ['Put HTTPS in front', 'Your usual reverse proxy is enough. Then connect the iPhone app to the address or add the web app to your home screen.'],
       ],
-      envComment: '# en, de or sv',
+      envComment: '# en or de',
     },
-    tour: { label: 'Tour', h2: 'Want to look around first? Use the demo data.', p: 'The tour walks you through the important places, right on the real pages. Afterwards the demo data is gone with one tap.', a: 'Install it', b: 'View on GitHub', shot: 'The tour explains the shopping list on the real page' },
-    story: {
-      word: 'To Huus', wordSub: 'Low German for “at home”. Spoken along the North Sea and the Baltic.',
+    why: {
+      label: 'Why ToHuus exists', word: 'To Huus', wordSub: 'Low German for “at home”.',
       ps: [
-        'ToHuus started in an ordinary family routine. One person knew where everything was and what was running out, the other one asked. The one rule while building it: it has to work on a tired Tuesday.',
-        'It is built for every kind of home, the studio flat without a freezer just as much as the flat share where everyone has their own shelf in the fridge.',
-        'It is free and open source. Issues and pull requests are welcome, and so are translations.',
+        'I built ToHuus for our own household. Only one of us knew what was still in the fridge, what we were cooking this week and whether there was coffee left, and everyone else asked. I wanted to change that without anyone having to keep a spreadsheet.',
+        'Most of the code was written by AI coding agents. My part was deciding what ToHuus should do, testing it in our everyday life and throwing out everything that does not work in a real household. Honestly, that was quite a lot.',
+        'If shopping is going digital anyway, you should get something out of it too. Now the first families are testing ToHuus, and I am curious what of it sticks in their everyday life.',
       ],
-      sig: 'Till & Lea',
+      sig: 'Till',
+    },
+    faq: {
+      label: 'Questions', h2: 'What people often ask.',
+      list: [
+        ['Do I have to type everything in?', 'No. Receipts come in as a PDF or a photo, and when you self-host also through your own e-mail inbox. What you tick off the list counts as a purchase too. You do not have to keep a stock list.'],
+        ['Does it work without online grocery delivery?', 'Yes. Paper receipts come in as a photo, and if you do not want to collect receipts at all, simply tick things off the list.'],
+        ['Is there an Android app?', 'There is no separate Android app. In the browser ToHuus runs as a web app you can add to your home screen, on Android just like on a computer.'],
+        ['When is the iPhone app coming?', 'Soon on TestFlight, first for a small group of test households. If you self-host, you can use the web app today.'],
+        ['Do I need AI for this?', 'No. The list, suggestions, cook planner and spending all work without it. A language model is only needed for photos of paper receipts and for the assistant.'],
+        ['Do I need a Thermomix?', 'No. The cook planner shows recipes with and without a Thermomix, and you can filter by it.'],
+        ['Who pays if there are four of us?', 'One subscription covers the whole household. Members, children, guests and connected households pay nothing.'],
+        ['What happens if I cancel?', 'The household goes back to Free. Nothing is deleted. You then see the last 60 days, and the assistant has 20 messages a month.'],
+        ['What happens to my data when I delete it?', 'First the household’s key is destroyed, so the database can no longer be read. Then the household’s files and backups are deleted. Backup copies of the account directory, which still hold the encrypted key, expire after their retention period.'],
+        ['Is ToHuus a family calendar?', 'No. ToHuus looks after shopping, cooking and the money for both. There are deliberately no appointments, chores with owners or points.'],
+      ],
     },
     foot: {
-      about: 'Open-source app for every kind of home, built by a family with a lot of help from Claude.',
+      about: 'ToHuus is offered by Heidrich Digital.', provider: `Provider: ${PROVIDER}`,
       project: 'Project', legal: 'Legal', code: 'Source code on GitHub', license: 'App licence: AGPL-3.0', licenseHa: 'HA integration licence: MIT', issues: 'Report a bug',
       imprint: 'Imprint', privacy: 'Privacy', otherLang: 'Deutsche Version',
-      fine: 'This website sets no cookies, does not track you and loads nothing from third parties. Fonts: Familjen Grotesk and Hedvig Letters (SIL Open Font License), served locally. Icons: Phosphor (MIT). Recipe photo: Max Griss on Unsplash. Product data and images in the app come partly from Open Food Facts (ODbL / CC BY-SA). ToHuus Hub is not affiliated with REWE, Vorwerk/Thermomix, Cookidoo, Telegram, Apple or the apps and shops named here. The names only describe compatible formats and services.',
+      fine: 'This website sets no cookies, does not track you and loads nothing from third parties. Fonts: Familjen Grotesk and Hedvig Letters (SIL Open Font License), served locally. Icons: Phosphor (MIT). The screenshots show a demo household with invented names and receipts. ToHuus is not affiliated with Tesco, REWE, Lidl, Aldi, Vorwerk/Thermomix, Apple or the other shops and services named here. The names only describe compatible formats and services.',
     },
   },
 };
 
 // ---------------------------------------------------------------- screenshots
 /** Every screenshot slot the page uses. The build fails when a file is missing, so no placeholder ever ships. */
-const SHOTS = ['today', 'shopping', 'order', 'cook', 'plan-vote', 'recipe', 'stock', 'labels', 'receipts', 'spending', 'members', 'away', 'ha-dashboard', 'tour', 'home', 'places'];
-/** Not on the page, but README.md shows it. */
-const README_SHOTS = ['people'];
-for (const lang of Object.keys(COPY)) for (const n of [...SHOTS, ...README_SHOTS]) for (const m of ['light', 'dark']) {
-  const f = path.join(ROOT, `assets/shots/${lang}/${n}-${m}.webp`);
+const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import'];
+const WIDTHS = [480, 960];
+for (const lang of Object.keys(COPY)) for (const n of SHOTS) for (const w of WIDTHS) {
+  const f = path.join(ROOT, `assets/shots/${lang}/${n}-${w}.webp`);
   if (!fs.existsSync(f)) throw new Error(`missing screenshot ${path.relative(ROOT, f)}`);
 }
 
 // ---------------------------------------------------------------- building blocks
-const phone = (c, [name, alt], cls = '') => {
+const img = (c, name, alt, { eager = false, cls = '', sizes = '(min-width: 960px) 300px, 72vw' } = {}) => {
   if (!SHOTS.includes(name)) throw new Error(`screenshot slot ${name} is not in SHOTS`);
-  return `<figure class="phone${cls}">
-          <div class="screen">
-            <img class="light-only" src="${c.base}assets/shots/${c.lang}/${name}-light.webp" alt="${alt}" loading="lazy" decoding="async" width="390" height="844">
-            <img class="dark-only" src="${c.base}assets/shots/${c.lang}/${name}-dark.webp" alt="" loading="lazy" decoding="async" width="390" height="844">
-          </div>
-        </figure>`;
+  const src = (w) => `${c.base}assets/shots/${c.lang}/${name}-${w}.webp`;
+  return `<img${cls ? ` class="${cls}"` : ''} src="${src(480)}" srcset="${WIDTHS.map((w) => `${src(w)} ${w}w`).join(', ')}" sizes="${sizes}" alt="${alt}" width="390" height="844" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
 };
 
-const head = (no, label) => `<div class="ch-head reveal"><span class="ch-no">${String(no).padStart(2, '0')}</span><span class="label">${label}</span></div>`;
-
-const points = (list) => `<ul class="points">
-${list.map(([icon, b, s], k) => `          <li class="reveal" style="--d:${60 + k * 40}ms"><span class="pi">${ico(icon)}</span><div><b>${b}</b><span>${s}</span></div></li>`).join('\n')}
-        </ul>`;
-
-const archPhoto = (c, a) => `<figure class="arch-card">
-          <div class="arch"><img src="${c.base}assets/img/recipe-gnocchi.webp" alt="${a.alt}" loading="lazy" decoding="async" width="560" height="659"></div>
-          <span class="stamp" aria-hidden="true">${a.stamp}</span>
+/** A CSS-drawn iPhone around a web screenshot. */
+const device = (inner, cls = '') => `<figure class="device${cls}">
+          <div class="device-screen"><span class="sb" aria-hidden="true">9:41</span>${inner}</div>
+          <span class="island" aria-hidden="true"></span>
         </figure>`;
 
-const chapter = (c, ch, no) => `
-<section class="chapter${ch.flip ? ' flip' : ''}" id="${ch.id}" aria-labelledby="${ch.id}-h">
-  <div class="wrap">
-    ${head(no, ch.label)}
-    <div class="ch-grid">
-      <div class="ch-copy">
-        <h2 class="reveal" id="${ch.id}-h">${ch.h2}</h2>
-        <p class="intro reveal">${ch.intro}</p>
-        ${points(ch.points)}
-      </div>
-      <div class="ch-visual reveal${ch.shots.length > 1 ? ' two' : ''}${ch.arch ? ' with-arch' : ''}">
-        ${ch.arch ? archPhoto(c, ch.arch) : ''}
-        ${ch.shots.map((s) => phone(c, s)).join('\n        ')}
-      </div>
-    </div>
-  </div>
-</section>`;
-
-const treats = (c, no) => {
-  const v = c.treats;
-  return `
-<section class="treats" id="${c.ids.treats}" aria-labelledby="treats-h">
-  <div class="wrap">
-    ${head(no, v.label)}
-    <div class="treats-block">
-      <span class="disc" aria-hidden="true"></span><span class="half" aria-hidden="true"></span>
-      <div class="treats-copy">
-        <h2 class="reveal" id="treats-h">${v.h2}</h2>
-        <div class="tale reveal">
-${v.story.map((p) => `          <p>${p}</p>`).join('\n')}
-        </div>
-        <p class="after reveal">${v.after}</p>
-      </div>
-      <div class="treats-phone reveal">${phone(c, v.shot)}</div>
-    </div>
-    <div class="treats-grid">
-      <div class="ticket wish reveal">
-        <div class="ticket-top">
-          <p class="label">${v.ticketH}</p>
-          <ol class="wish-steps">
-${v.steps.map(([t, s]) => `            <li><b>${t}</b><span>${s}</span></li>`).join('\n')}
-          </ol>
-        </div>
-        <div class="tear" aria-hidden="true"></div>
-        <p class="thanks">${ico('heart')}<span>${v.thanks}</span></p>
-      </div>
-      <div class="modes">
-        <h3 class="reveal">${v.modesH}</h3>
-        <ul class="doors">
-${v.modes.map(([t, s], k) => `          <li class="door d${k + 1} reveal" style="--d:${k * 60}ms"><b>${t}</b><span>${s}</span></li>`).join('\n')}
-        </ul>
-        <p class="menu-note reveal">${v.menu}</p>
-      </div>
-    </div>
-  </div>
-</section>`;
-};
+const label = (t, cls = '') => `<p class="label${cls}">${t}</p>`;
 
 function page(c) {
   const b = c.base;
-  const h = c.host;
-  const e = c.everywhere;
-  const hm = c.home;
   const id = c.ids;
-  let no = 0;
-  const n = () => ++no;
+  const H = c.hero;
+  const A = c.ask;
+  const J = c.jobs;
+  const L = c.levels;
+  const W = c.how;
+  const F = c.who;
+  const T = c.ways;
+  const P = c.prices;
+  const D = c.privacy;
+  const S = c.host;
+  const Y = c.why;
+  const Q = c.faq;
   return `<!doctype html>
 <html lang="${c.lang}">
 <head>
@@ -477,11 +438,10 @@ function page(c) {
 <link rel="alternate" hreflang="en" href="${SITE}">
 <link rel="alternate" hreflang="de" href="${SITE}de/">
 <link rel="alternate" hreflang="x-default" href="${SITE}">
-<meta name="theme-color" content="#f7f5ef" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f1513" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f5ef">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ToHuus Hub">
+<meta property="og:site_name" content="ToHuus">
 <meta property="og:title" content="${c.title}">
 <meta property="og:description" content="${c.desc}">
 <meta property="og:url" content="${c.url}">
@@ -501,9 +461,9 @@ function page(c) {
 <link rel="preload" href="${b}assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${b}assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${b}assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';d.setAttribute('data-theme',t)})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus Hub","description":"${c.desc}","applicationCategory":"LifestyleApplication","operatingSystem":"Docker, Linux","license":"https://www.gnu.org/licenses/agpl-3.0.html","isAccessibleForFree":true,"url":"${c.url}","image":"${SITE}assets/img/og-${c.lang}.png","codeRepository":"${GH}","inLanguage":["en","de"],"author":{"@type":"Person","name":"Till Heidrich","url":"https://github.com/tillheidrich"}}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus","description":"${c.desc}","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web, Docker","license":"https://www.gnu.org/licenses/agpl-3.0.html","url":"${c.url}","image":"${SITE}assets/img/og-${c.lang}.png","codeRepository":"${GH}","inLanguage":["en","de"],"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}}
 </script>
 </head>
 <body>
@@ -516,7 +476,6 @@ ${sprite}
   <nav class="nav-links" aria-label="${c.navLabel}">
 ${c.nav.map(([href, l]) => `    <a href="${href}">${l}</a>`).join('\n')}
   </nav>
-  <a class="nav-gh" href="${GH}">${ico('github')}<span>GitHub</span></a>
   <div class="lang" role="group" aria-label="${c.langLabel}">
     <a href="${c.lang === 'en' ? './' : '../'}" hreflang="en" lang="en"${c.lang === 'en' ? ' aria-current="true"' : ''}>EN</a>
     <a href="${c.lang === 'de' ? './' : 'de/'}" hreflang="de" lang="de"${c.lang === 'de' ? ' aria-current="true"' : ''}>DE</a>
@@ -530,147 +489,225 @@ ${c.nav.map(([href, l]) => `    <a href="${href}">${l}</a>`).join('\n')}
 <section class="hero" aria-labelledby="hero-h">
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <p class="label">${c.hero.label}</p>
-      <h1 id="hero-h">${c.hero.h1}</h1>
-      <p class="lede">${c.hero.lede}</p>
+      ${label(H.label)}
+      <h1 id="hero-h">${H.h1}</h1>
+      <p class="lede">${H.lede}</p>
       <div class="ctas">
-        <a class="btn primary" href="#${id.install}">${c.hero.cta}<span class="tail">${ico('download')}</span></a>
-        <a class="btn" href="${GH}">${ico('github')}${c.hero.code}</a>
-        <a class="link-play" href="#${id.tour}">${ico('play')}${c.hero.tour}</a>
+        <a class="btn primary" href="#${id.ways}">${ico('apple')}<span class="btn-2"><b>${H.ios}</b><small>${H.iosSub}</small></span><span class="tail">${ico('arrow')}</span></a>
+        <a class="btn" href="${GH}">${ico('github')}${H.gh}</a>
       </div>
-      <ul class="facts">${c.hero.facts.map((f) => `<li>${f}</li>`).join('')}</ul>
+      <ul class="facts">${H.facts.map((f) => `<li>${ico('check')}${f}</li>`).join('')}</ul>
     </div>
     <div class="hero-art">
-    ${homeTiles(c.hero.tiles, c.hero.tilesLabel)}
+      ${homeTiles(H.tiles, H.tilesLabel)}
+      ${device(`${img(c, 'today', H.shot, { eager: true, cls: 'light-only', sizes: '(min-width: 960px) 310px, 64vw' })}${img(c, 'today-dark', H.shot, { cls: 'dark-only', sizes: '(min-width: 960px) 310px, 64vw' })}`, ' hero-device')}
     </div>
   </div>
 </section>
 
-<section class="worries" aria-labelledby="worries-h">
-  <div class="wrap worries-grid">
+<section class="ask" aria-labelledby="ask-h">
+  <div class="wrap ask-grid">
     <div>
-      <p class="label reveal">${c.worries.label}</p>
-      <h2 class="reveal" id="worries-h">${c.worries.h2}</h2>
-      <p class="intro reveal">${c.worries.p}</p>
+      ${label(A.label, ' reveal')}
+      <h2 class="reveal" id="ask-h">${A.h2}</h2>
+      <p class="intro reveal">${A.p}</p>
+      <p class="pull reveal">${A.p2}</p>
     </div>
-    <div class="receipt reveal" aria-label="${c.worries.bonTitle}">
-      <div class="receipt-h"><b>${c.worries.bonTitle}</b><span aria-hidden="true">ToHuus</span></div>
+    <div class="receipt reveal" role="group" aria-label="${A.bonTitle}">
+      <div class="receipt-h"><b>${A.bonTitle}</b><span aria-hidden="true">ToHuus</span></div>
       <ul>
-${c.worries.list.map((q) => `        <li><s>${q}</s>${ico('check', 'ico ok')}</li>`).join('\n')}
+${A.list.map((q) => `        <li><s>${q}</s>${ico('check', 'ico ok')}</li>`).join('\n')}
       </ul>
-      <p class="receipt-f">${c.worries.bonFoot}</p>
+      <p class="receipt-f">${A.bonFoot}</p>
     </div>
   </div>
 </section>
 
-<section class="chapter" id="${id.home}" aria-labelledby="home-h">
+<section class="jobs" aria-labelledby="jobs-h">
   <div class="wrap">
-    ${head(n(), hm.label)}
-    <div class="ch-grid">
-      <div class="ch-copy">
-        <h2 class="reveal" id="home-h">${hm.h2}</h2>
-        <p class="intro reveal">${hm.intro}</p>
-        <ul class="forms">
-${hm.forms.map(([shape, t, s], k) => `          <li class="reveal" style="--d:${60 + k * 50}ms"><span class="shape ${shape}" aria-hidden="true"></span><b>${t}</b><span>${s}</span></li>`).join('\n')}
-        </ul>
-        <h3 class="reveal">${hm.placesH}</h3>
-        <p class="reveal">${hm.placesP}</p>
-        <ul class="chips reveal">${hm.chips.map((x) => `<li>${x}</li>`).join('')}<li class="none">${hm.chipNone}</li></ul>
-      </div>
-      <div class="ch-visual two reveal">
-        ${hm.shots.map((s) => phone(c, s)).join('\n        ')}
-      </div>
+    <div class="sec-head">
+      ${label(J.label, ' reveal')}
+      <h2 class="reveal" id="jobs-h">${J.h2}</h2>
+      <p class="intro reveal">${J.intro}</p>
     </div>
-  </div>
-</section>
-${chapter(c, c.everyday, n())}
-${treats(c, n())}
-${c.chapters.map((ch) => chapter(c, ch, n())).join('\n')}
-
-<section class="chapter everywhere" aria-labelledby="everywhere-h">
-  <div class="wrap">
-    ${head(n(), e.label)}
-    <h2 class="reveal" id="everywhere-h">${e.h2}</h2>
-    <p class="intro reveal">${e.p}</p>
-    <div class="panels">
-      <article class="panel big reveal">
-        <span class="pi">${ico('chat')}</span>
-        <h3>${e.ai[0]}</h3>
-        <p>${e.ai[1]}</p>
-        <div class="chat" aria-hidden="true">
-          <div class="m me"><span class="file">${ico('camera')}${e.ai[2]}</span>${e.ai[3]}</div>
-          <div class="m it">${e.ai[4]}</div>
-        </div>
-      </article>
-      <article class="panel reveal"><span class="pi">${ico('send')}</span><h3>${e.tg[0]}</h3><p>${e.tg[1]}</p></article>
-      <article class="panel reveal"><span class="pi">${ico('mail')}</span><h3>${e.mail[0]}</h3><p>${e.mail[1]}</p></article>
-      <article class="panel reveal"><span class="pi">${ico('bolt')}</span><h3>${e.sc[0]}</h3><p>${e.sc[1]}</p></article>
-    </div>
+${J.list.map((j, k) => `    <article class="job${k % 2 ? ' flip' : ''}" id="${j.id}" aria-labelledby="${j.id}-h">
+      <div class="job-copy reveal">
+        <p class="job-no"><span>${j.no}</span>${j.label}</p>
+        <h3 id="${j.id}-h">${j.h3}</h3>
+        <p>${j.p}</p>
+        <ul class="ticks">${j.points.map((p) => `<li>${ico('check')}<span>${p}</span></li>`).join('')}</ul>
+      </div>
+      <div class="job-visual reveal">
+        <span class="job-shape s${k + 1}" aria-hidden="true"></span>
+        ${device(img(c, j.shot, j.alt))}
+      </div>
+    </article>`).join('\n')}
   </div>
 </section>
 
-<section class="chapter host" id="${id.host}" aria-labelledby="host-h">
-  <div class="wrap">
-    ${head(n(), h.label)}
-    <div class="host-grid">
-      <div>
-        <h2 class="reveal" id="host-h">${h.h2}</h2>
-        <p class="intro reveal">${h.p}</p>
-        <dl class="facts-list">
-${h.facts.map(([i, t, s]) => `          <div class="reveal">${ico(i)}<dt>${t}</dt><dd>${s}</dd></div>`).join('\n')}
-          <div class="reveal">${ico('code')}<dt>${h.licenceH}</dt><dd>${h.licence}</dd></div>
-        </dl>
-      </div>
-      <div class="ticket install reveal" id="${id.install}">
-        <div class="ticket-top">
-          <h3>${h.installH}</h3>
-          <ol class="steps">
-${h.steps.map(([t, s]) => `            <li><b>${t}</b><span>${s}</span></li>`).join('\n')}
-          </ol>
-        </div>
-        <div class="tear" aria-hidden="true"></div>
-        <div class="code">
-          <div class="code-head"><span>${ico('terminal')}Terminal</span><button class="btn sm copy" type="button" data-copy="code-sh" data-done="${c.copied}">${ico('copy')}<span>${c.copy}</span></button></div>
-<pre id="code-sh"><span class="k">git clone</span> ${GH}.git
-<span class="k">cd</span> tohuus-hub
-<span class="k">cp</span> .env.example .env
-<span class="k">docker compose up</span> -d --build</pre>
-          <div class="code-head"><span>${ico('code')}.env</span><button class="btn sm copy" type="button" data-copy="code-env" data-done="${c.copied}">${ico('copy')}<span>${c.copy}</span></button></div>
-<pre id="code-env"><span class="k">BASE_URL</span>=<span class="s">https://home.example.org</span>
-<span class="k">ADMIN_NAME</span>=Alex
-<span class="k">ADMIN_PASSWORD</span>=change-me
-<span class="k">LANGUAGE</span>=${c.lang} <span class="c">${h.envComment}</span>
-<span class="k">TZ</span>=Europe/Berlin</pre>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="tour" id="${id.tour}" aria-labelledby="tour-h">
+<section class="levels" id="${id.levels}" aria-labelledby="levels-h">
   <div class="wrap">
     <div class="block">
       <span class="disc" aria-hidden="true"></span><span class="half" aria-hidden="true"></span>
       <div class="block-copy">
-        <p class="label on-block">${bird()}${c.tour.label}</p>
-        <h2 id="tour-h">${c.tour.h2}</h2>
-        <p>${c.tour.p}</p>
-        <div class="ctas">
-          <a class="btn on-block-primary" href="#${id.install}">${c.tour.a}<span class="tail">${ico('download')}</span></a>
-          <a class="btn on-block-ghost" href="${GH}">${ico('github')}${c.tour.b}</a>
-        </div>
+        <p class="label on-block">${bird()}${L.label}</p>
+        <h2 id="levels-h">${L.h2}</h2>
+        <p class="block-intro">${L.intro}</p>
+        <ol class="level-list">
+${L.list.map(([i, t, s], k) => `          <li class="reveal" style="--d:${k * 70}ms"><span class="lv-ico">${ico(i)}</span><div><b>${t}</b><span>${s}</span></div></li>`).join('\n')}
+        </ol>
       </div>
-      <div class="block-phone">${phone(c, ['tour', c.tour.shot])}</div>
+      <div class="block-phone">${device(img(c, L.shot, L.alt, { sizes: '(min-width: 960px) 300px, 70vw' }), ' cut')}</div>
     </div>
   </div>
 </section>
 
-<section class="story" aria-labelledby="story-h">
-  <div class="wrap story-grid">
-    <p class="word reveal" id="story-h">${c.story.word}<small>${c.story.wordSub}</small></p>
+<section class="how" id="${id.how}" aria-labelledby="how-h">
+  <div class="wrap how-grid">
+    <div>
+      ${label(W.label, ' reveal')}
+      <h2 class="reveal" id="how-h">${W.h2}</h2>
+      <p class="intro reveal">${W.intro}</p>
+      <ol class="how-steps">
+${W.steps.map(([t, s], k) => `        <li class="reveal" style="--d:${k * 60}ms"><b>${t}</b><span>${s}</span></li>`).join('\n')}
+      </ol>
+    </div>
+    <div class="ticket origin reveal" role="group" aria-label="${W.cardTitle}">
+      <div class="ticket-top">
+        <p class="origin-h"><b>${W.cardTitle}</b><span>${W.cardSub}</span></p>
+        <ul class="origin-rows">
+${W.rows.map(([t, o, k]) => `          <li class="o-${k}"><span class="box" aria-hidden="true"></span><span class="o-t">${t}</span><span class="o-o">${o}</span></li>`).join('\n')}
+        </ul>
+      </div>
+      <div class="tear" aria-hidden="true"></div>
+      <p class="origin-f">${W.cardFoot}</p>
+    </div>
+  </div>
+</section>
+
+<section class="who" id="${id.who}" aria-labelledby="who-h">
+  <div class="wrap">
+    <div class="sec-head">
+      ${label(F.label, ' reveal')}
+      <h2 class="reveal" id="who-h">${F.h2}</h2>
+      <p class="intro reveal">${F.intro}</p>
+    </div>
+    <ul class="forms">
+${F.forms.map(([shape, t, s], k) => `      <li class="reveal" style="--d:${k * 50}ms"><span class="shape ${shape}" aria-hidden="true"></span><b>${t}</b><span>${s}</span></li>`).join('\n')}
+    </ul>
+    <p class="note reveal">${F.note}</p>
+  </div>
+</section>
+
+<section class="ways" id="${id.ways}" aria-labelledby="ways-h">
+  <div class="wrap">
+    <div class="sec-head">
+      ${label(T.label, ' reveal')}
+      <h2 class="reveal" id="ways-h">${T.h2}</h2>
+      <p class="intro reveal">${T.intro}</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="compare">
+        <thead><tr><td></td><th scope="col">${ico('cloud')}${T.cols[0]}</th><th scope="col">${ico('server')}${T.cols[1]}</th></tr></thead>
+        <tbody>
+${T.rows.map(([h, a, z]) => `          <tr><th scope="row">${h}</th><td data-col="${T.cols[0]}">${a}</td><td data-col="${T.cols[1]}">${z}</td></tr>`).join('\n')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="prices" id="${id.prices}" aria-labelledby="prices-h">
+  <div class="wrap">
+    <div class="sec-head">
+      ${label(P.label, ' reveal')}
+      <h2 class="reveal" id="prices-h">${P.h2}</h2>
+      <p class="intro reveal">${P.intro}</p>
+    </div>
+    <ul class="plans">
+${P.plans.map((p, k) => `      <li class="plan${p.host ? ' host' : ''}${p.mark ? ' marked' : ''} reveal" style="--d:${k * 60}ms">
+        ${p.mark ? `<span class="plan-mark">${p.mark}</span>` : ''}
+        <h3>${p.name}</h3>
+        <p class="price"><b>${p.price}</b>${p.year ? `<span>${P.per}</span>` : `<span>${p.sub}</span>`}</p>
+        ${p.year ? `<p class="price-y">${P.or} ${p.year} ${P.year}</p>` : '<p class="price-y" aria-hidden="true">&nbsp;</p>'}
+        <ul>${p.items.map((x) => `<li>${ico('check')}<span>${x}</span></li>`).join('')}</ul>
+        <p class="storage"><span>${P.storage}</span><b>${p.storage}</b></p>
+      </li>`).join('\n')}
+    </ul>
+    <p class="note reveal">${P.note}</p>
+  </div>
+</section>
+
+<section class="privacy" id="${id.privacy}" aria-labelledby="privacy-h">
+  <div class="wrap">
+    <div class="sec-head">
+      ${label(D.label, ' reveal')}
+      <h2 class="reveal" id="privacy-h">${D.h2}</h2>
+      <p class="intro reveal">${D.intro}</p>
+    </div>
+    <dl class="facts-grid">
+${D.facts.map(([i, t, s], k) => `      <div class="reveal" style="--d:${(k % 3) * 60}ms"><span class="pi">${ico(i)}</span><dt>${t}</dt><dd>${s}</dd></div>`).join('\n')}
+    </dl>
+    <p class="more reveal"><a href="${D.linkHref}">${D.link}${ico('arrow')}</a></p>
+  </div>
+</section>
+
+<section class="host" id="${id.host}" aria-labelledby="host-h">
+  <div class="wrap host-grid">
+    <div>
+      ${label(S.label, ' reveal')}
+      <h2 class="reveal" id="host-h">${S.h2}</h2>
+      <p class="intro reveal">${S.p}</p>
+      <dl class="facts-list">
+${S.facts.map(([i, t, s]) => `        <div class="reveal">${ico(i)}<dt>${t}</dt><dd>${s}</dd></div>`).join('\n')}
+      </dl>
+    </div>
+    <div class="ticket install reveal" id="${id.install}">
+      <div class="ticket-top">
+        <h3>${S.installH}</h3>
+        <ol class="steps">
+${S.steps.map(([t, s]) => `          <li><b>${t}</b><span>${s}</span></li>`).join('\n')}
+        </ol>
+      </div>
+      <div class="tear" aria-hidden="true"></div>
+      <div class="code">
+        <div class="code-head"><span>${ico('terminal')}Terminal</span><button class="btn sm copy" type="button" data-copy="code-sh" data-done="${c.copied}">${ico('copy')}<span>${c.copy}</span></button></div>
+<pre id="code-sh"><span class="k">git clone</span> ${GH}.git
+<span class="k">cd</span> tohuus-hub
+<span class="k">cp</span> .env.example .env
+<span class="k">docker compose up</span> -d --build</pre>
+        <div class="code-head"><span>${ico('code')}.env</span><button class="btn sm copy" type="button" data-copy="code-env" data-done="${c.copied}">${ico('copy')}<span>${c.copy}</span></button></div>
+<pre id="code-env"><span class="k">BASE_URL</span>=<span class="s">https://home.example.org</span>
+<span class="k">ADMIN_NAME</span>=Alex
+<span class="k">ADMIN_PASSWORD</span>=change-me
+<span class="k">LANGUAGE</span>=${c.lang} <span class="c">${S.envComment}</span>
+<span class="k">TZ</span>=Europe/Berlin</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="why" id="${id.why}" aria-labelledby="why-h">
+  <div class="wrap why-grid">
     <div class="reveal">
-${c.story.ps.map((p) => `      <p>${p}</p>`).join('\n')}
-      <p class="sig">${c.story.sig}</p>
+      ${label(Y.label)}
+      <p class="word" id="why-h">${Y.word}<small>${Y.wordSub}</small></p>
+    </div>
+    <div class="reveal">
+${Y.ps.map((p) => `      <p>${p}</p>`).join('\n')}
+      <p class="sig">${Y.sig}</p>
+    </div>
+  </div>
+</section>
+
+<section class="faq" id="${id.faq}" aria-labelledby="faq-h">
+  <div class="wrap faq-grid">
+    <div class="sec-head">
+      ${label(Q.label, ' reveal')}
+      <h2 class="reveal" id="faq-h">${Q.h2}</h2>
+    </div>
+    <div class="qa">
+${Q.list.map(([q, a]) => `      <details class="reveal"><summary>${q}${ico('plus', 'ico pm')}</summary><p>${a}</p></details>`).join('\n')}
     </div>
   </div>
 </section>
@@ -682,7 +719,7 @@ ${c.story.ps.map((p) => `      <p>${p}</p>`).join('\n')}
     <div class="foot-grid">
       <div>
         <a class="brand" href="./">${brandMark(26)}<span>ToHuus</span></a>
-        <p>${c.foot.about}</p>
+        <p>${c.foot.about}<br>${c.foot.provider}</p>
       </div>
       <div>
         <h4>${c.foot.project}</h4>
@@ -707,7 +744,7 @@ ${c.story.ps.map((p) => `      <p>${p}</p>`).join('\n')}
 </footer>
 
 <nav class="rail" aria-label="${c.railLabel}">
-${c.rail.map(([href, l, i], k) => `  <a href="${href}"${k === 2 ? ' class="plus"' : ''}>${ico(i)}<span>${l}</span></a>`).join('\n')}
+${c.rail.map(([href, l, i]) => `  <a href="${href}">${ico(i)}<span>${l}</span></a>`).join('\n')}
 </nav>
 
 <script src="${b}assets/site.js" defer></script>
@@ -716,11 +753,15 @@ ${c.rail.map(([href, l, i], k) => `  <a href="${href}"${k === 2 ? ' class="plus"
 `;
 }
 
-// guard: no em or en dashes in the copy or the template (house style)
+// guards: house style (no em or en dashes, except in the required provider line) and no family names
 for (const c of Object.values(COPY)) {
-  const s = JSON.stringify(c) + page(c).replace(sprite, '');
+  const s = (JSON.stringify(c) + page(c).replace(sprite, '')).split(PROVIDER).join('');
   if (s.includes('—')) throw new Error(`em dash in ${c.lang} page`);
   if (s.includes('–')) throw new Error(`en dash in ${c.lang} page`);
+  const text = page(c).replace(sprite, '').split(PROVIDER).join('').replace(/https?:\/\/[^\s"'<)]+/g, '').replace(/heidrich-digital|Heidrich Digital/g, '');
+  const bad = text.match(/\b(Lea|Felix|Heidrich|Mila)\b/);
+  if (bad) throw new Error(`family name "${bad[0]}" in ${c.lang} page`);
+  if ((text.match(/\bTill\b/g) ?? []).length !== 1) throw new Error(`"Till" must appear exactly once (signature) in ${c.lang} page`);
 }
 fs.writeFileSync(path.join(ROOT, 'index.html'), page(COPY.en));
 fs.mkdirSync(path.join(ROOT, 'de'), { recursive: true });
@@ -728,19 +769,20 @@ fs.writeFileSync(path.join(ROOT, 'de/index.html'), page(COPY.de));
 console.log('built site/index.html and site/de/index.html');
 
 /*
- * Refreshing the screenshots (needs Playwright, e.g. the helper in /tmp/pw used during development):
- *   1. npx vite build
- *   2. per language a fresh server: DATA_DIR=/tmp/site-<lang> SEED_DEMO=false LANGUAGE=<lang> ADMIN_NAME=Till
- *      ADMIN_PASSWORD=test1234 PORT=<port> BASE_URL=http://localhost:<port> node --import tsx server/index.ts
- *   3. start the demo via the tour API (POST /api/tour/start {choice:'demo'}), add the child Mila and the permanent
- *      guest Oma Inge, import the receipt fixtures from test/fixtures/receipts/ (POST /api/imports/upload, then
- *      /apply), add a member Lea (POST /api/users) and, as Lea, ask Till for vanilla ice cream with the note
- *      "with a spoon, please" (POST /api/bar/orders {bring_by}); Till asks Lea for crisps and Lea accepts
- *      (PATCH /api/orders/:id {status:'accepted'}), so the Treats page shows both directions
- *   4. shoot every slot in SHOTS (plus README_SHOTS) at 390x844, deviceScaleFactor 2, light and dark (household
- *      theme via PATCH /api/appearance/household), with the demo banner hidden (.demo-banner)
- *   5. convert to webp, 780 px wide, quality 80, into site/assets/shots/<lang>/<name>-<light|dark>.webp
+ * Refreshing the screenshots (Playwright + sharp in a scratch folder outside the repo):
+ *   1. npm run build
+ *   2. per language a fresh self-hosted server with invented people:
+ *      DATA_DIR=/tmp/site-<lang> SEED_DEMO=true ADMIN_NAME=Sam ADMIN_PASSWORD=demo12345 LANGUAGE=de REGION=DE
+ *      PORT=8095 BASE_URL=http://localhost:8095 node dist/server.mjs   (English: LANGUAGE=en REGION=GB, port 8096)
+ *   3. upload about four months of generated receipts (REWE/Lidl/Aldi/dm in German, Tesco/Lidl/Aldi/Boots in English)
+ *      as text through POST /api/imports/upload and apply each (POST /api/imports/:id/apply), so the purchase rhythm,
+ *      the money page and the suggestions have real data; add the members Mira and Jonas (POST /api/users), let Mira
+ *      add two items, accept one rhythm suggestion (POST /api/rhythm/:id/accept), skip the tour (PUT /api/tour)
+ *   4. shoot /, /einkauf, /kochen, /geld (previous month), /import and / in dark at 390x844, deviceScaleFactor 3,
+ *      household theme via PATCH /api/appearance/household, with .demo-banner hidden
+ *   5. convert to webp at 480 and 960 px wide into site/assets/shots/<lang>/<name>-<w>.webp
+ *   Never use real names. Check every image before committing.
  *
- * OG images (site/assets/img/og-<lang>.png, 1200x630): a 1200x630 page with the wordmark, the hero headline, one
- * line of copy and homeTiles(), styled by site.css and screenshotted with Playwright from the served site/ folder.
+ * OG images (site/assets/img/og-<lang>.png, 1200x630): a 1200x630 page with the wordmark, the hero headline and
+ * homeTiles(), styled by site.css and screenshotted with Playwright from the served site/ folder.
  */
