@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { config } from '../config.js';
+import { importsDir, writeStoredFile } from './images.js';
 import { db, getSetting } from '../db.js';
 import { detectReweKind, isSameShopping, parseReweAvis, parseReweEbon, reconcile } from '../importers/rewe.js';
 import type { ParsedImport, ParsedLine } from '../importers/types.js';
@@ -315,8 +316,8 @@ export function linesToImport(
 
 export function saveUpload(buf: Buffer, ext: string): string {
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
-  const file = path.join(config.dataDir, 'imports', name);
-  fs.writeFileSync(file, buf);
+  const file = path.join(importsDir(), name);
+  writeStoredFile(file, buf);
   return file;
 }
 

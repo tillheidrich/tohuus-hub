@@ -318,7 +318,8 @@ export function inviteContext() {
   return { household: getSetting<string>('household.name', '') || mailHousehold() || '', brand: brand(), language: lang(), app: APP_NAME };
 }
 
-export type AcceptMethod = 'password' | 'passkey' | 'email' | 'sso';
+/** 'account': ToHuus Cloud – the person signs in with their cloud account, the member row gets no password of its own */
+export type AcceptMethod = 'password' | 'passkey' | 'email' | 'sso' | 'account';
 export interface AcceptInput {
   name?: string;
   method?: AcceptMethod;
@@ -346,13 +347,15 @@ export function acceptInvite(token: string, b: AcceptInput, msgs: { invalid: str
       // also without an explicit method: an omitted method must not get around "passwords only for admins"
       if (!allowed.password) throw new InviteError(400, t('This household signs in without passwords – pick a passkey or an e-mail link.'));
     }
+    if (method === 'account' && !config.multiTenant) throw new InviteError(400, t('Invalid input'));
     if (method === 'sso' && !allowed.sso) throw new InviteError(400, t('Single sign-on is not set up here.'));
     if (method === 'passkey' && !allowed.passkey) throw new InviteError(400, t('Passkeys are switched off in this household.'));
     if (method === 'email' && !allowed.email) throw new InviteError(400, t('Sign-in links by e-mail aren’t available here.'));
     let email: string | null = null;
     let verified = false;
     const typed = b.email?.trim() ? normEmail(b.email) : null;
-    if (method === 'email') {
+    if (method === 'account') email = typed;
+    else if (method === 'email') {
       if (!typed || !EMAIL_RE.test(typed)) throw new InviteError(400, t('That doesn’t look like an e-mail address.'));
       email = typed;
     } else if (inv.email) email = inv.email;
@@ -362,7 +365,7 @@ export function acceptInvite(token: string, b: AcceptInput, msgs: { invalid: str
         email = null;
       // confirmed only when this very link went to that address by mail (a link handed over by hand proves nothing
       // about the mailbox – the admin may have mistyped it); otherwise the caller sends a confirmation mail
-      } else verified = Boolean(inv.email && email === inv.email && inv.sent_at);
+      } else verified = method !== 'account' && Boolean(inv.email && email === inv.email && inv.sent_at);
     }
     const hash = method === 'password' ? hashPassword(b.password!) : `none$${randomToken(12)}`;
     const guest = inv.kind === 'guest';

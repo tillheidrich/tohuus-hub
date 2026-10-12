@@ -17,9 +17,10 @@ import { t } from '../i18n.js';
 import { randomToken } from './auth.js';
 import { householdName, ownOrigin, rpId, userById } from './auth-policy.js';
 import { AuthError } from './auth-sessions.js';
+import { ScopedMap } from './tenancy.js';
 
 const CHALLENGE_MS = 5 * 60_000;
-const challenges = new Map<string, { challenge: string; userId?: number; exp: number }>();
+const challenges = new ScopedMap<string, { challenge: string; userId?: number; exp: number }>();
 
 function putChallenge(key: string, challenge: string, userId?: number) {
   const now = Date.now();

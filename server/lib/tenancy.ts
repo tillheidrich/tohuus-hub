@@ -203,3 +203,28 @@ export class ScopedSet<T> implements Set<T> {
  */
 export type CloudOffFeature = 'haRest' | 'lanPrinters' | 'telegramPolling' | 'imap' | 'cookidoo' | 'restoreFromFile' | 'webdavBackup';
 export const featureOff = (_f: CloudOffFeature) => config.multiTenant;
+
+let slugResolver: ((id: string) => string | null) | null = null;
+/** accounts.ts: how to find the routing prefix of a household */
+export function setSlugResolver(fn: (id: string) => string | null) {
+  slugResolver = fn;
+}
+
+/**
+ * Cloud: tokens created inside a household (guest links, displays, invites, API tokens …) start with the
+ * household's routing prefix `h<10 chars>_`, so a request carrying only that token can be routed to the right
+ * household database. The prefix is not a secret – the token is still looked up (hashed) in that household.
+ */
+export function tokenPrefix(): string {
+  if (!config.multiTenant || !slugResolver) return '';
+  const c = als.getStore();
+  if (!c) return '';
+  const s = slugResolver(c.id);
+  return s ? `${s}_` : '';
+}
+
+/** The routing prefix inside a token (`h…_`, optionally after `sw_`/`swl_`), or null. */
+export function slugInToken(token: string): string | null {
+  const m = /^(?:swl?_)?(h[a-z2-7]{10})_[A-Za-z0-9_-]{8,}$/.exec(token);
+  return m ? m[1] : null;
+}

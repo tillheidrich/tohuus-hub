@@ -21,6 +21,7 @@ import { createKid, deleteKid, updateKid } from './kids.js';
 import { ANIMALS, parseFace, type Face } from './people-faces.js';
 import { GUEST_LEVELS, LEVEL_AREAS, effectiveLevel, expireOverrides, isGuestLevel, isHouseGuest, type EffectiveLevel, type GuestLevel, type GuestOverride } from './people-policy.js';
 import { peopleSignals, prefsOf, type PersonPrefs } from './people-signals.js';
+import { forEachHousehold } from './cloud-jobs.js';
 
 // children: optional birth year and the shared picture model (kid_profiles comes from kids.ts, imported above)
 migrate(
@@ -367,12 +368,9 @@ export function tickPeople(now = new Date()) {
 let timer: NodeJS.Timeout | null = null;
 export function startPeopleScheduler() {
   if (timer) return;
+  // cloud: every household whose database is open (somebody is using it right now)
   timer = setInterval(() => {
-    try {
-      tickPeople();
-    } catch (e) {
-      console.warn('[people]', (e as Error).message);
-    }
+    void forEachHousehold(() => tickPeople(), { scope: 'open', label: 'people', jitterMs: 0 }).catch((e) => console.warn('[people]', (e as Error).message));
   }, 60_000);
   timer.unref?.();
 }

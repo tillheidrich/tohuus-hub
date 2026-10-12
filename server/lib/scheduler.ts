@@ -13,6 +13,8 @@ import { startPeopleScheduler } from './people.js';
 import { startInboxPoller } from './retail-inbox.js';
 import { notPrivate } from './share-core.js';
 import { rotationTick } from './plan2.js';
+import { forEachHousehold } from './cloud-jobs.js';
+import { featureOff } from './tenancy.js';
 
 function localHour() {
   return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: config.timezone }).format(new Date()));
@@ -78,29 +80,49 @@ export async function sendDigest(force = false) {
   });
 }
 
+/** One scheduler round for the current household (expiry, care, budgets, rotation, daily digest). */
+export async function householdTick() {
+  try {
+    await checkExpiry();
+    await checkCareDue().catch((e) => console.warn('[care]', (e as Error).message));
+    await checkBudgets().catch((e) => console.warn('[budgets]', (e as Error).message));
+    await rotationTick().catch((e) => console.warn('[rotation]', (e as Error).message));
+    await sendDigest();
+  } catch (e) {
+    console.warn('[scheduler]', (e as Error).message);
+  }
+}
+
+/**
+ * Self-host: the one household. Cloud: every household used in the last 14 days, one after the other with jitter,
+ * each inside its own context (lib/cloud-jobs.ts).
+ */
 export function startScheduler() {
   startPeopleScheduler();
   startPartyScheduler();
   startInboxPoller();
+  let busy = false;
   const tick = async () => {
+    if (busy) return; // a cloud round over many households may take longer than the interval
+    busy = true;
     try {
-      await checkExpiry();
-      await checkCareDue().catch((e) => console.warn('[care]', (e as Error).message));
-      await checkBudgets().catch((e) => console.warn('[budgets]', (e as Error).message));
-      await rotationTick().catch((e) => console.warn('[rotation]', (e as Error).message));
-      await sendDigest();
-    } catch (e) {
-      console.warn('[scheduler]', (e as Error).message);
+      await forEachHousehold(householdTick, { scope: 'active', label: 'scheduler' });
+    } finally {
+      busy = false;
     }
   };
   setTimeout(tick, 30_000);
   setInterval(tick, 15 * 60_000);
-  setTimeout(() => enqueueMissingImages(), 10_000);
-  const cookidoo = () => {
-    const h = haSettings();
-    if (h.url && h.token) syncCookidoo().then((r) => r.added && console.log('[cookidoo]', r)).catch((e) => console.warn('[cookidoo]', e.message));
-  };
-  setTimeout(cookidoo, 60_000);
-  setInterval(cookidoo, 3 * 3600_000);
-  setInterval(() => enqueueMissingImages(), 6 * 3600_000);
+  const images = () => void forEachHousehold(() => enqueueMissingImages(), { scope: 'active', days: 3, label: 'images' });
+  setTimeout(images, 10_000);
+  // Cookidoo goes through the household's Home Assistant – self-host only
+  if (!featureOff('cookidoo')) {
+    const cookidoo = () => {
+      const h = haSettings();
+      if (h.url && h.token) syncCookidoo().then((r) => r.added && console.log('[cookidoo]', r)).catch((e) => console.warn('[cookidoo]', e.message));
+    };
+    setTimeout(cookidoo, 60_000);
+    setInterval(cookidoo, 3 * 3600_000);
+  }
+  setInterval(images, 6 * 3600_000);
 }

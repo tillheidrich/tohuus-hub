@@ -23,6 +23,7 @@ import {
   sortBySections,
   tripSequence,
 } from './shopparse.js';
+import { ScopedMap } from './tenancy.js';
 
 export * from './shopparse.js';
 
@@ -65,7 +66,7 @@ migrate(
 
 // ------------------------------------------------------------------ sections
 
-const catKeyById = new Map<number, string | null>();
+const catKeyById = new ScopedMap<number, string | null>();
 function categorySection(categoryId: number | null | undefined): Section | null {
   if (!categoryId) return null;
   if (!catKeyById.has(categoryId)) {

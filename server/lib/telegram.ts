@@ -27,6 +27,7 @@ import { formatItem, parseQuickAdd, quickAdd } from './shop.js';
 import { runVision, visionAvailable } from './vision.js';
 import { notPrivate } from './share-core.js';
 import { houseGuestFor, levelRank, type HouseGuest } from './people-policy.js';
+import { featureOff } from './tenancy.js';
 
 migrate(
   'channels-1',
@@ -695,6 +696,8 @@ export function stopTelegram() {
 
 /** (Re)start receiving updates according to the settings. Safe to call any number of times. */
 export function startTelegram() {
+  // ToHuus Cloud: no long polling per household (and no shared webhook routing yet)
+  if (featureOff('telegramPolling')) return;
   stopTelegram();
   const my = gen;
   const c = channelsCfg().telegram;

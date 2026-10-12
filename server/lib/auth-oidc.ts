@@ -14,6 +14,7 @@ import { db } from '../db.js';
 import { t } from '../i18n.js';
 import { NAME_MAX, randomToken, safeEqual } from './auth.js';
 import { normEmail, ssoConfig, ssoReady, userByVerifiedEmail, type SsoConfig } from './auth-policy.js';
+import { ScopedMap } from './tenancy.js';
 
 export const OIDC_COOKIE = 'sw_oidc';
 export const OIDC_COOKIE_PATH = '/api/auth/oidc';
@@ -95,7 +96,7 @@ interface Pending {
   linkUserId: number | null;
   exp: number;
 }
-const pending = new Map<string, Pending>();
+const pending = new ScopedMap<string, Pending>();
 
 const b64url = (b: Buffer) => b.toString('base64url');
 

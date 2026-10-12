@@ -12,6 +12,7 @@
  */
 import { db, getSetting, migrate, setSetting } from '../db.js';
 import { isGuestUser } from './people-policy.js';
+import { perHousehold } from './tenancy.js';
 
 migrate(
   'share-1',
@@ -182,19 +183,21 @@ export function applyShareView<T extends { id: number; text: string; product_id:
 
 export type StockMode = 'full' | 'staples';
 const MODE_KEY = 'share.stockMode';
-let modeCache: { v: StockMode; at: number } | null = null;
+// per household (ToHuus Cloud)
+const modeCacheOf = perHousehold(() => ({ c: null as { v: StockMode; at: number } | null }));
 
 /** 'staples': only products marked "runs out regularly" are tracked – no warnings or counting for the rest. */
 export function stockMode(): StockMode {
+  const modeCache = modeCacheOf().c;
   if (modeCache && Date.now() - modeCache.at < 5000) return modeCache.v;
   const v = getSetting<string>(MODE_KEY, 'full') === 'staples' ? 'staples' : 'full';
-  modeCache = { v, at: Date.now() };
+  modeCacheOf().c = { v, at: Date.now() };
   return v;
 }
 
 export function setStockMode(mode: StockMode) {
   setSetting(MODE_KEY, mode);
-  modeCache = { v: mode, at: Date.now() };
+  modeCacheOf().c = { v: mode, at: Date.now() };
 }
 
 /** Whether a product is tracked at all under the current start mode (data is never deleted, only ignored). */

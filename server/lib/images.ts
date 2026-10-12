@@ -2,11 +2,91 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
+import type { NextFunction, Request, Response } from 'express';
 import { config } from '../config.js';
+import { currentKeys, getSetting, setSetting } from '../db.js';
 import { safeFetch } from './net.js';
 import { t } from '../i18n.js';
+import { decryptBlob, encryptBlob, isEncryptedBlob } from './crypto-keys.js';
+import { householdDir, slugOf } from './accounts.js';
+import { assertStorage, trackStorage } from './plans.js';
+import { currentHousehold, householdId } from './tenancy.js';
+import { resolveActor, safeEqual } from './auth.js';
 
-const dir = () => path.join(config.dataDir, 'images');
+// ---------------------------------------------------------------- files at rest
+// Images and receipt files live per household (cloud: DATA_DIR/households/<uuid>/images|imports, self-host:
+// DATA_DIR/images|imports). With a key (cloud: the household key, self-host: DB_ENCRYPTION_KEY) they are stored
+// AES-256-GCM encrypted; files written before encryption was switched on still load (detected by their header).
+
+/** Image folder of the current household. */
+export const imagesDir = () => (config.multiTenant ? path.join(householdDir(householdId()), 'images') : path.join(config.dataDir, 'images'));
+/** Receipt/import file folder of the current household. */
+export const importsDir = () => (config.multiTenant ? path.join(householdDir(householdId()), 'imports') : path.join(config.dataDir, 'imports'));
+const dir = imagesDir;
+
+const fileKey = () => currentKeys()?.files ?? null;
+
+/** Write a household file (encrypted when a key is set), enforcing and counting the storage quota. */
+export function writeStoredFile(file: string, plain: Buffer) {
+  assertStorage(plain.length);
+  const key = fileKey();
+  const data = key ? encryptBlob(key, plain) : plain;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  let before = 0;
+  try {
+    before = fs.statSync(file).size;
+  } catch {
+    /* new file */
+  }
+  fs.writeFileSync(file, data);
+  trackStorage(data.length - before);
+}
+
+/** Read a household file – decrypts encrypted ones, plain (older) ones come back as they are. */
+export function readStoredFile(file: string): Buffer {
+  const raw = fs.readFileSync(file);
+  if (!isEncryptedBlob(raw)) return raw;
+  const key = fileKey();
+  if (!key) throw new Error('encrypted file but no key');
+  return decryptBlob(key, raw);
+}
+
+export function removeStoredFile(file: string) {
+  let size = 0;
+  try {
+    size = fs.statSync(file).size;
+  } catch {
+    return;
+  }
+  fs.rmSync(file, { force: true });
+  trackStorage(-size);
+}
+
+const IMG_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(webp|jpe?g|png|gif|avif)$/i;
+/** File of a stored image by its public path `/img/<file>` (null for anything else). */
+export function imageFile(publicPath: string | null | undefined): string | null {
+  if (!publicPath?.startsWith('/img/')) return null;
+  const name = path.basename(publicPath.split('?')[0]);
+  return IMG_NAME.test(name) ? path.join(dir(), name) : null;
+}
+
+/** The decrypted bytes of a stored image, or null when it is missing. */
+export function readImage(publicPath: string | null | undefined): Buffer | null {
+  const f = imageFile(publicPath);
+  if (!f || !fs.existsSync(f)) return null;
+  try {
+    return readStoredFile(f);
+  } catch {
+    return null;
+  }
+}
+
+/** Store an already encoded image under its final name; returns `/img/<name>`. */
+export function storeImageBytes(name: string, buf: Buffer): string {
+  if (!IMG_NAME.test(name)) throw new Error(t('Invalid image name'));
+  writeStoredFile(path.join(dir(), name), buf);
+  return `/img/${name}`;
+}
 
 // small servers (512 MB containers): no libvips operation cache, at most 2 threads per image
 sharp.cache(false);
@@ -16,12 +96,13 @@ sharp.concurrency(Math.min(2, sharp.concurrency()));
 export async function saveImage(buf: Buffer, prefix: string): Promise<string> {
   if (!/^[a-z]\d+$/.test(prefix)) throw new Error(t('Invalid image name'));
   const name = `${prefix}-${crypto.randomBytes(6).toString('hex')}.webp`;
-  await sharp(buf, { failOn: 'none' })
+  assertStorage(Math.min(buf.length, 400_000));
+  const out = await sharp(buf, { failOn: 'none' })
     .rotate()
     .resize({ width: 800, height: 800, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 82 })
-    .toFile(path.join(dir(), name));
-  return `/img/${name}`;
+    .toBuffer();
+  return storeImageBytes(name, out);
 }
 
 /** A normal browser – some image CDNs answer bots and unknown clients with 403. */
@@ -128,9 +209,123 @@ export async function fetchImage(url: string, opts: { referer?: string | null; t
 }
 
 export function deleteImage(publicPath: string | null | undefined) {
-  if (!publicPath?.startsWith('/img/')) return;
-  const f = path.join(dir(), path.basename(publicPath));
-  fs.rm(f, { force: true }, () => {});
+  const f = imageFile(publicPath);
+  if (f) removeStoredFile(f);
+}
+
+// ---------------------------------------------------------------- serving /img (authenticated)
+
+const SIGN_DAY = 86_400;
+let selfhostSignKey: Buffer | null = null;
+/** HMAC key for image URLs: the household's key in the cloud; self-host: from DB_ENCRYPTION_KEY or a stored random secret. */
+function signKey(): Buffer {
+  const k = currentKeys();
+  if (k) return k.sign;
+  if (selfhostSignKey) return selfhostSignKey;
+  let secret = getSetting<string>('img.sign_secret', '');
+  if (!/^[0-9a-f]{64}$/.test(secret)) {
+    secret = crypto.randomBytes(32).toString('hex');
+    setSetting('img.sign_secret', secret);
+  }
+  selfhostSignKey = Buffer.from(secret, 'hex');
+  return selfhostSignKey;
+}
+const sigOf = (name: string, exp: number) => crypto.createHmac('sha256', signKey()).update(`img:${name}:${exp}`).digest('base64url').slice(0, 32);
+
+/**
+ * A short-lived URL for an image (guest links, displays, Home Assistant, apps without the cookie).
+ * The expiry is rounded to whole days so the URL stays the same for a day (browser caches keep working).
+ */
+export function signImageUrl(publicPath: string, days = 7): string {
+  const name = path.basename(publicPath.split('?')[0]);
+  const exp = (Math.floor(Date.now() / 1000 / SIGN_DAY) + days + 1) * SIGN_DAY;
+  const slug = config.multiTenant ? slugOf(householdId()) : null;
+  return `/img/${name}?${slug ? `h=${slug}&` : ''}e=${exp}&s=${sigOf(name, exp)}`;
+}
+
+function signatureOk(name: string, e: unknown, s: unknown) {
+  if (typeof e !== 'string' || typeof s !== 'string' || !/^\d{9,12}$/.test(e)) return false;
+  const exp = Number(e);
+  if (exp * 1000 < Date.now()) return false;
+  return safeEqual(sigOf(name, exp), s);
+}
+
+/** GET /img/<file>: a signed-in member, an app/API token of the household, or a valid signed URL. */
+export function serveImage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const name = String(req.params.name ?? '');
+    if (!IMG_NAME.test(name)) return void res.status(404).end();
+    if (config.multiTenant && !currentHousehold()) return void res.status(401).json({ error: 'unauthorized' });
+    const signed = req.query.s !== undefined;
+    if (signed ? !signatureOk(name, req.query.e, req.query.s) : !resolveActor(req)) return void res.status(401).json({ error: 'unauthorized' });
+    const buf = readImage(`/img/${name}`);
+    if (!buf) return void res.status(404).end();
+    const ext = name.split('.').pop()!.toLowerCase();
+    res.type(ext === 'jpg' ? 'jpeg' : ext);
+    // image files never change under their name
+    res.setHeader('Cache-Control', `private, max-age=${signed ? 86400 : 30 * 86400}, immutable`);
+    res.setHeader('ETag', `"${name}"`);
+    if (req.headers['if-none-match'] === `"${name}"`) return void res.status(304).end();
+    res.send(buf);
+  } catch (e) {
+    next(e);
+  }
+}
+
+const IMG_IN_TEXT = /(^|["'(\s=])((?:https?:\/\/[^"'()\s]+)?\/img\/[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(?:webp|jpe?g|png|gif|avif))(?![?\w])/g;
+const base = () => config.baseUrl;
+
+function signValue(v: unknown, depth = 0): unknown {
+  if (typeof v === 'string') {
+    if (v.startsWith('/img/') && imageFile(v)) return signImageUrl(v);
+    if (v.startsWith(`${base()}/img/`) && imageFile(v.slice(base().length))) return base() + signImageUrl(v.slice(base().length));
+    return v;
+  }
+  if (depth > 12 || !v || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map((x) => signValue(x, depth + 1));
+  if (Buffer.isBuffer(v) || v instanceof Date) return v;
+  const out: Record<string, unknown> = {};
+  for (const [k, x] of Object.entries(v)) out[k] = signValue(x, depth + 1);
+  return out;
+}
+
+/** Replace `/img/…` references in HTML (displays, printed pages) with signed URLs. */
+export const signImagesInHtml = (html: string) => html.replace(IMG_IN_TEXT, (_m, pre: string, url: string) => {
+  const abs = url.startsWith('http');
+  const p = abs ? url.slice(url.indexOf('/img/')) : url;
+  return pre + (abs ? url.slice(0, url.indexOf('/img/')) : '') + signImageUrl(p);
+});
+
+/**
+ * Responses for anyone who is not a signed-in browser (guests, displays, kids' devices, Home Assistant, the
+ * iPhone app with its Bearer token) carry signed image URLs – they have no cookie to show at /img.
+ */
+export function signImagesForTokenClients(req: Request, res: Response, next: NextFunction) {
+  const json = res.json.bind(res);
+  const send = res.send.bind(res);
+  const needsSigning = () => {
+    if (config.multiTenant && !currentHousehold()) return false;
+    const bearer = req.headers.authorization?.startsWith('Bearer ') || typeof req.headers['x-api-key'] === 'string';
+    if (bearer) return true;
+    return config.multiTenant ? !currentHousehold()?.sessionId : !req.actor?.sessionId;
+  };
+  res.json = (body?: unknown) => {
+    try {
+      if (needsSigning()) body = signValue(body);
+    } catch {
+      /* leave unsigned */
+    }
+    return json(body);
+  };
+  res.send = (body?: unknown) => {
+    try {
+      if (typeof body === 'string' && body.includes('/img/') && /html/.test(String(res.getHeader('Content-Type') ?? '')) && needsSigning()) body = signImagesInHtml(body);
+    } catch {
+      /* leave unsigned */
+    }
+    return send(body);
+  };
+  next();
 }
 
 /** Downscale a photo for vision models (keeps tokens and upload size small). */

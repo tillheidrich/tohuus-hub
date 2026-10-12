@@ -47,6 +47,18 @@ import { r as designRoutes } from './routes/design.js';
 import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
 import { r as buyAtRoutes } from './routes/buyat.js';
 import { householdAppearance } from './lib/appearance.js';
+import { setGlobalDispatcher } from 'undici';
+import { privateBlockingAgent } from './lib/net.js';
+import { cloudContext } from './lib/cloud-auth.js';
+import { appAuth, cloud as cloudRoutes, cloudPub, instance } from './routes/cloud.js';
+import { r as billingRoutes, pub as billingPublic } from './routes/billing.js';
+import { serveImage, signImagesForTokenClients } from './lib/images.js';
+import { NoHouseholdError, currentHousehold } from './lib/tenancy.js';
+import { QuotaError } from './lib/plans.js';
+import { startCloudBackups } from './lib/cloud-backup.js';
+
+// ToHuus Cloud: no outbound request of any household may reach a private/internal address (HA, webhooks, feeds …)
+if (config.multiTenant) setGlobalDispatcher(privateBlockingAgent);
 import { ensureBaseData, seedDemo } from './seed.js';
 
 // a new household gets no places unasked – onboarding asks which ones it has (area: home); the demo brings its own
@@ -58,6 +70,8 @@ app.disable('x-powered-by');
 app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 1));
 app.use(express.json({ limit: '4mb' }));
 app.use(cookieParser());
+// ToHuus Cloud: pick the household of this request (session, app token, token prefix) – lib/cloud-auth.ts
+if (config.multiTenant) app.use(cloudContext);
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'same-origin');
@@ -88,7 +102,18 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.all('/mcp', handleMcp);
 app.all('/mcp/:secret', handleMcp);
 
-app.use('/img', express.static(path.join(config.dataDir, 'images'), { maxAge: '30d', immutable: true, fallthrough: false }));
+// images need a signed-in member, an app/API token or a short-lived signed URL (guest links, displays, HA, apps)
+app.use(signImagesForTokenClients);
+app.get('/img/:name', serveImage);
+app.use('/img', (_req, res) => void res.status(404).end());
+
+app.use('/api', instance);
+app.use('/api', appAuth);
+app.use('/api', billingPublic);
+if (config.multiTenant) {
+  app.use('/api', cloudPub);
+  app.use('/api', cloudRoutes);
+}
 
 // iPhone shortcut (personal list token) and the share-target fallback – before the routers that require a session
 app.use(sharePublic);
@@ -135,6 +160,7 @@ app.use('/api', menuRoutes);
 app.use('/api', designRoutes);
 app.use('/api', invitesRoutes);
 app.use('/api', buyAtRoutes);
+app.use('/api', billingRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -142,9 +168,11 @@ const webDir = [path.join(here, 'web'), path.join(here, '../dist/web')].find((d)
 if (webDir) {
   // manifest per household theme (colours match the --canvas token of web/src/styles.css; one brand: ToHuus)
   const CANVAS = { light: '#f7f5ef', dark: '#0f1513' } as const;
+  // cloud pages outside a household (sign-in, signup) use the defaults
+  const theme = () => (config.multiTenant && !currentHousehold() ? 'light' : householdAppearance().theme);
   app.get('/manifest.webmanifest', (_req, res) => {
     const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
-    const c = CANVAS[householdAppearance().theme === 'dark' ? 'dark' : 'light'];
+    const c = CANVAS[theme() === 'dark' ? 'dark' : 'light'];
     Object.assign(m, { background_color: c, theme_color: c, description: t('Less on your mind. More at home.') });
     res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
   });
@@ -154,13 +182,21 @@ if (webDir) {
   const html = fs.readFileSync(path.join(webDir, 'index.html'), 'utf8');
   // the document language follows the household setting
   // … and the household theme is known before the first paint (web/public/theme-boot.js reads it)
-  const withLang = (doc: string) => doc.replace(/<html lang="[^"]*"/, `<html lang="${lang()}" data-theme-default="${householdAppearance().theme}"`);
+  const withLang = (doc: string) => doc.replace(/<html lang="[^"]*"/, `<html lang="${lang()}" data-theme-default="${theme()}"`);
   app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(withLang(html)));
 }
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ZodError) {
     res.status(400).json({ error: t('Invalid input'), issues: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`) });
+    return;
+  }
+  if (err instanceof NoHouseholdError) {
+    res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
+  if (err instanceof QuotaError) {
+    res.status(413).json(err.toJSON());
     return;
   }
   if (err instanceof MulterError) {
@@ -175,5 +211,6 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 app.listen(config.port, () => {
   console.log(`ToHuus Hub running on :${config.port} (${config.baseUrl})`);
   startScheduler();
-  startBackups();
+  if (config.multiTenant) startCloudBackups();
+  else startBackups();
 });

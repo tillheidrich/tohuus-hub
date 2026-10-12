@@ -13,6 +13,7 @@ import { STARTER } from './onboard.js';
 import { type Section, parseQuickAdd, previewQuickAdd, quickAdd, sectionOf } from './shop.js';
 import { norm } from './text.js';
 import { type ShareRow, type StockMode, type Visibility, isTrackedProduct, setStockMode, shareRow, stockMode } from './share-core.js';
+import { ScopedMap } from './tenancy.js';
 
 export * from './share-core.js';
 
@@ -273,7 +274,7 @@ interface InboxEntry {
   url: string;
   files: { name: string; type: string; buf: Buffer }[];
 }
-const inbox = new Map<string, InboxEntry>();
+const inbox = new ScopedMap<string, InboxEntry>();
 const INBOX_TTL = 30 * 60_000;
 
 function sweepInbox() {

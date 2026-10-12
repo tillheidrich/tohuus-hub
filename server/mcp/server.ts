@@ -565,7 +565,8 @@ export async function handleMcp(req: Request, res: Response) {
   let actorName: string | null = null;
   const secret = req.params.secret as string | undefined;
   if (secret) {
-    if (config.mcpPathSecret && safeEqual(secret, config.mcpPathSecret)) actorName = 'Assistant';
+    // the instance-wide path secret only exists for a self-hosted household (it names no household in the cloud)
+    if (config.mcpPathSecret && !config.multiTenant && safeEqual(secret, config.mcpPathSecret)) actorName = 'Assistant';
     else {
       // tokens in URLs end up in logs — only MCP-scoped tokens are accepted here
       const a = actorFromBearer(secret);

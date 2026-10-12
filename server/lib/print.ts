@@ -16,6 +16,8 @@ import * as pos from './escpos.js';
 import { notifySettings } from './notify.js';
 import { qrMatrix } from './qr.js';
 import { type Paper, type Ticket, type TicketSpec, COLS, DOTS, buildTicket, renderGrey, renderPng, renderText, wrap } from './tickets.js';
+import { ScopedSet } from './tenancy.js';
+import { featureOff } from './tenancy.js';
 
 migrate(
   'print-1',
@@ -440,7 +442,7 @@ export const channelLabel = (c: SendChannel) => ({ telegram: 'Telegram', matrix:
 
 // ---------------------------------------------------------------- automations
 
-const inflight = new Set<string>();
+const inflight = new ScopedSet<string>();
 
 /** New orders → every printer with auto-print on ("party" = only orders that belong to a party). */
 export async function autoPrintOrders() {
@@ -501,7 +503,7 @@ let started = false;
 
 /** Listen for new orders (debounced) and check due care tasks every 15 minutes. */
 export function startPrintAutomations() {
-  if (started) return;
+  if (started || featureOff('lanPrinters')) return;
   started = true;
   onEmit((topics) => {
     if (!topics.includes('orders')) return;

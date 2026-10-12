@@ -11,6 +11,7 @@ import { t } from '../i18n.js';
 import { activeIngredients, effectiveIngredients, variantContext } from './variants.js';
 import { scaleText, servingsFactor, sumAmounts } from './scale.js';
 import { nobodyHomeOn } from './away-state.js';
+import { featureOff } from './tenancy.js';
 
 export interface PlanEntry {
   id: number;
@@ -269,6 +270,7 @@ export async function importCookidooEvents(input: CookidooEvent[], range: { star
  * long-lived HA token stored in ToHuus Hub. The push from the HACS integration needs no token here.
  */
 export async function syncCookidoo(): Promise<CookidooResult> {
+  if (featureOff('cookidoo')) return { events: 0, added: 0, updated: 0, removed: 0, imported: 0, error: 'Not available in ToHuus Cloud.' };
   const s = haSettings();
   if (!s.url || !s.token || !s.cookidooCalendar) return { events: 0, added: 0, updated: 0, removed: 0, imported: 0, error: t('Home Assistant not connected') };
   const start = localDay(-1);

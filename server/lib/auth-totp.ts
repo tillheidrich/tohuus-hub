@@ -6,6 +6,7 @@ import crypto from 'node:crypto';
 import { db } from '../db.js';
 import { safeEqual, sha256 } from './auth.js';
 import { householdName, userById } from './auth-policy.js';
+import { ScopedMap } from './tenancy.js';
 
 const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
@@ -78,7 +79,7 @@ export function otpauthUri(secret: string, account: string) {
 // ---------------------------------------------------------------- per member
 
 /** secrets waiting for the first correct code (set-up screen), per member, 15 minutes */
-const pending = new Map<number, { secret: string; exp: number }>();
+const pending = new ScopedMap<number, { secret: string; exp: number }>();
 
 export function beginTotpSetup(userId: number): { secret: string; uri: string } {
   const u = userById(userId)!;

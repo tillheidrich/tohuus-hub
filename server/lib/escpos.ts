@@ -4,6 +4,7 @@
  * Text mode uses the printer's own font with code page CP858 or Windows-1252 (Epson numbering).
  */
 import net from 'node:net';
+import { featureOff } from './tenancy.js';
 
 export const ESC = 0x1b;
 export const GS = 0x1d;
@@ -124,6 +125,8 @@ export function rasterJob(bits: Uint8Array, width: number, height: number, o: Jo
 
 /** Send bytes to a network printer (raw TCP, usually port 9100). */
 export function sendTcp(host: string, port: number, data: Buffer, timeoutMs = 8000): Promise<void> {
+  // ToHuus Cloud: no connections into anyone's LAN (or ours)
+  if (featureOff('lanPrinters')) return Promise.reject(new Error('Network printers are not available in ToHuus Cloud.'));
   return new Promise((resolve, reject) => {
     const sock = net.createConnection({ host, port });
     let done = false;

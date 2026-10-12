@@ -3,6 +3,8 @@ import type { NextFunction, Request, Response } from 'express';
 import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
 import { guestMay, houseGuestFor, type HouseGuest } from './people-policy.js';
+import { currentHousehold, tokenPrefix } from './tenancy.js';
+import { config } from '../config.js';
 
 export interface Actor {
   kind: 'user' | 'token' | 'guest';
@@ -83,6 +85,13 @@ migrate(
   );`,
 );
 
+// App/device tokens (scope 'app'): exactly the rights of one member, bound to a device name (docs/plan-2026-10-12.md).
+migrate(
+  'app-tokens-1',
+  `ALTER TABLE api_tokens ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+  ALTER TABLE api_tokens ADD COLUMN device TEXT;`,
+);
+
 declare module 'express-serve-static-core' {
   interface Request {
     actor?: Actor;
@@ -94,7 +103,8 @@ export const PASSWORD_MIN = 8;
 export const NAME_MAX = 40;
 
 export const sha256 = (s: string) => crypto.createHash('sha256').update(s).digest('hex');
-export const randomToken = (bytes = 24) => crypto.randomBytes(bytes).toString('base64url');
+/** Random URL-safe token; in ToHuus Cloud prefixed with the household's routing prefix (lib/tenancy.ts). */
+export const randomToken = (bytes = 24) => tokenPrefix() + crypto.randomBytes(bytes).toString('base64url');
 
 export function hashPassword(pw: string): string {
   const salt = crypto.randomBytes(16);
@@ -125,6 +135,9 @@ const buckets = new Map<string, { n: number; reset: number }>();
 /** for tests */
 export const resetRateLimits = () => buckets.clear();
 export function rateLimited(key: string, max: number, windowMs: number): boolean {
+  // cloud: inside a household the buckets are per household (user ids and names repeat across households)
+  const h = config.multiTenant ? currentHousehold() : null;
+  if (h) key = `${h.id}|${key}`;
   const now = Date.now();
   const b = buckets.get(key);
   if (!b || b.reset < now) {
@@ -182,13 +195,24 @@ export function createApiToken(name: string, scope = 'full'): { token: string; i
   return { token, id: Number(info.lastInsertRowid) };
 }
 
+/** The actor of a household member (sessions, app tokens, cloud memberships). */
+export function userActor(userId: number, extra: Partial<Actor> = {}): Actor | null {
+  const u = db.prepare('SELECT id, name, role FROM users WHERE id = ?').get(userId) as { id: number; name: string; role: 'admin' | 'member' } | undefined;
+  if (!u) return null;
+  const houseGuest = houseGuestFor(u.id);
+  return { kind: 'user', userId: u.id, name: u.name, role: houseGuest ? 'member' : u.role, ...extra, ...(houseGuest ? { houseGuest } : {}) };
+}
+
 export function actorFromBearer(token: string | undefined): Actor | null {
-  if (!token) return null;
-  const row = db.prepare('SELECT id, name, scope FROM api_tokens WHERE token_hash = ?').get(sha256(token)) as
-    | { id: number; name: string; scope: string }
+  if (!token || token.length > 300) return null;
+  if (config.multiTenant && !currentHousehold()) return null;
+  const row = db.prepare('SELECT id, name, scope, user_id FROM api_tokens WHERE token_hash = ?').get(sha256(token)) as
+    | { id: number; name: string; scope: string; user_id: number | null }
     | undefined;
   if (!row) return null;
   db.prepare(`UPDATE api_tokens SET last_used_at = datetime('now') WHERE id = ?`).run(row.id);
+  // an app token acts as the member it belongs to – nothing more
+  if (row.scope === 'app') return row.user_id ? userActor(row.user_id, { scope: 'app' }) : null;
   return { kind: 'token', name: row.name, role: row.scope === 'full' ? 'admin' : 'member', scope: row.scope };
 }
 
@@ -211,7 +235,11 @@ function actorFromSession(token: string | undefined, deviceToken: string | undef
   return { kind: 'user', userId: row.id, name: row.name, role: houseGuest ? 'member' : row.role, sessionId: row.sid, ...(houseGuest ? { houseGuest } : {}) };
 }
 
+/** ToHuus Cloud replaces the session/token lookup (lib/cloud-auth.ts); self-host leaves it unset. */
+export const cloudActorHook: { resolve?: (req: Request) => Actor | null } = {};
+
 export function resolveActor(req: Request): Actor | null {
+  if (cloudActorHook.resolve) return cloudActorHook.resolve(req);
   const auth = req.headers.authorization;
   if (auth?.startsWith('Bearer ')) return actorFromBearer(auth.slice(7).trim());
   const headerToken = req.headers['x-api-key'];
@@ -251,6 +279,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export function guestFromToken(token: string): Actor | null {
+  if (config.multiTenant && !currentHousehold()) return null;
   // guest_links.token holds sha256(token) – the plain token only ever lives in the shared URL
   const row = db
     .prepare(

@@ -12,5 +12,5 @@
     "types": ["node"],
     "paths": { "better-sqlite3": ["./node_modules/better-sqlite3/index.d.ts"] }
   },
-  "include": ["server", "web/src", "test"]
+  "include": ["server", "web/src", "test", "scripts"]
 }

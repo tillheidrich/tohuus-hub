@@ -26,6 +26,7 @@ import { overview } from './overview.js';
 import { liveParty } from './party.js';
 import { getPlan } from './plan.js';
 import { householdAppearance } from './appearance.js';
+import { ScopedMap } from './tenancy.js';
 
 migrate(
   'kiosk-1',
@@ -656,7 +657,7 @@ const bumpVersion = () => {
   version++;
 };
 onEmit(() => bumpVersion());
-const pngCache = new Map<string, { at: number; v: number; buf: Buffer }>();
+const pngCache = new ScopedMap<string, { at: number; v: number; buf: Buffer }>();
 const CACHE_MS = 60_000;
 
 const pango = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
