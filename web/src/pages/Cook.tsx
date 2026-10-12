@@ -277,9 +277,6 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
         </div>
       )}
       <SwapRulesCard />
-      <div style={{ marginTop: 8 }}>
-        <HowTo slug="rezepte-importieren" />
-      </div>
       <RecipePackageSheet open={pkgOpen} onClose={() => setPkgOpen(false)} />
     </section>
   );

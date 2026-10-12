@@ -122,7 +122,12 @@
 }
 .hg-search {
   flex: 1 1 200px;
-  max-width: 320px;
+  max-width: 360px;
+}
+@media (max-width: 600px) {
+  .hg-search {
+    max-width: none;
+  }
 }
 .hg {
   display: grid;
@@ -193,9 +198,10 @@
   text-decoration: none;
 }
 .hg-code {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
 }
 .hg-code-ic {
   display: inline-grid;
@@ -208,10 +214,11 @@
   flex: none;
 }
 .hg-code-actions {
+  grid-column: 1 / -1;
   display: flex;
   gap: 6px;
   align-items: center;
-  flex: none;
+  justify-content: flex-end;
 }
 .hg-code-actions .btn {
   min-height: 44px;

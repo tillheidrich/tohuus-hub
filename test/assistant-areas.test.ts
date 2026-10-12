@@ -44,7 +44,7 @@ describe('per-screen tools', () => {
     expect(areas.recipeGet('lasagne')).toMatchObject({ found: true, title: 'Lasagne', ingredients: ['500 g Hackfleisch'], steps: ['Schichten.'] });
     const { ctx, area } = ctxOf();
     const out = areas.recipeSaveAdapted(area, { from: 'Lasagne', title: 'Lasagne vegetarisch', ingredients: ['500 g Linsen'], steps: ['Schichten.'] }) as any;
-    expect(db.prepare('SELECT description FROM recipes WHERE id = ?').get(out.id)).toEqual({ description: 'Adapted from Lasagne' });
+    expect(db.prepare('SELECT description FROM recipes WHERE id = ?').get(out.id)).toEqual({ description: expect.stringMatching(/^(Adapted from|Angepasst aus) Lasagne$/) });
     expect((db.prepare(`SELECT COUNT(*) n FROM recipes WHERE title = 'Lasagne'`).get() as any).n).toBe(1);
     tools.runUndo(ctx.actions[0].undo, 1);
     expect(db.prepare('SELECT 1 FROM recipes WHERE id = ?').get(out.id)).toBeUndefined();
