@@ -14,6 +14,7 @@ DATA_DIR/
   households/<uuid>/images/       photos, AES-256-GCM per file
   households/<uuid>/imports/      receipt files, AES-256-GCM per file
   backups/<uuid>/                 nightly VACUUM INTO copies (encrypted like the database)
+  backups/<uuid>/.files-manifest.json   what of images/ and imports/ is on S3 (path, size, mtime)
   backups/_accounts/              nightly copies of accounts.db
 ```
 
@@ -51,7 +52,9 @@ DATA_DIR/
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |
 | `APPLE_SANDBOX_ACCOUNTS` | – | comma-separated e-mails of TestFlight testers: Sandbox purchases count only for households with one of these accounts |
-| `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`) |
+| `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup and of all images and receipt files (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`; a MinIO in a private network works too – these requests bypass the private-address block) |
+| `BACKUP_FILES_MAX_FILES`, `BACKUP_FILES_MAX_MB` | – | file sync budget per night over all households (20 000 files, 4096 MB); the rest follows the next night |
+| `BACKUP_FILES_MAX_FILES_PER_HOUSEHOLD`, `BACKUP_FILES_MAX_MB_PER_HOUSEHOLD` | – | per household and night (2 000 files, 1024 MB), so one big household cannot hold up the others |
 | `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_TOPIC`, `APNS_ENV` | – | iPhone push – [notifications.md](notifications.md#iphone-push-apns-serverlibapnsts) |
 | `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU) |
 | `OPERATOR_EMAILS` | – | comma-separated account e-mails that may open the operator page `/betrieb` |
@@ -77,9 +80,21 @@ and ignored in the cloud.
 
 - Nightly from 03:00 (`TZ`): `accounts.db` and every household that changed since its last backup are copied with
   `VACUUM INTO` (stays encrypted). Retention 7 daily + 4 weekly per household. With `BACKUP_S3_*` each new file is
-  uploaded to `<prefix>/<uuid>/<file>` and `<prefix>/_accounts/<file>`.
-- Images and receipt files are not inside the database copies – back up the volume (or replicate
-  `DATA_DIR/households/*/images|imports`) as well. They are encrypted files; the same keys apply.
+  uploaded to `<prefix>/<uuid>/<file>` and `<prefix>/_accounts/<file>`. Older copies are only rotated locally – set
+  a lifecycle rule on the bucket for the `.db` objects (e.g. 60 days).
+- **Images and receipt files** are not inside the database copies. With `BACKUP_S3_*` they are synced right after
+  the database copies (`server/lib/offsite-files.ts`): every file under `households/<uuid>/images/` and `imports/`
+  goes to `<prefix>/<uuid>/files/images/<name>` / `…/files/imports/<name>` **byte for byte as it is on disk** –
+  AES-256-GCM with the household key, never decrypted on the way. Incremental: `backups/<uuid>/.files-manifest.json`
+  remembers path, size and mtime of what was uploaded; only new or changed files go up, files deleted in the
+  household are deleted on S3 on the next run (`DeleteObject`). A lost manifest only means one full re-upload
+  (PUT is idempotent). Bounded per night (`BACKUP_FILES_MAX_*`, see Environment): what does not fit stays
+  `pending` and the next night starts with the household where the budget ran out. A failed upload is retried the
+  next night. Do not put a lifecycle expiry on `*/files/*` – those objects are the current state, not history.
+- Result of the last file sync (counts only: households, uploaded, deleted, bytes, pending, errors) is in
+  `backups/.last-file-sync` and on `/betrieb`.
+- Without S3, back up the volume (or replicate `DATA_DIR/households/*/images|imports`) yourself. The files are
+  encrypted; the same keys apply.
 - **Restore drill** (do it monthly): `DATA_DIR=/data TOHUUS_MASTER_KEY=… node dist/restore-check.mjs`
   opens the newest accounts backup and a random household backup with the keys and runs `PRAGMA integrity_check`
   (exit code 0 = fine). Pass a household uuid (and a file) to check a specific one. In development:
@@ -90,6 +105,20 @@ and ignored in the cloud.
 - **Restoring accounts.db**: same procedure with `DATA_DIR/accounts.db`. Households created after that backup lose
   their directory entry (and with it their key) – restore accounts.db only together with a fresh copy of all
   wrapped keys, or replay the newer rows by hand.
+- **Restoring images and receipt files** of one household from S3 (e.g. after losing the volume, together with
+  its database copy):
+
+  ```
+  DATA_DIR=/data BACKUP_S3_ENDPOINT=… BACKUP_S3_BUCKET=… BACKUP_S3_ACCESS_KEY=… BACKUP_S3_SECRET_KEY=… \
+    [BACKUP_S3_REGION=… BACKUP_S3_PREFIX=…] node dist/restore-files.mjs <householdUuid> [--dry-run] [--overwrite] [--to <folder>]
+  ```
+
+  (development: `npm run restore-files -- <uuid> …`). It lists `<prefix>/<uuid>/files/`, downloads into
+  `households/<uuid>/images|imports/` and keeps files that already exist unless `--overwrite`. Only keys of the
+  form `images/<name>` / `imports/<name>` are written (anything else is skipped and reported). No master key is
+  needed – the files stay encrypted and open with the household key from accounts.db as before. The household's
+  manifest is updated, so the next night does not upload them again. `--to <folder>` restores somewhere else to
+  look first (the manifest is not touched then); `--dry-run` only counts. Exit code 0 = done.
 - Restore from an uploaded file (the self-host *Settings › Backups* screen) is off in the cloud.
 
 ## Adding a household
@@ -117,7 +146,9 @@ manual household use the same endpoint with a session.
   - The household id goes into `DATA_DIR/shred-log.jsonl` (ids and times, no keys). When accounts.db is opened –
     also after restoring an older copy that still has the key – every logged household is shredded again.
   - The wrapped key is scrubbed from the local accounts backups (`backups/_accounts/*.db`).
-  - With `BACKUP_S3_*` the household's S3 objects are listed and deleted right away.
+  - With `BACKUP_S3_*` the household's S3 objects – database copies and `files/` – are listed and deleted right
+    away. If the nightly file sync was uploading for that household at the same moment, it deletes the prefix once
+    more when it notices the household folder is gone.
   - **Remaining retention:** copies of accounts.db already uploaded to S3 (`_accounts/…`) still carry the wrapped
     key until they expire – without the household's own backups they unlock nothing, but set a lifecycle rule
     (e.g. 60 days) and keep bucket versioning off or short. Copies of the volume made outside ToHuus (snapshots)
@@ -158,6 +189,27 @@ New cloud account passwords need 10 characters (signup, reset, change, invite wi
 ## E-mail language
 
 Account mails – address confirmation, sign-in link, password reset, account deleted, "new assistant connected" (OAuth) – are built and sent inside `inAccountLang(account.lang, …)` (`server/lib/account-mail.ts`, `withLang()` in `server/i18n.ts`), so subject, title, text, button, footer and the `<html lang>` all use **the account's language** (`accounts.lang`, stored at signup from `lang`; accounts created through an invitation get the household's language). Without a stored language the household's (or the instance's) language is used. Invitation mails go out in the inviting household's language (the invitee has no account yet). The footer says "ToHuus Cloud" in the cloud and "euer Haushalt, selbst gehostet" self-hosted. Test: a `lang: 'de'` signup gets no English template text (`test/cloud-isolation.test.ts`).
+
+## Sign-in link and code (other device)
+
+`POST /api/auth/link { email }` (always `{ ok: true, sent: true }`) mails the account – in its language – a **link**
+(signs in the browser that opens it, 15 minutes, single use) and a **6-digit code** (shown as `123 456`) for the
+device where the person asked for the mail: the laptop's browser while the mail is read on the phone, or the iPhone
+app. `server/lib/cloud-codes.ts`, table `auth_codes` in accounts.db (hash only, bound to account and link).
+
+`POST /api/auth/link/code { email, code, device?, household? }` (cloud only):
+
+- without `device` → cookie session for this browser, `{ status: 'signed_in' }`;
+- with `device` (the iPhone app) → an app token, same answer as `POST /api/auth/app`:
+  `{ token, account, user, households, household }`;
+- `400` "That code doesn’t match …" (also for unknown addresses), `410` when the code is used, expired or burnt,
+  `403` when `household` is not a membership, `429` rate limits (20 per IP, 10 per address in 15 minutes).
+
+Rules: 10 minutes, single use, 5 wrong tries burn every open code of the account (the link keeps working). Using the
+code also uses up the link of the same mail; opening a link burns the account's open codes. Like the link, the
+code confirms the address (`verified_at`). Sessions from a code have the method `link-code`, which counts as a fresh
+e-mail confirmation for deleting an account or household. Self-host keeps its own direction (the asking device shows
+a 4-digit code that is typed where the link is opened – `server/lib/auth-links.ts`).
 
 ## App web link
 
@@ -209,6 +261,7 @@ Cloud only. Who: accounts whose e-mail address is listed in `OPERATOR_EMAILS` (c
 | Weekly question (list2 pulse): answers per week of households that switched sharing on | `pulse_agg` in `accounts.db` | no | no |
 | Error rate (requests and 5xx answers per hour, last 24 h) | in memory since the last start, status class only (no path, no person, no household) | no | no |
 | Backups: last nightly run, last restore check (+ result), S3 on/off | `backups/.last-nightly`, `backups/.last-restore-check` (written by `dist/restore-check.mjs`) | no | no |
+| Last file sync to S3: households, files uploaded / deleted, bytes, pending for the next night, errors (`backups.lastFileSync`) | `backups/.last-file-sync` | no | no |
 | Server: process memory, container memory limit, disk free, load, uptime | the OS | no | no |
 
 Cost = prompt tokens × input price + completion tokens × output price, per million tokens: `AI_PRICES` (JSON `{ "<model>": [in, out] }`) or `AI_PRICE_PER_MTOK` (`"in,out"`, default `0.1,0.3`), currency label `AI_PRICE_CURRENCY` (default `USD`). It is an estimate, not the invoice.
@@ -226,7 +279,5 @@ Never shown: household names, people, lists, receipts, conversations, e-mail add
 ## Known gaps (TODO)
 
 - Passkeys for cloud accounts (one RP-ID = the cloud host) are not wired yet; the endpoints answer 404.
-- The magic link signs in the browser that opens it (no cross-device code confirmation as in self-host).
-- Images are not part of the nightly database copies; no S3 copy of images yet.
 - No admin back office (support lookups, manual plan changes) – use accounts.db with the master key.
 - Master key rotation is manual (see Keys).

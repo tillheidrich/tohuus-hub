@@ -136,8 +136,9 @@ export function Login() {
 
   const sendLink = (target: { email?: string; name?: string }) =>
     run(async () => {
-      const r = await post<{ code: string }>('/auth/link', target);
-      setLinkCode(r.code);
+      const r = await post<{ code?: string }>('/auth/link', target);
+      // self-host: this device shows a code for the other one; cloud: the code comes in the mail (CloudLinkSent)
+      setLinkCode(r.code ?? '');
       setStep('sent');
     });
 
@@ -167,7 +168,7 @@ export function Login() {
       </div>
     );
   } else if (step === 'sent') {
-    body = <LinkSent code={linkCode} onBack={() => setStep('main')} />;
+    body = o.cloud || !linkCode ? <CloudLinkSent email={email.trim()} onBack={() => setStep('main')} /> : <LinkSent code={linkCode} onBack={() => setStep('main')} />;
   } else if (step === 'link') {
     body = (
       <form className="stack" onSubmit={(e) => { e.preventDefault(); sendLink({ email: email.trim() }); }}>
@@ -426,6 +427,65 @@ function LinkSent({ code, onBack }: { code: string; onBack: () => void }) {
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * ToHuus Cloud, after "send me a link": the mail has a link (signs in the browser that opens it) and a 6-digit code.
+ * Read the mail on the phone? Type the code here – POST /api/auth/link/code.
+ */
+function CloudLinkSent({ email, onBack }: { email: string; onBack: () => void }) {
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    // opening the link in another tab of this browser signs this one in too
+    const onFocus = () => invalidate('me');
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setErr('');
+    try {
+      await post('/auth/link/code', { email, code });
+      invalidate('me');
+    } catch (x) {
+      setErr((x as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form className="stack" style={{ gap: 18 }} onSubmit={submit}>
+      <div>
+        <button type="button" className="btn ghost sm auth-back" onClick={onBack}>
+          <ArrowLeft size={14} /> {t('Back')}
+        </button>
+        <div className="eyebrow">{t('Sign-in link')}</div>
+        <h1>{t('Check your e-mail')}</h1>
+      </div>
+      <p className="muted" style={{ margin: 0 }}>{t('If the address is known here, a mail is on its way. Open the link on this device – or type the code from the mail here.')}</p>
+      <div className="field">
+        <label htmlFor="link-code">{t('Code from the mail')}</label>
+        <input
+          id="link-code"
+          className="input mono auth-code-input"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={7}
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+          autoFocus
+        />
+        <div className="help">{t('6 digits, valid for 10 minutes.')}</div>
+      </div>
+      {err && <div className="small auth-error" role="alert">{err}</div>}
+      <button className="btn primary lg" disabled={busy || code.length !== 6}>
+        <SignIn size={18} /> {t('Sign in')}
+      </button>
+    </form>
   );
 }
 

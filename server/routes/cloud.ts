@@ -317,12 +317,27 @@ async function sendCloudSignInLink(email: string) {
   const acc = await A();
   const a = acc.accountByEmail(email);
   if (!a) return;
+  await mailSignIn(a);
+}
+
+/**
+ * The sign-in mail: a link (signs in the browser that opens it, 15 minutes) and a 6-digit code for the device where
+ * the person asked for it (10 minutes, 5 tries) – POST /api/auth/link/code. Everything in the account's language.
+ */
+async function mailSignIn(a: { id: number; email: string; lang: string | null }) {
+  const acc = await A();
   const token = acc.createAuthLink('magic', a.id, 15);
+  const code = (await import('../lib/cloud-codes.js')).createSignInCode(a.id, token);
   await inAccountLang(a.lang, () =>
-    sendAuthMail(a.email, t('Your sign-in link'), t('Sign in to ToHuus'), t('Tap the button to sign in. The link works once and for 15 minutes.'), {
-      url: `${config.baseUrl}/anmelden/link#${token}`,
-      label: t('Sign in'),
-    }),
+    sendAuthMail(
+      a.email,
+      t('Your sign-in link'),
+      t('Sign in to ToHuus'),
+      t('Tap the button to sign in. The link works once and for 15 minutes.'),
+      { url: `${config.baseUrl}/anmelden/link#${token}`, label: t('Sign in') },
+      t('Reading this on another device? Type the code where you asked for this mail. It works once and for 10 minutes.'),
+      { rows: [{ label: t('Code for the other device'), value: `${code.slice(0, 3)} ${code.slice(3)}` }] },
+    ),
   );
 }
 
@@ -502,15 +517,7 @@ cloudPub.post(
     if (rateLimitedGlobal(`link-ip:${req.ip}`, 10, 15 * 60_000) || rateLimitedGlobal(`link:${email}`, 3, 15 * 60_000)) return sameAnswer();
     const acc = await A();
     const a = EMAIL_RE.test(email) ? acc.accountByEmail(email) : undefined;
-    if (a && canSendMail()) {
-      const token = acc.createAuthLink('magic', a.id, 15);
-      void inAccountLang(a.lang, () =>
-        sendAuthMail(a.email, t('Your sign-in link'), t('Sign in to ToHuus'), t('Tap the button to sign in. The link works once and for 15 minutes.'), {
-          url: `${config.baseUrl}/anmelden/link#${token}`,
-          label: t('Sign in'),
-        }),
-      );
-    }
+    if (a && canSendMail()) void mailSignIn(a).catch((e) => console.warn('[auth mail]', (e as Error).message));
     return sameAnswer();
   }),
 );
@@ -523,7 +530,51 @@ cloudPub.post(
     if (!accountId) throw new AuthError(410, t('This link has expired or was already used.'));
     // opening a link from the mailbox also proves the address
     acc.accountsDb().prepare(`UPDATE accounts SET verified_at = COALESCE(verified_at, datetime('now')) WHERE id = ?`).run(accountId);
+    (await import('../lib/cloud-codes.js')).burnSignInCodes(accountId);
     await startCloudSession(req, res, accountId, acc.membershipsOf(accountId)[0]?.household_id ?? null, 'link');
+    return { status: 'signed_in' };
+  }),
+);
+
+/**
+ * The code from the sign-in mail, typed on the device that asked for it (the mail was opened somewhere else).
+ * Without `device`: a cookie session for this browser → `{ status: 'signed_in' }`. With `device` (the iPhone app):
+ * an app token → the same answer as POST /api/auth/app. 6 digits, 10 minutes, single use, 5 tries.
+ */
+const codeReq = z.object({
+  email: z.string().trim().max(254),
+  code: z.string().max(20),
+  device: z.string().trim().min(1).max(80).optional(),
+  household: z.string().max(64).optional(),
+});
+cloudPub.post(
+  '/auth/link/code',
+  wrap(async (req, res) => {
+    const b = codeReq.parse(req.body ?? {});
+    const email = normEmail(b.email);
+    const code = b.code.replace(/\s+/g, '');
+    if (rateLimitedGlobal(`link-code-ip:${req.ip}`, 20, 15 * 60_000) || rateLimitedGlobal(`link-code:${email}`, 10, 15 * 60_000))
+      throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    const acc = await A();
+    const codes = await import('../lib/cloud-codes.js');
+    const a = EMAIL_RE.test(email) ? acc.accountByEmail(email) : undefined;
+    // unknown address and wrong code answer alike
+    const r = a ? codes.useSignInCode(a.id, code) : ({ ok: false, reason: 'wrong', left: codes.CODE_TRIES - 1 } as const);
+    if (!r.ok) {
+      if (r.reason === 'expired') throw new AuthError(410, t('This code has run out. Ask for a new mail.'));
+      throw new AuthError(400, t('That code doesn’t match. Check the mail and try again.'));
+    }
+    const accountId = a!.id;
+    // the code came from the mailbox: that proves the address, like opening the link
+    acc.accountsDb().prepare(`UPDATE accounts SET verified_at = COALESCE(verified_at, datetime('now')) WHERE id = ?`).run(accountId);
+    const ms = acc.membershipsOf(accountId);
+    const chosen = (b.household && ms.find((m) => m.household_id === b.household)) || ms[0] || null;
+    if (b.household && chosen?.household_id !== b.household) throw new AuthError(403, t('You are not a member of this household.'));
+    if (b.device) {
+      const { token } = acc.createAppToken(accountId, b.device, chosen?.household_id ?? null);
+      return { token, ...(await cloudMe(accountId, chosen?.household_id ?? null)) };
+    }
+    await startCloudSession(req, res, accountId, chosen?.household_id ?? null, 'link-code');
     return { status: 'signed_in' };
   }),
 );
