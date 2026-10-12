@@ -2687,6 +2687,23 @@
         }
       }
     },
+    "Please choose a household first – a subscription always belongs to one household.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please choose a household first – a subscription always belongs to one household."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitte wähl erst einen Haushalt – ein Abo gehört immer zu einem Haushalt."
+          }
+        }
+      }
+    },
     "Please sign in to the ToHuus app first.": {
       "extractionState": "manual",
       "localizations": {
@@ -3464,7 +3481,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sag oder schreib, was du brauchst"
+            "value": "Sprich oder schreib, was du brauchst"
           }
         }
       }

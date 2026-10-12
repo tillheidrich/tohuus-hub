@@ -81,7 +81,7 @@ struct AssistantButton: View {
                 .background(Theme.primary, in: Circle())
                 .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
         }
-        .accessibilityLabel(L("Assistant"))
+        .accessibilityLabel(L("Speak"))
         .accessibilityHint(L("Speak or type what you need"))
     }
 }

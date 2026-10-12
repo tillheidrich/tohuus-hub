@@ -195,7 +195,7 @@ function EntryLevels({ legacy }: { legacy?: boolean }) {
         {canTalk ? (
           <button className="entry-tile" onClick={() => openAssistant()}>
             <Microphone size={22} />
-            <b>{t('Just say it')}</b>
+            <b>{t('Just speak')}</b>
             <span>{t('“Milk is out”')}</span>
           </button>
         ) : (

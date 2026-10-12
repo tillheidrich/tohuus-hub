@@ -190,7 +190,7 @@ Eine grüne Kachel (`#176b50`), darin das ToHuus-Haus in Papierfarbe mit Bogent�
 - **Tab-Leiste mobil ist weiß** (Tills Vorgabe): volle Breite unten, `--surface`, Haarlinie oben plus weicher Schatten, Icons in `--ink-2`, aktiver Tab grün (`--primary-text`, gefülltes Icon in einer `--primary-soft`-Pille, Label fett). Dunkel: dieselbe Leiste auf der dunklen Fläche. Zähler sitzen als Tintenkreise am Icon. Die schwarze schwebende Leiste und das grüne Plus darin sind entfallen.
 - **Tabs:** Heute · Einkauf · Vorrat · Kochen · Geld. Alles andere unter `/mehr` (Avatar im Heute-Kopf, Desktop: Abschnitt „Mehr“ in der Sidebar). „+“ sitzt als Icon-Button im Heute-Kopf und als „Hinzufügen“ in der Sidebar.
 - **Sidebar Desktop** ist jetzt hell (`--surface`, Haarlinie rechts), aktiver Eintrag grün gefüllt.
-- **Assistent:** schwebende Taste rechts über der Tab-Leiste, Tinte mit grünem Mikrofon und „Sagen“, `--r-lg`, `--shadow-float`.
+- **Assistent:** schwebende Taste rechts über der Tab-Leiste, Tinte mit grünem Mikrofon und „Sprechen“, `--r-lg`, `--shadow-float`.
 - **Heute:** kein grüner Kopfblock und kein Ticket mehr, sondern höchstens fünf ruhige Karten (`.hcard`: Fläche, 1 px Linie, Formmarker vor dem Titel), ab 1100 px zweispaltig (`columns: 2`).
 - **Geld:** Balken in einer Farbe (`--primary`), Werte als Text in Tinte daneben, Wochenverlauf als 2-px-Linie mit Hover/Fokus und einer Tabelle für Screenreader.
 - Tap-Ziele: `.icon-btn` ist jetzt 44 × 44 px.
