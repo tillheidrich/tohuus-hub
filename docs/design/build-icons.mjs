@@ -85,3 +85,20 @@ await png(flatD, 180, `${SITE}/apple-touch-icon-dark.png`);
 await png(light, 192, `${SITE}/icon-192.png`);
 await png(dark, 192, `${SITE}/icon-192-dark.png`);
 await png(light, 32, `${SITE}/favicon-32.png`);
+
+// Native apps (ios/): full-bleed squares without alpha – iOS and watchOS mask the corners themselves.
+// iOS 18 appearances: "any" (brand), "dark" (green-black tile), "tinted" (grey-scale mark on black, the system tints it).
+const tinted = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#000000"/>
+  ${mark({ house: '#ffffff', door: '#8a8a8a' })}
+</svg>
+`;
+const opaque = async (svg, size, file) => {
+  await sharp(Buffer.from(svg), { density: 300 }).resize(size, size).flatten({ background: '#000000' }).removeAlpha().png({ compressionLevel: 9 }).toFile(file);
+  console.log('wrote', file);
+};
+const IOS = 'ios/ToHuus/Resources/Assets.xcassets/AppIcon.appiconset';
+await opaque(flatL, 1024, `${IOS}/AppIcon-1024.png`);
+await opaque(flatD, 1024, `${IOS}/AppIcon-1024-dark.png`);
+await opaque(tinted, 1024, `${IOS}/AppIcon-1024-tinted.png`);
+await opaque(flatL, 1024, 'ios/ToHuusWatch/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png');
