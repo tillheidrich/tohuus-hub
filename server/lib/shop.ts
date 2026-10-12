@@ -9,7 +9,7 @@ import { addToShopping, adjustStock, getProduct, guessCategory, matchProduct } f
 import { norm, tokens } from './text.js';
 import { fitsStore, itemBuyAt } from './buyat.js';
 import { type ShareInfo, type Viewer, applyShareView, realProductId } from './share-core.js';
-import { afterUntick, bookTick, originOf, removeItem, tickItem } from './shopping-trust.js';
+import { afterUntick, announceTick, bookTick, originOf, removeItem, tickItem } from './shopping-trust.js';
 import {
   CATEGORY_SECTION,
   type AisleModel,
@@ -26,6 +26,7 @@ import {
 } from './shopparse.js';
 import { ScopedMap } from './tenancy.js';
 import { decorateItems } from './list2.js';
+import './list-schema.js';
 import { estimate, listLists } from './lists.js';
 
 export * from './shopparse.js';
@@ -65,6 +66,14 @@ migrate(
     ha_status TEXT NOT NULL DEFAULT 'needs_action'
   );
   CREATE TABLE shop_ops (op_id TEXT PRIMARY KEY, result TEXT, at TEXT NOT NULL DEFAULT (datetime('now')));`,
+);
+
+// list2: a store's place, typed in by a person – only for the optional iPhone arrival hint (docs/shopping-list.md)
+migrate(
+  'list2-3-stores',
+  `ALTER TABLE shop_stores ADD COLUMN lat REAL;
+   ALTER TABLE shop_stores ADD COLUMN lon REAL;
+   ALTER TABLE shop_stores ADD COLUMN radius_m INTEGER;`,
 );
 
 // ------------------------------------------------------------------ sections
@@ -126,6 +135,10 @@ export interface Store {
   name: string;
   order: string[];
   trips: number;
+  /** list2: optional, entered by a person (iPhone store-arrival hint); never looked up */
+  lat?: number | null;
+  lon?: number | null;
+  radius_m?: number | null;
 }
 
 function readModel(raw: string): AisleModel {
@@ -141,10 +154,10 @@ function readModel(raw: string): AisleModel {
 }
 
 export function listStores(): Store[] {
-  const rows = db.prepare('SELECT id, name, model FROM shop_stores ORDER BY sort, id').all() as { id: number; name: string; model: string }[];
+  const rows = db.prepare('SELECT * FROM shop_stores ORDER BY sort, id').all() as { id: number; name: string; model: string; lat?: number | null; lon?: number | null; radius_m?: number | null }[];
   return rows.map((r) => {
     const m = readModel(r.model);
-    return { id: r.id, name: r.name, order: m.order, trips: m.trips };
+    return { id: r.id, name: r.name, order: m.order, trips: m.trips, lat: r.lat ?? null, lon: r.lon ?? null, radius_m: r.radius_m ?? null };
   });
 }
 
@@ -174,6 +187,17 @@ export function createStore(name: string): Store {
 
 export function renameStore(id: number, name: string) {
   db.prepare('UPDATE shop_stores SET name = ? WHERE id = ?').run(name.trim().slice(0, 60), id);
+  emit('shopping');
+}
+
+/** Coordinates of a store, typed in by a person (never looked up). `null` clears them. */
+export function setStorePlace(id: number, p: { lat?: number | null; lon?: number | null; radius_m?: number | null }) {
+  const cur = db.prepare('SELECT lat, lon, radius_m FROM shop_stores WHERE id = ?').get(id) as { lat: number | null; lon: number | null; radius_m: number | null } | undefined;
+  if (!cur) throw Object.assign(new Error('not found'), { status: 404 });
+  const lat = p.lat === undefined ? cur.lat : p.lat;
+  const lon = p.lon === undefined ? cur.lon : p.lon;
+  if ((lat == null) !== (lon == null)) throw Object.assign(new Error('lat and lon belong together'), { status: 400 });
+  db.prepare('UPDATE shop_stores SET lat = ?, lon = ?, radius_m = ? WHERE id = ?').run(lat, lon, p.radius_m === undefined ? cur.radius_m : p.radius_m, id);
   emit('shopping');
 }
 
@@ -324,6 +348,7 @@ export function setBasket(itemId: number, on: boolean, actor: string, storeId?: 
     if (it.checked_at && it.in_basket) return { ok: true };
     db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ?, in_basket = 1 WHERE id = ?`).run(actor, itemId);
     if (storeId) recordTick(storeId, sectionOf(it));
+    if (!it.checked_at) announceTick({ itemId, actor, storeId: storeId ?? null });
   } else {
     db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(itemId);
     afterUntick(itemId, actor);
@@ -482,7 +507,7 @@ export function quickAdd(text: string, actor: string, source = 'manual', listId:
 export type OfflineOp =
   | { op_id: string; type: 'add'; text: string; product_id?: number | null; qty?: number | null; list_id?: number | null }
   | { op_id: string; type: 'basket'; id: number; on: boolean; store_id?: number | null }
-  | { op_id: string; type: 'check'; id: number; on: boolean; to_stock?: boolean }
+  | { op_id: string; type: 'check'; id: number; on: boolean; to_stock?: boolean; store_id?: number | null }
   | { op_id: string; type: 'delete'; id: number }
   | { op_id: string; type: 'claim'; id: number; on: boolean };
 
@@ -502,7 +527,7 @@ export function replayOps(ops: OfflineOp[], actor: { name: string; userId?: numb
       } else if (op.type === 'basket') {
         if (exists(op.id)) setBasket(op.id, op.on, actor.name, op.store_id ?? null);
       } else if (op.type === 'check') {
-        if (exists(op.id)) tickItem(op.id, op.on, actor.name, { toStock: op.to_stock });
+        if (exists(op.id)) tickItem(op.id, op.on, actor.name, { toStock: op.to_stock, storeId: op.store_id ?? null });
       } else if (op.type === 'delete') {
         removeItem(op.id);
       } else if (op.type === 'claim') {

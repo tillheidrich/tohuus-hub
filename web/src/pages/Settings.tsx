@@ -30,6 +30,8 @@ import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
 import { AssistantPrivacyCard } from './Memory';
 import { MyListViewCard } from '../shop/trust';
+import { NotifyMine } from './NotifyMine';
+import { ModulesCard } from './Modules';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -95,6 +97,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'plan' && cloud && <BillingCard />}
       {tab === 'plan' && cloud && <CloudAccountCard />}
       {tab === 'home' && <Household me={me} admin={admin} />}
+      {tab === 'home' && <ModulesCard admin={admin} />}
       {tab === 'home' && <AwayEntryCard />}
       {tab === 'home' && <MenuSettingsCard />}
       {tab === 'account' && <MyPerson me={me} />}
@@ -108,6 +111,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'members' && <KidsSection admin={admin} />}
       {tab === 'places' && <PlacesSettings admin={admin} />}
       {tab === 'places' && <CategorySettings admin={admin} />}
+      {tab === 'notify' && me.actor.userId && <NotifyMine />}
       {tab === 'notify' && <Notify admin={admin} />}
       {tab === 'access' && <AssistantPrivacyCard admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
@@ -181,7 +185,13 @@ const EVENT_LABEL: Record<string, string> = {
   'budget.warning': 'Spending budget at 80 % or reached',
   'plan.vote': 'Family food vote started or decided',
   'plan.rotation': 'Next week filled from the rotation',
+  'trip.started': 'Someone is shopping right now',
+  'trip.addon': 'Something added to a shopping trip',
+  'rhythm.due': 'Something is due again',
+  'plan.reminder': 'Reminder for the week plan',
 };
+/** phones and browsers decide per person for these (NotifyMine) – the household matrix only routes shared channels */
+const PERSONAL_EVENTS = new Set(['trip.started', 'trip.addon', 'rhythm.due', 'plan.reminder', 'stock.expiring', 'import.review', 'order.new', 'budget.warning']);
 
 function Notify({ admin }: { admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
@@ -198,7 +208,11 @@ function Notify({ admin }: { admin: boolean }) {
   };
   const setEv = (ev: string, ch: string, v: boolean) => setN((x: any) => ({ ...x, events: { ...x.events, [ev]: { ...x.events[ev], [ch]: v } } }));
   return (
-    <div className="stack" style={{ gap: 22 }}>
+    <div className="stack" style={{ gap: 22, marginTop: 22 }}>
+      <div>
+        <h2 style={{ margin: 0 }}>{t('For the whole household')}</h2>
+        <p className="small muted" style={{ margin: '4px 0 0' }}>{t('Shared channels: Home Assistant, ntfy, webhooks, Telegram and the household e-mail address. Phones and browsers follow each person’s own choice above.')}</p>
+      </div>
       <div className="card pad stack">
         <div className="field">
           <label>{t('Home Assistant – webhook URL')}</label>
@@ -269,7 +283,11 @@ function Notify({ admin }: { admin: boolean }) {
                   <td>{t(EVENT_LABEL[ev])}</td>
                   {['ha', 'ntfy', 'webhook', 'email', 'push', ...extraCols.map(([k]) => k)].map((ch) => (
                     <td key={ch}>
-                      <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
+                      {ch === 'push' && PERSONAL_EVENTS.has(ev) ? (
+                        <span className="muted small" title={t('Each person decides this for themselves')}>{t('per person')}</span>
+                      ) : (
+                        <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
+                      )}
                     </td>
                   ))}
                 </tr>

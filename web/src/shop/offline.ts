@@ -8,7 +8,7 @@ import { ApiError, invalidate, post } from '../api';
 export type QueuedOp =
   | { op_id: string; type: 'add'; text: string; product_id?: number | null; qty?: number | null; list_id?: number | null }
   | { op_id: string; type: 'basket'; id: number; on: boolean; store_id?: number | null }
-  | { op_id: string; type: 'check'; id: number; on: boolean; to_stock?: boolean }
+  | { op_id: string; type: 'check'; id: number; on: boolean; to_stock?: boolean; store_id?: number | null }
   | { op_id: string; type: 'delete'; id: number }
   | { op_id: string; type: 'claim'; id: number; on: boolean };
 

@@ -28,3 +28,25 @@ migrate(
    CREATE INDEX IF NOT EXISTS shopping_items_list ON shopping_items(list_id);`,
 );
 
+
+migrate(
+  'list2-3-trips',
+  `CREATE TABLE IF NOT EXISTS shop_trips (
+     id INTEGER PRIMARY KEY,
+     user_id INTEGER NOT NULL,
+     store_id INTEGER,
+     started_at TEXT NOT NULL DEFAULT (datetime('now')),
+     last_at TEXT NOT NULL DEFAULT (datetime('now')),
+     ended_at TEXT,
+     ticks INTEGER NOT NULL DEFAULT 0
+   );
+   CREATE INDEX IF NOT EXISTS shop_trips_open ON shop_trips(ended_at, last_at);
+   CREATE TABLE IF NOT EXISTS list_tick_log (
+     id INTEGER PRIMARY KEY,
+     user_id INTEGER NOT NULL,
+     item_id INTEGER NOT NULL,
+     store_id INTEGER,
+     at TEXT NOT NULL DEFAULT (datetime('now'))
+   );
+   CREATE INDEX IF NOT EXISTS list_tick_log_user ON list_tick_log(user_id, at);`,
+);

@@ -5,7 +5,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db.js';
-import { requireAuth } from '../lib/auth.js';
+import { requireAdmin, requireAuth } from '../lib/auth.js';
+import { emit } from '../lib/bus.js';
+import { APNS_TOKEN, apnsConfigured, listDevices as listApnsDevices, registerDevice, removeDevice, sendApns } from '../lib/apns.js';
+import { MODULES, modules, setModules } from '../lib/modules.js';
+import { PERSON_EVENTS, memberEmail, personPrefs, presence, setPersonPrefs, setPresence } from '../lib/notify-prefs.js';
+import { activeTrips, addToTrip, endTrip, setTripPrivate, tripPrivate } from '../lib/trips.js';
+import '../lib/list-jobs.js';
 import { checkout } from '../lib/shop.js';
 import { uploadQuota } from '../lib/plans.js';
 import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeItemPhoto, restoreItem, setItemPhoto, setListPrefs, updateItem } from '../lib/list2.js';
@@ -98,7 +104,9 @@ r.post(
   '/list/finish',
   wrap((req) => {
     const b = z.object({ store_id: z.number().nullable().optional(), to_stock: z.boolean().default(true) }).parse(req.body ?? {});
-    return finishShopping({ checkout: () => checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req) }) });
+    const out = finishShopping({ checkout: () => checkout({ storeId: b.store_id ?? null, toStock: b.to_stock, actor: actorName(req) }) });
+    endTrip(userId(req));
+    return out;
   }),
 );
 
@@ -149,4 +157,107 @@ r.get('/list/estimate', (req, res) => {
     .prepare(`SELECT s.product_id, s.qty, s.text, s.id FROM shopping_items s WHERE s.checked_at IS NULL ${listId === 'all' ? '' : `AND ${listFilter(listId)}`} AND s.id NOT IN (SELECT item_id FROM share_items)`)
     .all() as { product_id: number | null; qty: number | null; text: string }[];
   res.json(estimate(rows));
+});
+
+// ---------------------------------------------------------------- C: shopping together, live
+
+/** Who is shopping right now, with their basket and the "Bringst du noch …?" rows (private trips: only the owner). */
+r.get('/shop/trips', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(activeTrips(userId(req)));
+});
+r.post(
+  '/shop/trips/:id/add',
+  wrap((req) => {
+    const b = z.object({ text: z.string().min(1).max(200) }).parse(req.body);
+    return addToTrip(num(req.params.id), b.text, { name: actorName(req), userId: userId(req) });
+  }),
+);
+r.get('/shop/trips/privacy', (req, res) => res.json({ private: userId(req) ? tripPrivate(userId(req)!) : false }));
+r.put('/shop/trips/privacy', (req, res) => {
+  const b = z.object({ private: z.boolean() }).parse(req.body);
+  const uid = userId(req);
+  if (!uid) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  res.json(setTripPrivate(uid, b.private));
+});
+
+// ---------------------------------------------------------------- D: notifications per person
+
+r.get('/notify/prefs', async (req, res) => {
+  const uid = userId(req);
+  if (!uid) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  const p = personPrefs(uid);
+  const mods = modules();
+  res.json({
+    events: PERSON_EVENTS.filter((e) => !e.module || mods[e.module]).map((e) => ({
+      key: e.key,
+      label: t(e.label),
+      apns: Boolean(p.events[e.key]?.apns),
+      push: Boolean(p.events[e.key]?.push),
+      digest: Boolean(p.events[e.key]?.digest),
+      homeOnly: p.homeOnly.includes(e.key),
+    })),
+    quiet: p.quiet,
+    preview: p.preview,
+    channels: {
+      apns: { configured: apnsConfigured(), devices: listApnsDevices(uid).length },
+      push: { devices: (db.prepare('SELECT COUNT(*) n FROM push_subscriptions WHERE user_id = ?').get(uid) as { n: number }).n },
+      digest: { email: Boolean(await memberEmail(uid)) },
+    },
+    presence: presence(uid),
+  });
+});
+r.put('/notify/prefs', (req, res) => {
+  const uid = userId(req);
+  if (!uid) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  const ch = z.object({ apns: z.boolean().optional(), push: z.boolean().optional(), digest: z.boolean().optional() });
+  const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+  const b = z
+    .object({
+      events: z.record(z.string(), ch).optional(),
+      quiet: z.object({ from: hhmm, to: hhmm }).nullable().optional(),
+      homeOnly: z.array(z.string()).max(20).optional(),
+      preview: z.enum(['full', 'generic']).optional(),
+    })
+    .parse(req.body);
+  setPersonPrefs(uid, b as never);
+  res.json({ ok: true });
+});
+/** "Nur wenn ich zu Hause bin": the iPhone app (or Home Assistant later) reports home / away. */
+r.post('/notify/presence', (req, res) => {
+  const b = z.object({ home: z.boolean(), source: z.enum(['app', 'ha']).default('app') }).parse(req.body);
+  const uid = userId(req);
+  if (!uid) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  res.json(setPresence(uid, b.home, b.source));
+});
+
+/** iPhone push: the app registers its APNs device token (hex) after the person allowed notifications. */
+r.post('/push/apns', (req, res) => {
+  const b = z.object({ token: z.string().regex(APNS_TOKEN), environment: z.enum(['production', 'sandbox']).default('production'), device: z.string().max(80).nullable().optional() }).parse(req.body);
+  const uid = userId(req);
+  if (!uid) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  res.json({ ...registerDevice(uid, b.token, b.environment, b.device ?? null), configured: apnsConfigured() });
+});
+r.get('/push/apns', (req, res) => res.json(userId(req) ? listApnsDevices(userId(req)!) : []));
+r.delete('/push/apns/:id', (req, res) => {
+  const uid = userId(req);
+  res.json({ ok: uid ? removeDevice(uid, req.params.id) : false });
+});
+r.post(
+  '/push/apns/test',
+  wrap(async (req) => {
+    const uid = userId(req);
+    if (!uid) return { sent: 0 };
+    return { sent: await sendApns([uid], { title: t('Test from ToHuus Hub'), body: t('Push notifications reach this device.'), path: '/', event: 'test', urgent: true }) };
+  }),
+);
+
+// ---------------------------------------------------------------- F: "Was nutzen wir?"
+
+r.get('/modules', (_req, res) => res.json(modules()));
+r.put('/modules', requireAdmin, (req, res) => {
+  const b = z.object(Object.fromEntries(MODULES.map((k) => [k, z.boolean().optional()]))).parse(req.body) as Partial<Record<(typeof MODULES)[number], boolean>>;
+  const out = setModules(b);
+  emit('settings');
+  res.json(out);
 });

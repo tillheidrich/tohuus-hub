@@ -306,3 +306,81 @@
   gap: 8px;
   font-size: var(--fs-m);
 }
+
+/* C: shopping together */
+.trips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.trip {
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: 0 0 0 var(--stroke) var(--ink);
+  overflow: hidden;
+}
+.trip.mine {
+  box-shadow: 0 0 0 1px var(--line);
+}
+.trip-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 12px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.trip-h.static {
+  cursor: default;
+}
+.trip-h b {
+  display: block;
+  font-weight: 600;
+  font-size: var(--fs-s);
+}
+.trip-h small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+}
+.trip-h .caret {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.trip.open .caret {
+  transform: rotate(180deg);
+}
+.trip-body {
+  padding: 0 12px 4px 54px;
+}
+.trip-body p {
+  margin: 0 0 6px;
+}
+.trip-ask {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+.trip-ask .input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+}
+.trip-ask .btn {
+  min-width: 48px;
+}
+.group.taken .group-h {
+  color: var(--ink-2);
+  border-bottom-style: dashed;
+}
+.group.taken .shop-item {
+  opacity: 0.75;
+}

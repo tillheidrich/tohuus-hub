@@ -5,6 +5,7 @@ import { config, smtpEnabled } from '../config.js';
 import { visionAvailable, visionModel } from '../lib/vision.js';
 import { appearanceFor } from '../lib/appearance.js';
 import { listPrefs } from '../lib/list2.js';
+import { modules } from '../lib/modules.js';
 import { homeSetup, localizeBaseNames } from '../lib/places.js';
 import { r as placesRoutes } from './places.js';
 import { brand, chooseBrand, db, defaultBrand, getSetting, lang, setSetting } from '../db.js';
@@ -91,6 +92,8 @@ r.get('/me', (req, res) => {
     home: homeSetup(),
     // list2: density and text size of this member (shop/prefs.ts applies them at start)
     listPrefs: listPrefs(actor.kind === 'user' ? actor.userId : null),
+    // "Was nutzen wir?" – areas the household switched off are hidden in the app (data stays)
+    modules: modules(),
     version: process.env.npm_package_version ?? '0.1.0',
   });
 });

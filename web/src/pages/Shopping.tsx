@@ -29,6 +29,7 @@ import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } fr
 import { ItemEditor, lastBoughtLine, substituteLine } from '../shop/ItemEditor';
 import '../shop/list2.css';
 import { AtStoreChips, EstimateLine, type GuardHint, type ListInfo, GuardSheet, ListTabs, ManageListSheet, NewListSheet, UsualsButton, UsualsGrid, guardCheck } from '../shop/fill';
+import { TripsBar, useTrips } from '../shop/together';
 import { ListViewSheet, RecentDone, SyncLine, cacheView, cachedView, readLocalPrefs, useListPrefs } from '../shop/trust';
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, SectionShape, sectionLabel } from '../shop/sections';
 import { ItemBuyAt } from '../shop/BuyAt';
@@ -118,6 +119,8 @@ export function Shopping() {
   const [usualsOpen, setUsualsOpen] = useState(false);
   const [guardAsk, setGuardAsk] = useState<{ text: string; productId?: number; hints: GuardHint[] } | null>(null);
   const prefs = useListPrefs();
+  // list2 C: who is shopping right now (ticks make a trip – nobody switches a mode on)
+  const trips = useTrips(!me.data?.actor.houseGuest);
   const inputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const inStore = mode === 'store';
@@ -239,7 +242,7 @@ export function Shopping() {
       return;
     }
     qc.setQueryData<ShopView>(qKey, (old) => (old ? moveLocal(old, i.id, on, false) : old));
-    const sent = await run({ type: 'check', id: i.id, on, to_stock: on && toStock });
+    const sent = await run({ type: 'check', id: i.id, on, to_stock: on && toStock, store_id: atStore });
     if (sent && on) {
       if (toStock && i.product_id) invalidate('products');
       // a tick is easy to hit by mistake – always offer the way back
@@ -314,7 +317,20 @@ export function Shopping() {
   const openItems = view ? view.sections.flatMap((s) => s.items) : [];
   const onList = new Set(openItems.map((i) => i.product_id).filter(Boolean));
   // ticked rows stay where they were, struck through, until "Einkauf fertig" (list2) – nothing jumps under a thumb
-  const groups = useMemo(() => (view ? inPlace(view) : []), [view]);
+  // two people shopping at once split by themselves: what another shopper took on ("Ich hol's") waits in their group
+  const shoppers = new Map((trips.data ?? []).filter((x) => !x.mine).map((x) => [x.user.id, x.user.name]));
+  const groups = useMemo(() => {
+    if (!view) return [];
+    const g = inPlace(view);
+    if (!shoppers.size) return g;
+    const taken = (i: ShopItem) => !i.checked_at && i.claim && shoppers.has(i.claim.user_id);
+    const out = g.map((x) => ({ ...x, items: x.items.filter((i) => !taken(i)) })).filter((x) => x.items.length);
+    for (const [uid, name] of shoppers) {
+      const items = g.flatMap((x) => x.items).filter((i) => taken(i) && i.claim!.user_id === uid);
+      if (items.length) out.push({ key: `taken:${name}`, items });
+    }
+    return out;
+  }, [view, trips.data]);
   const ticked = view ? view.basket.length + view.done.length : 0;
   const currentList = view?.lists?.find((l) => l.id === listId);
 
@@ -342,6 +358,7 @@ export function Shopping() {
         <ListTabs lists={view.lists} value={listId} onChange={pickList} onNew={() => setNewList(true)} onManage={() => setManageList(true)} />
       )}
       <SyncLine updatedAt={q.dataUpdatedAt} />
+      <TripsBar trips={trips.data ?? []} />
       {!inStore && view && <AtStoreChips stores={view.stores} value={atStore} onChange={pickAt} />}
       {view && <EstimateLine e={view.estimate} />}
       {currentList?.kind === 'care' && currentList.note && (
@@ -464,10 +481,10 @@ export function Shopping() {
           </div>
         ) : (
           groups.map((g) => (
-            <section key={g.key} className="group" aria-label={sectionLabel(g.key)}>
+            <section key={g.key} className={`group ${g.key.startsWith('taken:') ? 'taken' : ''}`} aria-label={groupLabel(g.key)}>
               <h2 className="group-h">
                 <SectionShape k={g.key} />
-                <span className="grow">{sectionLabel(g.key)}</span>
+                <span className="grow">{groupLabel(g.key)}</span>
                 <span className="n">{g.items.filter((i) => !i.checked_at).length}</span>
               </h2>
               <div className="group-list">
@@ -630,6 +647,8 @@ export function OfflineStore({ onSignIn }: { onSignIn: () => void }) {
     </div>
   );
 }
+
+const groupLabel = (k: string) => (k.startsWith('taken:') ? t('{name} is getting these', { name: k.slice(6) }) : sectionLabel(k));
 
 /** Open rows of each aisle first, then the ticked ones of that aisle – in the place they were. */
 function inPlace(v: ShopView): { key: string; items: ShopItem[] }[] {

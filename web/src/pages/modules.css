@@ -1,0 +1,39 @@
+/* "Was nutzt ihr?" (list2 F) */
+.mod-list {
+  display: flex;
+  flex-direction: column;
+  border-top: var(--stroke) solid var(--ink);
+}
+.mod-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.mod-row b {
+  display: block;
+  font-weight: 600;
+}
+.mod-row .grow > span {
+  display: block;
+  font-size: var(--fs-s);
+  color: var(--ink-2);
+}
+.mod-ic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--canvas);
+  color: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.mod-row.on .mod-ic {
+  background: var(--primary-soft);
+  color: var(--primary-dark, var(--primary));
+  box-shadow: none;
+}

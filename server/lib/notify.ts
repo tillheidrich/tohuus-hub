@@ -5,6 +5,9 @@ import { emit } from './bus.js';
 import { t } from '../i18n.js';
 import { actionsFor, pushDeviceCount, sendPush } from './webpush.js';
 import { quietWhileAway } from './away-state.js';
+import { sendApns } from './apns.js';
+import { personEventOf, queueDigest, recipients, textFor } from './notify-prefs.js';
+import { eventHidden } from './modules.js';
 
 export type NotifyEvent =
   | 'stock.low'
@@ -22,6 +25,11 @@ export type NotifyEvent =
   | 'budget.warning'
   | 'plan.vote'
   | 'plan.rotation'
+  // list2 (12 Oct 2026): personal events, routed per person (notify-prefs.ts)
+  | 'trip.started'
+  | 'trip.addon'
+  | 'rhythm.due'
+  | 'plan.reminder'
   | 'test';
 
 export interface NotifySettings {
@@ -77,6 +85,10 @@ const EVENT_EYEBROW: Partial<Record<NotifyEvent, string>> = {
   'budget.warning': 'Budget',
   'plan.vote': 'Meal plan',
   'plan.rotation': 'Meal plan',
+  'trip.started': 'Shopping',
+  'trip.addon': 'Shopping',
+  'rhythm.due': 'Shopping list',
+  'plan.reminder': 'Meal plan',
   test: 'Test',
 };
 
@@ -109,6 +121,12 @@ export const DEFAULT_NOTIFY: NotifySettings = {
     // family food votes (started / result) and the quiet weekly rotation fill (plan2)
     'plan.vote': { ha: false, webhook: true, ntfy: true, email: false, push: true },
     'plan.rotation': { ha: false, webhook: true, ntfy: false, email: false, push: false },
+    // personal events: phones and browsers follow each person's own choice (notify-prefs.ts); here only the
+    // household channels for self-hosters
+    'trip.started': { ha: true, webhook: true, ntfy: false, email: false, push: false, telegram: false, gotify: false, matrix: false },
+    'trip.addon': { ha: false, webhook: true, ntfy: false, email: false, push: false, telegram: false, gotify: false, matrix: false },
+    'rhythm.due': { ha: true, webhook: true, ntfy: false, email: false, push: false, telegram: false, gotify: false, matrix: false },
+    'plan.reminder': { ha: false, webhook: true, ntfy: false, email: false, push: false, telegram: false, gotify: false, matrix: false },
     test: { ha: true, webhook: true, ntfy: true, email: true, push: true },
   },
 };
@@ -143,6 +161,8 @@ export interface NotifyInput {
   urgent?: boolean;
   /** Web Push only to this member's devices; `null` = to nobody (e.g. a guest without an account). Other channels are household-wide. */
   toUserId?: number | null;
+  /** personal channels: everyone but these members (e.g. the person who is shopping) */
+  exceptUserIds?: number[];
 }
 
 async function post(url: string, body: unknown, headers: Record<string, string> = {}) {
@@ -166,6 +186,8 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
 export async function notify(input: NotifyInput): Promise<{ channels: string[]; skipped?: boolean; quiet?: boolean }> {
   // away mode: only urgent things while nobody is around to act on "milk is low"
   if (quietWhileAway(input.event, input.urgent)) return { channels: [], skipped: true, quiet: true };
+  // "Was nutzen wir?" (modules.ts): a switched-off area tells nobody anything
+  if (eventHidden(input.event, input.data)) return { channels: [], skipped: true };
   if (input.dedupeKey) {
     const hours = input.dedupeHours ?? 20;
     const recent = db
@@ -188,16 +210,56 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
   const jobs: Promise<[string, boolean]>[] = [];
   if (route.ha && s.haWebhookUrl) jobs.push(post(s.haWebhookUrl, payload).then((ok) => ['ha', ok]));
   if (route.webhook && s.webhookUrl) jobs.push(post(s.webhookUrl, payload).then((ok) => ['webhook', ok]));
-  // Web Push (PWA): an event saved before the channel existed falls back to the default routing
-  // ha2: members who chose "via Home Assistant" get the push through their HA companion app instead
-  const personal = (route.push ?? DEFAULT_NOTIFY.events[input.event]?.push) && personalRouter ? personalRouter({ ...input, url }) : null;
-  if (personal?.job) jobs.push(personal.job.then((ok): [string, boolean] => ['ha_app', ok]).catch((): [string, boolean] => ['ha_app', false]));
-  if ((route.push ?? DEFAULT_NOTIFY.events[input.event]?.push) && pushDeviceCount() > 0 && input.toUserId !== null)
-    jobs.push(
-      sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { userId: input.toUserId, excludeUserIds: personal?.skipPushUsers })
-        .then((ok): [string, boolean] => ['push', ok])
-        .catch((): [string, boolean] => ['push', false]),
-    );
+  // personal events (list2, notify-prefs.ts): each member's own choice per event and channel, quiet hours,
+  // "only at home", lock-screen preview – the household push column does not apply to them
+  const pe = personEventOf(input.event, input.data);
+  if (pe) {
+    const aud = { toUserId: input.toUserId, exceptUserIds: input.exceptUserIds, urgent: input.urgent };
+    const pushTo = recipients(pe, 'push', aud);
+    const personal = pushTo.length && personalRouter ? personalRouter({ ...input, url }) : null;
+    if (personal?.job) jobs.push(personal.job.then((ok): [string, boolean] => ['ha_app', ok]).catch((): [string, boolean] => ['ha_app', false]));
+    const skip = new Set(personal?.skipPushUsers ?? []);
+    for (const [ids, text] of byPreview(pushTo.filter((id) => !skip.has(id)), input))
+      if (pushDeviceCount() > 0)
+        jobs.push(
+          sendPush({ title: text.title, body: text.body, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { userIds: ids })
+            .then((ok): [string, boolean] => ['push', ok])
+            .catch((): [string, boolean] => ['push', false]),
+        );
+    for (const [ids, text] of byPreview(recipients(pe, 'apns', aud), input))
+      jobs.push(
+        sendApns(ids, { title: text.title, body: text.body, path: input.path, event: input.event, collapseId: input.dedupeKey, urgent: input.urgent })
+          .then((n): [string, boolean] => ['apns', n > 0])
+          .catch((): [string, boolean] => ['apns', false]),
+      );
+    const digestTo = recipients(pe, 'digest', aud);
+    if (digestTo.length) queueDigest(digestTo, { event: input.event, title: input.title, body: input.message, path: input.path });
+  } else {
+    // Web Push (PWA): an event saved before the channel existed falls back to the default routing
+    // ha2: members who chose "via Home Assistant" get the push through their HA companion app instead
+    const pushOn = route.push ?? DEFAULT_NOTIFY.events[input.event]?.push;
+    const personal = pushOn && personalRouter ? personalRouter({ ...input, url }) : null;
+    if (personal?.job) jobs.push(personal.job.then((ok): [string, boolean] => ['ha_app', ok]).catch((): [string, boolean] => ['ha_app', false]));
+    if (pushOn && pushDeviceCount() > 0 && input.toUserId !== null)
+      jobs.push(
+        sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { userId: input.toUserId, excludeUserIds: personal?.skipPushUsers })
+          .then((ok): [string, boolean] => ['push', ok])
+          .catch((): [string, boolean] => ['push', false]),
+      );
+    // the iPhone app gets what the browser gets (same audience)
+    if (pushOn && input.toUserId !== null) {
+      const skip = new Set([...(personal?.skipPushUsers ?? []), ...(input.exceptUserIds ?? [])]);
+      const ids = input.toUserId
+        ? [input.toUserId]
+        : (db.prepare(`SELECT id FROM users WHERE COALESCE(kind, 'member') != 'guest'`).all() as { id: number }[]).map((r) => r.id).filter((id) => !skip.has(id));
+      for (const [group, text] of byPreview(ids, input))
+        jobs.push(
+          sendApns(group, { title: text.title, body: text.body, path: input.path, event: input.event, collapseId: input.dedupeKey, urgent: input.urgent })
+            .then((n): [string, boolean] => ['apns', n > 0])
+            .catch((): [string, boolean] => ['apns', false]),
+        );
+    }
+  }
   if (route.ntfy && s.ntfyUrl)
     jobs.push(
       post(s.ntfyUrl, input.message, { Title: encodeHeader(input.title), Click: url, Tags: 'house' }).then((ok) => ['ntfy', ok]),
@@ -243,6 +305,19 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
   );
   emit('notifications');
   return { channels };
+}
+
+/** Members grouped by what their lock screen may show (full text or only "Neues in ToHuus"). */
+function byPreview(ids: number[], input: NotifyInput): [number[], { title: string; body: string }][] {
+  const groups = new Map<string, [number[], { title: string; body: string }]>();
+  for (const id of ids) {
+    const text = textFor(id, input.title, input.message);
+    const key = `${text.title}\u0000${text.body}`;
+    const g = groups.get(key) ?? [[], text];
+    g[0].push(id);
+    groups.set(key, g);
+  }
+  return [...groups.values()];
 }
 
 function encodeHeader(s: string) {

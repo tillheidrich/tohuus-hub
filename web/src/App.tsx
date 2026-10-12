@@ -8,7 +8,7 @@ import { applyBrand } from './brand';
 import { useInstance, useToday } from './data';
 import { setLang, t } from './i18n';
 import { kidLock } from './kidlock';
-import { load, moreGroups, TABS, tabFor } from './nav';
+import { load, moduleAllows, moreGroups, TABS, tabFor } from './nav';
 import { useOnboardingRedirect } from './onboarding-state';
 import { guestAllows } from './people/access';
 import { enablePeopleDirectory } from './people/Avatar';
@@ -34,6 +34,8 @@ export interface Me {
   appearance?: Appearance;
   /** household form and home preset (area: home) */
   home?: import('./household').HomeSetup;
+  /** "Was nutzt ihr?" – areas the household switched off (list2) */
+  modules?: Record<string, boolean>;
 }
 
 // ------------------------------------------------------------------ route chunks (plan 2026-10-12: shell + Heute load first, every other page on demand)
@@ -191,8 +193,10 @@ function Shell({ me }: { me: Me }) {
 
   const openCount = today.data?.list.open ?? 0;
   const attention = today.data?.counts?.attention ?? 0;
-  const tabs = TABS.filter((l) => guestAllows(gl, l.to));
-  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud' });
+  // "Was nutzt ihr?" (list2): switched-off areas leave the tab bar and "Mehr" (their pages stay reachable by link)
+  const mods = me.modules;
+  const tabs = TABS.filter((l) => guestAllows(gl, l.to) && moduleAllows(mods, l.to));
+  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods });
   const activeTab = tabFor(loc.pathname);
   const badge = (to: string) => (to === '/einkauf' && openCount ? openCount : to === '/bestand' && attention ? attention : 0);
 
