@@ -250,7 +250,6 @@ export const web2: Record<string, string> = {
   'Create a household': 'Haushalt anlegen',
   // assistant
   Assistant: 'Assistent',
-  'Speak': 'Sprechen',
   'Assistant: say or type what’s missing': 'Assistent: sag oder tipp, was fehlt',
   'The assistant isn’t available on this server.': 'Der Assistent ist auf diesem Server nicht eingerichtet.',
   'That was the last message for this month.': 'Das war die letzte Nachricht für diesen Monat.',

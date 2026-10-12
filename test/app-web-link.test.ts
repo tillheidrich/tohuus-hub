@@ -50,6 +50,11 @@ it('one-time, 60 s, same member', async () => {
   const me = await (await fetch(base + '/api/me', { headers: { cookie } })).json();
   expect(me.actor.name).toBe('Lea');
   expect((await fetch(url, { redirect: 'manual' })).status).toBe(410);
+  // at most 5 live links per app token
+  const codes: number[] = [];
+  for (let i = 0; i < 6; i++) codes.push((await post('/api/auth/app/web-link', {}, bearer)).status);
+  expect(codes.slice(0, 5).every((c) => c === 200)).toBe(true);
+  expect(codes[5]).toBe(429);
   // a full API token or no token gets nothing
   expect((await post('/api/auth/app/web-link', {})).status).toBe(401);
 });
