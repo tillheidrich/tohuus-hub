@@ -419,6 +419,24 @@ describe('cloud isolation', () => {
     expect(stB.text).not.toContain('MARKERA');
   });
 
+  it('sample-data marks (GET /api/tour/demo/marks) stay inside the household', async () => {
+    const demo = await import('../server/lib/demo');
+    const { db } = await import('../server/db');
+    const pid = tenancy.runInHousehold(hA, () => {
+      const id = (db.prepare(`SELECT id FROM products WHERE name = 'MARKERA-prod'`).get() as { id: number }).id;
+      demo.markDemo('products', [id]);
+      return id;
+    });
+    const a = await A.get('/api/tour/demo/marks');
+    expect(a.status, a.text).toBe(200);
+    expect(a.json.products).toContain(pid);
+    const b = await B.get('/api/tour/demo/marks');
+    expect(b.status).toBe(200);
+    expect(b.json).toEqual({ products: [], recipes: [], shopping: [] });
+    expect((await new Client().get('/api/tour/demo/marks')).status).toBe(401);
+    tenancy.runInHousehold(hA, () => db.prepare('DELETE FROM demo_rows').run());
+  });
+
   it('guest links resolve to their own household only', async () => {
     expect(guestTokenA).toMatch(/^h[a-z2-7]{10}_/);
     const g = await new Client().get(`/api/guest/${guestTokenA}/shopping`);

@@ -461,3 +461,34 @@ export function startChoice() {
   const choice = getSetting<string | null>('tour.start', null);
   return { choice, due: choice === null && householdUntouched() };
 }
+
+// ---------------------------------------------------------------- sample data marks and the gentle reminder (package D, 1.0)
+
+/** Ids of the sample rows the apps tag quietly with "Beispiel" (no banner). Only ids – never names. */
+export function demoMarks() {
+  const live = liveDemoRows();
+  return {
+    products: live.get('products') ?? [],
+    recipes: live.get('recipes') ?? [],
+    shopping: live.get('shopping_items') ?? [],
+  };
+}
+
+/** After this many days with sample data, Today asks once (gently) whether they can go. */
+export const DEMO_NUDGE_DAYS = 3;
+
+/** When the sample data came in (oldest live mark) and whether Today should offer removing it now. */
+export function demoNudge(now = Date.now()) {
+  const live = liveDemoRows();
+  let rows = 0;
+  for (const ids of live.values()) rows += ids.length;
+  const since = rows ? ((db.prepare('SELECT MIN(created_at) at FROM demo_rows').get() as { at: string | null }).at ?? null) : null;
+  const dismissed = getSetting<string | null>('tour.demoNudge', null) === 'dismissed';
+  const old = since ? Date.parse(since.replace(' ', 'T') + 'Z') <= now - DEMO_NUDGE_DAYS * 86400000 : false;
+  return { since, nudge: rows > 0 && old && !dismissed };
+}
+
+/** "Behalten" on Today: the reminder does not come back (Settings still offers removing them). */
+export function dismissDemoNudge() {
+  setSetting('tour.demoNudge', 'dismissed');
+}
