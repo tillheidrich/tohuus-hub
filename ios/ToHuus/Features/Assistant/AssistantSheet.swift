@@ -21,6 +21,9 @@ final class AssistantModel {
     var error: String?
     private var conversationId: String?
 
+    /// AI is off for this member – the built-in reader answers
+    var basic = false
+
     func send(_ text: String, store: ServerStore) async {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty, !sending else { return }
@@ -28,7 +31,7 @@ final class AssistantModel {
         sending = true
         defer { sending = false }
         do {
-            let r = try await store.api.chat(t, conversationId: conversationId)
+            let r = try await store.api.chat(t, conversationId: conversationId, basic: basic)
             receive(r, store: store)
         } catch {
             handle(error)
@@ -126,6 +129,7 @@ struct AssistantSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .onAppear { model.basic = !app.aiOn }
         #if DEBUG
         .task {
             if let m = UserDefaults.standard.string(forKey: "debugAssistantMessage"), model.messages.isEmpty {
@@ -137,6 +141,15 @@ struct AssistantSheet: View {
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            if !app.aiOn {
+                Label(app.aiLocked ? L("AI is switched off for you. ToHuus still understands simple sentences like “milk and bread”.")
+                                   : L("Without AI: ToHuus understands simple sentences like “milk and bread” or “what's on the list?”."),
+                      systemImage: app.aiLocked ? "lock" : "text.bubble")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.ink2)
+                    .padding(Theme.Space.s3)
+                    .background(Theme.surface2, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+            }
             Text(L("Just say what's going on at home.")).font(.headline)
             ForEach([L("“Milk is out, and we need something for Sunday.”"), L("“What can we cook today?”"),
                      L("“How much did we spend at Aldi this month?”")], id: \.self) { s in
@@ -239,8 +252,10 @@ struct AssistantSheet: View {
             let result = dictation.stop()
             if let text = result.text {
                 Task { await model.send(text, store: store) }
-            } else if let audio = result.audio, app.instance?.voiceEnabled ?? true {
+            } else if let audio = result.audio, app.voiceAIOn {
                 Task { await model.sendVoice(audio, store: store) }
+            } else if result.audio != nil {
+                model.error = L("Speech recognition on this iPhone isn't available right now – please type instead.")
             }
         }
     }
