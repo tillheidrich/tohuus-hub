@@ -92,6 +92,12 @@ struct ShoppingView: View {
             .overlay(alignment: .bottom) { undoBar }
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }
             .task(id: store.revision("shopping")) { await loadSuggestions() }
+            .onChange(of: app.requestedStore, initial: true) { _, id in
+                guard let id else { return }
+                app.requestedStore = nil
+                shopMode = true
+                Task { await store.setStore(id, shopMode: true) }
+            }
             .onChange(of: app.addRequest) { _, _ in
                 if shopMode {
                     shopMode = false

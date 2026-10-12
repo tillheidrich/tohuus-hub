@@ -3,6 +3,7 @@ import UIKit
 
 @main
 struct ToHuusApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var app = AppModel()
     @State private var storeKit = StoreManager()
     @Environment(\.scenePhase) private var scenePhase
@@ -14,7 +15,6 @@ struct ToHuusApp: App {
         tab.shadowColor = UIColor(hex: 0xDEDCD3)
         UITabBar.appearance().standardAppearance = tab
         UITabBar.appearance().scrollEdgeAppearance = tab
-        PhoneWatchBridge.shared.activate()
     }
 
     var body: some Scene {

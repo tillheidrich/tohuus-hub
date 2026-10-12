@@ -36,6 +36,10 @@ struct SettingsView: View {
                         LabeledContent(L("Household"), value: app.activeHousehold?.name ?? "–")
                     }
                 }
+                Section {
+                    NavigationLink { NotificationSettingsView() } label: { Label(L("Notifications"), systemImage: "bell") }
+                    NavigationLink { StoreArrivalView(store: store) } label: { Label(L("Hint in the shop"), systemImage: "location") }
+                }
                 Section(L("Plan & storage")) {
                     LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free") : L("Own server – everything included")))
                     if let used = app.billing?.assistantUsed {

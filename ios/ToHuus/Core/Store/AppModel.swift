@@ -22,6 +22,8 @@ final class AppModel {
     var requestedTab: String?
     /// iPad kitchen mode (big week plan, recipe step by step, list to tick)
     var showKitchen = false
+    /// a notification or the store-arrival hint asks for the list of one shop (shop mode)
+    var requestedStore: Int?
     /// ⌘N: focus the "what's missing" field on the list
     private(set) var addRequest = 0
     /// ⌘F: search (pantry, or recipes while cooking)
@@ -32,6 +34,39 @@ final class AppModel {
 
     private static let householdsKey = "session.households"
     private static let userKey = "session.user"
+
+    // MARK: AI switch
+
+    private(set) var aiStatus: AIStatus?
+    private(set) var isChild = false
+    private static let personalAIKey = "ai.personal"
+    /// this member's own switch (server when it knows one, else kept on this device)
+    private(set) var personalAI: Bool = SharedConfig.defaults.object(forKey: "ai.personal") as? Bool ?? true
+
+    /// AI is off for this member: the household or the server has none, they switched it off, or a parent did.
+    var aiLocked: Bool { isChild && (aiStatus?.locked ?? true) || aiStatus?.locked == true }
+    var aiAvailable: Bool { (instance?.assistantEnabled ?? true) && (aiStatus?.ai ?? instance?.assistantEnabled ?? false) && (aiStatus?.household ?? true) }
+    var aiOn: Bool { aiAvailable && personalAI && !aiLocked }
+    var receiptAIOn: Bool { aiOn && (aiStatus?.receiptsAi ?? instance?.features?.receiptsAi?.bool ?? false) }
+    var voiceAIOn: Bool { aiOn && (aiStatus?.voice ?? instance?.voiceEnabled ?? false) }
+
+    func loadAIState() async {
+        guard let api else { return }
+        if let me = try? await api.me() { isChild = me.isChild }
+        if let s: AIStatus = try? await api.get("api/assistant/status") {
+            aiStatus = s
+            if let p = s.personal { personalAI = p; SharedConfig.defaults.set(p, forKey: Self.personalAIKey) }
+        }
+    }
+
+    /// PATCH /api/assistant/personal { ai } – a server without it keeps the choice on this device only.
+    func setPersonalAI(_ on: Bool) async {
+        personalAI = on
+        SharedConfig.defaults.set(on, forKey: Self.personalAIKey)
+        guard let api else { return }
+        _ = try? await api.send("PATCH", "api/assistant/personal", json: ["ai": on], as: Ignored.self)
+        await loadAIState()
+    }
 
     var isCloud: Bool { session?.isCloud ?? false }
     /// purchases only exist in ToHuus Cloud; a self-hosted server has everything unlocked
@@ -139,6 +174,8 @@ final class AppModel {
             await st.flush()
             await st.drainUploadQueue(session: s)
             await PhoneWatchBridge.shared.handOverSession(api: api)
+            await PushManager.shared.sendToken()
+            await loadAIState()
         }
     }
 
@@ -215,6 +252,7 @@ final class AppModel {
 
     func signOut(message: String? = nil) {
         PhoneWatchBridge.shared.signOut()
+        if let api { Task { await PushManager.shared.forget(api: api) } }
         store?.stopEvents()
         store = nil
         SessionInfo.clear()

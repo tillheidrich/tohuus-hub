@@ -102,6 +102,40 @@
           }
         }
       }
+    },
+    "NSLocationWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur wenn du den Hinweis im Laden einschaltest: ToHuus merkt sich, wo deine Läden sind. Die Orte bleiben auf deinem iPhone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only if you switch on the hint in the shop: ToHuus saves where your shops are. The places stay on your iPhone."
+          }
+        }
+      }
+    },
+    "NSLocationAlwaysAndWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur wenn du den Hinweis im Laden einschaltest: Kommst du bei einem gespeicherten Laden an, fragt ToHuus, ob es die Liste öffnen soll. Dein Standort verlässt nie dein iPhone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only if you switch on the hint in the shop: when you arrive at a shop you saved, ToHuus asks whether to open the list. Your location never leaves your iPhone."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

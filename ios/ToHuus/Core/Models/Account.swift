@@ -94,6 +94,11 @@ struct MeResponse: Decodable, Sendable {
 
     var name: String? { actor?["name"]?.string }
     var role: String? { actor?["role"]?.string }
+    /// children (kid devices or a child role) see AI as locked
+    var isChild: Bool {
+        let kind = actor?["kind"]?.string
+        return kind == "kid" || kind == "child" || role == "child" || role == "kid" || actor?["child"]?.bool == true
+    }
 }
 
 /// GET /api/auth/app/devices
@@ -143,5 +148,42 @@ struct BillingStatus: Decodable, Sendable {
     var storageLimitBytes: Double? {
         storage?.first("limitBytes", "quotaBytes", "limit")?.double ?? limits?.first("storageBytes", "storageQuotaBytes")?.double
             ?? limits?.first("storageMb").flatMap { $0.double.map { $0 * 1_048_576 } }
+    }
+}
+
+/// GET /api/assistant/status – what the UI can offer. Fields beyond `ai/voice/receiptsAi` are read when present:
+/// `household` (the household's AI switch), `personal` (this member's own switch), `locked` (a child whose parents
+/// switched AI off – shown, not changeable), `reason`.
+struct AIStatus: Decodable, Sendable, Equatable {
+    var ai: Bool?
+    var voice: Bool?
+    var receiptsAi: Bool?
+    var household: Bool?
+    var personal: Bool?
+    var locked: Bool?
+    var reason: String?
+
+    init(ai: Bool? = nil, voice: Bool? = nil, receiptsAi: Bool? = nil, household: Bool? = nil, personal: Bool? = nil, locked: Bool? = nil, reason: String? = nil) {
+        self.ai = ai; self.voice = voice; self.receiptsAi = receiptsAi
+        self.household = household; self.personal = personal; self.locked = locked; self.reason = reason
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: AnyKey.self)
+        // `ai` may be a bool or an object { enabled, household, personal, locked }
+        if let b = c.first(Bool.self, "ai") { ai = b }
+        else if let o = c.first(JSONValue.self, "ai") {
+            ai = o.first("enabled", "on", "available")?.bool
+            household = o["household"]?.bool
+            personal = o["personal"]?.bool
+            locked = o["locked"]?.bool
+            reason = o["reason"]?.string
+        }
+        voice = c.first(Bool.self, "voice")
+        receiptsAi = c.first(Bool.self, "receiptsAi")
+        household = household ?? c.first(Bool.self, "aiHousehold", "household")
+        personal = personal ?? c.first(Bool.self, "aiPersonal", "personal")
+        locked = locked ?? c.first(Bool.self, "aiLocked", "locked", "kidLock")
+        reason = reason ?? c.first(String.self, "aiReason", "reason")
     }
 }

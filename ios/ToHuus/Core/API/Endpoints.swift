@@ -189,6 +189,55 @@ extension APIClient {
     func applyImport(_ id: Int) async throws { _ = try await send("POST", "api/imports/\(id)/apply", as: Ignored.self) }
 }
 
+// MARK: push & notification settings
+
+extension APIClient {
+    /// POST /api/push/apns { token, environment: 'sandbox'|'production', device, bundle } (server: branch b-list)
+    func registerAPNs(token: String, environment: String, device: String) async throws {
+        _ = try await send("POST", "api/push/apns", json: ["token": token, "environment": environment, "device": device,
+                                                           "bundle": Bundle.main.bundleIdentifier ?? "de.heidrichdigital.tohuus"], as: Ignored.self)
+    }
+
+    /// DELETE /api/push/apns { token } – on sign-out or when notifications are switched off on this device.
+    func unregisterAPNs(token: String) async throws {
+        _ = try await send("DELETE", "api/push/apns", json: ["token": token], as: Ignored.self)
+    }
+
+    /// Plain decoding (no snake-case conversion): event keys such as "auth.new_device" must stay as they are.
+    private func rawJSON(_ path: String) async throws -> JSONValue {
+        let data = try await getData(path)
+        do { return try JSONDecoder().decode(JSONValue.self, from: data) } catch { throw APIError.decoding(String(describing: error)) }
+    }
+
+    /// GET /api/notify/prefs, or the household matrix from /api/settings on older servers.
+    func notifyPrefs() async throws -> NotifyPrefs {
+        do {
+            let data = try await getData("api/notify/prefs")
+            do { return try JSONDecoder().decode(NotifyPrefs.self, from: data) } catch { throw APIError.decoding(String(describing: error)) }
+        } catch APIError.notFound {
+            guard let p = NotifyPrefs.fromSettings(try await rawJSON("api/settings")) else { throw APIError.notFound }
+            return p
+        }
+    }
+
+    /// Saves one switch: personal prefs when the server has them, else the push column of the household matrix (admins).
+    func setNotifyPref(_ key: String, on: Bool, prefs: NotifyPrefs) async throws {
+        if !prefs.household {
+            _ = try await send("PATCH", "api/notify/prefs", json: ["events": [key: on]], as: Ignored.self)
+            return
+        }
+        var row = prefs.raw[key]?.object ?? [:]
+        row["push"] = .bool(on)
+        for k in ["ha", "webhook", "ntfy", "email"] where row[k] == nil { row[k] = .bool(false) }
+        let obj = try JSONSerialization.jsonObject(with: try JSONEncoder().encode(JSONValue.object(row)))
+        _ = try await send("PATCH", "api/settings", json: ["notify": ["events": [key: obj]]], as: Ignored.self)
+    }
+
+    func setQuietHours(_ q: NotifyPrefs.QuietHours) async throws {
+        _ = try await send("PATCH", "api/notify/prefs", json: ["quietHours": ["enabled": q.enabled, "from": q.from, "to": q.to]], as: Ignored.self)
+    }
+}
+
 /// Body of POST /api/shop/sync
 struct SyncBody: Encodable, Sendable {
     let ops: [PendingOp]
