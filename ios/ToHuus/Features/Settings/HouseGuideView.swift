@@ -229,7 +229,9 @@ struct HouseGuideView: View {
             state = nil
             #if DEBUG
             // simulator checks: -debugMore housecard-new | housecode-new
-            if editCard == nil, editCode == nil, guide?.canEdit == true, let d = UserDefaults.standard.string(forKey: "debugMore") {
+            if editCard == nil, editCode == nil, guide?.canEdit == true, let d = UserDefaults.standard.string(forKey: "debugMore"), d.hasPrefix("house") {
+                // the debug sheet is still animating in – present the editor a moment later
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
                 if d == "housecard-new" { editCard = EditTarget(item: nil) }
                 if d == "housecard-edit" { editCard = EditTarget(item: guide?.cards.first) }
                 if d == "housecode-new" { editCode = EditTarget(item: nil) }

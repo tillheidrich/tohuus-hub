@@ -777,6 +777,7 @@ struct PriceHistoryView: View {
 struct PricePickerView: View {
     let store: ServerStore
     @State private var all: [PricedProduct] = []
+    @State private var loaded = false
     @State private var query = ""
 
     var body: some View {
@@ -796,10 +797,18 @@ struct PricePickerView: View {
                 }
             }
             if list.isEmpty && !all.isEmpty { Text(L("Nothing found.")).foregroundStyle(Theme.ink3) }
+            if loaded && all.isEmpty {
+                EmptyStateView(art: .receipt, title: L("No prices yet"),
+                               message: L("Prices come from your receipts. Once the same thing shows up on a few receipts, you see here where it was cheaper."))
+                    .listRowBackground(Color.clear)
+            }
         }
         .searchable(text: $query, prompt: L("Search products"))
         .navigationTitle(L("Price history"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { all = (try? await store.api.pricedProducts()) ?? [] }
+        .task {
+            all = (try? await store.api.pricedProducts()) ?? []
+            loaded = true
+        }
     }
 }

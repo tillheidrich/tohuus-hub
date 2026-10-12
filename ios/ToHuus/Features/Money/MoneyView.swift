@@ -26,14 +26,15 @@ struct MoneyView: View {
                     moreLinks
                     if let error { ErrorBanner(message: error) { Task { await load() } } }
                     if let o = overview {
-                        totalCard(o)
-                        if !o.byWeek.isEmpty { weekChart(o) }
+                        let nothing = (o.total ?? 0) == 0 && o.byCategory.isEmpty
+                        if !nothing { totalCard(o) }
+                        if !nothing && !o.byWeek.isEmpty { weekChart(o) }
                         if !o.byCategory.isEmpty { barChart(L("By category"), "square.grid.2x2", o.byCategory, o.currency) }
                         if !o.byShop.isEmpty { barChart(L("By shop"), "storefront", o.byShop, o.currency) }
                         if !o.priceChanges.isEmpty { priceCard(o) }
                         if !o.hints.isEmpty { hintsCard(o) }
                         if !cheapest.isEmpty { cheapestCard }
-                        if o.total == nil && o.byCategory.isEmpty {
+                        if nothing {
                             EmptyStateView(art: .receipt, title: L("No receipts this month yet."),
                                            message: L("Add a receipt photo or forward your e-receipts – ToHuus does the rest."),
                                            actionTitle: L("Add receipt")) { showReceipt = true }

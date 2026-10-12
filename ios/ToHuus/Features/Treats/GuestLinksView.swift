@@ -62,9 +62,12 @@ struct GuestLinksView: View {
             Button(L("Cancel"), role: .cancel) {}
         }
         .toast($toast)
-        .onAppear {
+        .task {
             #if DEBUG
-            if creating == nil, UserDefaults.standard.string(forKey: "debugMore") == "guestlink-new" { creating = .babysitter }
+            if creating == nil, UserDefaults.standard.string(forKey: "debugMore") == "guestlink-new" {
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+                creating = .babysitter
+            }
             #endif
         }
     }

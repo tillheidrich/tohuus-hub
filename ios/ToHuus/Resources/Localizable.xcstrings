@@ -7906,6 +7906,23 @@
         }
       }
     },
+    "No prices yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No prices yet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Preise"
+          }
+        }
+      }
+    },
     "No receipts this month yet.": {
       "extractionState": "manual",
       "localizations": {
@@ -9959,6 +9976,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preis auf dem Bon"
+          }
+        }
+      }
+    },
+    "Prices come from your receipts. Once the same thing shows up on a few receipts, you see here where it was cheaper.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prices come from your receipts. Once the same thing shows up on a few receipts, you see here where it was cheaper."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preise kommen von deinen Bons. Taucht dasselbe auf ein paar Bons auf, siehst du hier, wo es günstiger war."
           }
         }
       }
