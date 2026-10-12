@@ -15,13 +15,26 @@ interface Overview {
   storage: { totalBytes: number; top: { id: string; bytes: number }[] };
   ai: { currency: string; perDay: { day: string; requests: number; tokens: number; cost: number }[]; perMonth: { month: string; requests: number; tokens: number; cost: number }[] };
   errors: { last24h: { total: number; errors: number; rate: number }; since: string | null };
-  backups: { lastNightly: { at: string | null; day?: string }; lastRestoreCheck: { at: string | null; ok?: boolean }; s3: boolean };
+  backups: { lastNightly: { at: string | null; day?: string }; lastRestoreCheck: { at: string | null; ok?: boolean };
+    /** images and receipt files to S3 – counts only */
+    lastFileSync?: { at: string | null; ok?: boolean; households?: number; uploaded?: number; deleted?: number; bytes?: number; pending?: number; errors?: number };
+    s3: boolean;
+  };
   pulse?: { week: string; counts: Record<string, number>; total: number }[];
   system: { memory: { rssBytes: number; totalBytes: number; freeBytes: number; limitBytes: number | null }; disk: { totalBytes: number; freeBytes: number } | null; load: number[]; uptimeS: number; node: string };
 }
 
 const mb = (b: number) => (b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${Math.round(b / 1e6)} MB`);
 const when = (s: string | null | undefined) => (s ? new Date(s).toLocaleString() : '–');
+
+/** "12.10. 03:14 · 40 up, 2 deleted, 1.2 MB, 30 left for tomorrow" – counts only, never names or files. */
+function fileSyncText(f: Overview['backups']['lastFileSync']): string {
+  if (!f?.at) return t('not yet');
+  const parts = [t('{n} up', { n: f.uploaded ?? 0 }), t('{n} deleted', { n: f.deleted ?? 0 }), mb(f.bytes ?? 0)];
+  if (f.pending) parts.push(t('{n} left for the next night', { n: f.pending }));
+  if (f.errors) parts.push(t('{n} errors', { n: f.errors }));
+  return `${when(f.at)} · ${parts.join(', ')}${f.ok === false ? ' ✗' : ' ✓'}`;
+}
 
 function Tile({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
@@ -133,6 +146,7 @@ export function Operator() {
                 [t('Last nightly backup'), when(d.backups.lastNightly.at)],
                 [t('Last restore check'), `${when(d.backups.lastRestoreCheck.at)}${d.backups.lastRestoreCheck.ok === false ? ' ✗' : d.backups.lastRestoreCheck.ok ? ' ✓' : ''}`],
                 [t('Off-site copy (S3)'), d.backups.s3 ? t('on') : t('off')],
+                ...(d.backups.s3 ? [[t('Photos and receipts to S3'), fileSyncText(d.backups.lastFileSync)] as [string, string]] : []),
                 [t('Memory (process / limit)'), `${mb(d.system.memory.rssBytes)} / ${d.system.memory.limitBytes ? mb(d.system.memory.limitBytes) : mb(d.system.memory.totalBytes)}`],
                 [t('Disk free'), d.system.disk ? `${mb(d.system.disk.freeBytes)} / ${mb(d.system.disk.totalBytes)}` : '–'],
                 [t('Load'), d.system.load.map((x) => x.toFixed(2)).join(' ')],

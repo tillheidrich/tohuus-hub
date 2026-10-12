@@ -14,6 +14,7 @@ versions): hide it.
 |---|---|
 | `GET /api/instance` | `features: { assistant, voice, receiptsAi, billingApple, ai: { configured, household, mcp }, ocr }` – `ocr` = text recognition on the server ([receipts.md](receipts.md)) |
 | `POST /api/auth/app`, `GET/DELETE /api/auth/app/devices[/:id]` | unchanged ([plan](plan-2026-10-12.md)) |
+| **new** `POST /api/auth/link { email }` → `POST /api/auth/link/code { email, code, device, household? }` | cloud only. Sign-in without a password: the mail carries a link and a 6-digit code (`123 456`; spaces are ignored). With `device` the answer is an app token, same shape as `POST /api/auth/app`: `{ token, account, user, households, household }`. `400` wrong code (also for an unknown address), `410` used / expired (10 minutes) / 5 wrong tries – ask for a new mail, `403` `household` is not a membership, `429` rate limit. Use `textContentType = .oneTimeCode`. Self-hosted servers answer 404 here – [cloud.md](cloud.md#sign-in-link-and-code-other-device) |
 | `GET /api/billing/status` | new: `renewsAt` (next charge, from the App Store renewal info; `null` = will not renew), `expiresAt`, `autoRenew`, `period` (`monthly`/`yearly`), `manageUrl` (`https://apps.apple.com/account/subscriptions`), `reminder` (personal), `source` (`apple`/`operator`/`none`) – [cloud.md](cloud.md#subscriptions-renewal-date-abo-verwalten-reminder) |
 | `PATCH /api/billing/reminder { enabled }` | e-mail 3 days before a yearly renewal (personal) |
 | "Abo verwalten" | `AppStore.showManageSubscriptions(in:)`, fallback `manageUrl` |
