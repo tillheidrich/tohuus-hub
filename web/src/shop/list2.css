@@ -71,7 +71,7 @@
   background: var(--ink);
   color: var(--surface);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 0.6875rem;
   letter-spacing: 0.02em;
 }
 .sync-line.warn {
@@ -144,6 +144,15 @@
 .ie-sub .chip {
   min-height: 44px;
 }
+/* three choices – they wrap instead of hiding the last one past the sheet edge */
+.chips.ie-sub {
+  -webkit-mask-image: none;
+  mask-image: none;
+  flex-wrap: wrap;
+  overflow-x: visible;
+  margin-inline: 0;
+  padding-inline: 0;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .recent-h .caret {
@@ -167,7 +176,7 @@
 }
 .chip .chip-n {
   margin-left: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   opacity: 0.7;
 }
 .ghost-chip {
@@ -269,7 +278,7 @@
   transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 .usual-n {
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.25;
   text-align: center;
   overflow: hidden;
@@ -401,7 +410,7 @@
 }
 .caldav-field code {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 0.8125rem;
   overflow-wrap: anywhere;
 }
 .caldav-steps {

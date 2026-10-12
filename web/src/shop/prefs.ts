@@ -23,7 +23,8 @@ export function applyListPrefs(p: ListPrefs | null | undefined) {
   const root = document.documentElement;
   for (const [k, v] of Object.entries(BASE)) {
     if (p.fontScale === 1) root.style.removeProperty(k);
-    else root.style.setProperty(k, `${Math.round(v * p.fontScale * 10) / 10}px`);
+    // rem, so the in-app size stacks on top of the browser's own text size
+    else root.style.setProperty(k, `${Math.round((v * p.fontScale * 100) / 16) / 100}rem`);
   }
   root.dataset.density = p.density;
   try {

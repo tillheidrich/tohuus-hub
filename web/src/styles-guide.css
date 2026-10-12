@@ -192,7 +192,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   color: var(--primary-text);
   text-decoration: none;
@@ -225,7 +225,7 @@
 }
 .hg-secret {
   margin-top: 6px;
-  font-size: 20px;
+  font-size: 1.25rem;
   letter-spacing: 0.08em;
   font-weight: 700;
 }
@@ -317,14 +317,14 @@
   border-radius: 12px;
   padding: 24px;
   max-width: 210mm;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .hg-print h1 {
   margin: 0 0 12px;
   color: #181d1a;
 }
 .hg-print h2 {
-  font-size: 16px;
+  font-size: 1rem;
   margin: 16px 0 6px;
   border-bottom: 1.5px solid #181d1a;
   padding-bottom: 2px;
@@ -352,7 +352,7 @@
   padding-left: 18px;
 }
 .hg-print-numbers dd {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
 }
 @media print {
