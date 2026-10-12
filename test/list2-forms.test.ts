@@ -252,8 +252,7 @@ describe('J: weekly question (opt-in, household-local)', () => {
     await p.answerPulse('3-5', null, '2026-10-18');
     expect(p.pulseState('2026-10-19').question).toBeNull();
     expect(p.pulseState('2026-10-19').history).toEqual([{ week: '2026-W42', answer: '3-5' }]);
-    // self-host: nothing leaves the household, the operator view is empty and closed without a token
+    // self-host: nothing leaves the household, the operator aggregate is empty (the operator page is cloud only)
     expect(await p.pulseAggregate()).toEqual([]);
-    expect(p.operatorAllowed('Bearer x')).toBe(false);
   });
 });

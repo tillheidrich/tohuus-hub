@@ -27,7 +27,6 @@ Object.assign(process.env, {
   LANGUAGE: 'en',
   TRUST_PROXY_HOPS: '1',
   // list2 J: the operator's view of the anonymous weekly-question counts
-  OPERATOR_TOKEN: 'op-' + crypto.randomBytes(24).toString('hex'),
 });
 
 const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code'];
@@ -459,22 +458,30 @@ describe('list2 bridges in the cloud', () => {
   });
 
   it('the operator sees only the anonymous weekly-question counts of households that chose to share', async () => {
-    const op = (token?: string) => new Client().get('/api/operator/pulse', token ? { authorization: `Bearer ${token}` } : {});
-    expect((await op()).status).toBe(401);
-    expect((await op('wrong-token-wrong-token-wrong')).status).toBe(401);
+    // one operator system: /betrieb (OPERATOR_EMAILS + a fresh password), no separate token
+    process.env.OPERATOR_EMAILS = 'pulse-op@example.org';
+    const opc = new Client();
+    await signup(opc, 'pulse-op@example.org', 'Puls', 'Puls home', 'single');
+    const op = (c: Client = opc) => c.get('/api/operator/pulse');
+    expect((await op(new Client())).status).toBe(404);
+    expect((await op(A)).status).toBe(404);
+    expect((await op()).status).toBe(401); // not unlocked yet
+    expect((await opc.post('/api/operator/unlock', { password: 'geheim1234' })).status).toBe(200);
     await A.req('PUT', '/api/pulse/settings', { enabled: true, share: true });
     await B.req('PUT', '/api/pulse/settings', { enabled: true, share: false });
     expect((await A.post('/api/pulse', { answer: '3-5' })).status).toBe(200);
     expect((await B.post('/api/pulse', { answer: 'more' })).status).toBe(200);
     // A changes the answer: the count moves, it does not double
     expect((await A.post('/api/pulse', { answer: '1-2' })).status).toBe(200);
-    const agg = await op(process.env.OPERATOR_TOKEN);
+    const agg = await op();
     expect(agg.status).toBe(200);
     expect(agg.json).toHaveLength(1);
     expect(agg.json[0].counts).toEqual({ '0': 0, '1-2': 1, '3-5': 0, more: 0 });
     expect(agg.json[0].total).toBe(1);
     expect(agg.text).not.toContain(hA);
     expect(agg.text).not.toContain(hB);
+    expect((await opc.get('/api/operator/overview')).json.pulse).toEqual(agg.json);
+    delete process.env.OPERATOR_EMAILS;
   });
 });
 

@@ -7,11 +7,10 @@
  *  - Off by default (`pulse.enabled`). An admin switches it on.
  *  - Sharing is a second, separate switch (`pulse.share`, default off). Only then – and only in ToHuus Cloud – the
  *    answer is added to an anonymous count per week and answer in accounts.db (`pulse_agg`: week, answer, n – no
- *    household id). The operator sees that distribution and nothing else (`GET /api/operator/pulse` with
- *    `OPERATOR_TOKEN`). Changing an answer moves the count; switching sharing off stops adding (counts already made
+ *    household id). The operator sees that distribution and nothing else (`GET /api/operator/pulse` and the
+ *    operator page /betrieb – OPERATOR_EMAILS + password, routes/operator.ts). Changing an answer moves the count; switching sharing off stops adding (counts already made
  *    stay, they are anonymous).
  */
-import crypto from 'node:crypto';
 import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
 import { emit } from './bus.js';
@@ -109,11 +108,3 @@ export async function pulseAggregate() {
   return [...by].map(([week, counts]) => ({ week, counts, total: Object.values(counts).reduce((a, b) => a + b, 0) }));
 }
 
-/** OPERATOR_TOKEN (env) – compared in constant time; no token configured = no access. */
-export function operatorAllowed(header: string | undefined) {
-  const want = process.env.OPERATOR_TOKEN?.trim();
-  if (!want || want.length < 24 || !header?.startsWith('Bearer ')) return false;
-  const got = Buffer.from(header.slice(7).trim());
-  const exp = Buffer.from(want);
-  return got.length === exp.length && crypto.timingSafeEqual(got, exp);
-}

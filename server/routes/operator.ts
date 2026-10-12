@@ -4,6 +4,7 @@
  *   POST   /api/operator/unlock { password }     fresh password check, valid 10 minutes for this session
  *   GET    /api/operator/overview                aggregates (no household content, nothing per person)
  *   GET    /api/operator/audit                   the operator audit log
+ *   GET    /api/operator/pulse                   the weekly question: anonymous counts (also in overview.pulse)
  *   POST   /api/operator/households/:id/trial { days }
  *   POST   /api/operator/households/:id/plan  { plan: 'free'|'haushalt'|'plus', until?: 'YYYY-MM-DD'|null, note? }
  *   POST   /api/operator/password-reset { email }
@@ -21,6 +22,7 @@ import { sendAuthMail } from '../lib/auth-policy.js';
 import { cloudIdentity } from '../lib/cloud-auth.js';
 import { canSendMail } from '../lib/mail.js';
 import { audit, auditLog, isOperatorEmail, overview } from '../lib/operator.js';
+import { pulseAggregate } from '../lib/pulse.js';
 
 export const r = Router();
 
@@ -76,9 +78,15 @@ r.post('/operator/unlock', async (req, res) => {
   res.json({ unlocked: true, until: new Date(Date.now() + UNLOCK_MS).toISOString() });
 });
 
-r.get('/operator/overview', fresh, (_req, res) => {
+r.get('/operator/overview', fresh, async (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json(overview());
+  // the weekly question (list2 pulse): anonymous counts of households that chose to share – no household id
+  res.json({ ...overview(), pulse: await pulseAggregate().catch(() => []) });
+});
+
+r.get('/operator/pulse', fresh, async (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await pulseAggregate());
 });
 
 r.get('/operator/audit', fresh, (_req, res) => res.json(auditLog(200)));

@@ -16,6 +16,7 @@ interface Overview {
   ai: { currency: string; perDay: { day: string; requests: number; tokens: number; cost: number }[]; perMonth: { month: string; requests: number; tokens: number; cost: number }[] };
   errors: { last24h: { total: number; errors: number; rate: number }; since: string | null };
   backups: { lastNightly: { at: string | null; day?: string }; lastRestoreCheck: { at: string | null; ok?: boolean }; s3: boolean };
+  pulse?: { week: string; counts: Record<string, number>; total: number }[];
   system: { memory: { rssBytes: number; totalBytes: number; freeBytes: number; limitBytes: number | null }; disk: { totalBytes: number; freeBytes: number } | null; load: number[]; uptimeS: number; node: string };
 }
 
@@ -116,6 +117,10 @@ export function Operator() {
             <h2 style={{ margin: 0 }}>{t('AI usage')}</h2>
             <Rows rows={d.ai.perMonth.map((m) => [m.month, `${m.requests} · ${Math.round(m.tokens / 1000)}k tok · ${m.cost.toFixed(2)} ${d.ai.currency}`])} />
             <Rows rows={d.ai.perDay.slice(-14).reverse().map((x) => [x.day, `${x.requests} · ${Math.round(x.tokens / 1000)}k tok · ${x.cost.toFixed(2)} ${d.ai.currency}`])} />
+          </section>
+          <section className="card pad stack">
+            <h2 style={{ margin: 0 }}>{t('Weekly question (shared answers)')}</h2>
+            <Rows rows={(d.pulse ?? []).slice(0, 8).map((w) => [w.week, `${Object.entries(w.counts).map(([k, n]) => `${k}: ${n}`).join(' · ')} (${w.total})`])} />
           </section>
           <section className="card pad stack">
             <h2 style={{ margin: 0 }}>{t('Largest households (ids)')}</h2>

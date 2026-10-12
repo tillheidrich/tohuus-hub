@@ -230,9 +230,9 @@ scraping.
 Opt-in, household-local. `GET /api/pulse` → `{ enabled, share, question: { week, options: ['0','1-2','3-5','more'] } \| null, history }`
 (question only on Sunday and Monday, once per ISO week); `POST /api/pulse { answer }`; `PUT /api/pulse/settings`
 (admin) `{ enabled?, share? }` – both off by default. With `share` on (cloud only) the answer is added to an anonymous
-count `pulse_agg(week, answer, n)` in accounts.db – no household id. Operator view: `GET /api/operator/pulse` with
-`Authorization: Bearer $OPERATOR_TOKEN` (env, ≥ 24 characters; without it the endpoint is closed) →
-`[{ week, counts: { '0', '1-2', '3-5', 'more' }, total }]`.
+count `pulse_agg(week, answer, n)` in accounts.db – no household id. Operator view: on the operator page `/betrieb`
+(`OPERATOR_EMAILS` + a fresh password, [cloud.md](cloud.md#operator-page-betrieb)): `GET /api/operator/pulse` and
+`pulse` in `GET /api/operator/overview` → `[{ week, counts: { '0', '1-2', '3-5', 'more' }, total }]`.
 
 ## Background jobs (list-jobs.ts)
 

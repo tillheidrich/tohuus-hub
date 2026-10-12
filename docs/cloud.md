@@ -53,7 +53,6 @@ DATA_DIR/
 | `APPLE_SANDBOX_ACCOUNTS` | – | comma-separated e-mails of TestFlight testers: Sandbox purchases count only for households with one of these accounts |
 | `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`) |
 | `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_TOPIC`, `APNS_ENV` | – | iPhone push – [notifications.md](notifications.md#iphone-push-apns-serverlibapnsts) |
-| `OPERATOR_TOKEN` | – | ≥ 24 characters: opens `GET /api/operator/pulse` (anonymous weekly-question counts of households that chose to share – [shopping-list.md](shopping-list.md#j--friends--family-measurement)) |
 | `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU) |
 | `OPERATOR_EMAILS` | – | comma-separated account e-mails that may open the operator page `/betrieb` |
 | `AI_PRICE_PER_MTOK`, `AI_PRICES`, `AI_PRICE_CURRENCY` | – | prices for the AI cost estimate on `/betrieb` (`"in,out"` per million tokens, default `0.1,0.3`; JSON per model; label, default `USD`) |
@@ -207,6 +206,7 @@ Cloud only. Who: accounts whose e-mail address is listed in `OPERATOR_EMAILS` (c
 | Plans (effective: free / trial / haushalt / plus) and paid plans by source (apple / operator) | `households` | count only | no |
 | Storage total and the 10 largest households | `households.storage_bytes` | **id and bytes only** – no name | no |
 | AI requests, tokens and estimated cost per day and month | new table `ai_usage_daily (day, model, requests, prompt_tokens, completion_tokens)` in `accounts.db`, written by `aiUsageHook` in `ai.ts` | no | no |
+| Weekly question (list2 pulse): answers per week of households that switched sharing on | `pulse_agg` in `accounts.db` | no | no |
 | Error rate (requests and 5xx answers per hour, last 24 h) | in memory since the last start, status class only (no path, no person, no household) | no | no |
 | Backups: last nightly run, last restore check (+ result), S3 on/off | `backups/.last-nightly`, `backups/.last-restore-check` (written by `dist/restore-check.mjs`) | no | no |
 | Server: process memory, container memory limit, disk free, load, uptime | the OS | no | no |

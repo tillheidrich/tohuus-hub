@@ -16,7 +16,7 @@ import { createAppPassword, listAppPasswords, revokeAppPassword } from '../lib/c
 import { SECTIONS, addLines, checkout, placeItem } from '../lib/shop.js';
 import { getUserPref, setUserPref } from '../lib/onboard.js';
 import { parseListExport } from '../lib/list-import.js';
-import { PULSE_ANSWERS, answerPulse, operatorAllowed, pulseAggregate, pulseState, setPulseSettings } from '../lib/pulse.js';
+import { PULSE_ANSWERS, answerPulse, pulseState, setPulseSettings } from '../lib/pulse.js';
 import { cheapestOverview, pricesFor } from '../lib/prices.js';
 import { type OfferDraft, activeOffers, addOffer, deleteOffer, parseOfferLines, readOfferImage, readOfferLink, saveOffers } from '../lib/offers.js';
 import { addLunchbox, careCheck, careMissing, careSpent, lunchbox, lunchboxDue, setItemOwner, setLunchbox, splitImport, wgBalance } from '../lib/hhforms.js';
@@ -456,10 +456,6 @@ r.put('/pulse/settings', requireAdmin, (req, res) => {
   res.json(setPulseSettings(b));
 });
 
-/** Operator view (cloud): only the anonymous distribution of households that chose to share. OPERATOR_TOKEN. */
+/** Public list2 routes (none at the moment). The operator view of the weekly question lives on /betrieb:
+ *  GET /api/operator/pulse and `pulse` in GET /api/operator/overview (routes/operator.ts – OPERATOR_EMAILS + unlock). */
 export const pub = Router();
-pub.get('/operator/pulse', async (req, res) => {
-  if (!operatorAllowed(req.headers.authorization)) return void res.status(401).json({ error: 'unauthorized' });
-  res.setHeader('Cache-Control', 'no-store');
-  res.json(await pulseAggregate());
-});

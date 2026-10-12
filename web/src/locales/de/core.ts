@@ -102,4 +102,5 @@ export const core: Record<string, string> = {
   'Manage subscription': 'Abo verwalten',
   'Reminder before the yearly renewal': 'Erinnerung vor der Jahresverlängerung',
   'An e-mail 3 days before Apple charges the next year.': 'Eine E-Mail 3 Tage, bevor Apple das nächste Jahr abbucht.',
+  'Weekly question (shared answers)': 'Wochenfrage (geteilte Antworten)',
 };
