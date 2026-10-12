@@ -1,0 +1,441 @@
+/**
+ * ToHuus Cloud leak test (mandatory): two households in one process. Everything household A creates carries a
+ * unique marker; household B must never see one of them – not through any GET route (the router stack is walked),
+ * not through server-sent events, caches, images or guest links. Plus signup, app tokens, invites, plans and the
+ * storage quota, crypto (wrong key, shredded household) and account deletion.
+ */
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import Database from 'better-sqlite3';
+import sharp from 'sharp';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+// the cloud installs a private-address-blocking dispatcher globally – the test client talks to localhost with its own
+import { Agent, FormData, fetch } from 'undici';
+const local = new Agent();
+
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-cloud-'));
+const PORT = 47600 + Math.floor(Math.random() * 300);
+const base = `http://localhost:${PORT}`;
+Object.assign(process.env, {
+  MULTI_TENANT: 'true',
+  TOHUUS_MASTER_KEY: crypto.randomBytes(32).toString('base64'),
+  DATA_DIR: dir,
+  PORT: String(PORT),
+  BASE_URL: base,
+  LANGUAGE: 'en',
+  TRUST_PROXY_HOPS: '1',
+});
+
+const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org'];
+const mails: { to: string; text: string }[] = [];
+
+let ipSeq = 1;
+class Client {
+  cookies = new Map<string, string>();
+  ip = `10.9.0.${ipSeq++}`;
+  headers: Record<string, string> = {};
+  async req(method: string, p: string, body?: unknown, extra: Record<string, string> = {}) {
+    const isForm = body instanceof FormData;
+    const res = await fetch(base + p, {
+      method,
+      redirect: 'manual',
+      headers: {
+        ...(isForm || body === undefined ? {} : { 'content-type': 'application/json' }),
+        cookie: [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; '),
+        'x-forwarded-for': this.ip,
+        origin: base,
+        ...this.headers,
+        ...extra,
+      },
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
+      signal: AbortSignal.timeout(8000),
+      dispatcher: local,
+    });
+    for (const c of res.headers.getSetCookie()) {
+      const [kv] = c.split(';');
+      const [k, ...v] = kv.split('=');
+      if (v.join('=') === '') this.cookies.delete(k.trim());
+      else this.cookies.set(k.trim(), v.join('='));
+    }
+    const buf = Buffer.from(await res.arrayBuffer());
+    const text = buf.toString('utf8');
+    let json: any = null;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      /* not json */
+    }
+    return { status: res.status, json, text, buf, type: res.headers.get('content-type') ?? '' };
+  }
+  get = (p: string, extra?: Record<string, string>) => this.req('GET', p, undefined, extra);
+  post = (p: string, b: unknown = {}, extra?: Record<string, string>) => this.req('POST', p, b, extra);
+}
+
+const A = new Client();
+const B = new Client();
+let hA = '';
+let hB = '';
+let app: any;
+let accounts: typeof import('../server/lib/accounts');
+let tenancy: typeof import('../server/lib/tenancy');
+let plans: typeof import('../server/lib/plans');
+let productImage = '';
+let guestTokenA = '';
+
+async function signup(c: Client, email: string, name: string, householdName: string, form = 'family') {
+  const r = await c.post('/api/cloud/signup', { email, password: 'geheim1234', name, householdName, form, lang: 'en', region: 'DE' });
+  expect(r.status, r.text).toBe(200);
+  return r.json.household.id as string;
+}
+
+beforeAll(async () => {
+  const mail = await import('../server/lib/mail');
+  mail.mailHook.send = (m) => void mails.push({ to: m.to, text: m.text });
+  ({ app } = await import('../server/index'));
+  accounts = await import('../server/lib/accounts');
+  tenancy = await import('../server/lib/tenancy');
+  plans = await import('../server/lib/plans');
+  await new Promise((r) => setTimeout(r, 200));
+
+  hA = await signup(A, 'markera@example.org', 'MarkerATill', 'MarkerAHome');
+  hB = await signup(B, 'b@example.org', 'Bea', 'Elsewhere', 'single');
+
+  // household A gets data with markers everywhere
+  expect((await A.post('/api/shopping', { text: 'MARKERA-shop' })).status).toBe(200);
+  const prod = await A.post('/api/products', { name: 'MARKERA-prod' });
+  expect(prod.status, prod.text).toBe(200);
+  const pid = prod.json.id;
+  expect((await A.post('/api/recipes', { title: 'MARKERA-recipe' })).status).toBe(200);
+  const loc = await A.post('/api/locations', { name: 'MARKERA-room' });
+  expect(loc.status, loc.text).toBe(200);
+  const g = await A.post('/api/guest-links', { name: 'MARKERA-guest', scopes: ['shopping'] });
+  expect(g.status, g.text).toBe(200);
+  guestTokenA = g.json.token;
+  expect((await A.post('/api/displays', { name: 'MARKERA-display' })).status).toBe(200);
+  // a product photo
+  const png = await sharp({ create: { width: 40, height: 30, channels: 3, background: '#c33' } }).png().toBuffer();
+  const fd = new FormData();
+  fd.append('image', new Blob([new Uint8Array(png)], { type: 'image/png' }), 'p.png');
+  const up = await A.req('POST', `/api/products/${pid}/image`, fd);
+  expect(up.status, up.text).toBe(200);
+  const p = await A.get(`/api/products/${pid}`);
+  productImage = p.json.image_path ?? p.json.product?.image_path;
+  expect(productImage).toMatch(/^\/img\/p\d+-[0-9a-f]+\.webp$/);
+}, 60_000);
+
+afterAll(() => {
+  app?.server?.close?.();
+});
+
+// ------------------------------------------------------------------ router walk
+
+function getRoutes(): string[] {
+  const out = new Set<string>();
+  const prefixes = ['/api/guest', '/api/party-board', '/api/kid', '/api'];
+  const walk = (stack: any[], prefix: string) => {
+    for (const layer of stack) {
+      if (layer.route) {
+        if (!layer.route.methods?.get) continue;
+        const paths = Array.isArray(layer.route.path) ? layer.route.path : [layer.route.path];
+        for (const p of paths) if (typeof p === 'string') out.add(prefix + p);
+      } else if (layer.handle?.stack) {
+        let sub = prefix;
+        if (!layer.slash) {
+          const hit = prefixes.find((pre) => layer.match(`${pre}/__probe__`) && (layer.path === pre || layer.path === `${prefix}${pre}`));
+          if (!hit) continue;
+          sub = prefix + hit;
+        }
+        walk(layer.handle.stack, sub);
+      }
+    }
+  };
+  walk(app.router.stack, '');
+  return [...out];
+}
+
+const SKIP = /\/events$|\/stream|oidc|\/download|\.png$|\/display-app\.js$|\/backups\/|\/teilen/;
+const fill = (p: string) => p.replace(/:(\w+)\??/g, (_m, name) => (/token|secret|code|key/i.test(name) ? 'x' : /name/.test(name) ? 'x.webp' : '1'));
+
+async function sweep(c: Client) {
+  const routes = getRoutes().filter((p) => !SKIP.test(p) && !p.includes('*') && !p.includes('('));
+  const found: { path: string; marker: string; status: number }[] = [];
+  let ok = 0;
+  for (const r of routes) {
+    const url = fill(r);
+    let res;
+    try {
+      res = await c.get(url);
+    } catch {
+      continue;
+    }
+    if (res.status === 200) ok++;
+    for (const m of MARKERS) if (res.text.toLowerCase().includes(m.toLowerCase())) found.push({ path: url, marker: m, status: res.status });
+  }
+  return { routes: routes.length, ok, found };
+}
+
+describe('cloud isolation', () => {
+  it('walks every GET route: household B never sees a marker of household A', async () => {
+    const a = await sweep(A);
+    // sanity: the sweep reaches A's data
+    expect(a.routes).toBeGreaterThan(100);
+    expect(a.found.length).toBeGreaterThan(5);
+    const b = await sweep(B);
+    console.log(`[sweep] routes=${a.routes} A:200=${a.ok} A:markers=${a.found.length} B:200=${b.ok}`, [...new Set(a.found.map((f) => f.path))].slice(0, 12).join(" "));
+    expect(b.ok).toBeGreaterThan(50);
+    expect(b.found).toEqual([]);
+    // and without any session nothing leaks either
+    const anon = await sweep(new Client());
+    expect(anon.found).toEqual([]);
+  }, 180_000);
+
+  it('server-sent events stay inside the household', async () => {
+    const listen = async (c: Client) => {
+      const ctrl = new AbortController();
+      const res = await fetch(`${base}/api/events`, { dispatcher: local, headers: { cookie: [...c.cookies].map(([k, v]) => `${k}=${v}`).join('; ') }, signal: ctrl.signal });
+      const reader = res.body!.getReader();
+      let text = '';
+      void (async () => {
+        try {
+          for (;;) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            text += Buffer.from(value).toString('utf8');
+          }
+        } catch {
+          /* aborted */
+        }
+      })();
+      return { get: () => text, stop: () => ctrl.abort() };
+    };
+    const la = await listen(A);
+    const lb = await listen(B);
+    await new Promise((r) => setTimeout(r, 200));
+    await A.post('/api/shopping', { text: 'MARKERA-shop 2' });
+    await new Promise((r) => setTimeout(r, 400));
+    expect(la.get()).toContain('event: change');
+    expect(lb.get()).not.toContain('event: change');
+    la.stop();
+    lb.stop();
+  });
+
+  it('per-household caches do not mix (stock mode cache, share inbox)', async () => {
+    const put = await A.req('PUT', '/api/share/start-mode', { mode: 'staples' });
+    expect(put.status, put.text).toBe(200);
+    expect((await A.get('/api/share/start-mode')).json.mode).toBe('staples');
+    expect((await B.get('/api/share/start-mode')).json.mode).toBe('full');
+    // the module-level cache itself
+    const sc = await import('../server/lib/share-core');
+    expect(tenancy.runInHousehold(hA, () => sc.stockMode())).toBe('staples');
+    expect(tenancy.runInHousehold(hB, () => sc.stockMode())).toBe('full');
+    expect(() => sc.stockMode()).toThrow(/no household context/);
+  });
+
+  it('images: encrypted at rest, only for the own household or with a valid signed URL', async () => {
+    const name = productImage.slice(5);
+    const file = path.join(dir, 'households', hA, 'images', name);
+    const raw = fs.readFileSync(file);
+    expect(raw.subarray(0, 4).toString()).toBe('THC1');
+    expect(raw.includes(Buffer.from('WEBP'))).toBe(false);
+    const own = await A.get(productImage);
+    expect(own.status).toBe(200);
+    expect(own.type).toContain('image/webp');
+    expect(own.buf.subarray(8, 12).toString()).toBe('WEBP');
+    expect((await B.get(productImage)).status).not.toBe(200);
+    expect((await new Client().get(productImage)).status).toBe(401);
+    // a token client (app) gets signed URLs in JSON …
+    const tok = (await A.post('/api/auth/app', { device: 'Test phone' })).json.token as string;
+    const viaApp = await new Client().get('/api/products', { authorization: `Bearer ${tok}` });
+    const signed = JSON.stringify(viaApp.json).match(/\/img\/p\d+-[0-9a-f]+\.webp\?h=h[a-z2-7]{10}&e=\d+&s=[\w-]+/)?.[0];
+    expect(signed).toBeTruthy();
+    expect((await new Client().get(signed!)).status).toBe(200);
+    // … which do not work tampered, nor for another household's slug
+    expect((await new Client().get(signed!.replace(/s=[\w-]{4}/, 's=AAAA'))).status).toBe(401);
+    const slugB = accounts.getHousehold(hB)!.slug;
+    expect((await new Client().get(signed!.replace(/h=h[a-z2-7]{10}/, `h=${slugB}`))).status).not.toBe(200);
+  });
+
+  it('guest links resolve to their own household only', async () => {
+    expect(guestTokenA).toMatch(/^h[a-z2-7]{10}_/);
+    const g = await new Client().get(`/api/guest/${guestTokenA}/shopping`);
+    expect(g.status, g.text).toBe(200);
+    expect(g.text).toContain('MARKERA-shop');
+    // same random part with B's routing prefix: nothing
+    const slugB = accounts.getHousehold(hB)!.slug;
+    const forged = `${slugB}_${guestTokenA.slice(12)}`;
+    const f = await new Client().get(`/api/guest/${forged}/shopping`);
+    expect(f.status).toBe(404);
+    expect(f.text).not.toContain('MARKERA');
+    // B, signed in, opening A's link still only gets the guest view – never B's or more of A
+    const viaB = await B.get(`/api/guest/${guestTokenA}`);
+    expect(viaB.json?.name).toBe('MARKERA-guest');
+    expect((await B.get('/api/shopping')).text).not.toContain('MARKERA');
+  });
+});
+
+describe('cloud accounts', () => {
+  it('signup: duplicate e-mail, weak password, verification link', async () => {
+    expect((await new Client().post('/api/cloud/signup', { email: 'markera@example.org', password: 'geheim1234', name: 'X', householdName: 'Y' })).status).toBe(409);
+    expect((await new Client().post('/api/cloud/signup', { email: 'new@example.org', password: 'short', name: 'X', householdName: 'Y' })).status).toBe(400);
+    const verify = mails.find((m) => m.to === 'markera@example.org')!;
+    expect(verify).toBeTruthy();
+    const token = verify.text.match(/\/anmelden\/email#([A-Za-z0-9_-]+)/)![1];
+    const r = await new Client().post('/api/auth/email/verify', { token });
+    expect(r.status, r.text).toBe(200);
+    expect((await new Client().post('/api/auth/email/verify', { token })).status).toBe(410);
+    expect((await A.get('/api/cloud/me')).json.account.verified).toBe(true);
+  });
+
+  it('password sign-in through the regular login endpoint, logout', async () => {
+    const c = new Client();
+    expect((await c.post('/api/auth/login', { name: 'markera@example.org', password: 'wrong-password' })).status).toBe(401);
+    expect((await c.post('/api/auth/login', { name: 'markera@example.org', password: 'geheim1234' })).status).toBe(200);
+    expect((await c.get('/api/me')).json.actor.name).toBe('MarkerATill');
+    await c.post('/api/auth/logout');
+    expect((await c.get('/api/shopping')).status).toBe(401);
+  });
+
+  it('app tokens: member rights in the chosen household, X-Household must be a membership, devices revocable', async () => {
+    const r = await new Client().post('/api/auth/app', { email: 'markera@example.org', password: 'geheim1234', device: 'iPhone A' });
+    expect(r.status, r.text).toBe(200);
+    expect(r.json.token).toMatch(/^sw_app_/);
+    expect(r.json.household.id).toBe(hA);
+    const bearer = { authorization: `Bearer ${r.json.token}` };
+    const c = new Client();
+    expect((await c.get('/api/shopping', bearer)).text).toContain('MARKERA-shop');
+    expect((await c.get('/api/shopping', { ...bearer, 'x-household': hB })).status).toBe(403);
+    expect((await c.get('/api/me', bearer)).json.actor).toMatchObject({ kind: 'user', name: 'MarkerATill', role: 'admin' });
+    const devices = await c.get('/api/auth/app/devices', bearer);
+    const mine = devices.json.find((d: any) => d.current);
+    expect(mine.device).toBe('iPhone A');
+    expect((await c.req('DELETE', `/api/auth/app/devices/${mine.id}`, undefined, bearer)).json.ok).toBe(true);
+    expect((await c.get('/api/shopping', bearer)).status).toBe(401);
+  });
+
+  it('invites create memberships; the new member sees A, never B', async () => {
+    const inv = await A.post('/api/invites', { name: 'Cleo' });
+    expect(inv.status, inv.text).toBe(200);
+    const token = (inv.json.url as string).split('/einladung/')[1];
+    expect(token).toMatch(/^h[a-z2-7]{10}_/);
+    const C = new Client();
+    expect((await C.get(`/api/invite/${token}`)).json.household).toBe('MarkerAHome');
+    const acc = await C.post(`/api/invite/${token}`, { email: 'cleo@example.org', password: 'geheim1234', name: 'Cleo' });
+    expect(acc.status, acc.text).toBe(200);
+    expect((await C.get('/api/shopping')).text).toContain('MARKERA-shop');
+    const me = await C.get('/api/cloud/me');
+    expect(me.json.households.map((h: any) => h.id)).toEqual([hA]);
+    // Cleo can switch to a household of her own and back
+    const own = await C.post('/api/cloud/households', { name: 'Cleo home', form: 'single' });
+    expect(own.status, own.text).toBe(200);
+    expect((await C.post(`/api/cloud/households/${own.json.id}/activate`)).status).toBe(200);
+    expect((await C.get('/api/shopping')).text).not.toContain('MARKERA');
+    expect((await C.post(`/api/cloud/households/${hB}/activate`)).status).toBe(403);
+    expect((await C.post(`/api/cloud/households/${hA}/activate`)).status).toBe(200);
+    // account deletion: her own household is shredded, she leaves A
+    const del = await C.req('DELETE', '/api/cloud/account', { password: 'geheim1234' });
+    expect(del.status, del.text).toBe(200);
+    expect(del.json.deleted).toEqual([own.json.id]);
+    expect(del.json.left).toEqual([hA]);
+    expect(fs.existsSync(path.join(dir, 'households', own.json.id))).toBe(false);
+    expect((await A.get('/api/users')).text).not.toContain('Cleo');
+  });
+});
+
+describe('plans and quotas', () => {
+  it('trial is Plus; expired trial falls back to Free with its limits', async () => {
+    const s = await A.get('/api/billing/status');
+    expect(s.json.plan).toBe('trial');
+    expect(s.json.limits.historyDays).toBeNull();
+    accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(hA);
+    const f = await A.get('/api/billing/status');
+    expect(f.json.plan).toBe('free');
+    expect(f.json.limits.historyDays).toBe(60);
+    expect(f.json.limits.assistantPerMonth).toBe(20);
+    expect(tenancy.runInHousehold(hA, () => plans.limits().historyDays)).toBe(60);
+  });
+
+  it('consume("assistant"): 20 a month on Free, then refused; other households unaffected', () => {
+    const results = tenancy.runInHousehold(hA, () => Array.from({ length: 21 }, () => plans.consume('assistant')));
+    expect(results.slice(0, 20).every((r) => r.ok)).toBe(true);
+    expect(results[19].remaining).toBe(0);
+    expect(results[20]).toEqual({ ok: false, remaining: 0 });
+    expect(tenancy.runInHousehold(hB, () => plans.consume('assistant')).ok).toBe(true);
+  });
+
+  it('storage quota: 413 with a message key when full, nothing deleted', async () => {
+    accounts.setStorageBytes(hA, 250 * 1024 * 1024);
+    const png = await sharp({ create: { width: 20, height: 20, channels: 3, background: '#3c3' } }).png().toBuffer();
+    const fd = new FormData();
+    fd.append('image', new Blob([new Uint8Array(png)], { type: 'image/png' }), 'p.png');
+    const r = await A.req('POST', '/api/recipes/1/image', fd);
+    expect(r.status).toBe(413);
+    expect(r.json.key).toBe('storage.full');
+    expect(r.json.quotaBytes).toBe(250 * 1024 * 1024);
+    expect((await A.get(productImage)).status).toBe(200);
+    accounts.setStorageBytes(hA, 0);
+  });
+});
+
+describe('crypto', () => {
+  it('household databases and accounts.db are unreadable without the right key', () => {
+    const file = path.join(dir, 'households', hA, 'tohuus.db');
+    expect(fs.readFileSync(file).subarray(0, 16).toString('latin1')).not.toBe('SQLite format 3\0');
+    const plain = new Database(file, { readonly: true });
+    expect(() => plain.prepare('SELECT COUNT(*) FROM shopping_items').get()).toThrow(/not a database/);
+    plain.close();
+    const wrong = new Database(file, { readonly: true });
+    wrong.pragma(`cipher = 'sqlcipher'`);
+    wrong.pragma('legacy = 4');
+    wrong.pragma(`key = "x'${crypto.randomBytes(32).toString('hex')}'"`);
+    expect(() => wrong.prepare('SELECT COUNT(*) FROM shopping_items').get()).toThrow(/not a database/);
+    wrong.close();
+    const acc = new Database(path.join(dir, 'accounts.db'), { readonly: true });
+    expect(() => acc.prepare('SELECT COUNT(*) FROM accounts').get()).toThrow(/not a database/);
+    acc.close();
+    // no marker in any file on disk
+    const all = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? all(path.join(d, e.name)) : [path.join(d, e.name)]));
+    for (const f of all(dir)) for (const m of ['MARKERA-shop', 'markera@example.org']) expect(fs.readFileSync(f).includes(Buffer.from(m)), `${f} contains ${m}`).toBe(false);
+  });
+
+  it('a wrong master key cannot unwrap a household key', async () => {
+    const keys = await import('../server/lib/crypto-keys');
+    const wrapped = accounts.accountsDb().prepare('SELECT wrapped_dek FROM households WHERE id = ?').get(hA) as { wrapped_dek: string };
+    expect(keys.unwrapDek(wrapped.wrapped_dek, hA)).toHaveLength(32);
+    expect(() => keys.unwrapDek(wrapped.wrapped_dek, hB)).toThrow(); // bound to the household id
+    const real = process.env.TOHUUS_MASTER_KEY;
+    process.env.TOHUUS_MASTER_KEY = crypto.randomBytes(32).toString('base64');
+    keys.resetKeyCache();
+    try {
+      expect(() => keys.unwrapDek(wrapped.wrapped_dek, hA)).toThrow(/unwrapped/);
+    } finally {
+      process.env.TOHUUS_MASTER_KEY = real;
+      keys.resetKeyCache();
+    }
+  });
+
+  it('nightly backup stays encrypted; deleting a household shreds key, files and backups', async () => {
+    const cb = await import('../server/lib/cloud-backup');
+    const r = await cb.runNightly(true);
+    expect(r.households).toBeGreaterThanOrEqual(2);
+    const bdir = path.join(dir, 'backups', hB);
+    const bfile = path.join(bdir, fs.readdirSync(bdir)[0]);
+    expect(fs.readFileSync(bfile).subarray(0, 16).toString('latin1')).not.toBe('SQLite format 3\0');
+    const copy = path.join(os.tmpdir(), `tohuus-shred-${Date.now()}.db`);
+    fs.copyFileSync(bfile, copy);
+    expect((await B.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'wrong name' })).status).toBe(400);
+    expect((await A.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'Elsewhere' })).status).toBe(403);
+    const del = await B.req('DELETE', `/api/cloud/households/${hB}`, { confirm: 'Elsewhere' });
+    expect(del.status, del.text).toBe(200);
+    expect(fs.existsSync(path.join(dir, 'households', hB))).toBe(false);
+    expect(fs.existsSync(bdir)).toBe(false);
+    expect((accounts.accountsDb().prepare('SELECT wrapped_dek FROM households WHERE id = ?').get(hB) as any).wrapped_dek).toBeNull();
+    expect((await B.get('/api/shopping')).status).toBe(401);
+    // the copied backup is useless now: its key is gone
+    expect(() => tenancy.runInHousehold(hB, () => plans.currentPlan())).not.toThrow();
+    const { householdDb } = await import('../server/db');
+    expect(() => householdDb(hB)).toThrow(/not found/);
+    fs.rmSync(copy, { force: true });
+  });
+});

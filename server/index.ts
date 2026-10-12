@@ -208,7 +208,8 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: msg });
 });
 
-app.listen(config.port, () => {
+export { app };
+export const server = app.listen(config.port, () => {
   console.log(`ToHuus Hub running on :${config.port} (${config.baseUrl})`);
   startScheduler();
   if (config.multiTenant) startCloudBackups();
