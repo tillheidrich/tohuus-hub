@@ -198,7 +198,14 @@ describe('C: shopping together', () => {
     expect(ok.jwtOk).toBe(true);
     expect(ok.headers['apns-topic']).toBe('de.heidrichdigital.tohuus');
     expect(ok.headers['apns-push-type']).toBe('alert');
-    expect(ok.body).toEqual({ aps: { alert: { title: 'Mira: Bringst du Butter mit?', body: 'Steht jetzt auf deiner Liste.' }, sound: 'default', 'thread-id': 'trip.addon' }, event: 'trip.addon', path: '/einkauf' });
+    expect(ok.body).toEqual({
+      aps: { alert: { title: 'Mira: Bringst du Butter mit?', body: 'Steht jetzt auf deiner Liste.' }, sound: 'default', 'thread-id': 'trip.addon', category: 'TOHUUS_ADDON' },
+      event: 'trip.addon',
+      path: '/einkauf',
+      url: 'tohuus://shopping',
+      // ids for "Mach ich" / "Geht nicht" – never names or text
+      data: { request_id: expect.stringMatching(/^\d+$/), trip_id: expect.stringMatching(/^\d+$/) },
+    });
     // the dead token answered 410 and is gone
     await wait(50);
     expect((await sam('GET', '/api/push/apns')).json).toHaveLength(1);
