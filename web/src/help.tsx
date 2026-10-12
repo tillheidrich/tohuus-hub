@@ -44,3 +44,28 @@ export function HowTo({ slug, label, className = '' }: { slug: HelpSlug; label?:
     </a>
   );
 }
+
+/** Which help article belongs to a screen (the shell shows it under the page). */
+const ROUTE_HELP: [RegExp, HelpSlug][] = [
+  [/^\/$/, 'merkt-sich'],
+  [/^\/einkauf/, 'einkaufsliste'],
+  [/^\/bestand$/, 'vorrat'],
+  [/^\/wo$/, 'babysitter'],
+  [/^\/kochen/, 'kochen'],
+  [/^\/geld/, 'geld'],
+  [/^\/import$/, 'kassenbons'],
+  [/^\/merkt-sich/, 'merkt-sich'],
+  [/^\/urlaub/, 'babysitter'],
+  [/^\/bar/, 'gaeste'],
+];
+
+/** "So geht's" under the current screen – null where the page has its own link or there is no article. */
+export function RouteHelp({ path }: { path: string }) {
+  const slug = ROUTE_HELP.find(([re]) => re.test(path))?.[1];
+  if (!slug) return null;
+  return (
+    <div className="route-help">
+      <HowTo slug={slug} />
+    </div>
+  );
+}

@@ -16,6 +16,7 @@ import { Today } from './pages/Today';
 import { setRegion } from './region';
 import { type Appearance, applyAppearance } from './theme';
 import { Avatar, Sheet, Skeleton } from './ui';
+import { RouteHelp } from './help';
 
 export interface Me {
   actor: {
@@ -57,6 +58,8 @@ const ImportReview = page(() => import('./pages/ImportReview'), 'ImportReview');
 const Scan = page(() => import('./pages/Scan'), 'Scan');
 const Find = page(() => import('./pages/Find'), 'Find');
 const HouseGuidePage = page(() => import('./pages/HouseGuide'), 'HouseGuidePage');
+const ExplainPage = page(() => import('./pages/Explain'), 'ExplainPage');
+const FactsPage = page(() => import('./pages/Explain'), 'FactsPage');
 const Bar = page(() => import('./pages/Bar'), 'Bar');
 const Order = page(() => import('./pages/Order'), 'Order');
 const MenuEditor = page(() => import('./pages/Menu'), 'MenuEditor');
@@ -287,11 +290,14 @@ function Shell({ me }: { me: Me }) {
               <Route path="/willkommen" element={<Onboarding me={me} />} />
               <Route path="/hilfe" element={<Help />} />
               <Route path="/hausinfo" element={<HouseGuidePage me={me} />} />
+              <Route path="/so-funktioniert-tohuus" element={<ExplainPage me={me} />} />
+              <Route path="/gut-zu-wissen" element={<FactsPage />} />
               <Route path="/lieblinge" element={<FavouritesPage />} />
               <Route path="/teilen" element={<ShareLanding me={me} />} />
               <Route path="*" element={<Today me={me} />} />
             </Routes>
           </Suspense>
+          <RouteHelp path={loc.pathname} />
         </div>
       </main>
 

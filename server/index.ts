@@ -51,6 +51,7 @@ import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
 import { r as buyAtRoutes } from './routes/buyat.js';
 import { r as featureRoutes } from './routes/features.js';
 import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
+import { r as factsRoutes } from './routes/facts.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
@@ -118,6 +119,7 @@ app.get('/img/:name', serveImage);
 app.use('/img', (_req, res) => void res.status(404).end());
 
 app.use('/api', instance);
+app.use('/api', factsRoutes);
 app.use('/api', appAuth);
 app.use('/api', billingPublic);
 if (config.multiTenant) {

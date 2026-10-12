@@ -112,6 +112,8 @@ export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolea
         { to: '/etiketten', label: t('QR labels'), icon: 'QrCode' },
         { to: '/einstellungen?tab=data', label: t('Data & backups'), icon: 'Database' },
         { to: '/einstellungen', label: t('Settings'), icon: 'Gear' },
+        { to: '/so-funktioniert-tohuus', label: t('How ToHuus works'), icon: 'BookOpen' },
+        { to: '/gut-zu-wissen', label: t('Good to know'), icon: 'Lightbulb' },
         { to: '/hilfe', label: t('Help'), icon: 'Question' },
       ],
     },

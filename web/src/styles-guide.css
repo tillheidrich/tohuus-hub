@@ -371,3 +371,75 @@
     max-width: none;
   }
 }
+
+.route-help {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0 8px;
+}
+
+/* So funktioniert ToHuus / Gut zu wissen */
+.explain-list,
+.facts-list {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.explain-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-l, 20px);
+  margin: 0 0 8px;
+}
+.explain-ic {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  flex: none;
+}
+.explain-card ul {
+  margin: 0 0 6px;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+.fact h2 {
+  font-size: var(--fs-l, 20px);
+  margin: 0 0 6px;
+}
+.fact p {
+  margin: 0 0 10px;
+}
+.fact-tohuus {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: var(--primary-soft);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.fact-tohuus svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--primary-text);
+}
+.fact-sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: var(--fs-s);
+}
+.fact-sources a {
+  color: var(--primary-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
