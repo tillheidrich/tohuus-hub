@@ -1,5 +1,6 @@
 import {
   ArrowDown,
+  Camera,
   ArrowSquareIn,
   ArrowUp,
   ArrowsDownUp,
@@ -22,10 +23,10 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Me } from '../App';
-import { type Product, ApiError, get, invalidate, patch, post, qc, useApi } from '../api';
+import { type Product, ApiError, api, get, invalidate, patch, post, qc, useApi } from '../api';
 import { useHousehold } from '../household';
 import { t } from '../i18n';
-import { getOr } from '../data';
+import { getOr, useInstance } from '../data';
 import { originLabel, rhythmLine } from '../origin';
 import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
 import { ItemEditor, lastBoughtLine, substituteLine } from '../shop/ItemEditor';
@@ -162,6 +163,8 @@ export function Shopping() {
   // list2 C: who is shopping right now (ticks make a trip – nobody switches a mode on)
   const trips = useTrips(!me.data?.actor.houseGuest);
   const inputRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const ocr = useInstance().data?.features?.ocr === true;
   const toast = useToast();
   const inStore = mode === 'store';
   useWakeLock(inStore);
@@ -341,6 +344,26 @@ export function Shopping() {
     }
   };
 
+  /** A photo of a paper list or a whiteboard: text recognition on the server (no AI), then the same preview as paste. */
+  const photoList = async (f: File) => {
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', f);
+      const r = await api<{ items: { name: string; qty: number }[]; confidence: number }>('/imports/list-photo', { form: fd });
+      if (!r.items.length) return toast({ text: t('No list items recognised. A sharper photo in good light helps.'), error: true });
+      const text = r.items.map((i) => (i.qty > 1 ? `${i.qty} ${i.name}` : i.name)).join('\n');
+      const parsed = await post<{ text: string; items: any[] }>('/share/parse', { text });
+      if (vis !== 'all') return add(parsed.text);
+      setPreview(parsed.items.map((x) => ({ ...x, include: !x.on_list || Boolean(x.qty), link: x.confident })));
+    } catch (e) {
+      toast({ text: e instanceof ApiError ? e.message : t('No connection – try again when you’re back online'), error: true });
+    } finally {
+      setBusy(false);
+      if (photoRef.current) photoRef.current.value = '';
+    }
+  };
+
   const share = async () => {
     const txt = await get<string>('/shopping/export.txt');
     if (navigator.share) {
@@ -460,6 +483,14 @@ export function Shopping() {
               <button type="button" className="icon-btn plain" onClick={paste} aria-label={t('Paste from clipboard')} title={t('Paste from clipboard')}>
                 <ClipboardText size={18} />
               </button>
+              {ocr && !me.data?.actor.houseGuest && (
+                <>
+                  <input ref={photoRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => e.target.files?.[0] && photoList(e.target.files[0])} />
+                  <button type="button" className="icon-btn plain" onClick={() => photoRef.current?.click()} aria-label={t('Photo of a paper list')} title={t('Photo of a paper list')}>
+                    <Camera size={18} />
+                  </button>
+                </>
+              )}
               <ComposerVisibility value={vis} open={visOpen} onToggle={() => setVisOpen((o) => !o)} />
             </span>
           </label>

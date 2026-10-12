@@ -53,7 +53,7 @@ export interface Instance {
   version?: string;
   signup: boolean;
   auth?: { password?: boolean; magicLink?: boolean; passkey?: boolean; oidc?: boolean; /** minimum length of a new password (cloud 10, self-host 8) */ passwordMin?: number };
-  features: { assistant?: boolean; voice?: boolean; receiptsAi?: boolean; billingApple?: boolean };
+  features: { assistant?: boolean; voice?: boolean; receiptsAi?: boolean; billingApple?: boolean; ocr?: boolean; ai?: { configured: boolean; household: boolean; mcp: boolean } };
   legal?: { privacy?: string; terms?: string; imprint?: string };
   /** false when the server has no /api/instance yet (before the cloud merge) */
   known: boolean;
