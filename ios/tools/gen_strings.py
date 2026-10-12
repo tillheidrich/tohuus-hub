@@ -6,7 +6,7 @@ import json, os, re, sys
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 pat = re.compile(r'\bLF?\(\s*"((?:[^"\\]|\\.)*)"')
 keys = set()
-for d in ["ToHuus", "ToHuusShare", "Shared"]:
+for d in ["ToHuus", "ToHuusShare", "ToHuusWidget", "ToHuusWatch", "ToHuusWatchWidgets", "Shared"]:
     for dp, _, fs in os.walk(os.path.join(root, d)):
         for f in fs:
             if f.endswith(".swift"):
