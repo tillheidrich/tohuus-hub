@@ -198,8 +198,21 @@ export function recoverSelfhostDb(file: string, key: Buffer | null) {
 function openSelfHost(): DB {
   const file = selfhostDbFile();
   recoverSelfhostDb(file, selfhostKeys?.db ?? null);
-  if (selfhostKeys && fs.existsSync(file) && isPlainSqlite(file)) encryptPlainDatabase(file, selfhostKeys.db);
-  const d = openDbFile(file, selfhostKeys?.db ?? null);
+  let key = selfhostKeys?.db ?? null;
+  if (selfhostKeys && fs.existsSync(file) && isPlainSqlite(file)) {
+    try {
+      encryptPlainDatabase(file, selfhostKeys.db);
+    } catch (e) {
+      // Another process still has the database open (e.g. the old container during a rolling update).
+      // Converting now could lose its last writes, so keep running unencrypted and convert on the next
+      // start, when this process is alone with the file.
+      if ((e as { code?: string }).code !== 'SQLITE_BUSY') throw e;
+      for (const f of [`${file}.encrypting`, `${file}.encrypting-wal`, `${file}.encrypting-shm`]) fs.rmSync(f, { force: true });
+      console.warn('[db] database busy (another process?) – starting unencrypted, will encrypt on the next restart');
+      key = null;
+    }
+  }
+  const d = openDbFile(file, key);
   tune(d);
   return d;
 }
