@@ -50,6 +50,9 @@ struct CookingView: View {
     let store: ServerStore
     @Environment(AppModel.self) private var app
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var width: CGFloat = 0
+    /// list + detail side by side only when there is room (not in a narrow Split View or iPad portrait with sidebar)
+    private var wide: Bool { sizeClass == .regular && width >= 700 }
     @State private var selectedRecipe: Int?
     @FocusState private var searchFocused: Bool
     @State private var dropTarget: String?
@@ -62,8 +65,9 @@ struct CookingView: View {
         NavigationStack {
             HStack(spacing: 0) {
                 column
-                    .frame(maxWidth: sizeClass == .regular ? 440 : .infinity)
-                if sizeClass == .regular {
+                    .frame(width: wide ? 380 : nil)
+                    .frame(maxWidth: wide ? 380 : .infinity)
+                if wide {
                     Divider()
                     Group {
                         if let selectedRecipe {
@@ -77,6 +81,7 @@ struct CookingView: View {
                     .canvasBackground()
                 }
             }
+            .onGeometryChangeCompat { w in width = w }
             .navigationTitle(L("Cooking"))
             .navigationDestination(for: Int.self) { id in RecipeDetailView(recipeId: id, store: store) }
             .toolbar {
@@ -89,17 +94,22 @@ struct CookingView: View {
                     .hoverEffect(.highlight)
                 }
             }
-            .onChange(of: app.searchRequest) { _, _ in
-                tab = 2
-                searchFocused = true
-            }
+            .onChange(of: app.searchRequest) { _, _ in consumeSearch() }
+            .onAppear { consumeSearch() }
         }
+    }
+
+    private func consumeSearch() {
+        guard app.searchPending else { return }
+        app.searchPending = false
+        tab = 2
+        searchFocused = true
     }
 
     /// Opens a recipe: next to the list on wide screens, pushed on the iPhone.
     @ViewBuilder
     private func recipeLink<Label: View>(_ id: Int, @ViewBuilder label: () -> Label) -> some View {
-        if sizeClass == .regular {
+        if wide {
             Button { selectedRecipe = id } label: { label() }
                 .buttonStyle(.plain)
                 .hoverEffect(.highlight)
@@ -185,7 +195,7 @@ struct CookingView: View {
             }
             .padding(Theme.Space.s3)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
-            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(selectedRecipe == idea.recipeId && sizeClass == .regular ? Theme.primary : Theme.line, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(selectedRecipe == idea.recipeId && wide ? Theme.primary : Theme.line, lineWidth: 1))
             .contentShape(Rectangle())
         }
     }

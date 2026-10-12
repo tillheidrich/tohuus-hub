@@ -150,10 +150,19 @@ struct ShoppingView: View {
                 app.requestedStore = nil
                 enterShop(id)
             }
-            .onChange(of: app.addRequest) { _, _ in
-                if shopMode { leaveShop() }
-                inputFocused = true
-            }
+            .onChange(of: app.addRequest) { _, _ in consumeAdd() }
+            .onAppear { consumeAdd() }
+        }
+    }
+
+    private func consumeAdd() {
+        guard app.addPending else { return }
+        app.addPending = false
+        if shopMode { leaveShop() }
+        Task {
+            // the field exists only after the first layout pass
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            inputFocused = true
         }
     }
 

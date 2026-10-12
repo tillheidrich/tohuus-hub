@@ -185,3 +185,14 @@ extension View {
         background(Theme.canvas.ignoresSafeArea())
     }
 }
+
+extension View {
+    /// Reports the view's width (iOS 17 has no onGeometryChange) – used to decide list + detail side by side.
+    func onGeometryChangeCompat(_ action: @escaping (CGFloat) -> Void) -> some View {
+        background(GeometryReader { g in
+            Color.clear
+                .onAppear { action(g.size.width) }
+                .onChange(of: g.size.width) { _, w in action(w) }
+        })
+    }
+}

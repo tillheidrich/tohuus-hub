@@ -29,8 +29,12 @@ final class AppModel {
     /// ⌘F: search (pantry, or recipes while cooking)
     private(set) var searchRequest = 0
 
-    func requestAdd() { addRequest += 1 }
-    func requestSearch() { searchRequest += 1 }
+    /// set until the screen that handles the shortcut has seen it (it may only appear after the area switch)
+    var addPending = false
+    var searchPending = false
+
+    func requestAdd() { addPending = true; addRequest += 1 }
+    func requestSearch() { searchPending = true; searchRequest += 1 }
 
     private static let householdsKey = "session.households"
     private static let userKey = "session.user"

@@ -44,6 +44,9 @@ struct PantryView: View {
     let store: ServerStore
     @Environment(AppModel.self) private var app
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var width: CGFloat = 0
+    /// list + detail side by side only when there is room (not in a narrow Split View or iPad portrait with sidebar)
+    private var wide: Bool { sizeClass == .regular && width >= 700 }
     @State private var searching = false
     /// regular width: the product shown next to the list
     @State private var selected: Int?
@@ -60,8 +63,9 @@ struct PantryView: View {
         NavigationStack(path: $path) {
             HStack(spacing: 0) {
                 list
-                    .frame(maxWidth: sizeClass == .regular ? 400 : .infinity)
-                if sizeClass == .regular {
+                    .frame(width: wide ? 380 : nil)
+                    .frame(maxWidth: wide ? 380 : .infinity)
+                if wide {
                     Divider()
                     Group {
                         if let selected {
@@ -74,6 +78,7 @@ struct PantryView: View {
                     .canvasBackground()
                 }
             }
+            .onGeometryChangeCompat { w in width = w }
             .navigationTitle(L("Pantry"))
             .navigationDestination(for: Int.self) { id in ProductDetailView(productId: id, store: store) }
             .toolbar {
@@ -103,8 +108,14 @@ struct PantryView: View {
         }
     }
 
+    private func consumeSearch() {
+        guard app.searchPending else { return }
+        app.searchPending = false
+        searching = true
+    }
+
     private func open(_ id: Int) {
-        if sizeClass == .regular { selected = id } else { path.append(id) }
+        if wide { selected = id } else { path.append(id) }
     }
 
     private var list: some View {
@@ -120,7 +131,7 @@ struct PantryView: View {
                         .listRowBackground(Color.clear)
                 }
                 ForEach(items) { p in
-                    if sizeClass == .regular {
+                    if wide {
                         Button { selected = p.id } label: { ProductRow(product: p, api: store.api).contentShape(Rectangle()) }
                             .buttonStyle(.plain)
                             .listRowBackground(selected == p.id ? Theme.primarySoft : Color.clear)
@@ -135,7 +146,8 @@ struct PantryView: View {
             .scrollContentBackground(.hidden)
             .canvasBackground()
             .searchable(text: $search, isPresented: $searching, prompt: L("Search the pantry"))
-            .onChange(of: app.searchRequest) { _, _ in searching = true }
+            .onChange(of: app.searchRequest) { _, _ in consumeSearch() }
+            .onAppear { consumeSearch() }
             .refreshable { await model.load(store.api) }
             .task(id: store.revision("stock") + store.revision("products")) { await model.load(store.api) }
     }

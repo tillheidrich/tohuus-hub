@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The five areas (Heute · Einkauf · Vorrat · Kochen · Geld) plus "Mehr".
 enum AppArea: String, CaseIterable, Hashable, Identifiable {
@@ -61,6 +62,16 @@ struct MainTabView: View {
             if UserDefaults.standard.bool(forKey: "debugSettings") { showSettings = true }
             if UserDefaults.standard.bool(forKey: "debugPaywall") { app.showPaywall = true }
             if UserDefaults.standard.bool(forKey: "debugKitchen") { app.showKitchen = true }
+            // screenshots without a Simulator window: -debugLandscape YES turns the iPad interface
+            if UserDefaults.standard.bool(forKey: "debugLandscape") {
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+                        scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+                        scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight)) { _ in }
+                    }
+                }
+            }
             #endif
         }
         .onChange(of: app.requestedTab) { _, t in applyRequestedTab(t) }
