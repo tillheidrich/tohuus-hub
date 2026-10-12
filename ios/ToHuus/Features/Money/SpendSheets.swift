@@ -669,12 +669,15 @@ struct PriceHistoryView: View {
     let store: ServerStore
     let productId: Int
     @State private var data: PriceHistory?
+    @State private var shops: [ShopPrice] = []
     @State private var error: String?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Space.s4) {
                 if let error { ErrorBanner(message: error) { Task { await load() } } }
+                if let p = data?.product { header(p) }
+                if !shops.isEmpty { shopsCard }
                 if let d = data {
                     if d.points.isEmpty {
                         EmptyStateView(art: .receipt, title: L("No comparable prices yet"), message: L("Weighed goods and items without a price are left out."))
@@ -727,9 +730,47 @@ struct PriceHistoryView: View {
         .task { await load() }
     }
 
+    private func header(_ p: PriceHistory.Product) -> some View {
+        HStack(spacing: Theme.Space.s3) {
+            RemoteImage(url: store.api.imageURL(p.imagePath), api: store.api, placeholder: "basket")
+                .frame(width: 56, height: 56)
+                .background(Theme.surface2)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(p.name).font(Theme.title(Theme.FontSize.l)).foregroundStyle(Theme.ink)
+                if let b = p.brand, !b.isEmpty { Text(b).font(.subheadline).foregroundStyle(Theme.ink3) }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    /// GET /api/prices/product/:id – the latest price per shop, cheapest first ("Wo war's günstiger")
+    private var shopsCard: some View {
+        Card(title: L("Where it was cheaper"), systemImage: "storefront") {
+            ForEach(Array(shops.enumerated()), id: \.offset) { i, s in
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s2) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(s.shop ?? "–").font(.subheadline.weight(i == 0 ? .semibold : .regular)).foregroundStyle(Theme.ink)
+                        Text([s.day.map { SpendDates.longDay(String($0.prefix(10))) }, s.baseLabel].compactMap { $0 }.joined(separator: " · "))
+                            .font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                    Spacer(minLength: 0)
+                    if i == 0 && shops.count > 1 {
+                        Text(L("cheapest")).font(.caption.weight(.semibold)).foregroundStyle(Theme.primaryText)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
+                            .background(Theme.primarySoft, in: Capsule())
+                    }
+                    Text(Money.format(s.price)).font(.subheadline.monospacedDigit().weight(.semibold)).foregroundStyle(Theme.ink)
+                }
+                .accessibilityElement(children: .combine)
+            }
+        }
+    }
+
     private func load() async {
         do { data = try await store.api.priceHistory(productId); error = nil }
         catch { self.error = APIError.from(error).localizedDescription }
+        shops = (try? await store.api.prices(product: productId)) ?? []
     }
 }
 

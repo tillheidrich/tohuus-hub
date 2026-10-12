@@ -20,6 +20,8 @@ struct HouseGuide: Decodable, Sendable {
         var detail: String?
         var assistant: String?
         var draft: JSONValue?
+        /// admins only
+        var visibility: HGVisibility?
     }
 
     /// A code is a secret: only `masked` and `has_value` here; the value comes from one explicit, logged reveal.
@@ -32,6 +34,15 @@ struct HouseGuide: Decodable, Sendable {
         var note: String?
         var hasValue: Bool?
         var masked: String?
+        var wifi: CodeWifi?
+        /// admins only
+        var visibility: HGVisibility?
+    }
+
+    struct CodeWifi: Decodable, Sendable, Hashable {
+        var ssid: String?
+        var security: String?
+        var hidden: Bool?
     }
 }
 
@@ -54,20 +65,52 @@ struct HouseGuideView: View {
     @State private var guide: HouseGuide?
     @State private var state: String?
     @State private var revealed: [Int: RevealedCode] = [:]
+    @State private var editCard: EditTarget<HouseGuide.Card>?
+    @State private var editCode: EditTarget<HouseGuide.Code>?
+
+    /// nil item = new
+    struct EditTarget<T>: Identifiable { var item: T?; let id = UUID() }
+
+    private var canEdit: Bool { guide?.canEdit == true }
 
     var body: some View {
         List {
             if let state { Text(state).foregroundStyle(Theme.ink3) }
+            if canEdit, let api = app.api {
+                Section {
+                    NavigationLink { GuestLinksView(api: api) } label: {
+                        Label(L("Links for babysitters and guests"), systemImage: "link")
+                    }
+                } footer: { Text(L("Tap a card to change it, swipe a code to the right. New ones with +.")) }
+            }
             if let g = guide {
                 let areas = orderedAreas(g)
                 ForEach(areas, id: \.self) { area in
                     Section(area.isEmpty ? L("Everywhere") : area) {
-                        ForEach(g.cards.filter { ($0.area ?? "") == area && $0.draft?.bool != true }) { c in cardRow(c) }
-                        ForEach(g.codes.filter { ($0.area ?? "") == area }) { c in codeRow(c) }
+                        ForEach(g.cards.filter { ($0.area ?? "") == area && $0.draft?.bool != true }) { c in
+                            cardRow(c)
+                                .contentShape(Rectangle())
+                                .onTapGesture { if canEdit { editCard = EditTarget(item: c) } }
+                                .accessibilityAction(named: L("Edit")) { if canEdit { editCard = EditTarget(item: c) } }
+                        }
+                        ForEach(g.codes.filter { ($0.area ?? "") == area }) { c in
+                            codeRow(c)
+                                .swipeActions(edge: .leading) {
+                                    if canEdit { Button { editCode = EditTarget(item: c) } label: { Label(L("Edit"), systemImage: "pencil") }.tint(Theme.primary) }
+                                }
+                                .contextMenu {
+                                    if canEdit { Button { editCode = EditTarget(item: c) } label: { Label(L("Edit"), systemImage: "pencil") } }
+                                }
+                                .accessibilityAction(named: L("Edit")) { if canEdit { editCode = EditTarget(item: c) } }
+                        }
                     }
                 }
                 if g.cards.isEmpty && g.codes.isEmpty {
-                    Text(L("Nothing here yet. Admins fill the house info in the web app.")).foregroundStyle(Theme.ink3)
+                    EmptyStateView(art: .book, title: L("Nothing here yet"),
+                                   message: canEdit ? L("Write down what a babysitter or guest needs: how the heating works, where the fuse box is, important numbers.")
+                                                    : L("The admins of your household fill in the house info."),
+                                   actionTitle: canEdit ? L("New card") : nil) { editCard = EditTarget(item: nil) }
+                        .listRowBackground(Color.clear)
                 }
             } else if state == nil {
                 ProgressView()
@@ -78,6 +121,27 @@ struct HouseGuideView: View {
             }
         }
         .navigationTitle(L("House info"))
+        .toolbar {
+            if canEdit {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button { editCard = EditTarget(item: nil) } label: { Label(L("New card"), systemImage: "text.below.photo") }
+                        Button { editCode = EditTarget(item: nil) } label: { Label(L("New code"), systemImage: "key") }
+                    } label: { Image(systemName: "plus") }
+                    .accessibilityLabel(L("Add"))
+                }
+            }
+        }
+        .sheet(item: $editCard) { t in
+            if let api = app.api {
+                HouseCardEditor(api: api, card: t.item, areas: guide?.areas ?? []) { Task { await load() } }
+            }
+        }
+        .sheet(item: $editCode) { t in
+            if let api = app.api {
+                HouseCodeEditor(api: api, code: t.item, areas: guide?.areas ?? []) { Task { await load() } }
+            }
+        }
         .task { await load() }
         .refreshable { await load() }
         .onDisappear { revealed = [:] }
@@ -163,6 +227,14 @@ struct HouseGuideView: View {
         do {
             guide = try await api.get("api/house-guide", as: HouseGuide.self)
             state = nil
+            #if DEBUG
+            // simulator checks: -debugMore housecard-new | housecode-new
+            if editCard == nil, editCode == nil, guide?.canEdit == true, let d = UserDefaults.standard.string(forKey: "debugMore") {
+                if d == "housecard-new" { editCard = EditTarget(item: nil) }
+                if d == "housecard-edit" { editCard = EditTarget(item: guide?.cards.first) }
+                if d == "housecode-new" { editCode = EditTarget(item: nil) }
+            }
+            #endif
         } catch APIError.notFound {
             state = L("Your server doesn't have this section yet.")
         } catch {

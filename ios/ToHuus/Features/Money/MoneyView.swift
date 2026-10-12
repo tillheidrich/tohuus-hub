@@ -61,6 +61,8 @@ struct MoneyView: View {
                 case .detail: SpendView(store: store)
                 case .receipts: ImportsListView(store: store) { showReceipt = true }
                 case .review(let id): ImportReviewView(store: store, importId: id)
+                case .prices(let id): PriceHistoryView(store: store, productId: id)
+                case .pricePicker: PricePickerView(store: store)
                 }
             }
             .onAppear {
@@ -69,6 +71,8 @@ struct MoneyView: View {
                 if path.isEmpty, let d = UserDefaults.standard.string(forKey: "debugMoney") {
                     if d == "detail" { path = [.detail] }
                     else if d == "receipts" { path = [.receipts] }
+                    else if d == "prices" { path = [.pricePicker] }
+                    else if d.hasPrefix("price:"), let id = Int(d.dropFirst(6)) { path = [.prices(id)] }
                     else if d.hasPrefix("review:"), let id = Int(d.dropFirst(7)) { path = [.receipts, .review(id)] }
                 }
                 #endif
@@ -107,20 +111,30 @@ struct MoneyView: View {
         .contentShape(Rectangle())
     }
 
-    /// GET /api/prices/cheapest – products you bought in two or more shops, where they were cheapest
+    /// GET /api/prices/cheapest – products you bought in two or more shops, where they were cheapest.
+    /// A row opens the price history with the per-shop prices; "All prices" searches every product with prices.
     private var cheapestCard: some View {
         Card(title: L("Where it was cheaper"), systemImage: "arrow.down.circle") {
             ForEach(cheapest.prefix(6)) { c in
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(c.name).font(.subheadline)
-                        Text(c.shops.prefix(3).map { "\($0.shop ?? "–") \(Money.format($0.price))" }.joined(separator: " · "))
-                            .font(.caption).foregroundStyle(Theme.ink3)
+                NavigationLink(value: MoneyRoute.prices(c.productId)) {
+                    HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s2) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(c.name).font(.subheadline).foregroundStyle(Theme.ink)
+                            Text(c.shops.prefix(3).map { "\($0.shop ?? "–") \(Money.format($0.price))" }.joined(separator: " · "))
+                                .font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                        Spacer(minLength: 0)
+                        if let s = c.saving, s > 0 { Text("−" + Money.format(s)).font(.subheadline).foregroundStyle(Theme.primaryText) }
+                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.ink3)
                     }
-                    Spacer()
-                    if let s = c.saving, s > 0 { Text("−" + Money.format(s)).font(.subheadline).foregroundStyle(Theme.primaryText) }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
+            NavigationLink(value: MoneyRoute.pricePicker) {
+                Label(L("All prices"), systemImage: "magnifyingglass").font(.subheadline.weight(.semibold))
+            }
+            .foregroundStyle(Theme.primaryText)
         }
     }
 
@@ -252,8 +266,9 @@ struct MoneyView: View {
 }
 
 enum MoneyRoute: Hashable {
-    case detail, receipts
+    case detail, receipts, pricePicker
     case review(Int)
+    case prices(Int)
 }
 
 private struct HintLabelStyle: LabelStyle {

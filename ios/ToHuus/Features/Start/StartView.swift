@@ -90,12 +90,9 @@ struct StartView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s2) {
-            HStack(spacing: Theme.Space.s2) {
-                BrandMark(size: 40)
-                Text("ToHuus").font(Theme.title(Theme.FontSize.h2)).foregroundStyle(Theme.ink)
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("ToHuus")
+            Image(systemName: "house.fill")
+                .font(.system(size: 34))
+                .foregroundStyle(Theme.primary)
             Text(L("Welcome to ToHuus")).font(Theme.title())
                 .foregroundStyle(Theme.ink)
             Text(L("ToHuus remembers what is missing at home, what you can cook and where the money goes."))

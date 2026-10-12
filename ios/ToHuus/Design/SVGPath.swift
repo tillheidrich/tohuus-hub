@@ -254,7 +254,6 @@ struct ArtShape: Sendable {
     }
 
     init(geometry: Geometry, cls: String) {
-        self.geometry = geometry
         var fill: ArtPaint?
         var stroke: ArtPaint?
         var width: CGFloat = 0
