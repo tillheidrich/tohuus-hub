@@ -67,7 +67,7 @@ import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
 import { cloudContext } from './lib/cloud-auth.js';
-import { appAuth, cloud as cloudRoutes, cloudPub, instance } from './routes/cloud.js';
+import { appAuth, cloud as cloudRoutes, cloudPub, instance, wellKnown } from './routes/cloud.js';
 import { r as billingRoutes, pub as billingPublic } from './routes/billing.js';
 import { serveImage, signImagesForTokenClients } from './lib/images.js';
 import { NoHouseholdError, currentHousehold } from './lib/tenancy.js';
@@ -122,6 +122,8 @@ app.use('/api', (req, res, next) => {
 });
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+// ToHuus Cloud: apple-app-site-association (webcredentials – passkeys in the iPhone app)
+if (config.multiTenant) app.use(wellKnown);
 
 // OAuth 2.1 for MCP: metadata, client registration, consent, tokens (routes/oauth.ts)
 app.use(oauthPub);

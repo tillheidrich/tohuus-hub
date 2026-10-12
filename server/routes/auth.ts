@@ -318,6 +318,7 @@ r.delete(
 );
 
 // passkeys
+r.get('/auth/passkeys', wrap((req) => listPasskeys(me(req))));
 r.post('/auth/passkeys/options', wrap((req) => registrationOptions(me(req))));
 r.post(
   '/auth/passkeys',

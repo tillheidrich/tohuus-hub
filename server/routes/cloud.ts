@@ -5,7 +5,8 @@
  *  - `instance`  GET /api/instance – public, both modes
  *  - `appAuth`   POST /api/auth/app, GET/DELETE /api/auth/app/devices – both modes
  *  - `cloudPub`  cloud only, mounted before the household sign-in routes: signup, sign-in, e-mail links, invites
- *  - `cloud`     cloud only: /api/cloud/me, households, account deletion, export
+ *  - `cloud`     cloud only: /api/cloud/me, households, account deletion, export, account passkeys
+ *  - `wellKnown` cloud only: /.well-known/apple-app-site-association (passkeys in the iPhone app)
  */
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
@@ -40,12 +41,14 @@ import { currentHousehold, runInHousehold } from '../lib/tenancy.js';
 import { currentPlan } from '../lib/plans.js';
 import * as accountsModule from '../lib/accounts.js';
 import * as cloudAuthModule from '../lib/cloud-auth.js';
+import * as cloudPasskeys from '../lib/cloud-passkeys.js';
 import { householdPerson, isHouseholdAdmin, syncMembership } from '../lib/membership-sync.js';
 
 export const instance = Router();
 export const appAuth = Router();
 export const cloudPub = Router();
 export const cloud = Router();
+export const wellKnown = Router();
 
 const cloudMode = () => config.multiTenant;
 // accounts.ts / cloud-auth.ts only open accounts.db in cloud mode
@@ -97,8 +100,8 @@ instance.get('/instance', (_req, res) => {
       /** minimum password length for new passwords (cloud accounts 10, self-hosted members 8) */
       passwordMin: passwordMin(),
       magicLink: canSendMail() && (cloudMode() || authPolicy().magicLink),
-      // passkeys: one RP-ID per cloud host – not wired for cloud accounts yet (docs/cloud.md)
-      passkey: !cloudMode() && authPolicy().passkeys,
+      // cloud: account passkeys, RP-ID = host of BASE_URL (lib/cloud-passkeys.ts); self-host: the household policy
+      passkey: cloudMode() || authPolicy().passkeys,
       oidc: !cloudMode() && ssoReady(),
     },
     signup: cloudMode() && config.signupOpen,
@@ -485,7 +488,7 @@ cloudPub.get('/auth/options', (_req, res) => {
     cloud: true,
     showNames: false,
     users: [],
-    methods: { password: true, passwordAdminsOnly: false, magicLink: mail, passkeys: false, reset: mail },
+    methods: { password: true, passwordAdminsOnly: false, magicLink: mail, passkeys: true, reset: mail },
     sso: null,
     shared: null,
   });
@@ -595,9 +598,63 @@ cloudPub.post(
   }),
 );
 
+// ---------------------------------------------------------------- passkey sign-in (account passkeys, lib/cloud-passkeys.ts)
+
+const PASSKEY_COOKIE = 'sw_wa';
+const PASSKEY_PATH = '/api/auth/passkey';
+
+/**
+ * Options for a usernameless sign-in. Web: the options JSON itself (as self-host) and the challenge key in a
+ * short-lived cookie. App (`client: 'ios'`): `{ options, key }` – the key goes back in the verify body.
+ */
+cloudPub.post(
+  '/auth/passkey/options',
+  wrap(async (req, res) => {
+    if (rateLimitedGlobal(`passkey:${req.ip}`, 30, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    const b = z.object({ client: z.enum(['web', 'ios']).default('web') }).parse(req.body ?? {});
+    const { options, key } = await cloudPasskeys.accountAuthenticationOptions();
+    if (b.client === 'ios') return { options, key };
+    res.cookie(PASSKEY_COOKIE, key, { ...cookieBase(), maxAge: 5 * 60_000, path: PASSKEY_PATH });
+    return options;
+  }),
+);
+
+const passkeyVerifyReq = z.object({
+  response: z.object({ id: z.string().max(1024), rawId: z.string().max(1024), type: z.string().max(40), response: z.record(z.string(), z.any()) }).passthrough(),
+  key: z.string().max(100).optional(),
+  /** app sign-in: an app token for this device instead of a cookie session */
+  device: z.string().trim().min(1).max(80).optional(),
+  household: z.string().max(64).optional(),
+});
+
+/** Verify the assertion → cookie session (web) or app token (`device` set, same answer as POST /api/auth/app). */
+cloudPub.post(
+  '/auth/passkey/verify',
+  wrap(async (req, res) => {
+    // like password sign-in: per address and per account
+    if (rateLimitedGlobal(`passkey-ip:${req.ip}`, 10, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    const b = passkeyVerifyReq.parse(req.body ?? {});
+    const cookieKey = req.cookies?.[PASSKEY_COOKIE];
+    res.clearCookie(PASSKEY_COOKIE, { path: PASSKEY_PATH });
+    const { accountId } = await cloudPasskeys.finishAccountAuthentication(b.key ?? (typeof cookieKey === 'string' ? cookieKey : undefined), b.response as any, (acct) => {
+      if (rateLimitedGlobal(`passkey-acct:${acct}`, 8, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    });
+    const acc = await A();
+    const ms = acc.membershipsOf(accountId);
+    if (b.device) {
+      const chosen = (b.household && ms.find((m) => m.household_id === b.household)) || ms[0] || null;
+      if (b.household && chosen?.household_id !== b.household) throw new AuthError(403, t('You are not a member of this household.'));
+      const { token } = acc.createAppToken(accountId, b.device, chosen?.household_id ?? null);
+      return { token, ...(await cloudMe(accountId, chosen?.household_id ?? null)) };
+    }
+    await startCloudSession(req, res, accountId, ms[0]?.household_id ?? null, 'passkey');
+    return { ok: true };
+  }),
+);
+
 // household-level sign-in methods that do not exist for cloud accounts (yet): answer clearly instead of failing
 const notInCloud = (_req: Request, res: Response) => void res.status(404).json({ error: t('Not available in ToHuus Cloud.') });
-for (const p of ['/auth/passkey/options', '/auth/passkey/verify', '/auth/pin', '/auth/link/confirm', '/auth/link/poll']) cloudPub.post(p, notInCloud);
+for (const p of ['/auth/pin', '/auth/link/confirm', '/auth/link/poll']) cloudPub.post(p, notInCloud);
 cloudPub.get('/auth/oidc/start', notInCloud);
 cloudPub.get('/auth/oidc/callback', notInCloud);
 cloudPub.get('/auth/users', (_req, res) => res.json([]));
@@ -776,6 +833,8 @@ cloud.delete(
       acc.removeMembership(a.id, m.household_id);
       left.push(m.household_id);
     }
+    // the account's passkeys go with it (also ON DELETE CASCADE)
+    cloudPasskeys.deleteAccountPasskeys(a.id);
     acc.accountsDb().prepare('DELETE FROM accounts WHERE id = ?').run(a.id);
     res.clearCookie(SESSION_COOKIE, { path: '/' });
     // confirmation, in the account's language (the address is gone from our side once this is sent)
@@ -871,6 +930,74 @@ cloud.post(
   }),
 );
 
+// ---------------------------------------------------------------- account passkeys (signed in)
+
+/** The settings screen reads GET /api/auth/me (household route): in the cloud its passkeys are the account's. */
+cloud.get('/auth/me', (req, res, next) => {
+  const id = cloudAuthModule.cloudIdentity(req);
+  if (!id) return next();
+  const json = res.json.bind(res);
+  res.json = (body: any) => {
+    if (res.statusCode < 300 && body && typeof body === 'object' && Array.isArray(body.passkeys)) {
+      const hasPassword = Boolean(accountsModule.accountById(id.accountId)?.password_hash?.startsWith('scrypt$'));
+      body = {
+        ...body,
+        // the account holds the password in the cloud, not the member row
+        has_password: hasPassword,
+        passkeys: cloudPasskeys.accountPasskeys(id.accountId),
+        policy: { ...body.policy, passkeys: true },
+        /** how a new passkey is confirmed: the account password, or a fresh e-mail link (accounts without one) */
+        confirm: hasPassword ? 'password' : 'email',
+      };
+    }
+    return json(body);
+  };
+  next();
+});
+
+cloud.get(
+  '/auth/passkeys',
+  wrap(async (req) => cloudPasskeys.accountPasskeys((await identity(req)).accountId)),
+);
+/** Start a registration – sensitive: needs the password (or a fresh e-mail link), like deleting a household. */
+cloud.post(
+  '/auth/passkeys/options',
+  wrap(async (req) => {
+    const id = await identity(req);
+    const b = z.object({ password: z.string().max(200).optional() }).parse(req.body ?? {});
+    await confirmAccount(req, id.accountId, b.password);
+    return cloudPasskeys.accountRegistrationOptions(id.accountId);
+  }),
+);
+cloud.post(
+  '/auth/passkeys',
+  wrap(async (req) => {
+    const id = await identity(req);
+    const b = z.object({ response: z.object({ id: z.string().max(1024) }).passthrough(), name: z.string().trim().max(60).optional() }).parse(req.body ?? {});
+    return cloudPasskeys.finishAccountRegistration(id.accountId, b.response as any, b.name);
+  }),
+);
+cloud.patch(
+  '/auth/passkeys/:id',
+  wrap(async (req) => {
+    const id = await identity(req);
+    const { name } = z.object({ name: z.string().trim().min(1).max(60) }).parse(req.body ?? {});
+    return { ok: cloudPasskeys.renameAccountPasskey(id.accountId, String(req.params.id), name) };
+  }),
+);
+cloud.delete(
+  '/auth/passkeys/:id',
+  wrap(async (req) => ({ ok: cloudPasskeys.deleteAccountPasskey((await identity(req)).accountId, String(req.params.id)) })),
+);
+
+// ---------------------------------------------------------------- Apple app site association (cloud host)
+
+/** `webcredentials` for the iPhone app (associated domain `webcredentials:<cloud host>`); JSON, no redirect. */
+wellKnown.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (_req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.type('application/json').send(JSON.stringify(cloudPasskeys.appleAppSiteAssociation()));
+});
+
 // members join by invitation and sign in with their own account – no household passwords, PINs, TOTP or SSO here
 cloud.post('/users', (_req, res) => void res.status(400).json({ error: t('In ToHuus Cloud people join by invitation.') }));
 cloud.patch('/users/:id', (req, res, next) => {
@@ -893,5 +1020,5 @@ cloud.delete('/users/:id', (req, res, next) => {
     });
   next();
 });
-for (const p of ['/auth/passkeys', '/auth/me/totp', '/auth/me/pin', '/auth/me/sso', '/auth/me/email', '/auth/sso', '/auth/device', '/auth/members/:id/reset-link', '/auth/members/:id/signout', '/auth/members/:id/totp', '/auth/members/:id/pin', '/auth/members/:id/sso', '/backups', '/restore'])
+for (const p of ['/auth/me/totp', '/auth/me/pin', '/auth/me/sso', '/auth/me/email', '/auth/sso', '/auth/device', '/auth/members/:id/reset-link', '/auth/members/:id/signout', '/auth/members/:id/totp', '/auth/members/:id/pin', '/auth/members/:id/sso', '/backups', '/restore'])
   cloud.use(p, notInCloud);
