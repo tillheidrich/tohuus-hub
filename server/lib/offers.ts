@@ -4,8 +4,8 @@
  * shop and validity, matches them with the list and the purchase rhythm ("Kaffee ist im Angebot und bei euch in 3
  * Tagen fällig") and can put one on the list with a note. Offers are kept per household until they run out.
  *
- * Never: offer feeds, retailer APIs, scraping. Reading order: OCR (server/lib/ocr.ts once merged – the shim answers
- * 'ocr.unavailable' until then) → the vision model if configured (counted like an import) → nothing.
+ * Never: offer feeds, retailer APIs, scraping. Reading order: OCR on the server (server/lib/ocr.ts, Tesseract, psm 11)
+ * → the vision model if configured and AI is on (counted like an import) → nothing.
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -19,7 +19,7 @@ import { toVisionJpeg } from './images.js';
 import { pdfToText } from './imports.js';
 import './buyat.js';
 import { safeFetch } from './net.js';
-import { ocrImage } from './ocr-shim.js';
+import { ocrAvailable, ocrImage, OcrError } from './ocr.js';
 import { fmtMoney, pricesFor } from './prices.js';
 import { rhythmList } from './rhythm.js';
 import { runVision, visionAvailable } from './vision.js';
@@ -125,13 +125,15 @@ export function parseOfferLines(lines: string[], ref = today()): OfferDraft[] {
 
 /** OCR first, then the vision model. Returns drafts and how they were read. */
 export async function readOfferImage(buf: Buffer): Promise<{ via: 'ocr' | 'ai'; offers: OfferDraft[] }> {
-  try {
-    const r = await ocrImage(buf);
-    const offers = parseOfferLines(r.lines);
-    if (offers.length) return { via: 'ocr', offers };
-  } catch (e) {
-    if ((e as { code?: string }).code !== 'ocr.unavailable') console.warn('[offers] ocr', (e as Error).message);
-  }
+  if (ocrAvailable())
+    try {
+      // flyers: sparse text in boxes (psm 11)
+      const r = await ocrImage(buf, { psm: 11 });
+      const offers = parseOfferLines(r.lines);
+      if (offers.length) return { via: 'ocr', offers };
+    } catch (e) {
+      if (!(e instanceof OcrError) || e.code !== 'unavailable') console.warn('[offers] ocr', (e as Error).message);
+    }
   if (!visionAvailable()) throw err(t('Photos of flyers need text recognition on the server. Type or paste the offer instead.'), 422);
   const j = await runVision('offer', { images: [await toVisionJpeg(buf)] });
   const shop = typeof j?.shop === 'string' ? j.shop : null;

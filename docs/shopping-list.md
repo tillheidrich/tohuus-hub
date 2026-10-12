@@ -220,8 +220,7 @@ toast. Checked with Playwright (simulated mouse drag of a row into another aisle
 `Offer` = `{ id, name, price, regularPrice, size, shop, validFrom, validTo, productId, hints: string[], onList, due, added }`,
 hints like "Kaffee Crema ist im Angebot und bei euch in 3 Tagen fällig", "sonst 5,99 € bei REWE", "bis 18.10.".
 
-Reading order: OCR (`server/lib/ocr.ts` from the b-core branch – until the merge `ocr-shim.ts` answers
-`ocr.unavailable`; **after merging, import `ocrImage` from `./ocr.js` in `offers.ts`**), then the vision model
+Reading order: OCR on the server (`ocrImage(buf, { psm: 11 })` from `server/lib/ocr.ts`, Tesseract, no AI), then the vision model
 (`runVision('offer')`, counted as an import), else 422 with a hint to paste the text. Nothing from offer feeds or
 scraping.
 

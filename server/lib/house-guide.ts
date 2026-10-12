@@ -18,6 +18,7 @@
  * house-sitter links ("sitters"), or specific guest links (with an optional end, per link). Admins see everything.
  * A guest link whose selection was saved explicitly (`house_links.custom`) shows only what was picked for it.
  */
+import { registerMovePart } from './move.js';
 import { currentKeys, db, migrate, now } from '../db.js';
 import { decryptBlob, encryptBlob, hkdf } from './crypto-keys.js';
 import { t } from '../i18n.js';
@@ -580,6 +581,19 @@ export function exportCodes() {
     wifi: r.kind === 'wifi' ? { ssid: r.wifi_ssid, security: r.wifi_security, hidden: Boolean(r.wifi_hidden) } : null,
   }));
 }
+
+// Cloud move (move.ts): code values only travel when the admin ticks "Codes aus der Hausinfo mitnehmen"; the code rows
+// themselves (label, kind, visibility) come with the normal export, the values are written sealed with the NEW
+// household's key on import.
+registerMovePart({
+  key: 'house-codes',
+  sensitive: true,
+  export: () => exportCodes().map((c) => ({ id: c.id, value: c.value })),
+  import: (data) => {
+    for (const c of Array.isArray(data) ? (data as { id: unknown; value: unknown }[]) : [])
+      if (typeof c.id === 'number' && typeof c.value === 'string' && db.prepare('SELECT 1 FROM house_codes WHERE id = ?').get(c.id)) writeSecret(c.id, c.value);
+  },
+});
 
 /** The access log over all codes (admins): who looked at which code when – never the value. */
 export function accessLog(limit = 100) {

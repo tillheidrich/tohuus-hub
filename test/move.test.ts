@@ -122,6 +122,11 @@ describe('the move file (self-hosted side)', () => {
     expect(tables).not.toContain('api_tokens');
     const text = JSON.stringify(exp);
     expect(text).not.toContain('Lakritz');
+    // Hausinfo: the code row comes along, its value only in the "-codes" file
+    expect(text).toContain('Haustür Umzug');
+    expect(fs.readFileSync(zipFile).toString('latin1')).not.toContain('4711-geheim');
+    const withCodes = readZip(fs.readFileSync(zipFile.replace(/\.zip$/, '-codes.zip')));
+    expect(withCodes.map((e) => e.name)).toContain('parts/house-codes.json');
     expect(text).not.toMatch(/password_hash|token_hash/);
     expect(text).toContain('Hafermilch Umzug');
   });
@@ -173,6 +178,22 @@ describe('importing into the cloud', () => {
     expect(fs.readFileSync(file).subarray(0, 4).toString('latin1')).not.toBe('RIFF');
     // a second import into the now full household is refused
     expect((await mira.req('POST', '/api/cloud/import', importForm('geheim1234'))).status).toBe(409);
+  });
+
+  it('Hausinfo codes come along only with the tick – sealed with the new household key', async () => {
+    const c = new Client();
+    await signup(c, 'codes@example.org', 'Mira', 'Mit Codes');
+    expect((await c.req('POST', '/api/cloud/import', importForm('geheim1234', zipFile.replace(/\.zip$/, '-codes.zip')))).status).toBe(202);
+    const job = await waitDone(c);
+    expect(job.state, JSON.stringify(job)).toBe('done');
+    expect(job.summary.parts).toEqual(['house-codes']);
+    const codes = (await c.req('GET', '/api/house-guide')).json.codes;
+    const door = codes.find((x: any) => x.label === 'Haustür Umzug');
+    expect(door.has_value).toBe(true);
+    expect((await c.req('POST', `/api/house-guide/codes/${door.id}/reveal`)).text).toContain('4711-geheim');
+    // without the tick: the code exists, but empty
+    const mira2 = (await mira.req('GET', '/api/house-guide')).json.codes.find((x: any) => x.label === 'Haustür Umzug');
+    expect(mira2.has_value).toBe(false);
   });
 
   it('household B never sees anything of it', async () => {
