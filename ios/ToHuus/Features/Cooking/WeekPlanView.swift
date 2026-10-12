@@ -126,7 +126,7 @@ struct WeekPlanSection: View {
         let list = model.entries(day)
         let mark = model.mark(day)
         return VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .center) {
                 Text(day == today ? LC("Today") : CookDay.weekday(day)).font(.subheadline.weight(.bold))
                     .foregroundStyle(day == today ? Theme.primaryText : Theme.ink)
                 Text(CookDay.dayOfMonth(day)).font(.subheadline.monospacedDigit()).foregroundStyle(Theme.ink3)
@@ -138,11 +138,21 @@ struct WeekPlanSection: View {
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Theme.infoSoft, in: Capsule())
                 }
+                if list.isEmpty && day >= today {
+                    Button { pickDay = day } label: {
+                        Label(LC("plan"), systemImage: "plus").font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 12).frame(minHeight: 36)
+                            .background(Theme.primarySoft, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.primaryText)
+                    .padding(.leading, mark == nil ? 0 : 6)
+                }
             }
             ForEach(list) { e in mealRow(e) }
-            if day >= today {
+            if day >= today && !list.isEmpty {
                 Button { pickDay = day } label: {
-                    Label(list.isEmpty ? LC("plan") : LC("add more"), systemImage: "plus")
+                    Label(LC("add more"), systemImage: "plus")
                         .font(.subheadline.weight(.medium))
                         .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                         .contentShape(Rectangle())
