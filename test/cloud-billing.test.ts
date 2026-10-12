@@ -212,6 +212,55 @@ describe.skipIf(!hasOpenssl)('Apple billing', () => {
     expect((await call('GET', '/api/billing/status')).json.plan).toBe('free');
   });
 
+  it('subscription trust: next renewal date from the renewal info, "Abo verwalten", one reminder 3 days before a yearly renewal', async () => {
+    const mail = await import('../server/lib/mail');
+    const renewals = await import('../server/lib/renewals');
+    const sent: { to: string; subject: string; text: string }[] = [];
+    mail.mailHook.send = (m) => void sent.push({ to: m.to, subject: m.subject, text: m.text });
+    const YEARLY = 'de.heidrichdigital.tohuus.plus.yearly';
+    const renewAt = Date.now() + 2.5 * 86400_000;
+    const note = async (type: string, renewal: Record<string, unknown>, t: Record<string, unknown> = {}) =>
+      call(
+        'POST',
+        '/api/billing/apple/notifications',
+        {
+          signedPayload: await sign(good, {
+            notificationType: type,
+            notificationUUID: crypto.randomUUID(),
+            data: { bundleId: BUNDLE, environment: 'Sandbox', signedTransactionInfo: await sign(good, tx({ productId: YEARLY, expiresDate: renewAt, ...t })), signedRenewalInfo: await sign(good, renewal) },
+          }),
+        },
+        false,
+      );
+    expect((await note('SUBSCRIBED', { autoRenewStatus: 1, autoRenewProductId: YEARLY, renewalDate: renewAt })).status).toBe(200);
+    const st = (await call('GET', '/api/billing/status')).json;
+    expect(st).toMatchObject({ plan: 'plus', source: 'apple', period: 'yearly', autoRenew: true, manageUrl: 'https://apps.apple.com/account/subscriptions', reminder: true });
+    expect(Date.parse(st.renewsAt.replace(' ', 'T') + 'Z')).toBeCloseTo(renewAt, -4);
+    // the reminder: once per renewal date
+    expect(await renewals.sendRenewalReminders()).toBe(1);
+    expect(sent.find((m) => m.to === 'buyer@example.org')?.text).toContain('apps.apple.com/account/subscriptions');
+    expect(await renewals.sendRenewalReminders()).toBe(0);
+    // not yet due (a year away) → nothing
+    await note('DID_RENEW', { autoRenewStatus: 1, autoRenewProductId: YEARLY, renewalDate: Date.now() + 365 * 86400_000 }, { expiresDate: Date.now() + 365 * 86400_000 });
+    expect(await renewals.sendRenewalReminders()).toBe(0);
+    // the admin switched the reminder off → no mail for the next one
+    expect((await call('PATCH', '/api/billing/reminder', { enabled: false })).json.reminder).toBe(false);
+    await note('DID_RENEW', { autoRenewStatus: 1, autoRenewProductId: YEARLY, renewalDate: Date.now() + 2 * 86400_000 }, { expiresDate: Date.now() + 2 * 86400_000 });
+    expect(await renewals.sendRenewalReminders()).toBe(0);
+    await call('PATCH', '/api/billing/reminder', { enabled: true });
+    // auto-renew switched off in the App Store: no renewal date, "endet am …"
+    await note('DID_CHANGE_RENEWAL_STATUS', { autoRenewStatus: 0, autoRenewProductId: YEARLY, renewalDate: Date.now() + 2 * 86400_000 });
+    const off = (await call('GET', '/api/billing/status')).json;
+    expect(off.autoRenew).toBe(false);
+    expect(off.renewsAt).toBeNull();
+    expect(off.expiresAt).toBeTruthy();
+    expect(await renewals.sendRenewalReminders()).toBe(0);
+    // monthly subscriptions never get a reminder
+    await note('DID_CHANGE_RENEWAL_PREF', { autoRenewStatus: 1, autoRenewProductId: 'de.heidrichdigital.tohuus.plus.monthly', renewalDate: Date.now() + 2 * 86400_000 });
+    expect(await renewals.sendRenewalReminders()).toBe(0);
+    mail.mailHook.send = undefined;
+  });
+
   it('the real Apple Root CA G3 is embedded', async () => {
     const { APPLE_ROOT_CA_G3, APPLE_ROOT_CA_G3_SHA256 } = await import('../server/lib/apple-root');
     const c = new crypto.X509Certificate(APPLE_ROOT_CA_G3);

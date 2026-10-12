@@ -10,6 +10,7 @@ import { requireAuth } from '../lib/auth.js';
 import { cookIdeas } from '../lib/cookideas.js';
 import { MoneyError, moneyOverview } from '../lib/money.js';
 import { todayAggregate } from '../lib/today.js';
+import { modules } from '../lib/modules.js';
 import { r as assistant } from './assistant.js';
 import { r as rhythm } from './rhythm.js';
 
@@ -17,7 +18,16 @@ export const r = Router();
 
 r.get('/today', requireAuth, (req: any, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const out = todayAggregate({ userId: req.actor?.userId ?? null, name: req.actor?.kind === 'user' ? req.actor?.name : null });
+  const raw = todayAggregate({ userId: req.actor?.userId ?? null, name: req.actor?.kind === 'user' ? req.actor?.name : null });
+  // "Was nutzen wir?" (modules.ts): switched-off areas leave "Heute" (their data stays)
+  const m = modules();
+  const out = {
+    ...raw,
+    stillHave: m.stock ? raw.stillHave : [],
+    cookToday: m.cook ? raw.cookToday : null,
+    money: m.money ? raw.money : null,
+    notices: raw.notices.filter((n) => m.money || n.kind !== 'budget'),
+  };
   // permanent guests (area: people) never see money or receipts
   if (req.actor?.houseGuest) res.json({ ...out, money: null, notices: [] });
   else res.json(out);

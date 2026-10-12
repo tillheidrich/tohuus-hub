@@ -38,6 +38,7 @@ import { StaplesPicker } from './Share';
 
 import { useInstance } from '../data';
 import { type GettingStarted, type Room, type Step, STEPS, useGettingStarted, useOnboardingRedirect } from '../onboarding-state';
+import { StepModules } from './Modules';
 export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
 
 // ================================================================== wizard
@@ -51,10 +52,11 @@ export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
  * the list → 4 "Wer kauft sonst ein?" (invite link) → 5 offer "Bon teilen". The older place/stock steps stay
  * reachable via /willkommen?step=places|spots|stock.
  */
-type Flow = 'who' | 'list' | 'walk' | 'invite' | 'receipt';
-const FLOW: Flow[] = ['who', 'list', 'walk', 'invite', 'receipt'];
+// list2: 'use' – „Was nutzt ihr?“ right after „Wer gehört dazu?“ (modules)
+type Flow = 'who' | 'use' | 'list' | 'walk' | 'invite' | 'receipt';
+const FLOW: Flow[] = ['who', 'use', 'list', 'walk', 'invite', 'receipt'];
 /** the server keeps the old step names – map the new flow onto them so progress survives a reload */
-const SERVER_STEP: Record<Flow, Step> = { who: 'home', list: 'where', walk: 'places', invite: 'invite', receipt: 'stock' };
+const SERVER_STEP: Record<Flow, Step> = { who: 'home', use: 'home', list: 'where', walk: 'places', invite: 'invite', receipt: 'stock' };
 const FROM_SERVER: Partial<Record<Step, Flow>> = { home: 'who', where: 'list', places: 'walk', spots: 'walk', invite: 'invite', stock: 'receipt' };
 const LEGACY: Step[] = ['places', 'spots', 'stock'];
 
@@ -127,10 +129,11 @@ export function Onboarding({ me }: { me: Me }) {
           initial={form ?? (g.data.home?.form_chosen ? (g.data.home.form as OnbForm) : null)}
           onNext={(f) => {
             setForm(f);
-            go('list');
+            go('use');
           }}
         />
       )}
+      {cur === 'use' && <StepModules onBack={back} onNext={next} />}
       {cur === 'list' && (
         <StepList
           onBack={back}

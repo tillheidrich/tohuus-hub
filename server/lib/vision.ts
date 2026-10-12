@@ -4,7 +4,7 @@
  * ToHuus Hub works without it — then photo imports are not available, but PDF imports, barcodes, manual entry
  * and MCP (where the assistant does the reading) still are.
  */
-import { aiConfig, aiEnabled, chat, extractJson, type ContentPart } from './ai.js';
+import { aiConfig, aiEnabled, assertAiAllowed, chat, extractJson, type ContentPart } from './ai.js';
 import { redactReceipt } from './redact.js';
 import { consumeImportAi, consumeReceiptAi } from './limits.js';
 
@@ -14,7 +14,7 @@ import { lang } from '../db.js';
 import { t, userError } from '../i18n.js';
 import { visionRegionHint as regionHint } from './region-hints.js';
 
-export type VisionTask = 'receipt' | 'shelf' | 'recipe' | 'product' | 'text-recipe' | 'text-items';
+export type VisionTask = 'receipt' | 'shelf' | 'recipe' | 'product' | 'text-recipe' | 'text-items' | 'offer' | 'ingredients';
 
 const PROMPTS: Record<VisionTask, string> = {
   receipt: `You are reading a till receipt or an order confirmation from a grocery store or drugstore.
@@ -24,19 +24,33 @@ Rules: one entry per item line. qty = number of items (1 for goods sold by weigh
 Leave out discounts, totals, payment and tax lines. Keep the names exactly as printed.`,
   shelf: `You see a photo from a household (e.g. freezer, fridge, pantry shelf, storage shelf).
 List the recognisable products. Return ONLY JSON:
-{"lines": [{"name": string, "brand": string|null, "qty": number, "confidence": number}]}
-qty = visible number of packs (estimate cautiously). confidence 0..1. Do not invent anything that cannot be seen.`,
-  recipe: `You are reading a recipe from a photo (e.g. a HelloFresh recipe card, a cookbook page, a Thermomix recipe, handwriting).
+{"lines": [{"name": string, "brand": string|null, "qty": number, "confidence": number, "best_before": "YYYY-MM-DD"|null, "days_left": number|null}]}
+qty = visible number of packs (estimate cautiously). confidence 0..1. best_before only if a date is readable; otherwise
+days_left = a cautious estimate of how many days it typically keeps from now (fresh produce short, tins long), or null.
+Do not invent anything that cannot be seen.`,
+  recipe: `You are reading a recipe from one or more photos or screenshots: a recipe card (e.g. HelloFresh), a cookbook page,
+a handwritten note, a screenshot from an app or website, or a photo of a Thermomix or other kitchen appliance display.
 Return ONLY JSON: {"title": string, "description": string|null, "servings": number|null, "time_min": number|null,
 "thermomix": boolean, "tags": string[], "ingredients": [{"text": string, "qty": number|null, "unit": string|null, "pantry": boolean}],
-"steps": [{"text": string, "tm": {"time": string|null, "temp": string|null, "speed": string|null}|null}]}
-pantry=true for basics like salt, pepper, oil, sugar, water. Copy Thermomix settings (e.g. "10 sec/speed 5") into tm.
+"steps": [{"text": string, "tm": {"device": string|null, "time": string|null, "temp": string|null, "speed": string|null, "mode": string|null}|null}]}
+pantry=true for basics like salt, pepper, oil, sugar, water. Appliance settings go into tm: device (e.g. "Thermomix", "Backofen",
+"Airfryer"), time ("10 Sek."), temp ("100 °C", "Varoma"), speed ("5"), mode ("Linkslauf", "Umluft"). A display photo shows
+settings only: one step with those settings and a short text. Copy what you see, invent nothing.
 If several photos belong to one recipe, merge them.`,
   product: `You see a product photo. Return ONLY JSON: {"name": string, "brand": string|null, "size": string|null,
 "category": string|null, "barcode": string|null}. Name without brand and without size.`,
-  'text-recipe': `Convert the following recipe text to JSON: {"title": string, "description": string|null, "servings": number|null,
+  'text-recipe': `Convert the following recipe text (a recipe page, a social media caption, notes) to JSON: {"title": string, "description": string|null, "servings": number|null,
 "time_min": number|null, "thermomix": boolean, "tags": string[], "ingredients": [{"text": string, "qty": number|null, "unit": string|null, "pantry": boolean}],
-"steps": [{"text": string, "tm": {"time": string|null, "temp": string|null, "speed": string|null}|null}]}. Return ONLY JSON.`,
+"steps": [{"text": string, "tm": {"device": string|null, "time": string|null, "temp": string|null, "speed": string|null, "mode": string|null}|null}]}.
+Leave out hashtags, greetings and "link in bio". Invent nothing: if the text has no ingredients, return empty lists. Return ONLY JSON.`,
+  ingredients: `You see a screenshot or photo of a recipe's ingredient list (e.g. from a recipe app or a cookbook). Return ONLY JSON:
+{"title": string|null, "servings": number|null, "ingredients": [string]} – one string per ingredient line exactly as written
+("200 g rote Linsen"). Leave out steps, nutrition and everything else. Invent nothing.`,
+  // list2 I: a photo of a flyer page or a shared offer (never fetched from feeds)
+  offer: `You see a supermarket flyer page or a price tag with offers. Return ONLY JSON:
+{"shop": string|null, "valid_from": "YYYY-MM-DD"|null, "valid_to": "YYYY-MM-DD"|null,
+"offers": [{"name": string, "brand": string|null, "size": string|null, "price": number, "regular_price": number|null}]}
+One entry per offered product with its offer price. Keep names as printed. Leave out anything without a price.`,
   'text-items': `Convert the following text (shopping list, note, receipt text) to JSON: {"lines": [{"name": string, "qty": number, "price": number|null}]}. Return ONLY JSON.`,
 };
 
@@ -84,6 +98,8 @@ async function ask(task: VisionTask, content: ContentPart[], kind: 'vision' | 'v
 }
 
 export async function runVision(task: VisionTask, input: { images?: string[]; text?: string }): Promise<any> {
+  // AI switched off (household, person, child): refused before any quota is counted or anything is sent
+  assertAiAllowed();
   if (!visionAvailable()) throw userError(t('No vision model configured (VISION_BASE_URL / VISION_MODEL)'));
   // reading receipts and shelves with AI is rate-limited per plan (plans.ts receiptAiPerDay); recipes are not
   // every AI read counts against the plan (plans.ts): receipts and shelves per day, recipe and product imports per day

@@ -3,31 +3,53 @@
     "step": {
       "user": {
         "title": "ToHuus Hub verbinden",
-        "description": "Öffne in ToHuus Hub Einstellungen › Zugänge & KI › Neuer Zugang, wähle „Home Assistant“ und kopiere den Token. Gib die Adresse ein, mit der du ToHuus Hub öffnest.",
+        "description": "Wo läuft dein ToHuus?",
+        "menu_options": {
+          "cloud": "ToHuus Cloud",
+          "own_server": "Eigener Server (selbst gehostet)"
+        }
+      },
+      "cloud": {
+        "title": "ToHuus Cloud",
+        "description": "Öffne in der ToHuus-App Einstellungen › Home Assistant und tipp auf „Home Assistant verbinden“. Gib den Code ein, der dort steht (gilt 10 Minuten). Home Assistant verbindet sich dann selbst mit {url}, bei dir zu Hause muss nichts aus dem Internet erreichbar sein.",
+        "data": {
+          "code": "Code aus der App"
+        },
+        "data_description": {
+          "code": "Acht Zeichen, z. B. ABCD-EFGH. Groß- oder Kleinschreibung ist egal."
+        }
+      },
+      "own_server": {
+        "title": "Eigenes ToHuus Hub",
+        "description": "Gib die Adresse ein, unter der Home Assistant dein ToHuus Hub erreicht, und den Code aus Einstellungen › Home Assistant › „Home Assistant verbinden“. Statt des Codes geht auch ein Token aus Einstellungen › Zugänge & KI › Neuer Zugang › „Home Assistant“.",
         "data": {
           "url": "Adresse",
-          "token": "Zugangs-Token",
+          "code": "Code aus der App",
+          "token": "Token statt Code",
           "verify_ssl": "SSL-Zertifikat prüfen"
         },
         "data_description": {
-          "url": "Zum Beispiel http://192.168.1.20:8080 oder https://home.example.de",
-          "token": "Beginnt mit sw_ – wird nur beim Erstellen einmal angezeigt.",
+          "url": "Zum Beispiel http://192.168.1.20:8080",
+          "code": "Acht Zeichen, gilt 10 Minuten, einmal verwendbar.",
+          "token": "Beginnt mit sw_. Nur nötig, wenn du keinen Code nimmst.",
           "verify_ssl": "Nur bei selbst signierten Zertifikaten ausschalten."
         }
       },
       "reauth_confirm": {
-        "title": "Neuer Zugangs-Token",
-        "description": "ToHuus Hub unter {url} nimmt den Token nicht mehr an. Erstelle einen neuen „Home Assistant“-Zugang und füge ihn hier ein.",
+        "title": "Neu verbinden",
+        "description": "ToHuus Hub unter {url} nimmt den Zugang nicht mehr an. Erstell in ToHuus einen neuen Code (Einstellungen › Home Assistant › „Home Assistant verbinden“) oder füge einen neuen Token ein.",
         "data": {
-          "token": "Zugangs-Token"
+          "code": "Code aus der App",
+          "token": "Token statt Code"
         }
       },
       "reconfigure": {
         "title": "Adresse von ToHuus Hub ändern",
-        "description": "Token leer lassen, um den bisherigen zu behalten.",
+        "description": "Code und Token leer lassen, um den bisherigen Zugang zu behalten. Umzug in die ToHuus Cloud: {cloud_url} und einen Code aus dem Cloud-Haushalt eingeben.",
         "data": {
           "url": "Adresse",
-          "token": "Zugangs-Token",
+          "code": "Code aus der App",
+          "token": "Token statt Code",
           "verify_ssl": "SSL-Zertifikat prüfen"
         }
       }
@@ -36,7 +58,11 @@
       "cannot_connect": "ToHuus Hub ist unter dieser Adresse nicht erreichbar.",
       "invalid_auth": "Der Token wurde abgelehnt. Erstelle in ToHuus Hub einen neuen „Home Assistant“-Zugang.",
       "not_supported": "Dieses ToHuus Hub ist zu alt für die Integration. Bitte zuerst ToHuus Hub aktualisieren.",
-      "unknown": "Unerwarteter Fehler."
+      "unknown": "Unerwarteter Fehler.",
+      "invalid_code": "Dieser Code gilt nicht (mehr). Erstell in der App einen neuen und gib ihn innerhalb von 10 Minuten ein.",
+      "too_many_attempts": "Zu viele Versuche. Warte ein paar Minuten und erstell einen neuen Code.",
+      "code_or_token": "Gib den Code aus der App ein (oder einen Token).",
+      "pairing_not_supported": "Dieses ToHuus Hub kennt noch keine Codes. Aktualisiere es oder nimm einen Token."
     },
     "abort": {
       "already_configured": "Dieses ToHuus Hub ist schon eingerichtet.",
@@ -58,14 +84,18 @@
           "display_height": "Höhe des Display-Bilds",
           "cookidoo_sync": "Cookidoo-Woche an ToHuus Hub senden",
           "cookidoo_entity": "Cookidoo-Kalender",
-          "bridge": "Zwei-Wege-Abgleich mit ToHuus Hub"
+          "bridge": "Zwei-Wege-Abgleich mit ToHuus Hub",
+          "notify_services": "ToHuus-Benachrichtigungen senden an",
+          "notify_events": "Welche Benachrichtigungen"
         },
         "data_description": {
           "live_updates": "Hält eine Verbindung offen, damit Änderungen nach ein, zwei Sekunden ankommen. Ohne fragt Home Assistant jede Minute nach.",
           "display_mode": "Für Küchen-Displays als Bild-Entitäten.",
           "cookidoo_sync": "Liest die geplanten Gerichte alle 3 Stunden und bei jeder Änderung aus der Cookidoo-Integration und trägt sie in den Wochenplan von ToHuus Hub ein.",
           "cookidoo_entity": "Meist calendar.cookidoo_speiseplan. Leer lassen, dann wird er automatisch genommen, sobald es ihn gibt.",
-          "bridge": "ToHuus Hub sieht eure To-do-Listen, Kalender, Personen, Benachrichtigungsdienste und per Sprache erreichbaren Geräte, gleicht die in ToHuus Hub (Einstellungen › Home Assistant) gewählten Listen und Kalender in beide Richtungen ab, schickt Benachrichtigungen über die Companion-App und nutzt NFC-Tag-Scans als Schnellaktionen."
+          "bridge": "ToHuus Hub sieht eure To-do-Listen, Kalender, Personen, Benachrichtigungsdienste und per Sprache erreichbaren Geräte (nur Namen und Räume, für die Hausinfo-Karten für Babysitter und Gäste), gleicht die in ToHuus Hub (Einstellungen › Home Assistant) gewählten Listen und Kalender in beide Richtungen ab, schickt Benachrichtigungen über die Companion-App und nutzt NFC-Tag-Scans als Schnellaktionen. Wer pro Thema führt: die „wer führt“-Auswahlen dieses Geräts.",
+          "notify_services": "Benachrichtigungsdienste, z. B. notify.mobile_app_… oder ein Fernseher/Lautsprecher. Home Assistant bekommt die Benachrichtigungen über die Live-Verbindung und gibt sie weiter. Leer lassen, wenn ToHuus sie schon pro Person schickt (Einstellungen › Home Assistant › Benachrichtigungen).",
+          "notify_events": "Nur diese Arten gehen an die Dienste oben."
         }
       }
     }
@@ -91,6 +121,22 @@
       "options": {
         "lunch": "Mittag",
         "dinner": "Abend"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "stock_low": "Wird knapp",
+        "stock_empty": "Ist alle",
+        "stock_expiring": "Bald abgelaufen",
+        "import_review": "Bon wartet auf Prüfung",
+        "order_new": "Neue Bestellung",
+        "order_status": "Bestellstatus",
+        "shopping_added": "Auf die Einkaufsliste gesetzt",
+        "digest_daily": "Tageszusammenfassung",
+        "care_due": "Pflege-Aufgabe fällig",
+        "party_ending": "Party endet",
+        "kids_wish": "Kinderwunsch",
+        "test": "Test"
       }
     }
   },
@@ -138,6 +184,15 @@
       },
       "receipts_to_review": {
         "name": "Bons zu prüfen"
+      },
+      "due": {
+        "name": "Fällig zum Einkaufen"
+      },
+      "spending_month": {
+        "name": "Ausgaben diesen Monat"
+      },
+      "spending_week": {
+        "name": "Ausgaben diese Woche"
       }
     },
     "binary_sensor": {
@@ -200,6 +255,35 @@
               "test": "Test"
             }
           }
+        }
+      }
+    },
+    "select": {
+      "leader_shopping": {
+        "name": "Einkaufsliste: wer führt",
+        "state": {
+          "both": "Beide",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Aus"
+        }
+      },
+      "leader_meals": {
+        "name": "Wochenplan: wer führt",
+        "state": {
+          "both": "Beide",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Aus"
+        }
+      },
+      "leader_care": {
+        "name": "Pflege-Aufgaben: wer führt",
+        "state": {
+          "both": "Beide",
+          "home_assistant": "Home Assistant",
+          "tohuus": "ToHuus",
+          "off": "Aus"
         }
       }
     }

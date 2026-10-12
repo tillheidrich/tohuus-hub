@@ -6,7 +6,8 @@ import { brand, db, getSetting, lang } from '../db.js';
 import { guestFromToken, randomToken, rateLimited, requireAuth, sha256 } from '../lib/auth.js';
 import { addClient } from '../lib/bus.js';
 import { addToShopping, listProducts } from '../lib/catalog.js';
-import { findThings } from '../lib/find.js';
+import { findInGuide, findThings } from '../lib/find.js';
+import { linkHasGuide } from '../lib/house-guide.js';
 import { DECLINE_REASONS, createOrder, helpers, listOrders, orderMenu, orderSchema, requestsFor, setOrderStatus, thankOrder } from '../lib/orders.js';
 import { guestClientId, partyForGuest, partyIdForLink, partyMenu } from '../lib/party.js';
 import { t } from '../i18n.js';
@@ -38,6 +39,8 @@ guest.get('/:token', (req, res) => {
     // currency/number format only – guests see no other household settings
     region: (({ code, currency, locale, units, week_start_day }) => ({ code, currency, locale, units, week_start_day }))(regionInfo()),
     note: (db.prepare('SELECT note FROM guest_links WHERE id = ?').get(req.actor!.guestLinkId) as { note: string | null } | undefined)?.note ?? null,
+    // Hausinfo shared with this link (cards, codes, voice list) – the page then offers it (GET /api/guest/:token/house)
+    house_guide: linkHasGuide(req.actor!.guestLinkId!) > 0,
     party: partyForGuest(req.actor!.guestLinkId, guestClientId(req, res)),
   });
 });
@@ -107,7 +110,10 @@ guest.get('/:token/stock', (req, res) => {
     out: x.in_stock === false,
     place_ids: x.places.map((p) => p.id),
   }));
-  res.json({ locations: locations.filter((l) => allowed.includes(l.id)), things });
+  // "Wo ist der Sicherungskasten?" – Hausinfo cards shared with this link answer too (never codes)
+  const q = String(req.query.q ?? '').slice(0, 60);
+  const house = q ? findInGuide(q, { kind: 'link', linkId: req.actor!.guestLinkId!, name: req.actor!.name }) : [];
+  res.json({ locations: locations.filter((l) => allowed.includes(l.id)), things, house });
 });
 
 guest.get('/:token/shopping', (req, res) => {

@@ -15,6 +15,11 @@ import { safeFetch } from '../lib/net.js';
 import { fmtDay, t } from '../i18n.js';
 import { recordCorrection } from '../lib/quality.js';
 import { uploadQuota } from '../lib/plans.js';
+import { parseListLines, readListPhoto, readReceiptPhotos, receiptFromLines } from '../lib/receipt-read.js';
+import { UsageLimitError } from '../lib/limits.js';
+import { AiError } from '../lib/ai.js';
+import { OcrError, ocrAvailable, ocrImage } from '../lib/ocr.js';
+import { importPurchaseHistory, parseCsv, productForArticle } from '../lib/list-import.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -145,7 +150,18 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
       results.push({ file: f.originalname, ...(await importText(f.buffer.toString('utf8'), actorName(req))) });
     }
   }
-  if (images.length) {
+  if (images.length && mode !== 'shelf') {
+    // receipts: text recognition + parsers first, the model only when the sum does not check out (receipt-read.ts)
+    try {
+      const read = await readReceiptPhotos(images.map((i) => i.buffer));
+      const out = createImport(read.parsed, { actor: actorName(req), rawText: null });
+      results.push({ file: images.map((i) => i.originalname).join(', '), ...out, via: read.via, confidence: read.confidence, sumMatches: read.sumMatches });
+    } catch (e) {
+      const x = e as { status?: number; message?: string };
+      if (x instanceof UsageLimitError) throw e;
+      results.push({ file: images.map((i) => i.originalname).join(', '), error: x.message ?? String(e), ...(e instanceof AiError ? { code: e.code } : {}) });
+    }
+  } else if (images.length) {
     if (!visionAvailable()) {
       results.push({ error: t('No vision model is set up for photos. Tip: send the photo to Claude/ChatGPT – via MCP it still ends up here.') });
     } else {
@@ -230,6 +246,61 @@ r.post('/imports/url', async (req, res) => {
 });
 
 /**
+ * Text lines recognised on the device (iPhone: Apple Vision) – nothing is uploaded but the text.
+ *   POST /api/imports/lines { lines: string[], source: 'ocr-device', mode?: 'auto'|'receipt'|'list', confidence?: 0..1 }
+ *   receipt (or auto and it parses as one) → { kind: 'receipt', id, via: 'ocr-device', sumMatches, confidence }
+ *   list (or auto and it is not a receipt) → { kind: 'list', items: [{ name, qty, confidence }] } – suggestions only
+ */
+r.post('/imports/lines', (req, res) => {
+  const b = z
+    .object({
+      lines: z.array(z.string().max(300)).min(1).max(400),
+      source: z.literal('ocr-device'),
+      mode: z.enum(['auto', 'receipt', 'list']).optional(),
+      confidence: z.number().min(0).max(1).nullable().optional(),
+    })
+    .parse(req.body);
+  const mode = b.mode ?? 'auto';
+  if (mode !== 'list') {
+    const read = receiptFromLines(b.lines, null, 'ocr-device', b.confidence ?? null);
+    if (read && (mode === 'receipt' || !read.parsed.meta.guessed)) {
+      const out = createImport(read.parsed, { actor: actorName(req), rawText: b.lines.join('\n') });
+      res.json({ kind: 'receipt', ...out, via: read.via, sumMatches: read.sumMatches, confidence: read.confidence });
+      return;
+    }
+    if (mode === 'receipt') {
+      res.status(422).json({ error: t('No receipt lines were recognised in the photo. A sharper photo in good light, flat and straight, helps.') });
+      return;
+    }
+  }
+  res.json({ kind: 'list', items: parseListLines(b.lines), source: 'ocr-device' });
+});
+
+/** Photo of a paper list or whiteboard → suggested items (server OCR, no AI). multipart "image" → { items, lines, confidence, source } */
+r.post('/imports/list-photo', upload.single('image'), async (req, res) => {
+  if (!req.file?.buffer) return void res.status(400).json({ error: t('No image received') });
+  if (!ocrAvailable()) return void res.status(501).json({ error: t('Text recognition is not installed on this server.'), code: 'ocr.unavailable' });
+  try {
+    res.json(await readListPhoto(req.file.buffer));
+  } catch (e) {
+    if (e instanceof OcrError) return void res.status(e.status).json({ error: e.message, code: `ocr.${e.code}` });
+    throw e;
+  }
+});
+
+/** Raw text recognition (debugging, other clients): multipart "image" → { lines, confidence, ms } */
+r.post('/imports/ocr', upload.single('image'), async (req, res) => {
+  if (!req.file?.buffer) return void res.status(400).json({ error: t('No image received') });
+  try {
+    const out = await ocrImage(req.file.buffer, { psm: req.body?.psm === '11' ? 11 : req.body?.psm === '4' ? 4 : 6 });
+    res.json({ lines: out.lines, confidence: out.confidence, ms: out.ms, lang: out.lang });
+  } catch (e) {
+    if (e instanceof OcrError) return void res.status(e.status).json({ error: e.message, code: `ocr.${e.code}` });
+    throw e;
+  }
+});
+
+/**
  * Catalogue import from a purchase history CSV (e.g. the REWE data export): creates products and
  * receipt aliases for articles bought at least `minCount` times — no stock is booked.
  * Accepted columns: Artikel_roh ("BRAND SIZE·BON NAME") or name/Artikel, optional Kategorie.
@@ -241,13 +312,14 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
   }
   const minCount = Number(req.body.min_count ?? 3);
   const text = req.file.buffer.toString('utf8').replace(/^﻿/, '');
-  const [head, ...rows] = text.split(/\r?\n/).filter(Boolean);
-  if (!head) {
+  // list2: a real CSV reader (quoted fields with ; or , inside) – the history part below needs every column
+  const table = parseCsv(text);
+  if (!table.length) {
     res.status(400).json({ error: t('File is empty') });
     return;
   }
-  const sep = head.includes(';') ? ';' : ',';
-  const cols = head.split(sep).map((c) => c.trim().toLowerCase());
+  const rows = table.slice(1);
+  const cols = table[0].map((c) => c.trim().toLowerCase());
   const iRaw = cols.indexOf('artikel_roh');
   const iName = iRaw >= 0 ? iRaw : cols.findIndex((c) => ['name', 'artikel', 'artikel_norm', 'produkt'].includes(c));
   const iCat = cols.indexOf('kategorie');
@@ -256,8 +328,7 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
     return;
   }
   const counts = new Map<string, { n: number; cat: string | null }>();
-  for (const row of rows) {
-    const c = row.split(sep);
+  for (const c of rows) {
     const key = c[iName]?.trim();
     if (!key) continue;
     const e = counts.get(key) ?? { n: 0, cat: iCat >= 0 ? c[iCat] : null };
@@ -296,7 +367,10 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
   });
   tx();
   emit('products');
-  res.json({ created, linked, distinct: counts.size });
+  // list2: with a date (and price) column every row becomes a purchase on its day – rhythm, prices per shop and
+  // spending work from day one; no stock is booked (lib/list-import.ts)
+  const history = importPurchaseHistory(table, iName, productForArticle, { actor: actorName(req), defaultShop: typeof req.body.shop === 'string' ? req.body.shop.slice(0, 60) : undefined });
+  res.json({ created, linked, distinct: counts.size, history });
 });
 
 /** Re-detect import lines against the current catalogue (after creating/merging products). */

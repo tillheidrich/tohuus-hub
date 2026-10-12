@@ -36,12 +36,56 @@ class ToHuusRequestError(ToHuusError):
     """The server refused a request (4xx), message is user-facing."""
 
 
+class ToHuusPairError(ToHuusError):
+    """A pairing code was refused. `reason`: invalid_code, too_many_attempts, gone or not_supported."""
+
+    def __init__(self, reason: str, message: str | None = None) -> None:
+        super().__init__(message or reason)
+        self.reason = reason
+
+
 def normalize_url(url: str) -> str:
     """Strip spaces and trailing slashes; add http:// if no scheme was given."""
     url = url.strip().rstrip("/")
     if not url.startswith(("http://", "https://")):
         url = f"http://{url}"
     return url
+
+
+async def async_claim_code(session: ClientSession, url: str, code: str, name: str | None = None) -> dict[str, Any]:
+    """Exchange a pairing code from the ToHuus app for a "Home Assistant" token.
+
+    POST /api/ha/pair/claim {code, name} → {token, instance_id, household, base_url, mode}. Public endpoint,
+    rate-limited by the server; the code is valid 10 minutes and works once.
+    """
+    try:
+        async with session.post(
+            f"{normalize_url(url)}/api/ha/pair/claim",
+            json={"code": code.strip(), "name": name},
+            headers={"Accept": "application/json"},
+            timeout=REQUEST_TIMEOUT,
+        ) as resp:
+            try:
+                body = await resp.json(content_type=None)
+            except (ValueError, ClientError):
+                body = None
+            body = body if isinstance(body, dict) else {}
+            if resp.status == 429:
+                raise ToHuusPairError("too_many_attempts", body.get("error"))
+            if resp.status == 410:
+                raise ToHuusPairError("gone", body.get("error"))
+            if resp.status in (400, 404) and body.get("code") == "invalid_code":
+                raise ToHuusPairError("invalid_code", body.get("error"))
+            if resp.status in (401, 403, 404, 405):
+                # a ToHuus Hub without pairing (before integration 0.3): use a token instead
+                raise ToHuusPairError("not_supported", body.get("error"))
+            if resp.status >= 500:
+                raise ToHuusConnectionError(body.get("error") or f"HTTP {resp.status}")
+            if resp.status >= 400 or not isinstance(body.get("token"), str):
+                raise ToHuusPairError("invalid_code", body.get("error"))
+            return body
+    except (TimeoutError, ClientError) as err:
+        raise ToHuusConnectionError(str(err) or err.__class__.__name__) from err
 
 
 class ToHuusApi:
@@ -154,6 +198,11 @@ class ToHuusApi:
     async def bridge_tag(self, body: dict[str, Any]) -> dict[str, Any]:
         """An NFC tag was scanned in Home Assistant."""
         data = await self.request("POST", "/bridge/tag", json_body=body)
+        return data if isinstance(data, dict) else {}
+
+    async def set_leader(self, topic: str, mode: str) -> dict[str, Any]:
+        """Who leads per topic (shopping, meals, care): two_way, from_ha, to_ha or off."""
+        data = await self.request("POST", "/bridge/leader", json_body={"topic": topic, "mode": mode})
         return data if isinstance(data, dict) else {}
 
     # ------------------------------------------------------------- services

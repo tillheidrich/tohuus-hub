@@ -12,12 +12,15 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { freePort } from './helpers/port';
+
+const PORT = await freePort();
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-sec5-test-'));
 process.env.DATA_DIR = dir;
-process.env.BASE_URL = 'http://localhost:47431';
+process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'en';
-const base = 'http://localhost:47431';
+const base = `http://localhost:${PORT}`;
 
 let server: http.Server;
 let db: typeof import('../server/db').db;
@@ -98,7 +101,7 @@ beforeAll(async () => {
   app.use('/api', authRoutes.r);
   app.use('/api', shareRoutes.r);
   app.use((err: any, _req: any, res: any, _next: any) => res.status(500).json({ error: String(err?.message ?? err) }));
-  await new Promise<void>((r) => (server = app.listen(47431, () => r())));
+  await new Promise<void>((r) => (server = app.listen(PORT, () => r())));
 });
 
 afterAll(() => {

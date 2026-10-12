@@ -12,8 +12,10 @@
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
 import { t } from '../i18n.js';
-import { addUsage, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
-import { buildContext, topicsOf } from './assistant-context.js';
+import { aiOffReason } from './ai-policy.js';
+import { addUsage, aiConfigured, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
+import { buildContext, topicsOf, type Topic } from './assistant-context.js';
+import { CONTEXT_TOPICS, contextHint, type ScreenContext } from './assistant-areas.js';
 import { parseIntent, type Intent } from './assistant-parse.js';
 import {
   cookIdeasTool,
@@ -196,6 +198,8 @@ export async function chatOnce(input: {
   user: AssistantUser;
   /** already counted (voice: the recording counts as the message) */
   allowance?: ConsumeResult;
+  /** the screen the person is on (assistant-areas.ts): its context lines and tools come along */
+  context?: ScreenContext | null;
 }): Promise<ChatOutput> {
   const message = input.message.trim().slice(0, 2000);
   if (!message) throw new AssistantError(t('Please write or say something.'));
@@ -224,7 +228,7 @@ export async function chatOnce(input: {
     } else {
       try {
         // Plus fair use over the allowance: still answered, just shorter
-        const r = await modelReply(message, prior, ctx, input.user, allowance.throttled ? 250 : 600);
+        const r = await modelReply(message, prior, ctx, input.user, allowance.throttled ? 250 : 600, input.context ?? null);
         out = { ...r, mode: 'ai', remaining: allowance.remaining, ...(allowance.throttled ? { throttled: true } : {}) };
       } catch (e) {
         if (!(e instanceof AiError)) throw e;
@@ -254,15 +258,17 @@ export function fullyUnderstood(intent: Intent): boolean {
   return ['purchase', 'remember', 'forget', 'list'].includes(intent.kind);
 }
 
-/** The prompt for one message: only the context lines and tools its topics need. Exported for tests. */
-export function promptFor(message: string, user: AssistantUser) {
-  const topics = topicsOf(message);
-  const context = buildContext({ purpose: 'assistant', viewer: { userId: user.userId, name: user.name }, topics });
-  return { system: systemPrompt(context.text), tools: toolsFor(topics), topics };
+/** The prompt for one message: only the context lines and tools its topics need (plus the screen's). Exported for tests. */
+export function promptFor(message: string, user: AssistantUser, context: ScreenContext | null = null) {
+  const fromText = topicsOf(message);
+  const topics = [...new Set([...(context ? CONTEXT_TOPICS[context] : []), ...(context && fromText.length === 3 ? [] : fromText)])] as Topic[];
+  const ctxText = buildContext({ purpose: 'assistant', viewer: { userId: user.userId, name: user.name }, topics });
+  const hint = contextHint(context, lang() === 'de');
+  return { system: systemPrompt(hint ? `${ctxText.text}\n${hint}` : ctxText.text), tools: toolsFor(topics, Boolean(context)), topics };
 }
 
-async function modelReply(message: string, prior: ChatMessage[], ctx: ToolCtx, user: AssistantUser, maxTokens = 600) {
-  const p = promptFor([...prior.filter((m) => m.role === 'user').slice(-2).map((m) => String(m.content)), message].join(' '), user);
+async function modelReply(message: string, prior: ChatMessage[], ctx: ToolCtx, user: AssistantUser, maxTokens = 600, context: ScreenContext | null = null) {
+  const p = promptFor([...prior.filter((m) => m.role === 'user').slice(-2).map((m) => String(m.content)), message].join(' '), user, context);
   const messages: ChatMessage[] = [{ role: 'system', content: p.system }, ...prior, { role: 'user', content: message }];
   let usage = zeroUsage();
   for (let round = 0; round < MAX_ROUNDS; round++) {
@@ -367,6 +373,8 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
     default:
       break;
   }
+  // AI switched off (household, person, child) while a model exists: say so plainly
+  if (aiConfigured('text') && aiOffReason()) return t('AI is off – I understand simple sentences like “milk is out and 2 peppers”.');
   return !aiEnabled('text')
     ? t('I understand short things like “milk, 2 peppers and bread”, “milk is out”, “do we still have eggs?” or “bought milk and bread at Aldi for 12.40”.')
     : t('I didn’t get that. Try something like “milk, 2 peppers and bread” or “what can we cook?”.');

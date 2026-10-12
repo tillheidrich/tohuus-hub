@@ -11,6 +11,7 @@ import { notify, notifySettings } from './notify.js';
 import { skipAutoShopping } from './away-state.js';
 import { nameScore, norm, splitProductName, tokens } from './text.js';
 import { isTrackedProduct } from './share-core.js';
+import './list-schema.js';
 
 export type TrackMode = 'count' | 'level' | 'none';
 export type Status = 'ok' | 'low' | 'empty' | 'expiring' | 'expired' | 'untracked';
@@ -326,21 +327,22 @@ export function addToShopping(input: {
   addedBy?: string;
   /** where it came from, shown under the row (shopping-trust.ts: rhythm interval, recipe title …) */
   origin?: Record<string, unknown> | null;
+  /** list2: which list (0/undefined = the main list); a row counts as "already there" only on the same list */
+  listId?: number | null;
 }) {
+  const listId = input.listId && input.listId > 0 ? input.listId : null;
+  const sameList = listId ? 'AND list_id = ?' : 'AND list_id IS NULL';
+  const listArgs = listId ? [listId] : [];
   if (input.productId) {
-    const open = db.prepare('SELECT id FROM shopping_items WHERE product_id = ? AND checked_at IS NULL').get(input.productId) as { id: number } | undefined;
+    const open = db.prepare(`SELECT id FROM shopping_items WHERE product_id = ? AND checked_at IS NULL ${sameList}`).get(input.productId, ...listArgs) as { id: number } | undefined;
     if (open) return { id: open.id, created: false };
   } else {
-    const open = db.prepare('SELECT id FROM shopping_items WHERE lower(text) = lower(?) AND checked_at IS NULL').get(input.text) as { id: number } | undefined;
+    const open = db.prepare(`SELECT id FROM shopping_items WHERE lower(text) = lower(?) AND checked_at IS NULL ${sameList}`).get(input.text, ...listArgs) as { id: number } | undefined;
     if (open) return { id: open.id, created: false };
   }
-  const info = input.origin
-    ? db
-        .prepare('INSERT INTO shopping_items (product_id, text, qty, note, source, added_by, origin_detail) VALUES (?, ?, ?, ?, ?, ?, ?)')
-        .run(input.productId ?? null, input.text, input.qty ?? null, input.note ?? null, input.source ?? 'manual', input.addedBy ?? null, JSON.stringify(input.origin))
-    : db
-        .prepare('INSERT INTO shopping_items (product_id, text, qty, note, source, added_by) VALUES (?, ?, ?, ?, ?, ?)')
-        .run(input.productId ?? null, input.text, input.qty ?? null, input.note ?? null, input.source ?? 'manual', input.addedBy ?? null);
+  const info = db
+    .prepare('INSERT INTO shopping_items (product_id, text, qty, note, source, added_by, origin_detail, list_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(input.productId ?? null, input.text, input.qty ?? null, input.note ?? null, input.source ?? 'manual', input.addedBy ?? null, input.origin ? JSON.stringify(input.origin) : null, listId);
   emit('shopping');
   return { id: Number(info.lastInsertRowid), created: true };
 }
@@ -360,6 +362,11 @@ export function matchProduct(name: string, opts: { code?: string | null; brand?:
     if (r) return { productId: r.product_id, score: 1, via: 'code' };
   }
   const n = norm(name);
+  // exact name first (list input fidelity, 12 Oct 2026): "Milch" is the product called "Milch", not a learned look-alike
+  const exact = db
+    .prepare(`SELECT id FROM products WHERE archived = 0 AND kind != 'leftover' AND (lower(name) = lower(?) OR lower(trim(COALESCE(brand, '') || ' ' || name)) = lower(?)) ORDER BY id LIMIT 1`)
+    .get(name.trim(), name.trim()) as { id: number } | undefined;
+  if (exact) return { productId: exact.id, score: 1, via: 'alias' };
   const alias = db
     .prepare('SELECT product_id FROM product_aliases a JOIN products p ON p.id = a.product_id WHERE alias = ? AND p.archived = 0 ORDER BY hits DESC LIMIT 1')
     .get(n) as { product_id: number } | undefined;

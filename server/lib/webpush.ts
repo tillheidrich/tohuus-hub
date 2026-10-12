@@ -100,14 +100,25 @@ export function actionsFor(event: string, data: Record<string, unknown> = {}): {
 }
 
 /** Send to every subscribed device (optionally only one member's). Dead subscriptions are removed. */
-export async function sendPush(msg: PushMessage, opts: { userId?: number; excludeUserIds?: number[] } = {}): Promise<boolean> {
+export async function sendPush(msg: PushMessage, opts: { userId?: number; userIds?: number[]; excludeUserIds?: number[] } = {}): Promise<boolean> {
   // ha2: members whose notifications go through Home Assistant instead are left out
   const skip = new Set(opts.excludeUserIds ?? []);
+  // notify-prefs.ts: exactly these members (their own choice per event)
+  if (opts.userIds) {
+    if (!opts.userIds.length) return false;
+    const only = new Set(opts.userIds);
+    const all = db.prepare('SELECT * FROM push_subscriptions WHERE user_id IS NOT NULL').all() as { id: number; user_id: number; endpoint: string; p256dh: string; auth: string; fails: number }[];
+    return deliver(msg, all.filter((s) => only.has(s.user_id) && !skip.has(s.user_id)));
+  }
   let subs = db
     // household-wide messages never reach permanent guests' devices (area: people) – only messages addressed to them
     .prepare(`SELECT * FROM push_subscriptions ${opts.userId ? 'WHERE user_id = ?' : "WHERE user_id IS NULL OR user_id NOT IN (SELECT id FROM users WHERE kind = 'guest')"}`)
     .all(...(opts.userId ? [opts.userId] : [])) as { id: number; endpoint: string; p256dh: string; auth: string; fails: number }[];
   if (skip.size) subs = subs.filter((s) => !skip.has((s as { user_id?: number | null }).user_id ?? -1));
+  return deliver(msg, subs);
+}
+
+async function deliver(msg: PushMessage, subs: { id: number; endpoint: string; p256dh: string; auth: string; fails: number }[]): Promise<boolean> {
   if (subs.length === 0) return false;
   const v = vapidKeys();
   const payload = JSON.stringify(msg);

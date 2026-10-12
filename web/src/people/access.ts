@@ -5,7 +5,7 @@ export type EffectiveLevel = 'order' | 'stock' | 'recipes' | 'family' | 'paused'
 export function guestAllows(level: EffectiveLevel | undefined, path: string) {
   if (!level) return true;
   if (level === 'paused') return false;
-  const ORDER = ['/bestellen', '/einkauf', '/einstellungen', '/hilfe'];
+  const ORDER = ['/bestellen', '/einkauf', '/einstellungen', '/hilfe', '/hausinfo', '/so-funktioniert-tohuus', '/gut-zu-wissen'];
   const STOCK = ['/', '/bestand', '/wo', '/abgleich', '/scan', '/q/'];
   const RECIPES = ['/kochen', '/rezepte', '/lieblinge'];
   const FAMILY_DENY = ['/import', '/ausgaben', '/geld', '/merkt-sich', '/pflege', '/etiketten', '/willkommen', '/urlaub'];

@@ -16,7 +16,7 @@ const sum = (r: ReturnType<typeof parse>) => Math.round((r.lines.reduce((s, l) =
 describe('generic parser: German chains, synthetic layouts', () => {
   it('every synthetic receipt adds up to its total and finds its store', () => {
     const expected: Record<string, string> = {
-      'edeka-app.txt': 'Edeka',
+      'edeka-app.txt': 'EDEKA',
       'netto-app.txt': 'Netto',
       'kaufland-card.txt': 'Kaufland',
       'lidl-plus.txt': 'Lidl',

@@ -52,7 +52,11 @@ DATA_DIR/
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |
 | `APPLE_SANDBOX_ACCOUNTS` | – | comma-separated e-mails of TestFlight testers: Sandbox purchases count only for households with one of these accounts |
 | `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`) |
+| `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_TOPIC`, `APNS_ENV` | – | iPhone push – [notifications.md](notifications.md#iphone-push-apns-serverlibapnsts) |
 | `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU) |
+| `OPERATOR_EMAILS` | – | comma-separated account e-mails that may open the operator page `/betrieb` |
+| `AI_PRICE_PER_MTOK`, `AI_PRICES`, `AI_PRICE_CURRENCY` | – | prices for the AI cost estimate on `/betrieb` (`"in,out"` per million tokens, default `0.1,0.3`; JSON per model; label, default `USD`) |
+| `OCR_DISABLED=1`, `TESSERACT_BIN` | – | switch server text recognition off / use another binary ([receipts.md](receipts.md)) |
 
 `ADMIN_NAME`/`ADMIN_PASSWORD`, `SEED_DEMO`, `MCP_PATH_SECRET`, `OIDC_*` and `DB_ENCRYPTION_KEY` are self-host only
 and ignored in the cloud.
@@ -132,7 +136,7 @@ manual household use the same endpoint with a session.
 | `ADMIN_PASSWORD`, demo seeding at start, `MCP_PATH_SECRET`, OIDC | instance-wide, no household |
 | household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead |
 
-Kept: guest links, displays, kid tablets, party board, web push, MCP with household tokens, the HACS integration,
+Kept: guest links, displays, kid tablets, party board, web push, iPhone push (APNs), the CalDAV bridge (app passwords carry the household prefix), MCP with household tokens, the HACS integration,
 exports (`GET /api/cloud/export`, household admins only, needs a confirmed e-mail).
 
 ## Plans and quotas
@@ -151,12 +155,73 @@ Notifications v2 – set this URL in App Store Connect). Both verify the JWS cha
 
 New cloud account passwords need 10 characters (signup, reset, change, invite with a new account); self-hosted members 8. `/api/instance` → `auth.passwordMin` tells the apps which applies.
 
+## E-mail language
+
+Account mails – address confirmation, sign-in link, password reset, account deleted, "new assistant connected" (OAuth) – are built and sent inside `inAccountLang(account.lang, …)` (`server/lib/account-mail.ts`, `withLang()` in `server/i18n.ts`), so subject, title, text, button, footer and the `<html lang>` all use **the account's language** (`accounts.lang`, stored at signup from `lang`; accounts created through an invitation get the household's language). Without a stored language the household's (or the instance's) language is used. Invitation mails go out in the inviting household's language (the invitee has no account yet). The footer says "ToHuus Cloud" in the cloud and "euer Haushalt, selbst gehostet" self-hosted. Test: a `lang: 'de'` signup gets no English template text (`test/cloud-isolation.test.ts`).
+
 ## App web link
 
 `POST /api/auth/app/web-link` (only with an app token, `Authorization: Bearer sw_app_…`, body `{ next?: "/path" }`) →
 `{ url, expiresIn: 60 }`. Opening `url` once (60 s, single use) signs that browser – the app's `WKWebView` – in with a
 cookie session for the same member and household and redirects to `next` (a relative path, default `/`). Works in
 both modes. The links live in process memory (sign-in material, not household data).
+
+## Subscriptions: renewal date, "Abo verwalten", reminder
+
+- `GET /api/billing/status` also returns `renewsAt` (the next charge from the App Store renewal info – `signedRenewalInfo.renewalDate` – or the end of the paid period; `null` when auto-renew is off), `expiresAt` (paid until), `autoRenew` (true/false/null), `period` (`monthly`/`yearly`), `manageUrl` and `reminder` (the caller's own choice). `source` can now also be `operator` (granted on `/betrieb`).
+- **"Abo verwalten"**: `manageUrl` is `https://apps.apple.com/account/subscriptions` (Apple's subscription management) whenever the plan comes from the App Store. The web app links to it; the iPhone app should call `AppStore.showManageSubscriptions(in:)` and fall back to that URL.
+- **Reminder**: App Store Server Notifications v2 store the renewal date and auto-renew state per household (`billing_renewals` in `accounts.db`, `server/lib/renewals.ts`). An hourly job e-mails the household's admins **3 days before a yearly renewal**, once per renewal date, in each account's language, with the "Abo verwalten" link – unless the household switched e-mail off for the event `billing.renewal` (notification settings) or the admin switched it off for themselves: `PATCH /api/billing/reminder { enabled }` (`user_prefs billing.reminder`, default on). Monthly plans get no reminder. Test: `test/cloud-billing.test.ts` with fake signed notifications.
+
+## Moving a self-hosted household in
+
+**On the own server** (*Einstellungen › Daten › Umzug in die ToHuus Cloud*, admins): `GET /api/move/file?secrets=0|1` downloads `tohuus-umzug-<date>.zip` (`server/lib/move.ts`, ZIP via `server/lib/zip.ts`):
+
+| Entry | Content |
+|---|---|
+| `manifest.json` | `{ format: 'tohuus-move', version: 1, createdAt, app, includeSecrets, counts, parts }` |
+| `export.json` | the household export of `data.ts` (`buildExport({ viewer: <admin> })`): no sessions, no tokens, no credential columns, no OAuth tables, no `*_secrets` tables, no other member's conversations, personal settings or "nur für mich" memory |
+| `images/<name>` | every stored image, decrypted |
+| `imports/<name>` | receipt files the imports point to |
+| `parts/<key>.json` | extra parts registered with `registerMovePart()`. Parts marked `sensitive` (Hausinfo codes) only when the admin ticks "Codes aus der Hausinfo mitnehmen" (`secrets=1`); `GET /api/move/info` lists the parts |
+
+**In the cloud** (*Einstellungen › Daten › Haushalt vom eigenen Server übernehmen*, shown to admins of an empty household): `POST /api/cloud/import` (multipart `file` + `password`) → `202 { state: 'running' }`; `GET /api/cloud/import` → `{ state: 'idle'|'running'|'done'|'failed', progress, empty?, summary?: { tables, rows, images, files, people: { mapped, created }, parts, skippedTables, foreignKeyIssues }, error?, code? }`.
+
+- Admins only, with a **fresh password check** (as for deleting a household). Max. `MOVE_MAX_MB` (default 300) upload, 3× that unpacked, 50 000 entries.
+- Only into a **new, empty household** (no products, recipes, imports, list rows, no second member) – `409 move.not_empty` otherwise. Photos and files must fit the plan's storage quota (`413 move.quota`).
+- The work runs after the answer, inside that household's context, into its encrypted database; images and receipt files are stored encrypted with the household key.
+- **People** are mapped by e-mail, then by name; the importing admin stands in for the first admin of the old household if nobody matched. Everyone else becomes a person without a sign-in (`password_hash '!'`) – invite them under *Mitglieder*. All `user_id`-like columns and `u<id>` person keys are rewritten.
+- Never imported: users rows as such, sessions, tokens, invites, guest links, kid tablet pairings, push subscriptions, assistant conversations, OAuth, the old server's settings (HA, Telegram, IMAP, backups, printers, sign-in policy) and the household name, language, region and AI/MCP switches (the cloud household keeps its own; the consent for health data must be given again).
+- Test: `test/move.test.ts` (a real self-hosted household in a child process → cloud import, isolation from another household).
+
+## Operator page (`/betrieb`)
+
+Cloud only. Who: accounts whose e-mail address is listed in `OPERATOR_EMAILS` (comma-separated); everyone else gets a plain 404 on every `/api/operator/*` route. Then a **fresh password check** (`POST /api/operator/unlock { password }`, valid 10 minutes for that session or app token, 5 tries per 15 minutes). Code: `server/lib/operator.ts`, `server/routes/operator.ts`, page `web/src/pages/Operator.tsx`.
+
+**What is counted – exactly this, nothing else:**
+
+| Figure | Source | Per household? | Per person? |
+|---|---|---|---|
+| Households total, active in 7 / 30 days, deleted so far | `households` (`last_active_at`, `deleted_at`) | count only | no |
+| Accounts total, new accounts and households per week (12 weeks) | `accounts.created_at`, `households.created_at` | count only | no |
+| Plans (effective: free / trial / haushalt / plus) and paid plans by source (apple / operator) | `households` | count only | no |
+| Storage total and the 10 largest households | `households.storage_bytes` | **id and bytes only** – no name | no |
+| AI requests, tokens and estimated cost per day and month | new table `ai_usage_daily (day, model, requests, prompt_tokens, completion_tokens)` in `accounts.db`, written by `aiUsageHook` in `ai.ts` | no | no |
+| Weekly question (list2 pulse): answers per week of households that switched sharing on | `pulse_agg` in `accounts.db` | no | no |
+| Error rate (requests and 5xx answers per hour, last 24 h) | in memory since the last start, status class only (no path, no person, no household) | no | no |
+| Backups: last nightly run, last restore check (+ result), S3 on/off | `backups/.last-nightly`, `backups/.last-restore-check` (written by `dist/restore-check.mjs`) | no | no |
+| Server: process memory, container memory limit, disk free, load, uptime | the OS | no | no |
+
+Cost = prompt tokens × input price + completion tokens × output price, per million tokens: `AI_PRICES` (JSON `{ "<model>": [in, out] }`) or `AI_PRICE_PER_MTOK` (`"in,out"`, default `0.1,0.3`), currency label `AI_PRICE_CURRENCY` (default `USD`). It is an estimate, not the invoice.
+
+Never shown: household names, people, lists, receipts, conversations, e-mail addresses (the audit names accounts by id).
+
+**Actions** (each one goes into `operator_audit (at, operator, action, target, detail)` in `accounts.db`, `GET /api/operator/audit`):
+
+- `POST /api/operator/households/:id/trial { days }` – extend (or restart) the trial, e.g. for TestFlight testers. Refused (409) while an App Store subscription is active.
+- `POST /api/operator/households/:id/plan { plan: 'free'|'haushalt'|'plus', until?: 'YYYY-MM-DD'|null, note? }` – grant a plan (`plan_source = 'operator'`), e.g. the App Review demo account. Refused while an App Store subscription is active.
+- `POST /api/operator/password-reset { email }` – sends the normal reset link (in the account's language).
+- `DELETE /api/operator/households/:id { confirm: <id> }` – crypto-shreds the household like a deletion by its admin.
+- `GET /api/operator/status`, `GET /api/operator/overview`.
 
 ## Known gaps (TODO)
 

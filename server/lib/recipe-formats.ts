@@ -349,8 +349,9 @@ export function fromCsv(text: string) {
 
 // ------------------------------------------------------------------ detection
 
-export type Format = 'tohuus' | 'schema' | 'mealie' | 'tandoor' | 'paprika' | 'nextcloud' | 'kitchenowl' | 'grocy' | 'themealdb' | 'html' | 'csv';
+export type Format = 'package' | 'tohuus' | 'schema' | 'mealie' | 'tandoor' | 'paprika' | 'nextcloud' | 'kitchenowl' | 'grocy' | 'themealdb' | 'html' | 'csv';
 export const FORMAT_LABELS: Record<Format, string> = {
+  package: 'ToHuus-Rezeptpaket',
   tohuus: 'ToHuus Hub',
   schema: 'schema.org JSON',
   mealie: 'Mealie',
@@ -364,7 +365,7 @@ export const FORMAT_LABELS: Record<Format, string> = {
   csv: 'CSV',
 };
 
-interface Found {
+export interface Found {
   format: Format;
   obj: any;
 }
@@ -406,9 +407,11 @@ export interface Detected {
   errors: ImportError[];
   /** items that could not be read at all */
   skipped: number;
+  /** non-fatal notes for the preview (e.g. a photo missing in a recipe package) */
+  warnings?: string[];
 }
 
-function finish(found: Found[], skipped = 0): Detected {
+export function finish(found: Found[], skipped = 0): Detected {
   const recipes: ImportRecipe[] = [];
   const errors: ImportError[] = [];
   found.forEach((f, index) => {

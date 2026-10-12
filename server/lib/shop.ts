@@ -9,7 +9,7 @@ import { addToShopping, adjustStock, getProduct, guessCategory, matchProduct } f
 import { norm, tokens } from './text.js';
 import { fitsStore, itemBuyAt } from './buyat.js';
 import { type ShareInfo, type Viewer, applyShareView, realProductId } from './share-core.js';
-import { afterUntick, bookTick, originOf, removeItem, tickItem } from './shopping-trust.js';
+import { afterUntick, announceTick, bookTick, originOf, removeItem, tickItem } from './shopping-trust.js';
 import {
   CATEGORY_SECTION,
   type AisleModel,
@@ -25,6 +25,9 @@ import {
   tripSequence,
 } from './shopparse.js';
 import { ScopedMap } from './tenancy.js';
+import { decorateItems } from './list2.js';
+import './list-schema.js';
+import { estimate, listLists } from './lists.js';
 
 export * from './shopparse.js';
 
@@ -63,6 +66,14 @@ migrate(
     ha_status TEXT NOT NULL DEFAULT 'needs_action'
   );
   CREATE TABLE shop_ops (op_id TEXT PRIMARY KEY, result TEXT, at TEXT NOT NULL DEFAULT (datetime('now')));`,
+);
+
+// list2: a store's place, typed in by a person – only for the optional iPhone arrival hint (docs/shopping-list.md)
+migrate(
+  'list2-3-stores',
+  `ALTER TABLE shop_stores ADD COLUMN lat REAL;
+   ALTER TABLE shop_stores ADD COLUMN lon REAL;
+   ALTER TABLE shop_stores ADD COLUMN radius_m INTEGER;`,
 );
 
 // ------------------------------------------------------------------ sections
@@ -124,6 +135,10 @@ export interface Store {
   name: string;
   order: string[];
   trips: number;
+  /** list2: optional, entered by a person (iPhone store-arrival hint); never looked up */
+  lat?: number | null;
+  lon?: number | null;
+  radius_m?: number | null;
 }
 
 function readModel(raw: string): AisleModel {
@@ -139,10 +154,10 @@ function readModel(raw: string): AisleModel {
 }
 
 export function listStores(): Store[] {
-  const rows = db.prepare('SELECT id, name, model FROM shop_stores ORDER BY sort, id').all() as { id: number; name: string; model: string }[];
+  const rows = db.prepare('SELECT * FROM shop_stores ORDER BY sort, id').all() as { id: number; name: string; model: string; lat?: number | null; lon?: number | null; radius_m?: number | null }[];
   return rows.map((r) => {
     const m = readModel(r.model);
-    return { id: r.id, name: r.name, order: m.order, trips: m.trips };
+    return { id: r.id, name: r.name, order: m.order, trips: m.trips, lat: r.lat ?? null, lon: r.lon ?? null, radius_m: r.radius_m ?? null };
   });
 }
 
@@ -172,6 +187,17 @@ export function createStore(name: string): Store {
 
 export function renameStore(id: number, name: string) {
   db.prepare('UPDATE shop_stores SET name = ? WHERE id = ?').run(name.trim().slice(0, 60), id);
+  emit('shopping');
+}
+
+/** Coordinates of a store, typed in by a person (never looked up). `null` clears them. */
+export function setStorePlace(id: number, p: { lat?: number | null; lon?: number | null; radius_m?: number | null }) {
+  const cur = db.prepare('SELECT lat, lon, radius_m FROM shop_stores WHERE id = ?').get(id) as { lat: number | null; lon: number | null; radius_m: number | null } | undefined;
+  if (!cur) throw Object.assign(new Error('not found'), { status: 404 });
+  const lat = p.lat === undefined ? cur.lat : p.lat;
+  const lon = p.lon === undefined ? cur.lon : p.lon;
+  if ((lat == null) !== (lon == null)) throw Object.assign(new Error('lat and lon belong together'), { status: 400 });
+  db.prepare('UPDATE shop_stores SET lat = ?, lon = ?, radius_m = ? WHERE id = ?').run(lat, lon, p.radius_m === undefined ? cur.radius_m : p.radius_m, id);
   emit('shopping');
 }
 
@@ -240,6 +266,10 @@ export interface ShopItem {
   buy_at: string[];
   /** where the row comes from: "Mira · today 14:05", "remembers: every ~9 days", "from recipe X" (shopping-trust.ts) */
   origin: string;
+  /** list2: which list (null = main) */
+  list_id?: number | null;
+  /** list2: manual order inside the aisle (drag & drop) */
+  sort_key?: number | null;
 }
 
 export function claimsOf(kind: 'shopping' | 'plan') {
@@ -264,7 +294,7 @@ export function shoppingItems(viewer?: Viewer): ShopItem[] {
     )
     .all() as (Omit<ShopItem, 'section' | 'claim' | 'buy_at' | 'origin'> & { buy_at: string | null; product_buy_at: string | null; origin_detail: string | null })[];
   const claims = claimsOf('shopping');
-  return applyShareView(rows, viewer, claims).map(({ product_buy_at, ...r }) => ({
+  return decorateItems(applyShareView(rows, viewer, claims)).map(({ product_buy_at, ...r }) => ({
     ...r,
     buy_at: itemBuyAt({ buy_at: r.buy_at, product_buy_at }),
     origin: originOf(r),
@@ -273,25 +303,85 @@ export function shoppingItems(viewer?: Viewer): ShopItem[] {
   }));
 }
 
+/** Order inside a section: a dragged row's sort_key, else newest first (the old order). */
+export const rowKey = (i: { sort_key?: number | null; created_at: string }) =>
+  i.sort_key ?? -Date.parse(i.created_at.replace(' ', 'T') + (i.created_at.includes('Z') ? '' : 'Z')) / 1000;
+
+/**
+ * Drag & drop (list2 H): put a row before / after another one, into another aisle (remembered for next time, like
+ * the aisle chips) or onto another list.
+ */
+export function placeItem(itemId: number, p: { neighborId?: number | null; after?: boolean; section?: Section | null; listId?: number | null }) {
+  const it = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(itemId) as any;
+  if (!it) throw Object.assign(new Error('not found'), { status: 404 });
+  if (p.listId != null && (it.list_id ?? 0) !== p.listId) {
+    if (p.listId !== 0 && !db.prepare('SELECT 1 FROM shopping_lists WHERE id = ? AND archived = 0').get(p.listId)) throw Object.assign(new Error('list not found'), { status: 404 });
+    db.prepare('UPDATE shopping_items SET list_id = ? WHERE id = ?').run(p.listId || null, itemId);
+  }
+  if (p.section && isSection(p.section) && sectionOf(it) !== p.section) setItemSection(itemId, p.section);
+  if (p.neighborId) {
+    const me = shoppingItems().find((x) => x.id === itemId);
+    const peers = shoppingItems()
+      .filter((x) => !x.checked_at && x.id !== itemId && (x.list_id ?? 0) === (me?.list_id ?? 0) && x.section === me?.section)
+      .sort((a, b) => rowKey(a) - rowKey(b));
+    const at = peers.findIndex((x) => x.id === p.neighborId);
+    if (at >= 0) {
+      const k = rowKey(peers[at]);
+      const other = p.after ? peers[at + 1] : peers[at - 1];
+      const key = other ? (k + rowKey(other)) / 2 : p.after ? k + 1 : k - 1;
+      db.prepare(`UPDATE shopping_items SET sort_key = ?, updated_at = datetime('now') WHERE id = ?`).run(key, itemId);
+    }
+  }
+  emit('shopping');
+  return { ok: true };
+}
+
 /** Everything the store view needs: open items grouped in the store's walking order, the basket, recently done. */
-export function storeView(storeId?: number | null, viewer?: Viewer) {
+export function storeView(storeId?: number | null, viewer?: Viewer, opts: { listId?: number | 'all' } = {}) {
   const stores = listStores();
   const store = (storeId ? stores.find((s) => s.id === storeId) : null) ?? null;
   const order = store?.order ?? [...SECTIONS];
-  const items = shoppingItems(viewer);
+  // list2: one list at a time (0 = the main list); 'all' for everything
+  const listId = opts.listId ?? 0;
+  const all = shoppingItems(viewer);
+  // the main list also carries the lists for a household somebody looks after ("für Oma"), as their own section
+  const care = listId === 0 ? new Map(listLists().filter((l) => l.kind === 'care').map((l) => [l.id, l])) : new Map();
+  const items = (listId === 'all' ? all : all.filter((i) => (i.list_id ?? 0) === listId || care.has(i.list_id ?? -1))).map((i) =>
+    i.list_id && care.has(i.list_id) ? { ...i, section: `list:${i.list_id}` as Section } : i,
+  );
   const open = items.filter((i) => !i.checked_at);
   const basket = items.filter((i) => i.checked_at && i.in_basket);
   const done = items.filter((i) => i.checked_at && !i.in_basket);
   // in a store: things somebody marked for another store ("dm", "weekly market") wait at the end, not in the aisles
   const here = store ? open.filter((i) => fitsStore(i.buy_at, store.name)) : open;
   const elsewhere = store ? open.filter((i) => !fitsStore(i.buy_at, store.name)) : [];
+  // list2: rows somebody dragged keep their place (sort_key); the rest stays newest first
   const sections: { key: string; items: ShopItem[] }[] = sortBySections(
-    [...new Set(here.map((i) => i.section))].map((key) => ({ key, items: here.filter((i) => i.section === key) })),
+    [...new Set(here.map((i) => i.section))].map((key) => ({ key, items: here.filter((i) => i.section === key).sort((a, b) => rowKey(a) - rowKey(b)) })),
     order,
     (g) => g.key,
   );
+  // care lists after the aisles: own section per household, never mixed into the aisles
+  const careKeys = sections.filter((x) => x.key.startsWith('list:'));
+  const aisles = sections.filter((x) => !x.key.startsWith('list:'));
+  sections.length = 0;
+  sections.push(...aisles);
   if (elsewhere.length) sections.push({ key: ELSEWHERE, items: elsewhere });
-  return { store, stores, order, sections, basket, done, open: open.length };
+  sections.push(...careKeys);
+  return {
+    store,
+    stores,
+    order,
+    sections,
+    basket,
+    done,
+    open: open.length,
+    listId,
+    lists: listLists(),
+    // expected total from the latest receipt prices; rows without a price are counted, never guessed (lists.ts)
+    estimate: estimate(store ? here : open),
+    serverTime: new Date().toISOString(),
+  };
 }
 
 // ------------------------------------------------------------------ basket / checkout
@@ -304,6 +394,7 @@ export function setBasket(itemId: number, on: boolean, actor: string, storeId?: 
     if (it.checked_at && it.in_basket) return { ok: true };
     db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ?, in_basket = 1 WHERE id = ?`).run(actor, itemId);
     if (storeId) recordTick(storeId, sectionOf(it));
+    if (!it.checked_at) announceTick({ itemId, actor, storeId: storeId ?? null });
   } else {
     db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(itemId);
     afterUntick(itemId, actor);
@@ -322,8 +413,13 @@ export function bookPurchase(productId: number, qty: number | null, actor: strin
 }
 
 /** "Done shopping": everything in the basket leaves the basket; products go into stock if wanted. Learns the aisle order. */
-export function checkout(input: { storeId?: number | null; toStock: boolean; actor: string }) {
-  const items = db.prepare('SELECT * FROM shopping_items WHERE in_basket = 1 AND checked_at IS NOT NULL').all() as any[];
+export function checkout(input: { storeId?: number | null; toStock: boolean; actor: string; onlyOwn?: boolean }) {
+  // list2: two people shopping at once – each checks out their own basket
+  const items = (
+    input.onlyOwn
+      ? db.prepare('SELECT * FROM shopping_items WHERE in_basket = 1 AND checked_at IS NOT NULL AND checked_by = ?').all(input.actor)
+      : db.prepare('SELECT * FROM shopping_items WHERE in_basket = 1 AND checked_at IS NOT NULL').all()
+  ) as any[];
   let booked = 0;
   db.transaction(() => {
     for (const it of items) {
@@ -424,7 +520,7 @@ export interface QuickAddLine {
   product_id?: number | null;
 }
 
-export function addLines(lines: QuickAddLine[], actor: string, source = 'manual') {
+export function addLines(lines: QuickAddLine[], actor: string, source = 'manual', listId: number | null = null) {
   const out: { id: number; text: string; created: boolean }[] = [];
   for (const l of lines) {
     const name = l.name.trim();
@@ -433,8 +529,9 @@ export function addLines(lines: QuickAddLine[], actor: string, source = 'manual'
     if (productId && !getProduct(productId)) productId = null;
     const p = productId ? getProduct(productId) : null;
     const note = l.amount ?? (l.unit && l.qty ? l.unit : null);
-    const text = p ? p.name : name;
-    const r = addToShopping({ productId, text, qty: l.qty ?? null, note, source, addedBy: actor });
+    // what somebody typed stays the row's name; the product is only linked in the background (list2.ts)
+    const text = name || p?.name || '';
+    const r = addToShopping({ productId, text, qty: l.qty ?? null, note, source, addedBy: actor, listId });
     if (!r.created && l.qty) {
       // already on the list: raise the quantity instead of a duplicate
       db.prepare('UPDATE shopping_items SET qty = MAX(COALESCE(qty, 1), ?) WHERE id = ?').run(l.qty, r.id);
@@ -446,21 +543,22 @@ export function addLines(lines: QuickAddLine[], actor: string, source = 'manual'
 }
 
 /** Parse, match confidently and add in one step (MCP, HA, voice). */
-export function quickAdd(text: string, actor: string, source = 'manual') {
+export function quickAdd(text: string, actor: string, source = 'manual', listId: number | null = null) {
   const preview = previewQuickAdd(text);
   return addLines(
     preview.map((p) => ({ name: p.name, qty: p.qty, unit: p.unit, amount: p.amount, product_id: p.confident ? p.product!.id : null })),
     actor,
     source,
+    listId,
   );
 }
 
 // ------------------------------------------------------------------ offline replay
 
 export type OfflineOp =
-  | { op_id: string; type: 'add'; text: string; product_id?: number | null; qty?: number | null }
+  | { op_id: string; type: 'add'; text: string; product_id?: number | null; qty?: number | null; list_id?: number | null }
   | { op_id: string; type: 'basket'; id: number; on: boolean; store_id?: number | null }
-  | { op_id: string; type: 'check'; id: number; on: boolean; to_stock?: boolean }
+  | { op_id: string; type: 'check'; id: number; on: boolean; to_stock?: boolean; store_id?: number | null }
   | { op_id: string; type: 'delete'; id: number }
   | { op_id: string; type: 'claim'; id: number; on: boolean };
 
@@ -475,12 +573,12 @@ export function replayOps(ops: OfflineOp[], actor: { name: string; userId?: numb
     try {
       const exists = (id: number) => Boolean(db.prepare('SELECT 1 FROM shopping_items WHERE id = ?').get(id));
       if (op.type === 'add') {
-        if (op.product_id) addLines([{ name: op.text, qty: op.qty ?? null, product_id: op.product_id }], actor.name);
-        else quickAdd(op.text, actor.name);
+        if (op.product_id) addLines([{ name: op.text, qty: op.qty ?? null, product_id: op.product_id }], actor.name, 'manual', op.list_id ?? null);
+        else quickAdd(op.text, actor.name, 'manual', op.list_id ?? null);
       } else if (op.type === 'basket') {
         if (exists(op.id)) setBasket(op.id, op.on, actor.name, op.store_id ?? null);
       } else if (op.type === 'check') {
-        if (exists(op.id)) tickItem(op.id, op.on, actor.name, { toStock: op.to_stock });
+        if (exists(op.id)) tickItem(op.id, op.on, actor.name, { toStock: op.to_stock, storeId: op.store_id ?? null });
       } else if (op.type === 'delete') {
         removeItem(op.id);
       } else if (op.type === 'claim') {

@@ -51,6 +51,22 @@ The rules live in [`server/lib/people-policy.ts`](../server/lib/people-policy.ts
 
 Children never get a login. A child is a kid profile (an animal and a colour, optional birth year). Kid tablets are paired by an admin and are bound to that device. On the tablet a child picks from pictures; each wish waits for a parent (push with approve and decline buttons, or *Today*). Rules per child: which items, daily limits, quiet hours. Children can vote in a family food vote on a shared phone ("together" mode), and parents rate dishes for them.
 
+## Privacy inside a household
+
+Some things belong to one person, not to the household. Nobody else sees them – **admins included** – and they never end up in someone else's export.
+
+| Personal | Where | Enforced in |
+|---|---|---|
+| Sessions (signed-in browsers) | `GET/DELETE /api/auth/sessions` – own only | `server/lib/auth-sessions.ts` |
+| App devices (iPhone app tokens) | `GET/DELETE /api/auth/app/devices` – own only; `GET /api/tokens` (admins) lists machine accesses only (`mcp`, `ha`, `full`), never members' app tokens, and `DELETE /api/tokens/:id` cannot remove them | `server/routes/cloud.ts`, `server/routes/core.ts` |
+| Push devices | `GET/DELETE /api/push/devices` – own only, also for admins | `server/routes/shop.ts` |
+| Assistant conversations (and their undo log) | `GET/DELETE /api/assistant/conversations…` – own only | `server/lib/assistant.ts` |
+| Personal AI setting (`ai.mine`) | `GET/PATCH /api/ai/settings` returns `mine` for the caller only | `server/routes/ai-settings.ts` |
+| MCP connections (OAuth) | `GET/DELETE /api/oauth/connections` – own only | `server/routes/oauth.ts` |
+| "Nur für mich" in *Was ToHuus sich merkt* | `POST /api/memory { text, onlyMe: true }` stores `ai_memory.private_to = <users.id>`; `GET /api/memory` returns other members' private rows to nobody (rows carry `onlyMe`); `DELETE` of someone else's private row answers 404; the person's own assistant and MCP connection (OAuth, as that person) see them, tokens without a person do not | `server/lib/memory.ts` |
+
+**The admin export** (`GET /api/export.json`, cloud `GET /api/cloud/export`) contains every household table without credentials, and leaves out: other members' assistant conversations, messages and undo entries, other members' `user_prefs` (personal settings), memory rows marked "nur für mich" by someone else, and the OAuth tables. Code: `personalFilter()` in `server/lib/data.ts`. Test: `test/privacy.test.ts`.
+
 ## Guest links
 
 A guest link is a random token (stored as a hash) with a name, an optional expiry and one or more scopes:

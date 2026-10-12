@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { cleanupGrants } from './oauth.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { fmtQty, listProducts } from './catalog.js';
 import { enqueueMissingImages } from './enrich.js';
@@ -80,14 +81,30 @@ export async function sendDigest(force = false) {
   });
 }
 
+/** Extra jobs per household round, registered by area modules (list2: personal digests, rhythm due, week plan). */
+export const householdJobs: { name: string; run: () => Promise<unknown> | unknown }[] = [];
+
 /** One scheduler round for the current household (expiry, care, budgets, rotation, daily digest). */
 export async function householdTick() {
+  for (const j of householdJobs) {
+    try {
+      await j.run();
+    } catch (e) {
+      console.warn(`[${j.name}]`, (e as Error).message);
+    }
+  }
   try {
     await checkExpiry();
     await checkCareDue().catch((e) => console.warn('[care]', (e as Error).message));
     await checkBudgets().catch((e) => console.warn('[budgets]', (e as Error).message));
     await rotationTick().catch((e) => console.warn('[rotation]', (e as Error).message));
     await sendDigest();
+    // OAuth for MCP: unused codes and long-dead connections go (oauth.ts)
+    try {
+      cleanupGrants();
+    } catch (e) {
+      console.warn('[oauth]', (e as Error).message);
+    }
   } catch (e) {
     console.warn('[scheduler]', (e as Error).message);
   }

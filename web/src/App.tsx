@@ -8,7 +8,7 @@ import { applyBrand } from './brand';
 import { useInstance, useToday } from './data';
 import { setLang, t } from './i18n';
 import { kidLock } from './kidlock';
-import { load, moreGroups, TABS, tabFor } from './nav';
+import { load, moduleAllows, moreGroups, TABS, tabFor } from './nav';
 import { useOnboardingRedirect } from './onboarding-state';
 import { guestAllows } from './people/access';
 import { enablePeopleDirectory } from './people/Avatar';
@@ -16,6 +16,9 @@ import { Today } from './pages/Today';
 import { setRegion } from './region';
 import { type Appearance, applyAppearance } from './theme';
 import { Avatar, Sheet, Skeleton } from './ui';
+import { type ListPrefs, applyListPrefs, readLocalPrefs } from './shop/prefs';
+import { RouteHelp } from './help';
+import { AreaAssist } from './assistant/AreaAssist';
 
 export interface Me {
   actor: {
@@ -33,6 +36,8 @@ export interface Me {
   appearance?: Appearance;
   /** household form and home preset (area: home) */
   home?: import('./household').HomeSetup;
+  /** "Was nutzt ihr?" – areas the household switched off (list2) */
+  modules?: Record<string, boolean>;
 }
 
 // ------------------------------------------------------------------ route chunks (plan 2026-10-12: shell + Heute load first, every other page on demand)
@@ -56,6 +61,9 @@ const Recognition = page(() => import('./pages/Recognition'), 'Recognition');
 const ImportReview = page(() => import('./pages/ImportReview'), 'ImportReview');
 const Scan = page(() => import('./pages/Scan'), 'Scan');
 const Find = page(() => import('./pages/Find'), 'Find');
+const HouseGuidePage = page(() => import('./pages/HouseGuide'), 'HouseGuidePage');
+const ExplainPage = page(() => import('./pages/Explain'), 'ExplainPage');
+const FactsPage = page(() => import('./pages/Explain'), 'FactsPage');
 const Bar = page(() => import('./pages/Bar'), 'Bar');
 const Order = page(() => import('./pages/Order'), 'Order');
 const MenuEditor = page(() => import('./pages/Menu'), 'MenuEditor');
@@ -83,6 +91,8 @@ const AuthLanding = page(() => import('./pages/AuthLanding'), 'AuthLanding');
 const Login = page(() => import('./pages/Login'), 'Login');
 const Signup = page(() => import('./pages/Signup'), 'Signup');
 const MemoryPage = page(() => import('./pages/Memory'), 'MemoryPage');
+const Operator = page(() => import('./pages/Operator'), 'Operator');
+const OfflineStore = page(load.shopping, 'OfflineStore');
 
 const Blank = () => <div style={{ minHeight: '100dvh' }} />;
 const PageLoading = () => (
@@ -111,8 +121,16 @@ function Authed() {
   const loc = useLocation();
   const me = useApi<Me>('me', '/me');
   const inst = useInstance();
+  const [signIn, setSignIn] = useState(false);
   if (me.isLoading) return <Blank />;
   const out = (me.error && (me.error as ApiError).status === 401) || !me.data;
+  // list2: the session ran out while somebody is in the store – the last list keeps working, sign-in comes at sync
+  if (out && !signIn && loc.pathname.startsWith('/einkauf') && storeListCached())
+    return (
+      <Suspense fallback={<Blank />}>
+        <OfflineStore onSignIn={() => setSignIn(true)} />
+      </Suspense>
+    );
   if (out) {
     // ToHuus Cloud: open sign-up (GET /api/instance → mode 'cloud', signup true)
     const canSignup = inst.data?.mode === 'cloud' && inst.data.signup;
@@ -128,9 +146,24 @@ function Authed() {
       </Suspense>
     );
   }
+  // back to an assistant's connection request (/oauth/authorize) after signing in
+  const next = new URLSearchParams(location.search).get('next');
+  if (next && next.startsWith('/oauth/authorize?')) {
+    window.location.replace(next);
+    return <Blank />;
+  }
   setLang(me.data!.language);
   setRegion((me.data as { region?: Parameters<typeof setRegion>[0] }).region);
   return <Shell key={me.data!.language} me={me.data!} />;
+}
+
+/** A list from the store view is kept on this device (shop/trust.tsx) – without importing the shop chunk. */
+function storeListCached() {
+  try {
+    return localStorage.getItem('sw.shop.mode') === 'store' && Boolean(localStorage.getItem('sw.shop.cache'));
+  } catch {
+    return false;
+  }
 }
 
 /** Deferred mounting for things that are never needed for the first paint (tour, "What's new"). */
@@ -158,6 +191,8 @@ function Shell({ me }: { me: Me }) {
   applyBrand();
   // light / dark for this member (household default or own choice) – after the brand so the status bar colour matches
   useEffect(() => applyAppearance(me.appearance), [me.appearance?.theme, me.brand]);
+  // list2: the member's own text size and list density, on every device
+  useEffect(() => applyListPrefs((me as Me & { listPrefs?: ListPrefs }).listPrefs ?? readLocalPrefs()), [me]);
   useEffect(() => window.scrollTo(0, 0), [loc.pathname]);
   // "+" from anywhere (Heute header, Vorrat, assistant): window event, so pages don't need a prop
   useEffect(() => {
@@ -170,8 +205,10 @@ function Shell({ me }: { me: Me }) {
 
   const openCount = today.data?.list.open ?? 0;
   const attention = today.data?.counts?.attention ?? 0;
-  const tabs = TABS.filter((l) => guestAllows(gl, l.to));
-  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud' });
+  // "Was nutzt ihr?" (list2): switched-off areas leave the tab bar and "Mehr" (their pages stay reachable by link)
+  const mods = me.modules;
+  const tabs = TABS.filter((l) => guestAllows(gl, l.to) && moduleAllows(mods, l.to));
+  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods });
   const activeTab = tabFor(loc.pathname);
   const badge = (to: string) => (to === '/einkauf' && openCount ? openCount : to === '/bestand' && attention ? attention : 0);
 
@@ -269,6 +306,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/geld" element={<Money />} />
               <Route path="/mehr" element={<More me={me} />} />
               <Route path="/merkt-sich" element={<MemoryPage />} />
+              <Route path="/betrieb" element={<Operator />} />
               <Route path="/import" element={<Imports me={me} />} />
               <Route path="/import/quality" element={<Recognition />} />
               <Route path="/import/:id" element={<ImportReview />} />
@@ -285,11 +323,16 @@ function Shell({ me }: { me: Me }) {
               <Route path="/q/:code" element={<QuickAction />} />
               <Route path="/willkommen" element={<Onboarding me={me} />} />
               <Route path="/hilfe" element={<Help />} />
+              <Route path="/hausinfo" element={<HouseGuidePage me={me} />} />
+              <Route path="/so-funktioniert-tohuus" element={<ExplainPage me={me} />} />
+              <Route path="/gut-zu-wissen" element={<FactsPage />} />
               <Route path="/lieblinge" element={<FavouritesPage />} />
               <Route path="/teilen" element={<ShareLanding me={me} />} />
               <Route path="*" element={<Today me={me} />} />
             </Routes>
           </Suspense>
+          <AreaAssist path={loc.pathname} />
+          <RouteHelp path={loc.pathname} />
         </div>
       </main>
 

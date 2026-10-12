@@ -65,7 +65,10 @@ const STORES: StoreDef[] = [
   { key: 'aldi-sued', name: 'Aldi Süd', header: /\baldi\s*s(?:ü|ue|u)d\b|\baldi\s+se\b/i, anywhere: /aldi-sued\.de/i },
   { key: 'aldi-nord', name: 'Aldi Nord', header: /\baldi\b/i, anywhere: /aldi-nord\.de/i },
   { key: 'netto', name: 'Netto', header: /\bnetto\b(?=.*marken|\s*$|\s+(?:filiale|city|stavenhagen))/im, anywhere: /netto-online\.de|netto marken-discount/i },
-  { key: 'edeka', name: 'Edeka', header: /\be\s?d\s?e\s?k\s?a\b|\bmarktkauf\b/i, anywhere: /edeka\.de/i },
+  // Edeka stores are run by independent merchants: the header names the merchant ("Bade", "Muster e.K."), the
+  // chain shows up on the card slip ("Edeka Markt"), as edeka.de, or in the till footer of the Edeka till system
+  // ("Datum Uhrzeit Filiale Pos Bed Bon")
+  { key: 'edeka', name: 'EDEKA', header: /\be\s?d\s?e\s?k\s?a\b|\bmarktkauf\b/i, anywhere: /edeka\.de|\bedeka\b|^\s*datum\s+uhrzeit\s+filiale\s+pos\s+bed\s+bon\s*$/im },
   { key: 'kaufland', name: 'Kaufland', header: /\bkaufland\b/i, anywhere: /kaufland\.de|kaufland card/i },
   { key: 'penny', name: 'Penny', header: /\bp\s?e\s?n\s?n\s?y\b/i, anywhere: /penny\.de/i },
   { key: 'norma', name: 'Norma', header: /\bnorma\b/i },
@@ -112,7 +115,8 @@ const P = '-?\\d{1,4},\\d\\d';
 const money = (s: string) => Math.round(parseGermanNumber(s) * 100) / 100;
 const near = (a: number, b: number, tol = 0.011) => Math.abs(a - b) <= tol;
 
-const TAX = '(?:\\s+(\\*?[A-D]\\*?|[1-4]))?';
+// tax code after the price, also glued to it after the "not discountable" star: "0,25*B"
+const TAX = '(?:(?:\\s+|\\s*\\*)(\\*?[A-D]\\*?|[1-4]))?';
 const itemRe = (sep: string) =>
   new RegExp(
     `^\\s*(\\S.*?)${sep}(?:(\\d{1,3})\\s*(?:Stk\\.?|St\\.?)?\\s*[x×*]\\s*(${P})\\s+|(${P})\\s*[x×*]\\s*(\\d{1,3})\\s+)?(${P})(?:\\s*(?:EUR|€))?${TAX}\\s*\\*?\\s*$`,
@@ -376,8 +380,16 @@ export function parseGenericReceipt(text: string, opts: GenericOptions = {}): Pa
 
   if (store?.drugstore) for (const l of lines) if (l.status !== 'deposit') l.categoryHint = hintFor(l.name, l.vatRate);
 
-  const date = parseDate(clean);
-  const bon = clean.match(/(?:Bon[- ]?Nr\.?|Beleg[- ]?Nr\.?|Bonnr\.?|Belegnummer|Trans(?:aktions)?[- ]?Nr\.?|Vorgang)\s*:?\s*(\d{2,})/i)?.[1] ?? null;
+  // the deposit printed right below a drink belongs to it ("Pfand 0,25" under "Spezi 0,33l")
+  lines.forEach((l, i) => {
+    const prev = lines[i - 1];
+    if (l.status === 'deposit' && (l.price ?? 0) > 0 && prev && prev.status === 'ok') l.depositFor = prev.name;
+  });
+
+  // the till footer "Datum Uhrzeit Filiale Pos Bed Bon" + the values below it (Edeka) beats any other date
+  const footer = clean.match(/^\s*datum\s+uhrzeit\s+filiale\s+pos\s+bed\s+bon\s*\n\s*(\d{1,2}\.\d{1,2}\.\d{2,4})\s+(\d{1,2}:\d{2})((?:\s+\d+){1,4})\s*$/im);
+  const date = (footer ? parseDate(`${footer[1]} ${footer[2]}`) : null) ?? parseDate(clean);
+  const bon = footer?.[3].trim().split(/\s+/).pop() ?? clean.match(/(?:Bon[- ]?Nr\.?|Beleg[- ]?Nr\.?|Bonnr\.?|Belegnummer|Trans(?:aktions)?[- ]?Nr\.?|Vorgang)\s*:?\s*(\d{2,})/i)?.[1] ?? null;
   const dm = date ? `${date.iso.slice(8, 10)}.${date.iso.slice(5, 7)}.${date.iso.slice(0, 4)}` : null;
   const label = store?.name ?? opts.fallbackTitle ?? 'Receipt';
   return {

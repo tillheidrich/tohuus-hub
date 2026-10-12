@@ -53,7 +53,7 @@ export interface Instance {
   version?: string;
   signup: boolean;
   auth?: { password?: boolean; magicLink?: boolean; passkey?: boolean; oidc?: boolean; /** minimum length of a new password (cloud 10, self-host 8) */ passwordMin?: number };
-  features: { assistant?: boolean; voice?: boolean; receiptsAi?: boolean; billingApple?: boolean };
+  features: { assistant?: boolean; voice?: boolean; receiptsAi?: boolean; billingApple?: boolean; ocr?: boolean; ai?: { configured: boolean; household: boolean; mcp: boolean } };
   legal?: { privacy?: string; terms?: string; imprint?: string };
   /** false when the server has no /api/instance yet (before the cloud merge) */
   known: boolean;
@@ -76,7 +76,14 @@ export interface Billing {
   plan: 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
   trialEndsAt?: string | null;
   renewsAt?: string | null;
-  source?: 'apple' | 'none';
+  expiresAt?: string | null;
+  autoRenew?: boolean | null;
+  period?: 'monthly' | 'yearly' | null;
+  /** Apple's subscription management (https://apps.apple.com/account/subscriptions) when the plan comes from the App Store */
+  manageUrl?: string | null;
+  /** personal: e-mail 3 days before a yearly renewal */
+  reminder?: boolean;
+  source?: 'apple' | 'operator' | 'none';
   limits?: { historyDays?: number | null; assistantPerMonth?: number | null; assistantThrottleOnly?: boolean; uploadsPerDay?: number | null; receiptAiPerDay?: number | null; storageBytes?: number | null; [k: string]: unknown };
   usage?: { assistantThisMonth?: number; uploadsToday?: number; receiptAiToday?: number; storageBytes?: number; [k: string]: unknown };
 }

@@ -10,6 +10,7 @@ import { api, ApiError, invalidate, post } from '../api';
 import { assistantLeft, markMissing, missing, useBilling } from '../data';
 import { t } from '../i18n';
 import { Sheet } from '../ui';
+import { screenContext } from './areas';
 
 interface Action {
   kind: string;
@@ -136,7 +137,8 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
     const pid = push({ role: 'assistant', text: '', pending: true });
     setBusy(true);
     try {
-      handle(await post<ChatAnswer>('/assistant/chat', { message, conversationId: memory.conversationId }), pid);
+      // the screen the person is on brings its context and tools (server/lib/assistant-areas.ts)
+      handle(await post<ChatAnswer>('/assistant/chat', { message, conversationId: memory.conversationId, context: screenContext(window.location.pathname) }), pid);
     } catch (e) {
       fail(e, pid);
     } finally {
@@ -176,6 +178,8 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
     const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm';
     form.append('audio', blob, `voice.${ext}`);
     if (memory.conversationId) form.append('conversationId', memory.conversationId);
+    const sc = screenContext(window.location.pathname);
+    if (sc) form.append('context', sc);
     try {
       handle(await api<ChatAnswer>('/assistant/voice', { method: 'POST', form }), pid, uid);
       update(uid, { pending: false });

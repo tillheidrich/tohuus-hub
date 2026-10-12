@@ -38,7 +38,7 @@ export const TABS: Tab[] = [
     icon: Basket,
     prefetch: () => {
       load.shopping();
-      warm(['shopping', 'store', 0, 'list'], '/shop/list');
+      warm(['shopping', 'store', 0, 'list', 0, 0], '/shop/list');
     },
   },
   {
@@ -70,13 +70,14 @@ export interface MoreGroup {
 }
 
 /** Everything that is not one of the five tabs, grouped. Labels are translated at call time. */
-export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolean }): MoreGroup[] {
+export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolean; modules?: Record<string, boolean> }): MoreGroup[] {
   const groups: MoreGroup[] = [
     {
       key: 'home',
       title: t('Around the home'),
       items: [
         { to: '/wo', label: t('Where’s what?'), icon: 'MapPin' },
+        { to: '/hausinfo', label: t('House info'), icon: 'Info' },
         { to: '/abgleich', label: t('Quick stock check'), icon: 'ClipboardText' },
         { to: '/pflege', label: t('Home & care'), icon: 'Wrench' },
         { to: '/urlaub', label: t('Trip / away'), icon: 'Suitcase' },
@@ -111,14 +112,33 @@ export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolea
         { to: '/etiketten', label: t('QR labels'), icon: 'QrCode' },
         { to: '/einstellungen?tab=data', label: t('Data & backups'), icon: 'Database' },
         { to: '/einstellungen', label: t('Settings'), icon: 'Gear' },
+        { to: '/so-funktioniert-tohuus', label: t('How ToHuus works'), icon: 'BookOpen' },
+        { to: '/gut-zu-wissen', label: t('Good to know'), icon: 'Lightbulb' },
         { to: '/hilfe', label: t('Help'), icon: 'Question' },
       ],
     },
   ];
   return groups
-    .map((g) => ({ ...g, items: g.items.filter((l) => (!l.cloud || opts.cloud) && guestAllows(opts.guest as never, l.to.split('?')[0])) }))
+    .map((g) => ({ ...g, items: g.items.filter((l) => (!l.cloud || opts.cloud) && guestAllows(opts.guest as never, l.to.split('?')[0]) && moduleAllows(opts.modules, l.to)) }))
     .filter((g) => g.items.length);
 }
+
+/** "Was nutzt ihr?" (list2): which switchable area a path belongs to (null = always there). */
+export function moduleOfPath(path: string): string | null {
+  const p = path.split('?')[0];
+  if (p.startsWith('/bestand') || p.startsWith('/abgleich') || p === '/wo' || p.startsWith('/scan')) return 'stock';
+  if (p.startsWith('/kochen') || p.startsWith('/rezepte')) return 'cook';
+  if (p.startsWith('/geld') || p.startsWith('/ausgaben')) return 'money';
+  if (p.startsWith('/bestellen')) return 'treats';
+  if (p.startsWith('/bar')) return 'guests';
+  if (p.startsWith('/pflege')) return 'homeinfo';
+  if (path.includes('tab=ha')) return 'ha';
+  return null;
+}
+export const moduleAllows = (mods: Record<string, boolean> | undefined, path: string) => {
+  const m = moduleOfPath(path);
+  return !m || !mods || mods[m] !== false;
+};
 
 /** Paths that belong to a tab (for the active state on sub pages such as /rezepte/12 or /bestand/4). */
 export function tabFor(path: string): string {

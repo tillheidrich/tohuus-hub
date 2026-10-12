@@ -13,6 +13,9 @@ import {
   Heart,
   House,
   type Icon,
+  Info,
+  BookOpen,
+  Lightbulb,
   MapPin,
   Notebook,
   Martini,
@@ -33,13 +36,13 @@ import { t } from '../i18n';
 import { moreGroups } from '../nav';
 import { Avatar } from '../ui';
 
-const ICONS: Record<string, Icon> = { ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
+const ICONS: Record<string, Icon> = { Info, BookOpen, Lightbulb, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
 
 export function More({ me }: { me: Me }) {
   const nav = useNavigate();
   const loc = useLocation();
   const inst = useInstance();
-  const groups = moreGroups({ guest: me.actor.houseGuest?.level, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud' });
+  const groups = moreGroups({ guest: me.actor.houseGuest?.level, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: me.modules });
   return (
     <div className="more-page">
       <header className="more-me">

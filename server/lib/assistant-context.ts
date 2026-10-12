@@ -16,6 +16,7 @@ import { rhythmDue } from './rhythm.js';
 import { notPrivate } from './share-core.js';
 import { today } from './spend2.js';
 import { addDays } from './spend2.js';
+import { eatFirst } from './fresh.js';
 
 export interface ContextViewer {
   userId?: number | null;
@@ -23,7 +24,8 @@ export interface ContextViewer {
 }
 
 /** What a message is about – decides which context lines and tools the model gets (smaller prompts). */
-export type Topic = 'shopping' | 'cooking' | 'money';
+export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests';
+/** what an unclear message gets; stock, house and guests come from the screen (assistant-areas.ts) or clear words */
 export const ALL_TOPICS: Topic[] = ['shopping', 'cooking', 'money'];
 
 export function topicsOf(message: string): Topic[] {
@@ -32,7 +34,20 @@ export function topicsOf(message: string): Topic[] {
   if (/koch|essen|rezept|zutat|ingredient|gericht|abend|mittag|frühstück|fruehstueck|backen|pfannkuchen|nudel|suppe|cook|recipe|dinner|lunch|breakfast|meal|bake|eat\b/.test(m)) out.add('cooking');
   if (/euro|€|\bgeld|ausgegeben|ausgaben|kost|budget|preis|teurer|günstig|guenstig|billig|spar|money|spent|spend|price|cheap|cost/.test(m)) out.add('money');
   if (/liste|kauf|brauch|alle\b|leer|haben wir|noch da|einkauf|fehlt|fällig|faellig|besorg|list|buy|need|out of|bought|shop|due\b/.test(m)) out.add('shopping');
+  if (/bald weg|muss weg|läuft ab|laeuft ab|abgelaufen|kühlschrank|kuehlschrank|vorrat|use soon|expir|fridge|pantry/.test(m)) out.add('stock');
+  if (/alexa|google home|hey siri|siri\b|home assistant|babysitter|heizung|rollladen|rollläden|sicherung|wasserhaupthahn|müll(abfuhr|tonne)|wlan|wifi|fernbedienung|hausinfo|house info/.test(m)) out.add('house');
+  if (/gäste|gaeste|party|feier|geburtstag|grillen|guests|birthday/.test(m)) out.add('guests');
   return out.size ? [...out] : [...ALL_TOPICS];
+}
+
+/** "Bald weg": what should be used soon – names and days only. */
+function useSoonLine() {
+  try {
+    const xs = eatFirst({ limit: 8 });
+    return xs.length ? `Use soon: ${xs.map((x) => `${x.name}${x.days_left != null ? ` (${x.days_left}d)` : ''}`).join(', ')}` : '';
+  } catch {
+    return '';
+  }
 }
 
 export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: ContextViewer | null; topics?: Topic[] }) {
@@ -92,6 +107,7 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
     has('shopping') ? `List: ${list.join(', ') || 'empty'}` : '',
     has('shopping') && due.length ? `Probably due: ${due.map((d) => d.name).join(', ')}` : '',
     has('cooking') ? `In stock (as recorded): ${pantry.map((p) => p.name).join(', ') || 'nothing recorded'}. Saved recipes: ${recipeCount}.` : '',
+    has('stock') || has('cooking') ? useSoonLine() : '',
     has('cooking') && week.length ? `Plan: ${week.map((w) => `${w.day} ${w.slot}: ${w.title}`).join('; ')}` : '',
     has('money') && money ? `Money: week ${fmtMoney(money.week)}, month ${fmtMoney(money.month)}${money.budget ? `, budget ${fmtMoney(money.budget.amount)} (${fmtMoney(money.budget.left)} left)` : ''}` : '',
     memory.length ? `Remembered: ${memory.map((m) => `[${m.id}] ${m.text}`).join(' | ')}` : '',

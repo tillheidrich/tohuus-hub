@@ -67,6 +67,9 @@ migrate(
   );`,
 );
 
+// AI switch per child (ai-policy.ts): only parents/admins change it, never the kid tablet
+migrate('kids-ai-1', `ALTER TABLE kid_profiles ADD COLUMN ai_off INTEGER NOT NULL DEFAULT 0;`);
+
 export const AVATARS = ['fox', 'bear', 'rabbit', 'cat', 'owl', 'frog', 'mouse', 'hedgehog'] as const;
 
 const httpError = (status: number, msg: string) => Object.assign(new Error(msg), { status });
@@ -110,6 +113,7 @@ function publicKid(k: KidRow) {
     has_pin: Boolean(k.pin_hash),
     rules: parseRules(k.rules),
     find_ids: JSON.parse(k.find_ids || '[]') as number[],
+    ai: !(k as any).ai_off,
     created_at: k.created_at,
   };
 }
@@ -199,6 +203,14 @@ export async function updateKid(id: number, input: KidInput) {
   if (input.rules !== undefined) set('rules', JSON.stringify(rulesSchema.parse(input.rules)));
   if (input.find_ids !== undefined) set('find_ids', JSON.stringify(input.find_ids.slice(0, 12)));
   if (sets.length) db.prepare(`UPDATE kid_profiles SET ${sets.join(', ')} WHERE id = ?`).run(...args, id);
+  emit('orders');
+  return getKid(id)!;
+}
+
+/** Parents/admins switch AI off (or on) for a child. */
+export function setKidAi(id: number, on: boolean) {
+  if (!getKidRow(id)) throw httpError(404, 'not found');
+  db.prepare('UPDATE kid_profiles SET ai_off = ? WHERE id = ?').run(on ? 0 : 1, id);
   emit('orders');
   return getKid(id)!;
 }
@@ -357,6 +369,8 @@ export function kidHome(device: { id: number }, kid: KidRow) {
     wishes: kidWishStatus(kid.id),
     find: kidFind(kid),
     device_id: device.id,
+    // shown locked on the tablet: "switched off by your parents" – there is no way to change it from here
+    ai: { enabled: !(kid as any).ai_off, locked: true },
   };
 }
 

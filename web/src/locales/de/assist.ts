@@ -1,0 +1,23 @@
+/** Assistant help per screen (area: assistant, October 2026) */
+export const assist: Record<string, string> = {
+  'Ask the assistant': 'Den Assistenten fragen',
+  'Merge the duplicates on the list': 'Doppelte auf der Liste zusammenführen',
+  'What do I need for lasagne?': 'Was brauche ich für Lasagne?',
+  'What has to go soon?': 'Was muss bald weg?',
+  'Plan the week with what we have': 'Plan die Woche mit dem, was da ist',
+  'Make it vegetarian for 6': 'Mach es vegetarisch für 6',
+  'Why was this month more expensive?': 'Warum war dieser Monat teurer?',
+  'Where can we save?': 'Wo können wir sparen?',
+  'We have Alexa and Hue in the living room – write it up for the babysitter': 'Wir haben Alexa und Hue im Wohnzimmer – schreib das für den Babysitter auf',
+  'Party on Saturday with 12 guests – what do we need?': 'Samstag Feier mit 12 Gästen – was brauchen wir?',
+  'Photo of the fridge': 'Foto vom Kühlschrank',
+  'Photo of the fridge or a cupboard': 'Foto vom Kühlschrank oder Schrank',
+  'ToHuus suggests what it sees, with an estimated best-before. Nothing is saved until you tick and confirm.': 'ToHuus schlägt vor, was es sieht, mit geschätztem Haltbarkeitsdatum. Gespeichert wird erst, was du anhakst und bestätigst.',
+  'Looking …': 'Schaut nach …',
+  'Take or choose a photo': 'Foto machen oder auswählen',
+  'Nothing recognised on the photo.': 'Auf dem Foto war nichts zu erkennen.',
+  'about until {date} (estimate)': 'etwa bis {date} (geschätzt)',
+  'no date': 'kein Datum',
+  'Add ticked to stock': 'Angehakte in den Vorrat',
+  '{n} added to stock': '{n} in den Vorrat gelegt',
+};

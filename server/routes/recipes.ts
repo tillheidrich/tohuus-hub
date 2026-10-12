@@ -9,6 +9,7 @@ import { deleteImage, saveImage, toVisionJpeg } from '../lib/images.js';
 import { setRecipeImageUrl } from '../lib/recipes2.js';
 import { getRecipe, ingredientCore, listRecipes, logCooked, parseRecipeJsonLd, saveRecipe, suggest } from '../lib/recipes.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
+import { cookidooConfirmNeeded, cookidooDraft, importSocial, isCookidooUrl, modelToRecipe, platformOf, readIngredients, saveCookidoo } from '../lib/recipe-ai-import.js';
 import { upload } from './core.js';
 import { addPlan, autofill, getPlan, planShopping, shiftPlan, syncCookidoo, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
@@ -16,6 +17,7 @@ import { safeFetch } from '../lib/net.js';
 import { t } from '../i18n.js';
 import { activeIngredients, effectiveIngredients } from '../lib/variants.js';
 import { uploadQuota } from '../lib/plans.js';
+import { recipeToShopping, searchByIngredients } from '../lib/recipe-list.js';
 
 const rid = (v: unknown) => {
   const n = Number(v);
@@ -37,7 +39,7 @@ const recipeSchema = z.object({
   tags: z.array(z.string()).optional(),
   favorite: z.boolean().optional(),
   notes: z.string().nullable().optional(),
-  steps: z.array(z.object({ text: z.string(), tm: z.object({ time: z.string().nullable().optional(), temp: z.string().nullable().optional(), speed: z.string().nullable().optional() }).nullable().optional() })).optional(),
+  steps: z.array(z.object({ text: z.string(), section: z.string().nullable().optional(), tm: z.object({ time: z.string().nullable().optional(), temp: z.string().nullable().optional(), speed: z.string().nullable().optional(), device: z.string().max(80).nullable().optional(), mode: z.string().max(60).nullable().optional() }).nullable().optional() })).optional(),
   ingredients: z
     .array(z.object({ text: z.string(), qty: z.number().nullable().optional(), unit: z.string().nullable().optional(), product_id: z.number().nullable().optional(), optional: z.boolean().optional(), pantry: z.boolean().optional() }))
     .optional(),
@@ -47,6 +49,15 @@ r.get('/recipes', (_req, res) => res.json(listRecipes()));
 r.get('/recipes/suggest', (req, res) => {
   const tm = req.query.thermomix === '1' ? true : req.query.thermomix === '0' ? false : null;
   res.json(suggest({ thermomix: tm, limit: Number(req.query.limit ?? 20) }));
+});
+/** "mit: Hähnchen, Paprika" – recipes by ingredients, over the recipe text only (no stock keeping). */
+r.get('/recipes/search', (req, res) => {
+  const terms = String(req.query.with ?? '')
+    .split(/[,;]/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+  res.json(searchByIngredients(terms));
 });
 r.get('/recipes/:id', (req, res, next) => {
   if (!/^\d+$/.test(req.params.id)) return next(); // e.g. /recipes/export.json (area recipes2)
@@ -120,19 +131,22 @@ r.post('/recipes/:id/cooked', (req, res) => {
   res.json({ ok: true });
 });
 
+/**
+ * Missing ingredients onto the list. Each row keeps its line as note ("für Curry: 2 Hähnchenbrustfilets"); a row that
+ * is already open gets the line added, amounts merge only when the units are safe (recipe-list.ts).
+ * Body (optional): `servings` (scales the lines), `only` (ingredient names to add, e.g. from cook ideas).
+ */
 r.post('/recipes/:id/shopping', (req, res) => {
   const rec = getRecipe(Number(req.params.id));
   if (!rec) {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  const missing = suggest({ limit: 999 }).find((s) => s.recipe.id === rec.id)?.missing ?? [];
-  let added = 0;
-  for (const m of missing) {
-    const match = matchIngredient(m);
-    if (addToShopping({ productId: match && match.score >= 0.72 ? match.productId : null, text: m, note: rec.title, source: 'recipe', addedBy: actorName(req) }).created) added++;
-  }
-  res.json({ added, missing });
+  const b = z.object({ servings: z.number().positive().max(100).nullable().optional(), only: z.array(z.string().max(200)).max(60).optional() }).parse(req.body ?? {});
+  const base = (db.prepare('SELECT servings FROM recipe_variants WHERE recipe_id = ?').get(rec.id) as { servings: number | null } | undefined)?.servings || rec.servings;
+  const factor = b.servings && base ? b.servings / base : 1;
+  const out = recipeToShopping(rec.id, { factor, actor: actorName(req), title: factor !== 1 && b.servings ? `${rec.title} (${b.servings})` : rec.title, only: b.only })!;
+  res.json({ added: out.added, missing: out.missing, ids: out.created });
 });
 
 /** Keep the photo link (shown right away, retried by the queue, browser fallback) and try to store it now. */
@@ -141,7 +155,17 @@ async function attachImage(id: number, url: string | null | undefined) {
 }
 
 r.post('/recipes/import/url', async (req, res) => {
-  const { url } = z.object({ url: z.string().url() }).parse(req.body);
+  const { url, text } = z.object({ url: z.string().url(), text: z.string().max(20_000).nullable().optional() }).parse(req.body);
+  // ToHuus Cloud never contacts Cookidoo: the app asks for title + ingredients instead (recipe-ai-import.ts)
+  if (cookidooConfirmNeeded(url)) {
+    res.status(409).json({ code: 'cookidoo_confirm', error: t('Cookidoo recipes are kept as title, link and ingredients – please confirm them.'), draft: cookidooDraft(url, text) });
+    return;
+  }
+  // Instagram, TikTok, Pinterest, YouTube: only what is public without a login, plus the shared caption
+  if (platformOf(url)) {
+    res.json(await importSocial({ url, text }));
+    return;
+  }
   let html: string;
   try {
     const resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ToHuus Hub recipe import)', Accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8', 'Accept-Language': langInfo(lang()).acceptLanguage }, maxBytes: 5 * 1024 * 1024 });
@@ -155,11 +179,16 @@ r.post('/recipes/import/url', async (req, res) => {
     res.status(502).json({ error: (e as Error).message });
     return;
   }
+  // schema.org JSON-LD first, without any model; the model only reads pages that have none
   let rec = parseRecipeJsonLd(html, url);
+  let ai = false;
   if (!rec && visionAvailable()) {
-    const text = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 15000);
-    const parsed = modelRecipe(await runVision('text-recipe', { text }));
-    if (parsed) rec = { ...parsed, source_type: 'url', source_url: url };
+    const pageText = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 15000);
+    const parsed = modelToRecipe(await runVision('text-recipe', { text: pageText }));
+    if (parsed) {
+      rec = { ...parsed, source_type: 'url', source_url: url };
+      ai = true;
+    }
   }
   if (!rec) {
     res.status(422).json({ error: t('No recipe was found on that page.') });
@@ -168,33 +197,44 @@ r.post('/recipes/import/url', async (req, res) => {
   const imageUrl = rec.image_path;
   const id = saveRecipe({ ...rec, image_path: null });
   await attachImage(id, imageUrl);
-  res.json({ id });
+  res.json({ id, ai });
 });
 
-/** Validate model output for recipes; returns null when unusable. */
-function modelRecipe(j: unknown) {
-  const r = recipeSchema.safeParse(normalizeModelRecipe(j));
-  return r.success ? r.data : null;
-}
-function normalizeModelRecipe(j: any) {
-  if (!j || typeof j !== 'object') return j;
-  const str = (v: unknown) => (typeof v === 'string' ? v : null);
-  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
-  return {
-    title: str(j.title) ?? t('Recipe'),
-    description: str(j.description),
-    servings: num(j.servings),
-    time_min: num(j.time_min),
-    thermomix: Boolean(j.thermomix),
-    tags: Array.isArray(j.tags) ? j.tags.filter((t: unknown) => typeof t === 'string').slice(0, 8) : [],
-    ingredients: Array.isArray(j.ingredients)
-      ? j.ingredients.filter((i: any) => i && typeof i.text === 'string').map((i: any) => ({ text: i.text, qty: num(i.qty), unit: str(i.unit), pantry: Boolean(i.pantry) }))
-      : [],
-    steps: Array.isArray(j.steps)
-      ? j.steps.filter((s: any) => s && typeof s.text === 'string').map((s: any) => ({ text: s.text, tm: s.tm && typeof s.tm === 'object' ? { time: str(s.tm.time), temp: str(s.tm.temp), speed: s.tm.speed == null ? null : String(s.tm.speed) } : null }))
-      : [],
-  };
-}
+/** Shared from Instagram, TikTok, Pinterest or YouTube: link + the caption that came along. */
+r.post('/recipes/import/social', async (req, res) => {
+  const b = z.object({ url: z.string().url(), text: z.string().max(20_000).nullable().optional() }).parse(req.body);
+  res.json(await importSocial(b));
+});
+
+/** Cookidoo: the draft to confirm (nothing is fetched) … */
+r.post('/recipes/import/cookidoo/draft', (req, res) => {
+  const b = z.object({ url: z.string().url(), text: z.string().max(5000).nullable().optional() }).parse(req.body);
+  if (!isCookidooUrl(b.url)) return void res.status(400).json({ error: t('That is not a Cookidoo link.') });
+  res.json(cookidooDraft(b.url, b.text));
+});
+/** … the ingredient list read from the person's own screenshot (needs AI; not saved) … */
+r.post('/recipes/import/cookidoo/read', upload.array('files', 4), uploadQuota, async (req, res) => {
+  const files = (req.files as Express.Multer.File[]) ?? [];
+  if (!files.length) return void res.status(400).json({ error: t('No photos') });
+  const imgs = await Promise.all(files.map((f) => toVisionJpeg(f.buffer, 1800)));
+  res.json(await readIngredients(imgs));
+});
+/** … and saving what the person confirmed: title + link + ingredients, no steps, no photos. */
+r.post('/recipes/import/cookidoo', async (req, res) => {
+  const b = z
+    .object({
+      url: z.string().url(),
+      title: z.string().max(200),
+      ingredients: z.array(z.string().max(300)).min(1).max(150),
+      servings: z.number().int().positive().max(100).nullable().optional(),
+      time_min: z.number().int().positive().max(10000).nullable().optional(),
+    })
+    .parse(req.body);
+  res.json(await saveCookidoo(b));
+});
+
+/** Model output → recipe (device steps included), null when unusable (recipe-ai-import.ts). */
+const modelRecipe = (j: unknown) => modelToRecipe(j);
 
 /** One or more photos of a recipe card (e.g. HelloFresh front + back) → one recipe. */
 r.post('/recipes/import/photo', upload.array('files', 6), uploadQuota, async (req, res) => {

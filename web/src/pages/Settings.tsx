@@ -29,6 +29,14 @@ import { useHousehold } from '../household';
 import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
 import { AssistantPrivacyCard } from './Memory';
+import { AiSwitchesCard, ConnectAssistantCard } from './AiSettings';
+import { MoveInCard, MoveOutCard } from './MoveSettings';
+import { MyListViewCard } from '../shop/trust';
+import { NotifyMine } from './NotifyMine';
+import { CalDavCard } from '../shop/bridges';
+import { LunchboxCard } from '../shop/forms';
+import { PulseSettingsCard } from '../pulse';
+import { ModulesCard } from './Modules';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -94,10 +102,15 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'plan' && cloud && <BillingCard />}
       {tab === 'plan' && cloud && <CloudAccountCard />}
       {tab === 'home' && <Household me={me} admin={admin} />}
+      {tab === 'home' && <ModulesCard admin={admin} />}
+      {tab === 'home' && <LunchboxCard />}
+      {tab === 'home' && <PulseSettingsCard admin={admin} />}
       {tab === 'home' && <AwayEntryCard />}
       {tab === 'home' && <MenuSettingsCard />}
       {tab === 'account' && <MyPerson me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
+      {tab === 'account' && me.actor.userId && <MyListViewCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalDavCard />}
       {tab === 'account' && <MyAccount me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <ShareSetupCard me={me} />}
       {tab === 'members' && <PeopleSection me={me} admin={admin} />}
@@ -106,7 +119,9 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'members' && <KidsSection admin={admin} />}
       {tab === 'places' && <PlacesSettings admin={admin} />}
       {tab === 'places' && <CategorySettings admin={admin} />}
+      {tab === 'notify' && me.actor.userId && <NotifyMine />}
       {tab === 'notify' && <Notify admin={admin} />}
+      {tab === 'access' && <AiSwitchesCard />}
       {tab === 'access' && <AssistantPrivacyCard admin={admin} />}
       {tab === 'access' && <Access admin={admin} />}
       {tab === 'ha' && <Ha2Settings admin={admin} />}
@@ -179,7 +194,13 @@ const EVENT_LABEL: Record<string, string> = {
   'budget.warning': 'Spending budget at 80 % or reached',
   'plan.vote': 'Family food vote started or decided',
   'plan.rotation': 'Next week filled from the rotation',
+  'trip.started': 'Someone is shopping right now',
+  'trip.addon': 'Something added to a shopping trip',
+  'rhythm.due': 'Something is due again',
+  'plan.reminder': 'Reminder for the week plan',
 };
+/** phones and browsers decide per person for these (NotifyMine) – the household matrix only routes shared channels */
+const PERSONAL_EVENTS = new Set(['trip.started', 'trip.addon', 'rhythm.due', 'plan.reminder', 'stock.expiring', 'import.review', 'order.new', 'budget.warning']);
 
 function Notify({ admin }: { admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
@@ -196,7 +217,11 @@ function Notify({ admin }: { admin: boolean }) {
   };
   const setEv = (ev: string, ch: string, v: boolean) => setN((x: any) => ({ ...x, events: { ...x.events, [ev]: { ...x.events[ev], [ch]: v } } }));
   return (
-    <div className="stack" style={{ gap: 22 }}>
+    <div className="stack" style={{ gap: 22, marginTop: 22 }}>
+      <div>
+        <h2 style={{ margin: 0 }}>{t('For the whole household')}</h2>
+        <p className="small muted" style={{ margin: '4px 0 0' }}>{t('Shared channels: Home Assistant, ntfy, webhooks, Telegram and the household e-mail address. Phones and browsers follow each person’s own choice above.')}</p>
+      </div>
       <div className="card pad stack">
         <div className="field">
           <label>{t('Home Assistant – webhook URL')}</label>
@@ -267,7 +292,11 @@ function Notify({ admin }: { admin: boolean }) {
                   <td>{t(EVENT_LABEL[ev])}</td>
                   {['ha', 'ntfy', 'webhook', 'email', 'push', ...extraCols.map(([k]) => k)].map((ch) => (
                     <td key={ch}>
-                      <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
+                      {ch === 'push' && PERSONAL_EVENTS.has(ev) ? (
+                        <span className="muted small" title={t('Each person decides this for themselves')}>{t('per person')}</span>
+                      ) : (
+                        <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -326,20 +355,7 @@ function Access({ admin }: { admin: boolean }) {
   const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast({ text: t('Copied') }));
   return (
     <div className="stack" style={{ gap: 22 }}>
-      <div className="card pad stack">
-        <div className="row">
-          <span className="thumb" style={{ width: 44, height: 44 }}><Plug size={22} /></span>
-          <div className="grow">
-            <b>{t('Claude, ChatGPT & co. (MCP)')}</b>
-            <div className="small muted">{t('Send photos of receipts, your freezer or HelloFresh cards to your assistant – it adds everything here.')}</div>
-          </div>
-        </div>
-        <ol className="small" style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
-          <li>{t('Create an “AI assistant” access below.')}</li>
-          <li>{t('In Claude: Settings › Connectors › Add custom connector. In ChatGPT: Settings › Connectors (developer mode).')}</li>
-          <li>{t('Enter the MCP address shown as the URL, authentication: none.')}</li>
-        </ol>
-      </div>
+      <ConnectAssistantCard />
       <HaIntegrationCard base={base} />
       {admin && s.data && <HaConnection initial={s.data.ha} />}
       {admin && s.data && <HaTodoCard />}
@@ -406,6 +422,7 @@ function Access({ admin }: { admin: boolean }) {
 
 function Data({ admin }: { admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
+  const cloud = useInstance().data?.mode === 'cloud';
   const fileRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -417,7 +434,9 @@ function Data({ admin }: { admin: boolean }) {
       fd.append('min_count', '3');
       const r = await api('/imports/catalog-csv', { form: fd });
       toast({ text: t('{created} products created, {linked} linked (from {distinct} items)', { created: r.created, linked: r.linked, distinct: r.distinct }) });
-      invalidate('products', 'overview');
+      // list2: with a date column the history becomes receipts – rhythm and prices work right away
+      if (r.history?.receipts) toast({ text: t('{n} shopping days with prices taken over – ToHuus now knows your rhythm.', { n: r.history.receipts }) });
+      invalidate('products', 'overview', 'rhythm', 'money', 'imports');
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     } finally {
@@ -426,6 +445,7 @@ function Data({ admin }: { admin: boolean }) {
   };
   return (
     <div className="stack" style={{ gap: 16 }}>
+      {cloud ? <MoveInCard admin={admin} /> : <MoveOutCard admin={admin} />}
       <Backups admin={admin} />
       <div className="card pad stack">
         <div className="row between wrap">

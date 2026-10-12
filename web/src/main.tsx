@@ -10,6 +10,7 @@ import { ToastProvider } from './ui';
 import { Lightbox } from './zoom';
 import './fonts.css';
 import './styles.css';
+import './styles-guide.css';
 
 // light / dark: web/public/theme-boot.js already set <html data-theme> before the first paint (see ./theme.ts)
 

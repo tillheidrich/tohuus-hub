@@ -154,6 +154,89 @@ async def test_diagnostics(hass: HomeAssistant, mock_api, entry) -> None:
     await _setup(hass, entry)
     diag = await async_get_config_entry_diagnostics(hass, entry)
     assert diag["entry"]["data"]["token"] == "**REDACTED**"
+    assert diag["entry"]["data"]["url"] == "**REDACTED**"
+    assert diag["info"]["household"] == "**REDACTED**"
     assert diag["counts"]["low"] >= 0
     with patch.object(entry.runtime_data.coordinator, "live", True):
         assert (await async_get_config_entry_diagnostics(hass, entry))["live_updates_connected"] is True
+
+
+async def test_due_money_and_leader(hass: HomeAssistant, mock_api, entry, state: dict[str, Any]) -> None:
+    await _setup(hass, entry)
+    due = hass.states.get("sensor.tohuus_hub_due")
+    assert due.state == "1"
+    assert due.attributes["items"][0]["name"] == "Hafermilch"
+    month = hass.states.get("sensor.tohuus_hub_spending_month")
+    assert float(month.state) == state["money"]["month"]
+    assert month.attributes["unit_of_measurement"] == "EUR"
+    assert month.attributes["budget_left"] == 262.85
+    assert float(hass.states.get("sensor.tohuus_hub_spending_week").state) == 23.4
+
+    leader = hass.states.get("select.tohuus_hub_leader_shopping")
+    assert leader.state == "both"
+    assert leader.attributes["options"] == ["off", "both", "home_assistant", "tohuus"]
+    assert hass.states.get("select.tohuus_hub_leader_care").attributes["options"] == ["off", "tohuus"]
+    mock_api.post(f"{API}/bridge/leader", json={"topic": "shopping", "mode": "from_ha"})
+    await hass.services.async_call("select", "select_option", {"option": "home_assistant"}, target={"entity_id": "select.tohuus_hub_leader_shopping"}, blocking=True)
+    call = [c for c in mock_api.mock_calls if str(c[1]).endswith("/bridge/leader")][-1]
+    assert call[2] == {"topic": "shopping", "mode": "from_ha"}
+
+
+async def test_old_server_has_no_new_entities(hass: HomeAssistant, aioclient_mock, entry, state: dict[str, Any]) -> None:
+    from .conftest import load
+
+    old = {k: v for k, v in state.items() if k not in ("due", "money", "sync")}
+    aioclient_mock.get(f"{API}/info", json=load("info.json"))
+    aioclient_mock.get(f"{API}/state", json=old)
+    aioclient_mock.get(f"{API}/calendar/meals", json={"events": []})
+    aioclient_mock.get(f"{API}/calendar/care", json={"events": []})
+    aioclient_mock.post(f"{API}/bridge/sync", json={"config": {}, "ops": []})
+    await _setup(hass, entry)
+    assert hass.states.get("sensor.tohuus_hub_due") is None
+    assert hass.states.get("sensor.tohuus_hub_spending_month") is None
+    assert hass.states.get("select.tohuus_hub_leader_shopping") is None
+    assert hass.states.get("sensor.tohuus_hub_products_low") is not None
+
+
+async def test_notifications_go_to_notify_services(hass: HomeAssistant, mock_api, entry) -> None:
+    from homeassistant.core import ServiceCall
+
+    calls: list[ServiceCall] = []
+    hass.services.async_register("notify", "kitchen_tv", lambda call: calls.append(call))
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "notify_services": ["notify.kitchen_tv", "notify.gone"], "notify_events": ["order_new"]})
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data.coordinator
+    coordinator._fire({"event": "order.new", "title": "New order", "message": "1× Cola from Sam", "url": "http://x/bar"})
+    coordinator._fire({"event": "stock.low", "title": "Milk running low", "message": "1 left"})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["title"] == "New order"
+    assert calls[0].data["message"] == "1× Cola from Sam"
+    assert calls[0].data["data"]["url"] == "http://x/bar"
+
+
+async def test_claim_code_client(hass: HomeAssistant, aioclient_mock) -> None:
+    """Unit test of the pairing client: success, refused codes, old servers, server errors."""
+    from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+    from custom_components.tohuus_hub.api import ToHuusConnectionError, ToHuusPairError, async_claim_code
+
+    session = async_get_clientsession(hass)
+    aioclient_mock.post("http://a.local/api/ha/pair/claim", json={"token": "sw_x", "instance_id": "i"})
+    assert (await async_claim_code(session, "a.local/", "ABCD-EFGH", "Home"))["token"] == "sw_x"
+    for host, status, body, reason in (
+        ("b", 404, {"code": "invalid_code", "error": "nope"}, "invalid_code"),
+        ("c", 429, {"code": "too_many_attempts"}, "too_many_attempts"),
+        ("d", 410, {"code": "gone"}, "gone"),
+        ("e", 401, {"error": "unauthorized"}, "not_supported"),
+        ("f", 200, {"no": "token"}, "invalid_code"),
+    ):
+        aioclient_mock.post(f"http://{host}.local/api/ha/pair/claim", status=status, json=body)
+        with pytest.raises(ToHuusPairError) as err:
+            await async_claim_code(session, f"http://{host}.local", "ABCD-EFGH")
+        assert err.value.reason == reason
+    aioclient_mock.post("http://g.local/api/ha/pair/claim", status=502, json={})
+    with pytest.raises(ToHuusConnectionError):
+        await async_claim_code(session, "http://g.local", "ABCD-EFGH")

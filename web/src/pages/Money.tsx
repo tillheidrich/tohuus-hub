@@ -16,6 +16,8 @@ import { getOr } from '../data';
 import { locale, t } from '../i18n';
 import { money } from '../region';
 import { Empty } from '../ui';
+import { WgBalanceCard } from '../shop/forms';
+import { CheapestCard } from '../shop/offers';
 
 interface Part {
   name: string;
@@ -171,6 +173,10 @@ export function Money() {
           {d.byCategory.length > 0 && <Bars title={t('By category')} parts={d.byCategory} fmt={fmt} />}
           {d.byShop.length > 0 && <Bars title={t('By shop')} parts={d.byShop} fmt={fmt} unit={(n) => (n === 1 ? t('1 visit') : t('{n} visits', { n }))} />}
           {d.priceChanges.length > 0 && <PriceChanges list={d.priceChanges} fmt={fmt} />}
+          {/* list2 G: shared flat – who is ahead this month */}
+          <WgBalanceCard month={month} />
+          {/* list2 I: where it is cheapest, from the household's own receipts */}
+          <CheapestCard />
           {d.hints.length > 0 && (
             <section className="hcard" aria-labelledby="h-hints">
               <div className="hcard-h">

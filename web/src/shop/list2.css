@@ -1,0 +1,546 @@
+/* Shopping list 2 (12 Oct 2026): ticked rows in place, sync line, recently done, densities, item editor.
+   Loaded with the shopping chunk only. Tokens from styles.css (Dutch Detail). */
+
+/* ticked rows stay where they are, struck through, until "Einkauf fertig" */
+.shop-item.done .title {
+  font-weight: 400;
+  color: var(--ink-2);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+.shop-item.done .sub {
+  opacity: 0.75;
+}
+.shop-item.done .thumb {
+  opacity: 0.55;
+}
+.shop-item .thumb.own-photo {
+  box-shadow: 0 0 0 var(--stroke) var(--ink);
+}
+
+/* densities (per person) */
+.shop.dens-compact .shop-item,
+.shop.dens-compact .shop-hit {
+  min-height: 48px;
+}
+.shop.dens-compact .shop-hit {
+  gap: 10px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.shop.dens-compact .shop-hit .sub {
+  display: none;
+}
+.shop.dens-compact .shop-groups {
+  gap: 18px;
+}
+.shop.dens-large .shop-item,
+.shop.dens-large .shop-hit {
+  min-height: 76px;
+}
+.shop.dens-large .shop-hit .title {
+  font-size: calc(var(--fs-row) + 2px);
+}
+.shop.dens-large .check {
+  width: 30px;
+  height: 30px;
+}
+
+/* "zuletzt abgeglichen vor 3 s" */
+.sync-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+  min-height: 20px;
+}
+.sync-line.ok svg {
+  color: var(--primary);
+}
+.sync-line.off,
+.sync-line.warn {
+  color: var(--ink);
+}
+.sync-line .badge-off {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.sync-line.warn {
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--warning-soft);
+  font-size: var(--fs-s);
+}
+
+/* "zuletzt erledigt" */
+.recent-done {
+  border-top: 1px solid var(--line);
+}
+.recent-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 2px;
+  background: none;
+  border: 0;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.recent-h .caret {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.recent-done.open .caret {
+  transform: rotate(180deg);
+}
+.recent-list > * + * {
+  border-top: 1px dashed var(--line);
+}
+.recent-row .btn {
+  flex: none;
+}
+
+/* item editor */
+.item-editor .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ie-qty {
+  gap: 10px;
+  align-items: center;
+}
+.ie-n {
+  min-width: 28px;
+  text-align: center;
+  font-size: var(--fs-l);
+}
+.ie-photo {
+  gap: 12px;
+  align-items: center;
+}
+.ie-last {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--primary-soft);
+}
+.ie-sub .chip {
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-h .caret {
+    transition: none;
+  }
+}
+
+/* B: lists, usuals, estimate, guard, "Ich bin bei" */
+.list-tabs {
+  margin-top: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.list-tabs::-webkit-scrollbar {
+  display: none;
+}
+.list-tabs .chip {
+  flex: none;
+  min-height: 40px;
+}
+.chip .chip-n {
+  margin-left: 6px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+.ghost-chip {
+  border-style: dashed;
+}
+.list-tabs:not(.chips) .ghost-chip {
+  min-height: 36px;
+  font-size: var(--fs-s);
+}
+.at-store {
+  margin-top: 10px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.at-store .chip {
+  flex: none;
+}
+.at-store .at-l {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  margin-right: 2px;
+}
+.estimate {
+  margin-top: 8px;
+}
+.estimate-b {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.estimate-b .muted {
+  font-weight: 400;
+}
+.handover-note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--warning-soft);
+  font-size: var(--fs-s);
+}
+.usuals {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.usuals-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.usuals-h h2 {
+  margin: 0;
+}
+.usuals-h .meta {
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.usuals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.usual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 104px;
+  padding: 10px 6px 8px;
+  border-radius: var(--r-sm);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.usual-n {
+  font-size: 13px;
+  line-height: 1.25;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.usual-mark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.usual.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.usual.on .usual-mark {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: none;
+}
+.guard-list {
+  margin: 0;
+  padding: 0 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: var(--fs-m);
+}
+
+/* C: shopping together */
+.trips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.trip {
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: 0 0 0 var(--stroke) var(--ink);
+  overflow: hidden;
+}
+.trip.mine {
+  box-shadow: 0 0 0 1px var(--line);
+}
+.trip-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 12px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.trip-h.static {
+  cursor: default;
+}
+.trip-h b {
+  display: block;
+  font-weight: 600;
+  font-size: var(--fs-s);
+}
+.trip-h small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+}
+.trip-h .caret {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.trip.open .caret {
+  transform: rotate(180deg);
+}
+.trip-body {
+  padding: 0 12px 4px 54px;
+}
+.trip-body p {
+  margin: 0 0 6px;
+}
+.trip-ask {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+.trip-ask .input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+}
+.trip-ask .btn {
+  min-width: 48px;
+}
+.group.taken .group-h {
+  color: var(--ink-2);
+  border-bottom-style: dashed;
+}
+.group.taken .shop-item {
+  opacity: 0.75;
+}
+
+/* E: bridges */
+.caldav-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  align-items: center;
+  padding: 8px 6px 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.caldav-field .eyebrow {
+  grid-column: 1 / -1;
+}
+.caldav-field code {
+  font-family: var(--mono);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.caldav-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* G: household forms */
+.lunch-sugg {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.lunch-sugg b {
+  display: block;
+}
+.lunch-sugg .grow > span {
+  display: block;
+  font-size: var(--fs-s);
+  color: var(--ink-2);
+}
+.lunch-act {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+@media (max-width: 420px) {
+  .lunch-sugg {
+    flex-wrap: wrap;
+  }
+  .lunch-act {
+    flex-direction: row;
+    width: 100%;
+  }
+}
+.seg-mini {
+  display: inline-flex;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line-strong, var(--line));
+  overflow: hidden;
+}
+.seg-mini button {
+  min-width: 64px;
+  min-height: 44px;
+  padding: 0 12px;
+  background: none;
+  border: 0;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-s);
+  cursor: pointer;
+}
+.seg-mini button.on {
+  background: var(--primary-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+.seg-mini button.on.miss {
+  background: var(--warning-soft);
+}
+.seg-mini button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.sm-select {
+  width: auto;
+  max-width: 150px;
+  min-height: 40px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.wg-balance .pos {
+  color: var(--primary);
+}
+.wg-balance .neg {
+  color: var(--ink);
+}
+
+/* I: offers and prices */
+.offers {
+  margin-top: 14px;
+}
+.offers .suggest-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.offers .suggest-h .linkish {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+}
+.offer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  border-top: 1px solid var(--line);
+}
+.offer b {
+  display: block;
+  font-weight: 600;
+  font-size: var(--fs-s);
+}
+.offer .grow > span {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+.offer-price {
+  min-width: 64px;
+  font-family: var(--display);
+  font-size: var(--fs-l);
+}
+.offer.hot .offer-price {
+  color: var(--primary);
+}
+.cheap-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cheap-list b {
+  display: block;
+}
+.cheap-list span {
+  font-size: var(--fs-s);
+  color: var(--ink-2);
+}

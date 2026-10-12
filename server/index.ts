@@ -45,11 +45,24 @@ import { r as qualityRoutes } from './routes/quality.js';
 import { r as peopleRoutes, pub as peoplePublic } from './routes/people.js';
 import { r as tourRoutes } from './routes/tour.js';
 import { r as ha2Routes, ha2Guest } from './routes/ha2.js';
+import { pub as haPairPublic } from './routes/ha-pair.js';
 import { r as menuRoutes } from './routes/menu.js';
 import { r as designRoutes } from './routes/design.js';
 import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
 import { r as buyAtRoutes } from './routes/buyat.js';
 import { r as featureRoutes } from './routes/features.js';
+import { r as aiSettingsRoutes } from './routes/ai-settings.js';
+import { pub as oauthPub, r as oauthRoutes } from './routes/oauth.js';
+import { r as operatorRoutes } from './routes/operator.js';
+import { r as moveRoutes } from './routes/move.js';
+import { r as iosCompat } from './routes/ios-compat.js';
+import { requestCounter } from './lib/operator.js';
+import { startRenewalReminders } from './lib/renewals.js';
+import { AiError } from './lib/ai.js';
+import { r as list2Routes, pub as list2Public } from './routes/list2.js';
+import { caldav } from './lib/caldav.js';
+import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
+import { r as factsRoutes } from './routes/facts.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
@@ -90,6 +103,9 @@ app.use((_req, res, next) => {
   next();
 });
 
+// cloud operator page: requests and 5xx per hour, status class only (lib/operator.ts)
+if (config.multiTenant) app.use('/api', requestCounter);
+
 // storage quota: the database counts too – large JSON writes are refused when the household is full (plans.ts)
 app.use('/api', bodyQuota);
 
@@ -107,6 +123,12 @@ app.use('/api', (req, res, next) => {
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
+// OAuth 2.1 for MCP: metadata, client registration, consent, tokens (routes/oauth.ts)
+app.use(oauthPub);
+// CalDAV bridge for Apple Reminders / Nextcloud Tasks (list2): /caldav/*, /.well-known/caldav – Basic auth with an
+// app-specific password, outside /api (no cookies, no CSRF) – lib/caldav.ts
+app.use(caldav);
+
 // MCP (Claude, ChatGPT, …) — stateless Streamable HTTP
 app.all('/mcp', handleMcp);
 app.all('/mcp/:secret', handleMcp);
@@ -117,17 +139,21 @@ app.get('/img/:name', serveImage);
 app.use('/img', (_req, res) => void res.status(404).end());
 
 app.use('/api', instance);
+app.use('/api', factsRoutes);
 app.use('/api', appAuth);
 app.use('/api', billingPublic);
 if (config.multiTenant) {
   app.use('/api', cloudPub);
   app.use('/api', cloudRoutes);
+  // operator page /betrieb: aggregates only (lib/operator.ts)
+  app.use('/api', operatorRoutes);
 }
 
 // iPhone shortcut (personal list token) and the share-target fallback – before the routers that require a session
 app.use(sharePublic);
 app.use('/api/guest', guest);
 app.use('/api/guest', ha2Guest);
+app.use('/api/guest', houseGuest);
 app.use('/api/party-board', partyBoard);
 app.use(kioskPublic);
 app.use('/api/kid', kidDevice);
@@ -135,7 +161,10 @@ app.use('/api', dataPublic);
 app.use('/api', invitesPublic);
 app.use('/api', channelsPublic);
 app.use('/api', authPublic);
+// Home Assistant pairing by code: claim is public (the integration has no token yet)
+app.use('/api', haPairPublic);
 app.use('/api', peoplePublic);
+app.use('/api', list2Public);
 app.use('/api', core);
 app.use('/api', imports);
 app.use('/api', recipes);
@@ -171,6 +200,13 @@ app.use('/api', invitesRoutes);
 app.use('/api', buyAtRoutes);
 app.use('/api', billingRoutes);
 app.use('/api', featureRoutes);
+app.use('/api', aiSettingsRoutes);
+app.use('/api', oauthRoutes);
+app.use('/api', moveRoutes);
+app.use('/api', list2Routes);
+// names the iPhone app 0.2 was built against (docs/ios-api-0.2.md) – thin aliases
+app.use('/api', iosCompat);
+app.use('/api', houseGuideRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -215,6 +251,10 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     res.status(err.status).json(err.toJSON());
     return;
   }
+  if (err instanceof AiError) {
+    res.status(err.status).json({ error: err.message, code: err.code });
+    return;
+  }
   if (err instanceof MulterError) {
     res.status(413).json({ error: t('File too large (max. 15 MB)') });
     return;
@@ -237,5 +277,6 @@ export const server = app.listen(config.port, () => {
   console.log(`ToHuus Hub running on :${config.port} (${config.baseUrl})`);
   startScheduler();
   if (config.multiTenant) startCloudBackups();
+  if (config.multiTenant) startRenewalReminders();
   else startBackups();
 });

@@ -2,6 +2,16 @@
 import { listProducts } from './catalog.js';
 import { listPlaces } from './places.js';
 import { norm, nameScore } from './text.js';
+import { searchGuideFor, type Viewer } from './house-guide.js';
+
+/**
+ * "Wo ist der Sicherungskasten?" – Hausinfo cards that match, as this viewer may see them (codes never; a code card
+ * only says that there is a code). Used next to the products on the babysitter's "Wo ist was?" page.
+ */
+export function findInGuide(q: string, viewer: Viewer, limit = 5) {
+  if (!q.trim()) return [];
+  return searchGuideFor(q, viewer, limit);
+}
 
 export interface FoundThing {
   id: number;

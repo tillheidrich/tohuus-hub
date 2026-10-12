@@ -2,15 +2,43 @@
 
 ToHuus Hub has a built-in [Model Context Protocol](https://modelcontextprotocol.io) server, so Claude, ChatGPT and other MCP clients can read and change the household on your behalf. A typical use: send a photo of a receipt, a freezer drawer or a recipe card to your assistant and say "put this into ToHuus Hub".
 
-## Connect
+## Connect with sign-in (OAuth 2.1) – recommended
+
+*Settings › Access & AI › Mit Claude oder ChatGPT verbinden* shows the MCP address: **`https://your-host/mcp`** (ToHuus Cloud: the cloud address + `/mcp`).
+
+1. Claude: *Settings › Connectors › Add custom connector*, paste the address. ChatGPT: *Settings › Connectors › Create* (developer mode), authentication OAuth.
+2. The client registers itself, opens the ToHuus sign-in, then the consent screen: which household (cloud, if you belong to several), **read** or **read and change**, and optionally **Allergien und Kinderdaten** (off by default).
+3. Done. The connection is listed under the same card (client name, scopes, last used) and can be ended there. A mail tells the person that a new assistant was connected.
+
+Implementation follows the MCP authorization spec (2025-06-18): `server/lib/oauth.ts`, `server/routes/oauth.ts`.
+
+| Endpoint | |
+|---|---|
+| `GET /.well-known/oauth-protected-resource` (also `/mcp` suffix) | RFC 9728: `{ resource: <base>/mcp, authorization_servers: [<base>], scopes_supported, bearer_methods_supported: ['header'] }` |
+| `GET /.well-known/oauth-authorization-server` | RFC 8414: authorize, token and registration endpoints; `code_challenge_methods_supported: ['S256']`, `token_endpoint_auth_methods_supported: ['none']`, `grant_types_supported: ['authorization_code','refresh_token']` |
+| `POST /oauth/register` | RFC 7591 dynamic registration, public clients only. `redirect_uris`: https, http only on loopback, or an app scheme; 20 per hour and IP |
+| `GET /oauth/authorize` | needs `response_type=code`, `client_id`, exact `redirect_uri`, `code_challenge` + `code_challenge_method=S256` (plain is refused), optional `scope`, `state`, `resource` (must be `<base>/mcp`). Not signed in → `/?next=…` (the web app comes back after sign-in). Unknown client or redirect → an error page, never a redirect |
+| `POST /oauth/authorize` | the consent form (same origin only): `household`, `access=read|write`, `health=1`, `decision=allow|deny` → `302 redirect_uri?code=…&state=…&iss=<base>` |
+| `POST /oauth/token` | form or JSON. `authorization_code` (+ `code_verifier`, `redirect_uri`, `client_id`) or `refresh_token` (+ `client_id`, optional narrower `scope`) → `{ access_token, token_type: 'Bearer', expires_in: 3600, refresh_token, scope }` |
+| `GET /api/oauth/connections` | own connections `{ connections: [{ id, client, scopes, created_at, last_used_at }], mcpUrl, mcp }` – never other members' |
+| `DELETE /api/oauth/connections/:id` | end an own connection |
+
+- **Scopes:** `mcp:read` (only tools marked `readOnlyHint`, everything else is not offered), `mcp:write` (all tools), `mcp:health` (allergies, children's birth years and sensitive memory – and only while the household has *Assistent & Datenschutz* switched on; without the scope the health switch counts as off for that connection).
+- **Lifetimes:** code 2 minutes and single use (a second use revokes the connection), access token 1 hour, refresh token 60 days and **rotated on every use**; presenting an already rotated refresh token revokes the connection.
+- **Who may connect:** adults with a sign-in (admins, members). Permanent guests and children cannot (children never have a sign-in).
+- **401 from `/mcp`** carries `WWW-Authenticate: Bearer resource_metadata="<base>/.well-known/oauth-protected-resource"` (plus `error="invalid_token"` when a token was sent).
+- **Cloud:** codes and tokens carry the household's routing prefix (`sw_h…_…`); a token request or MCP call is routed to that household and checked in its own encrypted database. Registered clients live in `accounts.db`. Self-host: everything in the household database.
+- **MCP switch:** *Settings › Access & AI › Eure eigenen Assistenten (MCP)* (`mcp.enabled`, admins). Off ⇒ `/mcp` answers 403 for OAuth connections and old tokens alike, and no new connection can be authorised. Independent from the built-in AI switch.
+
+## Connect with a token in the URL (Home Assistant, older clients)
 
 1. *Settings › Access & AI › New access › AI assistant (Einstellungen › Zugänge & KI › Neuer Zugang › KI-Assistent)*.
 2. Copy the MCP address, `https://your-host/mcp/sw_…`. The token is part of the URL, so treat it like a password. Revoke it under the same settings tab if it leaks.
-3. Claude: *Settings › Connectors › Add custom connector*, authentication none. ChatGPT: *Settings › Connectors* in developer mode.
+3. Use it as the connector URL with authentication none.
 
 Alternatives: `POST /mcp` with `Authorization: Bearer <token>` (an `mcp` or `full` token), or a fixed path `/mcp/<MCP_PATH_SECRET>` from the environment.
 
-An "AI assistant" token can only reach `/mcp`, nothing else in the API. The transport is stateless Streamable HTTP. Changes made by the assistant show the token's name in the history.
+An "AI assistant" token can only reach `/mcp`, nothing else in the API. The transport is stateless Streamable HTTP. Changes made by the assistant show the token's name (OAuth: "Claude (Mira)") in the history.
 
 ## Behaviour worth knowing
 
@@ -24,7 +52,7 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 
 ## Tools
 
-114 tools, grouped by area. Source: `server/mcp/server.ts` (core) and `server/mcp/tools-<area>.ts`.
+114+ tools (the exact list: `tools/list`), grouped by area. Source: `server/mcp/server.ts` (core) and `server/mcp/tools-<area>.ts`.
 
 ### Core (23)
 
@@ -53,6 +81,10 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 | `set_place` | Remember where something is |
 | `list_locations` | Places with product counts |
 | `product_details` | A product with recent history |
+
+### Lists, usuals, trips and offers (6)
+
+`list_lists`, `create_list`, `usual_items`, `check_before_adding` (on a list / bought recently / at home), `shopping_trips` (who is shopping now; private trips never), `current_offers` (offers the household saved). All read-only except `create_list`, so a read-only OAuth connection gets five of them.
 
 ### Keeping stock fresh (6)
 

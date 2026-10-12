@@ -93,55 +93,52 @@ function steps(form: HouseholdForm = 'family'): Step[] {
       title: t('One shopping list for everyone'),
       body:
         form === 'single'
-          ? t('Empty things land on your list by themselves, sorted by aisle – nothing to keep in your head.')
-          : t('Everyone adds to the same list, and empty things land on it by themselves. Tap an item to say who is getting it – so nothing gets bought twice.'),
+          ? t('ToHuus remembers what you buy and how often. What is probably due comes as a suggestion – it only goes on the list after a yes. Every row says where it came from.')
+          : t('Everyone adds to the same list. ToHuus remembers what you buy and how often; what is probably due comes as a suggestion, and every row says where it came from.'),
     },
     {
       id: 'stock',
       route: '/bestand',
       targets: nav('/bestand'),
-      title: t('Stock and where things are'),
+      title: t('Stock is optional'),
       body:
         form === 'family'
-          ? t('See what is at home, place by place. “Where’s what?” finds the plasters or the spare batteries – handy for anyone looking after the kids, too.')
-          : t('See what is at home, place by place. “Where’s what?” finds the plasters or the spare batteries in seconds.'),
+          ? t('Nobody has to keep a stock list. If you like, see what is at home place by place – “Where’s what?” finds the plasters, handy for anyone looking after the kids, too.')
+          : t('Nobody has to keep a stock list. If you like, see what is at home place by place – “Where’s what?” finds the plasters in seconds.'),
     },
     {
       id: 'cook',
       route: '/kochen',
       targets: nav('/kochen'),
       title: t('What shall we eat?'),
-      body: t('Recipes, a week plan and ideas from what is already at home. Missing ingredients go on the list with one tap.'),
-    },
-    {
-      id: 'orders',
-      route: '/bestellen',
-      targets: [...nav('/bestellen'), TITLE],
-      title: form === 'single' ? t('Guests & party') : t('Treats'),
-      body:
-        form === 'single'
-          ? t('Guests can ask for a drink or a snack from what is really there. Guest links work without an account.')
-          : t('Ask each other for a little something – tea with honey, the ice cream from the freezer – and someone at home brings it. Guests and parties work the same way.'),
+      body: t('Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.'),
     },
     {
       id: 'receipts',
       route: '/geld',
       targets: nav('/geld'),
-      title: t('Receipts and spending'),
-      body: t('Upload a receipt and the stock updates itself. Spending shows where the money goes – without keeping a budget book.'),
+      title: t('Receipts and money'),
+      body: t('Upload a receipt – eBon, PDF or photo – and ToHuus sees what you bought and what it cost. Money shows the month by shop and category, without a budget book.'),
     },
     {
-      id: 'settings',
-      route: '/einstellungen',
-      targets: [...nav('/einstellungen'), TITLE],
-      title: t('Settings and connections'),
-      body: t('Members, places and push live in Settings. Telegram, Home Assistant or your AI assistant can be connected there – all optional.'),
+      id: 'speak',
+      route: '/',
+      targets: ['.assist-fab'],
+      title: t('Speak'),
+      body: t('Say or type “milk is out, and we need something for Sunday”. With AI switched on it also helps on every screen; without AI the simple sentences still work. Every change can be undone.'),
+    },
+    {
+      id: 'more',
+      route: '/mehr',
+      targets: [MORE, ...nav('/mehr'), TITLE],
+      title: t('More: house info and how it works'),
+      body: t('Under More you find the house info for babysitters and guests, “How ToHuus works” and “Good to know” – plus people, guests and settings.'),
     },
     {
       id: 'done',
       targets: [],
       title: t('That’s the tour'),
-      body: t('You can take it again any time under Help. Start small: one shopping list and the things that run out most often.'),
+      body: t('You can take it again any time under Help. Start small: one shopping list and a receipt or two – ToHuus takes it from there.'),
     },
   ];
 }

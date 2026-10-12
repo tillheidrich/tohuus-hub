@@ -43,6 +43,8 @@ Most features are an "area" with the same shape: `server/routes/<area>.ts`, `ser
 
 The October 2026 feature build adds `rhythm` (purchase rhythm), `money` (overview), `cookideas`, `today` (aggregate for the first tab), `memory` and `assistant` (with `assistant-tools`, `assistant-parse`, `assistant-context`); their routers are mounted together through `server/routes/features.ts`, their MCP tools are in `server/mcp/tools-features.ts`. `shopping-trust.ts` holds the list rules every tick path uses (booking and un-booking, soft clear, origin). Plan limits are read through `lib/limits.ts`, a thin adapter over `plans.ts` (history window, assistant messages, AI receipt reads).
 
+The shopping list 2 build (12 Oct 2026, [shopping-list.md](shopping-list.md)) adds `list2` (trust), `lists`, `trips`, `notify-prefs` + `apns`, `caldav`, `list-import`, `modules`, `hhforms`, `prices` + `offers`, `pulse` and `list-jobs`, with migrations in the dependency-free `list-schema.ts`; one router `routes/list2.ts` (plus `pub` for the operator view) and the CalDAV router `caldav` mounted outside `/api`. `shopping-trust.ts` announces ticks through `onTick()` (trips listen), the scheduler runs area jobs registered in `householdJobs`.
+
 Two areas have no MCP tools on purpose: `auth` and `ha` (their modules exist but register nothing).
 
 Modules import each other directly. Where a cycle would appear, a small dependency-free part is split out (`share-core.ts`, `away-state.ts`, `people-policy.ts`, `people-signals.ts`, `fresh-shelf.ts`), and the comment at the top of each file says who may import it.

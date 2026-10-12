@@ -7,11 +7,14 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
+
+const PORT = await freePort();
 
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-fixes-'));
-process.env.BASE_URL = 'http://localhost:47417';
+process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'en';
-const base = 'http://localhost:47417';
+const base = `http://localhost:${PORT}`;
 
 let db: typeof import('../server/db').db;
 let dbm: typeof import('../server/db');
@@ -83,7 +86,7 @@ beforeAll(async () => {
   app.use('/api', inviteRoutes.r);
   app.use('/api', buyAtRoutes.r);
   app.use((err: any, _req: any, res: any, _next: any) => res.status(err?.name === 'ZodError' ? 400 : 500).json({ error: String(err?.message ?? err) }));
-  server = app.listen(47417);
+  server = app.listen(PORT);
   await new Promise((r) => server.once('listening', r));
   tillCookie = cookieOf((await req('POST', '/api/login')).setCookie);
 });

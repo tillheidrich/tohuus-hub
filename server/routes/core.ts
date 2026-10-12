@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { config, smtpEnabled } from '../config.js';
 import { visionAvailable, visionModel } from '../lib/vision.js';
 import { appearanceFor } from '../lib/appearance.js';
+import { listPrefs } from '../lib/list2.js';
+import { modules } from '../lib/modules.js';
 import { homeSetup, localizeBaseNames } from '../lib/places.js';
 import { r as placesRoutes } from './places.js';
 import { brand, chooseBrand, db, defaultBrand, getSetting, lang, setSetting } from '../db.js';
@@ -43,6 +45,7 @@ import { guestSafeOverview } from '../lib/people-policy.js';
 import { haSettings } from '../lib/plan.js';
 import { findThings } from '../lib/find.js';
 import { buildExport, showNamesOnLogin } from '../lib/data.js';
+import { exportCodes } from '../lib/house-guide.js';
 import { t } from '../i18n.js';
 import { setDateKind } from '../lib/retail.js';
 import { applyShareView, notPrivate } from '../lib/share-core.js';
@@ -88,6 +91,10 @@ r.get('/me', (req, res) => {
     appearance: appearanceFor(actor.kind === 'user' ? actor.userId : null),
     // household form and home preset (area: home) – the UI adapts its defaults and wording to it
     home: homeSetup(),
+    // list2: density and text size of this member (shop/prefs.ts applies them at start)
+    listPrefs: listPrefs(actor.kind === 'user' ? actor.userId : null),
+    // "Was nutzen wir?" – areas the household switched off are hidden in the app (data stays)
+    modules: modules(),
     version: process.env.npm_package_version ?? '0.1.0',
   });
 });
@@ -415,13 +422,13 @@ r.get('/shopping', (req, res) => {
 });
 
 r.post('/shopping', (req, res) => {
-  const b = z.object({ text: z.string().min(1), product_id: z.number().nullable().optional(), qty: z.number().nullable().optional(), note: z.string().nullable().optional() }).parse(req.body);
+  const b = z.object({ text: z.string().min(1), product_id: z.number().nullable().optional(), qty: z.number().nullable().optional(), note: z.string().nullable().optional(), list_id: z.number().int().min(0).nullable().optional() }).parse(req.body);
   let productId = b.product_id ?? null;
   if (!productId) {
     const m = matchProduct(b.text);
     if (m && m.score >= 0.8) productId = m.productId;
   }
-  const out = addToShopping({ productId, text: b.text, qty: b.qty, note: b.note, source: 'manual', addedBy: actorName(req) });
+  const out = addToShopping({ productId, text: b.text, qty: b.qty, note: b.note, source: 'manual', addedBy: actorName(req), listId: b.list_id ?? null });
   if (out.created)
     void notify({ event: 'shopping.added', title: t('Shopping list: {text}', { text: b.text }), message: t('{actor} added “{text}” to the list.', { actor: actorName(req), text: b.text }), path: '/einkauf' });
   res.json(out);
@@ -577,19 +584,22 @@ r.delete('/users/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-r.get('/tokens', requireAdmin, (_req, res) => res.json(db.prepare('SELECT id, name, prefix, scope, created_at, last_used_at FROM api_tokens ORDER BY id DESC').all()));
+// machine accesses only: a member's app/device tokens are theirs (GET /api/auth/app/devices), never listed for admins
+r.get('/tokens', requireAdmin, (_req, res) => res.json(db.prepare(`SELECT id, name, prefix, scope, created_at, last_used_at FROM api_tokens WHERE scope != 'app' ORDER BY id DESC`).all()));
 r.post('/tokens', requireAdmin, (req, res) => {
   const b = z.object({ name: z.string().min(1), scope: z.enum(['full', 'ha', 'mcp']).default('full') }).parse(req.body);
   res.json(createApiToken(b.name, b.scope));
 });
 r.delete('/tokens/:id', requireAdmin, (req, res) => {
-  db.prepare('DELETE FROM api_tokens WHERE id = ?').run(id(req.params.id));
+  db.prepare(`DELETE FROM api_tokens WHERE id = ? AND scope != 'app'`).run(id(req.params.id));
   res.json({ ok: true });
 });
 
-r.get('/export.json', requireAdmin, (_req, res) => {
-  // every household table, never credentials (see server/lib/data.ts)
-  const out = buildExport();
+r.get('/export.json', requireAdmin, (req, res) => {
+  // every household table, never credentials, never other members' personal rows (see server/lib/data.ts);
+  // Hausinfo codes only when ticked (?codes=1)
+  const out: Record<string, unknown> = buildExport({ viewer: req.actor?.userId ?? null });
+  if (req.query.codes === '1') out.house_codes = exportCodes();
   res.setHeader('Content-Disposition', `attachment; filename="tohuus-export-${new Date().toISOString().slice(0, 10)}.json"`);
   res.json(out);
 });

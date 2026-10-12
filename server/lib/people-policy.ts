@@ -154,6 +154,9 @@ const ORDER: Rule[] = [
   write(/^\/share\/(parse|items)$/),
   ['W', /^\/share\/items\/\d+$/],
   read(/^\/share\/items\/mine$/),
+  // Hausinfo (house-guide.ts): every level reads what is shared with it (each card/code has its own visibility)
+  read(/^\/house-guide$/),
+  write(/^\/house-guide\/codes\/\d+\/reveal$/),
 ];
 
 const STOCK: Rule[] = [

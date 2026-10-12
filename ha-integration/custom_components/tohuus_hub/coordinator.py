@@ -15,7 +15,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import ToHuusApi, ToHuusAuthError, ToHuusError
-from .const import ATTR_CONFIG_ENTRY_ID, CONF_LIVE_UPDATES, DOMAIN, EVENT_TOHUUS, SCAN_INTERVAL
+from .const import ATTR_CONFIG_ENTRY_ID, CONF_LIVE_UPDATES, CONF_NOTIFY_EVENTS, CONF_NOTIFY_SERVICES, DOMAIN, EVENT_TOHUUS, NOTIFY_EVENT_OPTIONS, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,3 +133,27 @@ class ToHuusCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.hass.bus.async_fire(EVENT_TOHUUS, payload)
         for cb in list(self.event_callbacks):
             cb(payload)
+        self._notify(payload)
+
+    @callback
+    def _notify(self, payload: dict[str, Any]) -> None:
+        """Forward a ToHuus notification to the notify services chosen in the options (phone, TV, speaker …)."""
+        services = self.config_entry.options.get(CONF_NOTIFY_SERVICES) or []
+        wanted = self.config_entry.options.get(CONF_NOTIFY_EVENTS) or NOTIFY_EVENT_OPTIONS
+        if not services or payload["type"] not in wanted:
+            return
+        message = payload.get("message") or payload.get("title")
+        if not message:
+            return
+        data: dict[str, Any] = {"message": message}
+        if payload.get("title") and payload.get("message"):
+            data["title"] = payload["title"]
+        if payload.get("url"):
+            # companion apps: tap opens ToHuus (iOS "url", Android "clickAction")
+            data["data"] = {"url": payload["url"], "clickAction": payload["url"]}
+        for service in services:
+            name = str(service).removeprefix("notify.")
+            if not self.hass.services.has_service("notify", name):
+                _LOGGER.debug("notify.%s does not exist (any more); skipped", name)
+                continue
+            self.hass.async_create_task(self.hass.services.async_call("notify", name, dict(data), blocking=False), f"{DOMAIN}_notify_{name}")

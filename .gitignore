@@ -5,3 +5,4 @@ data
 test/fixtures/private
 *.log
 .DS_Store
+!server/data/

@@ -20,6 +20,10 @@ export interface ParsedLine {
   status: LineStatus;
   note?: string | null;
   substituteFor?: string | null;
+  /** deposit lines: the item (name) the deposit belongs to, e.g. the drink right above it */
+  depositFor?: string | null;
+  /** text recognition (OCR): how sure the reading of this line was, 0..1 */
+  ocrConfidence?: number | null;
   /** ordered quantity (avis only) */
   ordered?: number | null;
 }
