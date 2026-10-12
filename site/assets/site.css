@@ -549,3 +549,61 @@ body.legal-page { padding-bottom: 0; }
   .nav-wrap, .legal-toc, .foot, .theme-btn { display: none !important; }
   .legal-grid { display: block; }
 }
+
+/* ------------------------------------------------------------ TestFlight and Home Assistant sections (home page) */
+.tf, .ha { padding: 72px 0; border-top: 1px solid var(--line); }
+.tf-card { max-width: 460px; width: 100%; justify-self: center; }
+.tf-rows { margin-top: 6px; counter-reset: r; }
+.tf-rows li { counter-increment: r; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; padding: 13px 0; font-size: 17px; border-bottom: 1px solid var(--line); }
+.tf-rows li:last-child { border-bottom: 0; }
+.tf-rows li::before { content: counter(r); width: 24px; height: 24px; display: grid; place-items: center; border-radius: var(--r-xs); box-shadow: inset 0 0 0 2px var(--ink); font-size: 13px; font-weight: 700; }
+.tf-foot { padding: 4px 20px 22px; display: grid; gap: 12px; }
+.tf-foot .btn { justify-content: space-between; }
+.tf-foot p { font-size: 14px; color: var(--ink-2); }
+.ha-steps { margin-top: 0; }
+@media (min-width: 960px) { .tf, .ha { padding: 112px 0; } .ha-steps { margin-top: 64px; } }
+
+/* ------------------------------------------------------------ help ("Hilfe & Tipps") */
+.soon-tag { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: var(--r-xs); background: var(--mustard); color: #181d1a; font-size: 12px; font-weight: 700; letter-spacing: 0.02em; vertical-align: 2px; white-space: nowrap; }
+.help-crumbs { flex-wrap: wrap; text-transform: none; letter-spacing: 0.02em; font-size: 14px; }
+.help-crumbs a { color: var(--primary-text); text-decoration: none; font-weight: 650; }
+.help-crumbs a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.help-lede { font-size: 18px; max-width: 60ch; }
+.help-soon { font-weight: 600; max-width: 64ch; }
+.help-index { padding-top: 16px; padding-bottom: 72px; }
+.help-group { margin-top: 40px; }
+.help-group h2 { font-size: clamp(24px, 3vw, 30px); padding-bottom: 12px; border-bottom: var(--stroke) solid var(--ink); }
+.help-cards { margin-top: 0; display: grid; }
+.help-card { position: relative; display: grid; gap: 4px; padding: 16px 40px 16px 0; min-height: 44px; text-decoration: none; border-bottom: 1px solid var(--line); }
+.help-card b { font-size: 18px; font-weight: 650; }
+.help-card > span:not(.soon-tag) { font-size: 15px; color: var(--ink-2); }
+.help-card .soon-tag { justify-self: start; }
+.help-card .ico { position: absolute; right: 6px; top: 50%; width: 20px; height: 20px; margin-top: -10px; color: var(--primary-text); transition: transform 160ms var(--ease-out); }
+.help-card:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.help-card:hover .ico { transform: translateX(3px); }
+.help-missing { margin-top: 40px; font-size: 15px; color: var(--ink-2); }
+.help-missing a { color: var(--primary-text); overflow-wrap: anywhere; }
+.help-body .help-steps { margin-top: 12px; display: grid; gap: 0; counter-reset: h; }
+.help-body .help-steps li { counter-increment: h; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.help-body .help-steps li::before { content: counter(h); width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--canvas); font-size: 13px; font-weight: 700; }
+.help-tip { padding: 14px 16px; border-left: 3px solid var(--mustard); background: var(--surface-2); border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+.help-body .code { margin-top: 12px; padding: 0 0 4px; }
+.help-body .code-head { margin-top: 0; }
+.help-body .code pre { max-width: 100%; }
+.help-body .code.prose pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.help-related { margin-top: 48px; padding: 22px 20px; border-radius: var(--r); background: var(--surface); box-shadow: inset 0 0 0 var(--stroke) var(--ink); }
+.help-related ul { margin-top: 10px; display: grid; }
+.help-related li a { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; color: var(--primary-text); text-decoration: none; border-bottom: 1px solid var(--line); }
+.help-related li:last-child a { border-bottom: 0; }
+.help-related li a .ico { margin-left: auto; width: 18px; height: 18px; }
+.help-related li a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.nav-links a[aria-current] { background: var(--ink); color: var(--canvas); }
+@media (min-width: 720px) {
+  .help-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
+}
+@media (min-width: 960px) {
+  .help-index { padding-bottom: 112px; }
+  .help-group { margin-top: 56px; }
+}
+.tf-card .origin-h { flex-direction: column; align-items: flex-start; gap: 2px; }
+.tf-card .origin-h b { font-size: 24px; line-height: 1.2; }

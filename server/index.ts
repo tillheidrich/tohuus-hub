@@ -45,6 +45,7 @@ import { r as qualityRoutes } from './routes/quality.js';
 import { r as peopleRoutes, pub as peoplePublic } from './routes/people.js';
 import { r as tourRoutes } from './routes/tour.js';
 import { r as ha2Routes, ha2Guest } from './routes/ha2.js';
+import { pub as haPairPublic } from './routes/ha-pair.js';
 import { r as menuRoutes } from './routes/menu.js';
 import { r as designRoutes } from './routes/design.js';
 import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
@@ -159,6 +160,8 @@ app.use('/api', dataPublic);
 app.use('/api', invitesPublic);
 app.use('/api', channelsPublic);
 app.use('/api', authPublic);
+// Home Assistant pairing by code: claim is public (the integration has no token yet)
+app.use('/api', haPairPublic);
 app.use('/api', peoplePublic);
 app.use('/api', list2Public);
 app.use('/api', core);

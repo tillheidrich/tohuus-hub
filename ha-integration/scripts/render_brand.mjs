@@ -1,4 +1,4 @@
-// Renders the brand images for Home Assistant / HACS from the ToHuus Hub app icon.
+// Renders the brand images for Home Assistant / HACS from the ToHuus Hub app icon (web/public/icon.svg).
 // Run from the ToHuus Hub repository root (it needs `sharp` and server/assets/fonts/hedvig-letters-sans-latin-400.ttf):
 //   node ha-integration/scripts/render_brand.mjs
 // Writes custom_components/tohuus_hub/{icon,logo}.png (+ dark/@2x variants under brands/) for the
@@ -9,7 +9,7 @@ import sharp from 'sharp';
 
 const root = process.cwd();
 const ha = path.join(root, 'ha-integration');
-const svg = fs.readFileSync(path.join(root, 'web/public/icon-light.svg'));
+const svg = fs.readFileSync(path.join(root, 'web/public/icon.svg'));
 // the app icon's viewBox width (1024 since the 2026-10 redesign) decides the render density
 const vbw = Number(/viewBox="0 0 (\d+)/.exec(svg.toString())?.[1] ?? 32);
 // wordmark in the brand face (Dutch Detail, wave 6): Hedvig Letters Sans 400, SIL OFL 1.1
