@@ -57,6 +57,8 @@ struct CookingView: View {
     @State private var path: [RecipeRef] = []
     @FocusState private var searchFocused: Bool
     @State private var showImport = false
+    @State private var showSources = false
+    @State private var sourcesQuery: String?
     @State private var model = CookModel()
     @State private var week = WeekModel()
     @State private var feedback = CookFeedback()
@@ -89,7 +91,13 @@ struct CookingView: View {
             .navigationDestination(for: RecipeRef.self) { ref in
                 RecipeDetailView(recipeId: ref.id, store: store, planEntryId: ref.planEntryId)
             }
-            .sheet(isPresented: $showImport) { RecipeImportSheet(store: store) }
+            .sheet(isPresented: $showImport) { RecipeImportSheet(store: store, openRecipe: openSaved) }
+            .sheet(isPresented: $showSources) {
+                NavigationStack {
+                    OpenRecipeBrowser(store: store, onSaved: { id in showSources = false; openSaved(id) }, initialQuery: sourcesQuery)
+                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { showSources = false } } }
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showImport = true } label: { Label(L("Add recipe"), systemImage: "plus") }
@@ -105,6 +113,15 @@ struct CookingView: View {
                 consumeSearch()
                 applyDebug()
             }
+        }
+    }
+
+    /// after a sheet saved a recipe: open it once the sheet is gone
+    private func openSaved(_ id: Int) {
+        tab = 2
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            open(RecipeRef(id: id))
         }
     }
 
@@ -127,9 +144,12 @@ struct CookingView: View {
         case "wte": tab = 0
         case "week": tab = 1
         case "recipes": tab = 2
+        case "open": tab = 2; showSources = true
+        case "import": tab = 2; showImport = true
         default:
             if d.hasPrefix("recipe:"), let id = Int(d.dropFirst(7)) { open(RecipeRef(id: id)) }
             if d.hasPrefix("with:") { tab = 2; search = "mit: " + d.dropFirst(5) }
+            if d.hasPrefix("open:") { tab = 2; sourcesQuery = String(d.dropFirst(5)); showSources = true }
         }
         if let w = UserDefaults.standard.string(forKey: "debugCookWeek") { tab = 1; week.offset = Int(w) ?? 0 }
         #endif
@@ -260,7 +280,32 @@ struct CookingView: View {
                 Divider()
             }
         }
+        discoverCard.padding(.top, Theme.Space.s4)
         SwapRulesSection(store: store, feedback: feedback).padding(.top, Theme.Space.s4)
+    }
+}
+
+extension CookingView {
+    /// „Rezepte entdecken“: open recipe database with photos (also in „Rezept hinzufügen“).
+    var discoverCard: some View {
+        Button { sourcesQuery = nil; showSources = true } label: {
+            HStack(spacing: Theme.Space.s3) {
+                Image(systemName: "globe.europe.africa").font(.title2).foregroundStyle(Theme.primaryText)
+                    .frame(width: 44, height: 44).background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(LC("Discover recipes")).font(.headline).foregroundStyle(Theme.ink)
+                    Text(LC("Browse an open recipe database with photos and take one over with a tap."))
+                        .font(.caption).foregroundStyle(Theme.ink2).multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3)
+            }
+            .padding(Theme.Space.s3)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 }
 

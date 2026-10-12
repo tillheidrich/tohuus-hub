@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 /// Recipe page (web: pages/Recipe.tsx, RecipeServings.tsx, RecipeVariant.tsx, people/Ratings.tsx):
@@ -25,6 +26,8 @@ struct RecipeDetailView: View {
     @State private var showVariant = false
     @State private var rateWho: RecipeRatings.Person?
     @State private var confirmOriginal = false
+    @State private var photoItem: PhotosPickerItem?
+    @State private var photoBusy = false
 
     var body: some View {
         ScrollView {
@@ -85,6 +88,10 @@ struct RecipeDetailView: View {
             if let r = recipe, let v = variant { VariantSheet(store: store, recipe: r, view: v, feedback: feedback) { Task { await load() } } }
         }
         .sheet(item: $rateWho) { p in rateSheet(p) }
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            Task { await uploadPhoto(item) }
+        }
         .confirmationDialog(LC("Back to the original recipe? Your changes for this recipe are removed."), isPresented: $confirmOriginal, titleVisibility: .visible) {
             Button(LC("Back to original"), role: .destructive) {
                 Task {
@@ -98,6 +105,27 @@ struct RecipeDetailView: View {
             }
         }
         .cookToast($feedback.toast) { Task { await feedback.undo?() } }
+    }
+
+    // MARK: photo
+
+    /// own photo for the recipe (web: Recipe.tsx → POST /api/recipes/:id/image), long side max 1600 px
+    private func uploadPhoto(_ item: PhotosPickerItem) async {
+        photoBusy = true
+        defer { photoBusy = false; photoItem = nil }
+        guard let d = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: d) else { return }
+        let scale = min(1, 1600 / max(img.size.width, img.size.height))
+        let size = CGSize(width: img.size.width * scale, height: img.size.height * scale)
+        let jpeg = UIGraphicsImageRenderer(size: size).image { _ in img.draw(in: CGRect(origin: .zero, size: size)) }.jpegData(compressionQuality: 0.82)
+        guard let jpeg else { return }
+        do {
+            try await store.api.uploadRecipePhoto(recipeId, jpeg: jpeg)
+            store.touch("recipes")
+            Haptics.success()
+            await load()
+        } catch {
+            feedback.fail(error)
+        }
     }
 
     // MARK: load
@@ -138,6 +166,26 @@ struct RecipeDetailView: View {
                 RemoteImage(url: store.api.imageURL(r.imagePath), api: store.api, placeholder: "fork.knife")
                     .frame(height: 220).frame(maxWidth: .infinity)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                    .overlay(alignment: .bottomTrailing) {
+                        PhotosPicker(selection: $photoItem, matching: .images) {
+                            Image(systemName: photoBusy ? "hourglass" : "camera")
+                                .font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
+                                .frame(width: 44, height: 44)
+                                .background(.regularMaterial, in: Circle())
+                        }
+                        .accessibilityLabel(LC("Change photo"))
+                        .padding(10)
+                    }
+            } else {
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    Label(photoBusy ? LC("Saving …") : LC("Add photo"), systemImage: "camera")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity, minHeight: 56)
+                        .background(Theme.surface2, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).strokeBorder(Theme.line, style: StrokeStyle(lineWidth: 1, dash: [5, 4])))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.primaryText)
             }
             if let s = sourceLabel(r.sourceType) { Text(s).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3) }
             Text(r.title).font(Theme.title())
