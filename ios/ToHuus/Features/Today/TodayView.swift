@@ -71,6 +71,7 @@ struct TodayView: View {
     let openTab: (MainTabView.Tab) -> Void
     @State private var model = TodayModel()
     @State private var toast: String?
+    @State private var showAllDue = false
 
     private var refreshKey: Int {
         store.revision("shopping") + store.revision("stock") + store.revision("recipes") + store.revision("imports")
@@ -154,26 +155,40 @@ struct TodayView: View {
         Card(title: L("Probably due"), systemImage: "clock.arrow.circlepath") {
             Text(L("ToHuus remembers how often you buy these. Put them on the list?"))
                 .font(.footnote).foregroundStyle(Theme.ink2)
-            ForEach(items) { item in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(item.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
-                    if !item.detail.isEmpty { Text(item.detail).font(.caption).foregroundStyle(Theme.ink3) }
-                    HStack(spacing: Theme.Space.s2) {
+            ForEach(showAllDue ? items : Array(items.prefix(3))) { item in
+                HStack(spacing: Theme.Space.s3) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
+                        if !item.detail.isEmpty { Text(item.detail).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1) }
+                    }
+                    Spacer(minLength: 0)
+                    if model.busyIds.contains(item.productId) {
+                        ProgressView()
+                    } else {
+                        Button {
+                            Task { await model.dismiss(item, store: store) }
+                        } label: {
+                            Image(systemName: "xmark").font(.footnote.weight(.semibold)).foregroundStyle(Theme.ink3)
+                                .frame(width: 36, height: 36).background(Theme.surface2, in: Circle())
+                        }
+                        .accessibilityLabel(LF("Not now: %@", item.name))
                         Button {
                             Task { await model.accept(item, store: store) }
                         } label: {
-                            Label(L("On the list"), systemImage: "plus")
+                            Image(systemName: "plus").font(.body.weight(.semibold)).foregroundStyle(Theme.onPrimary)
+                                .frame(width: 36, height: 36).background(Theme.primary, in: Circle())
                         }
-                        .buttonStyle(.borderedProminent)
-                        Button(L("Not now")) { Task { await model.dismiss(item, store: store) } }
-                            .buttonStyle(.bordered)
-                        if model.busyIds.contains(item.productId) { ProgressView() }
+                        .accessibilityLabel(LF("Put %@ on the list", item.name))
                     }
-                    .font(.subheadline)
-                    .controlSize(.small)
                 }
-                .padding(.vertical, 4)
-                if item.id != items.last?.id { Divider() }
+                .buttonStyle(.plain)
+                .padding(.vertical, 2)
+            }
+            if items.count > 3 {
+                Button(showAllDue ? L("Show less") : LF("Show all %d", items.count)) {
+                    withAnimation(.easeOut(duration: 0.2)) { showAllDue.toggle() }
+                }
+                .font(.subheadline.weight(.semibold))
             }
         }
     }
@@ -193,7 +208,7 @@ struct TodayView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(r.title).font(.subheadline).foregroundStyle(Theme.ink)
                             .strikethrough(r.checked == true)
-                        Text([r.origin, ServerDate.relative(r.at)].compactMap { $0 }.joined(separator: " · "))
+                        Text(r.origin ?? ServerDate.relative(r.at) ?? "")
                             .font(.caption).foregroundStyle(Theme.ink3)
                     }
                 }

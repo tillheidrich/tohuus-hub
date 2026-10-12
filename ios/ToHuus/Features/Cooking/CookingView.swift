@@ -101,12 +101,19 @@ struct CookingView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(idea.title).font(.headline).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
                     if let t = idea.timeMin { Label(LF("%d min", Int(t)), systemImage: "timer").font(.caption).foregroundStyle(Theme.ink3) }
-                    if idea.missing.isEmpty {
-                        Text(L("Everything is at home.")).font(.caption).foregroundStyle(Theme.primaryText)
-                    } else {
+                    if !idea.missing.isEmpty {
                         Text(LF("Missing: %@", idea.missing.map(\.name).joined(separator: ", "))).font(.caption).foregroundStyle(Theme.low)
                     }
-                    if let r = idea.reasons.first { Text(r).font(.caption).foregroundStyle(Theme.ink2) }
+                    if !idea.reasons.isEmpty {
+                        // the server's neutral reasons ("alles da · verbraucht Feta")
+                        Text(idea.reasons.prefix(2).joined(separator: " · ")).font(.caption)
+                            .foregroundStyle(idea.missing.isEmpty ? Theme.primaryText : Theme.ink2)
+                    } else if idea.missing.isEmpty {
+                        Text(L("Everything is at home.")).font(.caption).foregroundStyle(Theme.primaryText)
+                    }
+                    if !idea.probablyHave.isEmpty {
+                        Text(LF("Probably at home: %@", idea.probablyHave.joined(separator: ", "))).font(.caption).foregroundStyle(Theme.ink3)
+                    }
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right").foregroundStyle(Theme.ink3)

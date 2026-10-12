@@ -321,5 +321,10 @@
 "“%@” is on the list.": "„%@“ steht auf der Liste.",
 "No connection – “%@” will be sent as soon as you're online.": "Keine Verbindung – „%@“ wird gesendet, sobald du wieder online bist.",
 "Open ToHuus once to see your list here.": "Öffne ToHuus einmal, dann siehst du hier eure Liste.",
-"What's missing at home, at a glance.": "Was zu Hause fehlt – auf einen Blick."
+"What's missing at home, at a glance.": "Was zu Hause fehlt – auf einen Blick.",
+"Not now: %@": "Gerade nicht: %@",
+"Put %@ on the list": "%@ auf die Liste",
+"Show less": "Weniger zeigen",
+"Show all %d": "Alle %d zeigen",
+"Probably at home: %@": "Wahrscheinlich da: %@"
 }

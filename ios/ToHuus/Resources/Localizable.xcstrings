@@ -2228,19 +2228,19 @@
         }
       }
     },
-    "Not now": {
+    "Not now: %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not now"
+            "value": "Not now: %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gerade nicht"
+            "value": "Gerade nicht: %@"
           }
         }
       }
@@ -2360,23 +2360,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Offline · %d Änderungen warten"
-          }
-        }
-      }
-    },
-    "On the list": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On the list"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf die Liste"
           }
         }
       }
@@ -2806,6 +2789,23 @@
         }
       }
     },
+    "Probably at home: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probably at home: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wahrscheinlich da: %@"
+          }
+        }
+      }
+    },
     "Probably due": {
       "extractionState": "manual",
       "localizations": {
@@ -2836,6 +2836,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "${item} auf die Liste setzen"
+          }
+        }
+      }
+    },
+    "Put %@ on the list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put %@ on the list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ auf die Liste"
           }
         }
       }
@@ -3312,6 +3329,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einkaufsliste"
+          }
+        }
+      }
+    },
+    "Show all %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all %d"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle %d zeigen"
+          }
+        }
+      }
+    },
+    "Show less": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show less"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weniger zeigen"
           }
         }
       }

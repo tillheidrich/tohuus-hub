@@ -152,6 +152,10 @@ final class AppModel {
 
     func refreshBilling() async {
         guard let api else { return }
+        if userName == nil, let me = try? await api.me(), let n = me.name {
+            userName = n
+            SharedConfig.defaults.set(n, forKey: Self.userKey)
+        }
         if let b = try? await api.billingStatus() { billing = b }
         else if !isCloud { billing = BillingStatus(plan: "selfhost") }
         if isCloud, let me = try? await api.cloudMe(), !me.allHouseholds.isEmpty {

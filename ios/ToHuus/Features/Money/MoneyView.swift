@@ -124,19 +124,28 @@ struct MoneyView: View {
         return raw
     }
 
+    /// Horizontal bars as plain rows: label, bar, amount – readable at every text size.
     private func barChart(_ title: String, _ icon: String, _ data: [MoneyOverview.Amount], _ currency: String?) -> some View {
         let top = Array(data.sorted { $0.value > $1.value }.prefix(8))
+        let maxValue = max(top.first?.value ?? 1, 0.01)
         return Card(title: title, systemImage: icon) {
-            Chart(top) { a in
-                BarMark(x: .value(L("Amount"), a.value), y: .value(title, a.label))
-                    .foregroundStyle(Theme.sage)
-                    .cornerRadius(3)
-                    .annotation(position: .trailing) {
-                        Text(Money.format(a.value, currency: currency)).font(.caption2).foregroundStyle(Theme.ink2)
+            ForEach(top) { a in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(a.label).font(.subheadline).foregroundStyle(Theme.ink).lineLimit(1)
+                        Spacer()
+                        Text(Money.format(a.value, currency: currency)).font(.subheadline.monospacedDigit()).foregroundStyle(Theme.ink2)
                     }
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.surface2)
+                            Capsule().fill(Theme.sage).frame(width: max(4, geo.size.width * a.value / maxValue))
+                        }
+                    }
+                    .frame(height: 6)
+                }
+                .accessibilityElement(children: .combine)
             }
-            .chartXAxis(.hidden)
-            .frame(height: CGFloat(top.count) * 30 + 10)
         }
     }
 

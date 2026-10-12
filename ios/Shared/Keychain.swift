@@ -25,9 +25,15 @@ enum Keychain {
             add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
             let status = SecItemAdd(add as CFDictionary, nil)
             if status == errSecSuccess { return true }
-            if status != errSecMissingEntitlement { return false }
+            if status != errSecMissingEntitlement { break }
         }
+        #if targetEnvironment(simulator)
+        // unsigned simulator builds have no keychain entitlement at all – keep development working
+        SharedConfig.defaults.set(value, forKey: "sim.keychain." + account)
+        return true
+        #else
         return false
+        #endif
     }
 
     static func read(account: String) -> String? {
@@ -39,10 +45,17 @@ enum Keychain {
             let status = SecItemCopyMatching(q as CFDictionary, &out)
             if status == errSecSuccess, let data = out as? Data { return String(data: data, encoding: .utf8) }
         }
+        #if targetEnvironment(simulator)
+        return SharedConfig.defaults.string(forKey: "sim.keychain." + account)
+        #else
         return nil
+        #endif
     }
 
     static func delete(account: String) {
         for group in [true, false] { SecItemDelete(baseQuery(account: account, group: group) as CFDictionary) }
+        #if targetEnvironment(simulator)
+        SharedConfig.defaults.removeObject(forKey: "sim.keychain." + account)
+        #endif
     }
 }
