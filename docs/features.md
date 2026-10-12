@@ -27,13 +27,35 @@ Settings tabs: Household (Haushalt), My account (Mein Konto), Members (Mitgliede
 
 ## Shopping
 
-- **Live list** shared by all members, with live updates over server-sent events. Low and empty items are added automatically (can be switched off under *Settings › Notifications*). Ticking an item books it into stock. *Shopping (Einkauf)*
+- **Live list** shared by all members, with live updates over server-sent events. Ticking an item can book it into stock; un-ticking takes exactly that booking back, and a receipt for the same product within 3 days does not book it a second time. *Shopping (Einkauf)*
+- **Every row says where it came from** (`origin`): who added it and when, "merkt sich: alle ~9 Tage", "aus Rezept Lasagne", "vom Assistenten", "über Home Assistant".
+- **Clear checked** hides ticked rows from every list but keeps them as purchase signals for the rhythm (nothing is deleted).
+- **Low stock onto the list automatically** is off by default since October 2026 (suggestions instead of automation). Households that already kept their stock up to date keep it on; anyone can switch it under *Settings › Notifications*.
 - **Quick add** in plain language ("2 l milk, bread, 6 eggs"). The paste button takes a whole copied list.
 - **Store mode**: grouped by aisle, the walking order is learned per store, a basket, then "done shopping" books everything in. Works offline and replays when back online. *Shopping › In the store (Einkauf › Im Laden)*
 - **"I'll get it"** claims so two people don't buy the same thing.
 - **Discreet and private items**: before adding, open *Who sees it? (Wer sieht es?)* and pick *Discreet (Diskret)* (others see a placeholder like "Drugstore item") or *Only me (Nur ich)* (others see nothing; you can share it with chosen members). Tap an item to change it later. The real name never reaches Home Assistant, Telegram, displays, tickets, guest links or MCP.
 - **Print or send the list** as a ticket. *Shopping › ticket button*
 - **Home Assistant to-do sync** (simple one-list sync). *Settings › Access & AI (Zugänge & KI)*. The two-way sync with any HA to-do list is under *Settings › Home Assistant*.
+
+## Purchase rhythm
+
+ToHuus merkt sich, was fehlt – without anyone keeping stock. From receipts (by the purchase date on the receipt, also while they still wait in review) and ticks on the list (also cleared ones), it learns how often each product is bought: mean interval, spread, confidence (≥3 purchases low, ≥5 medium, ≥8 high). Holiday gaps are left out.
+
+- **Due now** shows as a suggestion with its origin ("alle ~5 Tage · zuletzt Mittwoch") on *Today* and in the assistant. *Yes* puts it on the list (row origin "merkt sich: alle ~5 Tage"), *Not now* keeps it quiet for half a rhythm; dismissed twice, it stays quiet until it is bought again. Nothing goes on the list by itself.
+- Stock only counts where somebody keeps it up to date (a consumption booked in the last 30 days): then a well-stocked product is not suggested.
+- Discreet and private products never appear.
+- API: `GET /api/rhythm`, `POST /api/rhythm/:productId/accept`, `POST /api/rhythm/:productId/dismiss`. MCP: `purchase_rhythm`. Code: `server/lib/rhythm.ts`.
+
+## Today aggregate
+
+`GET /api/today` gives the *Today (Heute)* screen everything in one call: greeting, what is due by rhythm, the list with recent changes and their origin, "Das habt ihr noch" (eat soon, leftovers, bought recently), what to cook today (plan first, else from what is at home), money this week and month, notices. Shape: [api-today.md](api-today.md).
+
+## Assistant
+
+The floating button on every tab: type or speak ("Milch ist alle, und wir brauchen was für Sonntag"). With an AI key it talks and uses tools (list, stock, rhythm, cook ideas, week plan, money, remember/forget, log a purchase); without one it still understands the common short sentences. Every write is reported with an undo. Conversations are private per person and deleted after 30 days. *ToHuus merkt sich* household facts on request (`GET/DELETE /api/memory`). Details: [assistant.md](assistant.md).
+
+Health data (allergies, children's birth years) goes to an AI – the built-in assistant or an MCP client – only when an admin allows it: *Settings › Access & AI* (`ai.healthShare`, default off). Without it, unsuitable dishes are still filtered on the server, without saying why.
 
 ## Sharing into the app
 
@@ -100,6 +122,7 @@ Settings tabs: Household (Haushalt), My account (Mein Konto), Members (Mitgliede
 
 ## Spending
 
+- **Money overview** for the *Geld* tab: `GET /api/money/overview?month=YYYY-MM` → total, budget, by category, shop and week, compared with last month (also "up to the same day"), price changes against the 90 days before (with the price per kg or litre where the pack size or a weighed line allows it), and calm saving hints from the household's own data only (cheaper at another shop in the last 3 months, thrown away more than once this month, bought every few days – two at once saves trips, budget forecast). No offers from outside, no affiliate links. Code: `server/lib/money.ts`.
 - Charts per week, month, year and all time; by category and store; top items; price history per product and "got more expensive" hints. *Spending (Ausgaben)*
 - **Budgets** per month or week, overall or per category, with a calm forecast and an optional warning notification. *Spending › Budgets*
 - **Manual expenses** (farmers' market, bakery cash), **tags**, **leave out** a line, receipt, product, category or store. CSV export.

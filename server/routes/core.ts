@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
-import { config, smtpEnabled, visionEnabled } from '../config.js';
+import { config, smtpEnabled } from '../config.js';
+import { visionAvailable, visionModel } from '../lib/vision.js';
 import { appearanceFor } from '../lib/appearance.js';
-import { homeSetup } from '../lib/places.js';
+import { homeSetup, localizeBaseNames } from '../lib/places.js';
 import { r as placesRoutes } from './places.js';
 import { brand, chooseBrand, db, defaultBrand, getSetting, lang, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
@@ -44,7 +45,9 @@ import { findThings } from '../lib/find.js';
 import { buildExport, showNamesOnLogin } from '../lib/data.js';
 import { t } from '../i18n.js';
 import { setDateKind } from '../lib/retail.js';
-import { applyShareView, notPrivate, realProductId } from '../lib/share-core.js';
+import { applyShareView, notPrivate } from '../lib/share-core.js';
+import { uploadQuota } from '../lib/plans.js';
+import { clearChecked, removeItem, tickItem, withOrigin } from '../lib/shopping-trust.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
 export const r = Router();
@@ -81,7 +84,7 @@ r.get('/me', (req, res) => {
     brand: brand(),
     language: lang(),
     region: regionInfo(),
-    features: { vision: visionEnabled(), email: smtpEnabled() },
+    features: { vision: visionAvailable(), email: smtpEnabled() },
     appearance: appearanceFor(actor.kind === 'user' ? actor.userId : null),
     // household form and home preset (area: home) – the UI adapts its defaults and wording to it
     home: homeSetup(),
@@ -259,7 +262,7 @@ r.delete('/products/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-r.post('/products/:id/image', upload.single('image'), async (req, res) => {
+r.post('/products/:id/image', upload.single('image'), uploadQuota, async (req, res) => {
   const p = getProduct(id(req.params.id));
   if (!p) {
     res.status(404).json({ error: 'not found' });
@@ -403,12 +406,12 @@ r.get('/shopping', (req, res) => {
       `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit,
          (SELECT COALESCE(SUM(qty),0) FROM stock st WHERE st.product_id = s.product_id) AS in_stock
        FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id
-       WHERE s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day')
+       WHERE s.cleared_at IS NULL AND (s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day'))
        ORDER BY s.checked_at IS NOT NULL, s.created_at DESC`,
     )
-    .all() as { id: number; text: string; product_id: number | null; note: string | null }[];
-  // discreet / private entries (area: share): real names only for their owner
-  res.json(applyShareView(items, { userId: req.actor?.userId ?? null }));
+    .all() as { id: number; text: string; product_id: number | null; note: string | null; source: string; added_by: string | null; created_at: string; origin_detail: string | null }[];
+  // discreet / private entries (area: share): real names only for their owner; every row says where it came from
+  res.json(withOrigin(applyShareView(items, { userId: req.actor?.userId ?? null })));
 });
 
 r.post('/shopping', (req, res) => {
@@ -431,29 +434,22 @@ r.patch('/shopping/:id', (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  const wasOpen = it.checked_at == null;
-  if (b.checked !== undefined)
-    db.prepare(`UPDATE shopping_items SET checked_at = ${b.checked ? "datetime('now')" : 'NULL'}, checked_by = ? WHERE id = ?`).run(b.checked ? actorName(req) : null, it.id);
   if (b.text !== undefined || b.qty !== undefined || b.note !== undefined)
     db.prepare('UPDATE shopping_items SET text = ?, qty = ?, note = ? WHERE id = ?').run(b.text ?? it.text, b.qty === undefined ? it.qty : b.qty, b.note === undefined ? it.note : b.note, it.id);
-  const pid = realProductId(it);
-  if (b.checked && wasOpen && b.to_stock && pid) {
-    adjustStock({ productId: pid, delta: it.qty ?? 1, reason: 'purchase', actor: actorName(req) });
-  }
+  // ticking may book into stock; un-ticking takes exactly that booking back (shopping-trust.ts)
+  const out = b.checked !== undefined ? tickItem(it.id, b.checked, actorName(req), { toStock: b.to_stock }) : null;
   emit('shopping');
-  res.json({ ok: true });
+  res.json({ ok: true, booked: out?.booked ?? false, unbooked: out?.unbooked ?? false });
 });
 
 r.delete('/shopping/:id', (req, res) => {
-  db.prepare('DELETE FROM shopping_items WHERE id = ?').run(id(req.params.id));
-  emit('shopping');
+  // a ticked row is only hidden: it stays a purchase signal for the rhythm
+  removeItem(id(req.params.id));
   res.json({ ok: true });
 });
 
 r.post('/shopping/clear-checked', (_req, res) => {
-  db.prepare('DELETE FROM shopping_items WHERE checked_at IS NOT NULL').run();
-  emit('shopping');
-  res.json({ ok: true });
+  res.json({ ok: true, cleared: clearChecked() });
 });
 
 r.get('/shopping/export.txt', (_req, res) => {
@@ -484,8 +480,10 @@ r.get('/settings', (req, res) => {
     ha: { ...haSettings(), token: haSettings().token ? '••••' : '' },
     notify: notifySettings(),
     importAutoApply: getSetting('import.autoApply', false),
+    // Art. 9 GDPR: allergies and children's birth years go to an AI only with this consent (default off)
+    ai: { healthShare: getSetting<boolean>('ai.health_share', false) === true },
     baseUrl: config.baseUrl,
-    features: { vision: visionEnabled(), email: smtpEnabled(), visionModel: config.vision.model || null },
+    features: { vision: visionAvailable(), email: smtpEnabled(), visionModel: visionModel() },
     // the path secret grants MCP access – only admins get to see it
     mcpPath: config.mcpPathSecret && req.actor?.role === 'admin' ? `${config.baseUrl}/mcp/${config.mcpPathSecret}` : null,
   });
@@ -498,6 +496,7 @@ r.patch('/settings', requireAdmin, (req, res) => {
       brand: z.enum(['tohuus', 'fredirando']).optional(),
       language: z.enum(LANG_CODES).optional(),
       importAutoApply: z.boolean().optional(),
+      ai: z.object({ healthShare: z.boolean().optional() }).optional(),
       ha: z.object({ url: z.string().url().or(z.literal('')).optional(), token: z.string().max(400).optional(), cookidooCalendar: z.string().max(120).optional() }).optional(),
       notify: z
         .object({
@@ -516,9 +515,13 @@ r.patch('/settings', requireAdmin, (req, res) => {
   if (b.household) setSetting('household.name', b.household);
   // the explicit choice in Settings wins over BRAND (choosing the default removes the override)
   if (b.brand) chooseBrand(b.brand);
-  if (b.language) setSetting('language', b.language);
+  if (b.language) {
+    setSetting('language', b.language);
+    localizeBaseNames();
+  }
   if (b.ha) setSetting('ha', { ...haSettings(), ...Object.fromEntries(Object.entries(b.ha).filter(([k, v]) => !(k === 'token' && v === '••••'))) });
   if (b.importAutoApply !== undefined) setSetting('import.autoApply', b.importAutoApply);
+  if (b.ai?.healthShare !== undefined) setSetting('ai.health_share', b.ai.healthShare);
   if (b.notify) {
     const cur = notifySettings();
     setSetting('notify', { ...cur, ...b.notify, events: { ...cur.events, ...(b.notify.events ?? {}) } });

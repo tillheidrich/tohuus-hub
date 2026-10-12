@@ -22,7 +22,9 @@ import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { matchIngredient } from './catalog.js';
-import { deleteImage, fetchImageDetailed, warnImage } from './images.js';
+import { deleteImage, fetchImageDetailed, storeImageBytes, warnImage } from './images.js';
+import { ScopedMap, householdId, perHousehold, runInHousehold } from './tenancy.js';
+import { assertStorage } from './plans.js';
 import { downloadCandidates } from './recipe-images.js';
 import { ingredientCore, isPantryText } from './recipes.js';
 import {
@@ -38,6 +40,7 @@ import {
   type LdIngredient,
   type LdStep,
 } from './recipe-jsonld.js';
+import { forEachHousehold } from './cloud-jobs.js';
 
 migrate(
   'recipes2-1',
@@ -289,18 +292,16 @@ export function writeRecipe(rec: ImportRecipe, existingId: number | null): { id:
 
 // ------------------------------------------------------------------ images
 
-const imgDir = () => path.join(config.dataDir, 'images');
-
 /** Store a recipe photo as webp, long side capped at IMAGE_MAX_PX; returns `/img/<file>`. */
 export async function saveRecipeImage(buf: Buffer, recipeId: number): Promise<string> {
-  fs.mkdirSync(imgDir(), { recursive: true });
   const name = `r${recipeId}-${crypto.randomBytes(6).toString('hex')}.webp`;
-  await sharp(buf, { failOn: 'none' })
+  assertStorage(Math.min(buf.length, 600_000));
+  const out = await sharp(buf, { failOn: 'none' })
     .rotate()
     .resize({ width: IMAGE_MAX_PX, height: IMAGE_MAX_PX, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 80 })
-    .toFile(path.join(imgDir(), name));
-  return `/img/${name}`;
+    .toBuffer();
+  return storeImageBytes(name, out);
 }
 
 async function setRecipeImage(id: number, buf: Buffer) {
@@ -315,38 +316,42 @@ async function setRecipeImage(id: number, buf: Buffer) {
   return true;
 }
 
-const queue: number[] = [];
-const queued = new Set<number>();
+// one download queue for all households: every entry remembers its household and is processed inside it
+const queue: { h: string; id: number }[] = [];
+const queued = new Set<string>();
 let running = 0;
-const imageStats = { done: 0, failed: 0 };
+const imageStatsOf = perHousehold(() => ({ done: 0, failed: 0 }));
 let drainWaiters: (() => void)[] = [];
-let emitTimer: NodeJS.Timeout | null = null;
+const emitTimers = new Map<string, NodeJS.Timeout>();
 const softEmit = () => {
-  if (emitTimer) return;
-  emitTimer = setTimeout(() => {
-    emitTimer = null;
-    emit('recipes');
+  const h = householdId();
+  if (emitTimers.has(h)) return;
+  const timer = setTimeout(() => {
+    emitTimers.delete(h);
+    runInHousehold({ id: h, via: 'recipes2' }, () => emit('recipes'));
   }, 1500);
-  emitTimer.unref?.();
+  timer.unref?.();
+  emitTimers.set(h, timer);
 };
 const IMAGE_CONCURRENCY = 2;
 const IMAGE_GAP_MS = 150;
 
 export function queueImage(id: number) {
-  if (queued.has(id)) return;
-  queued.add(id);
-  queue.push(id);
+  const h = householdId();
+  if (queued.has(`${h}:${id}`)) return;
+  queued.add(`${h}:${id}`);
+  queue.push({ h, id });
   pump();
 }
 
 function pump() {
   while (running < IMAGE_CONCURRENCY && queue.length) {
-    const id = queue.shift()!;
+    const { h, id } = queue.shift()!;
     running++;
-    downloadOne(id)
+    runInHousehold({ id: h, via: 'recipes2' }, () => downloadOne(id))
       .catch(() => {})
       .finally(() => {
-        queued.delete(id);
+        queued.delete(`${h}:${id}`);
         running--;
         setTimeout(pump, IMAGE_GAP_MS).unref?.();
         if (!running && !queue.length) {
@@ -375,11 +380,11 @@ async function downloadOne(id: number) {
     } else reason = r.reason;
   }
   if (ok) {
-    imageStats.done++;
+    imageStatsOf().done++;
     db.prepare('UPDATE recipes SET image_tries = 0, image_error = NULL WHERE id = ?').run(id);
     softEmit();
   } else {
-    imageStats.failed++;
+    imageStatsOf().failed++;
     warnImage(row.image_url, reason || 'failed');
     db.prepare('UPDATE recipes SET image_tries = image_tries + 1, image_error = ? WHERE id = ?').run((reason || 'failed').slice(0, 200), id);
   }
@@ -401,10 +406,10 @@ export function imageQueueStatus() {
     .all() as { reason: string; n: number }[];
   return {
     /** in the download queue of this process right now */
-    pending: queue.length + running,
+    pending: [...queued].filter((k) => k.startsWith(`${householdId()}:`)).length,
     /** downloaded / failed since the server started */
-    done: imageStats.done,
-    failed: imageStats.failed,
+    done: imageStatsOf().done,
+    failed: imageStatsOf().failed,
     /** recipes that came with a photo link */
     total: c.with_url,
     /** of those: stored locally */
@@ -438,7 +443,7 @@ export async function storeFetchedImage(id: number, buf: Buffer): Promise<'store
   if (row.image_path) return 'exists';
   if (!(await setRecipeImage(id, buf))) return 'not_found';
   db.prepare('UPDATE recipes SET image_tries = 0, image_error = NULL WHERE id = ?').run(id);
-  imageStats.done++;
+  imageStatsOf().done++;
   softEmit();
   return 'stored';
 }
@@ -476,7 +481,7 @@ export function resumeImages() {
   rows.forEach((r) => queueImage(r.id));
   return rows.length;
 }
-if (!process.env.VITEST) setTimeout(() => resumeImages(), 8000).unref?.();
+if (!process.env.VITEST) setTimeout(() => void forEachHousehold(() => resumeImages(), { scope: 'active', days: 3, label: 'recipe-images' }), 8000).unref?.();
 
 // ------------------------------------------------------------------ bulk
 
@@ -590,7 +595,7 @@ interface Session {
   recipes: ImportRecipe[];
   errors: ImportError[];
 }
-const sessions = new Map<string, Session>();
+const sessions = new ScopedMap<string, Session>();
 const SESSION_TTL = 60 * 60 * 1000;
 
 export function stage(format: string, recipes: ImportRecipe[], errors: ImportError[]): Session {
@@ -610,7 +615,7 @@ export interface Job {
   result: BulkResult;
   error: string | null;
 }
-const jobs = new Map<string, Job>();
+const jobs = new ScopedMap<string, Job>();
 
 /** Start importing a staged file in the background; poll with getJob(). */
 export function startJob(sessionId: string, include?: number[]): Job | null {

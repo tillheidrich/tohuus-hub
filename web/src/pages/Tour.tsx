@@ -64,7 +64,9 @@ interface Step {
 }
 
 const nav = (to: string) => [`.sidebar a[href="${to}"]`, `.tabbar a[href="${to}"]`];
-const MORE = '.tabbar button.tab';
+/** "Mehr" is the avatar in the Heute header on phones (five-tab navigation, plan 2026-10-12) */
+const MORE = '.avatar-btn';
+const TITLE = '.main h1';
 
 /** The steps, in the household language (built at render time so t() picks the right dictionary).
  * The wording follows the household form (area: home): no "who is getting it" alone, no kids outside a family. */
@@ -80,7 +82,7 @@ function steps(form: HouseholdForm = 'family'): Step[] {
     {
       id: 'add',
       route: '/',
-      targets: ['.tabbar .fab', '.sidebar .btn.primary'],
+      targets: ['.today-head .icon-btn', '.sidebar .side-add'],
       title: t('Adding things takes seconds'),
       body: t('Scan a barcode, upload a receipt, take a photo or just type “2 milk, parcel tape”. Nobody has to type in the whole house.'),
     },
@@ -96,8 +98,8 @@ function steps(form: HouseholdForm = 'family'): Step[] {
     },
     {
       id: 'stock',
-      route: '/wo',
-      targets: [...nav('/wo'), MORE],
+      route: '/bestand',
+      targets: nav('/bestand'),
       title: t('Stock and where things are'),
       body:
         form === 'family'
@@ -107,14 +109,14 @@ function steps(form: HouseholdForm = 'family'): Step[] {
     {
       id: 'cook',
       route: '/kochen',
-      targets: [...nav('/kochen'), MORE],
+      targets: nav('/kochen'),
       title: t('What shall we eat?'),
       body: t('Recipes, a week plan and ideas from what is already at home. Missing ingredients go on the list with one tap.'),
     },
     {
       id: 'orders',
       route: '/bestellen',
-      targets: nav('/bestellen'),
+      targets: [...nav('/bestellen'), TITLE],
       title: form === 'single' ? t('Guests & party') : t('Treats'),
       body:
         form === 'single'
@@ -123,15 +125,15 @@ function steps(form: HouseholdForm = 'family'): Step[] {
     },
     {
       id: 'receipts',
-      route: '/ausgaben',
-      targets: [...nav('/ausgaben'), MORE],
+      route: '/geld',
+      targets: nav('/geld'),
       title: t('Receipts and spending'),
       body: t('Upload a receipt and the stock updates itself. Spending shows where the money goes – without keeping a budget book.'),
     },
     {
       id: 'settings',
       route: '/einstellungen',
-      targets: [...nav('/einstellungen'), MORE],
+      targets: [...nav('/einstellungen'), TITLE],
       title: t('Settings and connections'),
       body: t('Members, places and push live in Settings. Telegram, Home Assistant or your AI assistant can be connected there – all optional.'),
     },
@@ -419,7 +421,7 @@ export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => 
             <b>
               {t('Start empty')} <span className="badge tour-rec">{t('recommended for your household')}</span>
             </b>
-            <span>{t('Name your home, pick your places and add your first things. Nothing to clean up later.')}</span>
+            <span>{t('Say who belongs to it and start with your list – in a minute. Nothing to clean up later.')}</span>
           </button>
           <button className="action tour-choice" disabled={busy !== null} onClick={() => choose('demo')}>
             <span className="ic">

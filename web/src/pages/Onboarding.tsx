@@ -7,6 +7,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Barcode,
+  Camera,
+  TextAa,
   CaretDown,
   Check,
   CheckCircle,
@@ -26,95 +28,59 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { type Climate, del, invalidate, patch, post, put, useApi } from '../api';
-import { FORM_HINT, FORM_LABEL, PRESET_LABEL, type HomePreset, type HomeSetup, type HouseholdForm, useHousehold } from '../household';
+import { type HomeSetup, type HouseholdForm, useHousehold } from '../household';
 import { CHANGELOG, latestChange, unseenChanges } from '../changelog';
-import { LANGUAGE_OPTIONS, lang, locale, pick, setLang, t } from '../i18n';
-import { Ic, LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { locale, pick, t } from '../i18n';
+import { LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { Ic } from '../placeicons';
 import { StartChoice, useTourInfo } from './Tour';
 import { StaplesPicker } from './Share';
-import { HomeArt, HomeTiles } from '../art';
 
-type Step = 'home' | 'where' | 'places' | 'spots' | 'invite' | 'stock';
-const STEPS: Step[] = ['home', 'where', 'places', 'spots', 'invite', 'stock'];
-
-interface Room {
-  id: number;
-  name: string;
-  kind: string;
-  icon: string;
-  climate?: Climate;
-  parent_id?: number | null;
-  archived?: boolean;
-  depth?: number;
-  products?: number;
-}
-
-export interface GettingStarted {
-  state: { step: Step; started: boolean; closed: boolean; skipped: boolean; checklistDismissed: boolean; stockPath?: string | null };
-  newHousehold: boolean;
-  wizardDue: boolean;
-  admin: boolean;
-  checklist: { items: { key: 'home' | 'invite' | 'stock' | 'phone' | 'recipe'; done: boolean }[]; done: number; total: number };
-  showChecklist: boolean;
-  household: { name: string; language: string };
-  home?: HomeSetup;
-  rooms: Room[];
-  counts: { members: number; products: number; inStock: number; recipes: number; imports: number };
-}
-
-export const useGettingStarted = (enabled = true) => useApi<GettingStarted>('onboarding', enabled ? '/onboarding' : null);
-
-const REDIRECT_KEY = 'sw.onb.redirected';
-const ss = {
-  get: (k: string) => {
-    try {
-      return sessionStorage.getItem(k);
-    } catch {
-      return null;
-    }
-  },
-  set: (k: string, v: string) => {
-    try {
-      sessionStorage.setItem(k, v);
-    } catch {
-      /* ignore */
-    }
-  },
-};
-
-/** Opens the setup once per browser session for an admin of a brand-new household. */
-export function useOnboardingRedirect(me: Me) {
-  const admin = me.actor.role === 'admin';
-  const g = useGettingStarted(admin);
-  const nav = useNavigate();
-  const loc = useLocation();
-  useEffect(() => {
-    if (!g.data?.wizardDue || loc.pathname !== '/' || ss.get(REDIRECT_KEY)) return;
-    ss.set(REDIRECT_KEY, '1');
-    nav('/willkommen', { replace: true });
-  }, [g.data?.wizardDue, loc.pathname, nav]);
-}
+import { useInstance } from '../data';
+import { type GettingStarted, type Room, type Step, STEPS, useGettingStarted, useOnboardingRedirect } from '../onboarding-state';
+export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
 
 // ================================================================== wizard
 
 /** The steps for this household: living alone skips "who else lives here" (area: home). */
-const stepsFor = (form?: HouseholdForm, chosen?: boolean) => STEPS.filter((s) => !(s === 'invite' && chosen && form === 'single'));
+
+/**
+ * Setup flow (strategy 12 Oct 2026, list first, no stock-keeping):
+ * 1 "Wer gehört dazu?" sets the household form → 2 "Wo ist eure Liste heute?" (paste, photo of the paper list,
+ * start fresh) → 3 the 30-second walkthrough "da · fehlt · egal" over typical items for that form; "fehlt" goes on
+ * the list → 4 "Wer kauft sonst ein?" (invite link) → 5 offer "Bon teilen". The older place/stock steps stay
+ * reachable via /willkommen?step=places|spots|stock.
+ */
+type Flow = 'who' | 'list' | 'walk' | 'invite' | 'receipt';
+const FLOW: Flow[] = ['who', 'list', 'walk', 'invite', 'receipt'];
+/** the server keeps the old step names – map the new flow onto them so progress survives a reload */
+const SERVER_STEP: Record<Flow, Step> = { who: 'home', list: 'where', walk: 'places', invite: 'invite', receipt: 'stock' };
+const FROM_SERVER: Partial<Record<Step, Flow>> = { home: 'who', where: 'list', places: 'walk', spots: 'walk', invite: 'invite', stock: 'receipt' };
+const LEGACY: Step[] = ['places', 'spots', 'stock'];
 
 export function Onboarding({ me }: { me: Me }) {
   const g = useGettingStarted(me.actor.role === 'admin');
   const [sp] = useSearchParams();
-  const [step, setStep] = useState<Step | null>(null);
+  const [step, setStep] = useState<Flow | null>(null);
+  const [form, setForm] = useState<OnbForm | null>(null);
+  const [photoLater, setPhotoLater] = useState(false);
   const nav = useNavigate();
   // area tour: on a fresh instance the admin first picks "start empty" or "explore with demo data"
   const tour = useTourInfo();
   const choosing = Boolean(tour.data?.start.due);
+  const legacy = sp.get('step') as Step | null;
+  const cloud = useInstance().data?.mode === 'cloud';
+  useEffect(() => {
+    if (cloud && choosing && me.actor.role === 'admin') post('/tour/start', { choice: 'empty' }).then(() => invalidate('tour', 'onboarding')).catch(() => {});
+  }, [cloud, choosing, me.actor.role]);
   useEffect(() => {
     if (step || !g.data || choosing) return;
-    const q = sp.get('step') as Step | null;
-    setStep(q && STEPS.includes(q) ? q : g.data.state.step ?? 'home');
+    setStep(FROM_SERVER[legacy ?? g.data.state.step] ?? 'who');
     if (!g.data.state.started) patch('/onboarding', { started: true }).then(() => invalidate('onboarding')).catch(() => {});
-  }, [g.data, sp, step, choosing]);
+  }, [g.data, legacy, step, choosing]);
 
+  // ToHuus Cloud: a new household starts empty – no demo choice, straight to "Wer gehört dazu?"
+  if (me.actor.role === 'admin' && choosing && cloud) return <Skeleton n={3} h={90} />;
   if (me.actor.role === 'admin' && choosing) return <StartChoice onDone={(c) => (c === 'demo' ? nav('/') : invalidate('onboarding'))} />;
   if (me.actor.role !== 'admin')
     return (
@@ -123,31 +89,30 @@ export function Onboarding({ me }: { me: Me }) {
       </div>
     );
   if (g.isLoading || !g.data || !step) return <Skeleton n={3} h={90} />;
+  // deep links into the older place / stock steps (Settings, checklist)
+  if (legacy && LEGACY.includes(legacy)) return <LegacyOnboarding g={g.data} first={legacy} />;
 
-  const steps = stepsFor(g.data.home?.form, g.data.home?.form_chosen);
-  const cur: Step = steps.includes(step) ? step : (steps[STEPS.indexOf(step)] ?? 'stock');
+  const curForm: OnbForm = form ?? (g.data.home?.form_chosen ? (g.data.home.form as OnbForm) : 'couple');
+  const steps = FLOW.filter((s) => !(s === 'invite' && curForm === 'single'));
+  const cur: Flow = steps.includes(step) ? step : 'receipt';
   const idx = steps.indexOf(cur);
-  const go = (s: Step) => {
+  const go = (s: Flow) => {
     setStep(s);
     window.scrollTo(0, 0);
-    patch('/onboarding', { step: s }).then(() => invalidate('onboarding')).catch(() => {});
+    patch('/onboarding', { step: SERVER_STEP[s] }).then(() => invalidate('onboarding')).catch(() => {});
   };
-  // the form may change in step 1 – work out next/back from the fresh list each time
-  const next = (from: Step, form?: HouseholdForm) => {
-    const list = stepsFor(form ?? g.data!.home?.form, form ? true : g.data!.home?.form_chosen);
-    go(list[list.indexOf(from) + 1] ?? 'stock');
-  };
-  const back = (from: Step) => go(steps[Math.max(0, steps.indexOf(from) - 1)]);
+  const next = () => go(steps[idx + 1] ?? 'receipt');
+  const back = () => go(steps[Math.max(0, idx - 1)]);
   const close = async (skipped: boolean, to = '/') => {
     await patch('/onboarding', { closed: true, skipped, started: true }).catch(() => {});
-    invalidate('onboarding');
+    invalidate('onboarding', 'today');
     nav(to);
   };
 
   return (
-    <div className="onb">
+    <div className="onb onb2">
       <div className="onb-top">
-        <div className="onb-progress" aria-label={t('Step {n} of {total}', { n: idx + 1, total: steps.length })}>
+        <div className="onb-progress" role="progressbar" aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={idx + 1} aria-label={t('Step {n} of {total}', { n: idx + 1, total: steps.length })}>
           {steps.map((s, i) => (
             <i key={s} className={i <= idx ? 'on' : ''} />
           ))}
@@ -156,85 +121,87 @@ export function Onboarding({ me }: { me: Me }) {
           {t('Skip setup')}
         </button>
       </div>
-      {cur === 'home' && <HomeTiles className="onb-homes" />}
-      <div className="eyebrow">{t('Step {n} of {total}', { n: idx + 1, total: steps.length })}</div>
-      {cur === 'home' && <StepHome g={g.data} onNext={(form) => next('home', form)} />}
-      {cur === 'where' && <StepWhere g={g.data} onBack={() => back('where')} onNext={() => next('where')} />}
-      {cur === 'places' && <StepPlaces g={g.data} onBack={() => back('places')} onNext={() => next('places')} />}
-      {cur === 'spots' && <StepSpots g={g.data} onBack={() => back('spots')} onNext={() => next('spots')} />}
-      {cur === 'invite' && <StepInvite form={g.data.home?.form ?? 'family'} onBack={() => back('invite')} onNext={() => next('invite')} />}
-      {cur === 'stock' && <StepStock onBack={() => back('stock')} onDone={(to) => close(false, to)} />}
+      {cur === 'who' && (
+        <StepWho
+          g={g.data}
+          initial={form ?? (g.data.home?.form_chosen ? (g.data.home.form as OnbForm) : null)}
+          onNext={(f) => {
+            setForm(f);
+            go('list');
+          }}
+        />
+      )}
+      {cur === 'list' && (
+        <StepList
+          onBack={back}
+          onNext={(photo) => {
+            setPhotoLater(photo);
+            next();
+          }}
+        />
+      )}
+      {cur === 'walk' && <StepWalk form={curForm} onBack={back} onNext={next} />}
+      {cur === 'invite' && <StepInvite form={curForm} title={t('Who else does the shopping?')} onBack={back} onNext={next} />}
+      {cur === 'receipt' && <StepReceipt photo={photoLater} onBack={back} onDone={(to) => close(false, to)} />}
     </div>
   );
 }
 
-// ------------------------------------------------------------------ step 1: name, language, who lives here
+/** The forms of the strategy, incl. 'carer' ("I also look after someone"). */
+type OnbForm = HouseholdForm;
+const ONB_FORMS: { key: OnbForm; label: string; hint: string }[] = [
+  { key: 'single', label: 'Just me', hint: 'One list, nothing to share.' },
+  { key: 'couple', label: 'The two of us', hint: 'One list for both, live on both phones.' },
+  { key: 'family', label: 'Family', hint: 'Everyone adds, whoever shops sees it.' },
+  { key: 'shared', label: 'Shared flat', hint: 'Shared things together, your own stays yours.' },
+  { key: 'carer', label: 'I also look after someone', hint: 'For example parents or a neighbour – their list next to yours.' },
+];
 
-function StepHome({ g, onNext }: { g: GettingStarted; onNext: (form?: HouseholdForm) => void }) {
+function StepWho({ g, initial, onNext }: { g: GettingStarted; initial: OnbForm | null; onNext: (f: OnbForm) => void }) {
+  const [form, setForm] = useState<OnbForm | null>(initial);
   const [name, setName] = useState(g.household.name);
-  const [form, setForm] = useState<HouseholdForm | null>(g.home?.form_chosen ? g.home.form : null);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
-  const setSetting = (body: Record<string, string>) => patch('/settings', body);
-  const next = async () => {
+  const save = async () => {
+    if (!form) return;
     setBusy(true);
     try {
-      await put('/onboarding/home', { household: name.trim() || undefined, ...(form ? { form } : {}) });
-      invalidate('me', 'settings', 'overview', 'onboarding');
-      onNext(form ?? undefined);
+      const body = { household: name.trim() || undefined };
+      await put('/onboarding/home', { ...body, form });
+      invalidate('me', 'settings', 'onboarding');
+      onNext(form);
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     } finally {
       setBusy(false);
     }
   };
-  const forms: HouseholdForm[] = ['single', 'couple', 'family', 'shared'];
-
   return (
     <div className="stack" style={{ gap: 22 }}>
       <header>
-        <h1>{t('Welcome home.')}</h1>
-        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
-          {t('A few short steps and your household is ready. Everything can be skipped and changed later in Settings.')}
-        </p>
+        <div className="eyebrow">{t('Welcome')}</div>
+        <h1>{t('Who belongs to it?')}</h1>
+        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>{t('ToHuus adapts its suggestions and wording. You can change it any time.')}</p>
       </header>
-
-      <div className="card pad stack" style={{ gap: 18 }}>
-        <div className="field">
-          <label htmlFor="onb-name">{t('What do you call your home?')}</label>
-          <input id="onb-name" className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. The Millers, Rotdornweg')} />
-        </div>
-        <div className="field">
-          <label>{t('Language')}</label>
-          <Seg
-            value={lang()}
-            onChange={(v) =>
-              setSetting({ language: v }).then(() => {
-                setLang(v);
-                location.reload();
-              })
-            }
-            options={LANGUAGE_OPTIONS}
-          />
-        </div>
+      <div className="onb-forms2" role="radiogroup" aria-label={t('Who belongs to it?')}>
+        {ONB_FORMS.map((f) => (
+          <button key={f.key} type="button" role="radio" aria-checked={form === f.key} className={`form-tile ${form === f.key ? 'on' : ''}`} onClick={() => setForm(f.key)}>
+            <span className={`shape ${f.key === 'single' ? 'c' : f.key === 'couple' ? 'a' : f.key === 'family' ? 's' : f.key === 'shared' ? 'h' : 't'}`} aria-hidden="true" />
+            <span className="grow">
+              <b>{t(f.label)}</b>
+              <span>{t(f.hint)}</span>
+            </span>
+            {form === f.key && <Check size={20} weight="bold" aria-hidden="true" />}
+          </button>
+        ))}
       </div>
-
-      <section>
-        <h2>{t('Who lives here?')}</h2>
-        <p className="small muted" style={{ margin: '4px 0 12px' }}>{t('The app adapts what it shows and suggests. Nothing is locked – you can switch any time.')}</p>
-        <div className="onb-paths onb-forms">
-          {forms.map((f) => (
-            <button key={f} type="button" className={`action ${form === f ? 'on' : ''}`} aria-pressed={form === f} onClick={() => setForm(form === f ? null : f)}>
-              <b>{t(FORM_LABEL[f])}</b>
-              <span>{t(FORM_HINT[f])}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
+      <div className="field">
+        <label htmlFor="onb-name">{t('What do you call your home?')}</label>
+        <input id="onb-name" className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. The Millers, Rotdornweg')} />
+      </div>
       <div className="onb-foot">
         <span />
-        <button className="btn primary lg" disabled={busy} onClick={next}>
+        <button className="btn primary lg" disabled={busy || !form} onClick={save}>
           {t('Next')} <ArrowRight size={18} />
         </button>
       </div>
@@ -242,16 +209,114 @@ function StepHome({ g, onNext }: { g: GettingStarted; onNext: (form?: HouseholdF
   );
 }
 
-// ------------------------------------------------------------------ step 2: how do you live?
-
-function StepWhere({ g, onBack, onNext }: { g: GettingStarted; onBack: () => void; onNext: () => void }) {
+function StepList({ onBack, onNext }: { onBack: () => void; onNext: (photoLater: boolean) => void }) {
+  const [mode, setMode] = useState<'paste' | null>(null);
+  const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const toast = useToast();
-  const choose = async (preset: HomePreset | null) => {
+  const takeOver = async () => {
     setBusy(true);
     try {
-      await put('/onboarding/where', { preset });
-      invalidate('me', 'onboarding');
+      const rows = await post<any[]>('/shop/parse', { text });
+      const items = rows.filter((r) => !r.on_list).map((r) => ({ name: r.name ?? r.text, qty: r.qty ?? null, unit: r.unit ?? null, amount: r.amount ?? null, product_id: r.confident ? (r.product_id ?? null) : null }));
+      if (items.length) await post('/shop/quick-add', { items });
+      invalidate('shopping', 'today');
+      toast({ text: items.length === 1 ? t('1 thing is on your list') : t('{n} things are on your list', { n: items.length }) });
+      onNext(false);
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="stack" style={{ gap: 22 }}>
+      <header>
+        <h1>{t('Where is your list today?')}</h1>
+        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>{t('Bring it along – nothing has to be typed twice.')}</p>
+      </header>
+      {mode === 'paste' ? (
+        <div className="stack">
+          <label className="field">
+            <span>{t('Paste your list')}</span>
+            <textarea className="input" rows={7} value={text} onChange={(e) => setText(e.target.value)} placeholder={t('From WhatsApp, Notes or an e-mail – one thing per line or separated by commas.')} autoFocus />
+          </label>
+          <button className="btn primary lg" disabled={busy || text.trim().length < 2} onClick={takeOver}>
+            {busy ? t('One moment …') : t('Put it on the list')} <ArrowRight size={18} />
+          </button>
+        </div>
+      ) : (
+        <div className="onb-forms2">
+          <button className="form-tile" onClick={() => setMode('paste')}>
+            <TextAa size={24} aria-hidden="true" />
+            <span className="grow">
+              <b>{t('Paste text')}</b>
+              <span>{t('From WhatsApp, Notes, an e-mail …')}</span>
+            </span>
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
+          <button className="form-tile" onClick={() => onNext(true)}>
+            <Camera size={24} aria-hidden="true" />
+            <span className="grow">
+              <b>{t('Photo of the paper list')}</b>
+              <span>{t('We’ll do it at the end of the setup.')}</span>
+            </span>
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
+          <button className="form-tile" onClick={() => onNext(false)}>
+            <Sparkle size={24} aria-hidden="true" />
+            <span className="grow">
+              <b>{t('Start fresh')}</b>
+              <span>{t('The next step fills the list in 30 seconds.')}</span>
+            </span>
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+      <div className="onb-foot">
+        <button className="btn ghost" onClick={mode ? () => setMode(null) : onBack}>
+          <ArrowLeft size={16} /> {t('Back')}
+        </button>
+        <span />
+      </div>
+    </div>
+  );
+}
+
+/** Typical items per household form – English source, shown via t(). No counting, no places, no appliances. */
+const WALK_BASE = ['Milk', 'Bread', 'Eggs', 'Butter', 'Coffee', 'Pasta', 'Rice', 'Onions', 'Tinned tomatoes', 'Cheese', 'Toilet paper', 'Washing-up liquid'];
+const WALK_EXTRA: Partial<Record<OnbForm, string[]>> = {
+  single: ['Muesli', 'Frozen pizza'],
+  family: ['Yoghurt', 'Apples', 'Juice', 'Bananas'],
+  shared: ['Oat milk', 'Bin bags', 'Sponges'],
+  carer: ['Mineral water', 'Rusks', 'Tea'],
+};
+function walkItems(form: OnbForm) {
+  const extra = WALK_EXTRA[form] ?? ['Bananas', 'Yoghurt'];
+  // twelve or a few more, the form's own first so the list feels like theirs
+  return [...extra, ...WALK_BASE].slice(0, Math.max(12, extra.length + 10));
+}
+
+type Answer = 'here' | 'missing' | 'skip';
+function StepWalk({ form, onBack, onNext }: { form: OnbForm; onBack: () => void; onNext: () => void }) {
+  const items = useMemo(() => walkItems(form), [form]);
+  const [i, setI] = useState(0);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const done = i >= items.length;
+  const missing = items.filter((_, k) => answers[k] === 'missing');
+  const answer = (a: Answer) => {
+    const n = [...answers];
+    n[i] = a;
+    setAnswers(n);
+    setI(i + 1);
+  };
+  const finish = async () => {
+    setBusy(true);
+    try {
+      if (missing.length) await post('/shop/quick-add', { items: missing.map((m) => ({ name: t(m) })) });
+      invalidate('shopping', 'today');
       onNext();
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
@@ -259,29 +324,116 @@ function StepWhere({ g, onBack, onNext }: { g: GettingStarted; onBack: () => voi
       setBusy(false);
     }
   };
-  const presets: HomePreset[] = ['flat', 'terraced', 'house', 'shared', 'other'];
+  // keys: ← fehlt, → da, ↓ egal – for a keyboard on desktop
+  useEffect(() => {
+    if (done) return;
+    const on = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+      if (e.key === 'ArrowRight') answer('here');
+      else if (e.key === 'ArrowLeft') answer('missing');
+      else if (e.key === 'ArrowDown') answer('skip');
+    };
+    window.addEventListener('keydown', on);
+    return () => window.removeEventListener('keydown', on);
+  });
   return (
     <div className="stack" style={{ gap: 22 }}>
       <header>
-        <h1>{t('How do you live?')}</h1>
-        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>{t('Only for suggestions and the picture of your home. Your places are always your own.')}</p>
+        <h1>{t('30 seconds: what’s missing?')}</h1>
+        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>{t('Just tap – no counting. Whatever is missing goes on the list.')}</p>
       </header>
-      <div className="onb-paths onb-presets">
-        {presets.map((p) => (
-          <button key={p} type="button" className={`action ${g.home?.preset === p ? 'on' : ''}`} aria-pressed={g.home?.preset === p} disabled={busy} onClick={() => choose(p)}>
-            {p !== 'other' && <HomeArt preset={p} className="onb-preset-art" />}
-            <b>{t(PRESET_LABEL[p])}</b>
-          </button>
-        ))}
+      {!done ? (
+        <div className="walk" aria-live="polite">
+          <div className="walk-count">{t('{n} of {total}', { n: i + 1, total: items.length })}</div>
+          <div className="walk-card">
+            <b>{t(items[i])}</b>
+          </div>
+          <div className="walk-btns">
+            <button className="btn lg walk-here" onClick={() => answer('here')}>
+              <Check size={18} weight="bold" /> {t('It’s here')}
+            </button>
+            <button className="btn lg primary walk-missing" onClick={() => answer('missing')}>
+              <Plus size={18} weight="bold" /> {t('Missing')}
+            </button>
+            <button className="btn lg ghost walk-skip" onClick={() => answer('skip')}>
+              {t('Don’t care')}
+            </button>
+          </div>
+          {i > 0 && (
+            <button className="linkish" style={{ alignSelf: 'center' }} onClick={() => setI(i - 1)}>
+              <ArrowLeft size={14} /> {t('One back')}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="walk-done">
+          <b>{missing.length === 0 ? t('Nothing missing – nice.') : missing.length === 1 ? t('1 thing goes on the list:') : t('{n} things go on the list:', { n: missing.length })}</b>
+          {missing.length > 0 && <p className="muted">{missing.map((m) => t(m)).join(', ')}</p>}
+        </div>
+      )}
+      <div className="onb-foot">
+        <button className="btn ghost" onClick={onBack}>
+          <ArrowLeft size={16} /> {t('Back')}
+        </button>
+        <button className={`btn lg ${done ? 'primary' : ''}`} disabled={busy} onClick={done ? finish : onNext}>
+          {done ? t('Next') : t('Skip')} <ArrowRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StepReceipt({ photo, onBack, onDone }: { photo: boolean; onBack: () => void; onDone: (to: string) => void }) {
+  return (
+    <div className="stack" style={{ gap: 22 }}>
+      <header>
+        <h1>{t('Share a receipt?')}</h1>
+        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
+          {t('From every receipt ToHuus remembers what you buy and how often – that’s where the suggestions on “Today” come from. And “Money” shows where it goes.')}
+        </p>
+      </header>
+      <div className="onb-forms2">
+        <button className="form-tile" onClick={() => onDone('/import?mode=file')}>
+          <FileArrowUp size={24} aria-hidden="true" />
+          <span className="grow">
+            <b>{t('Share a receipt')}</b>
+            <span>{t('eBon, REWE PDF or a delivery notice')}</span>
+          </span>
+          <ArrowRight size={18} aria-hidden="true" />
+        </button>
+        <button className="form-tile" onClick={() => onDone('/import?mode=photo')}>
+          <Camera size={24} aria-hidden="true" />
+          <span className="grow">
+            <b>{photo ? t('Photo of the paper list or a receipt') : t('Photo of a paper receipt')}</b>
+            <span>{t('Aldi, Lidl, the bakery …')}</span>
+          </span>
+          <ArrowRight size={18} aria-hidden="true" />
+        </button>
       </div>
       <div className="onb-foot">
         <button className="btn ghost" onClick={onBack}>
           <ArrowLeft size={16} /> {t('Back')}
         </button>
-        <button className="btn lg" disabled={busy} onClick={() => choose(null)}>
-          {t('Skip')} <ArrowRight size={18} />
+        <button className="btn lg primary" onClick={() => onDone('/')}>
+          {t('Later – to Today')} <ArrowRight size={18} />
         </button>
       </div>
+    </div>
+  );
+}
+
+/** The older place / stock steps, still reachable by deep link (Settings, getting-started checklist). */
+function LegacyOnboarding({ g, first }: { g: GettingStarted; first: Step }) {
+  const nav = useNavigate();
+  const [step, setStep] = useState<Step>(first);
+  const order: Step[] = ['places', 'spots', 'stock'];
+  const go = (s: Step | undefined) => (s ? setStep(s) : nav('/'));
+  const at = order.indexOf(step);
+  return (
+    <div className="onb">
+      {step === 'places' && <StepPlaces g={g} onBack={() => nav(-1)} onNext={() => go(order[at + 1])} />}
+      {step === 'spots' && <StepSpots g={g} onBack={() => go(order[at - 1])} onNext={() => go(order[at + 1])} />}
+      {step === 'stock' && <StepStock onBack={() => go(order[at - 1])} onDone={(to) => nav(to)} />}
     </div>
   );
 }
@@ -539,7 +691,7 @@ function StepSpots({ g, onBack, onNext }: { g: GettingStarted; onBack: () => voi
 
 // ------------------------------------------------------------------ step 5: invite (not for one-person households)
 
-function StepInvite({ form, onBack, onNext }: { form: HouseholdForm; onBack: () => void; onNext: () => void }) {
+function StepInvite({ form, title, onBack, onNext }: { form: HouseholdForm; title?: string; onBack: () => void; onNext: () => void }) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<{ name: string; url: string } | null>(null);
@@ -566,7 +718,7 @@ function StepInvite({ form, onBack, onNext }: { form: HouseholdForm; onBack: () 
   return (
     <div className="stack" style={{ gap: 22 }}>
       <header>
-        <h1>{t('Who else lives here?')}</h1>
+        <h1>{title ?? t('Who else lives here?')}</h1>
         <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
           {form === 'couple'
             ? t('Shared lists only work when everyone can add to them. Your partner gets a personal link and picks their own password.')
@@ -828,6 +980,7 @@ const INVITE_TITLE: Record<HouseholdForm, string> = {
   couple: 'Invite your partner',
   family: 'Invite your family',
   shared: 'Invite your flatmates',
+  carer: 'Invite the people you shop for',
 };
 
 /** "3 of 5 done" – disappears when everything is done or when dismissed. Admins only. */

@@ -14,6 +14,7 @@ import { upload } from './core.js';
 import { safeFetch } from '../lib/net.js';
 import { fmtDay, t } from '../i18n.js';
 import { recordCorrection } from '../lib/quality.js';
+import { uploadQuota } from '../lib/plans.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -118,7 +119,7 @@ r.delete('/imports/:id', (req, res) => {
  * Universal upload: PDFs (REWE avis / eBon or any text PDF), photos (receipt, shelf, product) and plain text.
  * mode: auto | receipt | shelf
  */
-r.post('/imports/upload', upload.array('files', 8), async (req, res) => {
+r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res) => {
   const files = (req.files as Express.Multer.File[]) ?? [];
   const mode = String(req.body.mode ?? 'auto');
   const results: any[] = [];

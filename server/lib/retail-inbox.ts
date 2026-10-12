@@ -17,6 +17,7 @@ import { emit } from './bus.js';
 import { createImport, linesToImport, parseDocumentText, pdfToText, saveUpload } from './imports.js';
 import { RetailError } from './retail.js';
 import { runVision, visionAvailable } from './vision.js';
+import { featureOff } from './tenancy.js';
 
 const KEY = 'retail.inbox';
 const PW_KEY = 'retail.inbox.password';
@@ -231,8 +232,9 @@ export interface InboxClient {
 
 export type ClientFactory = (cfg: InboxConfig, password: string) => InboxClient;
 
-const imapFactory: ClientFactory = (cfg, password) =>
-  new ImapFlow({
+const imapFactory: ClientFactory = (cfg, password) => {
+  if (featureOff('imap')) throw new Error('The mailbox import is not available in ToHuus Cloud.');
+  return new ImapFlow({
     host: cfg.host,
     port: cfg.port,
     secure: cfg.tls,
@@ -240,6 +242,7 @@ const imapFactory: ClientFactory = (cfg, password) =>
     logger: false,
     socketTimeout: 60_000,
   }) as unknown as InboxClient;
+};
 
 export function senderAllowed(from: string, allow: string[]) {
   if (!allow.length) return true;
@@ -345,7 +348,7 @@ async function runCheck(opts: CheckOptions): Promise<InboxStatus> {
 
 let timer: NodeJS.Timeout | null = null;
 export function startInboxPoller() {
-  if (timer) return;
+  if (timer || featureOff('imap')) return;
   const tick = () => {
     if (!inboxConfig().enabled) return;
     checkInbox().catch((e) => console.error('[inbox]', (e as Error).message));

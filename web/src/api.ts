@@ -3,15 +3,27 @@ import { locale, num, t } from './i18n';
 
 export const qc = new QueryClient({
   // a 4xx (not allowed, not found) won't change on a retry – only network / server errors are retried once
-  defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: true, retry: (n, e) => n < 1 && !(((e as { status?: number }).status ?? 0) >= 400 && ((e as { status?: number }).status ?? 0) < 500) } },
+  // Server-sent events (/api/events) invalidate what changed, so data can stay fresh for a while: switching tabs
+  // shows the cache instantly instead of refetching everything (plan 2026-10-12, speed).
+  defaultOptions: { queries: { staleTime: 120_000, gcTime: 10 * 60_000, refetchOnWindowFocus: true, retry: (n, e) => n < 1 && !(((e as { status?: number }).status ?? 0) >= 400 && ((e as { status?: number }).status ?? 0) < 500) } },
 });
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** machine-readable reason from the server, e.g. 'quota.assistant', 'quota.receiptAi', 'storage.full' */
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
+}
+
+/** Friendly words for limits the server reports with a code (plans, quotas). */
+function friendly(code: string | undefined, fallback: string) {
+  if (code === 'quota.receiptAi') return t('Today’s receipt photos are used up – PDFs and eBons still work, photos again tomorrow.');
+  if (code === 'uploads.daily') return t('That’s enough uploads for today – tomorrow it works again.');
+  return fallback;
 }
 
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown; form?: FormData } = {}): Promise<T> {
@@ -23,7 +35,10 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   });
   const isJson = r.headers.get('content-type')?.includes('json');
   const data = isJson ? await r.json() : await r.text();
-  if (!r.ok) throw new ApiError(r.status, (isJson && (data as any).error) || r.statusText);
+  if (!r.ok) {
+    const code = isJson ? ((data as any).code ?? (data as any).key) : undefined;
+    throw new ApiError(r.status, friendly(code, (isJson && (data as any).error) || r.statusText), code);
+  }
   // An API answer that is not JSON is never what a caller expects (e.g. the SPA shell for an unknown path)
   if (!isJson && r.status !== 204 && (r.headers.get('content-type') ?? '').includes('text/html')) throw new ApiError(502, t('Unexpected answer from the server'));
   return data as T;
@@ -47,14 +62,14 @@ export function useApi<T = any>(key: string | (string | number)[], path: string 
 
 /** topic → query keys to refresh when the server announces a change */
 const TOPIC_KEYS: Record<string, string[]> = {
-  stock: ['overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh', 'onboarding', 'away', 'boxes', 'share'],
-  products: ['products', 'product', 'overview', 'shopping', 'fresh', 'onboarding', 'boxes', 'share'],
-  shopping: ['shopping', 'overview'],
-  recipes: ['recipes', 'recipe', 'suggest', 'overview', 'plan', 'onboarding', 'people', 'recipe-photos'],
-  imports: ['imports', 'import', 'overview', 'spending', 'quality'],
-  orders: ['orders', 'overview'],
+  stock: ['today', 'rhythm', 'cook', 'overview', 'products', 'product', 'locations', 'shopping', 'suggest', 'ha', 'fresh', 'onboarding', 'away', 'boxes', 'share'],
+  products: ['today', 'products', 'product', 'overview', 'shopping', 'fresh', 'onboarding', 'boxes', 'share'],
+  shopping: ['today', 'rhythm', 'shopping', 'overview'],
+  recipes: ['today', 'cook', 'recipes', 'recipe', 'suggest', 'overview', 'plan', 'onboarding', 'people', 'recipe-photos'],
+  imports: ['today', 'money', 'rhythm', 'imports', 'import', 'overview', 'spending', 'quality'],
+  orders: ['today', 'orders', 'overview'],
   notifications: ['notifications'],
-  settings: ['settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share'],
+  settings: ['billing', 'settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share'],
   care: ['care'],
   away: ['away'],
   tour: ['tour', 'overview', 'products', 'recipes', 'shopping', 'onboarding'],

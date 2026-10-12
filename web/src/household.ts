@@ -7,7 +7,8 @@ import type { Me } from './App';
 import { useApi } from './api';
 import { t } from './i18n';
 
-export type HouseholdForm = 'single' | 'couple' | 'family' | 'shared';
+/** 'carer': "ich versorge noch jemanden mit" – also shops and cooks for someone outside the home (plan 12 Oct 2026) */
+export type HouseholdForm = 'single' | 'couple' | 'family' | 'shared' | 'carer';
 export type HomePreset = 'flat' | 'terraced' | 'house' | 'shared' | 'other';
 
 export interface HomeSetup {
@@ -37,12 +38,14 @@ export const FORM_LABEL: Record<HouseholdForm, string> = {
   couple: 'The two of us',
   family: 'Family',
   shared: 'Shared flat',
+  carer: 'I also look after someone',
 };
 export const FORM_HINT: Record<HouseholdForm, string> = {
   single: 'No “who’s getting it”, no votes – just your lists.',
   couple: 'Shared lists, votes for dinner, no kids section.',
   family: 'Everything, including kids and guests.',
   shared: 'Shared and personal places, no family wording.',
+  carer: 'Your list and theirs side by side, “who gets it” included.',
 };
 export const PRESET_LABEL: Record<HomePreset, string> = {
   flat: 'Flat',

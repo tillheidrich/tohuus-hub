@@ -22,6 +22,8 @@ import type { Me } from '../App';
 import { type Product, ApiError, get, invalidate, patch, post, qc, useApi } from '../api';
 import { useHousehold } from '../household';
 import { t } from '../i18n';
+import { getOr } from '../data';
+import { originLabel, rhythmLine } from '../origin';
 import { pendingQueue, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, SectionShape, sectionLabel } from '../shop/sections';
 import { ItemBuyAt } from '../shop/BuyAt';
@@ -176,15 +178,26 @@ export function Shopping() {
   const tick = async (i: ShopItem, on: boolean) => {
     if (i.id < 0) return;
     if (inStore) {
-      qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0], (old) => (old ? moveLocal(old, i.id, on, true) : old));
+      qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, on, true) : old));
       await run({ type: 'basket', id: i.id, on, store_id: storeId });
       return;
     }
-    qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0], (old) => (old ? moveLocal(old, i.id, on, false) : old));
+    qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, on, false) : old));
     const sent = await run({ type: 'check', id: i.id, on, to_stock: on && toStock });
-    if (sent && on && toStock && i.product_id) {
-      invalidate('products');
-      toast({ text: t('{name} put away', { name: i.text }) });
+    if (sent && on) {
+      if (toStock && i.product_id) invalidate('products');
+      // a tick is easy to hit by mistake – always offer the way back
+      toast({
+        text: toStock && i.product_id ? t('{name} put away', { name: i.text }) : t('{name} ticked off', { name: i.text }),
+        action: {
+          label: t('Undo'),
+          run: () => {
+            qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, false, false) : old));
+            // the same un-tick as tapping the row again: the server takes back exactly what the tick booked into stock
+            void run({ type: 'check', id: i.id, on: false }).then(() => invalidate('products', 'today'));
+          },
+        },
+      });
     }
   };
 
@@ -363,7 +376,7 @@ export function Shopping() {
         </div>
       )}
 
-      {!inStore && <ForecastHints onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
+      {!inStore && <Suggestions onList={onList} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id })} />}
 
       <div className="shop-groups">
         {q.isLoading && !view ? (
@@ -573,9 +586,10 @@ function moveLocal(v: ShopView, id: number, on: boolean, basket: boolean): ShopV
 function ShopRow({ i, big = false, fresh = false, onCheck, onMore, onClaim }: { i: ShopItem; big?: boolean; fresh?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void; onClaim?: () => void }) {
   const on = Boolean(i.checked_at);
   const [checking, setChecking] = useState(false);
-  const sourceLabel: Record<string, string> = { auto: t('ran low'), 'used-up': t('used up'), recipe: t('for a recipe'), ha: 'Home Assistant', assistant: t('Assistant'), guest: t('Guest'), share: t('shared') };
+  // every row shows where it came from (product rule): `origin` from the server, older servers: source + added_by
+  const origin = (i as ShopItem & { origin?: string | null }).origin ?? (i.source === 'manual' ? null : i.source);
   const qty = i.qty && i.qty !== 1 ? `${String(i.qty).replace('.', ',')}× ` : '';
-  const sub = [shareSubline(i.share), i.note, i.buy_at?.length ? t('at {stores}', { stores: i.buy_at.join(', ') }) : null, big ? null : i.brand, big ? null : (sourceLabel[i.source] ?? null), !big && !i.share && i.added_by && i.source === 'manual' ? i.added_by : null].filter(Boolean).join(' · ');
+  const sub = [shareSubline(i.share), i.note, i.buy_at?.length ? t('at {stores}', { stores: i.buy_at.join(', ') }) : null, big ? null : i.brand, big || i.share ? null : originLabel(origin, i.added_by)].filter(Boolean).join(' · ');
   // the tick shows at once; the row glides on to "done" right after (briefing: 140–220 ms), never blocking
   const toggle = () => {
     if (on || checking) return onCheck(i, !on);
@@ -827,6 +841,77 @@ function NewStoreSheet({ open, onClose, onCreated }: { open: boolean; onClose: (
 }
 
 /** "Probably running low soon" – only shown when the forecast endpoint exists (fresh area). */
+interface Rhythm {
+  productId: number;
+  name: string;
+  everyDays: number;
+  lastBought: string | null;
+  dueOn: string | null;
+  label?: string;
+  suggested?: boolean;
+  onList?: boolean;
+  muted?: boolean;
+}
+
+/**
+ * "Vorschläge" (plan 2026-10-12): what ToHuus remembers is due, from receipts and ticks – never put on the list
+ * silently, always with accept / dismiss (dismissed twice → the server stops suggesting). Servers without
+ * /api/rhythm show the older "probably running low soon" hints instead.
+ */
+function Suggestions({ onList, onAdd }: { onList: Set<number | null>; onAdd: (name: string, id: number) => void }) {
+  const r = useQuery<Rhythm[] | null>({
+    queryKey: ['rhythm'],
+    queryFn: () => getOr<any>('/rhythm', () => null).then((d) => (d == null ? null : Array.isArray(d) ? d : (d.items ?? []))),
+    retry: false,
+  });
+  const toast = useToast();
+  const [gone, setGone] = useState<Set<number>>(new Set());
+  if (r.isLoading) return null;
+  if (r.data == null) return <ForecastHints onList={onList} onAdd={onAdd} />;
+  const today = new Intl.DateTimeFormat('sv-SE').format(new Date());
+  const items = r.data.filter((x) => !gone.has(x.productId) && !x.onList && !x.muted && !onList.has(x.productId) && (x.suggested ?? (x.dueOn != null && x.dueOn <= today))).slice(0, 6);
+  if (!items.length) return null;
+  const act = async (x: Rhythm, kind: 'accept' | 'dismiss') => {
+    setGone(new Set(gone).add(x.productId));
+    try {
+      await post(`/rhythm/${x.productId}/${kind}`);
+      invalidate('shopping', 'today', 'rhythm');
+      if (kind === 'accept') toast({ text: t('{name} is on the shopping list', { name: x.name }) });
+    } catch (e) {
+      setGone((g) => {
+        const n = new Set(g);
+        n.delete(x.productId);
+        return n;
+      });
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  return (
+    <section className="suggest-strip" aria-labelledby="sugg-h">
+      <div className="suggest-h">
+        <h2 id="sugg-h" className="eyebrow">{t('Suggestions')}</h2>
+        <span className="meta">{t('ToHuus remembers what you buy regularly')}</span>
+      </div>
+      <ul>
+        {items.map((x) => (
+          <li key={x.productId} className="sugg">
+            <button className="sugg-add" onClick={() => act(x, 'accept')} aria-label={t('Put {name} on the list', { name: x.name })}>
+              <Plus size={15} weight="bold" />
+              <span className="grow">
+                <b>{x.name}</b>
+                <small>{rhythmLine(x.everyDays, x.lastBought, x.label)}</small>
+              </span>
+            </button>
+            <button className="icon-btn plain sugg-x" onClick={() => act(x, 'dismiss')} aria-label={t('Not now: {name}', { name: x.name })} title={t('Not now')}>
+              <X size={16} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function ForecastHints({ onList, onAdd }: { onList: Set<number | null>; onAdd: (name: string, id: number) => void }) {
   const f = useQuery<any>({ queryKey: ['shopping', 'forecast'], queryFn: () => get('/fresh/forecast'), retry: false, staleTime: 10 * 60_000 });
   const raw: any[] = Array.isArray(f.data) ? f.data : (f.data?.items ?? f.data?.products ?? f.data?.soon ?? []);

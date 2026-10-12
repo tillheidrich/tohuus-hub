@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { config } from '../config.js';
+import { importsDir, writeStoredFile } from './images.js';
 import { db, getSetting } from '../db.js';
 import { detectReweKind, isSameShopping, parseReweAvis, parseReweEbon, reconcile } from '../importers/rewe.js';
 import type { ParsedImport, ParsedLine } from '../importers/types.js';
@@ -23,6 +24,7 @@ import { notify } from './notify.js';
 import { splitProductName, titleCaseReceipt } from './text.js';
 import { t } from '../i18n.js';
 import { applyRulesAfterReconcile, applyRulesToImport, applyStoreRule } from './quality.js';
+import { takeTickBooking } from './shopping-trust.js';
 
 const pexec = promisify(execFile);
 
@@ -96,6 +98,8 @@ export interface CreateImportOptions {
   sourceFile?: string | null;
   rawText?: string | null;
   autoApply?: boolean;
+  /** no "please check" notification (the person just told the assistant about this purchase) */
+  silent?: boolean;
 }
 
 /**
@@ -140,7 +144,7 @@ export function createImport(parsed: ParsedImport, opts: CreateImportOptions = {
   const needsReview = (db.prepare(`SELECT COUNT(*) n FROM import_lines WHERE import_id = ? AND (status != 'ok' OR action = 'new')`).get(id) as { n: number }).n;
   if (auto && needsReview === 0) {
     applyImport(id, opts.actor ?? 'ToHuus Hub');
-  } else {
+  } else if (!opts.silent) {
     const count = parsed.lines.filter((l) => l.status !== 'deposit').length;
     const special = parsed.lines.filter((l) => ['substitute', 'unavailable', 'reduced'].includes(l.status)).length;
     void notify({
@@ -257,6 +261,16 @@ export function applyImport(id: number, actor: string) {
   const lines = db.prepare('SELECT * FROM import_lines WHERE import_id = ? ORDER BY sort').all(id) as any[];
   let applied = 0;
   const created: number[] = [];
+  // purchase day of the receipt (not the day it is approved) – for matching list ticks that already booked stock
+  const metaDate = (() => {
+    try {
+      const d = JSON.parse(imp.meta || '{}').date;
+      return typeof d === 'string' && /^\d{4}-\d\d-\d\d/.test(d) ? d.slice(0, 10) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const purchaseDay = metaDate ?? new Date().toISOString().slice(0, 10);
   const tx = db.transaction(() => {
     for (const l of lines) {
       if (l.action === 'skip' || !l.qty) continue;
@@ -270,10 +284,13 @@ export function applyImport(id: number, actor: string) {
       if (l.receipt_name) learnAlias(l.receipt_name, productId, imp.kind === 'rewe-ebon' || imp.kind === 'rewe-avis' ? 'rewe-bon' : 'receipt');
       learnAlias(l.name, productId, 'import');
       if (p.track_mode === 'none') continue;
-      const qty = p.track_mode === 'level' ? undefined : l.qty;
+      // a list tick within 3 days already put (part of) this into stock – don't book it twice (shopping-trust.ts)
+      const already = l.qty > 0 ? takeTickBooking(productId, purchaseDay, p.track_mode === 'level' ? 1 : l.qty, id) : 0;
+      const qty = p.track_mode === 'level' ? undefined : l.qty - already;
       const bestBefore = l.best_before ?? (p.shelf_days && l.qty > 0 ? new Date(Date.now() + p.shelf_days * 86400000).toISOString().slice(0, 10) : null);
-      if (p.track_mode === 'level') adjustStock({ productId, locationId: l.location_id, set: l.qty < 0 ? 0 : 3, reason: 'import', actor, ref: `import:${id}`, silent: true });
-      else adjustStock({ productId, locationId: l.location_id, delta: qty!, bestBefore, reason: 'import', actor, ref: `import:${id}`, silent: true });
+      if (p.track_mode === 'level') {
+        if (!already) adjustStock({ productId, locationId: l.location_id, set: l.qty < 0 ? 0 : 3, reason: 'import', actor, ref: `import:${id}`, silent: true });
+      } else if (qty) adjustStock({ productId, locationId: l.location_id, delta: qty, bestBefore, reason: 'import', actor, ref: `import:${id}`, silent: true });
       applied++;
       // bought → tick it off the shopping list
       if (l.qty > 0)
@@ -315,8 +332,8 @@ export function linesToImport(
 
 export function saveUpload(buf: Buffer, ext: string): string {
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
-  const file = path.join(config.dataDir, 'imports', name);
-  fs.writeFileSync(file, buf);
+  const file = path.join(importsDir(), name);
+  writeStoredFile(file, buf);
   return file;
 }
 

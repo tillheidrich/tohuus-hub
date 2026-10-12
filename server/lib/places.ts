@@ -11,7 +11,7 @@
  * A system place (kind 'unassigned', "Noch keinem Ort zugewiesen") takes stock that has no place yet. It is
  * created on demand, never illustrated and hidden while it is empty.
  */
-import { db, getSetting, migrate, setSetting } from '../db.js';
+import { db, getSetting, migrate, onDbReady, setSetting } from '../db.js';
 import { config } from '../config.js';
 import type Database from 'better-sqlite3';
 import { t } from '../i18n.js';
@@ -94,7 +94,7 @@ function breakCycles(handle: Database.Database) {
   }
 }
 
-normalizeLocations();
+onDbReady(normalizeLocations);
 
 // ------------------------------------------------------------------ the system place for stock without a place
 
@@ -350,7 +350,8 @@ export function templatesFor(preset: HomePreset | null, spots = false) {
 
 // ------------------------------------------------------------------ household form and home preset
 
-export const FORMS = ['single', 'couple', 'family', 'shared'] as const;
+/** 'carer': "ich versorge noch jemanden mit" – shops and cooks for someone outside the home too (plan 12 Oct 2026) */
+export const FORMS = ['single', 'couple', 'family', 'shared', 'carer'] as const;
 export type HouseholdForm = (typeof FORMS)[number];
 
 /** Who lives here. Not chosen yet = 'family' (what the app always assumed – existing households stay as they are). */
@@ -548,4 +549,26 @@ export function homeSnapshot() {
     has_fridge: hasClimate('chilled'),
     has_freezer: hasClimate('frozen'),
   };
+}
+
+/**
+ * Base places and categories still carrying their default name in the other UI language get the name of the current
+ * language (a household that started in English and switched to German, or the demo seeded in German). Only exact
+ * default names are touched, never a name a person chose, and never when the target name exists already.
+ */
+export function localizeBaseNames(): number {
+  const de = getSetting<string>('language', config.language) === 'de';
+  let n = 0;
+  const rename = (table: 'locations' | 'categories', rows: readonly { en: string; de: string }[]) => {
+    for (const r of rows) {
+      const [from, to] = de ? [r.en, r.de] : [r.de, r.en];
+      if (from === to) continue;
+      if (db.prepare(`SELECT 1 FROM ${table} WHERE name = ?`).get(to)) continue;
+      n += db.prepare(`UPDATE ${table} SET name = ? WHERE name = ?`).run(to, from).changes;
+    }
+  };
+  rename('locations', PLACE_TEMPLATES);
+  rename('categories', BASE_CATEGORIES);
+  if (n) emit('settings', 'stock');
+  return n;
 }

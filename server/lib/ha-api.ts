@@ -9,6 +9,7 @@ import { config } from '../config.js';
 import { db, getSetting, lang, migrate, setSetting } from '../db.js';
 import { t } from '../i18n.js';
 import { emit, onEmit } from './bus.js';
+import { householdId, perHousehold } from './tenancy.js';
 import { randomToken } from './auth.js';
 import { addInterval, completeCareTask, findCareTask, listCareTasks, type IntervalUnit } from './care.js';
 import { addToShopping, adjustStock, fmtQty, getProduct, listProducts, localDay, markUsedUp, matchProduct } from './catalog.js';
@@ -22,6 +23,7 @@ import { suggest } from './recipes.js';
 import { quickAdd } from './shop.js';
 import { notPrivate } from './share-core.js';
 import { haAway } from './away.js';
+import { afterUntick } from './shopping-trust.js';
 
 export const HA_API_VERSION = 1;
 
@@ -181,6 +183,7 @@ export function todoUpdate(uid: string, b: { summary?: string; status?: 'needs_a
     db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ?, in_basket = 0 WHERE id = ?`).run(actor, it.id);
   } else if (b.status === 'needs_action' && it.checked_at) {
     db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(it.id);
+    afterUntick(it.id, actor);
   }
   emit('shopping');
   return todoItems().find((x) => x.uid === String(it.id))!;
@@ -453,17 +456,27 @@ export function svcCompleteCare(ref: string | number, actor: string) {
 // ------------------------------------------------------------------ live events for the integration
 
 type Client = { res: Response };
-const clients = new Set<Client>();
-let lastNotification = 0;
+// per household (ToHuus Cloud): connected integrations and the last notification they have seen
+const clientsByHousehold = new Map<string, Set<Client>>();
+const householdClients = () => {
+  const id = householdId();
+  let s = clientsByHousehold.get(id);
+  if (!s) clientsByHousehold.set(id, (s = new Set()));
+  return s;
+};
+const lastNote = perHousehold(() => ({ id: -1 }));
+const maxNotificationId = () => (db.prepare('SELECT COALESCE(MAX(id), 0) AS id FROM notifications').get() as { id: number }).id;
 let wired = false;
 
 function wire() {
+  if (lastNote().id < 0) lastNote().id = maxNotificationId();
   if (wired) return;
   wired = true;
-  lastNotification = (db.prepare('SELECT COALESCE(MAX(id), 0) AS id FROM notifications').get() as { id: number }).id;
   onEmit((topics) => {
+    const clients = householdClients();
+    const last = lastNote();
     if (!clients.size) {
-      if (topics.includes('notifications')) lastNotification = (db.prepare('SELECT COALESCE(MAX(id), 0) AS id FROM notifications').get() as { id: number }).id;
+      if (topics.includes('notifications') || last.id < 0) last.id = maxNotificationId();
       return;
     }
     const send = (event: string, data: unknown) => {
@@ -472,7 +485,7 @@ function wire() {
     };
     send('change', { topics, at: Date.now() });
     if (topics.includes('notifications')) {
-      const rows = db.prepare('SELECT id, event, title, body, payload, created_at FROM notifications WHERE id > ? ORDER BY id LIMIT 20').all(lastNotification) as {
+      const rows = db.prepare('SELECT id, event, title, body, payload, created_at FROM notifications WHERE id > ? ORDER BY id LIMIT 20').all(Math.max(0, last.id)) as {
         id: number;
         event: string;
         title: string;
@@ -481,7 +494,7 @@ function wire() {
         created_at: string;
       }[];
       for (const r of rows) {
-        lastNotification = r.id;
+        last.id = r.id;
         let payload: any = {};
         try {
           payload = r.payload ? JSON.parse(r.payload) : {};
@@ -496,6 +509,7 @@ function wire() {
 
 /** Push a custom event to every connected integration (ha2: `bridge` = "please sync now"). Returns the number of listeners. */
 export function sendHaEvent(event: string, data: unknown) {
+  const clients = householdClients();
   const line = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const c of clients) c.res.write(line);
   return clients.size;
@@ -505,6 +519,7 @@ const MAX_HA_CLIENTS = 20;
 /** Server-sent events: `change` (topics, like /api/events) and `tohuus` (each notification with its event type). */
 export function addHaClient(res: Response) {
   wire();
+  const clients = householdClients();
   if (clients.size >= MAX_HA_CLIENTS) {
     res.status(503).end();
     return;

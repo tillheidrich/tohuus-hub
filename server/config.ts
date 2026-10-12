@@ -37,6 +37,15 @@ export const config = {
   brand: env.BRAND ?? 'tohuus',
   /** UI and notification language on first start: en | de (changeable in settings) */
   language: env.LANGUAGE ?? 'en',
+  /** ToHuus Cloud: many households, one encrypted database each (docs/cloud.md). Off = self-hosted, one household. */
+  multiTenant: (env.MULTI_TENANT ?? 'false') === 'true',
+  /** cloud: open household databases kept in memory (LRU); idle ones close after `poolIdleMin` minutes */
+  poolMax: Math.max(2, Number(env.HOUSEHOLD_POOL_MAX ?? 64)),
+  poolIdleMin: Math.max(1, Number(env.HOUSEHOLD_POOL_IDLE_MIN ?? 10)),
+  /** self-host storage quota in MB (0 = unlimited); cloud quotas follow the plan */
+  storageQuotaMb: Number(env.STORAGE_QUOTA_MB ?? 0),
+  /** cloud: signups allowed (the instance can be closed for new households) */
+  signupOpen: (env.CLOUD_SIGNUP ?? 'true') !== 'false',
 };
 
 export const visionEnabled = () => Boolean(config.vision.baseUrl && config.vision.model);

@@ -2,11 +2,11 @@
  * Backups: nightly SQLite snapshots with rotation, manual snapshots, optional WebDAV off-site copy,
  * and restore (staged as DATA_DIR/restore-pending.db, applied by ./restore-boot.ts on the next start).
  */
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '../config.js';
-import { db, getSetting, setSetting } from '../db.js';
+import { db, encryptPlainDatabase, getSetting, isPlainSqlite, openDbFile, selfhostKeys, setSetting, snapshotDb } from '../db.js';
 import { t } from '../i18n.js';
 import { hashPassword, randomToken, sha256 } from './auth.js';
 import { EXPORT_FORMAT, exportTables, normalizeGuestTokens } from './data.js';
@@ -127,7 +127,8 @@ export function createBackup(kind: BackupKind): Promise<BackupItem> {
     const name = `tohuus-${day}-${time}-${kind}.db`;
     const file = path.join(backupDir(), name);
     const part = `${file}.part`;
-    await db.backup(part);
+    fs.rmSync(part, { force: true });
+    await snapshotDb(part);
     fs.renameSync(part, file);
     rotateBackups();
     const st = fs.statSync(file);
@@ -290,7 +291,16 @@ export class RestoreError extends Error {
   status = 400;
 }
 
+/** A plain SQLite file – or, on an encrypted install, a file that opens with this install's key. */
 export function isSqliteFile(file: string) {
+  if (!isPlainSqlite(file) && selfhostKeys) {
+    try {
+      openDbFile(file, selfhostKeys.db, { readonly: true, fileMustExist: true }).close();
+      return true;
+    } catch {
+      return false;
+    }
+  }
   try {
     const fd = fs.openSync(file, 'r');
     const buf = Buffer.alloc(16);
@@ -309,7 +319,7 @@ export function validateDbFile(file: string) {
   const sidecars = ['-wal', '-shm'].map((x) => file + x).filter((f) => !fs.existsSync(f));
   let d: Database.Database | null = null;
   try {
-    d = new Database(file, { readonly: true, fileMustExist: true });
+    d = openDbFile(file, isPlainSqlite(file) ? null : (selfhostKeys?.db ?? null), { readonly: true, fileMustExist: true });
     const ic = d.pragma('integrity_check', { simple: true });
     if (ic !== 'ok') throw new RestoreError(t('The backup is damaged ({detail}).', { detail: String(ic).slice(0, 120) }));
     const tables = new Set((d.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all() as { name: string }[]).map((r) => r.name));
@@ -338,6 +348,8 @@ export async function stageDbRestore(file: string, source: string, by: string) {
   fs.mkdirSync(tmpDir(), { recursive: true });
   const part = path.join(tmpDir(), `pending-${Date.now()}.db`);
   fs.copyFileSync(file, part);
+  // an encrypted install only ever runs on encrypted files: a plain backup is encrypted while staging
+  if (selfhostKeys && isPlainSqlite(part)) encryptPlainDatabase(part, selfhostKeys.db, { keepPlain: false });
   fs.renameSync(part, pendingPath());
   writeMeta(source, by, summary);
   return summary;
@@ -382,8 +394,8 @@ const parseJson = (s: unknown) => {
 export async function buildFromExport(json: unknown, workFile: string) {
   const tables = exportTablesOf(json);
   if (!Array.isArray(tables.products)) throw new RestoreError(t('This is not a ToHuus Hub export.'));
-  await db.backup(workFile);
-  const w = new Database(workFile);
+  await snapshotDb(workFile);
+  const w = openDbFile(workFile, selfhostKeys?.db ?? null);
   try {
     w.pragma('journal_mode = DELETE');
     w.pragma('foreign_keys = OFF');

@@ -15,6 +15,7 @@ export const de_auth: Record<string, string> = {
   'Shared device': 'Gemeinsames Gerät',
   'This device is not set up as a shared family device.': 'Dieses Gerät ist nicht als gemeinsames Familiengerät eingerichtet.',
   'That PIN didn’t work.': 'Die PIN stimmt nicht.',
+  'At least {n} characters, please.': 'Bitte mindestens {n} Zeichen.',
   'This link has expired or was already used.': 'Dieser Link ist abgelaufen oder wurde schon benutzt.',
   'Your sign-in link': 'Dein Anmeldelink',
   'Sign in to {household}': 'Bei {household} anmelden',

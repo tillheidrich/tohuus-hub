@@ -17,7 +17,7 @@ import {
   updateOnboardState,
 } from '../lib/onboard.js';
 import { BASE_LOCATIONS, baseName } from '../lib/basedata.js';
-import { CLIMATES, FORMS, PRESETS, homePreset, setHomeSetup, templatesFor } from '../lib/places.js';
+import { CLIMATES, FORMS, PRESETS, homePreset, setHomeSetup, templatesFor, localizeBaseNames } from '../lib/places.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -82,7 +82,10 @@ r.put('/onboarding/home', requireAdmin, (req, res) => {
     })
     .parse(req.body ?? {});
   if (b.household) setSetting('household.name', b.household);
-  if (b.language) setSetting('language', b.language);
+  if (b.language) {
+    setSetting('language', b.language);
+    localizeBaseNames();
+  }
   if (b.form !== undefined || b.preset !== undefined) setHomeSetup({ form: b.form, preset: b.preset });
   const out = b.rooms ? setRooms(b.rooms) : null;
   const state = advance('home');

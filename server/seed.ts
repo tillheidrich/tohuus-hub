@@ -3,13 +3,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
+import { storeImageBytes } from './lib/images.js';
 import { db, getSetting, lang, setSetting } from './db.js';
 import { t } from './i18n.js';
 import { adjustStock, createProduct } from './lib/catalog.js';
 import { NAME_MAX, PASSWORD_MIN, hashPassword, randomToken } from './lib/auth.js';
 import { BASE_CATEGORIES, BASE_LOCATIONS, baseName, categoryIdByKey, locationIdByKey, type CategoryKey } from './lib/basedata.js';
 import { saveRecipe } from './lib/recipes.js';
-import { linkCategoryDefaults } from './lib/places.js';
+import { linkCategoryDefaults, localizeBaseNames } from './lib/places.js';
 import { captureDemo } from './lib/demo.js';
 
 /** The seven neutral base places (fridge, freezer, pantry …) – only for the demo and tests, never unasked. */
@@ -30,7 +31,8 @@ export function ensureBaseData(opts: { places?: boolean } = {}) {
     const ins = db.prepare('INSERT INTO categories (name, icon, default_location_id, track_mode, sort) VALUES (?, ?, ?, ?, ?)');
     BASE_CATEGORIES.forEach((c, i) => ins.run(baseName(c), c.icon, locationIdByKey(c.loc), c.track, i));
   }
-  if ((db.prepare('SELECT COUNT(*) n FROM users').get() as { n: number }).n === 0) {
+  // ToHuus Cloud: the first member comes from the signup (accounts directory), never from ADMIN_PASSWORD
+  if (!config.multiTenant && (db.prepare('SELECT COUNT(*) n FROM users').get() as { n: number }).n === 0) {
     const pw = config.adminPassword || randomToken(9);
     if (config.adminPassword && config.adminPassword.length < PASSWORD_MIN)
       console.warn(`  ToHuus Hub: ADMIN_PASSWORD is shorter than ${PASSWORD_MIN} characters – it works for the first login, but please change it in Settings.`);
@@ -261,6 +263,8 @@ export function seedDemo(opts: { force?: boolean } = {}): boolean {
   if ((db.prepare('SELECT COUNT(*) n FROM products').get() as { n: number }).n > 0) return false;
   // the demo household lives in the neutral base places; a household that already picked its own keeps them
   ensureBasePlaces();
+  // a German household gets German base names (places/categories may have been created while it was still English)
+  localizeBaseNames();
   captureDemo(seedDemoRows);
   setSetting('demo.seeded', true);
   return true;
@@ -362,8 +366,7 @@ function demoRecipeImage(recipeId: number, slug: string): string | null {
   if (!src) return null; // photos missing (e.g. a trimmed build) – the recipe just shows the placeholder
   const name = `r${recipeId}-${crypto.randomBytes(6).toString('hex')}.webp`;
   try {
-    fs.copyFileSync(src, path.join(config.dataDir, 'images', name));
-    return `/img/${name}`;
+    return storeImageBytes(name, fs.readFileSync(src));
   } catch {
     return null;
   }

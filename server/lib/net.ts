@@ -46,7 +46,8 @@ export function isPrivateIp(ip: string): boolean {
   return true;
 }
 
-const agent = new Agent({
+/** Dispatcher that refuses private/internal addresses at connect time (ToHuus Cloud installs it globally). */
+export const privateBlockingAgent = new Agent({
   connect: {
     lookup: (hostname: string, opts: any, cb: any) => {
       dns.lookup(hostname, { all: true }, (err, addrs) => {
@@ -84,7 +85,7 @@ export async function safeFetch(
       const host = u.hostname.replace(/^\[|\]$/g, '');
       if (net.isIP(host) && isPrivateIp(host)) throw new SafeFetchError(t('Address not allowed'));
       if (/^(localhost|.*\.local|.*\.internal)$/i.test(host)) throw new SafeFetchError(t('Address not allowed'));
-      const r = await ufetch(current, { dispatcher: agent, redirect: 'manual', signal: ctrl.signal, headers: opts.headers });
+      const r = await ufetch(current, { dispatcher: privateBlockingAgent, redirect: 'manual', signal: ctrl.signal, headers: opts.headers });
       if (r.status >= 300 && r.status < 400 && r.headers.get('location')) {
         current = new URL(r.headers.get('location')!, current).toString();
         await r.body?.cancel();

@@ -1,9 +1,12 @@
 /**
- * Optional vision/LLM provider (any OpenAI-compatible chat completions endpoint: Mistral, OpenRouter,
- * Ollama, vLLM …). ToHuus Hub works without it — then photo imports are not available, but PDF imports,
- * barcodes, manual entry and MCP (where the assistant does the reading) still are.
+ * Optional vision/LLM provider through server/lib/ai.ts (OpenRouter pinned to Mistral by default, or any
+ * OpenAI-compatible endpoint: Mistral, Ollama, vLLM …; the older VISION_* variables still work).
+ * ToHuus Hub works without it — then photo imports are not available, but PDF imports, barcodes, manual entry
+ * and MCP (where the assistant does the reading) still are.
  */
-import { config, visionEnabled } from '../config.js';
+import { aiConfig, aiEnabled, chat, extractJson, type ContentPart } from './ai.js';
+import { redactReceipt } from './redact.js';
+import { consumeReceiptAi } from './limits.js';
 import { lang } from '../db.js';
 import { t } from '../i18n.js';
 import { visionRegionHint as regionHint } from './region-hints.js';
@@ -46,45 +49,54 @@ function prompt(task: VisionTask) {
 }
 
 export function visionAvailable() {
-  return visionEnabled();
+  return aiEnabled('vision');
 }
 
-function extractJson(s: string): any {
-  const cleaned = s.replace(/```(?:json)?/g, '').trim();
-  const start = cleaned.indexOf('{');
-  const end = cleaned.lastIndexOf('}');
-  if (start < 0 || end < start) throw new Error(t('No JSON answer from the model'));
-  return JSON.parse(cleaned.slice(start, end + 1));
+/** Name of the configured vision model (settings page), or null. */
+export function visionModel() {
+  return aiConfig()?.models.vision ?? null;
+}
+
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+/**
+ * Does a recognised receipt look right? At least one item line, and – when the model read a total – the line
+ * prices add up to it (deposits included, discounts may make the sum a little higher). Otherwise the receipt
+ * gets a second try with the stronger model (AI_MODEL_VISION_HARD).
+ */
+export function receiptLooksRight(j: any): boolean {
+  const lines = Array.isArray(j?.lines) ? j.lines.filter((l: any) => l && typeof l.name === 'string' && l.name.trim()) : [];
+  if (!lines.length) return false;
+  const total = num(j?.total);
+  if (total == null || total <= 0) return true;
+  const priced = lines.map((l: any) => num(l.price)).filter((x: number | null): x is number => x != null);
+  if (priced.length < lines.length * 0.6) return false;
+  const sum = priced.reduce((a: number, b: number) => a + b, 0);
+  return Math.abs(sum - total) <= Math.max(0.1, total * 0.15);
+}
+
+async function ask(task: VisionTask, content: ContentPart[], kind: 'vision' | 'visionHard') {
+  const res = await chat({ kind, temperature: 0.1, messages: [{ role: 'user', content }] });
+  return extractJson(res.content);
 }
 
 export async function runVision(task: VisionTask, input: { images?: string[]; text?: string }): Promise<any> {
-  if (!visionEnabled()) throw new Error(t('No vision model configured (VISION_BASE_URL / VISION_MODEL)'));
-  const content: any[] = [{ type: 'text', text: prompt(task) + (input.text ? `\n\n---\n${input.text}` : '') }];
+  if (!visionAvailable()) throw new Error(t('No vision model configured (VISION_BASE_URL / VISION_MODEL)'));
+  // reading receipts and shelves with AI is rate-limited per plan (plans.ts receiptAiPerDay); recipes are not
+  if (task === 'receipt' || task === 'text-items' || task === 'shelf')
+    consumeReceiptAi(() => t('Enough receipts read by AI for today. Upload the PDF, or try again tomorrow.'));
+  // receipt text (PDF, mail, digital receipt) goes out without card, loyalty, TSE and address data (redact.ts)
+  const text = input.text && task === 'text-items' ? redactReceipt(input.text).text : input.text;
+  const content: ContentPart[] = [{ type: 'text', text: prompt(task) + (text ? `\n\n---\n${text}` : '') }];
   for (const img of input.images ?? []) content.push({ type: 'image_url', image_url: { url: img } });
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 120000);
-  try {
-    const r = await fetch(`${config.vision.baseUrl}/chat/completions`, {
-      method: 'POST',
-      signal: ctrl.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(config.vision.apiKey ? { Authorization: `Bearer ${config.vision.apiKey}` } : {}),
-        'HTTP-Referer': config.baseUrl,
-        'X-Title': 'ToHuus Hub',
-      },
-      body: JSON.stringify({
-        model: config.vision.model,
-        temperature: 0.1,
-        messages: [{ role: 'user', content }],
-      }),
-    });
-    if (!r.ok) throw new Error(`Vision-API ${r.status}: ${(await r.text()).slice(0, 300)}`);
-    const j: any = await r.json();
-    const text = j.choices?.[0]?.message?.content;
-    const str = Array.isArray(text) ? text.map((c: any) => c.text ?? '').join('') : String(text ?? '');
-    return extractJson(str);
-  } finally {
-    clearTimeout(timer);
+  const j = await ask(task, content, 'vision');
+  if (task === 'receipt' && !receiptLooksRight(j) && aiEnabled('visionHard')) {
+    try {
+      const second = await ask(task, content, 'visionHard');
+      if (receiptLooksRight(second) || !Array.isArray(j?.lines) || !j.lines.length) return second;
+    } catch (e) {
+      console.warn('[vision] second try failed', (e as Error).message);
+    }
   }
+  return j;
 }

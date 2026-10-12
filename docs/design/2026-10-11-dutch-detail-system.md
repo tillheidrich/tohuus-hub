@@ -184,3 +184,13 @@ Eine grüne Kachel (`#176b50`), darin das ToHuus-Haus in Papierfarbe mit Bogent�
 - Gast-Seite (`/g/…`), Party-Board und Kinder-Modus haben nur die Token-Umstellung bekommen. Der Kinder-Modus behält bewusst seine eigene, kindgerechte Palette.
 - `OrderMenu` in `Guest.tsx` trägt noch den toten Parameter `fredi` (immer `false`). Das gehört zur Logik des Fixes-Agenten und kann dort entfernt werden. Ebenso `fredi()` in `server/lib/tickets.ts` (ist immer `false`).
 - Marketing-Website (Phase 6): Die Favicons sind schon neu, Hero und Paletten in `site/` noch nicht.
+
+## 12. Nachtrag 12.10.2026: fünf Tabs (Plan `docs/plan-2026-10-12.md`)
+
+- **Tab-Leiste mobil ist weiß** (Tills Vorgabe): volle Breite unten, `--surface`, Haarlinie oben plus weicher Schatten, Icons in `--ink-2`, aktiver Tab grün (`--primary-text`, gefülltes Icon in einer `--primary-soft`-Pille, Label fett). Dunkel: dieselbe Leiste auf der dunklen Fläche. Zähler sitzen als Tintenkreise am Icon. Die schwarze schwebende Leiste und das grüne Plus darin sind entfallen.
+- **Tabs:** Heute · Einkauf · Vorrat · Kochen · Geld. Alles andere unter `/mehr` (Avatar im Heute-Kopf, Desktop: Abschnitt „Mehr“ in der Sidebar). „+“ sitzt als Icon-Button im Heute-Kopf und als „Hinzufügen“ in der Sidebar.
+- **Sidebar Desktop** ist jetzt hell (`--surface`, Haarlinie rechts), aktiver Eintrag grün gefüllt.
+- **Assistent:** schwebende Taste rechts über der Tab-Leiste, Tinte mit grünem Mikrofon und „Sagen“, `--r-lg`, `--shadow-float`.
+- **Heute:** kein grüner Kopfblock und kein Ticket mehr, sondern höchstens fünf ruhige Karten (`.hcard`: Fläche, 1 px Linie, Formmarker vor dem Titel), ab 1100 px zweispaltig (`columns: 2`).
+- **Geld:** Balken in einer Farbe (`--primary`), Werte als Text in Tinte daneben, Wochenverlauf als 2-px-Linie mit Hover/Fokus und einer Tabelle für Screenreader.
+- Tap-Ziele: `.icon-btn` ist jetzt 44 × 44 px.

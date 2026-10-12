@@ -4,13 +4,15 @@
  */
 import type { Request, Response } from 'express';
 import { config } from '../config.js';
-import { db } from '../db.js';
+import { db, onDbReady } from '../db.js';
 import { locale, t } from '../i18n.js';
 import { DEVICE_COOKIE, SESSION_COOKIE, SESSION_DAYS, createSession, destroySession, hashPassword, randomToken, rateLimited, sha256, verifyPassword } from './auth.js';
 import { authPolicy, cookieBase, deviceLabel, householdName, methodLabel, sendAuthMail, userById, userByName, mailAvailable } from './auth-policy.js';
 import { emit } from './bus.js';
 import { notifySettings } from './notify.js';
 import { pushDeviceCount, sendPush } from './webpush.js';
+import { ScopedMap } from './tenancy.js';
+import { forEachHousehold } from './cloud-jobs.js';
 
 const DEVICE_RE = /^[A-Za-z0-9_-]{32,64}$/;
 /** sessions started with a PIN on a shared device live shorter and only together with its device cookie */
@@ -180,7 +182,7 @@ export class AuthError extends Error {
 const PIN_FAILS_MEMBER = 5;
 const PIN_FAILS_DEVICE = 10;
 const PIN_WINDOW_MS = 15 * 60_000;
-const pinFails = new Map<string, { n: number; reset: number }>();
+const pinFails = new ScopedMap<string, { n: number; reset: number }>();
 function pinBlocked(key: string, max: number) {
   const f = pinFails.get(key);
   return Boolean(f && f.reset > Date.now() && f.n >= max);
@@ -216,5 +218,5 @@ export function cleanupAuth() {
   db.prepare(`DELETE FROM sessions WHERE expires_at < datetime('now')`).run();
   db.prepare(`DELETE FROM auth_tokens WHERE expires_at < datetime('now', '-1 day')`).run();
 }
-cleanupAuth();
-setInterval(cleanupAuth, 6 * 3600_000).unref();
+onDbReady(cleanupAuth);
+setInterval(() => void forEachHousehold(cleanupAuth, { scope: 'open', label: 'auth-cleanup', jitterMs: 0 }), 6 * 3600_000).unref();

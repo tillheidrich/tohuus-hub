@@ -2,7 +2,7 @@
 
 A guide for developers and coding agents who want to change ToHuus Hub. It describes the code as it is; the history is in [CHANGELOG.md](../CHANGELOG.md).
 
-ToHuus Hub is one Node.js process with one SQLite database. The server renders nothing except a few small pages for displays and serves a React single-page app. There is no message queue, no Redis and no separate worker; background jobs run on timers in the same process.
+ToHuus Hub is one Node.js process with one SQLite database per household: self-hosted it serves exactly one household, as **ToHuus Cloud** (`MULTI_TENANT=true`, see [cloud.md](cloud.md)) many, each in its own encrypted database. The server renders nothing except a few small pages for displays and serves a React single-page app. There is no message queue, no Redis and no separate worker; background jobs run on timers in the same process.
 
 ## Folders
 
@@ -10,7 +10,8 @@ ToHuus Hub is one Node.js process with one SQLite database. The server renders n
 server/
   index.ts           Express app: security headers, CSRF check, routers, static web app, brand files
   config.ts          environment variables (the only place that reads most of them)
-  db.ts              opens the database, numbered core migrations, migrate() for named ones, settings, brand(), lang()
+  db.ts              opens the database (self-host) or the per-household pool (cloud), encryption, numbered core
+                     migrations, migrate() for named ones, onDbReady(), settings, brand(), lang()
   i18n.ts            t() for server strings; dictionaries in server/locales/
   languages.ts       the list of UI languages (shared with the web app)
   seed.ts            base places and categories, the demo household
@@ -40,13 +41,17 @@ docs/                this documentation, research notes, design notes
 
 Most features are an "area" with the same shape: `server/routes/<area>.ts`, `server/lib/<area>.ts`, `server/mcp/tools-<area>.ts`, `server/locales/de-<area>.ts`, `web/src/locales/de/<area>.ts`, pages under `web/src/pages/`, and `test/<area>.test.ts`. Current areas: core (stock, products, places, shopping, settings), imports, recipes, guest, data, party, fresh, shop, home (care, spending, QR), kiosk, kids, onboard, retail, ha, channels, intl, cook2, auth, spend2, print, share, labels, away, plan2, recipes2, quality, people, tour, ha2, menu, design.
 
+The October 2026 feature build adds `rhythm` (purchase rhythm), `money` (overview), `cookideas`, `today` (aggregate for the first tab), `memory` and `assistant` (with `assistant-tools`, `assistant-parse`, `assistant-context`); their routers are mounted together through `server/routes/features.ts`, their MCP tools are in `server/mcp/tools-features.ts`. `shopping-trust.ts` holds the list rules every tick path uses (booking and un-booking, soft clear, origin). Plan limits are read through `lib/limits.ts`, a thin adapter over `plans.ts` (history window, assistant messages, AI receipt reads).
+
 Two areas have no MCP tools on purpose: `auth` and `ha` (their modules exist but register nothing).
 
 Modules import each other directly. Where a cycle would appear, a small dependency-free part is split out (`share-core.ts`, `away-state.ts`, `people-policy.ts`, `people-signals.ts`, `fresh-shelf.ts`), and the comment at the top of each file says who may import it.
 
 ## Request flow
 
-1. `restore-boot.ts` runs first and applies a staged restore before the database is opened.
+1. `restore-boot.ts` runs first and applies a staged restore before the database is opened (self-host).
+   In the cloud, `cloudContext` (`lib/cloud-auth.ts`) then picks the household of the request and runs the rest of
+   it inside that household (see [cloud.md](cloud.md)).
 2. Every response gets security headers: a strict Content Security Policy, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, a narrow `Permissions-Policy`.
 3. **CSRF**: on `/api`, a write (anything but GET, HEAD, OPTIONS) authenticated by cookie must come from `BASE_URL`'s origin (`Origin` or `Sec-Fetch-Site: same-origin`). Requests with a Bearer token or `x-api-key`, and guest-link routes, skip this check because they cannot ride on a cookie.
 4. `/mcp` and `/mcp/:secret` go to the MCP handler.
@@ -66,21 +71,29 @@ Modules import each other directly. Where a cycle would appear, a small dependen
 | API token | `Authorization: Bearer sw_…` or `x-api-key` | scope `full` (acts as admin), `mcp` (only `/mcp`), `ha` (only `/api/ha/*` and `/api/events`) |
 | guest link | token in the URL path | scopes `bar`, `stock`, `shopping`; stored as a hash |
 | kid tablet, display, party board | device or display token | each with its own small router and read-only data |
+| app / device | `Authorization: Bearer sw_app_…` | exactly the member's rights (`POST /api/auth/app`); self-host: `api_tokens` scope `app` with `user_id`; cloud: `app_tokens` in accounts.db plus `X-Household` |
+| cloud account | cookie session in accounts.db | resolves to the active household's membership → the same member actor as above |
 
 ## Database and migrations
 
-`better-sqlite3` with WAL, foreign keys on and a 5 second busy timeout. All queries are synchronous, which keeps transactions simple (`db.transaction(() => …)()`).
+`better-sqlite3-multiple-ciphers` (installed under the name `better-sqlite3`, a drop-in with SQLite3 Multiple Ciphers) with WAL, foreign keys on and a 5 second busy timeout. All queries are synchronous, which keeps transactions simple (`db.transaction(() => …)()`).
+
+- **Self-host**: one file, `DATA_DIR/tohuus.db` (or the legacy `stockwerk.db`). With `DB_ENCRYPTION_KEY` it is SQLCipher-encrypted (raw 256-bit key, derived with HKDF; a passphrase is stretched with scrypt). An existing plain database is converted once at start: copy → `PRAGMA rekey` → every table's row count and the integrity check verified → swap; the original stays as `tohuus.db.plain-backup-<date>` and the log asks the admin to delete it after checking.
+- **Cloud**: `DATA_DIR/households/<uuid>/tohuus.db`, each with its own key, opened on demand into an LRU pool. `db` is a proxy that resolves the household from the request/job context (`lib/tenancy.ts`) and throws without one. Code that must run once a database is open (base data, token hashing, location repair) registers with `onDbReady(fn)` instead of running at module load.
+- Snapshots of an encrypted database use `VACUUM INTO` (the copy keeps the encryption); `snapshotDb()` in `db.ts` picks the right method.
 
 There are two kinds of migrations:
 
 - **Core migrations** in `server/db.ts`: a numbered, append-only array, tracked in `_migrations`.
 - **Named migrations** for areas: `migrate('labels-2', sql)` at module load, tracked by name in `_migrations_named`. A name runs exactly once. Never edit SQL that has shipped; add `labels-3`.
 
-Before the first pending named migration on an existing household, `preMigrationBackup()` copies the database into `backups/` with `VACUUM INTO`. Each migration runs in a transaction.
+Before the first pending named migration on an existing household, `preMigrationBackup()` copies the database into `backups/` with `VACUUM INTO` (self-host). Each migration runs in a transaction. Every `migrate()` call is also kept in a registry: cloud household databases replay core and named migrations when they are opened, so a migration reaches every household.
+
+Module-level state that holds household data must be per household: use `perHousehold(() => …)`, `ScopedMap` or `ScopedSet` from `lib/tenancy.ts` (plain values in self-host), and queues that outlive a request must remember the household of each entry and process it inside `runInHousehold()`.
 
 Settings are JSON values in the `settings` table (`getSetting`, `setSetting`). Any settings field whose name contains `token`, `passw` or `secret` (and a few more words) is dropped from the JSON export, so put credentials in fields named that way.
 
-Images are stored as WebP in `DATA_DIR/images` and served under `/img/` with long cache headers.
+Images are stored as WebP per household (`DATA_DIR/images` self-host, `households/<uuid>/images` cloud), AES-256-GCM encrypted when a key exists (files written earlier stay readable – detected by their header). Read and write them only through `lib/images.ts` (`storeImageBytes`, `readImage`, `writeStoredFile`, `readStoredFile`), which also counts the storage quota. `/img/<file>` needs a signed-in member, an app/API token or a short-lived signed URL (`?e=…&s=…`, in the cloud also `h=<household prefix>`); responses to token clients (guest links, displays, kid tablets, HA, the apps, MCP) carry signed URLs automatically.
 
 ## Live updates (bus)
 
@@ -90,7 +103,7 @@ Images are stored as WebP in `DATA_DIR/images` and served under `/img/` with lon
 - Guest-link clients only receive stock, product, order and shopping topics.
 - The Home Assistant integration listens on the same stream (with its `ha` token) and refreshes within a second.
 - In-process listeners (`onEmit`) let modules react to changes, for example the Home Assistant to-do sync.
-- Limits: 200 clients, of which at most 60 guests.
+- Limits: 200 clients per household, of which at most 60 guests (cloud: `SSE_MAX_TOTAL` over all). Clients and events belong to one household.
 
 ## Background jobs (scheduler)
 
@@ -106,6 +119,8 @@ Everything runs in the server process on timers:
 | party end, guest-level overrides | own timers | `lib/party.ts`, `lib/people.ts` |
 | Telegram long polling | continuous, when configured | `lib/telegram.ts` |
 | recipe photo downloads | small throttled queue, resumed on start, retry endpoint, browser fallback; display falls back to the link (`lib/recipe-images.ts`) | `lib/recipes2.ts` |
+
+In the cloud the scheduler runs each job once per household used in the last 14 days, one after the other with jitter, inside that household's context (`lib/cloud-jobs.ts`); minute ticks (party, guest-level overrides) only visit households whose database is open. IMAP, Telegram polling, network printers, Cookidoo and the HA REST fallback do not run in the cloud. Nightly cloud backups: `lib/cloud-backup.ts`.
 
 Times use `TZ`. Notifications go through `notify()` in `lib/notify.ts`, which routes each event to the channels switched on for it, respects quiet hours during a trip, and de-duplicates repeats.
 
@@ -128,6 +143,10 @@ The English text is the key everywhere: `t('Shopping list')`, with placeholders 
 
 Tools are registered with `s.registerTool(name, { title, description, inputSchema, annotations }, handler)`. Read-only tools carry `readOnlyHint`. There are 106 tools; the list is in [mcp.md](mcp.md). MCP tools must respect the same privacy rules as the UI: discreet and private items are never returned by name.
 
+## AI
+
+All model calls go through `server/lib/ai.ts`: OpenAI-compatible chat completions, OpenRouter by default, every OpenRouter request pinned to Mistral with `provider: { order: ["mistral"], allow_fallbacks: false, data_collection: "deny" }`, timeouts, retries with backoff, clean error codes, token usage, tool calls, audio as `input_audio`. `vision.ts` (receipt, shelf, recipe photos) and the assistant use it; tests replace the network with `setAiFetch()`. Callers filter first: `redactForAssistant()` (people-signals.ts) for anything about people, `redact.ts` for receipt text. Details and variables: [assistant.md](assistant.md).
+
 ## Home Assistant
 
 Three paths, described in [home-assistant.md](home-assistant.md): the HACS integration polls `/api/ha/v1/*` and listens to `/api/events`; the two-way bridge (`lib/ha2.ts`, `lib/ha2-engine.ts`) reconciles topics with a three-way merge and an acknowledged outbox; the REST fallback calls Home Assistant with an address and long-lived token. The sync engine is pure and tested on its own.
@@ -138,14 +157,16 @@ React 19 with React Router and TanStack Query. One stylesheet with design tokens
 
 ## Security model
 
-- **One household per instance.** There is no tenant separation inside the database; run one instance per household.
+- **Self-host: one household per instance. Cloud: one encrypted database per household.** There is no tenant column anywhere; separation is the file, its key and the household context. Without a context in cloud mode every database access, every per-household cache and every key lookup throws. `test/cloud-isolation.test.ts` walks every GET route as a second household and checks that none of the first household's data appears (also SSE, caches, images, guest links, MCP).
+- **Encryption at rest**: cloud – master key from the environment only (`TOHUUS_MASTER_KEY`), HKDF sub-keys, per-household random data key wrapped with AES-256-GCM in accounts.db, SQLCipher databases, AES-256-GCM images and receipt files, crypto-shredding on delete. Self-host – optional `DB_ENCRYPTION_KEY` for the database, images and backups. Keys are never written to the data volume.
+- **App Store purchases** are verified on the server: JWS signature, `x5c` chain up to the embedded Apple Root CA G3, Apple's marker extensions, bundle id, environment, `appAccountToken` = household uuid; notifications are idempotent by `notificationUUID`.
 - **Passwords**: scrypt. **Sessions, API tokens, guest links, display tokens, share keys, sign-in links**: random values stored as SHA-256 hashes; the plain value is shown once. A party's tokens are kept in plain text only while the party runs (the TV shows the join QR) and are cleared at the end.
 - **Sign-in**: rate limits per IP and per name, optional TOTP, passkeys with user verification, OIDC with PKCE, state and nonce, e-mail links bound to the asking browser. See [auth.md](auth.md).
 - **CSRF**: origin check on cookie-authenticated writes (see request flow). Cookies are httpOnly and SameSite=Lax.
 - **Authorization**: `requireAuth`/`requireAdmin` per route; token scopes; the permanent-guest allowlist enforced centrally, with paths lower-cased before matching.
-- **Outgoing requests** for user-supplied URLs (recipe links, receipt QR links, photos, WebDAV, webhooks) go through `lib/net.ts`: private and internal networks (IPv4 and IPv6) are blocked at connect time, so DNS rebinding does not help; redirects, size and time are limited.
+- **Outgoing requests** for user-supplied URLs (recipe links, receipt QR links, photos, WebDAV, webhooks) go through `lib/net.ts`: private and internal networks (IPv4 and IPv6) are blocked at connect time, so DNS rebinding does not help; redirects, size and time are limited. In the cloud the same blocking dispatcher is installed globally, so admin-configured addresses (Home Assistant, webhooks, Matrix, Gotify) cannot reach internal networks either.
 - **Privacy by construction**: discreet and private shopping items keep only a placeholder in `shopping_items`, so every reader of that table (Home Assistant, Telegram, displays, tickets, MCP, guest links, digests) sees the placeholder at worst; private items are additionally filtered with `notPrivate()`. Displays show only what their widgets list. The sitter voice guide filters locks, alarms, cameras and similar devices.
-- **Exports** drop sessions, tokens and secret fields. Backups are full copies and must be stored privately.
+- **Exports** drop sessions, tokens and secret fields. Backups are full copies and must be stored privately (with encryption on they stay encrypted).
 - **Anonymised receipts** (`lib/redact.ts`) remove addresses, card, loyalty and TSE data, names and links, and blur dates and times. They are only built on request and never sent automatically.
 - **No telemetry.**
 

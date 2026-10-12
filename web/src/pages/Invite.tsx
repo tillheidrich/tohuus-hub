@@ -62,8 +62,13 @@ export function Invite() {
     }
   }, []);
   const d = info.data;
+  // ToHuus Cloud: joining means an account – e-mail and password (or an account already signed in)
+  const opts = useQuery({ queryKey: ['auth-options'], queryFn: () => api<{ cloud?: boolean }>('/auth/options'), retry: false });
+  const cloud = Boolean(opts.data?.cloud);
   const methods: Method[] = d
-    ? ([d.methods.passkey && webauthn && 'passkey', d.methods.password && 'password', d.methods.email && 'email', d.methods.sso && 'sso'].filter(Boolean) as Method[])
+    ? cloud
+      ? ['password']
+      : ([d.methods.passkey && webauthn && 'passkey', d.methods.password && 'password', d.methods.email && 'email', d.methods.sso && 'sso'].filter(Boolean) as Method[])
     : [];
 
   useEffect(() => {
@@ -80,10 +85,12 @@ export function Invite() {
     if (d?.household) document.title = `${d.household} · ${BRAND.name}`;
   }, [d?.household]);
 
-  const tooShort = pw.length > 0 && pw.length < 8;
+  // the server's rule (cloud accounts 10, self-hosted members 8)
+  const minPw = cloud ? 10 : 8;
+  const tooShort = pw.length > 0 && pw.length < minPw;
   const mismatch = pw2.length > 0 && pw !== pw2;
   const emailOk = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(email.trim());
-  const ready = Boolean(name.trim()) && (method === 'password' ? pw.length >= 8 && pw === pw2 : method === 'email' ? emailOk : Boolean(method));
+  const ready = Boolean(name.trim()) && (cloud ? emailOk && pw.length >= minPw && pw === pw2 : method === 'password' ? pw.length >= minPw && pw === pw2 : method === 'email' ? emailOk : Boolean(method));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +99,9 @@ export function Invite() {
     setErr('');
     try {
       const r = await api<{ ok: true; sso_url: string | null; verify_sent: boolean }>(`/invite/${encodeURIComponent(token)}`, {
-        body: { name: name.trim(), method, ...(method === 'password' ? { password: pw } : {}), ...(method === 'email' ? { email: email.trim() } : {}) },
+        body: cloud
+          ? { name: name.trim(), email: email.trim(), password: pw, client: 'web' }
+          : { name: name.trim(), method, ...(method === 'password' ? { password: pw } : {}), ...(method === 'email' ? { email: email.trim() } : {}) },
       });
       // signed in now – passkey and SSO are finished from here
       if (method === 'sso' && r.sso_url) return void location.assign(r.sso_url);
@@ -136,7 +145,7 @@ export function Invite() {
           <div className="h1" style={{ fontSize: 46, maxWidth: 460 }}>{d?.household || b.name}</div>
           <p style={{ opacity: 0.75, maxWidth: 420, marginTop: 14 }}>{b.tagline}</p>
         </div>
-        <div className="small" style={{ opacity: 0.6 }}>{t('Self-hosted · Open source')}</div>
+        <div className="small" style={{ opacity: 0.6 }}>{cloud ? 'ToHuus Cloud' : t('Self-hosted · Open source')}</div>
       </div>
 
       <div className="form">
@@ -198,7 +207,13 @@ export function Invite() {
               <div className="help">{t('This is how the others see you – and the name you sign in with.')}</div>
             </div>
 
-            {methods.length === 0 ? (
+            {cloud ? (
+              <div className="field">
+                <label htmlFor="inv-mail">{t('Your e-mail address')}</label>
+                <input id="inv-mail" className="input" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <div className="help">{t('You sign in with it. If you already have a ToHuus account, use its e-mail and password.')}</div>
+              </div>
+            ) : methods.length === 0 ? (
               <p className="small" style={{ color: 'var(--empty)' }}>{t('This browser can’t use any of the sign-in methods this household allows. Try another browser or ask whoever invited you.')}</p>
             ) : (
               <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0, gap: 8 }}>
@@ -226,7 +241,7 @@ export function Invite() {
                       {show ? <EyeSlash size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <div className="help" style={tooShort ? { color: 'var(--empty)' } : undefined}>{t('At least 8 characters. A short sentence is easy to remember.')}</div>
+                  <div className="help" style={tooShort ? { color: 'var(--empty)' } : undefined}>{t('At least {n} characters. A short sentence is easy to remember.', { n: minPw })}</div>
                 </div>
                 <div className="field">
                   <label htmlFor="inv-pw2">{t('Repeat password')}</label>

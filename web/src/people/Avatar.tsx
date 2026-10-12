@@ -4,10 +4,11 @@
  * and shows the person's photo, animal or initials. Pass `face` when the caller already knows it
  * (sign-in screen, people settings).
  */
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '../api';
-import { KidAnimal } from '../pages/KidArt';
+// animal faces are drawings from kid mode – loaded only when someone actually has one (keeps the first load small)
+const KidAnimal = lazy(() => import('../pages/KidArt').then((m) => ({ default: m.KidAnimal })));
 
 export type Face = { type: 'initials' } | { type: 'animal'; animal: string } | { type: 'photo'; image: string };
 export interface DirEntry {
@@ -70,7 +71,9 @@ export function Avatar({
   if (f.type === 'animal')
     return (
       <span className={`avatar avatar-animal ${className}`} style={{ width: size, height: size }}>
-        <KidAnimal name={f.animal} size={size} color={c} />
+        <Suspense fallback={null}>
+          <KidAnimal name={f.animal} size={size} color={c} />
+        </Suspense>
       </span>
     );
   const initials = (name ?? '?')

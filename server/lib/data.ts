@@ -2,7 +2,7 @@
  * Data area: secret-free export, guest-link token hashing, member invites.
  * Backups and restore live in ./backup.ts.
  */
-import { db, getSetting } from '../db.js';
+import { db, getSetting, onDbReady } from '../db.js';
 import { randomToken, sha256 } from './auth.js';
 
 // ---------------------------------------------------------------- schema
@@ -27,7 +27,7 @@ export function normalizeGuestTokens(): number {
   db.transaction(() => plain.forEach((r) => upd.run(sha256(r.token), r.id)))();
   return plain.length;
 }
-normalizeGuestTokens();
+onDbReady(normalizeGuestTokens);
 
 /** Hash for storing a freshly generated guest token. */
 export const guestTokenHash = (token: string) => sha256(token);

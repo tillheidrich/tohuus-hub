@@ -31,6 +31,8 @@ import { formatItem } from './shop.js';
 import { isMasked, notPrivate } from './share-core.js';
 import { norm } from './text.js';
 import { reconcile, type Fields, type LocalItem, type LocalOp, type RemoteItem, type RemoteOp, type SyncMode, type Link } from './ha2-engine.js';
+import { featureOff, householdId } from './tenancy.js';
+import { afterUntick } from './shopping-trust.js';
 
 migrate(
   'ha2-1',
@@ -239,6 +241,7 @@ export function bridgeAlive(now = Date.now()) {
   return Boolean(seen && now - Date.parse(seen) < 15 * 60_000);
 }
 export const restReady = () => {
+  if (featureOff('haRest')) return false;
   const h = haSettings();
   return Boolean(h.url && h.token);
 };
@@ -430,7 +433,10 @@ const shopping: Adapter = {
     if (p.title !== undefined && String(p.title).trim() && !isMasked(id)) db.prepare('UPDATE shopping_items SET text = ? WHERE id = ?').run(String(p.title).trim().slice(0, 200), id);
     if (p.qty !== undefined) db.prepare('UPDATE shopping_items SET qty = ? WHERE id = ?').run(Number(p.qty) > 0 && Number(p.qty) !== 1 ? Number(p.qty) : null, id);
     if (p.done === true) db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = 'Home Assistant', in_basket = 0 WHERE id = ? AND checked_at IS NULL`).run(id);
-    if (p.done === false) db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(id);
+    if (p.done === false) {
+      db.prepare('UPDATE shopping_items SET checked_at = NULL, checked_by = NULL, in_basket = 0 WHERE id = ?').run(id);
+      afterUntick(id, 'Home Assistant');
+    }
     return null;
   },
   ops(op, entity) {
@@ -1135,6 +1141,7 @@ export const VOICE_DOMAINS = new Set(['light', 'switch', 'cover', 'climate', 'fa
 let restRunning: Promise<unknown> | null = null;
 /** REST transport: snapshot every enabled entity, reconcile, deliver. */
 export function syncViaRest(opts: { capabilities?: boolean } = {}) {
+  if (featureOff('haRest')) return Promise.resolve({ error: 'Not available in ToHuus Cloud.' });
   if (restRunning) return restRunning as Promise<{ error?: string }>;
   restRunning = (async () => {
     try {
@@ -1218,15 +1225,19 @@ export function bridgeSync(body: BridgeBody) {
 
 // ================================================================== scheduling
 
-let timer: ReturnType<typeof setTimeout> | null = null;
+// one debounce timer per household (ToHuus Cloud); the callback runs in the household that scheduled it
+const timers = new Map<string, ReturnType<typeof setTimeout>>();
 /** Something changed here: sync soon (debounced). */
 export function schedule(_reason: string) {
-  if (timer) clearTimeout(timer);
-  timer = setTimeout(() => {
-    timer = null;
+  const h = householdId();
+  const prev = timers.get(h);
+  if (prev) clearTimeout(prev);
+  const timer = setTimeout(() => {
+    timers.delete(h);
     void syncNow();
   }, 2000);
   timer.unref?.();
+  timers.set(h, timer);
 }
 
 /** Sync now with whichever transport is active. */
@@ -1253,6 +1264,8 @@ export function startHa2() {
     if (applying || !anyTopicOn()) return;
     if (topics.includes('shopping') || topics.includes('recipes') || topics.includes('care')) schedule('local');
   });
+  // REST polling reaches into the household's network – self-host only
+  if (featureOff('haRest')) return;
   const poll = setInterval(() => {
     if ((anyTopicOn() || ha2Settings().presence.enabled) && activeTransport() === 'rest') void syncViaRest();
   }, 3 * 60_000);

@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { config } from '../config.js';
+import { readImage } from './images.js';
 import { brand, db, getSetting } from '../db.js';
 import { locale, t } from '../i18n.js';
 import { localDay } from './catalog.js';
@@ -288,9 +289,8 @@ function careTicket(spec: TicketSpec, actor?: string): Ticket {
 }
 
 async function picture(imagePath: string | null | undefined, w: number): Promise<Block | null> {
-  if (!imagePath?.startsWith('/img/')) return null;
-  const f = path.join(config.dataDir, 'images', path.basename(imagePath));
-  if (!fs.existsSync(f)) return null;
+  const f = readImage(imagePath);
+  if (!f) return null;
   try {
     const png = await sharp(f).resize({ width: w, height: w, fit: 'inside' }).flatten({ background: '#ffffff' }).greyscale().normalise().png().toBuffer({ resolveWithObject: true });
     return { k: 'image', png: png.data, w: png.info.width, h: png.info.height };

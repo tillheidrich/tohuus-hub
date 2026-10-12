@@ -30,9 +30,12 @@ import {
   updateKid,
 } from '../lib/kids.js';
 import { rulesSchema } from '../lib/kids-rules.js';
+import { config } from '../config.js';
+import { uploadQuota } from '../lib/plans.js';
 
 // the demo kid is added after the demo household exists (index.ts seeds synchronously after importing routes)
 setImmediate(() => {
+  if (config.multiTenant) return; // the cloud has no demo household at start-up
   try {
     seedKidsDemo();
   } catch (e) {
@@ -78,7 +81,7 @@ r.get('/kids/places', (_req, res) => {
   res.json((db.prepare(`SELECT id, name, icon, hint FROM locations WHERE archived = 0 AND kind != 'unassigned' ORDER BY sort, id`).all() as any[]).map((l) => ({ ...l, photo: photos.get(l.id) ?? null })));
 });
 
-r.post('/kids/places/:id/photo', requireAdmin, upload.single('image'), async (req, res) => {
+r.post('/kids/places/:id/photo', requireAdmin, upload.single('image'), uploadQuota, async (req, res) => {
   const id = num(req.params.id);
   if (!db.prepare('SELECT 1 FROM locations WHERE id = ?').get(id)) {
     res.status(404).json({ error: 'not found' });

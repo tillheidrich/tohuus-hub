@@ -15,6 +15,7 @@ import { addToShopping, listProducts } from './catalog.js';
 import { guestTokenHash } from './data.js';
 import { notify } from './notify.js';
 import { blockedForGuests, menuDecor } from './menu.js';
+import { forEachHousehold } from './cloud-jobs.js';
 
 migrate(
   'party-1',
@@ -458,7 +459,7 @@ export function purgeGuestNames(nowMs = Date.now()) {
 let timer: NodeJS.Timeout | null = null;
 export function startPartyScheduler() {
   if (timer) return;
-  const run = () => partyTick().catch((e) => console.warn('[party]', (e as Error).message));
+  const run = () => forEachHousehold(() => partyTick(), { scope: 'open', label: 'party', jitterMs: 0 }).catch((e) => console.warn('[party]', (e as Error).message));
   setTimeout(run, 5_000).unref?.();
   timer = setInterval(run, 60_000);
   timer.unref?.();

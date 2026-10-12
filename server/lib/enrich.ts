@@ -3,12 +3,15 @@ import { db } from '../db.js';
 import { emit } from './bus.js';
 import { fetchImage, saveImage } from './images.js';
 import { lookupBarcode, searchProducts } from './off.js';
+import { householdId, runInHousehold } from './tenancy.js';
 
-const queue: number[] = [];
+// one queue for all households: every entry remembers its household and is processed inside it
+const queue: { h: string; id: number }[] = [];
 let running = false;
 
 export function enqueueEnrich(productId: number) {
-  if (!queue.includes(productId)) queue.push(productId);
+  const h = householdId();
+  if (!queue.some((q) => q.h === h && q.id === productId)) queue.push({ h, id: productId });
   void run();
 }
 
@@ -17,9 +20,9 @@ async function run() {
   running = true;
   try {
     while (queue.length) {
-      const id = queue.shift()!;
+      const { h, id } = queue.shift()!;
       try {
-        await enrichOne(id);
+        await runInHousehold({ id: h, via: 'enrich' }, () => enrichOne(id));
       } catch (e) {
         console.warn('[enrich]', id, (e as Error).message);
       }

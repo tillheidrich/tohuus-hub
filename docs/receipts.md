@@ -4,6 +4,16 @@ Stock and spending come in through what a household already gets: order notices,
 
 Where: *Imports (Importe)* for uploads and the review, *Imports › Receipt recognition (Importe › Bon-Erkennung)* for statistics and learned rules, *Settings › Access & AI › Receipts by e-mail* for the inbox.
 
+## Three ways in – whatever the household's digital level
+
+| Level | How | What happens |
+|---|---|---|
+| Full grocery delivery | REWE pickup/delivery notice and eBon (PDF, e-mail inbox, share sheet) | parsed exactly, reconciled with the order, review or automatic booking |
+| Any receipt on paper or screen | photo, screenshot or PDF of any receipt (Aldi, Lidl, bakery …) | read by the vision model through `server/lib/ai.ts` – on OpenRouter pinned to Mistral in the EU with no data collection; receipt *text* (PDFs, mails, digital receipts) goes out with card, loyalty, TSE and address data removed (`redact.ts`); a receipt whose lines don't add up to its total gets a second try with `AI_MODEL_VISION_HARD`. Photos are scaled down and sent as they are (blurring regions of a photo would need OCR first) |
+| Just saying it | the assistant: "Hab bei Aldi Milch, Eier und Brot für 12,40 gekauft" (typed or spoken; works without a model too) | a receipt in review dated with the purchase day (it counts for the purchase rhythm at once), a manual expense with the total for the money overview, matching list rows ticked off. The receipt lines carry no prices, so applying it later never counts money twice. Undo removes all of it |
+
+Receipts count for the purchase rhythm by the date printed on them (`imports.meta.date`), not by when someone approved them, and already while they wait in review.
+
 ## Supported documents
 
 | Source | Status |
@@ -12,7 +22,7 @@ Where: *Imports (Importe)* for uploads and the review, *Imports › Receipt reco
 | REWE eBon (PDF) | ✅ quantities, weights, deposits and returns; matched to the order by order number, or by market and day, so whatever you handed back at pickup does not end up in stock |
 | Digital receipts behind a QR link | ✅ PDF or HTML behind the link |
 | Receipts by e-mail (IMAP inbox) | ✅ forward eBons and order mails to a mailbox; PDF attachments and HTML or text receipts become imports. Mails are never deleted. |
-| Any receipt, shelf or recipe photo | ✅ with a vision model (`VISION_*`), or through your MCP assistant |
+| Any receipt, shelf or recipe photo | ✅ with a vision model (`AI_*`, or the older `VISION_*`), or through your MCP assistant |
 | Purchase history CSV (e.g. the REWE data export) | ✅ builds the product catalogue and receipt aliases (*Settings › Data & backups*) |
 | Lidl, Aldi Süd/Nord, Edeka, Netto, Kaufland, Penny, Norma, Globus, tegut, dm, Rossmann, Müller, Budni (PDF or text) | 🧪 generic German parser, tested with synthetic fixtures |
 | Tesco, Sainsbury's, Asda, Morrisons, Waitrose, M&S, Co-op, Aldi UK, Lidl GB, Boots, Superdrug | 🧪 UK parser: £ amounts, Clubcard and Nectar prices, multibuy and meal-deal savings, `kg @ £/kg`, carrier bags as fees |

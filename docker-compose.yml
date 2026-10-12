@@ -9,3 +9,20 @@ services:
     volumes:
       - ./data:/data
     env_file: .env
+    # Recommended: encrypt database, photos and backups. Keep the key OUT of ./data (e.g. in .env or a secret store);
+    # without it the data cannot be read. An existing database is converted on the next start.
+    # environment:
+    #   DB_ENCRYPTION_KEY: ${DB_ENCRYPTION_KEY}
+
+  # ToHuus Cloud (many households) – same image, see docs/cloud.md
+  # tohuus-cloud:
+  #   image: ghcr.io/tillheidrich/tohuus-hub:latest
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8081:8080"
+  #   volumes:
+  #     - ./cloud-data:/data
+  #   environment:
+  #     MULTI_TENANT: "true"
+  #     TOHUUS_MASTER_KEY: ${TOHUUS_MASTER_KEY}   # openssl rand -base64 32 – never store it in ./cloud-data
+  #     BASE_URL: https://app.example.org
