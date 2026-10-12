@@ -270,6 +270,15 @@ describe('with a model (fake)', () => {
   });
 });
 
+describe('permanent guests', () => {
+  it('never reach money, the assistant or what ToHuus remembers', async () => {
+    const { guestMay } = await import('../server/lib/people-policy');
+    for (const p of ['/api/money/overview', '/api/assistant/chat', '/api/assistant/undo/x', '/api/memory', '/api/memory/3'])
+      for (const level of ['family', 'recipes', 'stock', 'order'] as const) expect(guestMay(level, p.includes('chat') || p.includes('undo') ? 'POST' : 'GET', p), `${level} ${p}`).toBe(false);
+    expect(guestMay('family', 'GET', '/api/today')).toBe(true);
+  });
+});
+
 describe('what ToHuus remembers', () => {
   it('flags sensitive text', () => {
     expect(memory.isSensitive('Mila hat eine Nussallergie')).toBe(true);

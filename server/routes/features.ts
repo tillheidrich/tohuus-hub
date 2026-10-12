@@ -17,7 +17,10 @@ export const r = Router();
 
 r.get('/today', requireAuth, (req: any, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json(todayAggregate({ userId: req.actor?.userId ?? null, name: req.actor?.kind === 'user' ? req.actor?.name : null }));
+  const out = todayAggregate({ userId: req.actor?.userId ?? null, name: req.actor?.kind === 'user' ? req.actor?.name : null });
+  // permanent guests (area: people) never see money or receipts
+  if (req.actor?.houseGuest) res.json({ ...out, money: null, notices: [] });
+  else res.json(out);
 });
 
 r.get('/money/overview', requireAuth, (req, res) => {

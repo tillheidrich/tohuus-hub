@@ -206,7 +206,7 @@ const FAMILY_DENY: RegExp[] = [
 const FAMILY_READONLY: RegExp[] = [/^\/share\/(start-mode|staples)(\/.*)?$/, /^\/onboarding(\/.*)?$/, /^\/region(\/.*)?$/, /^\/(locations|categories)(\/.*)?$/, /^\/shop\/(stores|ha-todo)(\/.*)?$/, /^\/menu(\/.*)?$/];
 
 /** Words that are never for guests, wherever a route puts them (also covers routes added later). */
-const NEVER = /^(spend|spending|budgets?|receipts?|bons?|imports?|backups?|tokens?|restore|export\.json|reset|settings|invites?|webdav)$/;
+const NEVER = /^(spend|spending|budgets?|receipts?|bons?|imports?|backups?|tokens?|restore|export\.json|reset|settings|invites?|webdav|money|memory|assistant)$/;
 
 const matches = (rules: Rule[], method: string, path: string) =>
   rules.some(([m, re]) => (m === '*' || (m === 'GET' ? method === 'GET' || method === 'HEAD' : method !== 'GET' && method !== 'HEAD')) && re.test(path));

@@ -2,7 +2,7 @@
 
 Contract for the web app and the iPhone app (plan 12 Oct 2026). One request, everything the first tab needs; the server answers in well under 50 ms on a typical household (measured on the demo household in `test/today.test.ts`, median around 15–25 ms). Code: [`server/lib/today.ts`](../server/lib/today.ts).
 
-Authentication: session cookie or `Authorization: Bearer sw_app_…` (any member; permanent guests are not allowed). Response header `Cache-Control: no-store`. Strings are already in the household language (English or German). Dates are `YYYY-MM-DD` in the household time zone, times are SQLite UTC timestamps `YYYY-MM-DD HH:MM:SS`.
+Authentication: session cookie or `Authorization: Bearer sw_app_…`. Permanent guests of level *family* get the same shape with `money: null` and no notices. Response header `Cache-Control: no-store`. Strings are already in the household language (English or German). Dates are `YYYY-MM-DD` in the household time zone, times are SQLite UTC timestamps `YYYY-MM-DD HH:MM:SS`.
 
 ```jsonc
 {
