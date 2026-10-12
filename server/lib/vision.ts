@@ -6,6 +6,7 @@
  */
 import { aiConfig, aiEnabled, chat, extractJson, type ContentPart } from './ai.js';
 import { redactReceipt } from './redact.js';
+import { consumeReceiptAi } from './limits.js';
 import { lang } from '../db.js';
 import { t } from '../i18n.js';
 import { visionRegionHint as regionHint } from './region-hints.js';
@@ -81,6 +82,9 @@ async function ask(task: VisionTask, content: ContentPart[], kind: 'vision' | 'v
 
 export async function runVision(task: VisionTask, input: { images?: string[]; text?: string }): Promise<any> {
   if (!visionAvailable()) throw new Error(t('No vision model configured (VISION_BASE_URL / VISION_MODEL)'));
+  // reading receipts and shelves with AI is rate-limited per plan (plans.ts receiptAiPerDay); recipes are not
+  if (task === 'receipt' || task === 'text-items' || task === 'shelf')
+    consumeReceiptAi(() => t('Enough receipts read by AI for today. Upload the PDF, or try again tomorrow.'));
   // receipt text (PDF, mail, digital receipt) goes out without card, loyalty, TSE and address data (redact.ts)
   const text = input.text && task === 'text-items' ? redactReceipt(input.text).text : input.text;
   const content: ContentPart[] = [{ type: 'text', text: prompt(task) + (text ? `\n\n---\n${text}` : '') }];

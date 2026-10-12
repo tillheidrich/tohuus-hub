@@ -13,9 +13,10 @@ import { z } from 'zod';
 import { lang, setSetting } from '../db.js';
 import { t } from '../i18n.js';
 import { aiEnabled, AiError, audioFormat, transcribe } from '../lib/ai.js';
-import { AssistantError, chatOnce, deleteAllConversations, deleteConversation, getConversation, listConversations, type AssistantUser } from '../lib/assistant.js';
+import { AssistantError, assistantQuotaError, chatOnce, deleteAllConversations, deleteConversation, getConversation, listConversations, type AssistantUser } from '../lib/assistant.js';
 import { runUndo, UndoError } from '../lib/assistant-tools.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
+import { consumeAssistant, UsageLimitError } from '../lib/limits.js';
 import { emit } from '../lib/bus.js';
 import { deleteMemory, listMemory, MemoryError, remember } from '../lib/memory.js';
 import { healthShareAllowed } from '../lib/people-signals.js';
@@ -29,6 +30,7 @@ const userOf = (req: any): AssistantUser => ({ userId: req.actor?.userId ?? null
 function fail(res: any, e: unknown) {
   if (e instanceof AssistantError || e instanceof UndoError || e instanceof MemoryError) return res.status(e.status).json({ error: e.message });
   if (e instanceof AiError) return res.status(e.status).json({ error: e.message, code: e.code });
+  if (e instanceof UsageLimitError) return res.status(e.status).json(e.toJSON());
   throw e;
 }
 
@@ -54,8 +56,10 @@ async function audioToText(req: any): Promise<string> {
   return out.text;
 }
 
+// recordings are never stored: they live in memory for the transcription and are dropped afterwards
 r.post('/assistant/transcribe', requireAuth, audioUpload.single('audio'), async (req, res) => {
   try {
+    if (aiEnabled('audio') && !consumeAssistant().ok) throw assistantQuotaError();
     res.json({ text: await audioToText(req) });
   } catch (e) {
     fail(res, e);
@@ -64,25 +68,31 @@ r.post('/assistant/transcribe', requireAuth, audioUpload.single('audio'), async 
 
 r.post('/assistant/voice', requireAuth, audioUpload.single('audio'), async (req, res) => {
   try {
+    // one recording = one assistant message (transcription and answer together)
+    const allowance = aiEnabled('audio') ? consumeAssistant() : undefined;
+    if (allowance && !allowance.ok) throw assistantQuotaError();
     const text = await audioToText(req);
     if (!text.trim()) {
       res.json({ text: '', conversationId: req.body?.conversationId ?? null, reply: t('I didn’t catch anything. Please try again.'), actions: [], mode: 'basic' });
       return;
     }
     const conversationId = typeof req.body?.conversationId === 'string' && req.body.conversationId ? req.body.conversationId : null;
-    res.json({ text, ...(await chatOnce({ message: text, conversationId, user: userOf(req) })) });
+    res.json({ text, ...(await chatOnce({ message: text, conversationId, user: userOf(req), allowance })) });
   } catch (e) {
     fail(res, e);
   }
 });
 
-r.post('/assistant/undo/:token', requireAuth, (req: any, res) => {
+function undo(req: any, res: any, token: unknown) {
+  if (typeof token !== 'string' || !/^[0-9a-f]{32}$/.test(token)) return void res.status(400).json({ error: t('This can no longer be undone.') });
   try {
-    res.json(runUndo(String(req.params.token), req.actor?.userId ?? null));
+    res.json(runUndo(token, req.actor?.userId ?? null));
   } catch (e) {
     fail(res, e);
   }
-});
+}
+r.post('/assistant/undo/:token', requireAuth, (req: any, res) => undo(req, res, String(req.params.token)));
+r.post('/assistant/undo', requireAuth, (req: any, res) => undo(req, res, req.body?.undo ?? req.body?.token));
 
 r.get('/assistant/conversations', requireAuth, (req, res) => res.json(listConversations(userOf(req))));
 r.get('/assistant/conversations/:id', requireAuth, (req, res) => {

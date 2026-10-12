@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { ZodError } from 'zod';
 import { MulterError } from 'multer';
 import { config } from './config.js';
+import { UsageLimitError } from './lib/limits.js';
+import { gzipApi, precompressedStatic } from './lib/compress.js';
 import { lang, onDbReady } from './db.js';
 import { t } from './i18n.js';
 import { startScheduler } from './lib/scheduler.js';
@@ -71,6 +73,8 @@ app.disable('x-powered-by');
 app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 1));
 app.use(express.json({ limit: '4mb' }));
 app.use(cookieParser());
+// JSON/text API answers > 1 kB gzipped (before the image signer, which rewrites bodies first) – lib/compress.ts
+app.use('/api', gzipApi);
 // ToHuus Cloud: pick the household of this request (session, app token, token prefix) – lib/cloud-auth.ts
 if (config.multiTenant) app.use(cloudContext);
 app.use((_req, res, next) => {
@@ -178,6 +182,8 @@ if (webDir) {
     Object.assign(m, { background_color: c, theme_color: c, description: t('Less on your mind. More at home.') });
     res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
   });
+  // pre-compressed .br/.gz from the build (scripts/precompress.mjs) for clients that accept them
+  app.use(precompressedStatic(webDir, (p) => (p.includes(`${path.sep}assets${path.sep}`) ? 'public, max-age=31536000, immutable' : 'public, max-age=3600')));
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {
     if (p.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } }));
@@ -199,6 +205,10 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   }
   if (err instanceof QuotaError) {
     res.status(413).json(err.toJSON());
+    return;
+  }
+  if (err instanceof UsageLimitError) {
+    res.status(err.status).json(err.toJSON());
     return;
   }
   if (err instanceof MulterError) {

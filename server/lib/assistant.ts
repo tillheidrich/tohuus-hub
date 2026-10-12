@@ -7,7 +7,7 @@
  *    (assistant-parse.ts) still turns "Milch, 2 Paprika und Brot" into list items and answers the common questions.
  *
  * Conversations are stored per person (assistant_conversations / assistant_messages), kept 30 days, deletable.
- * Usage is counted through limits-shim.ts before any model call.
+ * Usage is counted through limits.ts before any model call.
  */
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
@@ -32,7 +32,11 @@ import {
   type AssistantAction,
   type ToolCtx,
 } from './assistant-tools.js';
-import { consumeAssistant } from './limits-shim.js';
+import { consumeAssistant, UsageLimitError, type ConsumeResult } from './limits.js';
+
+/** HTTP 402 for the apps when the monthly assistant messages are used up. */
+export const assistantQuotaError = () =>
+  new UsageLimitError(t('The assistant messages for this month are used up. Simple things like “milk and bread” still work.'), 402, 'quota.assistant', 0);
 import { fmtMoney } from './money.js';
 
 migrate(
@@ -77,6 +81,8 @@ export interface ChatOutput {
   usage?: Usage;
   /** messages left this month (null = unlimited) */
   remaining?: number | null;
+  /** Plus fair use: over the allowance, answered more briefly */
+  throttled?: boolean;
 }
 
 export class AssistantError extends Error {
@@ -192,25 +198,37 @@ export function systemPrompt(contextText: string) {
 
 // ------------------------------------------------------------------ chat
 
-export async function chatOnce(input: { message: string; conversationId?: string | null; user: AssistantUser }): Promise<ChatOutput> {
+export async function chatOnce(input: {
+  message: string;
+  conversationId?: string | null;
+  user: AssistantUser;
+  /** already counted (voice: the recording counts as the message) */
+  allowance?: ConsumeResult;
+}): Promise<ChatOutput> {
   const message = input.message.trim().slice(0, 2000);
   if (!message) throw new AssistantError(t('Please write or say something.'));
   pruneConversations();
+  if (input.conversationId && !ownConversation(input.conversationId, input.user)) throw new AssistantError(t('Conversation not found'), 404);
+  // count before anything is stored: over the allowance, what the built-in reader understands still works (it costs
+  // no model call); anything else answers HTTP 402 { code: 'quota.assistant' }
+  const allowance = aiEnabled('text') ? (input.allowance ?? consumeAssistant()) : null;
+  const overQuota = Boolean(allowance && !allowance.ok);
+  if (overQuota && parseIntent(message).kind === 'unknown')
+    throw assistantQuotaError();
   const conversationId = openConversation(input.conversationId, input.user, message);
   const prior = history(conversationId);
   store(conversationId, 'user', message);
   const ctx: ToolCtx = { actor: input.user.name, userId: input.user.userId, actions: [] };
 
-  let out: { reply: string; mode: 'ai' | 'basic'; usage?: Usage; remaining?: number | null };
-  if (aiEnabled('text')) {
-    const allowance = consumeAssistant();
-    if (!allowance.ok) {
-      const basic = basicReply(message, ctx);
-      out = { reply: `${allowance.reason ?? t('The assistant messages for this month are used up.')} ${basic}`.trim(), mode: 'basic', remaining: allowance.remaining };
+  let out: { reply: string; mode: 'ai' | 'basic'; usage?: Usage; remaining?: number | null; throttled?: boolean };
+  if (allowance) {
+    if (overQuota) {
+      out = { reply: basicReply(message, ctx), mode: 'basic', remaining: 0 };
     } else {
       try {
-        const r = await modelReply(message, prior, ctx, input.user);
-        out = { ...r, mode: 'ai', remaining: allowance.remaining };
+        // Plus fair use over the allowance: still answered, just shorter
+        const r = await modelReply(message, prior, ctx, input.user, allowance.throttled ? 250 : 600);
+        out = { ...r, mode: 'ai', remaining: allowance.remaining, ...(allowance.throttled ? { throttled: true } : {}) };
       } catch (e) {
         if (!(e instanceof AiError)) throw e;
         console.warn('[assistant] model failed, using the built-in reader:', e.code, e.detail ?? e.message);
@@ -222,15 +240,23 @@ export async function chatOnce(input: { message: string; conversationId?: string
     out = { reply: basicReply(message, ctx), mode: 'basic' };
   }
   store(conversationId, 'assistant', out.reply, { actions: ctx.actions, mode: out.mode, tokens: out.usage?.total ?? 0 });
-  return { conversationId, reply: out.reply, actions: ctx.actions, mode: out.mode, ...(out.usage ? { usage: out.usage } : {}), ...(out.remaining !== undefined ? { remaining: out.remaining } : {}) };
+  return {
+    conversationId,
+    reply: out.reply,
+    actions: ctx.actions,
+    mode: out.mode,
+    ...(out.usage ? { usage: out.usage } : {}),
+    ...(out.remaining !== undefined ? { remaining: out.remaining } : {}),
+    ...(out.throttled ? { throttled: true } : {}),
+  };
 }
 
-async function modelReply(message: string, prior: ChatMessage[], ctx: ToolCtx, user: AssistantUser) {
+async function modelReply(message: string, prior: ChatMessage[], ctx: ToolCtx, user: AssistantUser, maxTokens = 600) {
   const context = buildContext({ purpose: 'assistant', viewer: { userId: user.userId, name: user.name } });
   const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt(context.text) }, ...prior, { role: 'user', content: message }];
   let usage = zeroUsage();
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const res = await chat({ kind: 'text', messages, tools: TOOL_DEFS, temperature: 0.3, maxTokens: 600 });
+    const res = await chat({ kind: 'text', messages, tools: TOOL_DEFS, temperature: 0.3, maxTokens });
     usage = addUsage(usage, res.usage);
     if (!res.toolCalls.length) return { reply: res.content.trim() || t('Done.'), usage };
     messages.push({ role: 'assistant', content: res.content || null, tool_calls: res.toolCalls });

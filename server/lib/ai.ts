@@ -15,7 +15,7 @@
  * Older installs: VISION_BASE_URL / VISION_API_KEY / VISION_MODEL keep working when no AI_* is set.
  *
  * Nothing here knows about households, privacy or plans: callers redact (people-signals.ts) and count
- * (limits-shim.ts) before they call. Tests replace the network with setAiFetch().
+ * (limits.ts) before they call. Tests replace the network with setAiFetch().
  */
 import { t } from '../i18n.js';
 

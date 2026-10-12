@@ -28,7 +28,7 @@ Object.assign(process.env, {
   TRUST_PROXY_HOPS: '1',
 });
 
-const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org'];
+const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store'];
 const mails: { to: string; text: string }[] = [];
 
 let ipSeq = 1;
@@ -123,6 +123,18 @@ beforeAll(async () => {
   const p = await A.get(`/api/products/${pid}`);
   productImage = p.json.image_path ?? p.json.product?.image_path;
   expect(productImage).toMatch(/^\/img\/p\d+-[0-9a-f]+\.webp$/);
+  // feature build: what ToHuus remembers, an assistant conversation, money and a purchase rhythm with markers
+  expect((await A.post('/api/memory', { text: 'MARKERA-memory Brot vom Bäcker' })).status).toBe(200);
+  const chat = await A.post('/api/assistant/chat', { message: 'MARKERA-chat' });
+  expect(chat.status, chat.text).toBe(200);
+  expect((await A.post('/api/spend/expenses', { amount: 9.5, store: 'MARKERA-store' })).status).toBe(200);
+  const { db } = await import('../server/db');
+  tenancy.runInHousehold(hA, () => {
+    for (const d of [21, 14, 7]) {
+      const day = new Date(Date.now() - d * 86400000).toISOString().slice(0, 10);
+      db.prepare(`INSERT INTO shopping_items (product_id, text, checked_at, cleared_at) VALUES (?, 'MARKERA-prod', ?, ?)`).run(pid, `${day} 10:00:00`, `${day} 11:00:00`);
+    }
+  });
 }, 60_000);
 
 afterAll(() => {
@@ -182,6 +194,12 @@ describe('cloud isolation', () => {
     // sanity: the sweep reaches A's data
     expect(a.routes).toBeGreaterThan(100);
     expect(a.found.length).toBeGreaterThan(5);
+    // the feature routes are part of the walk and show A's data to A
+    const routes = getRoutes();
+    for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/cook/ideas', '/api/memory', '/api/assistant/conversations', '/api/assistant/conversations/:id', '/api/assistant/status', '/api/assistant/settings'])
+      expect(routes, r).toContain(r);
+    const seen = new Set(a.found.map((f) => f.path));
+    for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/memory', '/api/assistant/conversations']) expect(seen, r).toContain(r);
     const b = await sweep(B);
     console.log(`[sweep] routes=${a.routes} A:200=${a.ok} A:markers=${a.found.length} B:200=${b.ok}`, [...new Set(a.found.map((f) => f.path))].slice(0, 12).join(" "));
     expect(b.ok).toBeGreaterThan(50);
@@ -251,6 +269,13 @@ describe('cloud isolation', () => {
     const signed = JSON.stringify(viaApp.json).match(/\/img\/p\d+-[0-9a-f]+\.webp\?h=h[a-z2-7]{10}&e=\d+&s=[\w-]+/)?.[0];
     expect(signed).toBeTruthy();
     expect((await new Client().get(signed!)).status).toBe(200);
+    // the feature endpoints the app reads with its token carry signed image URLs as well
+    for (const p of ['/api/rhythm', '/api/today']) {
+      const r = await new Client().get(p, { authorization: `Bearer ${tok}` });
+      expect(r.status, p).toBe(200);
+      expect(r.text, p).toMatch(/\/img\/p\d+-[0-9a-f]+\.webp\?h=h[a-z2-7]{10}&e=\d+&s=/);
+      expect(r.text, p).not.toMatch(/\/img\/p\d+-[0-9a-f]+\.webp"/);
+    }
     // … which do not work tampered, nor for another household's slug
     expect((await new Client().get(signed!.replace(/s=[\w-]{4}/, 's=AAAA'))).status).toBe(401);
     const slugB = accounts.getHousehold(hB)!.slug;
@@ -339,6 +364,27 @@ describe('cloud accounts', () => {
     expect((await c.get('/api/shopping', bearer)).status).toBe(401);
   });
 
+  it('web link: an app token becomes a one-time cookie session for the same household (60 s, single use)', async () => {
+    const r = await new Client().post('/api/auth/app', { email: 'markera@example.org', password: 'geheim1234', device: 'iPhone WebView' });
+    const bearer = { authorization: `Bearer ${r.json.token}` };
+    // a cookie session cannot ask for one
+    expect((await A.post('/api/auth/app/web-link', {})).status).toBe(401);
+    const link = await new Client().post('/api/auth/app/web-link', { next: '/einstellungen' }, bearer);
+    expect(link.status, link.text).toBe(200);
+    expect(link.json.url).toMatch(new RegExp(`^${base}/api/auth/app/web-link/`));
+    const W = new Client();
+    const open = await W.get(link.json.url.slice(base.length));
+    expect(open.status).toBe(302);
+    expect((await W.get('/api/shopping')).text).toContain('MARKERA-shop');
+    expect((await W.get('/api/me')).json.actor.name).toBe('MarkerATill');
+    // single use
+    expect((await new Client().get(link.json.url.slice(base.length))).status).toBe(410);
+    // an unsafe next falls back to /
+    const l2 = await new Client().post('/api/auth/app/web-link', { next: '//evil.example' }, bearer);
+    const o2 = await fetch(l2.json.url, { redirect: 'manual', dispatcher: local });
+    expect(o2.headers.get('location')).toBe('/');
+  });
+
   it('invites create memberships; the new member sees A, never B', async () => {
     const inv = await A.post('/api/invites', { name: 'Cleo' });
     expect(inv.status, inv.text).toBe(200);
@@ -387,6 +433,46 @@ describe('plans and quotas', () => {
     expect(results[19].remaining).toBe(0);
     expect(results[20]).toEqual({ ok: false, remaining: 0 });
     expect(tenancy.runInHousehold(hB, () => plans.consume('assistant')).ok).toBe(true);
+  });
+
+  it('assistant messages are counted per household: Free stops at 20 with HTTP 402, others go on', async () => {
+    const ai = await import('../server/lib/ai');
+    process.env.AI_API_KEY = 'sk-test';
+    let calls = 0;
+    ai.setAiFetch(async () => {
+      calls++;
+      return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'Gern.' } }], usage: { total_tokens: 10 } }), { status: 200 });
+    });
+    try {
+      const C = new Client();
+      const hC = await signup(C, 'c-quota@example.org', 'Cora', 'Quota home', 'couple');
+      accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(hC);
+      for (let i = 0; i < 20; i++) {
+        const r = await C.post('/api/assistant/chat', { message: `Wie geht es dir ${i}?` });
+        expect(r.status, r.text).toBe(200);
+        expect(r.json.mode).toBe('ai');
+      }
+      expect(calls).toBe(20);
+      expect(tenancy.runInHousehold(hC, () => plans.usage('assistant'))).toBe(20);
+      const over = await C.post('/api/assistant/chat', { message: 'Wie wird das Wetter?' });
+      expect(over.status).toBe(402);
+      expect(over.json).toMatchObject({ code: 'quota.assistant', remaining: 0 });
+      expect(over.json.error).toBeTruthy();
+      // what the built-in reader understands still works, without a model call
+      const basic = await C.post('/api/assistant/chat', { message: 'Milch und 2 Paprika' });
+      expect(basic.status).toBe(200);
+      expect(basic.json.mode).toBe('basic');
+      expect(calls).toBe(20);
+      // another household is not affected
+      const other = new Client();
+      await signup(other, 'd-quota@example.org', 'Dora', 'Other home', 'carer');
+      const r = await other.post('/api/assistant/chat', { message: 'Hallo?' });
+      expect(r.status).toBe(200);
+      expect(r.json.mode).toBe('ai');
+    } finally {
+      ai.setAiFetch(null);
+      delete process.env.AI_API_KEY;
+    }
   });
 
   it('storage quota: 413 with a message key when full, nothing deleted', async () => {

@@ -199,6 +199,69 @@ appAuth.delete(
   }),
 );
 
+// ----------------------------------------------------------------- web link for the app's WKWebView
+
+/**
+ * One-time links (60 s, single use) that turn the app's token into a cookie session for the same member and
+ * household, so rare settings can open the web UI inside the app. Kept in process memory on purpose: they are
+ * sign-in material, not household data, and a restart simply makes the app ask for a new one.
+ */
+interface WebLink {
+  userId: number | null;
+  accountId: number | null;
+  householdId: string | null;
+  next: string;
+  exp: number;
+}
+const webLinks = new Map<string, WebLink>();
+const WEB_LINK_MS = 60_000;
+const safeNext = (v: unknown) => (typeof v === 'string' && /^\/(?![/\\])[\w\-./?=&%#]*$/.test(v) && v.length <= 300 ? v : '/');
+
+appAuth.post(
+  '/auth/app/web-link',
+  wrap(async (req) => {
+    if (!currentTokenHash(req)?.length || !req.headers.authorization?.slice(7).trim().startsWith('sw_app_')) throw new AuthError(401, 'unauthorized');
+    const now = Date.now();
+    for (const [k, v] of webLinks) if (v.exp < now) webLinks.delete(k);
+    let link: WebLink;
+    if (!cloudMode()) {
+      const a = resolveActor(req);
+      if (!a || a.kind !== 'user' || !a.userId || a.scope !== 'app') throw new AuthError(401, 'unauthorized');
+      link = { userId: a.userId, accountId: null, householdId: null, next: safeNext(req.body?.next), exp: now + WEB_LINK_MS };
+    } else {
+      const id = (await CA()).cloudIdentity(req);
+      const hh = currentHousehold()?.id ?? null;
+      if (!id?.appTokenId || !hh) throw new AuthError(401, 'unauthorized');
+      link = { userId: null, accountId: id.accountId, householdId: hh, next: safeNext(req.body?.next), exp: now + WEB_LINK_MS };
+    }
+    const token = randomToken(32);
+    webLinks.set(sha256(token), link);
+    return { url: `${config.baseUrl}/api/auth/app/web-link/${token}`, expiresIn: WEB_LINK_MS / 1000 };
+  }),
+);
+
+appAuth.get('/auth/app/web-link/:token', async (req, res, next) => {
+  try {
+    const key = sha256(String(req.params.token));
+    const link = webLinks.get(key);
+    webLinks.delete(key); // single use, also when expired
+    if (!link || link.exp < Date.now()) return void res.status(410).type('text/plain').send(t('This link has expired or was already used.'));
+    if (!cloudMode()) {
+      const { startSession } = await import('../lib/auth-sessions.js');
+      if (!db.prepare('SELECT 1 FROM users WHERE id = ?').get(link.userId)) return void res.status(410).end();
+      startSession(req, res, link.userId!, 'app-link');
+    } else {
+      const acc = await A();
+      if (!acc.membership(link.accountId!, link.householdId!)) return void res.status(410).end();
+      await startCloudSession(req, res, link.accountId!, link.householdId, 'app-link');
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.redirect(302, link.next);
+  } catch (e) {
+    next(e);
+  }
+});
+
 function currentTokenHash(req: Request) {
   const a = req.headers.authorization;
   return a?.startsWith('Bearer ') ? sha256(a.slice(7).trim()) : null;
@@ -248,8 +311,8 @@ async function startCloudSession(req: Request, res: Response, accountId: number,
   setSessionCookie(res, token);
 }
 
-const FORM_MAP: Record<string, 'single' | 'couple' | 'family' | 'shared'> = { single: 'single', couple: 'couple', family: 'family', wg: 'shared', carer: 'family' };
-const PLAN_FORMS = ['single', 'couple', 'family', 'wg', 'carer'] as const;
+const FORM_MAP: Record<string, 'single' | 'couple' | 'family' | 'shared' | 'carer'> = { single: 'single', couple: 'couple', family: 'family', wg: 'shared', shared: 'shared', carer: 'carer' };
+const PLAN_FORMS = ['single', 'couple', 'family', 'wg', 'shared', 'carer'] as const;
 
 /** Create a household for an account: directory entry, database with defaults, first admin, membership. */
 async function createHouseholdFor(accountId: number, input: { householdName: string; name: string; email: string; form: string; lang: string; region: string }) {

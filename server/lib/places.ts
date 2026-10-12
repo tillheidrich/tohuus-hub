@@ -350,7 +350,8 @@ export function templatesFor(preset: HomePreset | null, spots = false) {
 
 // ------------------------------------------------------------------ household form and home preset
 
-export const FORMS = ['single', 'couple', 'family', 'shared'] as const;
+/** 'carer': "ich versorge noch jemanden mit" – shops and cooks for someone outside the home too (plan 12 Oct 2026) */
+export const FORMS = ['single', 'couple', 'family', 'shared', 'carer'] as const;
 export type HouseholdForm = (typeof FORMS)[number];
 
 /** Who lives here. Not chosen yet = 'family' (what the app always assumed – existing households stay as they are). */

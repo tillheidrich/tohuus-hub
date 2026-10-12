@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch server/index.ts",
     "dev:web": "vite",
-    "build": "vite build && esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/server.mjs --packages=external && esbuild scripts/restore-check.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/restore-check.mjs --packages=external",
+    "build": "vite build && node scripts/precompress.mjs dist/web && esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/server.mjs --packages=external && esbuild scripts/restore-check.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/restore-check.mjs --packages=external",
     "start": "node dist/server.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p .",

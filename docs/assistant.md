@@ -93,7 +93,7 @@ Outward the app says "ToHuus merkt sich …"; the word "Gedächtnis" stays inter
 
 ## Limits
 
-Before every model call `consumeAssistant()` ([`limits-shim.ts`](../server/lib/limits-shim.ts)) counts one message. Today it always allows; after the cloud branch it becomes `plans.consume('assistant')` (Free 20, Haushalt 100, Plus 1 500 fair use per month). When the allowance is used up, the answer comes from the built-in reader with a short note.
+Before every model call `consumeAssistant()` ([`limits.ts`](../server/lib/limits.ts)) counts one message. Today it always allows; after the cloud branch it becomes `plans.consume('assistant')` (Free 20, Haushalt 100, Plus 1 500 fair use per month). When the allowance is used up, the answer comes from the built-in reader with a short note.
 
 ## Configuration
 

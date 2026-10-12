@@ -14,7 +14,7 @@ import { config } from '../config.js';
 import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
 import { addToShopping, getProduct } from './catalog.js';
-import { historySince } from './limits-shim.js';
+import { historySince } from './limits.js';
 import { PURCHASE_DAY } from './spending.js';
 import './share-core.js';
 import './shopping-trust.js';

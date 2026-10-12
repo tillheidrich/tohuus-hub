@@ -332,6 +332,8 @@ describe('household form', () => {
   it('is stored, exposed and only changes presentation', async () => {
     expect((await call('PUT', '/home/setup', { form: 'couple', preset: 'house' })).json).toMatchObject({ form: 'couple', preset: 'house', ui: { votes: true, kids: false } });
     expect((await call('GET', '/me')).json.home).toMatchObject({ form: 'couple', preset: 'house' });
+    // "ich versorge noch jemanden mit"
+    expect((await call('PUT', '/home/setup', { form: 'carer' })).json).toMatchObject({ form: 'carer', ui: { votes: true, kids: false, personal_places: false } });
     expect((await call('PUT', '/home/setup', { form: 'nonsense' })).status).toBe(400);
     expect((await call('GET', '/home/setup')).json.places.length).toBeGreaterThan(0);
   });

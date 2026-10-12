@@ -8,7 +8,7 @@
  */
 import { db } from '../db.js';
 import { t } from '../i18n.js';
-import { historySince } from './limits-shim.js';
+import { historySince } from './limits.js';
 import { region } from './region.js';
 import { rhythmList } from './rhythm.js';
 import { addDays, aggregate, budgetStatus, loadEntries, periodRange, today, type Entry } from './spend2.js';

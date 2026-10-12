@@ -14,6 +14,9 @@ export const de_assistant: Record<string, string> = {
   'This audio format is not supported. Please use m4a, mp3, wav, ogg, webm or flac.': 'Dieses Audioformat geht leider nicht. Bitte m4a, mp3, wav, ogg, webm oder flac verwenden.',
   'I didn’t catch anything. Please try again.': 'Ich hab nichts verstanden. Versuch es bitte noch mal.',
 
+  'Enough receipts read by AI for today. Upload the PDF, or try again tomorrow.': 'Für heute wurden genug Bons per KI gelesen. Lad das PDF hoch oder versuch es morgen wieder.',
+  'The assistant messages for this month are used up. Simple things like “milk and bread” still work.': 'Die Nachrichten an den Assistenten sind für diesen Monat aufgebraucht. Einfaches wie „Milch und Brot“ geht weiter.',
+
   // conversations
   'Conversation not found': 'Unterhaltung nicht gefunden',
   'Please write or say something.': 'Schreib oder sag einfach etwas.',
