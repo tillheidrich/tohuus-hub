@@ -68,7 +68,12 @@ struct OpenRecipeBrowser: View {
         .navigationTitle(LC("Discover recipes"))
         .navigationBarTitleDisplayMode(.inline)
         .task(id: term) { await search() }
-        .onAppear { if let initialQuery, query.isEmpty { query = initialQuery } }
+        .onAppear {
+            if let initialQuery, query.isEmpty { query = initialQuery }
+            #if DEBUG
+            if let id = UserDefaults.standard.string(forKey: "debugOpenRecipe") { show = OpenRecipeHit(id: id, title: "") }
+            #endif
+        }
         .sheet(item: $show) { hit in
             OpenRecipePreviewSheet(store: store, hit: hit) { id in
                 show = nil

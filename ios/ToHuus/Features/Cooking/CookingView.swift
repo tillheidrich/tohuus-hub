@@ -58,6 +58,7 @@ struct CookingView: View {
     @FocusState private var searchFocused: Bool
     @State private var showImport = false
     @State private var showSources = false
+    @State private var showPackage = false
     @State private var sourcesQuery: String?
     @State private var model = CookModel()
     @State private var week = WeekModel()
@@ -92,6 +93,9 @@ struct CookingView: View {
                 RecipeDetailView(recipeId: ref.id, store: store, planEntryId: ref.planEntryId)
             }
             .sheet(isPresented: $showImport) { RecipeImportSheet(store: store, openRecipe: openSaved) }
+            .sheet(isPresented: $showPackage) {
+                NavigationStack { RecipePackageView(store: store) { showPackage = false } }
+            }
             .sheet(isPresented: $showSources) {
                 NavigationStack {
                     OpenRecipeBrowser(store: store, onSaved: { id in showSources = false; openSaved(id) }, initialQuery: sourcesQuery)
@@ -146,6 +150,7 @@ struct CookingView: View {
         case "recipes": tab = 2
         case "open": tab = 2; showSources = true
         case "import": tab = 2; showImport = true
+        case "package": tab = 2; showPackage = true
         default:
             if d.hasPrefix("recipe:"), let id = Int(d.dropFirst(7)) { open(RecipeRef(id: id)) }
             if d.hasPrefix("with:") { tab = 2; search = "mit: " + d.dropFirst(5) }
