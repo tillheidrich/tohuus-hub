@@ -9,13 +9,13 @@
 import nodemailer from 'nodemailer';
 import type { Attachment } from 'nodemailer/lib/mailer/index.js';
 import { config, smtpEnabled } from '../config.js';
-import { db, getSetting, lang } from '../db.js';
+import { db, getSetting, lang, onDbReady } from '../db.js';
 import { t } from '../i18n.js';
 
 // The app was called "Stockwerk" before it became ToHuus Hub. A household that still carries the old app name as
 // its own name gets the neutral default back (it is an app name, not a household name) – once.
 // Idempotent and cheap, so no named migration (that would take a pre-migration backup on every install).
-db.prepare(`UPDATE settings SET value = '""' WHERE key = 'household.name' AND lower(trim(value, '"')) IN ('stockwerk', 'stockwerk hub')`).run();
+onDbReady(() => db.prepare(`UPDATE settings SET value = '""' WHERE key = 'household.name' AND lower(trim(value, '"')) IN ('stockwerk', 'stockwerk hub')`).run());
 
 export const APP_NAME = 'ToHuus Hub';
 const OLD_NAME = /stockwerk/i;

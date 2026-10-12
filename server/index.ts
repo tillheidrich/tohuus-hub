@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { ZodError } from 'zod';
 import { MulterError } from 'multer';
 import { config } from './config.js';
-import { lang } from './db.js';
+import { lang, onDbReady } from './db.js';
 import { t } from './i18n.js';
 import { startScheduler } from './lib/scheduler.js';
 import { handleMcp } from './mcp/server.js';
@@ -50,8 +50,8 @@ import { householdAppearance } from './lib/appearance.js';
 import { ensureBaseData, seedDemo } from './seed.js';
 
 // a new household gets no places unasked – onboarding asks which ones it has (area: home); the demo brings its own
-ensureBaseData({ places: false });
-if (config.seedDemo) seedDemo();
+onDbReady(() => ensureBaseData({ places: false }));
+if (config.seedDemo && !config.multiTenant) seedDemo();
 
 const app = express();
 app.disable('x-powered-by');
