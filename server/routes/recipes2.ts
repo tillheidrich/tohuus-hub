@@ -3,7 +3,7 @@ import { Router, type NextFunction, type Request, type Response } from 'express'
 import multer from 'multer';
 import { z } from 'zod';
 import { lang } from '../db.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { requireAuth } from '../lib/auth.js';
 import { lookupMealDb, mealToRecipe, randomMealDb, searchMealDb } from '../lib/open-recipes.js';
 import { detectFile, detectText, FORMAT_LABELS } from '../lib/recipe-formats.js';
@@ -106,7 +106,7 @@ r.post('/recipes/import/paste', canImport, (req, res) => {
   try {
     const { text } = z.object({ text: z.string().min(2).max(4_000_000) }).parse(req.body);
     const list = recipeList(extractJson(text));
-    if (!list.length) throw new Error(t('No recipes found in this file.'));
+    if (!list.length) throw userError(t('No recipes found in this file.'));
     const recipes: ImportRecipe[] = [];
     const errors: ImportError[] = [];
     list.slice(0, MAX_BULK).forEach((o, index) => {

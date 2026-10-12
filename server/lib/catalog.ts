@@ -1,7 +1,7 @@
 import { config } from '../config.js';
 import { db, lang, now } from '../db.js';
 import { commaDecimal } from '../languages.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { categoryIdByKey, type CategoryKey } from './basedata.js';
 import { unassignedId, usablePlace } from './places.js';
 import { regionCategoryRules } from './region-categories.js';
@@ -155,9 +155,9 @@ export interface AdjustInput {
 /** Change stock. Positive delta adds a (possibly dated) entry, negative consumes oldest-first (FEFO). */
 export function adjustStock(input: AdjustInput) {
   const p = getProduct(input.productId);
-  if (!p) throw new Error(t('Product not found'));
-  if (input.set !== undefined && (input.set < 0 || !Number.isFinite(input.set))) throw new Error(t('Quantity must not be negative'));
-  if (input.delta !== undefined && !Number.isFinite(input.delta)) throw new Error(t('Invalid quantity'));
+  if (!p) throw userError(t('Product not found'));
+  if (input.set !== undefined && (input.set < 0 || !Number.isFinite(input.set))) throw userError(t('Quantity must not be negative'));
+  if (input.delta !== undefined && !Number.isFinite(input.delta)) throw userError(t('Invalid quantity'));
   const before = productStatus(p, stockOf(p.id));
   const tx = db.transaction(() => {
     const locationId = input.locationId ?? usablePlace(p.default_location_id) ?? firstLocationId();

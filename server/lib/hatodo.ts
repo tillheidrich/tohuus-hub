@@ -10,7 +10,7 @@ import { emit, onEmit } from './bus.js';
 import { haSettings } from './plan.js';
 import { formatItem, quickAdd } from './shop.js';
 import { isMasked, notPrivate } from './share-core.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { featureOff } from './tenancy.js';
 import { afterUntick } from './shopping-trust.js';
 
@@ -48,7 +48,7 @@ async function call(service: string, body: Record<string, unknown>, response = f
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(12_000),
   });
-  if (!r.ok) throw new Error(t('Home Assistant responded with {status}', { status: r.status }));
+  if (!r.ok) throw userError(t('Home Assistant responded with {status}', { status: r.status }));
   return response ? ((await r.json()) as any) : null;
 }
 

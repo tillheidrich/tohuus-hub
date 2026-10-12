@@ -51,3 +51,6 @@ export function t(en: string, vars?: Record<string, string | number | null | und
 
 export const locale = () => localeOf(lang());
 export const fmtDay = (d: string | Date) => new Date(d).toLocaleDateString(locale());
+
+/** An error whose message is meant for the person (already translated): shown as is, also in production. */
+export const userError = (message: string) => Object.assign(new Error(message), { expose: true });

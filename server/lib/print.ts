@@ -4,7 +4,7 @@
  * (new orders → kitchen printer, due care tasks → printer, with quiet hours).
  */
 import { APP_NAME, canSendMail, mailHousehold, sendMail } from './mail.js';
-import sharp from 'sharp';
+import sharp from './sharp-safe.js';
 import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
 import { t } from '../i18n.js';

@@ -48,10 +48,14 @@ final class StoreManager {
 
     @discardableResult
     func purchase(_ product: Product, household: String?) async -> Bool {
+        // one subscription per household: without the household's UUID the server could not assign the purchase
+        guard let household, let uuid = UUID(uuidString: household) else {
+            message = L("Please choose a household first – a subscription always belongs to one household.")
+            return false
+        }
         purchasing = product.id
         defer { purchasing = nil }
-        var options: Set<Product.PurchaseOption> = []
-        if let household, let uuid = UUID(uuidString: household) { options.insert(.appAccountToken(uuid)) }
+        let options: Set<Product.PurchaseOption> = [.appAccountToken(uuid)]
         do {
             let result = try await product.purchase(options: options)
             switch result {

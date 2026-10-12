@@ -77,7 +77,15 @@ export function gzipApi(req: Request, res: Response, next: NextFunction) {
         if (buf.length > MIN) {
           res.setHeader('Content-Encoding', 'gzip');
           res.setHeader('Vary', 'Accept-Encoding');
-          return send(zlib.gzipSync(buf, { level: 6 }));
+          // compressed on the libuv thread pool – never blocks the request loop
+          zlib.gzip(buf, { level: 6 }, (err, out) => {
+            if (err) {
+              res.removeHeader('Content-Encoding');
+              return void send(buf);
+            }
+            send(out);
+          });
+          return res;
         }
       }
     } catch {

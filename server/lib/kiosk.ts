@@ -12,7 +12,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import sharp, { type OverlayOptions } from 'sharp';
+import { type OverlayOptions } from 'sharp';
+import sharp from './sharp-safe.js';
 import { config } from '../config.js';
 import { db, getSetting, lang, migrate } from '../db.js';
 import { locale, t } from '../i18n.js';

@@ -15,6 +15,7 @@ export const de_auth: Record<string, string> = {
   'Shared device': 'Gemeinsames Gerät',
   'This device is not set up as a shared family device.': 'Dieses Gerät ist nicht als gemeinsames Familiengerät eingerichtet.',
   'That PIN didn’t work.': 'Die PIN stimmt nicht.',
+  'Something went wrong (reference {ref}).': 'Da ist etwas schiefgegangen (Referenz {ref}).',
   'Only admins can export the household.': 'Nur Admins können den Haushalt exportieren.',
   'Please confirm with your password.': 'Bitte bestätige mit deinem Passwort.',
   'We sent you an e-mail. Open the link in it, then try again within 15 minutes.': 'Wir haben dir eine E-Mail geschickt. Öffne den Link darin und versuch es dann innerhalb von 15 Minuten noch mal.',

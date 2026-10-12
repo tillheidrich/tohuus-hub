@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '../config.js';
 import { db, encryptPlainDatabase, getSetting, isPlainSqlite, openDbFile, selfhostKeys, setSetting, snapshotDb } from '../db.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { hashPassword, randomToken, sha256 } from './auth.js';
 import { EXPORT_FORMAT, exportTables, normalizeGuestTokens } from './data.js';
 import { PENDING_FILE, PENDING_META, APPLIED_META } from './restore-paths.js';
@@ -198,7 +198,7 @@ async function davFetch(url: string, init: RequestInit, timeoutMs: number) {
       : code === 'ECONNREFUSED' ? t('connection refused')
       : code?.startsWith('CERT') || code?.includes('SELF_SIGNED') || code?.startsWith('UNABLE_TO') ? t('certificate not trusted')
       : (code ?? (e as Error).message);
-    throw new Error(t('Off-site storage not reachable: {reason}', { reason }));
+    throw userError(t('Off-site storage not reachable: {reason}', { reason }));
   }
 }
 

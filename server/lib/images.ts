@@ -1,12 +1,13 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import sharp from 'sharp';
+import sharpLib from 'sharp';
+import sharp from './sharp-safe.js';
 import type { NextFunction, Request, Response } from 'express';
 import { config } from '../config.js';
 import { currentKeys, getSetting, setSetting } from '../db.js';
 import { safeFetch } from './net.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { decryptBlob, encryptBlob, isEncryptedBlob } from './crypto-keys.js';
 import { householdDir, slugOf } from './accounts.js';
 import { assertStorage, trackStorage } from './plans.js';
@@ -83,18 +84,18 @@ export function readImage(publicPath: string | null | undefined): Buffer | null 
 
 /** Store an already encoded image under its final name; returns `/img/<name>`. */
 export function storeImageBytes(name: string, buf: Buffer): string {
-  if (!IMG_NAME.test(name)) throw new Error(t('Invalid image name'));
+  if (!IMG_NAME.test(name)) throw userError(t('Invalid image name'));
   writeStoredFile(path.join(dir(), name), buf);
   return `/img/${name}`;
 }
 
 // small servers (512 MB containers): no libvips operation cache, at most 2 threads per image
-sharp.cache(false);
-sharp.concurrency(Math.min(2, sharp.concurrency()));
+sharpLib.cache(false);
+sharpLib.concurrency(Math.min(2, sharpLib.concurrency()));
 
 /** Store an image as webp (max 800px) and return the public path `/img/<file>`. */
 export async function saveImage(buf: Buffer, prefix: string): Promise<string> {
-  if (!/^[a-z]\d+$/.test(prefix)) throw new Error(t('Invalid image name'));
+  if (!/^[a-z]\d+$/.test(prefix)) throw userError(t('Invalid image name'));
   const name = `${prefix}-${crypto.randomBytes(6).toString('hex')}.webp`;
   assertStorage(Math.min(buf.length, 400_000));
   const out = await sharp(buf, { failOn: 'none' })

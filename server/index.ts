@@ -1,6 +1,7 @@
 // must run before anything opens the database: applies a staged restore
 import './lib/restore-boot.js';
 import cookieParser from 'cookie-parser';
+import crypto from 'node:crypto';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -57,7 +58,7 @@ import { appAuth, cloud as cloudRoutes, cloudPub, instance } from './routes/clou
 import { r as billingRoutes, pub as billingPublic } from './routes/billing.js';
 import { serveImage, signImagesForTokenClients } from './lib/images.js';
 import { NoHouseholdError, currentHousehold } from './lib/tenancy.js';
-import { QuotaError } from './lib/plans.js';
+import { QuotaError, bodyQuota } from './lib/plans.js';
 import { startCloudBackups } from './lib/cloud-backup.js';
 
 // ToHuus Cloud: no outbound request of any household may reach a private/internal address (HA, webhooks, feeds …)
@@ -88,6 +89,9 @@ app.use((_req, res, next) => {
   );
   next();
 });
+
+// storage quota: the database counts too – large JSON writes are refused when the household is full (plans.ts)
+app.use('/api', bodyQuota);
 
 // CSRF: cookie-authenticated writes must come from our own origin (sibling subdomains share SameSite=Lax)
 const ownOrigin = new URL(config.baseUrl).origin;
@@ -215,9 +219,17 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     res.status(413).json({ error: t('File too large (max. 15 MB)') });
     return;
   }
-  const msg = (err as Error)?.message ?? t('Error');
-  console.error('[error]', msg);
-  res.status(500).json({ error: msg });
+  const e = err as { message?: string; status?: unknown; expose?: boolean; stack?: string };
+  // deliberate client errors (status < 500) and translated messages for people (userError) are shown as they are
+  if (typeof e?.status === 'number' && e.status >= 400 && e.status < 500) return void res.status(e.status).json({ error: e.message ?? t('Error') });
+  if (e?.expose && e.message) {
+    console.error('[error]', e.message);
+    return void res.status(500).json({ error: e.message });
+  }
+  // anything else: no internals in production (paths, SQL, stack) – a reference to find it in the log
+  const ref = crypto.randomBytes(4).toString('hex');
+  console.error(`[error ${ref}]`, e?.stack ?? e?.message ?? err);
+  res.status(500).json({ error: process.env.NODE_ENV === 'production' ? t('Something went wrong (reference {ref}).', { ref }) : (e?.message ?? t('Error')), ref });
 });
 
 export { app };

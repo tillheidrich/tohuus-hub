@@ -8,7 +8,7 @@
  */
 import crypto from 'node:crypto';
 import zlib from 'node:zlib';
-import sharp from 'sharp';
+import sharp from './sharp-safe.js';
 import { config } from '../config.js';
 import { db, migrate, now } from '../db.js';
 import { locale, t } from '../i18n.js';

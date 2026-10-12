@@ -6,7 +6,7 @@
 import dns from 'node:dns';
 import net from 'node:net';
 import { Agent, fetch as ufetch } from 'undici';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 
 /** Errors with a user-facing reason (blocked address, too large …), passed through unchanged. */
 class SafeFetchError extends Error {}
@@ -114,7 +114,7 @@ export async function safeFetch(
   } catch (e) {
     if (e instanceof SafeFetchError || (e as { cause?: unknown })?.cause instanceof SafeFetchError) throw e instanceof SafeFetchError ? e : (e as { cause: SafeFetchError }).cause;
     // keep the low-level cause (DNS, refused, timeout …) for logs; the message stays user-facing
-    throw new Error(t('Link not reachable'), { cause: e });
+    throw Object.assign(new Error(t('Link not reachable'), { cause: e }), { expose: true });
   } finally {
     clearTimeout(timer);
   }

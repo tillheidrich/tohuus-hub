@@ -16,7 +16,7 @@
  */
 import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { emit, onEmit } from './bus.js';
 import { addInterval, completeCareTask, listCareTasks } from './care.js';
 import { setPresence as setAwayPresence } from './away.js';
@@ -1038,13 +1038,13 @@ export function tagTargets() {
 
 async function haFetch(path: string, init: RequestInit = {}) {
   const h = haSettings();
-  if (!h.url || !h.token) throw new Error(t('Home Assistant not connected'));
+  if (!h.url || !h.token) throw userError(t('Home Assistant not connected'));
   const r = await fetch(`${h.url.replace(/\/$/, '')}${path}`, {
     ...init,
     headers: { Authorization: `Bearer ${h.token}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
     signal: AbortSignal.timeout(12_000),
   });
-  if (!r.ok) throw new Error(t('Home Assistant responded with {status}', { status: r.status }));
+  if (!r.ok) throw userError(t('Home Assistant responded with {status}', { status: r.status }));
   const text = await r.text();
   return text ? JSON.parse(text) : null;
 }
@@ -1076,7 +1076,7 @@ async function restRun(op: HaOp): Promise<string | null> {
     return null;
   }
   if (op.kind === 'calendar') {
-    if (op.action === 'delete') throw new Error(t('Deleting calendar events needs the ToHuus Hub integration'));
+    if (op.action === 'delete') throw userError(t('Deleting calendar events needs the ToHuus Hub integration'));
     await haFetch('/api/services/calendar/create_event', { method: 'POST', body: JSON.stringify({ entity_id: op.entity_id, summary: op.summary, description: op.description, start_date: op.start_date, end_date: op.end_date }) });
     return null;
   }

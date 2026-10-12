@@ -5,7 +5,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import sharp from 'sharp';
+import sharp from './sharp-safe.js';
 import { config } from '../config.js';
 import { readImage } from './images.js';
 import { brand, db, getSetting } from '../db.js';

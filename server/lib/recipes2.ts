@@ -16,10 +16,10 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import sharp from 'sharp';
+import sharp from './sharp-safe.js';
 import { config } from '../config.js';
 import { db, migrate } from '../db.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { emit } from './bus.js';
 import { matchIngredient } from './catalog.js';
 import { deleteImage, fetchImageDetailed, storeImageBytes, warnImage } from './images.js';
@@ -137,10 +137,10 @@ export function fmtAmount(n: number, lang = 'en'): string {
  * Throws an Error with a user-facing reason when the object is unusable.
  */
 export function normalizeRecipe(o: unknown, defaults: { source_type?: string } = {}): ImportRecipe {
-  if (!o || typeof o !== 'object' || Array.isArray(o)) throw new Error(t('Not a recipe object'));
+  if (!o || typeof o !== 'object' || Array.isArray(o)) throw userError(t('Not a recipe object'));
   const x = o as any;
   const title = str(x.name ?? x.title, 200);
-  if (!title) throw new Error(t('The recipe has no name'));
+  if (!title) throw userError(t('The recipe has no name'));
 
   const source_url = httpUrl(x.url ?? x.source_url ?? x.sourceUrl ?? (typeof x.mainEntityOfPage === 'string' ? x.mainEntityOfPage : x.mainEntityOfPage?.['@id']));
   const rawType = typeof x.source_type === 'string' ? x.source_type.toLowerCase().trim() : '';
@@ -182,7 +182,7 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
   const instrFlag = x.instructions_available;
   const instructions_available = instrFlag === false || instrFlag === 'false' || instrFlag === 0 ? false : !(steps.length === 0 && source_type === 'cookidoo');
   const thermomix = typeof x.thermomix === 'boolean' ? x.thermomix : source_type === 'cookidoo' || /thermomix|\bstufe\s?\d|\bvaroma\b/i.test(JSON.stringify(steps).slice(0, 20000));
-  if (ingredients.length === 0 && steps.length === 0 && !source_url) throw new Error(t('The recipe has neither ingredients nor steps'));
+  if (ingredients.length === 0 && steps.length === 0 && !source_url) throw userError(t('The recipe has neither ingredients nor steps'));
   return {
     title,
     description: x.description ? cleanText(x.description).slice(0, 2000) || null : null,
@@ -500,7 +500,7 @@ export interface BulkResult {
  */
 export async function bulkImport(items: unknown[], opts: { defaults?: { source_type?: string }; onProgress?: (done: number, r: BulkResult) => void; normalized?: boolean } = {}): Promise<BulkResult> {
   const res: BulkResult = { created: 0, updated: 0, images: 0, failed: 0, errors: [], ids: [] };
-  if (items.length > MAX_BULK) throw new Error(t('At most {n} recipes per import', { n: MAX_BULK }));
+  if (items.length > MAX_BULK) throw userError(t('At most {n} recipes per import', { n: MAX_BULK }));
   const CHUNK = 25;
   for (let start = 0; start < items.length; start += CHUNK) {
     const chunk = items.slice(start, start + CHUNK);
@@ -778,6 +778,6 @@ export function extractJson(text: string): unknown {
         /* fall through */
       }
     }
-    throw new Error(t('That is not valid JSON. Copy the whole answer of the assistant.'));
+    throw userError(t('That is not valid JSON. Copy the whole answer of the assistant.'));
   }
 }

@@ -9,7 +9,7 @@
  */
 import path from 'node:path';
 import zlib from 'node:zlib';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { cleanText, findRecipeNode, jsonLdBlocks, lenientJson } from './recipe-jsonld.js';
 import { mealToRecipe } from './open-recipes.js';
 import { normalizeRecipe, recipeList, type ImportError, type ImportRecipe } from './recipes2.js';
@@ -37,14 +37,14 @@ export function readZip(buf: Buffer): ZipEntry[] {
       break;
     }
   }
-  if (eocd < 0) throw new Error(t('The zip file is damaged.'));
+  if (eocd < 0) throw userError(t('The zip file is damaged.'));
   const count = buf.readUInt16LE(eocd + 10);
   let p = buf.readUInt32LE(eocd + 16);
-  if (count > MAX_ENTRIES) throw new Error(t('The zip file has too many entries.'));
+  if (count > MAX_ENTRIES) throw userError(t('The zip file has too many entries.'));
   const out: ZipEntry[] = [];
   let total = 0;
   for (let n = 0; n < count; n++) {
-    if (p + 46 > buf.length || buf.readUInt32LE(p) !== 0x02014b50) throw new Error(t('The zip file is damaged.'));
+    if (p + 46 > buf.length || buf.readUInt32LE(p) !== 0x02014b50) throw userError(t('The zip file is damaged.'));
     const flags = buf.readUInt16LE(p + 8);
     const method = buf.readUInt16LE(p + 10);
     const csize = buf.readUInt32LE(p + 20);
@@ -57,17 +57,17 @@ export function readZip(buf: Buffer): ZipEntry[] {
     p += 46 + nlen + xlen + clen;
     if (name.endsWith('/') || flags & 1) continue;
     total += usize;
-    if (total > MAX_UNZIPPED) throw new Error(t('The zip file is too large when unpacked.'));
+    if (total > MAX_UNZIPPED) throw userError(t('The zip file is too large when unpacked.'));
     out.push({
       name,
       size: usize,
       data: () => {
-        if (buf.readUInt32LE(local) !== 0x04034b50) throw new Error(t('The zip file is damaged.'));
+        if (buf.readUInt32LE(local) !== 0x04034b50) throw userError(t('The zip file is damaged.'));
         const start = local + 30 + buf.readUInt16LE(local + 26) + buf.readUInt16LE(local + 28);
         const raw = buf.subarray(start, start + csize);
         if (method === 0) return Buffer.from(raw);
         if (method === 8) return zlib.inflateRawSync(raw, { maxOutputLength: Math.max(usize, 1) + 1024 });
-        throw new Error(t('Unsupported zip compression.'));
+        throw userError(t('Unsupported zip compression.'));
       },
     });
   }
@@ -319,14 +319,14 @@ const CSV_COLS: Record<string, RegExp> = {
 
 export function fromCsv(text: string) {
   const rows = parseCsv(text);
-  if (rows.length < 2) throw new Error(t('The CSV file has no recipe rows.'));
+  if (rows.length < 2) throw userError(t('The CSV file has no recipe rows.'));
   const head = rows[0].map((h) => h.trim());
   const idx: Record<string, number> = {};
   for (const [k, re] of Object.entries(CSV_COLS)) {
     const i = head.findIndex((h) => re.test(h));
     if (i >= 0) idx[k] = i;
   }
-  if (idx.name === undefined) throw new Error(t('The CSV file needs a column “name” or “title”.'));
+  if (idx.name === undefined) throw userError(t('The CSV file needs a column “name” or “title”.'));
   const cell = (r: string[], k: string) => (idx[k] !== undefined ? (r[idx[k]] ?? '').trim() : '');
   const split = (s: string) => (s.includes('\n') ? s.split(/\r?\n/) : s.split(/\s*[;|]\s*/)).map((x) => x.trim()).filter(Boolean);
   return rows.slice(1).map((r) => ({
@@ -421,21 +421,21 @@ function finish(found: Found[], skipped = 0): Detected {
   const counts = new Map<Format, number>();
   found.forEach((f) => counts.set(f.format, (counts.get(f.format) ?? 0) + 1));
   const format = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-  if (!format) throw new Error(t('No recipes found in this file.'));
+  if (!format) throw userError(t('No recipes found in this file.'));
   return { format, recipes, errors, skipped };
 }
 
 function fromText(text: string): Detected {
   const s = text.replace(/^﻿/, '').trim();
-  if (!s) throw new Error(t('The file is empty.'));
+  if (!s) throw userError(t('The file is empty.'));
   if (/^[[{]/.test(s)) {
     const data = lenientJson(s);
-    if (data === undefined) throw new Error(t('That is not valid JSON.'));
+    if (data === undefined) throw userError(t('That is not valid JSON.'));
     return finish(fromJsonDoc(data));
   }
   if (/<html|<script|<!doctype/i.test(s.slice(0, 2000))) {
     const found = jsonLdBlocks(s).map((b) => findRecipeNode(b)).filter(Boolean).map((obj) => ({ format: 'html' as Format, obj }));
-    if (!found.length) throw new Error(t('No recipe was found on that page.'));
+    if (!found.length) throw userError(t('No recipe was found on that page.'));
     return finish(found);
   }
   return finish(fromCsv(s).map((obj) => ({ format: 'csv' as Format, obj })));
@@ -495,7 +495,7 @@ function fromZip(buf: Buffer, depth = 0): Found[] {
 export function detectFile(buf: Buffer, filename = ''): Detected {
   if (isZip(buf)) {
     const found = fromZip(buf);
-    if (!found.length) throw new Error(t('No recipes found in this file.'));
+    if (!found.length) throw userError(t('No recipes found in this file.'));
     return finish(found);
   }
   if (isGzip(buf) || /\.paprikarecipe$/i.test(filename)) {

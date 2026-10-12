@@ -112,18 +112,21 @@ export function encryptPlainDatabase(file: string, key: Buffer, opts: { keepPlai
   } finally {
     check.close();
   }
+  // the swap is one atomic rename over the plain file: at no moment is there no database under `file`
+  // (a crash before it leaves the plain database in place; the leftover .encrypting is redone on the next start)
   if (opts.keepPlain === false) {
     // a temporary copy (staged restore): nothing to keep
-    fs.rmSync(file, { force: true });
-    for (const x of ['-wal', '-shm']) fs.rmSync(file + x, { force: true });
     fs.renameSync(work, file);
+    for (const x of ['-wal', '-shm']) fs.rmSync(file + x, { force: true });
     return;
   }
   let keep = `${file}.plain-backup-${stamp}`;
   for (let i = 2; fs.existsSync(keep); i++) keep = `${file}.plain-backup-${stamp}-${i}`;
-  fs.renameSync(file, keep);
-  for (const x of ['-wal', '-shm']) fs.rmSync(file + x, { force: true });
+  fs.copyFileSync(file, keep);
+  fsyncFile(keep);
+  fsyncFile(work);
   fs.renameSync(work, file);
+  for (const x of ['-wal', '-shm']) fs.rmSync(file + x, { force: true });
   console.warn(
     `\n  [db] The database is now encrypted (DB_ENCRYPTION_KEY). The unencrypted original was kept as\n` +
       `       ${keep}\n` +
@@ -143,8 +146,58 @@ export const dbEncrypted = () => config.multiTenant || Boolean(selfhostKeys);
 const legacyDb = path.join(config.dataDir, 'stockwerk.db');
 export const selfhostDbFile = () => (fs.existsSync(legacyDb) ? legacyDb : path.join(config.dataDir, 'tohuus.db'));
 
+function fsyncFile(f: string) {
+  const fd = fs.openSync(f, 'r');
+  try {
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+/**
+ * Self-host start-up after an interrupted encryption: the database file is missing, but a verified copy or the kept
+ * plain original exists → put it back instead of creating an empty household. Exported for tests.
+ */
+export function recoverSelfhostDb(file: string, key: Buffer | null) {
+  if (fs.existsSync(file)) return null;
+  const dir = path.dirname(file);
+  const base = path.basename(file);
+  let names: string[] = [];
+  try {
+    names = fs.readdirSync(dir);
+  } catch {
+    return null;
+  }
+  // 1. a finished encrypted copy that opens with the key and passes the integrity check
+  const work = `${file}.encrypting`;
+  if (key && fs.existsSync(work)) {
+    try {
+      const d = openDbFile(work, key);
+      const ok = d.pragma('integrity_check', { simple: true }) === 'ok';
+      d.close();
+      if (ok) {
+        fs.renameSync(work, file);
+        console.warn(`[db] recovered the database from ${path.basename(work)} after an interrupted encryption`);
+        return work;
+      }
+    } catch {
+      /* not usable – fall back to the plain original */
+    }
+  }
+  // 2. the newest kept plain original (it is encrypted again right after)
+  const plain = names.filter((n) => n.startsWith(`${base}.plain-backup-`) && !/-(wal|shm)$/.test(n)).sort().pop();
+  if (plain) {
+    fs.copyFileSync(path.join(dir, plain), file);
+    console.warn(`[db] the database was missing – restored it from ${plain}`);
+    return plain;
+  }
+  return null;
+}
+
 function openSelfHost(): DB {
   const file = selfhostDbFile();
+  recoverSelfhostDb(file, selfhostKeys?.db ?? null);
   if (selfhostKeys && fs.existsSync(file) && isPlainSqlite(file)) encryptPlainDatabase(file, selfhostKeys.db);
   const d = openDbFile(file, selfhostKeys?.db ?? null);
   tune(d);

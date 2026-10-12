@@ -213,6 +213,8 @@ appAuth.delete(
  * sign-in material, not household data, and a restart simply makes the app ask for a new one.
  */
 interface WebLink {
+  /** the app token that asked (hash) – at most 5 live links each */
+  owner: string;
   userId: number | null;
   accountId: number | null;
   householdId: string | null;
@@ -221,6 +223,8 @@ interface WebLink {
 }
 const webLinks = new Map<string, WebLink>();
 const WEB_LINK_MS = 60_000;
+const WEB_LINKS_PER_TOKEN = 5;
+const WEB_LINKS_MAX = 10_000;
 const safeNext = (v: unknown) => (typeof v === 'string' && /^\/(?![/\\])[\w\-./?=&%#]*$/.test(v) && v.length <= 300 ? v : '/');
 
 appAuth.post(
@@ -229,16 +233,19 @@ appAuth.post(
     if (!currentTokenHash(req)?.length || !req.headers.authorization?.slice(7).trim().startsWith('sw_app_')) throw new AuthError(401, 'unauthorized');
     const now = Date.now();
     for (const [k, v] of webLinks) if (v.exp < now) webLinks.delete(k);
+    const owner = currentTokenHash(req)!;
+    if ([...webLinks.values()].filter((v) => v.owner === owner).length >= WEB_LINKS_PER_TOKEN || webLinks.size >= WEB_LINKS_MAX)
+      throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     let link: WebLink;
     if (!cloudMode()) {
       const a = resolveActor(req);
       if (!a || a.kind !== 'user' || !a.userId || a.scope !== 'app') throw new AuthError(401, 'unauthorized');
-      link = { userId: a.userId, accountId: null, householdId: null, next: safeNext(req.body?.next), exp: now + WEB_LINK_MS };
+      link = { owner, userId: a.userId, accountId: null, householdId: null, next: safeNext(req.body?.next), exp: now + WEB_LINK_MS };
     } else {
       const id = (await CA()).cloudIdentity(req);
       const hh = currentHousehold()?.id ?? null;
       if (!id?.appTokenId || !hh) throw new AuthError(401, 'unauthorized');
-      link = { userId: null, accountId: id.accountId, householdId: hh, next: safeNext(req.body?.next), exp: now + WEB_LINK_MS };
+      link = { owner, userId: null, accountId: id.accountId, householdId: hh, next: safeNext(req.body?.next), exp: now + WEB_LINK_MS };
     }
     const token = randomToken(32);
     webLinks.set(sha256(token), link);
@@ -595,6 +602,8 @@ cloudPub.post(
       })
       .parse(req.body ?? {});
     const acc = await A();
+    // the invitation first: an invalid or used link never creates an account
+    if (!findInvite(String(req.params.token))) throw new AuthError(404, t('This invitation has expired or was already used.'));
     // who accepts: the signed-in account, or sign in / sign up with e-mail + password right here
     let accountId = (await CA()).cloudIdentity(req)?.accountId ?? null;
     if (!accountId) {
@@ -604,6 +613,7 @@ cloudPub.post(
       const existing = acc.accountByEmail(email);
       if (existing) accountId = await cloudPasswordCheck(req, email, b.password);
       else {
+        if (!config.signupOpen) throw new AuthError(403, t('New sign-ups are closed at the moment.'));
         if (b.password.length < CLOUD_PASSWORD_MIN) throw new AuthError(400, t('At least {n} characters, please.', { n: CLOUD_PASSWORD_MIN }));
         if (rateLimitedGlobal(`signup-ip:${req.ip}`, 5, 60 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
         accountId = acc.createAccount(email, hashPassword(b.password), b.name || null, lang()).id;

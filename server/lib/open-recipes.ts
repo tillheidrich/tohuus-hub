@@ -5,7 +5,7 @@
  * visible as "original". Steps stay in English (no cloud translation).
  */
 import { lang } from '../db.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { safeFetch } from './net.js';
 import { region } from './region.js';
 import { translateIngredient, translateTag } from './recipe-translate.js';
@@ -24,11 +24,11 @@ export interface OpenHit {
 
 async function getJson(url: string): Promise<any> {
   const r = await safeFetch(url, { maxBytes: 2 * 1024 * 1024, timeoutMs: 12000, headers: { Accept: 'application/json', 'User-Agent': 'ToHuus Hub recipe search' } });
-  if (!r.ok) throw new Error(t('The recipe database did not answer (HTTP {status}).', { status: r.status }));
+  if (!r.ok) throw userError(t('The recipe database did not answer (HTTP {status}).', { status: r.status }));
   try {
     return JSON.parse(r.buf.toString('utf8'));
   } catch {
-    throw new Error(t('The recipe database sent something unexpected.'));
+    throw userError(t('The recipe database sent something unexpected.'));
   }
 }
 

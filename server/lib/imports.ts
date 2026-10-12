@@ -22,7 +22,7 @@ import {
 import { enqueueEnrich } from './enrich.js';
 import { notify } from './notify.js';
 import { splitProductName, titleCaseReceipt } from './text.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { applyRulesAfterReconcile, applyRulesToImport, applyStoreRule } from './quality.js';
 import { takeTickBooking } from './shopping-trust.js';
 
@@ -256,7 +256,7 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
 
 export function applyImport(id: number, actor: string) {
   const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
-  if (!imp) throw new Error(t('Import not found'));
+  if (!imp) throw userError(t('Import not found'));
   if (imp.status !== 'review') return { applied: 0, created: 0 };
   const lines = db.prepare('SELECT * FROM import_lines WHERE import_id = ? ORDER BY sort').all(id) as any[];
   let applied = 0;

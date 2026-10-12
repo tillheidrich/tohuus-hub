@@ -7,7 +7,7 @@ import crypto from 'node:crypto';
 import { config } from '../config.js';
 import { db, lang, migrate } from '../db.js';
 import { localeOf } from '../languages.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, localDay, matchProduct, stockOf } from './catalog.js';
 import { notify } from './notify.js';
@@ -230,24 +230,24 @@ export interface CareInput {
 }
 
 function validateDay(v: string | null | undefined, field: string) {
-  if (v != null && !isDay(v)) throw new Error(t('Invalid date: {field}', { field }));
+  if (v != null && !isDay(v)) throw userError(t('Invalid date: {field}', { field }));
 }
 
 /** Create a task from a template key and/or explicit fields. */
 export function createCareTask(input: CareInput) {
   const tpl = input.template ? CARE_TEMPLATES.find((x) => x.key === input.template) : undefined;
-  if (input.template && !tpl) throw new Error(t('Unknown template'));
+  if (input.template && !tpl) throw userError(t('Unknown template'));
   const name = (input.name?.trim() || (tpl ? t(tpl.name) : '')).slice(0, 120);
-  if (!name) throw new Error(t('Please enter a name'));
+  if (!name) throw userError(t('Please enter a name'));
   const n = input.interval_n !== undefined ? input.interval_n : (tpl?.n ?? null);
   const unit = input.interval_unit !== undefined ? input.interval_unit : (tpl?.unit ?? null);
-  if ((n && !unit) || (!n && unit)) throw new Error(t('Interval needs a number and a unit'));
-  if (n !== null && n !== undefined && (!Number.isInteger(n) || n < 1 || n > 1000)) throw new Error(t('Invalid interval'));
+  if ((n && !unit) || (!n && unit)) throw userError(t('Interval needs a number and a unit'));
+  if (n !== null && n !== undefined && (!Number.isInteger(n) || n < 1 || n > 1000)) throw userError(t('Invalid interval'));
   validateDay(input.next_due, 'next_due');
   validateDay(input.last_done, 'last_done');
   let nextDue = input.next_due ?? null;
   if (!nextDue && n && unit) nextDue = addInterval(input.last_done ?? localDay(0), n, unit);
-  if (!nextDue && !n) throw new Error(t('A task without interval needs a date'));
+  if (!nextDue && !n) throw userError(t('A task without interval needs a date'));
   let productId = input.product_id ?? null;
   if (!productId && input.product_id === undefined && tpl?.product) {
     const m = matchProduct(tpl.product);
@@ -279,7 +279,7 @@ export function createCareTask(input: CareInput) {
 
 export function updateCareTask(id: number, input: CareInput & { archived?: boolean }) {
   const row = getCareTask(id);
-  if (!row) throw new Error(t('Task not found'));
+  if (!row) throw userError(t('Task not found'));
   validateDay(input.next_due, 'next_due');
   validateDay(input.last_done, 'last_done');
   const next = { ...row };
@@ -287,8 +287,8 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
     if (input[k] !== undefined) (next as any)[k] = input[k];
   }
   if (input.archived !== undefined) next.archived = input.archived ? 1 : 0;
-  if (!next.name?.trim()) throw new Error(t('Please enter a name'));
-  if ((next.interval_n && !next.interval_unit) || (!next.interval_n && next.interval_unit)) throw new Error(t('Interval needs a number and a unit'));
+  if (!next.name?.trim()) throw userError(t('Please enter a name'));
+  if ((next.interval_n && !next.interval_unit) || (!next.interval_n && next.interval_unit)) throw userError(t('Interval needs a number and a unit'));
   // interval changed and no explicit date: recompute from the last time it was done
   const intervalChanged = (input.interval_n !== undefined && input.interval_n !== row.interval_n) || (input.interval_unit !== undefined && input.interval_unit !== row.interval_unit);
   if (input.next_due === undefined && (intervalChanged || input.last_done !== undefined) && next.interval_n && next.interval_unit && next.last_done)
@@ -327,7 +327,7 @@ export function deleteCareTask(id: number) {
  */
 export function completeCareTask(id: number, actor: string, opts: { doneOn?: string | null; nextDue?: string | null; note?: string | null } = {}) {
   const row = getCareTask(id);
-  if (!row) throw new Error(t('Task not found'));
+  if (!row) throw userError(t('Task not found'));
   validateDay(opts.doneOn, 'done_on');
   validateDay(opts.nextDue, 'next_due');
   const doneOn = opts.doneOn ?? localDay(0);
@@ -361,7 +361,7 @@ export function undoCareTask(id: number, actor: string) {
     | { id: number; prev_last_done: string | null; prev_next_due: string | null; consumed: number }
     | undefined;
   const row = getCareTask(id);
-  if (!row || !last) throw new Error(t('Nothing to undo'));
+  if (!row || !last) throw userError(t('Nothing to undo'));
   if (last.consumed > 0 && row.product_id) adjustStock({ productId: row.product_id, delta: last.consumed, reason: 'undo', actor, ref: `care:${id}` });
   db.transaction(() => {
     db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, updated_at = datetime('now') WHERE id = ?`).run(last.prev_last_done, last.prev_next_due, id);

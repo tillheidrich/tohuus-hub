@@ -4,7 +4,7 @@
  */
 import { config } from '../config.js';
 import { db, getSetting, setSetting } from '../db.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { region } from './region.js';
 
 // ------------------------------------------------------------------ pure helpers
@@ -143,7 +143,7 @@ export function currentMonth() {
 }
 
 export function spendingSummary(month = currentMonth()) {
-  if (!/^\d{4}-\d\d$/.test(month)) throw new Error(t('Month must look like 2026-10'));
+  if (!/^\d{4}-\d\d$/.test(month)) throw userError(t('Month must look like 2026-10'));
   const lines = spendLines({ month });
   const goods = lines.filter((l) => !isDeposit(l));
   const deposit = round2(lines.filter(isDeposit).reduce((s, l) => s + l.price, 0));

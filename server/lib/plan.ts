@@ -7,7 +7,7 @@ import { setRecipeImageUrl } from './recipes2.js';
 import { safeFetch } from './net.js';
 import { getRecipe, ingredientCore, listRecipes, parseRecipeJsonLd, saveRecipe, suggest } from './recipes.js';
 import { norm, nameScore } from './text.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { activeIngredients, effectiveIngredients, variantContext } from './variants.js';
 import { scaleText, servingsFactor, sumAmounts } from './scale.js';
 import { nobodyHomeOn } from './away-state.js';
@@ -52,10 +52,10 @@ export function addPlan(input: { day: string; recipe_id?: number | null; title?:
   let title = input.title?.trim() ?? '';
   if (input.recipe_id) {
     const r = db.prepare('SELECT title FROM recipes WHERE id = ?').get(input.recipe_id) as { title: string } | undefined;
-    if (!r) throw new Error(t('Recipe not found'));
+    if (!r) throw userError(t('Recipe not found'));
     title ||= r.title;
   }
-  if (!title) throw new Error(t('Title is missing'));
+  if (!title) throw userError(t('Title is missing'));
   const info = db
     .prepare('INSERT INTO meal_plan (day, slot, recipe_id, title, note, source, external_id) VALUES (?, ?, ?, ?, ?, ?, ?)')
     .run(input.day, input.slot ?? 'abend', input.recipe_id ?? null, title, input.note ?? null, input.source ?? 'manual', input.external_id ?? null);

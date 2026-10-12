@@ -257,6 +257,24 @@ export function recountStorage(householdId: string) {
 }
 
 /**
+ * The database counts as well (it is measured on every check): large JSON writes (bulk recipe imports, restores of
+ * lists …) are refused with 413 when they would not fit any more. Small everyday writes (ticking, adding one item)
+ * always go through, so a full household can still use its list and delete things.
+ */
+export function bodyQuota(req: Request, res: Response, next: NextFunction) {
+  try {
+    const len = Number(req.headers['content-length'] ?? 0);
+    if (!['POST', 'PUT', 'PATCH'].includes(req.method) || !(len > 64 * 1024) || /multipart\/form-data/.test(String(req.headers['content-type'] ?? ''))) return next();
+    if (cloud() && !currentHousehold()) return next();
+    const s = checkStorage(len);
+    if (!s.ok) return void res.status(413).json(new QuotaError(s.usedBytes, s.quotaBytes!).toJSON());
+    next();
+  } catch (e) {
+    next(e);
+  }
+}
+
+/**
  * Middleware for every upload route (after multer): 413 when the files do not fit into the storage quota,
  * 429 when the daily upload allowance is used up. Self-host: only STORAGE_QUOTA_MB (if set) applies.
  */

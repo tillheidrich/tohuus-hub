@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 import { config } from '../config.js';
 import { db } from '../db.js';
-import { t } from '../i18n.js';
+import { t, userError } from '../i18n.js';
 import { NAME_MAX, randomToken, safeEqual } from './auth.js';
 import { normEmail, ssoConfig, ssoReady, userByVerifiedEmail, type SsoConfig } from './auth-policy.js';
 import { ScopedMap } from './tenancy.js';
@@ -66,7 +66,7 @@ export async function discover(issuer: string, fresh = false): Promise<Discovery
   const hit = discoCache.get(iss);
   if (!fresh && hit && Date.now() - hit.at < 10 * 60_000) return hit.doc;
   const doc = (await getJson(`${iss}/.well-known/openid-configuration`)) as Discovery;
-  if (!doc?.issuer || trimIssuer(doc.issuer) !== iss) throw new Error(t('The provider calls itself “{got}”, not “{want}”. Use exactly that issuer URL.', { got: doc?.issuer ?? '?', want: iss }));
+  if (!doc?.issuer || trimIssuer(doc.issuer) !== iss) throw userError(t('The provider calls itself “{got}”, not “{want}”. Use exactly that issuer URL.', { got: doc?.issuer ?? '?', want: iss }));
   for (const k of ['authorization_endpoint', 'token_endpoint', 'jwks_uri'] as const) if (!doc[k]) throw new Error(`${k} missing in discovery`);
   discoCache.set(iss, { at: Date.now(), doc });
   return doc;

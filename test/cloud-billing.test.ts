@@ -33,6 +33,8 @@ Object.assign(process.env, {
   PORT: String(PORT),
   BASE_URL: base,
   LANGUAGE: 'en',
+  // TestFlight purchases (Sandbox) only count for tester accounts
+  APPLE_SANDBOX_ACCOUNTS: 'buyer@example.org,other@example.org',
 });
 const local = new Agent();
 const BUNDLE = 'de.heidrichdigital.tohuus';
@@ -151,6 +153,24 @@ describe.skipIf(!hasOpenssl)('Apple billing', () => {
     // nothing of that changed the other household
     const acc = await import('../server/lib/accounts');
     expect(acc.getHousehold(otherHousehold)!.plan).toBe('trial');
+  });
+
+  it('Sandbox only for tester accounts; an older transaction never shortens a later expiry', async () => {
+    const real = process.env.APPLE_SANDBOX_ACCOUNTS;
+    process.env.APPLE_SANDBOX_ACCOUNTS = 'someone-else@example.org';
+    try {
+      expect((await call('POST', '/api/billing/apple/transaction', { signedTransaction: await sign(good, tx()) })).status).toBe(400);
+      expect((await call('POST', '/api/billing/apple/transaction', { signedTransaction: await sign(good, tx({ environment: 'Production' })) })).status).toBe(200);
+    } finally {
+      process.env.APPLE_SANDBOX_ACCOUNTS = real;
+    }
+    const acc = await import('../server/lib/accounts');
+    const far = Date.now() + 300 * 86400_000;
+    await call('POST', '/api/billing/apple/transaction', { signedTransaction: await sign(good, tx({ expiresDate: far, productId: 'de.heidrichdigital.tohuus.plus.yearly' })) });
+    const until = acc.getHousehold(household)!.plan_expires_at;
+    // a late monthly transaction of another subscription (other original id) must not shorten it
+    await call('POST', '/api/billing/apple/transaction', { signedTransaction: await sign(good, tx({ originalTransactionId: 'orig-old', expiresDate: Date.now() + 5 * 86400_000 })) });
+    expect(acc.getHousehold(household)!.plan_expires_at).toBe(until);
   });
 
   it('App Store Server Notifications v2: renew, idempotent, expire, refund', async () => {

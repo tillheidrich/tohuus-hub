@@ -123,4 +123,11 @@ export interface AppleRenewal {
 }
 
 export const appleBundleId = () => process.env.APPLE_BUNDLE_ID || 'de.heidrichdigital.tohuus';
-export const appleEnvironments = () => (process.env.APPLE_ENVIRONMENTS || 'Production,Sandbox').split(',').map((x) => x.trim()).filter(Boolean);
+/** StoreKit environments accepted for everyone (default: Production only). */
+export const appleEnvironments = () => (process.env.APPLE_ENVIRONMENTS || 'Production').split(',').map((x) => x.trim()).filter(Boolean);
+/** Accounts (e-mails) allowed to buy in the Sandbox (TestFlight testers): APPLE_SANDBOX_ACCOUNTS=a@x.de,b@y.de */
+export const appleSandboxAccounts = () =>
+  (process.env.APPLE_SANDBOX_ACCOUNTS ?? '')
+    .split(',')
+    .map((x) => x.trim().toLowerCase())
+    .filter(Boolean);

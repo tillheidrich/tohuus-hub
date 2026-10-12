@@ -13,6 +13,7 @@ import {
   AppleVerifyError,
   appleBundleId,
   appleEnvironments,
+  appleSandboxAccounts,
   verifyAppleJws,
   type AppleNotification,
   type AppleRenewal,
@@ -71,9 +72,19 @@ const wrap =
 
 r.get('/billing/status', requireAuth, (_req, res) => res.json(billingStatus()));
 
-function checkTransactionBasics(tx: AppleTransaction) {
+/** Sandbox (TestFlight) purchases count only for households with a tester account (APPLE_SANDBOX_ACCOUNTS). */
+function sandboxTester(householdId: string | null) {
+  const testers = appleSandboxAccounts();
+  if (!householdId || !testers.length) return false;
+  return (accountsDb().prepare('SELECT a.email FROM memberships m JOIN accounts a ON a.id = m.account_id WHERE m.household_id = ?').all(householdId) as { email: string }[]).some((a) =>
+    testers.includes(a.email.toLowerCase()),
+  );
+}
+
+function checkTransactionBasics(tx: AppleTransaction, householdId: string | null) {
   if (tx.bundleId !== appleBundleId()) throw new AppleVerifyError('transaction belongs to another app');
-  if (tx.environment && !appleEnvironments().includes(tx.environment)) throw new AppleVerifyError(`environment ${tx.environment} not accepted`);
+  const env = tx.environment ?? 'Production';
+  if (!appleEnvironments().includes(env) && !(env === 'Sandbox' && sandboxTester(householdId))) throw new AppleVerifyError(`environment ${env} not accepted`);
   if (!APPLE_PRODUCTS[tx.productId]) throw new AppleVerifyError('unknown product');
 }
 
@@ -95,7 +106,8 @@ export function applyAppleTransaction(householdId: string, tx: AppleTransaction)
     }
     // never shorten a running subscription because an older transaction arrives late
     const h = getHousehold(householdId)!;
-    const later = !h.plan_expires_at || !expires || expires >= h.plan_expires_at || h.original_transaction_id !== tx.originalTransactionId;
+    // compared by expiry only: a late, older transaction (also of another subscription) must not shorten a later expiry
+    const later = !h.plan_expires_at || !expires || expires >= h.plan_expires_at;
     if (later)
       d.prepare(
         `UPDATE households SET plan = ?, plan_source = 'apple', plan_expires_at = ?, plan_product = ?, original_transaction_id = ? WHERE id = ?`,
@@ -111,8 +123,8 @@ r.post(
     const b = z.object({ signedTransaction: z.string().max(30_000) }).parse(req.body ?? {});
     if (req.actor?.role !== 'admin' && req.actor?.kind === 'user' && req.actor.houseGuest) throw new AppleVerifyError('guests cannot change the plan');
     const tx = await verifyAppleJws<AppleTransaction>(b.signedTransaction);
-    checkTransactionBasics(tx);
     const hid = currentHousehold()!.id;
+    checkTransactionBasics(tx, hid);
     if (!tx.appAccountToken || tx.appAccountToken.toLowerCase() !== hid) throw new AppleVerifyError('this purchase belongs to another household');
     applyAppleTransaction(hid, tx);
     return billingStatus();
@@ -133,7 +145,7 @@ pub.post(
     let tx: AppleTransaction | null = null;
     if (n.data?.signedTransactionInfo) {
       tx = await verifyAppleJws<AppleTransaction>(n.data.signedTransactionInfo);
-      checkTransactionBasics(tx);
+      checkTransactionBasics(tx, tx.appAccountToken?.toLowerCase() ?? null);
     }
     let renewal: AppleRenewal | null = null;
     if (n.data?.signedRenewalInfo) renewal = await verifyAppleJws<AppleRenewal>(n.data.signedRenewalInfo);
