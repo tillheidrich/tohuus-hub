@@ -25,4 +25,5 @@ export const de_people: Record<string, string> = {
   'You can’t change this person.': 'Diese Person kannst du nicht ändern.',
   'Your access is paused at the moment.': 'Dein Zugang ist gerade pausiert.',
   'This part of the app is not shared with you.': 'Dieser Teil der App ist für dich nicht freigegeben.',
+  'Allergies are health data. Please confirm first that ToHuus may store them.': 'Allergien sind Gesundheitsdaten. Bestätige bitte zuerst, dass ToHuus sie speichern darf.',
 };

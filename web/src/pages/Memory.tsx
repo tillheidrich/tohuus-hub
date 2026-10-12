@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { del, invalidate, patch, post, relTime, useApi } from '../api';
 import { t } from '../i18n';
 import { Empty, Skeleton, Toggle, useToast } from '../ui';
+import { useHealthConsent } from '../people/HealthConsent';
 
 interface MemoryRow {
   id: number;
@@ -28,11 +29,14 @@ export function MemoryPage() {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const toast = useToast();
+  const { withConsent, sheet } = useHealthConsent();
   const add = async () => {
     if (text.trim().length < 2) return;
     setBusy(true);
     try {
-      await post('/memory', { text: text.trim() });
+      const body = { text: text.trim() };
+      const saved = await withConsent((consent) => post('/memory', consent ? { ...body, consent } : body));
+      if (saved === null) return;
       setText('');
       invalidate('memory');
     } catch (e) {
@@ -53,6 +57,7 @@ export function MemoryPage() {
   const rows = q.data ?? [];
   return (
     <div className="memory-page">
+      {sheet}
       <header className="page-head">
         <div>
           <div className="eyebrow">{t('Assistant')}</div>
@@ -126,7 +131,8 @@ export function AssistantPrivacyCard({ admin }: { admin: boolean }) {
         <div>
           <b>{t('Share allergies and children’s details with the assistant')}</b>
           <div className="small muted">
-            {t('Then it can take them into account when it suggests dishes. Off: unsuitable dishes are still left out, without saying why.')}
+            {t('Then it can take them into account when it suggests dishes. Off: unsuitable dishes are still left out, without saying why.')}{' '}
+            {t('This applies to everyone in the household. Off by default.')}
           </div>
         </div>
         {s.data ? <Toggle on={s.data.healthShare} onChange={admin ? set : () => toast({ text: t('Only an admin can change this.'), error: true })} label={t('Share allergies and children’s details with the assistant')} /> : null}

@@ -53,8 +53,31 @@ Also `POST /api/assistant/undo` with body `{ "undo": "<token>" }`. → `{ ok: tr
 ### Conversations, status, consent
 
 - `GET /api/assistant/conversations` → own conversations `[{ id, title, created_at, updated_at, messages }]`; `GET /api/assistant/conversations/:id` → `{ id, messages: [{ id, role, content, actions, mode, created_at }] }`; `DELETE` one or all (`DELETE /api/assistant/conversations`). Conversations are private to the person and deleted 30 days after the last message.
-- `GET /api/assistant/status` → `{ ai, voice, receiptsAi, healthShare, language }` – what the UI can offer.
-- `GET /api/assistant/settings` → `{ healthShare }`; `PATCH` (admins) `{ healthShare: boolean }`. Also in `GET/PATCH /api/settings` as `ai.healthShare`.
+- `GET /api/assistant/status` → `{ ai, voice, receiptsAi, healthShare, healthConsent, language }` – what the UI can offer.
+- `GET /api/assistant/settings` → `{ healthShare, healthConsent }`; `PATCH` (admins) `{ healthShare: boolean }`. Also in `GET/PATCH /api/settings` as `ai.healthShare`.
+
+### Health data: one-time consent (`consent`)
+
+Allergies and health notes are special categories of personal data (Art. 9 GDPR). The **first** one a household stores
+needs an explicit confirmation; after that nobody is asked again (the consent is per household, not per person).
+
+- Endpoints that can store health data accept an optional `consent: true` in the body: `PUT /api/people/me/prefs`,
+  `PUT /api/people/person/:key/prefs`, `POST /api/people/children`, `PATCH /api/people/children/:id`
+  (each when `allergies` is non-empty) and `POST /api/memory` (when the text is classified sensitive).
+- Without consent on record and without `consent: true` the server answers **HTTP 409**
+  `{ "error": "Allergien sind Gesundheitsdaten. …", "code": "health_consent" }` and stores nothing (a child is not
+  created either). The client then shows the confirmation sheet and repeats the same request with `consent: true`.
+- Sheet text (German, binding): „Allergien sind Gesundheitsdaten. ToHuus speichert sie verschlüsselt in eurem Haushalt
+  und nutzt sie nur für Warnhinweise bei Rezepten. An den Assistenten gehen sie nur, wenn ihr das in den Einstellungen
+  erlaubt.“ Buttons „Nicht jetzt“ / „Speichern“.
+- Stored once as the setting `health.consent` = `{ at: "<UTC datetime>", by: "<name> (#<userId>)" }`. Read it from
+  `GET /api/assistant/settings` or `GET /api/assistant/status` → `healthConsent: { at, by } | null`; prefs responses
+  carry `healthConsent: boolean`. A client may ask up front when `healthConsent` is null instead of waiting for the 409.
+- The assistant and MCP `remember` tools never store a sensitive note before the consent; they answer with a hint to
+  add it under People › Allergies.
+- Separate from this, `ai.healthShare` (Settings › Assistant, admins, default off, applies to everyone in the
+  household) decides whether allergies, children's birth years and sensitive memory rows go to the model at all.
+  Without it they are never part of the model context, MCP `household_context` or tool results.
 
 ## Tools
 
@@ -86,7 +109,7 @@ The system prompt is German (du-Form) or English, by household language.
 
 Table `ai_memory`: `scope` household|person, `person` (key like `u2`/`k1`), `kind` fact|preference|routine, `text`, `source` user|assistant|derived, `sensitive` (word-list classifier: health, diet for medical reasons, pregnancy, medication, religion, politics, sexuality, origin, union), `created_by`, `confirmed_at`. Max 300 rows.
 
-- `GET /api/memory` → all rows (including sensitive ones – it is the household's own data), `POST /api/memory` `{ text, kind?, person? }`, `DELETE /api/memory/:id`.
+- `GET /api/memory` → all rows (including sensitive ones – it is the household's own data), `POST /api/memory` `{ text, kind?, person?, consent? }` (409 `health_consent` for the first sensitive note, see above), `DELETE /api/memory/:id`.
 - MCP: `remember`, `forget`, `household_context`.
 
 Outward the app says "ToHuus merkt sich …"; the word "Gedächtnis" stays internal.

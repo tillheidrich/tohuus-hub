@@ -43,7 +43,7 @@ beforeAll(async () => {
   const memory = await import('../server/lib/memory');
   db.prepare(`INSERT INTO users (name, role, password_hash) VALUES ('Till', 'admin', ?)`).run(auth.hashPassword('test1234'));
   db.prepare(`INSERT INTO users (name, role, password_hash) VALUES ('Lea', 'member', ?)`).run(auth.hashPassword('test1234'));
-  const kid = await people.createChild({ name: CHILD, birth_year: Number(BIRTH_YEAR), allergies: ['Nüsse'], likes: ['Pfannkuchen'] });
+  const kid = await people.createChild({ name: CHILD, birth_year: Number(BIRTH_YEAR), allergies: ['Nüsse'], likes: ['Pfannkuchen'] }, { consent: true, by: 'test' });
   people.setPrefs('u2', { dislikes: ['Pilze'] });
   for (const name of ['Mehl', 'Butter', 'Zucker', 'Haselnüsse', 'Eier', 'Milch', 'Champignons', 'Nudeln']) {
     const id = catalog.createProduct({ name });

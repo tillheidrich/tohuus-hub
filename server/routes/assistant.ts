@@ -18,7 +18,8 @@ import { runUndo, UndoError } from '../lib/assistant-tools.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { consumeAssistant, UsageLimitError } from '../lib/limits.js';
 import { emit } from '../lib/bus.js';
-import { deleteMemory, listMemory, MemoryError, remember } from '../lib/memory.js';
+import { deleteMemory, isSensitive, listMemory, MemoryError, remember } from '../lib/memory.js';
+import { healthConsent, requireHealthConsent } from '../lib/health-consent.js';
 import { healthShareAllowed } from '../lib/people-signals.js';
 import { visionAvailable } from '../lib/vision.js';
 
@@ -31,11 +32,13 @@ function fail(res: any, e: unknown) {
   if (e instanceof AssistantError || e instanceof UndoError || e instanceof MemoryError) return res.status(e.status).json({ error: e.message });
   if (e instanceof AiError) return res.status(e.status).json({ error: e.message, code: e.code });
   if (e instanceof UsageLimitError) return res.status(e.status).json(e.toJSON());
+  const x = e as { status?: number; code?: string; message?: string };
+  if (x?.code === 'health_consent') return res.status(409).json({ error: x.message, code: x.code });
   throw e;
 }
 
 r.get('/assistant/status', requireAuth, (_req, res) => {
-  res.json({ ai: aiEnabled('text'), voice: aiEnabled('audio'), receiptsAi: visionAvailable(), healthShare: healthShareAllowed(), language: lang() });
+  res.json({ ai: aiEnabled('text'), voice: aiEnabled('audio'), receiptsAi: visionAvailable(), healthShare: healthShareAllowed(), healthConsent: healthConsent(), language: lang() });
 });
 
 r.post('/assistant/chat', requireAuth, async (req, res) => {
@@ -113,12 +116,12 @@ r.delete('/assistant/conversations/:id', requireAuth, (req, res) => {
 r.delete('/assistant/conversations', requireAuth, (req, res) => res.json({ ok: true, deleted: deleteAllConversations(userOf(req)) }));
 
 // household consent for health data (Art. 9 GDPR) – default off
-r.get('/assistant/settings', requireAuth, (_req, res) => res.json({ healthShare: healthShareAllowed() }));
+r.get('/assistant/settings', requireAuth, (_req, res) => res.json({ healthShare: healthShareAllowed(), healthConsent: healthConsent() }));
 r.patch('/assistant/settings', requireAuth, requireAdmin, (req, res) => {
   const b = z.object({ healthShare: z.boolean() }).parse(req.body);
   setSetting('ai.health_share', b.healthShare);
   emit('settings');
-  res.json({ healthShare: healthShareAllowed() });
+  res.json({ healthShare: healthShareAllowed(), healthConsent: healthConsent() });
 });
 
 // ---------------------------------------------------------------- what ToHuus remembers
@@ -126,9 +129,16 @@ r.patch('/assistant/settings', requireAuth, requireAdmin, (req, res) => {
 r.get('/memory', requireAuth, (_req, res) => res.json(listMemory({ includeSensitive: true })));
 r.post('/memory', requireAuth, (req: any, res) => {
   const b = z
-    .object({ text: z.string().min(2).max(300), kind: z.enum(['fact', 'preference', 'routine']).optional(), person: z.string().max(20).nullable().optional() })
+    .object({
+      text: z.string().min(2).max(300),
+      kind: z.enum(['fact', 'preference', 'routine']).optional(),
+      person: z.string().max(20).nullable().optional(),
+      consent: z.boolean().optional(),
+    })
     .parse(req.body);
   try {
+    // a health note (allergy, intolerance …) is Art. 9 data: the household confirms once before the first one is kept
+    if (isSensitive(b.text)) requireHealthConsent({ consent: b.consent, by: `${req.actor?.name ?? '?'} (#${req.actor?.userId ?? '?'})` });
     res.json(remember({ text: b.text, kind: b.kind, person: b.person ?? null, source: 'user', createdBy: req.actor?.name ?? null }));
   } catch (e) {
     fail(res, e);

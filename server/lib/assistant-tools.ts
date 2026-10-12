@@ -13,7 +13,8 @@ import { emit } from './bus.js';
 import { addToShopping, adjustStock, fmtQty, getProduct, listProducts, markUsedUp, matchIngredient, matchProduct } from './catalog.js';
 import { cookIdeas } from './cookideas.js';
 import { createImport, linesToImport } from './imports.js';
-import { forget, remember, restoreMemory, type MemoryRow } from './memory.js';
+import { forget, isSensitive, remember, restoreMemory, type MemoryRow } from './memory.js';
+import { healthConsent } from './health-consent.js';
 import { moneyOverview, fmtMoney } from './money.js';
 import { historySince } from './limits.js';
 import { isDeposit, shopName, spendLines } from './spending.js';
@@ -377,10 +378,15 @@ export function moneySummary(input: { month?: string | null; shop?: string | nul
 }
 
 export function rememberTool(ctx: ToolCtx, input: { text: string; kind?: 'fact' | 'preference' | 'routine' | null }) {
+  // health notes need the household's one-time confirmation, which only the app's sheet can ask for
+  if (isSensitive(input.text) && !healthConsent()) return { ok: false, hint: healthNoteHint() };
   const row = remember({ text: input.text, kind: input.kind ?? 'fact', source: 'assistant', createdBy: ctx.actor, confirmed: true });
   record(ctx, 'remember', t('Remembered: {text}', { text: row.text }), { kind: 'forget', id: row.id });
   return { ok: true, id: row.id };
 }
+
+export const healthNoteHint = () =>
+  t('That sounds like health information. Please add allergies under People › Allergies; ToHuus asks there once whether it may store them.');
 
 export function forgetTool(ctx: ToolCtx, input: { text?: string | null; id?: number | null }) {
   const rows = forget(input.id ?? input.text ?? '');

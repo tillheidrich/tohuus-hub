@@ -333,7 +333,11 @@ describe('what ToHuus remembers', () => {
     expect(a.json).toMatchObject({ text: 'Samstags wird gegrillt', kind: 'routine', source: 'user', sensitive: 0 });
     const again = await till.req('POST', '/api/memory', { text: 'samstags wird gegrillt' });
     expect(again.json.id).toBe(a.json.id);
-    const s = await till.req('POST', '/api/memory', { text: 'Lea verträgt keine Laktose' });
+    // a health note needs the household's one-time confirmation (Art. 9 GDPR)
+    const refused = await till.req('POST', '/api/memory', { text: 'Mira verträgt keine Laktose' });
+    expect(refused.status).toBe(409);
+    expect(refused.json.code).toBe('health_consent');
+    const s = await till.req('POST', '/api/memory', { text: 'Mira verträgt keine Laktose', consent: true });
     expect(s.json.sensitive).toBe(1);
     const list = (await till.req('GET', '/api/memory')).json;
     expect(list.find((x: any) => x.id === s.json.id).sensitive).toBe(true);
@@ -352,7 +356,7 @@ describe('what ToHuus remembers', () => {
     expect(r.ok).toBe(true);
     const c = JSON.parse((await call('household_context', {})).content[0].text);
     expect(c.memory.map((m: any) => m.text)).toContain('Wir trinken Hafermilch');
-    expect(c.memory.map((m: any) => m.text)).not.toContain('Lea verträgt keine Laktose');
+    expect(c.memory.map((m: any) => m.text)).not.toContain('Mira verträgt keine Laktose');
     expect(s._registeredTools.household_context.annotations.readOnlyHint).toBe(true);
     const f = JSON.parse((await call('forget', { text: 'Hafermilch' })).content[0].text);
     expect(f.forgotten).toEqual(['Wir trinken Hafermilch']);

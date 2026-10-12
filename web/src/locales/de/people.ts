@@ -134,4 +134,8 @@ export const people: Record<string, string> = {
   "“For a while” changes it for a weekend or pauses it – it switches back by itself. “Send login link” mails a one-time link, or shows a link and QR code when e-mail is not set up.": "„Für eine Weile“ ändert das fürs Wochenende oder pausiert den Zugang – er stellt sich von selbst zurück. „Anmeldelink schicken“ mailt einen Einmal-Link oder zeigt Link und QR-Code, wenn keine E-Mail eingerichtet ist.",
   "After cooking, one tap per person: not for me, okay, loved it. Allergies warn on dishes and are never planned automatically; ratings and dislikes nudge suggestions. Cook › Favourites shows the family favourites and each person’s.": "Nach dem Kochen ein Tipp pro Person: nicht meins, okay, lecker. Allergien warnen bei Gerichten und werden nie automatisch eingeplant; Bewertungen und Abneigungen beeinflussen Vorschläge sanft. Kochen › Lieblinge zeigt die Familienlieblinge und die jeder Person.",
   "Open members": "Mitglieder öffnen",
+  'Save allergies?': 'Allergien speichern?',
+  'Allergies are health data. ToHuus stores them encrypted in your household and only uses them for warnings on recipes. They only go to the assistant if you allow that in the settings.':
+    'Allergien sind Gesundheitsdaten. ToHuus speichert sie verschlüsselt in eurem Haushalt und nutzt sie nur für Warnhinweise bei Rezepten. An den Assistenten gehen sie nur, wenn ihr das in den Einstellungen erlaubt.',
+  'This applies to everyone in the household. Off by default.': 'Das gilt für alle Personen im Haushalt. Ab Werk ist es aus.',
 };

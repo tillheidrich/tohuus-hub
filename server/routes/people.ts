@@ -50,7 +50,8 @@ const wrap =
     } catch (e) {
       if (e instanceof z.ZodError) return next(e);
       const status = e instanceof AuthError ? e.status : (e as { status?: number }).status;
-      if (status) return void res.status(status).json({ error: (e as Error).message });
+      const code = (e as { code?: unknown }).code;
+      if (status) return void res.status(status).json({ error: (e as Error).message, ...(typeof code === 'string' ? { code } : {}) });
       next(e);
     }
   };
@@ -66,7 +67,9 @@ const face = z.discriminatedUnion('type', [
   z.object({ type: z.literal('animal'), animal: z.string().refine((a) => ANIMALS.includes(a)) }),
 ]);
 const list = z.array(z.string().trim().max(40)).max(30);
-const prefs = z.object({ likes: list.optional(), dislikes: list.optional(), allergies: list.optional() });
+const prefs = z.object({ likes: list.optional(), dislikes: list.optional(), allergies: list.optional(), consent: z.boolean().optional() });
+/** consent for health data (allergies): who confirmed the sheet */
+const consentOf = (req: Request, consent: boolean | undefined) => ({ consent, by: `${actorName(req)} (#${req.actor?.userId ?? '?'})` });
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const level = z.enum(GUEST_LEVELS);
 const key = (req: Request) => {
@@ -132,7 +135,8 @@ const editRoutes = (prefix: string) => {
     wrap((req) => {
       const k = key(req);
       if (!canEditPerson(req.actor, k)) throw forbidden();
-      return setPrefs(k, prefs.parse(req.body));
+      const { consent, ...b } = prefs.parse(req.body);
+      return setPrefs(k, b, consentOf(req, consent));
     }),
   );
 };
@@ -180,6 +184,7 @@ const childInput = z.object({
   likes: list.optional(),
   dislikes: list.optional(),
   allergies: list.optional(),
+  consent: z.boolean().optional(),
 });
 
 r.post(
@@ -188,10 +193,18 @@ r.post(
   wrap((req) => {
     const b = childInput.parse(req.body);
     if (!b.name) throw Object.assign(new Error(t('Please enter a name.')), { status: 400 });
-    return createChild(b);
+    const { consent, ...input } = b;
+    return createChild(input, consentOf(req, consent));
   }),
 );
-r.patch('/people/children/:id', requireAdmin, wrap((req) => updateChild(Number(req.params.id), childInput.parse(req.body))));
+r.patch(
+  '/people/children/:id',
+  requireAdmin,
+  wrap((req) => {
+    const { consent, ...input } = childInput.parse(req.body);
+    return updateChild(Number(req.params.id), input, consentOf(req, consent));
+  }),
+);
 r.delete(
   '/people/children/:id',
   requireAdmin,

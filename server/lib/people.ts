@@ -205,16 +205,20 @@ export function setColor(key: string, color: string) {
 
 const cleanList = (xs: string[] | undefined) => [...new Set((xs ?? []).map((x) => x.trim().slice(0, 40)).filter(Boolean))].slice(0, 30);
 
-export function setPrefs(key: string, p: Partial<PersonPrefs>) {
+export { healthConsent, healthConsentError, requireHealthConsent, type ConsentInput } from './health-consent.js';
+import { requireHealthConsent, healthConsent, type ConsentInput } from './health-consent.js';
+
+export function setPrefs(key: string, p: Partial<PersonPrefs>, c: ConsentInput = {}) {
   mustExist(key);
   const cur = prefsOf(key);
   const next = { likes: p.likes ? cleanList(p.likes) : cur.likes, dislikes: p.dislikes ? cleanList(p.dislikes) : cur.dislikes, allergies: p.allergies ? cleanList(p.allergies) : cur.allergies };
+  if (p.allergies && next.allergies.length > 0) requireHealthConsent(c);
   db.prepare(
     `INSERT INTO people_prefs (person, likes, dislikes, allergies) VALUES (?, ?, ?, ?)
      ON CONFLICT(person) DO UPDATE SET likes = excluded.likes, dislikes = excluded.dislikes, allergies = excluded.allergies, updated_at = datetime('now')`,
   ).run(key, JSON.stringify(next.likes), JSON.stringify(next.dislikes), JSON.stringify(next.allergies));
   emit('recipes', 'settings');
-  return next;
+  return { ...next, healthConsent: Boolean(healthConsent()) };
 }
 
 // ---------------------------------------------------------------- children (= kid-mode profiles)
@@ -236,25 +240,28 @@ export interface ChildInput {
   allergies?: string[];
 }
 
-export async function createChild(input: ChildInput) {
+export async function createChild(input: ChildInput, c: ConsentInput = {}) {
   if (!input.name?.trim()) throw httpError(400, t('Please enter a name.'));
+  // ask before anything is created, so a refused consent leaves no half-made child behind
+  if (input.allergies && cleanList(input.allergies).length) requireHealthConsent(c);
   const animal = input.face?.type === 'animal' ? input.face.animal : ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
   const kid = await createKid({ name: input.name, color: input.color, avatar: animal });
   db.prepare('UPDATE kid_profiles SET birth_year = ? WHERE id = ?').run(checkYear(input.birth_year), kid.id);
   const key = `k${kid.id}`;
   if (input.face && input.face.type !== 'photo') setFace(key, input.face);
-  if (input.likes || input.dislikes || input.allergies) setPrefs(key, input);
+  if (input.likes || input.dislikes || input.allergies) setPrefs(key, input, c);
   emit('settings');
   return getPerson(key)!;
 }
 
-export async function updateChild(id: number, input: ChildInput) {
+export async function updateChild(id: number, input: ChildInput, c: ConsentInput = {}) {
   const key = `k${id}`;
   mustExist(key);
+  if (input.allergies && cleanList(input.allergies).length) requireHealthConsent(c);
   if (input.name !== undefined || input.color !== undefined) await updateKid(id, { name: input.name, color: input.color });
   if (input.birth_year !== undefined) db.prepare('UPDATE kid_profiles SET birth_year = ? WHERE id = ?').run(checkYear(input.birth_year), id);
   if (input.face && input.face.type !== 'photo') setFace(key, input.face);
-  if (input.likes || input.dislikes || input.allergies) setPrefs(key, input);
+  if (input.likes || input.dislikes || input.allergies) setPrefs(key, input, c);
   emit('settings');
   return getPerson(key)!;
 }

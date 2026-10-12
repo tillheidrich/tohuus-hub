@@ -2,7 +2,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { buildContext } from '../lib/assistant-context.js';
-import { forget, MemoryError, remember } from '../lib/memory.js';
+import { forget, isSensitive, MemoryError, remember } from '../lib/memory.js';
+import { healthConsent } from '../lib/health-consent.js';
+import { healthNoteHint } from '../lib/assistant-tools.js';
 import { healthShareAllowed } from '../lib/people-signals.js';
 import { rhythmList } from '../lib/rhythm.js';
 
@@ -56,6 +58,7 @@ export function register(s: McpServer, actorName: string) {
     },
     async (a) => {
       try {
+        if (isSensitive(a.text) && !healthConsent()) return fail(healthNoteHint());
         const row = remember({ text: a.text, kind: a.kind, person: a.person ?? null, source: 'assistant', createdBy: actorName, confirmed: true });
         return text({ ok: true, id: row.id, sensitive: Boolean(row.sensitive) });
       } catch (e) {

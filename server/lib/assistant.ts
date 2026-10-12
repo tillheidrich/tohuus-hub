@@ -354,7 +354,8 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
       return m.budget ? t('This month so far {total}, {left} left of the budget.', { total: m.total, left: m.budget.left }) : t('This month so far {total}.', { total: m.total });
     }
     case 'remember': {
-      rememberTool(ctx, { text: intent.text });
+      const res = rememberTool(ctx, { text: intent.text });
+      if (!res.ok) return res.hint ?? '';
       return t('Got it, ToHuus remembers that.');
     }
     case 'forget': {

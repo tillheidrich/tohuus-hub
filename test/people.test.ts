@@ -387,13 +387,31 @@ describe('children, pictures, ratings', () => {
   let recipeId = 0;
 
   it('adds a child without a login – one profile shared with kid mode', async () => {
-    const r = await admin.post('/api/people/children', { name: 'Mila', birth_year: 2021, allergies: ['Nüsse'], dislikes: ['Pilze'] });
+    // allergies are health data: the first save needs an explicit confirmation, nothing is created without it
+    const before = (await admin.get('/api/kids')).json.kids.length;
+    const refused = await admin.post('/api/people/children', { name: 'Mika', birth_year: 2021, allergies: ['Nüsse'], dislikes: ['Pilze'] });
+    expect(refused.status).toBe(409);
+    expect(refused.json.code).toBe('health_consent');
+    expect((await admin.get('/api/kids')).json.kids.length).toBe(before);
+    const r = await admin.post('/api/people/children', { name: 'Mika', birth_year: 2021, allergies: ['Nüsse'], dislikes: ['Pilze'], consent: true });
     expect(r.status).toBe(200);
+    // kept once per household: when and who (name and user id)
+    const consent = JSON.parse((db.prepare("SELECT value FROM settings WHERE key = 'health.consent'").get() as { value: string }).value);
+    expect(consent.at).toBeTruthy();
+    expect(consent.by).toMatch(/#\d+/);
+    // once confirmed for the household, later changes need no second sheet – also for other people
+    const again = await admin.patch(`/api/people/children/${r.json.key.slice(1)}`, { allergies: ['Nüsse', 'Sesam'] });
+    expect(again.status).toBe(200);
+    await admin.patch(`/api/people/children/${r.json.key.slice(1)}`, { allergies: ['Nüsse'] });
+    expect((await admin.put('/api/people/me/prefs', { likes: ['Suppe'] })).status).toBe(200);
+    const own = await admin.put('/api/people/me/prefs', { allergies: ['Laktose'] });
+    expect(own.json).toMatchObject({ allergies: ['Laktose'], healthConsent: true });
+    expect((await admin.put('/api/people/me/prefs', { allergies: [] })).status).toBe(200);
     expect(r.json).toMatchObject({ kind: 'child', birth_year: 2021, prefs: { allergies: ['Nüsse'], dislikes: ['Pilze'] } });
     expect(r.json.face.type).toBe('animal');
     child = r.json.key;
     const kids = await admin.get('/api/kids');
-    expect(kids.json.kids.some((k: any) => k.name === 'Mila')).toBe(true);
+    expect(kids.json.kids.some((k: any) => k.name === 'Mika')).toBe(true);
     expect((await admin.post('/api/people/children', { name: 'Old', birth_year: 1950 })).status).toBe(400);
     // no birth year is fine
     expect((await admin.post('/api/people/children', { name: 'Jonas' })).status).toBe(200);

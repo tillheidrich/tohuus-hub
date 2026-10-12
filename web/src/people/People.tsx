@@ -33,6 +33,7 @@ import { ANIMAL_KEYS } from '../pages/KidArt';
 import { Seg, Sheet, Skeleton, useToast } from '../ui';
 import { Avatar, type Face } from './Avatar';
 import { PersonProfileSheet } from './Ratings';
+import { useHealthConsent } from './HealthConsent';
 
 export type GuestLevel = 'order' | 'stock' | 'recipes' | 'family';
 export type EffectiveLevel = GuestLevel | 'paused';
@@ -378,13 +379,15 @@ function CropSheet({ file, onClose, base, onDone }: { file: File | null; onClose
 
 export function PrefsEditor({ person, base }: { person: Pick<Person, 'key' | 'name' | 'prefs' | 'kind'>; base: string }) {
   const toast = useToast();
+  const { withConsent, sheet } = useHealthConsent();
   const save = (patchBody: Partial<NonNullable<Person['prefs']>>) =>
-    put(`${base}/prefs`, patchBody)
+    withConsent((consent) => put(`${base}/prefs`, consent ? { ...patchBody, consent } : patchBody))
       .then(() => invalidate('people', 'suggest', 'what-to-eat', 'wte', 'overview'))
       .catch((e) => toast({ text: (e as Error).message, error: true }));
   const p = person.prefs ?? { likes: [], dislikes: [], allergies: [] };
   return (
     <div className="stack" style={{ gap: 12 }}>
+      {sheet}
       <TagField
         label={t('Allergies')}
         help={t('Dishes with these get a warning and are never planned automatically. “Nuts”, “milk”, “egg” or “gluten” also cover the usual ingredients.')}
@@ -479,6 +482,7 @@ function AddChildSheet({ open, onClose, onCreated }: { open: boolean; onClose: (
   const [f, setF] = useState({ name: '', year: '', allergies: '' });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const { withConsent, sheet } = useHealthConsent();
   useEffect(() => {
     if (open) {
       setF({ name: '', year: '', allergies: '' });
@@ -489,12 +493,14 @@ function AddChildSheet({ open, onClose, onCreated }: { open: boolean; onClose: (
     setBusy(true);
     setErr('');
     try {
-      const p = await post<Person>('/people/children', {
+      const body = {
         name: f.name.trim(),
         birth_year: f.year ? Number(f.year) : null,
         color: PERSON_COLORS[Math.floor(Math.random() * PERSON_COLORS.length)],
         allergies: f.allergies.split(',').map((x) => x.trim()).filter(Boolean),
-      });
+      };
+      const p = await withConsent((consent) => post<Person>('/people/children', consent ? { ...body, consent } : body));
+      if (!p) return;
       invalidate('people', 'people-dir', 'kids');
       onCreated(p.key);
     } catch (e) {
@@ -505,6 +511,7 @@ function AddChildSheet({ open, onClose, onCreated }: { open: boolean; onClose: (
   };
   return (
     <Sheet open={open} onClose={onClose} title={t('Add a child')}>
+      {sheet}
       <div className="stack">
         <p className="small muted" style={{ margin: 0 }}>
           {t('Children never get a login. You rate dishes for them and choose their picture; kid mode uses the same profile.')}
