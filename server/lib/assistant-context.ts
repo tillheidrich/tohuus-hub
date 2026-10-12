@@ -67,7 +67,7 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
   const lines: string[] = [
     `Household: ${data.household}. Today: ${day}.${data.viewer ? ` Talking to: ${data.viewer}.` : ''}`,
     `People: ${people.map((p: any) => `${p.name} (${p.kind}${p.likes.length ? `, likes ${p.likes.join(', ')}` : ''}${p.dislikes.length ? `, dislikes ${p.dislikes.join(', ')}` : ''}${p.allergies?.length ? `, allergies ${p.allergies.join(', ')}` : ''})`).join('; ') || '–'}`,
-    consent ? 'Health data: shared by the household.' : 'Health data (allergies etc.) is not shared with you. ToHuus filters unsuitable recipes itself.',
+    consent ? 'Health data: shared by the household.' : 'Health data of the people is not shared with you. ToHuus filters unsuitable recipes itself.',
     `Shopping list (open): ${list.join(', ') || 'empty'}`,
     `Probably due (purchase rhythm): ${due.map((d) => `${d.name} (every ~${d.everyDays} days)`).join(', ') || 'nothing'}`,
     `Meal plan next 7 days: ${week.map((w) => `${w.day} ${w.slot}: ${w.title}`).join('; ') || 'nothing planned'}`,
