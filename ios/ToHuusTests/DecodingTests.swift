@@ -180,7 +180,7 @@ final class DecodingTests: XCTestCase {
         XCTAssertEqual(s.householdId, "1ebb0595-5608-40c3-93d6-47d91417735d")
         XCTAssertTrue(s.households.isEmpty)
         let me = try decode(CloudMe.self, "cloud-me")
-        XCTAssertEqual(me.email, "till@example.org")
+        XCTAssertEqual(me.email, "sam@example.org")
         XCTAssertFalse(me.verified)
         XCTAssertEqual(me.allHouseholds.count, 1)
         let devices = try JSONCoding.decoder().decode(Lossy<AppDevice>.self, from: try fixture("devices")).wrappedValue

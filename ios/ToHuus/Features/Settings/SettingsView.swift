@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 /// "Mehr": account, household, plan & storage, devices, sign out, delete account, legal, web settings.
@@ -15,6 +16,7 @@ struct SettingsView: View {
     @State private var error: String?
     @State private var showWeb = false
     @State private var deletePassword = ""
+    @State private var manageSubscriptions = false
 
     var body: some View {
         NavigationStack {
@@ -39,6 +41,18 @@ struct SettingsView: View {
                 Section {
                     NavigationLink { NotificationSettingsView() } label: { Label(L("Notifications"), systemImage: "bell") }
                     NavigationLink { StoreArrivalView(store: store) } label: { Label(L("Hint in the shop"), systemImage: "location") }
+                    NavigationLink { AISettingsView() } label: {
+                        LabeledContent {
+                            if app.aiLocked { Image(systemName: "lock.fill").foregroundStyle(Theme.ink3) }
+                            else { Text(app.aiOn ? L("on") : L("off")) }
+                        } label: { Label(L("With or without AI"), systemImage: "sparkles") }
+                    }
+                    NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
+                }
+                Section(L("Knowing")) {
+                    NavigationLink { HowItWorksView() } label: { Label(L("How ToHuus works"), systemImage: "lightbulb") }
+                    NavigationLink { FactsView() } label: { Label(L("Good to know"), systemImage: "book") }
+                    NavigationLink { HelpListView() } label: { Label(L("Help"), systemImage: "questionmark.circle") }
                 }
                 Section(L("Plan & storage")) {
                     LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free") : L("Own server – everything included")))
@@ -53,7 +67,10 @@ struct SettingsView: View {
                         }
                     }
                     if app.purchasesAvailable {
-                        Button(app.billing?.isPaid == true ? L("Manage plan") : L("See plans")) { app.showPaywall = true; dismiss() }
+                        Button(app.billing?.isPaid == true ? L("Manage plan") : L("See plans")) { app.showPaywall = true; if !embedded { dismiss() } }
+                        if app.billing?.source == "apple" || app.billing?.isPaid == true {
+                            Button(L("Manage subscription")) { manageSubscriptions = true }
+                        }
                     }
                 }
                 Section {
@@ -120,6 +137,7 @@ struct SettingsView: View {
             } message: {
                 Text(L("Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your password. An active App Store subscription must be cancelled in your Apple Account settings."))
             }
+            .manageSubscriptionsSheet(isPresented: $manageSubscriptions)
             .sheet(isPresented: $showWeb) {
                 if let api = app.api { WebSettingsView(api: api) }
             }

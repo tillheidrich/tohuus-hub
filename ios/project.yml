@@ -1,6 +1,6 @@
 # XcodeGen definition for the native ToHuus iPhone app.
 # Generate: brew install xcodegen && cd ios && xcodegen generate
-# Signing: set TOHUUS_TEAM_ID below (or pass it to xcodebuild) – Till's individual team is the one Equilo uses.
+# Signing: set TOHUUS_TEAM_ID below (or pass it to xcodebuild) – the same individual team as Equilo.
 name: ToHuus
 options:
   bundleIdPrefix: de.heidrichdigital
@@ -10,7 +10,7 @@ options:
   developmentLanguage: en
 settings:
   base:
-    TOHUUS_TEAM_ID: "FVS7WVTQ67"  # Till Heidrich (Individual) – same team as Equilo
+    TOHUUS_TEAM_ID: "FVS7WVTQ67"  # individual team – same as Equilo
     DEVELOPMENT_TEAM: "$(TOHUUS_TEAM_ID)"
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "0.2.0"
