@@ -8,13 +8,16 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
+
+const PORT = await freePort();
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-people-test-'));
 process.env.DATA_DIR = dir;
-process.env.BASE_URL = 'http://localhost:47417';
+process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'en';
 
-const base = 'http://localhost:47417';
+const base = `http://localhost:${PORT}`;
 let server: http.Server;
 let db: typeof import('../server/db').db;
 let auth: typeof import('../server/lib/auth');
@@ -115,7 +118,7 @@ beforeAll(async () => {
   app.use('/api', peopleRoutes.r);
   app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
   app.use((err: any, _req: any, res: any, _next: any) => res.status(err instanceof ZodError ? 400 : 500).json({ error: String(err?.message ?? err) }));
-  await new Promise<void>((r) => (server = app.listen(47417, () => r())));
+  await new Promise<void>((r) => (server = app.listen(PORT, () => r())));
   expect((await admin.post('/api/auth/login', { name: 'Till', password: 'test1234' })).status).toBe(200);
 });
 

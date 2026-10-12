@@ -10,10 +10,14 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { SignJWT, exportJWK, generateKeyPair } from 'jose';
+import { freePort } from './helpers/port';
+
+const PORT = await freePort();
+const OIDC_PORT = await freePort();
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-auth-test-'));
 process.env.DATA_DIR = dir;
-process.env.BASE_URL = 'http://localhost:47391';
+process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'en';
 
 let db: typeof import('../server/db').db;
@@ -22,7 +26,7 @@ let policy: typeof import('../server/lib/auth-policy');
 let totp: typeof import('../server/lib/auth-totp');
 let oidc: typeof import('../server/lib/auth-oidc');
 let server: http.Server;
-const base = 'http://localhost:47391';
+const base = `http://localhost:${PORT}`;
 const mails: { to: string; text: string }[] = [];
 
 let ipSeq = 1;
@@ -107,7 +111,7 @@ beforeAll(async () => {
   });
   app.use('/api', routes.r);
   app.use((err: any, _req: any, res: any, _next: any) => res.status(500).json({ error: String(err?.message ?? err) }));
-  server = app.listen(47391);
+  server = app.listen(PORT);
   await new Promise((r) => server.once('listening', r));
 });
 
@@ -481,8 +485,7 @@ describe('passkeys', () => {
 
 let provider: http.Server;
 describe('SSO (OpenID Connect)', () => {
-  const PORT = 47392;
-  const issuer = `http://127.0.0.1:${PORT}`;
+  const issuer = `http://127.0.0.1:${OIDC_PORT}`;
   let keys: Awaited<ReturnType<typeof generateKeyPair>>;
   let otherKeys: Awaited<ReturnType<typeof generateKeyPair>>;
   /** what the provider will put into the next ID token */
@@ -537,7 +540,7 @@ describe('SSO (OpenID Connect)', () => {
       if (u.pathname === '/userinfo') return json(200, { sub: next.sub });
       json(404, {});
     });
-    await new Promise<void>((r) => provider.listen(PORT, r));
+    await new Promise<void>((r) => provider.listen(OIDC_PORT, r));
     policy.setSsoConfig({ enabled: true, issuer, clientId: 'tohuus', clientSecret: 's3cret', label: 'Authentik' });
   });
 
