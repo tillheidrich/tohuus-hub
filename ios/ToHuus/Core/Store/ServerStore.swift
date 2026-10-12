@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WidgetKit
 
 /// Household data from a ToHuus server: the offline-capable shopping list and live refresh via SSE.
 @MainActor
@@ -91,6 +92,22 @@ final class ServerStore: HouseholdStore {
 
     private func rebuild() {
         list = OpQueueLogic.apply(ops, to: snapshot)
+        if !shopMode && storeId == nil { publishWidgetSnapshot() }
+    }
+
+    @ObservationIgnored private var lastWidget: WidgetSnapshot?
+
+    /// The home-screen widget reads this from the App Group.
+    private func publishWidgetSnapshot() {
+        let names = list.openItems.prefix(3).map { item -> String in
+            let n = item.productName ?? item.text
+            return item.qtyLabel.map { "\($0) \(n)" } ?? n
+        }
+        let snap = WidgetSnapshot(open: list.openCount, items: Array(names), household: nil, updatedAt: Date())
+        guard snap.open != lastWidget?.open || snap.items != lastWidget?.items else { return }
+        lastWidget = snap
+        snap.save()
+        WidgetCenter.shared.reloadTimelines(ofKind: "ToHuusShopping")
     }
 
     private func enqueue(_ op: PendingOp) async {

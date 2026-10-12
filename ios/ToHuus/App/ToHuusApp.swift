@@ -39,10 +39,15 @@ struct ToHuusApp: App {
         }
     }
 
-    /// tohuus://connect?url=https://… (QR on a self-hosted server) and tohuus://assistant
+    /// tohuus://assistant, tohuus://shopping (widget) and the other tabs
     private func handle(_ url: URL) {
         guard url.scheme == "tohuus" else { return }
-        if url.host() == "assistant", app.phase == .signedIn { app.showAssistant = true }
+        guard app.phase == .signedIn else { return }
+        switch url.host() {
+        case "assistant": app.showAssistant = true
+        case "shopping", "today", "pantry", "cooking", "money": app.requestedTab = url.host()
+        default: break
+        }
     }
 }
 

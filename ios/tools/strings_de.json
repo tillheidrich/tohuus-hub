@@ -305,5 +305,21 @@
 "“How much did we spend at Aldi this month?”": "„Wie viel haben wir diesen Monat bei Aldi ausgegeben?“",
 "“Milk is out, and we need something for Sunday.”": "„Milch ist alle, und wir brauchen was für Sonntag.“",
 "“What can we cook today?”": "„Was können wir heute kochen?“",
-"Current plan": "Aktueller Plan"
+"Current plan": "Aktueller Plan",
+"Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your password. An active App Store subscription must be cancelled in your Apple Account settings.": "Haushalte, zu denen nur du gehörst, werden mit allen Daten gelöscht. Aus gemeinsamen Haushalten trittst du nur aus – die anderen behalten alles. Bestätige mit deinem Passwort. Ein laufendes App-Store-Abo kündigst du in den Einstellungen deines Apple Accounts.",
+"Password (at least %d characters)": "Passwort (mindestens %d Zeichen)",
+"Your household's storage is full. Nothing was deleted – free up space or choose a bigger plan.": "Der Speicher eures Haushalts ist voll. Gelöscht wurde nichts – mach Platz oder wähl einen größeren Plan.",
+"Lots going on this month – answers are a little shorter for now.": "Diesen Monat ist viel los – die Antworten fallen gerade etwas kürzer aus.",
+"%d assistant messages left this month.": "Noch %d Nachrichten an den Assistenten diesen Monat.",
+"Add to the shopping list": "Auf die Liste setzen",
+"What": "Was",
+"What should go on the list?": "Was soll auf die Liste?",
+"Put ${item} on the list": "${item} auf die Liste setzen",
+"Add to list": "Auf die Liste",
+"Puts something on your household's ToHuus list, e.g. “2 milk and bread”.": "Setzt etwas auf eure ToHuus-Liste, z. B. „2 Milch und Brot“.",
+"Nothing was added.": "Es wurde nichts hinzugefügt.",
+"“%@” is on the list.": "„%@“ steht auf der Liste.",
+"No connection – “%@” will be sent as soon as you're online.": "Keine Verbindung – „%@“ wird gesendet, sobald du wieder online bist.",
+"Open ToHuus once to see your list here.": "Öffne ToHuus einmal, dann siehst du hier eure Liste.",
+"What's missing at home, at a glance.": "Was zu Hause fehlt – auf einen Blick."
 }

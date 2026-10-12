@@ -10,9 +10,9 @@ struct StartView: View {
     @State private var error: String?
 
     enum Step: Hashable {
-        case cloud
+        case cloud(URL)
         case signIn(URL, String)
-        case signUp
+        case signUp(URL)
     }
 
     var body: some View {
@@ -64,11 +64,21 @@ struct StartView: View {
             .canvasBackground()
             .navigationDestination(for: Step.self) { step in
                 switch step {
-                case .cloud: CloudChoiceView(path: $path)
+                case .cloud(let url): CloudChoiceView(server: url, path: $path)
                 case .signIn(let url, let mode): SignInView(server: url, mode: mode)
-                case .signUp: SignUpView()
+                case .signUp(let url): SignUpView(server: url)
                 }
             }
+            #if DEBUG
+            .onAppear {
+                if let raw = UserDefaults.standard.string(forKey: "debugStartSignup"), let url = URL(string: raw) {
+                    Task {
+                        _ = try? await app.loadInstance(url)
+                        path = [.cloud(url), .signUp(url)]
+                    }
+                }
+            }
+            #endif
             .sheet(isPresented: $showScanner) {
                 ScannerSheet(title: L("Scan QR code"), symbologies: [.qr]) { code in
                     serverText = code
@@ -96,7 +106,7 @@ struct StartView: View {
         defer { busy = false }
         error = nil
         _ = try? await app.loadInstance(SharedConfig.cloudURL)
-        path.append(.cloud)
+        path.append(.cloud(SharedConfig.cloudURL))
     }
 
     private func connectOwn() async {
@@ -109,7 +119,8 @@ struct StartView: View {
         error = nil
         do {
             let info = try await app.loadInstance(url)
-            path.append(.signIn(url, info.isCloud ? "cloud" : "selfhost"))
+            // a ToHuus Cloud at another address (staging, development) offers sign-up too
+            path.append(info.isCloud && info.signup == true ? .cloud(url) : .signIn(url, info.isCloud ? "cloud" : "selfhost"))
         } catch {
             self.error = L("ToHuus could not reach this server. Check the address and that the server is running.")
         }
@@ -119,6 +130,7 @@ struct StartView: View {
 /// ToHuus Cloud: create a household or sign in.
 struct CloudChoiceView: View {
     @Environment(AppModel.self) private var app
+    let server: URL
     @Binding var path: [StartView.Step]
 
     var body: some View {
@@ -127,9 +139,9 @@ struct CloudChoiceView: View {
                 Text(L("ToHuus Cloud")).font(Theme.title())
                 Text(L("New here? Set up your household in a minute. Every new household gets 14 days of Plus, without payment details."))
                     .foregroundStyle(Theme.ink2)
-                Button(L("Create household")) { path.append(.signUp) }
+                Button(L("Create household")) { path.append(.signUp(server)) }
                     .buttonStyle(PrimaryButtonStyle())
-                Button(L("I already have an account")) { path.append(.signIn(SharedConfig.cloudURL, "cloud")) }
+                Button(L("I already have an account")) { path.append(.signIn(server, "cloud")) }
                     .buttonStyle(SecondaryButtonStyle())
                 if let privacy = app.instance?.legal?.privacy, let url = URL(string: privacy) {
                     Link(L("Privacy"), destination: url).font(.footnote)
@@ -224,6 +236,7 @@ struct SignInView: View {
 /// ToHuus Cloud sign-up with the one onboarding question "Wer gehört dazu?".
 struct SignUpView: View {
     @Environment(AppModel.self) private var app
+    var server: URL = SharedConfig.cloudURL
     @State private var name = ""
     @State private var email = ""
     @State private var password = ""
@@ -246,7 +259,7 @@ struct SignUpView: View {
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                SecureField(L("Password (at least 8 characters)"), text: $password).textContentType(.newPassword)
+                SecureField(LF("Password (at least %d characters)", minPassword), text: $password).textContentType(.newPassword)
             } header: {
                 Text(L("You"))
             }
@@ -287,8 +300,10 @@ struct SignUpView: View {
         .navigationTitle(L("Create household"))
     }
 
+    private var minPassword: Int { app.instance?.passwordMin ?? 10 }
+
     private var valid: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty && email.contains("@") && password.count >= 8
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && email.contains("@") && password.count >= minPassword
             && !householdName.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
@@ -297,7 +312,7 @@ struct SignUpView: View {
         defer { busy = false }
         error = nil
         do {
-            try await app.signUp(email: email.trimmingCharacters(in: .whitespaces), password: password,
+            try await app.signUp(server: server, email: email.trimmingCharacters(in: .whitespaces), password: password,
                                  name: name.trimmingCharacters(in: .whitespaces),
                                  householdName: householdName.trimmingCharacters(in: .whitespaces), form: form)
         } catch {

@@ -30,12 +30,19 @@ struct MainTabView: View {
                 .tag(Tab.money)
         }
         .overlay(alignment: .bottomTrailing) {
-            if app.instance?.assistantEnabled ?? true {
-                AssistantButton { app.showAssistant = true }
-                    .padding(.trailing, Theme.Space.s4)
-                    .padding(.bottom, 64)
-            }
+            // always there: without a model the assistant still reads the common sentences (basic mode)
+            AssistantButton { app.showAssistant = true }
+                .padding(.trailing, Theme.Space.s4)
+                .padding(.bottom, 64)
         }
+        .onAppear {
+            applyRequestedTab(app.requestedTab)
+            #if DEBUG
+            if UserDefaults.standard.bool(forKey: "debugSettings") { showSettings = true }
+            if UserDefaults.standard.bool(forKey: "debugPaywall") { app.showPaywall = true }
+            #endif
+        }
+        .onChange(of: app.requestedTab) { _, t in applyRequestedTab(t) }
         .sheet(isPresented: $app.showAssistant) {
             AssistantSheet(store: store)
         }
@@ -45,6 +52,20 @@ struct MainTabView: View {
         .sheet(isPresented: $app.showPaywall) {
             PaywallView()
         }
+    }
+}
+
+extension MainTabView {
+    func applyRequestedTab(_ t: String?) {
+        guard let t else { return }
+        switch t {
+        case "shopping": tab = .shopping
+        case "pantry": tab = .pantry
+        case "cooking": tab = .cooking
+        case "money": tab = .money
+        default: tab = .today
+        }
+        app.requestedTab = nil
     }
 }
 

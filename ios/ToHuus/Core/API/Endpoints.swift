@@ -28,11 +28,14 @@ extension APIClient {
     func cloudMe() async throws -> CloudMe { try await get("api/cloud/me") }
     func devices() async throws -> [AppDevice] { try await get("api/auth/app/devices", as: Lossy<AppDevice>.self).wrappedValue }
     func revokeDevice(_ id: String) async throws { _ = try await send("DELETE", "api/auth/app/devices/\(id)", as: Ignored.self) }
-    func deleteCloudAccount() async throws { _ = try await send("DELETE", "api/cloud/account", as: Ignored.self) }
+    /// DELETE /api/cloud/account, confirmed with the password (the server also accepts `{ confirm: "<e-mail>" }`).
+    func deleteCloudAccount(password: String) async throws {
+        _ = try await send("DELETE", "api/cloud/account", json: ["password": password], as: Ignored.self)
+    }
 
     /// Optional server helper: a one-time link that signs the web view in (see SettingsView). nil when unsupported.
-    func webSignInLink() async -> URL? {
-        guard let r = try? await send("POST", "api/auth/app/web-link", json: [:], as: JSONValue.self),
+    func webSignInLink(next: String = "/") async -> URL? {
+        guard let r = try? await send("POST", "api/auth/app/web-link", json: ["next": next], as: JSONValue.self),
               let s = r.first("url", "link")?.string else { return nil }
         if s.hasPrefix("http") { return URL(string: s) }
         return try? url(s)
@@ -111,7 +114,7 @@ extension APIClient {
 
     func cookIdeas() async throws -> [CookIdea] {
         do {
-            return try await get("api/cook/ideas", as: CookIdeasResponse.self).ideas
+            return try await get("api/cook/ideas", query: [URLQueryItem(name: "limit", value: "12")], as: CookIdeasResponse.self).ideas
         } catch APIError.notFound {
             // older servers: the existing suggestion endpoint has the same information
             return try await get("api/recipes/suggest", query: [URLQueryItem(name: "limit", value: "20")], as: Lossy<CookIdea>.self).wrappedValue
@@ -159,8 +162,9 @@ extension APIClient {
         return try await upload("api/assistant/voice", multipart: mp, timeout: 120)
     }
 
-    func undo(_ token: JSONValue) async throws {
-        _ = try await send("POST", "api/assistant/undo", body: ["undo": token], as: Ignored.self)
+    func undo(_ token: String) async throws {
+        let safe = token.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? token
+        _ = try await send("POST", "api/assistant/undo/\(safe)", as: Ignored.self)
     }
 
     // MARK: receipts

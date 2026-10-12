@@ -18,6 +18,8 @@ final class AppModel {
     var notice: String?
     var showAssistant = false
     var showPaywall = false
+    /// set by deep links (tohuus://shopping from the widget)
+    var requestedTab: String?
 
     private static let householdsKey = "session.households"
     private static let userKey = "session.user"
@@ -31,6 +33,15 @@ final class AppModel {
     // MARK: launch
 
     func restore() async {
+        #if DEBUG
+        // simulator checks: -debugServer http://localhost:8099 -debugToken sw_app_… [-debugHousehold <uuid>]
+        let d = UserDefaults.standard
+        if let server = d.string(forKey: "debugServer").flatMap(URL.init(string:)), let token = d.string(forKey: "debugToken") {
+            SessionInfo(serverURL: server, mode: "cloud", householdId: d.string(forKey: "debugHousehold"), deviceName: Self.deviceName).save()
+            SessionInfo.token = token
+        }
+        if d.bool(forKey: "debugSignedOut") { SessionInfo.clear() }
+        #endif
         guard let s = SessionInfo.load(), let token = SessionInfo.token else {
             phase = .start
             return
@@ -45,6 +56,10 @@ final class AppModel {
             instance = try? await APIClient(baseURL: s.serverURL).instance()
             await refreshBilling()
         }
+        #if DEBUG
+        requestedTab = UserDefaults.standard.string(forKey: "debugTab")
+        if UserDefaults.standard.bool(forKey: "debugAssistant") { showAssistant = true }
+        #endif
     }
 
     // MARK: connect & sign in
@@ -74,8 +89,8 @@ final class AppModel {
         finishSignIn(server: server, mode: mode, response: res)
     }
 
-    func signUp(email: String, password: String, name: String, householdName: String, form: String) async throws {
-        let server = SharedConfig.cloudURL
+    func signUp(server: URL = SharedConfig.cloudURL, email: String, password: String, name: String, householdName: String,
+                form: String) async throws {
         let res = try await APIClient(baseURL: server).signUp(email: email, password: password, name: name,
                                                               householdName: householdName, form: form, device: Self.deviceName)
         finishSignIn(server: server, mode: "cloud", response: res)
@@ -161,6 +176,7 @@ final class AppModel {
         SharedConfig.defaults.removeObject(forKey: Self.householdsKey)
         SharedConfig.defaults.removeObject(forKey: Self.userKey)
         ShoppingCache.wipeAll()
+        WidgetSnapshot.clear()
         session = nil
         households = []
         billing = nil
@@ -170,9 +186,9 @@ final class AppModel {
     }
 
     /// App Review 5.1.1(v): delete the cloud account from inside the app.
-    func deleteAccount() async throws {
+    func deleteAccount(password: String) async throws {
         guard let api else { return }
-        try await api.deleteCloudAccount()
+        try await api.deleteCloudAccount(password: password)
         signOut(message: L("Your account has been deleted."))
     }
 }

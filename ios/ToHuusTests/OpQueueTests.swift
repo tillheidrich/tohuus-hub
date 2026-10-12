@@ -60,28 +60,36 @@ final class OpQueueTests: XCTestCase {
     func testApplyOnSnapshot() throws {
         let base = try list()
         var q: [PendingOp] = []
-        q = OpQueueLogic.enqueue(.add("3 Dosen Tomaten", localId: -1), into: q)
-        q = OpQueueLogic.enqueue(.check(12, on: true), into: q)
-        q = OpQueueLogic.enqueue(.delete(14), into: q)
-        q = OpQueueLogic.enqueue(.check(9, on: false), into: q)
+        q = OpQueueLogic.enqueue(.add("3 Dosen Mais", localId: -1), into: q)
+        q = OpQueueLogic.enqueue(.check(5, on: true), into: q)
+        q = OpQueueLogic.enqueue(.delete(1), into: q)
         let out = OpQueueLogic.apply(q, to: base)
         let open = out.openItems
-        XCTAssertTrue(open.contains { $0.id == -1 && $0.text == "Tomaten" && $0.qty == 3 && $0.pending == true })
-        XCTAssertFalse(open.contains { $0.id == 12 })
-        XCTAssertTrue(out.done.contains { $0.id == 12 })
-        XCTAssertFalse(open.contains { $0.id == 14 })
-        XCTAssertTrue(open.contains { $0.id == 9 }, "unticked row is open again")
+        XCTAssertTrue(open.contains { $0.id == -1 && $0.text == "Mais" && $0.qty == 3 && $0.pending == true })
+        XCTAssertFalse(open.contains { $0.id == 5 })
+        XCTAssertTrue(out.done.contains { $0.id == 5 })
+        XCTAssertFalse(open.contains { $0.id == 1 })
         XCTAssertEqual(out.open, open.count)
+        // ticking it back puts it into its section again
+        let back = OpQueueLogic.apply([.check(5, on: true), .check(5, on: false)], to: base)
+        XCTAssertTrue(back.sections.first { $0.key == "chilled" }?.items.contains { $0.id == 5 } ?? false)
     }
 
     func testApplyBasket() throws {
-        let out = OpQueueLogic.apply([.basket(13, on: true, storeId: 1)], to: try list())
-        XCTAssertEqual(out.basket.map(\.id), [13])
+        let out = OpQueueLogic.apply([.basket(2, on: true, storeId: 1)], to: try list())
+        XCTAssertEqual(out.basket.map(\.id), [2])
         XCTAssertTrue(out.basket[0].isInBasket)
+        XCTAssertFalse(out.sections.contains { $0.key == "frozen" && $0.items.contains { $0.id == 2 } })
     }
 
     func testAddDoesNotDuplicateWhatIsOpen() throws {
-        let out = OpQueueLogic.apply([.add("vollmilch", localId: -5)], to: try list())
+        let out = OpQueueLogic.apply([.add("milch", localId: -5)], to: try list())
         XCTAssertFalse(out.openItems.contains { $0.id == -5 })
+    }
+
+    func testPendingRowShowsNotSent() throws {
+        let out = OpQueueLogic.apply([.add("Mais", localId: -9)], to: try list())
+        let row = try XCTUnwrap(out.openItems.first { $0.id == -9 })
+        XCTAssertTrue(row.originLine.contains(L("not sent yet")))
     }
 }

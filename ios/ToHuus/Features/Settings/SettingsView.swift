@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var deleting = false
     @State private var error: String?
     @State private var showWeb = false
+    @State private var deletePassword = ""
 
     var body: some View {
         NavigationStack {
@@ -103,10 +104,12 @@ struct SettingsView: View {
             } message: {
                 Text(L("Changes that haven't been sent yet are lost."))
             }
-            .confirmationDialog(L("Delete your account?"), isPresented: $confirmDelete, titleVisibility: .visible) {
+            .alert(L("Delete your account?"), isPresented: $confirmDelete) {
+                SecureField(L("Password"), text: $deletePassword)
                 Button(L("Delete account for good"), role: .destructive) { Task { await deleteAccount() } }
+                Button(L("Cancel"), role: .cancel) { deletePassword = "" }
             } message: {
-                Text(L("Households you are the only admin of are deleted with all their data. Other households keep their data, you just leave them. An active App Store subscription must be cancelled in your Apple Account settings."))
+                Text(L("Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your password. An active App Store subscription must be cancelled in your Apple Account settings."))
             }
             .sheet(isPresented: $showWeb) {
                 if let api = app.api { WebSettingsView(api: api) }
@@ -132,7 +135,8 @@ struct SettingsView: View {
         deleting = true
         defer { deleting = false }
         do {
-            try await app.deleteAccount()
+            try await app.deleteAccount(password: deletePassword)
+            deletePassword = ""
             dismiss()
         } catch {
             self.error = APIError.from(error).localizedDescription

@@ -12,8 +12,10 @@ for d in ["ToHuus", "ToHuusShare", "Shared"]:
             if f.endswith(".swift"):
                 for m in pat.finditer(open(os.path.join(dp, f), encoding="utf-8").read()):
                     keys.add(m.group(1).encode().decode("unicode_escape").encode("latin-1").decode("utf-8"))
-# SignUpView form labels are passed through L(f.1)
-for extra in ["Just me", "The two of us", "Family with children", "Flat share", "I look after someone"]:
+# SignUpView form labels are passed through L(f.1); App Intent titles are LocalizedStringResource literals
+for extra in ["Just me", "The two of us", "Family with children", "Flat share", "I look after someone",
+              "Add to the shopping list", "What", "What should go on the list?", "Put ${item} on the list", "Add to list",
+              "Puts something on your household's ToHuus list, e.g. “2 milk and bread”."]:
     keys.add(extra)
 de = json.load(open(os.path.join(root, "tools", "strings_de.json"), encoding="utf-8"))
 missing = sorted(k for k in keys if k not in de)
@@ -28,3 +30,14 @@ json.dump(out, open(os.path.join(root, "ToHuus", "Resources", "Localizable.xcstr
 print(f"{len(keys)} keys, {len(missing)} without German")
 for k in missing:
     print("MISSING:", json.dumps(k, ensure_ascii=False))
+
+# App Shortcuts phrases (Siri) live in their own catalog
+phrases = {
+    "Add something to the ${applicationName} list": "Setz etwas auf die ${applicationName}-Liste",
+    "Put something on my ${applicationName} list": "Etwas auf die ${applicationName}-Liste setzen",
+}
+ps = {k: {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": k}},
+                                                          "de": {"stringUnit": {"state": "translated", "value": v}}}}
+      for k, v in phrases.items()}
+json.dump({"sourceLanguage": "en", "strings": ps, "version": "1.0"},
+          open(os.path.join(root, "ToHuus", "Resources", "AppShortcuts.xcstrings"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)

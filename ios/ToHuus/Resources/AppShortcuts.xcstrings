@@ -1,0 +1,40 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Add something to the ${applicationName} list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add something to the ${applicationName} list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setz etwas auf die ${applicationName}-Liste"
+          }
+        }
+      }
+    },
+    "Put something on my ${applicationName} list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put something on my ${applicationName} list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwas auf die ${applicationName}-Liste setzen"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

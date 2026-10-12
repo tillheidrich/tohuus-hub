@@ -191,7 +191,8 @@ struct TodayView: View {
                 }
                 ForEach(recent.prefix(4), id: \.stableId) { r in
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(r.name ?? "").font(.subheadline).foregroundStyle(Theme.ink)
+                        Text(r.title).font(.subheadline).foregroundStyle(Theme.ink)
+                            .strikethrough(r.checked == true)
                         Text([r.origin, ServerDate.relative(r.at)].compactMap { $0 }.joined(separator: " · "))
                             .font(.caption).foregroundStyle(Theme.ink3)
                     }
@@ -207,7 +208,13 @@ struct TodayView: View {
                 HStack {
                     Text(i.name).font(.subheadline)
                     Spacer()
-                    if let d = ServerDate.shortDay(i.date) { StatusPill(text: d, status: "expiring") }
+                    if let label = i.label ?? ServerDate.shortDay(i.date) {
+                        if i.kind == "probably" {
+                            Text(label).font(.caption).foregroundStyle(Theme.ink3)
+                        } else {
+                            StatusPill(text: label, status: (i.daysLeft ?? 1) < 0 ? "expired" : "expiring")
+                        }
+                    }
                 }
             }
         }
@@ -223,6 +230,9 @@ struct TodayView: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(cook.title ?? "").font(.headline)
+                    if let why = cook.why, !why.isEmpty {
+                        Text(why.joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink2)
+                    }
                     if cook.missing.isEmpty {
                         Text(L("Everything is at home.")).font(.caption).foregroundStyle(Theme.primaryText)
                     } else {
@@ -252,20 +262,20 @@ struct TodayView: View {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s5) {
                     VStack(alignment: .leading) {
                         Text(L("This week")).font(.caption).foregroundStyle(Theme.ink3)
-                        Text(Money.format(m.week)).font(.title3.weight(.semibold))
+                        Text(Money.format(m.week, currency: m.currency)).font(.title3.weight(.semibold))
                     }
                     VStack(alignment: .leading) {
                         Text(L("This month")).font(.caption).foregroundStyle(Theme.ink3)
-                        Text(Money.format(m.month)).font(.title3.weight(.semibold))
+                        Text(Money.format(m.month, currency: m.currency)).font(.title3.weight(.semibold))
                     }
                     Spacer()
                 }
                 .foregroundStyle(Theme.ink)
-                if let budget = m.budget, budget > 0, let month = m.month {
+                if let budget = m.budgetAmount, budget > 0, let month = m.month {
                     ProgressView(value: min(month / budget, 1)) {
-                        Text(LF("%@ of %@ budget", Money.format(month), Money.format(budget))).font(.caption)
+                        Text(LF("%@ of %@ budget", Money.format(month, currency: m.currency), Money.format(budget, currency: m.currency))).font(.caption)
                     }
-                    .tint(month > budget ? Theme.low : Theme.primary)
+                    .tint(m.budgetState == "over" || month > budget ? Theme.low : (m.budgetState == "near" ? Theme.warning : Theme.primary))
                 }
             }
         }

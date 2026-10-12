@@ -65,6 +65,8 @@ struct ShopItem: Decodable, Sendable, Identifiable, Equatable {
     var section: String?
     var claim: Claim?
     var buyAt: [String]?
+    /// the origin line, already formatted by the server ("Lea · heute 14:05", "merkt sich: alle ~9 Tage")
+    var origin: String?
     /// queued locally, not yet on the server
     var pending: Bool?
 
@@ -86,6 +88,9 @@ struct ShopItem: Decodable, Sendable, Identifiable, Equatable {
 
     /// The origin line under each row (product rule: every row shows where it came from).
     var originLine: String {
+        if let origin, !origin.isEmpty {
+            return pending == true ? origin + " · " + L("not sent yet") : origin
+        }
         var parts: [String] = []
         switch source ?? "manual" {
         case "manual": parts.append(addedBy.map { LF("added by %@", $0) } ?? L("added by hand"))

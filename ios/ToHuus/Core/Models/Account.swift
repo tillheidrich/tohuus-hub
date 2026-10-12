@@ -8,6 +8,7 @@ struct InstanceInfo: Decodable, Sendable {
     var brand: String?
     var lang: String?
     var auth: AuthMethods?
+    var region: JSONValue?
     var signup: Bool?
     var features: Features?
     var legal: Legal?
@@ -17,6 +18,7 @@ struct InstanceInfo: Decodable, Sendable {
         var magicLink: JSONValue?
         var passkey: JSONValue?
         var oidc: JSONValue?
+        var passwordMin: Int?
     }
 
     struct Features: Decodable, Sendable {
@@ -36,6 +38,8 @@ struct InstanceInfo: Decodable, Sendable {
     var assistantEnabled: Bool { features?.assistant?.bool ?? true }
     var voiceEnabled: Bool { features?.voice?.bool ?? false }
     var billingApple: Bool { features?.billingApple?.bool ?? isCloud }
+    /// cloud accounts 10, self-hosted members 8
+    var passwordMin: Int { auth?.passwordMin ?? (isCloud ? 10 : 8) }
 
     /// Fallback for servers that predate /api/instance.
     static let legacySelfHost = InstanceInfo(name: "ToHuus", mode: "selfhost", signup: false)
@@ -46,6 +50,7 @@ struct HouseholdRef: Codable, Sendable, Identifiable, Hashable {
     var name: String?
     var role: String?
     var plan: String?
+    var trialEndsAt: String?
 }
 
 /// POST /api/auth/app and POST /api/cloud/signup (client ios)
@@ -76,7 +81,7 @@ struct CloudMe: Decodable, Sendable {
     var household: JSONValue?
 
     var email: String? { account?["email"]?.string }
-    var verified: Bool { account?.first("verifiedAt", "verified")?.isNull == false }
+    var verified: Bool { account?["verified"]?.bool ?? (account?["verifiedAt"].map { !$0.isNull } ?? false) }
     var allHouseholds: [HouseholdRef] { households.isEmpty ? memberships : households }
 }
 

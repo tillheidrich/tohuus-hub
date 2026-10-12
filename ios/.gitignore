@@ -7,3 +7,5 @@ ToHuusShare/ToHuusShare.entitlements
 build/
 DerivedData/
 *.xcuserstate
+ToHuusWidget/Info.plist
+ToHuusWidget/ToHuusWidget.entitlements

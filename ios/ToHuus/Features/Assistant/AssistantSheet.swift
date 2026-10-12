@@ -10,6 +10,8 @@ final class AssistantModel {
         var text: String
         var actions: [AssistantAction] = []
         var undone: Set<String> = []
+        /// small line under the answer: fair-use throttling, few messages left
+        var note: String?
     }
 
     var messages: [Message] = []
@@ -51,7 +53,10 @@ final class AssistantModel {
 
     private func receive(_ r: ChatResponse, store: ServerStore) {
         if let c = r.conversationId { conversationId = c.value }
-        messages.append(Message(fromUser: false, text: r.reply ?? "", actions: r.actions))
+        var note: String?
+        if r.throttled == true { note = L("Lots going on this month – answers are a little shorter for now.") }
+        else if let left = r.remaining, left <= 5 { note = LF("%d assistant messages left this month.", left) }
+        messages.append(Message(fromUser: false, text: r.reply ?? "", actions: r.actions, note: note))
         if !r.actions.isEmpty {
             Haptics.success()
             store.touch("shopping", "stock", "recipes")
@@ -121,6 +126,13 @@ struct AssistantSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        #if DEBUG
+        .task {
+            if let m = UserDefaults.standard.string(forKey: "debugAssistantMessage"), model.messages.isEmpty {
+                await model.send(m, store: store)
+            }
+        }
+        #endif
     }
 
     private var intro: some View {
@@ -143,6 +155,7 @@ struct AssistantSheet: View {
             if m.fromUser { Spacer(minLength: 40) }
             VStack(alignment: .leading, spacing: 6) {
                 Text(m.text).font(.body).foregroundStyle(m.fromUser ? Theme.onPrimary : Theme.ink)
+                if let note = m.note { Text(note).font(.caption).foregroundStyle(Theme.ink3) }
                 ForEach(m.actions) { a in
                     HStack(spacing: 6) {
                         Image(systemName: m.undone.contains(a.id) ? "arrow.uturn.backward" : "checkmark.circle")

@@ -7,6 +7,8 @@ enum APIError: Error, LocalizedError, Equatable {
     case unauthorized
     /// assistant quota or plan limit reached (402, or an error flagged as quota)
     case quota(String)
+    /// 413 storage.full – the household's storage quota is used up (nothing is deleted)
+    case storageFull(String)
     /// 404 – usually an endpoint the server does not have yet
     case notFound
     case server(status: Int, message: String)
@@ -18,6 +20,7 @@ enum APIError: Error, LocalizedError, Equatable {
         case .offline: return L("No connection right now. ToHuus keeps your changes and sends them later.")
         case .unauthorized: return L("You have been signed out. Please sign in again.")
         case .quota(let m): return m.isEmpty ? L("This month's assistant messages are used up.") : m
+        case .storageFull(let m): return m.isEmpty ? L("Your household's storage is full. Nothing was deleted – free up space or choose a bigger plan.") : m
         case .notFound: return L("This server doesn't know that yet. Is it up to date?")
         case .server(_, let m): return m
         case .decoding: return L("The server answered in a way the app doesn't understand yet.")

@@ -2,10 +2,10 @@ import SwiftUI
 import WebKit
 
 /// Rare settings live in the web app. A bearer token can't become a browser cookie by itself, so:
-/// 1. If the server offers `POST /api/auth/app/web-link` (one-time sign-in link for the signed-in device), the web view
-///    opens that link and is signed in at once.
-/// 2. Otherwise the web view opens the server and the person signs in there once; the cookie stays in the app's
-///    persistent WKWebsiteDataStore, so it is a one-time step.
+/// 1. `POST /api/auth/app/web-link { next }` → `{ url, expiresIn: 60 }`: a one-time link (60 s, single use) that turns
+///    the app token into a cookie session for the same member and household and redirects to `next`.
+/// 2. Older servers without it: the web view opens the server and the person signs in there once; the cookie stays
+///    in the app's persistent WKWebsiteDataStore.
 /// A WKWebView (not ASWebAuthenticationSession) keeps the person inside the app and needs no callback scheme.
 struct WebSettingsView: View {
     let api: APIClient
@@ -25,7 +25,7 @@ struct WebSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
             .task {
-                url = await api.webSignInLink() ?? (try? api.url("einstellungen")) ?? api.baseURL
+                url = await api.webSignInLink(next: "/einstellungen") ?? (try? api.url("einstellungen")) ?? api.baseURL
             }
         }
     }

@@ -10,7 +10,7 @@ options:
   developmentLanguage: en
 settings:
   base:
-    TOHUUS_TEAM_ID: ""            # placeholder – fill in on the Mac (Apple Developer team id)
+    TOHUUS_TEAM_ID: "FVS7WVTQ67"  # Till Heidrich (Individual) – same team as Equilo
     DEVELOPMENT_TEAM: "$(TOHUUS_TEAM_ID)"
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "0.1.0"
@@ -32,6 +32,8 @@ targets:
     dependencies:
       - target: ToHuusShare
         embed: true
+      - target: ToHuusWidget
+        embed: true
       - sdk: StoreKit.framework
       - sdk: VisionKit.framework
       - sdk: Speech.framework
@@ -46,6 +48,8 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIRequiresFullScreen: true
         ITSAppUsesNonExemptEncryption: false
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true   # http://localhost and LAN addresses for self-hosted servers / development
         CFBundleURLTypes:
           - CFBundleURLName: de.heidrichdigital.tohuus
             CFBundleURLSchemes: [tohuus]
@@ -101,6 +105,38 @@ targets:
         INFOPLIST_FILE: ToHuusShare/Info.plist
         GENERATE_INFOPLIST_FILE: false
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) SHARE_EXTENSION"
+        APPLICATION_EXTENSION_API_ONLY: true
+  ToHuusWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ToHuusWidget
+      - path: Shared
+      - path: ToHuus/Resources/Localizable.xcstrings
+      - path: ToHuus/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: ToHuusWidget/Info.plist
+      properties:
+        CFBundleDisplayName: ToHuus
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [de, en]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: ToHuusWidget/ToHuusWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.de.heidrichdigital.tohuus
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus.widget
+        INFOPLIST_FILE: ToHuusWidget/Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) WIDGET_EXTENSION"
         APPLICATION_EXTENSION_API_ONLY: true
   ToHuusTests:
     type: bundle.unit-test

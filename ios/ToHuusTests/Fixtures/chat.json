@@ -1,3 +1,1 @@
-{ "conversationId": 17, "reply": "Milch steht auf der Liste. Für Sonntag hätte ich Pfannkuchen.", "actions": [
-  { "kind": "list.add", "summary": "Milch auf die Liste", "undo": { "op": "list.remove", "id": 12 } },
-  { "kind": "plan.add", "summary": "Pfannkuchen für Sonntag geplant" } ] }
+{"conversationId":"a09d8fe5-597a-42c9-8daf-d7aedc235414","reply":"Milch und 2× Paprika – steht auf der Liste.","actions":[{"kind":"list_add","summary":"2× Paprika auf die Liste gesetzt","undo":"cbf09c3f21f3f8162567d5ecf371f288"}],"mode":"basic"}

@@ -282,7 +282,7 @@ struct ShoppingView: View {
         let openIds = Set(store.list.openItems.compactMap(\.productId))
         let today = ServerDate.day()
         suggestions = all.filter { r in
-            !openIds.contains(r.productId) && (r.suggested?.bool ?? ((r.dueOn ?? "9999") <= today))
+            !openIds.contains(r.productId) && r.onList != true && r.muted != true && (r.suggested ?? ((r.dueOn ?? "9999") <= today))
         }
         .prefix(10).map { $0 }
     }

@@ -20,23 +20,44 @@ struct TodayPayload: Decodable, Sendable {
 
     struct RecentChange: Decodable, Sendable, Identifiable {
         var id: FlexID?
+        var text: String?
         var name: String?
+        var qty: Double?
+        var checked: Bool?
         var origin: String?
         var at: String?
-        var stableId: String { id?.value ?? "\(name ?? "")-\(at ?? "")" }
+        var stableId: String { id?.value ?? "\(title)-\(at ?? "")" }
+        var title: String {
+            let n = text ?? name ?? ""
+            guard let q = qty, q != 1 else { return n }
+            return (q.rounded() == q ? "\(Int(q))× " : "\(q)× ") + n
+        }
     }
 
     struct CookToday: Decodable, Sendable {
+        /// planned | ready | almost
+        var kind: String?
         var recipeId: Int?
+        var planId: Int?
         var title: String?
         var image: String?
+        var timeMin: Double?
         @Lossy var missing: [NameItem]
+        var probablyHave: [String]?
+        var usesExpiring: [String]?
+        var why: [String]?
     }
 
     struct TodayMoney: Decodable, Sendable {
+        var currency: String?
         var week: Double?
         var month: Double?
-        var budget: Double?
+        /// { amount, spent, left, state } (a plain number is accepted too)
+        var budget: JSONValue?
+
+        var budgetAmount: Double? { budget?.double ?? budget?["amount"]?.double }
+        var budgetLeft: Double? { budget?["left"]?.double }
+        var budgetState: String? { budget?["state"]?.string }
     }
 }
 
@@ -44,16 +65,26 @@ struct TodayPayload: Decodable, Sendable {
 struct RhythmItem: Decodable, Sendable, Identifiable, Hashable {
     var productId: Int
     var name: String
+    var image: String?
     var everyDays: Double?
+    var spread: Double?
     var lastBought: String?
     var dueOn: String?
+    /// negative = overdue
+    var dueInDays: Int?
     var confidence: String?
     var origin: String?
-    var suggested: JSONValue?
+    var suggested: Bool?
+    var onList: Bool?
+    var muted: Bool?
+    var count: Int?
+    /// "alle ~5 Tage · zuletzt Mittwoch" – already in the household language
+    var label: String?
 
     var id: Int { productId }
 
     var detail: String {
+        if let label, !label.isEmpty { return label }
         var parts: [String] = []
         if let d = everyDays, d > 0 { parts.append(LF("about every %d days", Int(d.rounded()))) }
         if let last = ServerDate.relative(lastBought) { parts.append(LF("last bought %@", last)) }
@@ -74,6 +105,12 @@ struct StillHaveItem: Decodable, Sendable, Identifiable, Hashable {
     var date: String?
     var qty: Double?
     var place: String?
+    /// expiring | leftover | probably
+    var kind: String?
+    var daysLeft: Int?
+    /// "noch 1 Tag", "bald essen", "gekauft am Dienstag" – in the household language
+    var label: String?
+    var image: String?
     var id: String { "\(productId ?? 0)-\(name)" }
 
     init(from decoder: Decoder) throws {
@@ -87,9 +124,13 @@ struct StillHaveItem: Decodable, Sendable, Identifiable, Hashable {
         }
         name = n
         productId = c.first(Int.self, "productId", "id")
-        date = c.first(String.self, "date", "expires", "expiresOn", "bestBefore", "nextExpiry", "until", "useBy")
+        date = c.first(String.self, "useBy", "date", "expires", "expiresOn", "bestBefore", "nextExpiry", "until")
         qty = c.first(Double.self, "qty", "total", "amount")
         place = c.first(String.self, "place", "location", "where")
+        kind = c.first(String.self, "kind")
+        daysLeft = c.first(Int.self, "daysLeft")
+        label = c.first(String.self, "label")
+        image = c.first(String.self, "image", "imagePath")
     }
 }
 
@@ -281,6 +322,7 @@ struct CookIdea: Decodable, Sendable, Identifiable, Hashable {
     var need: Int?
     var timeMin: Double?
     var reasons: [String]
+    var probablyHave: [String] = []
     var id: Int { recipeId }
 
     init(recipeId: Int, title: String, image: String? = nil, missing: [NameItem] = [], have: Int? = nil, need: Int? = nil,
@@ -309,16 +351,18 @@ struct CookIdea: Decodable, Sendable, Identifiable, Hashable {
         have = c.first(Int.self, "have")
         need = c.first(Int.self, "need")
         timeMin = c.first(Double.self, "timeMin") ?? nested?.first(Double.self, "timeMin")
-        reasons = c.first([String].self, "reasons", "why") ?? []
+        reasons = c.first([String].self, "why", "reasons") ?? []
+        probablyHave = c.first([String].self, "probablyHave") ?? []
     }
 
     static func == (a: CookIdea, b: CookIdea) -> Bool { a.recipeId == b.recipeId }
     func hash(into h: inout Hasher) { h.combine(recipeId) }
 }
 
-/// GET /api/cook/ideas: an array or { ideas: [...] }
+/// GET /api/cook/ideas → { ready, almost, probablyAtHome } (an array or { ideas } is accepted too)
 struct CookIdeasResponse: Decodable, Sendable {
     var ideas: [CookIdea]
+    var probablyAtHome: [String] = []
     init(ideas: [CookIdea]) { self.ideas = ideas }
     init(from decoder: Decoder) throws {
         if (try? decoder.unkeyedContainer()) != nil {
@@ -326,11 +370,16 @@ struct CookIdeasResponse: Decodable, Sendable {
             return
         }
         let c = try decoder.container(keyedBy: AnyKey.self)
-        for key in ["ideas", "items", "now", "recipes"] {
+        probablyAtHome = c.first([String].self, "probablyAtHome") ?? []
+        if c.contains(AnyKey("ready")) || c.contains(AnyKey("almost")) {
+            let ready = (try? c.decode(Lossy<CookIdea>.self, forKey: AnyKey("ready")).wrappedValue) ?? []
+            let almost = (try? c.decode(Lossy<CookIdea>.self, forKey: AnyKey("almost")).wrappedValue) ?? []
+            ideas = ready + almost
+            return
+        }
+        for key in ["ideas", "items", "recipes"] {
             if let v = try? c.decode(Lossy<CookIdea>.self, forKey: AnyKey(key)), !v.wrappedValue.isEmpty {
-                var all = v.wrappedValue
-                if key == "now", let more = try? c.decode(Lossy<CookIdea>.self, forKey: AnyKey("almost")) { all += more.wrappedValue }
-                ideas = all
+                ideas = v.wrappedValue
                 return
             }
         }
@@ -376,6 +425,9 @@ struct MoneyOverview: Decodable, Sendable {
     var priceChanges: [PriceChange] = []
     var hints: [Notice] = []
     var currency: String?
+    var budgetLeft: Double?
+    var budgetState: String?
+    var historyLimited = false
 
     struct Amount: Sendable, Identifiable, Hashable {
         var label: String
@@ -400,7 +452,7 @@ struct MoneyOverview: Decodable, Sendable {
             before = c.first(Double.self, "before", "from", "old", "was", "previous", "prev")
             after = c.first(Double.self, "after", "to", "now", "new", "current", "price")
             pct = c.first(Double.self, "pct", "percent", "changePct", "change", "deltaPct")
-            shop = c.first(String.self, "shop", "store")
+            shop = c.first(String.self, "shop", "store") ?? c.first([String].self, "shops")?.joined(separator: ", ")
             if pct == nil, let b = before, let a = after, b > 0 { pct = (a - b) / b * 100 }
         }
     }
@@ -412,7 +464,12 @@ struct MoneyOverview: Decodable, Sendable {
         month = c.first(String.self, "month")
         total = c.first(Double.self, "total", "spent", "sum")
         budget = c.first(Double.self, "budget")
-        if budget == nil, let b = c.first(JSONValue.self, "budget") { budget = b.first("amount", "limit", "value")?.double }
+        if budget == nil, let b = c.first(JSONValue.self, "budget") {
+            budget = b.first("amount", "limit", "value")?.double
+            budgetLeft = b["left"]?.double
+            budgetState = b["state"]?.string
+        }
+        historyLimited = c.first(Bool.self, "historyLimited") ?? false
         currency = c.first(String.self, "currency")
         byCategory = Self.amounts(c.first(JSONValue.self, "byCategory", "categories"))
         byShop = Self.amounts(c.first(JSONValue.self, "byShop", "shops", "byStore", "stores"))
@@ -454,12 +511,19 @@ struct ChatResponse: Decodable, Sendable {
     /// voice: what was understood
     var text: String?
     var transcript: String?
+    /// ai | basic
+    var mode: String?
+    /// assistant messages left this month (nil = unlimited)
+    var remaining: Int?
+    /// Plus fair use: answered, but shorter
+    var throttled: Bool?
 }
 
 struct AssistantAction: Decodable, Sendable, Identifiable, Hashable {
     var kind: String?
     var summary: String?
-    var undo: JSONValue?
+    /// undo token (32 hex), valid 24 hours for the person who caused the action
+    var undo: String?
     var id: String { (kind ?? "") + (summary ?? "") }
 }
 

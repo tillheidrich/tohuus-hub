@@ -1,4 +1,1 @@
-{ "name": "ToHuus Cloud", "mode": "cloud", "version": "0.9.0", "brand": "tohuus", "lang": "de", "region": "DE",
-  "auth": { "password": true, "magicLink": true, "passkey": true, "oidc": false }, "signup": true,
-  "features": { "assistant": true, "voice": true, "receiptsAi": true, "billingApple": true },
-  "legal": { "privacy": "https://tohuus.heidrich-digital.de/datenschutz", "terms": null, "imprint": "https://tohuus.heidrich-digital.de/impressum" } }
+{"name":"ToHuus Cloud","mode":"cloud","version":"0.1.0","brand":"tohuus","lang":"en","region":"GB","auth":{"password":true,"passwordMin":10,"magicLink":false,"passkey":false,"oidc":false},"signup":true,"features":{"assistant":false,"voice":false,"receiptsAi":false,"billingApple":true},"legal":{"privacy":null,"terms":null,"imprint":null}}

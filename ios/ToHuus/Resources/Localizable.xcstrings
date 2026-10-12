@@ -69,6 +69,23 @@
         }
       }
     },
+    "%d assistant messages left this month.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d assistant messages left this month."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %d Nachrichten an den Assistenten diesen Monat."
+          }
+        }
+      }
+    },
     "%d at home": {
       "extractionState": "manual",
       "localizations": {
@@ -422,6 +439,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bon hinzufügen"
+          }
+        }
+      }
+    },
+    "Add to list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf die Liste"
+          }
+        }
+      }
+    },
+    "Add to the shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to the shopping list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf die Liste setzen"
           }
         }
       }
@@ -1480,19 +1531,19 @@
         }
       }
     },
-    "Households you are the only admin of are deleted with all their data. Other households keep their data, you just leave them. An active App Store subscription must be cancelled in your Apple Account settings.": {
+    "Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your password. An active App Store subscription must be cancelled in your Apple Account settings.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Households you are the only admin of are deleted with all their data. Other households keep their data, you just leave them. An active App Store subscription must be cancelled in your Apple Account settings."
+            "value": "Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your password. An active App Store subscription must be cancelled in your Apple Account settings."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Haushalte, in denen nur du Admin bist, werden mit allen Daten gelöscht. Andere Haushalte behalten ihre Daten, du trittst nur aus. Ein laufendes App-Store-Abo kündigst du in den Einstellungen deines Apple Accounts."
+            "value": "Haushalte, zu denen nur du gehörst, werden mit allen Daten gelöscht. Aus gemeinsamen Haushalten trittst du nur aus – die anderen behalten alles. Bestätige mit deinem Passwort. Ein laufendes App-Store-Abo kündigst du in den Einstellungen deines Apple Accounts."
           }
         }
       }
@@ -1748,6 +1799,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ich höre zu …"
+          }
+        }
+      }
+    },
+    "Lots going on this month – answers are a little shorter for now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lots going on this month – answers are a little shorter for now."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Monat ist viel los – die Antworten fallen gerade etwas kürzer aus."
           }
         }
       }
@@ -2092,6 +2160,23 @@
         }
       }
     },
+    "No connection – “%@” will be sent as soon as you're online.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection – “%@” will be sent as soon as you're online."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Verbindung – „%@“ wird gesendet, sobald du wieder online bist."
+          }
+        }
+      }
+    },
     "No ideas yet.": {
       "extractionState": "manual",
       "localizations": {
@@ -2224,6 +2309,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nichts geplant"
+          }
+        }
+      }
+    },
+    "Nothing was added.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was added."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es wurde nichts hinzugefügt."
           }
         }
       }
@@ -2466,19 +2568,19 @@
         }
       }
     },
-    "Password (at least 8 characters)": {
+    "Password (at least %d characters)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Password (at least 8 characters)"
+            "value": "Password (at least %d characters)"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Passwort (mindestens 8 Zeichen)"
+            "value": "Passwort (mindestens %d Zeichen)"
           }
         }
       }
@@ -2717,6 +2819,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wahrscheinlich fällig"
+          }
+        }
+      }
+    },
+    "Put ${item} on the list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put ${item} on the list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${item} auf die Liste setzen"
+          }
+        }
+      }
+    },
+    "Puts something on your household's ToHuus list, e.g. “2 milk and bread”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puts something on your household's ToHuus list, e.g. “2 milk and bread”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setzt etwas auf eure ToHuus-Liste, z. B. „2 Milch und Brot“."
           }
         }
       }
@@ -4115,6 +4251,23 @@
         }
       }
     },
+    "What": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was"
+          }
+        }
+      }
+    },
     "What shall we cook?": {
       "extractionState": "manual",
       "localizations": {
@@ -4128,6 +4281,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was kochen wir?"
+          }
+        }
+      }
+    },
+    "What should go on the list?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should go on the list?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was soll auf die Liste?"
           }
         }
       }
@@ -4349,6 +4519,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan eures Haushalts"
+          }
+        }
+      }
+    },
+    "Your household's storage is full. Nothing was deleted – free up space or choose a bigger plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household's storage is full. Nothing was deleted – free up space or choose a bigger plan."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Speicher eures Haushalts ist voll. Gelöscht wurde nichts – mach Platz oder wähl einen größeren Plan."
           }
         }
       }
@@ -5148,6 +5335,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wunsch von %@"
+          }
+        }
+      }
+    },
+    "“%@” is on the list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is on the list."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ steht auf der Liste."
           }
         }
       }

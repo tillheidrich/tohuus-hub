@@ -57,7 +57,10 @@ final class APIClient: Sendable {
         if (200..<300).contains(status) { return data }
         let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         let message = (obj?["error"] as? String) ?? (obj?["message"] as? String) ?? HTTPURLResponse.localizedString(forStatusCode: status)
-        let isQuota = status == 402 || (obj?["quota"] as? Bool) == true || (obj?["code"] as? String)?.contains("quota") == true
+        let code = (obj?["code"] as? String) ?? (obj?["key"] as? String) ?? ""
+        // 402 quota.assistant, 429 quota.receiptAi (docs/assistant.md "Limits")
+        let isQuota = status == 402 || (obj?["quota"] as? Bool) == true || code.hasPrefix("quota")
+        if status == 413 || code == "storage.full" { throw APIError.storageFull(message) }
         switch status {
         case 401 where token != nil:
             onUnauthorized()
@@ -118,11 +121,13 @@ final class APIClient: Sendable {
         return try decode(T.self, from: data)
     }
 
-    /// Image paths from the server: absolute URLs, "/img/…" or a bare file name under /img/.
+    /// Image paths from the server: absolute URLs, "/img/…?h=…&e=…&s=…" (signed for bearer clients – the query must
+    /// survive) or a bare file name under /img/.
     func imageURL(_ path: String?) -> URL? {
         guard let path, !path.isEmpty else { return nil }
         if path.hasPrefix("http://") || path.hasPrefix("https://") { return URL(string: path) }
-        if path.hasPrefix("/") { return try? url(path) }
-        return try? url("img/" + path)
+        var base = baseURL.absoluteString
+        while base.hasSuffix("/") { base.removeLast() }
+        return URL(string: base + (path.hasPrefix("/") ? path : "/img/" + path))
     }
 }
