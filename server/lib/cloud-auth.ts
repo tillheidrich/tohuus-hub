@@ -41,7 +41,7 @@ const bearerOf = (req: Request): string | null => {
 };
 
 /** Every string in the path, the query and the top level of a JSON body that carries a household routing prefix. */
-function prefixedSlugs(req: Request): string[] {
+function prefixedSlugs(req: Request, includeBody: boolean): string[] {
   const out = new Set<string>();
   const look = (v: unknown) => {
     if (typeof v !== 'string' || v.length > 300) return;
@@ -56,7 +56,8 @@ function prefixedSlugs(req: Request): string[] {
     }
   }
   for (const v of Object.values(req.query ?? {})) (Array.isArray(v) ? v : [v]).forEach(look);
-  if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) for (const v of Object.values(req.body)) look(v);
+  // only for requests without a session: a member's own text must never re-route their request
+  if (includeBody && req.body && typeof req.body === 'object' && !Array.isArray(req.body)) for (const v of Object.values(req.body)) look(v);
   return [...out];
 }
 
@@ -112,12 +113,12 @@ export function cloudContext(req: Request, res: Response, next: NextFunction) {
       if (h) ctx = { id: h.id, via: 'token-prefix' };
     } else {
       // 2b/3. tokens in the URL or body, signed image URLs
-      const slugs = prefixedSlugs(req);
+      // 4. cookie session
+      const sess = sessionByToken(req.cookies?.[SESSION_COOKIE]);
+      const slugs = prefixedSlugs(req, !sess);
       const hs = typeof req.query.h === 'string' && req.path.startsWith('/img/') ? req.query.h : null;
       if (hs) slugs.push(hs);
       const homes = [...new Set(slugs.map((s) => householdBySlug(s)?.id).filter((x): x is string => Boolean(x)))];
-      // 4. cookie session
-      const sess = sessionByToken(req.cookies?.[SESSION_COOKIE]);
       let m = sess ? pickHousehold(sess.account_id, null, sess.household_id) : null;
       if (homes.length === 1) {
         ctx = { id: homes[0], via: 'token-prefix' };

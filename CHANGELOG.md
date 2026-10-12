@@ -4,7 +4,17 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+### Added
+
+- **ToHuus Cloud** (`MULTI_TENANT=true`, [docs/cloud.md](docs/cloud.md)): many households in one instance, one SQLCipher-encrypted database per household (`households/<uuid>/tohuus.db`), envelope encryption (master key from the environment, per-household data key wrapped in `accounts.db`, crypto-shredding on delete), a household context per request and job, per-household caches, live updates and scheduler runs, an accounts directory with sessions, memberships and app tokens, signup with a 14-day Plus trial, invitations that create memberships, account and household deletion, export, nightly encrypted backups with 7 daily + 4 weekly copies and optional S3 upload, a restore drill (`dist/restore-check.mjs`). Network features that reach into a home (HA REST, printers, IMAP, Telegram polling, Cookidoo, restore from file) are off in the cloud, and outbound requests cannot reach private addresses.
+- **Plans and quotas** (`server/lib/plans.ts`): Free / Haushalt / Plus / trial / self-hosted entitlements, `consume()` for assistant messages, uploads and receipt reads, a storage quota per household (Free 250 MB, Haushalt 2 GB, Plus 5 GB; self-hosted unlimited or `STORAGE_QUOTA_MB`) enforced on every upload with HTTP 413, `GET /api/billing/status`, Apple StoreKit 2 transactions and App Store Server Notifications v2 verified against the Apple Root CA G3.
+- **`GET /api/instance`** and **app tokens** (`POST /api/auth/app`, `GET/DELETE /api/auth/app/devices`) for the iPhone app, in both modes: a device token acts exactly as its member.
+- **Encryption for self-hosted installs**: `DB_ENCRYPTION_KEY` encrypts the database, photos and backups; an existing plain database is converted once on start (verified per table, the plain original kept next to it until the admin deletes it).
+
 ### Changed
+
+- **Photos need authentication**: `/img/…` answers only signed-in members, app/API tokens and short-lived signed URLs. Guest links, displays, kid tablets, Home Assistant, MCP and the apps get signed URLs automatically.
+- The SQLite driver is now `better-sqlite3-multiple-ciphers` (installed as `better-sqlite3`, drop-in).
 
 - **Swedish removed as UI language; region Sweden stays.** The app, notifications and demo data are English or German. The region Sweden (SEK, Swedish receipts from ICA, Coop, Willys and others, Swedish product names from Open Food Facts, Swedish stores in store mode) is unchanged. A household that ran in Swedish switches to English on update (migration `lang-sv-removed-1`), and its base places and categories that still carry their Swedish default names get their English names back; renamed places, products and recipes stay as they are.
 

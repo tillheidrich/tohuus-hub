@@ -1,0 +1,139 @@
+# ToHuus Cloud – operations
+
+ToHuus Cloud is the same image as the self-hosted ToHuus Hub, started with `MULTI_TENANT=true`. It holds many
+households; each one has its own encrypted SQLite database. This page is for whoever runs the cloud instance.
+The binding product and API contract is [plan-2026-10-12.md](plan-2026-10-12.md); the code map is
+[architecture.md](architecture.md).
+
+## How it is built
+
+```
+DATA_DIR/
+  accounts.db                     accounts, households, memberships, sessions, app tokens, billing, usage (encrypted)
+  households/<uuid>/tohuus.db     one household (encrypted with its own key)
+  households/<uuid>/images/       photos, AES-256-GCM per file
+  households/<uuid>/imports/      receipt files, AES-256-GCM per file
+  backups/<uuid>/                 nightly VACUUM INTO copies (encrypted like the database)
+  backups/_accounts/              nightly copies of accounts.db
+```
+
+- **Household context.** Every request and background job runs inside one household (`AsyncLocalStorage`,
+  `server/lib/tenancy.ts`). `db` from `server/db.ts` resolves to that household's connection from an LRU pool
+  (`HOUSEHOLD_POOL_MAX`, default 64; idle handles close after `HOUSEHOLD_POOL_IDLE_MIN` minutes). Without a
+  context every database access throws, and protected routes answer 401 – the system fails closed.
+- **Which household?** `server/lib/cloud-auth.ts`, in this order: app token (`Authorization: Bearer sw_app_…`,
+  household from `X-Household` or the one used last) → a household token in header, path, query or (without a
+  session) body → a signed image URL → the cookie session's active household. Household tokens (guest links,
+  displays, invites, HA/MCP tokens, list tokens, QR labels, kid tablets …) start with the household's routing
+  prefix `h<10 chars>_`; the token itself is still checked (hashed) inside that household, so a forged prefix finds
+  nothing.
+- **Migrations** (`migrate(name, sql)` and the numbered core ones) are registered at start-up and applied to
+  every household database when it is opened.
+- **Module state** that holds household data is kept per household (`perHousehold`, `ScopedMap`, `ScopedSet`);
+  background queues remember the household of each entry; server-sent events are per household.
+- **Accounts**: e-mail + scrypt password, e-mail links. A membership maps an account to a `users.id` inside the
+  household database, so every feature sees the same `Actor` as in self-host.
+
+## Environment
+
+| Variable | Required | Meaning |
+|---|---|---|
+| `MULTI_TENANT=true` | yes | cloud mode |
+| `TOHUUS_MASTER_KEY` | yes | 32 random bytes, base64 (`openssl rand -base64 32`). Environment only – never on the data volume. Without it the server refuses to start. |
+| `BASE_URL` | yes | public URL of the cloud (links, signed image URLs, passkey RP-ID later) |
+| `DATA_DIR` | – | default `./data` (`/data` in the image) |
+| `SMTP_*` | recommended | verification, sign-in and reset mails |
+| `CLOUD_SIGNUP=false` | – | close signups (existing accounts keep working) |
+| `CLOUD_NAME` | – | name in `/api/instance` (default "ToHuus Cloud") |
+| `HOUSEHOLD_POOL_MAX`, `HOUSEHOLD_POOL_IDLE_MIN` | – | connection pool (64, 10) |
+| `SSE_MAX_TOTAL` | – | live-update connections over all households (5000; 200 per household) |
+| `LEGAL_PRIVACY_URL`, `LEGAL_TERMS_URL`, `LEGAL_IMPRINT_URL` | – | shown by the apps via `/api/instance` |
+| `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
+| `APPLE_ENVIRONMENTS` | – | accepted StoreKit environments, default `Production,Sandbox` (TestFlight is Sandbox) |
+| `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_PREFIX` | – | off-site copy of every nightly backup (S3-compatible, e.g. Hetzner Object Storage `https://fsn1.your-objectstorage.com`) |
+| `AI_*` | – | assistant (see the plan; owned by the assistant work) |
+
+`ADMIN_NAME`/`ADMIN_PASSWORD`, `SEED_DEMO`, `MCP_PATH_SECRET`, `OIDC_*` and `DB_ENCRYPTION_KEY` are self-host only
+and ignored in the cloud.
+
+## Keys
+
+- `TOHUUS_MASTER_KEY` → HKDF-SHA256 → `accounts` (SQLCipher key of accounts.db) and `dek-wrap` (wraps the
+  household keys).
+- Each household has a random 256-bit data key (DEK), stored in `accounts.db` wrapped with AES-256-GCM (the
+  household uuid is bound in as additional data). From the DEK: `db` (SQLCipher key), `files` (images/receipt
+  files), `img-sign` (signed image URLs).
+- Keep the master key in the deployment's secret store **and** offline (password manager, printed in a safe).
+  Losing it makes every household unreadable, backups included.
+- Rotating the master key is not automated yet: it means re-wrapping every `wrapped_dek` and re-keying
+  `accounts.db` (`PRAGMA rekey`) in one maintenance window.
+
+## Backups and restore
+
+- Nightly from 03:00 (`TZ`): `accounts.db` and every household that changed since its last backup are copied with
+  `VACUUM INTO` (stays encrypted). Retention 7 daily + 4 weekly per household. With `BACKUP_S3_*` each new file is
+  uploaded to `<prefix>/<uuid>/<file>` and `<prefix>/_accounts/<file>`.
+- Images and receipt files are not inside the database copies – back up the volume (or replicate
+  `DATA_DIR/households/*/images|imports`) as well. They are encrypted files; the same keys apply.
+- **Restore drill** (do it monthly): `DATA_DIR=/data TOHUUS_MASTER_KEY=… node dist/restore-check.mjs`
+  opens the newest accounts backup and a random household backup with the keys and runs `PRAGMA integrity_check`
+  (exit code 0 = fine). Pass a household uuid (and a file) to check a specific one. In development:
+  `npm run restore-check`.
+- **Restoring one household**: stop the instance (or make sure the household is not open), move
+  `households/<uuid>/tohuus.db` (and `-wal`, `-shm`) aside, copy the backup file to `households/<uuid>/tohuus.db`,
+  start again. The household key is unchanged, so the backup opens as it is.
+- **Restoring accounts.db**: same procedure with `DATA_DIR/accounts.db`. Households created after that backup lose
+  their directory entry (and with it their key) – restore accounts.db only together with a fresh copy of all
+  wrapped keys, or replay the newer rows by hand.
+- Restore from an uploaded file (the self-host *Settings › Backups* screen) is off in the cloud.
+
+## Adding a household
+
+Normally through the apps: `POST /api/cloud/signup` (new account + household, 14-day trial at Plus level) or
+`POST /api/cloud/households` (another household for a signed-in account). The database is created on first open
+with the form-based defaults (name, language, region, household form). There is no admin back office yet; for a
+manual household use the same endpoint with a session.
+
+## Deleting
+
+- `DELETE /api/cloud/households/:id` (admin of that household, body `{ confirm: "<household name>" }`):
+  crypto-shredding first (the wrapped key is set to NULL in the same transaction that removes memberships and
+  detaches sessions/tokens), then the folder and its backups are removed.
+- `DELETE /api/cloud/account` (body `{ password }` or `{ confirm: "<e-mail>" }`): households the account has to
+  itself are shredded; in shared households the person leaves (if they were the last admin, the longest member
+  becomes admin). Required by App Store guideline 5.1.1(v).
+- Off-site copies in S3 are encrypted with the destroyed key; let the bucket's lifecycle rule expire them (set one,
+  e.g. 60 days).
+
+## What is off in the cloud
+
+| Feature | Why |
+|---|---|
+| Home Assistant REST fallback, HA to-do REST sync, Cookidoo pull | reach into the household's network; the HACS integration (polling + SSE) and MCP keep working |
+| any outbound request to private/internal addresses | a global dispatcher blocks them at connect time (HA, webhooks, Matrix, Gotify …) |
+| network printers (ESC/POS over TCP) | LAN only |
+| Telegram long polling | one poller per household does not scale; webhook routing is not built yet |
+| IMAP receipt inbox | per-household mailbox polling |
+| restore from file, WebDAV backup settings | replaced by the cloud backups |
+| `ADMIN_PASSWORD`, demo seeding at start, `MCP_PATH_SECRET`, OIDC | instance-wide, no household |
+| household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead |
+
+Kept: guest links, displays, kid tablets, party board, web push, MCP with household tokens, the HACS integration,
+exports (`GET /api/cloud/export`, needs a confirmed e-mail).
+
+## Plans and quotas
+
+`server/lib/plans.ts` (exact limits there and in the plan doc): Free 250 MB / 60 days history / 20 assistant
+messages a month, Haushalt 2 GB / full history / 100, Plus 5 GB / 1 500 (throttled, not blocked), trial = Plus.
+Storage counts the household's files on every write/delete plus the database size; it is recounted nightly.
+Over quota, uploads get HTTP 413 with `key: "storage.full"`; nothing is deleted. Apple purchases arrive through
+`POST /api/billing/apple/transaction` (from the app) and `POST /api/billing/apple/notifications` (App Store Server
+Notifications v2 – set this URL in App Store Connect). Both verify the JWS chain to the embedded Apple Root CA G3.
+
+## Known gaps (TODO)
+
+- Passkeys for cloud accounts (one RP-ID = the cloud host) are not wired yet; the endpoints answer 404.
+- The magic link signs in the browser that opens it (no cross-device code confirmation as in self-host).
+- Images are not part of the nightly database copies; no S3 copy of images yet.
+- No admin back office (support lookups, manual plan changes) – use accounts.db with the master key.
+- Master key rotation is manual (see Keys).

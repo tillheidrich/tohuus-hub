@@ -11,6 +11,7 @@ import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, localDay, matchProduct, stockOf } from './catalog.js';
 import { notify } from './notify.js';
+import { tokenPrefix } from './tenancy.js';
 
 migrate(
   'home-1',
@@ -422,7 +423,8 @@ export type QrKind = 'product' | 'location' | 'care';
 
 /** Random, unguessable code – the code itself carries no data. */
 export function newCode() {
-  return crypto.randomBytes(9).toString('base64url');
+  // cloud: with the household's routing prefix, so a scan lands in the right household
+  return tokenPrefix() + crypto.randomBytes(9).toString('base64url');
 }
 
 export const qrUrl = (code: string) => `${config.baseUrl}/q/${code}`;
