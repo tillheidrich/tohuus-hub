@@ -18,6 +18,8 @@ struct ReceiptCaptureView: View {
     @State private var results: [ImportResult] = []
     @State private var applied: Set<Int> = []
     @State private var error: String?
+    @State private var showEBon = false
+    @State private var openImport: Int?
 
     typealias UploadFile = (name: String, mime: String, data: Data)
 
@@ -57,6 +59,12 @@ struct ReceiptCaptureView: View {
                     }
                     .buttonStyle(SecondaryButtonStyle())
                     Button {
+                        showEBon = true
+                    } label: {
+                        Label(L("Digital receipt (QR code or link)"), systemImage: "qrcode.viewfinder")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    Button {
                         showPaperList = true
                     } label: {
                         Label(L("Photograph a paper list"), systemImage: "list.bullet.rectangle")
@@ -67,6 +75,13 @@ struct ReceiptCaptureView: View {
                     }
                     if let error { ErrorBanner(message: error) }
                     ForEach(results, id: \.stableId) { r in resultRow(r) }
+                    NavigationLink {
+                        ImportsListView(store: store)
+                    } label: {
+                        Label(L("All receipts"), systemImage: "doc.on.doc")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(minHeight: 44)
                 }
                 .padding(Theme.Space.s4)
             }
@@ -75,6 +90,12 @@ struct ReceiptCaptureView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { dismiss() } } }
             .sheet(isPresented: $showPaperList) { PaperListSheet(store: store) }
+            .sheet(isPresented: $showEBon) {
+                EBonSheet(store: store) { r in
+                    if let id = r.id { openImport = id }
+                }
+            }
+            .navigationDestination(item: $openImport) { id in ImportReviewView(store: store, importId: id) }
             .fullScreenCover(isPresented: $showScanner) {
                 DocumentScanner { images in
                     showScanner = false
@@ -120,6 +141,8 @@ struct ReceiptCaptureView: View {
                 } else if let id = r.id {
                     if applied.contains(id) {
                         Text(L("Taken over. ToHuus remembers it.")).font(.caption).foregroundStyle(Theme.ink2)
+                        NavigationLink(L("Show receipt")) { ImportReviewView(store: store, importId: id) }
+                            .font(.subheadline)
                     } else {
                         Button(L("Take it over")) {
                             Task {
@@ -131,7 +154,13 @@ struct ReceiptCaptureView: View {
                             }
                         }
                         .buttonStyle(.borderedProminent)
-                        Text(L("You can check the lines in the web app under Receipts.")).font(.caption).foregroundStyle(Theme.ink3)
+                        NavigationLink {
+                            ImportReviewView(store: store, importId: id)
+                        } label: {
+                            Label(L("Check the lines first"), systemImage: "list.bullet.rectangle")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .frame(minHeight: 44)
                     }
                 }
             }
@@ -155,7 +184,7 @@ struct ReceiptCaptureView: View {
                 uploading = true
                 defer { uploading = false }
                 let r = try await store.api.importLines(lines, mode: "receipt")
-                let note = r.sumMatches == false ? L("The total doesn't add up – please check the lines in the web app.") : nil
+                let note = r.sumMatches == false ? L("The total doesn't add up – please check the lines.") : nil
                 results = [ImportResult(file: nil, id: r.id, error: note, title: r.title ?? L("Receipt"), duplicate: nil, lines: nil)] + results
                 store.touch("imports")
                 Haptics.success()

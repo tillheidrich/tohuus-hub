@@ -44,19 +44,53 @@ struct StatusPill: View {
     }
 }
 
+/// Empty state: a small drawing (EmptyArt), a title, an optional line and an optional action.
+/// Older calls with only an SF Symbol keep working – the symbol is mapped to the matching drawing,
+/// or shown as before when no drawing fits.
 struct EmptyStateView: View {
     let systemImage: String
     let title: String
     var message: String?
+    /// explicit drawing; nil = derived from `systemImage`
+    var art: EmptyArt.Name?
+    var actionTitle: String?
+    var action: (() -> Void)?
+
+    init(systemImage: String, title: String, message: String? = nil, art: EmptyArt.Name? = nil,
+         actionTitle: String? = nil, action: (() -> Void)? = nil) {
+        self.systemImage = systemImage
+        self.title = title
+        self.message = message
+        self.art = art
+        self.actionTitle = actionTitle
+        self.action = action
+    }
+
+    /// drawing first: `EmptyStateView(art: .receipt, title: …)`
+    init(art: EmptyArt.Name, title: String, message: String? = nil, actionTitle: String? = nil, action: (() -> Void)? = nil) {
+        self.init(systemImage: "", title: title, message: message, art: art, actionTitle: actionTitle, action: action)
+    }
 
     var body: some View {
         VStack(spacing: Theme.Space.s3) {
-            Image(systemName: systemImage)
-                .font(.system(size: 40, weight: .light))
-                .foregroundStyle(Theme.sage)
-            Text(title).font(.headline).foregroundStyle(Theme.ink)
+            if let name = art ?? EmptyArt.forSymbol(systemImage) {
+                EmptyArt(name: name, height: 88)
+                    .padding(.bottom, Theme.Space.s1)
+            } else if !systemImage.isEmpty {
+                Image(systemName: systemImage)
+                    .font(.system(size: 40, weight: .light))
+                    .foregroundStyle(Theme.sage)
+                    .accessibilityHidden(true)
+            }
+            Text(title).font(.headline).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
             if let message {
                 Text(message).font(.subheadline).foregroundStyle(Theme.ink2).multilineTextAlignment(.center)
+            }
+            if let actionTitle, let action {
+                Button(actionTitle, action: action)
+                    .buttonStyle(PrimaryButtonStyle())
+                    .frame(maxWidth: 280)
+                    .padding(.top, Theme.Space.s2)
             }
         }
         .padding(Theme.Space.s8)

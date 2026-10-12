@@ -1,0 +1,185 @@
+import SwiftUI
+
+/// "Bons": every receipt, order and eBon with its state (to check · booked · discarded) – web: Imports.tsx "History".
+/// Tap one to check and book it in. A digital receipt (eBon) can be fetched from its QR code or link.
+struct ImportsListView: View {
+    let store: ServerStore
+    /// shown as a button when the list is opened from Geld (not from the receipt sheet itself)
+    var onAddReceipt: (() -> Void)?
+    @State private var items: [ImportSummary] = []
+    @State private var loaded = false
+    @State private var error: String?
+    @State private var showEBon = false
+    @State private var openId: Int?
+    @State private var toast: ToastMessage?
+
+    var body: some View {
+        List {
+            Section {
+                if let onAddReceipt {
+                    Button { onAddReceipt() } label: { Label(L("Add receipt"), systemImage: "doc.text.viewfinder") }
+                }
+                Button { showEBon = true } label: { Label(L("Digital receipt (QR code or link)"), systemImage: "qrcode.viewfinder") }
+            } footer: {
+                Text(L("Many checkouts show a QR code for the digital receipt. Scan it and ToHuus fetches the receipt."))
+            }
+            if let error {
+                Section { ErrorBanner(message: error) { Task { await load() } } }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+            }
+            if loaded && items.isEmpty && error == nil {
+                Section {
+                    EmptyStateView(art: .receipt, title: L("Nothing imported yet"),
+                                   message: L("Photograph a receipt, choose a PDF or scan the QR code of a digital receipt – ToHuus reads it and you check it here."))
+                }
+                .listRowBackground(Color.clear)
+            } else if !items.isEmpty {
+                let toCheck = items.filter { $0.status == "review" }
+                if !toCheck.isEmpty {
+                    Section(L("To check")) { ForEach(toCheck) { row($0) } }
+                }
+                let rest = items.filter { $0.status != "review" }
+                if !rest.isEmpty {
+                    Section(L("History")) { ForEach(rest) { row($0) } }
+                }
+            } else if !loaded {
+                Section { HStack { Spacer(); ProgressView(); Spacer() } }.listRowBackground(Color.clear)
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .canvasBackground()
+        .navigationTitle(L("Receipts"))
+        .refreshable { await load() }
+        .task(id: store.revision("imports")) { await load() }
+        .navigationDestination(item: $openId) { id in ImportReviewView(store: store, importId: id) }
+        .sheet(isPresented: $showEBon) {
+            EBonSheet(store: store) { result in
+                if result.duplicate == true { toast = ToastMessage(text: L("This receipt was already there.")) }
+                if let id = result.id { openId = id }
+            }
+        }
+        .toast($toast)
+    }
+
+    private func row(_ i: ImportSummary) -> some View {
+        Button { openId = i.id } label: {
+            HStack(spacing: Theme.Space.s3) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: Theme.Radius.base).fill(i.status == "applied" ? Theme.primarySoft : Theme.surface2)
+                    Image(systemName: i.status == "applied" ? "checkmark.circle.fill" : "doc.text")
+                        .foregroundStyle(i.status == "applied" ? Theme.primaryText : Theme.ink2)
+                }
+                .frame(width: 44, height: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(i.title).font(.body).foregroundStyle(Theme.ink).lineLimit(2)
+                    Text(subtitle(i)).font(.caption).foregroundStyle(Theme.ink3).lineLimit(2)
+                }
+                Spacer(minLength: 4)
+                statusPill(i.status)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func subtitle(_ i: ImportSummary) -> String {
+        var parts: [String] = []
+        if let s = i.shop, !s.isEmpty, !i.title.localizedCaseInsensitiveContains(s) { parts.append(s) }
+        if let n = i.lines { parts.append(n == 1 ? L("1 line") : LF("%d lines", n)) }
+        if let p = i.paid { parts.append(Money.format(p)) }
+        if i.reconciled { parts.append(L("matched with receipt")) }
+        if let d = ServerDate.parse(i.day) { parts.append(d.formatted(.dateTime.day().month(.abbreviated))) }
+        return parts.joined(separator: " · ")
+    }
+
+    @ViewBuilder
+    private func statusPill(_ s: String) -> some View {
+        switch s {
+        case "review": StatusPill(text: L("to check"), status: "expiring")
+        case "applied": StatusPill(text: L("booked"), status: nil)
+        default: StatusPill(text: L("discarded"), status: nil)
+        }
+    }
+
+    private func load() async {
+        do {
+            items = try await store.api.imports()
+            error = nil
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
+        loaded = true
+    }
+}
+
+/// Digital receipt: scan the QR code at the checkout or paste the link → POST /api/imports/url.
+struct EBonSheet: View {
+    let store: ServerStore
+    let onImported: (UrlImportResult) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var url = ""
+    @State private var showScanner = false
+    @State private var busy = false
+    @State private var error: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Button { showScanner = true } label: { Label(L("Scan QR code"), systemImage: "qrcode.viewfinder") }
+                }
+                Section {
+                    TextField("https://…", text: $url)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } header: {
+                    Text(L("Link to the digital receipt"))
+                } footer: {
+                    Text(L("REWE, Lidl, Aldi, dm and many others show a QR code for the digital receipt at the checkout."))
+                }
+                if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
+                Section {
+                    Button {
+                        Task { await fetch(url) }
+                    } label: {
+                        HStack { Text(L("Fetch receipt")); if busy { Spacer(); ProgressView() } }
+                    }
+                    .disabled(busy || URL(string: url.trimmingCharacters(in: .whitespaces))?.scheme?.hasPrefix("http") != true)
+                }
+            }
+            .navigationTitle(L("Digital receipt"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } } }
+            .sheet(isPresented: $showScanner) {
+                ScannerSheet(title: L("Scan QR code"), symbologies: [.qr]) { code in
+                    url = code
+                    Task { await fetch(code) }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func fetch(_ raw: String) async {
+        let link = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard link.lowercased().hasPrefix("http") else {
+            error = L("That QR code is not a link to a receipt.")
+            return
+        }
+        busy = true
+        defer { busy = false }
+        error = nil
+        do {
+            let r = try await store.api.importFromURL(link)
+            store.touch("imports")
+            Haptics.success()
+            dismiss()
+            onImported(r)
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
+    }
+}

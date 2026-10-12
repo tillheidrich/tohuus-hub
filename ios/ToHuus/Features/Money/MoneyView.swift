@@ -9,6 +9,7 @@ struct MoneyView: View {
     @State private var loading = false
     @State private var cheapest: [CheapestProduct] = []
     @State private var showReceipt = false
+    @State private var path: [MoneyRoute] = []
 
     private var monthKey: String {
         let f = DateFormatter()
@@ -18,10 +19,11 @@ struct MoneyView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
                     monthSwitcher
+                    moreLinks
                     if let error { ErrorBanner(message: error) { Task { await load() } } }
                     if let o = overview {
                         totalCard(o)
@@ -32,8 +34,9 @@ struct MoneyView: View {
                         if !o.hints.isEmpty { hintsCard(o) }
                         if !cheapest.isEmpty { cheapestCard }
                         if o.total == nil && o.byCategory.isEmpty {
-                            EmptyStateView(systemImage: "doc.text", title: L("No receipts this month yet."),
-                                           message: L("Add a receipt photo or forward your e-receipts – ToHuus does the rest."))
+                            EmptyStateView(art: .receipt, title: L("No receipts this month yet."),
+                                           message: L("Add a receipt photo or forward your e-receipts – ToHuus does the rest."),
+                                           actionTitle: L("Add receipt")) { showReceipt = true }
                         }
                     } else if loading {
                         ProgressView().frame(maxWidth: .infinity).padding(.top, 60)
@@ -53,7 +56,55 @@ struct MoneyView: View {
             .refreshable { await load() }
             .task(id: "\(monthKey)-\(store.revision("imports"))") { await load() }
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }
+            .navigationDestination(for: MoneyRoute.self) { r in
+                switch r {
+                case .detail: SpendView(store: store)
+                case .receipts: ImportsListView(store: store) { showReceipt = true }
+                case .review(let id): ImportReviewView(store: store, importId: id)
+                }
+            }
+            .onAppear {
+                #if DEBUG
+                // simulator checks: -debugMoney detail | receipts | review:<id>
+                if path.isEmpty, let d = UserDefaults.standard.string(forKey: "debugMoney") {
+                    if d == "detail" { path = [.detail] }
+                    else if d == "receipts" { path = [.receipts] }
+                    else if d.hasPrefix("review:"), let id = Int(d.dropFirst(7)) { path = [.receipts, .review(id)] }
+                }
+                #endif
+            }
         }
+    }
+
+    /// Spending in detail and the receipts – the web's Spending and Imports pages, natively.
+    private var moreLinks: some View {
+        HStack(spacing: Theme.Space.s3) {
+            NavigationLink(value: MoneyRoute.detail) {
+                linkTile(L("In detail"), L("Periods, budgets, export"), "chart.bar.xaxis")
+            }
+            NavigationLink(value: MoneyRoute.receipts) {
+                linkTile(L("Receipts"), L("Check and book in"), "doc.text")
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func linkTile(_ title: String, _ sub: String, _ icon: String) -> some View {
+        HStack(spacing: Theme.Space.s3) {
+            Image(systemName: icon).font(.title3).foregroundStyle(Theme.primaryText)
+                .frame(width: 36, height: 36)
+                .background(Theme.primarySoft, in: Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+                Text(sub).font(.caption).foregroundStyle(Theme.ink3).lineLimit(2)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(Theme.Space.s3)
+        .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+        .contentShape(Rectangle())
     }
 
     /// GET /api/prices/cheapest – products you bought in two or more shops, where they were cheapest
@@ -198,6 +249,11 @@ struct MoneyView: View {
             }
         }
     }
+}
+
+enum MoneyRoute: Hashable {
+    case detail, receipts
+    case review(Int)
 }
 
 private struct HintLabelStyle: LabelStyle {

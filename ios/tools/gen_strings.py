@@ -18,6 +18,9 @@ for extra in ["Just me", "The two of us", "Family with children", "Flat share", 
               "Puts something on your household's ToHuus list, e.g. “2 milk and bread”."]:
     keys.add(extra)
 de = json.load(open(os.path.join(root, "tools", "strings_de.json"), encoding="utf-8"))
+# per-area files (strings_de_<area>.json) keep parallel work from colliding in one file
+for extra_file in sorted(f for f in os.listdir(os.path.join(root, "tools")) if f.startswith("strings_de_") and f.endswith(".json")):
+    de.update(json.load(open(os.path.join(root, "tools", extra_file), encoding="utf-8")))
 missing = sorted(k for k in keys if k not in de)
 strings = {}
 for k in sorted(keys):
