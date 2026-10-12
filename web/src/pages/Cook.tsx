@@ -1,9 +1,9 @@
 import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Package, Plus, TextAa } from '@phosphor-icons/react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { useQuery } from '@tanstack/react-query';
-import { api, invalidate, post, useApi } from '../api';
+import { ApiError, api, invalidate, post, useApi } from '../api';
 import { getOr, imgSrc } from '../data';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { lang, t } from '../i18n';
@@ -13,6 +13,7 @@ import { VotesCard } from './Plan2';
 import { WhatToEatPanel } from './WhatToEat';
 import { SwapRulesCard } from './RecipeVariant';
 import { RecipePackageSheet } from './RecipePackage';
+import { CookidooSheet, type CookidooDraft } from './CookidooSheet';
 import { HowTo } from '../help';
 
 type View = 'ideas' | 'week' | 'recipes';
@@ -42,7 +43,14 @@ export function Kitchen({ me }: { me: Me }) {
       /* ignore */
     }
   };
-  const [importOpen, setImportOpen] = useState(() => sp.get('add') === '1');
+  const [importOpen, setImportOpen] = useState(() => sp.get('add') === '1' && !sp.get('cookidoo'));
+  // shared Cookidoo link in the cloud (Share page) → confirm title + ingredients here
+  const [ckDraft, setCkDraft] = useState<CookidooDraft | null>(null);
+  useEffect(() => {
+    const u = sp.get('cookidoo');
+    if (u) post<CookidooDraft>('/recipes/import/cookidoo/draft', { url: u }).then(setCkDraft).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const nav = useNavigate();
   const recipes = useApi<any[]>('recipes', '/recipes');
   return (
@@ -68,6 +76,7 @@ export function Kitchen({ me }: { me: Me }) {
       {view === 'week' && <WeekView />}
       {view === 'recipes' && <RecipesView recipes={recipes} />}
       <RecipeImport open={importOpen} onClose={() => setImportOpen(false)} vision={me.features.vision} />
+      <CookidooSheet draft={ckDraft} onClose={() => setCkDraft(null)} vision={me.features.vision} />
     </div>
   );
 }
@@ -281,20 +290,25 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
   const [url, setUrl] = useState('');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [cookidoo, setCookidoo] = useState<CookidooDraft | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const nav = useNavigate();
   const toast = useToast();
-  const done = (id: number) => {
+  const done = (r: { id: number; incomplete?: boolean; existed?: boolean }) => {
     invalidate('recipes', 'suggest');
     onClose();
-    nav(`/rezepte/${id}`);
+    if (r.incomplete) toast({ text: t('The post had no recipe text – the link and photo are saved. Add the ingredients, or a photo of the recipe.') });
+    else if (r.existed) toast({ text: t('You saved this one before.') });
+    nav(`/rezepte/${r.id}`);
   };
-  const run = async (fn: () => Promise<{ id: number }>) => {
+  const run = async (fn: () => Promise<{ id: number; incomplete?: boolean; existed?: boolean }>) => {
     setBusy(true);
     try {
-      done((await fn()).id);
+      done(await fn());
     } catch (e) {
-      toast({ text: (e as Error).message, error: true });
+      // ToHuus Cloud: a Cookidoo link is confirmed by hand (title + ingredients), nothing is fetched from Cookidoo
+      if (e instanceof ApiError && e.code === 'cookidoo_confirm') setCookidoo(await post<CookidooDraft>('/recipes/import/cookidoo/draft', { url }).catch(() => ({ url, title: '', ingredients: [] })));
+      else toast({ text: (e as Error).message, error: true });
     } finally {
       setBusy(false);
     }
@@ -307,8 +321,8 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
           <>
             <div className="field">
               <label>{t('Recipe link')}</label>
-              <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t('https://cookidoo.de/recipes/… or Chefkoch, HelloFresh …')} inputMode="url" />
-              <div className="help">{t('Works with almost any recipe site. Cookidoo brings ingredients and the photo along; steps only with a login.')}</div>
+              <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t('Recipe site, Instagram, TikTok, Pinterest, YouTube …')} inputMode="url" />
+              <div className="help">{t('Works with almost any recipe site and with posts from Instagram, TikTok, Pinterest and YouTube (only what is public). Cookidoo keeps name, link and ingredients.')}</div>
             </div>
             <button className="btn primary lg" disabled={!url || busy} onClick={() => run(() => post('/recipes/import/url', { url }))}>
               <LinkIcon size={18} /> {busy ? t('Reading recipe…') : t('Import')}
@@ -318,7 +332,7 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
         {mode === 'photo' && (
           <>
             <p className="small muted" style={{ margin: 0 }}>
-              {t('One or more photos of the same card (e.g. front and back of a HelloFresh card).')} {vision ? '' : t('Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the ToHuus Hub connection they save it straight here.')}
+              {t('A cookbook page, a handwritten note, a screenshot or the display of your Thermomix or oven – several photos of the same recipe are merged.')} {vision ? '' : t('Note: no vision model is set up on this server. Send the photo to Claude or ChatGPT instead – with the ToHuus Hub connection they save it straight here.')}
             </p>
             <input
               ref={fileRef}
@@ -355,7 +369,9 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
         <button className="linkish small" style={{ alignSelf: 'center' }} onClick={() => { onClose(); nav('/einstellungen?tab=recipes'); }}>
           {t('More ways: open recipe database, other apps, any AI, file')}
         </button>
+        <HowTo slug="rezepte-importieren" className="small" />
       </div>
+      <CookidooSheet draft={cookidoo} onClose={() => { setCookidoo(null); onClose(); }} vision={vision} />
     </Sheet>
   );
 }

@@ -599,10 +599,11 @@ export function StepsElsewhere({ r }: { r: any }) {
       <b>{t('Steps in {app}', { app })}</b>
       <div className="small muted">{t('The steps are only available in {app}. Ingredients, planning and shopping work here as usual.', { app })}</div>
       {r.source_url && (
-        <a className="btn" style={{ alignSelf: 'flex-start' }} href={r.source_url} target="_blank" rel="noreferrer">
-          <ArrowSquareOut size={16} /> {t('Open in {app}', { app })}
+        <a className="btn primary" style={{ alignSelf: 'flex-start' }} href={r.source_url} target="_blank" rel="noreferrer">
+          <ArrowSquareOut size={16} /> {r.source_type === 'cookidoo' ? t('Open in Cookidoo to cook') : t('Open in {app}', { app })}
         </a>
       )}
+      {r.source_type === 'cookidoo' && !r.image_path && <div className="small muted">{t('Tip: take a photo of your own dish next time – then you will recognise it in the list.')}</div>}
     </div>
   );
 }

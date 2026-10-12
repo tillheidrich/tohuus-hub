@@ -11,4 +11,13 @@ export const de_recipepack: Record<string, string> = {
   '{title}: the photo could not be unpacked.': '{title}: Das Foto ließ sich nicht entpacken.',
   'for {title}: {line}': 'für {title}: {line}',
   'together {total}': 'zusammen {total}',
+  'That is not a link from Instagram, TikTok, Pinterest or YouTube.': 'Das ist kein Link von Instagram, TikTok, Pinterest oder YouTube.',
+  'The post had no recipe text. Add ingredients and steps, or a photo of the recipe.': 'Im Beitrag stand kein Rezepttext. Ergänz Zutaten und Schritte oder ein Foto vom Rezept.',
+  'Recipe from {platform}': 'Rezept von {platform}',
+  'That is not a Cookidoo link.': 'Das ist kein Cookidoo-Link.',
+  'Add the ingredients – copy them from Cookidoo or take a screenshot.': 'Ergänz die Zutaten – kopier sie aus Cookidoo oder mach einen Screenshot.',
+  'Cookidoo recipe': 'Cookidoo-Rezept',
+  'Reading photos needs AI. Copy the ingredients and paste them instead.': 'Fotos lesen geht nur mit KI. Kopier die Zutaten und füg sie ein.',
+  'Cookidoo recipes are kept as title, link and ingredients – please confirm them.': 'Cookidoo-Rezepte bleiben hier als Name, Link und Zutaten – bitte bestätig sie.',
+  'Import failed.': 'Import fehlgeschlagen.',
 };

@@ -190,11 +190,14 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
         ? devices.some((d) => /thermomix|\btm\s?[4-7]\b/i.test(d))
         : source_type === 'cookidoo' || /thermomix|\bstufe\s?\d|\bvaroma\b/i.test(JSON.stringify(steps).slice(0, 20000));
   if (ingredients.length === 0 && steps.length === 0 && !source_url) throw userError(t('The recipe has neither ingredients nor steps'));
+  // ToHuus Cloud never copies Cookidoo content: title, link and ingredients only – steps and photos stay in Cookidoo
+  const cookidooCloud = config.multiTenant && source_type === 'cookidoo';
+  if (cookidooCloud) steps.length = 0;
   return {
     title,
     description: x.description ? cleanText(x.description).slice(0, 2000) || null : null,
-    image_url: imageUrl(x.image ?? x.image_url ?? x.imageUrl ?? x.thumbnailUrl),
-    image_data: Buffer.isBuffer(x.image_data) ? x.image_data : null,
+    image_url: cookidooCloud ? null : imageUrl(x.image ?? x.image_url ?? x.imageUrl ?? x.thumbnailUrl),
+    image_data: !cookidooCloud && Buffer.isBuffer(x.image_data) ? x.image_data : null,
     servings: yieldServings(x.recipeYield ?? x.yield ?? x.servings),
     time_min: time_min && time_min < 100000 ? time_min : null,
     thermomix,
@@ -206,7 +209,7 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
     source_type,
     external_id,
     source_url,
-    instructions_available,
+    instructions_available: cookidooCloud ? false : instructions_available,
     notes: typeof x.notes === 'string' && x.notes.trim() ? cleanText(x.notes).slice(0, 2000) : null,
     favorite: x.favorite === true,
   };

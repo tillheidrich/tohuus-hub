@@ -34,4 +34,22 @@ export const recipepack: Record<string, string> = {
   'Cook mode': 'Kochmodus',
   'How we make it': 'So machen wir das',
   'Step {n} of {total}': 'Schritt {n} von {total}',
+  'Cookidoo recipe': 'Cookidoo-Rezept',
+  'ToHuus keeps the name, the link and the ingredients – so planning and the shopping list work. Steps and photos stay in Cookidoo; you cook from there.':
+    'ToHuus merkt sich Name, Link und Zutaten – damit Planen und Einkaufsliste klappen. Schritte und Fotos bleiben in Cookidoo; gekocht wird von dort.',
+  'e.g. Lentil curry': 'z. B. Linsencurry',
+  'Ingredients, one per line': 'Zutaten, eine pro Zeile',
+  'In the Cookidoo app: open the recipe, copy the ingredients and paste them here – or take a screenshot.': 'In der Cookidoo-App: Rezept öffnen, Zutaten kopieren und hier einfügen – oder einen Screenshot machen.',
+  'Read ingredients from a screenshot': 'Zutaten vom Screenshot lesen',
+  'No ingredients found on the picture.': 'Auf dem Bild waren keine Zutaten zu finden.',
+  'Saved. Cook it in Cookidoo – a photo of your own dish makes it easy to find.': 'Gespeichert. Gekocht wird in Cookidoo – ein Foto von deinem Gericht macht es leicht wiederzufinden.',
+  'Open in Cookidoo to cook': 'Zum Kochen in Cookidoo öffnen',
+  'Tip: take a photo of your own dish next time – then you will recognise it in the list.': 'Tipp: Fotografier beim nächsten Mal dein Gericht – dann erkennst du es in der Liste.',
+  'The post had no recipe text – the link and photo are saved. Add the ingredients, or a photo of the recipe.': 'Im Beitrag stand kein Rezept – Link und Foto sind gespeichert. Ergänz die Zutaten oder ein Foto vom Rezept.',
+  'You saved this one before.': 'Das hast du schon gespeichert.',
+  'Recipe site, Instagram, TikTok, Pinterest, YouTube …': 'Rezeptseite, Instagram, TikTok, Pinterest, YouTube …',
+  'Works with almost any recipe site and with posts from Instagram, TikTok, Pinterest and YouTube (only what is public). Cookidoo keeps name, link and ingredients.':
+    'Klappt mit fast jeder Rezeptseite und mit Beiträgen von Instagram, TikTok, Pinterest und YouTube (nur was öffentlich ist). Bei Cookidoo bleiben Name, Link und Zutaten.',
+  'A cookbook page, a handwritten note, a screenshot or the display of your Thermomix or oven – several photos of the same recipe are merged.':
+    'Eine Kochbuchseite, ein handgeschriebener Zettel, ein Screenshot oder das Display von Thermomix oder Ofen – mehrere Fotos vom selben Rezept werden zusammengeführt.',
 };
