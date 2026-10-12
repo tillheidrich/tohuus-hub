@@ -85,7 +85,7 @@ enum AccountDeletionResult: Equatable {
 
 extension AppModel {
     /// DELETE /api/cloud/account with `password`, `appleIdentityToken` + `appleNonce`, or `code` (from the mail).
-    func deleteAccount(confirm body: [String: Any]) async -> AccountDeletionResult {
+    func deleteAccount(confirm body: [String: String]) async -> AccountDeletionResult {
         guard let api else { return .failed(L("You have been signed out. Please sign in again.")) }
         do {
             let r = try await api.deleteAccountRaw(body)

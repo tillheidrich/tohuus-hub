@@ -54,7 +54,7 @@ struct AccountDeletionModifier: ViewModifier {
         }
     }
 
-    private func run(_ body: [String: Any]) async {
+    private func run(_ body: [String: String]) async {
         busy = true
         defer { busy = false; password = "" }
         switch await app.deleteAccount(confirm: body) {

@@ -38,7 +38,7 @@ extension APIClient {
 
     /// DELETE /api/cloud/account with whatever confirms it: `password`, `appleIdentityToken` + `appleNonce`, or the
     /// mail `code`. Status and body come back as they are (400 `needEmailConfirm` sends the mail with the code).
-    func deleteAccountRaw(_ body: [String: Any]) async throws -> (status: Int, body: JSONValue) {
+    func deleteAccountRaw(_ body: [String: String]) async throws -> (status: Int, body: JSONValue) {
         try await sendRaw("DELETE", "api/cloud/account", json: body)
     }
 
