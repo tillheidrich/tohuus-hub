@@ -97,7 +97,9 @@ export function ImportReview() {
                 </>
               ) : (
                 <button className="pill-btn" onClick={() => setPick(l)}>
-                  → {l.product_name ?? t('match')}
+                  {/* no break between the arrow and the name */}
+                  {'→\u00a0'}
+                  {l.product_name ?? t('match')}
                 </button>
               )}
               <button className="pill-btn" onClick={() => setLocFor(l)}>

@@ -57,6 +57,13 @@ export function Settings({ me }: { me: Me }) {
   }, [loc.search, cloud]);
   const nav = useNavigate();
   const admin = me.actor.role === 'admin';
+  // phones: the tab row scrolls sideways – bring the open tab into view (a deep link to "Daten" lands off-screen)
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = tabsRef.current;
+    const on = row?.querySelector<HTMLElement>('button.on');
+    if (row && on && row.scrollWidth > row.clientWidth) row.scrollLeft += on.getBoundingClientRect().left - row.getBoundingClientRect().left - 16;
+  }, [tab]);
   return (
     <div>
       <header className="page-head">
@@ -74,7 +81,7 @@ export function Settings({ me }: { me: Me }) {
           </button>
         </div>
       </header>
-      <div className="tabs-inline">
+      <div className="tabs-inline" ref={tabsRef}>
         {(
           [
             ...(cloud ? ([['plan', t('Plan & storage')]] as [Tab, string][]) : []),
