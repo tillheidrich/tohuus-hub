@@ -40,6 +40,8 @@ docs/                this documentation, research notes, design notes
 
 Most features are an "area" with the same shape: `server/routes/<area>.ts`, `server/lib/<area>.ts`, `server/mcp/tools-<area>.ts`, `server/locales/de-<area>.ts`, `web/src/locales/de/<area>.ts`, pages under `web/src/pages/`, and `test/<area>.test.ts`. Current areas: core (stock, products, places, shopping, settings), imports, recipes, guest, data, party, fresh, shop, home (care, spending, QR), kiosk, kids, onboard, retail, ha, channels, intl, cook2, auth, spend2, print, share, labels, away, plan2, recipes2, quality, people, tour, ha2, menu, design.
 
+The October 2026 feature build adds `rhythm` (purchase rhythm), `money` (overview), `cookideas`, `today` (aggregate for the first tab), `memory` and `assistant` (with `assistant-tools`, `assistant-parse`, `assistant-context`); their routers are mounted together through `server/routes/features.ts`, their MCP tools are in `server/mcp/tools-features.ts`. `shopping-trust.ts` holds the list rules every tick path uses (booking and un-booking, soft clear, origin). Plan limits are read through `lib/limits-shim.ts` (to be replaced by the cloud branch's `plans`).
+
 Two areas have no MCP tools on purpose: `auth` and `ha` (their modules exist but register nothing).
 
 Modules import each other directly. Where a cycle would appear, a small dependency-free part is split out (`share-core.ts`, `away-state.ts`, `people-policy.ts`, `people-signals.ts`, `fresh-shelf.ts`), and the comment at the top of each file says who may import it.
@@ -127,6 +129,10 @@ The English text is the key everywhere: `t('Shopping list')`, with placeholders 
 - `/mcp` with `Authorization: Bearer` and a `full` or `mcp` token.
 
 Tools are registered with `s.registerTool(name, { title, description, inputSchema, annotations }, handler)`. Read-only tools carry `readOnlyHint`. There are 106 tools; the list is in [mcp.md](mcp.md). MCP tools must respect the same privacy rules as the UI: discreet and private items are never returned by name.
+
+## AI
+
+All model calls go through `server/lib/ai.ts`: OpenAI-compatible chat completions, OpenRouter by default, every OpenRouter request pinned to Mistral with `provider: { order: ["mistral"], allow_fallbacks: false, data_collection: "deny" }`, timeouts, retries with backoff, clean error codes, token usage, tool calls, audio as `input_audio`. `vision.ts` (receipt, shelf, recipe photos) and the assistant use it; tests replace the network with `setAiFetch()`. Callers filter first: `redactForAssistant()` (people-signals.ts) for anything about people, `redact.ts` for receipt text. Details and variables: [assistant.md](assistant.md).
 
 ## Home Assistant
 

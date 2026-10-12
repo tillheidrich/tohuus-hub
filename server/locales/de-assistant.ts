@@ -92,6 +92,7 @@ export const de_assistant: Record<string, string> = {
   'eat soon': 'bald essen',
   'past its date': 'Datum überschritten',
   '{n} days left': 'noch {n} Tage',
+  '1 day left': 'noch 1 Tag',
   'bought {day}': 'gekauft am {day}',
   'planned for today': 'für heute geplant',
   '1 receipt is waiting for a quick look': 'Ein Bon wartet auf einen kurzen Blick',

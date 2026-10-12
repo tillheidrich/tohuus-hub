@@ -79,7 +79,7 @@ export function todayAggregate(viewer?: TodayViewer | null) {
       kind: e.kind === 'leftover' ? 'leftover' : 'expiring',
       useBy: e.use_by,
       daysLeft: e.days_left,
-      label: e.days_left == null ? t('eat soon') : e.days_left < 0 ? t('past its date') : e.days_left === 0 ? t('today') : t('{n} days left', { n: e.days_left }),
+      label: e.days_left == null ? t('eat soon') : e.days_left < 0 ? t('past its date') : e.days_left === 0 ? t('today') : e.days_left === 1 ? t('1 day left') : t('{n} days left', { n: e.days_left }),
     });
   }
   for (const r of rhythm.filter((x) => likely.has(x.productId)).sort((a, b) => b.lastBought.localeCompare(a.lastBought))) {

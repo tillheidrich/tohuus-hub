@@ -4,9 +4,29 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+### Added
+
+- **Purchase rhythm without stock**: ToHuus merkt sich, how often each product is bought – from receipts (by the date printed on them, also while still in review) and list ticks – and suggests what is probably due, with its origin. Accept puts it on the list, dismissing twice keeps it quiet until it is bought again. Discreet and private products never appear. `GET /api/rhythm`, `POST /api/rhythm/:id/accept|dismiss`, MCP `purchase_rhythm`.
+- **Assistant** (`/api/assistant/chat`, `/transcribe`, `/voice`, `/undo/:token`): shopping and household helper, cook planner, money helper with server-side tools (list, "haben wir noch …?", used up, rhythm, cook ideas, week plan, recipe to list, money, remember/forget, log a told purchase). Every write comes with undo. Works without an AI key for the common sentences ("Milch, 2 Paprika und Brot", "Milch ist alle", "Hab bei Aldi … für 12,40 gekauft"). Conversations private per person, kept 30 days. See [docs/assistant.md](docs/assistant.md).
+- **What ToHuus remembers** (`ai_memory`): facts, preferences and routines on request, sensitive ones flagged and kept from the model without consent. `GET/POST/DELETE /api/memory`, MCP `remember`, `forget`, `household_context`.
+- **Today in one call** (`GET /api/today`, [docs/api-today.md](docs/api-today.md)), **money overview** (`GET /api/money/overview`: by category, shop and week, vs. last month, price changes with price per kg/l, saving hints from own data only) and **cook ideas** (`GET /api/cook/ideas`: ready now or 1–2 missing, counting what the rhythm says is probably at home, allergy-safe on the server).
+- **One AI client** (`server/lib/ai.ts`): OpenRouter by default, pinned to Mistral (EU, no fallbacks, no data collection); `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL_TEXT`, `AI_MODEL_VISION`, `AI_MODEL_VISION_HARD`, `AI_MODEL_AUDIO`; the older `VISION_*` keep working. Receipt photos that don't add up get a second try with the stronger model; receipt text goes out without card, loyalty and TSE data. A startup check warns when the vision model cannot read images.
+- MCP: 114 tools in total.
+
 ### Changed
 
+- **Health data stays at home unless allowed**: allergies, children's birth years and sensitive memory go to an AI (MCP or the assistant) only with the new consent `ai.healthShare` (default off). MCP `household_people` drops them without it; suggestion reasons in MCP answers never name a person ("für mindestens eine Person ungeeignet").
+- **Automatic list entries for low stock are off by default** for new households and households that don't keep stock up to date; households that maintained stock keep their setting (migration `trust-2-autolist`).
+- **Every list row says where it came from** (`origin` in `/api/shopping` and `/api/shop/list`).
+- The browser may use the microphone for the assistant (`Permissions-Policy: microphone=(self)`).
+
 - **Swedish removed as UI language; region Sweden stays.** The app, notifications and demo data are English or German. The region Sweden (SEK, Swedish receipts from ICA, Coop, Willys and others, Swedish product names from Open Food Facts, Swedish stores in store mode) is unchanged. A household that ran in Swedish switches to English on update (migration `lang-sv-removed-1`), and its base places and categories that still carry their Swedish default names get their English names back; renamed places, products and recipes stay as they are.
+
+### Fixed
+
+- "Clear checked" no longer deletes ticked items: they are hidden and stay purchase signals (`cleared_at`).
+- Un-ticking an item now takes back the stock its tick booked (app, store mode, offline replay, MCP, Home Assistant).
+- A receipt applied within 3 days of a tick that booked the same product no longer books it twice.
 
 ## Wave 5 (2026-10-11)
 

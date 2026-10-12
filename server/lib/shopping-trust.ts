@@ -213,7 +213,8 @@ export function originOf(it: { source?: string | null; added_by?: string | null;
   if (src === 'care') return t('for home care');
   if (src === 'party') return t('after the party');
   const via = VIA[src] ? t(VIA[src]) : null;
-  const who = it.added_by && it.added_by !== 'ToHuus Hub' ? it.added_by : null;
+  // "Home Assistant · heute 14:05 · über Home Assistant" says the same thing twice
+  const who = it.added_by && it.added_by !== 'ToHuus Hub' && !(via && via.toLowerCase().includes(it.added_by.toLowerCase())) ? it.added_by : null;
   return [who, when, via].filter(Boolean).join(' · ') || t('added {when}', { when });
 }
 

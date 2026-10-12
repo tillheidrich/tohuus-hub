@@ -17,12 +17,14 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 - **Purchases go to review by default.** `record_purchase` creates an import that waits for a person to check it. The assistant can pass `apply: true` to book it immediately.
 - **Recipes are saved directly.**
 - **Privacy**: discreet and private shopping items are never returned by name; the assistant sees the neutral placeholder or nothing.
+- **Health data (Art. 9 GDPR)**: allergies, children's birth years and memory rows flagged sensitive are only returned when an admin allowed sharing health data with AI (*Settings › Access & AI*, `ai.healthShare`, default off). Every tool answer passes the same filter as the built-in assistant (`redactForAssistant()` in `server/lib/people-signals.ts`): suggestion reasons never name a person ("für mindestens eine Person ungeeignet", "ein Liebling bei euch"). Regression test: `test/security-ai-art9.test.ts`.
+- **Suggestions, not automation**: `purchase_rhythm` only says what is probably due; put things on the list when the person agrees.
 - **Region first**: `region_info` tells the assistant the currency and receipt conventions before it records a purchase.
 - Read-only tools are marked with `readOnlyHint`, so clients can run them without asking.
 
 ## Tools
 
-106 tools, grouped by area. Source: `server/mcp/server.ts` (core) and `server/mcp/tools-<area>.ts`.
+114 tools, grouped by area. Source: `server/mcp/server.ts` (core) and `server/mcp/tools-<area>.ts`.
 
 ### Core (23)
 
@@ -96,11 +98,24 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 
 `get_home_assistant_sync`, `sync_home_assistant_now`, `who_is_home`, `list_voice_commands`
 
+### Purchase rhythm and what ToHuus remembers (4)
+
+| Tool | What it does |
+|---|---|
+| `purchase_rhythm` | How often each product is bought (receipts by purchase date + list ticks, no stock needed), what is due now (read-only) |
+| `remember` | Remember a household fact, preference or routine the person asked for |
+| `forget` | Forget something ToHuus remembers (by id or text) |
+| `household_context` | The household right now: people (likes/dislikes; health data only with consent), open list, due by rhythm, week plan, money this month, what ToHuus remembers (read-only) |
+
+### Places (4)
+
+`get_home_setup`, `set_household_form`, `add_place`, `update_place` (`server/mcp/tools-places.ts`).
+
 ### Household and system (9)
 
 `region_info`, `send_household_message`, `display_status`, `print_ticket`, `send_ticket`, `backup_now`, `household_members`, `getting_started_status`, `data_overview`
 
-Per module: core 23, fresh 6, labels 5, shop 3, share 6, cook2 3, recipes2 4, people 3, plan2 10, party 4, menu 4, kids 2, away 5, home 5, spend2 4, retail 2, quality 4, ha2 4, intl 1, channels 1, kiosk 1, print 2, data 2, onboard 1, tour 1. Total 106.
+Per module: core 23, fresh 6, labels 5, shop 3, share 6, cook2 3, recipes2 4, people 3, plan2 10, party 4, menu 4, kids 2, away 5, home 5, spend2 4, retail 2, quality 4, ha2 4, intl 1, channels 1, kiosk 1, print 2, data 2, onboard 1, tour 1, places 4, features 4. Total 114.
 
 To count them yourself:
 
