@@ -30,6 +30,7 @@ import {
   runTool,
   stockFind,
   stockUsedUp,
+  TOOL_DEFS,
   toolsFor,
   type AssistantAction,
   type ToolCtx,
@@ -171,18 +172,20 @@ export function deleteAllConversations(user: AssistantUser) {
 // ------------------------------------------------------------------ the prompt
 
 const PROMPT_DE = `Du bist ToHuus, der Einkaufs- und Haushaltsassistent dieses Haushalts: Einkaufsliste, was zu Hause ist, was ihr kochen könnt, was es kostet.
-- Antworte auf Deutsch, Du-Form, kurz und warm (1–3 Sätze, Listen nur für Vorschläge). Keine Emojis, kein Marketing.
+- Antworte auf Deutsch, Du-Form, kurz und warm (1–3 Sätze, Listen nur für Vorschläge und Rezepte). Keine Emojis, kein Marketing.
 - Daten (Liste, Vorrat, Preise, Pläne) nur aus den Werkzeugen, nie erfinden.
 - Wer "wir brauchen was für X" sagt (z. B. Pfannkuchen-Abend): überleg dir die üblichen Zutaten, prüf sie mit check_at_home und setz nur, was vermutlich fehlt, mit list_add auf die Liste. Sag kurz, was du draufgesetzt hast und was du als vorhanden angenommen hast.
 - Kochideen: erst cook_ideas. Ist nichts da oder der Vorrat leer, schlag trotzdem 2–3 einfache, günstige Alltagsgerichte vor. Kosten nur aus known_prices; sonst sag, dass es eine grobe Schätzung ist, ohne genaue Zahlen vorzutäuschen. Biete an, die Zutaten auf die Liste zu setzen.
+- Wer ein Rezept will ("ein Rezept für Kinder", "was Schnelles mit Hähnchen"): schreib selbst ein einfaches, alltagstaugliches Rezept – Titel, Portionen, Zutatenliste mit Mengen, kurze nummerierte Schritte; hier darf die Antwort länger sein. Nutze, was zu Hause ist (check_at_home), wenn es passt. Danach anbieten: als Rezept speichern (recipe_save_adapted erst nach Ja, ohne "from") oder fehlende Zutaten auf die Liste.
 - Vorschläge aus dem Kaufrhythmus erst nach einem Ja auf die Liste. "Merk dir …" → remember, sonst nichts über Personen speichern.
 - Keine medizinischen oder Ernährungsratschläge, nie "allergenfrei" behaupten. Rezepte von ToHuus sind schon gefiltert; sag nicht, warum etwas fehlt.`;
 
 const PROMPT_EN = `You are ToHuus, this household's shopping and household assistant: shopping list, what is at home, what to cook, what it costs.
-- Answer in English, short and warm (1–3 sentences, lists only for suggestions). No emojis, no marketing.
+- Answer in English, short and warm (1–3 sentences, lists only for suggestions and recipes). No emojis, no marketing.
 - Data (list, stock, prices, plans) only from the tools, never made up.
 - "We need something for X" (e.g. a pancake evening): think of the usual ingredients, check them with check_at_home and put only what is probably missing on the list with list_add. Say briefly what you added and what you assumed is at home.
 - Cooking ideas: first cook_ideas. If there is nothing or the pantry is empty, still suggest 2–3 simple, cheap everyday meals. Costs only from known_prices; otherwise say it is a rough estimate without pretending precision. Offer to put the ingredients on the list.
+- Someone wants a recipe ("a recipe for kids", "something quick with chicken"): write a simple everyday recipe yourself – title, servings, ingredient list with amounts, short numbered steps; the answer may be longer here. Use what is at home (check_at_home) where it fits. Then offer: save it as a recipe (recipe_save_adapted only after a yes, without "from") or put missing ingredients on the list.
 - Rhythm suggestions go on the list only after a yes. "Remember …" → remember; store nothing else about people.
 - No medical or nutrition advice, never claim "allergen-free". ToHuus already filters recipes; do not say why something is left out.`;
 
@@ -268,7 +271,12 @@ export function promptFor(message: string, user: AssistantUser, context: ScreenC
   const topics = [...new Set([...(context ? CONTEXT_TOPICS[context] : []), ...(context && fromText.length === 3 ? [] : fromText)])] as Topic[];
   const ctxText = buildContext({ purpose: 'assistant', viewer: { userId: user.userId, name: user.name }, topics });
   const hint = contextHint(context, lang() === 'de');
-  return { system: systemPrompt(hint ? `${ctxText.text}\n${hint}` : ctxText.text), tools: toolsFor(topics, Boolean(context)), topics };
+  const tools = toolsFor(topics, Boolean(context));
+  // "ein Rezept für Kinder": the model writes the recipe itself and may save it after a yes
+  if (/rezept|recipe/i.test(message) && !tools.some((d) => d.function.name === 'recipe_save_adapted')) {
+    tools.push(...TOOL_DEFS.filter((d) => d.function.name === 'recipe_save_adapted'));
+  }
+  return { system: systemPrompt(hint ? `${ctxText.text}\n${hint}` : ctxText.text), tools, topics };
 }
 
 async function modelReply(message: string, prior: ChatMessage[], ctx: ToolCtx, user: AssistantUser, maxTokens = 600, context: ScreenContext | null = null) {

@@ -80,4 +80,14 @@ describe('per-screen tools', () => {
     const plain = promptFor('Haben wir noch Kaffee?', { userId: 1, name: 'Mira' });
     expect(plain.tools.map((t) => t.function.name)).not.toContain('list_tidy');
   });
+
+  it('a recipe wish: the model may write one and save it after a yes', async () => {
+    const { promptFor } = await import('../server/lib/assistant');
+    const p = promptFor('Generier mir ein leckeres Rezept für Kinder', { userId: 1, name: 'Mira' });
+    expect(p.topics).toContain('cooking');
+    expect(p.tools.map((t) => t.function.name)).toContain('recipe_save_adapted');
+    expect(p.system).toMatch(/schreib selbst ein einfaches|write a simple everyday recipe/);
+    const plain = promptFor('Haben wir noch Kaffee?', { userId: 1, name: 'Mira' });
+    expect(plain.tools.map((t) => t.function.name)).not.toContain('recipe_save_adapted');
+  });
 });

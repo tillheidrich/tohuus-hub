@@ -184,6 +184,7 @@ Recordings are never stored: they stay in memory for the transcription and are d
 | `AI_MODEL_VISION` | `mistralai/mistral-small-2603` |
 | `AI_MODEL_VISION_HARD` | `mistralai/mistral-large-4-0` (second try for receipts that don't add up) |
 | `AI_MODEL_AUDIO` | `mistralai/voxtral-small-24b-2507` |
+| `AI_MODEL_FALLBACKS` | other Mistral models tried in turn on 429/5xx/timeouts (comma-separated, `-` = none). Default with OpenRouter: text `mistralai/mistral-medium-3.1,mistralai/mistral-large-2512`, vision `mistralai/mistral-medium-3.1,mistralai/mistral-large-4-0`; own endpoints: none |
 | `VISION_BASE_URL`, `VISION_API_KEY`, `VISION_MODEL` | older installs; used when no `AI_*` is set (then no audio model unless `AI_MODEL_AUDIO`) |
 
 Every request to OpenRouter carries `provider: { order: ["mistral"], allow_fallbacks: false, data_collection: "deny" }`. Timeouts 60 s (vision 120 s, audio 90 s), two retries with backoff for 429/5xx/timeouts. At start the server checks on OpenRouter's `/models` that the vision model accepts images and logs a warning if not.
