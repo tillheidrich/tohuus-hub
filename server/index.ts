@@ -51,6 +51,7 @@ import { r as invitesRoutes, pub as invitesPublic } from './routes/invites.js';
 import { r as buyAtRoutes } from './routes/buyat.js';
 import { r as featureRoutes } from './routes/features.js';
 import { r as list2Routes } from './routes/list2.js';
+import { caldav } from './lib/caldav.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
@@ -107,6 +108,10 @@ app.use('/api', (req, res, next) => {
 });
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// CalDAV bridge for Apple Reminders / Nextcloud Tasks (list2): /caldav/*, /.well-known/caldav – Basic auth with an
+// app-specific password, outside /api (no cookies, no CSRF) – lib/caldav.ts
+app.use(caldav);
 
 // MCP (Claude, ChatGPT, …) — stateless Streamable HTTP
 app.all('/mcp', handleMcp);

@@ -12,7 +12,9 @@ import { MODULES, modules, setModules } from '../lib/modules.js';
 import { PERSON_EVENTS, memberEmail, personPrefs, presence, setPersonPrefs, setPresence } from '../lib/notify-prefs.js';
 import { activeTrips, addToTrip, endTrip, setTripPrivate, tripPrivate } from '../lib/trips.js';
 import '../lib/list-jobs.js';
-import { checkout } from '../lib/shop.js';
+import { createAppPassword, listAppPasswords, revokeAppPassword } from '../lib/caldav.js';
+import { addLines, checkout } from '../lib/shop.js';
+import { parseListExport } from '../lib/list-import.js';
 import { uploadQuota } from '../lib/plans.js';
 import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeItemPhoto, restoreItem, setItemPhoto, setListPrefs, updateItem } from '../lib/list2.js';
 import { t } from '../i18n.js';
@@ -261,3 +263,41 @@ r.put('/modules', requireAdmin, (req, res) => {
   emit('settings');
   res.json(out);
 });
+
+// ---------------------------------------------------------------- E: bridges
+
+/** CalDAV app passwords (Apple Reminders, Nextcloud Tasks …): shown once, per member, revocable. */
+r.get('/caldav/passwords', (req, res) => res.json(userId(req) ? listAppPasswords(userId(req)!) : []));
+r.post('/caldav/passwords', (req, res) => {
+  const b = z.object({ label: z.string().max(60).default('iPhone') }).parse(req.body ?? {});
+  const uid = userId(req);
+  if (!uid || req.actor?.houseGuest) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  res.json(createAppPassword(uid, b.label));
+});
+r.delete('/caldav/passwords/:id', (req, res) => res.json({ ok: userId(req) ? revokeAppPassword(userId(req)!, num(req.params.id)) : false }));
+
+/**
+ * One-off import from another list app (Google Keep Takeout JSON, Bring! JSON, AnyList/Notes/WhatsApp text, CSV).
+ * JSON body `{ text, list_id?, include_checked?, dry_run? }` or multipart `file`. dry_run answers the rows only.
+ */
+r.post(
+  '/list/import',
+  upload.single('file'),
+  wrap((req, res) => {
+    const raw = req.file ? req.file.buffer.toString('utf8') : typeof req.body?.text === 'string' ? req.body.text : '';
+    if (!raw.trim()) return void res.status(400).json({ error: t('Nothing to import') });
+    if (raw.length > 500_000) return void res.status(413).json({ error: t('File too large') });
+    const bool = (v: unknown) => v === true || v === 'true' || v === '1';
+    const listId = Number(req.body?.list_id) || null;
+    const parsed = parseListExport(raw);
+    const rows = parsed.items.filter((i) => bool(req.body?.include_checked) || !i.checked).slice(0, 300);
+    if (bool(req.body?.dry_run)) return { format: parsed.format, items: rows, skippedChecked: parsed.items.length - rows.length };
+    const added = addLines(
+      rows.map((i) => ({ name: i.name, qty: i.qty, amount: i.note })),
+      actorName(req),
+      'import',
+      listId,
+    );
+    return { format: parsed.format, added: added.filter((a) => a.created).length, already: added.filter((a) => !a.created).length, skippedChecked: parsed.items.length - rows.length };
+  }),
+);

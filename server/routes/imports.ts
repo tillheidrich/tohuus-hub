@@ -15,6 +15,7 @@ import { safeFetch } from '../lib/net.js';
 import { fmtDay, t } from '../i18n.js';
 import { recordCorrection } from '../lib/quality.js';
 import { uploadQuota } from '../lib/plans.js';
+import { importPurchaseHistory, parseCsv, productForArticle } from '../lib/list-import.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -241,13 +242,14 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
   }
   const minCount = Number(req.body.min_count ?? 3);
   const text = req.file.buffer.toString('utf8').replace(/^﻿/, '');
-  const [head, ...rows] = text.split(/\r?\n/).filter(Boolean);
-  if (!head) {
+  // list2: a real CSV reader (quoted fields with ; or , inside) – the history part below needs every column
+  const table = parseCsv(text);
+  if (!table.length) {
     res.status(400).json({ error: t('File is empty') });
     return;
   }
-  const sep = head.includes(';') ? ';' : ',';
-  const cols = head.split(sep).map((c) => c.trim().toLowerCase());
+  const rows = table.slice(1);
+  const cols = table[0].map((c) => c.trim().toLowerCase());
   const iRaw = cols.indexOf('artikel_roh');
   const iName = iRaw >= 0 ? iRaw : cols.findIndex((c) => ['name', 'artikel', 'artikel_norm', 'produkt'].includes(c));
   const iCat = cols.indexOf('kategorie');
@@ -256,8 +258,7 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
     return;
   }
   const counts = new Map<string, { n: number; cat: string | null }>();
-  for (const row of rows) {
-    const c = row.split(sep);
+  for (const c of rows) {
     const key = c[iName]?.trim();
     if (!key) continue;
     const e = counts.get(key) ?? { n: 0, cat: iCat >= 0 ? c[iCat] : null };
@@ -296,7 +297,10 @@ r.post('/imports/catalog-csv', upload.single('file'), (req, res) => {
   });
   tx();
   emit('products');
-  res.json({ created, linked, distinct: counts.size });
+  // list2: with a date (and price) column every row becomes a purchase on its day – rhythm, prices per shop and
+  // spending work from day one; no stock is booked (lib/list-import.ts)
+  const history = importPurchaseHistory(table, iName, productForArticle, { actor: actorName(req), defaultShop: typeof req.body.shop === 'string' ? req.body.shop.slice(0, 60) : undefined });
+  res.json({ created, linked, distinct: counts.size, history });
 });
 
 /** Re-detect import lines against the current catalogue (after creating/merging products). */

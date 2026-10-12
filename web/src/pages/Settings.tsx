@@ -31,6 +31,7 @@ import { BillingCard, CloudAccountCard } from './Billing';
 import { AssistantPrivacyCard } from './Memory';
 import { MyListViewCard } from '../shop/trust';
 import { NotifyMine } from './NotifyMine';
+import { CalDavCard } from '../shop/bridges';
 import { ModulesCard } from './Modules';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
@@ -103,6 +104,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'account' && <MyPerson me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
       {tab === 'account' && me.actor.userId && <MyListViewCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalDavCard />}
       {tab === 'account' && <MyAccount me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <ShareSetupCard me={me} />}
       {tab === 'members' && <PeopleSection me={me} admin={admin} />}
@@ -437,7 +439,9 @@ function Data({ admin }: { admin: boolean }) {
       fd.append('min_count', '3');
       const r = await api('/imports/catalog-csv', { form: fd });
       toast({ text: t('{created} products created, {linked} linked (from {distinct} items)', { created: r.created, linked: r.linked, distinct: r.distinct }) });
-      invalidate('products', 'overview');
+      // list2: with a date column the history becomes receipts – rhythm and prices work right away
+      if (r.history?.receipts) toast({ text: t('{n} shopping days with prices taken over – ToHuus now knows your rhythm.', { n: r.history.receipts }) });
+      invalidate('products', 'overview', 'rhythm', 'money', 'imports');
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     } finally {

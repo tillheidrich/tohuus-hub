@@ -45,4 +45,8 @@ export const de_list2: Record<string, string> = {
   'ToHuus remembers what you buy regularly. Put it on the list?': 'ToHuus merkt sich, was ihr regelmäßig kauft. Auf die Liste?',
   'Next week is still empty': 'Die nächste Woche ist noch leer',
   'A few minutes for the week plan? ToHuus suggests what fits what you have at home.': 'Ein paar Minuten für den Wochenplan? ToHuus schlägt vor, was zu dem passt, was ihr da habt.',
+  // E – bridges
+  'Only reminders (VTODO) with a title': 'Nur Erinnerungen (VTODO) mit Titel',
+  'Purchase history · {shop}': 'Einkaufshistorie · {shop}',
+  'Nothing to import': 'Nichts zum Übernehmen',
 };

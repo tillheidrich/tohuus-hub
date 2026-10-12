@@ -1,5 +1,6 @@
 import {
   ArrowDown,
+  ArrowSquareIn,
   ArrowUp,
   ArrowsDownUp,
   Basket,
@@ -30,6 +31,7 @@ import { ItemEditor, lastBoughtLine, substituteLine } from '../shop/ItemEditor';
 import '../shop/list2.css';
 import { AtStoreChips, EstimateLine, type GuardHint, type ListInfo, GuardSheet, ListTabs, ManageListSheet, NewListSheet, UsualsButton, UsualsGrid, guardCheck } from '../shop/fill';
 import { TripsBar, useTrips } from '../shop/together';
+import { ImportListSheet } from '../shop/bridges';
 import { ListViewSheet, RecentDone, SyncLine, cacheView, cachedView, readLocalPrefs, useListPrefs } from '../shop/trust';
 import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, SectionShape, sectionLabel } from '../shop/sections';
 import { ItemBuyAt } from '../shop/BuyAt';
@@ -117,6 +119,7 @@ export function Shopping() {
   const [newList, setNewList] = useState(false);
   const [manageList, setManageList] = useState(false);
   const [usualsOpen, setUsualsOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [guardAsk, setGuardAsk] = useState<{ text: string; productId?: number; hints: GuardHint[] } | null>(null);
   const prefs = useListPrefs();
   // list2 C: who is shopping right now (ticks make a trip – nobody switches a mode on)
@@ -521,6 +524,13 @@ export function Shopping() {
           </div>
         )}
 
+        {!inStore && view && (
+          <div className="shop-more">
+            <button className="btn ghost sm" onClick={() => setImportOpen(true)}>
+              <ArrowSquareIn size={16} /> {t('From another app')}
+            </button>
+          </div>
+        )}
         {!inStore && view && view.open + view.done.length > 0 && (
           <div className="shop-more">
             <button className="btn ghost sm" onClick={share}>
@@ -589,6 +599,7 @@ export function Shopping() {
       {view?.store && <OrderSheet open={ordering} store={view.store} present={view.sections.map((s) => s.key)} onClose={() => setOrdering(false)} />}
       <NewStoreSheet open={newStore} onClose={() => setNewStore(false)} onCreated={(s) => { pickStore(s.id); refresh(); }} />
       <ListViewSheet open={viewOpen} onClose={() => setViewOpen(false)} />
+      <ImportListSheet open={importOpen} listId={listId} onClose={() => setImportOpen(false)} />
     </div>
   );
 }
