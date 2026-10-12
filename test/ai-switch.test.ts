@@ -64,6 +64,7 @@ beforeAll(async () => {
     import('../server/routes/recipes'),
     import('../server/routes/kids'),
     import('../server/routes/ai-settings'),
+    import('../server/routes/list2'),
   ]);
   const { handleMcp } = await import('../server/mcp/server');
   db.prepare(`INSERT INTO users (name, role, password_hash) VALUES ('Mira', 'admin', ?)`).run(auth.hashPassword('test1234'));
@@ -74,7 +75,7 @@ beforeAll(async () => {
   app.all('/mcp/:secret', handleMcp);
   app.use('/api/kid', routes[5].kid);
   app.use('/api', routes[0].pub);
-  for (const r of [routes[1].r, routes[2].r, routes[3].r, routes[4].r, routes[5].r, routes[6].r]) app.use('/api', r);
+  for (const r of [routes[1].r, routes[2].r, routes[3].r, routes[4].r, routes[5].r, routes[6].r, routes[7].r]) app.use('/api', r);
   app.use((err: any, _req: any, res: any, _next: any) => res.status(err instanceof ai.AiError ? err.status : err?.name === 'ZodError' ? 400 : (err?.status ?? 500)).json({ error: String(err?.message ?? err), code: err?.code }));
   await new Promise<void>((r) => {
     server = app.listen(0, () => r());
@@ -138,6 +139,17 @@ describe('household switch off', () => {
     expect(rp.status).toBeGreaterThanOrEqual(400);
     const rt = await mira.req('POST', '/api/recipes/import/text', { text: 'Pfannkuchen: Mehl, Milch, Eier verrühren und in der Pfanne backen. Für 4 Personen, 20 Minuten.' });
     expect(rt.status).toBe(200); // the simple reader without a model (title, ingredient lines, steps)
+    // merged AI paths: fridge/shelf photo, area assistant, recipe ingredients screenshot (Cookidoo read), flyer offers
+    const fridge = await mira.req('POST', '/api/assistant/photo', undefined, imageForm('files'));
+    expect(fridge.status).toBeGreaterThanOrEqual(400);
+    const area = await mira.req('POST', '/api/assistant/chat', { message: 'Erzähl mir einen Witz über Gurken', context: 'house' });
+    expect(area.json.mode).toBe('basic');
+    const cookidoo = await mira.req('POST', '/api/recipes/import/cookidoo/read', undefined, imageForm('files'));
+    expect(cookidoo.status).toBeGreaterThanOrEqual(400);
+    const flyer = await mira.req('POST', '/api/offers/scan', undefined, imageForm('image'));
+    expect(flyer.status).toBeGreaterThanOrEqual(400);
+    for (const task of ['offer', 'ingredients', 'shelf', 'text-recipe'] as const)
+      await expect(policy.runAsAiActor({ userId: 1 }, () => vision.runVision(task, { images: ['data:image/png;base64,AA'], text: 'x' }))).rejects.toMatchObject({ code: 'ai.disabled' });
     await expect(policy.runAsAiActor({ userId: 1 }, () => vision.runVision('receipt', { images: ['data:image/png;base64,AA'] }))).rejects.toMatchObject({ code: 'ai.disabled' });
     await expect(ai.chat({ messages: [{ role: 'user', content: 'x' }] })).rejects.toMatchObject({ code: 'ai.disabled' });
     expect(calls).toBe(0);
@@ -188,6 +200,8 @@ describe('children', () => {
     expect(viaTablet.status).toBeGreaterThanOrEqual(400);
     expect(policy.kidAiOn(kidId)).toBe(false);
     await expect(policy.runAsAiActor({ kidId }, () => ai.chat({ messages: [{ role: 'user', content: 'x' }] }))).rejects.toMatchObject({ code: 'ai.disabled', detail: 'parents' });
+    for (const task of ['offer', 'ingredients', 'shelf', 'recipe'] as const)
+      await expect(policy.runAsAiActor({ kidId }, () => vision.runVision(task, { images: ['data:image/png;base64,AA'] }))).rejects.toMatchObject({ code: 'ai.disabled', detail: 'parents' });
     expect(calls).toBe(0);
     expect((await mira.req('GET', '/api/ai/settings')).json.kids).toEqual([{ id: kidId, name: 'Mika', ai: false }]);
   });
