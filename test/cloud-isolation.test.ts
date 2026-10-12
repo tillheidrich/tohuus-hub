@@ -574,6 +574,59 @@ describe('plans and quotas', () => {
   });
 });
 
+describe('operator page (/betrieb)', () => {
+  it('only OPERATOR_EMAILS, only after a fresh password, only aggregates; actions are logged', async () => {
+    process.env.OPERATOR_EMAILS = 'op@example.org, other-op@example.org';
+    process.env.AI_PRICE_PER_MTOK = '1,2';
+    const op = new Client();
+    await signup(op, 'op@example.org', 'Ops', 'Ops home', 'single');
+    // everybody else: the same 404 as for an unknown route
+    expect((await A.get('/api/operator/status')).status).toBe(404);
+    expect((await new Client().get('/api/operator/overview')).status).toBe(404);
+    expect((await op.get('/api/operator/status')).json).toMatchObject({ operator: true, unlocked: false });
+    expect((await op.get('/api/operator/overview')).json.code).toBe('operator.locked');
+    expect((await op.post('/api/operator/unlock', { password: 'falsch-falsch' })).status).toBe(403);
+    expect((await op.post('/api/operator/unlock', { password: 'geheim1234' })).status).toBe(200);
+    const operator = await import('../server/lib/operator');
+    const ai = await import('../server/lib/ai');
+    ai.aiUsageHook.record!('mistralai/mistral-small-2603', { prompt: 1_000_000, completion: 500_000, total: 1_500_000 });
+    operator.countRequest(500);
+    const ov = await op.get('/api/operator/overview');
+    expect(ov.status, ov.text).toBe(200);
+    expect(ov.json.households.total).toBeGreaterThanOrEqual(3);
+    expect(ov.json.accounts).toBeGreaterThanOrEqual(3);
+    expect(ov.json.storage.top[0]).toEqual({ id: expect.stringMatching(/^[0-9a-f-]{36}$/), bytes: expect.any(Number) });
+    const today = new Date().toISOString().slice(0, 10);
+    const day = ov.json.ai.perDay.find((d: any) => d.day === today);
+    expect(day.tokens).toBeGreaterThanOrEqual(1_500_000);
+    expect(day.cost).toBeGreaterThanOrEqual(2); // 1 M in × 1 + 0.5 M out × 2 per million tokens
+    expect(ov.json.errors.last24h.errors).toBeGreaterThanOrEqual(1);
+    expect(ov.json.system.memory.rssBytes).toBeGreaterThan(0);
+    // never household content: no household or person names, no e-mail addresses
+    for (const m of [...MARKERS, 'Elsewhere', 'Bea', 'Ops home', '@example.org']) expect(ov.text, m).not.toContain(m);
+    // actions
+    expect((await op.post(`/api/operator/households/${hB}/trial`, { days: 30 })).status).toBe(200);
+    expect(tenancy.runInHousehold(hB, () => plans.currentPlan())).toBe('trial');
+    expect((await op.post(`/api/operator/households/${hB}/plan`, { plan: 'plus', until: '2099-12-31', note: 'App Review demo' })).status).toBe(200);
+    expect(tenancy.runInHousehold(hB, () => plans.currentPlan())).toBe('plus');
+    mails.length = 0;
+    expect((await op.post('/api/operator/password-reset', { email: 'b@example.org' })).status).toBe(200);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mails.some((m) => m.to === 'b@example.org')).toBe(true);
+    const throwaway = await signup(new Client(), 'weg@example.org', 'Weg', 'Weg home', 'single');
+    expect((await op.req('DELETE', `/api/operator/households/${throwaway}`, { confirm: 'nope' })).status).toBe(400);
+    expect((await op.req('DELETE', `/api/operator/households/${throwaway}`, { confirm: throwaway })).status).toBe(200);
+    expect(accounts.getHousehold(throwaway)).toBeUndefined();
+    const audit = (await op.get('/api/operator/audit')).json;
+    expect(audit.map((a: any) => a.action)).toEqual(expect.arrayContaining(['unlock', 'unlock.failed', 'household.trial', 'household.plan', 'account.password-reset', 'household.delete']));
+    expect(JSON.stringify(audit)).not.toContain('b@example.org');
+    // back to Free for the tests after this one
+    expect((await op.post(`/api/operator/households/${hB}/plan`, { plan: 'free' })).status).toBe(200);
+    delete process.env.OPERATOR_EMAILS;
+    expect((await op.get('/api/operator/status')).status).toBe(404);
+  });
+});
+
 describe('crypto', () => {
   it('household databases and accounts.db are unreadable without the right key', () => {
     const file = path.join(dir, 'households', hA, 'tohuus.db');

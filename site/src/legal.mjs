@@ -69,6 +69,7 @@ export function legalCopy(k) {
           'Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.')
         + h3('Tarif, Kontingente und Käufe')
         + p('Zu jedem Haushalt speichern wir den Tarif, das Ende der Testphase, Zähler für die Kontingente (Nachrichten an den Assistenten, KI-Lesevorgänge für Bons und Importe, Uploads) und den belegten Speicherplatz. Kaufst du ein Abo, speichern wir die Angaben aus der von Apple signierten Transaktion (siehe <a href="#apple">Käufe über Apple</a>). Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.')
+        + p('Für den Betrieb sehen wir nur Summen: wie viele Haushalte es gibt und wie viele aktiv sind, Anmeldungen pro Woche, Tarife, belegten Speicher, KI-Verbrauch pro Tag und die Fehlerquote des Servers. Inhalte eines Haushalts und Angaben zu einzelnen Personen gehören nicht dazu.')
         + h3('Sicherheit und Missbrauchsschutz')
         + p('Bei jeder Anmeldung speichern wir zur Sitzung die IP-Adresse und die Gerätekennung des Browsers oder der App (User-Agent) sowie den Zeitpunkt der letzten Nutzung. So kannst du deine angemeldeten Geräte sehen und abmelden, und wir können Missbrauch erkennen. Für die iPhone-App speichern wir zum Geräte-Token den Gerätenamen und wann es zuletzt benutzt wurde. Um Anmeldeversuche, Registrierungen und das Versenden von E-Mails zu begrenzen, zählen wir IP-Adressen und E-Mail-Adressen kurzzeitig im Arbeitsspeicher des Servers, höchstens eine Stunde lang. Fehlermeldungen des Servers schreiben wir in ein Protokoll.',
           'Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse ist der sichere Betrieb des Dienstes und der Schutz eurer Konten.')
@@ -309,6 +310,7 @@ export function legalCopy(k) {
           'Legal basis: Art. 6(1)(b) GDPR.')
         + h3('Plan, allowances and purchases')
         + p('For each household we store the plan, the end of the trial, counters for the allowances (assistant messages, AI reads for receipts and imports, uploads) and the storage used. If you buy a subscription, we store the details from the transaction signed by Apple (see <a href="#apple">Purchases through Apple</a>). Legal basis: Art. 6(1)(b) GDPR.')
+        + p('To run the service we only look at totals: how many households there are and how many are active, sign-ups per week, plans, storage used, AI usage per day and the server error rate. Household content and details about individual people are not part of it.')
         + h3('Security and abuse prevention')
         + p('With every sign-in we store the IP address and the browser or app identifier (user agent) together with the session, plus when it was last used. This lets you see and sign out your devices, and lets us detect abuse. For the iPhone app we store the device name with the device token and when it was last used. To limit sign-in attempts, sign-ups and outgoing e-mails, we count IP addresses and e-mail addresses briefly in the server’s memory, for one hour at most. Server error messages are written to a log.',
           'Legal basis: Art. 6(1)(f) GDPR. Our legitimate interest is running the service securely and protecting your accounts.')

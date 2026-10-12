@@ -119,6 +119,9 @@ export function providerPin(baseUrl: string): Record<string, unknown> {
 
 // ------------------------------------------------------------------ transport (replaceable in tests)
 
+/** Cloud operator statistics (operator.ts): tokens per day and model – no household, no person. */
+export const aiUsageHook: { record?: (model: string, usage: Usage) => void } = {};
+
 export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
 let fetchImpl: FetchLike | null = null;
 /** Tests: answer requests without the network. Pass null to restore the real fetch. */
@@ -248,7 +251,9 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     if (attempt > 0) await sleep(backoff * 2 ** (attempt - 1));
     try {
-      return await once(cfg, body, timeoutMs);
+      const res = await once(cfg, body, timeoutMs);
+      aiUsageHook.record?.(res.model, res.usage);
+      return res;
     } catch (e) {
       last = e;
       if (!retryable(e) || attempt === retries) break;

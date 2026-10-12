@@ -162,6 +162,35 @@ Account mails – address confirmation, sign-in link, password reset, account de
 cookie session for the same member and household and redirects to `next` (a relative path, default `/`). Works in
 both modes. The links live in process memory (sign-in material, not household data).
 
+## Operator page (`/betrieb`)
+
+Cloud only. Who: accounts whose e-mail address is listed in `OPERATOR_EMAILS` (comma-separated); everyone else gets a plain 404 on every `/api/operator/*` route. Then a **fresh password check** (`POST /api/operator/unlock { password }`, valid 10 minutes for that session or app token, 5 tries per 15 minutes). Code: `server/lib/operator.ts`, `server/routes/operator.ts`, page `web/src/pages/Operator.tsx`.
+
+**What is counted – exactly this, nothing else:**
+
+| Figure | Source | Per household? | Per person? |
+|---|---|---|---|
+| Households total, active in 7 / 30 days, deleted so far | `households` (`last_active_at`, `deleted_at`) | count only | no |
+| Accounts total, new accounts and households per week (12 weeks) | `accounts.created_at`, `households.created_at` | count only | no |
+| Plans (effective: free / trial / haushalt / plus) and paid plans by source (apple / operator) | `households` | count only | no |
+| Storage total and the 10 largest households | `households.storage_bytes` | **id and bytes only** – no name | no |
+| AI requests, tokens and estimated cost per day and month | new table `ai_usage_daily (day, model, requests, prompt_tokens, completion_tokens)` in `accounts.db`, written by `aiUsageHook` in `ai.ts` | no | no |
+| Error rate (requests and 5xx answers per hour, last 24 h) | in memory since the last start, status class only (no path, no person, no household) | no | no |
+| Backups: last nightly run, last restore check (+ result), S3 on/off | `backups/.last-nightly`, `backups/.last-restore-check` (written by `dist/restore-check.mjs`) | no | no |
+| Server: process memory, container memory limit, disk free, load, uptime | the OS | no | no |
+
+Cost = prompt tokens × input price + completion tokens × output price, per million tokens: `AI_PRICES` (JSON `{ "<model>": [in, out] }`) or `AI_PRICE_PER_MTOK` (`"in,out"`, default `0.1,0.3`), currency label `AI_PRICE_CURRENCY` (default `USD`). It is an estimate, not the invoice.
+
+Never shown: household names, people, lists, receipts, conversations, e-mail addresses (the audit names accounts by id).
+
+**Actions** (each one goes into `operator_audit (at, operator, action, target, detail)` in `accounts.db`, `GET /api/operator/audit`):
+
+- `POST /api/operator/households/:id/trial { days }` – extend (or restart) the trial, e.g. for TestFlight testers. Refused (409) while an App Store subscription is active.
+- `POST /api/operator/households/:id/plan { plan: 'free'|'haushalt'|'plus', until?: 'YYYY-MM-DD'|null, note? }` – grant a plan (`plan_source = 'operator'`), e.g. the App Review demo account. Refused while an App Store subscription is active.
+- `POST /api/operator/password-reset { email }` – sends the normal reset link (in the account's language).
+- `DELETE /api/operator/households/:id { confirm: <id> }` – crypto-shreds the household like a deletion by its admin.
+- `GET /api/operator/status`, `GET /api/operator/overview`.
+
 ## Known gaps (TODO)
 
 - Passkeys for cloud accounts (one RP-ID = the cloud host) are not wired yet; the endpoints answer 404.

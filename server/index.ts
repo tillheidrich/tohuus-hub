@@ -52,6 +52,8 @@ import { r as buyAtRoutes } from './routes/buyat.js';
 import { r as featureRoutes } from './routes/features.js';
 import { r as aiSettingsRoutes } from './routes/ai-settings.js';
 import { pub as oauthPub, r as oauthRoutes } from './routes/oauth.js';
+import { r as operatorRoutes } from './routes/operator.js';
+import { requestCounter } from './lib/operator.js';
 import { AiError } from './lib/ai.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
@@ -93,6 +95,9 @@ app.use((_req, res, next) => {
   next();
 });
 
+// cloud operator page: requests and 5xx per hour, status class only (lib/operator.ts)
+if (config.multiTenant) app.use('/api', requestCounter);
+
 // storage quota: the database counts too – large JSON writes are refused when the household is full (plans.ts)
 app.use('/api', bodyQuota);
 
@@ -128,6 +133,8 @@ app.use('/api', billingPublic);
 if (config.multiTenant) {
   app.use('/api', cloudPub);
   app.use('/api', cloudRoutes);
+  // operator page /betrieb: aggregates only (lib/operator.ts)
+  app.use('/api', operatorRoutes);
 }
 
 // iPhone shortcut (personal list token) and the share-target fallback – before the routers that require a session

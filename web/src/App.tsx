@@ -83,6 +83,7 @@ const AuthLanding = page(() => import('./pages/AuthLanding'), 'AuthLanding');
 const Login = page(() => import('./pages/Login'), 'Login');
 const Signup = page(() => import('./pages/Signup'), 'Signup');
 const MemoryPage = page(() => import('./pages/Memory'), 'MemoryPage');
+const Operator = page(() => import('./pages/Operator'), 'Operator');
 
 const Blank = () => <div style={{ minHeight: '100dvh' }} />;
 const PageLoading = () => (
@@ -275,6 +276,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/geld" element={<Money />} />
               <Route path="/mehr" element={<More me={me} />} />
               <Route path="/merkt-sich" element={<MemoryPage />} />
+              <Route path="/betrieb" element={<Operator />} />
               <Route path="/import" element={<Imports me={me} />} />
               <Route path="/import/quality" element={<Recognition />} />
               <Route path="/import/:id" element={<ImportReview />} />

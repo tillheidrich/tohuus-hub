@@ -81,4 +81,5 @@ export const de_core: Record<string, string> = {
     'Hast du ein Abo über Apple, kündige es bitte auch im App Store – das Löschen des Kontos beendet es nicht.',
   'If this was not you, write to us right away.': 'Warst du das nicht? Dann schreib uns bitte sofort.',
   'ToHuus Cloud': 'ToHuus Cloud',
+  'Please confirm your password again.': 'Bitte bestätige dein Passwort noch einmal.',
 };
