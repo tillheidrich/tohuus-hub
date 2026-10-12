@@ -77,9 +77,8 @@ export interface Billing {
   trialEndsAt?: string | null;
   renewsAt?: string | null;
   source?: 'apple' | 'none';
-  limits?: { historyDays?: number | null; assistantPerMonth?: number | null; storageMb?: number | null; [k: string]: unknown };
-  usage?: { assistantThisMonth?: number; storageMb?: number; storageBytes?: number; [k: string]: unknown };
-  storage?: { usedBytes?: number; quotaBytes?: number | null };
+  limits?: { historyDays?: number | null; assistantPerMonth?: number | null; assistantThrottleOnly?: boolean; uploadsPerDay?: number | null; receiptAiPerDay?: number | null; storageBytes?: number | null; [k: string]: unknown };
+  usage?: { assistantThisMonth?: number; uploadsToday?: number; receiptAiToday?: number; storageBytes?: number; [k: string]: unknown };
 }
 
 export function useBilling(enabled = true) {
@@ -105,15 +104,25 @@ export type Origin = 'receipts' | 'ticks' | 'both' | string;
 export interface RhythmItem {
   productId: number;
   name: string;
+  image?: string | null;
   everyDays: number;
   lastBought: string | null;
   dueOn: string | null;
+  /** days until due, negative = overdue */
+  dueInDays?: number;
   confidence: 'low' | 'medium' | 'high';
   origin: Origin;
+  /** already worded by the server: "alle ~5 Tage · zuletzt Mittwoch" */
+  label?: string;
+  suggested?: boolean;
+  onList?: boolean;
+  muted?: boolean;
 }
 export interface ListChange {
   id: number;
   name: string;
+  qty?: number | null;
+  checked?: boolean;
   origin: string | null;
   at: string;
   by?: string | null;
@@ -122,6 +131,9 @@ export interface StillHave {
   productId?: number;
   id?: number;
   name: string;
+  image?: string | null;
+  kind?: 'expiring' | 'leftover' | 'probably' | string;
+  daysLeft?: number | null;
   nextExpiry?: string | null;
   expiresOn?: string | null;
   status?: string;
@@ -129,19 +141,55 @@ export interface StillHave {
   note?: string | null;
 }
 export interface CookToday {
-  recipeId: number;
+  kind?: 'planned' | 'ready' | 'almost';
+  recipeId: number | null;
+  planId?: number | null;
   title: string;
   image: string | null;
   missing: (string | { name: string; productId?: number | null })[];
+  probablyHave?: string[];
+  why?: string[];
   timeMin?: number | null;
 }
 export interface MoneyGlance {
   week: number | null;
   month: number | null;
   budget: number | null;
+  /** ok | near | over (server) */
+  budgetState?: string | null;
   currency?: string;
 }
 export type Notice = string | { kind?: string; text: string; to?: string | null };
+
+/** Image paths come as "/img/…", a bare file name or a full (signed) URL. */
+export const imgSrc = (p: string | null | undefined) => (!p ? null : /^(\/|https?:|data:|blob:)/.test(p) ? p : `/img/${p}`);
+
+/** The server's /api/today answer (docs/api-today.md) → the shape the screen uses. */
+function fromServer(raw: any): Today {
+  const m = raw.money;
+  return {
+    greeting: raw.greeting,
+    household: typeof raw.household === 'string' ? raw.household : raw.household?.name,
+    rhythm: raw.rhythm ?? [],
+    list: {
+      open: raw.list?.open ?? 0,
+      recent: (raw.list?.recent ?? []).map((r: any) => ({ id: r.id, name: r.name ?? r.text, qty: r.qty ?? null, checked: Boolean(r.checked), origin: r.origin ?? null, by: r.by ?? null, at: r.at })),
+    },
+    stillHave: (raw.stillHave ?? []).map((x: any) => ({
+      ...x,
+      note: x.label ?? x.note ?? null,
+      status: x.kind === 'expiring' && (x.daysLeft ?? 0) < 0 ? 'expired' : x.kind === 'expiring' ? 'expiring' : (x.status ?? x.kind),
+    })),
+    cookToday: raw.cookToday
+      ? { ...raw.cookToday, missing: (raw.cookToday.missing ?? []).map((x: any) => (typeof x === 'string' ? x : { name: x.text ?? x.name, productId: x.productId ?? null })) }
+      : null,
+    money: m
+      ? { week: m.week ?? null, month: m.month ?? null, budget: typeof m.budget === 'number' ? m.budget : (m.budget?.amount ?? null), budgetState: m.budget?.state ?? null, currency: m.currency }
+      : null,
+    notices: (raw.notices ?? []).map((n: any) => (typeof n === 'string' ? n : { kind: n.kind, text: n.text, to: n.to ?? n.path ?? null })),
+    counts: { attention: (raw.stillHave ?? []).filter((x: any) => x.kind === 'expiring' || x.kind === 'leftover').length },
+  };
+}
 export interface Today {
   greeting?: string;
   household?: string;
@@ -203,13 +251,7 @@ export function useToday(enabled = true) {
   return useQuery<Today>({
     queryKey: TODAY_KEY,
     queryFn: () =>
-      getOr<Today>('/today', legacyToday).then((d) => ({
-        ...d,
-        rhythm: d.rhythm ?? [],
-        list: d.list ?? { open: 0, recent: [] },
-        stillHave: d.stillHave ?? [],
-        notices: d.notices ?? [],
-      })),
+      getOr<any>('/today', legacyToday).then((d) => (d.legacy ? (d as Today) : fromServer(d))),
     enabled,
     staleTime: 30_000,
   });

@@ -82,6 +82,7 @@ const Invite = page(() => import('./pages/Invite'), 'Invite');
 const AuthLanding = page(() => import('./pages/AuthLanding'), 'AuthLanding');
 const Login = page(() => import('./pages/Login'), 'Login');
 const Signup = page(() => import('./pages/Signup'), 'Signup');
+const MemoryPage = page(() => import('./pages/Memory'), 'MemoryPage');
 
 const Blank = () => <div style={{ minHeight: '100dvh' }} />;
 const PageLoading = () => (
@@ -267,6 +268,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/abstimmung/:id" element={<VotePage />} />
               <Route path="/geld" element={<Money />} />
               <Route path="/mehr" element={<More me={me} />} />
+              <Route path="/merkt-sich" element={<MemoryPage />} />
               <Route path="/import" element={<Imports me={me} />} />
               <Route path="/import/quality" element={<Recognition />} />
               <Route path="/import/:id" element={<ImportReview />} />
@@ -291,7 +293,7 @@ function Shell({ me }: { me: Me }) {
         </div>
       </main>
 
-      <nav className="tabbar" aria-label={t('Navigation')}>
+      <nav className="tabbar" aria-label={t('Navigation')} hidden={loc.pathname.startsWith('/willkommen')}>
         {tabs.map((l) => {
           const on = activeTab === l.to;
           const n = badge(l.to);

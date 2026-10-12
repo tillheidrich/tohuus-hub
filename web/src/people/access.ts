@@ -8,7 +8,7 @@ export function guestAllows(level: EffectiveLevel | undefined, path: string) {
   const ORDER = ['/bestellen', '/einkauf', '/einstellungen', '/hilfe'];
   const STOCK = ['/', '/bestand', '/wo', '/abgleich', '/scan', '/q/'];
   const RECIPES = ['/kochen', '/rezepte', '/lieblinge'];
-  const FAMILY_DENY = ['/import', '/ausgaben', '/geld', '/pflege', '/etiketten', '/willkommen', '/urlaub'];
+  const FAMILY_DENY = ['/import', '/ausgaben', '/geld', '/merkt-sich', '/pflege', '/etiketten', '/willkommen', '/urlaub'];
   const starts = (list: string[]) => list.some((p) => (p === '/' ? path === '/' : p.endsWith('/') ? path.startsWith(p) : path === p || path.startsWith(`${p}/`)));
   if (level === 'family') return !starts(FAMILY_DENY);
   if (starts(ORDER)) return true;

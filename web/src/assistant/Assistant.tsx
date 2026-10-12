@@ -24,6 +24,7 @@ interface Msg {
   actions?: Action[];
   pending?: boolean;
   error?: boolean;
+  throttled?: boolean;
 }
 interface ChatAnswer {
   conversationId: string;
@@ -31,6 +32,11 @@ interface ChatAnswer {
   actions?: Action[];
   text?: string;
   transcript?: string;
+  mode?: 'ai' | 'basic';
+  /** messages left this month (null = unlimited) */
+  remaining?: number | null;
+  /** Plus fair use: answered, but shorter */
+  throttled?: boolean;
 }
 
 let nextId = 1;
@@ -39,8 +45,9 @@ let memory: { conversationId?: string; msgs: Msg[] } = { msgs: [] };
 
 const SUGGESTIONS = ['What’s missing?', 'What shall I cook today?', 'What did we spend this month?', 'Milk is out'];
 
+/** mp4 (Safari, iPhone) and ogg/opus first – the transcription takes both directly; webm only as the last resort */
 function pickMime() {
-  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+  const types = ['audio/mp4', 'audio/ogg;codecs=opus', 'audio/webm;codecs=opus', 'audio/webm'];
   for (const m of types) if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.(m)) return m;
   return '';
 }
@@ -52,12 +59,13 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
   const [rec, setRec] = useState<{ started: number } | null>(null);
   const [secs, setSecs] = useState(0);
   const [quotaHit, setQuotaHit] = useState(false);
+  const [leftNow, setLeftNow] = useState<number | null | undefined>(undefined);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const list = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const billing = useBilling(open);
-  const left = assistantLeft(billing.data);
+  const left = leftNow !== undefined ? leftNow : assistantLeft(billing.data);
   const exhausted = quotaHit || left === 0;
   const canRecord = voice && typeof window !== 'undefined' && 'MediaRecorder' in window && Boolean(navigator.mediaDevices?.getUserMedia);
 
@@ -95,7 +103,8 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
     memory.conversationId = a.conversationId ?? memory.conversationId;
     const heard = a.text ?? a.transcript;
     if (userId && heard) update(userId, { text: heard, pending: false });
-    update(pendingId, { text: a.reply, actions: a.actions ?? [], pending: false });
+    update(pendingId, { text: a.reply, actions: a.actions ?? [], pending: false, throttled: Boolean(a.throttled) });
+    if (a.remaining !== undefined) setLeftNow(a.remaining);
     if (a.actions?.length) invalidate('today', 'shopping', 'overview', 'products', 'rhythm', 'plan');
     invalidate('billing');
   };
@@ -106,9 +115,14 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
       update(pendingId, { text: t('The assistant isn’t available on this server.'), pending: false, error: true });
       return;
     }
-    if (e instanceof ApiError && (e.status === 402 || e.status === 429)) {
+    // 402 quota.assistant: this month's messages are used up (simple list sentences keep working, see docs/assistant.md)
+    if (e instanceof ApiError && (e.code === 'quota.assistant' || e.status === 402)) {
       setQuotaHit(true);
-      update(pendingId, { text: t('That was the last message for this month.'), pending: false, error: true });
+      update(pendingId, { text: t('I can only do the simple things this month: lists, “… is out”, what you bought. Everything else again from the 1st.'), pending: false });
+      return;
+    }
+    if (e instanceof ApiError && e.status === 429) {
+      update(pendingId, { text: t('A lot going on right now – please try again in a moment.'), pending: false, error: true });
       return;
     }
     update(pendingId, { text: (e as Error).message || t('Something went wrong. Try again.'), pending: false, error: true });
@@ -116,7 +130,7 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
 
   async function send(raw: string) {
     const message = raw.trim();
-    if (!message || busy || exhausted) return;
+    if (!message || busy) return;
     setText('');
     push({ role: 'user', text: message });
     const pid = push({ role: 'assistant', text: '', pending: true });
@@ -203,6 +217,7 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
               ) : (
                 <p>{m.text}</p>
               )}
+              {m.throttled && <small className="bubble-note">{t('A bit shorter today – it’s been a busy month.')}</small>}
               {m.actions && m.actions.length > 0 && (
                 <ul className="receipts">
                   {m.actions.map((a, i) => (
@@ -222,14 +237,15 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
           ))}
         </div>
 
-        {exhausted ? (
+        {exhausted && (
           <div className="assist-quota" role="status">
             <b>{t('This month’s assistant messages are used up.')}</b>
             <p>
-              {t('Everything else keeps working as usual, and the messages start again on the 1st. “Haushalt” has 100 a month, “Plus” is meant for everyday use. For now you can subscribe in the iPhone app.')}
+              {t('Lists and “… is out” keep working, everything else again from the 1st. “Haushalt” has 100 messages a month, “Plus” is meant for everyday use. For now you can subscribe in the iPhone app.')}
             </p>
           </div>
-        ) : (
+        )}
+        {(
           <>
             {msgs.length === 0 && (
               <div className="chips assist-chips">

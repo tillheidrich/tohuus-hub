@@ -10,10 +10,20 @@ export const qc = new QueryClient({
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** machine-readable reason from the server, e.g. 'quota.assistant', 'quota.receiptAi', 'storage.full' */
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
+}
+
+/** Friendly words for limits the server reports with a code (plans, quotas). */
+function friendly(code: string | undefined, fallback: string) {
+  if (code === 'quota.receiptAi') return t('Today’s receipt photos are used up – PDFs and eBons still work, photos again tomorrow.');
+  if (code === 'uploads.daily') return t('That’s enough uploads for today – tomorrow it works again.');
+  return fallback;
 }
 
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown; form?: FormData } = {}): Promise<T> {
@@ -25,7 +35,10 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   });
   const isJson = r.headers.get('content-type')?.includes('json');
   const data = isJson ? await r.json() : await r.text();
-  if (!r.ok) throw new ApiError(r.status, (isJson && (data as any).error) || r.statusText);
+  if (!r.ok) {
+    const code = isJson ? ((data as any).code ?? (data as any).key) : undefined;
+    throw new ApiError(r.status, friendly(code, (isJson && (data as any).error) || r.statusText), code);
+  }
   // An API answer that is not JSON is never what a caller expects (e.g. the SPA shell for an unknown path)
   if (!isJson && r.status !== 204 && (r.headers.get('content-type') ?? '').includes('text/html')) throw new ApiError(502, t('Unexpected answer from the server'));
   return data as T;

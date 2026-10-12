@@ -27,6 +27,9 @@ interface PriceChange {
   from: number;
   to: number;
   shop?: string | null;
+  /** price per kg or litre when the pack size is known */
+  base?: { from: number; to: number; unit: string } | null;
+  pct?: number | null;
 }
 interface Overview {
   month: string;
@@ -39,6 +42,8 @@ interface Overview {
   vsLastMonth: { total: number | null; diff: number | null } | null;
   priceChanges: PriceChange[];
   hints: string[];
+  /** Free plan: months before the remembered history are cut */
+  historyLimited?: boolean;
   legacy?: boolean;
 }
 
@@ -60,9 +65,20 @@ function normalise(d: any, month: string): Overview {
     currency: d.currency,
     byCategory: (d.byCategory ?? []).map(part),
     byShop: (d.byShop ?? []).map(part),
-    byWeek: (d.byWeek ?? []).map((w: any, i: number) => ({ label: String(w.label ?? w.week ?? w.from ?? i + 1), from: w.from, total: num(w.total) })),
+    // weeks that haven't started yet are left out (the server lists the whole month)
+    byWeek: (d.byWeek ?? [])
+      .filter((w: any) => !w.from || w.from <= new Intl.DateTimeFormat('sv-SE').format(new Date()))
+      .map((w: any, i: number) => ({ label: String(w.label ?? w.week ?? w.from ?? i + 1), from: w.from, total: num(w.total) })),
     vsLastMonth: vs == null ? null : typeof vs === 'number' ? { total: null, diff: vs } : { total: vs.total ?? vs.previous ?? null, diff: vs.diff ?? (vs.total != null ? num(d.total) - num(vs.total) : null) },
-    priceChanges: (d.priceChanges ?? []).map((p: any) => ({ name: p.name ?? p.product, from: num(p.from ?? p.old ?? p.before), to: num(p.to ?? p.new ?? p.now), shop: p.shop ?? p.store ?? null })),
+    priceChanges: (d.priceChanges ?? []).map((p: any) => ({
+      name: p.name ?? p.product,
+      from: num(p.from ?? p.old ?? p.before),
+      to: num(p.to ?? p.new ?? p.now),
+      shop: p.shop ?? p.store ?? (Array.isArray(p.shops) ? p.shops.join(', ') : null),
+      base: p.basePrice ? { from: num(p.basePrice.before), to: num(p.basePrice.now), unit: p.basePrice.unit } : null,
+      pct: p.pct ?? null,
+    })),
+    historyLimited: Boolean(d.historyLimited),
     hints: (d.hints ?? []).map((h: any) => (typeof h === 'string' ? h : (h.text ?? ''))).filter(Boolean),
   };
 }
@@ -173,6 +189,7 @@ export function Money() {
               </ul>
             </section>
           )}
+          {d.historyLimited && <p className="meta money-note">{t('This month is further back than your plan remembers. “Haushalt” keeps the full history.')}</p>}
           {d.legacy && <p className="meta money-note">{t('Price changes and saving hints appear as soon as this server has the new money overview.')}</p>}
         </div>
       )}
@@ -327,13 +344,14 @@ function PriceChanges({ list, fmt }: { list: PriceChange[]; fmt: (n: number, dig
       <ul className="hrows prices">
         {list.slice(0, 8).map((p, i) => {
           const up = p.to > p.from;
-          const pct = p.from ? Math.round(((p.to - p.from) / p.from) * 100) : 0;
+          const pct = p.pct != null ? Math.round(p.pct) : p.from ? Math.round(((p.to - p.from) / p.from) * 100) : 0;
           return (
             <li key={i} className="hrow">
               <div className="grow">
                 <b>{p.name}</b>
                 <span className="meta">
                   {fmt(p.from, 2)} → {fmt(p.to, 2)}
+                  {p.base ? ` (${fmt(p.base.to, 2)}/${p.base.unit})` : ''}
                   {p.shop ? ` · ${p.shop}` : ''}
                 </span>
               </div>

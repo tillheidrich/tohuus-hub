@@ -104,6 +104,7 @@ export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolea
       title: t('Household & settings'),
       items: [
         { to: '/einstellungen?tab=members', label: t('People'), icon: 'UsersThree' },
+        { to: '/merkt-sich', label: t('What ToHuus remembers'), icon: 'Notebook' },
         { to: '/einstellungen?tab=plan', label: t('Plan & storage'), icon: 'CreditCard', cloud: true },
         { to: '/einstellungen?tab=displays', label: t('Displays'), icon: 'Monitor' },
         { to: '/einstellungen?tab=ha', label: 'Home Assistant', icon: 'House' },

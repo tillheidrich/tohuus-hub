@@ -193,7 +193,8 @@ export function Shopping() {
           label: t('Undo'),
           run: () => {
             qc.setQueryData<ShopView>(['shopping', 'store', storeId ?? 0, mode], (old) => (old ? moveLocal(old, i.id, false, false) : old));
-            void run({ type: 'check', id: i.id, on: false, to_stock: false });
+            // the same un-tick as tapping the row again: the server takes back exactly what the tick booked into stock
+            void run({ type: 'check', id: i.id, on: false }).then(() => invalidate('products', 'today'));
           },
         },
       });
@@ -846,7 +847,10 @@ interface Rhythm {
   everyDays: number;
   lastBought: string | null;
   dueOn: string | null;
+  label?: string;
   suggested?: boolean;
+  onList?: boolean;
+  muted?: boolean;
 }
 
 /**
@@ -865,7 +869,7 @@ function Suggestions({ onList, onAdd }: { onList: Set<number | null>; onAdd: (na
   if (r.isLoading) return null;
   if (r.data == null) return <ForecastHints onList={onList} onAdd={onAdd} />;
   const today = new Intl.DateTimeFormat('sv-SE').format(new Date());
-  const items = r.data.filter((x) => !gone.has(x.productId) && !onList.has(x.productId) && (x.suggested ?? (x.dueOn != null && x.dueOn <= today))).slice(0, 6);
+  const items = r.data.filter((x) => !gone.has(x.productId) && !x.onList && !x.muted && !onList.has(x.productId) && (x.suggested ?? (x.dueOn != null && x.dueOn <= today))).slice(0, 6);
   if (!items.length) return null;
   const act = async (x: Rhythm, kind: 'accept' | 'dismiss') => {
     setGone(new Set(gone).add(x.productId));
@@ -895,7 +899,7 @@ function Suggestions({ onList, onAdd }: { onList: Set<number | null>; onAdd: (na
               <Plus size={15} weight="bold" />
               <span className="grow">
                 <b>{x.name}</b>
-                <small>{rhythmLine(x.everyDays, x.lastBought)}</small>
+                <small>{rhythmLine(x.everyDays, x.lastBought, x.label)}</small>
               </span>
             </button>
             <button className="icon-btn plain sugg-x" onClick={() => act(x, 'dismiss')} aria-label={t('Not now: {name}', { name: x.name })} title={t('Not now')}>

@@ -27,9 +27,10 @@ export function BillingCard() {
   if (b.isLoading) return <Skeleton n={1} h={160} />;
   const s = b.data;
   if (!s) return <div className="card pad small muted">{t('The plan details aren’t available on this server yet.')}</div>;
-  const usedMb = s.storage?.usedBytes != null ? s.storage.usedBytes / 1048576 : (s.usage?.storageMb ?? null);
-  const quotaMb = s.storage?.quotaBytes != null ? s.storage.quotaBytes / 1048576 : (s.limits?.storageMb ?? null);
-  const pct = usedMb != null && quotaMb ? Math.min(100, Math.round((usedMb / quotaMb) * 100)) : null;
+  const usedMb = s.usage?.storageBytes != null ? s.usage.storageBytes / 1048576 : null;
+  const quotaMb = s.limits?.storageBytes != null ? s.limits.storageBytes / 1048576 : null;
+  // a sliver stays visible as soon as anything is stored
+  const pct = usedMb != null && quotaMb ? Math.min(100, Math.max(usedMb > 0 ? 1 : 0, Math.round((usedMb / quotaMb) * 100))) : null;
   const msgs = s.limits?.assistantPerMonth;
   return (
     <section className="card pad stack" aria-labelledby="plan-h" style={{ marginBottom: 16 }}>
@@ -55,6 +56,18 @@ export function BillingCard() {
           <>
             <dt>{t('Assistant')}</dt>
             <dd>{t('{used} of {max} messages this month', { used: s.usage?.assistantThisMonth ?? 0, max: msgs })}</dd>
+          </>
+        )}
+        {s.limits?.receiptAiPerDay != null && (
+          <>
+            <dt>{t('Receipt photos')}</dt>
+            <dd>{t('{used} of {max} today', { used: s.usage?.receiptAiToday ?? 0, max: s.limits.receiptAiPerDay })}</dd>
+          </>
+        )}
+        {s.limits?.historyDays != null && (
+          <>
+            <dt>{t('Remembers')}</dt>
+            <dd>{t('{n} days back', { n: s.limits.historyDays })}</dd>
           </>
         )}
       </dl>

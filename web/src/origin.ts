@@ -6,7 +6,12 @@
 import { relTime } from './api';
 import { t } from './i18n';
 
+/** Short source keys of older servers; anything else is a line the server already worded ("Lea · heute 14:05"). */
+const KEYS = new Set(['rhythm', 'remembered', 'auto', 'stock', 'used-up', 'guest', 'share', 'receipt', 'receipts', 'import', 'assistant', 'voice', 'recipe', 'plan', 'cookidoo', 'ha', 'order', 'treat', 'away', 'leftover', 'paper', 'photo', 'manual']);
+export const isWorded = (origin: string | null | undefined): boolean => Boolean(origin && !KEYS.has(origin));
+
 export function originLabel(origin: string | null | undefined, by?: string | null): string {
+  if (isWorded(origin)) return origin as string;
   switch (origin) {
     case 'rhythm':
     case 'remembered':
@@ -50,7 +55,7 @@ export function originLabel(origin: string | null | undefined, by?: string | nul
 
 /** "Lea · 2 h ago" / "ToHuus remembered · yesterday" */
 export const originLine = (origin: string | null | undefined, by: string | null | undefined, at?: string | null) =>
-  [originLabel(origin, by), at ? relTime(at) : null].filter(Boolean).join(' · ');
+  isWorded(origin) ? (origin as string) : [originLabel(origin, by), at ? relTime(at) : null].filter(Boolean).join(' · ');
 
 /** Whole days since a YYYY-MM-DD (or SQL timestamp), local time. */
 export function daysSince(d: string | null | undefined): number | null {
@@ -67,8 +72,9 @@ export function agoDays(n: number | null): string {
   return t('{n} days ago', { n });
 }
 
-/** "remembers: every ~6 days, last 9 days ago" */
-export const rhythmLine = (everyDays: number, lastBought: string | null) => {
+/** "merkt sich: alle ~6 Tage · zuletzt Mittwoch" – the server's label when it sends one */
+export const rhythmLine = (everyDays: number, lastBought: string | null, label?: string | null) => {
+  if (label) return t('remembers: {label}', { label });
   const ago = daysSince(lastBought);
   return ago == null ? t('remembers: every ~{n} days', { n: Math.round(everyDays) }) : t('remembers: every ~{n} days, last {ago}', { n: Math.round(everyDays), ago: agoDays(ago) });
 };

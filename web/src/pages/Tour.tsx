@@ -421,7 +421,7 @@ export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => 
             <b>
               {t('Start empty')} <span className="badge tour-rec">{t('recommended for your household')}</span>
             </b>
-            <span>{t('Name your home, pick your places and add your first things. Nothing to clean up later.')}</span>
+            <span>{t('Say who belongs to it and start with your list – in a minute. Nothing to clean up later.')}</span>
           </button>
           <button className="action tour-choice" disabled={busy !== null} onClick={() => choose('demo')}>
             <span className="ic">

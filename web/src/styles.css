@@ -9473,6 +9473,15 @@ button.li {
 }
 .due-act .btn {
   min-height: 44px;
+  font-size: 15px;
+}
+.due-row {
+  padding: 10px 0;
+}
+.due-more {
+  order: 9;
+  align-self: flex-start;
+  min-height: 44px;
 }
 @media (min-width: 560px) {
   .due-row {
@@ -10314,4 +10323,28 @@ button.rcard {
 }
 .walk-done p {
   margin: 6px 0 0;
+}
+.dotmk.done {
+  background: var(--primary);
+}
+.struck {
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-3);
+  color: var(--ink-2);
+}
+.memory-page {
+  max-width: 640px;
+}
+.memory-add {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.memory-add .input {
+  flex: 1;
+  min-width: 0;
+}
+.memory-list {
+  list-style: none;
+  margin: 0;
 }

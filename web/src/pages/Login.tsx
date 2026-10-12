@@ -13,6 +13,8 @@ import { useInstance } from '../data';
 type Method = 'passkey' | 'link' | 'password' | 'sso';
 export interface AuthOptions {
   language?: string;
+  /** ToHuus Cloud: sign in with an account (e-mail + password) */
+  cloud?: boolean;
   brand?: string;
   showNames: boolean;
   users: { name: string; color: string; methods: Method[]; face?: import('../people/Avatar').Face | null }[];
@@ -272,11 +274,13 @@ export function Login() {
             {anyButton && <div className="auth-or"><span>{t('or with password')}</span></div>}
             {typeName && (
               <div className="field">
-                <label htmlFor="login-name">{t('Name')}</label>
+                <label htmlFor="login-name">{o?.cloud ? t('E-mail') : t('Name')}</label>
                 <input
                   id="login-name"
                   className="input"
-                  autoComplete="username webauthn"
+                  type={o?.cloud ? 'email' : 'text'}
+                  inputMode={o?.cloud ? 'email' : undefined}
+                  autoComplete={o?.cloud ? 'email' : 'username webauthn'}
                   autoCapitalize="none"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -328,7 +332,7 @@ export function Login() {
           <BrandMark className="on-block" /> {BRAND.name}
         </div>
         <div className="login-hero">
-          <p className="eyebrow label-sq">{t('Open source · on your own server')}</p>
+          <p className="eyebrow label-sq">{o?.cloud ? 'ToHuus Cloud' : t('Open source · on your own server')}</p>
           <h1 className="login-h1">
             {t('Less on your mind.')}
             <br />

@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { useQuery } from '@tanstack/react-query';
 import { api, invalidate, post, useApi } from '../api';
-import { getOr } from '../data';
+import { getOr, imgSrc } from '../data';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { t } from '../i18n';
 import { WeekPlan } from './Week';
@@ -77,15 +77,18 @@ interface Idea {
   title: string;
   image?: string | null;
   timeMin?: number | null;
-  missing?: (string | { name: string; productId?: number | null })[];
-  reason?: string | null;
+  missing?: (string | { text?: string; name?: string; productId?: number | null })[];
+  probablyHave?: string[];
+  why?: string[];
 }
+const missName = (m: NonNullable<Idea['missing']>[number]) => (typeof m === 'string' ? m : (m.text ?? m.name ?? ''));
 
 /** "Daraus könnt ihr heute kochen" from /api/cook/ideas – hidden on servers without it (the panel below covers the same). */
 function CookIdeas() {
   const q = useQuery<Idea[] | null>({
     queryKey: ['cook', 'ideas'],
-    queryFn: () => getOr<any>('/cook/ideas', () => null).then((d) => (d == null ? null : Array.isArray(d) ? d : (d.ideas ?? d.recipes ?? []))),
+    // { ready, almost, probablyAtHome } (docs/api-today.md); ready first, then 1–2 missing
+    queryFn: () => getOr<any>('/cook/ideas?limit=8', () => null).then((d) => (d == null ? null : Array.isArray(d) ? d : [...(d.ready ?? []), ...(d.almost ?? [])])),
     retry: false,
   });
   const nav = useNavigate();
@@ -93,7 +96,7 @@ function CookIdeas() {
   const [added, setAdded] = useState<Set<number>>(new Set());
   if (!q.data?.length) return null;
   const addMissing = async (i: Idea) => {
-    const miss = (i.missing ?? []).map((m) => (typeof m === 'string' ? { name: m, productId: null } : m));
+    const miss = (i.missing ?? []).map((m) => ({ name: missName(m), productId: typeof m === 'string' ? null : (m.productId ?? null) }));
     await post('/shop/quick-add', { items: miss.map((m) => ({ name: m.name, product_id: m.productId ?? null })) });
     setAdded(new Set(added).add(i.recipeId));
     invalidate('shopping', 'today');
@@ -104,14 +107,15 @@ function CookIdeas() {
       <h2 id="h-ideas">{t('You can cook this today')}</h2>
       <div className="cidea-strip">
         {q.data.slice(0, 8).map((i) => {
-          const miss = (i.missing ?? []).map((m) => (typeof m === 'string' ? m : m.name));
+          const miss = (i.missing ?? []).map(missName);
           return (
             <article key={i.recipeId} className="cidea">
               <button className="cidea-img" onClick={() => nav(`/rezepte/${i.recipeId}`)} aria-label={i.title}>
-                {i.image ? <img src={i.image} alt="" loading="lazy" /> : <ChefHat size={30} aria-hidden="true" />}
+                {i.image ? <img src={imgSrc(i.image)!} alt="" loading="lazy" /> : <ChefHat size={30} aria-hidden="true" />}
               </button>
               <b>{i.title}</b>
               <span className="meta">{miss.length === 0 ? t('Everything is at home') : t('Missing: {list}', { list: miss.join(', ') })}</span>
+              {i.probablyHave && i.probablyHave.length > 0 && <span className="meta">{t('Probably at home: {list}', { list: i.probablyHave.join(', ') })}</span>}
               {miss.length > 0 && (
                 <button className="btn sm" disabled={added.has(i.recipeId)} onClick={() => addMissing(i)}>
                   {added.has(i.recipeId) ? t('On the list') : t('Put on the list')}

@@ -16,9 +16,13 @@ export function openAssistant(text?: string, send = false) {
   window.dispatchEvent(new CustomEvent('tohuus:assistant', { detail: { text, send } }));
 }
 
+/**
+ * The assistant exists on every server that has /api/instance: without an AI key it still understands the common
+ * sentences ("Milch, 2 Paprika und Brot", "Milch ist alle") in basic mode (docs/assistant.md).
+ */
+const hasAssistant = (i: Instance | undefined) => Boolean(i && (i.known || i.features?.assistant)) && !isMissing('/assistant/chat');
 export function assistantAvailable(): boolean {
-  const i = qc.getQueryData<Instance>(['instance']);
-  return Boolean(i?.features?.assistant) && !isMissing('/assistant/chat');
+  return hasAssistant(qc.getQueryData<Instance>(['instance']));
 }
 
 export function AssistantFab() {
@@ -39,7 +43,7 @@ export function AssistantFab() {
       window.removeEventListener('tohuus:assistant-gone', gone);
     };
   }, []);
-  const available = Boolean(inst.data?.features?.assistant) && !isMissing('/assistant/chat');
+  const available = hasAssistant(inst.data);
   if (!available && !open) return null;
   return (
     <>
@@ -61,7 +65,7 @@ export function AssistantFab() {
       )}
       {open && (
         <Suspense fallback={null}>
-          <AssistantSheet open={open} onClose={() => setOpen(false)} seed={seed} voice={inst.data?.features?.voice !== false} />
+          <AssistantSheet open={open} onClose={() => setOpen(false)} seed={seed} voice={Boolean(inst.data?.features?.voice)} />
         </Suspense>
       )}
     </>

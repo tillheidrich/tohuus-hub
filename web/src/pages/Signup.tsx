@@ -45,8 +45,8 @@ export function Signup() {
         region: navigator.language?.split('-')[1] ?? 'DE',
         client: 'web',
       });
-      history.replaceState(null, '', '/willkommen');
-      invalidate('me');
+      // a fresh start with the new session: straight into the setup ("Wer gehört dazu?")
+      location.replace('/willkommen');
     } catch (e) {
       setErr(e instanceof ApiError && e.status === 409 ? t('There is already an account with this e-mail address. Sign in instead?') : (e as Error).message);
     } finally {

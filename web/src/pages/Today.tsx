@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { post, qc } from '../api';
 import { assistantAvailable, openAssistant } from '../assistant/Fab';
-import { type CookToday, type Notice, type RhythmItem, type StillHave, type Today as TodayData, TODAY_KEY, useToday } from '../data';
+import { type CookToday, imgSrc, type Notice, type RhythmItem, type StillHave, type Today as TodayData, TODAY_KEY, useToday } from '../data';
 import { locale, t } from '../i18n';
 import { originLine, rhythmLine } from '../origin';
 import { guestAllows } from '../people/access';
@@ -116,6 +116,7 @@ function CardHead({ title, shape, link }: { title: string; shape: string; link?:
 
 function DueCard({ items, legacy }: { items: RhythmItem[]; legacy?: boolean }) {
   const toast = useToast();
+  const nav = useNavigate();
   const [busy, setBusy] = useState<number | null>(null);
   const act = async (r: RhythmItem, kind: 'accept' | 'dismiss') => {
     setBusy(r.productId);
@@ -138,15 +139,20 @@ function DueCard({ items, legacy }: { items: RhythmItem[]; legacy?: boolean }) {
           {t('Due')}
         </h2>
       </div>
+      {items.length > 3 && (
+        <button className="linkish due-more" onClick={() => nav('/einkauf')}>
+          {t('{n} more suggestions on the shopping list', { n: items.length - 3 })} <ArrowRight size={14} />
+        </button>
+      )}
       {items.length === 0 ? (
         <EntryLevels legacy={legacy} />
       ) : (
         <ul className="hrows">
-          {items.slice(0, 4).map((r) => (
+          {items.slice(0, 3).map((r) => (
             <li key={r.productId} className="hrow due-row">
               <div className="grow">
                 <b>{r.name}</b>
-                <span className="meta">{rhythmLine(r.everyDays, r.lastBought)}</span>
+                <span className="meta">{rhythmLine(r.everyDays, r.lastBought, r.label)}</span>
               </div>
               <div className="due-act">
                 <button className="btn sm primary" disabled={busy === r.productId} onClick={() => act(r, 'accept')}>
@@ -228,10 +234,13 @@ function ListCard({ d }: { d: TodayData }) {
         <ul className="hrows quiet">
           {d.list.recent.slice(0, 3).map((r) => (
             <li key={r.id} className="hrow">
-              <span className="dotmk" aria-hidden="true" />
+              <span className={`dotmk ${r.checked ? 'done' : ''}`} aria-hidden="true" />
               <div className="grow">
-                <b>{r.name}</b>
-                <span className="meta">{originLine(r.origin, r.by, r.at)}</span>
+                <b className={r.checked ? 'struck' : undefined}>
+                  {r.qty && r.qty !== 1 ? `${String(r.qty).replace('.', ',')}× ` : ''}
+                  {r.name}
+                </b>
+                <span className="meta">{[r.checked ? t('ticked off') : null, originLine(r.origin, r.by, r.at)].filter(Boolean).join(' · ')}</span>
               </div>
             </li>
           ))}
@@ -255,7 +264,7 @@ function StillHaveCard({ items }: { items: StillHave[] }) {
           const when = s.note ?? expiryText(s.nextExpiry ?? s.expiresOn ?? null);
           return (
             <li key={id ?? i} className="hrow">
-              <span className={`mk ${s.status === 'expired' ? 'out' : 'soon'}`} aria-hidden="true" />
+              <span className={`mk ${s.status === 'expired' ? 'out' : s.kind === 'probably' ? 'ok' : 'soon'}`} aria-hidden="true" />
               <button className="grow plain-row" onClick={() => id && nav(`/bestand/${id}`)}>
                 <b>{s.name}</b>
                 <span className="meta">{[when, s.location].filter(Boolean).join(' · ')}</span>
@@ -288,13 +297,15 @@ function CookCard({ c }: { c: CookToday }) {
   };
   return (
     <section className="hcard cook" aria-labelledby="h-cook">
-      <CardHead title={t('Cook today?')} shape="a" link={{ label: t('More ideas'), to: '/kochen' }} />
-      <button className="cook-main" onClick={() => nav(`/rezepte/${c.recipeId}`)}>
-        <span className="cook-img">{c.image ? <img src={c.image} alt="" loading="lazy" /> : <ChefHat size={28} aria-hidden="true" />}</span>
+      <CardHead title={c.kind === 'planned' ? t('Planned for today') : t('Cook today?')} shape="a" link={{ label: t('More ideas'), to: '/kochen' }} />
+      <button className="cook-main" onClick={() => nav(c.recipeId ? `/rezepte/${c.recipeId}${c.planId ? `?plan=${c.planId}` : ''}` : '/kochen?view=week')}>
+        <span className="cook-img">{c.image ? <img src={imgSrc(c.image)!} alt="" loading="lazy" /> : <ChefHat size={28} aria-hidden="true" />}</span>
         <span className="grow">
           <b>{c.title}</b>
           <span className="meta">
-            {missing.length === 0 ? (
+            {c.kind === 'planned' ? (
+              (c.why ?? []).join(' · ')
+            ) : missing.length === 0 ? (
               <span className="ok">
                 <Check size={14} weight="bold" /> {t('Everything is at home')}
               </span>
@@ -303,6 +314,7 @@ function CookCard({ c }: { c: CookToday }) {
             )}
             {c.timeMin ? ` · ${t('{n} min', { n: c.timeMin })}` : ''}
           </span>
+          {c.probablyHave && c.probablyHave.length > 0 && <span className="meta">{t('Probably at home: {list}', { list: c.probablyHave.join(', ') })}</span>}
         </span>
       </button>
       {missing.length > 0 && (
@@ -320,7 +332,7 @@ function MoneyCard({ m }: { m: NonNullable<TodayData['money']> }) {
   const nav = useNavigate();
   const month = new Date().toLocaleDateString(locale(), { month: 'long' });
   const pct = m.budget && m.month != null ? Math.min(100, Math.round((m.month / m.budget) * 100)) : null;
-  const over = m.budget != null && m.month != null && m.month > m.budget;
+  const over = m.budgetState ? m.budgetState === 'over' : m.budget != null && m.month != null && m.month > m.budget;
   const cur = m.currency ? { currency: m.currency } : {};
   return (
     <section className="hcard money" aria-labelledby="h-money">

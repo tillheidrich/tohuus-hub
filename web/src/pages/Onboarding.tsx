@@ -36,6 +36,7 @@ import { Ic } from '../placeicons';
 import { StartChoice, useTourInfo } from './Tour';
 import { StaplesPicker } from './Share';
 
+import { useInstance } from '../data';
 import { type GettingStarted, type Room, type Step, STEPS, useGettingStarted, useOnboardingRedirect } from '../onboarding-state';
 export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
 
@@ -68,12 +69,18 @@ export function Onboarding({ me }: { me: Me }) {
   const tour = useTourInfo();
   const choosing = Boolean(tour.data?.start.due);
   const legacy = sp.get('step') as Step | null;
+  const cloud = useInstance().data?.mode === 'cloud';
+  useEffect(() => {
+    if (cloud && choosing && me.actor.role === 'admin') post('/tour/start', { choice: 'empty' }).then(() => invalidate('tour', 'onboarding')).catch(() => {});
+  }, [cloud, choosing, me.actor.role]);
   useEffect(() => {
     if (step || !g.data || choosing) return;
     setStep(FROM_SERVER[legacy ?? g.data.state.step] ?? 'who');
     if (!g.data.state.started) patch('/onboarding', { started: true }).then(() => invalidate('onboarding')).catch(() => {});
   }, [g.data, legacy, step, choosing]);
 
+  // ToHuus Cloud: a new household starts empty – no demo choice, straight to "Wer gehört dazu?"
+  if (me.actor.role === 'admin' && choosing && cloud) return <Skeleton n={3} h={90} />;
   if (me.actor.role === 'admin' && choosing) return <StartChoice onDone={(c) => (c === 'demo' ? nav('/') : invalidate('onboarding'))} />;
   if (me.actor.role !== 'admin')
     return (
@@ -134,14 +141,14 @@ export function Onboarding({ me }: { me: Me }) {
         />
       )}
       {cur === 'walk' && <StepWalk form={curForm} onBack={back} onNext={next} />}
-      {cur === 'invite' && <StepInvite form={toHomeForm(curForm)} title={t('Who else does the shopping?')} onBack={back} onNext={next} />}
+      {cur === 'invite' && <StepInvite form={curForm} title={t('Who else does the shopping?')} onBack={back} onNext={next} />}
       {cur === 'receipt' && <StepReceipt photo={photoLater} onBack={back} onDone={(to) => close(false, to)} />}
     </div>
   );
 }
 
-/** The forms of the strategy; 'carer' ("I also look after someone") is new and maps onto 'couple' on older servers. */
-type OnbForm = HouseholdForm | 'carer';
+/** The forms of the strategy, incl. 'carer' ("I also look after someone"). */
+type OnbForm = HouseholdForm;
 const ONB_FORMS: { key: OnbForm; label: string; hint: string }[] = [
   { key: 'single', label: 'Just me', hint: 'One list, nothing to share.' },
   { key: 'couple', label: 'The two of us', hint: 'One list for both, live on both phones.' },
@@ -149,18 +156,9 @@ const ONB_FORMS: { key: OnbForm; label: string; hint: string }[] = [
   { key: 'shared', label: 'Shared flat', hint: 'Shared things together, your own stays yours.' },
   { key: 'carer', label: 'I also look after someone', hint: 'For example parents or a neighbour – their list next to yours.' },
 ];
-const toHomeForm = (f: OnbForm): HouseholdForm => (f === 'carer' ? 'couple' : f);
-const CARER_KEY = 'sw.onb.carer';
 
 function StepWho({ g, initial, onNext }: { g: GettingStarted; initial: OnbForm | null; onNext: (f: OnbForm) => void }) {
-  const [form, setForm] = useState<OnbForm | null>(() => {
-    try {
-      if (localStorage.getItem(CARER_KEY) === '1') return 'carer';
-    } catch {
-      /* ignore */
-    }
-    return initial;
-  });
+  const [form, setForm] = useState<OnbForm | null>(initial);
   const [name, setName] = useState(g.household.name);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
@@ -169,17 +167,7 @@ function StepWho({ g, initial, onNext }: { g: GettingStarted; initial: OnbForm |
     setBusy(true);
     try {
       const body = { household: name.trim() || undefined };
-      // newer servers know 'carer'; older ones answer 400 – then the closest existing form, remembered on this device
-      await put('/onboarding/home', { ...body, form }).catch(async (e) => {
-        if (form !== 'carer') throw e;
-        await put('/onboarding/home', { ...body, form: toHomeForm(form) });
-      });
-      try {
-        if (form === 'carer') localStorage.setItem(CARER_KEY, '1');
-        else localStorage.removeItem(CARER_KEY);
-      } catch {
-        /* ignore */
-      }
+      await put('/onboarding/home', { ...body, form });
       invalidate('me', 'settings', 'onboarding');
       onNext(form);
     } catch (e) {
@@ -992,6 +980,7 @@ const INVITE_TITLE: Record<HouseholdForm, string> = {
   couple: 'Invite your partner',
   family: 'Invite your family',
   shared: 'Invite your flatmates',
+  carer: 'Invite the people you shop for',
 };
 
 /** "3 of 5 done" – disappears when everything is done or when dismissed. Admins only. */
