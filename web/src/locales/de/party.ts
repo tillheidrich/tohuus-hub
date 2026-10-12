@@ -39,7 +39,7 @@ export const party: Record<string, string> = {
   'In the kitchen': 'In der Küche',
   'Kitchen board': 'Küchen-Board',
   'Kitchen’s closed – thanks for coming!': 'Küche ist zu – danke fürs Kommen!',
-  'Lea’s birthday, barbecue …': 'Leas Geburtstag, Grillabend …',
+  'Mira’s birthday, barbecue …': 'Miras Geburtstag, Grillabend …',
   'Like last time': 'Wie letztes Mal',
   'Max per guest': 'Höchstens pro Gast',
   'More from the house': 'Mehr aus dem Haus',

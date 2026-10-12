@@ -24,8 +24,8 @@ final class DecodingTests: XCTestCase {
         let milk = try XCTUnwrap(list.openItems.first { $0.text == "Milch" })
         XCTAssertEqual(milk.qtyLabel, "2×")
         XCTAssertFalse(milk.isInBasket)
-        XCTAssertEqual(milk.origin, "Till · heute 15:26")
-        XCTAssertEqual(milk.originLine, "Till · heute 15:26", "the server's origin line is shown as it is")
+        XCTAssertEqual(milk.origin, "Sam · heute 15:26")
+        XCTAssertEqual(milk.originLine, "Sam · heute 15:26", "the server's origin line is shown as it is")
         XCTAssertEqual(list.openItems.first { $0.text == "Erdbeer-Eis" }?.originLine, "im Vorrat knapp")
         // lenient: a broken row is dropped, not the whole list
         var raw = try XCTUnwrap(JSONSerialization.jsonObject(with: try fixture("shop-list")) as? [String: Any])
@@ -41,8 +41,8 @@ final class DecodingTests: XCTestCase {
 
     func testToday() throws {
         let t = try decode(TodayPayload.self, "today")
-        XCTAssertEqual(t.greeting, "Hallo, Till")
-        XCTAssertEqual(t.householdName, "Familie Heidrich")
+        XCTAssertEqual(t.greeting, "Hallo, Sam")
+        XCTAssertEqual(t.householdName, "Familie Berg")
         XCTAssertEqual(t.rhythm.count, 5)
         XCTAssertEqual(t.rhythm[0].name, "Bananen")
         XCTAssertEqual(t.rhythm[0].dueInDays, -2)
@@ -173,9 +173,9 @@ final class DecodingTests: XCTestCase {
         let a = try decode(AppAuthResponse.self, "auth-app")
         XCTAssertTrue(a.token.hasPrefix("sw_app_"))
         XCTAssertEqual(a.householdId, "1ebb0595-5608-40c3-93d6-47d91417735d")
-        XCTAssertEqual(a.households.first?.name, "Familie Heidrich")
+        XCTAssertEqual(a.households.first?.name, "Familie Berg")
         XCTAssertEqual(a.households.first?.trialEndsAt, "2026-10-26 13:26:36")
-        XCTAssertEqual(a.userName, "Till")
+        XCTAssertEqual(a.userName, "Sam")
         let s = try decode(AppAuthResponse.self, "signup")
         XCTAssertEqual(s.householdId, "1ebb0595-5608-40c3-93d6-47d91417735d")
         XCTAssertTrue(s.households.isEmpty)
@@ -191,7 +191,7 @@ final class DecodingTests: XCTestCase {
         XCTAssertEqual(link["expiresIn"]?.int, 60)
         XCTAssertTrue(link["url"]?.string?.contains("/api/auth/app/web-link/") == true)
         let mine = try decode(MeResponse.self, "me")
-        XCTAssertEqual(mine.name, "Till")
+        XCTAssertEqual(mine.name, "Sam")
     }
 
     func testInstance() throws {

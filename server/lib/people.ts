@@ -516,7 +516,7 @@ export function personProfile(key: string, viewer?: Actor | null) {
   };
 }
 
-/** For an assistant: resolve "Mila" / "u3" / "k2" to a person key. */
+/** For an assistant: resolve "Mika" / "u3" / "k2" to a person key. */
 export function findPersonKey(nameOrKey: string): string | null {
   const s = nameOrKey.trim();
   if (/^[uk]\d+$/.test(s)) return getPerson(s) ? s : null;

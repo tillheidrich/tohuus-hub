@@ -193,7 +193,7 @@ export const guest: Record<string, string> = {
   'Sensors for your dashboard (low stock, best-before, shopping list, meal idea), push notifications to your phone with an “Add to list” button.': 'Sensoren fürs Dashboard (knapp, MHD, Einkaufsliste, Kochidee), Push aufs Handy mit Knopf „Auf die Liste“.',
   'Create a “Home Assistant” access – you’ll get a ready-made package to paste in.': 'Zugang „Home Assistant“ erzeugen – dann bekommst du ein fertiges Package zum Einfügen.',
   'New access': 'Neuer Zugang',
-  'Name, e.g. Claude Till': 'Name, z. B. Claude Till',
+  'Name, e.g. Claude Sam': 'Name, z. B. Claude Sam',
   Script: 'Skript',
   'AI assistant': 'KI-Assistent',
   'Full API access': 'Voller API-Zugriff',

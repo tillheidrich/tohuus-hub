@@ -184,7 +184,7 @@ export function createOrder(
   const what = input.note ? (text ? t('{items} – “{note}”', { items: text, note: input.note }) : `„${input.note}“`) : text;
   void notify({
     event: 'order.new',
-    // at home it's a wish, not an order: "Lea would love something" – and only the chosen person's phone rings
+    // at home it's a wish, not an order: "Mira would love something" – and only the chosen person's phone rings
     title: kind === 'home' ? (target ? t('{name} asks you for something', { name }) : t('{name} would love something', { name })) : kind === 'party' ? t('Party order from {name}', { name }) : t('{name} (guest) would like something', { name }),
     message: what,
     path: kind === 'home' ? '/bestellen' : '/bar',

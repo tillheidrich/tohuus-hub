@@ -172,7 +172,7 @@ export const away: Record<string, string> = {
   'Who travels?': 'Wer fährt mit?',
   'Not everyone has to come along. Kids or guests without an account: add them below.': 'Nicht alle müssen mit. Kinder oder Gäste ohne Konto: unten hinzufügen.',
   'Also travelling or staying at home': 'Fährt auch mit oder bleibt zu Hause',
-  'e.g. Mila, Oma Inge': 'z. B. Mila, Oma Inge',
+  'e.g. Mika, Oma Inge': 'z. B. Mika, Oma Inge',
   'travels': 'fährt mit',
   'stays': 'bleibt',
   'Someone stays home: the week plan and the shopping list carry on for them.': 'Jemand bleibt zu Hause: Wochenplan und Einkaufsliste laufen für sie weiter.',

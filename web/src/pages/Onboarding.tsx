@@ -756,7 +756,7 @@ function StepInvite({ form, title, onBack, onNext }: { form: HouseholdForm; titl
         <div className="card pad stack">
           <div className="field">
             <label htmlFor="onb-inv">{t('Their name')}</label>
-            <input id="onb-inv" className="input" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && name.trim() && create()} placeholder={t('e.g. Lea')} />
+            <input id="onb-inv" className="input" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && name.trim() && create()} placeholder={t('e.g. Mira')} />
           </div>
           <button className="btn primary" disabled={busy || !name.trim()} onClick={create}>
             <UserPlus size={16} /> {busy ? t('Creating …') : t('Create invitation')}

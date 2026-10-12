@@ -101,7 +101,7 @@ export const order: Record<string, string> = {
   'Treats › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey.':
     'Verwöhnen › Für mich: Tipp auf eine Kachel – was Süßes, was zu trinken, aus dem Kühlschrank – oder auf „Was anderes“ für einen freien Wunsch wie Tee mit Honig.',
   '“How would you like it?” is a note for the person bringing it. “Who brings it?” asks one person – or whoever can.': '„Wie hättest du’s gern?“ ist eine Notiz für die Person, die es bringt. „Wer bringt’s?“ fragt eine Person – oder wer gerade kann.',
-  'The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Lea is bringing it”.': 'Die anderen bekommen eine Nachricht mit „Ich bring’s“ oder „Geht gerade nicht“ und einem kurzen Grund. Du siehst „Kommt gleich – Lea bringt’s“.',
+  'The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Mira is bringing it”.': 'Die anderen bekommen eine Nachricht mit „Ich bring’s“ oder „Geht gerade nicht“ und einem kurzen Grund. Du siehst „Kommt gleich – Mira bringt’s“.',
   'Once it’s there you can say thanks. Nobody keeps score – no points, no list of who brought what.': 'Wenn es da ist, kannst du Danke sagen. Niemand führt Buch – keine Punkte, keine Liste, wer was gebracht hat.',
   'Living alone? Then the page is just for guests and parties.': 'Du wohnst allein? Dann ist die Seite nur für Gäste und Partys da.',
   'Guests ask for what is really there – no app, no account.': 'Gäste wünschen sich, was wirklich da ist – ohne App, ohne Konto.',

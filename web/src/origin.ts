@@ -6,7 +6,7 @@
 import { relTime } from './api';
 import { t } from './i18n';
 
-/** Short source keys of older servers; anything else is a line the server already worded ("Lea · heute 14:05"). */
+/** Short source keys of older servers; anything else is a line the server already worded ("Mira · heute 14:05"). */
 const KEYS = new Set(['rhythm', 'remembered', 'auto', 'stock', 'used-up', 'guest', 'share', 'receipt', 'receipts', 'import', 'assistant', 'voice', 'recipe', 'plan', 'cookidoo', 'ha', 'order', 'treat', 'away', 'leftover', 'paper', 'photo', 'manual']);
 export const isWorded = (origin: string | null | undefined): boolean => Boolean(origin && !KEYS.has(origin));
 
@@ -53,7 +53,7 @@ export function originLabel(origin: string | null | undefined, by?: string | nul
   }
 }
 
-/** "Lea · 2 h ago" / "ToHuus remembered · yesterday" */
+/** "Mira · 2 h ago" / "ToHuus remembered · yesterday" */
 export const originLine = (origin: string | null | undefined, by: string | null | undefined, at?: string | null) =>
   isWorded(origin) ? (origin as string) : [originLabel(origin, by), at ? relTime(at) : null].filter(Boolean).join(' · ');
 

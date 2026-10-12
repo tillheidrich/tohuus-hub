@@ -34,7 +34,7 @@ export const people: Record<string, string> = {
   'e.g. nuts, milk': 'z. B. Nüsse, Milch',
   'e.g. mushrooms': 'z. B. Pilze',
   'e.g. pasta': 'z. B. Nudeln',
-  'e.g. Mila': 'z. B. Mila',
+  'e.g. Mika': 'z. B. Mika',
   'e.g. Oma Inge': 'z. B. Oma Inge',
   'Year of birth (optional)': 'Geburtsjahr (optional)',
   'Separate with commas. You can add likes and dislikes afterwards.': 'Mit Komma trennen. Vorlieben kannst du danach ergänzen.',

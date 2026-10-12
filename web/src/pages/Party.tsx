@@ -498,7 +498,7 @@ function StartSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
         )}
         <div className="field">
           <label>{t('Name')}</label>
-          <input className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} placeholder={t('Lea’s birthday, barbecue …')} />
+          <input className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} placeholder={t('Mira’s birthday, barbecue …')} />
         </div>
         <div className="field">
           <label>{t('Ends')}</label>

@@ -57,7 +57,7 @@ export function MemoryPage() {
         <div>
           <div className="eyebrow">{t('Assistant')}</div>
           <h1>{t('What ToHuus remembers')}</h1>
-          <p className="muted">{t('Things you asked ToHuus to remember – for example “we don’t eat pork” or “Lea shops on Saturdays”. Delete anything at any time.')}</p>
+          <p className="muted">{t('Things you asked ToHuus to remember – for example “we don’t eat pork” or “Mira shops on Saturdays”. Delete anything at any time.')}</p>
         </div>
       </header>
       <form

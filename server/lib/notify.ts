@@ -96,7 +96,7 @@ export const DEFAULT_NOTIFY: NotifySettings = {
     'stock.expiring': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'import.review': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'order.new': { ha: true, webhook: true, ntfy: true, email: false, push: true },
-    // goes only to the person who asked ("Lea is bringing it") – guests have no account and get nothing
+    // goes only to the person who asked ("Mira is bringing it") – guests have no account and get nothing
     'order.status': { ha: false, webhook: true, ntfy: false, email: false, push: true, telegram: false, gotify: false, matrix: false },
     'shopping.added': { ha: false, webhook: true, ntfy: false, email: false, push: false },
     'digest.daily': { ha: true, webhook: true, ntfy: false, email: true, push: false },

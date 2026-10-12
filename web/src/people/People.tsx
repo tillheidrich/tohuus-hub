@@ -511,7 +511,7 @@ function AddChildSheet({ open, onClose, onCreated }: { open: boolean; onClose: (
         </p>
         <div className="field">
           <label htmlFor="add-child-name">{t('Name')}</label>
-          <input id="add-child-name" className="input" value={f.name} maxLength={30} autoFocus placeholder={t('e.g. Mila')} onChange={(e) => setF({ ...f, name: e.target.value })} />
+          <input id="add-child-name" className="input" value={f.name} maxLength={30} autoFocus placeholder={t('e.g. Mika')} onChange={(e) => setF({ ...f, name: e.target.value })} />
         </div>
         <div className="field">
           <label htmlFor="add-child-year">{t('Year of birth (optional)')}</label>

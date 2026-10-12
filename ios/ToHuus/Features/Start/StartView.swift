@@ -264,7 +264,7 @@ struct SignUpView: View {
                 Text(L("You"))
             }
             Section {
-                TextField(L("Name of your household, e.g. Familie Heidrich"), text: $householdName)
+                TextField(L("Name of your household, e.g. Familie Berg"), text: $householdName)
                 Picker(L("Who belongs to it?"), selection: $form) {
                     ForEach(Self.forms, id: \.0) { f in Text(L(f.1)).tag(f.0) }
                 }

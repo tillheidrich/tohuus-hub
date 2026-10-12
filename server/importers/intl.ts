@@ -1,5 +1,5 @@
 /**
- * Till receipts from the UK, the US and Sweden (pdftotext -layout output, plain-text or HTML mail bodies).
+ * Sam receipts from the UK, the US and Sweden (pdftotext -layout output, plain-text or HTML mail bodies).
  *
  * The German chains have their own grammar in generic.ts. This one is region-aware:
  *

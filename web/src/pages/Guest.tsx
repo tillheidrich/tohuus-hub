@@ -411,7 +411,7 @@ function NameSheet({ open, initial, onClose, onSave }: { open: boolean; initial:
         <p className="muted" style={{ margin: 0 }}>{t('Your name goes with every order, so the kitchen knows whose it is. This phone remembers it.')}</p>
         <div className="field">
           <label htmlFor="guest-name">{t('Your name')}</label>
-          <input id="guest-name" className="input" value={v} maxLength={40} autoComplete="given-name" autoFocus onChange={(e) => setV(e.target.value)} placeholder={t('e.g. Mila')} />
+          <input id="guest-name" className="input" value={v} maxLength={40} autoComplete="given-name" autoFocus onChange={(e) => setV(e.target.value)} placeholder={t('e.g. Mika')} />
         </div>
         <button className="btn primary lg" disabled={!v.trim()}>
           <Check size={18} weight="bold" /> {t('That’s me')}

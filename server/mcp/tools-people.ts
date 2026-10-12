@@ -55,11 +55,11 @@ export function register(s: McpServer, actorName: string) {
       title: 'Rate a recipe for a person',
       description:
         'Store how much one person liked a dish: 1 = not for them, 3 = okay, 5 = loved it (2 and 4 are allowed too). ' +
-        'Works for children as well ("Mila loved the pancakes"). Ratings gently steer meal suggestions. ' +
+        'Works for children as well ("Mika loved the pancakes"). Ratings gently steer meal suggestions. ' +
         'Pass rating null to remove the rating.',
       inputSchema: {
         recipe: z.union([z.string(), z.number()]).describe('recipe title or id'),
-        person: z.string().describe('name of the person (e.g. "Mila") or a key from household_people'),
+        person: z.string().describe('name of the person (e.g. "Mika") or a key from household_people'),
         rating: z.number().int().min(1).max(5).nullable(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

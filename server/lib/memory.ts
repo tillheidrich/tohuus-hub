@@ -1,6 +1,6 @@
 /**
  * What ToHuus "merkt sich" about a household beyond lists and receipts: small facts, preferences and routines
- * ("Wir kaufen Brot beim Bäcker", "Samstags wird gegrillt", "Lea trinkt Hafermilch"). Written by people, by the
+ * ("Wir kaufen Brot beim Bäcker", "Samstags wird gegrillt", "Mira trinkt Hafermilch"). Written by people, by the
  * assistant when someone asks it to remember something, or derived. Every row can be read and deleted
  * (GET/DELETE /api/memory); the word "Gedächtnis" stays internal.
  *

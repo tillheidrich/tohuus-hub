@@ -219,7 +219,7 @@ export function healthShareAllowed(): boolean {
 export interface AssistantRedactor {
   /** the household agreed to share health data with the assistant */
   consent: boolean;
-  /** neutral wording for per-person suggestion reasons (allergy warnings, "loved by Mila", "Ben doesn't like …") */
+  /** neutral wording for per-person suggestion reasons (allergy warnings, "loved by Mika", "Ben doesn't like …") */
   text(s: string): string;
   /** the same for every string inside a JSON-like value */
   deep<T>(v: T): T;

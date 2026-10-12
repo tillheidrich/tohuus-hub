@@ -22,7 +22,7 @@ const err = (status: number, message: string) => Object.assign(new Error(message
 // ------------------------------------------------------------------ shared text
 
 const URL_RE = /\bhttps?:\/\/[^\s<>"')\]]+/gi;
-/** WhatsApp/Signal export prefixes: "[11.10.26, 14:03:12] Lea: …", "11.10.26, 14:03 - Lea: …", "10/11/26, 2:03 PM - Lea: …" */
+/** WhatsApp/Signal export prefixes: "[11.10.26, 14:03:12] Mira: …", "11.10.26, 14:03 - Mira: …", "10/11/26, 2:03 PM - Mira: …" */
 const CHAT_PREFIX = /^\s*\[?\d{1,4}[./-]\d{1,2}[./-]\d{1,4},?\s+\d{1,2}[:.]\d{2}(?:[:.]\d{2})?(?:\s?[AaPp]\.?[Mm]\.?)?\]?\s*(?:[-–]\s*)?[^:\n]{1,40}:\s+/;
 const MEDIA = /^<?\s*(medien ausgeschlossen|media omitted|bild weggelassen|image omitted|diese nachricht wurde gelöscht|this message was deleted|meddelandet raderades|media utelämnad)\s*>?$/i;
 const CHECKBOX = /^\s*(?:[-*•·–]\s*)?(?:\[\s?[xX✓]?\s?\]|[☐☑☒✅✔✓□■▢◻])\s*/;

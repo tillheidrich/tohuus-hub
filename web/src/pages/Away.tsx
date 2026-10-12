@@ -1236,7 +1236,7 @@ function TripSheet({ trip, open, members, onClose, onSaved }: { trip: Trip | nul
         <div className="field">
           <label>{t('Also travelling or staying at home')}</label>
           <div className="row" style={{ gap: 8 }}>
-            <input className="input grow" value={extra} placeholder={t('e.g. Mila, Oma Inge')} onChange={(e) => setExtra(e.target.value)} />
+            <input className="input grow" value={extra} placeholder={t('e.g. Mika, Oma Inge')} onChange={(e) => setExtra(e.target.value)} />
             <button
               type="button"
               className="btn"

@@ -137,7 +137,7 @@ r.get('/claims', (req, res) => {
 r.post('/claims', (req, res) => {
   const b = z.object({ kind: z.enum(['shopping', 'plan']), id: z.number(), on: z.boolean().default(true), user_id: z.number().optional() }).parse(req.body);
   try {
-    // members claim for themselves; picking someone else is allowed too ("Lea kocht")
+    // members claim for themselves; picking someone else is allowed too ("Mira kocht")
     const uid = b.user_id ?? userId(req);
     if (b.user_id && !db.prepare('SELECT 1 FROM users WHERE id = ?').get(b.user_id)) throw Object.assign(new Error('member not found'), { status: 404 });
     res.json(claim(b.kind, b.id, uid, b.on));

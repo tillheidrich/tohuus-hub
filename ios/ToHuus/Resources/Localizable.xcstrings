@@ -1990,19 +1990,19 @@
         }
       }
     },
-    "Name of your household, e.g. Familie Heidrich": {
+    "Name of your household, e.g. Familie Berg": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name of your household, e.g. Familie Heidrich"
+            "value": "Name of your household, e.g. Familie Berg"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name eures Haushalts, z. B. Familie Heidrich"
+            "value": "Name eures Haushalts, z. B. Familie Berg"
           }
         }
       }

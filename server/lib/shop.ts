@@ -238,7 +238,7 @@ export interface ShopItem {
   share?: ShareInfo;
   /** "Where to buy?" – only what a person entered (item, else its product); empty = anywhere (wave 6) */
   buy_at: string[];
-  /** where the row comes from: "Lea · today 14:05", "remembers: every ~9 days", "from recipe X" (shopping-trust.ts) */
+  /** where the row comes from: "Mira · today 14:05", "remembers: every ~9 days", "from recipe X" (shopping-trust.ts) */
   origin: string;
 }
 

@@ -36,7 +36,7 @@ export interface TicketSpec {
   text?: string | null;
   title?: string | null;
   day?: string | null;
-  /** who made it ("from Till") */
+  /** who made it ("from Sam") */
   from?: string | null;
 }
 

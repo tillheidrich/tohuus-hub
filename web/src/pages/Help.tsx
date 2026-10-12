@@ -91,7 +91,7 @@ export function Help() {
       steps: [
         t('Treats › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey.'),
         t('“How would you like it?” is a note for the person bringing it. “Who brings it?” asks one person – or whoever can.'),
-        t('The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Lea is bringing it”.'),
+        t('The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Mira is bringing it”.'),
         t('Once it’s there you can say thanks. Nobody keeps score – no points, no list of who brought what.'),
         t('Living alone? Then the page is just for guests and parties.'),
       ],

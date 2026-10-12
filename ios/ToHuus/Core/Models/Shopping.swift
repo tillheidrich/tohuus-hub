@@ -65,7 +65,7 @@ struct ShopItem: Decodable, Sendable, Identifiable, Equatable {
     var section: String?
     var claim: Claim?
     var buyAt: [String]?
-    /// the origin line, already formatted by the server ("Lea · heute 14:05", "merkt sich: alle ~9 Tage")
+    /// the origin line, already formatted by the server ("Mira · heute 14:05", "merkt sich: alle ~9 Tage")
     var origin: String?
     /// queued locally, not yet on the server
     var pending: Bool?

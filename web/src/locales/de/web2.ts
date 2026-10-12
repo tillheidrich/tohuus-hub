@@ -180,8 +180,8 @@ export const web2: Record<string, string> = {
   // Integration 12.10. (echte Endpunkte)
   'Forgotten: {text}': 'Vergessen: {text}',
   'What ToHuus remembers': 'Was ToHuus sich merkt',
-  'Things you asked ToHuus to remember – for example “we don’t eat pork” or “Lea shops on Saturdays”. Delete anything at any time.':
-    'Was ToHuus sich für euch merken soll – zum Beispiel „Wir essen kein Schwein“ oder „Lea kauft samstags ein“. Du kannst alles jederzeit löschen.',
+  'Things you asked ToHuus to remember – for example “we don’t eat pork” or “Mira shops on Saturdays”. Delete anything at any time.':
+    'Was ToHuus sich für euch merken soll – zum Beispiel „Wir essen kein Schwein“ oder „Mira kauft samstags ein“. Du kannst alles jederzeit löschen.',
   'e.g. We shop at Aldi on Saturdays': 'z. B. Samstags kaufen wir bei Aldi ein',
   'Remember something new': 'Etwas Neues merken',
   Remember: 'Merken',

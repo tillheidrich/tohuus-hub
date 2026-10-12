@@ -19,7 +19,7 @@ export const data: Record<string, string> = {
     'Praktisch zu Hause: Namen antippen, Passwort eingeben. Schalt es aus, wenn die App aus dem Internet erreichbar ist – dann tippt jede:r den eigenen Namen.',
   'You get a personal link. Whoever opens it picks their own password – nobody has to pass passwords around. The link works once and for 7 days.':
     'Du bekommst einen persönlichen Link. Wer ihn öffnet, wählt das eigene Passwort – niemand muss Passwörter weitergeben. Der Link gilt einmal und 7 Tage lang.',
-  'e.g. Lea': 'z. B. Lea',
+  'e.g. Mira': 'z. B. Mira',
   Role: 'Rolle',
   'Admins can also change settings, members and backups.': 'Admins können auch Einstellungen, Mitglieder und Sicherungen ändern.',
   'Members can use everything day to day, but not change settings.': 'Mitglieder können im Alltag alles nutzen, aber keine Einstellungen ändern.',

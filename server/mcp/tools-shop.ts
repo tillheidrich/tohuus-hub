@@ -32,7 +32,7 @@ export function register(s: McpServer, actorName: string) {
     {
       title: 'Take care of it',
       description:
-        'Marks that a household member takes care of a shopping item ("Till gets it") or a planned meal ("Lea cooks"). No points, just so nobody does it twice. ' +
+        'Marks that a household member takes care of a shopping item ("Sam gets it") or a planned meal ("Mira cooks"). No points, just so nobody does it twice. ' +
         'Use release=true to remove the claim.',
       inputSchema: {
         kind: z.enum(['shopping', 'plan']).default('shopping'),

@@ -348,7 +348,7 @@ function Access({ admin }: { admin: boolean }) {
         <div className="card pad stack">
           <b>{t('New access')}</b>
           <div className="grid-2">
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('Name, e.g. Claude Till')} />
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('Name, e.g. Claude Sam')} />
             <Seg value={scope} onChange={(v) => { setScope(v); setName(v === 'ha' ? 'Home Assistant' : v === 'mcp' ? 'Claude' : t('Script')); }} options={[['mcp', t('AI assistant')], ['ha', 'Home Assistant'], ['full', t('Full API access')]]} />
           </div>
           <button className="btn primary" onClick={create}>

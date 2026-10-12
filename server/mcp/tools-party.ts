@@ -47,7 +47,7 @@ export function register(s: McpServer, actorName: string) {
         'Starts party mode: a short-lived guest link (QR) bound to the party, a party menu, a TV board and an automatic end. ' +
         'Without products the menu is every bar item. Returns the guest link, the board link and a 4-digit code for pairing a TV at <base>/party.',
       inputSchema: {
-        name: z.string().max(60).optional().describe('e.g. "Lea\'s 35th", "Barbecue"'),
+        name: z.string().max(60).optional().describe('e.g. "Mira\'s 35th", "Barbecue"'),
         hours: z.number().min(0.5).max(48).optional().describe('Planned duration, default 5'),
         idle_minutes: z.number().int().min(0).max(600).optional().describe('End automatically after this many minutes without orders, default 90; 0 = off'),
         products: z.array(z.union([z.number().int(), z.string()])).optional().describe('Party menu: product ids or names. Default: all bar items.'),

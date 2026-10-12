@@ -43,7 +43,7 @@ export function register(s: McpServer, actorName: string) {
         '"discreet": everyone sees a neutral placeholder such as "Drugstore item"; with reveal_to_shopper=true whoever is shopping is shown the real name. ' +
         'The real name is never returned by any tool, Home Assistant, Telegram, displays or printed tickets – only the member sees it in the app.',
       inputSchema: {
-        text: z.string().min(1).max(500).describe('the item(s), e.g. "Kondome" or "birthday present for Lea"'),
+        text: z.string().min(1).max(500).describe('the item(s), e.g. "Kondome" or "birthday present for Mira"'),
         member: z.string().describe('the household member it belongs to'),
         visibility: z.enum(['private', 'discreet']).default('discreet'),
         reveal_to_shopper: z.boolean().optional().describe('discreet only: show the real name to whoever is shopping'),
