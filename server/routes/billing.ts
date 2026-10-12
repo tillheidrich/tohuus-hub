@@ -43,6 +43,7 @@ export function billingStatus() {
       assistantThrottleOnly: l.assistantThrottleOnly,
       uploadsPerDay: l.uploadsPerDay,
       receiptAiPerDay: l.receiptAiPerDay,
+      importAiPerDay: l.importAiPerDay,
       storageBytes: l.storageBytes,
       features: l.features,
     },

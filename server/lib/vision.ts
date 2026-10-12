@@ -6,7 +6,10 @@
  */
 import { aiConfig, aiEnabled, chat, extractJson, type ContentPart } from './ai.js';
 import { redactReceipt } from './redact.js';
-import { consumeReceiptAi } from './limits.js';
+import { consumeImportAi, consumeReceiptAi } from './limits.js';
+
+/** text sent to a model is capped (a whole web page or a pasted book must not burn tokens) */
+const MAX_TEXT = 50_000;
 import { lang } from '../db.js';
 import { t } from '../i18n.js';
 import { visionRegionHint as regionHint } from './region-hints.js';
@@ -83,8 +86,12 @@ async function ask(task: VisionTask, content: ContentPart[], kind: 'vision' | 'v
 export async function runVision(task: VisionTask, input: { images?: string[]; text?: string }): Promise<any> {
   if (!visionAvailable()) throw new Error(t('No vision model configured (VISION_BASE_URL / VISION_MODEL)'));
   // reading receipts and shelves with AI is rate-limited per plan (plans.ts receiptAiPerDay); recipes are not
+  // every AI read counts against the plan (plans.ts): receipts and shelves per day, recipe and product imports per day
   if (task === 'receipt' || task === 'text-items' || task === 'shelf')
     consumeReceiptAi(() => t('Enough receipts read by AI for today. Upload the PDF, or try again tomorrow.'));
+  else consumeImportAi(() => t('Enough recipes imported with AI for today. Try again tomorrow, or type the recipe in.'));
+  if (input.text && input.text.length > MAX_TEXT) input = { ...input, text: input.text.slice(0, MAX_TEXT) };
+  if ((input.images?.length ?? 0) > 8) throw new Error(t('Please send at most 8 photos at once.'));
   // receipt text (PDF, mail, digital receipt) goes out without card, loyalty, TSE and address data (redact.ts)
   const text = input.text && task === 'text-items' ? redactReceipt(input.text).text : input.text;
   const content: ContentPart[] = [{ type: 'text', text: prompt(task) + (text ? `\n\n---\n${text}` : '') }];

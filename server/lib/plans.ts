@@ -23,7 +23,7 @@ import { currentHousehold } from './tenancy.js';
 
 export type Plan = 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
 export const PLANS: Plan[] = ['free', 'trial', 'haushalt', 'plus', 'selfhost'];
-export type UsageKind = 'assistant' | 'upload' | 'receiptAi';
+export type UsageKind = 'assistant' | 'upload' | 'receiptAi' | 'importAi';
 
 export interface Limits {
   /** how far back rhythm, "Das habt ihr noch", spending … look (null = full history) */
@@ -36,6 +36,8 @@ export interface Limits {
   uploadsPerDay: number | null;
   /** AI receipt reads per day (receipts stay unlimited, only rate-limited) */
   receiptAiPerDay: number | null;
+  /** AI recipe/product imports per day (link, text, photo) */
+  importAiPerDay: number | null;
   /** storage quota in bytes (null = unlimited) */
   storageBytes: number | null;
   features: {
@@ -56,17 +58,18 @@ const haushaltFeatures = { ...base, fullHistory: true, priceHistory: true, conne
 const plusFeatures = { ...haushaltFeatures, weekPlanFromPantry: true, monthlyAnalysis: true, substituteFromStock: true };
 
 export const PLAN_LIMITS: Record<Plan, Limits> = {
-  free: { historyDays: 60, assistantPerMonth: 20, assistantThrottleOnly: false, uploadsPerDay: 60, receiptAiPerDay: 15, storageBytes: 250 * MB, features: base },
-  haushalt: { historyDays: null, assistantPerMonth: 100, assistantThrottleOnly: false, uploadsPerDay: 200, receiptAiPerDay: 40, storageBytes: 2048 * MB, features: haushaltFeatures },
-  plus: { historyDays: null, assistantPerMonth: 1500, assistantThrottleOnly: true, uploadsPerDay: 300, receiptAiPerDay: 60, storageBytes: 5120 * MB, features: plusFeatures },
+  free: { historyDays: 60, assistantPerMonth: 20, assistantThrottleOnly: false, uploadsPerDay: 60, receiptAiPerDay: 15, importAiPerDay: 10, storageBytes: 250 * MB, features: base },
+  haushalt: { historyDays: null, assistantPerMonth: 100, assistantThrottleOnly: false, uploadsPerDay: 200, receiptAiPerDay: 40, importAiPerDay: 40, storageBytes: 2048 * MB, features: haushaltFeatures },
+  plus: { historyDays: null, assistantPerMonth: 1500, assistantThrottleOnly: true, uploadsPerDay: 300, receiptAiPerDay: 60, importAiPerDay: 100, storageBytes: 5120 * MB, features: plusFeatures },
   // the 14-day trial is Plus
-  trial: { historyDays: null, assistantPerMonth: 1500, assistantThrottleOnly: true, uploadsPerDay: 300, receiptAiPerDay: 60, storageBytes: 5120 * MB, features: plusFeatures },
+  trial: { historyDays: null, assistantPerMonth: 1500, assistantThrottleOnly: true, uploadsPerDay: 300, receiptAiPerDay: 60, importAiPerDay: 100, storageBytes: 5120 * MB, features: plusFeatures },
   selfhost: {
     historyDays: null,
     assistantPerMonth: null,
     assistantThrottleOnly: false,
     uploadsPerDay: null,
     receiptAiPerDay: null,
+    importAiPerDay: null,
     storageBytes: null,
     features: { ...plusFeatures },
   },
@@ -119,7 +122,8 @@ export function entitlement(name: keyof Limits['features']): boolean {
 }
 
 const periodOf = (kind: UsageKind, d = new Date()) => (kind === 'assistant' ? d.toISOString().slice(0, 7) : d.toISOString().slice(0, 10));
-const allowance = (kind: UsageKind, l: Limits) => (kind === 'assistant' ? l.assistantPerMonth : kind === 'upload' ? l.uploadsPerDay : l.receiptAiPerDay);
+const allowance = (kind: UsageKind, l: Limits) =>
+  kind === 'assistant' ? l.assistantPerMonth : kind === 'upload' ? l.uploadsPerDay : kind === 'importAi' ? l.importAiPerDay : l.receiptAiPerDay;
 
 export interface ConsumeResult {
   ok: boolean;

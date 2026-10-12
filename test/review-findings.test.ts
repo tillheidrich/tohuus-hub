@@ -209,13 +209,14 @@ describe('review: crypto-shredding leaves no way back', () => {
     const cb = await import('../server/lib/cloud-backup');
     const calls: { method: string; url: string }[] = [];
     const id = '0f0e0d0c-1111-4222-8333-444455556666';
-    const realFetch = globalThis.fetch;
-    globalThis.fetch = (async (url: any, init: any = {}) => {
+    const g = globalThis as any;
+    const realFetch = g.fetch;
+    g.fetch = (async (url: any, init: any = {}) => {
       calls.push({ method: init.method ?? 'GET', url: String(url) });
       if ((init.method ?? 'GET') === 'GET')
         return new Response(`<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>tohuus/${id}/a.db</Key></Contents><Contents><Key>tohuus/${id}/b.db</Key></Contents></ListBucketResult>`, { status: 200 });
       return new Response(null, { status: 204 });
-    }) as typeof fetch;
+    });
     try {
       const n = await cb.deleteS3Household(id, { endpoint: 'https://s3.example.org', bucket: 'b', region: 'eu', accessKey: 'k', secretKey: 's', prefix: 'tohuus' });
       expect(n).toBe(2);
@@ -223,7 +224,36 @@ describe('review: crypto-shredding leaves no way back', () => {
       expect(calls[0].url).toContain(`prefix=tohuus%2F${id}%2F`);
       expect(calls.filter((c) => c.method === 'DELETE').map((c) => c.url.split('/').pop())).toEqual(['a.db', 'b.db']);
     } finally {
-      globalThis.fetch = realFetch;
+      g.fetch = realFetch;
+    }
+  });
+});
+
+describe('review: AI imports count against the plan', () => {
+  it('Free: 10 recipe imports with AI a day, then HTTP 429 quota.importAi; text is capped', async () => {
+    const A = new Client();
+    const h = await signup(A, 'cook@example.org', 'Cook', 'Cook Home');
+    accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(h);
+    const ai = await import('../server/lib/ai');
+    const tenancy = await import('../server/lib/tenancy');
+    const plans = await import('../server/lib/plans');
+    process.env.AI_API_KEY = 'sk-test';
+    const sent: number[] = [];
+    ai.setAiFetch(async (_u, init) => {
+      sent.push(String(init.body).length);
+      return new Response(JSON.stringify({ choices: [{ message: { content: '{"title":"Suppe","ingredients":[{"text":"Wasser"}],"steps":[{"text":"Kochen"}]}' } }] }), { status: 200 });
+    });
+    try {
+      for (let i = 0; i < 10; i++) expect((await A.post('/api/recipes/import/text', { text: `Suppe ${i}: Wasser kochen und fertig.` })).status).toBe(200);
+      const over = await A.post('/api/recipes/import/text', { text: 'Noch eine Suppe: Wasser kochen.' });
+      expect(over.status).toBe(429);
+      expect(over.json.code).toBe('quota.importAi');
+      expect(tenancy.runInHousehold(h, () => plans.usage('importAi'))).toBe(10);
+      expect((await A.post('/api/recipes/import/text', { text: 'x'.repeat(60_000) })).status).toBe(400);
+      expect(Math.max(...sent)).toBeLessThan(60_000);
+    } finally {
+      ai.setAiFetch(null);
+      delete process.env.AI_API_KEY;
     }
   });
 });

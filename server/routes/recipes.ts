@@ -223,7 +223,7 @@ r.post('/recipes/import/photo', upload.array('files', 6), uploadQuota, async (re
 });
 
 r.post('/recipes/import/text', async (req, res) => {
-  const { text } = z.object({ text: z.string().min(10) }).parse(req.body);
+  const { text } = z.object({ text: z.string().min(10).max(50_000) }).parse(req.body);
   if (!visionAvailable()) {
     // minimal fallback: first line title, lines with numbers = ingredients, rest = steps
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);

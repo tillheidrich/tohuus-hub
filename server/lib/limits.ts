@@ -45,6 +45,12 @@ export class UsageLimitError extends Error {
   }
 }
 
+/** Count one AI recipe/product import (link, text, photo) – plans.ts importAiPerDay. */
+export function consumeImportAi(message: () => string) {
+  const r = consume('importAi');
+  if (!r.ok) throw new UsageLimitError(message(), 429, 'quota.importAi', 0);
+}
+
 /** Count one AI receipt read (receipts stay unlimited, only the AI reading is rate-limited per day). */
 export function consumeReceiptAi(message: () => string) {
   const r = consume('receiptAi');
