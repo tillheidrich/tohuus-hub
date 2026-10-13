@@ -47,5 +47,11 @@
   "Double-tap to put it back on the list": "Doppeltippen, um es wieder auf die Liste zu setzen",
   "Double-tap to tick it off": "Doppeltippen zum Abhaken",
   "More for the list": "Mehr für die Liste",
-  "Receipts, paper lists, usuals, wishes and sharing": "Bons, Papierlisten, Übliche, Wünsche und Teilen"
+  "Receipts, paper lists, usuals, wishes and sharing": "Bons, Papierlisten, Übliche, Wünsche und Teilen",
+  "%d in the basket": "%d im Korb",
+  "%d open": "%d offen",
+  "Bring along: %@": "Bitte mitbringen: %@",
+  "Nothing missing": "Nichts fehlt",
+  "%d missing": "%d fehlen",
+  "Probably due: %@": "Wohl bald fällig: %@"
 }

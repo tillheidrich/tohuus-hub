@@ -851,6 +851,23 @@
         }
       }
     },
+    "%d missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d missing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d fehlen"
+          }
+        }
+      }
+    },
     "%d more matched": {
       "extractionState": "manual",
       "localizations": {
@@ -3737,6 +3754,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Brot & Backwaren"
+          }
+        }
+      }
+    },
+    "Bring along: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring along: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitte mitbringen: %@"
           }
         }
       }
@@ -12326,6 +12360,23 @@
         }
       }
     },
+    "Nothing missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing missing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts fehlt"
+          }
+        }
+      }
+    },
     "Nothing missing right now.": {
       "extractionState": "manual",
       "localizations": {
@@ -14973,7 +15024,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wohl fällig: %@"
+            "value": "Wohl bald fällig: %@"
           }
         }
       }

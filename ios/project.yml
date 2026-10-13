@@ -60,6 +60,8 @@ targets:
           - CFBundleURLName: de.heidrichdigital.tohuus
             CFBundleURLSchemes: [tohuus]
         NSCameraUsageDescription: "ToHuus uses the camera to scan barcodes, receipts and paper lists."
+        # "Einkauf läuft" on the lock screen and in the Dynamic Island (LiveTripActivity.swift)
+        NSSupportsLiveActivities: true
         NSMicrophoneUsageDescription: "ToHuus uses the microphone when you speak to the assistant."
         NSSpeechRecognitionUsageDescription: "Your words are turned into text on your iPhone so the assistant can understand them."
         NSPhotoLibraryAddUsageDescription: "ToHuus can save images to your photo library."
