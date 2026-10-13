@@ -7,7 +7,7 @@ export default [
     sections: [
       ['Warum der Zettel am Kühlschrank nicht mehr reicht',
         '<p>Der handgeschriebene Zettel ist immer noch der Klassiker. In einer Forsa-Umfrage für den Lebensmittelhandelsverband BVLH von 2020 sagten 84 Prozent derer, die größere Einkäufe planen, dass sie dafür einen Zettel schreiben. Nur etwa jede fünfte Person nutzte eine App.</p>' +
-        '<p>Für eine Person funktioniert der Zettel gut. Sobald zwei oder mehr Leute im Haushalt einkaufen, hat er ein Problem: Er hängt zu Hause, während jemand im Laden steht. Und das ist der Normalfall, denn 2024 lebten laut Statistischem Bundesamt in gut 57 Prozent der Haushalte zwei oder mehr Personen.</p>' +
+        '<p>Für eine Person funktioniert der Zettel gut. Sobald zwei oder mehr Leute im Haushalt einkaufen, hängt er zu Hause, während jemand im Laden steht. Das ist der Normalfall, denn 2024 lebten laut Statistischem Bundesamt in gut 57 Prozent der Haushalte zwei oder mehr Personen.</p>' +
         '<p>Viele weichen auf den Familienchat aus. Dort gehen „Milch!“ und „Brauchen wir noch Eier?“ aber zwischen Fotos und Terminen unter, und am Ende weiß niemand, welche Nachricht noch gilt.</p>'],
       ['Was eine geteilte Liste können muss',
         '<p>Eine gemeinsame Liste ist nur so gut wie ihr Zustand in dem Moment, in dem jemand vor dem Regal steht. Darauf solltet ihr achten:</p>' +
@@ -22,7 +22,7 @@ export default [
         '<p>Bei einem <em>Paar</em> geht es vor allem um Absprachen unterwegs. Wer auf dem Heimweg am Laden vorbeikommt, schaut kurz auf die Liste, sagt „ich hol’s“ und die andere Person weiß Bescheid, ohne anzurufen.</p>' +
         '<p>In einer <em>WG</em> trennt ihr am besten Gemeinsames und Eigenes. Klopapier und Spülmittel kommen auf die gemeinsame Liste, das eigene Müsli auf die eigene. Wer etwas für alle kauft, sollte das Geld später einfach zurückbekommen, sonst kippt die Stimmung irgendwann über eine Packung Butter.</p>'],
       ['Kleine Absprachen, die viel Streit sparen',
-        '<p>Die beste App hilft wenig, wenn jede Person sie anders benutzt. Ein paar Regeln, die ihr einmal kurz besprecht, machen den Unterschied:</p>' +
+        '<p>Die beste App hilft wenig, wenn jede Person sie anders benutzt. Meistens reichen ein paar Regeln, die ihr einmal kurz besprecht:</p>' +
         '<ol><li>Wer etwas leer macht, trägt es sofort ein. Am besten in dem Moment und nicht erst abends.</li>' +
         '<li>Ein Eintrag sagt genug, damit jemand anderes das Richtige kauft. „Joghurt“ reicht selten, „4 Naturjoghurt 3,5 %“ schon eher.</li>' +
         '<li>Wer losgeht, schaut vorher auf die Liste und markiert, was er mitnimmt.</li>' +
@@ -30,7 +30,7 @@ export default [
         '<p>Am Anfang fühlt sich das nach Aufwand an. Nach zwei, drei Wochen ist es Gewohnheit, und die Frage „Hast du an die Milch gedacht?“ stellt sich kaum noch, weil alle denselben Stand sehen.</p>'],
       ['Ein Abend bei Familie Berg',
         '<p>Bei Familie Berg kauft Sam meist auf dem Heimweg von der Arbeit ein. Um halb sechs steht Sam im Laden und hat die Liste offen: Milch, Äpfel, Nudeln. Zu Hause merkt Mira beim Blick in den Kühlschrank, dass der Joghurt für das Frühstück fehlt, und trägt ihn ein. Mika wünscht sich Fischstäbchen und darf sie selbst auf die Liste setzen.</p>' +
-        '<p>Sam sieht beide Einträge sofort, ohne dass jemand anrufen musste. Ben, der älteste, hatte am Mittag schon „Ich hol’s“ bei den Batterien angetippt, weil er ohnehin am Drogeriemarkt vorbeikam. Sam lässt sie deshalb liegen. Am Ende ist alles da, und nichts liegt doppelt im Schrank.</p>'],
+        '<p>Sam sieht beide Einträge sofort, ohne dass jemand anrufen musste. Ben, der älteste, hatte am Mittag schon „Ich hol’s“ bei den Batterien angetippt, weil er ohnehin am Drogeriemarkt vorbeikam. Sam lässt sie deshalb liegen, und abends liegt nur eine Packung Batterien in der Schublade.</p>'],
       ['So hilft ToHuus beim Teilen',
         '<p>ToHuus ist eine Einkaufs- und Haushalts-App für Familien, Paare und WGs. Die Einkaufsliste ist live auf allen Handys und im Browser. Hakt jemand im Laden etwas ab, verschwindet es bei den anderen innerhalb von Sekunden, und was zu Hause dazukommt, sieht die Person im Laden sofort an der richtigen Stelle.</p>' +
         '<p>Mit „Ich hol’s“ zeigt ihr, wer einen Eintrag übernimmt. Jede Zeile zeigt, wer sie wann eingetragen hat. Im Modus „Im Laden“ sortiert ToHuus die Liste nach Gängen und funktioniert auch ohne Netz. Ihr könnt mehrere Listen anlegen, private Listen führen und einzelne Einträge diskret machen, dann sehen die anderen nur einen Platzhalter. Was schon auf der Liste steht, kommt nicht doppelt drauf.</p>' +
@@ -67,15 +67,15 @@ export default [
       ['Wie oft kaufen die Leute in Deutschland ein?',
         '<p>Der klassische Wocheneinkauf am Samstag ist längst nicht mehr die Regel. Laut einer YouGov-Umfrage von 2026, über die Öko-Test berichtet, kauft mehr als die Hälfte der Menschen in Deutschland mehrmals pro Woche oder sogar täglich Lebensmittel ein. Sieben Prozent gehen jeden Tag, 36 Prozent einmal pro Woche.</p>' +
         '<p>Das KPMG Consumer Barometer von 2025 kommt auf einen ähnlichen Rhythmus: Wer alles isst, geht im Schnitt 2,7-mal pro Woche in einen Lebensmittelladen, Vegetarierinnen und Vegetarier etwas häufiger.</p>' +
-        '<p>Ein Grund liegt auf der Hand. Der nächste Supermarkt ist in vielen Orten ein paar Minuten entfernt, und wer auf dem Heimweg sowieso daran vorbeikommt, nimmt eben schnell etwas mit. Ob das gut oder schlecht ist, hängt davon ab, was dabei im Korb landet.</p>'],
+        '<p>Das liegt auch an der Nähe, denn der nächste Supermarkt ist in vielen Orten ein paar Minuten entfernt, und wer auf dem Heimweg sowieso daran vorbeikommt, nimmt eben schnell etwas mit. Ob das gut oder schlecht ist, hängt davon ab, was dabei im Korb landet.</p>'],
       ['Was für den Wocheneinkauf spricht',
         '<p>Jeder Einkauf kostet Zeit, im Laden selbst und für den Weg und die Schlange an der Kasse. In einer großen Shopper-Studie der Universität Köln mit GfK und GS1 Germany, vorgestellt 2011, dauerte ein beobachteter Einkauf im Schnitt 24 Minuten. Wer dreimal statt einmal in der Woche geht, zahlt das dreimal.</p>' +
         '<p>Dazu kommt das Geld. In derselben Studie hatten 68 Prozent aller Einkäufe einen ungeplanten Anteil, also etwas, das nicht auf dem Zettel stand. Jeder zusätzliche Gang ist eine weitere Gelegenheit für Schokolade an der Kasse oder das Angebot am Gangende. Ein geplanter Einkauf mit Liste hält das klein.</p>' +
-        '<p>Und es ist entspannter. Wer weiß, dass am Freitag eingekauft wird, muss unter der Woche nicht ständig überlegen, ob noch genug da ist. Für Familien mit vollen Tagen ist das oft der wichtigste Punkt, denn ein fester Termin lässt sich planen, fünf spontane Abstecher eher nicht.</p>'],
+        '<p>Für Familien mit vollen Tagen zählt oft noch mehr, dass ein fester Termin Ruhe bringt. Wer weiß, dass am Freitag eingekauft wird, muss unter der Woche nicht ständig überlegen, ob noch genug da ist, und einen Termin kann man besser einplanen als fünf spontane Abstecher.</p>'],
       ['Was für öfter und kleiner spricht',
-        '<p>Der große Wocheneinkauf hat eine Schwäche, und die liegt im Gemüsefach. Wer am Samstag für sieben Tage Salat und Beeren kauft, wirft am Donnerstag oft einen Teil davon weg. Das Umweltbundesamt rät deshalb, vor dem Einkauf die Vorräte zu prüfen und mit einem Speiseplan für die Woche zu planen, damit nur das gekauft wird, was auch gegessen wird.</p>' +
+        '<p>Die Schwäche des großen Wocheneinkaufs liegt im Gemüsefach. Wer am Samstag für sieben Tage Salat und Beeren kauft, wirft am Donnerstag oft einen Teil davon weg. Das Umweltbundesamt rät deshalb, vor dem Einkauf die Vorräte zu prüfen und mit einem Speiseplan für die Woche zu planen, damit nur das gekauft wird, was auch gegessen wird.</p>' +
         '<p>Kleine Einkäufe passen außerdem gut zu Haushalten, in denen die Woche schwer planbar ist, etwa mit Schichtarbeit oder wechselnden Kinderwochen. Und wer zu Fuß oder mit dem Rad einkauft, kann ohnehin nicht für sieben Tage auf einmal tragen.</p>' +
-        '<p>Der Haken ist die Disziplin. Der „schnelle“ Einkauf für Milch endet erstaunlich oft mit einem vollen Korb.</p>'],
+        '<p>Der Haken ist die Disziplin, denn der „schnelle“ Einkauf für Milch endet oft mit einem vollen Korb.</p>'],
       ['Ein Rhythmus, der zu euch passt',
         '<p>Für viele Haushalte funktioniert eine Mischung am besten:</p>' +
         '<ol><li>Ein fester großer Einkauf pro Woche für alles, was hält: Nudeln, Reis, Konserven, Drogerie, Getränke, Tiefkühlware.</li>' +
@@ -117,28 +117,28 @@ export default [
     slug: 'mental-load-einkaufen', status: 'published', date: '2026-10-13',
     title: 'Mental Load beim Einkaufen: Wer denkt daran, was fehlt?',
     desc: 'Beim Einkaufen ist das Drandenken die eigentliche Arbeit, und sie liegt meist bei Frauen. So verteilt ihr sie fairer, ohne ständig nachzufragen.',
-    answer: 'Mental Load beim Einkaufen ist die unsichtbare Arbeit davor: merken, was fehlt, planen, was es gibt, an Allergien und Kita-Frühstück denken. Studien zeigen, dass diese Planungsarbeit in Deutschland überwiegend Frauen machen, auch wenn sie Vollzeit arbeiten. Fairer wird es, wenn alle selbst eintragen, was sie aufbrauchen, und Zuständigkeiten ganz abgegeben werden, mit dem Drandenken.',
+    answer: 'Mental Load beim Einkaufen ist die unsichtbare Arbeit davor, also merken, was fehlt, und planen, was es gibt. Laut einer Studie des WSI von 2023 machen diese Planungsarbeit in Deutschland überwiegend Frauen, auch wenn sie Vollzeit arbeiten. Fairer wird es, wenn alle selbst eintragen, was sie aufbrauchen, und eine Person einen Bereich ganz übernimmt, auch das Drandenken.',
     sections: [
       ['Was Mental Load beim Einkaufen heißt',
         '<p>Mit Mental Load ist die Denkarbeit gemeint, die vor jeder sichtbaren Aufgabe liegt. Beim Einkaufen ist das eine ganze Menge: merken, dass der Kaffee in drei Tagen alle ist, wissen, welches Brot das Kind mag, daran denken, dass am Donnerstag Kuchen für die Kita gebraucht wird, und abends überlegen, was es morgen gibt.</p>' +
         '<p>Der eigentliche Einkauf ist danach fast der kleinere Teil. Wer mit einer fertigen Liste in den Laden geht, erledigt eine Aufgabe. Wer die Liste geschrieben hat, hat die Woche im Kopf gehabt. Das fällt im Alltag kaum auf, weil es nebenbei passiert, beim Blick in den Kühlschrank oder auf dem Weg zur Arbeit.</p>' +
-        '<p>Anstrengend wird es durch die Dauer. Diese Gedanken haben keinen Feierabend, sie tauchen in der Besprechung auf oder abends kurz vor dem Einschlafen. Wer sie trägt, ist selten richtig fertig mit dem Haushalt, auch wenn gerade nichts zu tun ist. Und weil man das Drandenken nicht sieht, wird es auch selten bemerkt.</p>'],
+        '<p>Anstrengend wird es durch die Dauer. Diese Gedanken haben keinen Feierabend, sie tauchen in der Besprechung auf oder abends kurz vor dem Einschlafen. Wer sie trägt, ist selten richtig fertig mit dem Haushalt, auch wenn gerade nichts zu tun ist. Gesehen wird diese Arbeit meist erst, wenn sie einmal ausfällt und die Milch fehlt.</p>'],
       ['Was die Zahlen zur Aufteilung sagen',
         '<p>Die Zeitverwendungserhebung des Statistischen Bundesamts misst, wie viel unbezahlte Arbeit Frauen und Männer leisten, also Haushalt, Kinderbetreuung, Pflege und Einkaufen. 2022 kamen Frauen auf rund 29,5 Stunden pro Woche, Männer auf rund 20,5 Stunden. Der Unterschied, der Gender Care Gap, liegt nach der Revision von 2025 bei 43,4 Prozent.</p>' +
         '<p>Für die Planungsarbeit selbst gibt es eine Studie des WSI der Hans-Böckler-Stiftung von 2023 mit rund 2.200 Befragten. Sie kommt zu dem Ergebnis, dass erwerbstätige Frauen mit einer Wahrscheinlichkeit von 62 Prozent die Alltagsorganisation überwiegend selbst übernehmen, bei Männern sind es 20 Prozent. Leben Kinder im Haushalt, steigt der Wert bei Frauen auf 74 Prozent. Auch Frauen in Vollzeit tragen den größeren Teil.</p>' +
-        '<p>Beim Einkaufen selbst holen die Väter etwas auf. In einer YouGov-Umfrage von Ende 2023 sagten 54 Prozent der Mütter und 44 Prozent der Väter, sie seien allein für den Lebensmitteleinkauf zuständig. Wer aber losgeht, ist eine andere Frage als wer vorher daran gedacht hat.</p>'],
+        '<p>Beim Einkaufen selbst holen die Väter etwas auf. In einer YouGov-Umfrage von Ende 2023 sagten 54 Prozent der Mütter und 44 Prozent der Väter, sie seien allein für den Lebensmitteleinkauf zuständig. Wer losgeht, sagt aber noch nichts darüber, wer vorher daran gedacht hat.</p>'],
       ['Warum „sag einfach, was ich mitbringen soll“ nicht hilft',
         '<p>Der Satz ist gut gemeint und verschiebt trotzdem genau die Arbeit, um die es geht. Wer fragt, was fehlt, lässt die andere Person weiter die Übersicht behalten. Sie muss die Liste im Kopf haben und hinterher kontrollieren, ob alles da ist.</p>' +
-        '<p>Entlastung entsteht erst, wenn jemand einen Bereich ganz übernimmt, mit dem Merken und dem Kaufen. Zum Beispiel alles rund ums Frühstück oder die Drogerie. Dann muss niemand mehr daran erinnern.</p>'],
+        '<p>Entlastung entsteht erst, wenn jemand einen Bereich ganz übernimmt, mit dem Merken und dem Kaufen, zum Beispiel alles rund ums Frühstück oder die Drogerie. Dann muss niemand mehr daran erinnern.</p>'],
       ['So verteilt ihr das Drandenken',
         '<ol><li>Eine Liste für alle, die immer erreichbar ist. Wer etwas aufbraucht, trägt es sofort selbst ein, auch die Kinder, sobald sie das können.</li>' +
         '<li>Ganze Bereiche abgeben. Wer „Drogerie“ hat, merkt auch selbst, wann die Zahnpasta alle ist.</li>' +
         '<li>Einmal pro Woche zehn Minuten gemeinsam auf die Woche schauen: Was steht an, was essen wir, wer kauft wann ein?</li>' +
         '<li>Das Gedächtnis entlasten. Was ihr regelmäßig kauft, muss niemand im Kopf behalten, wenn die Liste oder eine App daran erinnert.</li></ol>' +
-        '<p>Das klingt nach Organisation, spart aber Gespräche. Die Frage „Haben wir noch Milch?“ stellt sich seltener, wenn alle denselben Stand sehen.</p>'],
+        '<p>Die zehn Minuten am Wochenende sparen unter der Woche viele kleine Nachfragen, und „Haben wir noch Milch?“ fragt seltener jemand, wenn alle denselben Stand sehen.</p>'],
       ['Beispiel: Mira und Sam teilen neu auf',
         '<p>Bei Familie Berg hatte Mira lange alles im Kopf. Sam ging zwar oft einkaufen, schrieb aber vorher eine Nachricht: „Was brauchen wir?“ Mira antwortete jedes Mal mit einer Liste.</p>' +
-        '<p>Jetzt hat Sam das Frühstück und die Getränke übernommen, ganz, mit dem Drandenken. Ben ist für seine eigenen Sachen und die Drogerie zuständig. Alle tragen in dieselbe Liste ein, und Mika setzt mit Hilfe die Wünsche für die Brotdose drauf. Mira schaut sonntags mit Sam zehn Minuten auf die Woche. Die Nachricht „Was brauchen wir?“ kommt kaum noch.</p>'],
+        '<p>Jetzt hat Sam das Frühstück und die Getränke ganz übernommen, auch das Drandenken. Ben ist für seine eigenen Sachen und die Drogerie zuständig. Alle tragen in dieselbe Liste ein, und Mika setzt mit Hilfe die Wünsche für die Brotdose drauf. Mira schaut sonntags mit Sam zehn Minuten auf die Woche. Die Nachricht „Was brauchen wir?“ kommt kaum noch.</p>'],
       ['So hilft ToHuus beim Drandenken',
         '<p>ToHuus ist dafür gebaut, dass nicht eine Person alles im Kopf haben muss. Die Einkaufsliste ist live auf allen Handys, und jeder Eintrag zeigt, wer ihn wann eingetragen hat. Mit „Ich hol’s“ seht ihr, wer was übernimmt.</p>' +
         '<p>Was ihr regelmäßig kauft, merkt sich ToHuus aus Kassenbons und abgehakten Einträgen. Ist etwas wieder fällig, erscheint ein Vorschlag mit Grund, und ein Tipp setzt es auf die Liste. ToHuus schreibt dabei nie heimlich auf die Liste. Wer gerade keine Hand frei hat, tippt auf „Sprechen“ und sagt zum Beispiel „Milch ist alle, und wir brauchen was für Sonntag“. Der Assistent trägt es ein und sagt, was er gemacht hat. Die KI lässt sich auch ganz abschalten, Liste und Vorschläge laufen dann weiter.</p>' +
@@ -174,11 +174,11 @@ export default [
     sections: [
       ['Warum doppelt kaufen so oft passiert',
         '<p>Die zweite Packung Butter im Kühlschrank hat fast immer dieselbe Geschichte. Zwei Leute dachten unabhängig voneinander, dass Butter fehlt, und beide haben welche mitgebracht. Oder es war noch eine angebrochene Packung hinten im Fach, die niemand gesehen hat.</p>' +
-        '<p>Dazu kommen typische Fallen. Im Laden ist man sich nicht sicher und kauft „zur Sicherheit“ noch eine. Ein Angebot lockt mit der Großpackung, obwohl zu Hause noch genug da ist. Und je mehr Leute im Haushalt einkaufen, desto öfter überschneiden sich die Einkäufe.</p>' +
+        '<p>Oft ist man sich im Laden auch nicht sicher und kauft „zur Sicherheit“ noch eine, oder ein Angebot lockt mit der Großpackung, obwohl zu Hause noch genug da ist. Je mehr Leute im Haushalt einkaufen, desto öfter überschneiden sich die Einkäufe.</p>' +
         '<p>Das Gedächtnis hilft dabei wenig. Wer am Montag in den Kühlschrank geschaut hat, weiß am Freitag im Laden kaum noch, ob der Frischkäse schon offen war oder noch zu. Und wer gar nicht nachgeschaut hat, verlässt sich auf das Gefühl, dass „bestimmt nichts mehr da“ ist.</p>' +
         '<p>Bei Nudeln oder Klopapier ist das ärgerlich, aber harmlos. Bei Joghurt oder Salat landet die zweite Packung oft im Müll.</p>'],
       ['Was das im Haushalt kostet',
-        '<p>Laut Umweltbundesamt entstanden 2022 rund 58 Prozent aller Lebensmittelabfälle in Deutschland in privaten Haushalten, das waren etwa 74,5 Kilogramm pro Kopf. In dieser Zahl stecken auch Schalen und Knochen, also Dinge, die sich nicht vermeiden lassen. Ein großer Teil ist aber schlicht zu viel gekauft.</p>' +
+        '<p>Laut Umweltbundesamt entstanden 2022 rund 58 Prozent aller Lebensmittelabfälle in Deutschland in privaten Haushalten, das waren etwa 74,5 Kilogramm pro Kopf. In dieser Zahl stecken auch Schalen und Knochen, also Dinge, die sich nicht vermeiden lassen. Ein Teil davon ist aber schlicht zu viel gekauft.</p>' +
         '<p>Eine Tagebuchstudie der GfK für das Bundesministerium für Ernährung von 2020 hat gefragt, warum Haushalte Lebensmittel wegwerfen. Meist war etwas verdorben, 29 Prozent der Haushalte nannten aber auch eine zu große Packung als Grund. Bei den vermeidbaren Abfällen machten frisches Obst und Gemüse rund 35 Prozent aus, also genau das, was man gern doppelt kauft, weil es „ja gesund ist“.</p>'],
       ['Den Vorrat im Blick behalten, ohne Inventur',
         '<p>Das Umweltbundesamt rät, vor jedem Einkauf die Vorräte zu prüfen und mit einer Liste loszugehen. Das muss nicht aufwendig sein:</p>' +
@@ -194,7 +194,7 @@ export default [
         '<p>Wer mehrere Läden nutzt, etwa einen Discounter für den großen Einkauf und den Wochenmarkt für Gemüse, sollte trotzdem bei einer Liste bleiben. Zwei getrennte Zettel sind der sicherste Weg, dieselben Möhren zweimal zu kaufen.</p>'],
       ['Beispiel: Die zweite Packung Kaffee bei Familie Berg',
         '<p>Bei Familie Berg standen im Frühjahr drei Packungen Kaffee im Schrank. Mira hatte eine beim Wocheneinkauf mitgenommen, Sam eine auf dem Heimweg, und Ben hatte noch eine im Angebot gesehen.</p>' +
-        '<p>Jetzt tragen alle in dieselbe Liste ein, und wer unterwegs etwas mitnimmt, markiert es vorher. Als Sam am Dienstag „Kaffee“ eintragen will, steht er schon drauf, Mira hat ihn am Morgen eingetragen und übernimmt ihn. Sam lässt es. Der Schrank ist seitdem deutlich übersichtlicher.</p>'],
+        '<p>Jetzt tragen alle in dieselbe Liste ein, und wer unterwegs etwas mitnimmt, markiert es vorher. Als Sam am Dienstag „Kaffee“ eintragen will, steht er schon drauf, Mira hat ihn am Morgen eingetragen und übernimmt ihn. Sam lässt ihn stehen, und im Schrank steht seitdem meistens nur noch eine Packung.</p>'],
       ['So hilft ToHuus gegen Doppelkäufe',
         '<p>In ToHuus gibt es eine gemeinsame Einkaufsliste, live auf allen Handys. Was schon auf der Liste steht, kommt nicht doppelt drauf. Mit „Ich hol’s“ sehen alle, wer einen Eintrag übernimmt, und jede Zeile zeigt, wer sie wann eingetragen hat.</p>' +
         '<p>Aus Kassenbons und abgehakten Einträgen merkt sich ToHuus, wie oft ihr etwas kauft. Ein Vorschlag kommt erst, wenn etwas wieder fällig ist. Ist noch genug da, tippt ihr „Haben wir noch“, und nach zweimal Ablehnen fragt ToHuus nicht mehr. Wer mag, führt zusätzlich einen Vorrat mit Mindesthaltbarkeit und dem Hinweis „wird bald knapp“. Das ist freiwillig, die Vorschläge funktionieren auch ohne.</p>' +
@@ -203,7 +203,7 @@ export default [
     faq: [
       ['Warum kaufen wir ständig Dinge doppelt?', 'Meist kaufen mehrere Leute ein, ohne voneinander zu wissen, oder es fehlt der Überblick, was noch zu Hause ist. Eine gemeinsame Liste und ein kurzer Vorratsblick vor dem Einkauf helfen dagegen.'],
       ['Brauche ich eine Vorratsliste, um nichts doppelt zu kaufen?', 'Nein, für die meisten Haushalte reicht ein kurzer Blick in Kühlschrank und Vorratsschrank vor dem Einkauf. Eine vollständige Vorratsliste wird selten lange gepflegt.'],
-      ['Was mache ich, wenn ich im Laden nicht weiß, ob wir etwas noch haben?', 'Kurz zu Hause nachfragen oder vorher ein Foto vom Kühlschrank machen. „Zur Sicherheit“ kaufen ist bei frischen Lebensmitteln der häufigste Weg in die Tonne.'],
+      ['Was mache ich, wenn ich im Laden nicht weiß, ob wir etwas noch haben?', 'Kurz zu Hause nachfragen oder vorher ein Foto vom Kühlschrank machen. Was ihr bei frischen Lebensmitteln „zur Sicherheit“ kauft, landet oft in der Tonne.'],
       ['Wie viele Lebensmittel wirft ein Haushalt in Deutschland weg?', 'Laut Umweltbundesamt waren es 2022 rund 74,5 Kilogramm pro Person in privaten Haushalten, einschließlich unvermeidbarer Reste wie Schalen.'],
     ],
     facts: [
@@ -225,7 +225,7 @@ export default [
   {
     slug: 'einkaufsliste-nach-gaengen-sortieren', status: 'published', date: '2026-10-13',
     title: 'Einkaufsliste nach Gängen sortieren und schneller einkaufen',
-    desc: 'Eine Liste in der Reihenfolge eures Ladens spart Wege, Zeit und Spontankäufe. So sortiert ihr sie von Hand oder lasst sie sortieren.',
+    desc: 'Eine Liste in der Reihenfolge eures Ladens spart Wege im Laden und Spontankäufe. So sortiert ihr sie von Hand oder lasst sie von einer App sortieren.',
     answer: 'Sortiert eure Einkaufsliste in der Reihenfolge, in der ihr durch euren Laden geht, also zum Beispiel Obst und Gemüse, Brot, Kühlregal, Vorräte, Drogerie, Tiefkühl. Dann lauft ihr jeden Gang nur einmal, vergesst weniger und kommt seltener an Dingen vorbei, die nicht auf der Liste stehen. Für jeden Laden, in dem ihr oft seid, lohnt sich eine eigene Reihenfolge.',
     sections: [
       ['Warum die Reihenfolge so viel Zeit kostet',
@@ -241,16 +241,16 @@ export default [
         '<li>Wenn ihr regelmäßig in zwei Läden einkauft, legt für jeden eine eigene Reihenfolge an.</li>' +
         '<li>Teilt euch im Laden auf, wenn ihr zu zweit seid: eine Person nimmt die eine Hälfte der Gruppen, die andere den Rest.</li></ol>' +
         '<p>Der Aufwand lohnt sich vor allem in dem Laden, in dem ihr am häufigsten seid. Dinge, die ihr woanders holt, etwa beim Bäcker oder auf dem Wochenmarkt, bekommen eine eigene Gruppe ganz am Ende, damit sie im Supermarkt nicht stören und trotzdem nicht vergessen werden.</p>' +
-        '<p>Ändert der Laden seinen Aufbau, und das passiert nach Umbauten öfter, passt ihr die Gruppen einmal an. Eine Liste, die nicht mehr zum Laden passt, kostet mehr Zeit als eine unsortierte.</p>'],
+        '<p>Ändert der Laden seinen Aufbau, und das passiert nach Umbauten öfter, passt ihr die Gruppen einmal an. Eine Liste, die nicht mehr zum Laden passt, schickt euch sonst wieder im Zickzack durch die Gänge.</p>'],
       ['Weniger Spontankäufe, wenn ihr dem Plan folgt',
-        '<p>Eine sortierte Liste spart nicht nur Zeit. In der Kölner Studie hatten 68 Prozent aller Einkäufe einen ungeplanten Anteil, also etwas, das nicht auf dem Zettel stand. Viele dieser Käufe entstehen, weil man an Regalen vorbeikommt, an denen man gar nicht hätte sein müssen, oder weil man noch einmal zurück muss und dabei am Süßigkeitenregal vorbeiläuft.</p>' +
+        '<p>Eine sortierte Liste hilft auch beim Geld. In der Kölner Studie hatten 68 Prozent aller Einkäufe einen ungeplanten Anteil, also etwas, das nicht auf dem Zettel stand. Gelegenheit dafür gibt es an jedem Regal, an dem man gar nicht hätte vorbeikommen müssen, und bei jedem Weg zurück, der am Süßigkeitenregal entlangführt.</p>' +
         '<p>Wer die Gänge in einer festen Reihenfolge abläuft, sieht weniger von dem, was er nicht braucht. Und wer mit der Liste in der Hand einkauft, ist damit nicht allein: In der Forsa-Umfrage für den BVLH von 2020 nutzten 84 Prozent derer, die größere Einkäufe planen, einen Einkaufszettel.</p>'],
       ['Beispiel: Mira im Laden, Sam zu Hause',
         '<p>Mira kauft samstags im Supermarkt in der Nähe ein. Ihre Liste beginnt bei den Äpfeln und endet bei der Tiefkühlpizza, genau so, wie sie durch den Laden geht. Während sie bei Obst und Gemüse steht, merkt Sam zu Hause, dass der Parmesan fehlt, und trägt ihn ein. Auf Miras Handy taucht er sofort bei Käse und Kühlregal auf, also dort, wo sie in ein paar Minuten ohnehin vorbeikommt.</p>' +
         '<p>Im Untergeschoss mit den Getränken hat Mira kein Netz. Sie hakt trotzdem weiter ab, und als sie wieder oben ist, sieht Sam, was schon im Wagen liegt. Mika wartet derweil an der Kasse auf die versprochene Brezel.</p>'],
       ['So sortiert ToHuus die Liste für euch',
         '<p>In ToHuus öffnet ihr im Laden den Modus „Im Laden“. Er sortiert die Einkaufsliste nach Gängen und lernt für jeden Laden eure eigene Laufreihenfolge aus eurer Nutzung. Eine Kette wird dabei nicht bevorzugt. Der Modus funktioniert auch ohne Netz und gleicht ab, sobald das Handy wieder online ist.</p>' +
-        '<p>Was zu Hause dazukommt, erscheint bei der Person im Laden an der richtigen Stelle. Mit „Ich hol’s“ könnt ihr euch zu zweit die Gänge aufteilen. Mit der iPhone-App kommt eine Apple-Watch-App, auf der die Liste ebenfalls nach Laden sortiert ist, abhaken mit Rückgängig inklusive.</p>' +
+        '<p>Was zu Hause dazukommt, erscheint bei der Person im Laden an der richtigen Stelle. Mit „Ich hol’s“ könnt ihr euch zu zweit die Gänge aufteilen. Zur iPhone-App, die es für die ToHuus Cloud gibt, gehört eine Apple-Watch-App, auf der die Liste ebenfalls nach Laden sortiert ist und sich mit Rückgängig abhaken lässt. Wer ToHuus selbst hostet, nutzt die Web-App im Browser.</p>' +
         '<p>Mehr dazu in der Hilfe unter <a href="../hilfe/einkaufsliste.html">Die Einkaufsliste</a> und <a href="../hilfe/gemeinsam-einkaufen.html">Gemeinsam einkaufen</a>. ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
     ],
     faq: [
