@@ -39,6 +39,11 @@ live (nur wenn sich `site/**` ändert).
    - `OPERATOR_EMAILS=mail@tillheidrich.de` (oder deine Login-Adresse). Ohne diesen Eintrag liefert `/betrieb` nur 404.
    - `CLOUD_SIGNUP` **nicht setzen**. Dann gilt `invite`, das Beta-Tor ist zu. Neue Leute kommen nur mit Code oder
      über die Allowlist rein (`/betrieb › Beta-Zugang`). Deine Adresse in `OPERATOR_EMAILS` kommt immer rein.
+   - **Sign in with Apple-Key** (Pflicht für den App Store, Regel 5.1.1(v)): Apple Developer › Keys › + ›
+     „Sign in with Apple“ aktivieren (Primary App ID `de.heidrichdigital.tohuus`), .p8 laden. Dann
+     `APPLE_SIWA_KEY_ID=<Key ID>`, `APPLE_SIWA_KEY_P8=<Inhalt der .p8, Zeilenumbrüche als \n>`, `APPLE_TEAM_ID=FVS7WVTQ67`.
+     Damit widerruft ToHuus beim Löschen eines Kontos die Apple-Anmeldung. Ohne den Key läuft alles, nur der
+     Widerruf fehlt.
    - Sobald du den APNs-Key hast: `APNS_KEY_ID`, `APNS_KEY_P8`, `APNS_ENV=production` (TestFlight nutzt Produktion).
 4. **Redeploy** in Coolify (Image neu ziehen) und die Logs ansehen, bis `listening` erscheint und keine
    `migration … failed` auftaucht.

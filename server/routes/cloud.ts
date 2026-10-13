@@ -1149,8 +1149,8 @@ export async function removeAccount(accountId: number): Promise<{ deleted: strin
   }
   // the account's passkeys go with it (also ON DELETE CASCADE)
   cloudPasskeys.deleteAccountPasskeys(a.id);
-  // and its Sign in with Apple link (token revocation needs a client secret: TODO(apple-revoke) in lib/cloud-apple.ts)
-  cloudApple.deleteAppleLinks(a.id);
+  // and its Sign in with Apple link, with the Apple tokens revoked first when a key is configured (lib/cloud-apple.ts)
+  await cloudApple.deleteAppleLinks(a.id);
   acc.accountsDb().prepare('DELETE FROM accounts WHERE id = ?').run(a.id);
   // confirmation, in the account's language (the address is gone from our side once this is sent)
   if (canSendMail())

@@ -27,6 +27,11 @@
  * Berg), no claims the app cannot keep.
  */
 
+import einkauf from './posts/a-einkauf.mjs';
+import geld from './posts/b-geld.mjs';
+import kochen from './posts/c-kochen.mjs';
+import zuhause from './posts/d-zuhause.mjs';
+
 export const BLOG_DIR = { de: 'ratgeber', en: 'blog' };
 
 export const BLOG_COPY = {
@@ -56,9 +61,9 @@ export const BLOG_COPY = {
   },
 };
 
-/** The posts. Nothing is published yet; the plan for the first ones is in docs/blog.md. */
+/** The posts: German ones in site/src/posts/<group>.mjs (one file per topic group), English ones to follow. */
 export const POSTS = {
-  de: [],
+  de: [...einkauf, ...geld, ...kochen, ...zuhause],
   en: [],
 };
 

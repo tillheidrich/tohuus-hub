@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Deleting an account revokes Sign in with Apple** (App Store 5.1.1(v)): the authorization code is exchanged for a refresh token at sign-in and revoked on deletion, once `APPLE_SIWA_KEY_ID` / `APPLE_SIWA_KEY_P8` are set.
+- **Sign-in warnings are personal**: `auth.new_device` no longer shows up in other members' notification list or in the Home Assistant stream; the HA stream also follows the household's Home Assistant routing per event.
 - **ToHuus Cloud no longer shows "Bons per E-Mail"**: the IMAP receipt inbox only works on a self-hosted server; `GET /api/retail/inbox` says `available: false` in the cloud and the cards are hidden.
 - **iPhone app: light or dark.** Settings › Erscheinungsbild (Wie das Gerät / Hell / Dunkel), per device, applied to the whole window. The sun in kitchen mode looked like a button but did nothing – it is now a menu with "Bildschirm bleibt an" (remembered, on by default) and the appearance. The tab bar is no longer white in dark mode.
 - **Friendlier error messages**: the server says "Das hat leider nicht geklappt. Versuch es bitte gleich noch mal – wenn es wieder passiert, nenn uns den Code …" instead of "Da ist etwas schiefgegangen (Referenz …)", and "Bitte melde dich noch einmal an." instead of `unauthorized` (now also `code: 'unauthorized'`; the API 404 keeps `error: 'not found'` for app builds up to 1.0 (5) and adds `code: 'not_found'`). The iPhone app turns technical texts ("unauthorized", "Internal Server Error", NSError dumps) into plain sentences per status (`APIError.friendly`).

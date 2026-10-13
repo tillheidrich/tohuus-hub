@@ -267,8 +267,7 @@ Test: `test/cloud-apple.test.ts` (a local RSA key and a fake JWKS – no network
   the app (`DELETE /api/cloud/account { appleIdentityToken, appleNonce }`, the token's `sub` must be the account's).
   Accounts without password and without Apple confirm in the app with the code from the mail: the first call sends it
   (`400 needEmailConfirm`), the second carries `{ code }` (password accounts always need the password).
-- **Open (TODO(apple-revoke) in `lib/cloud-apple.ts`)**: revoking Apple's tokens on deletion needs a Sign in with Apple key
-  (client secret). The exact steps are in the file header; nothing else changes when the key is added.
+- **Token revocation (5.1.1(v))**: with `APPLE_SIWA_KEY_ID` and `APPLE_SIWA_KEY_P8` (the .p8 as PEM, `\n` allowed) and `APPLE_TEAM_ID` (default FVS7WVTQ67) set, every sign-in exchanges Apple's authorization code once for a refresh token (`POST https://appleid.apple.com/auth/token`, client_secret = ES256 JWT for the bundle id or the Services ID), kept in `account_apple.refresh_token`; deleting the account revokes it (`POST …/auth/revoke`) before the link is dropped. Without the key nothing is exchanged and deletion only drops the link (logged once). A failed exchange never fails the sign-in.
 
 ## Sample data (cloud and self-host)
 

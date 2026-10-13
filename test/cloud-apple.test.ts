@@ -256,6 +256,40 @@ describe('Sign in with Apple – app', () => {
   });
 });
 
+describe('Sign in with Apple – token revocation (5.1.1(v))', () => {
+  it('exchanges the code at sign-in and revokes the token when the account is deleted', async () => {
+    const { privateKey } = (await import('node:crypto')).generateKeyPairSync('ec', { namedCurve: 'P-256' });
+    process.env.APPLE_SIWA_KEY_ID = 'KEY123';
+    process.env.APPLE_SIWA_KEY_P8 = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString().replace(/\n/g, '\\n');
+    const calls: { url: string; form: URLSearchParams }[] = [];
+    appleLib.setAppleFetchForTests(async (url, init) => {
+      const form = new URLSearchParams(init.body);
+      calls.push({ url, form });
+      if (url.endsWith('/auth/token')) return { ok: true, status: 200, json: async () => ({ refresh_token: 'rt-sam-1', access_token: 'x' }) };
+      return { ok: true, status: 200, json: async () => ({}) };
+    });
+    try {
+      const c = new Client();
+      const r = await c.post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam', email: 'sam@privaterelay.appleid.com' }), authorizationCode: 'code-1', device: 'iPhone', name: 'Sam' });
+      expect(r.status, r.text).toBe(200);
+      const ex = calls.find((x) => x.url.endsWith('/auth/token'))!;
+      expect(ex.form.get('code')).toBe('code-1');
+      expect(ex.form.get('grant_type')).toBe('authorization_code');
+      expect(ex.form.get('client_secret')!.split('.')).toHaveLength(3);
+      const auth = { authorization: `Bearer ${r.json.token}` };
+      const d = await c.del('/api/cloud/account', { appleIdentityToken: await token({ sub: 'apple-sam', nonce: 'del-sam' }), appleNonce: 'del-sam' }, auth);
+      expect(d.status, d.text).toBe(200);
+      const rv = calls.find((x) => x.url.endsWith('/auth/revoke'))!;
+      expect(rv.form.get('token')).toBe('rt-sam-1');
+      expect(rv.form.get('token_type_hint')).toBe('refresh_token');
+    } finally {
+      appleLib.setAppleFetchForTests(null);
+      delete process.env.APPLE_SIWA_KEY_ID;
+      delete process.env.APPLE_SIWA_KEY_P8;
+    }
+  });
+});
+
 describe('account deletion in the app without a password', () => {
   it('confirms with the code from the confirmation mail', async () => {
     const c = new Client();
