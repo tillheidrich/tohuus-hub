@@ -328,7 +328,7 @@ export function Login() {
   }
 
   return (
-    <div className="login">
+    <main className="login">
       <div className="art">
         <span className="disc" aria-hidden="true" />
         <span className="half" aria-hidden="true" />
@@ -353,7 +353,7 @@ export function Login() {
         {body}
         <SignupHint />
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -90,7 +90,7 @@ export function NotifyMine() {
       </div>
       <div className="nm-grid" role="table" aria-label={t('What reaches me where')}>
         <div className="nm-row nm-head" role="row">
-          <span role="columnheader" className="nm-ev" />
+          <span role="columnheader" className="nm-ev"><span className="sr-only">{t('Event')}</span></span>
           {COLS.map((c) => (
             <span key={c.key} role="columnheader" className="nm-col">
               <c.icon size={18} aria-hidden />
