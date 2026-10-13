@@ -11,6 +11,8 @@
  *   DELETE /api/operator/beta/codes/:id                  revoke
  *   POST   /api/operator/beta/allowlist { emails, note? }
  *   DELETE /api/operator/beta/allowlist { email }
+ *   GET    /api/operator/stats?days=56                usage statistics: events per week/platform, funnel, cohorts, plans, AI cost
+ *   POST   /api/operator/stats/snapshot                 compute the nightly snapshot now
  *   GET    /api/operator/households/:id                  plan, trial, dates, storage, member count – no names
  *   GET    /api/operator/audit?before=<id>&limit=        the audit log, paged
  */
@@ -20,6 +22,7 @@ import { accountsDb, getHousehold, isUuid } from '../lib/accounts.js';
 import { DEFAULT_FALLBACKS, aiConfig, fallbackModels, pingModel, type ModelKind } from '../lib/ai.js';
 import { addAllowlist, createBetaCode, listAllowlist, listBetaCodes, removeAllowlist, revokeBetaCode, signupMode, SIGNUP_MODES } from '../lib/beta.js';
 import { audit, auditLog } from '../lib/operator.js';
+import { runStatsNightly, statsView } from '../lib/stats.js';
 import { RUNTIME_KEYS, SECRET_KEYS, isRuntimeKey, lastFour, runtimeSetting, runtimeSettingsView, setRuntimeSetting, supportEmail, type RuntimeKey } from '../lib/runtime-settings.js';
 
 export function operatorAdmin(fresh: import('express').RequestHandler) {
@@ -142,6 +145,19 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     if (!removeAllowlist(email)) return void res.status(404).json({ error: 'not found' });
     audit(who(req), 'beta.allowlist.remove', null);
     res.json({ ok: true });
+  });
+
+  // ---------------------------------------------------------------- usage statistics (counts only, lib/stats.ts)
+
+  r.get('/operator/stats', fresh, (req, res) => {
+    const { days } = z.object({ days: z.coerce.number().int().min(7).max(400).default(56) }).parse(req.query);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(statsView(days));
+  });
+  r.post('/operator/stats/snapshot', fresh, async (req, res) => {
+    const snap = await runStatsNightly();
+    audit(who(req), 'stats.snapshot', snap.day);
+    res.json(snap);
   });
 
   // ---------------------------------------------------------------- households (id only, no names)

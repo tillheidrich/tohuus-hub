@@ -253,3 +253,64 @@ describe('households and audit log', () => {
   });
 });
 
+
+describe('usage statistics (counts only)', () => {
+  it('counts feature actions per day and platform, never per household or person', async () => {
+    const stats = await import('../server/lib/stats');
+    expect(stats.statEventOf('POST', '/shopping')).toBe('list.add');
+    expect(stats.statEventOf('POST', '/imports/:id/apply')).toBe('receipt.applied');
+    expect(stats.statEventOf('GET', '/shopping')).toBeNull();
+    expect(stats.suppress(2)).toBeNull();
+    expect(stats.suppress(0)).toBe(0);
+    expect(stats.suppress(3)).toBe(3);
+    // four households add to their lists on the web; one also from the app (2 times – below the minimum cell)
+    const web = [A, new Client(), new Client(), new Client()];
+    for (const [i, c] of web.entries()) {
+      if (i > 0) await signup(c, `stats${i}@example.org`, `Haushalt ${i}`);
+      expect((await c.post('/api/shopping', { text: 'Milch' })).status).toBe(200);
+    }
+    const app = await new Client().post('/api/cloud/signup', { email: 'app@example.org', password: 'geheim1234', name: 'Sam', householdName: 'App-Haushalt', form: 'single', lang: 'de', client: 'ios', device: 'iPhone' });
+    const bearer = { authorization: `Bearer ${app.json.token}`, 'x-tohuus-client': 'ios' };
+    for (let i = 0; i < 2; i++) expect((await new Client().req('POST', '/api/shopping', { text: `Brot ${i}` }, bearer)).status).toBe(200);
+    // a failed action is not counted
+    expect((await A.post('/api/shopping', {})).status).toBe(400);
+    stats.flushStats();
+    const v = await op.get('/api/operator/stats');
+    expect(v.status, v.text).toBe(200);
+    const add = v.json.events.find((e: any) => e.event === 'list.add');
+    expect(add.total).toBe(6);
+    expect(add.byPlatform.web).toBe(4);
+    expect(add.byPlatform.ios).toBeNull(); // 2 → suppressed
+    expect(v.json.minCell).toBe(3);
+    expect(v.json.plans.find((p: any) => p.plan === 'trial').n).toBeGreaterThanOrEqual(3);
+    // nothing in the statistics tables points at a household or a person
+    const dump = JSON.stringify([
+      accounts.accountsDb().prepare('SELECT * FROM stat_events_daily').all(),
+      accounts.accountsDb().prepare('SELECT * FROM stat_snapshots').all(),
+    ]);
+    expect(dump).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}/);
+    for (const m of ['Familie Berg', 'Mira', 'Milch', '@example.org', '10.83.']) expect(dump + v.text).not.toContain(m);
+    const cols = (accounts.accountsDb().prepare(`PRAGMA table_info(stat_events_daily)`).all() as { name: string }[]).map((c) => c.name);
+    expect(cols).toEqual(['day', 'event', 'platform', 'n']);
+  });
+
+  it('the nightly snapshot adds up the funnel, weekly active households and cohorts – counts only', async () => {
+    // the facts behind it stay inside each household's own database
+    const m = tenancy.runInHousehold(hA, async () => (await import('../server/db')).getSetting<any>('stats.milestones', {}));
+    expect((await m).firstItem).toBe(new Date().toISOString().slice(0, 10));
+    const s = await op.post('/api/operator/stats/snapshot');
+    expect(s.status, s.text).toBe(200);
+    expect(s.json.funnel.created).toBeGreaterThanOrEqual(5);
+    expect(s.json.funnel.firstItem).toBe(5);
+    expect(s.json.funnel.firstReceipt).toBe(0);
+    const stats = await import('../server/lib/stats');
+    const week = stats.isoWeek();
+    expect(s.json.weeklyActive.at(-1)).toEqual({ week, n: 5 });
+    const cohort = s.json.cohorts.find((c: any) => c.week === week);
+    expect(cohort.size).toBeGreaterThanOrEqual(5);
+    expect(cohort.active).toEqual(Array(8).fill(null)); // no later week yet
+    expect(JSON.stringify(s.json)).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}/);
+    expect((await op.get('/api/operator/stats')).json.snapshot.day).toBe(s.json.day);
+    expect((await op.get('/api/operator/audit')).json.some((l: any) => l.action === 'stats.snapshot')).toBe(true);
+  });
+});

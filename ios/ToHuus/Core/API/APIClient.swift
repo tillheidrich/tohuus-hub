@@ -37,6 +37,12 @@ final class APIClient: Sendable {
         if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         if let householdId { req.setValue(householdId, forHTTPHeaderField: "X-Household") }
         req.setValue(Locale.preferredLanguages.first ?? "de", forHTTPHeaderField: "Accept-Language")
+        // ToHuus Cloud usage statistics count actions by platform only (docs/cloud.md › Usage statistics)
+        #if os(watchOS)
+        req.setValue("watch", forHTTPHeaderField: "X-ToHuus-Client")
+        #else
+        req.setValue("ios", forHTTPHeaderField: "X-ToHuus-Client")
+        #endif
         return req
     }
 

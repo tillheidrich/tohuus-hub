@@ -57,6 +57,7 @@ import { r as operatorRoutes } from './routes/operator.js';
 import { r as moveRoutes } from './routes/move.js';
 import { r as iosCompat } from './routes/ios-compat.js';
 import { requestCounter } from './lib/operator.js';
+import { startStats, statsCounter } from './lib/stats.js';
 import { startRenewalReminders } from './lib/renewals.js';
 import { AiError } from './lib/ai.js';
 import { r as list2Routes, pub as list2Public } from './routes/list2.js';
@@ -106,6 +107,8 @@ app.use((_req, res, next) => {
 
 // cloud operator page: requests and 5xx per hour, status class only (lib/operator.ts)
 if (config.multiTenant) app.use('/api', requestCounter);
+// cloud usage statistics: feature events per day and platform, counts only (lib/stats.ts)
+if (config.multiTenant) app.use('/api', statsCounter);
 
 // storage quota: the database counts too – large JSON writes are refused when the household is full (plans.ts)
 app.use('/api', bodyQuota);
@@ -285,5 +288,6 @@ export const server = app.listen(config.port, () => {
   startScheduler();
   if (config.multiTenant) startCloudBackups();
   if (config.multiTenant) startRenewalReminders();
+  if (config.multiTenant) startStats();
   else startBackups();
 });

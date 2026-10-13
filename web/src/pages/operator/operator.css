@@ -134,3 +134,110 @@
   width: 100%;
   margin: 0;
 }
+/* charts: one series, brand green, thin bars with a rounded data end; suppressed (< 3) = outlined stub */
+.op-chart {
+  margin: 0;
+}
+.op-bars {
+  position: relative;
+}
+.op-bars svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.op-axis {
+  stroke: var(--line-strong);
+  stroke-width: 1px;
+}
+.op-bar {
+  fill: var(--primary);
+}
+.op-bar.on {
+  fill: var(--ink);
+}
+.op-bar.sup {
+  fill: none;
+  stroke: var(--ink-3, var(--ink-2));
+  stroke-width: 1px;
+  stroke-dasharray: 2 2;
+}
+.op-hits {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.op-hit {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: default;
+}
+.op-hit:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.op-tip {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 var(--stroke) var(--ink);
+  border-radius: var(--r-sm);
+  padding: 4px 8px;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.op-xaxis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+.op-events {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 18px 22px;
+}
+.op-event h3 {
+  margin: 0;
+  font-size: var(--fs-s);
+}
+.op-funnel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.op-funnel-head {
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.op-funnel-track {
+  height: 10px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.op-funnel-track i {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  border-radius: 0 3px 3px 0;
+}
+.op-funnel-track i.sup {
+  background: var(--line-strong);
+}
+.op-cohorts td,
+.op-cohorts th {
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .op-bar {
+    transition: fill 120ms ease-out;
+  }
+}
