@@ -86,6 +86,7 @@ struct RecipeImportSheet: View {
                     HelpLink(slug: "cookidoo", title: L("Cookidoo recipes"))
                 }
             }
+            .themedList()
             .navigationTitle(L("Add recipe"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -185,6 +186,7 @@ struct CookidooConfirmView: View {
                 if busy { ProgressView() }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
+            .themedList()
             .navigationTitle(L("Cookidoo recipe"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -115,6 +115,7 @@ struct SpendDrillView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }
             }
         }
+        .themedList()
         .navigationTitle(drill.title)
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -317,6 +318,7 @@ struct SpendReceiptView: View {
                 }
             }
         }
+        .themedList()
         .navigationTitle(data.map { [$0.store, $0.day.map(SpendDates.longDay)].compactMap { $0 }.joined(separator: " · ") } ?? L("Receipt"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -419,6 +421,7 @@ struct SpendLineView: View {
                 }
             } header: { Text(L("Don’t count in the statistics")) }
         }
+        .themedList()
         .navigationTitle(entry.name)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -527,6 +530,7 @@ struct BudgetsEditView: View {
                 .disabled(busy || (Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0) <= 0)
             }
         }
+        .themedList()
         .navigationTitle(L("Budgets"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -584,6 +588,7 @@ struct ExcludedListView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }
             }
         }
+        .themedList()
         .navigationTitle(L("Left out"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -742,6 +747,7 @@ struct PricePickerView: View {
                     .listRowBackground(Color.clear)
             }
         }
+        .themedList()
         .searchable(text: $query, prompt: L("Search products"))
         .navigationTitle(L("Price history"))
         .navigationBarTitleDisplayMode(.inline)

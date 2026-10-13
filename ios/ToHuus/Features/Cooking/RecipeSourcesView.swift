@@ -339,6 +339,7 @@ struct RecipePackageView: View {
             }
             Section { HelpLink(slug: "rezeptpaket", title: LC("Recipe package")) }
         }
+        .themedList()
         .navigationTitle(LC("Recipe package"))
         .navigationBarTitleDisplayMode(.inline)
         .fileImporter(isPresented: $picking, allowedContentTypes: Self.types) { result in
@@ -431,6 +432,7 @@ struct ImportPreviewSheet: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.low) } }
             }
+            .themedList()
             .navigationTitle(job?.finished == true ? LC("Import finished") : LC("Preview"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

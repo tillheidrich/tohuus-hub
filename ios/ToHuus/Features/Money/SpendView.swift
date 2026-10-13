@@ -180,8 +180,9 @@ struct SpendView: View {
         Card {
             Text((s.ongoing == true ? L("So far") : L("Total")).uppercased()).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3).tracking(0.6)
             Text(Money.format(s.total, currency: s.currency))
-                .font(.system(size: 38, weight: .semibold, design: .serif)).monospacedDigit()
+                .font(Theme.number(.serif)).monospacedDigit()
                 .foregroundStyle(Theme.ink)
+                .numberTransition(s.total ?? 0)
             Text([
                 (s.receipts ?? 0) == 1 ? L("1 receipt") : LF("%d receipts", s.receipts ?? 0),
                 (s.manual?.count ?? 0) > 0 ? ((s.manual?.count ?? 0) == 1 ? L("1 own expense") : LF("%d own expenses", s.manual?.count ?? 0)) : nil,
@@ -506,7 +507,7 @@ struct ColumnsChart: View {
                                 }
                             }
                             .frame(height: 120)
-                            Text(c.label).font(.system(size: 10)).foregroundStyle(c.on ? Theme.ink : Theme.ink3)
+                            Text(c.label).font(.caption2).foregroundStyle(c.on ? Theme.ink : Theme.ink3)
                                 .lineLimit(1).minimumScaleFactor(0.6)
                                 .frame(height: 12)
                         }

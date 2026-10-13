@@ -107,6 +107,10 @@ struct MeResponse: Decodable, Sendable {
     var modules: [String: Bool]?
     /// { density: compact|normal|large, fontScale }
     var listPrefs: JSONValue?
+    /// who lives here: { form: single|couple|family|wg|…, form_chosen, ui } (server/lib/places.ts homeSetup)
+    var home: JSONValue?
+    /// a household of one (chosen at sign-up) – "Bring mir was" has nobody to ask, like the web
+    var isSingleHousehold: Bool { home?["form"]?.string == "single" && (home?["form_chosen"]?.bool ?? home?["formChosen"]?.bool ?? true) }
 
     var name: String? { actor?["name"]?.string }
     var role: String? { actor?["role"]?.string }

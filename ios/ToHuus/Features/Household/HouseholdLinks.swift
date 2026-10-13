@@ -3,6 +3,7 @@ import SwiftUI
 /// Entry points in "Mehr" › Haushalt: people, invitations, what ToHuus remembers (kept out of SettingsView so the
 /// shared file only gets one line).
 struct HouseholdLinks: View {
+    @Environment(AppModel.self) private var app
     let api: APIClient
     @State private var open: String?
 
@@ -11,7 +12,10 @@ struct HouseholdLinks: View {
             NavigationLink { HouseholdView(api: api) } label: { Label(L("People & likes"), systemImage: "person.2") }
             NavigationLink { InvitesView(api: api) } label: { Label(L("Invite someone"), systemImage: "person.badge.plus") }
             NavigationLink { MemoryView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "text.book.closed") }
-            NavigationLink { TreatsView(api: api) } label: { Label(L("For me – ask for something"), systemImage: "heart") }
+            // "Bring mir was" needs someone at home to ask: hidden for a household of one and when switched off
+            if !app.singleHousehold && app.moduleOn("treats") {
+                NavigationLink { TreatsView(api: api) } label: { Label(L("For me – ask for something"), systemImage: "heart") }
+            }
             NavigationLink { GuestLinksView(api: api) } label: { Label(L("Guest links"), systemImage: "link") }
         }
         .sheet(item: Binding(get: { open.map(DebugKey.init) }, set: { open = $0?.id })) { k in

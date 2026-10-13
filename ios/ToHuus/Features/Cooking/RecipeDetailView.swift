@@ -481,6 +481,7 @@ struct RecipeDetailView: View {
                     .datePickerStyle(.graphical)
                 if let s = servings { Text(LCF("For %d people", s)).foregroundStyle(Theme.ink2) }
             }
+            .themedList()
             .navigationTitle(L("Plan meal"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

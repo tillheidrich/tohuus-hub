@@ -202,7 +202,7 @@ struct TodayView: View {
         } label: {
             Card(title: L("Shopping list"), systemImage: "cart") {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("\(open)").font(.system(size: 34, weight: .semibold, design: .rounded)).foregroundStyle(Theme.primaryText)
+                    Text("\(open)").font(Theme.number()).foregroundStyle(Theme.primaryText).numberTransition(Double(open))
                     Text(open == 1 ? L("thing is missing") : L("things are missing")).foregroundStyle(Theme.ink2)
                     Spacer()
                     Image(systemName: "chevron.right").foregroundStyle(Theme.ink3)

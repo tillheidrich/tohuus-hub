@@ -87,6 +87,7 @@ struct NewProductSheet: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(L("New product"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

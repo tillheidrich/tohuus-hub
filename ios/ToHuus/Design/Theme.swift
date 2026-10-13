@@ -66,8 +66,27 @@ enum Theme {
 
     static let stroke: CGFloat = 1.5
 
-    static func title(_ size: CGFloat = FontSize.h1) -> Font { .system(size: size, weight: .semibold, design: .serif) }
-    static let rowFont = Font.system(size: FontSize.row)
+    /// Serif titles that follow Dynamic Type: the token size picks the text style of the same default size
+    /// (28 → .title, 22 → .title2, 20 → .title3, 17 → .body …), so XXXL and the accessibility sizes scale them.
+    static func title(_ size: CGFloat = FontSize.h1) -> Font { .system(textStyle(for: size), design: .serif, weight: .semibold) }
+    static let rowFont = Font.body
+    /// big numbers (totals, counts) – scale with Dynamic Type from the large title size
+    static func number(_ design: Font.Design = .rounded) -> Font { .system(.largeTitle, design: design, weight: .semibold) }
+
+    static func textStyle(for size: CGFloat) -> Font.TextStyle {
+        switch size {
+        case 30...: return .largeTitle
+        case 25..<30: return .title
+        case 21..<25: return .title2
+        case 19..<21: return .title3
+        case 17..<19: return .body
+        case 16..<17: return .callout
+        case 14..<16: return .subheadline
+        case 13..<14: return .footnote
+        case 12..<13: return .caption
+        default: return .caption2
+        }
+    }
 
     private static func dynamic(_ light: UInt32, _ dark: UInt32) -> Color {
         Color(UIColor { traits in traits.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light) })

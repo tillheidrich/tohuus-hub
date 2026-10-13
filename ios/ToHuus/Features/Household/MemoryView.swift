@@ -54,6 +54,7 @@ struct MemoryView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }
             }
         }
+        .themedList()
         .navigationTitle(L("What ToHuus remembers"))
         .task { await load() }
         .refreshable { await load() }

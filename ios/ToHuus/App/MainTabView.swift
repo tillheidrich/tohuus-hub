@@ -85,6 +85,10 @@ struct MainTabView: View {
             #endif
         }
         .onChange(of: app.requestedTab) { _, t in applyRequestedTab(t) }
+        #if DEBUG
+        // StoreKit Testing screenshot (ToHuusTests/PaywallStoreKitTests): the hosted test opens the paywall
+        .onReceive(NotificationCenter.default.publisher(for: .toHuusDebugShowPaywall)) { _ in app.showPaywall = true }
+        #endif
         .onChange(of: app.modules) { _, _ in if !visible(area) { area = .today } }
         .onChange(of: app.addRequest) { _, _ in area = .shopping }
         .onChange(of: app.searchRequest) { _, _ in if area != .cooking && area != .pantry { area = visible(.pantry) ? .pantry : .cooking } }
@@ -110,24 +114,29 @@ struct MainTabView: View {
     private var tabLayout: some View {
         TabView(selection: $area) {
             TodayView(store: store, openSettings: { showSettings = true }, openTab: { area = $0 })
+                .tabEntrance()
                 .tabItem { Label(AppArea.today.title, systemImage: AppArea.today.icon) }
                 .tag(AppArea.today)
             ShoppingView(store: store)
+                .tabEntrance()
                 .tabItem { Label(AppArea.shopping.title, systemImage: AppArea.shopping.icon) }
                 .badge(store.list.openCount)
                 .tag(AppArea.shopping)
             if visible(.pantry) {
                 PantryView(store: store)
+                    .tabEntrance()
                     .tabItem { Label(AppArea.pantry.title, systemImage: AppArea.pantry.icon) }
                     .tag(AppArea.pantry)
             }
             if visible(.cooking) {
                 CookingView(store: store)
+                    .tabEntrance()
                     .tabItem { Label(AppArea.cooking.title, systemImage: AppArea.cooking.icon) }
                     .tag(AppArea.cooking)
             }
             if visible(.money) {
                 MoneyView(store: store)
+                    .tabEntrance()
                     .tabItem { Label(AppArea.money.title, systemImage: AppArea.money.icon) }
                     .tag(AppArea.money)
             }
@@ -180,6 +189,7 @@ struct MainTabView: View {
         } detail: {
             detail(area)
                 .id(area)
+                .tabEntrance()
         }
         .navigationSplitViewStyle(.balanced)
     }
@@ -206,6 +216,11 @@ extension MainTabView {
         area = visible(a) ? a : .today
         app.requestedTab = nil
     }
+}
+
+extension Notification.Name {
+    /// debug builds: opens the paywall (StoreKit Testing screenshot run)
+    static let toHuusDebugShowPaywall = Notification.Name("ToHuusDebugShowPaywall")
 }
 
 struct AssistantButton: View {

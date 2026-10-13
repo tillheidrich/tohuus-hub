@@ -240,20 +240,41 @@ targets:
     platform: iOS
     sources:
       - path: ToHuusTests
+      # StoreKit Testing (SKTestSession) – the same configuration the Run action uses
+      - path: StoreKit/ToHuus.storekit
+        buildPhase: resources
     dependencies:
       - target: ToHuus
+      - sdk: StoreKitTest.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus.tests
         GENERATE_INFOPLIST_FILE: true
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ToHuus.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ToHuus"
         BUNDLE_LOADER: "$(TEST_HOST)"
+  # accessibility audit of the main screens (XCUIApplication.performAccessibilityAudit, iOS 17)
+  ToHuusUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: ToHuusUITests
+    dependencies:
+      - target: ToHuus
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus.uitests
+        GENERATE_INFOPLIST_FILE: true
+        # test code only: the audit handler closure is not Sendable in the XCTest SDK
+        SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        TEST_TARGET_NAME: ToHuus
 schemes:
   ToHuus:
     build:
       targets:
         ToHuus: all
         ToHuusTests: [test]
+        ToHuusUITests: [test]
     run:
       config: Debug
       storeKitConfiguration: StoreKit/ToHuus.storekit
@@ -261,6 +282,7 @@ schemes:
       config: Debug
       targets:
         - ToHuusTests
+        - ToHuusUITests
     archive:
       config: Release
   ToHuusWatch:
