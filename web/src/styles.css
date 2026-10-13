@@ -10533,3 +10533,19 @@ button.rcard {
   list-style: none;
   margin: 0;
 }
+
+/* a page that failed to load (crash.tsx): a calm card instead of a white screen */
+.crash {
+  display: grid;
+  place-items: center;
+  min-height: 50vh;
+  padding: 24px 16px;
+}
+.crash-card {
+  max-width: 420px;
+  gap: 12px;
+}
+.crash-card h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}

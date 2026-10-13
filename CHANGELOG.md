@@ -6,6 +6,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Web: no more white screens after an update.** A page chunk of an older build reloads the app once; any page that fails shows a card with "Neu laden" / "Zur Startseite" while tab bar and sidebar stay (`web/src/crash.tsx`). A missing file under `/assets/` (or any `.js/.css/…`) now answers 404 instead of the app page with 200, which the service worker used to keep as that script – every later visit of the page stayed white. Service worker v5 drops such caches and never stores HTML as an asset.
 - **Assistant: "Ja" is an answer, not a product.** "Ja", "ja bitte", "Mach das", "Speichere das Rezept", "Nein", "Danke" never land on the shopping list; a "Ja" after a recipe goes to the model with the conversation and the save tool (docs/assistant.md). Without a model or while it is busy the assistant says so.
 - **Assistant answers faster or says it is busy**: one 45 s budget per answer (25 s per model request) instead of 60 s per try with retries and fallback models; recipes get room for 1 000 tokens.
 

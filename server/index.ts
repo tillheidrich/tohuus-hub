@@ -246,6 +246,9 @@ if (webDir) {
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {
     if (p.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } }));
+  // a file the build no longer has (a chunk of an older version) is a 404 – never the app page with 200, which the
+  // service worker would keep as that script and every later visit of the page would stay white
+  app.use((req, res, next) => (/^\/assets\//.test(req.path) || /\.(?:m?js|css|map|woff2?|png|webp|svg|json)$/i.test(req.path) ? res.status(404).type('text/plain').send('not found') : next()));
   const html = fs.readFileSync(path.join(webDir, 'index.html'), 'utf8');
   // the document language follows the household setting
   // … and the household theme is known before the first paint (web/public/theme-boot.js reads it)

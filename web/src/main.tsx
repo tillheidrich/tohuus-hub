@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { startA11yHelpers } from './a11y';
 import { qc } from './api';
 import { App } from './App';
+import { CrashBoundary, startCrashGuards } from './crash';
 import { loadDict } from './i18n';
 import { startOffline } from './shop/offline';
 import { ToastProvider } from './ui';
@@ -19,6 +20,8 @@ import './styles-guide.css';
 startOffline();
 // field labels linked to their controls on every page and sheet (./a11y.ts)
 startA11yHelpers();
+// a page chunk from an older build reloads once instead of a white screen (./crash.tsx)
+startCrashGuards();
 
 /** Re-renders the whole app once a language dictionary arrives after a switch (dictionaries are lazy chunks). */
 function LangGate({ children }: { children: React.ReactNode }) {
@@ -38,7 +41,9 @@ const render = () =>
         <BrowserRouter>
           <ToastProvider>
             <LangGate>
-              <App />
+              <CrashBoundary>
+                <App />
+              </CrashBoundary>
             </LangGate>
             <Lightbox />
           </ToastProvider>

@@ -1,5 +1,6 @@
 import { Barcode, BowlFood, Camera, FileArrowUp, MagnifyingGlass, Package, Plus, QrCode, TextAa, Gear } from '@phosphor-icons/react';
 import { type ComponentType, lazy, type ReactNode, Suspense, useEffect, useState } from 'react';
+import { CrashBoundary } from './crash';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, connectEvents, useApi } from './api';
 import { AssistantFab } from './assistant/Fab';
@@ -292,6 +293,8 @@ function Shell({ me }: { me: Me }) {
           </Suspense>
         )}
         <div key={loc.pathname} className="page-fade">
+          {/* a page that fails shows a card with "Neu laden" here – tab bar and sidebar stay (./crash.tsx) */}
+          <CrashBoundary>
           <Suspense fallback={<PageLoading />}>
             <Routes>
               <Route path="/" element={<Today me={me} />} />
@@ -335,6 +338,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="*" element={<Today me={me} />} />
             </Routes>
           </Suspense>
+          </CrashBoundary>
           <AreaAssist path={loc.pathname} />
           <RouteHelp path={loc.pathname} />
         </div>
