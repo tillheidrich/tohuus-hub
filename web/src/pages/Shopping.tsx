@@ -16,6 +16,7 @@ import {
   Storefront,
   Tag,
   TextAa,
+  Gift,
   Trash,
   WifiSlash,
   X,
@@ -27,6 +28,7 @@ import type { Me } from '../App';
 import { type Product, ApiError, api, get, invalidate, patch, post, qc, useApi } from '../api';
 import { useHousehold } from '../household';
 import { t } from '../i18n';
+import { Link } from 'react-router-dom';
 import { getOr, useInstance } from '../data';
 import { originLabel, rhythmLine } from '../origin';
 import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
@@ -423,6 +425,11 @@ export function Shopping() {
           <button className="icon-btn plain" onClick={() => setViewOpen(true)} aria-label={t('How the list looks for me')} title={t('How the list looks for me')}>
             <TextAa size={20} />
           </button>
+          {!inStore && !me.data?.actor.houseGuest && (
+            <Link className="icon-btn plain" to="/einkauf/wuensche" aria-label={t('Wishes & Merkliste')} title={t('Wishes & Merkliste')}>
+              <Gift size={20} />
+            </Link>
+          )}
         </div>
       </header>
       {inStore && view?.store && <p className="eyebrow shop-at">{t('At {store}', { store: view.store.name })}</p>}

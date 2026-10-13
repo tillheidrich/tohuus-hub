@@ -78,6 +78,8 @@ export interface ShareInfo {
   /** discreet: the real name may be shown to whoever shops */
   reveal: boolean;
   placeholder: string;
+  /** the row is on a private list – its privacy follows the list (list-privacy.ts) */
+  list?: boolean;
 }
 
 const parseIds = (s: string): number[] => {
@@ -156,6 +158,7 @@ export function applyShareView<T extends { id: number; text: string; product_id:
       share_with: parseIds(s.share_with),
       reveal: Boolean(s.reveal),
       placeholder: r.text,
+      ...((s as ShareRow & { from_list?: number | null }).from_list ? { list: true } : {}),
     };
     if (!v.real) {
       out.push({ ...r, share: info });

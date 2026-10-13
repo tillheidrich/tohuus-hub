@@ -10,6 +10,7 @@ import {
   Database,
   Gear,
   HandHeart,
+  Gift,
   Heart,
   House,
   type Icon,
@@ -36,7 +37,7 @@ import { t } from '../i18n';
 import { moreGroups } from '../nav';
 import { Avatar } from '../ui';
 
-const ICONS: Record<string, Icon> = { Info, BookOpen, Lightbulb, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
+const ICONS: Record<string, Icon> = { Gift, Info, BookOpen, Lightbulb, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
 
 export function More({ me }: { me: Me }) {
   const nav = useNavigate();

@@ -596,7 +596,7 @@ export function shareText(listId: number, v: WishViewer, opts: { item_ids?: numb
   const rows = opts.skip_taken && list.can_reserve ? chosen.filter((i) => i.status === 'open') : chosen;
   const prices = opts.prices !== false;
   const lines: string[] = [];
-  lines.push(list.for_name ? t('Wishes for {name}', { name: list.for_name }) + ` – ${list.name}` : list.name);
+  lines.push(list.for_name && !list.name.toLowerCase().includes(list.for_name.toLowerCase()) ? `${list.name} – ${t('Wishes for {name}', { name: list.for_name })}` : list.name);
   lines.push('');
   rows.forEach((i, n) => {
     const price = prices && i.price != null ? ` – ${i.price_from_links ? t('from {price}', { price: fmtPrice(i.price) }) : fmtPrice(i.price)}` : '';

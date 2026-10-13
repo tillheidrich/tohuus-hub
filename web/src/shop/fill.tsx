@@ -9,6 +9,8 @@ import { t } from '../i18n';
 import { money } from '../region';
 import { Sheet, Thumb, useToast } from '../ui';
 import type { Store } from './sections';
+import { type ListVisibility, VisibilityIcon, VisibilityPicker, visibilityLabel } from './privacy';
+import type { Me } from '../App';
 
 export interface ListInfo {
   id: number;
@@ -16,6 +18,11 @@ export interface ListInfo {
   kind: 'main' | 'store' | 'gifts' | 'care' | 'other';
   note: string | null;
   open: number;
+  /** private lists (13 Oct 2026) */
+  visibility?: ListVisibility;
+  owner?: string | null;
+  share_with?: number[];
+  mine?: boolean;
 }
 
 export interface Estimate {
@@ -47,6 +54,11 @@ export function ListTabs({ lists, value, onChange, onNew, onManage }: { lists: L
     <div className="list-tabs chips" role="tablist" aria-label={t('Lists')}>
       {lists.map((l) => (
         <button key={l.id} role="tab" aria-selected={l.id === value} className={`chip ${l.id === value ? 'on' : ''}`} onClick={() => onChange(l.id)} data-drop={l.id === value ? undefined : `list:${l.id}`}>
+          {l.visibility && l.visibility !== 'household' && (
+            <span className="list-lock" title={visibilityLabel(l.visibility, l.share_with, l.owner, l.mine)}>
+              <VisibilityIcon v={l.visibility} size={13} />
+            </span>
+          )}
           {l.name}
           {l.open ? <span className="chip-n">{l.open}</span> : null}
         </button>
@@ -73,11 +85,17 @@ const PRESETS: [string, ListInfo['kind']][] = [
 export function NewListSheet({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (l: ListInfo) => void }) {
   const [name, setName] = useState('');
   const [kind, setKind] = useState<ListInfo['kind']>('other');
+  const [vis, setVis] = useState<ListVisibility>('household');
+  const [shareWith, setShareWith] = useState<number[]>([]);
+  const me = useApi<Me>('me', '/me');
   const toast = useToast();
+  const canHide = me.data?.actor.kind === 'user' && !me.data?.actor.houseGuest;
   const save = async (n = name, k = kind) => {
     try {
-      const l = await post<ListInfo>('/list/lists', { name: n.trim(), kind: k === 'main' ? 'other' : k });
+      const l = await post<ListInfo>('/list/lists', { name: n.trim(), kind: k === 'main' ? 'other' : k, ...(canHide ? { visibility: vis, share_with: shareWith } : {}) });
       setName('');
+      setVis('household');
+      setShareWith([]);
       invalidate('shopping');
       onCreated(l);
       onClose();
@@ -100,6 +118,7 @@ export function NewListSheet({ open, onClose, onCreated }: { open: boolean; onCl
           <input type="checkbox" checked={kind === 'care'} onChange={(e) => setKind(e.target.checked ? 'care' : 'other')} />
           {t('I shop this for someone else (own section in the store, handover note)')}
         </label>
+        {canHide && <VisibilityPicker value={vis} shareWith={shareWith} meId={me.data?.actor.userId} onChange={(v, w) => (setVis(v), setShareWith(w))} />}
         <button className="btn primary" disabled={!name.trim()} onClick={() => save()}>
           {t('Create list')}
         </button>
@@ -112,15 +131,23 @@ export function NewListSheet({ open, onClose, onCreated }: { open: boolean; onCl
 export function ManageListSheet({ list, onClose, onDeleted }: { list: ListInfo | null; onClose: () => void; onDeleted: () => void }) {
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
+  const [vis, setVis] = useState<ListVisibility>('household');
+  const [shareWith, setShareWith] = useState<number[]>([]);
+  const me = useApi<Me>('me', '/me');
   const toast = useToast();
   useEffect(() => {
     setName(list?.name ?? '');
     setNote(list?.note ?? '');
+    setVis(list?.visibility ?? 'household');
+    setShareWith(list?.share_with ?? []);
   }, [list?.id]);
   if (!list) return <Sheet open={false} onClose={onClose}>{null}</Sheet>;
+  // who sees it: anyone may make a household list private (and owns it then); after that only the owner decides
+  const mayPrivacy = me.data?.actor.kind === 'user' && !me.data?.actor.houseGuest && (list.visibility === 'household' || list.mine || !list.visibility);
+  const privacyChanged = vis !== (list.visibility ?? 'household') || JSON.stringify([...shareWith].sort()) !== JSON.stringify([...(list.share_with ?? [])].sort());
   const save = async () => {
     try {
-      await patch(`/list/lists/${list.id}`, { name: name.trim(), note: note.trim() || null });
+      await patch(`/list/lists/${list.id}`, { name: name.trim(), note: note.trim() || null, ...(mayPrivacy && privacyChanged ? { visibility: vis, share_with: shareWith } : {}) });
       invalidate('shopping');
       toast({ text: t('Saved') });
       onClose();
@@ -129,9 +156,13 @@ export function ManageListSheet({ list, onClose, onDeleted }: { list: ListInfo |
     }
   };
   const remove = async () => {
-    await del(`/list/lists/${list.id}`);
+    try {
+      await del(`/list/lists/${list.id}`);
+    } catch (e) {
+      return toast({ text: (e as Error).message, error: true });
+    }
     invalidate('shopping');
-    toast({ text: t('List removed – open items moved to the shopping list') });
+    toast({ text: list.visibility && list.visibility !== 'household' ? t('List removed – open items moved to the shopping list and stay private') : t('List removed – open items moved to the shopping list') });
     onDeleted();
     onClose();
   };
@@ -146,6 +177,13 @@ export function ManageListSheet({ list, onClose, onDeleted }: { list: ListInfo |
           <span className="eyebrow">{list.kind === 'care' ? t('Handover note') : t('Note')}</span>
           <textarea className="input" rows={3} maxLength={1000} value={note} placeholder={list.kind === 'care' ? t('e.g. milk into the fridge, receipt in the drawer') : ''} onChange={(e) => setNote(e.target.value)} />
         </label>
+        {mayPrivacy ? (
+          <VisibilityPicker value={vis} shareWith={shareWith} meId={me.data?.actor.userId} onChange={(v, w) => (setVis(v), setShareWith(w))} />
+        ) : list.visibility && list.visibility !== 'household' ? (
+          <p className="small muted row" style={{ gap: 6 }}>
+            <VisibilityIcon v={list.visibility} /> {t('{name} shared this list with you. Only {name} can change who sees it.', { name: list.owner ?? '?' })}
+          </p>
+        ) : null}
         <div className="row">
           <button className="btn danger" onClick={remove}>
             {t('Remove list')}

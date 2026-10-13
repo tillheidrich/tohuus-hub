@@ -1,0 +1,326 @@
+/* Einkauf › Wünsche (13 Oct 2026) – Dutch Detail: flat surfaces, 1.5 px strokes, arches for photos. */
+.wishes-page {
+  max-width: 880px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  color: var(--primary-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.wish-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.wish-search {
+  flex: 1 1 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.wish-search svg {
+  position: absolute;
+  left: 12px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+.wish-search .input {
+  padding-left: 38px;
+  width: 100%;
+}
+.wish-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.wish-list-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 var(--stroke) var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  overflow: hidden;
+  min-height: 44px;
+}
+.wish-list-card:hover,
+.wish-list-card:focus-visible {
+  box-shadow: inset 0 0 0 var(--stroke-2, 2px) var(--ink);
+}
+.wish-list-photos {
+  display: flex;
+  height: 92px;
+  background: var(--sand);
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+}
+.wish-list-photos.none {
+  height: 56px;
+}
+.wish-list-photos img {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  object-fit: cover;
+}
+.wish-list-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 14px;
+  min-width: 0;
+}
+.wish-list-name {
+  font-size: var(--fs-row);
+  overflow-wrap: anywhere;
+}
+.wish-list-meta,
+.wish-list-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.badge.quiet {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.wish-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wish-result {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 var(--stroke) var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  min-height: 56px;
+}
+.wish-result .grow {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.wish-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 14px;
+}
+.danger-text {
+  color: var(--empty);
+}
+.accent-text {
+  color: var(--primary-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+.wish-quick {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.wish-quick .input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.wish-items {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wish-row {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 var(--stroke) var(--line);
+}
+.wish-row.is-bought .wish-title {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  color: var(--ink-2);
+}
+.wish-pick {
+  display: flex;
+  align-items: center;
+  min-width: 32px;
+}
+.wish-pick input {
+  width: 22px;
+  height: 22px;
+}
+.wish-photo {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.wish-photo .thumb {
+  border-radius: 999px 999px 6px 6px;
+  overflow: hidden;
+}
+.wish-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wish-title {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  font-size: var(--fs-row);
+  font-weight: 650;
+  color: var(--ink);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  min-height: 24px;
+}
+.wish-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+}
+.wish-price {
+  font-weight: 700;
+}
+.wish-prio {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
+}
+.wish-prio.p3 {
+  color: var(--clay);
+}
+.wish-note {
+  margin: 0;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.wish-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wish-links .chip {
+  height: auto;
+  min-height: 32px;
+  padding: 4px 10px;
+  max-width: 100%;
+  text-decoration: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.wish-status {
+  align-self: flex-start;
+}
+.wish-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.wish-row-actions .btn.sm {
+  min-height: 40px;
+}
+.wish-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wish-photo-edit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.wish-photo-edit img,
+.wish-photo-empty {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 999px 999px 6px 6px;
+  background: var(--sand);
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+}
+.wish-link-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.wish-link-edit .row .input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.wish-link-edit .wish-price-in {
+  flex: 0 0 96px;
+}
+.wish-list-pick {
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 48px;
+}
+.wish-share-text {
+  font-family: var(--font);
+  font-size: var(--fs-s);
+  white-space: pre-wrap;
+}
+.list-lock {
+  display: inline-flex;
+  color: var(--ink-2);
+}
+.chip.on .list-lock {
+  color: inherit;
+}
+.btn.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+@media (max-width: 520px) {
+  .wish-quick .hide-sm {
+    display: none;
+  }
+  .wish-row {
+    gap: 10px;
+    padding: 10px;
+  }
+  .wish-photo .thumb {
+    width: 60px !important;
+    height: 60px !important;
+  }
+}
+.wish-price-main {
+  max-width: 160px;
+}

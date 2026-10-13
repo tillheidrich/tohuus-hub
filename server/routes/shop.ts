@@ -167,7 +167,7 @@ r.post('/claims', (req, res) => {
   }
 });
 
-r.get('/shop/members', (_req, res) => res.json(db.prepare('SELECT id, name, color FROM users ORDER BY id').all()));
+r.get('/shop/members', (_req, res) => res.json(db.prepare('SELECT id, name, color, kind FROM users ORDER BY id').all()));
 
 // ---------------------------------------------------------------- offline replay
 
