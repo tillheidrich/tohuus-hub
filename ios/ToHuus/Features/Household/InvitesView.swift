@@ -25,6 +25,7 @@ struct InvitesView: View {
                 Section(L("Invitations")) { ForEach(items) { row($0) } }
             }
         }
+        .themedList()
         .navigationTitle(L("Invitations"))
         .task { await load() }
         .refreshable { await load() }
@@ -194,6 +195,7 @@ struct NewInviteSheet: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(L("Invite someone"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

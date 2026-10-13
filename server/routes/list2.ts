@@ -21,6 +21,7 @@ import { cheapestOverview, pricesFor } from '../lib/prices.js';
 import { type OfferDraft, activeOffers, addOffer, deleteOffer, parseOfferLines, readOfferImage, readOfferLink, saveOffers } from '../lib/offers.js';
 import { addLunchbox, careCheck, careMissing, careSpent, lunchbox, lunchboxDue, setItemOwner, setLunchbox, splitImport, wgBalance } from '../lib/hhforms.js';
 import { uploadQuota } from '../lib/plans.js';
+import { requireFeature } from '../lib/limits.js';
 import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeItemPhoto, restoreItem, setItemPhoto, setListPrefs, updateItem } from '../lib/list2.js';
 import { t } from '../i18n.js';
 import { LIST_KINDS, LIST_VISIBILITIES, assertListAccess, createList, deleteList, estimate, guard, listFilter, listLists, listOfItem, moveItemToList, privateRowGuard, updateList, usuals } from '../lib/lists.js';
@@ -281,7 +282,8 @@ r.put('/modules', requireAdmin, (req, res) => {
 
 /** CalDAV app passwords (Apple Reminders, Nextcloud Tasks …): shown once, per member, revocable. */
 r.get('/caldav/passwords', (req, res) => res.json(userId(req) ? listAppPasswords(userId(req)!) : []));
-r.post('/caldav/passwords', (req, res) => {
+// mirroring lists to Apple Reminders / Nextcloud: Household plan and up (cloud)
+r.post('/caldav/passwords', requireFeature('mirrorLists'), (req, res) => {
   const b = z.object({ label: z.string().max(60).default('iPhone') }).parse(req.body ?? {});
   const uid = userId(req);
   if (!uid || req.actor?.houseGuest) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });

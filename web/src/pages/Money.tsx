@@ -358,14 +358,14 @@ function WeekTrend({ weeks, fmt }: { weeks: Overview['byWeek']; fmt: (n: number)
           {wLabel(weeks[active])}: <b className="ink">{fmt(weeks[active].total)}</b>
         </span>
       </div>
-      <svg className="spark" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t('Spending per week')} onMouseLeave={() => setHover(null)}>
+      <svg className="spark" viewBox={`0 0 ${W} ${H}`} role="group" aria-label={t('Spending per week')} onMouseLeave={() => setHover(null)}>
         <line x1={pad.l} x2={W - pad.r} y1={H - pad.b} y2={H - pad.b} className="axis" />
         <path d={path} className="line" />
         {weeks.map((w, i) => (
           <g key={i}>
             <circle cx={x(i)} cy={y(w.total)} r={i === active ? 5 : 3} className={i === active ? 'pt on' : 'pt'} />
             {/* hit target wider than the mark */}
-            <rect x={x(i) - 18} y={0} width={36} height={H} className="hit" onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={0} aria-label={`${wLabel(w)}: ${fmt(w.total)}`} />
+            <rect x={x(i) - 18} y={0} width={36} height={H} className="hit" onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={0} role="img" aria-label={`${wLabel(w)}: ${fmt(w.total)}`} />
             {(i === 0 || i === weeks.length - 1) && (
               <text x={x(i)} y={H - 6} textAnchor={i === 0 ? 'start' : 'end'} className="tick">
                 {w.from ? new Date(`${w.from}T12:00:00`).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) : w.label}

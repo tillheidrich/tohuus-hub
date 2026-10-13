@@ -202,6 +202,16 @@ struct RecipeDetailView: View {
         switch s {
         case "hellofresh": return "HelloFresh"
         case "cookidoo": return "Cookidoo"
+        case "monsieur-cuisine": return "Monsieur Cuisine"
+        case "cookit": return "Home Connect"
+        case "kenwood": return "Kenwood World"
+        case "tefal": return "Tefal"
+        case "moulinex": return "Moulinex"
+        case "krups": return "Krups"
+        case "magimix": return "Magimix"
+        case "kitchenaid": return "KitchenAid"
+        case "cecotec": return "Cecotec Mambo"
+        case "nutriu": return "NutriU"
         case "url": return LC("From the web")
         case "photo": return LC("From a photo")
         case "own": return LC("House recipe")
@@ -481,6 +491,7 @@ struct RecipeDetailView: View {
                     .datePickerStyle(.graphical)
                 if let s = servings { Text(LCF("For %d people", s)).foregroundStyle(Theme.ink2) }
             }
+            .themedList()
             .navigationTitle(L("Plan meal"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

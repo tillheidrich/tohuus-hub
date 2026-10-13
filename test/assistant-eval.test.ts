@@ -149,6 +149,7 @@ describe('assistant eval (scripted model)', () => {
     expect(p.topics).toEqual(['shopping']);
     expect(p.system).not.toMatch(/Money:|Plan:/);
     expect(p.tools.map((t) => t.function.name)).not.toContain('money_summary');
-    expect(JSON.stringify(p.tools).length + p.system.length).toBeLessThan(5000);
+    // includes the scope rules (assistant-scope.ts, about 500 characters)
+    expect(JSON.stringify(p.tools).length + p.system.length).toBeLessThan(5500);
   });
 });

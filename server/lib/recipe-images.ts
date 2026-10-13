@@ -12,6 +12,8 @@
 // the columns image_url / image_tries / image_error come from the recipes2 migrations – make sure they ran
 // before any query uses recipeImageSql() (modules that join recipes may load before the recipes2 routes)
 import './recipes2.js';
+import { config } from '../config.js';
+import { isDevicePlatformImage } from './device-platforms.js';
 
 const TME_PLAIN = 'https://assets.tmecosys.com/image/upload/img/';
 /** 876×720 – the 1.5× variant Cookidoo itself uses on recipe pages. */
@@ -21,6 +23,22 @@ const TME_SIZED = `https://assets.tmecosys.com/image/upload/${TME_VARIANT}/img/`
 /** A smaller CDN variant of the same photo (only where we know one), else the URL itself. */
 export function sizedImageUrl(url: string): string {
   return url.startsWith(TME_PLAIN) ? TME_SIZED + url.slice(TME_PLAIN.length) : url;
+}
+
+/**
+ * ToHuus Cloud never fetches anything from Cookidoo or the other appliance platforms itself (decision 13 Oct 2026,
+ * docs/recipes-import.md, device-platforms.ts): such a photo link is kept for display and stored only when the person's own device loads it
+ * ("Fotos über dieses Gerät laden") or when the photo came along as a file (package, MCP image, screenshot).
+ */
+export function serverMayFetchImage(url: string): boolean {
+  if (!config.multiTenant) return true;
+  try {
+    new URL(url);
+    // Cookidoo (cookidoo.*, assets.tmecosys.com), Monsieur Cuisine, Home Connect, Kenwood … (device-platforms.ts)
+    return !isDevicePlatformImage(url);
+  } catch {
+    return false;
+  }
 }
 
 /** URLs to try for a download, best first (sized variant, then the original). */

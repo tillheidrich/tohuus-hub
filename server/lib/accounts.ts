@@ -128,6 +128,9 @@ const SCHEMA: string[] = [
     n INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (household_id, kind, period)
   );`,
+  // operators can pause an account (back office › Konten, routes/operator-accounts.ts)
+  `ALTER TABLE accounts ADD COLUMN blocked_at TEXT;
+  ALTER TABLE accounts ADD COLUMN blocked_reason TEXT;`,
 ];
 
 let adb: DB | null = null;
@@ -316,6 +319,10 @@ export function shredHousehold(id: string) {
   dropHouseholdState(id);
   for (const dir of [householdDir(id), householdBackupDir(id)]) fs.rmSync(dir, { recursive: true, force: true });
   scrubAccountBackups(id);
+  // its receipt address and counters (docs/mail-inbox.md)
+  void import('./mail-inbound.js')
+    .then((m) => m.dropMailAddress(id))
+    .catch(() => {});
   // off-site copies of this household (S3) go as well
   void import('./cloud-backup.js')
     .then((m) => m.deleteS3Household(id))
@@ -360,6 +367,9 @@ export interface AccountRow {
   verified_at: string | null;
   created_at: string;
   last_login_at: string | null;
+  /** paused by an operator: no new session or app token, the old ones were removed */
+  blocked_at?: string | null;
+  blocked_reason?: string | null;
 }
 export const accountById = (id: number) => accountsDb().prepare('SELECT * FROM accounts WHERE id = ?').get(id) as AccountRow | undefined;
 export const accountByEmail = (email: string) => accountsDb().prepare('SELECT * FROM accounts WHERE email = ?').get(email.trim().toLowerCase()) as AccountRow | undefined;
@@ -417,7 +427,20 @@ export const membersOf = (householdId: string) =>
 
 export const CLOUD_SESSION_DAYS = 180;
 
+/** What a paused account hears – the contact comes from the back office (support.email), registered there. */
+export const blockedMessage = { text: () => 'This account is paused. Write to us if you think this is a mistake.' };
+
+/**
+ * Every way into an account ends in a session or an app token (password, code, link, passkey, Apple): a paused
+ * account gets neither – HTTP 403 with code `account.blocked`.
+ */
+function assertNotBlocked(accountId: number) {
+  const row = accountsDb().prepare('SELECT blocked_at FROM accounts WHERE id = ?').get(accountId) as { blocked_at: string | null } | undefined;
+  if (row?.blocked_at) throw Object.assign(new Error(blockedMessage.text()), { status: 403, code: 'account.blocked' });
+}
+
 export function createCloudSession(accountId: number, householdId: string | null, meta: { ua?: string | null; ip?: string | null; method?: string } = {}): string {
+  assertNotBlocked(accountId);
   const token = rand(32);
   accountsDb()
     .prepare(
@@ -465,6 +488,7 @@ export const setSessionHousehold = (sessionId: number, householdId: string | nul
 export const APP_TOKEN_PREFIX = 'sw_app_';
 
 export function createAppToken(accountId: number, device: string, householdId: string | null): { token: string; id: number } {
+  assertNotBlocked(accountId);
   const token = `${APP_TOKEN_PREFIX}${rand(32)}`;
   const info = accountsDb()
     .prepare('INSERT INTO app_tokens (token_hash, prefix, account_id, device, household_id) VALUES (?, ?, ?, ?, ?)')

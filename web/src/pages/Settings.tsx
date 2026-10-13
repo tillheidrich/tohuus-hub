@@ -28,6 +28,7 @@ import { CategorySettings, HouseholdFormCard, PlacesSettings } from './PlacesSet
 import { useHousehold } from '../household';
 import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
+import { ErrorLog } from './operator/Errors';
 import { AssistantPrivacyCard } from './Memory';
 import { AiSwitchesCard, ConnectAssistantCard } from './AiSettings';
 import { MoveInCard, MoveOutCard } from './MoveSettings';
@@ -208,6 +209,8 @@ const EVENT_LABEL: Record<string, string> = {
 };
 /** phones and browsers decide per person for these (NotifyMine) – the household matrix only routes shared channels */
 const PERSONAL_EVENTS = new Set(['trip.started', 'trip.addon', 'rhythm.due', 'plan.reminder', 'stock.expiring', 'import.review', 'order.new', 'budget.warning']);
+/** column names of the notification matrix, for the checkboxes' accessible names */
+const CHANNEL_NAME: Record<string, string> = { ha: 'Home Assistant', ntfy: 'ntfy', webhook: 'Webhook', email: 'E-Mail', push: 'Push' };
 
 function Notify({ admin }: { admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
@@ -302,7 +305,7 @@ function Notify({ admin }: { admin: boolean }) {
                       {ch === 'push' && PERSONAL_EVENTS.has(ev) ? (
                         <span className="muted small" title={t('Each person decides this for themselves')}>{t('per person')}</span>
                       ) : (
-                        <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
+                        <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} aria-label={`${t(EVENT_LABEL[ev])} – ${CHANNEL_NAME[ch] ?? extraCols.find(([k]) => k === ch)?.[1] ?? ch}`} />
                       )}
                     </td>
                   ))}
@@ -453,7 +456,19 @@ function Data({ admin }: { admin: boolean }) {
   return (
     <div className="stack" style={{ gap: 16 }}>
       {cloud ? <MoveInCard admin={admin} /> : <MoveOutCard admin={admin} />}
-      <Backups admin={admin} />
+      {/* ToHuus Cloud backs every household up itself (nightly, encrypted, off-site) – the self-host backups are not there */}
+      {/* self-hosted: the admins are the operators – the error log with download (operator/Errors.tsx) */}
+      {!cloud && admin && (
+        <details className="card pad">
+          <summary><b>{t('Error log')}</b> <span className="small muted">· {t('for whoever looks after this server')}</span></summary>
+          <ErrorLog base="/diag/errors" />
+        </details>
+      )}
+      {cloud ? (
+        <div className="card pad small muted">{t('Backups: ToHuus Cloud saves your household every night, encrypted, also outside the data centre. You can download everything at any time under Plan & storage › Your data.')}</div>
+      ) : (
+        <Backups admin={admin} />
+      )}
       <div className="card pad stack">
         <div className="row between wrap">
           <div>

@@ -122,6 +122,7 @@ struct ExpenseEditView: View {
                 } header: { Text(L("Don’t count in the statistics")) }
             }
         }
+        .themedList()
         .navigationTitle(entry == nil ? L("Add an expense") : L("Edit expense"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }

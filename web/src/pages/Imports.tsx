@@ -8,6 +8,7 @@ import { Ic } from '../placeicons';
 import { num, t } from '../i18n';
 import { money } from '../region';
 import { InboxStatusCard } from './Retail';
+import { MailAddressCard } from './MailAddress';
 
 export function Imports({ me }: { me: Me }) {
   const [params] = useSearchParams();
@@ -177,6 +178,7 @@ export function Imports({ me }: { me: Me }) {
 
       <div style={{ marginTop: 14 }}>
         <InboxStatusCard admin={me.actor.role === 'admin'} />
+        <MailAddressCard admin={me.actor.role === 'admin'} />
       </div>
 
       <section className="section">

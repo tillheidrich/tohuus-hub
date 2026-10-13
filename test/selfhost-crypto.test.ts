@@ -10,9 +10,10 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { Agent, fetch } from 'undici';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-selfcrypto-'));
-const PORT = 47900 + Math.floor(Math.random() * 90);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 Object.assign(process.env, { DATA_DIR: dir, PORT: String(PORT), BASE_URL: base, LANGUAGE: 'en', ADMIN_NAME: 'Admin', ADMIN_PASSWORD: 'selfhost123', MULTI_TENANT: '' });
 delete process.env.DB_ENCRYPTION_KEY;

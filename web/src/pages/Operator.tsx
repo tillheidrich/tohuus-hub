@@ -1,11 +1,14 @@
 // /betrieb – the operator back office of ToHuus Cloud (server/routes/operator.ts, operator-admin.ts). Aggregates only:
 // no household content, nothing per person; households appear by id. Opening it needs a fresh password check, every
-// change lands in the audit log. Sections: Übersicht, Statistik, Beta-Zugang, Rezepte, Einstellungen, Haushalte, Protokoll.
+// change lands in the audit log. Sections: Übersicht, Statistik, Fehler, Konten, Beta-Zugang, Geschenke, Rezepte, Einstellungen, Haushalte, Protokoll.
 import { useEffect, useState } from 'react';
 import { api, post, useApi, type ApiError } from '../api';
 import { t } from '../i18n';
 import { Seg, Skeleton } from '../ui';
+import { OperatorAccounts } from './operator/Accounts';
+import { ErrorLog } from './operator/Errors';
 import { OperatorBeta } from './operator/Beta';
+import { OperatorGifts } from './operator/Gifts';
 import { OperatorRecipes } from './operator/Recipes';
 import { OperatorSettings } from './operator/Settings';
 import { OperatorStats } from './operator/Stats';
@@ -33,11 +36,14 @@ interface Overview {
   system: { memory: { rssBytes: number; totalBytes: number; freeBytes: number; limitBytes: number | null }; disk: { totalBytes: number; freeBytes: number } | null; load: number[]; uptimeS: number; node: string };
 }
 
-type Tab = 'overview' | 'stats' | 'beta' | 'recipes' | 'settings' | 'households' | 'audit';
+type Tab = 'overview' | 'stats' | 'errors' | 'accounts' | 'beta' | 'gifts' | 'recipes' | 'settings' | 'households' | 'audit';
 const TABS: [Tab, string, string][] = [
   ['overview', 'Overview', 'uebersicht'],
   ['stats', 'Statistics', 'statistik'],
+  ['errors', 'Errors', 'fehler'],
+  ['accounts', 'Accounts', 'konten'],
   ['beta', 'Beta access', 'beta'],
+  ['gifts', 'Gifts', 'geschenke'],
   ['recipes', 'Recipes', 'rezepte'],
   ['settings', 'Settings', 'einstellungen'],
   ['households', 'Households', 'haushalte'],
@@ -296,7 +302,10 @@ export function Operator() {
       </nav>
       {tab === 'overview' && <OverviewSection />}
       {tab === 'stats' && <OperatorStats />}
+      {tab === 'errors' && <ErrorLog base="/operator/errors" />}
+      {tab === 'accounts' && <OperatorAccounts />}
       {tab === 'beta' && <OperatorBeta />}
+      {tab === 'gifts' && <OperatorGifts />}
       {tab === 'recipes' && <OperatorRecipes />}
       {tab === 'settings' && <OperatorSettings />}
       {tab === 'households' && <HouseholdsSection />}

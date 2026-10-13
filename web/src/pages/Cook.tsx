@@ -309,7 +309,7 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
     try {
       done(await fn());
     } catch (e) {
-      // ToHuus Cloud: a Cookidoo link is confirmed by hand (title + ingredients), nothing is fetched from Cookidoo
+      // ToHuus Cloud: a Cookidoo (Monsieur Cuisine, Cookit …) link is confirmed by hand (title + ingredients), nothing is fetched from there
       if (e instanceof ApiError && e.code === 'cookidoo_confirm') setCookidoo(await post<CookidooDraft>('/recipes/import/cookidoo/draft', { url }).catch(() => ({ url, title: '', ingredients: [] })));
       else toast({ text: (e as Error).message, error: true });
     } finally {
@@ -325,7 +325,7 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
             <div className="field">
               <label>{t('Recipe link')}</label>
               <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t('Recipe site, Instagram, TikTok, Pinterest, YouTube …')} inputMode="url" />
-              <div className="help">{t('Works with almost any recipe site and with posts from Instagram, TikTok, Pinterest and YouTube (only what is public). Cookidoo keeps name, link and ingredients.')}</div>
+              <div className="help">{t('Works with almost any recipe site and with posts from Instagram, TikTok, Pinterest and YouTube (only what is public). Cookidoo, Monsieur Cuisine and other kitchen appliance apps keep name, link and ingredients.')}</div>
             </div>
             <button className="btn primary lg" disabled={!url || busy} onClick={() => run(() => post('/recipes/import/url', { url }))}>
               <LinkIcon size={18} /> {busy ? t('Reading recipe…') : t('Import')}

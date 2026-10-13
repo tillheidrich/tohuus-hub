@@ -94,6 +94,7 @@ struct LeftoversSheet: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(L("Leftovers"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
@@ -242,6 +243,7 @@ struct BoxDetail: View {
                 ProgressView()
             }
         }
+        .themedList()
         .navigationTitle(L("Box"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
@@ -323,6 +325,7 @@ struct LabelSheet: View {
                             ProgressView()
                         }
                     }
+                    .themedList()
                     .navigationTitle(L("Label"))
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }

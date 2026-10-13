@@ -10,9 +10,10 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-oauth-'));
-const PORT = 47900 + Math.floor(Math.random() * 90);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 process.env.DATA_DIR = dir;
 process.env.BASE_URL = base;

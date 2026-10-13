@@ -218,8 +218,9 @@ struct MoneyView: View {
     private func totalCard(_ o: MoneyOverview) -> some View {
         Card(title: L("Food & household"), systemImage: "eurosign.circle") {
             Text(Money.format(o.total ?? 0, currency: o.currency))
-                .font(.system(size: 36, weight: .semibold, design: .rounded))
+                .font(Theme.number())
                 .foregroundStyle(Theme.ink)
+                .numberTransition(o.total ?? 0)
             if let vs = o.vsLastMonth {
                 let up = vs > 0
                 Label(LF("%@ %% vs. last month", String(format: "%+.0f", vs)), systemImage: up ? "arrow.up.right" : "arrow.down.right")

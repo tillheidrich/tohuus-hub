@@ -1,5 +1,6 @@
 import { Barcode, BowlFood, Camera, FileArrowUp, MagnifyingGlass, Package, Plus, QrCode, TextAa, Gear } from '@phosphor-icons/react';
 import { type ComponentType, lazy, type ReactNode, Suspense, useEffect, useState } from 'react';
+import { CrashBoundary } from './crash';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, connectEvents, useApi } from './api';
 import { AssistantFab } from './assistant/Fab';
@@ -57,6 +58,7 @@ const Check = page(() => import('./pages/Check'), 'Check');
 const RecipeDetail = page(() => import('./pages/Recipe'), 'RecipeDetail');
 const VotePage = page(() => import('./pages/Plan2'), 'VotePage');
 const Imports = page(() => import('./pages/Imports'), 'Imports');
+const MyHandover = page(() => import('./pages/Handover'), 'MyHandover');
 const Recognition = page(() => import('./pages/Recognition'), 'Recognition');
 const ImportReview = page(() => import('./pages/ImportReview'), 'ImportReview');
 const Scan = page(() => import('./pages/Scan'), 'Scan');
@@ -292,6 +294,8 @@ function Shell({ me }: { me: Me }) {
           </Suspense>
         )}
         <div key={loc.pathname} className="page-fade">
+          {/* a page that fails shows a card with "Neu laden" here – tab bar and sidebar stay (./crash.tsx) */}
+          <CrashBoundary>
           <Suspense fallback={<PageLoading />}>
             <Routes>
               <Route path="/" element={<Today me={me} />} />
@@ -328,6 +332,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/willkommen" element={<Onboarding me={me} />} />
               <Route path="/hilfe" element={<Help />} />
               <Route path="/hausinfo" element={<HouseGuidePage me={me} />} />
+              <Route path="/uebergabe" element={<MyHandover />} />
               <Route path="/so-funktioniert-tohuus" element={<ExplainPage me={me} />} />
               <Route path="/gut-zu-wissen" element={<FactsPage />} />
               <Route path="/lieblinge" element={<FavouritesPage />} />
@@ -335,6 +340,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="*" element={<Today me={me} />} />
             </Routes>
           </Suspense>
+          </CrashBoundary>
           <AreaAssist path={loc.pathname} />
           <RouteHelp path={loc.pathname} />
         </div>

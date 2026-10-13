@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 – 2026-10-13
+
+- **More notification kinds** on the event entity and for the notify services: budget hint, meal vote, cooking rotation, shopping trip started, “bring something too”, probably due, meal plan reminder. Before, the integration dropped these although ToHuus sent them.
+- Works with ToHuus from 13 Oct 2026: the live stream only carries notifications whose Home Assistant column is on in ToHuus, and never personal ones (a member’s own budget, sign-in warnings).
+
 ## 0.3.0 – 2026-10-12
 
 - **Connect with a code**: the config flow asks *ToHuus Cloud* (`https://cloud.tohuus.heidrich-digital.de`) or *Own server*; the code from ToHuus (*Settings › Home Assistant › Connect Home Assistant*, 10 minutes, single use) is exchanged for a "Home Assistant" access at `POST /api/ha/pair/claim`. Tokens still work (*Token instead of code*). Re-authentication and reconfigure accept a code too.

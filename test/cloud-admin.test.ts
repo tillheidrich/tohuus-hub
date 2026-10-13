@@ -10,10 +10,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Agent, FormData, fetch } from 'undici';
+import { freePort } from './helpers/port';
 const local = new Agent();
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-admin-'));
-const PORT = 49400 + Math.floor(Math.random() * 300);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 Object.assign(process.env, {
   MULTI_TENANT: 'true',
@@ -253,6 +254,73 @@ describe('households and audit log', () => {
   });
 });
 
+
+describe('accounts (Konten)', () => {
+  it('lists accounts with account data only, searchable; nobody else may look', async () => {
+    expect((await A.get('/api/operator/accounts')).status).toBe(404);
+    const l = await op.get('/api/operator/accounts?q=mira@example.org');
+    expect(l.status, l.text).toBe(200);
+    expect(l.json.total).toBe(1);
+    const a = l.json.accounts[0];
+    expect(a).toMatchObject({ email: 'mira@example.org', name: 'Mira', password: true, blocked_at: null, households: [{ id: hA, name: 'Familie Berg', role: 'admin' }] });
+    // account data only – nothing from inside the household
+    expect(Object.keys(a).sort()).toEqual(['apple', 'blocked_at', 'blocked_reason', 'created_at', 'devices', 'email', 'households', 'id', 'lang', 'last_login_at', 'last_seen_at', 'name', 'passkeys', 'password', 'verified_at']);
+    expect((await op.get('/api/operator/accounts?filter=blocked')).json.total).toBe(0);
+  });
+
+  it('pauses an account: signed out everywhere, no new sign-in or app token, then works again', async () => {
+    const B = new Client();
+    await signup(B, 'konten-sam@example.org', 'WG Sam');
+    const id = (await op.get('/api/operator/accounts?q=konten-sam@')).json.accounts[0].id;
+    expect((await B.get('/api/cloud/me')).status).toBe(200);
+    expect((await op.post(`/api/operator/accounts/${id}/block`, { reason: 'x' })).status).toBe(400);
+    const b = await op.post(`/api/operator/accounts/${id}/block`, { reason: 'Spam-Rezepte im Katalog', notify: false });
+    expect(b.status, b.text).toBe(200);
+    expect(b.json.signedOut).toBeGreaterThan(0);
+    expect((await B.get('/api/cloud/me')).status).toBe(401);
+    const login = await new Client().post('/api/cloud/login', { email: 'konten-sam@example.org', password: 'geheim1234' });
+    expect(login.status).toBe(403);
+    expect(login.json).toMatchObject({ code: 'account.blocked' });
+    expect(login.json.error).toMatch(/pausiert|paused/);
+    const app = await new Client().post('/api/auth/app', { email: 'konten-sam@example.org', password: 'geheim1234', device: 'iPhone' });
+    expect(app.status).toBe(403);
+    expect((await op.get('/api/operator/accounts?filter=blocked')).json.accounts[0]).toMatchObject({ id, blocked_reason: 'Spam-Rezepte im Katalog' });
+    expect((await op.post(`/api/operator/accounts/${id}/unblock`, { notify: false })).status).toBe(200);
+    expect((await new Client().post('/api/cloud/login', { email: 'konten-sam@example.org', password: 'geheim1234' })).status).toBe(200);
+    const log = await op.get('/api/operator/audit');
+    expect(log.status, log.text).toBe(200);
+    const entries = log.json as { action: string; target: string }[];
+    expect(entries.map((e) => e.action)).toEqual(expect.arrayContaining(['account.block', 'account.unblock']));
+    // the log names the account by id, never by address
+    expect(JSON.stringify(entries)).not.toContain('konten-sam@example.org');
+  });
+
+  it('removes an account for good after confirming its address – its own household is crypto-shredded', async () => {
+    const C = new Client();
+    const hC = await signup(C, 'konten-ben@example.org', 'Ben allein');
+    const id = (await op.get('/api/operator/accounts?q=konten-ben@')).json.accounts[0].id;
+    expect((await op.del(`/api/operator/accounts/${id}`, { confirm: 'falsch@example.org' })).status).toBe(400);
+    const d = await op.del(`/api/operator/accounts/${id}`, { confirm: 'KONTEN-BEN@example.org' });
+    expect(d.status, d.text).toBe(200);
+    expect(d.json.deleted).toEqual([hC]);
+    expect(accounts.accountByEmail('konten-ben@example.org')).toBeUndefined();
+    expect(accounts.getHousehold(hC)).toBeUndefined();
+    expect((await C.get('/api/cloud/me')).status).toBe(401);
+  });
+});
+
+describe('error log (Fehler)', () => {
+  it('only operators; apps report, the list and the download work', async () => {
+    expect((await A.get('/api/operator/errors')).status).toBe(404);
+    expect((await A.post('/api/diag/errors', { source: 'ios', errors: [{ message: 'keyNotFound(kind)', route: '/api/today', appVersion: '1.0.0 (5)' }] })).status).toBe(200);
+    const l = await op.get('/api/operator/errors?source=ios');
+    expect(l.status, l.text).toBe(200);
+    // the household of the reporter is kept as its id, nothing else about it
+    expect(l.json.rows[0]).toMatchObject({ source: 'ios', message: 'keyNotFound(kind)', household_id: hA, app_version: '1.0.0 (5)' });
+    const csv = await op.get('/api/operator/errors?format=csv');
+    expect(csv.text).toContain('keyNotFound(kind)');
+  });
+});
 
 describe('usage statistics (counts only)', () => {
   it('counts feature actions per day and platform, never per household or person', async () => {

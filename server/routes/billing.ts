@@ -7,7 +7,8 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { config } from '../config.js';
-import { requireAuth } from '../lib/auth.js';
+import { requireAdmin, requireAuth } from '../lib/auth.js';
+import { GiftError, giftOf, redeemPlanCode } from '../lib/gifts.js';
 import { accountsDb, getHousehold, type HouseholdRow } from '../lib/accounts.js';
 import {
   AppleVerifyError,
@@ -19,7 +20,7 @@ import {
   type AppleRenewal,
   type AppleTransaction,
 } from '../lib/apple.js';
-import { APPLE_PRODUCTS, PLAN_LIMITS, checkStorage, currentPlan, limits, usage, type Limits } from '../lib/plans.js';
+import { APPLE_PRODUCTS, LIFETIME_PRODUCT, PLAN_LIMITS, checkStorage, currentPlan, limits, usage, type Limits } from '../lib/plans.js';
 import { currentHousehold } from '../lib/tenancy.js';
 import { APPLE_MANAGE_URL, recordRenewal, reminderWanted, renewalOf } from '../lib/renewals.js';
 import { db } from '../db.js';
@@ -37,6 +38,7 @@ export function billingStatus() {
   const h: HouseholdRow | undefined = config.multiTenant ? getHousehold(currentHousehold()!.id) : undefined;
   const apple = h?.plan_source === 'apple' && (plan === 'haushalt' || plan === 'plus');
   const ren = apple && h ? renewalOf(h.id) : undefined;
+  const gift = h ? giftOf(h.id) : null;
   return {
     plan,
     trialEndsAt: plan === 'trial' ? (h?.trial_ends_at ?? null) : null,
@@ -45,10 +47,15 @@ export function billingStatus() {
     /** paid until (also when it will not renew) */
     expiresAt: apple ? h!.plan_expires_at : null,
     autoRenew: apple ? (ren ? Boolean(ren.auto_renew) : null) : null,
+    /** Plus bought once, for good (optional App Store product); an old subscription still renewing should be cancelled */
+    lifetime: Boolean(apple && h!.plan_product === LIFETIME_PRODUCT && plan === 'plus'),
     period: apple ? (ren?.period ?? (h!.plan_product ? (APPLE_PRODUCTS[h!.plan_product]?.period ?? null) : null)) : null,
     /** "Abo verwalten": Apple's subscription management (the app opens it with showManageSubscriptions) */
     manageUrl: apple ? APPLE_MANAGE_URL : null,
-    source: h?.plan_source === 'apple' ? 'apple' : h?.plan_source === 'operator' ? 'operator' : 'none',
+    // where the plan comes from: apple | beta (gift for everyone during the test) | code | operator | none
+    source: gift && gift.plan === plan && !apple ? gift.kind : h?.plan_source === 'apple' ? 'apple' : h?.plan_source === 'operator' ? 'operator' : 'none',
+    /** a plan as a gift (gifts.ts): `until` null = for good; the paywall shows it instead of prices */
+    gift: gift && gift.plan === plan && !apple ? { kind: gift.kind, plan: gift.plan, until: gift.until, forever: gift.until === null && gift.kind !== 'beta' } : null,
     limits: {
       historyDays: l.historyDays,
       assistantPerMonth: nullIfInf(l.assistantPerMonth),
@@ -95,6 +102,22 @@ const wrap =
 
 r.get('/billing/status', requireAuth, (req, res) => res.json({ ...billingStatus(), reminder: reminderWanted(req.actor?.userId) }));
 
+/**
+ * Redeem a plan code (gifts.ts) – admins, cloud only. Web only on purpose: App Store Review Guideline 3.1.1 does not
+ * allow the iPhone app to unlock features with own codes; the app just shows the plan.
+ */
+r.post('/billing/redeem', requireAuth, requireAdmin, (req, res) => {
+  if (!config.multiTenant) return void res.status(400).json({ error: 'cloud only' });
+  const { code } = z.object({ code: z.string().trim().min(4).max(60) }).parse(req.body ?? {});
+  try {
+    const out = redeemPlanCode(currentHousehold()!.id, code);
+    res.json({ ok: true, ...out, status: billingStatus() });
+  } catch (e) {
+    if (e instanceof GiftError) return void res.status(e.status).json({ error: e.message, code: e.code });
+    throw e;
+  }
+});
+
 /** Personal: the e-mail 3 days before a yearly renewal (admins get it; default on). */
 r.patch('/billing/reminder', requireAuth, (req, res) => {
   const { enabled } = z.object({ enabled: z.boolean() }).parse(req.body ?? {});
@@ -140,6 +163,8 @@ export function applyAppleTransaction(householdId: string, tx: AppleTransaction)
     }
     // never shorten a running subscription because an older transaction arrives late
     const h = getHousehold(householdId)!;
+    // Plus for good (lifetime) is never replaced by a subscription; only its own refund ends it (above)
+    if (h.plan_product === LIFETIME_PRODUCT && h.plan === 'plus' && tx.productId !== LIFETIME_PRODUCT) return;
     // compared by expiry only: a late, older transaction (also of another subscription) must not shorten a later expiry
     const later = !h.plan_expires_at || !expires || expires >= h.plan_expires_at;
     if (later)

@@ -101,4 +101,7 @@ export const de_core: Record<string, string> = {
     'Du bekommst das, weil du Admin dieses Haushalts bist. Abschalten unter Einstellungen › Abo & Speicher.',
   '{name} brings it': '{name} bringt es mit',
   'Stays on the list – {name} can’t bring it': 'Bleibt auf der Liste – {name} kann es nicht mitbringen',
+  // short videos (images.ts)
+  'This video format is not supported. MP4, MOV (iPhone) and WebM work.': 'Dieses Videoformat geht nicht. MP4, MOV (iPhone) und WebM gehen.',
+  'The video is larger than 100 MB. Shorten it, or send it from the iPhone app – it makes videos smaller before sending.': 'Das Video ist größer als 100 MB. Kürz es, oder schick es aus der iPhone-App – die macht Videos vor dem Senden kleiner.',
 };

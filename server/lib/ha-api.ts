@@ -23,6 +23,7 @@ import { suggest } from './recipes.js';
 import { quickAdd } from './shop.js';
 import { notPrivate } from './share-core.js';
 import { haAway } from './away.js';
+import { notifySettings } from './notify.js';
 import { afterUntick } from './shopping-trust.js';
 import './spending.js'; // imports.private_for
 
@@ -486,7 +487,7 @@ function wire() {
     };
     send('change', { topics, at: Date.now() });
     if (topics.includes('notifications')) {
-      const rows = db.prepare('SELECT id, event, title, body, payload, created_at FROM notifications WHERE id > ? ORDER BY id LIMIT 20').all(Math.max(0, last.id)) as {
+      const rows = db.prepare(`SELECT id, event, title, body, payload, created_at FROM notifications WHERE id > ? AND json_extract(payload, '$.personal_for') IS NULL ORDER BY id LIMIT 20`).all(Math.max(0, last.id)) as {
         id: number;
         event: string;
         title: string;
@@ -494,8 +495,11 @@ function wire() {
         payload: string | null;
         created_at: string;
       }[];
+      // the household's routing decides: an event with the Home Assistant column off stays out of the stream too
+      const routes = notifySettings().events as Record<string, { ha?: boolean } | undefined>;
       for (const r of rows) {
         last.id = r.id;
+        if (routes[r.event]?.ha === false) continue;
         let payload: any = {};
         try {
           payload = r.payload ? JSON.parse(r.payload) : {};

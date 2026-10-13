@@ -1,5 +1,6 @@
 /** Recipe import from open databases, other apps and AI; bulk JSON import and export (area: recipes2) */
 import { Router, type NextFunction, type Request, type Response } from 'express';
+import { config } from '../config.js';
 import multer from 'multer';
 import { z } from 'zod';
 import { lang } from '../db.js';
@@ -93,7 +94,7 @@ r.get('/recipes/package.zip', (req, res) => {
 
 /** Everything an app or a person needs to build a package: prompt for their own AI, example, limits. */
 r.get('/recipes/package/template', (_req, res) => {
-  res.json({ format: PACKAGE_FORMAT, version: PACKAGE_VERSION, prompts: PACKAGE_PROMPTS, example: PACKAGE_EXAMPLE, limits: PACKAGE_LIMITS, language: lang(), help: 'https://tohuus.heidrich-digital.de/hilfe/rezeptpaket.html' });
+  res.json({ format: PACKAGE_FORMAT, version: PACKAGE_VERSION, prompts: PACKAGE_PROMPTS, example: PACKAGE_EXAMPLE, limits: PACKAGE_LIMITS, language: lang(), help: `${config.siteUrl}/hilfe/rezeptpaket.html` });
 });
 
 // ---------------------------------------------------------------- staged import with preview & progress

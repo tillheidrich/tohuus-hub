@@ -24,14 +24,15 @@ import * as Ph from '@phosphor-icons/react/ssr';
 import { homeTiles, brandMark, bird } from './art.mjs';
 import { legalCopy } from './legal.mjs';
 import { helpCopy } from './help.mjs';
+import { BLOG_COPY, BLOG_DIR, checkPost, publishedPosts } from './blog.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const SITE = 'https://tohuus.heidrich-digital.de/';
+import { SITE, CLOUD } from './config.mjs';
 const GH = 'https://github.com/tillheidrich/tohuus-hub';
 /** Required provider line (Impressum). The only place where the en dash is allowed. */
 const PROVIDER = 'Till Heidrich – Content Creation';
 /** Contact data of the provider for the legal pages (Datenschutz, Nutzungsbedingungen). */
-const CONTACT = { MAIL: 'mail@tillheidrich.de', PHONE: '0157 73953819', ADDRESS: ['Rotdornweg 17', '21255 Tostedt'], CLOUD: 'https://cloud.tohuus.heidrich-digital.de' };
+const CONTACT = { MAIL: 'mail@tillheidrich.de', PHONE: '0157 73953819', ADDRESS: ['Rotdornweg 17', '21255 Tostedt'], CLOUD };
 const LEGAL = legalCopy({ PROVIDER, SITE, GH, ...CONTACT });
 /** TestFlight: a prefilled e-mail asks for what we need to invite someone (no form, no tracking). */
 const TF_MAIL = 'tohuus@tillheidrich.de';
@@ -55,7 +56,7 @@ const ICONS = {
   robot: 'Robot', package: 'Package', refresh: 'ArrowsClockwise', send: 'PaperPlaneTilt', mail: 'EnvelopeSimple',
   terminal: 'TerminalWindow', code: 'Code', export: 'Export', plus: 'Plus', caret: 'CaretDown', printer: 'Printer',
   phone: 'DeviceMobile', globe: 'Globe', chart: 'ChartBar', list: 'ListChecks', store: 'Storefront', sparkle: 'Sparkle',
-  power: 'Power', plug: 'Plug', house: 'House', question: 'Question', scan: 'Scan', watch: 'Watch',
+  power: 'Power', plug: 'Plug', house: 'House', question: 'Question', scan: 'Scan', watch: 'Watch', image: 'ImageSquare', share: 'ShareNetwork',
 };
 const symbol = (id, name) => {
   const C = Ph[`${name}Icon`] || Ph[name];
@@ -80,7 +81,7 @@ const COPY = {
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
     legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant' },
-    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe']],
+    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#bring-mir-was', 'Bring mir was'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
       label: 'Einkaufs- und Haushaltsassistent',
@@ -101,7 +102,7 @@ const COPY = {
     },
     jobs: {
       label: 'Was ToHuus macht', h2: 'Einkauf, Kochen und Geld hängen zusammen.',
-      intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei.',
+      intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei. Und um das, was ein Zuhause sonst noch ausmacht: einander was Gutes tun und Wünsche festhalten.',
       list: [
         { id: 'einkauf', no: '1', label: 'Einkauf', h3: 'ToHuus merkt sich, was fehlt.', shot: 'shopping',
           alt: 'Einkaufsliste in ToHuus: oben Vorschläge wie Hackfleisch mit „merkt sich: alle ~12 Tage“, darunter nach Bereichen sortierte Einträge mit Ich-hol’s-Knopf und Herkunft wie „Mira, heute“.',
@@ -114,7 +115,15 @@ const COPY = {
         { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
           alt: 'Seite Geld für September 2026: 215,81 Euro ausgegeben, 17 Euro mehr als im Vormonat, darunter ein Wochenverlauf und Balken nach Kategorie.',
           p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
-          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Ein Budget, wenn ihr eins wollt', 'Export als CSV'] },
+          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, für alle oder nur für dich, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
+        { id: 'bring-mir-was', no: '4', label: 'Bring mir was', h3: 'Einer liegt auf dem Sofa, einer steht in der Küche.', shot: 'treats',
+          alt: 'Seite Bring mir was: „Was hättest du gern?“, darunter Karten wie Was Süßes, Was zu trinken, Was zum Knabbern und Aus dem Kühlschrank, dazu die Reiter Gäste und Party.',
+          p: 'Wer gerade festsitzt, im Bett, beim Zubettbringen oder mit Kind auf dem Arm, wünscht sich mit zwei Tipps eine Kleinigkeit. Die anderen sehen es sofort, einer sagt „Ich bring’s“, und eure Karte zeigt nur, was wirklich da ist. Für Besuch gibt es eine eigene Karte, und am Partyabend bestellen die Gäste direkt von eurer Partykarte.',
+          points: ['Eure eigene Karte: Süßes, Getränke, Snacks, aus dem Kühlschrank', 'Gäste wünschen sich etwas über einen Link, ganz ohne App', 'Party: ihr seht, was bestellt ist und was noch da ist'] },
+        { id: 'wuensche', no: '5', label: 'Wünsche', h3: 'Wunschlisten, die nichts verraten.', shot: 'wishes',
+          alt: 'Seite Wünsche: Listen „Weihnachten für Mika“ mit drei Wünschen, zwei davon vergeben, und die Merkliste „Neue Kekse & Fundstücke“.',
+          p: 'Geburtstag, Weihnachten oder einfach eine Merkliste: Wünsche mit Foto, mehreren Links, Preis und Notiz. Wer etwas reserviert, sieht der Rest der Familie, die beschenkte Person aber nie. Eine Liste lässt sich ganz oder in Teilen per Nachricht verschicken.',
+          points: ['Foto, Links, Preis und „wer könnte das schenken“', 'Private Listen, die nur du siehst', 'Teilen als Link oder fertige Nachricht'] },
       ],
     },
     levels: {
@@ -123,7 +132,7 @@ const COPY = {
       shot: 'import', alt: 'Seite Importe: Bons als PDF, Foto, QR-Link oder Text, darunter der Verlauf mit gebuchten Bons von REWE und Aldi.',
       list: [
         ['receipt', 'Lieferdienst und eBon', 'Bestellt ihr bei REWE oder bekommt ihr digitale Bons, kommen Bestellung und Bon als PDF herein. ToHuus gleicht beides ab und bucht, was wirklich geliefert wurde.'],
-        ['camera', 'Bon fotografieren', 'Bei Aldi, Lidl oder auf Papier reicht ein Foto vom Bon. Was ToHuus nicht sicher lesen kann, legt es dir zum Prüfen vor, bevor etwas gebucht wird. Eine Texterkennung ganz ohne KI ist in Arbeit.'],
+        ['camera', 'Bon fotografieren', 'Bei Aldi, Lidl oder auf Papier reicht ein Foto vom Bon. Was ToHuus nicht sicher lesen kann, legt es dir zum Prüfen vor, bevor etwas gebucht wird. Die Texterkennung läuft ohne KI, auf dem Server oder direkt auf deinem iPhone.'],
         ['mic', 'Einfach sprechen', 'Du tippst auf „Sprechen“ und sagst: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt es auf die Liste und sagt dir, was er eingetragen hat. Jeder Schritt lässt sich zurücknehmen.'],
       ],
     },
@@ -158,7 +167,7 @@ const COPY = {
       cols: ['ToHuus Cloud', 'Selbst hosten'],
       rows: [
         ['Für wen', 'Alle, die einfach anfangen wollen', 'Alle mit eigenem Server, NAS oder Home Assistant'],
-        ['Apps', 'iPhone-App und im Browser, auch auf Android. iPad und Apple Watch kommen mit der App', 'iPhone-App mit deinem Server verbunden, dazu der Browser'],
+        ['Apps', 'iPhone-App und im Browser, auch auf Android. iPad und Apple Watch kommen mit der App', 'Im Browser als Web-App (auch auf dem Startbildschirm), dazu Home Assistant und eigene Assistenten über MCP. Die iPhone-App gibt es nur für die Cloud'],
         ['Daten', 'Server in Deutschland (Hetzner), jeder Haushalt mit eigenem Schlüssel verschlüsselt', 'Auf deinem Server, auf Wunsch verschlüsselt'],
         ['Bon-Fotos und Assistent', 'Dabei, mit Kontingent je nach Tarif. KI abschaltbar für Haushalt, Person und Kinder', 'Mit eigenem KI-Schlüssel oder ganz ohne'],
         ['Claude, ChatGPT (MCP)', 'Über MCP mit Anmeldung (OAuth)', 'Über MCP mit Zugangsschlüssel'],
@@ -174,7 +183,7 @@ const COPY = {
         { name: 'Free', price: '0 €', sub: 'für immer', storage: '250 MB', items: ['Gemeinsame Liste mit Einkaufsmodus', 'Bons ohne Limit', 'Merkt sich 60 Tage zurück', 'Rezepte von Hand oder per Link', '20 Nachrichten an den Assistenten im Monat'] },
         { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick', 'Verbundene Haushalte zum Mitversorgen', 'Import aus Screenshots und Fotos von Papierlisten', '100 Nachrichten im Monat'] },
         { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
-        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'iPhone-App und Browser'], host: true },
+        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'Web-App im Browser, Home Assistant, MCP'], host: true },
       ],
       note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Bezahlt wird in der iPhone-App über Apple.',
     },
@@ -188,7 +197,8 @@ const COPY = {
         ['robot', 'KI nur über Mistral', 'Bon-Fotos, Spracheingaben und der Assistent laufen über OpenRouter zu Mistral, einem Anbieter aus Frankreich. Jede Anfrage ist auf Mistral festgelegt, ohne Ausweichen auf andere Anbieter, und geht laut OpenRouter nur an Anbieter, die keine Nutzerdaten sammeln. Sprachaufnahmen werden nicht gespeichert.'],
         ['lock', 'Sensible Angaben bleiben zu Hause', 'Allergien und Angaben zu Kindern gehen nur an ein Sprachmodell, wenn ihr das ausdrücklich einschaltet.'],
         ['power', 'KI lässt sich abschalten', 'Für den ganzen Haushalt, nur für dich oder für einzelne Kinder. Dann geht keine Anfrage an ein Sprachmodell, und Liste, Vorschläge, Kochen und Geld laufen weiter.'],
-        ['scan', 'Texterkennung ohne KI', 'Bon-Fotos werden direkt auf dem Server gelesen, ohne Sprachmodell. Das Foto verlässt den Server nicht.'],
+        ['phone', 'Apple Intelligence nur auf dem iPhone', 'Wer möchte, lässt Bon-Fotos und handgeschriebene Listen von Apple Intelligence direkt auf dem iPhone aufräumen. Das ist pro Gerät ausgeschaltet, bis du es einschaltest, und dafür verlässt nichts das Gerät.'],
+        ['scan', 'Texterkennung ohne KI', 'Bon-Fotos liest zuerst eine Texterkennung ohne Sprachmodell auf dem Server, oder dein iPhone liest sie selbst und schickt nur den Text. Nur wenn das nicht aufgeht und KI an ist, liest Mistral das Foto.'],
         ['plug', 'Eure Assistenten nur, wenn ihr wollt', 'Claude oder ChatGPT verbindet ihr selbst über MCP. Diskrete Einträge sehen sie nur als Platzhalter, und ein Admin kann MCP abschalten.'],
         ['trash', 'Wenn ihr löscht', 'Löscht ihr den Haushalt, wird zuerst sein Schlüssel vernichtet, dann folgen die Daten und ihre Sicherungen. Sicherungskopien der Kontoverwaltung laufen nach ihrer Frist ab.'],
       ],
@@ -196,7 +206,7 @@ const COPY = {
     },
     host: {
       label: 'Selbst hosten', h2: 'Für alle mit eigenem Server.',
-      p: 'Ein Docker-Container und eine SQLite-Datei, kostenlos unter AGPL-3.0. Die iPhone-App verbindet sich mit deinem Server, im Browser läuft ToHuus als Web-App. Ein Konto bei uns brauchst du dafür nicht.',
+      p: 'Ein Docker-Container und eine SQLite-Datei, kostenlos unter AGPL-3.0. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst. Die iPhone-App ist für die ToHuus Cloud gedacht. Ein Konto bei uns brauchst du dafür nicht.',
       facts: [
         ['refresh', 'Home Assistant in beide Richtungen', 'Einkaufsliste als To-do-Liste für Assist, Sensoren für Fälliges und den Wochenplan als Kalender. Installiert über HACS, die Integration steht unter MIT-Lizenz.'],
         ['mail', 'Bon-Postfach, Telegram, Drucker', 'Bons kommen per Mail herein, „2 Milch, Brot“ im Chat landet auf der Liste, und ein Bon-Drucker in der Küche druckt sie aus.'],
@@ -208,7 +218,7 @@ const COPY = {
         ['Holen und einstellen', 'In <code>.env</code> trägst du <code>BASE_URL</code>, deinen Namen und ein Passwort ein. Alle weiteren Optionen stehen kommentiert in <code>.env.example</code>.'],
         ['Starten', 'Mit <code>docker compose up -d --build</code>, dann <code>http://localhost:8080</code> öffnen. Die Daten liegen in <code>./data</code>.'],
         ['Leer oder mit Demo', 'Beim ersten Start wählst du, ob du leer anfängst oder dich erst mit Demo-Daten umsiehst. Die sind später mit einem Tipp wieder weg.'],
-        ['HTTPS davor', 'Dein üblicher Reverse Proxy reicht. Danach die iPhone-App mit der Adresse verbinden oder die Web-App auf den Startbildschirm legen.'],
+        ['HTTPS davor', 'Dein üblicher Reverse Proxy reicht. Danach die Web-App im Browser öffnen und auf den Startbildschirm legen.'],
       ],
       envComment: '# en oder de',
     },
@@ -247,8 +257,9 @@ const COPY = {
         ['Funktioniert das ohne REWE?', 'Ja. ToHuus liest auch Bons von Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm und Rossmann, Papierbons per Foto. Wer gar keine Bons sammeln will, hakt einfach auf der Liste ab.'],
         ['Gibt es ToHuus für Android?', 'Eine eigene Android-App gibt es nicht. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst, auf Android genauso wie am Rechner.'],
         ['Wann kommt die iPhone-App?', `Sie ist im Test über TestFlight, in einem kleinen, geschlossenen Kreis. Einen Platz kannst du <a href="${tfHref('de')}">per Mail anfragen</a>. iPad und Apple Watch kommen mit der App. Wer selbst hostet, kann die Web-App schon heute nutzen.`],
-        ['Brauche ich dafür KI?', 'Nein. Liste, Vorschläge, Kochplaner und Ausgaben funktionieren ohne. Ein Sprachmodell braucht es nur für Fotos von Papierbons und für freie Fragen an den Assistenten. Ihr könnt die KI für den Haushalt, für einzelne Personen und für Kinder abschalten.'],
-        ['Kann ich meine Rezepte mitbringen?', 'Ja. Per Link, Foto, aus Apps wie Mealie, Paprika oder Nextcloud Kochbuch, oder viele auf einmal als Rezeptpaket. Das Paket kann dir auch deine eigene KI aus Fotos deiner Kochbücher bauen.'],
+        ['Brauche ich dafür KI?', 'Nein. Liste, Vorschläge, Kochplaner und Ausgaben funktionieren ohne. Bon-Fotos liest ToHuus zuerst mit einer Texterkennung ohne KI, auf dem Server oder direkt auf dem iPhone. Ein Sprachmodell hilft nur, wenn das nicht reicht, und bei freien Fragen an den Assistenten. Auf neueren iPhones kann auf Wunsch Apple Intelligence auf dem Gerät helfen. Ihr könnt die KI für den Haushalt, für einzelne Personen und für Kinder abschalten.'],
+        ['Kann ich meine Rezepte mitbringen?', 'Ja. Per Link von Rezeptseiten, aus Instagram, TikTok, Pinterest oder YouTube, per Foto, aus Apps wie Mealie, Paprika oder Nextcloud Kochbuch, oder viele auf einmal als Rezeptpaket mit Fotos. Hast du Claude oder ChatGPT verbunden, kann deine eigene KI auch hunderte Rezepte samt Fotos in einem Rutsch speichern.'],
+        ['Und Cookidoo?', 'Teile ein Cookidoo-Rezept mit ToHuus oder füge den Link ein, dann bestätigst du Name und Zutaten. Die Schritte kannst du dazuschreiben oder aus deinen Screenshots lesen lassen. ToHuus ruft selbst nie etwas von Cookidoo ab, und was du mitbringst, bleibt privat in eurem Haushalt.'],
         ['Was ist die Hausinfo?', 'Karten für Babysitter und Gäste mit Sprachbefehlen, Abläufen, Tipps und Notfallinfos. Codes wie für die Tür oder das WLAN sind dort eigens geschützt und gehen nie an eine KI. Auf dem Babysitter-Link steht sie neben „Wo ist was?“, auch offline.'],
         ['Brauche ich einen Thermomix?', 'Nein. Der Kochplaner zeigt Rezepte mit und ohne Thermomix, und ihr könnt danach filtern.'],
         ['Wer zahlt, wenn wir zu viert sind?', 'Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder, Gäste und verbundene Haushalte zahlen nichts.'],
@@ -272,7 +283,7 @@ const COPY = {
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
     legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant' },
-    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
+    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#bring-me-something', 'Bring me something'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
       label: 'Shopping and household assistant',
@@ -293,7 +304,7 @@ const COPY = {
     },
     jobs: {
       label: 'What ToHuus does', h2: 'Shopping, cooking and money belong together.',
-      intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three.',
+      intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three. And after the rest of what makes a home: doing each other a good turn and keeping track of wishes.',
       list: [
         { id: 'shopping', no: '1', label: 'Shopping', h3: 'ToHuus remembers what is missing.', shot: 'shopping',
           alt: 'Shopping list in ToHuus: suggestions at the top such as beef mince with “remembers: every ~12 days”, below it items sorted by section with an I’ll-get-it button and where they came from, like “Mira, today”.',
@@ -306,7 +317,15 @@ const COPY = {
         { id: 'money', no: '3', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
           alt: 'Money page for September 2026: £215.81 spent, £17 more than the month before, with a weekly line and bars by category below.',
           p: 'Every receipt counts. ToHuus shows what a month cost, in which shop and for which category, and compares it with the month before. You do not need to keep a ledger.',
-          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'A budget, if you want one', 'CSV export'] },
+          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week, month or year, shared or just for you, with a note at 80 percent', 'CSV export'] },
+        { id: 'bring-me-something', no: '4', label: 'Bring me something', h3: 'One of you is on the sofa, one is in the kitchen.', shot: 'treats',
+          alt: 'Treats page: “What would you like?”, with cards such as Something sweet, Something to drink, Something to nibble and From the fridge, plus tabs for Guests and Party.',
+          p: 'Whoever is stuck, in bed, at bedtime or with a child on their arm, asks for a little something in two taps. The others see it right away, someone says “I’ll bring it”, and your menu only shows what is actually at home. Visitors get their own menu, and on party night guests order straight from your party menu.',
+          points: ['Your own menu: sweets, drinks, snacks, from the fridge', 'Guests ask through a link, no app needed', 'Party: you see what was ordered and what is left'] },
+        { id: 'wishes', no: '5', label: 'Wishes', h3: 'Wish lists that give nothing away.', shot: 'wishes',
+          alt: 'Wishes page: the list “Christmas for Mika” with three wishes and the saved list “New biscuits & finds”.',
+          p: 'Birthdays, Christmas or just a list of things to remember: wishes with a photo, several links, a price and a note. The family sees who reserved what, the person it is for never does. Send a whole list or part of it as a message.',
+          points: ['Photo, links, price and “who could give this”', 'Private lists only you can see', 'Share as a link or a ready-made message'] },
       ],
     },
     levels: {
@@ -315,7 +334,7 @@ const COPY = {
       shot: 'import', alt: 'Imports page: receipts as PDF, photo, QR link or text, with the history of booked receipts from Tesco and Aldi below.',
       list: [
         ['receipt', 'Delivery and e-receipts', 'If you order groceries online or get digital receipts, the order and the receipt come in as a PDF. ToHuus matches them and books what was actually delivered.'],
-        ['camera', 'Snap the receipt', 'For a paper receipt, a photo is enough. Anything ToHuus cannot read with confidence is shown to you for a check before it is booked. Text recognition entirely without AI is being built.'],
+        ['camera', 'Snap the receipt', 'For a paper receipt, a photo is enough. Anything ToHuus cannot read with confidence is shown to you for a check before it is booked. Text recognition runs without AI, on the server or right on your iPhone.'],
         ['mic', 'Just speak', 'Tap “Speak” and say: “We are out of milk, and we need something for Sunday.” The assistant puts it on the list and tells you what it added. Every step can be undone.'],
       ],
     },
@@ -350,7 +369,7 @@ const COPY = {
       cols: ['ToHuus Cloud', 'Self-hosted'],
       rows: [
         ['Who for', 'Anyone who just wants to start', 'Anyone with a server, a NAS or Home Assistant'],
-        ['Apps', 'iPhone app and the browser, Android included. iPad and Apple Watch come with the app', 'iPhone app connected to your server, plus the browser'],
+        ['Apps', 'iPhone app and the browser, Android included. iPad and Apple Watch come with the app', 'In the browser as a web app (also on the home screen), plus Home Assistant and your own assistants over MCP. The iPhone app is for the cloud only'],
         ['Data', 'Servers in Germany (Hetzner), every household encrypted with its own key', 'On your server, encrypted if you like'],
         ['Receipt photos and assistant', 'Included, with an allowance per plan. AI can be switched off for the household, a person or a child', 'With your own AI key, or without'],
         ['Claude, ChatGPT (MCP)', 'Through MCP with sign-in (OAuth)', 'Through MCP with an access key'],
@@ -366,7 +385,7 @@ const COPY = {
         { name: 'Free', price: '€0', sub: 'for good', storage: '250 MB', items: ['Shared list with shop mode', 'Unlimited receipts', 'Remembers 60 days back', 'Recipes by hand or from a link', '20 assistant messages a month'] },
         { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices, spending and review', 'Connected households for looking after someone', 'Import from screenshots and photos of paper lists', '100 messages a month'] },
         { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', '1,500 messages a month'], mark: '14 days to try' },
-        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'iPhone app and browser'], host: true },
+        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'Web app in the browser, Home Assistant, MCP'], host: true },
       ],
       note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. Payment runs through Apple in the iPhone app.',
     },
@@ -380,7 +399,8 @@ const COPY = {
         ['robot', 'AI only through Mistral', 'Receipt photos, voice input and the assistant go through OpenRouter to Mistral, a provider based in France. Every request is pinned to Mistral with no fallback to other providers, and according to OpenRouter only goes to providers that do not collect user data. Voice recordings are not stored.'],
         ['lock', 'Sensitive details stay at home', 'Allergies and details about children only go to a language model if you explicitly switch that on.'],
         ['power', 'AI can be switched off', 'For the whole household, just for you or for a single child. Then no request goes to a language model, and the list, suggestions, cooking and money keep working.'],
-        ['scan', 'Text recognition without AI', 'Receipt photos are read on the server itself, with no language model. The photo does not leave the server.'],
+        ['phone', 'Apple Intelligence on the iPhone only', 'If you like, Apple Intelligence tidies up receipt photos and handwritten lists right on the iPhone. It is off on every device until you switch it on, and nothing leaves the device for it.'],
+        ['scan', 'Text recognition without AI', 'Receipt photos are first read by text recognition without a language model on the server, or your iPhone reads them itself and sends only the text. Only if that does not add up and AI is on does Mistral read the photo.'],
         ['plug', 'Your assistants only if you want', 'You connect Claude or ChatGPT yourself through MCP. They see discreet items only as a placeholder, and an admin can switch MCP off.'],
         ['trash', 'When you delete', 'When you delete the household, its key is destroyed first, then the data and its backups follow. Backup copies of the account directory expire after their retention period.'],
       ],
@@ -388,7 +408,7 @@ const COPY = {
     },
     host: {
       label: 'Self-hosting', h2: 'For everyone with their own server.',
-      p: 'One Docker container and one SQLite file, free under the AGPL-3.0. The iPhone app connects to your server, and in the browser ToHuus runs as a web app. You do not need an account with us.',
+      p: 'One Docker container and one SQLite file, free under the AGPL-3.0. In the browser ToHuus runs as a web app you can add to your home screen. The iPhone app is meant for ToHuus Cloud. You do not need an account with us.',
       facts: [
         ['refresh', 'Home Assistant, both ways', 'The shopping list as a to-do list for Assist, sensors for what is due and the week plan as a calendar. Installed via HACS, the integration is MIT licensed.'],
         ['mail', 'Receipt inbox, Telegram, printer', 'Receipts arrive by e-mail, “2 milk, bread” in a chat lands on the list, and a receipt printer in the kitchen prints it.'],
@@ -400,7 +420,7 @@ const COPY = {
         ['Get it and set it up', 'In <code>.env</code> you fill in <code>BASE_URL</code>, your name and a password. Every other option is listed with comments in <code>.env.example</code>.'],
         ['Start it', 'Run <code>docker compose up -d --build</code>, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.'],
         ['Empty or demo', 'On first start you choose to begin empty or to look around with demo data first. One tap removes it later.'],
-        ['Put HTTPS in front', 'Your usual reverse proxy is enough. Then connect the iPhone app to the address or add the web app to your home screen.'],
+        ['Put HTTPS in front', 'Your usual reverse proxy is enough. Then open the web app in the browser and add it to your home screen.'],
       ],
       envComment: '# en or de',
     },
@@ -439,8 +459,9 @@ const COPY = {
         ['Does it work without online grocery delivery?', 'Yes. Paper receipts come in as a photo, and if you do not want to collect receipts at all, simply tick things off the list.'],
         ['Is there an Android app?', 'There is no separate Android app. In the browser ToHuus runs as a web app you can add to your home screen, on Android just like on a computer.'],
         ['When is the iPhone app coming?', `It is being tested on TestFlight in a small, closed group. You can <a href="${tfHref('en')}">ask for a place by e-mail</a>. iPad and Apple Watch come with the app. If you self-host, you can use the web app today.`],
-        ['Do I need AI for this?', 'No. The list, suggestions, cook planner and spending all work without it. A language model is only needed for photos of paper receipts and for open questions to the assistant. You can switch AI off for the household, for single people and for children.'],
-        ['Can I bring my recipes?', 'Yes. From a link, a photo, apps like Mealie, Paprika or Nextcloud Cookbook, or many at once as a recipe pack. Your own AI can build the pack from photos of your cookbooks.'],
+        ['Do I need AI for this?', 'No. The list, suggestions, cook planner and spending all work without it. Receipt photos are read first by text recognition without AI, on the server or right on the iPhone. A language model only helps when that is not enough, and with open questions to the assistant. On newer iPhones Apple Intelligence can help on the device if you like. You can switch AI off for the household, for single people and for children.'],
+        ['Can I bring my recipes?', 'Yes. From a link to a recipe site, from Instagram, TikTok, Pinterest or YouTube, from a photo, from apps like Mealie, Paprika or Nextcloud Cookbook, or many at once as a recipe pack with photos. If you connected Claude or ChatGPT, your own AI can save hundreds of recipes with their photos in one go.'],
+        ['And Cookidoo?', 'Share a Cookidoo recipe with ToHuus or paste the link, then confirm the name and ingredients. Add the steps yourself or let ToHuus read them from your screenshots. ToHuus never fetches anything from Cookidoo itself, and what you bring along stays private in your household.'],
         ['What is the house info?', 'Cards for babysitters and guests with voice commands, routines, tips and emergency details. Codes such as the door or the Wi-Fi are protected separately and never go to an AI. On the babysitter link it sits next to “where is what”, also offline.'],
         ['Do I need a Thermomix?', 'No. The cook planner shows recipes with and without a Thermomix, and you can filter by it.'],
         ['Who pays if there are four of us?', 'One subscription covers the whole household. Members, children, guests and connected households pay nothing.'],
@@ -460,7 +481,7 @@ const COPY = {
 
 // ---------------------------------------------------------------- screenshots
 /** Every screenshot slot the page uses. The build fails when a file is missing, so no placeholder ever ships. */
-const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import'];
+const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes'];
 const WIDTHS = [480, 960];
 for (const lang of Object.keys(COPY)) for (const n of SHOTS) for (const w of WIDTHS) {
   const f = path.join(ROOT, `assets/shots/${lang}/${n}-${w}.webp`);
@@ -491,9 +512,9 @@ const pageTop = (c, m, b = c.base) => `<!doctype html>
 <title>${m.title}</title>
 <meta name="description" content="${m.desc}">
 <link rel="canonical" href="${m.url}">
-<link rel="alternate" hreflang="en" href="${m.alt.en}">
+${m.alt.en && m.alt.de ? `<link rel="alternate" hreflang="en" href="${m.alt.en}">
 <link rel="alternate" hreflang="de" href="${m.alt.de}">
-<link rel="alternate" hreflang="x-default" href="${m.alt.en}">
+<link rel="alternate" hreflang="x-default" href="${m.alt.en}">` : ''}
 <meta name="theme-color" content="#f7f5ef">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
@@ -521,6 +542,7 @@ const pageTop = (c, m, b = c.base) => `<!doctype html>
 ${m.ld ? `<script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus","description":"${c.desc}","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web, Docker","license":"https://www.gnu.org/licenses/agpl-3.0.html","url":"${c.url}","image":"${SITE}assets/img/og-${c.lang}.png","codeRepository":"${GH}","inLanguage":["en","de"],"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}}
 </script>
+` : ''}${m.extraLd ? `<script type="application/ld+json">${m.extraLd}</script>
 ` : ''}</head>
 <body${m.bodyClass ? ` class="${m.bodyClass}"` : ''}>
 ${sprite}
@@ -530,7 +552,10 @@ ${sprite}
 <div class="nav">
   <a class="brand" href="${m.home ?? './'}" aria-label="${c.homeLabel}">${brandMark(28)}<span>ToHuus</span></a>
   <nav class="nav-links" aria-label="${c.navLabel}">
-${c.nav.map(([href, l]) => `    <a href="${href === 'HELP' ? (m.helpHref ?? helpIndexHref(c.lang)) : m.navBase + href}"${href === 'HELP' && m.isHelp ? ' aria-current="page"' : ''}>${l}</a>`).join('\n')}
+${c.nav
+  .filter(([href]) => href !== 'BLOG' || publishedPosts(c.lang).length > 0)
+  .map(([href, l]) => `    <a href="${href === 'HELP' ? (m.helpHref ?? helpIndexHref(c.lang)) : href === 'BLOG' ? `${m.home ?? './'}${c.lang === 'de' ? '../' : ''}${BLOG_DIR[c.lang]}/` : m.navBase + href}"${(href === 'HELP' && m.isHelp) || (href === 'BLOG' && m.bodyClass?.includes('blog-page')) ? ' aria-current="page"' : ''}>${l}</a>`)
+  .join('\n')}
   </nav>
   <div class="lang" role="group" aria-label="${c.langLabel}">
     <a href="${m.enHref}" hreflang="en" lang="en"${c.lang === 'en' ? ' aria-current="true"' : ''}>EN</a>
@@ -554,7 +579,8 @@ const pageFoot = (c, m) => `<footer class="foot">
         <h4>${c.foot.project}</h4>
         <ul>
           <li><a href="${m.helpHref ?? helpIndexHref(c.lang, 'home')}">${c.foot.help}</a></li>
-          <li><a href="${GH}">${c.foot.code}</a></li>
+${publishedPosts(c.lang).length ? `          <li><a href="${m.home ?? './'}${c.lang === 'de' ? '../' : ''}${BLOG_DIR[c.lang]}/">${BLOG_COPY[c.lang].title}</a></li>
+` : ''}          <li><a href="${GH}">${c.foot.code}</a></li>
           <li><a href="${GH}/blob/main/LICENSE">${c.foot.license}</a></li>
           <li><a href="${GH}/blob/main/ha-integration/LICENSE">${c.foot.licenseHa}</a></li>
           <li><a href="${GH}/issues">${c.foot.issues}</a></li>
@@ -671,7 +697,7 @@ ${J.list.map((j, k) => `    <article class="job${k % 2 ? ' flip' : ''}" id="${j.
 ${L.list.map(([i, t, s], k) => `          <li class="reveal" style="--d:${k * 70}ms"><span class="lv-ico">${ico(i)}</span><div><b>${t}</b><span>${s}</span></div></li>`).join('\n')}
         </ol>
       </div>
-      <div class="block-phone">${device(img(c, L.shot, L.alt, { sizes: '(min-width: 960px) 300px, 70vw' }), ' cut')}</div>
+      <div class="block-phone">${device(img(c, L.shot, L.alt, { sizes: '(min-width: 960px) 300px, 70vw' }))}</div>
     </div>
   </div>
 </section>
@@ -1049,6 +1075,200 @@ ${pageFoot(c, m)}
 `;
 }
 
+// ---------------------------------------------------------------- blog / Ratgeber (blog.mjs, docs/blog.md)
+const ldJson = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
+
+function blogMeta(c, p) {
+  const B = BLOG_COPY[c.lang];
+  const other = c.lang === 'de' ? 'en' : 'de';
+  const self = p ? `${p.slug}.html` : './';
+  const pair = p?.pair && publishedPosts(other).some((x) => x.slug === p.pair) ? `${p.pair}.html` : '';
+  const otherHasIndex = publishedPosts(other).length > 0;
+  const url = (lang, file) => `${SITE}${BLOG_DIR[lang]}/${file === './' ? '' : file}`;
+  const otherHref = pair || (otherHasIndex && !p) ? `../${BLOG_DIR[other]}/${pair}` : other === 'de' ? '../de/' : '../';
+  // hreflang only between real translations (a post without a pair has none)
+  const altOther = pair || (otherHasIndex && !p) ? url(other, pair || './') : null;
+  return {
+    title: p ? `${p.title} · ToHuus` : `${B.title} · ToHuus`, desc: p ? p.desc : B.desc,
+    url: url(c.lang, self), alt: { [c.lang]: url(c.lang, self), [other]: altOther }, ld: false,
+    navBase: c.lang === 'de' ? '../de/' : '../', home: c.lang === 'de' ? '../de/' : '../', legalBase: c.lang === 'de' ? '../de/' : '../',
+    helpHref: `../${HELP_DIR[c.lang]}/`, bodyClass: 'legal-page help-page blog-page',
+    enHref: c.lang === 'en' ? self : otherHref, deHref: c.lang === 'de' ? self : otherHref, otherHref,
+  };
+}
+
+const fmtPostDate = (lang, d) => new Date(`${d}T12:00:00Z`).toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+/**
+ * One fact as a card people can keep: the page shows it as a green card, the button draws the same card as a
+ * 1080 × 1350 PNG (site.js, canvas, local fonts) and offers "Teilen" on phones or saves the file.
+ */
+const factCard = (c, p, f, n, { link = false } = {}) => {
+  const B = BLOG_COPY[c.lang];
+  const file = `tohuus-fakt-${p.slug}-${n}`;
+  return `<li class="fact">
+        <figure class="fact-card" id="fakt-${p.slug}-${n}" data-value="${f.value}" data-text="${f.text}" data-source="${f.source}">
+          <span class="fact-brand" aria-hidden="true">ToHuus ${B.title}</span>
+          <p class="fact-v">${f.value}</p>
+          <p class="fact-t">${f.text}</p>
+          <figcaption>${B.source} <a href="${f.url}">${f.source}</a></figcaption>
+        </figure>
+        <div class="fact-actions">
+          <button class="fact-save" type="button" data-fact="fakt-${p.slug}-${n}" data-file="${file}" data-share="${B.share}" data-saved="${B.saved}" aria-label="${B.saveImage}: ${f.value}">${ico('image')}<span>${B.saveImage}</span></button>
+          ${link ? `<a class="fact-link" href="${p.slug}.html">${B.toPost}${ico('arrow')}</a>` : ''}
+        </div>
+      </li>`;
+};
+
+function blogFacts(c) {
+  const B = BLOG_COPY[c.lang];
+  const posts = publishedPosts(c.lang).filter((p) => p.facts?.length);
+  const m = blogMeta(c);
+  m.title = `${B.factsTitle} · ToHuus`;
+  m.desc = B.factsDesc;
+  m.url = `${SITE}${BLOG_DIR[c.lang]}/fakten.html`;
+  m.alt = { [c.lang]: m.url };
+  m.enHref = c.lang === 'en' ? 'fakten.html' : m.enHref;
+  m.deHref = c.lang === 'de' ? 'fakten.html' : m.deHref;
+  const count = posts.reduce((a, p) => a + p.facts.length, 0);
+  return `${pageTop(c, m, '../')}
+<main id="main" class="legal help">
+
+<section class="legal-head help-head" aria-labelledby="facts-h">
+  <div class="wrap">
+    <p class="label help-crumbs"><a href="./">${B.title}</a></p>
+    <h1 id="facts-h">${B.factsH1}</h1>
+    <p class="legal-note help-lede">${B.factsLede.replace('{n}', String(count))}</p>
+  </div>
+</section>
+
+<div class="wrap help-index">
+${posts.map((p) => `  <section class="help-group" aria-labelledby="f-${p.slug}">
+    <h2 id="f-${p.slug}"><a href="${p.slug}.html">${p.title}</a></h2>
+    <ul class="fact-cards">
+      ${p.facts.map((f, k) => factCard(c, p, f, k + 1, { link: true })).join('\n      ')}
+    </ul>
+  </section>`).join('\n')}
+</div>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
+
+function blogIndex(c) {
+  const B = BLOG_COPY[c.lang];
+  const m = blogMeta(c);
+  const posts = publishedPosts(c.lang);
+  m.extraLd = ldJson({ '@context': 'https://schema.org', '@type': 'Blog', name: `ToHuus ${B.title}`, url: m.url, inLanguage: c.lang, description: B.desc,
+    blogPost: posts.map((p) => ({ '@type': 'BlogPosting', headline: p.title, url: `${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html`, datePublished: p.date })) });
+  return `${pageTop(c, m, '../')}
+<main id="main" class="legal help">
+
+<section class="legal-head help-head" aria-labelledby="blog-h">
+  <div class="wrap">
+    ${label(B.label)}
+    <h1 id="blog-h">${B.h1}</h1>
+    <p class="legal-note help-lede">${B.lede}</p>
+  </div>
+</section>
+
+<div class="wrap help-index">
+  ${posts.some((p) => p.facts?.length) ? `<p class="blog-facts-link"><a class="btn" href="fakten.html">${ico('chart')}${B.factsLink}</a></p>` : ''}
+  <ul class="help-cards">
+${posts.map((p) => `    <li><a class="help-card" href="${p.slug}.html"><b>${p.title}</b><span>${p.desc}</span><span><time datetime="${p.date}">${fmtPostDate(c.lang, p.date)}</time></span>${ico('arrow')}</a></li>`).join('\n')}
+  </ul>
+</div>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
+
+function blogPost(c, p) {
+  const B = BLOG_COPY[c.lang];
+  const m = blogMeta(c, p);
+  const secs = p.sections.map(([h, body]) => ({ id: anchorId(h), h, body }));
+  const help = (p.help ?? []).map((sl) => helpBySlug(c.lang, sl)).filter(Boolean);
+  const toc = [...secs, ...(p.facts?.length ? [{ id: 'fakten', h: B.factsHere }] : []), ...(p.faq?.length ? [{ id: 'faq', h: B.faq }] : [])];
+  const ld = [{ '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.desc, datePublished: p.date, dateModified: p.updated ?? p.date,
+    inLanguage: c.lang, mainEntityOfPage: m.url, image: `${SITE}assets/img/og-${c.lang}.png`,
+    author: { '@type': 'Organization', name: 'ToHuus', url: c.url }, publisher: { '@type': 'Organization', name: 'Heidrich Digital', url: 'https://heidrich-digital.de' } },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'ToHuus', item: c.url },
+    { '@type': 'ListItem', position: 2, name: B.title, item: `${SITE}${BLOG_DIR[c.lang]}/` },
+    { '@type': 'ListItem', position: 3, name: p.title, item: m.url }] }];
+  if (p.faq?.length) ld.push({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: p.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) });
+  m.extraLd = ldJson(ld);
+  return `${pageTop(c, m, '../')}
+<main id="main" class="legal help">
+
+<article aria-labelledby="post-h">
+<header class="legal-head help-head">
+  <div class="wrap">
+    <p class="label help-crumbs"><a href="./">${B.title}</a></p>
+    <h1 id="post-h">${p.title}</h1>
+    <p class="legal-note help-lede">${p.answer}</p>
+    <p class="legal-status"><time datetime="${p.date}">${B.published} ${fmtPostDate(c.lang, p.date)}</time>${p.updated && p.updated !== p.date ? ` · <time datetime="${p.updated}">${B.updated} ${fmtPostDate(c.lang, p.updated)}</time>` : ''}</p>
+  </div>
+</header>
+
+<div class="wrap legal-grid">
+  <nav class="legal-toc" aria-label="${p.title}">
+    <ol>
+${toc.map((x, k) => `      <li><a href="#${x.id}"><span>${k + 1}</span>${x.h}</a></li>`).join('\n')}
+    </ol>
+    <p class="legal-links"><a href="./">${B.back}${ico('arrow')}</a>${m.otherHref.endsWith('.html') ? `<a href="${m.otherHref}" hreflang="${c.otherLang}">${B.other}${ico('arrow')}</a>` : ''}</p>
+  </nav>
+  <div class="legal-body help-body">
+${secs.map((x) => `    <section id="${x.id}" aria-labelledby="${x.id}-h">
+      <h2 id="${x.id}-h">${x.h}</h2>
+      ${x.body}
+    </section>`).join('\n')}
+${p.facts?.length ? `    <section id="fakten" aria-labelledby="fakten-h">
+      <h2 id="fakten-h">${B.factsHere}</h2>
+      <p>${B.factsNote} <a href="fakten.html">${B.factsAll}</a></p>
+      <ul class="fact-cards">
+      ${p.facts.map((f, k) => factCard(c, p, f, k + 1)).join('\n      ')}
+      </ul>
+    </section>` : ''}
+${p.faq?.length ? `    <section id="faq" aria-labelledby="faq-h">
+      <h2 id="faq-h">${B.faq}</h2>
+${p.faq.map(([q, a]) => `      <h3>${q}</h3>\n      <p>${a}</p>`).join('\n')}
+    </section>` : ''}
+${help.length ? `    <aside class="help-related" aria-labelledby="rel-h">
+      <p class="legal-summary-h" id="rel-h">${B.help}</p>
+      <ul>${help.map((r) => `<li><a href="../${HELP_DIR[c.lang]}/${r.slug}.html">${r.title}${ico('arrow')}</a></li>`).join('')}</ul>
+    </aside>` : ''}
+${p.sources?.length ? `    <aside class="blog-sources" aria-labelledby="src-h">
+      <p class="legal-summary-h" id="src-h">${B.sources}</p>
+      <ol>${p.sources.map(([t, u]) => `<li><a href="${u}">${t}</a></li>`).join('')}</ol>
+    </aside>` : ''}
+    <p class="help-missing">${B.tryText} <a href="${c.lang === 'de' ? '../de/' : '../'}">${B.tryIt}</a></p>
+  </div>
+</div>
+</article>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
+
 // guards: house style (no em or en dashes, except in the required provider line) and no family names
 const LEGAL_KINDS = ['privacy', 'terms'];
 const checkText = (html, where, tillCount, extra = '') => {
@@ -1106,23 +1326,81 @@ for (const [file, html] of helpPages) {
   fs.mkdirSync(path.dirname(path.join(ROOT, file)), { recursive: true });
   fs.writeFileSync(path.join(ROOT, file), html);
 }
+// blog / Ratgeber: only published posts get a page; without any, the folder does not exist
+const blogPages = [];
+for (const c of Object.values(COPY)) {
+  const posts = publishedPosts(c.lang);
+  for (const p of posts) checkPost(c.lang, p);
+  if (new Set(posts.map((p) => p.slug)).size !== posts.length) throw new Error(`duplicate blog slug (${c.lang})`);
+  if (!posts.length) continue;
+  blogPages.push([path.join(BLOG_DIR[c.lang], 'index.html'), blogIndex(c), c]);
+  for (const p of posts) blogPages.push([path.join(BLOG_DIR[c.lang], `${p.slug}.html`), blogPost(c, p), c]);
+  if (posts.some((p) => p.facts?.length)) blogPages.push([path.join(BLOG_DIR[c.lang], 'fakten.html'), blogFacts(c), c]);
+}
+for (const [file, html] of blogPages) {
+  checkText(html, file, 0);
+  for (const [, id] of html.matchAll(/href="#([^"]+)"/g)) if (id !== 'main' && !html.includes(`id="${id}"`)) throw new Error(`broken anchor #${id} in ${file}`);
+}
+for (const dir of Object.values(BLOG_DIR)) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
+for (const [file, html] of blogPages) {
+  fs.mkdirSync(path.dirname(path.join(ROOT, file)), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, file), html);
+}
+
+// sitemap.xml, robots.txt and llms.txt: for search engines and AI answer engines (SEO and GEO, docs/blog.md)
+const today = new Date().toISOString().slice(0, 10);
+const urls = [
+  [SITE, today], [`${SITE}de/`, today],
+  ...Object.values(COPY).flatMap((c) => LEGAL_KINDS.map((k) => [`${SITE}${c.lang === 'de' ? 'de/' : ''}${LEGAL[c.lang][k].file}`, today])),
+  ...helpPages.map(([f]) => [`${SITE}${f.replace(/index\.html$/, '')}`, today]),
+  ...Object.values(COPY).flatMap((c) => (publishedPosts(c.lang).length ? [[`${SITE}${BLOG_DIR[c.lang]}/`, publishedPosts(c.lang)[0].updated ?? publishedPosts(c.lang)[0].date]] : [])),
+  ...Object.values(COPY).flatMap((c) => publishedPosts(c.lang).map((p) => [`${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html`, p.updated ?? p.date])),
+  ...Object.values(COPY).flatMap((c) => (publishedPosts(c.lang).some((p) => p.facts?.length) ? [[`${SITE}${BLOG_DIR[c.lang]}/fakten.html`, publishedPosts(c.lang)[0].updated ?? publishedPosts(c.lang)[0].date]] : [])),
+];
+fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map(([u, d]) => `  <url><loc>${u}</loc><lastmod>${d}</lastmod></url>`).join('\n')}
+</urlset>
+`);
+fs.writeFileSync(path.join(ROOT, 'robots.txt'), `# ToHuus website: everything may be read, by search engines and by AI answer engines alike
+User-agent: *
+Allow: /
+
+Sitemap: ${SITE}sitemap.xml
+`);
+const llmsList = (lang) => [
+  ...helpPages.filter(([, , c]) => c.lang === lang).map(([f, html]) => [html.match(/<title>([^<]*) · ToHuus<\/title>/)?.[1] ?? f, `${SITE}${f.replace(/index\.html$/, '')}`, html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '']),
+];
+fs.writeFileSync(path.join(ROOT, 'llms.txt'), `# ToHuus
+
+> ${COPY.en.desc}
+
+ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app in ToHuus Cloud, or self-hosted with Docker as a web app with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
+
+## Website
+- [ToHuus (English)](${SITE}): what it does, pricing, privacy, self-hosting
+- [ToHuus (Deutsch)](${SITE}de/): German version
+- [Privacy policy](${SITE}${LEGAL.en.privacy.file})
+- [Source code](${GH})
+
+## Help (English)
+${llmsList('en').map(([t, u, d]) => `- [${t}](${u})${d ? `: ${d}` : ''}`).join('\n')}
+
+## Hilfe (Deutsch)
+${llmsList('de').map(([t, u, d]) => `- [${t}](${u})${d ? `: ${d}` : ''}`).join('\n')}
+${Object.values(COPY).map((c) => (publishedPosts(c.lang).length ? `\n## ${BLOG_COPY[c.lang].title}\n${publishedPosts(c.lang).map((p) => `- [${p.title}](${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html): ${p.desc}`).join('\n')}\n` : '')).join('')}${Object.values(COPY).map((c) => {
+  const fs2 = publishedPosts(c.lang).flatMap((p) => (p.facts ?? []).map((f) => `- ${f.value}: ${f.text} (${f.source}, ${f.url})`));
+  return fs2.length ? `\n## ${BLOG_COPY[c.lang].factsTitle}\n${fs2.join('\n')}\n` : '';
+}).join('')}`);
+console.log(`built ${blogPages.length} blog pages, sitemap.xml (${urls.length} URLs), robots.txt and llms.txt`);
 console.log(`built ${helpPages.length} help pages (${Object.values(HELP_DIR).join('/, ')}/)`);
 console.log(`built site/index.html, site/de/index.html and the legal pages (${LEGAL_KINDS.map((k) => `${LEGAL.en[k].file}, de/${LEGAL.de[k].file}`).join(', ')})`);
 
 /*
- * Refreshing the screenshots (Playwright + sharp in a scratch folder outside the repo):
- *   1. npm run build
- *   2. per language a fresh self-hosted server with invented people:
- *      DATA_DIR=/tmp/site-<lang> SEED_DEMO=true ADMIN_NAME=Sam ADMIN_PASSWORD=demo12345 LANGUAGE=de REGION=DE
- *      PORT=8095 BASE_URL=http://localhost:8095 node dist/server.mjs   (English: LANGUAGE=en REGION=GB, port 8096)
- *   3. upload about four months of generated receipts (REWE/Lidl/Aldi/dm in German, Tesco/Lidl/Aldi/Boots in English)
- *      as text through POST /api/imports/upload and apply each (POST /api/imports/:id/apply), so the purchase rhythm,
- *      the money page and the suggestions have real data; add the members Mira and Jonas (POST /api/users), let Mira
- *      add two items, accept one rhythm suggestion (POST /api/rhythm/:id/accept), skip the tour (PUT /api/tour)
- *   4. shoot /, /einkauf, /kochen, /geld (previous month), /import and / in dark at 390x844, deviceScaleFactor 3,
- *      household theme via PATCH /api/appearance/household, with .demo-banner hidden
- *   5. convert to webp at 480 and 960 px wide into site/assets/shots/<lang>/<name>-<w>.webp
- *   Never use real names. Check every image before committing.
+ * Refreshing the screenshots: scripts/site-shots.mjs against a local ToHuus Cloud with open sign-up. It creates a
+ * household per language with invented people and four months of invented receipts and shoots every slot in SHOTS at
+ * 390x844 pt, 3x, with the iPhone's status area and home indicator simulated, so the device frame never cuts anything.
+ * Never use real names. Check every image before committing.
  *
  * OG images (site/assets/img/og-<lang>.png, 1200x630): a 1200x630 page with the wordmark, the hero headline and
  * homeTiles(), styled by site.css and screenshotted with Playwright from the served site/ folder.

@@ -10,7 +10,7 @@ import type { Me } from '../App';
 import { invalidate, post, put, qc, useApi } from '../api';
 import { type HouseholdForm, useHousehold } from '../household';
 import { t } from '../i18n';
-import { Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { Sheet, Skeleton, Toggle, useDialog, useToast } from '../ui';
 import { useGettingStarted } from './Onboarding';
 import { HomeTiles } from '../art';
 import './account.css';
@@ -119,8 +119,26 @@ function steps(form: HouseholdForm = 'family'): Step[] {
       route: '/geld',
       targets: nav('/geld'),
       title: t('Receipts and money'),
-      body: t('Upload a receipt – eBon, PDF or photo – and ToHuus sees what you bought and what it cost. Money shows the month by shop and category, without a budget book.'),
+      body: t('Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.'),
     },
+    {
+      id: 'wishes',
+      route: '/einkauf/wuensche',
+      targets: [TITLE],
+      title: t('Wishes'),
+      body: t('Wish lists with photo, links and price. Who reserved what stays hidden from the person it is for. Private lists only you can see.'),
+    },
+    ...(form === 'single'
+      ? []
+      : [
+          {
+            id: 'treats',
+            route: '/bestellen',
+            targets: [TITLE],
+            title: t('Bring mir was'),
+            body: t('Stuck on the sofa or putting the kids to bed? Ask for a little something in two taps, someone at home says “I’ll bring it”. Guests can ask through a link.'),
+          },
+        ]),
     {
       id: 'speak',
       route: '/',
@@ -132,8 +150,8 @@ function steps(form: HouseholdForm = 'family'): Step[] {
       id: 'more',
       route: '/mehr',
       targets: [MORE, ...nav('/mehr'), TITLE],
-      title: t('More: house info and how it works'),
-      body: t('Under More you find the house info for babysitters and guests, “How ToHuus works” and “Good to know” – plus people, guests and settings.'),
+      title: t('More: house info, trips and how it works'),
+      body: t('Under More you find the house info for babysitters and guests (with photos and short videos), the handover for whoever looks after pets and plants while you are away, “How ToHuus works” and the settings, including AI on or off.'),
     },
     {
       id: 'done',
@@ -237,6 +255,8 @@ function TourOverlay({ start, onStep, onClose }: { start: number; onStep: (step:
   const [viaMore, setViaMore] = useState(false);
   const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight });
   const cardRef = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  useDialog(box, true);
   const navigate = useNavigate();
   const loc = useLocation();
   const step = all[i];
@@ -319,7 +339,7 @@ function TourOverlay({ start, onStep, onClose }: { start: number; onStep: (step:
   }
 
   return (
-    <div className="tour" role="dialog" aria-modal="true" aria-labelledby="tour-title" aria-describedby="tour-body">
+    <div ref={box} className="tour" role="dialog" aria-modal="true" aria-labelledby="tour-title" aria-describedby="tour-body">
       <div className={`tour-scrim ${hole ? '' : 'dim'}`} />
       {hole && <div className="tour-hole" style={hole} aria-hidden />}
       <div ref={cardRef} className={`tour-card ${place}`} style={cardStyle} tabIndex={-1}>
@@ -428,7 +448,7 @@ export function TourHelpCard() {
       </span>
       <div className="grow">
         <b>{t('Take the tour')}</b>
-        <div className="small muted">{t('Nine short steps through the app, right on the real pages. Takes about two minutes.')}</div>
+        <div className="small muted">{t('A few short steps through the app, right on the real pages. Takes about two minutes.')}</div>
       </div>
       <div className="row wrap" style={{ gap: 8 }}>
         {resumable && (

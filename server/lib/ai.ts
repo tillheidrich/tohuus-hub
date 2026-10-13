@@ -252,6 +252,8 @@ export interface ChatOptions {
   timeoutMs?: number;
   /** extra attempts after the first for 429/5xx/timeouts, default 2 */
   retries?: number;
+  /** absolute time (ms since epoch) after which no further attempt starts; each attempt's timeout is cut to it */
+  deadline?: number;
   /** base backoff, default 600 ms (doubles per attempt) */
   backoffMs?: number;
   json?: boolean;
@@ -302,8 +304,13 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
     const tries = i === 0 ? retries : Math.min(1, retries);
     for (let attempt = 0; attempt <= tries; attempt++) {
       if (attempt > 0) await sleep(backoff * 2 ** (attempt - 1));
+      const left = opts.deadline ? opts.deadline - Date.now() : Infinity;
+      if (left < 2000) {
+        last ??= new AiError(t('The AI service took too long to answer.'), 'timeout', 504);
+        break;
+      }
       try {
-        const res = await once(cfg, b, timeoutMs);
+        const res = await once(cfg, b, Math.min(timeoutMs, left));
         aiUsageHook.record?.(res.model, res.usage);
         return res;
       } catch (e) {
@@ -313,6 +320,7 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
     }
     // only "busy / down / slow" moves on to the next model; a wrong request or key would fail there too
     if (!retryable(last)) break;
+    if (opts.deadline && opts.deadline - Date.now() < 2000) break;
     if (i < chain.length - 1) console.warn(`[ai] ${m} unavailable (${(last as AiError).code}), trying ${chain[i + 1]}`);
   }
   throw last instanceof AiError ? last : new AiError(t('The AI service is not reachable right now.'), 'upstream', 502, String((last as Error)?.message ?? last));

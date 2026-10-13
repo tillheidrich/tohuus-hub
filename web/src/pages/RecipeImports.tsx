@@ -526,7 +526,7 @@ export function ImportPreviewSheet({ staged, onClose }: { staged: Staged | null;
                       <div className="sub">
                         {[
                           r.ingredients === 1 ? t('1 ingredient') : t('{n} ingredients', { n: r.ingredients }),
-                          r.instructions_available ? (r.steps === 1 ? t('1 step') : t('{n} steps', { n: r.steps })) : t('Steps in Cookidoo'),
+                          r.instructions_available ? (r.steps === 1 ? t('1 step') : t('{n} steps', { n: r.steps })) : t('Steps in {app}', { app: DEVICE_PLATFORM_LABELS[r.source_type] ?? t('the original app') }),
                           r.translated ? t('translated') : null,
                           r.has_photo ? t('with photo') : null,
                           r.devices?.length ? r.devices.join(', ') : null,
@@ -588,22 +588,42 @@ function ErrorList({ errors, title }: { errors: { index: number; title: string |
 
 // ---------------------------------------------------------------- recipe page helpers
 
-/** True when the steps only exist in the source app (Cookidoo shows them after login only). */
-export const stepsElsewhere = (r: any) => r.instructions_available === 0 || (r.source_type === 'cookidoo' && (r.steps?.length ?? 0) === 0);
+/**
+ * Recipe platforms of kitchen appliances (server/lib/device-platforms.ts): the source_type is the platform id.
+ * Their steps live in the platform's app (Cookidoo, Monsieur Cuisine … show them after login only).
+ */
+export const DEVICE_PLATFORM_LABELS: Record<string, string> = {
+  cookidoo: 'Cookidoo',
+  'monsieur-cuisine': 'Monsieur Cuisine',
+  cookit: 'Home Connect',
+  kenwood: 'Kenwood World',
+  tefal: 'Tefal',
+  moulinex: 'Moulinex',
+  krups: 'Krups',
+  magimix: 'Magimix',
+  kitchenaid: 'KitchenAid',
+  cecotec: 'Cecotec Mambo',
+  nutriu: 'NutriU',
+};
+const devicePlatform = (r: any): string | null => DEVICE_PLATFORM_LABELS[r.source_type] ?? null;
 
-/** "Steps in Cookidoo" with a link, instead of an empty step list. */
+/** True when the steps only exist in the source app (Cookidoo shows them after login only). */
+export const stepsElsewhere = (r: any) => r.instructions_available === 0 || (devicePlatform(r) !== null && (r.steps?.length ?? 0) === 0);
+
+/** "Steps in Cookidoo" (or Monsieur Cuisine …) with a link, instead of an empty step list. */
 export function StepsElsewhere({ r }: { r: any }) {
-  const app = r.source_type === 'cookidoo' ? 'Cookidoo' : r.source_url ? new URL(r.source_url).hostname.replace(/^www\./, '') : t('the original app');
+  const platform = devicePlatform(r);
+  const app = platform ?? (r.source_url ? new URL(r.source_url).hostname.replace(/^www\./, '') : t('the original app'));
   return (
     <div className="card pad stack" style={{ gap: 8 }}>
       <b>{t('Steps in {app}', { app })}</b>
       <div className="small muted">{t('The steps are only available in {app}. Ingredients, planning and shopping work here as usual.', { app })}</div>
       {r.source_url && (
         <a className="btn primary" style={{ alignSelf: 'flex-start' }} href={r.source_url} target="_blank" rel="noreferrer">
-          <ArrowSquareOut size={16} /> {r.source_type === 'cookidoo' ? t('Open in Cookidoo to cook') : t('Open in {app}', { app })}
+          <ArrowSquareOut size={16} /> {platform ? t('Open in {app} to cook', { app }) : t('Open in {app}', { app })}
         </a>
       )}
-      {r.source_type === 'cookidoo' && !r.image_path && <div className="small muted">{t('Tip: take a photo of your own dish next time – then you will recognise it in the list.')}</div>}
+      {platform && !r.image_path && <div className="small muted">{t('Tip: take a photo of your own dish next time – then you will recognise it in the list.')}</div>}
     </div>
   );
 }
@@ -635,4 +655,5 @@ export const SOURCE_LABELS: Record<string, string> = {
   nextcloud: 'Nextcloud Cookbook',
   kitchenowl: 'KitchenOwl',
   grocy: 'Grocy',
+  ...DEVICE_PLATFORM_LABELS,
 };

@@ -8,6 +8,7 @@
 import { recipeToShopping } from './recipe-list.js';
 import { AREA_TOOL_DEFS, AREA_TOOLS_BY_TOPIC, runAreaTool, undoArea } from './assistant-areas.js';
 import { WISH_TOOL_DEFS, WISH_TOOLS, runWishTool, undoWish } from './assistant-wishes.js';
+import { appHelp } from './assistant-scope.js';
 import { guideOverviewForAi, searchGuide } from './house-guide.js';
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
@@ -29,7 +30,7 @@ import { lastPurchase, rhythmDue, rhythmList } from './rhythm.js';
 import { notPrivate } from './share-core.js';
 import { wordMatch } from './shop.js';
 import { originOf, tickItem } from './shopping-trust.js';
-import { addDays, addExpense, deleteExpense, today } from './spend2.js';
+import { addDays, addExpense, deleteExpense, setBudget, today } from './spend2.js';
 import { nameScore, norm } from './text.js';
 import type { ParsedItem } from './shopparse.js';
 import type { ToolDef } from './ai.js';
@@ -443,6 +444,19 @@ export function logPurchase(ctx: ToolCtx, input: { shop?: string | null; total?:
   return { receipt_id: importId, expense_id: expenseId, day, total, ticked_off_list: ticked.length };
 }
 
+/** A budget the person asked for: the household's, or – mine – only theirs (never visible to others). */
+function budgetSetTool(ctx: ToolCtx, a: any) {
+  const mine = a.mine === true;
+  if (mine && ctx.userId == null) return { error: 'Personal budgets need a signed-in person.' };
+  const period = ['week', 'month', 'year'].includes(a.period) ? a.period : 'month';
+  const amount = typeof a.amount === 'number' && a.amount > 0 ? a.amount : null;
+  const category = typeof a.category === 'string' ? a.category : '';
+  setBudget({ amount, period, category, owner: mine ? ctx.userId : 0 });
+  const per = { week: t('per week'), month: t('per month'), year: t('per year') }[period as 'week' | 'month' | 'year'];
+  record(ctx, 'budget_set', amount == null ? t('Budget removed') : `${t('Budget')}: ${fmtMoney(amount)} ${per}${category ? ` (${category})` : ''}${mine ? ` · ${t('only you')}` : ''}`, null);
+  return { ok: true, amount, period, category: category || null, mine };
+}
+
 // ------------------------------------------------------------------ definitions for the model
 
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object', properties, required, additionalProperties: false });
@@ -474,6 +488,8 @@ export const TOOL_DEFS: ToolDef[] = [
   fn('remember', 'Remember a household fact or preference – only when asked ("merk dir …").', { text: { type: 'string' }, kind: { type: 'string', enum: ['fact', 'preference', 'routine'] } }, ['text']),
   fn('forget', 'Forget something remembered (id or text).', { text: { type: 'string' }, id: { type: 'integer' } }),
   fn('house_info', 'How things work at home (Hausinfo): voice commands, routines, heating, blinds, bins, TV, fuse box, numbers. Never codes.', { query: { type: 'string' } }),
+  fn('budget_set', 'Set or remove a spending budget (only after a yes). mine=true: only for the speaker, private.', { amount: { type: 'number', description: 'euros; null removes' }, period: { type: 'string', enum: ['week', 'month', 'year'] }, category: str('empty = everything'), mine: { type: 'boolean' } }, ['amount']),
+  fn('app_help', 'Where a feature lives in the ToHuus app and its help page (for "how do I / where is / can ToHuus …").', { query: { type: 'string' } }, ['query']),
   ...AREA_TOOL_DEFS,
   ...WISH_TOOL_DEFS,
 ];
@@ -481,8 +497,9 @@ export const TOOL_DEFS: ToolDef[] = [
 const TOOLS_BY_TOPIC: Record<string, string[]> = {
   shopping: ['list_show', 'list_add', 'list_remove', 'list_check', 'stock_find', 'check_at_home', 'stock_used_up', 'rhythm_due', 'log_purchase'],
   cooking: ['cook_ideas', 'check_at_home', 'list_add', 'known_prices', 'plan_meal', 'recipe_to_list'],
-  money: ['money_summary', 'known_prices', 'log_purchase'],
+  money: ['money_summary', 'known_prices', 'log_purchase', 'budget_set'],
   wishes: WISH_TOOLS,
+  help: ['app_help'],
 };
 
 /** Only the tools a message can need (fewer tokens, fewer wrong calls). */
@@ -526,6 +543,10 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
   const a = args && typeof args === 'object' ? args : {};
   const out = (() => {
     switch (name) {
+      case 'budget_set':
+        return budgetSetTool(ctx, a);
+      case 'app_help':
+        return appHelp(String(a.query ?? ''));
       case 'list_show':
         return listShow();
       case 'list_add':

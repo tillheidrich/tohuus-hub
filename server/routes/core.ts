@@ -472,8 +472,13 @@ r.get('/shopping/export.txt', (_req, res) => {
 
 // ---------------------------------------------------------------- notifications
 
-r.get('/notifications', (_req, res) => {
-  res.json(db.prepare('SELECT id, event, title, body, channels, read_at, created_at FROM notifications ORDER BY id DESC LIMIT 60').all());
+r.get('/notifications', (req, res) => {
+  // personal ones (e.g. a person's own budget) only for that person
+  res.json(
+    db
+      .prepare(`SELECT id, event, title, body, channels, read_at, created_at FROM notifications WHERE json_extract(payload, '$.personal_for') IS NULL OR json_extract(payload, '$.personal_for') = ? ORDER BY id DESC LIMIT 60`)
+      .all(req.actor?.userId ?? -1),
+  );
 });
 r.post('/notifications/read', (_req, res) => {
   db.prepare(`UPDATE notifications SET read_at = datetime('now') WHERE read_at IS NULL`).run();

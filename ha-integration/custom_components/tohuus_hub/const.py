@@ -9,7 +9,7 @@ DOMAIN: Final = "tohuus_hub"
 MANUFACTURER: Final = "ToHuus Hub"
 API_VERSION: Final = 1
 # keep in step with manifest.json
-VERSION: Final = "0.3.0"
+VERSION: Final = "0.3.1"
 
 # ToHuus Cloud – Home Assistant pulls everything from here over HTTPS + server-sent events (no inbound connection)
 CLOUD_URL: Final = "https://cloud.tohuus.heidrich-digital.de"
@@ -70,6 +70,13 @@ EVENT_TYPES: Final = [
     "care.due",
     "party.ending",
     "kids.wish",
+    "budget.warning",
+    "plan.vote",
+    "plan.rotation",
+    "trip.started",
+    "trip.addon",
+    "rhythm.due",
+    "plan.reminder",
     "test",
 ]
 

@@ -107,9 +107,15 @@ struct MeResponse: Decodable, Sendable {
     var modules: [String: Bool]?
     /// { density: compact|normal|large, fontScale }
     var listPrefs: JSONValue?
+    /// who lives here: { form: single|couple|family|wg|…, form_chosen, ui } (server/lib/places.ts homeSetup)
+    var home: JSONValue?
+    /// a household of one (chosen at sign-up) – "Bring mir was" has nobody to ask, like the web
+    var isSingleHousehold: Bool { home?["form"]?.string == "single" && (home?["form_chosen"]?.bool ?? home?["formChosen"]?.bool ?? true) }
 
     var name: String? { actor?["name"]?.string }
     var role: String? { actor?["role"]?.string }
+    /// a permanent guest of the household (actor.houseGuest { level, … }) – sees only what is shared with guests
+    var isGuest: Bool { actor?["houseGuest"]?["level"]?.string != nil }
     /// children (kid devices or a child role) see AI as locked
     var isChild: Bool {
         let kind = actor?["kind"]?.string
@@ -148,12 +154,30 @@ struct BillingStatus: Decodable, Sendable {
     var storage: JSONValue?
     /// what each plan includes: `{ free, haushalt, plus }` with the fields of `limits` (cloud)
     var plans: JSONValue?
+    /// a plan as a gift (server/lib/gifts.ts): during the beta for everyone, or a code redeemed on the web
+    var gift: Gift?
+    /// Plus bought once, for good (optional App Store product `plus.lifetime`)
+    var lifetime: Bool?
+
+    struct Gift: Decodable, Sendable {
+        /// beta | code | operator
+        var kind: String?
+        var plan: String?
+        var until: String?
+        var forever: Bool?
+    }
 
     var planLabel: String {
+        if let gift {
+            let name = plan == "haushalt" ? L("Household") : L("Plus")
+            if gift.kind == "beta" { return LF("%@ – a gift during the beta", name) }
+            if gift.forever == true { return LF("%@ – for good", name) }
+            return LF("%@ – a gift", name)
+        }
         switch plan {
         case "trial": return L("Trial (Plus)")
         case "haushalt": return L("Household")
-        case "plus": return L("Plus")
+        case "plus": return lifetime == true ? L("Plus – for good") : L("Plus")
         case "selfhost": return L("Own server – everything included")
         default: return L("Free")
         }

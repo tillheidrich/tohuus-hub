@@ -180,8 +180,9 @@ struct SpendView: View {
         Card {
             Text((s.ongoing == true ? L("So far") : L("Total")).uppercased()).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3).tracking(0.6)
             Text(Money.format(s.total, currency: s.currency))
-                .font(.system(size: 38, weight: .semibold, design: .serif)).monospacedDigit()
+                .font(Theme.number(.serif)).monospacedDigit()
                 .foregroundStyle(Theme.ink)
+                .numberTransition(s.total ?? 0)
             Text([
                 (s.receipts ?? 0) == 1 ? L("1 receipt") : LF("%d receipts", s.receipts ?? 0),
                 (s.manual?.count ?? 0) > 0 ? ((s.manual?.count ?? 0) == 1 ? L("1 own expense") : LF("%d own expenses", s.manual?.count ?? 0)) : nil,
@@ -247,11 +248,11 @@ struct SpendView: View {
     @ViewBuilder
     private func budgets(_ s: SpendStats) -> some View {
         if s.budgets.isEmpty {
-            Button { sheet = .budgets } label: { Label(L("Set a budget (optional)"), systemImage: "target") }
+            Button { sheet = .budgets } label: { Label(view == "mine" ? L("Set a budget just for you (optional)") : L("Set a budget (optional)"), systemImage: "target") }
                 .font(.subheadline.weight(.semibold))
                 .frame(minHeight: 44)
         } else {
-            section(L("Budgets")) {
+            section(view == "mine" ? L("My budgets") : L("Budgets")) {
                 Card {
                     ForEach(s.budgets) { b in BudgetBar(b: b, currency: s.currency) }
                     Button(L("Change")) { sheet = .budgets }.font(.subheadline.weight(.semibold))
@@ -441,7 +442,7 @@ struct BudgetBar: View {
             }
             .frame(height: 8)
             Text([
-                b.period == "week" ? L("per week") : L("per month"),
+                b.period == "week" ? L("per week") : b.period == "year" ? L("per year") : L("per month"),
                 b.state == "over" ? L("Budget reached") : LF("%@ left", Money.format(b.remaining ?? max(0, b.amount - b.spent), currency: currency)),
                 b.ongoing == true && (b.daysLeft ?? 0) > 0 && (b.forecast ?? b.spent) != b.spent
                     ? LF("at this pace about %@ by the end", Money.format(b.forecast ?? 0, currency: currency)) : nil,
@@ -506,7 +507,7 @@ struct ColumnsChart: View {
                                 }
                             }
                             .frame(height: 120)
-                            Text(c.label).font(.system(size: 10)).foregroundStyle(c.on ? Theme.ink : Theme.ink3)
+                            Text(c.label).font(.caption2).foregroundStyle(c.on ? Theme.ink : Theme.ink3)
                                 .lineLimit(1).minimumScaleFactor(0.6)
                                 .frame(height: 12)
                         }

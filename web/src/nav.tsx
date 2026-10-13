@@ -82,6 +82,8 @@ export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolea
         { to: '/abgleich', label: t('Quick stock check'), icon: 'ClipboardText' },
         { to: '/pflege', label: t('Home & care'), icon: 'Wrench' },
         { to: '/urlaub', label: t('Trip / away'), icon: 'Suitcase' },
+        // permanent guests chosen for a trip's handover (members use the trip page)
+        ...(opts.guest ? [{ to: '/uebergabe', label: t('Handover'), icon: 'Suitcase' }] : []),
       ],
     },
     {

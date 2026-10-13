@@ -136,6 +136,13 @@
         "care_due": "Pflege-Aufgabe fällig",
         "party_ending": "Party endet",
         "kids_wish": "Kinderwunsch",
+        "budget_warning": "Budget-Hinweis",
+        "plan_vote": "Abstimmung zum Essen",
+        "plan_rotation": "Kochrotation",
+        "trip_started": "Einkauf gestartet",
+        "trip_addon": "Bringst du noch was mit?",
+        "rhythm_due": "Wahrscheinlich fällig",
+        "plan_reminder": "Erinnerung Essensplan",
         "test": "Test"
       }
     }
@@ -252,6 +259,13 @@
               "care_due": "Pflege-Aufgabe fällig",
               "party_ending": "Party endet",
               "kids_wish": "Kinderwunsch",
+              "budget_warning": "Budget-Hinweis",
+              "plan_vote": "Abstimmung zum Essen",
+              "plan_rotation": "Kochrotation",
+              "trip_started": "Einkauf gestartet",
+              "trip_addon": "Bringst du noch was mit?",
+              "rhythm_due": "Wahrscheinlich fällig",
+              "plan_reminder": "Erinnerung Essensplan",
               "test": "Test"
             }
           }

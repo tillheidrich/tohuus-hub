@@ -44,6 +44,11 @@ DATA_DIR/
 | `BASE_URL` | yes | public URL of the cloud (links, signed image URLs; its host is the passkey RP-ID, its origin the expected passkey origin – changing the host makes existing passkeys useless) |
 | `DATA_DIR` | – | default `./data` (`/data` in the image) |
 | `SMTP_*` | recommended | verification, sign-in and reset mails |
+| `SITE_URL` | – | the public website (default `https://tohuus.heidrich-digital.de`); help links and `/api/instance` `siteUrl` – docs/domain.md |
+| `MAIL_INBOUND_DOMAIN` | – | receipt addresses `bons-…@<domain>` (Plus; feature off when unset) – docs/mail-inbox.md |
+| `MAIL_SMTP_PORT` | – | port of the inbound SMTP listener inside the container (e.g. `2525`, Coolify maps 25 to it) |
+| `MAIL_TLS_CERT_FILE`, `MAIL_TLS_KEY_FILE` | – | certificate for STARTTLS on the SMTP listener |
+| `MAIL_INBOUND_SECRET` | – | ≥ 16 characters; enables the webhook `POST /api/mail/inbound` |
 | `CLOUD_SIGNUP` | – | `open` \| `invite` \| `closed` (default **`invite`** – the beta gate, see [Beta gate](#beta-gate); old `true`/`false` = open/closed). Overridden by the back office setting `signup.mode` |
 | `SUPPORT_EMAIL` | – | address shown to ask for an access code (default `tohuus@tillheidrich.de`; back office setting `support.email` wins) |
 | `CLOUD_NAME` | – | name in `/api/instance` (default "ToHuus Cloud") |
@@ -164,7 +169,7 @@ form, the shops named at sign-up).
 | any outbound request to private/internal addresses | a global dispatcher blocks them at connect time (HA, webhooks, Matrix, Gotify …) |
 | network printers (ESC/POS over TCP) | LAN only |
 | Telegram long polling | one poller per household does not scale; webhook routing is not built yet |
-| IMAP receipt inbox | per-household mailbox polling |
+| IMAP receipt inbox | per-household mailbox polling; `GET /api/retail/inbox` answers `available: false` and the apps hide the cards (`PUT` and `/check` are 404). The cloud has receipt addresses per household instead (docs/mail-inbox.md) |
 | restore from file, WebDAV backup settings | replaced by the cloud backups |
 | `ADMIN_PASSWORD`, demo seeding at start, `MCP_PATH_SECRET`, OIDC | instance-wide, no household |
 | household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead (account passkeys exist, see below) |
@@ -183,6 +188,32 @@ recounted nightly. Over quota, uploads and JSON writes above 64 kB get HTTP 413 
 everyday writes still work and nothing is deleted. Apple purchases arrive through
 `POST /api/billing/apple/transaction` (from the app) and `POST /api/billing/apple/notifications` (App Store Server
 Notifications v2 – set this URL in App Store Connect). Both verify the JWS chain to the embedded Apple Root CA G3.
+
+**Features are checked by the server** (`server/lib/limits.ts` › `requireFeature` / `assertFeature`, test
+`test/cloud-plans.test.ts`). Without the plan the answer is HTTP 402
+`{ error, code: 'plan', feature, plan: 'haushalt' | 'plus' }` (the iPhone app shows the message like a quota, the web
+app as a toast). Self-hosted servers have everything; the trial and the beta gift count like Plus.
+
+| Feature (`limits.features`) | From | Checked at |
+|---|---|---|
+| `priceHistory` | Haushalt | `GET /api/spending/prices/:productId`, MCP `price_history` |
+| `mirrorLists` | Haushalt | `POST /api/caldav/passwords` (new Apple Reminders / Nextcloud mirrors; existing ones keep working) |
+| `fullHistory` | Haushalt | `historyDays()` (rhythm, money, "Das habt ihr noch") |
+| `weekPlanFromPantry` | Plus | `POST /api/plan/autofill`, HA `fill_week`, MCP `fill_week` |
+| `monthlyAnalysis` | Plus | assistant `money_compare` |
+| receipt address | Plus | `GET /api/mail/address`, inbound mails (`docs/mail-inbox.md`) |
+| `connectedHouseholds`, `substituteFromStock`, `importQuota` | – | only plan text and limits so far; no separate endpoint exists yet |
+
+**Lifetime (optional)**: the non-consumable `de.heidrichdigital.tohuus.plus.lifetime` (`LIFETIME_PRODUCT` in
+`plans.ts`) gives Plus without expiry. The paywall shows it only when the product exists in App Store Connect, so it
+can be added later or never. A subscription transaction never replaces it; only its own refund (`REFUND` / `REVOKE`)
+ends it. `GET /api/billing/status` says `lifetime: true`; when an old subscription still renews, the paywall asks to
+cancel it.
+
+**Codes for beta testers**: Apple offer codes, created in App Store Connect (subscription › Offer Codes; for the
+lifetime product: In-App Purchase › Offer Codes). Testers redeem them in the iPhone app under Abo › "Code einlösen"
+(Apple's sheet, also while the beta gift is on). The redeemed purchase arrives as a normal signed transaction
+(`OFFER_REDEEMED` / `SUBSCRIBED`), so nothing else is needed on the server. Our own `GIFT-…` codes stay web only.
 
 ## Passwords
 
@@ -267,8 +298,7 @@ Test: `test/cloud-apple.test.ts` (a local RSA key and a fake JWKS – no network
   the app (`DELETE /api/cloud/account { appleIdentityToken, appleNonce }`, the token's `sub` must be the account's).
   Accounts without password and without Apple confirm in the app with the code from the mail: the first call sends it
   (`400 needEmailConfirm`), the second carries `{ code }` (password accounts always need the password).
-- **Open (TODO(apple-revoke) in `lib/cloud-apple.ts`)**: revoking Apple's tokens on deletion needs a Sign in with Apple key
-  (client secret). The exact steps are in the file header; nothing else changes when the key is added.
+- **Token revocation (5.1.1(v))**: with `APPLE_SIWA_KEY_ID` and `APPLE_SIWA_KEY_P8` (the .p8 as PEM, `\n` allowed) and `APPLE_TEAM_ID` (default FVS7WVTQ67) set, every sign-in exchanges Apple's authorization code once for a refresh token (`POST https://appleid.apple.com/auth/token`, client_secret = ES256 JWT for the bundle id or the Services ID), kept in `account_apple.refresh_token`; deleting the account revokes it (`POST …/auth/revoke`) before the link is dropped. Without the key nothing is exchanged and deletion only drops the link (logged once). A failed exchange never fails the sign-in.
 
 ## Sample data (cloud and self-host)
 
@@ -416,6 +446,27 @@ A stored value **overrides the environment**; removing it falls back to the envi
 `server/lib/ai.ts` reads the AI keys through `aiRuntime.overrides` (registered by runtime-settings.ts, cached in
 process, cache dropped on every change) – `aiConfig()`/`fallbackModels()` see them at once; an explicit `env` object
 passed by tests/tools is not touched. Test: `test/cloud-admin.test.ts`.
+
+## Accounts in the back office
+
+Back office › **Konten** (`server/routes/operator-accounts.ts`, `web/src/pages/operator/Accounts.tsx`). For keeping the service safe – e.g. taking someone out of the beta – with account data only.
+
+- `GET /api/operator/accounts?q=&filter=all|blocked|unconfirmed&offset=&limit=` → `{ total, accounts }`: e-mail, name, language, created / confirmed / last login / last seen (sessions and app tokens), number of app devices, sign-in ways (password, Apple, passkeys), households with name, role and plan. Never anything from inside a household.
+- `POST /api/operator/accounts/:id/block { reason (3–300), notify = true }` – **pause**: every session and app token is removed at once, and `createCloudSession` / `createAppToken` refuse the account (HTTP 403, `code: 'account.blocked'`, "Dieses Konto ist pausiert … schreib an <support>"), so password, e-mail code or link, passkey and Sign in with Apple all stop. The person gets a mail with the reason in their language. Households and their data stay; others in a shared household keep using it.
+- `POST /api/operator/accounts/:id/unblock { notify }`, `POST /api/operator/accounts/:id/signout` (sessions and app tokens removed, no pause).
+- `DELETE /api/operator/accounts/:id { confirm: <e-mail> }` – the same `removeAccount()` as "Konto löschen" in Settings: households where nobody else is left are crypto-shredded, in shared ones the person leaves (an heir becomes admin), passkeys and Apple link go, confirmation mail.
+- Every action is in the audit log with the account **id** (never the address).
+- **Apple and GDPR**: App Store Review Guideline 5.1.1(v) asks that people can delete their account in the app – that stays. Pausing for abuse is covered by the terms ("aus wichtigem Grund"); the privacy policy names the account administration (Art. 6 (1) f GDPR). A paused person can still ask by e-mail for deletion or an export.
+- Not affected by a pause: MCP/OAuth connections and Home Assistant tokens of a household belong to the household, not to the account – revoke them in that household if needed.
+
+## Gifts: beta plan and plan codes
+
+`server/lib/gifts.ts`, back office › **Geschenke**. Nothing is bought and nothing is charged in either way.
+
+- **Beta gift** – runtime setting `beta.gift` = `haushalt` | `plus` (unset = off). While it is set, `planOf()` gives every cloud household at least that plan (a running trial counts like Plus). `GET /api/billing/status` then says `source: 'beta'`, `gift: { kind: 'beta', plan, until: null, forever: false }`; the web billing card and the iPhone paywall show "Während der Beta geschenkt" instead of prices. Switching it off falls back to what each household has on its own (trial, code, App Store, Free) – nothing is deleted.
+- **Plan codes** (`GIFT-XXXX-XXXX`) – the operator creates them (`POST /api/operator/gifts/codes { plan, days | null = for good, count, maxUses (default 1), note, expiresAt }`, list `GET /api/operator/gifts`, revoke `DELETE /api/operator/gifts/codes/:id`; every change audited). An **admin** of a household redeems one on the **web**: Settings › Abo › "Code einlösen" → `POST /api/billing/redeem { code }` → `{ plan, until, status }`. Errors: `gift.invalid` 404, `gift.used_up` 410, `gift.already` 409 (once per household), `gift.apple` 409 (a running App Store subscription is never overwritten – cancel it there first). A redeemed code sets the household's plan with `plan_source = 'code'`; a longer or better gift the household already has is kept, the days are added to its end.
+- **Why not in the iPhone app**: App Store Review Guideline 3.1.1 does not allow unlocking features with own codes or license keys inside an iOS app. The app therefore has no code field; it shows the plan the household has (3.1.3(b), multiplatform services). Apple's own offer codes for the subscriptions stay available in the paywall ("Code einlösen" there is Apple's sheet).
+- Tables in accounts.db: `plan_codes`, `plan_code_redemptions (code_id, household_id, at)`.
 
 ## Beta gate
 

@@ -157,6 +157,9 @@ const ORDER: Rule[] = [
   // Hausinfo (house-guide.ts): every level reads what is shared with it (each card/code has its own visibility)
   read(/^\/house-guide$/),
   write(/^\/house-guide\/codes\/\d+\/reveal$/),
+  // holiday handover (handover.ts): what is shared with this guest for a trip, and ticking it
+  read(/^\/handover\/mine$/),
+  write(/^\/handover\/done$/),
 ];
 
 const STOCK: Rule[] = [

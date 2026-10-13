@@ -87,6 +87,8 @@ final class ServerStore: HouseholdStore {
         guard tripsSupported else { return }
         do {
             trips = try await api.trips()
+            // "Einkauf läuft" on the lock screen and in the Dynamic Island (LiveTripActivity.swift)
+            LiveTripActivity.sync(trip: trips.first(where: \.isMine), open: list.openCount)
         } catch APIError.notFound {
             tripsSupported = false
         } catch {}

@@ -6,6 +6,7 @@ import VisionKit
 /// choose the lines → onto the shared list (offline queue, like typing them).
 struct PaperListSheet: View {
     let store: ServerStore
+    @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
     @State private var showScanner = false
     @State private var photo: PhotosPickerItem?
@@ -46,6 +47,7 @@ struct PaperListSheet: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(L("Paper list"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -78,6 +80,8 @@ struct PaperListSheet: View {
         var all: [String] = []
         for img in images { all += (try? await DeviceOCR.lines(in: img)) ?? [] }
         var items = DeviceOCR.listItems(all)
+        // Apple Intelligence on this iPhone (if chosen) fixes handwriting before the server's reader sees it
+        if OnDeviceAI.active(app), let tidy = await OnDeviceAI.tidyList(all) { items = tidy }
         // the server's list reader (same parser as quick add) when it is there; the local filter otherwise
         if !items.isEmpty, let r = try? await store.api.importLines(items, mode: "list"), r.kind == "list", !r.items.isEmpty {
             items = r.items.map { i in

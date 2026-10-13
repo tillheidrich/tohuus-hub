@@ -50,7 +50,7 @@ export function helpCopy(k) {
         sections: [
           ['Konto oder eigener Server', p(
             `In der ToHuus Cloud legst du in der iPhone-App oder im Browser unter <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a> ein Konto und einen Haushalt an. Jeder neue Haushalt nutzt 14 Tage lang Plus, ohne Zahlungsdaten.`,
-            'Hast du einen eigenen Server, läuft ToHuus dort als Docker-Container. Wie das geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>. Die iPhone-App verbindest du dann mit „Eigener Server“.',
+            'Hast du einen eigenen Server, läuft ToHuus dort als Docker-Container. Wie das geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>. Dort nutzt ihr die Web-App im Browser, die iPhone-App ist für die ToHuus Cloud gedacht.',
           )],
           ['Wer gehört dazu?', p(
             'Beim Start fragt ToHuus nur das: allein, zu zweit, Familie, WG oder ein Haushalt, den du mitversorgst. Danach richtet sich, was du siehst. Ändern kannst du es später in den Einstellungen.',
@@ -194,6 +194,7 @@ export function helpCopy(k) {
             'Bei Instagram, TikTok und ähnlichen steht das Rezept meist in der Beschreibung oder nur im Video. Einen Link teilen kannst du trotzdem; was ToHuus von der Seite lesen kann, übernimmt es. Klappt das nicht, mach einen Screenshot der Beschreibung und nimm ihn als Foto.',
           )],
           ['Per Foto oder Text', p('Bis zu sechs Fotos pro Rezept, etwa Vorder- und Rückseite einer Rezeptkarte oder eine Kochbuchseite. Fotos und eingefügter Text werden mit KI gelesen; ist sie aus, tippst du das Rezept ein oder nimmst ein <a href="rezeptpaket.html">Rezeptpaket</a> von deiner eigenen KI.')],
+          ['Aus Küchenmaschinen-Apps', p('Cookidoo, Monsieur Cuisine, Cookit und ähnliche Apps zeigen ihre Rezepte nur mit Anmeldung. In der ToHuus Cloud bestätigst du deshalb Name und Zutaten selbst, am einfachsten per eingefügtem Text. Mehr unter <a href="cookidoo.html">Cookidoo, Monsieur Cuisine und andere Küchenmaschinen</a>.')],
           ['Aus anderen Apps', p('Unter Einstellungen › Rezepte nimmt ToHuus Exporte von Mealie, Tandoor, Paprika, Nextcloud Kochbuch, KitchenOwl und als CSV. Du siehst vorher eine Vorschau und wählst aus.')],
           ['Nur eigene Inhalte', tip('Übernimm Rezepte für dich und deinen Haushalt. Fremde Rezepte gehören ihren Urhebern: zum Kochen speichern ja, weiterverbreiten nein.')],
         ],
@@ -237,12 +238,15 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         related: ['rezepte-importieren', 'daten-export', 'kochen'],
       },
       {
-        slug: 'cookidoo', group: 'cook', title: 'Cookidoo-Rezepte',
-        desc: 'Wie Thermomix-Rezepte aus Cookidoo neben ToHuus funktionieren.',
+        slug: 'cookidoo', group: 'cook', title: 'Cookidoo, Monsieur Cuisine und andere Küchenmaschinen',
+        desc: 'Wie Rezepte aus Cookidoo, Monsieur Cuisine, Cookit und anderen Küchenmaschinen-Apps neben ToHuus funktionieren.',
         sections: [
-          ['In der ToHuus Cloud', p('ToHuus greift nicht auf dein Cookidoo-Konto zu. Ein Cookidoo-Rezept speicherst du als Link mit Zutatenliste: So kommen die Zutaten auf eure Einkaufsliste und in den Kochplaner. Gekocht wird weiter in Cookidoo und am Gerät.')],
-          ['Selbst gehostet mit Home Assistant', p('Nutzt ihr die offizielle Cookidoo-Integration in Home Assistant, holt die ToHuus-Integration eure Cookidoo-Woche in den Wochenplan. Details unter <a href="home-assistant.html">Home Assistant</a>.')],
-          ['Eigene Thermomix-Rezepte', p('Rezepte mit Thermomix-Schritten (Zeit, Temperatur, Stufe, Linkslauf) kannst du über ein <a href="rezeptpaket.html">Rezeptpaket</a> übernehmen, etwa aus Fotos deines eigenen Kochbuchs.')],
+          ['Welche Apps', p('Das gilt für Cookidoo (Thermomix), Monsieur Cuisine, Home Connect mit dem Bosch Cookit, Kenwood World, die Companion-Apps von Tefal, Moulinex und Krups, Magimix Cook Expert, den KitchenAid Cook Processor, Cecotec Mambo und Philips NutriU. Offene Rezeptseiten wie Kitchen Stories oder Ninja Kitchen übernimmst du ganz normal per Link.')],
+          ['In der ToHuus Cloud', p('ToHuus greift nicht auf dein Konto bei diesen Apps zu und ruft selbst nichts von dort ab, auch keine Fotos. Ein Rezept teilst du mit ToHuus oder fügst den Link ein, dann bestätigst du Name und Zutaten. Die Schritte kannst du dazuschreiben oder aus deinen eigenen Screenshots lesen lassen. Alles bleibt privat in eurem Haushalt.')],
+          ['Text einfügen', p('Am schnellsten geht es so: In der App das ganze Rezept kopieren, in ToHuus unter „Text einfügen“ einsetzen und „Mit KI lesen“ tippen. ToHuus sortiert es in Name, Zutaten und Schritte, du schaust drüber und speicherst. Ist die KI aus, sortiert ToHuus nach Zeilen: Zeilen mit Mengen werden Zutaten, der Rest Schritte.')],
+          ['Viele auf einmal, mit Fotos', p('Hast du eine eigene KI wie Claude oder ChatGPT per MCP verbunden, kann sie Rezepte mit Schritten und Fotos in einem Rutsch speichern, auch hunderte. Oder du lädst ein <a href="rezeptpaket.html">Rezeptpaket</a> mit Fotos hoch, auf dem iPhone direkt aus der Dateien-App. Fotos, die nur als Link ankommen, lädt dein eigenes Gerät: im Browser unter Einstellungen › Rezepte › Rezeptfotos mit „Fotos über diesen Browser laden“.')],
+          ['Selbst gehostet mit Home Assistant', p('Selbst gehostet liest ToHuus öffentliche Rezeptseiten dieser Apps wie jede andere Rezeptseite. Nutzt ihr die offizielle Cookidoo-Integration in Home Assistant, holt die ToHuus-Integration eure Cookidoo-Woche in den Wochenplan. Details unter <a href="home-assistant.html">Home Assistant</a>.')],
+          ['Eigene Geräterezepte', p('Rezepte mit Geräteschritten (Zeit, Temperatur, Stufe, Linkslauf) kannst du über ein <a href="rezeptpaket.html">Rezeptpaket</a> übernehmen, etwa aus Fotos deines eigenen Kochbuchs. Das klappt für den Thermomix genauso wie für Monsieur Cuisine oder Cookit.')],
         ],
         related: ['kochen', 'rezeptpaket', 'home-assistant'],
       },
@@ -252,7 +256,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         sections: [
           ['Der Monat', p('Jeder Bon zählt mit. Die Seite Geld zeigt, was der Monat gekostet hat, nach Woche, Laden und Kategorie, und vergleicht mit dem Vormonat bis zum gleichen Tag.')],
           ['Preise', p('Bei Dingen, die ihr oft kauft, zeigt ToHuus Preisänderungen gegenüber den 90 Tagen davor, wenn möglich pro Kilo oder Liter.')],
-          ['Budget und Hinweise', p('Ein Budget pro Monat oder Woche ist freiwillig. Hinweise kommen nur aus euren eigenen Bons, zum Beispiel wenn etwas in einem anderen eurer Läden günstiger war. Angebote von außen, Werbung oder Affiliate-Links gibt es nicht.')],
+          ['Budget und Hinweise', p('Ein Budget pro Woche, Monat oder Jahr ist freiwillig, für den ganzen Haushalt oder unter „Nur meins“ nur für dich. Hinweise kommen nur aus euren eigenen Bons, zum Beispiel wenn etwas in einem anderen eurer Läden günstiger war. Angebote von außen, Werbung oder Affiliate-Links gibt es nicht.')],
           ['Ohne Bon', p('Wochenmarkt oder Bäcker trägst du von Hand ein, oder du sagst es: „Beim Bäcker 6,40 ausgegeben.“ Alles lässt sich als CSV exportieren.')],
           ['Wie weit zurück', p('Free zeigt die letzten 60 Tage, Haushalt und Plus die ganze Geschichte.')],
         ],
@@ -270,7 +274,10 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Fragen zum Geld beantworten: „Was hat der Einkauf im September gekostet?“',
             'Einen Einkauf ohne Bon festhalten: „Bei Aldi Milch, Eier und Brot für 12,40 gekauft.“',
             'Sich etwas für den Haushalt merken, wenn du ihn darum bittest.',
+            'Ein Budget setzen, für alle oder nur für dich: „Setz uns 400 Euro im Monat für Lebensmittel.“',
+            'Fragen zur App beantworten: „Wo stelle ich das Jahresbudget ein?“ Er sagt dir den Weg und verlinkt die passende Hilfeseite.',
           )],
+          ['Nur für euren Haushalt', p('Der Assistent kümmert sich um Einkauf, Kochen, Vorrat, Geld und alles rund um ToHuus. Hausaufgaben, Programmieren, Politik oder Wetter lehnt er freundlich ab, ohne dafür ein Sprachmodell zu fragen und ohne dass es von deinem Kontingent abgeht. Versuche, ihm eine andere Rolle zu geben oder seine Regeln auszulesen, laufen ins Leere. Was in Rezepten, Bons oder Links steht, behandelt er als Inhalt, nie als Anweisung.')],
           ['Alles bleibt rückgängig', p('Unter jeder Antwort steht, was er eingetragen hat, mit „Rückgängig“. Er schreibt nur, wenn du ihn darum bittest.')],
           ['Ohne KI', p('Ist die KI aus oder das Kontingent für den Monat verbraucht, versteht der Assistent weiter die häufigen kurzen Sätze wie „Klopapier ist alle und 2 Paprika“.')],
           ['Privat', p('Gespräche sieht nur die Person, die sie geführt hat. Sie werden 30 Tage nach der letzten Nachricht gelöscht. Sprachaufnahmen werden nur in Text umgewandelt und nicht gespeichert.')],
@@ -499,7 +506,7 @@ cards:
 cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_URL</code>, deinen Namen und ein Passwort ein. Danach <code>http://localhost:8080</code> öffnen. Die Daten liegen in <code>./data</code>.')],
-          ['HTTPS und die App', p('Stell deinen üblichen Reverse Proxy davor. Dann verbindest du die iPhone-App mit „Eigener Server“ oder legst die Web-App auf den Startbildschirm.')],
+          ['HTTPS und die App', p('Stell deinen üblichen Reverse Proxy davor. Dann öffnest du die Web-App im Browser und legst sie auf den Startbildschirm.')],
           ['KI', p('Optional, mit einem Schlüssel für OpenRouter oder jeden OpenAI-kompatiblen Dienst, auch lokal. Ohne Schlüssel läuft alles außer Fotos von Papierbons und freien Fragen an den Assistenten.')],
           ['Sicherungen', p('Jede Nacht eine Sicherung, auf Wunsch zusätzlich auf eine WebDAV-Freigabe wie Nextcloud. Die Datenbank lässt sich mit <code>DB_ENCRYPTION_KEY</code> verschlüsseln.')],
           ['Nur im eigenen Netz', p('Bon-Postfach per IMAP, Telegram, Bon-Drucker und Home Assistant mit allen Extras.')],
@@ -605,7 +612,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Account or your own server', p(
             `In ToHuus Cloud you create an account and a household in the iPhone app or in the browser at <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a>. Every new household gets 14 days of Plus, no payment details needed.`,
-            'If you have your own server, ToHuus runs there as a Docker container (see <a href="self-hosting.html">Self-hosting</a>). Connect the iPhone app with “Own server”.',
+            'If you have your own server, ToHuus runs there as a Docker container (see <a href="self-hosting.html">Self-hosting</a>). There you use the web app in the browser; the iPhone app is meant for ToHuus Cloud.',
           )],
           ['Who belongs to it?', p('On first start ToHuus only asks this: just you, the two of you, a family, a flat share, or a household you look after. What you see follows from that, and you can change it later.')],
           ['The five areas', ul(
@@ -787,7 +794,7 @@ cards:
 cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code>, your name and a password, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.')],
-          ['HTTPS and the app', p('Put your usual reverse proxy in front. Then connect the iPhone app with “Own server” or add the web app to your home screen.')],
+          ['HTTPS and the app', p('Put your usual reverse proxy in front. Then open the web app in the browser and add it to your home screen.')],
           ['AI', p('Optional, with a key for OpenRouter or any OpenAI-compatible service, local ones included. Without a key everything works except photos of paper receipts and open questions to the assistant.')],
           ['Backups', p('A backup every night, optionally copied to a WebDAV share like Nextcloud. The database can be encrypted with <code>DB_ENCRYPTION_KEY</code>.')],
         ],

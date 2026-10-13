@@ -7,6 +7,7 @@
  * Settings: 'retail.inbox' (no secrets) and 'retail.inbox.password' (the key matches the export filter
  * /token|passw|secret/, so the password never leaves the server in an export).
  */
+import fs from 'node:fs';
 import path from 'node:path';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
@@ -133,6 +134,8 @@ export interface MailDeps {
   pdfToText: (file: string) => Promise<string>;
   /** vision fallback only for trusted senders (allowlist set) */
   allowVision: boolean;
+  /** delete a saved PDF again when it did not become an import (cloud receipt address: nothing else is kept) */
+  dropUnrecognised?: boolean;
 }
 
 /** Receipt HTML → text that keeps table columns apart (2+ spaces), so the receipt grammar still applies. */
@@ -174,11 +177,16 @@ export async function processMessage(msg: MailMessage, deps: MailDeps): Promise<
   let unreadable = 0;
   for (const a of pdfs) {
     const file = saveUpload(a.content, '.pdf');
+    const before = out.imports.length;
+    const drop = () => {
+      if (deps.dropUnrecognised && out.imports.length === before) fs.rmSync(file, { force: true });
+    };
     let text = '';
     try {
       text = await deps.pdfToText(file);
     } catch {
       unreadable++;
+      drop();
       continue;
     }
     const opts = { actor: MAIL_ACTOR, sourceFile: path.basename(file), rawText: text };
@@ -195,6 +203,7 @@ export async function processMessage(msg: MailMessage, deps: MailDeps): Promise<
         unreadable++;
       }
     } else unreadable++;
+    drop();
   }
   // no PDF receipt: maybe the receipt is in the mail itself (HTML or plain-text eBon)
   if (out.imports.length === 0) {

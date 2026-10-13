@@ -9,10 +9,10 @@ import http2 from 'node:http2';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-list2-live-'));
-const PORT = 47910 + Math.floor(Math.random() * 60);
-const APNS_PORT = PORT + 70;
+const PORT = await freePort();
 process.env.DATA_DIR = dir;
 process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'de';
@@ -24,7 +24,6 @@ Object.assign(process.env, {
   APNS_TEAM_ID: 'TEAM123456',
   APNS_KEY_P8: privateKey.export({ type: 'pkcs8', format: 'pem' }).toString().replace(/\n/g, '\\n'),
   APNS_TOPIC: 'de.heidrichdigital.tohuus',
-  APNS_HOST: `http://localhost:${APNS_PORT}`,
 });
 
 const base = `http://localhost:${PORT}`;
@@ -80,7 +79,9 @@ beforeAll(async () => {
       }
     });
   });
-  await new Promise<void>((r) => apns.listen(APNS_PORT, () => r()));
+  // a free port picked by the system (a fixed one collided with other test files running in parallel)
+  await new Promise<void>((r) => apns.listen(0, () => r()));
+  process.env.APNS_HOST = `http://localhost:${(apns.address() as import('node:net').AddressInfo).port}`;
 
   const dbm = await import('../server/db');
   db = dbm.db;

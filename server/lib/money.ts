@@ -206,7 +206,7 @@ export function currentMonth() {
   return today().slice(0, 7);
 }
 
-/** `opts.view = 'mine'`: only the viewer's personal entries and lines – no budgets, no household hints. */
+/** `opts.view = 'mine'`: only the viewer's personal entries and lines and their own budgets – no household hints. */
 export function moneyOverview(month = currentMonth(), opts: LoadOpts = {}) {
   const mine = opts.view === 'mine' && Boolean(opts.viewer);
   if (!MONTH.test(month)) throw new MoneyError(t('Month must look like 2026-10'));
@@ -240,7 +240,10 @@ export function moneyOverview(month = currentMonth(), opts: LoadOpts = {}) {
     weeks.push({ from: wFrom, to: wTo, total: counted(inMonth.filter((e) => e.day >= wFrom && e.day <= wTo)) });
     d = addDays(w.to, 1);
   }
-  const budgets = mine ? [] : budgetStatus(refDay, all.length ? loadEntries({ from: clip(addDays(from, -7)), to: addDays(to, 7) }) : [], weekStart);
+  // household budgets in the household view, the viewer's own budgets in "Nur meins" (over their own entries)
+  const budgets = mine
+    ? budgetStatus(refDay, undefined, weekStart, opts.viewer!)
+    : budgetStatus(refDay, all.length ? loadEntries({ from: clip(addDays(from, -7)), to: addDays(to, 7) }) : [], weekStart);
   const overall = budgets.find((b) => !b.category && b.period === 'month') ?? null;
   const lines = spendLines({ since: since && since > addDays(from, -95) ? since : addDays(from, -95) });
   const hints: MoneyHint[] = [];
@@ -263,7 +266,7 @@ export function moneyOverview(month = currentMonth(), opts: LoadOpts = {}) {
     budget: overall
       ? { amount: overall.amount, spent: overall.spent, left: round2(overall.amount - overall.spent), pct: overall.pct, forecast: overall.forecast, state: overall.state }
       : null,
-    budgets: budgets.map((b) => ({ id: b.id, label: b.label, category: b.category, period: b.period, amount: b.amount, spent: b.spent, pct: b.pct, state: b.state })),
+    budgets: budgets.map((b) => ({ id: b.id, label: b.label, category: b.category, period: b.period, personal: b.personal, amount: b.amount, spent: b.spent, pct: b.pct, state: b.state })),
     byCategory: agg.by_category.map((c) => ({ name: c.name, total: c.total, count: c.count })),
     byShop: agg.by_store.map((s) => ({ name: s.name, total: s.total, baskets: s.baskets, avgBasket: s.avg_basket })),
     byWeek: weeks,

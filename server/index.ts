@@ -30,6 +30,8 @@ import { r as kioskRoutes, pub as kioskPublic } from './routes/kiosk.js';
 import { r as kidsRoutes, kid as kidDevice } from './routes/kids.js';
 import { r as onboardRoutes } from './routes/onboard.js';
 import { r as retailRoutes } from './routes/retail.js';
+import { r as mailRoutes, pub as mailPublic } from './routes/mail.js';
+import { startSmtpInbound } from './lib/mail-smtp.js';
 import { r as channelsRoutes, pub as channelsPublic } from './routes/channels.js';
 import { r as intlRoutes } from './routes/intl.js';
 import { r as cook2Routes } from './routes/cook2.js';
@@ -66,6 +68,8 @@ import { AiError } from './lib/ai.js';
 import { r as list2Routes, pub as list2Public } from './routes/list2.js';
 import { caldav } from './lib/caldav.js';
 import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
+import { r as handoverRoutes, guestHandover } from './routes/handover.js';
+import { r as diagRoutes } from './routes/diag.js';
 import { r as wishRoutes } from './routes/wishes.js';
 import { r as factsRoutes } from './routes/facts.js';
 import { householdAppearance } from './lib/appearance.js';
@@ -76,6 +80,7 @@ import { appAuth, cloud as cloudRoutes, cloudPub, instance, wellKnown } from './
 import { appleAuth } from './routes/cloud-apple.js';
 import { r as billingRoutes, pub as billingPublic } from './routes/billing.js';
 import { serveImage, signImagesForTokenClients } from './lib/images.js';
+import { logError } from './lib/errorlog.js';
 import { NoHouseholdError, currentHousehold } from './lib/tenancy.js';
 import { QuotaError, bodyQuota } from './lib/plans.js';
 import { startCloudBackups } from './lib/cloud-backup.js';
@@ -91,6 +96,9 @@ if (config.seedDemo && !config.multiTenant) seedDemo();
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 1));
+// recipes with their photos inline (base64) from the person's own AI over MCP or the bulk API: up to 40 MB per call;
+// everything else stays at 4 MB (body-parser skips a body that is already parsed)
+app.use(['/mcp', '/api/recipes/import/bulk'], express.json({ limit: '40mb' }));
 app.use(express.json({ limit: '4mb' }));
 app.use(cookieParser());
 // JSON/text API answers > 1 kB gzipped (before the image signer, which rewrites bodies first) – lib/compress.ts
@@ -154,6 +162,8 @@ app.use('/api', instance);
 app.use('/api', factsRoutes);
 app.use('/api', appAuth);
 app.use('/api', billingPublic);
+// receipt address webhook (raw mail body, shared secret) – before the household auth layer
+app.use('/api', mailPublic);
 if (config.multiTenant) {
   // Sign in with Apple (app token or cookie session, web redirect flow) – routes/cloud-apple.ts
   app.use('/api', appleAuth);
@@ -171,6 +181,7 @@ app.use(sharePublic);
 app.use('/api/guest', guest);
 app.use('/api/guest', ha2Guest);
 app.use('/api/guest', houseGuest);
+app.use('/api/guest', guestHandover);
 app.use('/api/party-board', partyBoard);
 app.use(kioskPublic);
 app.use('/api/kid', kidDevice);
@@ -196,6 +207,7 @@ app.use('/api', kioskRoutes);
 app.use('/api', kidsRoutes);
 app.use('/api', onboardRoutes);
 app.use('/api', retailRoutes);
+app.use('/api', mailRoutes);
 app.use('/api', channelsRoutes);
 app.use('/api', intlRoutes);
 app.use('/api', cook2Routes);
@@ -225,8 +237,11 @@ app.use('/api', list2Routes);
 // names the iPhone app 0.2 was built against (docs/ios-api-0.2.md) – thin aliases
 app.use('/api', iosCompat);
 app.use('/api', houseGuideRoutes);
+app.use('/api', handoverRoutes);
+app.use('/api', diagRoutes);
 app.use('/api', wishRoutes);
-app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
+// the text stays 'not found': iPhone app builds up to 1.0 (5) hide a feature by exactly this answer
+app.use('/api', (_req, res) => res.status(404).json({ error: 'not found', code: 'not_found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webDir = [path.join(here, 'web'), path.join(here, '../dist/web')].find((d) => fs.existsSync(path.join(d, 'index.html')));
@@ -246,6 +261,9 @@ if (webDir) {
   app.use(express.static(webDir, { index: false, maxAge: '1h', setHeaders: (res, p) => {
     if (p.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } }));
+  // a file the build no longer has (a chunk of an older version) is a 404 – never the app page with 200, which the
+  // service worker would keep as that script and every later visit of the page would stay white
+  app.use((req, res, next) => (/^\/assets\//.test(req.path) || /\.(?:m?js|css|map|woff2?|png|webp|svg|json)$/i.test(req.path) ? res.status(404).type('text/plain').send('not found') : next()));
   const html = fs.readFileSync(path.join(webDir, 'index.html'), 'utf8');
   // the document language follows the household setting
   // … and the household theme is known before the first paint (web/public/theme-boot.js reads it)
@@ -259,7 +277,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     return;
   }
   if (err instanceof NoHouseholdError) {
-    res.status(401).json({ error: 'unauthorized' });
+    res.status(401).json({ error: t('Please sign in again.'), code: 'unauthorized' });
     return;
   }
   if (err instanceof QuotaError) {
@@ -278,9 +296,10 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     res.status(413).json({ error: t('File too large (max. 15 MB)') });
     return;
   }
-  const e = err as { message?: string; status?: unknown; expose?: boolean; stack?: string };
+  const e = err as { message?: string; status?: unknown; expose?: boolean; stack?: string; code?: unknown };
   // deliberate client errors (status < 500) and translated messages for people (userError) are shown as they are
-  if (typeof e?.status === 'number' && e.status >= 400 && e.status < 500) return void res.status(e.status).json({ error: e.message ?? t('Error') });
+  if (typeof e?.status === 'number' && e.status >= 400 && e.status < 500)
+    return void res.status(e.status).json({ error: e.message ?? t('Error'), ...(typeof e.code === 'string' && /^[a-z]+\.[a-z_]+$/.test(e.code) ? { code: e.code } : {}) });
   if (e?.expose && e.message) {
     console.error('[error]', e.message);
     return void res.status(500).json({ error: e.message });
@@ -288,7 +307,9 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   // anything else: no internals in production (paths, SQL, stack) – a reference to find it in the log
   const ref = crypto.randomBytes(4).toString('hex');
   console.error(`[error ${ref}]`, e?.stack ?? e?.message ?? err);
-  res.status(500).json({ error: process.env.NODE_ENV === 'production' ? t('Something went wrong (reference {ref}).', { ref }) : (e?.message ?? t('Error')), ref });
+  // and in the error log (back office › Fehler, lib/errorlog.ts) – searchable by the reference people send us
+  logError({ source: 'server', ref, message: e?.message ?? String(err), stack: e?.stack ?? null, route: `${_req.method} ${_req.originalUrl}`, status: 500, kind: (err as Error)?.name ?? null, appVersion: String(_req.headers['x-tohuus-version'] ?? '') || null, platform: String(_req.headers['x-tohuus-client'] ?? '') || null });
+  res.status(500).json({ error: process.env.NODE_ENV === 'production' ? t('That didn’t work. Please try again in a moment – if it happens again, tell us the code {ref}.', { ref }) : (e?.message ?? t('Error')), ref });
 });
 
 export { app };
@@ -299,5 +320,7 @@ export const server = app.listen(config.port, () => {
   if (config.multiTenant) startRenewalReminders();
   if (config.multiTenant) startStats();
   if (config.multiTenant) startCatalogScheduler();
+  // receipt addresses (docs/mail-inbox.md): only with MAIL_INBOUND_DOMAIN and MAIL_SMTP_PORT
+  if (config.multiTenant) startSmtpInbound();
   else startBackups();
 });

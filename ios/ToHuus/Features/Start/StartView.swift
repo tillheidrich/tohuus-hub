@@ -98,12 +98,12 @@ enum Legal {
     private static var german: Bool { Locale.current.language.languageCode?.identifier == "de" }
     static func privacy(_ i: InstanceInfo?) -> URL {
         i?.legal?.privacy.flatMap(URL.init(string:))
-            ?? URL(string: german ? "https://tohuus.heidrich-digital.de/de/datenschutz.html" : "https://tohuus.heidrich-digital.de/privacy.html")!
+            ?? SharedConfig.siteURL.appendingPathComponent(german ? "de/datenschutz.html" : "privacy.html")
     }
 
     static func terms(_ i: InstanceInfo?) -> URL {
         i?.legal?.terms.flatMap(URL.init(string:))
-            ?? URL(string: german ? "https://tohuus.heidrich-digital.de/de/nutzungsbedingungen.html" : "https://tohuus.heidrich-digital.de/terms.html")!
+            ?? SharedConfig.siteURL.appendingPathComponent(german ? "de/nutzungsbedingungen.html" : "terms.html")
     }
 }
 

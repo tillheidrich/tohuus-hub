@@ -25,6 +25,9 @@ import {
   createCard,
   createCode,
   deleteCard,
+  addCardMedia,
+  updateCardMedia,
+  deleteCardMedia,
   deleteCode,
   guide,
   guideForLink,
@@ -42,6 +45,18 @@ import {
   WIFI_SECURITY,
 } from '../lib/house-guide.js';
 import { GUEST_LEVELS } from '../lib/people-policy.js';
+import multer from 'multer';
+import { VIDEO_MAX_BYTES } from '../lib/images.js';
+import { uploadQuota } from '../lib/plans.js';
+
+// photos and short videos for cards: one file per request, up to the video limit (100 MB)
+const mediaUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: VIDEO_MAX_BYTES, files: 1, fields: 4 } });
+const mediaFile = (req: Request, res: Response, next: NextFunction) =>
+  mediaUpload.single('file')(req, res, (err?: unknown) => {
+    if (err && (err as { code?: string }).code === 'LIMIT_FILE_SIZE')
+      return void res.status(413).json({ error: t('The video is larger than 100 MB. Shorten it, or send it from the iPhone app – it makes videos smaller before sending.'), code: 'media.too_large' });
+    next(err);
+  });
 
 export const r = Router();
 
@@ -94,6 +109,29 @@ r.get('/house-guide', requireAuth, h((req) => guide(viewerOf(req.actor))));
 r.post('/house-guide/cards', requireAuth, requireAdmin, h((req) => createCard(card.extend({ title: z.string().min(1).max(100) }).parse(req.body), actorName(req))));
 r.patch('/house-guide/cards/:id', requireAuth, requireAdmin, h((req) => updateCard(idOf(req), card.parse(req.body))));
 r.delete('/house-guide/cards/:id', requireAuth, requireAdmin, h((req) => (deleteCard(idOf(req)), { ok: true })));
+
+/** Photos and short videos on a card: multipart `file` (+ `caption`). Same visibility as the card. */
+r.post('/house-guide/cards/:id/media', requireAuth, requireAdmin, uploadQuota, mediaFile, async (req, res, next) => {
+  try {
+    if (!req.file?.buffer) return void res.status(400).json({ error: t('No file received') });
+    const caption = typeof req.body?.caption === 'string' ? req.body.caption : null;
+    res.json(await addCardMedia(idOf(req), req.file, caption));
+  } catch (e) {
+    if (e instanceof HouseGuideError) return void res.status(e.status).json({ error: e.message });
+    next(e);
+  }
+});
+r.patch(
+  '/house-guide/cards/:id/media/:mediaId',
+  requireAuth,
+  requireAdmin,
+  h((req) => {
+    const { caption } = z.object({ caption: z.string().max(140).nullable() }).parse(req.body ?? {});
+    updateCardMedia(idOf(req), Number(req.params.mediaId), caption);
+    return { ok: true };
+  }),
+);
+r.delete('/house-guide/cards/:id/media/:mediaId', requireAuth, requireAdmin, h((req) => (deleteCardMedia(idOf(req), Number(req.params.mediaId)), { ok: true })));
 
 r.post('/house-guide/codes', requireAuth, requireAdmin, h((req) => createCode(code.extend({ label: z.string().min(1).max(80) }).parse(req.body), actorName(req))));
 r.patch('/house-guide/codes/:id', requireAuth, requireAdmin, h((req) => updateCode(idOf(req), code.parse(req.body))));

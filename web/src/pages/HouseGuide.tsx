@@ -11,7 +11,7 @@ import QRCode from 'qrcode';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
-import { del, get, invalidate, patch, post, put, useApi } from '../api';
+import { api, del, get, invalidate, patch, post, put, useApi } from '../api';
 import { HowTo } from '../help';
 import { t } from '../i18n';
 import { Empty, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
@@ -37,7 +37,18 @@ export interface Card {
   hint?: string | null;
   draft?: boolean;
   visibility?: Visibility;
+  /** photos and short videos (same visibility as the card) */
+  media?: Media[];
 }
+export interface Media {
+  id: number;
+  kind: 'photo' | 'video';
+  url: string;
+  caption: string | null;
+}
+/** the server's limit per file (server/lib/images.ts VIDEO_MAX_BYTES) – said before anyone picks a file */
+const MEDIA_MAX_BYTES = 100 * 1024 * 1024;
+const MEDIA_PER_CARD = 8;
 export interface Code {
   id: number;
   kind: 'door' | 'alarm' | 'garage' | 'wifi' | 'safe' | 'other';
@@ -169,7 +180,107 @@ function GuideCard({ c, showArea, onEdit }: { c: Card; showArea: boolean; onEdit
         c.hint && <p className="small muted">{c.hint}</p>
       )}
       {c.detail && <p className="small muted hg-detail">{c.type === 'routine' ? `${t('What happens:')} ${c.detail}` : c.detail}</p>}
+      {!!c.media?.length && <MediaStrip media={c.media} title={c.title} />}
     </article>
+  );
+}
+
+/** Photos (tap to zoom) and short videos of a card. */
+function MediaStrip({ media, title }: { media: Media[]; title: string }) {
+  return (
+    <div className="hg-media">
+      {media.map((m) => (
+        <figure key={m.id} className={`hg-media-item ${m.kind}`}>
+          {m.kind === 'photo' ? (
+            <img src={m.url} alt={m.caption || title} loading="lazy" data-zoom />
+          ) : (
+            <video src={m.url} controls playsInline preload="metadata" aria-label={m.caption || title} />
+          )}
+          {m.caption && <figcaption className="small muted">{m.caption}</figcaption>}
+        </figure>
+      ))}
+    </div>
+  );
+}
+
+/** Too big for the server? Said before uploading, in plain words. */
+function tooBig(f: File): string | null {
+  if (f.size <= MEDIA_MAX_BYTES) return null;
+  return f.type.startsWith('video/')
+    ? t('“{name}” is {mb} MB – videos can be up to 100 MB. Shorten it, or add it in the iPhone app: it makes videos smaller first (about 5 minutes fit).', { name: f.name, mb: Math.round(f.size / 1048576) })
+    : t('“{name}” is larger than 100 MB.', { name: f.name });
+}
+
+async function uploadMedia(cardId: number, f: File) {
+  const form = new FormData();
+  form.append('file', f, f.name);
+  return api<Media>(`/house-guide/cards/${cardId}/media`, { method: 'POST', form });
+}
+
+/** In the card editor: what is there, add more, remove. New cards collect files and upload them after saving. */
+function MediaEditor({ cardId, media, pending, setPending }: { cardId?: number; media: Media[]; pending: File[]; setPending: (f: File[]) => void }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const count = media.length + pending.length;
+  const pick = async (files: FileList | null) => {
+    const list = [...(files ?? [])];
+    const ok: File[] = [];
+    for (const f of list) {
+      const big = tooBig(f);
+      if (big) toast({ text: big, error: true });
+      else ok.push(f);
+    }
+    const room = MEDIA_PER_CARD - count;
+    if (ok.length > room) toast({ text: t('Up to {n} photos or videos per card.', { n: MEDIA_PER_CARD }), error: true });
+    const take = ok.slice(0, Math.max(0, room));
+    if (!take.length) return;
+    if (!cardId) return setPending([...pending, ...take]);
+    setBusy(true);
+    try {
+      for (const f of take) await uploadMedia(cardId, f);
+      invalidate('house-guide');
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const remove = async (m: Media) => {
+    if (!cardId) return;
+    await del(`/house-guide/cards/${cardId}/media/${m.id}`);
+    invalidate('house-guide');
+  };
+  return (
+    <div className="field">
+      <span className="label">{t('Photos and videos')}</span>
+      {(media.length > 0 || pending.length > 0) && (
+        <ul className="hg-media-edit">
+          {media.map((m) => (
+            <li key={m.id}>
+              {m.kind === 'photo' ? <img src={m.url} alt="" /> : <video src={m.url} preload="metadata" muted playsInline aria-hidden="true" />}
+              <button type="button" className="icon-btn sm" onClick={() => remove(m)} aria-label={t('Remove')}>
+                <Trash size={14} />
+              </button>
+            </li>
+          ))}
+          {pending.map((f, i) => (
+            <li key={`p${i}`} className="pending">
+              <span className="small">{f.name}</span>
+              <button type="button" className="icon-btn sm" onClick={() => setPending(pending.filter((_, j) => j !== i))} aria-label={t('Remove')}>
+                <Trash size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {count < MEDIA_PER_CARD && (
+        <label className={`btn ${busy ? 'disabled' : ''}`} style={{ alignSelf: 'flex-start' }}>
+          <Plus size={16} /> {busy ? t('Uploading …') : t('Add a photo or video')}
+          <input type="file" accept="image/*,video/*" multiple hidden disabled={busy} onChange={(e) => (pick(e.target.files), (e.target.value = ''))} />
+        </label>
+      )}
+      <span className="small muted">{t('Photos, and videos up to 100 MB each (in the iPhone app about 5 minutes – it makes them smaller first). Up to {n} per card. Who sees the card sees them too.', { n: MEDIA_PER_CARD })}</span>
+    </div>
   );
 }
 
@@ -505,11 +616,16 @@ const DEFAULT_CODE_VIS: Visibility = { members: true, guest_level: null, sitters
 function CardEditor({ init, areas, onClose }: { init: Partial<Card>; areas: string[]; onClose: () => void }) {
   const [f, setF] = useState({ type: init.type ?? 'tip', topic: init.topic ?? 'other', area: init.area ?? '', title: init.title ?? '', body: init.body ?? '', detail: init.detail ?? '', visibility: init.visibility ?? DEFAULT_CARD_VIS });
   const toast = useToast();
+  const [pending, setPending] = useState<File[]>([]);
+  // the card as it is now (new photos appear while the editor is open)
+  const live = useApi<Guide>('house-guide', '/house-guide').data?.cards.find((c) => c.id === init.id);
   const save = async () => {
     try {
       const body = { ...f, area: f.area.trim() || null, detail: f.detail.trim() || null };
-      if (init.id) await patch(`/house-guide/cards/${init.id}`, body);
-      else await post('/house-guide/cards', body);
+      let id = init.id;
+      if (id) await patch(`/house-guide/cards/${id}`, body);
+      else id = (await post<Card>('/house-guide/cards', body)).id;
+      for (const file of pending) await uploadMedia(id!, file);
       invalidate('house-guide');
       onClose();
     } catch (e) {
@@ -544,6 +660,7 @@ function CardEditor({ init, areas, onClose }: { init: Partial<Card>; areas: stri
           <input id="hg-area" className="input" list="hg-areas" value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })} placeholder={t('e.g. Living room')} />
           <datalist id="hg-areas">{areas.map((a) => <option key={a} value={a} />)}</datalist>
         </div>
+        <MediaEditor cardId={init.id} media={live?.media ?? init.media ?? []} pending={pending} setPending={setPending} />
         <VisibilityEditor v={f.visibility} onChange={(visibility) => setF({ ...f, visibility })} />
         <p className="small muted" style={{ margin: 0 }}>{t('Cards are not secret – codes and passwords belong under Codes.')}</p>
         <div className="row" style={{ gap: 8 }}>
@@ -552,7 +669,7 @@ function CardEditor({ init, areas, onClose }: { init: Partial<Card>; areas: stri
               <Trash size={16} /> {t('Delete')}
             </button>
           )}
-          <button className="btn primary grow" disabled={!f.title.trim()} onClick={save}>{t('Save')}</button>
+          <button className="btn primary grow" disabled={!f.title.trim()} onClick={save}>{pending.length ? t('Save and upload') : t('Save')}</button>
         </div>
       </div>
     </Sheet>

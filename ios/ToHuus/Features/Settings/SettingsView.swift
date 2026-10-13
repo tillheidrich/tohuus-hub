@@ -19,6 +19,7 @@ struct SettingsView: View {
     /// how deleting the account is confirmed (GET /api/cloud/me): password, Apple or a mail code
     @State private var hasPassword = true
     @State private var appleLinked = false
+    @State private var showTour = false
 
     var body: some View {
         NavigationStack {
@@ -51,6 +52,7 @@ struct SettingsView: View {
                         } label: { Label(L("With or without AI"), systemImage: "sparkles") }
                     }
                     NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
+                    AppearancePicker()
                 }
                 if app.moduleOn("homeinfo") {
                     Section {
@@ -58,9 +60,11 @@ struct SettingsView: View {
                     }
                 }
                 Section(L("Knowing")) {
+                    Button { showTour = true } label: { Label(L("Take the tour"), systemImage: "map") }
                     NavigationLink { HowItWorksView() } label: { Label(L("How ToHuus works"), systemImage: "lightbulb") }
                     NavigationLink { FactsView() } label: { Label(L("Good to know"), systemImage: "book") }
                     NavigationLink { HelpListView() } label: { Label(L("Help"), systemImage: "questionmark.circle") }
+                    NavigationLink { ErrorLogView() } label: { Label(L("Error log"), systemImage: "ladybug") }
                 }
                 SampleDataSettingsSection()
                 Section(L("Plan & storage")) {
@@ -144,6 +148,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(L("More"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -161,6 +166,7 @@ struct SettingsView: View {
             .sheet(isPresented: $showWeb) {
                 if let api = app.api { WebSettingsView(api: api) }
             }
+            .sheet(isPresented: $showTour) { AppTourView() }
         }
     }
 

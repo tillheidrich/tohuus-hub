@@ -1,5 +1,5 @@
 /* ToHuus Hub service worker: app shell + last shopping list offline, Web Push with actions. */
-const VERSION = 'tohuus-v4'; // v4: code-split app (lazy route chunks precached from /asset-manifest.json)
+const VERSION = 'tohuus-v5'; // v5: drops caches where an older server stored the app page as a missing chunk (white screens)
 const SHELL = `${VERSION}-shell`;
 const DATA = `${VERSION}-data`;
 // things shared into the app (share target) wait here until the /teilen page picks them up – survives SW updates
@@ -86,7 +86,8 @@ async function cacheFirst(req) {
   const hit = await cache.match(req);
   if (hit) return hit;
   const res = await fetch(req);
-  if (res.ok) cache.put(req, res.clone());
+  // only real files: an HTML page under /assets/ is a missing chunk of an older build, never something to keep
+  if (res.ok && !(res.headers.get('content-type') ?? '').includes('text/html')) cache.put(req, res.clone());
   return res;
 }
 

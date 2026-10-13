@@ -43,6 +43,7 @@ struct GuestLinksView: View {
                 HelpLink(slug: "hausinfo", title: L("House info for guests and sitters"))
             }
         }
+        .themedList()
         .navigationTitle(L("Guest links"))
         .task { await load() }
         .refreshable { await load() }
@@ -192,6 +193,7 @@ struct GuestLinkForm: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(L("New guest link"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

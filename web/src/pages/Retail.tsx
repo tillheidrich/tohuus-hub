@@ -30,6 +30,8 @@ interface InboxSettings {
   configured: boolean;
 }
 interface InboxInfo {
+  /** false in ToHuus Cloud (no mailbox polling there) */
+  available?: boolean;
   configured: boolean;
   enabled: boolean;
   forward_to: string | null;
@@ -78,7 +80,7 @@ export function InboxStatusCard({ admin }: { admin: boolean }) {
   const check = useCheckNow();
   const toast = useToast();
   if (q.isLoading) return <Skeleton h={72} n={1} />;
-  if (q.isError || !q.data) return null;
+  if (q.isError || !q.data || q.data.available === false) return null;
   const d = q.data;
   if (!d.configured) {
     if (!admin) return null;
@@ -176,6 +178,7 @@ export function InboxSettingsCard() {
     }
   };
   const complete = Boolean(f.host.trim() && f.user.trim() && (f.password || s?.has_password));
+  if (q.data?.available === false) return null;
   return (
     <div className="card pad stack rt-settings">
       <div className="row">

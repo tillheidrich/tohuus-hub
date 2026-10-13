@@ -31,6 +31,7 @@ import type { Me } from '../App';
 import { del, fmtDate, get, invalidate, patch, post, useApi } from '../api';
 import { Empty, ProductPicker, Seg, Sheet, Skeleton, Stepper, Thumb, Toggle, useToast } from '../ui';
 import { t } from '../i18n';
+import { HandoverTab } from './Handover';
 
 type Phase = 'planned' | 'before' | 'during' | 'after' | 'done';
 interface Trip {
@@ -257,7 +258,7 @@ export function Away({ me }: { me: Me }) {
 
 // ------------------------------------------------------------------ one trip
 
-type Tab = 'before' | 'pack' | 'kitchen' | 'sitter' | 'home';
+type Tab = 'before' | 'pack' | 'kitchen' | 'sitter' | 'home' | 'handover';
 
 function defaultTab(tr: Trip): Tab {
   if (tr.welcome_ready || tr.phase === 'after' || tr.phase === 'done') return 'home';
@@ -305,6 +306,7 @@ function TripDetail({ id, onEdit, onClosed }: { id: number; onEdit: (tr: Trip) =
     ['pack', t('Packing')],
     ['kitchen', t('Kitchen')],
     ['sitter', t('House sitter')],
+    ['handover', t('Handover')],
     ['home', t('Back home')],
   ];
   return (
@@ -353,6 +355,7 @@ function TripDetail({ id, onEdit, onClosed }: { id: number; onEdit: (tr: Trip) =
       {current === 'pack' && <PackTab id={id} d={d} />}
       {current === 'kitchen' && <KitchenTab id={id} d={d} onEdit={() => onEdit(tr)} />}
       {current === 'sitter' && <SitterTab id={id} tr={tr} careSoon={d.checklist.filter((c: any) => c.key.startsWith('care:'))} />}
+      {current === 'handover' && <HandoverTab tripId={id} />}
       {current === 'home' && <HomeTab id={id} d={d} />}
     </>
   );

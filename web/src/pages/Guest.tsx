@@ -2,6 +2,7 @@ import { Basket, Check, Coffee, Cookie, IceCream, MagnifyingGlass, Martini, Minu
 import { FindList, type Found, useDebounce } from './Find';
 import { GuestVoice } from './Ha2';
 import { GuestHouse } from './HouseGuide';
+import { GuestHandover } from './Handover';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -64,11 +65,16 @@ export function Guest() {
   const { token = '' } = useParams();
   const info = useQuery({ queryKey: ['orders', 'guest-info', token], queryFn: () => gapi(token, '') , retry: false });
   // Hausinfo is its own tab when something is shared with this link (house-guide.ts)
-  const scopes: string[] = [...(info.data?.scopes ?? []), ...(info.data?.house_guide ? ['house'] : [])];
-  const [tab, setTab] = useState<'bar' | 'stock' | 'shopping' | 'house'>('bar');
+  // a holiday handover shared with this link comes first (handover.ts)
+  const scopes: string[] = [...(info.data?.handover ? ['handover'] : []), ...(info.data?.scopes ?? []), ...(info.data?.house_guide ? ['house'] : [])];
+  const [tab, setTab] = useState<'bar' | 'stock' | 'shopping' | 'house' | 'handover'>('bar');
   useEffect(() => {
     if (scopes.length && !scopes.includes(tab)) setTab(scopes[0] as any);
   }, [scopes, tab]);
+  // the house sitter opens the link for the handover – show it first
+  useEffect(() => {
+    if (info.data?.handover) setTab('handover');
+  }, [info.data?.handover]);
   useEffect(() => connectEvents(`/api/guest/${token}/events`), [token]);
   useEffect(() => {
     if (!info.data) return;
@@ -96,21 +102,22 @@ export function Guest() {
     <div className="guest">
       <>
           <div className="eyebrow">{info.data.household} · {info.data.name}</div>
-          <h1 style={{ marginBottom: 6 }}>{tab === 'bar' ? t('Fancy something?') : tab === 'stock' ? t('Where is what?') : tab === 'house' ? t('How things work here') : t('What’s missing?')}</h1>
+          <h1 style={{ marginBottom: 6 }}>{tab === 'handover' ? t('While we’re away') : tab === 'bar' ? t('Fancy something?') : tab === 'stock' ? t('Where is what?') : tab === 'house' ? t('How things work here') : t('What’s missing?')}</h1>
           <p className="muted" style={{ marginTop: 0 }}>
-            {tab === 'bar' ? (info.data.party ? t('Order here – we’ll call you when it’s ready at the counter.') : t('Drinks, ice cream and snacks – just order and we’ll bring it over.')) : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : tab === 'house' ? t('Voice commands, tips and important numbers – stays readable without a connection once opened.') : t('Add it to our shopping list.')}
+            {tab === 'handover' ? t('What to do and how – tick it if you like, so we know all is well.') : tab === 'bar' ? (info.data.party ? t('Order here – we’ll call you when it’s ready at the counter.') : t('Drinks, ice cream and snacks – just order and we’ll bring it over.')) : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : tab === 'house' ? t('Voice commands, tips and important numbers – stays readable without a connection once opened.') : t('Add it to our shopping list.')}
           </p>
       </>
       {info.data.note && <div className="note-card" style={{ margin: '14px 0' }}>{info.data.note}</div>}
       {scopes.length > 1 && (
         <div style={{ margin: '14px 0' }}>
-          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list'), house: t('House info') } as Record<string, string>)[s] ?? s]) as any} />
+          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list'), house: t('House info'), handover: t('Handover') } as Record<string, string>)[s] ?? s]) as any} />
         </div>
       )}
       {tab === 'bar' && <OrderMenu src={{ key: `guest-${token}`, party: Boolean(info.data.party), menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
       {tab === 'house' && <GuestHouse token={token} household={info.data.household} />}
+      {tab === 'handover' && <GuestHandover token={token} />}
       <p className="credit" style={{ marginTop: 40, textAlign: 'center' }}>{t('ToHuus Hub · your household, self-hosted')}</p>
     </div>
   );

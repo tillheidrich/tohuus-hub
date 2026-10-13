@@ -256,7 +256,7 @@ export function resolveActor(req: Request): Actor | null {
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const actor = resolveActor(req);
   if (!actor) {
-    res.status(401).json({ error: 'unauthorized' });
+    res.status(401).json({ error: t('Please sign in again.'), code: 'unauthorized' });
     return;
   }
   if (actor.kind === 'token' && actor.scope !== 'full') {

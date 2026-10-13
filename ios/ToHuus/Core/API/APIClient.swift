@@ -17,6 +17,9 @@ final class APIClient: Sendable {
         self.householdId = householdId
         self.session = session
         self.onUnauthorized = onUnauthorized
+        // the error log reports to the server of the current session (ErrorLog.swift)
+        let (b, t, h) = (baseURL, token, householdId)
+        Task { await ErrorLog.shared.use(base: b, token: t, household: h) }
     }
 
     func url(_ path: String, query: [URLQueryItem] = []) throws -> URL {
@@ -63,6 +66,11 @@ final class APIClient: Sendable {
         if (200..<300).contains(status) { return data }
         let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         let message = (obj?["error"] as? String) ?? (obj?["message"] as? String) ?? HTTPURLResponse.localizedString(forStatusCode: status)
+        if status >= 500 {
+            // the server logged it too (with the code in the message) – the app's log says where it happened
+            let route = "\(req.httpMethod ?? "GET") \(req.url?.path ?? "")"
+            Task { await ErrorLog.shared.record(kind: "http", message: message, route: route, status: status) }
+        }
         let code = (obj?["code"] as? String) ?? (obj?["key"] as? String) ?? ""
         // 402 quota.assistant, 429 quota.receiptAi (docs/assistant.md "Limits")
         let isQuota = status == 402 || (obj?["quota"] as? Bool) == true || code.hasPrefix("quota")
@@ -73,7 +81,7 @@ final class APIClient: Sendable {
             throw APIError.unauthorized
         case 401:
             throw APIError.server(status: 401, message: message)
-        case 404 where obj?["error"] == nil || message == "not found" || message == "Not found":
+        case 404 where obj?["error"] == nil || message == "not found" || message == "Not found" || code == "not_found":
             throw APIError.notFound
         case _ where isQuota:
             throw APIError.quota(message)
@@ -105,6 +113,9 @@ final class APIClient: Sendable {
         do {
             return try JSONCoding.decoder().decode(T.self, from: data)
         } catch {
+            // an answer this app version cannot read – exactly what the developer needs to know
+            let msg = "\(T.self): \(String(describing: error).prefix(400))"
+            Task { await ErrorLog.shared.record(kind: "decoding", message: msg) }
             throw APIError.decoding(String(describing: error))
         }
     }

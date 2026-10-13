@@ -16,6 +16,7 @@ import { fmtDay, t } from '../i18n.js';
 import { randomToken, sha256 } from './auth.js';
 import { emit } from './bus.js';
 import { listCareTasks } from './care.js';
+import { deleteTripHandover } from './handover.js';
 import { addToShopping, adjustStock, getProduct, listProducts, matchIngredient, matchProduct } from './catalog.js';
 import { categoryKeyOf, entryExpiry, openDaysFor } from './fresh-shelf.js';
 import { freeze, wasteProduct } from './fresh.js';
@@ -250,6 +251,7 @@ export function stopTrip(id: number) {
 }
 
 export function deleteTrip(id: number) {
+  deleteTripHandover(id);
   const trip = needTrip(id);
   if (trip.sitter_link_id) db.prepare('UPDATE guest_links SET revoked = 1 WHERE id = ?').run(trip.sitter_link_id);
   db.prepare('DELETE FROM away_trips WHERE id = ?').run(id);

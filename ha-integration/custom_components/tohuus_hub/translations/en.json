@@ -136,6 +136,13 @@
         "care_due": "Care task due",
         "party_ending": "Party ending",
         "kids_wish": "Kid wish",
+        "budget_warning": "Budget hint",
+        "plan_vote": "Meal vote",
+        "plan_rotation": "Cooking rotation",
+        "trip_started": "Shopping trip started",
+        "trip_addon": "Bring something too",
+        "rhythm_due": "Probably due",
+        "plan_reminder": "Meal plan reminder",
         "test": "Test"
       }
     }
@@ -252,6 +259,13 @@
               "care_due": "Care task due",
               "party_ending": "Party ending",
               "kids_wish": "Kid wish",
+              "budget_warning": "Budget hint",
+              "plan_vote": "Meal vote",
+              "plan_rotation": "Cooking rotation",
+              "trip_started": "Shopping trip started",
+              "trip_addon": "Bring something too",
+              "rhythm_due": "Probably due",
+              "plan_reminder": "Meal plan reminder",
               "test": "Test"
             }
           }

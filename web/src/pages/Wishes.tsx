@@ -29,7 +29,7 @@ import { t } from '../i18n';
 import { money } from '../region';
 import { type ListVisibility, VisibilityIcon, VisibilityPicker, useMembers, visibilityLabel } from '../shop/privacy';
 import type { ListInfo } from '../shop/fill';
-import { Avatar, Empty, Seg, Sheet, Skeleton, Thumb, useToast } from '../ui';
+import { Avatar, Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import './wishes.css';
 
 // ------------------------------------------------------------------ types
@@ -744,7 +744,7 @@ function WishSheet({ open, wish, list, onClose }: { open: boolean; wish: Wish | 
             {list.for_name && <span className="small muted">{t('{name} never sees this.', { name: list.for_name })}</span>}
           </div>
         )}
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           {wish && (
             <>
               <button type="button" className="btn ghost danger-text" onClick={remove}>
@@ -801,12 +801,12 @@ function ShareSheet({ open, list, itemIds, onClose }: { open: boolean; list: Wis
       <div className="stack">
         <label className="row between small">
           <span>{t('With prices')}</span>
-          <input type="checkbox" checked={prices} onChange={(e) => setPrices(e.target.checked)} />
+          <Toggle on={prices} onChange={setPrices} label={t('With prices')} />
         </label>
         {list.can_reserve && (
           <label className="row between small">
             <span>{t('Leave out what is already reserved or bought')}</span>
-            <input type="checkbox" checked={skip} onChange={(e) => setSkip(e.target.checked)} />
+            <Toggle on={skip} onChange={setSkip} label={t('Leave out what is already reserved or bought')} />
           </label>
         )}
         <textarea className="input wish-share-text" readOnly rows={10} value={out?.text ?? ''} aria-label={t('Message')} />

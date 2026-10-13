@@ -5,6 +5,7 @@
  * link and retrieval date (docs/facts.md). Nothing household-specific, nothing personal.
  */
 import FACTS from '../data/facts.json';
+import { config } from '../config.js';
 
 export type FactLang = 'de' | 'en';
 
@@ -23,7 +24,7 @@ export function facts(lang: FactLang = 'de') {
   return {
     version: FACTS.version,
     retrieved: FACTS.retrieved,
-    help: 'https://tohuus.heidrich-digital.de/hilfe/gut-zu-wissen.html',
+    help: `${config.siteUrl}/hilfe/gut-zu-wissen.html`,
     facts: (FACTS.facts as RawFact[]).map((f) => ({
       id: f.id,
       topic: f.topic,
