@@ -23,6 +23,8 @@ interface Prefs {
   events: Row[];
   quiet: { from: string; to: string } | null;
   preview: 'full' | 'generic';
+  /** no optional mails at all (summary, reminders) */
+  mailOff?: boolean;
   channels: { apns: { configured: boolean; devices: number }; push: { devices: number }; digest: { email: boolean } };
   presence: boolean | null;
 }
@@ -155,6 +157,17 @@ export function NotifyMine() {
           ]}
           label={t('On the lock screen')}
         />
+      </div>
+      <div className="row between">
+        <div>
+          <b>{t('Mails from ToHuus')}</b>
+          <div className="small muted">
+            {p.mailOff
+              ? t('Off: no summaries or reminders by mail. Sign-in links and security notices still come.')
+              : t('Summaries and reminders by mail, as chosen above. Every such mail has a link to unsubscribe.')}
+          </div>
+        </div>
+        <Toggle on={!p.mailOff} onChange={(v) => save({ mailOff: !v }, { ...p, mailOff: !v })} label={t('Mails from ToHuus')} />
       </div>
       <TripPrivacyRow />
     </section>

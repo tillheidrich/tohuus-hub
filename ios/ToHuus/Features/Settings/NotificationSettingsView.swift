@@ -58,6 +58,16 @@ struct NotificationSettingsView: View {
                 Section { ProgressView() }
             }
 
+            if let prefs, !prefs.household, let off = prefs.mailOff {
+                Section {
+                    Toggle(L("Mails from ToHuus"), isOn: Binding(get: { !off }, set: { on in Task { await setMail(on) } }))
+                } header: {
+                    Text(L("By e-mail"))
+                } footer: {
+                    Text(L("The daily summary and reminders before a contract renews. Sign-in links and security notices always come."))
+                }
+            }
+
             if quietSupported {
                 Section {
                     Toggle(L("Quiet hours"), isOn: Binding(get: { quiet.enabled }, set: { quiet.enabled = $0; saveQuiet() }))
@@ -104,6 +114,15 @@ struct NotificationSettingsView: View {
             try await api.setNotifyPref(key, on: on, prefs: p)
             if p.household { await load() }
         } catch {
+            self.error = APIError.from(error).localizedDescription
+            await load()
+        }
+    }
+
+    private func setMail(_ on: Bool) async {
+        guard let api = app.api else { return }
+        prefs?.mailOff = !on
+        do { try await api.setMailOff(!on) } catch {
             self.error = APIError.from(error).localizedDescription
             await load()
         }

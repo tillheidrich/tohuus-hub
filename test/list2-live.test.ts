@@ -130,6 +130,12 @@ describe('D: notifications per person', () => {
     expect(p.quiet).toEqual({ from: '22:00', to: '07:00' });
     expect(p.events.find((e: any) => e.key === 'trip.started').label).toBe('Jemand kauft gerade ein');
     expect(p.channels.apns).toEqual({ configured: true, devices: 0 });
+    // optional mails: on until the person switches them off (Settings or the link in the mail)
+    expect(p.mailOff).toBe(false);
+    expect((await sam('PUT', '/api/notify/prefs', { mailOff: true })).status).toBe(200);
+    expect((await sam('GET', '/api/notify/prefs')).json.mailOff).toBe(true);
+    expect((await mira('GET', '/api/notify/prefs')).json.mailOff).toBe(false);
+    await sam('PUT', '/api/notify/prefs', { mailOff: false });
   });
 
   it('registers iPhone device tokens per person', async () => {

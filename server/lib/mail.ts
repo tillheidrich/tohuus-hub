@@ -75,6 +75,8 @@ export interface MailContent {
   footnote?: string | null;
   /** why this mail arrives (below the card) */
   reason?: string | null;
+  /** one-click unsubscribe for optional mails (summary, reminders): footer link + List-Unsubscribe headers */
+  unsubscribeUrl?: string | null;
 }
 
 export interface RenderedMail {
@@ -194,7 +196,7 @@ function footerHtml(c: MailContent, household: string) {
 <td valign="middle" class="ink" style="font-family:${FONT_BRAND};font-size:16px;line-height:24px;color:${C.ink}">ToHuus</td>
 </tr></table>
 <div class="muted" style="margin:0 0 10px;font-family:${FONT_UI};font-size:13px;line-height:1.5;color:${C.ink2}">${esc(t('Shopping, cooking and money for your household.'))}</div>
-${c.reason ? `<div style="margin:0 0 10px">${escMulti(c.reason)}</div>` : ''}
+${c.reason ? `<div style="margin:0 0 10px">${escMulti(c.reason)}</div>` : ''}${c.unsubscribeUrl ? `\n<div style="margin:0 0 10px"><a class="link" href="${esc(c.unsubscribeUrl)}" target="_blank" style="color:${C.primary};text-decoration:underline">${esc(t('Unsubscribe from these mails'))}</a></div>` : ''}
 <div style="margin:0 0 8px">${links}</div>
 <div>${esc(household ? `${household} · ${APP_NAME}` : APP_NAME)} · ${esc(config.multiTenant ? t('ToHuus Cloud') : t('your household, self-hosted'))}</div>
 </td></tr>`;
@@ -313,6 +315,7 @@ export function renderText(c: MailContent, household = mailHousehold()): string 
   if (c.footnote) out.push(c.footnote, '');
   out.push('--');
   if (c.reason) out.push(c.reason);
+  if (c.unsubscribeUrl) out.push(`${t('Unsubscribe from these mails')}: ${c.unsubscribeUrl}`);
   for (const l of footerLinks()) out.push(`${l.label}: ${l.url}`);
   out.push(`${household ? `${household} · ` : ''}${APP_NAME} · ${config.multiTenant ? t('ToHuus Cloud') : t('your household, self-hosted')}`);
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
@@ -367,6 +370,8 @@ export interface OutgoingMail {
   text: string;
   html: string;
   attachments?: Attachment[];
+  /** extra headers, e.g. List-Unsubscribe (RFC 2369) and List-Unsubscribe-Post (RFC 8058) */
+  headers?: Record<string, string>;
 }
 /** Tests (and future transports) can hook in here instead of SMTP. */
 export const mailHook: { send?: (m: OutgoingMail) => Promise<void> | void } = {};
@@ -396,6 +401,7 @@ export function sendMail(to: string, content: MailContent, attachments: Attachme
   const r = renderMail(content);
   // household / person names end up in the subject: never let a line break reach a mail header
   const mail: OutgoingMail = { to: to.replace(/[\r\n]+/g, ''), subject: r.subject.replace(/[\r\n\t]+/g, ' ').trim(), text: r.text, html: r.html, attachments: [logoAttachment(), iconAttachment(), ...attachments] };
+  if (content.unsubscribeUrl) mail.headers = { 'List-Unsubscribe': `<${content.unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' };
   if (mailHook.send) return Promise.resolve(mailHook.send(mail)).then(() => undefined);
   const tr = smtpTransport();
   if (!tr) return Promise.reject(new Error('SMTP is not configured'));

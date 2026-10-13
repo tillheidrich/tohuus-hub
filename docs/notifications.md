@@ -41,14 +41,23 @@ switched off ("Was nutzen wir?", `modules.ts`) disappear from the list and are n
 - **Only at home** per event: skipped while the person is reported away. Presence comes from
   `POST /api/notify/presence { home: boolean, source: 'app'|'ha' }` (the iPhone app, Home Assistant later); older than
   12 hours counts as unknown, and unknown means "send".
+- **Mails from ToHuus** (`mailOff`, default false): one switch per person for every optional mail – the e-mail
+  summary and the renewal reminder (`renewals.ts`). Sign-in links, password resets and security notices always come.
+  Every optional mail carries a signed link `GET /api/mail/unsubscribe/<token>` (`server/lib/mail-unsub.ts`, HMAC with
+  a key derived from the master key in the cloud, a random secret in the settings when self-hosted) plus the headers
+  `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 2369 / RFC 8058). GET only shows a
+  page with one button (mail scanners open links); `POST` sets `mailOff: true`. Web: Settings › Notifications; iPhone:
+  Mehr › Mitteilungen › Per Mail.
 - **Lock screen**: `preview: 'full'` (the text) or `'generic'` ("ToHuus – Neues in ToHuus"), for iPhone and browser.
 
 API (every member, about themselves):
 
 | Endpoint | Body | Answer |
 |---|---|---|
-| `GET /api/notify/prefs` | | `{ events: [{ key, label, apns, push, digest, homeOnly }], quiet: { from, to } \| null, preview, channels: { apns: { configured, devices }, push: { devices }, digest: { email } }, presence }` |
-| `PUT /api/notify/prefs` | `{ events?: { [key]: { apns?, push?, digest? } }, quiet?: { from, to } \| null, homeOnly?: string[], preview? }` | `{ ok }` |
+| `GET /api/notify/prefs` | | `{ events: [{ key, label, apns, push, digest, homeOnly }], quiet: { from, to } \| null, preview, mailOff, channels: { apns: { configured, devices }, push: { devices }, digest: { email } }, presence }` |
+| `PUT /api/notify/prefs` | `{ events?: { [key]: { apns?, push?, digest? } }, quiet?: { from, to } \| null, homeOnly?: string[], preview?, mailOff?: boolean }` | `{ ok }` |
+| `GET /api/mail/unsubscribe/:token` | (no sign-in, signed token) | HTML page with one button |
+| `POST /api/mail/unsubscribe/:token` | form or `List-Unsubscribe=One-Click` | HTML page; `mailOff` is now true |
 | `POST /api/notify/presence` | `{ home, source? }` | `{ home, source }` |
 
 Since 13 Oct 2026 every event that reaches people is in this table, so each member decides for themselves; the

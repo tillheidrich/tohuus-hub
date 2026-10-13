@@ -11,6 +11,7 @@ import { config } from '../config.js';
 import { db, getSetting } from '../db.js';
 import { t } from '../i18n.js';
 import { accountsDb, getHousehold } from './accounts.js';
+import { unsubscribeUrl } from './mail-unsub.js';
 import { inAccountLang } from './account-mail.js';
 import { canSendMail, sendMail } from './mail.js';
 import { APPLE_PRODUCTS } from './plans.js';
@@ -71,7 +72,10 @@ export function reminderWanted(userId: number | null | undefined): boolean {
   if (!userId) return false;
   try {
     const row = db.prepare(`SELECT value FROM user_prefs WHERE user_id = ? AND key = 'billing.reminder'`).get(userId) as { value: string } | undefined;
-    return row ? JSON.parse(row.value) !== false : true;
+    if (row && JSON.parse(row.value) === false) return false;
+    // "no mails from ToHuus" (Settings › Notifications or the unsubscribe link) covers the reminder too
+    const n = db.prepare(`SELECT value FROM user_prefs WHERE user_id = ? AND key = 'notify'`).get(userId) as { value: string } | undefined;
+    return !(n && (JSON.parse(n.value) as { mailOff?: boolean }).mailOff === true);
   } catch {
     return true;
   }
@@ -125,6 +129,7 @@ export async function sendRenewalReminders(now = Date.now()): Promise<number> {
               ],
               button: { url: APPLE_MANAGE_URL, label: t('Manage subscription') },
               reason: t('You get this because you are an admin of this household. Switch it off in Settings › Plan & storage.'),
+              unsubscribeUrl: unsubscribeUrl(a.user_id),
             }),
           );
           sent++;

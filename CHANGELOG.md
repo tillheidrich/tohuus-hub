@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Mails can be switched off**: "Mails from ToHuus" in Settings › Notifications (web and iPhone, `mailOff` in `GET/PUT /api/notify/prefs`) stops the e-mail summary and renewal reminders for that person; every such mail has an unsubscribe link and one-click `List-Unsubscribe` headers (`/api/mail/unsubscribe/:token`).
+
 - **Baking recipes**: six Plus drafts (Zimtschnecken, Franzbrötchen, Apfel-Streuselkuchen, Quarkbrötchen, Haferkekse, Zwetschgenkuchen) with preview cards 33–38; the preview-card ZIP upload takes `start` for a ZIP of part of the design.
 
 - **Mail branding**: the header shows the house of the app icon, the footer the app icon, a short line about ToHuus, links to notification settings and help (cloud: privacy and imprint too, also in the plain-text part); the brand fonts load from our own website (`SITE_URL/assets/fonts`), never from a font CDN.

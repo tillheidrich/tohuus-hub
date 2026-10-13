@@ -14,6 +14,7 @@ import { config } from '../config.js';
 import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
 import { APP_NAME, canSendMail, mailHousehold, sendMail } from './mail.js';
+import { unsubscribeUrl } from './mail-unsub.js';
 import { getUserPref, setUserPref } from './onboard.js';
 import { currentHousehold } from './tenancy.js';
 import './people-policy.js';
@@ -67,6 +68,8 @@ export interface PersonPrefs {
   homeOnly: string[];
   /** lock screen: the real text, or only "Neues in ToHuus" */
   preview: 'full' | 'generic';
+  /** no optional mails at all (summary, renewal reminder) – set in Settings or by the unsubscribe link in a mail */
+  mailOff: boolean;
 }
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -74,7 +77,7 @@ const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 export function defaultPrefs(): PersonPrefs {
   const events: PersonPrefs['events'] = {};
   for (const e of PERSON_EVENTS) events[e.key] = { apns: e.on, push: e.on, digest: false };
-  return { events, quiet: { from: '22:00', to: '07:00' }, homeOnly: [], preview: 'full' };
+  return { events, quiet: { from: '22:00', to: '07:00' }, homeOnly: [], preview: 'full', mailOff: false };
 }
 
 export function personPrefs(userId: number): PersonPrefs {
@@ -88,6 +91,7 @@ export function personPrefs(userId: number): PersonPrefs {
     quiet,
     homeOnly: Array.isArray(raw.homeOnly) ? raw.homeOnly.filter((k) => PERSON_EVENTS.some((e) => e.key === k)) : [],
     preview: raw.preview === 'generic' ? 'generic' : 'full',
+    mailOff: raw.mailOff === true,
   };
 }
 
@@ -105,6 +109,7 @@ export function setPersonPrefs(userId: number, p: Partial<PersonPrefs>): PersonP
     quiet: p.quiet === undefined ? cur.quiet : p.quiet === null ? null : HHMM.test(p.quiet.from) && HHMM.test(p.quiet.to) ? p.quiet : cur.quiet,
     homeOnly: p.homeOnly ? p.homeOnly.filter((k) => PERSON_EVENTS.some((e) => e.key === k)) : cur.homeOnly,
     preview: p.preview === 'generic' || p.preview === 'full' ? p.preview : cur.preview,
+    mailOff: typeof p.mailOff === 'boolean' ? p.mailOff : cur.mailOff,
   };
   setUserPref(userId, 'notify', next);
   return next;
@@ -164,6 +169,7 @@ export function recipients(ev: PersonEvent, channel: PersonChannel, a: Audience 
     if (except.has(id)) return false;
     const p = personPrefs(id);
     if (!p.events[ev]?.[channel]) return false;
+    if (channel === 'digest' && p.mailOff) return false;
     if (channel !== 'digest' && !a.urgent && inQuietHours(p.quiet, a.nowMs)) return false;
     if (p.homeOnly.includes(ev) && presence(id) === false) return false;
     return true;
@@ -205,7 +211,7 @@ export async function sendPersonalDigests(opts: { force?: boolean } = {}) {
   for (const r of rows) by.set(r.user_id, [...(by.get(r.user_id) ?? []), r]);
   let sent = 0;
   for (const [uid, items] of by) {
-    const to = await memberEmail(uid);
+    const to = personPrefs(uid).mailOff ? null : await memberEmail(uid);
     const done = db.prepare(`UPDATE notify_digest SET sent_at = datetime('now') WHERE id = ?`);
     if (!to || !canSendMail()) {
       // nowhere to send it: drop after three days instead of piling up
@@ -219,6 +225,7 @@ export async function sendPersonalDigests(opts: { force?: boolean } = {}) {
       sections: [{ title: t('{n} things', { n: items.length }), items: items.map((i) => `${i.title} – ${i.body}`) }],
       button: { url: config.baseUrl, label: t('Open in ToHuus Hub') },
       reason: t('You get this because you chose the e-mail summary under Settings › Notifications.'),
+      unsubscribeUrl: unsubscribeUrl(uid),
     })
       .then(() => {
         for (const i of items) done.run(i.id);

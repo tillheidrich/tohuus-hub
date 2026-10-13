@@ -4183,6 +4183,23 @@
         }
       }
     },
+    "By e-mail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By e-mail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per Mail"
+          }
+        }
+      }
+    },
     "By person": {
       "extractionState": "manual",
       "localizations": {
@@ -10537,6 +10554,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diesen Monat ist viel los – die Antworten fallen gerade etwas kürzer aus."
+          }
+        }
+      }
+    },
+    "Mails from ToHuus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mails from ToHuus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mails von ToHuus"
           }
         }
       }
@@ -20431,6 +20465,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der bisherige Link für „%@“ funktioniert dann nicht mehr. Neuen erstellen?"
+          }
+        }
+      }
+    },
+    "The daily summary and reminders before a contract renews. Sign-in links and security notices always come.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The daily summary and reminders before a contract renews. Sign-in links and security notices always come."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die tägliche Übersicht und Erinnerungen, bevor ein Vertrag sich verlängert. Anmeldelinks und Sicherheitshinweise kommen immer."
           }
         }
       }

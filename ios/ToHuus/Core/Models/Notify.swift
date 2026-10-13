@@ -10,6 +10,8 @@ import Foundation
 struct NotifyPrefs: Decodable, Sendable, Equatable {
     var events: [EventPref]
     var quietHours: QuietHours?
+    /// all optional ToHuus mails (e-mail summary, renewal reminders) switched off for this person; nil = server too old
+    var mailOff: Bool?
     /// true when read from the household matrix (fallback)
     var household = false
     /// household matrix rows as the server sent them (needed to PATCH /api/settings without losing other channels)
@@ -44,6 +46,7 @@ struct NotifyPrefs: Decodable, Sendable, Equatable {
         let c = try decoder.container(keyedBy: AnyKey.self)
         let ev = c.first(JSONValue.self, "events", "prefs") ?? .null
         events = Self.parseEvents(ev)
+        mailOff = try? c.decodeIfPresent(Bool.self, forKey: AnyKey("mailOff"))
         // real shape: `quiet: { from, to } | null`; older shape: `quietHours: { enabled, from, to }`
         if let q = c.first(JSONValue.self, "quietHours", "quiet") {
             quietHours = QuietHours(enabled: q["enabled"]?.bool ?? true, from: q.first("from", "start")?.string ?? "22:00",

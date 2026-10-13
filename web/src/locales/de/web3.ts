@@ -217,4 +217,7 @@ export const web3: Record<string, string> = {
   "Last {days} days: {received} received, {imported} became receipts, {ignored} discarded": "Letzte {days} Tage: {received} angekommen, {imported} als Bon gebucht, {ignored} verworfen",
   "New address": "Neue Adresse",
   "See plans": "Abos ansehen",
+  'Mails from ToHuus': 'Mails von ToHuus',
+  'Off: no summaries or reminders by mail. Sign-in links and security notices still come.': 'Aus: keine Zusammenfassungen oder Erinnerungen per Mail. Anmeldelinks und Sicherheitshinweise kommen trotzdem.',
+  'Summaries and reminders by mail, as chosen above. Every such mail has a link to unsubscribe.': 'Zusammenfassungen und Erinnerungen per Mail, so wie oben eingestellt. In jeder dieser Mails steht ein Link zum Abbestellen.',
 };

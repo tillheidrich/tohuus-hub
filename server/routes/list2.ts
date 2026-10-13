@@ -216,6 +216,7 @@ r.get('/notify/prefs', async (req, res) => {
     })),
     quiet: p.quiet,
     preview: p.preview,
+    mailOff: p.mailOff,
     channels: {
       apns: { configured: apnsConfigured(), devices: listApnsDevices(uid).length },
       push: { devices: (db.prepare('SELECT COUNT(*) n FROM push_subscriptions WHERE user_id = ?').get(uid) as { n: number }).n },
@@ -235,6 +236,7 @@ r.put('/notify/prefs', (req, res) => {
       quiet: z.object({ from: hhmm, to: hhmm }).nullable().optional(),
       homeOnly: z.array(z.string()).max(20).optional(),
       preview: z.enum(['full', 'generic']).optional(),
+      mailOff: z.boolean().optional(),
     })
     .parse(req.body);
   setPersonPrefs(uid, b as never);
