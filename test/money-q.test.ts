@@ -333,6 +333,13 @@ describe('money lists', () => {
     expect(bulk.split.transfers.every((t: any) => t.amount === 2)).toBe(true);
   });
 
+  it('a private shopping list is no money-list source for people it is not shared with', async () => {
+    await import('../server/lib/lists');
+    const id = Number(db.prepare(`INSERT INTO shopping_lists (name, visibility, owner_id) VALUES ('Torte für Mika', 'private', ?)`).run(mira).lastInsertRowid);
+    expect((await req('mika', 'POST', '/api/money/lists', { title: 'x', count: 2, from: { kind: 'shopping', list_id: id } })).status).toBe(404);
+    expect((await req('mira', 'POST', '/api/money/lists', { title: 'Torte', count: 2, from: { kind: 'shopping', list_id: id } })).status).toBeLessThan(300);
+  });
+
   it('a private list is only for its owner and the people it is shared with', async () => {
     const L = (await req('mira', 'POST', '/api/money/lists', { title: 'Kuchen für Mika', visibility: 'private', items: [{ name: 'Torte', amount: 30 }] })).json;
     expect((await req('mika', 'GET', '/api/money/lists')).json.map((x: any) => x.id)).not.toContain(L.id);

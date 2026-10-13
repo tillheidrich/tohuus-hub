@@ -28,6 +28,7 @@ import { applyShareView, notPrivate } from './share-core.js';
 import { loadEntries, memberNames } from './spend2.js';
 import { receiptVisible, round2, shopName } from './spending.js';
 import { tripPrivate } from './trips.js';
+import { canUseList } from './lists.js';
 
 migrate(
   'money-lists-1',
@@ -369,7 +370,8 @@ function draftsFrom(src: Source, viewer: number | null): { drafts: Draft[]; labe
     let label: string | null = t('Shopping list');
     if (listId) {
       const l = db.prepare('SELECT name FROM shopping_lists WHERE id = ? AND archived = 0').get(listId) as { name: string } | undefined;
-      if (!l) throw new MoneyListError(t('List not found'), 404);
+      // a private list (q-wish) is 404 for everyone it is not shared with – also as a money-list source
+      if (!l || !canUseList(listId, viewer)) throw new MoneyListError(t('List not found'), 404);
       label = l.name;
     }
     const which = src.which ?? 'all';
