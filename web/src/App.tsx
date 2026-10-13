@@ -58,6 +58,7 @@ const Check = page(() => import('./pages/Check'), 'Check');
 const RecipeDetail = page(() => import('./pages/Recipe'), 'RecipeDetail');
 const VotePage = page(() => import('./pages/Plan2'), 'VotePage');
 const Imports = page(() => import('./pages/Imports'), 'Imports');
+const MyHandover = page(() => import('./pages/Handover'), 'MyHandover');
 const Recognition = page(() => import('./pages/Recognition'), 'Recognition');
 const ImportReview = page(() => import('./pages/ImportReview'), 'ImportReview');
 const Scan = page(() => import('./pages/Scan'), 'Scan');
@@ -331,6 +332,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/willkommen" element={<Onboarding me={me} />} />
               <Route path="/hilfe" element={<Help />} />
               <Route path="/hausinfo" element={<HouseGuidePage me={me} />} />
+              <Route path="/uebergabe" element={<MyHandover />} />
               <Route path="/so-funktioniert-tohuus" element={<ExplainPage me={me} />} />
               <Route path="/gut-zu-wissen" element={<FactsPage />} />
               <Route path="/lieblinge" element={<FavouritesPage />} />

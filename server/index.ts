@@ -66,6 +66,7 @@ import { AiError } from './lib/ai.js';
 import { r as list2Routes, pub as list2Public } from './routes/list2.js';
 import { caldav } from './lib/caldav.js';
 import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
+import { r as handoverRoutes, guestHandover } from './routes/handover.js';
 import { r as wishRoutes } from './routes/wishes.js';
 import { r as factsRoutes } from './routes/facts.js';
 import { householdAppearance } from './lib/appearance.js';
@@ -171,6 +172,7 @@ app.use(sharePublic);
 app.use('/api/guest', guest);
 app.use('/api/guest', ha2Guest);
 app.use('/api/guest', houseGuest);
+app.use('/api/guest', guestHandover);
 app.use('/api/party-board', partyBoard);
 app.use(kioskPublic);
 app.use('/api/kid', kidDevice);
@@ -225,6 +227,7 @@ app.use('/api', list2Routes);
 // names the iPhone app 0.2 was built against (docs/ios-api-0.2.md) – thin aliases
 app.use('/api', iosCompat);
 app.use('/api', houseGuideRoutes);
+app.use('/api', handoverRoutes);
 app.use('/api', wishRoutes);
 // the text stays 'not found': iPhone app builds up to 1.0 (5) hide a feature by exactly this answer
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found', code: 'not_found' }));

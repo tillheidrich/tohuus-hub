@@ -8,6 +8,7 @@ import { addClient } from '../lib/bus.js';
 import { addToShopping, listProducts } from '../lib/catalog.js';
 import { findInGuide, findThings } from '../lib/find.js';
 import { linkHasGuide } from '../lib/house-guide.js';
+import { viewerTrips } from '../lib/handover.js';
 import { DECLINE_REASONS, createOrder, helpers, listOrders, orderMenu, orderSchema, requestsFor, setOrderStatus, thankOrder } from '../lib/orders.js';
 import { guestClientId, partyForGuest, partyIdForLink, partyMenu } from '../lib/party.js';
 import { t } from '../i18n.js';
@@ -41,6 +42,8 @@ guest.get('/:token', (req, res) => {
     note: (db.prepare('SELECT note FROM guest_links WHERE id = ?').get(req.actor!.guestLinkId) as { note: string | null } | undefined)?.note ?? null,
     // Hausinfo shared with this link (cards, codes, voice list) – the page then offers it (GET /api/guest/:token/house)
     house_guide: linkHasGuide(req.actor!.guestLinkId!) > 0,
+    // a holiday handover shared with this link (handover.ts) – the page then shows it first
+    handover: viewerTrips({ linkId: req.actor!.guestLinkId! }).length > 0,
     party: partyForGuest(req.actor!.guestLinkId, guestClientId(req, res)),
   });
 });
