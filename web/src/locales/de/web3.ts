@@ -85,4 +85,16 @@ export const web3: Record<string, string> = {
   'Account removed': 'Konto entfernt',
   'Remove for good': 'Endgültig entfernen',
   'A gift from us – nothing is charged.': 'Ein Geschenk von uns – es wird nichts abgebucht.',
+  // Hausinfo: photos and videos on cards
+  '“{name}” is {mb} MB – videos can be up to 100 MB. Shorten it, or add it in the iPhone app: it makes videos smaller first (about 5 minutes fit).':
+    '„{name}“ hat {mb} MB – Videos dürfen bis 100 MB groß sein. Kürz es, oder füg es in der iPhone-App hinzu: Die macht Videos vorher kleiner (etwa 5 Minuten passen).',
+  '“{name}” is larger than 100 MB.': '„{name}“ ist größer als 100 MB.',
+  'Up to {n} photos or videos per card.': 'Bis zu {n} Fotos oder Videos pro Karte.',
+  'Photos and videos': 'Fotos und Videos',
+  Remove: 'Entfernen',
+  'Uploading …': 'Wird hochgeladen …',
+  'Add a photo or video': 'Foto oder Video hinzufügen',
+  'Photos, and videos up to 100 MB each (in the iPhone app about 5 minutes – it makes them smaller first). Up to {n} per card. Who sees the card sees them too.':
+    'Fotos und Videos bis je 100 MB (in der iPhone-App etwa 5 Minuten – sie macht sie vorher kleiner). Bis zu {n} pro Karte. Wer die Karte sieht, sieht sie auch.',
+  'Save and upload': 'Speichern und hochladen',
 };

@@ -22,6 +22,8 @@ struct HouseGuide: Decodable, Sendable {
         var draft: JSONValue?
         /// admins only
         var visibility: HGVisibility?
+        /// photos and short videos (HouseGuideMedia.swift)
+        var media: [HGMedia]?
     }
 
     /// A code is a secret: only `masked` and `has_value` here; the value comes from one explicit, logged reveal.
@@ -160,6 +162,7 @@ struct HouseGuideView: View {
                 Text(c.type == "voice" || c.type == "routine" ? "„\(b)“" : b).font(.subheadline)
             }
             if let d = c.detail, !d.isEmpty { Text(d).font(.caption).foregroundStyle(Theme.ink2) }
+            if let m = c.media, !m.isEmpty { HGMediaStrip(media: m, title: c.title).padding(.top, 4) }
         }
         .padding(.vertical, 2)
     }

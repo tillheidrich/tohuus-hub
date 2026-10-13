@@ -84,6 +84,7 @@ struct HouseCardEditor: View {
                     }
                     AreaField(area: $area, areas: areas)
                 }
+                HGCardMediaSection(api: api, cardId: card?.id, media: card?.media ?? [])
                 Section {
                     Toggle(L("Everyone at home"), isOn: $vis.members)
                     Toggle(L("All babysitter and house-sitter links"), isOn: $vis.sitters)
@@ -98,7 +99,7 @@ struct HouseCardEditor: View {
             .navigationTitle(card == nil ? L("New card") : L("Edit card"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { onDone(); dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L("Save")) { Task { await save() } }
                         .disabled(busy || title.trimmingCharacters(in: .whitespaces).isEmpty)

@@ -63,7 +63,28 @@ export function removeStoredFile(file: string) {
   trackStorage(-size);
 }
 
-const IMG_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(webp|jpe?g|png|gif|avif)$/i;
+const IMG_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(webp|jpe?g|png|gif|avif|mp4|mov|m4v|webm)$/i;
+/** short videos (Hausinfo cards) live next to the images under /img/ – same encryption, quota and signing */
+const VIDEO_TYPE: Record<string, string> = { mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm' };
+/** 100 MB: about 5 minutes after the iPhone app shrinks the video to 720p; the upload forms say so up front */
+export const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
+
+/** Which video container the bytes are (ISO-BMFF ftyp → mp4 or mov, EBML → webm), or null. */
+export function videoKind(b: Buffer): 'mp4' | 'mov' | 'webm' | null {
+  if (b.length < 12) return null;
+  if (b.subarray(4, 8).toString('latin1') === 'ftyp') return b.subarray(8, 10).toString('latin1') === 'qt' ? 'mov' : 'mp4';
+  if (b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return 'webm';
+  return null;
+}
+
+/** Store a short video as it is (no transcoding on the server); returns `/img/<file>`. */
+export function saveVideo(buf: Buffer, prefix: string): string {
+  if (!/^[a-z]\d+$/.test(prefix)) throw userError(t('Invalid image name'));
+  const kind = videoKind(buf);
+  if (!kind) throw userError(t('This video format is not supported. MP4, MOV (iPhone) and WebM work.'));
+  if (buf.length > VIDEO_MAX_BYTES) throw userError(t('The video is larger than 100 MB. Shorten it, or send it from the iPhone app – it makes videos smaller before sending.'));
+  return storeImageBytes(`${prefix}-${crypto.randomBytes(6).toString('hex')}.${kind}`, buf);
+}
 /** File of a stored image by its public path `/img/<file>` (null for anything else). */
 export function imageFile(publicPath: string | null | undefined): string | null {
   if (!publicPath?.startsWith('/img/')) return null;
@@ -93,14 +114,14 @@ export function storeImageBytes(name: string, buf: Buffer): string {
 sharpLib.cache(false);
 sharpLib.concurrency(Math.min(2, sharpLib.concurrency()));
 
-/** Store an image as webp (max 800px) and return the public path `/img/<file>`. */
-export async function saveImage(buf: Buffer, prefix: string): Promise<string> {
+/** Store an image as webp (max 800 px, or `max`) and return the public path `/img/<file>`. */
+export async function saveImage(buf: Buffer, prefix: string, max = 800): Promise<string> {
   if (!/^[a-z]\d+$/.test(prefix)) throw userError(t('Invalid image name'));
   const name = `${prefix}-${crypto.randomBytes(6).toString('hex')}.webp`;
   assertStorage(Math.min(buf.length, 400_000));
   const out = await sharp(buf, { failOn: 'none' })
     .rotate()
-    .resize({ width: 800, height: 800, fit: 'inside', withoutEnlargement: true })
+    .resize({ width: max, height: max, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 82 })
     .toBuffer();
   return storeImageBytes(name, out);
@@ -210,6 +231,7 @@ export async function fetchImage(url: string, opts: { referer?: string | null; t
 }
 
 export function deleteImage(publicPath: string | null | undefined) {
+  for (const k of [...videoCache.keys()]) if (publicPath && k.endsWith(`/${path.basename(publicPath.split('?')[0])}`)) videoCache.delete(k);
   const f = imageFile(publicPath);
   if (f) removeStoredFile(f);
 }
@@ -251,6 +273,22 @@ function signatureOk(name: string, e: unknown, s: unknown) {
   return safeEqual(sigOf(name, exp), s);
 }
 
+/**
+ * Decrypted videos for a few minutes (at most two, keyed by household and name): a player asks for many byte ranges
+ * of the same file, and decrypting 100 MB for each of them would stall a small server.
+ */
+const videoCache = new Map<string, { buf: Buffer; at: number }>();
+function videoBytes(name: string): Buffer | null {
+  const key = `${config.multiTenant ? householdId() : '-'}/${name}`;
+  const hit = videoCache.get(key);
+  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.buf;
+  const buf = readImage(`/img/${name}`);
+  if (!buf) return null;
+  videoCache.set(key, { buf, at: Date.now() });
+  while (videoCache.size > 2) videoCache.delete(videoCache.keys().next().value!);
+  return buf;
+}
+
 /** GET /img/<file>: a signed-in member, an app/API token of the household, or a valid signed URL. */
 export function serveImage(req: Request, res: Response, next: NextFunction) {
   try {
@@ -259,21 +297,39 @@ export function serveImage(req: Request, res: Response, next: NextFunction) {
     if (config.multiTenant && !currentHousehold()) return void res.status(401).json({ error: t('Please sign in again.'), code: 'unauthorized' });
     const signed = req.query.s !== undefined;
     if (signed ? !signatureOk(name, req.query.e, req.query.s) : !resolveActor(req)) return void res.status(401).json({ error: t('Please sign in again.'), code: 'unauthorized' });
-    const buf = readImage(`/img/${name}`);
-    if (!buf) return void res.status(404).end();
     const ext = name.split('.').pop()!.toLowerCase();
-    res.type(ext === 'jpg' ? 'jpeg' : ext);
+    const buf = VIDEO_TYPE[ext] ? videoBytes(name) : readImage(`/img/${name}`);
+    if (!buf) return void res.status(404).end();
+    res.type(VIDEO_TYPE[ext] ?? (ext === 'jpg' ? 'jpeg' : ext));
     // image files never change under their name
     res.setHeader('Cache-Control', `private, max-age=${signed ? 86400 : 30 * 86400}, immutable`);
     res.setHeader('ETag', `"${name}"`);
     if (req.headers['if-none-match'] === `"${name}"`) return void res.status(304).end();
+    if (VIDEO_TYPE[ext]) {
+      // Safari and the iPhone only play a video when the server answers byte ranges
+      res.setHeader('Accept-Ranges', 'bytes');
+      const m = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ''));
+      if (m && (m[1] || m[2])) {
+        const size = buf.length;
+        let start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]));
+        let end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
+        if (start >= size || start > end) {
+          res.setHeader('Content-Range', `bytes */${size}`);
+          return void res.status(416).end();
+        }
+        start = Math.max(0, start);
+        end = Math.max(start, end);
+        res.status(206).setHeader('Content-Range', `bytes ${start}-${end}/${size}`);
+        return void res.send(buf.subarray(start, end + 1));
+      }
+    }
     res.send(buf);
   } catch (e) {
     next(e);
   }
 }
 
-const IMG_IN_TEXT = /(^|["'(\s=])((?:https?:\/\/[^"'()\s]+)?\/img\/[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(?:webp|jpe?g|png|gif|avif))(?![?\w])/g;
+const IMG_IN_TEXT = /(^|["'(\s=])((?:https?:\/\/[^"'()\s]+)?\/img\/[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(?:webp|jpe?g|png|gif|avif|mp4|mov|m4v|webm))(?![?\w])/g;
 const base = () => config.baseUrl;
 
 function signValue(v: unknown, depth = 0): unknown {

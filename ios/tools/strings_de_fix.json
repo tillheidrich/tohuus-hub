@@ -25,5 +25,15 @@
   "A gift for your household": "Ein Geschenk für euren Haushalt",
   "While ToHuus is being tested, nobody pays – thank you for helping. When the beta ends, your household keeps what it has on its own. Nothing is charged automatically and nothing is deleted.": "Solange ToHuus getestet wird, zahlt niemand – danke fürs Mithelfen. Nach der Beta behält euer Haushalt, was er selbst hat. Nichts wird automatisch abgebucht und nichts gelöscht.",
   "Your household has this plan for good. Nothing is charged.": "Euer Haushalt hat diesen Plan für immer. Es wird nichts abgebucht.",
-  "Your household has this plan until %@. After that Free – nothing is charged automatically.": "Euer Haushalt hat diesen Plan bis %@. Danach Free – nichts wird automatisch abgebucht."
+  "Your household has this plan until %@. After that Free – nothing is charged automatically.": "Euer Haushalt hat diesen Plan bis %@. Danach Free – nichts wird automatisch abgebucht.",
+  "Video: %@": "Video: %@",
+  "Photo: %@": "Foto: %@",
+  "Save the card first, then add photos and videos.": "Speichere die Karte zuerst, dann kannst du Fotos und Videos hinzufügen.",
+  "Remove": "Entfernen",
+  "Add a photo or video": "Foto oder Video hinzufügen",
+  "Photos and videos": "Fotos und Videos",
+  "Photos, and videos of about 5 minutes – the app makes them smaller before sending (up to 100 MB). Up to %d per card. Who sees the card sees them too.": "Fotos und Videos von etwa 5 Minuten – die App macht sie vor dem Senden kleiner (bis 100 MB). Bis zu %d pro Karte. Wer die Karte sieht, sieht sie auch.",
+  "Making the video smaller …": "Video wird kleiner gemacht …",
+  "Sending …": "Wird gesendet …",
+  "Even made smaller, this video is larger than 100 MB. Shorten it in Photos (Edit › trim) and add it again.": "Auch verkleinert ist das Video größer als 100 MB. Kürz es in Fotos (Bearbeiten › Trimmen) und füg es dann noch mal hinzu."
 }
