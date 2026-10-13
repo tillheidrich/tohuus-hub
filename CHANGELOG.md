@@ -4,6 +4,13 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Heute (web, iPhone) greets German households in Plattdeutsch: "Moin" / "'n Avend" and a saying that fits the time of day, weekday, season and special days (Advent, Christmas, New Year, Easter); a tap shows the meaning and a short note. `GET /api/today` › `platt`; data `server/data/platt.json`, logic `server/lib/platt.ts`; household setting `today.platt` = '0' switches it off. The German website shows the same sayings in the hero.
+- Change your own name: `PATCH /api/cloud/me { name }` (account and every household), web Settings › My account, iPhone Mehr › Konto.
+- Hausinfo on the iPhone: revealed codes and passwords can be hidden again ("Verbergen").
+- `CLOUD_RECIPES_PUBLISH_ALL=1` publishes the server-seeded starting set of ToHuus-Rezepte at start (never uploads, AI drafts or unpublished recipes).
+- Legal pages: status line is only the date now (no draft note).
+- CI: the admin-host test no longer needs a web build.
+
 ### Fixed
 
 - **iPhone accessibility**: undo bars and toasts on the dark block colour (readable in dark mode), they stay while VoiceOver runs and are announced; 44 pt tap targets for Heute suggestions, chips and steppers; the import quantity stepper is one adjustable VoiceOver element; animations follow Reduce Motion; kitchen-mode steps scale with Dynamic Type; darker text colour instead of clay; selected chart bars are marked for VoiceOver and in bold.

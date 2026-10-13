@@ -3,6 +3,8 @@ import Foundation
 /// GET /api/today – one aggregate for the "Heute" screen.
 struct TodayPayload: Decodable, Sendable {
     var greeting: String?
+    /// Plattdeutsch saying for this moment (server/lib/platt.ts); German households only.
+    var platt: Platt?
     var household: JSONValue?
     @Lossy var rhythm: [RhythmItem]
     var list: TodayList?
@@ -12,6 +14,13 @@ struct TodayPayload: Decodable, Sendable {
     @Lossy var notices: [Notice]
 
     var householdName: String? { household?.string ?? household?["name"]?.string }
+
+    struct Platt: Decodable, Sendable, Hashable {
+        var id: String
+        var text: String
+        var meaning: String
+        var note: String
+    }
 
     struct TodayList: Decodable, Sendable {
         var open: Int?

@@ -118,6 +118,7 @@ struct TodayView: View {
                 Text(model.today?.greeting ?? defaultGreeting)
                     .font(Theme.title())
                     .foregroundStyle(Theme.ink)
+                if let p = model.today?.platt { PlattLine(platt: p) }
                 if let hh = model.today?.householdName ?? app.activeHousehold?.name {
                     Text(hh).font(.subheadline).foregroundStyle(Theme.ink2)
                 }
@@ -136,6 +137,10 @@ struct TodayView: View {
     private var defaultGreeting: String {
         let h = Calendar.current.component(.hour, from: Date())
         let name = app.userName.map { ", \($0)" } ?? ""
+        // German: the same Platt greeting the server sends, so nothing flips after loading
+        if Locale.current.language.languageCode?.identifier == "de" {
+            return ((18..<23).contains(h) ? "'n Avend" : "Moin") + name
+        }
         switch h {
         case 5..<11: return L("Good morning") + name
         case 11..<17: return L("Hello") + name
@@ -296,6 +301,38 @@ struct TodayView: View {
                     try? await Task.sleep(nanoseconds: 2_500_000_000)
                     self.toast = nil
                 }
+        }
+    }
+}
+
+
+/// The Plattdeutsch saying under the greeting; a tap shows what it means.
+private struct PlattLine: View {
+    let platt: TodayPayload.Platt
+    @State private var open = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button {
+                if reduceMotion { open.toggle() } else { withAnimation(.easeOut(duration: 0.2)) { open.toggle() } }
+            } label: {
+                Text("„\(platt.text)“")
+                    .font(.subheadline.italic())
+                    .foregroundStyle(Theme.ink2)
+                    .underline(pattern: .dot, color: Theme.ink3)
+                    .multilineTextAlignment(.leading)
+                    .frame(minHeight: 44, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(L("Shows what it means"))
+            .id(platt.id)
+            if open {
+                (Text(platt.meaning).bold().foregroundStyle(Theme.ink) + Text(" " + platt.note).foregroundStyle(Theme.ink2))
+                    .font(.footnote)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity)
+            }
         }
     }
 }

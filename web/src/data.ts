@@ -184,6 +184,7 @@ function fromServer(raw: any): Today {
   const m = raw.money;
   return {
     greeting: raw.greeting,
+    platt: raw.platt ?? null,
     household: typeof raw.household === 'string' ? raw.household : raw.household?.name,
     rhythm: raw.rhythm ?? [],
     list: {
@@ -207,6 +208,8 @@ function fromServer(raw: any): Today {
 }
 export interface Today {
   greeting?: string;
+  /** Plattdeutsch saying for this moment (server/lib/platt.ts), German households only. */
+  platt?: { id: string; text: string; meaning: string; note: string } | null;
   household?: string;
   rhythm: RhythmItem[];
   list: { open: number; recent: ListChange[] };

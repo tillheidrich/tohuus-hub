@@ -553,6 +553,10 @@ anything is published, AI pictures carry "KI-Bild".
   `published_at`.
 - **Starting set**: 30 simple everyday German recipes written for ToHuus (`server/data/catalog-seed.ts`), seeded once
   as **drafts** (AI-assisted). Nothing is visible to households until the operator reads, marks and schedules them.
+- **Publish the whole starting set at once** (owner's decision 13 Oct 2026): `CLOUD_RECIPES_PUBLISH_ALL=1` publishes, at
+  every start, all server-seeded recipes (`created_by` `seed`, `seed-plus`, `seed-devices`, `seed-baking`) that are not
+  still a draft or scheduled and marks them `reviewed` (audit `catalog.publish-all`). Uploads, AI drafts and recipes the
+  operator unpublished are never touched, so the variable can stay set.
 - **Plus set** (13 Oct 2026): 20 autumn and winter recipes (`server/data/catalog-seed-plus.ts`: one pot, one tray,
   cooking once for two days, leftovers), seeded once as drafts with `tier = 'plus'`. Each has an AI picture made in
   the founder's Canva account; `image_ref` holds its Canva link, the back office shows "Bild in Canva öffnen" next to

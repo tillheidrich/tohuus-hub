@@ -100,7 +100,8 @@ describe('back office on its own host', () => {
     expect((await a.get('/api/operator/status')).status).toBe(401);
     expect((await a.get('/api/admin-auth/me')).status).toBe(401);
     const page = await a.get('/');
-    expect(page.text).toMatch(/ToHuus Betrieb|<div id="root">|not found/);
+    // with a web build it is the back-office page; without one (CI) at least never the app
+    expect(page.text).not.toMatch(/<title>ToHuus Hub|<title>ToHuus<\/title>|manifest\.webmanifest/);
   });
 
   it('first sign-in: password, mail code, authenticator set-up – then the operator API works without unlock', async () => {
@@ -145,6 +146,17 @@ describe('back office on its own host', () => {
     const l2 = await b.post('/api/admin-auth/login', { email: 'op@example.org', password: 'geheim1234' });
     for (let i = 0; i < 5; i++) await b.post('/api/admin-auth/totp', { ticket: l2.json.ticket, code: '123456' });
     expect((await b.post('/api/admin-auth/totp', { ticket: l2.json.ticket, code: totp.totpAt(secret, totp.currentStep() + 1) })).status).toBe(410);
+  });
+
+  it('the app host: your own name can be changed, and Heute greets in Platt with a saying', async () => {
+    const r = await app.req('PATCH', '/api/cloud/me', { name: 'Samu' });
+    expect(r.status, r.text).toBe(200);
+    expect(r.json.skipped).toEqual([]);
+    const today = await app.get('/api/today');
+    expect(today.status, today.text).toBe(200);
+    expect(today.json.greeting).toMatch(/^(Moin|'n Avend), Samu$/);
+    expect(today.json.platt).toMatchObject({ text: expect.any(String), meaning: expect.any(String), note: expect.any(String) });
+    expect((await app.req('PATCH', '/api/cloud/me', { name: '' })).status).toBe(400);
   });
 
   it('logins are rate limited', async () => {

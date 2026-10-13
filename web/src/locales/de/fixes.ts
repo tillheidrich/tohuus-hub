@@ -82,4 +82,6 @@ export const fixes: Record<string, string> = {
   'Also sees the stock and where things are.': 'Sieht außerdem den Vorrat und wo was liegt.',
   'Also sees recipes, the week plan and votes.': 'Sieht außerdem Rezepte, den Wochenplan und Abstimmungen.',
   'Everything day to day – but no settings, spending or backups.': 'Alles im Alltag – aber keine Einstellungen, Ausgaben oder Backups.',
+  'Saved. In {households} someone already has this name, there it stays as it was.': 'Gespeichert. In {households} heißt schon jemand so, dort bleibt dein Name wie er war.',
+  'This is how the others in your household see you.': 'So sehen dich die anderen in deinem Haushalt.',
 };

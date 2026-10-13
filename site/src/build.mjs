@@ -28,6 +28,8 @@ import { BLOG_COPY, BLOG_DIR, checkPost, publishedPosts } from './blog.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 import { SITE, CLOUD } from './config.mjs';
+// Plattdeutsche Sprüche: the same data as the app (server/data/platt.json); site.js picks the one for the visitor's moment
+const PLATT = JSON.parse(fs.readFileSync(new URL('../../server/data/platt.json', import.meta.url), 'utf8')).sayings;
 const GH = 'https://github.com/tillheidrich/tohuus-hub';
 /** Required provider line (Impressum). The only place where the en dash is allowed. */
 const PROVIDER = 'Till Heidrich – Content Creation';
@@ -46,7 +48,7 @@ const tfHref = (lang) => {
 const HELP_DIR = { de: 'hilfe', en: 'help' };
 const helpIndexHref = (lang) => (lang === 'de' ? `../${HELP_DIR.de}/` : `${HELP_DIR.en}/`);
 /** Draft status shown on top of every legal page until the owner decides on a legal review. */
-const LEGAL_STATUS = { de: 'Stand: 12.10.2026 · Entwurf, rechtlich noch nicht geprüft', en: 'As of 12 October 2026 · Draft, not yet legally reviewed' };
+const LEGAL_STATUS = { de: 'Stand: 13.10.2026', en: 'As of 13 October 2026' };
 
 // ---------------------------------------------------------------- icons (Phosphor regular, like the app)
 const ICONS = {
@@ -503,6 +505,23 @@ const device = (inner, cls = '') => `<figure class="device${cls}">
           <span class="island" aria-hidden="true"></span>
         </figure>`;
 
+/**
+ * The Plattdeutsch saying on the German home page, like on the app's Heute screen. Rendered with a timeless saying
+ * (so it reads well without JavaScript); site.js swaps in the one for the visitor's time of day, weekday and season
+ * and opens the meaning on tap. The data travels in the page as JSON.
+ */
+function plattBlock() {
+  const esc = (x) => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const first = PLATT.find((x) => !x.when) ?? PLATT[0];
+  const data = JSON.stringify(PLATT.map(({ id, text, meaning, note, when }) => ({ id, text, meaning, note, when }))).replace(/</g, '\\u003c');
+  return `<div class="platt" data-platt>
+        <span class="platt-hi">Moin!</span>
+        <button type="button" class="platt-say" aria-expanded="false" aria-controls="platt-more"><span lang="nds">„${esc(first.text)}“</span></button>
+        <p class="platt-more" id="platt-more" hidden><b>${esc(first.meaning)}</b> ${esc(first.note)}</p>
+        <script type="application/json" id="platt-data">${data}</script>
+      </div>`;
+}
+
 const label = (t, cls = '') => `<p class="label${cls}">${t}</p>`;
 
 /** Document head and site header, shared by the home page and the legal pages. */
@@ -639,6 +658,7 @@ function page(c) {
         <a class="btn" href="${GH}">${ico('github')}${H.gh}</a>
       </div>
       <ul class="facts">${H.facts.map((f) => `<li>${ico('check')}${f}</li>`).join('')}</ul>
+      ${c.lang === 'de' ? plattBlock() : ''}
     </div>
     <div class="hero-art">
       ${homeTiles(H.tiles, H.tilesLabel)}
@@ -1288,7 +1308,7 @@ for (const c of Object.values(COPY)) {
   for (const kind of LEGAL_KINDS) {
     const html = legalPage(c, kind);
     checkText(html, `${c.lang} ${kind} page`, 0);
-    if (!html.includes(LEGAL_STATUS[c.lang])) throw new Error(`draft status line missing on ${c.lang} ${kind} page`);
+    if (!html.includes(LEGAL_STATUS[c.lang])) throw new Error(`status line missing on ${c.lang} ${kind} page`);
     // every in-page link points at a section that exists
     for (const [, id] of html.matchAll(/href="#([^"]+)"/g)) if (id !== 'main' && !html.includes(`id="${id}"`)) throw new Error(`broken anchor #${id} in ${c.lang} ${kind} page`);
   }

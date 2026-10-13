@@ -601,4 +601,24 @@ describe('ToHuus-Rezepte (central catalogue)', () => {
     expect(d).toMatchObject({ state: 'draft', origin: 'ai_draft', aiAssisted: true, reviewState: 'draft' });
     expect((await A.get('/api/cloud-recipes')).json.recent.some((x: any) => x.title === 'Gemüsesuppe')).toBe(false);
   });
+
+  it('CLOUD_RECIPES_PUBLISH_ALL publishes the seeded starting set, never AI drafts or unpublished recipes', async () => {
+    expect(cat.publishSeedsFromEnv()).toBe(0); // without the variable nothing happens
+    process.env.CLOUD_RECIPES_PUBLISH_ALL = '1';
+    try {
+      const before = (await op.get('/api/operator/recipes')).json.recipes as any[];
+      const unpublishedBefore = before.filter((r) => r.state === 'unpublished').map((r) => r.id);
+      const n = cat.publishSeedsFromEnv();
+      expect(n).toBeGreaterThan(50);
+      const after = (await op.get('/api/operator/recipes')).json.recipes as any[];
+      expect(after.find((r) => r.title === 'Gemüsesuppe')).toMatchObject({ state: 'draft' });
+      for (const id of unpublishedBefore) expect(after.find((r) => r.id === id).state).toBe('unpublished');
+      const pf = after.find((r) => r.title === 'Pfannkuchen');
+      expect(pf).toMatchObject({ state: 'published', reviewState: 'reviewed' });
+      expect((await A.get(`/api/cloud-recipes/${pf.id}`)).status).toBe(200);
+      expect(cat.publishSeedsFromEnv()).toBe(0); // idempotent
+    } finally {
+      delete process.env.CLOUD_RECIPES_PUBLISH_ALL;
+    }
+  });
 });

@@ -14,6 +14,7 @@ import { boughtText, rhythmList, type RhythmItem } from './rhythm.js';
 import { applyShareView, notPrivate } from './share-core.js';
 import { fmtWhen, originOf } from './shopping-trust.js';
 import { today as todayDay } from './spend2.js';
+import { contextNow, pickSaying, plattHello } from './platt.js';
 
 export interface TodayViewer {
   userId?: number | null;
@@ -22,10 +23,19 @@ export interface TodayViewer {
 
 const WEEKDAY = (d: string, locale: string) => new Date(d + 'T12:00:00Z').toLocaleDateString(locale, { weekday: 'long', timeZone: 'UTC' });
 
+/** Plattdeutsch on the Heute screen: German households only, unless switched off (`today.platt` = '0'). */
+const plattOn = () => lang() === 'de' && String(getSetting('today.platt', '1')) !== '0';
+
 function greeting(name: string | null | undefined) {
-  const hour = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: config.timezone }).format(new Date()));
-  const base = hour < 5 ? t('Good evening') : hour < 11 ? t('Good morning') : hour < 17 ? t('Hello') : t('Good evening');
+  const hour = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: config.timezone }).format(new Date())) % 24;
+  const base = plattOn() ? plattHello(hour) : hour < 5 ? t('Good evening') : hour < 11 ? t('Good morning') : hour < 17 ? t('Hello') : t('Good evening');
   return name ? t('{greeting}, {name}', { greeting: base, name }) : base;
+}
+
+function platt(viewer?: TodayViewer | null) {
+  if (!plattOn()) return null;
+  const s = pickSaying(contextNow(), String(viewer?.userId ?? ''));
+  return s ? { id: s.id, text: s.text, meaning: s.meaning, note: s.note } : null;
 }
 
 function rhythmCard(r: RhythmItem, locale: string) {
@@ -121,6 +131,7 @@ export function todayAggregate(viewer?: TodayViewer | null) {
   return {
     date: day,
     greeting: greeting(viewer?.name),
+    platt: platt(viewer),
     household: { name: getSetting('household.name', t('Our home')) },
     rhythm: rhythm.filter((r) => r.suggested).slice(0, 5).map((r) => rhythmCard(r, locale)),
     list: { open, recent },

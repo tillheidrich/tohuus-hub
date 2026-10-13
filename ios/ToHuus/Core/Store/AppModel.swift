@@ -102,6 +102,20 @@ final class AppModel {
         await loadAIState()
     }
 
+    /// PATCH /api/cloud/me { name } – your own name, on the account and in every household.
+    /// Returns the households where someone already had that name (there it stays as it was).
+    func rename(to name: String) async throws -> [String] {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let api, !trimmed.isEmpty else { return [] }
+        let (status, body) = try await api.sendRaw("PATCH", "api/cloud/me", json: ["name": trimmed])
+        guard (200..<300).contains(status) else {
+            throw NSError(domain: "ToHuus", code: status, userInfo: [NSLocalizedDescriptionKey: body["error"]?.string ?? L("That did not work. Please try again.")])
+        }
+        userName = trimmed
+        SharedConfig.defaults.set(trimmed, forKey: Self.userKey)
+        return body["skipped"]?.array?.compactMap(\.string) ?? []
+    }
+
     /// PATCH /api/ai/settings { mine } – a server without it keeps the choice on this device only.
     func setPersonalAI(_ on: Bool) async {
         personalAI = on

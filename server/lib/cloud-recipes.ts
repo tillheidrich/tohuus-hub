@@ -402,10 +402,36 @@ export function scheduleReviewed(opts: { ids?: number[]; perWeek?: number; start
   return out;
 }
 
+/**
+ * CLOUD_RECIPES_PUBLISH_ALL=1 (owner's decision 13.10.2026): publish the whole starting set at once – every recipe the
+ * server seeded itself (`created_by` seed, seed-plus, seed-devices, seed-baking) that is still a draft or scheduled,
+ * marked as reviewed. Uploads, AI drafts and unpublished recipes are never touched, so the variable can stay set. Returns how many.
+ */
+export function publishSeedsFromEnv(): number {
+  if (!/^(1|true|yes)$/i.test((process.env.CLOUD_RECIPES_PUBLISH_ALL ?? '').trim())) return 0;
+  const n = catalogDb()
+    .prepare(
+      `UPDATE catalog_recipes SET state = 'published', published_at = COALESCE(published_at, datetime('now')), publish_at = NULL,
+         review_state = CASE WHEN review_state = 'draft' THEN 'reviewed' ELSE review_state END, updated_at = datetime('now')
+       WHERE state IN ('draft', 'scheduled') AND (created_by = 'seed' OR created_by LIKE 'seed-%')`,
+    )
+    .run().changes;
+  if (n) {
+    console.log(`[catalog] CLOUD_RECIPES_PUBLISH_ALL: published ${n} recipe(s) of the starting set`);
+    void import('./operator.js').then((m) => m.audit('server', 'catalog.publish-all', null, { count: n })).catch(() => undefined);
+  }
+  return n;
+}
+
 let timer: NodeJS.Timeout | null = null;
 /** Every 10 minutes: publish what is due. */
 export function startCatalogScheduler() {
   if (timer || !config.multiTenant) return;
+  try {
+    publishSeedsFromEnv();
+  } catch (e) {
+    console.warn('[catalog] publish all', (e as Error).message);
+  }
   const tick = () => {
     try {
       const n = publishDue();

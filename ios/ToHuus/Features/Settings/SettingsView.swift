@@ -20,12 +20,30 @@ struct SettingsView: View {
     @State private var hasPassword = true
     @State private var appleLinked = false
     @State private var showTour = false
+    @State private var renaming = false
+    @State private var newName = ""
 
     var body: some View {
         NavigationStack {
             Form {
                 Section(L("Account")) {
-                    LabeledContent(L("Name"), value: app.userName ?? "–")
+                    if app.isCloud {
+                        Button {
+                            newName = app.userName ?? ""
+                            renaming = true
+                        } label: {
+                            LabeledContent(L("Name")) {
+                                HStack(spacing: 6) {
+                                    Text(app.userName ?? "–")
+                                    Image(systemName: "pencil").font(.footnote).accessibilityHidden(true)
+                                }
+                            }
+                        }
+                        .foregroundStyle(Theme.ink)
+                        .accessibilityHint(L("Change your name"))
+                    } else {
+                        LabeledContent(L("Name"), value: app.userName ?? "–")
+                    }
                     if let email { LabeledContent(L("E-mail"), value: email) }
                     LabeledContent(L("Server"), value: app.isCloud ? L("ToHuus Cloud") : (app.session?.serverURL.host() ?? ""))
                 }
@@ -170,6 +188,24 @@ struct SettingsView: View {
                 if let api = app.api { WebSettingsView(api: api) }
             }
             .sheet(isPresented: $showTour) { AppTourView() }
+            .alert(L("Your name"), isPresented: $renaming) {
+                TextField(L("Name"), text: $newName)
+                    .textContentType(.name)
+                    .submitLabel(.done)
+                Button(L("Cancel"), role: .cancel) {}
+                Button(L("Save")) {
+                    let name = String(newName.trimmingCharacters(in: .whitespacesAndNewlines).prefix(40))
+                    guard !name.isEmpty else { return }
+                    Task {
+                        do {
+                            let skipped = try await app.rename(to: name)
+                            if !skipped.isEmpty { error = LF("In %@ someone already has this name, there it stays as it was.", skipped.joined(separator: ", ")) }
+                        } catch { self.error = error.localizedDescription }
+                    }
+                }
+            } message: {
+                Text(L("This is how the others in your household see you."))
+            }
         }
     }
 

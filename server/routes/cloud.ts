@@ -864,6 +864,29 @@ cloud.get(
   }),
 );
 
+/**
+ * PATCH /api/cloud/me { name } – change your own name: on the account and as the member name in every household you
+ * belong to (each household keeps its own copy). A name already used by someone else in a household stays there as it was.
+ */
+cloud.patch(
+  '/cloud/me',
+  wrap(async (req) => {
+    const id = await identity(req);
+    const { name } = z.object({ name: z.string().trim().min(1).max(NAME_MAX) }).parse(req.body ?? {});
+    const acc = await A();
+    acc.accountsDb().prepare('UPDATE accounts SET name = ? WHERE id = ?').run(name, id.accountId);
+    const skipped: string[] = [];
+    for (const m of acc.membershipsOf(id.accountId)) {
+      runInHousehold({ id: m.household_id, via: 'me' }, () => {
+        if (db.prepare('SELECT 1 FROM users WHERE lower(name) = lower(?) AND id != ?').get(name, m.user_id)) return void skipped.push(m.name);
+        db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, m.user_id);
+        emit('settings');
+      });
+    }
+    return { ...(await cloudMe(id.accountId, currentHousehold()?.id ?? null)), skipped };
+  }),
+);
+
 cloud.post(
   '/cloud/households',
   wrap(async (req) => {

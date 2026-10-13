@@ -122,4 +122,55 @@
       });
     });
   });
+
+  // Plattdeutsch saying on the German home page (data: server/data/platt.json, same rules as server/lib/platt.ts:
+  // time of day, weekday, month, special days; special days usually win, sayings bound to the moment weigh 3×)
+  var pl = document.querySelector('[data-platt]');
+  var plData = document.getElementById('platt-data');
+  if (pl && plData) {
+    var say = pl.querySelector('.platt-say'), more = pl.querySelector('.platt-more'), hi = pl.querySelector('.platt-hi');
+    try {
+      var list = JSON.parse(plData.textContent || '[]');
+      var now = new Date(), h = now.getHours(), m = now.getMonth() + 1, wd = now.getDay();
+      var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+      var iso = function (x) { return x.getFullYear() + '-' + pad(x.getMonth() + 1) + '-' + pad(x.getDate()); };
+      var date = iso(now), md = date.slice(5);
+      var slot = h >= 5 && h < 11 ? 'morning' : h >= 11 && h < 14 ? 'noon' : h >= 14 && h < 18 ? 'afternoon' : h >= 18 && h < 23 ? 'evening' : 'night';
+      var y = now.getFullYear(), a = y % 19, b = Math.floor(y / 100), c = y % 100, dd = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+      var hh = (19 * a + b - dd - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - hh - k) % 7, mm = Math.floor((a + 11 * hh + 22 * l) / 451);
+      var easter = new Date(y, Math.floor((hh + l - 7 * mm + 114) / 31) - 1, ((hh + l - 7 * mm + 114) % 31) + 1);
+      var specials = [];
+      if (md >= '12-01' && md <= '12-23') specials.push('advent');
+      if (md >= '12-24' && md <= '12-26') specials.push('christmas');
+      if (md === '12-31') specials.push('newyear-eve');
+      if (md === '01-01' || md === '01-02') specials.push('newyear');
+      var ed = function (n) { var x = new Date(easter); x.setDate(x.getDate() + n); return iso(x); };
+      if (date >= ed(-2) && date <= ed(1)) specials.push('easter');
+      var has = function (arr, v) { return !arr || arr.indexOf(v) >= 0; };
+      var fits = list.filter(function (s) {
+        var w = s.when; if (!w) return true;
+        return has(w.slots, slot) && has(w.days, wd) && has(w.months, m) && (!w.special || w.special.some(function (x) { return specials.indexOf(x) >= 0; }));
+      });
+      var sp = fits.filter(function (s) { return s.when && s.when.special; });
+      var pick = null;
+      if (sp.length && Math.random() < 0.75) pick = sp[Math.floor(Math.random() * sp.length)];
+      else {
+        var pool = [];
+        fits.forEach(function (s) { if (!(s.when && s.when.special)) for (var n = 0; n < (s.when ? 3 : 1); n++) pool.push(s); });
+        if (pool.length) pick = pool[Math.floor(Math.random() * pool.length)];
+      }
+      if (pick) {
+        say.firstChild.textContent = '„' + pick.text + '“';
+        more.innerHTML = '';
+        var bb = document.createElement('b'); bb.textContent = pick.meaning; more.appendChild(bb);
+        more.appendChild(document.createTextNode(' ' + pick.note));
+      }
+      if (hi) hi.textContent = slot === 'evening' ? "'n Avend!" : 'Moin!';
+    } catch (err) { /* keep the saying from the build */ }
+    say.addEventListener('click', function () {
+      var open = more.hasAttribute('hidden');
+      if (open) more.removeAttribute('hidden'); else more.setAttribute('hidden', '');
+      say.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
 })();

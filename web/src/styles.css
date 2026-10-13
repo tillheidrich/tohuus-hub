@@ -9643,6 +9643,39 @@ button.li {
 .today-head .eyebrow {
   color: var(--ink-2);
 }
+/* Plattdeutsch saying under the greeting (server/lib/platt.ts) */
+.platt-say {
+  border: 0;
+  background: none;
+  padding: 6px 0;
+  min-height: 44px;
+  font: inherit;
+  font-style: italic;
+  color: var(--ink-2);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+}
+.platt-say:hover {
+  color: var(--ink);
+}
+.platt-more {
+  margin: 0 0 6px;
+  max-width: 46ch;
+  color: var(--ink-2);
+  animation: platt-in 180ms ease-out;
+}
+.platt-more b {
+  color: var(--ink);
+  font-weight: 600;
+}
+@keyframes platt-in {
+  from { opacity: 0; transform: translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .platt-more { animation: none; }
+}
 .avatar-btn {
   border: 0;
   padding: 2px;

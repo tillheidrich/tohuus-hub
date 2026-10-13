@@ -17,6 +17,8 @@ import { Avatar, Empty, expiryText, useToast } from '../ui';
 
 function greeting() {
   const h = new Date().getHours();
+  // German: the same Platt greeting the server sends (server/lib/platt.ts), so nothing flips after loading
+  if (locale().startsWith('de')) return h >= 18 && h < 23 ? "'n Avend" : 'Moin';
   if (h < 5) return t('Good night');
   if (h < 11) return t('Good morning');
   if (h < 17) return t('Hello');
@@ -31,6 +33,23 @@ const patchToday = (fn: (d: TodayData) => TodayData) => qc.setQueryData<TodayDat
  * Fällig · Liste · Das habt ihr noch · Heute kochen? · Geld. Each card hides when it has nothing to say,
  * except "Fällig", which then invites the three ways in: share a receipt, photo of the paper list, just say it.
  */
+/** The Plattdeutsch saying under the greeting; a tap shows what it means. */
+function PlattLine({ p }: { p: NonNullable<TodayData['platt']> }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="platt">
+      <button type="button" className="platt-say" aria-expanded={open} aria-controls="platt-more" onClick={() => setOpen((o) => !o)}>
+        <span lang="nds">„{p.text}“</span>
+      </button>
+      {open && (
+        <p id="platt-more" className="platt-more small">
+          <b>{p.meaning}</b> {p.note}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function Today({ me }: { me: Me }) {
   const q = useToday();
   const nav = useNavigate();
@@ -48,6 +67,7 @@ export function Today({ me }: { me: Me }) {
         <h1 className="greet">
           {d?.greeting ?? `${greeting()}, ${me.actor.name}!`}
         </h1>
+        {d?.platt && <PlattLine p={d.platt} />}
       </div>
       {guestAllows(gl, '/bestand') && (
         <button className="icon-btn" onClick={() => window.dispatchEvent(new Event('tohuus:add'))} aria-label={t('Add')} title={t('Add')}>

@@ -9,7 +9,7 @@ import { SITE_HOST } from './config.mjs';
  * server/lib/apple.ts and ios/. When the code changes (retention, providers, limits, cookies), change these texts in
  * the same commit. The German text is binding; the English one is a translation.
  *
- * Status 12.10.2026: draft, not reviewed by a lawyer. Keep the status line visible until the owner decides otherwise.
+ * Status line: only the date of the last change (owner's decision 13.10.2026: no draft note).
  * House style of the site applies: no em or en dashes (the provider line is the only exception).
  */
 

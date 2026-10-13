@@ -195,6 +195,11 @@ struct HouseGuideView: View {
                 Spacer()
                 if let r = revealed[c.id], let v = r.value {
                     Text(v).font(.body.monospaced()).textSelection(.enabled)
+                    Button(L("Hide")) { withAnimation { revealed[c.id] = nil } }
+                        .buttonStyle(.bordered).controlSize(.small)
+                } else if revealed[c.id] != nil {
+                    Button(L("Hide")) { withAnimation { revealed[c.id] = nil } }
+                        .buttonStyle(.bordered).controlSize(.small)
                 } else if c.hasValue == true {
                     Text(c.masked ?? "••••").foregroundStyle(Theme.ink3)
                     Button(L("Show")) { Task { await reveal(c) } }

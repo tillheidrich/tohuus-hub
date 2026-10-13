@@ -107,6 +107,7 @@ export function MyAccount({ me }: { me: Me }) {
   const cloud = inst.data?.mode === 'cloud';
   return (
     <div className="stack" style={{ gap: 14 }}>
+      <NameCard me={me} cloud={cloud} />
       <SignInSummary a={a} />
       {a.policy.passkeys && <Passkeys a={a} />}
       <EmailCard a={a} />
@@ -117,6 +118,41 @@ export function MyAccount({ me }: { me: Me }) {
       {a.policy.pinSwitch && <PinCard a={a} />}
       <Devices a={a} admin={me.actor.role === 'admin'} />
     </div>
+  );
+}
+
+/** Your own name: in the cloud on the account and in every household (PATCH /cloud/me), self-hosted on the member. */
+function NameCard({ me, cloud }: { me: Me; cloud: boolean }) {
+  const toast = useToast();
+  const [name, setName] = useState(me.actor.name ?? '');
+  const [busy, setBusy] = useState(false);
+  const changed = name.trim() !== '' && name.trim() !== me.actor.name;
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!changed) return;
+    setBusy(true);
+    try {
+      const r = cloud ? await patch<{ skipped?: string[] }>('/cloud/me', { name: name.trim() }) : await patch(`/users/${me.actor.userId}`, { name: name.trim() });
+      invalidate('me', 'auth-me', 'today', 'people', 'users');
+      const skipped = (r as { skipped?: string[] })?.skipped ?? [];
+      toast({ text: skipped.length ? t('Saved. In {households} someone already has this name, there it stays as it was.', { households: skipped.join(', ') }) : t('Saved') });
+    } catch (err) {
+      toast({ text: errText(err), error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form className="card pad stack" onSubmit={save}>
+      <div className="field">
+        <label htmlFor="my-name">{t('Your name')}</label>
+        <div className="row">
+          <input id="my-name" className="input" value={name} maxLength={40} autoComplete="name" onChange={(e) => setName(e.target.value)} />
+          <button className="btn" disabled={!changed || busy}>{t('Save')}</button>
+        </div>
+        <div className="small muted">{t('This is how the others in your household see you.')}</div>
+      </div>
+    </form>
   );
 }
 

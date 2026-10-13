@@ -7,7 +7,10 @@ Authentication: session cookie or `Authorization: Bearer sw_app_…`. Permanent 
 ```jsonc
 {
   "date": "2026-10-12",
-  "greeting": "Guten Morgen, Till",           // by hour; without a name for API tokens
+  "greeting": "Moin, Sam",                    // by hour; German households: Platt ("Moin" / "'n Avend"); without a name for API tokens
+  "platt": { "id": "rut-ut-de-feddern", "text": "Rut ut de Feddern!", "meaning": "Raus aus den Federn!", "note": "…" },
+                                             // Plattdeutsch saying for this time slot, weekday, season (server/lib/platt.ts,
+                                             // data server/data/platt.json); null for other languages or when today.platt = '0'
   "household": { "name": "Fredirando" },
 
   // due now from the purchase rhythm (receipts + list ticks, no stock needed), most urgent first, max 5

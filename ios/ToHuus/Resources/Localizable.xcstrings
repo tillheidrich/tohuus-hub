@@ -4591,6 +4591,23 @@
         }
       }
     },
+    "Change your name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change your name"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namen ändern"
+          }
+        }
+      }
+    },
     "Changes that haven't been sent yet are lost.": {
       "extractionState": "manual",
       "localizations": {
@@ -8705,6 +8722,23 @@
         }
       }
     },
+    "Hide": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbergen"
+          }
+        }
+      }
+    },
     "Hide settled lists": {
       "extractionState": "manual",
       "localizations": {
@@ -9296,6 +9330,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Impressum"
+          }
+        }
+      }
+    },
+    "In %@ someone already has this name, there it stays as it was.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %@ someone already has this name, there it stays as it was."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %@ heißt schon jemand so, dort bleibt dein Name wie er war."
           }
         }
       }
@@ -18769,6 +18820,23 @@
         }
       }
     },
+    "Shows what it means": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what it means"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt, was es bedeutet"
+          }
+        }
+      }
+    },
     "Sign in": {
       "extractionState": "manual",
       "localizations": {
@@ -20333,6 +20401,23 @@
         }
       }
     },
+    "That did not work. Please try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That did not work. Please try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das hat nicht geklappt. Versuch es bitte noch einmal."
+          }
+        }
+      }
+    },
     "That didn't work – please sign in again.": {
       "extractionState": "manual",
       "localizations": {
@@ -21179,6 +21264,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses iPhone"
+          }
+        }
+      }
+    },
+    "This is how the others in your household see you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is how the others in your household see you."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So sehen dich die anderen in deinem Haushalt."
           }
         }
       }
