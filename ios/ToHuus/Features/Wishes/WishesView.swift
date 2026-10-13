@@ -75,6 +75,7 @@ struct WishesView: View {
             }
             if let error { Text(error).foregroundStyle(Theme.empty) }
         }
+        .themedList()
         .navigationTitle(L("Wishes"))
         .searchable(text: $query, prompt: L("Search all wishes"))
         .task(id: query) { await search() }
@@ -246,6 +247,9 @@ struct WishListDetailView: View {
             }
             if let error { Text(error).foregroundStyle(Theme.empty) }
         }
+        .themedList()
+        // a new wish slides in, "reserved"/"bought" badges change in place – still with Reduce Motion
+        .motion(value: (detail?.items ?? []).map { "\($0.id):\(String(describing: $0.status))" })
         .navigationTitle(detail?.list.name ?? "")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -295,7 +299,12 @@ struct WishListDetailView: View {
         } catch { self.error = APIError.from(error).localizedDescription }
     }
     private func setStatus(_ w: Wish, _ s: String) async {
-        do { try await api.setWishStatus(w.id, status: s); Haptics.tick(); await load() } catch { self.error = APIError.from(error).localizedDescription }
+        do {
+            try await api.setWishStatus(w.id, status: s)
+            // reserving or buying is a small promise to someone – a success tap; releasing just a tick
+            if s == "open" { Haptics.tick() } else { Haptics.success() }
+            await load()
+        } catch { self.error = APIError.from(error).localizedDescription }
     }
     private func archiveList() async {
         guard let l = detail?.list else { return }
@@ -344,7 +353,7 @@ private struct WishRowView: View {
                     if let p = priceText(wish.price, fromLinks: wish.priceFromLinks) { Text(p).font(.subheadline.weight(.bold)) }
                     if wish.priority != 2 {
                         Label(priorityLabel(wish.priority), systemImage: wish.priority == 3 ? "heart.fill" : "heart")
-                            .font(.subheadline).foregroundStyle(wish.priority == 3 ? Theme.clay : Theme.ink2)
+                            .font(.subheadline).foregroundStyle(wish.priority == 3 ? Theme.low : Theme.ink2)
                     }
                     if let g = wish.giver { Text(LF("could give: %@", g.name)).font(.subheadline).foregroundStyle(Theme.ink2) }
                 }
@@ -370,6 +379,7 @@ private struct WishRowView: View {
                     let who = wish.statusBy?.name ?? "?"
                     Badge(text: wish.status == "reserved" ? (mine ? L("You reserved it") : LF("Reserved by %@", who)) : (mine ? L("You bought it") : LF("Bought by %@", who)),
                           symbol: wish.status == "reserved" ? "gift" : "checkmark")
+                        .transition(.scale(scale: 0.85).combined(with: .opacity))
                 }
                 if !selecting {
                     FlowLayout(spacing: 8) {
@@ -430,6 +440,7 @@ private struct WishToListSheet: View {
                 }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
+            .themedList()
             .navigationTitle(L("Onto which list?"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } } }
@@ -501,6 +512,7 @@ struct WishListEditSheet: View {
                 }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
+            .themedList()
             .navigationTitle(list == nil ? L("New wish list") : L("Edit list"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -647,6 +659,7 @@ struct WishEditSheet: View {
                 }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
+            .themedList()
             .navigationTitle(wish == nil ? L("New wish") : L("Wish"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -749,6 +762,7 @@ private struct WishShareSheet: View {
                     Text(L("The message never says who reserved or bought something."))
                 }
             }
+            .themedList()
             .navigationTitle(L("Share wishes"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }

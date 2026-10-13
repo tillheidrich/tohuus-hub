@@ -10,7 +10,9 @@
  *   spend_line_meta   per receipt line: category override for the statistics
  *   spend_exclusions  "not counted": scope line | receipt | product | category | store | expense, with a reason
  *   spend_tags        free tags on lines, receipts and expenses ("Party", "Urlaub")
- *   spend_budgets     optional budgets per month or week, overall ('' category) or per category
+ *   spend_budgets     optional budgets per week, month or year, overall ('' category) or per category; shared by the
+ *                     household (owner 0) or personal (owner = user id, counts only that person's "Nur meins" entries,
+ *                     seen and notified only to them – migration 'budgets-year-mine')
  * The overall monthly budget is mirrored to the older setting 'spending.target' (spending.ts, /spending/target).
  *
  * Wave 2 (q-money, migration 'money-q-2'): entries for non-food too (categories the household can rename), a photo or
@@ -85,6 +87,24 @@ migrate(
    ALTER TABLE spend_expenses ADD COLUMN attachment TEXT;
    ALTER TABLE spend_expenses ADD COLUMN attachment_type TEXT;
    ALTER TABLE spend_expenses ADD COLUMN items TEXT;`,
+);
+
+// 13 Oct 2026: year budgets and personal budgets ("gemeinsam, aber auch alleine")
+migrate(
+  'budgets-year-mine',
+  `CREATE TABLE spend_budgets_new (
+     id INTEGER PRIMARY KEY,
+     category TEXT NOT NULL DEFAULT '',
+     period TEXT NOT NULL CHECK (period IN ('week','month','year')),
+     amount REAL NOT NULL,
+     notify INTEGER NOT NULL DEFAULT 1,
+     owner INTEGER NOT NULL DEFAULT 0,
+     created_at TEXT NOT NULL DEFAULT (datetime('now')),
+     UNIQUE (category, period, owner)
+   );
+   INSERT INTO spend_budgets_new (id, category, period, amount, notify, created_at) SELECT id, category, period, amount, notify, created_at FROM spend_budgets;
+   DROP TABLE spend_budgets;
+   ALTER TABLE spend_budgets_new RENAME TO spend_budgets;`,
 );
 
 export class SpendError extends Error {}
@@ -517,19 +537,22 @@ function discountsFor(entries: Entry[]) {
 
 // ------------------------------------------------------------------ budgets
 
+export type BudgetPeriod = 'week' | 'month' | 'year';
 export interface BudgetRow {
   id: number;
   category: string; // '' = overall
-  period: 'week' | 'month';
+  period: BudgetPeriod;
   amount: number;
   notify: number;
+  /** 0 = the household's, else the user id of the person it belongs to */
+  owner: number;
 }
 
 function syncLegacyTarget() {
   const legacy = spendingTarget();
-  const row = db.prepare(`SELECT * FROM spend_budgets WHERE category = '' AND period = 'month'`).get() as BudgetRow | undefined;
+  const row = db.prepare(`SELECT * FROM spend_budgets WHERE category = '' AND period = 'month' AND owner = 0`).get() as BudgetRow | undefined;
   if (legacy && (!row || row.amount !== legacy)) {
-    db.prepare(`INSERT INTO spend_budgets (category, period, amount) VALUES ('', 'month', ?) ON CONFLICT(category, period) DO UPDATE SET amount = excluded.amount`).run(legacy);
+    db.prepare(`INSERT INTO spend_budgets (category, period, amount) VALUES ('', 'month', ?) ON CONFLICT(category, period, owner) DO UPDATE SET amount = excluded.amount`).run(legacy);
   } else if (!legacy && row && getSetting('spend2.targetSynced', false)) {
     // the older target endpoint removed the target → remove the mirrored budget too
     db.prepare('DELETE FROM spend_budgets WHERE id = ?').run(row.id);
@@ -537,40 +560,47 @@ function syncLegacyTarget() {
   if (!getSetting('spend2.targetSynced', false)) setSetting('spend2.targetSynced', true);
 }
 
-export function listBudgets(): BudgetRow[] {
+/** The household's budgets (owner 0) or one person's own (owner = user id) – never both mixed. */
+export function listBudgets(owner = 0): BudgetRow[] {
   syncLegacyTarget();
-  return db.prepare(`SELECT * FROM spend_budgets ORDER BY category = '' DESC, period, category`).all() as BudgetRow[];
+  return db.prepare(`SELECT * FROM spend_budgets WHERE owner = ? ORDER BY category = '' DESC, CASE period WHEN 'week' THEN 0 WHEN 'month' THEN 1 ELSE 2 END, category`).all(owner) as BudgetRow[];
 }
 
-export function setBudget(input: { category?: string | null; period?: 'week' | 'month'; amount: number | null; notify?: boolean }) {
+export function setBudget(input: { category?: string | null; period?: BudgetPeriod; amount: number | null; notify?: boolean; owner?: number | null }) {
   const category = (input.category ?? '').trim().slice(0, 80);
   const period = input.period ?? 'month';
+  const owner = input.owner ?? 0;
+  if (!['week', 'month', 'year'].includes(period)) throw new SpendError(t('Budget period must be week, month or year'));
   if (input.amount != null && !(input.amount > 0 && input.amount < 1_000_000)) throw new SpendError(t('Budget must be a positive amount'));
   syncLegacyTarget();
   if (input.amount == null) {
-    db.prepare('DELETE FROM spend_budgets WHERE category = ? AND period = ?').run(category, period);
+    db.prepare('DELETE FROM spend_budgets WHERE category = ? AND period = ? AND owner = ?').run(category, period, owner);
   } else {
     db.prepare(
-      `INSERT INTO spend_budgets (category, period, amount, notify) VALUES (?, ?, ?, ?)
-       ON CONFLICT(category, period) DO UPDATE SET amount = excluded.amount, notify = COALESCE(?, spend_budgets.notify)`,
-    ).run(category, period, round2(input.amount), input.notify === false ? 0 : 1, input.notify == null ? null : input.notify ? 1 : 0);
+      `INSERT INTO spend_budgets (category, period, amount, notify, owner) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(category, period, owner) DO UPDATE SET amount = excluded.amount, notify = COALESCE(?, spend_budgets.notify)`,
+    ).run(category, period, round2(input.amount), input.notify === false ? 0 : 1, owner, input.notify == null ? null : input.notify ? 1 : 0);
   }
-  if (category === '' && period === 'month') setSpendingTarget(input.amount);
+  if (category === '' && period === 'month' && owner === 0) setSpendingTarget(input.amount);
   emit('imports');
-  return listBudgets();
+  return listBudgets(owner);
 }
 
-export function deleteBudget(id: number) {
+/** Removes a budget; a personal one only by its owner (anyone else gets "not found"). */
+export function deleteBudget(id: number, viewer: number | null = null) {
   const row = db.prepare('SELECT * FROM spend_budgets WHERE id = ?').get(id) as BudgetRow | undefined;
-  if (!row) throw new SpendError(t('Budget not found'));
-  return setBudget({ category: row.category, period: row.period, amount: null });
+  if (!row || (row.owner !== 0 && row.owner !== viewer)) throw new SpendError(t('Budget not found'));
+  return setBudget({ category: row.category, period: row.period, amount: null, owner: row.owner });
 }
 
-/** Budget states for the period of each budget that contains `refDay`. */
-export function budgetStatus(refDay = today(), all?: Entry[], weekStart: 0 | 1 = region().weekStart) {
-  const budgets = listBudgets();
+/**
+ * Budget states for the period of each budget that contains `refDay`. `owner` 0 = the household's budgets over the
+ * household entries; a user id = that person's own budgets over their "Nur meins" entries (`all` must then be those).
+ */
+export function budgetStatus(refDay = today(), all?: Entry[], weekStart: 0 | 1 = region().weekStart, owner = 0) {
+  const budgets = listBudgets(owner);
   if (!budgets.length) return [];
-  const list = all ?? loadEntries();
+  const list = all ?? loadEntries(undefined, owner ? { view: 'mine', viewer: owner } : {});
   const now = today();
   return budgets.map((b) => {
     const r = periodRange(b.period, refDay, weekStart);
@@ -580,6 +610,7 @@ export function budgetStatus(refDay = today(), all?: Entry[], weekStart: 0 | 1 =
       category: b.category || null,
       label: b.category || t('All spending'),
       period: b.period,
+      personal: b.owner !== 0,
       notify: Boolean(b.notify),
       from: r.from,
       to: r.to,
@@ -590,13 +621,17 @@ export function budgetStatus(refDay = today(), all?: Entry[], weekStart: 0 | 1 =
 
 /** Called by the scheduler: a gentle note at 80 % and at 100 % of a budget, once per period each. */
 export async function checkBudgets() {
-  for (const b of budgetStatus()) {
+  // the household's budgets, then each person's own (those only reach that person, never the household channels)
+  const owners = (db.prepare('SELECT DISTINCT owner FROM spend_budgets WHERE owner != 0').all() as { owner: number }[]).map((r) => r.owner);
+  const all = [...budgetStatus().map((b) => ({ b, owner: 0 })), ...owners.flatMap((o) => budgetStatus(today(), undefined, region().weekStart, o).map((b) => ({ b, owner: o })))];
+  for (const { b, owner } of all) {
     if (!b.notify || b.state === 'ok' || !b.ongoing) continue;
     const level = b.state === 'over' ? 100 : 80;
     const cur = region().currency;
     const money = (n: number) => new Intl.NumberFormat(region().locale, { style: 'currency', currency: cur }).format(n);
-    const periodWord = b.period === 'week' ? t('this week') : t('this month');
+    const periodWord = b.period === 'week' ? t('this week') : b.period === 'year' ? t('this year') : t('this month');
     await notify({
+      ...(owner ? { toUserId: owner, personalOnly: true } : {}),
       event: 'budget.warning',
       title: level === 100 ? t('{name}: budget reached', { name: b.label }) : t('{name}: {pct} % of the budget', { name: b.label, pct: b.pct }),
       message: [
@@ -605,8 +640,8 @@ export async function checkBudgets() {
       ]
         .filter(Boolean)
         .join(' '),
-      path: '/ausgaben',
-      data: { budget_id: b.id, category: b.category, period: b.period, spent: b.spent, amount: b.amount, pct: b.pct, forecast: b.forecast },
+      path: owner ? '/ausgaben?view=mine' : '/ausgaben',
+      data: { budget_id: b.id, category: b.category, period: b.period, personal: owner !== 0, spent: b.spent, amount: b.amount, pct: b.pct, forecast: b.forecast },
       dedupeKey: `budget:${b.id}:${b.from}:${level}`,
       dedupeHours: 24 * 400,
     });
@@ -692,8 +727,8 @@ export function spendStats(q: StatsQuery, opts: LoadOpts = {}) {
 
   // budgets for the viewed period (or the current one when viewing a year / all time)
   const ref = now >= r.from && now <= r.to ? now : q.period === 'year' || q.period === 'all' ? now : r.anchor;
-  // budgets belong to the household – not shown in the personal view
-  const budgets = mineView ? [] : budgetStatus(ref, q.tag ? loadEntries() : all, ws);
+  // the household's budgets in the household view, the viewer's own ones in "Nur meins"
+  const budgets = mineView ? budgetStatus(ref, q.tag ? loadEntries(undefined, opts) : all, ws, opts.viewer!) : budgetStatus(ref, q.tag ? loadEntries() : all, ws);
 
   return {
     period: q.period,

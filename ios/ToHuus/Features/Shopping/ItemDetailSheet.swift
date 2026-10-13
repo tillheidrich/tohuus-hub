@@ -77,6 +77,7 @@ struct ItemDetailSheet: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(L("Details"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

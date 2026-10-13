@@ -474,3 +474,151 @@
   white-space: normal;
   text-align: left;
 }
+
+/* photos and short videos on a card (HouseGuide.tsx MediaStrip / MediaEditor) */
+.hg-media {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.hg-media-item {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.hg-media-item.video {
+  grid-column: 1 / -1;
+}
+.hg-media-item img,
+.hg-media-item video {
+  width: 100%;
+  border-radius: var(--r-sm, 8px);
+  background: var(--surface-2, #efebe2);
+  display: block;
+}
+.hg-media-item img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  cursor: zoom-in;
+}
+.hg-media-item video {
+  max-height: 60vh;
+}
+.hg-media-edit {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hg-media-edit li {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: var(--r-sm, 8px);
+  overflow: hidden;
+  background: var(--surface-2, #efebe2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hg-media-edit li.pending {
+  padding: 6px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.hg-media-edit img,
+.hg-media-edit video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hg-media-edit .icon-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--surface, #fffdf9);
+}
+@media print {
+  .hg-media-item.video {
+    display: none;
+  }
+}
+
+/* holiday handover (Handover.tsx): today's list on the guest link, progress on the trip page */
+.ho-today {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ho-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 1px solid var(--line, #deddd3);
+  border-radius: var(--r-sm, 8px);
+  background: var(--surface, #fffdf9);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ho-today li.done .ho-check {
+  background: var(--accent-soft, #e4eee6);
+  border-color: transparent;
+}
+.ho-today li.done b {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.ho-box {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 2px solid var(--line-strong, #b9b6aa);
+  display: grid;
+  place-items: center;
+  color: var(--accent-ink, #fff);
+}
+.ho-today li.done .ho-box {
+  background: var(--accent, #176b50);
+  border-color: var(--accent, #176b50);
+}
+.ho-progress {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.ho-progress li {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) auto 1fr;
+  gap: 10px;
+  align-items: baseline;
+}
+.ho-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.ho-who {
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ho-box {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+}

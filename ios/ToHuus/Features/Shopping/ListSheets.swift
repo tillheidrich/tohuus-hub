@@ -36,6 +36,7 @@ struct RecentDoneSheet: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(L("Recently done"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
@@ -95,6 +96,7 @@ struct UsualsSheet: View {
                     }
                 }
             }
+            .themedList()
             .searchable(text: $search)
             .navigationTitle(L("Our usuals"))
             .navigationBarTitleDisplayMode(.inline)
@@ -162,6 +164,7 @@ struct OffersView: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(L("Offers"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }

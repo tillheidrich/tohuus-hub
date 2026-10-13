@@ -21,6 +21,7 @@ import { cheapestOverview, pricesFor } from '../lib/prices.js';
 import { type OfferDraft, activeOffers, addOffer, deleteOffer, parseOfferLines, readOfferImage, readOfferLink, saveOffers } from '../lib/offers.js';
 import { addLunchbox, careCheck, careMissing, careSpent, lunchbox, lunchboxDue, setItemOwner, setLunchbox, splitImport, wgBalance } from '../lib/hhforms.js';
 import { uploadQuota } from '../lib/plans.js';
+import { requireFeature } from '../lib/limits.js';
 import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeItemPhoto, restoreItem, setItemPhoto, setListPrefs, updateItem } from '../lib/list2.js';
 import { t } from '../i18n.js';
 import { LIST_KINDS, LIST_VISIBILITIES, assertListAccess, createList, deleteList, estimate, guard, listFilter, listLists, listOfItem, moveItemToList, privateRowGuard, updateList, usuals } from '../lib/lists.js';
@@ -36,7 +37,8 @@ r.use(privateRowGuard);
 const actorName = (req: any): string => req.actor?.name ?? 'unknown';
 const userId = (req: any): number | null => req.actor?.userId ?? null;
 const num = (v: unknown) => Number(v);
-const fail = (res: any, e: unknown) => res.status((e as any).status ?? 500).json({ error: (e as Error).message });
+// errors with their own body (plan limits: code, feature, plan) keep it
+const fail = (res: any, e: unknown) => res.status((e as any).status ?? 500).json(typeof (e as any).toJSON === 'function' ? (e as any).toJSON() : { error: (e as Error).message });
 const wrap = (fn: (req: any, res: any) => unknown) => async (req: any, res: any) => {
   try {
     const out = await fn(req, res);
@@ -214,6 +216,7 @@ r.get('/notify/prefs', async (req, res) => {
     })),
     quiet: p.quiet,
     preview: p.preview,
+    mailOff: p.mailOff,
     channels: {
       apns: { configured: apnsConfigured(), devices: listApnsDevices(uid).length },
       push: { devices: (db.prepare('SELECT COUNT(*) n FROM push_subscriptions WHERE user_id = ?').get(uid) as { n: number }).n },
@@ -233,6 +236,7 @@ r.put('/notify/prefs', (req, res) => {
       quiet: z.object({ from: hhmm, to: hhmm }).nullable().optional(),
       homeOnly: z.array(z.string()).max(20).optional(),
       preview: z.enum(['full', 'generic']).optional(),
+      mailOff: z.boolean().optional(),
     })
     .parse(req.body);
   setPersonPrefs(uid, b as never);
@@ -281,7 +285,8 @@ r.put('/modules', requireAdmin, (req, res) => {
 
 /** CalDAV app passwords (Apple Reminders, Nextcloud Tasks …): shown once, per member, revocable. */
 r.get('/caldav/passwords', (req, res) => res.json(userId(req) ? listAppPasswords(userId(req)!) : []));
-r.post('/caldav/passwords', (req, res) => {
+// mirroring lists to Apple Reminders / Nextcloud: Household plan and up (cloud)
+r.post('/caldav/passwords', requireFeature('mirrorLists'), (req, res) => {
   const b = z.object({ label: z.string().max(60).default('iPhone') }).parse(req.body ?? {});
   const uid = userId(req);
   if (!uid || req.actor?.houseGuest) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });

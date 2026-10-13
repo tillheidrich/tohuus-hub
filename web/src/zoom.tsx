@@ -1,6 +1,7 @@
 import { X } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import { t } from './i18n';
+import { useDialog } from './ui';
 
 /**
  * Full-screen photo viewer. Any <img data-zoom> in the app opens here on tap (recipe photos,
@@ -42,6 +43,8 @@ export function Lightbox() {
       if (history.state?.lightbox) history.back();
     };
   }, [img]);
+  const box = useRef<HTMLDivElement>(null);
+  useDialog(box, Boolean(img));
 
   if (!img) return null;
   const toggle = (e: React.MouseEvent<HTMLImageElement>) => {
@@ -60,7 +63,7 @@ export function Lightbox() {
     } else setZoom(false);
   };
   return (
-    <div className="lightbox" role="dialog" aria-modal="true" aria-label={img.alt || t('Photo')} onClick={() => setImg(null)}>
+    <div ref={box} className="lightbox" role="dialog" aria-modal="true" aria-label={img.alt || t('Photo')} tabIndex={-1} onClick={() => setImg(null)}>
       <div ref={scroller} className={`lb-scroll ${zoom ? 'zoomed' : ''}`}>
         <img src={img.src} alt={img.alt} onClick={toggle} draggable={false} />
       </div>

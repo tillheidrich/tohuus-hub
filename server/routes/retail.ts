@@ -1,6 +1,7 @@
 /** More retailers, e-mail inbox for receipts, use-by vs best-before, waste value */
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
+import { config } from '../config.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { checkInbox, inboxStatus, publicConfig, recentMails, saveInboxConfig } from '../lib/retail-inbox.js';
 import { RetailError, defaultDateKind, setDateKind, wasteValue } from '../lib/retail.js';
@@ -22,8 +23,11 @@ const isAdmin = (req: Request) => req.actor?.role === 'admin';
 
 /** Everyone sees whether it works and where to forward receipts; admins also get the settings. */
 r.get('/retail/inbox', (req, res) => {
+  // ToHuus Cloud: no per-household mailbox polling (docs/cloud.md › What is off) – the apps hide the cards
+  if (config.multiTenant) return void res.json({ available: false, configured: false, enabled: false, forward_to: null, folder: 'INBOX', status: null, settings: null, recent: [] });
   const cfg = publicConfig();
   res.json({
+    available: true,
     configured: cfg.configured,
     enabled: cfg.enabled,
     forward_to: cfg.configured && /@/.test(cfg.user) ? cfg.user : null,
@@ -47,6 +51,7 @@ const inboxBody = z.object({
 });
 
 r.put('/retail/inbox', requireAdmin, (req, res) => {
+  if (config.multiTenant) return void res.status(404).json({ error: 'not found', code: 'not_found' });
   const b = inboxBody.parse(req.body);
   if (b.allowFrom) b.allowFrom = b.allowFrom.map((x) => x.trim()).filter(Boolean);
   if (b.moveTo !== undefined) b.moveTo = b.moveTo?.trim() || null;
@@ -55,6 +60,7 @@ r.put('/retail/inbox', requireAdmin, (req, res) => {
 
 /** "Check now" – also works while the inbox is still switched off (to test the settings). */
 r.post('/retail/inbox/check', async (_req, res) => {
+  if (config.multiTenant) return void res.status(404).json({ error: 'not found', code: 'not_found' });
   res.json(await checkInbox({ force: true }));
 });
 

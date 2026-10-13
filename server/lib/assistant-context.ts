@@ -24,7 +24,7 @@ export interface ContextViewer {
 }
 
 /** What a message is about – decides which context lines and tools the model gets (smaller prompts). */
-export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests' | 'wishes';
+export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests' | 'wishes' | 'help';
 /** what an unclear message gets; stock, house and guests come from the screen (assistant-areas.ts) or clear words */
 export const ALL_TOPICS: Topic[] = ['shopping', 'cooking', 'money'];
 
@@ -39,6 +39,9 @@ export function topicsOf(message: string): Topic[] {
   if (/gäste|gaeste|party|feier|geburtstag|grillen|guests|birthday/.test(m)) out.add('guests');
   // wish lists / Merkliste (assistant-wishes.ts): "merk dir die Kekse aus dem Artikel", "was wünscht sich Mika?"
   if (/merkliste|wunsch|wünsch|wuensch|geschenk|schenken|wishlist|\bwish|\bgift|merk dir\b.*(artikel|link|https?:)|save (this|it) for later/.test(m)) out.add('wishes');
+  // questions about the app itself (assistant-scope.ts › app_help)
+  const help = /\bwie (geht|kann ich|mache ich|funktioniert|stelle? ich)|\bwo (finde|ist|sind|stell|kann ich)|\bkann (ich|man|tohuus|die app)|\bgeht das\b|einstellung|funktion|\babo\b|\bplus\b|\btour\b|hilfe|\bhow (do|can|does)\b|\bwhere (is|are|do|can)\b|\bcan (i|tohuus|the app)\b|settings|\bhelp\b/.test(m);
+  if (help) out.add('help');
   return out.size ? [...out] : [...ALL_TOPICS];
 }
 

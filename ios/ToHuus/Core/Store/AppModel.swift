@@ -70,18 +70,36 @@ final class AppModel {
     /// "Was nutzen wir?" – switched-off areas disappear (GET /api/me → modules). The list always stays.
     private(set) var modules: [String: Bool] = [:]
     func moduleOn(_ key: String) -> Bool { modules[key] ?? true }
+    /// a household of one: "Bring mir was" (asking someone at home) is hidden, like on the web
+    private(set) var singleHousehold = false
+    /// a permanent guest (Mehr shows the handover shared with them instead of trips and care)
+    private(set) var isGuest = false
 
     func loadAIState() async {
         guard let api else { return }
         if let me = try? await api.me() {
             isChild = me.isChild
             if let m = me.modules { modules = m }
+            singleHousehold = me.isSingleHousehold
+            isGuest = me.isGuest
             if let p = me.listPrefs { ListPrefsSync.adopt(p) }
         }
         if let s: AIStatus = try? await api.get("api/assistant/status") {
             aiStatus = s
             if let p = s.personal { personalAI = p; SharedConfig.defaults.set(p, forKey: Self.personalAIKey) }
         }
+    }
+
+    /// ToHuus Cloud: the person has not agreed to AI yet (server reason "consent")
+    var aiConsentNeeded: Bool { aiStatus?.reason == "consent" }
+    /// who receives the data when AI is used (shown in the consent text)
+    var aiProcessor: String? { aiStatus?.processor }
+
+    /// PATCH /api/ai/settings { consent } – agree to AI or withdraw (ToHuus Cloud)
+    func setAIConsent(_ on: Bool) async {
+        guard let api else { return }
+        _ = try? await api.send("PATCH", "api/ai/settings", json: ["consent": on], as: Ignored.self)
+        await loadAIState()
     }
 
     /// PATCH /api/ai/settings { mine } – a server without it keeps the choice on this device only.

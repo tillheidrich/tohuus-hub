@@ -12,10 +12,11 @@ import path from 'node:path';
 import { SignJWT, exportJWK, generateKeyPair } from 'jose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Agent, fetch } from 'undici';
+import { freePort } from './helpers/port';
 const local = new Agent();
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-beta-'));
-const PORT = 49100 + Math.floor(Math.random() * 300);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 Object.assign(process.env, {
   MULTI_TENANT: 'true',
@@ -123,7 +124,7 @@ describe('beta gate', () => {
     expect(beta.envSignupMode({ CLOUD_SIGNUP: 'true' } as NodeJS.ProcessEnv)).toBe('open');
     expect(beta.envSignupMode({ CLOUD_SIGNUP: 'false' } as NodeJS.ProcessEnv)).toBe('closed');
     const i = await new Client().get('/api/instance');
-    expect(i.json).toMatchObject({ signup: true, signupMode: 'invite', support: 'tohuus@tillheidrich.de' });
+    expect(i.json).toMatchObject({ signup: true, signupMode: 'invite', support: 'tohuus@tillheidrich.de', betaGift: null, minIosBuild: null });
   });
 
   it('e-mail sign-up (web and app) needs a code or an allowlisted address', async () => {

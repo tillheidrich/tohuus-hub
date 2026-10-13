@@ -21,8 +21,8 @@ export const explain: Record<string, string> = {
     'Ohne KI: die Liste, Kassenbons als eBon oder PDF, der Kaufrhythmus, Geld, Rezepte von Links mit Rezeptdaten und einfache Sätze wie „Milch, 2 Paprika und Brot“.',
   'With AI: receipt photos, recipes from photos, screenshots and social media posts, open questions to the assistant and help on each screen. Suggestions always wait for your yes.':
     'Mit KI: Fotos von Kassenbons, Rezepte aus Fotos, Screenshots und Social-Media-Beiträgen, offene Fragen an den Assistenten und Hilfe auf jedem Bildschirm. Vorschläge warten immer auf dein Ja.',
-  'In ToHuus Cloud, AI runs on Mistral models in the EU (via OpenRouter, no training on your data). Only what a request needs is sent; allergies and children’s details only with the household’s consent, house codes never.':
-    'In der ToHuus Cloud laufen KI-Anfragen über Mistral-Modelle in der EU (über OpenRouter, kein Training mit euren Daten). Gesendet wird nur, was eine Anfrage braucht; Allergien und Angaben zu Kindern nur mit Zustimmung des Haushalts, Hauscodes nie.',
+  'In ToHuus Cloud, AI runs on Mistral models in the EU (no training on your data). Only what a request needs is sent; allergies and children’s details only with the household’s consent, house codes never.':
+    'In der ToHuus Cloud laufen KI-Anfragen über Mistral-Modelle in der EU (kein Training mit euren Daten). Gesendet wird nur, was eine Anfrage braucht; Allergien und Angaben zu Kindern nur mit Zustimmung des Haushalts, Hauscodes nie.',
   'What others see': 'Was andere sehen',
   'Everyone in the household shares the list, recipes, plan and money overview.': 'Alle im Haushalt teilen Liste, Rezepte, Plan und Geld-Übersicht.',
   'Private and discreet list items stay private – others see a placeholder at most.': 'Private und diskrete Einträge bleiben privat – andere sehen höchstens einen Platzhalter.',

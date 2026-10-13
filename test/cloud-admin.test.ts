@@ -10,10 +10,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Agent, FormData, fetch } from 'undici';
+import { freePort } from './helpers/port';
 const local = new Agent();
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-admin-'));
-const PORT = 49400 + Math.floor(Math.random() * 300);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 Object.assign(process.env, {
   MULTI_TENANT: 'true',
@@ -142,6 +143,8 @@ describe('runtime settings', () => {
 
     // a request uses the stored key, still pinned to Mistral EU
     aiCalls.length = 0;
+    const policy = await import('../server/lib/ai-policy');
+    tenancy.runInHousehold(hA, () => policy.setHouseholdAiConsent(true));
     const res = await tenancy.runInHousehold(hA, () => ai.chat({ messages: [{ role: 'user', content: 'hi' }] }));
     expect(res.content).toBe('OK');
     expect(aiCalls[0].auth).toBe('Bearer sk-or-v1-supersecret-9f3a');
@@ -254,6 +257,73 @@ describe('households and audit log', () => {
 });
 
 
+describe('accounts (Konten)', () => {
+  it('lists accounts with account data only, searchable; nobody else may look', async () => {
+    expect((await A.get('/api/operator/accounts')).status).toBe(404);
+    const l = await op.get('/api/operator/accounts?q=mira@example.org');
+    expect(l.status, l.text).toBe(200);
+    expect(l.json.total).toBe(1);
+    const a = l.json.accounts[0];
+    expect(a).toMatchObject({ email: 'mira@example.org', name: 'Mira', password: true, blocked_at: null, households: [{ id: hA, name: 'Familie Berg', role: 'admin' }] });
+    // account data only – nothing from inside the household
+    expect(Object.keys(a).sort()).toEqual(['apple', 'blocked_at', 'blocked_reason', 'created_at', 'devices', 'email', 'households', 'id', 'lang', 'last_login_at', 'last_seen_at', 'name', 'passkeys', 'password', 'verified_at']);
+    expect((await op.get('/api/operator/accounts?filter=blocked')).json.total).toBe(0);
+  });
+
+  it('pauses an account: signed out everywhere, no new sign-in or app token, then works again', async () => {
+    const B = new Client();
+    await signup(B, 'konten-sam@example.org', 'WG Sam');
+    const id = (await op.get('/api/operator/accounts?q=konten-sam@')).json.accounts[0].id;
+    expect((await B.get('/api/cloud/me')).status).toBe(200);
+    expect((await op.post(`/api/operator/accounts/${id}/block`, { reason: 'x' })).status).toBe(400);
+    const b = await op.post(`/api/operator/accounts/${id}/block`, { reason: 'Spam-Rezepte im Katalog', notify: false });
+    expect(b.status, b.text).toBe(200);
+    expect(b.json.signedOut).toBeGreaterThan(0);
+    expect((await B.get('/api/cloud/me')).status).toBe(401);
+    const login = await new Client().post('/api/cloud/login', { email: 'konten-sam@example.org', password: 'geheim1234' });
+    expect(login.status).toBe(403);
+    expect(login.json).toMatchObject({ code: 'account.blocked' });
+    expect(login.json.error).toMatch(/pausiert|paused/);
+    const app = await new Client().post('/api/auth/app', { email: 'konten-sam@example.org', password: 'geheim1234', device: 'iPhone' });
+    expect(app.status).toBe(403);
+    expect((await op.get('/api/operator/accounts?filter=blocked')).json.accounts[0]).toMatchObject({ id, blocked_reason: 'Spam-Rezepte im Katalog' });
+    expect((await op.post(`/api/operator/accounts/${id}/unblock`, { notify: false })).status).toBe(200);
+    expect((await new Client().post('/api/cloud/login', { email: 'konten-sam@example.org', password: 'geheim1234' })).status).toBe(200);
+    const log = await op.get('/api/operator/audit');
+    expect(log.status, log.text).toBe(200);
+    const entries = log.json as { action: string; target: string }[];
+    expect(entries.map((e) => e.action)).toEqual(expect.arrayContaining(['account.block', 'account.unblock']));
+    // the log names the account by id, never by address
+    expect(JSON.stringify(entries)).not.toContain('konten-sam@example.org');
+  });
+
+  it('removes an account for good after confirming its address – its own household is crypto-shredded', async () => {
+    const C = new Client();
+    const hC = await signup(C, 'konten-ben@example.org', 'Ben allein');
+    const id = (await op.get('/api/operator/accounts?q=konten-ben@')).json.accounts[0].id;
+    expect((await op.del(`/api/operator/accounts/${id}`, { confirm: 'falsch@example.org' })).status).toBe(400);
+    const d = await op.del(`/api/operator/accounts/${id}`, { confirm: 'KONTEN-BEN@example.org' });
+    expect(d.status, d.text).toBe(200);
+    expect(d.json.deleted).toEqual([hC]);
+    expect(accounts.accountByEmail('konten-ben@example.org')).toBeUndefined();
+    expect(accounts.getHousehold(hC)).toBeUndefined();
+    expect((await C.get('/api/cloud/me')).status).toBe(401);
+  });
+});
+
+describe('error log (Fehler)', () => {
+  it('only operators; apps report, the list and the download work', async () => {
+    expect((await A.get('/api/operator/errors')).status).toBe(404);
+    expect((await A.post('/api/diag/errors', { source: 'ios', errors: [{ message: 'keyNotFound(kind)', route: '/api/today', appVersion: '1.0.0 (5)' }] })).status).toBe(200);
+    const l = await op.get('/api/operator/errors?source=ios');
+    expect(l.status, l.text).toBe(200);
+    // the household of the reporter is kept as its id, nothing else about it
+    expect(l.json.rows[0]).toMatchObject({ source: 'ios', message: 'keyNotFound(kind)', household_id: hA, app_version: '1.0.0 (5)' });
+    const csv = await op.get('/api/operator/errors?format=csv');
+    expect(csv.text).toContain('keyNotFound(kind)');
+  });
+});
+
 describe('usage statistics (counts only)', () => {
   it('counts feature actions per day and platform, never per household or person', async () => {
     const stats = await import('../server/lib/stats');
@@ -317,12 +387,34 @@ describe('usage statistics (counts only)', () => {
 
 describe('ToHuus-Rezepte (central catalogue)', () => {
   let cat: typeof import('../server/lib/cloud-recipes');
-  it('starts with 30 own drafts – nothing published, allergens computed, review notes', async () => {
+  it('starts with 30 own drafts, 20 Plus drafts, 12 kitchen-machine and 6 baking drafts – nothing published, allergens computed, review notes', async () => {
     cat = await import('../server/lib/cloud-recipes');
     const l = await op.get('/api/operator/recipes');
     expect(l.status, l.text).toBe(200);
-    expect(l.json.recipes).toHaveLength(30);
-    expect(l.json.counts).toEqual({ draft: 30 });
+    expect(l.json.recipes).toHaveLength(68);
+    expect(l.json.counts).toEqual({ draft: 68 });
+    // the Plus set: tier plus, each with the Canva link of its AI picture
+    const plusSet = l.json.recipes.filter((r: any) => r.plus);
+    expect(plusSet).toHaveLength(38);
+    // baking: preview-card pages 33–38 after the kitchen-machine recipes
+    const rolls = l.json.recipes.find((r: any) => r.title === 'Zimtschnecken');
+    expect(rolls).toMatchObject({ plus: true, imagePage: 33 });
+    expect(l.json.recipes.find((r: any) => r.title === 'Zwetschgenkuchen vom Blech').imagePage).toBe(38);
+    expect(rolls.allergens).toEqual(expect.arrayContaining(['gluten', 'eggs', 'milk']));
+    // kitchen machines: the settings sit on the steps, the device on the recipe; Thermomix only for Thermomix
+    const tm = l.json.recipes.find((r: any) => r.title === 'Kürbisrisotto aus dem Thermomix');
+    expect(tm.thermomix).toBe(true);
+    expect(tm.steps.find((x: any) => /Reis zugeben/.test(x.text)).tm).toMatchObject({ device: 'Thermomix', time: '2 Min.', temp: '120 °C', speed: '1', mode: 'Linkslauf' });
+    expect(tm.steps.find((x: any) => /abschmecken/.test(x.text)).tm ?? null).toBeNull();
+    const mc = l.json.recipes.find((r: any) => r.title === 'Chili con Carne aus dem Monsieur Cuisine');
+    expect(mc.thermomix).toBe(false);
+    expect(mc.steps[2].tm).toMatchObject({ device: 'Monsieur Cuisine', temp: '130 °C' });
+    expect(mc.warnings.some((w: string) => /Monsieur Cuisine settings/.test(w))).toBe(true);
+    const pizza = l.json.recipes.find((r: any) => r.title === 'Blechpizza mit Thermomix-Teig');
+    expect(pizza.steps[pizza.steps.length - 1].tm).toMatchObject({ device: 'Backofen', temp: '230 °C' });
+    expect(plusSet.every((r: any) => /^https:\/\/www\.canva\.com\/M\/MAHX/.test(r.imageRef))).toBe(true);
+    // poultry and mince recipes say when they are cooked through (no review note)
+    for (const t of ['Ofen-Hähnchen mit Wurzelgemüse', 'Hackbällchen in Tomatensoße', 'Chili con Carne aus dem Monsieur Cuisine', 'Hähnchen-Geschnetzeltes mit Champignons aus dem Cookit']) expect(plusSet.find((r: any) => r.title === t).warnings.some((w: string) => /Poultry/.test(w)), t).toBe(false);
     const pf = l.json.recipes.find((r: any) => r.title === 'Pfannkuchen');
     expect(pf.allergens).toEqual(['eggs', 'gluten', 'milk']);
     expect(pf.aiAssisted).toBe(true);
@@ -340,7 +432,7 @@ describe('ToHuus-Rezepte (central catalogue)', () => {
   });
 
   it('review → schedule 3 per week → the scheduler publishes; households see "new this week" and save a copy', async () => {
-    const l = (await op.get('/api/operator/recipes')).json.recipes as any[];
+    const l = ((await op.get('/api/operator/recipes')).json.recipes as any[]).filter((r) => !r.plus);
     const [a, b, c, d] = l.slice(0, 4);
     expect((await op.post(`/api/operator/recipes/${a.id}/publish`)).status).toBe(409); // not read yet
     expect((await op.req('PATCH', `/api/operator/recipes/${a.id}`, { publishAt: '2026-01-01' })).status).toBe(409);
@@ -386,6 +478,32 @@ describe('ToHuus-Rezepte (central catalogue)', () => {
     expect((await op.get('/api/operator/audit')).json.map((x: any) => x.action)).toEqual(expect.arrayContaining(['recipes.update', 'recipes.schedule', 'recipes.unpublish']));
   });
 
+  it('Plus recipes: households without Plus see the card with a lock, opening and saving answer 402', async () => {
+    const pr = ((await op.get('/api/operator/recipes')).json.recipes as any[]).find((r) => r.title === 'Kürbis-Linsen-Suppe');
+    expect((await op.req('PATCH', `/api/operator/recipes/${pr.id}`, { reviewState: 'reviewed', publishAt: new Date(Date.now() - 60_000).toISOString().replace('T', ' ').slice(0, 19) })).status).toBe(200);
+    expect(cat.publishDue()).toBe(1);
+    // a household on Free
+    const F = new Client();
+    const hF = await signup(F, 'cat-free@example.org', 'Free-Haushalt');
+    accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(hF);
+    const list = (await F.get('/api/cloud-recipes')).json;
+    expect(list.plus).toBe(false);
+    expect(list.newThisWeek.find((r: any) => r.id === pr.id)).toMatchObject({ plus: true, locked: true, title: 'Kürbis-Linsen-Suppe' });
+    const one = await F.get(`/api/cloud-recipes/${pr.id}`);
+    expect(one.status).toBe(402);
+    expect(one.json).toMatchObject({ code: 'plan', feature: 'plusRecipes', plan: 'plus' });
+    expect((await F.post(`/api/cloud-recipes/${pr.id}/save`)).status).toBe(402);
+    // the trial (Plus) opens and saves it
+    const T = new Client();
+    await signup(T, 'cat-trial@example.org', 'Trial-Haushalt');
+    expect((await T.get('/api/cloud-recipes')).json.newThisWeek.find((r: any) => r.id === pr.id)).toMatchObject({ plus: true, locked: false });
+    expect((await T.get(`/api/cloud-recipes/${pr.id}`)).json.ingredients.length).toBeGreaterThan(3);
+    expect((await T.post(`/api/cloud-recipes/${pr.id}/save`)).json.created).toBe(true);
+    // the operator can take the Plus mark off again
+    expect((await op.req('PATCH', `/api/operator/recipes/${pr.id}`, { tier: 'all' })).json.plus).toBe(false);
+    expect((await F.get(`/api/cloud-recipes/${pr.id}`)).status).toBe(200);
+  });
+
   it('uploads a recipe package with a photo; the photo is stored once, encrypted, shown only when published', async () => {
     const sharp = (await import('sharp')).default;
     const { writeZip } = await import('../server/lib/recipe-package');
@@ -428,6 +546,43 @@ describe('ToHuus-Rezepte (central catalogue)', () => {
     // a draft can be deleted, a published recipe not
     expect((await op.del(`/api/operator/recipes/${r1.id}`)).status).toBe(409);
     expect((await op.del(`/api/operator/recipes/${r2.id}`)).status).toBe(200);
+  });
+
+  it('maps a Canva ZIP of preview cards to the seeded recipes by page number', async () => {
+    const sharp = (await import('sharp')).default;
+    const { writeZip } = await import('../server/lib/recipe-package');
+    const png = await sharp({ create: { width: 64, height: 48, channels: 3, background: '#176b50' } }).png().toBuffer();
+    const all = (await op.get('/api/operator/recipes')).json.recipes as { id: number; title: string; imagePage: number | null; imageCredit: string | null }[];
+    const p1 = all.find((r) => r.imagePage === 1)!;
+    const p12 = all.find((r) => r.imagePage === 12)!;
+    expect(p1.title).toBe('Kürbis-Linsen-Suppe');
+    const zip = writeZip([
+      { name: 'ToHuus Vorschaubilder/1.png', data: png },
+      { name: 'ToHuus Vorschaubilder/12.png', data: png },
+      { name: 'ToHuus Vorschaubilder/99.png', data: png },
+      { name: 'notiz.txt', data: Buffer.from('x') },
+    ]);
+    const fd = new FormData();
+    fd.append('file', new Blob([new Uint8Array(zip)], { type: 'application/zip' }), 'canva.zip');
+    const up = await op.req('POST', '/api/operator/recipes/preview-zip', fd);
+    expect(up.status, up.text).toBe(200);
+    expect(up.json.updated).toBe(2);
+    expect(up.json.skipped).toEqual(expect.arrayContaining(['ToHuus Vorschaubilder/99.png', 'notiz.txt']));
+    const r1 = (await op.get(`/api/operator/recipes/${p1.id}`)).json;
+    expect(r1.image).toBeTruthy();
+    // a real Pexels photo is in this card: shown as photo with the credit
+    expect(r1).toMatchObject({ imageKind: 'photo', imageCredit: 'Pexels' });
+    expect((await op.get(`/api/operator/recipes/${p12.id}`)).json.image).toBeTruthy();
+    // part of the design: the baking cards exported on their own (pages 1–6 = 33–38)
+    const part = new FormData();
+    part.append('file', new Blob([new Uint8Array(writeZip([{ name: '1.png', data: png }]))], { type: 'application/zip' }), 'gebaeck.zip');
+    part.append('start', '33');
+    const up2 = await op.req('POST', '/api/operator/recipes/preview-zip', part);
+    expect(up2.json.recipes).toEqual([expect.objectContaining({ page: 33, title: 'Zimtschnecken' })]);
+    // not a zip
+    const bad = new FormData();
+    bad.append('file', new Blob([png], { type: 'image/png' }), 'x.png');
+    expect((await op.req('POST', '/api/operator/recipes/preview-zip', bad)).status).toBe(400);
   });
 
   it('AI drafts land in the queue as drafts, never published', async () => {

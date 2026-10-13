@@ -1,14 +1,30 @@
 /**
  * AI on/off (ai-policy.ts). Contract: docs/assistant.md › "Switching AI off".
- *   GET   /api/ai/settings → { configured, household, mcp, mine, effective, reason, admin, kids? }
- *   PATCH /api/ai/settings { household?, mcp? (admins), mine? (the signed-in member, for themselves only) }
+ *   GET   /api/ai/settings → { configured, household, mcp, mine, effective, reason, consent, admin, kids? }
+ *   PATCH /api/ai/settings { household?, mcp? (admins), mine?, consent? (the signed-in member, for themselves only) }
+ * `consent` (ToHuus Cloud): { required, given, household, processor } – reason 'consent' until the person agreed.
  * Children: PUT /api/kids/:id/ai { enabled } (routes/kids.ts).
  */
 import { Router } from 'express';
 import { z } from 'zod';
+import { config } from '../config.js';
 import { db } from '../db.js';
+import { currentLang } from '../i18n.js';
 import { aiConfigured } from '../lib/ai.js';
-import { aiOffReason, householdAiOn, mcpOn, personAiOn, setHouseholdAi, setMcpOn, setPersonAi } from '../lib/ai-policy.js';
+import {
+  AI_PROCESSOR,
+  aiConsentRequired,
+  aiOffReason,
+  householdAiConsent,
+  householdAiOn,
+  mcpOn,
+  personAiConsent,
+  personAiOn,
+  setAiConsent,
+  setHouseholdAi,
+  setMcpOn,
+  setPersonAi,
+} from '../lib/ai-policy.js';
 import { requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 
@@ -27,6 +43,7 @@ export function aiStateFor(userId: number | null | undefined) {
     mine: personAiOn(userId),
     effective: any && reason === null,
     reason: reason ?? (any ? null : 'no_model'),
+    consent: { required: aiConsentRequired(), given: !aiConsentRequired() || personAiConsent(userId), household: !aiConsentRequired() || householdAiConsent(), processor: AI_PROCESSOR, privacyUrl: `${config.siteUrl}/${currentLang() === 'de' ? 'de/datenschutz.html' : 'privacy.html'}` },
   };
 }
 
@@ -44,7 +61,7 @@ r.get('/ai/settings', requireAuth, (req, res) => {
 });
 
 r.patch('/ai/settings', requireAuth, (req, res) => {
-  const b = z.object({ household: z.boolean().optional(), mcp: z.boolean().optional(), mine: z.boolean().optional() }).strict().parse(req.body);
+  const b = z.object({ household: z.boolean().optional(), mcp: z.boolean().optional(), mine: z.boolean().optional(), consent: z.boolean().optional() }).strict().parse(req.body);
   const a = req.actor!;
   const admin = a.role === 'admin' && !a.houseGuest && a.kind !== 'guest';
   if ((b.household !== undefined || b.mcp !== undefined) && !admin) {
@@ -57,6 +74,13 @@ r.patch('/ai/settings', requireAuth, (req, res) => {
       return;
     }
     setPersonAi(a.userId, b.mine);
+  }
+  if (b.consent !== undefined) {
+    if (!a.userId || a.kind === 'guest' || a.houseGuest) {
+      res.status(400).json({ error: 'no person' });
+      return;
+    }
+    setAiConsent(a.userId, b.consent, { admin });
   }
   if (b.household !== undefined) setHouseholdAi(b.household);
   if (b.mcp !== undefined) setMcpOn(b.mcp);

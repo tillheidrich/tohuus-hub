@@ -352,6 +352,14 @@ extension APIClient {
     func setPresence(home: Bool) async throws {
         _ = try await send("POST", "api/notify/presence", json: ["home": home, "source": "app"], as: Ignored.self)
     }
+    /// POST /api/push/apns/test → { sent } – a test notification to this person's devices
+    func sendTestPush() async throws -> Int {
+        let r = try await send("POST", "api/push/apns/test", json: [String: String](), as: JSONValue.self)
+        return r["sent"]?.int ?? 0
+    }
+
+    /// PUT /api/notify/prefs { mailOff } – all optional mails for this person off/on
+    func setMailOff(_ off: Bool) async throws { _ = try await send("PUT", "api/notify/prefs", json: ["mailOff": off], as: Ignored.self) }
     func setHomeOnly(_ keys: [String]) async throws { _ = try await send("PUT", "api/notify/prefs", json: ["homeOnly": keys], as: Ignored.self) }
 }
 

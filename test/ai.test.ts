@@ -147,6 +147,16 @@ describe('chat', () => {
     expect(ai.fallbackModels('text', 'x', { AI_BASE_URL: 'http://ollama.local/v1', AI_API_KEY: 'k' } as any)).toEqual([]);
   });
 
+  it('a deadline stops retries and fallback models (a person is waiting)', async () => {
+    process.env.AI_API_KEY = 'k';
+    fake([() => ({ status: 429, text: 'busy' })]);
+    const t0 = Date.now();
+    // the backoff (1 s) runs into the deadline: one try, then no more attempts and no fallback model
+    await expect(ai.chat({ messages: [{ role: 'user', content: 'x' }], backoffMs: 1000, deadline: Date.now() + 2500 })).rejects.toMatchObject({ code: 'rate_limited' });
+    expect(calls).toHaveLength(1);
+    expect(Date.now() - t0).toBeLessThan(2500);
+  });
+
   it('maps errors cleanly and does not retry a bad key', async () => {
     process.env.AI_API_KEY = 'k';
     fake([() => ({ status: 401, text: 'no' })]);

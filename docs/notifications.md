@@ -22,6 +22,15 @@ ToHuus Hub tells the household when something needs attention. There are two lay
 | `order.new` | on | a „Bring mir was“ wish |
 | `guest.order` | off | an order from guests or a party (`order.new` with `kind` guest/party) |
 | `budget.warning` | off | budget hint |
+| `stock.low` | off | something is running low |
+| `stock.empty` | off | something is used up |
+| `shopping.added` | off | something was put on the list |
+| `order.status` | on | news on my own „Bring mir was“ wish |
+| `kids.wish` | on | a wish from the children (kid mode) |
+| `plan.vote` | on | a vote on what to eat |
+| `plan.rotation` | off | the week plan was filled from the rotation |
+| `care.due` | off | a care task is due |
+| `party.ending` | off | the party is ending |
 
 Channels per event: `apns` (iPhone), `push` (browser), `digest` (one e-mail a day at the household's digest hour, to the
 member's confirmed address – their own in self-host, their account's in the cloud). Events of an area the household
@@ -32,18 +41,29 @@ switched off ("Was nutzen wir?", `modules.ts`) disappear from the list and are n
 - **Only at home** per event: skipped while the person is reported away. Presence comes from
   `POST /api/notify/presence { home: boolean, source: 'app'|'ha' }` (the iPhone app, Home Assistant later); older than
   12 hours counts as unknown, and unknown means "send".
+- **Mails from ToHuus** (`mailOff`, default false): one switch per person for every optional mail – the e-mail
+  summary and the renewal reminder (`renewals.ts`). Sign-in links, password resets and security notices always come.
+  Every optional mail carries a signed link `GET /api/mail/unsubscribe/<token>` (`server/lib/mail-unsub.ts`, HMAC with
+  a key derived from the master key in the cloud, a random secret in the settings when self-hosted) plus the headers
+  `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 2369 / RFC 8058). GET only shows a
+  page with one button (mail scanners open links); `POST` sets `mailOff: true`. Web: Settings › Notifications; iPhone:
+  Mehr › Mitteilungen › Per Mail.
 - **Lock screen**: `preview: 'full'` (the text) or `'generic'` ("ToHuus – Neues in ToHuus"), for iPhone and browser.
 
 API (every member, about themselves):
 
 | Endpoint | Body | Answer |
 |---|---|---|
-| `GET /api/notify/prefs` | | `{ events: [{ key, label, apns, push, digest, homeOnly }], quiet: { from, to } \| null, preview, channels: { apns: { configured, devices }, push: { devices }, digest: { email } }, presence }` |
-| `PUT /api/notify/prefs` | `{ events?: { [key]: { apns?, push?, digest? } }, quiet?: { from, to } \| null, homeOnly?: string[], preview? }` | `{ ok }` |
+| `GET /api/notify/prefs` | | `{ events: [{ key, label, apns, push, digest, homeOnly }], quiet: { from, to } \| null, preview, mailOff, channels: { apns: { configured, devices }, push: { devices }, digest: { email } }, presence }` |
+| `PUT /api/notify/prefs` | `{ events?: { [key]: { apns?, push?, digest? } }, quiet?: { from, to } \| null, homeOnly?: string[], preview?, mailOff?: boolean }` | `{ ok }` |
+| `GET /api/mail/unsubscribe/:token` | (no sign-in, signed token) | HTML page with one button |
+| `POST /api/mail/unsubscribe/:token` | form or `List-Unsubscribe=One-Click` | HTML page; `mailOff` is now true |
 | `POST /api/notify/presence` | `{ home, source? }` | `{ home, source }` |
 
-Events not in this table (low stock, care tasks, sign-ins, party, kids, votes, the daily digest, tests) keep the
-household routing below; the iPhone gets them whenever browser push would (same audience).
+Since 13 Oct 2026 every event that reaches people is in this table, so each member decides for themselves; the
+household matrix below only routes the shared channels (Home Assistant, ntfy, webhooks, chat, household e-mail) for
+them. Not personal: sign-in warnings (`auth.new_device`, always to the person concerned), the household's daily
+e-mail digest and tests.
 
 ## iPhone push (APNs, `server/lib/apns.ts`)
 

@@ -10,23 +10,37 @@ import WebKit
 struct WebSettingsView: View {
     let api: APIClient
     @Environment(\.dismiss) private var dismiss
-    @State private var url: URL?
 
     var body: some View {
         NavigationStack {
-            Group {
-                if let url {
-                    WebView(url: url, allowedHost: api.baseURL.host())
-                } else {
-                    ProgressView()
-                }
+            WebPageView(api: api, path: "/einstellungen", title: L("Web settings"))
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
+        }
+    }
+}
+
+/// A page of the web app inside the app, signed in with the one-time link – for areas the app does not have natively
+/// yet (Pflege, Urlaub with the handover, the handover for guests; docs/ios-parity-2026-10-13.md).
+struct WebPageView: View {
+    let api: APIClient
+    /// web route, e.g. "/pflege"
+    let path: String
+    let title: String
+    @State private var url: URL?
+
+    var body: some View {
+        Group {
+            if let url {
+                WebView(url: url, allowedHost: api.baseURL.host())
+            } else {
+                ProgressView()
             }
-            .navigationTitle(L("Web settings"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
-            .task {
-                url = await api.webSignInLink(next: "/einstellungen") ?? (try? api.url("einstellungen")) ?? api.baseURL
-            }
+        }
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            let clean = path.hasPrefix("/") ? String(path.dropFirst()) : path
+            url = await api.webSignInLink(next: path) ?? (try? api.url(clean)) ?? api.baseURL
         }
     }
 }
@@ -38,6 +52,8 @@ struct WebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
+        // the web app hides what the iPhone app must not offer (code redemption, App Store guideline 3.1.1)
+        config.applicationNameForUserAgent = "ToHuusApp"
         let view = WKWebView(frame: .zero, configuration: config)
         view.navigationDelegate = context.coordinator
         view.allowsBackForwardNavigationGestures = true

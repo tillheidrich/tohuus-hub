@@ -217,6 +217,10 @@
   color: var(--ink-2);
 }
 .wish-prio.p3 {
+  color: var(--ink);
+}
+/* the clay heart only (3.7:1 is enough for an icon, not for 14 px text) */
+.wish-prio.p3 svg {
   color: var(--clay);
 }
 .wish-note {

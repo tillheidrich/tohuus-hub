@@ -10,21 +10,15 @@
  * Apple's stable user id (`sub`) is linked to exactly one account in `account_apple` (accounts.db, created on first
  * use like the passkey tables). Nothing of Apple's is stored in a household database.
  *
- * TODO(apple-revoke): App Store guideline 5.1.1(v) expects that deleting an account also revokes its Sign in with
- * Apple tokens. That needs a client secret, which we do not have yet. Steps once the key exists:
- *   1. In the Apple Developer account create a key with "Sign in with Apple" enabled (Keys › +), note its Key ID,
- *      download the .p8; set APPLE_SIWA_KEY_ID, APPLE_SIWA_KEY_P8 (PEM), APPLE_TEAM_ID (FVS7WVTQ67).
- *   2. client_secret = ES256 JWT, header { alg: 'ES256', kid: <Key ID> }, claims { iss: <Team ID>, iat: now,
- *      exp: now + ≤ 6 months, aud: 'https://appleid.apple.com', sub: <client_id> } – client_id is the bundle id for
- *      app sign-ins and the Services ID for web sign-ins.
- *   3. At sign-in exchange the `authorizationCode` (app: sent in the body; web: `code` in the form_post) once:
- *      POST https://appleid.apple.com/auth/token (x-www-form-urlencoded: client_id, client_secret, code,
- *      grant_type=authorization_code[, redirect_uri for web]) → store `refresh_token` encrypted in account_apple.
- *   4. On account deletion: POST https://appleid.apple.com/auth/revoke (client_id, client_secret,
- *      token=<refresh_token>, token_type_hint=refresh_token) before the row is deleted. 200 = revoked.
+ * Token revocation (App Store guideline 5.1.1(v)): with a Sign in with Apple key configured (APPLE_SIWA_KEY_ID,
+ * APPLE_SIWA_KEY_P8 as PEM, APPLE_TEAM_ID – Apple Developer › Keys › + › "Sign in with Apple"), every sign-in exchanges
+ * the authorization code once for a refresh token (POST https://appleid.apple.com/auth/token, client_secret = ES256 JWT
+ * for the bundle id or the Services ID), kept in `account_apple` (accounts.db is encrypted as a whole). Deleting the
+ * account revokes it first (POST …/auth/revoke). Without the key nothing is exchanged and deletion only drops the link
+ * (logged once) – docs/cloud.md › Sign in with Apple.
  */
 import crypto from 'node:crypto';
-import { createLocalJWKSet, jwtVerify, type JSONWebKeySet, type JWTPayload } from 'jose';
+import { createLocalJWKSet, importPKCS8, jwtVerify, SignJWT, type JSONWebKeySet, type JWTPayload } from 'jose';
 import type { DB } from '../db.js';
 import { t } from '../i18n.js';
 import { accountsDb } from './accounts.js';
@@ -174,6 +168,10 @@ function adb(): DB {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       last_used_at TEXT
     );`);
+    // token revocation (13 Oct 2026): the refresh token from the code exchange and the client it belongs to
+    const cols = new Set((d.prepare('PRAGMA table_info(account_apple)').all() as { name: string }[]).map((c) => c.name));
+    if (!cols.has('refresh_token')) d.exec('ALTER TABLE account_apple ADD COLUMN refresh_token TEXT');
+    if (!cols.has('client_id')) d.exec('ALTER TABLE account_apple ADD COLUMN client_id TEXT');
     ready.add(d);
   }
   return d;
@@ -196,9 +194,85 @@ export function touchApple(sub: string, email: string | null) {
   adb().prepare(`UPDATE account_apple SET last_used_at = datetime('now'), email = COALESCE(?, email) WHERE sub = ?`).run(email, sub);
 }
 
-/** Account deletion: the Apple link goes (also ON DELETE CASCADE). Token revocation: see TODO(apple-revoke) above. */
-export function deleteAppleLinks(accountId: number) {
+// ---------------------------------------------------------------- token exchange and revocation
+
+const APPLE_TOKEN_URL = 'https://appleid.apple.com/auth/token';
+const APPLE_REVOKE_URL = 'https://appleid.apple.com/auth/revoke';
+type FetchLike = (url: string, init: { method: string; headers: Record<string, string>; body: string; signal?: AbortSignal }) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
+let fetchImpl: FetchLike = (url, init) => fetch(url, init);
+/** tests: answer Apple's endpoints locally */
+export function setAppleFetchForTests(f: FetchLike | null) {
+  fetchImpl = f ?? ((url, init) => fetch(url, init));
+}
+
+/** a Sign in with Apple key is configured (else no exchange and no revocation) */
+export const siwaConfigured = () => Boolean(process.env.APPLE_SIWA_KEY_ID && process.env.APPLE_SIWA_KEY_P8);
+
+/** client_secret for Apple's token endpoints: ES256 JWT signed with the Sign in with Apple key, valid 10 minutes */
+async function clientSecret(clientId: string) {
+  const key = await importPKCS8(process.env.APPLE_SIWA_KEY_P8!.replace(/\\n/g, '\n'), 'ES256');
+  return new SignJWT({})
+    .setProtectedHeader({ alg: 'ES256', kid: process.env.APPLE_SIWA_KEY_ID! })
+    .setIssuer(process.env.APPLE_TEAM_ID || 'FVS7WVTQ67')
+    .setIssuedAt()
+    .setExpirationTime('10m')
+    .setAudience(APPLE_ISSUER)
+    .setSubject(clientId)
+    .sign(key);
+}
+
+async function post(url: string, form: Record<string, string>) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    return await fetchImpl(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(form).toString(), signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * After a sign-in: exchange the one-time authorization code for a refresh token and keep it with the link, so the
+ * account's Apple tokens can be revoked when it is deleted. Never fails the sign-in (returns false instead).
+ */
+export async function keepAppleRefreshToken(sub: string, code: string | undefined, clientId: string, redirectUri?: string): Promise<boolean> {
+  if (!code || !siwaConfigured()) return false;
+  try {
+    const form: Record<string, string> = { client_id: clientId, client_secret: await clientSecret(clientId), code, grant_type: 'authorization_code' };
+    if (redirectUri) form.redirect_uri = redirectUri;
+    const r = await post(APPLE_TOKEN_URL, form);
+    const j = (await r.json().catch(() => null)) as { refresh_token?: string } | null;
+    if (!r.ok || !j?.refresh_token) {
+      console.warn(`[apple] code exchange failed (${r.status})`);
+      return false;
+    }
+    adb().prepare('UPDATE account_apple SET refresh_token = ?, client_id = ? WHERE sub = ?').run(j.refresh_token, clientId, sub);
+    return true;
+  } catch (e) {
+    console.warn('[apple] code exchange failed:', (e as Error).message);
+    return false;
+  }
+}
+
+let warnedNoKey = false;
+/** Account deletion: revoke the Apple tokens (when we hold one), then drop the link (also ON DELETE CASCADE). */
+export async function deleteAppleLinks(accountId: number): Promise<{ revoked: boolean }> {
+  const row = adb().prepare('SELECT refresh_token, client_id FROM account_apple WHERE account_id = ?').get(accountId) as { refresh_token: string | null; client_id: string | null } | undefined;
+  let revoked = false;
+  if (row?.refresh_token && row.client_id && siwaConfigured()) {
+    try {
+      const r = await post(APPLE_REVOKE_URL, { client_id: row.client_id, client_secret: await clientSecret(row.client_id), token: row.refresh_token, token_type_hint: 'refresh_token' });
+      revoked = r.ok;
+      if (!r.ok) console.warn(`[apple] revoke failed (${r.status})`);
+    } catch (e) {
+      console.warn('[apple] revoke failed:', (e as Error).message);
+    }
+  } else if (row && !siwaConfigured() && !warnedNoKey) {
+    warnedNoKey = true;
+    console.warn('[apple] account with Sign in with Apple deleted without token revocation: set APPLE_SIWA_KEY_ID / APPLE_SIWA_KEY_P8');
+  }
   adb().prepare('DELETE FROM account_apple WHERE account_id = ?').run(accountId);
+  return { revoked };
 }
 
 export const _test = { used };

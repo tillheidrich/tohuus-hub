@@ -39,4 +39,7 @@ export const de_spend2: Record<string, string> = {
   'Manual expense': 'Eigene Ausgabe',
   Other: 'Sonstiges',
   Uncategorised: 'Ohne Kategorie',
+  'this year': 'dieses Jahr',
+  'Budget period must be week, month or year': 'Ein Budget gilt pro Woche, Monat oder Jahr',
+  'Personal budgets need a signed-in person': 'Ein eigenes Budget braucht eine angemeldete Person',
 };

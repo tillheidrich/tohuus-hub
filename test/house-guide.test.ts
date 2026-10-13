@@ -2,6 +2,7 @@
  * Hausinfo (house-guide.ts): visibility per card/code for members, guest levels and guest/sitter links (with end),
  * codes as secrets (separate table, masked, reveal logged, never to assistant/MCP/export), templates, guest pages.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import type { AddressInfo } from 'node:net';
 import os from 'node:os';
@@ -52,6 +53,8 @@ beforeAll(async () => {
   app.use('/api/guest', guest);
   app.use('/api/guest', houseGuest);
   app.use('/api', r);
+  const { serveImage } = await import('../server/lib/images');
+  app.get('/img/:name', serveImage);
   await new Promise<void>((resolve) => {
     const srv = app.listen(0, () => {
       base = `http://127.0.0.1:${(srv.address() as AddressInfo).port}`;
@@ -174,6 +177,51 @@ describe('codes are secrets', () => {
     expect(JSON.stringify(handlers.get('house_info') && (await handlers.get('house_info')!({ query: 'Sicherungskasten' })))).toContain('Links neben der Tür');
     // only on purpose: the admin ticks "with codes"
     expect(JSON.stringify(hg.exportCodes())).toContain(SECRET);
+  });
+});
+
+describe('photos and videos on cards', () => {
+  const upload = async (cardId: number, name: string, type: string, buf: Buffer, caption?: string) => {
+    const f = new FormData();
+    f.append('file', new Blob([new Uint8Array(buf)], { type }), name);
+    if (caption) f.append('caption', caption);
+    const res = await fetch(`${base}/api/house-guide/cards/${cardId}/media`, { method: 'POST', headers: { Authorization: `Bearer ${adminToken}` }, body: f });
+    return { status: res.status, json: (await res.json().catch(() => null)) as any };
+  };
+  // a tiny but real MP4 header (ISO-BMFF "ftyp isom") plus some bytes
+  const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypisom'), Buffer.alloc(12), crypto.randomBytes(5000)]);
+
+  it('a photo and a video on a card; the card shows them where the card is visible – also on the sitter link', async () => {
+    const card = hg.createCard({ type: 'tip', topic: 'heating', area: 'Flur', title: 'Heizung', body: '', visibility: { members: true, guest_level: null, sitters: true, links: [] } }, 'Mira');
+    const sharp = (await import('sharp')).default;
+    const png = await sharp({ create: { width: 40, height: 30, channels: 3, background: '#2a6' } }).png().toBuffer();
+    const p = await upload(card.id, 'thermostat.png', 'image/png', png, 'Thermostat im Flur');
+    expect(p.status, JSON.stringify(p.json)).toBe(200);
+    expect(p.json).toMatchObject({ kind: 'photo', caption: 'Thermostat im Flur' });
+    expect(p.json.url).toMatch(/^\/img\/h\d+-[0-9a-f]+\.webp$/);
+    const v = await upload(card.id, 'heizung.mov', 'video/quicktime', mp4);
+    expect(v.status, JSON.stringify(v.json)).toBe(200);
+    expect(v.json).toMatchObject({ kind: 'video' });
+    expect(v.json.url).toMatch(/\.mp4$/);
+    // an empty body with media counts as filled in – the sitter sees the card with both
+    const sitter = { kind: 'link', name: 'Ben', linkId: sitterId } as const;
+    const seen = hg.listCards(sitter).find((c) => c.id === card.id)!;
+    expect(seen.media.map((m) => m.kind)).toEqual(['photo', 'video']);
+    // byte ranges for players (Safari / iPhone)
+    const res = await fetch(`${base}${v.json.url}`, { headers: { Authorization: `Bearer ${adminToken}`, Range: 'bytes=0-99' } });
+    expect(res.status).toBe(206);
+    expect(res.headers.get('content-range')).toBe(`bytes 0-99/${mp4.length}`);
+    expect(res.headers.get('content-type')).toBe('video/mp4');
+    expect((await res.arrayBuffer()).byteLength).toBe(100);
+    // not a video and not an image: refused
+    expect((await upload(card.id, 'x.mov', 'video/quicktime', Buffer.from('not a video at all'))).status).toBe(400);
+    // caption, delete; deleting the card removes its files
+    expect((await http('PATCH', `/house-guide/cards/${card.id}/media/${p.json.id}`, { caption: 'Drehrad links' })).status).toBe(200);
+    expect((await http('DELETE', `/house-guide/cards/${card.id}/media/${p.json.id}`)).status).toBe(200);
+    expect(hg.listCards(sitter).find((c) => c.id === card.id)!.media).toHaveLength(1);
+    hg.deleteCard(card.id);
+    expect(db.prepare('SELECT COUNT(*) AS n FROM house_media WHERE card_id = ?').get(card.id)).toEqual({ n: 0 });
+    expect((await fetch(`${base}${v.json.url}`, { headers: { Authorization: `Bearer ${adminToken}` } })).status).toBe(404);
   });
 });
 

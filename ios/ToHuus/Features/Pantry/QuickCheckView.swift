@@ -289,7 +289,7 @@ struct CheckStackView: View {
             case "gone": tally.gone += 1
             default: tally.changed += 1
             }
-            withAnimation(.easeOut(duration: 0.2)) {
+            Motion.perform(Motion.quick) {
                 mode = .ask
                 index += 1
             }

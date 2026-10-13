@@ -3,6 +3,7 @@ import SwiftUI
 /// "Neu diese Woche" – ToHuus-Rezepte from the cloud catalogue at the top of "Was kochen wir?". One tap saves a copy
 /// into the household's recipes (source "ToHuus"); a saved one opens instead. Cloud only.
 struct CatalogNewSection: View {
+    @Environment(AppModel.self) private var app
     let store: ServerStore
     let openRecipe: (RecipeRef) -> Void
     @State private var list: CatalogList?
@@ -58,6 +59,12 @@ struct CatalogNewSection: View {
                     Text(L("AI image")).font(.caption2.weight(.bold)).padding(.horizontal, 6).padding(.vertical, 2)
                         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 4)).padding(6)
                 }
+                if c.plus == true {
+                    Text("Plus").font(.caption2.weight(.bold)).foregroundStyle(Theme.onPrimary)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Theme.primary, in: RoundedRectangle(cornerRadius: 4)).padding(6)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                }
             }
             .frame(width: 160, height: 120)
             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -67,7 +74,15 @@ struct CatalogNewSection: View {
             if let m = c.timeMin { Text(LF("%d min", m)).font(.caption).foregroundStyle(Theme.ink2) }
             Text(c.aiAssisted == true ? L("Written with AI, checked by us") : L("Checked by us"))
                 .font(.caption2).foregroundStyle(Theme.ink3).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            if let saved {
+            if let credit = c.imageCredit {
+                Text(LF("Photo: %@", credit)).font(.caption2).foregroundStyle(Theme.ink3).lineLimit(1)
+            }
+            if c.locked == true {
+                // a Plus recipe without Plus: the plans instead of saving
+                Button { app.showPaywall = true } label: { Label(L("Part of Plus"), systemImage: "lock") }
+                    .font(.footnote.weight(.semibold)).frame(minHeight: 44)
+                    .accessibilityLabel(LF("%@ is part of Plus", c.title))
+            } else if let saved {
                 Button { openRecipe(RecipeRef(id: saved)) } label: { Label(L("In your recipes"), systemImage: "checkmark") }
                     .font(.footnote.weight(.semibold)).frame(minHeight: 44)
             } else {

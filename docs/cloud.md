@@ -44,12 +44,18 @@ DATA_DIR/
 | `BASE_URL` | yes | public URL of the cloud (links, signed image URLs; its host is the passkey RP-ID, its origin the expected passkey origin – changing the host makes existing passkeys useless) |
 | `DATA_DIR` | – | default `./data` (`/data` in the image) |
 | `SMTP_*` | recommended | verification, sign-in and reset mails |
+| `SITE_URL` | – | the public website (default `https://tohuus.heidrich-digital.de`); help links and `/api/instance` `siteUrl` – docs/domain.md |
+| `MAIL_INBOUND_DOMAIN` | – | receipt addresses `bons-…@<domain>` (Plus; feature off when unset) – docs/mail-inbox.md |
+| `MAIL_SMTP_PORT` | – | port of the inbound SMTP listener inside the container (e.g. `2525`, Coolify maps 25 to it) |
+| `MAIL_TLS_CERT_FILE`, `MAIL_TLS_KEY_FILE` | – | certificate for STARTTLS on the SMTP listener |
+| `MAIL_INBOUND_SECRET` | – | ≥ 16 characters; enables the webhook `POST /api/mail/inbound` |
 | `CLOUD_SIGNUP` | – | `open` \| `invite` \| `closed` (default **`invite`** – the beta gate, see [Beta gate](#beta-gate); old `true`/`false` = open/closed). Overridden by the back office setting `signup.mode` |
 | `SUPPORT_EMAIL` | – | address shown to ask for an access code (default `tohuus@tillheidrich.de`; back office setting `support.email` wins) |
 | `CLOUD_NAME` | – | name in `/api/instance` (default "ToHuus Cloud") |
 | `HOUSEHOLD_POOL_MAX`, `HOUSEHOLD_POOL_IDLE_MIN` | – | connection pool (64, 10) |
 | `SSE_MAX_TOTAL` | – | live-update connections over all households (5000; 200 per household) |
 | `LEGAL_PRIVACY_URL`, `LEGAL_TERMS_URL`, `LEGAL_IMPRINT_URL` | – | shown by the apps via `/api/instance` |
+| `MIN_IOS_BUILD` | – | builds of the iPhone app below this number show only "Bitte aktualisiere ToHuus" (`/api/instance` → `minIosBuild`); set it after an API change older builds can't follow. `/api/instance` also carries `betaGift` (`'haushalt'\|'plus'\|null`, runtime setting `beta.gift`), so the app hides "14 Tage, dann Free" during the beta |
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
 | `APPLE_APP_IDS` | – | comma-separated `<TeamID>.<bundle id>` for `webcredentials` in `/.well-known/apple-app-site-association`, default `FVS7WVTQ67.de.heidrichdigital.tohuus` |
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |
@@ -136,7 +142,7 @@ form, the shops named at sign-up).
   `memberships` mirror in accounts.db is never trusted for this –, body `{ confirm: "<household name>", password }`):
   crypto-shredding first (the wrapped key is set to NULL in the same transaction that removes memberships and
   detaches sessions/tokens), then the folder and its local backups are removed.
-- `DELETE /api/cloud/account` (body `{ password }`, or `{ appleIdentityToken, appleNonce }` / `{ code }` – see [Sign in with Apple](#sign-in-with-apple)): households the account has to itself – or where only permanent
+- `DELETE /api/cloud/account` (body `{ password }`, or `{ appleIdentityToken, appleNonce, appleAuthorizationCode? }` / `{ code }` – see [Sign in with Apple](#sign-in-with-apple)): households the account has to itself – or where only permanent
   guests would remain – are shredded; in shared households the person leaves, and if they were the last admin the
   longest-standing *member* becomes admin (never a guest, never an expired membership). The account's passkeys
   and WebAuthn user handle are deleted with it. Required by App Store guideline 5.1.1(v).
@@ -164,7 +170,7 @@ form, the shops named at sign-up).
 | any outbound request to private/internal addresses | a global dispatcher blocks them at connect time (HA, webhooks, Matrix, Gotify …) |
 | network printers (ESC/POS over TCP) | LAN only |
 | Telegram long polling | one poller per household does not scale; webhook routing is not built yet |
-| IMAP receipt inbox | per-household mailbox polling |
+| IMAP receipt inbox | per-household mailbox polling; `GET /api/retail/inbox` answers `available: false` and the apps hide the cards (`PUT` and `/check` are 404). The cloud has receipt addresses per household instead (docs/mail-inbox.md) |
 | restore from file, WebDAV backup settings | replaced by the cloud backups |
 | `ADMIN_PASSWORD`, demo seeding at start, `MCP_PATH_SECRET`, OIDC | instance-wide, no household |
 | household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead (account passkeys exist, see below) |
@@ -183,6 +189,34 @@ recounted nightly. Over quota, uploads and JSON writes above 64 kB get HTTP 413 
 everyday writes still work and nothing is deleted. Apple purchases arrive through
 `POST /api/billing/apple/transaction` (from the app) and `POST /api/billing/apple/notifications` (App Store Server
 Notifications v2 – set this URL in App Store Connect). Both verify the JWS chain to the embedded Apple Root CA G3.
+
+**Features are checked by the server** (`server/lib/limits.ts` › `requireFeature` / `assertFeature`, test
+`test/cloud-plans.test.ts`). Without the plan the answer is HTTP 402
+`{ error, code: 'plan', feature, plan: 'haushalt' | 'plus' }` (the iPhone app shows the message like a quota, the web
+app as a toast). Self-hosted servers have everything; the trial and the beta gift count like Plus.
+
+| Feature (`limits.features`) | From | Checked at |
+|---|---|---|
+| `priceHistory` | Haushalt | `GET /api/spending/prices/:productId`, MCP `price_history` |
+| `mirrorLists` | Haushalt | `POST /api/caldav/passwords` (new Apple Reminders / Nextcloud mirrors; existing ones keep working) |
+| `fullHistory` | Haushalt | `historyDays()` (rhythm, money, "Das habt ihr noch") |
+| `weekPlanFromPantry` | Plus | `POST /api/plan/autofill`, HA `fill_week`, MCP `fill_week` |
+| `monthlyAnalysis` | Plus | assistant `money_compare` |
+| `plusRecipes` | Plus | ToHuus-Rezepte with `tier = 'plus'`: `GET /api/cloud-recipes/:id`, `POST …/save` |
+| receipt address | Plus | `GET /api/mail/address`, inbound mails (`docs/mail-inbox.md`) |
+| `connectedHouseholds` | Haushalt | new "Mitversorgen" lists (`kind: 'care'`, create or change to care); existing ones keep working |
+| `substituteFromStock`, `importQuota` | – | only plan text and limits so far; no separate endpoint exists yet |
+
+**Lifetime (optional)**: the non-consumable `de.heidrichdigital.tohuus.plus.lifetime` (`LIFETIME_PRODUCT` in
+`plans.ts`) gives Plus without expiry. The paywall shows it only when the product exists in App Store Connect, so it
+can be added later or never. A subscription transaction never replaces it; only its own refund (`REFUND` / `REVOKE`)
+ends it. `GET /api/billing/status` says `lifetime: true`; when an old subscription still renews, the paywall asks to
+cancel it.
+
+**Codes for beta testers**: Apple offer codes, created in App Store Connect (subscription › Offer Codes; for the
+lifetime product: In-App Purchase › Offer Codes). Testers redeem them in the iPhone app under Abo › "Code einlösen"
+(Apple's sheet, also while the beta gift is on). The redeemed purchase arrives as a normal signed transaction
+(`OFFER_REDEEMED` / `SUBSCRIBED`), so nothing else is needed on the server. Our own `GIFT-…` codes stay web only.
 
 ## Passwords
 
@@ -238,8 +272,8 @@ Test: `test/cloud-apple.test.ts` (a local RSA key and a fake JWKS – no network
   `https://appleid.apple.com`, audience = `APPLE_BUNDLE_ID` (app, default `de.heidrichdigital.tohuus`) or
   `APPLE_SERVICES_ID` (web, default `de.heidrichdigital.tohuus.web`; `off` or empty hides the web button), expiry (30 s
   tolerance), and the nonce: the client generates a raw nonce, puts SHA-256 (hex) of it into the Apple request and sends
-  the raw value to us; each nonce and each token works once (process memory). A token that carries a nonce is refused
-  without it; the web flow always needs one.
+  the raw value to us; each nonce and each token works once (process memory). Since 13 Oct 2026 every
+  sign-in needs one (app and web); a token without a nonce is refused.
 - **Accounts**: `account_apple (sub PRIMARY KEY, account_id UNIQUE → accounts ON DELETE CASCADE, email, private_relay,
   created_at, last_used_at)` in `accounts.db` (created on first use). A known `sub` signs in to its account. Otherwise a
   verified Apple e-mail that equals a **verified** account's address links the two (once; another Apple ID cannot take a
@@ -264,11 +298,12 @@ Test: `test/cloud-apple.test.ts` (a local RSA key and a fake JWKS – no network
   `de.heidrichdigital.tohuus.web` with "Sign in with Apple" configured for the domain of `BASE_URL` and the return URL
   `<BASE_URL>/api/auth/apple/callback`, grouped with the App ID as primary.
 - **Deleting the account** removes the link. Apple accounts without a password confirm with a fresh Sign in with Apple in
-  the app (`DELETE /api/cloud/account { appleIdentityToken, appleNonce }`, the token's `sub` must be the account's).
+  the app (`DELETE /api/cloud/account { appleIdentityToken, appleNonce, appleAuthorizationCode? }`, the token's `sub` must be the
+  account's). The fresh `appleAuthorizationCode` is exchanged for a refresh token first, so the revocation also works
+  when the exchange at sign-in failed or the Sign in with Apple key was set later.
   Accounts without password and without Apple confirm in the app with the code from the mail: the first call sends it
   (`400 needEmailConfirm`), the second carries `{ code }` (password accounts always need the password).
-- **Open (TODO(apple-revoke) in `lib/cloud-apple.ts`)**: revoking Apple's tokens on deletion needs a Sign in with Apple key
-  (client secret). The exact steps are in the file header; nothing else changes when the key is added.
+- **Token revocation (5.1.1(v))**: with `APPLE_SIWA_KEY_ID` and `APPLE_SIWA_KEY_P8` (the .p8 as PEM, `\n` allowed) and `APPLE_TEAM_ID` (default FVS7WVTQ67) set, every sign-in exchanges Apple's authorization code once for a refresh token (`POST https://appleid.apple.com/auth/token`, client_secret = ES256 JWT for the bundle id or the Services ID), kept in `account_apple.refresh_token`; deleting the account revokes it (`POST …/auth/revoke`) before the link is dropped. Without the key nothing is exchanged and deletion only drops the link (logged once). A failed exchange never fails the sign-in.
 
 ## Sample data (cloud and self-host)
 
@@ -283,7 +318,7 @@ rows the household used since stay unless `include_used`. Test: `test/demo-flow.
 
 ## E-mail language
 
-Account mails – address confirmation, sign-in link, password reset, account deleted, "new assistant connected" (OAuth) – are built and sent inside `inAccountLang(account.lang, …)` (`server/lib/account-mail.ts`, `withLang()` in `server/i18n.ts`), so subject, title, text, button, footer and the `<html lang>` all use **the account's language** (`accounts.lang`, stored at signup from `lang`; accounts created through an invitation get the household's language). Without a stored language the household's (or the instance's) language is used. Invitation mails go out in the inviting household's language (the invitee has no account yet). The footer says "ToHuus Cloud" in the cloud and "euer Haushalt, selbst gehostet" self-hosted. Test: a `lang: 'de'` signup gets no English template text (`test/cloud-isolation.test.ts`).
+Account mails – address confirmation, sign-in link, password reset, account deleted, "new assistant connected" (OAuth) – are built and sent inside `inAccountLang(account.lang, …)` (`server/lib/account-mail.ts`, `withLang()` in `server/i18n.ts`), so subject, title, text, button, footer and the `<html lang>` all use **the account's language** (`accounts.lang`, stored at signup from `lang`; accounts created through an invitation get the household's language). Without a stored language the household's (or the instance's) language is used. Invitation mails go out in the inviting household's language (the invitee has no account yet). The footer says "ToHuus Cloud" in the cloud and "euer Haushalt, selbst gehostet" self-hosted. Layout (`server/lib/mail.ts`): green header with the house of the app icon and the title, ticket card, then a footer with the app icon, one line about ToHuus, the reason for the mail and links – notification settings (`BASE_URL/einstellungen?tab=notify`) and help (`SITE_URL/hilfe/`), in the cloud also privacy and imprint; the plain-text part lists the same links. The brand fonts are `@font-face` from `SITE_URL/assets/fonts` (our own site, no font CDN); clients that block remote fonts fall back to Georgia/Arial. Test: a `lang: 'de'` signup gets no English template text (`test/cloud-isolation.test.ts`).
 
 ## Sign-in link and code (other device)
 
@@ -417,6 +452,27 @@ A stored value **overrides the environment**; removing it falls back to the envi
 process, cache dropped on every change) – `aiConfig()`/`fallbackModels()` see them at once; an explicit `env` object
 passed by tests/tools is not touched. Test: `test/cloud-admin.test.ts`.
 
+## Accounts in the back office
+
+Back office › **Konten** (`server/routes/operator-accounts.ts`, `web/src/pages/operator/Accounts.tsx`). For keeping the service safe – e.g. taking someone out of the beta – with account data only.
+
+- `GET /api/operator/accounts?q=&filter=all|blocked|unconfirmed&offset=&limit=` → `{ total, accounts }`: e-mail, name, language, created / confirmed / last login / last seen (sessions and app tokens), number of app devices, sign-in ways (password, Apple, passkeys), households with name, role and plan. Never anything from inside a household.
+- `POST /api/operator/accounts/:id/block { reason (3–300), notify = true }` – **pause**: every session and app token is removed at once, and `createCloudSession` / `createAppToken` refuse the account (HTTP 403, `code: 'account.blocked'`, "Dieses Konto ist pausiert … schreib an <support>"), so password, e-mail code or link, passkey and Sign in with Apple all stop. The person gets a mail with the reason in their language. Households and their data stay; others in a shared household keep using it.
+- `POST /api/operator/accounts/:id/unblock { notify }`, `POST /api/operator/accounts/:id/signout` (sessions and app tokens removed, no pause).
+- `DELETE /api/operator/accounts/:id { confirm: <e-mail> }` – the same `removeAccount()` as "Konto löschen" in Settings: households where nobody else is left are crypto-shredded, in shared ones the person leaves (an heir becomes admin), passkeys and Apple link go, confirmation mail.
+- Every action is in the audit log with the account **id** (never the address).
+- **Apple and GDPR**: App Store Review Guideline 5.1.1(v) asks that people can delete their account in the app – that stays. Pausing for abuse is covered by the terms ("aus wichtigem Grund"); the privacy policy names the account administration (Art. 6 (1) f GDPR). A paused person can still ask by e-mail for deletion or an export.
+- Not affected by a pause: MCP/OAuth connections and Home Assistant tokens of a household belong to the household, not to the account – revoke them in that household if needed.
+
+## Gifts: beta plan and plan codes
+
+`server/lib/gifts.ts`, back office › **Geschenke**. Nothing is bought and nothing is charged in either way.
+
+- **Beta gift** – runtime setting `beta.gift` = `haushalt` | `plus` (unset = off). While it is set, `planOf()` gives every cloud household at least that plan (a running trial counts like Plus). `GET /api/billing/status` then says `source: 'beta'`, `gift: { kind: 'beta', plan, until: null, forever: false }`; the web billing card and the iPhone paywall show "Während der Beta geschenkt" instead of prices. Switching it off falls back to what each household has on its own (trial, code, App Store, Free) – nothing is deleted.
+- **Plan codes** (`GIFT-XXXX-XXXX`) – the operator creates them (`POST /api/operator/gifts/codes { plan, days | null = for good, count, maxUses (default 1), note, expiresAt }`, list `GET /api/operator/gifts`, revoke `DELETE /api/operator/gifts/codes/:id`; every change audited). An **admin** of a household redeems one on the **web**: Settings › Abo › "Code einlösen" → `POST /api/billing/redeem { code }` → `{ plan, until, status }`. Errors: `gift.invalid` 404, `gift.used_up` 410, `gift.already` 409 (once per household), `gift.apple` 409 (a running App Store subscription is never overwritten – cancel it there first). A redeemed code sets the household's plan with `plan_source = 'code'`; a longer or better gift the household already has is kept, the days are added to its end.
+- **Why not in the iPhone app**: App Store Review Guideline 3.1.1 does not allow unlocking features with own codes or license keys inside an iOS app. The app therefore has no code field; it shows the plan the household has (3.1.3(b), multiplatform services). Apple's own offer codes for the subscriptions stay available in the paywall ("Code einlösen" there is Apple's sheet).
+- Tables in accounts.db: `plan_codes`, `plan_code_redemptions (code_id, household_id, at)`.
+
 ## Beta gate
 
 `server/lib/beta.ts`. While ToHuus is in TestFlight nobody opens an account at the cloud domain without being let in.
@@ -483,6 +539,18 @@ anything is published, AI pictures carry "KI-Bild".
   `published_at`.
 - **Starting set**: 30 simple everyday German recipes written for ToHuus (`server/data/catalog-seed.ts`), seeded once
   as **drafts** (AI-assisted). Nothing is visible to households until the operator reads, marks and schedules them.
+- **Plus set** (13 Oct 2026): 20 autumn and winter recipes (`server/data/catalog-seed-plus.ts`: one pot, one tray,
+  cooking once for two days, leftovers), seeded once as drafts with `tier = 'plus'`. Each has an AI picture made in
+  the founder's Canva account; `image_ref` holds its Canva link, the back office shows "Bild in Canva öffnen" next to
+  "Foto hinzufügen" and stores the upload as `image_kind: 'ai'` ("KI-Bild" badge). `tier` can be switched per
+  recipe (`PATCH …/:id { tier: 'all' | 'plus' }`).
+- **Kitchen machines** (13 Oct 2026): 12 more Plus drafts for Thermomix, Monsieur Cuisine and Cookit
+  (`server/data/catalog-seed-devices.ts`), each step with its settings (`tm` on the step, `tohuus.devices`), a review
+  note to check the settings on a real machine, and a Canva AI picture like the Plus set.
+- **Plus recipes for households**: the list shows them to everyone with `plus: true` and `locked` when the household
+  has no Plus (`plusRecipes` feature, trial and beta gift count); `GET /api/cloud-recipes/:id` and `…/save` answer
+  402 `{ code: 'plan', feature: 'plusRecipes' }` for a locked one. Web and iPhone show a "Plus" badge and "Gehört zu
+  Plus" (opens the plans).
 - **Scheduler**: every 10 minutes publishes `scheduled` recipes whose `publish_at` has passed.
 - **Households** (`server/routes/cloud-recipes.ts`, signed-in members; guests not):
   - `GET /api/cloud-recipes` → `{ newThisWeek: [card], recent: [card], saved: { "<catalogId>": <recipeId> } }`;
@@ -504,7 +572,14 @@ anything is published, AI pictures carry "KI-Bild".
   `POST …/:id/unpublish`, `DELETE …/:id` (not while published), `POST /api/operator/recipes/schedule`
   (`{ perWeek: 1–7 (3 = Mon/Wed/Fri 06:00 UTC), ids?, start? }` → `{ plan }` for reviewed drafts after the last
   planned date), `POST /api/operator/recipes/ai-drafts` (`{ dishes: [≤5 names] }` → Mistral via `ai.ts`, drafts with
-  `origin: 'ai_draft'` – never published automatically).
+  `origin: 'ai_draft'` – never published automatically), `POST /api/operator/recipes/preview-zip` (multipart `file` =
+  the PNG/JPG export of the Canva preview-card design as ZIP; the number before the extension of each file is the page,
+  page n goes to the recipe with `image_page = n + start - 1` (field `start`, default 1, for a ZIP of part of the
+  design such as the baking cards 33–38); kind `photo` when the recipe has an `image_credit`, else `ai` →
+  `{ updated, recipes: [{ page, id, title }], skipped }`).
+- Preview cards: the seeded Plus and kitchen-machine recipes carry `image_page` (1–38: 20 Plus, 12 kitchen-machine, 6 baking recipes) and
+  `image_credit` (a real Pexels photo is in the card: "Name / Pexels"). Cards and detail return `imageCredit` (only
+  once an image is set), shown as "Foto: …" on web and iPhone.
 - Web: "Neu diese Woche" strip in *Kochen › Was kochen wir?* (cloud only, falls back to "Neu von ToHuus" with the latest
   six), detail sheet with origin line, allergens, ingredients, steps; iOS: the same strip in Kochen.
 - Test: `test/cloud-admin.test.ts`.

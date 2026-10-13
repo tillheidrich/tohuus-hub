@@ -81,6 +81,9 @@ struct TagEditor: View {
                         .padding(.horizontal, 10).padding(.vertical, 6)
                         .foregroundStyle(fg)
                         .background(bg, in: Capsule())
+                        // the visible chip stays small; the tap area is 44 pt high (FlowLayout spacing absorbs it)
+                        .padding(.vertical, 5)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(LF("Remove %@", v))

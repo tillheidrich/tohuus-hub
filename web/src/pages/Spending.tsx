@@ -13,7 +13,7 @@ import {
   TrendUp,
   Trash,
 } from '@phosphor-icons/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { del, fmtDate, invalidate, patch, post, put, useApi } from '../api';
 import { Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
@@ -61,11 +61,14 @@ interface Bucket {
   total: number;
   excluded?: number;
 }
+type BudgetPeriod = 'week' | 'month' | 'year';
+const perPeriod = (p: BudgetPeriod) => (p === 'week' ? t('per week') : p === 'year' ? t('per year') : t('per month'));
 interface Budget {
   id: number;
   category: string | null;
   label: string;
-  period: 'week' | 'month';
+  period: BudgetPeriod;
+  personal?: boolean;
   notify: boolean;
   from: string;
   to: string;
@@ -300,7 +303,7 @@ export function Spending() {
         <div className={isFetching ? 'sp2-refetch' : ''}>
           <Hero s={s} kind={kind} onExcluded={() => setDrill({ title: t('Left out'), from: s.from, to: s.to, excluded: true })} />
 
-          <Budgets s={s} onManage={() => setBudgetsOpen(true)} />
+          <Budgets s={s} mine={mine} onManage={() => setBudgetsOpen(true)} />
 
           {s.trend.length > 0 && (
             <section className="section">
@@ -387,7 +390,7 @@ export function Spending() {
       <ExpenseFormSheet target={expense === 'new' ? 'new' : (expense?.id ?? null)} onClose={() => setExpense(null)} preset={mine ? { private_for: meta.data?.me ?? null } : undefined} extra={expense && expense !== 'new' ? <ExpenseExclusion e={expense} onDone={() => setExpense(null)} /> : null} />
       <NewMoneyListSheet open={listFrom != null} preset={listFrom} onClose={() => setListFrom(null)} onCreated={(id) => { setListFrom(null); setListId(id); }} />
       <MoneyListSheet id={listId} onClose={() => setListId(null)} />
-      <BudgetSheet open={budgetsOpen} onClose={() => setBudgetsOpen(false)} meta={meta.data} />
+      <BudgetSheet open={budgetsOpen} onClose={() => setBudgetsOpen(false)} meta={meta.data} mine={mine} />
       <ExcludedSheet open={excludedOpen} onClose={() => setExcludedOpen(false)} />
       <ExportSheet open={exportOpen} onClose={() => setExportOpen(false)} kind={kind} anchor={anchor} tag={tag} s={s} view={view} />
       <PriceSheet productId={priceFor} onClose={() => setPriceFor(null)} />
@@ -468,17 +471,17 @@ function Hero({ s, kind, onExcluded }: { s: Stats; kind: Kind; onExcluded: () =>
 
 // ------------------------------------------------------------------ budgets
 
-function Budgets({ s, onManage }: { s: Stats; onManage: () => void }) {
+function Budgets({ s, mine, onManage }: { s: Stats; mine: boolean; onManage: () => void }) {
   if (!s.budgets.length)
     return (
       <button className="linkish sp2-add-budget" onClick={onManage}>
-        <Target size={15} /> {t('Set a budget (optional)')}
+        <Target size={15} /> {mine ? t('Set a budget just for you (optional)') : t('Set a budget (optional)')}
       </button>
     );
   return (
     <section className="section">
       <div className="section-head">
-        <h2>{t('Budgets')}</h2>
+        <h2>{mine ? t('My budgets') : t('Budgets')}</h2>
         <a onClick={onManage}>{t('Change')}</a>
       </div>
       <div className="list">
@@ -502,7 +505,7 @@ function Budgets({ s, onManage }: { s: Stats; onManage: () => void }) {
               </div>
               <div className="sub small muted">
                 {[
-                  b.period === 'week' ? t('per week') : t('per month'),
+                  perPeriod(b.period),
                   b.state === 'over' ? t('Budget reached') : t('{amount} left', { amount: eur(b.remaining) }),
                   b.ongoing && b.days_left > 0 && b.forecast !== b.spent ? t('at this pace about {amount} by the end', { amount: eur(b.forecast) }) : null,
                 ]
@@ -517,18 +520,22 @@ function Budgets({ s, onManage }: { s: Stats; onManage: () => void }) {
   );
 }
 
-function BudgetSheet({ open, onClose, meta }: { open: boolean; onClose: () => void; meta?: Meta }) {
-  const { data } = useApi<{ budgets: { id: number; category: string; period: 'week' | 'month'; amount: number; notify: number }[] }>(['spending', 'budgets'], open ? '/spend/budgets' : null);
+/** The household's budgets, or – in "Nur meins" – the viewer's own (only they see them, they count only their entries). */
+function BudgetSheet({ open, onClose, meta, mine }: { open: boolean; onClose: () => void; meta?: Meta; mine: boolean }) {
+  const { data } = useApi<{ budgets: { id: number; category: string; period: BudgetPeriod; amount: number; notify: number }[] }>(
+    ['spending', 'budgets', mine ? 'mine' : 'household'],
+    open ? `/spend/budgets${mine ? '?view=mine' : ''}` : null,
+  );
   const toast = useToast();
   const [cat, setCat] = useState('');
-  const [period, setPeriod] = useState<'month' | 'week'>('month');
+  const [period, setPeriod] = useState<BudgetPeriod>('month');
   const [amount, setAmount] = useState('');
   const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState(false);
-  const save = async (body: { category: string | null; period: 'week' | 'month'; amount: number | null; notify?: boolean }) => {
+  const save = async (body: { category: string | null; period: BudgetPeriod; amount: number | null; notify?: boolean }) => {
     setBusy(true);
     try {
-      await put('/spend/budgets', body);
+      await put('/spend/budgets', { ...body, mine });
       invalidate('spending');
       toast({ text: body.amount ? t('Budget saved') : t('Budget removed') });
       setAmount('');
@@ -539,10 +546,15 @@ function BudgetSheet({ open, onClose, meta }: { open: boolean; onClose: () => vo
     }
   };
   return (
-    <Sheet open={open} onClose={onClose} title={t('Budgets')}>
+    <Sheet open={open} onClose={onClose} title={mine ? t('My budgets') : t('Budgets')}>
       <div className="stack">
         <p className="small muted" style={{ margin: 0 }}>
           {t('Entirely optional. A budget shows a bar and a calm forecast. If you like, you get a short note at 80 % and when it is reached.')}
+        </p>
+        <p className="small" style={{ margin: 0 }}>
+          {mine
+            ? t('Only you see these budgets. They count what belongs to you: your own entries and the lines assigned to you. Notes go to your devices only.')
+            : t('Shared by the household: everyone sees them. For a budget just for you, switch to “Just mine” first.')}
         </p>
         {(data?.budgets ?? []).length > 0 && (
           <div className="list">
@@ -550,7 +562,7 @@ function BudgetSheet({ open, onClose, meta }: { open: boolean; onClose: () => vo
               <div key={b.id} className="li" style={{ minHeight: 52 }}>
                 <div className="grow">
                   <div className="title">{b.category || t('All spending')}</div>
-                  <div className="sub">{eur(b.amount)} {b.period === 'week' ? t('per week') : t('per month')}</div>
+                  <div className="sub">{eur(b.amount)} {perPeriod(b.period)}</div>
                 </div>
                 <Toggle on={Boolean(b.notify)} label={t('Notify')} onChange={(v) => save({ category: b.category || null, period: b.period, amount: b.amount, notify: v })} />
                 <button className="icon-btn plain" aria-label={t('Remove')} onClick={() => save({ category: b.category || null, period: b.period, amount: null })}><Trash size={18} /></button>
@@ -570,9 +582,9 @@ function BudgetSheet({ open, onClose, meta }: { open: boolean; onClose: () => vo
           <div className="row" style={{ gap: 12, flexWrap: 'wrap' }}>
             <div className="field grow">
               <label htmlFor="sp2-bamt">{t('Amount in {currency}', { currency: region().currency })}</label>
-              <input id="sp2-bamt" className="input" type="number" inputMode="decimal" min={0} step={5} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={cat ? '40' : '600'} />
+              <input id="sp2-bamt" className="input" type="number" inputMode="decimal" min={0} step={5} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={period === 'year' ? (cat ? '500' : '7000') : period === 'week' ? (cat ? '10' : '150') : cat ? '40' : '600'} />
             </div>
-            <Seg<'month' | 'week'> value={period} options={[['month', t('per month')], ['week', t('per week')]]} onChange={setPeriod} />
+            <Seg<BudgetPeriod> value={period} options={[['week', t('per week')], ['month', t('per month')], ['year', t('per year')]]} onChange={setPeriod} />
           </div>
           <label className="row" style={{ gap: 10 }}>
             <Toggle on={notify} onChange={setNotify} label={t('Notify at 80 % and 100 %')} />
@@ -599,13 +611,52 @@ interface Col {
   on?: boolean;
 }
 
-/** Column chart as buttons: each bar is its own hit target, keyboard focusable; readout above the plot. */
+/**
+ * Column chart as one control (WCAG 2.5.8): the whole plot is the hit target – a tap or click picks the column under
+ * the pointer, so 31 thin day columns never become 9 px buttons. Keyboard: the plot is a listbox, ←/→/Home/End move,
+ * Enter or Space picks. The readout above says what is under the pointer or the keyboard.
+ */
 function Columns({ data, onPick, hint }: { data: Col[]; onPick: (key: string) => void; hint: string }) {
   const [hover, setHover] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<number>(-1);
+  const cols = useRef<HTMLDivElement>(null);
+  const idBase = useId();
   const max = Math.max(...data.map((d) => d.value + (d.extra ?? 0)), 0.01);
   const shown = data.find((d) => d.key === hover) ?? data.find((d) => d.on) ?? null;
   const anyExtra = data.some((d) => (d.extra ?? 0) > 0);
   const dense = data.length > 16;
+  const label = (d: Col) => `${d.title}: ${eur(d.value)}${d.extra ? `, ${t('{amount} not counted', { amount: eur(d.extra) })}` : ''}`;
+  /** column under the pointer, from its x position over the whole plot */
+  const at = (clientX: number) => {
+    const kids = cols.current ? [...cols.current.children] : [];
+    let best = -1;
+    let dist = Infinity;
+    kids.forEach((k, i) => {
+      const r = k.getBoundingClientRect();
+      const dx = clientX < r.left ? r.left - clientX : clientX > r.right ? clientX - r.right : 0;
+      if (dx < dist) {
+        dist = dx;
+        best = i;
+      }
+    });
+    return best;
+  };
+  const moveTo = (i: number) => {
+    const n = Math.max(0, Math.min(data.length - 1, i));
+    setCursor(n);
+    setHover(data[n]?.key ?? null);
+  };
+  const onKey = (e: React.KeyboardEvent) => {
+    const from = cursor >= 0 ? cursor : Math.max(0, data.findIndex((d) => d.on));
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') moveTo(from + 1);
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') moveTo(from - 1);
+    else if (e.key === 'Home') moveTo(0);
+    else if (e.key === 'End') moveTo(data.length - 1);
+    else if ((e.key === 'Enter' || e.key === ' ') && data[from]) onPick(data[from].key);
+    else return;
+    e.preventDefault();
+  };
+  const active = cursor >= 0 ? cursor : data.findIndex((d) => d.on);
   return (
     <div className="card sp2-chart">
       <div className="sp2-readout" aria-live="polite">
@@ -623,28 +674,48 @@ function Columns({ data, onPick, hint }: { data: Col[]; onPick: (key: string) =>
           <span>{compact(max)}</span>
           <span>{compact(max / 2)}</span>
         </div>
-        <div className={`sp2-cols ${dense ? 'dense' : ''}`} role="list">
-          {data.map((d) => {
+        <div
+          ref={cols}
+          className={`sp2-cols ${dense ? 'dense' : ''}`}
+          role="listbox"
+          tabIndex={0}
+          aria-label={hint}
+          aria-activedescendant={active >= 0 ? `${idBase}-${active}` : undefined}
+          onKeyDown={onKey}
+          onPointerMove={(e) => {
+            const i = at(e.clientX);
+            if (i >= 0) setHover(data[i].key);
+          }}
+          onPointerLeave={() => setHover(null)}
+          onBlur={() => {
+            setHover(null);
+            setCursor(-1);
+          }}
+          onClick={(e) => {
+            const i = at(e.clientX);
+            if (i < 0) return;
+            setCursor(i);
+            onPick(data[i].key);
+          }}
+        >
+          {data.map((d, i) => {
             const h = (d.value / max) * 100;
             const hx = ((d.extra ?? 0) / max) * 100;
             return (
-              <button
+              <div
                 key={d.key}
-                role="listitem"
-                className={`sp2-col ${d.on ? 'on' : ''} ${hover === d.key ? 'hover' : ''}`}
-                onClick={() => onPick(d.key)}
-                onPointerEnter={() => setHover(d.key)}
-                onPointerLeave={() => setHover(null)}
-                onFocus={() => setHover(d.key)}
-                onBlur={() => setHover(null)}
-                aria-label={`${d.title}: ${eur(d.value)}${d.extra ? `, ${t('{amount} not counted', { amount: eur(d.extra) })}` : ''}`}
+                id={`${idBase}-${i}`}
+                role="option"
+                aria-selected={Boolean(d.on)}
+                aria-label={label(d)}
+                className={`sp2-col ${d.on ? 'on' : ''} ${hover === d.key ? 'hover' : ''} ${i === cursor ? 'cursor' : ''}`}
               >
                 <span className="bar">
                   {hx > 0 && <i className="x" style={{ height: `${Math.max(2, hx)}%` }} />}
                   {h > 0 && <i style={{ height: `${Math.max(2, h)}%` }} />}
                 </span>
-                <span className="lbl">{d.label}</span>
-              </button>
+                <span className="lbl" aria-hidden>{d.label}</span>
+              </div>
             );
           })}
         </div>

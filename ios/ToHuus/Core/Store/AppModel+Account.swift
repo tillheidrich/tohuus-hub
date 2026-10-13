@@ -27,7 +27,7 @@ extension AppModel {
     func signInWithPasskey(runner: AuthorizationRunner) async throws {
         let api = APIClient(baseURL: cloudServer)
         let o = try await api.passkeyOptions()
-        let rp = o.options.rpId ?? cloudServer.host() ?? "cloud.tohuus.heidrich-digital.de"
+        let rp = o.options.rpId ?? cloudServer.host() ?? SharedConfig.cloudURL.host() ?? ""
         let assertion = try await runner.passkey(rpId: rp, challenge: o.options.challenge)
         let res = try await api.passkeyVerify(key: o.key, device: Self.deviceName, response: assertion.json)
         finishSignIn(server: cloudServer, mode: "cloud", response: res)

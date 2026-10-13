@@ -4,7 +4,11 @@ import Foundation
 enum SharedConfig {
     static let appGroup = "group.de.heidrichdigital.tohuus"
     static let keychainService = "de.heidrichdigital.tohuus"
+    /// The two public addresses in one place (docs/domain.md). A domain change: these two lines, the associated
+    /// domain in ios/project.yml and a new build.
     static let cloudURL = URL(string: "https://cloud.tohuus.heidrich-digital.de")!
+    /// the website: help pages, legal texts, Ratgeber
+    static let siteURL = URL(string: "https://tohuus.heidrich-digital.de")!
     static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
 
     /// UserDefaults shared through the App Group; falls back to the standard defaults when the group is unavailable

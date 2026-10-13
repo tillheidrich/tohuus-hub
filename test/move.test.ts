@@ -13,12 +13,13 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Agent, FormData, fetch } from 'undici';
 import { readZip } from '../server/lib/zip';
+import { freePort } from './helpers/port';
 
 const local = new Agent();
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-move-cloud-'));
 const selfDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-move-self-'));
 const zipFile = path.join(selfDir, 'move.zip');
-const PORT = 48200 + Math.floor(Math.random() * 300);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 
 let ipSeq = 1;

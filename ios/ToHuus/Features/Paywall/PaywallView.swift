@@ -19,6 +19,11 @@ struct PaywallView: View {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
                     if !app.purchasesAvailable {
                         EmptyStateView(systemImage: "checkmark.seal", title: L("Everything is included for this household."))
+                    } else if let gift = app.billing?.gift {
+                        // a gift (beta for everyone, or a code from us): nothing to buy, just say what the household has
+                        currentPlan
+                        giftNote(gift)
+                        legal
                     } else {
                         currentPlan
                         Picker(L("Billing period"), selection: $yearly) {
@@ -29,6 +34,7 @@ struct PaywallView: View {
                         if storeKit.productsMissing || storeKit.loadError != nil { productsUnavailable }
                         planCard(plan: "haushalt", title: L("Household"), symbol: "house")
                         planCard(plan: "plus", title: L("Plus"), symbol: "sparkles")
+                        if let life = storeKit.lifetime, app.billing?.lifetime != true { lifetimeCard(life) }
                         freeCard
                         if let m = storeKit.message { Text(m).font(.footnote).foregroundStyle(Theme.info) }
                         legal
@@ -70,10 +76,37 @@ struct PaywallView: View {
             } else if app.billing?.isPaid == true, let e = ServerDate.parse(app.billing?.expiresAt) {
                 Text(LF("Ends on %@ – it will not renew.", e.formatted(date: .long, time: .omitted))).font(.footnote).foregroundStyle(Theme.ink2)
             }
+            if app.billing?.lifetime == true, app.billing?.autoRenew == true {
+                // bought Plus for good while a subscription still renews: Apple keeps charging until it is cancelled
+                Text(L("You have Plus for good. Your old subscription still renews – cancel it under “Manage subscription” so it is not charged again."))
+                    .font(.footnote).foregroundStyle(Theme.warning)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Text(L("One subscription covers the whole household. Members, children and guests never pay."))
                 .font(.footnote).foregroundStyle(Theme.ink3)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    private func giftNote(_ gift: BillingStatus.Gift) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            Label(gift.kind == "beta" ? L("Free during the beta") : L("A gift for your household"), systemImage: "gift")
+                .font(.headline).foregroundStyle(Theme.primaryText)
+            Group {
+                if gift.kind == "beta" {
+                    Text(L("While ToHuus is being tested, nobody pays – thank you for helping. When the beta ends, your household keeps what it has on its own. Nothing is charged automatically and nothing is deleted."))
+                } else if gift.forever == true {
+                    Text(L("Your household has this plan for good. Nothing is charged."))
+                } else if let d = ServerDate.parse(gift.until) {
+                    Text(LF("Your household has this plan until %@. After that Free – nothing is charged automatically.", d.formatted(date: .long, time: .omitted)))
+                }
+            }
+            .font(.footnote).foregroundStyle(Theme.ink2)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(Theme.Space.s3)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
     }
 
     private var productsUnavailable: some View {
@@ -129,6 +162,31 @@ struct PaywallView: View {
             } else {
                 ProgressView()
             }
+        }
+    }
+
+    /// Optional: Plus once, for good (non-consumable `plus.lifetime`).
+    private func lifetimeCard(_ product: Product) -> some View {
+        Card(title: L("Plus for good"), systemImage: "infinity") {
+            Text(L("Everything in Plus for this household, paid once. No subscription, nothing renews."))
+                .font(.subheadline).foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("\(product.displayPrice) \(product.periodLabel)").font(.headline).foregroundStyle(Theme.ink)
+            Button {
+                Task {
+                    if await storeKit.purchase(product, household: app.session?.householdId) {
+                        Haptics.success()
+                        await app.refreshBilling()
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(L("Buy once"))
+                    if storeKit.purchasing == product.id { ProgressView().tint(Theme.onPrimary) }
+                }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(storeKit.purchasing != nil)
         }
     }
 
@@ -196,6 +254,7 @@ enum PlanText {
         if f?["connectedHouseholds"]?.bool == true { out.append(L("Connected households and shared lists")) }
         if f?["weekPlanFromPantry"]?.bool == true { out.append(L("Week plan from what you have at home")) }
         if f?["monthlyAnalysis"]?.bool == true { out.append(L("A look back at every month")) }
+        if f?["plusRecipes"]?.bool == true { out.append(L("New ToHuus recipes for the season, with pictures")) }
         if let n = l["assistantPerMonth"]?.int {
             out.append(l["assistantThrottleOnly"]?.bool == true
                        ? LF("%d assistant messages a month – after that slower, never blocked", n)
@@ -211,7 +270,7 @@ enum PlanText {
     private static func fallback(_ plan: String) -> [String] {
         switch plan {
         case "plus":
-            return [L("Everything in Household"), L("Week plan from what you have at home"), L("A look back at every month"),
+            return [L("Everything in Household"), L("Week plan from what you have at home"), L("A look back at every month"), L("New ToHuus recipes for the season, with pictures"),
                     LF("%d assistant messages a month – after that slower, never blocked", 1500), LF("%@ for receipts and photos", "5 GB")]
         case "haushalt":
             return [L("The whole history: prices, spending, what you buy how often"), L("Connected households and shared lists"),

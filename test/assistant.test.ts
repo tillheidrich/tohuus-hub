@@ -8,14 +8,16 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-assistant-'));
 process.env.DATA_DIR = dir;
-process.env.BASE_URL = 'http://localhost:47434';
+const PORT = await freePort();
+process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'de';
 for (const k of ['AI_BASE_URL', 'AI_API_KEY', 'VISION_BASE_URL', 'VISION_MODEL', 'AI_MODEL_AUDIO']) delete process.env[k];
 
-const base = 'http://localhost:47434';
+const base = `http://localhost:${PORT}`;
 let server: http.Server;
 let db: typeof import('../server/db').db;
 let ai: typeof import('../server/lib/ai');
@@ -67,7 +69,7 @@ beforeAll(async () => {
   app.use('/api', core.r);
   app.use('/api', features.r);
   app.use((err: any, _req: any, res: any, _next: any) => res.status(err?.name === 'ZodError' ? 400 : 500).json({ error: String(err?.message ?? err) }));
-  await new Promise<void>((r) => (server = app.listen(47434, () => r())));
+  await new Promise<void>((r) => (server = app.listen(PORT, () => r())));
   expect((await till.req('POST', '/api/auth/login', { name: 'Till', password: 'test1234' })).status).toBe(200);
   expect((await lea.req('POST', '/api/auth/login', { name: 'Lea', password: 'test1234' })).status).toBe(200);
 });
@@ -84,6 +86,28 @@ afterAll(() => {
 
 describe('reading without a model (pure)', () => {
   const p = (s: string) => parse.parseIntent(s);
+  it('answers to the assistant are never list items', () => {
+    const cases: [string, string][] = [
+      ['Ja', 'yes'],
+      ['ja bitte', 'yes'],
+      ['Gerne!', 'yes'],
+      ['Okay', 'yes'],
+      ['Mach das', 'yes'],
+      ['Ja, auf die Liste', 'yes'],
+      ['Nein', 'no'],
+      ['nein danke', 'no'],
+      ['Danke', 'thanks'],
+      ['Speichere das Rezept', 'command'],
+      ['Speicher es als neues Rezept', 'command'],
+      ['Ja, speichern', 'command'],
+      ['Plan das für Sonntag', 'command'],
+    ];
+    for (const [text, answer] of cases) expect([text, p(text)]).toEqual([text, { kind: 'reply', answer }]);
+    // list sentences stay list sentences
+    expect(p('Setz bitte Milch auf die Liste')).toMatchObject({ kind: 'add' });
+    expect(p('Brot bitte')).toMatchObject({ kind: 'add', items: [{ name: 'Brot' }] });
+    expect(p('Milch und Brot')).toMatchObject({ kind: 'add' });
+  });
   it('lists', () => {
     expect(p('Milch, 2 Paprika und Brot')).toMatchObject({ kind: 'add', items: [{ name: 'Milch' }, { name: 'Paprika', qty: 2 }, { name: 'Brot' }] });
     expect(p('Setz bitte Milch auf die Liste')).toMatchObject({ kind: 'add', items: [{ name: 'Milch' }] });
@@ -149,6 +173,16 @@ describe('without a model configured', () => {
     expect(openTexts()).toEqual([]);
   });
 
+  it('"Ja" or "Danke" never land on the list', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    const r = await till.chat('Ja');
+    expect(r.status).toBe(200);
+    expect(r.json.actions).toEqual([]);
+    expect(r.json.reply).toMatch(/KI-Assistenten/);
+    expect((await till.chat('Danke')).json.reply).toBe('Gern.');
+    expect(openTexts()).toEqual([]);
+  });
+
   it('several clauses: used up plus more, and a question back for the vague part', async () => {
     db.prepare('DELETE FROM shopping_items').run();
     const r = await till.chat('Milch ist alle und 2 Paprika');
@@ -201,7 +235,8 @@ describe('without a model configured', () => {
     const m = await till.chat('Merk dir, dass wir Brot beim Bäcker kaufen');
     expect(m.json.actions[0].kind).toBe('remember');
     expect((await till.req('GET', '/api/memory')).json.map((x: any) => x.text)).toContain('wir Brot beim Bäcker kaufen');
-    expect((await till.chat('Wie wird das Wetter?')).json.reply).toMatch(/Milch, 2 Paprika und Brot/);
+    // not about the household: a friendly answer instead (assistant-scope.ts)
+    expect((await till.chat('Wie wird das Wetter?')).json).toMatchObject({ mode: 'basic', scope: 'off_topic' });
   });
 
   it('stores conversations per person, keeps them private and deletable', async () => {
@@ -246,6 +281,17 @@ describe('with a model (fake)', () => {
     });
     return bodies;
   }
+
+  it('refuses transcripts longer than a minute of speech (no free transcription service)', async () => {
+    model([() => ({ role: 'assistant', content: 'Bla '.repeat(400) })]);
+    const f = new FormData();
+    f.append('audio', new Blob([Buffer.from('RIFFxxxx')], { type: 'audio/wav' }), 'talk.wav');
+    const r = await till.req('POST', '/api/assistant/transcribe', undefined, f);
+    expect(r.status).toBe(413);
+    expect(r.json.error).toMatch(/zu lang/);
+    ai.setAiFetch(null);
+    delete process.env.AI_API_KEY;
+  });
 
   it('runs tools server-side and reports writes with undo', async () => {
     db.prepare('DELETE FROM shopping_items').run();
@@ -309,6 +355,30 @@ describe('with a model (fake)', () => {
     const bad = new FormData();
     bad.append('audio', new Blob([Buffer.from('x')], { type: 'application/pdf' }), 'x.pdf');
     expect((await till.req('POST', '/api/assistant/transcribe', undefined, bad)).status).toBe(415);
+  });
+
+  it('a "Ja" after a recipe goes to the model with the conversation and the save tool', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    model([() => ({ role: 'assistant', content: 'Nudeln mit Tomatensoße für 4 …\nSoll ich es als Rezept speichern?' })]);
+    const first = await till.chat('Schreib mir ein schnelles Gericht für Kinder');
+    expect(first.json.mode).toBe('ai');
+    const bodies = model([() => ({ role: 'assistant', content: 'Gespeichert.' })]);
+    const yes = await till.chat('Ja', first.json.conversationId);
+    expect(yes.json).toMatchObject({ mode: 'ai', reply: 'Gespeichert.' });
+    expect(bodies).toHaveLength(1);
+    // the last answer is in the request, and the recipe tool comes along because of it
+    expect(bodies[0].messages.some((m: any) => m.role === 'assistant' && /Rezept speichern/.test(m.content))).toBe(true);
+    expect(bodies[0].tools.map((t: any) => t.function.name)).toContain('recipe_save_adapted');
+    expect(openTexts()).toEqual([]);
+  });
+
+  it('a "Ja" while the model is down says busy instead of putting "Ja" on the list', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    process.env.AI_API_KEY = 'sk-test';
+    ai.setAiFetch(async () => new Response('down', { status: 503 }));
+    const r = await till.chat('Ja');
+    expect(r.json).toMatchObject({ mode: 'basic', reply: 'Der Assistent ist gerade ausgelastet. Versuch es bitte gleich noch mal.' });
+    expect(openTexts()).toEqual([]);
   });
 
   it('status says what is available', async () => {

@@ -75,6 +75,8 @@ export interface MailContent {
   footnote?: string | null;
   /** why this mail arrives (below the card) */
   reason?: string | null;
+  /** one-click unsubscribe for optional mails (summary, reminders): footer link + List-Unsubscribe headers */
+  unsubscribeUrl?: string | null;
 }
 
 export interface RenderedMail {
@@ -99,6 +101,7 @@ export function mailHousehold(): string {
 }
 
 export const LOGO_CID = 'tohuus-mark';
+export const ICON_CID = 'tohuus-icon';
 
 // ---------------------------------------------------------------- render
 
@@ -155,6 +158,50 @@ function notch(side: 'left' | 'right') {
   return `<td width="12" class="canvas" style="width:12px;background:${C.canvas};font-size:0;line-height:0"><div class="notch edge" style="width:10px;height:22px;border:1.5px solid ${C.ink};${b};border-radius:${r};background:${C.canvas}"></div></td>`;
 }
 
+/**
+ * The brand fonts, served from our own website (never a font CDN – a mail must not tell a third party who opened
+ * it). Apple Mail, iOS Mail, Outlook for Mac and Thunderbird load them; Gmail and Outlook for Windows use the
+ * fallbacks in the font stacks.
+ */
+function fontFaces() {
+  const f = `${config.siteUrl}/assets/fonts`;
+  const face = (family: string, file: string, weight: string) =>
+    `@font-face{font-family:'${family}';font-style:normal;font-weight:${weight};font-display:swap;src:url(${f}/${file}) format('woff2')}`;
+  return [
+    face('Hedvig Letters Serif', 'hedvig-letters-serif-latin-400-normal.woff2', '400'),
+    face('Hedvig Letters Sans', 'hedvig-letters-sans-latin-400-normal.woff2', '400'),
+    face('Familjen Grotesk', 'familjen-grotesk-latin-wght-normal.woff2', '400 700'),
+  ].join('\n');
+}
+
+/** Links in the footer: notification settings and help always; privacy and imprint for ToHuus Cloud. */
+export function footerLinks(): { label: string; url: string }[] {
+  const de = currentLang() === 'de';
+  const links = [
+    { label: t('Notification settings'), url: `${config.baseUrl}/einstellungen?tab=notify` },
+    { label: t('Help'), url: `${config.siteUrl}/${de ? 'hilfe' : 'help'}/` },
+  ];
+  if (config.multiTenant)
+    links.push({ label: t('Privacy'), url: `${config.siteUrl}/${de ? 'de/datenschutz.html' : 'privacy.html'}` }, { label: t('Imprint'), url: 'https://heidrich-digital.de/impressum' });
+  return links;
+}
+
+function footerHtml(c: MailContent, household: string) {
+  const links = footerLinks()
+    .map((l) => `<a class="link" href="${esc(l.url)}" target="_blank" style="color:${C.primary};text-decoration:underline">${esc(l.label)}</a>`)
+    .join(' &nbsp;·&nbsp; ');
+  return `<tr><td align="center" class="muted" style="padding:26px 18px 0;font-family:${FONT_UI};font-size:12px;line-height:1.6;color:${C.ink3}">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px"><tr>
+<td valign="middle" style="padding-right:8px"><img src="cid:${ICON_CID}" width="24" height="24" alt="" style="display:block;border:0;border-radius:6px"></td>
+<td valign="middle" class="ink" style="font-family:${FONT_BRAND};font-size:16px;line-height:24px;color:${C.ink}">ToHuus</td>
+</tr></table>
+<div class="muted" style="margin:0 0 10px;font-family:${FONT_UI};font-size:13px;line-height:1.5;color:${C.ink2}">${esc(t('Shopping, cooking and money for your household.'))}</div>
+${c.reason ? `<div style="margin:0 0 10px">${escMulti(c.reason)}</div>` : ''}${c.unsubscribeUrl ? `\n<div style="margin:0 0 10px"><a class="link" href="${esc(c.unsubscribeUrl)}" target="_blank" style="color:${C.primary};text-decoration:underline">${esc(t('Unsubscribe from these mails'))}</a></div>` : ''}
+<div style="margin:0 0 8px">${links}</div>
+<div>${esc(household ? `${household} · ${APP_NAME}` : APP_NAME)} · ${esc(config.multiTenant ? t('ToHuus Cloud') : t('your household, self-hosted'))}</div>
+</td></tr>`;
+}
+
 export function renderMail(c: MailContent): RenderedMail {
   const household = mailHousehold();
   const paragraphs = (c.paragraphs ?? []).filter((p) => p && p.trim());
@@ -186,6 +233,7 @@ export function renderMail(c: MailContent): RenderedMail {
 <meta name="supported-color-schemes" content="light dark">
 <title>${esc(c.subject)}</title>
 <style>
+${fontFaces()}
 body{margin:0;padding:0;-webkit-text-size-adjust:100%}
 a{color:${C.primary}}
 @media (max-width:620px){.px{padding-left:20px!important;padding-right:20px!important}.h1{font-size:27px!important}}
@@ -213,7 +261,7 @@ ${preheaderHtml(pre)}
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px">
 <tr><td class="block px" bgcolor="${C.block}" style="background:${C.block};border:1.5px solid ${C.block};border-bottom:0;border-radius:10px 10px 0 0;padding:22px 28px 0;color:${C.onBlock}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td valign="middle" style="font-family:${FONT_BRAND};font-size:21px;line-height:32px;color:${C.onBlock};white-space:nowrap"><img src="cid:${LOGO_CID}" width="32" height="32" alt="" style="display:inline-block;vertical-align:middle;border:0;border-radius:7px;margin-right:10px"><span style="vertical-align:middle;color:${C.onBlock}">ToHuus</span></td>
+<td valign="middle" style="font-family:${FONT_BRAND};font-size:23px;line-height:32px;color:${C.onBlock};white-space:nowrap"><img src="cid:${LOGO_CID}" width="30" height="30" alt="" style="display:inline-block;vertical-align:-6px;border:0;margin-right:10px"><span style="color:${C.onBlock};letter-spacing:-0.01em">ToHuus</span></td>
 <td valign="middle" align="right" style="font-family:${FONT_UI};font-size:13px;line-height:18px;color:${C.blockSub};text-align:right">${esc(household)}</td>
 </tr></table>
 <div class="h1" style="margin:26px 0 0;font-family:${FONT_DISPLAY};font-weight:400;font-size:31px;line-height:1.15;letter-spacing:-0.01em;color:${C.onBlock}">${esc(c.title)}</div>
@@ -237,9 +285,7 @@ ${c.footnote ? `<p class="muted" style="margin:14px 0 0;font-family:${FONT_UI};f
 </td></tr>`
     : ''
 }
-<tr><td align="center" style="padding:20px 18px 0;font-family:${FONT_UI};font-size:12px;line-height:1.6;color:${C.ink3}" class="muted">
-${c.reason ? `${escMulti(c.reason)}<br>` : ''}${esc(household ? `${household} · ${APP_NAME}` : APP_NAME)} · ${esc(config.multiTenant ? t('ToHuus Cloud') : t('your household, self-hosted'))}
-</td></tr>
+${footerHtml(c, household)}
 </table>
 </td></tr>
 </table>
@@ -269,28 +315,38 @@ export function renderText(c: MailContent, household = mailHousehold()): string 
   if (c.footnote) out.push(c.footnote, '');
   out.push('--');
   if (c.reason) out.push(c.reason);
+  if (c.unsubscribeUrl) out.push(`${t('Unsubscribe from these mails')}: ${c.unsubscribeUrl}`);
+  for (const l of footerLinks()) out.push(`${l.label}: ${l.url}`);
   out.push(`${household ? `${household} · ` : ''}${APP_NAME} · ${config.multiTenant ? t('ToHuus Cloud') : t('your household, self-hosted')}`);
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
 }
 
 // ---------------------------------------------------------------- logo (inline image, content id)
 
-/** House mark (green house on cream, sun-yellow door), drawn once and kept in memory. */
-export const MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
-<rect width="96" height="96" rx="20" fill="${C.onBlock}"/>
-<path d="M22 47 L48 25 L74 47" fill="none" stroke="${C.primary}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="30" y="48" width="36" height="27" rx="5" fill="${C.primary}"/>
-<path d="M43 75 V66 a5 5 0 0 1 10 0 V75 Z" fill="${C.sun}"/>
+/** House mark of the app icon (cream house, sun-yellow door) for the green header block, drawn once. */
+export const MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="96" height="96">
+<path d="M4 28V14L16 4l12 10v14z" fill="${C.onBlock}"/>
+<path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" fill="${C.sun}"/>
 </svg>`;
 
-/** MARK_SVG rendered once to a 96×96 PNG (1.7 KB) – embedded so sending needs no image work. */
+/** MARK_SVG rendered once to a 96×96 PNG (0.6 KB) – embedded so sending needs no image work. */
 const LOGO_PNG_B64 =
-  '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';
+  'iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAllBMVEVMaXH29O739/D29e739e7////29O/38/Dw8PD29e749e729O729O739fD29e/////48uz39e/ouGXv1qr28unw16zrwXvpumnx3Lfpu2vouWb39O728ujy373x3bf28+vszJL39Oz06tbsyIfy48fpvnHtzJPrx4bty5Dsy5D06dTu0Z3szJHpvXLw27btyo3v0p/z5MnmkuUTAAAAEXRSTlMA/CSZ7gORRBG7b/rbZtYFKa3axjMAAAAJcEhZcwAALiMAAC4jAXilP3YAAAEmSURBVGje7dHrdgExAMRxVLFUSaw7pXWpS1v6/i9XVI/YTW2SnRzHMfMA8//wy2Q4juNubo+Fh5rP/1IgRFDy9597Frs91X39F/PisHzRz3+1Io7Llr3wCmV46j2vOjT1L686LPUfrzok9YlXHYz6nBdPHeVFU8d5sdQ6XiS1nhdG/T8vhvoSL4L6Mm966iTetNTJvKmozXjdqU15XanNed2obXhdqO14rantee2oXXhtqN14zaldeU2p3XkNqQVoDDDAAAMeA+Fw3Op2W/Nh6CXQ//qUx806fXwgXEplmwE6MHqXZ5u8ggNrGdkWG3jrRQO9FTSwkLF9IANhOx5oD4CBqdTsGxjo6AIvwEBTF2gCAw1doMEAAwwwwAAD9xrgOI670n4AYREVPM7HfH4AAAAASUVORK5CYII=';
+
+/** The app icon (green tile, cream house) as a 96×96 PNG for the footer – the same picture as on the home screen. */
+const ICON_PNG_B64 =
+  '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';
 
 export const logoPng = (): Buffer => Buffer.from(LOGO_PNG_B64, 'base64');
 
 export function logoAttachment(): Attachment {
   return { filename: 'tohuus.png', content: logoPng(), cid: LOGO_CID, contentType: 'image/png', contentDisposition: 'inline' };
+}
+
+export const iconPng = (): Buffer => Buffer.from(ICON_PNG_B64, 'base64');
+
+export function iconAttachment(): Attachment {
+  return { filename: 'tohuus-icon.png', content: iconPng(), cid: ICON_CID, contentType: 'image/png', contentDisposition: 'inline' };
 }
 
 // ---------------------------------------------------------------- sender + transport
@@ -314,6 +370,8 @@ export interface OutgoingMail {
   text: string;
   html: string;
   attachments?: Attachment[];
+  /** extra headers, e.g. List-Unsubscribe (RFC 2369) and List-Unsubscribe-Post (RFC 8058) */
+  headers?: Record<string, string>;
 }
 /** Tests (and future transports) can hook in here instead of SMTP. */
 export const mailHook: { send?: (m: OutgoingMail) => Promise<void> | void } = {};
@@ -342,7 +400,8 @@ export const canSendMail = () => smtpEnabled() || Boolean(mailHook.send);
 export function sendMail(to: string, content: MailContent, attachments: Attachment[] = []): Promise<void> {
   const r = renderMail(content);
   // household / person names end up in the subject: never let a line break reach a mail header
-  const mail: OutgoingMail = { to: to.replace(/[\r\n]+/g, ''), subject: r.subject.replace(/[\r\n\t]+/g, ' ').trim(), text: r.text, html: r.html, attachments: [logoAttachment(), ...attachments] };
+  const mail: OutgoingMail = { to: to.replace(/[\r\n]+/g, ''), subject: r.subject.replace(/[\r\n\t]+/g, ' ').trim(), text: r.text, html: r.html, attachments: [logoAttachment(), iconAttachment(), ...attachments] };
+  if (content.unsubscribeUrl) mail.headers = { 'List-Unsubscribe': `<${content.unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' };
   if (mailHook.send) return Promise.resolve(mailHook.send(mail)).then(() => undefined);
   const tr = smtpTransport();
   if (!tr) return Promise.reject(new Error('SMTP is not configured'));

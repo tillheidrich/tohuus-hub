@@ -120,7 +120,7 @@ struct MoneyListView: View {
             if let l = list {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(Money.format(l.split.total)).font(.system(size: 34, weight: .semibold, design: .rounded))
+                        Text(Money.format(l.split.total)).font(Theme.number()).numberTransition(l.split.total ?? 0)
                         if let pp = l.split.perPerson, l.people.count > 1 {
                             Text(LF("%lld people · %@ each", l.people.count, Money.format(pp))).font(.subheadline).foregroundStyle(Theme.ink2)
                         }
@@ -256,6 +256,7 @@ struct MoneyListView: View {
                 ProgressView()
             }
         }
+        .themedList()
         .navigationTitle(list?.title ?? L("Money list"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -449,6 +450,7 @@ struct NewMoneyListView: View {
                     .disabled(busy || !ready)
             }
         }
+        .themedList()
         .navigationTitle(L("New money list"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -536,6 +538,7 @@ struct MoneySettingsView: View {
                 } footer: { Text(L("E.g. the cola that belongs to Sam. They still show on the receipt and in “Just mine”.")) }
             }
         }
+        .themedList()
         .navigationTitle(L("Categories & sharing"))
         .navigationBarTitleDisplayMode(.inline)
         .task { meta = try? await store.api.spendMeta() }

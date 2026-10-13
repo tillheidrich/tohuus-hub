@@ -23,7 +23,7 @@ The web app keeps the same list in `web/src/help.ts` (`HELP_SLUGS`) – a test c
 | `kochen` | Kochen mit dem, was da ist | Cook ideas, week plan, house note, cook mode, servings | Kochen |
 | `rezepte-importieren` | Rezepte übernehmen | Link, photo, screenshot, social media share, other apps | Kochen › Rezepte |
 | `rezeptpaket` | Das ToHuus-Rezeptpaket | ZIP/JSON format, prompt for your own AI, export and round trip | Kochen › Rezepte › Rezeptpaket |
-| `cookidoo` | Cookidoo-Rezepte | Link + ingredient list only, cooking happens in Cookidoo | Kochen › Rezepte |
+| `cookidoo` | Cookidoo, Monsieur Cuisine und andere Küchenmaschinen | Cookidoo, Monsieur Cuisine, Cookit … in the cloud: link + confirmed ingredients (pasted text, screenshots), cooking happens in the platform's app | Kochen › Rezepte |
 | `geld` | Geld: Lebensmittel und Haushalt | Month overview, per shop/category, price changes, budget | Geld |
 | `sprechen` | Sprechen | The assistant, voice, what it can do per screen, confirm and undo | every "Sprechen" button |
 | `ki-an-oder-aus` | Mit oder ohne KI | What works without AI, what AI adds, which model, what is sent, quotas | Mehr › So funktioniert ToHuus, settings |

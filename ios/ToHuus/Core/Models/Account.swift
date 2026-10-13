@@ -12,8 +12,12 @@ struct InstanceInfo: Decodable, Sendable {
     var signup: Bool?
     /// ToHuus Cloud beta gate: "invite" = sign-up needs an access code (docs/cloud.md › Beta gate)
     var signupMode: String?
-    /// address to ask for an access code
+    /// address to ask for an access code (and for tester feedback)
     var support: String?
+    /// the plan every household gets during the beta ("haushalt" | "plus"), nil when none
+    var betaGift: String?
+    /// builds below this show "Bitte aktualisieren" (MIN_IOS_BUILD on the server)
+    var minIosBuild: Int?
     var features: Features?
     var legal: Legal?
 
@@ -107,9 +111,15 @@ struct MeResponse: Decodable, Sendable {
     var modules: [String: Bool]?
     /// { density: compact|normal|large, fontScale }
     var listPrefs: JSONValue?
+    /// who lives here: { form: single|couple|family|wg|…, form_chosen, ui } (server/lib/places.ts homeSetup)
+    var home: JSONValue?
+    /// a household of one (chosen at sign-up) – "Bring mir was" has nobody to ask, like the web
+    var isSingleHousehold: Bool { home?["form"]?.string == "single" && (home?["form_chosen"]?.bool ?? home?["formChosen"]?.bool ?? true) }
 
     var name: String? { actor?["name"]?.string }
     var role: String? { actor?["role"]?.string }
+    /// a permanent guest of the household (actor.houseGuest { level, … }) – sees only what is shared with guests
+    var isGuest: Bool { actor?["houseGuest"]?["level"]?.string != nil }
     /// children (kid devices or a child role) see AI as locked
     var isChild: Bool {
         let kind = actor?["kind"]?.string
@@ -148,12 +158,30 @@ struct BillingStatus: Decodable, Sendable {
     var storage: JSONValue?
     /// what each plan includes: `{ free, haushalt, plus }` with the fields of `limits` (cloud)
     var plans: JSONValue?
+    /// a plan as a gift (server/lib/gifts.ts): during the beta for everyone, or a code redeemed on the web
+    var gift: Gift?
+    /// Plus bought once, for good (optional App Store product `plus.lifetime`)
+    var lifetime: Bool?
+
+    struct Gift: Decodable, Sendable {
+        /// beta | code | operator
+        var kind: String?
+        var plan: String?
+        var until: String?
+        var forever: Bool?
+    }
 
     var planLabel: String {
+        if let gift {
+            let name = plan == "haushalt" ? L("Household") : L("Plus")
+            if gift.kind == "beta" { return LF("%@ – a gift during the beta", name) }
+            if gift.forever == true { return LF("%@ – for good", name) }
+            return LF("%@ – a gift", name)
+        }
         switch plan {
         case "trial": return L("Trial (Plus)")
         case "haushalt": return L("Household")
-        case "plus": return L("Plus")
+        case "plus": return lifetime == true ? L("Plus – for good") : L("Plus")
         case "selfhost": return L("Own server – everything included")
         default: return L("Free")
         }
@@ -187,6 +215,8 @@ struct AIStatus: Decodable, Sendable, Equatable {
     var personal: Bool?
     var locked: Bool?
     var reason: String?
+    /// aiState.consent.processor (ToHuus Cloud)
+    var processor: String?
 
     init(ai: Bool? = nil, voice: Bool? = nil, receiptsAi: Bool? = nil, household: Bool? = nil, personal: Bool? = nil, locked: Bool? = nil, reason: String? = nil) {
         self.ai = ai; self.voice = voice; self.receiptsAi = receiptsAi
@@ -210,5 +240,6 @@ struct AIStatus: Decodable, Sendable, Equatable {
         personal = personal ?? c.first(Bool.self, "aiPersonal", "personal")
         locked = locked ?? c.first(Bool.self, "aiLocked", "locked", "kidLock")
         reason = reason ?? c.first(String.self, "aiReason", "reason")
+        processor = c.first(JSONValue.self, "aiState")?["consent"]?["processor"]?.string
     }
 }

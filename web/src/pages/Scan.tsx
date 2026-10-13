@@ -138,6 +138,7 @@ export function Scan() {
 
   return (
     <div>
+      <h1 className="sr-only">{mode === 'qr' ? t('Digital receipt') : t('Scan barcode')}</h1>
       <div className="row" style={{ marginBottom: 14 }}>
         <button className="icon-btn" onClick={() => nav(-1)} aria-label={t('Back')}>
           <ArrowLeft size={18} />

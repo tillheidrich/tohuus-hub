@@ -223,16 +223,25 @@ struct ImportReviewView: View {
 
     private func qtyStepper(_ l: ImportLine) -> some View {
         HStack(spacing: 0) {
-            Button { Task { await update(l, ["qty": .number(max(0, l.qty - 1))]) } } label: { Image(systemName: "minus").frame(width: 36, height: 36) }
+            Button { Task { await update(l, ["qty": .number(max(0, l.qty - 1))]) } } label: { Image(systemName: "minus").frame(width: 44, height: 44) }
                 .accessibilityLabel(L("Less"))
             Text(qtyText(l.qty)).font(.subheadline.monospacedDigit().weight(.semibold)).frame(minWidth: 26)
-            Button { Task { await update(l, ["qty": .number(l.qty + 1)]) } } label: { Image(systemName: "plus").frame(width: 36, height: 36) }
+            Button { Task { await update(l, ["qty": .number(l.qty + 1)]) } } label: { Image(systemName: "plus").frame(width: 44, height: 44) }
                 .accessibilityLabel(L("More"))
         }
         .foregroundStyle(Theme.ink)
         .background(Theme.surface2, in: Capsule())
-        .accessibilityElement(children: .contain)
+        // one adjustable element for VoiceOver: swipe up/down changes the quantity
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L("Quantity"))
         .accessibilityValue(qtyText(l.qty))
+        .accessibilityAdjustableAction { dir in
+            switch dir {
+            case .increment: Task { await update(l, ["qty": .number(l.qty + 1)]) }
+            case .decrement: Task { await update(l, ["qty": .number(max(0, l.qty - 1))]) }
+            @unknown default: break
+            }
+        }
     }
 
     private func pill(_ text: String, _ icon: String?, on: Bool = false, action: @escaping () -> Void) -> some View {
@@ -385,6 +394,7 @@ struct ProductPickSheet: View {
                     }
                 }
             }
+            .themedList()
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: L("Search products"))
             .navigationTitle(L("Which product is it?"))
             .navigationBarTitleDisplayMode(.inline)
@@ -473,6 +483,7 @@ struct LineFixSheet: View {
                 }
                 if invalid { Section { Text(L("Please enter a valid number.")).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(L("Correct this line"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

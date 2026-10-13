@@ -25,7 +25,8 @@ import { matchIngredient } from './catalog.js';
 import { deleteImage, fetchImageDetailed, storeImageBytes, warnImage } from './images.js';
 import { ScopedMap, householdId, perHousehold, runInHousehold } from './tenancy.js';
 import { assertStorage } from './plans.js';
-import { downloadCandidates } from './recipe-images.js';
+import { downloadCandidates, serverMayFetchImage } from './recipe-images.js';
+import { DEVICE_PLATFORM_IDS, devicePlatformOf } from './device-platforms.js';
 import { ingredientCore, isPantryText } from './recipes.js';
 import {
   cleanText,
@@ -144,8 +145,11 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
 
   const source_url = httpUrl(x.url ?? x.source_url ?? x.sourceUrl ?? (typeof x.mainEntityOfPage === 'string' ? x.mainEntityOfPage : x.mainEntityOfPage?.['@id']));
   const rawType = typeof x.source_type === 'string' ? x.source_type.toLowerCase().trim() : '';
-  let source_type = /^[a-z0-9_-]{1,24}$/.test(rawType) ? rawType : defaults.source_type ?? (source_url && cookidooId(source_url) ? 'cookidoo' : source_url ? 'url' : 'json');
+  // a link of an appliance platform (Cookidoo, Monsieur Cuisine, Cookit … – device-platforms.ts) keeps its platform as source
+  const platform = devicePlatformOf(source_url);
+  let source_type = /^[a-z0-9_-]{1,24}$/.test(rawType) ? rawType : defaults.source_type ?? (source_url && cookidooId(source_url) ? 'cookidoo' : platform ? platform.id : source_url ? 'url' : 'json');
   if (source_type === 'url' && cookidooId(source_url)) source_type = 'cookidoo';
+  else if (source_type === 'url' && platform) source_type = platform.id;
   let external_id = str(x.external_id ?? x.externalId, 120);
   if (!external_id && source_type === 'cookidoo') external_id = cookidooId(source_url);
   if (!external_id && !source_url && TITLE_KEYED.has(source_type)) external_id = `title:${slug(title)}`;
@@ -180,7 +184,7 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
   const cook = durationMinutes(x.cookTime ?? x.cook_time ?? x.performTime);
   const time_min = total ?? (prep || cook ? (prep ?? 0) + (cook ?? 0) : null);
   const instrFlag = x.instructions_available;
-  const instructions_available = instrFlag === false || instrFlag === 'false' || instrFlag === 0 ? false : !(steps.length === 0 && source_type === 'cookidoo');
+  const instructions_available = instrFlag === false || instrFlag === 'false' || instrFlag === 0 ? false : !(steps.length === 0 && DEVICE_PLATFORM_IDS.includes(source_type));
   // a package names its appliances (tohuus.devices, tohuus.device per step): "Stufe 2" on a stand mixer is not a Thermomix
   const devices = [...(Array.isArray(x.tohuus?.devices) ? x.tohuus.devices : []), ...steps.map((st) => st.tm?.device)].filter((d): d is string => typeof d === 'string' && Boolean(d.trim()));
   const thermomix =
@@ -190,14 +194,15 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
         ? devices.some((d) => /thermomix|\btm\s?[4-7]\b/i.test(d))
         : source_type === 'cookidoo' || /thermomix|\bstufe\s?\d|\bvaroma\b/i.test(JSON.stringify(steps).slice(0, 20000));
   if (ingredients.length === 0 && steps.length === 0 && !source_url) throw userError(t('The recipe has neither ingredients nor steps'));
-  // ToHuus Cloud never copies Cookidoo content: title, link and ingredients only – steps and photos stay in Cookidoo
-  const cookidooCloud = config.multiTenant && source_type === 'cookidoo';
-  if (cookidooCloud) steps.length = 0;
+  // ToHuus Cloud never fetches Cookidoo itself; what the person brings along (steps from their own AI over MCP, a
+  // package, a screenshot, photos as files) is kept privately in the household (decision 13 Oct 2026). A Cookidoo
+  // photo link is kept for display; the download is left to the person's device (recipe-images.ts).
   return {
     title,
     description: x.description ? cleanText(x.description).slice(0, 2000) || null : null,
-    image_url: cookidooCloud ? null : imageUrl(x.image ?? x.image_url ?? x.imageUrl ?? x.thumbnailUrl),
-    image_data: !cookidooCloud && Buffer.isBuffer(x.image_data) ? x.image_data : null,
+    image_url: imageUrl(x.image ?? x.image_url ?? x.imageUrl ?? x.thumbnailUrl),
+    // a photo as a file (package, Paprika …) or inline as base64 (bulk JSON, MCP: the person's own AI sends what it sees)
+    image_data: Buffer.isBuffer(x.image_data) ? x.image_data : inlineImage(x.image_base64 ?? x.imageBase64),
     servings: yieldServings(x.recipeYield ?? x.yield ?? x.servings),
     time_min: time_min && time_min < 100000 ? time_min : null,
     thermomix,
@@ -209,7 +214,7 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
     source_type,
     external_id,
     source_url,
-    instructions_available: cookidooCloud ? false : instructions_available,
+    instructions_available,
     notes: typeof x.notes === 'string' && x.notes.trim() ? cleanText(x.notes).slice(0, 2000) : null,
     favorite: x.favorite === true,
   };
@@ -314,7 +319,16 @@ export async function saveRecipeImage(buf: Buffer, recipeId: number): Promise<st
   return storeImageBytes(name, out);
 }
 
-async function setRecipeImage(id: number, buf: Buffer) {
+/** base64 (optionally a data: URL) → image bytes, at most 8 MB; anything else is ignored */
+function inlineImage(v: unknown): Buffer | null {
+  if (typeof v !== 'string' || v.length < 100 || v.length > 11_200_000) return null;
+  const b64 = v.replace(/^data:image\/[a-z+.-]+;base64,/i, '').replace(/\s+/g, '');
+  if (!/^[A-Za-z0-9+/]+=*$/.test(b64)) return null;
+  const buf = Buffer.from(b64, 'base64');
+  return buf.length > 0 && buf.length <= 8 * 1024 * 1024 ? buf : null;
+}
+
+export async function setRecipeImage(id: number, buf: Buffer) {
   const img = await saveRecipeImage(buf, id);
   const old = db.prepare('SELECT image_path FROM recipes WHERE id = ?').get(id) as { image_path: string | null } | undefined;
   if (!old) {
@@ -376,6 +390,12 @@ function pump() {
 async function downloadOne(id: number) {
   const row = db.prepare('SELECT image_url, image_path, source_url FROM recipes WHERE id = ?').get(id) as { image_url: string | null; image_path: string | null; source_url: string | null } | undefined;
   if (!row?.image_url) return;
+  // Cookidoo and the other appliance platforms in the cloud: the person's device loads the photo (browser fallback), never this server
+  if (!serverMayFetchImage(row.image_url)) {
+    const p = devicePlatformOf(row.image_url) ?? devicePlatformOf(row.source_url);
+    db.prepare(`UPDATE recipes SET image_tries = 3, image_error = ? WHERE id = ?`).run(`${p?.id ?? 'cookidoo'}: device`, id);
+    return;
+  }
   let reason = '';
   let ok = false;
   for (const url of downloadCandidates(row.image_url)) {

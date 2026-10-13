@@ -7,13 +7,15 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-money-'));
 process.env.DATA_DIR = dir;
-process.env.BASE_URL = 'http://localhost:47435';
+const PORT = await freePort();
+process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'de';
 
-const base = 'http://localhost:47435';
+const base = `http://localhost:${PORT}`;
 let server: http.Server;
 let db: typeof import('../server/db').db;
 let money: typeof import('../server/lib/money');
@@ -69,7 +71,7 @@ beforeAll(async () => {
   app.use(cookieParser());
   app.use('/api', authRoutes.pub);
   app.use('/api', features.r);
-  await new Promise<void>((r) => (server = app.listen(47435, () => r())));
+  await new Promise<void>((r) => (server = app.listen(PORT, () => r())));
   const login = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json', origin: base }, body: JSON.stringify({ name: 'Till', password: 'test1234' }) });
   cookie = login.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
 });

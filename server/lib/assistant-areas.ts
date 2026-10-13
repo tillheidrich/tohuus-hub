@@ -25,6 +25,7 @@ import { fmtMoney, moneyOverview } from './money.js';
 import { getRecipe, saveRecipe } from './recipes.js';
 import { notPrivate } from './share-core.js';
 import { norm } from './text.js';
+import { entitlement } from './plans.js';
 
 export const CONTEXTS = ['shopping', 'stock', 'cook', 'money', 'house', 'guests'] as const;
 export type ScreenContext = (typeof CONTEXTS)[number];
@@ -303,7 +304,8 @@ export function runAreaTool(ctx: AreaCtx, name: string, a: any): unknown {
     case 'recipe_save_adapted':
       return recipeSaveAdapted(ctx, a);
     case 'money_compare':
-      return moneyCompare(a.month);
+      // the look back at every month is Plus (cloud)
+      return entitlement('monthlyAnalysis') ? moneyCompare(a.month) : { error: 'plan', note: 'Comparing months is part of Plus; say so briefly and offer money_summary instead.' };
     case 'house_draft_cards':
       return houseDraftCards(ctx, a);
     default:

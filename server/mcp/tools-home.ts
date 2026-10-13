@@ -5,6 +5,7 @@ import { db } from '../db.js';
 import { matchProduct } from '../lib/catalog.js';
 import { CARE_TEMPLATES, completeCareTask, createCareTask, findCareTask, listCareTasks } from '../lib/care.js';
 import { currentMonth, priceHistory, spendingSummary } from '../lib/spending.js';
+import { entitlement } from '../lib/plans.js';
 
 const text = (v: unknown) => ({ content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 1) }] });
 const RO = { readOnlyHint: true, openWorldHint: false };
@@ -141,6 +142,7 @@ export function register(s: McpServer, actorName: string) {
         id = m && m.score >= 0.6 ? m.productId : null;
       }
       if (!id) return err(`No product matches "${product}".`);
+      if (!entitlement('priceHistory')) return err('Price history is part of the Household plan or Plus.');
       const h = priceHistory(id);
       if (!h.product) return err('Product not found.');
       return text(h);

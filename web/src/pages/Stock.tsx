@@ -116,7 +116,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
           <button className="icon-btn" title={t('Group by')} onClick={() => setGroup(group === 'location' ? 'category' : 'location')}>
             <SlidersHorizontal size={18} />
           </button>
-          <button className="btn primary" onClick={onNew}>
+          <button className="btn primary" onClick={onNew} aria-label={t('New product')}>
             <Plus size={16} weight="bold" /> <span className="only-desktop">{t('Product')}</span>
           </button>
         </div>
@@ -174,7 +174,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
             <section key={g.key}>
               <div className="row" style={{ marginBottom: 8, gap: 8, color: 'var(--ink-2)' }}>
                 <Ic name={g.icon} size={18} />
-                <h3>{g.title}</h3>
+                <h2 className="h3">{g.title}</h2>
                 <span className="small muted mono">{g.items.length}</span>
               </div>
               <div className="list">

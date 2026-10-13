@@ -60,9 +60,10 @@ targets:
           - CFBundleURLName: de.heidrichdigital.tohuus
             CFBundleURLSchemes: [tohuus]
         NSCameraUsageDescription: "ToHuus uses the camera to scan barcodes, receipts and paper lists."
-        NSMicrophoneUsageDescription: "ToHuus uses the microphone when you speak to the assistant."
-        NSSpeechRecognitionUsageDescription: "Your words are turned into text on your iPhone so the assistant can understand them."
-        NSPhotoLibraryAddUsageDescription: "ToHuus can save images to your photo library."
+        # "Einkauf läuft" on the lock screen and in the Dynamic Island (LiveTripActivity.swift)
+        NSSupportsLiveActivities: true
+        NSMicrophoneUsageDescription: "ToHuus uses the microphone only while you speak to the assistant or dictate for the list. If your iPhone can't turn speech into text, the recording goes to ToHuus to be turned into text."
+        NSSpeechRecognitionUsageDescription: "Your words are turned into text so the assistant understands you – on your iPhone where possible, otherwise by Apple's speech recognition."
         NSLocationWhenInUseUsageDescription: "Only if you switch on the hint in the shop: ToHuus saves where your shops are. The places stay on your iPhone."
         NSLocationAlwaysAndWhenInUseUsageDescription: "Only if you switch on the hint in the shop: when you arrive at a shop you saved, ToHuus asks whether to open the list. Your location never leaves your iPhone."
     entitlements:
@@ -240,20 +241,41 @@ targets:
     platform: iOS
     sources:
       - path: ToHuusTests
+      # StoreKit Testing (SKTestSession) – the same configuration the Run action uses
+      - path: StoreKit/ToHuus.storekit
+        buildPhase: resources
     dependencies:
       - target: ToHuus
+      - sdk: StoreKitTest.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus.tests
         GENERATE_INFOPLIST_FILE: true
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ToHuus.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ToHuus"
         BUNDLE_LOADER: "$(TEST_HOST)"
+  # accessibility audit of the main screens (XCUIApplication.performAccessibilityAudit, iOS 17)
+  ToHuusUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: ToHuusUITests
+    dependencies:
+      - target: ToHuus
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus.uitests
+        GENERATE_INFOPLIST_FILE: true
+        # test code only: the audit handler closure is not Sendable in the XCTest SDK
+        SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        TEST_TARGET_NAME: ToHuus
 schemes:
   ToHuus:
     build:
       targets:
         ToHuus: all
         ToHuusTests: [test]
+        ToHuusUITests: [test]
     run:
       config: Debug
       storeKitConfiguration: StoreKit/ToHuus.storekit
@@ -261,6 +283,7 @@ schemes:
       config: Debug
       targets:
         - ToHuusTests
+        - ToHuusUITests
     archive:
       config: Release
   ToHuusWatch:

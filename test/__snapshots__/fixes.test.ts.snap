@@ -11,6 +11,9 @@ exports[`mail layout > renders the same HTML and text (snapshot) > html 1`] = `
 <meta name="supported-color-schemes" content="light dark">
 <title>Test · Sign in</title>
 <style>
+@font-face{font-family:'Hedvig Letters Serif';font-style:normal;font-weight:400;font-display:swap;src:url(https://tohuus.heidrich-digital.de/assets/fonts/hedvig-letters-serif-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Hedvig Letters Sans';font-style:normal;font-weight:400;font-display:swap;src:url(https://tohuus.heidrich-digital.de/assets/fonts/hedvig-letters-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Familjen Grotesk';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://tohuus.heidrich-digital.de/assets/fonts/familjen-grotesk-latin-wght-normal.woff2) format('woff2')}
 body{margin:0;padding:0;-webkit-text-size-adjust:100%}
 a{color:#176B50}
 @media (max-width:620px){.px{padding-left:20px!important;padding-right:20px!important}.h1{font-size:27px!important}}
@@ -39,7 +42,7 @@ The link works once.&#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px">
 <tr><td class="block px" bgcolor="#104E3C" style="background:#104E3C;border:1.5px solid #104E3C;border-bottom:0;border-radius:10px 10px 0 0;padding:22px 28px 0;color:#F7F5EF">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td valign="middle" style="font-family:'Hedvig Letters Sans', 'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:21px;line-height:32px;color:#F7F5EF;white-space:nowrap"><img src="cid:tohuus-mark" width="32" height="32" alt="" style="display:inline-block;vertical-align:middle;border:0;border-radius:7px;margin-right:10px"><span style="vertical-align:middle;color:#F7F5EF">ToHuus</span></td>
+<td valign="middle" style="font-family:'Hedvig Letters Sans', 'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:23px;line-height:32px;color:#F7F5EF;white-space:nowrap"><img src="cid:tohuus-mark" width="30" height="30" alt="" style="display:inline-block;vertical-align:-6px;border:0;margin-right:10px"><span style="color:#F7F5EF;letter-spacing:-0.01em">ToHuus</span></td>
 <td valign="middle" align="right" style="font-family:'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:13px;line-height:18px;color:#D5E3DA;text-align:right">Testhaus</td>
 </tr></table>
 <div class="h1" style="margin:26px 0 0;font-family:'Hedvig Letters Serif', Georgia, 'Times New Roman', serif;font-weight:400;font-size:31px;line-height:1.15;letter-spacing:-0.01em;color:#F7F5EF">Sign in to Testhaus</div>
@@ -59,8 +62,15 @@ The link works once.&#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&
 <p class="muted" style="margin:14px 0 0;font-family:'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:13px;line-height:1.5;color:#6B746E">Button not working? Copy this link into your browser:<br><a class="link" href="https://hub.example.org/anmelden/link#TOKEN" style="color:#176B50;word-break:break-all">https://hub.example.org/anmelden/link#TOKEN</a></p>
 <p class="muted" style="margin:14px 0 0;font-family:'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:13px;line-height:1.5;color:#6B746E">Requested from Safari · iPhone.</p>
 </td></tr>
-<tr><td align="center" style="padding:20px 18px 0;font-family:'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:12px;line-height:1.6;color:#6B746E" class="muted">
-You get this because …<br>Testhaus · ToHuus Hub · your household, self-hosted
+<tr><td align="center" class="muted" style="padding:26px 18px 0;font-family:'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:12px;line-height:1.6;color:#6B746E">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px"><tr>
+<td valign="middle" style="padding-right:8px"><img src="cid:tohuus-icon" width="24" height="24" alt="" style="display:block;border:0;border-radius:6px"></td>
+<td valign="middle" class="ink" style="font-family:'Hedvig Letters Sans', 'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:16px;line-height:24px;color:#181D1A">ToHuus</td>
+</tr></table>
+<div class="muted" style="margin:0 0 10px;font-family:'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:13px;line-height:1.5;color:#4A524C">Shopping, cooking and money for your household.</div>
+<div style="margin:0 0 10px">You get this because …</div>
+<div style="margin:0 0 8px"><a class="link" href="BASE_URL/einstellungen?tab=notify" target="_blank" style="color:#176B50;text-decoration:underline">Notification settings</a> &nbsp;·&nbsp; <a class="link" href="https://tohuus.heidrich-digital.de/help/" target="_blank" style="color:#176B50;text-decoration:underline">Help</a></div>
+<div>Testhaus · ToHuus Hub · your household, self-hosted</div>
 </td></tr>
 </table>
 </td></tr>
@@ -93,6 +103,8 @@ Requested from Safari · iPhone.
 
 --
 You get this because …
+Notification settings: BASE_URL/einstellungen?tab=notify
+Help: https://tohuus.heidrich-digital.de/help/
 Testhaus · ToHuus Hub · your household, self-hosted
 "
 `;

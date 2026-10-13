@@ -19,6 +19,7 @@ import { config } from '../config.js';
 import { selfhostDbFile } from '../db.js';
 import { t } from '../i18n.js';
 import * as accounts from './accounts.js';
+import { betaGift } from './gifts.js';
 import { currentHousehold } from './tenancy.js';
 
 export type Plan = 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
@@ -49,13 +50,15 @@ export interface Limits {
     weekPlanFromPantry: boolean;
     monthlyAnalysis: boolean;
     substituteFromStock: boolean;
+    /** ToHuus-Rezepte marked Plus (catalogue tier 'plus') */
+    plusRecipes: boolean;
   };
 }
 
 const MB = 1024 * 1024;
-const base = { fullHistory: false, priceHistory: false, connectedHouseholds: false, mirrorLists: false, importQuota: false, weekPlanFromPantry: false, monthlyAnalysis: false, substituteFromStock: false };
+const base = { fullHistory: false, priceHistory: false, connectedHouseholds: false, mirrorLists: false, importQuota: false, weekPlanFromPantry: false, monthlyAnalysis: false, substituteFromStock: false, plusRecipes: false };
 const haushaltFeatures = { ...base, fullHistory: true, priceHistory: true, connectedHouseholds: true, mirrorLists: true, importQuota: true };
-const plusFeatures = { ...haushaltFeatures, weekPlanFromPantry: true, monthlyAnalysis: true, substituteFromStock: true };
+const plusFeatures = { ...haushaltFeatures, weekPlanFromPantry: true, monthlyAnalysis: true, substituteFromStock: true, plusRecipes: true };
 
 export const PLAN_LIMITS: Record<Plan, Limits> = {
   free: { historyDays: 60, assistantPerMonth: 20, assistantThrottleOnly: false, uploadsPerDay: 60, receiptAiPerDay: 15, importAiPerDay: 10, storageBytes: 250 * MB, features: base },
@@ -75,12 +78,19 @@ export const PLAN_LIMITS: Record<Plan, Limits> = {
   },
 };
 
-/** Apple product ids → plan (subscription group "ToHuus") */
-export const APPLE_PRODUCTS: Record<string, { plan: 'haushalt' | 'plus'; period: 'monthly' | 'yearly'; price: string }> = {
+/**
+ * Apple product ids → plan. Subscriptions in the group "ToHuus"; `plus.lifetime` is an optional non-consumable (Plus for
+ * good, no expiry). It only shows up in the app once it exists in App Store Connect – nothing breaks without it.
+ * Offer codes (beta testers) work for all of them: the redeemed purchase arrives as an ordinary transaction.
+ */
+export const LIFETIME_PRODUCT = 'de.heidrichdigital.tohuus.plus.lifetime';
+export const APPLE_PRODUCTS: Record<string, { plan: 'haushalt' | 'plus'; period: 'monthly' | 'yearly' | 'lifetime'; price: string }> = {
   'de.heidrichdigital.tohuus.haushalt.monthly': { plan: 'haushalt', period: 'monthly', price: '3,99 €' },
   'de.heidrichdigital.tohuus.haushalt.yearly': { plan: 'haushalt', period: 'yearly', price: '34,99 €' },
   'de.heidrichdigital.tohuus.plus.monthly': { plan: 'plus', period: 'monthly', price: '5,99 €' },
   'de.heidrichdigital.tohuus.plus.yearly': { plan: 'plus', period: 'yearly', price: '59,99 €' },
+  // price set in App Store Connect; the apps show the App Store price
+  [LIFETIME_PRODUCT]: { plan: 'plus', period: 'lifetime', price: '' },
 };
 
 const cloud = () => config.multiTenant;
@@ -104,6 +114,16 @@ export function planOf(householdId: string): Plan {
   if (!cloud()) return 'selfhost';
   const h = acc().getHousehold(householdId);
   if (!h) return 'free';
+  const own = ownPlan(h);
+  // the beta gift (gifts.ts): at least that plan for everyone while it is switched on
+  const gift = betaGift();
+  return gift && PLAN_RANK[gift] > PLAN_RANK[own] ? gift : own;
+}
+
+/** trial counts like Plus (same limits); a gift of Plus during the beta replaces it */
+const PLAN_RANK: Record<Plan, number> = { free: 0, haushalt: 1, trial: 2, plus: 3, selfhost: 4 };
+
+function ownPlan(h: { plan: string; trial_ends_at: string | null; plan_expires_at: string | null }): Plan {
   const now = nowSql();
   if (h.plan === 'trial') return h.trial_ends_at && h.trial_ends_at > now ? 'trial' : 'free';
   if (h.plan === 'haushalt' || h.plan === 'plus') return !h.plan_expires_at || h.plan_expires_at > now ? h.plan : 'free';

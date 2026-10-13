@@ -12,10 +12,11 @@ import path from 'node:path';
 import { SignJWT, exportJWK, generateKeyPair } from 'jose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Agent, fetch } from 'undici';
+import { freePort } from './helpers/port';
 const local = new Agent();
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-cloud-apple-'));
-const PORT = 48300 + Math.floor(Math.random() * 300);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 Object.assign(process.env, {
   MULTI_TENANT: 'true',
@@ -166,8 +167,8 @@ describe('Sign in with Apple – app', () => {
     expect(b.json.plans.plus.storageBytes).toBe(5120 * 1024 * 1024);
   });
 
-  it('signs in to the same account the next time (no name, no nonce in the token)', async () => {
-    const r = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-new', email: 'xyz@privaterelay.appleid.com' }), device: 'iPad' });
+  it('signs in to the same account the next time (no name)', async () => {
+    const r = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-new', email: 'xyz@privaterelay.appleid.com', nonce: 'ios-1' }), nonce: 'ios-1', device: 'iPad' });
     expect(r.status, r.text).toBe(200);
     expect(r.json.created).toBe(false);
     expect(r.json.account.id).toBe(firstAccount);
@@ -198,6 +199,8 @@ describe('Sign in with Apple – app', () => {
       const r = await new Client().post('/api/auth/apple', { ...b, device: 'iPhone' });
       expect(r.status, `${JSON.stringify(b).slice(0, 80)} → ${r.text}`).toBe(401);
     }
+    // the app always sends a nonce now; a token without one is refused
+    expect((await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-new' }), device: 'iPhone' })).status).toBe(401);
     // a web sign-in always needs the nonce
     const w = await new Client().post('/api/auth/apple', { identityToken: await token({ aud: 'de.heidrichdigital.tohuus.web' }), client: 'web' });
     expect(w.status).toBe(401);
@@ -209,31 +212,31 @@ describe('Sign in with Apple – app', () => {
     expect(s.status, s.text).toBe(200);
     const sam = accounts.accountByEmail('sam@example.org')!;
     // not confirmed yet → refused (no new account either)
-    const r1 = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam', email: 'sam@example.org' }), device: 'iPhone' });
+    const r1 = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam', email: 'sam@example.org', nonce: 'ios-2' }), nonce: 'ios-2', device: 'iPhone' });
     expect(r1.status).toBe(409);
     accounts.accountsDb().prepare(`UPDATE accounts SET verified_at = datetime('now') WHERE id = ?`).run(sam.id);
     // Apple says the address is unverified → refused
-    const r2 = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam', email: 'sam@example.org', verified: false }), device: 'iPhone' });
+    const r2 = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam', email: 'sam@example.org', verified: false, nonce: 'ios-3' }), nonce: 'ios-3', device: 'iPhone' });
     expect(r2.status).toBe(409);
-    const r3 = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam', email: 'sam@example.org' }), device: 'iPhone' });
+    const r3 = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam', email: 'sam@example.org', nonce: 'ios-4' }), nonce: 'ios-4', device: 'iPhone' });
     expect(r3.status, r3.text).toBe(200);
     expect(r3.json.created).toBe(false);
     expect(r3.json.account.id).toBe(sam.id);
     expect(r3.json.household.name).toBe('Sams WG');
     expect(r3.json.account.hasPassword).toBe(true);
     // another Apple ID with the same address cannot take the account over
-    const r4 = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam-2', email: 'sam@example.org' }), device: 'iPhone' });
+    const r4 = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam-2', email: 'sam@example.org', nonce: 'ios-5' }), nonce: 'ios-5', device: 'iPhone' });
     expect(r4.status).toBe(409);
   });
 
   it('refuses a token without e-mail when no account exists', async () => {
-    const r = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-nomail', email: null }), device: 'iPhone' });
+    const r = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-nomail', email: null, nonce: 'ios-6' }), nonce: 'ios-6', device: 'iPhone' });
     expect(r.status).toBe(400);
   });
 
   it('confirms the account deletion with a fresh Apple sign-in and removes the link', async () => {
     const c = new Client();
-    const r = await c.post('/api/auth/apple', { identityToken: await token({ sub: 'apple-ben', email: 'ben@privaterelay.appleid.com' }), device: 'iPhone', name: 'Ben' });
+    const r = await c.post('/api/auth/apple', { identityToken: await token({ sub: 'apple-ben', email: 'ben@privaterelay.appleid.com', nonce: 'ios-7' }), nonce: 'ios-7', device: 'iPhone', name: 'Ben' });
     expect(r.status, r.text).toBe(200);
     const auth = { authorization: `Bearer ${r.json.token}` };
     const benId = r.json.account.id;
@@ -241,25 +244,87 @@ describe('Sign in with Apple – app', () => {
     const d0 = await c.del('/api/cloud/account', {}, auth);
     expect(d0.status).toBe(400);
     // another Apple ID does not confirm
-    await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-mika', email: 'mika@privaterelay.appleid.com' }), device: 'iPhone' });
-    const d1 = await c.del('/api/cloud/account', { appleIdentityToken: await token({ sub: 'apple-mika', email: 'mika@privaterelay.appleid.com' }) }, auth);
+    await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-mika', email: 'mika@privaterelay.appleid.com', nonce: 'ios-8' }), nonce: 'ios-8', device: 'iPhone' });
+    const d1 = await c.del('/api/cloud/account', { appleIdentityToken: await token({ sub: 'apple-mika', email: 'mika@privaterelay.appleid.com', nonce: 'del-mika' }), appleNonce: 'del-mika' }, auth);
     expect(d1.status).toBe(400);
     const d2 = await c.del('/api/cloud/account', { appleIdentityToken: await token({ sub: 'apple-ben', nonce: 'del-1' }), appleNonce: 'del-1' }, auth);
     expect(d2.status, d2.text).toBe(200);
     expect(accounts.accountById(benId)).toBeUndefined();
     expect(appleLib.appleAccountOf('apple-ben')).toBeNull();
     // signing in again starts from scratch
-    const again = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-ben', email: 'ben@privaterelay.appleid.com' }), device: 'iPhone' });
+    const again = await new Client().post('/api/auth/apple', { identityToken: await token({ sub: 'apple-ben', email: 'ben@privaterelay.appleid.com', nonce: 'ios-9' }), nonce: 'ios-9', device: 'iPhone' });
     expect(again.status).toBe(200);
     expect(again.json.created).toBe(true);
     expect(again.json.account.id).not.toBe(benId);
   });
 });
 
+describe('Sign in with Apple – token revocation (5.1.1(v))', () => {
+  it('exchanges the code at sign-in and revokes the token when the account is deleted', async () => {
+    const { privateKey } = (await import('node:crypto')).generateKeyPairSync('ec', { namedCurve: 'P-256' });
+    process.env.APPLE_SIWA_KEY_ID = 'KEY123';
+    process.env.APPLE_SIWA_KEY_P8 = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString().replace(/\n/g, '\\n');
+    const calls: { url: string; form: URLSearchParams }[] = [];
+    appleLib.setAppleFetchForTests(async (url, init) => {
+      const form = new URLSearchParams(init.body);
+      calls.push({ url, form });
+      if (url.endsWith('/auth/token')) return { ok: true, status: 200, json: async () => ({ refresh_token: 'rt-sam-1', access_token: 'x' }) };
+      return { ok: true, status: 200, json: async () => ({}) };
+    });
+    try {
+      const c = new Client();
+      const r = await c.post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam', email: 'sam@privaterelay.appleid.com', nonce: 'ios-10' }), nonce: 'ios-10', authorizationCode: 'code-1', device: 'iPhone', name: 'Sam' });
+      expect(r.status, r.text).toBe(200);
+      const ex = calls.find((x) => x.url.endsWith('/auth/token'))!;
+      expect(ex.form.get('code')).toBe('code-1');
+      expect(ex.form.get('grant_type')).toBe('authorization_code');
+      expect(ex.form.get('client_secret')!.split('.')).toHaveLength(3);
+      const auth = { authorization: `Bearer ${r.json.token}` };
+      const d = await c.del('/api/cloud/account', { appleIdentityToken: await token({ sub: 'apple-sam', nonce: 'del-sam' }), appleNonce: 'del-sam' }, auth);
+      expect(d.status, d.text).toBe(200);
+      const rv = calls.find((x) => x.url.endsWith('/auth/revoke'))!;
+      expect(rv.form.get('token')).toBe('rt-sam-1');
+      expect(rv.form.get('token_type_hint')).toBe('refresh_token');
+    } finally {
+      appleLib.setAppleFetchForTests(null);
+      delete process.env.APPLE_SIWA_KEY_ID;
+      delete process.env.APPLE_SIWA_KEY_P8;
+    }
+  });
+
+  it('revokes at deletion with the fresh code even when the sign-in kept no token', async () => {
+    const { privateKey } = (await import('node:crypto')).generateKeyPairSync('ec', { namedCurve: 'P-256' });
+    const c = new Client();
+    // signed in while the key was missing: nothing to revoke later
+    const r = await c.post('/api/auth/apple', { identityToken: await token({ sub: 'apple-mira', email: 'mira@privaterelay.appleid.com', nonce: 'mira-1' }), nonce: 'mira-1', authorizationCode: 'code-old', device: 'iPhone', name: 'Mira' });
+    expect(r.status, r.text).toBe(200);
+    process.env.APPLE_SIWA_KEY_ID = 'KEY123';
+    process.env.APPLE_SIWA_KEY_P8 = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString().replace(/\n/g, '\\n');
+    const calls: { url: string; form: URLSearchParams }[] = [];
+    appleLib.setAppleFetchForTests(async (url, init) => {
+      const form = new URLSearchParams(init.body);
+      calls.push({ url, form });
+      if (url.endsWith('/auth/token')) return { ok: true, status: 200, json: async () => ({ refresh_token: 'rt-mira-2' }) };
+      return { ok: true, status: 200, json: async () => ({}) };
+    });
+    try {
+      const auth = { authorization: `Bearer ${r.json.token}` };
+      const d = await c.del('/api/cloud/account', { appleIdentityToken: await token({ sub: 'apple-mira', nonce: 'del-mira' }), appleNonce: 'del-mira', appleAuthorizationCode: 'code-fresh' }, auth);
+      expect(d.status, d.text).toBe(200);
+      expect(calls.find((x) => x.url.endsWith('/auth/token'))!.form.get('code')).toBe('code-fresh');
+      expect(calls.find((x) => x.url.endsWith('/auth/revoke'))!.form.get('token')).toBe('rt-mira-2');
+    } finally {
+      appleLib.setAppleFetchForTests(null);
+      delete process.env.APPLE_SIWA_KEY_ID;
+      delete process.env.APPLE_SIWA_KEY_P8;
+    }
+  });
+});
+
 describe('account deletion in the app without a password', () => {
   it('confirms with the code from the confirmation mail', async () => {
     const c = new Client();
-    const r = await c.post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam-code', email: 'samcode@privaterelay.appleid.com' }), device: 'iPhone' });
+    const r = await c.post('/api/auth/apple', { identityToken: await token({ sub: 'apple-sam-code', email: 'samcode@privaterelay.appleid.com', nonce: 'ios-11' }), nonce: 'ios-11', device: 'iPhone' });
     expect(r.status, r.text).toBe(200);
     const auth = { authorization: `Bearer ${r.json.token}` };
     const d0 = await c.del('/api/cloud/account', {}, auth);

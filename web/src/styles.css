@@ -266,6 +266,12 @@ img {
   outline-offset: 2px;
   border-radius: var(--r-xs);
 }
+/* rows that scroll sideways clip anything drawn outside them: inside them the ring is drawn inward, in the item's
+   own text colour (which already contrasts with its background, selected or not) */
+:is(.chips, .seg, .hscroll, .tabs-inline, .p2-forn, .p2-voters, .share-files, .away-tabs, .suggest-strip ul, .kid-wishes, .rate-faces) :focus-visible {
+  outline-color: currentColor;
+  outline-offset: -3px;
+}
 [hidden] {
   display: none !important;
 }
@@ -616,6 +622,17 @@ img {
 .main {
   scroll-padding-bottom: calc(var(--tabbar-h) + 90px);
 }
+/* the document is what scrolls, so the padding has to sit on html too: a focused control is scrolled clear of the
+   fixed tab bar and the Sprechen button on phones and of the floating button on wide screens */
+html {
+  scroll-padding-top: 16px;
+  scroll-padding-bottom: calc(var(--tabbar-h) + var(--safe-b, 0px) + 90px);
+}
+@media (min-width: 960px) {
+  html {
+    scroll-padding-bottom: 96px;
+  }
+}
 @media (min-width: 960px) {
   .main {
     padding-bottom: 112px;
@@ -663,11 +680,17 @@ h2,
   letter-spacing: -0.005em;
   margin: 0;
 }
-h3 {
+h3,
+.h3 {
   font-size: var(--fs-m);
   font-weight: 600;
   line-height: 1.35;
   margin: 0;
+}
+/* a section heading that is an h2 in the outline (no skipped level) but keeps the h3 look */
+h2.h3 {
+  font-family: inherit;
+  letter-spacing: normal;
 }
 .eyebrow {
   font-family: var(--font);
@@ -1939,6 +1962,19 @@ textarea.input {
   .seg button,
   .levels button {
     height: 40px;
+  }
+  /* the visible size stays (so nothing jumps), an invisible ::before grows the hit area to at least 44 × 44 px */
+  :where(.btn.sm, .chip, .seg button, .stepper button, .toggle, .linkish) {
+    position: relative;
+  }
+  :where(.btn.sm, .chip, .seg button, .stepper button, .toggle, .linkish)::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -3866,6 +3902,26 @@ img[data-zoom] {
 .wmeal .grow {
   padding: 0 2px;
 }
+/* the dish's name is the button that opens its sheet (keyboard: Tab + Enter) */
+.wmeal-open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+.wmeal-open .t,
+.wmeal-open .s {
+  display: block;
+}
+.wmeal-open .t {
+  display: -webkit-box;
+}
 .wmeal .icon-btn.sm {
   position: absolute;
   top: 10px;
@@ -3902,7 +3958,7 @@ img[data-zoom] {
   gap: 4px;
 }
 .wadd:hover {
-  color: var(--accent);
+  color: var(--primary-text);
   border-color: var(--accent);
 }
 .plan-today {
@@ -4055,7 +4111,8 @@ img[data-zoom] {
   color: var(--ink);
 }
 .found .spot {
-  color: var(--accent);
+  /* green as text: the lighter one in dark mode (the accent fill is only 3.3:1 on the dark surface) */
+  color: var(--primary-text);
   font-weight: 600;
 }
 .found .lhint {
@@ -6671,7 +6728,16 @@ html.board-mode body {
   font: inherit;
   border-radius: 6px;
 }
-.sp2-col:focus-visible {
+/* the plot is one focusable listbox; the column under the keyboard cursor gets the ring */
+.sp2-cols {
+  cursor: pointer;
+  border-radius: 8px;
+}
+.sp2-cols:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.sp2-cols:focus-visible .sp2-col.cursor {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -6720,6 +6786,10 @@ html.board-mode body {
 .sp2-cols.dense .sp2-col .lbl {
   font-size: 0.625rem;
   overflow: visible;
+  /* every fifth day is labelled; the number may be wider than its thin column and reaches into the neighbours */
+  align-self: center;
+  margin: 0 -10px;
+  text-align: center;
 }
 .sp2-legend {
   display: flex;
@@ -7438,8 +7508,8 @@ button.li {
   color: var(--accent-ink);
 }
 .auth-summary .muted {
+  /* full colour: opacity on the green would fall under 4.5:1 */
   color: inherit;
-  opacity: 0.8;
 }
 .auth-ic {
   flex: none;
@@ -8920,7 +8990,7 @@ button.li {
 .menu-group-name:disabled {
   cursor: default;
 }
-.menu-group-name h3 {
+.menu-group-name :is(h2, h3) {
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -9815,7 +9885,10 @@ button.li {
   gap: 12px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding-bottom: 6px;
+  /* 4px of room on every side (taken back by the negative margin) so the focus ring of an idea is not clipped */
+  margin: -4px -4px 0;
+  padding: 4px 4px 6px;
+  scroll-padding-inline: 4px;
   scrollbar-width: none;
 }
 .cidea {
@@ -10499,4 +10572,20 @@ button.rcard {
 .memory-list {
   list-style: none;
   margin: 0;
+}
+
+/* a page that failed to load (crash.tsx): a calm card instead of a white screen */
+.crash {
+  display: grid;
+  place-items: center;
+  min-height: 50vh;
+  padding: 24px 16px;
+}
+.crash-card {
+  max-width: 420px;
+  gap: 12px;
+}
+.crash-card h2 {
+  margin: 0;
+  font-size: 1.125rem;
 }

@@ -17,6 +17,8 @@ export type Intent =
   | { kind: 'money' }
   | { kind: 'remember'; text: string }
   | { kind: 'forget'; text: string }
+  /** an answer to the assistant ("Ja", "nein danke", "speicher das Rezept") – never a list item; needs the conversation */
+  | { kind: 'reply'; answer: 'yes' | 'no' | 'thanks' | 'command' }
   | { kind: 'unknown' };
 
 const clean = (s: string) => s.replace(/\s+/g, ' ').replace(/^[\s,.;:!-]+|[\s,.;:!?-]+$/g, '').trim();
@@ -36,6 +38,9 @@ export function parseIntent(input: string): Intent {
   const text = clean(input);
   if (!text) return { kind: 'unknown' };
   let m: RegExpMatchArray | null;
+
+  const r = replyOf(text);
+  if (r) return { kind: 'reply', answer: r };
 
   // remember / forget – a wish or a link from an article ("merk dir die Kekse aus dem Artikel") is for the wish list,
   // which needs the model (assistant-wishes.ts), not a household fact
@@ -66,6 +71,40 @@ export function parseIntent(input: string): Intent {
   const list = /\?/.test(input) ? null : readItems(text);
   if (list) return { kind: 'add', ...list };
   return { kind: 'unknown' };
+}
+
+// ------------------------------------------------------------------ answers to the assistant
+
+const YES = /^(?:ja|jaa+|jo|jop|jep|jap|japp|yes|yeah|yep|yup|sure|ok|okay|oki|okey|klar|genau|gerne?|bitte|unbedingt|sicher|passt|gut|super|perfekt|prima|top|mach(?:\s+(?:das|mal|es|ruhig))?|machen|go|los|please|do\s+it|go\s+ahead)$/i;
+const NO = /^(?:nein|nee|ne|nö|noe|no|nope|lieber\s+nicht|nicht\s+nötig|brauch(?:e|en)?\s+(?:ich|wir)\s+nicht|abbrechen|stopp?|cancel|no\s+thanks?)$/i;
+const THANKS = /^(?:danke(?:\s+(?:schön|schoen|dir|sehr))?|dankeschön|vielen\s+dank|merci|thanks?(?:\s+you)?|thx|cool|toll|klasse|nice)$/i;
+/** imperatives for things only the conversation can resolve ("speicher es", "plan das für Sonntag", "save it") */
+const COMMAND = /^(?:bitte\s+)?(?:speicher\w*|sicher\s+(?:es|das)|übernimm|uebernimm|nimm\s+(?:das|es|die)|plan\w*|trag\s+(?:es|das|sie)|schreib\w*|erstell\w*|lösch\w*|loesch\w*|änder\w*|aender\w*|pass\s+(?:es|das)|mach\s+(?:es|das|daraus|ein)|zeig\s+(?:es|das|mir)|save|keep|make|create|plan|delete|change|add\s+(?:it|them|that))\b/i;
+
+/** "Ja", "ja bitte", "nein danke", "Ja, speichern", "Speichere das Rezept" → what kind of answer it is, else null. */
+export function replyOf(text: string): 'yes' | 'no' | 'thanks' | 'command' | null {
+  const t = text.toLowerCase().replace(/[!.?…]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t) return null;
+  // "Ja, auf die Liste" after "Soll ich die fehlenden Zutaten auf die Liste setzen?" is a yes
+  if (/^(?:ja|jo|yes|ok|okay|gerne?|bitte)\b[\s,]*(?:bitte\s+)?(?:auf|on(?:to)?)\s+(?:die|the)\s+(?:liste|list)(?:\s+bitte)?$/.test(t)) return 'yes';
+  // the list words make it a list sentence ("setz Milch auf die Liste" stays a list add)
+  if (/\b(?:liste|list|einkaufszettel)\b/.test(t) && !/rezept|recipe|plan/.test(t)) return null;
+  const parts = t.split(/\s*,\s*|\s+-\s+|\s+und\s+|\s+and\s+/).filter(Boolean);
+  const kinds = parts.map((p) => (YES.test(p) ? 'yes' : NO.test(p) ? 'no' : THANKS.test(p) ? 'thanks' : COMMAND.test(p) ? 'command' : null));
+  // every part must be an answer ("ja bitte", "nein danke") – checked word by word for two-word yes/no/thanks
+  const words = t.split(' ');
+  const wordKinds = words.map((w) => (YES.test(w) ? 'yes' : NO.test(w) ? 'no' : THANKS.test(w) ? 'thanks' : null));
+  const all = kinds.every(Boolean) ? (kinds as string[]) : wordKinds.every(Boolean) && words.length <= 4 ? (wordKinds as string[]) : null;
+  if (all) {
+    if (all.includes('no')) return 'no';
+    if (all.includes('command')) return 'command';
+    if (all.includes('yes')) return 'yes';
+    return 'thanks';
+  }
+  // "ja, speichere das Rezept bitte", "Speichere das Rezept" – a command, maybe after a yes
+  const rest = YES.test(parts[0] ?? '') ? parts.slice(1).join(' ') : t;
+  if (COMMAND.test(rest)) return 'command';
+  return null;
 }
 
 // ------------------------------------------------------------------ list clauses

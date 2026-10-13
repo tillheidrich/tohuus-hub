@@ -58,13 +58,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus nutzt das Mikrofon, wenn du mit dem Assistenten sprichst."
+            "value": "ToHuus nutzt das Mikrofon nur, während du mit dem Assistenten sprichst oder etwas für die Liste diktierst. Kann dein iPhone Sprache nicht selbst in Text umwandeln, geht die Aufnahme dafür an ToHuus."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus uses the microphone when you speak to the assistant."
+            "value": "ToHuus uses the microphone only while you speak to the assistant or dictate for the list. If your iPhone can't turn speech into text, the recording goes to ToHuus to be turned into text."
           }
         }
       }
@@ -75,13 +75,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was du sagst, wird auf deinem iPhone in Text umgewandelt, damit der Assistent dich versteht."
+            "value": "Was du sagst, wird in Text umgewandelt, damit der Assistent dich versteht – wenn möglich auf deinem iPhone, sonst über die Spracherkennung von Apple."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your words are turned into text on your iPhone so the assistant can understand them."
+            "value": "Your words are turned into text so the assistant understands you – on your iPhone where possible, otherwise by Apple's speech recognition."
           }
         }
       }

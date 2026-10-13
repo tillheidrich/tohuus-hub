@@ -6,7 +6,7 @@
  */
 import { DownloadSimple, Trash } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { api, invalidate, patch, useApi } from '../api';
+import { api, invalidate, patch, post, useApi } from '../api';
 import { type Billing, useBilling } from '../data';
 import { locale, t } from '../i18n';
 import { Sheet, Skeleton, Toggle, useToast } from '../ui';
@@ -39,7 +39,21 @@ export function BillingCard() {
       </h2>
       <dl className="plan-facts">
         <dt>{t('Plan')}</dt>
-        <dd>{t(PLAN_LABEL[s.plan] ?? s.plan)}</dd>
+        <dd>{s.lifetime ? t('Plus – for good') : t(PLAN_LABEL[s.plan] ?? s.plan)}</dd>
+        {s.gift && (
+          <>
+            <dt>{t('Gift')}</dt>
+            <dd>
+              {s.gift.kind === 'beta'
+                ? t('Free during the beta – thank you for testing')
+                : s.gift.forever
+                  ? t('For good')
+                  : s.gift.until
+                    ? t('Until {date}', { date: fmtDay(s.gift.until) })
+                    : t('Gift')}
+            </dd>
+          </>
+        )}
         {s.plan === 'trial' && s.trialEndsAt && (
           <>
             <dt>{t('Trial ends')}</dt>
@@ -105,10 +119,66 @@ export function BillingCard() {
           </div>
         </div>
       )}
+      <RedeemCode />
       <p className="small muted" style={{ margin: 0 }}>
-        {t('Subscriptions are bought in the ToHuus iPhone app for now – one per household, everyone in it benefits. When a subscription ends, the household goes back to Free and nothing is deleted.')}
+        {s.gift?.kind === 'beta'
+          ? t('During the beta nobody pays. When it ends, every household keeps what it has on its own – nothing is deleted.')
+          : s.gift
+            ? t('A gift from us – nothing is charged.')
+            : t('Subscriptions are bought in the ToHuus iPhone app for now – one per household, everyone in it benefits. When a subscription ends, the household goes back to Free and nothing is deleted.')}
       </p>
     </section>
+  );
+}
+
+/**
+ * "Code einlösen": a gift code from us (server/lib/gifts.ts) – admins only, web only (the iPhone app may not unlock
+ * features with own codes, App Store Review Guideline 3.1.1).
+ */
+function RedeemCode() {
+  const me = useApi<{ actor: { role: string } }>('me', '/me');
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (me.data?.actor?.role !== 'admin') return null;
+  // inside the iPhone app's web view (WebSettingsView.swift): no codes, App Store guideline 3.1.1
+  if (/ToHuusApp/.test(navigator.userAgent)) return null;
+  if (!open)
+    return (
+      <button className="btn ghost" style={{ alignSelf: 'flex-start' }} onClick={() => setOpen(true)}>
+        {t('Redeem a code')}
+      </button>
+    );
+  return (
+    <form
+      className="row wrap"
+      style={{ gap: 8, alignItems: 'flex-end' }}
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!code.trim()) return;
+        setBusy(true);
+        try {
+          const r = await post<{ plan: string; until: string | null }>('/billing/redeem', { code: code.trim() });
+          toast({ text: r.until ? t('Redeemed – {plan} until {date}.', { plan: t(PLAN_LABEL[r.plan as Billing['plan']] ?? r.plan), date: fmtDay(r.until) }) : t('Redeemed – {plan} for good. Thank you!', { plan: t(PLAN_LABEL[r.plan as Billing['plan']] ?? r.plan) }) });
+          setCode('');
+          setOpen(false);
+          invalidate('billing');
+        } catch (err) {
+          toast({ text: (err as Error).message, error: true });
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <div className="field grow" style={{ minWidth: 200 }}>
+        <label htmlFor="gift-code">{t('Gift code')}</label>
+        <input id="gift-code" className="input mono" autoFocus autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="GIFT-XXXX-XXXX" value={code} onChange={(e) => setCode(e.target.value)} />
+      </div>
+      <button className="btn primary" disabled={busy || !code.trim()}>
+        {t('Redeem')}
+      </button>
+    </form>
   );
 }
 

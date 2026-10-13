@@ -115,6 +115,7 @@ struct SpendDrillView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }
             }
         }
+        .themedList()
         .navigationTitle(drill.title)
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -317,6 +318,7 @@ struct SpendReceiptView: View {
                 }
             }
         }
+        .themedList()
         .navigationTitle(data.map { [$0.store, $0.day.map(SpendDates.longDay)].compactMap { $0 }.joined(separator: " · ") } ?? L("Receipt"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -419,6 +421,7 @@ struct SpendLineView: View {
                 }
             } header: { Text(L("Don’t count in the statistics")) }
         }
+        .themedList()
         .navigationTitle(entry.name)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -466,9 +469,12 @@ struct SpendLineView: View {
 
 // MARK: - budgets
 
+/// The household's budgets, or – in "Nur meins" – the person's own (only they see them, they count only their entries).
 struct BudgetsEditView: View {
     let store: ServerStore
     let meta: SpendMeta?
+    @AppStorage("money.view", store: SharedConfig.defaults) private var view = "household"
+    private var mine: Bool { view == "mine" }
     @State private var rows: [BudgetsResponse.BudgetRow] = []
     @State private var category = ""
     @State private var period = "month"
@@ -482,6 +488,10 @@ struct BudgetsEditView: View {
             Section {
                 Text(L("Entirely optional. A budget shows a bar and a calm forecast. If you like, you get a short note at 80 % and when it is reached."))
                     .font(.subheadline).foregroundStyle(Theme.ink2)
+                Text(mine
+                     ? L("Only you see these budgets. They count what belongs to you: your own entries and the lines assigned to you. Notes go to your devices only.")
+                     : L("Shared by the household: everyone sees them. For a budget just for you, switch to “Just mine” first."))
+                    .font(.subheadline)
             }
             if !rows.isEmpty {
                 Section(L("Your budgets")) {
@@ -490,7 +500,7 @@ struct BudgetsEditView: View {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(b.category.isEmpty ? L("All spending") : b.category)
-                                    Text(Money.format(b.amount) + " " + (b.period == "week" ? L("per week") : L("per month")))
+                                    Text(Money.format(b.amount) + " " + (b.period == "week" ? L("per week") : b.period == "year" ? L("per year") : L("per month")))
                                         .font(.caption).foregroundStyle(Theme.ink3)
                                 }
                                 Spacer()
@@ -514,10 +524,11 @@ struct BudgetsEditView: View {
                     Text(L("All spending")).tag("")
                     ForEach(meta?.categories ?? [], id: \.self) { Text($0).tag($0) }
                 }
-                TextField(category.isEmpty ? "600" : "40", text: $amount).keyboardType(.decimalPad)
+                TextField(period == "year" ? (category.isEmpty ? "7000" : "500") : period == "week" ? (category.isEmpty ? "150" : "10") : (category.isEmpty ? "600" : "40"), text: $amount).keyboardType(.decimalPad)
                 Picker(L("Period"), selection: $period) {
-                    Text(L("per month")).tag("month")
                     Text(L("per week")).tag("week")
+                    Text(L("per month")).tag("month")
+                    Text(L("per year")).tag("year")
                 }
                 .pickerStyle(.segmented)
                 Toggle(L("Notify at 80 % and 100 %"), isOn: $notify)
@@ -527,19 +538,20 @@ struct BudgetsEditView: View {
                 .disabled(busy || (Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0) <= 0)
             }
         }
-        .navigationTitle(L("Budgets"))
+        .themedList()
+        .navigationTitle(mine ? L("My budgets") : L("Budgets"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .toast($toast)
     }
 
-    private func load() async { rows = (try? await store.api.spendBudgets().budgets) ?? rows }
+    private func load() async { rows = (try? await store.api.spendBudgets(mine: mine).budgets) ?? rows }
 
     private func save(category: String, period: String, amount: Double?, notify: Bool?, clearField: Bool = false) async {
         busy = true
         defer { busy = false }
         do {
-            try await store.api.setBudget(category: category.isEmpty ? nil : category, period: period, amount: amount, notify: notify)
+            try await store.api.setBudget(category: category.isEmpty ? nil : category, period: period, amount: amount, notify: notify, mine: mine)
             toast = ToastMessage(text: amount == nil ? L("Budget removed") : L("Budget saved"))
             if clearField { self.amount = "" }
             store.touch("imports")
@@ -584,6 +596,7 @@ struct ExcludedListView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }
             }
         }
+        .themedList()
         .navigationTitle(L("Left out"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -742,6 +755,7 @@ struct PricePickerView: View {
                     .listRowBackground(Color.clear)
             }
         }
+        .themedList()
         .searchable(text: $query, prompt: L("Search products"))
         .navigationTitle(L("Price history"))
         .navigationBarTitleDisplayMode(.inline)

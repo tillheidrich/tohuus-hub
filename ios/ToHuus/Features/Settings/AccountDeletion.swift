@@ -48,7 +48,10 @@ struct AccountDeletionModifier: ViewModifier {
     private func viaApple() async {
         do {
             let (cred, nonce) = try await runner.appleReauth()
-            await run(["appleIdentityToken": cred.identityToken, "appleNonce": nonce])
+            var body: [String: String] = ["appleIdentityToken": cred.identityToken, "appleNonce": nonce]
+            // Apple: revoke the user's tokens when the account goes – the server exchanges this fresh code and revokes it
+            if let code = cred.authorizationCode { body["appleAuthorizationCode"] = code }
+            await run(body)
         } catch {
             if !AuthorizationRunner.cancelled(error) { onError(APIError.from(error).localizedDescription) }
         }

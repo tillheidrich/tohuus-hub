@@ -114,3 +114,10 @@
 .catalog-origin {
   margin: 0;
 }
+/* Plus recipe: badge on the right, so it never covers "KI-Bild" */
+.dish-badge.dish-plus {
+  left: auto;
+  right: 8px;
+  background: var(--primary);
+  color: var(--on-primary);
+}

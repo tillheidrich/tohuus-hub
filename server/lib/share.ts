@@ -14,6 +14,7 @@ import { type Section, parseQuickAdd, previewQuickAdd, quickAdd, sectionOf } fro
 import { norm } from './text.js';
 import { type ShareRow, type StockMode, type Visibility, isTrackedProduct, setStockMode, shareRow, stockMode } from './share-core.js';
 import { ScopedMap } from './tenancy.js';
+import { devicePlatformOf } from './device-platforms.js';
 
 export * from './share-core.js';
 
@@ -52,13 +53,13 @@ export function cleanSharedText(text: string): string {
 }
 
 const RECIPE_HINT =
-  /rezept|recipe|recept|chefkoch|cookidoo|hellofresh|kitchenstories|lecker\.de|essen-und-trinken|eatsmarter|springlane|einfachbacken|gaumenfreundin|allrecipes|bbcgoodfood|seriouseats|bonappetit|epicurious|food52|budgetbytes|jamieoliver|marleyspoon|ica\.se|koket\.se|arla\.se|mytaste|tasteline|nyt.*cooking|cooking\.nytimes|thermomix|kochbar|kuechengoetter|zuckerjagdwurst|smittenkitchen|delish|tasty\.co/i;
+  /rezept|recipe|recept|chefkoch|cookidoo|hellofresh|kitchenstories|lecker\.de|essen-und-trinken|eatsmarter|springlane|einfachbacken|gaumenfreundin|allrecipes|bbcgoodfood|seriouseats|bonappetit|epicurious|food52|budgetbytes|jamieoliver|marleyspoon|ica\.se|koket\.se|arla\.se|mytaste|tasteline|nyt.*cooking|cooking\.nytimes|thermomix|monsieur-cuisine|home-connect|cookit|kenwoodworld|nutriu|cook-?expert|mambo|recette|receta|ricetta|kochbar|kuechengoetter|zuckerjagdwurst|smittenkitchen|delish|tasty\.co/i;
 const RECEIPT_HINT = /e-?bon|kassenbon|receipt|kvitto|beleg|anybill|bonbox|rechnung|invoice/i;
 
 export function looksLikeRecipeUrl(url: string) {
   try {
     const u = new URL(url);
-    return RECIPE_HINT.test(u.hostname + u.pathname);
+    return RECIPE_HINT.test(u.hostname + u.pathname) || devicePlatformOf(url) !== null;
   } catch {
     return false;
   }

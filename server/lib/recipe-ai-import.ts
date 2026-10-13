@@ -6,9 +6,10 @@
  *   JSON-LD) – never anything behind a login, no scraping of feeds or comments. A recipe in the caption is read by
  *   the model (counted as `importAi`); a video without recipe text becomes a recipe stub with title, link and the
  *   public still image, to be completed by hand or from a photo.
- * - **Cookidoo links in the cloud**: nothing is fetched from Cookidoo. The recipe keeps title + link + the ingredient
- *   list the person confirmed (pasted, or read from their own screenshot), no steps, no photos; cooking happens in
- *   Cookidoo ("Zum Kochen in Cookidoo öffnen"), an own photo of the dish is welcome.
+ * - **Cookidoo and other appliance platforms in the cloud** (Monsieur Cuisine, Cookit, Kenwood … – device-platforms.ts):
+ *   nothing is fetched from them. The recipe keeps title + link + the ingredient list the person confirmed (pasted,
+ *   read from their own screenshot or from copied text) and the steps only when the person brought them; cooking
+ *   happens on the platform ("Zum Kochen in Cookidoo öffnen"), an own photo of the dish is welcome.
  * - **Photos and screenshots**: cookbook page, handwritten note, screenshot, photo of a Thermomix or other appliance
  *   display → ingredients, steps and appliance steps (vision prompt in vision.ts).
  *
@@ -23,6 +24,7 @@ import { cleanText, findRecipeNode, jsonLdBlocks, lenientJson, oneLine } from '.
 import { saveRecipe, type RecipeInput } from './recipes.js';
 import { bulkImport, setRecipeImageUrl } from './recipes2.js';
 import { runVision, visionAvailable } from './vision.js';
+import { devicePlatformOf, devicePlatformRecipeId } from './device-platforms.js';
 
 export type Platform = 'instagram' | 'tiktok' | 'pinterest' | 'youtube';
 
@@ -304,51 +306,62 @@ function titleFrom(title: string | null, caption: string, platform: Platform): s
   return oneLine(pick).replace(/\s*[|–-]\s*(YouTube|TikTok|Pinterest|Instagram)\s*$/i, '').slice(0, 120);
 }
 
-// ------------------------------------------------------------------ Cookidoo (cloud: nothing fetched)
+// ------------------------------------------------------------------ Cookidoo & other appliance platforms (cloud: nothing fetched)
+// Monsieur Cuisine, Home Connect (Cookit), Kenwood, the Groupe SEB companions, Magimix, KitchenAid, Cecotec Mambo,
+// NutriU work exactly like Cookidoo (registry in device-platforms.ts). The API keeps the Cookidoo names.
 
-export const isCookidooUrl = (url: string) => {
-  try {
-    return /(^|\.)cookidoo\.[a-z.]+$/i.test(new URL(url).hostname);
-  } catch {
-    return false;
-  }
-};
-export const cookidooRecipeId = (url: string) => url.match(/cookidoo\.[a-z.]+\/.*?\/(r\d+)(?:[/?#]|$)/i)?.[1] ?? null;
+/** Any appliance recipe platform (Cookidoo, Monsieur Cuisine, Cookit …). */
+export const isDevicePlatformUrl = (url: string) => devicePlatformOf(url) !== null;
+/** Kept for older callers: true for every appliance platform, not only Cookidoo. */
+export const isCookidooUrl = isDevicePlatformUrl;
+export const cookidooRecipeId = (url: string) => devicePlatformRecipeId(url);
 
-/** Cookidoo is never contacted from the cloud; self-hosted servers keep the public-page import. */
-export const cookidooConfirmNeeded = (url: string) => config.multiTenant && isCookidooUrl(url);
+/** These platforms are never contacted from the cloud; self-hosted servers keep the public-page import. */
+export const cookidooConfirmNeeded = (url: string) => config.multiTenant && isDevicePlatformUrl(url);
 
-/** A title out of what the Cookidoo app shares ("Schau dir dieses Rezept an: Linsencurry https://cookidoo…"). */
+/** A title out of what the platform's app shares ("Schau dir dieses Rezept an: Linsencurry https://cookidoo…"). */
 export function cookidooTitleFrom(text: string | null | undefined): string | null {
   if (!text) return null;
   const s = text
     .replace(/https?:\/\/\S+/g, '')
     .replace(/^(schau dir (doch )?(mal )?dieses rezept an|check out this recipe|ich habe ein rezept für dich|rezept|recipe)\s*[:!-]?\s*/i, '')
-    .replace(/\s*(auf|on)\s+cookidoo.*$/i, '')
+    .replace(/\s*(auf|on|bei|in)\s+(der\s+|the\s+)?(cookidoo|monsieur cuisine|home connect|kenwood|nutriu|my ?companion|magimix|kitchenaid|mambo)\b.*$/i, '')
     .trim();
   return s ? oneLine(s).slice(0, 120) : null;
 }
 
 /** The draft the app shows for confirmation – nothing fetched. */
 export function cookidooDraft(url: string, sharedText?: string | null) {
-  return { url: canonicalUrl(url), external_id: cookidooRecipeId(url), title: cookidooTitleFrom(sharedText) ?? '', ingredients: [] as string[] };
+  const p = devicePlatformOf(url);
+  return {
+    url: canonicalUrl(url),
+    external_id: cookidooRecipeId(url),
+    title: cookidooTitleFrom(sharedText) ?? '',
+    ingredients: [] as string[],
+    platform: p ? { id: p.id, label: p.label, device: p.device } : null,
+  };
 }
 
-/** Save what the person confirmed: title + link + ingredients. No steps, no photos – cooking happens in Cookidoo. */
-export async function saveCookidoo(input: { url: string; title: string; ingredients: string[]; servings?: number | null; time_min?: number | null }): Promise<{ id: number; created: boolean }> {
-  if (!isCookidooUrl(input.url)) throw fail(t('That is not a Cookidoo link.'));
+/** Save what the person confirmed: title + link + ingredients (+ steps they brought). Nothing fetched; cooking happens on the platform. */
+export async function saveCookidoo(input: { url: string; title: string; ingredients: string[]; steps?: string[]; servings?: number | null; time_min?: number | null }): Promise<{ id: number; created: boolean }> {
+  const p = devicePlatformOf(input.url);
+  if (!p) throw fail(t('That is not a link from Cookidoo or another kitchen appliance app.'));
   const ingredients = input.ingredients.map((l) => oneLine(l).slice(0, 300)).filter(Boolean).slice(0, 150);
-  if (!ingredients.length) throw fail(t('Add the ingredients – copy them from Cookidoo or take a screenshot.'));
+  if (!ingredients.length) throw fail(t('Add the ingredients – copy them from {app} or take a screenshot.', { app: p.label }));
+  const cookidoo = p.id === 'cookidoo';
   const out = await bulkImport([
     {
-      name: input.title.trim().slice(0, 200) || t('Cookidoo recipe'),
+      name: input.title.trim().slice(0, 200) || t('{app} recipe', { app: p.label }),
       url: canonicalUrl(input.url),
-      source_type: 'cookidoo',
+      source_type: p.id,
       external_id: cookidooRecipeId(input.url),
       recipeIngredient: ingredients,
-      recipeInstructions: [],
-      instructions_available: false,
-      thermomix: true,
+      // steps only when the person brought them along (their screenshots, their text, their own AI); nothing is fetched
+      recipeInstructions: (input.steps ?? []).map((l) => oneLine(l).slice(0, 3000)).filter(Boolean).slice(0, 120),
+      instructions_available: Boolean(input.steps?.some((l) => l.trim())),
+      thermomix: cookidoo,
+      // the appliance: Cookidoo has its Thermomix flag; the others keep the device as a tag (shown on the recipe)
+      ...(cookidoo ? {} : { tags: [p.device], tohuus: { devices: [p.device] } }),
       ...(input.servings ? { recipeYield: input.servings } : {}),
       ...(input.time_min ? { totalTime: input.time_min } : {}),
     },
@@ -356,11 +369,36 @@ export async function saveCookidoo(input: { url: string; title: string; ingredie
   if (!out.ids[0]) throw userError(out.errors[0]?.error ?? t('Import failed.'));
   return { id: out.ids[0], created: out.created === 1 };
 }
+export const saveDevicePlatformRecipe = saveCookidoo;
+
+/** Recipe text the person copied from the platform's app → title, ingredients, steps, servings (shown for confirmation, not saved). */
+export async function readRecipeText(text: string): Promise<{ title: string | null; ingredients: string[]; steps: string[]; servings: number | null; ai: boolean }> {
+  const clean = text.slice(0, 20_000);
+  if (visionAvailable()) {
+    // the household's AI switch, the person's and the kid lock are checked in runVision → ai.ts; counted as importAi
+    const rec = modelToRecipe(await runVision('text-recipe', { text: clean }));
+    if (rec) {
+      return {
+        title: rec.title ? oneLine(rec.title).slice(0, 200) : null,
+        ingredients: (rec.ingredients ?? []).map((i) => oneLine(i.text).slice(0, 300)).filter(Boolean).slice(0, 150),
+        steps: (rec.steps ?? []).map((st) => oneLine(st.text).slice(0, 3000)).filter(Boolean).slice(0, 120),
+        servings: rec.servings ?? null,
+        ai: true,
+      };
+    }
+  }
+  // without AI (or nothing recognised): first line title, lines with amounts = ingredients, the rest = steps
+  const rec = plainTextRecipe(clean);
+  const servings = Number(clean.match(/(\d{1,2})\s*(portionen|personen|servings|portions)/i)?.[1]) || null;
+  return { title: rec.title ? oneLine(rec.title).slice(0, 200) : null, ingredients: (rec.ingredients ?? []).map((i) => i.text), steps: (rec.steps ?? []).map((st) => st.text), servings, ai: false };
+}
 
 /** Read an ingredient list from the person's own screenshot (Cookidoo app, a cookbook) – shown for confirmation, not saved. */
-export async function readIngredients(images: string[]): Promise<{ title: string | null; ingredients: string[]; servings: number | null }> {
+export async function readIngredients(images: string[]): Promise<{ title: string | null; ingredients: string[]; steps: string[]; servings: number | null }> {
   if (!visionAvailable()) throw fail(t('Reading photos needs AI. Copy the ingredients and paste them instead.'), 501);
+  // the person's own screenshots: the ingredient list, and the steps when they are on the screenshots too
   const j = await runVision('ingredients', { images });
   const list = Array.isArray(j?.ingredients) ? j.ingredients.map((x: any) => (typeof x === 'string' ? x : typeof x?.text === 'string' ? x.text : '')).map((x: string) => oneLine(x)).filter(Boolean).slice(0, 150) : [];
-  return { title: s(j?.title, 200), ingredients: list, servings: n(j?.servings) };
+  const steps = Array.isArray(j?.steps) ? j.steps.map((x: any) => (typeof x === 'string' ? x : typeof x?.text === 'string' ? x.text : '')).map((x: string) => oneLine(x).slice(0, 3000)).filter(Boolean).slice(0, 120) : [];
+  return { title: s(j?.title, 200), ingredients: list, steps, servings: n(j?.servings) };
 }

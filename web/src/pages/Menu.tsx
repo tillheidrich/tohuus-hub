@@ -404,7 +404,7 @@ function GroupHead({ g, canEdit, first, last, onMove, onRemove, onRename, onDrag
         />
       ) : (
         <button className="menu-group-name" onClick={() => canEdit && setEditing(true)} disabled={!canEdit}>
-          <h3>{g.name}</h3>
+          <h2 className="h3">{g.name}</h2>
           <span className="small muted">{g.items.length}</span>
           {canEdit && <PencilSimple size={14} className="muted" />}
         </button>

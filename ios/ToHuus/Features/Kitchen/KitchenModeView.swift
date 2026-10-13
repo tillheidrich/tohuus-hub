@@ -13,6 +13,8 @@ struct KitchenModeView: View {
     @State private var plan: PlanResponse?
     @State private var recipeId: Int?
     @State private var error: String?
+    /// remembered per device; on by default – the reason kitchen mode exists
+    @AppStorage("kitchen.keepAwake") private var keepOn = true
 
     enum Part: Hashable { case week, recipe, list }
 
@@ -40,17 +42,21 @@ struct KitchenModeView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L("Close")) { dismiss() }.keyboardShortcut(.cancelAction)
                 }
+                // the sun used to look like a button but did nothing (13 Oct feedback): now a menu with the two
+                // things a counter screen needs – keep the screen on, and light or dark
                 ToolbarItem(placement: .primaryAction) {
-                    Group {
+                    Menu {
+                        Toggle(isOn: $keepOn) { Label(L("Screen stays on"), systemImage: "sun.max") }
+                        AppearancePicker()
+                    } label: {
                         if sizeClass == .regular {
-                            Label(L("Screen stays on"), systemImage: "sun.max.fill").labelStyle(.titleAndIcon)
+                            Label(keepOn ? L("Screen stays on") : L("Screen may turn off"), systemImage: keepOn ? "sun.max.fill" : "sun.max")
+                                .labelStyle(.titleAndIcon)
                         } else {
-                            Image(systemName: "sun.max.fill")
+                            Image(systemName: keepOn ? "sun.max.fill" : "sun.max")
                         }
                     }
-                    .font(.footnote)
-                    .foregroundStyle(Theme.ink3)
-                    .accessibilityLabel(L("Screen stays on"))
+                    .accessibilityLabel(L("Screen and appearance"))
                 }
             }
             .task(id: store.revision("recipes")) { await load() }
@@ -58,10 +64,11 @@ struct KitchenModeView: View {
         .onAppear { keepAwake(true) }
         .onDisappear { keepAwake(false) }
         .onChange(of: scenePhase) { _, phase in keepAwake(phase == .active) }
+        .onChange(of: keepOn) { _, _ in keepAwake(scenePhase == .active) }
     }
 
     private func keepAwake(_ on: Bool) {
-        UIApplication.shared.isIdleTimerDisabled = on
+        UIApplication.shared.isIdleTimerDisabled = on && keepOn
     }
 
     private func openRecipe(_ id: Int) {
@@ -207,7 +214,7 @@ private struct KitchenRecipe: View {
                         .font(.headline).foregroundStyle(Theme.primaryText)
                     ScrollView {
                         Text(r.steps[i].text)
-                            .font(.system(size: 34, weight: .regular))
+                            .font(.system(.largeTitle, weight: .regular))
                             .foregroundStyle(Theme.ink)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .accessibilityAddTraits(.updatesFrequently)
@@ -314,13 +321,14 @@ private struct KitchenList: View {
                     .foregroundStyle(Theme.mustard)
                 }
                 .font(.title3)
-                .foregroundStyle(Theme.canvas)
+                .foregroundStyle(Theme.onBlock)
                 .padding(Theme.Space.s4)
-                .background(Theme.ink, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                .background(Theme.block, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
                 .padding(Theme.Space.s4)
                 .task(id: item.id) {
-                    try? await Task.sleep(nanoseconds: 5_000_000_000)
-                    if lastTicked?.id == item.id { lastTicked = nil }
+                    A11yTiming.announce(LF("“%@” ticked off", item.productName ?? item.text))
+                    await A11yTiming.hold(5)
+                    if !Task.isCancelled, lastTicked?.id == item.id { lastTicked = nil }
                 }
             }
         }

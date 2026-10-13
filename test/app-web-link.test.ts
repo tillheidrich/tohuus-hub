@@ -4,11 +4,13 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-weblink-'));
 process.env.DATA_DIR = dir;
-process.env.BASE_URL = 'http://localhost:47437';
-const base = 'http://localhost:47437';
+const PORT = await freePort();
+process.env.BASE_URL = `http://localhost:${PORT}`;
+const base = `http://localhost:${PORT}`;
 let server: http.Server;
 
 beforeAll(async () => {
@@ -26,7 +28,7 @@ beforeAll(async () => {
   app.use('/api', cloud.appAuth);
   app.use('/api', authRoutes.pub);
   app.use('/api', core.r);
-  await new Promise<void>((r) => (server = app.listen(47437, () => r())));
+  await new Promise<void>((r) => (server = app.listen(PORT, () => r())));
 });
 afterAll(() => {
   server?.close();

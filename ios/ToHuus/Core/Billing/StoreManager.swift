@@ -12,7 +12,10 @@ final class StoreManager {
         "de.heidrichdigital.tohuus.haushalt.yearly",
         "de.heidrichdigital.tohuus.plus.monthly",
         "de.heidrichdigital.tohuus.plus.yearly",
+        // optional: Plus once, for good (non-consumable). Shown only when it exists in App Store Connect.
+        Self.lifetimeId,
     ]
+    static let lifetimeId = "de.heidrichdigital.tohuus.plus.lifetime"
 
     private(set) var products: [Product] = []
     private(set) var purchasing: String?
@@ -49,6 +52,9 @@ final class StoreManager {
 
     /// products did not come (sandbox, no connection): the paywall says so instead of spinning
     var productsMissing: Bool { loaded && !loading && products.isEmpty }
+
+    /// Plus for good, when it is offered in the App Store
+    var lifetime: Product? { products.first { $0.id == Self.lifetimeId } }
 
     func product(plan: String, yearly: Bool) -> Product? {
         products.first { $0.id == "de.heidrichdigital.tohuus.\(plan).\(yearly ? "yearly" : "monthly")" }
@@ -116,7 +122,7 @@ final class StoreManager {
 
 extension Product {
     var periodLabel: String {
-        guard let p = subscription?.subscriptionPeriod else { return "" }
+        guard let p = subscription?.subscriptionPeriod else { return type == .nonConsumable ? L("once, for good") : "" }
         switch p.unit {
         case .year: return L("per year")
         case .month: return L("per month")

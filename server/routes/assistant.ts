@@ -32,6 +32,8 @@ import { aiStateFor } from './ai-settings.js';
 export const r = Router();
 
 const audioUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 12 * 1024 * 1024, files: 1, fields: 5 } });
+/** about a minute of speech */
+const MAX_TRANSCRIPT = 1200;
 const userOf = (req: any): AssistantUser => ({ userId: req.actor?.userId ?? null, name: req.actor?.name ?? 'unknown' });
 
 function fail(res: any, e: unknown) {
@@ -76,6 +78,9 @@ async function audioToText(req: any): Promise<string> {
   const format = audioFormat(f.mimetype, f.originalname);
   if (!format) throw new AssistantError(t('This audio format is not supported. Please use m4a, mp3, wav, ogg, webm or flac.'), 415);
   const out = await transcribe(f.buffer, format, lang());
+  // dictation for the list and the assistant is a few sentences (the apps record 60 s at most): longer transcripts
+  // are refused, so the endpoint can't be used as a free transcription service for lectures or meetings
+  if (out.text.length > MAX_TRANSCRIPT) throw new AssistantError(t('That was too long. Please say it in a few short sentences.'), 413);
   return out.text;
 }
 

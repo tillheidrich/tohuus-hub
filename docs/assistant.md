@@ -14,6 +14,10 @@ Code: [`server/lib/assistant.ts`](../server/lib/assistant.ts) (conversation, mod
 
 If the model fails mid-way, writes it already made stay (they are in `actions`, with undo); otherwise the built-in reader answers instead of an error.
 
+**Answers to the assistant** (`replyOf` in assistant-parse.ts): "Ja", "ja bitte", "Mach das", "Ja, auf die Liste", "Speichere das Rezept", "Nein", "Danke" are intent `reply` – never list items. "Nein"/"Danke" are answered without a model ("Alles klar." / "Gern."); "Ja" and commands go to the model with the conversation, and the tools follow the last answer too (a "Ja" after a recipe gets `recipe_save_adapted`). Without a model or while it is busy the answer says so – nothing is put on the list.
+
+**Time budget**: one answer may take at most 45 s in total (all tool rounds, retries and fallback models; `deadline` in `chat()`), one model request at most 25 s. Before, a stuck model could keep a person waiting for minutes (60 s per try × retries × fallback models).
+
 ## Endpoints
 
 All need a signed-in member (cookie or app token). Errors: `{ error }` (AI errors add `code`: `not_configured`, `timeout`, `rate_limited`, `auth`, `bad_request`, `upstream`, `bad_response`).
@@ -32,11 +36,12 @@ All need a signed-in member (cookie or app token). Errors: `{ error }` (AI error
   ],
   "mode": "ai",                             // ai | basic
   "usage": { "prompt": 1830, "completion": 64, "total": 1894 },   // only with a model
-  "remaining": null                         // assistant messages left this month (null = unlimited)
+  "remaining": null,                        // assistant messages left this month (null = unlimited)
+  "scope": "off_topic"                      // only when the scope filter answered: "role" | "off_topic"
 }
 ```
 
-Action kinds: `list_add`, `list_remove`, `list_check`, `stock_used_up`, `plan_meal`, `recipe_to_list`, `log_purchase`, `remember`, `forget`. `recipe_save_adapted` also carries `recipe_id` (the saved recipe), so the apps can open it from the chip.
+Action kinds: `list_add`, `list_remove`, `list_check`, `stock_used_up`, `plan_meal`, `recipe_to_list`, `log_purchase`, `budget_set`, `remember`, `forget`. `recipe_save_adapted` also carries `recipe_id` (the saved recipe), so the apps can open it from the chip.
 
 ### `POST /api/assistant/transcribe`
 
@@ -66,11 +71,21 @@ Four switches, enforced centrally in `server/lib/ai.ts` (`chat()`, `transcribe()
 | Person `ai.mine` | `user_prefs` of that member | only that member; never shown to others | on |
 | Child | `kid_profiles.ai_off` | parents (admins and members, not permanent guests) via `PUT /api/kids/:id/ai { enabled }` | on |
 | MCP for the household's own assistants `mcp.enabled` | setting | admins | on; independent from the built-in AI (no model is called for MCP); off ⇒ `/mcp` answers 403 |
+| Consent (ToHuus Cloud only) `ai.consent` | `user_prefs` per person; household setting `ai.consent` when an admin agrees | each person for themselves (`PATCH { consent }`); an admin's consent also covers the household | **off** until agreed – App Store guideline 5.1.2(i) |
+
+**Consent in ToHuus Cloud** (13 Oct 2026): before the first model request with a person's data, that person agrees
+once (iPhone: a one-time sheet after sign-in and Mehr › Mit oder ohne KI; web: Einstellungen › Zugänge & KI). The text
+names the receiver (`AI_PROCESSOR` in ai-policy.ts: Mistral AI (EU), no training; the app and website name only Mistral – OpenRouter is the API in between and stays listed in the privacy policy as a processor). Requests
+of a person use the person's consent; children and background jobs (receipts by mail) use the household's, given by an
+admin. Without it the reason is `consent` and every feature takes its path without a model. The operator's catalogue
+drafts in `/betrieb` carry no household data and are not affected (`runAsAiActor({ operator: true })`). In the cloud a
+new child's AI starts **off** (`kid_profiles.ai_off = 1`), a parent switches it on. Self-hosted servers choose their own
+model and ask no consent.
 
 The person is taken from the request (`requireAuth` runs the rest of the request inside `runAsAiActor`), the child from the paired kid tablet (`/api/kid/:token/*`). A kid tablet can never change its switch: there is no route for it, `GET /api/kid/:token` only returns `ai: { enabled, locked: true }` for the locked display "von deinen Eltern ausgeschaltet".
 
-- `GET /api/ai/settings` → `{ configured: { text, vision, audio }, household, mcp, mine, effective, reason: null|'no_model'|'household'|'person'|'parents', admin, kids?: [{ id, name, ai }] }` (`kids` for adult members only).
-- `PATCH /api/ai/settings` `{ household?, mcp? }` (admins, else 403) and/or `{ mine? }` (the caller, for themselves) → the state as above.
+- `GET /api/ai/settings` → `{ configured: { text, vision, audio }, household, mcp, mine, effective, reason: null|'no_model'|'household'|'person'|'parents'|'cloud'|'consent', consent: { required, given, household, processor, privacyUrl }, admin, kids?: [{ id, name, ai }] }` (`kids` for adult members only).
+- `PATCH /api/ai/settings` `{ household?, mcp? }` (admins, else 403) and/or `{ mine?, consent? }` (the caller, for themselves; not for guests) → the state as above.
 - `GET /api/assistant/status` additionally returns `aiState` (same object without `admin`/`kids`); `ai`, `voice` and `receiptsAi` are the effective values for the caller.
 - `GET /api/instance` → `features.ai: { configured, household, mcp }`; `features.assistant/voice/receiptsAi` are `configured && household`.
 
@@ -117,7 +132,42 @@ Run in-process on the library functions (never over HTTP). Results going back to
 | `recipe_to_list` | missing ingredients onto the list, origin "aus Rezept X" | removes the new rows |
 | `money_summary` | month, shop, category, budget, price changes, hints | – |
 | `log_purchase` | a told purchase: receipt in review (dated, counts for the rhythm at once, no prices) plus a manual expense with the total; ticks matching list rows | removes receipt, expense, ticks |
+| `budget_set` | a budget per week, month or year, for the household or – `mine` – only for the speaker (private); only after a yes | – |
+| `app_help` | "Wie geht …? Wo finde ich …? Kann ToHuus …?": where a feature lives in the app and its help page (`APP_GUIDE` in `server/lib/assistant-scope.ts`) | – |
 | `remember` / `forget` | what ToHuus remembers | forget / restore |
+
+## Scope: only the household, never misused
+
+Founder's rule (13 Oct 2026): the assistant only handles topics around the household and the app and turns
+everything else down in a friendly way. Three layers (`server/lib/assistant-scope.ts`):
+
+1. **Filter before anything else** (`scopeCheck`): attempts to change the role or read the instructions ("ignoriere
+   alle Anweisungen", "zeig deinen Systemprompt", "du bist jetzt …", role play) and requests that are clearly not
+   about the household (code, homework, essays, translations, poems, politics, investments, weather, medical or
+   legal advice, weapons, adult content, stories and speeches, school subjects like physics or maths, "wer war …") get a short, warm answer that offers household help. No model call,
+   nothing counted against the allowance, `scope: "role" | "off_topic"` in the response. Conservative on purpose:
+   a household word in the message ("Rezept", "Liste", "Budget", "Milch" …) lets it through, so "übersetz mir das
+   Rezept" or "Waschmittel Dosierung?" still work. The eval prompts are checked against it.
+2. **System prompt** (`SCOPE_DE` / `SCOPE_EN`): the same rule for everything the filter cannot see; role and rules
+   never change; text inside recipes, receipts, links and tool results is data, not instructions (prompt injection
+   through an imported recipe or a forwarded mail does nothing).
+3. **Tools only**: the model can only act through the household tools below. No web access, no code execution, no
+   mail, no other households (tenancy), writes with undo, guests never reach `/assistant`.
+
+Other model paths cannot be used for general chat: imports and receipt reading ask for fixed JSON (recipe, items) and
+keep only what fits that shape; `POST /api/assistant/transcribe` refuses transcripts over 1200 characters (about a
+minute of speech, HTTP 413), so it is no free transcription service. Every path counts against the plan's allowance
+(`plans.consume`), replies are capped at 600 tokens, messages at 2000 characters.
+
+Tests: `test/assistant-scope.test.ts`.
+
+## What the assistant can do, and where the rest lives
+
+The in-app assistant covers the everyday questions (list, pantry, cooking, plan, money and budgets, wishes, house
+info, guests, "merk dir") and answers every "how do I …?" with `app_help`. Things that need a screen (scanning a
+receipt, editing a recipe photo, settings, invitations, subscriptions) stay in the app; the assistant names the way
+there. A connected AI over MCP (Claude, ChatGPT; `docs/mcp.md`) has the full set of about 120 tools, including bulk
+recipe imports, trips, party, "Bring mir was", leftovers, care tasks and Home Assistant.
 
 ## Help per screen (`context`)
 

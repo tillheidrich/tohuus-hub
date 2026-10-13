@@ -24,6 +24,7 @@ import { cloudIdentity } from '../lib/cloud-auth.js';
 import { canSendMail } from '../lib/mail.js';
 import { audit, isOperatorEmail, overview } from '../lib/operator.js';
 import { operatorAdmin } from './operator-admin.js';
+import { operatorAccounts } from './operator-accounts.js';
 import { pulseAggregate } from '../lib/pulse.js';
 
 export const r = Router();
@@ -93,6 +94,7 @@ r.get('/operator/pulse', fresh, async (_req, res) => {
 
 // back office: settings, beta gate, household lookup, paged audit log, statistics, ToHuus-Rezepte (operator-admin.ts)
 r.use(operatorAdmin(fresh));
+r.use(operatorAccounts(fresh));
 
 const household = (req: Request, res: Response) => {
   const id = String(req.params.id);

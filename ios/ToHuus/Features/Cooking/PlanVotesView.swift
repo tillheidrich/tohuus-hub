@@ -770,7 +770,7 @@ struct VoteDetailView: View {
     private func swipe(_ v: FoodVote, _ id: Int, _ value: Int) async {
         Haptics.tick()
         guard await send(v, [(id, value)]) else { return }
-        withAnimation(.easeOut(duration: 0.2)) { queue.removeAll { $0 == id } }
+        Motion.perform(Motion.quick) { queue.removeAll { $0 == id } }
         if queue.isEmpty { voter = nil; await load() }
     }
 

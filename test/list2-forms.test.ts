@@ -8,9 +8,10 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-list2-forms-'));
-const PORT = 48120 + Math.floor(Math.random() * 60);
+const PORT = await freePort();
 process.env.DATA_DIR = dir;
 process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'de';

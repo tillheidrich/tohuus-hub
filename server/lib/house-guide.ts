@@ -27,6 +27,7 @@ import { guestVoice, voiceByArea, voiceItems, voiceSettings, assistantName } fro
 import { GUEST_LEVELS, levelRank, type EffectiveLevel, type GuestLevel } from './people-policy.js';
 import { regionInfo } from './region.js';
 import { norm } from './text.js';
+import { deleteImage, looksLikeImage, saveImage, saveVideo, videoKind } from './images.js';
 
 migrate(
   'house-guide-1',
@@ -86,6 +87,21 @@ migrate(
      value TEXT NOT NULL,
      length INTEGER NOT NULL DEFAULT 0
    );`,
+);
+
+// photos and short videos on a card (13 Oct 2026: "wie die Heizung geht" shows better than it reads)
+migrate(
+  'house-guide-media',
+  `CREATE TABLE house_media (
+     id INTEGER PRIMARY KEY,
+     card_id INTEGER NOT NULL,
+     kind TEXT NOT NULL CHECK (kind IN ('photo','video')),
+     path TEXT NOT NULL,
+     caption TEXT,
+     sort INTEGER NOT NULL DEFAULT 0,
+     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+   );
+   CREATE INDEX house_media_card ON house_media(card_id, sort);`,
 );
 
 // ---------------------------------------------------------------- code values at rest
@@ -290,8 +306,27 @@ export interface CardInput {
   visibility?: Visibility;
 }
 
-const cardOut = (r: CardRow, admin: boolean, vis?: VisRow[]) => ({
+interface MediaRow {
+  id: number;
+  card_id: number;
+  kind: 'photo' | 'video';
+  path: string;
+  caption: string | null;
+}
+/** Photos and videos per card – the same visibility as the card (they are only ever listed with it). */
+function mediaByCard(): Map<number, { id: number; kind: 'photo' | 'video'; url: string; caption: string | null }[]> {
+  const out = new Map<number, { id: number; kind: 'photo' | 'video'; url: string; caption: string | null }[]>();
+  for (const m of db.prepare('SELECT id, card_id, kind, path, caption FROM house_media ORDER BY sort, id').all() as MediaRow[]) {
+    const list = out.get(m.card_id) ?? [];
+    list.push({ id: m.id, kind: m.kind, url: m.path, caption: m.caption });
+    out.set(m.card_id, list);
+  }
+  return out;
+}
+
+const cardOut = (r: CardRow, admin: boolean, vis?: VisRow[], media?: ReturnType<typeof mediaByCard>) => ({
   id: r.id,
+  media: (media ?? mediaByCard()).get(r.id) ?? [],
   type: r.type,
   topic: r.topic,
   area: r.area,
@@ -333,7 +368,11 @@ export function listCards(v: Viewer) {
   const vis = visRows('card');
   const rows = db.prepare('SELECT * FROM house_cards ORDER BY sort, id').all() as CardRow[];
   const admin = v.kind === 'admin';
-  return rows.filter((r) => admin || (!r.draft && r.body.trim() && sees(v, vis.get(r.id) ?? []))).map((r) => cardOut(r, admin, vis.get(r.id)));
+  const media = mediaByCard();
+  // a card that only shows (a photo of the fuse box, a video of the heating) counts as filled in
+  return rows
+    .filter((r) => admin || (!r.draft && (r.body.trim() || media.has(r.id)) && sees(v, vis.get(r.id) ?? [])))
+    .map((r) => cardOut(r, admin, vis.get(r.id), media));
 }
 
 const cardRow = (id: number) => db.prepare('SELECT * FROM house_cards WHERE id = ?').get(id) as CardRow | undefined;
@@ -379,7 +418,9 @@ export function updateCard(id: number, input: CardInput) {
 }
 
 export function deleteCard(id: number) {
+  for (const m of db.prepare('SELECT path FROM house_media WHERE card_id = ?').all(id) as { path: string }[]) deleteImage(m.path);
   const n = db.transaction(() => {
+    db.prepare('DELETE FROM house_media WHERE card_id = ?').run(id);
     db.prepare(`DELETE FROM house_visibility WHERE item = 'card' AND item_id = ?`).run(id);
     return db.prepare('DELETE FROM house_cards WHERE id = ?').run(id).changes;
   })();
@@ -628,6 +669,51 @@ export function haVoiceFor(v: Viewer) {
 }
 
 // ---------------------------------------------------------------- whole guide
+
+// ---------------------------------------------------------------- photos and videos on cards
+
+export const MEDIA_PER_CARD = 8;
+
+/** Add a photo (stored as webp, up to 1600 px) or a short video (stored as it is) to a card. Admins only (route). */
+export async function addCardMedia(cardId: number, file: { buffer: Buffer; mimetype: string }, caption: string | null) {
+  if (!cardRow(cardId)) throw notFound();
+  const n = (db.prepare('SELECT COUNT(*) AS n FROM house_media WHERE card_id = ?').get(cardId) as { n: number }).n;
+  if (n >= MEDIA_PER_CARD) throw new HouseGuideError(400, t('Up to {n} photos or videos per card.', { n: MEDIA_PER_CARD }));
+  const video = videoKind(file.buffer) !== null || file.mimetype.startsWith('video/');
+  if (video && !videoKind(file.buffer)) throw new HouseGuideError(400, t('This video format is not supported. MP4, MOV (iPhone) and WebM work.'));
+  if (!video && !looksLikeImage(file.buffer)) throw new HouseGuideError(400, t('This is neither a photo nor a video ToHuus can show.'));
+  let pathOut: string;
+  try {
+    pathOut = video ? saveVideo(file.buffer, `h${cardId}`) : await saveImage(file.buffer, `h${cardId}`, 1600);
+  } catch (e) {
+    // the storage quota (413) and other deliberate answers go on as they are; a broken file is the person's to fix
+    if ((e as { status?: number }).status) throw e;
+    if ((e as { expose?: boolean }).expose) throw new HouseGuideError(400, (e as Error).message);
+    throw new HouseGuideError(400, t('This is neither a photo nor a video ToHuus can show.'));
+  }
+  const id = Number(
+    db
+      .prepare(`INSERT INTO house_media (card_id, kind, path, caption, sort) VALUES (?, ?, ?, ?, (SELECT COALESCE(MAX(sort), 0) + 1 FROM house_media WHERE card_id = ?))`)
+      .run(cardId, video ? 'video' : 'photo', pathOut, clip(caption, 140), cardId).lastInsertRowid,
+  );
+  db.prepare(`UPDATE house_cards SET updated_at = datetime('now') WHERE id = ?`).run(cardId);
+  emit('settings');
+  return { id, kind: video ? ('video' as const) : ('photo' as const), url: pathOut, caption: clip(caption, 140) };
+}
+
+export function updateCardMedia(cardId: number, mediaId: number, caption: string | null) {
+  const n = db.prepare('UPDATE house_media SET caption = ? WHERE id = ? AND card_id = ?').run(clip(caption, 140), mediaId, cardId).changes;
+  if (!n) throw notFound();
+  emit('settings');
+}
+
+export function deleteCardMedia(cardId: number, mediaId: number) {
+  const m = db.prepare('SELECT path FROM house_media WHERE id = ? AND card_id = ?').get(mediaId, cardId) as { path: string } | undefined;
+  if (!m) throw notFound();
+  db.prepare('DELETE FROM house_media WHERE id = ?').run(mediaId);
+  deleteImage(m.path);
+  emit('settings');
+}
 
 export function guide(v: Viewer) {
   const cards = listCards(v);

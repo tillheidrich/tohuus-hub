@@ -9,10 +9,10 @@ import http2 from 'node:http2';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-list2-live-'));
-const PORT = 47910 + Math.floor(Math.random() * 60);
-const APNS_PORT = PORT + 70;
+const PORT = await freePort();
 process.env.DATA_DIR = dir;
 process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'de';
@@ -24,7 +24,6 @@ Object.assign(process.env, {
   APNS_TEAM_ID: 'TEAM123456',
   APNS_KEY_P8: privateKey.export({ type: 'pkcs8', format: 'pem' }).toString().replace(/\n/g, '\\n'),
   APNS_TOPIC: 'de.heidrichdigital.tohuus',
-  APNS_HOST: `http://localhost:${APNS_PORT}`,
 });
 
 const base = `http://localhost:${PORT}`;
@@ -80,7 +79,9 @@ beforeAll(async () => {
       }
     });
   });
-  await new Promise<void>((r) => apns.listen(APNS_PORT, () => r()));
+  // a free port picked by the system (a fixed one collided with other test files running in parallel)
+  await new Promise<void>((r) => apns.listen(0, () => r()));
+  process.env.APNS_HOST = `http://localhost:${(apns.address() as import('node:net').AddressInfo).port}`;
 
   const dbm = await import('../server/db');
   db = dbm.db;
@@ -124,10 +125,17 @@ describe('D: notifications per person', () => {
   it('starts calm: only what is addressed to you is on', async () => {
     const p = (await sam('GET', '/api/notify/prefs')).json;
     const on = p.events.filter((e: any) => e.apns || e.push).map((e: any) => e.key);
-    expect(on.sort()).toEqual(['order.new', 'trip.addon']);
+    // addressed to you: your shopping trip, a "Bring mir was" wish, news on your own wish, a vote that asks you, a child's wish
+    expect(on.sort()).toEqual(['kids.wish', 'order.new', 'order.status', 'plan.vote', 'trip.addon']);
     expect(p.quiet).toEqual({ from: '22:00', to: '07:00' });
     expect(p.events.find((e: any) => e.key === 'trip.started').label).toBe('Jemand kauft gerade ein');
     expect(p.channels.apns).toEqual({ configured: true, devices: 0 });
+    // optional mails: on until the person switches them off (Settings or the link in the mail)
+    expect(p.mailOff).toBe(false);
+    expect((await sam('PUT', '/api/notify/prefs', { mailOff: true })).status).toBe(200);
+    expect((await sam('GET', '/api/notify/prefs')).json.mailOff).toBe(true);
+    expect((await mira('GET', '/api/notify/prefs')).json.mailOff).toBe(false);
+    await sam('PUT', '/api/notify/prefs', { mailOff: false });
   });
 
   it('registers iPhone device tokens per person', async () => {
@@ -174,6 +182,9 @@ describe('C: shopping together', () => {
     expect(trips).toHaveLength(1);
     expect(trips[0]).toMatchObject({ user: { name: 'Sam' }, store: { name: 'Lidl' }, mine: false });
     expect(trips[0].basket.map((x: any) => x.text).sort()).toEqual(['Bananen', 'Joghurt']);
+    // the first item's checked_at may be a second before the trip's start (tick log written just after): still in
+    db.prepare(`UPDATE shopping_items SET checked_at = datetime((SELECT started_at FROM shop_trips WHERE id = ?), '-1 second') WHERE id = ?`).run(trips[0].id, a.id);
+    expect((await mira('GET', '/api/shop/trips')).json[0].basket.map((x: any) => x.text).sort()).toEqual(['Bananen', 'Joghurt']);
     // Mira wanted to know (her own switch) – Sam himself is never told about his own trip
     const n = lastNotification('trip.started');
     expect(n.title).toBe('Sam kauft gerade bei Lidl ein');

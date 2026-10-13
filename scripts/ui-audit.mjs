@@ -12,6 +12,7 @@
  * Usage (playwright must be resolvable – install it in a scratch dir and set NODE_PATH, see docs/ui-audit.md):
  *   node scripts/ui-audit.mjs http://localhost:8080 [--out dir] [--email x --password y] [--only /einkauf,/kochen]
  *        [--viewports 390x844,768x1024,1280x800] [--themes light,dark] [--no-large | --large-only] [--no-dialogs] [--strict]
+ *        [--seed] [--no-fresh] [--fresh-email x]
  * Without credentials on a cloud server it signs up a fresh household (de) and loads the demo data
  * (POST /api/cloud/signup, POST /api/tour/demo). Self-hosted: pass the admin name as --email.
  * Writes <out>/report.json, <out>/report.md and one PNG per page/viewport/theme. Exit code 0 always
@@ -19,150 +20,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { createRequire } from 'node:module';
+import { args, fileName, loadPlaywright, pages, prepare, reset, visit } from './audit-shared.mjs';
 
-const require = createRequire(import.meta.url);
-let chromium;
-try {
-  ({ chromium } = require('playwright'));
-} catch {
-  console.error('playwright not found – install it outside the repo and set NODE_PATH (see docs/ui-audit.md)');
-  process.exit(2);
-}
-
-// ------------------------------------------------------------------ args
-const argv = process.argv.slice(2);
-const opt = (name, def) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 ? argv[i + 1] : def;
-};
-const flag = (name) => argv.includes(`--${name}`);
-const BASE = (argv.find((a) => /^https?:\/\//.test(a)) ?? 'http://localhost:8080').replace(/\/$/, '');
-const OUT = path.resolve(opt('out', 'ui-audit-out'));
-const VIEWPORTS = opt('viewports', '390x844,768x1024,1280x800')
-  .split(',')
-  .map((v) => v.split('x').map(Number));
-const THEMES = opt('themes', 'light,dark').split(',');
-const ONLY = opt('only', '')
-  .split(',')
-  .filter(Boolean);
-const EXEC = process.env.PW_CHROMIUM ?? findChromium();
-fs.mkdirSync(OUT, { recursive: true });
-
-function findChromium() {
-  const root = '/opt/pw-browsers';
-  if (!fs.existsSync(root)) return undefined;
-  const dirs = fs.readdirSync(root).filter((d) => /^chromium-\d+$/.test(d)).sort();
-  for (const d of dirs.reverse()) {
-    for (const p of ['chrome-linux/chrome', 'chrome-linux64/chrome']) if (fs.existsSync(path.join(root, d, p))) return path.join(root, d, p);
-  }
-  return undefined;
-}
-
-// ------------------------------------------------------------------ session
-async function api(ctx, method, p, body) {
-  const r = await ctx.request.fetch(`${BASE}/api${p}`, { method, data: body ?? undefined, headers: { 'content-type': 'application/json' } });
-  let json = null;
-  try {
-    json = await r.json();
-  } catch {
-    /* not json */
-  }
-  return { status: r.status(), json };
-}
-
-async function signIn(ctx) {
-  let email = opt('email');
-  let password = opt('password');
-  const inst = (await api(ctx, 'GET', '/instance')).json ?? {};
-  if (!email && inst.mode === 'cloud' && inst.signup) {
-    email = `audit-${Date.now()}@example.org`;
-    password = 'audit-geheim-1234';
-    const s = await api(ctx, 'POST', '/cloud/signup', { email, password, name: 'Mira', householdName: 'Familie Berg', form: 'family', lang: 'de', region: 'DE', client: 'web' });
-    if (s.status !== 200) throw new Error(`signup failed: ${s.status} ${JSON.stringify(s.json)}`);
-  } else {
-    const l = await api(ctx, 'POST', '/auth/login', { name: email, password });
-    if (l.status !== 200) throw new Error(`login failed: ${l.status} ${JSON.stringify(l.json)}`);
-  }
-  // quiet start: no setup redirect, no tour, demo data in, theme follows the browser
-  await api(ctx, 'PATCH', '/onboarding', { closed: true, skipped: true, started: true, checklistDismissed: true });
-  await api(ctx, 'POST', '/tour/start', { choice: 'demo' });
-  const st = (await api(ctx, 'GET', '/tour')).json;
-  if (!st?.demo?.rows) await api(ctx, 'POST', '/tour/demo', {});
-  await api(ctx, 'PUT', '/tour', { status: 'skipped' });
-  await api(ctx, 'PATCH', '/appearance/household', { theme: 'system', userChoice: true });
-  await api(ctx, 'PATCH', '/appearance/me', { theme: null });
-  return { email, password, inst };
-}
-
-// ------------------------------------------------------------------ what to visit
-async function targets(ctx, inst) {
-  const first = async (p, pick) => {
-    const r = await api(ctx, 'GET', p);
-    try {
-      return pick(r.json);
-    } catch {
-      return null;
-    }
-  };
-  const productId = await first('/products', (j) => (Array.isArray(j) ? j : j.products ?? j.items)[0].id);
-  const recipeId = await first('/recipes', (j) => (Array.isArray(j) ? j : j.recipes ?? j.items)[0].id);
-  if (!(await api(ctx, 'GET', '/imports')).json?.length) {
-    // a typed list gives the receipt review page something to show
-    await ctx.request.post(`${BASE}/api/imports/upload`, { multipart: { text: '2x Milch 1,5%\nHaferdrink Barista\nSpülmaschinentabs Classic 40 Stück\nBio-Vollkorn-Dinkelbrötchen' } }).catch(() => {});
-  }
-  const importId = await first('/imports', (j) => (Array.isArray(j) ? j : j.imports ?? j.items)[0].id);
-  const routes = [
-    '/',
-    '/einkauf',
-    '/bestand',
-    productId && `/bestand/${productId}`,
-    '/kochen',
-    '/kochen?view=ideas',
-    '/kochen?view=week',
-    '/kochen?view=recipes',
-    recipeId && `/rezepte/${recipeId}`,
-    '/geld',
-    '/mehr',
-    '/wo',
-    '/hausinfo',
-    '/abgleich',
-    '/pflege',
-    '/urlaub',
-    '/import',
-    '/import?mode=photo',
-    '/import?mode=text',
-    '/import?mode=url',
-    '/import/quality',
-    importId && `/import/${importId}`,
-    '/lieblinge',
-    '/ausgaben',
-    '/bestellen',
-    '/bestellen/karte',
-    '/bar',
-    '/merkt-sich',
-    '/etiketten',
-    '/scan',
-    '/so-funktioniert-tohuus',
-    '/gut-zu-wissen',
-    '/hilfe',
-    '/teilen',
-    '/willkommen',
-    ...['home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'displays', 'print', 'recipes', 'data', ...(inst.mode === 'cloud' ? ['plan'] : [])].map((t) => `/einstellungen?tab=${t}`),
-  ].filter(Boolean);
-  return routes.map((r) => ({ name: r, path: r }));
-}
-
-/** Sheets and dialogs: open by clicking; a step that finds nothing is reported as "not reached". */
-const DIALOGS = [
-  { name: 'sheet:add', path: '/', open: async (p) => p.evaluate(() => window.dispatchEvent(new Event('tohuus:add'))) },
-  { name: 'sheet:assistant', path: '/', open: async (p) => p.locator('.assist-fab').first().click() },
-  { name: 'sheet:item-editor', path: '/einkauf', open: async (p) => p.locator('main .icon-btn.plain[aria-label="Mehr"], main .icon-btn.plain[aria-label="More"]').first().click() },
-  { name: 'sheet:new-product', path: '/bestand', open: async (p) => p.locator('main .page-head .btn.primary').first().click() },
-  { name: 'sheet:recipe-import', path: '/kochen?add=1', open: async () => {} },
-  { name: 'sheet:plan-entry', path: '/kochen?view=week', open: async (p) => p.locator('.wadd').first().click() },
-  { name: 'sheet:plan-meal', path: '/kochen?view=week', open: async (p) => p.locator('.wmeal').first().click() },
-];
 // ------------------------------------------------------------------ the detector (runs in the page)
 function detect() {
   const out = [];
@@ -346,13 +205,12 @@ function covered() {
 }
 
 // ------------------------------------------------------------------ run
+const A = args({ out: 'ui-audit-out' });
+const { OUT, VIEWPORTS, THEMES, EXEC, flag } = A;
+fs.mkdirSync(OUT, { recursive: true });
+const { chromium } = loadPlaywright();
 const browser = await chromium.launch({ executablePath: EXEC });
-const setupCtx = await browser.newContext();
-const session = await signIn(setupCtx);
-const storage = await setupCtx.storageState();
-let list = [...(await targets(setupCtx, session.inst)), ...(flag('no-dialogs') ? [] : DIALOGS)];
-if (ONLY.length) list = list.filter((t) => ONLY.some((o) => t.name === o || t.path === o || t.name.startsWith(o)));
-await setupCtx.close();
+const { session, storage, fresh, list } = await prepare(browser, A);
 
 const runs = [];
 if (!flag('large-only')) for (const [w, h] of VIEWPORTS) for (const theme of THEMES) runs.push({ w, h, theme, large: false });
@@ -361,53 +219,15 @@ if (!flag('no-large')) runs.push({ w: 390, h: 844, theme: 'light', large: true }
 const report = [];
 for (const run of runs) {
   const tag = `${run.w}x${run.h}-${run.theme}${run.large ? '-large' : ''}`;
-  const ctx = await browser.newContext({
-    viewport: { width: run.w, height: run.h },
-    deviceScaleFactor: 1,
-    colorScheme: run.theme,
-    reducedMotion: 'reduce',
-    storageState: storage,
-    locale: 'de-DE',
-    hasTouch: run.w < 700,
-  });
-  await ctx.addInitScript((large) => {
-    try {
-      sessionStorage.setItem('sw.onb.redirected', '1');
-      localStorage.setItem('sw.theme', 'system');
-      // browser text size 20px: the CDP font setting below does not survive every navigation in headless
-      // Chromium, so the root size is set directly as well (the app sizes everything in rem from it)
-      if (large) document.addEventListener('DOMContentLoaded', () => document.documentElement.style.setProperty('font-size', '20px'));
-      if (large === 'app') localStorage.setItem('sw.listPrefs', JSON.stringify({ density: 'normal', fontScale: 1.25 }));
-    } catch {
-      /* ignore */
-    }
-  }, run.large);
-  const page = await ctx.newPage();
-  page.setDefaultTimeout(5000);
-  if (run.large) {
-    // browser default font size 20px (the Dynamic Type equivalent of a desktop browser)
-    const cdp = await ctx.newCDPSession(page);
-    await cdp.send('Page.enable');
-    await cdp.send('Page.setFontSizes', { fontSizes: { standard: 20, fixed: 20 } });
-  }
+  const ps = pages(browser, run, { storage, fresh, password: session.password });
   for (const t of list) {
-    const file = `${t.name.replace(/^\//, '').replace(/[^\w-]+/g, '_') || 'heute'}--${tag}.png`;
+    const file = fileName(t, tag);
     const entry = { page: t.name, viewport: tag, issues: [], screenshot: file };
+    let page;
     try {
-      // the app keeps an event stream open, so "networkidle" never comes – wait for the page instead
-      await page.goto(BASE + t.path, { waitUntil: 'load', timeout: 20000 });
-      await page.waitForSelector('main .page-fade, main, .login, .card', { timeout: 10000 }).catch(() => {});
-      await page.waitForFunction(() => !document.querySelector('main [aria-busy="true"], .skeleton'), null, { timeout: 6000 }).catch(() => {});
-      await page.waitForTimeout(600);
-      if (t.open) {
-        try {
-          await t.open(page);
-          await page.waitForSelector('[role="dialog"], .sheet', { timeout: 4000 });
-          await page.waitForTimeout(400);
-        } catch (e) {
-          entry.issues.push({ kind: 'not-reached', el: '', text: '', extra: String(e.message ?? e).split('\n')[0] });
-        }
-      }
+      page = await ps.get(t);
+      const { error } = await visit(page, t);
+      if (error) entry.issues.push({ kind: 'not-reached', el: '', text: '', extra: error });
       entry.issues.push(...(await page.evaluate(detect)));
       if (!t.open) {
         await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -424,16 +244,17 @@ for (const run of runs) {
     } catch (e) {
       entry.issues.push({ kind: 'error', el: '', text: '', extra: String(e.message ?? e).split('\n')[0] });
     }
+    if (page) await reset(page, t);
     report.push(entry);
     const n = entry.issues.length;
     process.stdout.write(`${n ? '✗' : '✓'} ${tag} ${t.name}${n ? ` (${n})` : ''}\n`);
   }
-  await ctx.close();
+  await ps.close();
 }
 await browser.close();
 
 fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2));
-const md = ['# UI audit', '', `Base: ${BASE} · ${new Date().toISOString()}`, ''];
+const md = ['# UI audit', '', `Base: ${A.BASE} · ${new Date().toISOString()}`, ''];
 const total = report.reduce((s, e) => s + e.issues.length, 0);
 md.push(`${report.length} page views, ${total} findings.`, '');
 for (const e of report.filter((x) => x.issues.length)) {

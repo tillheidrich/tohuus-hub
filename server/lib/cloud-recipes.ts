@@ -19,7 +19,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '../config.js';
 import { openDbFile, type DB } from '../db.js';
-import { CATALOG_SEED } from '../data/catalog-seed.js';
+import { CATALOG_SEED, type SeedRecipe } from '../data/catalog-seed.js';
+import { CATALOG_SEED_PLUS } from '../data/catalog-seed-plus.js';
+import { CATALOG_SEED_DEVICES, type DeviceSeedRecipe } from '../data/catalog-seed-devices.js';
+import { CATALOG_SEED_BAKING } from '../data/catalog-seed-baking.js';
 import { decryptBlob, deriveKey, encryptBlob } from './crypto-keys.js';
 import { normalizeRecipe, type ImportRecipe } from './recipes2.js';
 import sharp from './sharp-safe.js';
@@ -60,8 +63,20 @@ export function catalogDb(): DB {
   d.pragma('journal_mode = WAL');
   d.pragma('busy_timeout = 5000');
   d.exec(SCHEMA);
+  // Plus recipes (13 Oct 2026): `tier` all|plus, `image_ref` = where the operator gets the picture (Canva link)
+  // image_page: page of the recipe in the Canva preview-card design (ZIP upload); image_credit: photographer of a real photo
+  for (const col of [`tier TEXT NOT NULL DEFAULT 'all'`, 'image_ref TEXT', 'image_page INTEGER', 'image_credit TEXT']) {
+    try {
+      d.exec(`ALTER TABLE catalog_recipes ADD COLUMN ${col}`);
+    } catch {
+      /* exists */
+    }
+  }
   cdb = d;
   seedCatalog();
+  seedPlus();
+  seedDevices();
+  seedBaking();
   return d;
 }
 /** tests */
@@ -181,6 +196,82 @@ export async function addCatalogRecipe(input: CatalogInput): Promise<number> {
   );
 }
 
+const seedToRecipe = (s: SeedRecipe | DeviceSeedRecipe) => {
+  const machine = 'machine' in s ? s.machine : null;
+  const rec = normalizeRecipe(
+    {
+      name: s.title,
+      description: s.description,
+      recipeYield: s.servings,
+      totalTime: `PT${s.minutes}M`,
+      keywords: s.tags.join(', '),
+      ingredients_structured: s.ingredients.map((line) => {
+        const [amount, unit, name, note] = line.split('|');
+        return { amount: amount || null, unit: unit || null, name, note: note || null };
+      }),
+      // kitchen-machine steps carry their settings (docs/recipe-package.md › Appliance steps)
+      recipeInstructions: (s.steps as (string | { text: string; time?: string; temp?: string; speed?: string; mode?: string; device?: string })[]).map((st) =>
+        typeof st === 'string'
+          ? { '@type': 'HowToStep', text: st }
+          : { '@type': 'HowToStep', text: st.text, ...(st.time || st.temp || st.speed || st.mode ? { tohuus: { device: st.device ?? machine, time: st.time, temperature: st.temp, speed: st.speed, mode: st.mode } } : {}) },
+      ),
+      ...(machine ? { tohuus: { devices: [machine] } } : {}),
+    },
+    { source_type: 'tohuus' },
+  );
+  return { ...rec, image_data: undefined, external_id: null };
+};
+
+/** Kitchen-machine recipes (catalog-seed-devices.ts) – once, as Plus drafts like the Plus set. */
+function seedDevices() {
+  const d = cdb!;
+  if (d.prepare(`SELECT value FROM catalog_meta WHERE key = 'seeded-devices-1'`).get()) return;
+  const ins = d.prepare(
+    `INSERT INTO catalog_recipes (title, description, data, tags, origin, ai_assisted, allergens, warnings, created_by, tier, image_ref, image_page, image_credit) VALUES (?, ?, ?, ?, 'own', 1, ?, ?, 'seed-devices', 'plus', ?, ?, ?)`,
+  );
+  d.transaction(() => {
+    CATALOG_SEED_DEVICES.forEach((s, i) => {
+      const data = seedToRecipe(s);
+      const warnings = [...safetyNotes(data), `Check the ${s.machine} settings on a real machine before publishing.`];
+      ins.run(data.title, data.description, JSON.stringify(data), JSON.stringify(data.tags), JSON.stringify(computeAllergens(data.ingredients)), JSON.stringify(warnings), s.canva ? `https://www.canva.com/M/${s.canva}` : null, CATALOG_SEED_PLUS.length + i + 1, s.credit ?? null);
+    });
+    d.prepare(`INSERT INTO catalog_meta (key, value) VALUES ('seeded-devices-1', datetime('now'))`).run();
+  })();
+}
+
+/** Baking (catalog-seed-baking.ts) – once, as Plus drafts; preview-card pages after the kitchen-machine recipes. */
+function seedBaking() {
+  const d = cdb!;
+  if (d.prepare(`SELECT value FROM catalog_meta WHERE key = 'seeded-baking-1'`).get()) return;
+  const ins = d.prepare(
+    `INSERT INTO catalog_recipes (title, description, data, tags, origin, ai_assisted, allergens, warnings, created_by, tier, image_ref, image_page, image_credit) VALUES (?, ?, ?, ?, 'own', 1, ?, ?, 'seed-baking', 'plus', ?, ?, ?)`,
+  );
+  const first = CATALOG_SEED_PLUS.length + CATALOG_SEED_DEVICES.length;
+  d.transaction(() => {
+    CATALOG_SEED_BAKING.forEach((s, i) => {
+      const data = seedToRecipe(s);
+      ins.run(data.title, data.description, JSON.stringify(data), JSON.stringify(data.tags), JSON.stringify(computeAllergens(data.ingredients)), JSON.stringify(safetyNotes(data)), s.canva ? `https://www.canva.com/M/${s.canva}` : null, first + i + 1, s.credit ?? null);
+    });
+    d.prepare(`INSERT INTO catalog_meta (key, value) VALUES ('seeded-baking-1', datetime('now'))`).run();
+  })();
+}
+
+/** The Plus set (catalog-seed-plus.ts) – once, as drafts with tier plus and the Canva link of its AI picture. */
+function seedPlus() {
+  const d = cdb!;
+  if (d.prepare(`SELECT value FROM catalog_meta WHERE key = 'seeded-plus-1'`).get()) return;
+  const ins = d.prepare(
+    `INSERT INTO catalog_recipes (title, description, data, tags, origin, ai_assisted, allergens, warnings, created_by, tier, image_ref, image_page, image_credit) VALUES (?, ?, ?, ?, 'own', 1, ?, ?, 'seed-plus', 'plus', ?, ?, ?)`,
+  );
+  d.transaction(() => {
+    CATALOG_SEED_PLUS.forEach((s, i) => {
+      const data = seedToRecipe(s);
+      ins.run(data.title, data.description, JSON.stringify(data), JSON.stringify(data.tags), JSON.stringify(computeAllergens(data.ingredients)), JSON.stringify(safetyNotes(data)), s.canva ? `https://www.canva.com/M/${s.canva}` : null, i + 1, s.credit ?? null);
+    });
+    d.prepare(`INSERT INTO catalog_meta (key, value) VALUES ('seeded-plus-1', datetime('now'))`).run();
+  })();
+}
+
 /** The starting set (30 everyday recipes) – once, as drafts. */
 function seedCatalog() {
   const d = cdb!;
@@ -190,23 +281,8 @@ function seedCatalog() {
   );
   d.transaction(() => {
     for (const s of CATALOG_SEED) {
-      const rec = normalizeRecipe(
-        {
-          name: s.title,
-          description: s.description,
-          recipeYield: s.servings,
-          totalTime: `PT${s.minutes}M`,
-          keywords: s.tags.join(', '),
-          ingredients_structured: s.ingredients.map((line) => {
-            const [amount, unit, name, note] = line.split('|');
-            return { amount: amount || null, unit: unit || null, name, note: note || null };
-          }),
-          recipeInstructions: s.steps.map((text) => ({ '@type': 'HowToStep', text })),
-        },
-        { source_type: 'tohuus' },
-      );
-      const data = { ...rec, image_data: undefined, external_id: null };
-      ins.run(rec.title, rec.description, JSON.stringify(data), JSON.stringify(rec.tags), JSON.stringify(computeAllergens(rec.ingredients)), JSON.stringify(safetyNotes(rec)));
+      const data = seedToRecipe(s);
+      ins.run(data.title, data.description, JSON.stringify(data), JSON.stringify(data.tags), JSON.stringify(computeAllergens(data.ingredients)), JSON.stringify(safetyNotes(data)));
     }
     d.prepare(`INSERT INTO catalog_meta (key, value) VALUES ('seeded', datetime('now'))`).run();
   })();
@@ -234,6 +310,10 @@ export interface CatalogRow {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  tier: 'all' | 'plus';
+  image_ref: string | null;
+  image_page: number | null;
+  image_credit: string | null;
 }
 
 export const imageUrlOf = (name: string | null) => (name ? `/api/cloud-recipes/img/${name}` : null);
@@ -256,6 +336,10 @@ export function publicCard(r: CatalogRow) {
     license: r.license,
     sourceAuthors: r.source_authors,
     publishedAt: r.published_at,
+    /** part of Plus (households without Plus see the card, not the recipe) */
+    plus: r.tier === 'plus',
+    /** a real photo: "Name / Pexels" – shown under the picture */
+    imageCredit: r.image ? r.image_credit : null,
   };
 }
 export function publicRecipe(r: CatalogRow) {
@@ -264,7 +348,7 @@ export function publicRecipe(r: CatalogRow) {
 }
 /** The back office sees everything. */
 export function adminRecipe(r: CatalogRow) {
-  return { ...publicRecipe(r), origin: r.origin, state: r.state, publishAt: r.publish_at, warnings: JSON.parse(r.warnings) as string[], createdAt: r.created_at, updatedAt: r.updated_at };
+  return { ...publicRecipe(r), imageRef: r.image_ref, imagePage: r.image_page, origin: r.origin, state: r.state, publishAt: r.publish_at, warnings: JSON.parse(r.warnings) as string[], createdAt: r.created_at, updatedAt: r.updated_at };
 }
 
 export const getCatalogRow = (id: number) => catalogDb().prepare('SELECT * FROM catalog_recipes WHERE id = ?').get(id) as CatalogRow | undefined;

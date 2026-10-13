@@ -136,6 +136,13 @@
         "care_due": "Skötseluppgift förfaller",
         "party_ending": "Festen slutar",
         "kids_wish": "Barnets önskan",
+        "budget_warning": "Budgetvarning",
+        "plan_vote": "Matomröstning",
+        "plan_rotation": "Matlagningsschema",
+        "trip_started": "Inköpsrunda startad",
+        "trip_addon": "Ta med något till",
+        "rhythm_due": "Troligen dags",
+        "plan_reminder": "Påminnelse matsedel",
         "test": "Test"
       }
     }
@@ -252,6 +259,13 @@
               "care_due": "Skötsel att göra",
               "party_ending": "Festen slutar",
               "kids_wish": "Barnets önskan",
+              "budget_warning": "Budgetvarning",
+              "plan_vote": "Matomröstning",
+              "plan_rotation": "Matlagningsschema",
+              "trip_started": "Inköpsrunda startad",
+              "trip_addon": "Ta med något till",
+              "rhythm_due": "Troligen dags",
+              "plan_reminder": "Påminnelse matsedel",
               "test": "Test"
             }
           }

@@ -8,13 +8,15 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-rhythm-'));
 process.env.DATA_DIR = dir;
-process.env.BASE_URL = 'http://localhost:47432';
+const PORT = await freePort();
+process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'de';
 
-const base = 'http://localhost:47432';
+const base = `http://localhost:${PORT}`;
 let server: http.Server;
 let db: typeof import('../server/db').db;
 let rhythm: typeof import('../server/lib/rhythm');
@@ -61,7 +63,7 @@ beforeAll(async () => {
   app.use('/api', core.r);
   app.use('/api', features.r);
   app.use((err: any, _req: any, res: any, _next: any) => res.status(500).json({ error: String(err?.message ?? err) }));
-  await new Promise<void>((r) => (server = app.listen(47432, () => r())));
+  await new Promise<void>((r) => (server = app.listen(PORT, () => r())));
   expect((await req('POST', '/api/auth/login', { name: 'Till', password: 'test1234' })).status).toBe(200);
 });
 

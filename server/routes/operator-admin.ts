@@ -16,17 +16,21 @@
  *   GET    /api/operator/households/:id                  plan, trial, dates, storage, member count – no names
  *   GET    /api/operator/audit?before=<id>&limit=        the audit log, paged
  */
+import { runAsAiActor } from '../lib/ai-policy.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import { accountsDb, getHousehold, isUuid } from '../lib/accounts.js';
 import { DEFAULT_FALLBACKS, aiConfig, fallbackModels, pingModel, type ModelKind } from '../lib/ai.js';
 import { addAllowlist, createBetaCode, listAllowlist, listBetaCodes, removeAllowlist, revokeBetaCode, signupMode, SIGNUP_MODES } from '../lib/beta.js';
+import { betaGift, createPlanCode, listPlanCodes, revokePlanCode } from '../lib/gifts.js';
+import { sendErrors } from './diag.js';
 import { audit, auditLog } from '../lib/operator.js';
 import { runStatsNightly, statsView } from '../lib/stats.js';
 import multer from 'multer';
 import { addCatalogRecipe, adminRecipe, catalogDb, draftRecipesWithAi, getCatalogRow, scheduleReviewed, storeCatalogImage, type CatalogRow } from '../lib/cloud-recipes.js';
 import { looksLikeImage } from '../lib/images.js';
 import { detectAny, detectAnyText, PACKAGE_LIMITS } from '../lib/recipe-package.js';
+import { isZip, readZip } from '../lib/recipe-formats.js';
 import { RUNTIME_KEYS, SECRET_KEYS, isRuntimeKey, lastFour, runtimeSetting, runtimeSettingsView, setRuntimeSetting, supportEmail, type RuntimeKey } from '../lib/runtime-settings.js';
 
 export function operatorAdmin(fresh: import('express').RequestHandler) {
@@ -67,6 +71,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     'ai.cloud': z.enum(['on', 'off']),
     'signup.mode': z.enum(SIGNUP_MODES as [string, ...string[]]),
     'support.email': z.string().trim().max(254).email(),
+    'beta.gift': z.enum(['haushalt', 'plus']),
   };
 
   r.put('/operator/settings', fresh, (req, res) => {
@@ -96,6 +101,48 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     const out = await pingModel(kind);
     audit(who(req), 'settings.ai-test', kind, { ok: out.ok, ...(out.ok ? { model: out.model } : { code: out.code }) });
     res.json(out);
+  });
+
+  // ---------------------------------------------------------------- error log (errorlog.ts) – also as a download
+
+  r.get('/operator/errors', fresh, (req, res) => sendErrors(req, res));
+
+  // ---------------------------------------------------------------- gifts: beta plan and plan codes (gifts.ts)
+
+  r.get('/operator/gifts', fresh, (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ betaGift: betaGift(), codes: listPlanCodes() });
+  });
+
+  r.post('/operator/gifts/codes', fresh, (req, res) => {
+    const b = z
+      .object({
+        plan: z.enum(['haushalt', 'plus']),
+        /** null = for good ("lifetime") */
+        days: z.number().int().min(1).max(3650).nullable(),
+        count: z.number().int().min(1).max(50).default(1),
+        note: z.string().trim().max(120).nullable().optional(),
+        maxUses: z.number().int().min(1).max(10_000).nullable().optional(),
+        expiresAt: z.string().regex(/^\d{4}-\d\d-\d\d$/).nullable().optional(),
+        code: z.string().trim().min(6).max(40).regex(/^[A-Za-z0-9 _-]+$/).optional(),
+      })
+      .parse(req.body ?? {});
+    if (b.code && b.count > 1) return void res.status(400).json({ error: 'a fixed code can only be created once' });
+    try {
+      const codes = Array.from({ length: b.count }, () => createPlanCode({ plan: b.plan, days: b.days, note: b.note, maxUses: b.maxUses ?? 1, expiresAt: b.expiresAt ?? null, code: b.code }, who(req)));
+      audit(who(req), 'gifts.codes.create', codes.map((c) => c.id).join(','), { plan: b.plan, days: b.days, count: codes.length, note: b.note ?? null });
+      res.json({ codes });
+    } catch (e) {
+      if (/UNIQUE/.test((e as Error).message)) return void res.status(409).json({ error: 'this code exists already' });
+      throw e;
+    }
+  });
+
+  r.delete('/operator/gifts/codes/:id', fresh, (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || !revokePlanCode(id)) return void res.status(404).json({ error: 'not found' });
+    audit(who(req), 'gifts.codes.revoke', String(id));
+    res.json({ ok: true });
   });
 
   // ---------------------------------------------------------------- beta gate
@@ -219,6 +266,8 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
         tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
         aiAssisted: z.boolean().optional(),
         imageKind: z.enum(['none', 'photo', 'ai']).optional(),
+        /** Plus recipe: households without Plus see the card with a lock */
+        tier: z.enum(['all', 'plus']).optional(),
       })
       .parse(req.body ?? {});
     const d = catalogDb();
@@ -227,6 +276,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     d.transaction(() => {
       if (b.reviewState) d.prepare(`UPDATE catalog_recipes SET review_state = ? WHERE id = ?`).run(b.reviewState, row.id);
       if (b.tags) d.prepare(`UPDATE catalog_recipes SET tags = ? WHERE id = ?`).run(JSON.stringify(b.tags), row.id);
+      if (b.tier) d.prepare(`UPDATE catalog_recipes SET tier = ? WHERE id = ?`).run(b.tier, row.id);
       if (b.aiAssisted !== undefined) d.prepare(`UPDATE catalog_recipes SET ai_assisted = ? WHERE id = ?`).run(b.aiAssisted ? 1 : 0, row.id);
       if (b.imageKind) d.prepare(`UPDATE catalog_recipes SET image_kind = CASE WHEN image IS NULL THEN 'none' ELSE ? END WHERE id = ?`).run(b.imageKind === 'none' ? 'photo' : b.imageKind, row.id);
       if (b.publishAt !== undefined) {
@@ -248,6 +298,45 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     catalogDb().prepare(`UPDATE catalog_recipes SET image = ?, image_kind = ?, updated_at = datetime('now') WHERE id = ?`).run(name, kind, row.id);
     audit(who(req), 'recipes.photo', `recipe:${row.id}`, { kind });
     res.json(adminRecipe(getCatalogRow(row.id)!));
+  });
+
+  /**
+   * Preview cards from Canva in one go: the ZIP Canva exports from the preview-card design ("1.png", "2.png" …, also
+   * inside a folder). Page N goes to the recipe with `image_page = N`; a recipe with a photographer (image_credit)
+   * becomes a photo, the others an AI picture. Pages without a recipe are reported, nothing else changes.
+   */
+  r.post('/operator/recipes/preview-zip', fresh, upload.single('file'), async (req, res) => {
+    if (!req.file || !isZip(req.file.buffer)) return void res.status(400).json({ error: 'not a zip' });
+    let entries;
+    try {
+      entries = readZip(req.file.buffer);
+    } catch (e) {
+      return void res.status(422).json({ error: (e as Error).message });
+    }
+    // a ZIP of part of the design (e.g. the baking cards 33–38 as pages 1–6) says where it starts
+    const start = Math.max(1, Math.min(999, Math.trunc(Number(req.body?.start) || 1)));
+    const byPage = new Map((catalogDb().prepare('SELECT * FROM catalog_recipes WHERE image_page IS NOT NULL').all() as CatalogRow[]).map((r) => [r.image_page!, r]));
+    const set = catalogDb().prepare(`UPDATE catalog_recipes SET image = ?, image_kind = ?, updated_at = datetime('now') WHERE id = ?`);
+    const done: { page: number; id: number; title: string }[] = [];
+    const skipped: string[] = [];
+    for (const e of entries) {
+      const m = /(?:^|[^0-9])(\d{1,3})\.(png|jpe?g|webp)$/i.exec(e.name);
+      const page = m ? Number(m[1]) + start - 1 : 0;
+      const row = m ? byPage.get(page) : undefined;
+      if (!m || !row) {
+        if (!e.name.endsWith('/')) skipped.push(e.name.slice(0, 80));
+        continue;
+      }
+      const buf = e.data();
+      if (!looksLikeImage(buf)) {
+        skipped.push(e.name.slice(0, 80));
+        continue;
+      }
+      set.run(await storeCatalogImage(buf), row.image_credit ? 'photo' : 'ai', row.id);
+      done.push({ page, id: row.id, title: row.title });
+    }
+    audit(who(req), 'recipes.preview-zip', null, { pages: done.length, skipped: skipped.length });
+    res.json({ updated: done.length, recipes: done, skipped: skipped.slice(0, 20) });
   });
 
   r.post('/operator/recipes/:id/publish', fresh, (req, res) => {
@@ -288,7 +377,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
   r.post('/operator/recipes/ai-drafts', fresh, async (req, res) => {
     const b = z.object({ dishes: z.array(z.string().trim().min(2).max(80)).min(1).max(5) }).parse(req.body ?? {});
     try {
-      const out = await draftRecipesWithAi(b.dishes, who(req));
+      const out = await runAsAiActor({ operator: true }, () => draftRecipesWithAi(b.dishes, who(req)));
       audit(who(req), 'recipes.ai-drafts', null, { requested: b.dishes.length, created: out.ids.length });
       res.json(out);
     } catch (e) {

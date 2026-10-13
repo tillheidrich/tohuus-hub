@@ -231,21 +231,36 @@ r.delete(
 
 // ---------------------------------------------------------------- budgets
 
-r.get('/spend/budgets', h(() => ({ budgets: listBudgets(), status: budgetStatus() })));
+// household budgets by default; `?view=mine` / `mine: true` = the signed-in person's own budgets (only they see them)
+const budgetsOf = (owner: number) => ({ budgets: listBudgets(owner), status: budgetStatus(undefined, undefined, undefined, owner) });
+const mineOwner = (req: Request, mine: unknown) => {
+  if (!mine) return 0;
+  const u = uid(req);
+  if (!u) throw new SpendError(t('Personal budgets need a signed-in person'));
+  return u;
+};
+r.get('/spend/budgets', h((req) => budgetsOf(mineOwner(req, req.query.view === 'mine'))));
 r.put(
   '/spend/budgets',
   h((req) => {
     const b = z
-      .object({ category: z.string().max(80).nullable().optional(), period: z.enum(['week', 'month']).default('month'), amount: z.number().positive().max(999999).nullable(), notify: z.boolean().optional() })
+      .object({
+        category: z.string().max(80).nullable().optional(),
+        period: z.enum(['week', 'month', 'year']).default('month'),
+        amount: z.number().positive().max(999999).nullable(),
+        notify: z.boolean().optional(),
+        mine: z.boolean().optional(),
+      })
       .parse(req.body);
-    setBudget(b);
-    return { budgets: listBudgets(), status: budgetStatus() };
+    const owner = mineOwner(req, b.mine);
+    setBudget({ ...b, owner });
+    return budgetsOf(owner);
   }),
 );
 r.delete(
   '/spend/budgets/:id',
   h((req) => {
-    deleteBudget(id(req.params.id));
+    deleteBudget(id(req.params.id), uid(req));
     return { ok: true };
   }),
 );

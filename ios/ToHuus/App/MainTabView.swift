@@ -53,6 +53,8 @@ struct MainTabView: View {
     let store: ServerStore
     @State private var area: AppArea = .today
     @State private var showSettings = false
+    @State private var showTour = false
+    @State private var showAIConsent = false
 
     /// kept for the tab version (Heute opens tabs through it)
     typealias Tab = AppArea
@@ -68,6 +70,7 @@ struct MainTabView: View {
         }
         .onAppear {
             applyRequestedTab(app.requestedTab)
+            if AppTourView.due { showTour = true }
             #if DEBUG
             if UserDefaults.standard.bool(forKey: "debugSettings") { showSettings = true }
             if UserDefaults.standard.bool(forKey: "debugPaywall") { app.showPaywall = true }
@@ -85,6 +88,10 @@ struct MainTabView: View {
             #endif
         }
         .onChange(of: app.requestedTab) { _, t in applyRequestedTab(t) }
+        #if DEBUG
+        // StoreKit Testing screenshot (ToHuusTests/PaywallStoreKitTests): the hosted test opens the paywall
+        .onReceive(NotificationCenter.default.publisher(for: .toHuusDebugShowPaywall)) { _ in app.showPaywall = true }
+        #endif
         .onChange(of: app.modules) { _, _ in if !visible(area) { area = .today } }
         .onChange(of: app.addRequest) { _, _ in area = .shopping }
         .onChange(of: app.searchRequest) { _, _ in if area != .cooking && area != .pantry { area = visible(.pantry) ? .pantry : .cooking } }
@@ -97,6 +104,14 @@ struct MainTabView: View {
         .sheet(isPresented: $app.showPaywall) {
             PaywallView()
         }
+        .sheet(isPresented: $showTour, onDismiss: { Task { await askAIConsent() } }) {
+            AppTourView()
+        }
+        .sheet(isPresented: $showAIConsent) {
+            AIConsentView()
+        }
+        .task { if !showTour { await askAIConsent() } }
+        .onChange(of: app.askSampleData) { _, asking in if !asking { Task { await askAIConsent() } } }
         .sheet(item: Binding(get: { store.cookidooDraft }, set: { store.cookidooDraft = $0 })) { d in
             CookidooConfirmView(store: store, request: d) { _ in store.cookidooDraft = nil }
         }
@@ -105,29 +120,41 @@ struct MainTabView: View {
         }
     }
 
+    /// ToHuus Cloud: ask once whether AI may be used (App Store guideline 5.1.2(i)); never over the tour or for children
+    private func askAIConsent() async {
+        guard !AIConsentView.asked, !app.isChild, !app.isGuest, !app.askSampleData else { return }
+        await app.loadAIState()
+        if app.aiConsentNeeded && app.aiAvailable && !showTour { showAIConsent = true }
+    }
+
     // MARK: iPhone
 
     private var tabLayout: some View {
         TabView(selection: $area) {
             TodayView(store: store, openSettings: { showSettings = true }, openTab: { area = $0 })
+                .tabEntrance()
                 .tabItem { Label(AppArea.today.title, systemImage: AppArea.today.icon) }
                 .tag(AppArea.today)
             ShoppingView(store: store)
+                .tabEntrance()
                 .tabItem { Label(AppArea.shopping.title, systemImage: AppArea.shopping.icon) }
                 .badge(store.list.openCount)
                 .tag(AppArea.shopping)
             if visible(.pantry) {
                 PantryView(store: store)
+                    .tabEntrance()
                     .tabItem { Label(AppArea.pantry.title, systemImage: AppArea.pantry.icon) }
                     .tag(AppArea.pantry)
             }
             if visible(.cooking) {
                 CookingView(store: store)
+                    .tabEntrance()
                     .tabItem { Label(AppArea.cooking.title, systemImage: AppArea.cooking.icon) }
                     .tag(AppArea.cooking)
             }
             if visible(.money) {
                 MoneyView(store: store)
+                    .tabEntrance()
                     .tabItem { Label(AppArea.money.title, systemImage: AppArea.money.icon) }
                     .tag(AppArea.money)
             }
@@ -180,6 +207,7 @@ struct MainTabView: View {
         } detail: {
             detail(area)
                 .id(area)
+                .tabEntrance()
         }
         .navigationSplitViewStyle(.balanced)
     }
@@ -206,6 +234,11 @@ extension MainTabView {
         area = visible(a) ? a : .today
         app.requestedTab = nil
     }
+}
+
+extension Notification.Name {
+    /// debug builds: opens the paywall (StoreKit Testing screenshot run)
+    static let toHuusDebugShowPaywall = Notification.Name("ToHuusDebugShowPaywall")
 }
 
 struct AssistantButton: View {

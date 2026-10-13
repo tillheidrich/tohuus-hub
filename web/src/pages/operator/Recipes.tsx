@@ -28,6 +28,10 @@ interface AdminRecipe {
   state: 'draft' | 'scheduled' | 'published' | 'unpublished';
   publishAt: string | null;
   warnings: string[];
+  /** part of Plus */
+  plus?: boolean;
+  /** where the picture for this recipe is (e.g. its AI picture in Canva) */
+  imageRef?: string | null;
   ingredients: { text: string }[];
   steps: { text: string }[];
 }
@@ -53,6 +57,7 @@ function RecipeSheet({ id, onClose }: { id: number | null; onClose: () => void }
             <span className="badge">{t(STATE_LABEL[r.state])}</span>
             <span className="badge info">{t(REVIEW_LABEL[r.reviewState])}</span>
             {r.aiAssisted && <span className="badge">{t('AI-assisted')}</span>}
+            {r.plus && <span className="badge">Plus</span>}
             <span className="small muted">
               {r.state === 'scheduled' && r.publishAt ? t('goes live {when}', { when: when(r.publishAt) }) : r.publishedAt ? t('live since {date}', { date: day(r.publishedAt) }) : ''}
             </span>
@@ -146,7 +151,8 @@ function RecipeSheet({ id, onClose }: { id: number | null; onClose: () => void }
                   if (!f) return;
                   const fd = new FormData();
                   fd.append('file', f);
-                  fd.append('kind', 'photo');
+                  // a recipe with a prepared AI picture (Canva link) gets the "KI-Bild" badge right away
+                  fd.append('kind', r.imageRef ? 'ai' : 'photo');
                   void run(() => api(`/operator/recipes/${r.id}/photo`, { form: fd }), t('Photo saved'));
                 }}
               />
@@ -161,6 +167,17 @@ function RecipeSheet({ id, onClose }: { id: number | null; onClose: () => void }
                 </button>
               )}
             </div>
+            {r.imageRef && (
+              <p className="small op-p">
+                <a href={r.imageRef} target="_blank" rel="noreferrer">
+                  {t('Open the picture in Canva')}
+                </a>{' '}
+                {t('– download it there, then “Add photo”. It is marked as AI image.')}
+              </p>
+            )}
+            <label className="row small op-wrap">
+              <input type="checkbox" checked={Boolean(r.plus)} onChange={(e) => patch({ tier: e.target.checked ? 'plus' : 'all' }, t('Saved'))} /> {t('Plus recipe (households without Plus see the card with a lock)')}
+            </label>
             {r.image && (
               <label className="row small op-wrap">
                 <input type="checkbox" checked={r.imageKind === 'ai'} onChange={(e) => patch({ imageKind: e.target.checked ? 'ai' : 'photo' }, t('Saved'))} /> {t('This photo is AI-generated (shows the “AI image” badge)')}
@@ -181,6 +198,9 @@ export function OperatorRecipes() {
   const [perWeek, setPerWeek] = useState(3);
   const [aiAssisted, setAiAssisted] = useState(false);
   const [dishes, setDishes] = useState('');
+  const cardsZip = useRef<HTMLInputElement>(null);
+  const [cardsStart, setCardsStart] = useState('1');
+  const [cardsDone, setCardsDone] = useState<{ updated: number; skipped: string[] } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [upload, setUpload] = useState<{ created: number; warnings: string[]; errors: { title: string | null; error: string }[] } | null>(null);
   const file = useRef<HTMLInputElement>(null);
@@ -253,6 +273,39 @@ export function OperatorRecipes() {
                   {w}
                 </div>
               ))}
+            </div>
+          )}
+        </Section>
+
+        <Section title={t('Preview cards from Canva')}>
+          <p className="small muted op-p">{t('In Canva, download the preview-card design as PNG (all pages, as ZIP) and upload the ZIP here. Page 1 goes to the recipe with page 1 and so on.')}</p>
+          <div className="field">
+            <label htmlFor="op-cards-start">{t('Page 1 of the ZIP is page')}</label>
+            <input id="op-cards-start" className="input" type="number" min={1} max={999} inputMode="numeric" value={cardsStart} onChange={(e) => setCardsStart(e.target.value)} style={{ maxWidth: 120 }} />
+          </div>
+          <button className="btn" onClick={() => cardsZip.current?.click()}>
+            {t('Upload preview cards (ZIP)')}
+          </button>
+          <input
+            ref={cardsZip}
+            type="file"
+            accept=".zip,application/zip"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              const fd = new FormData();
+              fd.append('file', f);
+              fd.append('start', cardsStart || '1');
+              const r = await run(() => api<{ updated: number; skipped: string[] }>('/operator/recipes/preview-zip', { form: fd }), t('Saved'));
+              if (r) setCardsDone(r);
+              e.target.value = '';
+            }}
+          />
+          {cardsDone && (
+            <div className="small" role="status">
+              {t('{n} recipes got their preview card.', { n: cardsDone.updated })}
+              {cardsDone.skipped.length > 0 && <div className="muted">{t('Not assigned')}: {cardsDone.skipped.join(', ')}</div>}
             </div>
           )}
         </Section>

@@ -68,4 +68,7 @@ export const de_houseguide: Record<string, string> = {
   '{wake}, turn off the light': '{wake}, Licht aus',
   '{wake}, turn on the light': '{wake}, Licht an',
   '{wake}, volume 3': '{wake}, Lautstärke 3',
+  // photos and videos on cards
+  'Up to {n} photos or videos per card.': 'Bis zu {n} Fotos oder Videos pro Karte.',
+  'This is neither a photo nor a video ToHuus can show.': 'Das ist weder ein Foto noch ein Video, das ToHuus zeigen kann.',
 };

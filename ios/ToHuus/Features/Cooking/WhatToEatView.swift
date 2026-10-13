@@ -304,7 +304,7 @@ struct WhatToEatSection: View {
                 return
             }
             Haptics.tick()
-            withAnimation(.easeOut(duration: 0.2)) { pick = p }
+            Motion.perform(Motion.quick) { pick = p }
             seen = p.cycled == true ? [p.item.key] : exclude + [p.item.key]
         } catch { feedback.fail(error) }
     }

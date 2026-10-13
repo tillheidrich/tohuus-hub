@@ -35,6 +35,8 @@ struct ShoppingView: View {
     @State private var toast: String?
     @AppStorage("list.density") private var densityRaw = ListDensity.normal.rawValue
     @AppStorage("list.fontScale") private var fontScale = 1.0
+    /// Dynamic Type on top of the list's own size setting (1 at the default text size)
+    @ScaledMetric(relativeTo: .body) private var typeScale: CGFloat = 1
     @FocusState private var inputFocused: Bool
 
     struct UndoAction: Equatable {
@@ -44,6 +46,10 @@ struct ShoppingView: View {
     }
 
     private var density: ListDensity { ListDensity(rawValue: densityRaw) ?? .normal }
+    /// what moves in the list: rows added, ticked (they slide to "ticked"), removed
+    private var listSignature: [Int] {
+        store.list.sections.flatMap { $0.items.map(\.id) } + [-1] + store.list.basket.map(\.id) + [-2] + store.list.done.map(\.id)
+    }
     private var others: [Trip] { store.trips.filter { !$0.isMine } }
     private var myTrip: Trip? { store.trips.first { $0.isMine } }
 
@@ -106,6 +112,8 @@ struct ShoppingView: View {
             .environment(\.defaultMinListRowHeight, density.minRowHeight)
             .scrollContentBackground(.hidden)
             .canvasBackground()
+            // adding inserts the row, ticking slides it down to "ticked" – still with Reduce Motion
+            .motion(value: listSignature)
             .refreshable {
                 await store.flush()
                 await store.refreshList()
@@ -327,17 +335,20 @@ struct ShoppingView: View {
     @ViewBuilder
     private func row(_ item: ShopItem) -> some View {
         let checked = item.isChecked
-        let size = (shopMode ? 21 : Theme.FontSize.row * density.fontFactor) * fontScale
+        let size = (shopMode ? 21 : Theme.FontSize.row * density.fontFactor) * fontScale * typeScale
         Button {
             toggle(item)
         } label: {
             HStack(alignment: .center, spacing: Theme.Space.s3) {
                 Image(systemName: checked ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: (shopMode ? 30 : 24) * fontScale))
+                    .font(.system(size: (shopMode ? 30 : 24) * fontScale * min(typeScale, 1.6)))
                     .foregroundStyle(checked ? Theme.primary : Theme.lineStrong)
+                    .contentTransition(.symbolEffect(.replace))
+                    .accessibilityHidden(true)
                 // own photo of the row first, else the product picture (decision 1.0: rows show it when there is one)
                 ProductThumb(path: item.photoPath ?? item.imagePath, api: store.api, size: thumbSize)
                     .opacity(checked ? 0.5 : 1)
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         if let q = item.qtyLabel { Text(q).foregroundStyle(Theme.primaryText).fontWeight(.semibold) }
@@ -376,6 +387,9 @@ struct ShoppingView: View {
         .buttonStyle(.plain)
         .hoverEffect(.highlight)
         .accessibilityValue(checked ? L("done") : L("open"))
+        .accessibilityHint(checked ? L("Double-tap to put it back on the list") : L("Double-tap to tick it off"))
+        .accessibilityAction(named: L("Details")) { detailItem = item }
+        .accessibilityAction(named: L("Remove")) { Task { await store.delete(item) } }
         .draggable(ItemDrag(id: item.id).payload)
         .swipeActions(edge: .leading) {
             if !item.isChecked && item.id > 0 && (me?.claimsOn ?? true) {
@@ -515,16 +529,17 @@ struct ShoppingView: View {
                 .keyboardShortcut("z", modifiers: .command)
             }
             .font(.subheadline)
-            .foregroundStyle(Theme.canvas)
+            .foregroundStyle(Theme.onBlock)
             .padding(.horizontal, 16).padding(.vertical, 12)
-            .background(Theme.ink, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+            .background(Theme.block, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
             .padding(.horizontal, 16)
             .padding(.trailing, 64)
             .padding(.bottom, 12)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .task(id: u) {
-                try? await Task.sleep(nanoseconds: 4_000_000_000)
-                if undo == u { undo = nil }
+                A11yTiming.announce(u.text)
+                await A11yTiming.hold(4)
+                if !Task.isCancelled, undo == u { undo = nil }
             }
         }
     }
@@ -534,7 +549,7 @@ struct ShoppingView: View {
     private var addSection: some View {
         Section {
             HStack(spacing: Theme.Space.s2) {
-                Image(systemName: "plus.circle.fill").foregroundStyle(Theme.primary).font(.title3)
+                Image(systemName: "plus.circle.fill").foregroundStyle(Theme.primary).font(.title3).accessibilityHidden(true)
                 TextField(L("What's missing? e.g. 2 milk, bread"), text: $input)
                     .focused($inputFocused)
                     .submitLabel(.done)
@@ -543,7 +558,7 @@ struct ShoppingView: View {
                 if !input.isEmpty {
                     Button(L("Add"), action: submit).fontWeight(.semibold)
                 } else {
-                    Button { showPaste = true } label: { Image(systemName: "doc.on.clipboard") }
+                    Button { showPaste = true } label: { Image(systemName: "doc.on.clipboard").tapTarget() }
                         .buttonStyle(.borderless)
                         .accessibilityLabel(L("Paste a list"))
                 }
@@ -554,7 +569,8 @@ struct ShoppingView: View {
                 } label: {
                     Image(systemName: visibility == .all ? "eye" : (visibility == .private ? "lock.fill" : "eye.slash.fill"))
                         .foregroundStyle(visibility == .all ? Theme.ink3 : Theme.primaryText)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .accessibilityLabel(L("Who sees it?"))
                 .accessibilityValue(visibility.title)
@@ -749,9 +765,11 @@ struct ShoppingView: View {
                 Button { Task { await shareList() } } label: { Label(L("Share the list"), systemImage: "square.and.arrow.up") }
                 Button { showShopSettings = true } label: { Label(L("Shops & aisles"), systemImage: "storefront") }
             } label: {
-                Image(systemName: "doc.text.viewfinder")
+                // receipts, paper lists, usuals, wishes, sharing – more than receipts, so the general "more" symbol
+                Image(systemName: "ellipsis.circle")
             }
-            .accessibilityLabel(L("Receipt or paper list"))
+            .accessibilityLabel(L("More for the list"))
+            .accessibilityHint(L("Receipts, paper lists, usuals, wishes and sharing"))
         }
     }
 }
@@ -908,6 +926,7 @@ extension ShoppingView {
                     } label: {
                         Image(systemName: "plus").font(.body.weight(.semibold)).foregroundStyle(Theme.onPrimary)
                             .frame(width: 34, height: 34).background(Theme.primary, in: Circle())
+                            .tapTarget()
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(LF("Put %@ on the list", f.name))

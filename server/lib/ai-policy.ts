@@ -8,17 +8,26 @@
  *   - MCP        `mcp.enabled`  (setting, admin; default on) – the household's OWN assistants (Claude, ChatGPT …)
  *                reaching ToHuus through MCP. Independent from the built-in AI: no model is called for MCP.
  *
+ * ToHuus Cloud also asks for consent (App Store guideline 5.1.2(i): personal data goes to a third-party AI only with
+ * explicit permission): `ai.consent` in user_prefs per person, and `ai.consent` as a household setting (given by an
+ * admin) for children and background jobs (receipts by mail). Without it the reason is 'consent'. Self-hosted
+ * households choose their own model, so the switches above are enough there.
+ *
  * The person/child are known from a small AsyncLocalStorage store that requireAuth (members) and the kid-tablet
  * router (children) fill; background jobs run without one and only the household switch applies.
  *
  * Only depends on db.ts (ai.ts and auth.ts import this file).
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { config } from '../config.js';
 import { db, getSetting, setSetting } from '../db.js';
+import { currentHousehold } from './tenancy.js';
 
 export interface AiActor {
   userId?: number | null;
   kidId?: number | null;
+  /** the operator's own work in /betrieb (catalogue drafts): no household or personal data in the request */
+  operator?: boolean;
 }
 
 const als = new AsyncLocalStorage<AiActor>();
@@ -29,7 +38,10 @@ export function runAsAiActor<T>(actor: AiActor, fn: () => T): T {
 }
 export const currentAiActor = (): AiActor | undefined => als.getStore();
 
-export type AiOffReason = 'household' | 'person' | 'parents' | 'cloud';
+export type AiOffReason = 'household' | 'person' | 'parents' | 'cloud' | 'consent';
+
+/** Who receives the data when AI is used in ToHuus Cloud – shown in the consent text (keep in sync with ai.ts pin). */
+export const AI_PROCESSOR = 'Mistral AI (EU)';
 
 /**
  * ToHuus Cloud: the operator can pause AI for the whole cloud (`/betrieb` › Einstellungen, runtime-settings.ts sets
@@ -59,6 +71,35 @@ export function setPersonAi(userId: number, on: boolean) {
   ).run(userId, JSON.stringify(on));
 }
 
+/** Consent is asked in ToHuus Cloud only. */
+export const aiConsentRequired = () => config.multiTenant;
+
+export function personAiConsent(userId: number | null | undefined): boolean {
+  if (!userId) return false;
+  try {
+    const row = db.prepare(`SELECT value FROM user_prefs WHERE user_id = ? AND key = 'ai.consent'`).get(userId) as { value: string } | undefined;
+    return Boolean(row && JSON.parse(row.value));
+  } catch {
+    return false;
+  }
+}
+
+/** The household's consent (an admin agreed): children and background jobs. */
+export const householdAiConsent = () => Boolean(getSetting<string | null>('ai.consent', null));
+
+/** Agree (date of agreement is kept) or withdraw. An admin agreeing also agrees for the household. */
+export function setAiConsent(userId: number, on: boolean, opts: { admin?: boolean } = {}) {
+  const value = on ? JSON.stringify(new Date().toISOString()) : 'false';
+  db.prepare(
+    `INSERT INTO user_prefs (user_id, key, value, updated_at) VALUES (?, 'ai.consent', ?, datetime('now'))
+     ON CONFLICT(user_id, key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  ).run(userId, value);
+  if (opts.admin) setSetting('ai.consent', on ? new Date().toISOString() : null);
+}
+
+/** The household's consent alone (tests, tools). */
+export const setHouseholdAiConsent = (on: boolean) => setSetting('ai.consent', on ? new Date().toISOString() : null);
+
 export function kidAiOn(kidId: number | null | undefined): boolean {
   if (!kidId) return true;
   try {
@@ -86,6 +127,10 @@ export function aiOffReason(actor: AiActor | undefined = als.getStore()): AiOffR
   if (!household) return 'household';
   if (actor?.kidId && !kidAiOn(actor.kidId)) return 'parents';
   if (actor?.userId && !personAiOn(actor.userId)) return 'person';
+  // outside a household, or the operator's catalogue drafts in /betrieb: no household or personal data is involved
+  if (aiConsentRequired() && currentHousehold() && !actor?.operator) {
+    if (actor?.userId ? !personAiConsent(actor.userId) : !householdAiConsent()) return 'consent';
+  }
   return null;
 }
 

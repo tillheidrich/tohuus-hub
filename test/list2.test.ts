@@ -9,9 +9,10 @@ import os from 'node:os';
 import path from 'node:path';
 import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-list2-'));
-const PORT = 47700 + Math.floor(Math.random() * 200);
+const PORT = await freePort();
 process.env.DATA_DIR = dir;
 process.env.BASE_URL = `http://localhost:${PORT}`;
 process.env.LANGUAGE = 'de';

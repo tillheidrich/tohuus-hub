@@ -38,6 +38,7 @@ struct HouseholdView: View {
                 Text(isAdmin ? L("Children and permanent guests can be added in the web app.") : L("Only admins can invite someone."))
             }
         }
+        .themedList()
         .navigationTitle(L("Our household"))
         .refreshable { await load() }
         .task { await load() }
@@ -146,6 +147,7 @@ struct PersonDetailView: View {
             }
             if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
         }
+        .themedList()
         .navigationTitle(person.name)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {

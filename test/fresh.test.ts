@@ -111,6 +111,15 @@ describe('fresh actions on a real database', () => {
     expect(catalog.stockOf(id).filter((e) => e.opened_at && e.qty > 0)).toHaveLength(0);
   });
 
+  it('fill level: running low from "low" by default, or from "half" when the household chose so', () => {
+    const id = catalog.createProduct({ name: 'Äpfel', trackMode: 'level' });
+    catalog.adjustStock({ productId: id, delta: 2, reason: 'manual', silent: true });
+    const status = () => catalog.productStatus(catalog.getProduct(id)!, catalog.stockOf(id), 7).status;
+    expect(status()).toBe('ok');
+    db.prepare('UPDATE products SET min_qty = 2 WHERE id = ?').run(id);
+    expect(status()).toBe('low');
+  });
+
   it('freezes and thaws back to where it came from', () => {
     const fridge = fresh.fridgeLocationId()!;
     const freezer = fresh.freezerLocationId()!;

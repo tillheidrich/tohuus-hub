@@ -106,11 +106,12 @@ export function activeTrips(viewerId: number | null): TripView[] {
   for (const r of rows) {
     const mine = r.user_id === viewerId;
     if (!mine && tripPrivate(r.user_id)) continue;
-    // discreet and private rows never show up in someone else's basket
+    // discreet and private rows never show up in someone else's basket; the trip starts at the first tick-log row,
+    // which can be written a second after the item's checked_at – a few seconds of slack keep that first item in
     const basket = db
       .prepare(
         `SELECT s.id, s.text, s.qty FROM shopping_items s
-         WHERE s.checked_by = ? AND s.checked_at >= ? AND s.id NOT IN (SELECT item_id FROM share_items) ORDER BY s.checked_at`,
+         WHERE s.checked_by = ? AND datetime(s.checked_at) >= datetime(?, '-5 seconds') AND s.id NOT IN (SELECT item_id FROM share_items) ORDER BY s.checked_at`,
       )
       .all(r.name, r.started_at) as { id: number; text: string; qty: number | null }[];
     const addOns = (

@@ -27,6 +27,18 @@ Templates (`GET /api/house-guide/templates`, `POST /api/house-guide/templates/:k
 main water tap, emergency number for the region, police, poison control, "us", neighbours). Applying twice adds
 nothing twice.
 
+## Photos and videos on cards
+
+A card can carry up to 8 photos or short videos ("so geht die Heizung" shows better than it reads). They have exactly
+the visibility of their card – on the guest/sitter link too (URLs are signed like every image for token clients).
+
+- `POST /api/house-guide/cards/:id/media` (admins, multipart `file` + optional `caption`) → `{ id, kind: 'photo'|'video', url, caption }`. Photos are stored as webp up to 1600 px; videos as they are (MP4, MOV, WebM – checked by their bytes, no transcoding on the server).
+- `PATCH /api/house-guide/cards/:id/media/:mediaId { caption }`, `DELETE …/media/:mediaId`. Deleting a card deletes its files.
+- Limit: **100 MB per file**, said in the editor before anyone picks a file (web: also checked in the browser before uploading, with the size in the message; HTTP 413 `media.too_large`). The **iPhone app makes videos smaller first** (720p MP4, about 5 minutes fit) and says so; a video still too big after that gets "kürz es in Fotos".
+- Files live encrypted next to the images (`/img/h<card>-….webp|mp4|mov|webm`), count against the storage quota, and are served with byte ranges (Safari and the iPhone player need them); decrypted videos are kept in memory for a few minutes (at most two) so a player's many range requests do not decrypt 100 MB each time.
+- A card with photos/videos but no text counts as filled in.
+- Table `house_media (id, card_id, kind, path, caption, sort, created_at)`.
+
 ## Who sees what
 
 Every card and every code has its own visibility:

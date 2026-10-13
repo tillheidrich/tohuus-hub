@@ -64,11 +64,11 @@ struct ServingsStepper: View {
             }
             Spacer(minLength: 4)
             HStack(spacing: 0) {
-                Button { onChange(max(1, value - 1)) } label: { Image(systemName: "minus").frame(width: 44, height: 40) }
+                Button { onChange(max(1, value - 1)) } label: { Image(systemName: "minus").frame(width: 44, height: 44) }
                     .disabled(value <= 1)
                     .accessibilityLabel(LC("less"))
                 Text("\(value)").font(.body.monospacedDigit().weight(.semibold)).frame(minWidth: 28)
-                Button { onChange(min(60, value + 1)) } label: { Image(systemName: "plus").frame(width: 44, height: 40) }
+                Button { onChange(min(60, value + 1)) } label: { Image(systemName: "plus").frame(width: 44, height: 44) }
                     .disabled(value >= 60)
                     .accessibilityLabel(LC("more"))
             }
@@ -101,14 +101,15 @@ extension View {
                     }
                 }
                 .padding(.horizontal, 16).padding(.vertical, 12)
-                .background(Theme.ink, in: Capsule())
-                .foregroundStyle(Theme.canvas)
+                .background(Theme.block, in: Capsule())
+                .foregroundStyle(Theme.onBlock)
                 .padding(.horizontal, Theme.Space.s4)
                 .padding(.bottom, bottom)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .task(id: t.id) {
-                    try? await Task.sleep(nanoseconds: 3_500_000_000)
-                    if toast.wrappedValue?.id == t.id { toast.wrappedValue = nil }
+                    A11yTiming.announce(t.text)
+                    await A11yTiming.hold(3.5)
+                    if !Task.isCancelled, toast.wrappedValue?.id == t.id { toast.wrappedValue = nil }
                 }
             }
         }

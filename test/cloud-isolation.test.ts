@@ -13,10 +13,11 @@ import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 // the cloud installs a private-address-blocking dispatcher globally – the test client talks to localhost with its own
 import { Agent, FormData, fetch } from 'undici';
+import { freePort } from './helpers/port';
 const local = new Agent();
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-cloud-'));
-const PORT = 47600 + Math.floor(Math.random() * 300);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 Object.assign(process.env, {
   MULTI_TENANT: 'true',
@@ -670,6 +671,8 @@ describe('plans and quotas', () => {
       const C = new Client();
       const hC = await signup(C, 'c-quota@example.org', 'Cora', 'Quota home', 'couple');
       accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(hC);
+      // ToHuus Cloud asks once before AI is used (ai-policy.ts)
+      expect((await C.req('PATCH', '/api/ai/settings', { consent: true })).status).toBe(200);
       for (let i = 0; i < 20; i++) {
         const r = await C.post('/api/assistant/chat', { message: `Wie geht es dir ${i}?` });
         expect(r.status, r.text).toBe(200);
@@ -677,7 +680,7 @@ describe('plans and quotas', () => {
       }
       expect(calls).toBe(20);
       expect(tenancy.runInHousehold(hC, () => plans.usage('assistant'))).toBe(20);
-      const over = await C.post('/api/assistant/chat', { message: 'Wie wird das Wetter?' });
+      const over = await C.post('/api/assistant/chat', { message: 'Wie geht es dir heute?' });
       expect(over.status).toBe(402);
       expect(over.json).toMatchObject({ code: 'quota.assistant', remaining: 0 });
       expect(over.json.error).toBeTruthy();
@@ -689,11 +692,43 @@ describe('plans and quotas', () => {
       // another household is not affected
       const other = new Client();
       await signup(other, 'd-quota@example.org', 'Dora', 'Other home', 'carer');
+      // without consent the assistant answers without AI; after it, with
+      expect((await other.post('/api/assistant/chat', { message: 'Hallo?' })).json.mode).not.toBe('ai');
+      await other.req('PATCH', '/api/ai/settings', { consent: true });
       const r = await other.post('/api/assistant/chat', { message: 'Hallo?' });
       expect(r.status).toBe(200);
       expect(r.json.mode).toBe('ai');
     } finally {
       ai.setAiFetch(null);
+      delete process.env.AI_API_KEY;
+    }
+  });
+
+  it('AI needs consent in the cloud: per person, the household for background jobs, children start off', async () => {
+    process.env.AI_API_KEY = 'sk-test';
+    try {
+      const E = new Client();
+      const hE = await signup(E, 'e-consent@example.org', 'Ella', 'Consent home', 'couple');
+      const s0 = (await E.get('/api/ai/settings')).json;
+      expect(s0.reason).toBe('consent');
+      expect(s0.effective).toBe(false);
+      expect(s0.consent).toMatchObject({ required: true, given: false, household: false });
+      expect(s0.consent.processor).toContain('Mistral');
+      const policy = await import('../server/lib/ai-policy');
+      expect(tenancy.runInHousehold(hE, () => policy.aiOffReason(undefined))).toBe('consent');
+      // the admin agrees: for herself and for the household's background jobs
+      const s1 = (await E.req('PATCH', '/api/ai/settings', { consent: true })).json;
+      expect(s1.reason).toBeNull();
+      expect(s1.consent).toMatchObject({ given: true, household: true });
+      expect(tenancy.runInHousehold(hE, () => policy.aiOffReason(undefined))).toBeNull();
+      // a new child's AI starts off
+      const kid = await E.req('POST', '/api/kids', { name: 'Mika' });
+      expect(kid.status, kid.text).toBeLessThan(300);
+      const kids = (await E.get('/api/ai/settings')).json.kids;
+      expect(kids.find((k: any) => k.name === 'Mika').ai).toBe(false);
+      // withdrawing works
+      expect((await E.req('PATCH', '/api/ai/settings', { consent: false })).json.reason).toBe('consent');
+    } finally {
       delete process.env.AI_API_KEY;
     }
   });

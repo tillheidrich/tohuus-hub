@@ -33,8 +33,10 @@ struct StartView: View {
                     }
                     if let error { ErrorBanner(message: error) }
                     if app.instance?.signupMode == "invite" { BetaNote() }
-                    Text(L("14 days with everything, without payment details. Then Free, unless you choose a plan."))
-                        .font(.footnote).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
+                    if app.instance?.betaGift == nil {
+                        Text(L("14 days with everything, without payment details. Then Free, unless you choose a plan."))
+                            .font(.footnote).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
+                    }
                     LegalLinks()
                 }
                 .padding(Theme.Space.s5)
@@ -98,12 +100,12 @@ enum Legal {
     private static var german: Bool { Locale.current.language.languageCode?.identifier == "de" }
     static func privacy(_ i: InstanceInfo?) -> URL {
         i?.legal?.privacy.flatMap(URL.init(string:))
-            ?? URL(string: german ? "https://tohuus.heidrich-digital.de/de/datenschutz.html" : "https://tohuus.heidrich-digital.de/privacy.html")!
+            ?? SharedConfig.siteURL.appendingPathComponent(german ? "de/datenschutz.html" : "privacy.html")
     }
 
     static func terms(_ i: InstanceInfo?) -> URL {
         i?.legal?.terms.flatMap(URL.init(string:))
-            ?? URL(string: german ? "https://tohuus.heidrich-digital.de/de/nutzungsbedingungen.html" : "https://tohuus.heidrich-digital.de/terms.html")!
+            ?? SharedConfig.siteURL.appendingPathComponent(german ? "de/nutzungsbedingungen.html" : "terms.html")
     }
 }
 
@@ -427,7 +429,11 @@ struct SignUpView: View {
                 .disabled(!valid || busy)
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(L("14 days of Plus for free, then Free unless you choose a plan. Nothing renews by itself."))
+                    if app.instance?.betaGift == nil {
+                        Text(L("14 days of Plus for free, then Free unless you choose a plan. Nothing renews by itself."))
+                    } else {
+                        Text(L("During the beta your household gets the plan as a gift. Nothing is charged."))
+                    }
                     Text(L("By creating an account you accept the terms and the privacy policy."))
                     LegalLinks().frame(maxWidth: .infinity, alignment: .leading)
                 }

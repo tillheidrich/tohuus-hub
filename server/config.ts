@@ -6,6 +6,8 @@ export const config = {
   port: Number(env.PORT ?? 8080),
   dataDir: path.resolve(env.DATA_DIR ?? './data'),
   baseUrl: (env.BASE_URL ?? 'http://localhost:8080').replace(/\/$/, ''),
+  /** the public website (help pages, legal texts, Ratgeber) – one place for the domain (docs/domain.md) */
+  siteUrl: (env.SITE_URL ?? 'https://tohuus.heidrich-digital.de').replace(/\/$/, ''),
   /** Secret used to sign nothing critical — sessions are random tokens stored hashed. Kept for future use. */
   appSecret: env.APP_SECRET ?? '',
   /** First admin is created on boot when the users table is empty. */

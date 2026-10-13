@@ -20,7 +20,7 @@ import { accountByEmail, accountById, accountsDb, createAccount, createAppToken,
 import { NAME_MAX, rateLimitedGlobal } from '../lib/auth.js';
 import { AuthError } from '../lib/auth-sessions.js';
 import { normCode, signupGate } from '../lib/beta.js';
-import { appleAccountOf, appleAudience, appleLinkOf, appleServicesId, linkApple, sha256hex, touchApple, verifyAppleIdentityToken, type AppleIdentity } from '../lib/cloud-apple.js';
+import { appleAccountOf, appleAudience, appleLinkOf, appleServicesId, keepAppleRefreshToken, linkApple, sha256hex, touchApple, verifyAppleIdentityToken, type AppleIdentity } from '../lib/cloud-apple.js';
 import { REGIONS, defaultRegionCode } from '../lib/region.js';
 import { PLAN_FORMS, cloudMe, createHouseholdFor, startCloudSession } from './cloud.js';
 
@@ -96,7 +96,7 @@ export async function accountForApple(req: Request, id: AppleIdentity, x: Extras
 
 const appleReq = z.object({
   identityToken: z.string().min(10).max(8000),
-  /** the app may send it; it is not exchanged yet (TODO(apple-revoke) in lib/cloud-apple.ts) */
+  /** exchanged once for a refresh token so deleting the account can revoke it (lib/cloud-apple.ts) */
   authorizationCode: z.string().max(2000).optional(),
   /** the raw nonce whose SHA-256 (hex) the client put into the Apple request */
   nonce: z.string().max(200).optional(),
@@ -120,9 +120,10 @@ appleAuth.post(
   wrap(async (req, res) => {
     if (rateLimitedGlobal(`apple-ip:${req.ip}`, 20, 5 * 60_000)) throw tooMany();
     const b = appleReq.parse(req.body ?? {});
-    const id = await verifyAppleIdentityToken(b.identityToken, { audience: appleAudience(b.client), nonce: b.nonce ?? null, requireNonce: b.client === 'web' });
+    const id = await verifyAppleIdentityToken(b.identityToken, { audience: appleAudience(b.client), nonce: b.nonce ?? null, requireNonce: true });
     const { accountId, created } = await accountForApple(req, id, b);
     accountsDb().prepare(`UPDATE accounts SET last_login_at = datetime('now') WHERE id = ?`).run(accountId);
+    await keepAppleRefreshToken(id.sub, b.authorizationCode, appleAudience(b.client));
     const ms = membershipsOf(accountId);
     const chosen = (b.household && ms.find((m) => m.household_id === b.household)) || ms[0] || null;
     if (b.household && chosen?.household_id !== b.household) throw new AuthError(403, t('You are not a member of this household.'));
@@ -212,6 +213,7 @@ appleAuth.post('/auth/apple/callback', express.urlencoded({ extended: false, lim
     const betaCode = codeB64 ? Buffer.from(codeB64, 'base64url').toString('utf8') || undefined : undefined;
     const { accountId, created } = await accountForApple(req, id, { name, lang, betaCode });
     accountsDb().prepare(`UPDATE accounts SET last_login_at = datetime('now') WHERE id = ?`).run(accountId);
+    await keepAppleRefreshToken(id.sub, b.data.code, appleAudience('web'), `${config.baseUrl}/api/auth/apple/callback`);
     await startCloudSession(req, res, accountId, membershipsOf(accountId)[0]?.household_id ?? null, 'apple');
     res.setHeader('Cache-Control', 'no-store');
     let dest = '/';

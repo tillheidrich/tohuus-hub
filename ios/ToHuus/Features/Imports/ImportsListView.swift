@@ -150,6 +150,7 @@ struct EBonSheet: View {
                     .disabled(busy || URL(string: url.trimmingCharacters(in: .whitespaces))?.scheme?.hasPrefix("http") != true)
                 }
             }
+            .themedList()
             .navigationTitle(L("Digital receipt"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } } }

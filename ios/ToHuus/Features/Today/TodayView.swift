@@ -173,6 +173,7 @@ struct TodayView: View {
                         } label: {
                             Image(systemName: "xmark").font(.footnote.weight(.semibold)).foregroundStyle(Theme.ink3)
                                 .frame(width: 36, height: 36).background(Theme.surface2, in: Circle())
+                                .tapTarget()
                         }
                         .accessibilityLabel(LF("Not now: %@", item.name))
                         Button {
@@ -180,6 +181,7 @@ struct TodayView: View {
                         } label: {
                             Image(systemName: "plus").font(.body.weight(.semibold)).foregroundStyle(Theme.onPrimary)
                                 .frame(width: 36, height: 36).background(Theme.primary, in: Circle())
+                                .tapTarget()
                         }
                         .accessibilityLabel(LF("Put %@ on the list", item.name))
                     }
@@ -189,7 +191,7 @@ struct TodayView: View {
             }
             if items.count > 3 {
                 Button(showAllDue ? L("Show less") : LF("Show all %d", items.count)) {
-                    withAnimation(.easeOut(duration: 0.2)) { showAllDue.toggle() }
+                    Motion.perform(Motion.quick) { showAllDue.toggle() }
                 }
                 .font(.subheadline.weight(.semibold))
             }
@@ -202,7 +204,7 @@ struct TodayView: View {
         } label: {
             Card(title: L("Shopping list"), systemImage: "cart") {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("\(open)").font(.system(size: 34, weight: .semibold, design: .rounded)).foregroundStyle(Theme.primaryText)
+                    Text("\(open)").font(Theme.number()).foregroundStyle(Theme.primaryText).numberTransition(Double(open))
                     Text(open == 1 ? L("thing is missing") : L("things are missing")).foregroundStyle(Theme.ink2)
                     Spacer()
                     Image(systemName: "chevron.right").foregroundStyle(Theme.ink3)

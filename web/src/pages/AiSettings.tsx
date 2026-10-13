@@ -11,7 +11,9 @@ interface AiSettings {
   mcp: boolean;
   mine: boolean;
   effective: boolean;
-  reason: 'no_model' | 'household' | 'person' | 'parents' | null;
+  reason: 'no_model' | 'household' | 'person' | 'parents' | 'cloud' | 'consent' | null;
+  /** ToHuus Cloud: AI only after the person agreed (server/lib/ai-policy.ts) */
+  consent?: { required: boolean; given: boolean; household: boolean; processor: string; privacyUrl: string };
   admin: boolean;
   kids?: { id: number; name: string; ai: boolean }[];
 }
@@ -59,6 +61,25 @@ export function AiSwitchesCard() {
           ? t('When AI is off, ToHuus sends nothing to an AI model. The list, stock, receipts as PDF, barcodes and text recognition on the server keep working.')
           : t('No AI model is set up on this server. ToHuus works without one: the list, stock, receipts as PDF, barcodes and text recognition on the server.')}
       </p>
+      {anyModel && d.consent?.required && (
+        <div className="card pad stack" role="group" aria-labelledby="ai-consent-h" style={{ background: 'var(--surface-2, transparent)' }}>
+          <h3 id="ai-consent-h" style={{ margin: 0 }}>{d.consent.given ? t('You agreed to AI') : t('Use AI? You decide.')}</h3>
+          <p className="small" style={{ margin: 0 }}>
+            {t('When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.', { processor: d.consent.processor })}
+          </p>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            {d.consent.given ? (
+              <button className="btn" onClick={() => set({ consent: false })}>{t('Withdraw consent')}</button>
+            ) : (
+              <button className="btn primary" onClick={() => set({ consent: true })}>{t('Agree and use AI')}</button>
+            )}
+            <a className="btn ghost" href={d.consent.privacyUrl} target="_blank" rel="noreferrer">{t('Privacy')}</a>
+          </div>
+          {d.admin && !d.consent.household && d.consent.given && (
+            <p className="small muted" style={{ margin: 0 }}>{t('Receipts by mail and children use AI only after an admin agreed.')}</p>
+          )}
+        </div>
+      )}
       {anyModel && (
         <>
           <Row

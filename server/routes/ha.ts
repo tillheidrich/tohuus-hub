@@ -1,6 +1,7 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { config } from '../config.js';
+import { assertFeature } from '../lib/limits.js';
 import { getSetting, lang } from '../db.js';
 import { requireAuth } from '../lib/auth.js';
 import { addToShopping, adjustStock, fmtQty, getProduct, localDay, markUsedUp, matchProduct } from '../lib/catalog.js';
@@ -408,6 +409,7 @@ r.post(
 r.post(
   '/ha/v1/services/fill_week',
   h((req) => {
+    assertFeature('weekPlanFromPantry');
     const b = z.object({ from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), days: z.number().int().min(1).max(28).default(7) }).parse(req.body ?? {});
     return autofill(b.from ?? localDay(0), b.days);
   }),

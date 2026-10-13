@@ -51,4 +51,19 @@ export const recipepack: Record<string, string> = {
     'Klappt mit fast jeder Rezeptseite und mit Beiträgen von Instagram, TikTok, Pinterest und YouTube (nur was öffentlich ist). Bei Cookidoo bleiben Name, Link und Zutaten.',
   'A cookbook page, a handwritten note, a screenshot or the display of your Thermomix or oven – several photos of the same recipe are merged.':
     'Eine Kochbuchseite, ein handgeschriebener Zettel, ein Screenshot oder das Display von Thermomix oder Ofen – mehrere Fotos vom selben Rezept werden zusammengeführt.',
+  // appliance platforms (Cookidoo, Monsieur Cuisine, Cookit …, CookidooSheet)
+  '{app} recipe': '{app}-Rezept',
+  'ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from {app} itself.':
+    'ToHuus speichert Name, Link, Zutaten und, wenn du sie ergänzt, die Schritte privat in eurem Haushalt. ToHuus ruft selbst nie etwas von {app} ab.',
+  'In the {app} app: open the recipe, copy the ingredients and paste them here – or take a screenshot.': 'In der {app}-App: Rezept öffnen, Zutaten kopieren und hier einfügen – oder einen Screenshot machen.',
+  'Saved. Cook it in {app} – a photo of your own dish makes it easy to find.': 'Gespeichert. Gekocht wird in {app} – ein Foto von deinem Gericht macht es leicht wiederzufinden.',
+  'Copy the whole recipe in the {app} app and paste it here.': 'Kopier in der {app}-App das ganze Rezept und füg es hier ein.',
+  'ToHuus sorts it into name, ingredients and steps. You check it before saving.': 'ToHuus sortiert es in Name, Zutaten und Schritte. Du schaust drüber, bevor du speicherst.',
+  'ToHuus sorts it by lines: amounts become ingredients, the rest steps. You check it before saving.': 'ToHuus sortiert nach Zeilen: Mengen werden Zutaten, der Rest Schritte. Du schaust drüber, bevor du speicherst.',
+  'Read with AI': 'Mit KI lesen',
+  'Sort the text': 'Text sortieren',
+  'No ingredients found in the text.': 'Im Text waren keine Zutaten zu finden.',
+  'Open in {app} to cook': 'Zum Kochen in {app} öffnen',
+  'Works with almost any recipe site and with posts from Instagram, TikTok, Pinterest and YouTube (only what is public). Cookidoo, Monsieur Cuisine and other kitchen appliance apps keep name, link and ingredients.':
+    'Klappt mit fast jeder Rezeptseite und mit Beiträgen von Instagram, TikTok, Pinterest und YouTube (nur was öffentlich ist). Bei Cookidoo, Monsieur Cuisine und anderen Küchenmaschinen-Apps bleiben Name, Link und Zutaten.',
 };

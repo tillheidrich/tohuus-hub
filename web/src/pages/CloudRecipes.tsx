@@ -1,6 +1,6 @@
 // ToHuus-Rezepte in Kochen (ToHuus Cloud only): "Neu diese Woche" from the central catalogue
 // (server/routes/cloud-recipes.ts). One tap saves a copy into the household's own recipes (source "ToHuus").
-import { BookmarkSimple, Check, ChefHat } from '@phosphor-icons/react';
+import { BookmarkSimple, Check, ChefHat, LockSimple } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { get, invalidate, post, useApi } from '../api';
@@ -24,6 +24,12 @@ export interface CatalogCard {
   license: string;
   sourceAuthors: string | null;
   publishedAt: string | null;
+  /** part of Plus */
+  plus?: boolean;
+  /** Plus recipe and this household has no Plus: card only */
+  locked?: boolean;
+  /** real photo: "Name / Pexels" */
+  imageCredit?: string | null;
 }
 interface CatalogRecipe extends CatalogCard {
   ingredients: { text: string; section?: string | null }[];
@@ -68,6 +74,7 @@ function Picture({ r }: { r: CatalogCard }) {
     <span className="dish-pic">
       {r.image ? <img src={r.image} alt="" loading="lazy" /> : <DishPlaceholder title={r.title} />}
       {r.image && r.imageKind === 'ai' && <span className="dish-badge">{t('AI image')}</span>}
+      {r.plus && <span className="dish-badge dish-plus">Plus</span>}
     </span>
   );
 }
@@ -111,7 +118,11 @@ export function CatalogNew() {
               </button>
               <b>{r.title}</b>
               <span className="meta">{[r.timeMin ? t('{n} min', { n: r.timeMin }) : null, r.servings ? t('{n} servings', { n: r.servings }) : null].filter(Boolean).join(' · ')}</span>
-              {saved ? (
+              {r.locked ? (
+                <button className="btn sm ghost" onClick={() => setOpen(r.id)}>
+                  <LockSimple size={14} aria-hidden="true" /> {t('Part of Plus')}
+                </button>
+              ) : saved ? (
                 <button className="btn sm ghost" onClick={() => nav(`/rezepte/${saved}`)}>
                   <Check size={14} weight="bold" aria-hidden="true" /> {t('In your recipes')}
                 </button>
@@ -124,15 +135,36 @@ export function CatalogNew() {
           );
         })}
       </div>
-      <CatalogSheet id={open} saved={open ? q.data.saved[open] : undefined} onClose={() => setOpen(null)} onSave={save} busy={busy} />
+      <CatalogSheet id={open} card={list.find((x) => x.id === open)} saved={open ? q.data.saved[open] : undefined} onClose={() => setOpen(null)} onSave={save} busy={busy} />
     </section>
   );
 }
 
-function CatalogSheet({ id, saved, onClose, onSave, busy }: { id: number | null; saved?: number; onClose: () => void; onSave: (id: number) => void; busy: number | null }) {
-  const q = useApi<CatalogRecipe>(['cloud-recipes', id ?? 0], id ? `/cloud-recipes/${id}` : null);
+function CatalogSheet({ id, card, saved, onClose, onSave, busy }: { id: number | null; card?: CatalogCard; saved?: number; onClose: () => void; onSave: (id: number) => void; busy: number | null }) {
+  const locked = Boolean(card?.locked);
+  const q = useApi<CatalogRecipe>(['cloud-recipes', id ?? 0], id && !locked ? `/cloud-recipes/${id}` : null);
   const nav = useNavigate();
   const r = q.data;
+  if (locked && card)
+    return (
+      <Sheet
+        open={id !== null}
+        onClose={onClose}
+        title={card.title}
+        footer={
+          <button className="btn primary block" onClick={() => nav('/einstellungen?tab=plan')}>
+            {t('See Plus')}
+          </button>
+        }
+      >
+        <div className="stack catalog-detail">
+          <Picture r={card} />
+          {card.description && <p className="op-p">{card.description}</p>}
+          {card.imageCredit && <p className="small muted">{t('Photo: {credit}', { credit: card.imageCredit })}</p>}
+          <p className="small muted">{t('This recipe is part of Plus. With Plus you get new seasonal recipes with pictures, the week plan from what is at home and more.')}</p>
+        </div>
+      </Sheet>
+    );
   return (
     <Sheet
       open={id !== null}
@@ -160,6 +192,7 @@ function CatalogSheet({ id, saved, onClose, onSave, busy }: { id: number | null;
           <p className="small muted catalog-origin">
             {originLine(r)}
             {r.license && r.license !== 'ToHuus' ? ` · ${r.license}${r.sourceAuthors ? ` (${r.sourceAuthors})` : ''}` : ''}
+            {r.imageCredit ? ` · ${t('Photo: {credit}', { credit: r.imageCredit })}` : ''}
           </p>
           {r.allergens.length > 0 && (
             <p className="small">

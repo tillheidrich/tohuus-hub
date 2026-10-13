@@ -72,7 +72,8 @@ export function productStatus(p: ProductRow, entries: StockEntry[], warnDays = n
   let status: Status = 'ok';
   if (p.track_mode === 'none') status = 'untracked';
   else if (total <= 0) status = 'empty';
-  else if (p.track_mode === 'level' ? total <= 1 : p.min_qty > 0 && total < p.min_qty) status = 'low';
+  // fill level: "knapp" from "wenig" (1, default) or already from "halb" (min_qty 2) – the household's choice per product
+  else if (p.track_mode === 'level' ? total <= (p.min_qty >= 2 ? 2 : 1) : p.min_qty > 0 && total < p.min_qty) status = 'low';
   if (nextExpiry && status !== 'empty') {
     if (nextExpiry < today) status = 'expired';
     else if (nextExpiry <= soon) status = 'expiring';

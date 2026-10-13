@@ -80,6 +80,8 @@ export interface Billing {
   plan: 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
   trialEndsAt?: string | null;
   renewsAt?: string | null;
+  /** Plus bought once, for good (optional App Store product) */
+  lifetime?: boolean;
   expiresAt?: string | null;
   autoRenew?: boolean | null;
   period?: 'monthly' | 'yearly' | null;
@@ -87,7 +89,9 @@ export interface Billing {
   manageUrl?: string | null;
   /** personal: e-mail 3 days before a yearly renewal */
   reminder?: boolean;
-  source?: 'apple' | 'operator' | 'none';
+  source?: 'apple' | 'operator' | 'beta' | 'code' | 'none';
+  /** a plan as a gift (server/lib/gifts.ts): beta for everyone, a redeemed code or the operator; `until` null = for good */
+  gift?: { kind: 'beta' | 'code' | 'operator'; plan: 'haushalt' | 'plus'; until: string | null; forever: boolean } | null;
   limits?: { historyDays?: number | null; assistantPerMonth?: number | null; assistantThrottleOnly?: boolean; uploadsPerDay?: number | null; receiptAiPerDay?: number | null; storageBytes?: number | null; [k: string]: unknown };
   usage?: { assistantThisMonth?: number; uploadsToday?: number; receiptAiToday?: number; storageBytes?: number; [k: string]: unknown };
 }

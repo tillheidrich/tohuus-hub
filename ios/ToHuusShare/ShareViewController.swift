@@ -116,7 +116,7 @@ final class ShareModel: ObservableObject {
         } catch ShareUploader.UploadError.needsConfirm {
             item.confirm = true
             UploadQueue.enqueue(item)
-            state = .done(L("A Cookidoo recipe – open ToHuus to confirm the ingredients."))
+            state = .done(L("A recipe from Cookidoo or another kitchen appliance app – open ToHuus to confirm the ingredients."))
         } catch ShareUploader.UploadError.server(let message) {
             state = .failed(message)
         } catch {
