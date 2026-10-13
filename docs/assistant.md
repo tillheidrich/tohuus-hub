@@ -14,6 +14,10 @@ Code: [`server/lib/assistant.ts`](../server/lib/assistant.ts) (conversation, mod
 
 If the model fails mid-way, writes it already made stay (they are in `actions`, with undo); otherwise the built-in reader answers instead of an error.
 
+**Answers to the assistant** (`replyOf` in assistant-parse.ts): "Ja", "ja bitte", "Mach das", "Ja, auf die Liste", "Speichere das Rezept", "Nein", "Danke" are intent `reply` – never list items. "Nein"/"Danke" are answered without a model ("Alles klar." / "Gern."); "Ja" and commands go to the model with the conversation, and the tools follow the last answer too (a "Ja" after a recipe gets `recipe_save_adapted`). Without a model or while it is busy the answer says so – nothing is put on the list.
+
+**Time budget**: one answer may take at most 45 s in total (all tool rounds, retries and fallback models; `deadline` in `chat()`), one model request at most 25 s. Before, a stuck model could keep a person waiting for minutes (60 s per try × retries × fallback models).
+
 ## Endpoints
 
 All need a signed-in member (cookie or app token). Errors: `{ error }` (AI errors add `code`: `not_configured`, `timeout`, `rate_limited`, `auth`, `bad_request`, `upstream`, `bad_response`).

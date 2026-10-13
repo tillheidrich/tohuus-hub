@@ -68,6 +68,10 @@ migrate(
 
 export const KEEP_DAYS = 30;
 const MAX_ROUNDS = 4;
+/** the whole answer (all tool rounds, retries and fallback models) – the iPhone app waits 90 s, people much less */
+const ASSISTANT_BUDGET_MS = 45_000;
+/** one model request – a recipe takes Mistral Small 5–15 s, longer means it is stuck */
+const ASSISTANT_TRY_MS = 25_000;
 const HISTORY = 12;
 
 export interface AssistantUser {
@@ -176,7 +180,7 @@ const PROMPT_DE = `Du bist ToHuus, der Einkaufs- und Haushaltsassistent dieses H
 - Daten (Liste, Vorrat, Preise, Pläne) nur aus den Werkzeugen, nie erfinden.
 - Wer "wir brauchen was für X" sagt (z. B. Pfannkuchen-Abend): überleg dir die üblichen Zutaten, prüf sie mit check_at_home und setz nur, was vermutlich fehlt, mit list_add auf die Liste. Sag kurz, was du draufgesetzt hast und was du als vorhanden angenommen hast.
 - Kochideen: erst cook_ideas. Ist nichts da oder der Vorrat leer, schlag trotzdem 2–3 einfache, günstige Alltagsgerichte vor. Kosten nur aus known_prices; sonst sag, dass es eine grobe Schätzung ist, ohne genaue Zahlen vorzutäuschen. Biete an, die Zutaten auf die Liste zu setzen.
-- Wer ein Rezept will ("ein Rezept für Kinder", "was Schnelles mit Hähnchen"): schreib selbst ein einfaches, alltagstaugliches Rezept – Titel, Portionen, Zutatenliste mit Mengen, kurze nummerierte Schritte; hier darf die Antwort länger sein. Nutze, was zu Hause ist (check_at_home), wenn es passt. Danach anbieten: als Rezept speichern (recipe_save_adapted erst nach Ja, ohne "from") oder fehlende Zutaten auf die Liste.
+- Wer ein Rezept will ("ein Rezept für Kinder", "was Schnelles mit Hähnchen"): schreib selbst ein einfaches, alltagstaugliches Rezept – Titel, Portionen, Zutatenliste mit Mengen, kurze nummerierte Schritte; hier darf die Antwort länger sein. Nutze, was zu Hause ist (check_at_home), wenn es passt. Danach anbieten: als Rezept speichern (recipe_save_adapted erst nach Ja, ohne "from") oder fehlende Zutaten auf die Liste. Auf "Ja" das Angebot sofort ausführen.
 - Vorschläge aus dem Kaufrhythmus erst nach einem Ja auf die Liste. "Merk dir …" → remember, sonst nichts über Personen speichern.
 - Keine medizinischen oder Ernährungsratschläge, nie "allergenfrei" behaupten. Rezepte von ToHuus sind schon gefiltert; sag nicht, warum etwas fehlt.`;
 
@@ -185,7 +189,7 @@ const PROMPT_EN = `You are ToHuus, this household's shopping and household assis
 - Data (list, stock, prices, plans) only from the tools, never made up.
 - "We need something for X" (e.g. a pancake evening): think of the usual ingredients, check them with check_at_home and put only what is probably missing on the list with list_add. Say briefly what you added and what you assumed is at home.
 - Cooking ideas: first cook_ideas. If there is nothing or the pantry is empty, still suggest 2–3 simple, cheap everyday meals. Costs only from known_prices; otherwise say it is a rough estimate without pretending precision. Offer to put the ingredients on the list.
-- Someone wants a recipe ("a recipe for kids", "something quick with chicken"): write a simple everyday recipe yourself – title, servings, ingredient list with amounts, short numbered steps; the answer may be longer here. Use what is at home (check_at_home) where it fits. Then offer: save it as a recipe (recipe_save_adapted only after a yes, without "from") or put missing ingredients on the list.
+- Someone wants a recipe ("a recipe for kids", "something quick with chicken"): write a simple everyday recipe yourself – title, servings, ingredient list with amounts, short numbered steps; the answer may be longer here. Use what is at home (check_at_home) where it fits. Then offer: save it as a recipe (recipe_save_adapted only after a yes, without "from") or put missing ingredients on the list. On "yes", do it at once.
 - Rhythm suggestions go on the list only after a yes. "Remember …" → remember; store nothing else about people.
 - No medical or nutrition advice, never claim "allergen-free". ToHuus already filters recipes; do not say why something is left out.`;
 
@@ -218,7 +222,8 @@ export async function chatOnce(input: {
   // the recording already counted (input.allowance), but the answer still comes from the built-in reader
   const allowance = aiEnabled('text') && !simple ? (input.allowance ?? consumeAssistant()) : null;
   const overQuota = Boolean(allowance && !allowance.ok);
-  if (overQuota && intent.kind === 'unknown') throw assistantQuotaError();
+  const needsModel = intent.kind === 'unknown' || (intent.kind === 'reply' && (intent.answer === 'yes' || intent.answer === 'command'));
+  if (overQuota && needsModel) throw assistantQuotaError();
   const conversationId = openConversation(input.conversationId, input.user, message);
   const prior = history(conversationId);
   store(conversationId, 'user', message);
@@ -231,7 +236,9 @@ export async function chatOnce(input: {
     } else {
       try {
         // Plus fair use over the allowance: still answered, just shorter
-        const r = await modelReply(message, prior, ctx, input.user, allowance.throttled ? 250 : 600, input.context ?? null);
+        // a recipe is longer than a list answer
+        const long = /rezept|recipe/i.test(message) || (intent.kind === 'reply' && /rezept|recipe|zutat|ingredient/i.test(String(prior[prior.length - 1]?.content ?? '')));
+        const r = await modelReply(message, prior, ctx, input.user, allowance.throttled ? 250 : long ? 1000 : 600, input.context ?? null);
         out = { ...r, mode: 'ai', remaining: allowance.remaining, ...(allowance.throttled ? { throttled: true } : {}) };
       } catch (e) {
         if (!(e instanceof AiError)) throw e;
@@ -240,7 +247,7 @@ export async function chatOnce(input: {
         // a question the built-in reader cannot answer ("ein Rezept für Kinder") gets an honest "busy, try again"
         // instead of "I did not understand"
         const busy = e.code === 'rate_limited' || e.code === 'upstream' || e.code === 'timeout';
-        const reply = ctx.actions.length ? t('Done.') : busy && intent.kind === 'unknown' ? t('The assistant is busy right now. Please try again in a moment.') : basicReply(message, ctx);
+        const reply = ctx.actions.length ? t('Done.') : busy && needsModel ? t('The assistant is busy right now. Please try again in a moment.') : basicReply(message, ctx);
         out = { reply, mode: 'basic', remaining: allowance.remaining };
       }
     }
@@ -262,6 +269,8 @@ export async function chatOnce(input: {
 /** Sentences the built-in reader handles completely – no model needed. */
 export function fullyUnderstood(intent: Intent): boolean {
   if (intent.kind === 'add') return intent.vague.length === 0;
+  // "danke", "nein" need no model; "ja" and "speicher das Rezept" do (they refer to the last answer)
+  if (intent.kind === 'reply') return intent.answer === 'thanks' || intent.answer === 'no';
   return ['purchase', 'remember', 'forget', 'list'].includes(intent.kind);
 }
 
@@ -280,11 +289,15 @@ export function promptFor(message: string, user: AssistantUser, context: ScreenC
 }
 
 async function modelReply(message: string, prior: ChatMessage[], ctx: ToolCtx, user: AssistantUser, maxTokens = 600, context: ScreenContext | null = null) {
-  const p = promptFor([...prior.filter((m) => m.role === 'user').slice(-2).map((m) => String(m.content)), message].join(' '), user, context);
+  // the topics (context lines, tools) also follow the last answer: "Ja" after a recipe needs the recipe tools
+  const lastAnswer = [...prior].reverse().find((m) => m.role === 'assistant');
+  const p = promptFor([...prior.filter((m) => m.role === 'user').slice(-2).map((m) => String(m.content)), String(lastAnswer?.content ?? '').slice(0, 600), message].join(' '), user, context);
   const messages: ChatMessage[] = [{ role: 'system', content: p.system }, ...prior, { role: 'user', content: message }];
   let usage = zeroUsage();
+  // a person is waiting: one overall budget instead of 60 s per try with retries and fallback models (minutes)
+  const deadline = Date.now() + ASSISTANT_BUDGET_MS;
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const res = await chat({ kind: 'text', messages, tools: p.tools, temperature: 0.3, maxTokens });
+    const res = await chat({ kind: 'text', messages, tools: p.tools, temperature: 0.3, maxTokens, timeoutMs: ASSISTANT_TRY_MS, retries: 1, deadline });
     usage = addUsage(usage, res.usage);
     if (!res.toolCalls.length) return { reply: res.content.trim() || t('Done.'), usage };
     messages.push({ role: 'assistant', content: res.content || null, tool_calls: res.toolCalls });
@@ -377,6 +390,13 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
       const res = rememberTool(ctx, { text: intent.text });
       if (!res.ok) return res.hint ?? '';
       return t('Got it, ToHuus remembers that.');
+    }
+    case 'reply': {
+      if (intent.answer === 'thanks') return t('Gladly.');
+      if (intent.answer === 'no') return t('All right.');
+      // "Ja" / "speicher das Rezept" refer to the last answer – only the model can follow up, never the list
+      if (aiConfigured('text') && aiOffReason()) return t('AI is off – I understand simple sentences like “milk is out and 2 peppers”.');
+      return aiEnabled('text') ? t('The assistant is busy right now. Please try again in a moment.') : t('I can’t do that without the AI assistant. Simple sentences like “milk, 2 peppers and bread” always work.');
     }
     case 'forget': {
       const r = forgetTool(ctx, { text: intent.text }) as any;

@@ -4,6 +4,11 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+### Fixed
+
+- **Assistant: "Ja" is an answer, not a product.** "Ja", "ja bitte", "Mach das", "Speichere das Rezept", "Nein", "Danke" never land on the shopping list; a "Ja" after a recipe goes to the model with the conversation and the save tool (docs/assistant.md). Without a model or while it is busy the assistant says so.
+- **Assistant answers faster or says it is busy**: one 45 s budget per answer (25 s per model request) instead of 60 s per try with retries and fallback models; recipes get room for 1 000 tokens.
+
 ### Added
 
 - **Cloud back office `/betrieb`** (docs/cloud.md › Operator back office): sections Übersicht, Statistik, Beta-Zugang, Rezepte, Einstellungen, Haushalte (id only), Protokoll (paged); every change audited.

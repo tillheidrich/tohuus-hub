@@ -84,6 +84,28 @@ afterAll(() => {
 
 describe('reading without a model (pure)', () => {
   const p = (s: string) => parse.parseIntent(s);
+  it('answers to the assistant are never list items', () => {
+    const cases: [string, string][] = [
+      ['Ja', 'yes'],
+      ['ja bitte', 'yes'],
+      ['Gerne!', 'yes'],
+      ['Okay', 'yes'],
+      ['Mach das', 'yes'],
+      ['Ja, auf die Liste', 'yes'],
+      ['Nein', 'no'],
+      ['nein danke', 'no'],
+      ['Danke', 'thanks'],
+      ['Speichere das Rezept', 'command'],
+      ['Speicher es als neues Rezept', 'command'],
+      ['Ja, speichern', 'command'],
+      ['Plan das für Sonntag', 'command'],
+    ];
+    for (const [text, answer] of cases) expect([text, p(text)]).toEqual([text, { kind: 'reply', answer }]);
+    // list sentences stay list sentences
+    expect(p('Setz bitte Milch auf die Liste')).toMatchObject({ kind: 'add' });
+    expect(p('Brot bitte')).toMatchObject({ kind: 'add', items: [{ name: 'Brot' }] });
+    expect(p('Milch und Brot')).toMatchObject({ kind: 'add' });
+  });
   it('lists', () => {
     expect(p('Milch, 2 Paprika und Brot')).toMatchObject({ kind: 'add', items: [{ name: 'Milch' }, { name: 'Paprika', qty: 2 }, { name: 'Brot' }] });
     expect(p('Setz bitte Milch auf die Liste')).toMatchObject({ kind: 'add', items: [{ name: 'Milch' }] });
@@ -146,6 +168,16 @@ describe('without a model configured', () => {
     expect((await lea.req('POST', `/api/assistant/undo/${r.json.actions[0].undo}`)).status).toBe(404);
     const u = await till.req('POST', `/api/assistant/undo/${r.json.actions[0].undo}`);
     expect(u.json.ok).toBe(true);
+    expect(openTexts()).toEqual([]);
+  });
+
+  it('"Ja" or "Danke" never land on the list', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    const r = await till.chat('Ja');
+    expect(r.status).toBe(200);
+    expect(r.json.actions).toEqual([]);
+    expect(r.json.reply).toMatch(/KI-Assistenten/);
+    expect((await till.chat('Danke')).json.reply).toBe('Gern.');
     expect(openTexts()).toEqual([]);
   });
 
@@ -309,6 +341,30 @@ describe('with a model (fake)', () => {
     const bad = new FormData();
     bad.append('audio', new Blob([Buffer.from('x')], { type: 'application/pdf' }), 'x.pdf');
     expect((await till.req('POST', '/api/assistant/transcribe', undefined, bad)).status).toBe(415);
+  });
+
+  it('a "Ja" after a recipe goes to the model with the conversation and the save tool', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    model([() => ({ role: 'assistant', content: 'Nudeln mit Tomatensoße für 4 …\nSoll ich es als Rezept speichern?' })]);
+    const first = await till.chat('Schreib mir ein schnelles Gericht für Kinder');
+    expect(first.json.mode).toBe('ai');
+    const bodies = model([() => ({ role: 'assistant', content: 'Gespeichert.' })]);
+    const yes = await till.chat('Ja', first.json.conversationId);
+    expect(yes.json).toMatchObject({ mode: 'ai', reply: 'Gespeichert.' });
+    expect(bodies).toHaveLength(1);
+    // the last answer is in the request, and the recipe tool comes along because of it
+    expect(bodies[0].messages.some((m: any) => m.role === 'assistant' && /Rezept speichern/.test(m.content))).toBe(true);
+    expect(bodies[0].tools.map((t: any) => t.function.name)).toContain('recipe_save_adapted');
+    expect(openTexts()).toEqual([]);
+  });
+
+  it('a "Ja" while the model is down says busy instead of putting "Ja" on the list', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    process.env.AI_API_KEY = 'sk-test';
+    ai.setAiFetch(async () => new Response('down', { status: 503 }));
+    const r = await till.chat('Ja');
+    expect(r.json).toMatchObject({ mode: 'basic', reply: 'Der Assistent ist gerade ausgelastet. Versuch es bitte gleich noch mal.' });
+    expect(openTexts()).toEqual([]);
   });
 
   it('status says what is available', async () => {

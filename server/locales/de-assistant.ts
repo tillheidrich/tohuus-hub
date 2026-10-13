@@ -5,6 +5,10 @@ export const de_assistant: Record<string, string> = {
   'No speech model is set up (AI_MODEL_AUDIO).': 'Es ist kein Sprachmodell eingerichtet (AI_MODEL_AUDIO).',
   'The AI service did not accept the key. Please check AI_API_KEY.': 'Der KI-Dienst hat den Schlüssel nicht angenommen. Bitte prüf AI_API_KEY.',
   'The assistant is busy right now. Please try again in a moment.': 'Der Assistent ist gerade ausgelastet. Versuch es bitte gleich noch mal.',
+  // answers to the assistant ("danke", "nein", "ja" without a model)
+  'Gladly.': 'Gern.',
+  'All right.': 'Alles klar.',
+  'I can’t do that without the AI assistant. Simple sentences like “milk, 2 peppers and bread” always work.': 'Das geht nur mit dem KI-Assistenten. Einfache Sätze wie „Milch, 2 Paprika und Brot“ klappen immer.',
   'The AI service is busy right now. Please try again in a moment.': 'Der KI-Dienst ist gerade ausgelastet. Versuch es bitte gleich noch mal.',
   'The AI service could not handle this request.': 'Der KI-Dienst konnte mit dieser Anfrage nichts anfangen.',
   'The AI service is not reachable right now.': 'Der KI-Dienst ist gerade nicht erreichbar.',
