@@ -486,7 +486,7 @@ function wire() {
     };
     send('change', { topics, at: Date.now() });
     if (topics.includes('notifications')) {
-      const rows = db.prepare('SELECT id, event, title, body, payload, created_at FROM notifications WHERE id > ? ORDER BY id LIMIT 20').all(Math.max(0, last.id)) as {
+      const rows = db.prepare(`SELECT id, event, title, body, payload, created_at FROM notifications WHERE id > ? AND json_extract(payload, '$.personal_for') IS NULL ORDER BY id LIMIT 20`).all(Math.max(0, last.id)) as {
         id: number;
         event: string;
         title: string;

@@ -189,6 +189,41 @@ describe('personal entries stay with their person', () => {
     expect(mine.budgets).toEqual([]);
   });
 
+  it('budgets per week, month or year – for the household and for one person alone', async () => {
+    // shared year budget: everyone sees it, it counts the household's entries
+    const shared = await req('mika', 'PUT', '/api/spend/budgets', { period: 'year', amount: 5000 });
+    expect(shared.status).toBe(200);
+    expect(shared.json.budgets.map((b: any) => [b.period, b.owner])).toEqual([['year', 0]]);
+    // Mira's own year and month budget over her personal entries (the 49.90 gift)
+    const own = await req('mira', 'PUT', '/api/spend/budgets', { period: 'year', amount: 600, mine: true });
+    await req('mira', 'PUT', '/api/spend/budgets', { period: 'month', amount: 50, mine: true });
+    expect(own.status).toBe(200);
+    const mineList = (await req('mira', 'GET', '/api/spend/budgets?view=mine')).json;
+    expect(mineList.budgets.map((b: any) => b.period)).toEqual(['month', 'year']);
+    const month = mineList.status.find((b: any) => b.period === 'month');
+    expect(month).toMatchObject({ personal: true, spent: 49.9, state: 'near' });
+    // nobody else sees them, not in the household list, not in Mika's own, not in the stats
+    expect((await req('mira', 'GET', '/api/spend/budgets')).json.budgets.every((b: any) => b.owner === 0)).toBe(true);
+    expect((await req('mika', 'GET', '/api/spend/budgets?view=mine')).json.budgets).toEqual([]);
+    const q = `period=month&date=${today}`;
+    expect((await req('mika', 'GET', `/api/spend/stats?${q}`)).json.budgets.map((b: any) => b.personal)).toEqual([false]);
+    expect((await req('mira', 'GET', `/api/spend/stats?${q}&view=mine`)).json.budgets.map((b: any) => b.period)).toEqual(['month', 'year']);
+    expect((await req('mira', 'GET', '/api/money/overview?view=mine')).json.budgets).toHaveLength(2);
+    // Mika cannot remove Mira's budget
+    const id = mineList.budgets[0].id;
+    expect((await req('mika', 'DELETE', `/api/spend/budgets/${id}`)).status).toBe(400);
+    // the 80 % note goes to Mira alone and stays out of the household's notification list
+    const { checkBudgets } = await import('../server/lib/spend2');
+    await checkBudgets();
+    const row = db.prepare(`SELECT payload FROM notifications WHERE event = 'budget.warning' ORDER BY id DESC LIMIT 1`).get() as { payload: string };
+    expect(JSON.parse(row.payload).personal_for).toBe(mira);
+    expect(JSON.stringify((await req('mika', 'GET', '/api/notifications')).json)).not.toContain('budget.warning');
+    expect(JSON.stringify((await req('mira', 'GET', '/api/notifications')).json)).toContain('budget.warning');
+    // clean up for the tests below
+    for (const b of mineList.budgets) expect((await req('mira', 'DELETE', `/api/spend/budgets/${b.id}`)).status).toBe(200);
+    await req('mika', 'PUT', '/api/spend/budgets', { period: 'year', amount: null });
+  });
+
   it('a personal receipt disappears for everyone else – lists, detail, prices, balance', async () => {
     const r = receipt('Mika', [{ name: 'Rasierer', price: 29.99 }]);
     personalReceipt = r.id;

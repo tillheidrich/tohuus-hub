@@ -78,11 +78,14 @@ extension APIClient {
 
     // MARK: budgets
 
-    func spendBudgets() async throws -> BudgetsResponse { try await get("api/spend/budgets") }
+    /// the household's budgets, or with `mine` the signed-in person's own (only they see them)
+    func spendBudgets(mine: Bool = false) async throws -> BudgetsResponse {
+        try await get("api/spend/budgets", query: mine ? [URLQueryItem(name: "view", value: "mine")] : [])
+    }
 
-    /// PUT /api/spend/budgets { category: string|null, period: week|month, amount: number|null (null removes), notify? }
-    func setBudget(category: String?, period: String, amount: Double?, notify: Bool?) async throws {
-        var body: [String: Any] = ["category": category ?? NSNull(), "period": period, "amount": amount ?? NSNull()]
+    /// PUT /api/spend/budgets { category: string|null, period: week|month|year, amount: number|null (null removes), notify?, mine? }
+    func setBudget(category: String?, period: String, amount: Double?, notify: Bool?, mine: Bool = false) async throws {
+        var body: [String: Any] = ["category": category ?? NSNull(), "period": period, "amount": amount ?? NSNull(), "mine": mine]
         if let notify { body["notify"] = notify }
         _ = try await send("PUT", "api/spend/budgets", json: body, as: Ignored.self)
     }

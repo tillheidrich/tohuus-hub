@@ -184,4 +184,8 @@ export const web3: Record<string, string> = {
   "first {date}": "zuerst {date}",
   "Error log": "Fehlerprotokoll",
   "for whoever looks after this server": "für die Person, die diesen Server betreut",
+  "Set a budget just for you (optional)": "Budget nur für dich festlegen (optional)",
+  "My budgets": "Meine Budgets",
+  "Only you see these budgets. They count what belongs to you: your own entries and the lines assigned to you. Notes go to your devices only.": "Diese Budgets siehst nur du. Sie zählen, was dir gehört: deine eigenen Einträge und die Posten, die dir zugeordnet sind. Hinweise kommen nur auf deine Geräte.",
+  "Shared by the household: everyone sees them. For a budget just for you, switch to “Just mine” first.": "Gemeinsam für den Haushalt: alle sehen sie. Für ein Budget nur für dich wechsle zuerst zu „Nur meins“.",
 };

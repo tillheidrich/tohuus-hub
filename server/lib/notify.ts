@@ -172,6 +172,9 @@ export interface NotifyInput {
   toUserId?: number | null;
   /** personal channels: everyone but these members (e.g. the person who is shopping) */
   exceptUserIds?: number[];
+  /** only the personal channels of `toUserId` (push, iPhone, digest) – never the household's Home Assistant, webhook,
+   *  ntfy, e-mail or chat channels (a person's own budget is nobody else's business) */
+  personalOnly?: boolean;
 }
 
 async function post(url: string, body: unknown, headers: Record<string, string> = {}) {
@@ -217,8 +220,9 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
     at: new Date().toISOString(),
   };
   const jobs: Promise<[string, boolean]>[] = [];
-  if (route.ha && s.haWebhookUrl) jobs.push(post(s.haWebhookUrl, payload).then((ok) => ['ha', ok]));
-  if (route.webhook && s.webhookUrl) jobs.push(post(s.webhookUrl, payload).then((ok) => ['webhook', ok]));
+  const shared = !input.personalOnly;
+  if (shared && route.ha && s.haWebhookUrl) jobs.push(post(s.haWebhookUrl, payload).then((ok) => ['ha', ok]));
+  if (shared && route.webhook && s.webhookUrl) jobs.push(post(s.webhookUrl, payload).then((ok) => ['webhook', ok]));
   // personal events (list2, notify-prefs.ts): each member's own choice per event and channel, quiet hours,
   // "only at home", lock-screen preview – the household push column does not apply to them
   const pe = personEventOf(input.event, input.data);
@@ -269,12 +273,12 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
         );
     }
   }
-  if (route.ntfy && s.ntfyUrl)
+  if (shared && route.ntfy && s.ntfyUrl)
     jobs.push(
       post(s.ntfyUrl, input.message, { Title: encodeHeader(input.title), Click: url, Tags: 'house' }).then((ok) => ['ntfy', ok]),
     );
   for (const c of extraChannels.values())
-    if (route[c.name] && c.ready())
+    if (shared && route[c.name] && c.ready())
       jobs.push(
         c
           .send({ ...input, url })
@@ -284,7 +288,7 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
             return [c.name, false];
           }),
       );
-  if (route.email && canSendMail() && s.emailTo) {
+  if (shared && route.email && canSendMail() && s.emailTo) {
     jobs.push(
       sendMail(s.emailTo, {
         subject: `${mailHousehold() || APP_NAME} · ${input.title}`,
@@ -304,11 +308,12 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
   }
   const results = await Promise.all(jobs);
   const channels = results.filter(([, ok]) => ok).map(([c]) => c);
+  // a personal notification stays out of the household's log (Settings, Home Assistant) – `personal_for` marks it
   db.prepare('INSERT INTO notifications (event, title, body, payload, dedupe_key, channels) VALUES (?, ?, ?, ?, ?, ?)').run(
     input.event,
     input.title,
     input.message,
-    JSON.stringify(payload),
+    JSON.stringify(input.personalOnly ? { ...payload, personal_for: input.toUserId ?? null } : payload),
     input.dedupeKey ?? null,
     JSON.stringify(results.map(([c, ok]) => ({ channel: c, ok }))),
   );

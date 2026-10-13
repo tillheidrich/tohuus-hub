@@ -61,11 +61,14 @@ interface Bucket {
   total: number;
   excluded?: number;
 }
+type BudgetPeriod = 'week' | 'month' | 'year';
+const perPeriod = (p: BudgetPeriod) => (p === 'week' ? t('per week') : p === 'year' ? t('per year') : t('per month'));
 interface Budget {
   id: number;
   category: string | null;
   label: string;
-  period: 'week' | 'month';
+  period: BudgetPeriod;
+  personal?: boolean;
   notify: boolean;
   from: string;
   to: string;
@@ -300,7 +303,7 @@ export function Spending() {
         <div className={isFetching ? 'sp2-refetch' : ''}>
           <Hero s={s} kind={kind} onExcluded={() => setDrill({ title: t('Left out'), from: s.from, to: s.to, excluded: true })} />
 
-          <Budgets s={s} onManage={() => setBudgetsOpen(true)} />
+          <Budgets s={s} mine={mine} onManage={() => setBudgetsOpen(true)} />
 
           {s.trend.length > 0 && (
             <section className="section">
@@ -387,7 +390,7 @@ export function Spending() {
       <ExpenseFormSheet target={expense === 'new' ? 'new' : (expense?.id ?? null)} onClose={() => setExpense(null)} preset={mine ? { private_for: meta.data?.me ?? null } : undefined} extra={expense && expense !== 'new' ? <ExpenseExclusion e={expense} onDone={() => setExpense(null)} /> : null} />
       <NewMoneyListSheet open={listFrom != null} preset={listFrom} onClose={() => setListFrom(null)} onCreated={(id) => { setListFrom(null); setListId(id); }} />
       <MoneyListSheet id={listId} onClose={() => setListId(null)} />
-      <BudgetSheet open={budgetsOpen} onClose={() => setBudgetsOpen(false)} meta={meta.data} />
+      <BudgetSheet open={budgetsOpen} onClose={() => setBudgetsOpen(false)} meta={meta.data} mine={mine} />
       <ExcludedSheet open={excludedOpen} onClose={() => setExcludedOpen(false)} />
       <ExportSheet open={exportOpen} onClose={() => setExportOpen(false)} kind={kind} anchor={anchor} tag={tag} s={s} view={view} />
       <PriceSheet productId={priceFor} onClose={() => setPriceFor(null)} />
@@ -468,17 +471,17 @@ function Hero({ s, kind, onExcluded }: { s: Stats; kind: Kind; onExcluded: () =>
 
 // ------------------------------------------------------------------ budgets
 
-function Budgets({ s, onManage }: { s: Stats; onManage: () => void }) {
+function Budgets({ s, mine, onManage }: { s: Stats; mine: boolean; onManage: () => void }) {
   if (!s.budgets.length)
     return (
       <button className="linkish sp2-add-budget" onClick={onManage}>
-        <Target size={15} /> {t('Set a budget (optional)')}
+        <Target size={15} /> {mine ? t('Set a budget just for you (optional)') : t('Set a budget (optional)')}
       </button>
     );
   return (
     <section className="section">
       <div className="section-head">
-        <h2>{t('Budgets')}</h2>
+        <h2>{mine ? t('My budgets') : t('Budgets')}</h2>
         <a onClick={onManage}>{t('Change')}</a>
       </div>
       <div className="list">
@@ -502,7 +505,7 @@ function Budgets({ s, onManage }: { s: Stats; onManage: () => void }) {
               </div>
               <div className="sub small muted">
                 {[
-                  b.period === 'week' ? t('per week') : t('per month'),
+                  perPeriod(b.period),
                   b.state === 'over' ? t('Budget reached') : t('{amount} left', { amount: eur(b.remaining) }),
                   b.ongoing && b.days_left > 0 && b.forecast !== b.spent ? t('at this pace about {amount} by the end', { amount: eur(b.forecast) }) : null,
                 ]
@@ -517,18 +520,22 @@ function Budgets({ s, onManage }: { s: Stats; onManage: () => void }) {
   );
 }
 
-function BudgetSheet({ open, onClose, meta }: { open: boolean; onClose: () => void; meta?: Meta }) {
-  const { data } = useApi<{ budgets: { id: number; category: string; period: 'week' | 'month'; amount: number; notify: number }[] }>(['spending', 'budgets'], open ? '/spend/budgets' : null);
+/** The household's budgets, or – in "Nur meins" – the viewer's own (only they see them, they count only their entries). */
+function BudgetSheet({ open, onClose, meta, mine }: { open: boolean; onClose: () => void; meta?: Meta; mine: boolean }) {
+  const { data } = useApi<{ budgets: { id: number; category: string; period: BudgetPeriod; amount: number; notify: number }[] }>(
+    ['spending', 'budgets', mine ? 'mine' : 'household'],
+    open ? `/spend/budgets${mine ? '?view=mine' : ''}` : null,
+  );
   const toast = useToast();
   const [cat, setCat] = useState('');
-  const [period, setPeriod] = useState<'month' | 'week'>('month');
+  const [period, setPeriod] = useState<BudgetPeriod>('month');
   const [amount, setAmount] = useState('');
   const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState(false);
-  const save = async (body: { category: string | null; period: 'week' | 'month'; amount: number | null; notify?: boolean }) => {
+  const save = async (body: { category: string | null; period: BudgetPeriod; amount: number | null; notify?: boolean }) => {
     setBusy(true);
     try {
-      await put('/spend/budgets', body);
+      await put('/spend/budgets', { ...body, mine });
       invalidate('spending');
       toast({ text: body.amount ? t('Budget saved') : t('Budget removed') });
       setAmount('');
@@ -539,10 +546,15 @@ function BudgetSheet({ open, onClose, meta }: { open: boolean; onClose: () => vo
     }
   };
   return (
-    <Sheet open={open} onClose={onClose} title={t('Budgets')}>
+    <Sheet open={open} onClose={onClose} title={mine ? t('My budgets') : t('Budgets')}>
       <div className="stack">
         <p className="small muted" style={{ margin: 0 }}>
           {t('Entirely optional. A budget shows a bar and a calm forecast. If you like, you get a short note at 80 % and when it is reached.')}
+        </p>
+        <p className="small" style={{ margin: 0 }}>
+          {mine
+            ? t('Only you see these budgets. They count what belongs to you: your own entries and the lines assigned to you. Notes go to your devices only.')
+            : t('Shared by the household: everyone sees them. For a budget just for you, switch to “Just mine” first.')}
         </p>
         {(data?.budgets ?? []).length > 0 && (
           <div className="list">
@@ -550,7 +562,7 @@ function BudgetSheet({ open, onClose, meta }: { open: boolean; onClose: () => vo
               <div key={b.id} className="li" style={{ minHeight: 52 }}>
                 <div className="grow">
                   <div className="title">{b.category || t('All spending')}</div>
-                  <div className="sub">{eur(b.amount)} {b.period === 'week' ? t('per week') : t('per month')}</div>
+                  <div className="sub">{eur(b.amount)} {perPeriod(b.period)}</div>
                 </div>
                 <Toggle on={Boolean(b.notify)} label={t('Notify')} onChange={(v) => save({ category: b.category || null, period: b.period, amount: b.amount, notify: v })} />
                 <button className="icon-btn plain" aria-label={t('Remove')} onClick={() => save({ category: b.category || null, period: b.period, amount: null })}><Trash size={18} /></button>
@@ -570,9 +582,9 @@ function BudgetSheet({ open, onClose, meta }: { open: boolean; onClose: () => vo
           <div className="row" style={{ gap: 12, flexWrap: 'wrap' }}>
             <div className="field grow">
               <label htmlFor="sp2-bamt">{t('Amount in {currency}', { currency: region().currency })}</label>
-              <input id="sp2-bamt" className="input" type="number" inputMode="decimal" min={0} step={5} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={cat ? '40' : '600'} />
+              <input id="sp2-bamt" className="input" type="number" inputMode="decimal" min={0} step={5} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={period === 'year' ? (cat ? '500' : '7000') : period === 'week' ? (cat ? '10' : '150') : cat ? '40' : '600'} />
             </div>
-            <Seg<'month' | 'week'> value={period} options={[['month', t('per month')], ['week', t('per week')]]} onChange={setPeriod} />
+            <Seg<BudgetPeriod> value={period} options={[['week', t('per week')], ['month', t('per month')], ['year', t('per year')]]} onChange={setPeriod} />
           </div>
           <label className="row" style={{ gap: 10 }}>
             <Toggle on={notify} onChange={setNotify} label={t('Notify at 80 % and 100 %')} />
