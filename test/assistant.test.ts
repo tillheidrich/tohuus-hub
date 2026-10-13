@@ -282,6 +282,17 @@ describe('with a model (fake)', () => {
     return bodies;
   }
 
+  it('refuses transcripts longer than a minute of speech (no free transcription service)', async () => {
+    model([() => ({ role: 'assistant', content: 'Bla '.repeat(400) })]);
+    const f = new FormData();
+    f.append('audio', new Blob([Buffer.from('RIFFxxxx')], { type: 'audio/wav' }), 'talk.wav');
+    const r = await till.req('POST', '/api/assistant/transcribe', undefined, f);
+    expect(r.status).toBe(413);
+    expect(r.json.error).toMatch(/zu lang/);
+    ai.setAiFetch(null);
+    delete process.env.AI_API_KEY;
+  });
+
   it('runs tools server-side and reports writes with undo', async () => {
     db.prepare('DELETE FROM shopping_items').run();
     const bodies = model([

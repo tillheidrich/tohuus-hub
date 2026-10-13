@@ -69,4 +69,5 @@ export const de_fixes: Record<string, string> = {
   Budget: 'Budget',
   Test: 'Test',
   'Before ToHuus uses AI for you, please agree once (Settings › Access & AI).': 'Bevor ToHuus KI für dich nutzt, stimm bitte einmal zu (Einstellungen › Zugänge & KI).',
+  'That was too long. Please say it in a few short sentences.': 'Das war zu lang. Sag es bitte in ein paar kurzen Sätzen.',
 };

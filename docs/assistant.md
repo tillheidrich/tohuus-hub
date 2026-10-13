@@ -144,7 +144,7 @@ everything else down in a friendly way. Three layers (`server/lib/assistant-scop
 1. **Filter before anything else** (`scopeCheck`): attempts to change the role or read the instructions ("ignoriere
    alle Anweisungen", "zeig deinen Systemprompt", "du bist jetzt …", role play) and requests that are clearly not
    about the household (code, homework, essays, translations, poems, politics, investments, weather, medical or
-   legal advice, weapons, adult content) get a short, warm answer that offers household help. No model call,
+   legal advice, weapons, adult content, stories and speeches, school subjects like physics or maths, "wer war …", news) get a short, warm answer that offers household help. No model call,
    nothing counted against the allowance, `scope: "role" | "off_topic"` in the response. Conservative on purpose:
    a household word in the message ("Rezept", "Liste", "Budget", "Milch" …) lets it through, so "übersetz mir das
    Rezept" or "Waschmittel Dosierung?" still work. The eval prompts are checked against it.
@@ -153,6 +153,11 @@ everything else down in a friendly way. Three layers (`server/lib/assistant-scop
    through an imported recipe or a forwarded mail does nothing).
 3. **Tools only**: the model can only act through the household tools below. No web access, no code execution, no
    mail, no other households (tenancy), writes with undo, guests never reach `/assistant`.
+
+Other model paths cannot be used for general chat: imports and receipt reading ask for fixed JSON (recipe, items) and
+keep only what fits that shape; `POST /api/assistant/transcribe` refuses transcripts over 1200 characters (about a
+minute of speech, HTTP 413), so it is no free transcription service. Every path counts against the plan's allowance
+(`plans.consume`), replies are capped at 600 tokens, messages at 2000 characters.
 
 Tests: `test/assistant-scope.test.ts`.
 

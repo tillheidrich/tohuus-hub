@@ -47,6 +47,11 @@ describe('scope filter', () => {
     'Lass uns ein Rollenspiel machen',
   ];
   const blockedTopic = [
+    'Schreib mir eine Geschichte über einen Drachen',
+    'Wer war Napoleon?',
+    'Erklär mir die Relativitätstheorie in der Physik',
+    'Löse die Gleichung 3x + 5 = 20',
+    'Was gibt es für Nachrichten heute?',
     'Schreib mir ein Python-Skript, das Dateien umbenennt',
     'Hilf mir bei meiner Mathe-Hausaufgabe',
     'Schreib meine Bewerbung als Projektmanager',
@@ -58,6 +63,8 @@ describe('scope filter', () => {
     'Write me a poem about the sea',
   ];
   const allowed = [
+    'Wer war zuletzt einkaufen?',
+    'Schreib mir eine Einkaufsliste für das Wochenende',
     'Milch ist alle',
     'Wir brauchen was für einen Pfannkuchen-Abend',
     'Was können wir heute kochen?',
