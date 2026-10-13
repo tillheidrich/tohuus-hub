@@ -522,6 +522,13 @@ export function ProductForm({ open, onClose, product, initial }: { open: boolean
             {f.track_mode === 'none' && t('For coffee from the machine or things ordered in: only for the bar and recipes.')}
           </div>
         </div>
+        {f.track_mode === 'level' && (
+          <div className="field">
+            <label>{t('Running low from')}</label>
+            <Seg value={Number(f.min_qty) >= 2 ? 'half' : 'low'} onChange={(v) => set('min_qty', v === 'half' ? 2 : 0)} options={[['low', t('low')], ['half', t('half')]]} />
+            <div className="help">{t('From then on it counts as running low and can go on the shopping list.')}</div>
+          </div>
+        )}
         {f.track_mode !== 'none' && <DateKindField value={f.date_kind} onChange={(v) => set('date_kind', v)} name={f.name} />}
         {f.track_mode === 'count' && (
           <div className="grid-2">

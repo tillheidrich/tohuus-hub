@@ -78,6 +78,13 @@ struct ProductEditSheet: View {
                         }
                         TextField(L("Unit, e.g. pcs, pack, bottle"), text: $unit)
                     }
+                    if trackMode == "level" {
+                        // fill level: running low from "low" (default) or already from "half" (min_qty 2)
+                        Picker(L("Running low from"), selection: $minQty) {
+                            Text(L("low")).tag(0)
+                            Text(L("half")).tag(2)
+                        }
+                    }
                 } header: {
                     Text(L("Counting"))
                 } footer: {
@@ -127,6 +134,7 @@ struct ProductEditSheet: View {
         placeId = product.defaultLocationId
         spot = product.spot ?? ""
         trackMode = product.trackMode ?? "count"
+        if trackMode == "level" { minQty = minQty >= 2 ? 2 : 0 }
         minQty = Int((product.minQty ?? 0).rounded())
         unit = product.unit ?? ""
         notes = product.notes ?? ""
@@ -144,7 +152,7 @@ struct ProductEditSheet: View {
         if placeId != product.defaultLocationId { f["default_location_id"] = placeId.map { $0 as Any } ?? NSNull() }
         if t(spot) != (product.spot ?? "") { f["spot"] = null(spot) }
         if trackMode != (product.trackMode ?? "count") { f["track_mode"] = trackMode }
-        if trackMode == "count" && Double(minQty) != (product.minQty ?? 0) { f["min_qty"] = minQty }
+        if (trackMode == "count" || trackMode == "level") && Double(minQty) != (product.minQty ?? 0) { f["min_qty"] = minQty }
         if trackMode == "count" && !t(unit).isEmpty && t(unit) != (product.unit ?? "") { f["unit"] = t(unit) }
         if t(notes) != (product.notes ?? "") { f["notes"] = null(notes) }
         do {

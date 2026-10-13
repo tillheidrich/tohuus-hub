@@ -16967,6 +16967,23 @@
         }
       }
     },
+    "Running low from": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running low from"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knapp ab"
+          }
+        }
+      }
+    },
     "Running low soon": {
       "extractionState": "manual",
       "localizations": {
