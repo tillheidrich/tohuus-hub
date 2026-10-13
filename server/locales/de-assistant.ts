@@ -29,6 +29,11 @@ export const de_assistant: Record<string, string> = {
   'Please write or say something.': 'Schreib oder sag einfach etwas.',
   'The assistant messages for this month are used up.': 'Die Nachrichten an den Assistenten sind für diesen Monat aufgebraucht.',
   'Done.': 'Erledigt.',
+  'per week': 'pro Woche',
+  'per month': 'pro Monat',
+  'per year': 'pro Jahr',
+  'Budget removed': 'Budget entfernt',
+  'only you': 'nur für dich',
   'This can no longer be undone.': 'Das lässt sich nicht mehr rückgängig machen.',
   and: 'und',
 

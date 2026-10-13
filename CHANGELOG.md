@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **The assistant stays a household assistant**: off-topic requests and attempts to change its role or read its instructions get a friendly answer without a model call and without counting (`scope` in `POST /api/assistant/chat`); the system prompt treats text from recipes, receipts and links as data. New tools `app_help` (where a feature lives, with the help page) and `budget_set` (household or private budgets).
+
 - **Deleting an account revokes Sign in with Apple** (App Store 5.1.1(v)): the authorization code is exchanged for a refresh token at sign-in and revoked on deletion, once `APPLE_SIWA_KEY_ID` / `APPLE_SIWA_KEY_P8` are set.
 - **Sign-in warnings are personal**: `auth.new_device` no longer shows up in other members' notification list or in the Home Assistant stream; the HA stream also follows the household's Home Assistant routing per event.
 - **ToHuus Cloud no longer shows "Bons per E-Mail"**: the IMAP receipt inbox only works on a self-hosted server; `GET /api/retail/inbox` says `available: false` in the cloud and the cards are hidden.

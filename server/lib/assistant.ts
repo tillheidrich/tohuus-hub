@@ -17,6 +17,7 @@ import { addUsage, aiConfigured, aiEnabled, AiError, chat, zeroUsage, type ChatM
 import { buildContext, topicsOf, type Topic } from './assistant-context.js';
 import { CONTEXT_TOPICS, contextHint, type ScreenContext } from './assistant-areas.js';
 import { parseIntent, type Intent } from './assistant-parse.js';
+import { scopeCheck, SCOPE_DE, SCOPE_EN } from './assistant-scope.js';
 import {
   cookIdeasTool,
   forgetTool,
@@ -90,6 +91,8 @@ export interface ChatOutput {
   remaining?: number | null;
   /** Plus fair use: over the allowance, answered more briefly */
   throttled?: boolean;
+  /** answered by the scope filter (assistant-scope.ts): 'role' or 'off_topic' */
+  scope?: 'role' | 'off_topic';
 }
 
 export class AssistantError extends Error {
@@ -194,7 +197,8 @@ const PROMPT_EN = `You are ToHuus, this household's shopping and household assis
 - No medical or nutrition advice, never claim "allergen-free". ToHuus already filters recipes; do not say why something is left out.`;
 
 export function systemPrompt(contextText: string) {
-  return `${lang() === 'de' ? PROMPT_DE : PROMPT_EN}\n\n${contextText}`;
+  const de = lang() === 'de';
+  return `${de ? PROMPT_DE : PROMPT_EN}\n${de ? SCOPE_DE : SCOPE_EN}\n\n${contextText}`;
 }
 
 // ------------------------------------------------------------------ chat
@@ -212,6 +216,15 @@ export async function chatOnce(input: {
   if (!message) throw new AssistantError(t('Please write or say something.'));
   pruneConversations();
   if (input.conversationId && !ownConversation(input.conversationId, input.user)) throw new AssistantError(t('Conversation not found'), 404);
+  // not about the household, or an attempt to change the assistant's role: a friendly answer, no model, nothing
+  // counted (assistant-scope.ts)
+  const scope = scopeCheck(message);
+  if (!scope.ok) {
+    const cid = openConversation(input.conversationId, input.user, message);
+    store(cid, 'user', message);
+    store(cid, 'assistant', scope.reply, { actions: [], mode: 'basic', tokens: 0 });
+    return { conversationId: cid, reply: scope.reply, actions: [], mode: 'basic', scope: scope.kind, ...(input.allowance ? { remaining: input.allowance.remaining } : {}) };
+  }
   // count before anything is stored: over the allowance, what the built-in reader understands still works (it costs
   // no model call); anything else answers HTTP 402 { code: 'quota.assistant' }
   // what the built-in reader fully understands (lists, "ist alle", a told purchase, "merk dir") is answered without a

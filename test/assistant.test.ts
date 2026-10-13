@@ -235,7 +235,8 @@ describe('without a model configured', () => {
     const m = await till.chat('Merk dir, dass wir Brot beim Bäcker kaufen');
     expect(m.json.actions[0].kind).toBe('remember');
     expect((await till.req('GET', '/api/memory')).json.map((x: any) => x.text)).toContain('wir Brot beim Bäcker kaufen');
-    expect((await till.chat('Wie wird das Wetter?')).json.reply).toMatch(/Milch, 2 Paprika und Brot/);
+    // not about the household: a friendly answer instead (assistant-scope.ts)
+    expect((await till.chat('Wie wird das Wetter?')).json).toMatchObject({ mode: 'basic', scope: 'off_topic' });
   });
 
   it('stores conversations per person, keeps them private and deletable', async () => {
