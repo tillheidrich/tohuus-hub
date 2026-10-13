@@ -19,6 +19,7 @@ struct SettingsView: View {
     /// how deleting the account is confirmed (GET /api/cloud/me): password, Apple or a mail code
     @State private var hasPassword = true
     @State private var appleLinked = false
+    @State private var showTour = false
 
     var body: some View {
         NavigationStack {
@@ -59,6 +60,7 @@ struct SettingsView: View {
                     }
                 }
                 Section(L("Knowing")) {
+                    Button { showTour = true } label: { Label(L("Take the tour"), systemImage: "map") }
                     NavigationLink { HowItWorksView() } label: { Label(L("How ToHuus works"), systemImage: "lightbulb") }
                     NavigationLink { FactsView() } label: { Label(L("Good to know"), systemImage: "book") }
                     NavigationLink { HelpListView() } label: { Label(L("Help"), systemImage: "questionmark.circle") }
@@ -164,6 +166,7 @@ struct SettingsView: View {
             .sheet(isPresented: $showWeb) {
                 if let api = app.api { WebSettingsView(api: api) }
             }
+            .sheet(isPresented: $showTour) { AppTourView() }
         }
     }
 

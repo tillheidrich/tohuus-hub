@@ -180,6 +180,12 @@ struct ReceiptCaptureView: View {
                 error = L("No text found on the photo. Try again in better light.")
                 return
             }
+            // Apple Intelligence on this iPhone (if the person chose it): tidy the lines before they are sent
+            if OnDeviceAI.active(app) {
+                uploading = true
+                if let tidy = await OnDeviceAI.tidyReceipt(lines) { lines = tidy }
+                uploading = false
+            }
             do {
                 uploading = true
                 defer { uploading = false }

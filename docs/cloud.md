@@ -164,7 +164,7 @@ form, the shops named at sign-up).
 | any outbound request to private/internal addresses | a global dispatcher blocks them at connect time (HA, webhooks, Matrix, Gotify …) |
 | network printers (ESC/POS over TCP) | LAN only |
 | Telegram long polling | one poller per household does not scale; webhook routing is not built yet |
-| IMAP receipt inbox | per-household mailbox polling |
+| IMAP receipt inbox | per-household mailbox polling; `GET /api/retail/inbox` answers `available: false` and the apps hide the cards (`PUT` and `/check` are 404) |
 | restore from file, WebDAV backup settings | replaced by the cloud backups |
 | `ADMIN_PASSWORD`, demo seeding at start, `MCP_PATH_SECRET`, OIDC | instance-wide, no household |
 | household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead (account passkeys exist, see below) |

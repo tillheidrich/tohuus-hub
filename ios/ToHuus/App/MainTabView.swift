@@ -53,6 +53,7 @@ struct MainTabView: View {
     let store: ServerStore
     @State private var area: AppArea = .today
     @State private var showSettings = false
+    @State private var showTour = false
 
     /// kept for the tab version (Heute opens tabs through it)
     typealias Tab = AppArea
@@ -68,6 +69,7 @@ struct MainTabView: View {
         }
         .onAppear {
             applyRequestedTab(app.requestedTab)
+            if AppTourView.due { showTour = true }
             #if DEBUG
             if UserDefaults.standard.bool(forKey: "debugSettings") { showSettings = true }
             if UserDefaults.standard.bool(forKey: "debugPaywall") { app.showPaywall = true }
@@ -100,6 +102,9 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $app.showPaywall) {
             PaywallView()
+        }
+        .sheet(isPresented: $showTour) {
+            AppTourView()
         }
         .sheet(item: Binding(get: { store.cookidooDraft }, set: { store.cookidooDraft = $0 })) { d in
             CookidooConfirmView(store: store, request: d) { _ in store.cookidooDraft = nil }

@@ -3248,6 +3248,40 @@
         }
       }
     },
+    "Apple Intelligence is still getting ready on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence is still getting ready on this iPhone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence wird auf diesem iPhone noch vorbereitet."
+          }
+        }
+      }
+    },
+    "Apple Intelligence on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence on this iPhone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence auf diesem iPhone"
+          }
+        }
+      }
+    },
     "Archive": {
       "extractionState": "manual",
       "localizations": {
@@ -3448,6 +3482,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Assistent diesen Monat"
+          }
+        }
+      }
+    },
+    "At a glance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At a glance"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf einen Blick"
           }
         }
       }
@@ -3833,6 +3884,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bring me something"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring mir was"
+          }
+        }
+      }
+    },
+    "Bring mir was": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring mir was"
           }
         },
         "de": {
@@ -6733,6 +6801,23 @@
         }
       }
     },
+    "Everyone adds to the same list. ToHuus remembers what you buy and how often; what is probably due comes as a suggestion, and every row says where it came from.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone adds to the same list. ToHuus remembers what you buy and how often; what is probably due comes as a suggestion, and every row says where it came from."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle schreiben auf dieselbe Liste. ToHuus merkt sich, was ihr kauft und wie oft; was vermutlich fällig ist, kommt als Vorschlag, und jede Zeile sagt, woher sie kommt."
+          }
+        }
+      }
+    },
     "Everyone at home": {
       "extractionState": "manual",
       "localizations": {
@@ -7328,6 +7413,23 @@
         }
       }
     },
+    "For babysitters and guests: Wi-Fi, smart home, emergency numbers, with photos and short videos. When you are away, a handover for whoever feeds the cat or waters the plants.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For babysitters and guests: Wi-Fi, smart home, emergency numbers, with photos and short videos. When you are away, a handover for whoever feeds the cat or waters the plants."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Babysitter und Gäste: WLAN, Smart Home, Notfallnummern, mit Fotos und kurzen Videos. Und wenn ihr weg seid, eine Übergabe für alle, die die Katze füttern oder die Pflanzen gießen."
+          }
+        }
+      }
+    },
     "For coffee from the machine or things ordered in: only for recipes.": {
       "extractionState": "manual",
       "localizations": {
@@ -7681,6 +7783,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Während der Beta geschenkt"
+          }
+        }
+      }
+    },
+    "Free sentences to the assistant and cooking help, through Mistral in the EU.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free sentences to the assistant and cooking help, through Mistral in the EU."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freie Sätze an den Assistenten und Hilfe beim Kochen, über Mistral in der EU."
           }
         }
       }
@@ -8535,6 +8654,23 @@
         }
       }
     },
+    "House info and trips": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House info and trips"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hausinfo und Urlaub"
+          }
+        }
+      }
+    },
     "House info for guests and sitters": {
       "extractionState": "manual",
       "localizations": {
@@ -8871,6 +9007,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ich bin im Laden"
+          }
+        }
+      }
+    },
+    "Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideen aus dem, was schon da ist, ein Wochenplan, wenn ihr wollt, und Rezepte aus Links, Fotos oder einem Rezeptpaket. Was fehlt, kommt mit einem Tipp auf die Liste."
           }
         }
       }
@@ -10010,6 +10163,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weniger"
+          }
+        }
+      }
+    },
+    "Let’s go": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let’s go"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los geht’s"
           }
         }
       }
@@ -12105,6 +12275,23 @@
         }
       }
     },
+    "Not available on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not available on this iPhone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem iPhone nicht verfügbar."
+          }
+        }
+      }
+    },
     "Not bought after all": {
       "extractionState": "manual",
       "localizations": {
@@ -12972,6 +13159,23 @@
         }
       }
     },
+    "On this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On this iPhone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem iPhone"
+          }
+        }
+      }
+    },
     "One less": {
       "extractionState": "manual",
       "localizations": {
@@ -13019,6 +13223,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eins mehr"
+          }
+        }
+      }
+    },
+    "One shopping list for everyone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One shopping list for everyone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Einkaufsliste für alle"
           }
         }
       }
@@ -14366,6 +14587,23 @@
         }
       }
     },
+    "Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto, PDF oder eBon: ToHuus sieht, was ihr gekauft habt und was es gekostet hat. Budgets pro Woche, Monat oder Jahr, für den Haushalt oder nur für dich, und Geldlisten zum Aufteilen, etwa für den Pizzaabend."
+          }
+        }
+      }
+    },
     "Photo: %@": {
       "extractionState": "manual",
       "localizations": {
@@ -15709,6 +15947,23 @@
         }
       }
     },
+    "Ready on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready on this iPhone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem iPhone bereit"
+          }
+        }
+      }
+    },
     "Really wants": {
       "extractionState": "manual",
       "localizations": {
@@ -15824,6 +16079,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bons"
+          }
+        }
+      }
+    },
+    "Receipts and money": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipts and money"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kassenbons und Geld"
           }
         }
       }
@@ -16827,6 +17099,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Durch Rabatte gespart"
+          }
+        }
+      }
+    },
+    "Say “milk is out, and we need something for Sunday”. ToHuus puts it on the list and tells you what it added. Every change can be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say “milk is out, and we need something for Sunday”. ToHuus puts it on the list and tells you what it added. Every change can be undone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag „Milch ist alle, und wir brauchen was für Sonntag“. ToHuus setzt es auf die Liste und sagt dir, was es eingetragen hat. Jeder Schritt lässt sich zurücknehmen."
           }
         }
       }
@@ -18208,6 +18497,23 @@
         }
       }
     },
+    "Skip tour": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip tour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tour überspringen"
+          }
+        }
+      }
+    },
     "So far": {
       "extractionState": "manual",
       "localizations": {
@@ -18786,6 +19092,23 @@
         }
       }
     },
+    "Stuck on the sofa or putting the kids to bed? Ask for a little something in two taps, someone at home says “I’ll bring it”. Guests can ask through a link.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuck on the sofa or putting the kids to bed? Ask for a little something in two taps, someone at home says “I’ll bring it”. Guests can ask through a link."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Festgesessen auf dem Sofa oder beim Zubettbringen? Wünsch dir mit zwei Tipps eine Kleinigkeit, jemand von euch sagt „Bring ich“. Gäste wünschen sich etwas über einen Link."
+          }
+        }
+      }
+    },
     "Stuck on the sofa, in bed or with bedtime? Ask for a little something – someone at home brings it.": {
       "extractionState": "manual",
       "localizations": {
@@ -18990,6 +19313,23 @@
         }
       }
     },
+    "Switch on Apple Intelligence in the iPhone settings first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch on Apple Intelligence in the iPhone settings first."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schalte Apple Intelligence zuerst in den iPhone-Einstellungen ein."
+          }
+        }
+      }
+    },
     "Switched off for you by an adult in the household.": {
       "extractionState": "manual",
       "localizations": {
@@ -19105,6 +19445,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Übernehmen"
+          }
+        }
+      }
+    },
+    "Take the tour": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take the tour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tour starten"
           }
         }
       }
@@ -19891,6 +20248,23 @@
         }
       }
     },
+    "The list, suggestions, cooking and money work without any AI. You can change both switches later in Settings › With or without AI.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list, suggestions, cooking and money work without any AI. You can change both switches later in Settings › With or without AI."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste, Vorschläge, Kochen und Geld funktionieren ganz ohne KI. Beide Schalter kannst du später unter Einstellungen › Mit oder ohne KI ändern."
+          }
+        }
+      }
+    },
     "The message never says who reserved or bought something.": {
       "extractionState": "manual",
       "localizations": {
@@ -20010,19 +20384,19 @@
         }
       }
     },
-    "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, “Sprechen” with simple sentences, receipts read on this iPhone.": {
+    "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, “Sprechen” with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like).": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, “Sprechen” with simple sentences, receipts read on this iPhone."
+            "value": "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, “Sprechen” with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like)."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die gemeinsame Liste, der Ladenmodus, was ToHuus sich aus Bons und Häkchen merkt, Rezepte, Geld, „Sprechen“ mit einfachen Sätzen, Bons auf diesem iPhone lesen."
+            "value": "Die gemeinsame Liste, der Einkaufsmodus, was ToHuus sich aus Bons und Häkchen merkt, Rezepte, Geld, „Sprechen“ mit einfachen Sätzen, Bons, die dieses iPhone liest (auf Wunsch mit Apple Intelligence)."
           }
         }
       }
@@ -20622,6 +20996,40 @@
         }
       }
     },
+    "Tidies up receipt photos and handwritten lists on this iPhone. Nothing leaves the device for this step.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidies up receipt photos and handwritten lists on this iPhone. Nothing leaves the device for this step."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Räumt Bon-Fotos und handgeschriebene Listen direkt auf diesem iPhone auf. Dafür verlässt nichts das Gerät."
+          }
+        }
+      }
+    },
+    "Tidies up receipt photos and handwritten lists right on this iPhone before only the text goes to ToHuus. Nothing leaves the device for this step, and it works with the household’s AI switched off. Only for this device, you can turn it off any time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidies up receipt photos and handwritten lists right on this iPhone before only the text goes to ToHuus. Nothing leaves the device for this step, and it works with the household’s AI switched off. Only for this device, you can turn it off any time."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Räumt Bon-Fotos und handgeschriebene Listen direkt auf diesem iPhone auf, bevor nur der Text an ToHuus geht. Dafür verlässt nichts das Gerät, und es funktioniert auch, wenn die KI im Haushalt aus ist. Gilt nur für dieses Gerät und lässt sich jederzeit ausschalten."
+          }
+        }
+      }
+    },
     "Tip": {
       "extractionState": "manual",
       "localizations": {
@@ -20843,6 +21251,23 @@
         }
       }
     },
+    "ToHuus remembers what you buy and how often. What is probably due comes as a suggestion – it only goes on the list after a yes. Every row says where it came from.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus remembers what you buy and how often. What is probably due comes as a suggestion – it only goes on the list after a yes. Every row says where it came from."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus merkt sich, was du kaufst und wie oft. Was vermutlich fällig ist, kommt als Vorschlag – auf die Liste erst nach einem Ja. Jede Zeile sagt, woher sie kommt."
+          }
+        }
+      }
+    },
     "ToHuus remembers what’s missing at home.": {
       "extractionState": "manual",
       "localizations": {
@@ -20924,6 +21349,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Heute"
+          }
+        }
+      }
+    },
+    "Today: the one page to glance at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today: the one page to glance at"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute: die eine Seite zum Draufschauen"
           }
         }
       }
@@ -21812,6 +22254,23 @@
         }
       }
     },
+    "What is running out, what should be eaten soon and what is planned. On most days a quick look here is all it takes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is running out, what should be eaten soon and what is planned. On most days a quick look here is all it takes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was ausgeht, was bald gegessen werden sollte und was geplant ist. An den meisten Tagen reicht ein kurzer Blick hierher."
+          }
+        }
+      }
+    },
     "What may they see?": {
       "extractionState": "manual",
       "localizations": {
@@ -21859,6 +22318,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was kochen wir?"
+          }
+        }
+      }
+    },
+    "What shall we eat?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What shall we eat?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was essen wir?"
           }
         }
       }
@@ -22611,6 +23087,23 @@
         }
       }
     },
+    "Widgets on the home and lock screen, the shopping trip on the lock screen while you shop, and the list on your Apple Watch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widgets on the home and lock screen, the shopping trip on the lock screen while you shop, and the list on your Apple Watch."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widgets auf Home- und Sperrbildschirm, der Einkauf auf dem Sperrbildschirm, während du einkaufst, und die Liste auf deiner Apple Watch."
+          }
+        }
+      }
+    },
     "Wish": {
       "extractionState": "manual",
       "localizations": {
@@ -22624,6 +23117,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wunsch"
+          }
+        }
+      }
+    },
+    "Wish lists with photo, links and price. Who reserved what stays hidden from the person it is for. Private lists only you can see.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wish lists with photo, links and price. Who reserved what stays hidden from the person it is for. Private lists only you can see."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wunschlisten mit Foto, Links und Preis. Wer was reserviert hat, sieht die beschenkte Person nie. Private Listen siehst nur du."
           }
         }
       }
@@ -22709,6 +23219,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mit oder ohne KI"
+          }
+        }
+      }
+    },
+    "With or without AI: you decide": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With or without AI: you decide"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit oder ohne KI: du entscheidest"
           }
         }
       }
