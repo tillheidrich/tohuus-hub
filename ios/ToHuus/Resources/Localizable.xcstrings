@@ -6138,6 +6138,40 @@
         }
       }
     },
+    "Double-tap to put it back on the list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap to put it back on the list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doppeltippen, um es wieder auf die Liste zu setzen"
+          }
+        }
+      }
+    },
+    "Double-tap to tick it off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap to tick it off"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doppeltippen zum Abhaken"
+          }
+        }
+      }
+    },
     "Drag the aisles into the order you walk through the shop.": {
       "extractionState": "manual",
       "localizations": {
@@ -10520,6 +10554,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mehr zu KI in ToHuus"
+          }
+        }
+      }
+    },
+    "More for the list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More for the list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr für die Liste"
           }
         }
       }
@@ -15505,23 +15556,6 @@
         }
       }
     },
-    "Receipt or paper list": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Receipt or paper list"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bon oder Zettel"
-          }
-        }
-      }
-    },
     "Receipt: %@": {
       "extractionState": "manual",
       "localizations": {
@@ -15603,6 +15637,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bons zeigen, was Lebensmittel und Haushalt im Monat kosten, pro Laden und Kategorie – und welche Preise gestiegen sind."
+          }
+        }
+      }
+    },
+    "Receipts, paper lists, usuals, wishes and sharing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipts, paper lists, usuals, wishes and sharing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bons, Papierlisten, Übliche, Wünsche und Teilen"
           }
         }
       }
