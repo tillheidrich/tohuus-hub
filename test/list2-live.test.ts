@@ -182,6 +182,9 @@ describe('C: shopping together', () => {
     expect(trips).toHaveLength(1);
     expect(trips[0]).toMatchObject({ user: { name: 'Sam' }, store: { name: 'Lidl' }, mine: false });
     expect(trips[0].basket.map((x: any) => x.text).sort()).toEqual(['Bananen', 'Joghurt']);
+    // the first item's checked_at may be a second before the trip's start (tick log written just after): still in
+    db.prepare(`UPDATE shopping_items SET checked_at = datetime((SELECT started_at FROM shop_trips WHERE id = ?), '-1 second') WHERE id = ?`).run(trips[0].id, a.id);
+    expect((await mira('GET', '/api/shop/trips')).json[0].basket.map((x: any) => x.text).sort()).toEqual(['Bananen', 'Joghurt']);
     // Mira wanted to know (her own switch) – Sam himself is never told about his own trip
     const n = lastNotification('trip.started');
     expect(n.title).toBe('Sam kauft gerade bei Lidl ein');
