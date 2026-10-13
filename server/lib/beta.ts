@@ -21,6 +21,7 @@ import type { DB } from '../db.js';
 import { t } from '../i18n.js';
 import { accountsDb } from './accounts.js';
 import { AuthError } from './auth-sessions.js';
+import { isOperatorEmail } from './operator.js';
 import { runtimeSetting, supportEmail } from './runtime-settings.js';
 
 export type SignupMode = 'open' | 'invite' | 'closed';
@@ -156,7 +157,8 @@ export function signupGate(email: string | null | undefined, code: string | null
   const mode = signupMode();
   if (mode === 'open') return { commit: () => {} };
   if (mode === 'closed') throw closedError();
-  if (allowlisted(email)) return { commit: () => {} };
+  // the allowlist, and the operators themselves (OPERATOR_EMAILS – a fresh cloud needs its first account)
+  if (allowlisted(email) || isOperatorEmail(email)) return { commit: () => {} };
   const c = code?.trim();
   if (!c) throw inviteOnlyError('invite');
   if (!codeValid(c)) throw inviteOnlyError('code');

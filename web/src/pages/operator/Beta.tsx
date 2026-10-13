@@ -100,8 +100,8 @@ export function OperatorBeta() {
               <tr>
                 <th>{t('Code')}</th>
                 <th>{t('Used')}</th>
-                <th>{t('Valid until')}</th>
-                <th>{t('Note')}</th>
+                <th className="op-hide-sm">{t('Valid until')}</th>
+                <th className="op-hide-sm">{t('Note')}</th>
                 <th>{t('Status')}</th>
                 <th />
               </tr>
@@ -112,13 +112,13 @@ export function OperatorBeta() {
                 return (
                   <tr key={c.id}>
                     <td>
-                      <button className="linkish mono" onClick={() => copy(c.code)} aria-label={t('Copy {code}', { code: c.code })}>
+                      <button className="linkish mono op-nowrap" onClick={() => copy(c.code)} aria-label={t('Copy {code}', { code: c.code })}>
                         {c.code}
                       </button>
                     </td>
                     <td className="op-num">{c.max_uses === null ? `${c.uses} / ∞` : `${c.uses} / ${c.max_uses}`}</td>
-                    <td>{c.expires_at ? day(c.expires_at) : '–'}</td>
-                    <td className="op-note">{c.note ?? ''}</td>
+                    <td className="op-hide-sm">{c.expires_at ? day(c.expires_at) : '–'}</td>
+                    <td className="op-note op-hide-sm">{c.note ?? ''}</td>
                     <td className={cls}>{s}</td>
                     <td>
                       {!c.revoked_at && (

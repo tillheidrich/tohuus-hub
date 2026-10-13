@@ -298,39 +298,20 @@ export function OperatorRecipes() {
           />
         }
       >
-        <div className="op-scroll">
-          <table className="table op-table">
-            <thead>
-              <tr>
-                <th>{t('Recipe')}</th>
-                <th>{t('Review')}</th>
-                <th>{t('Status')}</th>
-                <th>{t('Date')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((r) => (
-                <tr key={r.id}>
-                  <td>
-                    <button className="linkish op-id" onClick={() => setOpen(r.id)}>
-                      {r.title}
-                    </button>
-                    {r.warnings.length > 0 && r.reviewState === 'draft' && <span className="small muted"> · {t('{n} notes', { n: r.warnings.length })}</span>}
-                  </td>
-                  <td className={r.reviewState === 'draft' ? 'muted' : 'op-ok'}>{t(REVIEW_LABEL[r.reviewState])}</td>
-                  <td>{t(STATE_LABEL[r.state])}</td>
-                  <td className="op-nowrap">{r.state === 'scheduled' ? day(r.publishAt) : r.state === 'published' ? day(r.publishedAt) : '–'}</td>
-                </tr>
-              ))}
-              {!list.length && (
-                <tr>
-                  <td colSpan={4} className="muted">
-                    {t('Nothing here.')}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="list op-rlist">
+          {list.map((r) => (
+            <button key={r.id} className="li op-rrow" onClick={() => setOpen(r.id)}>
+              <span className="grow">
+                <b>{r.title}</b>
+                <span className="small muted">
+                  <span className={r.reviewState === 'draft' ? '' : 'op-ok'}>{t(REVIEW_LABEL[r.reviewState])}</span> · {t(STATE_LABEL[r.state])}
+                  {r.state === 'scheduled' ? ` · ${day(r.publishAt)}` : r.state === 'published' ? ` · ${day(r.publishedAt)}` : ''}
+                  {r.warnings.length > 0 && r.reviewState === 'draft' ? ` · ${t('{n} notes', { n: r.warnings.length })}` : ''}
+                </span>
+              </span>
+            </button>
+          ))}
+          {!list.length && <div className="li small muted">{t('Nothing here.')}</div>}
         </div>
       </Section>
       <RecipeSheet id={open} onClose={() => setOpen(null)} />

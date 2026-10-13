@@ -429,7 +429,7 @@ passed by tests/tools is not touched. Test: `test/cloud-admin.test.ts`.
 - **Not gated**: signing in to an existing account (the App Review demo account keeps working), **joining a household
   by invitation (always, even when closed)**, e-mail links and codes (they never create accounts), another household
   for an existing account.
-- **Let in**: an e-mail address on the allowlist (`beta_allowlist`), or a valid code (`beta_codes`: optional max uses,
+- **Let in**: an e-mail address on the allowlist (`beta_allowlist`) or in `OPERATOR_EMAILS`, or a valid code (`beta_codes`: optional max uses,
   expiry date, note; revocable). Codes look like `TOHU-7KQM-X3PA`, case and spaces do not matter, a use is counted
   atomically only when the account is really created (an existing address → 409, code not used). Nothing records
   which account used which code.

@@ -45,6 +45,7 @@
   min-width: 0;
 }
 .op-section-head {
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
@@ -65,11 +66,15 @@
   flex: 1;
   min-width: 200px;
 }
+.input.op-narrow,
 .op-narrow {
   width: 90px;
+  flex: none;
 }
+.input.op-mid,
 .op-mid {
-  width: 160px;
+  width: 170px;
+  flex: none;
 }
 .op-help {
   gap: 10px;
@@ -262,4 +267,32 @@
 .op-actions {
   border-top: 1px solid var(--line);
   padding-top: 12px;
+}
+
+.op-rrow {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  min-height: 52px;
+}
+.op-rrow .grow {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.op-rrow:hover b {
+  text-decoration: underline;
+}
+.op-section-head .seg {
+  max-width: 100%;
+}
+
+@media (max-width: 560px) {
+  .op-hide-sm {
+    display: none;
+  }
 }

@@ -159,6 +159,10 @@ describe('beta gate', () => {
     // allowlisted address, no code
     beta.addAllowlist(['Friend@Example.org'], 'Freundin', 'test');
     expect((await new Client().post('/api/cloud/signup', signupBody('friend@example.org'))).status).toBe(200);
+    // operators (OPERATOR_EMAILS) can always create their account – a fresh cloud needs a first one
+    process.env.OPERATOR_EMAILS = 'boss@example.org';
+    expect((await new Client().post('/api/cloud/signup', signupBody('boss@example.org'))).status).toBe(200);
+    delete process.env.OPERATOR_EMAILS;
   });
 
   it('expired and revoked codes do not work', async () => {
