@@ -26,6 +26,7 @@ import { audit, isOperatorEmail, overview } from '../lib/operator.js';
 import { operatorAdmin } from './operator-admin.js';
 import { operatorAccounts } from './operator-accounts.js';
 import { pulseAggregate } from '../lib/pulse.js';
+import { adminHost, adminSessionOf, isAdminHost } from '../lib/admin-auth.js';
 
 export const r = Router();
 
@@ -36,6 +37,8 @@ interface Op {
   accountId: number;
   email: string;
   key: string;
+  /** set on the back-office host: when its session ends (ms) */
+  admin?: number;
 }
 declare module 'express-serve-static-core' {
   interface Request {
@@ -46,6 +49,14 @@ declare module 'express-serve-static-core' {
 /** Operators only; everybody else gets the same 404 as for an unknown route. */
 function operatorOnly(req: Request, res: Response, next: NextFunction) {
   if (!config.multiTenant) return void res.status(404).json({ error: 'not found' });
+  // with a back-office host (ADMIN_HOST) the back office exists only there, behind its own sign-in with a second factor;
+  // the app's session and app tokens never reach it (lib/admin-auth.ts)
+  if (adminHost()) {
+    const s = isAdminHost(req) ? adminSessionOf(req) : null;
+    if (!s) return void res.status(isAdminHost(req) ? 401 : 404).json({ error: isAdminHost(req) ? 'unauthorized' : 'not found' });
+    req.operator = { accountId: s.accountId, email: s.email, key: `admin:${s.id}`, admin: s.expiresAt };
+    return next();
+  }
   const id = cloudIdentity(req);
   const a = id ? accountById(id.accountId) : undefined;
   if (!id || !a || !isOperatorEmail(a.email)) return void res.status(404).json({ error: 'not found' });
@@ -54,6 +65,8 @@ function operatorOnly(req: Request, res: Response, next: NextFunction) {
 }
 
 function fresh(req: Request, res: Response, next: NextFunction) {
+  // the back-office session is itself fresh (password + authenticator, 30 minutes idle)
+  if (req.operator!.admin) return next();
   const until = unlocked.get(req.operator!.key) ?? 0;
   if (until < Date.now()) return void res.status(401).json({ error: t('Please confirm your password again.'), code: 'operator.locked' });
   next();
@@ -62,7 +75,7 @@ function fresh(req: Request, res: Response, next: NextFunction) {
 r.use('/operator', operatorOnly);
 
 r.get('/operator/status', (req, res) => {
-  const until = unlocked.get(req.operator!.key) ?? 0;
+  const until = req.operator!.admin ?? unlocked.get(req.operator!.key) ?? 0;
   res.setHeader('Cache-Control', 'no-store');
   res.json({ operator: true, unlocked: until > Date.now(), until: until > Date.now() ? new Date(until).toISOString() : null });
 });

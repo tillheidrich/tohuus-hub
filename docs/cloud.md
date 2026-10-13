@@ -66,6 +66,7 @@ DATA_DIR/
 | `BACKUP_FILES_MAX_FILES_PER_HOUSEHOLD`, `BACKUP_FILES_MAX_MB_PER_HOUSEHOLD` | – | per household and night (2 000 files, 1024 MB), so one big household cannot hold up the others |
 | `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_TOPIC`, `APNS_ENV` | – | iPhone push – [notifications.md](notifications.md#iphone-push-apns-serverlibapnsts) |
 | `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU). Key, base URL, models and fallbacks can be overridden at runtime in the back office ([Runtime settings](#runtime-settings)) |
+| `ADMIN_HOST` | – | own host for the back office, see "Back office on its own host" |
 | `OPERATOR_EMAILS` | – | comma-separated account e-mails that may open the operator page `/betrieb` |
 | `AI_PRICE_PER_MTOK`, `AI_PRICES`, `AI_PRICE_CURRENCY` | – | prices for the AI cost estimate on `/betrieb` (`"in,out"` per million tokens, default `0.1,0.3`; JSON per model; label, default `USD`) |
 | `OCR_DISABLED=1`, `TESSERACT_BIN` | – | switch server text recognition off / use another binary ([receipts.md](receipts.md)) |
@@ -376,6 +377,18 @@ both modes. The links live in process memory (sign-in material, not household da
 - **People** are mapped by e-mail, then by name; the importing admin stands in for the first admin of the old household if nobody matched. Everyone else becomes a person without a sign-in (`password_hash '!'`) – invite them under *Mitglieder*. All `user_id`-like columns and `u<id>` person keys are rewritten.
 - Never imported: users rows as such, sessions, tokens, invites, guest links, kid tablet pairings, push subscriptions, assistant conversations, OAuth, the old server's settings (HA, Telegram, IMAP, backups, printers, sign-in policy) and the household name, language, region and AI/MCP switches (the cloud household keeps its own; the consent for health data must be given again).
 - Test: `test/move.test.ts` (a real self-hosted household in a child process → cloud import, isolation from another household).
+
+## Back office on its own host (`ADMIN_HOST`)
+
+With `ADMIN_HOST=betrieb.tohuus.heidrich-digital.de` (the host must also be a domain of the Coolify app and have a DNS record) the back office moves to its own host:
+
+- **App host**: `/betrieb` redirects there, every `/api/operator/*` and `/api/admin-auth/*` answers 404 – also for operators.
+- **Admin host**: serves only `web/admin.html` (no app shell, no service worker), `/api/admin-auth/*` and `/api/operator/*`. Every other API path, `/mcp`, `/img`, `/oauth`, CalDAV and `.well-known` answer 404. `X-Robots-Tag: noindex`.
+- **Sign-in** (`server/lib/admin-auth.ts`, `server/routes/admin-auth.ts`): e-mail + password of an account in `OPERATOR_EMAILS`, then a 6-digit authenticator code (TOTP, replay-protected). The very first time the operator proves the mailbox with a code by mail and sets up the authenticator (QR code). The TOTP secret is stored AES-256-GCM-encrypted in `accounts.db` (`operator_totp`, key derived from the master key). Tickets between the steps live 5 minutes and burn after 5 wrong codes; logins are rate limited per IP and per address.
+- **Session**: own cookie `tohuus_admin` (host-only, HttpOnly, Secure, SameSite=Strict), only its SHA-256 stored (`admin_sessions`), 30 minutes idle, 12 hours at most. The app's session or app tokens never open the back office; no extra password unlock inside.
+- **Audit**: every sign-in, failure, set-up, logout and change in `operator_audit` (with IP for sign-in events).
+- **Lost authenticator**: set `ADMIN_RESET_TOTP=<operator e-mail>`, restart, sign in again (password + mail code + new set-up), then remove the variable.
+- Without `ADMIN_HOST` (self-host, tests) `/betrieb` stays inside the app with the password unlock as before.
 
 ## Operator page (`/betrieb`)
 

@@ -37,6 +37,8 @@ export default defineConfig({
     // the first load is the shell + Heute; every other page is its own chunk (plan 2026-10-12, speed)
     chunkSizeWarningLimit: 400,
     rolldownOptions: {
+      // the app and the back office (own host, server/lib/admin-auth.ts) are two pages of one build
+      input: { main: 'web/index.html', admin: 'web/admin.html' },
       output: {
         // long-lived vendor chunks: an app update does not invalidate React, the router or TanStack Query in the cache
         codeSplitting: {

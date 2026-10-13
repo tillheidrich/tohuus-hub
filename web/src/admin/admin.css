@@ -1,0 +1,12 @@
+/* ToHuus Betrieb – own host, no app shell (admin/main.tsx) */
+body { background: var(--canvas); color: var(--ink); margin: 0; }
+.adm-login { min-height: 100dvh; display: grid; place-items: center; padding: 16px; box-sizing: border-box; }
+.adm-login > form { width: min(420px, 100%); gap: 14px; }
+.adm-login h1 { margin: 2px 0 0; }
+.adm-qr { width: 200px; max-width: 100%; margin: 0 auto; background: #fff; padding: 8px; border-radius: 12px; }
+.adm-qr svg { display: block; width: 100%; height: auto; }
+.adm-secret { display: block; margin-top: 6px; word-break: break-all; font-size: 0.95rem; }
+.adm-err { color: var(--empty); }
+.adm-bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.adm-who { margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.adm-main { max-width: 1200px; margin: 0 auto; padding: 16px; box-sizing: border-box; }

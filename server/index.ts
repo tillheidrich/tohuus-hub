@@ -57,6 +57,8 @@ import { r as featureRoutes } from './routes/features.js';
 import { r as aiSettingsRoutes } from './routes/ai-settings.js';
 import { pub as oauthPub, r as oauthRoutes } from './routes/oauth.js';
 import { r as operatorRoutes } from './routes/operator.js';
+import { adminAuth } from './routes/admin-auth.js';
+import { adminHost, isAdminHost } from './lib/admin-auth.js';
 import { r as moveRoutes } from './routes/move.js';
 import { r as iosCompat } from './routes/ios-compat.js';
 import { requestCounter } from './lib/operator.js';
@@ -101,6 +103,20 @@ app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 1));
 app.use(['/mcp', '/api/recipes/import/bulk'], express.json({ limit: '40mb' }));
 app.use(express.json({ limit: '4mb' }));
 app.use(cookieParser());
+// ToHuus Cloud back office on its own host (ADMIN_HOST): there only its sign-in, the operator API, static files and the
+// back-office page exist; on the app's host /betrieb moves there (lib/admin-auth.ts)
+app.use((req, res, next) => {
+  const host = adminHost();
+  if (!host) return next();
+  if (isAdminHost(req)) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    if (req.path.startsWith('/api/') && !/^\/api\/(?:admin-auth|operator)(?:\/|$)/.test(req.path)) return void res.status(404).json({ error: 'not found' });
+    if (/^\/(?:mcp|img|display|oauth|caldav|\.well-known)(?:\/|$)/.test(req.path)) return void res.status(404).type('text/plain').send('not found');
+    return next();
+  }
+  if (req.path === '/betrieb' || req.path.startsWith('/betrieb/')) return void res.redirect(302, `https://${host}/`);
+  next();
+});
 // JSON/text API answers > 1 kB gzipped (before the image signer, which rewrites bodies first) – lib/compress.ts
 app.use('/api', gzipApi);
 // ToHuus Cloud: pick the household of this request (session, app token, token prefix) – lib/cloud-auth.ts
@@ -136,6 +152,7 @@ app.use('/api', (req, res, next) => {
   const origin = req.headers.origin;
   const site = req.headers['sec-fetch-site'];
   if (origin === ownOrigin || site === 'same-origin' || (!origin && !site)) return next();
+  if (adminHost() && isAdminHost(req) && origin === `https://${adminHost()}`) return next();
   res.status(403).json({ error: t('Request from another site') });
 });
 
@@ -170,6 +187,7 @@ if (config.multiTenant) {
   app.use('/api', cloudPub);
   app.use('/api', cloudRoutes);
   // operator page /betrieb: aggregates only (lib/operator.ts)
+  app.use('/api', adminAuth);
   app.use('/api', operatorRoutes);
   // ToHuus-Rezepte: the central recipe catalogue (lib/cloud-recipes.ts)
   app.use('/api', cloudRecipesPublic);
@@ -268,7 +286,15 @@ if (webDir) {
   // the document language follows the household setting
   // … and the household theme is known before the first paint (web/public/theme-boot.js reads it)
   const withLang = (doc: string) => doc.replace(/<html lang="[^"]*"/, `<html lang="${lang()}" data-theme-default="${theme()}"`);
-  app.get(/.*/, (_req, res) => res.type('html').setHeader('Cache-Control', 'no-cache').send(withLang(html)));
+  const adminHtmlFile = path.join(webDir, 'admin.html');
+  const adminHtml = fs.existsSync(adminHtmlFile) ? fs.readFileSync(adminHtmlFile, 'utf8') : null;
+  app.get(/.*/, (req, res) => {
+    if (isAdminHost(req)) {
+      if (!adminHtml) return void res.status(404).type('text/plain').send('not found');
+      return void res.type('html').setHeader('Cache-Control', 'no-store').send(adminHtml);
+    }
+    res.type('html').setHeader('Cache-Control', 'no-cache').send(withLang(html));
+  });
 }
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
