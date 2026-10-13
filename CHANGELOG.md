@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- iPhone: tapping the microphone crashed on first use (speech permission answer arrived off the main actor under Swift 6 isolation checks); permission and recognition callbacks are now nonisolated. Build 9.
+
 - `BETA_ALLOWLIST` (env): addresses that may sign up without an access code, next to the back-office allowlist.
 
 - Receipt upload: an eBon e-mail printed to PDF ("Dein REWE eBon vom …") gets the hint that the receipt is the mail's attachment, instead of an AI guess.

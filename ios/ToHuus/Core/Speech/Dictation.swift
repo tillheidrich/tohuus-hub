@@ -96,14 +96,16 @@ final class Dictation {
         input.installTap(onBus: 0, bufferSize: 1024, format: format, block: Self.tapBlock(req))
         engine.prepare()
         try engine.start()
-        task = recognizer.recognitionTask(with: req) { [weak self] result, err in
+        task = recognizer.recognitionTask(with: req, resultHandler: Self.resultHandler { [weak self] text in
+            if let text { self?.transcript = text }
+        })
+    }
+
+    /// Built outside the main actor: results arrive on a background queue; only the text hops to the main actor.
+    nonisolated private static func resultHandler(_ apply: @escaping @MainActor @Sendable (String?) -> Void) -> @Sendable (SFSpeechRecognitionResult?, Error?) -> Void {
+        { result, _ in
             let text = result?.bestTranscription.formattedString
-            let final = result?.isFinal ?? false
-            Task { @MainActor in
-                guard let self else { return }
-                if let text { self.transcript = text }
-                if err != nil || final { /* stop() collects the transcript */ }
-            }
+            Task { @MainActor in apply(text) }
         }
     }
 
@@ -143,13 +145,15 @@ final class Dictation {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
-    private static func micAllowed() async -> Bool {
+    nonisolated private static func micAllowed() async -> Bool {
         await AVAudioApplication.requestRecordPermission()
     }
 
-    private static func speechAllowed() async -> Bool {
+    /// nonisolated: the system calls the permission answer on a background queue. Inside this @MainActor class a
+    /// closure would inherit the main actor and the runtime traps (TestFlight crash 14.10., build 6).
+    nonisolated private static func speechAllowed() async -> Bool {
         await withCheckedContinuation { (c: CheckedContinuation<Bool, Never>) in
-            SFSpeechRecognizer.requestAuthorization { status in c.resume(returning: status == .authorized) }
+            SFSpeechRecognizer.requestAuthorization { @Sendable status in c.resume(returning: status == .authorized) }
         }
     }
 }
