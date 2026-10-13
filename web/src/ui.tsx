@@ -233,7 +233,8 @@ export function useDialog(ref: RefObject<HTMLElement | null>, open: boolean, onC
       cancelAnimationFrame(raf);
       document.removeEventListener('keydown', onKey);
       // give focus back to whatever opened the dialog (if it is still there)
-      if (opener && opener.isConnected) setTimeout(() => opener.focus({ preventScroll: true }), 0);
+      // no opener (a sheet opened by a link or an event): the page's main area, never <body>
+      setTimeout(() => (opener && opener.isConnected ? opener : document.getElementById('main'))?.focus({ preventScroll: true }), 0);
     };
   }, [open, ref]);
 }

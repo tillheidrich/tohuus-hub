@@ -4075,7 +4075,8 @@ img[data-zoom] {
   color: var(--ink);
 }
 .found .spot {
-  color: var(--accent);
+  /* green as text: the lighter one in dark mode (the accent fill is only 3.3:1 on the dark surface) */
+  color: var(--primary-text);
   font-weight: 600;
 }
 .found .lhint {
