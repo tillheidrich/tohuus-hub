@@ -195,6 +195,18 @@ describe.skipIf(!fs.existsSync('/usr/bin/tesseract') && !process.env.TESSERACT_B
   });
 });
 
+/** A minimal one-page PDF with the given text lines (Courier). */
+function pdfOf(rows: string[]): string {
+  const q = (x: string) => x.replace(/[\\()]/g, (c) => '\\' + c);
+  const stream = `BT /F1 10 Tf 12 TL 40 800 Td ${rows.map((r) => `(${q(r)}) Tj T*`).join(' ')} ET`;
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>', `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`, '<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>'];
+  let pdf = '%PDF-1.4\n';
+  const offs: number[] = [];
+  objs.forEach((o, i) => { offs.push(pdf.length); pdf += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+  const xref = pdf.length;
+  return pdf + `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offs.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+}
+
 describe('upload: files named .pdf that are not PDFs (TestFlight 13.10., a2bd3b25)', () => {
   const send = async (buf: Buffer | string, name: string) => {
     const f = new FormData();
@@ -215,6 +227,8 @@ describe('upload: files named .pdf that are not PDFs (TestFlight 13.10., a2bd3b2
     const broken = await send('%PDF-1.7\n<< broken ) >>', 'kaputt.pdf');
     expect(broken.status).toBe(200);
     expect(broken.json.results[0].error).toMatch(/PDF/);
+    const mail = await send(pdfOf(['Von: REWE eBon ebon@mailing.rewe.de', 'Betreff: Dein REWE eBon vom 13.10.2026', 'Hallo Sam,', 'hier ist der eBon zu deinem Einkauf in Hoehe von 2,98 EUR.']), 'Dein_REWE_eBon.pdf');
+    expect(mail.json.results[0].error).toMatch(/Anhang|attach/);
     const junk = await send(Buffer.from(Array.from({ length: 600 }, (_, i) => (i * 37) % 32)), 'junk.pdf');
     expect(junk.status).toBe(200);
     expect(junk.json.results[0].error).toMatch(/PDF/);

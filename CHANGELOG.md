@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Receipt upload: an eBon e-mail printed to PDF ("Dein REWE eBon vom …") gets the hint that the receipt is the mail's attachment, instead of an AI guess.
+
 - Fix (cloud): every PDF receipt upload failed, because pdftotext read the stored file, which is encrypted at rest in ToHuus Cloud. `pdfToText` now decrypts into a private temp file first (also for mail, Telegram and retail inbox imports).
 
 - Receipt upload: a file named .pdf that is no PDF (a saved web page of a digital receipt) is read as a web page; a damaged or protected PDF, or any other file, gets a plain answer instead of a server error (was error a2bd3b25).

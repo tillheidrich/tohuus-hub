@@ -156,6 +156,9 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
       const parsed = parseDocumentText(text, f.originalname);
       if (parsed) {
         results.push({ file: f.originalname, ...createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
+      } else if (isPrintedEbonMail(text)) {
+        // the eBon mail printed as a PDF: the receipt is its attachment, not in the printout
+        results.push({ file: f.originalname, error: t('This is the eBon e-mail itself, the receipt is attached to it as a PDF. Upload the attachment, or forward the e-mail to your household’s ToHuus address.') });
       } else if (visionAvailable() && text.trim().length > 30) {
         const j = await runVision('text-items', { text: text.slice(0, 12000) });
         const imp = linesToImport('receipt', t('Receipt {file}', { file: f.originalname }), cleanLines(j.lines));
@@ -199,6 +202,9 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
   if (typeof req.body.text === 'string' && req.body.text.trim()) results.push(await importText(req.body.text, actorName(req)));
   res.json({ results });
 });
+
+/** "Dein REWE eBon vom …" (and similar shop mails) printed to PDF – text of the mail, no receipt lines. */
+export const isPrintedEbonMail = (text: string) => /\beBon\b/i.test(text) && /^\s*(?:Von|From|Betreff|Subject):/im.test(text) && !/^\s*SUMME\b/im.test(text);
 
 /** A real PDF starts with "%PDF" (some writers put a few bytes before it). */
 export const looksLikePdf = (buf: Buffer) => buf.subarray(0, 1024).includes('%PDF');

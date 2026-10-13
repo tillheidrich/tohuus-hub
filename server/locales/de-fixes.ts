@@ -73,4 +73,5 @@ export const de_fixes: Record<string, string> = {
   'This PDF could not be read (damaged or password protected). Open it, save it again as a PDF or take a photo of the receipt.': 'Dieses PDF lässt sich nicht lesen (beschädigt oder mit Passwort geschützt). Öffne es, speichere es neu als PDF oder fotografier den Bon.',
   'This file is not a PDF. Save the receipt as a PDF again or take a photo of it.': 'Diese Datei ist kein PDF. Speichere den Bon noch einmal als PDF oder fotografier ihn.',
   'This file is a saved web page, not a PDF, and no receipt was found in it. Open the receipt in the browser and save or share it as a PDF.': 'Diese Datei ist eine gespeicherte Webseite, kein PDF, und es steht kein Bon darin. Öffne den Bon im Browser und speichere oder teile ihn als PDF.',
+  'This is the eBon e-mail itself, the receipt is attached to it as a PDF. Upload the attachment, or forward the e-mail to your household’s ToHuus address.': 'Das ist die eBon-Mail selbst, der Bon hängt als PDF an der Mail. Lade den Anhang hoch oder leite die Mail an die ToHuus-Adresse eures Haushalts weiter.',
 };
