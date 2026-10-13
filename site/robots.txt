@@ -1,0 +1,5 @@
+# ToHuus website: everything may be read, by search engines and by AI answer engines alike
+User-agent: *
+Allow: /
+
+Sitemap: https://tohuus.heidrich-digital.de/sitemap.xml

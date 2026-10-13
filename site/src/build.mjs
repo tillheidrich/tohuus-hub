@@ -24,6 +24,7 @@ import * as Ph from '@phosphor-icons/react/ssr';
 import { homeTiles, brandMark, bird } from './art.mjs';
 import { legalCopy } from './legal.mjs';
 import { helpCopy } from './help.mjs';
+import { BLOG_COPY, BLOG_DIR, checkPost, publishedPosts } from './blog.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const SITE = 'https://tohuus.heidrich-digital.de/';
@@ -80,7 +81,7 @@ const COPY = {
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
     legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant' },
-    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe']],
+    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#bring-mir-was', 'Bring mir was'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
       label: 'Einkaufs- und Haushaltsassistent',
@@ -101,7 +102,7 @@ const COPY = {
     },
     jobs: {
       label: 'Was ToHuus macht', h2: 'Einkauf, Kochen und Geld hängen zusammen.',
-      intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei.',
+      intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei. Und um das, was ein Zuhause sonst noch ausmacht: einander was Gutes tun und Wünsche festhalten.',
       list: [
         { id: 'einkauf', no: '1', label: 'Einkauf', h3: 'ToHuus merkt sich, was fehlt.', shot: 'shopping',
           alt: 'Einkaufsliste in ToHuus: oben Vorschläge wie Hackfleisch mit „merkt sich: alle ~12 Tage“, darunter nach Bereichen sortierte Einträge mit Ich-hol’s-Knopf und Herkunft wie „Mira, heute“.',
@@ -114,7 +115,15 @@ const COPY = {
         { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
           alt: 'Seite Geld für September 2026: 215,81 Euro ausgegeben, 17 Euro mehr als im Vormonat, darunter ein Wochenverlauf und Balken nach Kategorie.',
           p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
-          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Ein Budget, wenn ihr eins wollt', 'Export als CSV'] },
+          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Budgets pro Woche oder Monat, gesamt oder je Kategorie, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
+        { id: 'bring-mir-was', no: '4', label: 'Bring mir was', h3: 'Einer liegt auf dem Sofa, einer steht in der Küche.', shot: 'treats',
+          alt: 'Seite Bring mir was: „Was hättest du gern?“, darunter Karten wie Was Süßes, Was zu trinken, Was zum Knabbern und Aus dem Kühlschrank, dazu die Reiter Gäste und Party.',
+          p: 'Wer gerade festsitzt, im Bett, beim Zubettbringen oder mit Kind auf dem Arm, wünscht sich mit zwei Tipps eine Kleinigkeit. Die anderen sehen es sofort, einer sagt „Bring ich“, und die Hauskarte zeigt nur, was wirklich da ist. Für Besuch gibt es eine eigene Karte, und am Partyabend bestellen die Gäste direkt von eurer Partykarte.',
+          points: ['Eure eigene Hauskarte: Süßes, Getränke, Snacks, aus dem Kühlschrank', 'Gäste wünschen sich etwas über einen Link, ganz ohne App', 'Party: ihr seht, was bestellt ist und was noch da ist'] },
+        { id: 'wuensche', no: '5', label: 'Wünsche', h3: 'Wunschlisten, die nichts verraten.', shot: 'wishes',
+          alt: 'Seite Wünsche: Listen „Weihnachten für Mika“ mit drei Wünschen, zwei davon vergeben, und die Merkliste „Neue Kekse & Fundstücke“.',
+          p: 'Geburtstag, Weihnachten oder einfach eine Merkliste: Wünsche mit Foto, mehreren Links, Preis und Notiz. Wer etwas reserviert, sieht der Rest der Familie, die beschenkte Person aber nie. Eine Liste lässt sich ganz oder in Teilen per Nachricht verschicken.',
+          points: ['Foto, Links, Preis und „wer könnte das schenken“', 'Private Listen, die nur du siehst', 'Teilen als Link oder fertige Nachricht'] },
       ],
     },
     levels: {
@@ -272,7 +281,7 @@ const COPY = {
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
     legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant' },
-    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
+    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#bring-me-something', 'Bring me something'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
       label: 'Shopping and household assistant',
@@ -293,7 +302,7 @@ const COPY = {
     },
     jobs: {
       label: 'What ToHuus does', h2: 'Shopping, cooking and money belong together.',
-      intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three.',
+      intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three. And after the rest of what makes a home: doing each other a good turn and keeping track of wishes.',
       list: [
         { id: 'shopping', no: '1', label: 'Shopping', h3: 'ToHuus remembers what is missing.', shot: 'shopping',
           alt: 'Shopping list in ToHuus: suggestions at the top such as beef mince with “remembers: every ~12 days”, below it items sorted by section with an I’ll-get-it button and where they came from, like “Mira, today”.',
@@ -306,7 +315,15 @@ const COPY = {
         { id: 'money', no: '3', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
           alt: 'Money page for September 2026: £215.81 spent, £17 more than the month before, with a weekly line and bars by category below.',
           p: 'Every receipt counts. ToHuus shows what a month cost, in which shop and for which category, and compares it with the month before. You do not need to keep a ledger.',
-          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'A budget, if you want one', 'CSV export'] },
+          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week or month, overall or per category, with a note at 80 percent', 'CSV export'] },
+        { id: 'bring-me-something', no: '4', label: 'Bring me something', h3: 'One of you is on the sofa, one is in the kitchen.', shot: 'treats',
+          alt: 'Treats page: “What would you like?”, with cards such as Something sweet, Something to drink, Something to nibble and From the fridge, plus tabs for Guests and Party.',
+          p: 'Whoever is stuck, in bed, at bedtime or with a child on their arm, asks for a little something in two taps. The others see it right away, someone says “I’ll bring it”, and the house menu only shows what is actually at home. Visitors get their own menu, and on party night guests order straight from your party menu.',
+          points: ['Your own house menu: sweets, drinks, snacks, from the fridge', 'Guests ask through a link, no app needed', 'Party: you see what was ordered and what is left'] },
+        { id: 'wishes', no: '5', label: 'Wishes', h3: 'Wish lists that give nothing away.', shot: 'wishes',
+          alt: 'Wishes page: the list “Christmas for Mika” with three wishes and the saved list “New biscuits & finds”.',
+          p: 'Birthdays, Christmas or just a list of things to remember: wishes with a photo, several links, a price and a note. The family sees who reserved what, the person it is for never does. Send a whole list or part of it as a message.',
+          points: ['Photo, links, price and “who could give this”', 'Private lists only you can see', 'Share as a link or a ready-made message'] },
       ],
     },
     levels: {
@@ -460,7 +477,7 @@ const COPY = {
 
 // ---------------------------------------------------------------- screenshots
 /** Every screenshot slot the page uses. The build fails when a file is missing, so no placeholder ever ships. */
-const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import'];
+const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes'];
 const WIDTHS = [480, 960];
 for (const lang of Object.keys(COPY)) for (const n of SHOTS) for (const w of WIDTHS) {
   const f = path.join(ROOT, `assets/shots/${lang}/${n}-${w}.webp`);
@@ -491,9 +508,9 @@ const pageTop = (c, m, b = c.base) => `<!doctype html>
 <title>${m.title}</title>
 <meta name="description" content="${m.desc}">
 <link rel="canonical" href="${m.url}">
-<link rel="alternate" hreflang="en" href="${m.alt.en}">
+${m.alt.en && m.alt.de ? `<link rel="alternate" hreflang="en" href="${m.alt.en}">
 <link rel="alternate" hreflang="de" href="${m.alt.de}">
-<link rel="alternate" hreflang="x-default" href="${m.alt.en}">
+<link rel="alternate" hreflang="x-default" href="${m.alt.en}">` : ''}
 <meta name="theme-color" content="#f7f5ef">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
@@ -521,6 +538,7 @@ const pageTop = (c, m, b = c.base) => `<!doctype html>
 ${m.ld ? `<script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus","description":"${c.desc}","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web, Docker","license":"https://www.gnu.org/licenses/agpl-3.0.html","url":"${c.url}","image":"${SITE}assets/img/og-${c.lang}.png","codeRepository":"${GH}","inLanguage":["en","de"],"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}}
 </script>
+` : ''}${m.extraLd ? `<script type="application/ld+json">${m.extraLd}</script>
 ` : ''}</head>
 <body${m.bodyClass ? ` class="${m.bodyClass}"` : ''}>
 ${sprite}
@@ -554,7 +572,8 @@ const pageFoot = (c, m) => `<footer class="foot">
         <h4>${c.foot.project}</h4>
         <ul>
           <li><a href="${m.helpHref ?? helpIndexHref(c.lang, 'home')}">${c.foot.help}</a></li>
-          <li><a href="${GH}">${c.foot.code}</a></li>
+${publishedPosts(c.lang).length ? `          <li><a href="${m.home ?? './'}${c.lang === 'de' ? '../' : ''}${BLOG_DIR[c.lang]}/">${BLOG_COPY[c.lang].title}</a></li>
+` : ''}          <li><a href="${GH}">${c.foot.code}</a></li>
           <li><a href="${GH}/blob/main/LICENSE">${c.foot.license}</a></li>
           <li><a href="${GH}/blob/main/ha-integration/LICENSE">${c.foot.licenseHa}</a></li>
           <li><a href="${GH}/issues">${c.foot.issues}</a></li>
@@ -671,7 +690,7 @@ ${J.list.map((j, k) => `    <article class="job${k % 2 ? ' flip' : ''}" id="${j.
 ${L.list.map(([i, t, s], k) => `          <li class="reveal" style="--d:${k * 70}ms"><span class="lv-ico">${ico(i)}</span><div><b>${t}</b><span>${s}</span></div></li>`).join('\n')}
         </ol>
       </div>
-      <div class="block-phone">${device(img(c, L.shot, L.alt, { sizes: '(min-width: 960px) 300px, 70vw' }), ' cut')}</div>
+      <div class="block-phone">${device(img(c, L.shot, L.alt, { sizes: '(min-width: 960px) 300px, 70vw' }))}</div>
     </div>
   </div>
 </section>
@@ -1049,6 +1068,125 @@ ${pageFoot(c, m)}
 `;
 }
 
+// ---------------------------------------------------------------- blog / Ratgeber (blog.mjs, docs/blog.md)
+const ldJson = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
+
+function blogMeta(c, p) {
+  const B = BLOG_COPY[c.lang];
+  const other = c.lang === 'de' ? 'en' : 'de';
+  const self = p ? `${p.slug}.html` : './';
+  const pair = p?.pair && publishedPosts(other).some((x) => x.slug === p.pair) ? `${p.pair}.html` : '';
+  const otherHasIndex = publishedPosts(other).length > 0;
+  const url = (lang, file) => `${SITE}${BLOG_DIR[lang]}/${file === './' ? '' : file}`;
+  const otherHref = pair || (otherHasIndex && !p) ? `../${BLOG_DIR[other]}/${pair}` : other === 'de' ? '../de/' : '../';
+  // hreflang only between real translations (a post without a pair has none)
+  const altOther = pair || (otherHasIndex && !p) ? url(other, pair || './') : null;
+  return {
+    title: p ? `${p.title} · ToHuus` : `${B.title} · ToHuus`, desc: p ? p.desc : B.desc,
+    url: url(c.lang, self), alt: { [c.lang]: url(c.lang, self), [other]: altOther }, ld: false,
+    navBase: c.lang === 'de' ? '../de/' : '../', home: c.lang === 'de' ? '../de/' : '../', legalBase: c.lang === 'de' ? '../de/' : '../',
+    helpHref: `../${HELP_DIR[c.lang]}/`, bodyClass: 'legal-page help-page blog-page',
+    enHref: c.lang === 'en' ? self : otherHref, deHref: c.lang === 'de' ? self : otherHref, otherHref,
+  };
+}
+
+const fmtPostDate = (lang, d) => new Date(`${d}T12:00:00Z`).toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+function blogIndex(c) {
+  const B = BLOG_COPY[c.lang];
+  const m = blogMeta(c);
+  const posts = publishedPosts(c.lang);
+  m.extraLd = ldJson({ '@context': 'https://schema.org', '@type': 'Blog', name: `ToHuus ${B.title}`, url: m.url, inLanguage: c.lang, description: B.desc,
+    blogPost: posts.map((p) => ({ '@type': 'BlogPosting', headline: p.title, url: `${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html`, datePublished: p.date })) });
+  return `${pageTop(c, m, '../')}
+<main id="main" class="legal help">
+
+<section class="legal-head help-head" aria-labelledby="blog-h">
+  <div class="wrap">
+    ${label(B.label)}
+    <h1 id="blog-h">${B.h1}</h1>
+    <p class="legal-note help-lede">${B.lede}</p>
+  </div>
+</section>
+
+<div class="wrap help-index">
+  <ul class="help-cards">
+${posts.map((p) => `    <li><a class="help-card" href="${p.slug}.html"><b>${p.title}</b><span>${p.desc}</span><span><time datetime="${p.date}">${fmtPostDate(c.lang, p.date)}</time></span>${ico('arrow')}</a></li>`).join('\n')}
+  </ul>
+</div>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
+
+function blogPost(c, p) {
+  const B = BLOG_COPY[c.lang];
+  const m = blogMeta(c, p);
+  const secs = p.sections.map(([h, body]) => ({ id: anchorId(h), h, body }));
+  const help = (p.help ?? []).map((sl) => helpBySlug(c.lang, sl)).filter(Boolean);
+  const ld = [{ '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.desc, datePublished: p.date, dateModified: p.updated ?? p.date,
+    inLanguage: c.lang, mainEntityOfPage: m.url, image: `${SITE}assets/img/og-${c.lang}.png`,
+    author: { '@type': 'Organization', name: 'ToHuus', url: c.url }, publisher: { '@type': 'Organization', name: 'Heidrich Digital', url: 'https://heidrich-digital.de' } },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'ToHuus', item: c.url },
+    { '@type': 'ListItem', position: 2, name: B.title, item: `${SITE}${BLOG_DIR[c.lang]}/` },
+    { '@type': 'ListItem', position: 3, name: p.title, item: m.url }] }];
+  if (p.faq?.length) ld.push({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: p.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) });
+  m.extraLd = ldJson(ld);
+  return `${pageTop(c, m, '../')}
+<main id="main" class="legal help">
+
+<article aria-labelledby="post-h">
+<header class="legal-head help-head">
+  <div class="wrap">
+    <p class="label help-crumbs"><a href="./">${B.title}</a></p>
+    <h1 id="post-h">${p.title}</h1>
+    <p class="legal-note help-lede">${p.answer}</p>
+    <p class="legal-status"><time datetime="${p.date}">${B.published} ${fmtPostDate(c.lang, p.date)}</time>${p.updated && p.updated !== p.date ? ` · <time datetime="${p.updated}">${B.updated} ${fmtPostDate(c.lang, p.updated)}</time>` : ''}</p>
+  </div>
+</header>
+
+<div class="wrap legal-grid">
+  <nav class="legal-toc" aria-label="${p.title}">
+    <ol>
+${secs.map((x, k) => `      <li><a href="#${x.id}"><span>${k + 1}</span>${x.h}</a></li>`).join('\n')}
+    </ol>
+    <p class="legal-links"><a href="./">${B.back}${ico('arrow')}</a>${m.otherHref.endsWith('.html') ? `<a href="${m.otherHref}" hreflang="${c.otherLang}">${B.other}${ico('arrow')}</a>` : ''}</p>
+  </nav>
+  <div class="legal-body help-body">
+${secs.map((x) => `    <section id="${x.id}" aria-labelledby="${x.id}-h">
+      <h2 id="${x.id}-h">${x.h}</h2>
+      ${x.body}
+    </section>`).join('\n')}
+${p.faq?.length ? `    <section id="faq" aria-labelledby="faq-h">
+      <h2 id="faq-h">${B.faq}</h2>
+${p.faq.map(([q, a]) => `      <h3>${q}</h3>\n      <p>${a}</p>`).join('\n')}
+    </section>` : ''}
+${help.length ? `    <aside class="help-related" aria-labelledby="rel-h">
+      <p class="legal-summary-h" id="rel-h">${B.help}</p>
+      <ul>${help.map((r) => `<li><a href="../${HELP_DIR[c.lang]}/${r.slug}.html">${r.title}${ico('arrow')}</a></li>`).join('')}</ul>
+    </aside>` : ''}
+    <p class="help-missing">${B.tryText} <a href="${c.lang === 'de' ? '../de/' : '../'}">${B.tryIt}</a></p>
+  </div>
+</div>
+</article>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
+
 // guards: house style (no em or en dashes, except in the required provider line) and no family names
 const LEGAL_KINDS = ['privacy', 'terms'];
 const checkText = (html, where, tillCount, extra = '') => {
@@ -1106,23 +1244,76 @@ for (const [file, html] of helpPages) {
   fs.mkdirSync(path.dirname(path.join(ROOT, file)), { recursive: true });
   fs.writeFileSync(path.join(ROOT, file), html);
 }
+// blog / Ratgeber: only published posts get a page; without any, the folder does not exist
+const blogPages = [];
+for (const c of Object.values(COPY)) {
+  const posts = publishedPosts(c.lang);
+  for (const p of posts) checkPost(c.lang, p);
+  if (new Set(posts.map((p) => p.slug)).size !== posts.length) throw new Error(`duplicate blog slug (${c.lang})`);
+  if (!posts.length) continue;
+  blogPages.push([path.join(BLOG_DIR[c.lang], 'index.html'), blogIndex(c), c]);
+  for (const p of posts) blogPages.push([path.join(BLOG_DIR[c.lang], `${p.slug}.html`), blogPost(c, p), c]);
+}
+for (const [file, html] of blogPages) {
+  checkText(html, file, 0);
+  for (const [, id] of html.matchAll(/href="#([^"]+)"/g)) if (id !== 'main' && !html.includes(`id="${id}"`)) throw new Error(`broken anchor #${id} in ${file}`);
+}
+for (const dir of Object.values(BLOG_DIR)) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
+for (const [file, html] of blogPages) {
+  fs.mkdirSync(path.dirname(path.join(ROOT, file)), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, file), html);
+}
+
+// sitemap.xml, robots.txt and llms.txt: for search engines and AI answer engines (SEO and GEO, docs/blog.md)
+const today = new Date().toISOString().slice(0, 10);
+const urls = [
+  [SITE, today], [`${SITE}de/`, today],
+  ...Object.values(COPY).flatMap((c) => LEGAL_KINDS.map((k) => [`${SITE}${c.lang === 'de' ? 'de/' : ''}${LEGAL[c.lang][k].file}`, today])),
+  ...helpPages.map(([f]) => [`${SITE}${f.replace(/index\.html$/, '')}`, today]),
+  ...Object.values(COPY).flatMap((c) => (publishedPosts(c.lang).length ? [[`${SITE}${BLOG_DIR[c.lang]}/`, publishedPosts(c.lang)[0].updated ?? publishedPosts(c.lang)[0].date]] : [])),
+  ...Object.values(COPY).flatMap((c) => publishedPosts(c.lang).map((p) => [`${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html`, p.updated ?? p.date])),
+];
+fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map(([u, d]) => `  <url><loc>${u}</loc><lastmod>${d}</lastmod></url>`).join('\n')}
+</urlset>
+`);
+fs.writeFileSync(path.join(ROOT, 'robots.txt'), `# ToHuus website: everything may be read, by search engines and by AI answer engines alike
+User-agent: *
+Allow: /
+
+Sitemap: ${SITE}sitemap.xml
+`);
+const llmsList = (lang) => [
+  ...helpPages.filter(([, , c]) => c.lang === lang).map(([f, html]) => [html.match(/<title>([^<]*) · ToHuus<\/title>/)?.[1] ?? f, `${SITE}${f.replace(/index\.html$/, '')}`, html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '']),
+];
+fs.writeFileSync(path.join(ROOT, 'llms.txt'), `# ToHuus
+
+> ${COPY.en.desc}
+
+ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app, web app, self-hosted with Docker or as a Home Assistant add-on). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
+
+## Website
+- [ToHuus (English)](${SITE}): what it does, pricing, privacy, self-hosting
+- [ToHuus (Deutsch)](${SITE}de/): German version
+- [Privacy policy](${SITE}${LEGAL.en.privacy.file})
+- [Source code](${GH})
+
+## Help (English)
+${llmsList('en').map(([t, u, d]) => `- [${t}](${u})${d ? `: ${d}` : ''}`).join('\n')}
+
+## Hilfe (Deutsch)
+${llmsList('de').map(([t, u, d]) => `- [${t}](${u})${d ? `: ${d}` : ''}`).join('\n')}
+${Object.values(COPY).map((c) => (publishedPosts(c.lang).length ? `\n## ${BLOG_COPY[c.lang].title}\n${publishedPosts(c.lang).map((p) => `- [${p.title}](${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html): ${p.desc}`).join('\n')}\n` : '')).join('')}`);
+console.log(`built ${blogPages.length} blog pages, sitemap.xml (${urls.length} URLs), robots.txt and llms.txt`);
 console.log(`built ${helpPages.length} help pages (${Object.values(HELP_DIR).join('/, ')}/)`);
 console.log(`built site/index.html, site/de/index.html and the legal pages (${LEGAL_KINDS.map((k) => `${LEGAL.en[k].file}, de/${LEGAL.de[k].file}`).join(', ')})`);
 
 /*
- * Refreshing the screenshots (Playwright + sharp in a scratch folder outside the repo):
- *   1. npm run build
- *   2. per language a fresh self-hosted server with invented people:
- *      DATA_DIR=/tmp/site-<lang> SEED_DEMO=true ADMIN_NAME=Sam ADMIN_PASSWORD=demo12345 LANGUAGE=de REGION=DE
- *      PORT=8095 BASE_URL=http://localhost:8095 node dist/server.mjs   (English: LANGUAGE=en REGION=GB, port 8096)
- *   3. upload about four months of generated receipts (REWE/Lidl/Aldi/dm in German, Tesco/Lidl/Aldi/Boots in English)
- *      as text through POST /api/imports/upload and apply each (POST /api/imports/:id/apply), so the purchase rhythm,
- *      the money page and the suggestions have real data; add the members Mira and Jonas (POST /api/users), let Mira
- *      add two items, accept one rhythm suggestion (POST /api/rhythm/:id/accept), skip the tour (PUT /api/tour)
- *   4. shoot /, /einkauf, /kochen, /geld (previous month), /import and / in dark at 390x844, deviceScaleFactor 3,
- *      household theme via PATCH /api/appearance/household, with .demo-banner hidden
- *   5. convert to webp at 480 and 960 px wide into site/assets/shots/<lang>/<name>-<w>.webp
- *   Never use real names. Check every image before committing.
+ * Refreshing the screenshots: scripts/site-shots.mjs against a local ToHuus Cloud with open sign-up. It creates a
+ * household per language with invented people and four months of invented receipts and shoots every slot in SHOTS at
+ * 390x844 pt, 3x, with the iPhone's status area and home indicator simulated, so the device frame never cuts anything.
+ * Never use real names. Check every image before committing.
  *
  * OG images (site/assets/img/og-<lang>.png, 1200x630): a 1200x630 page with the wordmark, the hero headline and
  * homeTiles(), styled by site.css and screenshotted with Playwright from the served site/ folder.
