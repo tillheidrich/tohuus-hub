@@ -120,7 +120,7 @@ appleAuth.post(
   wrap(async (req, res) => {
     if (rateLimitedGlobal(`apple-ip:${req.ip}`, 20, 5 * 60_000)) throw tooMany();
     const b = appleReq.parse(req.body ?? {});
-    const id = await verifyAppleIdentityToken(b.identityToken, { audience: appleAudience(b.client), nonce: b.nonce ?? null, requireNonce: b.client === 'web' });
+    const id = await verifyAppleIdentityToken(b.identityToken, { audience: appleAudience(b.client), nonce: b.nonce ?? null, requireNonce: true });
     const { accountId, created } = await accountForApple(req, id, b);
     accountsDb().prepare(`UPDATE accounts SET last_login_at = datetime('now') WHERE id = ?`).run(accountId);
     await keepAppleRefreshToken(id.sub, b.authorizationCode, appleAudience(b.client));

@@ -141,7 +141,7 @@ form, the shops named at sign-up).
   `memberships` mirror in accounts.db is never trusted for this –, body `{ confirm: "<household name>", password }`):
   crypto-shredding first (the wrapped key is set to NULL in the same transaction that removes memberships and
   detaches sessions/tokens), then the folder and its local backups are removed.
-- `DELETE /api/cloud/account` (body `{ password }`, or `{ appleIdentityToken, appleNonce }` / `{ code }` – see [Sign in with Apple](#sign-in-with-apple)): households the account has to itself – or where only permanent
+- `DELETE /api/cloud/account` (body `{ password }`, or `{ appleIdentityToken, appleNonce, appleAuthorizationCode? }` / `{ code }` – see [Sign in with Apple](#sign-in-with-apple)): households the account has to itself – or where only permanent
   guests would remain – are shredded; in shared households the person leaves, and if they were the last admin the
   longest-standing *member* becomes admin (never a guest, never an expired membership). The account's passkeys
   and WebAuthn user handle are deleted with it. Required by App Store guideline 5.1.1(v).
@@ -271,8 +271,8 @@ Test: `test/cloud-apple.test.ts` (a local RSA key and a fake JWKS – no network
   `https://appleid.apple.com`, audience = `APPLE_BUNDLE_ID` (app, default `de.heidrichdigital.tohuus`) or
   `APPLE_SERVICES_ID` (web, default `de.heidrichdigital.tohuus.web`; `off` or empty hides the web button), expiry (30 s
   tolerance), and the nonce: the client generates a raw nonce, puts SHA-256 (hex) of it into the Apple request and sends
-  the raw value to us; each nonce and each token works once (process memory). A token that carries a nonce is refused
-  without it; the web flow always needs one.
+  the raw value to us; each nonce and each token works once (process memory). Since 13 Oct 2026 every
+  sign-in needs one (app and web); a token without a nonce is refused.
 - **Accounts**: `account_apple (sub PRIMARY KEY, account_id UNIQUE → accounts ON DELETE CASCADE, email, private_relay,
   created_at, last_used_at)` in `accounts.db` (created on first use). A known `sub` signs in to its account. Otherwise a
   verified Apple e-mail that equals a **verified** account's address links the two (once; another Apple ID cannot take a
@@ -297,7 +297,9 @@ Test: `test/cloud-apple.test.ts` (a local RSA key and a fake JWKS – no network
   `de.heidrichdigital.tohuus.web` with "Sign in with Apple" configured for the domain of `BASE_URL` and the return URL
   `<BASE_URL>/api/auth/apple/callback`, grouped with the App ID as primary.
 - **Deleting the account** removes the link. Apple accounts without a password confirm with a fresh Sign in with Apple in
-  the app (`DELETE /api/cloud/account { appleIdentityToken, appleNonce }`, the token's `sub` must be the account's).
+  the app (`DELETE /api/cloud/account { appleIdentityToken, appleNonce, appleAuthorizationCode? }`, the token's `sub` must be the
+  account's). The fresh `appleAuthorizationCode` is exchanged for a refresh token first, so the revocation also works
+  when the exchange at sign-in failed or the Sign in with Apple key was set later.
   Accounts without password and without Apple confirm in the app with the code from the mail: the first call sends it
   (`400 needEmailConfirm`), the second carries `{ code }` (password accounts always need the password).
 - **Token revocation (5.1.1(v))**: with `APPLE_SIWA_KEY_ID` and `APPLE_SIWA_KEY_P8` (the .p8 as PEM, `\n` allowed) and `APPLE_TEAM_ID` (default FVS7WVTQ67) set, every sign-in exchanges Apple's authorization code once for a refresh token (`POST https://appleid.apple.com/auth/token`, client_secret = ES256 JWT for the bundle id or the Services ID), kept in `account_apple.refresh_token`; deleting the account revokes it (`POST …/auth/revoke`) before the link is dropped. Without the key nothing is exchanged and deletion only drops the link (logged once). A failed exchange never fails the sign-in.

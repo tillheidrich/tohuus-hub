@@ -318,14 +318,16 @@ function currentTokenHash(req: Request) {
  * (e-mail links only) confirms with a fresh e-mail link: the first call sends it, opening it within 15 minutes
  * makes the session fresh, and the call is repeated.
  */
-export async function confirmAccount(req: Request, accountId: number, password: string | undefined, apple?: { identityToken?: string; nonce?: string }, code?: string) {
+export async function confirmAccount(req: Request, accountId: number, password: string | undefined, apple?: { identityToken?: string; nonce?: string; authorizationCode?: string }, code?: string) {
   const acc = await A();
   const a = acc.accountById(accountId)!;
   // an account linked to Apple can confirm with a fresh Sign in with Apple in the app (same Apple ID)
   if (apple?.identityToken) {
     if (rateLimitedGlobal(`confirm:${accountId}`, 8, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
-    const id = await cloudApple.verifyAppleIdentityToken(apple.identityToken, { audience: cloudApple.appleAudience('ios'), nonce: apple.nonce ?? null });
+    const id = await cloudApple.verifyAppleIdentityToken(apple.identityToken, { audience: cloudApple.appleAudience('ios'), nonce: apple.nonce ?? null, requireNonce: true });
     if (cloudApple.appleAccountOf(id.sub) !== accountId) throw new AuthError(400, t('That Apple ID belongs to another account.'));
+    // a fresh code gives a fresh refresh token, so deleting the account can revoke it even when the sign-in exchange failed
+    await cloudApple.keepAppleRefreshToken(id.sub, apple.authorizationCode, cloudApple.appleAudience('ios'));
     return;
   }
   if (a.password_hash?.startsWith('scrypt$')) {
@@ -930,11 +932,13 @@ cloud.delete(
         /** Apple-linked accounts: a fresh Sign in with Apple instead of the password */
         appleIdentityToken: z.string().max(8000).optional(),
         appleNonce: z.string().max(200).optional(),
+        /** from the same fresh Sign in with Apple: exchanged for a token that is then revoked (App Store rule 5.1.1(v)) */
+        appleAuthorizationCode: z.string().max(2000).optional(),
         /** accounts without a password, in the app: the code from the confirmation mail */
         code: z.string().max(20).optional(),
       })
       .parse(req.body ?? {});
-    await confirmAccount(req, a.id, b.password, { identityToken: b.appleIdentityToken, nonce: b.appleNonce }, b.code);
+    await confirmAccount(req, a.id, b.password, { identityToken: b.appleIdentityToken, nonce: b.appleNonce, authorizationCode: b.appleAuthorizationCode }, b.code);
     const out = await removeAccount(a.id);
     res.clearCookie(SESSION_COOKIE, { path: '/' });
     return { ok: true, ...out };
