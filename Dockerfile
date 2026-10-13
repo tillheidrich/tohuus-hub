@@ -22,6 +22,6 @@ RUN mkdir -p /data && chown node:node /data
 USER node
 VOLUME /data
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD curl -fs http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD curl -fs "http://localhost:${PORT:-8080}/health" || exit 1
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "dist/server.mjs"]

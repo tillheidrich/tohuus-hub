@@ -185,6 +185,8 @@ Every variable the server reads. Only `BASE_URL` and the admin account matter fo
 | `BASE_URL` | `http://localhost:8080` | Public URL. Used in links, notifications, guest links, MCP addresses and as the passkey domain. |
 | `PORT` | `8080` | Port the server listens on. |
 | `DATA_DIR` | `./data` (`/data` in Docker) | Where the database, images, imports and backups are stored. |
+| `DB_ENCRYPTION_KEY` | none | Encrypts the database at rest (32 random bytes, `openssl rand -base64 32`, or a long passphrase). Keep it outside the data volume – without it the data cannot be read. An existing plain database is converted on the next start. |
+| `STORAGE_QUOTA_MB` | `0` | Storage limit in MB for photos, receipt files and the database (`0` = unlimited). |
 | `ADMIN_NAME` | `Admin` | First account, created when there are no users yet. |
 | `ADMIN_PASSWORD` | random | Password for that account. If empty, a random one is printed to the log once. |
 | `LANGUAGE` | `en` | UI language on first start: `en` or `de`. Changeable under *Settings › Household*. |
