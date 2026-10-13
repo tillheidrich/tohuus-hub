@@ -933,56 +933,9 @@ cloud.delete(
       })
       .parse(req.body ?? {});
     await confirmAccount(req, a.id, b.password, { identityToken: b.appleIdentityToken, nonce: b.appleNonce }, b.code);
-    const shredded: string[] = [];
-    const left: string[] = [];
-    for (const m of acc.membershipsOf(a.id)) {
-      // who else really belongs: a current membership and a member row (not a permanent guest) in the household
-      const others = acc
-        .membersOf(m.household_id)
-        .filter((x) => x.account_id !== a.id && (!x.expires_at || Date.parse(x.expires_at.replace(' ', 'T') + 'Z') > Date.now()))
-        .map((x) => ({ ...x, person: householdPerson(m.household_id, x.user_id) }))
-        .filter((x) => x.person);
-      const full = others.filter((x) => x.person!.kind !== 'guest');
-      // nobody left who could run the household (guests never inherit it) → crypto-shred
-      if (!full.length) {
-        acc.shredHousehold(m.household_id);
-        shredded.push(m.household_id);
-        continue;
-      }
-      if (isHouseholdAdmin(householdPerson(m.household_id, m.user_id)) && !full.some((x) => isHouseholdAdmin(x.person))) {
-        const heir = full[0];
-        runInHousehold({ id: m.household_id, via: 'account-delete' }, () => {
-          db.prepare(`UPDATE users SET role = 'admin' WHERE id = ?`).run(heir.user_id);
-          syncMembership(heir.user_id);
-        });
-      }
-      runInHousehold({ id: m.household_id, via: 'account-delete' }, () => {
-        db.prepare('DELETE FROM users WHERE id = ?').run(m.user_id);
-        emit('settings');
-      });
-      acc.removeMembership(a.id, m.household_id);
-      left.push(m.household_id);
-    }
-    // the account's passkeys go with it (also ON DELETE CASCADE)
-    cloudPasskeys.deleteAccountPasskeys(a.id);
-    // and its Sign in with Apple link (token revocation needs a client secret: TODO(apple-revoke) in lib/cloud-apple.ts)
-    cloudApple.deleteAppleLinks(a.id);
-    acc.accountsDb().prepare('DELETE FROM accounts WHERE id = ?').run(a.id);
+    const out = await removeAccount(a.id);
     res.clearCookie(SESSION_COOKIE, { path: '/' });
-    // confirmation, in the account's language (the address is gone from our side once this is sent)
-    if (canSendMail())
-      void inAccountLang(a.lang, () =>
-        sendAuthMail(
-          a.email,
-          t('Your ToHuus account is deleted'),
-          t('Account deleted'),
-          t('Your account and your sign-in are gone. Households where you were the only member were deleted with everything in them; in shared households you left, and the others keep their list.'),
-          undefined,
-          t('If this was not you, write to us right away.'),
-          { paragraphs: [t('Your account and your sign-in are gone. Households where you were the only member were deleted with everything in them; in shared households you left, and the others keep their list.'), t('If you have a subscription through Apple, cancel it in the App Store as well – deleting the account does not end it.')] },
-        ),
-      );
-    return { ok: true, deleted: shredded, left };
+    return { ok: true, ...out };
   }),
 );
 
@@ -1154,3 +1107,63 @@ cloud.delete('/users/:id', (req, res, next) => {
 });
 for (const p of ['/auth/me/totp', '/auth/me/pin', '/auth/me/sso', '/auth/me/email', '/auth/sso', '/auth/device', '/auth/members/:id/reset-link', '/auth/members/:id/signout', '/auth/members/:id/totp', '/auth/members/:id/pin', '/auth/members/:id/sso', '/backups', '/restore'])
   cloud.use(p, notInCloud);
+
+/**
+ * Removes an account for good (the person in Settings, or an operator in the back office): households where nobody
+ * else could run them are crypto-shredded, in shared ones the person leaves (an heir becomes admin), passkeys and the
+ * Apple link go, and a confirmation mail goes out in the account's language.
+ */
+export async function removeAccount(accountId: number): Promise<{ deleted: string[]; left: string[] }> {
+  const acc = await A();
+  const a = acc.accountById(accountId);
+  if (!a) return { deleted: [], left: [] };
+  const shredded: string[] = [];
+  const left: string[] = [];
+  for (const m of acc.membershipsOf(a.id)) {
+    // who else really belongs: a current membership and a member row (not a permanent guest) in the household
+    const others = acc
+      .membersOf(m.household_id)
+      .filter((x) => x.account_id !== a.id && (!x.expires_at || Date.parse(x.expires_at.replace(' ', 'T') + 'Z') > Date.now()))
+      .map((x) => ({ ...x, person: householdPerson(m.household_id, x.user_id) }))
+      .filter((x) => x.person);
+    const full = others.filter((x) => x.person!.kind !== 'guest');
+    // nobody left who could run the household (guests never inherit it) → crypto-shred
+    if (!full.length) {
+      acc.shredHousehold(m.household_id);
+      shredded.push(m.household_id);
+      continue;
+    }
+    if (isHouseholdAdmin(householdPerson(m.household_id, m.user_id)) && !full.some((x) => isHouseholdAdmin(x.person))) {
+      const heir = full[0];
+      runInHousehold({ id: m.household_id, via: 'account-delete' }, () => {
+        db.prepare(`UPDATE users SET role = 'admin' WHERE id = ?`).run(heir.user_id);
+        syncMembership(heir.user_id);
+      });
+    }
+    runInHousehold({ id: m.household_id, via: 'account-delete' }, () => {
+      db.prepare('DELETE FROM users WHERE id = ?').run(m.user_id);
+      emit('settings');
+    });
+    acc.removeMembership(a.id, m.household_id);
+    left.push(m.household_id);
+  }
+  // the account's passkeys go with it (also ON DELETE CASCADE)
+  cloudPasskeys.deleteAccountPasskeys(a.id);
+  // and its Sign in with Apple link (token revocation needs a client secret: TODO(apple-revoke) in lib/cloud-apple.ts)
+  cloudApple.deleteAppleLinks(a.id);
+  acc.accountsDb().prepare('DELETE FROM accounts WHERE id = ?').run(a.id);
+  // confirmation, in the account's language (the address is gone from our side once this is sent)
+  if (canSendMail())
+    void inAccountLang(a.lang, () =>
+      sendAuthMail(
+        a.email,
+        t('Your ToHuus account is deleted'),
+        t('Account deleted'),
+        t('Your account and your sign-in are gone. Households where you were the only member were deleted with everything in them; in shared households you left, and the others keep their list.'),
+        undefined,
+        t('If this was not you, write to us right away.'),
+        { paragraphs: [t('Your account and your sign-in are gone. Households where you were the only member were deleted with everything in them; in shared households you left, and the others keep their list.'), t('If you have a subscription through Apple, cancel it in the App Store as well – deleting the account does not end it.')] },
+      ),
+    );
+  return { deleted: shredded, left };
+}

@@ -417,6 +417,18 @@ A stored value **overrides the environment**; removing it falls back to the envi
 process, cache dropped on every change) – `aiConfig()`/`fallbackModels()` see them at once; an explicit `env` object
 passed by tests/tools is not touched. Test: `test/cloud-admin.test.ts`.
 
+## Accounts in the back office
+
+Back office › **Konten** (`server/routes/operator-accounts.ts`, `web/src/pages/operator/Accounts.tsx`). For keeping the service safe – e.g. taking someone out of the beta – with account data only.
+
+- `GET /api/operator/accounts?q=&filter=all|blocked|unconfirmed&offset=&limit=` → `{ total, accounts }`: e-mail, name, language, created / confirmed / last login / last seen (sessions and app tokens), number of app devices, sign-in ways (password, Apple, passkeys), households with name, role and plan. Never anything from inside a household.
+- `POST /api/operator/accounts/:id/block { reason (3–300), notify = true }` – **pause**: every session and app token is removed at once, and `createCloudSession` / `createAppToken` refuse the account (HTTP 403, `code: 'account.blocked'`, "Dieses Konto ist pausiert … schreib an <support>"), so password, e-mail code or link, passkey and Sign in with Apple all stop. The person gets a mail with the reason in their language. Households and their data stay; others in a shared household keep using it.
+- `POST /api/operator/accounts/:id/unblock { notify }`, `POST /api/operator/accounts/:id/signout` (sessions and app tokens removed, no pause).
+- `DELETE /api/operator/accounts/:id { confirm: <e-mail> }` – the same `removeAccount()` as "Konto löschen" in Settings: households where nobody else is left are crypto-shredded, in shared ones the person leaves (an heir becomes admin), passkeys and Apple link go, confirmation mail.
+- Every action is in the audit log with the account **id** (never the address).
+- **Apple and GDPR**: App Store Review Guideline 5.1.1(v) asks that people can delete their account in the app – that stays. Pausing for abuse is covered by the terms ("aus wichtigem Grund"); the privacy policy names the account administration (Art. 6 (1) f GDPR). A paused person can still ask by e-mail for deletion or an export.
+- Not affected by a pause: MCP/OAuth connections and Home Assistant tokens of a household belong to the household, not to the account – revoke them in that household if needed.
+
 ## Gifts: beta plan and plan codes
 
 `server/lib/gifts.ts`, back office › **Geschenke**. Nothing is bought and nothing is charged in either way.

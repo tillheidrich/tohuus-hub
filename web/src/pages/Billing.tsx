@@ -123,7 +123,9 @@ export function BillingCard() {
       <p className="small muted" style={{ margin: 0 }}>
         {s.gift?.kind === 'beta'
           ? t('During the beta nobody pays. When it ends, every household keeps what it has on its own – nothing is deleted.')
-          : t('Subscriptions are bought in the ToHuus iPhone app for now – one per household, everyone in it benefits. When a subscription ends, the household goes back to Free and nothing is deleted.')}
+          : s.gift
+            ? t('A gift from us – nothing is charged.')
+            : t('Subscriptions are bought in the ToHuus iPhone app for now – one per household, everyone in it benefits. When a subscription ends, the household goes back to Free and nothing is deleted.')}
       </p>
     </section>
   );

@@ -282,9 +282,10 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     res.status(413).json({ error: t('File too large (max. 15 MB)') });
     return;
   }
-  const e = err as { message?: string; status?: unknown; expose?: boolean; stack?: string };
+  const e = err as { message?: string; status?: unknown; expose?: boolean; stack?: string; code?: unknown };
   // deliberate client errors (status < 500) and translated messages for people (userError) are shown as they are
-  if (typeof e?.status === 'number' && e.status >= 400 && e.status < 500) return void res.status(e.status).json({ error: e.message ?? t('Error') });
+  if (typeof e?.status === 'number' && e.status >= 400 && e.status < 500)
+    return void res.status(e.status).json({ error: e.message ?? t('Error'), ...(typeof e.code === 'string' && /^[a-z]+\.[a-z_]+$/.test(e.code) ? { code: e.code } : {}) });
   if (e?.expose && e.message) {
     console.error('[error]', e.message);
     return void res.status(500).json({ error: e.message });

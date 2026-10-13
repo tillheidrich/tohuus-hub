@@ -296,3 +296,23 @@
     display: none;
   }
 }
+
+/* Konten (Accounts.tsx) */
+.op-acc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.op-acc-name {
+  font-family: inherit;
+}
+.op-danger summary {
+  cursor: pointer;
+  color: var(--danger, #b42318);
+  font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
