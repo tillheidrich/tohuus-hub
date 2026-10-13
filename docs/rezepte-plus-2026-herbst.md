@@ -16,7 +16,7 @@ bzw. dem Gerät und dem Namen). Alles liegt in **einem** Canva-Design:
    Seite 1 geht an das Rezept mit Seite 1 usw.; was nicht passt, steht danach unter „Nicht zugeordnet“.
 3. Rezept lesen, auf „Gelesen und geprüft“ stellen, dann einplanen. Ich würde drei pro Woche nehmen (Mo, Mi, Fr).
 
-**Echte Fotos, wo es passt.** 16 Karten haben ein echtes Foto von Pexels (kostenlos, auch kommerziell, Nennung
+**Echte Fotos, wo es passt.** 16 der ersten 32 Karten haben ein echtes Foto von Pexels (kostenlos, auch kommerziell, Nennung
 freiwillig – wir nennen trotzdem: unter dem Bild steht „Foto: Name / Pexels“). Bei den übrigen 16 gab es kein
 passendes Foto; dort bleibt das KI-Bild aus deinem Canva-Konto, und die Karte trägt das Schild „KI-Bild“.
 
@@ -25,7 +25,7 @@ passendes Foto; dort bleibt das KI-Bild aus deinem Canva-Konto, und die Karte tr
 | 1 Kürbis-Linsen-Suppe | Pexels ([Foto](https://www.pexels.com/photo/soup-on-white-ceramic-soup-bowl-209540/)) |
 | 2 Ofen-Hähnchen mit Wurzelgemüse | Pexels ([Foto](https://www.pexels.com/photo/delicious-roasted-chicken-with-vegetables-in-glass-form-6210933/)) |
 | 3 Hähnchen-Wraps vom Vortag | Pexels ([Foto](https://www.pexels.com/photo/wraps-on-wooden-board-5112578/)) |
-| 7 Gemüsereis aus dem Kühlschrank | Pexels ([Foto](https://www.pexels.com/photo/fried-rice-on-the-plate-4940832/)) |
+| 7 Gemüsereis aus dem Kühlschrank | Nadja M / Pexels ([Foto](https://www.pexels.com/photo/a-dish-with-rice-and-vegetables-17910326/)) |
 | 10 Apfel-Zimt-Porridge | Alesia Kozik / Pexels ([Foto](https://www.pexels.com/photo/brown-and-white-food-on-black-ceramic-bowl-6072379/)) |
 | 12 Shakshuka mit Feta | Pexels (Foto 28581598) |
 | 14 Erbsensuppe aus dem Vorrat | Farhad Ibrahimzade / Pexels (Foto 8738014) |
@@ -89,6 +89,26 @@ Maschinen überein, nachgekocht hat sie noch niemand. Das Backoffice erinnert da
 | Cookit | One-Pot-Pasta mit Gemüse aus dem Cookit | 25 min | [Bild in Canva](https://www.canva.com/M/MAHX51B9Pw4) |
 | Cookit | Grießbrei mit Apfelkompott aus dem Cookit | 20 min | [Bild in Canva](https://www.canva.com/M/MAHX54VKjOM) |
 | Cookit | Linsencurry mit Spinat aus dem Cookit | 35 min | [Bild in Canva](https://www.canva.com/M/MAHX50PuHzA) |
+
+## Gebäck (auch Plus)
+
+Sechs Rezepte zum Backen (`server/data/catalog-seed-baking.ts`), Vorschaukarten in einem eigenen Canva-Design:
+[ToHuus Vorschaubilder Gebäck](https://www.canva.com/d/SH5iCLredB6N8-B). Sie sind die Seiten 33 bis 38. Beim Hochladen im
+Backoffice „Seite 1 im ZIP ist Seite“ auf **33** stellen.
+
+| Seite | Rezept | Zeit | Bild |
+|---|---|---|---|
+| 33 | Zimtschnecken | 150 min | Foto Pexels (3434526) |
+| 34 | Franzbrötchen | 120 min | KI-Bild |
+| 35 | Apfel-Streuselkuchen vom Blech | 75 min | KI-Bild |
+| 36 | Quarkbrötchen | 35 min | Foto Pexels (4197986) |
+| 37 | Haferkekse mit Schokolade | 30 min | Foto Pexels (5436476) – auf dem Foto ist keine Schokolade zu sehen |
+| 38 | Zwetschgenkuchen vom Blech | 120 min | KI-Bild |
+
+**Unsplash:** Aus der Entwicklungsumgebung kommt man an unsplash.com nicht heran (Netz gesperrt), deshalb sind alle
+echten Fotos von Pexels. Wenn du in Canva selbst ein Unsplash- oder Canva-Stockfoto in eine Karte ziehst, ist das in
+Ordnung: In einem Canva-Design darfst du Canva-Stockfotos verwenden und als Bild exportieren. Trag dann im Seed den
+Fotografen als `credit` ein (oder sag mir den Namen).
 
 ## Was Plus dabei bedeutet
 

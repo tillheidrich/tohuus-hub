@@ -22,6 +22,7 @@ import { openDbFile, type DB } from '../db.js';
 import { CATALOG_SEED, type SeedRecipe } from '../data/catalog-seed.js';
 import { CATALOG_SEED_PLUS } from '../data/catalog-seed-plus.js';
 import { CATALOG_SEED_DEVICES, type DeviceSeedRecipe } from '../data/catalog-seed-devices.js';
+import { CATALOG_SEED_BAKING } from '../data/catalog-seed-baking.js';
 import { decryptBlob, deriveKey, encryptBlob } from './crypto-keys.js';
 import { normalizeRecipe, type ImportRecipe } from './recipes2.js';
 import sharp from './sharp-safe.js';
@@ -75,6 +76,7 @@ export function catalogDb(): DB {
   seedCatalog();
   seedPlus();
   seedDevices();
+  seedBaking();
   return d;
 }
 /** tests */
@@ -234,6 +236,23 @@ function seedDevices() {
       ins.run(data.title, data.description, JSON.stringify(data), JSON.stringify(data.tags), JSON.stringify(computeAllergens(data.ingredients)), JSON.stringify(warnings), s.canva ? `https://www.canva.com/M/${s.canva}` : null, CATALOG_SEED_PLUS.length + i + 1, s.credit ?? null);
     });
     d.prepare(`INSERT INTO catalog_meta (key, value) VALUES ('seeded-devices-1', datetime('now'))`).run();
+  })();
+}
+
+/** Baking (catalog-seed-baking.ts) – once, as Plus drafts; preview-card pages after the kitchen-machine recipes. */
+function seedBaking() {
+  const d = cdb!;
+  if (d.prepare(`SELECT value FROM catalog_meta WHERE key = 'seeded-baking-1'`).get()) return;
+  const ins = d.prepare(
+    `INSERT INTO catalog_recipes (title, description, data, tags, origin, ai_assisted, allergens, warnings, created_by, tier, image_ref, image_page, image_credit) VALUES (?, ?, ?, ?, 'own', 1, ?, ?, 'seed-baking', 'plus', ?, ?, ?)`,
+  );
+  const first = CATALOG_SEED_PLUS.length + CATALOG_SEED_DEVICES.length;
+  d.transaction(() => {
+    CATALOG_SEED_BAKING.forEach((s, i) => {
+      const data = seedToRecipe(s);
+      ins.run(data.title, data.description, JSON.stringify(data), JSON.stringify(data.tags), JSON.stringify(computeAllergens(data.ingredients)), JSON.stringify(safetyNotes(data)), s.canva ? `https://www.canva.com/M/${s.canva}` : null, first + i + 1, s.credit ?? null);
+    });
+    d.prepare(`INSERT INTO catalog_meta (key, value) VALUES ('seeded-baking-1', datetime('now'))`).run();
   })();
 }
 

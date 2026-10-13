@@ -385,15 +385,20 @@ describe('usage statistics (counts only)', () => {
 
 describe('ToHuus-Rezepte (central catalogue)', () => {
   let cat: typeof import('../server/lib/cloud-recipes');
-  it('starts with 30 own drafts, 20 Plus drafts and 12 kitchen-machine drafts – nothing published, allergens computed, review notes', async () => {
+  it('starts with 30 own drafts, 20 Plus drafts, 12 kitchen-machine and 6 baking drafts – nothing published, allergens computed, review notes', async () => {
     cat = await import('../server/lib/cloud-recipes');
     const l = await op.get('/api/operator/recipes');
     expect(l.status, l.text).toBe(200);
-    expect(l.json.recipes).toHaveLength(62);
-    expect(l.json.counts).toEqual({ draft: 62 });
+    expect(l.json.recipes).toHaveLength(68);
+    expect(l.json.counts).toEqual({ draft: 68 });
     // the Plus set: tier plus, each with the Canva link of its AI picture
     const plusSet = l.json.recipes.filter((r: any) => r.plus);
-    expect(plusSet).toHaveLength(32);
+    expect(plusSet).toHaveLength(38);
+    // baking: preview-card pages 33–38 after the kitchen-machine recipes
+    const rolls = l.json.recipes.find((r: any) => r.title === 'Zimtschnecken');
+    expect(rolls).toMatchObject({ plus: true, imagePage: 33 });
+    expect(l.json.recipes.find((r: any) => r.title === 'Zwetschgenkuchen vom Blech').imagePage).toBe(38);
+    expect(rolls.allergens).toEqual(expect.arrayContaining(['gluten', 'eggs', 'milk']));
     // kitchen machines: the settings sit on the steps, the device on the recipe; Thermomix only for Thermomix
     const tm = l.json.recipes.find((r: any) => r.title === 'Kürbisrisotto aus dem Thermomix');
     expect(tm.thermomix).toBe(true);
@@ -566,6 +571,12 @@ describe('ToHuus-Rezepte (central catalogue)', () => {
     // a real Pexels photo is in this card: shown as photo with the credit
     expect(r1).toMatchObject({ imageKind: 'photo', imageCredit: 'Pexels' });
     expect((await op.get(`/api/operator/recipes/${p12.id}`)).json.image).toBeTruthy();
+    // part of the design: the baking cards exported on their own (pages 1–6 = 33–38)
+    const part = new FormData();
+    part.append('file', new Blob([new Uint8Array(writeZip([{ name: '1.png', data: png }]))], { type: 'application/zip' }), 'gebaeck.zip');
+    part.append('start', '33');
+    const up2 = await op.req('POST', '/api/operator/recipes/preview-zip', part);
+    expect(up2.json.recipes).toEqual([expect.objectContaining({ page: 33, title: 'Zimtschnecken' })]);
     // not a zip
     const bad = new FormData();
     bad.append('file', new Blob([png], { type: 'image/png' }), 'x.png');

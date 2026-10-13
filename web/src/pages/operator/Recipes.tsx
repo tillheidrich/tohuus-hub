@@ -199,6 +199,7 @@ export function OperatorRecipes() {
   const [aiAssisted, setAiAssisted] = useState(false);
   const [dishes, setDishes] = useState('');
   const cardsZip = useRef<HTMLInputElement>(null);
+  const [cardsStart, setCardsStart] = useState('1');
   const [cardsDone, setCardsDone] = useState<{ updated: number; skipped: string[] } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [upload, setUpload] = useState<{ created: number; warnings: string[]; errors: { title: string | null; error: string }[] } | null>(null);
@@ -278,6 +279,10 @@ export function OperatorRecipes() {
 
         <Section title={t('Preview cards from Canva')}>
           <p className="small muted op-p">{t('In Canva, download the preview-card design as PNG (all pages, as ZIP) and upload the ZIP here. Page 1 goes to the recipe with page 1 and so on.')}</p>
+          <div className="field">
+            <label htmlFor="op-cards-start">{t('Page 1 of the ZIP is page')}</label>
+            <input id="op-cards-start" className="input" type="number" min={1} max={999} inputMode="numeric" value={cardsStart} onChange={(e) => setCardsStart(e.target.value)} style={{ maxWidth: 120 }} />
+          </div>
           <button className="btn" onClick={() => cardsZip.current?.click()}>
             {t('Upload preview cards (ZIP)')}
           </button>
@@ -291,6 +296,7 @@ export function OperatorRecipes() {
               if (!f) return;
               const fd = new FormData();
               fd.append('file', f);
+              fd.append('start', cardsStart || '1');
               const r = await run(() => api<{ updated: number; skipped: string[] }>('/operator/recipes/preview-zip', { form: fd }), t('Saved'));
               if (r) setCardsDone(r);
               e.target.value = '';

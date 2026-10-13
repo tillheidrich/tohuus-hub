@@ -197,11 +197,14 @@ describe('mail layout', () => {
     reason: 'You get this because …',
   });
 
-  it('renders the same HTML and text (snapshot)', () => {
+  it('renders the same HTML and text (snapshot)', async () => {
     dbm.setSetting('household.name', 'Testhaus');
     const r = mail.renderMail(fixture());
-    expect(r.html).toMatchSnapshot('html');
-    expect(r.text).toMatchSnapshot('text');
+    // the footer links to the instance; its port changes from run to run
+    const { config } = await import('../server/config');
+    const stable = (s: string) => s.split(config.baseUrl).join('BASE_URL');
+    expect(stable(r.html)).toMatchSnapshot('html');
+    expect(stable(r.text)).toMatchSnapshot('text');
     expect(r.html).toContain('cid:tohuus-mark');
     expect(r.html).toContain('cid:tohuus-icon');
     // brand fonts come from our own website, never from a font CDN

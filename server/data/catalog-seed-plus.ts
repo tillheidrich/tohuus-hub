@@ -127,7 +127,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Mit Sojasoße und Frühlingszwiebeln abschmecken. Gekochten Reis nicht länger als einen Tag aufheben und immer gut durcherhitzen.',
     ],
     canva: 'MAHX5uhc90w',
-    credit: 'Pexels',
+    credit: 'Nadja M / Pexels',
   },
   {
     title: 'Nudelauflauf mit Brokkoli und Resten',

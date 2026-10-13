@@ -312,13 +312,16 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     } catch (e) {
       return void res.status(422).json({ error: (e as Error).message });
     }
+    // a ZIP of part of the design (e.g. the baking cards 33–38 as pages 1–6) says where it starts
+    const start = Math.max(1, Math.min(999, Math.trunc(Number(req.body?.start) || 1)));
     const byPage = new Map((catalogDb().prepare('SELECT * FROM catalog_recipes WHERE image_page IS NOT NULL').all() as CatalogRow[]).map((r) => [r.image_page!, r]));
     const set = catalogDb().prepare(`UPDATE catalog_recipes SET image = ?, image_kind = ?, updated_at = datetime('now') WHERE id = ?`);
     const done: { page: number; id: number; title: string }[] = [];
     const skipped: string[] = [];
     for (const e of entries) {
       const m = /(?:^|[^0-9])(\d{1,3})\.(png|jpe?g|webp)$/i.exec(e.name);
-      const row = m ? byPage.get(Number(m[1])) : undefined;
+      const page = m ? Number(m[1]) + start - 1 : 0;
+      const row = m ? byPage.get(page) : undefined;
       if (!m || !row) {
         if (!e.name.endsWith('/')) skipped.push(e.name.slice(0, 80));
         continue;
@@ -329,7 +332,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
         continue;
       }
       set.run(await storeCatalogImage(buf), row.image_credit ? 'photo' : 'ai', row.id);
-      done.push({ page: Number(m[1]), id: row.id, title: row.title });
+      done.push({ page, id: row.id, title: row.title });
     }
     audit(who(req), 'recipes.preview-zip', null, { pages: done.length, skipped: skipped.length });
     res.json({ updated: done.length, recipes: done, skipped: skipped.slice(0, 20) });

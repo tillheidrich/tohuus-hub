@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Baking recipes**: six Plus drafts (Zimtschnecken, Franzbrötchen, Apfel-Streuselkuchen, Quarkbrötchen, Haferkekse, Zwetschgenkuchen) with preview cards 33–38; the preview-card ZIP upload takes `start` for a ZIP of part of the design.
+
 - **Mail branding**: the header shows the house of the app icon, the footer the app icon, a short line about ToHuus, links to notification settings and help (cloud: privacy and imprint too, also in the plain-text part); the brand fonts load from our own website (`SITE_URL/assets/fonts`), never from a font CDN.
 
 - **Preview cards for Plus recipes**: one Canva design with a card per recipe (real Pexels photo where one fits, otherwise the AI picture), back office upload of the Canva ZIP (`POST /api/operator/recipes/preview-zip`, page → recipe), photo credit (`imageCredit`, "Foto: …") on web and iPhone.

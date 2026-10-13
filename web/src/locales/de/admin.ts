@@ -171,6 +171,7 @@ export const admin: Record<string, string> = {
   'Preview cards from Canva': 'Vorschaubilder aus Canva',
   'In Canva, download the preview-card design as PNG (all pages, as ZIP) and upload the ZIP here. Page 1 goes to the recipe with page 1 and so on.': 'Lade in Canva das Design mit den Vorschaubildern als PNG herunter (alle Seiten, als ZIP) und lade das ZIP hier hoch. Seite 1 geht an das Rezept mit Seite 1 und so weiter.',
   'Upload preview cards (ZIP)': 'Vorschaubilder hochladen (ZIP)',
+  'Page 1 of the ZIP is page': 'Seite 1 im ZIP ist Seite',
   '{n} recipes got their preview card.': '{n} Rezepte haben ihr Vorschaubild.',
   'Not assigned': 'Nicht zugeordnet',
   '– download it there, then “Add photo”. It is marked as AI image.': '– dort herunterladen, dann „Foto hinzufügen“. Es wird als KI-Bild markiert.',
