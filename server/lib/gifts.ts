@@ -31,7 +31,8 @@ export const GIFT_PLANS: GiftPlan[] = ['haushalt', 'plus'];
 /** The plan every household gets during the beta, or null. */
 export function betaGift(): GiftPlan | null {
   if (!config.multiTenant) return null;
-  const v = runtimeSetting('beta.gift');
+  // back office first; the environment (BETA_GIFT) is the fallback so a fresh deploy can start with the gift on
+  const v = runtimeSetting('beta.gift') ?? (process.env.BETA_GIFT ?? '').trim().toLowerCase();
   return v === 'haushalt' || v === 'plus' ? v : null;
 }
 

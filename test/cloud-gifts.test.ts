@@ -98,6 +98,17 @@ describe('beta gift', () => {
     rs.setRuntimeSetting('beta.gift', null, 'test');
     expect((await c.get('/api/billing/status')).json).toMatchObject({ plan: 'trial', gift: null });
   });
+
+  it('BETA_GIFT in the environment switches the gift on (the back office setting wins when set)', async () => {
+    const { c } = await household('beta-gift-env@example.org');
+    process.env.BETA_GIFT = 'plus';
+    try {
+      expect((await c.get('/api/billing/status')).json).toMatchObject({ plan: 'plus', source: 'beta' });
+    } finally {
+      rs.setRuntimeSetting('beta.gift', null, 'test');
+      delete process.env.BETA_GIFT;
+    }
+  });
 });
 
 describe('plan codes', () => {
