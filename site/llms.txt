@@ -170,7 +170,7 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - 616 Mio. l: So viel alkoholfreies Bier wurde 2025 in Deutschland produziert, 6,5 Prozent mehr als im Vorjahr. (Destatis 2026, https://www.destatis.de/DE/Presse/Pressemitteilungen/Zahl-der-Woche/2026/PD26_28_p002.html)
 - 128,8 l: So viel Mineral- und Heilwasser trank jede Person in Deutschland 2025 im Schnitt. (VDM 2026, https://www.vdm-bonn.de/presse/pressemitteilungen/mineralwasser-absatz-steigt-2025-deutlich/)
 - 74,5 kg: So viele Lebensmittel warf jede Person 2022 im eigenen Haushalt weg, das sind 58 Prozent aller Lebensmittelabfälle. (BMLEH 2022, https://www.bmleh.de/DE/themen/ernaehrung/lebensmittelverschwendung/studie-lebensmittelabfaelle-deutschland.html)
-- Ohne App: Gäste bestellen bei ToHuus über einen Link oder QR-Code von der Partykarte, ohne App und ohne Konto. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/gaeste.html)
+- Ohne App: Gäste bestellen bei ToHuus über einen Link oder QR-Code vom Party-Menü, ohne App und ohne Konto. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/gaeste.html)
 - 112: Die Notrufnummer 112 gilt seit 1991 in der ganzen EU und ist von jedem Telefon kostenlos erreichbar (Stand 2026). (EU, Your Europe 2026, https://europa.eu/youreurope/citizens/travel/security-and-emergencies/emergency/index_de.htm)
 - 116117: Der ärztliche Bereitschaftsdienst ist rund um die Uhr ohne Vorwahl und kostenfrei erreichbar (Stand 2026). (KBV, 116117.de 2026, https://www.116117.de/de/aerztlicher-bereitschaftsdienst.php)
 - 45.372: So oft wurde der Giftnotruf München 2024 um Rat gefragt. (Giftnotruf München 2024, https://toxikologie.mri.tum.de/sites/default/files/2025-05/jahresbericht_2024_2.pdf)
