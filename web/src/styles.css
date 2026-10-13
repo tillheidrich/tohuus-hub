@@ -10250,6 +10250,10 @@ button.rcard {
   color: var(--empty);
   font-weight: 600;
 }
+.signup .beta-note {
+  margin: 0;
+  color: var(--ink-2);
+}
 .signup-hint {
   margin-top: 16px;
   text-align: center;

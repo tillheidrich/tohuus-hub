@@ -5,7 +5,8 @@
  * Mistral (EU) with `provider: { order: ['mistral'], allow_fallbacks: false, data_collection: 'deny' }`, so a
  * household's text never lands at a provider that trains on it or sits outside the EU.
  *
- * Configuration (environment, read on every call so tests and restarts see changes):
+ * Configuration (environment, read on every call so tests and restarts see changes; in ToHuus Cloud the operator's
+ * runtime settings – `/betrieb` › Einstellungen, server/lib/runtime-settings.ts – override the same names):
  *   AI_BASE_URL          default https://openrouter.ai/api/v1 (when AI_API_KEY is set)
  *   AI_API_KEY
  *   AI_MODEL_TEXT        default mistralai/mistral-small-2603
@@ -44,9 +45,28 @@ export const DEFAULT_FALLBACKS: Record<ModelKind, string[]> = {
   audio: [],
 };
 
-export function fallbackModels(kind: ModelKind, primary: string, env: NodeJS.ProcessEnv = process.env): string[] {
+/**
+ * Cloud: runtime settings from the operator back office (runtime-settings.ts registers `overrides`, cached there and
+ * dropped on every change). They use the environment variable names and win over the environment.
+ */
+export const aiRuntime: { overrides?: () => Record<string, string> } = {};
+
+/** The environment with the operator's runtime settings on top (only for the real process environment). */
+export function effectiveEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  if (env !== process.env || !aiRuntime.overrides) return env;
+  let o: Record<string, string> = {};
+  try {
+    o = aiRuntime.overrides();
+  } catch {
+    o = {};
+  }
+  return Object.keys(o).length ? { ...env, ...o } : env;
+}
+
+export function fallbackModels(kind: ModelKind, primary: string, envIn: NodeJS.ProcessEnv = process.env): string[] {
+  const env = effectiveEnv(envIn);
   const raw = (env.AI_MODEL_FALLBACKS ?? '').trim();
-  const cfg = aiConfig(env);
+  const cfg = aiConfig(envIn);
   let list: string[];
   if (raw === '-') list = [];
   else if (raw) list = kind === 'audio' ? [] : raw.split(',').map((x) => x.trim()).filter(Boolean);
@@ -66,7 +86,8 @@ export interface AiConfig {
 const clean = (s: string | undefined) => (s ?? '').trim();
 
 /** Current configuration, or null when no model is set up at all. */
-export function aiConfig(env: NodeJS.ProcessEnv = process.env): AiConfig | null {
+export function aiConfig(envIn: NodeJS.ProcessEnv = process.env): AiConfig | null {
+  const env = effectiveEnv(envIn);
   const aiBase = clean(env.AI_BASE_URL).replace(/\/$/, '');
   const aiKey = clean(env.AI_API_KEY);
   if (aiBase || aiKey) {
@@ -125,7 +146,9 @@ export function aiDisabledError(reason: AiOffReason): AiError {
       ? t('AI was switched off by your parents.')
       : reason === 'person'
         ? t('You switched AI off for yourself (Settings › Access & AI).')
-        : t('AI is switched off for this household (Settings › Access & AI).');
+        : reason === 'cloud'
+          ? t('AI is paused in ToHuus Cloud right now. Everything else works as usual.')
+          : t('AI is switched off for this household (Settings › Access & AI).');
   return new AiError(msg, 'ai.disabled', 403, reason);
 }
 
@@ -362,6 +385,25 @@ export function extractJson(s: string): any {
     return JSON.parse(cleaned.slice(start, end + 1));
   } catch {
     throw new AiError(t('No JSON answer from the model'), 'bad_response', 502);
+  }
+}
+
+/**
+ * Operator back office: one tiny request to the configured model of `kind` (no household data, no policy switch –
+ * it checks the key, the base URL and the model). Counted like any other request.
+ */
+export async function pingModel(kind: ModelKind = 'text'): Promise<{ ok: true; model: string; ms: number } | { ok: false; code: AiErrorCode; error: string; detail?: string }> {
+  const cfg = aiConfig();
+  const model = cfg?.models[kind] ?? null;
+  if (!cfg || !model) return { ok: false, code: 'not_configured', error: t('No AI model is set up (AI_API_KEY / AI_MODEL_*).') };
+  const started = Date.now();
+  try {
+    const res = await once(cfg, { model, messages: [{ role: 'user', content: 'Reply with the single word OK.' }], temperature: 0, max_tokens: 3, ...providerPin(cfg.baseUrl) }, 20_000);
+    aiUsageHook.record?.(res.model, res.usage);
+    return { ok: true, model: res.model, ms: Date.now() - started };
+  } catch (e) {
+    const err = e instanceof AiError ? e : new AiError(String((e as Error)?.message ?? e), 'upstream', 502);
+    return { ok: false, code: err.code, error: err.message, detail: err.detail?.slice(0, 200) };
   }
 }
 

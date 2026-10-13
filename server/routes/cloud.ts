@@ -80,9 +80,18 @@ const legal = () => ({
   terms: process.env.LEGAL_TERMS_URL || null,
   imprint: process.env.LEGAL_IMPRINT_URL || null,
 });
-import { householdAiOn, mcpOn } from '../lib/ai-policy.js';
+import { cloudAiSwitch, householdAiOn, mcpOn } from '../lib/ai-policy.js';
+import { aiConfig } from '../lib/ai.js';
+import * as betaModule from '../lib/beta.js';
+import { supportEmail } from '../lib/runtime-settings.js';
 import { ocrAvailable } from '../lib/ocr.js';
-const aiConfigured = () => Boolean(process.env.AI_API_KEY) || visionEnabled();
+// the operator's runtime settings (lib/runtime-settings.ts) count as configured too
+const aiConfigured = () => Boolean(aiConfig()) || visionEnabled();
+function signupInfo() {
+  if (!cloudMode()) return { signup: false };
+  const mode = betaModule.signupMode();
+  return { signup: mode !== 'closed', signupMode: mode, support: supportEmail() };
+}
 
 // ================================================================= instance (both modes)
 
@@ -107,13 +116,16 @@ instance.get('/instance', (_req, res) => {
       // Sign in with Apple (cloud only): the web button needs the Services ID (lib/cloud-apple.ts); the app always can
       apple: cloudMode() && Boolean(cloudApple.appleServicesId()),
     },
-    signup: cloudMode() && config.signupOpen,
+    // beta gate (lib/beta.ts): `signup` = the sign-up page is offered at all; `signupMode` says whether it needs an
+    // access code ('invite'); `support` is the address to ask for one
+    ...signupInfo(),
     features: (() => {
       // household switches (ai-policy.ts) – only known inside a household; the sign-in page sees the instance
       const household = inHousehold ? householdAiOn() : true;
+      const cloudOn = !cloudAiSwitch.off();
       const mcp = inHousehold ? mcpOn() : true;
-      const on = aiConfigured() && household;
-      return { assistant: on, voice: on, receiptsAi: on, billingApple: cloudMode(), ai: { configured: aiConfigured(), household, mcp }, ocr: ocrAvailable() };
+      const on = aiConfigured() && household && cloudOn;
+      return { assistant: on, voice: on, receiptsAi: on, billingApple: cloudMode(), ai: { configured: aiConfigured(), household, mcp, ...(cloudMode() ? { cloud: cloudOn } : {}) }, ocr: ocrAvailable() };
     })(),
     legal: legal(),
   });
@@ -464,20 +476,24 @@ const signupReq = z.object({
   region: z.string().trim().max(4).optional(),
   client: z.enum(['web', 'ios']).default('web'),
   device: z.string().trim().max(80).optional(),
+  /** beta gate: access code (lib/beta.ts) – needed in `invite` mode unless the address is allowlisted */
+  betaCode: z.string().trim().max(40).optional(),
 });
 
 cloudPub.post(
   '/cloud/signup',
   wrap(async (req, res) => {
-    if (!config.signupOpen) throw new AuthError(403, t('New sign-ups are closed at the moment.'));
     const b = signupReq.parse(req.body ?? {});
     const email = normEmail(b.email);
     if (!EMAIL_RE.test(email)) throw new AuthError(400, t('That doesn’t look like an e-mail address.'));
+    // beta gate (lib/beta.ts): open / invite (allowlisted address or access code) / closed
+    const gate = betaModule.signupGate(email, b.betaCode);
     if (rateLimitedGlobal(`signup-ip:${req.ip}`, 5, 60 * 60_000) || rateLimitedGlobal(`signup-mail:${email}`, 3, 60 * 60_000))
       throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const acc = await A();
     if (acc.accountByEmail(email)) throw new AuthError(409, t('There is already an account with this address – please sign in.'));
     const region = (b.region && REGIONS.some((r) => r.code === b.region!.toUpperCase()) ? b.region.toUpperCase() : defaultRegionCode(b.lang));
+    gate.commit();
     const a = acc.createAccount(email, hashPassword(b.password), b.name, b.lang);
     const h = await createHouseholdFor(a.id, { householdName: b.householdName, name: b.name, email, form: b.form, lang: b.lang, region });
     void sendVerifyMail(a.id, email, h.id).catch((e) => console.warn('[signup mail]', (e as Error).message));
@@ -487,6 +503,21 @@ cloudPub.post(
     }
     await startCloudSession(req, res, a.id, h.id, 'signup');
     return { ok: true, household: { id: h.id, name: h.name, role: 'admin', plan: h.plan } };
+  }),
+);
+
+/**
+ * Beta gate check before signing up (e.g. before Sign in with Apple in the app): `{ ok: true }` or the same 403 as
+ * the sign-up itself (`code: 'signup.invite' | 'signup.code_invalid' | 'signup.closed'`, `contact`, `mailto`).
+ * Does not use the code up.
+ */
+cloudPub.post(
+  '/cloud/signup/check',
+  wrap(async (req) => {
+    if (rateLimitedGlobal(`signup-check:${req.ip}`, 30, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    const b = z.object({ email: z.string().trim().max(254).optional(), betaCode: z.string().trim().max(40).optional() }).parse(req.body ?? {});
+    betaModule.signupGate(b.email ? normEmail(b.email) : null, b.betaCode);
+    return { ok: true, mode: betaModule.signupMode() };
   }),
 );
 
@@ -766,7 +797,7 @@ cloudPub.post(
       const existing = acc.accountByEmail(email);
       if (existing) accountId = await cloudPasswordCheck(req, email, b.password);
       else {
-        if (!config.signupOpen) throw new AuthError(403, t('New sign-ups are closed at the moment.'));
+        // joining a household by invitation always works – no beta gate here (lib/beta.ts)
         if (b.password.length < CLOUD_PASSWORD_MIN) throw new AuthError(400, t('At least {n} characters, please.', { n: CLOUD_PASSWORD_MIN }));
         if (rateLimitedGlobal(`signup-ip:${req.ip}`, 5, 60 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
         accountId = acc.createAccount(email, hashPassword(b.password), b.name || null, lang()).id;

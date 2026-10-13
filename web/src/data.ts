@@ -52,8 +52,12 @@ export interface Instance {
   mode: 'cloud' | 'selfhost';
   version?: string;
   signup: boolean;
+  /** ToHuus Cloud beta gate: 'invite' = sign-up needs an access code (or an allowlisted address) */
+  signupMode?: 'open' | 'invite' | 'closed';
+  /** ToHuus Cloud: address to ask for an access code */
+  support?: string;
   auth?: { password?: boolean; magicLink?: boolean; passkey?: boolean; oidc?: boolean; /** minimum length of a new password (cloud 10, self-host 8) */ passwordMin?: number; /** ToHuus Cloud: Sign in with Apple on the web */ apple?: boolean };
-  features: { assistant?: boolean; voice?: boolean; receiptsAi?: boolean; billingApple?: boolean; ocr?: boolean; ai?: { configured: boolean; household: boolean; mcp: boolean } };
+  features: { assistant?: boolean; voice?: boolean; receiptsAi?: boolean; billingApple?: boolean; ocr?: boolean; ai?: { configured: boolean; household: boolean; mcp: boolean; cloud?: boolean } };
   legal?: { privacy?: string; terms?: string; imprint?: string };
   /** false when the server has no /api/instance yet (before the cloud merge) */
   known: boolean;

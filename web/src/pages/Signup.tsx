@@ -9,7 +9,20 @@ import { BrandMark, HomeTiles } from '../art';
 import { BRAND } from '../brand';
 import { useInstance } from '../data';
 import { lang, t } from '../i18n';
-import { AppleButton } from './AppleSignIn';
+import { AppleButton, appleErrorKey } from './AppleSignIn';
+
+/** Beta gate (ToHuus Cloud): the one sentence and the mail link to ask for an access code. */
+export function BetaNotice({ support }: { support?: string }) {
+  const to = support || 'tohuus@tillheidrich.de';
+  return (
+    <p className="beta-note small" role="note">
+      {t('ToHuus is in a small test right now. You need an access code – feel free to ask by e-mail.')}{' '}
+      <a className="linkish" href={`mailto:${to}?subject=${encodeURIComponent('ToHuus Zugangscode')}`}>
+        {to}
+      </a>
+    </p>
+  );
+}
 
 export type CloudForm = 'single' | 'couple' | 'family' | 'wg' | 'carer';
 export const CLOUD_FORMS: [CloudForm, string][] = [
@@ -28,7 +41,12 @@ export function Signup() {
   const [home, setHome] = useState('');
   const [form, setForm] = useState<CloudForm | null>(null);
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
+  // after Sign in with Apple came back without a usable code (`/signup?apple=invite|code`)
+  const [appleBack] = useState(appleErrorKey);
+  const [err, setErr] = useState(appleBack.text);
+  const [code, setCode] = useState('');
+  const invite = inst.data?.signupMode === 'invite';
+  const closed = inst.data?.signupMode === 'closed';
   const legal = inst.data?.legal;
   const minPw = inst.data?.auth?.passwordMin ?? 10;
   const submit = async (e: React.FormEvent) => {
@@ -46,11 +64,21 @@ export function Signup() {
         lang: lang(),
         region: navigator.language?.split('-')[1] ?? 'DE',
         client: 'web',
+        ...(code.trim() ? { betaCode: code.trim() } : {}),
       });
       // a fresh start with the new session: straight into the setup ("Wer gehört dazu?")
       location.replace('/willkommen');
     } catch (e) {
-      setErr(e instanceof ApiError && e.status === 409 ? t('There is already an account with this e-mail address. Sign in instead?') : (e as Error).message);
+      const c = e instanceof ApiError ? e.code : undefined;
+      setErr(
+        e instanceof ApiError && e.status === 409
+          ? t('There is already an account with this e-mail address. Sign in instead?')
+          : c === 'signup.code_invalid'
+            ? t('This access code doesn’t work (anymore). Check it or ask for a new one.')
+            : c === 'signup.invite'
+              ? t('Please enter your access code.')
+              : (e as Error).message,
+      );
     } finally {
       setBusy(false);
     }
@@ -80,9 +108,29 @@ export function Signup() {
         </div>
         <form className="stack signup" onSubmit={submit} noValidate>
           <h2>{t('Create your household')}</h2>
+          {closed && <p className="beta-note small">{t('New sign-ups are closed at the moment.')}</p>}
+          {invite && (
+            <div className="field">
+              <label htmlFor="su-code">{t('Access code')}</label>
+              <input
+                id="su-code"
+                className="input mono"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="TOHU-XXXX-XXXX"
+                aria-describedby="su-code-help"
+              />
+              <div id="su-code-help">
+                <BetaNotice support={inst.data?.support} />
+              </div>
+            </div>
+          )}
           {inst.data?.auth?.apple && (
             <>
-              <AppleButton label={t('Sign up with Apple')} />
+              <AppleButton label={t('Sign up with Apple')} code={code} />
               <div className="auth-or apple-or">
                 <span>{t('or with your e-mail address')}</span>
               </div>

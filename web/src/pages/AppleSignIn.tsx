@@ -20,10 +20,13 @@ function AppleLogo() {
 }
 
 /** "Mit Apple anmelden" – black on light, white on dark. `next` = where to go afterwards (relative path). */
-export function AppleButton({ next, label }: { next?: string; label?: string }) {
+export function AppleButton({ next, label, code }: { next?: string; label?: string; /** beta gate: access code for a new account */ code?: string }) {
   const inst = useInstance();
   if (inst.data?.mode !== 'cloud' || !inst.data.auth?.apple) return null;
-  const href = `/api/auth/apple/start${next ? `?next=${encodeURIComponent(next)}` : ''}`;
+  const q = new URLSearchParams();
+  if (next) q.set('next', next);
+  if (code?.trim()) q.set('code', code.trim());
+  const href = `/api/auth/apple/start${q.size ? `?${q}` : ''}`;
   return (
     <a className="apple-btn" href={href}>
       <AppleLogo />
@@ -38,16 +41,23 @@ const APPLE_ERRORS: Record<string, string> = {
   exists: 'There is already an account with this address. Please sign in with your password or an e-mail link first.',
   closed: 'New sign-ups are closed at the moment.',
   busy: 'Too many attempts. Please wait a few minutes.',
+  invite: 'ToHuus is in a small test right now. You need an access code – feel free to ask by e-mail.',
+  code: 'This access code doesn’t work (anymore). Check it or ask for a new one.',
 };
 
 /** The reason after a failed Apple sign-in (`/?apple=…`), shown once; a cancel at Apple says nothing. */
 export function appleError(): string {
-  if (typeof location === 'undefined') return '';
+  return appleErrorKey().text;
+}
+
+/** Like appleError(), with the key (`invite`/`code` = beta gate: the sign-up page shows the code field and the mail link). */
+export function appleErrorKey(): { key: string; text: string } {
+  if (typeof location === 'undefined') return { key: '', text: '' };
   const p = new URLSearchParams(location.search);
   const k = p.get('apple');
-  if (!k) return '';
+  if (!k) return { key: '', text: '' };
   p.delete('apple');
   const q = p.toString();
   history.replaceState(null, '', location.pathname + (q ? `?${q}` : ''));
-  return k === 'cancelled' ? '' : t(APPLE_ERRORS[k] ?? APPLE_ERRORS.failed);
+  return { key: k, text: k === 'cancelled' ? '' : t(APPLE_ERRORS[k] ?? APPLE_ERRORS.failed) };
 }

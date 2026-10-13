@@ -41,8 +41,9 @@ import { de_rhythm } from './locales/de-rhythm.js';
 import { de_money } from './locales/de-money.js';
 import { de_core } from './locales/de-core.js';
 
-const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order, ...de_assistant, ...de_rhythm, ...de_money, ...de_core, ...de_list2, ...de_recipepack, ...de_houseguide, ...de_cloudops, ...de_account };
+const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order, ...de_assistant, ...de_rhythm, ...de_money, ...de_core, ...de_list2, ...de_recipepack, ...de_houseguide, ...de_cloudops, ...de_account, ...de_admin };
 import { de_list2 } from './locales/de-list2.js';
+import { de_admin } from './locales/de-admin.js';
 
 import { de_recipepack } from './locales/de-recipepack.js';
 import { de_houseguide } from './locales/de-houseguide.js';

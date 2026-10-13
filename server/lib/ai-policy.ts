@@ -29,7 +29,13 @@ export function runAsAiActor<T>(actor: AiActor, fn: () => T): T {
 }
 export const currentAiActor = (): AiActor | undefined => als.getStore();
 
-export type AiOffReason = 'household' | 'person' | 'parents';
+export type AiOffReason = 'household' | 'person' | 'parents' | 'cloud';
+
+/**
+ * ToHuus Cloud: the operator can pause AI for the whole cloud (`/betrieb` › Einstellungen, runtime-settings.ts sets
+ * `off`). Checked before every household switch – no model request leaves the server while it is off.
+ */
+export const cloudAiSwitch: { off: () => boolean } = { off: () => false };
 
 export const householdAiOn = () => getSetting<boolean>('ai.enabled', true) !== false;
 export const mcpOn = () => getSetting<boolean>('mcp.enabled', true) !== false;
@@ -65,6 +71,11 @@ export function kidAiOn(kidId: number | null | undefined): boolean {
 
 /** Why AI is off for the current request, or null when the switches allow it (a model may still be missing). */
 export function aiOffReason(actor: AiActor | undefined = als.getStore()): AiOffReason | null {
+  try {
+    if (cloudAiSwitch.off()) return 'cloud';
+  } catch {
+    /* settings not readable: the household switches decide */
+  }
   let household = true;
   try {
     household = householdAiOn();

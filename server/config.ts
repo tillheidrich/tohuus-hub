@@ -44,7 +44,7 @@ export const config = {
   poolIdleMin: Math.max(1, Number(env.HOUSEHOLD_POOL_IDLE_MIN ?? 10)),
   /** self-host storage quota in MB (0 = unlimited); cloud quotas follow the plan */
   storageQuotaMb: Number(env.STORAGE_QUOTA_MB ?? 0),
-  /** cloud: signups allowed (the instance can be closed for new households) */
+  /** deprecated – the beta gate (lib/beta.ts: signupMode()) decides; kept for older imports */
   signupOpen: (env.CLOUD_SIGNUP ?? 'true') !== 'false',
 };
 

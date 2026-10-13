@@ -3,7 +3,8 @@
  *   GET    /api/operator/status                 → { operator: true, unlocked, until }   (404 for everyone else)
  *   POST   /api/operator/unlock { password }     fresh password check, valid 10 minutes for this session
  *   GET    /api/operator/overview                aggregates (no household content, nothing per person)
- *   GET    /api/operator/audit                   the operator audit log
+ *   GET    /api/operator/audit                   the operator audit log (operator-admin.ts, paged)
+ *   …settings, beta gate, household lookup, statistics, ToHuus-Rezepte: routes/operator-admin.ts
  *   GET    /api/operator/pulse                   the weekly question: anonymous counts (also in overview.pulse)
  *   POST   /api/operator/households/:id/trial { days }
  *   POST   /api/operator/households/:id/plan  { plan: 'free'|'haushalt'|'plus', until?: 'YYYY-MM-DD'|null, note? }
@@ -21,7 +22,8 @@ import { rateLimitedGlobal, verifyPassword } from '../lib/auth.js';
 import { sendAuthMail } from '../lib/auth-policy.js';
 import { cloudIdentity } from '../lib/cloud-auth.js';
 import { canSendMail } from '../lib/mail.js';
-import { audit, auditLog, isOperatorEmail, overview } from '../lib/operator.js';
+import { audit, isOperatorEmail, overview } from '../lib/operator.js';
+import { operatorAdmin } from './operator-admin.js';
 import { pulseAggregate } from '../lib/pulse.js';
 
 export const r = Router();
@@ -89,7 +91,8 @@ r.get('/operator/pulse', fresh, async (_req, res) => {
   res.json(await pulseAggregate());
 });
 
-r.get('/operator/audit', fresh, (_req, res) => res.json(auditLog(200)));
+// back office: settings, beta gate, household lookup, paged audit log, statistics, ToHuus-Rezepte (operator-admin.ts)
+r.use(operatorAdmin(fresh));
 
 const household = (req: Request, res: Response) => {
   const id = String(req.params.id);

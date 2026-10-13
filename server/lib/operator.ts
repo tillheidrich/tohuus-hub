@@ -109,8 +109,12 @@ export function requestCounter(_req: Request, res: Response, next: NextFunction)
 export function audit(operator: string, action: string, target: string | null, detail: Record<string, unknown> | null = null) {
   adb().prepare('INSERT INTO operator_audit (operator, action, target, detail) VALUES (?, ?, ?, ?)').run(operator, action, target, detail ? JSON.stringify(detail) : null);
 }
-export const auditLog = (limit = 100) =>
-  (adb().prepare('SELECT id, at, operator, action, target, detail FROM operator_audit ORDER BY id DESC LIMIT ?').all(limit) as { detail: string | null }[]).map((r) => ({
+export const auditLog = (limit = 100, before?: number) =>
+  (
+    adb()
+      .prepare(`SELECT id, at, operator, action, target, detail FROM operator_audit ${before ? 'WHERE id < ?' : ''} ORDER BY id DESC LIMIT ?`)
+      .all(...(before ? [before, limit] : [limit])) as { detail: string | null }[]
+  ).map((r) => ({
     ...r,
     detail: r.detail ? JSON.parse(r.detail) : null,
   }));

@@ -19,6 +19,7 @@ import { LANG_CODES, isLang } from '../languages.js';
 import { accountByEmail, accountById, accountsDb, createAccount, createAppToken, membershipsOf } from '../lib/accounts.js';
 import { NAME_MAX, rateLimitedGlobal } from '../lib/auth.js';
 import { AuthError } from '../lib/auth-sessions.js';
+import { normCode, signupGate } from '../lib/beta.js';
 import { appleAccountOf, appleAudience, appleLinkOf, appleServicesId, linkApple, sha256hex, touchApple, verifyAppleIdentityToken, type AppleIdentity } from '../lib/cloud-apple.js';
 import { REGIONS, defaultRegionCode } from '../lib/region.js';
 import { PLAN_FORMS, cloudMe, createHouseholdFor, startCloudSession } from './cloud.js';
@@ -45,6 +46,8 @@ interface Extras {
   form?: (typeof PLAN_FORMS)[number];
   lang?: string;
   region?: string;
+  /** beta gate: access code for a new account (lib/beta.ts) */
+  betaCode?: string;
 }
 
 /** The account for a verified Apple identity – existing, linked by a verified e-mail, or new (with a household). */
@@ -63,12 +66,14 @@ export async function accountForApple(req: Request, id: AppleIdentity, x: Extras
     linkApple(existing.id, id);
     return { accountId: existing.id, created: false };
   }
-  if (!config.signupOpen) throw new AuthError(403, t('New sign-ups are closed at the moment.'));
+  // beta gate: a new account needs an allowlisted address or an access code (existing accounts were handled above)
+  const gate = signupGate(id.email, x.betaCode);
   if (!id.email) throw new AuthError(400, t('Apple didn’t share an e-mail address. Please create the account with your e-mail address instead.'));
   if (rateLimitedGlobal(`signup-ip:${req.ip}`, 5, 60 * 60_000)) throw tooMany();
   const l = x.lang && isLang(x.lang) ? x.lang : isLang(config.language) ? config.language : 'en';
   const region = x.region && REGIONS.some((r) => r.code === x.region!.toUpperCase()) ? x.region.toUpperCase() : defaultRegionCode(l);
   const name = (x.name?.trim() || (id.privateRelay ? '' : id.email.split('@')[0]) || t('Me')).slice(0, NAME_MAX);
+  gate.commit();
   const a = createAccount(id.email, null, name, l);
   // Apple confirmed the address (private relay addresses forward to the person's mailbox)
   if (id.emailVerified) accountsDb().prepare(`UPDATE accounts SET verified_at = datetime('now') WHERE id = ?`).run(a.id);
@@ -101,6 +106,8 @@ const appleReq = z.object({
   lang: z.enum(LANG_CODES).optional(),
   region: z.string().trim().max(4).optional(),
   household: z.string().max(64).optional(),
+  /** beta gate: access code, only used when a new account is created */
+  betaCode: z.string().trim().max(40).optional(),
 });
 
 appleAuth.post(
@@ -153,7 +160,9 @@ appleAuth.get('/auth/apple/start', (req, res) => {
   const state = crypto.randomBytes(24).toString('base64url');
   const nonce = crypto.randomBytes(24).toString('base64url');
   const next = safeNext(req.query.next);
-  res.cookie(STATE_COOKIE, `${state}.${nonce}.${Buffer.from(next).toString('base64url')}`, stateCookie());
+  // beta gate: the access code typed on the sign-up page travels with the state (only used for a new account)
+  const code = typeof req.query.code === 'string' ? normCode(req.query.code).slice(0, 40) : '';
+  res.cookie(STATE_COOKIE, `${state}.${nonce}.${Buffer.from(next).toString('base64url')}.${Buffer.from(code).toString('base64url')}`, stateCookie());
   res.setHeader('Cache-Control', 'no-store');
   res.redirect(302, appleAuthorizeUrl(servicesId, state, sha256hex(nonce)));
 });
@@ -170,7 +179,8 @@ const callbackBody = z.object({
 appleAuth.post('/auth/apple/callback', express.urlencoded({ extended: false, limit: '24kb' }), async (req, res, next) => {
   const back = (code: string) => {
     res.setHeader('Cache-Control', 'no-store');
-    res.redirect(303, `/?apple=${code}`);
+    // beta gate: back to the sign-up page, which has the code field and the mail link
+    res.redirect(303, code === 'invite' || code === 'code' ? `/signup?apple=${code}` : `/?apple=${code}`);
   };
   try {
     const raw = req.cookies?.[STATE_COOKIE];
@@ -179,7 +189,7 @@ appleAuth.post('/auth/apple/callback', express.urlencoded({ extended: false, lim
     const b = callbackBody.safeParse(req.body ?? {});
     if (!b.success) return back('failed');
     if (b.data.error) return back(b.data.error === 'user_cancelled_authorize' ? 'cancelled' : 'failed');
-    const [state, nonce, nextB64] = typeof raw === 'string' ? raw.split('.') : [];
+    const [state, nonce, nextB64, codeB64] = typeof raw === 'string' ? raw.split('.') : [];
     const want = Buffer.from(state ?? '');
     const got = Buffer.from(b.data.state ?? '');
     if (!state || !nonce || want.length !== got.length || !crypto.timingSafeEqual(want, got) || !b.data.id_token) return back('expired');
@@ -194,7 +204,8 @@ appleAuth.post('/auth/apple/callback', express.urlencoded({ extended: false, lim
       /* not JSON – no name */
     }
     const lang = typeof req.headers['accept-language'] === 'string' ? req.headers['accept-language'].slice(0, 2).toLowerCase() : undefined;
-    const { accountId, created } = await accountForApple(req, id, { name, lang });
+    const betaCode = codeB64 ? Buffer.from(codeB64, 'base64url').toString('utf8') || undefined : undefined;
+    const { accountId, created } = await accountForApple(req, id, { name, lang, betaCode });
     accountsDb().prepare(`UPDATE accounts SET last_login_at = datetime('now') WHERE id = ?`).run(accountId);
     await startCloudSession(req, res, accountId, membershipsOf(accountId)[0]?.household_id ?? null, 'apple');
     res.setHeader('Cache-Control', 'no-store');
@@ -206,7 +217,10 @@ appleAuth.post('/auth/apple/callback', express.urlencoded({ extended: false, lim
     }
     res.redirect(303, created ? '/willkommen' : dest);
   } catch (e) {
-    if (e instanceof AuthError) return back(e.status === 409 ? 'exists' : e.status === 403 ? 'closed' : e.status === 429 ? 'busy' : 'failed');
+    if (e instanceof AuthError) {
+      const c = e.extra?.code;
+      return back(c === 'signup.invite' ? 'invite' : c === 'signup.code_invalid' ? 'code' : e.status === 409 ? 'exists' : e.status === 403 ? 'closed' : e.status === 429 ? 'busy' : 'failed');
+    }
     next(e);
   }
 });
