@@ -20,6 +20,7 @@ import { UsageLimitError } from '../lib/limits.js';
 import { AiError } from '../lib/ai.js';
 import { OcrError, ocrAvailable, ocrImage } from '../lib/ocr.js';
 import { importPurchaseHistory, parseCsv, productForArticle } from '../lib/list-import.js';
+import { receiptVisible, VISIBLE_TO } from '../lib/spending.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -32,15 +33,23 @@ export const r = Router();
 r.use(requireAuth);
 const actorName = (req: any) => req.actor?.name ?? 'unbekannt';
 
-r.get('/imports', (_req, res) => {
+// personal receipts (q-money): only the person they belong to and who marked them ever reach them
+r.param('id', (req, res, next, id) => {
+  if (/^\d+$/.test(String(id)) && db.prepare('SELECT 1 FROM imports WHERE id = ?').get(Number(id)) && !receiptVisible(Number(id), req.actor?.userId ?? null))
+    return void res.status(404).json({ error: 'not found' });
+  next();
+});
+
+r.get('/imports', (req, res) => {
+  const uid = req.actor?.userId ?? 0;
   res.json(
     db
       .prepare(
-        `SELECT i.id, i.kind, i.status, i.title, i.shop, i.total, i.ref, i.meta, i.actor, i.created_at, i.applied_at,
+        `SELECT i.id, i.kind, i.status, i.title, i.shop, i.total, i.ref, i.meta, i.actor, i.created_at, i.applied_at, i.private_for,
           (SELECT COUNT(*) FROM import_lines l WHERE l.import_id = i.id) AS lines
-         FROM imports i ORDER BY i.id DESC LIMIT 80`,
+         FROM imports i WHERE ${VISIBLE_TO} ORDER BY i.id DESC LIMIT 80`,
       )
-      .all()
+      .all(uid, uid)
       .map((i: any) => ({ ...i, meta: JSON.parse(i.meta) })),
   );
 });

@@ -17,6 +17,8 @@ struct SpendView: View {
     @State private var toast: ToastMessage?
     @State private var showAllCats = false
     @State private var showAllStores = false
+    /// q-money: "Haushalt / Nur meins" – shared with the Geld tab
+    @AppStorage("money.view", store: SharedConfig.defaults) private var view = "household"
 
     var body: some View {
         ScrollView {
@@ -100,7 +102,7 @@ struct SpendView: View {
             }
         }
         .refreshable { await load() }
-        .task(id: "\(kind)|\(anchor)|\(tag ?? "")|\(store.revision("imports"))") { await load() }
+        .task(id: "\(kind)|\(anchor)|\(tag ?? "")|\(view)|\(store.revision("imports"))") { await load() }
         .onChange(of: kind) { _, k in SharedConfig.defaults.set(k, forKey: "spend.kind") }
         .sheet(item: $sheet, onDismiss: { Task { await load() } }) { s in
             SpendSheetView(store: store, sheet: s, meta: meta)
@@ -126,6 +128,7 @@ struct SpendView: View {
 
     private var controls: some View {
         VStack(spacing: Theme.Space.s3) {
+            if !(meta?.members ?? []).isEmpty { MoneyViewSwitch(view: $view) }
             Picker(L("Period"), selection: Binding(get: { kind }, set: { kind = $0; anchor = SpendDates.today })) {
                 Text(L("Week")).tag("week")
                 Text(L("Month")).tag("month")
@@ -375,7 +378,7 @@ struct SpendView: View {
         loading = true
         defer { loading = false }
         do {
-            let s = try await store.api.spendStats(period: kind, date: kind == "all" ? nil : anchor, tag: tag)
+            let s = try await store.api.spendStats(period: kind, date: kind == "all" ? nil : anchor, tag: tag, view: view)
             stats = s
             error = nil
             if meta == nil { meta = try? await store.api.spendMeta() }
@@ -390,7 +393,7 @@ struct SpendView: View {
         exporting = true
         defer { exporting = false }
         do {
-            let data = try await store.api.spendExportCSV(period: all ? "all" : kind, date: all || kind == "all" ? nil : anchor, tag: all ? nil : tag)
+            let data = try await store.api.spendExportCSV(period: all ? "all" : kind, date: all || kind == "all" ? nil : anchor, tag: all ? nil : tag, view: view)
             let name: String
             if all || kind == "all" { name = "tohuus-ausgaben-alles.csv" }
             else {

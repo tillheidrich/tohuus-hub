@@ -10,6 +10,7 @@ import { t } from '../i18n';
 import { money } from '../region';
 import { Sheet, Toggle, useToast } from '../ui';
 import './list2.css';
+import { useMoneyMeta } from '../money/entry';
 import type { ListInfo } from './fill';
 import type { ShopItem } from './sections';
 
@@ -59,21 +60,25 @@ interface Line {
   for_list_id: number | null;
 }
 
-/** Import review: who paid and whom each line is for – only where it matters (WG, care lists). */
-export function WhoPaidPanel({ imp }: { imp: { id: number; actor: string | null; paid_by?: number | null; lines: Line[] } }) {
-  const home = useHousehold();
-  const members = useApi<Member[]>(['shopping', 'members'], '/shop/members');
+/**
+ * Import review: who paid and whom each line is for – wherever more than one person lives (q-money: every household
+ * form, not only WGs) or a care list exists; and "this receipt is just mine" (personal: nobody else sees it).
+ */
+export function WhoPaidPanel({ imp }: { imp: { id: number; actor: string | null; paid_by?: number | null; private_for?: number | null; lines: Line[] } }) {
+  const meta = useMoneyMeta();
   const lists = useApi<ListInfo[]>(['shopping', 'lists'], '/list/lists');
   const care = (lists.data ?? []).filter((l) => l.kind === 'care');
   const [open, setOpen] = useState(false);
   const toast = useToast();
-  if (home.form !== 'shared' && !care.length) return null;
-  const ms = members.data ?? [];
+  const ms: Member[] = (meta.data?.members ?? []).map((m) => ({ ...m, color: '' }));
+  const multi = ms.length > 1;
+  const me = meta.data?.me ?? null;
+  if (!multi && !care.length && me == null) return null;
   const payer = imp.paid_by ?? ms.find((m) => m.name === imp.actor)?.id ?? null;
   const save = async (body: Record<string, unknown>) => {
     try {
       await post(`/imports/${imp.id}/split`, body);
-      invalidate('import', 'money');
+      invalidate('import', 'money', 'spending');
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     }
@@ -82,12 +87,33 @@ export function WhoPaidPanel({ imp }: { imp: { id: number; actor: string | null;
   return (
     <section className="card pad stack who-paid">
       <button className="row between linkish" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-        <b>{home.form === 'shared' ? t('Who paid, and for whom?') : t('Anything for someone else?')}</b>
-        <span className="small muted">{payer ? ms.find((m) => m.id === payer)?.name : ''}</span>
+        <b>{multi ? t('Who paid, and for whom?') : t('Anything for someone else?')}</b>
+        <span className="small muted">{imp.private_for ? t('just mine') : payer ? ms.find((m) => m.id === payer)?.name : ''}</span>
       </button>
       {open && (
         <>
-          {home.form === 'shared' && (
+          {me != null && (
+            <label className="row" style={{ gap: 10, alignItems: 'flex-start', minHeight: 44 }}>
+              <input
+                type="checkbox"
+                checked={imp.private_for != null}
+                onChange={async (e) => {
+                  try {
+                    await post(`/spend/receipts/${imp.id}/personal`, { for_user_id: e.target.checked ? me : null });
+                    invalidate('import', 'imports', 'money', 'spending');
+                  } catch (err) {
+                    toast({ text: (err as Error).message, error: true });
+                  }
+                }}
+                style={{ width: 22, height: 22, marginTop: 2 }}
+              />
+              <span className="grow small">
+                <b>{t('This receipt is just mine')}</b>
+                <span className="muted" style={{ display: 'block' }}>{t('Nobody else sees it, not even in the household numbers.')}</span>
+              </span>
+            </label>
+          )}
+          {multi && imp.private_for == null && (
             <div className="chips" style={{ flexWrap: 'wrap' }}>
               {ms.map((m) => (
                 <button key={m.id} className={`chip ${payer === m.id ? 'on' : ''}`} onClick={() => save({ paid_by: m.id })}>
@@ -96,7 +122,7 @@ export function WhoPaidPanel({ imp }: { imp: { id: number; actor: string | null;
               ))}
             </div>
           )}
-          <div className="list">
+          {imp.private_for == null && (multi || care.length > 0) && <div className="list">
             {imp.lines
               .filter((l) => l.price != null)
               .map((l) => (
@@ -114,7 +140,7 @@ export function WhoPaidPanel({ imp }: { imp: { id: number; actor: string | null;
                     }}
                   >
                     <option value="">{t('Shared')}</option>
-                    {home.form === 'shared' && ms.map((m) => <option key={m.id} value={`u${m.id}`}>{m.name}</option>)}
+                    {multi && ms.map((m) => <option key={m.id} value={`u${m.id}`}>{m.name}</option>)}
                     {care.map((c) => (
                       <option key={c.id} value={`l${c.id}`}>
                         {c.name}
@@ -123,7 +149,7 @@ export function WhoPaidPanel({ imp }: { imp: { id: number; actor: string | null;
                   </select>
                 </div>
               ))}
-          </div>
+          </div>}
         </>
       )}
     </section>

@@ -3,9 +3,30 @@
  * No budgets, no bank connection, no ranking – an optional monthly target is the only setting.
  */
 import { config } from '../config.js';
-import { db, getSetting, setSetting } from '../db.js';
+import { db, getSetting, migrate, setSetting } from '../db.js';
 import { t, userError } from '../i18n.js';
 import { region } from './region.js';
+
+// Personal receipts (wave 2, q-money): a receipt can belong to one person – `private_for` is that person, `private_by`
+// the member who marked it. Only those two ever see it; every household-wide read leaves it out.
+migrate(
+  'money-q-1',
+  `ALTER TABLE imports ADD COLUMN private_for INTEGER;
+   ALTER TABLE imports ADD COLUMN private_by INTEGER;`,
+);
+
+/** SQL condition for household-wide reads of `imports i`: no personal receipts. */
+export const NOT_PERSONAL = 'i.private_for IS NULL';
+/** SQL condition: household receipts plus the viewer's own personal ones (two `?` = viewer id). */
+export const VISIBLE_TO = '(i.private_for IS NULL OR i.private_for = ? OR i.private_by = ?)';
+
+/** May this member see the receipt? (personal receipts: only the person it belongs to and who marked it) */
+export function receiptVisible(importId: number, viewer: number | null | undefined) {
+  const r = db.prepare('SELECT private_for, private_by FROM imports WHERE id = ?').get(importId) as { private_for: number | null; private_by: number | null } | undefined;
+  if (!r) return false;
+  if (r.private_for == null) return true;
+  return viewer != null && (r.private_for === viewer || r.private_by === viewer);
+}
 
 // ------------------------------------------------------------------ pure helpers
 
@@ -79,15 +100,25 @@ export interface SpendLine {
   price: number;
   status: string;
   note: string | null;
+  /** personal receipt: the person it belongs to (null = household) */
+  private_for: number | null;
+  private_by: number | null;
 }
 
 export const PURCHASE_DAY = `CASE WHEN json_extract(i.meta, '$.date') GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'
   THEN substr(json_extract(i.meta, '$.date'), 1, 10) ELSE substr(COALESCE(i.applied_at, i.created_at), 1, 10) END`;
 
-/** All paid lines from applied imports (not: unavailable items, items returned at pickup). */
-export function spendLines(filter: { month?: string; productId?: number; since?: string } = {}): SpendLine[] {
+/**
+ * All paid lines from applied imports (not: unavailable items, items returned at pickup). Personal receipts are left
+ * out unless `viewer` is given – then that member's own personal receipts are included.
+ */
+export function spendLines(filter: { month?: string; productId?: number; since?: string; viewer?: number | null } = {}): SpendLine[] {
   const where: string[] = [`i.status = 'applied'`, 'l.price IS NOT NULL', `l.status NOT IN ('unavailable','returned')`];
   const args: unknown[] = [];
+  if (filter.viewer) {
+    where.push(VISIBLE_TO);
+    args.push(filter.viewer, filter.viewer);
+  } else where.push(NOT_PERSONAL);
   if (filter.productId) {
     where.push('l.product_id = ?');
     args.push(filter.productId);
@@ -95,7 +126,7 @@ export function spendLines(filter: { month?: string; productId?: number; since?:
   const rows = db
     .prepare(
       `SELECT l.id, l.import_id, ${PURCHASE_DAY} AS day, COALESCE(NULLIF(trim(i.shop), ''), i.kind) AS shop, l.name, l.product_id,
-         p.name AS product_name, c.name AS category, l.qty, l.unit, l.price, l.status, l.note
+         p.name AS product_name, c.name AS category, l.qty, l.unit, l.price, l.status, l.note, i.private_for, i.private_by
        FROM import_lines l JOIN imports i ON i.id = l.import_id
        LEFT JOIN products p ON p.id = l.product_id LEFT JOIN categories c ON c.id = p.category_id
        WHERE ${where.join(' AND ')}`,
@@ -217,7 +248,7 @@ export function pricedProducts() {
     .prepare(
       `SELECT p.id, p.name, p.brand, p.image_path, COUNT(*) AS purchases, MAX(${PURCHASE_DAY}) AS last_day
        FROM import_lines l JOIN imports i ON i.id = l.import_id JOIN products p ON p.id = l.product_id
-       WHERE i.status = 'applied' AND l.price IS NOT NULL AND l.status NOT IN ('unavailable','returned','deposit')
+       WHERE i.status = 'applied' AND ${NOT_PERSONAL} AND l.price IS NOT NULL AND l.status NOT IN ('unavailable','returned','deposit')
        GROUP BY p.id ORDER BY purchases DESC, p.name LIMIT 300`,
     )
     .all();

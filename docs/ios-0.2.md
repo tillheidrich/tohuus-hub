@@ -269,3 +269,14 @@ Debug launch args: `-debugSampleQuestion YES`, `-debugSignedOut YES` with `-debu
 - **Statistics**: every request carries `X-ToHuus-Client: ios|watch` (APIClient) – the only thing the cloud's usage
   statistics learn about the device. Endpoints: `Endpoints+CloudRecipes.swift`, `Endpoints+Account.swift`
   (`storeChoices`); models `CloudRecipes.swift`, `Signup.swift`. Strings: `ios/tools/strings_de_admin.json`.
+## 0.3 parity – Geld wave 2 (q-money)
+
+Server and fields: [docs/money.md](money.md). New files: `Core/API/Endpoints+Money.swift`, `Core/Models/Money.swift`, `Features/Money/ExpenseEditView.swift`, `Features/Money/MoneyListViews.swift`.
+
+- **Geld tab**: „Haushalt / Nur meins“ (segmented, stored in `SharedConfig` `money.view`, shared with „Im Detail“, which passes `view=mine` to stats, drill-down and CSV export); „Ausgabe eintragen“; card „Aufteilen“ with the money lists; „Kategorien & Aufteilen“.
+- **Own entry** (`ExpenseEditView`, also from „Im Detail“): document camera / photo / PDF → `POST /api/spend/files` with `read=1` (fills amount, date, shop, lines when empty), category chips from `money_categories`, „Für wen?“ (household / just me / a member = personal), „Wer hat bezahlt?“, single items with a person each, attachment view/remove.
+- **Receipt in „Im Detail“**: who paid, a person per line (`POST /api/imports/:id/split`), „Dieser Bon gehört nur mir“ (`POST /api/spend/receipts/:id/personal`), „Bon aufteilen“ → money list from the receipt.
+- **Money lists**: list (`MoneyListView`): equal / by person, amounts editable, payer and owner per cost, „Alles bezahlt von …“, people add/remove (swipe), Ausgleich with „Erledigt“/undo, „Alles ist ausgeglichen“, share text (ShareLink, copy, mail), visibility for the owner, delete. New list (`NewMoneyListView`): from typing, a shopping list, a trip or a receipt; with names or just a number; private + chosen people.
+- Entry rows show badges: personal, for a person, your part, paperclip.
+- Debug: `-debugMoney list:<id> | newlist | expense | mine | settings | receipt:<id>`.
+- Still web-only: selecting single receipt lines for a money list (iOS splits the whole receipt), per-line person in the import review screen (iOS: in the receipt under „Im Detail“).

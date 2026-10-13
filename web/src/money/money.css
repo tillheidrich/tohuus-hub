@@ -1,0 +1,240 @@
+/* Geld: own entries, personal view, money lists (q-money) */
+
+.field .label {
+  font-size: var(--fs-s);
+  font-weight: 600;
+  color: var(--ink);
+}
+.mq-chips {
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+}
+.mq-chips .chip {
+  min-height: 44px;
+}
+.mq-form {
+  padding-bottom: 8px;
+}
+.mq-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mq-file-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 4px 6px 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+.mq-ell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mq-note {
+  margin: 6px 0 0;
+  color: var(--warning);
+}
+.mq-warn {
+  color: var(--warning);
+}
+.mq-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-weight: 600;
+}
+.mq-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px auto 44px;
+  gap: 8px;
+  align-items: center;
+}
+.mq-item:not(:has(select)) {
+  grid-template-columns: minmax(0, 1fr) 88px 44px;
+}
+.mq-price {
+  width: 96px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 480px) {
+  .mq-two {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mq-item {
+    grid-template-columns: minmax(0, 1fr) 84px 44px;
+  }
+  .mq-item select {
+    grid-column: 1 / 3;
+    max-width: none;
+    width: 100%;
+  }
+}
+.mq-badge {
+  margin-left: 6px;
+  gap: 3px;
+}
+.mq-badge::before {
+  display: none;
+}
+
+/* Geld page: the view switch */
+.mq-view {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 14px;
+}
+.mq-view-note {
+  text-align: center;
+  margin: -6px 0 14px;
+}
+.mq-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+
+/* money lists */
+.mq-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.mq-row .meta {
+  display: block;
+}
+.mq-row .num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.mq-sum {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.mq-total {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+.mq-priv {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.mq-h {
+  font-size: var(--fs-m, 1rem);
+  margin: 6px 0 8px;
+}
+.mq-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+.mq-bulk {
+  margin-top: 10px;
+  align-items: center;
+}
+.mq-bulk .chip {
+  min-height: 40px;
+}
+.mq-item-row {
+  align-items: center;
+  gap: 8px;
+  min-height: 64px;
+}
+.mq-item-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mq-item-main .title {
+  overflow-wrap: anywhere;
+}
+.mq-item-sel {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mq-person .pos {
+  color: var(--primary-text);
+}
+.mq-person .num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.mq-transfers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mq-transfers li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.mq-transfers.done li {
+  color: var(--ink-2);
+}
+.mq-even {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary-text);
+  font-weight: 600;
+}
+.mq-text {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: var(--fs-s);
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+}
+.mq-count {
+  align-items: center;
+}
+.mq-count .icon-btn {
+  font-size: 1.25rem;
+}
+.mq-line-person {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mq-list .help,
+.mq-form .help,
+.who-paid .help {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}

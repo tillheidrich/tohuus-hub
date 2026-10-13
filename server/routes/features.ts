@@ -38,7 +38,8 @@ r.get('/money/overview', requireAuth, (req, res) => {
   if (!m.success) return void res.status(400).json({ error: t('Month must look like 2026-10') });
   const month = m.data;
   try {
-    res.json(moneyOverview(month));
+    const viewer = req.actor?.userId ?? null;
+    res.json(moneyOverview(month, { viewer, view: req.query.view === 'mine' && viewer ? 'mine' : 'household' }));
   } catch (e) {
     if (e instanceof MoneyError) return void res.status(400).json({ error: e.message });
     throw e;

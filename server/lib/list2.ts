@@ -54,7 +54,7 @@ export function lastBoughtFor(productIds: number[]): Map<number, LastBought> {
       `SELECT l.product_id AS pid, COALESCE(NULLIF(l.receipt_name, ''), l.name) AS name, l.price, l.qty, ${PURCHASE_DAY} AS day,
          NULLIF(trim(i.shop), '') AS shop, p.size, p.image_path
        FROM import_lines l JOIN imports i ON i.id = l.import_id JOIN products p ON p.id = l.product_id
-       WHERE l.product_id IN (${ids.map(() => '?').join(',')}) AND l.qty > 0 AND l.status NOT IN ('unavailable','returned','deposit')
+       WHERE l.product_id IN (${ids.map(() => '?').join(',')}) AND l.qty > 0 AND l.status NOT IN ('unavailable','returned','deposit') AND i.private_for IS NULL
          AND (i.status = 'applied' OR (i.status = 'review' AND l.action = 'add'))
        ORDER BY day DESC, l.id DESC`,
     )

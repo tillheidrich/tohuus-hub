@@ -7,7 +7,7 @@
  * Chart rules (dataviz skill): one series → no legend, values as text labels in ink (never in the bar colour),
  * bars anchored at zero, no grid, every chart also readable as a list/table for screen readers.
  */
-import { ArrowDown, ArrowRight, ArrowUp, CaretLeft, CaretRight, Coins, Lightbulb, Receipt } from '@phosphor-icons/react';
+import { ArrowDown, ArrowRight, ArrowUp, CaretLeft, CaretRight, Coins, GearSix, Lightbulb, LockSimple, Plus, Receipt } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +18,8 @@ import { money } from '../region';
 import { Empty } from '../ui';
 import { WgBalanceCard } from '../shop/forms';
 import { CheapestCard } from '../shop/offers';
+import { ExpenseFormSheet, MoneySettingsSheet, useMoneyMeta, useView, ViewSwitch } from '../money/entry';
+import { MoneyListSheet, MoneyListsCard, NewMoneyListSheet } from '../money/lists';
 
 interface Part {
   name: string;
@@ -116,9 +118,17 @@ export function Money() {
   const [month, setMonth] = useState(() => ym(new Date()));
   const nav = useNavigate();
   const current = ym(new Date());
+  // q-money: the household's money or only what belongs to me
+  const [view, setView] = useView();
+  const mine = view === 'mine';
+  const meta = useMoneyMeta();
+  const [entry, setEntry] = useState<'new' | null>(null);
+  const [settings, setSettings] = useState(false);
+  const [newList, setNewList] = useState(false);
+  const [listId, setListId] = useState<number | null>(null);
   const q = useQuery<Overview>({
-    queryKey: ['money', month],
-    queryFn: () => getOr<any>(`/money/overview?month=${month}`, () => null).then((d) => (d ? normalise(d, month) : legacy(month))),
+    queryKey: ['money', month, view],
+    queryFn: () => getOr<any>(`/money/overview?month=${month}${mine ? '&view=mine' : ''}`, () => null).then((d) => (d ? normalise(d, month) : legacy(month))),
     placeholderData: (prev) => prev,
   });
   const d = q.data;
@@ -135,11 +145,25 @@ export function Money() {
           <h1>{t('Money')}</h1>
         </div>
         <div className="actions">
+          <button className="btn primary sm" onClick={() => setEntry('new')}>
+            <Plus size={15} /> {t('Expense')}
+          </button>
           <button className="btn ghost" onClick={() => nav('/ausgaben')}>
             {t('In detail')} <ArrowRight size={16} />
           </button>
         </div>
       </header>
+
+      {(meta.data?.members?.length ?? 0) > 0 && (
+        <div className="mq-view">
+          <ViewSwitch value={view} onChange={setView} />
+        </div>
+      )}
+      {mine && (
+        <p className="meta mq-view-note">
+          <LockSimple size={13} aria-hidden="true" /> {t('Only what belongs to you: your personal entries and items marked for you. Nobody else sees them.')}
+        </p>
+      )}
 
       <div className="month-switch" role="group" aria-label={t('Month')}>
         <button className="icon-btn" onClick={() => setMonth(shiftMonth(month, -1))} aria-label={t('Previous month')}>
@@ -161,10 +185,19 @@ export function Money() {
           <Empty icon={<Coins size={26} />} title={t('Couldn’t load the numbers')} action={{ label: t('Try again'), onClick: () => q.refetch() }} />
         </div>
       ) : d.total === 0 && d.byCategory.length === 0 ? (
-        <div className="hcard">
-          <Empty icon={<Receipt size={26} />} art="receipt" title={t('Nothing spent this month – or no receipts yet')} action={{ label: t('Share a receipt'), onClick: () => nav('/import?mode=file') }}>
-            {t('Every receipt you share shows up here: per shop, per category, and what got more expensive.')}
-          </Empty>
+        <div className="money-grid">
+          <div className="hcard">
+            {mine ? (
+              <Empty icon={<LockSimple size={26} />} title={t('Nothing of your own this month')} action={{ label: t('Add a personal expense'), onClick: () => setEntry('new') }}>
+                {t('Mark an expense or receipt as “just for me”, or a receipt item as yours – it shows up here.')}
+              </Empty>
+            ) : (
+              <Empty icon={<Receipt size={26} />} art="receipt" title={t('Nothing spent this month – or no receipts yet')} action={{ label: t('Share a receipt'), onClick: () => nav('/import?mode=file') }}>
+                {t('Every receipt you share shows up here: per shop, per category, and what got more expensive.')}
+              </Empty>
+            )}
+          </div>
+          {!mine && <MoneyListsCard onOpen={setListId} onNew={() => setNewList(true)} />}
         </div>
       ) : (
         <div className={`money-grid ${q.isFetching ? 'refreshing' : ''}`}>
@@ -173,10 +206,12 @@ export function Money() {
           {d.byCategory.length > 0 && <Bars title={t('By category')} parts={d.byCategory} fmt={fmt} />}
           {d.byShop.length > 0 && <Bars title={t('By shop')} parts={d.byShop} fmt={fmt} unit={(n) => (n === 1 ? t('1 visit') : t('{n} visits', { n }))} />}
           {d.priceChanges.length > 0 && <PriceChanges list={d.priceChanges} fmt={fmt} />}
+          {/* q-money: money lists – split an occasion */}
+          {!mine && <MoneyListsCard onOpen={setListId} onNew={() => setNewList(true)} />}
           {/* list2 G: shared flat – who is ahead this month */}
-          <WgBalanceCard month={month} />
+          {!mine && <WgBalanceCard month={month} />}
           {/* list2 I: where it is cheapest, from the household's own receipts */}
-          <CheapestCard />
+          {!mine && <CheapestCard />}
           {d.hints.length > 0 && (
             <section className="hcard" aria-labelledby="h-hints">
               <div className="hcard-h">
@@ -199,6 +234,22 @@ export function Money() {
           {d.legacy && <p className="meta money-note">{t('Price changes and saving hints appear as soon as this server has the new money overview.')}</p>}
         </div>
       )}
+      <p className="meta money-note">
+        <button className="linkish" onClick={() => setSettings(true)}>
+          <GearSix size={14} aria-hidden="true" /> {t('Categories & sharing')}
+        </button>
+      </p>
+      <ExpenseFormSheet target={entry} onClose={() => setEntry(null)} preset={mine ? { private_for: meta.data?.me ?? null } : undefined} />
+      <MoneySettingsSheet open={settings} onClose={() => setSettings(false)} />
+      <NewMoneyListSheet
+        open={newList}
+        onClose={() => setNewList(false)}
+        onCreated={(id) => {
+          setNewList(false);
+          setListId(id);
+        }}
+      />
+      <MoneyListSheet id={listId} onClose={() => setListId(null)} />
     </div>
   );
 }

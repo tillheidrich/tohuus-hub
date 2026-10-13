@@ -122,6 +122,11 @@ struct SpendMeta: Decodable, Sendable {
     var stores: [String] = []
     var today: String?
     var currency: String?
+    /// q-money: categories for own entries (renamable), members (no permanent guests), the viewer, household setting
+    var moneyCategories: [String]?
+    var members: [MoneyMember]?
+    var me: Int?
+    var assignedOut: Bool?
 }
 
 /// One spending entry: a receipt line or an own expense (server/lib/spend2.ts `Entry`).
@@ -145,6 +150,14 @@ struct SpendEntry: Decodable, Sendable, Identifiable, Hashable {
     var tags: [String] = []
     var note: String?
     var excluded: Exclusion?
+    /// q-money: a receipt line for one person, personal entries, who paid, attachment, line items, "your part"
+    var forUserId: Int?
+    var forName: String?
+    var personal: Personal?
+    var paidBy: Int?
+    var hasAttachment = false
+    var items: [ExpenseItem] = []
+    var part = false
 
     struct Exclusion: Decodable, Sendable, Hashable {
         var id: Int
@@ -174,6 +187,13 @@ struct SpendEntry: Decodable, Sendable, Identifiable, Hashable {
         tags = c.first([String].self, "tags") ?? []
         note = c.first(String.self, "note")
         excluded = c.first(Exclusion.self, "excluded")
+        forUserId = c.first(Int.self, "forUserId")
+        forName = c.first(String.self, "forName")
+        personal = c.first(Personal.self, "personal")
+        paidBy = c.first(Int.self, "paidBy")
+        hasAttachment = c.first(JSONValue.self, "attachment").map { !$0.isNull } ?? false
+        items = c.first([ExpenseItem].self, "items") ?? []
+        part = c.first(Bool.self, "part") ?? false
     }
 }
 
@@ -198,6 +218,9 @@ struct SpendReceipt: Decodable, Sendable {
     var tags: [String] = []
     var exclusion: SpendEntry.Exclusion?
     @Lossy var entries: [SpendEntry]
+    var paidBy: Int?
+    var actor: String?
+    var personal: Personal?
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: AnyKey.self)
@@ -211,6 +234,9 @@ struct SpendReceipt: Decodable, Sendable {
         discounts = c.first(Double.self, "discounts")
         tags = c.first([String].self, "tags") ?? []
         exclusion = c.first(SpendEntry.Exclusion.self, "exclusion")
+        paidBy = c.first(Int.self, "paidBy")
+        actor = c.first(String.self, "actor")
+        personal = c.first(Personal.self, "personal")
         _entries = (try? c.decode(Lossy<SpendEntry>.self, forKey: AnyKey("entries"))) ?? Lossy(wrappedValue: [])
     }
 }

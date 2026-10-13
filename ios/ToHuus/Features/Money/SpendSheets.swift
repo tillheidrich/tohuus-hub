@@ -166,7 +166,8 @@ struct SpendDrillView: View {
 
     private func load() async {
         do {
-            data = try await store.api.spendEntries(from: drill.from, to: drill.to, category: drill.category, store: drill.store, tag: drill.tag, excludedOnly: drill.excludedOnly)
+            data = try await store.api.spendEntries(from: drill.from, to: drill.to, category: drill.category, store: drill.store, tag: drill.tag, excludedOnly: drill.excludedOnly,
+                                                    view: SharedConfig.defaults.string(forKey: "money.view"))
             error = nil
         } catch {
             self.error = APIError.from(error).localizedDescription
@@ -208,6 +209,7 @@ struct SpendEntryRow: View {
                     if let x = e.excluded {
                         Label(x.reason ?? L("left out"), systemImage: "eye.slash").font(.caption2).foregroundStyle(Theme.ink3)
                     }
+                    MoneyEntryBadges(e: e)
                 }
             }
             Spacer()
@@ -242,6 +244,10 @@ struct SpendReceiptView: View {
     @State private var reason = ""
     @State private var error: String?
     @State private var toast: ToastMessage?
+    @State private var openList: Int?
+    @State private var splitting = false
+
+    private var members: [MoneyMember] { meta?.members ?? [] }
 
     var body: some View {
         Form {
@@ -256,6 +262,42 @@ struct SpendReceiptView: View {
                     ForEach(d.entries) { e in
                         NavigationLink { SpendLineView(store: store, entry: e, meta: meta) } label: { SpendEntryRow(e: e) }
                     }
+                }
+                // q-money: who paid, single lines for one person, personal receipt, split as a money list
+                if members.count > 1 && d.personal == nil {
+                    Section(L("Who paid?")) {
+                        let payer = d.paidBy ?? members.first { $0.name == d.actor }?.id
+                        FlowLayout(spacing: 6) {
+                            ForEach(members) { m in
+                                ChoiceChip(title: m.name, on: payer == m.id) { Task { await run { try await store.api.setReceiptPayer(receiptId, userId: m.id) } } }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    Section {
+                        ForEach(d.entries) { e in
+                            Picker(selection: Binding(get: { e.forUserId }, set: { v in Task { await run { try await store.api.setLineOwner(receipt: receiptId, line: e.id, userId: v) } } })) {
+                                Text(L("Household")).tag(Int?.none)
+                                ForEach(members) { m in Text(m.name).tag(Int?.some(m.id)) }
+                            } label: {
+                                Text(e.name).font(.subheadline).lineLimit(2)
+                            }
+                        }
+                    } header: { Text(L("For whom?")) } footer: { Text(L("Something on it belongs to one person? Choose them next to the item.")) }
+                }
+                if let me = meta?.me {
+                    Section {
+                        Toggle(isOn: Binding(get: { d.personal != nil }, set: { on in Task { await run { try await store.api.setReceiptPersonal(receiptId, forUserId: on ? me : nil) } } })) {
+                            Text(d.personal.map { $0.forUserId == me ? L("This receipt is just mine") : LF("Belongs to %@", $0.forName ?? "") } ?? L("This receipt is just mine"))
+                        }
+                        .disabled(d.personal.map { $0.forUserId != me && $0.byUserId != me } ?? false)
+                    } footer: { Text(L("Personal receipts are only in your “Just mine” – nobody else sees them, not even in the household numbers.")) }
+                }
+                Section {
+                    Button {
+                        Task { await split() }
+                    } label: { HStack { Label(L("Split this receipt"), systemImage: "person.2"); if splitting { Spacer(); ProgressView() } } }
+                        .disabled(splitting)
                 }
                 Section(L("Tags for the whole receipt")) {
                     TagEditor(label: L("Tags"), values: $tags, suggestions: meta?.tags ?? [])
@@ -279,6 +321,25 @@ struct SpendReceiptView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .toast($toast)
+        .navigationDestination(item: $openList) { id in MoneyListView(store: store, listId: id) }
+    }
+
+    private func run(_ fn: () async throws -> Void) async {
+        do {
+            try await fn()
+            store.touch("imports")
+            await load()
+        } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
+    }
+
+    private func split() async {
+        splitting = true
+        defer { splitting = false }
+        do {
+            let l = try await store.api.createMoneyList(title: data?.store, people: nil, count: nil, from: .receipt(receiptId), privateList: false, shareWith: [])
+            store.touch("imports")
+            openList = l.id
+        } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
 
     private func load() async {
@@ -400,128 +461,6 @@ struct SpendLineView: View {
             store.touch("imports")
             dismiss()
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
-    }
-}
-
-// MARK: - own expense
-
-struct ExpenseEditView: View {
-    let store: ServerStore
-    let entry: SpendEntry?
-    let meta: SpendMeta?
-    @Environment(\.dismiss) private var dismiss
-    @State private var amount = ""
-    @State private var day = Date()
-    @State private var where_ = ""
-    @State private var category = ""
-    @State private var note = ""
-    @State private var tags: [String] = []
-    @State private var reason = ""
-    @State private var busy = false
-    @State private var confirmDelete = false
-    @State private var error: String?
-
-    private var value: Double? { Double(amount.replacingOccurrences(of: ",", with: ".").replacingOccurrences(of: " ", with: "")) }
-
-    var body: some View {
-        Form {
-            if entry == nil {
-                Section { Text(L("For things without a receipt – the farmers’ market, the bakery paid in cash.")).font(.subheadline).foregroundStyle(Theme.ink2) }
-            }
-            Section {
-                TextField("12,50", text: $amount).keyboardType(.decimalPad).font(.title3.monospacedDigit())
-                DatePicker(L("Date"), selection: $day, in: ...Date(), displayedComponents: .date)
-            } header: { Text(L("Amount")) }
-            Section(L("Where")) {
-                TextField(L("e.g. Farmers’ market"), text: $where_)
-                suggestions(meta?.stores ?? [], $where_)
-            }
-            Section(L("Category")) {
-                TextField(L("Uncategorised"), text: $category)
-                suggestions(meta?.categories ?? [], $category)
-            }
-            Section(L("Note")) { TextField(L("Note"), text: $note, axis: .vertical) }
-            Section { TagEditor(label: L("Tags"), values: $tags, suggestions: meta?.tags ?? []) }
-            if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
-            Section {
-                Button { Task { await save() } } label: { HStack { Text(L("Save")); if busy { Spacer(); ProgressView() } } }
-                    .disabled(busy || (value ?? 0) <= 0)
-                if entry != nil {
-                    Button(L("Delete"), role: .destructive) { confirmDelete = true }
-                }
-            }
-            if let e = entry {
-                Section {
-                    if e.excluded != nil {
-                        Button(L("Count again")) { Task { await toggleExclude(e) } }
-                    } else {
-                        ReasonPicker(reason: $reason)
-                        Button { Task { await toggleExclude(e) } } label: { Label(L("Leave out"), systemImage: "eye.slash") }
-                    }
-                } header: { Text(L("Don’t count in the statistics")) }
-            }
-        }
-        .navigationTitle(entry == nil ? L("Add an expense") : L("Edit expense"))
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            guard let e = entry else { return }
-            amount = String(format: "%.2f", e.price).replacingOccurrences(of: ".", with: ",")
-            day = SpendDates.toDate(e.day)
-            where_ = e.store
-            category = e.categoryOriginal == nil && e.category == L("Uncategorised") ? "" : e.category
-            note = e.note ?? ""
-            tags = e.tags
-        }
-        .confirmationDialog(L("Delete this expense?"), isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button(L("Delete"), role: .destructive) { Task { await delete() } }
-        }
-    }
-
-    private func suggestions(_ list: [String], _ binding: Binding<String>) -> some View {
-        Group {
-            if !list.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) { ForEach(list.prefix(16), id: \.self) { c in ChoiceChip(title: c, on: binding.wrappedValue == c) { binding.wrappedValue = c } } }
-                }
-            }
-        }
-    }
-
-    private func clean(_ s: String) -> String? { let t = s.trimmingCharacters(in: .whitespaces); return t.isEmpty ? nil : t }
-
-    private func save() async {
-        guard let v = value, v > 0 else { return }
-        busy = true
-        defer { busy = false }
-        let d = SpendDates.fromDate(day)
-        do {
-            if let e = entry {
-                try await store.api.updateExpense(e.id, amount: v, day: d, store: clean(where_), category: clean(category), note: clean(note), tags: tags)
-            } else {
-                try await store.api.addExpense(amount: v, day: d, store: clean(where_), category: clean(category), note: clean(note), tags: tags)
-            }
-            store.touch("imports")
-            Haptics.success()
-            dismiss()
-        } catch { self.error = APIError.from(error).localizedDescription }
-    }
-
-    private func delete() async {
-        guard let e = entry else { return }
-        do {
-            try await store.api.deleteExpense(e.id)
-            store.touch("imports")
-            dismiss()
-        } catch { self.error = APIError.from(error).localizedDescription }
-    }
-
-    private func toggleExclude(_ e: SpendEntry) async {
-        do {
-            if let ex = e.excluded { try await store.api.countAgain(ex.id) }
-            else { try await store.api.excludeSpend(scope: "expense", ref: String(e.id), reason: reason.isEmpty ? nil : reason) }
-            store.touch("imports")
-            dismiss()
-        } catch { self.error = APIError.from(error).localizedDescription }
     }
 }
 
