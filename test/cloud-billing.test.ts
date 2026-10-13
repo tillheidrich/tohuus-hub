@@ -12,6 +12,7 @@ import path from 'node:path';
 import { CompactSign } from 'jose';
 import { Agent, fetch } from 'undici';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const hasOpenssl = (() => {
   try {
@@ -24,7 +25,7 @@ const hasOpenssl = (() => {
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-billing-'));
 const certs = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-certs-'));
-const PORT = 48000 + Math.floor(Math.random() * 90);
+const PORT = await freePort();
 const base = `http://localhost:${PORT}`;
 Object.assign(process.env, {
   MULTI_TENANT: 'true',

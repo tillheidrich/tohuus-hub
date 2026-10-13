@@ -6,10 +6,12 @@ import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { afterAll, beforeAll, expect, it } from 'vitest';
+import { freePort } from './helpers/port';
 
 const web = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-compress-'));
 let server: http.Server;
-const base = 'http://localhost:47438';
+const PORT = await freePort();
+const base = `http://localhost:${PORT}`;
 
 /** raw GET without automatic decompression */
 const raw = (p: string, headers: Record<string, string> = {}) =>
@@ -36,7 +38,7 @@ beforeAll(async () => {
   app.get('/api/small', (_req, res) => res.json({ ok: true }));
   app.use(precompressedStatic(web, (p) => (p.includes('/assets/') ? 'public, max-age=31536000, immutable' : null)));
   app.use(express.static(web));
-  await new Promise<void>((r) => (server = app.listen(47438, () => r())));
+  await new Promise<void>((r) => (server = app.listen(PORT, () => r())));
 });
 afterAll(() => {
   server?.close();
