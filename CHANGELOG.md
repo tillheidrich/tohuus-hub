@@ -6,7 +6,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
-- **Assistant scope**: more clearly off-topic requests are answered without a model (stories, school subjects, "wer war …", news); `POST /api/assistant/transcribe` refuses transcripts over about a minute of speech (413).
+- **Assistant scope**: more clearly off-topic requests are answered without a model (stories, school subjects, "wer war …"); `POST /api/assistant/transcribe` refuses transcripts over about a minute of speech (413).
 
 - **iPhone app for longer tests**: "Feedback senden" (mail to the support address with version and build), version shows the build, every request sends `X-ToHuus-Version`, a test notification button and a hint when the server has no APNs key, "Das gibt es nicht mehr" instead of a server message for 404, privacy and terms links always present, no "14 Tage, dann Free" while a beta gift is on (`betaGift` in `/api/instance`), `MIN_IOS_BUILD` blocks builds that are too old, the offline list can be written while the iPhone is locked (Siri), a broken offline queue is logged.
 

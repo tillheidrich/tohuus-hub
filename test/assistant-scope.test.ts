@@ -51,7 +51,6 @@ describe('scope filter', () => {
     'Wer war Napoleon?',
     'Erklär mir die Relativitätstheorie in der Physik',
     'Löse die Gleichung 3x + 5 = 20',
-    'Was gibt es für Nachrichten heute?',
     'Schreib mir ein Python-Skript, das Dateien umbenennt',
     'Hilf mir bei meiner Mathe-Hausaufgabe',
     'Schreib meine Bewerbung als Projektmanager',
@@ -65,6 +64,7 @@ describe('scope filter', () => {
   const allowed = [
     'Wer war zuletzt einkaufen?',
     'Schreib mir eine Einkaufsliste für das Wochenende',
+    'Merk dir die Kekse aus dem Artikel https://news.example.org/kekse',
     'Milch ist alle',
     'Wir brauchen was für einen Pfannkuchen-Abend',
     'Was können wir heute kochen?',
