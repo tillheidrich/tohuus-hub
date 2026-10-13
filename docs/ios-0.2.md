@@ -127,3 +127,36 @@ Opt-in under Mehr › Hinweis im Laden, off by default. Shops are saved on the d
 shop id), region monitoring (max. 20), local notification only when something is open. No location is sent to the
 server or anywhere else. "Wenn in Benutzung" first, "Immer" asked right after – only when the person switched the
 hint on.
+
+## 0.3 parity – Einkauf & Vorrat
+
+Native in the iPhone/iPad app since the 0.3 parity work (package A, 12 Oct 2026). All endpoints already existed for the web; the app calls them from `ios/ToHuus/Core/API/Endpoints+ShopPantry.swift`, models in `Core/Models/ShopPantry.swift`.
+
+| Screen / place | What | Endpoints |
+|---|---|---|
+| Einkauf › row (swipe from the left, context menu) | „Ich hol’s“ / „Freigeben“; the row shows „Du holst es“ / „Mira holt’s“ | `POST /api/claims { kind: 'shopping', id, on, user_id? }` |
+| Einkauf › row sheet (`ItemDetailSheet`) | name and quantity, note, substitute, photo, **Wer kümmert sich?** (member chips), **Wo kaufen?** (chips + free text), **Wer sieht es?** (Alle / Diskret / Nur ich, placeholder, „der Person zeigen, die einkauft“, share with), last bought, remove | `PATCH /api/list/items/:id { text?, qty?, note?, substitute? }` (only changed keys), `GET /api/shop/members`, `GET /api/me` (`actor.userId`, `home.ui.claims`), `PUT /api/shop/items/:id/buy-at`, `GET /api/buy-at/suggestions`, `PATCH /api/share/items/:id` |
+| Einkauf › add row | eye button: next entry discreet / only for me (goes straight to the server, never into the offline queue); clipboard button | `POST /api/share/items { text, visibility }` |
+| Einkauf › „Liste einfügen“ (`PasteListSheet`) | PasteButton (no clipboard prompt) or typed text → lines with product matches → choose → add to the current list | `POST /api/share/parse { text }`, `POST /api/shop/quick-add { items, list_id }` |
+| Einkauf › „Liste teilen“ | system share sheet with the export text (private rows out, discreet ones as placeholder) | `GET /api/shopping/export.txt` |
+| Einkauf › „Wird bald knapp“ section | estimates for counted products not on the list, + puts it on | `GET /api/fresh/forecast?within=7` |
+| Einkauf › list menu › „Liste umbenennen oder entfernen“ (`ManageListSheet`) | name, (handover) note, remove | `PATCH /api/list/lists/:id`, `DELETE /api/list/lists/:id` |
+| Einkauf › „Läden & Gänge“ (`ShopSettingsSheet`, `StoreOrderView`) | shops, add / delete / rename, aisle order by drag | `GET/POST /api/shop/stores`, `PATCH /api/shop/stores/:id { name?, order? }`, `DELETE /api/shop/stores/:id` |
+| Vorrat › product › „Bearbeiten“ (`ProductEditSheet`) | name, brand, category, usual place, exact spot, counting (Stück / Füllstand / nicht zählen), minimum, unit, note, photo | `PATCH /api/products/:id` (changed keys only), `POST /api/products/:id/image`, `GET /api/categories`, `GET /api/locations` |
+| Vorrat › product › „Wo und bis wann“ | batches with place, date, geöffnet / eingefroren; per batch: change date, opened, freeze / thaw, move to another place; „Etwas wegräumen – mit Datum und Ort“ | `GET /api/fresh/products/:id`, `PATCH /api/stock/:id { best_before?, location_id? }`, `POST /api/fresh/products/:id/open|freeze|thaw { entry_id, qty? }`, `POST /api/stock/adjust { delta, location_id, best_before }` |
+| Vorrat › product › „Wo kaufen?“ | shops for the product | `PUT /api/products/:id/buy-at` |
+| Vorrat › filter menu | group by place or category (this device, `pantry.group`), filter by category | `GET /api/categories` |
+| Vorrat › „Schnell-Check“ (`QuickCheckView`, `CheckStackView`) | places with last check → one card per thing: Stimmt / Weniger / Leer / Weg (reason) | `GET /api/fresh/check`, `GET /api/fresh/check/:place`, `POST /api/fresh/check/:place { product_id, action, qty?, reason? }` |
+| Vorrat › „Wo ist was?“ (`FindView`) | search with place path, hint and exact spot | `GET /api/find?q=` |
+| Vorrat › „Reste wegstellen“ (`LeftoversSheet`) | name, portions, containers, fridge/freezer, own eat-by; label image to share; boxes in the fridge and freezer | `POST /api/labels/boxes`, `GET /api/labels/boxes`, `GET /api/labels/boxes/:code/label.png` |
+| Vorrat › „Dosen-Etikett scannen“ (`LabelSheet`, `BoxDetail`) | QR from a box label (existing `CodeScannerView`): took one portion, all eaten, thawed, thrown away, undo, plan it; product and place labels too | `GET /api/labels/boxes/:code`, `POST …/action { action }`, `POST …/undo`, `POST …/plan { day, slot }`, `GET /api/qr/:code` |
+| Product pictures (decision 1.0) | list rows (own row photo, else the product picture; left of the name, all densities and in the shop), „vermutlich fällig“ chips on the list, „Unsere Üblichen“, Heute › „Vermutlich fällig“ and „Das habt ihr noch“, pantry rows, product page – shown only when the server has a picture (`ProductThumb`) | `image_path` on `/api/shop/list` rows, `/api/products`, `/api/list/usuals`; `image` on `/api/rhythm` and `/api/today` (`rhythm`, `stillHave`) – signed `/img/…?h=&e=&s=` URLs for bearer clients |
+| Vorrat › product › picture (tap the picture, or „Bearbeiten“ › „Bild ändern“) (`ProductImageSheet`) | own photo (camera on device, Fotos) or a picture from Open Food Facts (search, weak matches below score 0.4 hidden); saved at once, credit shown | `POST /api/products/:id/image` (multipart `image`, or `url` + `code`), `GET /api/lookup/search?q=` |
+| Vorrat › „+“ / barcode (`NewProductSheet`) | new product by hand or from a scan: Open Food Facts picture from the scan, or pictures offered while typing the name, or an own photo; category, place, counting, how many at home | `GET /api/lookup/barcode/:code`, `GET /api/lookup/search`, `POST /api/products { name, brand, category_id, default_location_id, track_mode, code, image_url, initial_qty, initial_location_id }`, then `POST /api/products/:id/image` for an own photo |
+| Heute › „Das habt ihr noch“ (`EatSoonCard`) | per row: Aufgebraucht (quick-check `empty` at the place of the first batch; things only „probably at home“ use used-up, which puts them on the list), Noch da (quick-check `ok`), Einplanen (today / tomorrow) | `GET /api/fresh/today` (place per product), `POST /api/fresh/check/:place`, `POST /api/stock/used-up`, `POST /api/plan { day, title }` |
+
+`ShopItem` decodes `share` (`ShareInfo`: visibility, mine, owner, revealed, share_with, reveal, placeholder). German strings for this area live in `ios/tools/strings_de_shop_pantry.json`; `tools/gen_strings.py` now merges every `strings_de_*.json` (re-run it after merging branches – `Localizable.xcstrings` is generated).
+
+Debug launch arguments (debug builds): `-debugItemSheet YES`, `-debugShopSettings YES`, `-debugPaste YES` (with `-debugTab shopping`); `-debugProduct <id>`, `-debugProductEdit YES`, `-debugProductImage YES`, `-debugNewProduct YES` (`-debugNewProductName <text>`), `-debugCheck YES`, `-debugCheckStack YES`, `-debugFind YES -debugFindQuery <q>`, `-debugLeftovers YES`, `-debugLabel <code>` (with `-debugTab pantry`).
+
+Still web-only in this area: printing label sheets (PDF), offers comparison per shop, kiosk/displays, WG personal rows (`owner`), the starter staples picker, waste insights per month, freezer/opening shelf-life settings per product.

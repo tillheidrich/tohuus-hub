@@ -71,7 +71,8 @@ struct UsualsSheet: View {
             List {
                 if missing { Text(L("Your server doesn't have this section yet.")).foregroundStyle(Theme.ink3) }
                 ForEach(rows.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) }) { u in
-                    HStack {
+                    HStack(spacing: Theme.Space.s3) {
+                        ProductThumb(path: u.imagePath, api: store.api, size: 40)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(u.name)
                             if let c = u.count { Text(LF("bought %d times", c)).font(.caption).foregroundStyle(Theme.ink3) }

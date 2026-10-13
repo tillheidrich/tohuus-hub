@@ -89,7 +89,7 @@ struct TodayView: View {
                         ForEach(t.notices) { n in noticeRow(n) }
                         if !t.rhythm.isEmpty { dueCard(t.rhythm) }
                         listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])
-                        if !t.stillHave.isEmpty && app.moduleOn("stock") { stillHaveCard(t.stillHave) }
+                        if !t.stillHave.isEmpty && app.moduleOn("stock") { EatSoonCard(items: t.stillHave, store: store) }
                         if let cook = t.cookToday, cook.recipeId != nil || cook.title != nil, app.moduleOn("cook") { cookCard(cook) }
                         if let money = t.money, app.moduleOn("money") { moneyCard(money) }
                     } else if model.limited || !store.isOnline {
@@ -158,6 +158,7 @@ struct TodayView: View {
                 .font(.footnote).foregroundStyle(Theme.ink2)
             ForEach(showAllDue ? items : Array(items.prefix(3))) { item in
                 HStack(spacing: Theme.Space.s3) {
+                    ProductThumb(path: item.image, api: store.api, size: 40)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(item.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
                         if !item.detail.isEmpty { Text(item.detail).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1) }
@@ -216,24 +217,6 @@ struct TodayView: View {
             }
         }
         .buttonStyle(.plain)
-    }
-
-    private func stillHaveCard(_ items: [StillHaveItem]) -> some View {
-        Card(title: L("You still have"), systemImage: "leaf") {
-            ForEach(items.prefix(6)) { i in
-                HStack {
-                    Text(i.name).font(.subheadline)
-                    Spacer()
-                    if let label = i.label ?? ServerDate.shortDay(i.date) {
-                        if i.kind == "probably" {
-                            Text(label).font(.caption).foregroundStyle(Theme.ink3)
-                        } else {
-                            StatusPill(text: label, status: (i.daysLeft ?? 1) < 0 ? "expired" : "expiring")
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private func cookCard(_ cook: TodayPayload.CookToday) -> some View {

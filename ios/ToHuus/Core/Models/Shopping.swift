@@ -178,6 +178,8 @@ struct ShopItem: Codable, Sendable, Identifiable, Equatable {
     /// "Spinat 3× weggeworfen – lieber 250 g?", "am günstigsten bei Aldi: 1,99 €"
     var sizeHint: String?
     var priceHint: String?
+    /// discreet / private entry (area: share) – see ShareInfo
+    var share: ShareInfo?
 
     struct Claim: Codable, Sendable, Equatable {
         var userId: Int?
