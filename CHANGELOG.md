@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Fix (cloud): every PDF receipt upload failed, because pdftotext read the stored file, which is encrypted at rest in ToHuus Cloud. `pdfToText` now decrypts into a private temp file first (also for mail, Telegram and retail inbox imports).
+
 - Receipt upload: a file named .pdf that is no PDF (a saved web page of a digital receipt) is read as a web page; a damaged or protected PDF, or any other file, gets a plain answer instead of a server error (was error a2bd3b25).
 
 - TestFlight feedback 13 Oct: the assistant's `list_add` never puts answers or greetings ("Ja", "Hallo") on the list, and a recipe amount ("100 g") goes into the note instead of becoming 100 packs (`amount` field). iPhone: cooking strings that fell back to English ("servings", "missing") are translated (gen_strings.py now collects LC/LCF keys), sign-in shows a plain sentence instead of "unauthorized".

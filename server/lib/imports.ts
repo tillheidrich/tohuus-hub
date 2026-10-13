@@ -1,9 +1,10 @@
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { config } from '../config.js';
-import { importsDir, writeStoredFile } from './images.js';
+import { importsDir, readStoredFile, writeStoredFile } from './images.js';
 import { db, getSetting } from '../db.js';
 import { detectReweKind, isSameShopping, parseReweAvis, parseReweEbon, reconcile } from '../importers/rewe.js';
 import type { ParsedImport, ParsedLine } from '../importers/types.js';
@@ -28,9 +29,22 @@ import { takeTickBooking } from './shopping-trust.js';
 
 const pexec = promisify(execFile);
 
+/**
+ * Text of a PDF. Stored files are encrypted at rest in ToHuus Cloud (images.ts › writeStoredFile), so pdftotext never
+ * gets the stored file itself: the plain bytes go to a private temp file that is removed right after (13.10.2026:
+ * every PDF upload in the cloud failed with "Couldn't read xref table" because pdftotext read the encrypted blob).
+ */
 export async function pdfToText(file: string): Promise<string> {
-  const { stdout } = await pexec('pdftotext', ['-layout', '-enc', 'UTF-8', file, '-'], { maxBuffer: 20 * 1024 * 1024, timeout: 30000 });
-  return stdout;
+  const plain = readStoredFile(file);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-pdf-'));
+  const tmp = path.join(dir, 'in.pdf');
+  try {
+    fs.writeFileSync(tmp, plain, { mode: 0o600 });
+    const { stdout } = await pexec('pdftotext', ['-layout', '-enc', 'UTF-8', tmp, '-'], { maxBuffer: 20 * 1024 * 1024, timeout: 30000 });
+    return stdout;
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 export function parseDocumentText(text: string, filename?: string): ParsedImport | null {

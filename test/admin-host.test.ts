@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Agent, fetch } from 'undici';
+import { Agent, FormData as UFormData, fetch } from 'undici';
 import { freePort } from './helpers/port';
 const local = new Agent();
 
@@ -157,6 +157,25 @@ describe('back office on its own host', () => {
     expect(today.json.greeting).toMatch(/^(Moin|'n Avend), Samu$/);
     expect(today.json.platt).toMatchObject({ text: expect.any(String), meaning: expect.any(String), note: expect.any(String) });
     expect((await app.req('PATCH', '/api/cloud/me', { name: '' })).status).toBe(400);
+  });
+
+  it('cloud: a PDF receipt is read although stored files are encrypted at rest (was a2bd3b25)', async () => {
+    const rows = fs.readFileSync(path.join(__dirname, 'fixtures', 'receipts', 'edeka-kaufmann.txt'), 'utf8').split('\n');
+    const esc = (x: string) => x.replace(/[\\()]/g, (c) => '\\' + c).replace(/[^\x20-\x7e]/g, '?');
+    const stream = `BT /F1 10 Tf 12 TL 40 800 Td ${rows.map((r) => `(${esc(r)}) Tj T*`).join(' ')} ET`;
+    const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>', `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`, '<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>'];
+    let pdf = '%PDF-1.4\n';
+    const offs: number[] = [];
+    objs.forEach((o, i) => { offs.push(pdf.length); pdf += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+    const xref = pdf.length;
+    pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offs.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    const f = new UFormData();
+    f.append('files', new Blob([pdf], { type: 'application/pdf' }), 'bon.pdf');
+    const res = await fetch(base + '/api/imports/upload', { method: 'POST', body: f, headers: { cookie: [...app.cookies].map(([k, v]) => `${k}=${v}`).join('; '), 'x-forwarded-for': app.ip, origin: base }, dispatcher: local });
+    const j = (await res.json()) as any;
+    expect(res.status, JSON.stringify(j)).toBe(200);
+    expect(j.results[0].error, JSON.stringify(j)).toBeUndefined();
+    expect(j.results[0].id).toBeGreaterThan(0);
   });
 
   it('logins are rate limited', async () => {

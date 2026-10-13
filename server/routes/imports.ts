@@ -135,7 +135,7 @@ r.delete('/imports/:id', (req, res) => {
  */
 r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res) => {
   const files = (req.files as Express.Multer.File[]) ?? [];
-  const mode = String(req.body.mode ?? 'auto');
+  const mode = String(req.body?.mode ?? 'auto');
   const results: any[] = [];
   const images: Express.Multer.File[] = [];
   for (const f of files) {
