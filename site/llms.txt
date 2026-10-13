@@ -38,7 +38,7 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Kochen mit dem, was da ist](https://tohuus.heidrich-digital.de/hilfe/kochen.html): Ideen aus dem Vorhandenen, der Wochenplan, Portionen und eure Hausversion.
 - [Rezepte per Link, Social Media und Foto](https://tohuus.heidrich-digital.de/hilfe/rezepte-importieren.html): Rezepte von Webseiten, aus Posts, von Fotos und aus anderen Apps übernehmen.
 - [Das ToHuus-Rezeptpaket](https://tohuus.heidrich-digital.de/hilfe/rezeptpaket.html): Viele Rezepte auf einmal: das Format, ein Prompt für deine eigene KI und der Weg zurück.
-- [Cookidoo-Rezepte](https://tohuus.heidrich-digital.de/hilfe/cookidoo.html): Wie Thermomix-Rezepte aus Cookidoo neben ToHuus funktionieren.
+- [Cookidoo, Monsieur Cuisine und andere Küchenmaschinen](https://tohuus.heidrich-digital.de/hilfe/cookidoo.html): Wie Rezepte aus Cookidoo, Monsieur Cuisine, Cookit und anderen Küchenmaschinen-Apps neben ToHuus funktionieren.
 - [Geld: Lebensmittel und Haushalt](https://tohuus.heidrich-digital.de/hilfe/geld.html): Was ein Monat gekostet hat, wo, wofür, und was teurer geworden ist.
 - [Sprechen und der Assistent](https://tohuus.heidrich-digital.de/hilfe/sprechen.html): Was der Knopf „Sprechen“ kann, was er einträgt und wie du es zurücknimmst.
 - [Mit oder ohne KI](https://tohuus.heidrich-digital.de/hilfe/ki-an-oder-aus.html): Was ohne KI geht, was sie dazu bringt, und wie du sie für Haushalt, dich oder Kinder abschaltest.

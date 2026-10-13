@@ -20,7 +20,7 @@ import {
   type AppleRenewal,
   type AppleTransaction,
 } from '../lib/apple.js';
-import { APPLE_PRODUCTS, PLAN_LIMITS, checkStorage, currentPlan, limits, usage, type Limits } from '../lib/plans.js';
+import { APPLE_PRODUCTS, LIFETIME_PRODUCT, PLAN_LIMITS, checkStorage, currentPlan, limits, usage, type Limits } from '../lib/plans.js';
 import { currentHousehold } from '../lib/tenancy.js';
 import { APPLE_MANAGE_URL, recordRenewal, reminderWanted, renewalOf } from '../lib/renewals.js';
 import { db } from '../db.js';
@@ -47,6 +47,8 @@ export function billingStatus() {
     /** paid until (also when it will not renew) */
     expiresAt: apple ? h!.plan_expires_at : null,
     autoRenew: apple ? (ren ? Boolean(ren.auto_renew) : null) : null,
+    /** Plus bought once, for good (optional App Store product); an old subscription still renewing should be cancelled */
+    lifetime: Boolean(apple && h!.plan_product === LIFETIME_PRODUCT && plan === 'plus'),
     period: apple ? (ren?.period ?? (h!.plan_product ? (APPLE_PRODUCTS[h!.plan_product]?.period ?? null) : null)) : null,
     /** "Abo verwalten": Apple's subscription management (the app opens it with showManageSubscriptions) */
     manageUrl: apple ? APPLE_MANAGE_URL : null,
@@ -161,6 +163,8 @@ export function applyAppleTransaction(householdId: string, tx: AppleTransaction)
     }
     // never shorten a running subscription because an older transaction arrives late
     const h = getHousehold(householdId)!;
+    // Plus for good (lifetime) is never replaced by a subscription; only its own refund ends it (above)
+    if (h.plan_product === LIFETIME_PRODUCT && h.plan === 'plus' && tx.productId !== LIFETIME_PRODUCT) return;
     // compared by expiry only: a late, older transaction (also of another subscription) must not shorten a later expiry
     const later = !h.plan_expires_at || !expires || expires >= h.plan_expires_at;
     if (later)

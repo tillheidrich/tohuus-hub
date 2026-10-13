@@ -678,7 +678,7 @@ describe('plans and quotas', () => {
       }
       expect(calls).toBe(20);
       expect(tenancy.runInHousehold(hC, () => plans.usage('assistant'))).toBe(20);
-      const over = await C.post('/api/assistant/chat', { message: 'Wie wird das Wetter?' });
+      const over = await C.post('/api/assistant/chat', { message: 'Wie geht es dir heute?' });
       expect(over.status).toBe(402);
       expect(over.json).toMatchObject({ code: 'quota.assistant', remaining: 0 });
       expect(over.json.error).toBeTruthy();

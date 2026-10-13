@@ -65,6 +65,8 @@ import { register as register_wish } from './tools-wish.js';
 import { register as register_house } from './tools-house.js';
 import { norm } from '../lib/text.js';
 import { signImagesInHtml } from '../lib/images.js';
+import { entitlement } from '../lib/plans.js';
+import { DEVICE_PLATFORM_IDS, devicePlatformOf } from '../lib/device-platforms.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 const text = (v: unknown) => ({ content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 1) }] });
@@ -403,14 +405,15 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
     {
       title: 'Save recipe',
       description:
-        'Saves a recipe (e.g. from a photo of a HelloFresh card you have read). Thermomix steps with tm {time, temp, speed}. pantry=true for basic ingredients (salt, oil …).',
+        'Saves a recipe (e.g. from a photo of a HelloFresh card you have read). Thermomix steps with tm {time, temp, speed}. pantry=true for basic ingredients (salt, oil …). ' +
+        'Kitchen appliance platforms (Cookidoo/Thermomix, Monsieur Cuisine, Home Connect/Cookit, Kenwood World, Tefal/Moulinex/Krups Companion, Magimix Cook Expert, KitchenAid Cook Processor, Cecotec Mambo, Philips NutriU): in ToHuus Cloud the server never fetches their pages or photos. Bring along what the person shows or tells you – title, ingredients, steps and the photo as image_base64 – with the link as source_url; the platform is recognised from the link.',
       inputSchema: {
         title: z.string(),
         description: z.string().optional(),
         servings: z.number().optional(),
         time_min: z.number().optional(),
         thermomix: z.boolean().default(false),
-        source_type: z.enum(['own', 'hellofresh', 'cookidoo', 'url', 'photo', 'family']).default('photo'),
+        source_type: z.enum(['own', 'hellofresh', 'url', 'photo', 'family', ...DEVICE_PLATFORM_IDS] as [string, ...string[]]).default('photo'),
         source_url: z.string().optional(),
         tags: z.array(z.string()).default([]),
         favorite: z.boolean().default(false),
@@ -423,6 +426,13 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
     },
     async (a) => {
       const { image_base64, ...rest } = a;
+      // a link of an appliance platform (device-platforms.ts) keeps the platform as source and the appliance as a tag
+      const platform = devicePlatformOf(a.source_url);
+      if (platform && ['photo', 'url', 'own'].includes(rest.source_type)) {
+        rest.source_type = platform.id;
+        if (platform.id === 'cookidoo') rest.thermomix = true;
+        else if (!rest.tags.some((x) => x.toLowerCase() === platform.device.toLowerCase())) rest.tags = [...rest.tags, platform.device];
+      }
       const id = saveRecipe(rest as any);
       const inline = image_base64 ? Buffer.from(image_base64.replace(/^data:image\/[a-z+.-]+;base64,/i, ''), 'base64') : null;
       if (inline && inline.length && inline.length <= 8 * 1024 * 1024) await setRecipeImage(id, inline).catch(() => false);
@@ -508,7 +518,7 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
   s.registerTool(
     'fill_week',
     { title: 'Fill the week', description: 'Fills free evenings of the next 7 days with suitable recipes from what is in stock.', inputSchema: {}, annotations: RW },
-    async () => text(autofill(localDay(0), 7)),
+    async () => (entitlement('weekPlanFromPantry') ? text(autofill(localDay(0), 7)) : { isError: true, content: [{ type: 'text' as const, text: 'Filling the week from what is at home is part of Plus.' }] }),
   );
 
   s.registerTool(

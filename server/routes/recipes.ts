@@ -9,8 +9,9 @@ import { deleteImage, saveImage, toVisionJpeg } from '../lib/images.js';
 import { setRecipeImageUrl } from '../lib/recipes2.js';
 import { getRecipe, ingredientCore, listRecipes, logCooked, parseRecipeJsonLd, saveRecipe, suggest } from '../lib/recipes.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
-import { cookidooConfirmNeeded, cookidooDraft, importSocial, isCookidooUrl, modelToRecipe, platformOf, readIngredients, saveCookidoo } from '../lib/recipe-ai-import.js';
+import { cookidooConfirmNeeded, cookidooDraft, importSocial, isDevicePlatformUrl, modelToRecipe, platformOf, readIngredients, readRecipeText, saveCookidoo } from '../lib/recipe-ai-import.js';
 import { upload } from './core.js';
+import { requireFeature } from '../lib/limits.js';
 import { addPlan, autofill, getPlan, planShopping, shiftPlan, syncCookidoo, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
 import { safeFetch } from '../lib/net.js';
@@ -156,9 +157,11 @@ async function attachImage(id: number, url: string | null | undefined) {
 
 r.post('/recipes/import/url', async (req, res) => {
   const { url, text } = z.object({ url: z.string().url(), text: z.string().max(20_000).nullable().optional() }).parse(req.body);
-  // ToHuus Cloud never contacts Cookidoo: the app asks for title + ingredients instead (recipe-ai-import.ts)
+  // ToHuus Cloud never contacts Cookidoo, Monsieur Cuisine, Cookit … (device-platforms.ts): the app asks for title +
+  // ingredients instead. The code stays 'cookidoo_confirm' for every platform – older apps rely on it.
   if (cookidooConfirmNeeded(url)) {
-    res.status(409).json({ code: 'cookidoo_confirm', error: t('Cookidoo recipes are kept as title, link and ingredients – please confirm them.'), draft: cookidooDraft(url, text) });
+    const draft = cookidooDraft(url, text);
+    res.status(409).json({ code: 'cookidoo_confirm', error: t('{app} recipes are kept as title, link and ingredients – please confirm them.', { app: draft.platform?.label ?? 'Cookidoo' }), draft });
     return;
   }
   // Instagram, TikTok, Pinterest, YouTube: only what is public without a login, plus the shared caption
@@ -206,21 +209,30 @@ r.post('/recipes/import/social', async (req, res) => {
   res.json(await importSocial(b));
 });
 
-/** Cookidoo: the draft to confirm (nothing is fetched) … */
-r.post('/recipes/import/cookidoo/draft', (req, res) => {
+/**
+ * Cookidoo and the other appliance platforms (Monsieur Cuisine, Cookit, Kenwood … – device-platforms.ts).
+ * The /cookidoo paths stay for older apps; /device is the same.
+ * The draft to confirm (nothing is fetched) …
+ */
+r.post(['/recipes/import/cookidoo/draft', '/recipes/import/device/draft'], (req, res) => {
   const b = z.object({ url: z.string().url(), text: z.string().max(5000).nullable().optional() }).parse(req.body);
-  if (!isCookidooUrl(b.url)) return void res.status(400).json({ error: t('That is not a Cookidoo link.') });
+  if (!isDevicePlatformUrl(b.url)) return void res.status(400).json({ error: t('That is not a link from Cookidoo or another kitchen appliance app.') });
   res.json(cookidooDraft(b.url, b.text));
 });
 /** … the ingredient list read from the person's own screenshot (needs AI; not saved) … */
-r.post('/recipes/import/cookidoo/read', upload.array('files', 4), uploadQuota, async (req, res) => {
+r.post(['/recipes/import/cookidoo/read', '/recipes/import/device/read'], upload.array('files', 4), uploadQuota, async (req, res) => {
   const files = (req.files as Express.Multer.File[]) ?? [];
   if (!files.length) return void res.status(400).json({ error: t('No photos') });
   const imgs = await Promise.all(files.map((f) => toVisionJpeg(f.buffer, 1800)));
   res.json(await readIngredients(imgs));
 });
+/** … or from the text the person copied in the platform's app (AI when on, else split by lines; not saved) … */
+r.post(['/recipes/import/cookidoo/read-text', '/recipes/import/device/read-text'], async (req, res) => {
+  const b = z.object({ text: z.string().trim().min(3).max(20_000) }).parse(req.body);
+  res.json(await readRecipeText(b.text));
+});
 /** … and saving what the person confirmed: title, link, ingredients and – if they brought them – steps. */
-r.post('/recipes/import/cookidoo', async (req, res) => {
+r.post(['/recipes/import/cookidoo', '/recipes/import/device'], async (req, res) => {
   const b = z
     .object({
       url: z.string().url(),
@@ -331,7 +343,8 @@ r.post('/plan/shift', (req, res) => {
   const b = z.object({ from: z.string().regex(dayRe), by: z.number().int().min(-7).max(7).default(1), slot: z.enum(['mittag', 'abend']).optional() }).parse(req.body);
   res.json(shiftPlan(b.from, b.by, b.slot));
 });
-r.post('/plan/autofill', (req, res) => {
+// filling free evenings from what is at home: Plus (cloud); self-hosted servers have everything
+r.post('/plan/autofill', requireFeature('weekPlanFromPantry'), (req, res) => {
   const from = dayRe.test(String(req.body?.from)) ? String(req.body.from) : localDay(0);
   res.json(autofill(from, Math.max(1, Math.min(28, Number(req.body?.days) || 7))));
 });

@@ -29,6 +29,7 @@ export const web3: Record<string, string> = {
   Gift: 'Geschenk',
   'Free during the beta – thank you for testing': 'Während der Beta geschenkt – danke fürs Testen',
   'For good': 'Für immer',
+  'Plus – for good': 'Plus – für immer',
   'Until {date}': 'Bis {date}',
   'During the beta nobody pays. When it ends, every household keeps what it has on its own – nothing is deleted.': 'Während der Beta zahlt niemand. Danach behält jeder Haushalt, was er selbst hat – gelöscht wird nichts.',
   'Redeem a code': 'Code einlösen',

@@ -39,7 +39,7 @@ export function BillingCard() {
       </h2>
       <dl className="plan-facts">
         <dt>{t('Plan')}</dt>
-        <dd>{t(PLAN_LABEL[s.plan] ?? s.plan)}</dd>
+        <dd>{s.lifetime ? t('Plus – for good') : t(PLAN_LABEL[s.plan] ?? s.plan)}</dd>
         {s.gift && (
           <>
             <dt>{t('Gift')}</dt>

@@ -26,6 +26,7 @@ import {
   type QrKind,
 } from '../lib/care.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
+import { requireFeature } from '../lib/limits.js';
 import { priceHistory, pricedProducts, setSpendingTarget, spendingCsv, spendingSummary, spendingTarget } from '../lib/spending.js';
 
 export const r = Router();
@@ -141,7 +142,8 @@ r.get('/spending', (req, res) => {
 
 r.get('/spending/products', (_req, res) => res.json(pricedProducts()));
 
-r.get('/spending/prices/:productId', (req, res) => res.json(priceHistory(num(req.params.productId))));
+// price history per product: Household plan and up (cloud); self-hosted servers have everything
+r.get('/spending/prices/:productId', requireFeature('priceHistory'), (req, res) => res.json(priceHistory(num(req.params.productId))));
 
 r.get('/spending/export.csv', (req, res) => {
   const m = req.query.month ? month.parse(String(req.query.month)) : undefined;

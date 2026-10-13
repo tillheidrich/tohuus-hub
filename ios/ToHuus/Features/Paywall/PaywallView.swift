@@ -34,6 +34,7 @@ struct PaywallView: View {
                         if storeKit.productsMissing || storeKit.loadError != nil { productsUnavailable }
                         planCard(plan: "haushalt", title: L("Household"), symbol: "house")
                         planCard(plan: "plus", title: L("Plus"), symbol: "sparkles")
+                        if let life = storeKit.lifetime, app.billing?.lifetime != true { lifetimeCard(life) }
                         freeCard
                         if let m = storeKit.message { Text(m).font(.footnote).foregroundStyle(Theme.info) }
                         legal
@@ -74,6 +75,12 @@ struct PaywallView: View {
                 Text(LF("Renews on %@", r.formatted(date: .long, time: .omitted))).font(.footnote).foregroundStyle(Theme.ink2)
             } else if app.billing?.isPaid == true, let e = ServerDate.parse(app.billing?.expiresAt) {
                 Text(LF("Ends on %@ – it will not renew.", e.formatted(date: .long, time: .omitted))).font(.footnote).foregroundStyle(Theme.ink2)
+            }
+            if app.billing?.lifetime == true, app.billing?.autoRenew == true {
+                // bought Plus for good while a subscription still renews: Apple keeps charging until it is cancelled
+                Text(L("You have Plus for good. Your old subscription still renews – cancel it under “Manage subscription” so it is not charged again."))
+                    .font(.footnote).foregroundStyle(Theme.warning)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Text(L("One subscription covers the whole household. Members, children and guests never pay."))
                 .font(.footnote).foregroundStyle(Theme.ink3)
@@ -155,6 +162,31 @@ struct PaywallView: View {
             } else {
                 ProgressView()
             }
+        }
+    }
+
+    /// Optional: Plus once, for good (non-consumable `plus.lifetime`).
+    private func lifetimeCard(_ product: Product) -> some View {
+        Card(title: L("Plus for good"), systemImage: "infinity") {
+            Text(L("Everything in Plus for this household, paid once. No subscription, nothing renews."))
+                .font(.subheadline).foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("\(product.displayPrice) \(product.periodLabel)").font(.headline).foregroundStyle(Theme.ink)
+            Button {
+                Task {
+                    if await storeKit.purchase(product, household: app.session?.householdId) {
+                        Haptics.success()
+                        await app.refreshBilling()
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(L("Buy once"))
+                    if storeKit.purchasing == product.id { ProgressView().tint(Theme.onPrimary) }
+                }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(storeKit.purchasing != nil)
         }
     }
 

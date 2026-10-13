@@ -392,6 +392,23 @@
         }
       }
     },
+    "%@ recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ recipe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-Rezept"
+          }
+        }
+      }
+    },
     "%@ says thanks": {
       "extractionState": "manual",
       "localizations": {
@@ -1548,23 +1565,6 @@
         }
       }
     },
-    "A Cookidoo recipe – open ToHuus to confirm the ingredients.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A Cookidoo recipe – open ToHuus to confirm the ingredients."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ein Cookidoo-Rezept – öffne ToHuus und bestätige die Zutaten."
-          }
-        }
-      }
-    },
     "A blanket, tea with honey …": {
       "extractionState": "manual",
       "localizations": {
@@ -1884,6 +1884,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Bon wartet auf einen Blick"
+          }
+        }
+      }
+    },
+    "A recipe from Cookidoo or another kitchen appliance app – open ToHuus to confirm the ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A recipe from Cookidoo or another kitchen appliance app – open ToHuus to confirm the ingredients."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Rezept aus Cookidoo oder einer anderen Küchenmaschinen-App – öffne ToHuus und bestätige die Zutaten."
           }
         }
       }
@@ -4098,6 +4115,23 @@
         }
       }
     },
+    "Buy once": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buy once"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal kaufen"
+          }
+        }
+      }
+    },
     "By category": {
       "extractionState": "manual",
       "localizations": {
@@ -5237,36 +5271,19 @@
         }
       }
     },
-    "Cookidoo recipe": {
+    "Cookidoo, Monsieur Cuisine & co.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cookidoo recipe"
+            "value": "Cookidoo, Monsieur Cuisine & co."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cookidoo-Rezept"
-          }
-        }
-      }
-    },
-    "Cookidoo recipes": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cookidoo recipes"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cookidoo-Rezepte"
+            "value": "Cookidoo, Monsieur Cuisine & Co."
           }
         }
       }
@@ -5373,19 +5390,36 @@
         }
       }
     },
-    "Copy them from Cookidoo, or take a screenshot of the ingredient list.": {
+    "Copy the whole recipe in the %@ app and paste it here. You check it before saving.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy them from Cookidoo, or take a screenshot of the ingredient list."
+            "value": "Copy the whole recipe in the %@ app and paste it here. You check it before saving."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kopier sie aus Cookidoo oder mach einen Screenshot der Zutatenliste."
+            "value": "Kopier in der %@-App das ganze Rezept und füg es hier ein. Du schaust drüber, bevor du speicherst."
+          }
+        }
+      }
+    },
+    "Copy them from %@, or take a screenshot of the ingredient list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy them from %@, or take a screenshot of the ingredient list."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopier sie aus %@ oder mach einen Screenshot der Zutatenliste."
           }
         }
       }
@@ -6950,6 +6984,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alles aus Haushalt"
+          }
+        }
+      }
+    },
+    "Everything in Plus for this household, paid once. No subscription, nothing renews.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything in Plus for this household, paid once. No subscription, nothing renews."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles aus Plus für diesen Haushalt, einmal bezahlt. Kein Abo, nichts verlängert sich."
           }
         }
       }
@@ -11867,6 +11918,23 @@
         }
       }
     },
+    "No ingredients found in the text.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ingredients found in the text."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Text waren keine Zutaten zu finden."
+          }
+        }
+      }
+    },
     "No lines on this receipt.": {
       "extractionState": "manual",
       "localizations": {
@@ -14400,6 +14468,23 @@
         }
       }
     },
+    "Paste text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste text"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text einfügen"
+          }
+        }
+      }
+    },
     "Paste the recipe – title, ingredients and steps.": {
       "extractionState": "manual",
       "localizations": {
@@ -15093,6 +15178,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plus"
+          }
+        }
+      }
+    },
+    "Plus for good": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus for good"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus für immer"
+          }
+        }
+      }
+    },
+    "Plus – for good": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus – for good"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus – für immer"
           }
         }
       }
@@ -15892,6 +16011,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fotos auf diesem iPhone lesen"
+          }
+        }
+      }
+    },
+    "Read with AI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read with AI"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit KI lesen"
           }
         }
       }
@@ -18820,6 +18956,23 @@
         }
       }
     },
+    "Sort the text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort the text"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text sortieren"
+          }
+        }
+      }
+    },
     "Source: %@": {
       "extractionState": "manual",
       "localizations": {
@@ -21234,19 +21387,19 @@
         }
       }
     },
-    "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from Cookidoo itself.": {
+    "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from %@ itself.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from Cookidoo itself."
+            "value": "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from %@ itself."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus speichert Name, Link, Zutaten und, wenn du sie ergänzt, die Schritte privat in eurem Haushalt. ToHuus ruft selbst nie etwas von Cookidoo ab."
+            "value": "ToHuus speichert Name, Link, Zutaten und, wenn du sie ergänzt, die Schritte privat in eurem Haushalt. ToHuus ruft selbst nie etwas von %@ ab."
           }
         }
       }
@@ -23767,6 +23920,23 @@
         }
       }
     },
+    "You have Plus for good. Your old subscription still renews – cancel it under “Manage subscription” so it is not charged again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have Plus for good. Your old subscription still renews – cancel it under “Manage subscription” so it is not charged again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast Plus für immer. Dein altes Abo verlängert sich noch: Kündige es unter „Abo verwalten“, damit es nicht noch mal abgebucht wird."
+          }
+        }
+      }
+    },
     "You have been signed out. Please sign in again.": {
       "extractionState": "manual",
       "localizations": {
@@ -25820,6 +25990,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "steht auf der Einkaufsliste"
+          }
+        }
+      }
+    },
+    "once, for good": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "once, for good"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "einmalig, für immer"
           }
         }
       }

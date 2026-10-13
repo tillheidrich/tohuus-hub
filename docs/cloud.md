@@ -189,6 +189,32 @@ everyday writes still work and nothing is deleted. Apple purchases arrive throug
 `POST /api/billing/apple/transaction` (from the app) and `POST /api/billing/apple/notifications` (App Store Server
 Notifications v2 – set this URL in App Store Connect). Both verify the JWS chain to the embedded Apple Root CA G3.
 
+**Features are checked by the server** (`server/lib/limits.ts` › `requireFeature` / `assertFeature`, test
+`test/cloud-plans.test.ts`). Without the plan the answer is HTTP 402
+`{ error, code: 'plan', feature, plan: 'haushalt' | 'plus' }` (the iPhone app shows the message like a quota, the web
+app as a toast). Self-hosted servers have everything; the trial and the beta gift count like Plus.
+
+| Feature (`limits.features`) | From | Checked at |
+|---|---|---|
+| `priceHistory` | Haushalt | `GET /api/spending/prices/:productId`, MCP `price_history` |
+| `mirrorLists` | Haushalt | `POST /api/caldav/passwords` (new Apple Reminders / Nextcloud mirrors; existing ones keep working) |
+| `fullHistory` | Haushalt | `historyDays()` (rhythm, money, "Das habt ihr noch") |
+| `weekPlanFromPantry` | Plus | `POST /api/plan/autofill`, HA `fill_week`, MCP `fill_week` |
+| `monthlyAnalysis` | Plus | assistant `money_compare` |
+| receipt address | Plus | `GET /api/mail/address`, inbound mails (`docs/mail-inbox.md`) |
+| `connectedHouseholds`, `substituteFromStock`, `importQuota` | – | only plan text and limits so far; no separate endpoint exists yet |
+
+**Lifetime (optional)**: the non-consumable `de.heidrichdigital.tohuus.plus.lifetime` (`LIFETIME_PRODUCT` in
+`plans.ts`) gives Plus without expiry. The paywall shows it only when the product exists in App Store Connect, so it
+can be added later or never. A subscription transaction never replaces it; only its own refund (`REFUND` / `REVOKE`)
+ends it. `GET /api/billing/status` says `lifetime: true`; when an old subscription still renews, the paywall asks to
+cancel it.
+
+**Codes for beta testers**: Apple offer codes, created in App Store Connect (subscription › Offer Codes; for the
+lifetime product: In-App Purchase › Offer Codes). Testers redeem them in the iPhone app under Abo › "Code einlösen"
+(Apple's sheet, also while the beta gift is on). The redeemed purchase arrives as a normal signed transaction
+(`OFFER_REDEEMED` / `SUBSCRIBED`), so nothing else is needed on the server. Our own `GIFT-…` codes stay web only.
+
 ## Passwords
 
 New cloud account passwords need 10 characters (signup, reset, change, invite with a new account); self-hosted members 8. `/api/instance` → `auth.passwordMin` tells the apps which applies.

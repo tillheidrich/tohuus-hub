@@ -156,6 +156,8 @@ struct BillingStatus: Decodable, Sendable {
     var plans: JSONValue?
     /// a plan as a gift (server/lib/gifts.ts): during the beta for everyone, or a code redeemed on the web
     var gift: Gift?
+    /// Plus bought once, for good (optional App Store product `plus.lifetime`)
+    var lifetime: Bool?
 
     struct Gift: Decodable, Sendable {
         /// beta | code | operator
@@ -175,7 +177,7 @@ struct BillingStatus: Decodable, Sendable {
         switch plan {
         case "trial": return L("Trial (Plus)")
         case "haushalt": return L("Household")
-        case "plus": return L("Plus")
+        case "plus": return lifetime == true ? L("Plus – for good") : L("Plus")
         case "selfhost": return L("Own server – everything included")
         default: return L("Free")
         }

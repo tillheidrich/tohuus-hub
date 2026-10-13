@@ -80,6 +80,8 @@ export interface Billing {
   plan: 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
   trialEndsAt?: string | null;
   renewsAt?: string | null;
+  /** Plus bought once, for good (optional App Store product) */
+  lifetime?: boolean;
   expiresAt?: string | null;
   autoRenew?: boolean | null;
   period?: 'monthly' | 'yearly' | null;

@@ -20,6 +20,10 @@ export const de_recipepack: Record<string, string> = {
   'Reading photos needs AI. Copy the ingredients and paste them instead.': 'Fotos lesen geht nur mit KI. Kopier die Zutaten und füg sie ein.',
   'Cookidoo recipes are kept as title, link and ingredients – please confirm them.': 'Cookidoo-Rezepte bleiben hier als Name, Link und Zutaten – bitte bestätig sie.',
   'Import failed.': 'Import fehlgeschlagen.',
+  'That is not a link from Cookidoo or another kitchen appliance app.': 'Das ist kein Link von Cookidoo oder einer anderen Küchenmaschinen-App.',
+  'Add the ingredients – copy them from {app} or take a screenshot.': 'Ergänz die Zutaten – kopier sie aus {app} oder mach einen Screenshot.',
+  '{app} recipe': '{app}-Rezept',
+  '{app} recipes are kept as title, link and ingredients – please confirm them.': '{app}-Rezepte bleiben hier als Name, Link und Zutaten – bitte bestätig sie.',
   // assistant help per screen (assistant-areas.ts)
   Other: 'Sonstiges',
   'Merged {n} duplicates on the list': '{n} Doppelte auf der Liste zusammengeführt',

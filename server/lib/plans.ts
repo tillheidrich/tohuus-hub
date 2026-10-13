@@ -76,12 +76,19 @@ export const PLAN_LIMITS: Record<Plan, Limits> = {
   },
 };
 
-/** Apple product ids → plan (subscription group "ToHuus") */
-export const APPLE_PRODUCTS: Record<string, { plan: 'haushalt' | 'plus'; period: 'monthly' | 'yearly'; price: string }> = {
+/**
+ * Apple product ids → plan. Subscriptions in the group "ToHuus"; `plus.lifetime` is an optional non-consumable (Plus for
+ * good, no expiry). It only shows up in the app once it exists in App Store Connect – nothing breaks without it.
+ * Offer codes (beta testers) work for all of them: the redeemed purchase arrives as an ordinary transaction.
+ */
+export const LIFETIME_PRODUCT = 'de.heidrichdigital.tohuus.plus.lifetime';
+export const APPLE_PRODUCTS: Record<string, { plan: 'haushalt' | 'plus'; period: 'monthly' | 'yearly' | 'lifetime'; price: string }> = {
   'de.heidrichdigital.tohuus.haushalt.monthly': { plan: 'haushalt', period: 'monthly', price: '3,99 €' },
   'de.heidrichdigital.tohuus.haushalt.yearly': { plan: 'haushalt', period: 'yearly', price: '34,99 €' },
   'de.heidrichdigital.tohuus.plus.monthly': { plan: 'plus', period: 'monthly', price: '5,99 €' },
   'de.heidrichdigital.tohuus.plus.yearly': { plan: 'plus', period: 'yearly', price: '59,99 €' },
+  // price set in App Store Connect; the apps show the App Store price
+  [LIFETIME_PRODUCT]: { plan: 'plus', period: 'lifetime', price: '' },
 };
 
 const cloud = () => config.multiTenant;

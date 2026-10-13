@@ -262,6 +262,27 @@ describe.skipIf(!hasOpenssl)('Apple billing', () => {
     mail.mailHook.send = undefined;
   });
 
+  it('optional lifetime Plus: no expiry, never replaced by a subscription, ended only by its own refund', async () => {
+    const LIFE = 'de.heidrichdigital.tohuus.plus.lifetime';
+    const life = tx({ productId: LIFE, originalTransactionId: 'orig-life', expiresDate: undefined, type: 'Non-Consumable' });
+    const r = await call('POST', '/api/billing/apple/transaction', { signedTransaction: await sign(good, life) });
+    expect(r.status, r.text).toBe(200);
+    expect(r.json).toMatchObject({ plan: 'plus', source: 'apple', lifetime: true, expiresAt: null });
+    expect(r.json.products.map((p: any) => p.id)).toContain(LIFE);
+    // a (late or old) subscription transaction does not replace it
+    await call('POST', '/api/billing/apple/transaction', { signedTransaction: await sign(good, tx({ productId: 'de.heidrichdigital.tohuus.haushalt.monthly', originalTransactionId: 'orig-sub' })) });
+    expect((await call('GET', '/api/billing/status')).json).toMatchObject({ plan: 'plus', lifetime: true });
+    // the refund of the lifetime purchase ends it
+    const refund = await call(
+      'POST',
+      '/api/billing/apple/notifications',
+      { signedPayload: await sign(good, { notificationType: 'REFUND', notificationUUID: crypto.randomUUID(), data: { bundleId: BUNDLE, environment: 'Sandbox', signedTransactionInfo: await sign(good, { ...life, revocationDate: Date.now() }) } }) },
+      false,
+    );
+    expect(refund.status, refund.text).toBe(200);
+    expect((await call('GET', '/api/billing/status')).json).toMatchObject({ plan: 'free', lifetime: false });
+  });
+
   it('the real Apple Root CA G3 is embedded', async () => {
     const { APPLE_ROOT_CA_G3, APPLE_ROOT_CA_G3_SHA256 } = await import('../server/lib/apple-root');
     const c = new crypto.X509Certificate(APPLE_ROOT_CA_G3);

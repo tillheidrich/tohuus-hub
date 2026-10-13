@@ -1,15 +1,18 @@
 import PhotosUI
 import SwiftUI
 
-/// A Cookidoo link waiting for confirmation (from the share sheet or the import sheet).
+/// A link of Cookidoo or another kitchen appliance platform (Monsieur Cuisine, Cookit, Kenwood …) waiting for
+/// confirmation (from the share sheet or the import sheet).
 struct CookidooDraftRequest: Identifiable, Equatable, Sendable {
     var url: String
     var text: String?
+    /// the platform's name from the server's draft ("Monsieur Cuisine"); nil → asked for with the draft
+    var platform: String? = nil
     var id: String { url }
 }
 
 /// Kochen › Rezept hinzufügen: link (also social posts with their caption), photos, or text.
-/// Cookidoo in ToHuus Cloud answers 409 `cookidoo_confirm` → the confirm sheet (link + ingredients only).
+/// Cookidoo and the other appliance platforms in ToHuus Cloud answer 409 `cookidoo_confirm` → the confirm sheet.
 struct RecipeImportSheet: View {
     let store: ServerStore
     /// a recipe from the open database was saved → open it (CookingView)
@@ -83,7 +86,7 @@ struct RecipeImportSheet: View {
                 if let message { Text(message).foregroundStyle(Theme.ink2) }
                 Section {
                     HelpLink(slug: "rezepte-importieren", title: L("Taking over recipes"))
-                    HelpLink(slug: "cookidoo", title: L("Cookidoo recipes"))
+                    HelpLink(slug: "cookidoo", title: L("Cookidoo, Monsieur Cuisine & co."))
                 }
             }
             .themedList()
@@ -123,7 +126,8 @@ struct RecipeImportSheet: View {
                 if !caption.isEmpty { body["text"] = caption }
                 let r = try await store.api.sendRaw("POST", "api/recipes/import/url", json: body, timeout: 90)
                 if r.status == 409, r.body["code"]?.string == "cookidoo_confirm" {
-                    cookidoo = CookidooDraftRequest(url: url, text: caption.isEmpty ? nil : caption)
+                    let label = r.body["draft"]?["platform"]?["label"]?.string
+                    cookidoo = CookidooDraftRequest(url: url, text: caption.isEmpty ? nil : caption, platform: label)
                     return
                 }
                 guard (200..<300).contains(r.status) else { throw APIError.server(status: r.status, message: r.body["error"]?.string ?? "") }
@@ -147,8 +151,9 @@ struct RecipeImportSheet: View {
     }
 }
 
-/// Cookidoo in ToHuus Cloud: ToHuus never contacts Cookidoo. The person confirms title, ingredients and – if they like –
-/// the steps (typed, pasted or read from their own screenshots); kept privately in the household.
+/// Cookidoo, Monsieur Cuisine, Cookit … in ToHuus Cloud: ToHuus never contacts the platform. The person confirms title,
+/// ingredients and – if they like – the steps (typed, pasted text sorted by AI or by lines, or read from their own
+/// screenshots); kept privately in the household.
 struct CookidooConfirmView: View {
     let store: ServerStore
     let request: CookidooDraftRequest
@@ -159,18 +164,36 @@ struct CookidooConfirmView: View {
     @State private var steps = ""
     @State private var servings = ""
     @State private var shots: [PhotosPickerItem] = []
+    @State private var pasted = ""
+    @State private var platform: String?
     @State private var busy = false
     @State private var error: String?
+
+    /// "Cookidoo", "Monsieur Cuisine" … (older servers send no platform: Cookidoo)
+    private var appName: String { platform ?? request.platform ?? "Cookidoo" }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Text(L("ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from Cookidoo itself."))
+                    Text(LF("ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from %@ itself.", appName))
                         .font(.subheadline).foregroundStyle(Theme.ink2)
                     Text(request.url).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1)
                 }
                 Section(L("Title")) { TextField(L("Title"), text: $title) }
+                Section {
+                    TextEditor(text: $pasted).frame(minHeight: 100)
+                    Button {
+                        Task { await readText() }
+                    } label: {
+                        Label(app.aiOn ? L("Read with AI") : L("Sort the text"), systemImage: app.aiOn ? "sparkles" : "text.alignleft")
+                    }
+                    .disabled(busy || pasted.trimmingCharacters(in: .whitespacesAndNewlines).count < 3)
+                } header: {
+                    Text(L("Paste text"))
+                } footer: {
+                    Text(LF("Copy the whole recipe in the %@ app and paste it here. You check it before saving.", appName))
+                }
                 Section {
                     TextEditor(text: $ingredients).frame(minHeight: 160)
                     if app.aiOn {
@@ -181,7 +204,7 @@ struct CookidooConfirmView: View {
                 } header: {
                     Text(L("Ingredients, one per line"))
                 } footer: {
-                    Text(L("Copy them from Cookidoo, or take a screenshot of the ingredient list."))
+                    Text(LF("Copy them from %@, or take a screenshot of the ingredient list.", appName))
                 }
                 Section(L("Steps, one per line (optional)")) { TextEditor(text: $steps).frame(minHeight: 120) }
                 Section(L("Servings")) { TextField(L("e.g. 4"), text: $servings).keyboardType(.numberPad) }
@@ -189,7 +212,7 @@ struct CookidooConfirmView: View {
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
             .themedList()
-            .navigationTitle(L("Cookidoo recipe"))
+            .navigationTitle(LF("%@ recipe", appName))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { finish(false) } }
@@ -210,12 +233,13 @@ struct CookidooConfirmView: View {
         ingredients.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
     }
 
-    /// POST /api/recipes/import/cookidoo/draft { url, text? } → { url, external_id, title, ingredients }
+    /// POST /api/recipes/import/cookidoo/draft { url, text? } → { url, external_id, title, ingredients, platform? { id, label } }
     private func draft() async {
         var body: [String: Any] = ["url": request.url]
         if let t = request.text { body["text"] = t }
         guard let d = try? await store.api.send("POST", "api/recipes/import/cookidoo/draft", json: body, as: JSONValue.self) else { return }
         if title.isEmpty { title = d["title"]?.string ?? "" }
+        if let label = d["platform"]?["label"]?.string { platform = label }
         if ingredients.isEmpty, let list = d["ingredients"]?.array { ingredients = list.compactMap(\.string).joined(separator: "\n") }
     }
 
@@ -241,7 +265,30 @@ struct CookidooConfirmView: View {
         }
     }
 
-    /// POST /api/recipes/import/cookidoo { url, title, ingredients[], servings? }
+    /// POST /api/recipes/import/device/read-text { text } → { title, ingredients, steps, servings, ai } – AI when it is on,
+    /// else sorted by lines; nothing saved
+    private func readText() async {
+        busy = true
+        defer { busy = false }
+        do {
+            let r = try await store.api.send("POST", "api/recipes/import/device/read-text", json: ["text": pasted], as: JSONValue.self, timeout: 90)
+            if title.isEmpty, let t = r["title"]?.string { title = t }
+            let found = (r["ingredients"]?.array ?? []).compactMap(\.string)
+            if !found.isEmpty { ingredients = (lines + found).joined(separator: "\n") }
+            if let list = r["steps"]?.array, !list.isEmpty { steps = list.compactMap(\.string).joined(separator: "\n") }
+            if servings.isEmpty, let s = r["servings"]?.int { servings = String(s) }
+            if found.isEmpty {
+                error = L("No ingredients found in the text.")
+            } else {
+                error = nil
+                pasted = ""
+            }
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
+    }
+
+    /// POST /api/recipes/import/cookidoo { url, title, ingredients[], steps?, servings? }
     private func save() async {
         busy = true
         defer { busy = false }

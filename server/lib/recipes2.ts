@@ -26,6 +26,7 @@ import { deleteImage, fetchImageDetailed, storeImageBytes, warnImage } from './i
 import { ScopedMap, householdId, perHousehold, runInHousehold } from './tenancy.js';
 import { assertStorage } from './plans.js';
 import { downloadCandidates, serverMayFetchImage } from './recipe-images.js';
+import { DEVICE_PLATFORM_IDS, devicePlatformOf } from './device-platforms.js';
 import { ingredientCore, isPantryText } from './recipes.js';
 import {
   cleanText,
@@ -144,8 +145,11 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
 
   const source_url = httpUrl(x.url ?? x.source_url ?? x.sourceUrl ?? (typeof x.mainEntityOfPage === 'string' ? x.mainEntityOfPage : x.mainEntityOfPage?.['@id']));
   const rawType = typeof x.source_type === 'string' ? x.source_type.toLowerCase().trim() : '';
-  let source_type = /^[a-z0-9_-]{1,24}$/.test(rawType) ? rawType : defaults.source_type ?? (source_url && cookidooId(source_url) ? 'cookidoo' : source_url ? 'url' : 'json');
+  // a link of an appliance platform (Cookidoo, Monsieur Cuisine, Cookit … – device-platforms.ts) keeps its platform as source
+  const platform = devicePlatformOf(source_url);
+  let source_type = /^[a-z0-9_-]{1,24}$/.test(rawType) ? rawType : defaults.source_type ?? (source_url && cookidooId(source_url) ? 'cookidoo' : platform ? platform.id : source_url ? 'url' : 'json');
   if (source_type === 'url' && cookidooId(source_url)) source_type = 'cookidoo';
+  else if (source_type === 'url' && platform) source_type = platform.id;
   let external_id = str(x.external_id ?? x.externalId, 120);
   if (!external_id && source_type === 'cookidoo') external_id = cookidooId(source_url);
   if (!external_id && !source_url && TITLE_KEYED.has(source_type)) external_id = `title:${slug(title)}`;
@@ -180,7 +184,7 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
   const cook = durationMinutes(x.cookTime ?? x.cook_time ?? x.performTime);
   const time_min = total ?? (prep || cook ? (prep ?? 0) + (cook ?? 0) : null);
   const instrFlag = x.instructions_available;
-  const instructions_available = instrFlag === false || instrFlag === 'false' || instrFlag === 0 ? false : !(steps.length === 0 && source_type === 'cookidoo');
+  const instructions_available = instrFlag === false || instrFlag === 'false' || instrFlag === 0 ? false : !(steps.length === 0 && DEVICE_PLATFORM_IDS.includes(source_type));
   // a package names its appliances (tohuus.devices, tohuus.device per step): "Stufe 2" on a stand mixer is not a Thermomix
   const devices = [...(Array.isArray(x.tohuus?.devices) ? x.tohuus.devices : []), ...steps.map((st) => st.tm?.device)].filter((d): d is string => typeof d === 'string' && Boolean(d.trim()));
   const thermomix =
@@ -386,9 +390,10 @@ function pump() {
 async function downloadOne(id: number) {
   const row = db.prepare('SELECT image_url, image_path, source_url FROM recipes WHERE id = ?').get(id) as { image_url: string | null; image_path: string | null; source_url: string | null } | undefined;
   if (!row?.image_url) return;
-  // Cookidoo in the cloud: the person's device loads the photo (browser fallback), never this server
+  // Cookidoo and the other appliance platforms in the cloud: the person's device loads the photo (browser fallback), never this server
   if (!serverMayFetchImage(row.image_url)) {
-    db.prepare(`UPDATE recipes SET image_tries = 3, image_error = 'cookidoo: device' WHERE id = ?`).run(id);
+    const p = devicePlatformOf(row.image_url) ?? devicePlatformOf(row.source_url);
+    db.prepare(`UPDATE recipes SET image_tries = 3, image_error = ? WHERE id = ?`).run(`${p?.id ?? 'cookidoo'}: device`, id);
     return;
   }
   let reason = '';

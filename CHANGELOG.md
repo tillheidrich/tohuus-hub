@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Plan features are checked by the server**: price history and new list mirrors need Haushalt, filling the week from the pantry and month comparisons need Plus (HTTP 402 `code: 'plan'`, `docs/cloud.md`). Optional lifetime Plus (`de.heidrichdigital.tohuus.plus.lifetime`, `lifetime` in `GET /api/billing/status`).
+
 - **The assistant stays a household assistant**: off-topic requests and attempts to change its role or read its instructions get a friendly answer without a model call and without counting (`scope` in `POST /api/assistant/chat`); the system prompt treats text from recipes, receipts and links as data. New tools `app_help` (where a feature lives, with the help page) and `budget_set` (household or private budgets).
 
 - **Deleting an account revokes Sign in with Apple** (App Store 5.1.1(v)): the authorization code is exchanged for a refresh token at sign-in and revoked on deletion, once `APPLE_SIWA_KEY_ID` / `APPLE_SIWA_KEY_P8` are set.
@@ -19,6 +21,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Added
 
+- **Monsieur Cuisine, Cookit and other kitchen appliance apps work like Cookidoo in ToHuus Cloud**: Monsieur Cuisine, Home Connect (Bosch Cookit), Kenwood World, Tefal/Moulinex/Krups Companion, Magimix Cook Expert, KitchenAid Cook Processor, Cecotec Mambo and Philips NutriU links are never fetched by the server (pages and photos); `POST /api/recipes/import/url` answers 409 `cookidoo_confirm` with `draft.platform { id, label, device }`, `/api/recipes/import/device/*` aliases the Cookidoo routes, and the new `POST /api/recipes/import/device/read-text` reads pasted recipe text (AI, else line split). Saved with `source_type` = platform id and the appliance as a tag. Registry: `server/lib/device-platforms.ts`. Web and iPhone: "Text einfügen" + "Mit KI lesen" in the confirm sheet, the platform's name everywhere (docs/recipes-import.md).
 - **Receipt address per household in ToHuus Cloud (Plus)**: `bons-<token>@MAIL_INBOUND_DOMAIN`, received by an inbound-only SMTP listener in the app (`lib/mail-smtp.ts`, `smtp-server`) or a webhook (`POST /api/mail/inbound`). Same recognition as the self-hosted IMAP inbox; one-time codes and mails without a receipt are dropped unstored, only counters are kept. `GET /api/mail/address`, `POST /api/mail/address/rotate`; cards on Importe (web) and Bon hinzufügen (iPhone). Off until `MAIL_INBOUND_DOMAIN` is set. docs/mail-inbox.md.
 - **Domain in one place per codebase** (`SITE_URL`, `site/src/config.mjs`, `web/src/urls.ts`, `SharedConfig.siteURL`), checklist for the move to tohuus-app.de in docs/domain.md.
 - **Cookidoo in ToHuus Cloud: what you bring along is kept.** Steps and photos that come from the person (their own AI over MCP, a recipe package, their screenshots, typed text) are stored privately in the household; the server still never fetches anything from Cookidoo (photo links are loaded by the person's browser). MCP `save_recipe` and bulk imports take photos inline as `image_base64`; `/mcp` and `POST /api/recipes/import/bulk` accept 40 MB per request. The Cookidoo sheet (web and iPhone) has a steps field and reads steps from screenshots.

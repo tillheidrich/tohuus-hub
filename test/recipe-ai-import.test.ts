@@ -224,7 +224,7 @@ describe('Cookidoo (cloud: nothing fetched; what the person brings along is kept
 
   it('draft from the shared text, save title + link + confirmed ingredients – steps only when brought along', async () => {
     const d = imp.cookidooDraft('https://cookidoo.de/recipes/recipe/de-DE/r777?utm_source=app', 'Schau dir dieses Rezept an: Linsencurry https://cookidoo.de/recipes/recipe/de-DE/r777');
-    expect(d).toEqual({ url: 'https://cookidoo.de/recipes/recipe/de-DE/r777', external_id: 'r777', title: 'Linsencurry', ingredients: [] });
+    expect(d).toEqual({ url: 'https://cookidoo.de/recipes/recipe/de-DE/r777', external_id: 'r777', title: 'Linsencurry', ingredients: [], platform: { id: 'cookidoo', label: 'Cookidoo', device: 'Thermomix' } });
     const res = await call('POST', '/recipes/import/cookidoo', { url: d.url, title: 'Linsencurry', ingredients: ['200 g rote Linsen', '1 Dose Kokosmilch'], servings: 4 });
     expect(res.status).toBe(200);
     const row = db.prepare('SELECT * FROM recipes WHERE id = ?').get(res.json.id) as any;
@@ -252,6 +252,115 @@ describe('Cookidoo (cloud: nothing fetched; what the person brings along is kept
     spy.mockRestore();
     expect((db.prepare('SELECT COUNT(*) AS n FROM recipes').get() as any).n).toBe(count);
     expect(JSON.stringify(modelCalls[0].messages)).toMatch(/one string per ingredient line/);
+  });
+});
+
+describe('other kitchen appliance platforms (Monsieur Cuisine, Cookit … – same as Cookidoo)', () => {
+  const MC = 'https://www.monsieur-cuisine.com/de/rezepte/detail/linsencurry/12345?utm_source=app';
+
+  it('registry: hosts, brand sites only with a recipe path, public recipe sites stay normal', async () => {
+    const dp = await import('../server/lib/device-platforms');
+    expect(dp.devicePlatformOf(MC)?.label).toBe('Monsieur Cuisine');
+    expect(dp.devicePlatformOf('https://cookidoo.de/recipes/recipe/de-DE/r1')?.id).toBe('cookidoo');
+    expect(dp.devicePlatformOf('https://www.home-connect.com/de/de/rezepte/abc')?.id).toBe('cookit');
+    expect(dp.devicePlatformOf('https://www.kenwoodworld.com/de-de/rezepte/x')?.id).toBe('kenwood');
+    expect(dp.devicePlatformOf('https://www.moulinex.de/rezepte/linsencurry')?.id).toBe('moulinex');
+    expect(dp.devicePlatformOf('https://www.moulinex.de/produkte/pfanne')).toBeNull();
+    expect(dp.devicePlatformOf('https://www.nutriu.com/recipes/xyz')?.label).toBe('NutriU');
+    expect(dp.devicePlatformOf('https://www.kitchenstories.com/de/rezepte/x')).toBeNull();
+    expect(dp.devicePlatformOf('https://www.ninjakitchen.de/rezepte/x')).toBeNull();
+    expect(dp.devicePlatformOf('not a url')).toBeNull();
+    const share = await import('../server/lib/share');
+    expect(share.looksLikeRecipeUrl(MC)).toBe(true);
+    expect(share.looksLikeRecipeUrl('https://www.nutriu.com/x/123')).toBe(true);
+  });
+
+  it('cloud: a Monsieur Cuisine link answers 409 cookidoo_confirm with the platform, nothing fetched; photos never downloaded', async () => {
+    // the route asks cookidooConfirmNeeded (cloud + registry); the HTTP layer here signs in like a self-hosted server
+    const was = config.multiTenant;
+    expect(imp.cookidooConfirmNeeded(MC)).toBe(false);
+    (config as any).multiTenant = true;
+    expect(imp.cookidooConfirmNeeded(MC)).toBe(true);
+    expect(imp.cookidooConfirmNeeded('https://www.kitchenstories.com/de/rezepte/x')).toBe(false);
+    (config as any).multiTenant = was;
+    const cloud = vi.spyOn(imp, 'cookidooConfirmNeeded').mockImplementation((u: string) => imp.isDevicePlatformUrl(u));
+    try {
+      const res = await call('POST', '/recipes/import/url', { url: MC, text: 'Schau dir dieses Rezept an: Linsencurry ' + MC });
+      expect(res.status).toBe(409);
+      expect(res.json.code).toBe('cookidoo_confirm');
+      expect(res.json.draft).toMatchObject({ url: 'https://www.monsieur-cuisine.com/de/rezepte/detail/linsencurry/12345', title: 'Linsencurry', platform: { id: 'monsieur-cuisine', label: 'Monsieur Cuisine' } });
+      expect(res.json.error).toMatch(/Monsieur Cuisine/);
+      expect(pageCalls).toHaveLength(0);
+      const draft = await call('POST', '/recipes/import/device/draft', { url: MC });
+      expect(draft.json.platform.label).toBe('Monsieur Cuisine');
+    } finally {
+      cloud.mockRestore();
+    }
+    (config as any).multiTenant = true;
+    try {
+      const imgs = await import('../server/lib/recipe-images');
+      expect(imgs.serverMayFetchImage('https://www.monsieur-cuisine.com/media/x.jpg')).toBe(false);
+      expect(imgs.serverMayFetchImage('https://media.home-connect.com/x.jpg')).toBe(false);
+      expect(imgs.serverMayFetchImage('https://sebplatform.api.groupe-seb.com/x.jpg')).toBe(false);
+      expect(imgs.serverMayFetchImage('https://www.chefkoch.de/x.jpg')).toBe(true);
+    } finally {
+      (config as any).multiTenant = was;
+    }
+    // self-hosted keeps the normal import
+    expect(imp.cookidooConfirmNeeded(MC)).toBe(false);
+  });
+
+  it('save keeps title, link, ingredients, steps and the appliance (tag), no Thermomix flag', async () => {
+    const res = await call('POST', '/recipes/import/device', { url: MC, title: 'Linsencurry', ingredients: ['200 g rote Linsen', '1 Zwiebel'], steps: ['Zwiebel 5 Sek./Stufe 5 zerkleinern.', 'Linsen dazu, 15 Min./100°C garen.'], servings: 4 });
+    expect(res.status).toBe(200);
+    const row = db.prepare('SELECT * FROM recipes WHERE id = ?').get(res.json.id) as any;
+    expect(row).toMatchObject({ title: 'Linsencurry', source_type: 'monsieur-cuisine', source_url: 'https://www.monsieur-cuisine.com/de/rezepte/detail/linsencurry/12345', instructions_available: 1, thermomix: 0, servings: 4, image_path: null });
+    expect(JSON.parse(row.steps).map((x: any) => x.text)).toEqual(['Zwiebel 5 Sek./Stufe 5 zerkleinern.', 'Linsen dazu, 15 Min./100°C garen.']);
+    expect(JSON.parse(row.tags)).toContain('Monsieur Cuisine');
+    expect(pageCalls).toHaveLength(0);
+    // confirming again updates instead of doubling (the old /cookidoo path works for every platform)
+    const again = await call('POST', '/recipes/import/cookidoo', { url: MC, title: 'Linsencurry', ingredients: ['250 g rote Linsen'] });
+    expect(again.json).toEqual({ id: res.json.id, created: false });
+    expect((await call('POST', '/recipes/import/device', { url: 'https://example.org/r1', title: 'X', ingredients: ['1 Ei'] })).status).toBe(400);
+  });
+
+  it('a photo link of the platform is never downloaded in the cloud', async () => {
+    const was = config.multiTenant;
+    (config as any).multiTenant = true;
+    try {
+      const { runInHousehold } = await import('../server/lib/tenancy');
+      const out = await runInHousehold('local', () => r2.bulkImport([{ name: 'MC Suppe', url: 'https://www.monsieur-cuisine.com/de/rezepte/detail/suppe/9', image: 'https://www.monsieur-cuisine.com/media/suppe.jpg', recipeIngredient: ['1 Kürbis'] }]));
+      await r2.waitForImages(5000);
+      const row = db.prepare('SELECT source_type, image_path, image_error, instructions_available FROM recipes WHERE id = ?').get(out.ids[0]) as any;
+      expect(row).toMatchObject({ source_type: 'monsieur-cuisine', image_path: null, image_error: 'monsieur-cuisine: device', instructions_available: 0 });
+    } finally {
+      (config as any).multiTenant = was;
+    }
+  });
+
+  it('pasted text: without AI split by lines (nothing saved, no model call)', async () => {
+    const count = (db.prepare('SELECT COUNT(*) AS n FROM recipes').get() as any).n;
+    const spy = vi.spyOn(ai, 'aiEnabled').mockReturnValue(false);
+    try {
+      const res = await call('POST', '/recipes/import/device/read-text', { text: 'Linsencurry\nFür 4 Portionen\n200 g rote Linsen\n1 Dose Kokosmilch\nAlles 20 Minuten köcheln.' });
+      expect(res.status).toBe(200);
+      expect(res.json).toMatchObject({ title: 'Linsencurry', ai: false, servings: 4 });
+      expect(res.json.ingredients).toEqual(['200 g rote Linsen', '1 Dose Kokosmilch']);
+      expect(res.json.steps).toContain('Alles 20 Minuten köcheln.');
+    } finally {
+      spy.mockRestore();
+    }
+    expect(modelCalls).toHaveLength(0);
+    expect((db.prepare('SELECT COUNT(*) AS n FROM recipes').get() as any).n).toBe(count);
+  });
+
+  it('pasted text with AI: the text-recipe model reads it (counted as importAi), nothing saved', async () => {
+    modelAnswer = () => CURRY_JSON;
+    const spy = vi.spyOn(plans, 'consume');
+    const out = await imp.readRecipeText('Cremiges Linsencurry … 200 g rote Linsen, 1 Dose Kokosmilch, Salz. Alles 20 Minuten köcheln.');
+    expect(out).toMatchObject({ title: 'Cremiges Linsencurry', ingredients: ['200 g rote Linsen', '1 Dose Kokosmilch', 'Salz'], steps: ['Alles 20 Minuten köcheln.'], servings: 4, ai: true });
+    expect(spy.mock.calls.map((c) => c[0])).toEqual(['importAi']);
+    spy.mockRestore();
   });
 });
 

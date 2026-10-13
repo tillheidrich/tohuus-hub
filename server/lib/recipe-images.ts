@@ -13,6 +13,7 @@
 // before any query uses recipeImageSql() (modules that join recipes may load before the recipes2 routes)
 import './recipes2.js';
 import { config } from '../config.js';
+import { isDevicePlatformImage } from './device-platforms.js';
 
 const TME_PLAIN = 'https://assets.tmecosys.com/image/upload/img/';
 /** 876×720 – the 1.5× variant Cookidoo itself uses on recipe pages. */
@@ -25,15 +26,16 @@ export function sizedImageUrl(url: string): string {
 }
 
 /**
- * ToHuus Cloud never fetches anything from Cookidoo itself (decision 13 Oct 2026, docs/recipes-import.md): a
- * Cookidoo photo link is kept for display and stored only when the person's own device loads it
+ * ToHuus Cloud never fetches anything from Cookidoo or the other appliance platforms itself (decision 13 Oct 2026,
+ * docs/recipes-import.md, device-platforms.ts): such a photo link is kept for display and stored only when the person's own device loads it
  * ("Fotos über dieses Gerät laden") or when the photo came along as a file (package, MCP image, screenshot).
  */
 export function serverMayFetchImage(url: string): boolean {
   if (!config.multiTenant) return true;
   try {
-    const host = new URL(url).hostname.toLowerCase();
-    return !(/(^|\.)cookidoo\.[a-z.]+$/.test(host) || host === 'assets.tmecosys.com' || host.endsWith('.tmecosys.com'));
+    new URL(url);
+    // Cookidoo (cookidoo.*, assets.tmecosys.com), Monsieur Cuisine, Home Connect, Kenwood … (device-platforms.ts)
+    return !isDevicePlatformImage(url);
   } catch {
     return false;
   }

@@ -16,7 +16,7 @@ enum Help {
         ("vorrat", L("Pantry (optional)")),
         ("kochen", L("Cooking with what's at home")),
         ("rezepte-importieren", L("Taking over recipes")),
-        ("cookidoo", L("Cookidoo recipes")),
+        ("cookidoo", L("Cookidoo, Monsieur Cuisine & co.")),
         ("geld", L("Money: groceries and household")),
         ("gemeinsam-einkaufen", L("Shopping together")),
         ("benachrichtigungen", L("Notifications")),

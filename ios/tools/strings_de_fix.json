@@ -111,5 +111,15 @@
   "Forward receipts, order and pickup confirmations to this address. Everything else is discarded at once, without being stored.": "Leite Bons, Bestell- und Abholbestätigungen an diese Adresse weiter. Alles andere verwirft ToHuus sofort, ohne es zu speichern.",
   "Filter by sender, so one-time codes and other mails never leave your mailbox.": "Filtere nach Absender, dann verlassen Einmalcodes und andere Mails dein Postfach gar nicht erst.",
   "Last %d days: %d received, %d became receipts": "Letzte %d Tage: %d angekommen, %d als Bon gebucht",
-  "With Plus your household gets its own address: forward receipts, order and pickup confirmations, and ToHuus books them.": "Mit Plus bekommt euer Haushalt eine eigene Adresse: Bons, Bestell- und Abholbestätigungen weiterleiten, ToHuus bucht sie."
+  "With Plus your household gets its own address: forward receipts, order and pickup confirmations, and ToHuus books them.": "Mit Plus bekommt euer Haushalt eine eigene Adresse: Bons, Bestell- und Abholbestätigungen weiterleiten, ToHuus bucht sie.",
+  "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from %@ itself.": "ToHuus speichert Name, Link, Zutaten und, wenn du sie ergänzt, die Schritte privat in eurem Haushalt. ToHuus ruft selbst nie etwas von %@ ab.",
+  "Read with AI": "Mit KI lesen",
+  "Sort the text": "Text sortieren",
+  "Paste text": "Text einfügen",
+  "Copy the whole recipe in the %@ app and paste it here. You check it before saving.": "Kopier in der %@-App das ganze Rezept und füg es hier ein. Du schaust drüber, bevor du speicherst.",
+  "Copy them from %@, or take a screenshot of the ingredient list.": "Kopier sie aus %@ oder mach einen Screenshot der Zutatenliste.",
+  "%@ recipe": "%@-Rezept",
+  "No ingredients found in the text.": "Im Text waren keine Zutaten zu finden.",
+  "Cookidoo, Monsieur Cuisine & co.": "Cookidoo, Monsieur Cuisine & Co.",
+  "A recipe from Cookidoo or another kitchen appliance app – open ToHuus to confirm the ingredients.": "Ein Rezept aus Cookidoo oder einer anderen Küchenmaschinen-App – öffne ToHuus und bestätige die Zutaten."
 }
