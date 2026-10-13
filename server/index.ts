@@ -58,6 +58,8 @@ import { r as moveRoutes } from './routes/move.js';
 import { r as iosCompat } from './routes/ios-compat.js';
 import { requestCounter } from './lib/operator.js';
 import { startStats, statsCounter } from './lib/stats.js';
+import { cloudRecipes as cloudRecipesRoutes, cloudRecipesPublic } from './routes/cloud-recipes.js';
+import { startCatalogScheduler } from './lib/cloud-recipes.js';
 import { startRenewalReminders } from './lib/renewals.js';
 import { AiError } from './lib/ai.js';
 import { r as list2Routes, pub as list2Public } from './routes/list2.js';
@@ -157,6 +159,9 @@ if (config.multiTenant) {
   app.use('/api', cloudRoutes);
   // operator page /betrieb: aggregates only (lib/operator.ts)
   app.use('/api', operatorRoutes);
+  // ToHuus-Rezepte: the central recipe catalogue (lib/cloud-recipes.ts)
+  app.use('/api', cloudRecipesPublic);
+  app.use('/api', cloudRecipesRoutes);
 }
 
 // iPhone shortcut (personal list token) and the share-target fallback – before the routers that require a session
@@ -289,5 +294,6 @@ export const server = app.listen(config.port, () => {
   if (config.multiTenant) startCloudBackups();
   if (config.multiTenant) startRenewalReminders();
   if (config.multiTenant) startStats();
+  if (config.multiTenant) startCatalogScheduler();
   else startBackups();
 });

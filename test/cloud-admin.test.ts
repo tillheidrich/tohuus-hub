@@ -314,3 +314,136 @@ describe('usage statistics (counts only)', () => {
     expect((await op.get('/api/operator/audit')).json.some((l: any) => l.action === 'stats.snapshot')).toBe(true);
   });
 });
+
+describe('ToHuus-Rezepte (central catalogue)', () => {
+  let cat: typeof import('../server/lib/cloud-recipes');
+  it('starts with 30 own drafts – nothing published, allergens computed, review notes', async () => {
+    cat = await import('../server/lib/cloud-recipes');
+    const l = await op.get('/api/operator/recipes');
+    expect(l.status, l.text).toBe(200);
+    expect(l.json.recipes).toHaveLength(30);
+    expect(l.json.counts).toEqual({ draft: 30 });
+    const pf = l.json.recipes.find((r: any) => r.title === 'Pfannkuchen');
+    expect(pf.allergens).toEqual(['eggs', 'gluten', 'milk']);
+    expect(pf.aiAssisted).toBe(true);
+    expect(pf.reviewState).toBe('draft');
+    const dal = l.json.recipes.find((r: any) => r.title === 'Linsen-Dal mit Reis');
+    expect(dal.allergens).toEqual([]); // Kokosmilch is not milk
+    expect(l.json.recipes.find((r: any) => r.title === 'Hähnchen-Gemüse-Pfanne mit Reis').warnings.some((w: string) => /Honey/.test(w))).toBe(true);
+    // households see nothing yet; non-operators cannot reach the back office
+    const h = await A.get('/api/cloud-recipes');
+    expect(h.status, h.text).toBe(200);
+    expect(h.json).toMatchObject({ newThisWeek: [], recent: [] });
+    expect((await A.get('/api/operator/recipes')).status).toBe(404);
+    // own encrypted database
+    expect(fs.readFileSync(path.join(dir, 'catalog', 'recipes.db')).subarray(0, 15).toString('latin1')).not.toBe('SQLite format 3');
+  });
+
+  it('review → schedule 3 per week → the scheduler publishes; households see "new this week" and save a copy', async () => {
+    const l = (await op.get('/api/operator/recipes')).json.recipes as any[];
+    const [a, b, c, d] = l.slice(0, 4);
+    expect((await op.post(`/api/operator/recipes/${a.id}/publish`)).status).toBe(409); // not read yet
+    expect((await op.req('PATCH', `/api/operator/recipes/${a.id}`, { publishAt: '2026-01-01' })).status).toBe(409);
+    for (const r of [a, b, c, d]) expect((await op.req('PATCH', `/api/operator/recipes/${r.id}`, { reviewState: 'reviewed' })).status).toBe(200);
+    const s = await op.post('/api/operator/recipes/schedule', { perWeek: 3 });
+    expect(s.json.plan).toHaveLength(4);
+    const days = s.json.plan.map((p: any) => new Date(`${p.publishAt.replace(' ', 'T')}Z`));
+    for (const x of days) {
+      expect([1, 3, 5]).toContain(x.getUTCDay());
+      expect(x.getUTCHours()).toBe(6);
+      expect(x.getTime()).toBeGreaterThan(Date.now());
+    }
+    expect(days.map((x: Date) => x.getTime())).toEqual([...days].map((x: Date) => x.getTime()).sort((p: number, q: number) => p - q));
+    expect(cat.publishDue()).toBe(0);
+    // the first one is due now
+    await op.req('PATCH', `/api/operator/recipes/${a.id}`, { publishAt: new Date(Date.now() - 60_000).toISOString().replace('T', ' ').slice(0, 19) });
+    expect(cat.publishDue()).toBe(1);
+    const h = await A.get('/api/cloud-recipes');
+    expect(h.json.newThisWeek.map((r: any) => r.id)).toEqual([a.id]);
+    expect(h.json.newThisWeek[0]).toMatchObject({ title: a.title, aiAssisted: true, reviewState: 'reviewed', imageKind: 'none', image: null });
+    expect(h.text).not.toContain('warnings');
+    expect((await A.get(`/api/cloud-recipes/${b.id}`)).status).toBe(404); // still scheduled
+    const one = await A.get(`/api/cloud-recipes/${a.id}`);
+    expect(one.json.steps.length).toBeGreaterThan(1);
+    expect(one.json.savedId).toBeNull();
+    // save: a copy with source ToHuus, once
+    const sv = await A.post(`/api/cloud-recipes/${a.id}/save`);
+    expect(sv.status, sv.text).toBe(200);
+    expect(sv.json.created).toBe(true);
+    expect((await A.post(`/api/cloud-recipes/${a.id}/save`)).json).toEqual({ id: sv.json.id, created: false });
+    const mine = await A.get(`/api/recipes/${sv.json.id}`);
+    expect(mine.json.source_type).toBe('tohuus');
+    expect(mine.json.title).toBe(a.title);
+    expect((await A.get('/api/cloud-recipes')).json.saved).toEqual({ [a.id]: sv.json.id });
+    // another household does not see this household's copy
+    const other = new Client();
+    await signup(other, 'cat-other@example.org', 'Anderer Haushalt');
+    expect((await other.get('/api/cloud-recipes')).json.saved).toEqual({});
+    // unpublish: gone for households, the saved copy stays theirs
+    expect((await op.post(`/api/operator/recipes/${a.id}/unpublish`)).status).toBe(200);
+    expect((await A.get(`/api/cloud-recipes/${a.id}`)).status).toBe(404);
+    expect((await A.get(`/api/recipes/${sv.json.id}`)).status).toBe(200);
+    expect((await op.get('/api/operator/audit')).json.map((x: any) => x.action)).toEqual(expect.arrayContaining(['recipes.update', 'recipes.schedule', 'recipes.unpublish']));
+  });
+
+  it('uploads a recipe package with a photo; the photo is stored once, encrypted, shown only when published', async () => {
+    const sharp = (await import('sharp')).default;
+    const { writeZip } = await import('../server/lib/recipe-package');
+    const png = await sharp({ create: { width: 60, height: 40, channels: 3, background: '#2a7' } }).png().toBuffer();
+    const doc = {
+      format: 'tohuus-rezeptpaket',
+      version: 1,
+      recipes: [
+        { name: 'Ofen-Feta mit Tomaten', image: 'bilder/feta.png', recipeYield: 2, totalTime: 'PT30M', recipeIngredient: ['200 g Feta', '300 g Kirschtomaten'], recipeInstructions: ['Alles in eine Form geben.', '25 Minuten backen.'] },
+        { name: 'Zweimal dasselbe Foto', image: 'bilder/feta.png', recipeIngredient: ['1 Brot', '1 Tomate'], recipeInstructions: ['Schneiden.', 'Belegen.'] },
+      ],
+    };
+    const zip = writeZip([
+      { name: 'rezepte.json', data: Buffer.from(JSON.stringify(doc)) },
+      { name: 'bilder/feta.png', data: png },
+    ]);
+    const fd = new FormData();
+    fd.append('file', new Blob([new Uint8Array(zip)], { type: 'application/zip' }), 'paket.zip');
+    fd.append('license', 'ToHuus');
+    const up = await op.req('POST', '/api/operator/recipes/upload', fd);
+    expect(up.status, up.text).toBe(200);
+    expect(up.json.created).toBe(2);
+    const r1 = (await op.get(`/api/operator/recipes/${up.json.ids[0]}`)).json;
+    const r2 = (await op.get(`/api/operator/recipes/${up.json.ids[1]}`)).json;
+    expect(r1).toMatchObject({ state: 'draft', origin: 'package', imageKind: 'photo', aiAssisted: false });
+    expect(r1.image).toBe(r2.image); // stored once
+    expect(fs.readdirSync(path.join(dir, 'catalog', 'images'))).toHaveLength(1);
+    const file = path.join(dir, 'catalog', 'images', fs.readdirSync(path.join(dir, 'catalog', 'images'))[0]);
+    expect(fs.readFileSync(file).subarray(0, 4).toString()).toBe('THC1');
+    // draft photo: operators only
+    expect((await op.get(r1.image)).type).toBe('image/webp');
+    expect((await A.get(r1.image)).status).toBe(404);
+    await op.req('PATCH', `/api/operator/recipes/${r1.id}`, { reviewState: 'cooked' });
+    expect((await op.post(`/api/operator/recipes/${r1.id}/publish`)).status).toBe(200);
+    expect((await new Client().get(r1.image)).status).toBe(200);
+    // saving copies the photo into the household
+    const sv = await A.post(`/api/cloud-recipes/${r1.id}/save`);
+    const mine = await A.get(`/api/recipes/${sv.json.id}`);
+    expect(mine.json.image_path).toMatch(/^\/img\/r\d+-/);
+    // a draft can be deleted, a published recipe not
+    expect((await op.del(`/api/operator/recipes/${r1.id}`)).status).toBe(409);
+    expect((await op.del(`/api/operator/recipes/${r2.id}`)).status).toBe(200);
+  });
+
+  it('AI drafts land in the queue as drafts, never published', async () => {
+    aiCalls.length = 0;
+    ai.setAiFetch(async (url, init) => {
+      const body = JSON.parse(String(init.body ?? '{}'));
+      aiCalls.push({ url, body, auth: null });
+      const content = JSON.stringify({ recipes: [{ name: 'Gemüsesuppe', recipeYield: 4, totalTime: 'PT30M', ingredients_structured: [{ amount: 2, unit: null, name: 'Möhren' }, { amount: 1, unit: 'l', name: 'Gemüsebrühe' }], recipeInstructions: [{ '@type': 'HowToStep', text: 'Schneiden.' }, { '@type': 'HowToStep', text: 'Kochen.' }] }] });
+      return new Response(JSON.stringify({ model: body.model, choices: [{ message: { role: 'assistant', content } }], usage: { prompt_tokens: 100, completion_tokens: 200 } }), { status: 200 });
+    });
+    const r = await op.post('/api/operator/recipes/ai-drafts', { dishes: ['Gemüsesuppe'] });
+    expect(r.status, r.text).toBe(200);
+    expect(r.json.ids).toHaveLength(1);
+    expect(aiCalls[0].body.provider).toEqual({ order: ['mistral'], allow_fallbacks: false, data_collection: 'deny' });
+    const d = (await op.get(`/api/operator/recipes/${r.json.ids[0]}`)).json;
+    expect(d).toMatchObject({ state: 'draft', origin: 'ai_draft', aiAssisted: true, reviewState: 'draft' });
+    expect((await A.get('/api/cloud-recipes')).json.recent.some((x: any) => x.title === 'Gemüsesuppe')).toBe(false);
+  });
+});

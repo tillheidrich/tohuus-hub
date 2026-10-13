@@ -23,6 +23,10 @@ import { DEFAULT_FALLBACKS, aiConfig, fallbackModels, pingModel, type ModelKind 
 import { addAllowlist, createBetaCode, listAllowlist, listBetaCodes, removeAllowlist, revokeBetaCode, signupMode, SIGNUP_MODES } from '../lib/beta.js';
 import { audit, auditLog } from '../lib/operator.js';
 import { runStatsNightly, statsView } from '../lib/stats.js';
+import multer from 'multer';
+import { addCatalogRecipe, adminRecipe, catalogDb, draftRecipesWithAi, getCatalogRow, scheduleReviewed, storeCatalogImage, type CatalogRow } from '../lib/cloud-recipes.js';
+import { looksLikeImage } from '../lib/images.js';
+import { detectAny, detectAnyText, PACKAGE_LIMITS } from '../lib/recipe-package.js';
 import { RUNTIME_KEYS, SECRET_KEYS, isRuntimeKey, lastFour, runtimeSetting, runtimeSettingsView, setRuntimeSetting, supportEmail, type RuntimeKey } from '../lib/runtime-settings.js';
 
 export function operatorAdmin(fresh: import('express').RequestHandler) {
@@ -158,6 +162,139 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     const snap = await runStatsNightly();
     audit(who(req), 'stats.snapshot', snap.day);
     res.json(snap);
+  });
+
+  // ---------------------------------------------------------------- ToHuus-Rezepte (lib/cloud-recipes.ts)
+
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: PACKAGE_LIMITS.maxUploadBytes, files: 1, fields: 10 } });
+  const rowOr404 = (req: import('express').Request, res: import('express').Response) => {
+    const row = getCatalogRow(Number(req.params.id));
+    if (!row) res.status(404).json({ error: 'not found' });
+    return row;
+  };
+
+  r.get('/operator/recipes', fresh, (_req, res) => {
+    const rows = catalogDb().prepare(`SELECT * FROM catalog_recipes ORDER BY CASE state WHEN 'scheduled' THEN 0 WHEN 'draft' THEN 1 WHEN 'published' THEN 2 ELSE 3 END, COALESCE(publish_at, published_at, created_at) DESC, id DESC`).all() as CatalogRow[];
+    const counts = Object.fromEntries((catalogDb().prepare('SELECT state, COUNT(*) n FROM catalog_recipes GROUP BY state').all() as { state: string; n: number }[]).map((x) => [x.state, x.n]));
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ counts, recipes: rows.map(adminRecipe) });
+  });
+
+  r.get('/operator/recipes/:id', fresh, (req, res) => {
+    const row = rowOr404(req, res);
+    if (row) res.json(adminRecipe(row));
+  });
+
+  /** A ToHuus recipe package (zip with rezepte.json + bilder/, or the JSON) → drafts. */
+  r.post('/operator/recipes/upload', fresh, upload.single('file'), async (req, res) => {
+    const b = z
+      .object({
+        aiAssisted: z.enum(['true', 'false']).default('false'),
+        imageKind: z.enum(['photo', 'ai']).default('photo'),
+        license: z.string().trim().max(80).optional(),
+        sourceAuthors: z.string().trim().max(300).optional(),
+        text: z.string().max(20_000_000).optional(),
+      })
+      .parse(req.body ?? {});
+    let d;
+    try {
+      d = req.file ? detectAny(req.file.buffer, req.file.originalname) : detectAnyText(b.text ?? '');
+    } catch (e) {
+      return void res.status(422).json({ error: (e as Error).message });
+    }
+    const ids: number[] = [];
+    for (const rec of d.recipes)
+      ids.push(await addCatalogRecipe({ recipe: rec, origin: 'package', aiAssisted: b.aiAssisted === 'true', imageKind: b.imageKind, license: b.license || 'ToHuus', sourceAuthors: b.sourceAuthors || null, by: who(req) }));
+    audit(who(req), 'recipes.upload', null, { created: ids.length, errors: d.errors.length, file: req.file?.originalname?.slice(0, 80) ?? null });
+    res.json({ created: ids.length, ids, errors: d.errors, warnings: d.warnings ?? [] });
+  });
+
+  r.patch('/operator/recipes/:id', fresh, (req, res) => {
+    const row = rowOr404(req, res);
+    if (!row) return;
+    const b = z
+      .object({
+        reviewState: z.enum(['draft', 'reviewed', 'cooked']).optional(),
+        publishAt: z.string().regex(/^\d{4}-\d\d-\d\d( \d\d:\d\d(:\d\d)?)?$/).nullable().optional(),
+        tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+        aiAssisted: z.boolean().optional(),
+        imageKind: z.enum(['none', 'photo', 'ai']).optional(),
+      })
+      .parse(req.body ?? {});
+    const d = catalogDb();
+    if (b.publishAt !== undefined && b.publishAt !== null && row.review_state === 'draft' && b.reviewState !== 'reviewed' && b.reviewState !== 'cooked')
+      return void res.status(409).json({ error: 'read and mark the recipe as reviewed first' });
+    d.transaction(() => {
+      if (b.reviewState) d.prepare(`UPDATE catalog_recipes SET review_state = ? WHERE id = ?`).run(b.reviewState, row.id);
+      if (b.tags) d.prepare(`UPDATE catalog_recipes SET tags = ? WHERE id = ?`).run(JSON.stringify(b.tags), row.id);
+      if (b.aiAssisted !== undefined) d.prepare(`UPDATE catalog_recipes SET ai_assisted = ? WHERE id = ?`).run(b.aiAssisted ? 1 : 0, row.id);
+      if (b.imageKind) d.prepare(`UPDATE catalog_recipes SET image_kind = CASE WHEN image IS NULL THEN 'none' ELSE ? END WHERE id = ?`).run(b.imageKind === 'none' ? 'photo' : b.imageKind, row.id);
+      if (b.publishAt !== undefined) {
+        if (b.publishAt === null) d.prepare(`UPDATE catalog_recipes SET state = CASE WHEN state = 'scheduled' THEN 'draft' ELSE state END, publish_at = NULL WHERE id = ?`).run(row.id);
+        else d.prepare(`UPDATE catalog_recipes SET state = 'scheduled', publish_at = ? WHERE id = ? AND state != 'published'`).run(b.publishAt.length === 10 ? `${b.publishAt} 06:00:00` : b.publishAt.padEnd(19, ':00').slice(0, 19), row.id);
+      }
+      d.prepare(`UPDATE catalog_recipes SET updated_at = datetime('now') WHERE id = ?`).run(row.id);
+    })();
+    audit(who(req), 'recipes.update', `recipe:${row.id}`, b);
+    res.json(adminRecipe(getCatalogRow(row.id)!));
+  });
+
+  r.post('/operator/recipes/:id/photo', fresh, upload.single('file'), async (req, res) => {
+    const row = rowOr404(req, res);
+    if (!row) return;
+    if (!req.file || !looksLikeImage(req.file.buffer)) return void res.status(400).json({ error: 'not a photo' });
+    const kind = req.body?.kind === 'ai' ? 'ai' : 'photo';
+    const name = await storeCatalogImage(req.file.buffer);
+    catalogDb().prepare(`UPDATE catalog_recipes SET image = ?, image_kind = ?, updated_at = datetime('now') WHERE id = ?`).run(name, kind, row.id);
+    audit(who(req), 'recipes.photo', `recipe:${row.id}`, { kind });
+    res.json(adminRecipe(getCatalogRow(row.id)!));
+  });
+
+  r.post('/operator/recipes/:id/publish', fresh, (req, res) => {
+    const row = rowOr404(req, res);
+    if (!row) return;
+    if (row.review_state === 'draft') return void res.status(409).json({ error: 'read and mark the recipe as reviewed first' });
+    catalogDb().prepare(`UPDATE catalog_recipes SET state = 'published', published_at = datetime('now'), publish_at = NULL, updated_at = datetime('now') WHERE id = ?`).run(row.id);
+    audit(who(req), 'recipes.publish', `recipe:${row.id}`);
+    res.json(adminRecipe(getCatalogRow(row.id)!));
+  });
+
+  r.post('/operator/recipes/:id/unpublish', fresh, (req, res) => {
+    const row = rowOr404(req, res);
+    if (!row) return;
+    catalogDb().prepare(`UPDATE catalog_recipes SET state = 'unpublished', publish_at = NULL, updated_at = datetime('now') WHERE id = ?`).run(row.id);
+    audit(who(req), 'recipes.unpublish', `recipe:${row.id}`);
+    res.json(adminRecipe(getCatalogRow(row.id)!));
+  });
+
+  r.delete('/operator/recipes/:id', fresh, (req, res) => {
+    const row = rowOr404(req, res);
+    if (!row) return;
+    if (row.state === 'published') return void res.status(409).json({ error: 'unpublish it first' });
+    catalogDb().prepare('DELETE FROM catalog_recipes WHERE id = ?').run(row.id);
+    audit(who(req), 'recipes.delete', `recipe:${row.id}`, { title: row.title });
+    res.json({ ok: true });
+  });
+
+  /** Publication dates for reviewed drafts: `perWeek` on fixed weekdays (3 → Mon, Wed, Fri, 06:00 UTC). */
+  r.post('/operator/recipes/schedule', fresh, (req, res) => {
+    const b = z.object({ ids: z.array(z.number().int()).max(500).optional(), perWeek: z.number().int().min(1).max(7).default(3), start: z.string().regex(/^\d{4}-\d\d-\d\d$/).nullable().optional() }).parse(req.body ?? {});
+    const plan = scheduleReviewed(b);
+    audit(who(req), 'recipes.schedule', null, { count: plan.length, perWeek: b.perWeek });
+    res.json({ plan });
+  });
+
+  /** "Entwürfe mit KI erstellen": Mistral drafts from dish names – into the queue as drafts, never published. */
+  r.post('/operator/recipes/ai-drafts', fresh, async (req, res) => {
+    const b = z.object({ dishes: z.array(z.string().trim().min(2).max(80)).min(1).max(5) }).parse(req.body ?? {});
+    try {
+      const out = await draftRecipesWithAi(b.dishes, who(req));
+      audit(who(req), 'recipes.ai-drafts', null, { requested: b.dishes.length, created: out.ids.length });
+      res.json(out);
+    } catch (e) {
+      const err = e as { status?: number; message: string; code?: string };
+      res.status(err.status && err.status >= 400 ? err.status : 502).json({ error: err.message, code: err.code });
+    }
   });
 
   // ---------------------------------------------------------------- households (id only, no names)
