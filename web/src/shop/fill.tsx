@@ -51,12 +51,13 @@ export function ListTabs({ lists, value, onChange, onNew, onManage }: { lists: L
       </div>
     );
   return (
-    <div className="list-tabs chips" role="tablist" aria-label={t('Lists')}>
+    <div className="list-tabs chips" role="group" aria-label={t('Lists')}>
       {lists.map((l) => (
-        <button key={l.id} role="tab" aria-selected={l.id === value} className={`chip ${l.id === value ? 'on' : ''}`} onClick={() => onChange(l.id)} data-drop={l.id === value ? undefined : `list:${l.id}`}>
+        <button key={l.id} aria-pressed={l.id === value} className={`chip ${l.id === value ? 'on' : ''}`} onClick={() => onChange(l.id)} data-drop={l.id === value ? undefined : `list:${l.id}`}>
           {l.visibility && l.visibility !== 'household' && (
             <span className="list-lock" title={visibilityLabel(l.visibility, l.share_with, l.owner, l.mine)}>
               <VisibilityIcon v={l.visibility} size={13} />
+              <span className="sr-only">{visibilityLabel(l.visibility, l.share_with, l.owner, l.mine)}: </span>
             </span>
           )}
           {l.name}

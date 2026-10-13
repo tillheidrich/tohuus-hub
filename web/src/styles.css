@@ -3866,6 +3866,26 @@ img[data-zoom] {
 .wmeal .grow {
   padding: 0 2px;
 }
+/* the dish's name is the button that opens its sheet (keyboard: Tab + Enter) */
+.wmeal-open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+.wmeal-open .t,
+.wmeal-open .s {
+  display: block;
+}
+.wmeal-open .t {
+  display: -webkit-box;
+}
 .wmeal .icon-btn.sm {
   position: absolute;
   top: 10px;
@@ -6720,6 +6740,10 @@ html.board-mode body {
 .sp2-cols.dense .sp2-col .lbl {
   font-size: 0.625rem;
   overflow: visible;
+  /* every fifth day is labelled; the number may be wider than its thin column and reaches into the neighbours */
+  align-self: center;
+  margin: 0 -10px;
+  text-align: center;
 }
 .sp2-legend {
   display: flex;
@@ -7438,8 +7462,8 @@ button.li {
   color: var(--accent-ink);
 }
 .auth-summary .muted {
+  /* full colour: opacity on the green would fall under 4.5:1 */
   color: inherit;
-  opacity: 0.8;
 }
 .auth-ic {
   flex: none;

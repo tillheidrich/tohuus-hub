@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { startA11yHelpers } from './a11y';
 import { qc } from './api';
 import { App } from './App';
 import { loadDict } from './i18n';
@@ -16,6 +17,8 @@ import './styles-guide.css';
 
 // service worker (app shell + shopping list offline, Web Push) and replay of offline changes
 startOffline();
+// field labels linked to their controls on every page and sheet (./a11y.ts)
+startA11yHelpers();
 
 /** Re-renders the whole app once a language dictionary arrives after a switch (dictionaries are lazy chunks). */
 function LangGate({ children }: { children: React.ReactNode }) {

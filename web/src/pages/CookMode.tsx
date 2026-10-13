@@ -4,7 +4,8 @@
  * as chips under the step.
  */
 import { ArrowLeft, ArrowRight, Check, X } from '@phosphor-icons/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useDialog } from '../ui';
 import { Amounts } from '../RegionAmounts';
 import { t } from '../i18n';
 
@@ -51,10 +52,13 @@ export function CookMode({ r, houseNote, onClose, onDone }: { r: any; houseNote:
       lock?.release?.().catch?.(() => {});
     };
   }, [steps.length, onClose]);
+  const box = useRef<HTMLDivElement>(null);
+  // focus inside, Tab stays inside, focus back to "Kochmodus" afterwards (Escape is handled above)
+  useDialog(box, true);
   const s = steps[i];
   const last = i === steps.length - 1;
   return (
-    <div className="cookmode" role="dialog" aria-modal="true" aria-label={t('Cook mode')}>
+    <div ref={box} className="cookmode" role="dialog" aria-modal="true" aria-label={t('Cook mode')} tabIndex={-1}>
       <div className="cookmode-head">
         <button className="icon-btn" onClick={onClose} aria-label={t('Close')}>
           <X size={18} />

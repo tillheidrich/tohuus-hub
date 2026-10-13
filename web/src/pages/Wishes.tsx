@@ -744,7 +744,7 @@ function WishSheet({ open, wish, list, onClose }: { open: boolean; wish: Wish | 
             {list.for_name && <span className="small muted">{t('{name} never sees this.', { name: list.for_name })}</span>}
           </div>
         )}
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           {wish && (
             <>
               <button type="button" className="btn ghost danger-text" onClick={remove}>
