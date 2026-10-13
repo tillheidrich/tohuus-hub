@@ -230,7 +230,7 @@ struct SignInView: View {
         do {
             try await app.signIn(server: app.cloudServer, mode: "cloud", login: login.trimmingCharacters(in: .whitespaces), password: password, code: nil)
         } catch let e as APIError {
-            if case .server(401, let m) = e { error = m } else { error = e.localizedDescription }
+            if case .server(401, let m) = e { error = APIError.friendly(status: 401, message: m) } else { error = e.localizedDescription }
         } catch {
             self.error = error.localizedDescription
         }

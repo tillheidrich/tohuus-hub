@@ -4,14 +4,22 @@ translations in tools/strings_de.json. English is the key (same rule as the web 
 """
 import json, os, re, sys
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-pat = re.compile(r'\bLF?\(\s*"((?:[^"\\]|\\.)*)"')
+pat = re.compile(r'\bL(?:C)?F?\(\s*"((?:[^"\\]|\\.)*)"')
+# LC/LCF (cooking) look in Cooking.xcstrings first and fall back to Localizable – keys missing there land here
+cooking = set(json.load(open(os.path.join(root, "ToHuus", "Resources", "Cooking.xcstrings"), encoding="utf-8"))["strings"])
+lc_pat = re.compile(r'\bLCF?\(\s*"((?:[^"\\]|\\.)*)"')
 keys = set()
 for d in ["ToHuus", "ToHuusShare", "ToHuusWidget", "ToHuusWatch", "ToHuusWatchWidgets", "Shared"]:
     for dp, _, fs in os.walk(os.path.join(root, d)):
         for f in fs:
             if f.endswith(".swift"):
-                for m in pat.finditer(open(os.path.join(dp, f), encoding="utf-8").read()):
-                    keys.add(m.group(1).encode().decode("unicode_escape").encode("latin-1").decode("utf-8"))
+                src = open(os.path.join(dp, f), encoding="utf-8").read()
+                lc = {m.start() for m in lc_pat.finditer(src)}
+                for m in pat.finditer(src):
+                    k = m.group(1).encode().decode("unicode_escape").encode("latin-1").decode("utf-8")
+                    if m.start() in lc and k in cooking:
+                        continue
+                    keys.add(k)
 # SignUpView form labels are passed through L(f.1); App Intent titles are LocalizedStringResource literals
 for extra in ["Just me", "The two of us", "Family with children", "Flat share", "I look after someone",
               "Add to the shopping list", "What", "What should go on the list?", "Put ${item} on the list", "Add to list",

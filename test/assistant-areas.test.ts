@@ -93,3 +93,17 @@ describe('per-screen tools', () => {
     expect(plain.tools.map((t) => t.function.name)).not.toContain('recipe_save_adapted');
   });
 });
+
+describe('list_add guards (TestFlight 13.10.)', () => {
+  it('never puts answers or greetings on the list, and recipe amounts become a note instead of 100 packs', () => {
+    const { ctx } = ctxOf();
+    const r = tools.listAdd(ctx as any, [{ name: 'Ja' }, { name: 'Hallo' }, { name: 'passierte Tomaten', qty: 100 }, { name: 'Spaghetti', qty: 200, amount: '200 g' }, { name: 'Zwiebeln', qty: 2 }]);
+    expect(r.added).toHaveLength(3);
+    const rows = db.prepare(`SELECT text, qty, note FROM shopping_items WHERE text IN ('Ja','Hallo','passierte Tomaten','Spaghetti','Zwiebeln') AND checked_at IS NULL ORDER BY id`).all() as any[];
+    expect(rows.map((x) => x.text)).toEqual(['passierte Tomaten', 'Spaghetti', 'Zwiebeln']);
+    expect(rows[0]).toMatchObject({ qty: null, note: '100' });
+    expect(rows[1]).toMatchObject({ qty: null, note: '200 g' });
+    expect(rows[2]).toMatchObject({ qty: 2, note: null });
+  });
+});
+

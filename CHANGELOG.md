@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- TestFlight feedback 13 Oct: the assistant's `list_add` never puts answers or greetings ("Ja", "Hallo") on the list, and a recipe amount ("100 g") goes into the note instead of becoming 100 packs (`amount` field). iPhone: cooking strings that fell back to English ("servings", "missing") are translated (gen_strings.py now collects LC/LCF keys), sign-in shows a plain sentence instead of "unauthorized".
+
 - Heute (web, iPhone) greets German households in Plattdeutsch: "Moin" / "'n Avend" and a saying that fits the time of day, weekday, season and special days (Advent, Christmas, New Year, Easter); a tap shows the meaning and a short note. `GET /api/today` › `platt`; data `server/data/platt.json`, logic `server/lib/platt.ts`; household setting `today.platt` = '0' switches it off. The German website shows the same sayings in the hero.
 - Change your own name: `PATCH /api/cloud/me { name }` (account and every household), web Settings › My account, iPhone Mehr › Konto.
 - Hausinfo on the iPhone: revealed codes and passwords can be hidden again ("Verbergen").

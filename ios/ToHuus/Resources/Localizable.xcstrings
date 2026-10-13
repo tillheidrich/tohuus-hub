@@ -1106,6 +1106,23 @@
         }
       }
     },
+    "%d servings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d servings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Portionen"
+          }
+        }
+      }
+    },
     "%d taken": {
       "extractionState": "manual",
       "localizations": {
@@ -5866,6 +5883,23 @@
         }
       }
     },
+    "Day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag"
+          }
+        }
+      }
+    },
     "Delete": {
       "extractionState": "manual",
       "localizations": {
@@ -6814,6 +6848,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Endet am %@ – es verlängert sich nicht."
+          }
+        }
+      }
+    },
+    "Enjoy your meal!": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enjoy your meal!"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guten Appetit!"
           }
         }
       }
@@ -14158,6 +14209,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Optional. Mit Datum erinnert dich ToHuus rechtzeitig."
+          }
+        }
+      }
+    },
+    "Options for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Options for %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optionen für %@"
           }
         }
       }
@@ -26313,6 +26381,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "mit Bon abgeglichen"
+          }
+        }
+      }
+    },
+    "missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "missing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fehlt"
           }
         }
       }

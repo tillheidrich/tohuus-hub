@@ -109,7 +109,7 @@ final class AppModel {
         guard let api, !trimmed.isEmpty else { return [] }
         let (status, body) = try await api.sendRaw("PATCH", "api/cloud/me", json: ["name": trimmed])
         guard (200..<300).contains(status) else {
-            throw NSError(domain: "ToHuus", code: status, userInfo: [NSLocalizedDescriptionKey: body["error"]?.string ?? L("That did not work. Please try again.")])
+            throw APIError.server(status: status, message: body["error"]?.string ?? "")
         }
         userName = trimmed
         SharedConfig.defaults.set(trimmed, forKey: Self.userKey)

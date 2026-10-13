@@ -33,6 +33,7 @@ import { originOf, tickItem } from './shopping-trust.js';
 import { addDays, addExpense, deleteExpense, setBudget, today } from './spend2.js';
 import { nameScore, norm } from './text.js';
 import type { ParsedItem } from './shopparse.js';
+import { SMALLTALK, replyOf } from './assistant-parse.js';
 import type { ToolDef } from './ai.js';
 
 migrate(
@@ -207,13 +208,21 @@ export function listShow() {
   return openRows().map((r) => ({ id: r.id, text: r.text, qty: r.qty, note: r.note, origin: originOf(r) }));
 }
 
-export function listAdd(ctx: ToolCtx, items: { name: string; qty?: number | null; note?: string | null }[]) {
+/**
+ * A list line is something to buy: answers and small talk ("Ja", "Hallo") never are, and a recipe amount ("100 g",
+ * "200 ml") is not a number of packs – it goes into the note, so "100 g passierte Tomaten" never becomes 100 packs.
+ */
+const MAX_PACKS = 24;
+export function listAdd(ctx: ToolCtx, items: { name: string; qty?: number | null; amount?: string | null; note?: string | null }[]) {
   const created: number[] = [];
   const names: string[] = [];
   const already: string[] = [];
-  for (const raw of items.slice(0, 30)) {
-    const name = raw.name?.trim();
-    if (!name) continue;
+  for (const raw0 of items.slice(0, 30)) {
+    const name = raw0.name?.trim();
+    if (!name || replyOf(name) || SMALLTALK.test(name.replace(/[!?.…]+$/g, ''))) continue;
+    const packs = typeof raw0.qty === 'number' && Number.isInteger(raw0.qty) && raw0.qty >= 1 && raw0.qty <= MAX_PACKS ? raw0.qty : null;
+    const amount = raw0.amount?.trim() || (typeof raw0.qty === 'number' && packs === null && raw0.qty > 0 ? String(raw0.qty).replace('.', ',') : '');
+    const raw = { ...raw0, qty: packs, note: [amount, raw0.note?.trim()].filter(Boolean).join(' · ') || null };
     const p = productFor(name);
     const r = addToShopping({
       productId: p?.id ?? null,
@@ -472,7 +481,7 @@ const fn = (name: string, description: string, properties: Record<string, unknow
 /** Kept short on purpose: every byte here is sent with every model call. */
 export const TOOL_DEFS: ToolDef[] = [
   fn('list_show', 'Open shopping list.'),
-  fn('list_add', 'Put items on the shopping list.', { items: arr(obj({ name: { type: 'string' }, qty: { type: 'number' }, note: { type: 'string' } }, ['name'])) }, ['items']),
+  fn('list_add', 'Put items on the shopping list. qty = packs to buy, never grams; "100 g" goes into amount.', { items: arr(obj({ name: { type: 'string' }, qty: { type: 'integer' }, amount: { type: 'string' }, note: { type: 'string' } }, ['name'])) }, ['items']),
   fn('list_remove', 'Take items off the list (not needed).', { items: strs }, ['items']),
   fn('list_check', 'Tick items off the list (bought).', { items: strs }, ['items']),
   fn('stock_find', 'Do we still have X? Stock, purchase rhythm, last purchase.', { query: { type: 'string' } }, ['query']),
