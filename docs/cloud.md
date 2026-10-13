@@ -541,6 +541,9 @@ anything is published, AI pictures carry "KI-Bild".
   the founder's Canva account; `image_ref` holds its Canva link, the back office shows "Bild in Canva öffnen" next to
   "Foto hinzufügen" and stores the upload as `image_kind: 'ai'` ("KI-Bild" badge). `tier` can be switched per
   recipe (`PATCH …/:id { tier: 'all' | 'plus' }`).
+- **Kitchen machines** (13 Oct 2026): 12 more Plus drafts for Thermomix, Monsieur Cuisine and Cookit
+  (`server/data/catalog-seed-devices.ts`), each step with its settings (`tm` on the step, `tohuus.devices`), a review
+  note to check the settings on a real machine, and a Canva AI picture like the Plus set.
 - **Plus recipes for households**: the list shows them to everyone with `plus: true` and `locked` when the household
   has no Plus (`plusRecipes` feature, trial and beta gift count); `GET /api/cloud-recipes/:id` and `…/save` answer
   402 `{ code: 'plan', feature: 'plusRecipes' }` for a locked one. Web and iPhone show a "Plus" badge and "Gehört zu

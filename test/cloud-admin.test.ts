@@ -385,18 +385,29 @@ describe('usage statistics (counts only)', () => {
 
 describe('ToHuus-Rezepte (central catalogue)', () => {
   let cat: typeof import('../server/lib/cloud-recipes');
-  it('starts with 30 own drafts and 20 Plus drafts – nothing published, allergens computed, review notes', async () => {
+  it('starts with 30 own drafts, 20 Plus drafts and 12 kitchen-machine drafts – nothing published, allergens computed, review notes', async () => {
     cat = await import('../server/lib/cloud-recipes');
     const l = await op.get('/api/operator/recipes');
     expect(l.status, l.text).toBe(200);
-    expect(l.json.recipes).toHaveLength(50);
-    expect(l.json.counts).toEqual({ draft: 50 });
+    expect(l.json.recipes).toHaveLength(62);
+    expect(l.json.counts).toEqual({ draft: 62 });
     // the Plus set: tier plus, each with the Canva link of its AI picture
     const plusSet = l.json.recipes.filter((r: any) => r.plus);
-    expect(plusSet).toHaveLength(20);
+    expect(plusSet).toHaveLength(32);
+    // kitchen machines: the settings sit on the steps, the device on the recipe; Thermomix only for Thermomix
+    const tm = l.json.recipes.find((r: any) => r.title === 'Kürbisrisotto aus dem Thermomix');
+    expect(tm.thermomix).toBe(true);
+    expect(tm.steps.find((x: any) => /Reis zugeben/.test(x.text)).tm).toMatchObject({ device: 'Thermomix', time: '2 Min.', temp: '120 °C', speed: '1', mode: 'Linkslauf' });
+    expect(tm.steps.find((x: any) => /abschmecken/.test(x.text)).tm ?? null).toBeNull();
+    const mc = l.json.recipes.find((r: any) => r.title === 'Chili con Carne aus dem Monsieur Cuisine');
+    expect(mc.thermomix).toBe(false);
+    expect(mc.steps[2].tm).toMatchObject({ device: 'Monsieur Cuisine', temp: '130 °C' });
+    expect(mc.warnings.some((w: string) => /Monsieur Cuisine settings/.test(w))).toBe(true);
+    const pizza = l.json.recipes.find((r: any) => r.title === 'Blechpizza mit Thermomix-Teig');
+    expect(pizza.steps[pizza.steps.length - 1].tm).toMatchObject({ device: 'Backofen', temp: '230 °C' });
     expect(plusSet.every((r: any) => /^https:\/\/www\.canva\.com\/M\/MAHX/.test(r.imageRef))).toBe(true);
     // poultry and mince recipes say when they are cooked through (no review note)
-    for (const t of ['Ofen-Hähnchen mit Wurzelgemüse', 'Hackbällchen in Tomatensoße']) expect(plusSet.find((r: any) => r.title === t).warnings.some((w: string) => /Poultry/.test(w)), t).toBe(false);
+    for (const t of ['Ofen-Hähnchen mit Wurzelgemüse', 'Hackbällchen in Tomatensoße', 'Chili con Carne aus dem Monsieur Cuisine', 'Hähnchen-Geschnetzeltes mit Champignons aus dem Cookit']) expect(plusSet.find((r: any) => r.title === t).warnings.some((w: string) => /Poultry/.test(w)), t).toBe(false);
     const pf = l.json.recipes.find((r: any) => r.title === 'Pfannkuchen');
     expect(pf.allergens).toEqual(['eggs', 'gluten', 'milk']);
     expect(pf.aiAssisted).toBe(true);

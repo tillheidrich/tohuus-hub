@@ -21,6 +21,7 @@ import { config } from '../config.js';
 import { openDbFile, type DB } from '../db.js';
 import { CATALOG_SEED, type SeedRecipe } from '../data/catalog-seed.js';
 import { CATALOG_SEED_PLUS } from '../data/catalog-seed-plus.js';
+import { CATALOG_SEED_DEVICES, type DeviceSeedRecipe } from '../data/catalog-seed-devices.js';
 import { decryptBlob, deriveKey, encryptBlob } from './crypto-keys.js';
 import { normalizeRecipe, type ImportRecipe } from './recipes2.js';
 import sharp from './sharp-safe.js';
@@ -72,6 +73,7 @@ export function catalogDb(): DB {
   cdb = d;
   seedCatalog();
   seedPlus();
+  seedDevices();
   return d;
 }
 /** tests */
@@ -191,7 +193,8 @@ export async function addCatalogRecipe(input: CatalogInput): Promise<number> {
   );
 }
 
-const seedToRecipe = (s: SeedRecipe) => {
+const seedToRecipe = (s: SeedRecipe | DeviceSeedRecipe) => {
+  const machine = 'machine' in s ? s.machine : null;
   const rec = normalizeRecipe(
     {
       name: s.title,
@@ -203,12 +206,35 @@ const seedToRecipe = (s: SeedRecipe) => {
         const [amount, unit, name, note] = line.split('|');
         return { amount: amount || null, unit: unit || null, name, note: note || null };
       }),
-      recipeInstructions: s.steps.map((text) => ({ '@type': 'HowToStep', text })),
+      // kitchen-machine steps carry their settings (docs/recipe-package.md › Appliance steps)
+      recipeInstructions: (s.steps as (string | { text: string; time?: string; temp?: string; speed?: string; mode?: string; device?: string })[]).map((st) =>
+        typeof st === 'string'
+          ? { '@type': 'HowToStep', text: st }
+          : { '@type': 'HowToStep', text: st.text, ...(st.time || st.temp || st.speed || st.mode ? { tohuus: { device: st.device ?? machine, time: st.time, temperature: st.temp, speed: st.speed, mode: st.mode } } : {}) },
+      ),
+      ...(machine ? { tohuus: { devices: [machine] } } : {}),
     },
     { source_type: 'tohuus' },
   );
   return { ...rec, image_data: undefined, external_id: null };
 };
+
+/** Kitchen-machine recipes (catalog-seed-devices.ts) – once, as Plus drafts like the Plus set. */
+function seedDevices() {
+  const d = cdb!;
+  if (d.prepare(`SELECT value FROM catalog_meta WHERE key = 'seeded-devices-1'`).get()) return;
+  const ins = d.prepare(
+    `INSERT INTO catalog_recipes (title, description, data, tags, origin, ai_assisted, allergens, warnings, created_by, tier, image_ref) VALUES (?, ?, ?, ?, 'own', 1, ?, ?, 'seed-devices', 'plus', ?)`,
+  );
+  d.transaction(() => {
+    for (const s of CATALOG_SEED_DEVICES) {
+      const data = seedToRecipe(s);
+      const warnings = [...safetyNotes(data), `Check the ${s.machine} settings on a real machine before publishing.`];
+      ins.run(data.title, data.description, JSON.stringify(data), JSON.stringify(data.tags), JSON.stringify(computeAllergens(data.ingredients)), JSON.stringify(warnings), s.canva ? `https://www.canva.com/M/${s.canva}` : null);
+    }
+    d.prepare(`INSERT INTO catalog_meta (key, value) VALUES ('seeded-devices-1', datetime('now'))`).run();
+  })();
+}
 
 /** The Plus set (catalog-seed-plus.ts) – once, as drafts with tier plus and the Canva link of its AI picture. */
 function seedPlus() {

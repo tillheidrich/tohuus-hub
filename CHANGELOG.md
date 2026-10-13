@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Kitchen-machine recipes**: 12 Plus drafts, four each for Thermomix, Monsieur Cuisine and Cookit, with the settings on every step and an AI picture in Canva.
+
 - **Plus recipes**: 20 new ToHuus-Rezepte for autumn and winter (drafts, each with an AI picture in Canva for the back office), a Plus tier in the catalogue (`plus`/`locked` on cards, 402 `plusRecipes` on open and save), "Plus" badge and "Gehört zu Plus" on web and iPhone, back office toggle.
 
 - **Fill level: running low is the household's choice**: per product "Knapp ab wenig" (default) or "ab halb" (`min_qty: 2` on a `level` product), in the web app and on iPhone; counted products keep "Mindestens vorrätig".

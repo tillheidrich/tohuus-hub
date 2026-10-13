@@ -1,4 +1,4 @@
-# Plus-Rezepte Herbst/Winter 2026
+# Plus-Rezepte Herbst/Winter 2026 und Küchenmaschinen
 
 20 neue ToHuus-Rezepte für Plus (`server/data/catalog-seed-plus.ts`). Sie liegen nach dem Deploy als **Entwürfe** im
 Backoffice unter */betrieb › Rezepte*, markiert als „Plus“. Mit KI geschrieben, deshalb liest du sie vor dem
@@ -40,6 +40,29 @@ Bild nicht gut? In Canva „Ähnliches erzeugen“ oder mir sagen, welches, dann
 | 18 | Rote-Bete-Salat mit Feta und Walnüssen | 10 min | [Bild in Canva](https://www.canva.com/M/MAHX5ohaMvM) |
 | 19 | Rahmspinat mit Kartoffeln und Spiegelei | 30 min | [Bild in Canva](https://www.canva.com/M/MAHX5pG20DU) |
 | 20 | Bananenbrot mit braunen Bananen | 70 min | [Bild in Canva](https://www.canva.com/M/MAHX5oMOVOY) |
+
+## Rezepte für Küchenmaschinen (auch Plus)
+
+Je vier für Thermomix, Monsieur Cuisine (Lidl) und Bosch Cookit (`server/data/catalog-seed-devices.ts`), eigene Texte,
+nichts aus Cookidoo, der Monsieur-Cuisine-App oder Home Connect. Jeder Schritt hat die Einstellungen (Zeit,
+Temperatur, Stufe, Linkslauf oder Rühraufsatz), die ToHuus im Kochmodus zeigt. **Bitte einmal auf dem echten Gerät
+nachkochen oder gegenlesen**, bevor du sie veröffentlichst: Die Stufen stimmen mit den üblichen Bereichen der
+Maschinen überein, nachgekocht hat sie noch niemand. Das Backoffice erinnert daran im Prüfhinweis.
+
+| Gerät | Rezept | Zeit | Bild |
+|---|---|---|---|
+| Thermomix | Kürbisrisotto aus dem Thermomix | 35 min | [Bild in Canva](https://www.canva.com/M/MAHX5-42Go4) |
+| Thermomix | Möhren-Ingwer-Suppe aus dem Thermomix | 30 min | [Bild in Canva](https://www.canva.com/M/MAHX565zdyY) |
+| Thermomix | Blechpizza mit Thermomix-Teig | 90 min | [Bild in Canva](https://www.canva.com/M/MAHX5_YkMQE) |
+| Thermomix | Linsen-Bolognese aus dem Thermomix | 35 min | [Bild in Canva](https://www.canva.com/M/MAHX53DxLeo) |
+| Monsieur Cuisine | Kartoffel-Lauch-Suppe aus dem Monsieur Cuisine | 35 min | [Bild in Canva](https://www.canva.com/M/MAHX57q7VGA) |
+| Monsieur Cuisine | Milchreis mit Kirschen aus dem Monsieur Cuisine | 40 min | [Bild in Canva](https://www.canva.com/M/MAHX5yPeM3o) |
+| Monsieur Cuisine | Hummus mit Gemüsesticks aus dem Monsieur Cuisine | 10 min | [Bild in Canva](https://www.canva.com/M/MAHX56l8pII) |
+| Monsieur Cuisine | Chili con Carne aus dem Monsieur Cuisine | 45 min | [Bild in Canva](https://www.canva.com/M/MAHX5w4J1Ik) |
+| Cookit | Hähnchen-Geschnetzeltes mit Champignons aus dem Cookit | 35 min | [Bild in Canva](https://www.canva.com/M/MAHX57a45vk) |
+| Cookit | One-Pot-Pasta mit Gemüse aus dem Cookit | 25 min | [Bild in Canva](https://www.canva.com/M/MAHX51B9Pw4) |
+| Cookit | Grießbrei mit Apfelkompott aus dem Cookit | 20 min | [Bild in Canva](https://www.canva.com/M/MAHX54VKjOM) |
+| Cookit | Linsencurry mit Spinat aus dem Cookit | 35 min | [Bild in Canva](https://www.canva.com/M/MAHX50PuHzA) |
 
 ## Was Plus dabei bedeutet
 
