@@ -9,6 +9,7 @@ import { BrandMark, HomeTiles } from '../art';
 import { BRAND } from '../brand';
 import { useInstance } from '../data';
 import { lang, t } from '../i18n';
+import { AppleButton } from './AppleSignIn';
 
 export type CloudForm = 'single' | 'couple' | 'family' | 'wg' | 'carer';
 export const CLOUD_FORMS: [CloudForm, string][] = [
@@ -79,6 +80,14 @@ export function Signup() {
         </div>
         <form className="stack signup" onSubmit={submit} noValidate>
           <h2>{t('Create your household')}</h2>
+          {inst.data?.auth?.apple && (
+            <>
+              <AppleButton label={t('Sign up with Apple')} />
+              <div className="auth-or apple-or">
+                <span>{t('or with your e-mail address')}</span>
+              </div>
+            </>
+          )}
           <div className="field">
             <label htmlFor="su-email">{t('E-mail')}</label>
             <input id="su-email" className="input" type="email" autoComplete="email" inputMode="email" required value={email} onChange={(e) => setEmail(e.target.value)} />

@@ -20,6 +20,7 @@ import {
   WifiSlash,
   X,
 } from '@phosphor-icons/react';
+import { DemoTag, useDemoMarks } from './Samples';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Me } from '../App';
@@ -857,6 +858,7 @@ function moveLocal(v: ShopView, id: number, on: boolean, basket: boolean): ShopV
 function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore, onClaim, drag }: { i: ShopItem; big?: boolean; store?: boolean; fresh?: boolean; onCheck: (i: ShopItem, on: boolean) => void; onMore?: () => void; onClaim?: () => void; drag?: Record<string, unknown> }) {
   const on = Boolean(i.checked_at);
   const [checking, setChecking] = useState(false);
+  const isDemo = useDemoMarks().shopping.has(i.id);
   // every row shows where it came from (product rule): `origin` from the server, older servers: source + added_by
   const origin = i.origin ?? (i.source === 'manual' ? null : i.source);
   const qty = i.qty && i.qty !== 1 ? `${String(i.qty).replace('.', ',')}× ` : '';
@@ -901,8 +903,10 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
             {qty}
             {i.text}
           </span>
-          {(sub || i.claim) && (
+          {(sub || i.claim || isDemo) && (
             <span className="sub">
+              <DemoTag on={isDemo} />
+              {isDemo && (sub || i.claim) ? ' ' : ''}
               {i.claim && !big && on ? i.claim.name + (sub ? ' · ' : '') : ''}
               {sub}
             </span>

@@ -29,6 +29,15 @@ final class AppModel {
     /// ⌘F: search (pantry, or recipes while cooking)
     private(set) var searchRequest = 0
 
+    // MARK: sample data (package D, 1.0)
+
+    /// a new household is asked once: "Möchtest du Beispieldaten, um ToHuus kennenzulernen?"
+    var askSampleData = false
+    /// GET /api/tour (sample rows, the question, the reminder on Today)
+    var tour: TourInfo?
+    /// ids of sample rows – tagged quietly with "Beispiel"
+    var sampleMarks = DemoMarks()
+
     /// set until the screen that handles the shortcut has seen it (it may only appear after the area switch)
     var addPending = false
     var searchPending = false
@@ -119,6 +128,7 @@ final class AppModel {
         #if DEBUG
         requestedTab = UserDefaults.standard.string(forKey: "debugTab")
         if UserDefaults.standard.bool(forKey: "debugAssistant") { showAssistant = true }
+        if UserDefaults.standard.bool(forKey: "debugSampleQuestion") { askSampleData = true }
         #endif
     }
 
@@ -155,9 +165,10 @@ final class AppModel {
                                                               householdName: householdName, form: form, device: Self.deviceName)
         finishSignIn(server: server, mode: "cloud", response: res)
         if res.userName == nil { userName = name }
+        askSampleData = true
     }
 
-    private func finishSignIn(server: URL, mode: String, response: AppAuthResponse) {
+    func finishSignIn(server: URL, mode: String, response: AppAuthResponse) {
         let s = SessionInfo(serverURL: server, mode: mode, householdId: response.householdId, deviceName: Self.deviceName)
         s.save()
         SessionInfo.token = response.token
@@ -168,6 +179,8 @@ final class AppModel {
         SharedConfig.defaults.set(userName, forKey: Self.userKey)
         open(session: s, token: response.token)
         phase = .signedIn
+        // Sign in with Apple created a new household: ask about sample data right away
+        if response.created == true { askSampleData = true }
         Task { await refreshBilling() }
     }
 
@@ -192,6 +205,7 @@ final class AppModel {
             await PhoneWatchBridge.shared.handOverSession(api: api)
             await PushManager.shared.sendToken()
             await loadAIState()
+            await refreshSamples(askIfDue: true)
         }
     }
 
@@ -280,6 +294,9 @@ final class AppModel {
         households = []
         billing = nil
         userName = nil
+        tour = nil
+        sampleMarks = DemoMarks()
+        askSampleData = false
         notice = message
         phase = .start
     }

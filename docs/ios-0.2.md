@@ -214,3 +214,44 @@ initials, animal drawing or photo on the person's colour, like web people/Avatar
 Still web-only: guest and party board (`/bar`, kitchen view), the menu editor ("Was Gäste sich wünschen können"),
 per-link Hausinfo selection (`/api/house-guide/links/:id`), Hausinfo templates and access log, children and permanent
 guests (add), receipt e-mail forwarding setup.
+## 0.3 parity – account, onboarding, subscriptions, App Store (1.0, package D)
+
+The App Store app is **ToHuus Cloud only** (self-hosting stays with the web app/PWA, Home Assistant and MCP on GitHub).
+Debug builds keep `-debugServer <url> -debugToken <t> -debugHousehold <uuid>`; `-debugServer` alone points the start
+screen at another cloud (development).
+
+**New / changed screens**
+
+| Screen | File | Endpoints |
+|---|---|---|
+| Start: brand mark, "ToHuus merkt sich, was zu Hause fehlt.", Sign in with Apple, "Konto erstellen", "Anmelden", privacy + terms | `Features/Start/StartView.swift` | `GET /api/instance` |
+| Sign in: e-mail + password, "Mit Code aus einer E-Mail anmelden", "Mit Passkey anmelden" | same | `POST /api/auth/app`, `POST /api/auth/passkey/options { client: 'ios' }` → `…/verify { key, device, response }` |
+| Code by e-mail | same (`EmailCodeView`) | `POST /api/auth/link { email }`, `POST /api/auth/link/code { email, code, device }` |
+| Create account (with "Mit Apple registrieren") | same (`SignUpView`) | `POST /api/cloud/signup`, `POST /api/auth/apple` |
+| "Möchtest du Beispieldaten …?" (sheet after a new household; also when `GET /api/tour` → `start.due` for an admin) | `Features/Samples/SampleViews.swift` | `POST /api/tour/start { choice }` |
+| "Beispiel" tag on list, pantry and recipe rows | `SampleTag` in ShoppingView, PantryView (`ProductRow`), CookingView | `GET /api/tour/demo/marks` |
+| Heute: "Bereit für deine eigenen Sachen?" (once, after 3 days) | `SampleNudgeCard` in TodayView | `GET /api/tour` → `demo.nudge`, `POST /api/tour/demo/remove`, `POST /api/tour/demo/nudge` |
+| Mehr › Beispieldaten entfernen (admins, while there are sample rows) | `SampleDataSettingsSection` | `POST /api/tour/demo/remove { include_used: false }` |
+| Mehr › Konto löschen (2 taps) – password, or Sign in with Apple, or the mail code | `Features/Settings/AccountDeletion.swift` | `DELETE /api/cloud/account { password }` / `{ appleIdentityToken, appleNonce }` / `{ code }` |
+| Plans (per household): trial days left, what each plan includes, prices from StoreKit, "Preise gerade nicht verfügbar" when StoreKit has no products, restore, "Abo verwalten" (`manageSubscriptionsSheet`), redeem code, Apple EULA + our terms + privacy | `Features/Paywall/PaywallView.swift` | `GET /api/billing/status` (`plans`, `limits`, `trialEndsAt`, `renewsAt`, `expiresAt`, `manageUrl`), `POST /api/billing/apple/transaction` |
+
+Sign in with Apple: `SignInWithAppleButton` (black on light, white on dark), scopes name + e-mail, nonce = random 32 bytes
+(base64url), SHA-256 hex in the request, raw value to `POST /api/auth/apple`. Re-authentication for deleting the account
+uses `ASAuthorizationController` (`Features/Start/AuthKit.swift`, also the passkey assertion). Cancelling is silent.
+
+**project.yml**: `MARKETING_VERSION 1.0.0`, `CURRENT_PROJECT_VERSION 5`; app entitlements
+`com.apple.developer.applesignin: [Default]` and `com.apple.developer.associated-domains:
+[webcredentials:cloud.tohuus.heidrich-digital.de]` – **both capabilities must be enabled for the App ID in the developer
+account before the next signed build**. `ITSAppUsesNonExemptEncryption` stays `false`. Camera text without the server QR
+code. StoreKit configuration `ios/StoreKit/ToHuus.storekit` (the four products, German storefront) is set in the
+scheme's run action.
+
+**Privacy manifest** (`ToHuus/Resources/PrivacyInfo.xcprivacy`, in every target): no tracking; collected (linked, app
+functionality only): e-mail, name, user id, other user content, photos, audio (assistant), purchase history, other
+financial info (receipts). Required-reason APIs: UserDefaults only (CA92.1, 1C8F.1); no file timestamps, boot time,
+disk space or keyboard APIs (checked).
+
+**Notifications** are asked only in context (Mehr › Mitteilungen, and when switching on the shop hint) – never at launch.
+
+Debug launch args: `-debugSampleQuestion YES`, `-debugSignedOut YES` with `-debugStartSignUp YES` / `-debugStartSignIn YES` /
+`-debugStartCode YES`, `-debugPaywall YES`, `-debugSettings YES`.

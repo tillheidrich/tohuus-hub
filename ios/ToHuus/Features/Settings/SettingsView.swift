@@ -15,8 +15,10 @@ struct SettingsView: View {
     @State private var deleting = false
     @State private var error: String?
     @State private var showWeb = false
-    @State private var deletePassword = ""
     @State private var manageSubscriptions = false
+    /// how deleting the account is confirmed (GET /api/cloud/me): password, Apple or a mail code
+    @State private var hasPassword = true
+    @State private var appleLinked = false
 
     var body: some View {
         NavigationStack {
@@ -60,6 +62,7 @@ struct SettingsView: View {
                     NavigationLink { FactsView() } label: { Label(L("Good to know"), systemImage: "book") }
                     NavigationLink { HelpListView() } label: { Label(L("Help"), systemImage: "questionmark.circle") }
                 }
+                SampleDataSettingsSection()
                 Section(L("Plan & storage")) {
                     LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free") : L("Own server – everything included")))
                     if let b = app.billing, b.isPaid {
@@ -152,13 +155,8 @@ struct SettingsView: View {
             } message: {
                 Text(L("Changes that haven't been sent yet are lost."))
             }
-            .alert(L("Delete your account?"), isPresented: $confirmDelete) {
-                SecureField(L("Password"), text: $deletePassword)
-                Button(L("Delete account for good"), role: .destructive) { Task { await deleteAccount() } }
-                Button(L("Cancel"), role: .cancel) { deletePassword = "" }
-            } message: {
-                Text(L("Households only you belong to are deleted with all their data. From shared households you just leave – the others keep everything. Confirm with your password. An active App Store subscription must be cancelled in your Apple Account settings."))
-            }
+            .accountDeletion(isPresented: $confirmDelete, hasPassword: hasPassword, appleLinked: appleLinked,
+                             onError: { error = $0 }, onDeleted: { dismiss() })
             .manageSubscriptionsSheet(isPresented: $manageSubscriptions)
             .sheet(isPresented: $showWeb) {
                 if let api = app.api { WebSettingsView(api: api) }
@@ -172,7 +170,12 @@ struct SettingsView: View {
 
     private func load() async {
         await loadDevices()
-        if app.isCloud, let me = try? await app.api?.cloudMe() { email = me.email }
+        if app.isCloud, let me = try? await app.api?.cloudMe() {
+            email = me.email
+            hasPassword = me.hasPassword
+            appleLinked = me.appleLinked
+        }
+        await app.refreshSamples()
         await app.refreshBilling()
     }
 
@@ -180,15 +183,4 @@ struct SettingsView: View {
         if let d = try? await app.api?.devices() { devices = d }
     }
 
-    private func deleteAccount() async {
-        deleting = true
-        defer { deleting = false }
-        do {
-            try await app.deleteAccount(password: deletePassword)
-            deletePassword = ""
-            dismiss()
-        } catch {
-            self.error = APIError.from(error).localizedDescription
-        }
-    }
 }

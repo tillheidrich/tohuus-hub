@@ -135,7 +135,7 @@ manual household use the same endpoint with a session.
   `memberships` mirror in accounts.db is never trusted for this –, body `{ confirm: "<household name>", password }`):
   crypto-shredding first (the wrapped key is set to NULL in the same transaction that removes memberships and
   detaches sessions/tokens), then the folder and its local backups are removed.
-- `DELETE /api/cloud/account` (body `{ password }`): households the account has to itself – or where only permanent
+- `DELETE /api/cloud/account` (body `{ password }`, or `{ appleIdentityToken, appleNonce }` / `{ code }` – see [Sign in with Apple](#sign-in-with-apple)): households the account has to itself – or where only permanent
   guests would remain – are shredded; in shared households the person leaves, and if they were the last admin the
   longest-standing *member* becomes admin (never a guest, never an expired membership). The account's passkeys
   and WebAuthn user handle are deleted with it. Required by App Store guideline 5.1.1(v).
@@ -227,6 +227,59 @@ helpers are shared with the self-host member passkeys (`server/lib/auth-passkeys
 - A password reset or change does not remove passkeys (they are a separate credential); deleting the account does.
   Test: `test/cloud-passkeys.test.ts` (software authenticator, P-256).
 
+## Sign in with Apple
+
+Code: `server/lib/cloud-apple.ts` (token checks, account links), `server/routes/cloud-apple.ts` (routes). Cloud only.
+Test: `test/cloud-apple.test.ts` (a local RSA key and a fake JWKS – no network).
+
+- **Token checks**: the identity token (JWT, RS256) is verified against Apple's keys (`https://appleid.apple.com/auth/keys`,
+  cached 24 h, fetched again at most once a minute when a token names an unknown key): issuer
+  `https://appleid.apple.com`, audience = `APPLE_BUNDLE_ID` (app, default `de.heidrichdigital.tohuus`) or
+  `APPLE_SERVICES_ID` (web, default `de.heidrichdigital.tohuus.web`; `off` or empty hides the web button), expiry (30 s
+  tolerance), and the nonce: the client generates a raw nonce, puts SHA-256 (hex) of it into the Apple request and sends
+  the raw value to us; each nonce and each token works once (process memory). A token that carries a nonce is refused
+  without it; the web flow always needs one.
+- **Accounts**: `account_apple (sub PRIMARY KEY, account_id UNIQUE → accounts ON DELETE CASCADE, email, private_relay,
+  created_at, last_used_at)` in `accounts.db` (created on first use). A known `sub` signs in to its account. Otherwise a
+  verified Apple e-mail that equals a **verified** account's address links the two (once; another Apple ID cannot take a
+  linked account over – 409). An address that belongs to an unconfirmed account, or an unverified Apple address that
+  matches an account, is refused with 409 ("sign in with password or e-mail link first"). Everybody else gets a new
+  account (no password, `verified_at` set when Apple says the address is verified – private relay addresses are fine)
+  and a household with the 14-day trial, like `POST /api/cloud/signup`. No e-mail in the token and no account → 400.
+- **App**: `POST /api/auth/apple { identityToken, authorizationCode?, nonce, name?, device, client: 'ios', householdName?,
+  form?, lang?, region?, household? }` → `{ token, created, account, user, households, household }` (as `POST
+  /api/auth/app`; `created: true` = new household, the app asks about sample data). `name` = the given name Apple hands
+  the app on the very first sign-in only.
+- **Web** (no Apple JS SDK): the button links to `GET /api/auth/apple/start?next=/path` → cookie `sw_apple`
+  (`state.nonce.next`, 10 minutes, path `/api/auth/apple`, `SameSite=None; Secure` on https because Apple posts back
+  cross-site) and a redirect to `https://appleid.apple.com/auth/authorize?client_id=<Services ID>&redirect_uri=<BASE_URL>/api/auth/apple/callback&response_type=code%20id_token&response_mode=form_post&scope=name%20email&state=…&nonce=<sha256>`.
+  `POST /api/auth/apple/callback` (form_post: `state`, `id_token`, `code`, `user` on the first time) is exempt from the
+  same-origin check – it is bound to the state cookie instead – and answers `303` to `/willkommen` (new household),
+  `next` or `/?apple=expired|failed|exists|closed|busy|cancelled` (the sign-in page shows the reason). Session method
+  `apple` (counts as a fresh confirmation for 15 minutes, like an e-mail link).
+- `/api/instance` → `auth.apple: true` when the Services ID is set. Rate limits: 20 per 5 minutes per IP, 10 per Apple ID,
+  new accounts share the signup limit (5 per hour per IP).
+- **Apple setup**: App ID `de.heidrichdigital.tohuus` with the "Sign in with Apple" capability; a Services ID
+  `de.heidrichdigital.tohuus.web` with "Sign in with Apple" configured for the domain of `BASE_URL` and the return URL
+  `<BASE_URL>/api/auth/apple/callback`, grouped with the App ID as primary.
+- **Deleting the account** removes the link. Apple accounts without a password confirm with a fresh Sign in with Apple in
+  the app (`DELETE /api/cloud/account { appleIdentityToken, appleNonce }`, the token's `sub` must be the account's).
+  Accounts without password and without Apple confirm in the app with the code from the mail: the first call sends it
+  (`400 needEmailConfirm`), the second carries `{ code }` (password accounts always need the password).
+- **Open (TODO(apple-revoke) in `lib/cloud-apple.ts`)**: revoking Apple's tokens on deletion needs a Sign in with Apple key
+  (client secret). The exact steps are in the file header; nothing else changes when the key is added.
+
+## Sample data (cloud and self-host)
+
+A new household is asked once (web `/willkommen`, the app right after sign-up): "Möchtest du Beispieldaten, um ToHuus
+kennenzulernen?" → `POST /api/tour/start { choice: 'demo'|'empty' }` (as before; the cloud no longer skips the question).
+There is no banner: `GET /api/tour/demo/marks` → `{ products: [id], recipes: [id], shopping: [id] }` (ids only) lets the
+apps tag sample rows with a small "Beispiel". `GET /api/tour` → `demo.since` (oldest sample row) and `demo.nudge` (admins,
+sample rows for 3 days or more, not dismissed) – Today offers removing them once; "Erst mal behalten" =
+`POST /api/tour/demo/nudge` (admins). Removing (`POST /api/tour/demo/remove`, Settings and Today) deletes only marked rows;
+rows the household used since stay unless `include_used`. Test: `test/demo-flow.test.ts`, isolation in
+`test/cloud-isolation.test.ts`.
+
 ## E-mail language
 
 Account mails – address confirmation, sign-in link, password reset, account deleted, "new assistant connected" (OAuth) – are built and sent inside `inAccountLang(account.lang, …)` (`server/lib/account-mail.ts`, `withLang()` in `server/i18n.ts`), so subject, title, text, button, footer and the `<html lang>` all use **the account's language** (`accounts.lang`, stored at signup from `lang`; accounts created through an invitation get the household's language). Without a stored language the household's (or the instance's) language is used. Invitation mails go out in the inviting household's language (the invitee has no account yet). The footer says "ToHuus Cloud" in the cloud and "euer Haushalt, selbst gehostet" self-hosted. Test: a `lang: 'de'` signup gets no English template text (`test/cloud-isolation.test.ts`).
@@ -261,6 +314,7 @@ both modes. The links live in process memory (sign-in material, not household da
 
 ## Subscriptions: renewal date, "Abo verwalten", reminder
 
+- `GET /api/billing/status` also returns `plans: { free, haushalt, plus }` (each with the fields of `limits`: `historyDays`, `assistantPerMonth`, `assistantThrottleOnly`, `receiptAiPerDay`, `importAiPerDay`, `storageBytes`, `features`) so the paywall can say what each plan includes; `null` self-hosted.
 - `GET /api/billing/status` also returns `renewsAt` (the next charge from the App Store renewal info – `signedRenewalInfo.renewalDate` – or the end of the paid period; `null` when auto-renew is off), `expiresAt` (paid until), `autoRenew` (true/false/null), `period` (`monthly`/`yearly`), `manageUrl` and `reminder` (the caller's own choice). `source` can now also be `operator` (granted on `/betrieb`).
 - **"Abo verwalten"**: `manageUrl` is `https://apps.apple.com/account/subscriptions` (Apple's subscription management) whenever the plan comes from the App Store. The web app links to it; the iPhone app should call `AppStore.showManageSubscriptions(in:)` and fall back to that URL.
 - **Reminder**: App Store Server Notifications v2 store the renewal date and auto-renew state per household (`billing_renewals` in `accounts.db`, `server/lib/renewals.ts`). An hourly job e-mails the household's admins **3 days before a yearly renewal**, once per renewal date, in each account's language, with the "Abo verwalten" link – unless the household switched e-mail off for the event `billing.renewal` (notification settings) or the admin switched it off for themselves: `PATCH /api/billing/reminder { enabled }` (`user_prefs billing.reminder`, default on). Monthly plans get no reminder. Test: `test/cloud-billing.test.ts` with fake signed notifications.

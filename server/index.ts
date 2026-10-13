@@ -68,6 +68,7 @@ import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
 import { cloudContext } from './lib/cloud-auth.js';
 import { appAuth, cloud as cloudRoutes, cloudPub, instance, wellKnown } from './routes/cloud.js';
+import { appleAuth } from './routes/cloud-apple.js';
 import { r as billingRoutes, pub as billingPublic } from './routes/billing.js';
 import { serveImage, signImagesForTokenClients } from './lib/images.js';
 import { NoHouseholdError, currentHousehold } from './lib/tenancy.js';
@@ -114,6 +115,8 @@ const ownOrigin = new URL(config.baseUrl).origin;
 app.use('/api', (req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
   // only Bearer/x-api-key requests are token-authenticated (resolveActor never falls back to the cookie for them)
+  // Apple's form_post comes from appleid.apple.com; it is bound to our own state cookie instead (routes/cloud-apple.ts)
+  if (config.multiTenant && req.path === '/auth/apple/callback') return next();
   if (req.path.startsWith('/guest/') || req.headers.authorization?.startsWith('Bearer ') || typeof req.headers['x-api-key'] === 'string') return next();
   const origin = req.headers.origin;
   const site = req.headers['sec-fetch-site'];
@@ -145,6 +148,8 @@ app.use('/api', factsRoutes);
 app.use('/api', appAuth);
 app.use('/api', billingPublic);
 if (config.multiTenant) {
+  // Sign in with Apple (app token or cookie session, web redirect flow) – routes/cloud-apple.ts
+  app.use('/api', appleAuth);
   app.use('/api', cloudPub);
   app.use('/api', cloudRoutes);
   // operator page /betrieb: aggregates only (lib/operator.ts)

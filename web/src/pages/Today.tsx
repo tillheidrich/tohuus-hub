@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
+import { DemoNudge } from './Samples';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
@@ -89,6 +90,7 @@ export function Today({ me }: { me: Me }) {
     <div className="today2">
       {head}
       {d.notices.length > 0 && <Notices list={d.notices} />}
+      {!gl && <DemoNudge />}
       <TodayCards
         cards={[
           ['rhythm', <DueCard items={d.rhythm} legacy={d.legacy} />],

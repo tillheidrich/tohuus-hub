@@ -41,7 +41,7 @@ const bearerOf = (req: Request): string | null => {
 };
 
 /** Sign-in, signup, e-mail links, password reset, app sign-in: account level, no household from the request. */
-const PRE_AUTH = /^\/api\/(auth\/(login|logout|link|link\/open|email\/verify|reset|reset\/check|reset\/confirm|app|options|passkey\/options|passkey\/verify)|cloud\/signup)\/?$/;
+const PRE_AUTH = /^\/api\/(auth\/(login|logout|link|link\/open|email\/verify|reset|reset\/check|reset\/confirm|app|options|passkey\/options|passkey\/verify|apple|apple\/start|apple\/callback)|cloud\/signup)\/?$/;
 
 /** Every string in the path, the query and the top level of a JSON body that carries a household routing prefix. */
 function prefixedSlugs(req: Request, includeBody: boolean): string[] {

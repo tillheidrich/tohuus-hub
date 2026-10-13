@@ -7,7 +7,7 @@ import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import { seedKidsDemo } from '../lib/kids.js';
 import { onboardState, updateOnboardState } from '../lib/onboard.js';
-import { ResetError, SCOPES, dataOverview, demoStatus, removeDemo, resetData, setTourState, startChoice, tourState } from '../lib/tour.js';
+import { ResetError, SCOPES, dataOverview, demoMarks, demoNudge, demoStatus, dismissDemoNudge, removeDemo, resetData, setTourState, startChoice, tourState } from '../lib/tour.js';
 import { seedDemo } from '../seed.js';
 
 export const r = Router();
@@ -24,10 +24,12 @@ r.get('/tour', (req, res) => {
   const id = uid(req);
   const demo = demoStatus();
   const start = startChoice();
+  const nudge = demoNudge();
   res.json({
     tour: id ? tourState(id) : null,
     admin: isAdmin(req),
-    demo: { rows: demo.rows, products: demo.products, recipes: demo.recipes, used: demo.used },
+    // since: when the sample data came in; nudge: Today offers removing it once (admins, after a few days)
+    demo: { rows: demo.rows, products: demo.products, recipes: demo.recipes, used: demo.used, since: nudge.since, nudge: nudge.nudge && isAdmin(req) },
     start: { choice: start.choice, due: isAdmin(req) && start.due },
   });
 });
@@ -79,6 +81,16 @@ r.post('/tour/demo', requireAdmin, (_req, res) => {
   }
   emit('stock', 'products', 'shopping', 'recipes', 'settings', 'tour');
   res.json({ ok: true, demo: demoStatus() });
+});
+
+/** Ids of the sample rows (products, recipes, list rows) – the apps tag them quietly with "Beispiel". */
+r.get('/tour/demo/marks', (_req, res) => res.json(demoMarks()));
+
+/** "Behalten" on the reminder on Today: it does not come back. */
+r.post('/tour/demo/nudge', requireAdmin, (_req, res) => {
+  dismissDemoNudge();
+  emit('tour');
+  res.json({ ok: true });
 });
 
 /** Remove exactly the demo rows; demo things the household has used since stay unless include_used. */

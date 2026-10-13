@@ -8,6 +8,7 @@ import { t } from '../i18n';
 import { QuickCheckButton, WasteCard } from './FreshParts';
 import { BoxesStock } from './Leftovers';
 import { StarterSheet } from './Onboarding';
+import { DemoTag, useDemoMarks } from './Samples';
 
 // English labels, translated at render time with t()
 const STATUS_FILTERS: [string, string][] = [
@@ -20,6 +21,7 @@ const STATUS_FILTERS: [string, string][] = [
 ];
 
 export function Stock({ onNew }: { onNew: () => void }) {
+  const demo = useDemoMarks();
   const [params, setParams] = useSearchParams();
   const products = useApi<Product[]>('products', '/products');
   const locations = useApi<Location[]>('locations', '/locations');
@@ -182,6 +184,8 @@ export function Stock({ onNew }: { onNew: () => void }) {
                     <div className="grow">
                       <div className="title">{p.name}</div>
                       <div className="sub">
+                        <DemoTag on={demo.products.has(p.id)} />
+                        {demo.products.has(p.id) ? ' ' : ''}
                         {[p.brand, p.size, p.nextExpiry && p.total > 0 ? expiryText(p.nextExpiry) : null].filter(Boolean).join(' · ') || ' '}
                       </div>
                       <div style={{ marginTop: 4 }}>

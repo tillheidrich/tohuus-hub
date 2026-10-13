@@ -42,6 +42,7 @@ import { currentPlan } from '../lib/plans.js';
 import * as accountsModule from '../lib/accounts.js';
 import * as cloudAuthModule from '../lib/cloud-auth.js';
 import * as cloudPasskeys from '../lib/cloud-passkeys.js';
+import * as cloudApple from '../lib/cloud-apple.js';
 import { householdPerson, isHouseholdAdmin, syncMembership } from '../lib/membership-sync.js';
 
 export const instance = Router();
@@ -103,6 +104,8 @@ instance.get('/instance', (_req, res) => {
       // cloud: account passkeys, RP-ID = host of BASE_URL (lib/cloud-passkeys.ts); self-host: the household policy
       passkey: cloudMode() || authPolicy().passkeys,
       oidc: !cloudMode() && ssoReady(),
+      // Sign in with Apple (cloud only): the web button needs the Services ID (lib/cloud-apple.ts); the app always can
+      apple: cloudMode() && Boolean(cloudApple.appleServicesId()),
     },
     signup: cloudMode() && config.signupOpen,
     features: (() => {
@@ -300,17 +303,31 @@ function currentTokenHash(req: Request) {
  * (e-mail links only) confirms with a fresh e-mail link: the first call sends it, opening it within 15 minutes
  * makes the session fresh, and the call is repeated.
  */
-export async function confirmAccount(req: Request, accountId: number, password: string | undefined) {
+export async function confirmAccount(req: Request, accountId: number, password: string | undefined, apple?: { identityToken?: string; nonce?: string }, code?: string) {
   const acc = await A();
   const a = acc.accountById(accountId)!;
+  // an account linked to Apple can confirm with a fresh Sign in with Apple in the app (same Apple ID)
+  if (apple?.identityToken) {
+    if (rateLimitedGlobal(`confirm:${accountId}`, 8, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    const id = await cloudApple.verifyAppleIdentityToken(apple.identityToken, { audience: cloudApple.appleAudience('ios'), nonce: apple.nonce ?? null });
+    if (cloudApple.appleAccountOf(id.sub) !== accountId) throw new AuthError(400, t('That Apple ID belongs to another account.'));
+    return;
+  }
   if (a.password_hash?.startsWith('scrypt$')) {
     if (rateLimitedGlobal(`confirm:${accountId}`, 8, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     if (!password || !(await verifyPassword(password, a.password_hash))) throw new AuthError(400, t('Please confirm with your password.'), { needPassword: true });
     return;
   }
+  // the iPhone app has no browser session: it types the 6-digit code from the confirmation mail instead
+  if (code) {
+    const r = (await import('../lib/cloud-codes.js')).useSignInCode(accountId, code.replace(/\s+/g, ''));
+    if (r.ok) return;
+    if (r.reason === 'expired') throw new AuthError(410, t('This code has run out. Ask for a new mail.'), { needEmailConfirm: true });
+    throw new AuthError(400, t('That code doesn’t match. Check the mail and try again.'), { needEmailConfirm: true });
+  }
   const id = (await CA()).cloudIdentity(req);
   const s = id?.sessionId ? (acc.accountsDb().prepare('SELECT method, created_at FROM sessions WHERE id = ?').get(id.sessionId) as { method: string; created_at: string } | undefined) : undefined;
-  if (s && /link|email/.test(s.method) && Date.parse(s.created_at.replace(' ', 'T') + 'Z') > Date.now() - 15 * 60_000) return;
+  if (s && /link|email|apple/.test(s.method) && Date.parse(s.created_at.replace(' ', 'T') + 'Z') > Date.now() - 15 * 60_000) return;
   await sendCloudSignInLink(a.email);
   throw new AuthError(400, t('We sent you an e-mail. Open the link in it, then try again within 15 minutes.'), { needEmailConfirm: true });
 }
@@ -355,7 +372,7 @@ async function cloudPasswordCheck(req: Request, emailRaw: string, password: stri
 }
 
 /** Account, memberships and the active household – the shape of /api/cloud/me (and of the app sign-in answer). */
-async function cloudMe(accountId: number, active: string | null) {
+export async function cloudMe(accountId: number, active: string | null) {
   const acc = await A();
   const a = acc.accountById(accountId)!;
   const ms = acc.membershipsOf(accountId);
@@ -367,7 +384,17 @@ async function cloudMe(accountId: number, active: string | null) {
     user = runInHousehold({ id: act.id, via: 'me' }, () => (db.prepare('SELECT id, name, role FROM users WHERE id = ?').get(m.user_id) as typeof user) ?? null);
   }
   return {
-    account: { id: a.id, email: a.email, name: a.name, verified: Boolean(a.verified_at), lang: a.lang },
+    account: {
+      id: a.id,
+      email: a.email,
+      name: a.name,
+      verified: Boolean(a.verified_at),
+      lang: a.lang,
+      /** how destructive actions are confirmed: password, or (none) an e-mail link / Sign in with Apple */
+      hasPassword: Boolean(a.password_hash?.startsWith('scrypt$')),
+      /** linked to Sign in with Apple */
+      apple: Boolean(cloudApple.appleLinkOf(a.id)),
+    },
     user,
     households,
     household: act,
@@ -378,7 +405,7 @@ function setSessionCookie(res: Response, token: string) {
   res.cookie(SESSION_COOKIE, token, { ...cookieBase(), maxAge: 180 * 86400000, path: '/' });
 }
 
-async function startCloudSession(req: Request, res: Response, accountId: number, householdId: string | null, method: string) {
+export async function startCloudSession(req: Request, res: Response, accountId: number, householdId: string | null, method: string) {
   const acc = await A();
   const prev = req.cookies?.[SESSION_COOKIE];
   if (typeof prev === 'string') acc.destroyCloudSession(prev);
@@ -387,10 +414,10 @@ async function startCloudSession(req: Request, res: Response, accountId: number,
 }
 
 const FORM_MAP: Record<string, 'single' | 'couple' | 'family' | 'shared' | 'carer'> = { single: 'single', couple: 'couple', family: 'family', wg: 'shared', shared: 'shared', carer: 'carer' };
-const PLAN_FORMS = ['single', 'couple', 'family', 'wg', 'shared', 'carer'] as const;
+export const PLAN_FORMS = ['single', 'couple', 'family', 'wg', 'shared', 'carer'] as const;
 
 /** Create a household for an account: directory entry, database with defaults, first admin, membership. */
-async function createHouseholdFor(accountId: number, input: { householdName: string; name: string; email: string; form: string; lang: string; region: string }) {
+export async function createHouseholdFor(accountId: number, input: { householdName: string; name: string; email: string; form: string; lang: string; region: string }) {
   const acc = await A();
   const h = acc.createHouseholdRow({ name: input.householdName, form: input.form, lang: input.lang, region: input.region, trial: true });
   const userId = runInHousehold({ id: h.id, via: 'signup' }, () => {
@@ -413,7 +440,7 @@ async function createHouseholdFor(accountId: number, input: { householdName: str
   return h;
 }
 
-async function sendVerifyMail(accountId: number, email: string, householdId: string | null) {
+export async function sendVerifyMail(accountId: number, email: string, householdId: string | null) {
   const acc = await A();
   const token = acc.createAuthLink('verify', accountId, 3 * 24 * 60);
   // the whole mail in the account's language (stored at signup) – subject, text, button and footer alike
@@ -852,8 +879,18 @@ cloud.delete(
     const id = await identity(req);
     const acc = await A();
     const a = acc.accountById(id.accountId)!;
-    const b = z.object({ password: z.string().max(200).optional(), confirm: z.string().max(254).optional() }).parse(req.body ?? {});
-    await confirmAccount(req, a.id, b.password);
+    const b = z
+      .object({
+        password: z.string().max(200).optional(),
+        confirm: z.string().max(254).optional(),
+        /** Apple-linked accounts: a fresh Sign in with Apple instead of the password */
+        appleIdentityToken: z.string().max(8000).optional(),
+        appleNonce: z.string().max(200).optional(),
+        /** accounts without a password, in the app: the code from the confirmation mail */
+        code: z.string().max(20).optional(),
+      })
+      .parse(req.body ?? {});
+    await confirmAccount(req, a.id, b.password, { identityToken: b.appleIdentityToken, nonce: b.appleNonce }, b.code);
     const shredded: string[] = [];
     const left: string[] = [];
     for (const m of acc.membershipsOf(a.id)) {
@@ -886,6 +923,8 @@ cloud.delete(
     }
     // the account's passkeys go with it (also ON DELETE CASCADE)
     cloudPasskeys.deleteAccountPasskeys(a.id);
+    // and its Sign in with Apple link (token revocation needs a client secret: TODO(apple-revoke) in lib/cloud-apple.ts)
+    cloudApple.deleteAppleLinks(a.id);
     acc.accountsDb().prepare('DELETE FROM accounts WHERE id = ?').run(a.id);
     res.clearCookie(SESSION_COOKIE, { path: '/' });
     // confirmation, in the account's language (the address is gone from our side once this is sent)

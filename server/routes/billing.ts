@@ -19,7 +19,7 @@ import {
   type AppleRenewal,
   type AppleTransaction,
 } from '../lib/apple.js';
-import { APPLE_PRODUCTS, checkStorage, currentPlan, limits, usage } from '../lib/plans.js';
+import { APPLE_PRODUCTS, PLAN_LIMITS, checkStorage, currentPlan, limits, usage, type Limits } from '../lib/plans.js';
 import { currentHousehold } from '../lib/tenancy.js';
 import { APPLE_MANAGE_URL, recordRenewal, reminderWanted, renewalOf } from '../lib/renewals.js';
 import { db } from '../db.js';
@@ -66,8 +66,20 @@ export function billingStatus() {
       storageBytes: st.usedBytes,
     },
     products: config.multiTenant ? Object.entries(APPLE_PRODUCTS).map(([id, p]) => ({ id, ...p })) : [],
+    /** what each plan includes (the paywall explains them in plain words) – same fields as `limits` */
+    plans: config.multiTenant ? { free: planLimits(PLAN_LIMITS.free), haushalt: planLimits(PLAN_LIMITS.haushalt), plus: planLimits(PLAN_LIMITS.plus) } : null,
   };
 }
+
+const planLimits = (l: Limits) => ({
+  historyDays: l.historyDays,
+  assistantPerMonth: nullIfInf(l.assistantPerMonth),
+  assistantThrottleOnly: l.assistantThrottleOnly,
+  receiptAiPerDay: l.receiptAiPerDay,
+  importAiPerDay: l.importAiPerDay,
+  storageBytes: l.storageBytes,
+  features: l.features,
+});
 
 const wrap =
   (fn: (req: Request, res: Response) => unknown) =>

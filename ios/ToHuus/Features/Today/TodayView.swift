@@ -87,6 +87,7 @@ struct TodayView: View {
                     if let error = model.error { ErrorBanner(message: error) { Task { await model.load(store) } } }
                     if let t = model.today {
                         ForEach(t.notices) { n in noticeRow(n) }
+                        SampleNudgeCard()
                         if !t.rhythm.isEmpty { dueCard(t.rhythm) }
                         listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])
                         if !t.stillHave.isEmpty && app.moduleOn("stock") { EatSoonCard(items: t.stillHave, store: store) }

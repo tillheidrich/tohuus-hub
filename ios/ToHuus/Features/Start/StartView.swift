@@ -1,190 +1,203 @@
+import AuthenticationServices
 import SwiftUI
 
-/// First screen: ToHuus Cloud (default) or own server, then sign up / sign in.
+/// First screen of the App Store app – ToHuus Cloud only (self-hosting lives on GitHub with the web app):
+/// brand, one-line promise, "Konto erstellen", "Anmelden", Sign in with Apple, privacy and terms.
 struct StartView: View {
     @Environment(AppModel.self) private var app
     @State private var path: [Step] = []
-    @State private var serverText = ""
-    @State private var showScanner = false
-    @State private var busy = false
     @State private var error: String?
 
     enum Step: Hashable {
-        case cloud(URL)
-        case signIn(URL, String)
-        case signUp(URL)
+        case signIn
+        case signUp
+        case code
     }
 
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Space.s6) {
+                VStack(spacing: Theme.Space.s6) {
                     header
                     if let notice = app.notice {
                         Text(notice).font(.subheadline).foregroundStyle(Theme.info)
                             .padding(Theme.Space.s3).frame(maxWidth: .infinity, alignment: .leading)
                             .background(Theme.infoSoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
                     }
-                    Card(title: L("ToHuus Cloud"), systemImage: "cloud") {
-                        Text(L("The easiest way: we run the server and store your household encrypted. Free to start."))
-                            .font(.subheadline).foregroundStyle(Theme.ink2)
-                        Button(L("Continue with ToHuus Cloud")) { Task { await connectCloud() } }
+                    VStack(spacing: Theme.Space.s3) {
+                        AppleSignInButton(kind: .signIn, error: $error)
+                        Button(L("Create account")) { path.append(.signUp) }
                             .buttonStyle(PrimaryButtonStyle())
-                            .disabled(busy)
-                    }
-                    Card(title: L("Own server"), systemImage: "server.rack") {
-                        Text(L("You run ToHuus yourself (Docker, Home Assistant). Everything is included."))
-                            .font(.subheadline).foregroundStyle(Theme.ink2)
-                        TextField(L("Address, e.g. tohuus.example.de"), text: $serverText)
-                            .textContentType(.URL)
-                            .keyboardType(.URL)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .padding(12)
-                            .background(Theme.canvas, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
-                            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(Theme.lineStrong, lineWidth: 1))
-                            .onSubmit { Task { await connectOwn() } }
-                        HStack(spacing: Theme.Space.s3) {
-                            Button {
-                                showScanner = true
-                            } label: {
-                                Label(L("Scan QR code"), systemImage: "qrcode.viewfinder")
-                            }
+                        Button(L("Sign in")) { path.append(.signIn) }
                             .buttonStyle(SecondaryButtonStyle())
-                            Button(L("Connect")) { Task { await connectOwn() } }
-                                .buttonStyle(SecondaryButtonStyle())
-                                .disabled(serverText.trimmingCharacters(in: .whitespaces).isEmpty || busy)
-                        }
                     }
-                    if busy { ProgressView().frame(maxWidth: .infinity) }
                     if let error { ErrorBanner(message: error) }
+                    Text(L("14 days with everything, without payment details. Then Free, unless you choose a plan."))
+                        .font(.footnote).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
+                    LegalLinks()
                 }
                 .padding(Theme.Space.s5)
+                .frame(maxWidth: 520)
+                .frame(maxWidth: .infinity)
             }
             .canvasBackground()
             .navigationDestination(for: Step.self) { step in
                 switch step {
-                case .cloud(let url): CloudChoiceView(server: url, path: $path)
-                case .signIn(let url, let mode): SignInView(server: url, mode: mode)
-                case .signUp(let url): SignUpView(server: url)
+                case .signIn: SignInView(path: $path)
+                case .signUp: SignUpView()
+                case .code: EmailCodeView()
                 }
             }
+            .task { _ = try? await app.loadInstance(app.cloudServer) }
             #if DEBUG
             .onAppear {
-                if let raw = UserDefaults.standard.string(forKey: "debugStartSignup"), let url = URL(string: raw) {
-                    Task {
-                        _ = try? await app.loadInstance(url)
-                        path = [.cloud(url), .signUp(url)]
-                    }
-                }
+                let d = UserDefaults.standard
+                if d.string(forKey: "debugStartSignup") != nil || d.bool(forKey: "debugStartSignUp") { path = [.signUp] }
+                else if d.bool(forKey: "debugStartSignIn") { path = [.signIn] }
+                else if d.bool(forKey: "debugStartCode") { path = [.code] }
             }
             #endif
-            .sheet(isPresented: $showScanner) {
-                ScannerSheet(title: L("Scan QR code"), symbologies: [.qr]) { code in
-                    serverText = code
-                    Task { await connectOwn() }
-                }
-            }
         }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.s2) {
-            Image(systemName: "house.fill")
-                .font(.system(size: 34))
-                .foregroundStyle(Theme.primary)
-            Text(L("Welcome to ToHuus")).font(Theme.title())
-                .foregroundStyle(Theme.ink)
-            Text(L("ToHuus remembers what is missing at home, what you can cook and where the money goes."))
-                .font(.body).foregroundStyle(Theme.ink2)
+        VStack(spacing: Theme.Space.s3) {
+            BrandMark(size: 72)
+                .padding(.top, Theme.Space.s10)
+                .accessibilityHidden(true)
+            Text("ToHuus").font(Theme.title(34)).foregroundStyle(Theme.ink)
+            Text(L("ToHuus remembers what’s missing at home."))
+                .font(.title3).foregroundStyle(Theme.ink2)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.top, Theme.Space.s6)
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, Theme.Space.s4)
+    }
+}
+
+/// The house mark of ToHuus: green house, mustard door (the web's BrandMark).
+struct BrandMark: View {
+    var size: CGFloat = 48
+
+    var body: some View {
+        Canvas { ctx, s in
+            let w = s.width, h = s.height
+            var house = Path()
+            house.move(to: CGPoint(x: w * 0.5, y: h * 0.08))
+            house.addLine(to: CGPoint(x: w * 0.94, y: h * 0.44))
+            house.addLine(to: CGPoint(x: w * 0.94, y: h * 0.94))
+            house.addLine(to: CGPoint(x: w * 0.06, y: h * 0.94))
+            house.addLine(to: CGPoint(x: w * 0.06, y: h * 0.44))
+            house.closeSubpath()
+            ctx.fill(house, with: .color(Theme.primary))
+            let door = Path(roundedRect: CGRect(x: w * 0.39, y: h * 0.58, width: w * 0.22, height: h * 0.36),
+                            cornerSize: CGSize(width: w * 0.11, height: w * 0.11), style: .continuous)
+            ctx.fill(door, with: .color(Theme.mustard))
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+/// Privacy policy and terms (instance links, else the ToHuus site) – shown on the start screen and the paywall.
+struct LegalLinks: View {
+    @Environment(AppModel.self) private var app
+    /// the paywall also lists Apple's standard licence agreement (App Review 3.1.2)
+    var withAppleEULA = false
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s4) {
+            Link(L("Privacy"), destination: Legal.privacy(app.instance))
+            Link(L("Terms"), destination: Legal.terms(app.instance))
+            if withAppleEULA { Link(L("Terms of Use (EULA)"), destination: SharedConfig.termsURL) }
+        }
+        .font(.footnote)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+enum Legal {
+    private static var german: Bool { Locale.current.language.languageCode?.identifier == "de" }
+    static func privacy(_ i: InstanceInfo?) -> URL {
+        i?.legal?.privacy.flatMap(URL.init(string:))
+            ?? URL(string: german ? "https://tohuus.heidrich-digital.de/de/datenschutz.html" : "https://tohuus.heidrich-digital.de/privacy.html")!
     }
 
-    private func connectCloud() async {
-        busy = true
-        defer { busy = false }
-        error = nil
-        _ = try? await app.loadInstance(SharedConfig.cloudURL)
-        path.append(.cloud(SharedConfig.cloudURL))
+    static func terms(_ i: InstanceInfo?) -> URL {
+        i?.legal?.terms.flatMap(URL.init(string:))
+            ?? URL(string: german ? "https://tohuus.heidrich-digital.de/de/nutzungsbedingungen.html" : "https://tohuus.heidrich-digital.de/terms.html")!
+    }
+}
+
+/// Apple's own button (black on light, white on dark), with the nonce handling.
+struct AppleSignInButton: View {
+    enum Kind { case signIn, signUp }
+    @Environment(AppModel.self) private var app
+    @Environment(\.colorScheme) private var scheme
+    let kind: Kind
+    @Binding var error: String?
+    @State private var nonce = ""
+    @State private var busy = false
+
+    var body: some View {
+        SignInWithAppleButton(kind == .signIn ? .signIn : .continue) { req in
+            nonce = AppleNonce.make()
+            req.requestedScopes = [.fullName, .email]
+            req.nonce = AppleNonce.sha256(nonce)
+        } onCompletion: { result in
+            switch result {
+            case .success(let auth):
+                guard let cred = AppleCredential(auth) else {
+                    error = L("Sign in with Apple didn’t work. Please try again.")
+                    return
+                }
+                let n = nonce
+                Task { await finish(cred, nonce: n) }
+            case .failure(let e):
+                if !AuthorizationRunner.cancelled(e) { error = L("Sign in with Apple didn’t work. Please try again.") }
+            }
+        }
+        .signInWithAppleButtonStyle(scheme == .dark ? .white : .black)
+        .frame(height: 50)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
+        .disabled(busy)
+        .overlay { if busy { ProgressView().tint(scheme == .dark ? .black : .white) } }
     }
 
-    private func connectOwn() async {
-        guard let url = AppModel.normalise(serverText) else {
-            error = APIError.invalidURL.localizedDescription
-            return
-        }
+    private func finish(_ cred: AppleCredential, nonce: String) async {
         busy = true
         defer { busy = false }
         error = nil
         do {
-            let info = try await app.loadInstance(url)
-            // a ToHuus Cloud at another address (staging, development) offers sign-up too
-            path.append(info.isCloud && info.signup == true ? .cloud(url) : .signIn(url, info.isCloud ? "cloud" : "selfhost"))
+            try await app.signInWithApple(cred, nonce: nonce)
         } catch {
-            self.error = L("ToHuus could not reach this server. Check the address and that the server is running.")
+            self.error = APIError.from(error).localizedDescription
         }
     }
 }
 
-/// ToHuus Cloud: create a household or sign in.
-struct CloudChoiceView: View {
-    @Environment(AppModel.self) private var app
-    let server: URL
-    @Binding var path: [StartView.Step]
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Theme.Space.s4) {
-                Text(L("ToHuus Cloud")).font(Theme.title())
-                Text(L("New here? Set up your household in a minute. Every new household gets 14 days of Plus, without payment details."))
-                    .foregroundStyle(Theme.ink2)
-                Button(L("Create household")) { path.append(.signUp(server)) }
-                    .buttonStyle(PrimaryButtonStyle())
-                Button(L("I already have an account")) { path.append(.signIn(server, "cloud")) }
-                    .buttonStyle(SecondaryButtonStyle())
-                if let privacy = app.instance?.legal?.privacy, let url = URL(string: privacy) {
-                    Link(L("Privacy"), destination: url).font(.footnote)
-                }
-            }
-            .padding(Theme.Space.s5)
-        }
-        .canvasBackground()
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
+/// E-mail and password; or a code from the mail; or a passkey.
 struct SignInView: View {
     @Environment(AppModel.self) private var app
-    let server: URL
-    let mode: String
+    @Binding var path: [StartView.Step]
     @State private var login = ""
     @State private var password = ""
-    @State private var code = ""
-    @State private var showCode = false
     @State private var busy = false
     @State private var error: String?
+    @State private var runner = AuthorizationRunner()
 
     var body: some View {
         Form {
             Section {
-                Text(server.host() ?? server.absoluteString).foregroundStyle(Theme.ink2)
-            } header: {
-                Text(L("Server"))
-            }
-            Section {
-                TextField(mode == "cloud" ? L("E-mail") : L("Name or e-mail"), text: $login)
+                TextField(L("E-mail"), text: $login)
                     .textContentType(.username)
-                    .keyboardType(mode == "cloud" ? .emailAddress : .default)
+                    .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 SecureField(L("Password"), text: $password)
                     .textContentType(.password)
-                if showCode {
-                    TextField(L("Code from your authenticator app"), text: $code)
-                        .textContentType(.oneTimeCode)
-                        .keyboardType(.numberPad)
-                }
+                    .onSubmit { Task { await submit() } }
             }
             if let error {
                 Section { Text(error).foregroundStyle(Theme.empty) }
@@ -200,10 +213,25 @@ struct SignInView: View {
                     }
                 }
                 .disabled(login.isEmpty || password.isEmpty || busy)
-            } footer: {
-                if mode != "cloud" {
-                    Text(L("Passkeys, e-mail links and SSO work in the web app. In the app, sign in with your password."))
+            }
+            Section {
+                Button {
+                    path.append(.code)
+                } label: {
+                    Label(L("Sign in with a code from an e-mail"), systemImage: "envelope")
                 }
+                if app.instance?.auth?.passkey?.bool ?? true {
+                    Button {
+                        Task { await passkey() }
+                    } label: {
+                        Label(L("Sign in with passkey"), systemImage: "person.badge.key")
+                    }
+                    .disabled(busy)
+                }
+            } header: {
+                Text(L("Without a password"))
+            } footer: {
+                Text(L("Forgot your password? Sign in with a code from an e-mail, then set a new one in the web app."))
             }
         }
         .scrollContentBackground(.hidden)
@@ -212,31 +240,117 @@ struct SignInView: View {
     }
 
     private func submit() async {
+        guard !login.isEmpty, !password.isEmpty else { return }
         busy = true
         defer { busy = false }
         error = nil
         do {
-            try await app.signIn(server: server, mode: mode, login: login.trimmingCharacters(in: .whitespaces), password: password,
-                                 code: showCode ? code : nil)
+            try await app.signIn(server: app.cloudServer, mode: "cloud", login: login.trimmingCharacters(in: .whitespaces), password: password, code: nil)
         } catch let e as APIError {
-            if case .server(401, let m) = e {
-                error = m
-                if m.lowercased().contains("code") { showCode = true }
-            } else if case .notFound = e {
-                error = L("This server is too old for the app. Please update ToHuus on the server.")
-            } else {
-                error = e.localizedDescription
-            }
+            if case .server(401, let m) = e { error = m } else { error = e.localizedDescription }
         } catch {
             self.error = error.localizedDescription
         }
     }
+
+    private func passkey() async {
+        busy = true
+        defer { busy = false }
+        error = nil
+        do {
+            try await app.signInWithPasskey(runner: runner)
+        } catch {
+            if !AuthorizationRunner.cancelled(error) { self.error = APIError.from(error).localizedDescription }
+        }
+    }
 }
 
-/// ToHuus Cloud sign-up with the one onboarding question "Wer gehört dazu?".
+/// Sign-in without a password: the mail carries a 6-digit code (POST /api/auth/link → /api/auth/link/code).
+struct EmailCodeView: View {
+    @Environment(AppModel.self) private var app
+    @State private var email = ""
+    @State private var code = ""
+    @State private var sent = false
+    @State private var busy = false
+    @State private var error: String?
+    @FocusState private var codeFocused: Bool
+
+    var body: some View {
+        Form {
+            Section {
+                TextField(L("E-mail"), text: $email)
+                    .textContentType(.emailAddress)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .disabled(sent)
+            } footer: {
+                if !sent { Text(L("We send you an e-mail with a code. Type it in here – it works once and for 10 minutes.")) }
+            }
+            if sent {
+                Section {
+                    TextField(L("6-digit code"), text: $code)
+                        .textContentType(.oneTimeCode)
+                        .keyboardType(.numberPad)
+                        .font(.title3.monospacedDigit())
+                        .focused($codeFocused)
+                } header: {
+                    Text(L("Code from the e-mail"))
+                } footer: {
+                    Text(LF("If %@ has an account, the mail is on its way. Check the spam folder too.", email))
+                }
+            }
+            if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
+            Section {
+                Button {
+                    Task { sent ? await signIn() : await send() }
+                } label: {
+                    HStack {
+                        Text(sent ? L("Sign in") : L("Send code")).fontWeight(.semibold)
+                        Spacer()
+                        if busy { ProgressView() }
+                    }
+                }
+                .disabled(busy || (sent ? code.filter(\.isNumber).count < 6 : !email.contains("@")))
+                if sent {
+                    Button(L("Send a new code")) { Task { await send() } }.disabled(busy)
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .canvasBackground()
+        .navigationTitle(L("Code by e-mail"))
+    }
+
+    private func send() async {
+        busy = true
+        defer { busy = false }
+        error = nil
+        do {
+            try await APIClient(baseURL: app.cloudServer).requestSignInMail(email: email.trimmingCharacters(in: .whitespaces))
+            sent = true
+            code = ""
+            codeFocused = true
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
+    }
+
+    private func signIn() async {
+        busy = true
+        defer { busy = false }
+        error = nil
+        do {
+            try await app.signInWithCode(email: email.trimmingCharacters(in: .whitespaces), code: code.filter(\.isNumber))
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
+    }
+}
+
+/// ToHuus Cloud sign-up with the one onboarding question "Wer gehört dazu?" – or with Apple.
 struct SignUpView: View {
     @Environment(AppModel.self) private var app
-    var server: URL = SharedConfig.cloudURL
     @State private var name = ""
     @State private var email = ""
     @State private var password = ""
@@ -252,6 +366,13 @@ struct SignUpView: View {
 
     var body: some View {
         Form {
+            Section {
+                AppleSignInButton(kind: .signUp, error: $error)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                    .listRowBackground(Color.clear)
+            } footer: {
+                Text(L("Or create the account with your e-mail address:"))
+            }
             Section {
                 TextField(L("Your name"), text: $name).textContentType(.givenName)
                 TextField(L("E-mail"), text: $email)
@@ -289,15 +410,14 @@ struct SignUpView: View {
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(L("14 days of Plus for free, then Free unless you choose a plan. Nothing renews by itself."))
-                    if let privacy = app.instance?.legal?.privacy, let url = URL(string: privacy) {
-                        Link(L("Privacy"), destination: url)
-                    }
+                    Text(L("By creating an account you accept the terms and the privacy policy."))
+                    LegalLinks().frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
         .scrollContentBackground(.hidden)
         .canvasBackground()
-        .navigationTitle(L("Create household"))
+        .navigationTitle(L("Create account"))
     }
 
     private var minPassword: Int { app.instance?.passwordMin ?? 10 }
@@ -312,7 +432,7 @@ struct SignUpView: View {
         defer { busy = false }
         error = nil
         do {
-            try await app.signUp(server: server, email: email.trimmingCharacters(in: .whitespaces), password: password,
+            try await app.signUp(server: app.cloudServer, email: email.trimmingCharacters(in: .whitespaces), password: password,
                                  name: name.trimmingCharacters(in: .whitespaces),
                                  householdName: householdName.trimmingCharacters(in: .whitespaces), form: form)
         } catch {
