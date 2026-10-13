@@ -94,6 +94,9 @@ if (config.seedDemo && !config.multiTenant) seedDemo();
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 1));
+// recipes with their photos inline (base64) from the person's own AI over MCP or the bulk API: up to 40 MB per call;
+// everything else stays at 4 MB (body-parser skips a body that is already parsed)
+app.use(['/mcp', '/api/recipes/import/bulk'], express.json({ limit: '40mb' }));
 app.use(express.json({ limit: '4mb' }));
 app.use(cookieParser());
 // JSON/text API answers > 1 kB gzipped (before the image signer, which rewrites bodies first) – lib/compress.ts

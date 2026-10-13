@@ -194,4 +194,7 @@ export const web3: Record<string, string> = {
   "More: house info, trips and how it works": "Mehr: Hausinfo, Urlaub und wie es funktioniert",
   "Under More you find the house info for babysitters and guests (with photos and short videos), the handover for whoever looks after pets and plants while you are away, “How ToHuus works” and the settings, including AI on or off.": "Unter Mehr findest du die Hausinfo für Babysitter und Gäste (mit Fotos und kurzen Videos), die Übergabe für alle, die im Urlaub Tiere und Pflanzen versorgen, „So funktioniert ToHuus“ und die Einstellungen, auch KI an oder aus.",
   "A few short steps through the app, right on the real pages. Takes about two minutes.": "Ein paar kurze Schritte durch die App, direkt auf den echten Seiten. Dauert etwa zwei Minuten.",
+  "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from Cookidoo itself.": "ToHuus speichert Name, Link, Zutaten und, wenn du sie ergänzt, die Schritte privat in eurem Haushalt. ToHuus ruft selbst nie etwas von Cookidoo ab.",
+  "Steps, one per line (optional)": "Schritte, einer pro Zeile (optional)",
+  "Read from screenshots": "Aus Screenshots lesen",
 };

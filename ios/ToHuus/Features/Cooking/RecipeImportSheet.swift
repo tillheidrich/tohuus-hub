@@ -147,8 +147,8 @@ struct RecipeImportSheet: View {
     }
 }
 
-/// Cookidoo in ToHuus Cloud: ToHuus never contacts Cookidoo. The person confirms title and ingredients (typed, pasted
-/// or read from their own screenshot); stored are title, link and ingredients – cooking happens in Cookidoo.
+/// Cookidoo in ToHuus Cloud: ToHuus never contacts Cookidoo. The person confirms title, ingredients and – if they like –
+/// the steps (typed, pasted or read from their own screenshots); kept privately in the household.
 struct CookidooConfirmView: View {
     let store: ServerStore
     let request: CookidooDraftRequest
@@ -156,6 +156,7 @@ struct CookidooConfirmView: View {
     @Environment(AppModel.self) private var app
     @State private var title = ""
     @State private var ingredients = ""
+    @State private var steps = ""
     @State private var servings = ""
     @State private var shots: [PhotosPickerItem] = []
     @State private var busy = false
@@ -165,7 +166,7 @@ struct CookidooConfirmView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(L("Cookidoo recipes stay in Cookidoo. ToHuus keeps the link, the title and the ingredients – so it knows what's missing and can put it on the list."))
+                    Text(L("ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from Cookidoo itself."))
                         .font(.subheadline).foregroundStyle(Theme.ink2)
                     Text(request.url).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1)
                 }
@@ -174,7 +175,7 @@ struct CookidooConfirmView: View {
                     TextEditor(text: $ingredients).frame(minHeight: 160)
                     if app.aiOn {
                         PhotosPicker(selection: $shots, maxSelectionCount: 4, matching: .images) {
-                            Label(L("Read a screenshot of the ingredient list"), systemImage: "text.viewfinder")
+                            Label(L("Read from screenshots"), systemImage: "text.viewfinder")
                         }
                     }
                 } header: {
@@ -182,6 +183,7 @@ struct CookidooConfirmView: View {
                 } footer: {
                     Text(L("Copy them from Cookidoo, or take a screenshot of the ingredient list."))
                 }
+                Section(L("Steps, one per line (optional)")) { TextEditor(text: $steps).frame(minHeight: 120) }
                 Section(L("Servings")) { TextField(L("e.g. 4"), text: $servings).keyboardType(.numberPad) }
                 if busy { ProgressView() }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
@@ -231,6 +233,7 @@ struct CookidooConfirmView: View {
             let r = try await store.api.upload("api/recipes/import/cookidoo/read", multipart: mp, as: JSONValue.self, timeout: 120)
             if title.isEmpty, let t = r["title"]?.string { title = t }
             if let list = r["ingredients"]?.array { ingredients = list.compactMap(\.string).joined(separator: "\n") }
+            if let list = r["steps"]?.array, !list.isEmpty { steps = list.compactMap(\.string).joined(separator: "\n") }
             if let s = r["servings"]?.int { servings = String(s) }
             error = nil
         } catch {
@@ -244,6 +247,8 @@ struct CookidooConfirmView: View {
         defer { busy = false }
         var body: [String: Any] = ["url": request.url, "title": title.trimmingCharacters(in: .whitespaces), "ingredients": lines]
         if let s = Int(servings) { body["servings"] = s }
+        let stepLines = steps.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        if !stepLines.isEmpty { body["steps"] = stepLines }
         do {
             _ = try await store.api.send("POST", "api/recipes/import/cookidoo", json: body, as: Ignored.self)
             store.touch("recipes")

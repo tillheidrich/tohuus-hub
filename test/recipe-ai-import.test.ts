@@ -200,21 +200,29 @@ describe('social media share', () => {
   });
 });
 
-describe('Cookidoo (cloud: nothing fetched, nothing copied)', () => {
-  it('in the cloud a Cookidoo link asks for confirmation; import paths drop steps and photos', async () => {
+describe('Cookidoo (cloud: nothing fetched; what the person brings along is kept)', () => {
+  it('in the cloud a Cookidoo link asks for confirmation; brought-along steps and the photo link stay, the server never downloads it', async () => {
     const was = config.multiTenant;
     (config as any).multiTenant = true;
     try {
       expect(imp.cookidooConfirmNeeded('https://cookidoo.de/recipes/recipe/de-DE/r123456')).toBe(true);
       expect(imp.cookidooConfirmNeeded('https://www.chefkoch.de/x')).toBe(false);
       const n = r2.normalizeRecipe({ name: 'TM Curry', url: 'https://cookidoo.de/recipes/recipe/de-DE/r123456', image: 'https://assets.tmecosys.com/x.jpg', recipeIngredient: ['1 Zwiebel'], recipeInstructions: ['Zwiebel 5 Sek./Stufe 5 zerkleinern.'] });
-      expect(n).toMatchObject({ source_type: 'cookidoo', image_url: null, steps: [], instructions_available: false, external_id: 'r123456' });
+      expect(n).toMatchObject({ source_type: 'cookidoo', image_url: 'https://assets.tmecosys.com/x.jpg', instructions_available: true, external_id: 'r123456' });
+      expect(n.steps.map((s: { text: string }) => s.text)).toEqual(['Zwiebel 5 Sek./Stufe 5 zerkleinern.']);
+      const imgs = await import('../server/lib/recipe-images');
+      expect(imgs.serverMayFetchImage('https://assets.tmecosys.com/x.jpg')).toBe(false);
+      expect(imgs.serverMayFetchImage('https://cookidoo.de/x.jpg')).toBe(false);
+      expect(imgs.serverMayFetchImage('https://www.chefkoch.de/x.jpg')).toBe(true);
+      // a photo that came along as bytes (base64 from the person's AI) is kept
+      const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='.padEnd(120, '=');
+      expect(Buffer.isBuffer(r2.normalizeRecipe({ name: 'X', source_type: 'cookidoo', recipeIngredient: ['1 Ei'], image_base64: 'data:image/png;base64,' + png.replace(/=+$/, '') + '==' }).image_data)).toBe(true);
     } finally {
       (config as any).multiTenant = was;
     }
   });
 
-  it('draft from the shared text, save title + link + confirmed ingredients – no steps, no photo', async () => {
+  it('draft from the shared text, save title + link + confirmed ingredients – steps only when brought along', async () => {
     const d = imp.cookidooDraft('https://cookidoo.de/recipes/recipe/de-DE/r777?utm_source=app', 'Schau dir dieses Rezept an: Linsencurry https://cookidoo.de/recipes/recipe/de-DE/r777');
     expect(d).toEqual({ url: 'https://cookidoo.de/recipes/recipe/de-DE/r777', external_id: 'r777', title: 'Linsencurry', ingredients: [] });
     const res = await call('POST', '/recipes/import/cookidoo', { url: d.url, title: 'Linsencurry', ingredients: ['200 g rote Linsen', '1 Dose Kokosmilch'], servings: 4 });
@@ -226,6 +234,12 @@ describe('Cookidoo (cloud: nothing fetched, nothing copied)', () => {
     const again = await call('POST', '/recipes/import/cookidoo', { url: d.url, title: 'Linsencurry', ingredients: ['250 g rote Linsen'] });
     expect(again.json).toEqual({ id: res.json.id, created: false });
     expect((await call('POST', '/recipes/import/cookidoo', { url: 'https://example.org/r1', title: 'X', ingredients: ['1 Ei'] })).status).toBe(400);
+    // with the steps from the person's screenshots
+    const withSteps = await call('POST', '/recipes/import/cookidoo', { url: 'https://cookidoo.de/recipes/recipe/de-DE/r888', title: 'Grießbrei', ingredients: ['500 ml Milch'], steps: ['Milch 7 Min./90°C/Stufe 2 erhitzen.'] });
+    const row2 = db.prepare('SELECT instructions_available, steps FROM recipes WHERE id = ?').get(withSteps.json.id) as any;
+    expect(row2.instructions_available).toBe(1);
+    expect(JSON.parse(row2.steps)[0].text).toBe('Milch 7 Min./90°C/Stufe 2 erhitzen.');
+    expect(pageCalls).toHaveLength(0);
   });
 
   it('reads the ingredient list from the person’s own screenshot (model, counted), nothing saved', async () => {
@@ -233,11 +247,11 @@ describe('Cookidoo (cloud: nothing fetched, nothing copied)', () => {
     const spy = vi.spyOn(plans, 'consume');
     const count = (db.prepare('SELECT COUNT(*) AS n FROM recipes').get() as any).n;
     const out = await imp.readIngredients(['data:image/jpeg;base64,AAAA']);
-    expect(out).toEqual({ title: 'Linsencurry', ingredients: ['200 g rote Linsen', '1 Zwiebel'], servings: 4 });
+    expect(out).toEqual({ title: 'Linsencurry', ingredients: ['200 g rote Linsen', '1 Zwiebel'], steps: [], servings: 4 });
     expect(spy.mock.calls.map((c) => c[0])).toEqual(['importAi']);
     spy.mockRestore();
     expect((db.prepare('SELECT COUNT(*) AS n FROM recipes').get() as any).n).toBe(count);
-    expect(JSON.stringify(modelCalls[0].messages)).toMatch(/ingredient list/);
+    expect(JSON.stringify(modelCalls[0].messages)).toMatch(/one string per ingredient line/);
   });
 });
 

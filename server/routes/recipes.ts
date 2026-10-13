@@ -219,13 +219,15 @@ r.post('/recipes/import/cookidoo/read', upload.array('files', 4), uploadQuota, a
   const imgs = await Promise.all(files.map((f) => toVisionJpeg(f.buffer, 1800)));
   res.json(await readIngredients(imgs));
 });
-/** … and saving what the person confirmed: title + link + ingredients, no steps, no photos. */
+/** … and saving what the person confirmed: title, link, ingredients and – if they brought them – steps. */
 r.post('/recipes/import/cookidoo', async (req, res) => {
   const b = z
     .object({
       url: z.string().url(),
       title: z.string().max(200),
       ingredients: z.array(z.string().max(300)).min(1).max(150),
+      /** the steps, when the person brought them along (their screenshots or text) */
+      steps: z.array(z.string().max(3000)).max(120).optional(),
       servings: z.number().int().positive().max(100).nullable().optional(),
       time_min: z.number().int().positive().max(10000).nullable().optional(),
     })

@@ -5271,23 +5271,6 @@
         }
       }
     },
-    "Cookidoo recipes stay in Cookidoo. ToHuus keeps the link, the title and the ingredients – so it knows what's missing and can put it on the list.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cookidoo recipes stay in Cookidoo. ToHuus keeps the link, the title and the ingredients – so it knows what's missing and can put it on the list."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cookidoo-Rezepte bleiben in Cookidoo. ToHuus merkt sich Link, Titel und Zutaten – so weiß es, was fehlt, und kann es auf die Liste setzen."
-          }
-        }
-      }
-    },
     "Cooking": {
       "extractionState": "manual",
       "localizations": {
@@ -15794,19 +15777,19 @@
         }
       }
     },
-    "Read a screenshot of the ingredient list": {
+    "Read from screenshots": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read a screenshot of the ingredient list"
+            "value": "Read from screenshots"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshot der Zutatenliste lesen"
+            "value": "Aus Screenshots lesen"
           }
         }
       }
@@ -19007,6 +18990,23 @@
         }
       }
     },
+    "Steps, one per line (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps, one per line (optional)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schritte, einer pro Zeile (optional)"
+          }
+        }
+      }
+    },
     "Still there": {
       "extractionState": "manual",
       "localizations": {
@@ -21162,6 +21162,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ToHuus ist gerade im kleinen Test. Du brauchst einen Zugangscode – frag gern per Mail nach."
+          }
+        }
+      }
+    },
+    "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from Cookidoo itself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from Cookidoo itself."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus speichert Name, Link, Zutaten und, wenn du sie ergänzt, die Schritte privat in eurem Haushalt. ToHuus ruft selbst nie etwas von Cookidoo ab."
           }
         }
       }

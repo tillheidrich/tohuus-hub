@@ -43,9 +43,10 @@ If several photos belong to one recipe, merge them.`,
 "time_min": number|null, "thermomix": boolean, "tags": string[], "ingredients": [{"text": string, "qty": number|null, "unit": string|null, "pantry": boolean}],
 "steps": [{"text": string, "tm": {"device": string|null, "time": string|null, "temp": string|null, "speed": string|null, "mode": string|null}|null}]}.
 Leave out hashtags, greetings and "link in bio". Invent nothing: if the text has no ingredients, return empty lists. Return ONLY JSON.`,
-  ingredients: `You see a screenshot or photo of a recipe's ingredient list (e.g. from a recipe app or a cookbook). Return ONLY JSON:
-{"title": string|null, "servings": number|null, "ingredients": [string]} – one string per ingredient line exactly as written
-("200 g rote Linsen"). Leave out steps, nutrition and everything else. Invent nothing.`,
+  ingredients: `You see one or more screenshots or photos of a recipe (e.g. from a recipe app or a cookbook) the person took themselves. Return ONLY JSON:
+{"title": string|null, "servings": number|null, "ingredients": [string], "steps": [string]} – one string per ingredient line exactly
+as written ("200 g rote Linsen"), and the preparation steps in order if they are visible (else an empty list), each step as
+written including appliance settings ("10 Sek./Stufe 5"). Leave out nutrition and everything else. Invent nothing.`,
   // list2 I: a photo of a flyer page or a shared offer (never fetched from feeds)
   offer: `You see a supermarket flyer page or a price tag with offers. Return ONLY JSON:
 {"shop": string|null, "valid_from": "YYYY-MM-DD"|null, "valid_to": "YYYY-MM-DD"|null,

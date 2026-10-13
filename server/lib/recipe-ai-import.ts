@@ -335,7 +335,7 @@ export function cookidooDraft(url: string, sharedText?: string | null) {
 }
 
 /** Save what the person confirmed: title + link + ingredients. No steps, no photos – cooking happens in Cookidoo. */
-export async function saveCookidoo(input: { url: string; title: string; ingredients: string[]; servings?: number | null; time_min?: number | null }): Promise<{ id: number; created: boolean }> {
+export async function saveCookidoo(input: { url: string; title: string; ingredients: string[]; steps?: string[]; servings?: number | null; time_min?: number | null }): Promise<{ id: number; created: boolean }> {
   if (!isCookidooUrl(input.url)) throw fail(t('That is not a Cookidoo link.'));
   const ingredients = input.ingredients.map((l) => oneLine(l).slice(0, 300)).filter(Boolean).slice(0, 150);
   if (!ingredients.length) throw fail(t('Add the ingredients – copy them from Cookidoo or take a screenshot.'));
@@ -346,8 +346,9 @@ export async function saveCookidoo(input: { url: string; title: string; ingredie
       source_type: 'cookidoo',
       external_id: cookidooRecipeId(input.url),
       recipeIngredient: ingredients,
-      recipeInstructions: [],
-      instructions_available: false,
+      // steps only when the person brought them along (their screenshots, their own AI); nothing is fetched
+      recipeInstructions: (input.steps ?? []).map((l) => oneLine(l).slice(0, 3000)).filter(Boolean).slice(0, 120),
+      instructions_available: Boolean(input.steps?.some((l) => l.trim())),
       thermomix: true,
       ...(input.servings ? { recipeYield: input.servings } : {}),
       ...(input.time_min ? { totalTime: input.time_min } : {}),
@@ -358,9 +359,11 @@ export async function saveCookidoo(input: { url: string; title: string; ingredie
 }
 
 /** Read an ingredient list from the person's own screenshot (Cookidoo app, a cookbook) – shown for confirmation, not saved. */
-export async function readIngredients(images: string[]): Promise<{ title: string | null; ingredients: string[]; servings: number | null }> {
+export async function readIngredients(images: string[]): Promise<{ title: string | null; ingredients: string[]; steps: string[]; servings: number | null }> {
   if (!visionAvailable()) throw fail(t('Reading photos needs AI. Copy the ingredients and paste them instead.'), 501);
+  // the person's own screenshots: the ingredient list, and the steps when they are on the screenshots too
   const j = await runVision('ingredients', { images });
   const list = Array.isArray(j?.ingredients) ? j.ingredients.map((x: any) => (typeof x === 'string' ? x : typeof x?.text === 'string' ? x.text : '')).map((x: string) => oneLine(x)).filter(Boolean).slice(0, 150) : [];
-  return { title: s(j?.title, 200), ingredients: list, servings: n(j?.servings) };
+  const steps = Array.isArray(j?.steps) ? j.steps.map((x: any) => (typeof x === 'string' ? x : typeof x?.text === 'string' ? x.text : '')).map((x: string) => oneLine(x).slice(0, 3000)).filter(Boolean).slice(0, 120) : [];
+  return { title: s(j?.title, 200), ingredients: list, steps, servings: n(j?.servings) };
 }

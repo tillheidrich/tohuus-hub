@@ -240,7 +240,8 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'cookidoo', group: 'cook', title: 'Cookidoo-Rezepte',
         desc: 'Wie Thermomix-Rezepte aus Cookidoo neben ToHuus funktionieren.',
         sections: [
-          ['In der ToHuus Cloud', p('ToHuus greift nicht auf dein Cookidoo-Konto zu. Ein Cookidoo-Rezept speicherst du als Link mit Zutatenliste: So kommen die Zutaten auf eure Einkaufsliste und in den Kochplaner. Gekocht wird weiter in Cookidoo und am Gerät.')],
+          ['In der ToHuus Cloud', p('ToHuus greift nicht auf dein Cookidoo-Konto zu und ruft selbst nichts von Cookidoo ab. Ein Cookidoo-Rezept teilst du mit ToHuus oder fügst den Link ein, dann bestätigst du Name und Zutaten. Die Schritte kannst du dazuschreiben oder aus deinen eigenen Screenshots lesen lassen. Alles bleibt privat in eurem Haushalt.')],
+          ['Viele auf einmal, mit Fotos', p('Hast du eine eigene KI wie Claude oder ChatGPT per MCP verbunden, kann sie Rezepte mit Schritten und Fotos in einem Rutsch speichern, auch hunderte. Oder du lädst ein <a href="rezeptpaket.html">Rezeptpaket</a> mit Fotos hoch, auf dem iPhone direkt aus der Dateien-App. Fotos, die nur als Cookidoo-Link ankommen, lädt dein eigenes Gerät: im Browser unter Einstellungen › Rezepte › Rezeptfotos mit „Fotos über diesen Browser laden“.')],
           ['Selbst gehostet mit Home Assistant', p('Nutzt ihr die offizielle Cookidoo-Integration in Home Assistant, holt die ToHuus-Integration eure Cookidoo-Woche in den Wochenplan. Details unter <a href="home-assistant.html">Home Assistant</a>.')],
           ['Eigene Thermomix-Rezepte', p('Rezepte mit Thermomix-Schritten (Zeit, Temperatur, Stufe, Linkslauf) kannst du über ein <a href="rezeptpaket.html">Rezeptpaket</a> übernehmen, etwa aus Fotos deines eigenen Kochbuchs.')],
         ],

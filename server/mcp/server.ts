@@ -26,7 +26,7 @@ import { fetchImage, saveImage } from '../lib/images.js';
 import { applyImport, createImport, linesToImport } from '../lib/imports.js';
 import { overview } from '../lib/overview.js';
 import { getRecipe, listRecipes, logCooked, saveRecipe, suggest } from '../lib/recipes.js';
-import { setRecipeImageUrl } from '../lib/recipes2.js';
+import { setRecipeImage, setRecipeImageUrl } from '../lib/recipes2.js';
 import { addPlan, autofill, getPlan, planShopping, shiftPlan, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
 import { register as register_data } from './tools-data.js';
@@ -417,12 +417,16 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
         ingredients: z.array(z.object({ text: z.string(), qty: z.number().optional(), unit: z.string().optional(), pantry: z.boolean().optional(), optional: z.boolean().optional() })),
         steps: z.array(z.object({ text: z.string(), tm: z.object({ time: z.string().optional(), temp: z.string().optional(), speed: z.string().optional() }).optional() })),
         image_url: z.string().url().optional(),
+        image_base64: z.string().max(11_200_000).optional().describe('the photo itself as base64 (JPEG/PNG/WebP, ≤ 8 MB), e.g. a screenshot the person gave you – use it when the photo is only visible to you'),
       },
       annotations: RW,
     },
     async (a) => {
-      const id = saveRecipe(a as any);
-      if (a.image_url) await setRecipeImageUrl(id, a.image_url, { wait: true });
+      const { image_base64, ...rest } = a;
+      const id = saveRecipe(rest as any);
+      const inline = image_base64 ? Buffer.from(image_base64.replace(/^data:image\/[a-z+.-]+;base64,/i, ''), 'base64') : null;
+      if (inline && inline.length && inline.length <= 8 * 1024 * 1024) await setRecipeImage(id, inline).catch(() => false);
+      else if (a.image_url) await setRecipeImageUrl(id, a.image_url, { wait: true });
       return text({ id, url: `${config.baseUrl}/rezepte/${id}` });
     },
   );

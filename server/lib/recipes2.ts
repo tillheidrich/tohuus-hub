@@ -25,7 +25,7 @@ import { matchIngredient } from './catalog.js';
 import { deleteImage, fetchImageDetailed, storeImageBytes, warnImage } from './images.js';
 import { ScopedMap, householdId, perHousehold, runInHousehold } from './tenancy.js';
 import { assertStorage } from './plans.js';
-import { downloadCandidates } from './recipe-images.js';
+import { downloadCandidates, serverMayFetchImage } from './recipe-images.js';
 import { ingredientCore, isPantryText } from './recipes.js';
 import {
   cleanText,
@@ -190,14 +190,15 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
         ? devices.some((d) => /thermomix|\btm\s?[4-7]\b/i.test(d))
         : source_type === 'cookidoo' || /thermomix|\bstufe\s?\d|\bvaroma\b/i.test(JSON.stringify(steps).slice(0, 20000));
   if (ingredients.length === 0 && steps.length === 0 && !source_url) throw userError(t('The recipe has neither ingredients nor steps'));
-  // ToHuus Cloud never copies Cookidoo content: title, link and ingredients only – steps and photos stay in Cookidoo
-  const cookidooCloud = config.multiTenant && source_type === 'cookidoo';
-  if (cookidooCloud) steps.length = 0;
+  // ToHuus Cloud never fetches Cookidoo itself; what the person brings along (steps from their own AI over MCP, a
+  // package, a screenshot, photos as files) is kept privately in the household (decision 13 Oct 2026). A Cookidoo
+  // photo link is kept for display; the download is left to the person's device (recipe-images.ts).
   return {
     title,
     description: x.description ? cleanText(x.description).slice(0, 2000) || null : null,
-    image_url: cookidooCloud ? null : imageUrl(x.image ?? x.image_url ?? x.imageUrl ?? x.thumbnailUrl),
-    image_data: !cookidooCloud && Buffer.isBuffer(x.image_data) ? x.image_data : null,
+    image_url: imageUrl(x.image ?? x.image_url ?? x.imageUrl ?? x.thumbnailUrl),
+    // a photo as a file (package, Paprika …) or inline as base64 (bulk JSON, MCP: the person's own AI sends what it sees)
+    image_data: Buffer.isBuffer(x.image_data) ? x.image_data : inlineImage(x.image_base64 ?? x.imageBase64),
     servings: yieldServings(x.recipeYield ?? x.yield ?? x.servings),
     time_min: time_min && time_min < 100000 ? time_min : null,
     thermomix,
@@ -209,7 +210,7 @@ export function normalizeRecipe(o: unknown, defaults: { source_type?: string } =
     source_type,
     external_id,
     source_url,
-    instructions_available: cookidooCloud ? false : instructions_available,
+    instructions_available,
     notes: typeof x.notes === 'string' && x.notes.trim() ? cleanText(x.notes).slice(0, 2000) : null,
     favorite: x.favorite === true,
   };
@@ -314,7 +315,16 @@ export async function saveRecipeImage(buf: Buffer, recipeId: number): Promise<st
   return storeImageBytes(name, out);
 }
 
-async function setRecipeImage(id: number, buf: Buffer) {
+/** base64 (optionally a data: URL) → image bytes, at most 8 MB; anything else is ignored */
+function inlineImage(v: unknown): Buffer | null {
+  if (typeof v !== 'string' || v.length < 100 || v.length > 11_200_000) return null;
+  const b64 = v.replace(/^data:image\/[a-z+.-]+;base64,/i, '').replace(/\s+/g, '');
+  if (!/^[A-Za-z0-9+/]+=*$/.test(b64)) return null;
+  const buf = Buffer.from(b64, 'base64');
+  return buf.length > 0 && buf.length <= 8 * 1024 * 1024 ? buf : null;
+}
+
+export async function setRecipeImage(id: number, buf: Buffer) {
   const img = await saveRecipeImage(buf, id);
   const old = db.prepare('SELECT image_path FROM recipes WHERE id = ?').get(id) as { image_path: string | null } | undefined;
   if (!old) {
@@ -376,6 +386,11 @@ function pump() {
 async function downloadOne(id: number) {
   const row = db.prepare('SELECT image_url, image_path, source_url FROM recipes WHERE id = ?').get(id) as { image_url: string | null; image_path: string | null; source_url: string | null } | undefined;
   if (!row?.image_url) return;
+  // Cookidoo in the cloud: the person's device loads the photo (browser fallback), never this server
+  if (!serverMayFetchImage(row.image_url)) {
+    db.prepare(`UPDATE recipes SET image_tries = 3, image_error = 'cookidoo: device' WHERE id = ?`).run(id);
+    return;
+  }
   let reason = '';
   let ok = false;
   for (const url of downloadCandidates(row.image_url)) {
