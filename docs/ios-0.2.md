@@ -255,3 +255,14 @@ disk space or keyboard APIs (checked).
 
 Debug launch args: `-debugSampleQuestion YES`, `-debugSignedOut YES` with `-debugStartSignUp YES` / `-debugStartSignIn YES` /
 `-debugStartCode YES`, `-debugPaywall YES`, `-debugSettings YES`.
+
+## 0.3 parity – Wünsche & private Listen (package q-wish, 13 Oct 2026)
+
+| Screen | File | Endpoints | Debug |
+|---|---|---|---|
+| Wünsche (lists, search, archive, new list with „für wen“ and „wer sieht das“) | Features/Wishes/WishesView.swift `WishesView`, `WishListEditSheet` | `GET/POST /api/wishes/lists`, `GET /api/wishes/search` | `-debugTab shopping -debugWishes YES` |
+| One list (quick add, sort, reserve/bought/release, auf die Einkaufsliste, share selection) | `WishListDetailView`, `WishToListSheet`, `WishShareSheet` | `GET/PATCH/DELETE /api/wishes/lists/:id`, `POST …/items`, `POST /api/wishes/items/:id/status`, `…/to-list`, `POST /api/wishes/lists/:id/share` | – |
+| Wish (photo from camera/Fotos, several links with price and server preview, price, priority, note, „wer könnte das schenken“) | `WishEditSheet` | `PATCH/DELETE /api/wishes/items/:id`, `POST/DELETE …/photo`, `POST /api/wishes/preview` | – |
+| Private shopping lists („Wer sieht das?“ in Liste bearbeiten, lock/people icon in the list menu) | Features/Shopping/ListTools.swift `ManageListSheet`, Features/Wishes/VisibilityPicker.swift | `PATCH /api/list/lists/:id { visibility, share_with }`, `GET /api/list/lists` (+ `visibility, owner, share_with, mine`) | – |
+
+Entry: Einkauf › menu (top right) › „Wünsche & Merkliste“. The app follows `can_reserve` / `for_me` from the server; the person a list is for never gets reservation data. API: [wishes.md](wishes.md). Strings: `ios/tools/strings_de_wish.json`.

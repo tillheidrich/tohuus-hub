@@ -57,7 +57,7 @@ struct WishesView: View {
                         .font(.footnote).foregroundStyle(Theme.ink2)
                         .listRowBackground(Color.clear)
                 }
-                if lists.isEmpty && !loading {
+                if lists.isEmpty && !loading && error == nil {
                     EmptyStateView(systemImage: "gift", title: archived ? L("Nothing archived") : L("No wish lists yet"),
                                    message: archived ? nil : L("For example “Wishes from Mika”, “Christmas for Mum” or a Merkliste for biscuits you saw in an article."),
                                    actionTitle: archived ? nil : L("New list"), action: archived ? nil : { creating = true })
