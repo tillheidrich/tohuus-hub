@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Every notification is each person's own choice**: low stock, used up, added to the list, news on a „Bring mir was“ wish, children's wishes, food votes, week-plan rotation, care tasks and party end joined the personal settings (`GET/PUT /api/notify/prefs`) with calm defaults; the household matrix keeps only the shared channels for them.
+
 - **Plan features are checked by the server**: price history, new list mirrors and new "Mitversorgen" lists need Haushalt, filling the week from the pantry and month comparisons need Plus (HTTP 402 `code: 'plan'`, `docs/cloud.md`). Optional lifetime Plus (`de.heidrichdigital.tohuus.plus.lifetime`, `lifetime` in `GET /api/billing/status`).
 
 - **The assistant stays a household assistant**: off-topic requests and attempts to change its role or read its instructions get a friendly answer without a model call and without counting (`scope` in `POST /api/assistant/chat`); the system prompt treats text from recipes, receipts and links as data. New tools `app_help` (where a feature lives, with the help page) and `budget_set` (household or private budgets).

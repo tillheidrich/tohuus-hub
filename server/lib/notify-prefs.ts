@@ -44,6 +44,16 @@ export const PERSON_EVENTS = [
   { key: 'order.new', label: 'A wish (Treats)', module: 'treats', on: true },
   { key: 'guest.order', label: 'An order from guests', module: 'guests', on: false },
   { key: 'budget.warning', label: 'Budget hint', module: 'money', on: false },
+  // since 13 Oct 2026 every event is the person's own choice; calm defaults: on only what asks something of you
+  { key: 'stock.low', label: 'Something is running low', module: 'stock', on: false },
+  { key: 'stock.empty', label: 'Something is used up', module: 'stock', on: false },
+  { key: 'shopping.added', label: 'Something was put on the list', module: null, on: false },
+  { key: 'order.status', label: 'News on my “Bring mir was” wish', module: 'treats', on: true },
+  { key: 'kids.wish', label: 'A wish from the children', module: 'treats', on: true },
+  { key: 'plan.vote', label: 'A vote on what to eat', module: 'cook', on: true },
+  { key: 'plan.rotation', label: 'The week plan was filled from the rotation', module: 'cook', on: false },
+  { key: 'care.due', label: 'A care task is due', module: 'homeinfo', on: false },
+  { key: 'party.ending', label: 'The party is ending', module: 'guests', on: false },
 ] as const;
 export type PersonEvent = (typeof PERSON_EVENTS)[number]['key'];
 export const PERSON_CHANNELS = ['apns', 'push', 'digest'] as const;

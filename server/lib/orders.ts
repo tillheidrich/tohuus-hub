@@ -3,6 +3,7 @@
  * from bed and somebody else brings it – plus the same mechanics for guests (visit, babysitter, grandparents) and
  * parties (bar). One code path for all three; `orderKind()` tells them apart for wording and notifications.
  */
+import { recipients } from './notify-prefs.js';
 import { z } from 'zod';
 import { config } from '../config.js';
 import { db, migrate } from '../db.js';
@@ -281,7 +282,8 @@ export function thankOrder(id: number, userId: number) {
   if (o.thanked_at) return { ok: true, already: true };
   db.prepare(`UPDATE orders SET thanked_at = datetime('now') WHERE id = ?`).run(o.id);
   emit('orders');
-  if (o.by_user_id && o.by_user_id !== userId && pushDeviceCount() > 0)
+  // only when the person wants news on their own wish (notify-prefs.ts, quiet hours included)
+  if (o.by_user_id && o.by_user_id !== userId && pushDeviceCount() > 0 && recipients('order.status', 'push', { toUserId: o.by_user_id }).length)
     void sendPush({ title: t('{name} says thanks', { name: o.guest_name }), body: t('For bringing it.'), url: `${config.baseUrl}/bestellen`, event: 'order.status' }, { userId: o.by_user_id }).catch(() => false);
   return { ok: true, already: false };
 }

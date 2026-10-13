@@ -22,6 +22,15 @@ ToHuus Hub tells the household when something needs attention. There are two lay
 | `order.new` | on | a „Bring mir was“ wish |
 | `guest.order` | off | an order from guests or a party (`order.new` with `kind` guest/party) |
 | `budget.warning` | off | budget hint |
+| `stock.low` | off | something is running low |
+| `stock.empty` | off | something is used up |
+| `shopping.added` | off | something was put on the list |
+| `order.status` | on | news on my own „Bring mir was“ wish |
+| `kids.wish` | on | a wish from the children (kid mode) |
+| `plan.vote` | on | a vote on what to eat |
+| `plan.rotation` | off | the week plan was filled from the rotation |
+| `care.due` | off | a care task is due |
+| `party.ending` | off | the party is ending |
 
 Channels per event: `apns` (iPhone), `push` (browser), `digest` (one e-mail a day at the household's digest hour, to the
 member's confirmed address – their own in self-host, their account's in the cloud). Events of an area the household
@@ -42,8 +51,10 @@ API (every member, about themselves):
 | `PUT /api/notify/prefs` | `{ events?: { [key]: { apns?, push?, digest? } }, quiet?: { from, to } \| null, homeOnly?: string[], preview? }` | `{ ok }` |
 | `POST /api/notify/presence` | `{ home, source? }` | `{ home, source }` |
 
-Events not in this table (low stock, care tasks, sign-ins, party, kids, votes, the daily digest, tests) keep the
-household routing below; the iPhone gets them whenever browser push would (same audience).
+Since 13 Oct 2026 every event that reaches people is in this table, so each member decides for themselves; the
+household matrix below only routes the shared channels (Home Assistant, ntfy, webhooks, chat, household e-mail) for
+them. Not personal: sign-in warnings (`auth.new_device`, always to the person concerned), the household's daily
+e-mail digest and tests.
 
 ## iPhone push (APNs, `server/lib/apns.ts`)
 

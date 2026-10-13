@@ -125,7 +125,8 @@ describe('D: notifications per person', () => {
   it('starts calm: only what is addressed to you is on', async () => {
     const p = (await sam('GET', '/api/notify/prefs')).json;
     const on = p.events.filter((e: any) => e.apns || e.push).map((e: any) => e.key);
-    expect(on.sort()).toEqual(['order.new', 'trip.addon']);
+    // addressed to you: your shopping trip, a "Bring mir was" wish, news on your own wish, a vote that asks you, a child's wish
+    expect(on.sort()).toEqual(['kids.wish', 'order.new', 'order.status', 'plan.vote', 'trip.addon']);
     expect(p.quiet).toEqual({ from: '22:00', to: '07:00' });
     expect(p.events.find((e: any) => e.key === 'trip.started').label).toBe('Jemand kauft gerade ein');
     expect(p.channels.apns).toEqual({ configured: true, devices: 0 });
