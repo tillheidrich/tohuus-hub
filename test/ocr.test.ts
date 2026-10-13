@@ -195,6 +195,32 @@ describe.skipIf(!fs.existsSync('/usr/bin/tesseract') && !process.env.TESSERACT_B
   });
 });
 
+describe('upload: files named .pdf that are not PDFs (TestFlight 13.10., a2bd3b25)', () => {
+  const send = async (buf: Buffer | string, name: string) => {
+    const f = new FormData();
+    f.append('files', new Blob([typeof buf === 'string' ? buf : new Uint8Array(buf)], { type: 'application/pdf' }), name);
+    const res = await fetch(`${base}/api/imports/upload`, { method: 'POST', headers: { cookie }, body: f });
+    return { status: res.status, json: (await res.json()) as any };
+  };
+  it('a saved web page with a receipt is read as one', async () => {
+    const html = `<!doctype html><html><body><table>${fixture.split('\n').map((l) => `<tr><td>${esc(l)}</td></tr>`).join('')}</table></body></html>`;
+    const r = await send(html, 'bon.pdf');
+    expect(r.status).toBe(200);
+    expect(r.json.results[0].id).toBeGreaterThan(0);
+  });
+  it('a web page without a receipt, a broken PDF and binary junk give a plain answer instead of a server error', async () => {
+    const page = await send('<!doctype html><html><body><h1>Bitte melde dich an</h1></body></html>', 'ebon.pdf');
+    expect(page.status).toBe(200);
+    expect(page.json.results[0].error).toMatch(/Webseite|web page/);
+    const broken = await send('%PDF-1.7\n<< broken ) >>', 'kaputt.pdf');
+    expect(broken.status).toBe(200);
+    expect(broken.json.results[0].error).toMatch(/PDF/);
+    const junk = await send(Buffer.from(Array.from({ length: 600 }, (_, i) => (i * 37) % 32)), 'junk.pdf');
+    expect(junk.status).toBe(200);
+    expect(junk.json.results[0].error).toMatch(/PDF/);
+  });
+});
+
 describe('device text (Apple Vision on the iPhone)', () => {
   it('receipt lines → an import, same parsers, no OCR, no model', async () => {
     const lines = receiptPart(fixture).split('\n').map((l) => l.trim()).filter(Boolean);

@@ -140,9 +140,19 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
   const images: Express.Multer.File[] = [];
   for (const f of files) {
     const isPdf = f.mimetype === 'application/pdf' || f.originalname.toLowerCase().endsWith('.pdf');
-    if (isPdf) {
+    if (isPdf && !looksLikePdf(f.buffer)) {
+      // named .pdf but not a PDF – often a saved web page of a digital receipt (TestFlight 13.10., a2bd3b25)
+      results.push({ file: f.originalname, ...(await importNotPdf(f.buffer, f.originalname, actorName(req))) });
+    } else if (isPdf) {
       const file = saveUpload(f.buffer, '.pdf');
-      const text = await pdfToText(file);
+      let text: string;
+      try {
+        text = await pdfToText(file);
+      } catch (e) {
+        console.warn('[imports] pdftotext failed:', String((e as Error).message ?? e).split('\n')[0]);
+        results.push({ file: f.originalname, error: t('This PDF could not be read (damaged or password protected). Open it, save it again as a PDF or take a photo of the receipt.') });
+        continue;
+      }
       const parsed = parseDocumentText(text, f.originalname);
       if (parsed) {
         results.push({ file: f.originalname, ...createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
@@ -190,6 +200,37 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
   res.json({ results });
 });
 
+/** A real PDF starts with "%PDF" (some writers put a few bytes before it). */
+export const looksLikePdf = (buf: Buffer) => buf.subarray(0, 1024).includes('%PDF');
+
+/** The visible text of an HTML page (digital receipts, saved web pages). */
+export function htmlText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<br\s*\/?>|<\/(p|div|tr|li|h\d)>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&euro;/g, '€')
+    .replace(/[ \t]+/g, ' ');
+}
+
+/** A file named .pdf that is not one: a web page or text is read as such, anything else gets a plain answer. */
+async function importNotPdf(buf: Buffer, name: string, actor: string): Promise<Record<string, unknown>> {
+  const head = buf.subarray(0, 2048).toString('utf8');
+  const printable = head.replace(/[\x20-\x7e\s\u00a0-\uffff]/g, '').length < head.length * 0.05;
+  if (!printable) return { error: t('This file is not a PDF. Save the receipt as a PDF again or take a photo of it.') };
+  const raw = buf.toString('utf8');
+  const text = /<(?:!doctype|html|body|table|div)\b/i.test(raw) ? htmlText(raw) : raw;
+  const parsed = parseDocumentText(text, name);
+  if (parsed) return createImport(parsed, { actor, rawText: text });
+  if (visionAvailable() && text.trim().length > 30) {
+    const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
+    if (lines.length) return createImport(linesToImport('receipt', t('Receipt {file}', { file: name }), lines), { actor, rawText: text });
+  }
+  return { error: t('This file is a saved web page, not a PDF, and no receipt was found in it. Open the receipt in the browser and save or share it as a PDF.') };
+}
+
 async function importText(text: string, actor: string) {
   const parsed = parseDocumentText(text);
   if (parsed) return createImport(parsed, { actor, rawText: text });
@@ -218,7 +259,13 @@ r.post('/imports/url', async (req, res) => {
   const { buf, contentType: type } = resp;
   if (type.includes('pdf') || buf.subarray(0, 4).toString() === '%PDF') {
     const file = saveUpload(buf, '.pdf');
-    const text = await pdfToText(file);
+    let text: string;
+    try {
+      text = await pdfToText(file);
+    } catch {
+      res.status(422).json({ error: t('This PDF could not be read (damaged or password protected). Open it, save it again as a PDF or take a photo of the receipt.') });
+      return;
+    }
     const parsed = parseDocumentText(text);
     if (parsed) {
       res.json(createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }));
@@ -233,13 +280,7 @@ r.post('/imports/url', async (req, res) => {
     return;
   }
   if (type.includes('html') || type.includes('text')) {
-    const text = buf
-      .toString('utf8')
-      .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<br\s*\/?>|<\/(p|div|tr|li)>/gi, '\n')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/[ \t]+/g, ' ');
+    const text = htmlText(buf.toString('utf8'));
     const parsed = parseDocumentText(text);
     if (parsed) {
       res.json(createImport(parsed, { actor: actorName(req) }));

@@ -70,4 +70,7 @@ export const de_fixes: Record<string, string> = {
   Test: 'Test',
   'Before ToHuus uses AI for you, please agree once (Settings › Access & AI).': 'Bevor ToHuus KI für dich nutzt, stimm bitte einmal zu (Einstellungen › Zugänge & KI).',
   'That was too long. Please say it in a few short sentences.': 'Das war zu lang. Sag es bitte in ein paar kurzen Sätzen.',
+  'This PDF could not be read (damaged or password protected). Open it, save it again as a PDF or take a photo of the receipt.': 'Dieses PDF lässt sich nicht lesen (beschädigt oder mit Passwort geschützt). Öffne es, speichere es neu als PDF oder fotografier den Bon.',
+  'This file is not a PDF. Save the receipt as a PDF again or take a photo of it.': 'Diese Datei ist kein PDF. Speichere den Bon noch einmal als PDF oder fotografier ihn.',
+  'This file is a saved web page, not a PDF, and no receipt was found in it. Open the receipt in the browser and save or share it as a PDF.': 'Diese Datei ist eine gespeicherte Webseite, kein PDF, und es steht kein Bon darin. Öffne den Bon im Browser und speichere oder teile ihn als PDF.',
 };
