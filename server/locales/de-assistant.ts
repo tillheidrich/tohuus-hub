@@ -1,5 +1,11 @@
 /** German strings of the assistant, what ToHuus remembers, the AI client and the "Heute" aggregate. */
 export const de_assistant: Record<string, string> = {
+  'Hi! I’m the ToHuus assistant. AI is not switched on yet – you can allow it under Settings › With or without AI. Until then I understand short things like “milk, 2 peppers and bread” or “do we still have eggs?”.':
+    'Hallo! Ich bin der Assistent von ToHuus. Die KI ist noch nicht eingeschaltet – du kannst sie unter Einstellungen › Mit oder ohne KI erlauben. Bis dahin verstehe ich kurze Sätze wie „Milch, 2 Paprika und Brot“ oder „Haben wir noch Eier?“.',
+  'Hi! I’m the ToHuus assistant. Tell me what is missing (“milk, 2 peppers and bread”), ask “do we still have eggs?” or “what can we cook?”.':
+    'Hallo! Ich bin der Assistent von ToHuus. Sag mir, was fehlt („Milch, 2 Paprika und Brot“), oder frag „Haben wir noch Eier?“ oder „Was können wir kochen?“.',
+  'For that I need AI, and it is not switched on yet – you can allow it under Settings › With or without AI. Short things like “milk, 2 peppers and bread” always work.':
+    'Dafür brauche ich die KI, und die ist noch nicht eingeschaltet – du kannst sie unter Einstellungen › Mit oder ohne KI erlauben. Kurze Sätze wie „Milch, 2 Paprika und Brot“ gehen immer.',
   // AI client (ai.ts)
   'No AI model is set up (AI_API_KEY / AI_MODEL_*).': 'Es ist kein KI-Modell eingerichtet (AI_API_KEY / AI_MODEL_*).',
   'No speech model is set up (AI_MODEL_AUDIO).': 'Es ist kein Sprachmodell eingerichtet (AI_MODEL_AUDIO).',

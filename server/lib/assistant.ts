@@ -411,6 +411,11 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
       if (aiConfigured('text') && aiOffReason()) return t('AI is off – I understand simple sentences like “milk is out and 2 peppers”.');
       return aiEnabled('text') ? t('The assistant is busy right now. Please try again in a moment.') : t('I can’t do that without the AI assistant. Simple sentences like “milk, 2 peppers and bread” always work.');
     }
+    case 'hello': {
+      if (aiConfigured('text') && aiOffReason() === 'consent')
+        return t('Hi! I’m the ToHuus assistant. AI is not switched on yet – you can allow it under Settings › With or without AI. Until then I understand short things like “milk, 2 peppers and bread” or “do we still have eggs?”.');
+      return t('Hi! I’m the ToHuus assistant. Tell me what is missing (“milk, 2 peppers and bread”), ask “do we still have eggs?” or “what can we cook?”.');
+    }
     case 'forget': {
       const r = forgetTool(ctx, { text: intent.text }) as any;
       return r.forgotten?.length ? t('Forgotten.') : t('Nothing matching was found.');
@@ -419,6 +424,8 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
       break;
   }
   // AI switched off (household, person, child) while a model exists: say so plainly
+  if (aiConfigured('text') && aiOffReason() === 'consent')
+    return t('For that I need AI, and it is not switched on yet – you can allow it under Settings › With or without AI. Short things like “milk, 2 peppers and bread” always work.');
   if (aiConfigured('text') && aiOffReason()) return t('AI is off – I understand simple sentences like “milk is out and 2 peppers”.');
   return !aiEnabled('text')
     ? t('I understand short things like “milk, 2 peppers and bread”, “milk is out”, “do we still have eggs?” or “bought milk and bread at Aldi for 12.40”.')

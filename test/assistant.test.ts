@@ -86,6 +86,10 @@ afterAll(() => {
 
 describe('reading without a model (pure)', () => {
   const p = (s: string) => parse.parseIntent(s);
+  it('greetings and test messages are never list items', () => {
+    for (const m of ['Hallo', 'hallo!', 'Test', 'test 2', 'Moin', 'Hi', 'Guten Morgen', 'Wer bist du?', 'Was kannst du?', 'Hilfe', 'Hey ToHuus']) expect(p(m).kind, m).toBe('hello');
+    for (const m of ['Milch', 'Testosteron-Shampoo', 'Hafermilch und Brot']) expect(p(m).kind, m).toBe('add');
+  });
   it('answers to the assistant are never list items', () => {
     const cases: [string, string][] = [
       ['Ja', 'yes'],
@@ -180,6 +184,10 @@ describe('without a model configured', () => {
     expect(r.json.actions).toEqual([]);
     expect(r.json.reply).toMatch(/KI-Assistenten/);
     expect((await till.chat('Danke')).json.reply).toBe('Gern.');
+    const hi = await till.chat('Hallo');
+    expect(hi.json.actions).toEqual([]);
+    expect(hi.json.reply).toMatch(/Assistent von ToHuus/);
+    expect((await till.chat('Test')).json.actions).toEqual([]);
     expect(openTexts()).toEqual([]);
   });
 

@@ -19,7 +19,13 @@ export type Intent =
   | { kind: 'forget'; text: string }
   /** an answer to the assistant ("Ja", "nein danke", "speicher das Rezept") – never a list item; needs the conversation */
   | { kind: 'reply'; answer: 'yes' | 'no' | 'thanks' | 'command' }
+  /** a greeting, a test message or a question about the assistant ("Hallo", "Test", "was kannst du?") – never a list item */
+  | { kind: 'hello' }
   | { kind: 'unknown' };
+
+/** "Hallo", "Moin", "Test", "Wer bist du?", "Was kannst du?" – small talk that must never land on the shopping list */
+export const SMALLTALK =
+  /^(?:(?:hallo|hallöchen|hello|hi|hey|huhu|moin(?:\s+moin)?|servus|grüß\s+(?:dich|gott)|gruess\s+dich|tach|na|yo|ahoi|guten\s+(?:morgen|tag|abend)|good\s+(?:morning|evening|afternoon)|gute\s+nacht)(?:\s+(?:du|zusammen|toHuus|tohuus|assistent))?|test(?:\s*\d+)?|testing|probe|check|ping|wie\s+geht(?:'?s|\s+es\s+dir)|how\s+are\s+you|wer\s+bist\s+du|who\s+are\s+you|was\s+kannst\s+du(?:\s+alles)?|what\s+can\s+you\s+do|hilfe|help)$/i;
 
 const clean = (s: string) => s.replace(/\s+/g, ' ').replace(/^[\s,.;:!-]+|[\s,.;:!?-]+$/g, '').trim();
 const money = (s: string | undefined) => (s ? Number(s.replace(/\s/g, '').replace(',', '.')) : null);
@@ -41,6 +47,7 @@ export function parseIntent(input: string): Intent {
 
   const r = replyOf(text);
   if (r) return { kind: 'reply', answer: r };
+  if (SMALLTALK.test(text.replace(/[!?.…]+$/g, '').trim())) return { kind: 'hello' };
 
   // remember / forget – a wish or a link from an article ("merk dir die Kekse aus dem Artikel") is for the wish list,
   // which needs the model (assistant-wishes.ts), not a household fact
