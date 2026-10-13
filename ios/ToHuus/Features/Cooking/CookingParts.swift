@@ -18,17 +18,6 @@ struct PersonDot: View {
     }
 }
 
-extension Color {
-    /// "#3a7d5c" → Color
-    init?(hexString: String?) {
-        guard var s = hexString?.trimmingCharacters(in: .whitespaces), !s.isEmpty else { return nil }
-        if s.hasPrefix("#") { s.removeFirst() }
-        if s.count == 3 { s = s.map { "\($0)\($0)" }.joined() }
-        guard s.count == 6, let v = UInt32(s, radix: 16) else { return nil }
-        self.init(UIColor(hex: v))
-    }
-}
-
 /// Filter / choice chip (≥ 44 pt tall tap area).
 struct CookChip: View {
     let title: String
@@ -52,33 +41,6 @@ struct CookChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])
-    }
-}
-
-/// Simple wrapping layout for chips.
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 6
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let w = proposal.width ?? 320
-        var x: CGFloat = 0, y: CGFloat = 0, row: CGFloat = 0, maxX: CGFloat = 0
-        for s in subviews {
-            let sz = s.sizeThatFits(.unspecified)
-            if x > 0 && x + sz.width > w { x = 0; y += row + spacing; row = 0 }
-            x += sz.width + spacing
-            maxX = max(maxX, x)
-            row = max(row, sz.height)
-        }
-        return CGSize(width: min(w, maxX), height: y + row)
-    }
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX, y = bounds.minY, row: CGFloat = 0
-        for s in subviews {
-            let sz = s.sizeThatFits(.unspecified)
-            if x > bounds.minX && x + sz.width > bounds.maxX { x = bounds.minX; y += row + spacing; row = 0 }
-            s.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(sz))
-            x += sz.width + spacing
-            row = max(row, sz.height)
-        }
     }
 }
 
