@@ -11,7 +11,7 @@ enum LiveTripActivity {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let running = Activity<ShoppingTripAttributes>.activities
         guard let trip else {
-            for a in running { Task { await a.end(nil, dismissalPolicy: .default) } }
+            Task { await endAll(except: nil, policy: .default) }
             return
         }
         let state = ShoppingTripAttributes.ContentState(
@@ -24,14 +24,29 @@ enum LiveTripActivity {
         let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(30 * 60))
         if let current = running.first(where: { $0.attributes.tripId == trip.id }) {
             guard current.content.state != state else { return }
-            Task { await current.update(content) }
+            let id = trip.id
+            Task { await update(tripId: id, content: content) }
             return
         }
-        for a in running { Task { await a.end(nil, dismissalPolicy: .immediate) } }
+        // Activity is not Sendable: the async calls run in nonisolated helpers that look the activities up themselves
+        let keep = trip.id
+        Task { await endAll(except: keep, policy: .immediate) }
         do {
             _ = try Activity.request(attributes: ShoppingTripAttributes(tripId: trip.id), content: content, pushType: nil)
         } catch {
             Task { await ErrorLog.shared.record(kind: "app", message: "Live Activity: \(error.localizedDescription)") }
+        }
+    }
+
+    nonisolated private static func endAll(except tripId: Int?, policy: ActivityUIDismissalPolicy) async {
+        for a in Activity<ShoppingTripAttributes>.activities where tripId == nil || a.attributes.tripId != tripId {
+            await a.end(nil, dismissalPolicy: policy)
+        }
+    }
+
+    nonisolated private static func update(tripId: Int, content: ActivityContent<ShoppingTripAttributes.ContentState>) async {
+        for a in Activity<ShoppingTripAttributes>.activities where a.attributes.tripId == tripId {
+            await a.update(content)
         }
     }
 }

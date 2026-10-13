@@ -6,7 +6,7 @@ import UIKit
 enum A11yTiming {
     /// Waits `seconds`, or forever while VoiceOver is on (the task is cancelled when the bar changes or goes away).
     static func hold(_ seconds: Double) async {
-        if UIAccessibility.isVoiceOverRunning {
+        if await MainActor.run(body: { UIAccessibility.isVoiceOverRunning }) {
             while !Task.isCancelled { try? await Task.sleep(nanoseconds: 60_000_000_000) }
             return
         }

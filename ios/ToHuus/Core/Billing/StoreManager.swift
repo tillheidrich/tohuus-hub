@@ -13,7 +13,7 @@ final class StoreManager {
         "de.heidrichdigital.tohuus.plus.monthly",
         "de.heidrichdigital.tohuus.plus.yearly",
         // optional: Plus once, for good (non-consumable). Shown only when it exists in App Store Connect.
-        Self.lifetimeId,
+        StoreManager.lifetimeId,
     ]
     static let lifetimeId = "de.heidrichdigital.tohuus.plus.lifetime"
 
