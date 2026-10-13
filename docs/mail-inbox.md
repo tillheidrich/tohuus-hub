@@ -78,3 +78,17 @@ change. Known shop senders for the AI fallback live in `server/lib/mail-inbound.
 - The privacy policy gets a paragraph: forwarded mails are processed in memory only, only receipts are stored, the
   rest is discarded without being stored; counters without content; Hetzner as host (already listed).
 - Members see the address; guests do not. The address does not reveal the household (random token).
+
+## REWE mails (checked with real mails, 13 Oct 2026)
+
+Anonymised copies are in `test/fixtures/rewe-mails` (`test/rewe-mails.test.ts`). Sender `@mailing.rewe.de` counts as a
+known shop.
+
+| Mail | What ToHuus does |
+|---|---|
+| "Dein REWE eBon vom …" (`ebon@mailing.rewe.de`) | the body has only the total; the receipt is the attached `REWE-ebon.pdf` → import `rewe-ebon` (reconciled with an earlier pickup/delivery notice of the same shopping) |
+| "Vielen Dank für deine Bestellung" / "Änderung deiner Bestellung beim REWE Abholservice" | **not booked**: an order is not a purchase yet, the eBon after the pickup is. Counted as `ignored:no_receipt` |
+| "Achtung: Bestellung enthält abweichende Mengen, Ersatz- & Fehlartikel" | the body has no items; the attached list (Lieferavis PDF) → import `rewe-avis`, which the later eBon reconciles |
+
+Still to check with a raw `.eml` that includes the attachments: the current eBon PDF layout and the avis PDF of a
+pickup order (the sample PDFs were printed mails without attachments).
