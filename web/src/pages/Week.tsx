@@ -114,17 +114,18 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
               {list.map((e) => (
                 <div key={e.id} className={`wmeal ${e.cooked ? 'done' : ''}`} onClick={() => setSel(e)} data-drop-row={e.id} {...drag(String(e.id), e)}>
                   {e.image_path ? <img src={e.image_path} alt="" loading="lazy" /> : <span className="ph"><ChefHat size={18} /></span>}
-                  <div className="grow">
-                    <div className="t">{e.title}</div>
-                    <div className="s">
+                  {/* the dish opens its sheet (move, another day, remove) – the keyboard way to everything dragging does */}
+                  <button type="button" className="grow wmeal-open" onClick={(ev) => { ev.stopPropagation(); setSel(e); }}>
+                    <span className="t">{e.title}</span>
+                    <span className="s">
                       {[
                         e.slot === 'mittag' ? t('Lunch') : null,
                         e.source === 'cookidoo' ? 'Cookidoo' : e.source === 'suggest' ? t('Suggested') : e.source === 'rotation' ? t('Rotation') : e.source === 'vote' ? t('Voted') : null,
                         e.thermomix ? 'TM' : null,
                         e.servings && e.servings !== (e.variant_servings || e.recipe_servings) ? t('for {n}', { n: e.servings }) : null,
                       ].filter(Boolean).join(' · ')}
-                    </div>
-                  </div>
+                    </span>
+                  </button>
                   <ClaimAvatar claim={claims.get(e.id)} />
                   <button
                     className="icon-btn sm"

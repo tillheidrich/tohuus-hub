@@ -208,6 +208,8 @@ const EVENT_LABEL: Record<string, string> = {
 };
 /** phones and browsers decide per person for these (NotifyMine) – the household matrix only routes shared channels */
 const PERSONAL_EVENTS = new Set(['trip.started', 'trip.addon', 'rhythm.due', 'plan.reminder', 'stock.expiring', 'import.review', 'order.new', 'budget.warning']);
+/** column names of the notification matrix, for the checkboxes' accessible names */
+const CHANNEL_NAME: Record<string, string> = { ha: 'Home Assistant', ntfy: 'ntfy', webhook: 'Webhook', email: 'E-Mail', push: 'Push' };
 
 function Notify({ admin }: { admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
@@ -302,7 +304,7 @@ function Notify({ admin }: { admin: boolean }) {
                       {ch === 'push' && PERSONAL_EVENTS.has(ev) ? (
                         <span className="muted small" title={t('Each person decides this for themselves')}>{t('per person')}</span>
                       ) : (
-                        <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} />
+                        <input type="checkbox" checked={Boolean(n.events[ev]?.[ch])} onChange={(e) => setEv(ev, ch, e.target.checked)} disabled={!admin} aria-label={`${t(EVENT_LABEL[ev])} – ${CHANNEL_NAME[ch] ?? extraCols.find(([k]) => k === ch)?.[1] ?? ch}`} />
                       )}
                     </td>
                   ))}

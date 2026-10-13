@@ -116,7 +116,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
           <button className="icon-btn" title={t('Group by')} onClick={() => setGroup(group === 'location' ? 'category' : 'location')}>
             <SlidersHorizontal size={18} />
           </button>
-          <button className="btn primary" onClick={onNew}>
+          <button className="btn primary" onClick={onNew} aria-label={t('New product')}>
             <Plus size={16} weight="bold" /> <span className="only-desktop">{t('Product')}</span>
           </button>
         </div>

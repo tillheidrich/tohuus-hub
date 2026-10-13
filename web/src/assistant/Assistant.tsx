@@ -204,7 +204,7 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
   return (
     <Sheet open={open} onClose={onClose} title={t('Assistant')}>
       <div className="assist">
-        <div className="assist-log" ref={list} aria-live="polite">
+        <div className="assist-log" ref={list} role="log" aria-live="polite" aria-label={t('Conversation')}>
           {msgs.length === 0 && (
             <div className="assist-hello">
               <p>{t('Tell me what’s missing, what you’d like to cook or what you want to know about your shopping. ToHuus remembers the rest.')}</p>

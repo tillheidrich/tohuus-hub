@@ -451,13 +451,13 @@ export function CategorySettings({ admin }: { admin: boolean }) {
             <div className="grow" style={{ minWidth: 120 }}>
               <div className="title">{c.name}</div>
             </div>
-            <select className="input" style={{ width: 'auto', height: 34, fontSize: 13 }} value={c.default_location_id ?? ''} disabled={!admin} onChange={(e) => patch(`/categories/${c.id}`, { default_location_id: e.target.value ? Number(e.target.value) : null }).then(() => invalidate('categories'))}>
+            <select className="input" aria-label={t('Place for new products: {name}', { name: c.name })} style={{ width: 'auto', height: 34, fontSize: 13 }} value={c.default_location_id ?? ''} disabled={!admin} onChange={(e) => patch(`/categories/${c.id}`, { default_location_id: e.target.value ? Number(e.target.value) : null }).then(() => invalidate('categories'))}>
               <option value="">{t('no place')}</option>
               {pick.map((l) => (
                 <option key={l.id} value={l.id}>{l.path ?? l.name}</option>
               ))}
             </select>
-            <select className="input" style={{ width: 'auto', height: 34, fontSize: 13 }} value={c.track_mode} disabled={!admin} onChange={(e) => patch(`/categories/${c.id}`, { track_mode: e.target.value }).then(() => invalidate('categories'))}>
+            <select className="input" aria-label={t('How to count: {name}', { name: c.name })} style={{ width: 'auto', height: 34, fontSize: 13 }} value={c.track_mode} disabled={!admin} onChange={(e) => patch(`/categories/${c.id}`, { track_mode: e.target.value }).then(() => invalidate('categories'))}>
               <option value="count">{t('Pieces')}</option>
               <option value="level">{t('Fill level')}</option>
               <option value="none">{t('don’t count')}</option>

@@ -1,6 +1,6 @@
 import { EmptyArt, type ArtName } from './art';
 import { Check, Minus, Plus, X, MagnifyingGlass } from '@phosphor-icons/react';
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { LEVELS, type Product, type Status, daysUntil, fmtDate, useApi } from './api';
 import { num, t } from './i18n';
@@ -90,8 +90,21 @@ export function LevelPicker({ value, onChange }: { value: number; onChange: (v: 
   );
 }
 
-export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label?: string }) {
-  return <button type="button" aria-label={label} aria-pressed={on} className={`toggle ${on ? 'on' : ''}`} onClick={() => onChange(!on)} />;
+/**
+ * On/off switch. `label` names it for screen readers; without one it is named by the text of its row (the label
+ * next to it), so every switch has a name (WCAG 4.1.2).
+ */
+export function Toggle({ on, onChange, label, disabled }: { on: boolean; onChange: (v: boolean) => void; label?: string; disabled?: boolean }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [auto, setAuto] = useState<string | undefined>();
+  useLayoutEffect(() => {
+    if (label || !ref.current) return;
+    const row = ref.current.closest('label, .row, .li, .between, li, .field, .card');
+    const named = row?.querySelector<HTMLElement>('b, strong, label, .label, h3, h4, span:not(.small):not(.muted)');
+    const txt = (named && !named.contains(ref.current) ? named.textContent : row?.textContent)?.replace(/\s+/g, ' ').trim();
+    if (txt) setAuto(txt.slice(0, 80));
+  }, [label]);
+  return <button ref={ref} type="button" role="switch" aria-label={label ?? auto} aria-checked={on} disabled={disabled} className={`toggle ${on ? 'on' : ''}`} onClick={() => onChange(!on)} />;
 }
 
 export function Seg<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label?: string }) {
@@ -121,11 +134,85 @@ export function Seg<T extends string>({ value, options, onChange, label }: { val
 
 // ------------------------------------------------------------------ sheet
 
-export function Sheet({ open, onClose, title, children, wide = false, footer }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode; wide?: boolean; footer?: ReactNode }) {
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), summary, [contenteditable="true"]';
+
+/** Focusable controls inside `root` that are actually visible (in tab order). */
+export function focusables(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => !el.closest('[inert], [hidden]') && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
+}
+
+/** The dialog that is on top right now (sheets can open over sheets – only the top one reacts to keys). */
+const isTopDialog = (el: HTMLElement) => {
+  const all = document.querySelectorAll('[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]');
+  return all[all.length - 1] === el;
+};
+
+/**
+ * Keyboard and screen-reader behaviour of a modal dialog (WCAG 2.1.2, 2.4.3, 2.4.7, 4.1.2):
+ * focus moves in when it opens (an autofocus field keeps it), Tab / Shift+Tab stay inside, Escape closes the top
+ * dialog only, and focus returns to the control that opened it. Without an explicit name the first heading inside
+ * labels the dialog.
+ */
+export function useDialog(ref: RefObject<HTMLElement | null>, open: boolean, onClose?: () => void) {
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    const el = ref.current;
+    if (!open || !el) return;
+    const opener = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+    if (!el.hasAttribute('aria-label') && !el.hasAttribute('aria-labelledby')) {
+      const h = el.querySelector<HTMLElement>('h1, h2, h3, legend');
+      if (h) {
+        if (!h.id) h.id = `dlg-${Math.random().toString(36).slice(2, 9)}`;
+        el.setAttribute('aria-labelledby', h.id);
+      }
+    }
+    // after the children had their chance to autofocus a field
+    const raf = requestAnimationFrame(() => {
+      if (el.contains(document.activeElement)) return;
+      const auto = el.querySelector<HTMLElement>('[autofocus], [data-autofocus]');
+      (auto ?? el).focus({ preventScroll: true });
+    });
+    const onKey = (e: KeyboardEvent) => {
+      if (!isTopDialog(el)) return;
+      if (e.key === 'Escape' && closeRef.current) {
+        e.stopPropagation();
+        closeRef.current();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const f = focusables(el);
+      if (!f.length) {
+        e.preventDefault();
+        el.focus();
+        return;
+      }
+      const first = f[0];
+      const last = f[f.length - 1];
+      const a = document.activeElement;
+      if (e.shiftKey && (a === first || a === el || !el.contains(a))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (a === last || !el.contains(a))) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', onKey);
+      // give focus back to whatever opened the dialog (if it is still there)
+      if (opener && opener.isConnected) setTimeout(() => opener.focus({ preventScroll: true }), 0);
+    };
+  }, [open, ref]);
+}
+
+export function Sheet({ open, onClose, title, children, wide = false, footer, label }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode; wide?: boolean; footer?: ReactNode; /** accessible name when there is no visible title */ label?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useDialog(ref, open, onClose);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     // keyboard-aware: the sheet never grows taller than what is visible above the on-screen keyboard
@@ -139,19 +226,18 @@ export function Sheet({ open, onClose, title, children, wide = false, footer }: 
     vv?.addEventListener('resize', fit);
     vv?.addEventListener('scroll', fit);
     return () => {
-      document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
       vv?.removeEventListener('resize', fit);
       vv?.removeEventListener('scroll', fit);
       document.documentElement.style.removeProperty('--vvh');
       document.documentElement.style.removeProperty('--vvt');
     };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return createPortal(
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true">
-        <div className="grip" />
+      <div ref={ref} className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={label} tabIndex={-1}>
+        <div className="grip" aria-hidden="true" />
         {title !== undefined && (
           <div className="sheet-head">
             <h2>{title}</h2>
@@ -185,9 +271,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastCtx.Provider value={push}>
       {children}
       {createPortal(
-        <div className="toasts" aria-live="polite">
+        <div className="toasts" role="status" aria-live="polite">
           {list.map((t) => (
-            <div key={t.id} className={`toast ${t.error ? 'error' : ''}`}>
+            <div key={t.id} className={`toast ${t.error ? 'error' : ''}`} role={t.error ? 'alert' : undefined}>
               {!t.error && <Check size={16} weight="bold" />}
               <span>{t.text}</span>
               {t.action && (
