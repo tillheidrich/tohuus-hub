@@ -37,6 +37,7 @@ struct SettingsView: View {
                     } else {
                         LabeledContent(L("Household"), value: app.activeHousehold?.name ?? "–")
                     }
+                    if let api = app.api { HouseholdLinks(api: api) }
                 }
                 Section {
                     NavigationLink { NotificationSettingsView() } label: { Label(L("Notifications"), systemImage: "bell") }

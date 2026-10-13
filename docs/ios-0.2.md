@@ -184,3 +184,33 @@ Native in the app now (mirrors `web/src/pages/Week.tsx`, `Plan2.tsx`, `WhatToEat
 Debug launch args (debug builds): `-debugTab cooking -debugCook wte|week|recipes|recipe:<id>|with:<terms>|open|open:<query>|import`, `-debugCookWeek <offset>`.
 
 Still web-only: label printing for leftovers (the phone saves the boxes unlabelled), Cookidoo sync button, the favourites page and person profiles, step-by-step cook mode on the iPhone (the iPad kitchen mode has its own), meal-box picks in the plan picker, printing the week.
+## 0.3 parity – Geld, Bons, Haushalt, Für mich & Hausinfo (package C)
+
+New native screens (debug launch args open them directly in simulator builds):
+
+| Screen | File | Endpoints | Debug |
+| --- | --- | --- | --- |
+| Bons (receipts list: status, shop, total, date, thumbnail; eBon link/QR) | Features/Imports/ImportsListView.swift | `GET /api/imports`, `POST /api/imports/url`, `POST /api/imports/:id/discard` | `-debugTab money -debugMoney receipts` |
+| Bon prüfen (fix a line, link to product / new product, leave a line out, target place, apply) | Features/Imports/ImportReviewView.swift | `GET /api/imports/:id`, `PATCH /api/imports/:id/lines/:lineId`, `POST /api/imports/:id/apply`, `POST /api/imports/:id/rematch` | `-debugMoney review:<id>` |
+| Geld im Detail (periods 12 weeks/months/years/all, drill-down to entries and receipts, budgets + notify, own expenses, leave out / count again, CSV via share sheet) | Features/Money/SpendView.swift, SpendSheets.swift | `/api/spend/stats`, `/api/spend/meta`, `/api/spend/entries`, `/api/spend/receipts/:id`, `/api/spend/budgets`, `/api/spend/expenses`, `/api/spend/exclusions`, `/api/spend/export?format=csv` | `-debugMoney detail` |
+| Wo war's günstiger / price history (chart, per-shop prices with the cheapest marked, product picture) | MoneyView "Wo war's günstiger" → PriceHistoryView; "Alle Preise" → PricePickerView | `GET /api/prices/cheapest`, `GET /api/prices/product/:id`, `GET /api/spending/prices/:id`, `GET /api/spending/products` | `-debugMoney prices`, `-debugMoney price:<productId>` |
+| Leute & Vorlieben (avatars, likes/dislikes/allergies with the Art. 9 consent step) | Features/Household/HouseholdView.swift | `GET /api/people`, `PUT /api/people/{me\|person/:key}/prefs`, `…/face` | `-debugSettings YES -debugMore people` |
+| Jemanden einladen (create, share sheet + QR, list, renew, revoke) | Features/Household/InvitesView.swift | `GET/POST /api/invites`, `GET /api/invites/options`, `POST /api/invites/:id/resend`, `DELETE /api/invites/:id` | `-debugMore invites` |
+| Was ToHuus sich merkt (list, add, forget, only for me) | Features/Household/MemoryView.swift | `GET/POST /api/memory`, `DELETE /api/memory/:id` | `-debugMore memory` |
+| Für mich (tiles, options, "who brings it", wish with note, inbox "Für dich" with I'll bring it / can't right now + reason / brought it, own wishes with private thanks; refreshes every 20 s) | Features/Treats/TreatsView.swift | `GET /api/bar/menu`, `/api/bar/helpers`, `/api/bar/my-orders`, `/api/bar/requests`, `POST /api/bar/orders`, `PATCH /api/orders/:id`, `POST /api/bar/orders/:id/thanks` | `-debugMore treats` |
+| Gäste-Links (babysitter/visitors/grandparents presets, scopes, places, days, note; share sheet + QR shown once; new link; revoke) | Features/Treats/GuestLinksView.swift | `GET/POST /api/guest-links`, `POST /api/guest-links/:id/rotate`, `DELETE /api/guest-links/:id` | `-debugMore guestlinks`, `guestlink-new` |
+| Hausinfo bearbeiten (admins: new/edit/delete cards and codes, who sees it: everyone at home / sitter links; code values are never loaded – empty field keeps them) | Features/Settings/HouseGuideView.swift, HouseGuideEdit.swift | `POST/PATCH/DELETE /api/house-guide/cards[/:id]`, `…/codes[/:id]` | `-debugMore house`, `housecard-new`, `housecard-edit`, `housecode-new` |
+
+Entry points: Geld → "Im Detail", "Bons", "Wo war's günstiger" rows and "Alle Preise"; Bon erfassen → "Bons prüfen";
+Mehr › Haushalt → Leute & Vorlieben, Jemanden einladen, Was ToHuus sich merkt, Für mich, Gäste-Links (`HouseholdLinks`);
+Mehr › Hausinfo → Links für Babysitter und Gäste (admins).
+
+Design: `Design/EmptyArt.swift` draws the web's empty-state illustrations (list, shelf, book, receipt, box, done,
+calendar, suitcase, bag) and the BrandMark as SwiftUI paths in the Dutch Detail colours; `EmptyStateView` shows the
+drawing (explicit `art:` or derived from the SF Symbol name) plus an optional action button – the old
+`EmptyStateView(systemImage:title:message:)` API still works. `Design/Avatar.swift` (`AvatarView`, `PersonAvatar`):
+initials, animal drawing or photo on the person's colour, like web people/Avatar.tsx.
+
+Still web-only: guest and party board (`/bar`, kitchen view), the menu editor ("Was Gäste sich wünschen können"),
+per-link Hausinfo selection (`/api/house-guide/links/:id`), Hausinfo templates and access log, children and permanent
+guests (add), receipt e-mail forwarding setup.
