@@ -68,7 +68,7 @@ A complete reference with where each feature sits in the app is in [docs/feature
 - **Store mode**: grouped by aisle, the order is learned per store, works offline, "I'll get it" claims, natural-language quick add ("2 l milk, bread").
 - **Discreet items**: mark an entry "discreet" and everyone else sees a neutral placeholder such as "Drugstore item", or "only me" so nobody else sees it at all. The real name never reaches Home Assistant, Telegram, displays, printed lists, guest links or AI assistants.
 - **Share into the app**: installed as a web app on Android or desktop, ToHuus Hub appears in the share menu. Share a WhatsApp list, a recipe link or a receipt photo. On iPhone, a Shortcut with a personal key does the same for the shopping list.
-- **Treats (Verwöhnen)**: do each other a good turn. Whoever is stuck with bedtime, ill in bed or working late asks for "vanilla ice cream, please" or "tea with honey" – the others get a push with "I'll bring it" or "Can't right now". No points, no ranking, just a private thanks.
+- **Treats („Bring mir was“)**: do each other a good turn. Whoever is stuck with bedtime, ill in bed or working late asks for "vanilla ice cream, please" or "tea with honey" – the others get a push with "I'll bring it" or "Can't right now". No points, no ranking, just a private thanks.
 - **Home care**: water filter, smoke detectors, descaling, tyres, passport expiry. Templates, reminders, one tap to mark done.
 - **Receipt-style tickets** for shopping lists, kitchen orders, care tasks and recipe cards, printed on an ESC/POS thermal printer or sent to Telegram, Matrix, Gotify or e-mail.
 - **Kitchen and wall displays** that also run on old tablets, plus a PNG for e-ink frames.

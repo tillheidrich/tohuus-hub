@@ -31,7 +31,7 @@ export const de_list2: Record<string, string> = {
   '“Still at home” runs out soon': '„Das habt ihr noch“ läuft bald ab',
   'A receipt was recognised': 'Ein Bon wurde erkannt',
   'Reminder for the week plan': 'Erinnerung an den Wochenplan',
-  'A wish (Treats)': 'Ein Wunsch (Verwöhnen)',
+  'A wish (Treats)': 'Ein Wunsch (Bring mir was)',
   'An order from guests': 'Eine Bestellung von Gästen',
   'Budget hint': 'Budget-Hinweis',
   'Something new in ToHuus': 'Neues in ToHuus',

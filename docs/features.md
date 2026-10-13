@@ -8,10 +8,10 @@ Admins see every settings tab. Members see most of them read-only. Permanent gue
 
 | Group | Pages |
 |---|---|
-| Tab bar | Today (Heute), Treats (Verwöhnen), Shopping (Einkauf), More (Mehr) |
+| Tab bar | Today (Heute), Treats (Bring mir was), Shopping (Einkauf), More (Mehr) |
 | Around the house (Rund ums Haus) | Stock (Bestand), Where's what? (Wo ist was?), Quick stock check (Schnell-Abgleich), Home & care (Haus & Pflege), Trip / away (Urlaub / unterwegs) |
 | Kitchen & shopping (Küche & Einkauf) | Shopping (Einkauf), Cook (Kochen), Favourites (Lieblinge), Imports (Importe), Spending (Ausgaben) |
-| Treats & guests (Verwöhnen & Gäste) | Treats (Verwöhnen), Guests & party (Gäste & Party) |
+| Treats & guests (Bring mir was & Gäste) | Treats (Bring mir was), Guests & party (Gäste & Party) |
 | Manage (Verwaltung) | QR labels (QR-Etiketten), Settings (Einstellungen), Help (Hilfe) |
 
 Settings tabs: Household (Haushalt), My account (Mein Konto), Members (Mitglieder), Places & categories (Orte & Kategorien), Notifications (Benachrichtigungen), Access & AI (Zugänge & KI), Home Assistant, Displays, Printers & tickets (Drucker & Bons), Recipes (Rezepte), Data & backups (Daten & Sicherung).
@@ -147,16 +147,16 @@ Health data (allergies, children's birth years) goes to an AI – the built-in a
 
 ## Treats, guests and party
 
-Treats (DE „Verwöhnen“) is about doing each other a good turn. One page, three modes: *For me* (everyday, the default for couples, families and flat shares), *Guests* and *Party*. A household that lives alone only sees Guests and Party.
+Treats (DE „Bring mir was“, until 13 Oct 2026 „Verwöhnen“) is about doing each other a good turn. One page, three modes: *Bring mir was* (everyday, the default for couples, families and flat shares), *Guests* and *Party*. A household that lives alone only sees Guests and Party.
 
-- **Ask for a little something**: someone stuck with bedtime, a sick partner, someone working late asks for "vanilla ice cream, please" or "tea with honey" from the sofa or from bed. Big tiles: something sweet, something to drink, something to nibble, from the fridge (only from real stock in a place of kind fridge), everything that's here, or a free wish. A note ("How would you like it?") and an optional "Who brings it?" (one person or whoever can). *Treats › For me (Verwöhnen › Für mich)*
+- **Ask for a little something**: someone stuck with bedtime, a sick partner, someone working late asks for "vanilla ice cream, please" or "tea with honey" from the sofa or from bed. Big tiles: something sweet, something to drink, something to nibble, from the fridge (only from real stock in a place of kind fridge), everything that's here, or a free wish. A note ("How would you like it?") and an optional "Who brings it?" (one person or whoever can). *Treats › Bring me something (Bring mir was)*
 - **One-tap answers**: the others get a push (or Telegram message) with "I'll bring it" / "Can't right now"; declining can carry a short reason ("In a few minutes", "It's all gone", "I'm not home", "My hands are full"). Chosen person: only their phone rings. The asker sees warm status lines: "Coming right up – Lea is bringing it", "Brought by Lea", "Not right now – in a few minutes". *Treats › For me › For you (Für dich)*
 - **A private thanks**: once it's there, the asker can say thanks; it reaches only the bringer. No points, no ranking, no list of who brought what.
-- **Order menu editor**: groups, items from stock (marked "out" when empty) and menu-only items (tap water, cappuccino) with up to three ingredients from stock that are booked out per serving; templates and suggestions. *Treats › Edit menu (Verwöhnen › Karte bearbeiten)*, or *Settings › Household › Treats & guests (Verwöhnen & Gäste)*
+- **Order menu editor**: groups, items from stock (marked "out" when empty) and menu-only items (tap water, cappuccino) with up to three ingredients from stock that are booked out per serving; templates and suggestions. *Treats › Edit menu (Bring mir was › Karte bearbeiten)*, or *Settings › Household › Treats & guests (Bring mir was & Gäste)*
 - **Board**: everything that comes in from home, guests and the party – accept, in progress, brought/served, can't right now; stock is booked out when served. *Guests & party (Gäste & Party)*
-- **Guest links**: a link or QR code that works without an account. Presets for visitors, the babysitter and grandparents. Each link opens one or more of: asking for something from the menu, read-only "where is what" for chosen places with a note, adding to the shopping list. Optional expiry, revoke any time. *Treats › Guests (Verwöhnen › Gäste)*
+- **Guest links**: a link or QR code that works without an account. Presets for visitors, the babysitter and grandparents. Each link opens one or more of: asking for something from the menu, read-only "where is what" for chosen places with a note, adding to the shopping list. Optional expiry, revoke any time. *Treats › Guests (Bring mir was › Gäste)*
 - **Babysitter link**: a guest link with "where is what", a note (emergency numbers, bedtime) and, if switched on, a voice command guide (see [home-assistant.md](home-assistant.md#voice-commands-on-the-babysitter-page)).
-- **Party mode**: start in two taps, a party menu with per-guest limits, a TV board with a join QR and a kitchen view (new, in progress, ready), soft reservation of the last bottle, automatic end, a recap that puts what ran out on the list, templates. *Treats › Party (Verwöhnen › Party)*
+- **Party mode**: start in two taps, a party menu with per-guest limits, a TV board with a join QR and a kitchen view (new, in progress, ready), soft reservation of the last bottle, automatic end, a recap that puts what ran out on the list, templates. *Treats › Party (Bring mir was › Party)*
 - **Kitchen tickets**: new orders can print on a kitchen printer automatically; a wish from home prints as a "Please bring" slip with who it is for. *Settings › Printers & tickets*
 
 ## Family and people

@@ -5895,7 +5895,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für mich"
+            "value": "Bring mir was"
           }
         }
       }
@@ -5912,7 +5912,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für mich – was wünschen"
+            "value": "Bring mir was – sag, was du brauchst"
           }
         }
       }
@@ -17404,7 +17404,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verwöhnen & Einkaufsliste"
+            "value": "Bring mir was & Einkaufsliste"
           }
         }
       }

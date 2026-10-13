@@ -1,5 +1,5 @@
 /**
- * "Mehr" (plan 2026-10-12): everything that is not one of the five tabs – settings, people, guests, Verwöhnen,
+ * "Mehr" (plan 2026-10-12): everything that is not one of the five tabs – settings, people, guests, Bring mir was,
  * displays, Home Assistant, labels, data … Reached from the avatar on Heute and from the desktop sidebar.
  */
 import {

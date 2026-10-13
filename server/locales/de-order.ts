@@ -1,6 +1,6 @@
-// German server strings for „Verwöhnen“ (order mode: household wishes, guests, party) – area: order
+// German server strings for „Bring mir was“ (order mode: household wishes, guests, party) – area: order
 export const de_order: Record<string, string> = {
-  Treats: 'Verwöhnen',
+  Treats: 'Bring mir was',
   'Not right now – {reason}': 'Geht gerade nicht – {reason}',
   'Not right now': 'Geht gerade nicht',
   'Ready at the counter': 'Steht bereit an der Theke',

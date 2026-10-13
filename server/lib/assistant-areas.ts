@@ -74,7 +74,7 @@ export function contextHint(ctx: ScreenContext | null | undefined, de: boolean):
       'Screen: house info. From descriptions like “we have Alexa and Hue in the living room” draft cards for babysitters (voice commands, routines, tips), show them, and save them as drafts with house_draft_cards only after a yes. Never ask for or store codes, PINs or passwords – people enter those themselves under Codes.',
     ],
     guests: [
-      'Bildschirm: Gäste/Verwöhnen. Einkauf für eine Feier: Mengen nach Gästezahl grob schätzen und als Schätzung sagen, mit check_at_home prüfen, nur Fehlendes nach Ja mit list_add.',
+      'Bildschirm: Gäste/Bring mir was. Einkauf für eine Feier: Mengen nach Gästezahl grob schätzen und als Schätzung sagen, mit check_at_home prüfen, nur Fehlendes nach Ja mit list_add.',
       'Screen: guests/treats. Shopping for a party: estimate amounts per guest count and say it is an estimate, check with check_at_home, add only what is missing after a yes with list_add.',
     ],
   };
