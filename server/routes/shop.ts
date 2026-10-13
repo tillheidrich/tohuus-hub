@@ -30,10 +30,13 @@ import { setHouseholdStores, storeChoices, storesChosen } from '../lib/stores.js
 import { region } from '../lib/region.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
+import { canUseList, privateRowGuard } from '../lib/lists.js';
 import { NOTIFY_ACTIONS, runNotifyAction } from '../lib/notify-actions.js';
 
 export const r = Router();
 r.use(requireAuth);
+// rows on a private list don't exist for anyone outside it (list-privacy.ts)
+r.use(privateRowGuard);
 
 startHaTodoSync();
 
@@ -149,6 +152,7 @@ r.post('/shop/quick-add', (req, res) => {
       list_id: z.number().int().min(0).nullable().optional(),
     })
     .parse(req.body);
+  if (!canUseList(b.list_id ?? null, userId(req))) return void res.status(404).json({ error: t('List not found') });
   res.json({ added: addLines(b.items, actorName(req), 'manual', b.list_id ?? null) });
 });
 
@@ -171,7 +175,7 @@ r.post('/claims', (req, res) => {
   }
 });
 
-r.get('/shop/members', (_req, res) => res.json(db.prepare('SELECT id, name, color FROM users ORDER BY id').all()));
+r.get('/shop/members', (_req, res) => res.json(db.prepare('SELECT id, name, color, kind FROM users ORDER BY id').all()));
 
 // ---------------------------------------------------------------- offline replay
 

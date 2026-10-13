@@ -1,0 +1,22 @@
+/** German server strings for private lists and wish lists ("Wünsche", 13 Oct 2026). */
+export const de_wish: Record<string, string> = {
+  'Only members with an account can keep a list to themselves.': 'Nur Mitglieder mit eigenem Zugang können eine Liste für sich behalten.',
+  'This row is on a private list. Change who sees the list instead.': 'Das steht auf einer privaten Liste. Ändere, wer die Liste sieht.',
+  'Only members with an account can keep wish lists.': 'Nur Mitglieder mit eigenem Zugang können Wunschlisten führen.',
+  'Only the person who made the list can change who sees it.': 'Nur wer die Liste angelegt hat, kann ändern, wer sie sieht.',
+  'Only the person who made the list can delete it.': 'Nur wer die Liste angelegt hat, kann sie löschen.',
+  'Saved for later': 'Merkliste',
+  'Sent from ToHuus': 'Gesendet mit ToHuus',
+  'That is not a valid link.': 'Das ist kein gültiger Link.',
+  'Too many link previews right now. Try again in a while.': 'Gerade zu viele Link-Vorschauen. Versuch es gleich noch mal.',
+  'Wish list for {name}': 'Wunschliste für {name}',
+  'Wish list not found': 'Wunschliste nicht gefunden',
+  'Wish list: {name}': 'Wunschliste: {name}',
+  'Wish not found': 'Wunsch nicht gefunden',
+  'Wishes for {name}': 'Wünsche für {name}',
+  'from {price}': 'ab {price}',
+  Link: 'Link',
+  'Invalid input': 'Ungültige Eingabe',
+  '{name} has already reserved this.': '{name} hat das schon reserviert.',
+  '“{title}” noted on {list}': '„{title}“ steht auf {list}',
+};

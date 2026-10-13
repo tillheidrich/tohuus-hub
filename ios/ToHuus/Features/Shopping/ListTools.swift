@@ -130,12 +130,27 @@ struct ManageListSheet: View {
     @State private var confirmDelete = false
     @State private var error: String?
     @State private var busy = false
+    // private lists (13 Oct 2026)
+    @State private var visibility = "household"
+    @State private var shareWith: [Int] = []
+    @State private var members: [Member] = []
+    @State private var me: MeLite?
+
+    /// anyone may make a household list private (and owns it then); after that only the owner decides
+    private var mayPrivacy: Bool { me?.isMember == true && (list.visibility ?? "household" == "household" || list.mine == true) }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section(L("Name")) {
                     TextField(L("Name"), text: $name)
+                }
+                if mayPrivacy {
+                    Section(L("Who sees it?")) {
+                        VisibilityPicker(visibility: $visibility, shareWith: $shareWith, members: members, meId: me?.userId)
+                    }
+                } else if list.isPrivate {
+                    Section { Text(LF("%@ shared this list with you. Only %@ can change who sees it.", list.owner ?? "?", list.owner ?? "?")).font(.footnote).foregroundStyle(Theme.ink3) }
                 }
                 Section {
                     TextField(list.kind == "care" ? L("e.g. milk into the fridge, receipt in the drawer") : L("Note"), text: $note, axis: .vertical)
@@ -165,6 +180,12 @@ struct ManageListSheet: View {
             .onAppear {
                 name = list.name
                 note = list.note ?? ""
+                visibility = list.visibility ?? "household"
+                shareWith = list.shareWith ?? []
+            }
+            .task {
+                me = try? await store.api.meLite()
+                members = (try? await store.api.members()) ?? []
             }
         }
         .presentationDetents([.medium, .large])
@@ -177,6 +198,9 @@ struct ManageListSheet: View {
         do {
             let n = note.trimmingCharacters(in: .whitespacesAndNewlines)
             try await store.api.updateShopList(id, name: name.trimmingCharacters(in: .whitespaces), note: n.isEmpty ? nil : n)
+            if mayPrivacy && (visibility != (list.visibility ?? "household") || Set(shareWith) != Set(list.shareWith ?? [])) {
+                try await store.api.setShopListVisibility(id, visibility: visibility, shareWith: shareWith)
+            }
             await store.refreshList()
             dismiss()
         } catch { self.error = APIError.from(error).localizedDescription }

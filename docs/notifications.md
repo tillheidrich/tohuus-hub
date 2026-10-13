@@ -19,7 +19,7 @@ ToHuus Hub tells the household when something needs attention. There are two lay
 | `stock.expiring` | off | "Das habt ihr noch" runs out soon |
 | `import.review` | off | a receipt was recognised and waits for a look |
 | `plan.reminder` | off | Sunday evening: next week is still empty (only when the week plan is used) |
-| `order.new` | on | a Verwöhnen wish |
+| `order.new` | on | a „Bring mir was“ wish |
 | `guest.order` | off | an order from guests or a party (`order.new` with `kind` guest/party) |
 | `budget.warning` | off | budget hint |
 

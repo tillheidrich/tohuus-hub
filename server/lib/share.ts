@@ -163,6 +163,8 @@ export function setPrivacy(itemId: number, input: PrivacyInput, viewer: { userId
     | undefined;
   if (!it) throw err(404, t('Item not found'));
   const s = shareRow(itemId);
+  // rows on a private list follow the list (list-privacy.ts) – change the list, not the row
+  if (s && (s as ShareRow & { from_list?: number | null }).from_list) throw err(400, t('This row is on a private list. Change who sees the list instead.'));
   if (s && s.owner_id !== null && s.owner_id !== viewer.userId) throw err(403, t('Only the person who added it can change this.'));
   const ownerId = s?.owner_id ?? viewer.userId;
   db.transaction(() => {

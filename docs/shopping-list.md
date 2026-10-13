@@ -64,10 +64,15 @@ operation queue does the same with `/api/shop/sync` (401 → keep the queue, ask
 | Endpoint | Body / query | Answer |
 |---|---|---|
 | `GET /api/shop/list?list=<id>` | `list` = `0` (main, default), a list id, or `all` | the view of that list; plus `listId`, `lists`, `estimate`. On the main list, lists of kind `care` appear as own sections `list:<id>` after the aisles |
-| `GET /api/list/lists` | | `[{ id, name, kind: 'main'\|'store'\|'gifts'\|'care'\|'other', note, open }]` (id 0 = main list) |
-| `POST /api/list/lists` | `{ name, kind?, note? }` | the list |
-| `PATCH /api/list/lists/:id` | `{ name?, kind?, note? }` | the list (`note` = handover note for care lists) |
-| `DELETE /api/list/lists/:id` | | `{ ok }` – open rows move to the main list |
+| `GET /api/list/lists` | | `[{ id, name, kind: 'main'\|'store'\|'gifts'\|'care'\|'other', note, open, visibility, owner_id, owner, share_with, mine }]` (id 0 = main list; only the lists the viewer may see) |
+| `POST /api/list/lists` | `{ name, kind?, note?, visibility?, share_with? }` | the list |
+| `PATCH /api/list/lists/:id` | `{ name?, kind?, note?, visibility?, share_with? }` | the list (`note` = handover note for care lists); `visibility`/`share_with`: anyone may make a household list private (and owns it then), afterwards only the owner (403 otherwise) |
+| `DELETE /api/list/lists/:id` | | `{ ok }` – open rows move to the main list (rows of a private list stay private) |
+
+### Private lists (13 Oct 2026)
+
+`visibility`: `household` (default, everyone), `private` (only the owner), `people` (owner + `share_with`, member ids; guests are dropped). A private list and everything on it does not exist for anyone else: 404 for the list, its rows (`/api/shopping/:id`, `/api/shop/items/:id/*`, `/api/list/items/:id/*` – `privateRowGuard`), adding to it, `?list=<id>` in the store view and the estimate. Rows are stored like private share items (`server/lib/list-privacy.ts`): `shopping_items` keeps only a placeholder, the real text/product/note live in `share_items` with `from_list` = the list; two SQLite triggers mask every row inserted into or moved onto a private list, whatever the path. So Heute, live shopping, rhythm, notifications, the assistant, MCP, Home Assistant, CalDAV, Watch/widget payloads (they read `/api/shop/list` / `/api/today`) and exports (`share_items`/`shopping_lists` filtered per person) never show them. Per-row privacy (`/api/share/items/:id`) is refused for these rows – change the list instead; the item's `share.list = true` tells the apps.
+
 | `POST /api/list/items/:id/move` | `{ list_id }` | `{ ok }` |
 | add with a list | `list_id` in `POST /api/shopping`, `POST /api/shop/quick-add` (`{ items, list_id }`) and sync op `add` (`list_id`) | a row counts as "already there" only on the same list |
 | `GET /api/list/usuals?limit=60` | | `[{ productId, name, image_path, count, lastDay, onList }]` – "Unsere Üblichen", most frequent first |

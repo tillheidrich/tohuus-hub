@@ -24,6 +24,10 @@ import { lastPurchase, purchaseEvents, rhythmList, sensitiveProductIds } from '.
 import { fmtWhen } from './shopping-trust.js';
 import { wasteHints } from './hhforms.js';
 import { config } from '../config.js';
+import { type ListVisibility, LIST_VISIBILITIES, VISIBLE_LIST_SQL, mayUseList, parseIds, syncListRows } from './list-privacy.js';
+import { isGuestUser } from './people-policy.js';
+
+export { LIST_VISIBILITIES, type ListVisibility, mayUseList } from './list-privacy.js';
 
 const err = (message: string, status = 400) => Object.assign(new Error(message), { status });
 
@@ -40,46 +44,123 @@ export interface ShoppingList {
   /** handover note (lists for someone else) or any note */
   note: string | null;
   open: number;
+  /** household = everyone; private = only the owner; people = the owner plus `share_with` (13 Oct 2026) */
+  visibility: ListVisibility;
+  owner_id: number | null;
+  owner: string | null;
+  share_with: number[];
+  /** the viewer owns the list (may change who sees it) */
+  mine: boolean;
 }
 
-export function listLists(): ShoppingList[] {
+/** Who is looking: a member's users.id; none (tokens, MCP, displays, CalDAV) → household lists only. */
+export interface ListViewer {
+  userId?: number | null;
+}
+
+type ListRow = { id: number; name: string; kind: ListKind; note: string | null; visibility: ListVisibility; owner_id: number | null; share_with: string; owner: string | null };
+
+/** The lists one person may see. Private lists of others don't exist for them – not even their name or count. */
+export function listLists(viewer?: ListViewer): ShoppingList[] {
+  const uid = viewer?.userId ?? null;
   const counts = new Map(
     (db.prepare('SELECT COALESCE(list_id, 0) AS id, COUNT(*) AS n FROM shopping_items WHERE checked_at IS NULL GROUP BY COALESCE(list_id, 0)').all() as { id: number; n: number }[]).map((r) => [
       r.id,
       r.n,
     ]),
   );
-  const own = db.prepare('SELECT id, name, kind, note FROM shopping_lists WHERE archived = 0 ORDER BY sort, id').all() as { id: number; name: string; kind: ListKind; note: string | null }[];
-  return [{ id: 0, name: t('Shopping list'), kind: 'main' as const, note: null, open: counts.get(0) ?? 0 }, ...own.map((l) => ({ ...l, open: counts.get(l.id) ?? 0 }))];
+  const own = (
+    uid
+      ? db.prepare(`SELECT l.id, l.name, l.kind, l.note, l.visibility, l.owner_id, l.share_with, u.name AS owner FROM shopping_lists l LEFT JOIN users u ON u.id = l.owner_id WHERE l.archived = 0 AND ${VISIBLE_LIST_SQL} ORDER BY l.sort, l.id`).all(uid, uid, uid)
+      : db.prepare(`SELECT l.id, l.name, l.kind, l.note, l.visibility, l.owner_id, l.share_with, u.name AS owner FROM shopping_lists l LEFT JOIN users u ON u.id = l.owner_id WHERE l.archived = 0 AND l.visibility = 'household' ORDER BY l.sort, l.id`).all()
+  ) as ListRow[];
+  const main: ShoppingList = { id: 0, name: t('Shopping list'), kind: 'main', note: null, open: counts.get(0) ?? 0, visibility: 'household', owner_id: null, owner: null, share_with: [], mine: false };
+  return [
+    main,
+    ...own
+      .filter((l) => mayUseList(l, uid))
+      .map((l) => ({ ...l, share_with: l.visibility === 'people' ? parseIds(l.share_with) : [], owner: l.visibility === 'household' ? null : l.owner, mine: uid != null && l.owner_id === uid, open: counts.get(l.id) ?? 0 })),
+  ];
 }
 
-export function getList(id: number): ShoppingList | null {
-  return listLists().find((l) => l.id === id) ?? null;
+export function getList(id: number, viewer?: ListViewer): ShoppingList | null {
+  return listLists(viewer).find((l) => l.id === id) ?? null;
 }
 
-export function createList(input: { name: string; kind?: ListKind; note?: string | null }): ShoppingList {
+/** May this person put things on / take things off this list? 0 = the main list (always). */
+export function canUseList(listId: number | null | undefined, userId: number | null | undefined) {
+  if (!listId) return true;
+  const row = db.prepare('SELECT visibility, owner_id, share_with FROM shopping_lists WHERE id = ? AND archived = 0').get(listId) as Parameters<typeof mayUseList>[0] | undefined;
+  return Boolean(row && mayUseList(row, userId));
+}
+
+/** Throws 404 (never 403 – a private list must not be confirmed to exist) when the person may not use the list. */
+export function assertListAccess(listId: number | null | undefined, userId: number | null | undefined) {
+  if (!canUseList(listId, userId)) throw err(t('List not found'), 404);
+}
+
+/** The list of a shopping row (0 = main). */
+export const listOfItem = (itemId: number) => ((db.prepare('SELECT list_id FROM shopping_items WHERE id = ?').get(itemId) as { list_id: number | null } | undefined)?.list_id ?? 0);
+
+const validPeople = (ids: number[] | undefined, ownerId: number | null) =>
+  [...new Set((ids ?? []).filter((id) => id !== ownerId && db.prepare(`SELECT 1 FROM users WHERE id = ? AND kind != 'guest'`).get(id)))].slice(0, 20);
+
+export interface ListPrivacyInput {
+  visibility?: ListVisibility;
+  share_with?: number[];
+}
+
+export function createList(input: { name: string; kind?: ListKind; note?: string | null } & ListPrivacyInput, viewer?: ListViewer): ShoppingList {
   const name = input.name.trim().slice(0, 60);
   if (!name) throw err(t('The name must not be empty'));
+  const uid = viewer?.userId ?? null;
+  const visibility = input.visibility ?? 'household';
+  if (visibility !== 'household' && (!uid || isGuestUser(uid))) throw err(t('Only members with an account can keep a list to themselves.'), 400);
   const max = (db.prepare('SELECT COALESCE(MAX(sort), 0) m FROM shopping_lists').get() as { m: number }).m;
-  const id = Number(db.prepare('INSERT INTO shopping_lists (name, kind, note, sort) VALUES (?, ?, ?, ?)').run(name, input.kind ?? 'other', input.note ?? null, max + 1).lastInsertRowid);
+  const id = Number(
+    db
+      .prepare('INSERT INTO shopping_lists (name, kind, note, sort, visibility, owner_id, share_with, placeholder) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(name, input.kind ?? 'other', input.note ?? null, max + 1, visibility, uid, JSON.stringify(visibility === 'people' ? validPeople(input.share_with, uid) : []), t('Personal item')).lastInsertRowid,
+  );
   emit('shopping');
-  return getList(id)!;
+  return getList(id, viewer)!;
 }
 
-export function updateList(id: number, p: { name?: string; note?: string | null; kind?: ListKind }) {
-  const row = db.prepare('SELECT * FROM shopping_lists WHERE id = ? AND archived = 0').get(id) as { name: string; note: string | null; kind: ListKind } | undefined;
-  if (!row) throw err(t('List not found'), 404);
+export function updateList(id: number, p: { name?: string; note?: string | null; kind?: ListKind } & ListPrivacyInput, viewer?: ListViewer) {
+  const row = db.prepare('SELECT * FROM shopping_lists WHERE id = ? AND archived = 0').get(id) as
+    | { name: string; note: string | null; kind: ListKind; visibility: ListVisibility; owner_id: number | null; share_with: string }
+    | undefined;
+  const uid = viewer?.userId ?? null;
+  if (!row || !mayUseList(row, uid)) throw err(t('List not found'), 404);
   const name = p.name !== undefined ? p.name.trim().slice(0, 60) : row.name;
   if (!name) throw err(t('The name must not be empty'));
-  db.prepare('UPDATE shopping_lists SET name = ?, note = ?, kind = ? WHERE id = ?').run(name, p.note === undefined ? row.note : p.note?.trim().slice(0, 1000) || null, p.kind ?? row.kind, id);
+  db.transaction(() => {
+    db.prepare('UPDATE shopping_lists SET name = ?, note = ?, kind = ? WHERE id = ?').run(name, p.note === undefined ? row.note : p.note?.trim().slice(0, 1000) || null, p.kind ?? row.kind, id);
+    if (p.visibility !== undefined || p.share_with !== undefined) {
+      // who sees a list: anyone may make a household list private (and owns it then); after that only the owner decides
+      if (row.visibility !== 'household' && row.owner_id !== null && row.owner_id !== uid) throw err(t('Only the person who added it can change this.'), 403);
+      if (!uid || isGuestUser(uid)) throw err(t('Only members with an account can keep a list to themselves.'), 400);
+      const visibility = p.visibility ?? row.visibility;
+      const owner = visibility === 'household' ? row.owner_id ?? uid : row.visibility === 'household' || row.owner_id === null ? uid : row.owner_id;
+      const shareWith = visibility === 'people' ? validPeople(p.share_with ?? parseIds(row.share_with), owner) : [];
+      db.prepare('UPDATE shopping_lists SET visibility = ?, owner_id = ?, share_with = ?, placeholder = COALESCE(placeholder, ?) WHERE id = ?').run(visibility, owner, JSON.stringify(shareWith), t('Personal item'), id);
+      syncListRows(id);
+    }
+  })();
   emit('shopping');
-  return getList(id)!;
+  return getList(id, viewer)!;
 }
 
-/** Deleting a list never deletes what is on it: open rows move to the main list. */
-export function deleteList(id: number) {
-  if (!db.prepare('SELECT 1 FROM shopping_lists WHERE id = ?').get(id)) throw err(t('List not found'), 404);
+/**
+ * Deleting a list never deletes what is on it: open rows move to the main list. Rows of a private list stay private
+ * (they keep their share entry, now as the owner's own private rows) – moving must never reveal them.
+ */
+export function deleteList(id: number, viewer?: ListViewer) {
+  const row = db.prepare('SELECT visibility, owner_id, share_with FROM shopping_lists WHERE id = ?').get(id) as Parameters<typeof mayUseList>[0] | undefined;
+  if (!row || !mayUseList(row, viewer?.userId ?? null)) throw err(t('List not found'), 404);
+  if (row.visibility !== 'household' && row.owner_id !== null && row.owner_id !== (viewer?.userId ?? null)) throw err(t('Only the person who added it can change this.'), 403);
   db.transaction(() => {
+    db.prepare('UPDATE share_items SET from_list = NULL WHERE from_list = ?').run(id);
     const moved = db.prepare('UPDATE shopping_items SET list_id = NULL WHERE list_id = ? AND checked_at IS NULL').run(id).changes;
     db.prepare('UPDATE shopping_lists SET archived = 1 WHERE id = ?').run(id);
     return moved;
@@ -88,8 +169,12 @@ export function deleteList(id: number) {
   return { ok: true };
 }
 
-export function moveItemToList(itemId: number, listId: number) {
+export function moveItemToList(itemId: number, listId: number, viewer?: ListViewer) {
   if (listId !== 0 && !db.prepare('SELECT 1 FROM shopping_lists WHERE id = ? AND archived = 0').get(listId)) throw err(t('List not found'), 404);
+  if (viewer) {
+    assertListAccess(listId, viewer.userId);
+    assertListAccess(listOfItem(itemId), viewer.userId);
+  }
   const n = db.prepare(`UPDATE shopping_items SET list_id = ?, updated_at = datetime('now') WHERE id = ?`).run(listId || null, itemId).changes;
   if (!n) throw err(t('Item not found'), 404);
   emit('shopping');
@@ -239,4 +324,20 @@ export function estimate(rows: { product_id: number | null; qty: number | null; 
     } else unpricedNames.push(r.share ? t('a private entry') : r.text);
   }
   return { total: Math.round(total * 100) / 100, priced, unpriced: unpricedNames.length, unpricedNames: unpricedNames.slice(0, 12), since };
+}
+
+// ------------------------------------------------------------------ guard for per-row writes
+
+const ROW_PATH = /^\/(?:shopping|shop\/items|list\/items)\/(\d+)(?:\/|$)/;
+
+/**
+ * Express middleware (mounted after requireAuth in the routers that change single rows): a row on a private list
+ * is answered with 404 for everyone who may not see that list – as if it did not exist.
+ */
+export function privateRowGuard(req: { path: string; actor?: { userId?: number | null } }, res: { status: (n: number) => { json: (b: unknown) => void } }, next: () => void) {
+  const m = ROW_PATH.exec(req.path);
+  if (!m) return next();
+  const listId = listOfItem(Number(m[1]));
+  if (!listId || canUseList(listId, req.actor?.userId ?? null)) return next();
+  res.status(404).json({ error: t('Item not found') });
 }

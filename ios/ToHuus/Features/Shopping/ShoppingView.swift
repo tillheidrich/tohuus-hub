@@ -16,6 +16,7 @@ struct ShoppingView: View {
     @State private var showRecent = false
     @State private var showUsuals = false
     @State private var showOffers = false
+    @State private var showWishes = false
     @State private var guardText: String?
     @State private var guardMessage = ""
     @State private var tripPrivate = false
@@ -138,6 +139,13 @@ struct ShoppingView: View {
             .sheet(isPresented: $showRecent) { RecentDoneSheet(store: store) }
             .sheet(isPresented: $showUsuals) { UsualsSheet(store: store) }
             .sheet(isPresented: $showOffers) { OffersView(store: store) }
+            .sheet(isPresented: $showWishes) { NavigationStack { WishesView(api: store.api).toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Done")) { showWishes = false } } } } }
+            .onAppear {
+                // simulator checks: -debugWishes YES (debug builds only)
+                #if DEBUG
+                if UserDefaults.standard.bool(forKey: "debugWishes") { showWishes = true }
+                #endif
+            }
             .sheet(isPresented: $showPaste) { PasteListSheet(store: store) }
             .sheet(isPresented: $showShopSettings) { ShopSettingsSheet(store: store) }
             .sheet(item: $manageList) { l in ManageListSheet(list: l, store: store) }
@@ -708,14 +716,14 @@ struct ShoppingView: View {
                             Task { await store.setList(l.id.value) }
                         } label: {
                             Label(l.open.map { "\(l.name) (\($0))" } ?? l.name,
-                                  systemImage: (store.list.listId?.value ?? "0") == l.id.value ? "checkmark" : "list.bullet")
+                                  systemImage: (store.list.listId?.value ?? "0") == l.id.value ? "checkmark" : (visibilitySymbol(l.visibility) ?? "list.bullet"))
                         }
                     }
                     if listsSupported {
                         Button { showNewList = true } label: { Label(L("New list"), systemImage: "plus") }
                     }
                     if let l = store.list.currentList, !l.isMain {
-                        Button { manageList = l } label: { Label(L("Rename or remove this list"), systemImage: "pencil") }
+                        Button { manageList = l } label: { Label(L("Edit this list"), systemImage: "pencil") }
                     }
                 } label: {
                     HStack(spacing: 4) {
@@ -735,6 +743,7 @@ struct ShoppingView: View {
                 Button { showUsuals = true } label: { Label(L("Our usuals"), systemImage: "star") }
                 Button { showRecent = true } label: { Label(L("Recently done"), systemImage: "clock.arrow.circlepath") }
                 Button { showOffers = true } label: { Label(L("Offers"), systemImage: "tag") }
+                Button { showWishes = true } label: { Label(L("Wishes & Merkliste"), systemImage: "gift") }
                 Divider()
                 Button { showPaste = true } label: { Label(L("Paste a list"), systemImage: "doc.on.clipboard") }
                 Button { Task { await shareList() } } label: { Label(L("Share the list"), systemImage: "square.and.arrow.up") }

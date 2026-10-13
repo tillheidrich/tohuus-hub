@@ -1,5 +1,5 @@
 /**
- * "Treats" (DE „Verwöhnen“, SV „Ompyssling“): someone in the household asks for a little something from the sofa or
+ * "Treats" (DE „Bring mir was“, formerly „Verwöhnen“, SV „Ompyssling“): someone in the household asks for a little something from the sofa or
  * from bed and somebody else brings it – plus the same mechanics for guests (visit, babysitter, grandparents) and
  * parties (bar). One code path for all three; `orderKind()` tells them apart for wording and notifications.
  */

@@ -23,13 +23,15 @@ import { addLunchbox, careCheck, careMissing, careSpent, lunchbox, lunchboxDue, 
 import { uploadQuota } from '../lib/plans.js';
 import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeItemPhoto, restoreItem, setItemPhoto, setListPrefs, updateItem } from '../lib/list2.js';
 import { t } from '../i18n.js';
-import { LIST_KINDS, createList, deleteList, estimate, guard, listFilter, listLists, moveItemToList, updateList, usuals } from '../lib/lists.js';
+import { LIST_KINDS, LIST_VISIBILITIES, assertListAccess, createList, deleteList, estimate, guard, listFilter, listLists, listOfItem, moveItemToList, privateRowGuard, updateList, usuals } from '../lib/lists.js';
 import { upload } from './core.js';
 import { receiptVisible } from '../lib/spending.js';
 
 export const r = Router();
 // mounted last (before the 404): everything here needs a signed-in member, an app or an API token
 r.use(requireAuth);
+// rows on a private list don't exist for anyone outside it (list-privacy.ts)
+r.use(privateRowGuard);
 
 const actorName = (req: any): string => req.actor?.name ?? 'unknown';
 const userId = (req: any): number | null => req.actor?.userId ?? null;
@@ -122,31 +124,33 @@ r.post(
 
 // ---------------------------------------------------------------- B: the list fills itself
 
-r.get('/list/lists', (_req, res) => res.json(listLists()));
+// private lists (13 Oct 2026): visibility household | private | people (+ share_with); others never see them
+r.get('/list/lists', (req, res) => res.json(listLists({ userId: userId(req) })));
+const ListPrivacy = { visibility: z.enum(LIST_VISIBILITIES).optional(), share_with: z.array(z.number().int().positive()).max(20).optional() };
 r.post(
   '/list/lists',
   wrap((req) => {
-    const b = z.object({ name: z.string().min(1).max(60), kind: z.enum(LIST_KINDS).optional(), note: z.string().max(1000).nullable().optional() }).parse(req.body);
-    return createList(b);
+    const b = z.object({ name: z.string().min(1).max(60), kind: z.enum(LIST_KINDS).optional(), note: z.string().max(1000).nullable().optional(), ...ListPrivacy }).parse(req.body);
+    return createList(b, { userId: userId(req) });
   }),
 );
 r.patch(
   '/list/lists/:id',
   wrap((req) => {
-    const b = z.object({ name: z.string().min(1).max(60).optional(), kind: z.enum(LIST_KINDS).optional(), note: z.string().max(1000).nullable().optional() }).parse(req.body);
-    return updateList(num(req.params.id), b);
+    const b = z.object({ name: z.string().min(1).max(60).optional(), kind: z.enum(LIST_KINDS).optional(), note: z.string().max(1000).nullable().optional(), ...ListPrivacy }).parse(req.body);
+    return updateList(num(req.params.id), b, { userId: userId(req) });
   }),
 );
 r.delete(
   '/list/lists/:id',
-  wrap((req) => deleteList(num(req.params.id))),
+  wrap((req) => deleteList(num(req.params.id), { userId: userId(req) })),
 );
 /** Move a row to another list (0 = main). */
 r.post(
   '/list/items/:id/move',
   wrap((req) => {
     const b = z.object({ list_id: z.number().int().min(0) }).parse(req.body);
-    return moveItemToList(num(req.params.id), b.list_id);
+    return moveItemToList(num(req.params.id), b.list_id, { userId: userId(req) });
   }),
 );
 
@@ -163,6 +167,7 @@ r.get('/list/guard', (req, res) => {
 /** Expected total of a list from the latest receipt prices. */
 r.get('/list/estimate', (req, res) => {
   const listId = req.query.list === 'all' ? 'all' : Number(req.query.list) || 0;
+  if (listId !== 'all' && listId && !listLists({ userId: userId(req) }).some((l) => l.id === listId)) return void res.status(404).json({ error: t('List not found') });
   const rows = db
     .prepare(`SELECT s.product_id, s.qty, s.text, s.id FROM shopping_items s WHERE s.checked_at IS NULL ${listId === 'all' ? '' : `AND ${listFilter(listId)}`} AND s.id NOT IN (SELECT item_id FROM share_items)`)
     .all() as { product_id: number | null; qty: number | null; text: string }[];
@@ -297,6 +302,7 @@ r.post(
     if (raw.length > 500_000) return void res.status(413).json({ error: t('File too large') });
     const bool = (v: unknown) => v === true || v === 'true' || v === '1';
     const listId = Number(req.body?.list_id) || null;
+    assertListAccess(listId, userId(req));
     const parsed = parseListExport(raw);
     const rows = parsed.items.filter((i) => bool(req.body?.include_checked) || !i.checked).slice(0, 300);
     if (bool(req.body?.dry_run)) return { format: parsed.format, items: rows, skippedChecked: parsed.items.length - rows.length };
@@ -387,6 +393,8 @@ r.post(
     const b = z
       .object({ neighbor_id: z.number().int().nullable().optional(), after: z.boolean().optional(), section: z.enum(SECTIONS).nullable().optional(), list_id: z.number().int().min(0).nullable().optional() })
       .parse(req.body);
+    assertListAccess(listOfItem(num(req.params.id)), userId(req));
+    if (b.list_id != null) assertListAccess(b.list_id, userId(req));
     return placeItem(num(req.params.id), { neighborId: b.neighbor_id ?? null, after: b.after, section: b.section ?? null, listId: b.list_id ?? null });
   }),
 );

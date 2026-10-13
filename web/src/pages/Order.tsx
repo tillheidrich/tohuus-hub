@@ -1,5 +1,5 @@
 /**
- * „Verwöhnen“ / "Treats" / „Ompyssling“ – doing each other a good turn.
+ * „Bring mir was“ (formerly „Verwöhnen“) / "Treats" / „Ompyssling“ – doing each other a good turn.
  *
  * Three modes on one page:
  * - For me (everyday, default for couples, families and flat shares): someone stuck with bedtime, a sick partner,
@@ -76,7 +76,7 @@ export function Order({ me }: { me: Me }) {
             value={mode}
             onChange={setMode}
             label={t('Mode')}
-            options={modes.map((m) => [m, { me: t('For me'), guests: t('Guests'), party: t('Party') }[m]] as [Mode, string])}
+            options={modes.map((m) => [m, { me: t('Bring me something'), guests: t('Guests'), party: t('Party') }[m]] as [Mode, string])}
           />
         </div>
       )}

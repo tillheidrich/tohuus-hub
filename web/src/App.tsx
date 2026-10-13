@@ -64,6 +64,8 @@ const Find = page(() => import('./pages/Find'), 'Find');
 const HouseGuidePage = page(() => import('./pages/HouseGuide'), 'HouseGuidePage');
 const ExplainPage = page(() => import('./pages/Explain'), 'ExplainPage');
 const FactsPage = page(() => import('./pages/Explain'), 'FactsPage');
+const WishesPage = page(() => import('./pages/Wishes'), 'WishesPage');
+const WishListPage = page(() => import('./pages/Wishes'), 'WishListPage');
 const Bar = page(() => import('./pages/Bar'), 'Bar');
 const Order = page(() => import('./pages/Order'), 'Order');
 const MenuEditor = page(() => import('./pages/Menu'), 'MenuEditor');
@@ -300,6 +302,8 @@ function Shell({ me }: { me: Me }) {
               <Route path="/abgleich" element={<Check />} />
               <Route path="/abgleich/:id" element={<Check />} />
               <Route path="/einkauf" element={<Shopping />} />
+              <Route path="/einkauf/wuensche" element={<WishesPage />} />
+              <Route path="/einkauf/wuensche/:id" element={<WishListPage />} />
               <Route path="/kochen" element={<Kitchen me={me} />} />
               <Route path="/rezepte/:id" element={<RecipeDetail />} />
               <Route path="/abstimmung/:id" element={<VotePage />} />

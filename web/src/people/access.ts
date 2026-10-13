@@ -5,6 +5,8 @@ export type EffectiveLevel = 'order' | 'stock' | 'recipes' | 'family' | 'paused'
 export function guestAllows(level: EffectiveLevel | undefined, path: string) {
   if (!level) return true;
   if (level === 'paused') return false;
+  // wish lists are never for guests (server: people-policy NEVER "wishes")
+  if (path === '/einkauf/wuensche' || path.startsWith('/einkauf/wuensche/')) return false;
   const ORDER = ['/bestellen', '/einkauf', '/einstellungen', '/hilfe', '/hausinfo', '/so-funktioniert-tohuus', '/gut-zu-wissen'];
   const STOCK = ['/', '/bestand', '/wo', '/abgleich', '/scan', '/q/'];
   const RECIPES = ['/kochen', '/rezepte', '/lieblinge'];

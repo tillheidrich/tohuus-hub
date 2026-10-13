@@ -7,6 +7,7 @@
  */
 import { recipeToShopping } from './recipe-list.js';
 import { AREA_TOOL_DEFS, AREA_TOOLS_BY_TOPIC, runAreaTool, undoArea } from './assistant-areas.js';
+import { WISH_TOOL_DEFS, WISH_TOOLS, runWishTool, undoWish } from './assistant-wishes.js';
 import { guideOverviewForAi, searchGuide } from './house-guide.js';
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
@@ -138,7 +139,7 @@ export function runUndo(token: string, userId: number | null, isAdmin = false) {
         break;
       default:
         // area tools (assistant-areas.ts): merged duplicates, adapted recipes, drafted Hausinfo cards, photo stock
-        undoArea(u);
+        if (!undoWish(u as { kind?: string; id?: number })) undoArea(u);
     }
     db.prepare(`UPDATE assistant_undo SET used_at = datetime('now') WHERE token = ?`).run(token);
   })();
@@ -474,12 +475,14 @@ export const TOOL_DEFS: ToolDef[] = [
   fn('forget', 'Forget something remembered (id or text).', { text: { type: 'string' }, id: { type: 'integer' } }),
   fn('house_info', 'How things work at home (Hausinfo): voice commands, routines, heating, blinds, bins, TV, fuse box, numbers. Never codes.', { query: { type: 'string' } }),
   ...AREA_TOOL_DEFS,
+  ...WISH_TOOL_DEFS,
 ];
 
 const TOOLS_BY_TOPIC: Record<string, string[]> = {
   shopping: ['list_show', 'list_add', 'list_remove', 'list_check', 'stock_find', 'check_at_home', 'stock_used_up', 'rhythm_due', 'log_purchase'],
   cooking: ['cook_ideas', 'check_at_home', 'list_add', 'known_prices', 'plan_meal', 'recipe_to_list'],
   money: ['money_summary', 'known_prices', 'log_purchase'],
+  wishes: WISH_TOOLS,
 };
 
 /** Only the tools a message can need (fewer tokens, fewer wrong calls). */
@@ -559,6 +562,8 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
         // Hausinfo: finished, member-visible cards only; codes never (house-guide.ts scrubs code values as well)
         return typeof a.query === 'string' && a.query.trim() ? searchGuide(a.query, 6) : guideOverviewForAi();
       default: {
+        const wish = runWishTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
+        if (wish !== undefined) return wish;
         const area = runAreaTool({ actor: ctx.actor, userId: ctx.userId, record: (kind, summary, undo, ref) => record(ctx, kind, summary, undo as Undo | null, ref) }, name, a);
         return area === undefined ? { error: `unknown tool ${name}` } : area;
       }

@@ -42,6 +42,8 @@ export interface ShareInfo {
   share_with: number[];
   reveal: boolean;
   placeholder: string;
+  /** on a private list – its privacy follows the list */
+  list?: boolean;
 }
 interface Row {
   name: string;
@@ -525,6 +527,14 @@ export function ItemPrivacy({ item, me, members, onDone }: { item: ShopItem & { 
     setPlaceholder(s?.placeholder ?? '');
   }, [item.id]);
   if (me?.actor.kind !== 'user') return null;
+  // a row on a private list follows the list (13 Oct 2026) – change who sees the list instead
+  if (s?.list)
+    return (
+      <div className="share-note small">
+        <ShareMark s={s} />
+        <span>{t('This is on a private list. Who sees it is set for the whole list.')}</span>
+      </div>
+    );
   if (s && !s.mine && s.owner)
     return (
       <div className="share-note small">
