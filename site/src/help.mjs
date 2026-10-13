@@ -49,7 +49,7 @@ export function helpCopy(k) {
         desc: 'Konto anlegen, sagen, wer dazugehört, und die fünf Bereiche kennenlernen.',
         sections: [
           ['Konto oder eigener Server', p(
-            `In der ToHuus Cloud legst du in der iPhone-App oder im Browser unter <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a> ein Konto und einen Haushalt an. Jeder neue Haushalt nutzt 14 Tage lang Plus, ohne Zahlungsdaten.`,
+            `In der ToHuus Cloud legst du in der iPhone-App oder im Browser unter <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a> ein Konto und einen Haushalt an, mit Mail-Code, Passwort, Passkey oder „Mit Apple anmelden“. Jeder neue Haushalt nutzt 14 Tage lang Plus, ohne Zahlungsdaten. Während der Beta brauchst du zum Anlegen einen Zugangscode oder eine Einladung, dafür schenken wir Testhaushalten oft Haushalt oder Plus.`,
             'Hast du einen eigenen Server, läuft ToHuus dort als Docker-Container. Wie das geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>. Dort nutzt ihr die Web-App im Browser, die iPhone-App ist für die ToHuus Cloud gedacht.',
           )],
           ['Wer gehört dazu?', p(
@@ -158,6 +158,7 @@ export function helpCopy(k) {
             'Pfand wird nie als Vorrat gebucht. Geht Text eines Bons an die KI, entfernt ToHuus vorher Karten- und Bonusnummern, TSE-Daten und die Adresse.',
           )],
           ['Welche Läden', p('Am besten getestet ist REWE. Für Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm, Rossmann und weitere gibt es einen allgemeinen Leser, der mit nachgebauten Bons getestet ist. Echte, anonymisierte Bons helfen: In jeder Prüfung gibt es dafür „Erkennung verbessern helfen“. Verschickt wird dabei nichts von allein.')],
+          ['Bons per Mail (Plus, Cloud)', p('<span class="soon-tag">Kommt bald</span> Mit Plus bekommt euer Haushalt eine eigene Bon-Adresse (Einstellungen › Bons per Mail). Leite eBons dorthin weiter oder richte im Mailprogramm eine Regel für den Absender ein. ToHuus nimmt nur echte Bons und Lieferavise. Bestellbestätigungen, etwa vom REWE Abholservice, werden nicht gebucht, denn gekauft ist erst, was auf dem eBon steht. Alles andere verwirft ToHuus, ohne es zu speichern. Über „Neue Adresse“ machst du die alte ungültig.')],
           ['Selbst gehostet', p('Dort kannst du zusätzlich ein Bon-Postfach einrichten: Mails mit Bons weiterleiten, ToHuus holt sie alle 10 Minuten ab.')],
         ],
         related: ['geld', 'ki-an-oder-aus', 'merkt-sich'],
@@ -297,7 +298,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             '<b>Nur für dich</b>: an derselben Stelle. Die anderen sehen deine Einstellung nicht.',
             '<b>Für ein Kind</b>: Eltern schalten die KI pro Kind ab. Auf dem Kinder-Tablet lässt sich das nicht ändern.',
             '<b>KI-Assistenten über MCP</b> (Claude, ChatGPT) haben einen eigenen Schalter.',
-          ), p('Ist die KI aus, geht keine einzige Anfrage an ein Sprachmodell. ToHuus sagt dann an den passenden Stellen, dass sie aus ist.')],
+          ), p('In der ToHuus Cloud ist die KI für Kinder erst aus, bis ein Elternteil sie einschaltet. Bons per Mail und Kinder nutzen KI erst, wenn ein Admin zugestimmt hat.', 'Ist die KI aus, geht keine einzige Anfrage an ein Sprachmodell. ToHuus sagt dann an den passenden Stellen, dass sie aus ist.')],
           ['Gesundheitsdaten', p('Allergien und Angaben zu Kindern gehen nur an ein Sprachmodell, wenn ein Admin das ausdrücklich einschaltet. Ohne das filtert ToHuus ungeeignete Gerichte trotzdem, nur eben auf dem Server.')],
           ['Texterkennung ohne KI', p('Bon-Fotos und Fotos von Zetteln liest ToHuus direkt auf dem Server, ohne Sprachmodell. Das ist manchmal weniger genau als die KI, aber das Foto verlässt den Server nicht. Mit KI wird die Texterkennung zuerst versucht, das Modell nur, wenn die Summe nicht stimmt.')],
         ],
@@ -309,7 +310,9 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         sections: [
           ['Karten', p('Die Hausinfo (Mehr › Hausinfo) sammelt auf Karten, was Babysitter, Großeltern oder Haushüter wissen müssen: Sprachbefehle für Licht und Rollläden, Abläufe wie das Zubettgehen, Tipps und wichtige Nummern. Vorlagen helfen beim Anfangen. Pro Karte legst du fest, wer sie sieht: Mitglieder, Gäste je nach Stufe, Babysitter- und Gast-Links.')],
           ['Sprachbefehle aus Home Assistant', p('Mit Home Assistant übernimmt ToHuus die Geräte, die ihr für Alexa, Google oder Assist freigegeben habt, mit Beispielsätzen. Nur Namen und Räume, nie Schlösser, Alarmanlagen, Kameras oder Garagentore.')],
+          ['Fotos und Videos', p('Jede Karte kann bis zu acht Fotos oder kurze Videos haben, etwa wie die Heizung entlüftet wird. Sie sind so sichtbar wie die Karte selbst.')],
           ['Für Gäste', p('Auf dem <a href="babysitter.html">Babysitter-Link</a> erscheint die Hausinfo als eigener Bereich, auch offline lesbar und als A4-Blatt zum Ausdrucken.')],
+          ['Urlaubsübergabe', p('Unter Mehr › Urlaub legst du pro Reise fest, was der Haushüter wann tun soll: Katze füttern, Pflanzen gießen, Post holen, mit Rhythmus und Uhrzeit, auf Wunsch mit Fotos. Er sieht es über seinen Link und hakt ab, was erledigt ist.')],
         ],
         related: ['babysitter', 'hausinfo-codes', 'gaeste'],
       },
@@ -376,11 +379,12 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'benachrichtigungen', group: 'connect', title: 'Benachrichtigungen',
         desc: 'Wann ToHuus sich meldet, wie du es einstellst und wie es ruhig bleibt.',
         sections: [
-          ['Auf dem iPhone', p(`<span class="soon-tag">Kommt mit der App</span> Mitteilungen mit Knöpfen wie „Auf die Liste“, „Mach ich“ oder „Geht nicht“. Pro Ereignis schaltest du sie an oder aus, und Ruhezeiten halten die Nacht frei.`)],
+          ['Auf dem iPhone', p(`<span class="soon-tag">In der iPhone-App (gerade im Test)</span> Mitteilungen mit Knöpfen wie „Auf die Liste“, „Mach ich“ oder „Geht nicht“. Pro Ereignis schaltest du sie an oder aus, und Ruhezeiten halten die Nacht frei.`)],
           ['Im Browser', p('Legst du die Web-App auf den Startbildschirm, kann sie Push-Mitteilungen schicken: Einstellungen › Benachrichtigungen › Push auf diesem Gerät.')],
           ['Wann', p('Zum Beispiel wenn ein Bon auf die Prüfung wartet, etwas ausgeht, ein Budget knapp wird oder sich ein neues Gerät anmeldet. Eine tägliche Übersicht zu einer festen Uhrzeit ist möglich. Im Urlaub bleibt es still.')],
           ['Selbst gehostet', p('Zusätzlich Telegram, ntfy, Gotify, Matrix, E-Mail und beliebige Webhooks.')],
           ['Home Assistant', p('Mit der Integration gehen ToHuus-Mitteilungen auch an eure Benachrichtigungsdienste in Home Assistant, etwa ans Handy oder an den Fernseher. Siehe <a href="home-assistant.html">Home Assistant</a>.')],
+          ['Mails von ToHuus', p('Die tägliche Zusammenfassung und die Erinnerung vor einer Abo-Verlängerung kommen per Mail. Unter Einstellungen › Benachrichtigungen schaltest du mit „Mails von ToHuus“ alle ab, oder du klickst in einer dieser Mails auf „Diese Mails abbestellen“. Anmeldelinks und Sicherheitshinweise kommen trotzdem, sie gehören zum Konto.')],
           ['Diskret bleibt diskret', p('Diskrete Einträge erscheinen in Mitteilungen nur als Platzhalter, private gar nicht.')],
         ],
         related: ['gemeinsam-einkaufen', 'home-assistant'],
@@ -612,7 +616,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         desc: 'Create an account, say who belongs to the household and meet the five areas.',
         sections: [
           ['Account or your own server', p(
-            `In ToHuus Cloud you create an account and a household in the iPhone app or in the browser at <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a>. Every new household gets 14 days of Plus, no payment details needed.`,
+            `In ToHuus Cloud you create an account and a household in the iPhone app or in the browser at <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a>. You can sign in with an e-mail code, a password, a passkey or Sign in with Apple. Every new household gets 14 days of Plus, no payment details needed. During the beta you need an access code or an invitation to sign up, and test households often get Household or Plus for free.`,
             'If you have your own server, ToHuus runs there as a Docker container (see <a href="self-hosting.html">Self-hosting</a>). There you use the web app in the browser; the iPhone app is meant for ToHuus Cloud.',
           )],
           ['Who belongs to it?', p('On first start ToHuus only asks this: just you, the two of you, a family, a flat share, or a household you look after. What you see follows from that, and you can change it later.')],
@@ -679,7 +683,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             '<b>Just for you</b>: same place. The others do not see your choice.',
             '<b>For a child</b>: parents switch AI off per child. It cannot be changed on the kid tablet.',
             '<b>AI assistants via MCP</b> (Claude, ChatGPT) have their own switch.',
-          ), p('While AI is off, not a single request goes to a language model.')],
+          ), p('In ToHuus Cloud AI only starts after you agreed once; you can withdraw that under Settings › Access & AI. For children it is off until a parent switches it on, and receipts by mail and children only use AI after an admin agreed.', 'While AI is off, not a single request goes to a language model.')],
           ['Health data', p('Allergies and details about children only go to a language model if an admin explicitly switches that on.')],
         ],
         related: ['speak', 'privacy-in-short'],

@@ -6,7 +6,7 @@
  * Product frame and wording: docs/plan-2026-10-12.md and the strategy "ToHuus merkt sich, was zu Hause fehlt"
  * (12.10.2026). ToHuus is the shopping and household assistant of a home: Einkauf, Kochen, Geld. Outward verb
  * "merkt sich", never "Gedächtnis"; "KI" is never the promise; data claims only where they can be checked.
- * No real names of the maker's family anywhere (copy, alt texts, screenshots). Demo people: Sam, Mira, Jonas.
+ * No real names of the maker's family anywhere (copy, alt texts, screenshots). Demo people: Sam, Mira, Ben.
  *
  * Design: "Dutch Detail" (docs/design/2026-10-11-dutch-detail-system.md): same tokens, fonts and icons as the app.
  * Signature elements: the illustrated homes, the green block with circles, the ticket with punch notches, the
@@ -111,7 +111,7 @@ const COPY = {
         { id: 'kochen', no: '2', label: 'Kochen', h3: 'Daraus könnt ihr heute kochen.', shot: 'cook',
           alt: 'Seite Kochen: „Daraus könnt ihr heute kochen“ mit Gnocchi-Pfanne und Ofengemüse mit Feta, beide mit „Alles da“, dazu Filter mit und ohne Thermomix.',
           p: 'Der Kochplaner fängt bei dem an, was zu Hause ist. Er zeigt, was sofort geht, wo nur eine Zutat fehlt und was bald weg muss. Wer mag, plant die Woche, und was dafür fehlt, kommt mit einem Tipp auf die Liste.',
-          points: ['Rezepte von Hand, per Link, vom Foto oder aus anderen Apps', 'Viele auf einmal als Rezeptpaket, auch von deiner eigenen KI gebaut', 'Mit und ohne Thermomix, Allergien werden beim Vorschlagen berücksichtigt'] },
+          points: ['Rezepte von Hand, per Link, vom Foto oder aus anderen Apps', 'Viele auf einmal als Rezeptpaket, auch von deiner eigenen KI gebaut', 'Mit und ohne Küchenmaschine, Allergien werden beim Vorschlagen berücksichtigt'] },
         { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
           alt: 'Seite Geld für September 2026: 215,81 Euro ausgegeben, 17 Euro mehr als im Vormonat, darunter ein Wochenverlauf und Balken nach Kategorie.',
           p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
@@ -146,7 +146,7 @@ const COPY = {
         ['Zurückhalten', '„Haben wir noch“ schiebt den Vorschlag auf. Lehnt ihr ihn zweimal ab, fragt ToHuus nicht mehr.'],
       ],
       cardTitle: 'Einkaufsliste', cardSub: 'mit Herkunft',
-      rows: [['Mozzarella', 'merkt sich: alle ~9 Tage', 'rhythm'], ['Backpapier', 'Mira · heute 16:41', 'person'], ['2× Haferdrink', 'Mira · heute 16:41', 'person'], ['Paketband', 'Jonas · gestern', 'person'], ['Tomaten, stückig', 'aus dem Wochenplan', 'plan']],
+      rows: [['Mozzarella', 'merkt sich: alle ~9 Tage', 'rhythm'], ['Backpapier', 'Mira · heute 16:41', 'person'], ['2× Haferdrink', 'Mira · heute 16:41', 'person'], ['Paketband', 'Ben · gestern', 'person'], ['Tomaten, stückig', 'aus dem Wochenplan', 'plan']],
       cardFoot: 'Keine Zeile ohne Absender',
     },
     who: {
@@ -181,11 +181,11 @@ const COPY = {
       per: '/ Monat', or: 'oder', year: '/ Jahr', storage: 'Speicher',
       plans: [
         { name: 'Free', price: '0 €', sub: 'für immer', storage: '250 MB', items: ['Gemeinsame Liste mit Einkaufsmodus', 'Bons ohne Limit', 'Merkt sich 60 Tage zurück', 'Rezepte von Hand oder per Link', '20 Nachrichten an den Assistenten im Monat'] },
-        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick', 'Verbundene Haushalte zum Mitversorgen', 'Import aus Screenshots und Fotos von Papierlisten', '100 Nachrichten im Monat'] },
-        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', 'Neue ToHuus-Rezepte zur Jahreszeit, mit Bild', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
+        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick', 'Verbundene Haushalte zum Mitversorgen', 'Mehr Importe aus Screenshots und Fotos (40 statt 10 am Tag)', '100 Nachrichten im Monat'] },
+        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', 'Neue ToHuus-Rezepte zur Jahreszeit, auch Backen und Küchenmaschine, mit Bild', 'Eigene Bon-Adresse für Bons per Mail', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
         { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'Web-App im Browser, Home Assistant, MCP'], host: true },
       ],
-      note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Bezahlt wird in der iPhone-App über Apple.',
+      note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Während der Beta schenken wir Testhaushalten Haushalt oder Plus. Bezahlt wird in der iPhone-App über Apple.',
     },
     privacy: {
       label: 'Datenschutz und Sicherheit', h2: 'Eure Bons arbeiten für euch, nicht für Marktforschung.',
@@ -196,7 +196,8 @@ const COPY = {
         ['eyeoff', 'Kein Tracking, keine Werbung', 'Eure Bons werden weder verkauft noch für Werbung ausgewertet. Auch diese Website setzt keine Cookies.'],
         ['robot', 'KI nur über Mistral', 'Bon-Fotos, Spracheingaben und der Assistent laufen über Mistral, einen Anbieter aus Frankreich, mit Verarbeitung in der EU. Jede Anfrage ist auf Mistral festgelegt, ohne Ausweichen auf andere Anbieter, und wird nicht zum Training genutzt. In der Cloud fragt ToHuus vorher: Ohne deine Zustimmung geht nichts an ein Sprachmodell. Sprachaufnahmen werden nicht gespeichert.'],
         ['lock', 'Sensible Angaben bleiben zu Hause', 'Allergien und Angaben zu Kindern gehen nur an ein Sprachmodell, wenn ihr das ausdrücklich einschaltet.'],
-        ['power', 'KI lässt sich abschalten', 'Für den ganzen Haushalt, nur für dich oder für einzelne Kinder. Dann geht keine Anfrage an ein Sprachmodell, und Liste, Vorschläge, Kochen und Geld laufen weiter.'],
+        ['mail', 'Mails nur, wenn du willst', 'Zusammenfassung und Abo-Erinnerung schaltest du unter Einstellungen › Benachrichtigungen › Mails von ToHuus ab, oder mit einem Klick in jeder dieser Mails. Werbung schicken wir nicht.'],
+        ['power', 'KI lässt sich abschalten', 'Für den ganzen Haushalt, nur für dich oder für einzelne Kinder. Dann geht keine Anfrage an ein Sprachmodell, und Liste, Vorschläge, Kochen und Geld laufen weiter. Für Kinder ist sie in der Cloud erst aus, bis ein Elternteil sie einschaltet.'],
         ['phone', 'Apple Intelligence nur auf dem iPhone', 'Wer möchte, lässt Bon-Fotos und handgeschriebene Listen von Apple Intelligence direkt auf dem iPhone aufräumen. Das ist pro Gerät ausgeschaltet, bis du es einschaltest, und dafür verlässt nichts das Gerät.'],
         ['scan', 'Texterkennung ohne KI', 'Bon-Fotos liest zuerst eine Texterkennung ohne Sprachmodell auf dem Server, oder dein iPhone liest sie selbst und schickt nur den Text. Nur wenn das nicht aufgeht und KI an ist, liest Mistral das Foto.'],
         ['plug', 'Eure Assistenten nur, wenn ihr wollt', 'Claude oder ChatGPT verbindet ihr selbst über MCP. Diskrete Einträge sehen sie nur als Platzhalter, und ein Admin kann MCP abschalten.'],
@@ -253,15 +254,15 @@ const COPY = {
     faq: {
       label: 'Fragen', h2: 'Was oft gefragt wird.', more: 'Mehr Antworten in Hilfe & Tipps',
       list: [
-        ['Muss ich alles abtippen?', 'Nein. Bons kommen als PDF oder Foto herein, beim Selbsthosten auch über ein eigenes Mail-Postfach. Was ihr auf der Liste abhakt, zählt ebenfalls als Einkauf. Einen Vorrat müsst ihr nicht pflegen.'],
+        ['Muss ich alles abtippen?', 'Nein. Bons kommen als PDF oder Foto herein. Mit Plus bekommt euer Haushalt in der Cloud eine eigene Bon-Adresse (kommt bald), selbst gehostet geht es über ein eigenes Postfach. Was ihr auf der Liste abhakt, zählt ebenfalls als Einkauf. Einen Vorrat müsst ihr nicht pflegen.'],
         ['Funktioniert das ohne REWE?', 'Ja. ToHuus liest auch Bons von Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm und Rossmann, Papierbons per Foto. Wer gar keine Bons sammeln will, hakt einfach auf der Liste ab.'],
         ['Gibt es ToHuus für Android?', 'Eine eigene Android-App gibt es nicht. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst, auf Android genauso wie am Rechner.'],
         ['Wann kommt die iPhone-App?', `Sie ist im Test über TestFlight, in einem kleinen, geschlossenen Kreis. Einen Platz kannst du <a href="${tfHref('de')}">per Mail anfragen</a>. iPad und Apple Watch kommen mit der App. Wer selbst hostet, kann die Web-App schon heute nutzen.`],
-        ['Brauche ich dafür KI?', 'Nein. Liste, Vorschläge, Kochplaner und Ausgaben funktionieren ohne. Bon-Fotos liest ToHuus zuerst mit einer Texterkennung ohne KI, auf dem Server oder direkt auf dem iPhone. Ein Sprachmodell hilft nur, wenn das nicht reicht, und bei freien Fragen an den Assistenten. Auf neueren iPhones kann auf Wunsch Apple Intelligence auf dem Gerät helfen. Ihr könnt die KI für den Haushalt, für einzelne Personen und für Kinder abschalten.'],
+        ['Brauche ich dafür KI?', 'Nein. Liste, Vorschläge, Kochplaner und Ausgaben funktionieren ohne. Bon-Fotos liest ToHuus zuerst mit einer Texterkennung ohne KI, auf dem Server oder direkt auf dem iPhone. Ein Sprachmodell hilft nur, wenn das nicht reicht, und bei freien Fragen an den Assistenten. Auf neueren iPhones kann auf Wunsch Apple Intelligence auf dem Gerät helfen. In der Cloud schaltest du KI erst mit deiner Zustimmung ein, und ihr könnt sie für den Haushalt, für einzelne Personen und für Kinder abschalten.'],
         ['Kann ich meine Rezepte mitbringen?', 'Ja. Per Link von Rezeptseiten, aus Instagram, TikTok, Pinterest oder YouTube, per Foto, aus Apps wie Mealie, Paprika oder Nextcloud Kochbuch, oder viele auf einmal als Rezeptpaket mit Fotos. Hast du Claude oder ChatGPT verbunden, kann deine eigene KI auch hunderte Rezepte samt Fotos in einem Rutsch speichern.'],
         ['Und Cookidoo, Monsieur Cuisine oder Cookit?', 'Teile ein Rezept aus Cookidoo, Monsieur Cuisine, Cookit oder einer anderen Küchenmaschinen-App mit ToHuus oder füge den Link ein, dann bestätigst du Name und Zutaten. Die Schritte kannst du dazuschreiben, als Text einfügen oder aus deinen Screenshots lesen lassen. ToHuus ruft diese Seiten selbst nie ab, und was du mitbringst, bleibt privat in eurem Haushalt.'],
-        ['Was ist die Hausinfo?', 'Karten für Babysitter und Gäste mit Sprachbefehlen, Abläufen, Tipps und Notfallinfos. Codes wie für die Tür oder das WLAN sind dort eigens geschützt und gehen nie an eine KI. Auf dem Babysitter-Link steht sie neben „Wo ist was?“, auch offline.'],
-        ['Brauche ich einen Thermomix?', 'Nein. Der Kochplaner zeigt Rezepte mit und ohne Thermomix, und ihr könnt danach filtern.'],
+        ['Was ist die Hausinfo?', 'Karten für Babysitter und Gäste mit Sprachbefehlen, Abläufen, Tipps und Notfallinfos. Codes wie für die Tür oder das WLAN sind dort eigens geschützt und gehen nie an eine KI. Karten können Fotos und kurze Videos haben. Auf dem Babysitter-Link steht sie neben „Wo ist was?“, auch offline. Für den Urlaub gibt es die Übergabe: was der Haushüter wann tun soll, mit Fotos.'],
+        ['Brauche ich einen Thermomix?', 'Nein. Der Kochplaner zeigt Rezepte mit und ohne Küchenmaschine, und ihr könnt danach filtern. Mit Plus gibt es auch ToHuus-Rezepte für Thermomix, Monsieur Cuisine und Cookit, mit den Einstellungen bei jedem Schritt.'],
         ['Wer zahlt, wenn wir zu viert sind?', 'Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder, Gäste und verbundene Haushalte zahlen nichts.'],
         ['Was passiert, wenn ich das Abo kündige?', 'Der Haushalt geht auf Free zurück. Gelöscht wird nichts. Ihr seht dann die letzten 60 Tage, und der Assistent hat 20 Nachrichten im Monat.'],
         ['Was passiert mit meinen Daten, wenn ich lösche?', 'Zuerst wird der Schlüssel des Haushalts vernichtet, damit ist die Datenbank nicht mehr lesbar. Danach werden die Dateien und die Sicherungen des Haushalts gelöscht. Sicherungskopien der Kontoverwaltung, die noch den verschlüsselten Schlüssel enthalten, laufen nach ihrer Frist ab.'],
@@ -272,7 +273,7 @@ const COPY = {
       about: 'ToHuus ist ein Angebot von Heidrich Digital.', provider: `Anbieter: ${PROVIDER}`,
       project: 'Projekt', legal: 'Rechtliches', help: 'Hilfe & Tipps', code: 'Quellcode auf GitHub', license: 'Lizenz App: AGPL-3.0', licenseHa: 'Lizenz HA-Integration: MIT', issues: 'Fehler melden',
       imprint: 'Impressum', privacy: 'Datenschutz', terms: 'Nutzungsbedingungen', otherLang: 'English version',
-      fine: 'Diese Website setzt keine Cookies, trackt nicht und lädt nichts von Dritten. Schriften: Familjen Grotesk und Hedvig Letters (SIL Open Font License), lokal ausgeliefert. Icons: Phosphor (MIT). Die Bildschirmfotos zeigen einen Demo-Haushalt mit ausgedachten Namen und Bons. ToHuus steht in keiner Verbindung zu REWE, Lidl, Aldi, Vorwerk/Thermomix, Apple oder den anderen genannten Läden und Diensten. Die Namen beschreiben nur kompatible Formate und Dienste.',
+      fine: 'Diese Website setzt keine Cookies, trackt nicht und lädt nichts von Dritten. Schriften: Familjen Grotesk und Hedvig Letters (SIL Open Font License), lokal ausgeliefert. Icons: Phosphor (MIT). Die Bildschirmfotos zeigen einen Demo-Haushalt mit ausgedachten Namen und Bons. Rezeptfotos: Pexels (mit Namensnennung) oder KI-erzeugt. ToHuus steht in keiner Verbindung zu REWE, Lidl, Aldi, Vorwerk/Thermomix, Apple oder den anderen genannten Läden und Diensten. Die Namen beschreiben nur kompatible Formate und Dienste.',
     },
   },
   en: {
@@ -313,7 +314,7 @@ const COPY = {
         { id: 'cooking', no: '2', label: 'Cooking', h3: 'You can cook this today.', shot: 'cook',
           alt: 'Cook page: “You can cook this today” with a gnocchi skillet and roast vegetables with feta, both marked “everything is at home”, plus filters with and without Thermomix.',
           p: 'The cook planner starts with what is at home. It shows what works right now, where only one ingredient is missing and what should be used soon. Plan the week if you like, and whatever it needs goes on the list in one tap.',
-          points: ['Recipes by hand, from a link, a photo or other apps', 'Many at once as a recipe pack, even built by your own AI', 'With or without a Thermomix, and allergies are taken into account'] },
+          points: ['Recipes by hand, from a link, a photo or other apps', 'Many at once as a recipe pack, even built by your own AI', 'With or without a kitchen machine, and allergies are taken into account'] },
         { id: 'money', no: '3', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
           alt: 'Money page for September 2026: £215.81 spent, £17 more than the month before, with a weekly line and bars by category below.',
           p: 'Every receipt counts. ToHuus shows what a month cost, in which shop and for which category, and compares it with the month before. You do not need to keep a ledger.',
@@ -348,7 +349,7 @@ const COPY = {
         ['Hold back', '“Still have it” postpones the suggestion. Turn it down twice and ToHuus stops asking.'],
       ],
       cardTitle: 'Shopping list', cardSub: 'with origins',
-      rows: [['Mozzarella', 'remembers: every ~9 days', 'rhythm'], ['Baking paper', 'Mira · today 16:41', 'person'], ['2× Oat drink', 'Mira · today 16:41', 'person'], ['Parcel tape', 'Jonas · yesterday', 'person'], ['Chopped tomatoes', 'from the week plan', 'plan']],
+      rows: [['Mozzarella', 'remembers: every ~9 days', 'rhythm'], ['Baking paper', 'Mira · today 16:41', 'person'], ['2× Oat drink', 'Mira · today 16:41', 'person'], ['Parcel tape', 'Ben · yesterday', 'person'], ['Chopped tomatoes', 'from the week plan', 'plan']],
       cardFoot: 'No line without a sender',
     },
     who: {
@@ -383,11 +384,11 @@ const COPY = {
       per: '/ month', or: 'or', year: '/ year', storage: 'Storage',
       plans: [
         { name: 'Free', price: '€0', sub: 'for good', storage: '250 MB', items: ['Shared list with shop mode', 'Unlimited receipts', 'Remembers 60 days back', 'Recipes by hand or from a link', '20 assistant messages a month'] },
-        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices, spending and review', 'Connected households for looking after someone', 'Import from screenshots and photos of paper lists', '100 messages a month'] },
-        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', 'New seasonal ToHuus recipes (in German), with pictures', '1,500 messages a month'], mark: '14 days to try' },
+        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices, spending and review', 'Connected households for looking after someone', 'More imports from screenshots and photos (40 instead of 10 a day)', '100 messages a month'] },
+        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', 'New seasonal ToHuus recipes (in German), baking and kitchen machines too, with pictures', 'Your own receipt address for receipts by mail', '1,500 messages a month'], mark: '14 days to try' },
         { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'Web app in the browser, Home Assistant, MCP'], host: true },
       ],
-      note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. Payment runs through Apple in the iPhone app.',
+      note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. During the beta we often give test households Household or Plus for free. Payment runs through Apple in the iPhone app.',
     },
     privacy: {
       label: 'Privacy and security', h2: 'Your receipts work for you, not for market research.',
@@ -398,7 +399,8 @@ const COPY = {
         ['eyeoff', 'No tracking, no ads', 'Your receipts are neither sold nor analysed for advertising. This website sets no cookies either.'],
         ['robot', 'AI only through Mistral', 'Receipt photos, voice input and the assistant run on Mistral, a provider based in France, processed in the EU. Every request is pinned to Mistral with no fallback to other providers and is not used for training. In the cloud ToHuus asks first: without your consent nothing goes to a language model. Voice recordings are not stored.'],
         ['lock', 'Sensitive details stay at home', 'Allergies and details about children only go to a language model if you explicitly switch that on.'],
-        ['power', 'AI can be switched off', 'For the whole household, just for you or for a single child. Then no request goes to a language model, and the list, suggestions, cooking and money keep working.'],
+        ['mail', 'Mails only if you want them', 'Switch off the summary and the subscription reminder under Settings › Notifications › Mails from ToHuus, or with one click in each of these mails. We never send advertising.'],
+        ['power', 'AI can be switched off', 'For the whole household, just for you or for a single child. Then no request goes to a language model, and the list, suggestions, cooking and money keep working. In the cloud it is off for children until a parent switches it on.'],
         ['phone', 'Apple Intelligence on the iPhone only', 'If you like, Apple Intelligence tidies up receipt photos and handwritten lists right on the iPhone. It is off on every device until you switch it on, and nothing leaves the device for it.'],
         ['scan', 'Text recognition without AI', 'Receipt photos are first read by text recognition without a language model on the server, or your iPhone reads them itself and sends only the text. Only if that does not add up and AI is on does Mistral read the photo.'],
         ['plug', 'Your assistants only if you want', 'You connect Claude or ChatGPT yourself through MCP. They see discreet items only as a placeholder, and an admin can switch MCP off.'],
@@ -455,15 +457,15 @@ const COPY = {
     faq: {
       label: 'Questions', h2: 'What people often ask.', more: 'More answers in Help & tips',
       list: [
-        ['Do I have to type everything in?', 'No. Receipts come in as a PDF or a photo, and when you self-host also through your own e-mail inbox. What you tick off the list counts as a purchase too. You do not have to keep a stock list.'],
+        ['Do I have to type everything in?', 'No. Receipts come in as a PDF or a photo. With Plus your household gets its own receipt address in the cloud (coming soon), and self-hosted it works through your own inbox. What you tick off the list counts as a purchase too. You do not have to keep a stock list.'],
         ['Does it work without online grocery delivery?', 'Yes. Paper receipts come in as a photo, and if you do not want to collect receipts at all, simply tick things off the list.'],
         ['Is there an Android app?', 'There is no separate Android app. In the browser ToHuus runs as a web app you can add to your home screen, on Android just like on a computer.'],
         ['When is the iPhone app coming?', `It is being tested on TestFlight in a small, closed group. You can <a href="${tfHref('en')}">ask for a place by e-mail</a>. iPad and Apple Watch come with the app. If you self-host, you can use the web app today.`],
-        ['Do I need AI for this?', 'No. The list, suggestions, cook planner and spending all work without it. Receipt photos are read first by text recognition without AI, on the server or right on the iPhone. A language model only helps when that is not enough, and with open questions to the assistant. On newer iPhones Apple Intelligence can help on the device if you like. You can switch AI off for the household, for single people and for children.'],
+        ['Do I need AI for this?', 'No. The list, suggestions, cook planner and spending all work without it. Receipt photos are read first by text recognition without AI, on the server or right on the iPhone. A language model only helps when that is not enough, and with open questions to the assistant. On newer iPhones Apple Intelligence can help on the device if you like. In the cloud AI only starts with your consent, and you can switch it off for the household, for single people and for children.'],
         ['Can I bring my recipes?', 'Yes. From a link to a recipe site, from Instagram, TikTok, Pinterest or YouTube, from a photo, from apps like Mealie, Paprika or Nextcloud Cookbook, or many at once as a recipe pack with photos. If you connected Claude or ChatGPT, your own AI can save hundreds of recipes with their photos in one go.'],
         ['And Cookidoo, Monsieur Cuisine or Cookit?', 'Share a recipe from Cookidoo, Monsieur Cuisine, Cookit or another kitchen machine app with ToHuus or paste the link, then confirm the name and ingredients. Add the steps yourself, paste them as text or let ToHuus read them from your screenshots. ToHuus never fetches these sites itself, and what you bring along stays private in your household.'],
-        ['What is the house info?', 'Cards for babysitters and guests with voice commands, routines, tips and emergency details. Codes such as the door or the Wi-Fi are protected separately and never go to an AI. On the babysitter link it sits next to “where is what”, also offline.'],
-        ['Do I need a Thermomix?', 'No. The cook planner shows recipes with and without a Thermomix, and you can filter by it.'],
+        ['What is the house info?', 'Cards for babysitters and guests with voice commands, routines, tips and emergency details. Codes such as the door or the Wi-Fi are protected separately and never go to an AI. Cards can have photos and short videos. On the babysitter link it sits next to “where is what”, also offline. For holidays there is the handover: what the house sitter should do and when, with photos.'],
+        ['Do I need a Thermomix?', 'No. The cook planner shows recipes with and without a kitchen machine, and you can filter by it. With Plus there are also ToHuus recipes for Thermomix, Monsieur Cuisine and Cookit, with the settings for each step.'],
         ['Who pays if there are four of us?', 'One subscription covers the whole household. Members, children, guests and connected households pay nothing.'],
         ['What happens if I cancel?', 'The household goes back to Free. Nothing is deleted. You then see the last 60 days, and the assistant has 20 messages a month.'],
         ['What happens to my data when I delete it?', 'First the household’s key is destroyed, so the database can no longer be read. Then the household’s files and backups are deleted. Backup copies of the account directory, which still hold the encrypted key, expire after their retention period.'],
@@ -474,7 +476,7 @@ const COPY = {
       about: 'ToHuus is offered by Heidrich Digital.', provider: `Provider: ${PROVIDER}`,
       project: 'Project', legal: 'Legal', help: 'Help & tips', code: 'Source code on GitHub', license: 'App licence: AGPL-3.0', licenseHa: 'HA integration licence: MIT', issues: 'Report a bug',
       imprint: 'Imprint', privacy: 'Privacy', terms: 'Terms of use', otherLang: 'Deutsche Version',
-      fine: 'This website sets no cookies, does not track you and loads nothing from third parties. Fonts: Familjen Grotesk and Hedvig Letters (SIL Open Font License), served locally. Icons: Phosphor (MIT). The screenshots show a demo household with invented names and receipts. ToHuus is not affiliated with Tesco, REWE, Lidl, Aldi, Vorwerk/Thermomix, Apple or the other shops and services named here. The names only describe compatible formats and services.',
+      fine: 'This website sets no cookies, does not track you and loads nothing from third parties. Fonts: Familjen Grotesk and Hedvig Letters (SIL Open Font License), served locally. Icons: Phosphor (MIT). The screenshots show a demo household with invented names and receipts. Recipe photos: Pexels (credited) or AI-generated. ToHuus is not affiliated with Tesco, REWE, Lidl, Aldi, Vorwerk/Thermomix, Apple or the other shops and services named here. The names only describe compatible formats and services.',
     },
   },
 };
