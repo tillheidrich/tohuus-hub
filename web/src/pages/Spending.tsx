@@ -17,6 +17,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { del, fmtDate, invalidate, patch, post, put, useApi } from '../api';
 import { Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { EntryBadges, ExpenseFormSheet, ReasonPicker, TagInput, useView, ViewSwitch, type Member } from '../money/entry';
+import { MoneyListSheet, NewMoneyListSheet, type Source } from '../money/lists';
 import { locale, t } from '../i18n';
 import { money, region, weekStart } from '../region';
 
@@ -44,6 +46,13 @@ interface Entry {
   tags: string[];
   note: string | null;
   excluded: { id: number; scope: Scope; reason: string | null } | null;
+  /** q-money: a receipt line that belongs to one person */
+  for_user_id?: number | null;
+  for_name?: string | null;
+  personal?: { for_user_id: number; for_name: string | null; by_user_id: number | null } | null;
+  paid_by?: number | null;
+  attachment?: { type: string } | null;
+  part?: boolean;
 }
 interface Bucket {
   key: string;
@@ -99,6 +108,8 @@ interface Meta {
   tags: string[];
   stores: string[];
   today: string;
+  members?: Member[];
+  me?: number | null;
 }
 interface Drill {
   title: string;
@@ -187,8 +198,10 @@ export function Spending() {
   });
   const [anchor, setAnchor] = useState(localToday());
   const [tag, setTag] = useState<string | null>(null);
-  const qs = `period=${kind}&date=${anchor}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`;
-  const { data: s, isLoading, error, isFetching } = useApi<Stats>(['spending', 'v2', kind, anchor, tag ?? ''], `/spend/stats?${qs}`);
+  const [view, setView] = useView();
+  const mine = view === 'mine';
+  const qs = `period=${kind}&date=${anchor}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}${mine ? '&view=mine' : ''}`;
+  const { data: s, isLoading, error, isFetching } = useApi<Stats>(['spending', 'v2', kind, anchor, tag ?? '', view], `/spend/stats?${qs}`);
   const meta = useApi<Meta>(['spending', 'meta'], '/spend/meta');
 
   const [drill, setDrill] = useState<Drill | null>(null);
@@ -200,6 +213,8 @@ export function Spending() {
   const [budgetsOpen, setBudgetsOpen] = useState(false);
   const [excludedOpen, setExcludedOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [listFrom, setListFrom] = useState<{ source: Source; title?: string } | null>(null);
+  const [listId, setListId] = useState<number | null>(null);
 
   useEffect(() => {
     try {
@@ -233,6 +248,7 @@ export function Spending() {
       </header>
 
       <div className="sp2-controls">
+        {(meta.data?.members?.length ?? 0) > 0 && <ViewSwitch value={view} onChange={setView} />}
         <Seg<Kind>
           value={kind}
           options={[
@@ -365,13 +381,15 @@ export function Spending() {
         </div>
       )}
 
-      <DrillSheet drill={drill} tag={tag} onClose={() => setDrill(null)} onReceipt={setReceiptId} onLine={openLine} />
-      <ReceiptSheet id={receiptId} onClose={() => setReceiptId(null)} onLine={openLine} meta={meta.data} />
+      <DrillSheet drill={drill} tag={tag} view={view} me={meta.data?.me ?? null} onClose={() => setDrill(null)} onReceipt={setReceiptId} onLine={openLine} />
+      <ReceiptSheet id={receiptId} onClose={() => setReceiptId(null)} onLine={openLine} meta={meta.data} onSplit={(source, title) => { setReceiptId(null); setListFrom({ source, title }); }} />
       <LineSheet entry={lineFor} onClose={() => setLineFor(null)} meta={meta.data} onPrice={(id) => { setLineFor(null); setPriceFor(id); }} />
-      <ExpenseSheet entry={expense} onClose={() => setExpense(null)} meta={meta.data} />
+      <ExpenseFormSheet target={expense === 'new' ? 'new' : (expense?.id ?? null)} onClose={() => setExpense(null)} preset={mine ? { private_for: meta.data?.me ?? null } : undefined} extra={expense && expense !== 'new' ? <ExpenseExclusion e={expense} onDone={() => setExpense(null)} /> : null} />
+      <NewMoneyListSheet open={listFrom != null} preset={listFrom} onClose={() => setListFrom(null)} onCreated={(id) => { setListFrom(null); setListId(id); }} />
+      <MoneyListSheet id={listId} onClose={() => setListId(null)} />
       <BudgetSheet open={budgetsOpen} onClose={() => setBudgetsOpen(false)} meta={meta.data} />
       <ExcludedSheet open={excludedOpen} onClose={() => setExcludedOpen(false)} />
-      <ExportSheet open={exportOpen} onClose={() => setExportOpen(false)} kind={kind} anchor={anchor} tag={tag} s={s} />
+      <ExportSheet open={exportOpen} onClose={() => setExportOpen(false)} kind={kind} anchor={anchor} tag={tag} s={s} view={view} />
       <PriceSheet productId={priceFor} onClose={() => setPriceFor(null)} />
       <PricePicker open={pickPrices} onClose={() => setPickPrices(false)} onPick={(id) => { setPickPrices(false); setPriceFor(id); }} />
     </div>
@@ -722,7 +740,7 @@ function groupEntries(list: Entry[]) {
   return groups;
 }
 
-function EntryRow({ e, onClick }: { e: Entry; onClick: () => void }) {
+function EntryRow({ e, onClick, me }: { e: Entry; onClick: () => void; me?: number | null }) {
   return (
     <button className={`li clickable sp2-entry ${e.excluded ? 'off' : ''}`} onClick={onClick}>
       <div className="grow">
@@ -732,6 +750,7 @@ function EntryRow({ e, onClick }: { e: Entry; onClick: () => void }) {
           {e.category_changed && <span className="muted"> · {t('changed')}</span>}
           {e.tags.map((x) => <span key={x} className="badge sp2-tag">{x}</span>)}
           {e.excluded && <span className="badge"><EyeSlash size={11} /> {e.excluded.reason || t('left out')}</span>}
+          <EntryBadges e={e} me={me} />
         </div>
       </div>
       <b className="num small">{eur(e.price)}</b>
@@ -739,9 +758,9 @@ function EntryRow({ e, onClick }: { e: Entry; onClick: () => void }) {
   );
 }
 
-function DrillSheet({ drill, tag, onClose, onReceipt, onLine }: { drill: Drill | null; tag: string | null; onClose: () => void; onReceipt: (id: number) => void; onLine: (e: Entry) => void }) {
+function DrillSheet({ drill, tag, view, me, onClose, onReceipt, onLine }: { drill: Drill | null; tag: string | null; view: string; me: number | null; onClose: () => void; onReceipt: (id: number) => void; onLine: (e: Entry) => void }) {
   const params = drill
-    ? new URLSearchParams({ period: 'custom', from: drill.from, to: drill.to, ...(drill.category ? { category: drill.category } : {}), ...(drill.store ? { store: drill.store } : {}), ...(tag ? { tag } : {}), ...(drill.excluded ? { excluded: '1' } : {}) }).toString()
+    ? new URLSearchParams({ period: 'custom', from: drill.from, to: drill.to, ...(drill.category ? { category: drill.category } : {}), ...(drill.store ? { store: drill.store } : {}), ...(tag ? { tag } : {}), ...(drill.excluded ? { excluded: '1' } : {}), ...(view === 'mine' ? { view: 'mine' } : {}) }).toString()
     : '';
   const { data, isLoading, error } = useApi<{ entries: Entry[]; truncated: boolean }>(['spending', 'entries', params], drill ? `/spend/entries?${params}` : null);
   const toast = useToast();
@@ -785,13 +804,14 @@ function DrillSheet({ drill, tag, onClose, onReceipt, onLine }: { drill: Drill |
                 <span className="grow">
                   <b>{g.store}</b> <span className="muted small">· {fd(g.day, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                   {!g.receipt_id && <span className="badge info" style={{ marginLeft: 6 }}>{t('own expense')}</span>}
+                  {!g.receipt_id && <EntryBadges e={g.entries[0]} me={me} />}
                 </span>
                 <b className="num small">{eur(g.entries.filter((e) => !e.excluded).reduce((a, e) => a + e.price, 0))}</b>
                 <CaretRight size={14} />
               </button>
               {g.receipt_id && (
                 <div className="list">
-                  {g.entries.map((e) => <EntryRow key={e.key} e={e} onClick={() => onLine(e)} />)}
+                  {g.entries.map((e) => <EntryRow key={e.key} e={e} me={me} onClick={() => onLine(e)} />)}
                 </div>
               )}
             </div>
@@ -808,67 +828,23 @@ function DrillSheet({ drill, tag, onClose, onReceipt, onLine }: { drill: Drill |
   );
 }
 
-const REASONS = ['Business', 'Gift', 'Party', 'For someone else'];
-
-function ReasonPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
-        {REASONS.map((r) => (
-          <button key={r} type="button" className={`chip ${value === t(r) ? 'on' : ''}`} onClick={() => onChange(value === t(r) ? '' : t(r))}>{t(r)}</button>
-        ))}
-      </div>
-      <input className="input" value={value} onChange={(e) => onChange(e.target.value)} placeholder={t('Reason (optional)')} maxLength={120} aria-label={t('Reason (optional)')} />
-    </div>
-  );
-}
-
-function TagInput({ value, onChange, suggestions }: { value: string[]; onChange: (v: string[]) => void; suggestions: string[] }) {
-  const [draft, setDraft] = useState('');
-  const add = (x: string) => {
-    const v = x.trim();
-    if (v && !value.some((y) => y.toLowerCase() === v.toLowerCase())) onChange([...value, v]);
-    setDraft('');
-  };
-  const rest = suggestions.filter((x) => !value.includes(x)).slice(0, 8);
-  return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="chips" style={{ margin: 0, padding: 0, flexWrap: 'wrap' }}>
-        {value.map((x) => (
-          <button key={x} type="button" className="chip on" onClick={() => onChange(value.filter((y) => y !== x))} aria-label={t('Remove tag {tag}', { tag: x })}>
-            <Tag size={13} /> {x} ×
-          </button>
-        ))}
-        {rest.map((x) => (
-          <button key={x} type="button" className="chip" onClick={() => add(x)}>
-            + {x}
-          </button>
-        ))}
-      </div>
-      <input
-        className="input"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            add(draft);
-          }
-        }}
-        onBlur={() => draft && add(draft)}
-        placeholder={t('New tag, e.g. Party')}
-        aria-label={t('New tag')}
-        maxLength={40}
-      />
-    </div>
-  );
-}
-
-function ReceiptSheet({ id, onClose, onLine, meta }: { id: number | null; onClose: () => void; onLine: (e: Entry) => void; meta?: Meta }) {
+function ReceiptSheet({ id, onClose, onLine, meta, onSplit }: { id: number | null; onClose: () => void; onLine: (e: Entry) => void; meta?: Meta; onSplit: (source: Source, title?: string) => void }) {
   const { data, isLoading } = useApi<any>(['spending', 'receipt', id ?? 0], id ? `/spend/receipts/${id}` : null);
   const toast = useToast();
   const [reason, setReason] = useState('');
+  const [pick, setPick] = useState<Set<string> | null>(null);
+  useEffect(() => setPick(null), [id]);
   if (!id) return null;
+  const members = meta?.members ?? [];
+  const me = meta?.me ?? null;
+  const run = async (fn: () => Promise<unknown>) => {
+    try {
+      await fn();
+      invalidate('spending', 'money', 'import');
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
   const setTags = async (tags: string[]) => {
     await put(`/spend/receipts/${id}/tags`, { tags });
     invalidate('spending');
@@ -884,6 +860,8 @@ function ReceiptSheet({ id, onClose, onLine, meta }: { id: number | null; onClos
       toast({ text: (e as Error).message, error: true });
     }
   };
+  const payer = data?.paid_by ?? members.find((m) => m.name === data?.actor)?.id ?? null;
+  const personal = data?.personal as Entry['personal'];
   return (
     <Sheet open onClose={onClose} title={data ? `${data.store} · ${fd(data.day, { day: 'numeric', month: 'short', year: 'numeric' })}` : t('Receipt')}>
       {isLoading || !data ? (
@@ -897,9 +875,82 @@ function ReceiptSheet({ id, onClose, onLine, meta }: { id: number | null; onClos
               {data.discounts > 0 && <> · {t('saved {amount}', { amount: eur(data.discounts) })}</>}
             </span>
           </div>
+          {members.length > 1 && !personal && (
+            <div className="field">
+              <span className="label" id="rc-pay">{t('Who paid?')}</span>
+              <div className="chips mq-chips" role="group" aria-labelledby="rc-pay">
+                {members.map((m) => (
+                  <button key={m.id} type="button" className={`chip ${payer === m.id ? 'on' : ''}`} aria-pressed={payer === m.id} onClick={() => run(() => post(`/imports/${id}/split`, { paid_by: m.id }))}>
+                    {m.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {members.length > 1 && !personal && !pick && <p className="help" style={{ margin: 0 }}>{t('Something on it belongs to one person? Choose them next to the item.')}</p>}
           <div className="list">
-            {data.entries.map((e: Entry) => <EntryRow key={e.key} e={e} onClick={() => onLine(e)} />)}
+            {data.entries.map((e: Entry) => (
+              <div key={e.key} className="mq-line-person">
+                {pick && (
+                  <input
+                    type="checkbox"
+                    checked={pick.has(e.key)}
+                    aria-label={t('Choose {name}', { name: e.name })}
+                    style={{ width: 22, height: 22, marginLeft: 8 }}
+                    onChange={() => setPick((p) => { const n = new Set(p); if (n.has(e.key)) n.delete(e.key); else n.add(e.key); return n; })}
+                  />
+                )}
+                <div className="grow" style={{ minWidth: 0 }}>
+                  <EntryRow e={e} me={me} onClick={() => onLine(e)} />
+                </div>
+                {!pick && !personal && members.length > 1 && (
+                  <select
+                    className="input sm-select"
+                    value={e.for_user_id ?? ''}
+                    aria-label={t('For whom is {name}?', { name: e.name })}
+                    onChange={(x) => run(() => post(`/imports/${id}/split`, { lines: [{ id: e.id, for_user_id: x.target.value ? Number(x.target.value) : null }] }))}
+                  >
+                    <option value="">{t('Household')}</option>
+                    {members.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            ))}
           </div>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            {pick ? (
+              <>
+                <button className="btn primary sm" disabled={!pick.size} onClick={() => onSplit({ kind: 'entries', keys: [...pick] }, data.store)}>
+                  {t('Split the selection ({n})', { n: pick.size })}
+                </button>
+                <button className="btn ghost sm" onClick={() => setPick(null)}>{t('Cancel')}</button>
+              </>
+            ) : (
+              <>
+                <button className="btn sm" onClick={() => onSplit({ kind: 'receipt', import_id: id }, data.store)}>{t('Split this receipt')}</button>
+                <button className="btn ghost sm" onClick={() => setPick(new Set())}>{t('Split only some items')}</button>
+              </>
+            )}
+          </div>
+          {me != null && (
+            <label className="row card pad" style={{ gap: 12, alignItems: 'flex-start' }}>
+              <input
+                type="checkbox"
+                checked={Boolean(personal)}
+                disabled={Boolean(personal && personal.for_user_id !== me && personal.by_user_id !== me)}
+                onChange={(x) => run(() => post(`/spend/receipts/${id}/personal`, { for_user_id: x.target.checked ? me : null }))}
+                style={{ width: 22, height: 22, marginTop: 2 }}
+              />
+              <span className="grow">
+                <b className="small">{personal && personal.for_user_id !== me ? t('Belongs to {name}', { name: personal.for_name ?? '' }) : t('This receipt is just mine')}</b>
+                <span className="help" style={{ display: 'block' }}>{t('Personal receipts are only in your “Just mine” – nobody else sees them, not even in the household numbers.')}</span>
+              </span>
+            </label>
+          )}
           <div className="field">
             <label>{t('Tags for the whole receipt')}</label>
             <TagInput value={data.tags} onChange={setTags} suggestions={meta?.tags ?? []} />
@@ -1022,108 +1073,33 @@ function LineSheet({ entry, onClose, meta, onPrice }: { entry: Entry | null; onC
   );
 }
 
-function ExpenseSheet({ entry, onClose, meta }: { entry: Entry | 'new' | null; onClose: () => void; meta?: Meta }) {
+/** "Don't count" for an own expense (below the entry form). */
+function ExpenseExclusion({ e, onDone }: { e: Entry; onDone: () => void }) {
   const toast = useToast();
-  const isNew = entry === 'new';
-  const e = entry && entry !== 'new' ? entry : null;
-  const [f, setF] = useState({ amount: '', day: localToday(), store: '', category: '', note: '' });
-  const [tags, setTags] = useState<string[]>([]);
   const [reason, setReason] = useState('');
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    if (entry === 'new') {
-      setF({ amount: '', day: localToday(), store: '', category: '', note: '' });
-      setTags([]);
-    } else if (entry) {
-      setF({ amount: String(entry.price), day: entry.day, store: entry.store, category: entry.category_original === null && entry.category === t('Uncategorised') ? '' : entry.category, note: entry.note ?? '' });
-      setTags(entry.tags);
-    }
-    setReason('');
-  }, [entry]);
-  if (!entry) return null;
-  const amount = Number(f.amount.replace(',', '.'));
-  const save = async () => {
-    setBusy(true);
+  const toggle = async () => {
     try {
-      const body = { amount, day: f.day, store: f.store || null, category: f.category || null, note: f.note || null, tags };
-      if (isNew) await post('/spend/expenses', body);
-      else await patch(`/spend/expenses/${e!.id}`, body);
-      invalidate('spending');
-      toast({ text: isNew ? t('Expense added') : t('Saved') });
-      onClose();
+      if (e.excluded) await del(`/spend/exclusions/${e.excluded.id}`);
+      else await post('/spend/exclusions', { scope: 'expense', ref: e.id, reason });
+      invalidate('spending', 'money');
+      toast({ text: e.excluded ? t('Counted again') : t('Expense no longer counts') });
+      onDone();
     } catch (err) {
       toast({ text: (err as Error).message, error: true });
-    } finally {
-      setBusy(false);
     }
   };
-  const remove = async () => {
-    if (!e || !window.confirm(t('Delete this expense?'))) return;
-    await del(`/spend/expenses/${e.id}`);
-    invalidate('spending');
-    toast({ text: t('Expense deleted') });
-    onClose();
-  };
-  const toggleExclude = async () => {
-    if (!e) return;
-    if (e.excluded) await del(`/spend/exclusions/${e.excluded.id}`);
-    else await post('/spend/exclusions', { scope: 'expense', ref: e.id, reason });
-    invalidate('spending');
-    toast({ text: e.excluded ? t('Counted again') : t('Expense no longer counts') });
-    onClose();
-  };
   return (
-    <Sheet open onClose={onClose} title={isNew ? t('Add an expense') : t('Edit expense')}>
-      <div className="stack">
-        {isNew && <p className="small muted" style={{ margin: 0 }}>{t('For things without a receipt – the farmers’ market, the bakery paid in cash.')}</p>}
-        <div className="row" style={{ gap: 12 }}>
-          <div className="field grow">
-            <label htmlFor="sp2-eamt">{t('Amount in {currency}', { currency: region().currency })}</label>
-            <input id="sp2-eamt" className="input" type="text" inputMode="decimal" value={f.amount} onChange={(x) => setF({ ...f, amount: x.target.value })} placeholder="12,50" autoFocus={isNew} />
-          </div>
-          <div className="field">
-            <label htmlFor="sp2-eday">{t('Date')}</label>
-            <input id="sp2-eday" className="input" type="date" value={f.day} max={localToday()} onChange={(x) => setF({ ...f, day: x.target.value })} />
-          </div>
-        </div>
-        <div className="field">
-          <label htmlFor="sp2-estore">{t('Where')}</label>
-          <input id="sp2-estore" className="input" list="sp2-stores" value={f.store} onChange={(x) => setF({ ...f, store: x.target.value })} placeholder={t('e.g. Farmers’ market')} maxLength={80} />
-          <datalist id="sp2-stores">{(meta?.stores ?? []).map((c) => <option key={c} value={c} />)}</datalist>
-        </div>
-        <div className="field">
-          <label htmlFor="sp2-ecat">{t('Category')}</label>
-          <input id="sp2-ecat" className="input" list="sp2-cats2" value={f.category} onChange={(x) => setF({ ...f, category: x.target.value })} placeholder={t('Uncategorised')} maxLength={80} />
-          <datalist id="sp2-cats2">{(meta?.categories ?? []).map((c) => <option key={c} value={c} />)}</datalist>
-        </div>
-        <div className="field">
-          <label htmlFor="sp2-enote">{t('Note')}</label>
-          <input id="sp2-enote" className="input" value={f.note} onChange={(x) => setF({ ...f, note: x.target.value })} maxLength={300} />
-        </div>
-        <div className="field">
-          <label>{t('Tags')}</label>
-          <TagInput value={tags} onChange={setTags} suggestions={meta?.tags ?? []} />
-        </div>
-        <div className="row">
-          {e && <button className="btn ghost danger sm" onClick={remove}><Trash size={15} /> {t('Delete')}</button>}
-          <div className="grow" />
-          <button className="btn primary" disabled={busy || !(amount > 0) || !f.day} onClick={save}>{t('Save')}</button>
-        </div>
-        {e && (
-          <div className="card pad stack" style={{ gap: 10 }}>
-            {e.excluded ? (
-              <button className="btn" onClick={toggleExclude}>{t('Count again')}</button>
-            ) : (
-              <>
-                <b className="small">{t('Don’t count in the statistics')}</b>
-                <ReasonPicker value={reason} onChange={setReason} />
-                <button className="btn" onClick={toggleExclude}><EyeSlash size={15} /> {t('Leave out')}</button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </Sheet>
+    <div className="card pad stack" style={{ gap: 10 }}>
+      {e.excluded ? (
+        <button className="btn" onClick={toggle}>{t('Count again')}</button>
+      ) : (
+        <>
+          <b className="small">{t('Don’t count in the statistics')}</b>
+          <ReasonPicker value={reason} onChange={setReason} />
+          <button className="btn" onClick={toggle}><EyeSlash size={15} /> {t('Leave out')}</button>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -1160,13 +1136,15 @@ function ExcludedSheet({ open, onClose }: { open: boolean; onClose: () => void }
   );
 }
 
-function ExportSheet({ open, onClose, kind, anchor, tag, s }: { open: boolean; onClose: () => void; kind: Kind; anchor: string; tag: string | null; s?: Stats }) {
-  const qs = `period=${kind}&date=${anchor}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`;
+function ExportSheet({ open, onClose, kind, anchor, tag, s, view }: { open: boolean; onClose: () => void; kind: Kind; anchor: string; tag: string | null; s?: Stats; view: string }) {
+  const v = view === 'mine' ? '&view=mine' : '';
+  const qs = `period=${kind}&date=${anchor}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}${v}`;
   const label = s ? periodLabel(kind, s.from, s.to) : '';
   return (
     <Sheet open={open} onClose={onClose} title={t('Export')}>
       <div className="stack">
         <p className="small muted" style={{ margin: 0 }}>{t('All fields, including items that are not counted (marked), categories, tags and notes.')}</p>
+        {view === 'mine' && <p className="small" style={{ margin: 0 }}>{t('Only what belongs to you.')}</p>}
         <div className="list">
           <a className="li clickable" href={`/api/spend/export?format=csv&${qs}`} download onClick={onClose}>
             <DownloadSimple size={18} />
@@ -1176,7 +1154,7 @@ function ExportSheet({ open, onClose, kind, anchor, tag, s }: { open: boolean; o
             <DownloadSimple size={18} />
             <div className="grow"><div className="title">JSON</div><div className="sub">{label}{tag ? ` · ${tag}` : ''} · {t('with summary')}</div></div>
           </a>
-          <a className="li clickable" href="/api/spend/export?format=csv&period=all" download onClick={onClose}>
+          <a className="li clickable" href={`/api/spend/export?format=csv&period=all${v}`} download onClick={onClose}>
             <DownloadSimple size={18} />
             <div className="grow"><div className="title">{t('Everything (CSV)')}</div><div className="sub">{t('All time')}</div></div>
           </a>
