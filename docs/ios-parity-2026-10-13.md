@@ -7,9 +7,9 @@ there; other pages are not linked from the app.
 
 | Web feature | Web | iOS | What is missing |
 |---|---|---|---|
-| Home & care tasks ("Pflege") | `/pflege` | missing | list, intervals, done + undo, due section on Today (only the push arrives) |
-| Trip / away mode | `/urlaub` | missing | trips, quiet notifications, use-up/freeze, checklist, packing (templates, stock), holiday kitchen, sitter link, welcome home, away banner |
-| Holiday handover | trip › Übergabe, `/uebergabe` | missing | items with rhythm, who sees it, ticks, templates, media, guest view |
+| Home & care tasks ("Pflege") | `/pflege` | web page in the app (Mehr › Pflege & Fristen) | list, intervals, done + undo, due section on Today (only the push arrives) |
+| Trip / away mode | `/urlaub` | web page in the app (Mehr › Urlaub / unterwegs) | trips, quiet notifications, use-up/freeze, checklist, packing (templates, stock), holiday kitchen, sitter link, welcome home, away banner |
+| Holiday handover | trip › Übergabe, `/uebergabe` | web page in the app (in the trip; guests: Mehr › Übergabe) | items with rhythm, who sees it, ticks, templates, media, guest view |
 | Places & categories editing | Settings › places | web view | create, rename, reorder, delete; categories; household form |
 | Notification routing | Settings › notify | partial | channels (push/e-mail/summary), lock-screen text, "only at home"; household matrix via web view |
 | Shopping-list extras | `shop/forms.tsx`, `bridges.tsx` | partial | WG balance/personal rows, lunchbox regulars, care fridge check, CalDAV, import from Bring!/AnyList/CSV, start mode, offers per shop |
@@ -43,3 +43,10 @@ household forms. Then: native data export, recognition rules + forwarding addres
 Hausinfo templates/log/print, account security.
 
 iPad: the app is universal (`TARGETED_DEVICE_FAMILY: "1,2"`, sidebar via `NavigationSplitView` in `MainTabView`).
+
+## Bridge since 13 Oct (branch `claude/tohuus-status-btntbq`)
+
+`WebPageView` (`ios/ToHuus/Features/Settings/WebSettingsView.swift`) opens any web page signed in. Mehr in the app
+now has *Urlaub / unterwegs* (`/urlaub`, with the handover tab), *Pflege & Fristen* (`/pflege`, when the area is
+switched on) and, for permanent guests, *Übergabe* (`/uebergabe`). Native screens for these stay the next step
+(order above).

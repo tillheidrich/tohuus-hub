@@ -17,6 +17,15 @@ struct HouseholdLinks: View {
                 NavigationLink { TreatsView(api: api) } label: { Label(L("For me – ask for something"), systemImage: "heart") }
             }
             NavigationLink { GuestLinksView(api: api) } label: { Label(L("Guest links"), systemImage: "link") }
+            // not native yet – the web pages, signed in (WebPageView); guests see only the handover shared with them
+            if app.isGuest {
+                NavigationLink { WebPageView(api: api, path: "/uebergabe", title: L("Handover")) } label: { Label(L("Handover"), systemImage: "suitcase") }
+            } else {
+                NavigationLink { WebPageView(api: api, path: "/urlaub", title: L("Trip / away")) } label: { Label(L("Trip / away"), systemImage: "suitcase") }
+                if app.moduleOn("homeinfo") {
+                    NavigationLink { WebPageView(api: api, path: "/pflege", title: L("Home & care")) } label: { Label(L("Home & care"), systemImage: "wrench.and.screwdriver") }
+                }
+            }
         }
         .sheet(item: Binding(get: { open.map(DebugKey.init) }, set: { open = $0?.id })) { k in
             NavigationStack {

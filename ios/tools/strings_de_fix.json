@@ -53,5 +53,8 @@
   "Bring along: %@": "Bitte mitbringen: %@",
   "Nothing missing": "Nichts fehlt",
   "%d missing": "%d fehlen",
-  "Probably due: %@": "Wohl bald fällig: %@"
+  "Probably due: %@": "Wohl bald fällig: %@",
+  "Handover": "Übergabe",
+  "Trip / away": "Urlaub / unterwegs",
+  "Home & care": "Pflege & Fristen"
 }

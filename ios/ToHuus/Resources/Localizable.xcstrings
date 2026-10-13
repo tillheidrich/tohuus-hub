@@ -8195,6 +8195,23 @@
         }
       }
     },
+    "Handover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handover"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übergabe"
+          }
+        }
+      }
+    },
     "Handover note": {
       "extractionState": "manual",
       "localizations": {
@@ -8412,6 +8429,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verlauf"
+          }
+        }
+      }
+    },
+    "Home & care": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home & care"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pflege & Fristen"
           }
         }
       }
@@ -20822,6 +20856,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Testphase (Plus)"
+          }
+        }
+      }
+    },
+    "Trip / away": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trip / away"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urlaub / unterwegs"
           }
         }
       }
