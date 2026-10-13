@@ -7277,6 +7277,23 @@
         }
       }
     },
+    "Filter by sender, so one-time codes and other mails never leave your mailbox.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by sender, so one-time codes and other mails never leave your mailbox."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtere nach Absender, dann verlassen Einmalcodes und andere Mails dein Postfach gar nicht erst."
+          }
+        }
+      }
+    },
     "Finish shopping": {
       "extractionState": "manual",
       "localizations": {
@@ -7681,6 +7698,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vergessen: %@"
+          }
+        }
+      }
+    },
+    "Forward receipts, order and pickup confirmations to this address. Everything else is discarded at once, without being stored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward receipts, order and pickup confirmations to this address. Everything else is discarded at once, without being stored."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leite Bons, Bestell- und Abholbestätigungen an diese Adresse weiter. Alles andere verwirft ToHuus sofort, ohne es zu speichern."
           }
         }
       }
@@ -9925,6 +9959,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Groß"
+          }
+        }
+      }
+    },
+    "Last %d days: %d received, %d became receipts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last %d days: %d received, %d became receipts"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte %d Tage: %d angekommen, %d als Bon gebucht"
           }
         }
       }
@@ -16096,6 +16147,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bons und Häkchen füllen den Vorrat von selbst – zählen musst du nicht."
+          }
+        }
+      }
+    },
+    "Receipts by e-mail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipts by e-mail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bons per E-Mail"
           }
         }
       }
@@ -23185,6 +23253,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wünsche & Merkliste"
+          }
+        }
+      }
+    },
+    "With Plus your household gets its own address: forward receipts, order and pickup confirmations, and ToHuus books them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With Plus your household gets its own address: forward receipts, order and pickup confirmations, and ToHuus books them."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Plus bekommt euer Haushalt eine eigene Adresse: Bons, Bestell- und Abholbestätigungen weiterleiten, ToHuus bucht sie."
           }
         }
       }

@@ -30,6 +30,8 @@ import { r as kioskRoutes, pub as kioskPublic } from './routes/kiosk.js';
 import { r as kidsRoutes, kid as kidDevice } from './routes/kids.js';
 import { r as onboardRoutes } from './routes/onboard.js';
 import { r as retailRoutes } from './routes/retail.js';
+import { r as mailRoutes, pub as mailPublic } from './routes/mail.js';
+import { startSmtpInbound } from './lib/mail-smtp.js';
 import { r as channelsRoutes, pub as channelsPublic } from './routes/channels.js';
 import { r as intlRoutes } from './routes/intl.js';
 import { r as cook2Routes } from './routes/cook2.js';
@@ -160,6 +162,8 @@ app.use('/api', instance);
 app.use('/api', factsRoutes);
 app.use('/api', appAuth);
 app.use('/api', billingPublic);
+// receipt address webhook (raw mail body, shared secret) – before the household auth layer
+app.use('/api', mailPublic);
 if (config.multiTenant) {
   // Sign in with Apple (app token or cookie session, web redirect flow) – routes/cloud-apple.ts
   app.use('/api', appleAuth);
@@ -203,6 +207,7 @@ app.use('/api', kioskRoutes);
 app.use('/api', kidsRoutes);
 app.use('/api', onboardRoutes);
 app.use('/api', retailRoutes);
+app.use('/api', mailRoutes);
 app.use('/api', channelsRoutes);
 app.use('/api', intlRoutes);
 app.use('/api', cook2Routes);
@@ -315,5 +320,7 @@ export const server = app.listen(config.port, () => {
   if (config.multiTenant) startRenewalReminders();
   if (config.multiTenant) startStats();
   if (config.multiTenant) startCatalogScheduler();
+  // receipt addresses (docs/mail-inbox.md): only with MAIL_INBOUND_DOMAIN and MAIL_SMTP_PORT
+  if (config.multiTenant) startSmtpInbound();
   else startBackups();
 });

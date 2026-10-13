@@ -319,6 +319,10 @@ export function shredHousehold(id: string) {
   dropHouseholdState(id);
   for (const dir of [householdDir(id), householdBackupDir(id)]) fs.rmSync(dir, { recursive: true, force: true });
   scrubAccountBackups(id);
+  // its receipt address and counters (docs/mail-inbox.md)
+  void import('./mail-inbound.js')
+    .then((m) => m.dropMailAddress(id))
+    .catch(() => {});
   // off-site copies of this household (S3) go as well
   void import('./cloud-backup.js')
     .then((m) => m.deleteS3Household(id))

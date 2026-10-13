@@ -44,6 +44,11 @@ DATA_DIR/
 | `BASE_URL` | yes | public URL of the cloud (links, signed image URLs; its host is the passkey RP-ID, its origin the expected passkey origin – changing the host makes existing passkeys useless) |
 | `DATA_DIR` | – | default `./data` (`/data` in the image) |
 | `SMTP_*` | recommended | verification, sign-in and reset mails |
+| `SITE_URL` | – | the public website (default `https://tohuus.heidrich-digital.de`); help links and `/api/instance` `siteUrl` – docs/domain.md |
+| `MAIL_INBOUND_DOMAIN` | – | receipt addresses `bons-…@<domain>` (Plus; feature off when unset) – docs/mail-inbox.md |
+| `MAIL_SMTP_PORT` | – | port of the inbound SMTP listener inside the container (e.g. `2525`, Coolify maps 25 to it) |
+| `MAIL_TLS_CERT_FILE`, `MAIL_TLS_KEY_FILE` | – | certificate for STARTTLS on the SMTP listener |
+| `MAIL_INBOUND_SECRET` | – | ≥ 16 characters; enables the webhook `POST /api/mail/inbound` |
 | `CLOUD_SIGNUP` | – | `open` \| `invite` \| `closed` (default **`invite`** – the beta gate, see [Beta gate](#beta-gate); old `true`/`false` = open/closed). Overridden by the back office setting `signup.mode` |
 | `SUPPORT_EMAIL` | – | address shown to ask for an access code (default `tohuus@tillheidrich.de`; back office setting `support.email` wins) |
 | `CLOUD_NAME` | – | name in `/api/instance` (default "ToHuus Cloud") |
@@ -164,7 +169,7 @@ form, the shops named at sign-up).
 | any outbound request to private/internal addresses | a global dispatcher blocks them at connect time (HA, webhooks, Matrix, Gotify …) |
 | network printers (ESC/POS over TCP) | LAN only |
 | Telegram long polling | one poller per household does not scale; webhook routing is not built yet |
-| IMAP receipt inbox | per-household mailbox polling; `GET /api/retail/inbox` answers `available: false` and the apps hide the cards (`PUT` and `/check` are 404) |
+| IMAP receipt inbox | per-household mailbox polling; `GET /api/retail/inbox` answers `available: false` and the apps hide the cards (`PUT` and `/check` are 404). The cloud has receipt addresses per household instead (docs/mail-inbox.md) |
 | restore from file, WebDAV backup settings | replaced by the cloud backups |
 | `ADMIN_PASSWORD`, demo seeding at start, `MCP_PATH_SECRET`, OIDC | instance-wide, no household |
 | household-level sign-in methods: PIN switch, TOTP, household passkeys, password per member | accounts sign in instead (account passkeys exist, see below) |

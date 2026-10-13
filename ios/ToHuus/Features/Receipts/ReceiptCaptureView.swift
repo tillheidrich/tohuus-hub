@@ -75,6 +75,7 @@ struct ReceiptCaptureView: View {
                     }
                     if let error { ErrorBanner(message: error) }
                     ForEach(results, id: \.stableId) { r in resultRow(r) }
+                    MailAddressSection(store: store)
                     NavigationLink {
                         ImportsListView(store: store)
                     } label: {

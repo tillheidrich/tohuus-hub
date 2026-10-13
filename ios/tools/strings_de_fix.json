@@ -106,5 +106,10 @@
   "The help pages open on %@.": "Die Hilfeseiten öffnen sich auf %@.",
   "ToHuus keeps the name, the link, the ingredients and – if you add them – the steps, privately in your household. ToHuus never fetches anything from Cookidoo itself.": "ToHuus speichert Name, Link, Zutaten und, wenn du sie ergänzt, die Schritte privat in eurem Haushalt. ToHuus ruft selbst nie etwas von Cookidoo ab.",
   "Steps, one per line (optional)": "Schritte, einer pro Zeile (optional)",
-  "Read from screenshots": "Aus Screenshots lesen"
+  "Read from screenshots": "Aus Screenshots lesen",
+  "Receipts by e-mail": "Bons per E-Mail",
+  "Forward receipts, order and pickup confirmations to this address. Everything else is discarded at once, without being stored.": "Leite Bons, Bestell- und Abholbestätigungen an diese Adresse weiter. Alles andere verwirft ToHuus sofort, ohne es zu speichern.",
+  "Filter by sender, so one-time codes and other mails never leave your mailbox.": "Filtere nach Absender, dann verlassen Einmalcodes und andere Mails dein Postfach gar nicht erst.",
+  "Last %d days: %d received, %d became receipts": "Letzte %d Tage: %d angekommen, %d als Bon gebucht",
+  "With Plus your household gets its own address: forward receipts, order and pickup confirmations, and ToHuus books them.": "Mit Plus bekommt euer Haushalt eine eigene Adresse: Bons, Bestell- und Abholbestätigungen weiterleiten, ToHuus bucht sie."
 }
