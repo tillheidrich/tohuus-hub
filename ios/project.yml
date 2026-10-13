@@ -64,7 +64,6 @@ targets:
         NSSupportsLiveActivities: true
         NSMicrophoneUsageDescription: "ToHuus uses the microphone when you speak to the assistant."
         NSSpeechRecognitionUsageDescription: "Your words are turned into text on your iPhone so the assistant can understand them."
-        NSPhotoLibraryAddUsageDescription: "ToHuus can save images to your photo library."
         NSLocationWhenInUseUsageDescription: "Only if you switch on the hint in the shop: ToHuus saves where your shops are. The places stay on your iPhone."
         NSLocationAlwaysAndWhenInUseUsageDescription: "Only if you switch on the hint in the shop: when you arrive at a shop you saved, ToHuus asks whether to open the list. Your location never leaves your iPhone."
     entitlements:

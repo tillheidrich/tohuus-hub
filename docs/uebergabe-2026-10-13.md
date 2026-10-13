@@ -91,8 +91,8 @@ der alte Server Jahresbudgets ab, die Wochen- und Monatsbudgets des Haushalts bl
    - Uhr: In der Liste gibt es oben „Bring mir was“.
 7. **Archivieren**: Product › Archive › Distribute › App Store Connect › Upload. In TestFlight landet der Build
    automatisch in der Gruppe „Intern“.
-8. **App Privacy** in App Store Connect ergänzen: **Diagnostics › Other Diagnostic Data**, *nicht* mit der Identität
-   verknüpft, *nicht* für Tracking, Zweck *App Functionality*. Grund ist das neue Fehlerprotokoll, das 5xx- und
+8. **App Privacy** in App Store Connect ergänzen: **Diagnostics › Other Diagnostic Data**, *mit* der Identität
+   verknüpft (das Fehlerprotokoll speichert die Haushalts-ID, damit sich ein gemeldeter Code finden lässt), *nicht* für Tracking, Zweck *App Functionality*. Grund ist das neue Fehlerprotokoll, das 5xx- und
    Lesefehler ohne Inhalte an den Server schickt.
 
 ---

@@ -189,6 +189,13 @@ describe('personal entries stay with their person', () => {
     expect(mine.budgets).toEqual([]);
   });
 
+  it('a sign-in warning is only in the list of the person who signed in', async () => {
+    const { alertNewDevice } = await import('../server/lib/auth-sessions');
+    await alertNewDevice(mira, 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', 'password');
+    expect(JSON.stringify((await req('mira', 'GET', '/api/notifications')).json)).toContain('auth.new_device');
+    expect(JSON.stringify((await req('mika', 'GET', '/api/notifications')).json)).not.toContain('auth.new_device');
+  });
+
   it('budgets per week, month or year – for the household and for one person alone', async () => {
     // shared year budget: everyone sees it, it counts the household's entries
     const shared = await req('mika', 'PUT', '/api/spend/budgets', { period: 'year', amount: 5000 });

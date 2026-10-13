@@ -2,7 +2,7 @@
 
 > ToHuus remembers for your household what is there, what is missing and what it costs, from your receipts and your list. For iPhone and the browser, in ToHuus Cloud or on your own server.
 
-ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app, web app, self-hosted with Docker or as a Home Assistant add-on). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
+ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app in ToHuus Cloud, or self-hosted with Docker as a web app with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
 
 ## Website
 - [ToHuus (English)](https://tohuus.heidrich-digital.de/): what it does, pricing, privacy, self-hosting

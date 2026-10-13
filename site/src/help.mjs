@@ -50,7 +50,7 @@ export function helpCopy(k) {
         sections: [
           ['Konto oder eigener Server', p(
             `In der ToHuus Cloud legst du in der iPhone-App oder im Browser unter <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a> ein Konto und einen Haushalt an. Jeder neue Haushalt nutzt 14 Tage lang Plus, ohne Zahlungsdaten.`,
-            'Hast du einen eigenen Server, läuft ToHuus dort als Docker-Container. Wie das geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>. Die iPhone-App verbindest du dann mit „Eigener Server“.',
+            'Hast du einen eigenen Server, läuft ToHuus dort als Docker-Container. Wie das geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>. Dort nutzt ihr die Web-App im Browser, die iPhone-App ist für die ToHuus Cloud gedacht.',
           )],
           ['Wer gehört dazu?', p(
             'Beim Start fragt ToHuus nur das: allein, zu zweit, Familie, WG oder ein Haushalt, den du mitversorgst. Danach richtet sich, was du siehst. Ändern kannst du es später in den Einstellungen.',
@@ -252,7 +252,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         sections: [
           ['Der Monat', p('Jeder Bon zählt mit. Die Seite Geld zeigt, was der Monat gekostet hat, nach Woche, Laden und Kategorie, und vergleicht mit dem Vormonat bis zum gleichen Tag.')],
           ['Preise', p('Bei Dingen, die ihr oft kauft, zeigt ToHuus Preisänderungen gegenüber den 90 Tagen davor, wenn möglich pro Kilo oder Liter.')],
-          ['Budget und Hinweise', p('Ein Budget pro Monat oder Woche ist freiwillig. Hinweise kommen nur aus euren eigenen Bons, zum Beispiel wenn etwas in einem anderen eurer Läden günstiger war. Angebote von außen, Werbung oder Affiliate-Links gibt es nicht.')],
+          ['Budget und Hinweise', p('Ein Budget pro Woche, Monat oder Jahr ist freiwillig, für den ganzen Haushalt oder unter „Nur meins“ nur für dich. Hinweise kommen nur aus euren eigenen Bons, zum Beispiel wenn etwas in einem anderen eurer Läden günstiger war. Angebote von außen, Werbung oder Affiliate-Links gibt es nicht.')],
           ['Ohne Bon', p('Wochenmarkt oder Bäcker trägst du von Hand ein, oder du sagst es: „Beim Bäcker 6,40 ausgegeben.“ Alles lässt sich als CSV exportieren.')],
           ['Wie weit zurück', p('Free zeigt die letzten 60 Tage, Haushalt und Plus die ganze Geschichte.')],
         ],
@@ -499,7 +499,7 @@ cards:
 cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_URL</code>, deinen Namen und ein Passwort ein. Danach <code>http://localhost:8080</code> öffnen. Die Daten liegen in <code>./data</code>.')],
-          ['HTTPS und die App', p('Stell deinen üblichen Reverse Proxy davor. Dann verbindest du die iPhone-App mit „Eigener Server“ oder legst die Web-App auf den Startbildschirm.')],
+          ['HTTPS und die App', p('Stell deinen üblichen Reverse Proxy davor. Dann öffnest du die Web-App im Browser und legst sie auf den Startbildschirm.')],
           ['KI', p('Optional, mit einem Schlüssel für OpenRouter oder jeden OpenAI-kompatiblen Dienst, auch lokal. Ohne Schlüssel läuft alles außer Fotos von Papierbons und freien Fragen an den Assistenten.')],
           ['Sicherungen', p('Jede Nacht eine Sicherung, auf Wunsch zusätzlich auf eine WebDAV-Freigabe wie Nextcloud. Die Datenbank lässt sich mit <code>DB_ENCRYPTION_KEY</code> verschlüsseln.')],
           ['Nur im eigenen Netz', p('Bon-Postfach per IMAP, Telegram, Bon-Drucker und Home Assistant mit allen Extras.')],
@@ -605,7 +605,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Account or your own server', p(
             `In ToHuus Cloud you create an account and a household in the iPhone app or in the browser at <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a>. Every new household gets 14 days of Plus, no payment details needed.`,
-            'If you have your own server, ToHuus runs there as a Docker container (see <a href="self-hosting.html">Self-hosting</a>). Connect the iPhone app with “Own server”.',
+            'If you have your own server, ToHuus runs there as a Docker container (see <a href="self-hosting.html">Self-hosting</a>). There you use the web app in the browser; the iPhone app is meant for ToHuus Cloud.',
           )],
           ['Who belongs to it?', p('On first start ToHuus only asks this: just you, the two of you, a family, a flat share, or a household you look after. What you see follows from that, and you can change it later.')],
           ['The five areas', ul(
@@ -787,7 +787,7 @@ cards:
 cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code>, your name and a password, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.')],
-          ['HTTPS and the app', p('Put your usual reverse proxy in front. Then connect the iPhone app with “Own server” or add the web app to your home screen.')],
+          ['HTTPS and the app', p('Put your usual reverse proxy in front. Then open the web app in the browser and add it to your home screen.')],
           ['AI', p('Optional, with a key for OpenRouter or any OpenAI-compatible service, local ones included. Without a key everything works except photos of paper receipts and open questions to the assistant.')],
           ['Backups', p('A backup every night, optionally copied to a WebDAV share like Nextcloud. The database can be encrypted with <code>DB_ENCRYPTION_KEY</code>.')],
         ],

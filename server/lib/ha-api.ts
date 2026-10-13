@@ -23,6 +23,7 @@ import { suggest } from './recipes.js';
 import { quickAdd } from './shop.js';
 import { notPrivate } from './share-core.js';
 import { haAway } from './away.js';
+import { notifySettings } from './notify.js';
 import { afterUntick } from './shopping-trust.js';
 import './spending.js'; // imports.private_for
 
@@ -494,8 +495,11 @@ function wire() {
         payload: string | null;
         created_at: string;
       }[];
+      // the household's routing decides: an event with the Home Assistant column off stays out of the stream too
+      const routes = notifySettings().events as Record<string, { ha?: boolean } | undefined>;
       for (const r of rows) {
         last.id = r.id;
+        if (routes[r.event]?.ha === false) continue;
         let payload: any = {};
         try {
           payload = r.payload ? JSON.parse(r.payload) : {};

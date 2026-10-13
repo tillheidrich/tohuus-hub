@@ -115,7 +115,7 @@ const COPY = {
         { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
           alt: 'Seite Geld für September 2026: 215,81 Euro ausgegeben, 17 Euro mehr als im Vormonat, darunter ein Wochenverlauf und Balken nach Kategorie.',
           p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
-          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Budgets pro Woche oder Monat, gesamt oder je Kategorie, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
+          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, für alle oder nur für dich, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
         { id: 'bring-mir-was', no: '4', label: 'Bring mir was', h3: 'Einer liegt auf dem Sofa, einer steht in der Küche.', shot: 'treats',
           alt: 'Seite Bring mir was: „Was hättest du gern?“, darunter Karten wie Was Süßes, Was zu trinken, Was zum Knabbern und Aus dem Kühlschrank, dazu die Reiter Gäste und Party.',
           p: 'Wer gerade festsitzt, im Bett, beim Zubettbringen oder mit Kind auf dem Arm, wünscht sich mit zwei Tipps eine Kleinigkeit. Die anderen sehen es sofort, einer sagt „Bring ich“, und die Hauskarte zeigt nur, was wirklich da ist. Für Besuch gibt es eine eigene Karte, und am Partyabend bestellen die Gäste direkt von eurer Partykarte.',
@@ -132,7 +132,7 @@ const COPY = {
       shot: 'import', alt: 'Seite Importe: Bons als PDF, Foto, QR-Link oder Text, darunter der Verlauf mit gebuchten Bons von REWE und Aldi.',
       list: [
         ['receipt', 'Lieferdienst und eBon', 'Bestellt ihr bei REWE oder bekommt ihr digitale Bons, kommen Bestellung und Bon als PDF herein. ToHuus gleicht beides ab und bucht, was wirklich geliefert wurde.'],
-        ['camera', 'Bon fotografieren', 'Bei Aldi, Lidl oder auf Papier reicht ein Foto vom Bon. Was ToHuus nicht sicher lesen kann, legt es dir zum Prüfen vor, bevor etwas gebucht wird. Eine Texterkennung ganz ohne KI ist in Arbeit.'],
+        ['camera', 'Bon fotografieren', 'Bei Aldi, Lidl oder auf Papier reicht ein Foto vom Bon. Was ToHuus nicht sicher lesen kann, legt es dir zum Prüfen vor, bevor etwas gebucht wird. Die Texterkennung läuft ohne KI, auf dem Server oder direkt auf deinem iPhone.'],
         ['mic', 'Einfach sprechen', 'Du tippst auf „Sprechen“ und sagst: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt es auf die Liste und sagt dir, was er eingetragen hat. Jeder Schritt lässt sich zurücknehmen.'],
       ],
     },
@@ -167,7 +167,7 @@ const COPY = {
       cols: ['ToHuus Cloud', 'Selbst hosten'],
       rows: [
         ['Für wen', 'Alle, die einfach anfangen wollen', 'Alle mit eigenem Server, NAS oder Home Assistant'],
-        ['Apps', 'iPhone-App und im Browser, auch auf Android. iPad und Apple Watch kommen mit der App', 'iPhone-App mit deinem Server verbunden, dazu der Browser'],
+        ['Apps', 'iPhone-App und im Browser, auch auf Android. iPad und Apple Watch kommen mit der App', 'Im Browser als Web-App (auch auf dem Startbildschirm), dazu Home Assistant und eigene Assistenten über MCP. Die iPhone-App gibt es nur für die Cloud'],
         ['Daten', 'Server in Deutschland (Hetzner), jeder Haushalt mit eigenem Schlüssel verschlüsselt', 'Auf deinem Server, auf Wunsch verschlüsselt'],
         ['Bon-Fotos und Assistent', 'Dabei, mit Kontingent je nach Tarif. KI abschaltbar für Haushalt, Person und Kinder', 'Mit eigenem KI-Schlüssel oder ganz ohne'],
         ['Claude, ChatGPT (MCP)', 'Über MCP mit Anmeldung (OAuth)', 'Über MCP mit Zugangsschlüssel'],
@@ -183,7 +183,7 @@ const COPY = {
         { name: 'Free', price: '0 €', sub: 'für immer', storage: '250 MB', items: ['Gemeinsame Liste mit Einkaufsmodus', 'Bons ohne Limit', 'Merkt sich 60 Tage zurück', 'Rezepte von Hand oder per Link', '20 Nachrichten an den Assistenten im Monat'] },
         { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick', 'Verbundene Haushalte zum Mitversorgen', 'Import aus Screenshots und Fotos von Papierlisten', '100 Nachrichten im Monat'] },
         { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
-        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'iPhone-App und Browser'], host: true },
+        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'Web-App im Browser, Home Assistant, MCP'], host: true },
       ],
       note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Bezahlt wird in der iPhone-App über Apple.',
     },
@@ -197,7 +197,7 @@ const COPY = {
         ['robot', 'KI nur über Mistral', 'Bon-Fotos, Spracheingaben und der Assistent laufen über OpenRouter zu Mistral, einem Anbieter aus Frankreich. Jede Anfrage ist auf Mistral festgelegt, ohne Ausweichen auf andere Anbieter, und geht laut OpenRouter nur an Anbieter, die keine Nutzerdaten sammeln. Sprachaufnahmen werden nicht gespeichert.'],
         ['lock', 'Sensible Angaben bleiben zu Hause', 'Allergien und Angaben zu Kindern gehen nur an ein Sprachmodell, wenn ihr das ausdrücklich einschaltet.'],
         ['power', 'KI lässt sich abschalten', 'Für den ganzen Haushalt, nur für dich oder für einzelne Kinder. Dann geht keine Anfrage an ein Sprachmodell, und Liste, Vorschläge, Kochen und Geld laufen weiter.'],
-        ['scan', 'Texterkennung ohne KI', 'Bon-Fotos werden direkt auf dem Server gelesen, ohne Sprachmodell. Das Foto verlässt den Server nicht.'],
+        ['scan', 'Texterkennung ohne KI', 'Bon-Fotos liest zuerst eine Texterkennung ohne Sprachmodell auf dem Server, oder dein iPhone liest sie selbst und schickt nur den Text. Nur wenn das nicht aufgeht und KI an ist, liest Mistral das Foto.'],
         ['plug', 'Eure Assistenten nur, wenn ihr wollt', 'Claude oder ChatGPT verbindet ihr selbst über MCP. Diskrete Einträge sehen sie nur als Platzhalter, und ein Admin kann MCP abschalten.'],
         ['trash', 'Wenn ihr löscht', 'Löscht ihr den Haushalt, wird zuerst sein Schlüssel vernichtet, dann folgen die Daten und ihre Sicherungen. Sicherungskopien der Kontoverwaltung laufen nach ihrer Frist ab.'],
       ],
@@ -205,7 +205,7 @@ const COPY = {
     },
     host: {
       label: 'Selbst hosten', h2: 'Für alle mit eigenem Server.',
-      p: 'Ein Docker-Container und eine SQLite-Datei, kostenlos unter AGPL-3.0. Die iPhone-App verbindet sich mit deinem Server, im Browser läuft ToHuus als Web-App. Ein Konto bei uns brauchst du dafür nicht.',
+      p: 'Ein Docker-Container und eine SQLite-Datei, kostenlos unter AGPL-3.0. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst. Die iPhone-App ist für die ToHuus Cloud gedacht. Ein Konto bei uns brauchst du dafür nicht.',
       facts: [
         ['refresh', 'Home Assistant in beide Richtungen', 'Einkaufsliste als To-do-Liste für Assist, Sensoren für Fälliges und den Wochenplan als Kalender. Installiert über HACS, die Integration steht unter MIT-Lizenz.'],
         ['mail', 'Bon-Postfach, Telegram, Drucker', 'Bons kommen per Mail herein, „2 Milch, Brot“ im Chat landet auf der Liste, und ein Bon-Drucker in der Küche druckt sie aus.'],
@@ -217,7 +217,7 @@ const COPY = {
         ['Holen und einstellen', 'In <code>.env</code> trägst du <code>BASE_URL</code>, deinen Namen und ein Passwort ein. Alle weiteren Optionen stehen kommentiert in <code>.env.example</code>.'],
         ['Starten', 'Mit <code>docker compose up -d --build</code>, dann <code>http://localhost:8080</code> öffnen. Die Daten liegen in <code>./data</code>.'],
         ['Leer oder mit Demo', 'Beim ersten Start wählst du, ob du leer anfängst oder dich erst mit Demo-Daten umsiehst. Die sind später mit einem Tipp wieder weg.'],
-        ['HTTPS davor', 'Dein üblicher Reverse Proxy reicht. Danach die iPhone-App mit der Adresse verbinden oder die Web-App auf den Startbildschirm legen.'],
+        ['HTTPS davor', 'Dein üblicher Reverse Proxy reicht. Danach die Web-App im Browser öffnen und auf den Startbildschirm legen.'],
       ],
       envComment: '# en oder de',
     },
@@ -315,7 +315,7 @@ const COPY = {
         { id: 'money', no: '3', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
           alt: 'Money page for September 2026: £215.81 spent, £17 more than the month before, with a weekly line and bars by category below.',
           p: 'Every receipt counts. ToHuus shows what a month cost, in which shop and for which category, and compares it with the month before. You do not need to keep a ledger.',
-          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week or month, overall or per category, with a note at 80 percent', 'CSV export'] },
+          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week, month or year, shared or just for you, with a note at 80 percent', 'CSV export'] },
         { id: 'bring-me-something', no: '4', label: 'Bring me something', h3: 'One of you is on the sofa, one is in the kitchen.', shot: 'treats',
           alt: 'Treats page: “What would you like?”, with cards such as Something sweet, Something to drink, Something to nibble and From the fridge, plus tabs for Guests and Party.',
           p: 'Whoever is stuck, in bed, at bedtime or with a child on their arm, asks for a little something in two taps. The others see it right away, someone says “I’ll bring it”, and the house menu only shows what is actually at home. Visitors get their own menu, and on party night guests order straight from your party menu.',
@@ -332,7 +332,7 @@ const COPY = {
       shot: 'import', alt: 'Imports page: receipts as PDF, photo, QR link or text, with the history of booked receipts from Tesco and Aldi below.',
       list: [
         ['receipt', 'Delivery and e-receipts', 'If you order groceries online or get digital receipts, the order and the receipt come in as a PDF. ToHuus matches them and books what was actually delivered.'],
-        ['camera', 'Snap the receipt', 'For a paper receipt, a photo is enough. Anything ToHuus cannot read with confidence is shown to you for a check before it is booked. Text recognition entirely without AI is being built.'],
+        ['camera', 'Snap the receipt', 'For a paper receipt, a photo is enough. Anything ToHuus cannot read with confidence is shown to you for a check before it is booked. Text recognition runs without AI, on the server or right on your iPhone.'],
         ['mic', 'Just speak', 'Tap “Speak” and say: “We are out of milk, and we need something for Sunday.” The assistant puts it on the list and tells you what it added. Every step can be undone.'],
       ],
     },
@@ -367,7 +367,7 @@ const COPY = {
       cols: ['ToHuus Cloud', 'Self-hosted'],
       rows: [
         ['Who for', 'Anyone who just wants to start', 'Anyone with a server, a NAS or Home Assistant'],
-        ['Apps', 'iPhone app and the browser, Android included. iPad and Apple Watch come with the app', 'iPhone app connected to your server, plus the browser'],
+        ['Apps', 'iPhone app and the browser, Android included. iPad and Apple Watch come with the app', 'In the browser as a web app (also on the home screen), plus Home Assistant and your own assistants over MCP. The iPhone app is for the cloud only'],
         ['Data', 'Servers in Germany (Hetzner), every household encrypted with its own key', 'On your server, encrypted if you like'],
         ['Receipt photos and assistant', 'Included, with an allowance per plan. AI can be switched off for the household, a person or a child', 'With your own AI key, or without'],
         ['Claude, ChatGPT (MCP)', 'Through MCP with sign-in (OAuth)', 'Through MCP with an access key'],
@@ -383,7 +383,7 @@ const COPY = {
         { name: 'Free', price: '€0', sub: 'for good', storage: '250 MB', items: ['Shared list with shop mode', 'Unlimited receipts', 'Remembers 60 days back', 'Recipes by hand or from a link', '20 assistant messages a month'] },
         { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices, spending and review', 'Connected households for looking after someone', 'Import from screenshots and photos of paper lists', '100 messages a month'] },
         { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', '1,500 messages a month'], mark: '14 days to try' },
-        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'iPhone app and browser'], host: true },
+        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'Web app in the browser, Home Assistant, MCP'], host: true },
       ],
       note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. Payment runs through Apple in the iPhone app.',
     },
@@ -397,7 +397,7 @@ const COPY = {
         ['robot', 'AI only through Mistral', 'Receipt photos, voice input and the assistant go through OpenRouter to Mistral, a provider based in France. Every request is pinned to Mistral with no fallback to other providers, and according to OpenRouter only goes to providers that do not collect user data. Voice recordings are not stored.'],
         ['lock', 'Sensitive details stay at home', 'Allergies and details about children only go to a language model if you explicitly switch that on.'],
         ['power', 'AI can be switched off', 'For the whole household, just for you or for a single child. Then no request goes to a language model, and the list, suggestions, cooking and money keep working.'],
-        ['scan', 'Text recognition without AI', 'Receipt photos are read on the server itself, with no language model. The photo does not leave the server.'],
+        ['scan', 'Text recognition without AI', 'Receipt photos are first read by text recognition without a language model on the server, or your iPhone reads them itself and sends only the text. Only if that does not add up and AI is on does Mistral read the photo.'],
         ['plug', 'Your assistants only if you want', 'You connect Claude or ChatGPT yourself through MCP. They see discreet items only as a placeholder, and an admin can switch MCP off.'],
         ['trash', 'When you delete', 'When you delete the household, its key is destroyed first, then the data and its backups follow. Backup copies of the account directory expire after their retention period.'],
       ],
@@ -405,7 +405,7 @@ const COPY = {
     },
     host: {
       label: 'Self-hosting', h2: 'For everyone with their own server.',
-      p: 'One Docker container and one SQLite file, free under the AGPL-3.0. The iPhone app connects to your server, and in the browser ToHuus runs as a web app. You do not need an account with us.',
+      p: 'One Docker container and one SQLite file, free under the AGPL-3.0. In the browser ToHuus runs as a web app you can add to your home screen. The iPhone app is meant for ToHuus Cloud. You do not need an account with us.',
       facts: [
         ['refresh', 'Home Assistant, both ways', 'The shopping list as a to-do list for Assist, sensors for what is due and the week plan as a calendar. Installed via HACS, the integration is MIT licensed.'],
         ['mail', 'Receipt inbox, Telegram, printer', 'Receipts arrive by e-mail, “2 milk, bread” in a chat lands on the list, and a receipt printer in the kitchen prints it.'],
@@ -417,7 +417,7 @@ const COPY = {
         ['Get it and set it up', 'In <code>.env</code> you fill in <code>BASE_URL</code>, your name and a password. Every other option is listed with comments in <code>.env.example</code>.'],
         ['Start it', 'Run <code>docker compose up -d --build</code>, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.'],
         ['Empty or demo', 'On first start you choose to begin empty or to look around with demo data first. One tap removes it later.'],
-        ['Put HTTPS in front', 'Your usual reverse proxy is enough. Then connect the iPhone app to the address or add the web app to your home screen.'],
+        ['Put HTTPS in front', 'Your usual reverse proxy is enough. Then open the web app in the browser and add it to your home screen.'],
       ],
       envComment: '# en or de',
     },
@@ -1368,7 +1368,7 @@ fs.writeFileSync(path.join(ROOT, 'llms.txt'), `# ToHuus
 
 > ${COPY.en.desc}
 
-ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app, web app, self-hosted with Docker or as a Home Assistant add-on). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
+ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app in ToHuus Cloud, or self-hosted with Docker as a web app with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
 
 ## Website
 - [ToHuus (English)](${SITE}): what it does, pricing, privacy, self-hosting

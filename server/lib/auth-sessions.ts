@@ -105,7 +105,8 @@ export async function alertNewDevice(userId: number, ua: string | null, method: 
     'auth.new_device',
     title,
     message,
-    JSON.stringify({ source: 'tohuus', event: 'auth.new_device', user_id: userId }),
+    // a person's sign-ins are theirs alone: `personal_for` keeps it out of the others' list and the HA stream
+    JSON.stringify({ source: 'tohuus', event: 'auth.new_device', user_id: userId, personal_for: userId }),
     JSON.stringify(channels),
   );
   emit('notifications');
