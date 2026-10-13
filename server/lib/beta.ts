@@ -132,7 +132,10 @@ export function addAllowlist(emails: string[], note: string | null, by: string |
   return n;
 }
 export const removeAllowlist = (email: string) => bdb().prepare('DELETE FROM beta_allowlist WHERE email = ?').run(email.trim().toLowerCase()).changes > 0;
-export const allowlisted = (email: string | null | undefined) => Boolean(email && bdb().prepare('SELECT 1 FROM beta_allowlist WHERE email = ?').get(email.trim().toLowerCase()));
+/** Addresses let in by the environment (BETA_ALLOWLIST, comma separated) – e.g. the App Review account on a fresh cloud. */
+const envAllowlist = () => (process.env.BETA_ALLOWLIST ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+export const allowlisted = (email: string | null | undefined) =>
+  Boolean(email && (envAllowlist().includes(email.trim().toLowerCase()) || bdb().prepare('SELECT 1 FROM beta_allowlist WHERE email = ?').get(email.trim().toLowerCase())));
 
 // ------------------------------------------------------------------ the gate
 

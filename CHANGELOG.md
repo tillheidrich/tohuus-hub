@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- `BETA_ALLOWLIST` (env): addresses that may sign up without an access code, next to the back-office allowlist.
+
 - Receipt upload: an eBon e-mail printed to PDF ("Dein REWE eBon vom …") gets the hint that the receipt is the mail's attachment, instead of an AI guess.
 
 - Fix (cloud): every PDF receipt upload failed, because pdftotext read the stored file, which is encrypted at rest in ToHuus Cloud. `pdfToText` now decrypts into a private temp file first (also for mail, Telegram and retail inbox imports).

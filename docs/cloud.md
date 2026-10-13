@@ -56,6 +56,7 @@ DATA_DIR/
 | `SSE_MAX_TOTAL` | – | live-update connections over all households (5000; 200 per household) |
 | `LEGAL_PRIVACY_URL`, `LEGAL_TERMS_URL`, `LEGAL_IMPRINT_URL` | – | shown by the apps via `/api/instance` |
 | `MIN_IOS_BUILD` | – | builds of the iPhone app below this number show only "Bitte aktualisiere ToHuus" (`/api/instance` → `minIosBuild`); set it after an API change older builds can't follow. `/api/instance` also carries `betaGift` (`'haushalt'\|'plus'\|null`, runtime setting `beta.gift`), so the app hides "14 Tage, dann Free" during the beta |
+| `BETA_ALLOWLIST` | – | Comma-separated addresses that may sign up without an access code, in addition to the allowlist in the back office (e.g. the App Review account on a fresh cloud) |
 | `BETA_GIFT` | – | `haushalt` or `plus`: every cloud household gets at least this plan during the beta. Fallback for the back-office setting `beta.gift` (the back office wins when set) |
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
 | `APPLE_APP_IDS` | – | comma-separated `<TeamID>.<bundle id>` for `webcredentials` in `/.well-known/apple-app-site-association`, default `FVS7WVTQ67.de.heidrichdigital.tohuus` |
