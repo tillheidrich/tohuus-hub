@@ -2,6 +2,11 @@
 export const de_fixes: Record<string, string> = {
   'Button not working? Copy this link into your browser:': 'Der Button geht nicht? Kopier diesen Link in deinen Browser:',
   'your household, self-hosted': 'dein Haushalt, selbst gehostet',
+  'Notification settings': 'Benachrichtigungen einstellen',
+  Help: 'Hilfe',
+  Privacy: 'Datenschutz',
+  Imprint: 'Impressum',
+  'Shopping, cooking and money for your household.': 'Einkauf, Kochen und Geld für euren Haushalt.',
   'Can order and add to the shopping list': 'Kann bestellen und auf die Einkaufsliste schreiben',
   'Can order and sees stock and where things are': 'Kann bestellen und sieht den Vorrat und wo was liegt',
   'Can order and sees stock, recipes and the week plan': 'Kann bestellen und sieht Vorrat, Rezepte und den Wochenplan',
