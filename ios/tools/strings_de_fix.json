@@ -35,5 +35,13 @@
   "Photos, and videos of about 5 minutes – the app makes them smaller before sending (up to 100 MB). Up to %d per card. Who sees the card sees them too.": "Fotos und Videos von etwa 5 Minuten – die App macht sie vor dem Senden kleiner (bis 100 MB). Bis zu %d pro Karte. Wer die Karte sieht, sieht sie auch.",
   "Making the video smaller …": "Video wird kleiner gemacht …",
   "Sending …": "Wird gesendet …",
-  "Even made smaller, this video is larger than 100 MB. Shorten it in Photos (Edit › trim) and add it again.": "Auch verkleinert ist das Video größer als 100 MB. Kürz es in Fotos (Bearbeiten › Trimmen) und füg es dann noch mal hinzu."
+  "Even made smaller, this video is larger than 100 MB. Shorten it in Photos (Edit › trim) and add it again.": "Auch verkleinert ist das Video größer als 100 MB. Kürz es in Fotos (Bearbeiten › Trimmen) und füg es dann noch mal hinzu.",
+  "If something does not work, the app notes it here and sends it to the ToHuus team – without your lists, receipts or messages. You can also share the list yourself.": "Wenn etwas nicht klappt, notiert die App es hier und schickt es an das ToHuus-Team – ohne eure Listen, Bons oder Nachrichten. Du kannst die Liste auch selbst teilen.",
+  "Nothing went wrong lately.": "In letzter Zeit ist nichts schiefgegangen.",
+  "Sent": "Gesendet",
+  "Error log": "Fehlerprotokoll",
+  "Share error log": "Fehlerprotokoll teilen",
+  "Send to the ToHuus team again": "Noch mal an das ToHuus-Team senden",
+  "Clear": "Leeren",
+  "Clear the error log on this device?": "Fehlerprotokoll auf diesem Gerät leeren?"
 }

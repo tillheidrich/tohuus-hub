@@ -62,6 +62,7 @@ struct SettingsView: View {
                     NavigationLink { HowItWorksView() } label: { Label(L("How ToHuus works"), systemImage: "lightbulb") }
                     NavigationLink { FactsView() } label: { Label(L("Good to know"), systemImage: "book") }
                     NavigationLink { HelpListView() } label: { Label(L("Help"), systemImage: "questionmark.circle") }
+                    NavigationLink { ErrorLogView() } label: { Label(L("Error log"), systemImage: "ladybug") }
                 }
                 SampleDataSettingsSection()
                 Section(L("Plan & storage")) {

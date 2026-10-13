@@ -4778,6 +4778,40 @@
         }
       }
     },
+    "Clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leeren"
+          }
+        }
+      }
+    },
+    "Clear the error log on this device?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the error log on this device?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlerprotokoll auf diesem Gerät leeren?"
+          }
+        }
+      }
+    },
     "Close": {
       "extractionState": "manual",
       "localizations": {
@@ -6491,6 +6525,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gleich"
+          }
+        }
+      }
+    },
+    "Error log": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error log"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlerprotokoll"
           }
         }
       }
@@ -8684,6 +8735,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wenn es das nicht gibt"
+          }
+        }
+      }
+    },
+    "If something does not work, the app notes it here and sends it to the ToHuus team – without your lists, receipts or messages. You can also share the list yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If something does not work, the app notes it here and sends it to the ToHuus team – without your lists, receipts or messages. You can also share the list yourself."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn etwas nicht klappt, notiert die App es hier und schickt es an das ToHuus-Team – ohne eure Listen, Bons oder Nachrichten. Du kannst die Liste auch selbst teilen."
           }
         }
       }
@@ -12339,6 +12407,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Es wurde nichts hinzugefügt."
+          }
+        }
+      }
+    },
+    "Nothing went wrong lately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing went wrong lately."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In letzter Zeit ist nichts schiefgegangen."
           }
         }
       }
@@ -16882,6 +16967,23 @@
         }
       }
     },
+    "Send to the ToHuus team again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to the ToHuus team again"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch mal an das ToHuus-Team senden"
+          }
+        }
+      }
+    },
     "Sending …": {
       "extractionState": "manual",
       "localizations": {
@@ -16895,6 +16997,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wird gesendet …"
+          }
+        }
+      }
+    },
+    "Sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesendet"
           }
         }
       }
@@ -17116,6 +17235,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Teil einen Rezept-Link aus Safari mit ToHuus, um es hinzuzufügen."
+          }
+        }
+      }
+    },
+    "Share error log": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share error log"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlerprotokoll teilen"
           }
         }
       }

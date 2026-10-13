@@ -316,3 +316,33 @@
   display: flex;
   align-items: center;
 }
+
+/* Fehler (Errors.tsx) */
+.err-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+.err-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  text-align: left;
+  width: 100%;
+}
+.err-msg {
+  flex: 1 1 200px;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.err-meta {
+  flex-basis: 100%;
+  overflow-wrap: anywhere;
+}
+.err-stack {
+  max-height: 260px;
+  overflow: auto;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

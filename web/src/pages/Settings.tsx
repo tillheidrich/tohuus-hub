@@ -28,6 +28,7 @@ import { CategorySettings, HouseholdFormCard, PlacesSettings } from './PlacesSet
 import { useHousehold } from '../household';
 import { useInstance } from '../data';
 import { BillingCard, CloudAccountCard } from './Billing';
+import { ErrorLog } from './operator/Errors';
 import { AssistantPrivacyCard } from './Memory';
 import { AiSwitchesCard, ConnectAssistantCard } from './AiSettings';
 import { MoveInCard, MoveOutCard } from './MoveSettings';
@@ -456,6 +457,13 @@ function Data({ admin }: { admin: boolean }) {
     <div className="stack" style={{ gap: 16 }}>
       {cloud ? <MoveInCard admin={admin} /> : <MoveOutCard admin={admin} />}
       {/* ToHuus Cloud backs every household up itself (nightly, encrypted, off-site) – the self-host backups are not there */}
+      {/* self-hosted: the admins are the operators – the error log with download (operator/Errors.tsx) */}
+      {!cloud && admin && (
+        <details className="card pad">
+          <summary><b>{t('Error log')}</b> <span className="small muted">· {t('for whoever looks after this server')}</span></summary>
+          <ErrorLog base="/diag/errors" />
+        </details>
+      )}
       {cloud ? (
         <div className="card pad small muted">{t('Backups: ToHuus Cloud saves your household every night, encrypted, also outside the data centre. You can download everything at any time under Plan & storage › Your data.')}</div>
       ) : (

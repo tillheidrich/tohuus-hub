@@ -67,6 +67,7 @@ import { r as list2Routes, pub as list2Public } from './routes/list2.js';
 import { caldav } from './lib/caldav.js';
 import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
 import { r as handoverRoutes, guestHandover } from './routes/handover.js';
+import { r as diagRoutes } from './routes/diag.js';
 import { r as wishRoutes } from './routes/wishes.js';
 import { r as factsRoutes } from './routes/facts.js';
 import { householdAppearance } from './lib/appearance.js';
@@ -77,6 +78,7 @@ import { appAuth, cloud as cloudRoutes, cloudPub, instance, wellKnown } from './
 import { appleAuth } from './routes/cloud-apple.js';
 import { r as billingRoutes, pub as billingPublic } from './routes/billing.js';
 import { serveImage, signImagesForTokenClients } from './lib/images.js';
+import { logError } from './lib/errorlog.js';
 import { NoHouseholdError, currentHousehold } from './lib/tenancy.js';
 import { QuotaError, bodyQuota } from './lib/plans.js';
 import { startCloudBackups } from './lib/cloud-backup.js';
@@ -228,6 +230,7 @@ app.use('/api', list2Routes);
 app.use('/api', iosCompat);
 app.use('/api', houseGuideRoutes);
 app.use('/api', handoverRoutes);
+app.use('/api', diagRoutes);
 app.use('/api', wishRoutes);
 // the text stays 'not found': iPhone app builds up to 1.0 (5) hide a feature by exactly this answer
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found', code: 'not_found' }));
@@ -296,6 +299,8 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   // anything else: no internals in production (paths, SQL, stack) – a reference to find it in the log
   const ref = crypto.randomBytes(4).toString('hex');
   console.error(`[error ${ref}]`, e?.stack ?? e?.message ?? err);
+  // and in the error log (back office › Fehler, lib/errorlog.ts) – searchable by the reference people send us
+  logError({ source: 'server', ref, message: e?.message ?? String(err), stack: e?.stack ?? null, route: `${_req.method} ${_req.originalUrl}`, status: 500, kind: (err as Error)?.name ?? null, appVersion: String(_req.headers['x-tohuus-version'] ?? '') || null, platform: String(_req.headers['x-tohuus-client'] ?? '') || null });
   res.status(500).json({ error: process.env.NODE_ENV === 'production' ? t('That didn’t work. Please try again in a moment – if it happens again, tell us the code {ref}.', { ref }) : (e?.message ?? t('Error')), ref });
 });
 

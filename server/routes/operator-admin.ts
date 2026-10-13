@@ -22,6 +22,7 @@ import { accountsDb, getHousehold, isUuid } from '../lib/accounts.js';
 import { DEFAULT_FALLBACKS, aiConfig, fallbackModels, pingModel, type ModelKind } from '../lib/ai.js';
 import { addAllowlist, createBetaCode, listAllowlist, listBetaCodes, removeAllowlist, revokeBetaCode, signupMode, SIGNUP_MODES } from '../lib/beta.js';
 import { betaGift, createPlanCode, listPlanCodes, revokePlanCode } from '../lib/gifts.js';
+import { sendErrors } from './diag.js';
 import { audit, auditLog } from '../lib/operator.js';
 import { runStatsNightly, statsView } from '../lib/stats.js';
 import multer from 'multer';
@@ -99,6 +100,10 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     audit(who(req), 'settings.ai-test', kind, { ok: out.ok, ...(out.ok ? { model: out.model } : { code: out.code }) });
     res.json(out);
   });
+
+  // ---------------------------------------------------------------- error log (errorlog.ts) – also as a download
+
+  r.get('/operator/errors', fresh, (req, res) => sendErrors(req, res));
 
   // ---------------------------------------------------------------- gifts: beta plan and plan codes (gifts.ts)
 

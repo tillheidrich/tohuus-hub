@@ -308,6 +308,19 @@ describe('accounts (Konten)', () => {
   });
 });
 
+describe('error log (Fehler)', () => {
+  it('only operators; apps report, the list and the download work', async () => {
+    expect((await A.get('/api/operator/errors')).status).toBe(404);
+    expect((await A.post('/api/diag/errors', { source: 'ios', errors: [{ message: 'keyNotFound(kind)', route: '/api/today', appVersion: '1.0.0 (5)' }] })).status).toBe(200);
+    const l = await op.get('/api/operator/errors?source=ios');
+    expect(l.status, l.text).toBe(200);
+    // the household of the reporter is kept as its id, nothing else about it
+    expect(l.json.rows[0]).toMatchObject({ source: 'ios', message: 'keyNotFound(kind)', household_id: hA, app_version: '1.0.0 (5)' });
+    const csv = await op.get('/api/operator/errors?format=csv');
+    expect(csv.text).toContain('keyNotFound(kind)');
+  });
+});
+
 describe('usage statistics (counts only)', () => {
   it('counts feature actions per day and platform, never per household or person', async () => {
     const stats = await import('../server/lib/stats');

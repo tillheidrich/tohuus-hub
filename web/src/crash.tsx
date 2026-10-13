@@ -13,6 +13,7 @@
 import { ArrowClockwise, House } from '@phosphor-icons/react';
 import { Component, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
+import { reportError } from './diag';
 import { t } from './i18n';
 
 const KEY = 'tohuus.chunkReload';
@@ -72,6 +73,7 @@ class Boundary extends Component<{ children: ReactNode; path: string }, State> {
   componentDidCatch(error: unknown) {
     if (isChunkError(error) && reloadForNewVersion()) return;
     console.error('[crash]', error);
+    reportError(error, isChunkError(error) ? 'chunk' : 'crash');
   }
   render() {
     if (!this.state.error) return this.props.children;
