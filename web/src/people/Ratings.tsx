@@ -246,7 +246,7 @@ export function Favourites() {
           )}
           {d.classics.length > 0 && (
             <section>
-              <h3 style={{ marginBottom: 10 }}>{t('Cooked most often')}</h3>
+              <h2 className="h3" style={{ marginBottom: 10 }}>{t('Cooked most often')}</h2>
               <div className="fav-grid">
                 {d.classics.map((c) => (
                   <RecipeTile key={c.recipe_id} c={c} faces={faces} />
@@ -260,7 +260,7 @@ export function Favourites() {
               <section key={p.key}>
                 <button className="row plain-btn" style={{ gap: 8, marginBottom: 10 }} onClick={() => setPerson(p.key)}>
                   <Avatar name={p.name} color={p.color} face={p.face} size={28} />
-                  <h3 style={{ margin: 0 }}>{t('{name} loves', { name: p.name })}</h3>
+                  <h2 className="h3" style={{ margin: 0 }}>{t('{name} loves', { name: p.name })}</h2>
                 </button>
                 <div className="fav-grid">
                   {p.top.map((c) => (

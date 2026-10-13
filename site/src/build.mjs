@@ -576,7 +576,7 @@ const pageFoot = (c, m) => `<footer class="foot">
         <p>${c.foot.about}<br>${c.foot.provider}</p>
       </div>
       <div>
-        <h4>${c.foot.project}</h4>
+        <h2 class="foot-h">${c.foot.project}</h2>
         <ul>
           <li><a href="${m.helpHref ?? helpIndexHref(c.lang, 'home')}">${c.foot.help}</a></li>
 ${publishedPosts(c.lang).length ? `          <li><a href="${m.home ?? './'}${c.lang === 'de' ? '../' : ''}${BLOG_DIR[c.lang]}/">${BLOG_COPY[c.lang].title}</a></li>
@@ -587,7 +587,7 @@ ${publishedPosts(c.lang).length ? `          <li><a href="${m.home ?? './'}${c.l
         </ul>
       </div>
       <div>
-        <h4>${c.foot.legal}</h4>
+        <h2 class="foot-h">${c.foot.legal}</h2>
         <ul>
           <li><a href="https://heidrich-digital.de/impressum">${c.foot.imprint}</a></li>
           <li><a href="${m.legalBase ?? ''}${LEGAL[c.lang].privacy.file}">${c.foot.privacy}</a></li>
@@ -810,7 +810,7 @@ ${P.plans.map((p, k) => `      <li class="plan${p.host ? ' host' : ''}${p.mark ?
       <p class="intro reveal">${D.intro}</p>
     </div>
     <dl class="facts-grid">
-${D.facts.map(([i, t, s], k) => `      <div class="reveal" style="--d:${(k % 3) * 60}ms"><span class="pi">${ico(i)}</span><dt>${t}</dt><dd>${s}</dd></div>`).join('\n')}
+${D.facts.map(([i, t, s], k) => `      <div class="reveal" style="--d:${(k % 3) * 60}ms"><dt><span class="pi">${ico(i)}</span>${t}</dt><dd>${s}</dd></div>`).join('\n')}
     </dl>
     <p class="more reveal"><a href="${D.linkHref}">${D.link}${ico('arrow')}</a></p>
   </div>
@@ -823,7 +823,7 @@ ${D.facts.map(([i, t, s], k) => `      <div class="reveal" style="--d:${(k % 3) 
       <h2 class="reveal" id="host-h">${S.h2}</h2>
       <p class="intro reveal">${S.p}</p>
       <dl class="facts-list">
-${S.facts.map(([i, t, s]) => `        <div class="reveal">${ico(i)}<dt>${t}</dt><dd>${s}</dd></div>`).join('\n')}
+${S.facts.map(([i, t, s]) => `        <div class="reveal"><dt>${ico(i)}${t}</dt><dd>${s}</dd></div>`).join('\n')}
       </dl>
     </div>
     <div class="ticket install reveal" id="${id.install}">
@@ -836,12 +836,12 @@ ${S.steps.map(([t, s]) => `          <li><b>${t}</b><span>${s}</span></li>`).joi
       <div class="tear" aria-hidden="true"></div>
       <div class="code">
         <div class="code-head"><span>${ico('terminal')}Terminal</span><button class="btn sm copy" type="button" data-copy="code-sh" data-done="${c.copied}">${ico('copy')}<span>${c.copy}</span></button></div>
-<pre id="code-sh"><span class="k">git clone</span> ${GH}.git
+<pre id="code-sh" tabindex="0" role="region" aria-label="Terminal"><span class="k">git clone</span> ${GH}.git
 <span class="k">cd</span> tohuus-hub
 <span class="k">cp</span> .env.example .env
 <span class="k">docker compose up</span> -d --build</pre>
         <div class="code-head"><span>${ico('code')}.env</span><button class="btn sm copy" type="button" data-copy="code-env" data-done="${c.copied}">${ico('copy')}<span>${c.copy}</span></button></div>
-<pre id="code-env"><span class="k">BASE_URL</span>=<span class="s">https://home.example.org</span>
+<pre id="code-env" tabindex="0" role="region" aria-label=".env"><span class="k">BASE_URL</span>=<span class="s">https://home.example.org</span>
 <span class="k">ADMIN_NAME</span>=Alex
 <span class="k">ADMIN_PASSWORD</span>=change-me
 <span class="k">LANGUAGE</span>=${c.lang} <span class="c">${S.envComment}</span>
@@ -963,7 +963,7 @@ ${pageFoot(c, m)}
 const esc = (x) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const helpKit = (lang) => ({
   CLOUD: CONTACT.CLOUD, GH, MAIL: TF_MAIL, TF_DE: tfHref('de'), TF_EN: tfHref('en'),
-  code: (id, lbl, text) => `<div class="code help-code${lbl === 'Prompt' ? ' prose' : ''}"><div class="code-head"><span>${ico(lbl === 'Terminal' ? 'terminal' : 'code')}${lbl}</span><button class="btn sm copy" type="button" data-copy="${id}" data-done="${COPY[lang].copied}">${ico('copy')}<span>${COPY[lang].copy}</span></button></div><pre id="${id}">${esc(text)}</pre></div>`,
+  code: (id, lbl, text) => `<div class="code help-code${lbl === 'Prompt' ? ' prose' : ''}"><div class="code-head"><span>${ico(lbl === 'Terminal' ? 'terminal' : 'code')}${lbl}</span><button class="btn sm copy" type="button" data-copy="${id}" data-done="${COPY[lang].copied}">${ico('copy')}<span>${COPY[lang].copy}</span></button></div><pre id="${id}" tabindex="0" role="region" aria-label="${lbl}">${esc(text)}</pre></div>`,
 });
 const HELP = { de: helpCopy(helpKit('de')).de, en: helpCopy(helpKit('en')).en };
 const helpBySlug = (lang, slug) => HELP[lang].articles.find((a) => a.slug === slug);

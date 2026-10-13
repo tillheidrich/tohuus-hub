@@ -28,7 +28,19 @@
     els.forEach(function (el) { el.classList.add('in'); });
   }
 
-  // copy buttons
+  // copy buttons; the visible label changes, and a polite live region tells screen readers about it
+  var copyLive = null;
+  function announce(msg) {
+    if (!copyLive) {
+      copyLive = document.createElement('span');
+      copyLive.setAttribute('role', 'status');
+      copyLive.setAttribute('aria-live', 'polite');
+      copyLive.style.cssText = 'position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0';
+      document.body.appendChild(copyLive);
+    }
+    copyLive.textContent = '';
+    setTimeout(function () { copyLive.textContent = msg; }, 50);
+  }
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {
       var pre = document.getElementById(b.getAttribute('data-copy'));
@@ -37,6 +49,7 @@
       var original = label.textContent;
       navigator.clipboard.writeText(pre.innerText.trim()).then(function () {
         label.textContent = b.getAttribute('data-done') || 'Copied';
+        announce(label.textContent);
         setTimeout(function () { label.textContent = original; }, 1600);
       });
     });

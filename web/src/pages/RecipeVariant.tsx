@@ -72,7 +72,7 @@ export function OurIngredients({ r, match, factor = 1 }: { r: any; match: any[];
   return (
     <section>
       <div className="row between" style={{ marginBottom: 8, gap: 8 }}>
-        <h3>{t('Ingredients')}</h3>
+        <h2 className="h3">{t('Ingredients')}</h2>
         {differs && <Seg value={mode} onChange={setMode} options={[['ours', t('Our way')], ['orig', t('Original')]]} />}
       </div>
       {showOurs && (variant?.note || variant?.servings || variant?.time_min) && (

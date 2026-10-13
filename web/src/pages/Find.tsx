@@ -72,7 +72,7 @@ export function FindList({ things, onPick, grouped = false }: { things: Found[];
         <section key={place.id}>
           <div className="row" style={{ marginBottom: 4 }}>
             <Ic name={place.icon} />
-            <h3>{place.name}</h3>
+            <h2 className="h3">{place.name}</h2>
             <span className="small muted mono" style={{ marginLeft: 'auto' }}>{items.length}</span>
           </div>
           {place.hint && <div className="small muted" style={{ marginBottom: 8 }}>{place.hint}</div>}

@@ -153,7 +153,7 @@ export function ProductDetail() {
           </dl>
 
           <section>
-            <h3 style={{ marginBottom: 8 }}>{t('History')}</h3>
+            <h2 className="h3" style={{ marginBottom: 8 }}>{t('History')}</h2>
             {p.history.length === 0 ? (
               <div className="muted small">{t('No changes yet.')}</div>
             ) : (

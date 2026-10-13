@@ -130,7 +130,7 @@ export function RecipeDetail() {
           <OurIngredients r={r} match={match.data ?? []} factor={factor} />
           <OriginalIngredients r={r} />
           <section>
-            <h3>{t('Instructions')}</h3>
+            <h2 className="h3">{t('Instructions')}</h2>
             {r.steps.length === 0 && (stepsElsewhere(r) ? <StepsElsewhere r={r} /> : <p className="muted small">{r.notes ?? t('No steps yet.')}</p>)}
             {r.steps.map((s: any, n: number) => (
               <div key={n}>

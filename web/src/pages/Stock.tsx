@@ -174,7 +174,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
             <section key={g.key}>
               <div className="row" style={{ marginBottom: 8, gap: 8, color: 'var(--ink-2)' }}>
                 <Ic name={g.icon} size={18} />
-                <h3>{g.title}</h3>
+                <h2 className="h3">{g.title}</h2>
                 <span className="small muted mono">{g.items.length}</span>
               </div>
               <div className="list">

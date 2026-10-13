@@ -99,7 +99,8 @@ html.dnd-dragging .assist-fab {
   opacity: 0.8;
   mask-image: linear-gradient(to bottom, #000 55%, transparent);
 }
-.arrange-toggle {
+.arrange-toggle,
+.linkish.arrange-toggle {
   display: block;
   margin: 18px auto 0;
   min-height: 44px;
