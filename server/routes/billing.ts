@@ -108,6 +108,8 @@ r.get('/billing/status', requireAuth, (req, res) => res.json({ ...billingStatus(
  */
 r.post('/billing/redeem', requireAuth, requireAdmin, (req, res) => {
   if (!config.multiTenant) return void res.status(400).json({ error: 'cloud only' });
+  // the web view inside the iPhone app identifies itself (WebSettingsView.swift) and gets no code redemption
+  if (/ToHuusApp/.test(String(req.headers['user-agent'] ?? ''))) return void res.status(403).json({ error: 'web only', code: 'billing.web_only' });
   const { code } = z.object({ code: z.string().trim().min(4).max(60) }).parse(req.body ?? {});
   try {
     const out = redeemPlanCode(currentHousehold()!.id, code);

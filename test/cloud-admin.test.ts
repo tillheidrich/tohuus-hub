@@ -143,6 +143,8 @@ describe('runtime settings', () => {
 
     // a request uses the stored key, still pinned to Mistral EU
     aiCalls.length = 0;
+    const policy = await import('../server/lib/ai-policy');
+    tenancy.runInHousehold(hA, () => policy.setHouseholdAiConsent(true));
     const res = await tenancy.runInHousehold(hA, () => ai.chat({ messages: [{ role: 'user', content: 'hi' }] }));
     expect(res.content).toBe('OK');
     expect(aiCalls[0].auth).toBe('Bearer sk-or-v1-supersecret-9f3a');

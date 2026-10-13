@@ -131,10 +131,13 @@ struct SettingsView: View {
                     Text(L("Guests, displays, Home Assistant and other rare settings live in the web app."))
                 }
                 Section(L("Legal")) {
-                    if let p = app.instance?.legal?.privacy, let url = URL(string: p) { Link(L("Privacy"), destination: url) }
+                    Link(L("Privacy"), destination: Legal.privacy(app.instance))
                     if let i = app.instance?.legal?.imprint, let url = URL(string: i) { Link(L("Imprint"), destination: url) }
-                    if let t = app.instance?.legal?.terms, let url = URL(string: t) { Link(L("Terms"), destination: url) }
-                    LabeledContent(L("Version"), value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
+                    Link(L("Terms"), destination: Legal.terms(app.instance))
+                    LabeledContent(L("Version"), value: ErrorLog.appVersion)
+                    if let url = FeedbackMail.url(instance: app.instance, household: app.session?.householdId) {
+                        Link(destination: url) { Label(L("Send feedback"), systemImage: "envelope") }
+                    }
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
                 Section {

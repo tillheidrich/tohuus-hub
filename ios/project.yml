@@ -62,8 +62,8 @@ targets:
         NSCameraUsageDescription: "ToHuus uses the camera to scan barcodes, receipts and paper lists."
         # "Einkauf läuft" on the lock screen and in the Dynamic Island (LiveTripActivity.swift)
         NSSupportsLiveActivities: true
-        NSMicrophoneUsageDescription: "ToHuus uses the microphone when you speak to the assistant."
-        NSSpeechRecognitionUsageDescription: "Your words are turned into text on your iPhone so the assistant can understand them."
+        NSMicrophoneUsageDescription: "ToHuus uses the microphone only while you speak to the assistant or dictate for the list. If your iPhone can't turn speech into text, the recording goes to ToHuus to be turned into text."
+        NSSpeechRecognitionUsageDescription: "Your words are turned into text so the assistant understands you – on your iPhone where possible, otherwise by Apple's speech recognition."
         NSLocationWhenInUseUsageDescription: "Only if you switch on the hint in the shop: ToHuus saves where your shops are. The places stay on your iPhone."
         NSLocationAlwaysAndWhenInUseUsageDescription: "Only if you switch on the hint in the shop: when you arrive at a shop you saved, ToHuus asks whether to open the list. Your location never leaves your iPhone."
     entitlements:

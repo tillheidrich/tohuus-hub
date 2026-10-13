@@ -2738,6 +2738,23 @@
         }
       }
     },
+    "Agree and use AI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and use AI"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zustimmen und KI nutzen"
+          }
+        }
+      }
+    },
     "Aisle order": {
       "extractionState": "manual",
       "localizations": {
@@ -5254,6 +5271,23 @@
         }
       }
     },
+    "Continue without AI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue without AI"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne KI weiter"
+          }
+        }
+      }
+    },
     "Cook today": {
       "extractionState": "manual",
       "localizations": {
@@ -6444,6 +6478,23 @@
         }
       }
     },
+    "During the beta your household gets the plan as a gift. Nothing is charged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "During the beta your household gets the plan as a gift. Nothing is charged."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Während der Beta bekommt dein Haushalt den Plan geschenkt. Es wird nichts abgebucht."
+          }
+        }
+      }
+    },
     "E-mail": {
       "extractionState": "manual",
       "localizations": {
@@ -7307,6 +7358,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Familie mit Kindern"
+          }
+        }
+      }
+    },
+    "Feedback on ToHuus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback on ToHuus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback zu ToHuus"
           }
         }
       }
@@ -11969,6 +12037,23 @@
         }
       }
     },
+    "No iPhone of yours is registered yet. Close and reopen the app, then try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No iPhone of yours is registered yet. Close and reopen the app, then try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch kein iPhone von dir ist angemeldet. Schließ die App, öffne sie wieder und versuch es noch mal."
+          }
+        }
+      }
+    },
     "No ideas yet.": {
       "extractionState": "manual",
       "localizations": {
@@ -13754,6 +13839,23 @@
         }
       }
     },
+    "Open TestFlight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open TestFlight"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TestFlight öffnen"
+          }
+        }
+      }
+    },
     "Open ToHuus on your iPhone once – the watch takes the sign-in from there.": {
       "extractionState": "manual",
       "localizations": {
@@ -15246,6 +15348,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Melde dich bitte zuerst in der ToHuus-App an."
+          }
+        }
+      }
+    },
+    "Please update ToHuus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please update ToHuus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitte aktualisiere ToHuus"
           }
         }
       }
@@ -17749,6 +17868,23 @@
         }
       }
     },
+    "Send a test notification": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a test notification"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test-Mitteilung senden"
+          }
+        }
+      }
+    },
     "Send again": {
       "extractionState": "manual",
       "localizations": {
@@ -17779,6 +17915,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Code schicken"
+          }
+        }
+      }
+    },
+    "Send feedback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send feedback"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback senden"
           }
         }
       }
@@ -17932,6 +18085,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "An ToHuus gesendet."
+          }
+        }
+      }
+    },
+    "Sent – it should arrive in a few seconds.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent – it should arrive in a few seconds."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesendet – sie sollte in ein paar Sekunden ankommen."
           }
         }
       }
@@ -20265,6 +20435,23 @@
         }
       }
     },
+    "That isn't there any more. Pull down to refresh.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That isn't there any more. Pull down to refresh."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das gibt es nicht mehr. Zieh nach unten zum Aktualisieren."
+          }
+        }
+      }
+    },
     "That took too long. Please try again in a moment.": {
       "extractionState": "manual",
       "localizations": {
@@ -20724,6 +20911,23 @@
         }
       }
     },
+    "The server has no key for iPhone notifications yet, so none arrive. The household's admin or the ToHuus team can fix this.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server has no key for iPhone notifications yet, so none arrive. The household's admin or the ToHuus team can fix this."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dem Server fehlt noch der Schlüssel für iPhone-Mitteilungen, deshalb kommt nichts an. Das kann der Admin des Haushalts oder das ToHuus-Team beheben."
+          }
+        }
+      }
+    },
     "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, “Sprechen” with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like).": {
       "extractionState": "manual",
       "localizations": {
@@ -20958,23 +21162,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Dose ist schon als leer markiert."
-          }
-        }
-      }
-    },
-    "This doesn't work with the server yet. Please try again later.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This doesn't work with the server yet. Please try again later."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das klappt mit dem Server noch nicht. Bitte versuch es später noch mal."
           }
         }
       }
@@ -21247,6 +21434,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Danach richtet sich, was du zuerst siehst. Du kannst es jederzeit ändern."
+          }
+        }
+      }
+    },
+    "This version no longer fits ToHuus Cloud. Install the latest build in TestFlight or the App Store – your data is safe.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This version no longer fits ToHuus Cloud. Install the latest build in TestFlight or the App Store – your data is safe."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Version passt nicht mehr zur ToHuus Cloud. Installier die neueste Version in TestFlight oder im App Store – deine Daten bleiben erhalten."
           }
         }
       }
@@ -22084,6 +22288,23 @@
         }
       }
     },
+    "Use AI? You decide.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use AI? You decide."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KI nutzen? Du entscheidest."
+          }
+        }
+      }
+    },
     "Use soon": {
       "extractionState": "manual",
       "localizations": {
@@ -22883,6 +23104,23 @@
         }
       }
     },
+    "When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn du KI nutzt (freie Sätze an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du geschrieben oder fotografiert hast, an {processor}. Es wird nicht zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter."
+          }
+        }
+      }
+    },
     "Where": {
       "extractionState": "manual",
       "localizations": {
@@ -23665,6 +23903,23 @@
         }
       }
     },
+    "Withdraw consent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdraw consent"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zustimmung zurückziehen"
+          }
+        }
+      }
+    },
     "Withdrawn": {
       "extractionState": "manual",
       "localizations": {
@@ -23937,6 +24192,23 @@
         }
       }
     },
+    "You agreed to AI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You agreed to AI"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast der KI zugestimmt"
+          }
+        }
+      }
+    },
     "You asked for": {
       "extractionState": "manual",
       "localizations": {
@@ -23967,6 +24239,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du hast es gekauft"
+          }
+        }
+      }
+    },
+    "You can change this any time under More › With or without AI.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can change this any time under More › With or without AI."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du kannst das jederzeit unter Mehr › Mit oder ohne KI ändern."
           }
         }
       }

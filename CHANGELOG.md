@@ -6,6 +6,11 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **iPhone app for longer tests**: "Feedback senden" (mail to the support address with version and build), version shows the build, every request sends `X-ToHuus-Version`, a test notification button and a hint when the server has no APNs key, "Das gibt es nicht mehr" instead of a server message for 404, privacy and terms links always present, no "14 Tage, dann Free" while a beta gift is on (`betaGift` in `/api/instance`), `MIN_IOS_BUILD` blocks builds that are too old, the offline list can be written while the iPhone is locked (Siri), a broken offline queue is logged.
+
+- **AI consent in ToHuus Cloud** (App Store 5.1.2(i)): AI runs only after the person agreed (one-time sheet in the app, card in Settings › Zugänge & KI; `consent` in `GET/PATCH /api/ai/settings`, reason `consent`); children and receipts by mail need an admin's consent; a new child's AI starts off in the cloud. Self-host unchanged.
+- **App Store**: code redemption is hidden and refused inside the iPhone app's web view (`ToHuusApp` user agent, `billing.web_only`); honest microphone and speech recognition texts; health data in the privacy manifest.
+
 - **Sign in with Apple**: the app's sign-in now needs the nonce too (the app always sent it); deleting an Apple-linked account in the app sends the fresh authorization code, so the Apple token is revoked even when none was kept at sign-in.
 
 - **Mails can be switched off**: "Mails from ToHuus" in Settings › Notifications (web and iPhone, `mailOff` in `GET/PUT /api/notify/prefs`) stops the e-mail summary and renewal reminders for that person; every such mail has an unsubscribe link and one-click `List-Unsubscribe` headers (`/api/mail/unsubscribe/:token`).

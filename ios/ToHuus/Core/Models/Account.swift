@@ -12,8 +12,12 @@ struct InstanceInfo: Decodable, Sendable {
     var signup: Bool?
     /// ToHuus Cloud beta gate: "invite" = sign-up needs an access code (docs/cloud.md › Beta gate)
     var signupMode: String?
-    /// address to ask for an access code
+    /// address to ask for an access code (and for tester feedback)
     var support: String?
+    /// the plan every household gets during the beta ("haushalt" | "plus"), nil when none
+    var betaGift: String?
+    /// builds below this show "Bitte aktualisieren" (MIN_IOS_BUILD on the server)
+    var minIosBuild: Int?
     var features: Features?
     var legal: Legal?
 
@@ -211,6 +215,8 @@ struct AIStatus: Decodable, Sendable, Equatable {
     var personal: Bool?
     var locked: Bool?
     var reason: String?
+    /// aiState.consent.processor (ToHuus Cloud)
+    var processor: String?
 
     init(ai: Bool? = nil, voice: Bool? = nil, receiptsAi: Bool? = nil, household: Bool? = nil, personal: Bool? = nil, locked: Bool? = nil, reason: String? = nil) {
         self.ai = ai; self.voice = voice; self.receiptsAi = receiptsAi
@@ -234,5 +240,6 @@ struct AIStatus: Decodable, Sendable, Equatable {
         personal = personal ?? c.first(Bool.self, "aiPersonal", "personal")
         locked = locked ?? c.first(Bool.self, "aiLocked", "locked", "kidLock")
         reason = reason ?? c.first(String.self, "aiReason", "reason")
+        processor = c.first(JSONValue.self, "aiState")?["consent"]?["processor"]?.string
     }
 }

@@ -55,6 +55,7 @@ DATA_DIR/
 | `HOUSEHOLD_POOL_MAX`, `HOUSEHOLD_POOL_IDLE_MIN` | – | connection pool (64, 10) |
 | `SSE_MAX_TOTAL` | – | live-update connections over all households (5000; 200 per household) |
 | `LEGAL_PRIVACY_URL`, `LEGAL_TERMS_URL`, `LEGAL_IMPRINT_URL` | – | shown by the apps via `/api/instance` |
+| `MIN_IOS_BUILD` | – | builds of the iPhone app below this number show only "Bitte aktualisiere ToHuus" (`/api/instance` → `minIosBuild`); set it after an API change older builds can't follow. `/api/instance` also carries `betaGift` (`'haushalt'\|'plus'\|null`, runtime setting `beta.gift`), so the app hides "14 Tage, dann Free" during the beta |
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
 | `APPLE_APP_IDS` | – | comma-separated `<TeamID>.<bundle id>` for `webcredentials` in `/.well-known/apple-app-site-association`, default `FVS7WVTQ67.de.heidrichdigital.tohuus` |
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |

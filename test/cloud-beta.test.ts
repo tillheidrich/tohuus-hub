@@ -124,7 +124,7 @@ describe('beta gate', () => {
     expect(beta.envSignupMode({ CLOUD_SIGNUP: 'true' } as NodeJS.ProcessEnv)).toBe('open');
     expect(beta.envSignupMode({ CLOUD_SIGNUP: 'false' } as NodeJS.ProcessEnv)).toBe('closed');
     const i = await new Client().get('/api/instance');
-    expect(i.json).toMatchObject({ signup: true, signupMode: 'invite', support: 'tohuus@tillheidrich.de' });
+    expect(i.json).toMatchObject({ signup: true, signupMode: 'invite', support: 'tohuus@tillheidrich.de', betaGift: null, minIosBuild: null });
   });
 
   it('e-mail sign-up (web and app) needs a code or an allowlisted address', async () => {

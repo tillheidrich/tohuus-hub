@@ -83,6 +83,7 @@ const legal = () => ({
 import { cloudAiSwitch, householdAiOn, mcpOn } from '../lib/ai-policy.js';
 import { aiConfig } from '../lib/ai.js';
 import * as betaModule from '../lib/beta.js';
+import { betaGift } from '../lib/gifts.js';
 import { supportEmail } from '../lib/runtime-settings.js';
 import { setHouseholdStores, storeChoices } from '../lib/stores.js';
 import { ocrAvailable } from '../lib/ocr.js';
@@ -91,7 +92,10 @@ const aiConfigured = () => Boolean(aiConfig()) || visionEnabled();
 function signupInfo() {
   if (!cloudMode()) return { signup: false };
   const mode = betaModule.signupMode();
-  return { signup: mode !== 'closed', signupMode: mode, support: supportEmail() };
+  // betaGift: the plan every household gets during the beta (the app then hides "14 days, then Free");
+  // minIosBuild: older app builds show "Bitte aktualisieren" (env MIN_IOS_BUILD, e.g. after an API change)
+  const minIosBuild = Number(process.env.MIN_IOS_BUILD) || null;
+  return { signup: mode !== 'closed', signupMode: mode, support: supportEmail(), betaGift: betaGift(), minIosBuild };
 }
 
 // ================================================================= instance (both modes)

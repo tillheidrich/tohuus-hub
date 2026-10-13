@@ -220,4 +220,12 @@ export const web3: Record<string, string> = {
   'Mails from ToHuus': 'Mails von ToHuus',
   'Off: no summaries or reminders by mail. Sign-in links and security notices still come.': 'Aus: keine Zusammenfassungen oder Erinnerungen per Mail. Anmeldelinks und Sicherheitshinweise kommen trotzdem.',
   'Summaries and reminders by mail, as chosen above. Every such mail has a link to unsubscribe.': 'Zusammenfassungen und Erinnerungen per Mail, so wie oben eingestellt. In jeder dieser Mails steht ein Link zum Abbestellen.',
+  'You agreed to AI': 'Du hast der KI zugestimmt',
+  'Use AI? You decide.': 'KI nutzen? Du entscheidest.',
+  'When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.':
+    'Wenn du KI nutzt (freie Sätze an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du geschrieben oder fotografiert hast, an {processor}. Es wird nicht zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter.',
+  Privacy: 'Datenschutz',
+  'Withdraw consent': 'Zustimmung zurückziehen',
+  'Agree and use AI': 'Zustimmen und KI nutzen',
+  'Receipts by mail and children use AI only after an admin agreed.': 'Bons per Mail und Kinder nutzen KI erst, wenn ein Admin zugestimmt hat.',
 };

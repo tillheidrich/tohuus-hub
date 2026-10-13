@@ -71,11 +71,21 @@ Four switches, enforced centrally in `server/lib/ai.ts` (`chat()`, `transcribe()
 | Person `ai.mine` | `user_prefs` of that member | only that member; never shown to others | on |
 | Child | `kid_profiles.ai_off` | parents (admins and members, not permanent guests) via `PUT /api/kids/:id/ai { enabled }` | on |
 | MCP for the household's own assistants `mcp.enabled` | setting | admins | on; independent from the built-in AI (no model is called for MCP); off ⇒ `/mcp` answers 403 |
+| Consent (ToHuus Cloud only) `ai.consent` | `user_prefs` per person; household setting `ai.consent` when an admin agrees | each person for themselves (`PATCH { consent }`); an admin's consent also covers the household | **off** until agreed – App Store guideline 5.1.2(i) |
+
+**Consent in ToHuus Cloud** (13 Oct 2026): before the first model request with a person's data, that person agrees
+once (iPhone: a one-time sheet after sign-in and Mehr › Mit oder ohne KI; web: Einstellungen › Zugänge & KI). The text
+names the receiver (`AI_PROCESSOR` in ai-policy.ts: Mistral AI (EU) via OpenRouter (USA), no training; the privacy page names both). Requests
+of a person use the person's consent; children and background jobs (receipts by mail) use the household's, given by an
+admin. Without it the reason is `consent` and every feature takes its path without a model. The operator's catalogue
+drafts in `/betrieb` carry no household data and are not affected (`runAsAiActor({ operator: true })`). In the cloud a
+new child's AI starts **off** (`kid_profiles.ai_off = 1`), a parent switches it on. Self-hosted servers choose their own
+model and ask no consent.
 
 The person is taken from the request (`requireAuth` runs the rest of the request inside `runAsAiActor`), the child from the paired kid tablet (`/api/kid/:token/*`). A kid tablet can never change its switch: there is no route for it, `GET /api/kid/:token` only returns `ai: { enabled, locked: true }` for the locked display "von deinen Eltern ausgeschaltet".
 
-- `GET /api/ai/settings` → `{ configured: { text, vision, audio }, household, mcp, mine, effective, reason: null|'no_model'|'household'|'person'|'parents', admin, kids?: [{ id, name, ai }] }` (`kids` for adult members only).
-- `PATCH /api/ai/settings` `{ household?, mcp? }` (admins, else 403) and/or `{ mine? }` (the caller, for themselves) → the state as above.
+- `GET /api/ai/settings` → `{ configured: { text, vision, audio }, household, mcp, mine, effective, reason: null|'no_model'|'household'|'person'|'parents'|'cloud'|'consent', consent: { required, given, household, processor, privacyUrl }, admin, kids?: [{ id, name, ai }] }` (`kids` for adult members only).
+- `PATCH /api/ai/settings` `{ household?, mcp? }` (admins, else 403) and/or `{ mine?, consent? }` (the caller, for themselves; not for guests) → the state as above.
 - `GET /api/assistant/status` additionally returns `aiState` (same object without `admin`/`kids`); `ai`, `voice` and `receiptsAi` are the effective values for the caller.
 - `GET /api/instance` → `features.ai: { configured, household, mcp }`; `features.assistant/voice/receiptsAi` are `configured && household`.
 

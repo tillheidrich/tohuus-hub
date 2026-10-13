@@ -90,6 +90,18 @@ final class AppModel {
         }
     }
 
+    /// ToHuus Cloud: the person has not agreed to AI yet (server reason "consent")
+    var aiConsentNeeded: Bool { aiStatus?.reason == "consent" }
+    /// who receives the data when AI is used (shown in the consent text)
+    var aiProcessor: String? { aiStatus?.processor }
+
+    /// PATCH /api/ai/settings { consent } – agree to AI or withdraw (ToHuus Cloud)
+    func setAIConsent(_ on: Bool) async {
+        guard let api else { return }
+        _ = try? await api.send("PATCH", "api/ai/settings", json: ["consent": on], as: Ignored.self)
+        await loadAIState()
+    }
+
     /// PATCH /api/ai/settings { mine } – a server without it keeps the choice on this device only.
     func setPersonalAI(_ on: Bool) async {
         personalAI = on

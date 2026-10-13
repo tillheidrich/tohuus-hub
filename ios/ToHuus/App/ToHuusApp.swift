@@ -74,8 +74,18 @@ struct ToHuusApp: App {
 struct RootView: View {
     @Environment(AppModel.self) private var app
 
+    /// MIN_IOS_BUILD on the server: an older build only says "please update" (an API change it can't follow)
+    private var tooOld: Bool {
+        guard let min = app.instance?.minIosBuild,
+              let build = Int(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "") else { return false }
+        return build < min
+    }
+
     var body: some View {
         Group {
+            if tooOld {
+                UpdateNeededView()
+            } else {
             switch app.phase {
             case .launching:
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).canvasBackground()
@@ -92,7 +102,26 @@ struct RootView: View {
                     ProgressView()
                 }
             }
+            }
         }
         .animation(.easeInOut(duration: 0.2), value: app.phase)
+    }
+}
+
+/// Shown instead of the app when the server needs a newer build.
+struct UpdateNeededView: View {
+    var body: some View {
+        VStack(spacing: Theme.Space.s4) {
+            Image(systemName: "arrow.down.app").font(.largeTitle).foregroundStyle(Theme.primary).accessibilityHidden(true)
+            Text(L("Please update ToHuus")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+            Text(L("This version no longer fits ToHuus Cloud. Install the latest build in TestFlight or the App Store – your data is safe."))
+                .multilineTextAlignment(.center).foregroundStyle(Theme.ink2)
+            if let url = URL(string: "itms-beta://") {
+                Link(L("Open TestFlight"), destination: url).buttonStyle(PrimaryButtonStyle())
+            }
+        }
+        .padding(Theme.Space.s6)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .canvasBackground()
     }
 }

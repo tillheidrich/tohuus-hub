@@ -9,6 +9,16 @@ struct AISettings: Decodable, Sendable {
     var reason: String?
     var admin: Bool?
     var kids: [Kid]?
+    /// ToHuus Cloud: AI only after the person agreed (server/lib/ai-policy.ts); nil on self-hosted servers
+    var consent: Consent?
+
+    struct Consent: Decodable, Sendable, Hashable {
+        var required: Bool
+        var given: Bool
+        var household: Bool?
+        var processor: String?
+        var privacyUrl: String?
+    }
 
     struct Kid: Decodable, Sendable, Identifiable, Hashable {
         var id: Int
@@ -25,6 +35,20 @@ struct AISettingsView: View {
 
     var body: some View {
         Form {
+            if let c = settings?.consent, c.required, app.aiAvailable {
+                Section {
+                    Text(AIConsentView.explanation(c.processor))
+                        .font(.subheadline).foregroundStyle(Theme.ink2)
+                    if c.given {
+                        Button(L("Withdraw consent"), role: .destructive) { Task { await app.setAIConsent(false); await load() } }
+                    } else {
+                        Button(L("Agree and use AI")) { Task { await app.setAIConsent(true); await load() } }
+                    }
+                    if let u = c.privacyUrl.flatMap(URL.init(string:)) { Link(L("Privacy"), destination: u) }
+                } header: {
+                    Text(c.given ? L("You agreed to AI") : L("Use AI? You decide."))
+                }
+            }
             Section {
                 LabeledContent(L("In this household"), value: app.aiAvailable ? L("available") : L("off"))
                 if app.aiLocked {
@@ -153,5 +177,49 @@ struct OnDeviceAISection: View {
         case .notReady: return L("Apple Intelligence is still getting ready on this iPhone.")
         case .notSupported: return L("Not available on this iPhone.")
         }
+    }
+}
+
+/// One-time question after sign-in in ToHuus Cloud (App Store guideline 5.1.2(i)): may ToHuus send what this person
+/// types or photographs to the AI service? "Ohne KI weiter" keeps everything else working; Settings › KI asks again.
+struct AIConsentView: View {
+    @Environment(AppModel.self) private var app
+    @Environment(\.dismiss) private var dismiss
+    @State private var busy = false
+
+    static func explanation(_ processor: String?) -> String {
+        L("When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.")
+            .replacingOccurrences(of: "{processor}", with: processor ?? "Mistral AI (EU), via OpenRouter (USA)")
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                    Image(systemName: "sparkles").font(.largeTitle).foregroundStyle(Theme.primary).accessibilityHidden(true)
+                    Text(L("Use AI? You decide.")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                    Text(Self.explanation(app.aiProcessor)).foregroundStyle(Theme.ink2)
+                    Text(L("You can change this any time under More › With or without AI.")).font(.footnote).foregroundStyle(Theme.ink3)
+                    Button {
+                        busy = true
+                        Task { await app.setAIConsent(true); busy = false; dismiss() }
+                    } label: { Text(L("Agree and use AI")).frame(maxWidth: .infinity) }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(busy)
+                    Button { dismiss() } label: { Text(L("Continue without AI")).frame(maxWidth: .infinity) }
+                        .buttonStyle(SecondaryButtonStyle())
+                }
+                .padding(Theme.Space.s5)
+            }
+            .background(Theme.canvas)
+        }
+        .interactiveDismissDisabled(busy)
+        .onDisappear { AIConsentView.asked = true }
+    }
+
+    /// asked once per device; Settings › KI stays the place to change it
+    static var asked: Bool {
+        get { UserDefaults.standard.bool(forKey: "aiConsentAsked") }
+        set { UserDefaults.standard.set(newValue, forKey: "aiConsentAsked") }
     }
 }

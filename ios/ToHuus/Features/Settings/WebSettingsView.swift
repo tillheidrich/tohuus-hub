@@ -52,6 +52,8 @@ struct WebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
+        // the web app hides what the iPhone app must not offer (code redemption, App Store guideline 3.1.1)
+        config.applicationNameForUserAgent = "ToHuusApp"
         let view = WKWebView(frame: .zero, configuration: config)
         view.navigationDelegate = context.coordinator
         view.allowsBackForwardNavigationGestures = true

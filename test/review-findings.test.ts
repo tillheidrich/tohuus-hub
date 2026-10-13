@@ -242,6 +242,7 @@ describe('review: AI imports count against the plan', () => {
       return new Response(JSON.stringify({ choices: [{ message: { content: '{"title":"Suppe","ingredients":[{"text":"Wasser"}],"steps":[{"text":"Kochen"}]}' } }] }), { status: 200 });
     });
     try {
+      expect((await A.req('PATCH', '/api/ai/settings', { consent: true })).status).toBe(200);
       for (let i = 0; i < 10; i++) expect((await A.post('/api/recipes/import/text', { text: `Suppe ${i}: Wasser kochen und fertig.` })).status).toBe(200);
       const over = await A.post('/api/recipes/import/text', { text: 'Noch eine Suppe: Wasser kochen.' });
       expect(over.status).toBe(429);

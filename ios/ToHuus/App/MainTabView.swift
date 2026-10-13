@@ -54,6 +54,7 @@ struct MainTabView: View {
     @State private var area: AppArea = .today
     @State private var showSettings = false
     @State private var showTour = false
+    @State private var showAIConsent = false
 
     /// kept for the tab version (Heute opens tabs through it)
     typealias Tab = AppArea
@@ -103,15 +104,27 @@ struct MainTabView: View {
         .sheet(isPresented: $app.showPaywall) {
             PaywallView()
         }
-        .sheet(isPresented: $showTour) {
+        .sheet(isPresented: $showTour, onDismiss: { Task { await askAIConsent() } }) {
             AppTourView()
         }
+        .sheet(isPresented: $showAIConsent) {
+            AIConsentView()
+        }
+        .task { if !showTour { await askAIConsent() } }
+        .onChange(of: app.askSampleData) { _, asking in if !asking { Task { await askAIConsent() } } }
         .sheet(item: Binding(get: { store.cookidooDraft }, set: { store.cookidooDraft = $0 })) { d in
             CookidooConfirmView(store: store, request: d) { _ in store.cookidooDraft = nil }
         }
         .fullScreenCover(isPresented: $app.showKitchen) {
             KitchenModeView(store: store)
         }
+    }
+
+    /// ToHuus Cloud: ask once whether AI may be used (App Store guideline 5.1.2(i)); never over the tour or for children
+    private func askAIConsent() async {
+        guard !AIConsentView.asked, !app.isChild, !app.isGuest, !app.askSampleData else { return }
+        await app.loadAIState()
+        if app.aiConsentNeeded && app.aiAvailable && !showTour { showAIConsent = true }
     }
 
     // MARK: iPhone

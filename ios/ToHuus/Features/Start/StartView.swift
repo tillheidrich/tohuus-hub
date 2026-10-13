@@ -33,8 +33,10 @@ struct StartView: View {
                     }
                     if let error { ErrorBanner(message: error) }
                     if app.instance?.signupMode == "invite" { BetaNote() }
-                    Text(L("14 days with everything, without payment details. Then Free, unless you choose a plan."))
-                        .font(.footnote).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
+                    if app.instance?.betaGift == nil {
+                        Text(L("14 days with everything, without payment details. Then Free, unless you choose a plan."))
+                            .font(.footnote).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
+                    }
                     LegalLinks()
                 }
                 .padding(Theme.Space.s5)
@@ -427,7 +429,11 @@ struct SignUpView: View {
                 .disabled(!valid || busy)
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(L("14 days of Plus for free, then Free unless you choose a plan. Nothing renews by itself."))
+                    if app.instance?.betaGift == nil {
+                        Text(L("14 days of Plus for free, then Free unless you choose a plan. Nothing renews by itself."))
+                    } else {
+                        Text(L("During the beta your household gets the plan as a gift. Nothing is charged."))
+                    }
                     Text(L("By creating an account you accept the terms and the privacy policy."))
                     LegalLinks().frame(maxWidth: .infinity, alignment: .leading)
                 }

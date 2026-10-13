@@ -16,6 +16,7 @@
  *   GET    /api/operator/households/:id                  plan, trial, dates, storage, member count – no names
  *   GET    /api/operator/audit?before=<id>&limit=        the audit log, paged
  */
+import { runAsAiActor } from '../lib/ai-policy.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import { accountsDb, getHousehold, isUuid } from '../lib/accounts.js';
@@ -376,7 +377,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
   r.post('/operator/recipes/ai-drafts', fresh, async (req, res) => {
     const b = z.object({ dishes: z.array(z.string().trim().min(2).max(80)).min(1).max(5) }).parse(req.body ?? {});
     try {
-      const out = await draftRecipesWithAi(b.dishes, who(req));
+      const out = await runAsAiActor({ operator: true }, () => draftRecipesWithAi(b.dishes, who(req)));
       audit(who(req), 'recipes.ai-drafts', null, { requested: b.dishes.length, created: out.ids.length });
       res.json(out);
     } catch (e) {

@@ -10,6 +10,7 @@ struct NotificationSettingsView: View {
     @State private var error: String?
     @State private var quiet = NotifyPrefs.QuietHours(enabled: false, from: "22:00", to: "07:00")
     @State private var quietSupported = false
+    @State private var testResult: String?
 
     var body: some View {
         Form {
@@ -33,6 +34,14 @@ struct NotificationSettingsView: View {
                 if !push.serverSupportsAPNs {
                     Text(L("Your server can't send iPhone notifications yet. It will once it is updated."))
                         .font(.footnote).foregroundStyle(Theme.ink3)
+                }
+                if prefs?.apnsConfigured == false {
+                    Text(L("The server has no key for iPhone notifications yet, so none arrive. The household's admin or the ToHuus team can fix this."))
+                        .font(.footnote).foregroundStyle(Theme.empty)
+                }
+                if push.state == .allowed && prefs?.apnsConfigured != false {
+                    Button(L("Send a test notification")) { Task { await testPush() } }
+                    if let testResult { Text(testResult).font(.footnote).foregroundStyle(Theme.ink3) }
                 }
                 if let e = push.lastError { Text(e).font(.footnote).foregroundStyle(Theme.empty) }
             } header: {
@@ -125,6 +134,16 @@ struct NotificationSettingsView: View {
         do { try await api.setMailOff(!on) } catch {
             self.error = APIError.from(error).localizedDescription
             await load()
+        }
+    }
+
+    private func testPush() async {
+        guard let api = app.api else { return }
+        do {
+            let n = try await api.sendTestPush()
+            testResult = n > 0 ? L("Sent – it should arrive in a few seconds.") : L("No iPhone of yours is registered yet. Close and reopen the app, then try again.")
+        } catch {
+            testResult = APIError.from(error).localizedDescription
         }
     }
 

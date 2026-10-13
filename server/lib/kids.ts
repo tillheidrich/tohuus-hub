@@ -173,6 +173,8 @@ export async function createKid(input: KidInput) {
         JSON.stringify(input.find_ids ?? []),
       ).lastInsertRowid,
   );
+  // ToHuus Cloud: AI for a child starts off – a parent switches it on (Settings › Access & AI)
+  if (config.multiTenant) db.prepare('UPDATE kid_profiles SET ai_off = 1 WHERE id = ?').run(id);
   emit('orders');
   return getKid(id)!;
 }

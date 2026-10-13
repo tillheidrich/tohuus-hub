@@ -30,11 +30,13 @@ let ipSeq = 1;
 class Client {
   cookies = new Map<string, string>();
   ip = `10.82.${Math.floor(ipSeq / 200)}.${ipSeq++ % 200}`;
+  ua: string | undefined;
   async req(method: string, p: string, body?: unknown) {
     const res = await fetch(base + p, {
       method,
       headers: {
         ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+        ...(this.ua ? { 'user-agent': this.ua } : {}),
         cookie: [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; '),
         'x-forwarded-for': this.ip,
         origin: base,
@@ -105,6 +107,10 @@ describe('plan codes', () => {
     expect(code.code).toMatch(/^GIFT-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
     // trial (Plus level) still wins until the trial ends – the code is stored as the household's own plan
     accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(a.id);
+    // never inside the iPhone app's web view (App Store guideline 3.1.1)
+    a.c.ua = 'Mozilla/5.0 (iPhone) AppleWebKit/605.1.15 ToHuusApp';
+    expect((await a.c.post('/api/billing/redeem', { code: code.code })).status).toBe(403);
+    a.c.ua = undefined;
     const r = await a.c.post('/api/billing/redeem', { code: code.code.toLowerCase() });
     expect(r.status, r.text).toBe(200);
     expect(r.json).toMatchObject({ ok: true, plan: 'haushalt', status: { plan: 'haushalt', source: 'code', gift: { kind: 'code', plan: 'haushalt', forever: false } } });

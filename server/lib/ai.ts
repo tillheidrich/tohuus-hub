@@ -146,7 +146,9 @@ export function aiDisabledError(reason: AiOffReason): AiError {
       ? t('AI was switched off by your parents.')
       : reason === 'person'
         ? t('You switched AI off for yourself (Settings › Access & AI).')
-        : reason === 'cloud'
+        : reason === 'consent'
+          ? t('Before ToHuus uses AI for you, please agree once (Settings › Access & AI).')
+          : reason === 'cloud'
           ? t('AI is paused in ToHuus Cloud right now. Everything else works as usual.')
           : t('AI is switched off for this household (Settings › Access & AI).');
   return new AiError(msg, 'ai.disabled', 403, reason);

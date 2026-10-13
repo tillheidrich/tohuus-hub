@@ -21,7 +21,7 @@ enum APIError: Error, LocalizedError, Equatable {
         case .unauthorized: return L("You have been signed out. Please sign in again.")
         case .quota(let m): return m.isEmpty ? L("This month's assistant messages are used up.") : m
         case .storageFull(let m): return m.isEmpty ? L("Your household's storage is full. Nothing was deleted – free up space or choose a bigger plan.") : m
-        case .notFound: return L("This doesn't work with the server yet. Please try again later.")
+        case .notFound: return L("That isn't there any more. Pull down to refresh.")
         case .server(let status, let m): return APIError.friendly(status: status, message: m)
         case .decoding: return L("The answer didn't fit this version of the app. Please update the app or try again later.")
         case .invalidURL: return L("That address doesn't look right.")
@@ -42,7 +42,7 @@ enum APIError: Error, LocalizedError, Equatable {
         switch status {
         case 401: return L("That didn't work – please sign in again.")
         case 403: return L("You can't do that in this household.")
-        case 404: return L("This doesn't work with the server yet. Please try again later.")
+        case 404: return L("That isn't there any more. Pull down to refresh.")
         case 408, 504: return L("That took too long. Please try again in a moment.")
         case 409: return L("That changed in the meantime. Pull down to refresh and try again.")
         case 413: return L("That file is too big.")

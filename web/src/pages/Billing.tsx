@@ -142,6 +142,8 @@ function RedeemCode() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   if (me.data?.actor?.role !== 'admin') return null;
+  // inside the iPhone app's web view (WebSettingsView.swift): no codes, App Store guideline 3.1.1
+  if (/ToHuusApp/.test(navigator.userAgent)) return null;
   if (!open)
     return (
       <button className="btn ghost" style={{ alignSelf: 'flex-start' }} onClick={() => setOpen(true)}>
