@@ -6,15 +6,41 @@ Veröffentlichen, wie beim Startset.
 
 ## So bringst du die Bilder rein
 
-Die Bilder sind KI-Bilder (1456 × 1088), erzeugt in deinem Canva-Konto. Hier in der Entwicklungsumgebung komme ich an
-Canva-Downloads nicht heran, deshalb holst du sie einmal selbst:
+Alle 32 Rezepte haben eine Vorschaukarte im ToHuus-Stil (Foto oben, cremefarbene Leiste mit „ToHuus-Rezept · Plus“
+bzw. dem Gerät und dem Namen). Alles liegt in **einem** Canva-Design:
+[ToHuus Vorschaubilder Plus-Rezepte](https://www.canva.com/d/kJ6NUxgrSGznR4B). Seite 1 bis 20 sind die Plus-Rezepte,
+21 bis 32 die Küchenmaschinen-Rezepte, in der Reihenfolge der Tabellen unten.
 
-1. Im Backoffice ein Plus-Rezept öffnen, „Bild in Canva öffnen“ klicken.
-2. In Canva herunterladen (JPG reicht).
-3. Zurück im Backoffice „Foto hinzufügen“ und die Datei wählen. Das Bild bekommt automatisch das Schild „KI-Bild“.
-4. Rezept lesen, auf „Gelesen und geprüft“ stellen, dann einplanen. Ich würde drei pro Woche nehmen (Mo, Mi, Fr).
+1. In Canva „Teilen › Herunterladen“, Dateityp PNG, alle Seiten. Canva liefert ein ZIP.
+2. Im Backoffice unter *Rezepte › Vorschaubilder aus Canva* „Vorschaubilder hochladen (ZIP)“ und das ZIP wählen.
+   Seite 1 geht an das Rezept mit Seite 1 usw.; was nicht passt, steht danach unter „Nicht zugeordnet“.
+3. Rezept lesen, auf „Gelesen und geprüft“ stellen, dann einplanen. Ich würde drei pro Woche nehmen (Mo, Mi, Fr).
 
-Bild nicht gut? In Canva „Ähnliches erzeugen“ oder mir sagen, welches, dann mache ich ein neues.
+**Echte Fotos, wo es passt.** 16 Karten haben ein echtes Foto von Pexels (kostenlos, auch kommerziell, Nennung
+freiwillig – wir nennen trotzdem: unter dem Bild steht „Foto: Name / Pexels“). Bei den übrigen 16 gab es kein
+passendes Foto; dort bleibt das KI-Bild aus deinem Canva-Konto, und die Karte trägt das Schild „KI-Bild“.
+
+| Seite | Foto |
+|---|---|
+| 1 Kürbis-Linsen-Suppe | Pexels ([Foto](https://www.pexels.com/photo/soup-on-white-ceramic-soup-bowl-209540/)) |
+| 2 Ofen-Hähnchen mit Wurzelgemüse | Pexels ([Foto](https://www.pexels.com/photo/delicious-roasted-chicken-with-vegetables-in-glass-form-6210933/)) |
+| 3 Hähnchen-Wraps vom Vortag | Pexels ([Foto](https://www.pexels.com/photo/wraps-on-wooden-board-5112578/)) |
+| 7 Gemüsereis aus dem Kühlschrank | Pexels ([Foto](https://www.pexels.com/photo/fried-rice-on-the-plate-4940832/)) |
+| 10 Apfel-Zimt-Porridge | Alesia Kozik / Pexels ([Foto](https://www.pexels.com/photo/brown-and-white-food-on-black-ceramic-bowl-6072379/)) |
+| 12 Shakshuka mit Feta | Pexels (Foto 28581598) |
+| 14 Erbsensuppe aus dem Vorrat | Farhad Ibrahimzade / Pexels (Foto 8738014) |
+| 15 Pfannkuchen mit Apfelmus | Pexels (Foto 4725646) |
+| 17 Hackbällchen in Tomatensoße | Pexels (Foto 9617397) |
+| 20 Bananenbrot | Airin Party / Pexels (Foto 830894) |
+| 22 Möhren-Ingwer-Suppe | Katrin Bolovtsova / Pexels (Foto 5662122) |
+| 24 Linsen-Bolognese | Pexels ([Foto](https://www.pexels.com/photo/spaghetti-with-wagyu-bolognese-18959531/)) |
+| 25 Kartoffel-Lauch-Suppe | Valeria Boltneva / Pexels ([Foto](https://www.pexels.com/photo/soup-in-a-bowl-1707270/)) |
+| 26 Milchreis mit Kirschen | Markus Spiske / Pexels ([Foto](https://www.pexels.com/photo/food-healthy-meal-breakfast-116725/)) |
+| 27 Hummus mit Gemüsesticks | Bora C / Pexels ([Foto](https://www.pexels.com/photo/healthy-snack-with-carrots-celery-and-hummus-35440206/)) |
+| 32 Linsencurry mit Spinat | Alesia Kozik / Pexels ([Foto](https://www.pexels.com/photo/food-healthy-lunch-meal-6544376/)) |
+
+Wo nur „Pexels“ steht, kannte die Suche den Namen nicht. Wenn du ihn auf der Pexels-Seite siehst, trag ihn im Seed
+(`credit`) nach. Ein Foto passt dir nicht? In Canva auf der Seite das Bild tauschen, neu exportieren, ZIP neu hochladen.
 
 ## Die Rezepte
 

@@ -198,6 +198,8 @@ export function OperatorRecipes() {
   const [perWeek, setPerWeek] = useState(3);
   const [aiAssisted, setAiAssisted] = useState(false);
   const [dishes, setDishes] = useState('');
+  const cardsZip = useRef<HTMLInputElement>(null);
+  const [cardsDone, setCardsDone] = useState<{ updated: number; skipped: string[] } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [upload, setUpload] = useState<{ created: number; warnings: string[]; errors: { title: string | null; error: string }[] } | null>(null);
   const file = useRef<HTMLInputElement>(null);
@@ -270,6 +272,34 @@ export function OperatorRecipes() {
                   {w}
                 </div>
               ))}
+            </div>
+          )}
+        </Section>
+
+        <Section title={t('Preview cards from Canva')}>
+          <p className="small muted op-p">{t('In Canva, download the preview-card design as PNG (all pages, as ZIP) and upload the ZIP here. Page 1 goes to the recipe with page 1 and so on.')}</p>
+          <button className="btn" onClick={() => cardsZip.current?.click()}>
+            {t('Upload preview cards (ZIP)')}
+          </button>
+          <input
+            ref={cardsZip}
+            type="file"
+            accept=".zip,application/zip"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              const fd = new FormData();
+              fd.append('file', f);
+              const r = await run(() => api<{ updated: number; skipped: string[] }>('/operator/recipes/preview-zip', { form: fd }), t('Saved'));
+              if (r) setCardsDone(r);
+              e.target.value = '';
+            }}
+          />
+          {cardsDone && (
+            <div className="small" role="status">
+              {t('{n} recipes got their preview card.', { n: cardsDone.updated })}
+              {cardsDone.skipped.length > 0 && <div className="muted">{t('Not assigned')}: {cardsDone.skipped.join(', ')}</div>}
             </div>
           )}
         </Section>

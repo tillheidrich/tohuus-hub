@@ -19,6 +19,8 @@ struct CatalogCard: Decodable, Sendable, Identifiable, Hashable {
     var plus: Bool?
     /// a Plus recipe and this household has no Plus: the card only, no saving
     var locked: Bool?
+    /// a real photo: "Name / Pexels"
+    var imageCredit: String?
 }
 
 struct CatalogList: Decodable, Sendable {

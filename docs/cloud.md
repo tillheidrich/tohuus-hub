@@ -569,7 +569,13 @@ anything is published, AI pictures carry "KI-Bild".
   `POST …/:id/unpublish`, `DELETE …/:id` (not while published), `POST /api/operator/recipes/schedule`
   (`{ perWeek: 1–7 (3 = Mon/Wed/Fri 06:00 UTC), ids?, start? }` → `{ plan }` for reviewed drafts after the last
   planned date), `POST /api/operator/recipes/ai-drafts` (`{ dishes: [≤5 names] }` → Mistral via `ai.ts`, drafts with
-  `origin: 'ai_draft'` – never published automatically).
+  `origin: 'ai_draft'` – never published automatically), `POST /api/operator/recipes/preview-zip` (multipart `file` =
+  the PNG/JPG export of the Canva preview-card design as ZIP; the number before the extension of each file is the page,
+  page n goes to the recipe with `image_page = n`; kind `photo` when the recipe has an `image_credit`, else `ai` →
+  `{ updated, recipes: [{ page, id, title }], skipped }`).
+- Preview cards: the seeded Plus and kitchen-machine recipes carry `image_page` (1–32, page in the Canva design) and
+  `image_credit` (a real Pexels photo is in the card: "Name / Pexels"). Cards and detail return `imageCredit` (only
+  once an image is set), shown as "Foto: …" on web and iPhone.
 - Web: "Neu diese Woche" strip in *Kochen › Was kochen wir?* (cloud only, falls back to "Neu von ToHuus" with the latest
   six), detail sheet with origin line, allergens, ingredients, steps; iOS: the same strip in Kochen.
 - Test: `test/cloud-admin.test.ts`.

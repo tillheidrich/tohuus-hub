@@ -541,6 +541,37 @@ describe('ToHuus-Rezepte (central catalogue)', () => {
     expect((await op.del(`/api/operator/recipes/${r2.id}`)).status).toBe(200);
   });
 
+  it('maps a Canva ZIP of preview cards to the seeded recipes by page number', async () => {
+    const sharp = (await import('sharp')).default;
+    const { writeZip } = await import('../server/lib/recipe-package');
+    const png = await sharp({ create: { width: 64, height: 48, channels: 3, background: '#176b50' } }).png().toBuffer();
+    const all = (await op.get('/api/operator/recipes')).json.recipes as { id: number; title: string; imagePage: number | null; imageCredit: string | null }[];
+    const p1 = all.find((r) => r.imagePage === 1)!;
+    const p12 = all.find((r) => r.imagePage === 12)!;
+    expect(p1.title).toBe('Kürbis-Linsen-Suppe');
+    const zip = writeZip([
+      { name: 'ToHuus Vorschaubilder/1.png', data: png },
+      { name: 'ToHuus Vorschaubilder/12.png', data: png },
+      { name: 'ToHuus Vorschaubilder/99.png', data: png },
+      { name: 'notiz.txt', data: Buffer.from('x') },
+    ]);
+    const fd = new FormData();
+    fd.append('file', new Blob([new Uint8Array(zip)], { type: 'application/zip' }), 'canva.zip');
+    const up = await op.req('POST', '/api/operator/recipes/preview-zip', fd);
+    expect(up.status, up.text).toBe(200);
+    expect(up.json.updated).toBe(2);
+    expect(up.json.skipped).toEqual(expect.arrayContaining(['ToHuus Vorschaubilder/99.png', 'notiz.txt']));
+    const r1 = (await op.get(`/api/operator/recipes/${p1.id}`)).json;
+    expect(r1.image).toBeTruthy();
+    // a real Pexels photo is in this card: shown as photo with the credit
+    expect(r1).toMatchObject({ imageKind: 'photo', imageCredit: 'Pexels' });
+    expect((await op.get(`/api/operator/recipes/${p12.id}`)).json.image).toBeTruthy();
+    // not a zip
+    const bad = new FormData();
+    bad.append('file', new Blob([png], { type: 'image/png' }), 'x.png');
+    expect((await op.req('POST', '/api/operator/recipes/preview-zip', bad)).status).toBe(400);
+  });
+
   it('AI drafts land in the queue as drafts, never published', async () => {
     aiCalls.length = 0;
     ai.setAiFetch(async (url, init) => {

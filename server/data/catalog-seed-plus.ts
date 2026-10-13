@@ -12,6 +12,8 @@ import type { SeedRecipe } from './catalog-seed.js';
 export interface PlusSeedRecipe extends SeedRecipe {
   /** Canva media id of the AI picture made for this recipe (null until made) */
   canva: string | null;
+  /** a real photo in the preview card (Pexels): who took it – null = the AI picture is used */
+  credit?: string | null;
 }
 
 export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
@@ -30,6 +32,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Kürbiskerne in einer trockenen Pfanne rösten und darüberstreuen. Die Hälfte hält sich gut zwei Tage im Kühlschrank.',
     ],
     canva: 'MAHX5mr8bd8',
+    credit: 'Pexels',
   },
   {
     title: 'Ofen-Hähnchen mit Wurzelgemüse',
@@ -46,6 +49,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Übriges Fleisch vom Knochen lösen und abgedeckt in den Kühlschrank stellen, am nächsten Tag aufbrauchen.',
     ],
     canva: 'MAHX5mLS8q8',
+    credit: 'Pexels',
   },
   {
     title: 'Hähnchen-Wraps vom Vortag',
@@ -61,6 +65,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Tortillas kurz in der trockenen Pfanne wärmen, mit Joghurt bestreichen, mit Salat, Gemüse und Hähnchen füllen und aufrollen.',
     ],
     canva: 'MAHX5u-nxFs',
+    credit: 'Pexels',
   },
   {
     title: 'Grünkohl-Kartoffel-Pfanne mit Spiegelei',
@@ -122,6 +127,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Mit Sojasoße und Frühlingszwiebeln abschmecken. Gekochten Reis nicht länger als einen Tag aufheben und immer gut durcherhitzen.',
     ],
     canva: 'MAHX5uhc90w',
+    credit: 'Pexels',
   },
   {
     title: 'Nudelauflauf mit Brokkoli und Resten',
@@ -169,6 +175,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Mit restlichem Apfel, Ahornsirup und Walnüssen servieren.',
     ],
     canva: 'MAHX5gWNV8g',
+    credit: 'Alesia Kozik / Pexels',
   },
   {
     title: 'Kartoffelsuppe mit Würstchen',
@@ -199,6 +206,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Feta darüberbröseln, mit Petersilie bestreuen und in der Pfanne servieren.',
     ],
     canva: 'MAHX5glVjJ8',
+    credit: 'Pexels',
   },
   {
     title: 'Gnocchi-Blech mit Paprika und Mozzarella',
@@ -229,6 +237,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Kasseler oder Räuchertofu würfeln und 5 Minuten mit erhitzen. Mit Majoran, Salz und Pfeffer abschmecken.',
     ],
     canva: 'MAHX5uZACzE',
+    credit: 'Farhad Ibrahimzade / Pexels',
   },
   {
     title: 'Pfannkuchen mit Apfelmus',
@@ -244,6 +253,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Mit Apfelmus servieren.',
     ],
     canva: 'MAHX5nz-YSY',
+    credit: 'Pexels',
   },
   {
     title: 'Bratkartoffeln mit Ei und Gurkensalat',
@@ -275,6 +285,7 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'Bällchen in die Soße legen und zugedeckt 15 Minuten köcheln, bis sie durchgegart sind: innen nicht mehr rosa. Dazu Nudeln oder Reis kochen.',
     ],
     canva: 'MAHX5j9hOYE',
+    credit: 'Pexels',
   },
   {
     title: 'Rote-Bete-Salat mit Feta und Walnüssen',
@@ -321,5 +332,6 @@ export const CATALOG_SEED_PLUS: PlusSeedRecipe[] = [
       'In der Form 10 Minuten abkühlen lassen, dann herausnehmen. Hält sich eingepackt drei Tage.',
     ],
     canva: 'MAHX5oMOVOY',
+    credit: 'Airin Party / Pexels',
   },
 ];

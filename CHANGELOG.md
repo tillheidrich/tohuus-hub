@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Preview cards for Plus recipes**: one Canva design with a card per recipe (real Pexels photo where one fits, otherwise the AI picture), back office upload of the Canva ZIP (`POST /api/operator/recipes/preview-zip`, page → recipe), photo credit (`imageCredit`, "Foto: …") on web and iPhone.
+
 - **Kitchen-machine recipes**: 12 Plus drafts, four each for Thermomix, Monsieur Cuisine and Cookit, with the settings on every step and an AI picture in Canva.
 
 - **Plus recipes**: 20 new ToHuus-Rezepte for autumn and winter (drafts, each with an AI picture in Canva for the back office), a Plus tier in the catalogue (`plus`/`locked` on cards, 402 `plusRecipes` on open and save), "Plus" badge and "Gehört zu Plus" on web and iPhone, back office toggle.

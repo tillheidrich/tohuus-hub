@@ -64,6 +64,7 @@ export const CATALOG_SEED_DEVICES: DeviceSeedRecipe[] = [
       'Mit Salz und Pfeffer abschmecken.',
     ],
     canva: 'MAHX565zdyY',
+    credit: 'Katrin Bolovtsova / Pexels',
   },
   {
     machine: 'Thermomix',
@@ -99,6 +100,7 @@ export const CATALOG_SEED_DEVICES: DeviceSeedRecipe[] = [
       'Soße mit Salz und Pfeffer abschmecken und mit den Nudeln servieren.',
     ],
     canva: 'MAHX53DxLeo',
+    credit: 'Pexels',
   },
 
   // ------------------------------------------------------------------ Monsieur Cuisine (Lidl)
@@ -118,6 +120,7 @@ export const CATALOG_SEED_DEVICES: DeviceSeedRecipe[] = [
       'Mit Salz, Pfeffer und Muskat abschmecken und mit Schnittlauch servieren.',
     ],
     canva: 'MAHX57q7VGA',
+    credit: 'Valeria Boltneva / Pexels',
   },
   {
     machine: 'Monsieur Cuisine',
@@ -134,6 +137,7 @@ export const CATALOG_SEED_DEVICES: DeviceSeedRecipe[] = [
       'Milchreis 5 Minuten ruhen lassen, dann mit den Kirschen servieren.',
     ],
     canva: 'MAHX5yPeM3o',
+    credit: 'Markus Spiske / Pexels',
   },
   {
     machine: 'Monsieur Cuisine',
@@ -150,6 +154,7 @@ export const CATALOG_SEED_DEVICES: DeviceSeedRecipe[] = [
       'Gemüse in Sticks schneiden und mit dem Hummus servieren.',
     ],
     canva: 'MAHX56l8pII',
+    credit: 'Bora C / Pexels',
   },
   {
     machine: 'Monsieur Cuisine',
@@ -234,5 +239,6 @@ export const CATALOG_SEED_DEVICES: DeviceSeedRecipe[] = [
       'Inzwischen Reis nach Packungsangabe kochen. Curry mit Salz abschmecken und mit Reis servieren.',
     ],
     canva: 'MAHX50PuHzA',
+    credit: 'Alesia Kozik / Pexels',
   },
 ];

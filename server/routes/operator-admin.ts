@@ -29,6 +29,7 @@ import multer from 'multer';
 import { addCatalogRecipe, adminRecipe, catalogDb, draftRecipesWithAi, getCatalogRow, scheduleReviewed, storeCatalogImage, type CatalogRow } from '../lib/cloud-recipes.js';
 import { looksLikeImage } from '../lib/images.js';
 import { detectAny, detectAnyText, PACKAGE_LIMITS } from '../lib/recipe-package.js';
+import { isZip, readZip } from '../lib/recipe-formats.js';
 import { RUNTIME_KEYS, SECRET_KEYS, isRuntimeKey, lastFour, runtimeSetting, runtimeSettingsView, setRuntimeSetting, supportEmail, type RuntimeKey } from '../lib/runtime-settings.js';
 
 export function operatorAdmin(fresh: import('express').RequestHandler) {
@@ -296,6 +297,42 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     catalogDb().prepare(`UPDATE catalog_recipes SET image = ?, image_kind = ?, updated_at = datetime('now') WHERE id = ?`).run(name, kind, row.id);
     audit(who(req), 'recipes.photo', `recipe:${row.id}`, { kind });
     res.json(adminRecipe(getCatalogRow(row.id)!));
+  });
+
+  /**
+   * Preview cards from Canva in one go: the ZIP Canva exports from the preview-card design ("1.png", "2.png" …, also
+   * inside a folder). Page N goes to the recipe with `image_page = N`; a recipe with a photographer (image_credit)
+   * becomes a photo, the others an AI picture. Pages without a recipe are reported, nothing else changes.
+   */
+  r.post('/operator/recipes/preview-zip', fresh, upload.single('file'), async (req, res) => {
+    if (!req.file || !isZip(req.file.buffer)) return void res.status(400).json({ error: 'not a zip' });
+    let entries;
+    try {
+      entries = readZip(req.file.buffer);
+    } catch (e) {
+      return void res.status(422).json({ error: (e as Error).message });
+    }
+    const byPage = new Map((catalogDb().prepare('SELECT * FROM catalog_recipes WHERE image_page IS NOT NULL').all() as CatalogRow[]).map((r) => [r.image_page!, r]));
+    const set = catalogDb().prepare(`UPDATE catalog_recipes SET image = ?, image_kind = ?, updated_at = datetime('now') WHERE id = ?`);
+    const done: { page: number; id: number; title: string }[] = [];
+    const skipped: string[] = [];
+    for (const e of entries) {
+      const m = /(?:^|[^0-9])(\d{1,3})\.(png|jpe?g|webp)$/i.exec(e.name);
+      const row = m ? byPage.get(Number(m[1])) : undefined;
+      if (!m || !row) {
+        if (!e.name.endsWith('/')) skipped.push(e.name.slice(0, 80));
+        continue;
+      }
+      const buf = e.data();
+      if (!looksLikeImage(buf)) {
+        skipped.push(e.name.slice(0, 80));
+        continue;
+      }
+      set.run(await storeCatalogImage(buf), row.image_credit ? 'photo' : 'ai', row.id);
+      done.push({ page: Number(m[1]), id: row.id, title: row.title });
+    }
+    audit(who(req), 'recipes.preview-zip', null, { pages: done.length, skipped: skipped.length });
+    res.json({ updated: done.length, recipes: done, skipped: skipped.slice(0, 20) });
   });
 
   r.post('/operator/recipes/:id/publish', fresh, (req, res) => {

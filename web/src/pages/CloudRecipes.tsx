@@ -28,6 +28,8 @@ export interface CatalogCard {
   plus?: boolean;
   /** Plus recipe and this household has no Plus: card only */
   locked?: boolean;
+  /** real photo: "Name / Pexels" */
+  imageCredit?: string | null;
 }
 interface CatalogRecipe extends CatalogCard {
   ingredients: { text: string; section?: string | null }[];
@@ -158,6 +160,7 @@ function CatalogSheet({ id, card, saved, onClose, onSave, busy }: { id: number |
         <div className="stack catalog-detail">
           <Picture r={card} />
           {card.description && <p className="op-p">{card.description}</p>}
+          {card.imageCredit && <p className="small muted">{t('Photo: {credit}', { credit: card.imageCredit })}</p>}
           <p className="small muted">{t('This recipe is part of Plus. With Plus you get new seasonal recipes with pictures, the week plan from what is at home and more.')}</p>
         </div>
       </Sheet>
@@ -189,6 +192,7 @@ function CatalogSheet({ id, card, saved, onClose, onSave, busy }: { id: number |
           <p className="small muted catalog-origin">
             {originLine(r)}
             {r.license && r.license !== 'ToHuus' ? ` · ${r.license}${r.sourceAuthors ? ` (${r.sourceAuthors})` : ''}` : ''}
+            {r.imageCredit ? ` · ${t('Photo: {credit}', { credit: r.imageCredit })}` : ''}
           </p>
           {r.allergens.length > 0 && (
             <p className="small">

@@ -74,6 +74,9 @@ struct CatalogNewSection: View {
             if let m = c.timeMin { Text(LF("%d min", m)).font(.caption).foregroundStyle(Theme.ink2) }
             Text(c.aiAssisted == true ? L("Written with AI, checked by us") : L("Checked by us"))
                 .font(.caption2).foregroundStyle(Theme.ink3).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            if let credit = c.imageCredit {
+                Text(LF("Photo: %@", credit)).font(.caption2).foregroundStyle(Theme.ink3).lineLimit(1)
+            }
             if c.locked == true {
                 // a Plus recipe without Plus: the plans instead of saving
                 Button { app.showPaywall = true } label: { Label(L("Part of Plus"), systemImage: "lock") }
