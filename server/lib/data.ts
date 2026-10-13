@@ -4,6 +4,8 @@
  */
 import { db, getSetting, onDbReady } from '../db.js';
 import { randomToken, sha256 } from './auth.js';
+import { mayUseList, parseIds } from './list-privacy.js';
+import { wishExportFilter } from './wish-policy.js';
 
 // ---------------------------------------------------------------- schema
 
@@ -87,6 +89,12 @@ function personalFilter(name: string, viewer: number | null): ((r: Record<string
     return (r) => own.has(String(r.conversation_id));
   }
   if (name === 'ai_memory') return (r) => r.private_to == null || (viewer != null && r.private_to === viewer);
+  // private shopping rows and private lists (share-core.ts, list-privacy.ts): only for the people who see them
+  if (name === 'share_items')
+    return (r) => r.visibility !== 'private' || r.owner_id == null || (viewer != null && (r.owner_id === viewer || parseIds(String(r.share_with ?? '[]')).includes(viewer)));
+  if (name === 'shopping_lists') return (r) => mayUseList(r as never, viewer);
+  const wish = wishExportFilter(name, viewer);
+  if (wish) return wish;
   return null;
 }
 

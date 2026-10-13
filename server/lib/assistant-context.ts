@@ -24,7 +24,7 @@ export interface ContextViewer {
 }
 
 /** What a message is about – decides which context lines and tools the model gets (smaller prompts). */
-export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests';
+export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests' | 'wishes';
 /** what an unclear message gets; stock, house and guests come from the screen (assistant-areas.ts) or clear words */
 export const ALL_TOPICS: Topic[] = ['shopping', 'cooking', 'money'];
 
@@ -37,6 +37,8 @@ export function topicsOf(message: string): Topic[] {
   if (/bald weg|muss weg|läuft ab|laeuft ab|abgelaufen|kühlschrank|kuehlschrank|vorrat|use soon|expir|fridge|pantry/.test(m)) out.add('stock');
   if (/alexa|google home|hey siri|siri\b|home assistant|babysitter|heizung|rollladen|rollläden|sicherung|wasserhaupthahn|müll(abfuhr|tonne)|wlan|wifi|fernbedienung|hausinfo|house info/.test(m)) out.add('house');
   if (/gäste|gaeste|party|feier|geburtstag|grillen|guests|birthday/.test(m)) out.add('guests');
+  // wish lists / Merkliste (assistant-wishes.ts): "merk dir die Kekse aus dem Artikel", "was wünscht sich Mika?"
+  if (/merkliste|wunsch|wünsch|wuensch|geschenk|schenken|wishlist|\bwish|\bgift|merk dir\b.*(artikel|link|https?:)|save (this|it) for later/.test(m)) out.add('wishes');
   return out.size ? [...out] : [...ALL_TOPICS];
 }
 

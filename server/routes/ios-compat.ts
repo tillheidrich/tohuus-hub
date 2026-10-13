@@ -45,11 +45,11 @@ r.post('/imports/text', requireAuth, (req, res) => {
   res.json({ kind: 'list', items: parseListLines(lines), source: 'ocr-device' });
 });
 
-r.get('/shop/lists', requireAuth, (_req, res) => res.json(listLists().map((l) => ({ id: l.id, name: l.name, open: l.open, kind: l.kind }))));
+r.get('/shop/lists', requireAuth, (req, res) => res.json(listLists({ userId: req.actor?.userId ?? null }).map((l) => ({ id: l.id, name: l.name, open: l.open, kind: l.kind, visibility: l.visibility }))));
 r.post('/shop/lists', requireAuth, (req, res) => {
   if (req.actor?.houseGuest) return void res.status(403).json({ error: 'forbidden' });
   const { name } = z.object({ name: z.string().trim().min(1).max(60) }).parse(req.body ?? {});
-  const l = createList({ name });
+  const l = createList({ name }, { userId: req.actor?.userId ?? null });
   emit('shopping');
   res.json({ id: l.id, name: l.name, open: l.open, kind: l.kind });
 });

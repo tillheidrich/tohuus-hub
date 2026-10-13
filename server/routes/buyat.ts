@@ -2,10 +2,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../lib/auth.js';
+import { privateRowGuard } from '../lib/lists.js';
 import { BUY_AT_MAX, buyAtSuggestions, setItemBuyAt, setProductBuyAt } from '../lib/buyat.js';
 
 export const r = Router();
 r.use(requireAuth);
+// rows on a private list don't exist for anyone outside it (list-privacy.ts)
+r.use(privateRowGuard);
 
 const list = z.object({ buy_at: z.array(z.string().trim().max(40)).max(BUY_AT_MAX) });
 const fail = (res: any, e: unknown) => res.status((e as any).status ?? 500).json({ error: (e as Error).message });

@@ -340,6 +340,20 @@ export function addToShopping(input: {
     const open = db.prepare(`SELECT id FROM shopping_items WHERE lower(text) = lower(?) AND checked_at IS NULL ${sameList}`).get(input.text, ...listArgs) as { id: number } | undefined;
     if (open) return { id: open.id, created: false };
   }
+  if (listId) {
+    // a private list (list-privacy.ts) keeps its rows masked – compare with the real names behind them
+    try {
+      const open = db
+        .prepare(
+          `SELECT s.id FROM shopping_items s JOIN share_items x ON x.item_id = s.id
+           WHERE s.list_id = ? AND s.checked_at IS NULL AND x.from_list IS NOT NULL AND (${input.productId ? 'x.real_product_id = ?' : 'lower(x.real_text) = lower(?)'}) LIMIT 1`,
+        )
+        .get(listId, input.productId || input.text) as { id: number } | undefined;
+      if (open) return { id: open.id, created: false };
+    } catch {
+      /* share tables not there yet (very early start) */
+    }
+  }
   const info = db
     .prepare('INSERT INTO shopping_items (product_id, text, qty, note, source, added_by, origin_detail, list_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
     .run(input.productId ?? null, input.text, input.qty ?? null, input.note ?? null, input.source ?? 'manual', input.addedBy ?? null, input.origin ? JSON.stringify(input.origin) : null, listId);

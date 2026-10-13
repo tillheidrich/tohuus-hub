@@ -37,8 +37,10 @@ export function parseIntent(input: string): Intent {
   if (!text) return { kind: 'unknown' };
   let m: RegExpMatchArray | null;
 
-  // remember / forget
-  if ((m = text.match(/^(?:bitte\s+)?(?:merk(?:e)?\s+dir|notier(?:e)?\s+dir|remember(?:\s+that)?|note\s+that)[:,]?\s+(.+)$/i))) return { kind: 'remember', text: clean(m[1].replace(/^(?:dass|that)\s+/i, '')) };
+  // remember / forget – a wish or a link from an article ("merk dir die Kekse aus dem Artikel") is for the wish list,
+  // which needs the model (assistant-wishes.ts), not a household fact
+  const wishy = /merkliste|wunsch|wünsch|geschenk|artikel|https?:\/\/|\blink\b|wishlist|\bwish/i.test(text);
+  if (!wishy && (m = text.match(/^(?:bitte\s+)?(?:merk(?:e)?\s+dir|notier(?:e)?\s+dir|remember(?:\s+that)?|note\s+that)[:,]?\s+(.+)$/i))) return { kind: 'remember', text: clean(m[1].replace(/^(?:dass|that)\s+/i, '')) };
   if ((m = text.match(/^(?:bitte\s+)?(?:vergiss|forget)[:,]?\s+(?:dass\s+|that\s+)?(.+)$/i))) return { kind: 'forget', text: clean(m[1]) };
 
   // a purchase: "Hab (gestern) bei Aldi Milch, Eier und Brot für 12,40 gekauft"

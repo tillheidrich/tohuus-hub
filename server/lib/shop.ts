@@ -27,7 +27,7 @@ import {
 import { ScopedMap } from './tenancy.js';
 import { decorateItems } from './list2.js';
 import './list-schema.js';
-import { estimate, listLists } from './lists.js';
+import { canUseList, estimate, listLists } from './lists.js';
 
 export * from './shopparse.js';
 
@@ -345,7 +345,7 @@ export function storeView(storeId?: number | null, viewer?: Viewer, opts: { list
   const listId = opts.listId ?? 0;
   const all = shoppingItems(viewer);
   // the main list also carries the lists for a household somebody looks after ("für Oma"), as their own section
-  const care = listId === 0 ? new Map(listLists().filter((l) => l.kind === 'care').map((l) => [l.id, l])) : new Map();
+  const care = listId === 0 ? new Map(listLists(viewer).filter((l) => l.kind === 'care').map((l) => [l.id, l])) : new Map();
   const items = (listId === 'all' ? all : all.filter((i) => (i.list_id ?? 0) === listId || care.has(i.list_id ?? -1))).map((i) =>
     i.list_id && care.has(i.list_id) ? { ...i, section: `list:${i.list_id}` as Section } : i,
   );
@@ -377,7 +377,7 @@ export function storeView(storeId?: number | null, viewer?: Viewer, opts: { list
     done,
     open: open.length,
     listId,
-    lists: listLists(),
+    lists: listLists(viewer),
     // expected total from the latest receipt prices; rows without a price are counted, never guessed (lists.ts)
     estimate: estimate(store ? here : open),
     serverTime: new Date().toISOString(),
@@ -573,6 +573,7 @@ export function replayOps(ops: OfflineOp[], actor: { name: string; userId?: numb
     try {
       const exists = (id: number) => Boolean(db.prepare('SELECT 1 FROM shopping_items WHERE id = ?').get(id));
       if (op.type === 'add') {
+        if (!canUseList(op.list_id ?? null, actor.userId ?? null)) throw new Error('list not found');
         if (op.product_id) addLines([{ name: op.text, qty: op.qty ?? null, product_id: op.product_id }], actor.name, 'manual', op.list_id ?? null);
         else quickAdd(op.text, actor.name, 'manual', op.list_id ?? null);
       } else if (op.type === 'basket') {

@@ -48,7 +48,8 @@ import { buildExport, showNamesOnLogin } from '../lib/data.js';
 import { exportCodes } from '../lib/house-guide.js';
 import { t } from '../i18n.js';
 import { setDateKind } from '../lib/retail.js';
-import { applyShareView, notPrivate } from '../lib/share-core.js';
+import { applyShareView, isMasked, notPrivate } from '../lib/share-core.js';
+import { canUseList, privateRowGuard } from '../lib/lists.js';
 import { uploadQuota } from '../lib/plans.js';
 import { clearChecked, removeItem, tickItem, withOrigin } from '../lib/shopping-trust.js';
 
@@ -100,6 +101,8 @@ r.get('/me', (req, res) => {
 });
 
 r.use(requireAuth);
+// rows on a private list don't exist for anyone outside it (list-privacy.ts)
+r.use(privateRowGuard);
 
 r.get('/events', (req, res) => addClient(res));
 
@@ -428,8 +431,10 @@ r.post('/shopping', (req, res) => {
     const m = matchProduct(b.text);
     if (m && m.score >= 0.8) productId = m.productId;
   }
+  if (!canUseList(b.list_id ?? null, req.actor?.userId ?? null)) return void res.status(404).json({ error: t('List not found') });
   const out = addToShopping({ productId, text: b.text, qty: b.qty, note: b.note, source: 'manual', addedBy: actorName(req), listId: b.list_id ?? null });
-  if (out.created)
+  // a row on a private list is nobody else's business – no announcement (list-privacy.ts)
+  if (out.created && !isMasked(out.id))
     void notify({ event: 'shopping.added', title: t('Shopping list: {text}', { text: b.text }), message: t('{actor} added “{text}” to the list.', { actor: actorName(req), text: b.text }), path: '/einkauf' });
   res.json(out);
 });

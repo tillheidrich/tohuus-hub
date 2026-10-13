@@ -62,6 +62,7 @@ import { AiError } from './lib/ai.js';
 import { r as list2Routes, pub as list2Public } from './routes/list2.js';
 import { caldav } from './lib/caldav.js';
 import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
+import { r as wishRoutes } from './routes/wishes.js';
 import { r as factsRoutes } from './routes/facts.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
@@ -214,6 +215,7 @@ app.use('/api', list2Routes);
 // names the iPhone app 0.2 was built against (docs/ios-api-0.2.md) – thin aliases
 app.use('/api', iosCompat);
 app.use('/api', houseGuideRoutes);
+app.use('/api', wishRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
