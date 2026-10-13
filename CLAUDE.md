@@ -2,7 +2,7 @@
 
 ToHuus is the shopping and household assistant of a home: it remembers what is missing (Einkauf), what to cook from what is there (Kochen) and where the money for food and household goes (Geld). It is **not** a family calendar, chat, task manager, points system, nutrition/health log or tracking tool. Strategy source: Outline wiki, collection "ToHuus Hub / Fredirando" (newest handover pages first).
 
-Status of 13 Oct 2026 and the open work: [docs/status-2026-10-13.md](docs/status-2026-10-13.md); latest handover for Till: [docs/uebergabe-2026-10-13-abend.md](docs/uebergabe-2026-10-13-abend.md).
+Status of 13 Oct 2026 and the open work: [docs/status-2026-10-13.md](docs/status-2026-10-13.md); latest handover: [docs/uebergabe-2026-10-14-nacht.md](docs/uebergabe-2026-10-14-nacht.md) (before: docs/uebergabe-2026-10-13-abend.md).
 
 ## Repo map
 
