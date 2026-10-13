@@ -16,6 +16,7 @@ import { SwapRulesCard } from './RecipeVariant';
 import { RecipePackageSheet } from './RecipePackage';
 import { CookidooSheet, type CookidooDraft } from './CookidooSheet';
 import { HowTo } from '../help';
+import { CatalogNew } from './CloudRecipes';
 
 type View = 'ideas' | 'week' | 'recipes';
 const VIEW_KEY = 'sw.kitchen.view';
@@ -153,6 +154,7 @@ function IdeasView({ onAddRecipe }: { onAddRecipe: () => void }) {
   return (
     <>
       <CookIdeas />
+      <CatalogNew />
       <WhatToEatPanel onAddRecipe={onAddRecipe} />
       <h2 style={{ margin: '28px 0 12px' }}>{t('Browse ideas')}</h2>
       <div className="row between wrap" style={{ marginBottom: 14 }}>

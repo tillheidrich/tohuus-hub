@@ -1,0 +1,116 @@
+/* ToHuus-Rezepte in Kochen: a calm strip like "Heute kochbar"; placeholder = dish name on the brand tint */
+.catalog-new {
+  margin: 22px 0 6px;
+}
+.catalog-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 12px;
+}
+.catalog-head h2 {
+  margin: 0;
+}
+.catalog-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 160px;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.catalog-card {
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.catalog-card b {
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.catalog-card .meta {
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+}
+.catalog-card .btn {
+  align-self: flex-start;
+  min-height: 44px;
+}
+.catalog-open {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.catalog-open:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.dish-pic {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--tint-2);
+}
+.dish-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.dish-ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px;
+  color: var(--tint-ink);
+  text-align: left;
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--primary) 22%, transparent) 0 38%, transparent 39%),
+    var(--tint-2);
+}
+.dish-ph span {
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.dish-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.catalog-detail .dish-pic {
+  max-width: 420px;
+}
+.catalog-detail h3 {
+  margin: 8px 0 0;
+}
+.catalog-ing,
+.catalog-steps {
+  margin: 0;
+  padding-left: 1.25em;
+  display: grid;
+  gap: 6px;
+}
+.catalog-origin {
+  margin: 0;
+}

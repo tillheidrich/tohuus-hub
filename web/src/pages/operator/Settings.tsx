@@ -137,7 +137,7 @@ export function OperatorSettings() {
           label={t('Sign-ups')}
           value={d.signupMode}
           options={[
-            ['open', t('Open')],
+            ['open', t('Open for everyone')],
             ['invite', t('With access code')],
             ['closed', t('Closed')],
           ]}

@@ -46,7 +46,7 @@ export function OperatorBeta() {
   return (
     <div className="stack op-gap">
       <div className="card pad op-banner" role="status">
-        <strong>{d.mode === 'invite' ? t('With access code') : d.mode === 'open' ? t('Open') : t('Closed')}</strong> · {modeText}{' '}
+        <strong>{d.mode === 'invite' ? t('With access code') : d.mode === 'open' ? t('Open for everyone') : t('Closed')}</strong> · {modeText}{' '}
         <span className="small muted">{t('Change it under Settings.')}</span>
       </div>
 
