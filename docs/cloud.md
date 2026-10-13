@@ -202,7 +202,8 @@ app as a toast). Self-hosted servers have everything; the trial and the beta gif
 | `weekPlanFromPantry` | Plus | `POST /api/plan/autofill`, HA `fill_week`, MCP `fill_week` |
 | `monthlyAnalysis` | Plus | assistant `money_compare` |
 | receipt address | Plus | `GET /api/mail/address`, inbound mails (`docs/mail-inbox.md`) |
-| `connectedHouseholds`, `substituteFromStock`, `importQuota` | – | only plan text and limits so far; no separate endpoint exists yet |
+| `connectedHouseholds` | Haushalt | new "Mitversorgen" lists (`kind: 'care'`, create or change to care); existing ones keep working |
+| `substituteFromStock`, `importQuota` | – | only plan text and limits so far; no separate endpoint exists yet |
 
 **Lifetime (optional)**: the non-consumable `de.heidrichdigital.tohuus.plus.lifetime` (`LIFETIME_PRODUCT` in
 `plans.ts`) gives Plus without expiry. The paywall shows it only when the product exists in App Store Connect, so it

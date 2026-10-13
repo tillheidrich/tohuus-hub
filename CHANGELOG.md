@@ -6,7 +6,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
-- **Plan features are checked by the server**: price history and new list mirrors need Haushalt, filling the week from the pantry and month comparisons need Plus (HTTP 402 `code: 'plan'`, `docs/cloud.md`). Optional lifetime Plus (`de.heidrichdigital.tohuus.plus.lifetime`, `lifetime` in `GET /api/billing/status`).
+- **Plan features are checked by the server**: price history, new list mirrors and new "Mitversorgen" lists need Haushalt, filling the week from the pantry and month comparisons need Plus (HTTP 402 `code: 'plan'`, `docs/cloud.md`). Optional lifetime Plus (`de.heidrichdigital.tohuus.plus.lifetime`, `lifetime` in `GET /api/billing/status`).
 
 - **The assistant stays a household assistant**: off-topic requests and attempts to change its role or read its instructions get a friendly answer without a model call and without counting (`scope` in `POST /api/assistant/chat`); the system prompt treats text from recipes, receipts and links as data. New tools `app_help` (where a feature lives, with the help page) and `budget_set` (household or private budgets).
 

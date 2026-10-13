@@ -97,9 +97,15 @@ describe('plan features on the server', () => {
     expect((await autofill()).json).toMatchObject({ feature: 'weekPlanFromPantry', plan: 'plus' });
     expect((await prices()).json).toMatchObject({ feature: 'priceHistory', plan: 'haushalt' });
     expect((await autofill()).json.error).toMatch(/Plus/);
+    // Mitversorgen (a care list) is Haushalt and up
+    const care = await c.post('/api/list/lists', { name: 'Für Oma', kind: 'care' });
+    expect(care.status, care.text).toBe(402);
+    expect(care.json).toMatchObject({ code: 'plan', feature: 'connectedHouseholds' });
+    expect((await c.post('/api/list/lists', { name: 'Baumarkt', kind: 'store' })).status).toBe(200);
     setPlan(id, 'haushalt');
     expect((await prices()).status).not.toBe(402);
     expect((await caldav()).status).toBe(200);
+    expect((await c.post('/api/list/lists', { name: 'Für Oma', kind: 'care' })).status).toBe(200);
     expect((await autofill()).status).toBe(402);
     setPlan(id, 'plus');
     expect((await autofill()).status).toBe(200);

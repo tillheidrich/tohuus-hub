@@ -18,7 +18,7 @@ import { localeOf } from '../languages.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { getProduct, matchProduct } from './catalog.js';
-import { historySince } from './limits.js';
+import { assertFeature, historySince } from './limits.js';
 import { lastBoughtFor } from './list2.js';
 import { lastPurchase, purchaseEvents, rhythmList, sensitiveProductIds } from './rhythm.js';
 import { fmtWhen } from './shopping-trust.js';
@@ -113,6 +113,8 @@ export interface ListPrivacyInput {
 export function createList(input: { name: string; kind?: ListKind; note?: string | null } & ListPrivacyInput, viewer?: ListViewer): ShoppingList {
   const name = input.name.trim().slice(0, 60);
   if (!name) throw err(t('The name must not be empty'));
+  // Mitversorgen (a list for a household someone looks after): Haushalt plan and up in the cloud
+  if (input.kind === 'care') assertFeature('connectedHouseholds');
   const uid = viewer?.userId ?? null;
   const visibility = input.visibility ?? 'household';
   if (visibility !== 'household' && (!uid || isGuestUser(uid))) throw err(t('Only members with an account can keep a list to themselves.'), 400);
@@ -134,6 +136,7 @@ export function updateList(id: number, p: { name?: string; note?: string | null;
   if (!row || !mayUseList(row, uid)) throw err(t('List not found'), 404);
   const name = p.name !== undefined ? p.name.trim().slice(0, 60) : row.name;
   if (!name) throw err(t('The name must not be empty'));
+  if (p.kind === 'care' && row.kind !== 'care') assertFeature('connectedHouseholds');
   db.transaction(() => {
     db.prepare('UPDATE shopping_lists SET name = ?, note = ?, kind = ? WHERE id = ?').run(name, p.note === undefined ? row.note : p.note?.trim().slice(0, 1000) || null, p.kind ?? row.kind, id);
     if (p.visibility !== undefined || p.share_with !== undefined) {

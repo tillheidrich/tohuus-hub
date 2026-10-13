@@ -75,13 +75,14 @@ Kontrastprüfung grün.
 - Bisher hat nur die App geprüft, welche Funktionen ein Plan hat. Jetzt antwortet der Server ohne passenden Plan
   mit HTTP 402 und einer freundlichen Meldung („Das gehört zu Plus. Du kannst jederzeit unter Einstellungen › Abo
   wechseln.“). Die Tabelle steht in [cloud.md](cloud.md) unter „Plans and quotas“:
-  - **Ab Haushalt**: Preisverlauf, neue Spiegelungen zu Apple Erinnerungen oder Nextcloud, die volle Historie.
+  - **Ab Haushalt**: Preisverlauf, neue Spiegelungen zu Apple Erinnerungen oder Nextcloud, neue Mitversorgen-Listen
+    (verbundene Haushalte), die volle Historie.
   - **Nur Plus**: die Woche aus dem Vorrat füllen (App, Home Assistant, MCP), Monatsvergleich im Assistenten und die
     Bon-Adresse.
 - Probezeit und Beta-Geschenk zählen wie Plus. Solange `beta.gift` auf Plus steht, merkt also niemand etwas. Erst
   wenn du das Geschenk abschaltest, greifen die Pläne.
-- **Noch ohne eigene Funktion** (nur im Plantext): „verbundene Haushalte“, „Ersatz aus dem Vorrat“. Entweder bauen
-  oder aus dem Plantext nehmen, bevor der App Store öffentlich wird.
+- **Noch ohne eigene Prüfung**: „Ersatz aus dem Vorrat“ steht nur in den Plan-Limits, nicht auf der Website. Entweder
+  einer Funktion zuordnen oder streichen.
 
 ### Lifetime (optional) und Codes für Beta-Tester
 
@@ -177,7 +178,7 @@ DNS für die Bon-Adresse (Cloudflare, Proxy aus): `bons.tohuus-app.de MX 10 mail
 - **Beispiel-Mails** für die Bon-Adresse (siehe oben).
 - **Echte geteilte Links** aus Monsieur Cuisine, Cookit und Kenwood, damit die Erkennung sicher passt.
 - **`APP_GUIDE` gegenlesen**: Stimmen die Menüwege? Was fehlt dir?
-- **Plantexte**: „verbundene Haushalte“ und „Ersatz aus dem Vorrat“ bauen oder streichen.
+- **Plantext**: „Ersatz aus dem Vorrat“ einer Funktion zuordnen oder streichen.
 - **Assistent prüfen mit einem echten Modell**: `node scripts/assistant-eval.mjs` gegen OpenRouter. Dazu ein paar
   Missbrauchsversuche selbst ausprobieren. Was durchrutscht, schick mir, dann kommt es in den Filter oder in die
   Tests.

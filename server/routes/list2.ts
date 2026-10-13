@@ -37,7 +37,8 @@ r.use(privateRowGuard);
 const actorName = (req: any): string => req.actor?.name ?? 'unknown';
 const userId = (req: any): number | null => req.actor?.userId ?? null;
 const num = (v: unknown) => Number(v);
-const fail = (res: any, e: unknown) => res.status((e as any).status ?? 500).json({ error: (e as Error).message });
+// errors with their own body (plan limits: code, feature, plan) keep it
+const fail = (res: any, e: unknown) => res.status((e as any).status ?? 500).json(typeof (e as any).toJSON === 'function' ? (e as any).toJSON() : { error: (e as Error).message });
 const wrap = (fn: (req: any, res: any) => unknown) => async (req: any, res: any) => {
   try {
     const out = await fn(req, res);
