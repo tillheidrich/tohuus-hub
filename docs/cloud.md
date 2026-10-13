@@ -44,7 +44,8 @@ DATA_DIR/
 | `BASE_URL` | yes | public URL of the cloud (links, signed image URLs; its host is the passkey RP-ID, its origin the expected passkey origin – changing the host makes existing passkeys useless) |
 | `DATA_DIR` | – | default `./data` (`/data` in the image) |
 | `SMTP_*` | recommended | verification, sign-in and reset mails |
-| `CLOUD_SIGNUP=false` | – | close signups (existing accounts keep working) |
+| `CLOUD_SIGNUP` | – | `open` \| `invite` \| `closed` (default **`invite`** – the beta gate, see [Beta gate](#beta-gate); old `true`/`false` = open/closed). Overridden by the back office setting `signup.mode` |
+| `SUPPORT_EMAIL` | – | address shown to ask for an access code (default `tohuus@tillheidrich.de`; back office setting `support.email` wins) |
 | `CLOUD_NAME` | – | name in `/api/instance` (default "ToHuus Cloud") |
 | `HOUSEHOLD_POOL_MAX`, `HOUSEHOLD_POOL_IDLE_MIN` | – | connection pool (64, 10) |
 | `SSE_MAX_TOTAL` | – | live-update connections over all households (5000; 200 per household) |
@@ -57,7 +58,7 @@ DATA_DIR/
 | `BACKUP_FILES_MAX_FILES`, `BACKUP_FILES_MAX_MB` | – | file sync budget per night over all households (20 000 files, 4096 MB); the rest follows the next night |
 | `BACKUP_FILES_MAX_FILES_PER_HOUSEHOLD`, `BACKUP_FILES_MAX_MB_PER_HOUSEHOLD` | – | per household and night (2 000 files, 1024 MB), so one big household cannot hold up the others |
 | `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_TOPIC`, `APNS_ENV` | – | iPhone push – [notifications.md](notifications.md#iphone-push-apns-serverlibapnsts) |
-| `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU) |
+| `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU). Key, base URL, models and fallbacks can be overridden at runtime in the back office ([Runtime settings](#runtime-settings)) |
 | `OPERATOR_EMAILS` | – | comma-separated account e-mails that may open the operator page `/betrieb` |
 | `AI_PRICE_PER_MTOK`, `AI_PRICES`, `AI_PRICE_CURRENCY` | – | prices for the AI cost estimate on `/betrieb` (`"in,out"` per million tokens, default `0.1,0.3`; JSON per model; label, default `USD`) |
 | `OCR_DISABLED=1`, `TESSERACT_BIN` | – | switch server text recognition off / use another binary ([receipts.md](receipts.md)) |
@@ -124,10 +125,10 @@ and ignored in the cloud.
 
 ## Adding a household
 
-Normally through the apps: `POST /api/cloud/signup` (new account + household, 14-day trial at Plus level) or
-`POST /api/cloud/households` (another household for a signed-in account). The database is created on first open
-with the form-based defaults (name, language, region, household form). There is no admin back office yet; for a
-manual household use the same endpoint with a session.
+Normally through the apps: `POST /api/cloud/signup` (new account + household, 14-day trial at Plus level; beta gate
+below) or `POST /api/cloud/households` (another household for a signed-in account – not gated, the account exists
+already). The database is created on first open with the form-based defaults (name, language, region, household
+form, the shops named at sign-up).
 
 ## Deleting
 
@@ -371,7 +372,160 @@ Never shown: household names, people, lists, receipts, conversations, e-mail add
 - `DELETE /api/operator/households/:id { confirm: <id> }` – crypto-shreds the household like a deletion by its admin.
 - `GET /api/operator/status`, `GET /api/operator/overview`.
 
+## Operator back office
+
+`/betrieb` grew into the back office (same access rules as above: `OPERATOR_EMAILS`, 404 for everybody else, fresh
+password valid 10 minutes, every change in `operator_audit`). Sections: **Übersicht** (the overview above),
+**Statistik**, **Beta-Zugang**, **Rezepte**, **Einstellungen**, **Haushalte** (lookup by id, trial/plan/delete,
+password reset, largest households by id – never names), **Protokoll** (paged audit log). Routes:
+`server/routes/operator-admin.ts` (mounted inside `routes/operator.ts`), page `web/src/pages/Operator.tsx` +
+`web/src/pages/operator/*`. The section is kept in the URL hash (`#statistik`, `#beta`, `#rezepte`, …).
+
+| Method | Path | Body / query → answer |
+|---|---|---|
+| GET | `/api/operator/settings` | `{ settings: { <key>: { value, source: 'settings'\|'env'\|'default', secret, updatedAt } }, ai: { configured, baseUrl, openrouter, apiKey: '…abcd', models, fallbacks, cloudOn }, signupMode, supportEmail }` |
+| PUT | `/api/operator/settings` | `{ <key>: string \| null }` (null/'' = back to the environment) → `{ ok, changed: [keys], settings, ai, signupMode }`; 400 for unknown keys or bad values |
+| POST | `/api/operator/settings/ai-test` | `{ kind?: 'text'\|'vision'\|'visionHard'\|'audio' }` → `{ ok: true, model, ms }` or `{ ok: false, code, error }` – one 3-token request, no household data |
+| GET | `/api/operator/beta` | `{ mode, supportEmail, codes: [{ id, code, note, max_uses, uses, expires_at, revoked_at, created_at }], allowlist: [{ email, note, created_at }] }` |
+| POST | `/api/operator/beta/codes` | `{ count?: 1–50, note?, maxUses?, expiresAt?: 'YYYY-MM-DD', code?: fixed text }` → `{ codes }` (409 if a fixed code exists) |
+| DELETE | `/api/operator/beta/codes/:id` | revoke |
+| POST / DELETE | `/api/operator/beta/allowlist` | `{ emails: 'a@x, b@y' \| [..], note? }` → `{ added }` / `{ email }` (the log stores counts, not addresses) |
+| GET | `/api/operator/stats?days=56` | see [Usage statistics](#usage-statistics) |
+| POST | `/api/operator/stats/snapshot` | compute tonight's snapshot now → the snapshot |
+| GET | `/api/operator/households/:id` | `{ id, plan, planSource, planExpiresAt, trialEndsAt, createdDay, lastActiveDay, storageBytes, members: { admin: n, member: n, guest: n } }` – no names |
+| GET | `/api/operator/audit?limit=&before=` | paged, newest first |
+| … | `/api/operator/recipes…` | see [ToHuus-Rezepte](#tohuus-rezepte) |
+
+## Runtime settings
+
+`server/lib/runtime-settings.ts`, table `runtime_settings (key, value, updated_at, updated_by)` in `accounts.db`.
+Each value is encrypted on its own with AES-256-GCM, key `HKDF(TOHUUS_MASTER_KEY, "runtime-settings")`, the key name
+as additional data (so a copy of accounts.db does not show the AI key, and a value cannot be moved to another name).
+A stored value **overrides the environment**; removing it falls back to the environment.
+
+| Key | Meaning |
+|---|---|
+| `AI_API_KEY` | write-only: the API only ever returns `…` + last 4 characters; the audit log stores only that |
+| `AI_BASE_URL` | https (or localhost) |
+| `AI_MODEL_TEXT`, `AI_MODEL_VISION`, `AI_MODEL_VISION_HARD`, `AI_MODEL_AUDIO` | model per kind |
+| `AI_MODEL_FALLBACKS` | comma-separated, `-` = none |
+| `ai.cloud` | `on` \| `off` – AI for the whole cloud. Off: `aiOffReason()` returns `cloud` before any household switch, no request leaves the server (`ai.disabled`, 403), `/api/instance` → `features.assistant/voice/receiptsAi: false`, `features.ai.cloud: false` |
+| `signup.mode` | `open` \| `invite` \| `closed` |
+| `support.email` | address in the beta message |
+
+`server/lib/ai.ts` reads the AI keys through `aiRuntime.overrides` (registered by runtime-settings.ts, cached in
+process, cache dropped on every change) – `aiConfig()`/`fallbackModels()` see them at once; an explicit `env` object
+passed by tests/tools is not touched. Test: `test/cloud-admin.test.ts`.
+
+## Beta gate
+
+`server/lib/beta.ts`. While ToHuus is in TestFlight nobody opens an account at the cloud domain without being let in.
+
+- **Modes**: `open` · `invite` (default) · `closed`. `GET /api/instance` → `signup: mode !== 'closed'`, `signupMode`,
+  `support` (address to ask for a code).
+- **Gated** (only when a NEW account is created): `POST /api/cloud/signup` (web and app, body `betaCode`), Sign in with
+  Apple in the app (`POST /api/auth/apple`, body `betaCode`) and on the web (`GET /api/auth/apple/start?code=…`, the
+  code travels in the state cookie; refusal → `303 /signup?apple=invite|code`).
+- **Not gated**: signing in to an existing account (the App Review demo account keeps working), **joining a household
+  by invitation (always, even when closed)**, e-mail links and codes (they never create accounts), another household
+  for an existing account.
+- **Let in**: an e-mail address on the allowlist (`beta_allowlist`), or a valid code (`beta_codes`: optional max uses,
+  expiry date, note; revocable). Codes look like `TOHU-7KQM-X3PA`, case and spaces do not matter, a use is counted
+  atomically only when the account is really created (an existing address → 409, code not used). Nothing records
+  which account used which code.
+- **Refusal**: `403 { error: "ToHuus ist gerade im kleinen Test. Du brauchst einen Zugangscode – frag gern per Mail
+  nach.", code: 'signup.invite' | 'signup.code_invalid' | 'signup.closed', contact, mailto }`.
+- `POST /api/cloud/signup/check { email?, betaCode? }` → `{ ok, mode }` or the same 403 (does not use the code; 30 per
+  15 minutes per IP).
+- Web: code field on `/signup` (when `signupMode` is `invite`) with the sentence and a mailto link; the Apple button
+  carries the code. iOS: code section in *Konto erstellen*, the sentence + mail link on the start screen.
+- Tests: `test/cloud-beta.test.ts` (every path), `test/cloud-admin.test.ts` (administration). The test setup
+  (`test/setup-env.ts`) sets `CLOUD_SIGNUP=open` unless a test sets it.
+
+## Usage statistics
+
+`server/lib/stats.ts`. GDPR-friendly by construction: **no personal data, no tracking IDs, no cookies, no third
+parties**.
+
+- **Feature events** – counted on the server when an API action succeeds (2xx), matched by method and route pattern:
+  `list.add`, `list.check`, `list.trip`, `list.create`, `receipt.upload`, `receipt.applied`, `recipe.import`,
+  `recipe.add`, `recipe.cooked`, `recipe.catalog_save`, `plan.add`, `assistant.message`, `wish.add`, `money.entry`,
+  `share`. Stored as `stat_events_daily (day, event, platform, n)` – platform `web` (cookie session), `ios` / `watch`
+  (the apps send `X-ToHuus-Client`), `other` (HA, MCP, guest links). Buffered, written every 30 s. Other packages add
+  routes with `addStatRoute(method, pattern, event)` or count directly with `countEvent()`.
+- **Funnel, weekly active, retention** – each household keeps in **its own encrypted database** (setting
+  `stats.milestones`) the day of its first list item, of its first receipt and the ISO weeks with an action (max. 60).
+  A nightly job (after 02:00 UTC, `stat_snapshots (day, data)`) reads them inside each household's context and stores
+  **counts only**: created (12 weeks) → first list item → first receipt → active in week 2 → still active in week 4
+  (with how many were old enough), households active per week (12 weeks), cohorts by sign-up week (size, active in
+  week 1…8). Plans and AI cost per week come from `households` and `ai_usage_daily`.
+- **Minimum cell size 3**: every number 1–2 is returned as `null` and shown as "< 3".
+- Retention of the tables: raw daily counters 400 days, snapshots 120 days.
+- `GET /api/operator/stats?days=56` → `{ days, minCell, weeks, events: [{ event, total, perWeek: [{ week, n }], byPlatform }], snapshot, plans, ai: { currency, perWeek } }`.
+- Privacy notice: paragraph "Nutzungsstatistik ohne Personenbezug" in `site/src/legal.mjs` (legal basis Art. 6 (1) f).
+- Test: `test/cloud-admin.test.ts` (no uuid, name, address or IP in the stats tables or answers).
+
+## ToHuus-Rezepte
+
+`server/lib/cloud-recipes.ts` – a curated catalogue for all cloud households (not per household). Sources and rules:
+wiki "Rezept-Pool mit KI-Rezepten und KI-Bildern" and "Recherche: Rezept-Pool – Recht, Quellen, Daten" (12.10.2026):
+own recipes written from facts, no copied texts, no third-party photos, AI only as drafts, a human reads before
+anything is published, AI pictures carry "KI-Bild".
+
+- **Storage**: `DATA_DIR/catalog/recipes.db` (SQLCipher, key `HKDF(master, "catalog-db")`), photos once per content
+  hash in `DATA_DIR/catalog/images/<hash>.webp` (AES-256-GCM, `HKDF(master, "catalog-files")`). Not part of the
+  household backups – back up `catalog/` with the volume (S3 sync of the catalogue: TODO).
+- **Fields**: title, description, the recipe as the normalised import shape, tags, image + `image_kind`
+  (`none` = styled placeholder with the dish name, `photo`, `ai`), `origin` (`own`, `package`, `ai_draft`),
+  `ai_assisted`, `review_state` (`draft` → `reviewed` → `cooked`), `license`, `source_authors`, computed `allergens`
+  (14 EU allergens from the ingredient text), `warnings` for the reviewer (poultry/mince without "durchgegart", honey,
+  raw eggs, missing servings/time), `state` (`draft`, `scheduled`, `published`, `unpublished`), `publish_at`,
+  `published_at`.
+- **Starting set**: 30 simple everyday German recipes written for ToHuus (`server/data/catalog-seed.ts`), seeded once
+  as **drafts** (AI-assisted). Nothing is visible to households until the operator reads, marks and schedules them.
+- **Scheduler**: every 10 minutes publishes `scheduled` recipes whose `publish_at` has passed.
+- **Households** (`server/routes/cloud-recipes.ts`, signed-in members; guests not):
+  - `GET /api/cloud-recipes` → `{ newThisWeek: [card], recent: [card], saved: { "<catalogId>": <recipeId> } }`;
+    card = `{ id, title, description, image, imageKind, tags, servings, timeMin, allergens, aiAssisted, reviewState,
+    license, sourceAuthors, publishedAt }` (newThisWeek = published in the last 7 days).
+  - `GET /api/cloud-recipes/:id` → card + `ingredients`, `steps`, `nutrition`, `thermomix`, `savedId` (404 unless
+    published).
+  - `POST /api/cloud-recipes/:id/save` → `{ id, created }` – a copy in the household's recipes (`source_type:
+    'tohuus'`, `ext_id: 'catalog-<id>'`, photo copied into the household's encrypted images, a note "Aus den
+    ToHuus-Rezepten – mit KI geschrieben, von uns geprüft"); saving again returns the existing copy. Unpublishing
+    never removes a household's copy.
+  - `GET /api/cloud-recipes/img/<hash>.webp` – public for published recipes, operators only for drafts.
+- **Back office**:
+  `GET /api/operator/recipes` (`{ counts, recipes }`), `GET /api/operator/recipes/:id`,
+  `POST /api/operator/recipes/upload` (multipart `file` = recipe package zip/json ([recipe-package.md](recipe-package.md)),
+  fields `aiAssisted`, `imageKind`, `license`, `sourceAuthors` → drafts), `PATCH /api/operator/recipes/:id`
+  (`reviewState`, `publishAt: 'YYYY-MM-DD[ HH:MM]' | null`, `tags`, `aiAssisted`, `imageKind`; planning needs
+  reviewed), `POST …/:id/photo` (multipart `file`, `kind`), `POST …/:id/publish` (reviewed only),
+  `POST …/:id/unpublish`, `DELETE …/:id` (not while published), `POST /api/operator/recipes/schedule`
+  (`{ perWeek: 1–7 (3 = Mon/Wed/Fri 06:00 UTC), ids?, start? }` → `{ plan }` for reviewed drafts after the last
+  planned date), `POST /api/operator/recipes/ai-drafts` (`{ dishes: [≤5 names] }` → Mistral via `ai.ts`, drafts with
+  `origin: 'ai_draft'` – never published automatically).
+- Web: "Neu diese Woche" strip in *Kochen › Was kochen wir?* (cloud only, falls back to "Neu von ToHuus" with the latest
+  six), detail sheet with origin line, allergens, ingredients, steps; iOS: the same strip in Kochen.
+- Test: `test/cloud-admin.test.ts`.
+
+## Shops without favourites
+
+`server/lib/stores.ts`. No preset favours REWE or any chain.
+
+- New households start with **no shops** (the old first-start rows REWE + Aldi are removed once while untouched – no
+  walking order, trip or saved place; `stores.neutral`). The sample data carries no supermarket own brands any more
+  (older sample rows are still recognised for removal).
+- Sign-up asks **"Wo kauft ihr meistens ein?"**: `GET /api/cloud/store-choices?region=DE` → `{ stores: [alphabetical],
+  market: 'Wochenmarkt' }`; `stores: string[]` on `POST /api/cloud/signup` and `POST /api/auth/apple`. Web sign-up and
+  the iOS sign-up show chips + "Sonstige" (own entries); the web setup flow asks once if sign-up did not
+  (`GET /api/shop/stores/choices` → `{ stores, market, chosen, own }`, `PUT /api/shop/stores/choice { stores }`).
+- Every list of shops (`GET /api/shop/stores`, store mode, "Wo kaufen?", the receipt shop picker) is ordered by the
+  household's own use over 180 days (store-mode trips, receipts, manual expenses), then alphabetically.
+- Receipt formats (REWE eBons and notices, other chains) stay supported – that is reading, not preferring.
+- Test: `test/stores-neutral.test.ts`, sign-up in `test/cloud-beta.test.ts`.
+
 ## Known gaps (TODO)
 
-- No admin back office (support lookups, manual plan changes) – use accounts.db with the master key.
 - Master key rotation is manual (see Keys).
+- `DATA_DIR/catalog/` (ToHuus-Rezepte) is not yet in the nightly backup / S3 sync – back up the volume.

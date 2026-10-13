@@ -255,3 +255,17 @@ disk space or keyboard APIs (checked).
 
 Debug launch args: `-debugSampleQuestion YES`, `-debugSignedOut YES` with `-debugStartSignUp YES` / `-debugStartSignIn YES` /
 `-debugStartCode YES`, `-debugPaywall YES`, `-debugSettings YES`.
+
+## 0.3 parity – beta gate, shops, ToHuus-Rezepte (1.0, package q-admin)
+
+- **Sign-up** (`StartView.swift` › `SignUpView`): when `/api/instance` → `signupMode == "invite"`, a section *Zugangscode*
+  (sent as `betaCode` with `POST /api/cloud/signup`) and the sentence "ToHuus ist gerade im kleinen Test …" with a mail
+  link to `instance.support` (`BetaNote`); the start screen shows the same note. *Wo kauft ihr meistens ein?*: chips
+  from `GET /api/cloud/store-choices?region=<device region>` (alphabetical + market), own entries, sent as `stores`.
+  The Apple button on the sign-up screen sends `betaCode` and `stores` with `POST /api/auth/apple`.
+- **Kochen › Was kochen wir?** (`CatalogNewSection.swift`, cloud only): "Neu diese Woche" from `GET /api/cloud-recipes`
+  (fallback "Neu von ToHuus"), placeholder with the dish name when there is no photo, "KI-Bild" badge for AI pictures,
+  "Mit KI geschrieben, von uns geprüft"; *Speichern* → `POST /api/cloud-recipes/:id/save` and opens the saved recipe.
+- **Statistics**: every request carries `X-ToHuus-Client: ios|watch` (APIClient) – the only thing the cloud's usage
+  statistics learn about the device. Endpoints: `Endpoints+CloudRecipes.swift`, `Endpoints+Account.swift`
+  (`storeChoices`); models `CloudRecipes.swift`, `Signup.swift`. Strings: `ios/tools/strings_de_admin.json`.
