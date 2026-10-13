@@ -69,6 +69,23 @@
         }
       }
     },
+    "%@ brings it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ brings it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ bringt’s"
+          }
+        }
+      }
+    },
     "%@ can see the wishes but never who reserved or bought what. To keep the whole list a surprise, pick “Only me” or chosen people.": {
       "extractionState": "manual",
       "localizations": {
@@ -3367,6 +3384,40 @@
         }
       }
     },
+    "Asked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewünscht"
+          }
+        }
+      }
+    },
+    "Asked of you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked of you"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für dich"
+          }
+        }
+      }
+    },
     "Assistant": {
       "extractionState": "manual",
       "localizations": {
@@ -3771,6 +3822,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bitte mitbringen: %@"
+          }
+        }
+      }
+    },
+    "Bring me something": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring me something"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring mir was"
           }
         }
       }
@@ -11986,6 +12054,23 @@
         }
       }
     },
+    "Nobody is asking for anything right now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody is asking for anything right now."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade wünscht sich niemand etwas."
+          }
+        }
+      }
+    },
     "Nobody yet": {
       "extractionState": "manual",
       "localizations": {
@@ -12135,6 +12220,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerade nicht: %@"
+          }
+        }
+      }
+    },
+    "Not reachable right now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not reachable right now."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade nicht erreichbar."
           }
         }
       }
@@ -12764,6 +12866,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Offline · %d Änderungen warten"
+          }
+        }
+      }
+    },
+    "On its way": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On its way"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommt gleich"
           }
         }
       }
@@ -22913,6 +23032,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du + %d"
+          }
+        }
+      }
+    },
+    "You asked for": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You asked for"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast dir gewünscht"
           }
         }
       }

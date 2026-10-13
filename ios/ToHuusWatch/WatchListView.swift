@@ -13,6 +13,11 @@ struct WatchListView: View {
                     .foregroundStyle(.secondary)
             } else {
                 speakRow
+                if store.api != nil {
+                    NavigationLink { WatchTreatsView() } label: {
+                        Label(L("Bring me something"), systemImage: "heart")
+                    }
+                }
                 if let reply = store.reply {
                     Text(reply).font(.footnote).foregroundStyle(.secondary)
                         .onTapGesture { store.reply = nil }
