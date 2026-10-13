@@ -76,29 +76,6 @@ struct StartView: View {
     }
 }
 
-/// The house mark of ToHuus: green house, mustard door (the web's BrandMark).
-struct BrandMark: View {
-    var size: CGFloat = 48
-
-    var body: some View {
-        Canvas { ctx, s in
-            let w = s.width, h = s.height
-            var house = Path()
-            house.move(to: CGPoint(x: w * 0.5, y: h * 0.08))
-            house.addLine(to: CGPoint(x: w * 0.94, y: h * 0.44))
-            house.addLine(to: CGPoint(x: w * 0.94, y: h * 0.94))
-            house.addLine(to: CGPoint(x: w * 0.06, y: h * 0.94))
-            house.addLine(to: CGPoint(x: w * 0.06, y: h * 0.44))
-            house.closeSubpath()
-            ctx.fill(house, with: .color(Theme.primary))
-            let door = Path(roundedRect: CGRect(x: w * 0.39, y: h * 0.58, width: w * 0.22, height: h * 0.36),
-                            cornerSize: CGSize(width: w * 0.11, height: w * 0.11), style: .continuous)
-            ctx.fill(door, with: .color(Theme.mustard))
-        }
-        .frame(width: size, height: size)
-    }
-}
-
 /// Privacy policy and terms (instance links, else the ToHuus site) – shown on the start screen and the paywall.
 struct LegalLinks: View {
     @Environment(AppModel.self) private var app
