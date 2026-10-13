@@ -455,7 +455,12 @@ function Data({ admin }: { admin: boolean }) {
   return (
     <div className="stack" style={{ gap: 16 }}>
       {cloud ? <MoveInCard admin={admin} /> : <MoveOutCard admin={admin} />}
-      <Backups admin={admin} />
+      {/* ToHuus Cloud backs every household up itself (nightly, encrypted, off-site) – the self-host backups are not there */}
+      {cloud ? (
+        <div className="card pad small muted">{t('Backups: ToHuus Cloud saves your household every night, encrypted, also outside the data centre. You can download everything at any time under Plan & storage › Your data.')}</div>
+      ) : (
+        <Backups admin={admin} />
+      )}
       <div className="card pad stack">
         <div className="row between wrap">
           <div>

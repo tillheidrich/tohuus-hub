@@ -186,6 +186,7 @@ export async function targets(ctx, inst, fresh) {
     '/so-funktioniert-tohuus',
     '/gut-zu-wissen',
     '/hilfe',
+    '/uebergabe',
     '/teilen',
     '/willkommen',
     ...['home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'displays', 'print', 'recipes', 'data', ...(inst.mode === 'cloud' ? ['plan'] : [])].map((t) => `/einstellungen?tab=${t}`),
@@ -195,7 +196,7 @@ export async function targets(ctx, inst, fresh) {
     { name: '/geld (nur meins)', path: '/geld', local: { 'sw.money.view': 'mine' } },
     privateListId && { name: '/einkauf (private Liste)', path: '/einkauf', local: { 'sw.shop.list': String(privateListId) } },
     // back office (only when the audit account is in OPERATOR_EMAILS)
-    ...(operator ? ['uebersicht', 'statistik', 'beta', 'rezepte', 'einstellungen', 'haushalte', 'protokoll'].map((h) => ({ name: `/betrieb#${h}`, path: `/betrieb#${h}`, operator: true })) : []),
+    ...(operator ? ['uebersicht', 'statistik', 'konten', 'beta', 'geschenke', 'rezepte', 'einstellungen', 'haushalte', 'protokoll'].map((h) => ({ name: `/betrieb#${h}`, path: `/betrieb#${h}`, operator: true })) : []),
     // signed out: sign-in and sign-up (beta code, shop choice)
     { name: 'anon:/', path: '/', as: 'anon' },
     ...(inst.mode === 'cloud' && inst.signup ? [{ name: 'anon:/signup', path: '/signup', as: 'anon' }] : []),

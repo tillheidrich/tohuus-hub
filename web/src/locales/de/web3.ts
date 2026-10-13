@@ -165,4 +165,5 @@ export const web3: Record<string, string> = {
   "What to do and how – tick it if you like, so we know all is well.": "Was zu tun ist und wie – hak es gern ab, dann wissen wir, dass alles gut ist.",
   "Handover": "Übergabe",
   "Handover item": "Punkt",
+  'Backups: ToHuus Cloud saves your household every night, encrypted, also outside the data centre. You can download everything at any time under Plan & storage › Your data.': 'Sicherungen: Die ToHuus Cloud sichert euren Haushalt jede Nacht, verschlüsselt, auch außerhalb des Rechenzentrums. Unter Abo & Speicher › Deine Daten könnt ihr jederzeit alles herunterladen.',
 };
