@@ -477,6 +477,57 @@
         }
       }
     },
+    "%@ – a gift": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – a gift"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – geschenkt"
+          }
+        }
+      }
+    },
+    "%@ – a gift during the beta": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – a gift during the beta"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – in der Beta geschenkt"
+          }
+        }
+      }
+    },
+    "%@ – for good": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – for good"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – für immer"
+          }
+        }
+      }
+    },
     "%@: %@ of %@": {
       "extractionState": "manual",
       "localizations": {
@@ -1578,6 +1629,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein gefüllter Beispielhaushalt: eine Liste, Sachen im Haus und ein paar Rezepte. Jedes Beispiel ist markiert, und mit einem Tipp sind alle wieder weg."
+          }
+        }
+      }
+    },
+    "A gift for your household": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A gift for your household"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Geschenk für euren Haushalt"
           }
         }
       }
@@ -7375,6 +7443,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Free"
+          }
+        }
+      }
+    },
+    "Free during the beta": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free during the beta"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Während der Beta geschenkt"
           }
         }
       }
@@ -21591,6 +21676,23 @@
         }
       }
     },
+    "While ToHuus is being tested, nobody pays – thank you for helping. When the beta ends, your household keeps what it has on its own. Nothing is charged automatically and nothing is deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While ToHuus is being tested, nobody pays – thank you for helping. When the beta ends, your household keeps what it has on its own. Nothing is charged automatically and nothing is deleted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solange ToHuus getestet wird, zahlt niemand – danke fürs Mithelfen. Nach der Beta behält euer Haushalt, was er selbst hat. Nichts wird automatisch abgebucht und nichts gelöscht."
+          }
+        }
+      }
+    },
     "Who belongs to it?": {
       "extractionState": "manual",
       "localizations": {
@@ -22556,6 +22658,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dein aktueller Plan"
+          }
+        }
+      }
+    },
+    "Your household has this plan for good. Nothing is charged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household has this plan for good. Nothing is charged."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Euer Haushalt hat diesen Plan für immer. Es wird nichts abgebucht."
+          }
+        }
+      }
+    },
+    "Your household has this plan until %@. After that Free – nothing is charged automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household has this plan until %@. After that Free – nothing is charged automatically."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Euer Haushalt hat diesen Plan bis %@. Danach Free – nichts wird automatisch abgebucht."
           }
         }
       }

@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { accountsDb, getHousehold, isUuid } from '../lib/accounts.js';
 import { DEFAULT_FALLBACKS, aiConfig, fallbackModels, pingModel, type ModelKind } from '../lib/ai.js';
 import { addAllowlist, createBetaCode, listAllowlist, listBetaCodes, removeAllowlist, revokeBetaCode, signupMode, SIGNUP_MODES } from '../lib/beta.js';
+import { betaGift, createPlanCode, listPlanCodes, revokePlanCode } from '../lib/gifts.js';
 import { audit, auditLog } from '../lib/operator.js';
 import { runStatsNightly, statsView } from '../lib/stats.js';
 import multer from 'multer';
@@ -67,6 +68,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     'ai.cloud': z.enum(['on', 'off']),
     'signup.mode': z.enum(SIGNUP_MODES as [string, ...string[]]),
     'support.email': z.string().trim().max(254).email(),
+    'beta.gift': z.enum(['haushalt', 'plus']),
   };
 
   r.put('/operator/settings', fresh, (req, res) => {
@@ -96,6 +98,44 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     const out = await pingModel(kind);
     audit(who(req), 'settings.ai-test', kind, { ok: out.ok, ...(out.ok ? { model: out.model } : { code: out.code }) });
     res.json(out);
+  });
+
+  // ---------------------------------------------------------------- gifts: beta plan and plan codes (gifts.ts)
+
+  r.get('/operator/gifts', fresh, (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ betaGift: betaGift(), codes: listPlanCodes() });
+  });
+
+  r.post('/operator/gifts/codes', fresh, (req, res) => {
+    const b = z
+      .object({
+        plan: z.enum(['haushalt', 'plus']),
+        /** null = for good ("lifetime") */
+        days: z.number().int().min(1).max(3650).nullable(),
+        count: z.number().int().min(1).max(50).default(1),
+        note: z.string().trim().max(120).nullable().optional(),
+        maxUses: z.number().int().min(1).max(10_000).nullable().optional(),
+        expiresAt: z.string().regex(/^\d{4}-\d\d-\d\d$/).nullable().optional(),
+        code: z.string().trim().min(6).max(40).regex(/^[A-Za-z0-9 _-]+$/).optional(),
+      })
+      .parse(req.body ?? {});
+    if (b.code && b.count > 1) return void res.status(400).json({ error: 'a fixed code can only be created once' });
+    try {
+      const codes = Array.from({ length: b.count }, () => createPlanCode({ plan: b.plan, days: b.days, note: b.note, maxUses: b.maxUses ?? 1, expiresAt: b.expiresAt ?? null, code: b.code }, who(req)));
+      audit(who(req), 'gifts.codes.create', codes.map((c) => c.id).join(','), { plan: b.plan, days: b.days, count: codes.length, note: b.note ?? null });
+      res.json({ codes });
+    } catch (e) {
+      if (/UNIQUE/.test((e as Error).message)) return void res.status(409).json({ error: 'this code exists already' });
+      throw e;
+    }
+  });
+
+  r.delete('/operator/gifts/codes/:id', fresh, (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || !revokePlanCode(id)) return void res.status(404).json({ error: 'not found' });
+    audit(who(req), 'gifts.codes.revoke', String(id));
+    res.json({ ok: true });
   });
 
   // ---------------------------------------------------------------- beta gate

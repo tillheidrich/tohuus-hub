@@ -17,5 +17,13 @@
   "Dark": "Dunkel",
   "Appearance": "Erscheinungsbild",
   "Screen may turn off": "Bildschirm darf ausgehen",
-  "Screen and appearance": "Bildschirm und Erscheinungsbild"
+  "Screen and appearance": "Bildschirm und Erscheinungsbild",
+  "%@ – a gift during the beta": "%@ – in der Beta geschenkt",
+  "%@ – for good": "%@ – für immer",
+  "%@ – a gift": "%@ – geschenkt",
+  "Free during the beta": "Während der Beta geschenkt",
+  "A gift for your household": "Ein Geschenk für euren Haushalt",
+  "While ToHuus is being tested, nobody pays – thank you for helping. When the beta ends, your household keeps what it has on its own. Nothing is charged automatically and nothing is deleted.": "Solange ToHuus getestet wird, zahlt niemand – danke fürs Mithelfen. Nach der Beta behält euer Haushalt, was er selbst hat. Nichts wird automatisch abgebucht und nichts gelöscht.",
+  "Your household has this plan for good. Nothing is charged.": "Euer Haushalt hat diesen Plan für immer. Es wird nichts abgebucht.",
+  "Your household has this plan until %@. After that Free – nothing is charged automatically.": "Euer Haushalt hat diesen Plan bis %@. Danach Free – nichts wird automatisch abgebucht."
 }

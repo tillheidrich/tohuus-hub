@@ -148,8 +148,24 @@ struct BillingStatus: Decodable, Sendable {
     var storage: JSONValue?
     /// what each plan includes: `{ free, haushalt, plus }` with the fields of `limits` (cloud)
     var plans: JSONValue?
+    /// a plan as a gift (server/lib/gifts.ts): during the beta for everyone, or a code redeemed on the web
+    var gift: Gift?
+
+    struct Gift: Decodable, Sendable {
+        /// beta | code | operator
+        var kind: String?
+        var plan: String?
+        var until: String?
+        var forever: Bool?
+    }
 
     var planLabel: String {
+        if let gift {
+            let name = plan == "haushalt" ? L("Household") : L("Plus")
+            if gift.kind == "beta" { return LF("%@ – a gift during the beta", name) }
+            if gift.forever == true { return LF("%@ – for good", name) }
+            return LF("%@ – a gift", name)
+        }
         switch plan {
         case "trial": return L("Trial (Plus)")
         case "haushalt": return L("Household")

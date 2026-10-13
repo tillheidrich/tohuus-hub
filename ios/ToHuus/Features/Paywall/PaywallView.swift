@@ -19,6 +19,11 @@ struct PaywallView: View {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
                     if !app.purchasesAvailable {
                         EmptyStateView(systemImage: "checkmark.seal", title: L("Everything is included for this household."))
+                    } else if let gift = app.billing?.gift {
+                        // a gift (beta for everyone, or a code from us): nothing to buy, just say what the household has
+                        currentPlan
+                        giftNote(gift)
+                        legal
                     } else {
                         currentPlan
                         Picker(L("Billing period"), selection: $yearly) {
@@ -74,6 +79,27 @@ struct PaywallView: View {
                 .font(.footnote).foregroundStyle(Theme.ink3)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    private func giftNote(_ gift: BillingStatus.Gift) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            Label(gift.kind == "beta" ? L("Free during the beta") : L("A gift for your household"), systemImage: "gift")
+                .font(.headline).foregroundStyle(Theme.primaryText)
+            Group {
+                if gift.kind == "beta" {
+                    Text(L("While ToHuus is being tested, nobody pays – thank you for helping. When the beta ends, your household keeps what it has on its own. Nothing is charged automatically and nothing is deleted."))
+                } else if gift.forever == true {
+                    Text(L("Your household has this plan for good. Nothing is charged."))
+                } else if let d = ServerDate.parse(gift.until) {
+                    Text(LF("Your household has this plan until %@. After that Free – nothing is charged automatically.", d.formatted(date: .long, time: .omitted)))
+                }
+            }
+            .font(.footnote).foregroundStyle(Theme.ink2)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(Theme.Space.s3)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
     }
 
     private var productsUnavailable: some View {

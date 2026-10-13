@@ -19,6 +19,7 @@ import { config } from '../config.js';
 import { selfhostDbFile } from '../db.js';
 import { t } from '../i18n.js';
 import * as accounts from './accounts.js';
+import { betaGift } from './gifts.js';
 import { currentHousehold } from './tenancy.js';
 
 export type Plan = 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
@@ -104,6 +105,16 @@ export function planOf(householdId: string): Plan {
   if (!cloud()) return 'selfhost';
   const h = acc().getHousehold(householdId);
   if (!h) return 'free';
+  const own = ownPlan(h);
+  // the beta gift (gifts.ts): at least that plan for everyone while it is switched on
+  const gift = betaGift();
+  return gift && PLAN_RANK[gift] > PLAN_RANK[own] ? gift : own;
+}
+
+/** trial counts like Plus (same limits); a gift of Plus during the beta replaces it */
+const PLAN_RANK: Record<Plan, number> = { free: 0, haushalt: 1, trial: 2, plus: 3, selfhost: 4 };
+
+function ownPlan(h: { plan: string; trial_ends_at: string | null; plan_expires_at: string | null }): Plan {
   const now = nowSql();
   if (h.plan === 'trial') return h.trial_ends_at && h.trial_ends_at > now ? 'trial' : 'free';
   if (h.plan === 'haushalt' || h.plan === 'plus') return !h.plan_expires_at || h.plan_expires_at > now ? h.plan : 'free';

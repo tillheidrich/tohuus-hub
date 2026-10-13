@@ -417,6 +417,15 @@ A stored value **overrides the environment**; removing it falls back to the envi
 process, cache dropped on every change) – `aiConfig()`/`fallbackModels()` see them at once; an explicit `env` object
 passed by tests/tools is not touched. Test: `test/cloud-admin.test.ts`.
 
+## Gifts: beta plan and plan codes
+
+`server/lib/gifts.ts`, back office › **Geschenke**. Nothing is bought and nothing is charged in either way.
+
+- **Beta gift** – runtime setting `beta.gift` = `haushalt` | `plus` (unset = off). While it is set, `planOf()` gives every cloud household at least that plan (a running trial counts like Plus). `GET /api/billing/status` then says `source: 'beta'`, `gift: { kind: 'beta', plan, until: null, forever: false }`; the web billing card and the iPhone paywall show "Während der Beta geschenkt" instead of prices. Switching it off falls back to what each household has on its own (trial, code, App Store, Free) – nothing is deleted.
+- **Plan codes** (`GIFT-XXXX-XXXX`) – the operator creates them (`POST /api/operator/gifts/codes { plan, days | null = for good, count, maxUses (default 1), note, expiresAt }`, list `GET /api/operator/gifts`, revoke `DELETE /api/operator/gifts/codes/:id`; every change audited). An **admin** of a household redeems one on the **web**: Settings › Abo › "Code einlösen" → `POST /api/billing/redeem { code }` → `{ plan, until, status }`. Errors: `gift.invalid` 404, `gift.used_up` 410, `gift.already` 409 (once per household), `gift.apple` 409 (a running App Store subscription is never overwritten – cancel it there first). A redeemed code sets the household's plan with `plan_source = 'code'`; a longer or better gift the household already has is kept, the days are added to its end.
+- **Why not in the iPhone app**: App Store Review Guideline 3.1.1 does not allow unlocking features with own codes or license keys inside an iOS app. The app therefore has no code field; it shows the plan the household has (3.1.3(b), multiplatform services). Apple's own offer codes for the subscriptions stay available in the paywall ("Code einlösen" there is Apple's sheet).
+- Tables in accounts.db: `plan_codes`, `plan_code_redemptions (code_id, household_id, at)`.
+
 ## Beta gate
 
 `server/lib/beta.ts`. While ToHuus is in TestFlight nobody opens an account at the cloud domain without being let in.

@@ -14,6 +14,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Added
 
+- **Gifts instead of payments during the beta** ([docs/cloud.md › Gifts](docs/cloud.md#gifts-beta-plan-and-plan-codes)): back office › Geschenke switches a plan on for every household while the beta runs (`beta.gift`), and creates gift codes (Haushalt/Plus, N days or for good) that an admin redeems on the web (Settings › Abo › "Code einlösen", `POST /api/billing/redeem`). The iPhone app shows the gift and no prices; it has no code field on purpose (App Store Review Guideline 3.1.1).
 - **Cloud back office `/betrieb`** (docs/cloud.md › Operator back office): sections Übersicht, Statistik, Beta-Zugang, Rezepte, Einstellungen, Haushalte (id only), Protokoll (paged); every change audited.
 - **Runtime settings**: AI key (write-only, last 4 shown, test button), base URL, models per kind, fallbacks, AI off for the whole cloud, sign-up mode, support address – encrypted in accounts.db, override the environment, read by `ai.ts` at once.
 - **Beta gate**: `CLOUD_SIGNUP=open|invite|closed` (default `invite`), access codes (uses, expiry, note, revocable) and an allowlist; every new-account path (web, app, Apple app/web) needs one; invitations always work; code field on web and iOS sign-up with "ToHuus ist gerade im kleinen Test …".
