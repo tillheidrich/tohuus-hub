@@ -20163,19 +20163,19 @@
         }
       }
     },
-    "The help pages open on tohuus.heidrich-digital.de.": {
+    "The help pages open on %@.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The help pages open on tohuus.heidrich-digital.de."
+            "value": "The help pages open on %@."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Hilfe öffnet sich auf tohuus.heidrich-digital.de."
+            "value": "Die Hilfeseiten öffnen sich auf %@."
           }
         }
       }

@@ -1,3 +1,5 @@
+import { help } from '../config.mjs';
+
 export default [
   {
     slug: 'wunschliste-teilen-ohne-ueberraschung', status: 'published', date: '2026-10-13',
@@ -84,7 +86,7 @@ export default [
       { value: '616 Mio. l', text: 'So viel alkoholfreies Bier wurde 2025 in Deutschland produziert, 6,5 Prozent mehr als im Vorjahr.', source: 'Destatis 2026', url: 'https://www.destatis.de/DE/Presse/Pressemitteilungen/Zahl-der-Woche/2026/PD26_28_p002.html' },
       { value: '128,8 l', text: 'So viel Mineral- und Heilwasser trank jede Person in Deutschland 2025 im Schnitt.', source: 'VDM 2026', url: 'https://www.vdm-bonn.de/presse/pressemitteilungen/mineralwasser-absatz-steigt-2025-deutlich/' },
       { value: '74,5 kg', text: 'So viele Lebensmittel warf jede Person 2022 im eigenen Haushalt weg, das sind 58 Prozent aller Lebensmittelabfälle.', source: 'BMLEH 2022', url: 'https://www.bmleh.de/DE/themen/ernaehrung/lebensmittelverschwendung/studie-lebensmittelabfaelle-deutschland.html' },
-      { value: 'Ohne App', text: 'Gäste bestellen bei ToHuus über einen Link oder QR-Code vom Party-Menü, ohne App und ohne Konto.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/gaeste.html' },
+      { value: 'Ohne App', text: 'Gäste bestellen bei ToHuus über einen Link oder QR-Code vom Party-Menü, ohne App und ohne Konto.', source: 'ToHuus', url: help('gaeste') },
     ],
     sources: [
       ['Destatis: 6,0 % weniger Bier im Jahr 2025 abgesetzt', 'https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/02/PD26_037_73.html'],
@@ -228,7 +230,7 @@ export default [
       { value: '38 %', text: 'Mehr als jeder Dritte in Deutschland hat Hemmungen, digitale Angebote zu nutzen, ergab eine Bitkom-Umfrage 2025.', source: 'Bitkom 2025', url: 'https://www.bitkom.org/Presse/Presseinformation/Hemmungen-digitale-Angebote-Digitaltag-2025' },
       { value: '40 %', text: 'So viele nutzen laut Cybersicherheitsmonitor 2026 eine Zwei-Faktor-Anmeldung, 2025 waren es 34 Prozent.', source: 'BSI/ProPK 2026', url: 'https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Digitalbarometer/CyMon-ProPK-BSI_2026_Ergebnispraesentation.pdf?__blob=publicationFile&v=2' },
       { value: 'Art. 20', text: 'Die DSGVO gibt euch seit 2018 das Recht, eure Daten maschinenlesbar zu bekommen und mitzunehmen.', source: 'DSGVO, EUR-Lex 2016', url: 'https://eur-lex.europa.eu/legal-content/DE/TXT/HTML/?uri=CELEX:02016R0679-20160504' },
-      { value: '1 Schlüssel', text: 'In der ToHuus Cloud hat jeder Haushalt eine eigene verschlüsselte Datenbank mit eigenem Schlüssel, auf Servern in Deutschland.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/datenschutz-kurz.html' },
+      { value: '1 Schlüssel', text: 'In der ToHuus Cloud hat jeder Haushalt eine eigene verschlüsselte Datenbank mit eigenem Schlüssel, auf Servern in Deutschland.', source: 'ToHuus', url: help('datenschutz-kurz') },
     ],
     sources: [
       ['Bitkom: Mehr als jeder Dritte hat Hemmungen, digitale Angebote zu nutzen (2025)', 'https://www.bitkom.org/Presse/Presseinformation/Hemmungen-digitale-Angebote-Digitaltag-2025'],

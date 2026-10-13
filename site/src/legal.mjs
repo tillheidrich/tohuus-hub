@@ -1,3 +1,4 @@
+import { SITE_HOST } from './config.mjs';
 /**
  * Legal pages of the site: privacy policy (Datenschutzerklärung) and terms of use (Nutzungsbedingungen), German and
  * English. Rendered by build.mjs into site/de/datenschutz.html, site/de/nutzungsbedingungen.html, site/privacy.html
@@ -49,7 +50,7 @@ export function legalCopy(k) {
         ul(`<b>ToHuus Cloud</b>: der von uns betriebene Server unter <code>${cloudHost}</code>.`,
           '<b>Die iPhone-App ToHuus</b>, wenn sie mit ToHuus Cloud verbunden ist.',
           '<b>Die Web-App</b> im Browser, wenn sie mit ToHuus Cloud verbunden ist.',
-          '<b>Diese Website</b> (tohuus.heidrich-digital.de).')
+          `<b>Diese Website</b> (${SITE_HOST}).`)
         + p('<b>Selbst gehostete Server:</b> Wer ToHuus auf einem eigenen Server betreibt, ist für die Daten auf diesem Server selbst verantwortlich. Wir erhalten dabei keine Daten, auch nicht, wenn die iPhone-App mit einem solchen Server verbunden ist. Die App spricht dann nur mit diesem Server und mit dem KI-Dienst, den der Betreiber dort eingerichtet hat. Siehe Abschnitt <a href="#selbst-hosten">Selbst gehostete Server</a>.') },
 
       { id: 'daten', h: 'Welche Daten wir verarbeiten und wozu', body:
@@ -294,7 +295,7 @@ export function legalCopy(k) {
         ul(`<b>ToHuus Cloud</b>: the server we run at <code>${cloudHost}</code>.`,
           '<b>The ToHuus iPhone app</b>, when it is connected to ToHuus Cloud.',
           '<b>The web app</b> in the browser, when it is connected to ToHuus Cloud.',
-          '<b>This website</b> (tohuus.heidrich-digital.de).')
+          `<b>This website</b> (${SITE_HOST}).`)
         + p('<b>Self-hosted servers:</b> whoever runs ToHuus on their own server is responsible for the data on that server. We receive no data from it, also not when the iPhone app is connected to such a server. The app then only talks to that server and to the AI service its operator has set up. See <a href="#self-hosting">Self-hosted servers</a>.') },
 
       { id: 'data', h: 'What data we process and why', body:

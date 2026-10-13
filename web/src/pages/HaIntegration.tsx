@@ -17,7 +17,7 @@ function useCopy() {
       .catch(() => toast({ text: t('Could not copy – select the text and copy it by hand.') }));
 }
 
-export const CLOUD_URL = 'https://cloud.tohuus.heidrich-digital.de';
+export { CLOUD_URL } from '../urls';
 
 interface PairStart {
   code: string;

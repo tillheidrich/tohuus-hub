@@ -27,12 +27,12 @@ import { helpCopy } from './help.mjs';
 import { BLOG_COPY, BLOG_DIR, checkPost, publishedPosts } from './blog.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const SITE = 'https://tohuus.heidrich-digital.de/';
+import { SITE, CLOUD } from './config.mjs';
 const GH = 'https://github.com/tillheidrich/tohuus-hub';
 /** Required provider line (Impressum). The only place where the en dash is allowed. */
 const PROVIDER = 'Till Heidrich – Content Creation';
 /** Contact data of the provider for the legal pages (Datenschutz, Nutzungsbedingungen). */
-const CONTACT = { MAIL: 'mail@tillheidrich.de', PHONE: '0157 73953819', ADDRESS: ['Rotdornweg 17', '21255 Tostedt'], CLOUD: 'https://cloud.tohuus.heidrich-digital.de' };
+const CONTACT = { MAIL: 'mail@tillheidrich.de', PHONE: '0157 73953819', ADDRESS: ['Rotdornweg 17', '21255 Tostedt'], CLOUD };
 const LEGAL = legalCopy({ PROVIDER, SITE, GH, ...CONTACT });
 /** TestFlight: a prefilled e-mail asks for what we need to invite someone (no form, no tracking). */
 const TF_MAIL = 'tohuus@tillheidrich.de';

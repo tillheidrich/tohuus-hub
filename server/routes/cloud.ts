@@ -104,6 +104,8 @@ instance.get('/instance', (_req, res) => {
     mode: cloudMode() ? 'cloud' : 'selfhost',
     version: version(),
     brand: 'tohuus',
+    /** the public website (help, legal, Ratgeber) – SITE_URL, so the apps follow a domain change */
+    siteUrl: config.siteUrl,
     lang: lang(),
     region: inHousehold ? regionInfo().code : defaultRegionCode(config.language),
     auth: {

@@ -1,3 +1,5 @@
+import { help } from '../config.mjs';
+
 export default [
   {
     slug: 'einkaufsliste-teilen', status: 'published', date: '2026-10-13',
@@ -47,7 +49,7 @@ export default [
       { value: '57,7 %', text: 'In gut 57 Prozent der Haushalte in Deutschland lebten 2024 zwei oder mehr Personen, die sich den Einkauf teilen können.', source: 'Statistisches Bundesamt 2024', url: 'https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Haushalte-Familien/Tabellen/1-3-privathaushalte-neuer-zeitvergleich.html' },
       { value: '44 %', text: 'Ende 2023 sagten 44 Prozent der Väter, sie seien allein für den Lebensmitteleinkauf zuständig. 2020 waren es 34 Prozent.', source: 'YouGov 2024', url: 'https://yougov.com/de-de/artikel/49258-immer-mehr-deutsche-vater-heute-allein-verantwortlich-fur-den-lebensmitteleinkauf-ihrer-familie' },
       { value: '28 %', text: '28 Prozent der Befragten hatten 2024 schon eine Einkaufsliste in der App eines Lebensmittelhändlers angelegt.', source: 'Bitkom 2025', url: 'https://www.bitkom.org/Presse/Presseinformation/Apps-Lebensmittelhaendlern-beliebter' },
-      { value: 'Sekunden', text: 'Hakt jemand in ToHuus im Laden etwas ab, verschwindet es bei allen anderen innerhalb von Sekunden von der Liste.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/gemeinsam-einkaufen.html' },
+      { value: 'Sekunden', text: 'Hakt jemand in ToHuus im Laden etwas ab, verschwindet es bei allen anderen innerhalb von Sekunden von der Liste.', source: 'ToHuus', url: help('gemeinsam-einkaufen') },
     ],
     sources: [
       ['BVLH: Forsa-Umfrage zur Einkaufsplanung (2020)', 'https://www.bvlh.net/fileadmin/user_upload/MI_21-09-2020_Einkaufsplanung_final.pdf'],
@@ -211,7 +213,7 @@ export default [
       { value: '58 %', text: 'Rund 58 Prozent aller Lebensmittelabfälle in Deutschland entstanden 2022 in privaten Haushalten.', source: 'Umweltbundesamt 2024', url: 'https://www.umweltbundesamt.de/themen/abfall-ressourcen/abfallwirtschaft/abfallvermeidung/lebensmittelabfaelle' },
       { value: '29 %', text: '29 Prozent der Haushalte nannten 2020 eine zu große Packung als Grund, Lebensmittel wegzuwerfen.', source: 'GfK für BMEL 2020', url: 'https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf' },
       { value: '35 %', text: 'Frisches Obst und Gemüse machten 2020 rund 35 Prozent der vermeidbaren Lebensmittelabfälle in Haushalten aus.', source: 'GfK für BMEL 2020', url: 'https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf' },
-      { value: '2×', text: 'Lehnt ihr einen Vorschlag zweimal mit „Haben wir noch“ ab, fragt ToHuus danach nicht mehr.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/merkt-sich.html' },
+      { value: '2×', text: 'Lehnt ihr einen Vorschlag zweimal mit „Haben wir noch“ ab, fragt ToHuus danach nicht mehr.', source: 'ToHuus', url: help('merkt-sich') },
     ],
     sources: [
       ['Umweltbundesamt: Lebensmittelabfälle', 'https://www.umweltbundesamt.de/themen/abfall-ressourcen/abfallwirtschaft/abfallvermeidung/lebensmittelabfaelle'],
@@ -264,7 +266,7 @@ export default [
       { value: '68 %', text: '68 Prozent aller beobachteten Einkäufe hatten einen ungeplanten Anteil, also etwas, das nicht auf dem Zettel stand (2011).', source: 'Lebensmittel Praxis 2011', url: 'https://lebensmittelpraxis.de/zentrale-management/3734-ab-in-den-wagen.html' },
       { value: '2,7×', text: 'Wer alles isst, geht im Schnitt 2,7-mal pro Woche in einen Lebensmittelladen (KPMG Consumer Barometer 2025).', source: 'KPMG 2025', url: 'https://kpmg.com/de/de/medien/pressemitteilungen/2025/06/schnitzel-oder-blumenkohl-supermarkt-oder-bioladen.html' },
       { value: '84 %', text: 'Wer größere Einkäufe plant, nutzt meist einen handgeschriebenen Zettel: 84 Prozent laut Forsa-Umfrage für den BVLH 2020.', source: 'BVLH/Forsa 2020', url: 'https://www.bvlh.net/fileadmin/user_upload/MI_21-09-2020_Einkaufsplanung_final.pdf' },
-      { value: 'Offline', text: 'Der Modus „Im Laden“ in ToHuus sortiert nach Gängen, lernt die Reihenfolge pro Laden und funktioniert auch ohne Netz.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/einkaufsliste.html' },
+      { value: 'Offline', text: 'Der Modus „Im Laden“ in ToHuus sortiert nach Gängen, lernt die Reihenfolge pro Laden und funktioniert auch ohne Netz.', source: 'ToHuus', url: help('einkaufsliste') },
     ],
     sources: [
       ['Lebensmittel Praxis: Ab in den Wagen (2011)', 'https://lebensmittelpraxis.de/zentrale-management/3734-ab-in-den-wagen.html'],

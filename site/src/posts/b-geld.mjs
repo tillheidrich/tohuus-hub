@@ -1,3 +1,5 @@
+import { help } from '../config.mjs';
+
 export default [
   {
     slug: 'haushaltsbuch-lebensmittel-kassenbon', status: 'published', date: '2026-10-13',
@@ -22,7 +24,7 @@ export default [
       { value: 'seit 2020', text: 'Seit dem 1. Januar 2020 gilt die Belegausgabepflicht. Der Beleg darf auch elektronisch kommen, wenn die Kundin oder der Kunde zustimmt.', source: 'Bundesfinanzministerium', url: 'https://www.bundesfinanzministerium.de/Content/DE/FAQ/FAQ-steuergerechtigkeit-belegpflicht.html' },
       { value: '72 %', text: '72 Prozent der befragten Händler in Deutschland, Österreich und der Schweiz boten 2025 digitale Kassenbons an, 2023 waren es 53 Prozent.', source: 'EHI Retail Institute 2025', url: 'https://www.handelsdaten.de/deutschsprachiger-einzelhandel/mobile-services-konsumentinnen-handel-2025' },
       { value: 'Restmüll', text: 'Kassenbons aus Thermopapier gehören laut Umweltbundesamt in den Restmüll, damit Farbentwickler nicht ins Recyclingpapier gelangen.', source: 'Umweltbundesamt', url: 'https://www.umweltbundesamt.de/themen/kassenbons-gehoeren-nicht-ins-altpapier' },
-      { value: 'ohne KI', text: 'ToHuus liest Papierbons zuerst mit einer Texterkennung ohne Sprachmodell und legt unsichere Zeilen zur Prüfung vor.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/kassenbons.html' },
+      { value: 'ohne KI', text: 'ToHuus liest Papierbons zuerst mit einer Texterkennung ohne Sprachmodell und legt unsichere Zeilen zur Prüfung vor.', source: 'ToHuus', url: help('kassenbons') },
     ],
     sources: [
       ['Destatis: Gut ein Fünftel der Nahrungsmittelausgaben entfallen auf Fleisch und Fisch (Pressemitteilung Nr. 204, 16. Juni 2026)', 'https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/06/PD26_204_639.html'],
@@ -90,7 +92,7 @@ export default [
       { value: '510 €', text: 'So viel kostete ein WG-Zimmer im Wintersemester 2026/27 an 90 Hochschulstandorten im Schnitt warm pro Monat.', source: 'Moses Mendelssohn Institut 2026', url: 'https://www.moses-mendelssohn-institut.de/aktuelles/WiSe2026' },
       { value: '850 €', text: 'So hoch lag der Median für ein WG-Zimmer im Wintersemester 2026/27 in München, in Berlin und Hamburg waren es 650 Euro.', source: 'Moses Mendelssohn Institut 2026', url: 'https://www.moses-mendelssohn-institut.de/aktuelles/WiSe2026' },
       { value: '270 €', text: 'So viel gaben Einpersonenhaushalte 2024 im Monat für Nahrungsmittel, Getränke und Tabakwaren aus.', source: 'Destatis, LWR 2024', url: 'https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Konsumausgaben-Lebenshaltungskosten/Tabellen/privater-konsum-haushaltsgroesse-lwr.html' },
-      { value: 'Geldliste', text: 'In ToHuus teilt eine Geldliste Kosten wie einen Pizzaabend und zeigt den Ausgleich mit möglichst wenigen Überweisungen.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/geld.html' },
+      { value: 'Geldliste', text: 'In ToHuus teilt eine Geldliste Kosten wie einen Pizzaabend und zeigt den Ausgleich mit möglichst wenigen Überweisungen.', source: 'ToHuus', url: help('geld') },
     ],
     sources: [
       ['DZHW: Die Studierendenbefragung in Deutschland, 22. Sozialerhebung, Hauptbericht', 'https://www.dzhw.eu/pdf/ab_20/Soz22_Hauptbericht.pdf'],
@@ -123,7 +125,7 @@ export default [
       { value: '14,0 %', text: '14,0 Prozent der Konsumausgaben eines Haushalts gingen 2024 im Schnitt an Nahrungsmittel, Getränke und Tabakwaren.', source: 'Destatis, LWR 2024', url: 'https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Konsumausgaben-Lebenshaltungskosten/Tabellen/privater-konsum-haushaltsgroesse-lwr.html' },
       { value: '+2,0 %', text: 'Um 2,0 Prozent teurer waren Nahrungsmittel in Deutschland im Jahresdurchschnitt 2025 gegenüber 2024.', source: 'Destatis 2026', url: 'https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/01/PD26_019_611.html' },
       { value: '6,3 Mio. t', text: 'So viele Lebensmittelabfälle fielen 2022 in privaten Haushalten in Deutschland an, 58 Prozent aller Lebensmittelabfälle.', source: 'BMLEH 2022', url: 'https://www.bmleh.de/DE/themen/ernaehrung/lebensmittelverschwendung/studie-lebensmittelabfaelle-deutschland.html' },
-      { value: '80 %', text: 'Bei 80 Prozent und beim Erreichen eines Budgets schickt ToHuus auf Wunsch eine kurze Nachricht.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/geld.html' },
+      { value: '80 %', text: 'Bei 80 Prozent und beim Erreichen eines Budgets schickt ToHuus auf Wunsch eine kurze Nachricht.', source: 'ToHuus', url: help('geld') },
     ],
     sources: [
       ['Destatis: Konsumausgaben privater Haushalte nach Haushaltsgröße (Laufende Wirtschaftsrechnungen)', 'https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Konsumausgaben-Lebenshaltungskosten/Tabellen/privater-konsum-haushaltsgroesse-lwr.html'],
@@ -158,7 +160,7 @@ export default [
       { value: '−29,9 %', text: 'Um 29,9 Prozent günstiger war Butter im August 2026 als ein Jahr zuvor, Eier kosteten dagegen 15,2 Prozent mehr.', source: 'Destatis 2026', url: 'https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/09/PD26_320_611.html' },
       { value: '28,4 %', text: 'Im Schnitt 28,4 Prozent betrug die versteckte Preiserhöhung bei 77 neuen Produkten auf der Mogelpackungsliste 2025.', source: 'Verbraucherzentrale Hamburg 2026', url: 'https://www.vzhh.de/presse/wahl-der-mogelpackung-des-jahres-2025-gestartet' },
       { value: '100 → 90 g', text: 'Von 100 auf 90 Gramm schrumpfte die Milka-Alpenmilch-Tafel, der Preis stieg von 1,49 auf 1,99 Euro. Das war die Mogelpackung des Jahres 2025.', source: 'Verbraucherzentrale Hamburg 2026', url: 'https://www.vzhh.de/themen/mogelpackungen/mogelpackung-des-jahres/milka-alpenmilch-ist-mogelpackung-des-jahres-2025' },
-      { value: '90 Tage', text: 'ToHuus vergleicht Preise oft gekaufter Dinge mit den 90 Tagen davor, wenn möglich pro Kilo oder Liter.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/geld.html' },
+      { value: '90 Tage', text: 'ToHuus vergleicht Preise oft gekaufter Dinge mit den 90 Tagen davor, wenn möglich pro Kilo oder Liter.', source: 'ToHuus', url: help('geld') },
     ],
     sources: [
       ['Destatis: Inflationsrate im Jahr 2025 bei +2,2 % (Pressemitteilung Nr. 019, 16. Januar 2026)', 'https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/01/PD26_019_611.html'],

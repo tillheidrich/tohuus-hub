@@ -1,3 +1,5 @@
+import { help } from '../config.mjs';
+
 export default [
   {
     slug: 'wochenplan-essen-familie', status: 'published', date: '2026-10-13',
@@ -23,7 +25,7 @@ export default [
       { value: '57 %', text: '57 Prozent der Menschen in Deutschland ist wichtig oder sehr wichtig, dass Kochen einfach und schnell geht (Ernährungsreport 2025).', source: 'BMLEH Ernährungsreport 2025', url: 'https://www.bmleh.de/DE/themen/ernaehrung/ernaehrungsreport2025.html' },
       { value: '35 %', text: '35 Prozent der vermeidbaren Lebensmittelabfälle in Haushalten sind frisches Obst und Gemüse (GfK-Erhebung 2020).', source: 'GfK im Auftrag des BMEL 2020', url: 'https://www.bmleh.de/DE/themen/ernaehrung/lebensmittelverschwendung/gfk-studie.html' },
       { value: '55 %', text: '55 Prozent der vermeidbaren Haushaltsabfälle landen in der Tonne, weil sie verdorben oder zu lange gelagert sind (2020).', source: 'GfK im Auftrag des BMEL 2020', url: 'https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf' },
-      { value: '1 Tipp', text: '1 Tipp setzt in ToHuus alles, was für die geplante Woche fehlt, auf die gemeinsame Einkaufsliste.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/kochen.html' },
+      { value: '1 Tipp', text: '1 Tipp setzt in ToHuus alles, was für die geplante Woche fehlt, auf die gemeinsame Einkaufsliste.', source: 'ToHuus', url: help('kochen') },
     ],
     sources: [
       ['BMLEH: Deutschland, wie es isst. Ernährungsreport 2025', 'https://www.bmleh.de/DE/themen/ernaehrung/ernaehrungsreport2025.html'],
@@ -94,7 +96,7 @@ export default [
       { value: '20 %', text: '20 Prozent der Menschen ab 14 in Deutschland nutzen TikTok mindestens einmal pro Woche (ARD/ZDF-Medienstudie 2025).', source: 'ARD/ZDF-Medienstudie 2025', url: 'https://www.media-perspektiven.de/fileadmin/user_upload/media-perspektiven/pdf/2025/MP_31_2025_ARD_ZDF-Medienstudie_Social_Media_zwischen_Wachstum_und_Saettigung_Nutzungsmuster_und_Plattformdynamiken_in_Deutschland.pdf' },
       { value: '44 %', text: '44 Prozent derer, die für Familie oder Freunde kochen, holen sich Ideen im Internet (Bitkom-Umfrage, veröffentlicht 2020).', source: 'Bitkom 2020', url: 'https://www.bitkom.org/Presse/Presseinformation/44-Prozent-inspirieren-sich-vor-dem-Kochen-im-Internet' },
       { value: '36 %', text: '36 Prozent nutzen dafür Rezeptseiten oder Foren, Kochvideos in sozialen Netzwerken nannten 5 Prozent (Bitkom 2020).', source: 'Bitkom 2020', url: 'https://www.bitkom.org/Presse/Presseinformation/44-Prozent-inspirieren-sich-vor-dem-Kochen-im-Internet' },
-      { value: '6 Fotos', text: '6 Fotos pro Rezept nimmt ToHuus, etwa Screenshots einer Beschreibung oder Vorder- und Rückseite einer Rezeptkarte.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/rezepte-importieren.html' },
+      { value: '6 Fotos', text: '6 Fotos pro Rezept nimmt ToHuus, etwa Screenshots einer Beschreibung oder Vorder- und Rückseite einer Rezeptkarte.', source: 'ToHuus', url: help('rezepte-importieren') },
     ],
     sources: [
       ['ARD/ZDF-Medienstudie 2025: Social Media zwischen Wachstum und Sättigung (Media Perspektiven 31/2025)', 'https://www.media-perspektiven.de/fileadmin/user_upload/media-perspektiven/pdf/2025/MP_31_2025_ARD_ZDF-Medienstudie_Social_Media_zwischen_Wachstum_und_Saettigung_Nutzungsmuster_und_Plattformdynamiken_in_Deutschland.pdf'],
@@ -127,7 +129,7 @@ export default [
       { value: '1,4 Mio.', text: 'So viele Thermomix-Geräte hat Vorwerk nach eigenen Angaben im Jahr 2025 weltweit verkauft.', source: 'Vorwerk, Bilanz 2025 (Mai 2026)', url: 'https://www.vorwerk-group.com/shared/assets/3.-Newsroom/1.1-Media-Realeases/2026/Pressemitteilung_St%C3%A4rke_des_Direktvertriebs_und_der_weltweiten_Community_Vorwerk_steigert_Umsatz_2025_auf_Rekordwert_von_36_Milliarden_Euro.pdf' },
       { value: '100.000', text: 'Über 100.000 Rezepte umfasst Cookidoo weltweit, laut Vorwerk (abgerufen 2026).', source: 'Vorwerk, Cookidoo 2026', url: 'https://www.vorwerk.com/at/de/c/home/rezepte-und-ideen/cookidoo' },
       { value: '57 %', text: '57 Prozent der Menschen in Deutschland ist wichtig oder sehr wichtig, dass Kochen einfach und schnell geht (Ernährungsreport 2025).', source: 'BMLEH Ernährungsreport 2025', url: 'https://www.bmleh.de/DE/themen/ernaehrung/ernaehrungsreport2025.html' },
-      { value: '1 Liste', text: 'Cookidoo-Rezepte speicherst du in ToHuus als Link mit Zutaten, die auf eure gemeinsame Einkaufsliste kommen.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/cookidoo.html' },
+      { value: '1 Liste', text: 'Cookidoo-Rezepte speicherst du in ToHuus als Link mit Zutaten, die auf eure gemeinsame Einkaufsliste kommen.', source: 'ToHuus', url: help('cookidoo') },
     ],
     sources: [
       ['Vorwerk: Cookidoo, die Rezeptplattform', 'https://www.vorwerk.com/at/de/c/home/rezepte-und-ideen/cookidoo'],
@@ -161,7 +163,7 @@ export default [
       { value: '57 %', text: '57 Prozent der Menschen in Deutschland ist wichtig oder sehr wichtig, dass Kochen einfach und schnell geht (Ernährungsreport 2025).', source: 'BMLEH Ernährungsreport 2025', url: 'https://www.bmleh.de/DE/themen/ernaehrung/ernaehrungsreport2025.html' },
       { value: '30 % zu 3 %', text: '30 Prozent kauften bei 6 Marmeladen im Probierstand ein Glas, bei 24 Sorten nur 3 Prozent (Studie von 2000).', source: 'Iyengar und Lepper 2000', url: 'https://doi.org/10.1037/0022-3514.79.6.995' },
       { value: '50', text: '50 Experimente zur Auswahlüberlastung zeigten 2010 im Schnitt kaum einen Effekt, er hängt stark von der Lage ab.', source: 'Scheibehenne und andere 2010', url: 'https://abcwest.cogs.indiana.edu/pmwiki/pdf/scheibehenne.options.2010.pdf' },
-      { value: '1 Tipp', text: 'Mit einem Tipp auf „Entscheidet ihr für uns“ wählt ToHuus, was heute mit dem Vorhandenen am besten passt.', source: 'ToHuus', url: 'https://tohuus.heidrich-digital.de/hilfe/kochen.html' },
+      { value: '1 Tipp', text: 'Mit einem Tipp auf „Entscheidet ihr für uns“ wählt ToHuus, was heute mit dem Vorhandenen am besten passt.', source: 'ToHuus', url: help('kochen') },
     ],
     sources: [
       ['BMLEH: Deutschland, wie es isst. Ernährungsreport 2025', 'https://www.bmleh.de/DE/themen/ernaehrung/ernaehrungsreport2025.html'],

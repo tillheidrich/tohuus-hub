@@ -4,8 +4,9 @@
  */
 import { Question } from '@phosphor-icons/react';
 import { t } from './i18n';
+import { SITE_URL } from './urls';
 
-export const HELP_BASE = 'https://tohuus.heidrich-digital.de/hilfe/';
+export const HELP_BASE = `${SITE_URL}/hilfe/`;
 
 export const HELP_SLUGS = [
   'erste-schritte',

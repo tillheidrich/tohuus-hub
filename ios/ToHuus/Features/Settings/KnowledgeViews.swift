@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Help articles on the website (contract: docs/help-slugs.md – the app only links slugs listed there).
 enum Help {
-    static let base = URL(string: "https://tohuus.heidrich-digital.de/hilfe/")!
+    static let base = SharedConfig.siteURL.appendingPathComponent("hilfe")
 
     static func url(_ slug: String) -> URL { base.appendingPathComponent("\(slug).html") }
 
@@ -56,7 +56,7 @@ struct HelpListView: View {
             Section {
                 ForEach(Help.articles, id: \.slug) { a in HelpLink(slug: a.slug, title: a.title) }
             } footer: {
-                Text(L("The help pages open on tohuus.heidrich-digital.de."))
+                Text(LF("The help pages open on %@.", SharedConfig.siteURL.host() ?? ""))
             }
         }
         .themedList()
