@@ -22,9 +22,6 @@ de = json.load(open(os.path.join(root, "tools", "strings_de.json"), encoding="ut
 for extra_file in sorted(os.listdir(os.path.join(root, "tools"))):
     if extra_file.startswith("strings_de_") and extra_file.endswith(".json"):
         de.update(json.load(open(os.path.join(root, "tools", extra_file), encoding="utf-8")))
-# per-area files (strings_de_<area>.json) keep parallel work from colliding in one file
-for extra_file in sorted(f for f in os.listdir(os.path.join(root, "tools")) if f.startswith("strings_de_") and f.endswith(".json")):
-    de.update(json.load(open(os.path.join(root, "tools", extra_file), encoding="utf-8")))
 missing = sorted(k for k in keys if k not in de)
 strings = {}
 for k in sorted(keys):

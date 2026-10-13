@@ -19,20 +19,34 @@
       }
     },
     "%@ added this discreetly and lets whoever shops see it. Please keep it to yourself.": {
-    "%@ asks you": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ added this discreetly and lets whoever shops see it. Please keep it to yourself."
-            "value": "%@ asks you"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ hat das diskret eingetragen und lässt es die Person sehen, die einkauft. Bitte behalt es für dich."
+          }
+        }
+      }
+    },
+    "%@ asks you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ asks you"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "%@ fragt dich"
           }
         }
@@ -55,25 +69,53 @@
         }
       }
     },
-    "%@ gets it": {
-    "%@ gets your thanks.": {
     "%@ for receipts and photos": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ gets it"
-            "value": "%@ gets your thanks."
             "value": "%@ for receipts and photos"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ holt’s"
-            "value": "%@ bekommt dein Danke."
             "value": "%@ für Bons und Fotos"
+          }
+        }
+      }
+    },
+    "%@ gets it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gets it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ holt’s"
+          }
+        }
+      }
+    },
+    "%@ gets your thanks.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gets your thanks."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ bekommt dein Danke."
           }
         }
       }
@@ -113,20 +155,34 @@
       }
     },
     "%@ is up to date": {
-    "%@ left": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ is up to date"
-            "value": "%@ left"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ ist auf dem neuesten Stand"
+          }
+        }
+      }
+    },
+    "%@ left": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ left"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "noch %@"
           }
         }
@@ -184,6 +240,22 @@
       }
     },
     "%@ portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ portions"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Portionen"
+          }
+        }
+      }
+    },
     "%@ says thanks": {
       "extractionState": "manual",
       "localizations": {
@@ -197,23 +269,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ sagt Danke"
-          }
-        }
-      }
-    },
-    "%@ takes care of it": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ portions"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ Portionen"
           }
         }
       }
@@ -304,20 +359,34 @@
       }
     },
     "%d added discreetly": {
-    "%d assistant messages a month": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%d added discreetly"
-            "value": "%d assistant messages a month"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "%d diskret eingetragen"
+          }
+        }
+      }
+    },
+    "%d assistant messages a month": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d assistant messages a month"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "%d Nachrichten an den Assistenten im Monat"
           }
         }
@@ -578,42 +647,70 @@
         }
       }
     },
-    "%d of %d": {
     "%d more matched": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d of %d"
             "value": "%d more matched"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d von %d"
             "value": "%d weitere zugeordnet"
           }
         }
       }
     },
-    "%d of %d chosen": {
     "%d not included (not delivered, returned, deposit)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d of %d chosen"
             "value": "%d not included (not delivered, returned, deposit)"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d von %d ausgewählt"
             "value": "%d nicht übernommen (nicht geliefert, zurückgegeben, Pfand)"
+          }
+        }
+      }
+    },
+    "%d of %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d of %d"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d von %d"
+          }
+        }
+      }
+    },
+    "%d of %d chosen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d of %d chosen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d von %d ausgewählt"
           }
         }
       }
@@ -669,24 +766,36 @@
         }
       }
     },
-    "%d put away": {
     "%d purchases · on average %@": {
-    "%d sample products and %d sample recipes are marked “Sample”. Removing them only deletes what the samples added – nothing you entered yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d purchases · on average %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Einkäufe · im Schnitt %@"
+          }
+        }
+      }
+    },
+    "%d put away": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%d put away"
-            "value": "%d purchases · on average %@"
-            "value": "%d sample products and %d sample recipes are marked “Sample”. Removing them only deletes what the samples added – nothing you entered yourself."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "%d weggeräumt"
-            "value": "%d Einkäufe · im Schnitt %@"
           }
         }
       }
@@ -704,24 +813,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Einkäufe"
-            "value": "%d Beispielprodukte und %d Beispielrezepte sind mit „Beispiel“ markiert. Beim Entfernen verschwindet nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast."
           }
         }
       }
     },
-    "%d servings": {
+    "%d sample products and %d sample recipes are marked “Sample”. Removing them only deletes what the samples added – nothing you entered yourself.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d servings"
+            "value": "%d sample products and %d sample recipes are marked “Sample”. Removing them only deletes what the samples added – nothing you entered yourself."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d Portionen"
+            "value": "%d Beispielprodukte und %d Beispielrezepte sind mit „Beispiel“ markiert. Beim Entfernen verschwindet nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast."
           }
         }
       }
@@ -739,7 +847,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Dinge"
-            "value": "%d Sachen"
           }
         }
       }
@@ -829,42 +936,53 @@
         }
       }
     },
-    "1 day left": {
     "+ Recipes": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 day left"
             "value": "+ Recipes"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "noch 1 Tag"
             "value": "+ Rezepte"
           }
         }
       }
     },
-    "1 portion": {
     "+ Stock": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 portion"
             "value": "+ Stock"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 Portion"
             "value": "+ Vorrat"
+          }
+        }
+      }
+    },
+    "1 day left": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day left"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch 1 Tag"
           }
         }
       }
@@ -899,6 +1017,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 eigene Ausgabe"
+          }
+        }
+      }
+    },
+    "1 portion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 portion"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Portion"
           }
         }
       }
@@ -950,7 +1085,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 Ding"
-            "value": "1 Sache"
           }
         }
       }
@@ -1126,20 +1260,34 @@
       }
     },
     "A few words (optional)": {
-    "A filled-in example household: a list, things at home and a few recipes. Each sample is marked, and you remove them all with one tap.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "A few words (optional)"
-            "value": "A filled-in example household: a list, things at home and a few recipes. Each sample is marked, and you remove them all with one tap."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Ein paar Worte (optional)"
+          }
+        }
+      }
+    },
+    "A filled-in example household: a list, things at home and a few recipes. Each sample is marked, and you remove them all with one tap.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A filled-in example household: a list, things at home and a few recipes. Each sample is marked, and you remove them all with one tap."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Ein gefüllter Beispielhaushalt: eine Liste, Sachen im Haus und ein paar Rezepte. Jedes Beispiel ist markiert, und mit einem Tipp sind alle wieder weg."
           }
         }
@@ -1162,23 +1310,18 @@
         }
       }
     },
-    "A list from a message or a note. You choose what goes on the list.": {
     "A link or QR code – no app, no account. Guests ask for what you put on the menu for guests, can find things in the places you share and add to the shopping list if you allow it. They never see quantities or purchases.": {
-    "A look back at every month": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A list from a message or a note. You choose what goes on the list."
             "value": "A link or QR code – no app, no account. Guests ask for what you put on the menu for guests, can find things in the places you share and add to the shopping list if you allow it. They never see quantities or purchases."
-            "value": "A look back at every month"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Liste aus einer Nachricht oder Notiz. Du wählst aus, was auf die Liste kommt."
             "value": "Ein Link oder QR-Code – ohne App, ohne Konto. Gäste wünschen sich, was ihr für Gäste auf die Karte stellt, finden Sachen an den Orten, die ihr teilt, und schreiben auf die Einkaufsliste, wenn ihr das erlaubt. Mengen und Einkäufe sehen sie nie."
           }
         }
@@ -1197,6 +1340,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Link ohne Ablaufdatum funktioniert, bis du ihn widerrufst – auch wenn er weitergeleitet wird. Trotzdem erstellen?"
+          }
+        }
+      }
+    },
+    "A list from a message or a note. You choose what goes on the list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A list from a message or a note. You choose what goes on the list."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Liste aus einer Nachricht oder Notiz. Du wählst aus, was auf die Liste kommt."
+          }
+        }
+      }
+    },
+    "A look back at every month": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A look back at every month"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Rückblick auf jeden Monat"
           }
         }
       }
@@ -1248,7 +1425,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Foto kannst du in der Web-App ändern."
-            "value": "Ein Rückblick auf jeden Monat"
           }
         }
       }
@@ -1848,38 +2024,18 @@
         }
       }
     },
-    "Address, e.g. tohuus.example.de": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Address, e.g. tohuus.example.de"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adresse, z. B. tohuus.example.de"
-          }
-        }
-      }
-    },
-    "Aisle order": {
     "Admin": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aisle order"
             "value": "Admin"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reihenfolge der Gänge"
             "value": "Admin"
           }
         }
@@ -1898,6 +2054,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Admins können auch Einstellungen, Mitglieder und Sicherungen ändern."
+          }
+        }
+      }
+    },
+    "Aisle order": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aisle order"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reihenfolge der Gänge"
           }
         }
       }
@@ -1936,61 +2109,86 @@
         }
       }
     },
-    "All categories": {
     "All babysitter and house-sitter links": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "All categories"
             "value": "All babysitter and house-sitter links"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle Kategorien"
             "value": "Alle Babysitter- und Haussitter-Links"
           }
         }
       }
     },
+    "All categories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All categories"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Kategorien"
+          }
+        }
+      }
+    },
     "All eaten": {
-    "All prices": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "All eaten"
-            "value": "All prices"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Alles gegessen"
+          }
+        }
+      }
+    },
+    "All prices": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All prices"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Alle Preise"
           }
         }
       }
     },
-    "All taken care of.": {
     "All receipts": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "All taken care of."
             "value": "All receipts"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alles erledigt."
             "value": "Alle Bons"
           }
         }
@@ -2009,6 +2207,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alle Ausgaben"
+          }
+        }
+      }
+    },
+    "All taken care of.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All taken care of."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles erledigt."
           }
         }
       }
@@ -2149,21 +2364,18 @@
         }
       }
     },
-    "Also visible to (optional):": {
     "Also sees recipes, the week plan and votes.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Also visible to (optional):"
             "value": "Also sees recipes, the week plan and votes."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auch sichtbar für (optional):"
             "value": "Sieht außerdem Rezepte, den Wochenplan und Abstimmungen."
           }
         }
@@ -2186,6 +2398,23 @@
         }
       }
     },
+    "Also visible to (optional):": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also visible to (optional):"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auch sichtbar für (optional):"
+          }
+        }
+      }
+    },
     "Amount": {
       "extractionState": "manual",
       "localizations": {
@@ -2203,15 +2432,30 @@
         }
       }
     },
-    "An estimate from past purchases and usage. Your stock is never changed by it.": {
     "An admin of your household can remove the sample data.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "An estimate from past purchases and usage. Your stock is never changed by it."
             "value": "An admin of your household can remove the sample data."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Admin deines Haushalts kann die Beispieldaten entfernen."
+          }
+        }
+      }
+    },
+    "An estimate from past purchases and usage. Your stock is never changed by it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An estimate from past purchases and usage. Your stock is never changed by it."
           }
         },
         "de": {
@@ -2235,7 +2479,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anderes Foto"
-            "value": "Ein Admin deines Haushalts kann die Beispieldaten entfernen."
           }
         }
       }
@@ -2495,23 +2738,35 @@
         }
       }
     },
-    "Box": {
-    "Bins": {
     "Billing period": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Box"
-            "value": "Bins"
             "value": "Billing period"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dose"
+            "value": "Abrechnung"
+          }
+        }
+      }
+    },
+    "Bins": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bins"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Müll"
           }
         }
@@ -2581,7 +2836,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eingebucht."
-            "value": "Abrechnung"
+          }
+        }
+      }
+    },
+    "Box": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Box"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dose"
           }
         }
       }
@@ -2824,22 +3095,36 @@
         }
       }
     },
-    "By place": {
     "By creating an account you accept the terms and the privacy policy.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "By place"
             "value": "By creating an account you accept the terms and the privacy policy."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nach Ort"
             "value": "Mit dem Konto akzeptierst du die Nutzungsbedingungen und die Datenschutzerklärung."
+          }
+        }
+      }
+    },
+    "By place": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By place"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Ort"
           }
         }
       }
@@ -3065,15 +3350,30 @@
         }
       }
     },
-    "Change the date": {
     "Change that in the list of things that are not counted.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Change the date"
             "value": "Change that in the list of things that are not counted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das lässt sich in der Liste „Nicht gezählt“ ändern."
+          }
+        }
+      }
+    },
+    "Change the date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the date"
           }
         },
         "de": {
@@ -3097,7 +3397,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bild ändern"
-            "value": "Das lässt sich in der Liste „Nicht gezählt“ ändern."
           }
         }
       }
@@ -3119,24 +3418,36 @@
         }
       }
     },
-    "Check and find": {
     "Check and book in": {
-    "Check the connection and try again. Nothing is bought without your confirmation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check and book in"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfen und einbuchen"
+          }
+        }
+      }
+    },
+    "Check and find": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Check and find"
-            "value": "Check and book in"
-            "value": "Check the connection and try again. Nothing is bought without your confirmation."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Prüfen und finden"
-            "value": "Prüfen und einbuchen"
           }
         }
       }
@@ -3154,6 +3465,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bon prüfen"
+          }
+        }
+      }
+    },
+    "Check the connection and try again. Nothing is bought without your confirmation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the connection and try again. Nothing is bought without your confirmation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüf die Verbindung und versuch es noch einmal. Ohne deine Bestätigung wird nichts gekauft."
           }
         }
       }
@@ -3205,7 +3533,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kind · Jahrgang %d"
-            "value": "Prüf die Verbindung und versuch es noch einmal. Ohne deine Bestätigung wird nichts gekauft."
           }
         }
       }
@@ -3482,7 +3809,6 @@
         }
       }
     },
-    "Code from your authenticator app": {
     "Code by e-mail": {
       "extractionState": "manual",
       "localizations": {
@@ -3631,7 +3957,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verbundene Haushalte und Listen"
+            "value": "Verbundene Haushalte und geteilte Listen"
           }
         }
       }
@@ -3649,24 +3975,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosen"
-          }
-        }
-      }
-    },
-    "Continue with ToHuus Cloud": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue with ToHuus Cloud"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weiter mit ToHuus Cloud"
-            "value": "Verbundene Haushalte und geteilte Listen"
           }
         }
       }
@@ -3859,40 +4167,51 @@
       }
     },
     "Correct": {
-    "Correct this line": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Correct"
-            "value": "Correct this line"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Stimmt"
+          }
+        }
+      }
+    },
+    "Correct this line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct this line"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Zeile korrigieren"
           }
         }
       }
     },
-    "Counting": {
     "Count %@ again": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Counting"
             "value": "Count %@ again"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zählen"
             "value": "%@ wieder zählen"
           }
         }
@@ -3962,6 +4281,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gezählt werden eingebuchte Bons und Bestellungen plus deine eigenen Ausgaben. Was nicht lieferbar war oder zurückging, bleibt draußen. Pfand ist in der Summe enthalten."
+          }
+        }
+      }
+    },
+    "Counting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counting"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zählen"
           }
         }
       }
@@ -4098,23 +4434,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Datum"
-          }
-        }
-      }
-    },
-    "Day": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Day"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tag"
           }
         }
       }
@@ -4324,60 +4643,68 @@
       }
     },
     "Didn't like it": {
-    "Digital receipt": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Didn't like it"
-            "value": "Digital receipt"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Hat nicht geschmeckt"
+          }
+        }
+      }
+    },
+    "Digital receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digital receipt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Digitaler Bon"
           }
         }
       }
     },
-    "Discreet": {
     "Digital receipt (QR code or link)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Discreet"
             "value": "Digital receipt (QR code or link)"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diskret"
             "value": "Digitaler Bon (QR-Code oder Link)"
           }
         }
       }
     },
-    "Don't count": {
     "Discard": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Don't count"
             "value": "Discard"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicht zählen"
             "value": "Verwerfen"
           }
         }
@@ -4434,6 +4761,23 @@
         }
       }
     },
+    "Discreet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discreet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diskret"
+          }
+        }
+      }
+    },
     "Dishes with these get a warning and are never planned automatically.": {
       "extractionState": "manual",
       "localizations": {
@@ -4464,6 +4808,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mag nicht"
+          }
+        }
+      }
+    },
+    "Don't count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't count"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht zählen"
           }
         }
       }
@@ -4570,23 +4931,6 @@
         }
       }
     },
-    "Drag a meal to another day, or use the … menu. Plan a meal from the recipe page or ask the assistant.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drag a meal to another day, or use the … menu. Plan a meal from the recipe page or ask the assistant."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zieh ein Essen auf einen anderen Tag oder nimm das …-Menü. Planen geht auf der Rezeptseite oder per Sprechen."
-          }
-        }
-      }
-    },
     "Drag the aisles into the order you walk through the shop.": {
       "extractionState": "manual",
       "localizations": {
@@ -4689,22 +5033,36 @@
         }
       }
     },
-    "Eat by": {
     "E-mail sent · valid until %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eat by"
             "value": "E-mail sent · valid until %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Essen bis"
             "value": "E-Mail verschickt · gültig bis %@"
+          }
+        }
+      }
+    },
+    "Eat by": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eat by"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essen bis"
           }
         }
       }
@@ -4726,62 +5084,87 @@
         }
       }
     },
-    "Edit product": {
     "Edit card": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edit product"
             "value": "Edit card"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Produkt bearbeiten"
             "value": "Karte bearbeiten"
           }
         }
       }
     },
-    "Edit row": {
     "Edit code": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edit row"
             "value": "Edit code"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eintrag bearbeiten"
             "value": "Code bearbeiten"
           }
         }
       }
     },
-    "Empty": {
     "Edit expense": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empty"
             "value": "Edit expense"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leer"
             "value": "Ausgabe bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit product": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit product"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Produkt bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit row": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit row"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eintrag bearbeiten"
           }
         }
       }
@@ -4799,6 +5182,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notfall"
+          }
+        }
+      }
+    },
+    "Empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer"
           }
         }
       }
@@ -4833,23 +5233,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Endet am %@ – es verlängert sich nicht."
-          }
-        }
-      }
-    },
-    "Enjoy your meal!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enjoy your meal!"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guten Appetit!"
           }
         }
       }
@@ -4889,60 +5272,102 @@
       }
     },
     "Everyone": {
-    "Everyone at home": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Everyone"
-            "value": "Everyone at home"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Alle"
+          }
+        }
+      }
+    },
+    "Everyone at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone at home"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Alle zu Hause"
           }
         }
       }
     },
-    "Everyone in the household sees it.": {
     "Everyone at home gets the push – whoever has a free hand says “I’ll bring it”.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everyone in the household sees it."
             "value": "Everyone at home gets the push – whoever has a free hand says “I’ll bring it”."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle im Haushalt sehen es."
             "value": "Alle zu Hause bekommen die Nachricht – wer eine Hand frei hat, sagt „Ich bring’s“."
           }
         }
       }
     },
+    "Everyone in the household sees it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone in the household sees it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle im Haushalt sehen es."
+          }
+        }
+      }
+    },
     "Everyone sees a neutral placeholder like “Drugstore item”. Only you see the real name.": {
-    "Everything (CSV)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Everyone sees a neutral placeholder like “Drugstore item”. Only you see the real name."
-            "value": "Everything (CSV)"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Alle sehen einen neutralen Platzhalter wie „Drogerieartikel“. Nur du siehst den echten Namen."
+          }
+        }
+      }
+    },
+    "Everything (CSV)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything (CSV)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Alles (CSV)"
           }
         }
@@ -5050,38 +5475,35 @@
         }
       }
     },
-    "Everything missing for the week is on the list.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Everything missing for the week is on the list."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alles, was für die Woche fehlt, steht auf der Liste."
-          }
-        }
-      }
-    },
     "Everything that’s here": {
-    "Everything you added yourself stays.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Everything that’s here"
-            "value": "Everything you added yourself stays."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Alles, was da ist"
+          }
+        }
+      }
+    },
+    "Everything you added yourself stays.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything you added yourself stays."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Alles, was du selbst eingetragen hast, bleibt."
           }
         }
@@ -5257,24 +5679,52 @@
         }
       }
     },
-    "Fill level": {
     "Fetch receipt": {
-    "Filling the sample household …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fetch receipt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon abrufen"
+          }
+        }
+      }
+    },
+    "Fill level": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fill level"
-            "value": "Fetch receipt"
-            "value": "Filling the sample household …"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Füllstand"
-            "value": "Bon abrufen"
+          }
+        }
+      }
+    },
+    "Filling the sample household …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filling the sample household …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Der Beispielhaushalt wird gefüllt …"
           }
         }
@@ -5382,62 +5832,104 @@
         }
       }
     },
-    "For coffee from the machine or things ordered in: only for recipes.": {
     "For": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "For coffee from the machine or things ordered in: only for recipes."
             "value": "For"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für Kaffee aus der Maschine oder Bestelltes: nur für Rezepte."
             "value": "Für"
           }
         }
       }
     },
+    "For coffee from the machine or things ordered in: only for recipes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For coffee from the machine or things ordered in: only for recipes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Kaffee aus der Maschine oder Bestelltes: nur für Rezepte."
+          }
+        }
+      }
+    },
     "For fruit, veg, bread: just “full – half – low – empty”. Less upkeep.": {
-    "For me": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "For fruit, veg, bread: just “full – half – low – empty”. Less upkeep."
-            "value": "For me"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Für Obst, Gemüse, Brot: nur „voll – halb – wenig – leer“. Weniger Pflege."
+          }
+        }
+      }
+    },
+    "For me": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For me"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Für mich"
           }
         }
       }
     },
-    "For packs, bottles, cans: count exactly. Below the minimum it goes on the list by itself.": {
     "For me – ask for something": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "For packs, bottles, cans: count exactly. Below the minimum it goes on the list by itself."
             "value": "For me – ask for something"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für Packungen, Flaschen, Dosen: genau zählen. Unter dem Minimum kommt es von selbst auf die Liste."
             "value": "Für mich – was wünschen"
+          }
+        }
+      }
+    },
+    "For packs, bottles, cans: count exactly. Below the minimum it goes on the list by itself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For packs, bottles, cans: count exactly. Below the minimum it goes on the list by itself."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Packungen, Flaschen, Dosen: genau zählen. Unter dem Minimum kommt es von selbst auf die Liste."
           }
         }
       }
@@ -5459,23 +5951,18 @@
         }
       }
     },
-    "Found": {
     "For someone else": {
-    "Forgot your password? Sign in with a code from an e-mail, then set a new one in the web app.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Found"
             "value": "For someone else"
-            "value": "Forgot your password? Sign in with a code from an e-mail, then set a new one in the web app."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gefunden"
             "value": "Für jemand anderen"
           }
         }
@@ -5566,6 +6053,23 @@
         }
       }
     },
+    "Forgot your password? Sign in with a code from an e-mail, then set a new one in the web app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgot your password? Sign in with a code from an e-mail, then set a new one in the web app."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort vergessen? Melde dich mit einem Code aus einer E-Mail an und leg danach in der Web-App ein neues fest."
+          }
+        }
+      }
+    },
     "Forgotten: %@": {
       "extractionState": "manual",
       "localizations": {
@@ -5579,7 +6083,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vergessen: %@"
-            "value": "Passwort vergessen? Melde dich mit einem Code aus einer E-Mail an und leg danach in der Web-App ein neues fest."
+          }
+        }
+      }
+    },
+    "Found": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gefunden"
           }
         }
       }
@@ -5652,15 +6172,30 @@
         }
       }
     },
-    "Freeze": {
     "Free stays free – the list, stock and recipes always work.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Freeze"
             "value": "Free stays free – the list, stock and recipes always work."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free bleibt kostenlos – Liste, Vorrat und Rezepte funktionieren immer."
+          }
+        }
+      }
+    },
+    "Freeze": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze"
           }
         },
         "de": {
@@ -5684,7 +6219,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gefrierfach"
-            "value": "Free bleibt kostenlos – Liste, Vorrat und Rezepte funktionieren immer."
           }
         }
       }
@@ -5707,20 +6241,34 @@
       }
     },
     "Fridge": {
-    "Frog": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fridge"
-            "value": "Frog"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Kühlschrank"
+          }
+        }
+      }
+    },
+    "Frog": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frog"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Frosch"
           }
         }
@@ -5845,59 +6393,70 @@
         }
       }
     },
-    "Full history: prices, spending, savings review": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Full history: prices, spending, savings review"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ganze Historie: Preise, Ausgaben, Spar-Rückblick"
-          }
-        }
-      }
-    },
-    "Goes into the week plan.": {
     "Garage door": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Goes into the week plan."
             "value": "Garage door"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kommt in den Wochenplan."
             "value": "Garagentor"
           }
         }
       }
     },
-    "Gone": {
     "Gift": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gone"
             "value": "Gift"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Weg"
             "value": "Geschenk"
+          }
+        }
+      }
+    },
+    "Goes into the week plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goes into the week plan."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommt in den Wochenplan."
+          }
+        }
+      }
+    },
+    "Gone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weg"
           }
         }
       }
@@ -5953,41 +6512,35 @@
         }
       }
     },
-    "Group and filter": {
     "Goods": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Group and filter"
             "value": "Goods"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gruppieren und filtern"
             "value": "Waren"
           }
         }
       }
     },
-    "Group by": {
     "Goods %@, deposit %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Group by"
             "value": "Goods %@, deposit %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gruppieren"
             "value": "Waren %@, Pfand %@"
           }
         }
@@ -6023,6 +6576,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Großeltern"
+          }
+        }
+      }
+    },
+    "Group and filter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group and filter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gruppieren und filtern"
+          }
+        }
+      }
+    },
+    "Group by": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group by"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gruppieren"
           }
         }
       }
@@ -6112,22 +6699,36 @@
         }
       }
     },
-    "Handover note": {
     "Habit": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Handover note"
             "value": "Habit"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Übergabe-Notiz"
             "value": "Gewohnheit"
+          }
+        }
+      }
+    },
+    "Handover note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handover note"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übergabe-Notiz"
           }
         }
       }
@@ -6201,20 +6802,34 @@
       }
     },
     "Helps with “Where is it?” – for babysitters and visitors too.": {
-    "Here’s our house link – no app needed:": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Helps with “Where is it?” – for babysitters and visitors too."
-            "value": "Here’s our house link – no app needed:"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Hilft bei „Wo ist was?“ – auch für Babysitter und Besuch."
+          }
+        }
+      }
+    },
+    "Here’s our house link – no app needed:": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Here’s our house link – no app needed:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Hier ist unser Haus-Link – ganz ohne App:"
           }
         }
@@ -6458,15 +7073,30 @@
         }
       }
     },
-    "How many": {
     "How it works": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "How many"
             "value": "How it works"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So geht’s"
+          }
+        }
+      }
+    },
+    "How many": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How many"
           }
         },
         "de": {
@@ -6507,7 +7137,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wie soll gezählt werden?"
-            "value": "So geht’s"
           }
         }
       }
@@ -6542,23 +7171,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wie hättest du’s gern?"
-          }
-        }
-      }
-    },
-    "I already have an account": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I already have an account"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ich habe schon ein Konto"
           }
         }
       }
@@ -6716,42 +7328,70 @@
         }
       }
     },
-    "In boxes": {
     "In a few minutes": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In boxes"
             "value": "In a few minutes"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "In Dosen"
             "value": "Gleich, in ein paar Minuten"
           }
         }
       }
     },
-    "In here": {
+    "In boxes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In boxes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Dosen"
+          }
+        }
+      }
+    },
     "In detail": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In here"
             "value": "In detail"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hier drin"
             "value": "Im Detail"
+          }
+        }
+      }
+    },
+    "In here": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In here"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier drin"
           }
         }
       }
@@ -7148,62 +7788,119 @@
       }
     },
     "Just so nobody buys it twice. No points, no ranking.": {
-    "Just “not now”": {
-    "Keep for now": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Just so nobody buys it twice. No points, no ranking."
-            "value": "Just “not now”"
-            "value": "Keep for now"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Nur damit es niemand doppelt kauft. Keine Punkte, keine Rangliste."
+          }
+        }
+      }
+    },
+    "Just “not now”": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just “not now”"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Einfach „jetzt nicht“"
           }
         }
       }
     },
     "Keep at least": {
-    "Key safe": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Keep at least"
-            "value": "Key safe"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Mindestens da haben"
-            "value": "Schlüsselsafe"
           }
         }
       }
     },
     "Keep at least %@": {
-    "Kids": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Keep at least %@"
-            "value": "Kids"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Mindestens %@ da haben"
+          }
+        }
+      }
+    },
+    "Keep for now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep for now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erst mal behalten"
+          }
+        }
+      }
+    },
+    "Key safe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key safe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüsselsafe"
+          }
+        }
+      }
+    },
+    "Kids": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kids"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Kinder"
           }
         }
@@ -7239,7 +7936,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Küche"
-            "value": "Erst mal behalten"
           }
         }
       }
@@ -7329,42 +8025,53 @@
         }
       }
     },
-    "Last bought": {
     "Last 12 months": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last bought"
             "value": "Last 12 months"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zuletzt gekauft"
             "value": "Letzte 12 Monate"
           }
         }
       }
     },
-    "Leftovers": {
     "Last 12 weeks": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leftovers"
             "value": "Last 12 weeks"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reste"
             "value": "Letzte 12 Wochen"
+          }
+        }
+      }
+    },
+    "Last bought": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last bought"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt gekauft"
           }
         }
       }
@@ -7450,6 +8157,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicht gezählt"
+          }
+        }
+      }
+    },
+    "Leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leftovers"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reste"
           }
         }
       }
@@ -7743,43 +8467,52 @@
         }
       }
     },
-    "Marked as opened": {
     "Many checkouts show a QR code for the digital receipt. Scan it and ToHuus fetches the receipt.": {
-    "Members, places, settings and everything you added yourself stay.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Many checkouts show a QR code for the digital receipt. Scan it and ToHuus fetches the receipt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viele Kassen zeigen einen QR-Code für den digitalen Bon. Scann ihn, und ToHuus holt den Bon ab."
+          }
+        }
+      }
+    },
+    "Marked as opened": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Marked as opened"
-            "value": "Many checkouts show a QR code for the digital receipt. Scan it and ToHuus fetches the receipt."
-            "value": "Members, places, settings and everything you added yourself stay."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Als geöffnet markiert"
-            "value": "Viele Kassen zeigen einen QR-Code für den digitalen Bon. Scann ihn, und ToHuus holt den Bon ab."
           }
         }
       }
     },
-    "Me": {
     "Match again": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Me"
             "value": "Match again"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ich"
             "value": "Neu zuordnen"
           }
         }
@@ -7819,6 +8552,23 @@
         }
       }
     },
+    "Me": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich"
+          }
+        }
+      }
+    },
     "Member": {
       "extractionState": "manual",
       "localizations": {
@@ -7849,6 +8599,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mitglieder können im Alltag alles nutzen, aber keine Einstellungen ändern."
+          }
+        }
+      }
+    },
+    "Members, places, settings and everything you added yourself stay.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Members, places, settings and everything you added yourself stay."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Mitglieder, Orte, Einstellungen und alles, was du selbst eingetragen hast, bleiben."
           }
         }
@@ -7871,23 +8637,6 @@
         }
       }
     },
-    "Missing for the week → list": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Missing for the week → list"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Was für die Woche fehlt → Liste"
-          }
-        }
-      }
-    },
     "Missing → list": {
       "extractionState": "manual",
       "localizations": {
@@ -7901,23 +8650,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fehlendes → Liste"
-          }
-        }
-      }
-    },
-    "Missing → list (%d)": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Missing → list (%d)"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fehlendes → Liste (%d)"
           }
         }
       }
@@ -8110,20 +8842,34 @@
       }
     },
     "Moved to %@": {
-    "My hands are full": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Moved to %@"
-            "value": "My hands are full"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Nach %@ verschoben"
+          }
+        }
+      }
+    },
+    "My hands are full": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My hands are full"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Hab grad die Hände voll"
           }
         }
@@ -8180,22 +8926,36 @@
         }
       }
     },
-    "Name it the way you say it at home. ToHuus finds a picture by itself if you don't choose one.": {
     "Name (optional)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name it the way you say it at home. ToHuus finds a picture by itself if you don't choose one."
             "value": "Name (optional)"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenn es so, wie ihr es zu Hause sagt. Wählst du kein Bild, sucht ToHuus selbst eins."
             "value": "Name (optional)"
+          }
+        }
+      }
+    },
+    "Name it the way you say it at home. ToHuus finds a picture by itself if you don't choose one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name it the way you say it at home. ToHuus finds a picture by itself if you don't choose one."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenn es so, wie ihr es zu Hause sagt. Wählst du kein Bild, sucht ToHuus selbst eins."
           }
         }
       }
@@ -8230,23 +8990,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Name auf der Liste"
-          }
-        }
-      }
-    },
-    "Name or e-mail": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name or e-mail"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name oder E-Mail"
           }
         }
       }
@@ -8302,21 +9045,18 @@
         }
       }
     },
-    "Never shown in Home Assistant, Telegram, displays, printed lists, guest links or to assistants.": {
     "Network name": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Never shown in Home Assistant, Telegram, displays, printed lists, guest links or to assistants."
             "value": "Network name"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erscheint nie in Home Assistant, Telegram, auf Displays, gedruckten Listen, Gast-Links oder bei Assistenten."
             "value": "Netzwerkname"
           }
         }
@@ -8335,6 +9075,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Produkt nie zählen"
+          }
+        }
+      }
+    },
+    "Never shown in Home Assistant, Telegram, displays, printed lists, guest links or to assistants.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never shown in Home Assistant, Telegram, displays, printed lists, guest links or to assistants."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erscheint nie in Home Assistant, Telegram, auf Displays, gedruckten Listen, Gast-Links oder bei Assistenten."
           }
         }
       }
@@ -8403,23 +9160,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Neuer Gäste-Link"
-          }
-        }
-      }
-    },
-    "New here? Set up your household in a minute. Every new household gets 14 days of Plus, without payment details.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New here? Set up your household in a minute. Every new household gets 14 days of Plus, without payment details."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Neu hier? Leg euren Haushalt in einer Minute an. Jeder neue Haushalt bekommt 14 Tage Plus – ohne Zahlungsdaten."
           }
         }
       }
@@ -8629,14 +9369,12 @@
       }
     },
     "No boxes in the fridge or freezer.": {
-    "No comparable prices yet": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No boxes in the fridge or freezer."
-            "value": "No comparable prices yet"
           }
         },
         "de": {
@@ -8660,6 +9398,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ohne Kategorie"
+          }
+        }
+      }
+    },
+    "No comparable prices yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No comparable prices yet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Noch keine vergleichbaren Preise"
           }
         }
@@ -8801,22 +9555,36 @@
         }
       }
     },
-    "No list lines found in it.": {
     "No lines on this receipt.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No list lines found in it."
             "value": "No lines on this receipt."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Darin keine Listenzeilen gefunden."
             "value": "Auf diesem Bon stehen keine Zeilen."
+          }
+        }
+      }
+    },
+    "No list lines found in it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No list lines found in it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darin keine Listenzeilen gefunden."
           }
         }
       }
@@ -8856,40 +9624,68 @@
       }
     },
     "No pictures found. Try fewer words or the brand.": {
-    "No places yet.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No pictures found. Try fewer words or the brand."
-            "value": "No places yet."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Keine Bilder gefunden. Versuch es mit weniger Wörtern oder der Marke."
-            "value": "Noch keine Orte."
           }
         }
       }
     },
     "No place": {
-    "No prices yet": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No place"
-            "value": "No prices yet"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Kein Ort"
+          }
+        }
+      }
+    },
+    "No places yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No places yet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Orte."
+          }
+        }
+      }
+    },
+    "No prices yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No prices yet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Noch keine Preise"
           }
         }
@@ -9014,24 +9810,53 @@
         }
       }
     },
-    "None": {
-    "Nobody here yet.": {
     "No, start empty": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "None"
-            "value": "Nobody here yet."
             "value": "No, start empty"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine"
+            "value": "Nein, leer starten"
+          }
+        }
+      }
+    },
+    "Nobody here yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody here yet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Noch niemand da."
+          }
+        }
+      }
+    },
+    "None": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine"
           }
         }
       }
@@ -9053,21 +9878,18 @@
         }
       }
     },
-    "Not grouped": {
     "Not counted because of %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not grouped"
             "value": "Not counted because of %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicht gruppiert"
             "value": "Zählt nicht wegen Regel für %@"
           }
         }
@@ -9090,6 +9912,23 @@
         }
       }
     },
+    "Not grouped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not grouped"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht gruppiert"
+          }
+        }
+      }
+    },
     "Not now": {
       "extractionState": "manual",
       "localizations": {
@@ -9103,7 +9942,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerade nicht"
-            "value": "Nein, leer starten"
           }
         }
       }
@@ -9193,7 +10031,6 @@
         }
       }
     },
-    "Nothing at home right now.": {
     "Note (optional, not secret)": {
       "extractionState": "manual",
       "localizations": {
@@ -9211,7 +10048,7 @@
         }
       }
     },
-    "Note, substitute, photo": {
+    "Nothing at home right now.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -9263,20 +10100,34 @@
       }
     },
     "Nothing here": {
-    "Nothing here yet": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Nothing here"
-            "value": "Nothing here yet"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Hier ist nichts"
+          }
+        }
+      }
+    },
+    "Nothing here yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing here yet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Hier steht noch nichts"
           }
         }
@@ -9911,23 +10762,6 @@
         }
       }
     },
-    "Only one or two things missing": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only one or two things missing"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nur ein, zwei Sachen fehlen"
-          }
-        }
-      }
-    },
     "Only the first 1000 entries are shown.": {
       "extractionState": "manual",
       "localizations": {
@@ -10302,38 +11136,35 @@
         }
       }
     },
-    "Options for %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Options for %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optionen für %@"
-          }
-        }
-      }
-    },
     "Or a picture from Open Food Facts": {
-    "Or create the account with your e-mail address:": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Or a picture from Open Food Facts"
-            "value": "Or create the account with your e-mail address:"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Oder ein Bild aus Open Food Facts"
+          }
+        }
+      }
+    },
+    "Or create the account with your e-mail address:": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or create the account with your e-mail address:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Oder leg das Konto mit deiner E-Mail-Adresse an:"
           }
         }
@@ -10390,24 +11221,53 @@
         }
       }
     },
-    "Others see “%@”": {
     "Other code": {
-    "Our home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anderer Code"
+          }
+        }
+      }
+    },
+    "Others see “%@”": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Others see “%@”"
-            "value": "Other code"
-            "value": "Our home"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Andere sehen „%@“"
-            "value": "Anderer Code"
+          }
+        }
+      }
+    },
+    "Our home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Our home"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unser Zuhause"
           }
         }
       }
@@ -10425,7 +11285,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unser Haushalt"
-            "value": "Unser Zuhause"
           }
         }
       }
@@ -10511,23 +11370,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eigene Ausgaben"
-          }
-        }
-      }
-    },
-    "Own server": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Own server"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eigener Server"
           }
         }
       }
@@ -10906,81 +11748,137 @@
         }
       }
     },
-    "Picture from Open Food Facts?": {
     "Photograph a receipt, choose a PDF or scan the QR code of a digital receipt – ToHuus reads it and you check it here.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Picture from Open Food Facts?"
             "value": "Photograph a receipt, choose a PDF or scan the QR code of a digital receipt – ToHuus reads it and you check it here."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bild aus Open Food Facts?"
             "value": "Fotografier einen Bon, wähl ein PDF oder scann den QR-Code eines digitalen Bons – ToHuus liest ihn, und du prüfst ihn hier."
           }
         }
       }
     },
-    "Pictures from Open Food Facts, free under CC BY-SA. ToHuus notes where the picture comes from.": {
     "Picture": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pictures from Open Food Facts, free under CC BY-SA. ToHuus notes where the picture comes from."
             "value": "Picture"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bilder aus Open Food Facts, frei unter CC BY-SA. ToHuus merkt sich, woher das Bild kommt."
             "value": "Bild"
           }
         }
       }
     },
-    "Pieces": {
+    "Picture from Open Food Facts?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picture from Open Food Facts?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild aus Open Food Facts?"
+          }
+        }
+      }
+    },
     "Picture: %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pieces"
             "value": "Picture: %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stück"
             "value": "Bild: %@"
           }
         }
       }
     },
+    "Pictures from Open Food Facts, free under CC BY-SA. ToHuus notes where the picture comes from.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pictures from Open Food Facts, free under CC BY-SA. ToHuus notes where the picture comes from."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilder aus Open Food Facts, frei unter CC BY-SA. ToHuus merkt sich, woher das Bild kommt."
+          }
+        }
+      }
+    },
+    "Pieces": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pieces"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stück"
+          }
+        }
+      }
+    },
     "Place": {
-    "Places they may look into": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Place"
-            "value": "Places they may look into"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Ort"
+          }
+        }
+      }
+    },
+    "Places they may look into": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Places they may look into"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Orte, in die sie schauen dürfen"
           }
         }
@@ -11173,38 +12071,35 @@
         }
       }
     },
-    "Plus for free until %@. After that Free – nothing is charged automatically.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plus for free until %@. After that Free – nothing is charged automatically."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plus geschenkt bis %@. Danach Free – es wird nichts automatisch abgebucht."
-          }
-        }
-      }
-    },
     "Portions": {
-    "Preference": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Portions"
-            "value": "Preference"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Portionen"
+          }
+        }
+      }
+    },
+    "Preference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preference"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Vorliebe"
           }
         }
@@ -11313,20 +12208,35 @@
       }
     },
     "Price history": {
-    "Price not available right now": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Price history"
-            "value": "Price not available right now"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Preisverlauf"
+          }
+        }
+      }
+    },
+    "Price not available right now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price not available right now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preis gerade nicht verfügbar"
           }
         }
       }
@@ -11361,7 +12271,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preise kommen von deinen Bons. Taucht dasselbe auf ein paar Bons auf, siehst du hier, wo es günstiger war."
-            "value": "Preis gerade nicht verfügbar"
           }
         }
       }
@@ -11451,23 +12360,6 @@
         }
       }
     },
-    "Probably at home: %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Probably at home: %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wahrscheinlich da: %@"
-          }
-        }
-      }
-    },
     "Probably due": {
       "extractionState": "manual",
       "localizations": {
@@ -11519,22 +12411,36 @@
         }
       }
     },
-    "Product picture": {
     "Product": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Product picture"
             "value": "Product"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Produktbild"
             "value": "Produkt"
+          }
+        }
+      }
+    },
+    "Product picture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product picture"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Produktbild"
           }
         }
       }
@@ -11760,22 +12666,36 @@
         }
       }
     },
-    "Quick stock check": {
     "Quick check": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quick stock check"
             "value": "Quick check"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schnell-Check"
             "value": "Kurz ansehen"
+          }
+        }
+      }
+    },
+    "Quick stock check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick stock check"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schnell-Check"
           }
         }
       }
@@ -11934,20 +12854,35 @@
       }
     },
     "Ready at the counter": {
-    "Ready for your own things?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Ready at the counter"
-            "value": "Ready for your own things?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Fertig an der Theke"
+          }
+        }
+      }
+    },
+    "Ready for your own things?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready for your own things?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereit für deine eigenen Sachen?"
           }
         }
       }
@@ -11965,7 +12900,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Grund (optional)"
-            "value": "Bereit für deine eigenen Sachen?"
           }
         }
       }
@@ -12243,20 +13177,34 @@
       }
     },
     "Release": {
-    "Remember": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Release"
-            "value": "Remember"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Freigeben"
+          }
+        }
+      }
+    },
+    "Remember": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Merken"
           }
         }
@@ -12296,43 +13244,87 @@
         }
       }
     },
-    "Remove from the list": {
     "Remove %@": {
-    "Remove sample data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ entfernen"
+          }
+        }
+      }
+    },
+    "Remove from the list": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Remove from the list"
-            "value": "Remove %@"
-            "value": "Remove sample data"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Von der Liste nehmen"
-            "value": "Beispieldaten entfernen"
           }
         }
       }
     },
     "Remove list": {
-    "Remove sample data?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Remove list"
-            "value": "Remove sample data?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Liste entfernen"
+          }
+        }
+      }
+    },
+    "Remove sample data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove sample data"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispieldaten entfernen"
+          }
+        }
+      }
+    },
+    "Remove sample data?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove sample data?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispieldaten entfernen?"
           }
         }
       }
@@ -12350,8 +13342,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Datum entfernen"
-            "value": "%@ entfernen"
-            "value": "Beispieldaten entfernen?"
           }
         }
       }
@@ -12612,20 +13602,34 @@
       }
     },
     "Same week last year": {
-    "Sample": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Same week last year"
-            "value": "Sample"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Gleiche Woche im Vorjahr"
+          }
+        }
+      }
+    },
+    "Sample": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Beispiel"
           }
         }
@@ -12972,38 +13976,35 @@
       }
     },
     "Search Open Food Facts": {
-    "Search products": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Search Open Food Facts"
-            "value": "Search products"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "In Open Food Facts suchen"
-            "value": "Produkte suchen"
           }
         }
       }
     },
-    "Search recipes": {
+    "Search products": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search recipes"
+            "value": "Search products"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rezepte suchen"
+            "value": "Produkte suchen"
           }
         }
       }
@@ -13093,62 +14094,104 @@
         }
       }
     },
-    "Send again": {
     "Send a new code": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send again"
             "value": "Send a new code"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nochmal senden"
             "value": "Neuen Code schicken"
           }
         }
       }
     },
-    "Send it": {
+    "Send again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send again"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nochmal senden"
+          }
+        }
+      }
+    },
     "Send code": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send it"
             "value": "Send code"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abschicken"
             "value": "Code schicken"
           }
         }
       }
     },
-    "Send the invitation by e-mail now": {
+    "Send it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abschicken"
+          }
+        }
+      }
+    },
     "Send me a code": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send the invitation by e-mail now"
             "value": "Send me a code"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einladung jetzt per E-Mail senden"
             "value": "Code per E-Mail schicken"
+          }
+        }
+      }
+    },
+    "Send the invitation by e-mail now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send the invitation by e-mail now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einladung jetzt per E-Mail senden"
           }
         }
       }
@@ -13289,22 +14332,36 @@
         }
       }
     },
-    "Set my own eat-by date": {
     "Set a budget (optional)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Set my own eat-by date"
             "value": "Set a budget (optional)"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eigenes Datum festlegen"
             "value": "Budget festlegen (optional)"
+          }
+        }
+      }
+    },
+    "Set my own eat-by date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set my own eat-by date"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigenes Datum festlegen"
           }
         }
       }
@@ -13326,15 +14383,30 @@
         }
       }
     },
-    "Share the label": {
     "Share link": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Share the label"
             "value": "Share link"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link teilen"
+          }
+        }
+      }
+    },
+    "Share the label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the label"
           }
         },
         "de": {
@@ -13375,7 +14447,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Von %@ mit dir geteilt"
-            "value": "Link teilen"
           }
         }
       }
@@ -13601,15 +14672,30 @@
         }
       }
     },
-    "Show to whoever shops": {
     "Show receipt": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show to whoever shops"
             "value": "Show receipt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon ansehen"
+          }
+        }
+      }
+    },
+    "Show to whoever shops": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show to whoever shops"
           }
         },
         "de": {
@@ -13650,7 +14736,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wird dir gezeigt, weil du einkaufst"
-            "value": "Bon ansehen"
           }
         }
       }
@@ -13775,20 +14860,34 @@
       }
     },
     "Skip": {
-    "So far": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Skip"
-            "value": "So far"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Überspringen"
+          }
+        }
+      }
+    },
+    "So far": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So far"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Bisher"
           }
         }
@@ -14049,21 +15148,18 @@
         }
       }
     },
-    "Spoiled": {
     "Spending appears here as soon as you book in a receipt. Prices come straight from the receipt.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spoiled"
             "value": "Spending appears here as soon as you book in a receipt. Prices come straight from the receipt."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verdorben"
             "value": "Ausgaben erscheinen hier, sobald du einen Bon einbuchst. Die Preise kommen direkt vom Bon."
           }
         }
@@ -14099,6 +15195,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insgesamt ausgegeben: %@"
+          }
+        }
+      }
+    },
+    "Spoiled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spoiled"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verdorben"
           }
         }
       }
@@ -14477,21 +15590,18 @@
         }
       }
     },
-    "Take a photo": {
     "TV": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Take a photo"
             "value": "TV"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Foto aufnehmen"
             "value": "Fernseher"
           }
         }
@@ -14527,6 +15637,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schlagwörter für den ganzen Bon"
+          }
+        }
+      }
+    },
+    "Take a photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto aufnehmen"
           }
         }
       }
@@ -14650,41 +15777,35 @@
         }
       }
     },
-    "Tap a shop to sort its aisles. In the shop, the list follows this order.": {
     "Tap a bar for its receipts": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tap a shop to sort its aisles. In the shop, the list follows this order."
             "value": "Tap a bar for its receipts"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tipp auf einen Laden, um seine Gänge zu sortieren. Im Laden folgt die Liste dieser Reihenfolge."
             "value": "Tipp auf einen Balken für die Bons"
           }
         }
       }
     },
-    "Tap one to use its picture. Free under CC BY-SA.": {
     "Tap a bar to open that period": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tap one to use its picture. Free under CC BY-SA."
             "value": "Tap a bar to open that period"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tipp eins an, um sein Bild zu nehmen. Frei unter CC BY-SA."
             "value": "Tipp auf einen Balken, um den Zeitraum zu öffnen"
           }
         }
@@ -14703,6 +15824,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tipp auf eine Karte, um sie zu ändern; Codes wischst du nach rechts. Neue mit +."
+          }
+        }
+      }
+    },
+    "Tap a shop to sort its aisles. In the shop, the list follows this order.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a shop to sort its aisles. In the shop, the list follows this order."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipp auf einen Laden, um seine Gänge zu sortieren. Im Laden folgt die Liste dieser Reihenfolge."
+          }
+        }
+      }
+    },
+    "Tap one to use its picture. Free under CC BY-SA.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap one to use its picture. Free under CC BY-SA."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipp eins an, um sein Bild zu nehmen. Frei unter CC BY-SA."
           }
         }
       }
@@ -14894,22 +16049,36 @@
         }
       }
     },
-    "That doesn’t look like an e-mail address.": {
     "That didn't work. Please try again.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "That doesn’t look like an e-mail address."
             "value": "That didn't work. Please try again."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das sieht nicht nach einer E-Mail-Adresse aus."
             "value": "Das hat nicht geklappt. Versuch es bitte noch einmal."
+          }
+        }
+      }
+    },
+    "That doesn’t look like an e-mail address.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That doesn’t look like an e-mail address."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das sieht nicht nach einer E-Mail-Adresse aus."
           }
         }
       }
@@ -15016,24 +16185,6 @@
         }
       }
     },
-    "The admins of your household fill in the house info.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The admins of your household fill in the house info."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Admins eures Haushalts füllen die Hausinfo aus."
-          }
-        }
-      }
-    },
-    "The assistant in everyday use: week plan from the pantry, monthly analysis": {
     "The App Store prices can’t be loaded right now.": {
       "extractionState": "manual",
       "localizations": {
@@ -15047,6 +16198,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die Preise aus dem App Store lassen sich gerade nicht laden."
+          }
+        }
+      }
+    },
+    "The admins of your household fill in the house info.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admins of your household fill in the house info."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Admins eures Haushalts füllen die Hausinfo aus."
           }
         }
       }
@@ -15068,39 +16236,36 @@
         }
       }
     },
-    "The day after tomorrow": {
     "The current link for “%@” stops working. Create a new one?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The day after tomorrow"
             "value": "The current link for “%@” stops working. Create a new one?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Übermorgen"
             "value": "Der bisherige Link für „%@“ funktioniert dann nicht mehr. Neuen erstellen?"
           }
         }
       }
     },
-    "The easiest way: we run the server and store your household encrypted. Free to start.": {
+    "The day after tomorrow": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The easiest way: we run the server and store your household encrypted. Free to start."
+            "value": "The day after tomorrow"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Am einfachsten: Wir betreiben den Server und speichern euren Haushalt verschlüsselt. Kostenlos starten."
+            "value": "Übermorgen"
           }
         }
       }
@@ -15122,43 +16287,87 @@
         }
       }
     },
-    "The label couldn't be loaded.": {
     "The invitation is on its way to %@. You can also pass on the link yourself:": {
-    "The last %d days in view": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The invitation is on its way to %@. You can also pass on the link yourself:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Einladung ist unterwegs an %@. Du kannst den Link auch selbst weitergeben:"
+          }
+        }
+      }
+    },
+    "The label couldn't be loaded.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The label couldn't be loaded."
-            "value": "The invitation is on its way to %@. You can also pass on the link yourself:"
-            "value": "The last %d days in view"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Das Etikett ließ sich nicht laden."
-            "value": "Die Einladung ist unterwegs an %@. Du kannst den Link auch selbst weitergeben:"
+          }
+        }
+      }
+    },
+    "The last %d days in view": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last %d days in view"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die letzten %d Tage im Blick"
           }
         }
       }
     },
     "The list is empty.": {
-    "The name others see, e.g. “Front door”.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The list is empty."
-            "value": "The name others see, e.g. “Front door”."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Die Liste ist leer."
+          }
+        }
+      }
+    },
+    "The name others see, e.g. “Front door”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The name others see, e.g. “Front door”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Name, den die anderen sehen, z. B. „Haustür“."
           }
         }
       }
@@ -15176,8 +16385,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wer im Laden ist oder „Ich hol’s“ gesagt hat, sieht den echten Namen."
-            "value": "Der Name, den die anderen sehen, z. B. „Haustür“."
-            "value": "Die letzten %d Tage im Blick"
           }
         }
       }
@@ -15353,20 +16560,35 @@
       }
     },
     "The week before": {
-    "The whole history: prices, spending, what you buy how often": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The week before"
-            "value": "The whole history: prices, spending, what you buy how often"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Vorwoche"
+          }
+        }
+      }
+    },
+    "The whole history: prices, spending, what you buy how often": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The whole history: prices, spending, what you buy how often"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die ganze Geschichte: Preise, Ausgaben, was ihr wie oft kauft"
           }
         }
       }
@@ -15384,7 +16606,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sie bleiben ausgegraut in den Listen sichtbar und werden getrennt summiert. Produkte und Bestand bleiben unverändert."
-            "value": "Die ganze Geschichte: Preise, Ausgaben, was ihr wie oft kauft"
           }
         }
       }
@@ -15559,25 +16780,53 @@
         }
       }
     },
-    "This place has nothing in stock right now.": {
     "This notice is still provisional. Add the eBon after pickup and ToHuus matches what you actually took home.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This notice is still provisional. Add the eBon after pickup and ToHuus matches what you actually took home."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Bestellübersicht ist noch vorläufig. Füg nach der Abholung den eBon hinzu, dann gleicht ToHuus ab, was du wirklich mitgenommen hast."
+          }
+        }
+      }
+    },
     "This passkey isn’t known here. It may have been removed.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This place has nothing in stock right now."
-            "value": "This notice is still provisional. Add the eBon after pickup and ToHuus matches what you actually took home."
             "value": "This passkey isn’t known here. It may have been removed."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "An diesem Ort ist gerade nichts."
-            "value": "Diese Bestellübersicht ist noch vorläufig. Füg nach der Abholung den eBon hinzu, dann gleicht ToHuus ab, was du wirklich mitgenommen hast."
             "value": "Diesen Passkey kennen wir nicht. Vielleicht wurde er entfernt."
+          }
+        }
+      }
+    },
+    "This place has nothing in stock right now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This place has nothing in stock right now."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An diesem Ort ist gerade nichts."
           }
         }
       }
@@ -15753,20 +17002,35 @@
       }
     },
     "Thrown away": {
-    "Thrown away (estimate)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Thrown away"
-            "value": "Thrown away (estimate)"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Weggeworfen"
+          }
+        }
+      }
+    },
+    "Thrown away (estimate)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thrown away (estimate)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weggeworfen (geschätzt)"
           }
         }
       }
@@ -15784,7 +17048,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weggeworfen – warum? (hilft, Muster zu sehen, optional)"
-            "value": "Weggeworfen (geschätzt)"
           }
         }
       }
@@ -16045,40 +17308,68 @@
       }
     },
     "Tomorrow": {
-    "Top items": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Tomorrow"
-            "value": "Top items"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Morgen"
-            "value": "Größte Posten"
           }
         }
       }
     },
     "Took one portion": {
-    "Topic": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Took one portion"
-            "value": "Topic"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Eine Portion genommen"
+          }
+        }
+      }
+    },
+    "Top items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top items"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Größte Posten"
+          }
+        }
+      }
+    },
+    "Topic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Topic"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Thema"
           }
         }
@@ -16238,20 +17529,35 @@
       }
     },
     "Undone.": {
-    "Unit": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Undone."
-            "value": "Unit"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Rückgängig gemacht."
+          }
+        }
+      }
+    },
+    "Unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einheit"
           }
         }
       }
@@ -16269,7 +17575,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einheit, z. B. Stk, Pck, Flasche"
-            "value": "Einheit"
           }
         }
       }
@@ -16428,20 +17733,34 @@
       }
     },
     "Usually kept in": {
-    "Valid for %d days": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Usually kept in"
-            "value": "Valid for %d days"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Steht meistens in"
+          }
+        }
+      }
+    },
+    "Valid for %d days": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid for %d days"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "%d Tage gültig"
           }
         }
@@ -16499,34 +17818,29 @@
       }
     },
     "Visit": {
-    "We send you an e-mail with a code. Type it in here – it works once and for 10 minutes.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Visit"
-            "value": "We send you an e-mail with a code. Type it in here – it works once and for 10 minutes."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Besuch"
-            "value": "Wir schicken dir eine E-Mail mit einem Code. Gib ihn hier ein – er gilt einmal und 10 Minuten lang."
           }
         }
       }
     },
     "Visitors": {
-    "We sent you an e-mail with a 6-digit code. Type it in to delete the account.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Visitors"
-            "value": "We sent you an e-mail with a 6-digit code. Type it in to delete the account."
           }
         },
         "de": {
@@ -16550,6 +17864,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wartet · gültig bis %@"
+          }
+        }
+      }
+    },
+    "We send you an e-mail with a code. Type it in here – it works once and for 10 minutes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We send you an e-mail with a code. Type it in here – it works once and for 10 minutes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir schicken dir eine E-Mail mit einem Code. Gib ihn hier ein – er gilt einmal und 10 Minuten lang."
+          }
+        }
+      }
+    },
+    "We sent you an e-mail with a 6-digit code. Type it in to delete the account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sent you an e-mail with a 6-digit code. Type it in to delete the account."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Wir haben dir eine E-Mail mit einem 6-stelligen Code geschickt. Gib ihn ein, um das Konto zu löschen."
           }
         }
@@ -16606,24 +17953,6 @@
         }
       }
     },
-    "Weighed goods and items without a price are left out.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weighed goods and items without a price are left out."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gewogene Ware und Posten ohne Preis werden nicht berücksichtigt."
-          }
-        }
-      }
-    },
-    "Welcome to ToHuus": {
     "Week plan from what you have at home": {
       "extractionState": "manual",
       "localizations": {
@@ -16637,6 +17966,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wochenplan aus dem, was zu Hause ist"
+          }
+        }
+      }
+    },
+    "Weighed goods and items without a price are left out.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weighed goods and items without a price are left out."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewogene Ware und Posten ohne Preis werden nicht berücksichtigt."
           }
         }
       }
@@ -16693,61 +18039,103 @@
       }
     },
     "What about %@?": {
-    "What happens": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "What about %@?"
-            "value": "What happens"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Was ist mit %@?"
+          }
+        }
+      }
+    },
+    "What happens": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What happens"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Was passiert"
           }
         }
       }
     },
     "What is it? e.g. chilli, soup": {
-    "What is not counted?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "What is it? e.g. chilli, soup"
-            "value": "What is not counted?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Was ist es? z. B. Chili, Suppe"
+          }
+        }
+      }
+    },
+    "What is not counted?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is not counted?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Was zählt nicht?"
           }
         }
       }
     },
-    "What others see, e.g. “Drugstore item”": {
     "What may they see?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What others see, e.g. “Drugstore item”"
             "value": "What may they see?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was andere sehen, z. B. „Drogerieartikel“"
             "value": "Was darf die Person sehen?"
+          }
+        }
+      }
+    },
+    "What others see, e.g. “Drugstore item”": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What others see, e.g. “Drugstore item”"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was andere sehen, z. B. „Drogerieartikel“"
           }
         }
       }
@@ -16922,42 +18310,70 @@
         }
       }
     },
-    "Where and until when": {
     "Where": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where and until when"
             "value": "Where"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wo und bis wann"
             "value": "Wo"
           }
         }
       }
     },
-    "Where does it live?": {
+    "Where and until when": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where and until when"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo und bis wann"
+          }
+        }
+      }
+    },
     "Where does it go?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where does it live?"
             "value": "Where does it go?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wo steht es?"
             "value": "Wohin damit?"
+          }
+        }
+      }
+    },
+    "Where does it live?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where does it live?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo steht es?"
           }
         }
       }
@@ -16996,41 +18412,69 @@
         }
       }
     },
-    "Where to buy?": {
     "Where the money went": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where to buy?"
             "value": "Where the money went"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wo kaufen?"
             "value": "Wohin das Geld ging"
           }
         }
       }
     },
+    "Where to buy?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where to buy?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo kaufen?"
+          }
+        }
+      }
+    },
     "Where to?": {
-    "Which product is it?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Where to?"
-            "value": "Which product is it?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Wohin?"
+          }
+        }
+      }
+    },
+    "Which product is it?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which product is it?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Welches Produkt ist das?"
           }
         }
@@ -17053,21 +18497,18 @@
         }
       }
     },
-    "Who sees it?": {
     "Who brings it?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Who sees it?"
             "value": "Who brings it?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wer sieht es?"
             "value": "Wer bringt’s?"
           }
         }
@@ -17090,6 +18531,23 @@
         }
       }
     },
+    "Who sees it?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who sees it?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer sieht es?"
+          }
+        }
+      }
+    },
     "Who sees what?": {
       "extractionState": "manual",
       "localizations": {
@@ -17108,20 +18566,34 @@
       }
     },
     "Who takes care of it?": {
-    "Whoever can": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Who takes care of it?"
-            "value": "Whoever can"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Wer kümmert sich?"
+          }
+        }
+      }
+    },
+    "Whoever can": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whoever can"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Wer gerade kann"
           }
         }
@@ -17331,22 +18803,36 @@
         }
       }
     },
-    "Write down what a babysitter or guest needs: how the heating works, where the fuse box is, important numbers.": {
     "Would you like sample data to get to know ToHuus?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Write down what a babysitter or guest needs: how the heating works, where the fuse box is, important numbers."
             "value": "Would you like sample data to get to know ToHuus?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schreib auf, was ein Babysitter oder Besuch braucht: wie die Heizung geht, wo der Sicherungskasten ist, wichtige Nummern."
             "value": "Möchtest du Beispieldaten, um ToHuus kennenzulernen?"
+          }
+        }
+      }
+    },
+    "Write down what a babysitter or guest needs: how the heating works, where the fuse box is, important numbers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write down what a babysitter or guest needs: how the heating works, where the fuse box is, important numbers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreib auf, was ein Babysitter oder Besuch braucht: wie die Heizung geht, wo der Sicherungskasten ist, wichtige Nummern."
           }
         }
       }
@@ -17453,40 +18939,6 @@
         }
       }
     },
-    "You can check the lines in the web app under Receipts.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You can check the lines in the web app under Receipts."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die einzelnen Zeilen kannst du in der Web-App unter Bons prüfen."
-          }
-        }
-      }
-    },
-    "You can cook this today": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You can cook this today"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das könnt ihr heute kochen"
-          }
-        }
-      }
-    },
     "You can still use everything else – the list, “Sprechen” with simple sentences, recipes.": {
       "extractionState": "manual",
       "localizations": {
@@ -17534,23 +18986,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du wurdest abgemeldet. Bitte melde dich neu an."
-          }
-        }
-      }
-    },
-    "You run ToHuus yourself (Docker, Home Assistant). Everything is included.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You run ToHuus yourself (Docker, Home Assistant). Everything is included."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du betreibst ToHuus selbst (Docker, Home Assistant). Alles ist dabei."
           }
         }
       }
@@ -17913,54 +19348,63 @@
       }
     },
     "aisle order learned from %d trips": {
-    "all gone": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "aisle order learned from %d trips"
-            "value": "all gone"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Gänge aus %d Einkäufen gelernt"
-            "value": "gerade alle"
           }
         }
       }
     },
     "aisle order not learned yet": {
-    "asked %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "aisle order not learned yet"
-            "value": "asked %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Gänge noch nicht gelernt"
-            "value": "an %@"
+          }
+        }
+      }
+    },
+    "all gone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "all gone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gerade alle"
           }
         }
       }
     },
     "already on the list": {
-    "at this pace about %@ by the end": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "already on the list"
-            "value": "at this pace about %@ by the end"
           }
         },
         "de": {
@@ -17984,6 +19428,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "als %@"
+          }
+        }
+      }
+    },
+    "asked %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "asked %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an %@"
+          }
+        }
+      }
+    },
+    "at this pace about %@ by the end": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at this pace about %@ by the end"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "in diesem Tempo etwa %@ bis zum Ende"
           }
         }
@@ -18024,20 +19501,34 @@
       }
     },
     "best before %@": {
-    "booked": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "best before %@"
-            "value": "booked"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "MHD %@"
+          }
+        }
+      }
+    },
+    "booked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "booked"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "eingebucht"
           }
         }
@@ -18163,60 +19654,103 @@
       }
     },
     "checked %d days ago": {
-    "correct": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "checked %d days ago"
-            "value": "correct"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "vor %d Tagen geprüft"
-            "value": "korrigieren"
           }
         }
       }
     },
     "checked today": {
-    "deposit": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "checked today"
-            "value": "deposit"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "heute geprüft"
-            "value": "Pfand"
           }
         }
       }
     },
     "checked yesterday": {
-    "discarded": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "checked yesterday"
-            "value": "discarded"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "gestern geprüft"
+          }
+        }
+      }
+    },
+    "correct": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "correct"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "korrigieren"
+          }
+        }
+      }
+    },
+    "deposit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "deposit"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pfand"
+          }
+        }
+      }
+    },
+    "discarded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "discarded"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "verworfen"
           }
         }
       }
@@ -18234,7 +19768,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "egal"
-            "value": "verworfen"
           }
         }
       }
@@ -18341,41 +19874,35 @@
         }
       }
     },
-    "e.g. batteries, tape, birthday candles": {
     "e.g. Farmers’ market": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "e.g. batteries, tape, birthday candles"
             "value": "e.g. Farmers’ market"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "z. B. Batterien, Klebeband, Geburtstagskerzen"
             "value": "z. B. Wochenmarkt"
           }
         }
       }
     },
-    "e.g. milk into the fridge, receipt in the drawer": {
     "e.g. Good night": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "e.g. milk into the fridge, receipt in the drawer"
             "value": "e.g. Good night"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "z. B. Milch in den Kühlschrank, Bon in die Schublade"
             "value": "z. B. Gute Nacht"
           }
         }
@@ -18483,6 +20010,40 @@
         }
       }
     },
+    "e.g. batteries, tape, birthday candles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. batteries, tape, birthday candles"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Batterien, Klebeband, Geburtstagskerzen"
+          }
+        }
+      }
+    },
+    "e.g. milk into the fridge, receipt in the drawer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. milk into the fridge, receipt in the drawer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Milch in den Kühlschrank, Bon in die Schublade"
+          }
+        }
+      }
+    },
     "e.g. mushrooms": {
       "extractionState": "manual",
       "localizations": {
@@ -18535,6 +20096,22 @@
       }
     },
     "e.g. only the lactose-free one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. only the lactose-free one"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. nur die laktosefreie"
+          }
+        }
+      }
+    },
     "e.g. pasta": {
       "extractionState": "manual",
       "localizations": {
@@ -18569,23 +20146,6 @@
         }
       }
     },
-    "e.g. the big pack, lactose-free": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "e.g. only the lactose-free one"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "z. B. nur die laktosefreie"
-          }
-        }
-      }
-    },
     "e.g. the big pack, ripe ones, for Sunday": {
       "extractionState": "manual",
       "localizations": {
@@ -18603,23 +20163,6 @@
         }
       }
     },
-    "eat by %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "eat by %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "essen bis %@"
-          }
-        }
-      }
-    },
     "e.g. with a spoon, in the big cup, to the bedroom": {
       "extractionState": "manual",
       "localizations": {
@@ -18633,6 +20176,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "z. B. mit Löffel, in der großen Tasse, ins Schlafzimmer"
+          }
+        }
+      }
+    },
+    "eat by %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eat by %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "essen bis %@"
           }
         }
       }
@@ -19045,39 +20605,36 @@
         }
       }
     },
-    "missing": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "missing"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "fehlt"
-          }
-        }
-      }
-    },
-    "never checked": {
     "name@example.org": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "never checked"
             "value": "name@example.org"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "noch nie geprüft"
             "value": "name@beispiel.de"
+          }
+        }
+      }
+    },
+    "never checked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "never checked"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch nie geprüft"
           }
         }
       }
@@ -19303,21 +20860,18 @@
         }
       }
     },
-    "past its date": {
     "own expense": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "past its date"
             "value": "own expense"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "abgelaufen"
             "value": "eigene Ausgabe"
           }
         }
@@ -19336,6 +20890,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pck"
+          }
+        }
+      }
+    },
+    "past its date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "past its date"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "abgelaufen"
           }
         }
       }
@@ -19443,14 +21014,12 @@
       }
     },
     "probably empty in %d days": {
-    "returned": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "probably empty in %d days"
-            "value": "returned"
           }
         },
         "de": {
@@ -19495,6 +21064,23 @@
         }
       }
     },
+    "returned": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "returned"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zurückgegeben"
+          }
+        }
+      }
+    },
     "rough estimate": {
       "extractionState": "manual",
       "localizations": {
@@ -19508,7 +21094,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "grobe Schätzung"
-            "value": "zurückgegeben"
           }
         }
       }
@@ -19564,22 +21149,36 @@
         }
       }
     },
-    "still there": {
     "skip": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "still there"
             "value": "skip"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "noch da"
             "value": "weglassen"
+          }
+        }
+      }
+    },
+    "still there": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "still there"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch da"
           }
         }
       }
@@ -19703,21 +21302,18 @@
         }
       }
     },
-    "today": {
     "this expense": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "today"
             "value": "this expense"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "heute"
             "value": "diese Ausgabe"
           }
         }
@@ -19770,6 +21366,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "zu prüfen"
+          }
+        }
+      }
+    },
+    "today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "heute"
           }
         }
       }
@@ -19962,14 +21575,12 @@
       }
     },
     "“%@” is planned for today.": {
-    "“%@” no longer works.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "“%@” is planned for today."
-            "value": "“%@” no longer works."
           }
         },
         "de": {
@@ -20027,6 +21638,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "„%@“ ist aufgebraucht."
+          }
+        }
+      }
+    },
+    "“%@” no longer works.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” no longer works."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
             "value": "„%@“ funktioniert nicht mehr."
           }
         }
