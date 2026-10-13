@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- CI: installs pdftotext and tesseract like the Docker image; tests run in UTC (date tests failed between 22:00 and 24:00 UTC).
+
 - iPhone: tapping the microphone crashed on first use (speech permission answer arrived off the main actor under Swift 6 isolation checks); permission and recognition callbacks are now nonisolated. Build 9.
 
 - `BETA_ALLOWLIST` (env): addresses that may sign up without an access code, next to the back-office allowlist.

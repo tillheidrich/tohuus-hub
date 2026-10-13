@@ -157,9 +157,8 @@ describe('D: notifications per person', () => {
   it('quiet hours wrap around midnight', async () => {
     const { inQuietHours } = await import('../server/lib/notify-prefs');
     const at = (h: number, m = 0) => {
-      // a moment that is h:m in Europe/Berlin
-      const d = new Date(Date.UTC(2026, 6, 1, h - 2, m));
-      return d.getTime();
+      // a moment that is h:m in the server's time zone (TZ, see test/setup-env.ts)
+      return new Date(2026, 6, 1, h, m).getTime();
     };
     expect(inQuietHours({ from: '22:00', to: '07:00' }, at(23))).toBe(true);
     expect(inQuietHours({ from: '22:00', to: '07:00' }, at(6, 59))).toBe(true);
