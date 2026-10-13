@@ -6,9 +6,11 @@ import SwiftUI
 final class CookModel {
     private(set) var ideas: [CookIdea] = []
     private(set) var recipes: [Recipe] = []
-    private(set) var plan: PlanResponse?
     private(set) var loading = false
     var error: String?
+    /// "mit: Hähnchen, Paprika" → hits from /api/recipes/search
+    private(set) var hits: [IngredientSearchHit]?
+    private var hitsKey = ""
 
     func load(_ api: APIClient) async {
         loading = true
@@ -16,33 +18,31 @@ final class CookModel {
         do {
             async let i = api.cookIdeas()
             async let r = api.recipes()
-            async let p = api.plan(from: ServerDate.day())
-            ideas = try await i
-            recipes = (try? await r) ?? recipes
-            plan = (try? await p) ?? plan
+            ideas = (try? await i) ?? ideas
+            recipes = try await r
             error = nil
         } catch {
             let e = APIError.from(error)
-            if !(e.isOffline && !ideas.isEmpty) { self.error = e.localizedDescription }
+            if !(e.isOffline && !recipes.isEmpty) { self.error = e.localizedDescription }
         }
     }
 
-    func removePlan(_ e: PlanEntry, api: APIClient) async {
-        try? await api.deletePlan(e.id)
-        await load(api)
+    func search(_ terms: [String]?, api: APIClient) async {
+        guard let terms, !terms.isEmpty else { hits = nil; hitsKey = ""; return }
+        let key = terms.joined(separator: ",")
+        guard key != hitsKey else { return }
+        hitsKey = key
+        let r = try? await api.searchRecipes(with: key)
+        if hitsKey == key { hits = r ?? [] }
     }
 
-    /// Drag & drop (or the "Move to" menu) in the week plan: PATCH /api/plan/:id { day }.
-    func movePlan(_ id: Int, to day: String, api: APIClient) async {
-        guard let entry = plan?.entries.first(where: { $0.id == id }), entry.day != day else { return }
-        if let i = plan?.entries.firstIndex(where: { $0.id == id }) { plan?.entries[i].day = day }
-        do {
-            try await api.movePlan(id, day: day)
-            Haptics.tick()
-        } catch {
-            self.error = APIError.from(error).localizedDescription
-        }
-        await load(api)
+    /// "mit: Hähnchen, Paprika" / "with: chicken" (web: ingredientTerms)
+    static func ingredientTerms(_ q: String) -> [String]? {
+        guard let m = q.range(of: #"^\s*(mit|with)\s*:\s*"#, options: [.regularExpression, .caseInsensitive]) else { return nil }
+        let rest = q[m.upperBound...]
+        let parts = rest.replacingOccurrences(of: #"\s+(und|and)\s+"#, with: ",", options: [.regularExpression, .caseInsensitive])
+            .split(whereSeparator: { $0 == "," || $0 == ";" }).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : Array(parts.prefix(6))
     }
 }
 
@@ -53,26 +53,31 @@ struct CookingView: View {
     @State private var width: CGFloat = 0
     /// list + detail side by side only when there is room (not in a narrow Split View or iPad portrait with sidebar)
     private var wide: Bool { sizeClass == .regular && width >= 700 }
-    @State private var selectedRecipe: Int?
+    @State private var selected: RecipeRef?
+    @State private var path: [RecipeRef] = []
     @FocusState private var searchFocused: Bool
-    @State private var dropTarget: String?
     @State private var showImport = false
+    @State private var showSources = false
+    @State private var showPackage = false
+    @State private var sourcesQuery: String?
     @State private var model = CookModel()
+    @State private var week = WeekModel()
+    @State private var feedback = CookFeedback()
     @State private var tab = 0
     @State private var search = ""
-    @State private var toast: String?
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             HStack(spacing: 0) {
                 column
-                    .frame(width: wide ? 380 : nil)
-                    .frame(maxWidth: wide ? 380 : .infinity)
+                    .frame(width: wide ? 400 : nil)
+                    .frame(maxWidth: wide ? 400 : .infinity)
                 if wide {
                     Divider()
                     Group {
-                        if let selectedRecipe {
-                            RecipeDetailView(recipeId: selectedRecipe, store: store).id(selectedRecipe)
+                        if let selected {
+                            RecipeDetailView(recipeId: selected.id, store: store, planEntryId: selected.planEntryId, onDeleted: { self.selected = nil })
+                                .id(selected)
                         } else {
                             EmptyStateView(systemImage: "fork.knife", title: L("Choose a recipe on the left."),
                                            message: L("Or open the kitchen mode: big week plan, recipe step by step, list to tick."))
@@ -84,29 +89,48 @@ struct CookingView: View {
             }
             .onGeometryChangeCompat { w in width = w }
             .navigationTitle(L("Cooking"))
-            .navigationDestination(for: Int.self) { id in RecipeDetailView(recipeId: id, store: store) }
-            .sheet(isPresented: $showImport) { RecipeImportSheet(store: store) }
+            .navigationDestination(for: RecipeRef.self) { ref in
+                RecipeDetailView(recipeId: ref.id, store: store, planEntryId: ref.planEntryId)
+            }
+            .sheet(isPresented: $showImport) { RecipeImportSheet(store: store, openRecipe: openSaved) }
+            .sheet(isPresented: $showPackage) {
+                NavigationStack { RecipePackageView(store: store) { showPackage = false } }
+            }
+            .sheet(isPresented: $showSources) {
+                NavigationStack {
+                    OpenRecipeBrowser(store: store, onSaved: { id in showSources = false; openSaved(id) }, initialQuery: sourcesQuery)
+                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { showSources = false } } }
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showImport = true
-                    } label: {
-                        Label(L("Add recipe"), systemImage: "plus")
-                    }
-                    .hoverEffect(.highlight)
+                    Button { showImport = true } label: { Label(L("Add recipe"), systemImage: "plus") }
+                        .hoverEffect(.highlight)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        app.showKitchen = true
-                    } label: {
-                        Label(L("Kitchen mode"), systemImage: "frying.pan")
-                    }
-                    .hoverEffect(.highlight)
+                    Button { app.showKitchen = true } label: { Label(L("Kitchen mode"), systemImage: "frying.pan") }
+                        .hoverEffect(.highlight)
                 }
             }
             .onChange(of: app.searchRequest) { _, _ in consumeSearch() }
-            .onAppear { consumeSearch() }
+            .onAppear {
+                consumeSearch()
+                applyDebug()
+            }
         }
+    }
+
+    /// after a sheet saved a recipe: open it once the sheet is gone
+    private func openSaved(_ id: Int) {
+        tab = 2
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            open(RecipeRef(id: id))
+        }
+    }
+
+    private func open(_ ref: RecipeRef) {
+        if wide { selected = ref } else { path.append(ref) }
     }
 
     private func consumeSearch() {
@@ -116,195 +140,184 @@ struct CookingView: View {
         searchFocused = true
     }
 
-    /// Opens a recipe: next to the list on wide screens, pushed on the iPhone.
-    @ViewBuilder
-    private func recipeLink<Label: View>(_ id: Int, @ViewBuilder label: () -> Label) -> some View {
-        if wide {
-            Button { selectedRecipe = id } label: { label() }
-                .buttonStyle(.plain)
-                .hoverEffect(.highlight)
-        } else {
-            NavigationLink(value: id) { label() }
-                .buttonStyle(.plain)
+    /// Debug builds: -debugCook week|wte|recipes|recipe:<id>|votes|rotation (screenshots).
+    private func applyDebug() {
+        #if DEBUG
+        guard let d = UserDefaults.standard.string(forKey: "debugCook") else { return }
+        switch d {
+        case "wte": tab = 0
+        case "week": tab = 1
+        case "recipes": tab = 2
+        case "open": tab = 2; showSources = true
+        case "import": tab = 2; showImport = true
+        case "package": tab = 2; showPackage = true
+        default:
+            if d.hasPrefix("recipe:"), let id = Int(d.dropFirst(7)) { open(RecipeRef(id: id)) }
+            if d.hasPrefix("with:") { tab = 2; search = "mit: " + d.dropFirst(5) }
+            if d.hasPrefix("open:") { tab = 2; sourcesQuery = String(d.dropFirst(5)); showSources = true }
         }
+        if let w = UserDefaults.standard.string(forKey: "debugCookWeek") { tab = 1; week.offset = Int(w) ?? 0 }
+        #endif
     }
 
     private var column: some View {
-            ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Space.s4) {
-                    Picker("", selection: $tab) {
-                        Text(L("What shall we cook?")).tag(0)
-                        Text(L("Week")).tag(1)
-                        Text(L("Recipes")).tag(2)
-                    }
-                    .pickerStyle(.segmented)
-                    if let error = model.error { ErrorBanner(message: error) { Task { await model.load(store.api) } } }
-                    switch tab {
-                    case 0: ideas
-                    case 1: week
-                    default: recipeList
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                Picker("", selection: $tab) {
+                    Text(L("What shall we cook?")).tag(0)
+                    Text(L("Week")).tag(1)
+                    Text(L("Recipes")).tag(2)
                 }
-                .padding(Theme.Space.s4)
-                .padding(.bottom, 80)
-            }
-            .canvasBackground()
-            .refreshable { await model.load(store.api) }
-            .task(id: store.revision("recipes") + store.revision("stock")) { await model.load(store.api) }
-            .overlay(alignment: .bottom) {
-                if let toast {
-                    Text(toast).font(.subheadline).padding(12).background(Theme.ink, in: Capsule()).foregroundStyle(Theme.canvas)
-                        .padding(.bottom, 90)
-                        .task { try? await Task.sleep(nanoseconds: 2_500_000_000); self.toast = nil }
+                .pickerStyle(.segmented)
+                if let error = model.error, tab == 2 { ErrorBanner(message: error) { Task { await model.load(store.api) } } }
+                switch tab {
+                case 0:
+                    WhatToEatSection(store: store, feedback: feedback, openRecipe: open, openImport: { showImport = true }, fallback: AnyView(ideas))
+                case 1:
+                    WeekPlanSection(store: store, model: week, feedback: feedback, openRecipe: open)
+                default:
+                    recipeList
                 }
             }
+            .padding(Theme.Space.s4)
+            .padding(.bottom, 80)
+        }
+        .canvasBackground()
+        .refreshable { await model.load(store.api); if tab == 1 { await week.load(store.api) } }
+        .task(id: store.revision("recipes") + store.revision("stock")) { await model.load(store.api) }
+        .cookToast($feedback.toast, bottom: 90) { Task { await feedback.undo?() } }
     }
 
+    /// Older servers without /api/cook2: the plain idea list.
     @ViewBuilder private var ideas: some View {
         if model.ideas.isEmpty && !model.loading {
             EmptyStateView(systemImage: "fork.knife", title: L("No ideas yet."),
                            message: L("Add a few recipes (by hand or as a link) and ToHuus shows what you can cook from what's at home."))
         }
-        let now = model.ideas.filter { $0.missing.isEmpty }
-        let almost = model.ideas.filter { !$0.missing.isEmpty && $0.missing.count <= 2 }
-        if !now.isEmpty {
-            Text(L("You can cook this today")).font(.headline)
-            ForEach(now) { idea in ideaCard(idea) }
-        }
-        if !almost.isEmpty {
-            Text(L("Only one or two things missing")).font(.headline).padding(.top, Theme.Space.s2)
-            ForEach(almost) { idea in ideaCard(idea) }
-        }
-    }
-
-    private func ideaCard(_ idea: CookIdea) -> some View {
-        recipeLink(idea.recipeId) {
-            HStack(spacing: Theme.Space.s3) {
-                RemoteImage(url: store.api.imageURL(idea.image), api: store.api, placeholder: "fork.knife")
-                    .frame(width: 76, height: 76)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(idea.title).font(.headline).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
-                    if let t = idea.timeMin { Label(LF("%d min", Int(t)), systemImage: "timer").font(.caption).foregroundStyle(Theme.ink3) }
-                    if !idea.missing.isEmpty {
-                        Text(LF("Missing: %@", idea.missing.map(\.name).joined(separator: ", "))).font(.caption).foregroundStyle(Theme.low)
-                    }
-                    if !idea.reasons.isEmpty {
-                        // the server's neutral reasons ("alles da · verbraucht Feta")
-                        Text(idea.reasons.prefix(2).joined(separator: " · ")).font(.caption)
-                            .foregroundStyle(idea.missing.isEmpty ? Theme.primaryText : Theme.ink2)
-                    } else if idea.missing.isEmpty {
-                        Text(L("Everything is at home.")).font(.caption).foregroundStyle(Theme.primaryText)
-                    }
-                    if !idea.probablyHave.isEmpty {
-                        Text(LF("Probably at home: %@", idea.probablyHave.joined(separator: ", "))).font(.caption).foregroundStyle(Theme.ink3)
-                    }
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right").foregroundStyle(Theme.ink3)
-            }
-            .padding(Theme.Space.s3)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
-            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(selectedRecipe == idea.recipeId && wide ? Theme.primary : Theme.line, lineWidth: 1))
-            .contentShape(Rectangle())
-        }
-    }
-
-    @ViewBuilder private var week: some View {
-        if let plan = model.plan {
-            ForEach(plan.days, id: \.self) { day in
-                let entries = plan.entries.filter { $0.day == day }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(ServerDate.shortDay(day) ?? day).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink2)
-                    if entries.isEmpty {
-                        Text(L("Nothing planned")).font(.subheadline).foregroundStyle(Theme.ink3)
-                    }
-                    ForEach(entries) { e in
-                        HStack {
-                            if let rid = e.recipeId {
-                                recipeLink(rid) { Text(e.title).foregroundStyle(Theme.ink) }
-                            } else {
-                                Text(e.title)
-                            }
-                            Spacer()
-                            if e.isCooked { Image(systemName: "checkmark").foregroundStyle(Theme.primaryText) }
-                            Menu {
-                                Menu {
-                                    ForEach(plan.days.filter { $0 != e.day }, id: \.self) { d in
-                                        Button(ServerDate.shortDay(d) ?? d) { Task { await model.movePlan(e.id, to: d, api: store.api) } }
-                                    }
-                                } label: { Label(L("Move to"), systemImage: "arrow.left.arrow.right") }
-                                Button(role: .destructive) {
-                                    Task { await model.removePlan(e, api: store.api) }
-                                } label: { Label(L("Remove"), systemImage: "trash") }
-                            } label: {
-                                Image(systemName: "ellipsis").foregroundStyle(Theme.ink3).frame(width: 44, height: 44)
-                            }
-                            .accessibilityLabel(LF("Options for %@", e.title))
-                        }
-                        .font(Theme.rowFont)
-                        .draggable(PlanDrag(id: e.id).payload) {
-                            Text(e.title).padding(8).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.sm))
+        ForEach(model.ideas) { idea in
+            Button { open(RecipeRef(id: idea.recipeId)) } label: {
+                HStack(spacing: Theme.Space.s3) {
+                    RemoteImage(url: store.api.imageURL(idea.image), api: store.api, placeholder: "fork.knife")
+                        .frame(width: 64, height: 64).clipShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(idea.title).font(.headline).foregroundStyle(Theme.ink)
+                        if !idea.missing.isEmpty {
+                            Text(LF("Missing: %@", idea.missing.map(\.name).joined(separator: ", "))).font(.caption).foregroundStyle(Theme.low)
+                        } else {
+                            Text(L("Everything is at home.")).font(.caption).foregroundStyle(Theme.primaryText)
                         }
                     }
+                    Spacer(minLength: 0)
                 }
                 .padding(Theme.Space.s3)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(dropTarget == day ? Theme.primarySoft : Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
-                .dropDestination(for: String.self) { items, _ in
-                    guard let id = items.compactMap(PlanDrag.init(payload:)).first?.id else { return false }
-                    Task { await model.movePlan(id, to: day, api: store.api) }
-                    return true
-                } isTargeted: { on in dropTarget = on ? day : (dropTarget == day ? nil : dropTarget) }
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
             }
-            Button {
-                Task {
-                    do {
-                        try await store.api.planToList(from: ServerDate.day())
-                        store.touch("shopping")
-                        await store.refreshList()
-                        toast = L("Everything missing for the week is on the list.")
-                    } catch { model.error = APIError.from(error).localizedDescription }
-                }
-            } label: {
-                Label(L("Missing for the week → list"), systemImage: "cart.badge.plus")
-            }
-            .buttonStyle(SecondaryButtonStyle())
-            Text(L("Drag a meal to another day, or use the … menu. Plan a meal from the recipe page or ask the assistant."))
-                .font(.footnote).foregroundStyle(Theme.ink3)
-        } else if model.loading {
-            ProgressView().frame(maxWidth: .infinity)
+            .buttonStyle(.plain)
         }
     }
 
     @ViewBuilder private var recipeList: some View {
-        TextField(L("Search recipes"), text: $search)
-            .focused($searchFocused)
-            .padding(10)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
-            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(Theme.line, lineWidth: 1))
-        let list = model.recipes.filter { search.isEmpty || $0.title.range(of: search, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
-        if list.isEmpty && !model.loading {
-            EmptyStateView(systemImage: "book", title: L("No recipes yet."), message: L("Share a recipe link to ToHuus from Safari to add it."))
+        let terms = CookModel.ingredientTerms(search)
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass").foregroundStyle(Theme.ink3)
+            TextField(LC("Search recipes – or “with: chicken, peppers”"), text: $search)
+                .focused($searchFocused)
+                .autocorrectionDisabled()
+            if !search.isEmpty {
+                Button { search = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.ink3) }
+                    .accessibilityLabel(LC("Clear"))
+            }
+        }
+        .padding(10)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(Theme.line, lineWidth: 1))
+        .task(id: terms?.joined(separator: ",") ?? "") { await model.search(terms, api: store.api) }
+        if let terms {
+            Text(LCF("Recipes with %@ – most matches first. Nothing needs to be in stock for this.", terms.joined(separator: ", ")))
+                .font(.caption).foregroundStyle(Theme.ink3)
+        } else {
+            Button(LC("Search by ingredients")) {
+                search = Locale.current.language.languageCode?.identifier == "de" ? "mit: " : "with: "
+                searchFocused = true
+            }
+            .font(.subheadline.weight(.semibold))
+        }
+        let rows: [RecipeRow] = {
+            if terms != nil {
+                let byId = Dictionary(model.recipes.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+                return (model.hits ?? []).compactMap { h in byId[h.id].map { RecipeRow(r: $0, hit: h) } }
+            }
+            return model.recipes.filter { search.isEmpty || $0.title.range(of: search, options: [.caseInsensitive, .diacriticInsensitive]) != nil }.map { RecipeRow(r: $0, hit: nil) }
+        }()
+        if rows.isEmpty && !model.loading {
+            if search.isEmpty {
+                EmptyStateView(systemImage: "book", title: L("No recipes yet."), message: L("Share a recipe link to ToHuus from Safari to add it."))
+            } else if terms == nil || model.hits != nil {
+                Text(LCF("No recipe matches “%@”.", search)).font(.subheadline).foregroundStyle(Theme.ink3)
+            }
         }
         LazyVStack(alignment: .leading, spacing: 0) {
-            ForEach(list) { r in
-                recipeLink(r.id) {
+            ForEach(rows) { row in
+                let r = row.r, hit = row.hit
+                Button { open(RecipeRef(id: r.id)) } label: {
                     HStack(spacing: Theme.Space.s3) {
                         RemoteImage(url: store.api.imageURL(r.imagePath), api: store.api, placeholder: "fork.knife")
-                            .frame(width: 44, height: 44)
+                            .frame(width: 48, height: 48)
                             .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
-                        Text(r.title).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(r.title).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
+                            if let hit {
+                                Text(hit.missing.isEmpty ? LCF("with %@", hit.matched.joined(separator: ", "))
+                                     : LCF("with %@ · without %@", hit.matched.joined(separator: ", "), hit.missing.joined(separator: ", ")))
+                                    .font(.caption).foregroundStyle(Theme.ink3)
+                            } else if let t = r.timeMin {
+                                Text(LF("%d min", Int(t))).font(.caption).foregroundStyle(Theme.ink3)
+                            }
+                        }
                         Spacer()
                         if r.favorite?.bool == true { Image(systemName: "heart.fill").foregroundStyle(Theme.clay) }
                     }
                     .padding(.vertical, 8)
                     .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .hoverEffect(.highlight)
                 Divider()
             }
         }
+        discoverCard.padding(.top, Theme.Space.s4)
+        SwapRulesSection(store: store, feedback: feedback).padding(.top, Theme.Space.s4)
     }
+}
+
+extension CookingView {
+    /// „Rezepte entdecken“: open recipe database with photos (also in „Rezept hinzufügen“).
+    var discoverCard: some View {
+        Button { sourcesQuery = nil; showSources = true } label: {
+            HStack(spacing: Theme.Space.s3) {
+                Image(systemName: "globe.europe.africa").font(.title2).foregroundStyle(Theme.primaryText)
+                    .frame(width: 44, height: 44).background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(LC("Discover recipes")).font(.headline).foregroundStyle(Theme.ink)
+                    Text(LC("Browse an open recipe database with photos and take one over with a tap."))
+                        .font(.caption).foregroundStyle(Theme.ink2).multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3)
+            }
+            .padding(Theme.Space.s3)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct RecipeRow: Identifiable {
+    let r: Recipe
+    let hit: IngredientSearchHit?
+    var id: Int { r.id }
 }
 
 /// Drag payload for a week-plan entry ("tohuus-plan:<id>"), so other text dropped on a day is ignored.

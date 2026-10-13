@@ -12,6 +12,8 @@ struct CookidooDraftRequest: Identifiable, Equatable, Sendable {
 /// Cookidoo in ToHuus Cloud answers 409 `cookidoo_confirm` → the confirm sheet (link + ingredients only).
 struct RecipeImportSheet: View {
     let store: ServerStore
+    /// a recipe from the open database was saved → open it (CookingView)
+    var openRecipe: ((Int) -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var mode = 0
     @State private var url = ""
@@ -25,6 +27,27 @@ struct RecipeImportSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    NavigationLink {
+                        OpenRecipeBrowser(store: store) { id in
+                            dismiss()
+                            openRecipe?(id)
+                        }
+                    } label: {
+                        Label { VStack(alignment: .leading, spacing: 2) {
+                            Text(LC("Discover recipes"))
+                            Text(LC("Open recipe database with photos")).font(.caption).foregroundStyle(Theme.ink3)
+                        } } icon: { Image(systemName: "globe.europe.africa") }
+                    }
+                    NavigationLink {
+                        RecipePackageView(store: store) { dismiss() }
+                    } label: {
+                        Label { VStack(alignment: .leading, spacing: 2) {
+                            Text(LC("Recipe package"))
+                            Text(LC("Many recipes at once – also from Mealie, Paprika & co.")).font(.caption).foregroundStyle(Theme.ink3)
+                        } } icon: { Image(systemName: "shippingbox") }
+                    }
+                }
                 Picker("", selection: $mode) {
                     Text(L("Link")).tag(0)
                     Text(L("Photo")).tag(1)

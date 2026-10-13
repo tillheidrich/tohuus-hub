@@ -524,6 +524,8 @@ struct AssistantAction: Decodable, Sendable, Identifiable, Hashable {
     var summary: String?
     /// undo token (32 hex), valid 24 hours for the person who caused the action
     var undo: String?
+    /// recipe_save_adapted: the saved recipe (opens from the chip)
+    var recipeId: Int?
     var id: String { (kind ?? "") + (summary ?? "") }
 }
 
