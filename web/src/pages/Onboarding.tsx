@@ -24,7 +24,7 @@ import {
   X,
 } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { type Climate, del, invalidate, patch, post, put, useApi } from '../api';
@@ -35,6 +35,7 @@ import { LevelPicker, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { Ic } from '../placeicons';
 import { StartChoice, useTourInfo } from './Tour';
 import { StaplesPicker } from './Share';
+import { StorePicker } from '../shop/StorePicker';
 
 import { type GettingStarted, type Room, type Step, STEPS, useGettingStarted, useOnboardingRedirect } from '../onboarding-state';
 import { StepModules } from './Modules';
@@ -52,10 +53,11 @@ export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
  * reachable via /willkommen?step=places|spots|stock.
  */
 // list2: 'use' – „Was nutzt ihr?“ right after „Wer gehört dazu?“ (modules)
-type Flow = 'who' | 'use' | 'list' | 'walk' | 'invite' | 'receipt';
-const FLOW: Flow[] = ['who', 'use', 'list', 'walk', 'invite', 'receipt'];
+// 'shops' – „Wo kauft ihr meistens ein?“ (no chain preset, server/lib/stores.ts); skipped when sign-up already asked
+type Flow = 'who' | 'use' | 'shops' | 'list' | 'walk' | 'invite' | 'receipt';
+const FLOW: Flow[] = ['who', 'use', 'shops', 'list', 'walk', 'invite', 'receipt'];
 /** the server keeps the old step names – map the new flow onto them so progress survives a reload */
-const SERVER_STEP: Record<Flow, Step> = { who: 'home', use: 'home', list: 'where', walk: 'places', invite: 'invite', receipt: 'stock' };
+const SERVER_STEP: Record<Flow, Step> = { who: 'home', use: 'home', shops: 'home', list: 'where', walk: 'places', invite: 'invite', receipt: 'stock' };
 const FROM_SERVER: Partial<Record<Step, Flow>> = { home: 'who', where: 'list', places: 'walk', spots: 'walk', invite: 'invite', stock: 'receipt' };
 const LEGACY: Step[] = ['places', 'spots', 'stock'];
 
@@ -68,6 +70,11 @@ export function Onboarding({ me }: { me: Me }) {
   const nav = useNavigate();
   // area tour: on a fresh instance the admin first picks "start empty" or "explore with demo data"
   const tour = useTourInfo();
+  // asked once: at cloud sign-up or here
+  const shopsQ = useApi<StoreChoices>(['shop-choices'], '/shop/stores/choices');
+  // snapshot when the flow starts, so answering does not shift the step list under the person
+  const shopsAsked = useRef<boolean | null>(null);
+  if (shopsQ.data && shopsAsked.current === null) shopsAsked.current = shopsQ.data.chosen;
   const choosing = Boolean(tour.data?.start.due);
   const legacy = sp.get('step') as Step | null;
   useEffect(() => {
@@ -89,7 +96,7 @@ export function Onboarding({ me }: { me: Me }) {
   if (legacy && LEGACY.includes(legacy)) return <LegacyOnboarding g={g.data} first={legacy} />;
 
   const curForm: OnbForm = form ?? (g.data.home?.form_chosen ? (g.data.home.form as OnbForm) : 'couple');
-  const steps = FLOW.filter((s) => !(s === 'invite' && curForm === 'single'));
+  const steps = FLOW.filter((s) => !(s === 'invite' && curForm === 'single') && !(s === 'shops' && shopsAsked.current !== false));
   const cur: Flow = steps.includes(step) ? step : 'receipt';
   const idx = steps.indexOf(cur);
   const go = (s: Flow) => {
@@ -128,6 +135,7 @@ export function Onboarding({ me }: { me: Me }) {
         />
       )}
       {cur === 'use' && <StepModules onBack={back} onNext={next} />}
+      {cur === 'shops' && shopsQ.data && <StepShops data={shopsQ.data} onBack={back} onNext={next} />}
       {cur === 'list' && (
         <StepList
           onBack={back}
@@ -140,6 +148,51 @@ export function Onboarding({ me }: { me: Me }) {
       {cur === 'walk' && <StepWalk form={curForm} onBack={back} onNext={next} />}
       {cur === 'invite' && <StepInvite form={curForm} title={t('Who else does the shopping?')} onBack={back} onNext={next} />}
       {cur === 'receipt' && <StepReceipt photo={photoLater} onBack={back} onDone={(to) => close(false, to)} />}
+    </div>
+  );
+}
+
+interface StoreChoices {
+  stores: string[];
+  market: string | null;
+  chosen: boolean;
+  own: string[];
+}
+
+/** „Wo kauft ihr meistens ein?“ – alphabetical, nothing preselected; the list and store mode follow the answer. */
+function StepShops({ data, onBack, onNext }: { data: StoreChoices; onBack: () => void; onNext: () => void }) {
+  const [shops, setShops] = useState<string[]>(data.own);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const save = async () => {
+    setBusy(true);
+    try {
+      await put('/shop/stores/choice', { stores: shops });
+      invalidate('shopping', 'shop-choices');
+      onNext();
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="stack" style={{ gap: 22 }}>
+      <header>
+        <h1>{t('Where do you usually shop?')}</h1>
+        <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
+          {t('Store mode and “Where to buy?” show these shops – the ones you use most come first.')}
+        </p>
+      </header>
+      <StorePicker choices={data.stores} market={data.market} value={shops} onChange={setShops} idPrefix="onb-shops" />
+      <div className="onb-foot">
+        <button className="btn ghost" onClick={onBack}>
+          <ArrowLeft size={16} /> {t('Back')}
+        </button>
+        <button className="btn lg primary" disabled={busy} onClick={save}>
+          {t('Next')} <ArrowRight size={18} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -402,7 +455,7 @@ function StepReceipt({ photo, onBack, onDone }: { photo: boolean; onBack: () => 
           <Camera size={24} aria-hidden="true" />
           <span className="grow">
             <b>{photo ? t('Photo of the paper list or a receipt') : t('Photo of a paper receipt')}</b>
-            <span>{t('Aldi, Lidl, the bakery …')}</span>
+            <span>{t('Supermarket, drugstore, bakery …')}</span>
           </span>
           <ArrowRight size={18} aria-hidden="true" />
         </button>

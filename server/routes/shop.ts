@@ -26,6 +26,8 @@ import {
 } from '../lib/shop.js';
 import { tickItem } from '../lib/shopping-trust.js';
 import { activeTrips, endTrip } from '../lib/trips.js';
+import { setHouseholdStores, storeChoices, storesChosen } from '../lib/stores.js';
+import { region } from '../lib/region.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
 import { NOTIFY_ACTIONS, runNotifyAction } from '../lib/notify-actions.js';
@@ -51,6 +53,12 @@ r.get('/shop/list', (req, res) => {
 });
 
 r.get('/shop/stores', (_req, res) => res.json(listStores()));
+/** "Wo kauft ihr meistens ein?" – choices for the household's region, whether it was answered, its shops (stores.ts) */
+r.get('/shop/stores/choices', (_req, res) => res.json({ ...storeChoices(region().code), chosen: storesChosen(), own: listStores().map((s) => s.name) }));
+r.put('/shop/stores/choice', (req, res) => {
+  const b = z.object({ stores: z.array(z.string().max(60)).max(30) }).parse(req.body ?? {});
+  res.json(setHouseholdStores(b.stores));
+});
 r.post('/shop/stores', (req, res) => {
   const b = z.object({ name: z.string().min(1).max(60) }).parse(req.body);
   res.json(createStore(b.name));

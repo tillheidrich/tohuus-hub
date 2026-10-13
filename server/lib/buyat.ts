@@ -13,6 +13,7 @@ import { db, migrate } from '../db.js';
 import { emit } from './bus.js';
 import { norm } from './text.js';
 import { region } from './region.js';
+import { orderByUse } from './stores.js';
 
 migrate(
   'buyat-1',
@@ -95,9 +96,12 @@ const EXTRA: Record<string, string[]> = {
 
 /** Suggestions for the "Where to buy?" picker: own stores first, then the region's chains, then what's in use. */
 export function buyAtSuggestions(): { own: string[]; common: string[]; used: string[] } {
-  const own = (db.prepare('SELECT name FROM shop_stores ORDER BY sort, id').all() as { name: string }[]).map((r) => r.name);
+  // own shops by the household's use, then alphabetical; the region's common ones alphabetical – no chain first
+  const own = orderByUse(db.prepare('SELECT name FROM shop_stores').all() as { name: string }[]).map((r) => r.name);
   const r = region();
-  const common = clean([...r.stores, ...(EXTRA[r.code] ?? [])], 40).filter((s) => !own.some((o) => norm(o) === norm(s)));
+  const common = clean([...r.stores, ...(EXTRA[r.code] ?? [])], 40)
+    .filter((s) => !own.some((o) => norm(o) === norm(s)))
+    .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
   const usedRaw = db.prepare(`SELECT buy_at FROM products WHERE buy_at IS NOT NULL UNION ALL SELECT buy_at FROM shopping_items WHERE buy_at IS NOT NULL`).all() as { buy_at: string }[];
   const known = new Set([...own, ...common].map(norm));
   const used = clean(usedRaw.flatMap((x) => parseBuyAt(x.buy_at)), 40).filter((s) => !known.has(norm(s)));

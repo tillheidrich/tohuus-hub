@@ -10,6 +10,10 @@ struct InstanceInfo: Decodable, Sendable {
     var auth: AuthMethods?
     var region: JSONValue?
     var signup: Bool?
+    /// ToHuus Cloud beta gate: "invite" = sign-up needs an access code (docs/cloud.md › Beta gate)
+    var signupMode: String?
+    /// address to ask for an access code
+    var support: String?
     var features: Features?
     var legal: Legal?
 

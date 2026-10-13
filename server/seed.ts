@@ -76,47 +76,47 @@ const DEMO: DemoItem[] = [
   ['Mineralwasser Medium', 'Gerolsteiner', '0,75l', 'drinks', 11, 6, { orderable: true, order_group: 'Getränke', unit: 'Flasche' }],
   ['Fritz-Kola', 'Fritz-Kola', '0,33l', 'drinks', 0, 0, { orderable: true, order_group: 'Getränke', unit: 'Flasche' }],
   // frozen
-  ['Vegane Dino Nuggets', 'REWE Beste Wahl', '300g', 'frozen', 2, 1],
-  ['Süsskartoffel Pommes', 'REWE Beste Wahl', '500g', 'frozen', 1, 1],
-  ['Curly Fries pikant', 'ja!', '600g', 'frozen', 1, 0],
+  ['Vegane Dino Nuggets', null, '300g', 'frozen', 2, 1],
+  ['Süsskartoffel Pommes', null, '500g', 'frozen', 1, 1],
+  ['Curly Fries pikant', null, '600g', 'frozen', 1, 0],
   ['Rahmspinat', 'Iglo', '750g', 'frozen', 1, 1],
-  ['Erbsen', 'ja!', '750g', 'frozen', 2, 1],
-  ['Mini Pizza Pomodori vegan', 'REWE Beste Wahl', '360g', 'frozen', 0, 1],
-  ['6-Kräuter', 'REWE Bio', '50g', 'frozen', 1, 0],
+  ['Erbsen', null, '750g', 'frozen', 2, 1],
+  ['Mini Pizza Pomodori vegan', null, '360g', 'frozen', 0, 1],
+  ['6-Kräuter', null, '50g', 'frozen', 1, 0],
   // fridge
   ['Eier Freilandhaltung', 'Cassenshof', '10 Stück', 'chilled', 6, 4, { unit: 'Stk' }],
   ['Butter', 'Kerrygold', '250g', 'chilled', 1, 1],
-  ['Mozzarella', 'ja!', '125g', 'chilled', 2, 1],
-  ['Feta', 'REWE Bio', '200g', 'chilled', 1, 0],
+  ['Mozzarella', null, '125g', 'chilled', 2, 1],
+  ['Feta', null, '200g', 'chilled', 1, 0],
   ['Fruchtzwerge weniger süß', 'Danone', '6x50g', 'chilled', 1, 1, { unit: 'Pack' }],
-  ['Kochcreme 15%', 'REWE', '250ml', 'chilled', 1, 1],
+  ['Kochcreme 15%', null, '250ml', 'chilled', 1, 1],
   ['Cheddar Scheiben', 'Violife', '140g', 'chilled', 1, 0],
   ['Veganer Schinken Spicker Mortadella', 'Rügenwalder Mühle', '80g', 'chilled', 1, 0],
   // pantry
   ['Gnocchi', 'Delverde', '500g', 'pantry', 2, 1],
   ['Spaghetti', 'Barilla', '500g', 'pantry', 3, 2],
   ['Eliche Tricolore', 'Delverde', '500g', 'pantry', 1, 0],
-  ['Basmati Reis', 'ja!', '1kg', 'pantry', 1, 1],
-  ['Rote Linsen', 'REWE Bio', '500g', 'pantry', 1, 0],
-  ['Stückige Tomaten', 'REWE', '400g', 'pantry', 4, 2, { unit: 'Dose' }],
-  ['Kokosmilch', 'REWE Beste Wahl', '400ml', 'pantry', 2, 1, { unit: 'Dose' }],
+  ['Basmati Reis', null, '1kg', 'pantry', 1, 1],
+  ['Rote Linsen', null, '500g', 'pantry', 1, 0],
+  ['Stückige Tomaten', null, '400g', 'pantry', 4, 2, { unit: 'Dose' }],
+  ['Kokosmilch', null, '400ml', 'pantry', 2, 1, { unit: 'Dose' }],
   ['Haferflocken', 'Kölln', '500g', 'pantry', 1, 1],
-  ['Sonnenmais Supersweet', 'REWE Beste Wahl', '140g', 'pantry', 2, 0, { unit: 'Dose' }],
-  ['Sesamöl Nativ', 'REWE Bio', '250ml', 'pantry', 1, 0, { unit: 'Flasche' }],
-  ['Burger Gewürz', 'REWE Beste Wahl', '41g', 'pantry', 1, 0],
+  ['Sonnenmais Supersweet', null, '140g', 'pantry', 2, 0, { unit: 'Dose' }],
+  ['Sesamöl Nativ', null, '250ml', 'pantry', 1, 0, { unit: 'Flasche' }],
+  ['Burger Gewürz', null, '41g', 'pantry', 1, 0],
   ['Pom-Bär Ketchup Style', 'Funny-frisch', '75g', 'snacks', 1, 0, { unit: 'Tüte' }],
   // fruit & veg (only roughly: full / half / low / empty)
   ['Bananen', null, null, 'produce', 3, 1],
-  ['Snack-Äpfel', 'REWE Beste Wahl', '1kg', 'produce', 2, 1],
+  ['Snack-Äpfel', null, '1kg', 'produce', 2, 1],
   ['Süßkartoffeln', null, null, 'produce', 1, 1],
   ['Paprika', null, null, 'produce', 2, 0],
   ['Zucchini', null, null, 'produce', 1, 0],
   ['Kartoffeln', null, '2kg', 'produce', 3, 1],
   ['Zwiebeln', null, null, 'produce', 1, 1],
-  ['Vollkornsandwich', 'REWE Bio', '750g', 'bakery', 2, 1],
+  ['Vollkornsandwich', null, '750g', 'bakery', 2, 1],
   // household & toiletries
   ['Paketband', 'tesa', '66m x 50mm', 'household', 0, 1, { unit: 'Rolle', spot: 'Regal neben der Tür, Kiste „Post & Pakete“' }],
-  ['Müllbeutel 35l', 'ja!', '25 Stück', 'household', 1, 1, { unit: 'Rolle' }],
+  ['Müllbeutel 35l', null, '25 Stück', 'household', 1, 1, { unit: 'Rolle' }],
   ['Spülmaschinen-Tabs', 'Finish', '50 Stück', 'household', 1, 1, { unit: 'Packung' }],
   ['Toilettenpapier', 'Hakle', '8 Rollen', 'household', 2, 1, { unit: 'Packung' }],
   ['Küchenrolle', 'Zewa', '4 Rollen', 'household', 1, 1, { unit: 'Packung' }],
@@ -132,6 +132,32 @@ const DEMO: DemoItem[] = [
   ['Wärmflasche', null, null, 'toiletries', 0, 0, { track: 'none', spot: 'Handtuchregal, ganz oben' }],
   ['Slipeinlagen Daily Protect', 'Always', '40 Stück', 'toiletries', 1, 1, { unit: 'Packung' }],
 ];
+/**
+ * Store neutrality (13 Oct 2026): the sample products carry no supermarket own brand any more. Households that got
+ * the sample data before still have these brands on their rows – kept here so removing sample data finds them.
+ */
+const LEGACY_BRANDS: Record<string, string> = {
+  'Vegane Dino Nuggets': 'REWE Beste Wahl',
+  'Süsskartoffel Pommes': 'REWE Beste Wahl',
+  'Curly Fries pikant': 'ja!',
+  'Erbsen': 'ja!',
+  'Mini Pizza Pomodori vegan': 'REWE Beste Wahl',
+  '6-Kräuter': 'REWE Bio',
+  'Mozzarella': 'ja!',
+  'Feta': 'REWE Bio',
+  'Kochcreme 15%': 'REWE',
+  'Basmati Reis': 'ja!',
+  'Rote Linsen': 'REWE Bio',
+  'Stückige Tomaten': 'REWE',
+  'Kokosmilch': 'REWE Beste Wahl',
+  'Sonnenmais Supersweet': 'REWE Beste Wahl',
+  'Sesamöl Nativ': 'REWE Bio',
+  'Burger Gewürz': 'REWE Beste Wahl',
+  'Snack-Äpfel': 'REWE Beste Wahl',
+  'Vollkornsandwich': 'REWE Bio',
+  'Müllbeutel 35l': 'ja!',
+};
+
 /** German demo text → English (product names, units, order groups and options, spots, hints, shopping items). */
 const EN: Record<string, string> = {
   // products
@@ -295,7 +321,9 @@ export function demoSignatures() {
   };
   return {
     entries: DEMO.length,
-    products: DEMO.flatMap(([name, brand, size]) => all(name).map((n) => ({ name: n, brand, sizes: sizes(size) }))),
+    products: DEMO.flatMap(([name, brand, size]) =>
+      all(name).flatMap((n) => [{ name: n, brand, sizes: sizes(size) }, ...(LEGACY_BRANDS[name] ? [{ name: n, brand: LEGACY_BRANDS[name] as string | null, sizes: sizes(size) }] : [])]),
+    ),
     recipes: [...RECIPES_DE, ...RECIPES_EN].map(([r]) => r.title),
     shopping: ['Paketband', 'Erdbeer-Eis', 'Mini Pizza Pomodori vegan', 'Geschenkpapier'].flatMap(all),
     guestLinks: all('Grillabend'),

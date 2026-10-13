@@ -15,13 +15,17 @@ extension APIClient {
         return try await send("POST", "api/auth/app", json: body)
     }
 
-    func signUp(email: String, password: String, name: String, householdName: String, form: String, device: String) async throws -> AppAuthResponse {
+    func signUp(email: String, password: String, name: String, householdName: String, form: String, device: String,
+                betaCode: String? = nil, stores: [String]? = nil) async throws -> AppAuthResponse {
         let lang = Locale.current.language.languageCode?.identifier == "de" ? "de" : "en"
         let region = Locale.current.region?.identifier ?? "DE"
-        return try await send("POST", "api/cloud/signup", json: [
+        var body: [String: Any] = [
             "email": email, "password": password, "name": name, "householdName": householdName, "form": form,
             "lang": lang, "region": region, "client": "ios", "device": device,
-        ])
+        ]
+        if let betaCode, !betaCode.isEmpty { body["betaCode"] = betaCode }
+        if let stores { body["stores"] = stores }
+        return try await send("POST", "api/cloud/signup", json: body)
     }
 
     /// A second app token for another device of the same member (the watch). Self-hosted servers allow it with the app

@@ -10250,6 +10250,21 @@ button.rcard {
   color: var(--empty);
   font-weight: 600;
 }
+/* "Wo kauft ihr meistens ein?" (shop/StorePicker.tsx) */
+.store-chips {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.store-chips .chip {
+  min-height: 44px;
+}
+.store-own .input {
+  flex: 1;
+  min-width: 0;
+}
+.store-own {
+  gap: 8px;
+}
 .signup .beta-note {
   margin: 0;
   color: var(--ink-2);

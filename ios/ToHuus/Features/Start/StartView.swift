@@ -32,6 +32,7 @@ struct StartView: View {
                             .buttonStyle(SecondaryButtonStyle())
                     }
                     if let error { ErrorBanner(message: error) }
+                    if app.instance?.signupMode == "invite" { BetaNote() }
                     Text(L("14 days with everything, without payment details. Then Free, unless you choose a plan."))
                         .font(.footnote).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
                     LegalLinks()
@@ -113,6 +114,9 @@ struct AppleSignInButton: View {
     @Environment(\.colorScheme) private var scheme
     let kind: Kind
     @Binding var error: String?
+    /// beta gate and "Wo kauft ihr meistens ein?" – used only when Apple creates a new account
+    var betaCode: String?
+    var stores: [String]?
     @State private var nonce = ""
     @State private var busy = false
 
@@ -147,7 +151,7 @@ struct AppleSignInButton: View {
         defer { busy = false }
         error = nil
         do {
-            try await app.signInWithApple(cred, nonce: nonce)
+            try await app.signInWithApple(cred, nonce: nonce, betaCode: betaCode, stores: stores)
         } catch {
             self.error = APIError.from(error).localizedDescription
         }
@@ -333,6 +337,10 @@ struct SignUpView: View {
     @State private var password = ""
     @State private var householdName = ""
     @State private var form = "family"
+    @State private var betaCode = ""
+    @State private var stores: [String] = []
+    @State private var choices: StoreChoices?
+    @State private var ownStore = ""
     @State private var busy = false
     @State private var error: String?
 
@@ -343,8 +351,21 @@ struct SignUpView: View {
 
     var body: some View {
         Form {
+            if invite {
+                Section {
+                    TextField(L("Access code"), text: $betaCode)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .font(.body.monospaced())
+                        .accessibilityHint(L("Needed to create an account during the test."))
+                } header: {
+                    Text(L("Access code"))
+                } footer: {
+                    BetaNote(compact: true)
+                }
+            }
             Section {
-                AppleSignInButton(kind: .signUp, error: $error)
+                AppleSignInButton(kind: .signUp, error: $error, betaCode: betaCode.trimmingCharacters(in: .whitespaces), stores: stores)
                     .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
                     .listRowBackground(Color.clear)
             } footer: {
@@ -372,6 +393,26 @@ struct SignUpView: View {
             } footer: {
                 Text(L("This sets what you see first. You can change it any time."))
             }
+            Section {
+                FlowLayout(spacing: 8) {
+                    ForEach(shopOptions, id: \.self) { s in
+                        ChoiceChip(title: s, on: stores.contains(s)) { toggle(s) }
+                    }
+                }
+                .padding(.vertical, 4)
+                HStack {
+                    TextField(L("Other shop, e.g. farm shop"), text: $ownStore)
+                        .submitLabel(.done)
+                        .onSubmit { addOwn() }
+                    if !ownStore.trimmingCharacters(in: .whitespaces).isEmpty {
+                        Button(L("Add")) { addOwn() }.font(.subheadline.weight(.semibold))
+                    }
+                }
+            } header: {
+                Text(L("Where do you usually shop?"))
+            } footer: {
+                Text(L("Pick as many as you like – you can change it any time."))
+            }
             if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             Section {
                 Button {
@@ -395,6 +436,28 @@ struct SignUpView: View {
         .scrollContentBackground(.hidden)
         .canvasBackground()
         .navigationTitle(L("Create account"))
+        .task { if choices == nil { choices = try? await APIClient(baseURL: app.cloudServer).storeChoices() } }
+    }
+
+    private var invite: Bool { app.instance?.signupMode == "invite" }
+
+    /// alphabetical shops of the region, the weekly market, then own entries – nothing preselected
+    private var shopOptions: [String] {
+        var all = choices?.stores ?? []
+        if let m = choices?.market { all.append(m) }
+        for s in stores where !all.contains(s) { all.append(s) }
+        return all
+    }
+
+    private func toggle(_ s: String) {
+        if let i = stores.firstIndex(of: s) { stores.remove(at: i) } else { stores.append(s) }
+    }
+
+    private func addOwn() {
+        let n = ownStore.trimmingCharacters(in: .whitespaces)
+        guard !n.isEmpty else { return }
+        if !stores.contains(where: { $0.caseInsensitiveCompare(n) == .orderedSame }) { stores.append(n) }
+        ownStore = ""
     }
 
     private var minPassword: Int { app.instance?.passwordMin ?? 10 }
@@ -411,9 +474,34 @@ struct SignUpView: View {
         do {
             try await app.signUp(server: app.cloudServer, email: email.trimmingCharacters(in: .whitespaces), password: password,
                                  name: name.trimmingCharacters(in: .whitespaces),
-                                 householdName: householdName.trimmingCharacters(in: .whitespaces), form: form)
+                                 householdName: householdName.trimmingCharacters(in: .whitespaces), form: form,
+                                 betaCode: betaCode.trimmingCharacters(in: .whitespaces), stores: stores)
         } catch {
             self.error = APIError.from(error).localizedDescription
         }
+    }
+}
+
+/// Beta gate: "ToHuus ist gerade im kleinen Test. Du brauchst einen Zugangscode – frag gern per Mail nach." with the
+/// mail link (support address from /api/instance).
+struct BetaNote: View {
+    @Environment(AppModel.self) private var app
+    var compact = false
+
+    private var address: String { app.instance?.support ?? "tohuus@tillheidrich.de" }
+
+    var body: some View {
+        VStack(alignment: compact ? .leading : .center, spacing: 4) {
+            Text(L("ToHuus is in a small test right now. You need an access code – feel free to ask by e-mail."))
+                .multilineTextAlignment(compact ? .leading : .center)
+                .fixedSize(horizontal: false, vertical: true)
+            if let url = URL(string: "mailto:\(address)?subject=ToHuus%20Zugangscode") {
+                Link(address, destination: url)
+                    .accessibilityLabel(LF("Write to %@", address))
+            }
+        }
+        .font(compact ? .footnote : .subheadline)
+        .foregroundStyle(Theme.ink2)
+        .frame(maxWidth: .infinity, alignment: compact ? .leading : .center)
     }
 }

@@ -238,4 +238,23 @@ describe('beta gate', () => {
     expect(r.json.contact).toBe('hallo@example.org');
     rs.setRuntimeSetting('support.email', null, 'test');
   });
+
+  it('sign-up asks where the household shops: exactly those shops, no preset chain', async () => {
+    const ch = await new Client().get('/api/cloud/store-choices?region=DE');
+    expect(ch.json.stores[0]).toBe('Aldi Nord');
+    expect(ch.json.market).toBe('Wochenmarkt');
+    rs.setRuntimeSetting('signup.mode', 'open', 'test');
+    const c = new Client();
+    expect((await c.post('/api/cloud/signup', signupBody('shops@example.org', { stores: ['Lidl', 'Wochenmarkt', 'Hofladen'] }))).status).toBe(200);
+    expect((await c.get('/api/shop/stores')).json.map((s: any) => s.name)).toEqual(['Hofladen', 'Lidl', 'Wochenmarkt']);
+    const choices = await c.get('/api/shop/stores/choices');
+    expect(choices.json).toMatchObject({ chosen: true, market: 'Wochenmarkt' });
+    // without an answer: no shops at all (and the question is still open)
+    const d = new Client();
+    expect((await d.post('/api/cloud/signup', signupBody('noshops@example.org'))).status).toBe(200);
+    expect((await d.get('/api/shop/stores')).json).toEqual([]);
+    expect((await d.get('/api/shop/stores/choices')).json.chosen).toBe(false);
+    expect((await d.req('PUT', '/api/shop/stores/choice', { stores: ['Edeka', 'dm'] })).json.stores).toEqual(['dm', 'Edeka']);
+    rs.setRuntimeSetting('signup.mode', null, 'test');
+  });
 });

@@ -37,7 +37,8 @@ export interface Recognition {
 export const UNITS = ['Stk', 'g', 'kg', 'ml', 'l', 'Pck'] as const;
 /** display label of a stored unit value */
 export const unitLabel = (u: string) => (u === 'Stk' ? t('pcs') : u === 'Pck' ? t('pack') : u);
-const STORES = ['REWE', 'Edeka', 'Lidl', 'Aldi Süd', 'Aldi Nord', 'Netto', 'Kaufland', 'Penny', 'Norma', 'Globus', 'tegut', 'dm', 'Rossmann', 'Müller', 'Budni'];
+// "which shop was it?" – the household's own recent shops come first (below), then these alphabetically: no chain first
+const STORES = ['Aldi Nord', 'Aldi Süd', 'Budni', 'dm', 'Edeka', 'Globus', 'Kaufland', 'Lidl', 'Müller', 'Netto', 'Norma', 'Penny', 'REWE', 'Rossmann', 'tegut'];
 
 export function useRecognition(importId: number | null | undefined) {
   return useApi<Recognition>(['quality', 'import', importId ?? 0], importId ? `/quality/imports/${importId}` : null);

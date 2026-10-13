@@ -48,6 +48,8 @@ interface Extras {
   region?: string;
   /** beta gate: access code for a new account (lib/beta.ts) */
   betaCode?: string;
+  /** "Wo kauft ihr meistens ein?" (lib/stores.ts), only for a new household */
+  stores?: string[];
 }
 
 /** The account for a verified Apple identity – existing, linked by a verified e-mail, or new (with a household). */
@@ -85,6 +87,7 @@ export async function accountForApple(req: Request, id: AppleIdentity, x: Extras
     form: x.form ?? 'couple',
     lang: l,
     region,
+    stores: x.stores,
   });
   return { accountId: a.id, created: true };
 }
@@ -108,6 +111,8 @@ const appleReq = z.object({
   household: z.string().max(64).optional(),
   /** beta gate: access code, only used when a new account is created */
   betaCode: z.string().trim().max(40).optional(),
+  /** "Wo kauft ihr meistens ein?" – only used for a new household */
+  stores: z.array(z.string().max(60)).max(30).optional(),
 });
 
 appleAuth.post(

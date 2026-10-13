@@ -2,7 +2,7 @@
  * Shopping in the store: sections ("aisles"), per-store learned walking order, basket + checkout,
  * claims ("I'll take care of it"), natural-language quick add and offline replay.
  */
-import { db, migrate } from '../db.js';
+import { db, migrate, onDbReady } from '../db.js';
 import { BASE_CATEGORIES } from './basedata.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, guessCategory, matchProduct } from './catalog.js';
@@ -28,6 +28,7 @@ import { ScopedMap } from './tenancy.js';
 import { decorateItems } from './list2.js';
 import './list-schema.js';
 import { estimate, listLists } from './lists.js';
+import { neutralizeStores, orderByUse } from './stores.js';
 
 export * from './shopparse.js';
 
@@ -75,6 +76,15 @@ migrate(
    ALTER TABLE shop_stores ADD COLUMN lon REAL;
    ALTER TABLE shop_stores ADD COLUMN radius_m INTEGER;`,
 );
+
+// no chain preferred: a new household does not keep the old first-start REWE + Aldi rows (stores.ts)
+onDbReady(() => {
+  try {
+    neutralizeStores();
+  } catch (e) {
+    console.warn('[stores] neutral start', (e as Error).message);
+  }
+});
 
 // ------------------------------------------------------------------ sections
 
@@ -153,8 +163,9 @@ function readModel(raw: string): AisleModel {
   }
 }
 
+/** The household's shops: most used first (trips, receipts, expenses), then alphabetical – no chain is preferred (stores.ts). */
 export function listStores(): Store[] {
-  const rows = db.prepare('SELECT * FROM shop_stores ORDER BY sort, id').all() as { id: number; name: string; model: string; lat?: number | null; lon?: number | null; radius_m?: number | null }[];
+  const rows = orderByUse(db.prepare('SELECT * FROM shop_stores ORDER BY id').all() as { id: number; name: string; model: string; lat?: number | null; lon?: number | null; radius_m?: number | null }[]);
   return rows.map((r) => {
     const m = readModel(r.model);
     return { id: r.id, name: r.name, order: m.order, trips: m.trips, lat: r.lat ?? null, lon: r.lon ?? null, radius_m: r.radius_m ?? null };

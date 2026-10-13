@@ -141,7 +141,7 @@ describe('every order carries a name', () => {
 describe('"Where to buy?" is only what a person set', () => {
   it('a shopping slip has no store line by default, even with a store for the walking order', async () => {
     catalog.addToShopping({ productId: icecream, text: 'Strawberry ice cream', source: 'auto', addedBy: 'ToHuus Hub' });
-    const rewe = shop.listStores().find((s) => s.name === 'REWE')!;
+    const rewe = shop.listStores().find((s) => s.name === 'REWE') ?? shop.createStore('REWE');
     const txt = tickets.renderText(await tickets.buildTicket({ type: 'shopping', store_id: rewe.id }, 58), 32);
     expect(txt).not.toMatch(/Store\s+REWE/i);
     expect(txt).not.toMatch(/^Store/m);
@@ -153,7 +153,7 @@ describe('"Where to buy?" is only what a person set', () => {
     const r = await req('PUT', `/api/shop/items/${item.id}/buy-at`, { buy_at: ['dm', ' Budni ', 'dm'] }, { cookie: tillCookie });
     expect(r.json).toMatchObject({ target: 'product', buy_at: ['dm', 'Budni'] });
     expect(buyat.parseBuyAt((db.prepare('SELECT buy_at FROM products WHERE id = ?').get(icecream) as any).buy_at)).toEqual(['dm', 'Budni']);
-    const rewe = shop.listStores().find((s) => s.name === 'REWE')!;
+    const rewe = shop.listStores().find((s) => s.name === 'REWE') ?? shop.createStore('REWE');
     const v = shop.storeView(rewe.id);
     expect(v.sections.at(-1)).toMatchObject({ key: 'elsewhere' });
     expect(v.sections.at(-1)!.items.map((i) => i.text)).toContain('Strawberry ice cream');

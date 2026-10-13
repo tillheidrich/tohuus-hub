@@ -11,10 +11,10 @@ extension AppModel {
     }
 
     /// Sign in with Apple: a new Apple ID gets an account and a household (then the sample-data question).
-    func signInWithApple(_ cred: AppleCredential, nonce: String) async throws {
+    func signInWithApple(_ cred: AppleCredential, nonce: String, betaCode: String? = nil, stores: [String]? = nil) async throws {
         let res = try await APIClient(baseURL: cloudServer).signInWithApple(
             identityToken: cred.identityToken, authorizationCode: cred.authorizationCode, nonce: nonce,
-            name: cred.givenName, device: Self.deviceName)
+            name: cred.givenName, device: Self.deviceName, betaCode: betaCode, stores: stores)
         finishSignIn(server: cloudServer, mode: "cloud", response: res)
     }
 

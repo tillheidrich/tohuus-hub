@@ -10,12 +10,21 @@ extension APIClient {
 
     /// POST /api/auth/apple – the identity token from AuthenticationServices; `nonce` = the raw nonce whose SHA-256
     /// went into the Apple request. A new Apple ID gets an account and a household (`created: true`).
-    func signInWithApple(identityToken: String, authorizationCode: String?, nonce: String, name: String?, device: String) async throws -> AppAuthResponse {
+    func signInWithApple(identityToken: String, authorizationCode: String?, nonce: String, name: String?, device: String,
+                         betaCode: String? = nil, stores: [String]? = nil) async throws -> AppAuthResponse {
         let (lang, region) = Self.langRegion
         var body: [String: Any] = ["identityToken": identityToken, "nonce": nonce, "device": device, "client": "ios", "lang": lang, "region": region]
+        // beta gate and "Wo kauft ihr meistens ein?" – only used when Apple creates a new account
+        if let betaCode, !betaCode.isEmpty { body["betaCode"] = betaCode }
+        if let stores, !stores.isEmpty { body["stores"] = stores }
         if let authorizationCode { body["authorizationCode"] = authorizationCode }
         if let name, !name.isEmpty { body["name"] = name }
         return try await send("POST", "api/auth/apple", json: body)
+    }
+
+    /// GET /api/cloud/store-choices – shops for "Wo kauft ihr meistens ein?", alphabetical (no chain preferred).
+    func storeChoices() async throws -> StoreChoices {
+        try await get("api/cloud/store-choices", query: [URLQueryItem(name: "region", value: Self.langRegion.1)])
     }
 
     /// POST /api/auth/link – the mail with a link and a 6-digit code (always answers ok).

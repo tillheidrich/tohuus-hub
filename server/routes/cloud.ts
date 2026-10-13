@@ -84,6 +84,7 @@ import { cloudAiSwitch, householdAiOn, mcpOn } from '../lib/ai-policy.js';
 import { aiConfig } from '../lib/ai.js';
 import * as betaModule from '../lib/beta.js';
 import { supportEmail } from '../lib/runtime-settings.js';
+import { setHouseholdStores, storeChoices } from '../lib/stores.js';
 import { ocrAvailable } from '../lib/ocr.js';
 // the operator's runtime settings (lib/runtime-settings.ts) count as configured too
 const aiConfigured = () => Boolean(aiConfig()) || visionEnabled();
@@ -429,7 +430,7 @@ const FORM_MAP: Record<string, 'single' | 'couple' | 'family' | 'shared' | 'care
 export const PLAN_FORMS = ['single', 'couple', 'family', 'wg', 'shared', 'carer'] as const;
 
 /** Create a household for an account: directory entry, database with defaults, first admin, membership. */
-export async function createHouseholdFor(accountId: number, input: { householdName: string; name: string; email: string; form: string; lang: string; region: string }) {
+export async function createHouseholdFor(accountId: number, input: { householdName: string; name: string; email: string; form: string; lang: string; region: string; /** "Wo kauft ihr meistens ein?" (stores.ts) */ stores?: string[] }) {
   const acc = await A();
   const h = acc.createHouseholdRow({ name: input.householdName, form: input.form, lang: input.lang, region: input.region, trial: true });
   const userId = runInHousehold({ id: h.id, via: 'signup' }, () => {
@@ -441,6 +442,8 @@ export async function createHouseholdFor(accountId: number, input: { householdNa
       setSetting('region', { code: defaultRegionCode(input.lang) });
     }
     setHomeSetup({ form: FORM_MAP[input.form] ?? null });
+    // no chain preferred: the household starts with the shops it named – or none (stores.ts)
+    setHouseholdStores(input.stores ?? [], { answered: input.stores !== undefined });
     const uid = Number(
       db
         .prepare(`INSERT INTO users (name, role, password_hash, color, email) VALUES (?, 'admin', ?, '#2f5bea', ?)`)
@@ -478,6 +481,8 @@ const signupReq = z.object({
   device: z.string().trim().max(80).optional(),
   /** beta gate: access code (lib/beta.ts) – needed in `invite` mode unless the address is allowlisted */
   betaCode: z.string().trim().max(40).optional(),
+  /** "Wo kauft ihr meistens ein?" – shop names (lib/stores.ts) */
+  stores: z.array(z.string().max(60)).max(30).optional(),
 });
 
 cloudPub.post(
@@ -495,7 +500,7 @@ cloudPub.post(
     const region = (b.region && REGIONS.some((r) => r.code === b.region!.toUpperCase()) ? b.region.toUpperCase() : defaultRegionCode(b.lang));
     gate.commit();
     const a = acc.createAccount(email, hashPassword(b.password), b.name, b.lang);
-    const h = await createHouseholdFor(a.id, { householdName: b.householdName, name: b.name, email, form: b.form, lang: b.lang, region });
+    const h = await createHouseholdFor(a.id, { householdName: b.householdName, name: b.name, email, form: b.form, lang: b.lang, region, stores: b.stores });
     void sendVerifyMail(a.id, email, h.id).catch((e) => console.warn('[signup mail]', (e as Error).message));
     if (b.client === 'ios') {
       const { token } = acc.createAppToken(a.id, b.device || 'iPhone', h.id);
@@ -505,6 +510,12 @@ cloudPub.post(
     return { ok: true, household: { id: h.id, name: h.name, role: 'admin', plan: h.plan } };
   }),
 );
+
+/** Shops for "Wo kauft ihr meistens ein?" at sign-up: `{ stores: [alphabetical], market }` for the region. */
+cloudPub.get('/cloud/store-choices', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.json(storeChoices(typeof req.query.region === 'string' ? req.query.region : 'DE'));
+});
 
 /**
  * Beta gate check before signing up (e.g. before Sign in with Apple in the app): `{ ok: true }` or the same 403 as

@@ -160,9 +160,10 @@ final class AppModel {
     }
 
     func signUp(server: URL = SharedConfig.cloudURL, email: String, password: String, name: String, householdName: String,
-                form: String) async throws {
+                form: String, betaCode: String? = nil, stores: [String]? = nil) async throws {
         let res = try await APIClient(baseURL: server).signUp(email: email, password: password, name: name,
-                                                              householdName: householdName, form: form, device: Self.deviceName)
+                                                              householdName: householdName, form: form, device: Self.deviceName,
+                                                              betaCode: betaCode, stores: stores)
         finishSignIn(server: server, mode: "cloud", response: res)
         if res.userName == nil { userName = name }
         askSampleData = true

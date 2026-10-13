@@ -1,0 +1,136 @@
+/* /betrieb – operator back office. Dutch Detail: ink lines, brand green for "ok", calm tables. */
+.op-page {
+  gap: 18px;
+  min-width: 0;
+}
+.op-gap {
+  gap: 14px;
+}
+.op-unlock {
+  max-width: 420px;
+}
+.op-nav {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--canvas);
+  padding: 6px 0;
+  max-width: 100%;
+}
+.op-nav .seg {
+  max-width: 100%;
+}
+.op-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.op-tile {
+  min-width: 0;
+}
+.op-tile-v {
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.op-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 14px;
+  align-items: start;
+}
+.op-section {
+  min-width: 0;
+}
+.op-section-head {
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.op-section-head h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+.op-p {
+  margin: 0;
+}
+.op-wrap {
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.op-grow {
+  flex: 1;
+  min-width: 200px;
+}
+.op-narrow {
+  width: 90px;
+}
+.op-mid {
+  width: 160px;
+}
+.op-help {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.op-key {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.op-ok {
+  color: var(--primary-ink, var(--primary));
+  font-weight: 600;
+}
+.op-bad {
+  color: var(--empty);
+  font-weight: 600;
+}
+.op-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.op-nowrap {
+  white-space: nowrap;
+}
+.op-id {
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.op-note {
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
+.op-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.op-table td,
+.op-table th {
+  vertical-align: top;
+}
+.op-table button {
+  min-height: 36px;
+}
+.op-banner {
+  line-height: 1.5;
+}
+.op-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 12px;
+  align-items: end;
+}
+.op-form .op-span {
+  grid-column: 1 / -1;
+}
+.op-fresh {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.op-fresh .codebox {
+  width: 100%;
+  margin: 0;
+}

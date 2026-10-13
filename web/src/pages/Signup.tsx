@@ -9,6 +9,8 @@ import { BrandMark, HomeTiles } from '../art';
 import { BRAND } from '../brand';
 import { useInstance } from '../data';
 import { lang, t } from '../i18n';
+import { useApi } from '../api';
+import { StorePicker } from '../shop/StorePicker';
 import { AppleButton, appleErrorKey } from './AppleSignIn';
 
 /** Beta gate (ToHuus Cloud): the one sentence and the mail link to ask for an access code. */
@@ -45,6 +47,9 @@ export function Signup() {
   const [appleBack] = useState(appleErrorKey);
   const [err, setErr] = useState(appleBack.text);
   const [code, setCode] = useState('');
+  const [shops, setShops] = useState<string[]>([]);
+  const region = navigator.language?.split('-')[1]?.toUpperCase() || 'DE';
+  const choices = useApi<{ stores: string[]; market: string | null }>(['store-choices', region], `/cloud/store-choices?region=${encodeURIComponent(region)}`);
   const invite = inst.data?.signupMode === 'invite';
   const closed = inst.data?.signupMode === 'closed';
   const legal = inst.data?.legal;
@@ -62,8 +67,9 @@ export function Signup() {
         householdName: home.trim() || t('Our home'),
         form: form ?? 'couple',
         lang: lang(),
-        region: navigator.language?.split('-')[1] ?? 'DE',
+        region,
         client: 'web',
+        stores: shops,
         ...(code.trim() ? { betaCode: code.trim() } : {}),
       });
       // a fresh start with the new session: straight into the setup ("Wer gehört dazu?")
@@ -162,6 +168,11 @@ export function Signup() {
                 </button>
               ))}
             </div>
+          </fieldset>
+          <fieldset className="field">
+            <legend>{t('Where do you usually shop?')}</legend>
+            {choices.data ? <StorePicker choices={choices.data.stores} market={choices.data.market} value={shops} onChange={setShops} idPrefix="su-shops" /> : null}
+            <div className="help">{t('Pick as many as you like – you can change it any time.')}</div>
           </fieldset>
           {err && (
             <p className="err" role="alert">
