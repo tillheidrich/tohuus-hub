@@ -529,16 +529,17 @@ struct ShoppingView: View {
                 .keyboardShortcut("z", modifiers: .command)
             }
             .font(.subheadline)
-            .foregroundStyle(Theme.canvas)
+            .foregroundStyle(Theme.onBlock)
             .padding(.horizontal, 16).padding(.vertical, 12)
-            .background(Theme.ink, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+            .background(Theme.block, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
             .padding(.horizontal, 16)
             .padding(.trailing, 64)
             .padding(.bottom, 12)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .task(id: u) {
-                try? await Task.sleep(nanoseconds: 4_000_000_000)
-                if undo == u { undo = nil }
+                A11yTiming.announce(u.text)
+                await A11yTiming.hold(4)
+                if !Task.isCancelled, undo == u { undo = nil }
             }
         }
     }

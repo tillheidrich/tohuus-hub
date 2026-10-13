@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **iPhone accessibility**: undo bars and toasts on the dark block colour (readable in dark mode), they stay while VoiceOver runs and are announced; 44 pt tap targets for Heute suggestions, chips and steppers; the import quantity stepper is one adjustable VoiceOver element; animations follow Reduce Motion; kitchen-mode steps scale with Dynamic Type; darker text colour instead of clay; selected chart bars are marked for VoiceOver and in bold.
+
 - **Website**: Plus with baking and kitchen-machine recipes and the receipt address, imports per plan, beta gifts, AI consent and children's AI off in the cloud, mails only if you want them, Hausinfo photos and the holiday handover, recipe photo credits; help pages for receipts by mail, mail opt-out and sign-in options.
 
 - **Assistant scope**: more clearly off-topic requests are answered without a model (stories, school subjects, "wer war …"); `POST /api/assistant/transcribe` refuses transcripts over about a minute of speech (413).

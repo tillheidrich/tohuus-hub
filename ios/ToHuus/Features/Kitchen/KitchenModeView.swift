@@ -214,7 +214,7 @@ private struct KitchenRecipe: View {
                         .font(.headline).foregroundStyle(Theme.primaryText)
                     ScrollView {
                         Text(r.steps[i].text)
-                            .font(.system(size: 34, weight: .regular))
+                            .font(.system(.largeTitle, weight: .regular))
                             .foregroundStyle(Theme.ink)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .accessibilityAddTraits(.updatesFrequently)
@@ -321,13 +321,14 @@ private struct KitchenList: View {
                     .foregroundStyle(Theme.mustard)
                 }
                 .font(.title3)
-                .foregroundStyle(Theme.canvas)
+                .foregroundStyle(Theme.onBlock)
                 .padding(Theme.Space.s4)
-                .background(Theme.ink, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                .background(Theme.block, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
                 .padding(Theme.Space.s4)
                 .task(id: item.id) {
-                    try? await Task.sleep(nanoseconds: 5_000_000_000)
-                    if lastTicked?.id == item.id { lastTicked = nil }
+                    A11yTiming.announce(LF("“%@” ticked off", item.productName ?? item.text))
+                    await A11yTiming.hold(5)
+                    if !Task.isCancelled, lastTicked?.id == item.id { lastTicked = nil }
                 }
             }
         }

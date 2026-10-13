@@ -507,7 +507,8 @@ struct ColumnsChart: View {
                                 }
                             }
                             .frame(height: 120)
-                            Text(c.label).font(.caption2).foregroundStyle(c.on ? Theme.ink : Theme.ink3)
+                            // selected: darker and bold, not only a different colour
+                            Text(c.label).font(.caption2.weight(c.on || focus == c.key ? .bold : .regular)).foregroundStyle(c.on ? Theme.ink : Theme.ink3)
                                 .lineLimit(1).minimumScaleFactor(0.6)
                                 .frame(height: 12)
                         }
@@ -517,6 +518,7 @@ struct ColumnsChart: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(c.title)
                     .accessibilityValue(Money.format(c.value))
+                    .accessibilityAddTraits(c.on || focus == c.key ? .isSelected : [])
                 }
             }
             if columns.contains(where: { $0.extra > 0 }) {

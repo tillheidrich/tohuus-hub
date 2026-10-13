@@ -353,7 +353,7 @@ private struct WishRowView: View {
                     if let p = priceText(wish.price, fromLinks: wish.priceFromLinks) { Text(p).font(.subheadline.weight(.bold)) }
                     if wish.priority != 2 {
                         Label(priorityLabel(wish.priority), systemImage: wish.priority == 3 ? "heart.fill" : "heart")
-                            .font(.subheadline).foregroundStyle(wish.priority == 3 ? Theme.clay : Theme.ink2)
+                            .font(.subheadline).foregroundStyle(wish.priority == 3 ? Theme.low : Theme.ink2)
                     }
                     if let g = wish.giver { Text(LF("could give: %@", g.name)).font(.subheadline).foregroundStyle(Theme.ink2) }
                 }

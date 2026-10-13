@@ -166,7 +166,7 @@ struct TreatsView: View {
                     case "done":
                         if o.thankedAt != nil {
                             Label(LF("%@ says thanks", o.guestName ?? ""), systemImage: "heart.fill")
-                                .font(.caption.weight(.semibold)).foregroundStyle(Theme.clay)
+                                .font(.caption.weight(.semibold)).foregroundStyle(Theme.low)
                         } else {
                             Text(L("Brought")).font(.caption).foregroundStyle(Theme.ink3)
                         }

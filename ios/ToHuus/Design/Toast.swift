@@ -34,9 +34,9 @@ private struct ToastModifier: ViewModifier {
                 .padding(.bottom, Theme.Space.s4)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .task(id: m.id) {
-                    UIAccessibility.post(notification: .announcement, argument: m.text)
-                    try? await Task.sleep(nanoseconds: m.action == nil ? 3_000_000_000 : 6_000_000_000)
-                    if message?.id == m.id { withAnimation { message = nil } }
+                    A11yTiming.announce(m.text)
+                    await A11yTiming.hold(m.action == nil ? 3 : 6)
+                    if !Task.isCancelled, message?.id == m.id { withAnimation { message = nil } }
                 }
             }
         }
