@@ -50,13 +50,15 @@ export interface Limits {
     weekPlanFromPantry: boolean;
     monthlyAnalysis: boolean;
     substituteFromStock: boolean;
+    /** ToHuus-Rezepte marked Plus (catalogue tier 'plus') */
+    plusRecipes: boolean;
   };
 }
 
 const MB = 1024 * 1024;
-const base = { fullHistory: false, priceHistory: false, connectedHouseholds: false, mirrorLists: false, importQuota: false, weekPlanFromPantry: false, monthlyAnalysis: false, substituteFromStock: false };
+const base = { fullHistory: false, priceHistory: false, connectedHouseholds: false, mirrorLists: false, importQuota: false, weekPlanFromPantry: false, monthlyAnalysis: false, substituteFromStock: false, plusRecipes: false };
 const haushaltFeatures = { ...base, fullHistory: true, priceHistory: true, connectedHouseholds: true, mirrorLists: true, importQuota: true };
-const plusFeatures = { ...haushaltFeatures, weekPlanFromPantry: true, monthlyAnalysis: true, substituteFromStock: true };
+const plusFeatures = { ...haushaltFeatures, weekPlanFromPantry: true, monthlyAnalysis: true, substituteFromStock: true, plusRecipes: true };
 
 export const PLAN_LIMITS: Record<Plan, Limits> = {
   free: { historyDays: 60, assistantPerMonth: 20, assistantThrottleOnly: false, uploadsPerDay: 60, receiptAiPerDay: 15, importAiPerDay: 10, storageBytes: 250 * MB, features: base },

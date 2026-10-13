@@ -205,6 +205,23 @@
         }
       }
     },
+    "%@ is part of Plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is part of Plus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gehört zu Plus"
+          }
+        }
+      }
+    },
     "%@ is shopping at %@": {
       "extractionState": "manual",
       "localizations": {
@@ -11306,6 +11323,23 @@
         }
       }
     },
+    "New ToHuus recipes for the season, with pictures": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New ToHuus recipes for the season, with pictures"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue ToHuus-Rezepte zur Jahreszeit, mit Bild"
+          }
+        }
+      }
+    },
     "New budget": {
       "extractionState": "manual",
       "localizations": {
@@ -14362,6 +14396,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zettel"
+          }
+        }
+      }
+    },
+    "Part of Plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part of Plus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gehört zu Plus"
           }
         }
       }

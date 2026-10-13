@@ -254,6 +254,7 @@ enum PlanText {
         if f?["connectedHouseholds"]?.bool == true { out.append(L("Connected households and shared lists")) }
         if f?["weekPlanFromPantry"]?.bool == true { out.append(L("Week plan from what you have at home")) }
         if f?["monthlyAnalysis"]?.bool == true { out.append(L("A look back at every month")) }
+        if f?["plusRecipes"]?.bool == true { out.append(L("New ToHuus recipes for the season, with pictures")) }
         if let n = l["assistantPerMonth"]?.int {
             out.append(l["assistantThrottleOnly"]?.bool == true
                        ? LF("%d assistant messages a month – after that slower, never blocked", n)
@@ -269,7 +270,7 @@ enum PlanText {
     private static func fallback(_ plan: String) -> [String] {
         switch plan {
         case "plus":
-            return [L("Everything in Household"), L("Week plan from what you have at home"), L("A look back at every month"),
+            return [L("Everything in Household"), L("Week plan from what you have at home"), L("A look back at every month"), L("New ToHuus recipes for the season, with pictures"),
                     LF("%d assistant messages a month – after that slower, never blocked", 1500), LF("%@ for receipts and photos", "5 GB")]
         case "haushalt":
             return [L("The whole history: prices, spending, what you buy how often"), L("Connected households and shared lists"),

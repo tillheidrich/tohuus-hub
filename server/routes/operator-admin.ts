@@ -264,6 +264,8 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
         tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
         aiAssisted: z.boolean().optional(),
         imageKind: z.enum(['none', 'photo', 'ai']).optional(),
+        /** Plus recipe: households without Plus see the card with a lock */
+        tier: z.enum(['all', 'plus']).optional(),
       })
       .parse(req.body ?? {});
     const d = catalogDb();
@@ -272,6 +274,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     d.transaction(() => {
       if (b.reviewState) d.prepare(`UPDATE catalog_recipes SET review_state = ? WHERE id = ?`).run(b.reviewState, row.id);
       if (b.tags) d.prepare(`UPDATE catalog_recipes SET tags = ? WHERE id = ?`).run(JSON.stringify(b.tags), row.id);
+      if (b.tier) d.prepare(`UPDATE catalog_recipes SET tier = ? WHERE id = ?`).run(b.tier, row.id);
       if (b.aiAssisted !== undefined) d.prepare(`UPDATE catalog_recipes SET ai_assisted = ? WHERE id = ?`).run(b.aiAssisted ? 1 : 0, row.id);
       if (b.imageKind) d.prepare(`UPDATE catalog_recipes SET image_kind = CASE WHEN image IS NULL THEN 'none' ELSE ? END WHERE id = ?`).run(b.imageKind === 'none' ? 'photo' : b.imageKind, row.id);
       if (b.publishAt !== undefined) {

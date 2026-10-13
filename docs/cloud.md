@@ -201,6 +201,7 @@ app as a toast). Self-hosted servers have everything; the trial and the beta gif
 | `fullHistory` | Haushalt | `historyDays()` (rhythm, money, "Das habt ihr noch") |
 | `weekPlanFromPantry` | Plus | `POST /api/plan/autofill`, HA `fill_week`, MCP `fill_week` |
 | `monthlyAnalysis` | Plus | assistant `money_compare` |
+| `plusRecipes` | Plus | ToHuus-Rezepte with `tier = 'plus'`: `GET /api/cloud-recipes/:id`, `POST …/save` |
 | receipt address | Plus | `GET /api/mail/address`, inbound mails (`docs/mail-inbox.md`) |
 | `connectedHouseholds` | Haushalt | new "Mitversorgen" lists (`kind: 'care'`, create or change to care); existing ones keep working |
 | `substituteFromStock`, `importQuota` | – | only plan text and limits so far; no separate endpoint exists yet |
@@ -535,6 +536,15 @@ anything is published, AI pictures carry "KI-Bild".
   `published_at`.
 - **Starting set**: 30 simple everyday German recipes written for ToHuus (`server/data/catalog-seed.ts`), seeded once
   as **drafts** (AI-assisted). Nothing is visible to households until the operator reads, marks and schedules them.
+- **Plus set** (13 Oct 2026): 20 autumn and winter recipes (`server/data/catalog-seed-plus.ts`: one pot, one tray,
+  cooking once for two days, leftovers), seeded once as drafts with `tier = 'plus'`. Each has an AI picture made in
+  the founder's Canva account; `image_ref` holds its Canva link, the back office shows "Bild in Canva öffnen" next to
+  "Foto hinzufügen" and stores the upload as `image_kind: 'ai'` ("KI-Bild" badge). `tier` can be switched per
+  recipe (`PATCH …/:id { tier: 'all' | 'plus' }`).
+- **Plus recipes for households**: the list shows them to everyone with `plus: true` and `locked` when the household
+  has no Plus (`plusRecipes` feature, trial and beta gift count); `GET /api/cloud-recipes/:id` and `…/save` answer
+  402 `{ code: 'plan', feature: 'plusRecipes' }` for a locked one. Web and iPhone show a "Plus" badge and "Gehört zu
+  Plus" (opens the plans).
 - **Scheduler**: every 10 minutes publishes `scheduled` recipes whose `publish_at` has passed.
 - **Households** (`server/routes/cloud-recipes.ts`, signed-in members; guests not):
   - `GET /api/cloud-recipes` → `{ newThisWeek: [card], recent: [card], saved: { "<catalogId>": <recipeId> } }`;

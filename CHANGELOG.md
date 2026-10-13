@@ -6,6 +6,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ### Fixed
 
+- **Plus recipes**: 20 new ToHuus-Rezepte for autumn and winter (drafts, each with an AI picture in Canva for the back office), a Plus tier in the catalogue (`plus`/`locked` on cards, 402 `plusRecipes` on open and save), "Plus" badge and "Gehört zu Plus" on web and iPhone, back office toggle.
+
 - **Fill level: running low is the household's choice**: per product "Knapp ab wenig" (default) or "ab halb" (`min_qty: 2` on a `level` product), in the web app and on iPhone; counted products keep "Mindestens vorrätig".
 
 - **Every notification is each person's own choice**: low stock, used up, added to the list, news on a „Bring mir was“ wish, children's wishes, food votes, week-plan rotation, care tasks and party end joined the personal settings (`GET/PUT /api/notify/prefs`) with calm defaults; the household matrix keeps only the shared channels for them.

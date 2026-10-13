@@ -72,6 +72,7 @@ export const FEATURE_PLAN: Record<Feature, 'haushalt' | 'plus'> = {
   weekPlanFromPantry: 'plus',
   monthlyAnalysis: 'plus',
   substituteFromStock: 'plus',
+  plusRecipes: 'plus',
 };
 
 /** HTTP 402 `{ code: 'plan', feature, plan }` – the apps show the message and offer the plans. */

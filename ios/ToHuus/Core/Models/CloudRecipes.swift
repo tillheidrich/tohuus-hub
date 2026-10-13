@@ -15,6 +15,10 @@ struct CatalogCard: Decodable, Sendable, Identifiable, Hashable {
     var aiAssisted: Bool?
     /// "reviewed" | "cooked"
     var reviewState: String?
+    /// part of Plus
+    var plus: Bool?
+    /// a Plus recipe and this household has no Plus: the card only, no saving
+    var locked: Bool?
 }
 
 struct CatalogList: Decodable, Sendable {

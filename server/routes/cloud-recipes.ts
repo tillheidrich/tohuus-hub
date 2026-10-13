@@ -12,7 +12,9 @@ import { accountById } from '../lib/accounts.js';
 import { requireAuth } from '../lib/auth.js';
 import { cloudIdentity } from '../lib/cloud-auth.js';
 import { catalogDb, getCatalogRow, publicRecipe, publishedRecipes, readCatalogImage } from '../lib/cloud-recipes.js';
+import { planError } from '../lib/limits.js';
 import { isOperatorEmail } from '../lib/operator.js';
+import { entitlement } from '../lib/plans.js';
 import { bulkImport, type ImportRecipe } from '../lib/recipes2.js';
 
 export const cloudRecipesPublic = Router();
@@ -46,7 +48,11 @@ cloudRecipes.use('/cloud-recipes', requireAuth);
 
 cloudRecipes.get('/cloud-recipes', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ ...publishedRecipes(), saved: savedMap() });
+  // Plus recipes show up for everyone (with a lock) – opening and saving them needs Plus
+  const plus = entitlement('plusRecipes');
+  const mark = <T extends { plus: boolean }>(c: T) => ({ ...c, locked: c.plus && !plus });
+  const p = publishedRecipes();
+  res.json({ newThisWeek: p.newThisWeek.map(mark), recent: p.recent.map(mark), saved: savedMap(), plus });
 });
 
 const published = (req: Request, res: Response) => {
@@ -54,6 +60,10 @@ const published = (req: Request, res: Response) => {
   const row = Number.isInteger(id) ? getCatalogRow(id) : undefined;
   if (!row || row.state !== 'published') {
     res.status(404).json({ error: t('This recipe is not available.') });
+    return undefined;
+  }
+  if (row.tier === 'plus' && !entitlement('plusRecipes')) {
+    res.status(402).json(planError('plusRecipes').toJSON());
     return undefined;
   }
   return row;

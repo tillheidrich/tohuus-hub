@@ -182,7 +182,7 @@ const COPY = {
       plans: [
         { name: 'Free', price: '0 €', sub: 'für immer', storage: '250 MB', items: ['Gemeinsame Liste mit Einkaufsmodus', 'Bons ohne Limit', 'Merkt sich 60 Tage zurück', 'Rezepte von Hand oder per Link', '20 Nachrichten an den Assistenten im Monat'] },
         { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick', 'Verbundene Haushalte zum Mitversorgen', 'Import aus Screenshots und Fotos von Papierlisten', '100 Nachrichten im Monat'] },
-        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
+        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', 'Neue ToHuus-Rezepte zur Jahreszeit, mit Bild', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
         { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'Web-App im Browser, Home Assistant, MCP'], host: true },
       ],
       note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Bezahlt wird in der iPhone-App über Apple.',
@@ -384,7 +384,7 @@ const COPY = {
       plans: [
         { name: 'Free', price: '€0', sub: 'for good', storage: '250 MB', items: ['Shared list with shop mode', 'Unlimited receipts', 'Remembers 60 days back', 'Recipes by hand or from a link', '20 assistant messages a month'] },
         { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices, spending and review', 'Connected households for looking after someone', 'Import from screenshots and photos of paper lists', '100 messages a month'] },
-        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', '1,500 messages a month'], mark: '14 days to try' },
+        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', 'New seasonal ToHuus recipes (in German), with pictures', '1,500 messages a month'], mark: '14 days to try' },
         { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'Web app in the browser, Home Assistant, MCP'], host: true },
       ],
       note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. Payment runs through Apple in the iPhone app.',

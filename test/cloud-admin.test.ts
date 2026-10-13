@@ -385,12 +385,18 @@ describe('usage statistics (counts only)', () => {
 
 describe('ToHuus-Rezepte (central catalogue)', () => {
   let cat: typeof import('../server/lib/cloud-recipes');
-  it('starts with 30 own drafts – nothing published, allergens computed, review notes', async () => {
+  it('starts with 30 own drafts and 20 Plus drafts – nothing published, allergens computed, review notes', async () => {
     cat = await import('../server/lib/cloud-recipes');
     const l = await op.get('/api/operator/recipes');
     expect(l.status, l.text).toBe(200);
-    expect(l.json.recipes).toHaveLength(30);
-    expect(l.json.counts).toEqual({ draft: 30 });
+    expect(l.json.recipes).toHaveLength(50);
+    expect(l.json.counts).toEqual({ draft: 50 });
+    // the Plus set: tier plus, each with the Canva link of its AI picture
+    const plusSet = l.json.recipes.filter((r: any) => r.plus);
+    expect(plusSet).toHaveLength(20);
+    expect(plusSet.every((r: any) => /^https:\/\/www\.canva\.com\/M\/MAHX/.test(r.imageRef))).toBe(true);
+    // poultry and mince recipes say when they are cooked through (no review note)
+    for (const t of ['Ofen-Hähnchen mit Wurzelgemüse', 'Hackbällchen in Tomatensoße']) expect(plusSet.find((r: any) => r.title === t).warnings.some((w: string) => /Poultry/.test(w)), t).toBe(false);
     const pf = l.json.recipes.find((r: any) => r.title === 'Pfannkuchen');
     expect(pf.allergens).toEqual(['eggs', 'gluten', 'milk']);
     expect(pf.aiAssisted).toBe(true);
@@ -408,7 +414,7 @@ describe('ToHuus-Rezepte (central catalogue)', () => {
   });
 
   it('review → schedule 3 per week → the scheduler publishes; households see "new this week" and save a copy', async () => {
-    const l = (await op.get('/api/operator/recipes')).json.recipes as any[];
+    const l = ((await op.get('/api/operator/recipes')).json.recipes as any[]).filter((r) => !r.plus);
     const [a, b, c, d] = l.slice(0, 4);
     expect((await op.post(`/api/operator/recipes/${a.id}/publish`)).status).toBe(409); // not read yet
     expect((await op.req('PATCH', `/api/operator/recipes/${a.id}`, { publishAt: '2026-01-01' })).status).toBe(409);
@@ -452,6 +458,32 @@ describe('ToHuus-Rezepte (central catalogue)', () => {
     expect((await A.get(`/api/cloud-recipes/${a.id}`)).status).toBe(404);
     expect((await A.get(`/api/recipes/${sv.json.id}`)).status).toBe(200);
     expect((await op.get('/api/operator/audit')).json.map((x: any) => x.action)).toEqual(expect.arrayContaining(['recipes.update', 'recipes.schedule', 'recipes.unpublish']));
+  });
+
+  it('Plus recipes: households without Plus see the card with a lock, opening and saving answer 402', async () => {
+    const pr = ((await op.get('/api/operator/recipes')).json.recipes as any[]).find((r) => r.title === 'Kürbis-Linsen-Suppe');
+    expect((await op.req('PATCH', `/api/operator/recipes/${pr.id}`, { reviewState: 'reviewed', publishAt: new Date(Date.now() - 60_000).toISOString().replace('T', ' ').slice(0, 19) })).status).toBe(200);
+    expect(cat.publishDue()).toBe(1);
+    // a household on Free
+    const F = new Client();
+    const hF = await signup(F, 'cat-free@example.org', 'Free-Haushalt');
+    accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(hF);
+    const list = (await F.get('/api/cloud-recipes')).json;
+    expect(list.plus).toBe(false);
+    expect(list.newThisWeek.find((r: any) => r.id === pr.id)).toMatchObject({ plus: true, locked: true, title: 'Kürbis-Linsen-Suppe' });
+    const one = await F.get(`/api/cloud-recipes/${pr.id}`);
+    expect(one.status).toBe(402);
+    expect(one.json).toMatchObject({ code: 'plan', feature: 'plusRecipes', plan: 'plus' });
+    expect((await F.post(`/api/cloud-recipes/${pr.id}/save`)).status).toBe(402);
+    // the trial (Plus) opens and saves it
+    const T = new Client();
+    await signup(T, 'cat-trial@example.org', 'Trial-Haushalt');
+    expect((await T.get('/api/cloud-recipes')).json.newThisWeek.find((r: any) => r.id === pr.id)).toMatchObject({ plus: true, locked: false });
+    expect((await T.get(`/api/cloud-recipes/${pr.id}`)).json.ingredients.length).toBeGreaterThan(3);
+    expect((await T.post(`/api/cloud-recipes/${pr.id}/save`)).json.created).toBe(true);
+    // the operator can take the Plus mark off again
+    expect((await op.req('PATCH', `/api/operator/recipes/${pr.id}`, { tier: 'all' })).json.plus).toBe(false);
+    expect((await F.get(`/api/cloud-recipes/${pr.id}`)).status).toBe(200);
   });
 
   it('uploads a recipe package with a photo; the photo is stored once, encrypted, shown only when published', async () => {
