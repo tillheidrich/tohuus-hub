@@ -21,14 +21,37 @@ enum APIError: Error, LocalizedError, Equatable {
         case .unauthorized: return L("You have been signed out. Please sign in again.")
         case .quota(let m): return m.isEmpty ? L("This month's assistant messages are used up.") : m
         case .storageFull(let m): return m.isEmpty ? L("Your household's storage is full. Nothing was deleted – free up space or choose a bigger plan.") : m
-        case .notFound: return L("This server doesn't know that yet. Is it up to date?")
-        case .server(_, let m): return m
-        case .decoding: return L("The server answered in a way the app doesn't understand yet.")
+        case .notFound: return L("This doesn't work with the server yet. Please try again later.")
+        case .server(let status, let m): return APIError.friendly(status: status, message: m)
+        case .decoding: return L("The answer didn't fit this version of the app. Please update the app or try again later.")
         case .invalidURL: return L("That address doesn't look right.")
         }
     }
 
     var isOffline: Bool { self == .offline }
+
+    /// Server texts meant for people are shown as they are; technical ones ("unauthorized", "Internal Server Error",
+    /// "not found", an NSError dump) become a plain sentence for the status.
+    static func friendly(status: Int, message: String) -> String {
+        let m = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        let technical = m.isEmpty
+            || m.range(of: #"^[a-z_ .-]+$"#, options: .regularExpression) != nil
+            || m.contains("Error Domain=") || m.contains("NSURLErrorDomain")
+            || m.lowercased() == HTTPURLResponse.localizedString(forStatusCode: status).lowercased()
+        if !technical { return m }
+        switch status {
+        case 401: return L("That didn't work – please sign in again.")
+        case 403: return L("You can't do that in this household.")
+        case 404: return L("This doesn't work with the server yet. Please try again later.")
+        case 408, 504: return L("That took too long. Please try again in a moment.")
+        case 409: return L("That changed in the meantime. Pull down to refresh and try again.")
+        case 413: return L("That file is too big.")
+        case 429: return L("A lot is happening right now. Please try again in a moment.")
+        case 502, 503: return L("ToHuus can't be reached right now. Please try again in a moment.")
+        case 500...: return L("That didn't work. Please try again in a moment.")
+        default: return L("That didn't work. Please try again.")
+        }
+    }
 
     static func from(_ error: Error) -> APIError {
         if let e = error as? APIError { return e }
@@ -37,8 +60,10 @@ enum APIError: Error, LocalizedError, Equatable {
             case .notConnectedToInternet, .networkConnectionLost, .timedOut, .cannotConnectToHost, .cannotFindHost,
                  .dnsLookupFailed, .dataNotAllowed, .internationalRoamingOff, .secureConnectionFailed:
                 return .offline
+            case .cancelled:
+                return .server(status: 0, message: L("Cancelled."))
             default:
-                return .server(status: 0, message: u.localizedDescription)
+                return .server(status: 0, message: L("That didn't work. Please check your connection and try again."))
             }
         }
         if error is DecodingError { return .decoding(String(describing: error)) }

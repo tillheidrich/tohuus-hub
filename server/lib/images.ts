@@ -256,9 +256,9 @@ export function serveImage(req: Request, res: Response, next: NextFunction) {
   try {
     const name = String(req.params.name ?? '');
     if (!IMG_NAME.test(name)) return void res.status(404).end();
-    if (config.multiTenant && !currentHousehold()) return void res.status(401).json({ error: 'unauthorized' });
+    if (config.multiTenant && !currentHousehold()) return void res.status(401).json({ error: t('Please sign in again.'), code: 'unauthorized' });
     const signed = req.query.s !== undefined;
-    if (signed ? !signatureOk(name, req.query.e, req.query.s) : !resolveActor(req)) return void res.status(401).json({ error: 'unauthorized' });
+    if (signed ? !signatureOk(name, req.query.e, req.query.s) : !resolveActor(req)) return void res.status(401).json({ error: t('Please sign in again.'), code: 'unauthorized' });
     const buf = readImage(`/img/${name}`);
     if (!buf) return void res.status(404).end();
     const ext = name.split('.').pop()!.toLowerCase();

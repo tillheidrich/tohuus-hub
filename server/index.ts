@@ -226,7 +226,8 @@ app.use('/api', list2Routes);
 app.use('/api', iosCompat);
 app.use('/api', houseGuideRoutes);
 app.use('/api', wishRoutes);
-app.use('/api', (_req, res) => res.status(404).json({ error: 'not found' }));
+// the text stays 'not found': iPhone app builds up to 1.0 (5) hide a feature by exactly this answer
+app.use('/api', (_req, res) => res.status(404).json({ error: 'not found', code: 'not_found' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webDir = [path.join(here, 'web'), path.join(here, '../dist/web')].find((d) => fs.existsSync(path.join(d, 'index.html')));
@@ -262,7 +263,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     return;
   }
   if (err instanceof NoHouseholdError) {
-    res.status(401).json({ error: 'unauthorized' });
+    res.status(401).json({ error: t('Please sign in again.'), code: 'unauthorized' });
     return;
   }
   if (err instanceof QuotaError) {
@@ -291,7 +292,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   // anything else: no internals in production (paths, SQL, stack) – a reference to find it in the log
   const ref = crypto.randomBytes(4).toString('hex');
   console.error(`[error ${ref}]`, e?.stack ?? e?.message ?? err);
-  res.status(500).json({ error: process.env.NODE_ENV === 'production' ? t('Something went wrong (reference {ref}).', { ref }) : (e?.message ?? t('Error')), ref });
+  res.status(500).json({ error: process.env.NODE_ENV === 'production' ? t('That didn’t work. Please try again in a moment – if it happens again, tell us the code {ref}.', { ref }) : (e?.message ?? t('Error')), ref });
 });
 
 export { app };
