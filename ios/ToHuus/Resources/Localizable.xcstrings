@@ -69,6 +69,23 @@
         }
       }
     },
+    "%@ each": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ each"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pro Kopf"
+          }
+        }
+      }
+    },
     "%@ for receipts and photos": {
       "extractionState": "manual",
       "localizations": {
@@ -82,6 +99,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ für Bons und Fotos"
+          }
+        }
+      }
+    },
+    "%@ gave %@ %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gave %@ %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat %2$@ %3$@ gegeben"
           }
         }
       }
@@ -116,6 +150,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ bekommt dein Danke."
+          }
+        }
+      }
+    },
+    "%@ gives %@ %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gives %@ %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ gibt %2$@ %3$@"
           }
         }
       }
@@ -239,6 +290,23 @@
         }
       }
     },
+    "%@ paid": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ paid"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat bezahlt"
+          }
+        }
+      }
+    },
     "%@ portions": {
       "extractionState": "manual",
       "localizations": {
@@ -303,6 +371,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@-mal"
+          }
+        }
+      }
+    },
+    "%@ without a payer yet – choose who paid for each cost.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ without a payer yet – choose who paid for each cost."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ noch ohne Zahler – wähl bei den Kosten, wer bezahlt hat."
           }
         }
       }
@@ -919,6 +1004,57 @@
         }
       }
     },
+    "%lld people": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld people"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Personen"
+          }
+        }
+      }
+    },
+    "%lld people · %@ each": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld people · %@ each"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Personen · %@ pro Kopf"
+          }
+        }
+      }
+    },
+    "%lld transfers open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld transfers open"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Ausgleiche offen"
+          }
+        }
+      }
+    },
     "(voice message)": {
       "extractionState": "manual",
       "localizations": {
@@ -1021,6 +1157,23 @@
         }
       }
     },
+    "1 person": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 person"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Person"
+          }
+        }
+      }
+    },
     "1 portion": {
       "extractionState": "manual",
       "localizations": {
@@ -1102,6 +1255,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 Sache fehlt."
+          }
+        }
+      }
+    },
+    "1 transfer open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 transfer open"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Ausgleich offen"
           }
         }
       }
@@ -1429,6 +1599,40 @@
         }
       }
     },
+    "A private list never shows up for anyone else – handy for a present.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A private list never shows up for anyone else – handy for a present."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine private Liste taucht bei niemand anderem auf – praktisch für ein Geschenk."
+          }
+        }
+      }
+    },
+    "A receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A receipt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Kassenbon"
+          }
+        }
+      }
+    },
     "A receipt waits for a look": {
       "extractionState": "manual",
       "localizations": {
@@ -1442,6 +1646,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Bon wartet auf einen Blick"
+          }
+        }
+      }
+    },
+    "A shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A shopping list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Einkaufsliste"
+          }
+        }
+      }
+    },
+    "A shopping trip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A shopping trip"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Einkauf"
           }
         }
       }
@@ -1684,6 +1922,40 @@
         }
       }
     },
+    "Add a person": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a person"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person hinzufügen"
+          }
+        }
+      }
+    },
+    "Add a personal expense": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a personal expense"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persönliche Ausgabe eintragen"
+          }
+        }
+      }
+    },
     "Add a photo": {
       "extractionState": "manual",
       "localizations": {
@@ -1867,6 +2139,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Als Bon hinzufügen"
+          }
+        }
+      }
+    },
+    "Add cost": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add cost"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosten hinzufügen"
+          }
+        }
+      }
+    },
+    "Add item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add item"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posten hinzufügen"
           }
         }
       }
@@ -2160,6 +2466,23 @@
         }
       }
     },
+    "All even.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All even."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles ausgeglichen."
+          }
+        }
+      }
+    },
     "All prices": {
       "extractionState": "manual",
       "localizations": {
@@ -2398,6 +2721,23 @@
         }
       }
     },
+    "Also show to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also show to %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auch %@ zeigen"
+          }
+        }
+      }
+    },
     "Also visible to (optional):": {
       "extractionState": "manual",
       "localizations": {
@@ -2466,6 +2806,23 @@
         }
       }
     },
+    "An item for one person counts for them – in “Just mine” and when splitting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An item for one person counts for them – in “Just mine” and when splitting."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Posten für eine Person zählt für sie – in „Nur meins“ und beim Aufteilen."
+          }
+        }
+      }
+    },
     "Another photo": {
       "extractionState": "manual",
       "localizations": {
@@ -2496,6 +2853,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anderer Laden"
+          }
+        }
+      }
+    },
+    "Anything the household buys – also without a receipt, also drugstore, kids or gifts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anything the household buys – also without a receipt, also drugstore, kids or gifts."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles, was ihr kauft – auch ohne Bon, auch Drogerie, Kinder oder Geschenke."
           }
         }
       }
@@ -2717,6 +3091,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wird gemacht"
+          }
+        }
+      }
+    },
+    "Belongs to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belongs to %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gehört %@"
           }
         }
       }
@@ -3112,6 +3503,23 @@
         }
       }
     },
+    "By person": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By person"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Person"
+          }
+        }
+      }
+    },
     "By place": {
       "extractionState": "manual",
       "localizations": {
@@ -3295,6 +3703,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Katze"
+          }
+        }
+      }
+    },
+    "Categories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorien"
+          }
+        }
+      }
+    },
+    "Categories & sharing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories & sharing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorien & Aufteilen"
+          }
+        }
+      }
+    },
+    "Categories for your own entries. Renaming changes them everywhere, also in budgets.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories for your own entries. Renaming changes them everywhere, also in budgets."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorien für eure eigenen Einträge. Umbenennen ändert sie überall, auch in Budgets."
           }
         }
       }
@@ -3775,6 +4234,23 @@
         }
       }
     },
+    "Choose …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auswählen …"
+          }
+        }
+      }
+    },
     "Close": {
       "extractionState": "manual",
       "localizations": {
@@ -4115,6 +4591,23 @@
         }
       }
     },
+    "Copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiert"
+          }
+        }
+      }
+    },
     "Copy": {
       "extractionState": "manual",
       "localizations": {
@@ -4145,6 +4638,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Link kopieren"
+          }
+        }
+      }
+    },
+    "Copy text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy text"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text kopieren"
           }
         }
       }
@@ -4196,6 +4706,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zeile korrigieren"
+          }
+        }
+      }
+    },
+    "Costs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosten"
           }
         }
       }
@@ -4302,6 +4829,23 @@
         }
       }
     },
+    "Counts for the household – everyone sees it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts for the household – everyone sees it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zählt für den Haushalt – alle sehen es."
+          }
+        }
+      }
+    },
     "Create": {
       "extractionState": "manual",
       "localizations": {
@@ -4366,6 +4910,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Link erstellen"
+          }
+        }
+      }
+    },
+    "Create money list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create money list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geldliste anlegen"
           }
         }
       }
@@ -4523,6 +5084,23 @@
         }
       }
     },
+    "Delete list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste löschen"
+          }
+        }
+      }
+    },
     "Delete this card?": {
       "extractionState": "manual",
       "localizations": {
@@ -4570,6 +5148,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Ausgabe löschen?"
+          }
+        }
+      }
+    },
+    "Delete this money list?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this money list?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Geldliste löschen?"
           }
         }
       }
@@ -5050,6 +5645,23 @@
         }
       }
     },
+    "E.g. the cola that belongs to Sam. They still show on the receipt and in “Just mine”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E.g. the cola that belongs to Sam. They still show on the receipt and in “Just mine”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Beispiel die Cola, die Sam gehört. Sie steht weiter auf dem Bon und in „Nur meins“."
+          }
+        }
+      }
+    },
     "Eat by": {
       "extractionState": "manual",
       "localizations": {
@@ -5250,6 +5862,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ganz freiwillig. Ein Budget zeigt einen Balken und eine ruhige Prognose. Wenn du magst, bekommst du bei 80 % und beim Erreichen eine kurze Nachricht."
+          }
+        }
+      }
+    },
+    "Equally": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equally"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gleich"
           }
         }
       }
@@ -5471,6 +6100,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für diesen Haushalt ist alles inklusive."
+          }
+        }
+      }
+    },
+    "Everything is settled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything is settled"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles ist ausgeglichen"
           }
         }
       }
@@ -6002,19 +6648,36 @@
         }
       }
     },
-    "For things without a receipt – the farmers’ market, the bakery paid in cash.": {
+    "For the household": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "For things without a receipt – the farmers’ market, the bakery paid in cash."
+            "value": "For the household"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für alles ohne Bon – Wochenmarkt, Bäcker mit Bargeld."
+            "value": "Für den Haushalt"
+          }
+        }
+      }
+    },
+    "For whom?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For whom?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für wen?"
           }
         }
       }
@@ -6852,6 +7515,23 @@
         }
       }
     },
+    "Hide settled lists": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide settled lists"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeglichene ausblenden"
+          }
+        }
+      }
+    },
     "Hint in the shop": {
       "extractionState": "manual",
       "localizations": {
@@ -7154,6 +7834,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "So sieht die Liste aus"
+          }
+        }
+      }
+    },
+    "How to split": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to split"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie aufteilen"
           }
         }
       }
@@ -7651,6 +8348,23 @@
         }
       }
     },
+    "Items: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posten: %@"
+          }
+        }
+      }
+    },
     "It’s all gone": {
       "extractionState": "manual",
       "localizations": {
@@ -7681,6 +8395,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ich bring’s"
+          }
+        }
+      }
+    },
+    "I’ll type it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I’ll type it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe ich selbst"
           }
         }
       }
@@ -7736,6 +8467,40 @@
         }
       }
     },
+    "Just a number": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just a number"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Anzahl"
+          }
+        }
+      }
+    },
+    "Just for me": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just for me"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur für mich"
+          }
+        }
+      }
+    },
     "Just me": {
       "extractionState": "manual",
       "localizations": {
@@ -7749,6 +8514,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nur ich"
+          }
+        }
+      }
+    },
+    "Just mine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just mine"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur meins"
           }
         }
       }
@@ -8127,6 +8909,23 @@
         }
       }
     },
+    "Leave items for one person out of the household numbers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave items for one person out of the household numbers"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posten für eine Person nicht in den Haushaltszahlen zählen"
+          }
+        }
+      }
+    },
     "Leave out": {
       "extractionState": "manual",
       "localizations": {
@@ -8484,6 +9283,23 @@
         }
       }
     },
+    "Mark an expense or receipt as “just for me”, or a receipt item as yours – it shows up here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark an expense or receipt as “just for me”, or a receipt item as yours – it shows up here."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markier eine Ausgabe oder einen Bon als „nur für mich“ oder einen Posten auf dem Bon als deinen – dann steht er hier."
+          }
+        }
+      }
+    },
     "Marked as opened": {
       "extractionState": "manual",
       "localizations": {
@@ -8684,6 +9500,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geld"
+          }
+        }
+      }
+    },
+    "Money list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Money list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geldliste"
           }
         }
       }
@@ -9130,6 +9963,23 @@
         }
       }
     },
+    "New category, e.g. Garden": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New category, e.g. Garden"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Kategorie, z. B. Garten"
+          }
+        }
+      }
+    },
     "New code": {
       "extractionState": "manual",
       "localizations": {
@@ -9211,6 +10061,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Neue Liste"
+          }
+        }
+      }
+    },
+    "New money list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New money list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Geldliste"
+          }
+        }
+      }
+    },
+    "New name for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New name for %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuer Name für %@"
           }
         }
       }
@@ -9725,6 +10609,23 @@
         }
       }
     },
+    "No receipts yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No receipts yet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Bons."
+          }
+        }
+      }
+    },
     "No recipe chosen.": {
       "extractionState": "manual",
       "localizations": {
@@ -9755,6 +10656,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noch keine Rezepte."
+          }
+        }
+      }
+    },
+    "No shopping trips in the last two weeks.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shopping trips in the last two weeks."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In den letzten zwei Wochen gab es keinen Einkauf."
           }
         }
       }
@@ -10248,6 +11166,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noch nichts notiert."
+          }
+        }
+      }
+    },
+    "Nothing of your own this month": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing of your own this month"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Monat nichts Eigenes"
           }
         }
       }
@@ -10796,6 +11731,23 @@
         }
       }
     },
+    "Only what belongs to you: your personal entries and items marked for you. Nobody else sees them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only what belongs to you: your personal entries and items marked for you. Nobody else sees them."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur, was dir gehört: deine persönlichen Einträge und Posten, die dir zugeordnet sind. Niemand sonst sieht sie."
+          }
+        }
+      }
+    },
     "Only what is where – never quantities.": {
       "extractionState": "manual",
       "localizations": {
@@ -10979,6 +11931,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öffne ein Rezept aus der Woche oder plane zuerst eins."
+          }
+        }
+      }
+    },
+    "Open again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open again"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wieder öffnen"
           }
         }
       }
@@ -11238,6 +12207,23 @@
         }
       }
     },
+    "Other …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere …"
+          }
+        }
+      }
+    },
     "Others see “%@”": {
       "extractionState": "manual",
       "localizations": {
@@ -11387,6 +12373,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eigener Server – alles dabei"
+          }
+        }
+      }
+    },
+    "Paid by …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid by …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezahlt von …"
+          }
+        }
+      }
+    },
+    "Paid everything:": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid everything:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles bezahlt hat:"
           }
         }
       }
@@ -11697,6 +12717,57 @@
         }
       }
     },
+    "Personal receipts are only in your “Just mine” – nobody else sees them, not even in the household numbers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal receipts are only in your “Just mine” – nobody else sees them, not even in the household numbers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persönliche Bons stehen nur in deinem „Nur meins“ – niemand sonst sieht sie, auch nicht in den Haushaltszahlen."
+          }
+        }
+      }
+    },
+    "Personal: only you and %@ see it. It is not in the household numbers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal: only you and %@ see it. It is not in the household numbers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persönlich: Nur du und %@ seht es. Es zählt nicht in den Haushaltszahlen."
+          }
+        }
+      }
+    },
+    "Personal: only you see it. It is not in the household numbers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal: only you see it. It is not in the household numbers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persönlich: Nur du siehst es. Es zählt nicht in den Haushaltszahlen."
+          }
+        }
+      }
+    },
     "Photo": {
       "extractionState": "manual",
       "localizations": {
@@ -11710,6 +12781,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Foto"
+          }
+        }
+      }
+    },
+    "Photo of the receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo of the receipt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon fotografieren"
+          }
+        }
+      }
+    },
+    "Photo or PDF": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo or PDF"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto oder PDF"
           }
         }
       }
@@ -11846,6 +12951,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stück"
+          }
+        }
+      }
+    },
+    "Pizza evening, barbecue, a weekend away: put the costs on a money list and see who gives whom how much.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pizza evening, barbecue, a weekend away: put the costs on a money list and see who gives whom how much."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pizzaabend, Grillen, ein Wochenende weg: Schreib die Kosten auf eine Geldliste und sieh, wer wem wie viel gibt."
           }
         }
       }
@@ -12258,6 +13380,23 @@
         }
       }
     },
+    "Prices come from your last receipts – you can change every amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prices come from your last receipts – you can change every amount."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Preise kommen von euren letzten Bons – du kannst jeden Betrag ändern."
+          }
+        }
+      }
+    },
     "Prices come from your receipts. Once the same thing shows up on a few receipts, you see here where it was cheaper.": {
       "extractionState": "manual",
       "localizations": {
@@ -12356,6 +13495,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Privat"
+          }
+        }
+      }
+    },
+    "Private – only you see it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private – only you see it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privat – nur du siehst sie"
           }
         }
       }
@@ -12768,6 +13924,23 @@
         }
       }
     },
+    "Read from the file – please check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read from the file – please check."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus der Datei gelesen – bitte kurz prüfen."
+          }
+        }
+      }
+    },
     "Read more": {
       "extractionState": "manual",
       "localizations": {
@@ -12934,6 +14107,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bon zählt nicht mehr"
+          }
+        }
+      }
+    },
+    "Receipt or invoice": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt or invoice"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon oder Rechnung"
           }
         }
       }
@@ -13261,6 +14451,23 @@
         }
       }
     },
+    "Remove attachment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove attachment"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anhang entfernen"
+          }
+        }
+      }
+    },
     "Remove from the list": {
       "extractionState": "manual",
       "localizations": {
@@ -13393,6 +14600,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "„%@“ entfernen?"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umbenennen"
           }
         }
       }
@@ -14366,6 +15590,40 @@
         }
       }
     },
+    "Settle up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settle up"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgleich"
+          }
+        }
+      }
+    },
+    "Share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teilen"
+          }
+        }
+      }
+    },
     "Share a recipe link to ToHuus from Safari to add it.": {
       "extractionState": "manual",
       "localizations": {
@@ -14655,6 +15913,23 @@
         }
       }
     },
+    "Show attachment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show attachment"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anhang ansehen"
+          }
+        }
+      }
+    },
     "Show less": {
       "extractionState": "manual",
       "localizations": {
@@ -14685,6 +15960,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bon ansehen"
+          }
+        }
+      }
+    },
+    "Show settled lists (%lld)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show settled lists (%lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeglichene zeigen (%lld)"
           }
         }
       }
@@ -14859,6 +16151,40 @@
         }
       }
     },
+    "Single items (%lld)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Single items (%lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einzelne Posten (%lld)"
+          }
+        }
+      }
+    },
+    "Single items (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Single items (optional)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einzelne Posten (wenn du magst)"
+          }
+        }
+      }
+    },
     "Skip": {
       "extractionState": "manual",
       "localizations": {
@@ -14927,6 +16253,23 @@
         }
       }
     },
+    "Someone else, e.g. Ben": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone else, e.g. Ben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch jemand, z. B. Ben"
+          }
+        }
+      }
+    },
     "Someone is out shopping": {
       "extractionState": "manual",
       "localizations": {
@@ -14974,6 +16317,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was anderes"
+          }
+        }
+      }
+    },
+    "Something on it belongs to one person? Choose them next to the item.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something on it belongs to one person? Choose them next to the item."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gehört etwas davon einer Person? Wähl sie beim Posten aus."
           }
         }
       }
@@ -15195,6 +16555,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insgesamt ausgegeben: %@"
+          }
+        }
+      }
+    },
+    "Split this receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split this receipt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon aufteilen"
+          }
+        }
+      }
+    },
+    "Splitting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Splitting"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufteilen"
           }
         }
       }
@@ -16848,6 +18242,23 @@
         }
       }
     },
+    "This receipt is just mine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This receipt is just mine"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Bon gehört nur mir"
+          }
+        }
+      }
+    },
     "This receipt is not counted": {
       "extractionState": "manual",
       "localizations": {
@@ -17184,6 +18595,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ToHuus darf das Mikrofon nicht nutzen. Du kannst es in den Einstellungen erlauben."
+          }
+        }
+      }
+    },
+    "ToHuus never moves money – settle it however you like.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus never moves money – settle it however you like."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus bewegt nie Geld – gleicht es aus, wie ihr mögt."
           }
         }
       }
@@ -18055,6 +19483,23 @@
         }
       }
     },
+    "What goes on it?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What goes on it?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was kommt drauf?"
+          }
+        }
+      }
+    },
     "What happens": {
       "extractionState": "manual",
       "localizations": {
@@ -18293,6 +19738,23 @@
         }
       }
     },
+    "What, e.g. drinks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What, e.g. drinks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was, z. B. Getränke"
+          }
+        }
+      }
+    },
     "When you get to a shop you saved here, ToHuus asks: “You're at Lidl – open the list?”. For this, iOS has to let ToHuus notice the place even when the app is closed (“Always”). Your location is never sent anywhere – the shop places and the check stay on this iPhone.": {
       "extractionState": "manual",
       "localizations": {
@@ -18463,6 +19925,23 @@
         }
       }
     },
+    "Which list?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which list?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welche Liste?"
+          }
+        }
+      }
+    },
     "Which product is it?": {
       "extractionState": "manual",
       "localizations": {
@@ -18476,6 +19955,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Welches Produkt ist das?"
+          }
+        }
+      }
+    },
+    "Which receipt?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which receipt?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcher Bon?"
+          }
+        }
+      }
+    },
+    "Which shopping trip?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which shopping trip?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcher Einkauf?"
           }
         }
       }
@@ -18514,6 +20027,23 @@
         }
       }
     },
+    "Who paid?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who paid?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer hat bezahlt?"
+          }
+        }
+      }
+    },
     "Who sees it": {
       "extractionState": "manual",
       "localizations": {
@@ -18548,6 +20078,23 @@
         }
       }
     },
+    "Who sees the list?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who sees the list?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer sieht die Liste?"
+          }
+        }
+      }
+    },
     "Who sees what?": {
       "extractionState": "manual",
       "localizations": {
@@ -18561,6 +20108,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wer sieht was?"
+          }
+        }
+      }
+    },
+    "Who shares": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who shares"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer teilt"
+          }
+        }
+      }
+    },
+    "Who shares?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who shares?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer teilt?"
           }
         }
       }
@@ -18612,6 +20193,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wer merkt, dass etwas fehlt, setzt es auf die Liste – getippt, gesprochen oder vom Bon. Jede Zeile zeigt, woher sie kommt."
+          }
+        }
+      }
+    },
+    "Whose money": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whose money"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wessen Geld"
           }
         }
       }
@@ -18680,6 +20278,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mit Mindesthaltbarkeit"
+          }
+        }
+      }
+    },
+    "With names": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With names"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Namen"
           }
         }
       }
@@ -19500,6 +21115,23 @@
         }
       }
     },
+    "belongs to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "belongs to %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gehört %@"
+          }
+        }
+      }
+    },
     "best before %@": {
       "extractionState": "manual",
       "localizations": {
@@ -19874,23 +21506,6 @@
         }
       }
     },
-    "e.g. Farmers’ market": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "e.g. Farmers’ market"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "z. B. Wochenmarkt"
-          }
-        }
-      }
-    },
     "e.g. Good night": {
       "extractionState": "manual",
       "localizations": {
@@ -19959,6 +21574,23 @@
         }
       }
     },
+    "e.g. Pizza evening": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. Pizza evening"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Pizzaabend"
+          }
+        }
+      }
+    },
     "e.g. Sam": {
       "extractionState": "manual",
       "localizations": {
@@ -20023,6 +21655,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "z. B. Batterien, Klebeband, Geburtstagskerzen"
+          }
+        }
+      }
+    },
+    "e.g. drugstore, bakery, market": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. drugstore, bakery, market"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Drogerie, Bäcker, Markt"
           }
         }
       }
@@ -20231,6 +21880,23 @@
         }
       }
     },
+    "for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "for %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "für %@"
+          }
+        }
+      }
+    },
     "for a recipe": {
       "extractionState": "manual",
       "localizations": {
@@ -20244,6 +21910,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "für ein Rezept"
+          }
+        }
+      }
+    },
+    "for everyone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "for everyone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "für alle"
           }
         }
       }
@@ -20499,6 +22182,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ist es „%@“?"
+          }
+        }
+      }
+    },
+    "just mine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "just mine"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nur meins"
           }
         }
       }
@@ -20894,6 +22594,23 @@
         }
       }
     },
+    "paid %@ · share %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paid %@ · share %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bezahlt %1$@ · Anteil %2$@"
+          }
+        }
+      }
+    },
     "past its date": {
       "extractionState": "manual",
       "localizations": {
@@ -21013,6 +22730,23 @@
         }
       }
     },
+    "private": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "private"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "privat"
+          }
+        }
+      }
+    },
     "probably empty in %d days": {
       "extractionState": "manual",
       "localizations": {
@@ -21128,6 +22862,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "sensibel – bleibt bei euch, solange nicht erlaubt"
+          }
+        }
+      }
+    },
+    "settled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "settled"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ausgeglichen"
+          }
+        }
+      }
+    },
+    "shared": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "shared"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geteilt"
           }
         }
       }
@@ -21523,6 +23291,23 @@
         }
       }
     },
+    "with attachment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with attachment"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mit Anhang"
+          }
+        }
+      }
+    },
     "with extras": {
       "extractionState": "manual",
       "localizations": {
@@ -21553,6 +23338,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "du"
+          }
+        }
+      }
+    },
+    "your part": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your part"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dein Teil"
           }
         }
       }

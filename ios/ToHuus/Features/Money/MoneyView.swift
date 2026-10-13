@@ -10,6 +10,11 @@ struct MoneyView: View {
     @State private var cheapest: [CheapestProduct] = []
     @State private var showReceipt = false
     @State private var path: [MoneyRoute] = []
+    // q-money: Haushalt / Nur meins, own entries, money lists
+    @AppStorage("money.view", store: SharedConfig.defaults) private var view = "household"
+    @State private var meta: SpendMeta?
+    @State private var lists: [MoneyListSummary] = []
+    @State private var showExpense = false
 
     private var monthKey: String {
         let f = DateFormatter()
@@ -22,6 +27,11 @@ struct MoneyView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                    if !(meta?.members ?? []).isEmpty { MoneyViewSwitch(view: $view) }
+                    if view == "mine" {
+                        Label(L("Only what belongs to you: your personal entries and items marked for you. Nobody else sees them."), systemImage: "lock")
+                            .font(.caption).foregroundStyle(Theme.ink2)
+                    }
                     monthSwitcher
                     moreLinks
                     if let error { ErrorBanner(message: error) { Task { await load() } } }
@@ -33,8 +43,13 @@ struct MoneyView: View {
                         if !o.byShop.isEmpty { barChart(L("By shop"), "storefront", o.byShop, o.currency) }
                         if !o.priceChanges.isEmpty { priceCard(o) }
                         if !o.hints.isEmpty { hintsCard(o) }
-                        if !cheapest.isEmpty { cheapestCard }
-                        if nothing {
+                        if view != "mine" { MoneyListsCard(lists: lists) { path.append(.newList) } }
+                        if !cheapest.isEmpty && view != "mine" { cheapestCard }
+                        if nothing && view == "mine" {
+                            EmptyStateView(art: .receipt, title: L("Nothing of your own this month"),
+                                           message: L("Mark an expense or receipt as “just for me”, or a receipt item as yours – it shows up here."),
+                                           actionTitle: L("Add a personal expense")) { showExpense = true }
+                        } else if nothing {
                             EmptyStateView(art: .receipt, title: L("No receipts this month yet."),
                                            message: L("Add a receipt photo or forward your e-receipts – ToHuus does the rest."),
                                            actionTitle: L("Add receipt")) { showReceipt = true }
@@ -48,6 +63,12 @@ struct MoneyView: View {
                         Label(L("Add receipt"), systemImage: "doc.text.viewfinder")
                     }
                     .buttonStyle(SecondaryButtonStyle())
+                    Button { showExpense = true } label: { Label(L("Add an expense"), systemImage: "plus") }
+                        .buttonStyle(SecondaryButtonStyle())
+                    NavigationLink(value: MoneyRoute.settings) {
+                        Label(L("Categories & sharing"), systemImage: "gearshape").font(.subheadline)
+                    }
+                    .frame(minHeight: 44)
                 }
                 .padding(Theme.Space.s4)
                 .padding(.bottom, 80)
@@ -55,15 +76,29 @@ struct MoneyView: View {
             .canvasBackground()
             .navigationTitle(L("Money"))
             .refreshable { await load() }
-            .task(id: "\(monthKey)-\(store.revision("imports"))") { await load() }
+            .task(id: "\(monthKey)-\(view)-\(store.revision("imports"))") { await load() }
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }
+            .sheet(isPresented: $showExpense) {
+                NavigationStack {
+                    ExpenseEditView(store: store, entry: nil, meta: meta, startPersonal: view == "mine")
+                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { showExpense = false } } }
+                }
+            }
             .navigationDestination(for: MoneyRoute.self) { r in
                 switch r {
                 case .detail: SpendView(store: store)
                 case .receipts: ImportsListView(store: store) { showReceipt = true }
                 case .review(let id): ImportReviewView(store: store, importId: id)
+                case .spendReceipt(let id): SpendReceiptView(store: store, receiptId: id, meta: meta)
                 case .prices(let id): PriceHistoryView(store: store, productId: id)
                 case .pricePicker: PricePickerView(store: store)
+                case .list(let id): MoneyListView(store: store, listId: id)
+                case .newList:
+                    NewMoneyListView(store: store) { id in
+                        path.removeLast()
+                        path.append(.list(id))
+                    }
+                case .settings: MoneySettingsView(store: store)
                 }
             }
             .onAppear {
@@ -75,6 +110,12 @@ struct MoneyView: View {
                     else if d == "prices" { path = [.pricePicker] }
                     else if d.hasPrefix("price:"), let id = Int(d.dropFirst(6)) { path = [.prices(id)] }
                     else if d.hasPrefix("review:"), let id = Int(d.dropFirst(7)) { path = [.receipts, .review(id)] }
+                    else if d.hasPrefix("list:"), let id = Int(d.dropFirst(5)) { path = [.list(id)] }
+                    else if d == "newlist" { path = [.newList] }
+                    else if d == "settings" { path = [.settings] }
+                    else if d.hasPrefix("receipt:"), let id = Int(d.dropFirst(8)) { path = [.spendReceipt(id)] }
+                    else if d == "expense" { showExpense = true }
+                    else if d == "mine" { view = "mine" }
                 }
                 #endif
             }
@@ -143,9 +184,11 @@ struct MoneyView: View {
         loading = true
         defer { loading = false }
         do {
-            overview = try await store.api.moneyOverview(month: monthKey)
+            overview = try await store.api.moneyOverview(month: monthKey, view: view)
             error = nil
             cheapest = (try? await store.api.cheapest()) ?? []
+            if meta == nil { meta = try? await store.api.spendMeta() }
+            lists = (try? await store.api.moneyLists()) ?? []
         } catch APIError.notFound {
             overview = nil
             error = L("This server can't show the money overview yet.")
@@ -270,6 +313,10 @@ enum MoneyRoute: Hashable {
     case detail, receipts, pricePicker
     case review(Int)
     case prices(Int)
+    case list(Int)
+    case newList
+    case settings
+    case spendReceipt(Int)
 }
 
 private struct HintLabelStyle: LabelStyle {
