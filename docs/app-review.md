@@ -14,7 +14,7 @@ are German and English.
 > limited to invited testers during the beta; the demo account is already let in. If you create a new account, enter
 > the access code below when asked.
 >
-> - Demo account: `review@tohuus.heidrich-digital.de` / password in the "Sign-in information" fields
+> - Demo account: `appreview@tillheidrich.de` / password in the "Sign-in information" fields
 > - Access code for a new account: (see "Sign-in information" › notes)
 >
 > The demo household has sample data (marked "Beispiel"): a shopping list, things at home, recipes, receipts and
