@@ -75,7 +75,7 @@ Four switches, enforced centrally in `server/lib/ai.ts` (`chat()`, `transcribe()
 
 **Consent in ToHuus Cloud** (13 Oct 2026): before the first model request with a person's data, that person agrees
 once (iPhone: a one-time sheet after sign-in and Mehr › Mit oder ohne KI; web: Einstellungen › Zugänge & KI). The text
-names the receiver (`AI_PROCESSOR` in ai-policy.ts: Mistral AI (EU) via OpenRouter (USA), no training; the privacy page names both). Requests
+names the receiver (`AI_PROCESSOR` in ai-policy.ts: Mistral AI (EU), no training; the app and website name only Mistral – OpenRouter is the API in between and stays listed in the privacy policy as a processor). Requests
 of a person use the person's consent; children and background jobs (receipts by mail) use the household's, given by an
 admin. Without it the reason is `consent` and every feature takes its path without a model. The operator's catalogue
 drafts in `/betrieb` carry no household data and are not affected (`runAsAiActor({ operator: true })`). In the cloud a

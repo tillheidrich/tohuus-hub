@@ -51,7 +51,7 @@ function sections(ai: boolean | null): Section[] {
         ai === null ? '' : ai ? t('AI is switched on for this household.') : t('AI is switched off for this household – everything below “without AI” works.'),
         t('Without AI: the list, receipts as eBon or PDF, purchase rhythm, money, recipes from links with recipe data, and simple sentences like “milk, 2 peppers and bread”.'),
         t('With AI: receipt photos, recipes from photos, screenshots and social media posts, open questions to the assistant and help on each screen. Suggestions always wait for your yes.'),
-        t('In ToHuus Cloud, AI runs on Mistral models in the EU (via OpenRouter, no training on your data). Only what a request needs is sent; allergies and children’s details only with the household’s consent, house codes never.'),
+        t('In ToHuus Cloud, AI runs on Mistral models in the EU (no training on your data). Only what a request needs is sent; allergies and children’s details only with the household’s consent, house codes never.'),
       ].filter(Boolean),
       slug: 'ki-an-oder-aus',
     },

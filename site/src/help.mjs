@@ -291,7 +291,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         sections: [
           ['Ohne KI', p('Liste, Vorschläge aus dem Kaufrhythmus, Kochplaner, Wochenplan, Geld, PDF-Bons und die häufigen kurzen Sätze im Assistenten funktionieren ganz ohne Sprachmodell.')],
           ['Was die KI dazubringt', p('Fotos von Papierbons und Rezepten lesen, freie Fragen an den Assistenten, gesprochene Sätze in Text umwandeln.')],
-          ['Welches Modell', p('In der ToHuus Cloud geht jede Anfrage über OpenRouter an Mistral, einen Anbieter aus Frankreich, fest eingestellt und ohne Ausweichen auf andere Anbieter, und laut OpenRouter nur an Anbieter, die keine Nutzerdaten sammeln. Selbst gehostet nimmst du deinen eigenen Schlüssel oder gar keinen.')],
+          ['Welches Modell', p('In der ToHuus Cloud geht jede Anfrage an Mistral, einen Anbieter aus Frankreich, mit Verarbeitung in der EU, fest eingestellt und ohne Ausweichen auf andere Anbieter. Nichts wird zum Training genutzt. Bevor KI für dich läuft, fragt ToHuus einmal nach deiner Zustimmung; zurückziehen kannst du sie unter Einstellungen › Zugänge & KI. Selbst gehostet nimmst du deinen eigenen Schlüssel oder gar keinen.')],
           ['Abschalten', ul(
             '<b>Für den ganzen Haushalt</b>: Einstellungen › Zugänge & KI, nur Admins.',
             '<b>Nur für dich</b>: an derselben Stelle. Die anderen sehen deine Einstellung nicht.',
@@ -508,7 +508,7 @@ cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_URL</code>, deinen Namen und ein Passwort ein. Danach <code>http://localhost:8080</code> öffnen. Die Daten liegen in <code>./data</code>.')],
           ['HTTPS und die App', p('Stell deinen üblichen Reverse Proxy davor. Dann öffnest du die Web-App im Browser und legst sie auf den Startbildschirm.')],
-          ['KI', p('Optional, mit einem Schlüssel für OpenRouter oder jeden OpenAI-kompatiblen Dienst, auch lokal. Ohne Schlüssel läuft alles außer Fotos von Papierbons und freien Fragen an den Assistenten.')],
+          ['KI', p('Optional, mit einem Schlüssel für jeden OpenAI-kompatiblen Dienst, etwa Mistral, auch lokal. Ohne Schlüssel läuft alles außer Fotos von Papierbons und freien Fragen an den Assistenten.')],
           ['Sicherungen', p('Jede Nacht eine Sicherung, auf Wunsch zusätzlich auf eine WebDAV-Freigabe wie Nextcloud. Die Datenbank lässt sich mit <code>DB_ENCRYPTION_KEY</code> verschlüsseln.')],
           ['Nur im eigenen Netz', p('Bon-Postfach per IMAP, Telegram, Bon-Drucker und Home Assistant mit allen Extras.')],
         ],
@@ -673,7 +673,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Without AI', p('The list, suggestions from the purchase rhythm, the cook planner, the week plan, money, PDF receipts and the common short sentences in the assistant all work without a language model.')],
           ['What AI adds', p('Reading photos of paper receipts and recipes, open questions to the assistant, turning speech into text.')],
-          ['Which model', p('In ToHuus Cloud every request goes through OpenRouter to Mistral, a provider based in France, pinned with no fallback, and according to OpenRouter only to providers that do not collect user data. Self-hosted, you bring your own key or none.')],
+          ['Which model', p('In ToHuus Cloud every request goes to Mistral, a provider based in France, processed in the EU, pinned with no fallback. Nothing is used for training. Before AI runs for you, ToHuus asks once for your consent; you can withdraw it under Settings › Access & AI. Self-hosted, you bring your own key or none.')],
           ['Switching it off', ul(
             '<b>For the whole household</b>: Settings › Access & AI, admins only.',
             '<b>Just for you</b>: same place. The others do not see your choice.',
@@ -796,7 +796,7 @@ cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code>, your name and a password, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.')],
           ['HTTPS and the app', p('Put your usual reverse proxy in front. Then open the web app in the browser and add it to your home screen.')],
-          ['AI', p('Optional, with a key for OpenRouter or any OpenAI-compatible service, local ones included. Without a key everything works except photos of paper receipts and open questions to the assistant.')],
+          ['AI', p('Optional, with a key for any OpenAI-compatible service, such as Mistral, local ones included. Without a key everything works except photos of paper receipts and open questions to the assistant.')],
           ['Backups', p('A backup every night, optionally copied to a WebDAV share like Nextcloud. The database can be encrypted with <code>DB_ENCRYPTION_KEY</code>.')],
         ],
         related: ['home-assistant', 'move-to-the-cloud'],

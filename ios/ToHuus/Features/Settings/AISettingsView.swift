@@ -189,7 +189,7 @@ struct AIConsentView: View {
 
     static func explanation(_ processor: String?) -> String {
         L("When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.")
-            .replacingOccurrences(of: "{processor}", with: processor ?? "Mistral AI (EU), via OpenRouter (USA)")
+            .replacingOccurrences(of: "{processor}", with: processor ?? "Mistral AI (EU)")
     }
 
     var body: some View {

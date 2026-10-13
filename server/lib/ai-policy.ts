@@ -41,7 +41,7 @@ export const currentAiActor = (): AiActor | undefined => als.getStore();
 export type AiOffReason = 'household' | 'person' | 'parents' | 'cloud' | 'consent';
 
 /** Who receives the data when AI is used in ToHuus Cloud – shown in the consent text (keep in sync with ai.ts pin). */
-export const AI_PROCESSOR = 'Mistral AI (EU), via OpenRouter (USA)';
+export const AI_PROCESSOR = 'Mistral AI (EU)';
 
 /**
  * ToHuus Cloud: the operator can pause AI for the whole cloud (`/betrieb` › Einstellungen, runtime-settings.ts sets
