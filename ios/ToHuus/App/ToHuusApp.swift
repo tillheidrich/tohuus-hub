@@ -7,12 +7,15 @@ struct ToHuusApp: App {
     @State private var app = AppModel()
     @State private var storeKit = StoreManager()
     @Environment(\.scenePhase) private var scenePhase
+    /// light / dark / like the device (Design/Appearance.swift)
+    @AppStorage(AppAppearance.storageKey) private var appearance = AppAppearance.system.rawValue
 
     init() {
         let tab = UITabBarAppearance()
         tab.configureWithOpaqueBackground()
-        tab.backgroundColor = .white
-        tab.shadowColor = UIColor(hex: 0xDEDCD3)
+        // white tab bar in light mode, the dark surface in dark mode (a white bar on a dark app glared)
+        tab.backgroundColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x17201C) : .white }
+        tab.shadowColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x26312C) : UIColor(hex: 0xDEDCD3) }
         UITabBar.appearance().standardAppearance = tab
         UITabBar.appearance().scrollEdgeAppearance = tab
     }
@@ -23,6 +26,7 @@ struct ToHuusApp: App {
                 .environment(app)
                 .environment(storeKit)
                 .tint(Theme.primary)
+                .preferredColorScheme(AppAppearance(rawValue: appearance)?.scheme)
                 .task {
                     storeKit.report = { [app] jws in
                         guard app.purchasesAvailable, let api = app.api else { return nil }

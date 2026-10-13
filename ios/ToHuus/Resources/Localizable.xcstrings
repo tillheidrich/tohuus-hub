@@ -3112,6 +3112,23 @@
         }
       }
     },
+    "Appearance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erscheinungsbild"
+          }
+        }
+      }
+    },
     "Archive": {
       "extractionState": "manual",
       "localizations": {
@@ -5420,6 +5437,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagesüberblick"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dunkel"
           }
         }
       }
@@ -9670,6 +9704,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wie Familie"
+          }
+        }
+      }
+    },
+    "Like the device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Like the device"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie das Gerät"
           }
         }
       }
@@ -16300,6 +16351,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mit dem Handy scannen oder den Link schicken. Gültig bis %@, funktioniert einmal. Er wird nur jetzt angezeigt."
+          }
+        }
+      }
+    },
+    "Screen and appearance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen and appearance"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirm und Erscheinungsbild"
+          }
+        }
+      }
+    },
+    "Screen may turn off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen may turn off"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirm darf ausgehen"
           }
         }
       }

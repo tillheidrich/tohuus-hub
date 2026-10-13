@@ -51,6 +51,7 @@ struct SettingsView: View {
                         } label: { Label(L("With or without AI"), systemImage: "sparkles") }
                     }
                     NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
+                    AppearancePicker()
                 }
                 if app.moduleOn("homeinfo") {
                     Section {
