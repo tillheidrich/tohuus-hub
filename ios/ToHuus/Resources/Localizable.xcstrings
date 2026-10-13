@@ -1531,6 +1531,23 @@
         }
       }
     },
+    "AI image": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI image"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KI-Bild"
+          }
+        }
+      }
+    },
     "AI is switched off for you. ToHuus still understands simple sentences like “milk and bread”.": {
       "extractionState": "manual",
       "localizations": {
@@ -1595,6 +1612,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zugang"
+          }
+        }
+      }
+    },
+    "Access code": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangscode"
           }
         }
       }
@@ -3499,6 +3533,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erst die Zeilen prüfen"
+          }
+        }
+      }
+    },
+    "Checked by us": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked by us"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von uns geprüft"
           }
         }
       }
@@ -7498,6 +7549,23 @@
         }
       }
     },
+    "In your recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In your recipes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In euren Rezepten"
+          }
+        }
+      }
+    },
     "Ingredients": {
       "extractionState": "manual",
       "localizations": {
@@ -9028,6 +9096,23 @@
         }
       }
     },
+    "Needed to create an account during the test.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needed to create an account during the test."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Während des Tests nötig, um ein Konto anzulegen."
+          }
+        }
+      }
+    },
     "Needs attention": {
       "extractionState": "manual",
       "localizations": {
@@ -9143,6 +9228,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Neuer Code"
+          }
+        }
+      }
+    },
+    "New from ToHuus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New from ToHuus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu von ToHuus"
           }
         }
       }
@@ -9279,6 +9381,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Neues Schlagwort, z. B. Party"
+          }
+        }
+      }
+    },
+    "New this week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New this week"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu diese Woche"
           }
         }
       }
@@ -11238,6 +11357,23 @@
         }
       }
     },
+    "Other shop, e.g. farm shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other shop, e.g. farm shop"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anderer Laden, z. B. Hofladen"
+          }
+        }
+      }
+    },
     "Others see “%@”": {
       "extractionState": "manual",
       "localizations": {
@@ -11761,6 +11897,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fotografier einen Bon, wähl ein PDF oder scann den QR-Code eines digitalen Bons – ToHuus liest ihn, und du prüfst ihn hier."
+          }
+        }
+      }
+    },
+    "Pick as many as you like – you can change it any time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick as many as you like – you can change it any time."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähl so viele, wie ihr mögt – ändern geht jederzeit."
           }
         }
       }
@@ -13699,6 +13852,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sichern"
+          }
+        }
+      }
+    },
+    "Save %@ to your recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save %@ to your recipes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ in euren Rezepten speichern"
           }
         }
       }
@@ -17171,6 +17341,23 @@
         }
       }
     },
+    "ToHuus is in a small test right now. You need an access code – feel free to ask by e-mail.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus is in a small test right now. You need an access code – feel free to ask by e-mail."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus ist gerade im kleinen Test. Du brauchst einen Zugangscode – frag gern per Mail nach."
+          }
+        }
+      }
+    },
     "ToHuus may not use the microphone. You can allow it in Settings.": {
       "extractionState": "manual",
       "localizations": {
@@ -17184,6 +17371,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ToHuus darf das Mikrofon nicht nutzen. Du kannst es in den Einstellungen erlauben."
+          }
+        }
+      }
+    },
+    "ToHuus recipes – simple everyday dishes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus recipes – simple everyday dishes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus-Rezepte – einfache Alltagsgerichte"
           }
         }
       }
@@ -18344,6 +18548,23 @@
         }
       }
     },
+    "Where do you usually shop?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where do you usually shop?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo kauft ihr meistens ein?"
+          }
+        }
+      }
+    },
     "Where does it go?": {
       "extractionState": "manual",
       "localizations": {
@@ -18837,6 +19058,23 @@
         }
       }
     },
+    "Write to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write to %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An %@ schreiben"
+          }
+        }
+      }
+    },
     "Write to ToHuus": {
       "extractionState": "manual",
       "localizations": {
@@ -18850,6 +19088,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schreib ToHuus"
+          }
+        }
+      }
+    },
+    "Written with AI, checked by us": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Written with AI, checked by us"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit KI geschrieben, von uns geprüft"
           }
         }
       }

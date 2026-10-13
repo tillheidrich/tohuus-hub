@@ -172,6 +172,7 @@ struct CookingView: View {
                 if let error = model.error, tab == 2 { ErrorBanner(message: error) { Task { await model.load(store.api) } } }
                 switch tab {
                 case 0:
+                    if app.isCloud { CatalogNewSection(store: store, openRecipe: open) }
                     WhatToEatSection(store: store, feedback: feedback, openRecipe: open, openImport: { showImport = true }, fallback: AnyView(ideas))
                 case 1:
                     WeekPlanSection(store: store, model: week, feedback: feedback, openRecipe: open)
