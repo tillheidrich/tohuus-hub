@@ -56,7 +56,13 @@ struct ListRef: Codable, Sendable, Identifiable, Hashable {
     var kind: String?
     var note: String?
     var open: Int?
+    /// private lists (13 Oct 2026): household | private | people
+    var visibility: String?
+    var owner: String?
+    var shareWith: [Int]?
+    var mine: Bool?
     var isMain: Bool { id.value == "0" || kind == "main" }
+    var isPrivate: Bool { (visibility ?? "household") != "household" }
 }
 
 /// `GET /api/shop/trips` – someone is out shopping (trips start by themselves from ticks in a shop).

@@ -65,6 +65,8 @@ struct Member: Decodable, Sendable, Identifiable, Hashable {
     var id: Int
     var name: String
     var color: String?
+    /// member | guest – guests can never be picked for private lists
+    var kind: String?
 }
 
 /// The parts of GET /api/me this area needs: who I am and whether "who takes care of it" is shown (home.ui.claims).
