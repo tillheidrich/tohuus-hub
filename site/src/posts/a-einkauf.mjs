@@ -88,7 +88,7 @@ export default [
         '<p>Den Speiseplan machen sie am Donnerstagabend zusammen, Mika darf ein Gericht aussuchen. Seitdem fährt kaum noch jemand wegen einer einzelnen Sache los, und die Bananen werden gegessen, bevor sie braun sind.</p>'],
       ['So hilft ToHuus beim Rhythmus',
         '<p>ToHuus merkt sich aus Kassenbons und abgehakten Einträgen, wie oft ihr etwas kauft. Wenn etwas wieder fällig ist, erscheint ein Vorschlag mit Grund, zum Beispiel „merkt sich: alle ~20 Tage, zuletzt vor 19 Tagen“. Ein Tipp setzt es auf die Liste, „Haben wir noch“ schiebt es auf. So ist die Liste für den großen Einkauf schon fast fertig, bevor ihr losgeht.</p>' +
-        '<p>Im Kochplaner seht ihr, was mit dem Vorhandenen sofort geht und was bald weg muss. Mit Plus plant ihr die Woche, und was fehlt, kommt mit einem Tipp auf die Liste. Unter Geld zeigt ToHuus, was ihr pro Woche und Monat ausgebt, im Vergleich zum Vormonat. Daran seht ihr, ob ein neuer Rhythmus wirklich etwas spart.</p>' +
+        '<p>Im Kochplaner seht ihr, was mit dem Vorhandenen sofort geht und was bald weg muss. Plant ihr die Woche, kommt, was fehlt, mit einem Tipp auf die Liste, und mit Plus füllt ToHuus freie Abende aus dem Vorrat. Unter Geld zeigt ToHuus, was ihr pro Woche und Monat ausgebt, im Vergleich zum Vormonat. Daran seht ihr, ob ein neuer Rhythmus wirklich etwas spart.</p>' +
         '<p>Mehr dazu in der Hilfe unter <a href="../hilfe/merkt-sich.html">Was ToHuus sich merkt</a> und <a href="../hilfe/geld.html">Geld</a>. ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
     ],
     faq: [

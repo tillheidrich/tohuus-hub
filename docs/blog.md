@@ -1,6 +1,8 @@
 # Blog / Ratgeber: SEO and GEO groundwork
 
-Status 13 Oct 2026: **prepared, no post written.** The website build (`node site/src/build.mjs`) can publish posts,
+Status 13 Oct 2026: **20 German posts published** (`site/src/posts/a-einkauf.mjs`, `b-geld.mjs`, `c-kochen.mjs`, `d-zuhause.mjs`). Facts were checked against search results of the original sources; the source pages themselves could not be opened from the build environment, so spot-check them now and then.
+
+Originally prepared without posts: The website build (`node site/src/build.mjs`) can publish posts,
 but as long as `POSTS` in `site/src/blog.mjs` holds no post with `status: 'published'`, no blog page exists and
 nothing links to it.
 
