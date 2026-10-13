@@ -177,7 +177,7 @@ struct ExpenseEditView: View {
                     Button { showScanner = true } label: { Label(L("Photo of the receipt"), systemImage: "doc.viewfinder") }
                 }
                 PhotosPicker(selection: $photo, matching: .images) { Label(L("Choose photos"), systemImage: "photo") }
-                Button { showFiles = true } label: { Label(L("Photo or PDF"), systemImage: "folder") }
+                Button { showFiles = true } label: { Label(L("Choose PDF or file"), systemImage: "folder") }
             }
             if reading { HStack { ProgressView(); Text(L("Reading …")).foregroundStyle(Theme.ink2) } }
             if let readNote { Text(readNote).font(.caption).foregroundStyle(Theme.warning) }

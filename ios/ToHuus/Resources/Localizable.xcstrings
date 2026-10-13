@@ -12406,7 +12406,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alles bezahlt hat:"
+            "value": "Alles bezahlt von …"
           }
         }
       }
@@ -12798,23 +12798,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bon fotografieren"
-          }
-        }
-      }
-    },
-    "Photo or PDF": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Photo or PDF"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Foto oder PDF"
           }
         }
       }
