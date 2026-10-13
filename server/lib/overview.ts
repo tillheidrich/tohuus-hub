@@ -5,6 +5,7 @@ import { listPlaces } from './places.js';
 import { suggest } from './recipes.js';
 import { t } from '../i18n.js';
 import { notPrivate } from './share-core.js';
+import './spending.js'; // imports.private_for
 
 export function overview() {
   const products = listProducts();
@@ -52,7 +53,7 @@ export function overview() {
   const shopping = db
     .prepare(`SELECT s.id, s.text, s.source, p.image_path FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id WHERE s.checked_at IS NULL AND ${notPrivate('s.id')} ORDER BY s.created_at DESC`)
     .all() as any[];
-  const imports = db.prepare(`SELECT id, kind, title, created_at, (SELECT COUNT(*) FROM import_lines l WHERE l.import_id = i.id) AS lines FROM imports i WHERE status = 'review' ORDER BY id DESC`).all();
+  const imports = db.prepare(`SELECT id, kind, title, created_at, (SELECT COUNT(*) FROM import_lines l WHERE l.import_id = i.id) AS lines FROM imports i WHERE status = 'review' AND private_for IS NULL ORDER BY id DESC`).all();
   const orders = db.prepare(`SELECT o.*, (SELECT json_group_array(json_object('name', name, 'qty', qty, 'options', json(options))) FROM order_lines WHERE order_id = o.id) AS lines FROM orders o WHERE status IN ('new','accepted') ORDER BY id DESC`).all() as any[];
   const activity = db
     .prepare(`SELECT m.*, p.name, p.unit, p.track_mode FROM movements m JOIN products p ON p.id = m.product_id ORDER BY m.id DESC LIMIT 8`)

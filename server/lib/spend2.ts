@@ -12,15 +12,27 @@
  *   spend_tags        free tags on lines, receipts and expenses ("Party", "Urlaub")
  *   spend_budgets     optional budgets per month or week, overall ('' category) or per category
  * The overall monthly budget is mirrored to the older setting 'spending.target' (spending.ts, /spending/target).
+ *
+ * Wave 2 (q-money, migration 'money-q-2'): entries for non-food too (categories the household can rename), a photo or
+ * PDF per own expense (encrypted like receipt files), optional line items, "who paid", and personal entries:
+ *   - `private_for` (expense or receipt): the entry belongs to that person – only they and whoever marked it see it,
+ *     never in household views, exports, the assistant, MCP or Home Assistant.
+ *   - a single line (receipt line or line item) can belong to a person ("6× Fritz-Kola → Sam") – visible to the
+ *     household, it counts in that person's "Nur meins" view and in splits. The setting `money.assignedOut` leaves
+ *     such lines out of the household totals.
+ * Views: 'household' (default, what everyone sees), 'mine' (the viewer's personal entries and lines), 'all'
+ * (household + the viewer's personal ones, nothing left out – used for a receipt's detail).
  */
 import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
+import './hhforms.js'; // import_lines.for_user_id, imports.paid_by
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { notify } from './notify.js';
 import { region } from './region.js';
 import { wasteValue } from './retail.js';
-import { isDeposit, round2, setSpendingTarget, shopName, spendingTarget, spendLines } from './spending.js';
+import { isDeposit, receiptVisible, round2, setSpendingTarget, shopName, spendingTarget, spendLines } from './spending.js';
+import { removeAttachment, takeAttachment } from './spend-files.js';
 
 migrate(
   'spend2-1',
@@ -63,6 +75,16 @@ migrate(
      created_at TEXT NOT NULL DEFAULT (datetime('now')),
      UNIQUE (category, period)
    );`,
+);
+
+migrate(
+  'money-q-2',
+  `ALTER TABLE spend_expenses ADD COLUMN user_id INTEGER;
+   ALTER TABLE spend_expenses ADD COLUMN private_for INTEGER;
+   ALTER TABLE spend_expenses ADD COLUMN paid_by INTEGER;
+   ALTER TABLE spend_expenses ADD COLUMN attachment TEXT;
+   ALTER TABLE spend_expenses ADD COLUMN attachment_type TEXT;
+   ALTER TABLE spend_expenses ADD COLUMN items TEXT;`,
 );
 
 export class SpendError extends Error {}
@@ -218,6 +240,63 @@ export interface Entry {
   tags: string[];
   note: string | null;
   excluded: { id: number; scope: ExclusionScope; reason: string | null } | null;
+  /** a single line that belongs to one person (receipt line; for expenses see `items`) */
+  for_user_id: number | null;
+  for_name: string | null;
+  /** personal entry: only this person (and who marked it) sees it */
+  personal: { for_user_id: number; for_name: string | null; by_user_id: number | null } | null;
+  /** who paid (receipt: imports.paid_by, expense: paid_by) */
+  paid_by: number | null;
+  /** own expense: a photo or PDF is attached (GET /api/spend/expenses/:id/attachment) */
+  attachment: { type: string } | null;
+  /** own expense: optional line items */
+  items: ExpenseItem[] | null;
+  /** "Nur meins": only the viewer's part of a shared expense (its items for them) */
+  part: boolean;
+}
+
+export interface ExpenseItem {
+  name: string;
+  qty: number | null;
+  price: number;
+  for_user_id: number | null;
+}
+
+export type View = 'household' | 'mine' | 'all';
+export interface LoadOpts {
+  /** the member looking (user id) – needed for 'mine' and 'all' */
+  viewer?: number | null;
+  view?: View;
+}
+
+/** Household setting: lines that belong to one person are left out of the household totals. */
+export const assignedOut = () => getSetting<boolean>('money.assignedOut', false) === true;
+export function setAssignedOut(on: boolean) {
+  setSetting('money.assignedOut', Boolean(on));
+  emit('imports');
+  return { assigned_out: assignedOut() };
+}
+
+export const parseItems = (raw: string | null | undefined): ExpenseItem[] => {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v)
+      ? v
+          .filter((x) => x && typeof x.name === 'string' && Number.isFinite(Number(x.price)))
+          .map((x) => ({ name: String(x.name), qty: x.qty == null ? null : Number(x.qty), price: round2(Number(x.price)), for_user_id: Number.isInteger(x.for_user_id) ? x.for_user_id : null }))
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+export function memberNames() {
+  return new Map((db.prepare('SELECT id, name FROM users ORDER BY id').all() as { id: number; name: string }[]).map((u) => [u.id, u.name]));
+}
+/** A member (not a permanent guest) – for "belongs to", "paid by", line owners. */
+export function isMember(id: number) {
+  return Boolean(db.prepare(`SELECT 1 FROM users WHERE id = ? AND COALESCE(kind, 'member') != 'guest'`).get(id));
 }
 
 const uncategorised = () => t('Uncategorised');
@@ -244,15 +323,28 @@ function tagMaps() {
   return m;
 }
 
-/** All spending entries (receipt lines + manual expenses), optionally within a day range. */
-export function loadEntries(r?: Range): Entry[] {
+/**
+ * All spending entries (receipt lines + manual expenses), optionally within a day range, as one member sees them
+ * (see the file comment for the views). Without options: the household view – never anyone's personal entries.
+ */
+export function loadEntries(r?: Range, opts: LoadOpts = {}): Entry[] {
+  const viewer = opts.viewer ?? null;
+  const view: View = viewer ? (opts.view ?? 'household') : 'household';
+  const mine = view === 'mine';
+  const out_ = view === 'household' && assignedOut();
+  const names = memberNames();
+  const lineFor = new Map((db.prepare('SELECT id, for_user_id FROM import_lines WHERE for_user_id IS NOT NULL').all() as { id: number; for_user_id: number }[]).map((x) => [x.id, x.for_user_id]));
+  const payers = new Map((db.prepare('SELECT id, paid_by FROM imports WHERE paid_by IS NOT NULL').all() as { id: number; paid_by: number }[]).map((x) => [x.id, x.paid_by]));
   const ex = exclusionMaps();
   const tags = tagMaps();
   const overrides = new Map((db.prepare('SELECT line_id, category FROM spend_line_meta WHERE category IS NOT NULL').all() as { line_id: number; category: string }[]).map((x) => [x.line_id, x.category]));
   const out: Entry[] = [];
   const inRange = (d: string) => !r || (d >= r.from && d <= r.to);
-  for (const l of spendLines()) {
+  for (const l of spendLines({ viewer: view === 'household' ? null : viewer })) {
     if (!inRange(l.day)) continue;
+    const forUser = lineFor.get(l.id) ?? null;
+    if (mine && l.private_for == null && forUser !== viewer) continue;
+    if (out_ && forUser != null) continue;
     const store = shopName(l.shop);
     const over = overrides.get(l.id) ?? null;
     const category = over ?? l.category ?? uncategorised();
@@ -282,11 +374,35 @@ export function loadEntries(r?: Range): Entry[] {
       tags: [...new Set([...(tags.get(`line:${l.id}`) ?? []), ...(tags.get(`receipt:${l.import_id}`) ?? [])])],
       note: l.note,
       excluded: excl ? { id: excl.id, scope: excl.scope, reason: excl.reason } : null,
+      for_user_id: forUser,
+      for_name: forUser ? (names.get(forUser) ?? null) : null,
+      personal: l.private_for != null ? { for_user_id: l.private_for, for_name: names.get(l.private_for) ?? null, by_user_id: l.private_by } : null,
+      paid_by: payers.get(l.import_id) ?? null,
+      attachment: null,
+      items: null,
+      part: false,
     });
   }
   const exps = db.prepare('SELECT * FROM spend_expenses ORDER BY day, id').all() as ExpenseRow[];
   for (const e of exps) {
     if (!inRange(e.day)) continue;
+    const items = parseItems(e.items);
+    let price = e.amount;
+    let part = false;
+    let label: string | null = null;
+    if (e.private_for != null) {
+      // personal: only for the person it belongs to and who entered it, never in the household view
+      if (view === 'household' || (e.private_for !== viewer && e.user_id !== viewer)) continue;
+    } else if (mine) {
+      const own = items.filter((i) => i.for_user_id === viewer);
+      if (!own.length) continue;
+      price = round2(own.reduce((s, i) => s + i.price, 0));
+      part = true;
+      label = own.map((i) => i.name).join(', ');
+    } else if (out_) {
+      price = round2(price - items.filter((i) => i.for_user_id != null).reduce((s, i) => s + i.price, 0));
+      if (price <= 0.004) continue;
+    }
     const store = e.store?.trim() || t('Other');
     const category = e.category?.trim() || uncategorised();
     const excl = ex.expense.get(String(e.id)) ?? ex.category.get(category.toLowerCase()) ?? ex.store.get(store.toLowerCase()) ?? null;
@@ -297,18 +413,25 @@ export function loadEntries(r?: Range): Entry[] {
       receipt_id: null,
       day: e.day,
       store,
-      name: e.note?.trim() || store,
+      name: label ?? (e.note?.trim() || store),
       product_id: null,
       category,
       category_original: null,
       category_changed: false,
       qty: 1,
       unit: null,
-      price: e.amount,
+      price,
       deposit: false,
       tags: tags.get(`expense:${e.id}`) ?? [],
       note: e.note,
       excluded: excl ? { id: excl.id, scope: excl.scope, reason: excl.reason } : null,
+      for_user_id: null,
+      for_name: null,
+      personal: e.private_for != null ? { for_user_id: e.private_for, for_name: names.get(e.private_for) ?? null, by_user_id: e.user_id } : null,
+      paid_by: e.paid_by,
+      attachment: e.attachment ? { type: e.attachment_type ?? 'application/octet-stream' } : null,
+      items: items.length ? items : null,
+      part,
     });
   }
   return out.sort((a, b) => b.day.localeCompare(a.day) || b.key.localeCompare(a.key));
@@ -512,10 +635,11 @@ export function resolveRange(q: StatsQuery, all: Entry[], weekStart: 0 | 1): Ran
   return { from: first < last ? first : last, to: last, anchor: last };
 }
 
-export function spendStats(q: StatsQuery) {
+export function spendStats(q: StatsQuery, opts: LoadOpts = {}) {
   const reg = region();
   const ws = reg.weekStart;
-  let all = loadEntries();
+  const mineView = opts.view === 'mine' && Boolean(opts.viewer);
+  let all = loadEntries(undefined, opts);
   if (q.tag) all = filterEntries(all, { tag: q.tag });
   const r = resolveRange(q, all, ws);
   const inR = (rr: Range) => all.filter((e) => e.day >= rr.from && e.day <= rr.to);
@@ -568,10 +692,12 @@ export function spendStats(q: StatsQuery) {
 
   // budgets for the viewed period (or the current one when viewing a year / all time)
   const ref = now >= r.from && now <= r.to ? now : q.period === 'year' || q.period === 'all' ? now : r.anchor;
-  const budgets = budgetStatus(ref, q.tag ? loadEntries() : all, ws);
+  // budgets belong to the household – not shown in the personal view
+  const budgets = mineView ? [] : budgetStatus(ref, q.tag ? loadEntries() : all, ws);
 
   return {
     period: q.period,
+    view: mineView ? 'mine' : 'household',
     from: r.from,
     to: r.to,
     anchor: r.anchor,
@@ -613,6 +739,12 @@ export interface ExpenseRow {
   note: string | null;
   actor: string | null;
   created_at: string;
+  user_id: number | null;
+  private_for: number | null;
+  paid_by: number | null;
+  attachment: string | null;
+  attachment_type: string | null;
+  items: string | null;
 }
 
 const cleanTags = (tags?: string[] | null) => [...new Set((tags ?? []).map((x) => x.trim().replace(/\s+/g, ' ').slice(0, 40)).filter(Boolean))].slice(0, 12);
@@ -630,16 +762,59 @@ export interface ExpenseInput {
   category?: string | null;
   note?: string | null;
   tags?: string[];
+  /** personal: the member it belongs to (null = for the household) */
+  private_for?: number | null;
+  paid_by?: number | null;
+  items?: { name: string; qty?: number | null; price: number; for_user_id?: number | null }[] | null;
+  /** token from POST /spend/files (a photo or PDF uploaded before saving); null removes the attachment */
+  attachment?: string | null;
 }
 
-export function addExpense(input: ExpenseInput, actor: string | null = null) {
+/** May this member see (and change) the expense? Personal ones: the person it belongs to and who entered it. */
+export function expenseVisible(e: Pick<ExpenseRow, 'private_for' | 'user_id'>, viewer: number | null | undefined) {
+  if (e.private_for == null) return true;
+  return viewer != null && (e.private_for === viewer || e.user_id === viewer);
+}
+
+const checkMember = (id: number | null | undefined) => {
+  if (id != null && !isMember(id)) throw new SpendError(t('Member not found'));
+};
+
+function cleanItems(items: ExpenseInput['items']): string | null {
+  if (!items) return null;
+  const xs = items
+    .slice(0, 100)
+    .map((i) => ({ name: String(i.name ?? '').trim().slice(0, 120), qty: i.qty == null || !Number.isFinite(Number(i.qty)) ? null : round2(Number(i.qty)), price: round2(Number(i.price)), for_user_id: i.for_user_id ?? null }))
+    .filter((i) => i.name && Number.isFinite(i.price) && Math.abs(i.price) < 1_000_000);
+  for (const i of xs) checkMember(i.for_user_id);
+  return xs.length ? JSON.stringify(xs) : null;
+}
+
+export function addExpense(input: ExpenseInput, actor: string | null = null, userId: number | null = null) {
   if (!(input.amount > 0 && input.amount < 1_000_000)) throw new SpendError(t('Amount must be more than 0'));
   const day = input.day ?? today();
   if (!DAY.test(day)) throw new SpendError(t('Date must look like 2026-10-10'));
+  checkMember(input.private_for);
+  checkMember(input.paid_by);
+  const items = cleanItems(input.items);
+  const file = input.attachment ? takeAttachment(input.attachment) : null;
   const id = db.transaction(() => {
     const res = db
-      .prepare('INSERT INTO spend_expenses (day, amount, store, category, note, actor) VALUES (?, ?, ?, ?, ?, ?)')
-      .run(day, round2(input.amount), input.store?.trim().slice(0, 80) || null, input.category?.trim().slice(0, 80) || null, input.note?.trim().slice(0, 300) || null, actor);
+      .prepare('INSERT INTO spend_expenses (day, amount, store, category, note, actor, user_id, private_for, paid_by, attachment, attachment_type, items) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(
+        day,
+        round2(input.amount),
+        input.store?.trim().slice(0, 80) || null,
+        input.category?.trim().slice(0, 80) || null,
+        input.note?.trim().slice(0, 300) || null,
+        actor,
+        userId,
+        input.private_for ?? null,
+        input.paid_by ?? null,
+        file?.name ?? null,
+        file?.type ?? null,
+        items,
+      );
     const id = Number(res.lastInsertRowid);
     if (input.tags) setTags('expense', id, input.tags);
     return id;
@@ -648,23 +823,68 @@ export function addExpense(input: ExpenseInput, actor: string | null = null) {
   return getExpense(id)!;
 }
 
-export function getExpense(id: number) {
+export function getExpense(id: number, viewer?: number | null) {
   const e = db.prepare('SELECT * FROM spend_expenses WHERE id = ?').get(id) as ExpenseRow | undefined;
-  return e ? { ...e, tags: (db.prepare(`SELECT tag FROM spend_tags WHERE scope = 'expense' AND ref = ? ORDER BY tag`).all(id) as { tag: string }[]).map((x) => x.tag) } : null;
+  if (!e || (viewer !== undefined && !expenseVisible(e, viewer))) return null;
+  const names = memberNames();
+  return {
+    id: e.id,
+    day: e.day,
+    amount: e.amount,
+    store: e.store,
+    category: e.category,
+    note: e.note,
+    actor: e.actor,
+    created_at: e.created_at,
+    user_id: e.user_id,
+    private_for: e.private_for,
+    personal: e.private_for != null ? { for_user_id: e.private_for, for_name: names.get(e.private_for) ?? null, by_user_id: e.user_id } : null,
+    paid_by: e.paid_by,
+    paid_by_name: e.paid_by ? (names.get(e.paid_by) ?? null) : null,
+    attachment: e.attachment ? { type: e.attachment_type ?? 'application/octet-stream' } : null,
+    items: parseItems(e.items).map((i) => ({ ...i, for_name: i.for_user_id ? (names.get(i.for_user_id) ?? null) : null })),
+    tags: (db.prepare(`SELECT tag FROM spend_tags WHERE scope = 'expense' AND ref = ? ORDER BY tag`).all(id) as { tag: string }[]).map((x) => x.tag),
+  };
 }
 
-export function updateExpense(id: number, input: Partial<ExpenseInput>) {
-  const cur = getExpense(id);
-  if (!cur) throw new SpendError(t('Expense not found'));
+/** The stored attachment of an expense (file name and type) for the download route – null when none/not visible. */
+export function expenseAttachment(id: number, viewer: number | null) {
+  const e = db.prepare('SELECT * FROM spend_expenses WHERE id = ?').get(id) as ExpenseRow | undefined;
+  if (!e || !expenseVisible(e, viewer) || !e.attachment) return null;
+  return { name: e.attachment, type: e.attachment_type ?? 'application/octet-stream' };
+}
+
+export function updateExpense(id: number, input: Partial<ExpenseInput>, viewer?: number | null) {
+  const row = db.prepare('SELECT * FROM spend_expenses WHERE id = ?').get(id) as ExpenseRow | undefined;
+  if (!row || (viewer !== undefined && !expenseVisible(row, viewer))) throw new SpendError(t('Expense not found'));
+  const cur = row;
   if (input.amount != null && !(input.amount > 0 && input.amount < 1_000_000)) throw new SpendError(t('Amount must be more than 0'));
   if (input.day != null && !DAY.test(input.day)) throw new SpendError(t('Date must look like 2026-10-10'));
+  if (input.private_for !== undefined) checkMember(input.private_for);
+  if (input.paid_by !== undefined) checkMember(input.paid_by);
+  const items = input.items !== undefined ? cleanItems(input.items) : cur.items;
+  let attachment = cur.attachment;
+  let attachmentType = cur.attachment_type;
+  if (input.attachment !== undefined && input.attachment !== cur.attachment) {
+    const file = input.attachment ? takeAttachment(input.attachment) : null;
+    if (cur.attachment) removeAttachment(cur.attachment);
+    attachment = file?.name ?? null;
+    attachmentType = file?.type ?? null;
+  }
   db.transaction(() => {
-    db.prepare('UPDATE spend_expenses SET day = ?, amount = ?, store = ?, category = ?, note = ? WHERE id = ?').run(
+    db.prepare('UPDATE spend_expenses SET day = ?, amount = ?, store = ?, category = ?, note = ?, private_for = ?, paid_by = ?, attachment = ?, attachment_type = ?, items = ?, user_id = COALESCE(user_id, ?) WHERE id = ?').run(
       input.day ?? cur.day,
       input.amount != null ? round2(input.amount) : cur.amount,
       input.store !== undefined ? input.store?.trim().slice(0, 80) || null : cur.store,
       input.category !== undefined ? input.category?.trim().slice(0, 80) || null : cur.category,
       input.note !== undefined ? input.note?.trim().slice(0, 300) || null : cur.note,
+      input.private_for !== undefined ? input.private_for : cur.private_for,
+      input.paid_by !== undefined ? input.paid_by : cur.paid_by,
+      attachment,
+      attachmentType,
+      items,
+      // whoever makes an old entry personal becomes its "entered by"
+      input.private_for != null ? (viewer ?? null) : null,
       id,
     );
     if (input.tags) setTags('expense', id, input.tags);
@@ -673,19 +893,32 @@ export function updateExpense(id: number, input: Partial<ExpenseInput>) {
   return getExpense(id)!;
 }
 
-export function deleteExpense(id: number) {
+export function deleteExpense(id: number, viewer?: number | null) {
+  const row = db.prepare('SELECT * FROM spend_expenses WHERE id = ?').get(id) as ExpenseRow | undefined;
+  if (!row) return;
+  if (viewer !== undefined && !expenseVisible(row, viewer)) throw new SpendError(t('Expense not found'));
   db.transaction(() => {
     db.prepare('DELETE FROM spend_expenses WHERE id = ?').run(id);
     db.prepare(`DELETE FROM spend_tags WHERE scope = 'expense' AND ref = ?`).run(id);
     db.prepare(`DELETE FROM spend_exclusions WHERE scope = 'expense' AND ref = ?`).run(String(id));
   })();
+  if (row.attachment) removeAttachment(row.attachment);
   emit('imports');
 }
 
+/** A receipt belongs to one person (only they and who marked it see it) or – with null – to the household again. */
+export function setReceiptPersonal(importId: number, forUserId: number | null, viewer: number | null) {
+  if (!receiptVisible(importId, viewer)) throw new SpendError(t('Receipt not found'));
+  checkMember(forUserId);
+  db.prepare('UPDATE imports SET private_for = ?, private_by = ? WHERE id = ?').run(forUserId, forUserId == null ? null : viewer, importId);
+  emit('imports');
+  return { private_for: forUserId };
+}
+
 /** Category override for the statistics (the product keeps its category) and tags of a receipt line. */
-export function updateLine(lineId: number, input: { category?: string | null; tags?: string[] }) {
-  const exists = db.prepare(`SELECT 1 FROM import_lines WHERE id = ?`).get(lineId);
-  if (!exists) throw new SpendError(t('Receipt line not found'));
+export function updateLine(lineId: number, input: { category?: string | null; tags?: string[] }, viewer: number | null = null) {
+  const exists = db.prepare(`SELECT import_id FROM import_lines WHERE id = ?`).get(lineId) as { import_id: number } | undefined;
+  if (!exists || !receiptVisible(exists.import_id, viewer)) throw new SpendError(t('Receipt line not found'));
   db.transaction(() => {
     if (input.category !== undefined) {
       const c = input.category?.trim().slice(0, 80) || null;
@@ -695,23 +928,24 @@ export function updateLine(lineId: number, input: { category?: string | null; ta
     if (input.tags) setTags('line', lineId, input.tags);
   })();
   emit('imports');
-  return loadEntries().find((e) => e.key === `l:${lineId}`) ?? null;
+  return loadEntries(undefined, { viewer, view: 'all' }).find((e) => e.key === `l:${lineId}`) ?? null;
 }
 
-export function setReceiptTags(importId: number, tags: string[]) {
-  if (!db.prepare('SELECT 1 FROM imports WHERE id = ?').get(importId)) throw new SpendError(t('Receipt not found'));
+export function setReceiptTags(importId: number, tags: string[], viewer: number | null = null) {
+  if (!db.prepare('SELECT 1 FROM imports WHERE id = ?').get(importId) || !receiptVisible(importId, viewer)) throw new SpendError(t('Receipt not found'));
   setTags('receipt', importId, tags);
   emit('imports');
   return receiptTags(importId);
 }
 const receiptTags = (id: number) => (db.prepare(`SELECT tag FROM spend_tags WHERE scope = 'receipt' AND ref = ? ORDER BY tag`).all(id) as { tag: string }[]).map((x) => x.tag);
 
-export function receiptDetail(importId: number) {
-  const imp = db.prepare(`SELECT id, title, shop, kind, total, status, meta, created_at, applied_at FROM imports WHERE id = ?`).get(importId) as
-    | { id: number; title: string; shop: string | null; kind: string; total: number | null; status: string; meta: string; created_at: string; applied_at: string | null }
+export function receiptDetail(importId: number, viewer: number | null = null) {
+  const imp = db.prepare(`SELECT id, title, shop, kind, total, status, meta, created_at, applied_at, paid_by, actor, private_for, private_by FROM imports WHERE id = ?`).get(importId) as
+    | { id: number; title: string; shop: string | null; kind: string; total: number | null; status: string; meta: string; created_at: string; applied_at: string | null; paid_by: number | null; actor: string | null; private_for: number | null; private_by: number | null }
     | undefined;
-  if (!imp) throw new SpendError(t('Receipt not found'));
-  const entries = filterEntries(loadEntries(), { receipt_id: importId });
+  if (!imp || !receiptVisible(importId, viewer)) throw new SpendError(t('Receipt not found'));
+  const entries = filterEntries(loadEntries(undefined, { viewer, view: 'all' }), { receipt_id: importId });
+  const names = memberNames();
   let discounts = 0;
   try {
     discounts = Math.abs(Number(JSON.parse(imp.meta)?.discounts ?? 0)) || 0;
@@ -730,6 +964,10 @@ export function receiptDetail(importId: number) {
     discounts: round2(discounts),
     tags: receiptTags(importId),
     exclusion: ex ?? null,
+    paid_by: imp.paid_by,
+    paid_by_name: imp.paid_by ? (names.get(imp.paid_by) ?? null) : null,
+    actor: imp.actor,
+    personal: imp.private_for != null ? { for_user_id: imp.private_for, for_name: names.get(imp.private_for) ?? null, by_user_id: imp.private_by } : null,
     entries,
   };
 }
@@ -793,10 +1031,49 @@ export function categoryNames() {
   const rows = db
     .prepare(
       `SELECT name FROM categories UNION SELECT category FROM spend_line_meta WHERE category IS NOT NULL
-       UNION SELECT category FROM spend_expenses WHERE category IS NOT NULL UNION SELECT category FROM spend_budgets WHERE category != ''`,
+       UNION SELECT category FROM spend_expenses WHERE category IS NOT NULL AND private_for IS NULL UNION SELECT category FROM spend_budgets WHERE category != ''`,
     )
     .all() as { name: string }[];
-  return [...new Set(rows.map((r) => r.name).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  return [...new Set([...moneyCategories(), ...rows.map((r) => r.name)].filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
+// ------------------------------------------------------------------ categories for own entries
+
+/** Default categories for own entries – food plus the usual non-food things a household buys. */
+const DEFAULT_CATEGORIES = ['Food', 'Household', 'Drugstore', 'Drinks', 'Kids', 'Gifts', 'Pets', 'Other'];
+
+/** The household's categories for own entries and invoices (renamable, extendable). */
+export function moneyCategories(): string[] {
+  const v = getSetting<string[] | null>('money.categories', null);
+  return Array.isArray(v) && v.length ? v : DEFAULT_CATEGORIES.map((c) => t(c));
+}
+
+const cleanCategory = (s: string) => s.trim().replace(/\s+/g, ' ').slice(0, 80);
+
+export function setMoneyCategories(list: string[]) {
+  const xs = [...new Set(list.map(cleanCategory).filter(Boolean))].slice(0, 40);
+  if (!xs.length) throw new SpendError(t('Keep at least one category'));
+  setSetting('money.categories', xs);
+  emit('imports');
+  return moneyCategories();
+}
+
+/** Rename a category everywhere it is used: own entries, line overrides, budgets, "not counted" rules. */
+export function renameMoneyCategory(from: string, to: string) {
+  const a = cleanCategory(from);
+  const b = cleanCategory(to);
+  if (!a || !b) throw new SpendError(t('Give a name'));
+  db.transaction(() => {
+    db.prepare('UPDATE spend_expenses SET category = ? WHERE lower(category) = lower(?)').run(b, a);
+    db.prepare('UPDATE spend_line_meta SET category = ? WHERE lower(category) = lower(?)').run(b, a);
+    const clash = db.prepare('SELECT 1 FROM spend_budgets WHERE lower(category) = lower(?)').get(b);
+    if (!clash) db.prepare('UPDATE spend_budgets SET category = ? WHERE lower(category) = lower(?)').run(b, a);
+    const clashEx = db.prepare(`SELECT 1 FROM spend_exclusions WHERE scope = 'category' AND lower(ref) = lower(?)`).get(b);
+    if (!clashEx) db.prepare(`UPDATE spend_exclusions SET ref = ? WHERE scope = 'category' AND lower(ref) = lower(?)`).run(b, a);
+  })();
+  const cur = moneyCategories();
+  const next = cur.some((c) => c.toLowerCase() === a.toLowerCase()) ? cur.map((c) => (c.toLowerCase() === a.toLowerCase() ? b : c)) : [...cur, b];
+  return setMoneyCategories(next);
 }
 export function tagNames() {
   return (db.prepare('SELECT tag, COUNT(*) AS n FROM spend_tags GROUP BY tag ORDER BY n DESC, tag').all() as { tag: string; n: number }[]).map((x) => x.tag);
@@ -807,13 +1084,13 @@ export function storeNames() {
 
 // ------------------------------------------------------------------ export
 
-export function exportRows(r: Range | null, tag?: string) {
-  let list = loadEntries(r ?? undefined);
+export function exportRows(r: Range | null, tag?: string, opts: LoadOpts = {}) {
+  let list = loadEntries(r ?? undefined, opts);
   if (tag) list = filterEntries(list, { tag });
   return [...list].sort((a, b) => a.day.localeCompare(b.day) || a.key.localeCompare(b.key));
 }
 
-export function exportCsv(r: Range | null, tag?: string) {
+export function exportCsv(r: Range | null, tag?: string, opts: LoadOpts = {}) {
   const esc = (v: unknown) => {
     let s = v == null ? '' : String(v);
     // spreadsheet formula injection: text from receipts/expenses that starts like a formula is kept as text
@@ -836,10 +1113,17 @@ export function exportCsv(r: Range | null, tag?: string) {
     t('Reason not counted'),
     t('Tags'),
     t('Note'),
+    t('For whom'),
+    t('Personal'),
+    t('Paid by'),
+    t('Attachment'),
+    t('Line items'),
   ];
   const yes = t('yes');
   const no = t('no');
-  const rows = exportRows(r, tag).map((e) => [
+  const names = memberNames();
+  const items = (e: Entry) => (e.items ?? []).map((i) => `${i.name} ${i.price.toFixed(2)}${i.for_user_id ? ` (${names.get(i.for_user_id) ?? ''})` : ''}`).join(' | ');
+  const rows = exportRows(r, tag, opts).map((e) => [
     e.day,
     e.kind === 'line' ? t('Receipt line') : t('Manual expense'),
     e.receipt_id ?? '',
@@ -855,6 +1139,11 @@ export function exportCsv(r: Range | null, tag?: string) {
     e.excluded ? e.excluded.reason ?? '' : '',
     e.tags.join(', '),
     e.note ?? '',
+    e.personal?.for_name ?? e.for_name ?? '',
+    e.personal ? yes : no,
+    e.paid_by ? (names.get(e.paid_by) ?? '') : '',
+    e.attachment ? yes : no,
+    items(e),
   ]);
   return [head, ...rows].map((row) => row.map(esc).join(';')).join('\n');
 }

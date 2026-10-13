@@ -112,7 +112,7 @@ export function purchaseEvents(productId?: number): PurchaseEvent[] {
     .prepare(
       `SELECT l.product_id AS productId, ${PURCHASE_DAY} AS day, NULLIF(trim(i.shop), '') AS shop
        FROM import_lines l JOIN imports i ON i.id = l.import_id
-       WHERE l.product_id IS NOT NULL AND l.qty > 0 AND l.status NOT IN ('unavailable','returned','deposit')
+       WHERE l.product_id IS NOT NULL AND l.qty > 0 AND l.status NOT IN ('unavailable','returned','deposit') AND i.private_for IS NULL
          AND (i.status = 'applied' OR (i.status = 'review' AND l.action = 'add')) ${productFilter}`,
     )
     .all(...args) as { productId: number; day: string; shop: string | null }[];

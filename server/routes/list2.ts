@@ -25,6 +25,7 @@ import { DENSITIES, SUBSTITUTES, finishShopping, listPrefs, recentDone, removeIt
 import { t } from '../i18n.js';
 import { LIST_KINDS, createList, deleteList, estimate, guard, listFilter, listLists, moveItemToList, updateList, usuals } from '../lib/lists.js';
 import { upload } from './core.js';
+import { receiptVisible } from '../lib/spending.js';
 
 export const r = Router();
 // mounted last (before the 404): everything here needs a signed-in member, an app or an API token
@@ -326,6 +327,7 @@ r.post(
   '/imports/:id/split',
   wrap((req) => {
     if (req.actor?.houseGuest) throw Object.assign(new Error('forbidden'), { status: 403 });
+    if (!receiptVisible(num(req.params.id), req.actor?.userId ?? null)) throw Object.assign(new Error(t('Import not found')), { status: 404 });
     const b = z
       .object({
         paid_by: z.number().int().positive().nullable().optional(),

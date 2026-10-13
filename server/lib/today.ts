@@ -109,7 +109,7 @@ export function todayAggregate(viewer?: TodayViewer | null) {
   }
 
   const notices: { kind: string; text: string; path: string }[] = [];
-  const review = (db.prepare(`SELECT COUNT(*) n FROM imports WHERE status = 'review'`).get() as { n: number }).n;
+  const review = (db.prepare(`SELECT COUNT(*) n FROM imports WHERE status = 'review' AND private_for IS NULL`).get() as { n: number }).n;
   if (review) notices.push({ kind: 'imports', text: review === 1 ? t('1 receipt is waiting for a quick look') : t('{n} receipts are waiting for a quick look', { n: review }), path: '/import' });
   if (money.budget && money.budget.state !== 'ok')
     notices.push({

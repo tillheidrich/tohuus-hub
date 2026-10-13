@@ -24,6 +24,7 @@ import { quickAdd } from './shop.js';
 import { notPrivate } from './share-core.js';
 import { haAway } from './away.js';
 import { afterUntick } from './shopping-trust.js';
+import './spending.js'; // imports.private_for
 
 export const HA_API_VERSION = 1;
 
@@ -330,7 +331,7 @@ export function haState() {
   const party = lp ? partyView(lp) : null;
   const wishes = listWishes('pending');
   const displays = listDisplays().map((d) => ({ id: d.id, name: d.name, layout: d.layout }));
-  const imports = (db.prepare(`SELECT COUNT(*) AS n FROM imports WHERE status = 'review'`).get() as { n: number }).n;
+  const imports = (db.prepare(`SELECT COUNT(*) AS n FROM imports WHERE status = 'review' AND private_for IS NULL`).get() as { n: number }).n;
 
   return {
     api: HA_API_VERSION,

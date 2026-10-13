@@ -57,7 +57,7 @@ export function pricesFor(productIds: number[]): Map<number, ShopPrice[]> {
       `SELECT l.product_id AS pid, l.price, l.qty, ${PURCHASE_DAY} AS day, COALESCE(NULLIF(trim(i.shop), ''), i.kind) AS shop, p.size
        FROM import_lines l JOIN imports i ON i.id = l.import_id JOIN products p ON p.id = l.product_id
        WHERE l.product_id IN (${ids.map(() => '?').join(',')}) AND l.price IS NOT NULL AND l.price > 0 AND l.qty > 0
-         AND l.status NOT IN ('unavailable','returned','deposit') AND i.status IN ('applied','review')
+         AND l.status NOT IN ('unavailable','returned','deposit') AND i.status IN ('applied','review') AND i.private_for IS NULL
        ORDER BY day DESC, l.id DESC`,
     )
     .all(...ids) as { pid: number; price: number; qty: number; day: string; shop: string; size: string | null }[];
@@ -92,7 +92,7 @@ export function cheapestOverview(limit = 12) {
     db
       .prepare(
         `SELECT l.product_id AS pid FROM import_lines l JOIN imports i ON i.id = l.import_id
-         WHERE l.product_id IS NOT NULL AND l.price > 0 AND i.status = 'applied'
+         WHERE l.product_id IS NOT NULL AND l.price > 0 AND i.status = 'applied' AND i.private_for IS NULL
          GROUP BY l.product_id HAVING COUNT(DISTINCT lower(trim(COALESCE(i.shop, '')))) >= 2`,
       )
       .all() as { pid: number }[]

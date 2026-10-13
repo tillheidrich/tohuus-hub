@@ -87,7 +87,7 @@ export function wgBalance(month: string) {
     .prepare(
       `SELECT i.id AS import_id, i.paid_by, i.actor, l.price, l.for_user_id, l.for_list_id, ${PURCHASE_DAY} AS day
        FROM import_lines l JOIN imports i ON i.id = l.import_id
-       WHERE i.status = 'applied' AND l.price IS NOT NULL AND l.status NOT IN ('unavailable','returned')`,
+       WHERE i.status = 'applied' AND i.private_for IS NULL AND l.price IS NOT NULL AND l.status NOT IN ('unavailable','returned')`,
     )
     .all() as { import_id: number; paid_by: number | null; actor: string | null; price: number; for_user_id: number | null; for_list_id: number | null; day: string }[];
   let shared = 0;
@@ -103,12 +103,43 @@ export function wgBalance(month: string) {
     if (l.for_user_id && by.has(l.for_user_id)) by.get(l.for_user_id)!.share += l.price;
     else shared += l.price;
   }
+  // own expenses with "who paid" (q-money): the payer paid it, line items for one person are theirs, the rest shared
+  for (const e of expensesWithPayer(month)) {
+    if (!by.has(e.paid_by)) continue;
+    by.get(e.paid_by)!.paid += e.amount;
+    let rest = e.amount;
+    for (const i of e.items) {
+      if (i.for_user_id && by.has(i.for_user_id)) {
+        by.get(i.for_user_id)!.share += i.price;
+        rest -= i.price;
+      }
+    }
+    shared += Math.max(0, rest);
+  }
   const n = Math.max(1, people.length);
   const out = [...by.values()].map((p) => {
     const share = round2(p.share + shared / n);
     return { ...p, paid: round2(p.paid), share, balance: round2(p.paid - share) };
   });
   return { month, people: out, shared: round2(shared), withoutPayer: round2(unassigned), settle: settle(out) };
+}
+
+function expensesWithPayer(month: string) {
+  try {
+    const rows = db.prepare(`SELECT amount, paid_by, items FROM spend_expenses WHERE private_for IS NULL AND paid_by IS NOT NULL AND substr(day, 1, 7) = ?`).all(month) as { amount: number; paid_by: number; items: string | null }[];
+    return rows.map((r) => {
+      let items: { price: number; for_user_id: number | null }[] = [];
+      try {
+        const v = r.items ? JSON.parse(r.items) : [];
+        if (Array.isArray(v)) items = v.map((x) => ({ price: Number(x.price) || 0, for_user_id: Number.isInteger(x.for_user_id) ? x.for_user_id : null }));
+      } catch {
+        /* ignore */
+      }
+      return { amount: r.amount, paid_by: r.paid_by, items };
+    });
+  } catch {
+    return []; // spend tables not set up yet
+  }
 }
 
 /** A few sentences to even out – the fewest transfers (greedy), never an actual payment. */
@@ -167,7 +198,7 @@ export function careSpent(listId: number, month: string) {
   const rows = db
     .prepare(
       `SELECT l.name, l.price, ${PURCHASE_DAY} AS day FROM import_lines l JOIN imports i ON i.id = l.import_id
-       WHERE i.status = 'applied' AND l.for_list_id = ? AND l.price IS NOT NULL`,
+       WHERE i.status = 'applied' AND i.private_for IS NULL AND l.for_list_id = ? AND l.price IS NOT NULL`,
     )
     .all(listId) as { name: string; price: number; day: string }[];
   const inMonth = rows.filter((r) => r.day.startsWith(month));

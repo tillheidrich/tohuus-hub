@@ -29,7 +29,7 @@ Object.assign(process.env, {
   // list2 J: the operator's view of the anonymous weekly-question counts
 });
 
-const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code'];
+const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code', 'MARKERA-money', 'MARKERA-file'];
 const mails: { to: string; text: string }[] = [];
 
 let ipSeq = 1;
@@ -128,7 +128,13 @@ beforeAll(async () => {
   expect((await A.post('/api/memory', { text: 'MARKERA-memory Brot vom Bäcker' })).status).toBe(200);
   const chat = await A.post('/api/assistant/chat', { message: 'MARKERA-chat' });
   expect(chat.status, chat.text).toBe(200);
-  expect((await A.post('/api/spend/expenses', { amount: 9.5, store: 'MARKERA-store' })).status).toBe(200);
+  // q-money: the first expense gets a PDF with a marker; a money list with a marker (both id 1 – the sweep fills :id with 1)
+  const pdf = new FormData();
+  pdf.append('file', new Blob([Buffer.from('%PDF-1.4\nMARKERA-file\n%%EOF')], { type: 'application/pdf' }), 'beleg.pdf');
+  const upPdf = await A.post('/api/spend/files', pdf);
+  expect(upPdf.status, upPdf.text).toBe(200);
+  expect((await A.post('/api/spend/expenses', { amount: 9.5, store: 'MARKERA-store', attachment: upPdf.json.token })).status).toBe(200);
+  expect((await A.post('/api/money/lists', { title: 'MARKERA-money', items: [{ name: 'MARKERA-money Pizza', amount: 20 }] })).status).toBe(200);
   // Hausinfo: a card and a code (its value must never come out of any GET route – not even for A)
   expect((await A.post('/api/house-guide/cards', { title: 'MARKERA-house Licht', body: 'Alexa, Licht an', type: 'voice', topic: 'light', area: 'Flur' })).status).toBe(200);
   const code = await A.post('/api/house-guide/codes', { kind: 'door', label: 'MARKERA-code Haustür', value: 'MARKERA-secret-4711' });
@@ -225,6 +231,8 @@ describe('cloud isolation', () => {
     for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/memory', '/api/assistant/conversations']) expect(seen, r).toContain(r);
     // list2: the new household-data routes show A's markers to A (so the B sweep below really checks them)
     for (const r of ['/api/list/lists', '/api/offers', '/api/list/lunchbox', '/api/caldav/passwords', '/api/push/apns', '/api/shop/trips', '/api/shop/list']) expect(seen, r).toContain(r);
+    // q-money: money lists and the expense attachment
+    for (const r of ['/api/money/lists', '/api/money/lists/1', '/api/spend/expenses/1', '/api/spend/expenses/1/attachment']) expect(seen, r).toContain(r);
     // Hausinfo GET routes are part of the walk; A sees its cards, nobody ever gets a code value from a GET
     for (const r of ['/api/house-guide', '/api/house-guide/templates', '/api/house-guide/links/:id', '/api/house-guide/codes/:id/views', '/api/house-guide/log', '/api/guest/:token/house', '/api/facts'])
       expect(routes, r).toContain(r);

@@ -11,7 +11,7 @@ import { t } from '../i18n.js';
 import { historySince } from './limits.js';
 import { region } from './region.js';
 import { rhythmList } from './rhythm.js';
-import { addDays, aggregate, budgetStatus, loadEntries, periodRange, today, type Entry } from './spend2.js';
+import { addDays, aggregate, budgetStatus, loadEntries, periodRange, today, type Entry, type LoadOpts } from './spend2.js';
 import { isDeposit, round2, shopName, spendLines, type SpendLine } from './spending.js';
 
 export class MoneyError extends Error {}
@@ -206,7 +206,9 @@ export function currentMonth() {
   return today().slice(0, 7);
 }
 
-export function moneyOverview(month = currentMonth()) {
+/** `opts.view = 'mine'`: only the viewer's personal entries and lines – no budgets, no household hints. */
+export function moneyOverview(month = currentMonth(), opts: LoadOpts = {}) {
+  const mine = opts.view === 'mine' && Boolean(opts.viewer);
   if (!MONTH.test(month)) throw new MoneyError(t('Month must look like 2026-10'));
   const from = `${month}-01`;
   const to = lastDayOf(month);
@@ -214,7 +216,7 @@ export function moneyOverview(month = currentMonth()) {
   const limited = Boolean(since && to < since);
   const clip = (d: string) => (since && d < since ? since : d);
   const refDay = currentMonth() === month ? today() : to;
-  const all = loadEntries({ from: clip(addDays(from, -31)), to });
+  const all = loadEntries({ from: clip(addDays(from, -31)), to }, opts);
   const inMonth = all.filter((e) => e.day >= clip(from) && e.day <= to);
   const agg = aggregate(inMonth);
   // last month, also "up to the same day" so a half month is compared fairly
@@ -238,16 +240,19 @@ export function moneyOverview(month = currentMonth()) {
     weeks.push({ from: wFrom, to: wTo, total: counted(inMonth.filter((e) => e.day >= wFrom && e.day <= wTo)) });
     d = addDays(w.to, 1);
   }
-  const budgets = budgetStatus(refDay, all.length ? loadEntries({ from: clip(addDays(from, -7)), to: addDays(to, 7) }) : [], weekStart);
+  const budgets = mine ? [] : budgetStatus(refDay, all.length ? loadEntries({ from: clip(addDays(from, -7)), to: addDays(to, 7) }) : [], weekStart);
   const overall = budgets.find((b) => !b.category && b.period === 'month') ?? null;
   const lines = spendLines({ since: since && since > addDays(from, -95) ? since : addDays(from, -95) });
   const hints: MoneyHint[] = [];
   if (overall && overall.forecast > overall.amount && refDay < to)
     hints.push({ kind: 'budget', amount: round2(overall.forecast - overall.amount), text: t('At this pace about {forecast} by the end of the month – {over} over the budget', { forecast: fmtMoney(overall.forecast), over: fmtMoney(overall.forecast - overall.amount) }) });
-  hints.push(...cheaperShopHints(lines, refDay), ...wasteHints(month));
-  if (currentMonth() === month) hints.push(...bundleHints());
+  if (!mine) {
+    hints.push(...cheaperShopHints(lines, refDay), ...wasteHints(month));
+    if (currentMonth() === month) hints.push(...bundleHints());
+  }
   return {
     month,
+    view: mine ? 'mine' : 'household',
     currency: region().currency,
     historyLimited: limited,
     total: agg.total,
@@ -269,7 +274,7 @@ export function moneyOverview(month = currentMonth()) {
       diff: round2(agg.total - compareWith),
       pct: compareWith > 0 ? Math.round(((agg.total - compareWith) / compareWith) * 1000) / 10 : null,
     },
-    priceChanges: priceChangesFor(month, lines),
+    priceChanges: mine ? [] : priceChangesFor(month, lines),
     hints,
   };
 }
