@@ -610,3 +610,31 @@ body.legal-page { padding-bottom: 0; }
 }
 .tf-card .origin-h { flex-direction: column; align-items: flex-start; gap: 2px; }
 .tf-card .origin-h b { font-size: 24px; line-height: 1.2; }
+
+/* ------------------------------------------------------------ blog: fact cards (saved as image by site.js) */
+.fact-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; padding: 0; list-style: none; }
+.legal-body section ul.fact-cards { display: grid; gap: 16px; }
+.legal-body section ul.fact-cards li { padding-left: 0; }
+.legal-body section ul.fact-cards li::before { display: none; }
+.fact { display: flex; flex-direction: column; gap: 8px; }
+.fact-card { position: relative; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; gap: 10px; min-height: 260px; margin: 0; padding: 22px 22px 18px; border-radius: var(--r-lg); background: #104e3c; color: #f7f5ef; }
+.fact-card::before { content: ''; position: absolute; z-index: -1; width: 180px; height: 180px; right: -70px; top: -80px; border-radius: 50%; background: #2c7a5f; }
+.fact-card::after { content: ''; position: absolute; z-index: -1; width: 64px; height: 32px; left: 22px; bottom: 0; border-radius: 64px 64px 0 0; background: #e8b865; }
+.fact-brand { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #d5e3da; }
+.legal-body .fact-card p { margin: 0; color: #f7f5ef; }
+.legal-body .fact-card .fact-v, .fact-v { font-family: var(--display); font-size: clamp(40px, 6vw, 54px); line-height: 1; letter-spacing: -0.01em; }
+.fact-t { font-size: 17px; line-height: 1.4; }
+.fact-card figcaption { margin-top: auto; padding-bottom: 30px; font-size: 13px; color: #d5e3da; }
+.legal-body .fact-card figcaption a, .fact-card figcaption a { color: #f7f5ef; text-decoration: underline; text-underline-offset: 3px; }
+.fact-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.fact-save { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 4px; border: 0; background: none; font: 650 15px/1 var(--font); color: var(--primary-text); cursor: pointer; }
+.fact-save .ico, .fact-link .ico { width: 18px; height: 18px; }
+.fact-save:hover span { text-decoration: underline; text-underline-offset: 3px; }
+.fact-save:focus-visible, .fact-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: var(--r-xs); }
+.fact-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 650; font-size: 15px; color: var(--primary-text); text-decoration: none; }
+.blog-facts-link { margin: 8px 0 24px; }
+.help-group h2 a { color: inherit; text-decoration: none; }
+.help-group h2 a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.blog-sources { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }
+.blog-sources ol { margin-top: 10px; padding-left: 20px; display: grid; gap: 6px; font-size: 15px; }
+.blog-sources a { color: var(--primary-text); overflow-wrap: anywhere; }

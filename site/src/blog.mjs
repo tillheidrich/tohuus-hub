@@ -18,6 +18,9 @@
  *     sections: [['Zwischenüberschrift', '<p>…</p>'], ...],
  *     faq: [['Frage?', 'Antwort.'], ...],    // optional, also as FAQPage schema
  *     help: ['einkaufsliste'],               // optional, help articles to link (slugs of help.mjs)
+ *     facts: [{ value: '78 kg', text: 'Ein Satz, der allein verständlich ist (mit Jahr).', source: 'Destatis 2023', url: 'https://…' }],
+ *                                            // each a card on the page that can be saved as an image; also on fakten.html
+ *     sources: [['Titel', 'https://…']],     // every source of the post, listed at the end
  *   }
  *
  * House rules as on the rest of the site: no em or en dashes, invented names only (Sam, Mira, Mika, Ben, Familie
@@ -33,6 +36,11 @@ export const BLOG_COPY = {
     desc: 'Ratgeber von ToHuus: Einkaufslisten teilen, Essen planen, Haushaltsgeld im Blick behalten, für Familien, Paare und WGs.',
     back: 'Alle Beiträge', other: 'English version', published: 'Veröffentlicht', updated: 'Aktualisiert', faq: 'Häufige Fragen',
     help: 'Passend aus der Hilfe', tryIt: 'ToHuus ausprobieren', tryText: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet.',
+    sources: 'Quellen', source: 'Quelle:', factsHere: 'Fakten zum Mitnehmen', factsNote: 'Jede Karte lässt sich als Bild speichern oder auf dem Handy direkt teilen.', factsAll: 'Alle Fakten',
+    factsTitle: 'Fakten rund um Einkauf, Kochen und Haushaltsgeld', factsH1: 'Fakten zum Mitnehmen', factsLink: 'Alle Fakten als Karten',
+    factsLede: '{n} Zahlen aus unseren Beiträgen, jede mit Quelle. Jede Karte lässt sich als Bild speichern oder teilen.',
+    factsDesc: 'Zahlen zu Lebensmittelkosten, Lebensmittelverschwendung, Einkauf und Haushalt, jede mit Quelle, als Karte zum Speichern und Teilen.',
+    saveImage: 'Als Bild speichern', share: 'Teilen', saved: 'Gespeichert', toPost: 'Zum Beitrag',
   },
   en: {
     title: 'Blog', label: 'Blog', h1: 'Shopping, cooking and money at home',
@@ -40,6 +48,11 @@ export const BLOG_COPY = {
     desc: 'The ToHuus blog: sharing a shopping list, planning meals and keeping an eye on household money, for families, couples and flatshares.',
     back: 'All posts', other: 'Deutsche Version', published: 'Published', updated: 'Updated', faq: 'Frequently asked questions',
     help: 'From the help', tryIt: 'Try ToHuus', tryText: 'ToHuus remembers what is at home, what is missing and what it costs.',
+    sources: 'Sources', source: 'Source:', factsHere: 'Facts to take away', factsNote: 'Every card can be saved as an image or shared straight from your phone.', factsAll: 'All facts',
+    factsTitle: 'Facts on shopping, cooking and household money', factsH1: 'Facts to take away', factsLink: 'All facts as cards',
+    factsLede: '{n} figures from our posts, each with its source. Every card can be saved as an image or shared.',
+    factsDesc: 'Figures on food costs, food waste, shopping and the household, each with its source, as cards to save and share.',
+    saveImage: 'Save as image', share: 'Share', saved: 'Saved', toPost: 'To the post',
   },
 };
 
@@ -61,4 +74,11 @@ export function checkPost(lang, p) {
   if (!p.desc || p.desc.length < 80 || p.desc.length > 170) throw new Error(`${where}: description should be 80 to 170 characters`);
   if (!p.answer) throw new Error(`${where}: the direct answer under the headline is missing`);
   if (!p.sections?.length) throw new Error(`${where}: no sections`);
+  for (const [k, f] of (p.facts ?? []).entries()) {
+    if (!f.value || f.value.length > 16) throw new Error(`${where}: fact ${k + 1} needs a short value (max 16 characters)`);
+    if (!f.text || f.text.length > 170) throw new Error(`${where}: fact ${k + 1} text missing or longer than 170 characters`);
+    if (!f.source || !/^https:\/\//.test(f.url ?? '')) throw new Error(`${where}: fact ${k + 1} needs a source and an https URL`);
+    if (/["<>]/.test(f.value + f.text + f.source)) throw new Error(`${where}: fact ${k + 1} must not contain " < >`);
+  }
+  for (const [t, u] of p.sources ?? []) if (!t || !/^https:\/\//.test(u)) throw new Error(`${where}: bad source ${t}`);
 }

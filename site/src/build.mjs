@@ -56,7 +56,7 @@ const ICONS = {
   robot: 'Robot', package: 'Package', refresh: 'ArrowsClockwise', send: 'PaperPlaneTilt', mail: 'EnvelopeSimple',
   terminal: 'TerminalWindow', code: 'Code', export: 'Export', plus: 'Plus', caret: 'CaretDown', printer: 'Printer',
   phone: 'DeviceMobile', globe: 'Globe', chart: 'ChartBar', list: 'ListChecks', store: 'Storefront', sparkle: 'Sparkle',
-  power: 'Power', plug: 'Plug', house: 'House', question: 'Question', scan: 'Scan', watch: 'Watch',
+  power: 'Power', plug: 'Plug', house: 'House', question: 'Question', scan: 'Scan', watch: 'Watch', image: 'ImageSquare', share: 'ShareNetwork',
 };
 const symbol = (id, name) => {
   const C = Ph[`${name}Icon`] || Ph[name];
@@ -1092,6 +1092,68 @@ function blogMeta(c, p) {
 
 const fmtPostDate = (lang, d) => new Date(`${d}T12:00:00Z`).toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
+/**
+ * One fact as a card people can keep: the page shows it as a green card, the button draws the same card as a
+ * 1080 × 1350 PNG (site.js, canvas, local fonts) and offers "Teilen" on phones or saves the file.
+ */
+const factCard = (c, p, f, n, { link = false } = {}) => {
+  const B = BLOG_COPY[c.lang];
+  const file = `tohuus-fakt-${p.slug}-${n}`;
+  return `<li class="fact">
+        <figure class="fact-card" id="fakt-${p.slug}-${n}" data-value="${f.value}" data-text="${f.text}" data-source="${f.source}">
+          <span class="fact-brand" aria-hidden="true">ToHuus ${B.title}</span>
+          <p class="fact-v">${f.value}</p>
+          <p class="fact-t">${f.text}</p>
+          <figcaption>${B.source} <a href="${f.url}">${f.source}</a></figcaption>
+        </figure>
+        <div class="fact-actions">
+          <button class="fact-save" type="button" data-fact="fakt-${p.slug}-${n}" data-file="${file}" data-share="${B.share}" data-saved="${B.saved}" aria-label="${B.saveImage}: ${f.value}">${ico('image')}<span>${B.saveImage}</span></button>
+          ${link ? `<a class="fact-link" href="${p.slug}.html">${B.toPost}${ico('arrow')}</a>` : ''}
+        </div>
+      </li>`;
+};
+
+function blogFacts(c) {
+  const B = BLOG_COPY[c.lang];
+  const posts = publishedPosts(c.lang).filter((p) => p.facts?.length);
+  const m = blogMeta(c);
+  m.title = `${B.factsTitle} · ToHuus`;
+  m.desc = B.factsDesc;
+  m.url = `${SITE}${BLOG_DIR[c.lang]}/fakten.html`;
+  m.alt = { [c.lang]: m.url };
+  m.enHref = c.lang === 'en' ? 'fakten.html' : m.enHref;
+  m.deHref = c.lang === 'de' ? 'fakten.html' : m.deHref;
+  const count = posts.reduce((a, p) => a + p.facts.length, 0);
+  return `${pageTop(c, m, '../')}
+<main id="main" class="legal help">
+
+<section class="legal-head help-head" aria-labelledby="facts-h">
+  <div class="wrap">
+    <p class="label help-crumbs"><a href="./">${B.title}</a></p>
+    <h1 id="facts-h">${B.factsH1}</h1>
+    <p class="legal-note help-lede">${B.factsLede.replace('{n}', String(count))}</p>
+  </div>
+</section>
+
+<div class="wrap help-index">
+${posts.map((p) => `  <section class="help-group" aria-labelledby="f-${p.slug}">
+    <h2 id="f-${p.slug}"><a href="${p.slug}.html">${p.title}</a></h2>
+    <ul class="fact-cards">
+      ${p.facts.map((f, k) => factCard(c, p, f, k + 1, { link: true })).join('\n      ')}
+    </ul>
+  </section>`).join('\n')}
+</div>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
+
 function blogIndex(c) {
   const B = BLOG_COPY[c.lang];
   const m = blogMeta(c);
@@ -1110,6 +1172,7 @@ function blogIndex(c) {
 </section>
 
 <div class="wrap help-index">
+  ${posts.some((p) => p.facts?.length) ? `<p class="blog-facts-link"><a class="btn" href="fakten.html">${ico('chart')}${B.factsLink}</a></p>` : ''}
   <ul class="help-cards">
 ${posts.map((p) => `    <li><a class="help-card" href="${p.slug}.html"><b>${p.title}</b><span>${p.desc}</span><span><time datetime="${p.date}">${fmtPostDate(c.lang, p.date)}</time></span>${ico('arrow')}</a></li>`).join('\n')}
   </ul>
@@ -1130,6 +1193,7 @@ function blogPost(c, p) {
   const m = blogMeta(c, p);
   const secs = p.sections.map(([h, body]) => ({ id: anchorId(h), h, body }));
   const help = (p.help ?? []).map((sl) => helpBySlug(c.lang, sl)).filter(Boolean);
+  const toc = [...secs, ...(p.facts?.length ? [{ id: 'fakten', h: B.factsHere }] : []), ...(p.faq?.length ? [{ id: 'faq', h: B.faq }] : [])];
   const ld = [{ '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.desc, datePublished: p.date, dateModified: p.updated ?? p.date,
     inLanguage: c.lang, mainEntityOfPage: m.url, image: `${SITE}assets/img/og-${c.lang}.png`,
     author: { '@type': 'Organization', name: 'ToHuus', url: c.url }, publisher: { '@type': 'Organization', name: 'Heidrich Digital', url: 'https://heidrich-digital.de' } },
@@ -1155,7 +1219,7 @@ function blogPost(c, p) {
 <div class="wrap legal-grid">
   <nav class="legal-toc" aria-label="${p.title}">
     <ol>
-${secs.map((x, k) => `      <li><a href="#${x.id}"><span>${k + 1}</span>${x.h}</a></li>`).join('\n')}
+${toc.map((x, k) => `      <li><a href="#${x.id}"><span>${k + 1}</span>${x.h}</a></li>`).join('\n')}
     </ol>
     <p class="legal-links"><a href="./">${B.back}${ico('arrow')}</a>${m.otherHref.endsWith('.html') ? `<a href="${m.otherHref}" hreflang="${c.otherLang}">${B.other}${ico('arrow')}</a>` : ''}</p>
   </nav>
@@ -1164,6 +1228,13 @@ ${secs.map((x) => `    <section id="${x.id}" aria-labelledby="${x.id}-h">
       <h2 id="${x.id}-h">${x.h}</h2>
       ${x.body}
     </section>`).join('\n')}
+${p.facts?.length ? `    <section id="fakten" aria-labelledby="fakten-h">
+      <h2 id="fakten-h">${B.factsHere}</h2>
+      <p>${B.factsNote} <a href="fakten.html">${B.factsAll}</a></p>
+      <ul class="fact-cards">
+      ${p.facts.map((f, k) => factCard(c, p, f, k + 1)).join('\n      ')}
+      </ul>
+    </section>` : ''}
 ${p.faq?.length ? `    <section id="faq" aria-labelledby="faq-h">
       <h2 id="faq-h">${B.faq}</h2>
 ${p.faq.map(([q, a]) => `      <h3>${q}</h3>\n      <p>${a}</p>`).join('\n')}
@@ -1171,6 +1242,10 @@ ${p.faq.map(([q, a]) => `      <h3>${q}</h3>\n      <p>${a}</p>`).join('\n')}
 ${help.length ? `    <aside class="help-related" aria-labelledby="rel-h">
       <p class="legal-summary-h" id="rel-h">${B.help}</p>
       <ul>${help.map((r) => `<li><a href="../${HELP_DIR[c.lang]}/${r.slug}.html">${r.title}${ico('arrow')}</a></li>`).join('')}</ul>
+    </aside>` : ''}
+${p.sources?.length ? `    <aside class="blog-sources" aria-labelledby="src-h">
+      <p class="legal-summary-h" id="src-h">${B.sources}</p>
+      <ol>${p.sources.map(([t, u]) => `<li><a href="${u}">${t}</a></li>`).join('')}</ol>
     </aside>` : ''}
     <p class="help-missing">${B.tryText} <a href="${c.lang === 'de' ? '../de/' : '../'}">${B.tryIt}</a></p>
   </div>
@@ -1253,6 +1328,7 @@ for (const c of Object.values(COPY)) {
   if (!posts.length) continue;
   blogPages.push([path.join(BLOG_DIR[c.lang], 'index.html'), blogIndex(c), c]);
   for (const p of posts) blogPages.push([path.join(BLOG_DIR[c.lang], `${p.slug}.html`), blogPost(c, p), c]);
+  if (posts.some((p) => p.facts?.length)) blogPages.push([path.join(BLOG_DIR[c.lang], 'fakten.html'), blogFacts(c), c]);
 }
 for (const [file, html] of blogPages) {
   checkText(html, file, 0);
@@ -1272,6 +1348,7 @@ const urls = [
   ...helpPages.map(([f]) => [`${SITE}${f.replace(/index\.html$/, '')}`, today]),
   ...Object.values(COPY).flatMap((c) => (publishedPosts(c.lang).length ? [[`${SITE}${BLOG_DIR[c.lang]}/`, publishedPosts(c.lang)[0].updated ?? publishedPosts(c.lang)[0].date]] : [])),
   ...Object.values(COPY).flatMap((c) => publishedPosts(c.lang).map((p) => [`${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html`, p.updated ?? p.date])),
+  ...Object.values(COPY).flatMap((c) => (publishedPosts(c.lang).some((p) => p.facts?.length) ? [[`${SITE}${BLOG_DIR[c.lang]}/fakten.html`, publishedPosts(c.lang)[0].updated ?? publishedPosts(c.lang)[0].date]] : [])),
 ];
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -1304,7 +1381,10 @@ ${llmsList('en').map(([t, u, d]) => `- [${t}](${u})${d ? `: ${d}` : ''}`).join('
 
 ## Hilfe (Deutsch)
 ${llmsList('de').map(([t, u, d]) => `- [${t}](${u})${d ? `: ${d}` : ''}`).join('\n')}
-${Object.values(COPY).map((c) => (publishedPosts(c.lang).length ? `\n## ${BLOG_COPY[c.lang].title}\n${publishedPosts(c.lang).map((p) => `- [${p.title}](${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html): ${p.desc}`).join('\n')}\n` : '')).join('')}`);
+${Object.values(COPY).map((c) => (publishedPosts(c.lang).length ? `\n## ${BLOG_COPY[c.lang].title}\n${publishedPosts(c.lang).map((p) => `- [${p.title}](${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html): ${p.desc}`).join('\n')}\n` : '')).join('')}${Object.values(COPY).map((c) => {
+  const fs2 = publishedPosts(c.lang).flatMap((p) => (p.facts ?? []).map((f) => `- ${f.value}: ${f.text} (${f.source}, ${f.url})`));
+  return fs2.length ? `\n## ${BLOG_COPY[c.lang].factsTitle}\n${fs2.join('\n')}\n` : '';
+}).join('')}`);
 console.log(`built ${blogPages.length} blog pages, sitemap.xml (${urls.length} URLs), robots.txt and llms.txt`);
 console.log(`built ${helpPages.length} help pages (${Object.values(HELP_DIR).join('/, ')}/)`);
 console.log(`built site/index.html, site/de/index.html and the legal pages (${LEGAL_KINDS.map((k) => `${LEGAL.en[k].file}, de/${LEGAL.de[k].file}`).join(', ')})`);
