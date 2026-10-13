@@ -46,6 +46,7 @@ struct PaperListSheet: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(L("Paper list"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

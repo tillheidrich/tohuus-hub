@@ -256,6 +256,7 @@ struct RecipeEditSheet: View {
                     Button(role: .destructive) { confirmDelete = true } label: { Label(LC("Delete recipe"), systemImage: "trash") }
                 }
             }
+            .themedList()
             .navigationTitle(LC("Edit recipe"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -449,6 +450,7 @@ struct VariantSheet: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(LCF("Our way: %@", recipe.title))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

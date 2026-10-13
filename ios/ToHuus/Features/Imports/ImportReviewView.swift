@@ -385,6 +385,7 @@ struct ProductPickSheet: View {
                     }
                 }
             }
+            .themedList()
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: L("Search products"))
             .navigationTitle(L("Which product is it?"))
             .navigationBarTitleDisplayMode(.inline)
@@ -473,6 +474,7 @@ struct LineFixSheet: View {
                 }
                 if invalid { Section { Text(L("Please enter a valid number.")).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(L("Correct this line"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -88,6 +88,7 @@ struct ProductEditSheet: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(L("Edit product"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -212,6 +213,7 @@ struct AddBatchSheet: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(LF("Put away %@", product.name))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -255,6 +257,7 @@ struct BatchDateSheet: View {
                 }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
+            .themedList()
             .navigationTitle(L("Best before"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -296,6 +299,7 @@ struct ProductBuyAtSheet: View {
                 }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
+            .themedList()
             .navigationTitle(L("Where to buy?"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

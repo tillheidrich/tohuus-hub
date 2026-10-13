@@ -65,6 +65,7 @@ struct PasteListSheet: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(L("Paste a list"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -165,6 +166,7 @@ struct ManageListSheet: View {
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
+            .themedList()
             .navigationTitle(list.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -266,6 +268,7 @@ struct ShopSettingsSheet: View {
                 }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
+            .themedList()
             .navigationTitle(L("Shops & aisles"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
@@ -319,6 +322,7 @@ struct StoreOrderView: View {
             }
             if let error { Text(error).foregroundStyle(Theme.empty) }
         }
+        .themedList()
         .environment(\.editMode, .constant(.active))
         .navigationTitle(shop.name)
         .navigationBarTitleDisplayMode(.inline)

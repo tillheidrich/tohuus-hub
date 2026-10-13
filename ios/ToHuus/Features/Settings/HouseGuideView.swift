@@ -122,6 +122,7 @@ struct HouseGuideView: View {
                 HelpLink(slug: "hausinfo-codes", title: L("Sharing codes safely"))
             }
         }
+        .themedList()
         .navigationTitle(L("House info"))
         .toolbar {
             if canEdit {

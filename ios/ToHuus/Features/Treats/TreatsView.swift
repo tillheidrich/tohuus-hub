@@ -56,6 +56,8 @@ struct TreatsView: View {
             .padding(.bottom, count > 0 ? 90 : 24)
         }
         .canvasBackground()
+        // an answered request changes in place ("I'll bring it" → on its way), the cart bar slides in
+        .motion(value: (requests + mine).map { "\($0.id):\($0.status)" } + ["\(count)"])
         .navigationTitle(L("For me"))
         .navigationBarTitleDisplayMode(.inline)
         .overlay(alignment: .bottom) { if count > 0 { cartBar } }
@@ -405,6 +407,8 @@ struct TreatsView: View {
         declining = nil
         do {
             try await api.answerTreat(o.id, status: status, reason: reason)
+            // "I'll bring it" / "Brought it" is a promise kept – a success tap; declining stays quiet
+            if status == "accepted" || status == "done" { Haptics.success() } else { Haptics.tick() }
             await load()
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
@@ -452,6 +456,7 @@ struct TreatOptionsSheet: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(item.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -546,6 +551,7 @@ struct TreatCheckoutSheet: View {
                     .disabled(busy || (cart.isEmpty && note.trimmingCharacters(in: .whitespaces).isEmpty))
                 }
             }
+            .themedList()
             .navigationTitle(L("Your wish"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } } }

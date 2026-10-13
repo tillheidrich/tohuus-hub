@@ -146,6 +146,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .themedList()
             .navigationTitle(L("More"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

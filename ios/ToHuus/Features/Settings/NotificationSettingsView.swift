@@ -71,6 +71,7 @@ struct NotificationSettingsView: View {
             }
             if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
         }
+        .themedList()
         .navigationTitle(L("Notifications"))
         .task {
             await push.refreshAuthorization(registerIfAllowed: true)

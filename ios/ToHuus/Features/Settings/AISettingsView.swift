@@ -79,6 +79,7 @@ struct AISettingsView: View {
             }
             if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
         }
+        .themedList()
         .navigationTitle(L("With or without AI"))
         .task {
             await app.loadAIState()

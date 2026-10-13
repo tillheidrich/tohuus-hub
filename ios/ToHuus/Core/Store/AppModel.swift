@@ -70,12 +70,15 @@ final class AppModel {
     /// "Was nutzen wir?" – switched-off areas disappear (GET /api/me → modules). The list always stays.
     private(set) var modules: [String: Bool] = [:]
     func moduleOn(_ key: String) -> Bool { modules[key] ?? true }
+    /// a household of one: "Bring mir was" (asking someone at home) is hidden, like on the web
+    private(set) var singleHousehold = false
 
     func loadAIState() async {
         guard let api else { return }
         if let me = try? await api.me() {
             isChild = me.isChild
             if let m = me.modules { modules = m }
+            singleHousehold = me.isSingleHousehold
             if let p = me.listPrefs { ListPrefsSync.adopt(p) }
         }
         if let s: AIStatus = try? await api.get("api/assistant/status") {

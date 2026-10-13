@@ -59,6 +59,7 @@ struct HelpListView: View {
                 Text(L("The help pages open on tohuus.heidrich-digital.de."))
             }
         }
+        .themedList()
         .navigationTitle(L("Help"))
     }
 }
@@ -185,6 +186,7 @@ struct FactsView: View {
             }
             Section { HelpLink(slug: "gut-zu-wissen", title: L("About this section")) }
         }
+        .themedList()
         .navigationTitle(L("Good to know"))
         .task { await load() }
         .refreshable { await load() }

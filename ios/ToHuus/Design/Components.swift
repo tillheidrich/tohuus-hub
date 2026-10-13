@@ -230,3 +230,10 @@ extension View {
         })
     }
 }
+
+extension View {
+    /// Lists and forms on the brand canvas instead of the system's grey (Dutch Detail: one background everywhere).
+    func themedList() -> some View {
+        scrollContentBackground(.hidden).background(Theme.canvas.ignoresSafeArea())
+    }
+}

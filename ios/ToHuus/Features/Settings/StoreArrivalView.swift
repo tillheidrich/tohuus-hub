@@ -97,6 +97,7 @@ struct StoreArrivalView: View {
                 }
             }
         }
+        .themedList()
         .navigationTitle(L("Hint in the shop"))
     }
 }
