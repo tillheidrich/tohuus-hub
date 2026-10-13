@@ -141,6 +141,36 @@ export function focusables(root: HTMLElement): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => !el.closest('[inert], [hidden]') && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
 }
 
+/**
+ * The last few focused elements. A field with `autoFocus` inside a sheet takes focus while React commits – before the
+ * dialog's effect runs – so `document.activeElement` is no longer the control that opened it. The dialog looks back
+ * here for the newest element outside itself.
+ */
+const focusTrail: { el: HTMLElement; at: number }[] = [];
+if (typeof document !== 'undefined') {
+  document.addEventListener(
+    'focusin',
+    (e) => {
+      if (!(e.target instanceof HTMLElement)) return;
+      focusTrail.push({ el: e.target, at: Date.now() });
+      if (focusTrail.length > 8) focusTrail.shift();
+    },
+    true,
+  );
+}
+function openerOutside(el: HTMLElement): HTMLElement | null {
+  const a = document.activeElement;
+  if (a instanceof HTMLElement && a !== document.body && !el.contains(a)) return a;
+  // only a moment ago – a sheet opened by an event (no click) must not send focus to something long gone by
+  const since = Date.now() - 1500;
+  for (let i = focusTrail.length - 1; i >= 0; i--) {
+    const { el: f, at } = focusTrail[i];
+    if (at < since) break;
+    if (f.isConnected && f !== document.body && !el.contains(f)) return f;
+  }
+  return null;
+}
+
 /** The dialog that is on top right now (sheets can open over sheets – only the top one reacts to keys). */
 const isTopDialog = (el: HTMLElement) => {
   const all = document.querySelectorAll('[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]');
@@ -159,7 +189,7 @@ export function useDialog(ref: RefObject<HTMLElement | null>, open: boolean, onC
   useEffect(() => {
     const el = ref.current;
     if (!open || !el) return;
-    const opener = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+    const opener = openerOutside(el);
     if (!el.hasAttribute('aria-label') && !el.hasAttribute('aria-labelledby')) {
       const h = el.querySelector<HTMLElement>('h1, h2, h3, legend');
       if (h) {

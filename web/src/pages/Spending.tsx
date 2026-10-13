@@ -13,7 +13,7 @@ import {
   TrendUp,
   Trash,
 } from '@phosphor-icons/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { del, fmtDate, invalidate, patch, post, put, useApi } from '../api';
 import { Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
@@ -599,13 +599,52 @@ interface Col {
   on?: boolean;
 }
 
-/** Column chart as buttons: each bar is its own hit target, keyboard focusable; readout above the plot. */
+/**
+ * Column chart as one control (WCAG 2.5.8): the whole plot is the hit target – a tap or click picks the column under
+ * the pointer, so 31 thin day columns never become 9 px buttons. Keyboard: the plot is a listbox, ←/→/Home/End move,
+ * Enter or Space picks. The readout above says what is under the pointer or the keyboard.
+ */
 function Columns({ data, onPick, hint }: { data: Col[]; onPick: (key: string) => void; hint: string }) {
   const [hover, setHover] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<number>(-1);
+  const cols = useRef<HTMLDivElement>(null);
+  const idBase = useId();
   const max = Math.max(...data.map((d) => d.value + (d.extra ?? 0)), 0.01);
   const shown = data.find((d) => d.key === hover) ?? data.find((d) => d.on) ?? null;
   const anyExtra = data.some((d) => (d.extra ?? 0) > 0);
   const dense = data.length > 16;
+  const label = (d: Col) => `${d.title}: ${eur(d.value)}${d.extra ? `, ${t('{amount} not counted', { amount: eur(d.extra) })}` : ''}`;
+  /** column under the pointer, from its x position over the whole plot */
+  const at = (clientX: number) => {
+    const kids = cols.current ? [...cols.current.children] : [];
+    let best = -1;
+    let dist = Infinity;
+    kids.forEach((k, i) => {
+      const r = k.getBoundingClientRect();
+      const dx = clientX < r.left ? r.left - clientX : clientX > r.right ? clientX - r.right : 0;
+      if (dx < dist) {
+        dist = dx;
+        best = i;
+      }
+    });
+    return best;
+  };
+  const moveTo = (i: number) => {
+    const n = Math.max(0, Math.min(data.length - 1, i));
+    setCursor(n);
+    setHover(data[n]?.key ?? null);
+  };
+  const onKey = (e: React.KeyboardEvent) => {
+    const from = cursor >= 0 ? cursor : Math.max(0, data.findIndex((d) => d.on));
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') moveTo(from + 1);
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') moveTo(from - 1);
+    else if (e.key === 'Home') moveTo(0);
+    else if (e.key === 'End') moveTo(data.length - 1);
+    else if ((e.key === 'Enter' || e.key === ' ') && data[from]) onPick(data[from].key);
+    else return;
+    e.preventDefault();
+  };
+  const active = cursor >= 0 ? cursor : data.findIndex((d) => d.on);
   return (
     <div className="card sp2-chart">
       <div className="sp2-readout" aria-live="polite">
@@ -623,28 +662,48 @@ function Columns({ data, onPick, hint }: { data: Col[]; onPick: (key: string) =>
           <span>{compact(max)}</span>
           <span>{compact(max / 2)}</span>
         </div>
-        <div className={`sp2-cols ${dense ? 'dense' : ''}`} role="list">
-          {data.map((d) => {
+        <div
+          ref={cols}
+          className={`sp2-cols ${dense ? 'dense' : ''}`}
+          role="listbox"
+          tabIndex={0}
+          aria-label={hint}
+          aria-activedescendant={active >= 0 ? `${idBase}-${active}` : undefined}
+          onKeyDown={onKey}
+          onPointerMove={(e) => {
+            const i = at(e.clientX);
+            if (i >= 0) setHover(data[i].key);
+          }}
+          onPointerLeave={() => setHover(null)}
+          onBlur={() => {
+            setHover(null);
+            setCursor(-1);
+          }}
+          onClick={(e) => {
+            const i = at(e.clientX);
+            if (i < 0) return;
+            setCursor(i);
+            onPick(data[i].key);
+          }}
+        >
+          {data.map((d, i) => {
             const h = (d.value / max) * 100;
             const hx = ((d.extra ?? 0) / max) * 100;
             return (
-              <button
+              <div
                 key={d.key}
-                role="listitem"
-                className={`sp2-col ${d.on ? 'on' : ''} ${hover === d.key ? 'hover' : ''}`}
-                onClick={() => onPick(d.key)}
-                onPointerEnter={() => setHover(d.key)}
-                onPointerLeave={() => setHover(null)}
-                onFocus={() => setHover(d.key)}
-                onBlur={() => setHover(null)}
-                aria-label={`${d.title}: ${eur(d.value)}${d.extra ? `, ${t('{amount} not counted', { amount: eur(d.extra) })}` : ''}`}
+                id={`${idBase}-${i}`}
+                role="option"
+                aria-selected={Boolean(d.on)}
+                aria-label={label(d)}
+                className={`sp2-col ${d.on ? 'on' : ''} ${hover === d.key ? 'hover' : ''} ${i === cursor ? 'cursor' : ''}`}
               >
                 <span className="bar">
                   {hx > 0 && <i className="x" style={{ height: `${Math.max(2, hx)}%` }} />}
                   {h > 0 && <i style={{ height: `${Math.max(2, h)}%` }} />}
                 </span>
-                <span className="lbl">{d.label}</span>
-              </button>
+                <span className="lbl" aria-hidden>{d.label}</span>
+              </div>
             );
           })}
         </div>

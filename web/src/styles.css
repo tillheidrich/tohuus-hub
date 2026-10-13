@@ -6691,7 +6691,16 @@ html.board-mode body {
   font: inherit;
   border-radius: 6px;
 }
-.sp2-col:focus-visible {
+/* the plot is one focusable listbox; the column under the keyboard cursor gets the ring */
+.sp2-cols {
+  cursor: pointer;
+  border-radius: 8px;
+}
+.sp2-cols:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.sp2-cols:focus-visible .sp2-col.cursor {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
