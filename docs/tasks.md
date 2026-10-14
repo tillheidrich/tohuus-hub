@@ -66,3 +66,13 @@ For calendars without CalDAV (Google Calendar, Outlook): `GET /kalender-abo/<sec
 - Web: `/aufgaben` (`web/src/pages/Care.tsx`, filter Alle / Haushalt / Pflege & Fristen / Meine), Heute card `TasksToday.tsx`, `Blick.tsx`. `/pflege` redirects to `/aufgaben?f=care`.
 - iOS: `CareView.swift`, `TasksTodayCard.swift`, `BlickSection.swift`, `CalDavView.swift` (password + subscription), `AddToCalendar.swift` (Apple's event editor, prefilled; iOS 17 needs no calendar permission for it).
 - Web: "In den Kalender" downloads `/api/care/:id/ics`; `CalendarFeedCard` (shop/bridges.tsx) on Aufgaben and Settings › My account.
+
+## "Mach ich" (14 Oct 2026)
+
+A promise with a day: *Heute*, *Morgen*, *Am Wochenende* (Saturday; today when it's already the weekend) or a date.
+The household sees "Sam macht's morgen"; the person keeps the task in mind (assignee, if nobody did yet). Once the day
+is over and it isn't done, the label says kindly "Sam hatte es für Mo., 13. Okt. vor" – no red, no reminder storm.
+Done clears the promise; only the person who promised can take it back.
+`POST /api/care/:id/promise` `{ when: 'today' | 'tomorrow' | 'weekend' | 'YYYY-MM-DD' | null }`; tasks carry
+`promise: { user_id, name, color, day, passed } | null`.
+

@@ -542,3 +542,47 @@ describe('Denkarbeit-Check (mental load cards)', () => {
     expect(task.as_needed).toBe(true);
   });
 });
+
+describe('"Mach ich" – a promise with a day', () => {
+  it('heute / morgen / Wochenende; only the promiser takes it back; done clears it', async () => {
+    const task = (await mira.req('POST', '/api/care', { name: 'Fenster putzen (Zusage)', category: 'house', interval_n: 1, interval_unit: 'month' })).json;
+    const care = await import('../server/lib/care');
+    const { localDay } = await import('../server/lib/catalog');
+    expect(care.promiseDay('today')).toBe(localDay(0));
+    expect(care.promiseDay('weekend', '2026-10-14')).toBe('2026-10-17');
+    expect(care.promiseDay('weekend', '2026-10-18')).toBe('2026-10-18');
+    expect(care.promiseDay('2020-01-01')).toBeNull();
+    const r = await sam.req('POST', `/api/care/${task.id}/promise`, { when: 'tomorrow' });
+    expect(r.status).toBe(200);
+    expect(r.json.promise).toMatchObject({ name: 'Sam', day: care.promiseDay('tomorrow'), passed: false });
+    expect(r.json.assignee?.name).toBe('Sam');
+    // Mira sees it, can't take it back
+    expect((await mira.req('GET', `/api/care/${task.id}`)).json.promise.name).toBe('Sam');
+    expect((await mira.req('POST', `/api/care/${task.id}/promise`, { when: null })).status).toBe(400);
+    expect((await sam.req('POST', `/api/care/${task.id}/promise`, { when: '2020-01-01' })).status).toBe(400);
+    await sam.req('POST', `/api/care/${task.id}/done`, {});
+    expect((await mira.req('GET', `/api/care/${task.id}`)).json.promise).toBeNull();
+  });
+});
+
+describe('Sterne (points) – off twice by default', () => {
+  it('needs the server switch and the household switch; no ranking, gentle mode hides it', async () => {
+    delete process.env.POINTS;
+    await mira.req('PUT', '/api/focus/prefs', { gentle: false });
+    expect((await mira.req('GET', '/api/points')).json).toMatchObject({ allowed: false, on: false, week: null });
+    expect((await mira.req('PUT', '/api/points/settings', { on: true, areas: ['tasks'] })).status).toBe(403);
+    process.env.POINTS = 'on';
+    expect((await sam.req('PUT', '/api/points/settings', { on: true, areas: ['tasks'] })).status).toBe(403);
+    const on = await mira.req('PUT', '/api/points/settings', { on: true, areas: ['tasks', 'shop'] });
+    expect(on.status).toBe(200);
+    expect(on.json.on).toBe(true);
+    expect(on.json.week.total).toBeGreaterThanOrEqual(0);
+    expect(typeof on.json.week.mine).toBe('number');
+    // gentle mode: no stars for this person
+    await sam.req('PUT', '/api/focus/prefs', { gentle: true });
+    expect((await sam.req('GET', '/api/points')).json.week).toBeNull();
+    await sam.req('PUT', '/api/focus/prefs', { gentle: false });
+    await mira.req('PUT', '/api/points/settings', { on: false, areas: ['tasks'] });
+    delete process.env.POINTS;
+  });
+});

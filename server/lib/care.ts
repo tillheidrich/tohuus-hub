@@ -84,6 +84,9 @@ migrate(
    ALTER TABLE care_tasks ADD COLUMN place TEXT;`,
 );
 
+// "Mach ich" (14 Oct 2026): a promise with a day – "Sam macht's morgen". Cleared when the task is done.
+migrate('tasks-promise', `ALTER TABLE care_tasks ADD COLUMN promised_by INTEGER; ALTER TABLE care_tasks ADD COLUMN promised_for TEXT;`);
+
 export type TaskCategory = 'house' | 'care';
 export type TaskVisibility = 'household' | 'private';
 export interface CheckItem {
@@ -312,9 +315,48 @@ export function careView(row: CareRow, today = localDay(0)) {
     product: p ? { id: p.id, name: p.name, brand: p.brand, image_path: p.image_path, unit: p.unit, track_mode: p.track_mode, stock } : null,
     location: loc ?? null,
     assignee: who ?? null,
+    promise: promiseOf(row, today),
   };
 }
 export type CareView = ReturnType<typeof careView>;
+
+/** "Mach ich": who promised it for which day; `passed` = the day is over and it isn't done (asked kindly again) */
+function promiseOf(row: CareRow, today: string) {
+  const r = row as CareRow & { promised_by?: number | null; promised_for?: string | null };
+  if (!r.promised_by || !r.promised_for) return null;
+  const u = db.prepare('SELECT id, name, color FROM users WHERE id = ?').get(r.promised_by) as { id: number; name: string; color: string } | undefined;
+  if (!u) return null;
+  return { user_id: u.id, name: u.name, color: u.color, day: r.promised_for, passed: r.promised_for < today };
+}
+
+/** The day for "heute" / "morgen" / "am Wochenende" (Saturday; today when it's already the weekend) or a date. */
+export function promiseDay(when: string, today = localDay(0)): string | null {
+  if (when === 'today') return today;
+  if (when === 'tomorrow') return addInterval(today, 1, 'day');
+  if (when === 'weekend') {
+    const dow = new Date(today + 'T12:00:00Z').getUTCDay();
+    return dow === 6 || dow === 0 ? today : addInterval(today, 6 - dow, 'day');
+  }
+  return isDay(when) && when >= today ? when : null;
+}
+
+/** "Mach ich – morgen": I take it on for that day (and keep it in mind if nobody does yet); null takes it back. */
+export function promiseCareTask(id: number, userId: number, when: string | null) {
+  const row = db.prepare('SELECT * FROM care_tasks WHERE id = ?').get(id) as (CareRow & { promised_by?: number | null }) | undefined;
+  if (!row) throw userError(t('Task not found'));
+  if (when == null) {
+    if (row.promised_by && row.promised_by !== userId) throw userError(t('Only the person who promised it can take it back'));
+    db.prepare(`UPDATE care_tasks SET promised_by = NULL, promised_for = NULL, updated_at = datetime('now') WHERE id = ?`).run(id);
+  } else {
+    const day = promiseDay(when);
+    if (!day) throw userError(t('Please pick today or a later day'));
+    db.prepare(
+      `UPDATE care_tasks SET promised_by = ?, promised_for = ?, assignee_user_id = COALESCE(assignee_user_id, ?), updated_at = datetime('now') WHERE id = ?`,
+    ).run(userId, day, userId, id);
+  }
+  emit('care');
+  return careView(db.prepare('SELECT * FROM care_tasks WHERE id = ?').get(id) as CareRow);
+}
 
 const STATE_RANK: Record<DueState, number> = { overdue: 0, today: 1, soon: 2, ok: 3, none: 4 };
 
@@ -573,7 +615,7 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
     const oneOff = !nextDue && !row.interval_n && !row.as_needed;
     // taking turns: the next person has it next time
     const doer = row.rotation ? nextInTurn(parseKeys(row.rotation), row.doer_key) : row.doer_key;
-    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, checklist = ?, archived = ?, doer_key = ?, updated_at = datetime('now') WHERE id = ?`).run(
+    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, checklist = ?, archived = ?, doer_key = ?, promised_by = NULL, promised_for = NULL, updated_at = datetime('now') WHERE id = ?`).run(
       doneOn, nextDue, fresh, oneOff ? 1 : row.archived, doer, id,
     );
   })();

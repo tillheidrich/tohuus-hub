@@ -205,6 +205,57 @@
         }
       }
     },
+    "%@ does it on %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ does it on %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ macht’s am %@"
+          }
+        }
+      }
+    },
+    "%@ does it today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ does it today"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ macht’s heute"
+          }
+        }
+      }
+    },
+    "%@ does it tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ does it tomorrow"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ macht’s morgen"
+          }
+        }
+      }
+    },
     "%@ each": {
       "extractionState": "manual",
       "localizations": {
@@ -337,6 +388,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ gibt %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%@ had planned it for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ had planned it for %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hatte es für %@ vor"
           }
         }
       }
@@ -1697,6 +1765,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Dateien"
+          }
+        }
+      }
+    },
+    "%d from you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d from you"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d von dir"
           }
         }
       }
@@ -3091,6 +3176,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d-mal auf dieser Liste"
+          }
+        }
+      }
+    },
+    "%d together": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d together"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d zusammen"
           }
         }
       }
@@ -9249,6 +9351,23 @@
         }
       }
     },
+    "At the weekend": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the weekend"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am Wochenende"
+          }
+        }
+      }
+    },
     "Authentik, Keycloak, Authelia, Forgejo/Gitea, Nextcloud, Google, Microsoft Entra … Members then sign in with the account they already have.": {
       "extractionState": "manual",
       "localizations": {
@@ -14770,6 +14889,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zählen in"
+          }
+        }
+      }
+    },
+    "Count stars": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count stars"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sterne zählen"
           }
         }
       }
@@ -26143,6 +26279,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ich bring’s"
+          }
+        }
+      }
+    },
+    "I’ll do it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I’ll do it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mach ich"
           }
         }
       }
@@ -38166,6 +38319,23 @@
         }
       }
     },
+    "Optional. A star for each thing someone does for the household – a task, the list, planning a meal, a receipt. You see your week together and your own stars; no rankings, no streaks. Gentle mode hides them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional. A star for each thing someone does for the household – a task, the list, planning a meal, a receipt. You see your week together and your own stars; no rankings, no streaks. Gentle mode hides them."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freiwillig. Ein Stern für alles, was jemand für den Haushalt tut – eine Aufgabe, die Liste, ein geplantes Essen, ein Bon. Ihr seht eure Woche zusammen und deine eigenen Sterne; keine Ranglisten, keine Serien. Im sanften Modus sind sie ausgeblendet."
+          }
+        }
+      }
+    },
     "Optional. With a date, ToHuus reminds you in time to use it.": {
       "extractionState": "manual",
       "localizations": {
@@ -40580,6 +40750,23 @@
         }
       }
     },
+    "Pick a day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a day"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag wählen"
+          }
+        }
+      }
+    },
     "Pick a few from the suggestions below – one tap each. You can adjust the interval later.": {
       "extractionState": "manual",
       "localizations": {
@@ -42378,6 +42565,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Produkte, Bestand, Verlauf, Barcodes"
+          }
+        }
+      }
+    },
+    "Promise for this day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promise for this day"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für diesen Tag zusagen"
           }
         }
       }
@@ -52021,6 +52225,40 @@
         }
       }
     },
+    "Stars": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stars"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sterne"
+          }
+        }
+      }
+    },
+    "Stars this week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stars this week"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sterne diese Woche"
+          }
+        }
+      }
+    },
     "Start a party": {
       "extractionState": "manual",
       "localizations": {
@@ -53751,6 +53989,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Altglas und Papier wegbringen"
+          }
+        }
+      }
+    },
+    "Take it back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take it back"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücknehmen"
           }
         }
       }

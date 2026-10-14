@@ -14,6 +14,7 @@ interface SettingRow {
   updatedAt: string | null;
 }
 interface SettingsView {
+  pointsOn?: boolean;
   settings: Record<string, SettingRow>;
   ai: { configured: boolean; baseUrl: string | null; openrouter: boolean; apiKey: string | null; models: Record<Kind, string | null> | null; fallbacks: Record<Kind, string[]>; cloudOn: boolean };
   signupMode: 'open' | 'invite' | 'closed';
@@ -71,6 +72,9 @@ export function OperatorSettings() {
   const changed = Object.keys(form).filter(dirty);
   return (
     <div className="stack op-gap">
+      <Section title={t('Stars for households')} aside={<Toggle on={Boolean(d.pointsOn)} label={t('Stars for households')} onChange={(on) => save({ points: on ? 'on' : 'off' }, on ? t('Households may switch on stars') : t('Stars are off for everyone'))} />}>
+        <p className="small muted op-p">{t('Off by default. When on, an admin of each household decides whether to count stars and for which areas – no rankings, no streaks.')}</p>
+      </Section>
       <Section title={t('AI for the whole cloud')} aside={<Toggle on={d.ai.cloudOn} label={t('AI for the whole cloud')} onChange={(on) => save({ 'ai.cloud': on ? 'on' : 'off' }, on ? t('AI is on again') : t('AI paused for everyone'))} />}>
         <p className="small muted op-p">
           {d.ai.cloudOn

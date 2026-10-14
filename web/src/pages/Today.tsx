@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, MagnifyingGlass, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
 import { DemoNudge } from './Samples';
 import { TasksTodayCard } from './TasksToday';
+import { StarsCard } from './Stars';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
@@ -119,7 +120,12 @@ export function Today({ me }: { me: Me }) {
       <TodayCards
         cards={[
           ['rhythm', <DueCard items={d.rhythm} legacy={d.legacy} />],
-          ['tasks', guestAllows(gl, '/aufgaben') ? <TasksTodayCard today={localDay()} /> : null],
+          ['tasks', guestAllows(gl, '/aufgaben') ? (
+            <>
+              <TasksTodayCard today={localDay()} />
+              <StarsCard guest={Boolean(gl)} />
+            </>
+          ) : null],
           ['list', guestAllows(gl, '/einkauf') ? <ListCard d={d} /> : null],
           ['still', d.stillHave.length > 0 ? <StillHaveCard items={d.stillHave} /> : null],
           ['cook', guestAllows(gl, '/kochen') && d.cookToday ? <CookCard c={d.cookToday} /> : null],

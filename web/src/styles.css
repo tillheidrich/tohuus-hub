@@ -10846,3 +10846,8 @@ html.gentle .badge.empty {
   vertical-align: -1px;
   margin-left: 4px;
 }
+
+/* "Mach ich" (pages/Care.tsx PromiseBox) */
+.care-promise .chip {
+  min-height: 40px;
+}

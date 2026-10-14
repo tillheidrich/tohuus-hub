@@ -70,6 +70,8 @@ export interface CareTask {
   doer: { key: string; name: string; color: string } | null;
   /** taking turns: person keys in order – "done" passes it to the next one */
   rotation?: string[];
+  /** "Mach ich": who promised it for which day (server: care.ts promiseCareTask) */
+  promise?: { user_id: number; name: string; color: string; day: string; passed: boolean } | null;
   /** Termin: with a time the task is a calendar entry (HH:MM, minutes, where) */
   due_time?: string | null;
   duration_min?: number | null;
@@ -148,6 +150,17 @@ export function dueLabel(x: Pick<CareTask, 'state' | 'days' | 'next_due'> & { as
 
 const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240];
 
+/** "Sam macht’s morgen" – and kindly, once the day is over: "Sam hatte es für Mo., 13. Okt. vor" */
+export function promiseLabel(p: NonNullable<CareTask['promise']>) {
+  const today = new Date().toLocaleDateString('sv-SE');
+  const tomorrow = new Date(Date.now() + 864e5).toLocaleDateString('sv-SE');
+  const date = fmtDate(p.day, { weekday: 'short', day: 'numeric', month: 'short' });
+  if (p.passed) return t('{name} had planned it for {date}', { name: p.name, date });
+  if (p.day === today) return t('{name} does it today', { name: p.name });
+  if (p.day === tomorrow) return t('{name} does it tomorrow', { name: p.name });
+  return t('{name} does it on {date}', { name: p.name, date });
+}
+
 export type TaskFilter = 'all' | 'house' | 'care' | 'mine';
 /** "Für mich": my private tasks and the ones I do or keep in mind */
 export function taskMatches(x: CareTask, f: TaskFilter, me?: number | null) {
@@ -207,6 +220,7 @@ export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareT
   const I = careIcon(task.template, task.category);
   const ticked = task.checklist?.filter((x) => x.done).length ?? 0;
   const sub = [
+    task.promise ? promiseLabel(task.promise) : null,
     compact || task.as_needed ? null : intervalLabel(task.interval_n, task.interval_unit),
     task.checklist?.length ? t('{done} of {total}', { done: ticked, total: task.checklist.length }) : null,
     task.product ? t('{name}: {n} in stock', { name: task.product.name, n: task.product.stock ?? 0 }) : null,
@@ -450,6 +464,49 @@ export function Care() {
   );
 }
 
+/** "Mach ich – heute / morgen / am Wochenende / am …" (server: POST /care/:id/promise) */
+function PromiseBox({ task, me }: { task: CareTask; me: number }) {
+  const toast = useToast();
+  const [pickDate, setPickDate] = useState(false);
+  const mine = task.promise?.user_id === me;
+  const send = async (when: string | null) => {
+    try {
+      await post(`/care/${task.id}/promise`, { when });
+      invalidate('care');
+      setPickDate(false);
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  return (
+    <div className="care-promise">
+      <b>{t('I’ll do it')}</b>
+      {task.promise && <div className="small muted">{promiseLabel(task.promise)}</div>}
+      <div className="chips" role="group" aria-label={t('I’ll do it')} style={{ marginTop: 6 }}>
+        <button className="chip" onClick={() => send('today')}>{t('Today')}</button>
+        <button className="chip" onClick={() => send('tomorrow')}>{t('Tomorrow')}</button>
+        <button className="chip" onClick={() => send('weekend')}>{t('At the weekend')}</button>
+        <button className="chip" onClick={() => setPickDate((v) => !v)} aria-expanded={pickDate}>{t('Pick a day')}</button>
+        {mine && (
+          <button className="chip" onClick={() => send(null)}>
+            {t('Take it back')}
+          </button>
+        )}
+      </div>
+      {pickDate && (
+        <input
+          type="date"
+          className="input"
+          style={{ marginTop: 8, maxWidth: 220 }}
+          min={new Date().toLocaleDateString('sv-SE')}
+          onChange={(e) => e.target.value && send(e.target.value)}
+          aria-label={t('Pick a day')}
+        />
+      )}
+    </div>
+  );
+}
+
 function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
   task: CareTask | null;
   me?: Me;
@@ -542,6 +599,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
             </div>
           </div>
         )}
+        {me?.actor.userId && !me.actor.houseGuest && <PromiseBox task={task} me={me.actor.userId} />}
         {home.ui.claims && task.visibility !== 'private' && <div className="row between care-claim">
           <div>
             <b>{t('I keep it in mind')}</b>

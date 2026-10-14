@@ -10,6 +10,7 @@ import { DataReset, TourButton } from './Tour';
 import { MyAccount, SignInAdmin } from './AuthSettings';
 import { HaTodoCard, PushCard } from '../shop/ShopSettings';
 import { ExtrasSettingsCard } from '../shop/extras';
+import { StarsSettingsCard } from './Stars';
 import { FocusSettingsCard } from '../focus/Focus';
 import { InboxSettingsCard } from './Retail';
 import { KidsSettings } from './KidsSettings';
@@ -114,6 +115,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'home' && <Household me={me} admin={admin} />}
       {tab === 'home' && <ModulesCard admin={admin} />}
       {tab === 'home' && <ExtrasSettingsCard admin={admin} />}
+      {tab === 'home' && <StarsSettingsCard admin={admin} />}
       {tab === 'home' && <LunchboxCard />}
       {tab === 'home' && <PulseSettingsCard admin={admin} />}
       {tab === 'home' && <AwayEntryCard />}

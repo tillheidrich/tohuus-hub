@@ -69,6 +69,7 @@ struct HouseholdBasicsView: View {
             }
             PulseSettingsSection(api: api, admin: app.isAdmin)
             ExtrasSettingsSection(api: api, admin: app.isAdmin)
+            StarsSettingsSection(api: api, admin: app.isAdmin)
         }
         .themedList()
         .navigationTitle(L("Household"))

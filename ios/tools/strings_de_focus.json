@@ -58,5 +58,20 @@
   "From the guide": "Aus dem Ratgeber",
   "Read on the website": "Auf der Website lesen",
   "This household signs in without passwords. Join in the browser with a passkey or an e-mail link, then connect the app under “Own server”.": "Dieser Haushalt meldet sich ohne Passwort an. Tritt im Browser mit Passkey oder E-Mail-Link bei und verbinde dann die App unter „Eigener Server“.",
-  "Continue in the browser": "Im Browser weiter"
+  "Continue in the browser": "Im Browser weiter",
+  "%@ had planned it for %@": "%@ hatte es für %@ vor",
+  "%@ does it today": "%@ macht’s heute",
+  "%@ does it tomorrow": "%@ macht’s morgen",
+  "%@ does it on %@": "%@ macht’s am %@",
+  "At the weekend": "Am Wochenende",
+  "Pick a day": "Tag wählen",
+  "Promise for this day": "Für diesen Tag zusagen",
+  "Take it back": "Zurücknehmen",
+  "I’ll do it": "Mach ich",
+  "Stars this week": "Sterne diese Woche",
+  "%d together": "%d zusammen",
+  "%d from you": "%d von dir",
+  "Count stars": "Sterne zählen",
+  "Stars": "Sterne",
+  "Optional. A star for each thing someone does for the household – a task, the list, planning a meal, a receipt. You see your week together and your own stars; no rankings, no streaks. Gentle mode hides them.": "Freiwillig. Ein Stern für alles, was jemand für den Haushalt tut – eine Aufgabe, die Liste, ein geplantes Essen, ein Bon. Ihr seht eure Woche zusammen und deine eigenen Sterne; keine Ranglisten, keine Serien. Im sanften Modus sind sie ausgeblendet."
 }

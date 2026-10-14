@@ -41,7 +41,11 @@ const bump = (m: Counts, name: string | null | undefined, n = 1) => {
 };
 
 function counts(days: number): Record<BlickArea, Counts> {
-  const since = `-${days} days`;
+  return countsSince(`-${days} days`);
+}
+
+/** Who did what per area since a SQLite date modifier ('-28 days') – also used for stars (points.ts). */
+export function countsSince(since: string): Record<BlickArea, Counts> {
   const out: Record<BlickArea, Counts> = { shop: new Map(), cook: new Map(), money: new Map(), tasks: new Map() };
   // Einkauf: noticing (put on the list) and doing (ticked off) – both count
   for (const r of db

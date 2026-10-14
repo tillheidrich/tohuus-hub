@@ -173,4 +173,7 @@ export const de_home: Record<string, string> = {
   "Children": "Kinder",
   "People": "Miteinander",
   "Card not found": "Karte nicht gefunden",
+  "Stars are not available on this server.": "Sterne gibt es auf diesem Server nicht.",
+  "Only the person who promised it can take it back": "Zurücknehmen kann nur, wer es zugesagt hat",
+  "Please pick today or a later day": "Bitte wähl heute oder einen späteren Tag",
 };

@@ -54,6 +54,10 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     var dueTime: String?
     var durationMin: Int?
     var place: String?
+    /// "Mach ich": who promised it for which day (server: care.ts promiseCareTask)
+    var promise: Promise?
+
+    struct Promise: Decodable, Sendable, Hashable { var userId: Int; var name: String; var color: String?; var day: String; var passed: Bool? }
 
     var isDueNow: Bool { ["overdue", "today", "soon"].contains(state ?? "") }
     var isPrivate: Bool { visibility == "private" }
@@ -118,6 +122,10 @@ extension APIClient {
     }
     func careUndo(_ id: Int) async throws { _ = try await send("POST", "api/care/\(id)/undo", as: Ignored.self) }
     /// "Ich kümmere mich" – or let go again. No points, no ranking.
+    /// "Mach ich": today | tomorrow | weekend | YYYY-MM-DD; nil takes it back
+    func carePromise(_ id: Int, _ when: String?) async throws {
+        _ = try await send("POST", "api/care/\(id)/promise", json: ["when": when.map { $0 as Any } ?? NSNull()], as: Ignored.self)
+    }
     func careClaim(_ id: Int, _ claim: Bool) async throws { _ = try await send("POST", "api/care/\(id)/claim", json: ["claim": claim], as: Ignored.self) }
 }
 
@@ -218,6 +226,15 @@ enum CareLabels {
             let s = d > 300 ? date.formatted(.dateTime.month(.abbreviated).year()) : date.formatted(.dateTime.day().month(.abbreviated))
             return LF("next: %@", s)
         }
+    }
+
+    /// "Sam macht’s morgen" – and kindly, once the day is over: "Sam hatte es für Mo., 13. Okt. vor"
+    static func promise(_ p: CareTask.Promise) -> String {
+        let date = ServerDate.parse(p.day)?.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) ?? p.day
+        if p.passed == true { return LF("%@ had planned it for %@", p.name, date) }
+        if p.day == ServerDate.day() { return LF("%@ does it today", p.name) }
+        if p.day == ServerDate.day(Date().addingTimeInterval(86_400)) { return LF("%@ does it tomorrow", p.name) }
+        return LF("%@ does it on %@", p.name, date)
     }
 
     static func color(_ state: String?) -> Color {
@@ -393,7 +410,8 @@ struct CareView: View {
                     Text(t.name).foregroundStyle(Theme.ink)
                 }
                 let items = t.checklist ?? []
-                let sub = [t.asNeeded == true ? nil : CareLabels.interval(t.intervalN, t.intervalUnit),
+                let sub = [t.promise.map { CareLabels.promise($0) },
+                           t.asNeeded == true ? nil : CareLabels.interval(t.intervalN, t.intervalUnit),
                            items.isEmpty ? nil : LF("%d of %d", items.filter(\.done).count, items.count),
                            t.product.map { LF("%@: %@ in stock", $0.name, Self.qty($0.stock ?? 0)) },
                            t.location?.name].compactMap { $0 }
@@ -530,6 +548,8 @@ private struct CareDetailSheet: View {
     @State private var items: [CareTask.CheckItem] = []
     @State private var addToCalendar = false
     @State private var splitting = false
+    @State private var promise: CareTask.Promise?
+    @State private var promiseDate = Date().addingTimeInterval(2 * 86_400)
 
     var body: some View {
         NavigationStack {
@@ -567,6 +587,24 @@ private struct CareDetailSheet: View {
                         ForEach(items.indices, id: \.self) { i in
                             Toggle(items[i].text, isOn: Binding(get: { items[i].done }, set: { v in Task { await tick(i, v) } }))
                         }
+                    }
+                }
+                if me?.isMember ?? true, let uid = me?.userId {
+                    Section {
+                        if let p = promise { Text(CareLabels.promise(p)).font(.subheadline).foregroundStyle(Theme.ink2) }
+                        HStack {
+                            Button(L("Today")) { Task { await promiseFor("today") } }
+                            Button(L("Tomorrow")) { Task { await promiseFor("tomorrow") } }
+                            Button(L("At the weekend")) { Task { await promiseFor("weekend") } }
+                        }
+                        .buttonStyle(.bordered)
+                        DatePicker(L("Pick a day"), selection: $promiseDate, in: Date()..., displayedComponents: .date)
+                        Button(L("Promise for this day")) { Task { await promiseFor(ServerDate.day(promiseDate)) } }
+                        if promise?.userId == uid {
+                            Button(L("Take it back"), role: .destructive) { Task { await promiseFor(nil) } }
+                        }
+                    } header: {
+                        Text(L("I’ll do it"))
                     }
                 }
                 if me?.claimsOn ?? true, me?.isMember ?? true, !task.isPrivate {
@@ -611,6 +649,7 @@ private struct CareDetailSheet: View {
             .task {
                 mine = me?.userId != nil && task.assigneeUserId == me?.userId
                 items = task.checklist ?? []
+                promise = task.promise
                 full = try? await api.careTask(task.id)
             }
         }
@@ -622,6 +661,31 @@ private struct CareDetailSheet: View {
     }
 
     /// a sub-item ticked or unticked – the whole list goes back (web: same PATCH)
+    /// "In kleine Schritte teilen" – AI if allowed, else built-in steps; saved as sub-items (focus.ts)
+    private func split() async {
+        splitting = true
+        defer { splitting = false }
+        do {
+            let r = try await api.suggestSteps(taskId: task.id)
+            let next = mergeSteps(items, r.steps)
+            try await api.saveCareTask(id: task.id, ["checklist": next.map { ["text": $0.text, "done": $0.done] as [String: Any] }])
+            items = next
+            error = nil
+            onChanged()
+        } catch { self.error = APIError.from(error).localizedDescription }
+    }
+
+    /// "Mach ich – heute / morgen / am Wochenende / am …"; nil takes it back
+    private func promiseFor(_ when: String?) async {
+        do {
+            try await api.carePromise(task.id, when)
+            promise = (try? await api.careTask(task.id))?.promise
+            error = nil
+            Haptics.tick()
+            onChanged()
+        } catch { self.error = APIError.from(error).localizedDescription }
+    }
+
     private func tick(_ i: Int, _ v: Bool) async {
         guard items.indices.contains(i) else { return }
         items[i].done = v

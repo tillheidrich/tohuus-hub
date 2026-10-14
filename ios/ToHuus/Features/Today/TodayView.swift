@@ -219,7 +219,9 @@ struct TodayView: View {
     @ViewBuilder private func card(_ key: TodayCardKey, _ t: TodayPayload) -> some View {
         switch key {
         case .rhythm: dueCard(t.rhythm)
-        case .tasks: TasksTodayCard(api: store.api, refresh: refreshKey)
+        case .tasks:
+            TasksTodayCard(api: store.api, refresh: refreshKey)
+            StarsCard(api: store.api, refresh: refreshKey)
         case .list: listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])
         case .still: EatSoonCard(items: t.stillHave, store: store)
         case .cook: if let c = t.cookToday { cookCard(c) }

@@ -19,6 +19,7 @@ import {
   dueCareTasks,
   getCareTask,
   learnedEveryDays,
+  promiseCareTask,
   listCareTasks,
   recentlyDone,
   qrUrl,
@@ -30,7 +31,8 @@ import {
 } from '../lib/care.js';
 import { focusPrefs, freshStart, setFocusPrefs, suggestSteps } from '../lib/focus.js';
 import { LOAD_ANSWERS, loadCards, setLoadAnswer, taskFromCard } from '../lib/loadcards.js';
-import { blickOverview, setCompareOptIn } from '../lib/blick.js';
+import { BLICK_AREAS, type BlickArea, blickOverview, setCompareOptIn } from '../lib/blick.js';
+import { pointsWeek, setPointsSettings } from '../lib/points.js';
 import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
@@ -236,6 +238,33 @@ r.put('/focus/prefs', (req, res) => {
     })
     .parse(req.body ?? {});
   res.json(setFocusPrefs(uid, b));
+});
+
+// ---------------------------------------------------------------- stars (lib/points.ts, docs/points.md) – off by default
+
+r.get('/points', (req, res) => {
+  if (req.actor?.role === 'guest' || req.actor?.houseGuest) return void res.status(403).json({ error: t('Not available for guests') });
+  res.json(pointsWeek(memberOf(req)));
+});
+r.put('/points/settings', (req, res) => {
+  if (req.actor?.role !== 'admin') return void res.status(403).json({ error: t('Only admins can change this.') });
+  const b = z.object({ on: z.boolean(), areas: z.array(z.enum(BLICK_AREAS as unknown as [BlickArea, ...BlickArea[]])).max(4) }).parse(req.body);
+  try {
+    setPointsSettings(b);
+    res.json(pointsWeek(memberOf(req)));
+  } catch (e) {
+    res.status((e as { status?: number }).status ?? 400).json({ error: (e as Error).message });
+  }
+});
+
+/** "Mach ich – heute / morgen / am Wochenende / am …": a promise with a day; { when: null } takes it back. */
+r.post('/care/:id/promise', (req, res) => {
+  const { when } = z.object({ when: z.string().max(10).nullable() }).parse(req.body);
+  const row = visibleTask(req, res, num(req.params.id));
+  if (!row) return;
+  const uid = memberOf(req);
+  if (!uid) return void res.status(403).json({ error: t('Only household members can do this') });
+  userError(res, () => promiseCareTask(row.id, uid, when));
 });
 
 /** "I'll take care of it" – or let go again. No points, no ranking. */
