@@ -28,6 +28,8 @@ struct RecipeDetailView: View {
     @State private var confirmOriginal = false
     @State private var photoItem: PhotosPickerItem?
     @State private var photoBusy = false
+    @State private var cookMode = false
+    @State private var showOrigLines = false
 
     var body: some View {
         ScrollView {
@@ -37,8 +39,9 @@ struct RecipeDetailView: View {
                     actions(r)
                     servingsRow(r)
                     ingredients(r)
+                    originalLines(r)
                     ratingsRow(r)
-                    if !r.steps.isEmpty { steps(r) } else if let n = r.notes, !n.isEmpty { Text(n).font(.subheadline).foregroundStyle(Theme.ink2) }
+                    if !r.steps.isEmpty { steps(r) } else if stepsElsewhere(r) { stepsElsewhereCard(r) } else if let n = r.notes, !n.isEmpty { Text(n).font(.subheadline).foregroundStyle(Theme.ink2) }
                     footer(r)
                 } else if let error {
                     ErrorBanner(message: error) { Task { await load() } }
@@ -61,6 +64,15 @@ struct RecipeDetailView: View {
                     .accessibilityAddTraits(r.isFavorite ? .isSelected : [])
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    CookPrintMenu(store: store, ticketType: "recipe", ticketId: r.id, title: r.title,
+                                  html: { CookPrint.recipeHTML(r, lines: printLines(r), note: variant?.variant?.note, servings: servingsLabel(r), image: heroImage(r)) },
+                                  text: { CookPrint.recipeText(r, lines: printLines(r), note: variant?.variant?.note, servings: servingsLabel(r)) },
+                                  feedback: feedback) {
+                        Image(systemName: "printer")
+                    }
+                    .accessibilityLabel(L("Print or share"))
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { showEdit = true } label: { Label(LC("Edit"), systemImage: "pencil") }
                 }
             }
@@ -76,18 +88,26 @@ struct RecipeDetailView: View {
         }
         .sheet(isPresented: $showEdit) {
             if let r = recipe {
-                RecipeEditSheet(store: store, recipe: r) {
-                    Task { await load() }
-                } onDeleted: {
+                RecipeEditorView(store: store, recipe: r, onSaved: { _ in Task { await load() } }, onDeleted: {
                     store.touch("recipes")
                     if let onDeleted { onDeleted() } else { dismiss() }
-                }
+                })
             }
         }
         .sheet(isPresented: $showVariant) {
             if let r = recipe, let v = variant { VariantSheet(store: store, recipe: r, view: v, feedback: feedback) { Task { await load() } } }
         }
         .sheet(item: $rateWho) { p in rateSheet(p) }
+        .fullScreenCover(isPresented: $cookMode) {
+            if let r = recipe {
+                CookModeView(store: store, recipeId: r.id, factor: factor(r)) {
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(450))
+                        showCooked = true
+                    }
+                }
+            }
+        }
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
             Task { await uploadPhoto(item) }
@@ -222,8 +242,16 @@ struct RecipeDetailView: View {
 
     private func actions(_ r: RecipeFull) -> some View {
         VStack(spacing: Theme.Space.s3) {
-            Button { showCooked = true } label: { Label(LC("Cooked it!"), systemImage: "checkmark") }
-                .buttonStyle(PrimaryButtonStyle())
+            if !r.steps.isEmpty {
+                Button { cookMode = true } label: { Label(L("Start cooking"), systemImage: "flame") }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .accessibilityHint(L("One step at a time, big text, timers – the screen stays on."))
+                Button { showCooked = true } label: { Label(LC("Cooked it!"), systemImage: "checkmark") }
+                    .buttonStyle(SecondaryButtonStyle())
+            } else {
+                Button { showCooked = true } label: { Label(LC("Cooked it!"), systemImage: "checkmark") }
+                    .buttonStyle(PrimaryButtonStyle())
+            }
             if !missing.isEmpty {
                 Button { Task { await missingToList(r) } } label: {
                     Label(missing.count == 1 ? LC("Add 1 missing ingredient to the list") : LCF("Add %d missing ingredients to the list", missing.count), systemImage: "cart.badge.plus")
@@ -462,6 +490,74 @@ struct RecipeDetailView: View {
         }
         if let src = r.sourceUrl, let url = URL(string: src) {
             Link(L("Open original recipe"), destination: url).font(.footnote)
+        }
+    }
+
+    // MARK: print, original lines, steps elsewhere
+
+    /// the lines as we cook them (house version, removed ones left out), scaled to the chosen servings
+    private func printLines(_ r: RecipeFull) -> [String] {
+        let f = factor(r)
+        let base: [String]
+        if let vl = variant?.ingredients, !vl.isEmpty, !showOriginal {
+            base = vl.filter { ($0.change ?? "none") != "remove" }.map(\.text)
+        } else {
+            base = r.ingredients.map(\.text)
+        }
+        return f == 1 ? base : base.map { AmountScale.scale($0, f) }
+    }
+
+    private func servingsLabel(_ r: RecipeFull) -> String? {
+        guard let n = servings ?? base(r) else { return nil }
+        return n == 1 ? LC("1 serving") : LCF("%d servings", n)
+    }
+
+    private func heroImage(_ r: RecipeFull) -> UIImage? {
+        guard let u = store.api.imageURL(r.imagePath) else { return nil }
+        return ImageCache.shared.image(for: u)
+    }
+
+    private static let devicePlatforms: Set<String> = ["cookidoo", "monsieur-cuisine", "cookit", "kenwood", "tefal", "moulinex", "krups", "magimix", "kitchenaid", "cecotec", "nutriu"]
+
+    /// web: stepsElsewhere – the steps only exist in the appliance's app
+    private func stepsElsewhere(_ r: RecipeFull) -> Bool {
+        if let a = r.instructionsAvailable, a.bool == false { return true }
+        return Self.devicePlatforms.contains(r.sourceType ?? "") && r.steps.isEmpty
+    }
+
+    private func stepsElsewhereCard(_ r: RecipeFull) -> some View {
+        let platform = Self.devicePlatforms.contains(r.sourceType ?? "") ? sourceLabel(r.sourceType) : nil
+        let app = platform ?? r.sourceUrl.flatMap { URL(string: $0)?.host()?.replacingOccurrences(of: "www.", with: "") } ?? L("the original app")
+        return Card(title: LF("Steps in %@", app), systemImage: "arrow.up.forward.app") {
+            Text(LF("The steps are only available in %@. Ingredients, planning and shopping work here as usual.", app))
+                .font(.subheadline).foregroundStyle(Theme.ink2)
+            if let src = r.sourceUrl, let url = URL(string: src) {
+                Link(destination: url) {
+                    Label(platform != nil ? LF("Open in %@ to cook", app) : LF("Open in %@", app), systemImage: "arrow.up.right.square")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+            }
+            if platform != nil && r.imagePath == nil {
+                Text(L("Tip: take a photo of your own dish next time – then you will recognise it in the list.")).font(.caption).foregroundStyle(Theme.ink3)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func originalLines(_ r: RecipeFull) -> some View {
+        if r.ingredients.contains(where: { ($0.orig ?? "").isEmpty == false }) {
+            DisclosureGroup(isExpanded: $showOrigLines) {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(Array(r.ingredients.enumerated()), id: \.offset) { _, i in
+                        Text(i.orig ?? i.text).font(.subheadline).foregroundStyle(Theme.ink2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 6)
+            } label: {
+                Label(L("Original ingredient lines"), systemImage: "character.book.closed").font(.subheadline.weight(.semibold))
+            }
+            .padding(.horizontal, Theme.Space.s1)
         }
     }
 

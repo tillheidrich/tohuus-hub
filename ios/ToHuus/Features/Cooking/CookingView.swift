@@ -59,6 +59,9 @@ struct CookingView: View {
     @State private var showImport = false
     @State private var showSources = false
     @State private var showPackage = false
+    @State private var showEditor = false
+    @State private var showTools = false
+    @State private var showFavourites = false
     @State private var sourcesQuery: String?
     @State private var model = CookModel()
     @State private var week = WeekModel()
@@ -92,7 +95,24 @@ struct CookingView: View {
             .navigationDestination(for: RecipeRef.self) { ref in
                 RecipeDetailView(recipeId: ref.id, store: store, planEntryId: ref.planEntryId)
             }
-            .sheet(isPresented: $showImport) { RecipeImportSheet(store: store, openRecipe: openSaved) }
+            .sheet(isPresented: $showImport) {
+                RecipeImportSheet(store: store, openRecipe: openSaved, newBlank: {
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(450))
+                        showEditor = true
+                    }
+                })
+            }
+            .sheet(isPresented: $showEditor) { RecipeEditorView(store: store, recipe: nil, onSaved: openSaved) }
+            .sheet(isPresented: $showTools) { RecipeToolsView(store: store, openRecipe: openSaved) }
+            .sheet(isPresented: $showFavourites) {
+                NavigationStack {
+                    FavouritesView(store: store)
+                        .navigationTitle(L("Favourites"))
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { showFavourites = false } } }
+                }
+            }
             .sheet(isPresented: $showPackage) {
                 NavigationStack { RecipePackageView(store: store) { showPackage = false } }
             }
@@ -104,7 +124,17 @@ struct CookingView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { showImport = true } label: { Label(L("Add recipe"), systemImage: "plus") }
+                    Menu {
+                        Button { showEditor = true } label: { Label(L("New recipe"), systemImage: "square.and.pencil") }
+                        Button { showImport = true } label: { Label(L("Take over: link, photo or text"), systemImage: "link") }
+                        Button { sourcesQuery = nil; showSources = true } label: { Label(LC("Discover recipes"), systemImage: "globe.europe.africa") }
+                        Divider()
+                        Button { showTools = true } label: { Label(L("Recipe tools"), systemImage: "wrench.and.screwdriver") }
+                    } label: { Label(L("Add recipe"), systemImage: "plus") }
+                    .hoverEffect(.highlight)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showFavourites = true } label: { Label(L("Favourites"), systemImage: "heart") }
                         .hoverEffect(.highlight)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -151,6 +181,8 @@ struct CookingView: View {
         case "open": tab = 2; showSources = true
         case "import": tab = 2; showImport = true
         case "package": tab = 2; showPackage = true
+        case "new": tab = 2; showEditor = true
+        case "tools": tab = 2; showTools = true
         default:
             if d.hasPrefix("recipe:"), let id = Int(d.dropFirst(7)) { open(RecipeRef(id: id)) }
             if d.hasPrefix("with:") { tab = 2; search = "mit: " + d.dropFirst(5) }
@@ -172,8 +204,11 @@ struct CookingView: View {
                 if let error = model.error, tab == 2 { ErrorBanner(message: error) { Task { await model.load(store.api) } } }
                 switch tab {
                 case 0:
+                    CookIdeasStrip(store: store, feedback: feedback, openRecipe: open)
                     if app.isCloud { CatalogNewSection(store: store, openRecipe: open) }
                     WhatToEatSection(store: store, feedback: feedback, openRecipe: open, openImport: { showImport = true }, fallback: AnyView(ideas))
+                    SuggestDeckSection(store: store, openRecipe: open, addRecipe: { showImport = true })
+                        .padding(.top, Theme.Space.s4)
                 case 1:
                     WeekPlanSection(store: store, model: week, feedback: feedback, openRecipe: open)
                 default:
@@ -218,75 +253,8 @@ struct CookingView: View {
     }
 
     @ViewBuilder private var recipeList: some View {
-        let terms = CookModel.ingredientTerms(search)
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass").foregroundStyle(Theme.ink3)
-            TextField(LC("Search recipes – or “with: chicken, peppers”"), text: $search)
-                .focused($searchFocused)
-                .autocorrectionDisabled()
-            if !search.isEmpty {
-                Button { search = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.ink3) }
-                    .accessibilityLabel(LC("Clear"))
-            }
-        }
-        .padding(10)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(Theme.line, lineWidth: 1))
-        .task(id: terms?.joined(separator: ",") ?? "") { await model.search(terms, api: store.api) }
-        if let terms {
-            Text(LCF("Recipes with %@ – most matches first. Nothing needs to be in stock for this.", terms.joined(separator: ", ")))
-                .font(.caption).foregroundStyle(Theme.ink3)
-        } else {
-            Button(LC("Search by ingredients")) {
-                search = Locale.current.language.languageCode?.identifier == "de" ? "mit: " : "with: "
-                searchFocused = true
-            }
-            .font(.subheadline.weight(.semibold))
-        }
-        let rows: [RecipeRow] = {
-            if terms != nil {
-                let byId = Dictionary(model.recipes.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-                return (model.hits ?? []).compactMap { h in byId[h.id].map { RecipeRow(r: $0, hit: h) } }
-            }
-            return model.recipes.filter { search.isEmpty || $0.title.range(of: search, options: [.caseInsensitive, .diacriticInsensitive]) != nil }.map { RecipeRow(r: $0, hit: nil) }
-        }()
-        if rows.isEmpty && !model.loading {
-            if search.isEmpty {
-                EmptyStateView(systemImage: "book", title: L("No recipes yet."), message: L("Share a recipe link to ToHuus from Safari to add it."))
-            } else if terms == nil || model.hits != nil {
-                Text(LCF("No recipe matches “%@”.", search)).font(.subheadline).foregroundStyle(Theme.ink3)
-            }
-        }
-        LazyVStack(alignment: .leading, spacing: 0) {
-            ForEach(rows) { row in
-                let r = row.r, hit = row.hit
-                Button { open(RecipeRef(id: r.id)) } label: {
-                    HStack(spacing: Theme.Space.s3) {
-                        RemoteImage(url: store.api.imageURL(r.imagePath), api: store.api, placeholder: "fork.knife")
-                            .frame(width: 48, height: 48)
-                            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(r.title).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
-                            if let hit {
-                                Text(hit.missing.isEmpty ? LCF("with %@", hit.matched.joined(separator: ", "))
-                                     : LCF("with %@ · without %@", hit.matched.joined(separator: ", "), hit.missing.joined(separator: ", ")))
-                                    .font(.caption).foregroundStyle(Theme.ink3)
-                            } else if let t = r.timeMin {
-                                Text(LF("%d min", Int(t))).font(.caption).foregroundStyle(Theme.ink3)
-                            }
-                        }
-                        SampleTag(on: app.sampleMarks.recipes.contains(r.id))
-                        Spacer()
-                        if r.favorite?.bool == true { Image(systemName: "heart.fill").foregroundStyle(Theme.clay) }
-                    }
-                    .padding(.vertical, 8)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .hoverEffect(.highlight)
-                Divider()
-            }
-        }
+        RecipeLibrarySection(store: store, model: model, feedback: feedback, search: $search, searchFocused: $searchFocused,
+                             open: open, newRecipe: { showEditor = true }, openTools: { showTools = true })
         discoverCard.padding(.top, Theme.Space.s4)
         SwapRulesSection(store: store, feedback: feedback).padding(.top, Theme.Space.s4)
     }
@@ -314,12 +282,6 @@ extension CookingView {
         }
         .buttonStyle(.plain)
     }
-}
-
-struct RecipeRow: Identifiable {
-    let r: Recipe
-    let hit: IngredientSearchHit?
-    var id: Int { r.id }
 }
 
 /// Drag payload for a week-plan entry ("tohuus-plan:<id>"), so other text dropped on a day is ignored.

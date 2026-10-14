@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Sheets of the recipe page: "Guten Appetit!" (cooked), edit / delete, "So machen wir das" (house version).
+// Sheets of the recipe page: "Guten Appetit!" (cooked), "So machen wir das" (house version). Editing: RecipeEditorView.
 
 // MARK: - cooked
 
@@ -26,10 +26,26 @@ struct CookedSheet: View {
     @State private var diffTo = ""
     @State private var diffAlways = false
     @State private var diffDone: [String] = []
+    @State private var labelled = false
+    @State private var labels: [LeftoverBox] = []
 
     private var usable: [(product: RecipeMatchLine.Product, qty: Double)] { AmountScale.consumption(matches, factor: factor) }
 
     var body: some View {
+        if !labels.isEmpty {
+            NavigationStack {
+                Form { BoxLabelsSection(store: store, boxes: labels) }
+                    .themedList()
+                    .navigationTitle(L("Put away – the labels"))
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { onDone(); dismiss() } } }
+            }
+        } else {
+            form
+        }
+    }
+
+    private var form: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.s5) {
@@ -77,6 +93,7 @@ struct CookedSheet: View {
                             .pickerStyle(.segmented)
                             Text(place == "fridge" ? LC("They show up under “Eat me first” – best within 3 days.") : LC("Keeps about 3 months in the freezer."))
                                 .font(.caption).foregroundStyle(Theme.ink3)
+                            Toggle(L("Make a label for the container"), isOn: $labelled).tint(Theme.primary)
                         }
                     }
                     Button { Task { await save() } } label: { Text(busy ? LC("Saving…") : LC("Log it")) }
@@ -187,173 +204,24 @@ struct CookedSheet: View {
             try? await store.api.saveMealRatings(recipe.id, meal)
             let consume = usable.filter { selected.contains($0.product.id) }.map { (productId: $0.product.id, qty: qty[$0.product.id] ?? $0.qty) }
             try await store.api.logCooked(recipe.id, rating: mealRating, consume: consume, planEntryId: planEntryId)
+            var made: [LeftoverBox] = []
             if leftovers {
-                do { try await store.api.saveLeftoverBoxes(recipeId: recipe.id, planEntryId: planEntryId, portions: portions, place: place) } catch { feedback.fail(error) }
+                if labelled {
+                    do {
+                        made = try await store.api.putAwayPlanned(planId: planEntryId, recipeId: recipe.id, name: nil, portions: Double(portions),
+                                                                 boxes: nil, place: place, eatBy: nil, labelled: true)
+                    } catch { feedback.fail(error) }
+                } else {
+                    do { try await store.api.saveLeftoverBoxes(recipeId: recipe.id, planEntryId: planEntryId, portions: portions, place: place) } catch { feedback.fail(error) }
+                }
             }
             Haptics.success()
             store.touch("recipes", "stock")
             feedback.say(leftovers ? LCF("%@ logged – %d portions put away", recipe.title, portions) : LCF("%@ added to your cooking history", recipe.title))
+            if !made.isEmpty { labels = made; return }
             onDone()
             dismiss()
         } catch { feedback.fail(error) }
-    }
-}
-
-// MARK: - edit / delete
-
-struct RecipeEditSheet: View {
-    let store: ServerStore
-    let recipe: RecipeFull
-    let onSaved: () -> Void
-    let onDeleted: () -> Void
-    @Environment(\.dismiss) private var dismiss
-    @State private var title = ""
-    @State private var desc = ""
-    @State private var servings = ""
-    @State private var minutes = ""
-    @State private var thermomix = false
-    @State private var tags = ""
-    @State private var ingredients = ""
-    @State private var steps = ""
-    @State private var notes = ""
-    @State private var source = ""
-    @State private var busy = false
-    @State private var error: String?
-    @State private var confirmDelete = false
-
-    private static var stapleMarker: String { LC("(pantry)") }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField(LC("Title"), text: $title)
-                    TextField(LC("Short description"), text: $desc, axis: .vertical)
-                    HStack {
-                        TextField(LC("Servings"), text: $servings).keyboardType(.numberPad)
-                        Divider()
-                        TextField(LC("Minutes"), text: $minutes).keyboardType(.numberPad)
-                    }
-                    Toggle(LC("Thermomix recipe"), isOn: $thermomix).tint(Theme.primary)
-                    TextField(LC("Tags (comma-separated)"), text: $tags)
-                }
-                Section {
-                    TextField(LC("Ingredients – one per line"), text: $ingredients, axis: .vertical).lineLimit(6...20)
-                } header: { Text(LC("Ingredients – one per line")) } footer: {
-                    Text(LCF("End a line with “%@” and it always counts as in stock.", Self.stapleMarker))
-                }
-                Section {
-                    TextField(LC("Steps – one per line"), text: $steps, axis: .vertical).lineLimit(6...30)
-                } header: { Text(LC("Steps – one per line")) } footer: {
-                    Text(LC("Thermomix settings go in square brackets: “Chop the onion [5 sec / speed 5]”."))
-                }
-                Section {
-                    TextField(LC("Notes"), text: $notes, axis: .vertical)
-                    TextField(LC("Source (link)"), text: $source).keyboardType(.URL).textInputAutocapitalization(.never)
-                }
-                if let error { Section { Text(error).foregroundStyle(Theme.low) } }
-                Section {
-                    Button(role: .destructive) { confirmDelete = true } label: { Label(LC("Delete recipe"), systemImage: "trash") }
-                }
-            }
-            .themedList()
-            .navigationTitle(LC("Edit recipe"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(L("Save")) { Task { await save() } }.disabled(busy || title.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
-            .confirmationDialog(LC("Delete recipe?"), isPresented: $confirmDelete, titleVisibility: .visible) {
-                Button(LC("Delete"), role: .destructive) { Task { await remove() } }
-            }
-            .onAppear(perform: fill)
-        }
-    }
-
-    private func fill() {
-        let r = recipe
-        title = r.title
-        desc = r.description ?? ""
-        servings = r.servings.map { String(Int($0)) } ?? ""
-        minutes = r.timeMin.map { String(Int($0)) } ?? ""
-        thermomix = r.thermomix ?? false
-        tags = (r.tags ?? []).joined(separator: ", ")
-        ingredients = r.ingredients.map { $0.isPantry ? "\($0.text) \(Self.stapleMarker)" : $0.text }.joined(separator: "\n")
-        steps = r.steps.map { s in
-            guard let tm = s.tm, let o = tm.object else { return s.text }
-            let device = o["device"]?.string
-            let parts = [o["time"]?.string, o["temp"]?.string, o["speed"]?.string.map { LCF("Speed %@", $0) }, o["mode"]?.string].compactMap { $0 }.filter { !$0.isEmpty }
-            guard !parts.isEmpty else { return s.text }
-            return "\(s.text) [\(device.map { "\($0): " } ?? "")\(parts.joined(separator: " / "))]"
-        }.joined(separator: "\n")
-        notes = r.notes ?? ""
-        source = r.sourceUrl ?? ""
-    }
-
-    private static let stapleRe = try! NSRegularExpression(pattern: "\\s*\\((Grundzutat|pantry)\\)$", options: .caseInsensitive)
-
-    private func parseStep(_ l: String) -> [String: Any] {
-        guard let open = l.lastIndex(of: "["), l.hasSuffix("]") else { return ["text": l] }
-        let inner = String(l[l.index(after: open)..<l.index(before: l.endIndex)])
-        var tm: [String: Any] = [:]
-        var rest = inner
-        if let colon = inner.firstIndex(of: ":"), !inner[..<colon].contains("/"), !(inner.first?.isNumber ?? false) {
-            tm["device"] = inner[..<colon].trimmingCharacters(in: .whitespaces)
-            rest = String(inner[inner.index(after: colon)...])
-        }
-        for p in rest.split(separator: "/").map({ $0.trimmingCharacters(in: .whitespaces) }).filter({ !$0.isEmpty }) {
-            let low = p.lowercased()
-            if low.contains("°") || low.contains("varoma") { tm["temp"] = p }
-            else if low.hasPrefix("stufe") || low.hasPrefix("speed") {
-                tm["speed"] = p.replacingOccurrences(of: "^(Stufe|Speed)\\s*", with: "", options: [.regularExpression, .caseInsensitive])
-            } else if ["linkslauf", "sanftrühr", "reverse", "gentle stir", "umluft", "heißluft", "grill", "knet", "teig", "dough", "fan", "turbo", "ober"].contains(where: { low.contains($0) }) { tm["mode"] = p }
-            else { tm["time"] = p }
-        }
-        return ["text": String(l[..<open]).trimmingCharacters(in: .whitespaces), "tm": tm]
-    }
-
-    private func save() async {
-        busy = true
-        defer { busy = false }
-        let ing: [[String: Any]] = ingredients.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }.map { l in
-            let r = NSRange(location: 0, length: (l as NSString).length)
-            let staple = Self.stapleRe.firstMatch(in: l, range: r) != nil
-            var o: [String: Any] = ["text": Self.stapleRe.stringByReplacingMatches(in: l, range: r, withTemplate: "")]
-            if staple { o["pantry"] = true }
-            return o
-        }
-        let st = steps.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }.map(parseStep)
-        func orNull(_ s: String) -> Any { s.trimmingCharacters(in: .whitespaces).isEmpty ? NSNull() : s.trimmingCharacters(in: .whitespaces) }
-        let body: [String: Any] = [
-            "title": title.trimmingCharacters(in: .whitespaces),
-            "description": orNull(desc),
-            "servings": Int(servings).map { $0 as Any } ?? NSNull(),
-            "time_min": Int(minutes).map { $0 as Any } ?? NSNull(),
-            "thermomix": thermomix,
-            "tags": tags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty },
-            "ingredients": ing,
-            "steps": st,
-            "notes": orNull(notes),
-            "source_url": orNull(source),
-            "source_type": recipe.sourceType ?? "own",
-            "favorite": recipe.isFavorite,
-        ]
-        do {
-            try await store.api.saveRecipe(recipe.id, body: body)
-            store.touch("recipes")
-            onSaved()
-            dismiss()
-        } catch { self.error = APIError.from(error).localizedDescription }
-    }
-
-    private func remove() async {
-        do {
-            try await store.api.deleteRecipe(recipe.id)
-            dismiss()
-            onDeleted()
-        } catch { self.error = APIError.from(error).localizedDescription }
     }
 }
 
