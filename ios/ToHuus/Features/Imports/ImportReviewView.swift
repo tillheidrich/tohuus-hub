@@ -17,13 +17,22 @@ struct ImportReviewView: View {
     @State private var fixFor: ImportLine?
     @State private var confirmDiscard = false
     @State private var toast: ToastMessage?
+    /// GET /api/quality/imports/:id – how the receipt was read (web: RecognitionCard, GradeBadge)
+    @State private var report: RecognitionReport?
 
     var body: some View {
         ScrollView {
             if let imp {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
                     header(imp)
+                    // list2 G: who paid and for whom; care lists – lines for the household you shop for
+                    WhoPaidPanel(store: store, importId: importId)
                     banners(imp)
+                    if imp.kind != "shelf", let report {
+                        RecognitionCardView(store: store, importId: importId, readonly: imp.readonly, report: report) {
+                            Task { await load() }
+                        }
+                    }
                     let look = imp.lines.filter(\.needsLook)
                     let sure = imp.lines.filter { $0.action == "add" && $0.status == "ok" }
                     let rest = imp.lines.filter(\.skipped)
@@ -174,9 +183,11 @@ struct ImportReviewView: View {
                 if let r = l.receiptName, r != l.name {
                     Text(LF("Receipt: %@", r)).font(.caption.monospaced()).foregroundStyle(Theme.ink3)
                 }
-                if l.statusLabel != nil || l.note != nil {
-                    HStack(spacing: 6) {
+                let grade = l.skipped ? nil : report?.grade(of: l.id)
+                if l.statusLabel != nil || l.note != nil || ["learned", "suggested", "unmatched"].contains(grade ?? "") {
+                    FlowLayout(spacing: 6) {
                         if let s = l.statusLabel { StatusPill(text: s, status: l.statusTone) }
+                        GradeBadge(grade: grade)
                         if let n = l.note { Text(n).font(.caption).foregroundStyle(Theme.ink3) }
                     }
                 }
@@ -297,8 +308,11 @@ struct ImportReviewView: View {
         do {
             async let i = store.api.importDetail(importId)
             async let p = store.api.places()
+            async let q = store.api.recognitionReport(importId)
             imp = try await i
             places = ((try? await p) ?? []).filter { $0.system != true }
+            // the review works without the report (older servers): it simply stays away
+            report = try? await q
             error = nil
         } catch {
             self.error = APIError.from(error).localizedDescription

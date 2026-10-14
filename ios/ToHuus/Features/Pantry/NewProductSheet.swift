@@ -9,6 +9,8 @@ struct NewProductSheet: View {
     let places: [Place]
     let categories: [ProductCategory]
     let store: ServerStore
+    /// e.g. what was typed in the pantry search ("Add “…”")
+    var initialName: String?
     let done: (Int?) -> Void
     @State private var name = ""
     @State private var brand = ""
@@ -21,6 +23,18 @@ struct NewProductSheet: View {
     @State private var ownPhoto: UIImage?
     @State private var busy = false
     @State private var error: String?
+    // "More details" – the rest of the web's new-product form (Product.tsx ProductForm)
+    @State private var size = ""
+    @State private var spot = ""
+    @State private var minQty = 0
+    @State private var unit = ""
+    @State private var hasDate = false
+    @State private var bestBefore = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+    @State private var dateKind: String?
+    @State private var isStaple = false
+    @State private var orderable = false
+    @State private var orderGroup = ""
+    @State private var notes = ""
 
     private var usablePlaces: [Place] { places.filter { $0.system != true } }
     private var scannedImage: String? { lookup?.remoteImage }
@@ -85,6 +99,40 @@ struct NewProductSheet: View {
                         Stepper(LF("%d at home", qty), value: $qty, in: 0...99)
                     }
                 }
+                Section {
+                    DisclosureGroup(L("More details")) {
+                        TextField(L("Size, e.g. 500g, 1l, 6 rolls"), text: $size)
+                        TextField(L("Exact spot, e.g. left shelf, top compartment"), text: $spot)
+                        if trackMode == "count" {
+                            Stepper(value: $minQty, in: 0...99) {
+                                LabeledContent(L("Keep at least"), value: minQty == 0 ? L("doesn't matter") : "\(minQty)")
+                            }
+                            TextField(L("Unit, e.g. pcs, pack, bottle"), text: $unit)
+                            Toggle(L("With best-before date"), isOn: $hasDate.animation())
+                            if hasDate { DatePicker(L("Best before"), selection: $bestBefore, displayedComponents: .date) }
+                        }
+                        if trackMode == "level" {
+                            Picker(L("Running low from"), selection: $minQty) {
+                                Text(L("low")).tag(0)
+                                Text(L("half")).tag(2)
+                            }
+                        }
+                        if trackMode != "none" {
+                            Picker(L("Date on the pack"), selection: $dateKind) {
+                                Text(L("Automatic")).tag(String?.none)
+                                Text(L("Best before")).tag(String?.some("best_before"))
+                                Text(L("Use by")).tag(String?.some("use_by"))
+                            }
+                        }
+                        Toggle(L("Always stocked"), isOn: $isStaple)
+                        Toggle(L("On the order menu"), isOn: $orderable.animation())
+                        if orderable {
+                            TextField(L("Bar section, e.g. drinks, ice cream, snacks"), text: $orderGroup)
+                        }
+                        TextField(L("Note, e.g. only the lactose-free one"), text: $notes)
+                    }
+                    .tint(Theme.primary)
+                }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
             .themedList()
@@ -97,7 +145,7 @@ struct NewProductSheet: View {
                 }
             }
             .onAppear {
-                if name.isEmpty { name = lookup?.remoteName ?? "" }
+                if name.isEmpty { name = lookup?.remoteName ?? initialName ?? "" }
                 if brand.isEmpty { brand = lookup?.remoteBrand ?? "" }
                 #if DEBUG
                 if name.isEmpty, let n = UserDefaults.standard.string(forKey: "debugNewProductName") { name = n }
@@ -176,6 +224,19 @@ struct NewProductSheet: View {
         if ownPhoto == nil, let url = pictureURL { body["image_url"] = url }
         if trackMode == "count" && qty > 0 { body["initial_qty"] = qty }
         if trackMode == "level" { body["initial_qty"] = 3 }
+        let t = { (s: String) in s.trimmingCharacters(in: .whitespacesAndNewlines) }
+        if !t(size).isEmpty { body["size"] = t(size) }
+        if !t(spot).isEmpty { body["spot"] = String(t(spot).prefix(120)) }
+        if trackMode != "none" && minQty > 0 { body["min_qty"] = minQty }
+        if trackMode == "count" && !t(unit).isEmpty { body["unit"] = t(unit) }
+        if trackMode == "count" && hasDate && qty > 0 { body["best_before"] = ServerDate.day(bestBefore) }
+        if trackMode != "none", let dateKind { body["date_kind"] = dateKind }
+        if isStaple { body["is_staple"] = true }
+        if orderable {
+            body["orderable"] = true
+            if !t(orderGroup).isEmpty { body["order_group"] = t(orderGroup) }
+        }
+        if !t(notes).isEmpty { body["notes"] = t(notes) }
         do {
             let id = try await store.api.createProductFull(body)
             if let id, let img = ownPhoto, let jpeg = img.resizedForUpload().jpegData(compressionQuality: 0.8) {

@@ -70,7 +70,17 @@ struct TreatsView: View {
                 try? await Task.sleep(nanoseconds: 20_000_000_000)
             }
         }
+        // live like the web: the server's "orders" change events (SSE via ServerStore) refresh at once
+        .task(id: app.store?.revision("orders") ?? 0) { await load() }
         .refreshable { await load() }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                // web Order.tsx: "Edit menu" for everyone but permanent guests
+                if let store = app.store, !app.isGuest {
+                    NavigationLink { MenuEditorView(store: store) } label: { Label(L("Edit menu"), systemImage: "pencil") }
+                }
+            }
+        }
         .sheet(item: $tile) { t in tileSheet(t) }
         .sheet(isPresented: $checkout) {
             TreatCheckoutSheet(cart: $cart, helpers: helpers, bringBy: $bringBy) { note in await send(note: note) }

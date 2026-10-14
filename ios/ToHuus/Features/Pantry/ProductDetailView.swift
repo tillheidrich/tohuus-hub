@@ -17,6 +17,12 @@ struct ProductDetailView: View {
     @State private var showBatch = false
     @State private var showBuyAt = false
     @State private var dateEntry: FreshProduct.Entry?
+    // web parity (docs/ios-native-places.md): order menu, staple, barcodes, receipts, fresh panel, runs out, labels
+    @State private var more = ProductMore()
+    @State private var freshMore: FreshMore?
+    @State private var showPortion = false
+    @Environment(AppModel.self) private var app: AppModel?
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollView {
@@ -25,7 +31,16 @@ struct ProductDetailView: View {
                     header(p)
                     amountCard(p)
                     batchesCard(p)
+                    if p.trackMode != "none" {
+                        FreshActionsCard(product: p, more: more, fresh: fresh, freshMore: freshMore, store: store, changed: { msg in
+                            toast = msg
+                            Task { await load() }
+                        }, eatenUp: { dismiss() })
+                    }
                     actions(p)
+                    if p.trackMode != "none" && !more.isLeftover {
+                        RunsOutRow(productId: p.id, on: more.runsOutOn, api: store.api) { store.touch("products") }
+                    }
                     whereCard(p)
                     if !prices.isEmpty { pricesCard }
                     if !p.history.isEmpty { historyCard(p) }
@@ -45,13 +60,19 @@ struct ProductDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(L("Edit")) { showEdit = true }.disabled(product == nil)
             }
+            if let p = product, app?.isGuest != true {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink { LabelsView(api: store.api, kind: .product, preselect: p.id) } label: { Image(systemName: "qrcode") }
+                        .accessibilityLabel(L("QR label"))
+                }
+            }
         }
         .task(id: store.revision("stock") + store.revision("products")) { await load() }
         .sheet(isPresented: $showEdit) {
             if let p = product {
-                ProductEditSheet(product: p, extra: extra, places: places, categories: categories, store: store) {
+                ProductEditSheet(product: p, extra: extra, more: more, places: places, categories: categories, store: store, saved: {
                     Task { await load() }
-                }
+                }, deleted: { dismiss() })
             }
         }
         .sheet(isPresented: $showImage) {
@@ -73,6 +94,16 @@ struct ProductDetailView: View {
         }
         .sheet(item: $dateEntry) { e in
             BatchDateSheet(entry: e, store: store) { Task { await load() } }
+        }
+        .sheet(isPresented: $showPortion) {
+            if let p = product {
+                PortionLabelSheet(product: p, leftover: more.isLeftover, hasFreezer: fresh?.hasFreezer ?? places.contains { $0.kind == "freezer" },
+                                  api: store.api) { msg in
+                    toast = msg
+                    store.touch("stock", "products")
+                    Task { await load() }
+                }
+            }
         }
         .onAppear {
             #if DEBUG
@@ -114,15 +145,20 @@ struct ProductDetailView: View {
     private func load() async {
         let api = store.api
         do {
-            let (p, x) = try await api.productFull(productId)
-            product = p
-            extra = x
+            // one GET /api/products/:id, read three ways
+            let data = try await api.getData("api/products/\(productId)")
+            product = try api.decode(ProductInfo.self, from: data)
+            extra = (try? api.decode(ProductExtra.self, from: data)) ?? ProductExtra()
+            more = (try? api.decode(ProductMore.self, from: data)) ?? ProductMore()
             error = nil
-            async let f = try? api.freshProduct(productId)
+            async let f = try? api.getData("api/fresh/products/\(productId)")
             async let pl = try? api.places()
             async let c = try? api.categories()
             async let pr = try? api.prices(product: productId)
-            fresh = await f
+            if let fd = await f {
+                fresh = try? api.decode(FreshProduct.self, from: fd)
+                freshMore = try? api.decode(FreshMore.self, from: fd)
+            }
             places = await pl ?? places
             categories = await c ?? categories
             prices = await pr ?? []
@@ -156,7 +192,18 @@ struct ProductDetailView: View {
                 Text(p.name).font(Theme.title(Theme.FontSize.h2))
                 let sub = [p.brand, categories.first { $0.id == p.categoryId }?.name].compactMap { $0 }.joined(separator: " · ")
                 if !sub.isEmpty { Text(sub).foregroundStyle(Theme.ink2) }
-                if let s = p.statusLabel { StatusPill(text: s, status: p.status) }
+                FlowLayout(spacing: 6) {
+                    if let size = p.size, !size.isEmpty { StatusPill(text: size, status: nil) }
+                    if let s = p.statusLabel { StatusPill(text: s, status: p.status) }
+                    if more.isStaple == true { StatusPill(text: L("always stocked"), status: nil) }
+                    if more.orderable == true {
+                        // the menu editor (pictures, choices, groups) – web /bestellen/karte?item=
+                        NavigationLink { WebPageView(api: store.api, path: "/bestellen/karte?item=\(p.id)", title: L("Menu")) } label: {
+                            StatusPill(text: L("on the order menu"), status: "ok")
+                        }
+                        .accessibilityHint(L("Opens the menu"))
+                    }
+                }
             }
         }
     }
@@ -259,21 +306,31 @@ struct ProductDetailView: View {
 
     private func actions(_ p: ProductInfo) -> some View {
         VStack(spacing: Theme.Space.s3) {
-            Button {
-                Task { await usedUp() }
-            } label: {
-                Label(L("Used up – put it on the list"), systemImage: "arrow.uturn.down.circle")
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            Button {
-                Task {
-                    await store.addProduct(p.id, name: p.name)
-                    toast = L("On the list.")
+            if !more.isLeftover {
+                Button {
+                    Task { await usedUp() }
+                } label: {
+                    Label(L("Used up – put it on the list"), systemImage: "arrow.uturn.down.circle")
                 }
-            } label: {
-                Label(L("Just put it on the list"), systemImage: "cart.badge.plus")
+                .buttonStyle(PrimaryButtonStyle())
+                Button {
+                    Task {
+                        await store.addProduct(p.id, name: p.name)
+                        toast = L("On the list.")
+                    }
+                } label: {
+                    Label(L("Just put it on the list"), systemImage: "cart.badge.plus")
+                }
+                .buttonStyle(SecondaryButtonStyle())
             }
-            .buttonStyle(SecondaryButtonStyle())
+            if p.trackMode != "none" {
+                let fridgeOnly = more.isLeftover || fresh?.hasFreezer == false
+                Button { showPortion = true } label: {
+                    Label(fridgeOnly ? L("Label") : L("Freeze & label"), systemImage: "tag")
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                .accessibilityHint(fridgeOnly ? L("Label leftovers") : L("Portion, freeze, label"))
+            }
         }
         .disabled(busy)
     }
@@ -284,6 +341,8 @@ struct ProductDetailView: View {
             detailRow(L("Usually kept in"), placeName(p.defaultLocationId))
             if let spot = p.spot, !spot.isEmpty { detailRow(L("Exact spot"), spot) }
             detailRow(L("Counting"), trackLabel(p.trackMode))
+            if let codes = more.codes, !codes.isEmpty { detailRow(L("Barcode"), codes.joined(separator: ", ")) }
+            if let aliases = more.aliases, !aliases.isEmpty { detailRow(L("On receipts"), aliases.prefix(4).map { $0.alias.uppercased() }.joined(separator: " · ")) }
             if let n = p.notes, !n.isEmpty { detailRow(L("Note"), n) }
             Divider()
             HStack(alignment: .firstTextBaseline) {
@@ -308,6 +367,18 @@ struct ProductDetailView: View {
         }
     }
 
+    /// movement reasons in words (web Product.tsx reasonText)
+    static func reasonText(_ r: String?) -> String? {
+        guard let r else { return nil }
+        let words: [String: String] = [
+            "import": L("Purchase imported"), "manual": L("by hand"), "consume": L("used"), "order": L("Guest order"),
+            "cook": L("while cooking"), "inventory": L("Stocktake"), "purchase": L("bought"), "assistant": L("via assistant"),
+            "move": L("moved"), "undo": L("undone"), "scan": L("via scan"), "waste": L("thrown away"), "freeze": L("frozen"),
+            "thaw": L("thawed"), "leftover": L("leftovers put away"),
+        ]
+        return words[r] ?? r
+    }
+
     private func trackLabel(_ m: String?) -> String {
         switch m {
         case "level": return L("Fill level")
@@ -323,7 +394,7 @@ struct ProductDetailView: View {
                     Text((m.delta ?? 0) > 0 ? "+\(String(format: "%g", m.delta ?? 0))" : String(format: "%g", m.delta ?? 0)).monospacedDigit()
                         .foregroundStyle((m.delta ?? 0) > 0 ? Theme.primaryText : Theme.ink2)
                         .frame(width: 44, alignment: .leading)
-                    Text(m.actor ?? m.reason ?? "").foregroundStyle(Theme.ink2)
+                    Text([Self.reasonText(m.reason), m.actor].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")).foregroundStyle(Theme.ink2)
                     Spacer()
                     Text(ServerDate.relative(m.createdAt) ?? "").foregroundStyle(Theme.ink3)
                 }
