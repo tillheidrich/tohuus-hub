@@ -68,6 +68,16 @@ struct MainTabView: View {
                 tabLayout
             }
         }
+        .onChange(of: area, initial: true) { _, a in
+            // the assistant gets the tab's screen, like the web's floating button (assistant-areas.ts CONTEXTS)
+            switch a {
+            case .shopping: app.assistantContext = "shopping"
+            case .pantry: app.assistantContext = "stock"
+            case .cooking: app.assistantContext = "cook"
+            case .money: app.assistantContext = "money"
+            default: app.assistantContext = nil
+            }
+        }
         .onAppear {
             applyRequestedTab(app.requestedTab)
             if AppTourView.due { showTour = true }

@@ -330,6 +330,8 @@ struct CareView: View {
         }
         .themedList()
         .navigationTitle(L("Tasks"))
+        .onAppear { app.screenContext = "tasks" }
+        .onDisappear { if app.screenContext == "tasks" { app.screenContext = nil } }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

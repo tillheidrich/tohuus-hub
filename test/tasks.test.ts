@@ -211,3 +211,38 @@ describe('taking turns, recently done and the learned rhythm', () => {
     expect(detail.json.learned_every_days).toBe(9);
   });
 });
+
+describe('the assistant and tasks', () => {
+  it('finds the tasks topic, and "Hausarbeit" is housework, not off topic', async () => {
+    const ctx = await import('../server/lib/assistant-context');
+    const scope = await import('../server/lib/assistant-scope');
+    expect(ctx.topicsOf('Wer ist diese Woche mit dem Bad dran?')).toContain('tasks');
+    expect(ctx.topicsOf('Wer macht eigentlich mehr Hausarbeit?')).toContain('tasks');
+    expect(scope.scopeCheck('Wer macht eigentlich mehr Hausarbeit bei uns?').ok).toBe(true);
+  });
+
+  it('adds, assigns, completes and undoes – private tasks never come back from tasks_list', async () => {
+    const tools = await import('../server/lib/assistant-tools');
+    const c = { actor: 'Mira', userId: miraId, actions: [] as any[] };
+    const add = tools.runTool(c, 'task_add', { name: 'Fenster putzen', every_n: 3, every_unit: 'month', take_turns: ['Mira', 'Sam'] }) as any;
+    expect(add.ok, JSON.stringify(add)).toBe(true);
+    expect(add.task.taking_turns).toEqual(['Mira', 'Sam']);
+    const list = tools.runTool(c, 'tasks_list', { filter: 'all' }) as any;
+    expect(JSON.stringify(list)).toContain('Fenster putzen');
+    expect(JSON.stringify(list)).not.toContain(SECRET);
+    const done = tools.runTool(c, 'task_done', { task: 'Fenster' }) as any;
+    expect(done.next_turn).toBe('Sam');
+    expect((tools.runTool(c, 'task_assign', { task: 'Fenster putzen', keeps_in_mind: 'me' }) as any).task.keeps_in_mind).toBe('Mira');
+    const ov = tools.runTool(c, 'tasks_overview', {}) as any;
+    expect(ov.done_by.some((x: any) => x.name === 'Mira')).toBe(true);
+    expect(JSON.stringify(ov)).not.toContain(SECRET);
+    // undo the add: the task is gone
+    const undoToken = c.actions.find((x) => x.kind === 'task_add')?.undo;
+    expect(undoToken).toBeTruthy();
+    expect((tools.runUndo(undoToken, miraId) as any).ok).toBe(true);
+    expect(JSON.stringify(tools.runTool(c, 'tasks_list', { filter: 'all' }))).not.toContain('Fenster putzen');
+    const priv = tools.runTool(c, 'task_add', { name: 'Arzttermin ausmachen', only_me: true, due: '2026-10-20' }) as any;
+    expect(priv.task.private).toBe(true);
+    expect(JSON.stringify(tools.runTool(c, 'tasks_list', { filter: 'all' }))).not.toContain('Arzttermin');
+  });
+});

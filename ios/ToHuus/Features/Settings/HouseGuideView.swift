@@ -155,6 +155,8 @@ struct HouseGuideView: View {
         }
         .themedList()
         .navigationTitle(L("House info"))
+        .onAppear { app.screenContext = "house" }
+        .onDisappear { if app.screenContext == "house" { app.screenContext = nil } }
         .searchable(text: $query, prompt: L("Search, e.g. heating"))
         .toolbar {
             if let g = guide, !(g.cards.isEmpty && g.codes.isEmpty) {

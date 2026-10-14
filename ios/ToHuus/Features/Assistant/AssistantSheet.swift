@@ -23,6 +23,8 @@ final class AssistantModel {
 
     /// AI is off for this member – the built-in reader answers
     var basic = false
+    /// the screen it was opened from (shopping, stock, cook, money, house, guests, tasks) – like the web
+    var context: String?
 
     func send(_ text: String, store: ServerStore) async {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -31,7 +33,7 @@ final class AssistantModel {
         sending = true
         defer { sending = false }
         do {
-            let r = try await store.api.chat(t, conversationId: conversationId, basic: basic)
+            let r = try await store.api.chat(t, conversationId: conversationId, basic: basic, context: context)
             receive(r, store: store)
         } catch {
             handle(error)
@@ -136,7 +138,10 @@ struct AssistantSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        .onAppear { model.basic = !app.aiOn }
+        .onAppear {
+            model.basic = !app.aiOn
+            model.context = app.screenContext ?? app.assistantContext
+        }
         #if DEBUG
         .task {
             if let m = UserDefaults.standard.string(forKey: "debugAssistantMessage"), model.messages.isEmpty {

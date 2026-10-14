@@ -37,4 +37,7 @@ export const tasks: Record<string, string> = {
   'Your rhythm': 'Euer Rhythmus',
   'You do it about every {n} days': 'Ihr macht das etwa alle {n} Tage',
   'Recently done': 'Zuletzt erledigt',
+  'What’s due today?': 'Was steht heute an?',
+  'Bathroom every Saturday, Mira and Sam take turns': 'Bad jeden Samstag, Mira und Sam abwechselnd',
+  'How do we share the housework?': 'Wie teilen wir uns die Hausarbeit?',
 };

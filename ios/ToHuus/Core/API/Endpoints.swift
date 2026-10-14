@@ -261,8 +261,9 @@ extension APIClient {
 
     /// `basic: true` asks for the built-in reader only (AI switched off for this member; servers that don't know the
     /// field ignore it and decide by their own switches).
-    func chat(_ message: String, conversationId: String?, basic: Bool = false) async throws -> ChatResponse {
+    func chat(_ message: String, conversationId: String?, basic: Bool = false, context: String? = nil) async throws -> ChatResponse {
         var body: [String: Any] = ["message": message]
+        if let context { body["context"] = context }
         if basic { body["mode"] = "basic" }
         if let conversationId { body["conversationId"] = conversationId }
         return try await send("POST", "api/assistant/chat", json: body, timeout: 90)

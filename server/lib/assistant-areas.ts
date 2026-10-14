@@ -27,7 +27,7 @@ import { notPrivate } from './share-core.js';
 import { norm } from './text.js';
 import { entitlement } from './plans.js';
 
-export const CONTEXTS = ['shopping', 'stock', 'cook', 'money', 'house', 'guests'] as const;
+export const CONTEXTS = ['shopping', 'stock', 'cook', 'money', 'house', 'guests', 'tasks'] as const;
 export type ScreenContext = (typeof CONTEXTS)[number];
 
 /** Topics (assistant-context.ts) a screen brings with it, besides what the message itself is about. */
@@ -38,6 +38,7 @@ export const CONTEXT_TOPICS: Record<ScreenContext, string[]> = {
   money: ['money'],
   house: ['house'],
   guests: ['shopping', 'guests'],
+  tasks: ['tasks'],
 };
 
 /** Area tools by topic (merged into assistant-tools.ts TOOLS_BY_TOPIC). */
@@ -73,6 +74,10 @@ export function contextHint(ctx: ScreenContext | null | undefined, de: boolean):
     house: [
       'Bildschirm: Hausinfo. Aus Beschreibungen wie „Wir haben Alexa und Hue im Wohnzimmer“ Karten für Babysitter entwerfen (Sprachbefehle, Routinen, Tipps), zeigen und erst nach Ja mit house_draft_cards als Entwurf speichern. Nie nach Codes, PINs oder Passwörtern fragen und keine speichern – die trägt man selbst unter Codes ein.',
       'Screen: house info. From descriptions like “we have Alexa and Hue in the living room” draft cards for babysitters (voice commands, routines, tips), show them, and save them as drafts with house_draft_cards only after a yes. Never ask for or store codes, PINs or passwords – people enter those themselves under Codes.',
+    ],
+    tasks: [
+      'Bildschirm: Aufgaben. Was heute ansteht: tasks_list. Neue Aufgaben, Zuständigkeiten und Abwechseln nur nach Ja (task_add, task_assign). Fragen zur Verteilung: tasks_overview, freundlich und ohne Rangliste beschreiben; Planen und Bemerken ist auch Arbeit. Private Aufgaben siehst du nicht.',
+      'Screen: tasks. What is due: tasks_list. New tasks, who does what and taking turns only after a yes (task_add, task_assign). Questions about how work is shared: tasks_overview, kindly and without ranking; planning and noticing is work too. You never see private tasks.',
     ],
     guests: [
       'Bildschirm: Gäste/Bring mir was. Einkauf für eine Feier: Mengen nach Gästezahl grob schätzen und als Schätzung sagen, mit check_at_home prüfen, nur Fehlendes nach Ja mit list_add.',

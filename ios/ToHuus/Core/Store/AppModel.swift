@@ -17,6 +17,10 @@ final class AppModel {
     private(set) var userName: String?
     var notice: String?
     var showAssistant = false
+    /// the screen the assistant is opened from (server assistant-areas.ts CONTEXTS) – its tools and hints follow it, like the web
+    var assistantContext: String?
+    /// pushed screens (Aufgaben, Hausinfo, Bring mir was) set their own context and give the tab's back when they go
+    var screenContext: String?
     var showPaywall = false
     /// set by deep links (tohuus://shopping from the widget)
     var requestedTab: String?
