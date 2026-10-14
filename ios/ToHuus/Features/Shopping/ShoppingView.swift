@@ -118,6 +118,7 @@ struct ShoppingView: View {
                 await loadSuggestions()
             }
             .navigationTitle(title)
+            .rootChrome()
             .toolbar { toolbar }
             .safeAreaInset(edge: .top) {
                 HStack { SyncBadge(online: store.isOnline, pending: store.pendingCount); Spacer() }

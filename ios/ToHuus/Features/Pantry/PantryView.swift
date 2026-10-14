@@ -116,6 +116,7 @@ struct PantryView: View {
             }
             .onGeometryChangeCompat { w in width = w }
             .navigationTitle(L("Pantry"))
+            .rootChrome()
             .navigationDestination(for: Int.self) { id in ProductDetailView(productId: id, store: store) }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -208,7 +209,7 @@ struct PantryView: View {
             .sheet(isPresented: $showLabelScan) {
                 ScannerSheet(title: L("Scan a box label"), symbologies: [.qr]) { code in scannedLabel = ScannedLabel(raw: code) }
             }
-            .sheet(item: $scannedLabel) { l in LabelSheet(raw: l.raw, store: store) { id in scannedLabel = nil; open(id) } }
+            .sheet(item: $scannedLabel) { l in LabelQuickActionView(raw: l.raw, store: store) { id in scannedLabel = nil; open(id) } }
             .task {
                 #if DEBUG
                 let d = UserDefaults.standard

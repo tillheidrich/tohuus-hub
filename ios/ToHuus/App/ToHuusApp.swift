@@ -23,6 +23,8 @@ struct ToHuusApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                // a device in kid mode stays locked to the kid screen, even after a relaunch (KidModeView.swift)
+                .kidModeGate()
                 .environment(app)
                 .environment(storeKit)
                 .tint(Theme.primary)

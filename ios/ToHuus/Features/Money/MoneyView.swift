@@ -81,6 +81,7 @@ struct MoneyView: View {
             }
             .canvasBackground()
             .navigationTitle(L("Money"))
+            .rootChrome()
             .refreshable { await load() }
             .task(id: "\(monthKey)-\(view)-\(store.revision("imports"))") { await load() }
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }

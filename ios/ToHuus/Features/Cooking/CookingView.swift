@@ -92,6 +92,7 @@ struct CookingView: View {
             }
             .onGeometryChangeCompat { w in width = w }
             .navigationTitle(L("Cooking"))
+            .rootChrome()
             .navigationDestination(for: RecipeRef.self) { ref in
                 RecipeDetailView(recipeId: ref.id, store: store, planEntryId: ref.planEntryId)
             }

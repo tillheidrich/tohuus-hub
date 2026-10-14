@@ -332,7 +332,7 @@ struct CareView: View {
             }
             Section {
                 NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
-                NavigationLink { WebPageView(api: api, path: "/etiketten?kind=care", title: L("Labels")) } label: { Label(L("Labels"), systemImage: "qrcode") }
+                NavigationLink { LabelsView(api: api, kind: .care) } label: { Label(L("Labels"), systemImage: "qrcode") }
             } footer: {
                 Text(L("Your tasks in Apple Reminders, your appointments in your calendar."))
             }
@@ -584,7 +584,7 @@ private struct CareDetailSheet: View {
                         Button { addToCalendar = true } label: { Label(L("Add to calendar"), systemImage: "calendar.badge.plus") }
                     }
                     Button { onEdit(task) } label: { Label(L("Edit"), systemImage: "pencil") }
-                    NavigationLink { WebPageView(api: api, path: "/etiketten?kind=care&id=\(task.id)", title: L("Label")) } label: { Label(L("Label"), systemImage: "qrcode") }
+                    NavigationLink { LabelsView(api: api, kind: .care, preselect: task.id) } label: { Label(L("Label"), systemImage: "qrcode") }
                 }
             }
             .themedList()

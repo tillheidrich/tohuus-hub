@@ -22,6 +22,11 @@ final class AppModel {
     /// pushed screens (Aufgaben, Hausinfo, Bring mir was) set their own context and give the tab's back when they go
     var screenContext: String?
     var showPaywall = false
+    /// global search (GlobalSearchView) and the Mehr sheet – opened from the magnifier and the avatar on every root screen
+    var showSearch = false
+    var showMore = false
+    /// Zuhause tab: "tasks" or "stock" (HomeView), set when someone opens /aufgaben or the pantry from elsewhere
+    var homeSegment: String?
     /// set by deep links (tohuus://shopping from the widget)
     var requestedTab: String?
     /// iPad kitchen mode (big week plan, recipe step by step, list to tick)

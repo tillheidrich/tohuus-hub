@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Mehr, grouped exactly like the web's "Mehr" (web/src/nav.tsx `moreGroups`): Rund ums Zuhause, Bons & Rezepte,
-/// Bring mir was & Gäste, Haushalt & Einstellungen. Same entries, same order, same filters (guest level and the
-/// switched-off areas of "Was nutzt ihr?"). Native screens where the app has them, otherwise the web page signed in
-/// (WebPageView) – docs/ios-parity-2026-10-13.md lists which ones are still web pages.
+/// Mehr (UX benchmark 2.3, docs/design/ux-benchmark-2026-10-14.md): the household and the devices groups of the one
+/// Mehr list; SettingsView adds the profile row, search, settings and help. What used to be "Rund ums Zuhause",
+/// "Bons & Rezepte" lives in its tab now (Zuhause, Geld, Kochen, Einkauf). Same filters as the web (guest level and the
+/// switched-off areas of "Was nutzt ihr?"). Every entry is native.
 struct MoreSections: View {
     @Environment(AppModel.self) private var app
     let store: ServerStore
@@ -15,77 +15,48 @@ struct MoreSections: View {
 
     var body: some View {
         Group {
-            Section(L("Around the home")) {
-                if allows("/wo") {
-                    Button { showFind = true } label: { Label(L("Where’s what?"), systemImage: "mappin.and.ellipse") }
-                        .foregroundStyle(Theme.ink)
-                }
-                if allows("/hausinfo") {
-                    NavigationLink { HouseGuideView() } label: { Label(L("House info"), systemImage: "info.circle") }
-                }
-                if allows("/einkauf/wuensche") {
-                    NavigationLink { WishesView(api: api) } label: { Label(L("Wishes & Merkliste"), systemImage: "gift") }
-                }
-                if allows("/abgleich") {
-                    Button { showCheck = true } label: { Label(L("Quick stock check"), systemImage: "checklist") }
-                        .foregroundStyle(Theme.ink)
-                }
-                if allows("/aufgaben") {
-                    NavigationLink { CareView(api: api) } label: { Label(L("Tasks"), systemImage: "checklist") }
-                }
-                if allows("/urlaub") {
-                    NavigationLink { AwayView(store: store) } label: { Label(L("Trip / away"), systemImage: "suitcase") }
-                }
-                // permanent guests chosen for a trip's handover (members use the trip page)
-                if app.isGuest && allows("/uebergabe") {
-                    NavigationLink { HandoverGuestView(api: api) } label: { Label(L("Handover"), systemImage: "suitcase") }
-                }
-            }
-            if allows("/import") || allows("/lieblinge") || allows("/ausgaben") {
-                Section(L("Receipts & recipes")) {
-                    if allows("/import") {
-                        NavigationLink { ImportsListView(store: store) } label: { Label(L("Receipts & imports"), systemImage: "doc.text") }
-                    }
-                    if allows("/lieblinge") {
-                        NavigationLink { WebPageView(api: api, path: "/lieblinge", title: L("Favourites")) } label: { Label(L("Favourites"), systemImage: "heart") }
-                    }
-                    if allows("/ausgaben") {
-                        NavigationLink { SpendView(store: store) } label: { Label(L("Spending in detail"), systemImage: "chart.bar") }
-                    }
-                }
-            }
-            if showTreats || allows("/bar") {
-                Section(L("Treats & guests")) {
-                    if showTreats {
-                        NavigationLink { TreatsView(api: api) } label: { Label(L("Treats"), systemImage: "hand.raised") }
-                    }
-                    if allows("/bar") {
-                        NavigationLink { WebPageView(api: api, path: "/bar", title: L("Guests & party")) } label: { Label(L("Guests & party"), systemImage: "wineglass") }
-                        NavigationLink { GuestLinksView(api: api) } label: { Label(L("Guest links"), systemImage: "link") }
-                    }
-                }
-            }
-            Section(L("Household & settings")) {
+            // Haushalt: the people and the guests (UX benchmark 2.3 – one list, every function at most two taps away)
+            Section(L("Household")) {
                 if allows("/einstellungen?tab=members") {
                     NavigationLink { HouseholdView(api: api) } label: { Label(L("People"), systemImage: "person.2") }
                     if !app.isGuest {
                         NavigationLink { InvitesView(api: api) } label: { Label(L("Invite someone"), systemImage: "person.badge.plus") }
                     }
                 }
+                if allows("/bar") {
+                    NavigationLink { GuestsPartyView(store: store) } label: { Label(L("Guests & party"), systemImage: "wineglass") }
+                }
+                if showTreats {
+                    NavigationLink { TreatsView(api: api) } label: { Label(L("Treats"), systemImage: "hand.raised") }
+                }
                 if allows("/merkt-sich") {
                     NavigationLink { MemoryView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "text.book.closed") }
                 }
-                if allows("/einstellungen?tab=displays") {
-                    NavigationLink { WebPageView(api: api, path: "/einstellungen?tab=displays", title: L("Displays")) } label: { Label(L("Displays"), systemImage: "display") }
+            }
+            // permanent guests: what the Zuhause tab shows members (Hausinfo, Wo ist was?) and their handover
+            if app.isGuest {
+                Section(L("Around the home")) {
+                    if allows("/wo") {
+                        Button { showFind = true } label: { Label(L("Where’s what?"), systemImage: "mappin.and.ellipse") }
+                            .foregroundStyle(Theme.ink)
+                    }
+                    if allows("/hausinfo") {
+                        NavigationLink { HouseGuideView() } label: { Label(L("House info"), systemImage: "info.circle") }
+                    }
+                    if allows("/uebergabe") {
+                        NavigationLink { HandoverGuestView(api: api) } label: { Label(L("Handover"), systemImage: "suitcase") }
+                    }
                 }
-                if allows("/einstellungen?tab=ha") {
-                    NavigationLink { WebPageView(api: api, path: "/einstellungen?tab=ha", title: "Home Assistant") } label: { Label("Home Assistant", systemImage: "house") }
-                }
-                if allows("/etiketten") {
-                    NavigationLink { WebPageView(api: api, path: "/etiketten", title: L("QR labels")) } label: { Label(L("QR labels"), systemImage: "qrcode") }
-                }
-                if allows("/einstellungen?tab=data") {
-                    NavigationLink { WebPageView(api: api, path: "/einstellungen?tab=data", title: L("Data & backups")) } label: { Label(L("Data & backups"), systemImage: "externaldrive") }
+            }
+            // Geräte: everything that connects ToHuus to other things
+            if !app.isGuest {
+                Section(L("Devices & connections")) {
+                    NavigationLink { IntegrationsHubView(api: api) } label: { Label(L("Connections"), systemImage: "point.3.connected.trianglepath.dotted") }
+                    NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
+                    if allows("/etiketten") {
+                        NavigationLink { LabelsView(api: api) } label: { Label(L("QR labels"), systemImage: "qrcode") }
+                    }
+                    NavigationLink { SignedInDevicesView(api: api) } label: { Label(L("Signed-in devices"), systemImage: "laptopcomputer.and.iphone") }
                 }
             }
         }

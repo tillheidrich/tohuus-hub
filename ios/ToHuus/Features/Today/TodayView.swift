@@ -274,6 +274,16 @@ struct TodayView: View {
                 }
                 .accessibilityLabel(L("Add to the list"))
             }
+            Button { app.showSearch = true } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Theme.primaryText)
+                    .frame(width: 40, height: 40)
+                    .background(Theme.surface, in: Circle())
+                    .overlay(Circle().stroke(Theme.line, lineWidth: 1))
+                    .tapTarget()
+            }
+            .accessibilityLabel(L("Search"))
             Button(action: openSettings) {
                 PersonAvatar(name: app.userName ?? "?", size: 40, api: store.api)
                     .tapTarget()

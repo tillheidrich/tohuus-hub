@@ -198,7 +198,7 @@ struct ProductDetailView: View {
                     if more.isStaple == true { StatusPill(text: L("always stocked"), status: nil) }
                     if more.orderable == true {
                         // the menu editor (pictures, choices, groups) – web /bestellen/karte?item=
-                        NavigationLink { WebPageView(api: store.api, path: "/bestellen/karte?item=\(p.id)", title: L("Menu")) } label: {
+                        NavigationLink { MenuEditorView(store: store) } label: {
                             StatusPill(text: L("on the order menu"), status: "ok")
                         }
                         .accessibilityHint(L("Opens the menu"))
