@@ -32,7 +32,8 @@ iOS: `cd ios && xcodegen generate && open ToHuus.xcodeproj` (team FVS7WVTQ67, bu
 ## Two modes, one codebase
 
 - **ToHuus Cloud** (`MULTI_TENANT=true`): many households, one encrypted SQLite file per household (`DATA_DIR/households/<uuid>/tohuus.db`), accounts in encrypted `accounts.db`, envelope encryption with `TOHUUS_MASTER_KEY`. Live at https://cloud.tohuus.heidrich-digital.de (Coolify app `tohuus-cloud`). Back office for operators at `/betrieb`. Sign-up is gated by the beta gate (`CLOUD_SIGNUP=invite` by default; codes/allowlist in `/betrieb`). See `docs/cloud.md`.
-- **Self-hosted** (`MULTI_TENANT=false`): one household, web app/PWA, Home Assistant, MCP. The App Store app is **cloud only** (decision 12 Oct 2026); self-hosting stays open source on GitHub without the native app.
+- **Self-hosted** (`MULTI_TENANT=false`): one household, web app/PWA, Home Assistant, MCP. Since 14 Oct 2026 the App Store app connects to a self-hosted server too ("Eigener Server" on the start screen; replaces the cloud-only decision of 12 Oct): every feature works on both, purchases exist only in the cloud.
+- **Web ↔ iOS parity** (decision 14 Oct 2026): every web function exists natively in the iOS app, no compromises and no web views for features. A new web feature is not done until the iOS screen exists (and the other way round). Structure and UX benchmark: `docs/design/ux-benchmark-2026-10-14.md`.
 
 ## Rules that are easy to break
 
