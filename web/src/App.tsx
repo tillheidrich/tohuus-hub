@@ -1,5 +1,5 @@
 import { Barcode, BowlFood, Camera, FileArrowUp, MagnifyingGlass, Package, Plus, QrCode, TextAa, Gear } from '@phosphor-icons/react';
-import { type ComponentType, lazy, type ReactNode, Suspense, useEffect, useState } from 'react';
+import { type ComponentType, lazy, type ReactNode, Suspense, useCallback, useEffect, useState } from 'react';
 import { CrashBoundary } from './crash';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, connectEvents, useApi } from './api';
@@ -9,7 +9,8 @@ import { applyBrand } from './brand';
 import { useInstance, useToday } from './data';
 import { setLang, t } from './i18n';
 import { kidLock } from './kidlock';
-import { load, moduleAllows, moreGroups, TABS, tabFor } from './nav';
+import { homeTarget, load, moduleAllows, moreGroups, TABS, tabFor } from './nav';
+import { GlobalSearch, useSearchHotkey } from './search/GlobalSearch';
 import { useOnboardingRedirect } from './onboarding-state';
 import { guestAllows } from './people/access';
 import { enablePeopleDirectory } from './people/Avatar';
@@ -211,10 +212,18 @@ function Shell({ me }: { me: Me }) {
   const attention = today.data?.counts?.attention ?? 0;
   // "Was nutzt ihr?" (list2): switched-off areas leave the tab bar and "Mehr" (their pages stay reachable by link)
   const mods = me.modules;
-  const tabs = TABS.filter((l) => guestAllows(gl, l.to) && moduleAllows(mods, l.to));
+  // Zuhause opens the side used last and only one the person may see (nav.tsx homeTarget)
+  const tabs = TABS.map((l) => (l.key === '/zuhause' ? { ...l, to: homeTarget(gl, mods) ?? '' } : l)).filter((l) => l.to && guestAllows(gl, l.to) && moduleAllows(mods, l.to));
+  const [search, setSearch] = useState(false);
+  const openSearch = useCallback(() => setSearch(true), []);
+  useSearchHotkey(openSearch);
+  useEffect(() => {
+    window.addEventListener('tohuus:search', openSearch);
+    return () => window.removeEventListener('tohuus:search', openSearch);
+  }, [openSearch]);
   const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods });
   const activeTab = tabFor(loc.pathname);
-  const badge = (to: string) => (to === '/einkauf' && openCount ? openCount : to === '/bestand' && attention ? attention : 0);
+  const badge = (key: string) => (key === '/einkauf' && openCount ? openCount : key === '/zuhause' && attention ? attention : 0);
 
   if (gl === 'paused')
     return (
@@ -234,26 +243,25 @@ function Shell({ me }: { me: Me }) {
           <BrandMark />
           <span>ToHuus</span>
         </NavLink>
-        {guestAllows(gl, '/wo') && (
-          <button className="side-search" onClick={() => nav('/wo')}>
-            <MagnifyingGlass size={18} />
-            <span>{t('Where can I find …?')}</span>
-          </button>
-        )}
+        <button className="side-search" onClick={openSearch} aria-keyshortcuts="Meta+K">
+          <MagnifyingGlass size={18} />
+          <span>{t('Search')}</span>
+          <kbd className="side-kbd">⌘K</kbd>
+        </button>
         <nav className="side-nav">
           <div className="nav-group">
             {tabs.map((l) => (
               <NavLink
-                key={l.to}
+                key={l.key}
                 to={l.to}
                 end={l.end}
                 onMouseEnter={l.prefetch}
                 onFocus={l.prefetch}
-                className={() => `navlink ${activeTab === l.to ? 'active' : ''}`}
+                className={() => `navlink ${activeTab === l.key ? 'active' : ''}`}
               >
-                <l.icon size={20} weight={activeTab === l.to ? 'fill' : 'regular'} />
+                <l.icon size={20} weight={activeTab === l.key ? 'fill' : 'regular'} />
                 {l.label()}
-                {badge(l.to) ? <span className="count">{badge(l.to)}</span> : null}
+                {badge(l.key) ? <span className="count">{badge(l.key)}</span> : null}
               </NavLink>
             ))}
           </div>
@@ -349,11 +357,11 @@ function Shell({ me }: { me: Me }) {
 
       <nav className="tabbar" aria-label={t('Navigation')} hidden={loc.pathname.startsWith('/willkommen')}>
         {tabs.map((l) => {
-          const on = activeTab === l.to;
-          const n = badge(l.to);
+          const on = activeTab === l.key;
+          const n = badge(l.key);
           return (
             <NavLink
-              key={l.to}
+              key={l.key}
               to={l.to}
               end={l.end}
               onTouchStart={l.prefetch}
@@ -372,6 +380,7 @@ function Shell({ me }: { me: Me }) {
       </nav>
 
       {!gl && !loc.pathname.startsWith('/willkommen') && <AssistantFab />}
+      {search && <GlobalSearch guest={gl} admin={me.actor.role === 'admin'} cloud={inst.data?.mode === 'cloud'} modules={mods} onClose={() => setSearch(false)} />}
 
       <AddSheet open={add} onClose={() => setAdd(false)} onNewProduct={() => setNewProduct(true)} onPutAway={() => setPutAway(true)} />
       {newProduct && (

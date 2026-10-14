@@ -1,9 +1,11 @@
 /**
- * Navigation model (plan 2026-10-12): five tabs – Heute · Einkauf · Vorrat · Kochen · Geld – plus "Mehr" for
- * everything else. Shared by the mobile tab bar, the desktop sidebar and the /mehr page.
+ * Navigation model (UX benchmark 14 Oct 2026, docs/design/ux-benchmark-2026-10-14.md): five tabs – Heute · Einkauf ·
+ * Kochen · Zuhause · Geld – plus "Mehr" (one list: Haushalt, Einstellungen, Geräte, Hilfe). Zuhause holds Aufgaben and
+ * Vorrat (switch at the top of both pages) and the doors Wo ist was?, Hausinfo, Urlaub. Same structure as the iPhone app.
+ * Shared by the mobile tab bar, the desktop sidebar and the /mehr page.
  * Each entry knows how to load its page chunk, so the tab bar can prefetch on hover / touchstart.
  */
-import { Basket, ChefHat, Coins, House, type Icon, Package } from '@phosphor-icons/react';
+import { Basket, ChefHat, Coins, House, HouseLine, type Icon } from '@phosphor-icons/react';
 import { qc, get } from './api';
 import { guestAllows } from './people/access';
 import { t } from './i18n';
@@ -18,6 +20,8 @@ export const load = {
 };
 
 export interface Tab {
+  /** the tab's identity for the active state (tabFor) */
+  key: string;
   to: string;
   label: () => string;
   icon: Icon;
@@ -31,8 +35,9 @@ const warm = (key: unknown[], path: string) => {
 };
 
 export const TABS: Tab[] = [
-  { to: '/', label: () => t('Today'), icon: House, end: true },
+  { key: '/', to: '/', label: () => t('Today'), icon: House, end: true },
   {
+    key: '/einkauf',
     to: '/einkauf',
     label: () => t('Shopping'),
     icon: Basket,
@@ -41,18 +46,33 @@ export const TABS: Tab[] = [
       warm(['shopping', 'store', 0, 'list', 0, 0], '/shop/list');
     },
   },
+  { key: '/kochen', to: '/kochen', label: () => t('Cook'), icon: ChefHat, prefetch: () => load.cook() },
   {
-    to: '/bestand',
-    label: () => t('Pantry'),
-    icon: Package,
+    key: '/zuhause',
+    to: '/aufgaben',
+    label: () => t('Home area'),
+    icon: HouseLine,
     prefetch: () => {
       load.stock();
       warm(['products'], '/products');
     },
   },
-  { to: '/kochen', label: () => t('Cook'), icon: ChefHat, prefetch: () => load.cook() },
-  { to: '/geld', label: () => t('Money'), icon: Coins, prefetch: () => load.money() },
+  { key: '/geld', to: '/geld', label: () => t('Money'), icon: Coins, prefetch: () => load.money() },
 ];
+
+/** Zuhause opens the side used last (Aufgaben or Vorrat) – and only one the person may see */
+export function homeTarget(guest: string | undefined, mods?: Record<string, boolean>): string | null {
+  let last = '/aufgaben';
+  try {
+    last = localStorage.getItem('sw.home.side') === 'stock' ? '/bestand' : '/aufgaben';
+  } catch {
+    /* private mode */
+  }
+  const ok = (p: string) => guestAllows(guest as never, p) && moduleAllows(mods, p);
+  if (ok(last)) return last;
+  const other = last === '/bestand' ? '/aufgaben' : '/bestand';
+  return ok(other) ? other : null;
+}
 
 export interface MoreLink {
   to: string;
@@ -73,51 +93,54 @@ export interface MoreGroup {
 export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolean; modules?: Record<string, boolean> }): MoreGroup[] {
   const groups: MoreGroup[] = [
     {
-      key: 'home',
-      title: t('Around the home'),
-      items: [
-        { to: '/wo', label: t('Where’s what?'), icon: 'MapPin' },
-        { to: '/hausinfo', label: t('House info'), icon: 'Info' },
-        { to: '/einkauf/wuensche', label: t('Wishes & Merkliste'), icon: 'Gift' },
-        { to: '/abgleich', label: t('Quick stock check'), icon: 'ClipboardText' },
-        { to: '/aufgaben', label: t('Tasks'), icon: 'ListChecks' },
-        { to: '/urlaub', label: t('Trip / away'), icon: 'Suitcase' },
-        // permanent guests chosen for a trip's handover (members use the trip page)
-        ...(opts.guest ? [{ to: '/uebergabe', label: t('Handover'), icon: 'Suitcase' }] : []),
-      ],
-    },
-    {
-      key: 'kitchen',
-      title: t('Receipts & recipes'),
-      items: [
-        { to: '/import', label: t('Receipts & imports'), icon: 'Receipt' },
-        { to: '/lieblinge', label: t('Favourites'), icon: 'Heart' },
-        { to: '/ausgaben', label: t('Spending in detail'), icon: 'ChartBar' },
-      ],
-    },
-    {
-      key: 'guests',
-      title: t('Treats & guests'),
-      items: [
-        { to: '/bestellen', label: t('Treats'), icon: 'HandHeart' },
-        { to: '/bar', label: t('Guests & party'), icon: 'Martini' },
-      ],
-    },
-    {
-      key: 'admin',
-      title: t('Household & settings'),
+      key: 'household',
+      title: t('Household'),
       items: [
         { to: '/einstellungen?tab=members', label: t('People'), icon: 'UsersThree' },
+        { to: '/bar', label: t('Guests & party'), icon: 'Martini' },
+        { to: '/bestellen', label: t('Treats'), icon: 'HandHeart' },
         { to: '/merkt-sich', label: t('What ToHuus remembers'), icon: 'Notebook' },
+        // permanent guests: what members find in Zuhause, and their handover
+        ...(opts.guest
+          ? [
+              { to: '/wo', label: t('Where’s what?'), icon: 'MapPin' },
+              { to: '/hausinfo', label: t('House info'), icon: 'Info' },
+              { to: '/uebergabe', label: t('Handover'), icon: 'Suitcase' },
+            ]
+          : []),
+      ],
+    },
+    {
+      key: 'settings',
+      title: t('Settings'),
+      items: [
+        { to: '/einstellungen?tab=account', label: t('My account'), icon: 'UserCircle' },
+        { to: '/einstellungen?tab=home', label: t('Household settings'), icon: 'House' },
+        { to: '/einstellungen?tab=places', label: t('Places & categories'), icon: 'SquaresFour' },
+        { to: '/einstellungen?tab=notify', label: t('Notifications'), icon: 'Bell' },
+        { to: '/einstellungen?tab=access', label: t('Access & AI'), icon: 'Sparkle' },
+        { to: '/einstellungen?tab=recipes', label: t('Recipes'), icon: 'BookOpen' },
         { to: '/einstellungen?tab=plan', label: t('Plan & storage'), icon: 'CreditCard', cloud: true },
-        { to: '/einstellungen?tab=displays', label: t('Displays'), icon: 'Monitor' },
-        { to: '/einstellungen?tab=ha', label: 'Home Assistant', icon: 'House' },
-        { to: '/etiketten', label: t('QR labels'), icon: 'QrCode' },
         { to: '/einstellungen?tab=data', label: t('Data & backups'), icon: 'Database' },
-        { to: '/einstellungen', label: t('Settings'), icon: 'Gear' },
+      ],
+    },
+    {
+      key: 'devices',
+      title: t('Devices & connections'),
+      items: [
+        { to: '/einstellungen?tab=ha', label: 'Home Assistant', icon: 'House' },
+        { to: '/einstellungen?tab=displays', label: t('Displays'), icon: 'Monitor' },
+        { to: '/einstellungen?tab=print', label: t('Printers & tickets'), icon: 'Printer' },
+        { to: '/etiketten', label: t('QR labels'), icon: 'QrCode' },
+      ],
+    },
+    {
+      key: 'help',
+      title: t('Help'),
+      items: [
+        { to: '/hilfe', label: t('Help'), icon: 'Question' },
         { to: '/so-funktioniert-tohuus', label: t('How ToHuus works'), icon: 'BookOpen' },
         { to: '/gut-zu-wissen', label: t('Good to know'), icon: 'Lightbulb' },
-        { to: '/hilfe', label: t('Help'), icon: 'Question' },
       ],
     },
   ];
@@ -148,8 +171,8 @@ export const moduleAllows = (mods: Record<string, boolean> | undefined, path: st
 export function tabFor(path: string): string {
   if (path === '/') return '/';
   if (path.startsWith('/einkauf')) return '/einkauf';
-  if (path.startsWith('/bestand') || path.startsWith('/scan')) return '/bestand';
+  if (['/bestand', '/scan', '/aufgaben', '/pflege', '/wo', '/hausinfo', '/urlaub', '/abgleich'].some((p) => path.startsWith(p))) return '/zuhause';
   if (path.startsWith('/kochen') || path.startsWith('/rezepte') || path.startsWith('/abstimmung')) return '/kochen';
-  if (path.startsWith('/geld')) return '/geld';
+  if (path.startsWith('/geld') || path.startsWith('/import') || path.startsWith('/ausgaben')) return '/geld';
   return '/mehr';
 }

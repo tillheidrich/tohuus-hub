@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
+import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, MagnifyingGlass, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
 import { DemoNudge } from './Samples';
 import { TasksTodayCard } from './TasksToday';
 import { Fragment, type ReactNode, useState } from 'react';
@@ -76,6 +76,9 @@ export function Today({ me }: { me: Me }) {
           <Plus size={20} />
         </button>
       )}
+      <button className="icon-btn" onClick={() => window.dispatchEvent(new Event('tohuus:search'))} aria-label={t('Search')} title={t('Search')}>
+        <MagnifyingGlass size={20} />
+      </button>
       <button className="avatar-btn" onClick={() => nav('/mehr')} aria-label={t('More: settings, people, guests …')} title={t('More')}>
         <Avatar name={me.actor.name} personKey={me.actor.userId ? `u${me.actor.userId}` : null} size={40} />
       </button>

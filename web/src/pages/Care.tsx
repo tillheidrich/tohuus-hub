@@ -32,6 +32,7 @@ import { BlickSection } from './Blick';
 import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
+import { HomeSwitch } from '../home/HomeSwitch';
 
 export type Unit = 'day' | 'week' | 'month' | 'year';
 export interface CareTask {
@@ -306,6 +307,7 @@ export function Care() {
 
   return (
     <div className="rise">
+      <HomeSwitch side="tasks" />
       <header className="page-head">
         <div>
           <div className="eyebrow">
