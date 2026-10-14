@@ -34,7 +34,7 @@ struct TasksTodayCard: View {
                                     if t.isPrivate { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(Theme.ink3).accessibilityLabel(L("Only for me")) }
                                     Text(t.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
                                 }
-                                Text([t.state == "overdue" ? L("overdue") : L("due today"), t.doer?.name].compactMap { $0 }.joined(separator: " · "))
+                                Text([t.state == "overdue" ? L("overdue") : t.dueTime.map { LF("today %@", TaskTime.label($0)) } ?? L("due today"), t.place, t.doer?.name].compactMap { $0 }.joined(separator: " · "))
                                     .font(.caption).foregroundStyle(t.state == "overdue" ? Theme.empty : Theme.ink3)
                             }
                             Spacer(minLength: 0)

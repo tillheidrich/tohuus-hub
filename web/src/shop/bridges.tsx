@@ -2,11 +2,11 @@
  * Bridges (list2, block E): the list in Apple Reminders / Nextcloud Tasks via CalDAV, and a one-off import from
  * another list app (Bring!, AnyList, Google Keep, a shared text or CSV).
  */
-import { ArrowSquareIn, Copy, Trash } from '@phosphor-icons/react';
+import { ArrowSquareIn, CalendarBlank, Copy, Trash } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 import { api, del, invalidate, post, relTime, useApi } from '../api';
 import { t } from '../i18n';
-import { Sheet, useToast } from '../ui';
+import { Sheet, Toggle, useToast } from '../ui';
 import './list2.css';
 
 interface Pw {
@@ -38,7 +38,7 @@ export function CalDavCard() {
           {t('ToHuus in Apple Reminders and Calendar')}
         </h2>
         <p className="small muted" style={{ margin: '4px 0 0' }}>
-          {t('Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows what is due in “ToHuus · Fällig”. One password for both.')}
+          {t('Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows your appointments in “ToHuus · Kalender” and “ToHuus · Mein Kalender” – moving and adding works both ways. One password for both.')}
         </p>
       </div>
       {made ? (
@@ -91,6 +91,89 @@ export function CalDavCard() {
                 aria-label={t('Revoke {name}', { name: p.label })}
                 onClick={async () => {
                   await del(`/caldav/passwords/${p.id}`);
+                  invalidate('settings');
+                }}
+              >
+                <Trash size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+interface Feed {
+  id: number;
+  label: string;
+  with_private: number;
+  created_at: string;
+  last_used_at: string | null;
+}
+
+/** Calendar subscription (webcal) for calendars without CalDAV: Google Calendar, Outlook and others – read-only. */
+export function CalendarFeedCard() {
+  const q = useApi<Feed[]>(['settings', 'feeds'], '/calendar/feeds');
+  const [made, setMade] = useState<{ url: string; webcal: string } | null>(null);
+  const [mine, setMine] = useState(false);
+  const toast = useToast();
+  const create = async () => {
+    try {
+      setMade(await post('/calendar/feeds', { label: mine ? t('Calendar with my own') : t('Calendar'), with_private: mine }));
+      invalidate('settings');
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast({ text: t('Copied') }));
+  return (
+    <section className="card pad stack" aria-labelledby="feed-h">
+      <div>
+        <h2 id="feed-h" style={{ margin: 0 }}>{t('Calendar subscription for Google, Outlook and others')}</h2>
+        <p className="small muted" style={{ margin: '4px 0 0' }}>
+          {t('For calendars without CalDAV: the link shows your tasks with a date and your appointments. It is read-only and updates about every hour. Keep it to yourself – whoever has it sees the entries.')}
+        </p>
+      </div>
+      {made ? (
+        <div className="stack caldav-made">
+          <div className="row caldav-field">
+            <code className="grow" style={{ wordBreak: 'break-all' }}>{made.url}</code>
+            <button className="icon-btn plain" onClick={() => copy(made.url)} aria-label={t('Copy {what}', { what: t('Link') })}>
+              <Copy size={16} />
+            </button>
+          </div>
+          <ol className="small caldav-steps">
+            <li>{t('Google Calendar (web): Other calendars › + › From URL, paste the link.')}</li>
+            <li>{t('Outlook: Add calendar › Subscribe from web, paste the link.')}</li>
+            <li>{t('On a Mac or iPhone you can also just open it:')} <a href={made.webcal}>{t('Open in calendar')}</a></li>
+          </ol>
+          <button className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setMade(null)}>{t('Done')}</button>
+        </div>
+      ) : (
+        <>
+          <label className="row between">
+            <span>{t('Include my private tasks')}</span>
+            <Toggle on={mine} onChange={setMine} label={t('Include my private tasks')} />
+          </label>
+          <button className="btn primary" style={{ alignSelf: 'flex-start' }} onClick={create}>
+            <CalendarBlank size={16} /> {t('Create link')}
+          </button>
+        </>
+      )}
+      {(q.data ?? []).length > 0 && (
+        <div className="list">
+          {(q.data ?? []).map((f) => (
+            <div key={f.id} className="li" style={{ minHeight: 52 }}>
+              <div className="grow">
+                <div className="title small">{f.label}</div>
+                <div className="sub">{f.last_used_at ? t('last used {when}', { when: relTime(f.last_used_at) }) : t('not used yet')}</div>
+              </div>
+              <button
+                className="icon-btn plain"
+                aria-label={t('Revoke {name}', { name: f.label })}
+                onClick={async () => {
+                  await del(`/calendar/feeds/${f.id}`);
                   invalidate('settings');
                 }}
               >

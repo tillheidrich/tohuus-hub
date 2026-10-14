@@ -332,4 +332,5 @@ the English key is the same).
 | Wer hat was im Blick (names per area, own number, "Anteile vergleichen") | Features/Household/BlickSection.swift | `GET /api/blick`, `PUT /api/blick/compare` |
 | Erinnerungen & Kalender (CalDAV app password) | Features/Settings/CalDavView.swift | `GET/POST/DELETE /api/caldav/passwords` |
 | Assistant: sparkles icon, screen context per area | MainTabView, AssistantSheet | `POST /api/assistant/chat { context }` |
-
+| Termine: time, length and place in the task form, "In den Kalender" in the detail (EKEventEditViewController), time on Heute | Features/Household/CareView.swift, AddToCalendar.swift, Today/TasksTodayCard.swift | `POST/PATCH /api/care { due_time, duration_min, place }` |
+| Kalender-Abo for Google / Outlook | Features/Settings/CalDavView.swift | `GET/POST/DELETE /api/calendar/feeds` |

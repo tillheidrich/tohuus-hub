@@ -3,6 +3,7 @@ import {
   Bathtub,
   Bicycle,
   Car,
+  CalendarPlus,
   Check,
   Coffee,
   Drop,
@@ -26,8 +27,9 @@ import { type Location, type Product, del, fmtDate, invalidate, patch, post, use
 import { useHousehold } from '../household';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { usePeopleDirectory } from '../people/Avatar';
-import { CalDavCard } from '../shop/bridges';
+import { CalDavCard, CalendarFeedCard } from '../shop/bridges';
 import { BlickSection } from './Blick';
+import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
 
@@ -65,6 +67,10 @@ export interface CareTask {
   doer: { key: string; name: string; color: string } | null;
   /** taking turns: person keys in order – "done" passes it to the next one */
   rotation?: string[];
+  /** Termin: with a time the task is a calendar entry (HH:MM, minutes, where) */
+  due_time?: string | null;
+  duration_min?: number | null;
+  place?: string | null;
   /** detail only: the rhythm the household actually keeps */
   learned_every_days?: number | null;
 }
@@ -136,6 +142,8 @@ export function dueLabel(x: Pick<CareTask, 'state' | 'days' | 'next_due'> & { as
   return t('next: {date}', { date: fmtDate(x.next_due, far ? { month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' }) });
 }
 
+const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240];
+
 export type TaskFilter = 'all' | 'house' | 'care' | 'mine';
 /** "Für mich": my private tasks and the ones I do or keep in mind */
 export function taskMatches(x: CareTask, f: TaskFilter, me?: number | null) {
@@ -198,6 +206,7 @@ export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareT
     compact || task.as_needed ? null : intervalLabel(task.interval_n, task.interval_unit),
     task.checklist?.length ? t('{done} of {total}', { done: ticked, total: task.checklist.length }) : null,
     task.product ? t('{name}: {n} in stock', { name: task.product.name, n: task.product.stock ?? 0 }) : null,
+    task.place,
     task.location?.name,
   ].filter(Boolean);
   return (
@@ -209,7 +218,7 @@ export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareT
           {task.name}
         </div>
         <div className="sub">
-          <span className={`care-due ${task.state}`}>{dueLabel(task)}</span>
+          <span className={`care-due ${task.state}`}>{dueLabel(task)}{task.due_time && task.next_due ? `, ${timeLabel(task.due_time)}` : ''}</span>
           {sub.length ? ` · ${sub.join(' · ')}` : ''}
         </div>
       </div>
@@ -411,8 +420,9 @@ export function Care() {
       )}
 
       {data?.me ? (
-        <div style={{ marginTop: 24 }}>
+        <div className="stack" style={{ marginTop: 24 }}>
           <CalDavCard />
+          <CalendarFeedCard />
         </div>
       ) : null}
       <TaskDetail
@@ -467,7 +477,11 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
         </div>
         <dl className="kv" style={{ margin: 0 }}>
           <dt>{t('Next due')}</dt>
-          <dd>{task.next_due ? fmtDate(task.next_due, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</dd>
+          <dd>
+            {task.next_due ? fmtDate(task.next_due, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+            {task.next_due && task.due_time ? `, ${timeLabel(task.due_time)} · ${durationLabel(task.duration_min ?? 60)}` : ''}
+          </dd>
+          {task.place && (<><dt>{t('Place')}</dt><dd>{task.place}</dd></>)}
           <dt>{t('Last done')}</dt>
           <dd>{task.last_done ? fmtDate(task.last_done, { day: 'numeric', month: 'long', year: 'numeric' }) : t('unknown')}</dd>
           <dt>{t('Reminder')}</dt>
@@ -481,6 +495,11 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
           )}
           {task.note && (<><dt>{t('Note')}</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{task.note}</dd></>)}
         </dl>
+        {task.next_due && (
+          <a className="btn" href={`/api/care/${task.id}/ics`} download style={{ alignSelf: 'flex-start', minHeight: 44 }}>
+            <CalendarPlus size={18} /> {t('Add to calendar')}
+          </a>
+        )}
         {task.checklist?.length > 0 && (
           <div>
             <div className="eyebrow" style={{ marginBottom: 6 }}>{t('Sub-items')}</div>
@@ -585,6 +604,9 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
         rotation: (f.rotation?.length ?? 0) > 1 ? f.rotation : [],
         checklist: f.checklist ?? [],
         next_due: f.next_due || null,
+        due_time: !needed && f.next_due && f.due_time ? f.due_time : null,
+        duration_min: !needed && f.next_due && f.due_time ? (f.duration_min ?? 60) : null,
+        place: f.place?.trim() || null,
         last_done: f.last_done || null,
         lead_days: f.lead_days ?? undefined,
         location_id: f.location_id ?? null,
@@ -683,6 +705,29 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
             <input className="input" type="number" min={0} max={365} inputMode="numeric" value={f.lead_days ?? ''} placeholder={t('automatic')} onChange={(e) => set({ lead_days: e.target.value === '' ? undefined : Number(e.target.value) })} />
           </div>
         </div>}
+        {!needed && (
+          <div className="grid-2">
+            <div className="field">
+              <label>{t('Time (optional)')}</label>
+              <input className="input" type="time" value={f.due_time ?? ''} onChange={(e) => set({ due_time: e.target.value || null })} />
+              <span className="help">{f.next_due ? t('With a time it is an appointment and shows in your calendar.') : t('Pick a date first.')}</span>
+            </div>
+            {f.due_time ? (
+              <div className="field">
+                <label>{t('How long')}</label>
+                <select className="input" value={f.duration_min ?? 60} onChange={(e) => set({ duration_min: Number(e.target.value) })}>
+                  {DURATIONS.map((m) => <option key={m} value={m}>{durationLabel(m)}</option>)}
+                </select>
+              </div>
+            ) : <div />}
+          </div>
+        )}
+        {!needed && (
+          <div className="field">
+            <label>{t('Place (optional)')}</label>
+            <input className="input" value={f.place ?? ''} maxLength={120} onChange={(e) => set({ place: e.target.value })} placeholder={t('e.g. basement, school, dentist')} />
+          </div>
+        )}
         <label className="row between">
           <span>
             <b>{t('Only for me')}</b>

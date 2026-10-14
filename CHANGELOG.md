@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Termine (web, iPhone): a task can have a time, length and place and is then a classic calendar entry. Apple Calendar shows "ToHuus · Kalender" and "ToHuus · Mein Kalender" two-way over CalDAV (replaces the read-only "ToHuus · Fällig"); Google Calendar, Outlook and others subscribe to a read-only link (`/api/calendar/feeds`, `/kalender-abo/<secret>.ics`); "In den Kalender" per task (`GET /api/care/:id/ics`, iPhone: Apple's event editor). The assistant's `task_add` takes `time`, `minutes`, `place`.
+
 - Aufgaben (web, iPhone, `docs/tasks.md`): household chores next to care & deadlines, private tasks ("nur für mich"), rhythm by weekday or after done, "bei Bedarf", sub-items, who does it (member or child), taking turns, recently done, the learned rhythm and a "Aufgaben heute" ring on Heute. `/pflege` → `/aufgaben`. New fields on `POST/PATCH /api/care`, new `GET /api/care/recent`.
 - Wer hat was im Blick (`GET /api/blick`, `PUT /api/blick/compare`): who noticed, planned, took care of receipts and did tasks – names only; shares only when every member agrees. `meal_plan.added_by` records who planned a meal.
 - Apple Reminders / Calendar: CalDAV collections "ToHuus · Aufgaben", "ToHuus · Nur für mich" (VTODO, two-way) and "ToHuus · Fällig" (read-only VEVENT). iPhone: Mehr › Aufgaben › Erinnerungen & Kalender.

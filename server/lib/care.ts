@@ -74,6 +74,13 @@ migrate(
 );
 // taking turns: the people who do a task in turn (person keys); "done" passes it to the next one
 migrate('tasks-2', `ALTER TABLE care_tasks ADD COLUMN rotation TEXT; ALTER TABLE care_log ADD COLUMN prev_doer_key TEXT;`);
+// Termine (14 Oct 2026): a task with a time is an appointment – it shows as a classic calendar entry (docs/tasks.md)
+migrate(
+  'termine-1',
+  `ALTER TABLE care_tasks ADD COLUMN due_time TEXT;
+   ALTER TABLE care_tasks ADD COLUMN duration_min INTEGER;
+   ALTER TABLE care_tasks ADD COLUMN place TEXT;`,
+);
 
 export type TaskCategory = 'house' | 'care';
 export type TaskVisibility = 'household' | 'private';
@@ -235,6 +242,10 @@ export interface CareRow {
   checklist: string | null;
   doer_key: string | null;
   rotation: string | null;
+  /** HH:MM – with a time the task is an appointment (Termin) */
+  due_time: string | null;
+  duration_min: number | null;
+  place: string | null;
 }
 
 /** Who may see a task: everyone in the household, or – private – only its owner. `viewer` undefined = shared views. */
@@ -342,7 +353,25 @@ export interface CareInput {
   checklist?: CheckItem[] | null;
   doer_key?: string | null;
   rotation?: string[] | null;
+  due_time?: string | null;
+  duration_min?: number | null;
+  place?: string | null;
 }
+
+function cleanTime(v: string | null | undefined) {
+  if (v == null || v === '') return null;
+  const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(v.trim());
+  if (!m) throw userError(t('Invalid time'));
+  return `${m[1].padStart(2, '0')}:${m[2]}`;
+}
+
+function cleanDuration(v: number | null | undefined) {
+  if (v == null) return null;
+  if (!Number.isInteger(v) || v < 5 || v > 1440) throw userError(t('Invalid duration'));
+  return v;
+}
+
+const cleanPlace = (v: string | null | undefined) => (v?.trim() ? v.trim().slice(0, 120) : null);
 
 function cleanRotation(list: string[] | null | undefined) {
   if (!list) return null;
@@ -393,8 +422,8 @@ export function createCareTask(input: CareInput, owner?: number | null) {
   const info = db
     .prepare(
       `INSERT INTO care_tasks (name, template, interval_n, interval_unit, next_due, last_done, lead_days, location_id, product_id, consume_qty, assignee_user_id, note,
-         category, visibility, owner_user_id, anchor, as_needed, checklist, doer_key, rotation)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         category, visibility, owner_user_id, anchor, as_needed, checklist, doer_key, rotation, due_time, duration_min, place)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       name,
@@ -417,6 +446,9 @@ export function createCareTask(input: CareInput, owner?: number | null) {
       cleanChecklist(input.checklist),
       validDoer(input.doer_key) ?? (input.rotation?.length ? (parseKeys(cleanRotation(input.rotation))[0] ?? null) : null),
       visibility === 'private' ? null : cleanRotation(input.rotation),
+      nextDue ? cleanTime(input.due_time) : null,
+      nextDue && input.due_time ? cleanDuration(input.duration_min) : null,
+      cleanPlace(input.place),
     );
   emit('care');
   return careView(getCareTask(Number(info.lastInsertRowid))!);
@@ -449,11 +481,17 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
     // a private task is nobody else's turn
     if (next.visibility === 'private') next.rotation = null;
   }
+  if (input.due_time !== undefined) next.due_time = cleanTime(input.due_time);
+  if (input.duration_min !== undefined) next.duration_min = cleanDuration(input.duration_min);
+  if (input.place !== undefined) next.place = cleanPlace(input.place);
   if (next.as_needed) {
     next.interval_n = null;
     next.interval_unit = null;
     if (input.next_due === undefined) next.next_due = null;
   }
+  // a time needs a day
+  if (!next.next_due) next.due_time = null;
+  if (!next.due_time) next.duration_min = null;
   if (!next.name?.trim()) throw userError(t('Please enter a name'));
   if ((next.interval_n && !next.interval_unit) || (!next.interval_n && next.interval_unit)) throw userError(t('Interval needs a number and a unit'));
   // interval changed and no explicit date: recompute from the last time it was done
@@ -463,7 +501,7 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
   db.prepare(
     `UPDATE care_tasks SET name = ?, interval_n = ?, interval_unit = ?, next_due = ?, last_done = ?, lead_days = ?, location_id = ?, product_id = ?,
        consume_qty = ?, assignee_user_id = ?, note = ?, archived = ?, category = ?, visibility = ?, owner_user_id = ?, anchor = ?, as_needed = ?,
-       checklist = ?, doer_key = ?, rotation = ?, updated_at = datetime('now') WHERE id = ?`,
+       checklist = ?, doer_key = ?, rotation = ?, due_time = ?, duration_min = ?, place = ?, updated_at = datetime('now') WHERE id = ?`,
   ).run(
     next.name.trim().slice(0, 120),
     next.interval_n,
@@ -485,6 +523,9 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
     next.checklist,
     next.doer_key,
     next.rotation,
+    next.due_time,
+    next.duration_min,
+    next.place,
     id,
   );
   emit('care');

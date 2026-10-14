@@ -29,6 +29,7 @@ import {
   type QrKind,
 } from '../lib/care.js';
 import { blickOverview, setCompareOptIn } from '../lib/blick.js';
+import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
 import { priceHistory, pricedProducts, setSpendingTarget, spendingCsv, spendingSummary, spendingTarget } from '../lib/spending.js';
@@ -70,6 +71,9 @@ const careBody = z.object({
   checklist: z.array(z.object({ text: z.string().max(120), done: z.boolean().optional().default(false) })).max(30).nullable().optional(),
   doer_key: z.string().max(20).nullable().optional(),
   rotation: z.array(z.string().max(20)).max(12).nullable().optional(),
+  due_time: z.string().max(5).nullable().optional(),
+  duration_min: z.number().int().min(5).max(1440).nullable().optional(),
+  place: z.string().max(120).nullable().optional(),
 });
 
 const viewerOf = (req: Request) => req.actor?.userId ?? null;
@@ -98,6 +102,16 @@ r.get('/care', (req, res) => {
 r.get('/care/due', (req, res) => res.json(dueCareTasks({ viewer: viewerOf(req) })));
 /** done lately, with who did it – the work stays visible */
 r.get('/care/recent', (req, res) => res.json(recentlyDone(viewerOf(req), Math.min(60, Math.max(1, Number(req.query.days) || 14)))));
+
+/** one task as a calendar entry to download ("In den Kalender") */
+r.get('/care/:id/ics', (req, res) => {
+  const row = visibleTask(req, res, num(req.params.id));
+  if (!row) return;
+  const task = careView(row);
+  if (!task.next_due) return void res.status(400).json({ error: t('This task has no date yet') });
+  res.setHeader('Content-Disposition', `attachment; filename="tohuus-${task.id}.ics"`);
+  res.type('text/calendar; charset=utf-8').send(eventIcs(task));
+});
 
 /** "Wer hat was im Blick": who was involved per area; shares only when every member agreed to compare */
 r.get('/blick', (req, res) => {

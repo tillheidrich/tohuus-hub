@@ -303,12 +303,16 @@ describe('Apple Reminders (CalDAV): tasks as reminder lists', () => {
     const heat = samTasks.find((x: any) => x.name === 'Heizung entlüften');
     expect(heat).toMatchObject({ visibility: 'private', next_due: '2026-11-01', owner_user_id: samId });
     expect(JSON.stringify((await mira.req('GET', '/api/care')).json)).not.toContain('Heizung entlüften');
-    // Apple Calendar: the read-only "ToHuus · Fällig" shows all-day events, writes are refused
-    const cal = await dav('REPORT', '/caldav/c/tc/', samAuth, '<c:calendar-query xmlns:c="urn:ietf:params:xml:ns:caldav"><c:calendar-data/></c:calendar-query>');
-    expect(cal.text).toContain('BEGIN:VEVENT');
-    expect(cal.text).toContain('DTSTART;VALUE=DATE:20261101');
+    // Apple Calendar: "Mein Kalender" shows Sam's own private task as an all-day event, the household calendar never Mira's secret
+    const q = '<c:calendar-query xmlns:c="urn:ietf:params:xml:ns:caldav"><c:calendar-data/></c:calendar-query>';
+    const mineCal = await dav('REPORT', '/caldav/c/tcm/', samAuth, q);
+    expect(mineCal.text).toContain('BEGIN:VEVENT');
+    expect(mineCal.text).toContain('DTSTART;VALUE=DATE:20261101');
+    const cal = await dav('REPORT', '/caldav/c/tc/', samAuth, q);
+    expect(cal.text).not.toContain('Heizung entlüften');
     expect(cal.text).not.toContain(SECRET);
-    expect((await dav('PUT', '/caldav/c/tc/x.ics', samAuth, ics)).status).toBe(403);
+    // a reminder is no calendar entry
+    expect((await dav('PUT', '/caldav/c/tc/x.ics', samAuth, ics)).status).toBe(415);
     // deleting in Reminders puts it away, nothing is lost
     expect((await dav('DELETE', '/caldav/c/tm/AAAA-BBBB.ics', samAuth)).status).toBe(204);
     expect((db.prepare('SELECT archived FROM care_tasks WHERE id = ?').get(heat.id) as any).archived).toBe(1);
@@ -345,5 +349,88 @@ describe('Wer hat was im Blick', () => {
     const money = both.areas.find((a: any) => a.area === 'money');
     expect(money.shares).toEqual([{ name: 'Sam', share: 100 }]);
     expect((await sam.req('PUT', '/api/blick/compare', { on: false })).json.areas.every((a: any) => a.shares === null)).toBe(true);
+  });
+});
+
+describe('Termine: classic calendar entries', () => {
+  const dav = async (method: string, p: string, auth: string, body = '', headers: Record<string, string> = {}) => {
+    const r = await fetch(base + p, { method, headers: { authorization: auth, depth: '1', ...headers }, body: body || undefined });
+    return { status: r.status, text: await r.text(), etag: r.headers.get('etag') };
+  };
+  let auth = '';
+  let start = '';
+  const q = '<c:calendar-query xmlns:c="urn:ietf:params:xml:ns:caldav"><c:calendar-data/></c:calendar-query>';
+
+  beforeAll(async () => {
+    const pm = (await mira.req('POST', '/api/caldav/passwords', { label: 'Mac' })).json;
+    auth = 'Basic ' + Buffer.from(`${pm.username}:${pm.password}`).toString('base64');
+  });
+
+  it('a task with a time is a timed event with place and duration (UTC), in Reminders with its time', async () => {
+    const r = await mira.req('POST', '/api/care', { name: 'Schornsteinfeger', category: 'house', next_due: '2026-11-03', due_time: '10:00', duration_min: 30, place: 'Keller' });
+    expect(r.status, JSON.stringify(r.json)).toBe(200);
+    expect(r.json).toMatchObject({ due_time: '10:00', duration_min: 30, place: 'Keller' });
+    const cal = await dav('REPORT', '/caldav/c/tc/', auth, q);
+    // 10:00 household time, sent in UTC (Berlin in November: 09:00Z; the test server may run in UTC)
+    const { zonedToUtc } = await import('../server/lib/calendar');
+    const z = (ms: number) => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    start = z(zonedToUtc('2026-11-03', '10:00'));
+    expect(cal.text).toContain(`DTSTART:${start}`);
+    expect(cal.text).toContain(`DTEND:${z(zonedToUtc('2026-11-03', '10:30'))}`);
+    expect(cal.text).toContain('LOCATION:Keller');
+    const rem = await dav('REPORT', '/caldav/c/t/', auth, q);
+    expect(rem.text).toContain(`DUE:${start}`);
+    // the single download for "In den Kalender"
+    const one = await fetch(`${base}/api/care/${r.json.id}/ics`, { headers: { cookie: mira.cookie } });
+    expect(one.headers.get('content-type')).toContain('text/calendar');
+    expect(await one.text()).toContain('SUMMARY:Schornsteinfeger');
+    // a wrong time is a plain answer
+    expect((await mira.req('PATCH', `/api/care/${r.json.id}`, { due_time: '25:00' })).status).toBe(400);
+  });
+
+  it('moving an event in Apple Calendar moves the task; a new event becomes a task, its RRULE the rhythm', async () => {
+    const task = (await mira.req('GET', '/api/care')).json.tasks.find((x: any) => x.name === 'Schornsteinfeger');
+    const href = `/caldav/c/tc/tohuus-event-${task.id}.ics`;
+    const got = await dav('GET', href, auth);
+    expect(got.status).toBe(200);
+    const moved = got.text.replace(/DTSTART:\S+/, 'DTSTART;TZID=Europe/Berlin:20261104T143000').replace(/DTEND:\S+/, 'DTEND;TZID=Europe/Berlin:20261104T153000');
+    expect((await dav('PUT', href, auth, moved, { 'if-match': got.etag! })).status).toBe(204);
+    // 14:30 in Berlin, read as the household's local time
+    const cal = await import('../server/lib/calendar');
+    const local = cal.utcToLocal(cal.zonedToUtc('2026-11-04', '14:30', 'Europe/Berlin'));
+    expect((await mira.req('GET', `/api/care/${task.id}`)).json).toMatchObject({ next_due: local.day, due_time: local.time, duration_min: 60 });
+    // a stale etag is refused
+    expect((await dav('PUT', href, auth, moved, { 'if-match': got.etag! })).status).toBe(412);
+    const ev = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', 'UID:CAL-1', 'SUMMARY:Elternabend', 'DTSTART:20261110T180000Z', 'DTEND:20261110T193000Z', 'LOCATION:Schule', 'RRULE:FREQ=MONTHLY;INTERVAL=1', 'END:VEVENT', 'END:VCALENDAR', ''].join('\r\n');
+    expect((await dav('PUT', '/caldav/c/tcm/CAL-1.ics', auth, ev, { 'if-none-match': '*' })).status).toBe(201);
+    const made = (await mira.req('GET', '/api/care')).json.tasks.find((x: any) => x.name === 'Elternabend');
+    const at = cal.utcToLocal(Date.UTC(2026, 10, 10, 18, 0));
+    expect(made).toMatchObject({ visibility: 'private', next_due: at.day, due_time: at.time, duration_min: 90, place: 'Schule', interval_n: 1, interval_unit: 'month', anchor: 'due' });
+    expect(JSON.stringify((await sam.req('GET', '/api/care')).json)).not.toContain('Elternabend');
+    expect((await dav('GET', '/caldav/c/tcm/CAL-1.ics', auth)).text).toContain('UID:CAL-1');
+    // deleting in the calendar puts it away
+    expect((await dav('DELETE', '/caldav/c/tcm/CAL-1.ics', auth)).status).toBe(204);
+    expect((db.prepare('SELECT archived FROM care_tasks WHERE id = ?').get(made.id) as any).archived).toBe(1);
+  });
+
+  it('the subscription (webcal) shows the household, private tasks only when chosen, and stops when revoked', async () => {
+    await mira.req('POST', '/api/care', { name: 'Zahnarzt', visibility: 'private', next_due: '2026-11-12', due_time: '08:15' });
+    const plain = (await mira.req('POST', '/api/calendar/feeds', { label: 'Google' })).json;
+    expect(plain.webcal).toMatch(/^webcal:/);
+    const path = new URL(plain.url).pathname;
+    const feed = await fetch(base + path);
+    expect(feed.headers.get('content-type')).toContain('text/calendar');
+    const text = await feed.text();
+    expect(text).toContain('SUMMARY:Schornsteinfeger');
+    expect(text).not.toContain('Zahnarzt');
+    expect(text).not.toContain(SECRET);
+    const withMine = (await mira.req('POST', '/api/calendar/feeds', { label: 'Outlook', with_private: true })).json;
+    expect(await (await fetch(base + new URL(withMine.url).pathname)).text()).toContain('SUMMARY:Zahnarzt');
+    // Sam's link never carries Mira's private tasks
+    const samFeed = (await sam.req('POST', '/api/calendar/feeds', { with_private: true })).json;
+    expect(await (await fetch(base + new URL(samFeed.url).pathname)).text()).not.toContain('Zahnarzt');
+    expect((await mira.req('GET', '/api/calendar/feeds')).json.length).toBe(2);
+    expect((await mira.req('DELETE', `/api/calendar/feeds/${plain.id}`)).json.ok).toBe(true);
+    expect((await fetch(base + path)).status).toBe(404);
   });
 });

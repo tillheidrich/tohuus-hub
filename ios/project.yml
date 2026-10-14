@@ -60,6 +60,7 @@ targets:
           - CFBundleURLName: de.heidrichdigital.tohuus
             CFBundleURLSchemes: [tohuus]
         NSCameraUsageDescription: "ToHuus uses the camera to scan barcodes, receipts and paper lists."
+        NSCalendarsWriteOnlyAccessUsageDescription: "ToHuus only adds an entry when you tap “Add to calendar” and save it. ToHuus does not read your calendar."
         # "Einkauf läuft" on the lock screen and in the Dynamic Island (LiveTripActivity.swift)
         NSSupportsLiveActivities: true
         NSMicrophoneUsageDescription: "ToHuus uses the microphone only while you speak to the assistant or dictate for the list. If your iPhone can't turn speech into text, the recording goes to ToHuus to be turned into text."

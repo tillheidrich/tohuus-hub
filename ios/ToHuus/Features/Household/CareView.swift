@@ -50,6 +50,10 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     var rotation: [String]?
     /// detail only: the rhythm the household actually keeps
     var learnedEveryDays: Int?
+    /// Termin: with a time (HH:MM) the task is a calendar entry, `durationMin` long, at `place`
+    var dueTime: String?
+    var durationMin: Int?
+    var place: String?
 
     var isDueNow: Bool { ["overdue", "today", "soon"].contains(state ?? "") }
     var isPrivate: Bool { visibility == "private" }
@@ -330,7 +334,7 @@ struct CareView: View {
                 NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
                 NavigationLink { WebPageView(api: api, path: "/etiketten?kind=care", title: L("Labels")) } label: { Label(L("Labels"), systemImage: "qrcode") }
             } footer: {
-                Text(L("Your tasks in Apple Reminders, what is due in Apple Calendar."))
+                Text(L("Your tasks in Apple Reminders, your appointments in your calendar."))
             }
         }
         .themedList()
@@ -384,7 +388,8 @@ struct CareView: View {
                            items.isEmpty ? nil : LF("%d of %d", items.filter(\.done).count, items.count),
                            t.product.map { LF("%@: %@ in stock", $0.name, Self.qty($0.stock ?? 0)) },
                            t.location?.name].compactMap { $0 }
-                (Text(CareLabels.due(t)).foregroundStyle(CareLabels.color(t.state)) + Text(" · " + sub.joined(separator: " · ")).foregroundStyle(Theme.ink3))
+                (Text(CareLabels.due(t) + (t.nextDue != nil ? t.dueTime.map { ", " + TaskTime.label($0) } ?? "" : "")).foregroundStyle(CareLabels.color(t.state))
+                    + Text((sub.isEmpty && t.place == nil ? "" : " · ") + ([t.place].compactMap { $0 } + sub).joined(separator: " · ")).foregroundStyle(Theme.ink3))
                     .font(.caption)
             }
             Spacer(minLength: 4)
@@ -513,6 +518,7 @@ private struct CareDetailSheet: View {
     @State private var mine = false
     @State private var error: String?
     @State private var items: [CareTask.CheckItem] = []
+    @State private var addToCalendar = false
 
     var body: some View {
         NavigationStack {
@@ -528,6 +534,10 @@ private struct CareDetailSheet: View {
                     if let n = full?.learnedEveryDays { LabeledContent(L("Your rhythm"), value: LF("You do it about every %d days", n)) }
                     if let l = task.location { LabeledContent(L("Where"), value: l.name) }
                     LabeledContent(L("Next due"), value: CareLabels.day(task.nextDue, long: true))
+                    if task.nextDue != nil, let time = task.dueTime {
+                        LabeledContent(L("Time"), value: "\(TaskTime.label(time)) · \(TaskTime.duration(task.durationMin ?? 60))")
+                    }
+                    if let p = task.place, !p.isEmpty { LabeledContent(L("Place"), value: p) }
                     LabeledContent(L("Last done"), value: task.lastDone == nil ? L("unknown") : CareLabels.day(task.lastDone))
                     LabeledContent(L("Reminder"), value: lead(task.leadDays ?? 0))
                     if let n = task.note, !n.isEmpty { LabeledContent(L("Note"), value: n) }
@@ -570,6 +580,9 @@ private struct CareDetailSheet: View {
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
                 Section {
                     Button { onDone(task) } label: { Label(L("Done"), systemImage: "checkmark") }
+                    if task.nextDue != nil {
+                        Button { addToCalendar = true } label: { Label(L("Add to calendar"), systemImage: "calendar.badge.plus") }
+                    }
                     Button { onEdit(task) } label: { Label(L("Edit"), systemImage: "pencil") }
                     NavigationLink { WebPageView(api: api, path: "/etiketten?kind=care&id=\(task.id)", title: L("Label")) } label: { Label(L("Label"), systemImage: "qrcode") }
                 }
@@ -578,6 +591,7 @@ private struct CareDetailSheet: View {
             .navigationTitle(task.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Close")) { dismiss() } } }
+            .sheet(isPresented: $addToCalendar) { AddToCalendarView(task: full ?? task).ignoresSafeArea() }
             .task {
                 mine = me?.userId != nil && task.assigneeUserId == me?.userId
                 items = task.checklist ?? []
@@ -632,6 +646,10 @@ private struct CareTaskForm: View {
     @State private var unit = "month"
     @State private var lastDone: Date?
     @State private var nextDue: Date?
+    /// Termin: a time makes it a calendar entry
+    @State private var time: Date?
+    @State private var duration = 60
+    @State private var place = ""
     @State private var lead: Int?
     @State private var placeId: Int?
     @State private var productId: Int?
@@ -681,6 +699,27 @@ private struct CareTaskForm: View {
                 } footer: {
                     if mode == "fixed" { Text(L("Remind me before this date.")) }
                     else if mode == "interval" { Text(L("Leave empty if you don’t know – it starts from today.")) }
+                }
+                if mode != "needed" {
+                    Section {
+                        if let t = time {
+                            HStack {
+                                DatePicker(L("Time (optional)"), selection: Binding(get: { t }, set: { time = $0 }), displayedComponents: .hourAndMinute)
+                                Button { time = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.ink3) }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel(L("Remove"))
+                            }
+                            Picker(L("How long"), selection: $duration) {
+                                ForEach(TaskTime.durations, id: \.self) { m in Text(TaskTime.duration(m)).tag(m) }
+                            }
+                        } else {
+                            Button { time = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: Date()) } label: { LabeledContent(L("Time (optional)"), value: L("not set")) }
+                                .foregroundStyle(Theme.ink)
+                        }
+                        TextField(L("Place (optional)"), text: $place, prompt: Text(L("e.g. basement, school, dentist")))
+                    } footer: {
+                        Text(nextDue == nil && time != nil ? L("Pick a date first.") : L("With a time it is an appointment and shows in your calendar."))
+                    }
                 }
                 Section {
                     Toggle(isOn: $privateTask) {
@@ -782,6 +821,12 @@ private struct CareTaskForm: View {
                     unit = t.intervalUnit ?? "month"
                     lastDone = ServerDate.parse(t.lastDone)
                     nextDue = ServerDate.parse(t.nextDue)
+                    time = t.dueTime.flatMap { hhmm in
+                        let p = hhmm.split(separator: ":").compactMap { Int($0) }
+                        return p.count == 2 ? Calendar.current.date(bySettingHour: p[0], minute: p[1], second: 0, of: Date()) : nil
+                    }
+                    duration = t.durationMin ?? 60
+                    place = t.place ?? ""
                     lead = t.leadDays
                     placeId = t.locationId
                     productId = t.productId
@@ -815,6 +860,9 @@ private struct CareTaskForm: View {
             "location_id": nul(placeId),
             "product_id": nul(productId),
             "note": nul(note.isEmpty ? nil : String(note.prefix(500))),
+            "due_time": nul(mode != "needed" && nextDue != nil ? time.map { TaskTime.hhmm($0) } : nil),
+            "duration_min": nul(mode != "needed" && nextDue != nil && time != nil ? duration : nil),
+            "place": nul(place.trimmingCharacters(in: .whitespaces).isEmpty ? nil : String(place.trimmingCharacters(in: .whitespaces).prefix(120))),
         ]
         if let lead { body["lead_days"] = lead }
         let next = (mode == "needed" ? nil : nextDue).map { ServerDate.day($0) }

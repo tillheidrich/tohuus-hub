@@ -2,6 +2,7 @@
  * Shopping list 2 (market research 12 Oct 2026): trust, a list that fills itself, shopping together, bridges.
  * Mounted under /api in server/index.ts. API reference: docs/shopping-list.md.
  */
+import { createFeed, listFeeds, revokeFeed } from '../lib/calendar.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db.js';
@@ -293,6 +294,16 @@ r.post('/caldav/passwords', requireFeature('mirrorLists'), (req, res) => {
   res.json(createAppPassword(uid, b.label));
 });
 r.delete('/caldav/passwords/:id', (req, res) => res.json({ ok: userId(req) ? revokeAppPassword(userId(req)!, num(req.params.id)) : false }));
+
+/** Calendar subscription (webcal) for Google Calendar, Outlook and others: read-only, per member, revocable. */
+r.get('/calendar/feeds', (req, res) => res.json(userId(req) ? listFeeds(userId(req)!) : []));
+r.post('/calendar/feeds', requireFeature('mirrorLists'), (req, res) => {
+  const b = z.object({ label: z.string().max(60).default(t('Calendar')), with_private: z.boolean().default(false) }).parse(req.body ?? {});
+  const uid = userId(req);
+  if (!uid || req.actor?.houseGuest) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  res.json(createFeed(uid, b.label, b.with_private));
+});
+r.delete('/calendar/feeds/:id', (req, res) => res.json({ ok: userId(req) ? revokeFeed(userId(req)!, num(req.params.id)) : false }));
 
 /**
  * One-off import from another list app (Google Keep Takeout JSON, Bring! JSON, AnyList/Notes/WhatsApp text, CSV).

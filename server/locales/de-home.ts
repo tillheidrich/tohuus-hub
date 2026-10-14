@@ -2,6 +2,12 @@
 export const de_home: Record<string, string> = {
   // chore templates (Aufgaben, 14 Oct 2026)
   'Only for signed-in members': 'Nur für angemeldete Mitglieder',
+  Calendar: 'Kalender',
+  'My calendar': 'Mein Kalender',
+  'Invalid time': 'Die Uhrzeit stimmt nicht (Format 14:30).',
+  'Invalid duration': 'Die Dauer muss zwischen 5 Minuten und 24 Stunden liegen.',
+  'This task has no date yet': 'Die Aufgabe hat noch kein Datum.',
+  'Only calendar entries (VEVENT) with a title and a date': 'Nur Kalendereinträge (VEVENT) mit Titel und Datum',
   Tasks: 'Aufgaben',
   'Only for me': 'Nur für mich',
   'Care & deadlines': 'Pflege & Fristen',

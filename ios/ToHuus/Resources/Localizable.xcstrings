@@ -460,6 +460,23 @@
         }
       }
     },
+    "%@ o’clock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ o’clock"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Uhr"
+          }
+        }
+      }
+    },
     "%@ paid": {
       "extractionState": "manual",
       "localizations": {
@@ -1017,6 +1034,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Dateien"
+          }
+        }
+      }
+    },
+    "%d h": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d h"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Std."
+          }
+        }
+      }
+    },
+    "%d h %d min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d h %d min"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Std. %d Min."
           }
         }
       }
@@ -3299,6 +3350,23 @@
         }
       }
     },
+    "Add to calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In den Kalender"
+          }
+        }
+      }
+    },
     "Add to list": {
       "extractionState": "manual",
       "localizations": {
@@ -4149,19 +4217,19 @@
         }
       }
     },
-    "Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows what is due in “ToHuus · Fällig”. One password for both.": {
+    "Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows your appointments in “ToHuus · Kalender” and “ToHuus · Mein Kalender” – moving and adding works both ways. One password for both.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows what is due in “ToHuus · Fällig”. One password for both."
+            "value": "Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows your appointments in “ToHuus · Kalender” and “ToHuus · Mein Kalender” – moving and adding works both ways. One password for both."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple Erinnerungen, Nextcloud Tasks oder Thunderbird zeigen deine Einkaufslisten und Aufgaben („ToHuus · Aufgaben“, „ToHuus · Nur für mich“), abhaken und hinzufügen geht dort auch. Apple Kalender zeigt in „ToHuus · Fällig“, was ansteht. Ein Passwort für beides."
+            "value": "Apple Erinnerungen, Nextcloud Tasks oder Thunderbird zeigen deine Einkaufslisten und Aufgaben („ToHuus · Aufgaben“, „ToHuus · Nur für mich“), abhaken und hinzufügen geht dort auch. Im Apple Kalender stehen deine Termine in „ToHuus · Kalender“ und „ToHuus · Mein Kalender“. Verschieben und neu eintragen klappt in beide Richtungen. Ein Passwort reicht für beides."
           }
         }
       }
@@ -5420,6 +5488,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "CSV – %@"
+          }
+        }
+      }
+    },
+    "Calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender"
+          }
+        }
+      }
+    },
+    "Calendar subscription for Google, Outlook and others": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar subscription for Google, Outlook and others"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender-Abo für Google, Outlook und andere"
+          }
+        }
+      }
+    },
+    "Calendar with my own": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar with my own"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender mit meinen eigenen"
           }
         }
       }
@@ -9895,6 +10014,23 @@
         }
       }
     },
+    "For calendars without CalDAV: the link shows your tasks with a date and your appointments. It is read-only and updates about every hour. Keep it to yourself – whoever has it sees the entries.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For calendars without CalDAV: the link shows your tasks with a date and your appointments. It is read-only and updates about every hour. Keep it to yourself – whoever has it sees the entries."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Kalender ohne CalDAV: Der Link zeigt eure Aufgaben mit Datum und eure Termine. Ändern lässt sich darüber nichts, und der Kalender holt sich etwa stündlich den neuen Stand. Behalte den Link für dich, denn wer ihn hat, sieht die Einträge."
+          }
+        }
+      }
+    },
     "For coffee from the machine or things ordered in: only for recipes.": {
       "extractionState": "manual",
       "localizations": {
@@ -10847,6 +10983,23 @@
         }
       }
     },
+    "Google Calendar (web): Other calendars › + › From URL, paste the link.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Calendar (web): Other calendars › + › From URL, paste the link."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Kalender (im Browser): Weitere Kalender › + › Per URL, dann den Link einfügen."
+          }
+        }
+      }
+    },
     "Got it – remembered for the next receipts.": {
       "extractionState": "manual",
       "localizations": {
@@ -11731,6 +11884,23 @@
         }
       }
     },
+    "How long": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How long"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie lange"
+          }
+        }
+      }
+    },
     "How many": {
       "extractionState": "manual",
       "localizations": {
@@ -12271,6 +12441,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "In euren Rezepten"
+          }
+        }
+      }
+    },
+    "Include my private tasks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include my private tasks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meine privaten Aufgaben mit aufnehmen"
           }
         }
       }
@@ -17732,6 +17919,23 @@
         }
       }
     },
+    "Open in calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Kalender öffnen"
+          }
+        }
+      }
+    },
     "Open network": {
       "extractionState": "manual",
       "localizations": {
@@ -18221,6 +18425,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unsere Üblichen"
+          }
+        }
+      }
+    },
+    "Outlook: Add calendar › Subscribe from web, paste the link.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outlook: Add calendar › Subscribe from web, paste the link."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outlook: Kalender hinzufügen › Aus dem Internet abonnieren, dann den Link einfügen."
           }
         }
       }
@@ -19024,6 +19245,23 @@
         }
       }
     },
+    "Pick a date first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a date first."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erst ein Datum wählen."
+          }
+        }
+      }
+    },
     "Pick a few from the suggestions below – one tap each. You can adjust the interval later.": {
       "extractionState": "manual",
       "localizations": {
@@ -19190,6 +19428,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ort"
+          }
+        }
+      }
+    },
+    "Place (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place (optional)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ort (optional)"
           }
         }
       }
@@ -27014,6 +27269,40 @@
         }
       }
     },
+    "Time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uhrzeit"
+          }
+        }
+      }
+    },
+    "Time (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time (optional)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uhrzeit (optional)"
+          }
+        }
+      }
+    },
     "Tip": {
       "extractionState": "manual",
       "localizations": {
@@ -30108,6 +30397,23 @@
         }
       }
     },
+    "With a time it is an appointment and shows in your calendar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With a time it is an appointment and shows in your calendar."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Uhrzeit wird daraus ein Termin, der auch in deinem Kalender steht."
+          }
+        }
+      }
+    },
     "With best-before date": {
       "extractionState": "manual",
       "localizations": {
@@ -31077,19 +31383,19 @@
         }
       }
     },
-    "Your tasks in Apple Reminders, what is due in Apple Calendar.": {
+    "Your tasks in Apple Reminders, your appointments in your calendar.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your tasks in Apple Reminders, what is due in Apple Calendar."
+            "value": "Your tasks in Apple Reminders, your appointments in your calendar."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Aufgaben in Apple Erinnerungen, was fällig ist im Apple Kalender."
+            "value": "Deine Aufgaben in Apple Erinnerungen, deine Termine im Kalender."
           }
         }
       }
@@ -32348,6 +32654,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "z. B. alle Lichter aus, Rollläden runter, Nachtlicht im Kinderzimmer an"
+          }
+        }
+      }
+    },
+    "e.g. basement, school, dentist": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. basement, school, dentist"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Keller, Schule, Zahnarzt"
           }
         }
       }
@@ -34592,6 +34915,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "heute"
+          }
+        }
+      }
+    },
+    "today %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "heute %@"
           }
         }
       }

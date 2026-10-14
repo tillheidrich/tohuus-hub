@@ -136,6 +136,23 @@
           }
         }
       }
+    },
+    "NSCalendarsWriteOnlyAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus trägt nur dann etwas ein, wenn du auf „In den Kalender“ tippst und speicherst. Deinen Kalender liest ToHuus nicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus only adds an entry when you tap “Add to calendar” and save it. ToHuus does not read your calendar."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

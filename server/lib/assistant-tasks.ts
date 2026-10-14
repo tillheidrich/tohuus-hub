@@ -49,6 +49,9 @@ export const TASK_TOOL_DEFS: ToolDef[] = [
       every_unit: { type: 'string', enum: ['day', 'week', 'month', 'year'] },
       as_needed: { type: 'boolean' },
       due: { type: 'string', description: 'YYYY-MM-DD, first or only date' },
+      time: { type: 'string', description: 'HH:MM – makes it an appointment (calendar entry); needs due' },
+      minutes: { type: 'integer', minimum: 5, maximum: 1440, description: 'how long the appointment takes' },
+      place: { type: 'string', description: 'where the appointment is' },
       keep_days: { type: 'boolean', description: 'true = keeps its days ("every Saturday") instead of counting from the day it was done' },
       only_me: { type: 'boolean' },
       doer: { type: 'string', description: 'name of the person who does it' },
@@ -108,6 +111,8 @@ const compact = (x: ReturnType<typeof listCareTasks>[number]) => ({
   area: x.category === 'house' ? 'household' : 'care & deadlines',
   when: x.as_needed ? 'when needed' : WHEN[x.state] ?? x.state,
   next_due: x.next_due,
+  time: x.due_time ?? undefined,
+  place: x.place ?? undefined,
   last_done: x.last_done,
   keeps_in_mind: x.assignee?.name ?? null,
   does_it: x.doer?.name ?? null,
@@ -149,6 +154,9 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
       doer_key: a.only_me ? null : (doer ?? null),
       rotation: a.only_me ? null : turns.length > 1 ? turns : null,
       checklist: Array.isArray(a.steps) ? a.steps.slice(0, 30).map((s: unknown) => ({ text: String(s), done: false })) : null,
+      due_time: typeof a.time === 'string' && /^\d{1,2}:\d{2}$/.test(a.time) ? a.time : null,
+      duration_min: Number.isInteger(a.minutes) ? a.minutes : null,
+      place: typeof a.place === 'string' ? a.place : null,
     };
     try {
       const task = createCareTask(input, ctx.userId);

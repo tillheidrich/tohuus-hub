@@ -16,6 +16,7 @@ Storage is the existing `care_tasks` / `care_log` tables (`server/lib/care.ts`, 
 | `doer_key` | who does it: `u<id>` member or `k<id>` child profile |
 | `assignee` | who keeps it in mind (existing column) |
 | `rotation` | keys taking turns – "done" passes the task to the next one, undo gives it back |
+| `due_time` / `duration_min` / `place` | Termin: with a time (HH:MM, household time) the task is an appointment of `duration_min` minutes (default 60) at `place` – a classic calendar entry (migration `termine-1`) |
 
 A one-off task without a rhythm is archived when it is done. `learned_every_days` on the detail is the median gap between the last done days.
 
@@ -24,7 +25,9 @@ A one-off task without a rhythm is archived when it is done. `learned_every_days
 - `GET /api/care` → `{ tasks, templates, units, me }` – private tasks only for their owner.
 - `GET /api/care/due`, `GET /api/care/:id` (404 for someone else's private task), `GET /api/care/recent?days=14`.
 - `POST /api/care` / `PATCH /api/care/:id` accept `category`, `visibility`, `anchor`, `as_needed`, `checklist`, `doer_key`, `rotation`. A household task made private belongs to whoever made it private.
-- `POST /api/care/:id/done`, `POST /api/care/:id/undo` as before.
+- `POST /api/care/:id/done`, `POST /api/care/:id/undo` as before. `due_time`, `duration_min`, `place` on POST/PATCH; a time needs a date (without a date it is dropped).
+- `GET /api/care/:id/ics` – the task as one calendar entry to download ("In den Kalender"); 400 without a date.
+- `GET /api/calendar/feeds`, `POST /api/calendar/feeds { label, with_private }` → `{ id, url, webcal }` (shown once), `DELETE /api/calendar/feeds/:id` – read-only calendar subscriptions per member.
 - `GET /api/blick?days=28` – "Wer hat was im Blick" (below). `PUT /api/blick/compare { on }` – my own yes/no to comparing shares.
 
 Templates: twelve chores in group `chores` (category `house`).
@@ -41,17 +44,25 @@ A private task is never visible to other members, guests, the assistant (tools a
 
 ## Apple Reminders and Calendar (CalDAV)
 
-`server/lib/caldav.ts`, same app password as the shopping lists (`/api/caldav/passwords`):
+`server/lib/caldav.ts` and `server/lib/calendar.ts`, same app password as the shopping lists (`/api/caldav/passwords`):
 
-- `/caldav/c/t/` "ToHuus · Aufgaben" – household tasks as VTODO. Ticking off completes the task (once per day), a new reminder becomes a household task, deleting archives it.
+- `/caldav/c/t/` "ToHuus · Aufgaben" – household tasks as VTODO (with a time: `DUE` in UTC). Ticking off completes the task (once per day), a new reminder becomes a household task, deleting archives it.
 - `/caldav/c/tm/` "ToHuus · Nur für mich" – the signed-in member's private tasks.
-- `/caldav/c/tc/` "ToHuus · Fällig" – read-only calendar (all-day VEVENTs on the due day); writes get 403.
+- `/caldav/c/tc/` "ToHuus · Kalender" – the household's tasks with a date as VEVENT, two-way. With a time a timed event (UTC), otherwise all-day. Moving or renaming an event changes the task; a new event becomes a task (category `house`, anchor `due`, a simple `RRULE` FREQ/INTERVAL becomes its rhythm); deleting archives it. A recurring task is one event on its next date, ToHuus keeps the rhythm.
+- `/caldav/c/tcm/` "ToHuus · Mein Kalender" – the same for the member's private tasks.
+
+Incoming times (UTC, `TZID` or floating) are read as household time (`TZ`, default Europe/Berlin).
+
+## Calendar subscription (webcal)
+
+For calendars without CalDAV (Google Calendar, Outlook): `GET /kalender-abo/<secret>.ics`, read-only, `REFRESH-INTERVAL` one hour. Holds the household's tasks with a date, the member's own private ones only when `with_private` was chosen. Secrets carry the household routing prefix (cloud) and are stored as a hash; an unknown or revoked link answers 404.
 
 ## Assistant
 
-`server/lib/assistant-tasks.ts`, topic `tasks`, screen context `tasks`: `tasks_list`, `task_add`, `task_done`, `task_assign`, `tasks_overview` (who did and keeps what in mind; numbers per person only when everyone agreed to compare). Every write is undoable. Private tasks never reach the model.
+`server/lib/assistant-tasks.ts`, topic `tasks`, screen context `tasks`: `tasks_list`, `task_add` (with `time`, `minutes`, `place` for an appointment), `task_done`, `task_assign`, `tasks_overview` (who did and keeps what in mind; numbers per person only when everyone agreed to compare). Every write is undoable. Private tasks never reach the model.
 
 ## Clients
 
 - Web: `/aufgaben` (`web/src/pages/Care.tsx`, filter Alle / Haushalt / Pflege & Fristen / Meine), Heute card `TasksToday.tsx`, `Blick.tsx`. `/pflege` redirects to `/aufgaben?f=care`.
-- iOS: `CareView.swift`, `TasksTodayCard.swift`, `BlickSection.swift`, `CalDavView.swift`.
+- iOS: `CareView.swift`, `TasksTodayCard.swift`, `BlickSection.swift`, `CalDavView.swift` (password + subscription), `AddToCalendar.swift` (Apple's event editor, prefilled; iOS 17 needs no calendar permission for it).
+- Web: "In den Kalender" downloads `/api/care/:id/ics`; `CalendarFeedCard` (shop/bridges.tsx) on Aufgaben and Settings › My account.

@@ -7,6 +7,7 @@ import { ArrowRight, Check, LockSimple } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
 import { fmtDate, invalidate, post, useApi } from '../api';
 import { t } from '../i18n';
+import { timeLabel } from './taskTime';
 import { useToast } from '../ui';
 
 interface TaskLite {
@@ -18,6 +19,8 @@ interface TaskLite {
   visibility?: 'household' | 'private';
   checklist?: { text: string; done: boolean }[];
   doer?: { name: string } | null;
+  due_time?: string | null;
+  place?: string | null;
 }
 
 export function TasksTodayCard({ today }: { today: string }) {
@@ -70,7 +73,7 @@ export function TasksTodayCard({ today }: { today: string }) {
                   {x.name}
                 </b>
                 <span className="meta">
-                  {[x.state === 'overdue' ? t('overdue') : t('due today'), x.doer?.name, x.checklist?.length ? t('{done} of {total}', { done: x.checklist.filter((c) => c.done).length, total: x.checklist.length }) : null]
+                  {[x.state === 'overdue' ? t('overdue') : x.due_time ? t('today {time}', { time: timeLabel(x.due_time) }) : t('due today'), x.place, x.doer?.name, x.checklist?.length ? t('{done} of {total}', { done: x.checklist.filter((c) => c.done).length, total: x.checklist.length }) : null]
                     .filter(Boolean)
                     .join(' · ')}
                 </span>

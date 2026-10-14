@@ -34,7 +34,7 @@ import { AiSwitchesCard, ConnectAssistantCard } from './AiSettings';
 import { MoveInCard, MoveOutCard } from './MoveSettings';
 import { MyListViewCard } from '../shop/trust';
 import { NotifyMine } from './NotifyMine';
-import { CalDavCard } from '../shop/bridges';
+import { CalDavCard, CalendarFeedCard } from '../shop/bridges';
 import { LunchboxCard } from '../shop/forms';
 import { PulseSettingsCard } from '../pulse';
 import { ModulesCard } from './Modules';
@@ -119,6 +119,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
       {tab === 'account' && me.actor.userId && <MyListViewCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalDavCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarFeedCard />}
       {tab === 'account' && <MyAccount me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <ShareSetupCard me={me} />}
       {tab === 'members' && <PeopleSection me={me} admin={admin} />}
