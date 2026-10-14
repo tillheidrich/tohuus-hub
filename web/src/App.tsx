@@ -150,9 +150,9 @@ function Authed() {
       </Suspense>
     );
   }
-  // back to an assistant's connection request (/oauth/authorize) after signing in
+  // back to an assistant's connection request (/oauth/authorize) or the iPhone app's browser sign-in after signing in
   const next = new URLSearchParams(location.search).get('next');
-  if (next && next.startsWith('/oauth/authorize?')) {
+  if (next && (next.startsWith('/oauth/authorize?') || next.startsWith('/api/auth/app/pair/start?'))) {
     window.location.replace(next);
     return <Blank />;
   }

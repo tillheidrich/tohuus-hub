@@ -61,6 +61,8 @@ struct ToHuusApp: App {
     /// tohuus://assistant, tohuus://shopping (widget) and the other tabs
     private func handle(_ url: URL) {
         guard url.scheme == "tohuus" else { return }
+        // tohuus://connect?server=…&code=… (QR code from the web app) – also before anyone is signed in
+        if ConnectInbox.shared.receive(url) { return }
         guard app.phase == .signedIn else { return }
         switch url.host() {
         case "assistant": app.showAssistant = true
@@ -98,6 +100,8 @@ struct RootView: View {
                         .sheet(isPresented: Binding(get: { app.askSampleData }, set: { app.askSampleData = $0 })) {
                             SampleQuestionView().interactiveDismissDisabled()
                         }
+                        // then the first-run setup for an admin of a new household (Start/FirstRunView.swift)
+                        .firstRunSetup(store: store)
                 } else {
                     ProgressView()
                 }
@@ -105,6 +109,8 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: app.phase)
+        // "Mit tohuus.example.de verbinden?" for links from the camera (Start/OwnServerView.swift)
+        .connectLinkSheet()
     }
 }
 

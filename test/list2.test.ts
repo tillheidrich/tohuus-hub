@@ -308,6 +308,9 @@ describe('H: drag & drop on the server', () => {
     expect((await req('GET', '/api/list/today-order')).json).toEqual({ order: [] });
     expect((await req('PUT', '/api/list/today-order', { order: ['money', 'list', 'list'] })).json).toEqual({ order: ['money', 'list'] });
     expect((await req('PUT', '/api/list/today-order', { order: ['nope'] })).status).toBe(400);
+    // the Aufgaben card can be arranged too (web and iPhone send 'tasks')
+    expect((await req('PUT', '/api/list/today-order', { order: ['tasks', 'money', 'list'] })).json).toEqual({ order: ['tasks', 'money', 'list'] });
+    await req('PUT', '/api/list/today-order', { order: ['money', 'list'] });
     expect((await req('GET', '/api/list/today-order')).json.order).toEqual(['money', 'list']);
   });
 });

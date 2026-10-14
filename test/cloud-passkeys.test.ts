@@ -164,10 +164,11 @@ const keyB = new SoftAuthenticator();
 let hA = '';
 let hB = '';
 let accounts: typeof import('../server/lib/accounts');
+const mails: { to: string; text: string }[] = [];
 
 beforeAll(async () => {
   const mail = await import('../server/lib/mail');
-  mail.mailHook.send = () => undefined;
+  mail.mailHook.send = (m) => void mails.push({ to: m.to, text: m.text });
   await import('../server/index');
   accounts = await import('../server/lib/accounts');
   await new Promise((r) => setTimeout(r, 200));
@@ -249,6 +250,29 @@ describe('cloud passkeys', () => {
     expect((await webSignIn(keyA, { counter: 1 })).v.status).toBe(401);
     // without options first
     expect((await new Client().post('/api/auth/passkey/verify', { response: keyA.assert({ challenge: 'x' }) })).status).toBe(400);
+  });
+
+  it('an account without a password confirms a new passkey in the app with the code from the mail', async () => {
+    const c = new Client();
+    await signup(c, 'mika.code@example.org', 'Mika', 'Mikas Zimmer');
+    // an app token, then the account loses its password (e-mail links only)
+    const app = await c.post('/api/auth/app', { email: 'mika.code@example.org', password: PW, device: 'iPhone' });
+    expect(app.status, app.text).toBe(200);
+    accounts.accountsDb().prepare('UPDATE accounts SET password_hash = NULL WHERE email = ?').run('mika.code@example.org');
+    const appClient = new Client();
+    appClient.headers = { authorization: `Bearer ${app.json.token}` };
+    const first = await appClient.post('/api/auth/passkeys/options', {});
+    expect(first.status).toBe(400);
+    expect(first.json.needEmailConfirm).toBe(true);
+    const mail = mails.filter((m) => m.to === 'mika.code@example.org').at(-1)!;
+    const code = mail.text.match(/(\d{3}) (\d{3})/)!.slice(1).join('');
+    expect((await appClient.post('/api/auth/passkeys/options', { code: code === '000000' ? '111111' : '000000' })).status).toBe(400);
+    const o = await appClient.post('/api/auth/passkeys/options', { code });
+    expect(o.status, o.text).toBe(200);
+    const key = new SoftAuthenticator();
+    const r = await appClient.post('/api/auth/passkeys', { response: key.register(o.json), name: 'iPhone' });
+    expect(r.status, r.text).toBe(200);
+    expect((await appClient.get('/api/auth/passkeys')).json).toHaveLength(1);
   });
 
   it('gives the iPhone app a token (device in the body)', async () => {

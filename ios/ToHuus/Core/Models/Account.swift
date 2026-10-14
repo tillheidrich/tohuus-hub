@@ -29,6 +29,8 @@ struct InstanceInfo: Decodable, Sendable {
         var passwordMin: Int?
         /// ToHuus Cloud: Sign in with Apple on the web (the app can always use it in the cloud)
         var apple: JSONValue?
+        /// connecting the app by QR code / one-time code and the browser sign-in (POST /api/auth/app/pair…)
+        var appPair: JSONValue?
     }
 
     struct Features: Decodable, Sendable {

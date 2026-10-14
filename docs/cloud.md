@@ -239,7 +239,8 @@ helpers are shared with the self-host member passkeys (`server/lib/auth-passkeys
   means "try again").
 - **Register** (signed in, cookie session or app token): `POST /api/auth/passkeys/options { password }` – a fresh
   password check as for deleting a household (`confirmAccount`: wrong/missing → `400 { needPassword: true }`;
-  accounts without a password confirm with a fresh e-mail link → `400 { needEmailConfirm: true }`) → WebAuthn
+  accounts without a password confirm with a fresh e-mail link → `400 { needEmailConfirm: true }`; the iPhone app has
+  no browser session and sends `{ code }` instead, the 6-digit code from that mail) → WebAuthn
   creation options (`rp.id`, `user.name` = account e-mail, `excludeCredentials`). Then
   `POST /api/auth/passkeys { response, name? }` → `{ id }` (`409` if that credential is already saved).
 - **List / rename / delete**: `GET /api/auth/passkeys` → `[{ id, name, device_type, backed_up, created_at,

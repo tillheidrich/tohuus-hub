@@ -212,9 +212,12 @@ final class AppModel {
     }
 
     func finishSignIn(server: URL, mode: String, response: AppAuthResponse) {
+        // another server or account joins this iPhone: keep the active one to switch back (Start/ConnectKit.swift)
+        if phase == .signedIn { rememberCurrentConnection() }
         let s = SessionInfo(serverURL: server, mode: mode, householdId: response.householdId, deviceName: Self.deviceName)
         s.save()
         SessionInfo.token = response.token
+        ConnectionVault.forget(token: response.token)
         session = s
         households = response.households
         saveHouseholds()

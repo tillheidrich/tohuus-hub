@@ -28,6 +28,7 @@ import { Avatar, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 import { t } from '../i18n';
 import { PinPad, cancelled } from './Login';
 import { useInstance } from '../data';
+import { AppConnectCard } from './AppConnect';
 
 interface AccountInfo {
   name: string;
@@ -116,6 +117,7 @@ export function MyAccount({ me }: { me: Me }) {
       {!cloud && <TotpCard a={a} />}
       {a.sso && <SsoCard sso={a.sso} />}
       {a.policy.pinSwitch && <PinCard a={a} />}
+      <AppConnectCard />
       <Devices a={a} admin={me.actor.role === 'admin'} />
     </div>
   );

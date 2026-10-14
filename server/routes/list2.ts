@@ -416,7 +416,8 @@ r.post(
 );
 
 /** Order of the cards on "Heute", per person. */
-const TODAY_CARDS = ['rhythm', 'list', 'still', 'cook', 'money', 'notices', 'pulse'] as const;
+// 'tasks': the Aufgaben card (web TasksToday, iPhone TasksTodayCard) – without it every arrangement with it was refused
+const TODAY_CARDS = ['rhythm', 'tasks', 'list', 'still', 'cook', 'money', 'notices', 'pulse'] as const;
 r.get('/list/today-order', (req, res) => res.json({ order: userId(req) ? getUserPref<string[]>(userId(req)!, 'today.order', []) : [] }));
 r.put('/list/today-order', (req, res) => {
   const b = z.object({ order: z.array(z.enum(TODAY_CARDS)).max(TODAY_CARDS.length) }).parse(req.body);

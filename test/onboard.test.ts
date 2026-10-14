@@ -132,6 +132,14 @@ describe('starter sets', () => {
     expect(s.checklist.items.find((i) => i.key === 'stock')?.done).toBe(true);
   });
 
+  it('the iPhone app with notifications counts as "app on the phone"', () => {
+    db.prepare(`INSERT OR IGNORE INTO users (id, name, role, password_hash) VALUES (1, 'Mira', 'admin', 'x')`).run();
+    db.exec(`CREATE TABLE IF NOT EXISTS apns_devices (id INTEGER PRIMARY KEY, user_id INTEGER, token TEXT, env TEXT, device TEXT)`);
+    expect(ob.gettingStarted(1).checklist.items.find((i) => i.key === 'phone')?.done).toBe(false);
+    db.prepare(`INSERT INTO apns_devices (user_id, token, env, device) VALUES (1, 'tok', 'sandbox', 'iPhone')`).run();
+    expect(ob.gettingStarted(1).checklist.items.find((i) => i.key === 'phone')?.done).toBe(true);
+  });
+
   it('the checklist disappears when dismissed', () => {
     ob.updateOnboardState({ checklistDismissed: true });
     expect(ob.gettingStarted(1).showChecklist).toBe(false);
