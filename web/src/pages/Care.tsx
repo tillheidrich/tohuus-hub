@@ -266,7 +266,8 @@ export function Care() {
   const { done, sheet } = useCareDone();
   const [sp] = useSearchParams();
   const [openId, setOpenId] = useState<number | null>(() => Number(sp.get('task')) || null);
-  const [form, setForm] = useState<Partial<CareTask> | null>(null);
+  // ?new=Bad putzen (global search "New task …") opens the form with the name
+  const [form, setForm] = useState<Partial<CareTask> | null>(() => (sp.get('new') ? { name: sp.get('new')!.slice(0, 120), interval_n: null, interval_unit: null, category: 'house' } : null));
   const [showTemplates, setShowTemplates] = useState(false);
   // Alle · Haushalt · Pflege & Fristen · Für mich (/pflege opens "care")
   const [filter, setFilter] = useState<TaskFilter>(() => {

@@ -255,6 +255,9 @@ describe('cloud isolation', () => {
     expect(b.leaks).toEqual([]);
     // B cannot reveal A's code by id either
     expect((await B.post(`/api/house-guide/codes/${houseCodeA}/reveal`, {})).status).toBe(404);
+    // global search: A finds its own things, B finds nothing of A's
+    expect(JSON.stringify((await A.get('/api/search?q=MARKERA')).json.groups)).toContain('MARKERA');
+    expect(JSON.stringify((await B.get('/api/search?q=MARKERA')).json.groups)).not.toContain('MARKERA');
     // and without any session nothing leaks either
     const anon = await sweep(new Client());
     expect(anon.found).toEqual([]);

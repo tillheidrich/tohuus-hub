@@ -57,7 +57,7 @@ beforeAll(async () => {
   app.use(cookieParser());
   app.use((await import('../server/lib/caldav')).caldav);
   app.use('/api', (await import('../server/routes/auth')).pub);
-  for (const m of ['core', 'home', 'list2']) app.use('/api', (await import(`../server/routes/${m}`)).r);
+  for (const m of ['core', 'home', 'list2', 'search']) app.use('/api', (await import(`../server/routes/${m}`)).r);
   app.use((err: any, _req: any, res: any, _next: any) => res.status(err?.name === 'ZodError' ? 400 : (err?.status ?? 500)).json({ error: String(err?.message ?? err) }));
   await new Promise<void>((r) => {
     server = app.listen(0, () => r());
@@ -432,5 +432,22 @@ describe('Termine: classic calendar entries', () => {
     expect((await mira.req('GET', '/api/calendar/feeds')).json.length).toBe(2);
     expect((await mira.req('DELETE', `/api/calendar/feeds/${plain.id}`)).json.ok).toBe(true);
     expect((await fetch(base + path)).status).toBe(404);
+  });
+});
+
+describe('global search', () => {
+  it('finds tasks, list rows and people; a private task only for its owner', async () => {
+    await mira.req('POST', '/api/care', { name: 'Gartenschlauch einräumen', category: 'house', next_due: '2026-11-20' });
+    await sam.req('POST', '/api/shopping', { text: 'Gartenerde' });
+    const r = (await mira.req('GET', '/api/search?q=garten')).json;
+    expect(r.groups.tasks.map((x: any) => x.name)).toContain('Gartenschlauch einräumen');
+    expect(r.groups.list.map((x: any) => x.text)).toContain('Gartenerde');
+    expect((await mira.req('GET', '/api/search?q=sam')).json.groups.people.map((x: any) => x.name)).toContain('Sam');
+    // a private task: only its owner finds it
+    await mira.req('POST', '/api/care', { name: 'Überraschung für Sam planen', visibility: 'private', next_due: '2026-11-21' });
+    expect(JSON.stringify((await mira.req('GET', '/api/search?q=ueberraschung')).json)).toContain('Überraschung für Sam');
+    expect(JSON.stringify((await sam.req('GET', '/api/search?q=ueberraschung')).json)).not.toContain('Überraschung');
+    // too short: nothing
+    expect((await mira.req('GET', '/api/search?q=g')).json.groups).toEqual({});
   });
 });
