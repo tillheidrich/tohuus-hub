@@ -30,8 +30,8 @@ struct MoreSections: View {
                     Button { showCheck = true } label: { Label(L("Quick stock check"), systemImage: "checklist") }
                         .foregroundStyle(Theme.ink)
                 }
-                if allows("/pflege") {
-                    NavigationLink { CareView(api: api) } label: { Label(L("Home & care"), systemImage: "wrench.and.screwdriver") }
+                if allows("/aufgaben") {
+                    NavigationLink { CareView(api: api) } label: { Label(L("Tasks"), systemImage: "checklist") }
                 }
                 if allows("/urlaub") {
                     NavigationLink { AwayView(store: store) } label: { Label(L("Trip / away"), systemImage: "suitcase") }
@@ -146,7 +146,7 @@ enum MoreAccess {
         let order = ["/bestellen", "/einkauf", "/einstellungen", "/hilfe", "/hausinfo", "/uebergabe", "/so-funktioniert-tohuus", "/gut-zu-wissen"]
         let stock = ["/", "/bestand", "/wo", "/abgleich", "/scan", "/q/"]
         let recipes = ["/kochen", "/rezepte", "/lieblinge"]
-        let familyDeny = ["/import", "/ausgaben", "/geld", "/merkt-sich", "/pflege", "/etiketten", "/willkommen", "/urlaub"]
+        let familyDeny = ["/import", "/ausgaben", "/geld", "/merkt-sich", "/pflege", "/aufgaben", "/etiketten", "/willkommen", "/urlaub"]
         func starts(_ list: [String]) -> Bool {
             list.contains { x in
                 x == "/" ? p == "/" : x.hasSuffix("/") ? p.hasPrefix(x) : (p == x || p.hasPrefix(x + "/"))

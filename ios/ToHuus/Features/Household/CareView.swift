@@ -1,13 +1,16 @@
 import SwiftUI
 
-// Pflege & Fristen natively (web: pages/Care.tsx, server: routes/home.ts /api/care, lib/care.ts).
-// Water filter, smoke detectors, descaling, tyres, passports: one tap when done, the next date is set by the server.
+// Aufgaben natively (web: pages/Care.tsx, server: routes/home.ts /api/care, lib/care.ts, docs/tasks.md).
+// Household chores and care & deadlines, once, recurring or when needed, for everyone or only for me: one tap when
+// done, the next date is set by the server. No points, no ranking.
 
 /// GET /api/care → { tasks, templates, users, today }
 struct CareData: Decodable, Sendable {
     @Lossy var tasks: [CareTask]
     @Lossy var templates: [CareTemplate]
     var today: String?
+    /** the signed-in member (filter "Für mich") */
+    var me: Int?
 }
 
 struct CareTask: Decodable, Sendable, Identifiable, Hashable {
@@ -32,8 +35,24 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     var location: CareLocation?
     var assignee: CareAssignee?
     var log: [CareLogEntry]?
+    /// house (household chore) | care (care & deadlines)
+    var category: String?
+    /// household | private ("nur für mich" – only its owner sees it)
+    var visibility: String?
+    var ownerUserId: Int?
+    /// done (next time counts from the day it was done) | due (keeps its days, "every Monday")
+    var anchor: String?
+    var asNeeded: Bool?
+    var checklist: [CheckItem]?
+    var doerKey: String?
+    var doer: Doer?
 
     var isDueNow: Bool { ["overdue", "today", "soon"].contains(state ?? "") }
+    var isPrivate: Bool { visibility == "private" }
+    var isHouse: Bool { category == "house" }
+
+    struct CheckItem: Decodable, Sendable, Hashable { var text: String; var done: Bool }
+    struct Doer: Decodable, Sendable, Hashable { var key: String; var name: String; var color: String? }
 
     struct CareProduct: Decodable, Sendable, Hashable { var id: Int; var name: String; var stock: Double? }
     struct CareLocation: Decodable, Sendable, Hashable { var id: Int; var name: String }
@@ -53,6 +72,8 @@ struct CareTemplate: Decodable, Sendable, Identifiable, Hashable {
     var unit: String?
     var group: String?
     var added: Bool?
+    var category: String?
+    var asNeeded: Bool?
     var id: String { key }
 }
 
@@ -84,13 +105,25 @@ extension APIClient {
 
 enum CareLabels {
     static let groups: [(String, String)] = [
-        ("kitchen", L("Kitchen")), ("house", L("House")), ("safety", L("Safety")), ("car", L("Car & bike")), ("papers", L("Papers & contracts")),
+        ("chores", L("Household")), ("kitchen", L("Kitchen")), ("house", L("House")), ("safety", L("Safety")), ("car", L("Car & bike")), ("papers", L("Papers & contracts")),
     ]
 
     /// template names come in English from the server (server/lib/care.ts CARE_TEMPLATES) – literal here so the
     /// string catalogue has them
     static func templateName(_ name: String) -> String {
         let known: [String: String] = [
+            "Clean the bathroom": L("Clean the bathroom"),
+            "Vacuum": L("Vacuum"),
+            "Mop the floors": L("Mop the floors"),
+            "Dust": L("Dust"),
+            "Change the bed linen": L("Change the bed linen"),
+            "Change towels": L("Change towels"),
+            "Take out the bins": L("Take out the bins"),
+            "Take glass and paper away": L("Take glass and paper away"),
+            "Wipe out the fridge": L("Wipe out the fridge"),
+            "Clean the oven": L("Clean the oven"),
+            "Clean the windows": L("Clean the windows"),
+            "Water the plants": L("Water the plants"),
             "Change water filter": L("Change water filter"),
             "Descale coffee machine": L("Descale coffee machine"),
             "Descale Thermomix": L("Descale Thermomix"),
@@ -112,8 +145,13 @@ enum CareLabels {
         return known[name] ?? name
     }
 
-    static func icon(_ template: String?) -> String {
+    static func icon(_ template: String?, category: String? = nil) -> String {
         switch template ?? "" {
+        case "clean-bathroom": return "bathtub"
+        case "vacuum", "mop", "dust": return "sparkles"
+        case "bed-linen", "towels": return "bed.double"
+        case "bins", "glass-paper": return "trash"
+        case "plants": return "leaf"
         case "water-filter", "dishwasher-filter": return "drop"
         case "descale-coffee", "descale-thermomix", "descale-kettle": return "cup.and.saucer"
         case "hood-filter", "hvac-filter": return "fan"
@@ -124,11 +162,12 @@ enum CareLabels {
         case "car-tyres": return "car"
         case "bike-tyres": return "bicycle"
         case "passport", "contract": return "person.text.rectangle"
-        default: return "wrench.and.screwdriver"
+        default: return category == "house" ? "checklist" : "wrench.and.screwdriver"
         }
     }
 
-    static func interval(_ n: Int?, _ unit: String?) -> String {
+    static func interval(_ n: Int?, _ unit: String?, asNeeded: Bool = false) -> String {
+        if asNeeded { return L("when needed") }
         guard let n, n > 0, let unit else { return L("fixed date") }
         if n == 1 {
             switch unit {
@@ -147,6 +186,7 @@ enum CareLabels {
     }
 
     static func due(_ t: CareTask) -> String {
+        if t.asNeeded == true && t.nextDue == nil { return L("when needed") }
         guard t.state != "none", let next = t.nextDue else { return L("no date") }
         let d = t.days ?? 0
         switch t.state {
@@ -176,10 +216,34 @@ enum CareLabels {
     }
 }
 
-/// Mehr › Pflege & Fristen: due and later tasks, one-tap templates, detail with history and "Ich kümmere mich",
-/// editing. Labels and the printable ticket stay in the web app (QR labels page).
+/// Alle · Haushalt · Pflege & Fristen · Für mich (web: Care.tsx taskMatches)
+enum TaskFilter: String, CaseIterable, Identifiable {
+    case all, house, care, mine
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .all: return L("All")
+        case .house: return L("Household")
+        case .care: return L("Care & deadlines")
+        case .mine: return L("For me")
+        }
+    }
+
+    func matches(_ t: CareTask, me: Int?) -> Bool {
+        switch self {
+        case .all: return true
+        case .mine: return t.isPrivate || (me != nil && (t.doerKey == "u\(me!)" || t.assigneeUserId == me))
+        case .house: return t.isHouse
+        case .care: return !t.isHouse
+        }
+    }
+}
+
+/// Mehr › Aufgaben (web: /aufgaben): due and later tasks with the web's filters, one-tap templates, detail with
+/// sub-items, history and "Ich hab's im Blick", editing. Labels and the printable ticket stay in the web app.
 struct CareView: View {
     let api: APIClient
+    var initialFilter: TaskFilter = .all
     @Environment(AppModel.self) private var app
     @State private var data: CareData?
     @State private var error: String?
@@ -189,19 +253,27 @@ struct CareView: View {
     @State private var askDate: CareTask?
     @State private var toast: ToastMessage?
     @State private var me: MeLite?
+    @State private var filter: TaskFilter?
+
+    private var current: TaskFilter { filter ?? initialFilter }
 
     var body: some View {
         List {
             Section {
-                Text(L("Water filter, smoke detectors, descaling, tyres, passports: the things nobody keeps in their head. One tap when done – the next date is set automatically."))
+                Text(L("Bathroom, bed linen, water filter, smoke detectors, passports: what has to be done at home, once or again and again – for everyone or only for you. One tap when done – the next date is set automatically."))
                     .font(.subheadline).foregroundStyle(Theme.ink2)
+                Picker(L("Show"), selection: Binding(get: { current }, set: { filter = $0 })) {
+                    ForEach(TaskFilter.allCases) { f in Text(f.title).tag(f) }
+                }
+                .pickerStyle(.segmented)
             }
             if let error { Section { ErrorBanner(message: error) { Task { await load() } } }.listRowBackground(Color.clear) }
             if let data {
-                let due = data.tasks.filter(\.isDueNow)
-                let later = data.tasks.filter { !$0.isDueNow }
-                if data.tasks.isEmpty {
-                    EmptyStateView(systemImage: "wrench.and.screwdriver", title: L("No tasks yet"),
+                let shown = data.tasks.filter { current.matches($0, me: data.me) }
+                let due = shown.filter(\.isDueNow)
+                let later = shown.filter { !$0.isDueNow }
+                if shown.isEmpty {
+                    EmptyStateView(systemImage: "checklist", title: L("No tasks yet"),
                                    message: L("Pick a few from the suggestions below – one tap each. You can adjust the interval later."), art: .calendar)
                         .listRowBackground(Color.clear)
                 }
@@ -216,10 +288,12 @@ struct CareView: View {
             }
         }
         .themedList()
-        .navigationTitle(L("Home & care"))
+        .navigationTitle(L("Tasks"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { form = CareFormTarget(task: nil, template: nil, name: nil) } label: { Image(systemName: "plus") }
+                Button {
+                    form = CareFormTarget(task: nil, template: nil, name: nil, category: current == .care ? "care" : "house", privateTask: current == .mine)
+                } label: { Image(systemName: "plus") }
                     .accessibilityLabel(L("New task"))
             }
         }
@@ -248,23 +322,32 @@ struct CareView: View {
 
     private func row(_ t: CareTask) -> some View {
         HStack(spacing: Theme.Space.s3) {
-            Image(systemName: CareLabels.icon(t.template))
+            Image(systemName: CareLabels.icon(t.template, category: t.category))
                 .foregroundStyle(CareLabels.color(t.state))
                 .frame(width: 32, height: 32)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(t.name).foregroundStyle(Theme.ink)
-                let sub = [CareLabels.interval(t.intervalN, t.intervalUnit),
+                HStack(spacing: 4) {
+                    if t.isPrivate { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(Theme.ink3).accessibilityLabel(L("Only for me")) }
+                    Text(t.name).foregroundStyle(Theme.ink)
+                }
+                let items = t.checklist ?? []
+                let sub = [t.asNeeded == true ? nil : CareLabels.interval(t.intervalN, t.intervalUnit),
+                           items.isEmpty ? nil : LF("%d of %d", items.filter(\.done).count, items.count),
                            t.product.map { LF("%@: %@ in stock", $0.name, Self.qty($0.stock ?? 0)) },
                            t.location?.name].compactMap { $0 }
                 (Text(CareLabels.due(t)).foregroundStyle(CareLabels.color(t.state)) + Text(" · " + sub.joined(separator: " · ")).foregroundStyle(Theme.ink3))
                     .font(.caption)
             }
             Spacer(minLength: 4)
-            if let a = t.assignee {
+            if let d = t.doer {
+                Text(String(d.name.prefix(1))).font(.caption.weight(.semibold)).foregroundStyle(Theme.onPrimary)
+                    .frame(width: 24, height: 24).background(Theme.clay, in: Circle())
+                    .accessibilityLabel(LF("%@ does it", d.name))
+            } else if let a = t.assignee {
                 Text(String(a.name.prefix(1))).font(.caption.weight(.semibold)).foregroundStyle(Theme.onPrimary)
                     .frame(width: 24, height: 24).background(Theme.sage, in: Circle())
-                    .accessibilityLabel(LF("%@ takes care of it", a.name))
+                    .accessibilityLabel(LF("%@ keeps it in mind", a.name))
             }
             Button { done(t) } label: { Label(L("Done"), systemImage: "checkmark").labelStyle(.titleAndIcon).font(.caption.weight(.semibold)) }
                 .buttonStyle(.bordered)
@@ -278,7 +361,9 @@ struct CareView: View {
 
     @ViewBuilder
     private func templates(_ data: CareData) -> some View {
-        let free = data.templates.filter { $0.added != true }
+        let free = data.templates.filter { x in
+            x.added != true && (current == .all || current == .mine || (x.category ?? "care") == (current == .house ? "house" : "care"))
+        }
         if !free.isEmpty {
             Section {
                 if data.tasks.isEmpty || showTemplates {
@@ -290,10 +375,10 @@ struct CareView: View {
                             ForEach(list) { x in
                                 Button { Task { await add(x) } } label: {
                                     HStack {
-                                        Image(systemName: CareLabels.icon(x.key)).frame(width: 28).accessibilityHidden(true)
+                                        Image(systemName: CareLabels.icon(x.key, category: x.category)).frame(width: 28).accessibilityHidden(true)
                                         VStack(alignment: .leading) {
                                             Text(CareLabels.templateName(x.name)).foregroundStyle(Theme.ink)
-                                            Text(CareLabels.interval(x.n, x.unit)).font(.caption).foregroundStyle(Theme.ink3)
+                                            Text(CareLabels.interval(x.n, x.unit, asNeeded: x.asNeeded == true)).font(.caption).foregroundStyle(Theme.ink3)
                                         }
                                         Spacer()
                                         Image(systemName: "plus").foregroundStyle(Theme.primaryText)
@@ -324,8 +409,8 @@ struct CareView: View {
 
     private func add(_ x: CareTemplate) async {
         // a template without interval (passport) needs its date first
-        guard x.n != nil else {
-            form = CareFormTarget(task: nil, template: x.key, name: CareLabels.templateName(x.name))
+        guard x.n != nil || x.asNeeded == true else {
+            form = CareFormTarget(task: nil, template: x.key, name: CareLabels.templateName(x.name), category: x.category ?? "care")
             return
         }
         do {
@@ -335,9 +420,9 @@ struct CareView: View {
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
 
-    /// one tap with undo; a fixed-date task (passport) asks first
+    /// one tap with undo; a fixed-date task (passport) asks first – one-offs and "when needed" are simply done
     private func done(_ t: CareTask) {
-        if t.intervalN == nil { askDate = t } else { Task { await finish(t, nextDue: nil) } }
+        if t.intervalN == nil && t.asNeeded != true && !t.isHouse { askDate = t } else { Task { await finish(t, nextDue: nil) } }
     }
 
     private func finish(_ t: CareTask, nextDue: String?) async {
@@ -360,6 +445,9 @@ struct CareFormTarget: Identifiable {
     var task: CareTask?
     var template: String?
     var name: String?
+    /// new task: house | care, and "only for me"
+    var category: String = "care"
+    var privateTask = false
     let id = UUID()
 }
 
@@ -374,13 +462,17 @@ private struct CareDetailSheet: View {
     @State private var full: CareTask?
     @State private var mine = false
     @State private var error: String?
+    @State private var items: [CareTask.CheckItem] = []
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     LabeledContent(L("Status")) { Text(CareLabels.due(task)).foregroundStyle(CareLabels.color(task.state)) }
-                    LabeledContent(L("Repeats"), value: CareLabels.interval(task.intervalN, task.intervalUnit))
+                    LabeledContent(L("Repeats"), value: CareLabels.interval(task.intervalN, task.intervalUnit, asNeeded: task.asNeeded == true))
+                    LabeledContent(L("Area"), value: task.isHouse ? L("Household") : L("Care & deadlines"))
+                    if task.isPrivate { Label(L("Only for me"), systemImage: "lock.fill").foregroundStyle(Theme.ink2) }
+                    if let d = task.doer { LabeledContent(L("Who does it"), value: d.name) }
                     if let l = task.location { LabeledContent(L("Where"), value: l.name) }
                     LabeledContent(L("Next due"), value: CareLabels.day(task.nextDue, long: true))
                     LabeledContent(L("Last done"), value: task.lastDone == nil ? L("unknown") : CareLabels.day(task.lastDone))
@@ -396,12 +488,19 @@ private struct CareDetailSheet: View {
                         }
                     }
                 }
-                if me?.claimsOn ?? true, me?.isMember ?? true {
+                if !items.isEmpty {
+                    Section(L("Sub-items")) {
+                        ForEach(items.indices, id: \.self) { i in
+                            Toggle(items[i].text, isOn: Binding(get: { items[i].done }, set: { v in Task { await tick(i, v) } }))
+                        }
+                    }
+                }
+                if me?.claimsOn ?? true, me?.isMember ?? true, !task.isPrivate {
                     Section {
                         Toggle(isOn: Binding(get: { mine }, set: { v in Task { await claim(v) } })) {
                             VStack(alignment: .leading) {
-                                Text(L("I’ll take care of it"))
-                                Text(task.assignee != nil && !mine ? LF("%@ takes care of it", task.assignee?.name ?? "") : L("So nobody else has to keep it in mind."))
+                                Text(L("I keep it in mind"))
+                                Text(task.assignee != nil && !mine ? LF("%@ keeps it in mind", task.assignee?.name ?? "") : L("So nobody else has to keep it in mind."))
                                     .font(.caption).foregroundStyle(Theme.ink3)
                             }
                         }
@@ -428,6 +527,7 @@ private struct CareDetailSheet: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Close")) { dismiss() } } }
             .task {
                 mine = me?.userId != nil && task.assigneeUserId == me?.userId
+                items = task.checklist ?? []
                 full = try? await api.careTask(task.id)
             }
         }
@@ -436,6 +536,16 @@ private struct CareDetailSheet: View {
 
     private func lead(_ n: Int) -> String {
         n == 0 ? L("on the day") : n == 1 ? L("1 day before") : LF("%d days before", n)
+    }
+
+    /// a sub-item ticked or unticked – the whole list goes back (web: same PATCH)
+    private func tick(_ i: Int, _ v: Bool) async {
+        guard items.indices.contains(i) else { return }
+        items[i].done = v
+        do {
+            try await api.saveCareTask(id: task.id, ["checklist": items.map { ["text": $0.text, "done": $0.done] as [String: Any] }])
+            onChanged()
+        } catch { self.error = APIError.from(error).localizedDescription }
     }
 
     private func claim(_ v: Bool) async {
@@ -447,7 +557,7 @@ private struct CareDetailSheet: View {
     }
 }
 
-/// New or edit a care task (web: Care.tsx TaskForm). Choosing a product to use up stays in the web app for now;
+/// New or edit a task (web: Care.tsx TaskForm). Choosing a product to use up stays in the web app for now;
 /// a product already set is shown and can be removed.
 private struct CareTaskForm: View {
     let api: APIClient
@@ -455,7 +565,15 @@ private struct CareTaskForm: View {
     let onDone: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
-    @State private var fixed = false
+    /// interval | fixed | needed
+    @State private var mode = "interval"
+    @State private var category = "care"
+    @State private var anchor = "done"
+    @State private var privateTask = false
+    @State private var doerKey: String?
+    @State private var people: [PersonDirEntry] = []
+    @State private var items: [CareTask.CheckItem] = []
+    @State private var newItem = ""
     @State private var n = 1
     @State private var unit = "month"
     @State private var lastDone: Date?
@@ -478,12 +596,18 @@ private struct CareTaskForm: View {
                     TextField(L("e.g. Change water filter"), text: $name)
                 }
                 Section {
-                    Picker(L("Kind"), selection: $fixed) {
-                        Text(L("Repeats")).tag(false)
-                        Text(L("Fixed date")).tag(true)
+                    Picker(L("Area"), selection: $category) {
+                        Text(L("Household")).tag("house")
+                        Text(L("Care & deadlines")).tag("care")
                     }
                     .pickerStyle(.segmented)
-                    if !fixed {
+                    Picker(L("How often"), selection: $mode) {
+                        Text(L("Repeats")).tag("interval")
+                        Text(L("Once / fixed date")).tag("fixed")
+                        Text(L("When needed")).tag("needed")
+                    }
+                    .pickerStyle(.segmented)
+                    if mode == "interval" {
                         Stepper(value: $n, in: 1...1000) { Text(LF("Every %d", n)) }
                         Picker(L("Unit"), selection: $unit) {
                             Text(L("days")).tag("day")
@@ -491,11 +615,45 @@ private struct CareTaskForm: View {
                             Text(L("months")).tag("month")
                             Text(L("years")).tag("year")
                         }
+                        Picker(L("The next time counts from"), selection: $anchor) {
+                            Text(L("when it was done")).tag("done")
+                            Text(L("the planned day")).tag("due")
+                        }
                         OptionalDate(title: L("Last done"), date: $lastDone)
                     }
-                    OptionalDate(title: fixed ? L("Date (e.g. expiry)") : L("Next due"), date: $nextDue)
+                    if mode != "needed" {
+                        OptionalDate(title: mode == "fixed" ? L("Date (e.g. expiry)") : L("Next due"), date: $nextDue)
+                    }
                 } footer: {
-                    Text(fixed ? L("Remind me before this date.") : L("Leave empty if you don’t know – it starts from today."))
+                    if mode == "fixed" { Text(L("Remind me before this date.")) }
+                    else if mode == "interval" { Text(L("Leave empty if you don’t know – it starts from today.")) }
+                }
+                Section {
+                    Toggle(isOn: $privateTask) {
+                        VStack(alignment: .leading) {
+                            Text(L("Only for me"))
+                            Text(L("Nobody else sees it – not the household, not the assistant for others, not displays."))
+                                .font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    if !privateTask && people.count > 1 {
+                        Picker(L("Who does it (optional)"), selection: $doerKey) {
+                            Text(L("Whoever has time")).tag(String?.none)
+                            ForEach(people) { p in Text(p.name).tag(String?.some(p.key)) }
+                        }
+                    }
+                }
+                Section(L("Sub-items (optional)")) {
+                    ForEach(items.indices, id: \.self) { i in
+                        Text(items[i].text)
+                            .swipeActions { Button(role: .destructive) { items.remove(at: i) } label: { Label(L("Remove"), systemImage: "trash") } }
+                    }
+                    HStack {
+                        TextField(L("e.g. sink, mirror, floor"), text: $newItem).submitLabel(.done).onSubmit { addItem() }
+                        Button { addItem() } label: { Image(systemName: "plus.circle.fill") }
+                            .disabled(newItem.trimmingCharacters(in: .whitespaces).isEmpty)
+                            .accessibilityLabel(L("Add"))
+                    }
                 }
                 Section {
                     Stepper(value: Binding(get: { lead ?? 0 }, set: { lead = $0 }), in: 0...365) {
@@ -528,7 +686,7 @@ private struct CareTaskForm: View {
                 ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L("Save")) { Task { await save() } }
-                        .disabled(busy || name.trimmingCharacters(in: .whitespaces).isEmpty || (fixed && nextDue == nil))
+                        .disabled(busy || name.trimmingCharacters(in: .whitespaces).isEmpty || (mode == "fixed" && nextDue == nil && category != "house"))
                 }
             }
             .confirmationDialog(LF("Delete “%@”?", name), isPresented: $confirmDelete, titleVisibility: .visible) {
@@ -536,11 +694,17 @@ private struct CareTaskForm: View {
             }
             .task {
                 places = (try? await api.places()) ?? []
+                people = ((try? await api.peopleDirectory()) ?? []).filter { $0.kind != "guest" }
             }
             .onAppear {
                 if let t = target.task {
                     name = t.name
-                    fixed = t.intervalN == nil
+                    mode = t.asNeeded == true ? "needed" : t.intervalN == nil ? "fixed" : "interval"
+                    category = t.category ?? "care"
+                    anchor = t.anchor ?? "done"
+                    privateTask = t.isPrivate
+                    doerKey = t.doerKey
+                    items = t.checklist ?? []
                     n = t.intervalN ?? 1
                     unit = t.intervalUnit ?? "month"
                     lastDone = ServerDate.parse(t.lastDone)
@@ -551,7 +715,10 @@ private struct CareTaskForm: View {
                     note = t.note ?? ""
                 } else {
                     name = target.name ?? ""
-                    fixed = target.template != nil
+                    category = target.category
+                    privateTask = target.privateTask
+                    mode = target.template != nil ? "fixed" : "interval"
+                    if target.template == nil && category == "house" { unit = "week" }
                 }
             }
         }
@@ -562,15 +729,21 @@ private struct CareTaskForm: View {
         defer { busy = false }
         var body: [String: Any] = [
             "name": String(name.trimmingCharacters(in: .whitespaces).prefix(120)),
-            "interval_n": nul(fixed ? nil : n),
-            "interval_unit": nul(fixed ? nil : unit),
+            "interval_n": nul(mode == "interval" ? n : nil),
+            "interval_unit": nul(mode == "interval" ? unit : nil),
+            "as_needed": mode == "needed",
+            "anchor": anchor,
+            "category": category,
+            "visibility": privateTask ? "private" : "household",
+            "doer_key": nul(privateTask ? nil : doerKey),
+            "checklist": items.map { ["text": $0.text, "done": $0.done] as [String: Any] },
             "location_id": nul(placeId),
             "product_id": nul(productId),
             "note": nul(note.isEmpty ? nil : String(note.prefix(500))),
         ]
         if let lead { body["lead_days"] = lead }
-        let next = nextDue.map { ServerDate.day($0) }
-        let last = (fixed ? nil : lastDone).map { ServerDate.day($0) }
+        let next = (mode == "needed" ? nil : nextDue).map { ServerDate.day($0) }
+        let last = (mode == "interval" ? lastDone : nil).map { ServerDate.day($0) }
         if let t = target.task {
             // keep the dates unless they changed – the server recomputes the due date when the interval changes
             if next != t.nextDue.map({ String($0.prefix(10)) }) { body["next_due"] = nul(next) }
@@ -585,6 +758,13 @@ private struct CareTaskForm: View {
             onDone()
             dismiss()
         } catch { self.error = APIError.from(error).localizedDescription }
+    }
+
+    private func addItem() {
+        let s = newItem.trimmingCharacters(in: .whitespaces)
+        guard !s.isEmpty, items.count < 30 else { return }
+        items.append(.init(text: String(s.prefix(120)), done: false))
+        newItem = ""
     }
 
     private func remove() async {

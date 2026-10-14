@@ -89,6 +89,9 @@ struct TodayView: View {
                         ForEach(t.notices) { n in noticeRow(n) }
                         SampleNudgeCard()
                         if !t.rhythm.isEmpty { dueCard(t.rhythm) }
+                        if MoreAccess.guestAllows(app.isGuest ? (app.guestLevel ?? "paused") : nil, "/aufgaben") {
+                            TasksTodayCard(api: store.api, refresh: refreshKey)
+                        }
                         listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])
                         if !t.stillHave.isEmpty && app.moduleOn("stock") { EatSoonCard(items: t.stillHave, store: store) }
                         if let cook = t.cookToday, cook.recipeId != nil || cook.title != nil, app.moduleOn("cook") { cookCard(cook) }
