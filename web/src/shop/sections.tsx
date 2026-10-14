@@ -49,6 +49,8 @@ export interface Claim {
 
 export interface ShopItem {
   id: number;
+  /** counts toward the weekly extras allowance (server: lib/extras.ts) */
+  extra?: boolean;
   product_id: number | null;
   text: string;
   qty: number | null;

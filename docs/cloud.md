@@ -58,6 +58,7 @@ DATA_DIR/
 | `MIN_IOS_BUILD` | – | builds of the iPhone app below this number show only "Bitte aktualisiere ToHuus" (`/api/instance` → `minIosBuild`); set it after an API change older builds can't follow. `/api/instance` also carries `betaGift` (`'haushalt'\|'plus'\|null`, runtime setting `beta.gift`), so the app hides "14 Tage, dann Free" during the beta |
 | `BETA_ALLOWLIST` | – | Comma-separated addresses that may sign up without an access code, in addition to the allowlist in the back office (e.g. the App Review account on a fresh cloud) |
 | `BETA_GIFT` | – | `haushalt` or `plus`: every cloud household gets at least this plan during the beta. Fallback for the back-office setting `beta.gift` (the back office wins when set) |
+| `BETA_GIFT_EXCEPT` | – | Comma-separated household ids left out of the beta gift (they keep their own trial/plan). For the App Review household, so the reviewer sees the plans with StoreKit prices and can buy in the sandbox – see `docs/ios-app-review.md` |
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
 | `APPLE_APP_IDS` | – | comma-separated `<TeamID>.<bundle id>` for `webcredentials` in `/.well-known/apple-app-site-association`, default `FVS7WVTQ67.de.heidrichdigital.tohuus` |
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |

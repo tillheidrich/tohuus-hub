@@ -163,6 +163,9 @@ struct LabelsView: View {
                 .font(.subheadline).foregroundStyle(Theme.ink2)
             Spacer()
             if busy { ProgressView() }
+            if selected.count == 1, let id = selected.first {
+                NFCWriteButton(api: api, kind: current.rawValue, id: id) { error = $0 }
+            }
             Button(L("Preview")) { Task { await build(print: false) } }
                 .buttonStyle(.bordered)
                 .disabled(selected.isEmpty || busy)

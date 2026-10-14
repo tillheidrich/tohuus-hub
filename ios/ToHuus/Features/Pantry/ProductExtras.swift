@@ -60,7 +60,7 @@ struct FreshActionsCard: View {
                 Text(checkedLine).font(.caption).foregroundStyle(Theme.ink3)
                 Spacer()
                 if !more.isLeftover {
-                    Button(freshMore?.openDays.map { LF("%d days after opening", $0) } ?? L("Shelf life")) { sheet = .shelf }
+                    Button(freshMore?.openDays.map { freshMore?.openDaysEstimated == true ? LF("about %d days after opening", $0) : LF("%d days after opening", $0) } ?? L("Shelf life")) { sheet = .shelf }
                         .font(.caption.weight(.semibold))
                         .frame(minHeight: 44)
                 } else if let r = freshMore?.recipeId {
@@ -133,7 +133,7 @@ struct FreshActionsCard: View {
             let r = try await store.api.freshAction(product.id, "open", entryId: nil)
             Haptics.success()
             store.touch("stock")
-            changed(r.useBy.flatMap { ServerDate.shortDay($0) }.map { LF("Opened – use by %@", $0) } ?? L("Marked as opened"))
+            changed(r.openedToast)
         } catch { changed(APIError.from(error).localizedDescription) }
     }
 

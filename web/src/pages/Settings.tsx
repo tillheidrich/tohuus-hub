@@ -9,6 +9,8 @@ import { Backups, Members } from './DataSettings';
 import { DataReset, TourButton } from './Tour';
 import { MyAccount, SignInAdmin } from './AuthSettings';
 import { HaTodoCard, PushCard } from '../shop/ShopSettings';
+import { ExtrasSettingsCard } from '../shop/extras';
+import { FocusSettingsCard } from '../focus/Focus';
 import { InboxSettingsCard } from './Retail';
 import { KidsSettings } from './KidsSettings';
 import { MyPerson, PeopleSection } from '../people/People';
@@ -111,6 +113,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'plan' && cloud && <CloudAccountCard />}
       {tab === 'home' && <Household me={me} admin={admin} />}
       {tab === 'home' && <ModulesCard admin={admin} />}
+      {tab === 'home' && <ExtrasSettingsCard admin={admin} />}
       {tab === 'home' && <LunchboxCard />}
       {tab === 'home' && <PulseSettingsCard admin={admin} />}
       {tab === 'home' && <AwayEntryCard />}
@@ -118,6 +121,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'account' && <MyPerson me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
       {tab === 'account' && me.actor.userId && <MyListViewCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <FocusSettingsCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalDavCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarFeedCard />}
       {tab === 'account' && <MyAccount me={me} />}

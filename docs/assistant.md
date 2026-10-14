@@ -74,8 +74,12 @@ Four switches, enforced centrally in `server/lib/ai.ts` (`chat()`, `transcribe()
 | Consent (ToHuus Cloud only) `ai.consent` | `user_prefs` per person; household setting `ai.consent` when an admin agrees | each person for themselves (`PATCH { consent }`); an admin's consent also covers the household | **off** until agreed – App Store guideline 5.1.2(i) |
 
 **Consent in ToHuus Cloud** (13 Oct 2026): before the first model request with a person's data, that person agrees
-once (iPhone: a one-time sheet after sign-in and Mehr › Mit oder ohne KI; web: Einstellungen › Zugänge & KI). The text
-names the receiver (`AI_PROCESSOR` in ai-policy.ts: Mistral AI (EU), no training; the app and website name only Mistral – OpenRouter is the API in between and stays listed in the privacy policy as a processor). Requests
+once (iPhone: a one-time sheet after sign-in per person and household, a hint with the consent inside the assistant
+until they decide, and Mehr › Mit oder ohne KI; web: Einstellungen › Zugänge & KI). The text names every receiver
+(`aiProcessorLabel()` in ai-policy.ts, sent as `consent.processor` in the request language: "Mistral AI (Frankreich),
+vermittelt über OpenRouter (USA)" / "Mistral AI (France), routed through OpenRouter (USA)"; since 14 Oct 2026 –
+App Store guideline 5.1.2(i) asks to disclose each third party that receives personal data, and OpenRouter does, see
+`docs/ios-app-review.md`), no training. Requests
 of a person use the person's consent; children and background jobs (receipts by mail) use the household's, given by an
 admin. Without it the reason is `consent` and every feature takes its path without a model. The operator's catalogue
 drafts in `/betrieb` carry no household data and are not affected (`runAsAiActor({ operator: true })`). In the cloud a

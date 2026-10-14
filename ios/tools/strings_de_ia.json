@@ -66,5 +66,8 @@
   "Invitation": "Einladung",
   "This doesn’t look like an invitation link.": "Das sieht nicht nach einem Einladungslink aus.",
   "I have an invitation": "Ich habe eine Einladung",
-  "estimated": "geschätzt"
+  "estimated": "geschätzt",
+  "Opened – keeps about until %@": "Angebrochen – hält etwa bis %@",
+  "about %d days after opening": "etwa %d Tage nach dem Öffnen",
+  "keeps about until %@": "hält etwa bis %@"
 }

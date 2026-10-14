@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { itemIsExtra } from '../lib/extras.js';
 import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled } from '../config.js';
@@ -414,7 +415,7 @@ r.get('/lookup/match', (req, res) => {
 r.get('/shopping', (req, res) => {
   const items = db
     .prepare(
-      `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit,
+      `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit, p.is_extra AS product_is_extra,
          (SELECT COALESCE(SUM(qty),0) FROM stock st WHERE st.product_id = s.product_id) AS in_stock
        FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id
        WHERE s.cleared_at IS NULL AND (s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day'))
@@ -422,7 +423,8 @@ r.get('/shopping', (req, res) => {
     )
     .all() as { id: number; text: string; product_id: number | null; note: string | null; source: string; added_by: string | null; created_at: string; origin_detail: string | null }[];
   // discreet / private entries (area: share): real names only for their owner; every row says where it came from
-  res.json(withOrigin(applyShareView(items, { userId: req.actor?.userId ?? null })));
+  const marked = items.map((x) => ({ ...x, extra: itemIsExtra(x as Parameters<typeof itemIsExtra>[0]) }));
+  res.json(withOrigin(applyShareView(marked, { userId: req.actor?.userId ?? null })));
 });
 
 r.post('/shopping', (req, res) => {

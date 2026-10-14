@@ -60,6 +60,12 @@ targets:
           - CFBundleURLName: de.heidrichdigital.tohuus
             CFBundleURLSchemes: [tohuus]
         NSCameraUsageDescription: "ToHuus uses the camera to scan barcodes, receipts and paper lists."
+        # the share sheet's "Save Image" (leftover and meal-box cards, printer previews) needs this key, or the app is terminated
+        # a self-hosted server at a home address (http://192.168.…, tohuus.local) triggers the local network prompt
+        NSLocalNetworkUsageDescription: "Only if your ToHuus server runs at home: ToHuus connects to it in your home network."
+        NSPhotoLibraryAddUsageDescription: "ToHuus can save images to your photo library."
+        # NFC tags with a ToHuus label link (NFCLabels.swift) – only while you write or read a tag
+        NFCReaderUsageDescription: "ToHuus reads and writes NFC tags only when you tap “NFC tag” – a tag holds the link of a ToHuus label."
         NSCalendarsWriteOnlyAccessUsageDescription: "ToHuus only adds an entry when you tap “Add to calendar” and save it. ToHuus does not read your calendar."
         # "Einkauf läuft" on the lock screen and in the Dynamic Island (LiveTripActivity.swift)
         NSSupportsLiveActivities: true
@@ -77,7 +83,10 @@ targets:
         # Sign in with Apple (enable the capability for de.heidrichdigital.tohuus in the developer account)
         com.apple.developer.applesignin: [Default]
         # passkeys of ToHuus Cloud accounts (served: /.well-known/apple-app-site-association)
-        com.apple.developer.associated-domains: ["webcredentials:cloud.tohuus.heidrich-digital.de"]
+        # applinks: label links ".../q/<code>" (QR and NFC tags) open the app on the cloud host
+        com.apple.developer.associated-domains: ["webcredentials:cloud.tohuus.heidrich-digital.de", "applinks:cloud.tohuus.heidrich-digital.de"]
+        # NFC tags (NFCLabels.swift): NDEF reading and writing
+        com.apple.developer.nfc.readersession.formats: [TAG]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.heidrichdigital.tohuus

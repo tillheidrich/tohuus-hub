@@ -28,6 +28,7 @@ import { t } from '../i18n.js';
 import { LIST_KINDS, LIST_VISIBILITIES, assertListAccess, createList, deleteList, estimate, guard, listFilter, listLists, listOfItem, moveItemToList, privateRowGuard, updateList, usuals } from '../lib/lists.js';
 import { upload } from './core.js';
 import { receiptVisible } from '../lib/spending.js';
+import { EXTRAS_MODES, extrasWeek, setExtrasSettings, setItemExtra } from '../lib/extras.js';
 
 export const r = Router();
 // mounted last (before the 404): everything here needs a signed-in member, an app or an API token
@@ -88,6 +89,32 @@ r.patch(
       })
       .parse(req.body);
     return updateItem(num(req.params.id), b);
+  }),
+);
+
+// ---------------------------------------------------------------- extras allowance (lib/extras.ts, docs/extras.md)
+
+/** This week's extras: allowance, used, still on the list, left. */
+r.get('/list/extras', (req, res) => {
+  if (req.actor?.kind === 'guest') return void res.status(403).json({ error: 'not for guest links' });
+  res.json(extrasWeek(userId(req)));
+});
+/** The household's weekly allowance (admins); null switches it off. */
+r.put(
+  '/list/extras/settings',
+  requireAdmin,
+  wrap((req) => {
+    const b = z.object({ mode: z.enum(EXTRAS_MODES), weekly: z.number().positive().max(10000) }).nullable().parse(req.body?.off ? null : req.body);
+    setExtrasSettings(b);
+    return extrasWeek(userId(req));
+  }),
+);
+/** Mark a row as extra (true), not extra (false) or back to automatic (null) – remembered for the product. */
+r.post(
+  '/list/items/:id/extra',
+  wrap((req) => {
+    const b = z.object({ extra: z.boolean().nullable() }).parse(req.body);
+    return setItemExtra(num(req.params.id), b.extra);
   }),
 );
 

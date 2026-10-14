@@ -299,6 +299,7 @@ struct ProductDetailView: View {
 
     private func dateLine(_ e: FreshProduct.Entry) -> String {
         if let u = e.useBy ?? e.bestBefore, let d = ServerDate.shortDay(u) {
+            if e.openedAt != nil, e.useByEstimated == true { return LF("keeps about until %@", d) }
             if e.openedAt != nil || e.inFreezer == true { return LF("use by %@", d) }
             // no printed date yet – the usual shelf life (web: Product.tsx, same wording)
             return e.bbEstimated == true ? LF("best before %@", d) + " · " + L("estimated") : LF("best before %@", d)
@@ -433,7 +434,7 @@ struct ProductDetailView: View {
             let r = try await store.api.freshAction(p.id, action, entryId: e.id, qty: action == "open" ? nil : e.qty)
             Haptics.success()
             switch action {
-            case "open": toast = r.useBy.flatMap { ServerDate.shortDay($0) }.map { LF("Opened – use by %@", $0) } ?? L("Marked as opened")
+            case "open": toast = r.openedToast
             case "freeze": toast = r.bestBefore.flatMap { ServerDate.shortDay($0) }.map { LF("Frozen – keeps until %@", $0) } ?? L("Frozen")
             default: toast = r.eatBy.flatMap { ServerDate.shortDay($0) }.map { LF("Thawed – eat by %@", $0) } ?? L("Thawed")
             }

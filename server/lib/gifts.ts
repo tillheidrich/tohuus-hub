@@ -28,9 +28,17 @@ import { runtimeSetting } from './runtime-settings.js';
 export type GiftPlan = 'haushalt' | 'plus';
 export const GIFT_PLANS: GiftPlan[] = ['haushalt', 'plus'];
 
-/** The plan every household gets during the beta, or null. */
-export function betaGift(): GiftPlan | null {
+/**
+ * Households left out of the beta gift: `BETA_GIFT_EXCEPT` = comma-separated household ids. Meant for the App Review
+ * household, so the reviewer sees the real plans with StoreKit prices and can buy in the sandbox (guideline 2.1).
+ */
+export const betaGiftExcepted = (householdId: string | null | undefined) =>
+  Boolean(householdId) && (process.env.BETA_GIFT_EXCEPT ?? '').split(',').map((x) => x.trim()).includes(householdId!);
+
+/** The plan every household gets during the beta, or null (also null for a household in `BETA_GIFT_EXCEPT`). */
+export function betaGift(householdId?: string | null): GiftPlan | null {
   if (!config.multiTenant) return null;
+  if (betaGiftExcepted(householdId)) return null;
   // back office first; the environment (BETA_GIFT) is the fallback so a fresh deploy can start with the gift on
   const v = runtimeSetting('beta.gift') ?? (process.env.BETA_GIFT ?? '').trim().toLowerCase();
   return v === 'haushalt' || v === 'plus' ? v : null;
@@ -151,6 +159,6 @@ export function giftOf(householdId: string): { kind: 'beta' | 'code' | 'operator
   const n = now();
   if (h && (h.plan_source === 'code' || h.plan_source === 'operator') && (h.plan === 'haushalt' || h.plan === 'plus') && (!h.plan_expires_at || h.plan_expires_at > n))
     return { kind: h.plan_source as 'code' | 'operator', plan: h.plan as GiftPlan, until: h.plan_expires_at };
-  const b = betaGift();
+  const b = betaGift(householdId);
   return b ? { kind: 'beta', plan: b, until: null } : null;
 }

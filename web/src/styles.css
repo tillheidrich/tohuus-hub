@@ -10735,3 +10735,56 @@ button.rcard {
   border-radius: 4px;
   padding: 0 5px;
 }
+
+/* gentle mode (focus/Focus.tsx): calm colours for things that are due – no red, no alarm */
+html.gentle .care-due.overdue,
+html.gentle .care-due.today {
+  color: var(--ink-2);
+}
+html.gentle .care-ic.overdue,
+html.gentle .care-ic.today {
+  background: var(--surface-2, var(--line));
+  color: var(--ink-2);
+}
+html.gentle .badge.empty {
+  background: var(--line);
+  color: var(--ink-2);
+}
+
+/* Eins nach dem anderen */
+.focus-card {
+  max-width: 560px;
+  align-items: stretch;
+}
+.focus-step {
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+.focus-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+.focus-timer .chip {
+  min-height: 44px;
+}
+.focus-rang {
+  text-align: center;
+  margin: 0;
+}
+.focus-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.focus-actions .btn {
+  min-height: 48px;
+}
+.focus-actions .big {
+  flex: 1 1 100%;
+  font-size: 1.05rem;
+}

@@ -153,6 +153,40 @@
           }
         }
       }
+    },
+    "NSLocalNetworkUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur wenn dein ToHuus-Server bei dir zu Hause läuft: ToHuus verbindet sich mit ihm in deinem Heimnetz."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only if your ToHuus server runs at home: ToHuus connects to it in your home network."
+          }
+        }
+      }
+    },
+    "NFCReaderUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus liest und beschreibt NFC-Tags nur, wenn du auf „NFC-Tag“ tippst – ein Tag trägt den Link eines ToHuus-Etiketts."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus reads and writes NFC tags only when you tap “NFC tag” – a tag holds the link of a ToHuus label."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

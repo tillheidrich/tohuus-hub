@@ -255,7 +255,7 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
     if (personal?.job) jobs.push(personal.job.then((ok): [string, boolean] => ['ha_app', ok]).catch((): [string, boolean] => ['ha_app', false]));
     if (pushOn && pushDeviceCount() > 0 && input.toUserId !== null)
       jobs.push(
-        sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { userId: input.toUserId, excludeUserIds: personal?.skipPushUsers })
+        sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { userId: input.toUserId, excludeUserIds: [...(personal?.skipPushUsers ?? []), ...(input.exceptUserIds ?? [])] })
           .then((ok): [string, boolean] => ['push', ok])
           .catch((): [string, boolean] => ['push', false]),
       );

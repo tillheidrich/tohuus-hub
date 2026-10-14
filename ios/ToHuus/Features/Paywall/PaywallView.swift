@@ -137,6 +137,7 @@ struct PaywallView: View {
             if let product {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(product.displayPrice) \(product.periodLabel)").font(.headline).foregroundStyle(Theme.ink)
+                    IntroOfferLine(product: product)
                     if yearly, let monthly = storeKit.product(plan: plan, yearly: false) {
                         let saving = 1 - (product.price as NSDecimalNumber).doubleValue / ((monthly.price as NSDecimalNumber).doubleValue * 12)
                         if saving > 0.05 { Text(LF("%d %% cheaper than monthly", Int(saving * 100))).font(.caption).foregroundStyle(Theme.primaryText) }
@@ -278,5 +279,47 @@ enum PlanText {
         default:
             return [LF("The last %d days in view", 60), LF("%d assistant messages a month", 20), LF("%@ for receipts and photos", "250 MB")]
         }
+    }
+}
+
+/// An introductory offer set up in App Store Connect (e.g. a free trial), with what it costs afterwards – only for people
+/// who can still get it (App Store guideline 3.1.2: the terms are clear before buying).
+struct IntroOfferLine: View {
+    let product: Product
+    @State private var eligible = false
+
+    var body: some View {
+        Group {
+            if eligible, let offer = product.subscription?.introductoryOffer {
+                Text(text(offer)).font(.caption).foregroundStyle(Theme.ink2).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .task(id: product.id) { eligible = await product.subscription?.isEligibleForIntroOffer ?? false }
+    }
+
+    private func text(_ offer: Product.SubscriptionOffer) -> String {
+        let length = Self.length(offer.period, times: offer.paymentMode == .payAsYouGo ? offer.periodCount : 1)
+        let after = "\(product.displayPrice) \(product.periodLabel)"
+        if offer.paymentMode == .freeTrial {
+            return LF("First %@ free, then %@. Cancel before the end and nothing is charged.", length, after)
+        }
+        return LF("%@ for the first %@, then %@.", offer.displayPrice, length, after)
+    }
+
+    /// "2 weeks", "1 month" in the app's language
+    static func length(_ p: Product.SubscriptionPeriod, times: Int) -> String {
+        let n = p.value * max(times, 1)
+        var c = DateComponents()
+        switch p.unit {
+        case .day: c.day = n
+        case .week: c.weekOfMonth = n
+        case .month: c.month = n
+        case .year: c.year = n
+        @unknown default: c.day = n
+        }
+        let f = DateComponentsFormatter()
+        f.unitsStyle = .full
+        f.allowedUnits = [.day, .weekOfMonth, .month, .year]
+        return f.string(from: c) ?? ""
     }
 }

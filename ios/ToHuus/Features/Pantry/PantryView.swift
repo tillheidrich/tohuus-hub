@@ -126,6 +126,11 @@ struct PantryView: View {
                         Divider()
                         Button { showLeftovers = true } label: { Label(L("Put leftovers away"), systemImage: "takeoutbag.and.cup.and.straw") }
                         Button { showLabelScan = true } label: { Label(L("Scan a box label"), systemImage: "qrcode.viewfinder") }
+                        if NFCLabels.available {
+                            Button {
+                                Task { if let link = try? await NFCLabels.read() { scannedLabel = ScannedLabel(raw: link) } }
+                            } label: { Label(L("Read NFC tag"), systemImage: "wave.3.right") }
+                        }
                         if !app.isGuest {
                             Divider()
                             Button { showLabels = true } label: { Label(L("QR labels"), systemImage: "qrcode") }

@@ -11,6 +11,8 @@ struct TasksTodayCard: View {
 
     private var today: String { ServerDate.day() }
     private var open: [CareTask] { tasks.filter { $0.state == "today" || $0.state == "overdue" } }
+    /// gentle mode (FocusViews.swift): at most N things, "wäre dran" instead of "überfällig"
+    private var max: Int { FocusFlags.todayMax ?? 4 }
     private var doneToday: Int { tasks.filter { $0.lastDone.map { String($0.prefix(10)) } == today }.count }
 
     var body: some View {
@@ -21,21 +23,21 @@ struct TasksTodayCard: View {
                     HStack(spacing: Theme.Space.s3) {
                         TaskRing(done: doneToday, total: total)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(open.isEmpty ? L("All done for today.") : LF("%d of %d done today", doneToday, total))
+                            Text(open.isEmpty ? L("All done for today.") : FocusFlags.gentle ? L("One thing at a time is enough.") : LF("%d of %d done today", doneToday, total))
                                 .font(.subheadline.weight(.semibold))
                             Text(open.isEmpty ? L("Nothing else is due.") : L("Tick off what’s done – the next date sets itself."))
                                 .font(.caption).foregroundStyle(Theme.ink3)
                         }
                     }
-                    ForEach(open.prefix(4)) { t in
+                    ForEach(open.prefix(max)) { t in
                         HStack(spacing: Theme.Space.s3) {
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 4) {
                                     if t.isPrivate { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(Theme.ink3).accessibilityLabel(L("Only for me")) }
                                     Text(t.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
                                 }
-                                Text([t.state == "overdue" ? L("overdue") : t.dueTime.map { LF("today %@", TaskTime.label($0)) } ?? L("due today"), t.place, t.doer?.name].compactMap { $0 }.joined(separator: " · "))
-                                    .font(.caption).foregroundStyle(t.state == "overdue" ? Theme.empty : Theme.ink3)
+                                Text([t.state == "overdue" ? (FocusFlags.gentle ? L("could be done") : L("overdue")) : t.dueTime.map { LF("today %@", TaskTime.label($0)) } ?? L("due today"), t.place, t.doer?.name].compactMap { $0 }.joined(separator: " · "))
+                                    .font(.caption).foregroundStyle(t.state == "overdue" && !FocusFlags.gentle ? Theme.empty : Theme.ink3)
                             }
                             Spacer(minLength: 0)
                             Button { Task { await done(t) } } label: {
@@ -47,8 +49,12 @@ struct TasksTodayCard: View {
                             .accessibilityLabel(LF("Done: %@", t.name))
                         }
                     }
-                    if open.count > 4 {
-                        Text(LF("%d more", open.count - 4)).font(.caption).foregroundStyle(Theme.ink3)
+                    if open.count > max {
+                        if FocusFlags.gentle {
+                            NavigationLink { FocusView(api: api) } label: { Label(L("One thing at a time"), systemImage: "scope").font(.caption) }
+                        } else {
+                            Text(LF("%d more", open.count - max)).font(.caption).foregroundStyle(Theme.ink3)
+                        }
                     }
                 }
             }
@@ -58,6 +64,7 @@ struct TasksTodayCard: View {
     }
 
     private func load() async {
+        if let p = try? await api.focusPrefs() { FocusFlags.apply(p) }
         if let d = try? await api.care() { tasks = d.tasks }
     }
 

@@ -102,6 +102,9 @@ struct ShoppingView: View {
                 }
                 doneSection
                 estimateSection
+                if !shopMode && !app.isGuest {
+                    ExtrasListSection(api: store.api, refresh: extrasRefresh)
+                }
                 if !shopMode && !app.isGuest && (me?.claimsOn ?? true) { whoGetsWhatSection }
                 Color.clear.frame(height: 72).listRowBackground(Color.clear)
             }
@@ -245,6 +248,13 @@ struct ShoppingView: View {
                 }
             }
         }
+    }
+
+    /// changes whenever rows, ticks or extra marks change – reloads the extras bar
+    private var extrasRefresh: Int {
+        var h = Hasher()
+        for i in store.list.openItems + store.list.basket + store.list.done { h.combine(i.id); h.combine(i.checkedAt); h.combine(i.extra); h.combine(i.qty) }
+        return h.finalize()
     }
 
     @ViewBuilder private var estimateSection: some View {
@@ -410,6 +420,10 @@ struct ShoppingView: View {
                         Text(item.productName ?? item.text)
                             .strikethrough(checked)
                             .foregroundStyle(checked ? Theme.ink3 : Theme.ink)
+                        if item.extra == true {
+                            Image(systemName: "sparkles").font(.caption).foregroundStyle(Theme.ink3)
+                                .accessibilityLabel(L("Extra"))
+                        }
                         SampleTag(on: app.sampleMarks.shopping.contains(item.id))
                         if let note = item.note, item.source != "recipe", !note.isEmpty {
                             Text(note).foregroundStyle(Theme.ink3)

@@ -116,7 +116,7 @@ export function planOf(householdId: string): Plan {
   if (!h) return 'free';
   const own = ownPlan(h);
   // the beta gift (gifts.ts): at least that plan for everyone while it is switched on
-  const gift = betaGift();
+  const gift = betaGift(householdId);
   return gift && PLAN_RANK[gift] > PLAN_RANK[own] ? gift : own;
 }
 

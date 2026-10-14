@@ -187,7 +187,10 @@ describe('cloud passkeys', () => {
     const aasa = await anon.get('/.well-known/apple-app-site-association');
     expect(aasa.status).toBe(200);
     expect(aasa.type).toMatch(/application\/json/);
-    expect(aasa.json).toEqual({ webcredentials: { apps: ['FVS7WVTQ67.de.heidrichdigital.tohuus'] } });
+    expect(aasa.json).toEqual({
+      webcredentials: { apps: ['FVS7WVTQ67.de.heidrichdigital.tohuus'] },
+      applinks: { details: [{ appIDs: ['FVS7WVTQ67.de.heidrichdigital.tohuus'], components: [{ '/': '/q/*', comment: 'ToHuus labels (QR, NFC)' }] }] },
+    });
   });
 
   it('registration needs a signed-in account and a fresh password check', async () => {

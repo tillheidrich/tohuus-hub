@@ -60,10 +60,33 @@ const OPEN_RULES: [RegExp, number][] = [
   [/(ketchup|grillsauce|bbq|barbecue)/i, 60],
   [/(senf|mustard)/i, 90],
   [/(nuss-?nougat|schokocreme|nutella|erdnussbutter|peanut butter)/i, 90],
+  [/(eier\b|\beggs?\b)/i, 2],
+  [/(milchreis|grießbrei|griessbrei|pudding|rice pudding)/i, 3],
+  [/(thunfisch|sardine|makrele|hering|tuna|mackerel)/i, 2],
+  [/(gnocchi|tortellini|ravioli|frische pasta|fresh pasta|maultaschen|schupfnudeln|spätzle frisch)/i, 3],
+  [/(apfelmus|kompott|applesauce)/i, 7],
+  [/(rotkohl|sauerkraut|red cabbage)/i, 5],
+  [/(oliven|olives|kapern|capers|antipasti)/i, 14],
+  [/(gewürzgurke|gewuerzgurke|essiggurke|cornichon|pickle)/i, 30],
+  [/(wraps?|tortilla)\b/i, 7],
+  [/(toast|sandwich ?brot)/i, 7],
+  [/(brot|bread|baguette)\b/i, 3],
+  [/(kondensmilch|condensed milk|kaffeesahne)/i, 3],
+  [/(kaffee|coffee)\b.*(gemahlen|ground)|(gemahlen|ground).*(kaffee|coffee)/i, 14],
+  [/(kaffeebohnen|ganze bohne|coffee beans|espresso|kaffee|coffee)\b/i, 30],
+  [/(müsli|muesli|cornflakes|haferflocken|granola|cereal)/i, 60],
+  [/(chips|crisps|nachos)\b/i, 3],
+  [/(sojasauce|sojasoße|soy sauce|worcester|fischsauce|fish sauce)/i, 180],
+  [/\b(dose|konserve|canned|tinned)\b|(mais|bohnen|kichererbsen|linsen|erbsen)\b/i, 3],
+  [/(sauce|soße|sosse|dressing)\b/i, 7],
 ];
 
+/** honey, oil, vinegar, sugar, salt, flour, rice, pasta … keep long once opened – no use-by worth showing */
+const OPEN_KEEPS =
+  /^(?!.*(\bin\s+(öl|oel|oil)|thunfisch|tuna|sardine|makrele|\bdose\b|sauce|soße|sosse|dressing|pesto|milchreis|frisch|fresh)).*(honig|honey|öl\b|oel\b|\boil\b|essig|vinegar|zucker|sugar|\bsalz\b|\bsalt\b|mehl\b|flour|\breis\b|\brice\b|nudeln|\bpasta\b|spaghetti|penne|fusilli)/i;
+
 /** Category fallback (stable category keys from basedata). */
-const OPEN_BY_CATEGORY: Partial<Record<string, number>> = { chilled: 4 };
+const OPEN_BY_CATEGORY: Partial<Record<string, number>> = { chilled: 4, bakery: 3, produce: 3 };
 
 /** Short eat-by after thawing: meat/fish 1 day, everything else 2. */
 const THAW_SHORT = /(hack|fleisch|fisch|lachs|hähnchen|haehnchen|pute|garnele|\bmince|\bmeat|\bfish|\bsalmon|\bchicken|\bturkey|\bprawn|\bshrimp)/i;
@@ -77,6 +100,7 @@ export function categoryKeyOf(categoryId: number | null | undefined): string | n
 
 /** Default shelf life after opening for a name/category, or null when there is no sensible rule. */
 export function defaultOpenDays(name: string, categoryKey: string | null): number | null {
+  if (OPEN_KEEPS.test(name)) return null;
   for (const [re, days] of OPEN_RULES) if (re.test(name)) return days;
   return categoryKey ? OPEN_BY_CATEGORY[categoryKey] ?? null : null;
 }
@@ -136,7 +160,7 @@ const UNOPENED_RULES: [RegExp, number][] = [
 
 /** sweets, canned, frozen or dried: the name may say milk, egg or sausage, the shelf life is a different story */
 const NO_FRESH_GUESS =
-  /(schoko|choco|keks|cookie|riegel|bonbon|gummi|chips|pulver|powder|\bdose\b|konserve|\bcanned|\btinned|tiefk(ü|ue)hl|\btk\b|\bfrozen|getrocknet|\bdried|likör|likoer|nudeln|pasta|eis\b|ice cream)/i;
+  /(schoko|choco|keks|cookie|riegel|bonbon|gummi|chips|pulver|powder|\bdose\b|konserve|\bcanned|\btinned|tiefk(ü|ue)hl|\btk\b|\bfrozen|getrocknet|\bdried|likör|likoer|nudeln|pasta|eis\b|ice cream|sauce|soße|sosse|passata|tomatenmark|stückige|pizzatomaten|gewürzgurk|gewuerzgurk|essiggurk|cornichon|pickle)/i;
 
 /** Category fallback for unopened products: fresh chilled things keep about a week, fruit & veg and bread a few days. */
 const UNOPENED_BY_CATEGORY: Partial<Record<string, number>> = { chilled: 10, produce: 7, bakery: 3 };
@@ -169,6 +193,11 @@ export interface ShelfProduct {
 export function openDaysFor(p: ShelfProduct): number | null {
   if (p.days_after_opening != null) return p.days_after_opening > 0 ? p.days_after_opening : null;
   return defaultOpenDays(p.name, categoryKeyOf(p.category_id));
+}
+
+/** is the use-by of an opened product a rule of thumb (not the household's own number)? */
+export function openDaysEstimated(p: ShelfProduct): boolean {
+  return p.days_after_opening == null && openDaysFor(p) != null;
 }
 
 export function thawDaysFor(name: string, kind?: string | null) {

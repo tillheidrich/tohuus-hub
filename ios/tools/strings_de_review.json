@@ -1,0 +1,8 @@
+{
+  "%@ for the first %@, then %@.": "%@ für die ersten %@, danach %@.",
+  "First %@ free, then %@. Cancel before the end and nothing is charged.": "Die ersten %@ kostenlos, danach %@. Kündigst du vorher, wird nichts berechnet.",
+  "For free questions, ToHuus needs your OK to use AI.": "Für freie Fragen braucht ToHuus dein Okay für KI.",
+  "Mistral AI (France), routed through OpenRouter (USA)": "Mistral AI (Frankreich), vermittelt über OpenRouter (USA)",
+  "Read and decide": "Lesen und entscheiden",
+  "When you use AI (free sentences and voice messages to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you write, say or photograph to {processor} – together with what the answer needs from your household, such as the list, stock or recipes. Allergies and children’s details only if your household allows it separately. Nothing is used to train models. Without AI everything else keeps working.": "Wenn du KI nutzt (freie Sätze und Sprachnachrichten an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du schreibst, sagst oder fotografierst, an {processor} – zusammen mit dem, was die Antwort aus eurem Haushalt braucht, etwa Liste, Vorrat oder Rezepte. Allergien und Angaben zu Kindern nur, wenn euer Haushalt das extra erlaubt. Nichts davon wird zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter."
+}

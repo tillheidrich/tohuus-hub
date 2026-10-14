@@ -168,7 +168,7 @@ extension APIClient {
 enum SearchRegistry {
     enum Target: String {
         case account, household, people, invite, places, notifications, connections, data, ai, calendar, labels, help
-        case servers, devices, guests, treats, memory, wishes, receipts, spending, favourites, houseInfo, away, listLook
+        case servers, devices, guests, treats, memory, wishes, receipts, spending, favourites, houseInfo, away, listLook, focus
     }
 
     struct Entry: Identifiable {
@@ -215,6 +215,9 @@ enum SearchRegistry {
                 Entry(title: L("Spending in detail"), words: "ausgaben diagramm export", icon: "chart.bar", target: .spending),
                 Entry(title: L("Favourites"), words: "lieblinge lieblingsessen", icon: "heart", target: .favourites),
                 Entry(title: L("Trip / away"), words: "urlaub verreist übergabe packen", icon: "suitcase", target: .away),
+                Entry(title: L("One thing at a time"), words: "fokus konzentration adhs ads timer eins nach dem anderen anfangen", icon: "scope", target: .focus),
+                Entry(title: L("Calm & focus"), words: "sanfter modus ruhig adhs ads autismus weniger überfordert erinnerungen bündeln", icon: "leaf", target: .account),
+                Entry(title: L("Extras in the weekly shop"), words: "extras kontingent luxus naschen süßes spaß budget woche", icon: "sparkles", target: .household),
             ]
             if !app.singleHousehold { out.append(Entry(title: L("Treats"), words: "bring mir was bestellen karte", icon: "hand.raised", target: .treats)) }
         }
@@ -255,6 +258,7 @@ enum SearchRegistry {
         case .houseInfo: HouseGuideView()
         case .away: AwayView(store: store)
         case .listLook: ListDisplaySettingsView()
+        case .focus: FocusView(api: api)
         }
     }
 }

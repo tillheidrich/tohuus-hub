@@ -216,7 +216,7 @@ per-link Hausinfo selection (`/api/house-guide/links/:id`), Hausinfo templates a
 guests (add), receipt e-mail forwarding setup.
 ## 0.3 parity – account, onboarding, subscriptions, App Store (1.0, package D)
 
-The App Store app is **ToHuus Cloud only** (self-hosting stays with the web app/PWA, Home Assistant and MCP on GitHub).
+The App Store app was **ToHuus Cloud only** until 14 Oct 2026; since then it also connects to a self-hosted server ("Eigener Server", see CLAUDE.md).
 Debug builds keep `-debugServer <url> -debugToken <t> -debugHousehold <uuid>`; `-debugServer` alone points the start
 screen at another cloud (development).
 

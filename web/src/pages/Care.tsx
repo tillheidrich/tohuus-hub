@@ -33,6 +33,7 @@ import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
 import { HomeSwitch } from '../home/HomeSwitch';
+import { FreshStartButton, SplitButton, isGentle, mergeSteps, suggestSteps } from '../focus/Focus';
 
 export type Unit = 'day' | 'week' | 'month' | 'year';
 export interface CareTask {
@@ -135,7 +136,8 @@ export function intervalLabel(n: number | null, unit: Unit | null, asNeeded = fa
 export function dueLabel(x: Pick<CareTask, 'state' | 'days' | 'next_due'> & { as_needed?: boolean }) {
   if (x.as_needed && !x.next_due) return t('when needed');
   if (x.state === 'none' || !x.next_due) return t('no date');
-  if (x.state === 'overdue') return x.days === -1 ? t('1 day overdue') : t('{n} days overdue', { n: -(x.days ?? 0) });
+  // gentle mode (focus): no counting of days late
+  if (x.state === 'overdue') return isGentle() ? t('could be done') : x.days === -1 ? t('1 day overdue') : t('{n} days overdue', { n: -(x.days ?? 0) });
   if (x.state === 'today') return t('due today');
   if (x.days === 1) return t('due tomorrow');
   if (x.state === 'soon') return t('due in {n} days', { n: x.days ?? 0 });
@@ -311,11 +313,15 @@ export function Care() {
       <header className="page-head">
         <div>
           <div className="eyebrow">
-            {dueNow.length === 0 ? t('Nothing due right now') : dueNow.length === 1 ? t('1 thing due soon') : t('{n} things due soon', { n: dueNow.length })}
+            {dueNow.length === 0 ? t('Nothing due right now') : isGentle() ? t('A few things could be done') : dueNow.length === 1 ? t('1 thing due soon') : t('{n} things due soon', { n: dueNow.length })}
           </div>
           <h1>{t('Tasks')}</h1>
         </div>
         <div className="actions">
+          <button className="btn sm" onClick={() => nav('/fokus')}>
+            {t('One thing at a time')}
+          </button>
+          <FreshStartButton overdue={tasks.filter((x) => x.state === 'overdue').length} />
           <button className="btn sm" onClick={() => nav('/etiketten?kind=care')}>
             <Printer size={15} /> {t('Labels')}
           </button>
@@ -453,6 +459,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
   const detail = useApi<CareTask>(['care', 'task', task?.id ?? 0], task ? `/care/${task.id}` : null);
   const home = useHousehold(); // area: home – no "I'll take care of it" when living alone
   const toast = useToast();
+  const nav = useNavigate();
   if (!task) return null;
   const mine = Boolean(me?.actor.userId && task.assignee_user_id === me.actor.userId);
   const claim = async (v: boolean) => {
@@ -563,6 +570,8 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
           <button className="btn sm" onClick={() => onEdit(task)}>{t('Edit')}</button>
           <button className="btn sm" onClick={() => onLabel(task)}><Printer size={15} /> {t('Label')}</button>
           <BonButton spec={{ type: 'care', id: task.id }} label={t('Ticket')} />
+          <SplitButton task={task} label={task.checklist?.length ? t('Smaller steps') : undefined} />
+          <button className="btn sm" onClick={() => { onClose(); nav(`/fokus?task=${task.id}`); }}>{t('Focus on this')}</button>
           <div className="grow" />
           <button className="btn primary" onClick={() => { onClose(); onDone(task); }}>
             <Check size={16} weight="bold" /> {t('Done')}
@@ -791,6 +800,19 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
             }}
           >
             <input className="input grow" value={item} onChange={(e) => setItem(e.target.value)} placeholder={t('e.g. sink, mirror, floor')} />
+            {f.name?.trim() && (
+              <button
+                className="btn sm"
+                type="button"
+                onClick={() =>
+                  suggestSteps({ id: f.id, name: f.name!, note: f.note })
+                    .then((r) => set({ checklist: mergeSteps(f.checklist ?? [], r.steps) }))
+                    .catch((e) => toast({ text: (e as Error).message, error: true }))
+                }
+              >
+                {t('Split into small steps')}
+              </button>
+            )}
             <button className="btn sm" type="submit" disabled={!item.trim()} aria-label={t('Add')}>
               <Plus size={14} />
             </button>

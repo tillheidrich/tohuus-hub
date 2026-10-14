@@ -59,6 +59,8 @@ const ICONS = {
   terminal: 'TerminalWindow', code: 'Code', export: 'Export', plus: 'Plus', caret: 'CaretDown', printer: 'Printer',
   phone: 'DeviceMobile', globe: 'Globe', chart: 'ChartBar', list: 'ListChecks', store: 'Storefront', sparkle: 'Sparkle',
   power: 'Power', plug: 'Plug', house: 'House', question: 'Question', scan: 'Scan', watch: 'Watch', image: 'ImageSquare', share: 'ShareNetwork',
+  wifi: 'WifiHigh', pin: 'MapPin', coffee: 'Coffee', moonstars: 'MoonStars', aid: 'FirstAidKit', baby: 'Baby', users: 'Users', paw: 'PawPrint',
+  suitcase: 'Suitcase', bed: 'Bed', timer: 'Timer', target: 'Target', feather: 'Feather', tag: 'Tag',
 };
 const symbol = (id, name) => {
   const C = Ph[`${name}Icon`] || Ph[name];
@@ -82,8 +84,8 @@ const COPY = {
     ogAlt: 'Das ToHuus-Zeichen, der Satz „Damit nicht einer alles im Kopf haben muss.“ und vier gezeichnete Wohnformen.',
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
-    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant' },
-    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#aufgaben', 'Aufgaben'], ['#bring-mir-was', 'Bring mir was'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
+    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll' },
+    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#aufgaben', 'Aufgaben'], ['#bring-mir-was', 'Bring mir was'], ['#hausinfo', 'Hausinfo'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
       label: 'Einkaufs- und Haushaltsassistent',
@@ -131,6 +133,49 @@ const COPY = {
           p: 'Geburtstag, Weihnachten oder einfach eine Merkliste: Wünsche mit Foto, mehreren Links, Preis und Notiz. Wer etwas reserviert, sieht der Rest der Familie, die beschenkte Person aber nie. Eine Liste lässt sich ganz oder in Teilen per Nachricht verschicken.',
           points: ['Foto, Links, Preis und „wer könnte das schenken“', 'Private Listen, die nur du siehst', 'Teilen als Link oder fertige Nachricht'] },
       ],
+    },
+    house: {
+      label: 'Hausinfo', h2: 'Vom Gäste-WLAN bis zur Kaffeemaschine.',
+      intro: 'Wer bei euch übernachtet, auf die Kinder aufpasst oder die Katze füttert, fragt meistens dasselbe: Wie ist das WLAN-Passwort, wie geht die Heizung, wann müssen die Kinder ins Bett? In der Hausinfo schreibt ihr das einmal auf, danach schickt ihr nur noch einen Link.',
+      path: [
+        ['wifi', 'Gäste-WLAN', 'Netz und Passwort liegen geschützt bei den Codes. Tippst du auf „Zeigen“, erscheint ein QR-Code, und euer Besuch ist mit der Handykamera im WLAN.'],
+        ['pin', 'Wo was ist', 'Pflaster, Taschenlampe, Sicherungskasten, Haupthahn. Über „Wo ist was?“ findet der Babysitter auch die Kekse, aber nur an den Orten, die ihr freigebt.'],
+        ['coffee', 'So geht’s hier', 'Heizung, Spülmaschine, Rollläden, Kaffeemaschine: kurz erklärt, auf Wunsch mit Foto oder kurzem Video. Mit Alexa, Google, Siri oder Home Assistant stehen die passenden Sprachbefehle dabei.'],
+        ['moonstars', 'Hausregeln und Kinder', 'Was die Kinder dürfen, wann Schlafenszeit ist und was sonst bei euch gilt, zum Beispiel Schuhe aus im Flur.'],
+        ['aid', 'Für den Notfall', 'Wichtige Nummern stehen ganz oben. Notruf, Giftnotruf, Nachbarn und eure eigenen Nummern gibt es als Vorlage, den Kinderarzt tragt ihr dazu.'],
+      ],
+      shots: [
+        ['houseinfo', 'Seite Hausinfo: unter Codes das Gäste-WLAN „Berg-Gast“ mit Passwort und QR-Code zum Scannen, darunter die verdeckte Haustür.'],
+        ['houseinfo-guest', 'Babysitter-Link von Familie Berg im Bereich Hausinfo, „So funktioniert’s hier“: das Gäste-WLAN verdeckt mit Zeigen-Knopf, darunter im Kinderzimmer die Karten „Schlafenszeiten Mika“ und „Was Mika darf“.'],
+      ],
+      caption: 'Links eure Hausinfo mit dem Gäste-WLAN, rechts das, was der Babysitter über seinen Link sieht.',
+      forLabel: 'Gedacht für',
+      for: [['baby', 'Babysitter'], ['users', 'Oma, Opa und alle, die oft da sind'], ['paw', 'Haus- und Tiersitter'], ['bed', 'Übernachtungsbesuch'], ['suitcase', 'Gäste in der Ferienwohnung']],
+      facts: [
+        ['eyeoff', 'Jeder sieht, was er sehen soll', 'Pro Karte legt ihr fest, wer sie sieht: alle, die hier wohnen, feste Gäste ab einer Stufe, alle Babysitter-Links oder nur bestimmte Links. Codes gebt ihr auf Wunsch nur bis zu einem Datum frei.'],
+        ['key', 'Codes liegen extra', 'Türcode, Alarmanlage, Garage und WLAN liegen getrennt von den Karten, in der Cloud verschlüsselt. Sie bleiben verdeckt, bis jemand auf „Zeigen“ tippt, und ihr seht, wer wann nachgesehen hat. Gäste sehen einen Code nur, wenn ihr ihn freigebt.'],
+        ['robot', 'Codes gehen nicht an KI', 'Der Assistent, KI-Assistenten über MCP, Home Assistant und Benachrichtigungen bekommen nie einen Code zu sehen. In einen Export kommen Codes nur, wenn ein Admin das ausdrücklich ankreuzt.'],
+        ['share', 'Ein Link, kein Konto', 'Babysitter und Gäste öffnen einen Link oder scannen einen QR-Code, ohne App und ohne Anmeldung. Einmal geöffnet, bleiben die Karten auch ohne Netz lesbar. Der Link läuft ab, wann ihr wollt, und lässt sich jederzeit widerrufen.'],
+        ['printer', 'Zum Ausdrucken', 'Als A4-Blatt „Für den Babysitter“ für den Kühlschrank: wichtige Nummern zuerst, dann alles nach Räumen. Statt der Codes steht dort „bitte fragen“, außer ihr druckt sie bewusst mit.'],
+        ['suitcase', 'Wenn ihr weg seid', 'Für die Reise gibt es die Übergabe: Katze morgens und abends füttern, Blumen montags und donnerstags gießen, mit Fotos. Der Haushüter hakt ab, was erledigt ist, und sein Link endet am Tag nach eurer Rückkehr.'],
+      ],
+      more: 'Hausinfo und Babysitter-Link in der Hilfe', help: 'hausinfo.html',
+    },
+    nd: {
+      label: 'Wenn der Kopf voll ist', h2: 'Für Köpfe, in denen viel los ist.',
+      intro: 'Mit ADHS, Autismus oder einfach in einer vollen Woche ist oft der Anfang das Schwerste: Wo fange ich an, was war noch mal dran, und wie lange dauert das überhaupt? Ein paar Dinge in ToHuus sind genau dafür gebaut. Sie helfen allen im Haushalt, und niemand muss erklären, warum er sie nutzt.',
+      list: [
+        ['list', 'Kleine Schritte', 'Jede Aufgabe lässt sich in kleine Schritte teilen, die du einzeln abhakst. „In kleine Schritte teilen“ schlägt welche vor: mit KI, wenn euer Haushalt das erlaubt, sonst aus fertigen Schritten für Bad putzen, Küche, Wäsche, Staubsaugen oder Bett beziehen. Ist die Aufgabe erledigt, stehen die Schritte beim nächsten Mal wieder offen da.'],
+        ['target', 'Eins nach dem anderen', 'Die Fokusansicht zeigt nur eine Sache: die nächste Aufgabe und darin den nächsten Schritt, groß und ohne Liste drumherum. Darunter stehen „Geschafft“, „Später“ und „Zu groß? Kleiner machen“.'],
+        ['timer', 'Sichtbarer Timer', 'Fünf Minuten, nur anfangen. Ein Ring zeigt, wie viel Zeit noch bleibt, am Ende kommt ein sanftes Signal. Gezählt oder ausgewertet wird dabei nichts.'],
+        ['feather', 'Sanfter Modus', 'Eine Einstellung nur für dich: keine roten Warnungen und keine Zähler, was fällig ist, „wäre dran“. „Neu anfangen“ legt alles Überfällige auf einen frischen Start, ohne Vorwurf. Mitteilungen kommen gebündelt in einer Nachricht zu der Zeit, die du wählst, und auf Heute stehen höchstens drei Dinge.'],
+        ['users', 'Keine Punkte, keine Ranglisten', 'Es gibt keine Streaks, keine Punkte und keine Belohnungen. „Wer hat was im Blick“ zeigt Namen alphabetisch, Anteile nur, wenn alle im Haushalt zustimmen.'],
+        ['pin', 'Aus den Augen, nicht aus dem Sinn', '„Wo ist was?“ weiß, wo die Batterien liegen und was im Gefrierfach ist. Wer mag, führt einen Vorrat und sieht, was da ist und was bald alle ist.'],
+        ['mic', 'Schnell aus dem Kopf', 'Ein Tipp auf den Assistenten, ein Satz, und es steht auf der Liste oder bei den Aufgaben, bevor der Gedanke wieder weg ist.'],
+        ['tag', 'Extras im Wocheneinkauf', 'Ihr legt fest, wie viel pro Woche für Extras drin ist, als Betrag oder als Anzahl. Einträge auf der Liste markiert ihr als Extra, und die Liste zeigt, wie viel davon schon verplant ist. Gesperrt wird nichts, ihr behaltet nur den Überblick, auch bei spontanen Käufen.'],
+      ],
+      note: 'ToHuus richtet sich nach „Bewegung reduzieren“ auf deinem Gerät, und an Tagen, an denen das Aufstehen schwerfällt, gibt es „Bring mir was“. ToHuus ist kein Gesundheits- oder Therapieangebot. Es nimmt euch nur ein paar Dinge aus dem Kopf.',
+      more: 'Alles dazu in der Hilfe', help: 'kopf-voll.html',
     },
     levels: {
       label: 'Einstieg', h2: 'Egal, wie digital ihr schon einkauft.',
@@ -217,7 +262,7 @@ const COPY = {
       facts: [
         ['refresh', 'Home Assistant in beide Richtungen', 'Einkaufsliste als To-do-Liste für Assist, Sensoren für Fälliges und den Wochenplan als Kalender. Installiert über HACS, die Integration steht unter MIT-Lizenz.'],
         ['mail', 'Bon-Postfach, Telegram, Drucker', 'Bons kommen per Mail herein, „2 Milch, Brot“ im Chat landet auf der Liste, und ein Bon-Drucker in der Küche druckt sie aus.'],
-        ['robot', 'KI optional', 'Mit einem Schlüssel für jeden OpenAI-kompatiblen Dienst, etwa Mistral, auch lokal. Ohne Schlüssel läuft alles außer Bon-Fotos und dem Assistenten.'],
+        ['robot', 'KI optional', 'Mit einem Schlüssel für jeden OpenAI-kompatiblen Dienst, etwa Mistral, auch lokal. Ohne Schlüssel läuft alles weiter: Bon-Fotos liest die Texterkennung auf deinem Server, und der Assistent versteht die häufigen kurzen Sätze.'],
         ['db', 'Eure Daten', 'Eine SQLite-Datei, auf Wunsch verschlüsselt, mit nächtlichen Sicherungen und Export als JSON.'],
         ['code', 'KI-Assistenten über MCP', 'Claude, ChatGPT und andere Assistenten verbinden sich über MCP direkt mit eurem Haushalt.'],
       ],
@@ -267,7 +312,11 @@ const COPY = {
         ['Brauche ich dafür KI?', 'Nein. Liste, Vorschläge, Kochplaner und Ausgaben funktionieren ohne. Bon-Fotos liest ToHuus zuerst mit einer Texterkennung ohne KI, auf dem Server oder direkt auf dem iPhone. Ein Sprachmodell hilft nur, wenn das nicht reicht, und bei freien Fragen an den Assistenten. Auf neueren iPhones kann auf Wunsch Apple Intelligence auf dem Gerät helfen. In der Cloud schaltest du KI erst mit deiner Zustimmung ein, und ihr könnt sie für den Haushalt, für einzelne Personen und für Kinder abschalten.'],
         ['Kann ich meine Rezepte mitbringen?', 'Ja. Per Link von Rezeptseiten, aus Instagram, TikTok, Pinterest oder YouTube, per Foto, aus Apps wie Mealie, Paprika oder Nextcloud Kochbuch, oder viele auf einmal als Rezeptpaket mit Fotos. Hast du Claude oder ChatGPT verbunden, kann deine eigene KI auch hunderte Rezepte samt Fotos in einem Rutsch speichern.'],
         ['Und Cookidoo, Monsieur Cuisine oder Cookit?', 'Teile ein Rezept aus Cookidoo, Monsieur Cuisine, Cookit oder einer anderen Küchenmaschinen-App mit ToHuus oder füge den Link ein, dann bestätigst du Name und Zutaten. Die Schritte kannst du dazuschreiben, als Text einfügen oder aus deinen Screenshots lesen lassen. ToHuus ruft diese Seiten selbst nie ab, und was du mitbringst, bleibt privat in eurem Haushalt.'],
-        ['Was ist die Hausinfo?', 'Karten für Babysitter und Gäste mit Sprachbefehlen, Abläufen, Tipps und Notfallinfos. Codes wie für die Tür oder das WLAN sind dort eigens geschützt und gehen nie an eine KI. Karten können Fotos und kurze Videos haben. Auf dem Babysitter-Link steht sie neben „Wo ist was?“, auch offline. Für den Urlaub gibt es die Übergabe: was der Haushüter wann tun soll, mit Fotos.'],
+        ['Was ist die Hausinfo?', 'Karten für alle, die bei euch aufpassen oder zu Besuch sind: Gäste-WLAN mit QR-Code, wie Heizung und Kaffeemaschine gehen, Hausregeln, Schlafenszeiten und wichtige Nummern, auf Wunsch mit Fotos und kurzen Videos. Babysitter öffnen sie über einen Link ohne Konto, einmal geöffnet auch offline, oder ihr druckt sie als A4-Blatt aus. Für den Urlaub gibt es die Übergabe: was der Haushüter wann tun soll, mit Fotos.'],
+        ['Sehen Gäste unsere Codes?', 'Nur die, die ihr freigebt, auf Wunsch bis zu einem Datum. Jeder Code bleibt verdeckt, bis jemand auf „Zeigen“ tippt, und ihr seht, wer wann nachgesehen hat. An eine KI, an Home Assistant oder in Benachrichtigungen gehen Codes nie.'],
+        ['Ist ToHuus für ADHS geeignet?', 'ToHuus ist für alle Haushalte gebaut, einiges davon aber gerade für Köpfe, in denen viel los ist: Aufgaben in kleinen Schritten, eine Ansicht, die nur das Nächste zeigt, ein sichtbarer Timer zum Anfangen und ein sanfter Modus ohne rote Warnungen. Punkte, Streaks oder Ranglisten gibt es nicht. Ob es zu dir passt, merkst du am besten im Alltag. Eine Behandlung oder Beratung ersetzt es nicht.'],
+        ['Sehen die anderen, dass ich den sanften Modus nutze?', 'Nein. Der sanfte Modus ist eine persönliche Einstellung und ändert nur, was du siehst und wann du Mitteilungen bekommst.'],
+        ['Hilft ToHuus bei Spontankäufen?', 'Ihr könnt ein Kontingent für Extras festlegen, pro Woche als Betrag oder als Anzahl. Einträge auf der Liste markiert ihr als Extra, und die Liste zeigt, wie viel davon schon verplant ist. ToHuus sperrt nichts, es zeigt nur, wo ihr steht.'],
         ['Brauche ich einen Thermomix?', 'Nein. Der Kochplaner zeigt Rezepte mit und ohne Küchenmaschine, und ihr könnt danach filtern. Mit Plus gibt es auch ToHuus-Rezepte für Thermomix, Monsieur Cuisine und Cookit, mit den Einstellungen bei jedem Schritt.'],
         ['Wer zahlt, wenn wir zu viert sind?', 'Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder, Gäste und verbundene Haushalte zahlen nichts.'],
         ['Was passiert, wenn ich das Abo kündige?', 'Der Haushalt geht auf Free zurück. Gelöscht wird nichts. Ihr seht dann die letzten 60 Tage, und der Assistent hat 20 Nachrichten im Monat.'],
@@ -289,8 +338,8 @@ const COPY = {
     ogAlt: 'The ToHuus mark, the line “So one person doesn’t have to keep it all in their head.” and four drawn homes.',
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
-    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant' },
-    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#tasks', 'Tasks'], ['#bring-me-something', 'Bring me something'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
+    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind' },
+    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#tasks', 'Tasks'], ['#bring-me-something', 'Bring me something'], ['#house-info', 'House info'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
       label: 'Shopping and household assistant',
@@ -338,6 +387,49 @@ const COPY = {
           p: 'Birthdays, Christmas or just a list of things to remember: wishes with a photo, several links, a price and a note. The family sees who reserved what, the person it is for never does. Send a whole list or part of it as a message.',
           points: ['Photo, links, price and “who could give this”', 'Private lists only you can see', 'Share as a link or a ready-made message'] },
       ],
+    },
+    house: {
+      label: 'House info', h2: 'From the guest Wi-Fi to the coffee machine.',
+      intro: 'Whoever stays over, looks after the kids or feeds the cat usually asks the same things: what is the Wi-Fi password, how does the heating work, when do the kids go to bed? Write it down once in the house info, and from then on you just send a link.',
+      path: [
+        ['wifi', 'Guest Wi-Fi', 'Network and password are kept safe with the codes. Tap “Show” and a QR code appears, and your visitors join with their phone camera.'],
+        ['pin', 'Where things are', 'Plasters, torch, fuse box, water stopcock. With “Where is what?” the babysitter finds the biscuits too, but only in the places you share.'],
+        ['coffee', 'How things work here', 'Heating, dishwasher, blinds, coffee machine: explained in a few lines, with a photo or a short video if you like. With Alexa, Google, Siri or Home Assistant the right voice commands are listed too.'],
+        ['moonstars', 'House rules and kids', 'What the kids may do, when bedtime is and whatever else goes in your home, such as shoes off in the hall.'],
+        ['aid', 'In an emergency', 'Important numbers come first. Emergency, poison advice, neighbours and your own numbers come as a template, and you add the GP.'],
+      ],
+      shots: [
+        ['houseinfo', 'House info page: under Codes the guest Wi-Fi “Berg-Guest” with its password and a QR code to scan, below it the hidden front door code.'],
+        ['houseinfo-guest', 'The Bergs’ babysitter link in the house info tab, “How things work here”: the guest Wi-Fi hidden with a Show button, below it in the kids’ room the cards “Bedtimes for Mika” and “What Mika may do”.'],
+      ],
+      caption: 'Left: your house info with the guest Wi-Fi. Right: what the babysitter sees through their link.',
+      forLabel: 'Made for',
+      for: [['baby', 'Babysitters'], ['users', 'Grandparents and everyone who is often around'], ['paw', 'House and pet sitters'], ['bed', 'Overnight guests'], ['suitcase', 'Guests in a holiday let']],
+      facts: [
+        ['eyeoff', 'Everyone sees what they should', 'For every card you decide who sees it: everyone who lives here, regular guests from a level up, all babysitter links or only certain links. Codes can be shared until a date.'],
+        ['key', 'Codes are kept apart', 'Door code, alarm, garage and Wi-Fi are stored apart from the cards, encrypted in the cloud. They stay hidden until someone taps “Show”, and you see who looked when. Guests only see a code you share with them.'],
+        ['robot', 'Codes never go to AI', 'The assistant, AI assistants over MCP, Home Assistant and notifications never get to see a code. Codes only go into an export if an admin explicitly ticks that.'],
+        ['share', 'A link, no account', 'Babysitters and guests open a link or scan a QR code, no app and no sign-in. Once opened, the cards stay readable without a connection. The link expires when you want and can be revoked at any time.'],
+        ['printer', 'To print', 'An A4 sheet “For the babysitter” for the fridge: important numbers first, then everything by room. Instead of codes it says “ask us”, unless you choose to print them.'],
+        ['suitcase', 'While you are away', 'For a trip there is the handover: feed the cat morning and evening, water the plants on Monday and Thursday, with photos. The house sitter ticks off what is done, and their link ends the day after you are back.'],
+      ],
+      more: 'House info and the babysitter link in the help', help: 'house-info.html',
+    },
+    nd: {
+      label: 'When your head is full', h2: 'For heads with a lot going on.',
+      intro: 'With ADHD, autism or just a packed week, starting is often the hardest part: where do I begin, what was due again, and how long will it even take? A few things in ToHuus are built for exactly that. They help everyone in the household, and nobody has to explain why they use them.',
+      list: [
+        ['list', 'Small steps', 'Every task can be split into small steps you tick off one by one. “Split into small steps” suggests some: with AI if your household allows it, otherwise from ready-made steps for cleaning the bathroom, the kitchen, laundry, hoovering or changing the bed. When the task is done, the steps are open again for next time.'],
+        ['target', 'One thing at a time', 'The focus view shows just one thing: the next task and its next step, large and without a list around it. Below it: “Done”, “Later” and “Too big? Make it smaller”.'],
+        ['timer', 'Visible timer', 'Five minutes, just to get going. A ring shows how much time is left, and a gentle signal sounds at the end. Nothing is counted or analysed.'],
+        ['feather', 'Gentle mode', 'A setting just for you: no red overdue warnings and no counters, things that are due say “could be done”. “Fresh start” moves everything overdue to a new start, no guilt. Notifications arrive bundled in one message at a time you choose, and Today shows at most three things.'],
+        ['users', 'No points, no rankings', 'There are no streaks, no points and no rewards. “Who keeps what in mind” lists names alphabetically, and shares only if everyone in the household agrees.'],
+        ['pin', 'Out of sight, still in mind', '“Where is what?” knows where the batteries are and what is in the freezer. If you like, keep a stock list and see what is at home and what is running out.'],
+        ['mic', 'Out of your head, fast', 'One tap on the assistant, one sentence, and it is on the list or with the tasks before the thought is gone again.'],
+        ['tag', 'Extras in the weekly shop', 'You set how much a week there is for extras, as an amount or a number of items. Mark items on the list as an extra, and the list shows how much of the allowance is used. Nothing is blocked, you just keep the overview, impulse buys included.'],
+      ],
+      note: 'ToHuus follows “Reduce motion” on your device, and on days when getting up is hard there is “Bring me something”. ToHuus is not a health or therapy service. It just takes a few things off your mind.',
+      more: 'More in the help', help: 'a-lot-on-your-mind.html',
     },
     levels: {
       label: 'Getting started', h2: 'However digital your shopping already is.',
@@ -424,7 +516,7 @@ const COPY = {
       facts: [
         ['refresh', 'Home Assistant, both ways', 'The shopping list as a to-do list for Assist, sensors for what is due and the week plan as a calendar. Installed via HACS, the integration is MIT licensed.'],
         ['mail', 'Receipt inbox, Telegram, printer', 'Receipts arrive by e-mail, “2 milk, bread” in a chat lands on the list, and a receipt printer in the kitchen prints it.'],
-        ['robot', 'AI is optional', 'With a key for any OpenAI-compatible service, such as Mistral, local ones included. Without a key everything works except receipt photos and the assistant.'],
+        ['robot', 'AI is optional', 'With a key for any OpenAI-compatible service, such as Mistral, local ones included. Without a key everything keeps working: receipt photos are read by text recognition on your server, and the assistant understands the common short sentences.'],
         ['db', 'Your data', 'One SQLite file, encrypted if you like, with nightly backups and JSON export.'],
         ['code', 'AI assistants via MCP', 'Claude, ChatGPT and other assistants connect straight to your household through MCP.'],
       ],
@@ -474,7 +566,11 @@ const COPY = {
         ['Do I need AI for this?', 'No. The list, suggestions, cook planner and spending all work without it. Receipt photos are read first by text recognition without AI, on the server or right on the iPhone. A language model only helps when that is not enough, and with open questions to the assistant. On newer iPhones Apple Intelligence can help on the device if you like. In the cloud AI only starts with your consent, and you can switch it off for the household, for single people and for children.'],
         ['Can I bring my recipes?', 'Yes. From a link to a recipe site, from Instagram, TikTok, Pinterest or YouTube, from a photo, from apps like Mealie, Paprika or Nextcloud Cookbook, or many at once as a recipe pack with photos. If you connected Claude or ChatGPT, your own AI can save hundreds of recipes with their photos in one go.'],
         ['And Cookidoo, Monsieur Cuisine or Cookit?', 'Share a recipe from Cookidoo, Monsieur Cuisine, Cookit or another kitchen machine app with ToHuus or paste the link, then confirm the name and ingredients. Add the steps yourself, paste them as text or let ToHuus read them from your screenshots. ToHuus never fetches these sites itself, and what you bring along stays private in your household.'],
-        ['What is the house info?', 'Cards for babysitters and guests with voice commands, routines, tips and emergency details. Codes such as the door or the Wi-Fi are protected separately and never go to an AI. Cards can have photos and short videos. On the babysitter link it sits next to “where is what”, also offline. For holidays there is the handover: what the house sitter should do and when, with photos.'],
+        ['What is the house info?', 'Cards for everyone who looks after your home or comes to stay: the guest Wi-Fi with a QR code, how the heating and the coffee machine work, house rules, bedtimes and important numbers, with photos and short videos if you like. Babysitters open it through a link without an account, offline once opened, or you print it as an A4 sheet. For holidays there is the handover: what the house sitter should do and when, with photos.'],
+        ['Do guests see our codes?', 'Only the ones you share, until a date if you like. Every code stays hidden until someone taps “Show”, and you see who looked when. Codes never go to an AI, to Home Assistant or into notifications.'],
+        ['Is ToHuus good for ADHD?', 'ToHuus is built for every household, but some of it is made for heads with a lot going on: tasks in small steps, a view that only shows the next thing, a visible timer to get started and a gentle mode without red warnings. There are no points, streaks or rankings. Whether it suits you is best found out in everyday life. It does not replace treatment or advice.'],
+        ['Do the others see that I use gentle mode?', 'No. Gentle mode is a personal setting and only changes what you see and when you get notifications.'],
+        ['Does ToHuus help with impulse buys?', 'You can set an allowance for extras, per week as an amount or a number of items. Mark items on the list as an extra, and the list shows how much of it is used. ToHuus blocks nothing, it just shows where you stand.'],
         ['Do I need a Thermomix?', 'No. The cook planner shows recipes with and without a kitchen machine, and you can filter by it. With Plus there are also ToHuus recipes for Thermomix, Monsieur Cuisine and Cookit, with the settings for each step.'],
         ['Who pays if there are four of us?', 'One subscription covers the whole household. Members, children, guests and connected households pay nothing.'],
         ['What happens if I cancel?', 'The household goes back to Free. Nothing is deleted. You then see the last 60 days, and the assistant has 20 messages a month.'],
@@ -493,7 +589,7 @@ const COPY = {
 
 // ---------------------------------------------------------------- screenshots
 /** Every screenshot slot the page uses. The build fails when a file is missing, so no placeholder ever ships. */
-const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes', 'tasks'];
+const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes', 'tasks', 'houseinfo', 'houseinfo-guest'];
 const WIDTHS = [480, 960];
 for (const lang of Object.keys(COPY)) for (const n of SHOTS) for (const w of WIDTHS) {
   const f = path.join(ROOT, `assets/shots/${lang}/${n}-${w}.webp`);
@@ -652,6 +748,8 @@ function page(c) {
   const Q = c.faq;
   const TF = c.tf;
   const HA = c.ha;
+  const HI = c.house;
+  const N = c.nd;
   const m = homeMeta(c);
   return `${pageTop(c, m)}<main id="main">
 
@@ -715,6 +813,36 @@ ${J.list.map((j, k) => `    <article class="job${k % 2 ? ' flip' : ''}" id="${j.
   </div>
 </section>
 
+<section class="house" id="${id.house}" aria-labelledby="house-h">
+  <div class="wrap">
+    <div class="house-grid">
+      <div>
+        ${label(HI.label, ' reveal')}
+        <h2 class="reveal" id="house-h">${HI.h2}</h2>
+        <p class="intro reveal">${HI.intro}</p>
+        <ol class="house-path">
+${HI.path.map(([i, t, s], k) => `          <li class="reveal" style="--d:${k * 60}ms"><span class="hp-ico">${ico(i)}</span><div><b>${t}</b><span>${s}</span></div></li>`).join('\n')}
+        </ol>
+      </div>
+      <figure class="house-visual reveal">
+        <span class="job-shape s2" aria-hidden="true"></span>
+        <div class="house-pair">
+${HI.shots.map(([n, alt]) => `          ${device(img(c, n, alt, { sizes: '(min-width: 960px) 250px, 44vw' }))}`).join('\n')}
+        </div>
+        <figcaption>${HI.caption}</figcaption>
+      </figure>
+    </div>
+    <div class="house-for reveal">
+      <p class="label">${HI.forLabel}</p>
+      <ul>${HI.for.map(([i, t]) => `<li>${ico(i)}<span>${t}</span></li>`).join('')}</ul>
+    </div>
+    <dl class="facts-grid">
+${HI.facts.map(([i, t, s], k) => `      <div class="reveal" style="--d:${(k % 3) * 60}ms"><dt><span class="pi">${ico(i)}</span>${t}</dt><dd>${s}</dd></div>`).join('\n')}
+    </dl>
+    <p class="more reveal"><a href="${helpIndexHref(c.lang)}${HI.help}">${HI.more}${ico('arrow')}</a></p>
+  </div>
+</section>
+
 <section class="levels" id="${id.levels}" aria-labelledby="levels-h">
   <div class="wrap">
     <div class="block">
@@ -766,6 +894,21 @@ ${W.rows.map(([t, o, k]) => `          <li class="o-${k}"><span class="box" aria
 ${F.forms.map(([shape, t, s], k) => `      <li class="reveal" style="--d:${k * 50}ms"><span class="shape ${shape}" aria-hidden="true"></span><b>${t}</b><span>${s}</span></li>`).join('\n')}
     </ul>
     <p class="note reveal">${F.note}</p>
+  </div>
+</section>
+
+<section class="nd" id="${id.nd}" aria-labelledby="nd-h">
+  <div class="wrap">
+    <div class="sec-head">
+      ${label(N.label, ' reveal')}
+      <h2 class="reveal" id="nd-h">${N.h2}</h2>
+      <p class="intro reveal">${N.intro}</p>
+    </div>
+    <ul class="nd-grid">
+${N.list.map(([i, t, s], k) => `      <li class="reveal" style="--d:${(k % 4) * 50}ms"><span class="nd-ico">${ico(i)}</span><b>${t}</b><span>${s}</span></li>`).join('\n')}
+    </ul>
+    <p class="note reveal">${N.note}</p>
+    <p class="more reveal"><a href="${helpIndexHref(c.lang)}${N.help}">${N.more}${ico('arrow')}</a></p>
   </div>
 </section>
 
@@ -1405,7 +1548,7 @@ fs.writeFileSync(path.join(ROOT, 'llms.txt'), `# ToHuus
 
 > ${COPY.en.desc}
 
-ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app, in ToHuus Cloud or self-hosted with Docker, with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, keeps the household's recurring tasks and appointments (with Apple Reminders and calendar sync), lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
+ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app, in ToHuus Cloud or self-hosted with Docker, with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, keeps the household's recurring tasks and appointments (with Apple Reminders and calendar sync), lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info for guests, babysitters and house sitters (guest Wi-Fi with a join QR code, how things work, house rules, bedtimes, important numbers; codes such as door or alarm codes are kept apart, revealed only on purpose and never sent to AI) plus holiday handovers. For heads with a lot going on (ADHD, autism, a packed week) tasks split into small steps, a focus view shows one thing at a time, a visible timer helps to start, a personal gentle mode drops red warnings and counters, and an allowance for extras keeps impulse buys in view; there are no streaks, points or rankings. Servers in Germany, no tracking, no ads, open source (AGPL).
 
 ## Website
 - [ToHuus (English)](${SITE}): what it does, pricing, privacy, self-hosting
@@ -1430,7 +1573,8 @@ console.log(`built site/index.html, site/de/index.html and the legal pages (${LE
  * Refreshing the screenshots: scripts/site-shots.mjs against a local ToHuus Cloud with open sign-up. It creates a
  * household per language with invented people and four months of invented receipts and shoots every slot in SHOTS at
  * 390x844 pt, 3x, with the iPhone's status area and home indicator simulated, so the device frame never cuts anything.
- * Never use real names. Check every image before committing.
+ * Never use real names. Check every image before committing. `--only houseinfo,houseinfo-guest` re-shoots just those
+ * slots (the Hausinfo slots seed their own cards, two codes and a babysitter link) and leaves every other image alone.
  *
  * OG images (site/assets/img/og-<lang>.png, 1200x630): a 1200x630 page with the wordmark, the hero headline and
  * homeTiles(), styled by site.css and screenshotted with Playwright from the served site/ folder.

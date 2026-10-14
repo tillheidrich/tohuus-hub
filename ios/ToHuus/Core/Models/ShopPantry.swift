@@ -171,9 +171,12 @@ struct ProductExtra: Decodable, Sendable {
     var buyAt: JSONValue?
     var kind: String?
     var isStaple: Bool?
+    /// the product's own setting (`date_kind`, nil = automatic) – see JSONCoding.splitDateKind
     var dateKind: String?
     /// "Open Food Facts · 4000… · CC BY-SA" when the picture came from there
     var imageCredit: String?
+
+    private enum CodingKeys: String, CodingKey { case buyAt, kind, isStaple, dateKind = "dateKindSetting", imageCredit }
 
     /// products.buy_at arrives as raw JSON text (web BuyAt.tsx parseBuyAt)
     var stores: [String] {
@@ -208,6 +211,7 @@ struct FreshProduct: Decodable, Sendable {
         var frozenAt: String?
         var inFreezer: Bool?
         var useBy: String?
+        var useByEstimated: Bool?
     }
 }
 
@@ -216,6 +220,13 @@ struct FreshActionResult: Decodable, Sendable {
     var useBy: String?
     var bestBefore: String?
     var eatBy: String?
+    /// the use-by is a rule of thumb (usual days after opening), not a known date
+    var estimated: Bool?
+
+    var openedToast: String {
+        guard let d = useBy.flatMap({ ServerDate.shortDay($0) }) else { return L("Marked as opened") }
+        return estimated == true ? LF("Opened – keeps about until %@", d) : LF("Opened – use by %@", d)
+    }
 }
 
 /// GET /api/fresh/check – places with what's there and when they were last checked

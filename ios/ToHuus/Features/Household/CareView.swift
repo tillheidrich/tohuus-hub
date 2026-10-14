@@ -208,7 +208,8 @@ enum CareLabels {
         guard t.state != "none", let next = t.nextDue else { return L("no date") }
         let d = t.days ?? 0
         switch t.state {
-        case "overdue": return d == -1 ? L("1 day overdue") : LF("%d days overdue", -d)
+        // gentle mode (FocusViews.swift): no counting of days late
+        case "overdue": return FocusFlags.gentle ? L("could be done") : d == -1 ? L("1 day overdue") : LF("%d days overdue", -d)
         case "today": return L("due today")
         default:
             if d == 1 { return L("due tomorrow") }
@@ -220,6 +221,7 @@ enum CareLabels {
     }
 
     static func color(_ state: String?) -> Color {
+        if FocusFlags.gentle, state == "overdue" || state == "today" { return Theme.ink2 }
         switch state {
         case "overdue": return Theme.empty
         case "today": return Theme.warning
@@ -288,6 +290,12 @@ struct CareView: View {
                 }
                 .pickerStyle(.segmented)
                 if let data {
+                    let overdue = data.tasks.filter { $0.state == "overdue" }.count
+                    NavigationLink { FocusView(api: api) } label: { Label(L("One thing at a time"), systemImage: "scope") }
+                    FreshStartButton(api: api, overdue: overdue) { text in
+                        toast = ToastMessage(text: text)
+                        Task { await load() }
+                    }
                     // household tasks nobody has in mind yet – counted kindly, never as blame
                     let loose = data.tasks.filter { !$0.isPrivate && $0.assigneeUserId == nil && $0.doerKey == nil && ($0.state == "today" || $0.state == "overdue" || $0.state == "soon") }.count
                     if loose > 0 && (me?.claimsOn ?? true) {
@@ -460,6 +468,7 @@ struct CareView: View {
             error = L("Your server doesn't have this section yet.")
         } catch { self.error = APIError.from(error).localizedDescription }
         if me == nil { me = try? await api.meLite() }
+        if let p = try? await api.focusPrefs() { FocusFlags.apply(p) }
     }
 
     private func add(_ x: CareTemplate) async {
@@ -519,6 +528,7 @@ private struct CareDetailSheet: View {
     @State private var error: String?
     @State private var items: [CareTask.CheckItem] = []
     @State private var addToCalendar = false
+    @State private var splitting = false
 
     var body: some View {
         NavigationStack {
@@ -584,6 +594,11 @@ private struct CareDetailSheet: View {
                         Button { addToCalendar = true } label: { Label(L("Add to calendar"), systemImage: "calendar.badge.plus") }
                     }
                     Button { onEdit(task) } label: { Label(L("Edit"), systemImage: "pencil") }
+                    Button { Task { await split() } } label: {
+                        Label(splitting ? L("Thinking …") : items.isEmpty ? L("Split into small steps") : L("Smaller steps"), systemImage: "sparkles")
+                    }
+                    .disabled(splitting)
+                    NavigationLink { FocusView(api: api, taskId: task.id) } label: { Label(L("Focus on this"), systemImage: "scope") }
                     NavigationLink { LabelsView(api: api, kind: .care, preselect: task.id) } label: { Label(L("Label"), systemImage: "qrcode") }
                 }
             }
@@ -758,6 +773,13 @@ private struct CareTaskForm: View {
                     ForEach(items.indices, id: \.self) { i in
                         Text(items[i].text)
                             .swipeActions { Button(role: .destructive) { items.remove(at: i) } label: { Label(L("Remove"), systemImage: "trash") } }
+                    }
+                    if !name.trimmingCharacters(in: .whitespaces).isEmpty {
+                        Button {
+                            Task {
+                                if let r = try? await api.suggestSteps(name: name, note: note.isEmpty ? nil : note) { items = mergeSteps(items, r.steps) }
+                            }
+                        } label: { Label(L("Split into small steps"), systemImage: "sparkles") }
                     }
                     HStack {
                         TextField(L("e.g. sink, mirror, floor"), text: $newItem).submitLabel(.done).onSubmit { addItem() }

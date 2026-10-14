@@ -28,6 +28,7 @@ import {
   updateCareTask,
   type QrKind,
 } from '../lib/care.js';
+import { focusPrefs, freshStart, setFocusPrefs, suggestSteps } from '../lib/focus.js';
 import { blickOverview, setCompareOptIn } from '../lib/blick.js';
 import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
@@ -77,6 +78,8 @@ const careBody = z.object({
 });
 
 const viewerOf = (req: Request) => req.actor?.userId ?? null;
+/** a member with an account – not a guest (focus routes) */
+const memberOf = (req: Request) => (req.actor?.houseGuest ? null : (req.actor?.userId ?? null));
 /** a task this person may see – a private task of someone else answers 404 like a missing one */
 function visibleTask(req: Request, res: Response, id: number) {
   const row = getCareTask(id);
@@ -166,6 +169,43 @@ r.post('/care/:id/done', (req, res) => {
 r.post('/care/:id/undo', (req, res) => {
   if (!visibleTask(req, res, num(req.params.id))) return;
   userError(res, () => undoCareTask(num(req.params.id), actorName(req)));
+});
+
+// ---------------------------------------------------------------- focus: small steps, fresh start, gentle mode (lib/focus.ts)
+
+/** Propose small steps for a task (AI if allowed for this person, else built-in). Saves nothing. */
+r.post('/care/:id/steps/suggest', async (req, res) => {
+  const row = visibleTask(req, res, num(req.params.id));
+  if (!row) return;
+  res.json(await suggestSteps({ name: row.name, note: row.note }));
+});
+/** Steps for a name that isn't a task yet (the "new task" sheet). */
+r.post('/focus/steps', async (req, res) => {
+  const b = z.object({ name: z.string().min(1).max(200), note: z.string().max(500).nullable().optional() }).parse(req.body);
+  if (!memberOf(req)) return void res.status(403).json({ error: t('Only household members can do this') });
+  res.json(await suggestSteps(b));
+});
+/** "Neu anfangen": overdue tasks I keep in mind (or nobody does) move to a fresh start. */
+r.post('/care/fresh-start', (req, res) => {
+  const uid = memberOf(req);
+  if (!uid) return void res.status(403).json({ error: t('Only household members can do this') });
+  const b = z.object({ per_day: z.number().int().min(1).max(5).optional() }).parse(req.body ?? {});
+  res.json(freshStart(uid, b.per_day ?? 2));
+});
+/** My focus settings – personal, nobody else sees them. */
+r.get('/focus/prefs', (req, res) => res.json(focusPrefs(memberOf(req))));
+r.put('/focus/prefs', (req, res) => {
+  const uid = memberOf(req);
+  if (!uid) return void res.status(403).json({ error: t('Only household members can do this') });
+  const b = z
+    .object({
+      gentle: z.boolean().optional(),
+      todayMax: z.number().int().min(1).max(10).nullable().optional(),
+      bundleHour: z.number().int().min(0).max(23).nullable().optional(),
+      timerMin: z.number().int().min(1).max(60).optional(),
+    })
+    .parse(req.body ?? {});
+  res.json(setFocusPrefs(uid, b));
 });
 
 /** "I'll take care of it" – or let go again. No points, no ranking. */

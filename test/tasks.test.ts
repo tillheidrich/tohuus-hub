@@ -451,3 +451,50 @@ describe('global search', () => {
     expect((await mira.req('GET', '/api/search?q=g')).json.groups).toEqual({});
   });
 });
+
+describe('für Köpfe, in denen viel los ist (focus)', () => {
+  it('focus settings are personal', async () => {
+    expect((await mira.req('GET', '/api/focus/prefs')).json).toMatchObject({ gentle: false, todayMax: null, bundleHour: null, timerMin: 5 });
+    const put = await mira.req('PUT', '/api/focus/prefs', { gentle: true, todayMax: 3, timerMin: 10 });
+    expect(put.json).toMatchObject({ gentle: true, todayMax: 3, timerMin: 10 });
+    expect((await sam.req('GET', '/api/focus/prefs')).json.gentle).toBe(false);
+    expect((await mira.req('PUT', '/api/focus/prefs', { todayMax: 50 })).status).toBe(400);
+  });
+
+  it('proposes small steps – built-in without AI, saves nothing', async () => {
+    const task = (await mira.req('POST', '/api/care', { name: 'Bad putzen', category: 'house', interval_n: 1, interval_unit: 'week' })).json;
+    const r = await mira.req('POST', `/api/care/${task.id}/steps/suggest`, {});
+    expect(r.status).toBe(200);
+    expect(r.json.source).toBe('builtin');
+    expect(r.json.steps).toContain('Toilette putzen');
+    expect((await mira.req('GET', `/api/care/${task.id}`)).json.checklist ?? []).toEqual([]);
+    expect((await sam.req('POST', '/api/focus/steps', { name: 'Wäsche' })).json.steps[0]).toBe('Wäschekorb zur Maschine bringen');
+  });
+
+  it('"Neu anfangen" spreads overdue tasks from today on, nothing is marked done', async () => {
+    const old = (await mira.req('POST', '/api/care', { name: 'Fenster putzen', category: 'house', next_due: '2026-01-05' })).json;
+    const old2 = (await mira.req('POST', '/api/care', { name: 'Keller', category: 'house', next_due: '2026-01-06' })).json;
+    const old3 = (await mira.req('POST', '/api/care', { name: 'Dachboden', category: 'house', next_due: '2026-01-07' })).json;
+    const r = await mira.req('POST', '/api/care/fresh-start', { per_day: 2 });
+    expect(r.status).toBe(200);
+    expect(r.json.moved).toBeGreaterThanOrEqual(3);
+    const { localDay } = await import('../server/lib/catalog');
+    const due = (id: number) => (db.prepare('SELECT next_due FROM care_tasks WHERE id = ?').get(id) as { next_due: string }).next_due;
+    for (const x of [old, old2, old3]) expect(due(x.id) >= localDay(0)).toBe(true);
+    expect(db.prepare('SELECT COUNT(*) n FROM care_log WHERE task_id IN (?, ?, ?)').get(old.id, old2.id, old3.id)).toEqual({ n: 0 });
+  });
+
+  it('bundled reminders: one message a day at the chosen hour', async () => {
+    await mira.req('PUT', '/api/focus/prefs', { bundleHour: 0 });
+    const focus = await import('../server/lib/focus');
+    const careLib = await import('../server/lib/care');
+    const onboard = await import('../server/lib/onboard');
+    const { localDay } = await import('../server/lib/catalog');
+    const miraId = (db.prepare(`SELECT id FROM users WHERE name = 'Mira'`).get() as { id: number }).id;
+    expect(focus.bundledUserIds()).toContain(miraId);
+    await careLib.sendCareBundles();
+    expect(onboard.getUserPref(miraId, 'focus.bundle_sent', '')).toBe(localDay(0));
+    await mira.req('PUT', '/api/focus/prefs', { bundleHour: null });
+    expect(focus.bundledUserIds()).not.toContain(miraId);
+  });
+});

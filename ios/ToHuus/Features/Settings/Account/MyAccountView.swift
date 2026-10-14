@@ -62,6 +62,7 @@ struct MyAccountView: View {
                 if !app.isCloud { totpSection(a) }
                 if !app.isCloud, let sso = a.sso { ssoSection(sso) }
                 if !app.isCloud, a.policy?.pinSwitch == true { pinSection(a) }
+                if !app.isGuest { FocusSettingsSection(api: api) }
                 Section {
                     NavigationLink { SignedInDevicesView(api: api) } label: {
                         Label(L("Signed-in devices"), systemImage: "laptopcomputer.and.iphone")

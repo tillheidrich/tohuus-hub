@@ -227,6 +227,8 @@ async function sweep(c: Client) {
 
 describe('cloud isolation', () => {
   it('walks every GET route: household B never sees a marker of household A', async () => {
+    // an extra on A's list (Extras allowance, lib/extras.ts) – added last, the list finish above clears the rest
+    expect((await A.post('/api/shopping', { text: 'MARKERA-shop Schokolade' })).status).toBe(200);
     const a = await sweep(A);
     // sanity: the sweep reaches A's data
     expect(a.routes).toBeGreaterThan(100);
@@ -242,7 +244,7 @@ describe('cloud isolation', () => {
     // q-money: money lists and the expense attachment
     for (const r of ['/api/money/lists', '/api/money/lists/1', '/api/spend/expenses/1', '/api/spend/expenses/1/attachment']) expect(seen, r).toContain(r);
     for (const r of ['/api/wishes/lists', '/api/wishes/lists/1', '/api/wishes/items/1']) expect(seen, r).toContain(r);
-    for (const r of ['/api/care', '/api/care/due', '/api/care/1', '/api/care/1/ics', '/api/blick']) expect(seen, r).toContain(r);
+    for (const r of ['/api/care', '/api/care/due', '/api/care/1', '/api/care/1/ics', '/api/blick', '/api/list/extras']) expect(seen, r).toContain(r);
     // Hausinfo GET routes are part of the walk; A sees its cards, nobody ever gets a code value from a GET
     for (const r of ['/api/house-guide', '/api/house-guide/templates', '/api/house-guide/links/:id', '/api/house-guide/codes/:id/views', '/api/house-guide/log', '/api/guest/:token/house', '/api/facts'])
       expect(routes, r).toContain(r);
@@ -721,6 +723,8 @@ describe('plans and quotas', () => {
       expect(s0.effective).toBe(false);
       expect(s0.consent).toMatchObject({ required: true, given: false, household: false });
       expect(s0.consent.processor).toContain('Mistral');
+      // everyone who receives the data is named (App Store guideline 5.1.2(i))
+      expect(s0.consent.processor).toContain('OpenRouter');
       const policy = await import('../server/lib/ai-policy');
       expect(tenancy.runInHousehold(hE, () => policy.aiOffReason(undefined))).toBe('consent');
       // the admin agrees: for herself and for the household's background jobs

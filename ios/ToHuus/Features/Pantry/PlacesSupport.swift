@@ -164,6 +164,7 @@ struct FreshMore: Decodable, Sendable {
     var daysAfterOpening: Int?
     var defaultDaysAfterOpening: Int?
     var openDays: Int?
+    var openDaysEstimated: Bool?
     var freezerDays: Int?
     var defaultFreezerDays: Int?
     var confirmedAt: String?

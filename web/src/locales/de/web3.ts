@@ -222,8 +222,8 @@ export const web3: Record<string, string> = {
   'Summaries and reminders by mail, as chosen above. Every such mail has a link to unsubscribe.': 'Zusammenfassungen und Erinnerungen per Mail, so wie oben eingestellt. In jeder dieser Mails steht ein Link zum Abbestellen.',
   'You agreed to AI': 'Du hast der KI zugestimmt',
   'Use AI? You decide.': 'KI nutzen? Du entscheidest.',
-  'When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.':
-    'Wenn du KI nutzt (freie Sätze an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du geschrieben oder fotografiert hast, an {processor}. Es wird nicht zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter.',
+  "When you use AI (free sentences and voice messages to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you write, say or photograph to {processor} – together with what the answer needs from your household, such as the list, stock or recipes. Allergies and children’s details only if your household allows it separately. Nothing is used to train models. Without AI everything else keeps working.":
+    "Wenn du KI nutzt (freie Sätze und Sprachnachrichten an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du schreibst, sagst oder fotografierst, an {processor} – zusammen mit dem, was die Antwort aus eurem Haushalt braucht, etwa Liste, Vorrat oder Rezepte. Allergien und Angaben zu Kindern nur, wenn euer Haushalt das extra erlaubt. Nichts davon wird zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter.",
   Privacy: 'Datenschutz',
   'Withdraw consent': 'Zustimmung zurückziehen',
   'Agree and use AI': 'Zustimmen und KI nutzen',

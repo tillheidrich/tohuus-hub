@@ -3,6 +3,7 @@
  * overdue – the household's and my own private ones (the server filters what I may see). No points, no ranking.
  * Small on purpose: it is part of the first load, the task page itself is a separate chunk.
  */
+import { useFocusPrefs } from '../focus/Focus';
 import { ArrowRight, Check, LockSimple } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
 import { fmtDate, invalidate, post, useApi } from '../api';
@@ -25,11 +26,14 @@ interface TaskLite {
 
 export function TasksTodayCard({ today }: { today: string }) {
   const q = useApi<{ tasks: TaskLite[] }>('care', '/care');
+  const focus = useFocusPrefs();
   const nav = useNavigate();
   const toast = useToast();
   const tasks = q.data?.tasks ?? [];
   if (!tasks.length) return null;
   const open = tasks.filter((x) => x.state === 'today' || x.state === 'overdue');
+  // gentle mode (focus): at most N things, "could be done" instead of "overdue"
+  const max = focus?.todayMax ?? 4;
   const doneToday = tasks.filter((x) => x.last_done === today).length;
   const total = open.length + doneToday;
   if (!total) return null;
@@ -59,13 +63,13 @@ export function TasksTodayCard({ today }: { today: string }) {
       <div className="row" style={{ gap: 14, alignItems: 'center', marginBottom: open.length ? 6 : 0 }}>
         <Ring done={doneToday} total={total} />
         <div className="grow">
-          <b>{open.length === 0 ? t('All done for today.') : t('{done} of {total} done today', { done: doneToday, total })}</b>
+          <b>{open.length === 0 ? t('All done for today.') : focus?.gentle ? t('One thing at a time is enough.') : t('{done} of {total} done today', { done: doneToday, total })}</b>
           <div className="meta">{open.length === 0 ? t('Nothing else is due.') : t('Tick off what’s done – the next date sets itself.')}</div>
         </div>
       </div>
       {open.length > 0 && (
         <ul className="hrows">
-          {open.slice(0, 4).map((x) => (
+          {open.slice(0, max).map((x) => (
             <li key={x.id} className="hrow">
               <div className="grow">
                 <b>
@@ -73,7 +77,7 @@ export function TasksTodayCard({ today }: { today: string }) {
                   {x.name}
                 </b>
                 <span className="meta">
-                  {[x.state === 'overdue' ? t('overdue') : x.due_time ? t('today {time}', { time: timeLabel(x.due_time) }) : t('due today'), x.place, x.doer?.name, x.checklist?.length ? t('{done} of {total}', { done: x.checklist.filter((c) => c.done).length, total: x.checklist.length }) : null]
+                  {[x.state === 'overdue' ? (focus?.gentle ? t('could be done') : t('overdue')) : x.due_time ? t('today {time}', { time: timeLabel(x.due_time) }) : t('due today'), x.place, x.doer?.name, x.checklist?.length ? t('{done} of {total}', { done: x.checklist.filter((c) => c.done).length, total: x.checklist.length }) : null]
                     .filter(Boolean)
                     .join(' · ')}
                 </span>
@@ -85,9 +89,9 @@ export function TasksTodayCard({ today }: { today: string }) {
           ))}
         </ul>
       )}
-      {open.length > 4 && (
-        <button className="linkish" style={{ marginTop: 8 }} onClick={() => nav('/aufgaben')}>
-          {t('{n} more', { n: open.length - 4 })} <ArrowRight size={12} />
+      {open.length > max && (
+        <button className="linkish" style={{ marginTop: 8 }} onClick={() => nav(focus?.gentle ? '/fokus' : '/aufgaben')}>
+          {focus?.gentle ? t('One thing at a time') : t('{n} more', { n: open.length - max })} <ArrowRight size={12} />
         </button>
       )}
     </section>

@@ -110,4 +110,7 @@ export const fresh: Record<string, string> = {
   'Keeps about 3 months in the freezer.': 'Hält im Gefrierfach etwa 3 Monate.',
   estimated: 'geschätzt',
   'Estimated from the usual shelf life. Enter the date from the pack and it is exact.': 'Geschätzt nach der üblichen Haltbarkeit. Trag das Datum von der Packung ein, dann stimmt es genau.',
+  'Opened – keeps about until {date}': 'Angebrochen – hält etwa bis {date}',
+  '{qty} opened {date} · keeps about until {until}': '{qty} angebrochen am {date} · hält etwa bis {until}',
+  'about {n} days after opening': 'etwa {n} Tage nach dem Öffnen',
 };

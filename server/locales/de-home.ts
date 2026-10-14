@@ -99,4 +99,7 @@ export const de_home: Record<string, string> = {
   Category: 'Kategorie',
   Quantity: 'Menge',
   'Price (EUR)': 'Preis (EUR)',
+  'Only household members can do this': 'Das geht nur für Mitglieder des Haushalts',
+  'One thing could be done today': 'Heute wäre eine Sache dran',
+  '{n} things could be done today': 'Heute wären {n} Sachen dran',
 };

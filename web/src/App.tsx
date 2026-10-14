@@ -21,6 +21,7 @@ import { Avatar, Sheet, Skeleton } from './ui';
 import { type ListPrefs, applyListPrefs, readLocalPrefs } from './shop/prefs';
 import { RouteHelp } from './help';
 import { AreaAssist } from './assistant/AreaAssist';
+import { FocusPage, useFocusPrefs } from './focus/Focus';
 
 export interface Me {
   actor: {
@@ -223,7 +224,9 @@ function Shell({ me }: { me: Me }) {
   }, [openSearch]);
   const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods });
   const activeTab = tabFor(loc.pathname);
-  const badge = (key: string) => (key === '/einkauf' && openCount ? openCount : key === '/zuhause' && attention ? attention : 0);
+  // gentle mode (focus): no "needs attention" counter on Zuhause
+  const focus = useFocusPrefs(Boolean(me.actor.userId) && !me.actor.houseGuest);
+  const badge = (key: string) => (key === '/einkauf' && openCount ? openCount : key === '/zuhause' && attention && !focus?.gentle ? attention : 0);
 
   if (gl === 'paused')
     return (
@@ -333,6 +336,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/bestellen/karte" element={<MenuEditor me={me} />} />
               <Route path="/einstellungen" element={<Settings me={me} />} />
               <Route path="/aufgaben" element={<Care />} />
+              <Route path="/fokus" element={<FocusPage />} />
               <Route path="/pflege" element={<Navigate to="/aufgaben?f=care" replace />} />
               <Route path="/urlaub" element={<Away me={me} />} />
               <Route path="/ausgaben" element={<Spending />} />

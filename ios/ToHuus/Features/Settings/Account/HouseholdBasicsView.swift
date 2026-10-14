@@ -68,6 +68,7 @@ struct HouseholdBasicsView: View {
                 if !app.isAdmin { Text(L("Only admins can change this.")) }
             }
             PulseSettingsSection(api: api, admin: app.isAdmin)
+            ExtrasSettingsSection(api: api, admin: app.isAdmin)
         }
         .themedList()
         .navigationTitle(L("Household"))

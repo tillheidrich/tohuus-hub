@@ -239,6 +239,23 @@
         }
       }
     },
+    "%@ for the first %@, then %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ for the first %@, then %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ für die ersten %@, danach %@."
+          }
+        }
+      }
+    },
     "%@ gave %@ %@": {
       "extractionState": "manual",
       "localizations": {
@@ -2041,6 +2058,23 @@
         }
       }
     },
+    "%d minutes %d seconds left": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d minutes %d seconds left"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch %d Minuten %d Sekunden"
+          }
+        }
+      }
+    },
     "%d missing": {
       "extractionState": "manual",
       "localizations": {
@@ -3057,6 +3091,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Wünsche"
+          }
+        }
+      }
+    },
+    "%d without a price yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d without a price yet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d noch ohne Preis."
           }
         }
       }
@@ -4999,6 +5050,23 @@
         }
       }
     },
+    "A weekly allowance for treats and little luxuries – sweets, snacks, ice cream, drinks, or whatever you mark. The list shows how much of it is used. It never blocks anything.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A weekly allowance for treats and little luxuries – sweets, snacks, ice cream, drinks, or whatever you mark. The list shows how much of it is used. It never blocks anything."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Wochen-Kontingent für Naschkram und kleinen Luxus – Süßes, Snacks, Eis, Getränke oder was ihr markiert. Die Liste zeigt, wie viel schon weg ist. Gesperrt wird nie etwas."
+          }
+        }
+      }
+    },
     "A wish for %@": {
       "extractionState": "manual",
       "localizations": {
@@ -6937,6 +7005,23 @@
         }
       }
     },
+    "After this: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After this: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danach: %@"
+          }
+        }
+      }
+    },
     "Afterwards move to (optional)": {
       "extractionState": "manual",
       "localizations": {
@@ -7868,6 +7953,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Menge pro Portion"
+          }
+        }
+      }
+    },
+    "Amount per week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount per week"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betrag pro Woche"
           }
         }
       }
@@ -10252,6 +10354,40 @@
         }
       }
     },
+    "Bought: %@. Still on the list: %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bought: %@. Still on the list: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekauft: %@. Noch auf der Liste: %@."
+          }
+        }
+      }
+    },
+    "Bought: %@. Still on the list: about %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bought: %@. Still on the list: about %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekauft: %@. Noch auf der Liste: etwa %@."
+          }
+        }
+      }
+    },
     "Box": {
       "extractionState": "manual",
       "localizations": {
@@ -10979,6 +11115,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kalender mit meinen eigenen"
+          }
+        }
+      }
+    },
+    "Calm & focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calm & focus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruhe & Fokus"
           }
         }
       }
@@ -14451,6 +14604,40 @@
         }
       }
     },
+    "Couldn't connect. Please try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't connect. Please try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Verbindung. Bitte versuch es noch mal."
+          }
+        }
+      }
+    },
+    "Couldn't write the tag.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't write the tag."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Tag ließ sich nicht beschreiben."
+          }
+        }
+      }
+    },
     "Couldn’t load the recap": {
       "extractionState": "manual",
       "localizations": {
@@ -14519,6 +14706,23 @@
         }
       }
     },
+    "Count in": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count in"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zählen in"
+          }
+        }
+      }
+    },
     "Counted": {
       "extractionState": "manual",
       "localizations": {
@@ -14583,6 +14787,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zählen"
+          }
+        }
+      }
+    },
+    "Counts as extra": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts as extra"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zählt als Extra"
           }
         }
       }
@@ -16389,6 +16610,23 @@
         }
       }
     },
+    "Done it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschafft"
+          }
+        }
+      }
+    },
     "Done shopping": {
       "extractionState": "manual",
       "localizations": {
@@ -16423,6 +16661,23 @@
         }
       }
     },
+    "Done – the tag now opens this label.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done – the tag now opens this label."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig – der Tag öffnet jetzt dieses Etikett."
+          }
+        }
+      }
+    },
     "Done!": {
       "extractionState": "manual",
       "localizations": {
@@ -16453,6 +16708,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erledigt."
+          }
+        }
+      }
+    },
+    "Done. Good.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done. Good."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschafft. Gut."
           }
         }
       }
@@ -18055,6 +18327,23 @@
         }
       }
     },
+    "Enjoy the quiet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enjoy the quiet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genieß die Ruhe."
+          }
+        }
+      }
+    },
     "Enjoy your meal!": {
       "extractionState": "manual",
       "localizations": {
@@ -19024,6 +19313,23 @@
         }
       }
     },
+    "Everything that piled up moves to a fresh start: two things a day from today. Nothing is marked as done, nothing is counted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything that piled up moves to a fresh start: two things a day from today. Nothing is marked as done, nothing is counted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was sich angestaut hat, fängt neu an: zwei Sachen pro Tag ab heute. Nichts wird abgehakt, nichts wird gezählt."
+          }
+        }
+      }
+    },
     "Everything that’s here": {
       "extractionState": "manual",
       "localizations": {
@@ -19292,6 +19598,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rezepte exportieren"
+          }
+        }
+      }
+    },
+    "Extra": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra"
+          }
+        }
+      }
+    },
+    "Extras allowance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras allowance"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras-Kontingent"
+          }
+        }
+      }
+    },
+    "Extras allowance switched off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras allowance switched off"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras-Kontingent ausgeschaltet"
+          }
+        }
+      }
+    },
+    "Extras in the weekly shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras in the weekly shop"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras im Wocheneinkauf"
+          }
+        }
+      }
+    },
+    "Extras this week: %@ of %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras this week: %@ of %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras diese Woche: %@ von %@"
           }
         }
       }
@@ -19653,6 +20044,23 @@
         }
       }
     },
+    "First %@ free, then %@. Cancel before the end and nothing is charged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First %@ free, then %@. Cancel before the end and nothing is charged."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die ersten %@ kostenlos, danach %@. Kündigst du vorher, wird nichts berechnet."
+          }
+        }
+      }
+    },
     "First day of the week": {
       "extractionState": "manual",
       "localizations": {
@@ -19734,6 +20142,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "WG"
+          }
+        }
+      }
+    },
+    "Focus on this": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus on this"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur das hier"
           }
         }
       }
@@ -19942,6 +20367,23 @@
         }
       }
     },
+    "For free questions, ToHuus needs your OK to use AI.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For free questions, ToHuus needs your OK to use AI."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für freie Fragen braucht ToHuus dein Okay für KI."
+          }
+        }
+      }
+    },
     "For fruit, veg, bread: just “full – half – low – empty”. Less upkeep.": {
       "extractionState": "manual",
       "localizations": {
@@ -19972,6 +20414,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für Erwachsene"
+          }
+        }
+      }
+    },
+    "For heads with a lot going on – ADHD, autism or just a full week. Only you see these settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For heads with a lot going on – ADHD, autism or just a full week. Only you see these settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Köpfe, in denen viel los ist – ADHS, Autismus oder einfach eine volle Woche. Diese Einstellungen siehst nur du."
           }
         }
       }
@@ -20707,6 +21166,40 @@
         }
       }
     },
+    "Fresh start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fresh start"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu anfangen"
+          }
+        }
+      }
+    },
+    "Fresh start: %d things spread over the next days.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fresh start: %d things spread over the next days."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu angefangen: %d Sachen auf die nächsten Tage verteilt."
+          }
+        }
+      }
+    },
     "Fri": {
       "extractionState": "manual",
       "localizations": {
@@ -21353,6 +21846,23 @@
         }
       }
     },
+    "Gentle mode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gentle mode"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sanfter Modus"
+          }
+        }
+      }
+    },
     "Get everything ready – tap what you have out.": {
       "extractionState": "manual",
       "localizations": {
@@ -21485,6 +21995,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gmail: Einstellungen › Filter › „Von“ z. B. rewe.de OR lidl.de › Weiterleiten an diese Adresse (die Adresse einmal bestätigen)."
+          }
+        }
+      }
+    },
+    "Go on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go on"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter"
           }
         }
       }
@@ -21689,6 +22216,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alles klar – für die nächsten Bons gemerkt."
+          }
+        }
+      }
+    },
+    "Got it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erkannt."
           }
         }
       }
@@ -22743,6 +23287,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Halten und ziehen. Diese Reihenfolge siehst nur du."
+          }
+        }
+      }
+    },
+    "Hold your iPhone near the tag to write the label onto it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold your iPhone near the tag to write the label onto it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halt dein iPhone an den Tag, um das Etikett darauf zu schreiben."
+          }
+        }
+      }
+    },
+    "Hold your iPhone near the tag.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold your iPhone near the tag."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halt dein iPhone an den Tag."
           }
         }
       }
@@ -25807,6 +26385,23 @@
         }
       }
     },
+    "Just start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just start"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einfach anfangen"
+          }
+        }
+      }
+    },
     "Just tap – no counting. Whatever is missing goes on the list.": {
       "extractionState": "manual",
       "localizations": {
@@ -28323,6 +28918,23 @@
         }
       }
     },
+    "Mark a row as extra (or not) in its details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark a row as extra (or not) in its details."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ob etwas ein Extra ist, stellst du in den Details eines Eintrags ein."
+          }
+        }
+      }
+    },
     "Mark a tablet as shared under My account; members with a PIN can switch there.": {
       "extractionState": "manual",
       "localizations": {
@@ -28986,6 +29598,23 @@
         }
       }
     },
+    "Mistral AI (France), routed through OpenRouter (USA)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mistral AI (France), routed through OpenRouter (USA)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mistral AI (Frankreich), vermittelt über OpenRouter (USA)"
+          }
+        }
+      }
+    },
     "Mode, e.g. fan": {
       "extractionState": "manual",
       "localizations": {
@@ -29084,6 +29713,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geldliste"
+          }
+        }
+      }
+    },
+    "Money per week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Money per week"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geld pro Woche"
           }
         }
       }
@@ -29305,6 +29951,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einmal für mehr Leute: Tipp auf das geplante Essen und ändere „Für … Personen“. Der Wocheneinkauf, „aufgebraucht“ nach dem Kochen und das aus dem Plan geöffnete Rezept rechnen damit. Dauerhaft ändern geht im Rezept unter „Bei uns“."
+          }
+        }
+      }
+    },
+    "More than one tag – hold only one near the iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than one tag – hold only one near the iPhone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr als ein Tag – halt nur einen ans iPhone."
           }
         }
       }
@@ -29645,6 +30308,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mein Wunsch wurde beantwortet"
+          }
+        }
+      }
+    },
+    "NFC tag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NFC tag"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NFC-Tag"
           }
         }
       }
@@ -31774,6 +32454,23 @@
         }
       }
     },
+    "No limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No limit"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Grenze"
+          }
+        }
+      }
+    },
     "No lines on this receipt.": {
       "extractionState": "manual",
       "localizations": {
@@ -32263,6 +32960,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noch keine Rezepte."
+          }
+        }
+      }
+    },
+    "No red, no counters. Things that are due say “could be done”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No red, no counters. Things that are due say “could be done”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Rot, keine Zähler. Was fällig ist, heißt „wäre dran“."
           }
         }
       }
@@ -33270,6 +33984,23 @@
         }
       }
     },
+    "Not set. An admin of the household can switch it on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not set. An admin of the household can switch it on."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht eingestellt. Wer den Haushalt verwaltet, kann es einschalten."
+          }
+        }
+      }
+    },
     "Not today": {
       "extractionState": "manual",
       "localizations": {
@@ -33848,6 +34579,23 @@
         }
       }
     },
+    "Nothing is waiting for you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is waiting for you."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade wartet nichts auf dich."
+          }
+        }
+      }
+    },
     "Nothing lands on the shopping list by itself while nobody is home.": {
       "extractionState": "manual",
       "localizations": {
@@ -34273,6 +35021,23 @@
         }
       }
     },
+    "Nothing to move – the rest is someone else’s.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to move – the rest is someone else’s."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts zu verschieben – der Rest liegt bei anderen."
+          }
+        }
+      }
+    },
     "Nothing to print.": {
       "extractionState": "manual",
       "localizations": {
@@ -34630,6 +35395,23 @@
         }
       }
     },
+    "Number of things per week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number of things per week"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzahl pro Woche"
+          }
+        }
+      }
+    },
     "Nuts": {
       "extractionState": "manual",
       "localizations": {
@@ -34932,6 +35714,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Okay – ToHuus fragt später noch mal."
+          }
+        }
+      }
+    },
+    "On Today, at most": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On Today, at most"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Heute höchstens"
           }
         }
       }
@@ -35361,6 +36160,23 @@
         }
       }
     },
+    "Once a day at %d:00": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Once a day at %d:00"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal am Tag um %d Uhr"
+          }
+        }
+      }
+    },
     "Once a few receipts are in, you see here how many lines were recognised without anybody having to correct them.": {
       "extractionState": "manual",
       "localizations": {
@@ -35425,6 +36241,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eins zurück"
+          }
+        }
+      }
+    },
+    "One by one, as usual": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One by one, as usual"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einzeln, wie bisher"
           }
         }
       }
@@ -35633,6 +36466,23 @@
         }
       }
     },
+    "One step done.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One step done."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Schritt geschafft."
+          }
+        }
+      }
+    },
     "One step per line. Bullets and numbers are removed.": {
       "extractionState": "manual",
       "localizations": {
@@ -35663,6 +36513,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder und Gäste zahlen nie."
+          }
+        }
+      }
+    },
+    "One thing at a time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One thing at a time"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eins nach dem anderen"
+          }
+        }
+      }
+    },
+    "One thing at a time is enough.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One thing at a time is enough."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eins nach dem anderen reicht."
           }
         }
       }
@@ -36258,6 +37142,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jetzt wird nur verfolgt, was ausgeht"
+          }
+        }
+      }
+    },
+    "Only what you keep in mind, what you do, your own tasks and what nobody took on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only what you keep in mind, what you do, your own tasks and what nobody took on."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur was du im Blick hast, was du machst, deine eigenen Aufgaben und was noch niemand übernommen hat."
           }
         }
       }
@@ -37057,6 +37958,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geöffnet"
+          }
+        }
+      }
+    },
+    "Opened – keeps about until %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opened – keeps about until %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angebrochen – hält etwa bis %@"
           }
         }
       }
@@ -40325,6 +41243,23 @@
         }
       }
     },
+    "Please enter an amount above zero.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter an amount above zero."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitte gib einen Wert über null ein."
+          }
+        }
+      }
+    },
     "Please sign in to the ToHuus app first.": {
       "extractionState": "manual",
       "localizations": {
@@ -42331,6 +43266,23 @@
         }
       }
     },
+    "Read NFC tag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read NFC tag"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NFC-Tag lesen"
+          }
+        }
+      }
+    },
     "Read aloud": {
       "extractionState": "manual",
       "localizations": {
@@ -42395,6 +43347,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lesen und ändern"
+          }
+        }
+      }
+    },
+    "Read and decide": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read and decide"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lesen und entscheiden"
           }
         }
       }
@@ -49182,6 +50151,23 @@
         }
       }
     },
+    "Shows what counts as extra this week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what counts as extra this week"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt, was diese Woche als Extra zählt"
+          }
+        }
+      }
+    },
     "Shows what it means": {
       "extractionState": "manual",
       "localizations": {
@@ -49909,6 +50895,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Klein (24 pro Seite)"
+          }
+        }
+      }
+    },
+    "Smaller steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smaller steps"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kleinere Schritte"
           }
         }
       }
@@ -50793,6 +51796,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "In diesem Monat ausgegeben"
+          }
+        }
+      }
+    },
+    "Split into small steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split into small steps"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In kleine Schritte teilen"
           }
         }
       }
@@ -52072,6 +53092,23 @@
         }
       }
     },
+    "Sweets, snacks, ice cream and drinks count by themselves. What you set here is remembered.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweets, snacks, ice cream and drinks count by themselves. What you set here is remembered."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Süßes, Snacks, Eis und Getränke zählen von selbst. Was du hier einstellst, merkt sich ToHuus."
+          }
+        }
+      }
+    },
     "Swipe or tap. Sorted by what's in stock, expiry dates, favorites and how long it's been.": {
       "extractionState": "manual",
       "localizations": {
@@ -52225,6 +53262,23 @@
         }
       }
     },
+    "Switch off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch off"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausschalten"
+          }
+        }
+      }
+    },
     "Switch off what you don’t need – the app gets smaller. You can switch it back on any time.": {
       "extractionState": "manual",
       "localizations": {
@@ -52238,6 +53292,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schaltet ab, was ihr nicht braucht – die App wird kleiner. Ihr könnt es jederzeit wieder einschalten."
+          }
+        }
+      }
+    },
+    "Switch on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch on"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einschalten"
           }
         }
       }
@@ -53292,6 +54363,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tippen: loslegen"
+          }
+        }
+      }
+    },
+    "Task reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task reminders"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen an Aufgaben"
           }
         }
       }
@@ -55404,19 +56492,19 @@
         }
       }
     },
-    "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, “Sprechen” with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like).": {
+    "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, the assistant with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like).": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, “Sprechen” with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like)."
+            "value": "The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, the assistant with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like)."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die gemeinsame Liste, der Einkaufsmodus, was ToHuus sich aus Bons und Häkchen merkt, Rezepte, Geld, „Sprechen“ mit einfachen Sätzen, Bons, die dieses iPhone liest (auf Wunsch mit Apple Intelligence)."
+            "value": "Die gemeinsame Liste, der Einkaufsmodus, was ToHuus sich aus Bons und Häkchen merkt, Rezepte, Geld, der Assistent mit einfachen Sätzen, Bons, die dieses iPhone liest (auf Wunsch mit Apple Intelligence)."
           }
         }
       }
@@ -55502,6 +56590,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das Tablet sagt, was angetippt wurde – in der Sprache des Haushalts."
+          }
+        }
+      }
+    },
+    "The tag is ready. Hold your iPhone to it to open the label.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The tag is ready. Hold your iPhone to it to open the label."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Tag ist fertig. Halt dein iPhone dran, dann öffnet sich das Etikett."
           }
         }
       }
@@ -55778,6 +56883,23 @@
         }
       }
     },
+    "There's no ToHuus label on this tag.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There's no ToHuus label on this tag."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem Tag ist kein ToHuus-Etikett."
+          }
+        }
+      }
+    },
     "Thermomix recipe": {
       "extractionState": "manual",
       "localizations": {
@@ -55880,6 +57002,23 @@
         }
       }
     },
+    "Things per week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Things per week"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinge pro Woche"
+          }
+        }
+      }
+    },
     "Things without a place": {
       "extractionState": "manual",
       "localizations": {
@@ -55910,6 +57049,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was ToHuus sich für euch merken soll – zum Beispiel „Wir essen kein Schwein“ oder „Mira kauft samstags ein“. Du kannst alles jederzeit löschen."
+          }
+        }
+      }
+    },
+    "Thinking …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thinking …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einen Moment …"
           }
         }
       }
@@ -56165,6 +57321,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses iPhone"
+          }
+        }
+      }
+    },
+    "This iPhone can't read NFC tags.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone can't read NFC tags."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses iPhone kann keine NFC-Tags lesen."
           }
         }
       }
@@ -56645,6 +57818,40 @@
         }
       }
     },
+    "This tag doesn't work with ToHuus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This tag doesn't work with ToHuus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Tag geht mit ToHuus nicht."
+          }
+        }
+      }
+    },
+    "This tag is locked and can't be written.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This tag is locked and can't be written."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Tag ist gesperrt und lässt sich nicht beschreiben."
+          }
+        }
+      }
+    },
     "This turns the receipt into an anonymised test file for the ToHuus project, so receipts from this shop are read better for everyone. Nothing is sent automatically – you decide whether to share the file, open a prefilled GitHub issue or an e-mail.": {
       "extractionState": "manual",
       "localizations": {
@@ -56709,6 +57916,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Woche ist vorbei"
+          }
+        }
+      }
+    },
+    "This week’s extras are used up. Nothing is blocked – you decide.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week’s extras are used up. Nothing is blocked – you decide."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Extras für diese Woche sind ausgeschöpft. Gesperrt wird nichts – ihr entscheidet."
           }
         }
       }
@@ -56985,6 +58209,23 @@
         }
       }
     },
+    "Timer starts with": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer starts with"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer startet mit"
+          }
+        }
+      }
+    },
     "Timer, %@ left": {
       "extractionState": "manual",
       "localizations": {
@@ -56998,6 +58239,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Timer, noch %@"
+          }
+        }
+      }
+    },
+    "Time’s up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time’s up"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeit ist um"
+          }
+        }
+      }
+    },
+    "Time’s up. Well done for starting – stop or go on, both are fine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time’s up. Well done for starting – stop or go on, both are fine."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeit ist um. Gut, dass du angefangen hast – aufhören oder weitermachen, beides ist okay."
           }
         }
       }
@@ -57746,6 +59021,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Morgen"
+          }
+        }
+      }
+    },
+    "Too big? Make it smaller": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too big? Make it smaller"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu groß? Kleiner machen"
           }
         }
       }
@@ -59994,6 +61286,23 @@
         }
       }
     },
+    "Well done for starting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Well done for starting."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gut, dass du angefangen hast."
+          }
+        }
+      }
+    },
     "We’re back": {
       "extractionState": "manual",
       "localizations": {
@@ -61014,19 +62323,19 @@
         }
       }
     },
-    "When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.": {
+    "When you use AI (free sentences and voice messages to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you write, say or photograph to {processor} – together with what the answer needs from your household, such as the list, stock or recipes. Allergies and children’s details only if your household allows it separately. Nothing is used to train models. Without AI everything else keeps working.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working."
+            "value": "When you use AI (free sentences and voice messages to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you write, say or photograph to {processor} – together with what the answer needs from your household, such as the list, stock or recipes. Allergies and children’s details only if your household allows it separately. Nothing is used to train models. Without AI everything else keeps working."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn du KI nutzt (freie Sätze an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du geschrieben oder fotografiert hast, an {processor}. Es wird nicht zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter."
+            "value": "Wenn du KI nutzt (freie Sätze und Sprachnachrichten an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du schreibst, sagst oder fotografierst, an {processor} – zusammen mit dem, was die Antwort aus eurem Haushalt braucht, etwa Liste, Vorrat oder Rezepte. Allergien und Angaben zu Kindern nur, wenn euer Haushalt das extra erlaubt. Nichts davon wird zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter."
           }
         }
       }
@@ -62901,6 +64210,23 @@
         }
       }
     },
+    "Write onto an NFC tag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write onto an NFC tag"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf einen NFC-Tag schreiben"
+          }
+        }
+      }
+    },
     "Write to %@": {
       "extractionState": "manual",
       "localizations": {
@@ -63275,19 +64601,19 @@
         }
       }
     },
-    "You can still use everything else – the list, “Sprechen” with simple sentences, recipes.": {
+    "You can still use everything else – the list, the assistant with simple sentences, recipes.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You can still use everything else – the list, “Sprechen” with simple sentences, recipes."
+            "value": "You can still use everything else – the list, the assistant with simple sentences, recipes."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alles andere geht weiter – die Liste, „Sprechen“ mit einfachen Sätzen, Rezepte."
+            "value": "Alles andere geht weiter – die Liste, der Assistent mit einfachen Sätzen, Rezepte."
           }
         }
       }
@@ -64308,6 +65634,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ein Wunsch"
+          }
+        }
+      }
+    },
+    "about %d days after opening": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "about %d days after opening"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "etwa %d Tage nach dem Öffnen"
           }
         }
       }
@@ -65396,6 +66739,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "von dir korrigiert"
+          }
+        }
+      }
+    },
+    "could be done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "could be done"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wäre dran"
           }
         }
       }
@@ -67861,6 +69221,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "nur meins"
+          }
+        }
+      }
+    },
+    "keeps about until %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "keeps about until %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hält etwa bis %@"
           }
         }
       }

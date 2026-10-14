@@ -130,6 +130,9 @@ struct MainTabView: View {
         .sheet(isPresented: $app.showSearch) {
             GlobalSearchView(store: store)
         }
+        .sheet(item: Binding(get: { app.pendingLabel.map(ScannedLabel.init) }, set: { app.pendingLabel = $0?.raw })) { l in
+            LabelQuickActionView(raw: l.raw, store: store)
+        }
         .sheet(isPresented: $app.showPaywall) {
             PaywallView()
         }
@@ -151,7 +154,7 @@ struct MainTabView: View {
 
     /// ToHuus Cloud: ask once whether AI may be used (App Store guideline 5.1.2(i)); never over the tour or for children
     private func askAIConsent() async {
-        guard !AIConsentView.asked, !app.isChild, !app.isGuest, !app.askSampleData else { return }
+        guard !AIConsentView.wasAsked(app), !app.isChild, !app.isGuest, !app.askSampleData else { return }
         await app.loadAIState()
         if app.aiConsentNeeded && app.aiAvailable && !showTour { showAIConsent = true }
     }

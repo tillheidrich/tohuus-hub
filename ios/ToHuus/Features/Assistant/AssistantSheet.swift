@@ -142,6 +142,8 @@ struct AssistantSheet: View {
             model.basic = !app.aiOn
             model.context = app.screenContext ?? app.assistantContext
         }
+        // agreeing to AI right here (AIConsentPrompt) switches from simple sentences to the full assistant
+        .onChange(of: app.aiOn) { _, on in model.basic = !on }
         #if DEBUG
         .task {
             if let m = UserDefaults.standard.string(forKey: "debugAssistantMessage"), model.messages.isEmpty {
@@ -153,6 +155,7 @@ struct AssistantSheet: View {
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            AIConsentPrompt()
             if !app.aiOn {
                 Label(app.aiLocked ? L("AI is switched off for you. ToHuus still understands simple sentences like “milk and bread”.")
                                    : L("Without AI: ToHuus understands simple sentences like “milk and bread” or “what's on the list?”."),

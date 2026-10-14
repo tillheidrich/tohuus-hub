@@ -80,7 +80,7 @@ struct AISettingsView: View {
                     .disabled(!app.aiAvailable)
                 }
             } footer: {
-                Text(app.aiLocked ? L("You can still use everything else – the list, “Sprechen” with simple sentences, recipes.")
+                Text(app.aiLocked ? L("You can still use everything else – the list, the assistant with simple sentences, recipes.")
                                   : L("Only for you. The others decide for themselves."))
             }
             OnDeviceAISection()
@@ -171,7 +171,7 @@ struct AISettingsView: View {
             Section {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
                     Label(L("Works without AI"), systemImage: "checkmark.circle").font(.headline)
-                    Text(L("The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, “Sprechen” with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like)."))
+                    Text(L("The shared list, shop mode, what ToHuus remembers from receipts and ticks, recipes, money, the assistant with simple sentences, receipts read on this iPhone (with Apple Intelligence if you like)."))
                         .font(.subheadline).foregroundStyle(Theme.ink2)
                 }
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
@@ -282,9 +282,10 @@ struct AIConsentView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var busy = false
 
+    /// Who gets what (App Store guideline 5.1.2(i)): the receiver comes from the server (`consent.processor`).
     static func explanation(_ processor: String?) -> String {
-        L("When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.")
-            .replacingOccurrences(of: "{processor}", with: processor ?? "Mistral AI (EU)")
+        L("When you use AI (free sentences and voice messages to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you write, say or photograph to {processor} – together with what the answer needs from your household, such as the list, stock or recipes. Allergies and children’s details only if your household allows it separately. Nothing is used to train models. Without AI everything else keeps working.")
+            .replacingOccurrences(of: "{processor}", with: processor ?? L("Mistral AI (France), routed through OpenRouter (USA)"))
     }
 
     var body: some View {
@@ -309,12 +310,36 @@ struct AIConsentView: View {
             .background(Theme.canvas)
         }
         .interactiveDismissDisabled(busy)
-        .onDisappear { AIConsentView.asked = true }
+        .onDisappear { AIConsentView.setAsked(app) }
     }
 
-    /// asked once per device; Settings › KI stays the place to change it
-    static var asked: Bool {
-        get { UserDefaults.standard.bool(forKey: "aiConsentAsked") }
-        set { UserDefaults.standard.set(newValue, forKey: "aiConsentAsked") }
+    /// Asked once per person and household on this device (the consent itself is stored per member on the server);
+    /// Settings › KI and the assistant stay the places to change it later.
+    private static func askedKey(_ app: AppModel) -> String {
+        let s = app.session
+        return "aiConsentAsked.\(s?.serverURL.host() ?? "")|\(s?.householdId ?? "")|\(app.userName ?? "")"
+    }
+    static func wasAsked(_ app: AppModel) -> Bool { UserDefaults.standard.bool(forKey: askedKey(app)) }
+    static func setAsked(_ app: AppModel) { UserDefaults.standard.set(true, forKey: askedKey(app)) }
+}
+
+/// In the assistant, when this person has not agreed to AI yet (ToHuus Cloud): say so and offer the consent right there.
+struct AIConsentPrompt: View {
+    @Environment(AppModel.self) private var app
+    @State private var showConsent = false
+
+    var body: some View {
+        if app.aiConsentNeeded && app.aiAvailable && !app.isChild && !app.isGuest {
+            VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                Label(L("For free questions, ToHuus needs your OK to use AI."), systemImage: "sparkles")
+                    .font(.footnote.weight(.semibold)).foregroundStyle(Theme.ink)
+                Button(L("Read and decide")) { showConsent = true }
+                    .font(.footnote.weight(.semibold))
+            }
+            .padding(Theme.Space.s3)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.surface2, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+            .sheet(isPresented: $showConsent) { AIConsentView() }
+        }
     }
 }

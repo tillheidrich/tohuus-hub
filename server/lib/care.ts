@@ -14,6 +14,8 @@ import { t, userError } from '../i18n.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, localDay, matchProduct, stockOf } from './catalog.js';
 import { notify } from './notify.js';
+import { bundleTitle, bundledUserIds, focusPrefs } from './focus.js';
+import { getUserPref, setUserPref } from './onboard.js';
 import { tokenPrefix } from './tenancy.js';
 
 migrate(
@@ -644,8 +646,11 @@ export function findCareTask(ref: string | number) {
 // ------------------------------------------------------------------ notifications (called by the scheduler)
 
 export async function checkCareDue() {
+  // gentle mode (focus.ts): these people get one bundled message at their hour instead
+  const bundled = bundledUserIds();
   for (const task of dueCareTasks({ allPrivate: true })) {
     const priv = task.visibility === 'private';
+    if (priv && task.owner_user_id != null && bundled.includes(task.owner_user_id)) continue;
     const now = task.state === 'today' || task.state === 'overdue';
     const when =
       task.state === 'overdue'
@@ -668,9 +673,35 @@ export async function checkCareDue() {
       path: '/aufgaben',
       data: { care_task_id: task.id, name: task.name, next_due: task.next_due, state: task.state },
       // a private task reminds only its owner, on their own devices
-      ...(priv ? { toUserId: task.owner_user_id, personalOnly: true } : {}),
+      ...(priv ? { toUserId: task.owner_user_id, personalOnly: true } : bundled.length ? { exceptUserIds: bundled } : {}),
       dedupeKey: `care:${task.id}:${task.next_due}:${now ? 'now' : 'soon'}`,
       dedupeHours: 24 * 400,
+    });
+  }
+}
+
+const hourFmt = new Intl.DateTimeFormat('en-GB', { timeZone: config.timezone, hour: '2-digit', hourCycle: 'h23' });
+
+/** Gentle mode: one message per person and day at their chosen hour – what could be done today (focus.ts). */
+export async function sendCareBundles(now = new Date()) {
+  const today = localDay(0);
+  const hour = Number(hourFmt.format(now));
+  for (const uid of bundledUserIds()) {
+    const p = focusPrefs(uid);
+    if (p.bundleHour == null || hour < p.bundleHour) continue;
+    if (getUserPref<string>(uid, 'focus.bundle_sent', '') === today) continue;
+    setUserPref(uid, 'focus.bundle_sent', today);
+    const due = listCareTasks({ viewer: uid }).filter((x) => x.state === 'today' || x.state === 'overdue');
+    if (!due.length) continue;
+    await notify({
+      event: 'care.due',
+      title: bundleTitle(due.length),
+      message: due.slice(0, 6).map((x) => x.name).join(' · ') + (due.length > 6 ? ' …' : ''),
+      path: '/aufgaben',
+      toUserId: uid,
+      personalOnly: true,
+      dedupeKey: `care-bundle:${uid}:${today}`,
+      dedupeHours: 20,
     });
   }
 }

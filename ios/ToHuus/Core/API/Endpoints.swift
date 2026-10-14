@@ -190,8 +190,10 @@ extension APIClient {
 
     // MARK: pantry
 
-    func products() async throws -> [ProductInfo] { try await get("api/products", as: Lossy<ProductInfo>.self).wrappedValue }
-    func product(_ id: Int) async throws -> ProductInfo { try await get("api/products/\(id)") }
+    func products() async throws -> [ProductInfo] {
+        try decode(Lossy<ProductInfo>.self, from: JSONCoding.splitDateKind(try await getData("api/products"))).wrappedValue
+    }
+    func product(_ id: Int) async throws -> ProductInfo { try decode(ProductInfo.self, from: JSONCoding.splitDateKind(try await getData("api/products/\(id)"))) }
     func places() async throws -> [Place] { try await get("api/locations", as: Lossy<Place>.self).wrappedValue }
     func usedUp(_ productId: Int) async throws { _ = try await send("POST", "api/stock/used-up", json: ["product_id": productId], as: Ignored.self) }
 

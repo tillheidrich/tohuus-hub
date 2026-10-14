@@ -388,7 +388,9 @@ extension APIClient {
     func deletePartyTemplate(_ id: Int) async throws { _ = try await send("DELETE", "api/party-templates/\(id)", as: Ignored.self) }
 
     // products on the bar
-    func barProducts() async throws -> [BarProduct] { try await get("api/products", as: Lossy<BarProduct>.self).wrappedValue }
+    func barProducts() async throws -> [BarProduct] {
+        try decode(Lossy<BarProduct>.self, from: JSONCoding.splitDateKind(try await getData("api/products"))).wrappedValue
+    }
     /// PATCH /api/products/:id { orderable, order_group } – the bar menu switch (web Bar.tsx Menu)
     func setOrderable(_ id: Int, on: Bool, group: String) async throws {
         _ = try await send("PATCH", "api/products/\(id)", json: ["orderable": on, "order_group": group], as: Ignored.self)

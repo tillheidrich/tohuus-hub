@@ -23,11 +23,14 @@ final class APIClient: Sendable {
     }
 
     func url(_ path: String, query: [URLQueryItem] = []) throws -> URL {
-        let clean = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        // "api/search?q=…": appendingPathComponent would turn the "?" into "%3F" – the query goes on separately
+        let parts = (path.hasPrefix("/") ? String(path.dropFirst()) : path).split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false)
+        let clean = String(parts[0])
         guard var comps = URLComponents(url: baseURL.appendingPathComponent(clean), resolvingAgainstBaseURL: false) else {
             throw APIError.invalidURL
         }
-        if !query.isEmpty { comps.queryItems = query }
+        if parts.count > 1, !parts[1].isEmpty { comps.percentEncodedQuery = String(parts[1]) }
+        if !query.isEmpty { comps.queryItems = (comps.queryItems ?? []) + query }
         guard let u = comps.url else { throw APIError.invalidURL }
         return u
     }

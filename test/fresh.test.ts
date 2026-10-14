@@ -88,6 +88,25 @@ describe('typical shelf life of unopened products', () => {
     expect(shelf.defaultOpenDays('Gouda Scheiben', null)).toBe(14);
     expect(shelf.defaultOpenDays('Leberwurst fein', null)).toBe(7);
     expect(shelf.defaultOpenDays('Blütenhonig', null)).toBeNull();
+    expect(shelf.defaultOpenDays('Thunfisch in Öl', null)).toBe(2);
+    expect(shelf.defaultOpenDays('Kidneybohnen Dose', null)).toBe(3);
+    expect(shelf.defaultOpenDays('Gewürzgurken', null)).toBe(30);
+    expect(shelf.defaultOpenDays('Milchreis', null)).toBe(3);
+    expect(shelf.defaultOpenDays('Olivenöl', null)).toBeNull();
+    expect(shelf.defaultOpenDays('Spaghetti', null)).toBeNull();
+    expect(shelf.defaultShelfDays('Tomatensauce Basilikum', null)).toBeNull();
+  });
+  it('marks the use-by after opening as estimated unless the household set its own days', async () => {
+    const id = catalog.createProduct({ name: 'Erdbeer Konfitüre', trackMode: 'count' });
+    catalog.adjustStock({ productId: id, delta: 1, bestBefore: '2027-09-01', reason: 'manual', silent: true });
+    const r = fresh.markOpened(id);
+    expect(r.use_by).toBe(shelf.addDays(catalog.localDay(0), 42));
+    expect(r.estimated).toBe(true);
+    expect(fresh.productFresh(id)!.open_days_estimated).toBe(true);
+    fresh.setShelf(id, { days_after_opening: 30 });
+    const f = fresh.productFresh(id)!;
+    expect(f.open_days_estimated).toBe(false);
+    expect(f.entries[0].use_by_estimated).toBe(false);
   });
 });
 

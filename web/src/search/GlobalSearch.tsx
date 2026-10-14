@@ -46,6 +46,9 @@ function registry(): { label: string; to: string; words: string }[] {
     { label: 'Home Assistant', to: s('ha'), words: 'home assistant smart home hacs' },
     { label: t('Reminders & Calendar'), to: '/aufgaben', words: 'apple erinnerungen kalender caldav google outlook abo termine' },
     { label: t('QR labels'), to: '/etiketten', words: 'etiketten qr drucken aufkleber' },
+    { label: t('One thing at a time'), to: '/fokus', words: 'fokus konzentration adhs ads timer eins nach dem anderen anfangen' },
+    { label: t('Calm & focus'), to: s('account'), words: 'sanfter modus ruhig adhs ads autismus weniger überfordert erinnerungen bündeln' },
+    { label: t('Extras in the weekly shop'), to: s('home'), words: 'extras kontingent luxus naschen süßes spaß budget woche' },
     { label: t('Plan & storage'), to: s('plan'), words: 'abo plan speicher bezahlen preis' },
     { label: t('Help'), to: '/hilfe', words: 'hilfe frage support' },
   ];

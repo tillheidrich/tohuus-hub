@@ -188,6 +188,8 @@ struct ShopItem: Codable, Sendable, Identifiable, Equatable {
     var share: ShareInfo?
     /// WG: the row is for one person ("für Mika"), nil = shared (POST /api/list/items/:id/owner)
     var owner: ShopRowOwner?
+    /// counts toward the weekly extras allowance (server: lib/extras.ts)
+    var extra: Bool?
 
     struct Claim: Codable, Sendable, Equatable {
         var userId: Int?

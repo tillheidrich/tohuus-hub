@@ -16,6 +16,7 @@ import {
   defaultOpenDays,
   categoryKeyOf,
   entryExpiry,
+  openDaysEstimated,
   openDaysFor,
   thawDaysFor,
 } from './fresh-shelf.js';
@@ -238,7 +239,8 @@ export function markOpened(productId: number, opts: { entryId?: number | null; a
   })();
   emit('stock');
   const days = openDaysFor(p);
-  return { opened_at: ts, open_days: days, use_by: entryExpiry(p, { best_before: e.best_before, opened_at: ts }, days) };
+  const opened = { best_before: e.best_before, bb_estimated: e.bb_estimated, opened_at: ts };
+  return { opened_at: ts, open_days: days, use_by: entryExpiry(p, opened, days), estimated: useByEstimated(p, opened, days) };
 }
 
 function moveEntryPart(p: FreshProduct, e: FreshEntry, take: number, to: number, patch: { best_before: string | null; opened_at: string | null; frozen_at: string | null; frozen_from: number | null }, reason: string, actor?: string) {
@@ -314,6 +316,16 @@ export function thaw(productId: number, opts: { qty?: number | null; entryId?: n
   })();
   emit('stock');
   return { moved, eat_by: eatBy, location_id: target };
+}
+
+/** is this entry's use-by a rule of thumb (estimated pack date or the usual days after opening) rather than a known date? */
+function useByEstimated(p: FreshProduct, e: { best_before: string | null; bb_estimated?: number; opened_at: string | null }, od: number | null) {
+  const until = entryExpiry(p, e, od);
+  if (!until) return false;
+  const printed = e.best_before && !e.bb_estimated ? e.best_before.slice(0, 10) : null;
+  if (printed === until) return false;
+  if (e.opened_at && od != null && until !== e.best_before?.slice(0, 10)) return openDaysEstimated(p);
+  return Boolean(e.bb_estimated);
 }
 
 export function setShelf(productId: number, v: { days_after_opening?: number | null; freezer_days?: number | null }) {
@@ -615,7 +627,9 @@ export function productFresh(productId: number, nowMs = Date.now()) {
       frozen_at: e.frozen_at,
       in_freezer: fz.has(e.location_id),
       use_by: entryExpiry(p, e, od),
+      use_by_estimated: useByEstimated(p, e, od),
     })),
+    open_days_estimated: openDaysEstimated(p),
     can_open: entries.some((e) => !e.opened_at && !fz.has(e.location_id)),
     can_freeze: entries.some((e) => !fz.has(e.location_id)),
     can_thaw: entries.some((e) => fz.has(e.location_id)),

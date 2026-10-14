@@ -56,6 +56,7 @@ struct ItemDetailSheet: View {
                 } footer: {
                     Text(L("A wish like “rather oat milk” goes into the note."))
                 }
+                if canEdit && !hidden { ExtraToggleSection(api: store.api, item: item) { Task { await store.refreshList() } } }
                 photoSection
                 if canEdit {
                     Section {

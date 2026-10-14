@@ -490,7 +490,8 @@ struct MoneyOverview: Decodable, Sendable {
             else {
                 vsLastMonth = v.first("pct", "percent", "diffPct", "changePct")?.double
                 lastMonthTotal = v.first("total", "last", "previous", "lastMonth")?.double
-                if vsLastMonth == nil, let last = lastMonthTotal, last > 0, let t = total { vsLastMonth = (t - last) / last * 100 }
+                // pct: null is the server's "nothing to compare up to this day" – no guess from the whole last month
+                if vsLastMonth == nil, v["pct"] == nil, let last = lastMonthTotal, last > 0, let t = total { vsLastMonth = (t - last) / last * 100 }
             }
         }
         priceChanges = (try? c.decode(Lossy<PriceChange>.self, forKey: AnyKey("priceChanges")).wrappedValue) ?? []

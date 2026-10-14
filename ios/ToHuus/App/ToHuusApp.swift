@@ -62,6 +62,11 @@ struct ToHuusApp: App {
 
     /// tohuus://assistant, tohuus://shopping (widget) and the other tabs
     private func handle(_ url: URL) {
+        // a ToHuus label link (NFC tag read in the background, universal link of the cloud host): https://…/q/<code>
+        if url.scheme == "https", url.path.hasPrefix("/q/") {
+            if app.phase == .signedIn { app.pendingLabel = url.absoluteString }
+            return
+        }
         guard url.scheme == "tohuus" else { return }
         // tohuus://connect?server=…&code=… (QR code from the web app) – also before anyone is signed in
         if ConnectInbox.shared.receive(url) { return }
