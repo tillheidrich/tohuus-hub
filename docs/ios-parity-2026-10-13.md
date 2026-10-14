@@ -14,7 +14,7 @@ there; other pages are not linked from the app.
 |---|---|---|---|
 | Home & care tasks ("Pflege") | `/pflege` | **native since 14 Oct** (CareView) | choosing a product to use up (a set product shows and can be removed), labels and ticket via the web page |
 | Trip / away mode | `/urlaub` | **native since 14 Oct** (AwayView) | – |
-| Holiday handover | trip › Übergabe, `/uebergabe` | **native since 14 Oct** (HandoverView, HandoverGuestView); | – (the page behind a guest link is for people without the app) |
+| Holiday handover | trip › Übergabe, `/uebergabe` | **native since 14 Oct** (HandoverView, HandoverGuestView) | – (the page behind a guest link is for people without the app) |
 | Places & categories editing | Settings › places | web view | create, rename, reorder, delete; categories; household form |
 | Notification routing | Settings › notify | partial | channels (push/e-mail/summary), lock-screen text, "only at home"; household matrix via web view |
 | Shopping-list extras | `shop/forms.tsx`, `bridges.tsx` | partial | WG balance/personal rows, lunchbox regulars, care fridge check, CalDAV, import from Bring!/AnyList/CSV, start mode, offers per shop |
