@@ -109,7 +109,7 @@ const COPY = {
       intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei. Und um das, was ein Zuhause sonst noch ausmacht: die Aufgaben, die immer wiederkommen, einander was Gutes tun und Wünsche festhalten.',
       list: [
         { id: 'einkauf', no: '1', label: 'Einkauf', h3: 'ToHuus merkt sich, was fehlt.', shot: 'shopping',
-          alt: 'Einkaufsliste in ToHuus: oben Vorschläge wie Pizza Margherita mit „merkt sich: alle ~32 Tage“, darunter nach Bereichen sortierte Einträge mit Ich-hol’s-Knopf und dem Hinweis „im Vorrat knapp“.',
+          alt: 'Einkaufsliste in ToHuus: oben die Leiste „Extras diese Woche: 2,58 € von 15,00 €“, darunter Vorschläge wie Pizza Margherita mit „merkt sich: alle ~32 Tage“, darunter nach Bereichen sortierte Einträge mit Ich-hol’s-Knopf und dem Hinweis „im Vorrat knapp“.',
           p: 'Aus euren Bons und dem, was ihr auf der Liste abhakt, sieht ToHuus, wie oft ihr etwas kauft. Ist es wieder so weit, erscheint es als Vorschlag mit Grund. Einen Vorrat müsst ihr dafür nicht führen.',
           points: ['Eine Liste, live auf allen Handys, auch während einer im Laden steht', 'Wer etwas übernimmt, tippt auf „Ich hol’s“', 'Im Laden nach Gängen sortiert, auch ohne Netz'] },
         { id: 'kochen', no: '2', label: 'Kochen', h3: 'Daraus könnt ihr heute kochen.', shot: 'cook',
@@ -163,17 +163,23 @@ const COPY = {
     },
     nd: {
       label: 'Wenn der Kopf voll ist', h2: 'Für Köpfe, in denen viel los ist.',
-      intro: 'Mit ADHS, Autismus oder einfach in einer vollen Woche ist oft der Anfang das Schwerste: Wo fange ich an, was war noch mal dran, und wie lange dauert das überhaupt? Ein paar Dinge in ToHuus sind genau dafür gebaut. Sie helfen allen im Haushalt, und niemand muss erklären, warum er sie nutzt.',
+      intro: 'Mit ADHS, Autismus oder einfach in einer vollen Woche ist oft der Anfang das Schwerste: Wo fange ich an, was war noch mal dran, und wie lange dauert das überhaupt? Ein paar Dinge in ToHuus sind genau dafür gebaut. Sie helfen allen im Haushalt, und niemand muss erklären, warum.',
       list: [
         ['list', 'Kleine Schritte', 'Jede Aufgabe lässt sich in kleine Schritte teilen, die du einzeln abhakst. „In kleine Schritte teilen“ schlägt welche vor: mit KI, wenn euer Haushalt das erlaubt, sonst aus fertigen Schritten für Bad putzen, Küche, Wäsche, Staubsaugen oder Bett beziehen. Ist die Aufgabe erledigt, stehen die Schritte beim nächsten Mal wieder offen da.'],
         ['target', 'Eins nach dem anderen', 'Die Fokusansicht zeigt nur eine Sache: die nächste Aufgabe und darin den nächsten Schritt, groß und ohne Liste drumherum. Darunter stehen „Geschafft“, „Später“ und „Zu groß? Kleiner machen“.'],
         ['timer', 'Sichtbarer Timer', 'Fünf Minuten, nur anfangen. Ein Ring zeigt, wie viel Zeit noch bleibt, am Ende kommt ein sanftes Signal. Gezählt oder ausgewertet wird dabei nichts.'],
         ['feather', 'Sanfter Modus', 'Eine Einstellung nur für dich: keine roten Warnungen und keine Zähler, was fällig ist, „wäre dran“. „Neu anfangen“ legt alles Überfällige auf einen frischen Start, ohne Vorwurf. Mitteilungen kommen gebündelt in einer Nachricht zu der Zeit, die du wählst, und auf Heute stehen höchstens drei Dinge.'],
         ['users', 'Keine Punkte, keine Ranglisten', 'Es gibt keine Streaks, keine Punkte und keine Belohnungen. „Wer hat was im Blick“ zeigt Namen alphabetisch, Anteile nur, wenn alle im Haushalt zustimmen.'],
+        ['list', 'Denkarbeit-Check', '33 Karten für die unsichtbare Arbeit, von „Merken, wenn etwas zur Neige geht“ bis „An Geburtstage denken“. Jede Person antwortet für sich, der Haushalt sieht die Antworten nur, wenn alle zustimmen. Zu jeder Karte steht, was ToHuus dir davon abnimmt.'],
         ['pin', 'Aus den Augen, nicht aus dem Sinn', '„Wo ist was?“ weiß, wo die Batterien liegen und was im Gefrierfach ist. Wer mag, führt einen Vorrat und sieht, was da ist und was bald alle ist.'],
         ['mic', 'Schnell aus dem Kopf', 'Ein Tipp auf den Assistenten, ein Satz, und es steht auf der Liste oder bei den Aufgaben, bevor der Gedanke wieder weg ist.'],
         ['tag', 'Extras im Wocheneinkauf', 'Ihr legt fest, wie viel pro Woche für Extras drin ist, als Betrag oder als Anzahl. Einträge auf der Liste markiert ihr als Extra, und die Liste zeigt, wie viel davon schon verplant ist. Gesperrt wird nichts, ihr behaltet nur den Überblick, auch bei spontanen Käufen.'],
       ],
+      shots: [
+        ['focus', 'Fokusansicht „Eins nach dem anderen“: nur die Aufgabe „Bad putzen“, Schritt 2 von 3, ein Timer-Ring mit 5 Minuten und die Knöpfe Geschafft, Später und Zu groß? Kleiner machen.'],
+        ['loadcards', 'Denkarbeit-Check: oben die eigene Zusammenfassung, darunter Karten wie „Merken, wenn etwas zur Neige geht“ mit den Antworten Mache meistens ich, Teilen wir, Macht meistens jemand anders.'],
+      ],
+      caption: 'Links eins nach dem anderen mit Timer, rechts der Denkarbeit-Check.',
       note: 'ToHuus richtet sich nach „Bewegung reduzieren“ auf deinem Gerät, und an Tagen, an denen das Aufstehen schwerfällt, gibt es „Bring mir was“. ToHuus ist kein Gesundheits- oder Therapieangebot. Es nimmt euch nur ein paar Dinge aus dem Kopf.',
       more: 'Alles dazu in der Hilfe', help: 'kopf-voll.html',
     },
@@ -363,7 +369,7 @@ const COPY = {
       intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three. And after the rest of what makes a home: the tasks that keep coming back, doing each other a good turn and keeping track of wishes.',
       list: [
         { id: 'shopping', no: '1', label: 'Shopping', h3: 'ToHuus remembers what is missing.', shot: 'shopping',
-          alt: 'Shopping list in ToHuus: suggestions at the top such as pizza with “remembers: every ~32 days”, below them items sorted by section with an I’ll-get-it button and the note “running low in stock”.',
+          alt: 'Shopping list in ToHuus: at the top the bar “Extras this week: £2.20 of £15.00”, then suggestions such as pizza with “remembers: every ~32 days”, below them items sorted by section with an I’ll-get-it button and the note “running low in stock”.',
           p: 'From your receipts and what you tick off the list, ToHuus learns how often you buy things. When something is due again, it shows up as a suggestion with its reason. You do not have to keep a stock list for that.',
           points: ['One list, live on every phone, also while someone is in the shop', 'Whoever takes something taps “I’ll get it”', 'Sorted by aisle in the shop, even without signal'] },
         { id: 'cooking', no: '2', label: 'Cooking', h3: 'You can cook this today.', shot: 'cook',
@@ -424,10 +430,16 @@ const COPY = {
         ['timer', 'Visible timer', 'Five minutes, just to get going. A ring shows how much time is left, and a gentle signal sounds at the end. Nothing is counted or analysed.'],
         ['feather', 'Gentle mode', 'A setting just for you: no red overdue warnings and no counters, things that are due say “could be done”. “Fresh start” moves everything overdue to a new start, no guilt. Notifications arrive bundled in one message at a time you choose, and Today shows at most three things.'],
         ['users', 'No points, no rankings', 'There are no streaks, no points and no rewards. “Who keeps what in mind” lists names alphabetically, and shares only if everyone in the household agrees.'],
+        ['list', 'Mental load check', '33 cards for the invisible work, from “Noticing when something is running out” to “Remembering birthdays”. Everyone answers privately; the household sees the answers only when everyone agrees. Each card says what ToHuus takes off your head.'],
         ['pin', 'Out of sight, still in mind', '“Where is what?” knows where the batteries are and what is in the freezer. If you like, keep a stock list and see what is at home and what is running out.'],
         ['mic', 'Out of your head, fast', 'One tap on the assistant, one sentence, and it is on the list or with the tasks before the thought is gone again.'],
         ['tag', 'Extras in the weekly shop', 'You set how much a week there is for extras, as an amount or a number of items. Mark items on the list as an extra, and the list shows how much of the allowance is used. Nothing is blocked, you just keep the overview, impulse buys included.'],
       ],
+      shots: [
+        ['focus', 'Focus view “One thing at a time”: only the task “Clean the bathroom”, step 2 of 3, a 5-minute timer ring and the buttons Done it, Later and Too big? Make it smaller.'],
+        ['loadcards', 'Mental load check: your own summary on top, below cards like “Noticing when something is running out” with the answers Mostly me, We share it, Mostly someone else.'],
+      ],
+      caption: 'Left, one thing at a time with a timer; right, the mental load check.',
       note: 'ToHuus follows “Reduce motion” on your device, and on days when getting up is hard there is “Bring me something”. ToHuus is not a health or therapy service. It just takes a few things off your mind.',
       more: 'More in the help', help: 'a-lot-on-your-mind.html',
     },
@@ -589,7 +601,7 @@ const COPY = {
 
 // ---------------------------------------------------------------- screenshots
 /** Every screenshot slot the page uses. The build fails when a file is missing, so no placeholder ever ships. */
-const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes', 'tasks', 'houseinfo', 'houseinfo-guest'];
+const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes', 'tasks', 'houseinfo', 'houseinfo-guest', 'focus', 'loadcards'];
 const WIDTHS = [480, 960];
 for (const lang of Object.keys(COPY)) for (const n of SHOTS) for (const w of WIDTHS) {
   const f = path.join(ROOT, `assets/shots/${lang}/${n}-${w}.webp`);
@@ -904,6 +916,12 @@ ${F.forms.map(([shape, t, s], k) => `      <li class="reveal" style="--d:${k * 5
       <h2 class="reveal" id="nd-h">${N.h2}</h2>
       <p class="intro reveal">${N.intro}</p>
     </div>
+    <figure class="house-visual nd-visual reveal">
+      <div class="house-pair">
+${N.shots.map(([n, alt]) => `        ${device(img(c, n, alt, { sizes: '(min-width: 960px) 250px, 44vw' }))}`).join('\n')}
+      </div>
+      <figcaption>${N.caption}</figcaption>
+    </figure>
     <ul class="nd-grid">
 ${N.list.map(([i, t, s], k) => `      <li class="reveal" style="--d:${(k % 4) * 50}ms"><span class="nd-ico">${ico(i)}</span><b>${t}</b><span>${s}</span></li>`).join('\n')}
     </ul>

@@ -695,3 +695,4 @@ body.legal-page { padding-bottom: 0; }
 .blog-sources { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }
 .blog-sources ol { margin-top: 10px; padding-left: 20px; display: grid; gap: 6px; font-size: 15px; }
 .blog-sources a { color: var(--primary-text); overflow-wrap: anywhere; }
+.nd-visual { margin: 32px auto 0; max-width: 620px; }

@@ -41,6 +41,9 @@ const SHOTS = [
   { name: 'treats', path: '/bestellen' },
   { name: 'wishes', path: '/einkauf/wuensche' },
   { name: 'tasks', path: '/aufgaben' },
+  // für Köpfe, in denen viel los ist (docs/focus.md, docs/mental-load.md): one task at a time, the mental load check
+  { name: 'focus', path: '/fokus', focus: true },
+  { name: 'loadcards', path: '/denkarbeit' },
   // Hausinfo (docs/house-guide.md): the household's own view and what a babysitter sees on the guest link
   { name: 'houseinfo', path: '/hausinfo', house: true, reveal: true },
   { name: 'houseinfo-guest', guest: true, house: true },
@@ -97,8 +100,8 @@ async function house(ctx, lang) {
 
 /** Aufgaben (docs/tasks.md): chores with a rhythm, taking turns, an appointment and one done today, in both languages */
 const TASKS = {
-  de: { bath: 'Bad putzen', bins: 'Müll rausbringen', linen: 'Bettwäsche wechseln', sweep: 'Schornsteinfeger', place: 'Keller', filter: 'Wasserfilter wechseln', plants: 'Pflanzen gießen', steps: ['Waschbecken', 'Spiegel', 'Boden'] },
-  en: { bath: 'Clean the bathroom', bins: 'Take out the bins', linen: 'Change the bed linen', sweep: 'Chimney sweep', place: 'Cellar', filter: 'Change the water filter', plants: 'Water the plants', steps: ['Sink', 'Mirror', 'Floor'] },
+  de: { extras: ['Schokolade', 'Chips'], cards: { stock_low: 'me', list_write: 'shared', weekly_shop: 'shared', dinner: 'me', birthdays: 'me', doctor: 'me', budget: 'other', receipts: 'other', cleaning_due: 'shared', maintenance: 'other' }, bath: 'Bad putzen', bins: 'Müll rausbringen', linen: 'Bettwäsche wechseln', sweep: 'Schornsteinfeger', place: 'Keller', filter: 'Wasserfilter wechseln', plants: 'Pflanzen gießen', steps: ['Waschbecken', 'Spiegel', 'Boden'] },
+  en: { extras: ['Chocolate', 'Crisps'], cards: { stock_low: 'me', list_write: 'shared', weekly_shop: 'shared', dinner: 'me', birthdays: 'me', doctor: 'me', budget: 'other', receipts: 'other', cleaning_due: 'shared', maintenance: 'other' }, bath: 'Clean the bathroom', bins: 'Take out the bins', linen: 'Change the bed linen', sweep: 'Chimney sweep', place: 'Cellar', filter: 'Change the water filter', plants: 'Water the plants', steps: ['Sink', 'Mirror', 'Floor'] },
 };
 async function tasks(ctx, lang) {
   const T = TASKS[lang];
@@ -106,13 +109,19 @@ async function tasks(ctx, lang) {
   const people = ((await (await ctx.request.get(`${A.BASE}/api/people/directory`)).json().catch(() => [])) ?? []).filter((p) => p.kind !== 'guest');
   const keys = people.slice(0, 2).map((p) => p.key);
   const post = (data) => ctx.request.post(`${A.BASE}/api/care`, { data });
-  await post({ name: T.bath, category: 'house', interval_n: 1, interval_unit: 'week', anchor: 'due', next_due: day(0), checklist: T.steps.map((text) => ({ text })), ...(keys.length > 1 ? { rotation: keys } : {}) });
+  const bath = await (await post({ name: T.bath, category: 'house', interval_n: 1, interval_unit: 'week', anchor: 'due', next_due: day(0), checklist: T.steps.map((text, i) => ({ text, done: i === 0 })), ...(keys.length > 1 ? { rotation: keys } : {}) })).json().catch(() => null);
   await post({ name: T.bins, category: 'house', interval_n: 1, interval_unit: 'week', anchor: 'due', next_due: day(0), ...(keys[1] ? { doer_key: keys[1] } : {}) });
   await post({ name: T.linen, category: 'house', interval_n: 2, interval_unit: 'week', next_due: day(3) });
   await post({ name: T.sweep, category: 'house', next_due: day(4), due_time: '10:00', duration_min: 30, place: T.place });
   await post({ name: T.filter, category: 'care', interval_n: 2, interval_unit: 'month', next_due: day(9) });
   const plants = await (await post({ name: T.plants, category: 'house', interval_n: 4, interval_unit: 'day', next_due: day(0) })).json().catch(() => null);
   if (plants?.id) await ctx.request.post(`${A.BASE}/api/care/${plants.id}/done`, { data: {} });
+  // extras allowance (docs/extras.md): 15 € a week, two extras on the list
+  await ctx.request.put(`${A.BASE}/api/list/extras/settings`, { data: { mode: 'money', weekly: 15 } });
+  for (const text of T.extras) await ctx.request.post(`${A.BASE}/api/shopping`, { data: { text } });
+  // Denkarbeit-Check: a few cards answered
+  for (const [key, answer] of Object.entries(T.cards)) await ctx.request.put(`${A.BASE}/api/blick/cards/${key}`, { data: { answer } });
+  return bath?.id ?? null;
 }
 
 /** Four months of invented receipts: the purchase rhythm, "probably due", Geld and the price history get real data. */
@@ -170,9 +179,10 @@ for (const lang of LANGS) {
   await setup.request.post(`${A.BASE}/api/tour/start`, { data: { choice: 'demo' } });
   await setup.request.put(`${A.BASE}/api/tour`, { data: { status: 'skipped' } });
   const full = PICK.some((s) => !s.house);
+  let focusId = null;
   if (full) {
     await receipts(setup, lang);
-    await tasks(setup, lang);
+    focusId = await tasks(setup, lang);
   }
   const guestToken = PICK.some((s) => s.house) ? await house(setup, lang) : null;
   if (!full) {
@@ -205,7 +215,7 @@ for (const lang of LANGS) {
       }
     });
     const page = await ctx.newPage();
-    await page.goto(A.BASE + (s.guest ? `/g/${guestToken}` : s.path), { waitUntil: 'load' });
+    await page.goto(A.BASE + (s.guest ? `/g/${guestToken}` : s.focus && focusId ? `${s.path}?task=${focusId}` : s.path), { waitUntil: 'load' });
     await page.addStyleTag({ content: SAFE });
     await page.waitForFunction(() => !document.querySelector('main [aria-busy="true"], .skeleton'), null, { timeout: 8000 }).catch(() => {});
     if (s.guest) {

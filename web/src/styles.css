@@ -10797,7 +10797,8 @@ html.gentle .badge.empty {
 }
 .loadcards-help {
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
+  list-style: none;
 }
 .loadcards-help li {
   margin: 4px 0;
@@ -10832,4 +10833,16 @@ html.gentle .badge.empty {
 .ratgeber-more {
   margin-top: auto;
   color: var(--primary-text, var(--primary));
+}
+.loadcards-help .linkish {
+  display: inline;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.45;
+  min-height: 0;
+  padding: 2px 0;
+}
+.loadcards-help .linkish svg {
+  vertical-align: -1px;
+  margin-left: 4px;
 }
