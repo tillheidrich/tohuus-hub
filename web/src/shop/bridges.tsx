@@ -35,10 +35,10 @@ export function CalDavCard() {
     <section className="card pad stack" aria-labelledby="cd-h">
       <div>
         <h2 id="cd-h" style={{ margin: 0 }}>
-          {t('The list in the Reminders app')}
+          {t('ToHuus in Apple Reminders and Calendar')}
         </h2>
         <p className="small muted" style={{ margin: '4px 0 0' }}>
-          {t('Apple Reminders, Nextcloud Tasks or Thunderbird show your lists and can tick and add. Every list becomes its own reminder list.')}
+          {t('Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows what is due in “ToHuus · Fällig”. One password for both.')}
         </p>
       </div>
       {made ? (
@@ -63,6 +63,7 @@ export function CalDavCard() {
             <li>{t('On the iPhone: Settings › Apps › Reminders › Reminders Accounts › Add Account › Other.')}</li>
             <li>{t('“Add CalDAV Account”, then enter server, user name and password from above.')}</li>
             <li>{t('Open Reminders – your ToHuus lists appear under the new account.')}</li>
+            <li>{t('For the calendar: Settings › Apps › Calendar › Calendar Accounts › Add Account › Other › “Add CalDAV Account”, with the same details.')}</li>
           </ol>
           <p className="small muted">{t('Nextcloud Tasks / DAVx⁵: use the full address {url}', { url: made.url })}</p>
           <button className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setMade(null)}>

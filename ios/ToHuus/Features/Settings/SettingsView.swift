@@ -71,6 +71,9 @@ struct SettingsView: View {
                         } label: { Label(L("With or without AI"), systemImage: "sparkles") }
                     }
                     NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
+                    if let api = app.api, !app.isGuest {
+                        NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
+                    }
                     AppearancePicker()
                 }
                 Section(L("Knowing")) {

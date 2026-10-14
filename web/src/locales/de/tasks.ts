@@ -40,4 +40,9 @@ export const tasks: Record<string, string> = {
   'What’s due today?': 'Was steht heute an?',
   'Bathroom every Saturday, Mira and Sam take turns': 'Bad jeden Samstag, Mira und Sam abwechselnd',
   'How do we share the housework?': 'Wie teilen wir uns die Hausarbeit?',
+  'ToHuus in Apple Reminders and Calendar': 'ToHuus in Apple Erinnerungen und Kalender',
+  'Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows what is due in “ToHuus · Fällig”. One password for both.':
+    'Apple Erinnerungen, Nextcloud Tasks oder Thunderbird zeigen deine Einkaufslisten und Aufgaben („ToHuus · Aufgaben“, „ToHuus · Nur für mich“), abhaken und hinzufügen geht dort auch. Apple Kalender zeigt in „ToHuus · Fällig“, was ansteht. Ein Passwort für beides.',
+  'For the calendar: Settings › Apps › Calendar › Calendar Accounts › Add Account › Other › “Add CalDAV Account”, with the same details.':
+    'Für den Kalender: Einstellungen › Apps › Kalender › Kalenderaccounts › Account hinzufügen › Andere › „CalDAV-Account hinzufügen“, mit denselben Angaben.',
 };

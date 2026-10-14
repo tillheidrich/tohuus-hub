@@ -11,6 +11,14 @@
  * URLs:  /.well-known/caldav → /caldav/   ·   /caldav/p/ (principal)   ·   /caldav/c/ (calendar home)
  *        /caldav/c/<list>/ (one calendar per list, 0 = main list)   ·   /caldav/c/<list>/<name>.ics
  *
+ * Aufgaben (14 Oct 2026, docs/tasks.md): two more reminder lists – /caldav/c/t/ "ToHuus · Aufgaben" (the household's
+ * tasks) and /caldav/c/tm/ "ToHuus · Nur für mich" (this member's private tasks, nobody else's password ever lists
+ * them). A task is one VTODO with DUE (all-day) = the next due date and no RRULE: ToHuus keeps the rhythm. Ticking it
+ * off in Reminders marks it done in ToHuus; the reminder comes back with the next date (one-offs disappear).
+ * A new reminder becomes a task, a deleted one is put away (archived), never deleted.
+ * /caldav/c/tc/ "ToHuus · Fällig" is a read-only calendar (VEVENT, all-day on the due date) of the same tasks – the
+ * household's and the member's own private ones – so Apple Calendar shows what is due without a family calendar.
+ *
  * Privacy: private list entries never leave ToHuus here; discreet ones only with their neutral placeholder.
  * In ToHuus Cloud the password carries the household routing prefix (like every household token).
  */
@@ -24,6 +32,7 @@ import { emit } from './bus.js';
 import { addToShopping } from './catalog.js';
 import './list-schema.js';
 import { listLists } from './lists.js';
+import { completeCareTask, createCareTask, listCareTasks, updateCareTask, type CareView } from './care.js';
 import { notPrivate } from './share-core.js';
 import { removeItem, tickItem } from './shopping-trust.js';
 import { runInHousehold, slugInToken } from './tenancy.js';
@@ -40,6 +49,14 @@ migrate(
    );
    CREATE TABLE IF NOT EXISTS caldav_objects (
      item_id INTEGER PRIMARY KEY,
+     uid TEXT NOT NULL UNIQUE,
+     name TEXT NOT NULL UNIQUE
+   );`,
+);
+migrate(
+  'caldav-tasks-1',
+  `CREATE TABLE IF NOT EXISTS caldav_task_objects (
+     task_id INTEGER PRIMARY KEY,
      uid TEXT NOT NULL UNIQUE,
      name TEXT NOT NULL UNIQUE
    );`,
@@ -140,6 +157,8 @@ export interface ParsedTodo {
   summary: string | null;
   description: string | null;
   completed: boolean;
+  /** DUE as YYYY-MM-DD (date or date-time, the day is enough for tasks) */
+  due: string | null;
 }
 
 export function parseTodo(body: string): ParsedTodo | null {
@@ -151,7 +170,15 @@ export function parseTodo(body: string): ParsedTodo | null {
     return r ? unesc(r[1].trim()) : null;
   };
   const status = get('STATUS')?.toUpperCase() ?? null;
-  return { uid: get('UID'), summary: get('SUMMARY'), description: get('DESCRIPTION'), completed: status === 'COMPLETED' || Boolean(get('COMPLETED')) };
+  const dueRaw = get('DUE');
+  const dm = dueRaw ? /^(\d{4})(\d{2})(\d{2})/.exec(dueRaw) : null;
+  return {
+    uid: get('UID'),
+    summary: get('SUMMARY'),
+    description: get('DESCRIPTION'),
+    completed: status === 'COMPLETED' || Boolean(get('COMPLETED')),
+    due: dm ? `${dm[1]}-${dm[2]}-${dm[3]}` : null,
+  };
 }
 
 /** "2 Milch" / "2× Milch" / "2x Milch" → qty + text. */
@@ -182,6 +209,185 @@ function itemByName(listId: number, name: string): ItemRow | undefined {
 }
 
 const ctagOf = (listId: number) => etagOf(itemsOf(listId).map((i) => `${i.id}:${changedAt(i)}:${i.checked_at ?? ''}`).join('|'));
+
+// ------------------------------------------------------------------ Aufgaben as reminders
+
+type TaskSeg = 't' | 'tm' | 'tc';
+const isTaskSeg = (s: string): s is TaskSeg => s === 't' || s === 'tm' || s === 'tc';
+
+/** t = the household's tasks, tm = this member's private ones */
+function tasksOf(seg: TaskSeg, userId: number): CareView[] {
+  const all = listCareTasks({ viewer: userId });
+  if (seg === 'tc') return all.filter((x) => x.next_due);
+  return seg === 'tm' ? all.filter((x) => x.visibility === 'private' && x.owner_user_id === userId) : all.filter((x) => x.visibility !== 'private');
+}
+
+function taskObjectOf(task: { id: number }): { uid: string; name: string } {
+  const o = db.prepare('SELECT uid, name FROM caldav_task_objects WHERE task_id = ?').get(task.id) as { uid: string; name: string } | undefined;
+  return o ?? { uid: `tohuus-task-${task.id}`, name: `tohuus-task-${task.id}` };
+}
+
+function taskByName(seg: TaskSeg, userId: number, name: string) {
+  const mapped = db.prepare('SELECT task_id FROM caldav_task_objects WHERE name = ?').get(name) as { task_id: number } | undefined;
+  const id = mapped?.task_id ?? (/^tohuus-task-(\d+)$/.exec(name) ? Number(/^tohuus-task-(\d+)$/.exec(name)![1]) : null);
+  return id ? tasksOf(seg, userId).find((x) => x.id === id) : undefined;
+}
+
+/** the calendar view of a task: an all-day event on its due date (read-only) */
+export function taskEventIcs(task: CareView): string {
+  const day = task.next_due!.replace(/-/g, '');
+  const next = new Date(Date.UTC(+day.slice(0, 4), +day.slice(4, 6) - 1, +day.slice(6, 8) + 1)).toISOString().slice(0, 10).replace(/-/g, '');
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//ToHuus//Aufgaben//DE',
+    'BEGIN:VEVENT',
+    `UID:tohuus-due-${task.id}-${day}`,
+    `DTSTAMP:${icsTime(task.updated_at)}`,
+    `LAST-MODIFIED:${icsTime(task.updated_at)}`,
+    `DTSTART;VALUE=DATE:${day}`,
+    `DTEND;VALUE=DATE:${next}`,
+    `SUMMARY:${esc(task.name)}`,
+    ...(task.doer ? [`DESCRIPTION:${esc(t('{name} does it', { name: task.doer.name }))}`] : []),
+    'TRANSP:TRANSPARENT',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ];
+  return lines.map(fold).join('\r\n') + '\r\n';
+}
+
+const icsFor = (seg: TaskSeg, task: CareView) => (seg === 'tc' ? taskEventIcs(task) : taskIcs(task));
+
+export function taskIcs(task: CareView): string {
+  const o = taskObjectOf(task);
+  const steps = task.checklist.map((c) => `${c.done ? '✓' : '•'} ${c.text}`);
+  const desc = [task.note, ...steps, task.doer ? t('{name} does it', { name: task.doer.name }) : null].filter(Boolean).join('\n');
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//ToHuus//Aufgaben//DE',
+    'BEGIN:VTODO',
+    `UID:${esc(o.uid)}`,
+    `DTSTAMP:${icsTime(task.updated_at)}`,
+    `CREATED:${icsTime(task.created_at)}`,
+    `LAST-MODIFIED:${icsTime(task.updated_at)}`,
+    `SUMMARY:${esc(task.name)}`,
+    ...(desc ? [`DESCRIPTION:${esc(desc)}`] : []),
+    ...(task.next_due ? [`DUE;VALUE=DATE:${task.next_due.replace(/-/g, '')}`] : []),
+    ...(task.state === 'overdue' || task.state === 'today' ? ['PRIORITY:1'] : []),
+    `CATEGORIES:${esc(task.category === 'house' ? t('Household') : t('Care & deadlines'))}`,
+    'STATUS:NEEDS-ACTION',
+    'END:VTODO',
+    'END:VCALENDAR',
+  ];
+  return lines.map(fold).join('\r\n') + '\r\n';
+}
+
+const taskCtag = (seg: TaskSeg, userId: number) => etagOf(tasksOf(seg, userId).map((x) => `${x.id}:${x.updated_at}:${x.next_due ?? ''}`).join('|') + seg);
+const taskListName = (seg: TaskSeg) => (seg === 't' ? `ToHuus · ${t('Tasks')}` : seg === 'tm' ? `ToHuus · ${t('Only for me')}` : `ToHuus · ${t('Due')}`);
+const readOnly = '<d:current-user-privilege-set><d:privilege><d:read/></d:privilege></d:current-user-privilege-set>';
+
+function taskCalendarProps(seg: TaskSeg, userId: number, order: number) {
+  return `<d:resourcetype><d:collection/><c:calendar/></d:resourcetype><d:displayname>${x(taskListName(seg))}</d:displayname><c:supported-calendar-component-set><c:comp name="${seg === 'tc' ? 'VEVENT' : 'VTODO'}"/></c:supported-calendar-component-set><cs:getctag>${x(taskCtag(seg, userId))}</cs:getctag><d:getetag>${x(taskCtag(seg, userId))}</d:getetag><d:current-user-principal><d:href>/caldav/p/</d:href></d:current-user-principal><d:owner><d:href>/caldav/p/</d:href></d:owner>${seg === 'tc' ? readOnly : privileges}<d:supported-report-set><d:supported-report><d:report><c:calendar-query/></d:report></d:supported-report><d:supported-report><d:report><c:calendar-multiget/></d:report></d:supported-report></d:supported-report-set><ic:calendar-order>${order}</ic:calendar-order><ic:calendar-color>${seg === 't' ? '#C56B4BFF' : seg === 'tm' ? '#2F5E7AFF' : '#176B50FF'}</ic:calendar-color>`;
+}
+
+function taskResponse(seg: TaskSeg, task: CareView, withData: boolean) {
+  const ics = icsFor(seg, task);
+  return response(
+    `/caldav/c/${seg}/${encodeURIComponent(taskObjectOf(task).name)}.ics`,
+    `<d:getetag>${x(etagOf(ics))}</d:getetag><d:getcontenttype>text/calendar; charset=utf-8; component=${seg === 'tc' ? 'vevent' : 'vtodo'}</d:getcontenttype><d:resourcetype/>${withData ? `<c:calendar-data>${x(ics)}</c:calendar-data>` : ''}`,
+  );
+}
+
+function handleTasks(req: Request, res: Response, member: { user_id: number; name: string }, seg: TaskSeg, segs: string[], body: string, depth: string) {
+  const uid = member.user_id;
+  if (segs.length === 2) {
+    if (req.method === 'PROPFIND') {
+      const parts = [response(`/caldav/c/${seg}/`, taskCalendarProps(seg, uid, seg === 't' ? 90 : seg === 'tm' ? 91 : 92))];
+      if (depth !== '0') for (const task of tasksOf(seg, uid)) parts.push(taskResponse(seg, task, false));
+      return dav(res, 207, multistatus(parts));
+    }
+    if (req.method === 'PROPPATCH') return dav(res, 207, multistatus([response(`/caldav/c/${seg}/`, '')]));
+    if (req.method === 'REPORT') {
+      const tasks = tasksOf(seg, uid);
+      if (/calendar-multiget/i.test(body)) {
+        const hrefs = [...body.matchAll(/<(?:\w+:)?href>([^<]+)<\/(?:\w+:)?href>/gi)].map((m) => decodeURIComponent(m[1].trim().replace(/^https?:\/\/[^/]+/, '')));
+        return dav(
+          res,
+          207,
+          multistatus(
+            hrefs.map((h) => {
+              const name = h.split('/').pop()!.replace(/\.ics$/, '');
+              const task = tasks.find((x) => taskObjectOf(x).name === name);
+              return task ? taskResponse(seg, task, true) : `<d:response><d:href>${x(h)}</d:href><d:status>HTTP/1.1 404 Not Found</d:status></d:response>`;
+            }),
+          ),
+        );
+      }
+      if (/sync-collection/i.test(body)) return dav(res, 403, multistatus([]));
+      const withData = /calendar-data/i.test(body) || !body;
+      return dav(res, 207, multistatus(tasks.map((task) => taskResponse(seg, task, withData))));
+    }
+    return void res.status(405).end();
+  }
+  if (segs.length !== 3 || !segs[2].endsWith('.ics')) return void res.status(404).end();
+  const name = segs[2].slice(0, -4);
+  const task = taskByName(seg, uid, name);
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    if (!task) return void res.status(404).end();
+    const ics = icsFor(seg, task);
+    res.setHeader('ETag', etagOf(ics));
+    return void res.status(200).type('text/calendar; charset=utf-8').send(req.method === 'HEAD' ? '' : ics);
+  }
+  if (req.method === 'PROPFIND') {
+    if (!task) return void res.status(404).end();
+    return dav(res, 207, multistatus([taskResponse(seg, task, false)]));
+  }
+  // the calendar is read-only – done and changes happen in Reminders or ToHuus
+  if (seg === 'tc' && req.method !== 'PROPFIND') return void res.status(403).end();
+  if (req.method === 'DELETE') {
+    if (!task) return void res.status(404).end();
+    // put away, never deleted from a phone's reminder list (it may be someone else's task)
+    updateCareTask(task.id, { archived: true });
+    return void res.status(204).end();
+  }
+  if (req.method === 'PUT') {
+    const todo = parseTodo(body);
+    if (!todo || !todo.summary?.trim()) return void res.status(415).type('text/plain').send(t('Only reminders (VTODO) with a title'));
+    if (req.headers['if-none-match'] === '*' && task) return void res.status(412).end();
+    const ifMatch = req.headers['if-match'];
+    if (ifMatch && (!task || ifMatch !== etagOf(taskIcs(task)))) return void res.status(412).end();
+    let id: number;
+    if (task) {
+      id = task.id;
+      const title = todo.summary.trim().slice(0, 120);
+      if (title !== task.name || (!todo.completed && todo.due && todo.due !== task.next_due)) updateCareTask(id, { name: title, ...(todo.completed || !todo.due || todo.due === task.next_due ? {} : { next_due: todo.due }) });
+      // ticked off in Reminders: done in ToHuus (once a day – a second sync of the same tick changes nothing)
+      const today = new Intl.DateTimeFormat('sv-SE', { timeZone: config.timezone }).format(new Date());
+      if (todo.completed && task.last_done !== today) completeCareTask(id, member.name, { actorUserId: uid });
+    } else {
+      const created = createCareTask(
+        {
+          name: todo.summary.trim().slice(0, 120),
+          category: 'house',
+          visibility: seg === 'tm' ? 'private' : 'household',
+          next_due: todo.due,
+          as_needed: !todo.due,
+          note: todo.description?.slice(0, 500) || null,
+        },
+        uid,
+      );
+      id = created.id;
+      db.prepare('DELETE FROM caldav_task_objects WHERE task_id = ? OR name = ? OR uid = ?').run(id, name, todo.uid ?? name);
+      db.prepare('INSERT INTO caldav_task_objects (task_id, uid, name) VALUES (?, ?, ?)').run(id, (todo.uid ?? name).slice(0, 200), name.slice(0, 200));
+      if (todo.completed) completeCareTask(id, member.name, { actorUserId: uid });
+    }
+    const now = tasksOf(seg, uid).find((x) => x.id === id);
+    if (now) res.setHeader('ETag', etagOf(taskIcs(now)));
+    return void res.status(task ? 204 : 201).end();
+  }
+  res.status(405).end();
+}
 
 // ------------------------------------------------------------------ XML
 
@@ -298,13 +504,17 @@ function handle(req: Request, res: Response, member: { user_id: number; name: st
   if (segs.length === 1) {
     if (req.method === 'PROPFIND') {
       const parts = [response('/caldav/c/', `<d:resourcetype><d:collection/></d:resourcetype><d:displayname>ToHuus</d:displayname><d:current-user-principal><d:href>/caldav/p/</d:href></d:current-user-principal>${privileges}`)];
-      if (depth !== '0') lists.forEach((l, i) => parts.push(response(`/caldav/c/${l.id}/`, calendarProps(l, i))));
+      if (depth !== '0') {
+        lists.forEach((l, i) => parts.push(response(`/caldav/c/${l.id}/`, calendarProps(l, i))));
+        for (const seg of ['t', 'tm', 'tc'] as const) parts.push(response(`/caldav/c/${seg}/`, taskCalendarProps(seg, member.user_id, seg === 't' ? 90 : seg === 'tm' ? 91 : 92)));
+      }
       return dav(res, 207, multistatus(parts));
     }
     if (req.method === 'PROPPATCH') return dav(res, 207, multistatus([response('/caldav/c/', '')]));
     return void res.status(405).end();
   }
 
+  if (isTaskSeg(segs[1])) return handleTasks(req, res, member, segs[1], segs, body, depth);
   const listId = listIdOfSeg(segs[1]);
   const idx = lists.findIndex((l) => l.id === listId);
   if (listId === null || idx < 0) return void res.status(404).end();

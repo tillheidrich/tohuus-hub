@@ -26,6 +26,7 @@ import { type Location, type Product, del, fmtDate, invalidate, patch, post, use
 import { useHousehold } from '../household';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { usePeopleDirectory } from '../people/Avatar';
+import { CalDavCard } from '../shop/bridges';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
 
@@ -407,6 +408,11 @@ export function Care() {
         </section>
       )}
 
+      {data?.me ? (
+        <div style={{ marginTop: 24 }}>
+          <CalDavCard />
+        </div>
+      ) : null}
       <TaskDetail
         task={open}
         me={me.data}

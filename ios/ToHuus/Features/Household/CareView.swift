@@ -325,7 +325,10 @@ struct CareView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }.listRowBackground(Color.clear)
             }
             Section {
+                NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
                 NavigationLink { WebPageView(api: api, path: "/etiketten?kind=care", title: L("Labels")) } label: { Label(L("Labels"), systemImage: "qrcode") }
+            } footer: {
+                Text(L("Your tasks in Apple Reminders, what is due in Apple Calendar."))
             }
         }
         .themedList()

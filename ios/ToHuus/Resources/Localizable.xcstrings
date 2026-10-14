@@ -4149,6 +4149,23 @@
         }
       }
     },
+    "Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows what is due in “ToHuus · Fällig”. One password for both.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Reminders, Nextcloud Tasks or Thunderbird show your shopping lists and your tasks (“ToHuus · Aufgaben”, “ToHuus · Nur für mich”) and can tick and add. Apple Calendar shows what is due in “ToHuus · Fällig”. One password for both."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Erinnerungen, Nextcloud Tasks oder Thunderbird zeigen deine Einkaufslisten und Aufgaben („ToHuus · Aufgaben“, „ToHuus · Nur für mich“), abhaken und hinzufügen geht dort auch. Apple Kalender zeigt in „ToHuus · Fällig“, was ansteht. Ein Passwort für beides."
+          }
+        }
+      }
+    },
     "Archive": {
       "extractionState": "manual",
       "localizations": {
@@ -6971,6 +6988,23 @@
         }
       }
     },
+    "Copy %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kopieren"
+          }
+        }
+      }
+    },
     "Copy link": {
       "extractionState": "manual",
       "localizations": {
@@ -7341,6 +7375,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Leg oben einen an – für einen Abend, ein Wochenende oder die Ferien."
+          }
+        }
+      }
+    },
+    "Create password": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create password"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort erstellen"
           }
         }
       }
@@ -7868,6 +7919,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerät"
+          }
+        }
+      }
+    },
+    "Device name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device name"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerätename"
           }
         }
       }
@@ -9959,6 +10027,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für den Babysitter: Die Hausinfo-Karten für Sitter-Links stehen auch auf dem Link. Codes bleiben verdeckt, bis man draufdrückt."
+          }
+        }
+      }
+    },
+    "For the calendar: Settings › Apps › Calendar › Calendar Accounts › Add Account › Other › “Add CalDAV Account”, with the same details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For the calendar: Settings › Apps › Calendar › Calendar Accounts › Add Account › Other › “Add CalDAV Account”, with the same details."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für den Kalender: Einstellungen › Apps › Kalender › Kalenderaccounts › Account hinzufügen › Andere › „CalDAV-Account hinzufügen“, mit denselben Angaben."
           }
         }
       }
@@ -16865,6 +16950,23 @@
         }
       }
     },
+    "On the iPhone: Settings › Apps › Reminders › Reminders Accounts › Add Account › Other.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the iPhone: Settings › Apps › Reminders › Reminders Accounts › Add Account › Other."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf dem iPhone: Einstellungen › Apps › Erinnerungen › Erinnerungen-Accounts › Account hinzufügen › Andere."
+          }
+        }
+      }
+    },
     "On the list.": {
       "extractionState": "manual",
       "localizations": {
@@ -17439,6 +17541,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Auf welche Liste?"
+          }
+        }
+      }
+    },
+    "Open Reminders – your ToHuus lists appear under the new account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Reminders – your ToHuus lists appear under the new account."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen öffnen – eure ToHuus-Listen stehen unter dem neuen Account."
           }
         }
       }
@@ -20860,6 +20979,23 @@
         }
       }
     },
+    "Reminders & Calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders & Calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen & Kalender"
+          }
+        }
+      }
+    },
     "Remove": {
       "extractionState": "manual",
       "localizations": {
@@ -23257,6 +23393,23 @@
         }
       }
     },
+    "Shown only now – copy it into the iPhone settings:": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shown only now – copy it into the iPhone settings:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird nur jetzt angezeigt – in die iPhone-Einstellungen übernehmen:"
+          }
+        }
+      }
+    },
     "Shown only now. Valid until %@.": {
       "extractionState": "manual",
       "localizations": {
@@ -24613,6 +24766,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wisch, um einen Link zu widerrufen."
+          }
+        }
+      }
+    },
+    "Swipe to revoke a password.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe to revoke a password."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Widerrufen eines Passworts wischen."
           }
         }
       }
@@ -27796,6 +27966,23 @@
         }
       }
     },
+    "User name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User name"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzername"
+          }
+        }
+      }
+    },
     "Uses %@ each time · %@ in stock": {
       "extractionState": "manual",
       "localizations": {
@@ -30771,6 +30958,23 @@
         }
       }
     },
+    "Your tasks in Apple Reminders, what is due in Apple Calendar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your tasks in Apple Reminders, what is due in Apple Calendar."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Aufgaben in Apple Erinnerungen, was fällig ist im Apple Kalender."
+          }
+        }
+      }
+    },
     "Your wish": {
       "extractionState": "manual",
       "localizations": {
@@ -32913,6 +33117,23 @@
         }
       }
     },
+    "last used %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last used %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zuletzt benutzt %@"
+          }
+        }
+      }
+    },
     "left out": {
       "extractionState": "manual",
       "localizations": {
@@ -33232,6 +33453,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "nicht gesetzt"
+          }
+        }
+      }
+    },
+    "not used yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not used yet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch nicht benutzt"
           }
         }
       }
@@ -34779,6 +35017,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "„%@“ abgehakt"
+          }
+        }
+      }
+    },
+    "“Add CalDAV Account”, then enter server, user name and password from above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Add CalDAV Account”, then enter server, user name and password from above."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„CalDAV-Account hinzufügen“, dann Server, Benutzername und Passwort von oben eintragen."
           }
         }
       }

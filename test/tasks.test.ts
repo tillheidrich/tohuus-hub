@@ -13,6 +13,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-tasks-'));
 process.env.DATA_DIR = dir;
 process.env.LANGUAGE = 'de';
+process.env.BASE_URL = 'http://localhost';
 for (const k of ['AI_BASE_URL', 'AI_API_KEY', 'VISION_BASE_URL', 'VISION_MODEL']) delete process.env[k];
 
 let server: http.Server;
@@ -54,8 +55,9 @@ beforeAll(async () => {
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
+  app.use((await import('../server/lib/caldav')).caldav);
   app.use('/api', (await import('../server/routes/auth')).pub);
-  for (const m of ['core', 'home']) app.use('/api', (await import(`../server/routes/${m}`)).r);
+  for (const m of ['core', 'home', 'list2']) app.use('/api', (await import(`../server/routes/${m}`)).r);
   app.use((err: any, _req: any, res: any, _next: any) => res.status(err?.name === 'ZodError' ? 400 : (err?.status ?? 500)).json({ error: String(err?.message ?? err) }));
   await new Promise<void>((r) => {
     server = app.listen(0, () => r());
@@ -244,5 +246,71 @@ describe('the assistant and tasks', () => {
     const priv = tools.runTool(c, 'task_add', { name: 'Arzttermin ausmachen', only_me: true, due: '2026-10-20' }) as any;
     expect(priv.task.private).toBe(true);
     expect(JSON.stringify(tools.runTool(c, 'tasks_list', { filter: 'all' }))).not.toContain('Arzttermin');
+  });
+});
+
+describe('Apple Reminders (CalDAV): tasks as reminder lists', () => {
+  const dav = async (method: string, p: string, auth: string, body = '', headers: Record<string, string> = {}) => {
+    const r = await fetch(base + p, { method, headers: { authorization: auth, depth: '1', ...headers }, body: body || undefined });
+    return { status: r.status, text: await r.text(), etag: r.headers.get('etag') };
+  };
+  let miraAuth = '';
+  let samAuth = '';
+
+  it('shows "ToHuus · Aufgaben" to everyone and "Nur für mich" with only the own private tasks', async () => {
+    const pm = await mira.req('POST', '/api/caldav/passwords', { label: 'iPhone' });
+    expect(pm.status, JSON.stringify(pm.json)).toBe(200);
+    miraAuth = 'Basic ' + Buffer.from(`Mira:${pm.json.password}`).toString('base64');
+    const ps = await sam.req('POST', '/api/caldav/passwords', { label: 'iPhone' });
+    samAuth = 'Basic ' + Buffer.from(`Sam:${ps.json.password}`).toString('base64');
+    const home = await dav('PROPFIND', '/caldav/c/', miraAuth);
+    expect(home.text).toContain('<d:href>/caldav/c/t/</d:href>');
+    expect(home.text).toContain('ToHuus · Aufgaben');
+    expect(home.text).toContain('ToHuus · Nur für mich');
+    const shared = await dav('REPORT', '/caldav/c/t/', miraAuth, '<c:calendar-query xmlns:c="urn:ietf:params:xml:ns:caldav"><c:calendar-data/></c:calendar-query>');
+    expect(shared.text).toContain('SUMMARY:Müll rausbringen');
+    expect(shared.text).toContain('DUE;VALUE=DATE:');
+    expect(shared.text).not.toContain(SECRET);
+    // (the first private task was done once and put away – a new one for this test)
+    const p2 = await mira.req('POST', '/api/care', { name: `${SECRET} 2`, visibility: 'private', interval_n: 1, interval_unit: 'month' });
+    expect(p2.status).toBe(200);
+    privateId = p2.json.id;
+    const mine = await dav('REPORT', '/caldav/c/tm/', miraAuth, '<c:calendar-query xmlns:c="urn:ietf:params:xml:ns:caldav"><c:calendar-data/></c:calendar-query>');
+    expect(mine.text).toContain(SECRET);
+    const samMine = await dav('REPORT', '/caldav/c/tm/', samAuth, '<c:calendar-query xmlns:c="urn:ietf:params:xml:ns:caldav"><c:calendar-data/></c:calendar-query>');
+    expect(samMine.text).not.toContain(SECRET);
+    // Sam cannot fetch Mira's private task by name either
+    expect((await dav('GET', `/caldav/c/tm/tohuus-task-${privateId}.ics`, samAuth)).status).toBe(404);
+    expect((await dav('GET', `/caldav/c/t/tohuus-task-${privateId}.ics`, samAuth)).status).toBe(404);
+  });
+
+  it('ticking off in Reminders marks the task done and the next date comes back; a new reminder becomes a task', async () => {
+    const task = (await mira.req('GET', '/api/care')).json.tasks.find((x: any) => x.name === 'Müll rausbringen');
+    const href = `/caldav/c/t/tohuus-task-${task.id}.ics`;
+    const got = await dav('GET', href, miraAuth);
+    expect(got.status).toBe(200);
+    const done = got.text.replace('STATUS:NEEDS-ACTION', 'STATUS:COMPLETED\r\nCOMPLETED:20261014T120000Z');
+    expect((await dav('PUT', href, miraAuth, done, { 'if-match': got.etag! })).status).toBe(204);
+    const after = (await mira.req('GET', `/api/care/${task.id}`)).json;
+    expect(after.last_done).toBe(new Intl.DateTimeFormat('sv-SE').format(new Date()));
+    expect(after.log[0].actor).toBe('Mira');
+    // the same tick synced twice changes nothing
+    const again = await dav('GET', href, miraAuth);
+    expect(again.text).toContain('STATUS:NEEDS-ACTION');
+    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VTODO', 'UID:AAAA-BBBB', 'SUMMARY:Heizung entlüften', 'DUE;VALUE=DATE:20261101', 'STATUS:NEEDS-ACTION', 'END:VTODO', 'END:VCALENDAR', ''].join('\r\n');
+    expect((await dav('PUT', '/caldav/c/tm/AAAA-BBBB.ics', samAuth, ics, { 'if-none-match': '*' })).status).toBe(201);
+    const samTasks = (await sam.req('GET', '/api/care')).json.tasks;
+    const heat = samTasks.find((x: any) => x.name === 'Heizung entlüften');
+    expect(heat).toMatchObject({ visibility: 'private', next_due: '2026-11-01', owner_user_id: samId });
+    expect(JSON.stringify((await mira.req('GET', '/api/care')).json)).not.toContain('Heizung entlüften');
+    // Apple Calendar: the read-only "ToHuus · Fällig" shows all-day events, writes are refused
+    const cal = await dav('REPORT', '/caldav/c/tc/', samAuth, '<c:calendar-query xmlns:c="urn:ietf:params:xml:ns:caldav"><c:calendar-data/></c:calendar-query>');
+    expect(cal.text).toContain('BEGIN:VEVENT');
+    expect(cal.text).toContain('DTSTART;VALUE=DATE:20261101');
+    expect(cal.text).not.toContain(SECRET);
+    expect((await dav('PUT', '/caldav/c/tc/x.ics', samAuth, ics)).status).toBe(403);
+    // deleting in Reminders puts it away, nothing is lost
+    expect((await dav('DELETE', '/caldav/c/tm/AAAA-BBBB.ics', samAuth)).status).toBe(204);
+    expect((db.prepare('SELECT archived FROM care_tasks WHERE id = ?').get(heat.id) as any).archived).toBe(1);
   });
 });
