@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- iPhone/iPad: Mehr is grouped like the web's Mehr (Rund ums Zuhause, Bons & Rezepte, Bring mir was & Gäste, Haushalt & Einstellungen) with the same entries, order and guest/area filters; Hausinfo sits at the top and no longer disappears when "Pflege & Hausinfo" is switched off. Pflege & Fristen is a native screen (due/later, done with undo, templates, history, "Ich kümmere mich", edit). Hausinfo gets everything the web has: templates, "who looked at codes", what each babysitter link shows, guest levels and single links per card/code, search, by room/by kind, the Home Assistant voice list and the A4 sheet "Für den Babysitter" (AirPrint). No API change.
+
 - CI: installs pdftotext and tesseract like the Docker image; tests run in UTC (date tests failed between 22:00 and 24:00 UTC).
 
 - iPhone: tapping the microphone crashed on first use (speech permission answer arrived off the main actor under Swift 6 isolation checks); permission and recognition callbacks are now nonisolated. Build 9.

@@ -290,3 +290,29 @@ Server and fields: [docs/money.md](money.md). New files: `Core/API/Endpoints+Mon
 | Private shopping lists („Wer sieht das?“ in Liste bearbeiten, lock/people icon in the list menu) | Features/Shopping/ListTools.swift `ManageListSheet`, Features/Wishes/VisibilityPicker.swift | `PATCH /api/list/lists/:id { visibility, share_with }`, `GET /api/list/lists` (+ `visibility, owner, share_with, mine`) | – |
 
 Entry: Einkauf › menu (top right) › „Wünsche & Merkliste“. The app follows `can_reserve` / `for_me` from the server; the person a list is for never gets reservation data. API: [wishes.md](wishes.md). Strings: `ios/tools/strings_de_wish.json`.
+
+## 14 Oct 2026 – Mehr like the web, Hausinfo complete, Pflege native
+
+**Mehr** (`Features/Household/HouseholdLinks.swift` › `MoreSections`) has the web's four groups in the web's order
+(`web/src/nav.tsx` `moreGroups`): *Rund ums Zuhause* (Wo ist was?, Hausinfo, Wünsche & Merkliste, Schneller Abgleich,
+Pflege & Fristen, Urlaub / unterwegs, Übergabe for guests), *Bons & Rezepte* (Bons & Importe, Lieblinge, Ausgaben im
+Detail), *Bring mir was & Gäste* (Bring mir was, Gäste & Party, Gäste-Links), *Haushalt & Einstellungen* (Leute,
+Jemanden einladen, Was ToHuus sich merkt, Displays, Home Assistant, QR-Etiketten, Daten & Sicherung). The same filters
+as the web: `MoreAccess.guestAllows` (port of `web/src/people/access.ts`, needs `GET /api/me` actor.houseGuest.level)
+and `MoreAccess.moduleAllows` ("Was nutzt ihr?"). Hausinfo is no longer hidden when the `homeinfo` area is off – the
+web never hid it (only `/pflege` belongs to that area). Entries without a native screen open the web page signed in
+(`WebPageView`): Urlaub, Übergabe, Lieblinge, Gäste & Party, Displays, Home Assistant, QR-Etiketten, Daten.
+
+| Screen | File | Endpoints | Debug |
+| --- | --- | --- | --- |
+| Pflege & Fristen (due / later, done with undo, fixed-date tasks ask for the new date, one-tap templates by group, detail with history and "Ich kümmere mich", new / edit / delete; labels open the web page) | Features/Household/CareView.swift | `GET/POST /api/care`, `GET/PATCH/DELETE /api/care/:id`, `POST /api/care/:id/{done,undo,claim}` | `-debugMore care`, `care-new` |
+| Hausinfo (codes on top, cards by room or by kind, search, drafts "noch ausfüllen" for admins with their hint, phone numbers as links, Home Assistant voice list, "zuletzt gezeigt" per code, print sheet "Für den Babysitter" with "Codes mitdrucken") | Features/Settings/HouseGuideView.swift, HouseGuideAdmin.swift | `GET /api/house-guide`, `POST …/codes/:id/reveal` | `-debugMore house` |
+| Hausinfo admin: templates, who looked at codes, what each babysitter link shows, who sees a card/code (everyone, permanent guests from a level, all sitter links, single links – codes with an end date) | Features/Settings/HouseGuideAdmin.swift, HouseGuideEdit.swift (`HGVisibilityEditor`) | `GET/POST /api/house-guide/templates[/:key]`, `GET /api/house-guide/log`, `GET/PUT/DELETE /api/house-guide/links/:id` | `-debugMore house-templates`, `house-log` |
+
+The print sheet goes through AirPrint (`UIPrintInteractionController` with an HTML formatter); "Als PDF sichern"
+comes from the print dialog. Code values for printing exist only in memory and in the print job, each one is revealed
+and logged like a tap on "Zeigen".
+
+German strings for these screens: `ios/tools/strings_de_parity.json` (taken from the web's `web/src/locales/de` where
+the English key is the same).
+

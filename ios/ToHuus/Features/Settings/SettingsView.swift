@@ -1,7 +1,8 @@
 import StoreKit
 import SwiftUI
 
-/// "Mehr": account, household, plan & storage, devices, sign out, delete account, legal, web settings.
+/// "Mehr": account, household, the same groups as the web's Mehr (MoreSections), settings, plan & storage, devices,
+/// sign out, delete account, legal, web settings.
 struct SettingsView: View {
     let store: ServerStore
     /// iPad sidebar: shown as an area, not as a sheet (no "Done")
@@ -58,8 +59,8 @@ struct SettingsView: View {
                     } else {
                         LabeledContent(L("Household"), value: app.activeHousehold?.name ?? "–")
                     }
-                    if let api = app.api { HouseholdLinks(api: api) }
                 }
+                if let api = app.api { MoreSections(store: store, api: api) }
                 Section {
                     NavigationLink { NotificationSettingsView() } label: { Label(L("Notifications"), systemImage: "bell") }
                     NavigationLink { StoreArrivalView(store: store) } label: { Label(L("Hint in the shop"), systemImage: "location") }
@@ -71,11 +72,6 @@ struct SettingsView: View {
                     }
                     NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
                     AppearancePicker()
-                }
-                if app.moduleOn("homeinfo") {
-                    Section {
-                        NavigationLink { HouseGuideView() } label: { Label(L("House info"), systemImage: "house") }
-                    }
                 }
                 Section(L("Knowing")) {
                     Button { showTour = true } label: { Label(L("Take the tour"), systemImage: "map") }

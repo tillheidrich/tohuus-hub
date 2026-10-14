@@ -120,6 +120,8 @@ struct MeResponse: Decodable, Sendable {
     var role: String? { actor?["role"]?.string }
     /// a permanent guest of the household (actor.houseGuest { level, … }) – sees only what is shared with guests
     var isGuest: Bool { actor?["houseGuest"]?["level"]?.string != nil }
+    /// the guest's level right now: order | stock | recipes | family | paused (nil = lives here)
+    var guestLevel: String? { actor?["houseGuest"]?["level"]?.string }
     /// children (kid devices or a child role) see AI as locked
     var isChild: Bool {
         let kind = actor?["kind"]?.string

@@ -74,6 +74,10 @@ final class AppModel {
     private(set) var singleHousehold = false
     /// a permanent guest (Mehr shows the handover shared with them instead of trips and care)
     private(set) var isGuest = false
+    /// the permanent guest's level (order | stock | recipes | family | paused) – Mehr filters like the web's guestAllows
+    private(set) var guestLevel: String?
+    /// an admin of the household (GET /api/me actor.role)
+    private(set) var isAdmin = false
 
     func loadAIState() async {
         guard let api else { return }
@@ -82,6 +86,8 @@ final class AppModel {
             if let m = me.modules { modules = m }
             singleHousehold = me.isSingleHousehold
             isGuest = me.isGuest
+            guestLevel = me.guestLevel
+            isAdmin = me.role == "admin"
             if let p = me.listPrefs { ListPrefsSync.adopt(p) }
         }
         if let s: AIStatus = try? await api.get("api/assistant/status") {
