@@ -139,7 +139,7 @@ export const de_home: Record<string, string> = {
   "Water filter, smoke alarms, descaling": "Wasserfilter, Rauchmelder, Entkalken",
   "Care tasks come with sensible intervals and a reminder.": "Pflege-Aufgaben kommen mit sinnvollen Abständen und Erinnerung.",
   "Knowing where things are": "Wissen, wo was liegt",
-  "“Where is what?” finds things by place – for everyone, not only the one who put them away.": "„Wo ist was?“ findet Dinge nach Ort – für alle, nicht nur für die Person, die sie weggeräumt hat.",
+  "“Where is what?” finds things by place – for everyone, not only the one who put them away.": "„Wo ist was?“ findet Sachen nach Ort – für alle, nicht nur für die Person, die sie weggeräumt hat.",
   "Keeping the laundry going": "Die Wäsche am Laufen halten",
   "Split it into small steps, with a timer if that helps.": "In kleine Schritte teilen, mit Timer, wenn das hilft.",
   "Looking after plants and pets": "Pflanzen und Haustiere versorgen",

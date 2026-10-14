@@ -176,7 +176,7 @@ export function helpCopy(k) {
         desc: 'Wer mag, führt Bestand. Nötig ist das für ToHuus nicht.',
         sections: [
           ['Freiwillig', p('ToHuus braucht keinen Vorrat, um zu wissen, was fehlt. Der Rhythmus kommt aus Bons und Häkchen. Wer trotzdem Bestand führen will, findet den Vorrat unter Zuhause, umschaltbar neben den Aufgaben.')],
-          ['Nur was ausgeht', p('Statt alles zu zählen, kannst du nur die Dinge verfolgen, die regelmäßig ausgehen. Umstellen geht jederzeit, ohne dass Daten verloren gehen.')],
+          ['Nur was ausgeht', p('Statt alles zu zählen, kannst du nur die Sachen verfolgen, die regelmäßig ausgehen. Umstellen geht jederzeit, ohne dass Daten verloren gehen.')],
           ['Zählen oder Füllstand', p('Pro Produkt: gezählt, als Füllstand (voll, halb, wenig, leer) oder gar nicht. Dazu Mindesthaltbarkeit pro Packung, geöffnet und eingefroren.')],
           ['Ab wann etwas knapp ist', p('Das legst du pro Produkt selbst fest. Beim Zählen mit „Mindestens vorrätig“: Fällt der Bestand darunter, gilt es als knapp und kommt auf Wunsch auf die Liste. Beim Füllstand wählst du „Knapp ab wenig“ oder schon „ab halb“. Ob du dazu eine Mitteilung bekommst, stellst du unter Benachrichtigungen für dich selbst ein.')],
           ['Schnell abgleichen', p('Der Schnell-Abgleich geht einen Ort durch, ein Tipp pro Produkt: stimmt, weniger, leer, weg. Barcodes scannst du mit der Kamera.')],
@@ -265,7 +265,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         desc: 'Was ein Monat gekostet hat, wo, wofür, und was teurer geworden ist.',
         sections: [
           ['Der Monat', p('Jeder Bon zählt mit. Die Seite Geld zeigt, was der Monat gekostet hat, nach Woche, Laden und Kategorie, und vergleicht mit dem Vormonat bis zum gleichen Tag.')],
-          ['Preise', p('Bei Dingen, die ihr oft kauft, zeigt ToHuus Preisänderungen gegenüber den 90 Tagen davor, wenn möglich pro Kilo oder Liter.')],
+          ['Preise', p('Bei Sachen, die ihr oft kauft, zeigt ToHuus Preisänderungen gegenüber den 90 Tagen davor, wenn möglich pro Kilo oder Liter.')],
           ['Budget und Hinweise', p('Ein Budget pro Woche, Monat oder Jahr ist freiwillig, für den ganzen Haushalt oder unter „Nur meins“ nur für dich. Hinweise kommen nur aus euren eigenen Bons, zum Beispiel wenn etwas in einem anderen eurer Läden günstiger war. Angebote von außen, Werbung oder Affiliate-Links gibt es nicht.')],
           ['Ohne Bon', p('Wochenmarkt oder Bäcker trägst du von Hand ein, oder du sagst es: „Beim Bäcker 6,40 ausgegeben.“ Alles lässt sich als CSV exportieren.')],
           ['Wie weit zurück', p('Free zeigt die letzten 60 Tage, Haushalt und Plus die ganze Geschichte.')],
@@ -277,7 +277,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         desc: 'Was zu Hause zu tun ist, einmal oder immer wieder, wer es macht und wer was im Blick hat.',
         sections: [
           ['Was dazugehört', p(
-            'Unter Zuhause › Aufgaben steht, was bei euch zu tun ist. <b>Haushalt</b> sind Dinge wie Bad putzen, Müll rausbringen oder Bettwäsche wechseln. <b>Pflege & Fristen</b> sind Wasserfilter, Rauchmelder, TÜV oder Ausweise. Oben filterst du nach Alle, Haushalt, Pflege & Fristen und Meine.',
+            'Unter Zuhause › Aufgaben steht, was bei euch zu tun ist. <b>Haushalt</b> sind Sachen wie Bad putzen, Müll rausbringen oder Bettwäsche wechseln. <b>Pflege & Fristen</b> sind Wasserfilter, Rauchmelder, TÜV oder Ausweise. Oben filterst du nach Alle, Haushalt, Pflege & Fristen und Meine.',
             'Für den Anfang gibt es Vorlagen für die üblichen Hausarbeiten. Auf „Heute“ zeigt eine Karte, was heute ansteht, und ein Tipp hakt es ab.',
           )],
           ['Einmal, immer wieder oder bei Bedarf', ul(
@@ -322,7 +322,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Keine roten Warnungen für Überfälliges und keine Zähler. Was fällig ist, „wäre dran“.',
             '„Neu anfangen“ legt alles Überfällige auf einen frischen Start, ohne schlechtes Gewissen.',
             'Mitteilungen kommen gebündelt in einer Nachricht, zu der Uhrzeit, die du wählst.',
-            'Auf Heute stehen höchstens drei Dinge.',
+            'Auf Heute stehen höchstens drei Sachen.',
           ), p('Die anderen im Haushalt sehen nicht, ob du den sanften Modus eingeschaltet hast.')],
           ['Extras im Wocheneinkauf', p('Ihr legt ein Kontingent für Extras fest, also für Luxus- und Spaßartikel: pro Woche als Betrag oder als Anzahl. Einträge auf der Liste markiert ihr als Extra, und die Liste zeigt, wie viel vom Kontingent schon verplant ist. ToHuus sperrt nichts, es hält nur den Überblick, gerade bei spontanen Käufen.')],
           ['Was es schon gibt', ul(

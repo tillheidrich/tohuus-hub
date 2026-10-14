@@ -257,7 +257,7 @@ export const list2: Record<string, string> = {
   "Money per week": "Geld pro Woche",
   "Number of things per week": "Anzahl pro Woche",
   "Amount per week": "Betrag pro Woche",
-  "Things per week": "Dinge pro Woche",
+  "Things per week": "Sachen pro Woche",
   "Switch on": "Einschalten",
   "Switch off": "Ausschalten",
   "Not set. An admin of the household can switch it on.": "Nicht eingestellt. Wer den Haushalt verwaltet, kann es einschalten.",

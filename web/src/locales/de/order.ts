@@ -109,7 +109,7 @@ export const order: Record<string, string> = {
   'Visitors, the babysitter or grandparents: Treats › Guests – a link with what they may ask for, chosen places read-only and a note.': 'Besuch, Babysitter oder Großeltern: Bring mir was › Gäste – ein Link mit dem, was sie sich wünschen dürfen, ausgewählten Orten zum Nachsehen und einer Notiz.',
   'Open guests': 'Gäste öffnen',
   'The menu: tea, ice cream, snacks': 'Die Karte: Tee, Eis, Snacks',
-  'Everything people can ask for lives in one menu – things from your stock and things that are simply there, like tap water or tea.': 'Alles, was man sich wünschen kann, steht auf einer Karte – Sachen aus dem Bestand und Dinge, die einfach da sind, wie Leitungswasser oder Tee.',
+  'Everything people can ask for lives in one menu – things from your stock and things that are simply there, like tap water or tea.': 'Alles, was man sich wünschen kann, steht auf einer Karte – Sachen aus dem Bestand und Sachen, die einfach da sind, wie Leitungswasser oder Tee.',
   'Treats › “Edit menu” (also in Settings › Household and in the party setup).': 'Bring mir was › „Karte bearbeiten“ (auch unter Einstellungen › Haushalt und beim Party-Start).',
   'Guests can ask for a drink or a snack from what is really there. Guest links work without an account.': 'Gäste können sich ein Getränk oder einen Snack wünschen – aus dem, was wirklich da ist. Gäste-Links funktionieren ohne Konto.',
   'Ask each other for a little something – tea with honey, the ice cream from the freezer – and someone at home brings it. Guests and parties work the same way.':

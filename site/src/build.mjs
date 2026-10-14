@@ -119,7 +119,7 @@ const COPY = {
         { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
           alt: 'Seite Geld für Oktober 2026: bisher 66,26 Euro, 10 Euro weniger als zur gleichen Zeit im Vormonat, darunter der Verlauf pro Woche und die Kategorien.',
           p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
-          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, für alle oder nur für dich, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
+          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Sachen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, für alle oder nur für dich, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
         { id: 'aufgaben', no: '4', label: 'Aufgaben', h3: 'Wer bringt diese Woche den Müll raus?', shot: 'tasks',
           alt: 'Seite Aufgaben im Bereich Zuhause: Bad putzen und Müll rausbringen sind heute fällig, jeweils mit der Person, die dran ist, darunter der Termin Schornsteinfeger in vier Tagen um 10 Uhr.',
           p: 'Bad putzen, Bettwäsche wechseln, den Wasserfilter tauschen oder der Termin mit dem Schornsteinfeger: ToHuus merkt sich, was wann dran ist und wer es macht. Wenn ihr euch abwechselt, gibt „Erledigt“ die Aufgabe an den Nächsten weiter. Punkte oder Ranglisten gibt es nicht, nur einen ruhigen Blick darauf, wer gerade woran denkt.',
@@ -163,12 +163,12 @@ const COPY = {
     },
     nd: {
       label: 'Wenn der Kopf voll ist', h2: 'Für Köpfe, in denen viel los ist.',
-      intro: 'Mit ADHS, Autismus oder einfach in einer vollen Woche ist oft der Anfang das Schwerste: Wo fange ich an, was war noch mal dran, und wie lange dauert das überhaupt? Ein paar Dinge in ToHuus sind genau dafür gebaut. Sie helfen allen im Haushalt, und niemand muss erklären, warum.',
+      intro: 'Mit ADHS, Autismus oder einfach in einer vollen Woche ist oft der Anfang das Schwerste: Wo fange ich an, was war noch mal dran, und wie lange dauert das überhaupt? Ein paar Sachen in ToHuus sind genau dafür gebaut. Sie helfen allen im Haushalt, und niemand muss erklären, warum.',
       list: [
         ['list', 'Kleine Schritte', 'Jede Aufgabe lässt sich in kleine Schritte teilen, die du einzeln abhakst. „In kleine Schritte teilen“ schlägt welche vor: mit KI, wenn euer Haushalt das erlaubt, sonst aus fertigen Schritten für Bad putzen, Küche, Wäsche, Staubsaugen oder Bett beziehen. Ist die Aufgabe erledigt, stehen die Schritte beim nächsten Mal wieder offen da.'],
         ['target', 'Eins nach dem anderen', 'Die Fokusansicht zeigt nur eine Sache: die nächste Aufgabe und darin den nächsten Schritt, groß und ohne Liste drumherum. Darunter stehen „Geschafft“, „Später“ und „Zu groß? Kleiner machen“.'],
         ['timer', 'Sichtbarer Timer', 'Fünf Minuten, nur anfangen. Ein Ring zeigt, wie viel Zeit noch bleibt, am Ende kommt ein sanftes Signal. Gezählt oder ausgewertet wird dabei nichts.'],
-        ['feather', 'Sanfter Modus', 'Eine Einstellung nur für dich: keine roten Warnungen und keine Zähler, was fällig ist, „wäre dran“. „Neu anfangen“ legt alles Überfällige auf einen frischen Start, ohne Vorwurf. Mitteilungen kommen gebündelt in einer Nachricht zu der Zeit, die du wählst, und auf Heute stehen höchstens drei Dinge.'],
+        ['feather', 'Sanfter Modus', 'Eine Einstellung nur für dich: keine roten Warnungen und keine Zähler, was fällig ist, „wäre dran“. „Neu anfangen“ legt alles Überfällige auf einen frischen Start, ohne Vorwurf. Mitteilungen kommen gebündelt in einer Nachricht zu der Zeit, die du wählst, und auf Heute stehen höchstens drei Sachen.'],
         ['users', 'Keine Punkte, keine Ranglisten', 'Es gibt keine Streaks, keine Punkte und keine Belohnungen. „Wer hat was im Blick“ zeigt Namen alphabetisch, Anteile nur, wenn alle im Haushalt zustimmen.'],
         ['list', 'Denkarbeit-Check', '33 Karten für die unsichtbare Arbeit, von „Merken, wenn etwas zur Neige geht“ bis „An Geburtstage denken“. Jede Person antwortet für sich, der Haushalt sieht die Antworten nur, wenn alle zustimmen. Zu jeder Karte steht, was ToHuus dir davon abnimmt.'],
         ['pin', 'Aus den Augen, nicht aus dem Sinn', '„Wo ist was?“ weiß, wo die Batterien liegen und was im Gefrierfach ist. Wer mag, führt einen Vorrat und sieht, was da ist und was bald alle ist.'],
@@ -180,7 +180,7 @@ const COPY = {
         ['loadcards', 'Denkarbeit-Check: oben die eigene Zusammenfassung, darunter Karten wie „Merken, wenn etwas zur Neige geht“ mit den Antworten Mache meistens ich, Teilen wir, Macht meistens jemand anders.'],
       ],
       caption: 'Links eins nach dem anderen mit Timer, rechts der Denkarbeit-Check.',
-      note: 'ToHuus richtet sich nach „Bewegung reduzieren“ auf deinem Gerät, und an Tagen, an denen das Aufstehen schwerfällt, gibt es „Bring mir was“. ToHuus ist kein Gesundheits- oder Therapieangebot. Es nimmt euch nur ein paar Dinge aus dem Kopf.',
+      note: 'ToHuus richtet sich nach „Bewegung reduzieren“ auf deinem Gerät, und an Tagen, an denen das Aufstehen schwerfällt, gibt es „Bring mir was“. ToHuus ist kein Gesundheits- oder Therapieangebot. Es nimmt euch nur ein paar Sachen aus dem Kopf.',
       more: 'Alles dazu in der Hilfe', help: 'kopf-voll.html',
     },
     levels: {

@@ -2801,7 +2801,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d Dinge"
+            "value": "%d Sachen"
           }
         }
       }
@@ -2886,7 +2886,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hier liegen noch %d Dinge"
+            "value": "Hier liegen noch %d Sachen"
           }
         }
       }
@@ -3022,7 +3022,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d Dinge liegen hier"
+            "value": "%d Sachen liegen hier"
           }
         }
       }
@@ -3039,7 +3039,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d Dinge mit genauem Platz"
+            "value": "%d Sachen mit genauem Platz"
           }
         }
       }
@@ -3923,7 +3923,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 Ding"
+            "value": "1 Sache"
           }
         }
       }
@@ -4076,7 +4076,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 Ding mit genauem Platz"
+            "value": "1 Sache mit genauem Platz"
           }
         }
       }
@@ -4450,7 +4450,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ein paar Dinge, die %@ allein holen darf – Pflaster, Zahnpasta, ein Becher. Standardmäßig aus."
+            "value": "Ein paar Sachen, die %@ allein holen darf – Pflaster, Zahnpasta, ein Becher. Standardmäßig aus."
           }
         }
       }
@@ -7833,7 +7833,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sieht auch, was im Haus ist und wo es liegt, und kann Dinge austragen."
+            "value": "Sieht auch, was im Haus ist und wo es liegt, und kann Sachen austragen."
           }
         }
       }
@@ -48514,7 +48514,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den genauen Platz trägst du beim Artikel ein („Regal links, oberstes Fach“). Auch Dinge, die nicht gezählt werden, können hier stehen – Fieberthermometer, Sicherungskasten, Ersatzschlüssel."
+            "value": "Den genauen Platz trägst du beim Artikel ein („Regal links, oberstes Fach“). Auch Sachen, die nicht gezählt werden, können hier stehen – Fieberthermometer, Sicherungskasten, Ersatzschlüssel."
           }
         }
       }
@@ -57048,7 +57048,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dinge (%d/12)"
+            "value": "Sachen (%d/12)"
           }
         }
       }
@@ -57065,7 +57065,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dinge pro Woche"
+            "value": "Sachen pro Woche"
           }
         }
       }
@@ -57082,7 +57082,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dinge ohne Ort"
+            "value": "Sachen ohne Ort"
           }
         }
       }
@@ -64766,7 +64766,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d Dinge hast meistens du im Kopf, %d teilt ihr, um %d kümmert sich jemand anders."
+            "value": "%d Sachen hast meistens du im Kopf, %d teilt ihr, um %d kümmert sich jemand anders."
           }
         }
       }

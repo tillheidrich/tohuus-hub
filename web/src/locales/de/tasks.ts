@@ -156,7 +156,7 @@ export const tasks: Record<string, string> = {
   "Saved as a task you keep in mind.": "Als Aufgabe gespeichert, die du im Blick hast.",
   "{n} of {total} answered": "{n} von {total} beantwortet",
   "Noticing, planning and remembering is work too – it just doesn’t show. Go through the cards: who usually keeps this in mind? Your answers are yours. The household sees them only when everyone agrees.": "Bemerken, planen, dran denken ist auch Arbeit – man sieht sie nur nicht. Geh die Karten durch: Wer hat das meistens im Kopf? Deine Antworten gehören dir. Der Haushalt sieht sie nur, wenn alle zustimmen.",
-  "You keep {me} things mostly in mind yourself, you share {shared}, someone else takes care of {other}.": "{me} Dinge hast meistens du im Kopf, {shared} teilt ihr, um {other} kümmert sich jemand anders.",
+  "You keep {me} things mostly in mind yourself, you share {shared}, someone else takes care of {other}.": "{me} Sachen hast meistens du im Kopf, {shared} teilt ihr, um {other} kümmert sich jemand anders.",
   "ToHuus can take some of it off your head:": "Einiges davon kann dir ToHuus abnehmen:",
   "Worth a chat": "Darüber lohnt sich ein Gespräch",
   "everyone thinks someone else does it": "alle denken, jemand anders macht es",
