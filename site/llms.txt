@@ -2,7 +2,7 @@
 
 > ToHuus remembers for your household what is there, what is missing and what it costs, from your receipts and your list. For iPhone and the browser, in ToHuus Cloud or on your own server.
 
-ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app in ToHuus Cloud, or self-hosted with Docker as a web app with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
+ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app, in ToHuus Cloud or self-hosted with Docker, with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, keeps the household's recurring tasks and appointments (with Apple Reminders and calendar sync), lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
 
 ## Website
 - [ToHuus (English)](https://tohuus.heidrich-digital.de/): what it does, pricing, privacy, self-hosting
@@ -11,15 +11,17 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Source code](https://github.com/tillheidrich/tohuus-hub)
 
 ## Help (English)
-- [Help & tips](https://tohuus.heidrich-digital.de/help/): How-tos for ToHuus: the list, receipts, speaking, AI on or off, recipe packs, Home Assistant, privacy and subscriptions. No sign-in, no tracking.
+- [Help & tips](https://tohuus.heidrich-digital.de/help/): How-tos for ToHuus: the list, receipts, tasks, the assistant, AI on or off, recipe packs, Home Assistant, privacy and subscriptions. No sign-in, no tracking.
 - [Getting started](https://tohuus.heidrich-digital.de/help/getting-started.html): Create an account, say who belongs to the household and meet the five areas.
 - [Shopping together](https://tohuus.heidrich-digital.de/help/shopping-together.html): Live on every phone, adding while someone is in the shop, and splitting the aisles.
 - [Sharing receipts](https://tohuus.heidrich-digital.de/help/receipts.html): E-receipts, PDF, photos and text: how receipts get into ToHuus and what happens to them.
-- [Speak and the assistant](https://tohuus.heidrich-digital.de/help/speak.html): What the “Speak” button does, what it adds and how to undo it.
+- [Tasks](https://tohuus.heidrich-digital.de/help/tasks.html): What needs doing at home, once or again and again, who does it and who keeps what in mind.
+- [The assistant](https://tohuus.heidrich-digital.de/help/speak.html): What the assistant does, what it adds and how to undo it.
 - [With or without AI](https://tohuus.heidrich-digital.de/help/ai-on-or-off.html): What works without AI, what it adds, and how to switch it off for the household, yourself or a child.
 - [The ToHuus recipe pack](https://tohuus.heidrich-digital.de/help/recipe-pack.html): Many recipes at once: the format, a prompt for your own AI and the way back out.
 - [Connect Home Assistant](https://tohuus.heidrich-digital.de/help/home-assistant.html): Step by step with HACS and a code from the app, for ToHuus Cloud and your own server.
 - [Connect Claude or ChatGPT](https://tohuus.heidrich-digital.de/help/connect-claude-chatgpt.html): Connect your household to the AI assistant you already use, through MCP.
+- [Reminders and calendars](https://tohuus.heidrich-digital.de/help/reminders-calendar.html): Shopping lists, tasks and appointments in Apple Reminders, Apple Calendar, Nextcloud, Google Calendar or Outlook.
 - [From your own server to the cloud](https://tohuus.heidrich-digital.de/help/move-to-the-cloud.html): Taking a self-hosted household into ToHuus Cloud.
 - [Self-hosting with Docker](https://tohuus.heidrich-digital.de/help/self-hosting.html): ToHuus on your own server, free under the AGPL-3.0.
 - [Privacy in short](https://tohuus.heidrich-digital.de/help/privacy-in-short.html): Where your data lives, who sees it and what never happens.
@@ -27,9 +29,9 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Frequently asked questions](https://tohuus.heidrich-digital.de/help/faq.html): Short answers to what people often ask.
 
 ## Hilfe (Deutsch)
-- [Hilfe & Tipps](https://tohuus.heidrich-digital.de/hilfe/): Anleitungen für ToHuus: Liste, Bons, Kochen, Geld, Sprechen, Home Assistant, Datenschutz und Abo. Ohne Anmeldung, ohne Tracking.
+- [Hilfe & Tipps](https://tohuus.heidrich-digital.de/hilfe/): Anleitungen für ToHuus: Liste, Bons, Kochen, Aufgaben, Geld, der Assistent, Home Assistant, Datenschutz und Abo. Ohne Anmeldung, ohne Tracking.
 - [Erste Schritte](https://tohuus.heidrich-digital.de/hilfe/erste-schritte.html): Konto anlegen, sagen, wer dazugehört, und die fünf Bereiche kennenlernen.
-- [So funktioniert ToHuus](https://tohuus.heidrich-digital.de/hilfe/so-funktioniert-tohuus.html): Wie ToHuus sich merkt, was fehlt, und warum jede Zeile sagt, woher sie kommt.
+- [So funktioniert ToHuus](https://tohuus.heidrich-digital.de/hilfe/so-funktioniert-tohuus.html): Wie ToHuus sich merkt, was fehlt, warum jede Zeile sagt, woher sie kommt, und wie du alles findest.
 - [Die Einkaufsliste](https://tohuus.heidrich-digital.de/hilfe/einkaufsliste.html): Eine Liste für alle, Schnelleingabe, „Ich hol’s“ und der Modus für den Laden.
 - [Gemeinsam einkaufen](https://tohuus.heidrich-digital.de/hilfe/gemeinsam-einkaufen.html): Live auf allen Handys, ergänzen, während jemand im Laden steht, und zu zweit losziehen.
 - [Was ToHuus sich merkt](https://tohuus.heidrich-digital.de/hilfe/merkt-sich.html): Kaufrhythmus, Vorschläge, „Haben wir noch“ und warum kein Vorrat nötig ist.
@@ -40,7 +42,8 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Das ToHuus-Rezeptpaket](https://tohuus.heidrich-digital.de/hilfe/rezeptpaket.html): Viele Rezepte auf einmal: das Format, ein Prompt für deine eigene KI und der Weg zurück.
 - [Cookidoo, Monsieur Cuisine und andere Küchenmaschinen](https://tohuus.heidrich-digital.de/hilfe/cookidoo.html): Wie Rezepte aus Cookidoo, Monsieur Cuisine, Cookit und anderen Küchenmaschinen-Apps neben ToHuus funktionieren.
 - [Geld: Lebensmittel und Haushalt](https://tohuus.heidrich-digital.de/hilfe/geld.html): Was ein Monat gekostet hat, wo, wofür, und was teurer geworden ist.
-- [Sprechen und der Assistent](https://tohuus.heidrich-digital.de/hilfe/sprechen.html): Was der Knopf „Sprechen“ kann, was er einträgt und wie du es zurücknimmst.
+- [Aufgaben](https://tohuus.heidrich-digital.de/hilfe/aufgaben.html): Was zu Hause zu tun ist, einmal oder immer wieder, wer es macht und wer was im Blick hat.
+- [Der Assistent](https://tohuus.heidrich-digital.de/hilfe/sprechen.html): Was der Assistent kann, was er einträgt und wie du es zurücknimmst.
 - [Mit oder ohne KI](https://tohuus.heidrich-digital.de/hilfe/ki-an-oder-aus.html): Was ohne KI geht, was sie dazu bringt, und wie du sie für Haushalt, dich oder Kinder abschaltest.
 - [Hausinfo für Gäste und Babysitter](https://tohuus.heidrich-digital.de/hilfe/hausinfo.html): Karten mit allem, was jemand wissen muss, der auf euer Zuhause aufpasst.
 - [Codes sicher teilen](https://tohuus.heidrich-digital.de/hilfe/hausinfo-codes.html): Türcode, WLAN, Alarmanlage: wie ToHuus Codes behandelt.
@@ -51,7 +54,7 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Benachrichtigungen](https://tohuus.heidrich-digital.de/hilfe/benachrichtigungen.html): Wann ToHuus sich meldet, wie du es einstellst und wie es ruhig bleibt.
 - [Home Assistant verbinden](https://tohuus.heidrich-digital.de/hilfe/home-assistant.html): Schritt für Schritt über HACS, mit Code aus der App, für ToHuus Cloud und eigenen Server.
 - [Mit Claude oder ChatGPT verbinden](https://tohuus.heidrich-digital.de/hilfe/claude-chatgpt.html): Deinen Haushalt über MCP mit dem KI-Assistenten verbinden, den du schon nutzt.
-- [Apple Erinnerungen oder Nextcloud spiegeln](https://tohuus.heidrich-digital.de/hilfe/erinnerungen-spiegeln.html): Die Einkaufsliste zusätzlich in einer anderen Listen-App, über CalDAV.
+- [Erinnerungen und Kalender](https://tohuus.heidrich-digital.de/hilfe/erinnerungen-spiegeln.html): Einkaufslisten, Aufgaben und Termine in Apple Erinnerungen, Apple Kalender, Nextcloud, Google Kalender oder Outlook.
 - [Vom eigenen Server in die Cloud](https://tohuus.heidrich-digital.de/hilfe/umzug-in-die-cloud.html): Einen selbst gehosteten Haushalt in die ToHuus Cloud mitnehmen.
 - [Selbst hosten mit Docker](https://tohuus.heidrich-digital.de/hilfe/selbst-hosten.html): ToHuus auf deinem eigenen Server, kostenlos unter AGPL-3.0.
 - [Deine Daten mitnehmen](https://tohuus.heidrich-digital.de/hilfe/daten-export.html): Export, Rezeptpaket und was beim Löschen passiert.

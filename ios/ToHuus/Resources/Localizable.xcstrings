@@ -324,6 +324,23 @@
         }
       }
     },
+    "%@ invites you to %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ invites you to %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ lädt dich zu %@ ein."
+          }
+        }
+      }
+    },
     "%@ is getting these": {
       "extractionState": "manual",
       "localizations": {
@@ -8837,6 +8854,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was wünschen"
+          }
+        }
+      }
+    },
+    "Ask on Sundays": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask on Sundays"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonntags fragen"
           }
         }
       }
@@ -23784,6 +23818,23 @@
         }
       }
     },
+    "I have an invitation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I have an invitation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich habe eine Einladung"
+          }
+        }
+      }
+    },
     "I keep it in mind": {
       "extractionState": "manual",
       "localizations": {
@@ -25161,6 +25212,23 @@
         }
       }
     },
+    "Invitation link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation link"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einladungslink"
+          }
+        }
+      }
+    },
     "Invitations": {
       "extractionState": "manual",
       "localizations": {
@@ -25531,6 +25599,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "JSON – %@"
+          }
+        }
+      }
+    },
+    "Join": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beitreten"
           }
         }
       }
@@ -35616,6 +35701,23 @@
         }
       }
     },
+    "Only a count per week and answer – no name, no household. Off by default.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only a count per week and answer – no name, no household. Off by default."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur eine Zählung pro Woche und Antwort – kein Name, kein Haushalt. Standardmäßig aus."
+          }
+        }
+      }
+    },
     "Only admins can change how people sign in.": {
       "extractionState": "manual",
       "localizations": {
@@ -36717,6 +36819,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "In euren Rezepten öffnen"
+          }
+        }
+      }
+    },
+    "Open invitation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open invitation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einladung öffnen"
           }
         }
       }
@@ -47856,6 +47975,23 @@
         }
       }
     },
+    "Share the answer anonymously": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the answer anonymously"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antwort anonym teilen"
+          }
+        }
+      }
+    },
     "Share the label": {
       "extractionState": "manual",
       "localizations": {
@@ -49943,6 +50079,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manches braucht kein Publikum – ein Geschenk, etwas aus der Apotheke."
+          }
+        }
+      }
+    },
+    "Someone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jemand"
           }
         }
       }
@@ -54622,6 +54775,23 @@
         }
       }
     },
+    "The link from the message, for example https://…/einladung/…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The link from the message, for example https://…/einladung/…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Link aus der Nachricht, zum Beispiel https://…/einladung/…"
+          }
+        }
+      }
+    },
     "The link is shown only once. Lost it? Use “New link” next to the display.": {
       "extractionState": "manual",
       "localizations": {
@@ -54958,6 +55128,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Passkey konnte nicht gestartet werden. Bitte versuch es noch einmal."
+          }
+        }
+      }
+    },
+    "The passwords don’t match.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passwords don’t match."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Passwörter sind nicht gleich."
           }
         }
       }
@@ -55927,6 +56114,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Dose ist schon als leer markiert."
+          }
+        }
+      }
+    },
+    "This doesn’t look like an invitation link.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This doesn’t look like an invitation link."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das sieht nicht nach einem Einladungslink aus."
           }
         }
       }
@@ -59688,6 +59892,23 @@
         }
       }
     },
+    "Weekly question (test phase)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly question (test phase)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wochenfrage (Testphase)"
+          }
+        }
+      }
+    },
     "Weighed goods and items without a price are left out.": {
       "extractionState": "manual",
       "localizations": {
@@ -62187,6 +62408,23 @@
         }
       }
     },
+    "With an existing ToHuus account, use its e-mail and password.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With an existing ToHuus account, use its e-mail and password."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hast du schon ein ToHuus-Konto, nimm dessen E-Mail und Passwort."
+          }
+        }
+      }
+    },
     "With best-before date": {
       "extractionState": "manual",
       "localizations": {
@@ -63186,6 +63424,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du legst das Datum selbst fest."
+          }
+        }
+      }
+    },
+    "You sign in with this name and password on this server.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You sign in with this name and password on this server."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit diesem Namen und Passwort meldest du dich auf diesem Server an."
           }
         }
       }
@@ -71788,6 +72043,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "„Wie viel haben wir diesen Monat bei Aldi ausgegeben?“"
+          }
+        }
+      }
+    },
+    "“How often did someone have to ask ‘Do we still have …?’” – one tap on “Heute”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“How often did someone have to ask ‘Do we still have …?’” – one tap on “Heute”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Wie oft musste jemand fragen ‚Haben wir noch …?‘“ – ein Tipp auf „Heute“."
           }
         }
       }

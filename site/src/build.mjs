@@ -272,7 +272,7 @@ const COPY = {
         ['Wer zahlt, wenn wir zu viert sind?', 'Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder, Gäste und verbundene Haushalte zahlen nichts.'],
         ['Was passiert, wenn ich das Abo kündige?', 'Der Haushalt geht auf Free zurück. Gelöscht wird nichts. Ihr seht dann die letzten 60 Tage, und der Assistent hat 20 Nachrichten im Monat.'],
         ['Was passiert mit meinen Daten, wenn ich lösche?', 'Zuerst wird der Schlüssel des Haushalts vernichtet, damit ist die Datenbank nicht mehr lesbar. Danach werden die Dateien und die Sicherungen des Haushalts gelöscht. Sicherungskopien der Kontoverwaltung, die noch den verschlüsselten Schlüssel enthalten, laufen nach ihrer Frist ab.'],
-        ['Ist ToHuus ein Familienkalender?', 'Nein. ToHuus kümmert sich um Einkauf, Kochen und das Geld dafür. Termine, Aufgaben mit Zuständigkeiten oder Punkte gibt es bewusst nicht.'],
+        ['Ist ToHuus ein Familienkalender?', 'Nein. ToHuus kümmert sich um Einkauf, Kochen, das Geld dafür und die Aufgaben im Haushalt. Termine wie der Schornsteinfeger landen in dem Kalender, den ihr sowieso nutzt, also Apple Kalender, Google oder Outlook. Eine eigene Kalenderansicht, einen Chat oder Punkte gibt es bewusst nicht.'],
       ],
     },
     foot: {
@@ -479,7 +479,7 @@ const COPY = {
         ['Who pays if there are four of us?', 'One subscription covers the whole household. Members, children, guests and connected households pay nothing.'],
         ['What happens if I cancel?', 'The household goes back to Free. Nothing is deleted. You then see the last 60 days, and the assistant has 20 messages a month.'],
         ['What happens to my data when I delete it?', 'First the household’s key is destroyed, so the database can no longer be read. Then the household’s files and backups are deleted. Backup copies of the account directory, which still hold the encrypted key, expire after their retention period.'],
-        ['Is ToHuus a family calendar?', 'No. ToHuus looks after shopping, cooking and the money for both. There are deliberately no appointments, chores with owners or points.'],
+        ['Is ToHuus a family calendar?', 'No. ToHuus looks after shopping, cooking, the money for both and the household tasks. Appointments such as the chimney sweep go into the calendar you already use, Apple Calendar, Google or Outlook. There is deliberately no calendar view of its own, no chat and no points.'],
       ],
     },
     foot: {

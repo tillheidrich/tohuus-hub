@@ -22,6 +22,7 @@ debug launch arguments:
 | Own server, several servers, Heute, first-run setup, tour, help, scanned labels | `docs/ios-native-start.md` |
 | Aufgaben, Wer hat was im Blick, Erinnerungen & Kalender | `docs/tasks.md`, `docs/ios-0.2.md` |
 | Global search | `docs/search.md` |
+| Joining by invitation link (cloud and own server), weekly question settings | `ios/ToHuus/Features/Start/JoinInviteView.swift`, `Features/Today/TodayExtras.swift` |
 
 `WebPageView` is left only for single sign-on linking (the provider's own sign-in page) and the old
 "Web settings" screen, which is no longer linked.

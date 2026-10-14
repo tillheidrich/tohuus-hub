@@ -4,6 +4,9 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- iPhone: "Ich habe eine Einladung" on the start screen – paste or scan an invitation link and join, in ToHuus Cloud (`POST /api/invite/:token` with `client: ios`) and on your own server; the weekly question settings in Mehr › Haushalt.
+- Website: an "Aufgaben" section, the iPhone app for self-hosting, new screenshots with the Zuhause tab, help articles "Aufgaben" / "Tasks", "Reminders & calendar", search and the own server in the app.
+
 - iPhone app without compromises (decision 14 Oct 2026): every web function is native – account & security, people, kids & kid mode, permanent guests, places & categories, product extras, QR labels, favourites, shopping extras (WG balance, lunchbox, list import, offers, shop mode), cooking (editor, cook mode with timers, week board, printing), money & receipts (recognition, who paid, charts), Bring mir was & party (menu editor, order board, kitchen board), notifications, connections (Home Assistant, displays, printers, channels, Cookidoo, mail), data & backups, Heute and the first-run setup. Notes per area: `docs/ios-native-*.md`.
 - iPhone app works with your own ToHuus server: address with password and two-step code, sign-in in the browser (with a confirmation page), or a QR code from the web (Settings › My account › "iPhone-App verbinden"; `POST /api/auth/app/pair`, `GET/POST /api/auth/app/pair/start`, `POST /api/auth/app/pair/claim`). Several servers on one iPhone.
 - New structure on web and iPhone (`docs/design/ux-benchmark-2026-10-14.md`): tabs Heute · Einkauf · Kochen · Zuhause · Geld; Zuhause holds Aufgaben and Vorrat with the doors Wo ist was?, Hausinfo, Urlaub; Mehr is one list (Haushalt, Einstellungen, Geräte & Verbindungen, Hilfe); search and Mehr on every screen.

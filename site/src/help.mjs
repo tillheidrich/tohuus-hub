@@ -7,7 +7,7 @@
  * or is being built in this release; anything not live yet carries `soon: true` and says so in the text.
  * Slugs beyond docs/help-slugs.md (site only, can be added to the contract later): gemeinsam-einkaufen,
  * benachrichtigungen, claude-chatgpt, erinnerungen-spiegeln, umzug-in-die-cloud, selbst-hosten, datenschutz-kurz,
- * abo-und-kuendigen, fragen.
+ * abo-und-kuendigen, fragen, aufgaben.
  *
  * `k` is the toolkit from build.mjs: { code(id, label, text), CLOUD, GH, MAIL, TF_DE, TF_EN }.
  */
@@ -22,7 +22,7 @@ export function helpCopy(k) {
     lang: 'de',
     dir: 'hilfe',
     title: 'Hilfe & Tipps',
-    desc: 'Anleitungen für ToHuus: Liste, Bons, Kochen, Geld, Sprechen, Home Assistant, Datenschutz und Abo. Ohne Anmeldung, ohne Tracking.',
+    desc: 'Anleitungen für ToHuus: Liste, Bons, Kochen, Aufgaben, Geld, der Assistent, Home Assistant, Datenschutz und Abo. Ohne Anmeldung, ohne Tracking.',
     label: 'Hilfe & Tipps',
     h1: 'Wie geht das mit ToHuus?',
     lede: 'Kurze Anleitungen zu allem, was ToHuus heute kann. Was noch nicht fertig ist, steht als „Kommt bald“ dabei.',
@@ -37,8 +37,9 @@ export function helpCopy(k) {
       ['start', 'Loslegen'],
       ['shop', 'Einkauf'],
       ['cook', 'Kochen'],
+      ['home', 'Zuhause'],
       ['money', 'Geld'],
-      ['ai', 'Sprechen und KI'],
+      ['ai', 'Assistent und KI'],
       ['people', 'Teilen, Gäste, Hausinfo'],
       ['connect', 'Verbinden'],
       ['account', 'Konto, Daten, Datenschutz'],
@@ -50,29 +51,31 @@ export function helpCopy(k) {
         sections: [
           ['Konto oder eigener Server', p(
             `In der ToHuus Cloud legst du in der iPhone-App oder im Browser unter <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a> ein Konto und einen Haushalt an, mit Mail-Code, Passwort, Passkey oder „Mit Apple anmelden“. Jeder neue Haushalt nutzt 14 Tage lang Plus, ohne Zahlungsdaten. Während der Beta brauchst du zum Anlegen einen Zugangscode oder eine Einladung, dafür schenken wir Testhaushalten oft Haushalt oder Plus.`,
-            'Hast du einen eigenen Server, läuft ToHuus dort als Docker-Container. Wie das geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>. Dort nutzt ihr die Web-App im Browser, die iPhone-App ist für die ToHuus Cloud gedacht.',
+            'Hast du einen eigenen Server, läuft ToHuus dort als Docker-Container. Wie das geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>. Ihr nutzt dann die Web-App im Browser oder die iPhone-App: Dort tippst du auf dem Startbildschirm auf „Eigener Server“ und meldest dich mit Adresse und Passwort an, im Browser oder per QR-Code aus der Web-App.',
           )],
           ['Wer gehört dazu?', p(
             'Beim Start fragt ToHuus nur das: allein, zu zweit, Familie, WG oder ein Haushalt, den du mitversorgst. Danach richtet sich, was du siehst. Ändern kannst du es später in den Einstellungen.',
           )],
           ['Die fünf Bereiche', ul(
             '<b>Heute</b>: was fällig ist, was weg muss, was ihr heute kochen könnt und was der Monat bisher gekostet hat.',
-            '<b>Einkauf</b>: die gemeinsame Liste und der Modus für den Laden.',
-            '<b>Vorrat</b>: freiwillig. Wer mag, führt hier Bestand.',
-            '<b>Kochen</b>: Ideen aus dem, was da ist, Rezepte und der Wochenplan.',
-            '<b>Geld</b>: was Essen und Haushalt kosten, nach Laden und Kategorie.',
-          ), p('Der Knopf „Sprechen“ ist auf jeder Seite. Einstellungen und alles Seltene findest du über dein Bild oben auf „Heute“.')],
+            '<b>Einkauf</b>: die gemeinsame Liste, der Modus für den Laden und eure Wünsche.',
+            '<b>Kochen</b>: Ideen aus dem, was da ist, Rezepte, Lieblinge und der Wochenplan.',
+            '<b>Zuhause</b>: Aufgaben und Vorrat, umschaltbar oben auf der Seite. Dazu „Wo ist was?“, Hausinfo und Urlaub.',
+            '<b>Geld</b>: was Essen und Haushalt kosten, nach Laden und Kategorie, und eure Bons.',
+          ), p('Den Vorrat führt ihr nur, wenn ihr mögt. Habt ihr Kochen, Vorrat oder Geld unter „Was nutzt ihr?“ abgeschaltet, verschwinden sie auch hier.', 'Der runde Knopf mit dem Funkeln ist der Assistent, er ist auf jeder Seite. Oben rechts auf jeder Seite findest du die Suche und dein Bild. Dein Bild öffnet „Mehr“ mit Haushalt, Einstellungen, Geräten & Verbindungen und der Hilfe.')],
+          ['Alles finden', p('Die Lupe oben rechts sucht in Funktionen, Einstellungen und allem aus eurem Haushalt: Produkte, Liste, Rezepte, Aufgaben, Hausinfo und Leute. Im Browser öffnest du sie auch mit ⌘K, Strg+K oder „/“. Mehr dazu unter <a href="so-funktioniert-tohuus.html#suchen">So funktioniert ToHuus</a>.')],
           ['Die erste Woche', ol(
             'Schreibt auf die Liste, was fehlt, und hakt ab, was ihr kauft.',
             'Teilt eure Bons, wenn ihr welche habt (siehe <a href="kassenbons.html">Kassenbons einlesen</a>).',
             'Ladet die anderen ein (siehe <a href="haushalt-teilen.html">Haushalt teilen</a>).',
+            'Tragt unter Zuhause › Aufgaben ein, was immer wieder ansteht, etwa Bad putzen oder Müll rausbringen, wenn ihr mögt (siehe <a href="aufgaben.html">Aufgaben</a>).',
           ), p('Pflegen müsst ihr nichts. Nach ein paar Wochen kennt ToHuus euren Rhythmus und schlägt vor, was wieder fällig ist.')],
         ],
-        related: ['so-funktioniert-tohuus', 'einkaufsliste', 'kassenbons'],
+        related: ['so-funktioniert-tohuus', 'einkaufsliste', 'aufgaben'],
       },
       {
         slug: 'so-funktioniert-tohuus', group: 'start', title: 'So funktioniert ToHuus',
-        desc: 'Wie ToHuus sich merkt, was fehlt, und warum jede Zeile sagt, woher sie kommt.',
+        desc: 'Wie ToHuus sich merkt, was fehlt, warum jede Zeile sagt, woher sie kommt, und wie du alles findest.',
         sections: [
           ['Aus Einkäufen lernen', p(
             'Jeder Bon und jedes Häkchen auf der Liste zählt als Einkauf. Daraus sieht ToHuus, wie oft ihr etwas kauft, zum Beispiel Haferflocken etwa alle 20 Tage. Einen Vorrat müsst ihr dafür nicht führen.',
@@ -84,6 +87,11 @@ export function helpCopy(k) {
           ['Jede Zeile hat einen Absender', p(
             'Auf der Liste steht bei jedem Eintrag, woher er kommt: wer ihn wann eingetragen hat, „merkt sich“, „aus dem Wochenplan“, „vom Assistenten“ oder „über Home Assistant“. Was der Assistent einträgt, lässt sich zurücknehmen.',
           )],
+          ['Suchen', p(
+            'Die Lupe oben rechts ist auf jeder Seite, im Browser auch das Suchfeld in der Seitenleiste. Mit ⌘K, Strg+K oder „/“ öffnest du sie von überall, solange du nicht gerade woanders tippst.',
+            'Gefunden wird, was du in ToHuus erreichen kannst: Funktionen und Einstellungen (auch mit Wörtern wie „Passwort“, „Etiketten drucken“ oder „Dunkelmodus“), Produkte im Vorrat, was auf der Liste steht, Rezepte, auch über eine Zutat, Aufgaben, Karten der Hausinfo und Leute im Haushalt.',
+            'Findet die Suche nichts, bietet sie dir an, das Gesuchte auf die Liste zu setzen oder als neue Aufgabe anzulegen.',
+          ), tip('Die Suche hält sich an dieselben Regeln wie der Rest: Private Einträge und private Aufgaben findet nur, wem sie gehören, Codes aus der Hausinfo nie, und Gäste nur, was ihre Stufe zeigt.')],
         ],
         related: ['merkt-sich', 'einkaufsliste', 'wer-sieht-was'],
       },
@@ -154,7 +162,7 @@ export function helpCopy(k) {
           )],
           ['Links und Text', p('Steckt ein digitaler Bon hinter einem QR-Code oder Link, füg den Link ein. Text aus einer Mail kannst du auch einfach einfügen.')],
           ['Prüfen vor dem Buchen', p(
-            'Jeder Bon wartet erst in der Prüfung: Zeilen, erkannte Produkte, Mengen und Preise. Was ToHuus nicht sicher lesen konnte, ist markiert. Korrigierst du eine Zeile, merkt sich ToHuus das für diesen Laden.',
+            'Alle Bons findest du unter Geld › Bons. Jeder Bon wartet erst in der Prüfung: Zeilen, erkannte Produkte, Mengen und Preise. Was ToHuus nicht sicher lesen konnte, ist markiert. Korrigierst du eine Zeile, merkt sich ToHuus das für diesen Laden.',
             'Pfand wird nie als Vorrat gebucht. Geht Text eines Bons an die KI, entfernt ToHuus vorher Karten- und Bonusnummern, TSE-Daten und die Adresse.',
           )],
           ['Welche Läden', p('Am besten getestet ist REWE. Für Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm, Rossmann und weitere gibt es einen allgemeinen Leser, der mit nachgebauten Bons getestet ist. Echte, anonymisierte Bons helfen: In jeder Prüfung gibt es dafür „Erkennung verbessern helfen“. Verschickt wird dabei nichts von allein.')],
@@ -164,10 +172,10 @@ export function helpCopy(k) {
         related: ['geld', 'ki-an-oder-aus', 'merkt-sich'],
       },
       {
-        slug: 'vorrat', group: 'shop', title: 'Vorrat (freiwillig)',
+        slug: 'vorrat', group: 'home', title: 'Vorrat (freiwillig)',
         desc: 'Wer mag, führt Bestand. Nötig ist das für ToHuus nicht.',
         sections: [
-          ['Freiwillig', p('ToHuus braucht keinen Vorrat, um zu wissen, was fehlt. Der Rhythmus kommt aus Bons und Häkchen. Wer trotzdem Bestand führen will, macht das hier.')],
+          ['Freiwillig', p('ToHuus braucht keinen Vorrat, um zu wissen, was fehlt. Der Rhythmus kommt aus Bons und Häkchen. Wer trotzdem Bestand führen will, findet den Vorrat unter Zuhause, umschaltbar neben den Aufgaben.')],
           ['Nur was ausgeht', p('Statt alles zu zählen, kannst du nur die Dinge verfolgen, die regelmäßig ausgehen. Umstellen geht jederzeit, ohne dass Daten verloren gehen.')],
           ['Zählen oder Füllstand', p('Pro Produkt: gezählt, als Füllstand (voll, halb, wenig, leer) oder gar nicht. Dazu Mindesthaltbarkeit pro Packung, geöffnet und eingefroren.')],
           ['Ab wann etwas knapp ist', p('Das legst du pro Produkt selbst fest. Beim Zählen mit „Mindestens vorrätig“: Fällt der Bestand darunter, gilt es als knapp und kommt auf Wunsch auf die Liste. Beim Füllstand wählst du „Knapp ab wenig“ oder schon „ab halb“. Ob du dazu eine Mitteilung bekommst, stellst du unter Benachrichtigungen für dich selbst ein.')],
@@ -182,7 +190,7 @@ export function helpCopy(k) {
         sections: [
           ['Was essen wir heute?', p('Der Kochplaner fängt bei dem an, was zu Hause ist: was sofort geht, wo nur eine Zutat fehlt (ein Tipp setzt sie auf die Liste) und was bald weg muss. Filter für Zeit, vegetarisch, mit oder ohne Thermomix.')],
           ['Wochenplan', p('Plant Mittag oder Abend, verschiebt Einträge und setzt alles, was für die Woche fehlt, mit einem Tipp auf die Liste. Wer mag, füllt freie Abende mit Vorschlägen aus dem Vorrat.')],
-          ['Portionen und Hausversion', p('Portionen änderst du auf der Rezeptseite. In der Hausversion passt ihr ein Rezept an euren Haushalt an, ohne das Original zu verändern.')],
+          ['Portionen und Hausversion', p('Portionen änderst du auf der Rezeptseite. In der Hausversion passt ihr ein Rezept an euren Haushalt an, ohne das Original zu verändern. Eure Lieblinge findest du ebenfalls unter Kochen.')],
           ['Allergien', p('Allergien und Abneigungen tragt ihr pro Person ein. Ein Gericht mit einem Allergen bekommt einen Hinweis und wird nie von allein eingeplant. Allergien sind Gesundheitsdaten: ToHuus fragt beim ersten Eintrag nach eurer Zustimmung, und an die KI gehen sie nur, wenn ihr das ausdrücklich erlaubt.')],
         ],
         related: ['rezepte-importieren', 'rezeptpaket', 'cookidoo'],
@@ -265,10 +273,44 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         related: ['kassenbons', 'abo-und-kuendigen'],
       },
       {
-        slug: 'sprechen', pair: 'speak', group: 'ai', title: 'Sprechen und der Assistent',
-        desc: 'Was der Knopf „Sprechen“ kann, was er einträgt und wie du es zurücknimmst.',
+        slug: 'aufgaben', pair: 'tasks', group: 'home', title: 'Aufgaben',
+        desc: 'Was zu Hause zu tun ist, einmal oder immer wieder, wer es macht und wer was im Blick hat.',
         sections: [
-          ['Sprechen oder tippen', p('Der Knopf „Sprechen“ ist auf jeder Seite. Sag oder schreib, was los ist: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt Milch auf die Liste und fragt nach, was es Sonntag geben soll.')],
+          ['Was dazugehört', p(
+            'Unter Zuhause › Aufgaben steht, was bei euch zu tun ist. <b>Haushalt</b> sind Dinge wie Bad putzen, Müll rausbringen oder Bettwäsche wechseln. <b>Pflege & Fristen</b> sind Wasserfilter, Rauchmelder, TÜV oder Ausweise. Oben filterst du nach Alle, Haushalt, Pflege & Fristen und Meine.',
+            'Für den Anfang gibt es Vorlagen für die üblichen Hausarbeiten. Auf „Heute“ zeigt eine Karte, was heute ansteht, und ein Tipp hakt es ab.',
+          )],
+          ['Einmal, immer wieder oder bei Bedarf', ul(
+            '<b>Einmal</b>: mit festem Datum. Ist sie erledigt, verschwindet sie aus der Übersicht.',
+            '<b>Immer wieder</b>: alle paar Tage, Wochen oder Monate, oder an festen Wochentagen. Du wählst, ob das nächste Mal ab dem Erledigen zählt oder ab dem geplanten Tag, etwa „jeden Montag“.',
+            '<b>Bei Bedarf</b>: ohne Datum, etwa Altglas wegbringen. Die Aufgabe wird nie fällig und steht bereit, wenn es so weit ist.',
+          ), p('Bei wiederkehrenden Aufgaben reicht ein Tipp auf „Erledigt“. Den nächsten Termin rechnet ToHuus selbst aus.')],
+          ['Für alle oder nur für mich', p(
+            'Eine Aufgabe gehört dem ganzen Haushalt oder nur dir. Was „Nur für mich“ ist, sieht sonst niemand: nicht die anderen Mitglieder, keine Gäste, nicht der Assistent, keine Displays, nicht Home Assistant. Erinnerungen dazu bekommst nur du.',
+          )],
+          ['Unterpunkte', p('Eine Aufgabe kann Unterpunkte haben, zum Beispiel beim Bad: Waschbecken, Spiegel, Boden. Du hakst sie einzeln ab. Ist die Aufgabe erledigt, stehen sie beim nächsten Mal wieder offen da.')],
+          ['Wer macht es', p(
+            'Bei „Wer macht es“ wählst du ein Mitglied oder ein Kind aus euren Kinderprofilen, oder du lässt es bei „Wer gerade Zeit hat“. Unabhängig davon kann jemand sagen „Ich hab’s im Blick“: Diese Person denkt dran, auch wenn jemand anders es erledigt.',
+            'Wechselt ihr euch ab, stellst du „Abwechselnd“ ein und wählst, wer mitmacht, etwa „Bad jeden Samstag, Mira und Sam abwechselnd“. „Erledigt“ gibt die Aufgabe an die nächste Person weiter, „Rückgängig“ gibt sie zurück.',
+          )],
+          ['Zuletzt erledigt und euer Rhythmus', p('Unter „Zuletzt erledigt“ seht ihr, was in den letzten Tagen geschafft wurde. Bei jeder Aufgabe zeigt ToHuus nach ein paar Malen, wie oft ihr sie wirklich macht, etwa „Ihr macht das etwa alle 9 Tage“. So merkt ihr, ob der geplante Rhythmus zu eurem Alltag passt.')],
+          ['Wer hat was im Blick', p(
+            'Dran denken und planen ist auch Arbeit. „Wer hat was im Blick“ zeigt für die letzten 28 Tage, wer sich um Einkauf, Kochen, Geld und Aufgaben gekümmert hat: wer etwas auf die Liste gesetzt oder eingekauft, das Essen geplant, Bons erfasst oder Aufgaben erledigt hat.',
+            'Dort stehen nur Namen, alphabetisch, ohne Zahlen. Deine eigene Zahl siehst nur du. Anteile in Prozent erscheinen erst, wenn alle im Haushalt „Anteile vergleichen“ eingeschaltet haben. Darunter steht, welche fälligen Aufgaben noch niemand im Blick hat.',
+          ), tip('Private Einträge, persönliche Bons und Aufgaben „Nur für mich“ zählen hier nie mit. Gäste sehen diesen Teil nicht.')],
+          ['Termine', p(
+            'Gibst du einer Aufgabe mit Datum eine Uhrzeit, wird daraus ein Termin, auf Wunsch mit Dauer und Ort, etwa „Zahnarzt, Dienstag 15 Uhr, 30 Min.“. Über „In den Kalender“ legst du eine einzelne Aufgabe in deinen Kalender.',
+            'Alle Aufgaben und Termine gleichzeitig in Apple Kalender, Apple Erinnerungen, Google Kalender oder Outlook: siehe <a href="erinnerungen-spiegeln.html">Erinnerungen und Kalender</a>.',
+          )],
+          ['Mit dem Assistenten', p('Sag dem <a href="sprechen.html">Assistenten</a> zum Beispiel „Bettwäsche wechseln alle zwei Wochen“ oder „Was steht heute an?“. Er legt Aufgaben an, hakt sie ab und verteilt sie. Alles, was er einträgt, lässt sich zurücknehmen.')],
+        ],
+        related: ['erinnerungen-spiegeln', 'wer-sieht-was', 'vorrat'],
+      },
+      {
+        slug: 'sprechen', pair: 'speak', group: 'ai', title: 'Der Assistent',
+        desc: 'Was der Assistent kann, was er einträgt und wie du es zurücknimmst.',
+        sections: [
+          ['Sprechen oder tippen', p('Der runde Knopf mit dem Funkeln unten rechts ist der Assistent, er ist auf jeder Seite. Schreib, was los ist, oder tipp auf das Mikrofon und sag es: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt Milch auf die Liste und fragt nach, was es Sonntag geben soll.')],
           ['Was er kann', ul(
             'Auf die Liste setzen, abhaken, streichen.',
             'Sagen, was noch da ist und was fällig ist.',
@@ -277,14 +319,16 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Einen Einkauf ohne Bon festhalten: „Bei Aldi Milch, Eier und Brot für 12,40 gekauft.“',
             'Sich etwas für den Haushalt merken, wenn du ihn darum bittest.',
             'Ein Budget setzen, für alle oder nur für dich: „Setz uns 400 Euro im Monat für Lebensmittel.“',
+            'Aufgaben anlegen, abhaken und verteilen: „Bad putzen jeden Samstag, Mira und Sam abwechselnd.“ Mit Uhrzeit wird daraus ein Termin.',
+            'Sagen, was heute ansteht und wer was im Blick hat.',
             'Fragen zur App beantworten: „Wo stelle ich das Jahresbudget ein?“ Er sagt dir den Weg und verlinkt die passende Hilfeseite.',
           )],
-          ['Nur für euren Haushalt', p('Der Assistent kümmert sich um Einkauf, Kochen, Vorrat, Geld und alles rund um ToHuus. Hausaufgaben, Programmieren, Politik oder Wetter lehnt er freundlich ab, ohne dafür ein Sprachmodell zu fragen und ohne dass es von deinem Kontingent abgeht. Versuche, ihm eine andere Rolle zu geben oder seine Regeln auszulesen, laufen ins Leere. Was in Rezepten, Bons oder Links steht, behandelt er als Inhalt, nie als Anweisung.')],
+          ['Nur für euren Haushalt', p('Der Assistent kümmert sich um Einkauf, Kochen, Vorrat, Aufgaben, Geld und alles rund um ToHuus. Hausaufgaben, Programmieren, Politik oder Wetter lehnt er freundlich ab, ohne dafür ein Sprachmodell zu fragen und ohne dass es von deinem Kontingent abgeht. Versuche, ihm eine andere Rolle zu geben oder seine Regeln auszulesen, laufen ins Leere. Was in Rezepten, Bons oder Links steht, behandelt er als Inhalt, nie als Anweisung.')],
           ['Alles bleibt rückgängig', p('Unter jeder Antwort steht, was er eingetragen hat, mit „Rückgängig“. Er schreibt nur, wenn du ihn darum bittest.')],
           ['Ohne KI', p('Ist die KI aus oder das Kontingent für den Monat verbraucht, versteht der Assistent weiter die häufigen kurzen Sätze wie „Klopapier ist alle und 2 Paprika“.')],
-          ['Privat', p('Gespräche sieht nur die Person, die sie geführt hat. Sie werden 30 Tage nach der letzten Nachricht gelöscht. Sprachaufnahmen werden nur in Text umgewandelt und nicht gespeichert.')],
+          ['Privat', p('Gespräche sieht nur die Person, die sie geführt hat. Sie werden 30 Tage nach der letzten Nachricht gelöscht. Sprachaufnahmen werden nur in Text umgewandelt und nicht gespeichert. Aufgaben, die nur für dich sind, bekommt der Assistent nie zu sehen.')],
         ],
-        related: ['ki-an-oder-aus', 'datenschutz-kurz', 'abo-und-kuendigen'],
+        related: ['ki-an-oder-aus', 'aufgaben', 'datenschutz-kurz'],
       },
       {
         slug: 'ki-an-oder-aus', pair: 'ai-on-or-off', group: 'ai', title: 'Mit oder ohne KI',
@@ -308,11 +352,11 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'hausinfo', group: 'people', title: 'Hausinfo für Gäste und Babysitter',
         desc: 'Karten mit allem, was jemand wissen muss, der auf euer Zuhause aufpasst.',
         sections: [
-          ['Karten', p('Die Hausinfo (Mehr › Hausinfo) sammelt auf Karten, was Babysitter, Großeltern oder Haushüter wissen müssen: Sprachbefehle für Licht und Rollläden, Abläufe wie das Zubettgehen, Tipps und wichtige Nummern. Vorlagen helfen beim Anfangen. Pro Karte legst du fest, wer sie sieht: Mitglieder, Gäste je nach Stufe, Babysitter- und Gast-Links.')],
+          ['Karten', p('Die Hausinfo (Zuhause › Hausinfo) sammelt auf Karten, was Babysitter, Großeltern oder Haushüter wissen müssen: Sprachbefehle für Licht und Rollläden, Abläufe wie das Zubettgehen, Tipps und wichtige Nummern. Vorlagen helfen beim Anfangen. Pro Karte legst du fest, wer sie sieht: Mitglieder, Gäste je nach Stufe, Babysitter- und Gast-Links.')],
           ['Sprachbefehle aus Home Assistant', p('Mit Home Assistant übernimmt ToHuus die Geräte, die ihr für Alexa, Google oder Assist freigegeben habt, mit Beispielsätzen. Nur Namen und Räume, nie Schlösser, Alarmanlagen, Kameras oder Garagentore.')],
           ['Fotos und Videos', p('Jede Karte kann bis zu acht Fotos oder kurze Videos haben, etwa wie die Heizung entlüftet wird. Sie sind so sichtbar wie die Karte selbst.')],
           ['Für Gäste', p('Auf dem <a href="babysitter.html">Babysitter-Link</a> erscheint die Hausinfo als eigener Bereich, auch offline lesbar und als A4-Blatt zum Ausdrucken.')],
-          ['Urlaubsübergabe', p('Unter Mehr › Urlaub legst du pro Reise fest, was der Haushüter wann tun soll: Katze füttern, Pflanzen gießen, Post holen, mit Rhythmus und Uhrzeit, auf Wunsch mit Fotos. Er sieht es über seinen Link und hakt ab, was erledigt ist.')],
+          ['Urlaubsübergabe', p('Unter Zuhause › Urlaub legst du pro Reise fest, was der Haushüter wann tun soll: Katze füttern, Pflanzen gießen, Post holen, mit Rhythmus und Uhrzeit, auf Wunsch mit Fotos. Er sieht es über seinen Link und hakt ab, was erledigt ist.')],
         ],
         related: ['babysitter', 'hausinfo-codes', 'gaeste'],
       },
@@ -368,9 +412,9 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'wer-sieht-was', group: 'people', title: 'Wer sieht was?',
         desc: 'Was gemeinsam ist, was privat bleibt und was nur du siehst.',
         sections: [
-          ['Gemeinsam', p('Die Liste, der Wochenplan, Rezepte und der Vorrat gehören dem Haushalt. Jede Zeile zeigt, wer sie eingetragen hat.')],
+          ['Gemeinsam', p('Die Liste, der Wochenplan, Rezepte, der Vorrat und die Aufgaben des Haushalts gehören allen. Jede Zeile zeigt, wer sie eingetragen hat.')],
           ['Diskret und nur für dich', p('Diskrete Einträge sehen die anderen nur als Platzhalter, private gar nicht. Beides geht nie an Home Assistant, Displays, Gast-Links oder KI-Assistenten.')],
-          ['Nur für dich', p('Deine Gespräche mit dem Assistenten, deine Anmeldungen und Geräte und deine persönlichen Einstellungen, auch ob du die KI für dich abgeschaltet hast.')],
+          ['Nur für dich', p('Deine Gespräche mit dem Assistenten, deine Anmeldungen und Geräte, deine persönlichen Einstellungen, auch ob du die KI für dich abgeschaltet hast, und Aufgaben „Nur für mich“.', 'Bei „Wer hat was im Blick“ stehen nur Namen. Deine eigene Zahl siehst nur du, Anteile erst, wenn alle zustimmen (siehe <a href="aufgaben.html">Aufgaben</a>).')],
           ['Gäste und Kinder', p('Sehen nur, was ihr freigebt (siehe <a href="gaeste.html">Gäste und Rechte</a>).')],
         ],
         related: ['einkaufsliste', 'gaeste', 'datenschutz-kurz'],
@@ -467,14 +511,29 @@ cards:
         related: ['ki-an-oder-aus', 'datenschutz-kurz', 'rezeptpaket'],
       },
       {
-        slug: 'erinnerungen-spiegeln', group: 'connect', title: 'Apple Erinnerungen oder Nextcloud spiegeln',
-        desc: 'Die Einkaufsliste zusätzlich in einer anderen Listen-App, über CalDAV.',
+        slug: 'erinnerungen-spiegeln', pair: 'reminders-calendar', group: 'connect', title: 'Erinnerungen und Kalender',
+        desc: 'Einkaufslisten, Aufgaben und Termine in Apple Erinnerungen, Apple Kalender, Nextcloud, Google Kalender oder Outlook.',
         sections: [
-          ['So geht es', p('ToHuus ist selbst ein CalDAV-Server: Jede eurer Listen erscheint als eigene Erinnerungsliste. Abhaken, Hinzufügen und Umbenennen gehen in beide Richtungen.'), ol(
-            'In ToHuus: Einstellungen › Mein Konto › Die Liste in der Erinnerungen-App › Passwort erstellen. Server, Benutzername und Passwort werden einmal angezeigt.',
-            'Auf dem iPhone: Einstellungen › Apps › Erinnerungen › Accounts › Account hinzufügen › Andere › CalDAV-Account hinzufügen, die drei Angaben eintragen.',
-            'Erinnerungen öffnen: Deine ToHuus-Listen stehen unter dem neuen Account.',
+          ['Was du bekommst', p('ToHuus ist selbst ein CalDAV-Server. Mit einem Passwort erscheinen in Apple Erinnerungen und im Apple Kalender:'), ul(
+            'Jede eurer Einkaufslisten als eigene Erinnerungsliste.',
+            '„ToHuus · Aufgaben“ mit den Aufgaben des Haushalts und „ToHuus · Nur für mich“ mit deinen eigenen.',
+            '„ToHuus · Kalender“ und „ToHuus · Mein Kalender“ mit allen Aufgaben, die ein Datum haben, und euren Terminen.',
+          ), p(
+            'Alles geht in beide Richtungen. Hakst du in Erinnerungen etwas ab, ist es in ToHuus erledigt. Eine neue Erinnerung in „ToHuus · Aufgaben“ wird eine Aufgabe. Verschiebst oder benennst du einen Termin im Kalender um, ändert sich die Aufgabe, und ein neuer Termin dort wird zur Aufgabe. Löschen räumt die Aufgabe in ToHuus weg.',
+            'Eine wiederkehrende Aufgabe steht als ein Termin am nächsten Datum im Kalender, den Rhythmus behält ToHuus. Was nur für dich ist, steht nur in „Nur für mich“ und „Mein Kalender“ und nur mit deinem eigenen Passwort.',
+          )],
+          ['Auf dem iPhone einrichten', ol(
+            'In ToHuus: ganz unten unter Zuhause › Aufgaben oder unter Einstellungen › Mein Konto bei „Erinnerungen & Kalender“ auf „Passwort erstellen“ tippen. Server, Benutzername und Passwort werden einmal angezeigt.',
+            'Für Erinnerungen: Einstellungen › Apps › Erinnerungen › Accounts › Account hinzufügen › Andere › CalDAV-Account hinzufügen, die drei Angaben eintragen.',
+            'Für den Kalender: Einstellungen › Apps › Kalender › Kalenderaccounts › Account hinzufügen › Andere › CalDAV-Account hinzufügen, mit denselben Angaben.',
+            'Erinnerungen und Kalender öffnen: Deine ToHuus-Listen und Kalender stehen unter dem neuen Account.',
           ), p('Nextcloud Tasks, DAVx⁵ oder Thunderbird nehmen die volle Adresse mit <code>/caldav/</code> am Ende. Jedes Passwort lässt sich einzeln widerrufen.')],
+          ['Google Kalender und Outlook', p('Für Kalender ohne CalDAV gibt es ein Kalender-Abo. Unter „Kalender-Abo für Google, Outlook und andere“ tippst du auf „Link erstellen“, auf Wunsch mit deinen privaten Aufgaben.'), ul(
+            'Google Kalender (im Browser): Weitere Kalender › + › Per URL, dann den Link einfügen.',
+            'Outlook: Kalender hinzufügen › Aus dem Internet abonnieren, dann den Link einfügen.',
+            'Auf dem Mac oder iPhone reicht ein Tipp auf „Im Kalender öffnen“.',
+          ), p('Über das Abo lässt sich nichts ändern, und der Kalender holt sich etwa stündlich den neuen Stand. Behalte den Link für dich, denn wer ihn hat, sieht die Einträge. Du kannst ihn jederzeit wieder löschen.')],
+          ['Eine einzelne Aufgabe', p('Bei jeder Aufgabe mit Datum gibt es „In den Kalender“. Auf dem iPhone öffnet sich der Termin direkt im Kalender, im Browser lädst du ihn als Datei herunter. Dafür brauchst du kein Passwort. Der Eintrag ist dann eine Kopie und ändert sich nicht mehr mit.')],
           ['Oder über Home Assistant', ol(
             'In Home Assistant die Integration „CalDAV“ mit deinem Nextcloud-Konto einrichten. Deine Aufgabenlisten erscheinen dort als To-do-Listen.',
             'Die ToHuus-Integration verbinden (siehe <a href="home-assistant.html">Home Assistant</a>).',
@@ -482,7 +541,7 @@ cards:
           )],
           ['Siri und Kurzbefehle', p('Etwas per Siri auf die Liste setzen geht mit einem persönlichen Schlüssel und einem Kurzbefehl: Einstellungen › Mein Konto › Aus anderen Apps an ToHuus teilen. Der Schlüssel kann nur auf die Liste schreiben.')],
         ],
-        related: ['home-assistant', 'gemeinsam-einkaufen'],
+        related: ['aufgaben', 'home-assistant', 'gemeinsam-einkaufen'],
       },
       {
         slug: 'umzug-in-die-cloud', pair: 'move-to-the-cloud', group: 'account', title: 'Vom eigenen Server in die Cloud',
@@ -511,12 +570,17 @@ cards:
 cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_URL</code>, deinen Namen und ein Passwort ein. Danach <code>http://localhost:8080</code> öffnen. Die Daten liegen in <code>./data</code>.')],
-          ['HTTPS und die App', p('Stell deinen üblichen Reverse Proxy davor. Dann öffnest du die Web-App im Browser und legst sie auf den Startbildschirm.')],
+          ['HTTPS und die Web-App', p('Stell deinen üblichen Reverse Proxy davor, etwa Caddy oder einen anderen mit Let’s Encrypt. Dann öffnest du die Web-App im Browser und legst sie auf den Startbildschirm.')],
+          ['Mit der iPhone-App', p('Die iPhone-App funktioniert auch mit deinem eigenen Server. Sie braucht https mit gültigem Zertifikat, einfaches http geht nur im Heimnetz. Auf dem Startbildschirm der App tippst du auf „Eigener Server“ und gibst die Adresse ein, mit der du ToHuus im Browser öffnest. Dann hast du drei Wege:'), ul(
+            '<b>Mit Passwort</b>: Name oder E-Mail und Passwort, dazu der Bestätigungscode, wenn du die Anmeldung in zwei Schritten eingeschaltet hast.',
+            '<b>Im Browser anmelden</b>: mit allem, was dein Server anbietet, etwa Passkey, E-Mail-Link oder SSO. Danach fragt eine Seite „ToHuus-App verbinden?“, und du bestätigst.',
+            '<b>Per QR-Code</b>: In der Web-App unter Einstellungen › Mein Konto › „iPhone-App verbinden“ erscheint ein QR-Code. In der App auf „QR-Code scannen“ tippen und darauf halten. Adresse und Passwort musst du dann nicht tippen.',
+          ), p('Auf einem iPhone können mehrere Server und Haushalte angemeldet sein, du wechselst mit einem Tipp. Auf dem eigenen Server ist in der App alles dabei, ohne Tarif und ohne Bezahlen.'), tip('Einen Passkey direkt in der App anlegen geht nur mit der ToHuus Cloud, so regelt Apple das. Auf deinem eigenen Server nimmst du für den Passkey den Weg „Im Browser anmelden“.')],
           ['KI', p('Optional, mit einem Schlüssel für jeden OpenAI-kompatiblen Dienst, etwa Mistral, auch lokal. Ohne Schlüssel läuft alles außer Fotos von Papierbons und freien Fragen an den Assistenten.')],
           ['Sicherungen', p('Jede Nacht eine Sicherung, auf Wunsch zusätzlich auf eine WebDAV-Freigabe wie Nextcloud. Die Datenbank lässt sich mit <code>DB_ENCRYPTION_KEY</code> verschlüsseln.')],
           ['Nur im eigenen Netz', p('Bon-Postfach per IMAP, Telegram, Bon-Drucker und Home Assistant mit allen Extras.')],
         ],
-        related: ['home-assistant', 'umzug-in-die-cloud', 'daten-export'],
+        related: ['erste-schritte', 'home-assistant', 'umzug-in-die-cloud'],
       },
       {
         slug: 'daten-export', group: 'account', title: 'Deine Daten mitnehmen',
@@ -577,9 +641,10 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Funktioniert das ohne REWE?', p('Ja. Papierbons per Foto, PDF-Bons von EDEKA und Kaufland, und wer gar keine Bons sammeln will, hakt einfach auf der Liste ab.')],
           ['Brauche ich KI?', p('Nein. Siehe <a href="ki-an-oder-aus.html">Mit oder ohne KI</a>.')],
           ['Gibt es eine Android-App?', p('Nein. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst.')],
+          ['Geht die iPhone-App mit meinem eigenen Server?', p('Ja. Auf dem Startbildschirm der App tippst du auf „Eigener Server“. Wie die Anmeldung geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>.')],
           ['Wann kommt die iPhone-App?', p(`Sie ist im Test über TestFlight, in einem kleinen, geschlossenen Kreis. Einen Platz kannst du per <a href="${k.TF_DE}">Mail anfragen</a>. iPad und Apple Watch kommen mit der App.`)],
           ['Brauche ich einen Thermomix?', p('Nein. Der Kochplaner zeigt Rezepte mit und ohne Thermomix.')],
-          ['Ist ToHuus ein Familienkalender?', p('Nein. ToHuus kümmert sich um Einkauf, Kochen und das Geld dafür. Termine, Aufgaben mit Zuständigen oder Punkte gibt es bewusst nicht.')],
+          ['Ist ToHuus ein Familienkalender?', p('Nein. ToHuus kümmert sich um Einkauf, Kochen, Geld und das, was zu Hause zu tun ist. Dafür gibt es <a href="aufgaben.html">Aufgaben</a>, auch mit Uhrzeit als Termin, und die stehen auf Wunsch in eurem Kalender. Chat, Punkte, Ranglisten oder Belohnungen gibt es bewusst nicht.')],
           ['Wo melde ich einen Fehler?', p(`Per Mail an <a href="mailto:${k.MAIL}">${k.MAIL}</a> oder als Issue auf <a href="${k.GH}/issues">GitHub</a>.`)],
         ],
         related: ['erste-schritte', 'abo-und-kuendigen', 'datenschutz-kurz'],
@@ -591,7 +656,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
     lang: 'en',
     dir: 'help',
     title: 'Help & tips',
-    desc: 'How-tos for ToHuus: the list, receipts, speaking, AI on or off, recipe packs, Home Assistant, privacy and subscriptions. No sign-in, no tracking.',
+    desc: 'How-tos for ToHuus: the list, receipts, tasks, the assistant, AI on or off, recipe packs, Home Assistant, privacy and subscriptions. No sign-in, no tracking.',
     label: 'Help & tips',
     h1: 'How does ToHuus work?',
     lede: 'Short guides to what ToHuus does today. Anything not finished yet is marked “Coming soon”. The full set of articles is in German.',
@@ -606,7 +671,8 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
       ['start', 'Getting started'],
       ['shop', 'Shopping'],
       ['cook', 'Cooking'],
-      ['ai', 'Speaking and AI'],
+      ['home', 'Home'],
+      ['ai', 'Assistant and AI'],
       ['connect', 'Connect'],
       ['account', 'Account, data, privacy'],
     ],
@@ -617,19 +683,23 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Account or your own server', p(
             `In ToHuus Cloud you create an account and a household in the iPhone app or in the browser at <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a>. You can sign in with an e-mail code, a password, a passkey or Sign in with Apple. Every new household gets 14 days of Plus, no payment details needed. During the beta you need an access code or an invitation to sign up, and test households often get Household or Plus for free.`,
-            'If you have your own server, ToHuus runs there as a Docker container (see <a href="self-hosting.html">Self-hosting</a>). There you use the web app in the browser; the iPhone app is meant for ToHuus Cloud.',
+            'If you have your own server, ToHuus runs there as a Docker container (see <a href="self-hosting.html">Self-hosting</a>). You then use the web app in the browser or the iPhone app: on its start screen tap “Own server” and sign in with the address and your password, in the browser or with a QR code from the web app.',
           )],
           ['Who belongs to it?', p('On first start ToHuus only asks this: just you, the two of you, a family, a flat share, or a household you look after. What you see follows from that, and you can change it later.')],
           ['The five areas', ul(
             '<b>Today</b>: what is due, what should be used soon, what you can cook, what the month has cost so far.',
-            '<b>Shopping</b>: the shared list and shop mode.',
-            '<b>Stock</b>: optional, for anyone who likes to keep stock.',
-            '<b>Cook</b>: ideas from what is at home, recipes and the week plan.',
-            '<b>Money</b>: what food and household cost, by shop and category.',
-          ), p('The “Speak” button is on every page. Settings live behind your picture at the top of Today.')],
-          ['The first week', p('Write what is missing on the list, tick off what you buy, share receipts if you have them and invite the others. Nothing needs upkeep. After a few weeks ToHuus knows your rhythm and suggests what is due again.')],
+            '<b>Shopping</b>: the shared list, shop mode and your wishes.',
+            '<b>Cooking</b>: ideas from what is at home, recipes, favourites and the week plan.',
+            '<b>Home</b>: tasks and the pantry, switched at the top of the page, plus “Where’s what?”, house info and “Trip / away”.',
+            '<b>Money</b>: what food and household cost, by shop and category, and your receipts.',
+          ), p('Keeping the pantry is optional. If you switch off cooking, stock or money under “What do you use?”, they disappear here too.', 'The round button with the sparkle is the assistant, on every page. At the top right of every page you find search and your picture. Your picture opens “More” with household, settings, devices & connections and help.')],
+          ['Search', p(
+            'The magnifier at the top right is on every page; in the browser there is also the search field in the sidebar. Press ⌘K, Ctrl+K or “/” to open it from anywhere, as long as you are not typing somewhere else.',
+            'It finds what you can reach in ToHuus: functions and settings (also with words like “password”, “print labels” or “dark mode”), products in stock, what is on the list, recipes, also by an ingredient, tasks, house info cards and people in the household. If nothing fits, it offers to put your words on the list or create a new task.',
+          ), tip('Search follows the same rules as everything else: private items and private tasks only for their owner, house info codes never, and guests only what their level shows.')],
+          ['The first week', p('Write what is missing on the list, tick off what you buy, share receipts if you have them and invite the others. If you like, add what comes up again and again at home under Home › Tasks (see <a href="tasks.html">Tasks</a>). Nothing needs upkeep. After a few weeks ToHuus knows your rhythm and suggests what is due again.')],
         ],
-        related: ['receipts', 'shopping-together', 'faq'],
+        related: ['receipts', 'tasks', 'faq'],
       },
       {
         slug: 'shopping-together', pair: 'gemeinsam-einkaufen', group: 'shop', title: 'Shopping together',
@@ -649,27 +719,61 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Digital receipts', p('Share an e-receipt or order PDF with ToHuus, for example from your mail app. For REWE in Germany, ToHuus matches the order with the receipt and books what was actually delivered.')],
           ['Paper receipts', p('Take a photo in the app. ToHuus first reads the text itself on the server (text recognition without AI) and checks that the lines add up to the total. Only if they do not and AI is on, Mistral reads the photo again.', 'With AI off it stays with text recognition. Lines read unclearly are marked, you correct them in the check.')],
-          ['Check before booking', p('Every receipt waits for a check first. Anything ToHuus could not read with confidence is marked. Correct a line and ToHuus remembers it for that shop. Before receipt text goes to the AI, card and loyalty numbers, TSE data and the address are removed.')],
+          ['Check before booking', p('You find all receipts under Money › Receipts. Every receipt waits for a check first. Anything ToHuus could not read with confidence is marked. Correct a line and ToHuus remembers it for that shop. Before receipt text goes to the AI, card and loyalty numbers, TSE data and the address are removed.')],
           ['Which shops', p('REWE is tested best. Other German chains, UK, US and Swedish receipts have parsers tested with synthetic receipts. Anonymised real receipts help: every check has “Help improve recognition”. Nothing is sent by itself.')],
         ],
         related: ['ai-on-or-off', 'getting-started'],
       },
       {
-        slug: 'speak', pair: 'sprechen', group: 'ai', title: 'Speak and the assistant',
-        desc: 'What the “Speak” button does, what it adds and how to undo it.',
+        slug: 'tasks', pair: 'aufgaben', group: 'home', title: 'Tasks',
+        desc: 'What needs doing at home, once or again and again, who does it and who keeps what in mind.',
         sections: [
-          ['Speak or type', p('The “Speak” button is on every page. Say or type what is going on: “We are out of milk, and we need something for Sunday.” The assistant puts milk on the list and asks what you would like on Sunday.')],
+          ['What belongs here', p(
+            'Home › Tasks holds what needs doing in your home. <b>Household</b> is things like cleaning the bathroom, taking out the bins or changing the bed linen. <b>Care & deadlines</b> is water filters, smoke detectors, the car inspection or passports. At the top you filter by All, Household, Care & deadlines and Mine.',
+            'To get going there are templates for the usual chores. On Today a card shows what is on today, and one tap ticks it off.',
+          )],
+          ['Once, again and again, or when needed', ul(
+            '<b>Once</b>: on a fixed date. When it is done, it leaves the overview.',
+            '<b>Again and again</b>: every few days, weeks or months, or on fixed weekdays. You choose whether the next time counts from when it was done or from the planned day, such as “every Monday”.',
+            '<b>When needed</b>: no date, such as taking the glass away. It is never due and is there when the time comes.',
+          ), p('For recurring tasks one tap on “Done” is enough. ToHuus works out the next date.')],
+          ['For everyone or only for me', p('A task belongs to the whole household or only to you. Nobody else sees what is “Only for me”: not the other members, no guests, not the assistant, no displays, not Home Assistant. Reminders for it go only to you.')],
+          ['Sub-items', p('A task can have sub-items, for the bathroom say sink, mirror, floor. You tick them off one by one. When the task is done, they are open again for next time.')],
+          ['Who does it', p(
+            'Under “Who does it” you choose a member or a child from your kid profiles, or leave it at “Whoever has time”. Separately, someone can say “I keep it in mind”: that person remembers it, even when someone else does it.',
+            'If you take turns, switch on “Take turns” and choose who joins in, for example “Bathroom every Saturday, Mira and Sam take turns”. “Done” passes the task to the next person, “Undo” gives it back.',
+          )],
+          ['Recently done and your rhythm', p('“Recently done” shows what got done in the last few days. After a few times each task shows how often you really do it, for example “You do it about every 9 days”. That tells you whether the planned rhythm fits your life.')],
+          ['Who keeps what in mind', p(
+            'Noticing and planning is work too. “Who keeps what in mind” shows for the last 28 days who looked after shopping, cooking, money and tasks: who put something on the list or shopped, planned meals, brought in receipts or did tasks.',
+            'It shows names only, in alphabetical order, without numbers. Only you see your own number. Shares in percent appear only once everyone in the household has switched on “Compare shares”. Below, it lists due tasks nobody keeps in mind yet.',
+          ), tip('Private list items, personal receipts and tasks that are “Only for me” never count here. Guests do not see this part.')],
+          ['Appointments', p(
+            'Give a task with a date a time and it becomes an appointment, with a duration and a place if you like, such as “Dentist, Tuesday 3 pm, 30 min”. “Add to calendar” puts a single task into your calendar.',
+            'All tasks and appointments in Apple Calendar, Apple Reminders, Google Calendar or Outlook at once: see <a href="reminders-calendar.html">Reminders and calendars</a>.',
+          )],
+          ['With the assistant', p('Tell the <a href="speak.html">assistant</a> something like “Change the bed linen every two weeks” or “What is on today?”. It adds tasks, ticks them off and hands them out. Everything it adds can be undone.')],
+        ],
+        related: ['reminders-calendar', 'speak', 'getting-started'],
+      },
+      {
+        slug: 'speak', pair: 'sprechen', group: 'ai', title: 'The assistant',
+        desc: 'What the assistant does, what it adds and how to undo it.',
+        sections: [
+          ['Speak or type', p('The round button with the sparkle at the bottom right is the assistant, on every page. Type what is going on, or tap the microphone and say it: “We are out of milk, and we need something for Sunday.” The assistant puts milk on the list and asks what you would like on Sunday.')],
           ['What it can do', ul(
             'Add to the list, tick off, remove.',
             'Say what is still there and what is due.',
             'Suggest what you can cook and put a dish into the week plan.',
             'Answer money questions: “What did the shopping cost in September?”',
             'Log a purchase without a receipt.',
+            'Add, tick off and hand out tasks: “Clean the bathroom every Saturday, Mira and Sam take turns.” With a time it becomes an appointment.',
+            'Say what is on today and who keeps what in mind.',
           )],
           ['Everything can be undone', p('Under every answer it says what it added, with “Undo”. It only writes when you ask it to.')],
-          ['Private', p('Only the person who had a conversation sees it. Conversations are deleted 30 days after the last message. Voice recordings are turned into text and not stored.')],
+          ['Private', p('Only the person who had a conversation sees it. Conversations are deleted 30 days after the last message. Voice recordings are turned into text and not stored. Tasks that are only for you never reach the assistant.')],
         ],
-        related: ['ai-on-or-off', 'privacy-in-short'],
+        related: ['ai-on-or-off', 'tasks', 'privacy-in-short'],
       },
       {
         slug: 'ai-on-or-off', pair: 'ki-an-oder-aus', group: 'ai', title: 'With or without AI',
@@ -783,6 +887,33 @@ cards:
         related: ['ai-on-or-off', 'privacy-in-short'],
       },
       {
+        slug: 'reminders-calendar', pair: 'erinnerungen-spiegeln', group: 'connect', title: 'Reminders and calendars',
+        desc: 'Shopping lists, tasks and appointments in Apple Reminders, Apple Calendar, Nextcloud, Google Calendar or Outlook.',
+        sections: [
+          ['What you get', p('ToHuus is a CalDAV server itself. With one password, Apple Reminders and Apple Calendar show:'), ul(
+            'Each of your shopping lists as its own reminder list.',
+            '“ToHuus · Tasks” with the household’s tasks and “ToHuus · Only for me” with your own.',
+            '“ToHuus · Calendar” and “ToHuus · My calendar” with every task that has a date, and your appointments.',
+          ), p(
+            'Everything works both ways. Tick something off in Reminders and it is done in ToHuus. A new reminder in “ToHuus · Tasks” becomes a task. Move or rename an appointment in the calendar and the task changes; a new event there becomes a task. Deleting puts the task away in ToHuus.',
+            'A recurring task shows as one event on its next date; ToHuus keeps the rhythm. What is only for you appears only in “Only for me” and “My calendar”, and only with your own password.',
+          )],
+          ['Set it up on the iPhone', ol(
+            'In ToHuus: at the bottom of Home › Tasks or under Settings › My account, find “Reminders & Calendar” and tap “Create password”. Server, user name and password are shown once.',
+            'For Reminders: Settings › Apps › Reminders › Accounts › Add Account › Other › Add CalDAV Account, and enter the three details.',
+            'For Calendar: Settings › Apps › Calendar › Calendar Accounts › Add Account › Other › Add CalDAV Account, with the same details.',
+            'Open Reminders and Calendar: your ToHuus lists and calendars are under the new account.',
+          ), p('Nextcloud Tasks, DAVx⁵ or Thunderbird take the full address ending in <code>/caldav/</code>. Every password can be revoked on its own.')],
+          ['Google Calendar and Outlook', p('For calendars without CalDAV there is a calendar subscription. Under “Calendar subscription for Google, Outlook and others” tap “Create link”, with your private tasks if you like.'), ul(
+            'Google Calendar (web): Other calendars › + › From URL, paste the link.',
+            'Outlook: Add calendar › Subscribe from web, paste the link.',
+            'On a Mac or iPhone one tap on “Open in calendar” is enough.',
+          ), p('The subscription is read-only, and the calendar fetches the latest state about every hour. Keep the link to yourself: whoever has it sees the entries. You can delete it any time.')],
+          ['A single task', p('Every task with a date has “Add to calendar”. On the iPhone the event opens straight in Calendar; in the browser you download it as a file. No password needed. The entry is a copy and does not change along with the task.')],
+        ],
+        related: ['tasks', 'home-assistant', 'shopping-together'],
+      },
+      {
         slug: 'move-to-the-cloud', pair: 'umzug-in-die-cloud', group: 'account', title: 'From your own server to the cloud',
         desc: 'Taking a self-hosted household into ToHuus Cloud.',
         sections: [
@@ -799,11 +930,16 @@ cards:
 cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code>, your name and a password, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.')],
-          ['HTTPS and the app', p('Put your usual reverse proxy in front. Then open the web app in the browser and add it to your home screen.')],
+          ['HTTPS and the web app', p('Put your usual reverse proxy in front, such as Caddy or another one with Let’s Encrypt. Then open the web app in the browser and add it to your home screen.')],
+          ['With the iPhone app', p('The iPhone app works with your own server too. It needs https with a valid certificate; plain http only works in your home network. On the app’s start screen tap “Own server” and enter the address you open ToHuus with in the browser. Then there are three ways in:'), ul(
+            '<b>Password</b>: name or e-mail and password, plus the code if you switched on two-step sign-in.',
+            '<b>Sign in in the browser</b>: with whatever your server offers, such as a passkey, an e-mail link or SSO. A page then asks “Connect the ToHuus app?” and you confirm.',
+            '<b>QR code</b>: in the web app, Settings › My account › “Connect the iPhone app” shows a QR code. In the app tap “Scan QR code” and point it there. No address or password to type.',
+          ), p('One iPhone can be signed in to several servers and households; you switch with one tap. On your own server everything in the app is included, no plans, no payments.'), tip('Creating a passkey right in the app only works with ToHuus Cloud; that is Apple’s rule. On your own server, use “Sign in in the browser” for your passkey.')],
           ['AI', p('Optional, with a key for any OpenAI-compatible service, such as Mistral, local ones included. Without a key everything works except photos of paper receipts and open questions to the assistant.')],
           ['Backups', p('A backup every night, optionally copied to a WebDAV share like Nextcloud. The database can be encrypted with <code>DB_ENCRYPTION_KEY</code>.')],
         ],
-        related: ['home-assistant', 'move-to-the-cloud'],
+        related: ['getting-started', 'home-assistant', 'move-to-the-cloud'],
       },
       {
         slug: 'privacy-in-short', pair: 'datenschutz-kurz', group: 'account', title: 'Privacy in short',
@@ -833,9 +969,10 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Do I have to type everything in?', p('No. Receipts come in as a PDF or a photo, and what you tick off the list counts as a purchase too. You do not have to keep stock.')],
           ['Do I need AI?', p('No. See <a href="ai-on-or-off.html">With or without AI</a>.')],
           ['Is there an Android app?', p('No. In the browser ToHuus runs as a web app you can add to your home screen.')],
+          ['Does the iPhone app work with my own server?', p('Yes. On the app’s start screen tap “Own server”. How signing in works is under <a href="self-hosting.html">Self-hosting</a>.')],
           ['When is the iPhone app coming?', p(`It is being tested on TestFlight in a small, closed group. You can <a href="${k.TF_EN}">ask for a place by e-mail</a>. iPad and Apple Watch come with the app.`)],
           ['Do I need a Thermomix?', p('No. The cook planner shows recipes with and without one.')],
-          ['Is ToHuus a family calendar?', p('No. ToHuus looks after shopping, cooking and the money for both. There are deliberately no appointments, chores with owners or points.')],
+          ['Is ToHuus a family calendar?', p('No. ToHuus looks after shopping, cooking, money and what needs doing at home. For that there are <a href="tasks.html">tasks</a>, also with a time as an appointment, and they can show up in your own calendar. There is deliberately no chat, no points, no leaderboards and no rewards.')],
           ['Where do I report a bug?', p(`By e-mail to <a href="mailto:${k.MAIL}">${k.MAIL}</a> or as an issue on <a href="${k.GH}/issues">GitHub</a>.`)],
         ],
         related: ['getting-started', 'subscription'],

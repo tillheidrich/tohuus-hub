@@ -78,6 +78,8 @@ struct AppAuthResponse: Decodable, Sendable {
     var household: JSONValue?
     /// Sign in with Apple: a new account and household were created (the app asks about sample data)
     var created: Bool?
+    /// joining by invitation (POST /api/invite/:token, client "ios") answers the member's name on top level
+    var name: String?
 
     /// The active household: an id string/number or an object with `id`.
     var householdId: String? {
@@ -88,7 +90,7 @@ struct AppAuthResponse: Decodable, Sendable {
         return households.first?.id.value
     }
 
-    var userName: String? { user?["name"]?.string ?? account?["name"]?.string }
+    var userName: String? { user?["name"]?.string ?? account?["name"]?.string ?? name }
 }
 
 /// GET /api/cloud/me

@@ -337,3 +337,48 @@ struct TodayChecklistCard: View {
         }
     }
 }
+
+/// Settings › Haushalt (web: pulse.tsx PulseSettingsCard): the weekly question on Heute – take part, and separately
+/// share the anonymous count. Admins change it, everyone sees it.
+struct PulseSettingsSection: View {
+    let api: APIClient
+    let admin: Bool
+    @State private var state: PulseState?
+    @State private var error: String?
+
+    var body: some View {
+        Section {
+            if let s = state {
+                Toggle(isOn: Binding(get: { s.enabled ?? false }, set: { v in Task { await set(["enabled": v]) } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Ask on Sundays"))
+                        Text(L("“How often did someone have to ask ‘Do we still have …?’” – one tap on “Heute”.")).font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                }
+                .disabled(!admin)
+                if s.enabled == true {
+                    Toggle(isOn: Binding(get: { s.share ?? false }, set: { v in Task { await set(["share": v]) } })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("Share the answer anonymously"))
+                            Text(L("Only a count per week and answer – no name, no household. Off by default.")).font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    .disabled(!admin)
+                }
+            }
+            if let error { Text(error).font(.caption).foregroundStyle(Theme.empty) }
+        } header: {
+            Text(L("Weekly question (test phase)"))
+        }
+        .tint(Theme.primary)
+        .task { state = try? await api.pulse() }
+    }
+
+    private func set(_ body: [String: Any]) async {
+        do {
+            _ = try await api.send("PUT", "api/pulse/settings", json: body, as: Ignored.self)
+            state = try await api.pulse()
+            error = nil
+        } catch { self.error = APIError.from(error).localizedDescription }
+    }
+}

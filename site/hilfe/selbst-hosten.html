@@ -45,6 +45,7 @@
     <a href="../de/#einkauf">Einkauf</a>
     <a href="../de/#kochen">Kochen</a>
     <a href="../de/#geld">Geld</a>
+    <a href="../de/#aufgaben">Aufgaben</a>
     <a href="../de/#bring-mir-was">Bring mir was</a>
     <a href="../de/#preise">Preise</a>
     <a href="../de/#datenschutz">Datenschutz</a>
@@ -78,10 +79,11 @@
     <ol>
       <li><a href="#was-du-brauchst"><span>1</span>Was du brauchst</a></li>
       <li><a href="#installieren"><span>2</span>Installieren</a></li>
-      <li><a href="#https-und-die-app"><span>3</span>HTTPS und die App</a></li>
-      <li><a href="#ki"><span>4</span>KI</a></li>
-      <li><a href="#sicherungen"><span>5</span>Sicherungen</a></li>
-      <li><a href="#nur-im-eigenen-netz"><span>6</span>Nur im eigenen Netz</a></li>
+      <li><a href="#https-und-die-web-app"><span>3</span>HTTPS und die Web-App</a></li>
+      <li><a href="#mit-der-iphone-app"><span>4</span>Mit der iPhone-App</a></li>
+      <li><a href="#ki"><span>5</span>KI</a></li>
+      <li><a href="#sicherungen"><span>6</span>Sicherungen</a></li>
+      <li><a href="#nur-im-eigenen-netz"><span>7</span>Nur im eigenen Netz</a></li>
     </ol>
     <p class="legal-links"><a href="./">Alle Hilfe-Themen<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a><a href="../help/self-hosting.html" hreflang="en">English<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></p>
   </nav>
@@ -97,25 +99,29 @@ cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build</pre></div><p>In <code>.env</code> trägst du <code>BASE_URL</code>, deinen Namen und ein Passwort ein. Danach <code>http://localhost:8080</code> öffnen. Die Daten liegen in <code>./data</code>.</p>
     </section>
-    <section id="https-und-die-app" aria-labelledby="https-und-die-app-h">
-      <h2 id="https-und-die-app-h"><span class="legal-no">3</span>HTTPS und die App</h2>
-      <p>Stell deinen üblichen Reverse Proxy davor. Dann öffnest du die Web-App im Browser und legst sie auf den Startbildschirm.</p>
+    <section id="https-und-die-web-app" aria-labelledby="https-und-die-web-app-h">
+      <h2 id="https-und-die-web-app-h"><span class="legal-no">3</span>HTTPS und die Web-App</h2>
+      <p>Stell deinen üblichen Reverse Proxy davor, etwa Caddy oder einen anderen mit Let’s Encrypt. Dann öffnest du die Web-App im Browser und legst sie auf den Startbildschirm.</p>
+    </section>
+    <section id="mit-der-iphone-app" aria-labelledby="mit-der-iphone-app-h">
+      <h2 id="mit-der-iphone-app-h"><span class="legal-no">4</span>Mit der iPhone-App</h2>
+      <p>Die iPhone-App funktioniert auch mit deinem eigenen Server. Sie braucht https mit gültigem Zertifikat, einfaches http geht nur im Heimnetz. Auf dem Startbildschirm der App tippst du auf „Eigener Server“ und gibst die Adresse ein, mit der du ToHuus im Browser öffnest. Dann hast du drei Wege:</p><ul><li><b>Mit Passwort</b>: Name oder E-Mail und Passwort, dazu der Bestätigungscode, wenn du die Anmeldung in zwei Schritten eingeschaltet hast.</li><li><b>Im Browser anmelden</b>: mit allem, was dein Server anbietet, etwa Passkey, E-Mail-Link oder SSO. Danach fragt eine Seite „ToHuus-App verbinden?“, und du bestätigst.</li><li><b>Per QR-Code</b>: In der Web-App unter Einstellungen › Mein Konto › „iPhone-App verbinden“ erscheint ein QR-Code. In der App auf „QR-Code scannen“ tippen und darauf halten. Adresse und Passwort musst du dann nicht tippen.</li></ul><p>Auf einem iPhone können mehrere Server und Haushalte angemeldet sein, du wechselst mit einem Tipp. Auf dem eigenen Server ist in der App alles dabei, ohne Tarif und ohne Bezahlen.</p><p class="help-tip">Einen Passkey direkt in der App anlegen geht nur mit der ToHuus Cloud, so regelt Apple das. Auf deinem eigenen Server nimmst du für den Passkey den Weg „Im Browser anmelden“.</p>
     </section>
     <section id="ki" aria-labelledby="ki-h">
-      <h2 id="ki-h"><span class="legal-no">4</span>KI</h2>
+      <h2 id="ki-h"><span class="legal-no">5</span>KI</h2>
       <p>Optional, mit einem Schlüssel für jeden OpenAI-kompatiblen Dienst, etwa Mistral, auch lokal. Ohne Schlüssel läuft alles außer Fotos von Papierbons und freien Fragen an den Assistenten.</p>
     </section>
     <section id="sicherungen" aria-labelledby="sicherungen-h">
-      <h2 id="sicherungen-h"><span class="legal-no">5</span>Sicherungen</h2>
+      <h2 id="sicherungen-h"><span class="legal-no">6</span>Sicherungen</h2>
       <p>Jede Nacht eine Sicherung, auf Wunsch zusätzlich auf eine WebDAV-Freigabe wie Nextcloud. Die Datenbank lässt sich mit <code>DB_ENCRYPTION_KEY</code> verschlüsseln.</p>
     </section>
     <section id="nur-im-eigenen-netz" aria-labelledby="nur-im-eigenen-netz-h">
-      <h2 id="nur-im-eigenen-netz-h"><span class="legal-no">6</span>Nur im eigenen Netz</h2>
+      <h2 id="nur-im-eigenen-netz-h"><span class="legal-no">7</span>Nur im eigenen Netz</h2>
       <p>Bon-Postfach per IMAP, Telegram, Bon-Drucker und Home Assistant mit allen Extras.</p>
     </section>
     <aside class="help-related" aria-labelledby="rel-h">
       <p class="legal-summary-h" id="rel-h">Passt dazu</p>
-      <ul><li><a href="home-assistant.html">Home Assistant verbinden<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li><li><a href="umzug-in-die-cloud.html">Vom eigenen Server in die Cloud<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li><li><a href="daten-export.html">Deine Daten mitnehmen<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li></ul>
+      <ul><li><a href="erste-schritte.html">Erste Schritte<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li><li><a href="home-assistant.html">Home Assistant verbinden<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li><li><a href="umzug-in-die-cloud.html">Vom eigenen Server in die Cloud<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li></ul>
     </aside>
     <p class="help-missing">Fehlt dir etwas oder stimmt etwas nicht? Schreib uns an <a href="mailto:tohuus@tillheidrich.de">tohuus@tillheidrich.de</a>.</p>
   </div>

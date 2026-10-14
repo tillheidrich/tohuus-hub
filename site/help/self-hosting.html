@@ -45,6 +45,7 @@
     <a href="../#shopping">Shopping</a>
     <a href="../#cooking">Cooking</a>
     <a href="../#money">Money</a>
+    <a href="../#tasks">Tasks</a>
     <a href="../#bring-me-something">Bring me something</a>
     <a href="../#pricing">Pricing</a>
     <a href="../#privacy">Privacy</a>
@@ -76,9 +77,10 @@
     <p class="label" id="toc-h">On this page</p>
     <ol>
       <li><a href="#install"><span>1</span>Install</a></li>
-      <li><a href="#https-and-the-app"><span>2</span>HTTPS and the app</a></li>
-      <li><a href="#ai"><span>3</span>AI</a></li>
-      <li><a href="#backups"><span>4</span>Backups</a></li>
+      <li><a href="#https-and-the-web-app"><span>2</span>HTTPS and the web app</a></li>
+      <li><a href="#with-the-iphone-app"><span>3</span>With the iPhone app</a></li>
+      <li><a href="#ai"><span>4</span>AI</a></li>
+      <li><a href="#backups"><span>5</span>Backups</a></li>
     </ol>
     <p class="legal-links"><a href="./">All help topics<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a><a href="../hilfe/selbst-hosten.html" hreflang="de">Deutsch<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></p>
   </nav>
@@ -90,21 +92,25 @@ cd tohuus-hub
 cp .env.example .env
 docker compose up -d --build</pre></div><p>In <code>.env</code> set <code>BASE_URL</code>, your name and a password, then open <code>http://localhost:8080</code>. Your data lives in <code>./data</code>.</p>
     </section>
-    <section id="https-and-the-app" aria-labelledby="https-and-the-app-h">
-      <h2 id="https-and-the-app-h"><span class="legal-no">2</span>HTTPS and the app</h2>
-      <p>Put your usual reverse proxy in front. Then open the web app in the browser and add it to your home screen.</p>
+    <section id="https-and-the-web-app" aria-labelledby="https-and-the-web-app-h">
+      <h2 id="https-and-the-web-app-h"><span class="legal-no">2</span>HTTPS and the web app</h2>
+      <p>Put your usual reverse proxy in front, such as Caddy or another one with Let’s Encrypt. Then open the web app in the browser and add it to your home screen.</p>
+    </section>
+    <section id="with-the-iphone-app" aria-labelledby="with-the-iphone-app-h">
+      <h2 id="with-the-iphone-app-h"><span class="legal-no">3</span>With the iPhone app</h2>
+      <p>The iPhone app works with your own server too. It needs https with a valid certificate; plain http only works in your home network. On the app’s start screen tap “Own server” and enter the address you open ToHuus with in the browser. Then there are three ways in:</p><ul><li><b>Password</b>: name or e-mail and password, plus the code if you switched on two-step sign-in.</li><li><b>Sign in in the browser</b>: with whatever your server offers, such as a passkey, an e-mail link or SSO. A page then asks “Connect the ToHuus app?” and you confirm.</li><li><b>QR code</b>: in the web app, Settings › My account › “Connect the iPhone app” shows a QR code. In the app tap “Scan QR code” and point it there. No address or password to type.</li></ul><p>One iPhone can be signed in to several servers and households; you switch with one tap. On your own server everything in the app is included, no plans, no payments.</p><p class="help-tip">Creating a passkey right in the app only works with ToHuus Cloud; that is Apple’s rule. On your own server, use “Sign in in the browser” for your passkey.</p>
     </section>
     <section id="ai" aria-labelledby="ai-h">
-      <h2 id="ai-h"><span class="legal-no">3</span>AI</h2>
+      <h2 id="ai-h"><span class="legal-no">4</span>AI</h2>
       <p>Optional, with a key for any OpenAI-compatible service, such as Mistral, local ones included. Without a key everything works except photos of paper receipts and open questions to the assistant.</p>
     </section>
     <section id="backups" aria-labelledby="backups-h">
-      <h2 id="backups-h"><span class="legal-no">4</span>Backups</h2>
+      <h2 id="backups-h"><span class="legal-no">5</span>Backups</h2>
       <p>A backup every night, optionally copied to a WebDAV share like Nextcloud. The database can be encrypted with <code>DB_ENCRYPTION_KEY</code>.</p>
     </section>
     <aside class="help-related" aria-labelledby="rel-h">
       <p class="legal-summary-h" id="rel-h">Related</p>
-      <ul><li><a href="home-assistant.html">Connect Home Assistant<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li><li><a href="move-to-the-cloud.html">From your own server to the cloud<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li></ul>
+      <ul><li><a href="getting-started.html">Getting started<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li><li><a href="home-assistant.html">Connect Home Assistant<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li><li><a href="move-to-the-cloud.html">From your own server to the cloud<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></li></ul>
     </aside>
     <p class="help-missing">Something missing or wrong? Write to <a href="mailto:tohuus@tillheidrich.de">tohuus@tillheidrich.de</a>.</p>
   </div>

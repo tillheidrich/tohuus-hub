@@ -24,6 +24,8 @@ struct StartView: View {
         case code
         /// "Eigener Server", optionally with an address (a scanned QR code that only carries the address)
         case ownServer(String = "")
+        /// an invitation link (JoinInviteView)
+        case invite(String = "")
     }
 
     var body: some View {
@@ -64,6 +66,7 @@ struct StartView: View {
                 case .signUp: SignUpView()
                 case .code: EmailCodeView()
                 case .ownServer(let a): OwnServerView(initialAddress: a)
+                case .invite(let l): JoinInviteView(initialLink: l)
                 }
             }
             .toolbar {
@@ -170,6 +173,11 @@ struct StartView: View {
             .font(.subheadline.weight(.semibold))
             Text(L("Everything is included on your own server. The QR code is in the web app under Settings › My account."))
                 .font(.caption).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
+            Button { path.append(.invite()) } label: {
+                Label(L("I have an invitation"), systemImage: "envelope.open").frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.bordered)
+            .font(.subheadline.weight(.semibold))
         }
         .padding(.top, Theme.Space.s2)
     }
@@ -186,6 +194,12 @@ struct StartView: View {
 
     /// A QR code from the web app (tohuus://connect…) – or a plain address, which opens "Eigener Server".
     private func scanned(_ text: String) async {
+        // an invitation's QR code (web: Einladen › QR)
+        if JoinInviteView.parse(text) != nil {
+            scanning = false
+            path.append(.invite(text))
+            return
+        }
         guard let link = ConnectLink(text: text) else {
             if text.contains("."), AppModel.normalise(text) != nil, !text.lowercased().hasPrefix("tohuus:") {
                 path.append(.ownServer(text))
