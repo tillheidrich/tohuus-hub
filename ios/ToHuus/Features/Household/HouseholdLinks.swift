@@ -34,11 +34,11 @@ struct MoreSections: View {
                     NavigationLink { CareView(api: api) } label: { Label(L("Home & care"), systemImage: "wrench.and.screwdriver") }
                 }
                 if allows("/urlaub") {
-                    NavigationLink { WebPageView(api: api, path: "/urlaub", title: L("Trip / away")) } label: { Label(L("Trip / away"), systemImage: "suitcase") }
+                    NavigationLink { AwayView(store: store) } label: { Label(L("Trip / away"), systemImage: "suitcase") }
                 }
                 // permanent guests chosen for a trip's handover (members use the trip page)
                 if app.isGuest && allows("/uebergabe") {
-                    NavigationLink { WebPageView(api: api, path: "/uebergabe", title: L("Handover")) } label: { Label(L("Handover"), systemImage: "suitcase") }
+                    NavigationLink { HandoverGuestView(api: api) } label: { Label(L("Handover"), systemImage: "suitcase") }
                 }
             }
             if allows("/import") || allows("/lieblinge") || allows("/ausgaben") {
@@ -110,16 +110,17 @@ struct MoreSections: View {
                 case "guestlinks", "guestlink-new": GuestLinksView(api: api)
                 case "house", "housecard-new", "housecard-edit", "housecode-new", "house-templates", "house-log": HouseGuideView()
                 case "care": CareView(api: api)
+                case "away": AwayView(store: store)
                 default: HouseholdView(api: api)
                 }
             }
         }
         .onAppear {
             #if DEBUG
-            // simulator checks: -debugMore people | invites | memory | treats | guestlinks | house… | care (with -debugSettings YES)
+            // simulator checks: -debugMore people | invites | memory | treats | guestlinks | house… | care | away (with -debugSettings YES)
             if open == nil, let d = UserDefaults.standard.string(forKey: "debugMore"),
                ["people", "invites", "memory", "treats", "guestlinks", "guestlink-new", "house", "housecard-new", "housecard-edit",
-                "housecode-new", "house-templates", "house-log", "care"].contains(d) {
+                "housecode-new", "house-templates", "house-log", "care", "away"].contains(d) {
                 open = d
             }
             #endif

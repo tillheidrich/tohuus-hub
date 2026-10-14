@@ -2,8 +2,8 @@
 
 **14 Oct:** Mehr in the app now has the web's groups, entries and order (`MoreSections`, docs/ios-0.2.md "14 Oct
 2026"). Every page of the web's Mehr is reachable in the app – natively or as the web page signed in. Native since
-14 Oct: Pflege & Fristen, the complete Hausinfo. Still a web page in the app: Urlaub, Übergabe, Lieblinge, Gäste &
-Party, Displays, Home Assistant, QR-Etiketten, Daten.
+14 Oct: Pflege & Fristen, the complete Hausinfo, Urlaub / unterwegs with all tabs, Übergabe (trip and guests).
+Still a web page in the app: Lieblinge, Gäste & Party, Displays, Home Assistant, QR-Etiketten, Daten.
 
 What the web app can do that the iPhone app (1.0 build 5 + the changes on `claude/tohuus-status-btntbq`) cannot yet.
 The app has one web view (`ios/ToHuus/Features/Settings/WebSettingsView.swift`, Mehr › "Weitere Einstellungen in
@@ -13,8 +13,8 @@ there; other pages are not linked from the app.
 | Web feature | Web | iOS | What is missing |
 |---|---|---|---|
 | Home & care tasks ("Pflege") | `/pflege` | **native since 14 Oct** (CareView) | choosing a product to use up (a set product shows and can be removed), labels and ticket via the web page |
-| Trip / away mode | `/urlaub` | web page in the app (Mehr › Urlaub / unterwegs) | trips, quiet notifications, use-up/freeze, checklist, packing (templates, stock), holiday kitchen, sitter link, welcome home, away banner |
-| Holiday handover | trip › Übergabe, `/uebergabe` | web page in the app (in the trip; guests: Mehr › Übergabe) | items with rhythm, who sees it, ticks, templates, media, guest view |
+| Trip / away mode | `/urlaub` | **native since 14 Oct** (AwayView) | – |
+| Holiday handover | trip › Übergabe, `/uebergabe` | **native since 14 Oct** (HandoverView, HandoverGuestView); | – (the page behind a guest link is for people without the app) |
 | Places & categories editing | Settings › places | web view | create, rename, reorder, delete; categories; household form |
 | Notification routing | Settings › notify | partial | channels (push/e-mail/summary), lock-screen text, "only at home"; household matrix via web view |
 | Shopping-list extras | `shop/forms.tsx`, `bridges.tsx` | partial | WG balance/personal rows, lunchbox regulars, care fridge check, CalDAV, import from Bring!/AnyList/CSV, start mode, offers per shop |
@@ -42,7 +42,7 @@ in/out, `/scan` (native scanner).
 
 ## Order to close the gaps
 
-1. ~~Care tasks~~ (14 Oct) · 2. Trip / away mode · 3. Holiday handover · 4. Packing and holiday kitchen · 5. Places & categories ·
+1. ~~Care tasks~~ · 2. ~~Trip / away mode~~ · 3. ~~Holiday handover~~ · 4. ~~Packing and holiday kitchen~~ (all 14 Oct) · 5. Places & categories ·
 6. Notification routing · 7. Party host and order board · 8. Treats menu editor · 9. People admin · 10. Shopping-list
 household forms. Then: native data export, recognition rules + forwarding address, blank recipe, favourites,
 ~~Hausinfo templates/log/print~~ (14 Oct), account security.
