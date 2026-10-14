@@ -223,6 +223,8 @@ struct ProductInfo: Decodable, Sendable, Identifiable, Hashable {
         var locationId: Int?
         var qty: Double?
         var bestBefore: String?
+        /// 1 = estimated from the usual shelf life (server: fresh-shelf.ts), not the printed date
+        var bbEstimated: Int?
         var openedAt: String?
     }
 

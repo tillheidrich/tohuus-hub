@@ -245,7 +245,7 @@ struct ProductDetailView: View {
     private func batchesCard(_ p: ProductInfo) -> some View {
         Card(title: L("Where and until when"), systemImage: "calendar") {
             let entries = fresh?.entries ?? p.stock.map {
-                FreshProduct.Entry(id: $0.id, locationId: $0.locationId, qty: $0.qty, bestBefore: $0.bestBefore, openedAt: $0.openedAt)
+                FreshProduct.Entry(id: $0.id, locationId: $0.locationId, qty: $0.qty, bestBefore: $0.bestBefore, openedAt: $0.openedAt, bbEstimated: $0.bbEstimated == 1)
             }
             if entries.isEmpty {
                 Text(L("Nothing at home right now.")).font(.subheadline).foregroundStyle(Theme.ink3)
@@ -299,7 +299,9 @@ struct ProductDetailView: View {
 
     private func dateLine(_ e: FreshProduct.Entry) -> String {
         if let u = e.useBy ?? e.bestBefore, let d = ServerDate.shortDay(u) {
-            return e.openedAt != nil || e.inFreezer == true ? LF("use by %@", d) : LF("best before %@", d)
+            if e.openedAt != nil || e.inFreezer == true { return LF("use by %@", d) }
+            // no printed date yet – the usual shelf life (web: Product.tsx, same wording)
+            return e.bbEstimated == true ? LF("best before %@", d) + " · " + L("estimated") : LF("best before %@", d)
         }
         return L("no date")
     }
@@ -465,11 +467,12 @@ struct ProductDetailView: View {
 }
 
 extension FreshProduct.Entry {
-    init(id: Int, locationId: Int?, qty: Double?, bestBefore: String?, openedAt: String?) {
+    init(id: Int, locationId: Int?, qty: Double?, bestBefore: String?, openedAt: String?, bbEstimated: Bool = false) {
         self.id = id
         self.locationId = locationId
         self.qty = qty
         self.bestBefore = bestBefore
         self.openedAt = openedAt
+        self.bbEstimated = bbEstimated
     }
 }

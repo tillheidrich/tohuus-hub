@@ -28,6 +28,9 @@ migrate(
    );`,
 );
 
+// unopened shelf life is an estimate until someone enters the printed date (stock.bb_estimated = 1)
+migrate('fresh-2', `ALTER TABLE stock ADD COLUMN bb_estimated INTEGER NOT NULL DEFAULT 0;`);
+
 export const DEFAULT_FREEZER_DAYS = 90;
 export const LEFTOVER_FRIDGE_DAYS = 3;
 
@@ -39,8 +42,12 @@ const OPEN_RULES: [RegExp, number][] = [
   [/\b(schmand|crème fraîche|creme fraiche|saure sahne|sour cream)\b/i, 5],
   [/(milch|drink|\bmilk)\b/i, 4],
   [/(joghurt|jogurt|quark|skyr|\byoghurt|\byogurt)\b/i, 4],
+  [/\b(butter)\b/i, 30],
   [/\b(mozzarella|burrata|feta|ricotta|frischkäse|cream cheese|hüttenkäse|cottage cheese)\b/i, 4],
+  [/(parmesan|parmigiano|grana padano|pecorino|bergkäse|bergkaese|hartkäse|hartkaese)/i, 28],
   [/(käse|kaese|\bcheese|\bgouda|\bcheddar|\bparmesan|\bemmentaler|\bleerdammer)\b/i, 14],
+  [/(leberwurst|teewurst|streichwurst)/i, 7],
+  [/(salami|chorizo|landjäger|landjaeger|rohschinken|serrano|parma).*\bam\s+st(ü|ue)ck|\bam\s+st(ü|ue)ck.*(salami|wurst|schinken)/i, 21],
   [/(schinken|salami|wurst|aufschnitt|mortadella|\bham|\bsliced meat)\b/i, 4],
   [/(saft|nektar|\bjuice|\bsmoothie)\b/i, 5],
   [/\b(wein|wine|sekt|prosecco)\b/i, 3],
@@ -49,6 +56,10 @@ const OPEN_RULES: [RegExp, number][] = [
   [/\b(passata|passierte tomaten|stückige tomaten|dosentomaten|chopped tomatoes)\b/i, 3],
   [/\b(hummus|tofu|brühe|fond|stock)\b/i, 4],
   [/\b(mayo|mayonnaise|remoulade)\b/i, 30],
+  [/(marmelade|konfitüre|konfituere|gelee|fruchtaufstrich|\bjam\b|\bjelly\b)/i, 42],
+  [/(ketchup|grillsauce|bbq|barbecue)/i, 60],
+  [/(senf|mustard)/i, 90],
+  [/(nuss-?nougat|schokocreme|nutella|erdnussbutter|peanut butter)/i, 90],
 ];
 
 /** Category fallback (stable category keys from basedata). */
@@ -68,6 +79,84 @@ export function categoryKeyOf(categoryId: number | null | undefined): string | n
 export function defaultOpenDays(name: string, categoryKey: string | null): number | null {
   for (const [re, days] of OPEN_RULES) if (re.test(name)) return days;
   return categoryKey ? OPEN_BY_CATEGORY[categoryKey] ?? null : null;
+}
+
+/**
+ * Typical shelf life of an unopened product counted from the day it was bought (German + English). First match wins.
+ * Used when a receipt, a list tick or the assistant books stock without a printed date: the date is an estimate
+ * (stock.bb_estimated), shown as "ca." and replaced the moment someone enters the date from the pack.
+ * Conservative on purpose – a product with a learned/entered `shelf_days` always wins. null = no sensible guess
+ * (dry goods: a two-year date only adds noise).
+ */
+const UNOPENED_RULES: [RegExp, number][] = [
+  // eggs: best-before is 28 days after laying, in the shop usually about three weeks left
+  [/(eier\b|\beggs?\b)/i, 21],
+  [/(hackfleisch|gehacktes|\bhack\b|\bmett\b|tatar|\bmince|ground (beef|meat))/i, 1],
+  [/(frische[rs]?\s+fisch|fischfilet|lachsfilet|forelle|kabeljau|seelachs|garnele|shrimp|fresh fish)/i, 2],
+  [/(räucherlachs|raeucherlachs|graved|smoked salmon)/i, 14],
+  [/(hähnchen|haehnchen|hühnchen|huhn|geflügel|pute|chicken|turkey|steak|schnitzel|gulasch|geschnetzeltes|bratwurst|grillwurst)/i, 3],
+  [/(rohmilch|vorzugsmilch|raw milk)/i, 3],
+  [/(\bh-?milch|haltbare milch|haltbarmilch|\buht\b|long-life)/i, 90],
+  [/(buttermilch|buttermilk)/i, 14],
+  [/(länger frisch|laenger frisch|\besl\b)/i, 14],
+  [/(hafer|soja|mandel|reis|oat|soy|almond)[\s-]*(drink|milch|milk)/i, 180],
+  [/(milch|\bmilk)\b/i, 7],
+  [/(sahne|\bcream\b|schmand|crème fraîche|creme fraiche|saure sahne|sour cream)/i, 14],
+  [/(joghurt|jogurt|skyr|yoghurt|yogurt)/i, 21],
+  [/(quark|hüttenkäse|huettenkaese|cottage cheese)/i, 14],
+  [/\b(butter)\b/i, 42],
+  [/(mozzarella|burrata|ricotta)/i, 14],
+  [/(frischkäse|frischkaese|cream cheese)/i, 21],
+  [/\b(feta|hirtenkäse|halloumi)\b/i, 30],
+  [/(camembert|brie|weichkäse|weichkaese)/i, 14],
+  [/(parmesan|parmigiano|grana padano|pecorino|bergkäse|bergkaese|hartkäse|hartkaese)/i, 90],
+  [/(käse|kaese|cheese|gouda|cheddar|emmentaler|leerdammer|tilsiter|edamer|butterkäse).*(scheiben|sliced|geschnitten)|(scheiben|sliced|geschnitten).*(käse|kaese|cheese|gouda|cheddar|emmentaler)/i, 21],
+  [/(käse|kaese|\bcheese|\bgouda|\bcheddar|\bemmentaler|\bleerdammer|\btilsiter)/i, 30],
+  [/(leberwurst|teewurst|streichwurst)/i, 21],
+  [/(salami|chorizo|landjäger|landjaeger|cabanossi|mettwurst|rohschinken|serrano|parma|prosciutto)/i, 30],
+  [/(wiener|würstchen|wuerstchen|frankfurter|bockwurst|sausages?)/i, 14],
+  [/(schinken|aufschnitt|mortadella|lyoner|fleischwurst|bierschinken|\bwurst|\bham\b|cold cuts)/i, 10],
+  [/(tofu|tempeh)/i, 30],
+  [/(hummus)/i, 14],
+  [/(marmelade|konfitüre|konfituere|gelee|fruchtaufstrich|\bjam\b|\bjelly\b)/i, 365],
+  [/(honig|honey)/i, 730],
+  [/(nuss-?nougat|schokocreme|nutella|erdnussbutter|peanut butter)/i, 270],
+  [/(ketchup|senf|mustard|mayo|mayonnaise|remoulade)/i, 180],
+  [/(toast|sandwich ?brot|vollkornbrot verpackt)/i, 10],
+  [/(brötchen|broetchen|semmel|croissant|brezel|laugen|\brolls?\b)/i, 2],
+  [/(brot|baguette|\bbread\b)/i, 4],
+  [/(salat|rucola|spinat|kräuter|kraeuter|petersilie|basilikum|schnittlauch|lettuce|herbs)/i, 5],
+  [/(beeren|erdbeer|himbeer|heidelbeer|blaubeer|berries|strawberr|raspberr|blueberr)/i, 4],
+  [/(banane|banana)/i, 6],
+  [/(tomate|gurke|paprika|zucchini|pilze|champignon|avocado|tomato|cucumber|pepper|mushroom)/i, 7],
+  [/(möhre|moehre|karotte|kohl|lauch|sellerie|carrot|cabbage|leek)/i, 21],
+  [/(apfel|äpfel|aepfel|birne|orange|zitrone|limette|apple|pear|lemon|lime)/i, 21],
+  [/(kartoffel|zwiebel|knoblauch|potato|onion|garlic)/i, 30],
+];
+
+/** sweets, canned, frozen or dried: the name may say milk, egg or sausage, the shelf life is a different story */
+const NO_FRESH_GUESS =
+  /(schoko|choco|keks|cookie|riegel|bonbon|gummi|chips|pulver|powder|\bdose\b|konserve|\bcanned|\btinned|tiefk(ü|ue)hl|\btk\b|\bfrozen|getrocknet|\bdried|likör|likoer|nudeln|pasta|eis\b|ice cream)/i;
+
+/** Category fallback for unopened products: fresh chilled things keep about a week, fruit & veg and bread a few days. */
+const UNOPENED_BY_CATEGORY: Partial<Record<string, number>> = { chilled: 10, produce: 7, bakery: 3 };
+
+/** Typical shelf life of an unopened product from the day of purchase, or null when there is no sensible guess. */
+export function defaultShelfDays(name: string, categoryKey: string | null): number | null {
+  if (NO_FRESH_GUESS.test(name)) return null;
+  for (const [re, days] of UNOPENED_RULES) if (re.test(name)) return days;
+  return categoryKey ? UNOPENED_BY_CATEGORY[categoryKey] ?? null : null;
+}
+
+/**
+ * Estimated best-before for freshly bought stock (YYYY-MM-DD) – the product's own `shelf_days` first, then the rules.
+ * Not for the freezer: frozen stock gets its own date from freezer_days.
+ */
+export function estimateBestBefore(p: ShelfProduct & { shelf_days?: number | null; track_mode?: string | null }, from = new Date()): string | null {
+  if (p.kind === 'leftover' || p.track_mode === 'none') return null;
+  const days = p.shelf_days != null && p.shelf_days > 0 ? p.shelf_days : defaultShelfDays(p.name, categoryKeyOf(p.category_id));
+  if (days == null) return null;
+  return addDays(dayFmt.format(from), days);
 }
 
 export interface ShelfProduct {

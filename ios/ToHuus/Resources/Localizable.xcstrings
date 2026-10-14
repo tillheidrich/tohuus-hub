@@ -66879,6 +66879,23 @@
         }
       }
     },
+    "estimated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "estimated"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geschätzt"
+          }
+        }
+      }
+    },
     "evening": {
       "extractionState": "manual",
       "localizations": {

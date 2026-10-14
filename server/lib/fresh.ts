@@ -230,7 +230,7 @@ export function markOpened(productId: number, opts: { entryId?: number | null; a
   db.transaction(() => {
     if (p.track_mode === 'count' && e.qty > 1) {
       db.prepare('UPDATE stock SET qty = qty - 1, updated_at = ? WHERE id = ?').run(ts, e.id);
-      db.prepare('INSERT INTO stock (product_id, location_id, qty, best_before, opened_at, updated_at) VALUES (?, ?, 1, ?, ?, ?)').run(p.id, e.location_id, e.best_before, ts, ts);
+      db.prepare('INSERT INTO stock (product_id, location_id, qty, best_before, bb_estimated, opened_at, updated_at) VALUES (?, ?, 1, ?, ?, ?, ?)').run(p.id, e.location_id, e.best_before, e.bb_estimated ?? 0, ts, ts);
     } else {
       db.prepare('UPDATE stock SET opened_at = ?, updated_at = ? WHERE id = ?').run(ts, ts, e.id);
     }
@@ -609,6 +609,7 @@ export function productFresh(productId: number, nowMs = Date.now()) {
       location_id: e.location_id,
       qty: e.qty,
       best_before: e.best_before,
+      bb_estimated: Boolean(e.bb_estimated),
       opened_at: e.opened_at,
       opened_day: e.opened_at ? dayOf(e.opened_at) : null,
       frozen_at: e.frozen_at,

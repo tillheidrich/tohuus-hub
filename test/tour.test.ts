@@ -118,7 +118,8 @@ describe('demo data', () => {
     expect(count('locations', 'hint IS NOT NULL')).toBe(0);
     // used demo things became the household's own
     expect(tour.demoStatus().rows).toBe(0);
-    expect(count('stock', `product_id = ${butter}`)).toBe(1);
+    // the demo row stays, the purchase is its own entry with an estimated best-before (fresh-shelf.ts)
+    expect(count('stock', `product_id = ${butter}`)).toBe(2);
   });
 
   it('recognises demo data seeded before rows were marked (existing instances)', () => {

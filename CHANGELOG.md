@@ -4,6 +4,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Vorrat: bought without a printed date, things get the usual shelf life as an estimate (eggs, milk, cheese, sausage, jam, honey, bread, fruit & veg …), marked "geschätzt" on web and iPhone until someone enters the date from the pack; `stock.bb_estimated`. More after-opening rules (jam, ketchup, mustard, butter, hard cheese, liver sausage). A passed estimate means "have a look", not "expired".
 - iPhone: "Ich habe eine Einladung" on the start screen – paste or scan an invitation link and join, in ToHuus Cloud (`POST /api/invite/:token` with `client: ios`) and on your own server; the weekly question settings in Mehr › Haushalt.
 - Website: an "Aufgaben" section, the iPhone app for self-hosting, new screenshots with the Zuhause tab, help articles "Aufgaben" / "Tasks", "Reminders & calendar", search and the own server in the app.
 

@@ -201,6 +201,8 @@ struct FreshProduct: Decodable, Sendable {
         var locationId: Int?
         var qty: Double?
         var bestBefore: String?
+        /// estimated from the usual shelf life, not the printed date
+        var bbEstimated: Bool?
         var openedAt: String?
         var openedDay: String?
         var frozenAt: String?

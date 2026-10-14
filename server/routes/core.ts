@@ -370,8 +370,9 @@ r.patch('/stock/:id', (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  db.prepare(`UPDATE stock SET best_before = ?, opened_at = ?, location_id = ?, updated_at = datetime('now') WHERE id = ?`).run(
+  db.prepare(`UPDATE stock SET best_before = ?, bb_estimated = ?, opened_at = ?, location_id = ?, updated_at = datetime('now') WHERE id = ?`).run(
     b.best_before === undefined ? s.best_before : b.best_before,
+    b.best_before === undefined ? s.bb_estimated : 0,
     b.opened_at === undefined ? s.opened_at : b.opened_at,
     b.location_id ?? s.location_id,
     s.id,
