@@ -27,6 +27,7 @@ import { useHousehold } from '../household';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { usePeopleDirectory } from '../people/Avatar';
 import { CalDavCard } from '../shop/bridges';
+import { BlickSection } from './Blick';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
 
@@ -370,6 +371,7 @@ export function Care() {
       )}
 
       <RecentlyDone />
+      <BlickSection onOpenTask={setOpenId} />
 
       {freeTemplates.length > 0 && (
         <section className="section">

@@ -6733,6 +6733,23 @@
         }
       }
     },
+    "Compare shares": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare shares"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteile vergleichen"
+          }
+        }
+      }
+    },
     "Confirm with Apple and delete": {
       "extractionState": "manual",
       "localizations": {
@@ -9126,6 +9143,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alle schreiben auf dieselbe Liste. ToHuus merkt sich, was ihr kauft und wie oft; was vermutlich fällig ist, kommt als Vorschlag, und jede Zeile sagt, woher sie kommt."
+          }
+        }
+      }
+    },
+    "Everyone agreed – shares are shown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone agreed – shares are shown."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle sind einverstanden – die Anteile werden gezeigt."
           }
         }
       }
@@ -15875,6 +15909,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Niemand ist zu Hause – der Wochenplan lässt diese Abende frei, keine Ideen für eine leere Küche."
+          }
+        }
+      }
+    },
+    "Nobody keeps these in mind yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody keeps these in mind yet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das hat noch niemand im Blick"
           }
         }
       }
@@ -23053,6 +23104,23 @@
         }
       }
     },
+    "Shares appear only when everyone agrees (%d of %d).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shares appear only when everyone agrees (%d of %d)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteile erscheinen erst, wenn alle einverstanden sind (%d von %d)."
+          }
+        }
+      }
+    },
     "Sharing codes safely": {
       "extractionState": "manual",
       "localizations": {
@@ -25956,6 +26024,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die letzten %d Tage im Blick"
+          }
+        }
+      }
+    },
+    "The last %d days. Noticing and planning is work too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last %d days. Noticing and planning is work too."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die letzten %d Tage. Dran denken und planen ist auch Arbeit."
           }
         }
       }
@@ -29547,6 +29632,23 @@
         }
       }
     },
+    "Who keeps what in mind": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who keeps what in mind"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer hat was im Blick"
+          }
+        }
+      }
+    },
     "Who looked at codes": {
       "extractionState": "manual",
       "localizations": {
@@ -30682,6 +30784,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du bist bei %@ – Liste öffnen?"
+          }
+        }
+      }
+    },
+    "You: %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You: %d"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du: %d"
           }
         }
       }

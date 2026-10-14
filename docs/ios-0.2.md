@@ -323,3 +323,13 @@ the English key is the same).
 | Urlaub / unterwegs: current or chosen trip with phase line, travellers / staying home, quiet and pause flags, edit, "Wir sind zurück" / cancel, delete; presence suggestion from Home Assistant (start / not now); other trips; new / edit trip (dates, who travels, extra names travel / stay, use-up days, three switches, holiday-flat shop) | Features/Away/AwayView.swift | `GET /api/away`, `GET/PATCH/DELETE /api/away/trips/:id`, `POST /api/away/trips`, `POST …/stop`, `POST /api/away/suggestion/{start,dismiss}` | `-debugMore away` |
 | Trip tabs (chips like the web's segments): **Vorher** (use up first with freeze, recipes that use it up, generated checklist), **Packen** (lists, own lists save / delete, add text, from stock with picker and suggestions, qty, book out), **Küche** (meals per day, from recipes, ingredients from the meals, own list, share as text), **Haushüten** (notes, link create / new / end, share, "Hausinfo für diesen Link"), **Übergabe** (HandoverView), **Zurück** (welcome-home list → shopping list, expired: toss / still good, book back) | Features/Away/AwayView.swift | `POST /api/away/trips/:id/{checklist,freeze,pack,pack/template,templates,book-out,book-back,meals,kitchen-list,kitchen-list/generate,sitter-link,expired,welcome,welcome-done}`, `PATCH/DELETE /api/away/items/:id`, `DELETE /api/away/{meals,templates}/:id`, `DELETE …/sitter-link`, `GET …/kitchen-list.txt` | |
 
+## 14 Oct 2026 (later) – Aufgaben, Wer hat was im Blick, Erinnerungen & Kalender
+
+| What | Where | API |
+|---|---|---|
+| Aufgaben (filter Alle / Haushalt / Pflege & Fristen / Meine; area, rhythm, "bei Bedarf", only for me, take turns, who does it, sub-items; recently done; nobody-keeps-it-in-mind hint) | Features/Household/CareView.swift | `GET/POST /api/care`, `GET /api/care/recent`, see docs/tasks.md |
+| Aufgaben heute (ring) on Heute | Features/Today/TasksTodayCard.swift | `GET /api/care`, `POST /api/care/:id/done` |
+| Wer hat was im Blick (names per area, own number, "Anteile vergleichen") | Features/Household/BlickSection.swift | `GET /api/blick`, `PUT /api/blick/compare` |
+| Erinnerungen & Kalender (CalDAV app password) | Features/Settings/CalDavView.swift | `GET/POST/DELETE /api/caldav/passwords` |
+| Assistant: sparkles icon, screen context per area | MainTabView, AssistantSheet | `POST /api/assistant/chat { context }` |
+

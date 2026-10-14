@@ -8,6 +8,7 @@
  *  - writes only when the person asked for it in this message, each with an undo;
  *  - tasks_overview counts what people did and keep in mind, for fair talk – never a ranking, never points.
  */
+import { blickOverview } from './blick.js';
 import { db } from '../db.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
@@ -219,12 +220,16 @@ export function tasksOverview(days = 28) {
     .all(`-${days} days`) as { task_id: number; actor: string | null }[]).filter((r) => sharedIds.has(r.task_id));
   const byPerson = new Map<string, number>();
   for (const r of done) byPerson.set(r.actor ?? '?', (byPerson.get(r.actor ?? '?') ?? 0) + 1);
+  const blick = blickOverview(null, days);
   const keeps = new Map<string, number>();
   for (const x of shared) if (x.assignee) keeps.set(x.assignee.name, (keeps.get(x.assignee.name) ?? 0) + 1);
   return {
     days,
     done_total: done.length,
-    done_by: [...byPerson.entries()].map(([name, n]) => ({ name, done: n })),
+    // numbers per person only when every member agreed to compare (lib/blick.ts) – otherwise just who was involved
+    done_by: [...byPerson.entries()].sort((a, b) => a[0].localeCompare(b[0], 'de')).map(([name, n]) => (blick.compare ? { name, done: n } : { name })),
+    // who noticed, planned and took care of receipts – the invisible part of the work
+    involved: Object.fromEntries(blick.areas.map((a) => [a.area, a.shares ?? a.people])),
     keeps_in_mind: [...keeps.entries()].map(([name, n]) => ({ name, tasks: n })),
     nobody_keeps_in_mind: shared.filter((x) => !x.assignee && !x.doer).map((x) => x.name).slice(0, 15),
     note: 'Planning and noticing (lists, meal plans, receipts) is also work; say so when it helps. Never rank people.',

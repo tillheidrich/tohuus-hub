@@ -349,7 +349,7 @@ export function planMeal(ctx: ToolCtx, input: { day?: string | null; recipe?: st
   const rec = findRecipe(input.recipe ?? null);
   if (input.recipe && !rec && !input.title) return { error: t('No recipe called “{name}” was found.', { name: String(input.recipe) }) };
   const slot = /mittag|lunch/i.test(input.slot ?? '') ? 'mittag' : 'abend';
-  const id = addPlan({ day, recipe_id: rec?.id ?? null, title: rec ? undefined : (input.title ?? undefined), slot, source: 'assistant' });
+  const id = addPlan({ day, recipe_id: rec?.id ?? null, title: rec ? undefined : (input.title ?? undefined), slot, source: 'assistant', added_by: ctx.actor });
   const title = rec?.title ?? input.title ?? '';
   record(ctx, 'plan_meal', t('Planned {title} for {day}', { title, day: fmtDay(day) }), { kind: 'delete_plan', id });
   return { planned: title, day, slot };

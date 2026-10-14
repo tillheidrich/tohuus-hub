@@ -4,6 +4,11 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Aufgaben (web, iPhone, `docs/tasks.md`): household chores next to care & deadlines, private tasks ("nur für mich"), rhythm by weekday or after done, "bei Bedarf", sub-items, who does it (member or child), taking turns, recently done, the learned rhythm and a "Aufgaben heute" ring on Heute. `/pflege` → `/aufgaben`. New fields on `POST/PATCH /api/care`, new `GET /api/care/recent`.
+- Wer hat was im Blick (`GET /api/blick`, `PUT /api/blick/compare`): who noticed, planned, took care of receipts and did tasks – names only; shares only when every member agrees. `meal_plan.added_by` records who planned a meal.
+- Apple Reminders / Calendar: CalDAV collections "ToHuus · Aufgaben", "ToHuus · Nur für mich" (VTODO, two-way) and "ToHuus · Fällig" (read-only VEVENT). iPhone: Mehr › Aufgaben › Erinnerungen & Kalender.
+- Assistant: round sparkle icon instead of "Sprechen"; tasks tools (`tasks_list`, `task_add`, `task_done`, `task_assign`, `tasks_overview`) and the screen context `tasks`; the iPhone now sends its screen context too. "Hausarbeit" is no longer off topic.
+
 - iPhone/iPad: Urlaub / unterwegs is a native screen with every tab of the web (Vorher, Packen, Küche, Haushüten, Übergabe, Zurück), new / edit trip and the Home Assistant presence suggestion; the Übergabe is native for the trip (items with rhythm, photos/videos, who sees it, ticks, templates, take over) and for permanent guests (Mehr › Übergabe). No API change.
 
 - iPhone/iPad: Mehr is grouped like the web's Mehr (Rund ums Zuhause, Bons & Rezepte, Bring mir was & Gäste, Haushalt & Einstellungen) with the same entries, order and guest/area filters; Hausinfo sits at the top and no longer disappears when "Pflege & Hausinfo" is switched off. Pflege & Fristen is a native screen (due/later, done with undo, templates, history, "Ich kümmere mich", edit). Hausinfo gets everything the web has: templates, "who looked at codes", what each babysitter link shows, guest levels and single links per card/code, search, by room/by kind, the Home Assistant voice list and the A4 sheet "Für den Babysitter" (AirPrint). No API change.

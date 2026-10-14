@@ -270,6 +270,7 @@ struct CareView: View {
     @State private var filter: TaskFilter?
     @State private var recent: [CareRecent] = []
     @State private var allRecent = false
+    @State private var reloads = 0
 
     private var current: TaskFilter { filter ?? initialFilter }
 
@@ -320,6 +321,7 @@ struct CareView: View {
                         }
                     } header: { Text(L("Recently done")) }
                 }
+                BlickSection(api: api, refresh: reloads) { id in detail = data.tasks.first { $0.id == id } }
                 templates(data)
             } else if error == nil {
                 HStack { Spacer(); ProgressView(); Spacer() }.listRowBackground(Color.clear)
@@ -448,6 +450,7 @@ struct CareView: View {
             data = try await api.care()
             error = nil
             recent = (try? await api.careRecent()) ?? []
+            reloads += 1
         } catch APIError.notFound {
             error = L("Your server doesn't have this section yet.")
         } catch { self.error = APIError.from(error).localizedDescription }

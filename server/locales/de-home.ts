@@ -1,6 +1,7 @@
 // German server strings for home care, spending and QR labels (key = English source text)
 export const de_home: Record<string, string> = {
   // chore templates (Aufgaben, 14 Oct 2026)
+  'Only for signed-in members': 'Nur für angemeldete Mitglieder',
   Tasks: 'Aufgaben',
   'Only for me': 'Nur für mich',
   'Care & deadlines': 'Pflege & Fristen',

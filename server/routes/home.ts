@@ -28,6 +28,7 @@ import {
   updateCareTask,
   type QrKind,
 } from '../lib/care.js';
+import { blickOverview, setCompareOptIn } from '../lib/blick.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
 import { priceHistory, pricedProducts, setSpendingTarget, spendingCsv, spendingSummary, spendingTarget } from '../lib/spending.js';
@@ -97,6 +98,18 @@ r.get('/care', (req, res) => {
 r.get('/care/due', (req, res) => res.json(dueCareTasks({ viewer: viewerOf(req) })));
 /** done lately, with who did it – the work stays visible */
 r.get('/care/recent', (req, res) => res.json(recentlyDone(viewerOf(req), Math.min(60, Math.max(1, Number(req.query.days) || 14)))));
+
+/** "Wer hat was im Blick": who was involved per area; shares only when every member agreed to compare */
+r.get('/blick', (req, res) => {
+  if (req.actor?.role === 'guest') return res.status(403).json({ error: t('Not available for guests') });
+  res.json(blickOverview(viewerOf(req), Math.min(90, Math.max(7, Number(req.query.days) || 28))));
+});
+r.put('/blick/compare', (req, res) => {
+  const id = viewerOf(req);
+  if (id == null || req.actor?.kind !== 'user') return res.status(403).json({ error: t('Only for signed-in members') });
+  setCompareOptIn(id, z.object({ on: z.boolean() }).parse(req.body).on);
+  res.json(blickOverview(id));
+});
 
 r.post('/care', (req, res) => {
   const b = careBody.parse(req.body);

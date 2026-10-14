@@ -314,3 +314,36 @@ describe('Apple Reminders (CalDAV): tasks as reminder lists', () => {
     expect((db.prepare('SELECT archived FROM care_tasks WHERE id = ?').get(heat.id) as any).archived).toBe(1);
   });
 });
+
+describe('Wer hat was im Blick', () => {
+  it('shows who was involved per area – names only, alphabetical, private things never count', async () => {
+    expect((await sam.req('POST', '/api/shopping', { text: 'Hafermilch' })).status).toBeLessThan(300);
+    (await import('../server/lib/plan')).addPlan({ day: '2026-10-20', title: 'Linsensuppe', added_by: 'Mira' });
+    db.prepare(`INSERT INTO imports (kind, title, actor, status) VALUES ('receipt', 'Bon', 'Sam', 'applied')`).run();
+    db.prepare(`INSERT INTO imports (kind, title, actor, status, private_for) VALUES ('receipt', 'Bon privat', 'Mira', 'applied', ?)`).run(miraId);
+    const b = (await mira.req('GET', '/api/blick')).json;
+    const area = (k: string) => b.areas.find((a: any) => a.area === k);
+    expect(area('shop').people).toContain('Sam');
+    expect(area('cook').people).toEqual(['Mira']);
+    expect(area('money').people).toEqual(['Sam']);
+    expect(area('tasks').people.length).toBeGreaterThan(0);
+    // without everyone's yes there are no shares, only the own number
+    expect(b.compare).toBe(false);
+    expect(area('cook').shares).toBeNull();
+    expect(area('cook').mine).toBe(1);
+    expect(JSON.stringify(b)).not.toContain(SECRET);
+    for (const a of b.areas) expect(a.people).toEqual([...a.people].sort((x: string, y: string) => x.localeCompare(y, 'de')));
+  });
+
+  it('shares appear only when every member said yes to comparing', async () => {
+    expect((await mira.req('PUT', '/api/blick/compare', { on: true })).json.compare).toBe(false);
+    // the other members of this test household (the seeded admin) say yes too
+    const blick = await import('../server/lib/blick');
+    for (const u of db.prepare('SELECT id FROM users WHERE id NOT IN (?, ?)').all(miraId, samId) as { id: number }[]) blick.setCompareOptIn(u.id, true);
+    const both = (await sam.req('PUT', '/api/blick/compare', { on: true })).json;
+    expect(both.compare).toBe(true);
+    const money = both.areas.find((a: any) => a.area === 'money');
+    expect(money.shares).toEqual([{ name: 'Sam', share: 100 }]);
+    expect((await sam.req('PUT', '/api/blick/compare', { on: false })).json.areas.every((a: any) => a.shares === null)).toBe(true);
+  });
+});

@@ -45,4 +45,16 @@ export const tasks: Record<string, string> = {
     'Apple Erinnerungen, Nextcloud Tasks oder Thunderbird zeigen deine Einkaufslisten und Aufgaben („ToHuus · Aufgaben“, „ToHuus · Nur für mich“), abhaken und hinzufügen geht dort auch. Apple Kalender zeigt in „ToHuus · Fällig“, was ansteht. Ein Passwort für beides.',
   'For the calendar: Settings › Apps › Calendar › Calendar Accounts › Add Account › Other › “Add CalDAV Account”, with the same details.':
     'Für den Kalender: Einstellungen › Apps › Kalender › Kalenderaccounts › Account hinzufügen › Andere › „CalDAV-Account hinzufügen“, mit denselben Angaben.',
+  Cooking: 'Kochen',
+  'Who keeps what in mind': 'Wer hat was im Blick',
+  'The last {n} days. Noticing and planning is work too.': 'Die letzten {n} Tage. Dran denken und planen ist auch Arbeit.',
+  'noticed what was missing or shopped': 'hat gemerkt, was fehlt, oder eingekauft',
+  'planned what to eat': 'hat geplant, was es gibt',
+  'brought in receipts and bills': 'hat Bons und Rechnungen erfasst',
+  'did household tasks': 'hat Aufgaben erledigt',
+  'You: {n}': 'Du: {n}',
+  'Nobody keeps these in mind yet': 'Das hat noch niemand im Blick',
+  'Compare shares': 'Anteile vergleichen',
+  'Everyone agreed – shares are shown.': 'Alle sind einverstanden – die Anteile werden gezeigt.',
+  'Shares appear only when everyone agrees ({n} of {m}).': 'Anteile erscheinen erst, wenn alle einverstanden sind ({n} von {m}).',
 };
