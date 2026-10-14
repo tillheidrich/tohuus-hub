@@ -20,6 +20,7 @@ import { WgBalanceCard } from '../shop/forms';
 import { CheapestCard } from '../shop/offers';
 import { ExpenseFormSheet, MoneySettingsSheet, useMoneyMeta, useView, ViewSwitch } from '../money/entry';
 import { MoneyListSheet, MoneyListsCard, NewMoneyListSheet } from '../money/lists';
+import { PurchaseSheets } from './Spending';
 
 interface Part {
   name: string;
@@ -35,8 +36,22 @@ interface PriceChange {
   base?: { from: number; to: number; unit: string } | null;
   pct?: number | null;
 }
+interface Purchase {
+  key: string;
+  kind: 'receipt' | 'expense';
+  id: number;
+  day: string;
+  store: string;
+  title: string;
+  total: number;
+  items: number;
+  preview: string[];
+  excluded: boolean;
+  personal: boolean;
+}
 interface Overview {
   month: string;
+  purchases: Purchase[];
   total: number;
   budget: number | null;
   currency?: string;
@@ -64,6 +79,7 @@ function normalise(d: any, month: string): Overview {
   const vs = d.vsLastMonth;
   return {
     month: d.month ?? month,
+    purchases: Array.isArray(d.purchases) ? d.purchases : [],
     total: num(d.total),
     budget: d.budget == null ? null : typeof d.budget === 'object' ? (d.budget.amount ?? null) : num(d.budget),
     currency: d.currency,
@@ -101,6 +117,7 @@ async function legacy(month: string): Promise<Overview> {
   const prev = s.compare?.previous;
   return {
     month,
+    purchases: [],
     total: num(s.total),
     budget: (s.budgets as any[] | undefined)?.find((b) => !b.category && b.period === 'month')?.amount ?? null,
     currency: s.currency,
@@ -126,6 +143,7 @@ export function Money() {
   const [settings, setSettings] = useState(false);
   const [newList, setNewList] = useState(false);
   const [listId, setListId] = useState<number | null>(null);
+  const [purchase, setPurchase] = useState<{ kind: 'receipt' | 'expense'; id: number } | null>(null);
   const q = useQuery<Overview>({
     queryKey: ['money', month, view],
     queryFn: () => getOr<any>(`/money/overview?month=${month}${mine ? '&view=mine' : ''}`, () => null).then((d) => (d ? normalise(d, month) : legacy(month))),
@@ -202,6 +220,7 @@ export function Money() {
       ) : (
         <div className={`money-grid ${q.isFetching ? 'refreshing' : ''}`}>
           <TotalCard d={d} fmt={fmt} ongoing={month === current} />
+          {d.purchases.length > 0 && <Purchases list={d.purchases} fmt={fmt} onOpen={setPurchase} onAll={() => nav('/ausgaben')} />}
           {d.byWeek.length > 1 && <WeekTrend weeks={d.byWeek} fmt={fmt} />}
           {d.byCategory.length > 0 && <Bars title={t('By category')} parts={d.byCategory} fmt={fmt} />}
           {d.byShop.length > 0 && <Bars title={t('By shop')} parts={d.byShop} fmt={fmt} unit={(n) => (n === 1 ? t('1 visit') : t('{n} visits', { n }))} />}
@@ -250,7 +269,58 @@ export function Money() {
         }}
       />
       <MoneyListSheet id={listId} onClose={() => setListId(null)} />
+      <PurchaseSheets open={purchase} onClose={() => setPurchase(null)} />
     </div>
+  );
+}
+
+const SHOWN = 6;
+
+/** The month's purchases, newest first – tap one for its items. */
+function Purchases({ list, fmt, onOpen, onAll }: { list: Purchase[]; fmt: (n: number, digits?: number) => string; onOpen: (p: { kind: 'receipt' | 'expense'; id: number }) => void; onAll: () => void }) {
+  const [all, setAll] = useState(false);
+  const shown = all ? list : list.slice(0, SHOWN);
+  return (
+    <section className="hcard money-purchases" aria-labelledby="h-purchases">
+      <div className="hcard-h">
+        <h2 id="h-purchases">
+          <span className="shape c" aria-hidden="true" />
+          {t('Purchases')}
+        </h2>
+        <button className="linkish small" onClick={onAll}>
+          {t('In detail')}
+        </button>
+      </div>
+      <ul className="purchases">
+        {shown.map((p) => (
+          <li key={p.key}>
+            <button className={`purchase ${p.excluded ? 'off' : ''}`} onClick={() => onOpen({ kind: p.kind, id: p.id })}>
+              <span className="grow">
+                <b>{p.title}</b>
+                <span className="meta">
+                  {new Date(`${p.day}T12:00:00`).toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' })}
+                  {p.kind === 'receipt' ? ` · ${p.items === 1 ? t('1 article') : t('{n} articles', { n: p.items })}` : ` · ${t('Own expense')}`}
+                  {p.personal && (
+                    <>
+                      {' · '}
+                      <LockSimple size={11} aria-label={t('Just mine')} />
+                    </>
+                  )}
+                </span>
+                {p.preview.length > 0 && <span className="meta purchase-preview">{p.preview.join(', ')}{p.kind === 'receipt' && p.items > p.preview.length ? ' …' : ''}</span>}
+              </span>
+              <b className="num">{p.excluded ? t('Doesn’t count') : fmt(p.total, 2)}</b>
+              <CaretRight size={16} aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
+      {list.length > SHOWN && (
+        <button className="btn ghost sm" onClick={() => setAll(!all)}>
+          {all ? t('Show less') : t('Show all {n}', { n: list.length })}
+        </button>
+      )}
+    </section>
   );
 }
 

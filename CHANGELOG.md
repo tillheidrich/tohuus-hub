@@ -4,6 +4,10 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Geld: the month's purchases right on the Geld page ("Einkäufe", newest first) – tap one for its items, prices and who it was for (receipt) or the expense form (web and iPhone). `purchases` in `GET /api/money/overview`.
+- Rückblick "Euer Jahr to Huus" (docs/review.md): the household's year in a few cards – bought, planned, cooked, done, used up, spent – as "wir", no names, no ranking, nothing private, no money in gentle mode. Built but off: needs `YEAR_REVIEW=on` or the back office switch; then on Heute from 1 December to 15 January, page `/rueckblick` (web and iPhone). `GET /api/review`.
+- Web offline queue: queued list changes carry the account they were made in (`scope` in `GET /api/me`) and are only replayed for it; `POST /api/shop/sync` answers 409 for another account's queue. Before, a queue left from one account could be replayed after signing in to another household.
+- Website: the AI facts now say that requests to Mistral are routed through OpenRouter (USA), like the privacy policy; "Bons ohne Monatslimit" (rate limits stay); the Plus receipt address is marked "kommt bald".
 - "Mach ich" for tasks: promise a task for today, tomorrow, the weekend or a day – "Sam macht's morgen"; asked kindly again when the day is over, cleared when done (web and iPhone). `POST /api/care/:id/promise`, `promise` on tasks.
 - Sterne (docs/points.md): optional stars for households, off by default – the server must allow them (`POINTS=on` or the back office) and an admin picks the areas. Week together and your own stars, no ranking, no streaks, hidden in gentle mode. `GET /api/points`, `PUT /api/points/settings`.
 - Copy: "Sache/Sachen" instead of "Ding/Dinge"; the website says "stars only if you switch them on".

@@ -222,6 +222,7 @@ struct TodayView: View {
         case .tasks:
             TasksTodayCard(api: store.api, refresh: refreshKey)
             StarsCard(api: store.api, refresh: refreshKey)
+            if !app.isGuest { ReviewTeaser(api: store.api, refresh: refreshKey) }
         case .list: listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])
         case .still: EatSoonCard(items: t.stillHave, store: store)
         case .cook: if let c = t.cookToday { cookCard(c) }

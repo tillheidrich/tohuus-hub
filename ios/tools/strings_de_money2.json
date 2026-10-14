@@ -94,5 +94,18 @@
   "recognised from the receipt header": "am Briefkopf des Bons erkannt",
   "recognised from the web address or company name": "an Webadresse oder Firmenname erkannt",
   "recognised: %d": "erkannt: %d",
-  "set store": "Geschäft angeben"
+  "set store": "Geschäft angeben",
+  "Purchases": "Einkäufe",
+  "1 article": "1 Artikel",
+  "%d articles": "%d Artikel",
+  "Doesn’t count": "Zählt nicht",
+  "Year in review": "Rückblick",
+  "Your year at home %d": "Euer Jahr to Huus %d",
+  "What you did together – no ranking, just what happened.": "Was ihr zusammen gemacht habt. Ohne Rangliste, einfach was war.",
+  "The year in review is not switched on": "Der Rückblick ist nicht eingeschaltet",
+  "This server doesn’t offer it (yet).": "Dieser Server bietet ihn (noch) nicht an.",
+  "Previous year": "Voriges Jahr",
+  "Next year": "Nächstes Jahr",
+  "Not much to look back on yet": "Noch nicht viel zum Zurückschauen",
+  "Use ToHuus for a while – the year fills up by itself.": "Nutzt ToHuus eine Weile – das Jahr füllt sich von selbst."
 }

@@ -52,6 +52,7 @@ import { setDateKind } from '../lib/retail.js';
 import { applyShareView, isMasked, notPrivate } from '../lib/share-core.js';
 import { canUseList, privateRowGuard } from '../lib/lists.js';
 import { uploadQuota } from '../lib/plans.js';
+import { queueScope } from '../lib/tenancy.js';
 import { clearChecked, removeItem, tickItem, withOrigin } from '../lib/shopping-trust.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
@@ -98,6 +99,8 @@ r.get('/me', (req, res) => {
     // "Was nutzen wir?" – areas the household switched off are hidden in the app (data stays)
     modules: modules(),
     version: process.env.npm_package_version ?? '0.1.0',
+    // stamps the web app's offline queue (shop/offline.ts) – changes are only replayed for this household and person
+    scope: queueScope(actor.kind === 'user' ? actor.userId : null, actor.kind),
   });
 });
 

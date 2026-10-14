@@ -102,6 +102,16 @@ describe('input fidelity', () => {
     expect(db.prepare(`SELECT text, product_id FROM shopping_items WHERE product_id = ?`).get(coco)).toEqual({ text: 'Ja! kokosmilch', product_id: coco });
   });
 
+  it('the web offline queue is only replayed for the account it was made in', async () => {
+    const scope = (await req('GET', '/api/me')).json.scope;
+    expect(scope).toMatch(/^[0-9a-f]{16}$/);
+    const other = await req('POST', '/api/shop/sync', { scope: '0000000000000000', ops: [{ op_id: 'op-scope-1', type: 'add', text: 'Fremde Sache' }] });
+    expect(other.status).toBe(409);
+    expect(db.prepare(`SELECT 1 FROM shopping_items WHERE text = 'Fremde Sache'`).get()).toBeUndefined();
+    expect((await req('POST', '/api/shop/sync', { scope, ops: [{ op_id: 'op-scope-2', type: 'add', text: 'Eigene Sache' }] })).status).toBe(200);
+    expect(db.prepare(`SELECT 1 FROM shopping_items WHERE text = 'Eigene Sache'`).get()).toBeTruthy();
+  });
+
   it('an exact product name wins over a look-alike', async () => {
     const mice = catalog.createProduct({ name: 'Milchmäuse' });
     const milk = catalog.createProduct({ name: 'Milch' });

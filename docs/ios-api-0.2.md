@@ -87,7 +87,7 @@ Children have no sign-in: there is no "kid" actor on a member session. With AI o
 | `GET /api/list/recent`, `POST /api/list/items/:id/restore`, `GET /api/list/status` | trust: recently done, undo, sync line |
 | `POST /api/list/items/:id/place { neighbor_id?, after?, section?, list_id? }` | drag & drop (also `POST /api/shop/items/:id/section`) |
 | `GET/PUT /api/list/prefs` | density, font scale |
-| Offline queue `POST /api/shop/sync` | ops for additions may carry `list_id` |
+| Offline queue `POST /api/shop/sync` | ops for additions may carry `list_id`; optional `scope` (from `GET /api/me › scope`, household + person) – a different scope answers 409 and nothing is replayed (the web queue sends it, the iPhone queue is per household already) |
 
 ### Shopping together (trips)
 

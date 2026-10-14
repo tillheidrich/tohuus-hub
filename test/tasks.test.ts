@@ -586,3 +586,45 @@ describe('Sterne (points) – off twice by default', () => {
     delete process.env.POINTS;
   });
 });
+
+describe('Rückblick (year in review) – built, but off by default', () => {
+  it('answers only { allowed: false } until the server allows it', async () => {
+    delete process.env.YEAR_REVIEW;
+    const off = (await mira.req('GET', '/api/review')).json;
+    expect(off).toMatchObject({ allowed: false, cards: [] });
+  });
+
+  it('then shows the household’s year as "we" – no names, nothing private', async () => {
+    const y = new Date().getFullYear();
+    const day = `${y}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
+    const ins = db.prepare(`INSERT INTO shopping_items (text, added_by, checked_at, checked_by, created_at) VALUES (?, 'Mira', datetime('now'), 'Sam', datetime('now'))`);
+    for (const x of ['Milch', 'Milch', 'Milch', 'Brot', 'Brot', 'Äpfel']) ins.run(x);
+    const meal = db.prepare(`INSERT INTO meal_plan (day, title) VALUES (?, ?)`);
+    for (const x of ['Linsensuppe', 'Linsensuppe', 'Pfannkuchen']) meal.run(day, x);
+    process.env.YEAR_REVIEW = 'on';
+    const r = (await sam.req('GET', '/api/review')).json;
+    expect(r.allowed).toBe(true);
+    expect(r.year).toBe(r.season ?? y);
+    const keys = r.cards.map((c: any) => c.key);
+    expect(keys).toEqual(expect.arrayContaining(['shop_bought', 'shop_noticed', 'cook_planned', 'tasks_done']));
+    expect(r.cards.find((c: any) => c.key === 'shop_bought').list[0]).toBe('Milch');
+    expect(r.cards.find((c: any) => c.key === 'cook_planned').list).toEqual(['Linsensuppe']);
+    expect(r.enough).toBe(true);
+    const all = JSON.stringify(r);
+    // no people, no private task
+    expect(all).not.toContain('Mira');
+    expect(all).not.toContain('Sam');
+    expect(all).not.toContain(SECRET);
+    // an earlier year with nothing in it: not enough yet
+    expect((await sam.req('GET', `/api/review?year=${y - 5}`)).json).toMatchObject({ allowed: true, year: y - 5, enough: false });
+    delete process.env.YEAR_REVIEW;
+  });
+
+  it('season: December and the first half of January', async () => {
+    const { reviewSeason } = await import('../server/lib/review');
+    expect(reviewSeason('2026-12-01')).toBe(2026);
+    expect(reviewSeason('2027-01-15')).toBe(2026);
+    expect(reviewSeason('2027-01-16')).toBeNull();
+    expect(reviewSeason('2026-10-14')).toBeNull();
+  });
+});

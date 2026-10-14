@@ -43,6 +43,7 @@ New on every entry: `for_user_id`, `for_name` (line for one person), `personal: 
 - Lines for a person and who paid a receipt: unchanged `POST /api/imports/:id/split { paid_by?, lines?: [{ id, for_user_id?, for_list_id? }] }`.
 - `GET /api/wg/balance` now also counts own expenses with `paid_by` (items for one person are theirs).
 - CSV export: new columns Für wen · Persönlich · Bezahlt von · Anhang · Posten.
+- `GET /api/money/overview` → also `purchases`: the month's receipts and own expenses, newest first (max 80), `[{ key, kind: 'receipt'|'expense', id, day, store, title, total, items, preview: string[] (the three biggest items), excluded, personal, entry: Entry|null (own expense) }]`. Geld shows them as "Einkäufe"; a receipt opens `GET /api/spend/receipts/:id` with its items (web: the receipt sheet from Ausgaben; iPhone: `SpendReceiptView`), an own expense opens the expense form. Same view rules as the rest of the overview (`view=mine`).
 
 ## Geldlisten
 

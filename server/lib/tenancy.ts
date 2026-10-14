@@ -11,6 +11,7 @@
  * Must not import db.ts (db.ts imports this file).
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { createHash } from 'node:crypto';
 import { config } from '../config.js';
 
 export interface HouseholdCtx {
@@ -52,6 +53,14 @@ export function householdId(): string {
   const c = als.getStore();
   if (!c) throw new NoHouseholdError();
   return c.id;
+}
+
+/**
+ * A short tag for "this household, this person" – the web app stamps its offline queue with it, so changes made
+ * under one account are never replayed into another household or by another person (shop/sync checks it).
+ */
+export function queueScope(userId: number | null | undefined, kind = 'user'): string {
+  return createHash('sha256').update(`${householdId()}:${userId ?? kind}`).digest('hex').slice(0, 16);
 }
 
 export function runInHousehold<T>(ctx: HouseholdCtx | string, fn: () => T): T {

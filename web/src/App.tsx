@@ -1,5 +1,6 @@
 import { Barcode, BowlFood, Camera, FileArrowUp, MagnifyingGlass, Package, Plus, QrCode, TextAa, Gear } from '@phosphor-icons/react';
 import { type ComponentType, lazy, type ReactNode, Suspense, useCallback, useEffect, useState } from 'react';
+import { setQueueScope } from './shop/offline';
 import { CrashBoundary } from './crash';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, connectEvents, useApi } from './api';
@@ -23,8 +24,11 @@ import { RouteHelp } from './help';
 import { AreaAssist } from './assistant/AreaAssist';
 import { FocusPage, useFocusPrefs } from './focus/Focus';
 import { LoadCardsPage } from './pages/LoadCards';
+import { ReviewPage } from './pages/Review';
 
 export interface Me {
+  /** household + person tag for the offline queue (shop/offline.ts) */
+  scope?: string;
   actor: {
     name: string;
     role: string;
@@ -129,6 +133,8 @@ function Authed() {
   const me = useApi<Me>('me', '/me');
   const inst = useInstance();
   const [signIn, setSignIn] = useState(false);
+  // only this account's offline changes are replayed
+  useEffect(() => setQueueScope(me.data?.scope), [me.data?.scope]);
   if (me.isLoading) return <Blank />;
   const out = (me.error && (me.error as ApiError).status === 401) || !me.data;
   // list2: the session ran out while somebody is in the store – the last list keeps working, sign-in comes at sync
@@ -339,6 +345,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/aufgaben" element={<Care />} />
               <Route path="/fokus" element={<FocusPage />} />
               <Route path="/denkarbeit" element={<LoadCardsPage />} />
+              <Route path="/rueckblick" element={<ReviewPage />} />
               <Route path="/pflege" element={<Navigate to="/aufgaben?f=care" replace />} />
               <Route path="/urlaub" element={<Away me={me} />} />
               <Route path="/ausgaben" element={<Spending />} />

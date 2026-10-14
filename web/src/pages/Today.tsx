@@ -2,6 +2,7 @@ import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSix
 import { DemoNudge } from './Samples';
 import { TasksTodayCard } from './TasksToday';
 import { StarsCard } from './Stars';
+import { ReviewTeaser } from './Review';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
@@ -124,6 +125,7 @@ export function Today({ me }: { me: Me }) {
             <>
               <TasksTodayCard today={localDay()} />
               <StarsCard guest={Boolean(gl)} />
+              <ReviewTeaser guest={Boolean(gl)} />
             </>
           ) : null],
           ['list', guestAllows(gl, '/einkauf') ? <ListCard d={d} /> : null],

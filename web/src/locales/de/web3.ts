@@ -107,7 +107,6 @@ export const web3: Record<string, string> = {
   // holiday handover (Handover.tsx)
   "Animals": "Tiere",
   "Bins": "Müll",
-  "Home": "Wohnung",
   "morning": "morgens",
   "midday": "mittags",
   "evening": "abends",

@@ -10138,6 +10138,53 @@ button.rcard {
 .money-note {
   margin: 0;
 }
+/* Geld: Einkäufe des Monats – antippen für die Artikel */
+.money-purchases .purchases {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+.money-purchases .purchases li + li {
+  border-top: 1px solid var(--line);
+}
+.money-purchases .purchase {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 2px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.money-purchases .purchase .grow {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.money-purchases .purchase .meta {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.money-purchases .purchase-preview {
+  display: block !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.money-purchases .purchase.off {
+  opacity: 0.6;
+}
+.money-purchases .purchase:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
 
 /* Mehr */
 .more-page {
@@ -10850,4 +10897,90 @@ html.gentle .badge.empty {
 /* "Mach ich" (pages/Care.tsx PromiseBox) */
 .care-promise .chip {
   min-height: 40px;
+}
+
+/* Rückblick – "Euer Jahr to Huus" (pages/Review.tsx) */
+.review-teaser {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.review-teaser > svg:first-child {
+  color: var(--mustard);
+  flex: none;
+}
+.review-teaser .grow {
+  display: flex;
+  flex-direction: column;
+}
+.review-intro,
+.review-outro {
+  color: var(--ink-2);
+  margin: 4px 0 16px;
+}
+.review-outro {
+  margin-top: 20px;
+  font-weight: 600;
+}
+.review-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+.review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 6px solid var(--primary);
+}
+.review-card.a-shop {
+  border-top-color: var(--primary);
+}
+.review-card.a-cook {
+  border-top-color: var(--clay);
+}
+.review-card.a-tasks {
+  border-top-color: var(--sage);
+}
+.review-card.a-pantry {
+  border-top-color: var(--mustard);
+}
+.review-card.a-money {
+  border-top-color: var(--info);
+}
+.review-icon {
+  color: var(--ink-2);
+}
+.review-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.review-title {
+  font-weight: 600;
+}
+.review-text {
+  color: var(--ink-2);
+  font-size: var(--fs-s);
+}
+.review-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: var(--ink-2);
+  font-size: var(--fs-s);
 }

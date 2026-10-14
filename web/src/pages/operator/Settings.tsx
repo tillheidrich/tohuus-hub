@@ -15,6 +15,7 @@ interface SettingRow {
 }
 interface SettingsView {
   pointsOn?: boolean;
+  yearReviewOn?: boolean;
   settings: Record<string, SettingRow>;
   ai: { configured: boolean; baseUrl: string | null; openrouter: boolean; apiKey: string | null; models: Record<Kind, string | null> | null; fallbacks: Record<Kind, string[]>; cloudOn: boolean };
   signupMode: 'open' | 'invite' | 'closed';
@@ -74,6 +75,9 @@ export function OperatorSettings() {
     <div className="stack op-gap">
       <Section title={t('Stars for households')} aside={<Toggle on={Boolean(d.pointsOn)} label={t('Stars for households')} onChange={(on) => save({ points: on ? 'on' : 'off' }, on ? t('Households may switch on stars') : t('Stars are off for everyone'))} />}>
         <p className="small muted op-p">{t('Off by default. When on, an admin of each household decides whether to count stars and for which areas – no rankings, no streaks.')}</p>
+      </Section>
+      <Section title={t('Year in review')} aside={<Toggle on={Boolean(d.yearReviewOn)} label={t('Year in review')} onChange={(on) => save({ year_review: on ? 'on' : 'off' }, on ? t('The year in review is on') : t('The year in review is off'))} />}>
+        <p className="small muted op-p">{t('Off by default. When on, every household gets “Your year at home”: a few cards about the year as “we” – no names, no ranking, nothing private. On “Today” from 1 December to 15 January.')}</p>
       </Section>
       <Section title={t('AI for the whole cloud')} aside={<Toggle on={d.ai.cloudOn} label={t('AI for the whole cloud')} onChange={(on) => save({ 'ai.cloud': on ? 'on' : 'off' }, on ? t('AI is on again') : t('AI paused for everyone'))} />}>
         <p className="small muted op-p">

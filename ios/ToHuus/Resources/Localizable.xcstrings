@@ -1361,6 +1361,23 @@
         }
       }
     },
+    "%d articles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d articles"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Artikel"
+          }
+        }
+      }
+    },
     "%d assistant messages a month": {
       "extractionState": "manual",
       "localizations": {
@@ -3465,6 +3482,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 archivierter Ort"
+          }
+        }
+      }
+    },
+    "1 article": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 article"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Artikel"
           }
         }
       }
@@ -16742,6 +16776,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Displays"
+          }
+        }
+      }
+    },
+    "Doesn’t count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doesn’t count"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zählt nicht"
           }
         }
       }
@@ -31944,6 +31995,23 @@
         }
       }
     },
+    "Next year": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next year"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächstes Jahr"
+          }
+        }
+      }
+    },
     "Nice to have": {
       "extractionState": "manual",
       "localizations": {
@@ -34031,6 +34099,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicht gruppiert"
+          }
+        }
+      }
+    },
+    "Not much to look back on yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not much to look back on yet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nicht viel zum Zurückschauen"
           }
         }
       }
@@ -41855,6 +41940,23 @@
         }
       }
     },
+    "Previous year": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous year"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voriges Jahr"
+          }
+        }
+      }
+    },
     "Price": {
       "extractionState": "manual",
       "localizations": {
@@ -42599,6 +42701,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einkauf importiert"
+          }
+        }
+      }
+    },
+    "Purchases": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchases"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einkäufe"
           }
         }
       }
@@ -57070,6 +57189,23 @@
         }
       }
     },
+    "The year in review is not switched on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The year in review is not switched on"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Rückblick ist nicht eingeschaltet"
+          }
+        }
+      }
+    },
     "Their name": {
       "extractionState": "manual",
       "localizations": {
@@ -58069,6 +58205,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieser Server kann keine E-Mails senden. Du bekommst stattdessen einen Link zum Weitergeben."
+          }
+        }
+      }
+    },
+    "This server doesn’t offer it (yet).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server doesn’t offer it (yet)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server bietet ihn (noch) nicht an."
           }
         }
       }
@@ -60368,6 +60521,23 @@
         }
       }
     },
+    "Use ToHuus for a while – the year fills up by itself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use ToHuus for a while – the year fills up by itself."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutzt ToHuus eine Weile – das Jahr füllt sich von selbst."
+          }
+        }
+      }
+    },
     "Use an app password (Nextcloud: Settings › Security), not your main password.": {
       "extractionState": "manual",
       "localizations": {
@@ -62353,6 +62523,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was hättest du gern?"
+          }
+        }
+      }
+    },
+    "What you did together – no ranking, just what happened.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you did together – no ranking, just what happened."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was ihr zusammen gemacht habt. Ohne Rangliste, einfach was war."
           }
         }
       }
@@ -64635,6 +64822,23 @@
         }
       }
     },
+    "Year in review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year in review"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rückblick"
+          }
+        }
+      }
+    },
     "Year of birth (optional)": {
       "extractionState": "manual",
       "localizations": {
@@ -65804,6 +66008,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deine Wünsche"
+          }
+        }
+      }
+    },
+    "Your year at home %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your year at home %d"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Euer Jahr to Huus %d"
           }
         }
       }

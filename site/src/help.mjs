@@ -365,7 +365,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         sections: [
           ['Ohne KI', p('Liste, Vorschläge aus dem Kaufrhythmus, Kochplaner, Wochenplan, Geld, PDF-Bons und die häufigen kurzen Sätze im Assistenten funktionieren ganz ohne Sprachmodell.')],
           ['Was die KI dazubringt', p('Fotos von Papierbons und Rezepten lesen, freie Fragen an den Assistenten, gesprochene Sätze in Text umwandeln.')],
-          ['Welches Modell', p('In der ToHuus Cloud geht jede Anfrage an Mistral, einen Anbieter aus Frankreich, mit Verarbeitung in der EU, fest eingestellt und ohne Ausweichen auf andere Anbieter. Nichts wird zum Training genutzt. Bevor KI für dich läuft, fragt ToHuus einmal nach deiner Zustimmung; zurückziehen kannst du sie unter Einstellungen › Zugänge & KI. Selbst gehostet nimmst du deinen eigenen Schlüssel oder gar keinen.')],
+          ['Welches Modell', p('In der ToHuus Cloud geht jede Anfrage an Mistral, einen Anbieter aus Frankreich, vermittelt über OpenRouter (USA), fest eingestellt und ohne Ausweichen auf andere Anbieter. Nichts wird zum Training genutzt. Bevor KI für dich läuft, fragt ToHuus einmal nach deiner Zustimmung; zurückziehen kannst du sie unter Einstellungen › Zugänge & KI. Selbst gehostet nimmst du deinen eigenen Schlüssel oder gar keinen.')],
           ['Abschalten', ul(
             '<b>Für den ganzen Haushalt</b>: Einstellungen › Zugänge & KI, nur Admins.',
             '<b>Nur für dich</b>: an derselben Stelle. Die anderen sehen deine Einstellung nicht.',
@@ -880,7 +880,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Without AI', p('The list, suggestions from the purchase rhythm, the cook planner, the week plan, money, PDF receipts and the common short sentences in the assistant all work without a language model.')],
           ['What AI adds', p('Reading photos of paper receipts and recipes, open questions to the assistant, turning speech into text.')],
-          ['Which model', p('In ToHuus Cloud every request goes to Mistral, a provider based in France, processed in the EU, pinned with no fallback. Nothing is used for training. Before AI runs for you, ToHuus asks once for your consent; you can withdraw it under Settings › Access & AI. Self-hosted, you bring your own key or none.')],
+          ['Which model', p('In ToHuus Cloud every request goes to Mistral, a provider based in France, routed through OpenRouter (USA), pinned with no fallback. Nothing is used for training. Before AI runs for you, ToHuus asks once for your consent; you can withdraw it under Settings › Access & AI. Self-hosted, you bring your own key or none.')],
           ['Switching it off', ul(
             '<b>For the whole household</b>: Settings › Access & AI, admins only.',
             '<b>Just for you</b>: same place. The others do not see your choice.',

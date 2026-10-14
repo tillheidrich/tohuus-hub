@@ -11,7 +11,7 @@ import { t } from '../i18n.js';
 import { historySince } from './limits.js';
 import { region } from './region.js';
 import { rhythmList } from './rhythm.js';
-import { addDays, aggregate, budgetStatus, loadEntries, periodRange, today, type Entry, type LoadOpts } from './spend2.js';
+import { addDays, aggregate, budgetStatus, loadEntries, periodRange, purchasesOf, today, type Entry, type LoadOpts } from './spend2.js';
 import { isDeposit, round2, shopName, spendLines, type SpendLine } from './spending.js';
 
 export class MoneyError extends Error {}
@@ -279,6 +279,8 @@ export function moneyOverview(month = currentMonth(), opts: LoadOpts = {}) {
     },
     priceChanges: mine ? [] : priceChangesFor(month, lines),
     hints,
+    /** receipts and own expenses of the month, newest first – tap one for its items (GET /api/spend/receipts/:id) */
+    purchases: purchasesOf(inMonth),
   };
 }
 

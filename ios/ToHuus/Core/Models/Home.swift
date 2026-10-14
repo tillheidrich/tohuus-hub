@@ -439,6 +439,25 @@ struct MoneyOverview: Decodable, Sendable {
     var budgetLeft: Double?
     var budgetState: String?
     var historyLimited = false
+    /// receipts and own expenses of the month, newest first – a row opens the receipt with its items
+    var purchases: [Purchase] = []
+
+    struct Purchase: Decodable, Sendable, Identifiable, Hashable {
+        var key: String
+        /// receipt | expense
+        var kind: String
+        var id: Int
+        var day: String
+        var store: String?
+        var title: String
+        var total: Double = 0
+        var items: Int = 0
+        var preview: [String] = []
+        var excluded = false
+        var personal = false
+        /// own expense: the entry itself (opens the expense form)
+        var entry: SpendEntry?
+    }
 
     struct Amount: Sendable, Identifiable, Hashable {
         var label: String
@@ -496,6 +515,7 @@ struct MoneyOverview: Decodable, Sendable {
         }
         priceChanges = (try? c.decode(Lossy<PriceChange>.self, forKey: AnyKey("priceChanges")).wrappedValue) ?? []
         hints = (try? c.decode(Lossy<Notice>.self, forKey: AnyKey("hints")).wrappedValue) ?? []
+        purchases = (try? c.decode(Lossy<Purchase>.self, forKey: AnyKey("purchases")).wrappedValue) ?? []
     }
 
     static func amounts(_ v: JSONValue?) -> [Amount] {

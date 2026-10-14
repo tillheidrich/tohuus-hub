@@ -15,6 +15,7 @@ struct MoneyView: View {
     @State private var meta: SpendMeta?
     @State private var lists: [MoneyListSummary] = []
     @State private var showExpense = false
+    @State private var allPurchases = false
 
     private var monthKey: String {
         let f = DateFormatter()
@@ -38,6 +39,7 @@ struct MoneyView: View {
                     if let o = overview {
                         let nothing = (o.total ?? 0) == 0 && o.byCategory.isEmpty
                         if !nothing { totalCard(o) }
+                        if !o.purchases.isEmpty { purchasesCard(o) }
                         if !nothing && !o.byWeek.isEmpty { weekChart(o) }
                         if !o.byCategory.isEmpty { barChart(L("By category"), "square.grid.2x2", o.byCategory, o.currency) }
                         if !o.byShop.isEmpty { barChart(L("By shop"), "storefront", o.byShop, o.currency) }
@@ -97,6 +99,7 @@ struct MoneyView: View {
                 case .receipts: ImportsListView(store: store) { showReceipt = true }
                 case .review(let id): ImportReviewView(store: store, importId: id)
                 case .spendReceipt(let id): SpendReceiptView(store: store, receiptId: id, meta: meta)
+                case .expense(let e): ExpenseEditView(store: store, entry: e, meta: meta)
                 case .prices(let id): PriceHistoryView(store: store, productId: id)
                 case .pricePicker: PricePickerView(store: store)
                 case .list(let id): MoneyListView(store: store, listId: id)
@@ -320,6 +323,54 @@ struct MoneyView: View {
         }
     }
 
+    /// The month's purchases, newest first – tap one for its items (receipt) or the expense form (own expense).
+    private func purchasesCard(_ o: MoneyOverview) -> some View {
+        let shown = allPurchases ? o.purchases : Array(o.purchases.prefix(6))
+        return Card(title: L("Purchases"), systemImage: "bag") {
+            ForEach(shown) { p in
+                NavigationLink(value: p.kind == "expense" ? (p.entry.map { MoneyRoute.expense($0) } ?? .detail) : .spendReceipt(p.id)) {
+                    HStack(alignment: .center, spacing: Theme.Space.s2) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 4) {
+                                Text(p.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+                                if p.personal { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(Theme.ink3).accessibilityLabel(L("Just mine")) }
+                            }
+                            Text(purchaseSub(p)).font(.caption).foregroundStyle(Theme.ink3)
+                            if !p.preview.isEmpty {
+                                Text(p.preview.joined(separator: ", ") + (p.kind == "receipt" && p.items > p.preview.count ? " …" : ""))
+                                    .font(.caption).foregroundStyle(Theme.ink3).lineLimit(1)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        Text(p.excluded ? L("Doesn’t count") : Money.format(p.total, currency: o.currency))
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(p.excluded ? Theme.ink3 : Theme.ink)
+                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            if o.purchases.count > 6 {
+                Button(allPurchases ? L("Show less") : LF("Show all %d", o.purchases.count)) { allPurchases.toggle() }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.primaryText)
+                    .frame(minHeight: 44)
+            }
+        }
+    }
+
+    private func purchaseSub(_ p: MoneyOverview.Purchase) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        var day = p.day
+        if let d = f.date(from: p.day) { day = d.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) }
+        let what = p.kind == "expense" ? L("Own expense") : (p.items == 1 ? L("1 article") : LF("%d articles", p.items))
+        return "\(day) · \(what)"
+    }
+
     private func hintsCard(_ o: MoneyOverview) -> some View {
         Card(title: L("Hints"), systemImage: "lightbulb") {
             ForEach(o.hints) { h in
@@ -337,6 +388,7 @@ enum MoneyRoute: Hashable {
     case newList
     case settings
     case spendReceipt(Int)
+    case expense(SpendEntry)
     case recognition
     case printers
 }

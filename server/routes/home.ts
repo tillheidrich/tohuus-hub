@@ -33,6 +33,7 @@ import { focusPrefs, freshStart, setFocusPrefs, suggestSteps } from '../lib/focu
 import { LOAD_ANSWERS, loadCards, setLoadAnswer, taskFromCard } from '../lib/loadcards.js';
 import { BLICK_AREAS, type BlickArea, blickOverview, setCompareOptIn } from '../lib/blick.js';
 import { pointsWeek, setPointsSettings } from '../lib/points.js';
+import { reviewAllowed, reviewSeason, yearReview } from '../lib/review.js';
 import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
@@ -255,6 +256,16 @@ r.put('/points/settings', (req, res) => {
   } catch (e) {
     res.status((e as { status?: number }).status ?? 400).json({ error: (e as Error).message });
   }
+});
+
+// ---------------------------------------------------------------- Rückblick (lib/review.ts, docs/review.md) – off by default
+
+r.get('/review', (req, res) => {
+  if (req.actor?.role === 'guest' || req.actor?.houseGuest) return void res.status(403).json({ error: t('Not available for guests') });
+  // ?peek=1: only whether it is on and in season – cheap enough for "Heute"
+  if (req.query.peek === '1') return void res.json({ allowed: reviewAllowed(), season: reviewAllowed() ? reviewSeason() : null });
+  const y = z.coerce.number().int().min(2000).max(2100).optional().safeParse(req.query.year || undefined);
+  res.json(yearReview(memberOf(req), y.success ? y.data : undefined));
 });
 
 /** "Mach ich – heute / morgen / am Wochenende / am …": a promise with a day; { when: null } takes it back. */

@@ -1046,6 +1046,29 @@ function ReceiptSheet({ id, onClose, onLine, meta, onSplit }: { id: number | nul
   );
 }
 
+/** A purchase from somewhere else (Geld): the receipt with its items, or the own expense – with everything the
+ * receipt sheet here offers (item details, prices, splitting). */
+export function PurchaseSheets({ open, onClose }: { open: { kind: 'receipt' | 'expense'; id: number } | null; onClose: () => void }) {
+  const meta = useApi<Meta>(['spending', 'meta'], open ? '/spend/meta' : null);
+  const [lineFor, setLineFor] = useState<Entry | null>(null);
+  const [expense, setExpense] = useState<number | null>(null);
+  const [priceFor, setPriceFor] = useState<number | null>(null);
+  const [listFrom, setListFrom] = useState<{ source: Source; title?: string } | null>(null);
+  const [listId, setListId] = useState<number | null>(null);
+  const openLine = (e: Entry) => (e.kind === 'expense' ? setExpense(e.id) : setLineFor(e));
+  const expenseId = open?.kind === 'expense' ? open.id : expense;
+  return (
+    <>
+      <ReceiptSheet id={open?.kind === 'receipt' ? open.id : null} onClose={onClose} onLine={openLine} meta={meta.data} onSplit={(source, title) => { onClose(); setListFrom({ source, title }); }} />
+      <LineSheet entry={lineFor} onClose={() => setLineFor(null)} meta={meta.data} onPrice={(id) => { setLineFor(null); setPriceFor(id); }} />
+      <ExpenseFormSheet target={expenseId} onClose={() => { setExpense(null); if (open?.kind === 'expense') onClose(); }} />
+      <PriceSheet productId={priceFor} onClose={() => setPriceFor(null)} />
+      <NewMoneyListSheet open={listFrom != null} preset={listFrom} onClose={() => setListFrom(null)} onCreated={(id) => { setListFrom(null); setListId(id); }} />
+      <MoneyListSheet id={listId} onClose={() => setListId(null)} />
+    </>
+  );
+}
+
 function LineSheet({ entry, onClose, meta, onPrice }: { entry: Entry | null; onClose: () => void; meta?: Meta; onPrice: (productId: number) => void }) {
   const toast = useToast();
   const [cat, setCat] = useState('');
