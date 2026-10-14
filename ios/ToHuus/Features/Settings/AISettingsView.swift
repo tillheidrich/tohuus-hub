@@ -2,6 +2,8 @@ import SwiftUI
 
 /// GET /api/ai/settings → { configured, household, mcp, mine, effective, reason, admin, kids?: [{ id, name, ai }] }
 struct AISettings: Decodable, Sendable {
+    /// which AI models the server has: { text, vision, audio }
+    var configured: Configured?
     var household: Bool?
     var mcp: Bool?
     var mine: Bool?
@@ -20,6 +22,18 @@ struct AISettings: Decodable, Sendable {
         var privacyUrl: String?
     }
 
+    struct Configured: Decodable, Sendable, Hashable {
+        var text: Bool?
+        var vision: Bool?
+        var audio: Bool?
+    }
+
+    /// false when the server has no AI model at all (older servers without `configured`: assume one)
+    var anyModel: Bool {
+        guard let c = configured else { return true }
+        return c.text == true || c.vision == true || c.audio == true
+    }
+
     struct Kid: Decodable, Sendable, Identifiable, Hashable {
         var id: Int
         var name: String
@@ -32,6 +46,10 @@ struct AISettingsView: View {
     @Environment(AppModel.self) private var app
     @State private var settings: AISettings?
     @State private var error: String?
+    /// GET /api/assistant/settings – health data for the assistant (Art. 9 GDPR), household-wide, admins change
+    @State private var healthShare: Bool?
+    /// GET /api/settings › features – what the server itself can read (vision model, e-mail)
+    @State private var server: HouseholdSettings?
 
     var body: some View {
         Form {
@@ -89,6 +107,67 @@ struct AISettingsView: View {
                     Text(L("A child's tablet shows AI as locked when you switch it off here."))
                 }
             }
+            Group {
+                if settings?.anyModel == false {
+                    Section {
+                        Text(L("No AI model is set up on this server. ToHuus works without one: the list, stock, receipts as PDF, barcodes and text recognition on the server."))
+                            .font(.subheadline).foregroundStyle(Theme.ink2)
+                    }
+                }
+                if let share = healthShare, !app.isGuest {
+                    Section {
+                        Toggle(isOn: Binding(get: { share }, set: { v in Task { await setHealthShare(v) } })) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L("Share allergies and children’s details with the assistant"))
+                                Text(L("Then it can take them into account when it suggests dishes. Off: unsuitable dishes are still left out, without saying why."))
+                                    .font(.caption).foregroundStyle(Theme.ink3)
+                            }
+                        }
+                        .tint(Theme.primary)
+                        .disabled(settings?.admin != true)
+                    } header: {
+                        Text(L("Assistant & privacy"))
+                    } footer: {
+                        Text(L("The assistant knows your list, what you buy and your recipes. Allergies, children’s ages and anything health-related stay at home – unless you switch this on.") + " "
+                             + L("This applies to everyone in the household. Off by default.")
+                             + (settings?.admin == true ? "" : " " + L("Only an admin can change this.")))
+                    }
+                }
+                if let api = app.api, !app.isGuest {
+                    Section {
+                        NavigationLink { ConnectAssistantView(api: api) } label: {
+                            Label(L("Connect with Claude or ChatGPT"), systemImage: "powerplug")
+                        }
+                        if settings?.admin == true {
+                            NavigationLink { AccessTokensView(api: api) } label: {
+                                Label(L("Access keys"), systemImage: "key")
+                            }
+                        }
+                    } header: {
+                        Text(L("Your own assistants"))
+                    } footer: {
+                        Text(L("Claude, ChatGPT and co. may reach ToHuus with an access you create. This is separate from the built-in AI: ToHuus itself calls no model for it."))
+                    }
+                }
+                if let f = server?.features {
+                    Section {
+                        LabeledContent(L("Image recognition"), value: f.vision == true ? LF("active (%@)", f.visionModel ?? "") : L("not set up"))
+                        if let ocr = app.instance?.features?.ocr?.bool {
+                            LabeledContent(L("Text recognition on the server"), value: ocr ? L("active") : L("not set up"))
+                        }
+                        LabeledContent(L("E-mail"), value: f.email == true ? L("active") : L("not set up"))
+                        if let store = app.store {
+                            NavigationLink { ReceiptRecognitionView(store: store) } label: {
+                                Label(L("Receipt recognition"), systemImage: "doc.text.viewfinder")
+                            }
+                        }
+                    } header: {
+                        Text(L("On the server"))
+                    } footer: {
+                        if f.vision != true { Text(L("Without image recognition, photos go through your own AI assistant or are read as text on this iPhone.")) }
+                    }
+                }
+            }
             Section {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
                     Label(L("Works without AI"), systemImage: "checkmark.circle").font(.headline)
@@ -115,7 +194,23 @@ struct AISettingsView: View {
     private func load() async {
         guard let api = app.api else { return }
         settings = try? await api.get("api/ai/settings", as: AISettings.self)
+        guard !app.isGuest else { return }
+        healthShare = (try? await api.get("api/assistant/settings", as: JSONValue.self))?["healthShare"]?.bool
+        server = try? await api.householdSettings()
     }
+
+    /// PATCH /api/assistant/settings { healthShare } (admins)
+    private func setHealthShare(_ on: Bool) async {
+        guard let api, settings?.admin == true else { return }
+        do {
+            let r = try await api.send("PATCH", "api/assistant/settings", json: ["healthShare": on], as: JSONValue.self)
+            healthShare = r["healthShare"]?.bool ?? on
+        } catch {
+            self.error = APIError.from(error).localizedDescription
+        }
+    }
+
+    private var api: APIClient? { app.api }
 
     private func patch(household: Bool? = nil, mcp: Bool? = nil) async {
         guard let api = app.api else { return }
