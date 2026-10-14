@@ -33,12 +33,12 @@ export function HomeSwitch({ side }: { side: 'tasks' | 'stock' }) {
       {both && (
         <Seg<'tasks' | 'stock'>
           value={side}
-          label={t('Home area')}
+          label={t('Home')}
           options={[['tasks', t('Tasks')], ['stock', t('Pantry')]]}
           onChange={(v) => nav(v === 'tasks' ? '/aufgaben' : '/bestand')}
         />
       )}
-      <div className="home-doors" role="group" aria-label={t('Home area')}>
+      <div className="home-doors" role="group" aria-label={t('Home')}>
         {ok('/wo') && (
           <button type="button" className="chip" onClick={() => nav('/wo')}>
             <MapPin size={15} aria-hidden="true" /> {t('Where’s what?')}

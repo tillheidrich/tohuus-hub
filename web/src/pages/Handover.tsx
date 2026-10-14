@@ -56,7 +56,7 @@ interface ViewerTrip {
 
 const MEDIA_MAX_BYTES = 100 * 1024 * 1024;
 const KIND_ICON: Record<Kind, ReactNode> = { pet: <PawPrint size={18} />, plants: <Plant size={18} />, post: <Envelope size={18} />, bins: <TrashSimple size={18} />, home: <House size={18} />, other: <Info size={18} /> };
-const kindName = (k: Kind) => ({ pet: t('Animals'), plants: t('Plants'), post: t('Post'), bins: t('Bins'), home: t('Home'), other: t('Other') })[k];
+const kindName = (k: Kind) => ({ pet: t('Animals'), plants: t('Plants'), post: t('Post'), bins: t('Bins'), home: t('Flat'), other: t('Other') })[k];
 const slotName = (s: string) => ({ morning: t('morning'), noon: t('midday'), evening: t('evening') })[s] ?? t('once that day');
 const WEEKDAYS = () => [t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat'), t('Sun')];
 

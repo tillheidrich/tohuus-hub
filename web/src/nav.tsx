@@ -50,7 +50,7 @@ export const TABS: Tab[] = [
   {
     key: '/zuhause',
     to: '/aufgaben',
-    label: () => t('Home area'),
+    label: () => t('Home'),
     icon: HouseLine,
     prefetch: () => {
       load.stock();

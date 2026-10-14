@@ -22793,7 +22793,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wohnung"
+            "value": "Zuhause"
           }
         }
       }
@@ -23015,23 +23015,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Home Assistant – Webhook-URL"
-          }
-        }
-      }
-    },
-    "Home area": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Home area"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zuhause"
           }
         }
       }

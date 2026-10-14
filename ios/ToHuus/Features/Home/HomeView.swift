@@ -53,7 +53,7 @@ struct HomeView: View {
     private var header: some View {
         VStack(spacing: Theme.Space.s2) {
             if stockOn && tasksOn {
-                Picker(L("Home area"), selection: $segment) {
+                Picker(L("Home"), selection: $segment) {
                     Text(L("Tasks")).tag("tasks")
                     Text(L("Pantry")).tag("stock")
                 }

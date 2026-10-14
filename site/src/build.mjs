@@ -83,7 +83,7 @@ const COPY = {
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
     legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant' },
-    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#bring-mir-was', 'Bring mir was'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
+    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#aufgaben', 'Aufgaben'], ['#bring-mir-was', 'Bring mir was'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
       label: 'Einkaufs- und Haushaltsassistent',
@@ -93,7 +93,7 @@ const COPY = {
       facts: ['Server in Deutschland (Hetzner)', 'Kein Tracking, keine Werbung', 'Selbst hosten kostenlos'],
       tiles: { flat: 'Wohnung', shared: 'WG', terraced: 'Reihenhaus', house: 'Haus' },
       tilesLabel: 'Vier gezeichnete Wohnformen: eine Wohnung, eine WG, Reihenhäuser und ein Haus.',
-      shot: 'ToHuus auf dem iPhone, Seite Heute: Hackfleisch und Haferflocken sind fällig, mit dem Hinweis „merkt sich: alle ~20 Tage, zuletzt vor 19 Tagen“, darunter die gemeinsame Liste mit Einträgen von Mira und Sam.',
+      shot: 'ToHuus auf dem iPhone, Seite Heute: unter „Fällig“ stehen Pizza Margherita, Reis und Spülmittel mit dem Hinweis, wie oft ihr sie kauft, darunter die Karte „Aufgaben heute“ mit „1 von 3 heute geschafft“.',
     },
     ask: {
       label: 'Haben wir noch …?', h2: 'Meistens weiß es nur eine Person.',
@@ -104,10 +104,10 @@ const COPY = {
     },
     jobs: {
       label: 'Was ToHuus macht', h2: 'Einkauf, Kochen und Geld hängen zusammen.',
-      intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei. Und um das, was ein Zuhause sonst noch ausmacht: einander was Gutes tun und Wünsche festhalten.',
+      intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei. Und um das, was ein Zuhause sonst noch ausmacht: die Aufgaben, die immer wiederkommen, einander was Gutes tun und Wünsche festhalten.',
       list: [
         { id: 'einkauf', no: '1', label: 'Einkauf', h3: 'ToHuus merkt sich, was fehlt.', shot: 'shopping',
-          alt: 'Einkaufsliste in ToHuus: oben Vorschläge wie Hackfleisch mit „merkt sich: alle ~12 Tage“, darunter nach Bereichen sortierte Einträge mit Ich-hol’s-Knopf und Herkunft wie „Mira, heute“.',
+          alt: 'Einkaufsliste in ToHuus: oben Vorschläge wie Pizza Margherita mit „merkt sich: alle ~32 Tage“, darunter nach Bereichen sortierte Einträge mit Ich-hol’s-Knopf und dem Hinweis „im Vorrat knapp“.',
           p: 'Aus euren Bons und dem, was ihr auf der Liste abhakt, sieht ToHuus, wie oft ihr etwas kauft. Ist es wieder so weit, erscheint es als Vorschlag mit Grund. Einen Vorrat müsst ihr dafür nicht führen.',
           points: ['Eine Liste, live auf allen Handys, auch während einer im Laden steht', 'Wer etwas übernimmt, tippt auf „Ich hol’s“', 'Im Laden nach Gängen sortiert, auch ohne Netz'] },
         { id: 'kochen', no: '2', label: 'Kochen', h3: 'Daraus könnt ihr heute kochen.', shot: 'cook',
@@ -115,14 +115,18 @@ const COPY = {
           p: 'Der Kochplaner fängt bei dem an, was zu Hause ist. Er zeigt, was sofort geht, wo nur eine Zutat fehlt und was bald weg muss. Wer mag, plant die Woche, und was dafür fehlt, kommt mit einem Tipp auf die Liste.',
           points: ['Rezepte von Hand, per Link, vom Foto oder aus anderen Apps', 'Viele auf einmal als Rezeptpaket, auch von deiner eigenen KI gebaut', 'Mit und ohne Küchenmaschine, Allergien werden beim Vorschlagen berücksichtigt'] },
         { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
-          alt: 'Seite Geld für September 2026: 215,81 Euro ausgegeben, 17 Euro mehr als im Vormonat, darunter ein Wochenverlauf und Balken nach Kategorie.',
+          alt: 'Seite Geld für Oktober 2026: bisher 66,26 Euro, 10 Euro weniger als zur gleichen Zeit im Vormonat, darunter der Verlauf pro Woche und die Kategorien.',
           p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
           points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Dingen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, für alle oder nur für dich, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
-        { id: 'bring-mir-was', no: '4', label: 'Bring mir was', h3: 'Einer liegt auf dem Sofa, einer steht in der Küche.', shot: 'treats',
+        { id: 'aufgaben', no: '4', label: 'Aufgaben', h3: 'Wer bringt diese Woche den Müll raus?', shot: 'tasks',
+          alt: 'Seite Aufgaben im Bereich Zuhause: Bad putzen und Müll rausbringen sind heute fällig, jeweils mit der Person, die dran ist, darunter der Termin Schornsteinfeger in vier Tagen um 10 Uhr.',
+          p: 'Bad putzen, Bettwäsche wechseln, den Wasserfilter tauschen oder der Termin mit dem Schornsteinfeger: ToHuus merkt sich, was wann dran ist und wer es macht. Wenn ihr euch abwechselt, gibt „Erledigt“ die Aufgabe an den Nächsten weiter. Punkte oder Ranglisten gibt es nicht, nur einen ruhigen Blick darauf, wer gerade woran denkt.',
+          points: ['Einmal, wiederkehrend oder bei Bedarf, für alle oder nur für dich', 'Termine mit Uhrzeit stehen in Apple Kalender, Google oder Outlook, Aufgaben in Apple Erinnerungen', 'Auch Kinder können dran sein, und was keiner im Blick hat, fällt auf'] },
+        { id: 'bring-mir-was', no: '5', label: 'Bring mir was', h3: 'Einer liegt auf dem Sofa, einer steht in der Küche.', shot: 'treats',
           alt: 'Seite Bring mir was: „Was hättest du gern?“, darunter Karten wie Was Süßes, Was zu trinken, Was zum Knabbern und Aus dem Kühlschrank, dazu die Reiter Gäste und Party.',
           p: 'Wer gerade festsitzt, im Bett, beim Zubettbringen oder mit Kind auf dem Arm, wünscht sich mit zwei Tipps eine Kleinigkeit. Die anderen sehen es sofort, einer sagt „Ich bring’s“, und eure Karte zeigt nur, was wirklich da ist. Für Besuch gibt es eine eigene Karte, und am Partyabend bestellen die Gäste direkt von eurer Partykarte.',
           points: ['Eure eigene Karte: Süßes, Getränke, Snacks, aus dem Kühlschrank', 'Gäste wünschen sich etwas über einen Link, ganz ohne App', 'Party: ihr seht, was bestellt ist und was noch da ist'] },
-        { id: 'wuensche', no: '5', label: 'Wünsche', h3: 'Wunschlisten, die nichts verraten.', shot: 'wishes',
+        { id: 'wuensche', no: '6', label: 'Wünsche', h3: 'Wunschlisten, die nichts verraten.', shot: 'wishes',
           alt: 'Seite Wünsche: Listen „Weihnachten für Mika“ mit drei Wünschen, zwei davon vergeben, und die Merkliste „Neue Kekse & Fundstücke“.',
           p: 'Geburtstag, Weihnachten oder einfach eine Merkliste: Wünsche mit Foto, mehreren Links, Preis und Notiz. Wer etwas reserviert, sieht der Rest der Familie, die beschenkte Person aber nie. Eine Liste lässt sich ganz oder in Teilen per Nachricht verschicken.',
           points: ['Foto, Links, Preis und „wer könnte das schenken“', 'Private Listen, die nur du siehst', 'Teilen als Link oder fertige Nachricht'] },
@@ -135,7 +139,7 @@ const COPY = {
       list: [
         ['receipt', 'Lieferdienst und eBon', 'Bestellt ihr bei REWE oder bekommt ihr digitale Bons, kommen Bestellung und Bon als PDF herein. ToHuus gleicht beides ab und bucht, was wirklich geliefert wurde.'],
         ['camera', 'Bon fotografieren', 'Bei Aldi, Lidl oder auf Papier reicht ein Foto vom Bon. Was ToHuus nicht sicher lesen kann, legt es dir zum Prüfen vor, bevor etwas gebucht wird. Die Texterkennung läuft ohne KI, auf dem Server oder direkt auf deinem iPhone.'],
-        ['mic', 'Einfach sprechen', 'Du tippst auf „Sprechen“ und sagst: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt es auf die Liste und sagt dir, was er eingetragen hat. Jeder Schritt lässt sich zurücknehmen.'],
+        ['mic', 'Einfach sagen', 'Du tippst auf den runden Assistenten-Knopf und sagst: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt es auf die Liste und sagt dir, was er eingetragen hat. Jeder Schritt lässt sich zurücknehmen.'],
       ],
     },
     how: {
@@ -158,7 +162,7 @@ const COPY = {
         ['c', 'Allein', 'Du musst dir nichts merken, und am Monatsende siehst du, was Essen und Haushalt gekostet haben.'],
         ['h', 'Zu zweit', 'Beide wissen, was fehlt. Keiner muss den anderen fragen, ob noch Kaffee da ist.'],
         ['s', 'Familie', 'Alle schreiben auf dieselbe Liste. Kinder und feste Gäste sehen nur, was ihr freigebt.'],
-        ['t', 'WG', 'Gemeinsames kommt auf eine Liste, private Einträge sehen die anderen nicht.'],
+        ['t', 'WG', 'Gemeinsames kommt auf eine Liste, private Einträge sehen die anderen nicht. Beim Putzplan wechselt ihr euch ab, und keiner muss daran erinnern.'],
         ['a', 'Mitversorgen', 'Wer für Eltern oder Großeltern mit einkauft, verbindet die beiden Haushalte und sieht, was dort fehlt.'],
       ],
       note: 'ToHuus setzt keinen Keller, keine Gefriertruhe und keinen Thermomix voraus. Ihr legt fest, welche Orte es bei euch gibt.',
@@ -169,7 +173,7 @@ const COPY = {
       cols: ['ToHuus Cloud', 'Selbst hosten'],
       rows: [
         ['Für wen', 'Alle, die einfach anfangen wollen', 'Alle mit eigenem Server, NAS oder Home Assistant'],
-        ['Apps', 'iPhone-App und im Browser, auch auf Android. iPad und Apple Watch kommen mit der App', 'Im Browser als Web-App (auch auf dem Startbildschirm), dazu Home Assistant und eigene Assistenten über MCP. Die iPhone-App gibt es nur für die Cloud'],
+        ['Apps', 'iPhone-App und im Browser, auch auf Android. iPad und Apple Watch kommen mit der App', 'Die iPhone-App, verbunden mit deinem Server, und im Browser als Web-App. Dazu Home Assistant und eigene Assistenten über MCP'],
         ['Daten', 'Server in Deutschland (Hetzner), jeder Haushalt mit eigenem Schlüssel verschlüsselt', 'Auf deinem Server, auf Wunsch verschlüsselt'],
         ['Bon-Fotos und Assistent', 'Dabei, mit Kontingent je nach Tarif. KI abschaltbar für Haushalt, Person und Kinder', 'Mit eigenem KI-Schlüssel oder ganz ohne'],
         ['Claude, ChatGPT (MCP)', 'Über MCP mit Anmeldung (OAuth)', 'Über MCP mit Zugangsschlüssel'],
@@ -185,7 +189,7 @@ const COPY = {
         { name: 'Free', price: '0 €', sub: 'für immer', storage: '250 MB', items: ['Gemeinsame Liste mit Einkaufsmodus', 'Bons ohne Limit', 'Merkt sich 60 Tage zurück', 'Rezepte von Hand oder per Link', '20 Nachrichten an den Assistenten im Monat'] },
         { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick', 'Verbundene Haushalte zum Mitversorgen', 'Mehr Importe aus Screenshots und Fotos (40 statt 10 am Tag)', '100 Nachrichten im Monat'] },
         { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', 'Neue ToHuus-Rezepte zur Jahreszeit, auch Backen und Küchenmaschine, mit Bild', 'Eigene Bon-Adresse für Bons per Mail', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
-        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'Web-App im Browser, Home Assistant, MCP'], host: true },
+        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'iPhone-App, Web-App, Home Assistant, MCP'], host: true },
       ],
       note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Während der Beta schenken wir Testhaushalten Haushalt oder Plus. Bezahlt wird in der iPhone-App über Apple.',
     },
@@ -209,7 +213,7 @@ const COPY = {
     },
     host: {
       label: 'Selbst hosten', h2: 'Für alle mit eigenem Server.',
-      p: 'Ein Docker-Container und eine SQLite-Datei, kostenlos unter AGPL-3.0. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst. Die iPhone-App ist für die ToHuus Cloud gedacht. Ein Konto bei uns brauchst du dafür nicht.',
+      p: 'Ein Docker-Container und eine SQLite-Datei, kostenlos unter AGPL-3.0. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst. Die iPhone-App verbindest du mit deinem Server, am einfachsten mit dem QR-Code aus der Web-App. Ein Konto bei uns brauchst du dafür nicht.',
       facts: [
         ['refresh', 'Home Assistant in beide Richtungen', 'Einkaufsliste als To-do-Liste für Assist, Sensoren für Fälliges und den Wochenplan als Kalender. Installiert über HACS, die Integration steht unter MIT-Lizenz.'],
         ['mail', 'Bon-Postfach, Telegram, Drucker', 'Bons kommen per Mail herein, „2 Milch, Brot“ im Chat landet auf der Liste, und ein Bon-Drucker in der Küche druckt sie aus.'],
@@ -259,7 +263,7 @@ const COPY = {
         ['Muss ich alles abtippen?', 'Nein. Bons kommen als PDF oder Foto herein. Mit Plus bekommt euer Haushalt in der Cloud eine eigene Bon-Adresse (kommt bald), selbst gehostet geht es über ein eigenes Postfach. Was ihr auf der Liste abhakt, zählt ebenfalls als Einkauf. Einen Vorrat müsst ihr nicht pflegen.'],
         ['Funktioniert das ohne REWE?', 'Ja. ToHuus liest auch Bons von Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm und Rossmann, Papierbons per Foto. Wer gar keine Bons sammeln will, hakt einfach auf der Liste ab.'],
         ['Gibt es ToHuus für Android?', 'Eine eigene Android-App gibt es nicht. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst, auf Android genauso wie am Rechner.'],
-        ['Wann kommt die iPhone-App?', `Sie ist im Test über TestFlight, in einem kleinen, geschlossenen Kreis. Einen Platz kannst du <a href="${tfHref('de')}">per Mail anfragen</a>. iPad und Apple Watch kommen mit der App. Wer selbst hostet, kann die Web-App schon heute nutzen.`],
+        ['Wann kommt die iPhone-App?', `Sie ist im Test über TestFlight, in einem kleinen, geschlossenen Kreis. Einen Platz kannst du <a href="${tfHref('de')}">per Mail anfragen</a>. iPad und Apple Watch kommen mit der App. Sie läuft mit der ToHuus Cloud und mit deinem eigenen Server.`],
         ['Brauche ich dafür KI?', 'Nein. Liste, Vorschläge, Kochplaner und Ausgaben funktionieren ohne. Bon-Fotos liest ToHuus zuerst mit einer Texterkennung ohne KI, auf dem Server oder direkt auf dem iPhone. Ein Sprachmodell hilft nur, wenn das nicht reicht, und bei freien Fragen an den Assistenten. Auf neueren iPhones kann auf Wunsch Apple Intelligence auf dem Gerät helfen. In der Cloud schaltest du KI erst mit deiner Zustimmung ein, und ihr könnt sie für den Haushalt, für einzelne Personen und für Kinder abschalten.'],
         ['Kann ich meine Rezepte mitbringen?', 'Ja. Per Link von Rezeptseiten, aus Instagram, TikTok, Pinterest oder YouTube, per Foto, aus Apps wie Mealie, Paprika oder Nextcloud Kochbuch, oder viele auf einmal als Rezeptpaket mit Fotos. Hast du Claude oder ChatGPT verbunden, kann deine eigene KI auch hunderte Rezepte samt Fotos in einem Rutsch speichern.'],
         ['Und Cookidoo, Monsieur Cuisine oder Cookit?', 'Teile ein Rezept aus Cookidoo, Monsieur Cuisine, Cookit oder einer anderen Küchenmaschinen-App mit ToHuus oder füge den Link ein, dann bestätigst du Name und Zutaten. Die Schritte kannst du dazuschreiben, als Text einfügen oder aus deinen Screenshots lesen lassen. ToHuus ruft diese Seiten selbst nie ab, und was du mitbringst, bleibt privat in eurem Haushalt.'],
@@ -286,7 +290,7 @@ const COPY = {
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
     legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant' },
-    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#bring-me-something', 'Bring me something'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
+    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#tasks', 'Tasks'], ['#bring-me-something', 'Bring me something'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
       label: 'Shopping and household assistant',
@@ -296,7 +300,7 @@ const COPY = {
       facts: ['Servers in Germany (Hetzner)', 'No tracking, no ads', 'Self-hosting is free'],
       tiles: { flat: 'Flat', shared: 'Flat share', terraced: 'Terraced house', house: 'House' },
       tilesLabel: 'Four drawn homes: a flat, a flat share, terraced houses and a house.',
-      shot: 'ToHuus on the iPhone, Today page: beef mince and porridge oats are due, with the note “remembers: every ~20 days, last 19 days ago”, below it the shared list with items from Mira and Sam.',
+      shot: 'ToHuus on the iPhone, Today page: under “Due” are pizza, rice and washing up liquid with how often you buy them, below them the card “Tasks today” with “1 of 3 done today”.',
     },
     ask: {
       label: 'Do we still have …?', h2: 'Usually only one person knows.',
@@ -307,10 +311,10 @@ const COPY = {
     },
     jobs: {
       label: 'What ToHuus does', h2: 'Shopping, cooking and money belong together.',
-      intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three. And after the rest of what makes a home: doing each other a good turn and keeping track of wishes.',
+      intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three. And after the rest of what makes a home: the tasks that keep coming back, doing each other a good turn and keeping track of wishes.',
       list: [
         { id: 'shopping', no: '1', label: 'Shopping', h3: 'ToHuus remembers what is missing.', shot: 'shopping',
-          alt: 'Shopping list in ToHuus: suggestions at the top such as beef mince with “remembers: every ~12 days”, below it items sorted by section with an I’ll-get-it button and where they came from, like “Mira, today”.',
+          alt: 'Shopping list in ToHuus: suggestions at the top such as pizza with “remembers: every ~32 days”, below them items sorted by section with an I’ll-get-it button and the note “running low in stock”.',
           p: 'From your receipts and what you tick off the list, ToHuus learns how often you buy things. When something is due again, it shows up as a suggestion with its reason. You do not have to keep a stock list for that.',
           points: ['One list, live on every phone, also while someone is in the shop', 'Whoever takes something taps “I’ll get it”', 'Sorted by aisle in the shop, even without signal'] },
         { id: 'cooking', no: '2', label: 'Cooking', h3: 'You can cook this today.', shot: 'cook',
@@ -318,14 +322,18 @@ const COPY = {
           p: 'The cook planner starts with what is at home. It shows what works right now, where only one ingredient is missing and what should be used soon. Plan the week if you like, and whatever it needs goes on the list in one tap.',
           points: ['Recipes by hand, from a link, a photo or other apps', 'Many at once as a recipe pack, even built by your own AI', 'With or without a kitchen machine, and allergies are taken into account'] },
         { id: 'money', no: '3', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
-          alt: 'Money page for September 2026: £215.81 spent, £17 more than the month before, with a weekly line and bars by category below.',
+          alt: 'Money page for October 2026: £33.70 so far, £27 less than at this point last month, with the weekly line and the categories below.',
           p: 'Every receipt counts. ToHuus shows what a month cost, in which shop and for which category, and compares it with the month before. You do not need to keep a ledger.',
           points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week, month or year, shared or just for you, with a note at 80 percent', 'CSV export'] },
-        { id: 'bring-me-something', no: '4', label: 'Bring me something', h3: 'One of you is on the sofa, one is in the kitchen.', shot: 'treats',
+        { id: 'tasks', no: '4', label: 'Tasks', h3: 'Whose turn is it to take out the bins?', shot: 'tasks',
+          alt: 'Tasks page in the Home area: cleaning the bathroom and taking out the bins are due today, each with the person whose turn it is, below it the chimney sweep appointment in four days at 10 o’clock.',
+          p: 'Cleaning the bathroom, changing the bed linen, the water filter or the chimney sweep’s visit: ToHuus remembers what is due when and who does it. If you take turns, “Done” passes the task on to the next person. There are no points and no rankings, just a calm look at who keeps what in mind.',
+          points: ['Once, recurring or when needed, for everyone or only for you', 'Appointments with a time show up in Apple Calendar, Google or Outlook, tasks in Apple Reminders', 'Children can have a turn too, and what nobody keeps in mind gets noticed'] },
+        { id: 'bring-me-something', no: '5', label: 'Bring me something', h3: 'One of you is on the sofa, one is in the kitchen.', shot: 'treats',
           alt: 'Treats page: “What would you like?”, with cards such as Something sweet, Something to drink, Something to nibble and From the fridge, plus tabs for Guests and Party.',
           p: 'Whoever is stuck, in bed, at bedtime or with a child on their arm, asks for a little something in two taps. The others see it right away, someone says “I’ll bring it”, and your menu only shows what is actually at home. Visitors get their own menu, and on party night guests order straight from your party menu.',
           points: ['Your own menu: sweets, drinks, snacks, from the fridge', 'Guests ask through a link, no app needed', 'Party: you see what was ordered and what is left'] },
-        { id: 'wishes', no: '5', label: 'Wishes', h3: 'Wish lists that give nothing away.', shot: 'wishes',
+        { id: 'wishes', no: '6', label: 'Wishes', h3: 'Wish lists that give nothing away.', shot: 'wishes',
           alt: 'Wishes page: the list “Christmas for Mika” with three wishes and the saved list “New biscuits & finds”.',
           p: 'Birthdays, Christmas or just a list of things to remember: wishes with a photo, several links, a price and a note. The family sees who reserved what, the person it is for never does. Send a whole list or part of it as a message.',
           points: ['Photo, links, price and “who could give this”', 'Private lists only you can see', 'Share as a link or a ready-made message'] },
@@ -338,7 +346,7 @@ const COPY = {
       list: [
         ['receipt', 'Delivery and e-receipts', 'If you order groceries online or get digital receipts, the order and the receipt come in as a PDF. ToHuus matches them and books what was actually delivered.'],
         ['camera', 'Snap the receipt', 'For a paper receipt, a photo is enough. Anything ToHuus cannot read with confidence is shown to you for a check before it is booked. Text recognition runs without AI, on the server or right on your iPhone.'],
-        ['mic', 'Just speak', 'Tap “Speak” and say: “We are out of milk, and we need something for Sunday.” The assistant puts it on the list and tells you what it added. Every step can be undone.'],
+        ['mic', 'Just say it', 'Tap the round assistant button and say: “We are out of milk, and we need something for Sunday.” The assistant puts it on the list and tells you what it added. Every step can be undone.'],
       ],
     },
     how: {
@@ -361,7 +369,7 @@ const COPY = {
         ['c', 'Just me', 'Nothing to remember, and at the end of the month you see what food and household cost.'],
         ['h', 'The two of us', 'Both of you know what is missing. Nobody has to ask whether there is coffee left.'],
         ['s', 'Family', 'Everyone writes on the same list. Children and regular guests only see what you share.'],
-        ['t', 'Flat share', 'Shared things go on one list, and the others do not see private items.'],
+        ['t', 'Flat share', 'Shared things go on one list, and the others do not see private items. The cleaning rota takes turns by itself, so nobody has to remind anyone.'],
         ['a', 'Looking after someone', 'If you shop for parents or grandparents too, connect the two households and see what is missing there.'],
       ],
       note: 'ToHuus does not assume a cellar, a chest freezer or a Thermomix. You decide which places your home has.',
@@ -372,7 +380,7 @@ const COPY = {
       cols: ['ToHuus Cloud', 'Self-hosted'],
       rows: [
         ['Who for', 'Anyone who just wants to start', 'Anyone with a server, a NAS or Home Assistant'],
-        ['Apps', 'iPhone app and the browser, Android included. iPad and Apple Watch come with the app', 'In the browser as a web app (also on the home screen), plus Home Assistant and your own assistants over MCP. The iPhone app is for the cloud only'],
+        ['Apps', 'iPhone app and the browser, Android included. iPad and Apple Watch come with the app', 'The iPhone app, connected to your server, and the browser as a web app. Plus Home Assistant and your own assistants over MCP'],
         ['Data', 'Servers in Germany (Hetzner), every household encrypted with its own key', 'On your server, encrypted if you like'],
         ['Receipt photos and assistant', 'Included, with an allowance per plan. AI can be switched off for the household, a person or a child', 'With your own AI key, or without'],
         ['Claude, ChatGPT (MCP)', 'Through MCP with sign-in (OAuth)', 'Through MCP with an access key'],
@@ -388,7 +396,7 @@ const COPY = {
         { name: 'Free', price: '€0', sub: 'for good', storage: '250 MB', items: ['Shared list with shop mode', 'Unlimited receipts', 'Remembers 60 days back', 'Recipes by hand or from a link', '20 assistant messages a month'] },
         { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices, spending and review', 'Connected households for looking after someone', 'More imports from screenshots and photos (40 instead of 10 a day)', '100 messages a month'] },
         { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', 'New seasonal ToHuus recipes (in German), baking and kitchen machines too, with pictures', 'Your own receipt address for receipts by mail', '1,500 messages a month'], mark: '14 days to try' },
-        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'Web app in the browser, Home Assistant, MCP'], host: true },
+        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'iPhone app, web app, Home Assistant, MCP'], host: true },
       ],
       note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. During the beta we often give test households Household or Plus for free. Payment runs through Apple in the iPhone app.',
     },
@@ -412,7 +420,7 @@ const COPY = {
     },
     host: {
       label: 'Self-hosting', h2: 'For everyone with their own server.',
-      p: 'One Docker container and one SQLite file, free under the AGPL-3.0. In the browser ToHuus runs as a web app you can add to your home screen. The iPhone app is meant for ToHuus Cloud. You do not need an account with us.',
+      p: 'One Docker container and one SQLite file, free under the AGPL-3.0. In the browser ToHuus runs as a web app you can add to your home screen. You connect the iPhone app to your server, most easily with the QR code from the web app. You do not need an account with us.',
       facts: [
         ['refresh', 'Home Assistant, both ways', 'The shopping list as a to-do list for Assist, sensors for what is due and the week plan as a calendar. Installed via HACS, the integration is MIT licensed.'],
         ['mail', 'Receipt inbox, Telegram, printer', 'Receipts arrive by e-mail, “2 milk, bread” in a chat lands on the list, and a receipt printer in the kitchen prints it.'],
@@ -462,7 +470,7 @@ const COPY = {
         ['Do I have to type everything in?', 'No. Receipts come in as a PDF or a photo. With Plus your household gets its own receipt address in the cloud (coming soon), and self-hosted it works through your own inbox. What you tick off the list counts as a purchase too. You do not have to keep a stock list.'],
         ['Does it work without online grocery delivery?', 'Yes. Paper receipts come in as a photo, and if you do not want to collect receipts at all, simply tick things off the list.'],
         ['Is there an Android app?', 'There is no separate Android app. In the browser ToHuus runs as a web app you can add to your home screen, on Android just like on a computer.'],
-        ['When is the iPhone app coming?', `It is being tested on TestFlight in a small, closed group. You can <a href="${tfHref('en')}">ask for a place by e-mail</a>. iPad and Apple Watch come with the app. If you self-host, you can use the web app today.`],
+        ['When is the iPhone app coming?', `It is being tested on TestFlight in a small, closed group. You can <a href="${tfHref('en')}">ask for a place by e-mail</a>. iPad and Apple Watch come with the app. It works with ToHuus Cloud and with your own server.`],
         ['Do I need AI for this?', 'No. The list, suggestions, cook planner and spending all work without it. Receipt photos are read first by text recognition without AI, on the server or right on the iPhone. A language model only helps when that is not enough, and with open questions to the assistant. On newer iPhones Apple Intelligence can help on the device if you like. In the cloud AI only starts with your consent, and you can switch it off for the household, for single people and for children.'],
         ['Can I bring my recipes?', 'Yes. From a link to a recipe site, from Instagram, TikTok, Pinterest or YouTube, from a photo, from apps like Mealie, Paprika or Nextcloud Cookbook, or many at once as a recipe pack with photos. If you connected Claude or ChatGPT, your own AI can save hundreds of recipes with their photos in one go.'],
         ['And Cookidoo, Monsieur Cuisine or Cookit?', 'Share a recipe from Cookidoo, Monsieur Cuisine, Cookit or another kitchen machine app with ToHuus or paste the link, then confirm the name and ingredients. Add the steps yourself, paste them as text or let ToHuus read them from your screenshots. ToHuus never fetches these sites itself, and what you bring along stays private in your household.'],
@@ -485,7 +493,7 @@ const COPY = {
 
 // ---------------------------------------------------------------- screenshots
 /** Every screenshot slot the page uses. The build fails when a file is missing, so no placeholder ever ships. */
-const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes'];
+const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes', 'tasks'];
 const WIDTHS = [480, 960];
 for (const lang of Object.keys(COPY)) for (const n of SHOTS) for (const w of WIDTHS) {
   const f = path.join(ROOT, `assets/shots/${lang}/${n}-${w}.webp`);
@@ -1397,7 +1405,7 @@ fs.writeFileSync(path.join(ROOT, 'llms.txt'), `# ToHuus
 
 > ${COPY.en.desc}
 
-ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app in ToHuus Cloud, or self-hosted with Docker as a web app with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
+ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app, in ToHuus Cloud or self-hosted with Docker, with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, keeps the household's recurring tasks and appointments (with Apple Reminders and calendar sync), lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
 
 ## Website
 - [ToHuus (English)](${SITE}): what it does, pricing, privacy, self-hosting

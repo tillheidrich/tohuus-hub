@@ -225,7 +225,7 @@ enum HandoverLabels {
         case "plants": return L("Plants")
         case "post": return L("Post")
         case "bins": return L("Bins")
-        case "home": return L("Home")
+        case "home": return L("Flat")
         default: return L("Other")
         }
     }

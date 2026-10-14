@@ -37,7 +37,28 @@ const SHOTS = [
   { name: 'import', path: '/import' },
   { name: 'treats', path: '/bestellen' },
   { name: 'wishes', path: '/einkauf/wuensche' },
+  { name: 'tasks', path: '/aufgaben' },
 ];
+
+/** Aufgaben (docs/tasks.md): chores with a rhythm, taking turns, an appointment and one done today, in both languages */
+const TASKS = {
+  de: { bath: 'Bad putzen', bins: 'Müll rausbringen', linen: 'Bettwäsche wechseln', sweep: 'Schornsteinfeger', place: 'Keller', filter: 'Wasserfilter wechseln', plants: 'Pflanzen gießen', steps: ['Waschbecken', 'Spiegel', 'Boden'] },
+  en: { bath: 'Clean the bathroom', bins: 'Take out the bins', linen: 'Change the bed linen', sweep: 'Chimney sweep', place: 'Cellar', filter: 'Change the water filter', plants: 'Water the plants', steps: ['Sink', 'Mirror', 'Floor'] },
+};
+async function tasks(ctx, lang) {
+  const T = TASKS[lang];
+  const day = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+  const people = ((await (await ctx.request.get(`${A.BASE}/api/people/directory`)).json().catch(() => [])) ?? []).filter((p) => p.kind !== 'guest');
+  const keys = people.slice(0, 2).map((p) => p.key);
+  const post = (data) => ctx.request.post(`${A.BASE}/api/care`, { data });
+  await post({ name: T.bath, category: 'house', interval_n: 1, interval_unit: 'week', anchor: 'due', next_due: day(0), checklist: T.steps.map((text) => ({ text })), ...(keys.length > 1 ? { rotation: keys } : {}) });
+  await post({ name: T.bins, category: 'house', interval_n: 1, interval_unit: 'week', anchor: 'due', next_due: day(0), ...(keys[1] ? { doer_key: keys[1] } : {}) });
+  await post({ name: T.linen, category: 'house', interval_n: 2, interval_unit: 'week', next_due: day(3) });
+  await post({ name: T.sweep, category: 'house', next_due: day(4), due_time: '10:00', duration_min: 30, place: T.place });
+  await post({ name: T.filter, category: 'care', interval_n: 2, interval_unit: 'month', next_due: day(9) });
+  const plants = await (await post({ name: T.plants, category: 'house', interval_n: 4, interval_unit: 'day', next_due: day(0) })).json().catch(() => null);
+  if (plants?.id) await ctx.request.post(`${A.BASE}/api/care/${plants.id}/done`, { data: {} });
+}
 
 /** Four months of invented receipts: the purchase rhythm, "probably due", Geld and the price history get real data. */
 const POOL = {
@@ -94,6 +115,7 @@ for (const lang of LANGS) {
   await setup.request.post(`${A.BASE}/api/tour/start`, { data: { choice: 'demo' } });
   await setup.request.put(`${A.BASE}/api/tour`, { data: { status: 'skipped' } });
   await receipts(setup, lang);
+  await tasks(setup, lang);
   if (lang === 'de') await seed(setup);
   else {
     // English wish lists (the shared seed writes German ones)

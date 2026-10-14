@@ -14,7 +14,6 @@
   "Every day": "Jeden Tag",
   "Fri": "Fr",
   "Handover item": "Punkt",
-  "Home": "Wohnung",
   "How often": "Wie oft",
   "It shows here while the trip is on.": "Sie erscheint hier, solange die Reise läuft.",
   "Mon": "Mo",
@@ -68,5 +67,6 @@
   "on %@": "am %@",
   "once that day": "einmal am Tag",
   "permanent guest": "dauerhafter Gast",
-  "when needed": "bei Bedarf"
+  "when needed": "bei Bedarf",
+  "Flat": "Wohnung"
 }

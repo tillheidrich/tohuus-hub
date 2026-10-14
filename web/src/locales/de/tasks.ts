@@ -88,7 +88,7 @@ export const tasks: Record<string, string> = {
   'Find a function, a setting or anything in your household.': 'Finde eine Funktion, eine Einstellung oder alles aus eurem Haushalt.',
   'Find a setting or function': 'Einstellung oder Funktion finden',
   'Functions & settings': 'Funktionen & Einstellungen',
-  'Home area': 'Zuhause',
+  Home: 'Zuhause',
   'Household settings': 'Haushalt',
   'New task “{text}”': 'Neue Aufgabe „{text}“',
   'Put “{text}” on the list': '„{text}“ auf die Liste',
