@@ -4,6 +4,14 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- iPhone app without compromises (decision 14 Oct 2026): every web function is native – account & security, people, kids & kid mode, permanent guests, places & categories, product extras, QR labels, favourites, shopping extras (WG balance, lunchbox, list import, offers, shop mode), cooking (editor, cook mode with timers, week board, printing), money & receipts (recognition, who paid, charts), Bring mir was & party (menu editor, order board, kitchen board), notifications, connections (Home Assistant, displays, printers, channels, Cookidoo, mail), data & backups, Heute and the first-run setup. Notes per area: `docs/ios-native-*.md`.
+- iPhone app works with your own ToHuus server: address with password and two-step code, sign-in in the browser (with a confirmation page), or a QR code from the web (Settings › My account › "iPhone-App verbinden"; `POST /api/auth/app/pair`, `GET/POST /api/auth/app/pair/start`, `POST /api/auth/app/pair/claim`). Several servers on one iPhone.
+- New structure on web and iPhone (`docs/design/ux-benchmark-2026-10-14.md`): tabs Heute · Einkauf · Kochen · Zuhause · Geld; Zuhause holds Aufgaben and Vorrat with the doors Wo ist was?, Hausinfo, Urlaub; Mehr is one list (Haushalt, Einstellungen, Geräte & Verbindungen, Hilfe); search and Mehr on every screen.
+- Global search: `GET /api/search` (`docs/search.md`) plus a registry of every function and setting; ⌘K / "/" on the web.
+- Cloud: `POST /api/auth/passkeys/options` accepts `{ code }` (code from the confirmation mail), so accounts without a password can add a passkey in the iPhone app.
+- Fixes: `PUT /api/list/today-order` refused the Aufgaben card; the getting-started item "phone" counts the iPhone app with notifications; chore templates in German on the web.
+- Tests: each vitest worker gets its own port block (two files could share a port and reach each other's server); the unreachable-photo test gets the 30 s it waits for.
+
 - Termine (web, iPhone): a task can have a time, length and place and is then a classic calendar entry. Apple Calendar shows "ToHuus · Kalender" and "ToHuus · Mein Kalender" two-way over CalDAV (replaces the read-only "ToHuus · Fällig"); Google Calendar, Outlook and others subscribe to a read-only link (`/api/calendar/feeds`, `/kalender-abo/<secret>.ics`); "In den Kalender" per task (`GET /api/care/:id/ics`, iPhone: Apple's event editor). The assistant's `task_add` takes `time`, `minutes`, `place`.
 
 - Aufgaben (web, iPhone, `docs/tasks.md`): household chores next to care & deadlines, private tasks ("nur für mich"), rhythm by weekday or after done, "bei Bedarf", sub-items, who does it (member or child), taking turns, recently done, the learned rhythm and a "Aufgaben heute" ring on Heute. `/pflege` → `/aufgaben`. New fields on `POST/PATCH /api/care`, new `GET /api/care/recent`.

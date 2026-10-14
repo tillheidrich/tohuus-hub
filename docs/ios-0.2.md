@@ -334,3 +334,7 @@ the English key is the same).
 | Assistant: sparkles icon, screen context per area | MainTabView, AssistantSheet | `POST /api/assistant/chat { context }` |
 | Termine: time, length and place in the task form, "In den Kalender" in the detail (EKEventEditViewController), time on Heute | Features/Household/CareView.swift, AddToCalendar.swift, Today/TasksTodayCard.swift | `POST/PATCH /api/care { due_time, duration_min, place }` |
 | Kalender-Abo for Google / Outlook | Features/Settings/CalDavView.swift | `GET/POST/DELETE /api/calendar/feeds` |
+
+## 14 Oct 2026 (night) – no compromises: everything native, own server, new structure
+
+Tabs Heute · Einkauf · Kochen · Zuhause · Geld (`App/MainTabView.swift`, `Features/Home/HomeView.swift`), search and the avatar for Mehr at the top right of every tab (`Design/RootChrome.swift`, `Features/Search/GlobalSearchView.swift`), Mehr as one list (`Features/Settings/SettingsView.swift`, `Features/Household/HouseholdLinks.swift`). Own server on the start screen (`Features/Start/OwnServerView.swift`, `ConnectKit.swift`). The areas are described in `docs/ios-native-*.md`; the overview is `docs/ios-parity-2026-10-13.md`.
