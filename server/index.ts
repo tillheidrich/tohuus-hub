@@ -127,6 +127,8 @@ app.use((_req, res, next) => {
   res.setHeader('Referrer-Policy', 'same-origin');
   res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
   res.setHeader('X-Frame-Options', 'DENY');
+  // HTTPS only from now on for this host (browsers ignore it over plain http; no includeSubDomains – sibling hosts decide for themselves)
+  if (config.baseUrl.startsWith('https://')) res.setHeader('Strict-Transport-Security', 'max-age=15552000');
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",

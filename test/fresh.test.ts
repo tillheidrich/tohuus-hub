@@ -81,6 +81,13 @@ describe('typical shelf life of unopened products', () => {
     expect(d('TK Hähnchenbrust')).toBeNull();
     expect(d('Spaghetti', 'pantry')).toBeNull();
     expect(d('Irgendwas', 'chilled')).toBe(10);
+    expect(d('Apfelsaft naturtrüb')).toBeNull();
+    expect(d('Kokosmilch')).toBeNull();
+    expect(d('Passierte Tomaten')).toBeNull();
+    expect(d('Kräutertee')).toBeNull();
+    expect(d('Paprika edelsüß')).toBeNull();
+    expect(shelf.defaultOpenDays('Rote Linsen', null)).toBeNull();
+    expect(shelf.defaultOpenDays('Kichererbsen Dose', null)).toBe(3);
   });
   it('after opening: jam in the fridge, hard cheese longer than sliced', () => {
     expect(shelf.defaultOpenDays('Erdbeer Konfitüre', null)).toBe(42);

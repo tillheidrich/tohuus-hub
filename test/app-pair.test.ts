@@ -88,6 +88,11 @@ it('browser sign-in: code bound to the app challenge, signed-out goes to the web
     fetch(`${base}/api/auth/app/pair/start`, { method: 'POST', redirect: 'manual', headers: { cookie, origin: base, 'content-type': 'application/x-www-form-urlencoded' }, body: `challenge=${c}` });
   // a cross-site form is refused
   expect((await fetch(`${base}/api/auth/app/pair/start`, { method: 'POST', redirect: 'manual', headers: { cookie, origin: 'https://evil.example', 'content-type': 'application/x-www-form-urlencoded' }, body: `challenge=${challenge}` })).status).toBe(403);
+  expect((await fetch(`${base}/api/auth/app/pair/start`, { method: 'POST', redirect: 'manual', headers: { cookie, origin: 'https://evil.example', 'sec-fetch-site': 'cross-site', 'content-type': 'application/x-www-form-urlencoded' }, body: `challenge=${challenge}` })).status).toBe(403);
+  // self-host opened under another address than BASE_URL (LAN IP): the browser says same-origin, the confirm works
+  const lan = await fetch(`${base}/api/auth/app/pair/start`, { method: 'POST', redirect: 'manual', headers: { cookie, origin: 'http://192.168.1.20:8080', 'sec-fetch-site': 'same-origin', 'content-type': 'application/x-www-form-urlencoded' }, body: `challenge=${challenge}` });
+  expect(lan.status).toBe(303);
+  expect(new URL(lan.headers.get('location')!).protocol).toBe('tohuus:');
   const go = await confirm(challenge);
   expect(go.status).toBe(303);
   const loc = new URL(go.headers.get('location')!);

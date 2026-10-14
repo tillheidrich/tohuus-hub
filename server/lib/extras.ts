@@ -13,7 +13,7 @@ import { t } from '../i18n.js';
 import { BASE_CATEGORIES } from './basedata.js';
 import { emit } from './bus.js';
 import { localDay } from './catalog.js';
-import { dayOf } from './fresh-shelf.js';
+import { addDays, dayOf } from './fresh-shelf.js';
 import { estimate, listLists } from './lists.js';
 import { region } from './region.js';
 import { notPrivate } from './share-core.js';
@@ -50,9 +50,9 @@ export function setExtrasSettings(v: ExtrasSettings | null) {
 
 const EXTRA_CATEGORIES = new Set(['snacks', 'icecream']);
 const EXTRA_NAME =
-  /(schoko|choco|praline|gummib(ä|ae)r|fruchtgummi|lakritz|bonbon|s(ü|ue)(ß|ss)igkeit|candy|sweets|\bchips\b|crisps|flips|nachos|popcorn|salzstangen|cracker|kekse?\b|cookies?|\bkuchen|torte|muffin|donut|croissant|eis\b|eiscreme|ice cream|magnum|\bcola\b|limo|fanta|sprite|eistee|energy|red bull|bier\b|beer|wein\b|wine\b|sekt|prosecco|champagner|champagne|whisky|gin\b|rum\b|wodka|vodka|lik(ö|oe)r|aperol)/i;
+  /(schoko|choco|praline|gummib(ä|ae)r|fruchtgummi|lakritz|bonbon|s(ü|ue)(ß|ss)igkeit|candy|sweets|\bchips\b|crisps|flips|nachos|popcorn|salzstangen|cracker|kekse?\b|cookies?|\bkuchen|\btorten?\b|muffin|donut|croissant|eis\b|eiscreme|ice cream|magnum|\bcola\b|limo|fanta|sprite|eistee|energy|red bull|bier\b|beer|wein\b|wine\b|sekt|prosecco|champagner|champagne|whisky|gin\b|rum\b|wodka|vodka|lik(ö|oe)r|aperol)/i;
 /** no extra by the rule of thumb – "Weinessig", "Bierhefe", "Backkakao" … */
-const NOT_EXTRA = /(essig|vinegar|hefe|backkakao|backschokolade|kuvert(ü|ue)re|zum backen|alkoholfrei.*\bbier\b(?!.*mix))/i;
+const NOT_EXTRA = /(\breis\b|(milch|wild|basmati|jasmin|langkorn|vollkorn|natur|parboiled|risotto)reis|tortellini|essig|vinegar|hefe|backkakao|backschokolade|kuvert(ü|ue)re|zum backen|alkoholfrei.*\bbier\b(?!.*mix))/i;
 
 function categoryKey(categoryId: number | null | undefined): string | null {
   if (!categoryId) return null;
@@ -116,9 +116,9 @@ export function extrasWeek(viewer: number | null) {
            (s.checked_at IS NULL AND s.cleared_at IS NULL) OR s.checked_at >= ?
          )`,
       )
-      .all(`${from} 00:00:00`) as Row[]
+      .all(`${addDays(from, -1)} 00:00:00`) as Row[]
   ).filter((r) => lists.has(r.list_id ?? 0) && itemIsExtra(r));
-  // a tick late on Sunday night may be stored as Monday UTC – the local day decides
+  // checked_at is UTC: the query starts a day early, the local day decides (a Monday 01:30 tick in Berlin is Sunday UTC)
   const thisWeek = (ts: string) => {
     const d = dayOf(ts);
     return d >= from && d <= to;

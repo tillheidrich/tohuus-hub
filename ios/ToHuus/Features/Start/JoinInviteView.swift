@@ -57,6 +57,16 @@ struct JoinInviteView: View {
                     if let m = info.message, !m.isEmpty { Text(m).foregroundStyle(Theme.ink2) }
                     if let a = info.access { LabeledContent(L("Access"), value: a) }
                 }
+                if !cloud && info.methods?.password == false {
+                    // this server signs members in without passwords (passkey or e-mail link): join in the browser,
+                    // then connect the app with "Eigener Server" (code-review 14 Oct 2026)
+                    Section {
+                        Text(L("This household signs in without passwords. Join in the browser with a passkey or an e-mail link, then connect the app under “Own server”."))
+                        if let url = URL(string: link.trimmingCharacters(in: .whitespacesAndNewlines)) {
+                            Link(destination: url) { Label(L("Continue in the browser"), systemImage: "safari") }
+                        }
+                    }
+                } else {
                 Section {
                     TextField(L("Your name"), text: $name).textContentType(.name)
                     if cloud {
@@ -77,6 +87,7 @@ struct JoinInviteView: View {
                         HStack { Text(L("Join")); if busy { Spacer(); ProgressView() } }
                     }
                     .disabled(!ready || busy)
+                }
                 }
             }
             if let error { Section { Text(error).foregroundStyle(Theme.empty) } }

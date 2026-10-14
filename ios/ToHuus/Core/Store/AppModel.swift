@@ -25,7 +25,7 @@ final class AppModel {
     /// global search (GlobalSearchView) and the Mehr sheet – opened from the magnifier and the avatar on every root screen
     var showSearch = false
     var showMore = false
-    /// a ToHuus label link opened from outside (NFC tag in the background, universal link ".../q/<code>")
+    /// a ToHuus label link opened from outside (QR scanned with the camera app – universal link ".../q/<code>")
     var pendingLabel: String?
     /// Zuhause tab: "tasks" or "stock" (HomeView), set when someone opens /aufgaben or the pantry from elsewhere
     var homeSegment: String?

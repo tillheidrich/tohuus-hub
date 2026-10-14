@@ -30,14 +30,6 @@ const KIND_HINT: Record<Exclude<Kind, 'boxes'>, string> = {
 
 /** Printable A4 sheet of QR labels. Codes are random ids mapped on the server; scanning needs a household login. */
 
-/** Web NFC (Chrome on Android): write the label's link onto a tag – the same random id as the QR code (docs/nfc.md). */
-const NFC_WRITE = typeof window !== 'undefined' && 'NDEFReader' in window;
-async function writeNfc(url: string) {
-  const Reader = (window as unknown as { NDEFReader: new () => { write: (m: unknown) => Promise<void> } }).NDEFReader;
-  await new Reader().write({ records: [{ recordType: 'url', data: url }] });
-  return t('The tag is ready. Hold your phone to it to open the label.');
-}
-
 export function Labels() {
   const [sp, setSp] = useSearchParams();
   const kind = (['product', 'location', 'care', 'boxes'].includes(sp.get('kind') ?? '') ? sp.get('kind') : 'product') as Kind;
@@ -191,11 +183,6 @@ export function Labels() {
                   {l.sub && <span>{l.sub}</span>}
                   <small>{l.kind !== 'boxes' && t(KIND_HINT[l.kind])}</small>
                 </div>
-                {NFC_WRITE && (
-                  <button className="btn sm no-print" onClick={() => writeNfc(l.url).then((m) => toast({ text: m })).catch((e) => toast({ text: (e as Error).message, error: true }))}>
-                    {t('NFC tag')}
-                  </button>
-                )}
               </div>
             ))}
           </div>

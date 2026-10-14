@@ -60,7 +60,6 @@ const OPEN_RULES: [RegExp, number][] = [
   [/(ketchup|grillsauce|bbq|barbecue)/i, 60],
   [/(senf|mustard)/i, 90],
   [/(nuss-?nougat|schokocreme|nutella|erdnussbutter|peanut butter)/i, 90],
-  [/(eier\b|\beggs?\b)/i, 2],
   [/(milchreis|grießbrei|griessbrei|pudding|rice pudding)/i, 3],
   [/(thunfisch|sardine|makrele|hering|tuna|mackerel)/i, 2],
   [/(gnocchi|tortellini|ravioli|frische pasta|fresh pasta|maultaschen|schupfnudeln|spätzle frisch)/i, 3],
@@ -77,7 +76,7 @@ const OPEN_RULES: [RegExp, number][] = [
   [/(müsli|muesli|cornflakes|haferflocken|granola|cereal)/i, 60],
   [/(chips|crisps|nachos)\b/i, 3],
   [/(sojasauce|sojasoße|soy sauce|worcester|fischsauce|fish sauce)/i, 180],
-  [/\b(dose|konserve|canned|tinned)\b|(mais|bohnen|kichererbsen|linsen|erbsen)\b/i, 3],
+  [/\b(dose|konserve|canned|tinned|glas)\b/i, 3],
   [/(sauce|soße|sosse|dressing)\b/i, 7],
 ];
 
@@ -160,7 +159,7 @@ const UNOPENED_RULES: [RegExp, number][] = [
 
 /** sweets, canned, frozen or dried: the name may say milk, egg or sausage, the shelf life is a different story */
 const NO_FRESH_GUESS =
-  /(schoko|choco|keks|cookie|riegel|bonbon|gummi|chips|pulver|powder|\bdose\b|konserve|\bcanned|\btinned|tiefk(ü|ue)hl|\btk\b|\bfrozen|getrocknet|\bdried|likör|likoer|nudeln|pasta|eis\b|ice cream|sauce|soße|sosse|passata|tomatenmark|stückige|pizzatomaten|gewürzgurk|gewuerzgurk|essiggurk|cornichon|pickle)/i;
+  /(schoko|choco|keks|cookie|riegel|bonbon|gummi|chips|pulver|powder|\bdose\b|konserve|\bcanned|\btinned|tiefk(ü|ue)hl|\btk\b|\bfrozen|getrocknet|\bdried|likör|likoer|nudeln|pasta|eis\b|ice cream|sauce|soße|sosse|passata|tomatenmark|stückige|pizzatomaten|gewürzgurk|gewuerzgurk|essiggurk|cornichon|pickle|saft\b|säfte|juice|nektar|\btee\b|kräutertee|früchtetee|\btea\b|kokosmilch|kondensmilch|kaffeesahne|passiert|gewürz|gewuerz|edelsüß|edelsuess|paprikapulver|getrocknet)/i;
 
 /** Category fallback for unopened products: fresh chilled things keep about a week, fruit & veg and bread a few days. */
 const UNOPENED_BY_CATEGORY: Partial<Record<string, number>> = { chilled: 10, produce: 7, bakery: 3 };

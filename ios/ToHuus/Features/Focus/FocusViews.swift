@@ -174,8 +174,11 @@ struct FocusView: View {
             .sorted { ($0.nextDue ?? "", $0.id) < ($1.nextDue ?? "", $1.id) }
     }
 
+    /// the task opened with "Focus on this" – let go once it's done (a recurring one comes back with a new date)
+    @State private var pinnedDone = false
+
     private var current: CareTask? {
-        if let taskId, !skipped.contains(taskId), let t = data?.tasks.first(where: { $0.id == taskId }) { return t }
+        if let taskId, !pinnedDone, !skipped.contains(taskId), let t = data?.tasks.first(where: { $0.id == taskId }) { return t }
         return queue.first { !skipped.contains($0.id) } ?? queue.first
     }
 
@@ -202,7 +205,12 @@ struct FocusView: View {
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(busy)
                     HStack {
-                        Button(L("Later")) { skipped.removeAll { $0 == t.id }; skipped.append(t.id) }
+                        Button(L("Later")) {
+                            skipped.removeAll { $0 == t.id }
+                            skipped.append(t.id)
+                            // everything skipped once: start the round again
+                            if queue.allSatisfy({ skipped.contains($0.id) }) { skipped = [t.id] }
+                        }
                             .buttonStyle(SecondaryButtonStyle())
                         Button { Task { await smaller(t) } } label: { Label(L("Too big? Make it smaller"), systemImage: "sparkles") }
                             .buttonStyle(SecondaryButtonStyle())
@@ -240,10 +248,14 @@ struct FocusView: View {
             if let i = items.firstIndex(where: { !$0.done }) {
                 items[i].done = true
                 try await api.saveCareTask(id: t.id, ["checklist": items.map { ["text": $0.text, "done": $0.done] as [String: Any] }])
-                if items.allSatisfy(\.done) { _ = try await api.careDone(t.id) }
+                if items.allSatisfy(\.done) {
+                    _ = try await api.careDone(t.id)
+                    if t.id == taskId { pinnedDone = true }
+                }
                 toast = ToastMessage(text: items.allSatisfy(\.done) ? L("Done. Good.") : L("One step done."))
             } else {
                 _ = try await api.careDone(t.id)
+                if t.id == taskId { pinnedDone = true }
                 toast = ToastMessage(text: L("Done. Good."))
             }
             Haptics.success()

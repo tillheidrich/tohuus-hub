@@ -62,7 +62,7 @@ struct ToHuusApp: App {
 
     /// tohuus://assistant, tohuus://shopping (widget) and the other tabs
     private func handle(_ url: URL) {
-        // a ToHuus label link (NFC tag read in the background, universal link of the cloud host): https://…/q/<code>
+        // a ToHuus QR label scanned with the camera app (universal link of the cloud host): https://…/q/<code>
         if url.scheme == "https", url.path.hasPrefix("/q/") {
             if app.phase == .signedIn { app.pendingLabel = url.absoluteString }
             return

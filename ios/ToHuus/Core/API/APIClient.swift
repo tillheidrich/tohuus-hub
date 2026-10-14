@@ -30,7 +30,11 @@ final class APIClient: Sendable {
             throw APIError.invalidURL
         }
         if parts.count > 1, !parts[1].isEmpty { comps.percentEncodedQuery = String(parts[1]) }
-        if !query.isEmpty { comps.queryItems = (comps.queryItems ?? []) + query }
+        if !query.isEmpty {
+            comps.queryItems = (comps.queryItems ?? []) + query
+            // URLComponents leaves "+" as is, and servers read it as a space ("1+1" → "1 1")
+            comps.percentEncodedQuery = comps.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+        }
         guard let u = comps.url else { throw APIError.invalidURL }
         return u
     }

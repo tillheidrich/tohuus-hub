@@ -24,7 +24,7 @@ The week follows the household's region (`weekStart`). Private rows and lists th
 
 | Method | Path | |
 |---|---|---|
-| GET | `/api/list/extras` | `{ on, mode, weekly, from, to, used, planned, left, over, unpriced, items: [{ id, text, qty, done }] }` – not for guest links |
+| GET | `/api/list/extras` | `{ on, mode, weekly, from, to, used, planned, left, over, unpriced, items: [{ id, text, qty, done }] }` – not for guest links or permanent guests (money mode holds receipt amounts) |
 | PUT | `/api/list/extras/settings` | admins: `{ mode: 'money' \| 'count', weekly }` or `{ off: true }` |
 | POST | `/api/list/items/:id/extra` | `{ extra: true \| false \| null }` – null = back to automatic |
 

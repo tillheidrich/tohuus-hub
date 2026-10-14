@@ -176,12 +176,19 @@ interface TaskRow {
 /**
  * "Neu anfangen": overdue tasks this person keeps in mind, does, owns privately – or nobody keeps in mind – move to
  * a fresh start: at most `perDay` per day from today on, oldest first. Nothing is marked done or missed.
+ * Appointments, fixed deadlines and fixed weekdays are never moved (code review 14 Oct 2026).
  */
 export function freshStart(userId: number, perDay = 2) {
   const today = localDay(0);
   const rows = (
     db
-      .prepare(`SELECT id, next_due, visibility, owner_user_id, assignee_user_id, doer_key, as_needed FROM care_tasks WHERE archived = 0 AND next_due IS NOT NULL AND next_due < ? ORDER BY next_due, id`)
+      // only recurring tasks that count from the last time: appointments (with a time), fixed deadlines (passport)
+      // and fixed weekdays ("every Monday") keep their dates
+      .prepare(
+        `SELECT id, next_due, visibility, owner_user_id, assignee_user_id, doer_key, as_needed FROM care_tasks
+         WHERE archived = 0 AND next_due IS NOT NULL AND next_due < ? AND due_time IS NULL AND interval_n IS NOT NULL AND COALESCE(anchor, 'done') = 'done'
+         ORDER BY next_due, id`,
+      )
       .all(today) as TaskRow[]
   ).filter((r) =>
     r.visibility === 'private'

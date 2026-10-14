@@ -218,6 +218,7 @@ struct HelpCenterView: View {
             } footer: {
                 Text(LF("The help pages open on %@.", SharedConfig.siteURL.host() ?? ""))
             }
+            if query.isEmpty, let api = store?.api { RatgeberSection(api: api, max: 6) }
             if let url = FeedbackMail.url(instance: app.instance, household: app.session?.householdId) {
                 Section {
                     Link(destination: url) { Label(L("Still stuck? Write to us"), systemImage: "lifepreserver") }

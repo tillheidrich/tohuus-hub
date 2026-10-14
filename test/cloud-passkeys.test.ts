@@ -189,7 +189,7 @@ describe('cloud passkeys', () => {
     expect(aasa.type).toMatch(/application\/json/);
     expect(aasa.json).toEqual({
       webcredentials: { apps: ['FVS7WVTQ67.de.heidrichdigital.tohuus'] },
-      applinks: { details: [{ appIDs: ['FVS7WVTQ67.de.heidrichdigital.tohuus'], components: [{ '/': '/q/*', comment: 'ToHuus labels (QR, NFC)' }] }] },
+      applinks: { details: [{ appIDs: ['FVS7WVTQ67.de.heidrichdigital.tohuus'], components: [{ '/': '/q/*', comment: 'ToHuus QR labels' }] }] },
     });
   });
 

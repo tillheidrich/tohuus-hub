@@ -10788,3 +10788,48 @@ html.gentle .badge.empty {
   flex: 1 1 100%;
   font-size: 1.05rem;
 }
+
+/* Denkarbeit-Check (pages/LoadCards.tsx) */
+.loadcard-text {
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin: 4px 0 10px;
+}
+.loadcards-help {
+  margin: 0;
+  padding-left: 18px;
+}
+.loadcards-help li {
+  margin: 4px 0;
+}
+.loadcards-teaser {
+  gap: 12px;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+}
+
+/* Ratgeber cards (pages/RatgeberCards.tsx) */
+.ratgeber-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.ratgeber-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+  min-height: 44px;
+}
+.ratgeber-card:hover b {
+  text-decoration: underline;
+}
+.ratgeber-more {
+  margin-top: auto;
+  color: var(--primary-text, var(--primary));
+}

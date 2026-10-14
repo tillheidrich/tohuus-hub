@@ -29,6 +29,7 @@ import {
   type QrKind,
 } from '../lib/care.js';
 import { focusPrefs, freshStart, setFocusPrefs, suggestSteps } from '../lib/focus.js';
+import { LOAD_ANSWERS, loadCards, setLoadAnswer, taskFromCard } from '../lib/loadcards.js';
 import { blickOverview, setCompareOptIn } from '../lib/blick.js';
 import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
@@ -118,7 +119,7 @@ r.get('/care/:id/ics', (req, res) => {
 
 /** "Wer hat was im Blick": who was involved per area; shares only when every member agreed to compare */
 r.get('/blick', (req, res) => {
-  if (req.actor?.role === 'guest') return res.status(403).json({ error: t('Not available for guests') });
+  if (req.actor?.role === 'guest' || req.actor?.houseGuest) return res.status(403).json({ error: t('Not available for guests') });
   res.json(blickOverview(viewerOf(req), Math.min(90, Math.max(7, Number(req.query.days) || 28))));
 });
 r.put('/blick/compare', (req, res) => {
@@ -126,6 +127,35 @@ r.put('/blick/compare', (req, res) => {
   if (id == null || req.actor?.kind !== 'user') return res.status(403).json({ error: t('Only for signed-in members') });
   setCompareOptIn(id, z.object({ on: z.boolean() }).parse(req.body).on);
   res.json(blickOverview(id));
+});
+
+// ---------------------------------------------------------------- Denkarbeit-Check (lib/loadcards.ts, docs/mental-load.md)
+
+r.get('/blick/cards', (req, res) => {
+  const uid = memberOf(req);
+  if (!uid) return void res.status(403).json({ error: t('Only for signed-in members') });
+  res.json(loadCards(uid));
+});
+r.put('/blick/cards/:key', (req, res) => {
+  const uid = memberOf(req);
+  if (!uid) return void res.status(403).json({ error: t('Only for signed-in members') });
+  const b = z.object({ answer: z.enum(LOAD_ANSWERS).nullable() }).parse(req.body);
+  try {
+    setLoadAnswer(uid, String(req.params.key), b.answer);
+    res.json(loadCards(uid));
+  } catch (e) {
+    res.status((e as { status?: number }).status ?? 400).json({ error: (e as Error).message });
+  }
+});
+/** "Daraus eine Aufgabe machen": a task "when needed" that I keep in mind. */
+r.post('/blick/cards/:key/task', (req, res) => {
+  const uid = memberOf(req);
+  if (!uid) return void res.status(403).json({ error: t('Only for signed-in members') });
+  try {
+    res.json(taskFromCard(uid, String(req.params.key)));
+  } catch (e) {
+    res.status((e as { status?: number }).status ?? 400).json({ error: (e as Error).message });
+  }
 });
 
 r.post('/care', (req, res) => {

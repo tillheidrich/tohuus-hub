@@ -96,7 +96,8 @@ r.patch(
 
 /** This week's extras: allowance, used, still on the list, left. */
 r.get('/list/extras', (req, res) => {
-  if (req.actor?.kind === 'guest') return void res.status(403).json({ error: 'not for guest links' });
+  // guest links and permanent guests: no receipt amounts (money stays with members)
+  if (req.actor?.kind === 'guest' || req.actor?.houseGuest) return void res.status(403).json({ error: 'not for guests' });
   res.json(extrasWeek(userId(req)));
 });
 /** The household's weekly allowance (admins); null switches it off. */

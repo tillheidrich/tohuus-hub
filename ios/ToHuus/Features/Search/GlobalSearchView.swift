@@ -159,8 +159,8 @@ private struct SearchAnswer: Decodable, Sendable { var groups: SearchGroups }
 
 extension APIClient {
     func search(_ q: String) async throws -> SearchGroups {
-        let enc = q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? q
-        return try await get("api/search?q=\(enc)", as: SearchAnswer.self).groups
+        // as a query item: "M&M" or "1+1" must not split the query (code review 14 Oct 2026)
+        return try await get("api/search", query: [URLQueryItem(name: "q", value: q)], as: SearchAnswer.self).groups
     }
 }
 
@@ -168,7 +168,7 @@ extension APIClient {
 enum SearchRegistry {
     enum Target: String {
         case account, household, people, invite, places, notifications, connections, data, ai, calendar, labels, help
-        case servers, devices, guests, treats, memory, wishes, receipts, spending, favourites, houseInfo, away, listLook, focus
+        case servers, devices, guests, treats, memory, wishes, receipts, spending, favourites, houseInfo, away, listLook, focus, loadCards
     }
 
     struct Entry: Identifiable {
@@ -215,6 +215,7 @@ enum SearchRegistry {
                 Entry(title: L("Spending in detail"), words: "ausgaben diagramm export", icon: "chart.bar", target: .spending),
                 Entry(title: L("Favourites"), words: "lieblinge lieblingsessen", icon: "heart", target: .favourites),
                 Entry(title: L("Trip / away"), words: "urlaub verreist übergabe packen", icon: "suitcase", target: .away),
+                Entry(title: L("Mental load check"), words: "mental load denkarbeit unsichtbare arbeit karten wer denkt an was fair verteilen", icon: "brain.head.profile", target: .loadCards),
                 Entry(title: L("One thing at a time"), words: "fokus konzentration adhs ads timer eins nach dem anderen anfangen", icon: "scope", target: .focus),
                 Entry(title: L("Calm & focus"), words: "sanfter modus ruhig adhs ads autismus weniger überfordert erinnerungen bündeln", icon: "leaf", target: .account),
                 Entry(title: L("Extras in the weekly shop"), words: "extras kontingent luxus naschen süßes spaß budget woche", icon: "sparkles", target: .household),
@@ -259,6 +260,7 @@ enum SearchRegistry {
         case .away: AwayView(store: store)
         case .listLook: ListDisplaySettingsView()
         case .focus: FocusView(api: api)
+        case .loadCards: LoadCardsView(api: api)
         }
     }
 }

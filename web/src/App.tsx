@@ -22,6 +22,7 @@ import { type ListPrefs, applyListPrefs, readLocalPrefs } from './shop/prefs';
 import { RouteHelp } from './help';
 import { AreaAssist } from './assistant/AreaAssist';
 import { FocusPage, useFocusPrefs } from './focus/Focus';
+import { LoadCardsPage } from './pages/LoadCards';
 
 export interface Me {
   actor: {
@@ -337,6 +338,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/einstellungen" element={<Settings me={me} />} />
               <Route path="/aufgaben" element={<Care />} />
               <Route path="/fokus" element={<FocusPage />} />
+              <Route path="/denkarbeit" element={<LoadCardsPage />} />
               <Route path="/pflege" element={<Navigate to="/aufgaben?f=care" replace />} />
               <Route path="/urlaub" element={<Away me={me} />} />
               <Route path="/ausgaben" element={<Spending />} />

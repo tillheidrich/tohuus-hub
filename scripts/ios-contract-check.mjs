@@ -456,7 +456,7 @@ function schemaKeys(src, at, file, depth = 0) {
     return c && open >= 0 && open - c.at < 5 ? new Set(objectKeys(c.src, open).keys) : null;
   }
   if ((m = /^z\.(record|any|unknown)\(/.exec(rest))) return new Set(['*']);
-  if ((m = /^(\w+)(\s*\.\s*(partial|strict|required)\(\))*\s*\.\s*extend\(\s*\{/.exec(rest))) {
+  if ((m = /^(\w+)(?:\s*\.\s*(?:partial|strict|required|omit|pick)\([^)]*\))*\s*\.\s*extend\(\s*\{/.exec(rest))) {
     const base = resolveSchema(m[1], file, depth + 1);
     const ext = objectKeys(src, at + m[0].length - 1).keys;
     return base ? new Set([...base, ...ext]) : null;
@@ -513,7 +513,18 @@ function bodyKeysOf(route) {
 function iosBodyKeys(c) {
   const src = read(c.abs);
   // arguments after the path literal, up to the call's closing parenthesis
-  let depth = 1, k = c.pos, inStr = false;
+  const close = closeParen(src, c.pos);
+  const args = src.slice(c.pos, close);
+  const m = /^\s*(?:\+\s*"[^"]*"\s*)?,\s*(?:json:\s*)?/.exec(args);
+  if (!m) return null;
+  const expr = args.slice(m[0].length).trim();
+  if (/^(as|query|timeout|multipart|ok|done|body):/.test(expr) || !expr) return null;
+  return resolveExpr(splitArgs(expr)[0] ?? '', c.abs, src, c.pos, 0);
+}
+
+/** index of the ")" closing the call whose arguments run from `from` (we are inside the parentheses) */
+function closeParen(src, from) {
+  let depth = 1, k = from, inStr = false;
   for (; k < src.length && depth > 0; k++) {
     const ch = src[k];
     if (ch === '"' && src[k - 1] !== '\\') inStr = !inStr;
@@ -521,29 +532,81 @@ function iosBodyKeys(c) {
     if ('([{'.includes(ch)) depth++;
     else if (')]}'.includes(ch)) depth--;
   }
-  const args = src.slice(c.pos, k - 1);
-  let m = /^\s*(?:\+\s*"[^"]*"\s*)?,\s*(?:json:\s*|body:\s*)?/.exec(args);
-  if (!m) return null;
-  let expr = args.slice(m[0].length).trim();
-  if (/^(as|query|timeout|multipart|ok|done):/.test(expr) || !expr) return null;
-  if (/^body:/.test(args.slice(m[0].length - 6))) return null;
-  if (expr.startsWith('nil')) return null;
+  return k - 1;
+}
+
+/** top-level comma-separated arguments */
+function splitArgs(text) {
+  const out = [];
+  let depth = 0, inStr = false, cur = '';
+  for (let k = 0; k < text.length; k++) {
+    const ch = text[k];
+    if (ch === '"' && text[k - 1] !== '\\') inStr = !inStr;
+    if (!inStr) {
+      if ('([{'.includes(ch)) depth++;
+      else if (')]}'.includes(ch)) depth--;
+      else if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue; }
+    }
+    cur += ch;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+
+const swiftFiles = () => walk(path.join(root, 'ios'), '.swift').filter((f) => !/\/(ToHuusTests|ToHuusUITests)\//.test(f));
+
+/** keys of a body expression at `pos` in `file`: a dictionary literal, a variable built in the same function, or a
+ *  parameter – then the dictionaries the callers pass (two levels deep) */
+function resolveExpr(expr, file, src, pos, depth) {
+  expr = expr.trim();
+  if (!expr || expr.startsWith('nil')) return null;
+  let m;
+  if ((m = /^(?:try\s+)?JSONSerialization\.data\(withJSONObject:\s*/.exec(expr))) return resolveExpr(expr.slice(m[0].length).replace(/\)\s*$/, ''), file, src, pos, depth);
   if (expr.startsWith('[')) {
     if (/^\[\s*:\s*\]/.test(expr)) return { keys: [] };
     const keys = [...dictTopKeys(expr)];
     return keys.length ? { keys } : null;
   }
-  const id = /^(\w+)/.exec(expr)?.[1];
-  if (!id || ['NotifyKit', 'payload', 'nil'].includes(id) && id !== 'payload') return null;
-  // the enclosing function
-  const fnStart = src.lastIndexOf('func ', c.pos);
-  const fnText = src.slice(fnStart, c.pos);
+  const id = /^(\w+)\s*$/.exec(expr)?.[1];
+  if (!id) return null;
+  const fnStart = src.lastIndexOf('func ', pos);
+  if (fnStart < 0) return null;
+  const fnText = src.slice(fnStart, pos);
   const keys = new Set();
-  const lit = new RegExp(String.raw`(?:var|let)\s+${id}\s*(?::\s*\[String\s*:\s*Any\??\])?\s*=\s*\[`).exec(fnText);
+  const lit = new RegExp(String.raw`(?:var|let)\s+${id}\s*(?::\s*\[String\s*:\s*(?:Any|JSONValue)\??\])?\s*=\s*\[`).exec(fnText);
   if (lit) for (const key of dictTopKeys(fnText.slice(lit.index + lit[0].length - 1))) keys.add(key);
   for (const a of fnText.matchAll(new RegExp(String.raw`\b${id}\["(\w+)"\]\s*=`, 'g'))) keys.add(a[1]);
-  if (!lit && !keys.size) return null;
-  return { keys: [...keys] };
+  if (lit || keys.size) return { keys: [...keys] };
+  // let data = try JSONSerialization.data(withJSONObject: body)
+  const ser = new RegExp(String.raw`(?:var|let)\s+${id}\s*=\s*(?:try\s+)?JSONSerialization\.data\(withJSONObject:\s*(\w+)\s*\)`).exec(fnText);
+  if (ser) return resolveExpr(ser[1], file, src, fnStart + ser.index, depth);
+  // a parameter of the enclosing function → what its callers pass
+  if (depth >= 2) return null;
+  const sig = /^func\s+(\w+)\s*(?:<[^>]*>)?\(/.exec(fnText);
+  if (!sig) return null;
+  const params = splitArgs(fnText.slice(sig[0].length, closeParen(fnText, sig[0].length)));
+  const idx = params.findIndex((p) => { const t = p.split(':')[0].trim().split(/\s+/); return (t[1] ?? t[0]) === id; });
+  if (idx < 0) return null;
+  const label = params[idx].split(':')[0].trim().split(/\s+/);
+  const ext = label.length > 1 ? label[0] : label[0];
+  const out = new Set();
+  let found = false;
+  // a private helper (save(_ body:) exists in many views) is only called from its own file
+  const declLine = src.slice(src.lastIndexOf('\n', fnStart) + 1, fnStart);
+  const scope = /\b(private|fileprivate)\b/.test(declLine) ? [file] : swiftFiles();
+  for (const f of scope) {
+    const fsrc = read(f);
+    for (const cm of fsrc.matchAll(new RegExp(String.raw`(?<!func\s)\b${sig[1]}\(`, 'g'))) {
+      const open = cm.index + cm[0].length;
+      const a = splitArgs(fsrc.slice(open, closeParen(fsrc, open)));
+      let arg = ext !== '_' ? a.find((x) => x.startsWith(ext + ':')) : a[idx];
+      if (arg === undefined) continue;
+      arg = arg.replace(/^\w+:\s*/, '');
+      const r = resolveExpr(arg, f, fsrc, cm.index, depth + 1);
+      if (r) { found = true; for (const k of r.keys) out.add(k); }
+    }
+  }
+  return found ? { keys: [...out], forwarded: true } : null;
 }
 
 function dictTopKeys(text) {
@@ -569,6 +632,12 @@ function dictTopKeys(text) {
   return keys;
 }
 
+/** keys the app sends on purpose although this server ignores them (reviewed – not a mismatch) */
+const KNOWN_EXTRA = {
+  // "built-in reader only" hint for newer servers; the server already decides by the person's own AI switch (lib/ai-policy.ts)
+  'POST /api/assistant/chat': ['mode'],
+};
+
 function bodyCheck(matched) {
   const issues = [];
   const unresolved = [];
@@ -580,9 +649,16 @@ function bodyCheck(matched) {
     // the first matching route may be a pre-check (cloud.post('/invites', …, next)) – take the first that reads the body
     let accepted = bodyKeysOf(c.target);
     if (!accepted) for (const r of routes.filter((r) => r !== c.target && r.method === c.target.method && r.path === c.target.path)) { accepted = bodyKeysOf(r); if (accepted) break; }
+    // "api/channels/\(name)" stands for several fixed routes – any of them may be meant
+    if (accepted && c.path.includes(PH)) {
+      for (const r of routes.filter((r) => r !== c.target && r.method === c.method && pathMatch(c.path, r.path))) {
+        const more = bodyKeysOf(r);
+        if (more) for (const k of more) accepted.add(k);
+      }
+    }
     if (!accepted || accepted.has('*')) { if (sent.keys.length) unresolved.push({ ...c, sent: sent.keys, why: accepted ? 'server takes any key' : 'server schema not found' }); continue; }
     checked++;
-    const unknown = sent.keys.filter((k) => !accepted.has(k));
+    const unknown = sent.keys.filter((k) => !accepted.has(k) && !(KNOWN_EXTRA[`${c.method} ${c.target.path}`] ?? []).includes(k));
     if (unknown.length) issues.push({ ...c, unknown, accepted: [...accepted] });
   }
   return { issues, checked, unresolved };

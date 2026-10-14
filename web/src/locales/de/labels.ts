@@ -97,6 +97,4 @@ export const labels: Record<string, string> = {
   "Leftovers come first in “What do we eat today?”, frozen portions that should go soon show up on Today, and the week plan offers “use the frozen bolognese” – with a reminder the day before to take it out.": "Reste stehen bei „Was essen wir heute?“ ganz oben, eingefrorene Portionen, die bald weg sollten, erscheinen auf „Heute“, und der Wochenplan bietet „eingefrorene Bolognese nehmen“ an – mit Erinnerung am Vortag, sie herauszunehmen.",
   "Open labels": "Etiketten öffnen",
   'Frozen on': 'Eingefroren',
-  'NFC tag': 'NFC-Tag',
-  'The tag is ready. Hold your phone to it to open the label.': 'Der Tag ist fertig. Halt dein Handy dran, dann öffnet sich das Etikett.',
 };

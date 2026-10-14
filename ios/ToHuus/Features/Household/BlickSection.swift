@@ -46,9 +46,14 @@ struct BlickSection: View {
 
     var body: some View {
         Group {
+            if let b = blick, !b.areas.contains(where: \.active) {
+                // nothing to show yet: the mental load check still is
+                Section { LoadCardsLink(api: api) }
+            }
             if let b = blick, b.areas.contains(where: \.active) {
                 Section {
                     ForEach(b.areas.filter(\.active)) { a in areaRow(a) }
+                    LoadCardsLink(api: api)
                     if !b.looseTasks.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             Label(L("Nobody keeps these in mind yet"), systemImage: "eye").font(.subheadline.weight(.semibold))

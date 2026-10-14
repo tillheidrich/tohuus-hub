@@ -19,7 +19,8 @@ struct MoreSections: View {
             Section(L("Household")) {
                 if allows("/einstellungen?tab=members") {
                     NavigationLink { HouseholdView(api: api) } label: { Label(L("People"), systemImage: "person.2") }
-                    if !app.isGuest {
+                    // GET/POST /api/invites are for admins (server/routes/invites.ts) – a member would only see "forbidden"
+                    if !app.isGuest && app.isAdmin {
                         NavigationLink { InvitesView(api: api) } label: { Label(L("Invite someone"), systemImage: "person.badge.plus") }
                     }
                 }

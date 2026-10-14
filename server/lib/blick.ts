@@ -19,7 +19,8 @@ export const BLICK_AREAS: BlickArea[] = ['shop', 'cook', 'money', 'tasks'];
 const PREF = 'blick.compare';
 
 function members() {
-  return db.prepare('SELECT id, name FROM users ORDER BY name COLLATE NOCASE').all() as { id: number; name: string }[];
+  // members only – permanent guests neither appear nor count for "everyone agreed"
+  return db.prepare(`SELECT id, name FROM users WHERE COALESCE(kind, 'member') != 'guest' ORDER BY name COLLATE NOCASE`).all() as { id: number; name: string }[];
 }
 
 export function compareOptIn(userId: number): boolean {

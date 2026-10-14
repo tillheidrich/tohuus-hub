@@ -8,6 +8,7 @@ import { invalidate, put, useApi } from '../api';
 import { t } from '../i18n';
 import { Avatar } from '../people/Avatar';
 import { Toggle, useToast } from '../ui';
+import { LoadCardsTeaser } from './LoadCards';
 
 export type BlickArea = 'shop' | 'cook' | 'money' | 'tasks';
 export interface Blick {
@@ -32,7 +33,16 @@ export function BlickSection({ onOpenTask }: { onOpenTask?: (id: number) => void
   const q = useApi<Blick>(['care', 'blick'], '/blick');
   const toast = useToast();
   const b = q.data;
-  if (!b || !b.areas.some((a) => a.active)) return null;
+  if (!b) return null;
+  // nothing to show yet: the mental load check still is
+  if (!b.areas.some((a) => a.active))
+    return (
+      <section className="section">
+        <div className="list">
+          <LoadCardsTeaser />
+        </div>
+      </section>
+    );
   const setCompare = async (on: boolean) => {
     try {
       await put('/blick/compare', { on });
@@ -94,6 +104,9 @@ export function BlickSection({ onOpenTask }: { onOpenTask?: (id: number) => void
           </div>
         </div>
       )}
+      <div className="list" style={{ marginTop: 8 }}>
+        <LoadCardsTeaser />
+      </div>
       {b.members >= 2 && (
         <label className="li" style={{ minHeight: 44, marginTop: 8 }}>
           <div className="grow">

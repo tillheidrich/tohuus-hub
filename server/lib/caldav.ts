@@ -39,6 +39,7 @@ import { completeCareTask, createCareTask, listCareTasks, updateCareTask, type C
 import { eventIcs, eventObjectOf, feedIcs, mapEventObject, parseEvent, utcToLocal, zonedToUtc } from './calendar.js';
 import { notPrivate } from './share-core.js';
 import { removeItem, tickItem } from './shopping-trust.js';
+import { houseGuestFor } from './people-policy.js';
 import { runInHousehold, slugInToken } from './tenancy.js';
 
 migrate(
@@ -93,7 +94,8 @@ function memberForSecret(secret: string) {
 
 // ------------------------------------------------------------------ iCalendar
 
-const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+// every line break (CRLF, LF and a lone CR) becomes \n – a raw CR could start a new property in some clients
+const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n');
 const unesc = (s: string) => s.replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1');
 const icsTime = (sql: string | null | undefined) => {
   const d = sql ? new Date(sql.replace(' ', 'T') + (sql.includes('Z') ? '' : 'Z')) : new Date();
@@ -450,6 +452,13 @@ function objectResponse(listId: number, i: ItemRow, withData: boolean) {
 // ------------------------------------------------------------------ the router
 
 const failed = new Map<string, { n: number; at: number }>();
+const FAIL_WINDOW = 10 * 60_000;
+/** one more wrong password / feed link from this address; old entries are dropped so the map cannot grow without end */
+function noteFailure(ip: string, f: { n: number; at: number } | undefined) {
+  const now = Date.now();
+  if (failed.size >= 10_000) for (const [k, v] of failed) if (now - v.at >= FAIL_WINDOW) failed.delete(k);
+  failed.set(ip, { n: f && now - f.at < FAIL_WINDOW ? f.n + 1 : 1, at: now });
+}
 
 function authenticate(req: Request): { secret: string } | null {
   const h = req.headers.authorization;
@@ -474,9 +483,11 @@ function withMember(req: Request, res: Response, fn: (member: { user_id: number;
   const go = () => {
     const m = memberForSecret(a.secret);
     if (!m) {
-      failed.set(ip, { n: (f?.n ?? 0) + 1, at: Date.now() });
+      noteFailure(ip, f);
       return deny(res);
     }
+    // a member who was made a permanent guest (or paused) keeps no CalDAV access: guests never get app passwords
+    if (houseGuestFor(m.user_id)) return deny(res);
     if (rateLimited(`caldav:${m.user_id}`, 600, 60_000)) return void res.status(429).type('text/plain').send('slow down');
     fn(m);
   };
@@ -509,7 +520,7 @@ caldav.get('/kalender-abo/:file', (req, res, next) => {
     try {
       const ics = feedIcs(secret);
       if (!ics) {
-        failed.set(ip, { n: (f?.n ?? 0) + 1, at: Date.now() });
+        noteFailure(ip, f);
         return void res.status(404).type('text/plain').send('not found');
       }
       res.setHeader('Cache-Control', 'private, max-age=900');

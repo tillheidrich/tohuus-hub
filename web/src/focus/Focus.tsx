@@ -235,7 +235,13 @@ export function FocusPage() {
 
   if (q.isLoading) return <Skeleton n={2} h={120} />;
 
-  const later = () => task && setSkipped((s) => [...s.filter((x) => x !== task.id), task.id]);
+  // "Später": next one; once everything was skipped, start the round again (only this one stays skipped)
+  const later = () =>
+    task &&
+    setSkipped((s) => {
+      const next = [...s.filter((x) => x !== task.id), task.id];
+      return queue.every((x) => next.includes(x.id)) ? [task.id] : next;
+    });
   const doneStep = async () => {
     if (!task) return;
     setBusy(true);

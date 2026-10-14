@@ -33,6 +33,7 @@ import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
 import { HomeSwitch } from '../home/HomeSwitch';
+import { RatgeberCards } from './RatgeberCards';
 import { FreshStartButton, SplitButton, isGentle, mergeSteps, suggestSteps } from '../focus/Focus';
 
 export type Unit = 'day' | 'week' | 'month' | 'year';
@@ -389,6 +390,7 @@ export function Care() {
       )}
 
       <RecentlyDone />
+      <RatgeberCards areas={['aufgaben', 'kopf']} />
       <BlickSection onOpenTask={setOpenId} />
 
       {freeTemplates.length > 0 && (
@@ -591,9 +593,11 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
   const toast = useToast();
   const key = initial ? JSON.stringify(initial) : '';
   useEffect(() => setF(initial ? { consume_qty: 1, ...initial } : {}), [key]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!initial) return null;
-  const people = usePeopleDirectory().filter((p) => p.kind !== 'guest');
+  // all hooks before the early return (the form is always mounted, `initial` toggles)
+  const directory = usePeopleDirectory();
   const [item, setItem] = useState('');
+  if (!initial) return null;
+  const people = directory.filter((p) => p.kind !== 'guest');
   const isNew = !f.id;
   const needed = Boolean(f.as_needed);
   const fixed = !f.interval_n && !needed;

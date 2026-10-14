@@ -197,6 +197,9 @@ const FAMILY_DENY: RegExp[] = [
   /^\/spend(ing)?(\/.*)?$/,
   /^\/retail\/(inbox|waste-value)(\/.*)?$/,
   /^\/care(\/.*)?$/,
+  // "Wer hat was im Blick" (task names, who brought in receipts) and the extras allowance (receipt amounts in money mode)
+  /^\/blick(\/.*)?$/,
+  /^\/list\/extras(\/.*)?$/,
   /^\/print\/(settings|printers)(\/.*)?$/,
   /^\/auth\/(policy|sso|members|device)(\/.*)?$/,
   /^\/ha(\/.*)?$/,

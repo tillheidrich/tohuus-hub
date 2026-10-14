@@ -17,6 +17,7 @@ import { db, migrate } from '../db.js';
 import { t } from '../i18n.js';
 import { randomToken, sha256 } from './auth.js';
 import { listCareTasks, type CareView, type IntervalUnit } from './care.js';
+import { houseGuestFor } from './people-policy.js';
 
 migrate(
   'calendar-1',
@@ -71,7 +72,8 @@ export function utcToLocal(ms: number, tz = config.timezone) {
 
 // ------------------------------------------------------------------ iCalendar
 
-const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+// every line break (CRLF, LF and a lone CR) becomes \n – a raw CR could start a new property in some clients
+const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n');
 const unesc = (s: string) => s.replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1');
 const utcStamp = (ms: number) => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 const sqlStamp = (sql: string | null | undefined) => utcStamp(sql ? new Date(sql.replace(' ', 'T') + (sql.includes('Z') ? '' : 'Z')).getTime() : Date.now());
@@ -248,7 +250,8 @@ export function feedIcs(secret: string) {
   const f = db.prepare('SELECT id, user_id, with_private FROM calendar_feeds WHERE secret_hash = ?').get(sha256(secret)) as
     | { id: number; user_id: number; with_private: number }
     | undefined;
-  if (!f) return null;
+  // a member who was made a permanent guest (or paused) keeps no feed: guests never get one
+  if (!f || houseGuestFor(f.user_id)) return null;
   db.prepare(`UPDATE calendar_feeds SET last_used_at = datetime('now') WHERE id = ?`).run(f.id);
   const tasks = listCareTasks({ viewer: f.user_id }).filter((x) => x.next_due && (x.visibility !== 'private' || (f.with_private && x.owner_user_id === f.user_id)));
   return calendarIcs(tasks, `ToHuus · ${t('Calendar')}`);

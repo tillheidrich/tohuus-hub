@@ -152,8 +152,11 @@ appPair.get('/auth/app/pair/start', (req, res, next) => {
 appPair.post('/auth/app/pair/start', express.urlencoded({ extended: false, limit: '2kb' }), (req, res, next) => {
   try {
     // only the confirmation page itself may send this form (SameSite=Lax already keeps the cookie off cross-site posts)
+    // Same rule as the /api CSRF check: our own origin, or the browser itself says same-origin (a self-hosted server
+    // opened under another address than BASE_URL, e.g. its LAN IP – the confirm page then posts from that origin)
     const origin = req.headers.origin;
-    if (origin && origin !== new URL(config.baseUrl).origin) return void res.status(403).type('text/plain').send('forbidden');
+    if (origin && origin !== new URL(config.baseUrl).origin && req.headers['sec-fetch-site'] !== 'same-origin')
+      return void res.status(403).type('text/plain').send('forbidden');
     const challenge = typeof req.body?.challenge === 'string' ? req.body.challenge : '';
     if (!CHALLENGE.test(challenge)) return void res.status(400).type('text/plain').send(t('This link is incomplete. Please start again in the app.'));
     res.setHeader('Cache-Control', 'no-store');
@@ -172,16 +175,24 @@ const claimReq = z.object({
   verifier: z.string().trim().min(43).max(128).optional(),
 });
 
+/** set when more than 300 wrong codes were tried within 10 minutes, from anywhere (guessing across many addresses) */
+let claimFailLockUntil = 0;
+
 appPair.post(
   '/auth/app/pair/claim',
   wrap(async (req) => {
-    if (rateLimitedGlobal(`pair-claim:${req.ip}`, 10, 10 * 60_000) || rateLimitedGlobal('pair-claim:all', 300, 10 * 60_000))
+    // per address always; across everyone only after many *wrong* codes – so a flood of claims can't lock out
+    // pairing for the whole cloud (security review 14 Oct 2026)
+    if (rateLimitedGlobal(`pair-claim:${req.ip}`, 10, 10 * 60_000) || claimFailLockUntil > Date.now())
       throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     const b = claimReq.parse(req.body ?? {});
     const key = sha256(norm(b.code));
     const p = codes.get(key);
     codes.delete(key); // single use, also when the verifier is wrong
-    const wrong = () => new AuthError(400, t('This code doesn’t work (any more). Create a new one in the web app.'));
+    const wrong = () => {
+      if (rateLimitedGlobal('pair-claim:fail', 300, 10 * 60_000)) claimFailLockUntil = Date.now() + 10 * 60_000;
+      return new AuthError(400, t('This code doesn’t work (any more). Create a new one in the web app.'));
+    };
     if (!p || p.exp < Date.now()) throw wrong();
     if (p.challenge) {
       const got = b.verifier ? crypto.createHash('sha256').update(b.verifier).digest('base64url') : '';

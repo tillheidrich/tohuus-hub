@@ -34,7 +34,7 @@ Templates: twelve chores in group `chores` (category `house`).
 
 ## Wer hat was im Blick
 
-`server/lib/blick.ts`. Per area – Einkauf (put on the list or ticked off), Kochen (planned a meal, `meal_plan.added_by`), Geld (brought in a receipt/bill, `imports.actor`), Aufgaben (done household tasks) – the members who were involved in the last 28 days, **alphabetical, no numbers**. Every member sees their own number (`mine`). Shares in percent appear only when **every** member switched on "Anteile vergleichen" (`user_prefs` key `blick.compare`). `loose_tasks` lists household tasks nobody keeps in mind or does. Guests get 403.
+`server/lib/blick.ts`. Per area – Einkauf (put on the list or ticked off), Kochen (planned a meal, `meal_plan.added_by`), Geld (brought in a receipt/bill, `imports.actor`), Aufgaben (done household tasks) – the members who were involved in the last 28 days, **alphabetical, no numbers**. Every member sees their own number (`mine`). Shares in percent appear only when **every** member switched on "Anteile vergleichen" (`user_prefs` key `blick.compare`). `loose_tasks` lists household tasks nobody keeps in mind or does. Guests get 403 (guest links and permanent guests at every level, `family` included).
 
 Never counted: private list items, personal receipts (`private_for`), private tasks, non-members ("Home Assistant", "ToHuus Hub", tokens).
 
@@ -55,7 +55,7 @@ Incoming times (UTC, `TZID` or floating) are read as household time (`TZ`, defau
 
 ## Calendar subscription (webcal)
 
-For calendars without CalDAV (Google Calendar, Outlook): `GET /kalender-abo/<secret>.ics`, read-only, `REFRESH-INTERVAL` one hour. Holds the household's tasks with a date, the member's own private ones only when `with_private` was chosen. Secrets carry the household routing prefix (cloud) and are stored as a hash; an unknown or revoked link answers 404.
+For calendars without CalDAV (Google Calendar, Outlook): `GET /kalender-abo/<secret>.ics`, read-only, `REFRESH-INTERVAL` one hour. Holds the household's tasks with a date, the member's own private ones only when `with_private` was chosen. Secrets carry the household routing prefix (cloud) and are stored as a hash; an unknown or revoked link answers 404. App passwords and feed links stop working while their member is a permanent guest (CalDAV 401, feed 404) and work again when they are a member again.
 
 ## Assistant
 

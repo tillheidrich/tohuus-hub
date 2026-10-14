@@ -73,6 +73,10 @@ describe('extras allowance', () => {
     expect(ex.looksExtra('Weißweinessig')).toBe(false);
     expect(ex.looksExtra('Backschokolade')).toBe(false);
     expect(ex.looksExtra('Vollmilch')).toBe(false);
+    expect(ex.looksExtra('Basmati Reis')).toBe(false);
+    expect(ex.looksExtra('Milchreis')).toBe(false);
+    expect(ex.looksExtra('Tortellini Ricotta')).toBe(false);
+    expect(ex.looksExtra('Erdbeereis')).toBe(true);
   });
 
   it('off until an admin sets it; counts open and ticked extras of this week', async () => {

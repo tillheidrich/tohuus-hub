@@ -1,11 +1,14 @@
 {
-  "version": 1,
-  "retrieved": "2026-10-12",
+  "version": 2,
+  "retrieved": "2026-10-14",
   "facts": [
     {
       "id": "food-waste-households",
       "topic": "food-waste",
-      "title": { "de": "Der größte Teil fällt zu Hause an", "en": "Most of it happens at home" },
+      "title": {
+        "de": "Der größte Teil fällt zu Hause an",
+        "en": "Most of it happens at home"
+      },
       "text": {
         "de": "2020 fielen in Deutschland rund 11 Millionen Tonnen Lebensmittelabfälle an. Rund 59 Prozent davon, 6,5 Millionen Tonnen, kamen aus privaten Haushalten – knapp 78 kg pro Kopf. Schalen und Knochen sind mitgezählt.",
         "en": "In 2020 Germany produced about 11 million tonnes of food waste. About 59 percent of it, 6.5 million tonnes, came from private households – just under 78 kg per person. Peels and bones are included."
@@ -15,13 +18,22 @@
         "en": "ToHuus remembers what you bought and shows on “Today” what should be used soon – without keeping a stock list."
       },
       "sources": [
-        { "title": "Essen für die Tonne: 11 Mio. Tonnen Lebensmittel", "publisher": "Umweltbundesamt", "url": "https://www.umweltbundesamt.de/themen/essen-fuer-die-tonne-11-mio-tonnen-lebensmittel", "retrieved": "2026-10-12", "note": "Zahlen für 2020, wie 2022 an die EU-Kommission gemeldet." }
+        {
+          "title": "Essen für die Tonne: 11 Mio. Tonnen Lebensmittel",
+          "publisher": "Umweltbundesamt",
+          "url": "https://www.umweltbundesamt.de/themen/essen-fuer-die-tonne-11-mio-tonnen-lebensmittel",
+          "retrieved": "2026-10-12",
+          "note": "Zahlen für 2020, wie 2022 an die EU-Kommission gemeldet."
+        }
       ]
     },
     {
       "id": "food-waste-avoidable",
       "topic": "food-waste",
-      "title": { "de": "Etwa 40 Prozent wären vermeidbar", "en": "About 40 percent could be avoided" },
+      "title": {
+        "de": "Etwa 40 Prozent wären vermeidbar",
+        "en": "About 40 percent could be avoided"
+      },
       "text": {
         "de": "Im Haushaltstagebuch der GfK für das Bundesernährungsministerium kamen 2020 rund 56 kg Lebensmittelabfall pro Person und Jahr zusammen. Etwa 40 Prozent davon galten als vermeidbar.",
         "en": "In the GfK household diary study for the German food ministry, households threw away about 56 kg of food per person in 2020. About 40 percent of it counted as avoidable."
@@ -31,13 +43,22 @@
         "en": "“You can cook this today” starts with what is already there – only then with what is missing."
       },
       "sources": [
-        { "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)", "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt", "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf", "retrieved": "2026-10-12", "note": "Tagebuchstudie mit rund 6 000 Haushalten; andere Methode als die EU-Meldung, daher kleinere Menge." }
+        {
+          "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)",
+          "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt",
+          "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf",
+          "retrieved": "2026-10-12",
+          "note": "Tagebuchstudie mit rund 6 000 Haushalten; andere Methode als die EU-Meldung, daher kleinere Menge."
+        }
       ]
     },
     {
       "id": "food-waste-household-size",
       "topic": "food-waste",
-      "title": { "de": "Allein wirft man pro Kopf mehr weg", "en": "Living alone means more waste per person" },
+      "title": {
+        "de": "Allein wirft man pro Kopf mehr weg",
+        "en": "Living alone means more waste per person"
+      },
       "text": {
         "de": "Pro Person warfen Einpersonenhaushalte 2020 rund 79 kg weg, Zweipersonenhaushalte rund 59 kg und Haushalte mit drei und mehr Personen rund 44 kg.",
         "en": "Per person, single households threw away about 79 kg in 2020, two-person households about 59 kg and households of three or more about 44 kg."
@@ -47,13 +68,21 @@
         "en": "ToHuus works for singles just as for families: type the servings directly and the shopping list follows."
       },
       "sources": [
-        { "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)", "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt", "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf", "retrieved": "2026-10-12" }
+        {
+          "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)",
+          "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt",
+          "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "food-waste-fruit-veg-bread",
       "topic": "food-waste",
-      "title": { "de": "Obst, Gemüse und Brot vorneweg", "en": "Fruit, vegetables and bread first" },
+      "title": {
+        "de": "Obst, Gemüse und Brot vorneweg",
+        "en": "Fruit, vegetables and bread first"
+      },
       "text": {
         "de": "Frisches Obst und Gemüse machen rund ein Drittel der vermeidbaren Abfälle aus, Brot und Backwaren etwa 13 Prozent.",
         "en": "Fresh fruit and vegetables make up about a third of avoidable household waste, bread and baked goods about 13 percent."
@@ -63,13 +92,21 @@
         "en": "Cook ideas prefer recipes that use what has to go soon – and show what of it is already there."
       },
       "sources": [
-        { "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)", "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt", "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf", "retrieved": "2026-10-12" }
+        {
+          "title": "Lebensmittelabfälle in deutschen Haushalten 2020 (GfK-Studie, Abschlussbericht)",
+          "publisher": "GfK SE im Auftrag des BMEL, veröffentlicht vom Umweltbundesamt",
+          "url": "https://www.umweltbundesamt.de/sites/default/files/medien/6232/dokumente/gfk-studie_2020.pdf",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "food-waste-wrong-amount",
       "topic": "shopping-list",
-      "title": { "de": "Falsche Menge gekauft", "en": "Bought the wrong amount" },
+      "title": {
+        "de": "Falsche Menge gekauft",
+        "en": "Bought the wrong amount"
+      },
       "text": {
         "de": "Bei rund 13 Prozent der vermeidbaren Abfälle war zu viel oder eine zu große Packung gekauft worden (7 Prozent falsche Menge, 6 Prozent zu große Packung).",
         "en": "Around 13 percent of avoidable waste came from buying too much or too large a pack (7 percent wrong amount, 6 percent pack too large)."
@@ -79,13 +116,21 @@
         "en": "From a recipe, the line goes onto the list (“for curry: 2 chicken breasts”), and amounts are only added up when the units match."
       },
       "sources": [
-        { "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020", "publisher": "Zu gut für die Tonne! (BMEL)", "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf", "retrieved": "2026-10-12" }
+        {
+          "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020",
+          "publisher": "Zu gut für die Tonne! (BMEL)",
+          "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "food-waste-cost",
       "topic": "food-waste",
-      "title": { "de": "Rund 137 Euro im Jahr", "en": "About 137 euros a year" },
+      "title": {
+        "de": "Rund 137 Euro im Jahr",
+        "en": "About 137 euros a year"
+      },
       "text": {
         "de": "Die vermeidbaren Lebensmittelabfälle eines durchschnittlichen Haushalts waren 2020 rund 137 Euro im Jahr wert.",
         "en": "The avoidable food waste of an average household was worth about 137 euros a year in 2020."
@@ -95,13 +140,21 @@
         "en": "Under “Money” you see what food and household really cost you – from your own receipts."
       },
       "sources": [
-        { "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020", "publisher": "Zu gut für die Tonne! (BMEL)", "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf", "retrieved": "2026-10-12" }
+        {
+          "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020",
+          "publisher": "Zu gut für die Tonne! (BMEL)",
+          "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "best-before-vs-use-by",
       "topic": "dates",
-      "title": { "de": "Mindestens haltbar ist nicht „sofort weg“", "en": "Best before is not “bin it”" },
+      "title": {
+        "de": "Mindestens haltbar ist nicht „sofort weg“",
+        "en": "Best before is not “bin it”"
+      },
       "text": {
         "de": "Nach dem Mindesthaltbarkeitsdatum („mindestens haltbar bis“) sind richtig gelagerte, ungeöffnete Lebensmittel oft noch gut – Aussehen, Geruch und Geschmack entscheiden. Nach dem Verbrauchsdatum („zu verbrauchen bis“), etwa bei Hackfleisch oder frischem Fisch, soll man sie nicht mehr essen.",
         "en": "After the best-before date, properly stored, unopened food is often still fine – look, smell and taste decide. After the use-by date, for example on minced meat or fresh fish, it should not be eaten any more."
@@ -111,13 +164,21 @@
         "en": "ToHuus tells the two apart: best before is a hint to check, use by is a real limit."
       },
       "sources": [
-        { "title": "Mindesthaltbarkeitsdatum (MHD) ist nicht gleich Verbrauchsdatum", "publisher": "Verbraucherzentrale", "url": "https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/mindesthaltbarkeitsdatum-mhd-ist-nicht-gleich-verbrauchsdatum-13452", "retrieved": "2026-10-12" }
+        {
+          "title": "Mindesthaltbarkeitsdatum (MHD) ist nicht gleich Verbrauchsdatum",
+          "publisher": "Verbraucherzentrale",
+          "url": "https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/mindesthaltbarkeitsdatum-mhd-ist-nicht-gleich-verbrauchsdatum-13452",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "best-before-small-share",
       "topic": "dates",
-      "title": { "de": "Am Datum liegt es selten", "en": "The date is rarely the reason" },
+      "title": {
+        "de": "Am Datum liegt es selten",
+        "en": "The date is rarely the reason"
+      },
       "text": {
         "de": "Ein abgelaufenes Mindesthaltbarkeitsdatum war 2020 nur bei rund 5 Prozent der vermeidbaren Haushaltsabfälle der Hauptgrund. Viel häufiger war etwas verdorben (36 Prozent) oder es war zu viel gekocht (17 Prozent).",
         "en": "An expired best-before date was the main reason for only about 5 percent of avoidable household waste in 2020. Much more often food had gone off (36 percent) or too much had been cooked (17 percent)."
@@ -127,13 +188,21 @@
         "en": "Leftovers can be noted as a box after cooking – ToHuus reminds you before they disappear at the back of the fridge."
       },
       "sources": [
-        { "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020", "publisher": "Zu gut für die Tonne! (BMEL)", "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf", "retrieved": "2026-10-12" }
+        {
+          "title": "Zusammenfassung: Lebensmittelabfälle in privaten Haushalten 2020",
+          "publisher": "Zu gut für die Tonne! (BMEL)",
+          "url": "https://www.zugutfuerdietonne.de/fileadmin/zgfdt/inhalt/Service/Studien/Zusammenfassung_GfK_2020_LMA_in_privaten_Haushalten.pdf",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "shopping-list-tip",
       "topic": "shopping-list",
-      "title": { "de": "Der Einkaufszettel hilft", "en": "The shopping list helps" },
+      "title": {
+        "de": "Der Einkaufszettel hilft",
+        "en": "The shopping list helps"
+      },
       "text": {
         "de": "Die Verbraucherzentrale nennt den Einkaufszettel als einen der einfachsten Wege, weniger Lebensmittel wegzuwerfen: kaufen, was gebraucht wird, statt was gerade im Angebot liegt.",
         "en": "The German consumer advice centres name the shopping list as one of the easiest ways to throw away less food: buy what is needed, not what happens to be on offer."
@@ -143,13 +212,21 @@
         "en": "One shared list for everyone, every row with its origin – and suggestions from your purchase rhythm that only go on after a yes."
       },
       "sources": [
-        { "title": "Lebensmittel wertschätzen und vor der Tonne bewahren", "publisher": "Verbraucherzentrale", "url": "https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/lebensmittel-wertschaetzen-und-vor-der-tonne-bewahren-59543", "retrieved": "2026-10-12" }
+        {
+          "title": "Lebensmittel wertschätzen und vor der Tonne bewahren",
+          "publisher": "Verbraucherzentrale",
+          "url": "https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/lebensmittel-wertschaetzen-und-vor-der-tonne-bewahren-59543",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "mental-load",
       "topic": "mental-load",
-      "title": { "de": "Wer denkt an alles?", "en": "Who keeps track of everything?" },
+      "title": {
+        "de": "Wer denkt an alles?",
+        "en": "Who keeps track of everything?"
+      },
       "text": {
         "de": "Nach einer Auswertung des WSI (Hans-Böckler-Stiftung, 2023) liegt die geschätzte Wahrscheinlichkeit, die Alltagsorganisation überwiegend zu übernehmen, bei erwerbstätigen Frauen bei 62 Prozent, bei Männern bei 20 Prozent; bei Frauen mit Kindern bei 74 Prozent. Es sind Modellwerte aus einer Befragung von rund 2 200 Erwerbspersonen, keine Auszählung.",
         "en": "According to an analysis by the WSI (Hans Böckler Foundation, 2023), the estimated probability of mainly doing the everyday organising is 62 percent for employed women and 20 percent for men; 74 percent for women with children. These are model values from a survey of about 2,200 people in work, not a head count."
@@ -159,13 +236,22 @@
         "en": "Everyone adds to the same list, ToHuus remembers the rest. Nobody has to keep anything up to date or be “in charge”."
       },
       "sources": [
-        { "title": "Pressemitteilung: Alltagsorganisation bei Paaren und Familien (WSI Report Nr. 87)", "publisher": "Hans-Böckler-Stiftung / WSI", "url": "https://www.boeckler.de/de/pressemitteilungen-2675-alltagsorganisation-bei-paaren-und-familien-51349.htm", "retrieved": "2026-10-12", "note": "Lott, Bünger: Mental Load – Frauen tragen die überwiegende Last, WSI Report 87, August 2023." }
+        {
+          "title": "Pressemitteilung: Alltagsorganisation bei Paaren und Familien (WSI Report Nr. 87)",
+          "publisher": "Hans-Böckler-Stiftung / WSI",
+          "url": "https://www.boeckler.de/de/pressemitteilungen-2675-alltagsorganisation-bei-paaren-und-familien-51349.htm",
+          "retrieved": "2026-10-12",
+          "note": "Lott, Bünger: Mental Load – Frauen tragen die überwiegende Last, WSI Report 87, August 2023."
+        }
       ]
     },
     {
       "id": "stockpile-days",
       "topic": "stockpiling",
-      "title": { "de": "Vorrat für zehn Tage", "en": "Supplies for ten days" },
+      "title": {
+        "de": "Vorrat für zehn Tage",
+        "en": "Supplies for ten days"
+      },
       "text": {
         "de": "Das Bundesamt für Bevölkerungsschutz empfiehlt, sich möglichst zehn Tage selbst versorgen zu können – schon drei Tage helfen sehr. Beim Wasser rechnet es mit 2 Litern pro Person und Tag, davon 0,5 Liter zum Kochen.",
         "en": "The German Federal Office of Civil Protection recommends being able to look after yourselves for ten days if possible – even three days help a lot. For water it counts 2 litres per person and day, 0.5 litres of it for cooking."
@@ -175,13 +261,21 @@
         "en": "Keeping stock is optional in ToHuus. If you do, you see what should be replaced soon – without having to maintain it."
       },
       "sources": [
-        { "title": "Vorsorgen für Krisen und Katastrophen (Ratgeber)", "publisher": "Bundesamt für Bevölkerungsschutz und Katastrophenhilfe (BBK)", "url": "https://www.bbk.bund.de/SharedDocs/Downloads/DE/Mediathek/Publikationen/Buergerinformationen/Ratgeber/ratgeber-notfallvorsorge.pdf?__blob=publicationFile", "retrieved": "2026-10-12" }
+        {
+          "title": "Vorsorgen für Krisen und Katastrophen (Ratgeber)",
+          "publisher": "Bundesamt für Bevölkerungsschutz und Katastrophenhilfe (BBK)",
+          "url": "https://www.bbk.bund.de/SharedDocs/Downloads/DE/Mediathek/Publikationen/Buergerinformationen/Ratgeber/ratgeber-notfallvorsorge.pdf?__blob=publicationFile",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "unit-price",
       "topic": "unit-prices",
-      "title": { "de": "Der Grundpreis gilt pro Kilo oder Liter", "en": "The unit price is per kilo or litre" },
+      "title": {
+        "de": "Der Grundpreis gilt pro Kilo oder Liter",
+        "en": "The unit price is per kilo or litre"
+      },
       "text": {
         "de": "Händler müssen bei verpackter Ware neben dem Gesamtpreis den Grundpreis angeben – seit der neuen Preisangabenverordnung je 1 Kilogramm oder 1 Liter. Nur bei loser Ware darf es auch je 100 Gramm oder 100 Milliliter sein.",
         "en": "Shops must show the unit price next to the total price of packaged goods – under the current German price indication rules per 1 kilogram or 1 litre. Only loose goods may use 100 grams or 100 millilitres."
@@ -191,14 +285,27 @@
         "en": "For price changes, ToHuus works out the price per kilo or litre from your receipts – so smaller packs at the old price stand out."
       },
       "sources": [
-        { "title": "Preisangabenverordnung (PAngV) § 4 Pflicht zur Angabe des Grundpreises", "publisher": "Bundesministerium der Justiz – gesetze-im-internet.de", "url": "https://www.gesetze-im-internet.de/pangv_2022/__4.html", "retrieved": "2026-10-12" },
-        { "title": "Preisangabenverordnung (PAngV) § 5 Mengeneinheit für die Angabe des Grundpreises", "publisher": "Bundesministerium der Justiz – gesetze-im-internet.de", "url": "https://www.gesetze-im-internet.de/pangv_2022/__5.html", "retrieved": "2026-10-12" }
+        {
+          "title": "Preisangabenverordnung (PAngV) § 4 Pflicht zur Angabe des Grundpreises",
+          "publisher": "Bundesministerium der Justiz – gesetze-im-internet.de",
+          "url": "https://www.gesetze-im-internet.de/pangv_2022/__4.html",
+          "retrieved": "2026-10-12"
+        },
+        {
+          "title": "Preisangabenverordnung (PAngV) § 5 Mengeneinheit für die Angabe des Grundpreises",
+          "publisher": "Bundesministerium der Justiz – gesetze-im-internet.de",
+          "url": "https://www.gesetze-im-internet.de/pangv_2022/__5.html",
+          "retrieved": "2026-10-12"
+        }
       ]
     },
     {
       "id": "food-prices",
       "topic": "prices",
-      "title": { "de": "Lebensmittel wurden deutlich teurer", "en": "Food got a lot more expensive" },
+      "title": {
+        "de": "Lebensmittel wurden deutlich teurer",
+        "en": "Food got a lot more expensive"
+      },
       "text": {
         "de": "Nahrungsmittel kosteten 2023 im Jahresdurchschnitt 12,4 Prozent mehr als 2022 – nachdem sie 2022 schon um 13,4 Prozent gestiegen waren. Die Inflationsrate insgesamt lag 2023 bei 5,9 Prozent.",
         "en": "On annual average, food cost 12.4 percent more in 2023 than in 2022 – after rising by 13.4 percent in 2022 already. Overall inflation in 2023 was 5.9 percent."
@@ -208,7 +315,216 @@
         "en": "ToHuus shows not the average but your own price changes – for the things you actually buy."
       },
       "sources": [
-        { "title": "Press release No. 020 of 16 January 2024: Inflation rate at +5.9% in 2023", "publisher": "Statistisches Bundesamt (Destatis)", "url": "https://www.destatis.de/EN/Press/2024/01/PE24_020_611.html", "retrieved": "2026-10-12" }
+        {
+          "title": "Press release No. 020 of 16 January 2024: Inflation rate at +5.9% in 2023",
+          "publisher": "Statistisches Bundesamt (Destatis)",
+          "url": "https://www.destatis.de/EN/Press/2024/01/PE24_020_611.html",
+          "retrieved": "2026-10-12"
+        }
+      ]
+    },
+    {
+      "id": "gender-care-gap-2022",
+      "topic": "mental-load",
+      "title": {
+        "de": "Neun Stunden mehr unbezahlte Arbeit",
+        "en": "Nine more hours of unpaid work"
+      },
+      "text": {
+        "de": "2022 leisteten Frauen in Deutschland im Schnitt knapp 29,5 Stunden unbezahlte Arbeit pro Woche, Männer knapp 20,5. Der Gender Care Gap lag bei 43,4 Prozent. Knapp 13 Stunden davon sind bei Frauen klassische Hausarbeit.",
+        "en": "In 2022 women in Germany did about 29.5 hours of unpaid work a week on average, men about 20.5. The gender care gap was 43.4 percent. For women, just under 13 of those hours are classic housework."
+      },
+      "tohuus": {
+        "de": "Aufgaben mit Rhythmus, Abwechseln und „Wer hat was im Blick“ machen die Verteilung sichtbar – ohne Strichliste.",
+        "en": "Tasks with a rhythm, taking turns and “Who keeps what in mind” make the split visible – without keeping score."
+      },
+      "sources": [
+        {
+          "title": "Zeitverwendungserhebung 2022: Ergebnisse",
+          "publisher": "Statistisches Bundesamt (Destatis)",
+          "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Zeitverwendung/Ergebnisse/_inhalt.html",
+          "retrieved": "2026-10-14",
+          "note": "Revidiert am 6. Juni 2025 (Zensus 2022); rund 10 000 Haushalte."
+        }
+      ]
+    },
+    {
+      "id": "cognitive-labor",
+      "topic": "mental-load",
+      "title": {
+        "de": "Denkarbeit hat vier Teile",
+        "en": "Thinking work has four parts"
+      },
+      "text": {
+        "de": "Eine Studie mit 35 Paaren beschreibt die Denkarbeit im Haushalt als vier Schritte: Bedarf erkennen, Möglichkeiten suchen, entscheiden, im Blick behalten. Erkennen und Im-Blick-Behalten lagen öfter bei den Frauen, entschieden wurde eher gemeinsam – und die Arbeit bleibt oft unsichtbar.",
+        "en": "A study of 35 couples describes household thinking work as four steps: noticing a need, looking for options, deciding, keeping an eye on it. Noticing and keeping an eye on it fell to women more often, deciding was more often shared – and the work often stays invisible."
+      },
+      "tohuus": {
+        "de": "Der Denkarbeit-Check macht diese Dinge Karte für Karte sichtbar; „Ich hab’s im Blick“ trennt das Drandenken vom Machen.",
+        "en": "The mental load check makes these things visible card by card; “I keep it in mind” separates remembering from doing."
+      },
+      "sources": [
+        {
+          "title": "The Cognitive Dimension of Household Labor",
+          "publisher": "American Sociological Review (Allison Daminger)",
+          "url": "https://doi.org/10.1177/0003122419859007",
+          "retrieved": "2026-10-14",
+          "note": "Qualitative Studie, 70 Interviews mit 35 Paaren in den USA – nicht repräsentativ."
+        }
+      ]
+    },
+    {
+      "id": "adhd-everyday",
+      "topic": "focus",
+      "title": {
+        "de": "Was bei ADHS im Alltag hilft",
+        "en": "What helps with ADHD day to day"
+      },
+      "text": {
+        "de": "Erwachsenen mit ADHS fällt es oft schwer, den Alltag zu organisieren und Termine einzuhalten. Empfohlen werden Routinen, Listen, Erinnerungshilfen an wichtigen Stellen und Aufgaben in kleinere Schritte zu teilen. In einer Befragung in Deutschland zeigten 4,7 Prozent der Erwachsenen ADHS-Anzeichen.",
+        "en": "Adults with ADHD often find it hard to organise daily life and keep appointments. Recommended are routines, lists, reminders in the right places and splitting tasks into smaller steps. In a German survey 4.7 percent of adults showed signs of ADHD."
+      },
+      "tohuus": {
+        "de": "„In kleine Schritte teilen“, „Eins nach dem anderen“ mit Timer und gebündelte Erinnerungen – für alle, ohne Begründung. ToHuus ist keine Therapie.",
+        "en": "“Split into small steps”, “One thing at a time” with a timer and bundled reminders – for everyone, no reason needed. ToHuus is not a therapy."
+      },
+      "sources": [
+        {
+          "title": "ADHS bei Erwachsenen",
+          "publisher": "IQWiG – gesundheitsinformation.de",
+          "url": "https://www.gesundheitsinformation.de/adhs-bei-erwachsenen.html",
+          "retrieved": "2026-10-14"
+        },
+        {
+          "title": "The estimated prevalence and correlates of adult ADHD in a German community sample",
+          "publisher": "European Archives of Psychiatry and Clinical Neuroscience (de Zwaan u. a., 2012)",
+          "url": "https://link.springer.com/doi/10.1007/s00406-011-0211-9",
+          "retrieved": "2026-10-14",
+          "note": "Screening-Fragebögen, keine klinische Diagnose."
+        }
+      ]
+    },
+    {
+      "id": "plans-goals",
+      "topic": "tasks",
+      "title": {
+        "de": "Ein konkreter Plan hilft",
+        "en": "A concrete plan helps"
+      },
+      "text": {
+        "de": "Eine Auswertung von 94 Studien fand: Wer sich konkret vornimmt „wenn X, dann mache ich Y“, erreicht Ziele deutlich häufiger – ein mittlerer bis großer Effekt.",
+        "en": "An analysis of 94 studies found that people who plan concretely – “if X, then I do Y” – reach their goals clearly more often, a medium to large effect."
+      },
+      "tohuus": {
+        "de": "Aufgaben mit festem Tag oder Uhrzeit, eine Erinnerung zur gewählten Stunde, auf Wunsch in Apple Erinnerungen.",
+        "en": "Tasks with a fixed day or time, a reminder at the hour you choose, in Apple Reminders if you like."
+      },
+      "sources": [
+        {
+          "title": "Implementation intentions and goal achievement: a meta-analysis",
+          "publisher": "Advances in Experimental Social Psychology (Gollwitzer, Sheeran, 2006)",
+          "url": "https://doi.org/10.1016/S0065-2601(06)38002-1",
+          "retrieved": "2026-10-14",
+          "note": "Meist Studien ohne ADHS; Effekt vermutlich etwas überschätzt."
+        }
+      ]
+    },
+    {
+      "id": "eggs-shelf-life",
+      "topic": "dates",
+      "title": {
+        "de": "Eier: 28 Tage ab Legedatum",
+        "en": "Eggs: 28 days from laying"
+      },
+      "text": {
+        "de": "Rohe Eier haben ein Mindesthaltbarkeitsdatum von 28 Tagen nach dem Legen. Im Kühlschrank bei höchstens 7 Grad halten sie bis zu 6 Wochen; nach dem Datum nur noch gut durcherhitzt essen.",
+        "en": "Raw eggs have a best-before date 28 days after laying. In the fridge at 7 degrees or less they keep up to 6 weeks; after the date, eat them only well cooked."
+      },
+      "tohuus": {
+        "de": "Für frisch gekaufte Eier schätzt ToHuus etwa drei Wochen und zeigt „geschätzt“, bis das Datum vom Karton eingetragen ist.",
+        "en": "For freshly bought eggs ToHuus estimates about three weeks and shows “estimated” until the date from the box is entered."
+      },
+      "sources": [
+        {
+          "title": "Eier: Alles zu Lagerung und Haltbarkeit",
+          "publisher": "Verbraucherzentrale",
+          "url": "https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/eier-haltbarkeit-und-lagerung-58925",
+          "retrieved": "2026-10-14"
+        }
+      ]
+    },
+    {
+      "id": "opened-no-period",
+      "topic": "dates",
+      "title": {
+        "de": "Nach dem Öffnen: oft keine Angabe",
+        "en": "After opening: often no information"
+      },
+      "text": {
+        "de": "In zwei Marktchecks mit zusammen 230 Produkten stand bei 107 kein Zeitraum, wie lange sie nach dem Öffnen halten. Rat: kühl lagern, das Öffnungsdatum notieren und vor dem Essen prüfen.",
+        "en": "In two market checks of 230 products in total, 107 gave no period for how long they keep after opening. Advice: keep them cool, note the opening date and check before eating."
+      },
+      "tohuus": {
+        "de": "„Angebrochen“ merkt sich das Datum und rechnet mit üblichen Tagen nach dem Öffnen – als „etwa“ markiert und pro Produkt änderbar.",
+        "en": "“Opened” remembers the date and counts the usual days after opening – marked “about” and adjustable per product."
+      },
+      "sources": [
+        {
+          "title": "Lebensmittel nach dem Öffnen „gekühlt lagern“: Angaben oft zu vage",
+          "publisher": "Verbraucherzentrale",
+          "url": "https://www.verbraucherzentrale.de/wissen/lebensmittel/lebensmittel-nach-dem-oeffnen-gekuehlt-lagern-angaben-oft-zu-vage-109122",
+          "retrieved": "2026-10-14",
+          "note": "Stand 30. Juli 2025; Marktchecks 2018 und 2023."
+        }
+      ]
+    },
+    {
+      "id": "sweets-spending",
+      "topic": "prices",
+      "title": {
+        "de": "Was Süßes und Getränke kosten",
+        "en": "What sweets and drinks cost"
+      },
+      "text": {
+        "de": "2023 gaben Haushalte im Schnitt rund 335 Euro im Monat für Nahrungsmittel aus, 8 Prozent davon für Zucker und Süßwaren. Dazu kamen rund 75 Euro für Getränke, 45 Prozent davon für alkoholische.",
+        "en": "In 2023 households spent about 335 euros a month on food on average, 8 percent of it on sugar and sweets. Another 75 euros or so went on drinks, 45 percent of that on alcoholic ones."
+      },
+      "tohuus": {
+        "de": "Extras im Wocheneinkauf zeigt, wie viel von eurem Wochenbudget für Naschkram und kleinen Luxus schon verplant ist – ohne etwas zu sperren.",
+        "en": "Extras in the weekly shop shows how much of your weekly budget for treats is already planned – without blocking anything."
+      },
+      "sources": [
+        {
+          "title": "Pressemitteilung Nr. 204 vom 16. Juni 2026",
+          "publisher": "Statistisches Bundesamt (Destatis)",
+          "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/06/PD26_204_639.html",
+          "retrieved": "2026-10-14",
+          "note": "Einkommens- und Verbrauchsstichprobe 2023; ohne Restaurant und Café."
+        }
+      ]
+    },
+    {
+      "id": "guest-wifi",
+      "topic": "house-info",
+      "title": {
+        "de": "Ein eigenes WLAN für Gäste",
+        "en": "A separate Wi-Fi for guests"
+      },
+      "text": {
+        "de": "Das BSI empfiehlt ein eigenes Gäste-WLAN mit einem Passwort aus mindestens 20 zufälligen Zeichen. Die Zugangsdaten sollen nirgends aushängen, sondern nur auf Nachfrage weitergegeben werden, etwa per QR-Code.",
+        "en": "The BSI recommends a separate guest Wi-Fi with a password of at least 20 random characters. The access data should not be put up anywhere but shared only on request, for example as a QR code."
+      },
+      "tohuus": {
+        "de": "In der Hausinfo liegt das Gäste-WLAN verdeckt bis „Zeigen“, mit QR-Code – getrennt von den Karten und pro Link freigegeben.",
+        "en": "In the house info the guest Wi-Fi stays hidden until “Show”, with a QR code – kept apart from the cards and shared per link."
+      },
+      "sources": [
+        {
+          "title": "Schritt für Schritt zum Gäste-WLAN",
+          "publisher": "Bundesamt für Sicherheit in der Informationstechnik (BSI)",
+          "url": "https://www.bsi.bund.de/DE/Themen/Verbraucherinnen-und-Verbraucher/Informationen-und-Empfehlungen/Cyber-Sicherheitsempfehlungen/Router-WLAN-VPN/Schritt-fuer-Schritt-zum-Gaeste-WLAN/Schritt-fuer-Schritt-zum-Gaeste-WLAN_node.html",
+          "retrieved": "2026-10-14"
+        }
       ]
     }
   ]

@@ -472,15 +472,21 @@ describe('für Köpfe, in denen viel los ist (focus)', () => {
   });
 
   it('"Neu anfangen" spreads overdue tasks from today on, nothing is marked done', async () => {
-    const old = (await mira.req('POST', '/api/care', { name: 'Fenster putzen', category: 'house', next_due: '2026-01-05' })).json;
-    const old2 = (await mira.req('POST', '/api/care', { name: 'Keller', category: 'house', next_due: '2026-01-06' })).json;
-    const old3 = (await mira.req('POST', '/api/care', { name: 'Dachboden', category: 'house', next_due: '2026-01-07' })).json;
+    const every = { category: 'house', interval_n: 1, interval_unit: 'month' };
+    const old = (await mira.req('POST', '/api/care', { ...every, name: 'Fenster putzen', next_due: '2026-01-05' })).json;
+    const old2 = (await mira.req('POST', '/api/care', { ...every, name: 'Keller', next_due: '2026-01-06' })).json;
+    const old3 = (await mira.req('POST', '/api/care', { ...every, name: 'Dachboden', next_due: '2026-01-07' })).json;
+    // an appointment and a fixed deadline keep their dates
+    const dentist = (await mira.req('POST', '/api/care', { ...every, name: 'Zahnarzt', next_due: '2026-01-08', due_time: '14:00' })).json;
+    const passport = (await mira.req('POST', '/api/care', { name: 'Pass verlängern', category: 'care', interval_n: null, next_due: '2026-01-09' })).json;
     const r = await mira.req('POST', '/api/care/fresh-start', { per_day: 2 });
     expect(r.status).toBe(200);
     expect(r.json.moved).toBeGreaterThanOrEqual(3);
     const { localDay } = await import('../server/lib/catalog');
     const due = (id: number) => (db.prepare('SELECT next_due FROM care_tasks WHERE id = ?').get(id) as { next_due: string }).next_due;
     for (const x of [old, old2, old3]) expect(due(x.id) >= localDay(0)).toBe(true);
+    expect(due(dentist.id)).toBe('2026-01-08');
+    expect(due(passport.id)).toBe('2026-01-09');
     expect(db.prepare('SELECT COUNT(*) n FROM care_log WHERE task_id IN (?, ?, ?)').get(old.id, old2.id, old3.id)).toEqual({ n: 0 });
   });
 
@@ -496,5 +502,43 @@ describe('für Köpfe, in denen viel los ist (focus)', () => {
     expect(onboard.getUserPref(miraId, 'focus.bundle_sent', '')).toBe(localDay(0));
     await mira.req('PUT', '/api/focus/prefs', { bundleHour: null });
     expect(focus.bundledUserIds()).not.toContain(miraId);
+  });
+});
+
+describe('Denkarbeit-Check (mental load cards)', () => {
+  it('answers are private until everyone agrees to compare', async () => {
+    const deck = (await mira.req('GET', '/api/blick/cards')).json;
+    expect(deck.cards.length).toBeGreaterThan(25);
+    const card = deck.cards.find((c: { key: string }) => c.key === 'stock_low');
+    expect(card.text).toBe('Merken, wenn etwas zur Neige geht');
+    expect(card.help.path).toBe('/bestand');
+    expect((await mira.req('PUT', '/api/blick/cards/stock_low', { answer: 'me' })).status).toBe(200);
+    expect((await sam.req('PUT', '/api/blick/cards/stock_low', { answer: 'other' })).status).toBe(200);
+    expect((await sam.req('PUT', '/api/blick/cards/nope', { answer: 'me' })).status).toBe(404);
+    expect((await sam.req('PUT', '/api/blick/cards/stock_low', { answer: 'maybe' })).status).toBe(400);
+    // Sam sees only Sam's own answer
+    await mira.req('PUT', '/api/blick/compare', { on: false });
+    await sam.req('PUT', '/api/blick/compare', { on: false });
+    let s = (await sam.req('GET', '/api/blick/cards')).json;
+    expect(s.compare).toBe(false);
+    expect(s.cards.find((c: { key: string }) => c.key === 'stock_low')).toMatchObject({ mine: 'other', household: null });
+    expect(JSON.stringify(s)).not.toContain('Mira');
+    expect(s.summary).toMatchObject({ answered: 1, other: 1 });
+    // everyone agrees: who said what, names alphabetical
+    const { setCompareOptIn } = await import('../server/lib/blick');
+    for (const u of db.prepare('SELECT id FROM users').all() as { id: number }[]) setCompareOptIn(u.id, true);
+    s = (await sam.req('GET', '/api/blick/cards')).json;
+    expect(s.compare).toBe(true);
+    const h = s.cards.find((c: { key: string }) => c.key === 'stock_low').household;
+    expect(h.who.me).toEqual(['Mira']);
+    expect(h.who.other).toEqual(['Sam']);
+  });
+
+  it('a card becomes a task I keep in mind', async () => {
+    const r = await sam.req('POST', '/api/blick/cards/repairs/task', {});
+    expect(r.status).toBe(200);
+    const task = (await sam.req('GET', `/api/care/${r.json.id}`)).json;
+    expect(task.name).toBe('Merken, was repariert werden muss');
+    expect(task.as_needed).toBe(true);
   });
 });

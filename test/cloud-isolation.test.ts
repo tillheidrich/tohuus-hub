@@ -235,7 +235,7 @@ describe('cloud isolation', () => {
     expect(a.found.length).toBeGreaterThan(5);
     // the feature routes are part of the walk and show A's data to A
     const routes = getRoutes();
-    for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/cook/ideas', '/api/memory', '/api/assistant/conversations', '/api/assistant/conversations/:id', '/api/assistant/status', '/api/assistant/settings'])
+    for (const r of ['/api/focus/prefs', '/api/blick/cards', '/api/calendar/feeds', '/api/today', '/api/rhythm', '/api/money/overview', '/api/cook/ideas', '/api/memory', '/api/assistant/conversations', '/api/assistant/conversations/:id', '/api/assistant/status', '/api/assistant/settings'])
       expect(routes, r).toContain(r);
     const seen = new Set(a.found.map((f) => f.path));
     for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/memory', '/api/assistant/conversations']) expect(seen, r).toContain(r);
