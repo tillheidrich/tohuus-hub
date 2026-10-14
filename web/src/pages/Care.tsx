@@ -61,6 +61,10 @@ export interface CareTask {
   checklist: { text: string; done: boolean }[];
   doer_key: string | null;
   doer: { key: string; name: string; color: string } | null;
+  /** taking turns: person keys in order – "done" passes it to the next one */
+  rotation?: string[];
+  /** detail only: the rhythm the household actually keeps */
+  learned_every_days?: number | null;
 }
 interface Template {
   key: string;
@@ -327,6 +331,15 @@ export function Care() {
           ]}
         />
       </div>
+      {(() => {
+        // household tasks nobody has in mind yet – counted kindly, never as blame (only where people share the work)
+        const loose = all.filter((x) => x.visibility !== 'private' && !x.assignee_user_id && !x.doer_key && x.state !== 'ok' && x.state !== 'none').length;
+        return loose > 0 && (data?.users?.length ?? 0) > 1 ? (
+          <p className="small muted" style={{ margin: '0 0 14px' }}>
+            {loose === 1 ? t('1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.') : t('{n} due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.', { n: loose })}
+          </p>
+        ) : null;
+      })()}
 
       {tasks.length === 0 ? (
         <div className="card">
@@ -354,6 +367,8 @@ export function Care() {
           )}
         </>
       )}
+
+      <RecentlyDone />
 
       {freeTemplates.length > 0 && (
         <section className="section">
@@ -449,7 +464,13 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
           <dd>{task.last_done ? fmtDate(task.last_done, { day: 'numeric', month: 'long', year: 'numeric' }) : t('unknown')}</dd>
           <dt>{t('Reminder')}</dt>
           <dd>{task.lead_days === 0 ? t('on the day') : task.lead_days === 1 ? t('1 day before') : t('{n} days before', { n: task.lead_days })}</dd>
-          {task.doer && (<><dt>{t('Who does it')}</dt><dd>{task.doer.name}</dd></>)}
+          {task.doer && (<><dt>{t('Who does it')}</dt><dd>{task.doer.name}{task.rotation && task.rotation.length > 1 ? ` · ${t('taking turns')}` : ''}</dd></>)}
+          {detail.data?.learned_every_days && (
+            <>
+              <dt>{t('Your rhythm')}</dt>
+              <dd>{t('You do it about every {n} days', { n: detail.data.learned_every_days })}</dd>
+            </>
+          )}
           {task.note && (<><dt>{t('Note')}</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{task.note}</dd></>)}
         </dl>
         {task.checklist?.length > 0 && (
@@ -553,6 +574,7 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
         category: f.category ?? 'care',
         visibility: f.visibility ?? 'household',
         doer_key: f.doer_key ?? null,
+        rotation: (f.rotation?.length ?? 0) > 1 ? f.rotation : [],
         checklist: f.checklist ?? [],
         next_due: f.next_due || null,
         last_done: f.last_done || null,
@@ -661,6 +683,27 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
           <Toggle on={f.visibility === 'private'} onChange={(v) => set({ visibility: v ? 'private' : 'household' })} label={t('Only for me')} />
         </label>
         {f.visibility !== 'private' && people.length > 1 && (
+          <label className="row between">
+            <span>
+              <b>{t('Take turns')}</b>
+              <span className="small muted" style={{ display: 'block' }}>{t('“Done” passes it to the next one.')}</span>
+            </span>
+            <Toggle on={(f.rotation?.length ?? 0) > 1} onChange={(v) => set({ rotation: v ? people.slice(0, 2).map((p) => p.key) : [] })} label={t('Take turns')} />
+          </label>
+        )}
+        {f.visibility !== 'private' && (f.rotation?.length ?? 0) > 1 && (
+          <div className="chips" role="group" aria-label={t('Who takes turns')}>
+            {people.map((p) => {
+              const on = f.rotation!.includes(p.key);
+              return (
+                <button key={p.key} type="button" className={`chip ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => set({ rotation: on ? f.rotation!.filter((k) => k !== p.key) : [...f.rotation!, p.key] })}>
+                  {on && <Check size={13} weight="bold" />} {p.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {f.visibility !== 'private' && people.length > 1 && (f.rotation?.length ?? 0) < 2 && (
           <div className="field">
             <label>{t('Who does it (optional)')}</label>
             <select className="input" value={f.doer_key ?? ''} onChange={(e) => set({ doer_key: e.target.value || null })}>
@@ -732,5 +775,32 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
       </div>
       <ProductPicker open={pick} onClose={() => setPick(false)} onPick={(p) => { set({ product_id: p.id }); setPick(false); }} />
     </Sheet>
+  );
+}
+
+/** "Zuletzt erledigt": the work people did stays visible for two weeks – who did what, newest first. */
+function RecentlyDone() {
+  const q = useApi<{ id: number; task_id: number; done_on: string; actor: string | null; name: string }[]>(['care', 'recent'], '/care/recent');
+  const [all, setAll] = useState(false);
+  const rows = q.data ?? [];
+  if (!rows.length) return null;
+  return (
+    <section className="section">
+      <div className="section-head">
+        <h2>{t('Recently done')}</h2>
+        {rows.length > 5 && <a onClick={() => setAll((v) => !v)}>{all ? t('Show less') : t('Show all {n}', { n: rows.length })}</a>}
+      </div>
+      <div className="list">
+        {(all ? rows : rows.slice(0, 5)).map((r) => (
+          <div key={r.id} className="li" style={{ minHeight: 44 }}>
+            <Check size={16} weight="bold" style={{ color: 'var(--primary)' }} aria-hidden="true" />
+            <div className="grow">
+              <div className="title">{r.name}</div>
+              <div className="sub">{[fmtDate(r.done_on, { weekday: 'short', day: 'numeric', month: 'short' }), r.actor].filter(Boolean).join(' · ')}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

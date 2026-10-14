@@ -18,7 +18,9 @@ import {
   deleteCareTask,
   dueCareTasks,
   getCareTask,
+  learnedEveryDays,
   listCareTasks,
+  recentlyDone,
   qrUrl,
   resolveCode,
   revokeCode,
@@ -66,6 +68,7 @@ const careBody = z.object({
   as_needed: z.boolean().optional(),
   checklist: z.array(z.object({ text: z.string().max(120), done: z.boolean().optional().default(false) })).max(30).nullable().optional(),
   doer_key: z.string().max(20).nullable().optional(),
+  rotation: z.array(z.string().max(20)).max(12).nullable().optional(),
 });
 
 const viewerOf = (req: Request) => req.actor?.userId ?? null;
@@ -92,6 +95,8 @@ r.get('/care', (req, res) => {
 });
 
 r.get('/care/due', (req, res) => res.json(dueCareTasks({ viewer: viewerOf(req) })));
+/** done lately, with who did it – the work stays visible */
+r.get('/care/recent', (req, res) => res.json(recentlyDone(viewerOf(req), Math.min(60, Math.max(1, Number(req.query.days) || 14)))));
 
 r.post('/care', (req, res) => {
   const b = careBody.parse(req.body);
@@ -101,7 +106,7 @@ r.post('/care', (req, res) => {
 r.get('/care/:id', (req, res) => {
   const row = visibleTask(req, res, num(req.params.id));
   if (!row) return;
-  res.json({ ...careView(row), log: careLog(row.id) });
+  res.json({ ...careView(row), log: careLog(row.id), learned_every_days: learnedEveryDays(row.id) });
 });
 
 r.patch('/care/:id', (req, res) => {

@@ -28,4 +28,13 @@ export const tasks: Record<string, string> = {
   'Sub-items': 'Unterpunkte',
   'Sub-items (optional)': 'Unterpunkte (optional)',
   'e.g. sink, mirror, floor': 'z. B. Waschbecken, Spiegel, Boden',
+  '1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.': '1 fällige Aufgabe hat noch niemand im Blick – tipp sie an und sag „Ich hab’s im Blick“.',
+  '{n} due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.': '{n} fällige Aufgaben hat noch niemand im Blick – tipp eine an und sag „Ich hab’s im Blick“.',
+  'taking turns': 'abwechselnd',
+  'Take turns': 'Abwechselnd',
+  '“Done” passes it to the next one.': '„Erledigt“ gibt sie an die nächste Person weiter.',
+  'Who takes turns': 'Wer sich abwechselt',
+  'Your rhythm': 'Euer Rhythmus',
+  'You do it about every {n} days': 'Ihr macht das etwa alle {n} Tage',
+  'Recently done': 'Zuletzt erledigt',
 };

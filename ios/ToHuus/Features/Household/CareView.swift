@@ -46,6 +46,10 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     var checklist: [CheckItem]?
     var doerKey: String?
     var doer: Doer?
+    /// taking turns: person keys in order – "done" passes it to the next one
+    var rotation: [String]?
+    /// detail only: the rhythm the household actually keeps
+    var learnedEveryDays: Int?
 
     var isDueNow: Bool { ["overdue", "today", "soon"].contains(state ?? "") }
     var isPrivate: Bool { visibility == "private" }
@@ -77,6 +81,15 @@ struct CareTemplate: Decodable, Sendable, Identifiable, Hashable {
     var id: String { key }
 }
 
+/// GET /api/care/recent – done lately, with who did it
+struct CareRecent: Decodable, Sendable, Identifiable, Hashable {
+    var id: Int
+    var taskId: Int
+    var doneOn: String
+    var actor: String?
+    var name: String
+}
+
 /// POST /api/care/:id/done → { task, consumed, on_shopping_list }
 struct CareDoneResult: Decodable, Sendable {
     var task: CareTask
@@ -86,6 +99,7 @@ struct CareDoneResult: Decodable, Sendable {
 extension APIClient {
     func care() async throws -> CareData { try await get("api/care") }
     func careTask(_ id: Int) async throws -> CareTask { try await get("api/care/\(id)") }
+    func careRecent() async throws -> [CareRecent] { try await get("api/care/recent", as: Lossy<CareRecent>.self).wrappedValue }
     func addCareTemplate(_ key: String) async throws { _ = try await send("POST", "api/care", json: ["template": key], as: Ignored.self) }
     func saveCareTask(id: Int?, _ body: [String: Any]) async throws {
         if let id { _ = try await send("PATCH", "api/care/\(id)", json: body, as: Ignored.self) }
@@ -254,6 +268,8 @@ struct CareView: View {
     @State private var toast: ToastMessage?
     @State private var me: MeLite?
     @State private var filter: TaskFilter?
+    @State private var recent: [CareRecent] = []
+    @State private var allRecent = false
 
     private var current: TaskFilter { filter ?? initialFilter }
 
@@ -266,6 +282,15 @@ struct CareView: View {
                     ForEach(TaskFilter.allCases) { f in Text(f.title).tag(f) }
                 }
                 .pickerStyle(.segmented)
+                if let data {
+                    // household tasks nobody has in mind yet – counted kindly, never as blame
+                    let loose = data.tasks.filter { !$0.isPrivate && $0.assigneeUserId == nil && $0.doerKey == nil && ($0.state == "today" || $0.state == "overdue" || $0.state == "soon") }.count
+                    if loose > 0 && (me?.claimsOn ?? true) {
+                        Text(loose == 1 ? L("1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.")
+                                        : LF("%d due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.", loose))
+                            .font(.footnote).foregroundStyle(Theme.ink3)
+                    }
+                }
             }
             if let error { Section { ErrorBanner(message: error) { Task { await load() } } }.listRowBackground(Color.clear) }
             if let data {
@@ -279,6 +304,22 @@ struct CareView: View {
                 }
                 if !due.isEmpty { Section(L("Due")) { ForEach(due) { row($0) } } }
                 if !later.isEmpty { Section(L("Later")) { ForEach(later) { row($0) } } }
+                if !recent.isEmpty {
+                    Section {
+                        ForEach(allRecent ? recent : Array(recent.prefix(5))) { r in
+                            HStack(spacing: Theme.Space.s3) {
+                                Image(systemName: "checkmark").foregroundStyle(Theme.primaryText).accessibilityHidden(true)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(r.name)
+                                    Text([CareLabels.day(r.doneOn), r.actor].compactMap { $0 }.joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink3)
+                                }
+                            }
+                        }
+                        if recent.count > 5 {
+                            Button(allRecent ? L("Show less") : LF("Show all %d", recent.count)) { withAnimation { allRecent.toggle() } }
+                        }
+                    } header: { Text(L("Recently done")) }
+                }
                 templates(data)
             } else if error == nil {
                 HStack { Spacer(); ProgressView(); Spacer() }.listRowBackground(Color.clear)
@@ -401,6 +442,7 @@ struct CareView: View {
         do {
             data = try await api.care()
             error = nil
+            recent = (try? await api.careRecent()) ?? []
         } catch APIError.notFound {
             error = L("Your server doesn't have this section yet.")
         } catch { self.error = APIError.from(error).localizedDescription }
@@ -472,7 +514,10 @@ private struct CareDetailSheet: View {
                     LabeledContent(L("Repeats"), value: CareLabels.interval(task.intervalN, task.intervalUnit, asNeeded: task.asNeeded == true))
                     LabeledContent(L("Area"), value: task.isHouse ? L("Household") : L("Care & deadlines"))
                     if task.isPrivate { Label(L("Only for me"), systemImage: "lock.fill").foregroundStyle(Theme.ink2) }
-                    if let d = task.doer { LabeledContent(L("Who does it"), value: d.name) }
+                    if let d = task.doer {
+                        LabeledContent(L("Who does it"), value: (task.rotation?.count ?? 0) > 1 ? "\(d.name) · \(L("taking turns"))" : d.name)
+                    }
+                    if let n = full?.learnedEveryDays { LabeledContent(L("Your rhythm"), value: LF("You do it about every %d days", n)) }
                     if let l = task.location { LabeledContent(L("Where"), value: l.name) }
                     LabeledContent(L("Next due"), value: CareLabels.day(task.nextDue, long: true))
                     LabeledContent(L("Last done"), value: task.lastDone == nil ? L("unknown") : CareLabels.day(task.lastDone))
@@ -571,6 +616,7 @@ private struct CareTaskForm: View {
     @State private var anchor = "done"
     @State private var privateTask = false
     @State private var doerKey: String?
+    @State private var rotation: [String] = []
     @State private var people: [PersonDirEntry] = []
     @State private var items: [CareTask.CheckItem] = []
     @State private var newItem = ""
@@ -637,9 +683,27 @@ private struct CareTaskForm: View {
                         }
                     }
                     if !privateTask && people.count > 1 {
-                        Picker(L("Who does it (optional)"), selection: $doerKey) {
-                            Text(L("Whoever has time")).tag(String?.none)
-                            ForEach(people) { p in Text(p.name).tag(String?.some(p.key)) }
+                        Toggle(isOn: Binding(get: { rotation.count > 1 }, set: { on in rotation = on ? people.prefix(2).map(\.key) : [] })) {
+                            VStack(alignment: .leading) {
+                                Text(L("Take turns"))
+                                Text(L("“Done” passes it to the next one.")).font(.caption).foregroundStyle(Theme.ink3)
+                            }
+                        }
+                        if rotation.count > 1 {
+                            FlowLayout(spacing: 6) {
+                                ForEach(people) { p in
+                                    ChoiceChip(title: p.name, on: rotation.contains(p.key)) {
+                                        if rotation.contains(p.key) { rotation.removeAll { $0 == p.key } } else { rotation.append(p.key) }
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 4)
+                            .accessibilityLabel(L("Who takes turns"))
+                        } else {
+                            Picker(L("Who does it (optional)"), selection: $doerKey) {
+                                Text(L("Whoever has time")).tag(String?.none)
+                                ForEach(people) { p in Text(p.name).tag(String?.some(p.key)) }
+                            }
                         }
                     }
                 }
@@ -704,6 +768,7 @@ private struct CareTaskForm: View {
                     anchor = t.anchor ?? "done"
                     privateTask = t.isPrivate
                     doerKey = t.doerKey
+                    rotation = t.rotation ?? []
                     items = t.checklist ?? []
                     n = t.intervalN ?? 1
                     unit = t.intervalUnit ?? "month"
@@ -735,7 +800,9 @@ private struct CareTaskForm: View {
             "anchor": anchor,
             "category": category,
             "visibility": privateTask ? "private" : "household",
-            "doer_key": nul(privateTask ? nil : doerKey),
+            // taking turns keeps whose turn it is; otherwise the chosen person
+            "doer_key": nul(privateTask ? nil : rotation.count > 1 ? (rotation.contains(doerKey ?? "") ? doerKey : nil) : doerKey),
+            "rotation": privateTask || rotation.count < 2 ? [String]() : rotation,
             "checklist": items.map { ["text": $0.text, "done": $0.done] as [String: Any] },
             "location_id": nul(placeId),
             "product_id": nul(productId),

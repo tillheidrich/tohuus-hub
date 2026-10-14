@@ -178,3 +178,36 @@ describe('a private task', () => {
     expect((await mira.req('GET', `/api/care/${choreId}`)).status).toBe(404);
   });
 });
+
+describe('taking turns, recently done and the learned rhythm', () => {
+  it('done passes the task to the next person in turn; undo gives it back', async () => {
+    const r = await mira.req('POST', '/api/care', { name: 'Müll rausbringen', category: 'house', interval_n: 1, interval_unit: 'week', rotation: [`u${miraId}`, `u${samId}`, kidKey] });
+    expect(r.status, JSON.stringify(r.json)).toBe(200);
+    expect(r.json.rotation).toEqual([`u${miraId}`, `u${samId}`, kidKey]);
+    expect(r.json.doer_key).toBe(`u${miraId}`);
+    const d1 = await mira.req('POST', `/api/care/${r.json.id}/done`);
+    expect(d1.json.task.doer_key).toBe(`u${samId}`);
+    const d2 = await sam.req('POST', `/api/care/${r.json.id}/done`);
+    expect(d2.json.task.doer_key).toBe(kidKey);
+    expect((await sam.req('POST', `/api/care/${r.json.id}/undo`)).json.doer_key).toBe(`u${samId}`);
+    expect(care.nextInTurn(['u1', 'u2'], 'u2')).toBe('u1');
+    expect(care.nextInTurn(['u1', 'u2'], null)).toBe('u1');
+  });
+
+  it('recently done shows who did what – a private task only to its owner', async () => {
+    await mira.req('POST', `/api/care/${privateId}/done`);
+    const mine = await mira.req('GET', '/api/care/recent');
+    expect(mine.status).toBe(200);
+    expect(mine.json.some((x: any) => x.name === SECRET)).toBe(true);
+    const sams = await sam.req('GET', '/api/care/recent');
+    expect(JSON.stringify(sams.json)).not.toContain(SECRET);
+    expect(sams.json.find((x: any) => x.name === 'Müll rausbringen')?.actor).toBeTruthy();
+  });
+
+  it('the rhythm the household keeps is learned from the done days (median gap)', async () => {
+    const r = await mira.req('POST', '/api/care', { name: 'Böden wischen', category: 'house', interval_n: 2, interval_unit: 'week' });
+    for (const d of ['2026-09-01', '2026-09-10', '2026-09-19', '2026-09-27']) await mira.req('POST', `/api/care/${r.json.id}/done`, { done_on: d });
+    const detail = await mira.req('GET', `/api/care/${r.json.id}`);
+    expect(detail.json.learned_every_days).toBe(9);
+  });
+});

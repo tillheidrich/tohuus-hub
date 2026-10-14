@@ -987,6 +987,23 @@
         }
       }
     },
+    "%d due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d fällige Aufgaben hat noch niemand im Blick – tipp eine an und sag „Ich hab’s im Blick“."
+          }
+        }
+      }
+    },
     "%d files": {
       "extractionState": "manual",
       "localizations": {
@@ -1799,6 +1816,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 Tag überfällig"
+          }
+        }
+      }
+    },
+    "1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 fällige Aufgabe hat noch niemand im Blick – tipp sie an und sag „Ich hab’s im Blick“."
           }
         }
       }
@@ -24872,6 +24906,23 @@
         }
       }
     },
+    "Take turns": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take turns"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abwechselnd"
+          }
+        }
+      }
+    },
     "Take your own photo": {
       "extractionState": "manual",
       "localizations": {
@@ -29496,6 +29547,23 @@
         }
       }
     },
+    "Who takes turns": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who takes turns"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer sich abwechselt"
+          }
+        }
+      }
+    },
     "Who travels?": {
       "extractionState": "manual",
       "localizations": {
@@ -30278,6 +30346,23 @@
         }
       }
     },
+    "You do it about every %d days": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You do it about every %d days"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihr macht das etwa alle %d Tage"
+          }
+        }
+      }
+    },
     "You don't have to count stock or keep anything up to date. The more you capture, the better ToHuus knows your home – but it works from day one.": {
       "extractionState": "manual",
       "localizations": {
@@ -30597,6 +30682,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die Nachrichten an den Assistenten sind für deinen Plan aufgebraucht. Liste, Bons und alles andere funktionieren weiter."
+          }
+        }
+      }
+    },
+    "Your rhythm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your rhythm"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Euer Rhythmus"
           }
         }
       }
@@ -33865,6 +33967,23 @@
         }
       }
     },
+    "taking turns": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taking turns"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "abwechselnd"
+          }
+        }
+      }
+    },
     "the category": {
       "extractionState": "manual",
       "localizations": {
@@ -34660,6 +34779,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "„%@“ abgehakt"
+          }
+        }
+      }
+    },
+    "“Done” passes it to the next one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Done” passes it to the next one."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Erledigt“ gibt sie an die nächste Person weiter."
           }
         }
       }

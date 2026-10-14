@@ -72,6 +72,8 @@ migrate(
    ALTER TABLE care_tasks ADD COLUMN doer_key TEXT;
    ALTER TABLE care_log ADD COLUMN actor_user_id INTEGER;`,
 );
+// taking turns: the people who do a task in turn (person keys); "done" passes it to the next one
+migrate('tasks-2', `ALTER TABLE care_tasks ADD COLUMN rotation TEXT; ALTER TABLE care_log ADD COLUMN prev_doer_key TEXT;`);
 
 export type TaskCategory = 'house' | 'care';
 export type TaskVisibility = 'household' | 'private';
@@ -232,6 +234,7 @@ export interface CareRow {
   as_needed: number;
   checklist: string | null;
   doer_key: string | null;
+  rotation: string | null;
 }
 
 /** Who may see a task: everyone in the household, or – private – only its owner. `viewer` undefined = shared views. */
@@ -246,6 +249,22 @@ function parseChecklist(raw: string | null): CheckItem[] {
   } catch {
     return [];
   }
+}
+
+function parseKeys(raw: string | null): string[] {
+  try {
+    const v = JSON.parse(raw || '[]');
+    return Array.isArray(v) ? v.filter((x) => typeof x === 'string' && /^[uk]\d+$/.test(x)) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** taking turns: who is next after `current` (the first one when nobody or someone else had it) */
+export function nextInTurn(rotation: string[], current: string | null) {
+  if (rotation.length < 2) return current;
+  const i = current ? rotation.indexOf(current) : -1;
+  return rotation[(i + 1) % rotation.length];
 }
 
 /** u<id> = a member, k<id> = a child profile (people directory keys) */
@@ -274,6 +293,7 @@ export function careView(row: CareRow, today = localDay(0)) {
     as_needed: Boolean(row.as_needed),
     checklist: parseChecklist(row.checklist),
     doer: personOf(row.doer_key),
+    rotation: parseKeys(row.rotation),
     state: ds.state,
     days: ds.days,
     product: p ? { id: p.id, name: p.name, brand: p.brand, image_path: p.image_path, unit: p.unit, track_mode: p.track_mode, stock } : null,
@@ -321,6 +341,13 @@ export interface CareInput {
   as_needed?: boolean;
   checklist?: CheckItem[] | null;
   doer_key?: string | null;
+  rotation?: string[] | null;
+}
+
+function cleanRotation(list: string[] | null | undefined) {
+  if (!list) return null;
+  const keys = [...new Set(list)].filter((k) => personOf(k)).slice(0, 12);
+  return keys.length > 1 ? JSON.stringify(keys) : null;
 }
 
 function cleanChecklist(list: CheckItem[] | null | undefined) {
@@ -366,8 +393,8 @@ export function createCareTask(input: CareInput, owner?: number | null) {
   const info = db
     .prepare(
       `INSERT INTO care_tasks (name, template, interval_n, interval_unit, next_due, last_done, lead_days, location_id, product_id, consume_qty, assignee_user_id, note,
-         category, visibility, owner_user_id, anchor, as_needed, checklist, doer_key)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         category, visibility, owner_user_id, anchor, as_needed, checklist, doer_key, rotation)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       name,
@@ -388,7 +415,8 @@ export function createCareTask(input: CareInput, owner?: number | null) {
       input.anchor === 'due' ? 'due' : 'done',
       asNeeded && !n ? 1 : 0,
       cleanChecklist(input.checklist),
-      validDoer(input.doer_key),
+      validDoer(input.doer_key) ?? (input.rotation?.length ? (parseKeys(cleanRotation(input.rotation))[0] ?? null) : null),
+      visibility === 'private' ? null : cleanRotation(input.rotation),
     );
   emit('care');
   return careView(getCareTask(Number(info.lastInsertRowid))!);
@@ -409,10 +437,17 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
   if (input.as_needed !== undefined) next.as_needed = input.as_needed ? 1 : 0;
   if (input.checklist !== undefined) next.checklist = cleanChecklist(input.checklist);
   if (input.doer_key !== undefined) next.doer_key = validDoer(input.doer_key);
+  if (input.rotation !== undefined) {
+    next.rotation = cleanRotation(input.rotation);
+    const turn = parseKeys(next.rotation);
+    if (turn.length && (!next.doer_key || !turn.includes(next.doer_key))) next.doer_key = turn[0];
+  }
   if (input.visibility !== undefined) {
     // only the owner turns a private task into a household one; a household task becomes private for whoever has it
     next.visibility = input.visibility === 'private' ? 'private' : 'household';
     if (next.visibility === 'private' && !next.owner_user_id) throw userError(t('Only household members can keep private tasks'));
+    // a private task is nobody else's turn
+    if (next.visibility === 'private') next.rotation = null;
   }
   if (next.as_needed) {
     next.interval_n = null;
@@ -428,7 +463,7 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
   db.prepare(
     `UPDATE care_tasks SET name = ?, interval_n = ?, interval_unit = ?, next_due = ?, last_done = ?, lead_days = ?, location_id = ?, product_id = ?,
        consume_qty = ?, assignee_user_id = ?, note = ?, archived = ?, category = ?, visibility = ?, owner_user_id = ?, anchor = ?, as_needed = ?,
-       checklist = ?, doer_key = ?, updated_at = datetime('now') WHERE id = ?`,
+       checklist = ?, doer_key = ?, rotation = ?, updated_at = datetime('now') WHERE id = ?`,
   ).run(
     next.name.trim().slice(0, 120),
     next.interval_n,
@@ -449,6 +484,7 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
     next.as_needed,
     next.checklist,
     next.doer_key,
+    next.rotation,
     id,
   );
   emit('care');
@@ -486,14 +522,16 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
     if (onList) addToShopping({ productId: p.id, text: p.name, source: 'care', addedBy: actor });
   }
   db.transaction(() => {
-    db.prepare('INSERT INTO care_log (task_id, done_on, actor, note, prev_last_done, prev_next_due, consumed, actor_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
-      id, doneOn, actor, opts.note ?? null, row.last_done, row.next_due, consumed, opts.actorUserId ?? null,
+    db.prepare('INSERT INTO care_log (task_id, done_on, actor, note, prev_last_done, prev_next_due, consumed, actor_user_id, prev_doer_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+      id, doneOn, actor, opts.note ?? null, row.last_done, row.next_due, consumed, opts.actorUserId ?? null, row.doer_key,
     );
     // sub-items start fresh for the next time; a one-off task without a next date is put away
     const fresh = row.checklist ? JSON.stringify(parseChecklist(row.checklist).map((x) => ({ ...x, done: false }))) : null;
     const oneOff = !nextDue && !row.interval_n && !row.as_needed;
-    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, checklist = ?, archived = ?, updated_at = datetime('now') WHERE id = ?`).run(
-      doneOn, nextDue, fresh, oneOff ? 1 : row.archived, id,
+    // taking turns: the next person has it next time
+    const doer = row.rotation ? nextInTurn(parseKeys(row.rotation), row.doer_key) : row.doer_key;
+    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, checklist = ?, archived = ?, doer_key = ?, updated_at = datetime('now') WHERE id = ?`).run(
+      doneOn, nextDue, fresh, oneOff ? 1 : row.archived, doer, id,
     );
   })();
   emit('care');
@@ -503,17 +541,48 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
 /** Undo the last "done" (mis-tap): restores the dates and puts the consumed item back. */
 export function undoCareTask(id: number, actor: string) {
   const last = db.prepare('SELECT * FROM care_log WHERE task_id = ? ORDER BY id DESC LIMIT 1').get(id) as
-    | { id: number; prev_last_done: string | null; prev_next_due: string | null; consumed: number }
+    | { id: number; prev_last_done: string | null; prev_next_due: string | null; consumed: number; prev_doer_key: string | null }
     | undefined;
   const row = getCareTask(id);
   if (!row || !last) throw userError(t('Nothing to undo'));
   if (last.consumed > 0 && row.product_id) adjustStock({ productId: row.product_id, delta: last.consumed, reason: 'undo', actor, ref: `care:${id}` });
   db.transaction(() => {
-    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, archived = 0, updated_at = datetime('now') WHERE id = ?`).run(last.prev_last_done, last.prev_next_due, id);
+    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, archived = 0, doer_key = COALESCE(?, doer_key), updated_at = datetime('now') WHERE id = ?`).run(
+      last.prev_last_done, last.prev_next_due, last.prev_doer_key, id,
+    );
     db.prepare('DELETE FROM care_log WHERE id = ?').run(last.id);
   })();
   emit('care');
   return careView(getCareTask(id)!);
+}
+
+/**
+ * What was done lately (stays visible – the work people did, not only what is still open): newest first, with who
+ * did it. Private tasks only for their owner.
+ */
+export function recentlyDone(viewer?: number | null, days = 14) {
+  const rows = db
+    .prepare(
+      `SELECT l.id, l.task_id, l.done_on, l.actor, l.actor_user_id, t.name, t.category, t.template, t.visibility, t.owner_user_id
+       FROM care_log l JOIN care_tasks t ON t.id = l.task_id
+       WHERE l.done_on >= date('now', ?) ORDER BY l.done_on DESC, l.id DESC LIMIT 60`,
+    )
+    .all(`-${days} days`) as { id: number; task_id: number; done_on: string; actor: string | null; actor_user_id: number | null; name: string; category: string; template: string | null; visibility: TaskVisibility; owner_user_id: number | null }[];
+  return rows
+    .filter((r) => canSeeTask(r, viewer))
+    .map(({ owner_user_id: _o, ...r }) => r);
+}
+
+/**
+ * The rhythm the household actually keeps ("ihr macht das etwa alle 9 Tage"): the median gap of the last done days,
+ * once there are at least three. Learned, not configured – a hint next to the planned interval, never a change.
+ */
+export function learnedEveryDays(taskId: number): number | null {
+  const days = (db.prepare('SELECT done_on FROM care_log WHERE task_id = ? ORDER BY done_on DESC LIMIT 7').all(taskId) as { done_on: string }[]).map((r) => r.done_on);
+  if (days.length < 3) return null;
+  const gaps = days.slice(0, -1).map((d, i) => daysBetween(days[i + 1], d)).filter((g) => g > 0).sort((a, b) => a - b);
+  if (gaps.length < 2) return null;
+  return gaps[Math.floor(gaps.length / 2)];
 }
 
 export function careLog(id: number, limit = 20) {
