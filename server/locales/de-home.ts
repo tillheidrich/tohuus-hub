@@ -1,5 +1,19 @@
 // German server strings for home care, spending and QR labels (key = English source text)
 export const de_home: Record<string, string> = {
+  // chore templates (Aufgaben, 14 Oct 2026)
+  'Clean the bathroom': 'Bad putzen',
+  Vacuum: 'Staubsaugen',
+  'Mop the floors': 'Böden wischen',
+  Dust: 'Staub wischen',
+  'Change the bed linen': 'Bettwäsche wechseln',
+  'Change towels': 'Handtücher wechseln',
+  'Take out the bins': 'Müll rausbringen',
+  'Take glass and paper away': 'Altglas und Papier wegbringen',
+  'Wipe out the fridge': 'Kühlschrank auswischen',
+  'Clean the oven': 'Backofen reinigen',
+  'Clean the windows': 'Fenster putzen',
+  'Water the plants': 'Pflanzen gießen',
+  'Only household members can keep private tasks': 'Nur Haushaltsmitglieder können private Aufgaben haben',
   // care templates
   'Change water filter': 'Wasserfilter wechseln',
   'Descale coffee machine': 'Kaffeemaschine entkalken',

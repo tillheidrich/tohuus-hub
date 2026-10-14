@@ -34,7 +34,7 @@ struct AppTourView: View {
                  body: L("Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.")),
             Page(id: "cook", symbol: "fork.knife", title: L("What shall we eat?"),
                  body: L("Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.")),
-            Page(id: "speak", symbol: "mic", title: L("Speak"),
+            Page(id: "speak", symbol: "sparkles", title: L("Assistant"),
                  body: L("Say “milk is out, and we need something for Sunday”. ToHuus puts it on the list and tells you what it added. Every change can be undone.")),
         ]
         if !app.singleHousehold && app.moduleOn("treats") {

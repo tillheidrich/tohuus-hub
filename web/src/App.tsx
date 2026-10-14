@@ -324,7 +324,8 @@ function Shell({ me }: { me: Me }) {
               <Route path="/bestellen" element={<Order me={me} />} />
               <Route path="/bestellen/karte" element={<MenuEditor me={me} />} />
               <Route path="/einstellungen" element={<Settings me={me} />} />
-              <Route path="/pflege" element={<Care />} />
+              <Route path="/aufgaben" element={<Care />} />
+              <Route path="/pflege" element={<Navigate to="/aufgaben?f=care" replace />} />
               <Route path="/urlaub" element={<Away me={me} />} />
               <Route path="/ausgaben" element={<Spending />} />
               <Route path="/etiketten" element={<Labels />} />

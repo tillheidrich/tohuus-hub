@@ -198,7 +198,7 @@ struct MainTabView: View {
                 Button {
                     app.showAssistant = true
                 } label: {
-                    Label(L("Speak"), systemImage: "mic.fill")
+                    Label(L("Assistant"), systemImage: "sparkles")
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(Theme.Space.s4)
@@ -246,15 +246,15 @@ struct AssistantButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "mic.fill")
-                .font(.system(size: 20, weight: .semibold))
+            Image(systemName: "sparkles")
+                .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Theme.onPrimary)
                 .frame(width: 56, height: 56)
                 .background(Theme.primary, in: Circle())
                 .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
         }
         .hoverEffect(.lift)
-        .accessibilityLabel(L("Speak"))
-        .accessibilityHint(L("Speak or type what you need"))
+        .accessibilityLabel(L("Assistant"))
+        .accessibilityHint(L("Ask, say or type what you need"))
     }
 }

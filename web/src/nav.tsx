@@ -80,7 +80,7 @@ export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolea
         { to: '/hausinfo', label: t('House info'), icon: 'Info' },
         { to: '/einkauf/wuensche', label: t('Wishes & Merkliste'), icon: 'Gift' },
         { to: '/abgleich', label: t('Quick stock check'), icon: 'ClipboardText' },
-        { to: '/pflege', label: t('Home & care'), icon: 'Wrench' },
+        { to: '/aufgaben', label: t('Tasks'), icon: 'ListChecks' },
         { to: '/urlaub', label: t('Trip / away'), icon: 'Suitcase' },
         // permanent guests chosen for a trip's handover (members use the trip page)
         ...(opts.guest ? [{ to: '/uebergabe', label: t('Handover'), icon: 'Suitcase' }] : []),
@@ -135,6 +135,7 @@ export function moduleOfPath(path: string): string | null {
   if (p.startsWith('/bestellen')) return 'treats';
   if (p.startsWith('/bar')) return 'guests';
   if (p.startsWith('/pflege')) return 'homeinfo';
+  // Aufgaben (14 Oct 2026) are always there – only the old /pflege link belongs to the switchable area
   if (path.includes('tab=ha')) return 'ha';
   return null;
 }

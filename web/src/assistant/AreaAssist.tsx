@@ -1,9 +1,9 @@
 /**
- * The small per-screen "Sprechen" entry (only when AI is on): two examples of what the assistant can do on this screen –
+ * The small per-screen assistant entry (only when AI is on): two examples of what the assistant can do on this screen –
  * a tap opens the assistant with the sentence filled in (you send it, nothing happens by itself). On the stock screen
  * also "Foto vom Kühlschrank": suggestions with estimated dates, ticked by you, added with one undo.
  */
-import { Camera, Microphone } from '@phosphor-icons/react';
+import { Camera, Sparkle } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 import { ApiError, api, invalidate, post, useApi } from '../api';
 import { t } from '../i18n';
@@ -28,7 +28,7 @@ export function AreaAssist({ path }: { path: string }) {
   return (
     <div className="area-assist" aria-label={t('Ask the assistant')}>
       <span className="area-assist-label">
-        <Microphone size={15} weight="fill" aria-hidden="true" /> {t('Speak')}
+        <Sparkle size={15} weight="fill" aria-hidden="true" /> {t('Assistant')}
       </span>
       {EXAMPLES()[ctx].map((x) => (
         <button key={x} className="chip" onClick={() => openAssistant(x)}>

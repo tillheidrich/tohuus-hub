@@ -51,7 +51,7 @@ struct ToHuusApp: App {
                 Button(L("Search")) { app.requestSearch() }
                     .keyboardShortcut("f", modifiers: .command)
                     .disabled(app.phase != .signedIn)
-                Button(L("Speak")) { app.showAssistant = true }
+                Button(L("Assistant")) { app.showAssistant = true }
                     .keyboardShortcut("k", modifiers: .command)
                     .disabled(app.phase != .signedIn)
             }

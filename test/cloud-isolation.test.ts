@@ -30,7 +30,7 @@ Object.assign(process.env, {
   // list2 J: the operator's view of the anonymous weekly-question counts
 });
 
-const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code', 'MARKERA-money', 'MARKERA-file', 'MARKERA-wish'];
+const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code', 'MARKERA-money', 'MARKERA-file', 'MARKERA-wish', 'MARKERA-task'];
 const mails: { to: string; text: string }[] = [];
 
 let ipSeq = 1;
@@ -154,6 +154,9 @@ beforeAll(async () => {
   const wl = await A.post('/api/wishes/lists', { name: 'MARKERA-wish Liste', for_name: 'Oma' });
   expect(wl.status).toBe(200);
   expect((await A.post(`/api/wishes/lists/${wl.json.id}/items`, { title: 'MARKERA-wish Buch', price: 12 })).status).toBe(200);
+  // Aufgaben (14 Oct 2026): a household chore with a sub-item, due today
+  const task = await A.post('/api/care', { name: 'MARKERA-task', category: 'house', next_due: new Date().toISOString().slice(0, 10), checklist: [{ text: 'MARKERA-sub' }] });
+  expect(task.status, task.text).toBe(200);
   const careList = await A.post('/api/list/lists', { name: 'MARKERA-list', kind: 'care', note: 'MARKERA-note' });
   expect(careList.status, careList.text).toBe(200);
   expect((await A.post('/api/shopping', { text: 'MARKERA-listitem', list_id: careList.json.id })).status).toBe(200);
@@ -239,6 +242,7 @@ describe('cloud isolation', () => {
     // q-money: money lists and the expense attachment
     for (const r of ['/api/money/lists', '/api/money/lists/1', '/api/spend/expenses/1', '/api/spend/expenses/1/attachment']) expect(seen, r).toContain(r);
     for (const r of ['/api/wishes/lists', '/api/wishes/lists/1', '/api/wishes/items/1']) expect(seen, r).toContain(r);
+    for (const r of ['/api/care', '/api/care/due', '/api/care/1']) expect(seen, r).toContain(r);
     // Hausinfo GET routes are part of the walk; A sees its cards, nobody ever gets a code value from a GET
     for (const r of ['/api/house-guide', '/api/house-guide/templates', '/api/house-guide/links/:id', '/api/house-guide/codes/:id/views', '/api/house-guide/log', '/api/guest/:token/house', '/api/facts'])
       expect(routes, r).toContain(r);

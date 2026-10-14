@@ -8,6 +8,7 @@ import { emit } from '../lib/bus.js';
 import { addToShopping, adjustStock, getProduct, listProducts, localDay, productView } from '../lib/catalog.js';
 import {
   CARE_TEMPLATES,
+  canSeeTask,
   UNITS,
   careLog,
   careView,
@@ -59,70 +60,87 @@ const careBody = z.object({
   consume_qty: z.number().min(0).max(100).nullable().optional(),
   assignee_user_id: z.number().int().nullable().optional(),
   note: z.string().max(500).nullable().optional(),
+  category: z.enum(['house', 'care']).optional(),
+  visibility: z.enum(['household', 'private']).optional(),
+  anchor: z.enum(['done', 'due']).optional(),
+  as_needed: z.boolean().optional(),
+  checklist: z.array(z.object({ text: z.string().max(120), done: z.boolean().optional().default(false) })).max(30).nullable().optional(),
+  doer_key: z.string().max(20).nullable().optional(),
 });
 
-r.get('/care', (_req, res) => {
-  const tasks = listCareTasks();
+const viewerOf = (req: Request) => req.actor?.userId ?? null;
+/** a task this person may see – a private task of someone else answers 404 like a missing one */
+function visibleTask(req: Request, res: Response, id: number) {
+  const row = getCareTask(id);
+  if (!row || !canSeeTask(row, viewerOf(req))) {
+    res.status(404).json({ error: t('Task not found') });
+    return null;
+  }
+  return row;
+}
+
+r.get('/care', (req, res) => {
+  const tasks = listCareTasks({ viewer: viewerOf(req) });
   const used = new Set(tasks.map((x) => x.template).filter(Boolean));
   res.json({
     tasks,
     templates: CARE_TEMPLATES.map((x) => ({ ...x, added: used.has(x.key) })),
     users: db.prepare('SELECT id, name, color FROM users ORDER BY id').all(),
+    me: viewerOf(req),
     today: localDay(0),
   });
 });
 
-r.get('/care/due', (_req, res) => res.json(dueCareTasks()));
+r.get('/care/due', (req, res) => res.json(dueCareTasks({ viewer: viewerOf(req) })));
 
 r.post('/care', (req, res) => {
   const b = careBody.parse(req.body);
-  userError(res, () => createCareTask(b as any));
+  userError(res, () => createCareTask(b as any, viewerOf(req)));
 });
 
 r.get('/care/:id', (req, res) => {
-  const row = getCareTask(num(req.params.id));
-  if (!row) {
-    res.status(404).json({ error: t('Task not found') });
-    return;
-  }
+  const row = visibleTask(req, res, num(req.params.id));
+  if (!row) return;
   res.json({ ...careView(row), log: careLog(row.id) });
 });
 
 r.patch('/care/:id', (req, res) => {
   const b = careBody.extend({ archived: z.boolean().optional() }).parse(req.body);
-  if (!getCareTask(num(req.params.id))) {
-    res.status(404).json({ error: t('Task not found') });
-    return;
+  const row = visibleTask(req, res, num(req.params.id));
+  if (!row) return;
+  // making a household task private: it becomes the private task of the person who does it
+  if (b.visibility === 'private' && row.visibility !== 'private') {
+    if (!viewerOf(req)) {
+      res.status(400).json({ error: t('Only household members can keep private tasks') });
+      return;
+    }
+    db.prepare('UPDATE care_tasks SET owner_user_id = ? WHERE id = ?').run(viewerOf(req), row.id);
   }
   userError(res, () => updateCareTask(num(req.params.id), b as any));
 });
 
 r.delete('/care/:id', (req, res) => {
+  if (!visibleTask(req, res, num(req.params.id))) return;
   deleteCareTask(num(req.params.id));
   res.json({ ok: true });
 });
 
 r.post('/care/:id/done', (req, res) => {
   const b = z.object({ done_on: day.nullable().optional(), next_due: day.nullable().optional(), note: z.string().max(500).nullable().optional() }).parse(req.body ?? {});
-  if (!getCareTask(num(req.params.id))) {
-    res.status(404).json({ error: t('Task not found') });
-    return;
-  }
-  userError(res, () => completeCareTask(num(req.params.id), actorName(req), { doneOn: b.done_on, nextDue: b.next_due, note: b.note }));
+  if (!visibleTask(req, res, num(req.params.id))) return;
+  userError(res, () => completeCareTask(num(req.params.id), actorName(req), { doneOn: b.done_on, nextDue: b.next_due, note: b.note, actorUserId: viewerOf(req) }));
 });
 
 r.post('/care/:id/undo', (req, res) => {
+  if (!visibleTask(req, res, num(req.params.id))) return;
   userError(res, () => undoCareTask(num(req.params.id), actorName(req)));
 });
 
 /** "I'll take care of it" – or let go again. No points, no ranking. */
 r.post('/care/:id/claim', (req, res) => {
   const { claim } = z.object({ claim: z.boolean() }).parse(req.body);
-  const row = getCareTask(num(req.params.id));
-  if (!row) {
-    res.status(404).json({ error: t('Task not found') });
-    return;
-  }
+  const row = visibleTask(req, res, num(req.params.id));
+  if (!row) return;
   const uid = req.actor?.userId ?? null;
   if (claim && !uid) {
     res.status(400).json({ error: t('Only household members can take on a task') });
@@ -174,7 +192,7 @@ function labelFor(k: QrKind, id: number) {
     return l ? { title: l.name, sub: l.hint } : null;
   }
   const c = getCareTask(id);
-  if (!c) return null;
+  if (!c || !canSeeTask(c)) return null;
   const every = c.interval_n && c.interval_unit ? intervalText(c.interval_n, c.interval_unit) : null;
   return { title: c.name, sub: every };
 }
@@ -237,7 +255,8 @@ function resolved(code: string) {
     return { kind: 'location' as const, code, location: l, items };
   }
   const c = getCareTask(row.ref_id);
-  if (!c) return null;
+  // a private task never gets a working label (labels hang where everyone can scan them)
+  if (!c || !canSeeTask(c)) return null;
   return { kind: 'care' as const, code, task: { ...careView(c), log: careLog(c.id, 5) } };
 }
 
@@ -287,7 +306,12 @@ r.post('/qr/:code/action', (req, res) => {
       return;
     }
   } else if (row.kind === 'care' && action === 'done') {
-    const out = completeCareTask(row.ref_id, actor);
+    const task = getCareTask(row.ref_id);
+    if (!task || !canSeeTask(task)) {
+      res.status(404).json({ error: t('This label is no longer valid.') });
+      return;
+    }
+    const out = completeCareTask(row.ref_id, actor, { actorUserId: req.actor?.userId ?? null });
     message = t('Done – next time: {date}', { date: out.task.next_due ? fmtDay(out.task.next_due + 'T12:00:00') : '–' });
   } else {
     res.status(400).json({ error: t('Not possible for this label') });

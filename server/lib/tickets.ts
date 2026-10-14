@@ -11,7 +11,7 @@ import { readImage } from './images.js';
 import { brand, db, getSetting } from '../db.js';
 import { locale, t } from '../i18n.js';
 import { localDay } from './catalog.js';
-import { careView, codeFor, getCareTask, qrUrl } from './care.js';
+import { canSeeTask, careView, codeFor, getCareTask, qrUrl } from './care.js';
 import { getPlan, weekDays } from './plan.js';
 import { getRecipe } from './recipes.js';
 import { storeView } from './shop.js';
@@ -259,7 +259,8 @@ function orderTicket(spec: TicketSpec): Ticket {
 
 function careTicket(spec: TicketSpec, actor?: string): Ticket {
   const row = getCareTask(Number(spec.id));
-  if (!row) throw new NotFound(t('Task not found'));
+  // printers are shared – a private task is never printed
+  if (!row || !canSeeTask(row)) throw new NotFound(t('Task not found'));
   const c = careView(row);
   const meta: [string, string][] = [];
   if (c.next_due) meta.push([t('Due'), dayLabel(c.next_due)]);

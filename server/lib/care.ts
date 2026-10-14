@@ -1,7 +1,10 @@
 /**
- * Home care ("Fristen"): recurring household tasks nobody remembers – water filter, smoke detectors,
- * descaling, tyres, passport expiry … – plus QR labels that open a small action page in the app.
- * No points, no ranking: a task can carry an optional "I'll take care of it".
+ * Aufgaben (tasks, docs/tasks.md): everything at home that has to be done or kept in mind – household chores
+ * (category `house`: bathroom, vacuuming, bed linen …) and care & deadlines (`care`: water filter, smoke detectors,
+ * descaling, tyres, passport expiry …), once, recurring or "when needed", for the household or only for me
+ * (`visibility: private` – nobody else, no assistant, MCP, Home Assistant, display, export or shared notification
+ * ever sees it). Plus QR labels that open a small action page in the app.
+ * No points, no ranking: a task can carry "I keep it in mind" (assignee) and who does it (doer, also a child).
  */
 import crypto from 'node:crypto';
 import { config } from '../config.js';
@@ -57,6 +60,26 @@ migrate(
   );`,
 );
 
+// Aufgaben (14 Oct 2026): chores next to care, private tasks, rhythm from the due date, "when needed", sub-items and who does it
+migrate(
+  'tasks-1',
+  `ALTER TABLE care_tasks ADD COLUMN category TEXT NOT NULL DEFAULT 'care';
+   ALTER TABLE care_tasks ADD COLUMN visibility TEXT NOT NULL DEFAULT 'household';
+   ALTER TABLE care_tasks ADD COLUMN owner_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+   ALTER TABLE care_tasks ADD COLUMN anchor TEXT NOT NULL DEFAULT 'done';
+   ALTER TABLE care_tasks ADD COLUMN as_needed INTEGER NOT NULL DEFAULT 0;
+   ALTER TABLE care_tasks ADD COLUMN checklist TEXT;
+   ALTER TABLE care_tasks ADD COLUMN doer_key TEXT;
+   ALTER TABLE care_log ADD COLUMN actor_user_id INTEGER;`,
+);
+
+export type TaskCategory = 'house' | 'care';
+export type TaskVisibility = 'household' | 'private';
+export interface CheckItem {
+  text: string;
+  done: boolean;
+}
+
 // ------------------------------------------------------------------ date math (pure)
 
 export type IntervalUnit = 'day' | 'week' | 'month' | 'year';
@@ -105,10 +128,20 @@ export function defaultLead(n: number | null, unit: IntervalUnit | null) {
  * Interval tasks move forward by their interval; fixed-date tasks (passport, contract) need a new date
  * – `explicitNext` wins in both cases.
  */
-export function nextDueAfter(task: { interval_n: number | null; interval_unit: IntervalUnit | null }, doneOn: string, explicitNext?: string | null) {
+export function nextDueAfter(
+  task: { interval_n: number | null; interval_unit: IntervalUnit | null; anchor?: string | null; next_due?: string | null },
+  doneOn: string,
+  explicitNext?: string | null,
+) {
   if (explicitNext) return explicitNext;
-  if (task.interval_n && task.interval_unit) return addInterval(doneOn, task.interval_n, task.interval_unit);
-  return null;
+  if (!task.interval_n || !task.interval_unit) return null;
+  // "every Monday": the rhythm keeps its days – the next date after the one that was due (and after today)
+  if (task.anchor === 'due' && task.next_due) {
+    let d = addInterval(task.next_due, task.interval_n, task.interval_unit);
+    for (let i = 0; i < 400 && d <= doneOn; i++) d = addInterval(d, task.interval_n, task.interval_unit);
+    return d;
+  }
+  return addInterval(doneOn, task.interval_n, task.interval_unit);
 }
 
 export type DueState = 'none' | 'ok' | 'soon' | 'today' | 'overdue';
@@ -134,10 +167,26 @@ export interface CareTemplate {
   /** product to consume on "done" (matched against the catalogue) */
   product?: string;
   note?: string;
-  group: 'kitchen' | 'safety' | 'house' | 'car' | 'papers';
+  group: 'chores' | 'kitchen' | 'safety' | 'house' | 'car' | 'papers';
+  /** chores: a household task (category house); everything else is care & deadlines */
+  category?: TaskCategory;
+  as_needed?: boolean;
 }
 
 export const CARE_TEMPLATES: CareTemplate[] = [
+  // household chores – nothing assumes a house, a garden or children
+  { key: 'clean-bathroom', name: 'Clean the bathroom', n: 1, unit: 'week', lead: 1, group: 'chores', category: 'house' },
+  { key: 'vacuum', name: 'Vacuum', n: 1, unit: 'week', lead: 1, group: 'chores', category: 'house' },
+  { key: 'mop', name: 'Mop the floors', n: 2, unit: 'week', lead: 1, group: 'chores', category: 'house' },
+  { key: 'dust', name: 'Dust', n: 2, unit: 'week', lead: 1, group: 'chores', category: 'house' },
+  { key: 'bed-linen', name: 'Change the bed linen', n: 2, unit: 'week', lead: 1, group: 'chores', category: 'house' },
+  { key: 'towels', name: 'Change towels', n: 1, unit: 'week', lead: 0, group: 'chores', category: 'house' },
+  { key: 'bins', name: 'Take out the bins', n: 1, unit: 'week', lead: 0, group: 'chores', category: 'house' },
+  { key: 'glass-paper', name: 'Take glass and paper away', n: null, unit: null, group: 'chores', category: 'house', as_needed: true },
+  { key: 'fridge-clean', name: 'Wipe out the fridge', n: 1, unit: 'month', lead: 2, group: 'chores', category: 'house' },
+  { key: 'oven', name: 'Clean the oven', n: 3, unit: 'month', lead: 7, group: 'chores', category: 'house' },
+  { key: 'windows', name: 'Clean the windows', n: 3, unit: 'month', lead: 7, group: 'chores', category: 'house' },
+  { key: 'plants', name: 'Water the plants', n: 1, unit: 'week', lead: 0, group: 'chores', category: 'house' },
   { key: 'water-filter', name: 'Change water filter', n: 4, unit: 'week', product: 'Brita Maxtra', group: 'kitchen' },
   { key: 'descale-coffee', name: 'Descale coffee machine', n: 2, unit: 'month', group: 'kitchen' },
   { key: 'descale-thermomix', name: 'Descale Thermomix', n: 1, unit: 'month', group: 'kitchen' },
@@ -176,6 +225,37 @@ export interface CareRow {
   archived: number;
   created_at: string;
   updated_at: string;
+  category: TaskCategory;
+  visibility: TaskVisibility;
+  owner_user_id: number | null;
+  anchor: 'done' | 'due';
+  as_needed: number;
+  checklist: string | null;
+  doer_key: string | null;
+}
+
+/** Who may see a task: everyone in the household, or – private – only its owner. `viewer` undefined = shared views. */
+export function canSeeTask(row: Pick<CareRow, 'visibility' | 'owner_user_id'>, viewer?: number | null) {
+  return row.visibility !== 'private' || (viewer != null && row.owner_user_id === viewer);
+}
+
+function parseChecklist(raw: string | null): CheckItem[] {
+  try {
+    const v = JSON.parse(raw || '[]');
+    return Array.isArray(v) ? v.filter((x) => x && typeof x.text === 'string').map((x) => ({ text: String(x.text).slice(0, 120), done: Boolean(x.done) })) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** u<id> = a member, k<id> = a child profile (people directory keys) */
+function personOf(key: string | null) {
+  const m = key ? /^([uk])(\d+)$/.exec(key) : null;
+  if (!m) return null;
+  const row = (m[1] === 'u' ? db.prepare('SELECT name, color FROM users WHERE id = ?') : db.prepare('SELECT name, color FROM kid_profiles WHERE id = ?')).get(Number(m[2])) as
+    | { name: string; color: string }
+    | undefined;
+  return row ? { key: key!, name: row.name, color: row.color } : null;
 }
 
 export function getCareTask(id: number) {
@@ -191,6 +271,9 @@ export function careView(row: CareRow, today = localDay(0)) {
   return {
     ...row,
     archived: Boolean(row.archived),
+    as_needed: Boolean(row.as_needed),
+    checklist: parseChecklist(row.checklist),
+    doer: personOf(row.doer_key),
     state: ds.state,
     days: ds.days,
     product: p ? { id: p.id, name: p.name, brand: p.brand, image_path: p.image_path, unit: p.unit, track_mode: p.track_mode, stock } : null,
@@ -202,16 +285,21 @@ export type CareView = ReturnType<typeof careView>;
 
 const STATE_RANK: Record<DueState, number> = { overdue: 0, today: 1, soon: 2, ok: 3, none: 4 };
 
-export function listCareTasks(opts: { includeArchived?: boolean } = {}) {
+/**
+ * Tasks a viewer may see. Without `viewer` (Home Assistant, MCP, displays, print, trips, the assistant's shared
+ * context) private tasks are left out; `allPrivate` is only for the scheduler, which notifies each owner alone.
+ */
+export function listCareTasks(opts: { includeArchived?: boolean; viewer?: number | null; allPrivate?: boolean } = {}) {
   const today = localDay(0);
   const rows = db.prepare(`SELECT * FROM care_tasks ${opts.includeArchived ? '' : 'WHERE archived = 0'}`).all() as CareRow[];
   return rows
+    .filter((r) => opts.allPrivate || canSeeTask(r, opts.viewer))
     .map((r) => careView(r, today))
     .sort((a, b) => STATE_RANK[a.state] - STATE_RANK[b.state] || (a.next_due ?? '9').localeCompare(b.next_due ?? '9') || a.name.localeCompare(b.name));
 }
 
-export function dueCareTasks() {
-  return listCareTasks().filter((x) => x.state === 'overdue' || x.state === 'today' || x.state === 'soon');
+export function dueCareTasks(opts: { viewer?: number | null; allPrivate?: boolean } = {}) {
+  return listCareTasks(opts).filter((x) => x.state === 'overdue' || x.state === 'today' || x.state === 'soon');
 }
 
 export interface CareInput {
@@ -227,14 +315,32 @@ export interface CareInput {
   consume_qty?: number | null;
   assignee_user_id?: number | null;
   note?: string | null;
+  category?: TaskCategory;
+  visibility?: TaskVisibility;
+  anchor?: 'done' | 'due';
+  as_needed?: boolean;
+  checklist?: CheckItem[] | null;
+  doer_key?: string | null;
+}
+
+function cleanChecklist(list: CheckItem[] | null | undefined) {
+  if (!list) return null;
+  const out = list.map((x) => ({ text: String(x.text ?? '').trim().slice(0, 120), done: Boolean(x.done) })).filter((x) => x.text).slice(0, 30);
+  return out.length ? JSON.stringify(out) : null;
+}
+
+function validDoer(key: string | null | undefined) {
+  if (key == null || key === '') return null;
+  if (!personOf(key)) throw userError(t('Person not found.'));
+  return key;
 }
 
 function validateDay(v: string | null | undefined, field: string) {
   if (v != null && !isDay(v)) throw userError(t('Invalid date: {field}', { field }));
 }
 
-/** Create a task from a template key and/or explicit fields. */
-export function createCareTask(input: CareInput) {
+/** Create a task from a template key and/or explicit fields. `owner` = the member creating it (needed for private). */
+export function createCareTask(input: CareInput, owner?: number | null) {
   const tpl = input.template ? CARE_TEMPLATES.find((x) => x.key === input.template) : undefined;
   if (input.template && !tpl) throw userError(t('Unknown template'));
   const name = (input.name?.trim() || (tpl ? t(tpl.name) : '')).slice(0, 120);
@@ -247,7 +353,10 @@ export function createCareTask(input: CareInput) {
   validateDay(input.last_done, 'last_done');
   let nextDue = input.next_due ?? null;
   if (!nextDue && n && unit) nextDue = addInterval(input.last_done ?? localDay(0), n, unit);
-  if (!nextDue && !n) throw userError(t('A task without interval needs a date'));
+  const asNeeded = input.as_needed ?? tpl?.as_needed ?? false;
+  if (!nextDue && !n && !asNeeded) throw userError(t('A task without interval needs a date'));
+  const visibility: TaskVisibility = input.visibility === 'private' ? 'private' : 'household';
+  if (visibility === 'private' && !owner) throw userError(t('Only household members can keep private tasks'));
   let productId = input.product_id ?? null;
   if (!productId && input.product_id === undefined && tpl?.product) {
     const m = matchProduct(tpl.product);
@@ -256,8 +365,9 @@ export function createCareTask(input: CareInput) {
   const lead = input.lead_days ?? tpl?.lead ?? defaultLead(n ?? null, unit ?? null);
   const info = db
     .prepare(
-      `INSERT INTO care_tasks (name, template, interval_n, interval_unit, next_due, last_done, lead_days, location_id, product_id, consume_qty, assignee_user_id, note)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO care_tasks (name, template, interval_n, interval_unit, next_due, last_done, lead_days, location_id, product_id, consume_qty, assignee_user_id, note,
+         category, visibility, owner_user_id, anchor, as_needed, checklist, doer_key)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       name,
@@ -272,6 +382,13 @@ export function createCareTask(input: CareInput) {
       input.consume_qty ?? 1,
       input.assignee_user_id ?? null,
       input.note ?? (tpl?.note ? t(tpl.note) : null),
+      input.category ?? tpl?.category ?? 'care',
+      visibility,
+      owner ?? null,
+      input.anchor === 'due' ? 'due' : 'done',
+      asNeeded && !n ? 1 : 0,
+      cleanChecklist(input.checklist),
+      validDoer(input.doer_key),
     );
   emit('care');
   return careView(getCareTask(Number(info.lastInsertRowid))!);
@@ -287,6 +404,21 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
     if (input[k] !== undefined) (next as any)[k] = input[k];
   }
   if (input.archived !== undefined) next.archived = input.archived ? 1 : 0;
+  if (input.category !== undefined) next.category = input.category === 'house' ? 'house' : 'care';
+  if (input.anchor !== undefined) next.anchor = input.anchor === 'due' ? 'due' : 'done';
+  if (input.as_needed !== undefined) next.as_needed = input.as_needed ? 1 : 0;
+  if (input.checklist !== undefined) next.checklist = cleanChecklist(input.checklist);
+  if (input.doer_key !== undefined) next.doer_key = validDoer(input.doer_key);
+  if (input.visibility !== undefined) {
+    // only the owner turns a private task into a household one; a household task becomes private for whoever has it
+    next.visibility = input.visibility === 'private' ? 'private' : 'household';
+    if (next.visibility === 'private' && !next.owner_user_id) throw userError(t('Only household members can keep private tasks'));
+  }
+  if (next.as_needed) {
+    next.interval_n = null;
+    next.interval_unit = null;
+    if (input.next_due === undefined) next.next_due = null;
+  }
   if (!next.name?.trim()) throw userError(t('Please enter a name'));
   if ((next.interval_n && !next.interval_unit) || (!next.interval_n && next.interval_unit)) throw userError(t('Interval needs a number and a unit'));
   // interval changed and no explicit date: recompute from the last time it was done
@@ -295,7 +427,8 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
     next.next_due = addInterval(next.last_done, next.interval_n, next.interval_unit);
   db.prepare(
     `UPDATE care_tasks SET name = ?, interval_n = ?, interval_unit = ?, next_due = ?, last_done = ?, lead_days = ?, location_id = ?, product_id = ?,
-       consume_qty = ?, assignee_user_id = ?, note = ?, archived = ?, updated_at = datetime('now') WHERE id = ?`,
+       consume_qty = ?, assignee_user_id = ?, note = ?, archived = ?, category = ?, visibility = ?, owner_user_id = ?, anchor = ?, as_needed = ?,
+       checklist = ?, doer_key = ?, updated_at = datetime('now') WHERE id = ?`,
   ).run(
     next.name.trim().slice(0, 120),
     next.interval_n,
@@ -309,6 +442,13 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
     next.assignee_user_id,
     next.note,
     next.archived,
+    next.category,
+    next.visibility,
+    next.owner_user_id,
+    next.anchor,
+    next.as_needed,
+    next.checklist,
+    next.doer_key,
     id,
   );
   emit('care');
@@ -325,7 +465,7 @@ export function deleteCareTask(id: number) {
  * Done in one tap: records history, moves the due date and – if the task uses up a product
  * (water filter cartridge) – takes one from stock and puts it on the shopping list when none is left for next time.
  */
-export function completeCareTask(id: number, actor: string, opts: { doneOn?: string | null; nextDue?: string | null; note?: string | null } = {}) {
+export function completeCareTask(id: number, actor: string, opts: { doneOn?: string | null; nextDue?: string | null; note?: string | null; actorUserId?: number | null } = {}) {
   const row = getCareTask(id);
   if (!row) throw userError(t('Task not found'));
   validateDay(opts.doneOn, 'done_on');
@@ -346,10 +486,15 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
     if (onList) addToShopping({ productId: p.id, text: p.name, source: 'care', addedBy: actor });
   }
   db.transaction(() => {
-    db.prepare('INSERT INTO care_log (task_id, done_on, actor, note, prev_last_done, prev_next_due, consumed) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
-      id, doneOn, actor, opts.note ?? null, row.last_done, row.next_due, consumed,
+    db.prepare('INSERT INTO care_log (task_id, done_on, actor, note, prev_last_done, prev_next_due, consumed, actor_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
+      id, doneOn, actor, opts.note ?? null, row.last_done, row.next_due, consumed, opts.actorUserId ?? null,
     );
-    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, updated_at = datetime('now') WHERE id = ?`).run(doneOn, nextDue, id);
+    // sub-items start fresh for the next time; a one-off task without a next date is put away
+    const fresh = row.checklist ? JSON.stringify(parseChecklist(row.checklist).map((x) => ({ ...x, done: false }))) : null;
+    const oneOff = !nextDue && !row.interval_n && !row.as_needed;
+    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, checklist = ?, archived = ?, updated_at = datetime('now') WHERE id = ?`).run(
+      doneOn, nextDue, fresh, oneOff ? 1 : row.archived, id,
+    );
   })();
   emit('care');
   return { task: careView(getCareTask(id)!), consumed, on_shopping_list: onList };
@@ -364,7 +509,7 @@ export function undoCareTask(id: number, actor: string) {
   if (!row || !last) throw userError(t('Nothing to undo'));
   if (last.consumed > 0 && row.product_id) adjustStock({ productId: row.product_id, delta: last.consumed, reason: 'undo', actor, ref: `care:${id}` });
   db.transaction(() => {
-    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, updated_at = datetime('now') WHERE id = ?`).run(last.prev_last_done, last.prev_next_due, id);
+    db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, archived = 0, updated_at = datetime('now') WHERE id = ?`).run(last.prev_last_done, last.prev_next_due, id);
     db.prepare('DELETE FROM care_log WHERE id = ?').run(last.id);
   })();
   emit('care');
@@ -377,16 +522,20 @@ export function careLog(id: number, limit = 20) {
 
 /** Find a task by id or (fuzzy) name – for MCP. */
 export function findCareTask(ref: string | number) {
-  if (typeof ref === 'number') return getCareTask(ref);
+  if (typeof ref === 'number') {
+    const row = getCareTask(ref);
+    return row && canSeeTask(row) ? row : undefined;
+  }
   const q = ref.toLowerCase().trim();
-  const rows = db.prepare('SELECT * FROM care_tasks WHERE archived = 0').all() as CareRow[];
+  const rows = db.prepare(`SELECT * FROM care_tasks WHERE archived = 0 AND visibility != 'private'`).all() as CareRow[];
   return rows.find((r) => r.name.toLowerCase() === q) ?? rows.find((r) => r.name.toLowerCase().includes(q)) ?? rows.find((r) => q.includes(r.name.toLowerCase()));
 }
 
 // ------------------------------------------------------------------ notifications (called by the scheduler)
 
 export async function checkCareDue() {
-  for (const task of dueCareTasks()) {
+  for (const task of dueCareTasks({ allPrivate: true })) {
+    const priv = task.visibility === 'private';
     const now = task.state === 'today' || task.state === 'overdue';
     const when =
       task.state === 'overdue'
@@ -406,8 +555,10 @@ export async function checkCareDue() {
       ]
         .filter(Boolean)
         .join(' ') || t('Tap “Done” in ToHuus Hub once it’s done.'),
-      path: '/pflege',
+      path: '/aufgaben',
       data: { care_task_id: task.id, name: task.name, next_due: task.next_due, state: task.state },
+      // a private task reminds only its owner, on their own devices
+      ...(priv ? { toUserId: task.owner_user_id, personalOnly: true } : {}),
       dedupeKey: `care:${task.id}:${task.next_due}:${now ? 'now' : 'soon'}`,
       dedupeHours: 24 * 400,
     });
