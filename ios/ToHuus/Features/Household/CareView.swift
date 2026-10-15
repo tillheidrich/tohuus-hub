@@ -58,6 +58,16 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     var promise: Promise?
     /// follows collection dates from the household's calendar (server: calsync.ts)
     var extKind: String?
+    /// learned: who did it at least 3 of the last 6 times (server: care.ts usualDoer)
+    var usual: Usual?
+    /// "Abgeben an …": asked and not answered yet
+    var offer: Offer?
+    struct Usual: Decodable, Sendable, Hashable { var userId: Int; var name: String; var color: String? }
+    struct Offer: Decodable, Sendable, Hashable {
+        struct Who: Decodable, Sendable, Hashable { var id: Int; var name: String }
+        var to: Who
+        var by: Who?
+    }
 
     struct Promise: Decodable, Sendable, Hashable { var userId: Int; var name: String; var color: String?; var day: String; var passed: Bool? }
 
@@ -326,6 +336,9 @@ struct CareView: View {
             }
             if let error { Section { ErrorBanner(message: error) { Task { await load() } } }.listRowBackground(Color.clear) }
             if let data {
+                if data.tasks.contains(where: { $0.offer?.to.id == data.me && data.me != nil }) {
+                    Section { OfferAsks(api: api, tasks: data.tasks, me: data.me) { Task { await load() } } }
+                }
                 let shown = data.tasks.filter { current.matches($0, me: data.me) }
                 let due = shown.filter(\.isDueNow)
                 let later = shown.filter { !$0.isDueNow }
@@ -336,6 +349,7 @@ struct CareView: View {
                 }
                 if !due.isEmpty { Section(L("Due")) { ForEach(due) { row($0) } } }
                 if !later.isEmpty { Section(L("Later")) { ForEach(later) { row($0) } } }
+                WhoDoesWhatSection(api: api, refresh: data.tasks.count + recent.count, onChanged: { Task { await load() } })
                 if !recent.isEmpty {
                     Section {
                         ForEach(allRecent ? recent : Array(recent.prefix(5))) { r in
@@ -415,6 +429,7 @@ struct CareView: View {
                 let items = t.checklist ?? []
                 let sub = [t.promise.map { CareLabels.promise($0) },
                            t.extKind == nil ? nil : L("from the calendar"),
+                           t.doer == nil && (t.rotation ?? []).isEmpty ? t.usual.map { LF("usually %@", $0.name) } : nil,
                            t.asNeeded == true ? nil : CareLabels.interval(t.intervalN, t.intervalUnit),
                            items.isEmpty ? nil : LF("%d of %d", items.filter(\.done).count, items.count),
                            t.product.map { LF("%@: %@ in stock", $0.name, Self.qty($0.stock ?? 0)) },
@@ -610,6 +625,9 @@ private struct CareDetailSheet: View {
                     } header: {
                         Text(L("I’ll do it"))
                     }
+                }
+                if me?.isMember ?? true, let uid = me?.userId {
+                    OfferSection(api: api, task: full ?? task, me: uid, onChanged: onChanged)
                 }
                 if me?.claimsOn ?? true, me?.isMember ?? true, !task.isPrivate {
                     Section {

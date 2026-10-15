@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, MagnifyingGlass, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
 import { DemoNudge } from './Samples';
 import { TasksTodayCard } from './TasksToday';
+import { TodayOfferAsks } from './WhoDoesWhat';
 import { StarsCard } from './Stars';
 import { ReviewTeaser } from './Review';
 import { Fragment, type ReactNode, useState } from 'react';
@@ -123,6 +124,7 @@ export function Today({ me }: { me: Me }) {
           ['rhythm', <DueCard items={d.rhythm} legacy={d.legacy} />],
           ['tasks', guestAllows(gl, '/aufgaben') ? (
             <>
+              <TodayOfferAsks />
               <TasksTodayCard today={localDay()} />
               <StarsCard guest={Boolean(gl)} />
               <ReviewTeaser guest={Boolean(gl)} />

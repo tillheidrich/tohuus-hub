@@ -53,6 +53,10 @@ A private task is never visible to other members, guests, the assistant (tools a
 
 Incoming times (UTC, `TZID` or floating) are read as household time (`TZ`, default Europe/Berlin).
 
+## Wer macht was
+
+ToHuus learns who usually does a task ("meistens Sam") and who cooked lately. It offers to write a habit down, lets members hand a task over, and shows who carries what, with names only and no numbers. See [who-does-what.md](who-does-what.md).
+
 ## Reading an existing calendar
 
 The iPhone can read the household's own calendar (bin collection → one task per bin) and write household tasks into an existing calendar, both ways. See [calendar-sync.md](calendar-sync.md).

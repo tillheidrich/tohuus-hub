@@ -4,6 +4,12 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Wer macht was (docs/who-does-what.md):
+  - ToHuus learns who usually does a task ("meistens Sam") and who cooked lately or on which weekday. The week plan suggests that person for open meals, faded; only a tap enters them.
+  - "So eintragen?" turns a habit into the doer. "Abgeben an …" asks another member, who answers yes or no on Heute.
+  - In Aufgaben, "Wer macht was" shows who carries what. It uses names and no numbers. A judgement on the balance appears only when everyone agreed to compare, and it is weighed by areas carried, not counts.
+  - Web and iPhone.
+  - New endpoints: `GET /api/habits`, `POST /api/habits/proposals/:id`, `GET /api/habits/cook`, `POST /api/care/:id/offer`, `POST /api/care/:id/offer/answer`. Tasks have `usual` and `offer`.
 - Kalender lesen (docs/calendar-sync.md):
   - The iPhone reads calendars you pick (e.g. the family calendar in iCloud) and finds the bin collection without AI. Each bin becomes one task that follows the dates ("Gelbe Tonne raus", the evening before or on the morning). Only the kind and the day reach the server.
   - Optionally, household tasks with a date go into an existing calendar, both ways.

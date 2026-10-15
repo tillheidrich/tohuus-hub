@@ -11011,3 +11011,44 @@ html.gentle .badge.empty {
   color: var(--ink-2);
   font-size: var(--fs-s);
 }
+
+/* Wer macht was (pages/WhoDoesWhat.tsx) */
+.who-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.who-person .chip.static {
+  cursor: default;
+}
+.who-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.who-proposal,
+.who-ask {
+  margin-bottom: 10px;
+  border-color: var(--primary);
+}
+.care-offer {
+  margin-top: 14px;
+}
+.care-offer .chips,
+.care-promise .chips {
+  flex-wrap: wrap;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+}
+/* a suggested cook: the person, faded and dashed – nothing is entered until someone taps */
+.claim-av.suggested {
+  opacity: 0.55;
+  outline: 1.5px dashed var(--ink-3);
+  outline-offset: 1px;
+  border-radius: 50%;
+}
+.who-pick button.suggested {
+  outline: 1.5px dashed var(--primary);
+  outline-offset: 2px;
+}

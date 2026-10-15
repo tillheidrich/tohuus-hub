@@ -34,6 +34,7 @@ import { LOAD_ANSWERS, loadCards, setLoadAnswer, taskFromCard } from '../lib/loa
 import { BLICK_AREAS, type BlickArea, blickOverview, setCompareOptIn } from '../lib/blick.js';
 import { pointsWeek, setPointsSettings } from '../lib/points.js';
 import { reviewAllowed, reviewSeason, yearReview } from '../lib/review.js';
+import { answerOffer, answerProposal, cookSuggestions, offerTask, whoDoesWhat } from '../lib/habits.js';
 import { BIN_KINDS, calsyncView, reviveKind, setCalendarAiConsent, setCalsyncSettings, suggestFromEvents, syncDates } from '../lib/calsync.js';
 import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
@@ -257,6 +258,44 @@ r.put('/points/settings', (req, res) => {
   } catch (e) {
     res.status((e as { status?: number }).status ?? 400).json({ error: (e as Error).message });
   }
+});
+
+// ---------------------------------------------------------------- Wer macht was (lib/habits.ts, docs/who-does-what.md)
+
+const membersOnly = (req: any, res: any) => {
+  if (req.actor?.role === 'guest' || req.actor?.houseGuest || !memberOf(req)) {
+    res.status(403).json({ error: t('Only household members can do this') });
+    return null;
+  }
+  return memberOf(req)!;
+};
+r.get('/habits', (req, res) => {
+  const me = membersOnly(req, res);
+  if (me) res.json(whoDoesWhat(me));
+});
+/** "So eintragen?" – the learned person becomes the doer, or never ask again */
+r.post('/habits/proposals/:id', (req, res) => {
+  if (!membersOnly(req, res)) return;
+  res.json(answerProposal(num(req.params.id), z.object({ accept: z.boolean() }).parse(req.body).accept));
+});
+/** Week plan: who probably cooks the open meals (weekday habit, else who cooked lately) – a suggestion only */
+r.get('/habits/cook', (req, res) => {
+  if (!membersOnly(req, res)) return;
+  const q = z.object({ from: z.string().regex(/^\d{4}-\d\d-\d\d$/), to: z.string().regex(/^\d{4}-\d\d-\d\d$/) }).parse(req.query);
+  res.json(cookSuggestions(q.from, q.to));
+});
+/** "Abgeben an …": { to_user_id } asks that member; null withdraws the question */
+r.post('/care/:id/offer', async (req, res) => {
+  const me = membersOnly(req, res);
+  if (!me) return;
+  const row = visibleTask(req, res, num(req.params.id));
+  if (!row) return;
+  res.json(await offerTask(row.id, me, z.object({ to_user_id: z.number().int().positive().nullable() }).parse(req.body).to_user_id));
+});
+r.post('/care/:id/offer/answer', async (req, res) => {
+  const me = membersOnly(req, res);
+  if (!me) return;
+  res.json(await answerOffer(num(req.params.id), me, z.object({ accept: z.boolean() }).parse(req.body).accept));
 });
 
 // ---------------------------------------------------------------- Kalender lesen (lib/calsync.ts, docs/calendar-sync.md)

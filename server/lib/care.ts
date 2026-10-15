@@ -88,6 +88,36 @@ migrate(
 migrate('tasks-promise', `ALTER TABLE care_tasks ADD COLUMN promised_by INTEGER; ALTER TABLE care_tasks ADD COLUMN promised_for TEXT;`);
 // a task fed by a calendar (calsync.ts): "Gelbe Tonne raus" follows the collection dates from the household's calendar
 migrate('tasks-ext', `ALTER TABLE care_tasks ADD COLUMN ext_kind TEXT;`);
+// "Abgeben": one member asks another to take a task over (habits.ts, docs/who-does-what.md)
+migrate('tasks-offer', `ALTER TABLE care_tasks ADD COLUMN offered_to INTEGER; ALTER TABLE care_tasks ADD COLUMN offered_by INTEGER;`);
+
+/**
+ * "Macht meistens Sam": the person who did a household task at least 3 of its last (up to) 6 times and 70 % of
+ * them, within 120 days. Learned from the history the household sees anyway – no numbers are shown.
+ */
+export function usualDoer(taskId: number): { user_id: number; name: string; color: string } | null {
+  const rows = db
+    .prepare(
+      `SELECT l.actor_user_id AS uid FROM care_log l JOIN users u ON u.id = l.actor_user_id
+       WHERE l.task_id = ? AND l.done_on >= date('now', '-120 days') AND COALESCE(u.kind, 'member') != 'guest'
+       ORDER BY l.done_on DESC, l.id DESC LIMIT 6`,
+    )
+    .all(taskId) as { uid: number }[];
+  if (rows.length < 3) return null;
+  const counts = new Map<number, number>();
+  for (const r of rows) counts.set(r.uid, (counts.get(r.uid) ?? 0) + 1);
+  const [uid, n] = [...counts].sort((a, b) => b[1] - a[1])[0];
+  if (n < 3 || n / rows.length < 0.7) return null;
+  return (db.prepare('SELECT id AS user_id, name, color FROM users WHERE id = ?').get(uid) as { user_id: number; name: string; color: string } | undefined) ?? null;
+}
+
+function offerOf(row: CareRow) {
+  const r = row as CareRow & { offered_to?: number | null; offered_by?: number | null };
+  if (!r.offered_to) return null;
+  const who = (id: number | null | undefined) => (id ? ((db.prepare('SELECT id, name FROM users WHERE id = ?').get(id) as { id: number; name: string } | undefined) ?? null) : null);
+  const to = who(r.offered_to);
+  return to ? { to, by: who(r.offered_by) } : null;
+}
 
 /** calsync.ts registers here – care.ts must not import it (calsync imports care) */
 export const careHooks: { nextDate?: (kind: string, after: string) => string | null } = {};
@@ -321,6 +351,9 @@ export function careView(row: CareRow, today = localDay(0)) {
     location: loc ?? null,
     assignee: who ?? null,
     promise: promiseOf(row, today),
+    // learned, never for private tasks (they are one person's anyway)
+    usual: row.visibility === 'private' ? null : usualDoer(row.id),
+    offer: offerOf(row),
   };
 }
 export type CareView = ReturnType<typeof careView>;
@@ -713,7 +746,7 @@ export async function checkCareDue() {
       event: 'care.due',
       title: t('{name}: {when}', { name: task.name, when }),
       message: [
-        task.assignee ? t('{name} takes care of it.', { name: task.assignee.name }) : null,
+        task.assignee ? t('{name} takes care of it.', { name: task.assignee.name }) : !task.doer && task.usual ? t('{name} usually does it.', { name: task.usual.name }) : null,
         task.product ? t('Needs: {product} ({n} in stock).', { product: task.product.name, n: task.product.stock ?? 0 }) : null,
         task.note,
       ]

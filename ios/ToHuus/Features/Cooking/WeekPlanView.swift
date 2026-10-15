@@ -23,6 +23,8 @@ final class WeekModel {
     private(set) var plan: WeekPlan?
     private(set) var overlay: WeekOverlay?
     private(set) var claims: [Int: PlanClaim] = [:]
+    /// who probably cooks open meals (server: habits.ts) – shown faded, nothing entered
+    private(set) var suggested: [Int: CookSuggestion] = [:]
     private(set) var members: [HouseMember] = []
     private(set) var myId: Int?
     private(set) var loading = false
@@ -48,6 +50,8 @@ final class WeekModel {
             self.plan = plan
             overlay = (try? await o) ?? overlay
             claims = Dictionary(((try? await c) ?? []).map { ($0.refId, $0) }, uniquingKeysWith: { a, _ in a })
+            let today = CookDay.today()
+            suggested = Dictionary(((try? await api.cookSuggestions(from: max(f, today), to: CookDay.add(f, 6))) ?? []).map { ($0.entryId, $0) }, uniquingKeysWith: { a, _ in a })
             error = nil
         } catch {
             self.error = APIError.from(error).localizedDescription
@@ -221,6 +225,11 @@ struct WeekPlanSection: View {
                     if let c = model.claims[e.id] {
                         PersonDot(name: c.name, color: c.color, size: 24)
                             .accessibilityLabel(LCF("%@ cooks", c.name))
+                    } else if let s = model.suggested[e.id] {
+                        PersonDot(name: s.name, color: s.color, size: 24)
+                            .opacity(0.5)
+                            .overlay(Circle().strokeBorder(Theme.ink3, style: StrokeStyle(lineWidth: 1.5, dash: [3, 2])))
+                            .accessibilityLabel(LF("Probably %@ cooks", s.name))
                     }
                 }
                 .contentShape(Rectangle())
@@ -478,6 +487,10 @@ struct MealSheet: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label(claim.map { LCF("%@ cooks", $0.name) } ?? LC("Who cooks?"), systemImage: "hand.raised")
                     .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink2)
+                if claim == nil, let s = model.suggested[e.id] {
+                    Text(s.why == "weekday" ? LF("%@ usually cooks on this weekday.", s.name) : LF("%@ has cooked most of the time lately.", s.name))
+                        .font(.footnote).foregroundStyle(Theme.ink3)
+                }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Theme.Space.s3) {
                         ForEach(model.members) { m in
@@ -486,6 +499,8 @@ struct MealSheet: View {
                                 VStack(spacing: 4) {
                                     PersonDot(name: m.name, color: m.color, size: 40)
                                         .overlay(Circle().stroke(on ? Theme.primary : .clear, lineWidth: 3).padding(-3))
+                                        .overlay(Circle().strokeBorder(claim == nil && model.suggested[e.id]?.userId == m.id ? Theme.primary : .clear,
+                                                                       style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])).padding(-4))
                                     Text(m.id == model.myId ? LC("Me") : m.name).font(.caption).foregroundStyle(on ? Theme.primaryText : Theme.ink2)
                                 }
                                 .frame(minWidth: 52)

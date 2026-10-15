@@ -628,3 +628,85 @@ describe('Rückblick (year in review) – built, but off by default', () => {
     expect(reviewSeason('2026-10-14')).toBeNull();
   });
 });
+
+describe('Wer macht was – habits, proposals, handing over (habits.ts)', () => {
+  let bin = 0;
+  const ago = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+  };
+
+  it('learns "macht meistens Sam" and offers to write it down', async () => {
+    bin = (await mira.req('POST', '/api/care', { name: 'Müll raus', category: 'house', interval_n: 1, interval_unit: 'week' })).json.id;
+    expect((await mira.req('GET', `/api/care/${bin}`)).json.usual).toBeNull();
+    for (const n of [21, 14, 7]) expect((await sam.req('POST', `/api/care/${bin}/done`, { done_on: ago(n) })).status).toBe(200);
+    expect((await mira.req('GET', `/api/care/${bin}`)).json.usual).toMatchObject({ user_id: samId, name: 'Sam' });
+    const w = (await mira.req('GET', '/api/habits')).json;
+    expect(w.proposals.map((p: any) => p.task_id)).toContain(bin);
+    expect(w.people.find((p: any) => p.name === 'Sam').does.map((d: any) => d.label)).toContain('Müll raus');
+    // no numbers anywhere, alphabetical
+    const names = w.people.map((p: any) => p.name);
+    expect(names.indexOf('Mira')).toBeLessThan(names.indexOf('Sam'));
+    expect(JSON.stringify(w)).not.toMatch(/"(count|share|n|of)":/);
+    expect((await mira.req('POST', `/api/habits/proposals/${bin}`, { accept: true })).status).toBe(200);
+    expect((await mira.req('GET', `/api/care/${bin}`)).json.doer).toMatchObject({ key: `u${samId}` });
+    expect((await mira.req('GET', '/api/habits')).json.proposals.map((p: any) => p.task_id)).not.toContain(bin);
+  });
+
+  it('one person mixed in does not make a habit', async () => {
+    const t2 = (await mira.req('POST', '/api/care', { name: 'Altglas', category: 'house', interval_n: 2, interval_unit: 'week' })).json.id;
+    await sam.req('POST', `/api/care/${t2}/done`, { done_on: ago(30) });
+    await mira.req('POST', `/api/care/${t2}/done`, { done_on: ago(16) });
+    await sam.req('POST', `/api/care/${t2}/done`, { done_on: ago(2) });
+    expect((await mira.req('GET', `/api/care/${t2}`)).json.usual).toBeNull();
+  });
+
+  it('"Abgeben an Mira": only Mira can answer; yes makes her the doer', async () => {
+    expect((await sam.req('POST', `/api/care/${bin}/offer`, { to_user_id: miraId })).status).toBe(200);
+    expect((await mira.req('GET', `/api/care/${bin}`)).json.offer).toMatchObject({ to: { id: miraId }, by: { id: samId } });
+    expect((await sam.req('POST', `/api/care/${bin}/offer/answer`, { accept: true })).status).toBe(404);
+    expect((await mira.req('POST', `/api/care/${bin}/offer/answer`, { accept: true })).status).toBe(200);
+    const task = (await mira.req('GET', `/api/care/${bin}`)).json;
+    expect(task.doer).toMatchObject({ key: `u${miraId}` });
+    expect(task.offer).toBeNull();
+  });
+
+  it('a "no" leaves it where it was', async () => {
+    await mira.req('POST', `/api/care/${bin}/offer`, { to_user_id: samId });
+    await sam.req('POST', `/api/care/${bin}/offer/answer`, { accept: false });
+    expect((await mira.req('GET', `/api/care/${bin}`)).json.doer).toMatchObject({ key: `u${miraId}` });
+  });
+
+  it('cooking: who cooked the last weeks is suggested for open meals – nothing entered', async () => {
+    const meal = db.prepare(`INSERT INTO meal_plan (day, title) VALUES (?, ?)`);
+    const claim = db.prepare(`INSERT INTO claims (kind, ref_id, user_id) VALUES ('plan', ?, ?)`);
+    for (const n of [18, 12, 9, 5, 3]) claim.run(Number(meal.run(ago(n), 'Abendessen').lastInsertRowid), samId);
+    const next = new Date();
+    next.setDate(next.getDate() + 2);
+    const day = next.toISOString().slice(0, 10);
+    const open = Number(meal.run(day, 'Pasta').lastInsertRowid);
+    const r = (await mira.req('GET', `/api/habits/cook?from=${day}&to=${day}`)).json;
+    expect(r.lately).toMatchObject({ name: 'Sam' });
+    expect(r.suggestions).toEqual([expect.objectContaining({ entry_id: open, name: 'Sam', why: 'lately' })]);
+    expect(db.prepare(`SELECT COUNT(*) n FROM claims WHERE ref_id = ?`).get(open)).toEqual({ n: 0 });
+    expect((await mira.req('GET', '/api/habits')).json.people.find((p: any) => p.name === 'Sam').does.map((d: any) => d.key)).toContain('cook');
+  });
+
+  it('a judgement only when everyone agreed to compare – weighed by what each carries', async () => {
+    for (const c of [mira, sam]) await c.req('PUT', '/api/blick/compare', { on: false });
+    expect((await mira.req('GET', '/api/habits')).json.balance).toBeNull();
+    await mira.req('PUT', '/api/blick/compare', { on: true });
+    await sam.req('PUT', '/api/blick/compare', { on: true });
+    const w = (await mira.req('GET', '/api/habits')).json;
+    expect(w.compare).toBe(true);
+    if (w.balance) expect(['even', 'leans']).toContain(w.balance.state);
+    await mira.req('PUT', '/api/blick/compare', { on: false });
+    await sam.req('PUT', '/api/blick/compare', { on: false });
+  });
+
+  it('closed to people who are not signed in', async () => {
+    const anon = new Client();
+    expect((await anon.req('GET', '/api/habits')).status).toBe(401);
+  });
+});

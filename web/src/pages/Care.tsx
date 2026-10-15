@@ -30,6 +30,7 @@ import { usePeopleDirectory } from '../people/Avatar';
 import { CalDavCard, CalendarFeedCard } from '../shop/bridges';
 import { CalendarReadCard } from './CalendarSync';
 import { BlickSection } from './Blick';
+import { OfferAsks, OfferBox, WhoDoesWhatSection } from './WhoDoesWhat';
 import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
@@ -75,6 +76,10 @@ export interface CareTask {
   promise?: { user_id: number; name: string; color: string; day: string; passed: boolean } | null;
   /** follows collection dates from the household's calendar (server: calsync.ts) */
   ext_kind?: string | null;
+  /** learned: who did it at least 3 of the last 6 times (server: care.ts usualDoer) */
+  usual?: { user_id: number; name: string; color: string } | null;
+  /** "Abgeben an …": asked and not answered yet */
+  offer?: { to: { id: number; name: string }; by: { id: number; name: string } | null } | null;
   /** Termin: with a time the task is a calendar entry (HH:MM, minutes, where) */
   due_time?: string | null;
   duration_min?: number | null;
@@ -225,6 +230,7 @@ export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareT
   const sub = [
     task.promise ? promiseLabel(task.promise) : null,
     task.ext_kind ? t('from the calendar') : null,
+    !task.doer && !task.rotation?.length && task.usual ? t('usually {name}', { name: task.usual.name }) : null,
     compact || task.as_needed ? null : intervalLabel(task.interval_n, task.interval_unit),
     task.checklist?.length ? t('{done} of {total}', { done: ticked, total: task.checklist.length }) : null,
     task.product ? t('{name}: {n} in stock', { name: task.product.name, n: task.product.stock ?? 0 }) : null,
@@ -357,6 +363,7 @@ export function Care() {
       <p className="small muted" style={{ margin: '-10px 0 18px', maxWidth: 560 }}>
         {t('Bathroom, bed linen, water filter, smoke detectors, passports: what has to be done at home, once or again and again – for everyone or only for you. One tap when done – the next date is set automatically.')}
       </p>
+      <OfferAsks tasks={all} me={data?.me} />
       <div style={{ marginBottom: 16 }}>
         <Seg<TaskFilter>
           value={filter}
@@ -408,6 +415,7 @@ export function Care() {
       )}
 
       <RecentlyDone />
+      <WhoDoesWhatSection onOpenTask={setOpenId} />
       <RatgeberCards areas={['aufgaben', 'kopf']} />
       <BlickSection onOpenTask={setOpenId} />
 
@@ -561,6 +569,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
           <dt>{t('Reminder')}</dt>
           <dd>{task.lead_days === 0 ? t('on the day') : task.lead_days === 1 ? t('1 day before') : t('{n} days before', { n: task.lead_days })}</dd>
           {task.doer && (<><dt>{t('Who does it')}</dt><dd>{task.doer.name}{task.rotation && task.rotation.length > 1 ? ` · ${t('taking turns')}` : ''}</dd></>)}
+          {!task.doer && task.usual && (<><dt>{t('Usually does it')}</dt><dd>{task.usual.user_id === me?.actor.userId ? t('You') : task.usual.name}</dd></>)}
           {detail.data?.learned_every_days && (
             <>
               <dt>{t('Your rhythm')}</dt>
@@ -605,6 +614,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
           </div>
         )}
         {me?.actor.userId && !me.actor.houseGuest && <PromiseBox task={task} me={me.actor.userId} />}
+        {me?.actor.userId && !me.actor.houseGuest && <OfferBox task={task} me={me.actor.userId} />}
         {home.ui.claims && task.visibility !== 'private' && <div className="row between care-claim">
           <div>
             <b>{t('I keep it in mind')}</b>

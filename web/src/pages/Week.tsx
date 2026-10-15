@@ -5,7 +5,7 @@ import { api, invalidate, patch, post, useApi } from '../api';
 import { useHousehold } from '../household';
 import { locale, t } from '../i18n';
 import { Seg, Sheet, useToast } from '../ui';
-import { ClaimAvatar, CookPicker, usePlanClaims } from '../shop/claims';
+import { ClaimAvatar, CookPicker, usePlanClaims, useCookSuggestions } from '../shop/claims';
 import { BonButton } from './Bons';
 import { DayMarkChips, EntryServings, markLabel, RotationButton, StartVoteSheet, useWeekOverlay } from './Plan2';
 import { MealBoxAction, PlanBoxPicks } from './Leftovers';
@@ -35,6 +35,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
   const overlay = useWeekOverlay(from);
   const marks = useMemo(() => new Map((overlay.data?.marks ?? []).map((m) => [m.day, m])), [overlay.data]);
   const claims = usePlanClaims();
+  const suggest = useCookSuggestions(from, addDays(from, 6));
   const [pick, setPick] = useState<string | null>(null);
   const [sel, setSel] = useState<any | null>(null);
   const [busy, setBusy] = useState('');
@@ -126,7 +127,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
                       ].filter(Boolean).join(' · ')}
                     </span>
                   </button>
-                  <ClaimAvatar claim={claims.get(e.id)} />
+                  <ClaimAvatar claim={claims.get(e.id)} suggested={e.day >= today ? suggest.get(e.id) : null} />
                   <button
                     className="icon-btn sm"
                     data-no-drag
@@ -195,7 +196,7 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
       </div>
 
       <PlanPicker day={pick} mark={pick ? marks.get(pick) ?? null : null} onClose={() => setPick(null)} />
-      <MealSheet entry={sel ? plan.data?.entries.find((x) => x.id === sel.id) ?? sel : null} claim={sel ? claims.get(sel.id) : null} onClose={() => setSel(null)} onOpen={(id) => nav(`/rezepte/${id}?plan=${sel?.id ?? ''}`)} />
+      <MealSheet entry={sel ? plan.data?.entries.find((x) => x.id === sel.id) ?? sel : null} claim={sel ? claims.get(sel.id) : null} suggested={sel ? suggest.get(sel.id) : null} onClose={() => setSel(null)} onOpen={(id) => nav(`/rezepte/${id}?plan=${sel?.id ?? ''}`)} />
     </section>
   );
 }
@@ -300,7 +301,7 @@ export async function shiftFrom(day: string, toast: ToastFn, slot?: string) {
 }
 
 /** Everything you do with a planned dish, one tap away: move, push the rest, drop. */
-function MealSheet({ entry, claim, onClose, onOpen }: { entry: any | null; claim?: any; onClose: () => void; onOpen: (id: number) => void }) {
+function MealSheet({ entry, claim, suggested, onClose, onOpen }: { entry: any | null; claim?: any; suggested?: any; onClose: () => void; onOpen: (id: number) => void }) {
   const toast = useToast();
   const today = todayStr();
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
@@ -318,7 +319,7 @@ function MealSheet({ entry, claim, onClose, onOpen }: { entry: any | null; claim
       <div className="stack">
         {entry.image_path && <img className="meal-sheet-img" src={entry.image_path} alt={entry.title} data-zoom="" />}
         <div className="small muted" style={{ marginTop: -6 }}>{label(entry.day)} · {entry.slot === 'mittag' ? t('lunch') : t('dinner')}</div>
-        <CookPicker entryId={entry.id} claim={claim} />
+        <CookPicker entryId={entry.id} claim={claim} suggested={suggested} />
         <EntryServings entry={entry} />
         <div className="action-grid">
           <button className="action" onClick={() => move(addDays(entry.day < today ? today : entry.day, 1))}>

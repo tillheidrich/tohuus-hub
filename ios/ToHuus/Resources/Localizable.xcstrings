@@ -120,6 +120,23 @@
         }
       }
     },
+    "%@ asks: will you take over “%@”?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ asks: will you take over “%@”?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ fragt: Übernimmst du „%@“?"
+          }
+        }
+      }
+    },
     "%@ brings it": {
       "extractionState": "manual",
       "localizations": {
@@ -405,6 +422,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ hatte es für %@ vor"
+          }
+        }
+      }
+    },
+    "%@ has cooked most of the time lately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ has cooked most of the time lately."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat zuletzt meistens gekocht."
           }
         }
       }
@@ -1068,6 +1102,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ bis %@, danach von selbst zurück auf „%@“."
+          }
+        }
+      }
+    },
+    "%@ usually cooks on this weekday.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ usually cooks on this weekday."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An diesem Wochentag kocht meistens %@."
+          }
+        }
+      }
+    },
+    "%@ usually does “%@”. Write it down like that?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ usually does “%@”. Write it down like that?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ macht „%@“ meistens. So eintragen?"
           }
         }
       }
@@ -4927,6 +4995,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerade ist viel los. Versuch es bitte gleich noch mal."
+          }
+        }
+      }
+    },
+    "A lot is with %@ right now. Would someone like to take something over?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A lot is with %@ right now. Would someone like to take something over?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade liegt vieles bei %@. Mag jemand etwas übernehmen?"
           }
         }
       }
@@ -9330,6 +9415,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gewünscht"
+          }
+        }
+      }
+    },
+    "Asked %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gefragt"
+          }
+        }
+      }
+    },
+    "Asked %@ – waiting for an answer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked %@ – waiting for an answer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gefragt – wartet auf Antwort."
           }
         }
       }
@@ -21897,6 +22016,23 @@
         }
       }
     },
+    "From now on they do it – if they say yes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From now on they do it – if they say yes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ab dann macht es die Person – wenn sie Ja sagt."
+          }
+        }
+      }
+    },
     "From receipts and ticks ToHuus learns how often you buy things. When something is probably due, it suggests it – it never puts anything on the list by itself.": {
       "extractionState": "manual",
       "localizations": {
@@ -23202,6 +23338,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Flur"
+          }
+        }
+      }
+    },
+    "Hand over": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hand over"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgeben"
           }
         }
       }
@@ -28047,6 +28200,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Leer lassen – dann trägt die Person ihren Namen selbst ein."
+          }
+        }
+      }
+    },
+    "Leave it open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave it open"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offen lassen"
           }
         }
       }
@@ -33827,6 +33997,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nr. %d"
+          }
+        }
+      }
+    },
+    "Nobody does these regularly yet: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody does these regularly yet: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das macht noch niemand regelmäßig: %@"
           }
         }
       }
@@ -42892,6 +43079,23 @@
         }
       }
     },
+    "Probably %@ cooks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probably %@ cooks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kocht voraussichtlich %@"
+          }
+        }
+      }
+    },
     "Probably at home: %@": {
       "extractionState": "manual",
       "localizations": {
@@ -43942,6 +44146,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hase"
+          }
+        }
+      }
+    },
+    "Rather not": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rather not"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lieber nicht"
           }
         }
       }
@@ -52701,6 +52922,23 @@
         }
       }
     },
+    "Spread quite evenly right now – everyone carries their part.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spread quite evenly right now – everyone carries their part."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade ziemlich gut verteilt – jede und jeder trägt einen Teil."
+          }
+        }
+      }
+    },
     "Stand in or in front of the shop and save it. Up to 20 shops.": {
       "extractionState": "manual",
       "localizations": {
@@ -59280,6 +59518,23 @@
         }
       }
     },
+    "To %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An %@"
+          }
+        }
+      }
+    },
     "To another list": {
       "extractionState": "manual",
       "localizations": {
@@ -59633,6 +59888,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ToHuus bewegt nie Geld – gleicht es aus, wie ihr mögt."
+          }
+        }
+      }
+    },
+    "ToHuus notices who usually does what – from what happens anyway. No points, no ranking.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus notices who usually does what – from what happens anyway. No points, no ranking."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus merkt sich, wer was meistens macht – aus dem, was ohnehin passiert. Ohne Punkte, ohne Rangliste."
           }
         }
       }
@@ -61401,6 +61673,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verbraucht ein Produkt (optional)"
+          }
+        }
+      }
+    },
+    "Usually does it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usually does it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macht meistens"
           }
         }
       }
@@ -63870,6 +64159,23 @@
         }
       }
     },
+    "Who does what": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who does what"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer macht was"
+          }
+        }
+      }
+    },
     "Who else does the shopping?": {
       "extractionState": "manual",
       "localizations": {
@@ -65349,6 +65655,40 @@
         }
       }
     },
+    "Yes, I’ll take it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, I’ll take it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, übernehme ich"
+          }
+        }
+      }
+    },
+    "Yes, like that": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, like that"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, so eintragen"
+          }
+        }
+      }
+    },
     "Yes, please": {
       "extractionState": "manual",
       "localizations": {
@@ -65753,6 +66093,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das habt ihr noch"
+          }
+        }
+      }
+    },
+    "You usually do “%@”. Write it down like that?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You usually do “%@”. Write it down like that?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du machst „%@“ meistens. So eintragen?"
           }
         }
       }
@@ -66246,6 +66603,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dein Passwort"
+          }
+        }
+      }
+    },
+    "Your place in the turn goes to them – if they say yes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your place in the turn goes to them – if they say yes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Platz beim Abwechseln geht an die Person – wenn sie Ja sagt."
           }
         }
       }
@@ -73743,6 +74117,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "braucht %@ auf"
+          }
+        }
+      }
+    },
+    "usually %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "usually %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "meistens %@"
           }
         }
       }
