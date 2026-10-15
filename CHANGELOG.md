@@ -4,6 +4,19 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Teilen (docs/sharing.md):
+  - Lists, Im Kopf, due tasks and the week plan go to Apple Notes, Mail or messages as text.
+  - Shared texts end with an optional "— geteilt aus ToHuus" line (admin switch, `PUT /api/share/settings`; `/api/me` has `site_url` and `share_footer`).
+  - Weekly and month review cards can be shared as branded images in 4:5 and 9:16, with no names and nothing private. Web and iOS.
+- "Was habt ihr heute gelöst?" (docs/checkin.md): Heute asks every other evening at most. A task is ticked off for whoever did it, so ToHuus learns; anything else is "nebenbei erledigt", also on someone else's behalf (`done_by`) with a "Danke". The answer is always positive, there is no push, and each person can turn it off. API: `/api/checkin`.
+- Für wen ich da bin (docs/carefor.md): someone you look after, private by default (health data).
+  - Their tasks, "Heute da gewesen", and the weekly review line "Das ist Arbeit – und sie zählt."
+  - Help links (Pflegetelefon, Entlastungsbetrag, wege-zur-pflege.de) without amounts in the code.
+  - A gentle one-time hint. Never shared with the assistant, MCP or Home Assistant.
+  - API: `/api/carefor`.
+- Single parents are detected (one grown-up with children): no comparisons, plus the review note "Alles auf deinen Schultern – und schau, was du geschafft hast."
+- "Du machst das seit Wochen – danke!": only for the person, after six times in a row, then the offer to hand it over. API: `habits.carrying`.
+- Monatsrückblick (`/api/month-review`) next to the week, and "Fertig für heute" on Heute (`today.calm`).
 - Im Kopf (docs/mind.md): "Im Kopf" (thoughts that aren't tasks yet) and "Nebenbei erledigt" (what never was on a list).
   - Private or for everyone, switchable any time. A household entry can be hidden from single members.
   - Others can tap "Ich denk mit" or "Danke". Only names are shown, never counts.
