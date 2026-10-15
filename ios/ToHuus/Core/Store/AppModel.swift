@@ -305,6 +305,8 @@ final class AppModel {
         await store.flush()
         await store.refreshList()
         await store.drainUploadQueue(session: session)
+        // Kalender lesen: at most once an hour, only when set up and allowed (CalendarSyncViews.swift)
+        await CalendarSync.shared.runIfDue(api: store.api, household: store.householdKey)
         store.touch("*")
     }
 

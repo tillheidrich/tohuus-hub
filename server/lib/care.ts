@@ -86,6 +86,11 @@ migrate(
 
 // "Mach ich" (14 Oct 2026): a promise with a day – "Sam macht's morgen". Cleared when the task is done.
 migrate('tasks-promise', `ALTER TABLE care_tasks ADD COLUMN promised_by INTEGER; ALTER TABLE care_tasks ADD COLUMN promised_for TEXT;`);
+// a task fed by a calendar (calsync.ts): "Gelbe Tonne raus" follows the collection dates from the household's calendar
+migrate('tasks-ext', `ALTER TABLE care_tasks ADD COLUMN ext_kind TEXT;`);
+
+/** calsync.ts registers here – care.ts must not import it (calsync imports care) */
+export const careHooks: { nextDate?: (kind: string, after: string) => string | null } = {};
 
 export type TaskCategory = 'house' | 'care';
 export type TaskVisibility = 'household' | 'private';
@@ -592,7 +597,9 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
   validateDay(opts.doneOn, 'done_on');
   validateDay(opts.nextDue, 'next_due');
   const doneOn = opts.doneOn ?? localDay(0);
-  const nextDue = nextDueAfter(row, doneOn, opts.nextDue);
+  // from a calendar: the next collection date, not an interval
+  const ext = (row as CareRow & { ext_kind?: string | null }).ext_kind;
+  const nextDue = ext && careHooks.nextDate && !opts.nextDue ? careHooks.nextDate(ext, row.next_due && row.next_due > doneOn ? row.next_due : doneOn) : nextDueAfter(row, doneOn, opts.nextDue);
   let consumed = 0;
   let onList = false;
   const p = row.product_id ? getProduct(row.product_id) : undefined;
@@ -612,7 +619,7 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
     );
     // sub-items start fresh for the next time; a one-off task without a next date is put away
     const fresh = row.checklist ? JSON.stringify(parseChecklist(row.checklist).map((x) => ({ ...x, done: false }))) : null;
-    const oneOff = !nextDue && !row.interval_n && !row.as_needed;
+    const oneOff = !nextDue && !row.interval_n && !row.as_needed && !ext;
     // taking turns: the next person has it next time
     const doer = row.rotation ? nextInTurn(parseKeys(row.rotation), row.doer_key) : row.doer_key;
     db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, checklist = ?, archived = ?, doer_key = ?, promised_by = NULL, promised_for = NULL, updated_at = datetime('now') WHERE id = ?`).run(

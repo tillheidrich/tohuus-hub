@@ -176,6 +176,16 @@ export const de_home: Record<string, string> = {
   "Stars are not available on this server.": "Sterne gibt es auf diesem Server nicht.",
   "Only the person who promised it can take it back": "Zurücknehmen kann nur, wer es zugesagt hat",
   "Please pick today or a later day": "Bitte wähl heute oder einen späteren Tag",
+  // Kalender lesen (calsync.ts)
+  "Put out bulky waste": "Sperrmüll rausstellen",
+  "Put out garden waste": "Grünschnitt rausstellen",
+  "Put out the Christmas tree": "Weihnachtsbaum rausstellen",
+  "Put out the bio bin": "Biotonne raus",
+  "Put out the paper bin": "Papiertonne raus",
+  "Put out the yellow bin": "Gelbe Tonne raus",
+  "Put out the general waste": "Restmüll raus",
+  "Allow the calendar check with AI first.": "Erlaub zuerst den Kalender-Abgleich mit KI.",
+  "The AI allowance for this month is used up.": "Das KI-Kontingent für diesen Monat ist aufgebraucht.",
   // Rückblick (review.ts)
   "Your year at home {year}": "Euer Jahr to Huus {year}",
   "What you did together – no ranking, just what happened.": "Was ihr zusammen gemacht habt. Ohne Rangliste, einfach was war.",

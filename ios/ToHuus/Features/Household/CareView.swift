@@ -56,6 +56,8 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     var place: String?
     /// "Mach ich": who promised it for which day (server: care.ts promiseCareTask)
     var promise: Promise?
+    /// follows collection dates from the household's calendar (server: calsync.ts)
+    var extKind: String?
 
     struct Promise: Decodable, Sendable, Hashable { var userId: Int; var name: String; var color: String?; var day: String; var passed: Bool? }
 
@@ -357,6 +359,7 @@ struct CareView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }.listRowBackground(Color.clear)
             }
             Section {
+                NavigationLink { CalendarSyncView(api: api, household: app.store?.householdKey ?? "default") } label: { Label(L("Read your existing calendar"), systemImage: "calendar.badge.checkmark") }
                 NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
                 NavigationLink { LabelsView(api: api, kind: .care) } label: { Label(L("Labels"), systemImage: "qrcode") }
             } footer: {
@@ -411,6 +414,7 @@ struct CareView: View {
                 }
                 let items = t.checklist ?? []
                 let sub = [t.promise.map { CareLabels.promise($0) },
+                           t.extKind == nil ? nil : L("from the calendar"),
                            t.asNeeded == true ? nil : CareLabels.interval(t.intervalN, t.intervalUnit),
                            items.isEmpty ? nil : LF("%d of %d", items.filter(\.done).count, items.count),
                            t.product.map { LF("%@: %@ in stock", $0.name, Self.qty($0.stock ?? 0)) },

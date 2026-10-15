@@ -64,7 +64,9 @@ targets:
         # a self-hosted server at a home address (http://192.168.…, tohuus.local) triggers the local network prompt
         NSLocalNetworkUsageDescription: "Only if your ToHuus server runs at home: ToHuus connects to it in your home network."
         NSPhotoLibraryAddUsageDescription: "ToHuus can save images to your photo library."
-        NSCalendarsWriteOnlyAccessUsageDescription: "ToHuus only adds an entry when you tap “Add to calendar” and save it. ToHuus does not read your calendar."
+        NSCalendarsWriteOnlyAccessUsageDescription: "ToHuus only adds an entry when you tap “Add to calendar” and save it."
+        # Kalender lesen (CalendarSyncViews.swift): only after the person switches it on, only the calendars they pick
+        NSCalendarsFullAccessUsageDescription: "Only if you switch it on under Tasks › Calendar: ToHuus reads the calendars you pick to find dates like the bin collection, and can write your household tasks into a calendar you choose. Only the kind and day of a collection leave your iPhone."
         # "Einkauf läuft" on the lock screen and in the Dynamic Island (LiveTripActivity.swift)
         NSSupportsLiveActivities: true
         NSMicrophoneUsageDescription: "ToHuus uses the microphone only while you speak to the assistant or dictate for the list. If your iPhone can't turn speech into text, the recording goes to ToHuus to be turned into text."

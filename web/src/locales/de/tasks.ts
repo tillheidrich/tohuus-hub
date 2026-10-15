@@ -186,4 +186,25 @@ export const tasks: Record<string, string> = {
   "Households may switch on stars": "Haushalte dürfen Sterne einschalten",
   "Stars are off for everyone": "Sterne sind für alle aus",
   "Off by default. When on, an admin of each household decides whether to count stars and for which areas – no rankings, no streaks.": "Standardmäßig aus. Wenn an, entscheidet ein Admin pro Haushalt, ob und für welche Bereiche Sterne gezählt werden – ohne Ranglisten, ohne Serien.",
+  // Kalender lesen (pages/CalendarSync.tsx)
+  'from the calendar': 'aus dem Kalender',
+  'Read your existing calendar': 'Euren Kalender lesen',
+  'The iPhone app can read a calendar you already keep (e.g. your family calendar in iCloud) and finds the bin collection in it. Only the kind and the day reach ToHuus – no other appointments. Set it up on the iPhone under Aufgaben › Kalender.':
+    'Die iPhone-App kann einen Kalender lesen, den ihr schon habt (z. B. euren Familienkalender in iCloud), und findet darin die Müllabfuhr. Bei ToHuus kommen nur die Art und der Tag an – keine anderen Termine. Einrichten geht auf dem iPhone unter Aufgaben › Kalender.',
+  'Last read {when}': 'Zuletzt gelesen {when}',
+  'Not connected yet.': 'Noch nicht verbunden.',
+  'switched off': 'ausgeschaltet',
+  'next collection {day}': 'nächste Abfuhr {day}',
+  'no date ahead': 'kein Termin in Sicht',
+  'On again': 'Wieder an',
+  'Switch on again': 'Wieder einschalten',
+  'Remind about the bin': 'An die Tonne erinnern',
+  'the evening before': 'am Vorabend',
+  'on the morning': 'am Morgen',
+  'AI may match calendar entries with tasks': 'KI darf Kalendereinträge mit Aufgaben abgleichen',
+  'Only for you and only with your OK: the iPhone sends the titles and days of the next 30 days of the calendars you picked to the language model (Mistral, via OpenRouter, USA). It suggests what is a household task, you decide. Nothing is stored. The bins don’t need AI.':
+    'Nur für dich und nur mit deinem OK: Das iPhone schickt Titel und Tage der nächsten 30 Tage aus den Kalendern, die du ausgewählt hast, an das Sprachmodell (Mistral, vermittelt über OpenRouter, USA). Es schlägt vor, was eine Aufgabe im Haushalt ist, du entscheidest. Gespeichert wird nichts. Für die Müllabfuhr braucht es keine KI.',
+  'AI is off in this household or for you.': 'KI ist in diesem Haushalt oder für dich aus.',
+  'Allowed – you can withdraw it any time.': 'Erlaubt – du kannst es jederzeit zurücknehmen.',
+  'Withdrawn': 'Zurückgenommen',
 };

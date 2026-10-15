@@ -31,7 +31,11 @@ final class ServerStore: HouseholdStore {
 
     var pendingCount: Int { ops.count }
 
+    /// the household this store belongs to (offline cache, calendar sync settings)
+    let householdKey: String
+
     init(api: APIClient, householdKey: String) {
+        self.householdKey = householdKey
         self.api = api
         cache = ShoppingCache(householdKey: householdKey)
         ops = cache.loadOps()

@@ -28,6 +28,7 @@ import { useHousehold } from '../household';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { usePeopleDirectory } from '../people/Avatar';
 import { CalDavCard, CalendarFeedCard } from '../shop/bridges';
+import { CalendarReadCard } from './CalendarSync';
 import { BlickSection } from './Blick';
 import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
@@ -72,6 +73,8 @@ export interface CareTask {
   rotation?: string[];
   /** "Mach ich": who promised it for which day (server: care.ts promiseCareTask) */
   promise?: { user_id: number; name: string; color: string; day: string; passed: boolean } | null;
+  /** follows collection dates from the household's calendar (server: calsync.ts) */
+  ext_kind?: string | null;
   /** Termin: with a time the task is a calendar entry (HH:MM, minutes, where) */
   due_time?: string | null;
   duration_min?: number | null;
@@ -221,6 +224,7 @@ export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareT
   const ticked = task.checklist?.filter((x) => x.done).length ?? 0;
   const sub = [
     task.promise ? promiseLabel(task.promise) : null,
+    task.ext_kind ? t('from the calendar') : null,
     compact || task.as_needed ? null : intervalLabel(task.interval_n, task.interval_unit),
     task.checklist?.length ? t('{done} of {total}', { done: ticked, total: task.checklist.length }) : null,
     task.product ? t('{name}: {n} in stock', { name: task.product.name, n: task.product.stock ?? 0 }) : null,
@@ -446,6 +450,7 @@ export function Care() {
 
       {data?.me ? (
         <div className="stack" style={{ marginTop: 24 }}>
+          <CalendarReadCard />
           <CalDavCard />
           <CalendarFeedCard />
         </div>

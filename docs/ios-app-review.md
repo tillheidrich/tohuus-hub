@@ -66,6 +66,13 @@ App Privacy answers, age rating and product ids stay in [app-review.md](app-revi
 - **App Privacy**: as in [app-review.md](app-review.md) §2. **Age rating**: §3 there; in the 2025 questionnaire answer
   "Parental controls: yes" (parents switch AI and areas off for kid profiles), user-generated content: no public sharing,
   unrestricted web access: no.
+- **Calendar (15 Oct 2026, docs/calendar-sync.md)**: the app now asks for *full* calendar access, but only on Aufgaben ›
+  Kalender after a tap on "Kalenderzugriff erlauben" (`NSCalendarsFullAccessUsageDescription`), and works fully without
+  it (5.1.1). Reading happens on the phone; only bin kind + day go to the server. Titles go to the AI only with the
+  separate per-person consent that names Mistral and OpenRouter (USA) (5.1.2(i), third-party AI). App Privacy: add
+  "Other User Content" (App Functionality, linked to the user, not tracking) if not already declared; the privacy
+  policy (`site/src/legal.mjs`, section Berechtigungen) mentions calendars. Review note: "Calendar access is optional
+  (Tasks › Calendar) and is used to find bin collection dates in calendars the user picks."
 - **Category**: Food & Drink, secondary Lifestyle – not Kids.
 - **Developer account**: capabilities for `de.heidrichdigital.tohuus` (Sign in with Apple, Push, App Groups, Associated
   Domains), `.share`, `.widget`, `.watchkitapp`, `.watchkitapp.watchwidgets` (App Groups).

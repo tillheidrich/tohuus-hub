@@ -53,6 +53,10 @@ A private task is never visible to other members, guests, the assistant (tools a
 
 Incoming times (UTC, `TZID` or floating) are read as household time (`TZ`, default Europe/Berlin).
 
+## Reading an existing calendar
+
+The iPhone can read the household's own calendar (bin collection → one task per bin) and write household tasks into an existing calendar, both ways. See [calendar-sync.md](calendar-sync.md).
+
 ## Calendar subscription (webcal)
 
 For calendars without CalDAV (Google Calendar, Outlook): `GET /kalender-abo/<secret>.ics`, read-only, `REFRESH-INTERVAL` one hour. Holds the household's tasks with a date, the member's own private ones only when `with_private` was chosen. Secrets carry the household routing prefix (cloud) and are stored as a hash; an unknown or revoked link answers 404. App passwords and feed links stop working while their member is a permanent guest (CalDAV 401, feed 404) and work again when they are a member again.

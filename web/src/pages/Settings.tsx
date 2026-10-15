@@ -38,6 +38,7 @@ import { MoveInCard, MoveOutCard } from './MoveSettings';
 import { MyListViewCard } from '../shop/trust';
 import { NotifyMine } from './NotifyMine';
 import { CalDavCard, CalendarFeedCard } from '../shop/bridges';
+import { CalendarReadCard } from './CalendarSync';
 import { LunchboxCard } from '../shop/forms';
 import { PulseSettingsCard } from '../pulse';
 import { ModulesCard } from './Modules';
@@ -124,6 +125,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
       {tab === 'account' && me.actor.userId && <MyListViewCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <FocusSettingsCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarReadCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalDavCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarFeedCard />}
       {tab === 'account' && <MyAccount me={me} />}

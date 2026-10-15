@@ -1548,6 +1548,23 @@
         }
       }
     },
+    "%d collection dates found": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d collection dates found"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Abfuhrtermine gefunden"
+          }
+        }
+      }
+    },
     "%d confirmed": {
       "extractionState": "manual",
       "localizations": {
@@ -1765,6 +1782,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Einträge"
+          }
+        }
+      }
+    },
+    "%d entries written": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d entries written"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Einträge geschrieben"
           }
         }
       }
@@ -2887,6 +2921,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d vergeben"
+          }
+        }
+      }
+    },
+    "%d tasks moved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tasks moved"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Aufgaben verschoben"
           }
         }
       }
@@ -5356,6 +5407,23 @@
         }
       }
     },
+    "AI check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI check"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgleich mit KI"
+          }
+        }
+      }
+    },
     "AI for the whole household": {
       "extractionState": "manual",
       "localizations": {
@@ -5407,6 +5475,23 @@
         }
       }
     },
+    "AI is off in this household or for you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is off in this household or for you."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KI ist in diesem Haushalt oder für dich aus."
+          }
+        }
+      }
+    },
     "AI is switched off for you. ToHuus still understands simple sentences like “milk and bread”.": {
       "extractionState": "manual",
       "localizations": {
@@ -5420,6 +5505,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "KI ist für dich ausgeschaltet. Einfache Sätze wie „Milch und Brot“ versteht ToHuus trotzdem."
+          }
+        }
+      }
+    },
+    "AI may match calendar entries with tasks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI may match calendar entries with tasks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KI darf Kalendereinträge mit Aufgaben abgleichen"
           }
         }
       }
@@ -5505,6 +5607,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zugangscode"
+          }
+        }
+      }
+    },
+    "Access is off. You can allow it in the iPhone Settings › ToHuus › Calendars (“Full access”).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access is off. You can allow it in the iPhone Settings › ToHuus › Calendars (“Full access”)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Zugriff ist aus. Du kannst ihn in den iPhone-Einstellungen › ToHuus › Kalender erlauben („Voller Zugriff“)."
           }
         }
       }
@@ -7766,6 +7885,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Allergien bleiben in eurem Haushalt. An den Assistenten gehen sie nur, wenn ihr das in den Einstellungen erlaubt."
+          }
+        }
+      }
+    },
+    "Allow calendar access": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow calendar access"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalenderzugriff erlauben"
           }
         }
       }
@@ -10180,6 +10316,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abrechnung"
+          }
+        }
+      }
+    },
+    "Bin collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bin collection"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Müllabfuhr"
           }
         }
       }
@@ -17698,6 +17851,23 @@
         }
       }
     },
+    "Each bin becomes one task that follows the dates – with taking turns and “Mach ich” like every task. Don’t want one? Archive the task.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each bin becomes one task that follows the dates – with taking turns and “Mach ich” like every task. Don’t want one? Archive the task."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede Tonne wird eine Aufgabe, die den Terminen folgt – mit Abwechseln und „Mach ich“ wie jede Aufgabe. Eine willst du nicht? Archivier die Aufgabe."
+          }
+        }
+      }
+    },
     "Each code printed is noted for the admins.": {
       "extractionState": "manual",
       "localizations": {
@@ -21642,6 +21812,23 @@
         }
       }
     },
+    "From ToHuus – move it here and the task moves too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From ToHuus – move it here and the task moves too."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus ToHuus – verschiebst du den Eintrag hier, zieht die Aufgabe mit."
+          }
+        }
+      }
+    },
     "From WhatsApp, Notes or an e-mail – one thing per line or separated by commas.": {
       "extractionState": "manual",
       "localizations": {
@@ -22131,6 +22318,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Leg alles bereit – tipp an, was schon draußen steht."
+          }
+        }
+      }
+    },
+    "Get suggestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get suggestions"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschläge holen"
           }
         }
       }
@@ -24103,6 +24307,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Haushaltseinstellungen"
+          }
+        }
+      }
+    },
+    "Household tasks with a date go into this calendar – never private ones. Move an entry there and the task moves too. Delete it there and ToHuus doesn’t write it again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household tasks with a date go into this calendar – never private ones. Move an entry there and the task moves too. Delete it there and ToHuus doesn’t write it again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgaben des Haushalts mit Datum kommen in diesen Kalender – private nie. Verschiebst du dort einen Eintrag, zieht die Aufgabe mit. Löschst du ihn dort, trägt ToHuus ihn nicht wieder ein."
           }
         }
       }
@@ -27520,6 +27741,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zuletzt gedruckt %@"
+          }
+        }
+      }
+    },
+    "Last read %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last read %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt gelesen %@"
           }
         }
       }
@@ -32233,6 +32471,23 @@
         }
       }
     },
+    "No calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keinen Kalender"
+          }
+        }
+      }
+    },
     "No category": {
       "extractionState": "manual",
       "localizations": {
@@ -32280,6 +32535,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noch kein Chat verbunden."
+          }
+        }
+      }
+    },
+    "No collection dates found.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No collection dates found."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Abfuhrtermine gefunden."
           }
         }
       }
@@ -34592,6 +34864,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nichts zu „%@“"
+          }
+        }
+      }
+    },
+    "Nothing found that looks like a household task.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing found that looks like a household task."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts gefunden, was nach einer Aufgabe im Haushalt aussieht."
           }
         }
       }
@@ -37129,6 +37418,23 @@
         }
       }
     },
+    "Only for you and only with your OK: your iPhone sends the titles and days of the next 30 days of the calendars you picked to the language model (Mistral, via OpenRouter, USA). It suggests what is a household task, you decide. Nothing is stored. The bins don’t need AI.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only for you and only with your OK: your iPhone sends the titles and days of the next 30 days of the calendars you picked to the language model (Mistral, via OpenRouter, USA). It suggests what is a household task, you decide. Nothing is stored. The bins don’t need AI."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur für dich und nur mit deinem OK: Dein iPhone schickt Titel und Tage der nächsten 30 Tage aus den Kalendern, die du ausgewählt hast, an das Sprachmodell (Mistral, vermittelt über OpenRouter, USA). Es schlägt vor, was eine Aufgabe im Haushalt ist, du entscheidest. Gespeichert wird nichts. Für die Müllabfuhr braucht es keine KI."
+          }
+        }
+      }
+    },
     "Only for you – the others decide for themselves.": {
       "extractionState": "manual",
       "localizations": {
@@ -37278,6 +37584,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Wochenende nur bestellen"
+          }
+        }
+      }
+    },
+    "Only the calendars you tick. ToHuus looks 4 months ahead.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the calendars you tick. ToHuus looks 4 months ahead."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur die Kalender mit Haken. ToHuus schaut 4 Monate voraus."
           }
         }
       }
@@ -37720,6 +38043,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erinnerungen öffnen – eure ToHuus-Listen stehen unter dem neuen Account."
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
           }
         }
       }
@@ -43861,6 +44201,23 @@
         }
       }
     },
+    "Read these calendars": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read these calendars"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Kalender lesen"
+          }
+        }
+      }
+    },
     "Read with AI": {
       "extractionState": "manual",
       "localizations": {
@@ -43874,6 +44231,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mit KI lesen"
+          }
+        }
+      }
+    },
+    "Read your existing calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read your existing calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Euren Kalender lesen"
           }
         }
       }
@@ -45098,6 +45472,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wird fürs nächste Mal gemerkt."
+          }
+        }
+      }
+    },
+    "Remind about the bin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind about the bin"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An die Tonne erinnern"
           }
         }
       }
@@ -53772,6 +54163,23 @@
         }
       }
     },
+    "Switch on again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch on again"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wieder einschalten"
+          }
+        }
+      }
+    },
     "Switch to %@?": {
       "extractionState": "manual",
       "localizations": {
@@ -54244,6 +54652,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Liste aus einer anderen App übernehmen"
+          }
+        }
+      }
+    },
+    "Take over as a task": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take over as a task"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als Aufgabe übernehmen"
           }
         }
       }
@@ -59055,6 +59480,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ToHuus passt Vorschläge und Wörter daran an. Du kannst es jederzeit ändern."
+          }
+        }
+      }
+    },
+    "ToHuus can read a calendar you already keep – your family calendar in iCloud, for example – and finds the bin collection in it. Only the kind and the day reach ToHuus; office days, doctor’s appointments and everything else stay on your iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus can read a calendar you already keep – your family calendar in iCloud, for example – and finds the bin collection in it. Only the kind and the day reach ToHuus; office days, doctor’s appointments and everything else stay on your iPhone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus kann einen Kalender lesen, den ihr schon habt – zum Beispiel euren Familienkalender in iCloud – und findet darin die Müllabfuhr. Bei ToHuus kommen nur die Art und der Tag an. Bürotage, Arzttermine und alles andere bleiben auf deinem iPhone."
           }
         }
       }
@@ -64703,6 +65145,23 @@
         }
       }
     },
+    "Write tasks into": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write tasks into"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgaben eintragen in"
+          }
+        }
+      }
+    },
     "Write to %@": {
       "extractionState": "manual",
       "localizations": {
@@ -69293,6 +69752,23 @@
         }
       }
     },
+    "from the calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from the calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aus dem Kalender"
+          }
+        }
+      }
+    },
     "from the sofa": {
       "extractionState": "manual",
       "localizations": {
@@ -70432,6 +70908,23 @@
         }
       }
     },
+    "next collection %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "next collection %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nächste Abfuhr %@"
+          }
+        }
+      }
+    },
     "next idea": {
       "extractionState": "manual",
       "localizations": {
@@ -70530,6 +71023,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ohne Datum"
+          }
+        }
+      }
+    },
+    "no date ahead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no date ahead"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kein Termin in Sicht"
           }
         }
       }
@@ -71108,6 +71618,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "auf der Liste"
+          }
+        }
+      }
+    },
+    "on the morning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the morning"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "am Morgen"
           }
         }
       }
@@ -72387,6 +72914,23 @@
         }
       }
     },
+    "switched off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "switched off"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ausgeschaltet"
+          }
+        }
+      }
+    },
     "synced": {
       "extractionState": "manual",
       "localizations": {
@@ -72485,6 +73029,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "die Kategorie"
+          }
+        }
+      }
+    },
+    "the evening before": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the evening before"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "am Vorabend"
           }
         }
       }
@@ -73607,6 +74168,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "„%@“ hinzugefügt"
+          }
+        }
+      }
+    },
+    "“%@” is a task now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is a task now."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ ist jetzt eine Aufgabe."
           }
         }
       }

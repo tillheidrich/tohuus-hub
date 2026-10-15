@@ -4,6 +4,13 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Kalender lesen (docs/calendar-sync.md):
+  - The iPhone reads calendars you pick (e.g. the family calendar in iCloud) and finds the bin collection without AI. Each bin becomes one task that follows the dates ("Gelbe Tonne raus", the evening before or on the morning). Only the kind and the day reach the server.
+  - Optionally, household tasks with a date go into an existing calendar, both ways.
+  - "KI darf Kalendereinträge mit Aufgaben abgleichen" is its own consent per person and names the recipients. It suggests household tasks from other entries and stores nothing.
+  - Web: settings card and "aus dem Kalender" on tasks.
+  - New: `GET /api/calsync`, `POST /api/calsync/dates`, `PUT /api/calsync/settings`, `POST /api/calsync/kinds/:kind/revive`, `PUT /api/calsync/ai`, `POST /api/calsync/suggest`; `ext_kind` on tasks.
+  - iOS asks for full calendar access only on that screen (`NSCalendarsFullAccessUsageDescription`). The privacy policy mentions calendars.
 - Web layout: text no longer touches the border in the new cards. Fokus, the Denkarbeit-Check, Extras, Sterne and Ratgeber cards have inner padding, the Denkarbeit answers wrap inside the card, and the teaser text in Aufgaben stays in its row. `scripts/ui-audit.mjs` reports this as `tight`, and the audit now visits `/fokus`, `/denkarbeit` and `/rueckblick`. The website screenshots are renewed.
 - Geld: the month's purchases right on the Geld page ("Einkäufe", newest first) – tap one for its items, prices and who it was for (receipt) or the expense form (web and iPhone). `purchases` in `GET /api/money/overview`.
 - Rückblick "Euer Jahr to Huus" (docs/review.md): the household's year in a few cards – bought, planned, cooked, done, used up, spent – as "wir", no names, no ranking, nothing private, no money in gentle mode. Built but off: needs `YEAR_REVIEW=on` or the back office switch; then on Heute from 1 December to 15 January, page `/rueckblick` (web and iPhone). `GET /api/review`.

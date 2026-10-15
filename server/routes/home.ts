@@ -34,6 +34,7 @@ import { LOAD_ANSWERS, loadCards, setLoadAnswer, taskFromCard } from '../lib/loa
 import { BLICK_AREAS, type BlickArea, blickOverview, setCompareOptIn } from '../lib/blick.js';
 import { pointsWeek, setPointsSettings } from '../lib/points.js';
 import { reviewAllowed, reviewSeason, yearReview } from '../lib/review.js';
+import { BIN_KINDS, calsyncView, reviveKind, setCalendarAiConsent, setCalsyncSettings, suggestFromEvents, syncDates } from '../lib/calsync.js';
 import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
@@ -255,6 +256,56 @@ r.put('/points/settings', (req, res) => {
     res.json(pointsWeek(memberOf(req)));
   } catch (e) {
     res.status((e as { status?: number }).status ?? 400).json({ error: (e as Error).message });
+  }
+});
+
+// ---------------------------------------------------------------- Kalender lesen (lib/calsync.ts, docs/calendar-sync.md)
+
+const noCalGuest = (req: any, res: any) => {
+  if (req.actor?.role === 'guest' || req.actor?.houseGuest || !memberOf(req)) {
+    res.status(403).json({ error: t('Only household members can do this') });
+    return true;
+  }
+  return false;
+};
+const DAY = z.string().regex(/^\d{4}-\d\d-\d\d$/);
+r.get('/calsync', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  res.json(calsyncView(memberOf(req)));
+});
+/** The phone's matches: kind + day only, never titles. */
+r.post('/calsync/dates', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  const kinds = BIN_KINDS.map((k) => k.key) as [string, ...string[]];
+  const b = z
+    .object({ source: z.string().min(4).max(80), from: DAY, to: DAY, dates: z.array(z.object({ kind: z.enum(kinds), day: DAY })).max(400) })
+    .parse(req.body);
+  res.json(syncDates(b));
+});
+r.put('/calsync/settings', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  res.json({ settings: setCalsyncSettings(z.object({ offset: z.enum(['evening', 'morning']) }).parse(req.body)) });
+});
+r.post('/calsync/kinds/:kind/revive', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  reviveKind(z.enum(BIN_KINDS.map((k) => k.key) as [string, ...string[]]).parse(req.params.kind));
+  res.json(calsyncView(memberOf(req)));
+});
+/** "KI darf Kalendereinträge mit Aufgaben abgleichen" – per person, own consent */
+r.put('/calsync/ai', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  res.json(setCalendarAiConsent(memberOf(req)!, z.object({ consent: z.boolean() }).parse(req.body).consent));
+});
+r.post('/calsync/suggest', async (req, res) => {
+  if (noCalGuest(req, res)) return;
+  const b = z
+    .object({ events: z.array(z.object({ title: z.string().max(200), day: DAY, time: z.string().regex(/^\d\d:\d\d$/).nullable().optional() })).max(200) })
+    .parse(req.body);
+  try {
+    res.json(await suggestFromEvents(memberOf(req)!, b.events));
+  } catch (e) {
+    const err = e as { status?: number; code?: string; message: string };
+    res.status(err.status ?? (err.code === 'ai.disabled' ? 403 : 502)).json({ error: err.message, code: err.code });
   }
 });
 
