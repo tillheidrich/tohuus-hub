@@ -117,6 +117,10 @@ struct MeResponse: Decodable, Sendable {
     var listPrefs: JSONValue?
     /// who lives here: { form: single|couple|family|wg|…, form_chosen, ui } (server/lib/places.ts homeSetup)
     var home: JSONValue?
+    /// the website for the share footer (docs/sharing.md), e.g. https://tohuus.heidrich-digital.de
+    var siteUrl: String?
+    /// the household keeps "— geteilt aus ToHuus · …" under shared texts (admin switch, default on)
+    var shareFooter: Bool?
     /// a household of one (chosen at sign-up) – "Bring mir was" has nobody to ask, like the web
     var isSingleHousehold: Bool { home?["form"]?.string == "single" && (home?["form_chosen"]?.bool ?? home?["formChosen"]?.bool ?? true) }
 

@@ -100,6 +100,7 @@ final class AppModel {
             guestLevel = me.guestLevel
             isAdmin = me.role == "admin"
             if let p = me.listPrefs { ListPrefsSync.adopt(p) }
+            ShareFooter.adopt(site: me.siteUrl, on: me.shareFooter)
         }
         if let s: AIStatus = try? await api.get("api/assistant/status") {
             aiStatus = s

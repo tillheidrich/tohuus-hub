@@ -249,6 +249,16 @@ struct WeekPlanSection: View {
         }
     }
 
+    /// "Mo., 13.10.: Linsensuppe, Salat" – one line per planned day; nil when nothing is planned
+    private var planShareText: String? {
+        let lines = model.days.compactMap { day -> String? in
+            let titles = model.entries(day).map(\.title)
+            return titles.isEmpty ? nil : "– " + CookDay.short(day) + ": " + titles.joined(separator: ", ")
+        }
+        guard !lines.isEmpty else { return nil }
+        return ShareText.make(title: LF("Our week plan from %@", CookDay.short(model.from)), lines: lines, medium: "plan")
+    }
+
     private var actions: some View {
         VStack(spacing: Theme.Space.s3) {
             Button { Task { await fillWeek() } } label: {
@@ -267,6 +277,13 @@ struct WeekPlanSection: View {
                     .disabled(!model.busy.isEmpty || (model.plan?.entries.isEmpty ?? true))
                 Button { showRotation = true } label: {
                     Label(rotationLabel, systemImage: "repeat").lineLimit(1)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
+            if let text = planShareText {
+                // the week plan to Notes, Mail or the family chat – plain text
+                ShareLink(item: text, subject: Text(L("Our week plan"))) {
+                    Label(L("Share the week plan"), systemImage: "square.and.arrow.up")
                 }
                 .buttonStyle(SecondaryButtonStyle())
             }

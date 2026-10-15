@@ -1058,7 +1058,8 @@ extension ShoppingView {
         do {
             let text = try await store.api.exportList()
             guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { show(L("The list is empty.")); return }
-            shareText = ShareText(text: (store.list.currentList?.name ?? L("Shopping list")) + "\n" + text)
+            let lines = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            shareText = ShareText(text: ShareText.make(title: store.list.currentList?.name ?? L("Shopping list"), lines: lines, medium: "list"))
         } catch {
             show(APIError.from(error).localizedDescription)
         }

@@ -14,6 +14,8 @@ struct TodayPayload: Decodable, Sendable {
     var cookToday: CookToday?
     var money: TodayMoney?
     @Lossy var notices: [Notice]
+    /// "Fertig für heute": nothing due or overdue for me and nothing waiting for a look (docs/checkin.md)
+    var calm: Bool?
 
     var householdName: String? { household?.string ?? household?["name"]?.string }
 

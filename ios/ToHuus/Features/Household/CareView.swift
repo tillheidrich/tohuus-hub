@@ -347,6 +347,10 @@ struct CareView: View {
             }
             if let error { Section { ErrorBanner(message: error) { Task { await load() } } }.listRowBackground(Color.clear) }
             if let data {
+                if data.me != nil {
+                    CareForHintCard(api: api, refresh: reloads, inList: true) { msg in toast = ToastMessage(text: msg) }
+                    CarryingSection(api: api, refresh: reloads) { id in detail = data.tasks.first { $0.id == id } }
+                }
                 if data.tasks.contains(where: { $0.offer?.to.id == data.me && data.me != nil }) {
                     Section { OfferAsks(api: api, tasks: data.tasks, me: data.me) { Task { await load() } } }
                 }
@@ -358,7 +362,22 @@ struct CareView: View {
                                    message: L("Pick a few from the suggestions below – one tap each. You can adjust the interval later."), art: .calendar)
                         .listRowBackground(Color.clear)
                 }
-                if !due.isEmpty { Section(L("Due")) { ForEach(due) { row($0) } } }
+                if !due.isEmpty {
+                    Section {
+                        ForEach(due) { row($0) }
+                    } header: {
+                        HStack {
+                            Text(L("Due"))
+                            Spacer()
+                            // to Notes, Mail or a message – what's due, as plain text
+                            ShareLink(item: ShareText.make(title: L("Due tasks"), lines: due.map { "☐ " + $0.name + " – " + CareLabels.due($0) }, medium: "tasks"),
+                                      subject: Text(L("Due tasks"))) {
+                                Image(systemName: "square.and.arrow.up").frame(minWidth: 44, minHeight: 44)
+                            }
+                            .accessibilityLabel(L("Share due tasks"))
+                        }
+                    }
+                }
                 if !later.isEmpty { Section(L("Later")) { ForEach(later) { row($0) } } }
                 WhoDoesWhatSection(api: api, refresh: data.tasks.count + recent.count, onChanged: { Task { await load() } })
                 if !recent.isEmpty {
@@ -388,6 +407,7 @@ struct CareView: View {
                                 }
                             } icon: { Image(systemName: "brain").foregroundStyle(Theme.primaryText) }
                         }
+                        CareForLink(api: api)
                     }
                     WeekReviewLink(api: api)
                 }

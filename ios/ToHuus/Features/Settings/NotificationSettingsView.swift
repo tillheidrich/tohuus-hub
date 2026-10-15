@@ -113,6 +113,7 @@ struct NotificationSettingsView: View {
                 }
             }
             if let api = app.api, !app.isGuest {
+                CheckinSettingSection(api: api)
                 Section {
                     NavigationLink { HouseholdNotifyView(api: api) } label: {
                         Label(L("For the whole household"), systemImage: "house")

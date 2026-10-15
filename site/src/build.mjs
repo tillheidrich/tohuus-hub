@@ -84,7 +84,7 @@ const COPY = {
     ogAlt: 'Das ToHuus-Zeichen, der Satz „Damit nicht einer alles im Kopf haben muss.“ und vier gezeichnete Wohnformen.',
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
-    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll' },
+    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll', diff: 'was-anders-ist' },
     nav: [['#funktionen', 'Funktionen'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
@@ -218,6 +218,31 @@ const COPY = {
       ],
       note: 'ToHuus setzt keinen Keller, keine Gefriertruhe und keinen Thermomix voraus. Ihr legt fest, welche Orte es bei euch gibt.',
     },
+    diff: {
+      label: 'Was anders ist', h2: 'Nicht das Tool für alles. Der Teil, der Haushalt ist.',
+      intro: 'ToHuus ist der smarte Assistent, der nicht den Anspruch hat, das Tool für alles zu sein. Für Termine, Notizen und Nachrichten habt ihr schon gute Apps. ToHuus nimmt sich davon, was Haushalt ist, und arbeitet mit ihnen zusammen.',
+      list: [
+        ['list', 'Ein Ort für Liste, Kochen, Aufgaben und Geld', 'Was ihr einkauft, wird gekocht, und dafür geht das Geld weg. ToHuus verbindet das aus euren Bons und eurer Liste. Vier Apps nebeneinander braucht ihr dafür nicht.'],
+        ['users', 'Lernt, wer was macht, ohne Punkte', 'ToHuus merkt sich, wer eine Aufgabe meistens übernimmt, und schlägt es beim nächsten Mal vor. Punkte, Ranglisten und Serien gibt es nicht, Sterne nur, wenn ihr sie einschaltet.'],
+        ['feather', 'Unsichtbare Arbeit wird sichtbar', 'Unter „Im Kopf“ steht, woran jemand gerade denkt, unter „Nebenbei erledigt“, was ohne Liste passiert ist. Die anderen können „Danke“ sagen. Gezählt wird dabei nichts.'],
+        ['suitcase', 'Wenn jemand weg ist', 'Dienstreise, ein Wochenende mit Freunden oder Krankenhaus: Für die Zeit legt ihr fest, wer was übernimmt und was warten darf. Die Aufgaben zeigen dann, wer einspringt.'],
+        ['house', 'Raum für alle, die sich kümmern', 'Wer für Eltern oder Großeltern da ist, legt Besuche, Arzttermine und Besorgungen als Aufgaben an, privat, solange du willst. Allein mit Kindern? Dann gibt es keine Vergleiche, nur den Blick auf das, was du geschafft hast.'],
+        ['moonstars', 'Ruhig gebaut', 'Kein Feed, keine Serien, Mitteilungen auf Wunsch gebündelt zu einer Uhrzeit, die du wählst. Ist für heute alles Wichtige erledigt, sagt ToHuus das und lässt dich in Ruhe.'],
+        ['lock', 'Privat bleibt privat', 'KI nur mit eurer Zustimmung und über Mistral, selbst gehostet mit eigener KI oder ganz ohne. Gesundheitsangaben gehen nur an eine KI, wenn ihr das ausdrücklich erlaubt. Was du über Menschen einträgst, um die du dich kümmerst, nie.'],
+        ['plug', 'Arbeitet mit dem, was ihr nutzt', 'Termine landen in Apple Kalender, Google oder Outlook, Aufgaben auf Wunsch in Apple Erinnerungen. Listen schickst du als Text an Notizen, Mail oder Nachrichten.'],
+      ],
+      tableH: 'Neben anderen Apps', cols: ['Gut für', 'Was ToHuus anders macht'],
+      rows: [
+        ['Bring!', 'Eine geteilte Einkaufsliste, im Laden schnell mit einer Hand bedient.', 'Auch eine geteilte Liste, im Laden nach Gängen sortiert. Dazu merkt ToHuus sich aus Bons und Häkchen, wann etwas wieder fällig ist, und hängt Kochen und Geld daran.'],
+        ['Cozi, FamilyWall', 'Familienkalender, Listen und Nachrichten an einem Ort.', 'Kein eigener Kalender und kein Chat. Termine gehen in den Kalender, den ihr schon nutzt. ToHuus kümmert sich um Einkauf, Kochen, Geld und Aufgaben.'],
+        ['OurHome', 'Aufgaben für die Familie mit Punkten und Belohnungen.', 'Aufgaben mit Abwechseln, aber ohne Punkte und Ranglisten. ToHuus lernt, wer was meistens macht.'],
+        ['Fair Play, FairShare', 'Unsichtbare Arbeit sichtbar machen, über Bereiche, die ihr miteinander aufteilt.', 'Die Bereiche lernt ToHuus aus eurem Alltag. „Im Kopf“ zeigt auch das Kleine, das auf keiner Karte steht.'],
+        ['Todoist, Apple Erinnerungen', 'Aufgabenlisten für alles, vom Job bis zum Einkauf.', 'Nur Haushalt, dafür mit Abwechseln, Vorschlägen und dem Blick darauf, wer was im Kopf hat. Aufgaben stehen auf Wunsch zusätzlich in Apple Erinnerungen.'],
+        ['Apple Notizen', 'Schnell etwas aufschreiben und teilen.', 'ToHuus ersetzt sie nicht: Listen gehen als Text an Notizen, Mail oder Nachrichten.'],
+      ],
+      note: 'Stand Oktober 2026, nach den Beschreibungen der Anbieter und unserer eigenen Recherche. Die Namen gehören ihren Inhabern, ToHuus steht in keiner Verbindung zu ihnen.',
+      share: 'Zahlen und Sätze zum Teilen', shareHref: 'teilen.html',
+    },
     ways: {
       label: 'Zwei Wege', h2: 'In der ToHuus Cloud oder auf deinem eigenen Server.',
       intro: 'Es ist dieselbe App mit demselben Code. Der Unterschied ist, wer den Server betreibt.',
@@ -344,7 +369,7 @@ const COPY = {
     ogAlt: 'The ToHuus mark, the line “So one person doesn’t have to keep it all in their head.” and four drawn homes.',
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
-    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind' },
+    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind', diff: 'what-is-different' },
     nav: [['#features', 'Features'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
@@ -477,6 +502,31 @@ const COPY = {
         ['a', 'Looking after someone', 'If you shop for parents or grandparents too, connect the two households and see what is missing there.'],
       ],
       note: 'ToHuus does not assume a cellar, a chest freezer or a Thermomix. You decide which places your home has.',
+    },
+    diff: {
+      label: 'What is different', h2: 'Not the tool for everything. The part that is home.',
+      intro: 'ToHuus is the smart assistant that does not try to be the tool for everything. For appointments, notes and messages you already have good apps. ToHuus takes from them what is household work and works alongside them.',
+      list: [
+        ['list', 'One place for the list, cooking, tasks and money', 'What you buy gets cooked, and that is where the money goes. ToHuus links them from your receipts and your list. You do not need four apps side by side.'],
+        ['users', 'Learns who does what, without points', 'ToHuus remembers who usually takes on a task and suggests them next time. There are no points, rankings or streaks, and stars only if you switch them on.'],
+        ['feather', 'Invisible work becomes visible', '“On my mind” shows what someone is thinking about, “Done on the side” what happened without a list. The others can say “Thanks”. Nothing is counted.'],
+        ['suitcase', 'When someone is away', 'A business trip, a weekend with friends or a hospital stay: for that time you decide who takes over what and what can wait. The tasks then show who steps in.'],
+        ['house', 'Room for everyone who looks after someone', 'If you look after parents or grandparents, visits, doctor’s appointments and errands become tasks, private for as long as you like. On your own with children? Then there are no comparisons, just a look at what you got done.'],
+        ['moonstars', 'Calm by design', 'No feed, no streaks, notifications bundled at a time you choose if you like. When everything important is done for today, ToHuus says so and leaves you alone.'],
+        ['lock', 'Private stays private', 'AI only with your consent and through Mistral, self-hosted with your own AI or none at all. Health details only go to an AI if you explicitly allow it. What you note about people you look after, never.'],
+        ['plug', 'Works with what you already use', 'Appointments go to Apple Calendar, Google or Outlook, tasks to Apple Reminders if you like. Lists go as text to Notes, Mail or Messages.'],
+      ],
+      tableH: 'Next to other apps', cols: ['Good for', 'What ToHuus does differently'],
+      rows: [
+        ['Bring!', 'A shared shopping list, quick to use with one hand in the shop.', 'A shared list too, sorted by aisle in the shop. On top, ToHuus learns from receipts and ticks when something is due again, and links cooking and money to it.'],
+        ['Cozi, FamilyWall', 'Family calendar, lists and messages in one place.', 'No calendar of its own and no chat. Appointments go into the calendar you already use. ToHuus looks after shopping, cooking, money and tasks.'],
+        ['OurHome', 'Family chores with points and rewards.', 'Tasks with taking turns, but no points or rankings. ToHuus learns who usually does what.'],
+        ['Fair Play, FairShare', 'Making invisible work visible, through areas you split between you.', 'ToHuus learns the areas from your everyday life. “On my mind” also shows the small things that are on no card.'],
+        ['Todoist, Apple Reminders', 'To-do lists for everything, from work to shopping.', 'Only the household, but with taking turns, suggestions and a view of who keeps what in mind. Tasks can also appear in Apple Reminders.'],
+        ['Apple Notes', 'Writing something down quickly and sharing it.', 'ToHuus does not replace it: lists go as text to Notes, Mail or Messages.'],
+      ],
+      note: 'As of October 2026, based on the providers’ own descriptions and our research. The names belong to their owners; ToHuus is not affiliated with them.',
+      share: 'Figures and lines to share', shareHref: 'share.html',
     },
     ways: {
       label: 'Two ways', h2: 'In ToHuus Cloud or on your own server.',
@@ -762,6 +812,7 @@ function page(c) {
   const HA = c.ha;
   const HI = c.house;
   const N = c.nd;
+  const X = c.diff;
   const m = homeMeta(c);
   return `${pageTop(c, m)}<main id="main">
 
@@ -927,6 +978,29 @@ ${N.list.map(([i, t, s], k) => `      <li class="reveal" style="--d:${(k % 4) * 
     </ul>
     <p class="note reveal">${N.note}</p>
     <p class="more reveal"><a href="${helpIndexHref(c.lang)}${N.help}">${N.more}${ico('arrow')}</a></p>
+  </div>
+</section>
+
+<section class="diff" id="${id.diff}" aria-labelledby="diff-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="reveal" id="diff-h">${X.h2}</h2>
+      <p class="intro reveal">${X.intro}</p>
+    </div>
+    <ul class="nd-grid diff-grid">
+${X.list.map(([i, t, s], k) => `      <li class="reveal" style="--d:${(k % 4) * 50}ms"><span class="nd-ico">${ico(i)}</span><b>${t}</b><span>${s}</span></li>`).join('\n')}
+    </ul>
+    <h3 class="diff-table-h reveal">${X.tableH}</h3>
+    <div class="table-wrap reveal">
+      <table class="compare vs">
+        <thead><tr><td></td><th scope="col">${X.cols[0]}</th><th scope="col">${brandMark(24)}${X.cols[1]}</th></tr></thead>
+        <tbody>
+${X.rows.map(([h, a, z]) => `          <tr><th scope="row">${h}</th><td data-col="${X.cols[0]}">${a}</td><td data-col="${X.cols[1]}">${z}</td></tr>`).join('\n')}
+        </tbody>
+      </table>
+    </div>
+    <p class="note reveal">${X.note}</p>
+    <p class="more reveal"><a href="${X.shareHref}">${X.share}${ico('arrow')}</a></p>
   </div>
 </section>
 
@@ -1330,6 +1404,7 @@ function blogFacts(c) {
     <p class="label help-crumbs"><a href="./">${B.title}</a></p>
     <h1 id="facts-h">${B.factsH1}</h1>
     <p class="legal-note help-lede">${B.factsLede.replace('{n}', String(count))}</p>
+    ${SHARE && c.lang === 'de' ? `<p class="blog-facts-link"><a class="btn" href="../de/teilen.html">${ico('share')}${SHARE_COPY.de.h1}</a></p>` : ''}
   </div>
 </section>
 
@@ -1370,7 +1445,7 @@ function blogIndex(c) {
 </section>
 
 <div class="wrap help-index">
-  ${posts.some((p) => p.facts?.length) ? `<p class="blog-facts-link"><a class="btn" href="fakten.html">${ico('chart')}${B.factsLink}</a></p>` : ''}
+  ${posts.some((p) => p.facts?.length) || (SHARE && c.lang === 'de') ? `<p class="blog-facts-link">${posts.some((p) => p.facts?.length) ? `<a class="btn" href="fakten.html">${ico('chart')}${B.factsLink}</a>` : ''}${SHARE && c.lang === 'de' ? `<a class="btn" href="../de/teilen.html">${ico('share')}${SHARE_COPY.de.h1}</a>` : ''}</p>` : ''}
   <ul class="help-cards">
 ${posts.map((p) => `    <li><a class="help-card" href="${p.slug}.html"><b>${p.title}</b><span>${p.desc}</span><span><time datetime="${p.date}">${fmtPostDate(c.lang, p.date)}</time></span>${ico('arrow')}</a></li>`).join('\n')}
   </ul>
@@ -1391,7 +1466,7 @@ function blogPost(c, p) {
   const m = blogMeta(c, p);
   const secs = p.sections.map(([h, body]) => ({ id: anchorId(h), h, body }));
   const help = (p.help ?? []).map((sl) => helpBySlug(c.lang, sl)).filter(Boolean);
-  const toc = [...secs, ...(p.facts?.length ? [{ id: 'fakten', h: B.factsHere }] : []), ...(p.faq?.length ? [{ id: 'faq', h: B.faq }] : [])];
+  const toc = [...secs, ...(p.facts?.length ? [{ id: 'fakten', h: B.factsHere }] : []), ...(shareStrip(c, p) ? [{ id: 'teilen', h: SHARE_COPY.de.post }] : []), ...(p.faq?.length ? [{ id: 'faq', h: B.faq }] : [])];
   const ld = [{ '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.desc, datePublished: p.date, dateModified: p.updated ?? p.date,
     inLanguage: c.lang, mainEntityOfPage: m.url, image: `${SITE}assets/img/og-${c.lang}.png`,
     author: { '@type': 'Organization', name: 'ToHuus', url: c.url }, publisher: { '@type': 'Organization', name: 'Heidrich Digital', url: 'https://heidrich-digital.de' } },
@@ -1433,7 +1508,7 @@ ${p.facts?.length ? `    <section id="fakten" aria-labelledby="fakten-h">
       ${p.facts.map((f, k) => factCard(c, p, f, k + 1)).join('\n      ')}
       </ul>
     </section>` : ''}
-${p.faq?.length ? `    <section id="faq" aria-labelledby="faq-h">
+${shareStrip(c, p)}${p.faq?.length ? `    <section id="faq" aria-labelledby="faq-h">
       <h2 id="faq-h">${B.faq}</h2>
 ${p.faq.map(([q, a]) => `      <h3>${q}</h3>\n      <p>${a}</p>`).join('\n')}
     </section>` : ''}
@@ -1459,6 +1534,126 @@ ${pageFoot(c, m)}
 </html>
 `;
 }
+
+// ---------------------------------------------------------------- share cards ("Zum Teilen", docs/sharing.md)
+/**
+ * The PNGs come from scripts/share-cards.mjs (site/assets/share/<slug>-4x5.png and -9x16.png, listed in index.json).
+ * German page: site/de/teilen.html, English page: site/share.html. The cards themselves are German, because the
+ * figures are about Germany. The build fails when a listed file is missing.
+ */
+const SHARE = (() => {
+  const f = path.join(ROOT, 'assets/share/index.json');
+  if (!fs.existsSync(f)) return null;
+  const data = JSON.parse(fs.readFileSync(f, 'utf8'));
+  for (const card of data.cards) for (const file of Object.values(card.files)) {
+    if (!fs.existsSync(path.join(ROOT, 'assets/share', file))) throw new Error(`missing share card assets/share/${file} (run scripts/share-cards.mjs)`);
+  }
+  return data;
+})();
+const SHARE_FILE = { de: 'de/teilen.html', en: 'share.html' };
+const SHARE_COPY = {
+  de: {
+    title: 'Zum Teilen: Zahlen und Sätze rund ums Zuhause', h1: 'Zum Teilen',
+    desc: 'Karten zu Pflege, Alleinerziehenden, Mental Load und einem ruhigen Haushalt, jede Zahl mit Quelle. Als Bild für Feed, Story und WhatsApp Status.',
+    lede: 'Zahlen und Sätze rund um Pflege, Alleinerziehende und die Denkarbeit zu Hause. Jede Zahl hat ihre Quelle unten auf der Karte. Speicher dir eine Karte und teil sie, wo du magst.',
+    formats: '4:5 passt in den Feed, 9:16 in Story und WhatsApp Status.',
+    facts: 'Zahlen mit Quelle', brand: 'Von ToHuus', source: 'Quelle:',
+    dl: (f) => (f === '4x5' ? '4:5 laden' : '9:16 laden'), dlLabel: (f, t) => `${t}, Bild im Format ${f === '4x5' ? '4:5' : '9:16'} laden`,
+    note: 'Auf den Karten stehen keine Namen und nichts aus einem Haushalt. Zahlen ohne Quelle gibt es hier nicht, und die Karten versprechen keine Wirkung. Stand: Oktober 2026.',
+    crumb: 'Ratgeber', crumbHref: '../ratgeber/', post: 'Zum Teilen', postNote: 'Diese Karten passen zum Beitrag. Alle Karten findest du unter',
+    lang: null,
+  },
+  en: {
+    title: 'Cards to share: figures and lines about home', h1: 'Cards to share',
+    desc: 'Cards on care, single parents, the mental load and a calm household, every figure with its source. As images for feed, story and WhatsApp Status.',
+    lede: 'Figures and lines about caring for relatives, single parents and the thinking work at home. Every figure has its source at the bottom of the card. The cards are in German, because the figures are about Germany.',
+    formats: '4:5 fits the feed, 9:16 stories and WhatsApp Status.',
+    facts: 'Figures with sources', brand: 'From ToHuus', source: 'Source:',
+    dl: (f) => (f === '4x5' ? 'Get 4:5' : 'Get 9:16'), dlLabel: (f, t) => `${t}, download the ${f === '4x5' ? '4:5' : '9:16'} image`,
+    note: 'The cards carry no names and nothing from a household. There are no figures without a source here, and the cards promise no effects. As of October 2026.',
+    crumb: 'ToHuus', crumbHref: './', lang: 'de',
+  },
+};
+/** Ratgeber posts that show a few matching cards ("Zum Teilen"). */
+const SHARE_ON_POST = {
+  'mental-load-haushalt-fair-verteilen': ['mental-load-termine', 'denkarbeit', 'care-gap'],
+  'mental-load-einkaufen': ['denkarbeit', 'plan-im-kopf', 'brand-gesehen-werden'],
+  'haushalt-mit-adhs': ['mitteilungen-buendeln', 'serien', 'brand-liegen-lassen'],
+  'putzplan-wg-paar-familie': ['danke', 'serien', 'brand-gesehen-werden'],
+};
+
+/** One card on the share page: the 4:5 image, what it says, its source and the two downloads. */
+const shareCard = (c, card, b) => {
+  const S = SHARE_COPY[c.lang];
+  const src = (f) => `${b}assets/share/${card.files[f]}`;
+  const alt = [card.eyebrow, card.value, card.title, card.text].filter(Boolean).join(' ').replace(/"/g, '&quot;');
+  return `<li class="share-item">
+        <figure>
+          <img src="${src('4x5')}" alt="${alt}" width="1080" height="1350" loading="lazy" decoding="async"${S.lang ? ` lang="${S.lang}"` : ''}>
+          <figcaption${S.lang ? ` lang="${S.lang}"` : ''}><b>${card.kind === 'fact' && card.value ? `${card.value} ` : ''}${card.title}</b>${card.source ? `<span>${SHARE_COPY.de.source} <a href="${card.url}">${card.source}</a></span>` : ''}</figcaption>
+        </figure>
+        <p class="share-dl">${Object.keys(card.files).map((f) => `<a class="btn sm" href="${src(f)}" download="tohuus-${card.files[f]}" aria-label="${S.dlLabel(f, card.title.replace(/"/g, '&quot;'))}">${ico('export')}${S.dl(f)}</a>`).join('')}</p>
+      </li>`;
+};
+
+function sharePage(c) {
+  const S = SHARE_COPY[c.lang];
+  const other = c.lang === 'de' ? 'en' : 'de';
+  const rel = (from, to) => (from === 'de' ? (to === 'de' ? 'teilen.html' : '../share.html') : to === 'de' ? 'de/teilen.html' : 'share.html');
+  const m = {
+    title: `${S.title} · ToHuus`, desc: S.desc, url: `${SITE}${SHARE_FILE[c.lang]}`, alt: { en: `${SITE}${SHARE_FILE.en}`, de: `${SITE}${SHARE_FILE.de}` },
+    ld: false, navBase: './', bodyClass: 'legal-page help-page',
+    enHref: rel(c.lang, 'en'), deHref: rel(c.lang, 'de'), otherHref: rel(c.lang, other),
+  };
+  const groups = [[S.facts, SHARE.cards.filter((x) => x.kind === 'fact')], [S.brand, SHARE.cards.filter((x) => x.kind !== 'fact')]];
+  return `${pageTop(c, m)}
+<main id="main" class="legal help">
+
+<section class="legal-head help-head" aria-labelledby="share-h">
+  <div class="wrap">
+    <p class="label help-crumbs"><a href="${S.crumbHref}">${S.crumb}</a></p>
+    <h1 id="share-h">${S.h1}</h1>
+    <p class="legal-note help-lede">${S.lede}</p>
+    <p class="note">${S.formats}</p>
+  </div>
+</section>
+
+<div class="wrap help-index share-index">
+${groups.map(([h, cards], k) => `  <section class="help-group" aria-labelledby="sg-${k}">
+    <h2 id="sg-${k}">${h}</h2>
+    <ul class="share-grid">
+      ${cards.map((x) => shareCard(c, x, c.base)).join('\n      ')}
+    </ul>
+  </section>`).join('\n')}
+  <p class="note">${S.note}</p>
+</div>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="${c.base}assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
+
+/** A few matching cards at the end of a Ratgeber post (German only, like the posts). */
+const shareStrip = (c, p) => {
+  const slugs = SHARE && c.lang === 'de' ? SHARE_ON_POST[p.slug] : null;
+  if (!slugs) return '';
+  const cards = slugs.map((sl) => SHARE.cards.find((x) => x.slug === sl)).filter(Boolean);
+  if (cards.length !== slugs.length) throw new Error(`share strip for ${p.slug}: unknown card`);
+  const S = SHARE_COPY.de;
+  return `    <section id="teilen" aria-labelledby="teilen-h">
+      <h2 id="teilen-h">${S.post}</h2>
+      <p>${S.postNote} <a href="../de/teilen.html">${S.h1}</a>.</p>
+      <ul class="share-grid share-strip">
+      ${cards.map((x) => shareCard(c, x, '../')).join('\n      ')}
+      </ul>
+    </section>
+`;
+};
 
 // guards: house style (no em or en dashes, except in the required provider line) and no family names
 const LEGAL_KINDS = ['privacy', 'terms'];
@@ -1509,6 +1704,11 @@ for (const [file, html, c] of helpPages) {
 fs.writeFileSync(path.join(ROOT, 'index.html'), page(COPY.en));
 fs.mkdirSync(path.join(ROOT, 'de'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'de/index.html'), page(COPY.de));
+if (SHARE) for (const c of Object.values(COPY)) {
+  const html = sharePage(c);
+  checkText(html, SHARE_FILE[c.lang], 0);
+  fs.writeFileSync(path.join(ROOT, SHARE_FILE[c.lang]), html);
+}
 for (const c of Object.values(COPY)) for (const kind of LEGAL_KINDS) {
   fs.writeFileSync(path.join(ROOT, c.lang === 'de' ? 'de' : '', LEGAL[c.lang][kind].file), legalPage(c, kind));
 }
@@ -1543,6 +1743,7 @@ const today = new Date().toISOString().slice(0, 10);
 const urls = [
   [SITE, today], [`${SITE}de/`, today],
   ...Object.values(COPY).flatMap((c) => LEGAL_KINDS.map((k) => [`${SITE}${c.lang === 'de' ? 'de/' : ''}${LEGAL[c.lang][k].file}`, today])),
+  ...(SHARE ? Object.values(SHARE_FILE).map((f) => [`${SITE}${f}`, today]) : []),
   ...helpPages.map(([f]) => [`${SITE}${f.replace(/index\.html$/, '')}`, today]),
   ...Object.values(COPY).flatMap((c) => (publishedPosts(c.lang).length ? [[`${SITE}${BLOG_DIR[c.lang]}/`, publishedPosts(c.lang)[0].updated ?? publishedPosts(c.lang)[0].date]] : [])),
   ...Object.values(COPY).flatMap((c) => publishedPosts(c.lang).map((p) => [`${SITE}${BLOG_DIR[c.lang]}/${p.slug}.html`, p.updated ?? p.date])),

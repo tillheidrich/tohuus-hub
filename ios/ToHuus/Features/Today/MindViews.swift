@@ -15,6 +15,10 @@ struct MindItem: Decodable, Sendable, Identifiable, Hashable {
     var kind: String
     var mine: Bool = false
     var by: Person?
+    /// someone else did it, the author wrote it down ("Danke, Mira!")
+    var doneBy: Person?
+    /// it's about me: someone wrote down that I did it
+    var aboutMe: Bool = false
     /// private | household
     var visibility: String
     var hideFrom: [Int] = []
@@ -34,9 +38,11 @@ struct MindData: Decodable, Sendable {
 extension APIClient {
     /// GET /api/mind – mine (open + done in the last two weeks) and what the others shared with me
     func mind() async throws -> MindData { try await get("api/mind") }
-    /// POST /api/mind { text, kind, visibility, hide_from }
-    func mindAdd(text: String, kind: String, isPrivate: Bool, hideFrom: [Int]) async throws {
-        _ = try await send("POST", "api/mind", json: ["text": text, "kind": kind, "visibility": isPrivate ? "private" : "household", "hide_from": isPrivate ? [] : hideFrom], as: Ignored.self)
+    /// POST /api/mind { text, kind, visibility, hide_from, done_by } – done_by: a member who did it (only for done)
+    func mindAdd(text: String, kind: String, isPrivate: Bool, hideFrom: [Int], doneBy: Int? = nil) async throws {
+        var body: [String: Any] = ["text": text, "kind": kind, "visibility": isPrivate ? "private" : "household", "hide_from": isPrivate ? [] : hideFrom]
+        if kind == "done", let doneBy { body["done_by"] = doneBy }
+        _ = try await send("POST", "api/mind", json: body, as: Ignored.self)
     }
     /// PATCH /api/mind/:id – kind (open → done), visibility (either way), hide_from
     func mindUpdate(_ id: Int, _ body: [String: Any]) async throws {
@@ -58,6 +64,8 @@ struct MindComposer: View {
     @State private var kind = "open"
     @State private var isPrivate = false
     @State private var hide: Set<Int> = []
+    /// "Wer hat's gemacht?" – nil = me
+    @State private var doneBy: Int?
     @State private var busy = false
     @State private var error: String?
 
@@ -77,6 +85,24 @@ struct MindComposer: View {
                 Button(L("Add")) { Task { await save() } }
                     .buttonStyle(.borderedProminent).tint(Theme.primary)
                     .disabled(busy || text.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            if kind == "done" && !members.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L("Who did it?")).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3)
+                    FlowLayout(spacing: 6) {
+                        ChoiceChip(title: L("Me"), systemImage: "person", on: doneBy == nil) { doneBy = nil }
+                        ForEach(members) { m in
+                            ChoiceChip(title: m.name, on: doneBy == m.id) {
+                                doneBy = m.id
+                                // someone else did it: it's for the household, so they see it and can get a "Danke"
+                                isPrivate = false
+                                hide.remove(m.id)
+                            }
+                        }
+                    }
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(L("Who did it?"))
             }
             FlowLayout(spacing: 6) {
                 ChoiceChip(title: L("For everyone"), systemImage: "person.3", on: !isPrivate) { isPrivate = false }
@@ -99,10 +125,14 @@ struct MindComposer: View {
         busy = true
         defer { busy = false }
         do {
-            try await api.mindAdd(text: String(v.prefix(200)), kind: kind, isPrivate: isPrivate, hideFrom: Array(hide))
-            let msg = kind == "done" ? L("Seen – nice that you did it.") : (isPrivate ? L("Noted – only for you.") : L("Noted – the others can see it."))
+            let other = kind == "done" ? doneBy : nil
+            try await api.mindAdd(text: String(v.prefix(200)), kind: kind, isPrivate: other == nil ? isPrivate : false, hideFrom: Array(hide), doneBy: other)
+            let name = other.flatMap { id in members.first { $0.id == id }?.name }
+            let msg = kind == "done" ? (name.map { LF("Seen – %@ gets a thank-you.", $0) } ?? L("Seen – nice that you did it."))
+                : (isPrivate ? L("Noted – only for you.") : L("Noted – the others can see it."))
             text = ""
             hide = []
+            doneBy = nil
             error = nil
             onSaved(msg)
         } catch {
@@ -128,6 +158,11 @@ struct MindRow: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.text).foregroundStyle(Theme.ink)
+                    if item.aboutMe {
+                        Label(L("That was you – thank you!"), systemImage: "heart.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Theme.primaryText)
+                    }
                     if !sub.isEmpty { Text(sub).font(.caption).foregroundStyle(Theme.ink3) }
                 }
                 Spacer(minLength: 0)
@@ -165,8 +200,15 @@ struct MindRow: View {
     private var sub: String {
         let hidden = item.hideFrom.compactMap { id in members.first { $0.id == id }?.name }
         let nods = item.nods.map(\.name).joined(separator: ", ")
+        let author: String? = {
+            guard !item.mine, let by = item.by else { return nil }
+            if item.aboutMe { return LF("%@ wrote it down: you did it", by.name) }
+            if let doer = item.doneBy { return LF("%@ wrote it down: %@ did it", by.name, doer.name) }
+            return item.kind == "done" ? LF("%@ did it", by.name) : LF("%@ has it on their mind", by.name)
+        }()
         return [
-            !item.mine ? item.by.map { item.kind == "done" ? LF("%@ did it", $0.name) : LF("%@ has it on their mind", $0.name) } : nil,
+            author,
+            item.mine ? item.doneBy.map { LF("%@ did it", $0.name) } : nil,
             item.mine && item.visibility == "private" ? L("only for you") : nil,
             item.mine && !hidden.isEmpty ? LF("not for %@", hidden.joined(separator: ", ")) : nil,
             nods.isEmpty ? nil : (item.kind == "done" ? LF("Thanks from %@", nods) : LF("%@ thinks along", nods)),
@@ -217,6 +259,20 @@ struct MindView: View {
         .themedList()
         .navigationTitle(L("On my mind"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let d = data, !(d.mine.open.isEmpty && d.mine.done.isEmpty) {
+                ToolbarItem(placement: .primaryAction) {
+                    // only my own entries – to Notes, Mail or a message, as plain text
+                    ShareLink(item: ShareText.make(title: L("On my mind"),
+                                                   lines: d.mine.open.map { "☐ " + $0.text } + d.mine.done.map { "✓ " + $0.text },
+                                                   medium: "mind"),
+                              subject: Text(L("On my mind"))) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel(L("Share what’s on my mind"))
+                }
+            }
+        }
         .task { await load() }
         .refreshable { await load() }
         .toast($toast)

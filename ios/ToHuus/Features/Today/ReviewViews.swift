@@ -102,6 +102,7 @@ struct YearReviewView: View {
     @State private var data: YearReview?
     @State private var error: String?
     @State private var loading = false
+    @State private var sharing: ShareCardSpec?
     private let now = Calendar.current.component(.year, from: Date())
 
     var body: some View {
@@ -117,7 +118,13 @@ struct YearReviewView: View {
                         if !d.enough {
                             EmptyStateView(art: .receipt, title: L("Not much to look back on yet"), message: L("Use ToHuus for a while – the year fills up by itself."))
                         } else {
-                            ForEach(d.cards) { c in cardView(c) }
+                            // household cards only ("we", no names, nothing private) – each can leave as a picture
+                            ForEach(d.cards) { c in
+                                ReviewCardView(card: c) {
+                                    sharing = ShareCardSpec(area: ShareCardTheme.area(c.area), eyebrow: L("Our year") + " · " + String(d.year ?? now),
+                                                            value: c.value, title: c.title, text: c.text, list: c.list)
+                                }
+                            }
                             if let outro = d.outro { Text(outro).font(.subheadline.weight(.semibold)).padding(.top, Theme.Space.s2) }
                         }
                     }
@@ -133,6 +140,7 @@ struct YearReviewView: View {
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }
         .task(id: year ?? 0) { await load() }
+        .sheet(item: $sharing) { spec in ShareCardSheet(spec: spec) }
     }
 
     private func yearSwitch(_ shown: Int) -> some View {
@@ -147,28 +155,6 @@ struct YearReviewView: View {
                 .disabled(shown >= now)
         }
         .foregroundStyle(Theme.primaryText)
-    }
-
-    private func cardView(_ c: YearReview.Card) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: ReviewStyle.icon(c.area)).font(.title3).foregroundStyle(Theme.ink2).accessibilityHidden(true)
-            Text(c.value).font(.system(.largeTitle, design: .rounded, weight: .bold)).foregroundStyle(Theme.ink)
-                .minimumScaleFactor(0.6).lineLimit(2)
-            Text(c.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
-            if let t = c.text { Text(t).font(.footnote).foregroundStyle(Theme.ink2) }
-            ForEach(c.list, id: \.self) { x in
-                Text("· " + x).font(.footnote).foregroundStyle(Theme.ink2)
-            }
-        }
-        .padding(Theme.Space.s4)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
-        .overlay(alignment: .top) {
-            UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.lg, topTrailingRadius: Theme.Radius.lg)
-                .fill(ReviewStyle.color(c.area)).frame(height: 6)
-        }
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
-        .accessibilityElement(children: .combine)
     }
 
     private func load() async {

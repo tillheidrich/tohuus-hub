@@ -29,11 +29,19 @@ struct WhoDoesWhatData: Decodable, Sendable {
         var id: Int { taskId }
     }
     struct Balance: Decodable, Sendable, Hashable { var state: String; var name: String? }
+    /// "Du machst das seit Wochen" – only the viewer's own: tasks they did the last 6 times in a row
+    struct Carrying: Decodable, Sendable, Hashable, Identifiable {
+        var taskId: Int
+        var name: String
+        var times: Int?
+        var id: Int { taskId }
+    }
     @Lossy var people: [Person]
     @Lossy var open: [Open]
     @Lossy var proposals: [Proposal]
     var compare: Bool = false
     var balance: Balance?
+    @Lossy var carrying: [Carrying]
 }
 
 struct CookSuggestion: Decodable, Sendable, Hashable {
@@ -54,6 +62,10 @@ extension APIClient {
     /// POST /api/habits/proposals/:id – write the habit down (accept) or never ask again
     func habitProposal(_ taskId: Int, accept: Bool) async throws {
         _ = try await send("POST", "api/habits/proposals/\(taskId)", json: ["accept": accept], as: Ignored.self)
+    }
+    /// POST /api/habits/carrying/:id/dismiss – "Passt so", never asked again for this task
+    func habitCarryingDismiss(_ taskId: Int) async throws {
+        _ = try await send("POST", "api/habits/carrying/\(taskId)/dismiss", json: [:], as: Ignored.self)
     }
     /// GET /api/habits/cook – who probably cooks the open meals (a suggestion only)
     func cookSuggestions(from: String, to: String) async throws -> [CookSuggestion] {

@@ -154,11 +154,21 @@ struct TodayView: View {
                             TodayChecklistCard(g: g, open: openChecklist, hide: { Task { await model.hideChecklist(store: store) } })
                         }
                         ForEach(shownCards(t)) { key in card(key, t) }
+                        if !app.isGuest {
+                            // in the evening, every other day at most: "Was habt ihr heute gelöst?"
+                            CheckinCard(api: store.api, refresh: refreshKey) { msg in
+                                toast = ToastMessage(text: msg)
+                                Task { await reload() }
+                            }
+                            CareForHintCard(api: store.api, refresh: refreshKey) { msg in toast = ToastMessage(text: msg) }
+                        }
                         if canArrange && shownCards(t).count > 1 {
                             Button(L("Arrange cards")) { arranging = true }
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }
+                        // "Fertig für heute": a quiet end – nothing to keep scrolling
+                        if t.calm == true && !app.isGuest { CalmCard() }
                     } else if model.limited || !store.isOnline {
                         listCard(open: store.list.openCount, recent: [])
                     } else if model.loading {
