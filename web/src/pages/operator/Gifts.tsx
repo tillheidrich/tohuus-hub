@@ -4,6 +4,7 @@ import { api, post, put, useApi } from '../../api';
 import { t } from '../../i18n';
 import { Seg, Skeleton, useToast } from '../../ui';
 import { Section, day, useRun } from './shared';
+import { OperatorHardship } from './Hardship';
 
 interface PlanCode {
   id: number;
@@ -48,6 +49,7 @@ export function OperatorGifts() {
   const gift = d.betaGift ?? 'off';
   return (
     <div className="stack op-gap">
+      <OperatorHardship />
       <Section title={t('Gift during the beta')}>
         <p className="small muted">
           {t('While this is on, every household in ToHuus Cloud gets this plan – nobody pays, nothing is bought. Switch it off when the beta ends; each household then has what it has on its own (trial, code, App Store, Free). Nothing is deleted.')}

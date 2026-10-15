@@ -6,7 +6,7 @@ import { StarsCard } from './Stars';
 import { ReviewTeaser } from './Review';
 import { WeekReviewTeaser } from './WeekReview';
 import { MindTodayCard } from './Mind';
-import { CalmCard, CheckinCard } from './Checkin';
+import { CalmCard, CheckinCard, GuestTasksCard } from './Checkin';
 import { CareForHint } from './CareFor';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -138,6 +138,7 @@ export function Today({ me }: { me: Me }) {
     <div className="today2">
       {head}
       {d.notices.length > 0 && <Notices list={d.notices} />}
+      {gl && <GuestTasksCard />}
       {!gl && <DemoNudge />}
       <TodayCards
         cards={[

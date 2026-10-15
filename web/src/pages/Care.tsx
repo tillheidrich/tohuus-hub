@@ -36,6 +36,7 @@ import { BlickSection } from './Blick';
 import { Carrying, OfferAsks, OfferBox, WhoDoesWhatSection } from './WhoDoesWhat';
 import { CareForHint } from './CareFor';
 import { ShareTextButton } from '../share/share';
+import { TodayDeckSheet } from './Decide';
 import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
@@ -323,6 +324,7 @@ export function Care() {
 
   const all = data?.tasks ?? [];
   const tasks = all.filter((x) => taskMatches(x, filter, data?.me));
+  const [deck, setDeck] = useState(false);
   const dueNow = tasks.filter((x) => ['overdue', 'today', 'soon'].includes(x.state));
   const later = tasks.filter((x) => !['overdue', 'today', 'soon'].includes(x.state));
   const open = tasks.find((x) => x.id === openId) ?? null;
@@ -365,6 +367,11 @@ export function Care() {
             {t('One thing at a time')}
           </button>
           <FreshStartButton overdue={tasks.filter((x) => x.state === 'overdue').length} />
+          {dueNow.length >= 3 && (
+            <button className="btn sm" onClick={() => setDeck(true)}>
+              {t('What will you manage today?')}
+            </button>
+          )}
           {dueNow.length > 0 && (
             <ShareTextButton
               title={t('Tasks')}
@@ -442,6 +449,7 @@ export function Care() {
 
       <RecentlyDone />
       <CareForHint />
+      {deck && <TodayDeckSheet tasks={dueNow} onClose={() => setDeck(false)} />}
       <Carrying onOpenTask={setOpenId} />
       <WhoDoesWhatSection onOpenTask={setOpenId} />
       <RatgeberCards areas={['aufgaben', 'kopf']} />

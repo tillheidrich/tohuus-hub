@@ -11332,3 +11332,64 @@ ul.mind-list,
   mask-image: none;
   -webkit-mask-image: none;
 }
+
+/* Wischen zum Entscheiden (pages/Decide.tsx) */
+.deck-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 72px;
+  text-align: center;
+}
+.decide-count {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.decide-done {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px 8px;
+  text-align: center;
+}
+.decide-done svg {
+  color: var(--primary-text);
+}
+
+/* Gut zu wissen (pages/FactStrip.tsx) */
+.fact-strip {
+  display: grid;
+  gap: 6px;
+  margin: 20px 0 8px;
+  padding: 16px 18px;
+  border-left: 4px solid var(--primary);
+}
+.fact-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary-text);
+}
+.fact-value {
+  font-family: var(--display);
+  font-size: 2.4rem;
+  line-height: 1.05;
+  color: var(--ink);
+}
+.fact-title {
+  overflow-wrap: anywhere;
+}
+.fact-text,
+.fact-tohuus {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mind-extra .input.sm {
+  min-height: 36px;
+  padding: 4px 8px;
+}

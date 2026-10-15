@@ -11,6 +11,7 @@ import { fmtDate, invalidate, post, put, useApi } from '../api';
 import { t } from '../i18n';
 import { Empty, Seg, Skeleton, Toggle, useToast } from '../ui';
 import { type CardSpec, ShareCardButton } from '../share/cards';
+import { FactStrip } from './FactStrip';
 
 type Area = 'shop' | 'cook' | 'tasks' | 'pantry' | 'money';
 interface Card {
@@ -216,6 +217,7 @@ export function WeekReviewPage() {
               )}
             </>
           )}
+          {!d.quiet && <FactStrip topics={d.note ? ['single-parents', 'appreciation'] : ['appreciation']} />}
           {d.mine && (
             <div className="card row between week-review-switch">
               <span className="grow">

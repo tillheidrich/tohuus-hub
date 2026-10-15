@@ -11,6 +11,7 @@ import { del, fmtDate, invalidate, patch, post, useApi } from '../api';
 import { t } from '../i18n';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { CareRow, type CareTask } from './Care';
+import { FactStrip } from './FactStrip';
 
 type Place = 'home' | 'own' | 'care_home' | 'other';
 type LogKind = 'visit' | 'call' | 'appointment' | 'errand' | 'other';
@@ -273,6 +274,7 @@ export function CareForPage() {
           ))}
         </div>
       )}
+      <FactStrip topics={['care']} />
       {d && d.help.length > 0 && (
         <section className="section" aria-labelledby="cf-help">
           <div className="section-head">

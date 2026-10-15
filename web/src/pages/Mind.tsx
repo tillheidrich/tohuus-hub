@@ -5,12 +5,14 @@
  * a household entry can be hidden from single members (a present for them). "Ich denk mit" / "Danke" show names,
  * never counts. Never to the assistant, MCP, Home Assistant, notifications or exports.
  */
-import { ArrowRight, Brain, Check, CheckCircle, Eye, EyeSlash, HandHeart, ListChecks, Lock, Trash, UsersThree } from '@phosphor-icons/react';
+import { ArrowRight, Brain, Broom, Check, CheckCircle, Eye, EyeSlash, HandHeart, ListChecks, Lock, Trash, UsersThree } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { del, invalidate, patch, post, useApi } from '../api';
+import { del, fmtDate, invalidate, patch, post, useApi } from '../api';
 import { t } from '../i18n';
 import { Seg, useToast } from '../ui';
+import { MindReviewSheet } from './Decide';
+import { FactStrip } from './FactStrip';
 import { ShareTextButton } from '../share/share';
 
 export interface MindItem {
@@ -28,8 +30,12 @@ export interface MindItem {
   /** someone else did it – the author wrote it down */
   done_by?: { id: number; name: string; color: string } | null;
   about_me?: boolean;
+  /** a soft "bis wann" – no reminder (null = irgendwann) */
+  due_on?: string | null;
 }
 interface MindData {
+  /** older thoughts that could use a look */
+  review?: number;
   mine: { open: MindItem[]; done: MindItem[] };
   others: { open: MindItem[]; done: MindItem[] };
   members: { id: number; name: string }[];
@@ -58,10 +64,20 @@ function Composer({ members, compact = false }: { members: MindData['members']; 
   const [priv, setPriv] = useState(false);
   const [hide, setHide] = useState<number[]>([]);
   const [doneBy, setDoneBy] = useState<number | null>(null);
+  const [many, setMany] = useState(false);
+  const [due, setDue] = useState('');
   const send = () => {
     if (!text.trim()) return;
     const other = kind === 'done' ? doneBy : null;
-    const body = { text: text.trim(), kind, visibility: priv && !other ? 'private' : 'household', hide_from: priv || other ? [] : hide, done_by: other };
+    const body = {
+      text: text.trim(),
+      kind,
+      visibility: priv && !other ? 'private' : 'household',
+      hide_from: priv || other ? [] : hide,
+      done_by: other,
+      due_on: kind === 'open' && due ? due : null,
+      many,
+    };
     act(
       () => post('/mind', body),
       other ? t('Noted – they’ll see your thanks.') : kind === 'done' ? t('Seen – nice that you did it.') : priv ? t('Noted – only for you.') : t('Noted – the others can see it.'),
@@ -69,6 +85,7 @@ function Composer({ members, compact = false }: { members: MindData['members']; 
       setText('');
       setHide([]);
       setDoneBy(null);
+      setDue('');
     });
   };
   return (
@@ -83,7 +100,18 @@ function Composer({ members, compact = false }: { members: MindData['members']; 
           ['done', t('Done on the side')],
         ]}
       />
-      <div className="row" style={{ gap: 8 }}>
+      <div className="row" style={{ gap: 8, alignItems: 'flex-end' }}>
+        {many ? (
+          <textarea
+            className="input grow"
+            rows={4}
+            value={text}
+            maxLength={4000}
+            aria-label={t('Everything on your mind – one per line')}
+            placeholder={t('One thought per line – everything that’s buzzing around.')}
+            onChange={(e) => setText(e.target.value)}
+          />
+        ) : (
         <input
           className="input grow"
           value={text}
@@ -93,10 +121,23 @@ function Composer({ members, compact = false }: { members: MindData['members']; 
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
         />
+        )}
         <button className="btn primary" disabled={!text.trim()} onClick={send}>
           {t('Add')}
         </button>
       </div>
+      {kind === 'open' && (
+        <div className="row wrap mind-extra" style={{ gap: 8, alignItems: 'center' }}>
+          <button type="button" className={`chip sm ${many ? 'on' : ''}`} aria-pressed={many} onClick={() => setMany((m) => !m)}>
+            {t('Several at once')}
+          </button>
+          <label className="small muted mind-due">
+            {t('Until when?')}{' '}
+            <input className="input sm" type="date" value={due} onChange={(e) => setDue(e.target.value)} aria-label={t('Until when? Empty = someday')} />
+          </label>
+          {!due && <span className="small muted">{t('empty = someday')}</span>}
+        </div>
+      )}
       {kind === 'done' && members.length > 0 && (
         <div className="row wrap mind-who" role="radiogroup" aria-label={t('Who did it?')} style={{ gap: 6 }}>
           <span className="small muted">{t('Who did it?')}</span>
@@ -153,6 +194,7 @@ function Row({ x, members }: { x: MindItem; members: MindData['members'] }) {
             x.done_by && !x.about_me && x.by ? (x.mine ? t('done by {name}', { name: x.done_by.name }) : t('{by} noticed: {name} did it', { by: x.by.name, name: x.done_by.name })) : null,
             !x.done_by && !x.mine && x.by ? (x.kind === 'done' ? t('{name} did it', { name: x.by.name }) : t('{name} has it on their mind', { name: x.by.name })) : null,
             x.mine && x.visibility === 'private' ? t('only for you') : null,
+            x.kind === 'open' && x.due_on ? t('until {date}', { date: fmtDate(x.due_on, { day: 'numeric', month: 'short' }) }) : null,
             x.mine && hidden.length ? t('not for {names}', { names: hidden.join(', ') }) : null,
             nods ? (x.kind === 'done' ? t('Thanks from {names}', { names: nods }) : t('{names} thinks along', { names: nods })) : null,
           ]
@@ -222,6 +264,7 @@ function List({ title, items, members, empty }: { title: string; items: MindItem
 export function MindPage() {
   const q = useMind();
   const d = q.data;
+  const [review, setReview] = useState(false);
   return (
     <div className="rise mind-page">
       <header className="page-head">
@@ -246,12 +289,23 @@ export function MindPage() {
       <div className="card pad">{d && <Composer members={d.members} />}</div>
       {d && (
         <>
+          {(d.review ?? 0) > 0 && (
+            <button className="li clickable card nav-row mind-review-row" onClick={() => setReview(true)}>
+              <Broom size={20} aria-hidden="true" />
+              <span className="grow">
+                <span className="title">{t('What of this still matters?')}</span>
+                <span className="sub">{t('{n} older thoughts – one at a time, letting go is allowed.', { n: d.review ?? 0 })}</span>
+              </span>
+            </button>
+          )}
           <List title={t('On your mind')} items={d.mine.open} members={d.members} empty={t('Nothing right now – or nothing written down.')} />
           <List title={t('With the others')} items={[...d.others.open, ...d.others.done]} members={d.members} />
           <List title={t('Done on the side')} items={d.mine.done} members={d.members} />
+          <FactStrip topics={['mental-load']} />
           <p className="small muted">{t('Never to the assistant, Home Assistant or notifications. Done things stay here two weeks and count in your weekly review.')}</p>
         </>
       )}
+      {review && <MindReviewSheet onClose={() => setReview(false)} />}
     </div>
   );
 }

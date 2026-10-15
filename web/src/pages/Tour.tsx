@@ -115,6 +115,13 @@ function steps(form: HouseholdForm = 'family'): Step[] {
       body: t('Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.'),
     },
     {
+      id: 'tasks',
+      route: '/aufgaben',
+      targets: [TITLE],
+      title: t('Tasks, your head and the people you look after'),
+      body: t('Household tasks without points. “On my mind” for thoughts without a deadline – private or for everyone. “People I look after” for visits and appointments. And when someone is away, ToHuus asks who takes what and what may wait.'),
+    },
+    {
       id: 'receipts',
       route: '/geld',
       targets: nav('/geld'),

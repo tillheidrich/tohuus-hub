@@ -58,7 +58,7 @@ interface HomePlanItem {
 
 /** "Was passiert zu Hause?" – who takes what while someone is away, what may wait (docs/away.md). */
 function HomePlanSection({ tr }: { tr: Trip }) {
-  const q = useApi<{ relief: boolean; takers: { key: string; name: string }[]; items: HomePlanItem[] }>(['away', 'home', tr.id], `/away/trips/${tr.id}/home`);
+  const q = useApi<{ relief: boolean; takers: { key: string; name: string; guest?: boolean }[]; items: HomePlanItem[] }>(['away', 'home', tr.id], `/away/trips/${tr.id}/home`);
   const toast = useToast();
   const d = q.data;
   if (!d || (!d.items.length && !d.relief)) return null;
@@ -102,7 +102,7 @@ function HomePlanSection({ tr }: { tr: Trip }) {
                   <div className="chips" role="group" aria-label={x.name} style={{ marginTop: 6 }}>
                     {d.takers.map((k) => (
                       <button key={k.key} className={`chip sm ${mode === 'take' && x.choice?.key === k.key ? 'on' : ''}`} onClick={() => set(x, 'take', k.key)}>
-                        {t('{name} takes it', { name: k.name })}
+                        {t('{name} takes it', { name: k.guest ? `${k.name} (${t('guest')})` : k.name })}
                       </button>
                     ))}
                     <button className={`chip sm ${mode === 'wait' ? 'on' : ''}`} onClick={() => set(x, 'wait')}>

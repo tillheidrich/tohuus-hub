@@ -6,9 +6,10 @@
  */
 import { Check, Moon, Plus } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { invalidate, post, put, useApi } from '../api';
+import { fmtDate, invalidate, post, put, useApi } from '../api';
 import { t } from '../i18n';
 import { Toggle, useToast } from '../ui';
+import { FactStrip } from './FactStrip';
 
 interface CheckinData {
   on: boolean;
@@ -143,13 +144,16 @@ export function CheckinCard({ guest }: { guest?: boolean }) {
 /** "Fertig für heute": nothing due, nothing waiting. A quiet end to Heute – no feed below. */
 export function CalmCard() {
   return (
-    <div className="calm-card" role="status">
-      <Moon size={22} aria-hidden="true" />
-      <div>
-        <b>{t('Everything important is done for today.')}</b>
-        <div className="small muted">{t('Put the phone down – ToHuus will be here when you need it.')}</div>
+    <>
+      <div className="calm-card" role="status">
+        <Moon size={22} aria-hidden="true" />
+        <div>
+          <b>{t('Everything important is done for today.')}</b>
+          <div className="small muted">{t('Put the phone down – ToHuus will be here when you need it.')}</div>
+        </div>
       </div>
-    </div>
+      <FactStrip topics={['calm']} className="calm-fact" />
+    </>
   );
 }
 
@@ -172,5 +176,61 @@ export function CheckinSettingsCard() {
       </span>
       <Toggle on={q.data.on} onChange={set} label={t('Ask in the evening what we solved')} />
     </div>
+  );
+}
+
+interface GuestTask {
+  id: number;
+  name: string;
+  note: string | null;
+  next_due: string | null;
+  due_time: string | null;
+  state: string;
+  stand_in: { name: string; for: string; until: string } | null;
+}
+
+/** Heute for a permanent guest: the tasks handed to them ("Blumen gießen", "Felix: Fiebersaft, falls nötig"). */
+export function GuestTasksCard() {
+  const q = useApi<{ tasks: GuestTask[] }>(['care', 'guest-tasks'], '/guest-tasks');
+  const toast = useToast();
+  const tasks = q.data?.tasks ?? [];
+  if (!tasks.length) return null;
+  const done = (id: number) =>
+    post<{ message: string }>(`/guest-tasks/${id}/done`)
+      .then((r) => {
+        toast({ text: r.message });
+        invalidate('care');
+      })
+      .catch((e: Error) => toast({ text: e.message, error: true }));
+  return (
+    <section className="hcard guest-tasks" aria-labelledby="h-guest-tasks">
+      <div className="hcard-h">
+        <h2 id="h-guest-tasks">
+          <span className="shape c" aria-hidden="true" />
+          {t('Your tasks here')}
+        </h2>
+      </div>
+      <ul className="list">
+        {tasks.map((x) => (
+          <li key={x.id} className="li">
+            <div className="grow" style={{ minWidth: 0 }}>
+              <div className="title">{x.name}</div>
+              <div className="sub">
+                {[
+                  x.stand_in ? t('while {who} is away', { who: x.stand_in.for }) : null,
+                  x.next_due ? fmtDate(x.next_due, { weekday: 'short', day: 'numeric', month: 'short' }) + (x.due_time ? `, ${x.due_time}` : '') : null,
+                  x.note,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </div>
+            </div>
+            <button className="btn sm primary" onClick={() => done(x.id)}>
+              {t('Done')}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
