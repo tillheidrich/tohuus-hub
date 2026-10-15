@@ -8,6 +8,7 @@
  *  - `cloud`     cloud only: /api/cloud/me, households, account deletion, export, account passkeys
  *  - `wellKnown` cloud only: /.well-known/apple-app-site-association (passkeys in the iPhone app)
  */
+import express from 'express';
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { config, smtpEnabled, visionEnabled } from '../config.js';
@@ -29,6 +30,7 @@ import {
 import { EMAIL_RE, authPolicy, cookieBase, hasPassword, normEmail, sendAuthMail, ssoReady, userByName, userByVerifiedEmail } from '../lib/auth-policy.js';
 import { checkSecondFactor } from '../lib/auth-totp.js';
 import { AuthError } from '../lib/auth-sessions.js';
+import { HardshipError, requestHardship } from '../lib/hardship.js';
 import { canSendMail } from '../lib/mail.js';
 import { emit } from '../lib/bus.js';
 import { buildExport } from '../lib/data.js';
@@ -498,6 +500,40 @@ const signupReq = z.object({
   /** "Wo kauft ihr meistens ein?" – shop names (lib/stores.ts) */
   stores: z.array(z.string().max(60)).max(30).optional(),
 });
+
+/**
+ * "Wir können uns das gerade nicht leisten" (lib/hardship.ts, docs/pricing.md): the website form posts here as a plain
+ * HTML form (no script, no CORS) and comes back to the website's thank-you page. JSON works too. Rate-limited, with a
+ * honeypot; the operators' address is never shown.
+ */
+cloudPub.post(
+  '/cloud/hardship',
+  express.urlencoded({ extended: false, limit: '8kb' }),
+  wrap(async (req, res) => {
+    const b = z
+      .object({
+        email: z.string().max(254),
+        name: z.string().max(80).optional(),
+        people: z.string().max(40).optional(),
+        message: z.string().max(1000).optional(),
+        lang: z.enum(['de', 'en']).optional(),
+        website: z.string().max(200).optional(),
+      })
+      .parse(req.body ?? {});
+    const form = String(req.headers['content-type'] ?? '').includes('application/x-www-form-urlencoded');
+    if (rateLimitedGlobal(`hardship-ip:${req.ip}`, 5, 60 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    const thanks = `${config.siteUrl}/${b.lang === 'en' ? 'thanks.html' : 'de/danke.html'}`;
+    try {
+      await requestHardship(b);
+    } catch (e) {
+      if (form) return void res.redirect(303, `${thanks}?error=1`);
+      if (e instanceof HardshipError) throw new AuthError(e.status, e.message);
+      throw e;
+    }
+    if (form) return void res.redirect(303, thanks);
+    return { ok: true };
+  }),
+);
 
 cloudPub.post(
   '/cloud/signup',

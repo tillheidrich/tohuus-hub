@@ -657,20 +657,19 @@ describe('plans and quotas', () => {
     accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(hA);
     const f = await A.get('/api/billing/status');
     expect(f.json.plan).toBe('free');
-    expect(f.json.limits.historyDays).toBe(60);
-    expect(f.json.limits.assistantPerMonth).toBe(20);
-    expect(tenancy.runInHousehold(hA, () => plans.limits().historyDays)).toBe(60);
+    expect(f.json.limits.historyDays).toBe(30);
+    // Free has no AI at all (15 Oct 2026, docs/pricing.md)
+    expect(f.json.limits.assistantPerMonth).toBe(0);
+    expect(tenancy.runInHousehold(hA, () => plans.limits().historyDays)).toBe(30);
   });
 
-  it('consume("assistant"): 20 a month on Free, then refused; other households unaffected', () => {
-    const results = tenancy.runInHousehold(hA, () => Array.from({ length: 21 }, () => plans.consume('assistant')));
-    expect(results.slice(0, 20).every((r) => r.ok)).toBe(true);
-    expect(results[19].remaining).toBe(0);
-    expect(results[20]).toEqual({ ok: false, remaining: 0 });
+  it('consume("assistant"): none on Free; other households unaffected', () => {
+    const results = tenancy.runInHousehold(hA, () => Array.from({ length: 2 }, () => plans.consume('assistant')));
+    expect(results[0]).toEqual({ ok: false, remaining: 0 });
     expect(tenancy.runInHousehold(hB, () => plans.consume('assistant')).ok).toBe(true);
   });
 
-  it('assistant messages are counted per household: Free stops at 20 with HTTP 402, others go on', async () => {
+  it('Free has no AI assistant (HTTP 402 plan.assistant, simple commands still work); others go on', async () => {
     const ai = await import('../server/lib/ai');
     process.env.AI_API_KEY = 'sk-test';
     let calls = 0;
@@ -684,22 +683,15 @@ describe('plans and quotas', () => {
       accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(hC);
       // ToHuus Cloud asks once before AI is used (ai-policy.ts)
       expect((await C.req('PATCH', '/api/ai/settings', { consent: true })).status).toBe(200);
-      for (let i = 0; i < 20; i++) {
-        const r = await C.post('/api/assistant/chat', { message: `Wie geht es dir ${i}?` });
-        expect(r.status, r.text).toBe(200);
-        expect(r.json.mode).toBe('ai');
-      }
-      expect(calls).toBe(20);
-      expect(tenancy.runInHousehold(hC, () => plans.usage('assistant'))).toBe(20);
       const over = await C.post('/api/assistant/chat', { message: 'Wie geht es dir heute?' });
       expect(over.status).toBe(402);
-      expect(over.json).toMatchObject({ code: 'quota.assistant', remaining: 0 });
+      expect(over.json).toMatchObject({ code: 'plan.assistant', remaining: 0 });
       expect(over.json.error).toBeTruthy();
       // what the built-in reader understands still works, without a model call
       const basic = await C.post('/api/assistant/chat', { message: 'Milch und 2 Paprika' });
       expect(basic.status).toBe(200);
       expect(basic.json.mode).toBe('basic');
-      expect(calls).toBe(20);
+      expect(calls).toBe(0);
       // another household is not affected
       const other = new Client();
       await signup(other, 'd-quota@example.org', 'Dora', 'Other home', 'carer');
@@ -747,14 +739,14 @@ describe('plans and quotas', () => {
   });
 
   it('storage quota: 413 with a message key when full, nothing deleted', async () => {
-    accounts.setStorageBytes(hA, 250 * 1024 * 1024);
+    accounts.setStorageBytes(hA, 100 * 1024 * 1024);
     const png = await sharp({ create: { width: 20, height: 20, channels: 3, background: '#3c3' } }).png().toBuffer();
     const fd = new FormData();
     fd.append('image', new Blob([new Uint8Array(png)], { type: 'image/png' }), 'p.png');
     const r = await A.req('POST', '/api/recipes/1/image', fd);
     expect(r.status).toBe(413);
     expect(r.json.key).toBe('storage.full');
-    expect(r.json.quotaBytes).toBe(250 * 1024 * 1024);
+    expect(r.json.quotaBytes).toBe(100 * 1024 * 1024);
     expect((await A.get(productImage)).status).toBe(200);
     accounts.setStorageBytes(hA, 0);
   });

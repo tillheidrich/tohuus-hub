@@ -301,7 +301,12 @@ function tripKeys(trip: TripRow) {
     /* no child profiles */
   }
   const all = [...users, ...kids];
-  return { away: new Set(all.filter((p) => names.has(p.name.toLowerCase())).map((p) => p.key)), takers: users.filter((u) => !names.has(u.name.toLowerCase())) };
+  // permanent guests can help too – Oma waters the plants, the aunt helps while Mira is in hospital
+  const guests = (db.prepare(`SELECT id, name FROM users WHERE kind = 'guest'`).all() as { id: number; name: string }[]).map((u) => ({ key: `u${u.id}`, name: u.name, guest: true }));
+  return {
+    away: new Set(all.filter((p) => names.has(p.name.toLowerCase())).map((p) => p.key)),
+    takers: [...users.filter((u) => !names.has(u.name.toLowerCase())).map((u) => ({ ...u, guest: false })), ...guests.filter((g) => !names.has(g.name.toLowerCase()))],
+  };
 }
 
 /** May this task simply wait until they're back? Not a daily one, not a date from the calendar (bins), not an appointment. */

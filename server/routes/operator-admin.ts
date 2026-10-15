@@ -23,6 +23,7 @@ import { accountsDb, getHousehold, isUuid } from '../lib/accounts.js';
 import { DEFAULT_FALLBACKS, aiConfig, fallbackModels, pingModel, type ModelKind } from '../lib/ai.js';
 import { addAllowlist, createBetaCode, listAllowlist, listBetaCodes, removeAllowlist, revokeBetaCode, signupMode, SIGNUP_MODES } from '../lib/beta.js';
 import { betaGift, createPlanCode, listPlanCodes, revokePlanCode } from '../lib/gifts.js';
+import { declineHardship, grantHardship, HardshipError, listHardship } from '../lib/hardship.js';
 import { sendErrors } from './diag.js';
 import { audit, auditLog } from '../lib/operator.js';
 import { runStatsNightly, statsView } from '../lib/stats.js';
@@ -136,6 +137,31 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
       res.json({ codes });
     } catch (e) {
       if (/UNIQUE/.test((e as Error).message)) return void res.status(409).json({ error: 'this code exists already' });
+      throw e;
+    }
+  });
+
+  // ---------------------------------------------------------------- "Wir können uns das nicht leisten" (lib/hardship.ts)
+
+  r.get('/operator/hardship', fresh, (_req, res) => res.json({ requests: listHardship() }));
+  r.post('/operator/hardship/:id/grant', fresh, async (req, res) => {
+    const b = z.object({ plan: z.enum(['haushalt', 'plus']).default('plus'), days: z.number().int().min(1).max(3650).nullable().default(365) }).parse(req.body ?? {});
+    try {
+      const out = await grantHardship(Number(req.params.id), b.plan, b.days, who(req));
+      audit(who(req), 'hardship.grant', String(req.params.id), { plan: b.plan, days: b.days });
+      res.json(out);
+    } catch (e) {
+      if (e instanceof HardshipError) return void res.status(e.status).json({ error: e.message });
+      throw e;
+    }
+  });
+  r.post('/operator/hardship/:id/decline', fresh, (req, res) => {
+    try {
+      const out = declineHardship(Number(req.params.id));
+      audit(who(req), 'hardship.decline', String(req.params.id));
+      res.json(out);
+    } catch (e) {
+      if (e instanceof HardshipError) return void res.status(e.status).json({ error: e.message });
       throw e;
     }
   });

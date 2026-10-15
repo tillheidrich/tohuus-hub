@@ -61,7 +61,10 @@ const haushaltFeatures = { ...base, fullHistory: true, priceHistory: true, conne
 const plusFeatures = { ...haushaltFeatures, weekPlanFromPantry: true, monthlyAnalysis: true, substituteFromStock: true, plusRecipes: true };
 
 export const PLAN_LIMITS: Record<Plan, Limits> = {
-  free: { historyDays: 60, assistantPerMonth: 20, assistantThrottleOnly: false, uploadsPerDay: 60, receiptAiPerDay: 15, importAiPerDay: 10, storageBytes: 250 * MB, features: base },
+  // Free (15 Oct 2026, docs/pricing.md): the minimum, without any AI – list, tasks, Im Kopf, week plan and recipes by
+  // hand, sharing. The assistant still understands simple commands without AI ("Milch auf die Liste"). Costs almost
+  // nothing to run; the 14-day trial (Plus) starts with every new household.
+  free: { historyDays: 30, assistantPerMonth: 0, assistantThrottleOnly: false, uploadsPerDay: 20, receiptAiPerDay: 0, importAiPerDay: 0, storageBytes: 100 * MB, features: base },
   haushalt: { historyDays: null, assistantPerMonth: 100, assistantThrottleOnly: false, uploadsPerDay: 200, receiptAiPerDay: 40, importAiPerDay: 40, storageBytes: 2048 * MB, features: haushaltFeatures },
   plus: { historyDays: null, assistantPerMonth: 1500, assistantThrottleOnly: true, uploadsPerDay: 300, receiptAiPerDay: 60, importAiPerDay: 100, storageBytes: 5120 * MB, features: plusFeatures },
   // the 14-day trial is Plus

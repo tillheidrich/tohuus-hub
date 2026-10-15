@@ -217,6 +217,10 @@ export const de_home: Record<string, string> = {
   "Your week at home": "Eure Woche to Huus",
   "This is what you did together": "Das habt ihr geschafft",
   "At home": "Zu Hause",
+  "Thanks for taking it while {who} is away.": "Danke, dass du das übernimmst, solange {who} weg ist.",
+  "You are all away – who could do it? Maybe ask a neighbour or family.": "Ihr seid alle weg – wer könnte das machen? Vielleicht Nachbarn oder Familie fragen.",
+  "Done – thank you!": "Erledigt – danke dir!",
+  "The assistant with AI comes with Haushalt and Plus – try it free for 14 days. Simple things like “milk and bread” work without it.": "Den Assistenten mit KI gibt es in Haushalt und Plus – 14 Tage kostenlos testen. Einfaches wie „Milch und Brot“ geht auch ohne.",
   // 15 Oct 2026: evening question, looking after someone, month review, single parents
   "What did you solve today?": "Was habt ihr heute gelöst?",
   "Today you solved {n} things together. Nice.": "Heute habt ihr zusammen {n} Sachen gelöst. Schön.",

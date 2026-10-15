@@ -11,7 +11,8 @@ import { config } from '../config.js';
 import { db, lang, migrate } from '../db.js';
 import { localeOf } from '../languages.js';
 import { t, userError } from '../i18n.js';
-import { awayPeople, isAway, taskPlanOn } from './away-state.js';
+import { awayPeople, isAway, quietWhileAway, taskPlanOn } from './away-state.js';
+import { isGuestUser } from './people-policy.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, localDay, matchProduct, stockOf } from './catalog.js';
 import { notify } from './notify.js';
@@ -797,6 +798,35 @@ export async function checkCareDue() {
       dedupeKey: `care:${task.id}:${task.next_due}:${now ? 'now' : 'soon'}`,
       dedupeHours: 24 * 400,
     });
+    if (priv) continue;
+    // someone stands in while the usual person is away (also a permanent guest – Oma, the aunt): they get it on their
+    // own devices, also while the household is away and otherwise quiet
+    const doerId = task.doer?.key?.startsWith('u') ? Number(task.doer.key.slice(1)) : null;
+    if (doerId && (task.stand_in || isGuestUser(doerId)))
+      await notify({
+        event: 'care.due',
+        title: t('{name}: {when}', { name: task.name, when }),
+        message: task.stand_in ? t('Thanks for taking it while {who} is away.', { who: task.stand_in.for }) : task.note || t('Tap “Done” in ToHuus Hub once it’s done.'),
+        path: '/',
+        data: { care_task_id: task.id, name: task.name, next_due: task.next_due, state: task.state },
+        toUserId: doerId,
+        personalOnly: true,
+        urgent: true,
+        dedupeKey: `care-standin:${task.id}:${task.next_due}:${now ? 'now' : 'soon'}`,
+        dedupeHours: 24 * 400,
+      });
+    // everyone is away and nobody took it – but the bins don't wait: one reminder anyway, for the whole household
+    else if (now && quietWhileAway('care.due') && !task.waits && ((task as { ext_kind?: string | null }).ext_kind || task.interval_unit === 'day' || task.due_time))
+      await notify({
+        event: 'care.due',
+        title: t('{name}: {when}', { name: task.name, when }),
+        message: t('You are all away – who could do it? Maybe ask a neighbour or family.'),
+        path: '/urlaub',
+        data: { care_task_id: task.id, name: task.name, next_due: task.next_due, state: task.state },
+        urgent: true,
+        dedupeKey: `care-away:${task.id}:${task.next_due}`,
+        dedupeHours: 24 * 400,
+      });
   }
 }
 

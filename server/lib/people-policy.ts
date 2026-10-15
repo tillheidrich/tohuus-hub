@@ -131,6 +131,10 @@ const ACCOUNT: Rule[] = [
   ['W', /^\/tour$/],
   // one's own picture, colour and likes
   any(/^\/people\/me(\/.*)?$/),
+  // tasks handed to this guest ("Oma gießt die Blumen", "die Tante hilft, solange Mira im Krankenhaus ist") – only
+  // their own, read and tick off (15 Oct 2026, docs/guests-and-permissions.md); the rest of Aufgaben stays closed
+  read(/^\/guest-tasks$/),
+  write(/^\/guest-tasks\/\d+\/done$/),
 ];
 
 const ORDER: Rule[] = [

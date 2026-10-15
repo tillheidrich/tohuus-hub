@@ -31,6 +31,8 @@ migrate(
 );
 // "Mira hat heute den Geschirrspüler ausgeräumt" – written down by someone else (the evening question, checkin.ts)
 migrate('mind-2', `ALTER TABLE mind_items ADD COLUMN done_by INTEGER REFERENCES users(id) ON DELETE SET NULL;`);
+// "irgendwann – aber bis Weihnachten" (a soft date, no reminder) and when the person last said "noch wichtig"
+migrate('mind-3', `ALTER TABLE mind_items ADD COLUMN due_on TEXT; ALTER TABLE mind_items ADD COLUMN reviewed_at TEXT;`);
 
 export class MindError extends Error {
   constructor(
@@ -52,6 +54,8 @@ interface Row {
   created_at: string;
   done_at: string | null;
   done_by?: number | null;
+  due_on?: string | null;
+  reviewed_at?: string | null;
 }
 
 const ids = (raw: string): number[] => {
@@ -93,6 +97,8 @@ function view(row: Row, viewer: number, people = names()) {
     nodded: ids(row.nods).includes(viewer),
     created_at: row.created_at,
     done_at: row.done_at,
+    /** a soft "bis wann" – no reminder, just there (null = irgendwann) */
+    due_on: row.due_on ?? null,
   };
 }
 export type MindView = ReturnType<typeof view>;
@@ -107,6 +113,8 @@ export function mindList(viewer: number) {
   const people = names();
   const seen = rows.filter((r) => canSeeMind(r, viewer)).map((r) => view(r, viewer, people));
   return {
+    /** how many of my older thoughts could use a look ("Was davon ist noch wichtig?") */
+    review: mindReview(viewer).items.length,
     mine: { open: seen.filter((x) => x.mine && x.kind === 'open'), done: seen.filter((x) => x.mine && x.kind === 'done') },
     others: { open: seen.filter((x) => !x.mine && x.kind === 'open'), done: seen.filter((x) => !x.mine && x.kind === 'done') },
     members: [...people.values()].filter((p) => p.id !== viewer).map((p) => ({ id: p.id, name: p.name })),
@@ -137,6 +145,21 @@ export interface MindInput {
   hide_from?: number[];
   /** done by another member (only for `done`; such an entry is always for the household – it's about them) */
   done_by?: number | null;
+  /** a soft date, YYYY-MM-DD (null = irgendwann) */
+  due_on?: string | null;
+}
+
+const cleanDay = (d: string | null | undefined) => (d && /^\d{4}-\d\d-\d\d$/.test(d) ? d : null);
+
+/** Brain dump: several thoughts at once – one per line ("- ", "• ", "1." are dropped). At most 20. */
+export function addMindMany(viewer: number, input: MindInput) {
+  const lines = String(input.text ?? '')
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\s*(?:[-–•*]|\d+[.)])\s*/, '').trim())
+    .filter(Boolean)
+    .slice(0, 20);
+  if (!lines.length) throw new MindError(t('Write a few words first.'));
+  return lines.map((text) => addMind(viewer, { ...input, text }));
 }
 
 export function addMind(viewer: number, input: MindInput) {
@@ -144,8 +167,8 @@ export function addMind(viewer: number, input: MindInput) {
   const other =
     kind === 'done' && input.done_by && input.done_by !== viewer && db.prepare(`SELECT 1 FROM users WHERE id = ? AND COALESCE(kind, 'member') != 'guest'`).get(input.done_by) ? input.done_by : null;
   const info = db
-    .prepare(`INSERT INTO mind_items (user_id, text, kind, visibility, hide_from, done_at, done_by) VALUES (?, ?, ?, ?, ?, ${kind === 'done' ? "datetime('now')" : 'NULL'}, ?)`)
-    .run(viewer, cleanText(input.text ?? ''), kind, other || input.visibility !== 'private' ? 'household' : 'private', other ? '[]' : cleanHide(input.hide_from, viewer), other);
+    .prepare(`INSERT INTO mind_items (user_id, text, kind, visibility, hide_from, done_at, done_by, due_on) VALUES (?, ?, ?, ?, ?, ${kind === 'done' ? "datetime('now')" : 'NULL'}, ?, ?)`)
+    .run(viewer, cleanText(input.text ?? ''), kind, other || input.visibility !== 'private' ? 'household' : 'private', other ? '[]' : cleanHide(input.hide_from, viewer), other, kind === 'open' ? cleanDay(input.due_on) : null);
   emit('mind');
   return view(db.prepare('SELECT * FROM mind_items WHERE id = ?').get(Number(info.lastInsertRowid)) as Row, viewer);
 }
@@ -154,6 +177,7 @@ export function addMind(viewer: number, input: MindInput) {
 export function updateMind(viewer: number, id: number, input: MindInput) {
   const row = own(id, viewer);
   const kind = input.kind ?? row.kind;
+  if (input.due_on !== undefined) db.prepare('UPDATE mind_items SET due_on = ? WHERE id = ?').run(cleanDay(input.due_on), id);
   db.prepare(`UPDATE mind_items SET text = ?, kind = ?, visibility = ?, hide_from = ?, done_at = ? WHERE id = ?`).run(
     input.text !== undefined ? cleanText(input.text) : row.text,
     kind,
@@ -164,6 +188,28 @@ export function updateMind(viewer: number, id: number, input: MindInput) {
   );
   emit('mind');
   return view(db.prepare('SELECT * FROM mind_items WHERE id = ?').get(id) as Row, viewer);
+}
+
+/**
+ * "Was davon ist noch wichtig?" – my open thoughts older than a week that I haven't looked at for two weeks, at most
+ * ten, oldest first. One at a time, swipe: still important (keep), done, or let go. Letting go is allowed.
+ */
+export function mindReview(viewer: number) {
+  const rows = db
+    .prepare(
+      `SELECT * FROM mind_items WHERE user_id = ? AND kind = 'open' AND created_at <= datetime('now', '-7 days')
+       AND (reviewed_at IS NULL OR reviewed_at <= datetime('now', '-14 days')) ORDER BY created_at LIMIT 10`,
+    )
+    .all(viewer) as Row[];
+  const people = names();
+  return { items: rows.map((r) => view(r, viewer, people)) };
+}
+
+/** "Noch wichtig" – stays, and won't be asked about again for two weeks. */
+export function keepMind(viewer: number, id: number) {
+  own(id, viewer);
+  db.prepare(`UPDATE mind_items SET reviewed_at = datetime('now') WHERE id = ?`).run(id);
+  return { ok: true };
 }
 
 export function deleteMind(viewer: number, id: number) {

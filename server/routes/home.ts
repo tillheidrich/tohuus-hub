@@ -40,7 +40,7 @@ import { BIN_KINDS, calsyncView, reviveKind, setCalendarAiConsent, setCalsyncSet
 import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
-import { addMind, deleteMind, MindError, mindList, nodMind, updateMind } from '../lib/mind.js';
+import { addMind, addMindMany, deleteMind, keepMind, MindError, mindList, mindReview, nodMind, updateMind } from '../lib/mind.js';
 import { checkinSave, checkinSkip, checkinView, setCheckinOn } from '../lib/checkin.js';
 import { addCareFor, addCareForTask, careForHint, careForList, deleteCareFor, deleteCareForLog, dismissCareForHint, logCareFor, updateCareFor } from '../lib/carefor.js';
 import { dismissCarrying } from '../lib/habits.js';
@@ -358,6 +358,9 @@ r.post('/calsync/suggest', async (req, res) => {
 
 const mindBody = z.object({
   done_by: z.number().int().positive().nullable().optional(),
+  due_on: z.string().regex(/^\d{4}-\d\d-\d\d$/).nullable().optional(),
+  /** brain dump: one thought per line */
+  many: z.boolean().optional(),
   text: z.string().max(400).optional(),
   kind: z.enum(['open', 'done']).optional(),
   visibility: z.enum(['private', 'household']).optional(),
@@ -377,7 +380,15 @@ const mindRun = (fn: (me: number, req: Request) => unknown) => (req: Request, re
 };
 const mindId = (req: Request) => Number(req.params.id) || 0;
 r.get('/mind', mindRun((me) => mindList(me)));
-r.post('/mind', mindRun((me, req) => addMind(me, mindBody.parse(req.body))));
+r.post(
+  '/mind',
+  mindRun((me, req) => {
+    const b = mindBody.parse(req.body);
+    return b.many ? { items: addMindMany(me, b) } : addMind(me, b);
+  }),
+);
+r.get('/mind/review', mindRun((me) => mindReview(me)));
+r.post('/mind/:id/keep', mindRun((me, req) => keepMind(me, mindId(req))));
 r.patch('/mind/:id', mindRun((me, req) => updateMind(me, mindId(req), mindBody.parse(req.body))));
 r.delete('/mind/:id', mindRun((me, req) => deleteMind(me, mindId(req))));
 r.post('/mind/:id/nod', mindRun((me, req) => nodMind(me, mindId(req))));
@@ -460,6 +471,38 @@ r.put('/share/settings', (req, res) => {
   const b = z.object({ footer: z.boolean() }).parse(req.body);
   setSetting('share.footer', b.footer);
   res.json({ footer: b.footer });
+});
+
+// ---------------------------------------------------------------- tasks handed to a person – also a permanent guest (docs/guests-and-permissions.md)
+
+/** The tasks this person does (as doer, or standing in while someone is away) – for guests the only view of Aufgaben. */
+function myTasks(me: number) {
+  return listCareTasks({ viewer: me })
+    .filter((x) => !x.archived && x.doer?.key === `u${me}` && canSeeTask(x, me))
+    .map((x) => ({
+      id: x.id,
+      name: x.name,
+      note: x.note,
+      next_due: x.next_due,
+      due_time: x.due_time,
+      state: x.state,
+      days: x.days,
+      checklist: x.checklist,
+      place: x.place,
+      stand_in: x.stand_in,
+    }));
+}
+r.get('/guest-tasks', (req, res) => {
+  const me = req.actor?.userId;
+  if (!me) return void res.status(403).json({ error: t('Only household members can do this') });
+  res.json({ tasks: myTasks(me) });
+});
+r.post('/guest-tasks/:id/done', (req, res) => {
+  const me = req.actor?.userId;
+  const id = Number(req.params.id);
+  if (!me || !myTasks(me).some((x) => x.id === id)) return void res.status(404).json({ error: t('Task not found') });
+  completeCareTask(id, req.actor!.name, { actorUserId: me });
+  res.json({ ok: true, message: t('Done – thank you!') });
 });
 
 // ---------------------------------------------------------------- Monatsrückblick (lib/weekly.ts)

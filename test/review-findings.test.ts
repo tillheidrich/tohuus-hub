@@ -228,7 +228,7 @@ describe('review: crypto-shredding leaves no way back', () => {
 });
 
 describe('review: AI imports count against the plan', () => {
-  it('Free: 10 recipe imports with AI a day, then HTTP 429 quota.importAi; text is capped', async () => {
+  it('Free: no recipe imports with AI (HTTP 429 quota.importAi); text is capped', async () => {
     const A = new Client();
     const h = await signup(A, 'cook@example.org', 'Cook', 'Cook Home');
     accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(h);
@@ -243,11 +243,11 @@ describe('review: AI imports count against the plan', () => {
     });
     try {
       expect((await A.req('PATCH', '/api/ai/settings', { consent: true })).status).toBe(200);
-      for (let i = 0; i < 10; i++) expect((await A.post('/api/recipes/import/text', { text: `Suppe ${i}: Wasser kochen und fertig.` })).status).toBe(200);
+      // Free has no AI imports (15 Oct 2026) – the first one is refused with the plan's message
       const over = await A.post('/api/recipes/import/text', { text: 'Noch eine Suppe: Wasser kochen.' });
       expect(over.status).toBe(429);
       expect(over.json.code).toBe('quota.importAi');
-      expect(tenancy.runInHousehold(h, () => plans.usage('importAi'))).toBe(10);
+      expect(tenancy.runInHousehold(h, () => plans.usage('importAi'))).toBe(0);
       expect((await A.post('/api/recipes/import/text', { text: 'x'.repeat(60_000) })).status).toBe(400);
       expect(Math.max(...sent)).toBeLessThan(60_000);
     } finally {
