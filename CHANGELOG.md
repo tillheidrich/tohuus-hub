@@ -4,6 +4,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Web layout: text no longer touches the border in the new cards. Fokus, the Denkarbeit-Check, Extras, Sterne and Ratgeber cards have inner padding, the Denkarbeit answers wrap inside the card, and the teaser text in Aufgaben stays in its row. `scripts/ui-audit.mjs` reports this as `tight`, and the audit now visits `/fokus`, `/denkarbeit` and `/rueckblick`. The website screenshots are renewed.
 - Geld: the month's purchases right on the Geld page ("Einkäufe", newest first) – tap one for its items, prices and who it was for (receipt) or the expense form (web and iPhone). `purchases` in `GET /api/money/overview`.
 - Rückblick "Euer Jahr to Huus" (docs/review.md): the household's year in a few cards – bought, planned, cooked, done, used up, spent – as "wir", no names, no ranking, nothing private, no money in gentle mode. Built but off: needs `YEAR_REVIEW=on` or the back office switch; then on Heute from 1 December to 15 January, page `/rueckblick` (web and iPhone). `GET /api/review`.
 - Web offline queue: queued list changes carry the account they were made in (`scope` in `GET /api/me`) and are only replayed for it; `POST /api/shop/sync` answers 409 for another account's queue. Before, a queue left from one account could be replayed after signing in to another household.

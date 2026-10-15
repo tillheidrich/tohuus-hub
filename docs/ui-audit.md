@@ -42,6 +42,7 @@ so the dark run follows the browser's colour scheme.
 | `offscreen` | something reaches past the left/right screen edge (not inside a scroll row, not cut by a clipping parent), or the page scrolls sideways |
 | `icon-overlap` | text drawn on an icon inside the same button/row, or a count badge covering more than a corner of its icon |
 | `wrap-under` | a button label that continues underneath its icon |
+| `tight` | text closer than 6 px to the border of the box it sits in, such as a card or chip without padding. Full-width bands, small discs under 48 px and text cut with „…“ are skipped |
 | `covered` | at the end of the page a control is still under the floating "Sprechen" button or the tab bar |
 | `not-reached` | a sheet could not be opened (selector changed, or the demo has nothing to open – e.g. no planned meal) |
 

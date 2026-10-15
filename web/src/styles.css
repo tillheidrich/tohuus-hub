@@ -10837,6 +10837,25 @@ html.gentle .badge.empty {
 }
 
 /* Denkarbeit-Check (pages/LoadCards.tsx) */
+/* cards with text in them (not around a list) keep their text off the border – 15 Oct 2026 */
+.card.stack,
+.loadcard,
+.ratgeber-card {
+  padding: 16px;
+}
+/* "So hilft ToHuus …" reads like a sentence: left-aligned, the arrow right after it */
+.loadcard .linkish,
+.loadcards-help .linkish {
+  text-align: left;
+  justify-content: flex-start;
+}
+/* the four answers wrap inside the card instead of running off its edge */
+.loadcard .chips {
+  flex-wrap: wrap;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+}
 .loadcard-text {
   font-size: 1.08rem;
   font-weight: 600;
@@ -10849,6 +10868,14 @@ html.gentle .badge.empty {
 }
 .loadcards-help li {
   margin: 4px 0;
+}
+.loadcards-teaser .grow {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.loadcards-teaser .sub {
+  white-space: normal;
 }
 .loadcards-teaser {
   gap: 12px;
