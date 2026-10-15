@@ -43,10 +43,10 @@ extension APIClient {
 
 enum LoadAnswers {
     static let all: [(key: String, title: String)] = [
-        ("me", "Mostly me"), ("shared", "We share it"), ("other", "Mostly someone else"), ("na", "Not our thing"),
+        ("me", L("Mostly me")), ("shared", L("We share it")), ("other", L("Mostly someone else")), ("na", L("Not our thing")),
     ]
     /// short labels for the answer buttons (the full one is the accessibility label)
-    static let short: [String: String] = ["me": "Me", "shared": "We share", "other": "Someone else", "na": "Not for us"]
+    static let short: [String: String] = ["me": L("Me"), "shared": L("We share"), "other": L("Someone else"), "na": L("Not for us")]
 }
 
 /// Entry row (Aufgaben › Wer hat was im Blick)

@@ -389,7 +389,8 @@ export function setHomePlan(tripId: number, taskId: number, input: { mode: 'take
 function moveWaiting(trip: TripRow, to: string) {
   const after = shiftDay(trip.end_day, 1);
   for (const [id, e] of Object.entries(parsePlan(trip.task_plan))) {
-    if (e.mode === 'wait') db.prepare('UPDATE care_tasks SET next_due = ? WHERE id = ? AND next_due = ?').run(to, Number(id), after);
+    // never earlier than it was due before the trip
+    if (e.mode === 'wait') db.prepare('UPDATE care_tasks SET next_due = ? WHERE id = ? AND next_due = ?').run(e.prev && e.prev > to ? e.prev : to, Number(id), after);
   }
 }
 
@@ -484,7 +485,8 @@ export interface CheckItem {
   goto: string | null;
 }
 
-export function checklist(trip: TripRow, today = awayDay(0)): CheckItem[] {
+/** `outside` (MCP): tasks for someone a member looks after stay out (health data, carefor.ts). */
+export function checklist(trip: TripRow, today = awayDay(0), outside = false): CheckItem[] {
   const done = parseObj<Record<string, boolean>>(trip.checklist, {});
   const sitter = parseObj<SitterNotes>(trip.sitter, {});
   const items: Omit<CheckItem, 'done'>[] = [];
@@ -508,7 +510,7 @@ export function checklist(trip: TripRow, today = awayDay(0)): CheckItem[] {
     goto: 'sitter',
   });
   items.push({ key: 'post', text: t('Post: pause it or ask someone to empty the mailbox'), detail: sitter.post ?? null, goto: 'sitter' });
-  for (const c of listCareTasks()) {
+  for (const c of listCareTasks({ outside })) {
     if (!c.next_due || c.next_due > trip.end_day) continue;
     if (c.state !== 'overdue' && c.state !== 'today' && c.state !== 'soon' && c.next_due < trip.start_day) continue;
     items.push({
@@ -921,7 +923,8 @@ export function sitterNote(trip: TripRow) {
   if (s.post) lines.push(`${t('Post')}: ${s.post}`);
   if (s.bins) lines.push(`${t('Bin days')}: ${s.bins}`);
   if (s.other) lines.push(s.other);
-  const care = listCareTasks().filter((c) => c.next_due && c.next_due >= trip.start_day && c.next_due <= trip.end_day);
+  // the note goes to someone outside the household: never tasks for someone a member looks after (health data)
+  const care = listCareTasks({ outside: true }).filter((c) => c.next_due && c.next_due >= trip.start_day && c.next_due <= trip.end_day);
   if (care.length) lines.push(`${t('Due while we’re away (only if it’s easy)')}: ${care.map((c) => `${c.name} (${fmtDay(c.next_due!)})`).join(', ')}`);
   return lines.join('\n\n').slice(0, 2000);
 }

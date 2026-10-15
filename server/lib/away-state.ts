@@ -72,7 +72,7 @@ migrate(
 migrate('away-kind', `ALTER TABLE away_trips ADD COLUMN kind TEXT; ALTER TABLE away_trips ADD COLUMN task_plan TEXT NOT NULL DEFAULT '{}';`);
 
 /** holiday · work (business trip) · party (stag/hen do, wellness, a weekend off) · hospital (hospital, rehab – health data:
- *  never to AI, MCP, Home Assistant or exports) · other */
+ *  never to AI, MCP or Home Assistant; the household's own export keeps it, as members see it in the app) · other */
 export const TRIP_KINDS = ['holiday', 'work', 'party', 'hospital', 'other'] as const;
 export type TripKind = (typeof TRIP_KINDS)[number];
 

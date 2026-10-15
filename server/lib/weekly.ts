@@ -36,6 +36,23 @@ export function lastWeek(day = today()) {
   return periodRange('week', addDays(cur.from, -1), region().weekStart);
 }
 
+/**
+ * "Welche Aufgaben erledigt wurden" (Till, 15 Oct 2026): the tasks done in the period with how often, for the share
+ * card the person puts together themselves (they pick which). Household: shared tasks only, no names of who did them.
+ * Mine: what I did, my private tasks included (only I see this part). Never tasks for someone a member looks after.
+ */
+function doneTasks(from: string, to: string, actor?: number): { name: string; times: number }[] {
+  const rows = db
+    .prepare(
+      `SELECT ct.name, COUNT(*) times, MAX(cl.done_on) last FROM care_log cl JOIN care_tasks ct ON ct.id = cl.task_id
+        WHERE cl.done_on BETWEEN ? AND ? AND ct.cared_for_id IS NULL
+          AND ${actor != null ? `cl.actor_user_id = ? AND (ct.visibility != 'private' OR ct.owner_user_id = ?)` : `ct.visibility != 'private'`}
+        GROUP BY ct.name ORDER BY times DESC, last DESC LIMIT 30`,
+    )
+    .all(...(actor != null ? [from, to, actor, actor] : [from, to])) as { name: string; times: number }[];
+  return rows.map((r) => ({ name: r.name, times: r.times }));
+}
+
 function mine(viewer: number, from: string, to: string): ReviewCard[] {
   const me = db.prepare('SELECT name FROM users WHERE id = ?').get(viewer) as { name: string } | undefined;
   if (!me) return [];
@@ -126,8 +143,8 @@ function periodReview(viewer: number | null, period: 'week' | 'month', day?: str
     title: period === 'week' ? t('Your week at home') : t('Your month at home'),
     /** a single parent carries it all – said out loud, kindly */
     note: singleParent && household.length + personal.length > 0 ? t('All of it on your shoulders – and look what you did.') : null,
-    household: { title: alone || singleParent ? t('At home') : t('This is what you did together'), cards: household },
-    mine: viewer != null ? { title: t('This is what you did'), cards: personal } : null,
+    household: { title: alone || singleParent ? t('At home') : t('This is what you did together'), cards: household, tasks: doneTasks(from, end) },
+    mine: viewer != null ? { title: t('This is what you did'), cards: personal, tasks: doneTasks(from, end, viewer) } : null,
     quiet: household.length === 0 && personal.length === 0 ? (period === 'week' ? t('A quiet week – that’s allowed too.') : t('A quiet month – that’s allowed too.')) : null,
   };
 }

@@ -97,8 +97,8 @@ export function cookCards(from: string, to: string): ReviewCard[] {
 }
 
 export function taskCards(from: string, to: string): ReviewCard[] {
-  // household tasks only – private ones never count
-  const shared = new Map(listCareTasks().filter((x) => canSeeTask(x)).map((x) => [x.id, x.name]));
+  // household tasks only – private ones never count, tasks for someone a member looks after never (these cards are shared)
+  const shared = new Map(listCareTasks({ outside: true }).filter((x) => canSeeTask(x)).map((x) => [x.id, x.name]));
   const rows = db.prepare(`SELECT task_id FROM care_log WHERE done_on BETWEEN ? AND ?`).all(from, to) as { task_id: number }[];
   const counts = new Map<string, number>();
   let done = 0;

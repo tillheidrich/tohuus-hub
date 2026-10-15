@@ -73,7 +73,7 @@ export function register(s: McpServer, actorName: string) {
       return text({
         trip: compactTrip(tr.id),
         use_up_before_leaving: sum.phase === 'before' || sum.phase === 'planned' ? useUpList(tr).map((x) => ({ name: x.name, use_by: x.use_by, can_freeze: x.can_freeze })) : undefined,
-        checklist: sum.phase === 'before' ? checklist(tr).map((c) => ({ item: c.text, detail: c.detail ?? undefined, done: c.done })) : undefined,
+        checklist: sum.phase === 'before' && tr.kind !== 'hospital' ? checklist(tr, undefined, true).map((c) => ({ item: c.text, detail: c.detail ?? undefined, done: c.done })) : undefined,
         welcome_home: sum.trip.welcome_ready ? welcomeList(tr).map((w) => ({ name: w.name, reason: w.reason, on_shopping_list: w.on_list })) : undefined,
         suggestion: sum.suggestion ?? undefined,
       });
@@ -145,6 +145,8 @@ export function register(s: McpServer, actorName: string) {
     async (a) => {
       const tr = tripFor(a.trip_id);
       if (!tr) return err('No trip found. Plan one with start_trip first.');
+      // a hospital stay is health data (what's packed says a lot): only in the app itself
+      if (tr.kind === 'hospital') return err('This trip’s packing list is only in the ToHuus app.');
       try {
         if (a.action === 'add') {
           for (const x of a.items ?? []) addPackItem(tr.id, { text: x });

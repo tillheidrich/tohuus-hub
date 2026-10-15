@@ -4,6 +4,23 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Rückblick: "Aufgaben teilen" – pick which done tasks go on the share picture (web and iOS). `GET /api/week-review` and `/api/month-review` add `household.tasks` / `mine.tasks` (docs/week-review.md).
+- Assistant: new tools `mind_list`, `mind_add`, `review`, `away_status` and `home_plan_set`. A household guest can be the doer. General household questions are answered as rules of thumb (docs/assistant.md).
+- Privacy and security fixes from the review:
+  - The export leaves out other people's private and hidden thoughts, and private people someone looks after with their log.
+  - Tasks for someone looked after stay out of webhooks, HA, chat channels, kiosk, printers, tickets, the sitter note and MCP checklists; their reminders go to members' own devices only.
+  - Deleting such a person deletes their tasks.
+  - A hidden thought becomes a private task.
+  - A hospital stay's packing list is not available over MCP.
+- Website form "Wir können uns das nicht leisten": the CSRF check lets it through from the website; rate limit and bad input lead to the friendly error page.
+- Fixes:
+  - A task that may wait never ends up due earlier than before the trip.
+  - Impossible dates in the review give 400.
+  - "Heute gelöst" counts in the household's time zone.
+  - The brain dump takes 20 full lines.
+  - Permanent guests can read `/api/whats-new`.
+  - The care hint no longer fires on recipes.
+
 - Free without any AI (docs/pricing.md): the minimum for 0 €, and the 14-day trial for every new household.
   - The assistant answers 402 `plan.assistant` with a calm note; simple commands still work.
   - The website form "Wir können uns das gerade nicht leisten" (`POST /api/cloud/hardship`) leads to back office › Härtefälle, where one click gifts a single-use code by e-mail. The operators' address is never shown.

@@ -37,7 +37,12 @@ export function solvedToday(day = localDay(0)) {
   const done = (db.prepare('SELECT task_id FROM care_log WHERE done_on = ?').all(day) as { task_id: number }[]).filter((r) => tasks.has(r.task_id)).length;
   let side = 0;
   try {
-    side = (db.prepare(`SELECT COUNT(*) n FROM mind_items WHERE kind = 'done' AND visibility = 'household' AND date(done_at) = ?`).get(day) as { n: number }).n;
+    // done_at is UTC; "today" is the household's day (config.timezone) – compare in that zone
+    const fmt = new Intl.DateTimeFormat('sv-SE', { timeZone: config.timezone });
+    const rows = db
+      .prepare(`SELECT done_at FROM mind_items WHERE kind = 'done' AND visibility = 'household' AND hide_from = '[]' AND done_at BETWEEN date(?, '-1 day') AND date(?, '+2 days')`)
+      .all(day, day) as { done_at: string }[];
+    side = rows.filter((r) => fmt.format(new Date(`${r.done_at.replace(' ', 'T')}Z`)) === day).length;
   } catch {
     /* older schema */
   }
@@ -82,10 +87,11 @@ export function checkinSave(viewer: number, items: CheckinItem[]) {
   const day = localDay(0);
   const people = new Map(members().map((m) => [m.id, m]));
   let saved = 0;
+  const tasks = new Map(listCareTasks().filter((x) => x.visibility !== 'private').map((x) => [x.id, x]));
   for (const it of items.slice(0, 20)) {
     const who = it.who && people.has(it.who) ? it.who : viewer;
     if (it.task_id) {
-      const task = listCareTasks().find((x) => x.id === it.task_id && x.visibility !== 'private');
+      const task = tasks.get(it.task_id);
       if (!task) continue;
       const already = db.prepare('SELECT 1 FROM care_log WHERE task_id = ? AND done_on = ?').get(task.id, day);
       if (!already) completeCareTask(task.id, people.get(who)!.name, { doneOn: day, actorUserId: who });

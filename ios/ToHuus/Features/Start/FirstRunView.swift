@@ -218,11 +218,11 @@ private struct FirstRunWho: View {
     @State private var error: String?
 
     static let forms: [(key: String, symbol: String, label: String, hint: String)] = [
-        ("single", "person", "Just me", "One list, nothing to share."),
-        ("couple", "person.2", "The two of us", "One list for both, live on both phones."),
-        ("family", "figure.2.and.child.holdinghands", "Family", "Everyone adds, whoever shops sees it."),
-        ("shared", "house", "Shared flat", "Shared things together, your own stays yours."),
-        ("carer", "heart", "I also look after someone", "For example parents or a neighbour – their list next to yours."),
+        ("single", "person", L("Just me"), L("One list, nothing to share.")),
+        ("couple", "person.2", L("The two of us"), L("One list for both, live on both phones.")),
+        ("family", "figure.2.and.child.holdinghands", L("Family"), L("Everyone adds, whoever shops sees it.")),
+        ("shared", "house", L("Shared flat"), L("Shared things together, your own stays yours.")),
+        ("carer", "heart", L("I also look after someone"), L("For example parents or a neighbour – their list next to yours.")),
     ]
 
     var body: some View {
@@ -275,13 +275,13 @@ private struct FirstRunModules: View {
     @State private var error: String?
 
     static let items: [(key: String, symbol: String, label: String, hint: String)] = [
-        ("stock", "cabinet", "Pantry", "What is at home and what should be eaten soon."),
-        ("cook", "fork.knife", "Cook", "Recipes, ideas from what you have, a week plan if you like."),
-        ("money", "eurosign.circle", "Money", "What food and household cost, from your receipts."),
-        ("treats", "heart", "Treats", "Wishes from the sofa: tea, a snack, a drink."),
-        ("homeinfo", "wrench.and.screwdriver", "Home info", "Care tasks and things to know about the home."),
-        ("guests", "party.popper", "Guests & party", "Guest links, a party board, orders from guests."),
-        ("ha", "house.circle", "Home Assistant", "Only if you run Home Assistant."),
+        ("stock", "cabinet", L("Pantry"), L("What is at home and what should be eaten soon.")),
+        ("cook", "fork.knife", L("Cook"), L("Recipes, ideas from what you have, a week plan if you like.")),
+        ("money", "eurosign.circle", L("Money"), L("What food and household cost, from your receipts.")),
+        ("treats", "heart", L("Treats"), L("Wishes from the sofa: tea, a snack, a drink.")),
+        ("homeinfo", "wrench.and.screwdriver", L("Home info"), L("Care tasks and things to know about the home.")),
+        ("guests", "party.popper", L("Guests & party"), L("Guest links, a party board, orders from guests.")),
+        ("ha", "house.circle", "Home Assistant", L("Only if you run Home Assistant.")),
     ]
 
     var body: some View {
@@ -476,12 +476,12 @@ private struct FirstRunWalk: View {
     @State private var error: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let base = ["Milk", "Bread", "Eggs", "Butter", "Coffee", "Pasta", "Rice", "Onions", "Tinned tomatoes", "Cheese", "Toilet paper", "Washing-up liquid"]
+    private static let base = [L("Milk"), L("Bread"), L("Eggs"), L("Butter"), L("Coffee"), L("Pasta"), L("Rice"), L("Onions"), L("Tinned tomatoes"), L("Cheese"), L("Toilet paper"), L("Washing-up liquid")]
     private static let extra: [String: [String]] = [
-        "single": ["Muesli", "Frozen pizza"],
-        "family": ["Yoghurt", "Apples", "Juice", "Bananas"],
-        "shared": ["Oat milk", "Bin bags", "Sponges"],
-        "carer": ["Mineral water", "Rusks", "Tea"],
+        "single": [L("Muesli"), L("Frozen pizza")],
+        "family": [L("Yoghurt"), L("Apples"), L("Juice"), L("Bananas")],
+        "shared": [L("Oat milk"), L("Bin bags"), L("Sponges")],
+        "carer": [L("Mineral water"), L("Rusks"), L("Tea")],
     ]
 
     private var items: [String] {

@@ -43,3 +43,16 @@ A card has the same shape as in the year in review (`docs/review.md`): `{ key, a
 - it is within the first three days of the new week;
 - the person has not marked the week as seen;
 - there is at least one card.
+
+
+## Erledigte Aufgaben aufs Bild (15 Oct 2026)
+
+Till: besides the general numbers ("4 Mal an etwas gedacht"), you can show which tasks were done, and choose which.
+- `GET /api/week-review` and `/api/month-review` add `household.tasks` and `mine.tasks`: `[{ name, times }]`, most often first, at most 30.
+  - `household.tasks`: shared tasks only, no names of who did them.
+  - `mine.tasks`: what the viewer did, their private tasks included (only they see this part).
+  - Never tasks for someone a member looks after (`cared_for_id`, health data). The "Am häufigsten" list of the household card leaves them out too.
+- Web and iOS: "Aufgaben teilen" next to "Woche teilen" (household) and in "Das hast du geschafft".
+  - The sheet "Welche Aufgaben kommen aufs Bild?" has chips, up to 6, with a live preview.
+  - The card shows the sum and the picked tasks ("Müll raus · 3×").
+  - The pick is remembered per device and preselected next time, if those tasks were done again.

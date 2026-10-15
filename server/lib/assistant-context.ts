@@ -40,6 +40,8 @@ export function topicsOf(message: string): Topic[] {
   if (/gäste|gaeste|party|feier|geburtstag|grillen|guests|birthday/.test(m)) out.add('guests');
   // Aufgaben (assistant-tasks.ts): chores, care & deadlines, who keeps what in mind, taking turns
   if (/aufgabe|to-?do|putz|sauber mach|bad\b|badezimmer|staubsaug|saugen|wisch|staub|wäsche|waesche|bettwäsche|handtücher|müll|muell|altglas|altpapier|fenster|backofen|blumen gieß|pflanzen gieß|gießen|erledig|wer ist dran|ist dran\b|abwechsel|zuständig|zustaendig|im blick|kümmer|kuemmer|hausarbeit|haushalt\w*|mental load|verteil|fair\b|frist|wasserfilter|rauchmelder|entkalk|reifen|reisepass|ausweis|erinner mich|termin\w*|kalender|um \d{1,2}(:\d\d)? uhr|schornsteinfeger|handwerker|elternabend|chore|task|appointment|calendar|clean|vacuum|laundry|bins?\b|whose turn|take turns|housework/.test(m)) out.add('tasks');
+  // Im Kopf, Rückblick, Unterwegs (assistant-home.ts) – they live with the tasks
+  if (/im kopf|gedanke|kopf frei|brain ?dump|nebenbei|geschafft|rückblick|rueckblick|diese woche|letzte woche|im urlaub|dienstreise|krankenhaus|wer ist weg|ist weg\b|nicht da\b|abwesen|unterwegs|übernimmt|uebernimmt|warten kann|darf warten|oma\b|opa\b|tante|on my mind|done on the side|this week|last week|who is away|takes over/.test(m)) out.add('tasks');
   // wish lists / Merkliste (assistant-wishes.ts): "merk dir die Kekse aus dem Artikel", "was wünscht sich Mika?"
   if (/merkliste|wunsch|wünsch|wuensch|geschenk|schenken|wishlist|\bwish|\bgift|merk dir\b.*(artikel|link|https?:)|save (this|it) for later/.test(m)) out.add('wishes');
   // questions about the app itself (assistant-scope.ts › app_help)
@@ -128,6 +130,10 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
     has('stock') || has('cooking') ? useSoonLine() : '',
     has('cooking') && week.length ? `Plan: ${week.map((w) => `${w.day} ${w.slot}: ${w.title}`).join('; ')}` : '',
     has('tasks') ? tasksLine() : '',
+    // general household know-how ("wie oft Bettwäsche wechseln?") – only with the tasks topic, so simple questions stay small
+    has('tasks')
+      ? 'General questions about household tasks (how often, how, with what, how to share fairly): answer briefly as a rule of thumb, then offer to make a task. No medical, legal or care advice – point to official sources.'
+      : '',
     has('money') && money ? `Money: week ${fmtMoney(money.week)}, month ${fmtMoney(money.month)}${money.budget ? `, budget ${fmtMoney(money.budget.amount)} (${fmtMoney(money.budget.left)} left)` : ''}` : '',
     memory.length ? `Remembered: ${memory.map((m) => `[${m.id}] ${m.text}`).join(' | ')}` : '',
   ].filter(Boolean);

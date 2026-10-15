@@ -242,3 +242,20 @@ Recordings are never stored: they stay in memory for the transcription and are d
 | `VISION_BASE_URL`, `VISION_API_KEY`, `VISION_MODEL` | older installs; used when no `AI_*` is set (then no audio model unless `AI_MODEL_AUDIO`) |
 
 Every request to OpenRouter carries `provider: { order: ["mistral"], allow_fallbacks: false, data_collection: "deny" }`. Timeouts 60 s (vision 120 s, audio 90 s), two retries with backoff for 429/5xx/timeouts. At start the server checks on OpenRouter's `/models` that the vision model accepts images and logs a warning if not.
+
+
+## Im Kopf, Rückblick, Unterwegs, Gäste (15 Oct 2026, `server/lib/assistant-home.ts`)
+
+Topic `tasks` brings these tools along. Words like "im Kopf", "geschafft", "Dienstreise", "wer ist weg" or "Oma" also select the topic.
+
+| Tool | What |
+|---|---|
+| `mind_list` | Thoughts the household shared, open or done on the side. Private thoughts and thoughts hidden from the viewer never. |
+| `mind_add` | Write down a thought or something done on the side (`done`, `done_by`, a soft `due`, `only_me`), with undo. |
+| `review` | Week or month: the household part, the tasks done together and the speaker's own numbers. No personal lists, never "für wen ich da bin". |
+| `away_status` | Who is away until when, and what happens with the tasks at home. A hospital stay is just "away", without its name or place. |
+| `home_plan_set` | Someone at home or a household guest takes a task, it waits, or it goes back to usual. Only after a yes, with undo. |
+
+- `task_add` / `task_assign`: `doer` may be a household guest ("Oma gießt die Blumen"). `keeps_in_mind` stays for members only.
+- General questions about household tasks ("wie oft Bettwäsche wechseln?") are answered briefly as a rule of thumb, then the assistant offers to make a task of it. No medical, legal or care advice. This instruction is only in the prompt with the tasks topic.
+- `app_help` knows Im Kopf, Rückblick, Abendfrage, Für wen ich da bin, guests helping, swiping and absences of single people.

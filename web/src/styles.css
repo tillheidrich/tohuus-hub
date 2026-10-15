@@ -11393,3 +11393,9 @@ ul.mind-list,
   min-height: 36px;
   padding: 4px 8px;
 }
+
+/* Wochenrückblick › "Aufgaben teilen": the person picks which tasks go on the picture */
+.review-pick {
+  gap: 8px;
+  margin: 4px 0 16px;
+}

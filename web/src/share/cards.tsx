@@ -150,7 +150,8 @@ export async function drawCard(canvas: HTMLCanvasElement, spec: CardSpec, format
   if (spec.list?.length) {
     y += 22;
     ctx.font = `38px ${SANS}`;
-    for (const item of spec.list.slice(0, 3)) {
+    // a list the person picked themselves (erledigte Aufgaben) may be longer when there is no text
+    for (const item of spec.list.slice(0, spec.text ? 3 : 6)) {
       if (y > limit) break;
       ctx.fillText(`·  ${lines(ctx, item, max - 40)[0]}`, pad, y);
       y += 54;
@@ -183,7 +184,8 @@ export function ShareCardButton({ spec, className = 'btn sm ghost', label }: { s
   );
 }
 
-function ShareCardSheet({ spec, onClose }: { spec: CardSpec; onClose: () => void }) {
+/** `children` sits above the preview – e.g. the picker for which tasks go on the card. */
+export function ShareCardSheet({ spec, onClose, title, children }: { spec: CardSpec; onClose: () => void; title?: string; children?: React.ReactNode }) {
   const meta = useShareMeta();
   const toast = useToast();
   const [format, setFormat] = useState<CardFormat>('story');
@@ -220,7 +222,8 @@ function ShareCardSheet({ spec, onClose }: { spec: CardSpec; onClose: () => void
     a.click();
   };
   return (
-    <Sheet open onClose={onClose} title={t('Share as image')}>
+    <Sheet open onClose={onClose} title={title ?? t('Share as image')}>
+      {children}
       <Seg
         value={format}
         onChange={setFormat}

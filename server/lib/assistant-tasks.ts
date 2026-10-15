@@ -54,7 +54,7 @@ export const TASK_TOOL_DEFS: ToolDef[] = [
       place: { type: 'string', description: 'where the appointment is' },
       keep_days: { type: 'boolean', description: 'true = keeps its days ("every Saturday") instead of counting from the day it was done' },
       only_me: { type: 'boolean' },
-      doer: { type: 'string', description: 'name of the person who does it' },
+      doer: { type: 'string', description: 'name of the person who does it – a member or a household guest (e.g. grandma who waters the plants)' },
       take_turns: { type: 'array', items: { type: 'string' }, description: 'names, in order, who take turns' },
       steps: { type: 'array', items: { type: 'string' }, description: 'sub-items, e.g. sink, mirror, floor' },
     },
@@ -67,7 +67,7 @@ export const TASK_TOOL_DEFS: ToolDef[] = [
     {
       task: { type: 'string' },
       keeps_in_mind: { type: 'string', description: 'a name, "me", or "nobody"' },
-      doer: { type: 'string', description: 'a name, or "nobody"' },
+      doer: { type: 'string', description: 'a name (a member or a household guest), or "nobody"' },
       take_turns: { type: 'array', items: { type: 'string' } },
     },
     ['task'],
@@ -86,13 +86,14 @@ type Ctx = { actor: string; userId: number | null };
 
 const WHEN: Record<string, string> = { overdue: 'overdue', today: 'due today', soon: 'due soon', ok: 'later', none: 'no date' };
 
-/** a person by name (or "me"): directory key u<id> / k<id> */
-function personKey(name: unknown, ctx: Ctx): string | null | undefined {
+/** a person by name (or "me"): directory key u<id> / k<id>. `guests`: household guests too (Oma waters the plants). */
+function personKey(name: unknown, ctx: Ctx, guests = false): string | null | undefined {
   if (typeof name !== 'string' || !name.trim()) return undefined;
   const n = norm(name);
   if (['nobody', 'niemand', 'none', 'keiner'].includes(n)) return null;
   if (['me', 'ich', 'mir', 'mich'].includes(n)) return ctx.userId ? `u${ctx.userId}` : undefined;
-  const hit = directory().find((p) => p.kind !== 'guest' && norm(p.name) === n) ?? directory().find((p) => p.kind !== 'guest' && norm(p.name).startsWith(n));
+  const ok = (p: { kind: string }) => guests || p.kind !== 'guest';
+  const hit = directory().find((p) => ok(p) && norm(p.name) === n) ?? directory().find((p) => ok(p) && norm(p.name).startsWith(n));
   return hit?.key;
 }
 
@@ -139,7 +140,7 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
     const title = String(a.name ?? '').trim().slice(0, 120);
     if (!title) return { error: 'name missing' };
     const turns = Array.isArray(a.take_turns) ? a.take_turns.map((n: unknown) => personKey(n, ctx)).filter((k: unknown): k is string => typeof k === 'string') : [];
-    const doer = personKey(a.doer, ctx);
+    const doer = personKey(a.doer, ctx, true);
     const unit = ['day', 'week', 'month', 'year'].includes(a.every_unit) ? (a.every_unit as IntervalUnit) : null;
     const n = unit ? Math.max(1, Math.min(1000, Number(a.every_n) || 1)) : null;
     const input: CareInput = {
@@ -182,7 +183,7 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
     if (keeper && !keeper.startsWith('u')) return { error: 'Only a household member with an account can keep a task in mind.' };
     patch.assignee_user_id = keeper ? Number(keeper.slice(1)) : null;
   }
-  const doer = personKey(a.doer, ctx);
+  const doer = personKey(a.doer, ctx, true);
   if (doer !== undefined) patch.doer_key = doer;
   if (Array.isArray(a.take_turns)) patch.rotation = a.take_turns.map((n: unknown) => personKey(n, ctx)).filter((k: unknown): k is string => typeof k === 'string');
   if (!Object.keys(patch).length) return { error: 'Say who keeps it in mind, who does it or who takes turns.' };

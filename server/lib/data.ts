@@ -101,6 +101,17 @@ function personalFilter(name: string, viewer: number | null): ((r: Record<string
     );
     return (r) => !hidden.has(Number(r.task_id));
   }
+  // Im Kopf (mind.ts): private thoughts and thoughts hidden from the viewer ("Geschenk für Mira") stay out
+  if (name === 'mind_items')
+    return (r) => viewer != null && (r.user_id === viewer || (r.visibility === 'household' && !parseIds(String(r.hide_from ?? '[]')).includes(viewer)));
+  // Für wen ich da bin (carefor.ts, health data): a private person and their log only in their owner's export
+  if (name === 'cared_for') return (r) => r.visibility === 'household' || (viewer != null && r.owner_user_id === viewer);
+  if (name === 'cared_for_log') {
+    const hidden = new Set(
+      (db.prepare(`SELECT id FROM cared_for WHERE visibility = 'private' AND owner_user_id != ?`).all(viewer ?? -1) as { id: number }[]).map((x) => x.id),
+    );
+    return (r) => !hidden.has(Number(r.cared_for_id));
+  }
   const wish = wishExportFilter(name, viewer);
   if (wish) return wish;
   return null;

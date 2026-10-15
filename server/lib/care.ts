@@ -773,7 +773,15 @@ export async function checkCareDue() {
           : task.days === 1
             ? t('due tomorrow')
             : t('due in {n} days', { n: task.days ?? 0 });
-    await notify({
+    // a task for someone a member looks after (carefor.ts) is health data: only members' own devices, one by one –
+    // never Home Assistant, webhooks, chat channels or the household's log
+    const health = Boolean((task as { cared_for_id?: number | null }).cared_for_id);
+    const recipients: (number | undefined)[] =
+      health && !priv
+        ? (db.prepare(`SELECT id FROM users WHERE COALESCE(kind, 'member') != 'guest'`).all() as { id: number }[]).map((u) => u.id).filter((id) => !bundled.includes(id))
+        : [undefined];
+    for (const to of recipients)
+      await notify({
       event: 'care.due',
       title: t('{name}: {when}', { name: task.name, when }),
       message: [
@@ -794,11 +802,11 @@ export async function checkCareDue() {
       path: '/aufgaben',
       data: { care_task_id: task.id, name: task.name, next_due: task.next_due, state: task.state },
       // a private task reminds only its owner, on their own devices
-      ...(priv ? { toUserId: task.owner_user_id, personalOnly: true } : bundled.length ? { exceptUserIds: bundled } : {}),
-      dedupeKey: `care:${task.id}:${task.next_due}:${now ? 'now' : 'soon'}`,
+      ...(priv ? { toUserId: task.owner_user_id, personalOnly: true } : to != null ? { toUserId: to, personalOnly: true } : bundled.length ? { exceptUserIds: bundled } : {}),
+      dedupeKey: `care:${task.id}:${task.next_due}:${now ? 'now' : 'soon'}${to != null ? `:u${to}` : ''}`,
       dedupeHours: 24 * 400,
     });
-    if (priv) continue;
+    if (priv || health) continue;
     // someone stands in while the usual person is away (also a permanent guest – Oma, the aunt): they get it on their
     // own devices, also while the household is away and otherwise quiet
     const doerId = task.doer?.key?.startsWith('u') ? Number(task.doer.key.slice(1)) : null;

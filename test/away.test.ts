@@ -340,10 +340,10 @@ describe('away: only some people (15 Oct 2026)', () => {
     // back to usual → the date comes back
     away.setHomePlan(id, windows, { mode: 'usual' });
     expect(care.getCareTask(windows)!.next_due).toBe(day(2));
-    // back early: waiting things are due tomorrow
+    // back early: waiting things are due the day after – but never earlier than they were due anyway
     away.setHomePlan(id, windows, { mode: 'wait' });
     away.stopTrip(id);
-    expect(care.getCareTask(windows)!.next_due).toBe(day(1));
+    expect(care.getCareTask(windows)!.next_due).toBe(day(2));
     // hospital: relief – Mira's bathroom may wait too
     const h = away.createTrip({ start_day: day(10), end_day: day(20), travellers: ['Sam'], kind: 'hospital' }, 'Sam');
     db.prepare('UPDATE care_tasks SET next_due = ? WHERE id = ?').run(day(12), bath);

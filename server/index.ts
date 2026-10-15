@@ -151,6 +151,17 @@ app.use('/api', (req, res, next) => {
   // only Bearer/x-api-key requests are token-authenticated (resolveActor never falls back to the cookie for them)
   // Apple's form_post comes from appleid.apple.com; it is bound to our own state cookie instead (routes/cloud-apple.ts)
   if (config.multiTenant && req.path === '/auth/apple/callback') return next();
+  // the website's "Wir können uns das nicht leisten" form (routes/cloud.ts): no cookie auth, only from our website
+  if (config.multiTenant && req.path === '/cloud/hardship') {
+    const from = req.headers.origin;
+    let site: string | null = null;
+    try {
+      site = new URL(config.siteUrl).origin;
+    } catch {
+      /* no website configured */
+    }
+    if (!from || from === site || from === ownOrigin) return next();
+  }
   if (req.path.startsWith('/guest/') || req.headers.authorization?.startsWith('Bearer ') || typeof req.headers['x-api-key'] === 'string') return next();
   const origin = req.headers.origin;
   const site = req.headers['sec-fetch-site'];

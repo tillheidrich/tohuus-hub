@@ -4,13 +4,13 @@
  * Positive only: no comparison between people, no money, a quiet week gets a kind sentence.
  * On "Heute" in the first three days of a new week until "Gesehen"; the page works for any week.
  */
-import { CaretLeft, CaretRight, CheckCircle, Coins, CookingPot, HandHeart, Package, ShoppingCart, Sparkle } from '@phosphor-icons/react';
-import { useEffect, useState } from 'react';
+import { CaretLeft, CaretRight, CheckCircle, Coins, CookingPot, HandHeart, ListChecks, Package, ShoppingCart, Sparkle } from '@phosphor-icons/react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fmtDate, invalidate, post, put, useApi } from '../api';
 import { t } from '../i18n';
 import { Empty, Seg, Skeleton, Toggle, useToast } from '../ui';
-import { type CardSpec, ShareCardButton } from '../share/cards';
+import { type CardSpec, ShareCardButton, ShareCardSheet } from '../share/cards';
 import { FactStrip } from './FactStrip';
 
 type Area = 'shop' | 'cook' | 'tasks' | 'pantry' | 'money';
@@ -31,9 +31,14 @@ export interface WeekReview {
   on: boolean;
   show: boolean;
   title: string;
-  household: { title: string; cards: Card[] };
-  mine: { title: string; cards: Card[] } | null;
+  household: { title: string; cards: Card[]; tasks?: DoneTask[] };
+  mine: { title: string; cards: Card[]; tasks?: DoneTask[] } | null;
   quiet: string | null;
+}
+
+interface DoneTask {
+  name: string;
+  times: number;
 }
 
 const ICON: Record<Area, React.ReactNode> = {
@@ -135,6 +140,81 @@ function summarySpec(d: WeekReview, when: string): CardSpec {
   };
 }
 
+const PICK_MAX = 6;
+const pickKey = (scope: string) => `tohuus.review.tasks.${scope}`;
+function lastPick(scope: string): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(pickKey(scope)) ?? '[]');
+    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * "Welche Aufgaben erledigt wurden" (Till, 15 Oct 2026): instead of only "12 Aufgaben erledigt", a card with the tasks
+ * themselves – the person picks which (up to six). What was picked last time is picked again if it was done again.
+ */
+function TasksShareButton({ tasks, scope, eyebrow }: { tasks: DoneTask[]; scope: 'household' | 'mine'; eyebrow: string }) {
+  const [open, setOpen] = useState(false);
+  if (!tasks.length) return null;
+  return (
+    <>
+      <button type="button" className="btn sm ghost" onClick={() => setOpen(true)}>
+        <ListChecks size={16} aria-hidden="true" /> {t('Share tasks')}
+      </button>
+      {open && <TasksShareSheet tasks={tasks} scope={scope} eyebrow={eyebrow} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function TasksShareSheet({ tasks, scope, eyebrow, onClose }: { tasks: DoneTask[]; scope: 'household' | 'mine'; eyebrow: string; onClose: () => void }) {
+  const [picked, setPicked] = useState<string[]>(() => {
+    const names = tasks.map((x) => x.name);
+    const again = lastPick(scope).filter((n) => names.includes(n));
+    return (again.length ? again : names).slice(0, Math.min(3, PICK_MAX));
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(pickKey(scope), JSON.stringify(picked));
+    } catch {
+      /* private window: nothing to remember */
+    }
+  }, [picked, scope]);
+  const toggle = (name: string) => setPicked((p) => (p.includes(name) ? p.filter((x) => x !== name) : p.length >= PICK_MAX ? p : [...p, name]));
+  const chosen = tasks.filter((x) => picked.includes(x.name));
+  const total = chosen.reduce((n, x) => n + x.times, 0);
+  const spec = useMemo<CardSpec>(
+    () => ({
+      area: 'tasks',
+      eyebrow,
+      value: String(total || ''),
+      title: scope === 'mine' ? (total === 1 ? t('task done by you') : t('tasks done by you')) : total === 1 ? t('task done together') : t('tasks done together'),
+      text: null,
+      list: chosen.map((x) => (x.times > 1 ? `${x.name} · ${x.times}×` : x.name)),
+    }),
+    [eyebrow, total, scope, chosen.map((x) => x.name).join('|')],
+  );
+  return (
+    <ShareCardSheet spec={spec} onClose={onClose} title={t('Which tasks go on the picture?')}>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        {t('Pick up to {n}. Only what you pick is on the picture.', { n: PICK_MAX })}
+      </p>
+      <div className="row wrap review-pick" role="group" aria-label={t('Tasks')}>
+        {tasks.map((x) => {
+          const on = picked.includes(x.name);
+          return (
+            <button key={x.name} type="button" className={`chip sm ${on ? 'on' : ''}`} aria-pressed={on} disabled={!on && picked.length >= PICK_MAX} onClick={() => toggle(x.name)}>
+              {x.name}
+              {x.times > 1 && <span className="muted"> · {x.times}×</span>}
+            </button>
+          );
+        })}
+      </div>
+    </ShareCardSheet>
+  );
+}
+
 export function WeekReviewPage() {
   const [params] = useSearchParams();
   const [period, setPeriod] = useState<'week' | 'month'>(params.get('period') === 'month' ? 'month' : 'week');
@@ -198,7 +278,10 @@ export function WeekReviewPage() {
                 <section className="section" aria-labelledby="wr-us">
                   <div className="section-head">
                     <h2 id="wr-us">{d.household.title}</h2>
-                    <ShareCardButton spec={summarySpec(d, range(d))} label={t('Share the week')} />
+                    <span className="row wrap" style={{ gap: 6 }}>
+                      <TasksShareButton tasks={d.household.tasks ?? []} scope="household" eyebrow={`${period === 'week' ? t('Our week') : t('Our month')} · ${range(d)}`} />
+                      <ShareCardButton spec={summarySpec(d, range(d))} label={period === 'week' ? t('Share the week') : t('Share the month')} />
+                    </span>
                   </div>
                   <Cards cards={d.household.cards} eyebrow={`${period === 'week' ? t('Our week') : t('Our month')} · ${range(d)}`} />
                 </section>
@@ -209,9 +292,12 @@ export function WeekReviewPage() {
                     <HandHeart size={20} aria-hidden="true" style={{ verticalAlign: '-3px', marginRight: 6 }} />
                     {d.mine.title}
                   </h2>
-                  <p className="muted small" style={{ margin: '0 0 10px' }}>
-                    {t('Only you see this part.')}
-                  </p>
+                  <div className="row between wrap" style={{ gap: 8, margin: '0 0 10px' }}>
+                    <p className="muted small" style={{ margin: 0 }}>
+                      {t('Only you see this part.')}
+                    </p>
+                    <TasksShareButton tasks={d.mine.tasks ?? []} scope="mine" eyebrow={`${period === 'week' ? t('My week') : t('My month')} · ${range(d)}`} />
+                  </div>
                   <Cards cards={d.mine.cards} eyebrow={`${period === 'week' ? t('My week') : t('My month')} · ${range(d)}`} personal />
                 </section>
               )}

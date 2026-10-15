@@ -260,7 +260,8 @@ function orderTicket(spec: TicketSpec): Ticket {
 function careTicket(spec: TicketSpec, actor?: string): Ticket {
   const row = getCareTask(Number(spec.id));
   // printers are shared – a private task is never printed
-  if (!row || !canSeeTask(row)) throw new NotFound(t('Task not found'));
+  // … and neither is a task for someone a member looks after (health data, carefor.ts)
+  if (!row || !canSeeTask(row) || (row as { cared_for_id?: number | null }).cared_for_id) throw new NotFound(t('Task not found'));
   const c = careView(row);
   const meta: [string, string][] = [];
   if (c.next_due) meta.push([t('Due'), dayLabel(c.next_due)]);

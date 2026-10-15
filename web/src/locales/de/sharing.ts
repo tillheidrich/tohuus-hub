@@ -124,4 +124,13 @@ export const sharing: Record<string, string> = {
   'Tasks, your head and the people you look after': 'Aufgaben, dein Kopf und für wen du da bist',
   'Household tasks without points. “On my mind” for thoughts without a deadline – private or for everyone. “People I look after” for visits and appointments. And when someone is away, ToHuus asks who takes what and what may wait.':
     'Aufgaben im Haushalt ohne Punkte. „Im Kopf“ für Gedanken ohne Frist – privat oder für alle. „Für wen ich da bin“ für Besuche und Termine. Und wenn jemand weg ist, fragt ToHuus, wer was übernimmt und was warten darf.',
+  // Wochenrückblick: erledigte Aufgaben selbst auswählen
+  'Share tasks': 'Aufgaben teilen',
+  'task done by you': 'Aufgabe von dir erledigt',
+  'tasks done by you': 'Aufgaben von dir erledigt',
+  'Share the month': 'Den Monat teilen',
+  'task done together': 'Aufgabe gemeinsam erledigt',
+  'tasks done together': 'Aufgaben gemeinsam erledigt',
+  'Which tasks go on the picture?': 'Welche Aufgaben kommen aufs Bild?',
+  'Pick up to {n}. Only what you pick is on the picture.': 'Such dir bis zu {n} aus. Aufs Bild kommt nur, was du auswählst.',
 };

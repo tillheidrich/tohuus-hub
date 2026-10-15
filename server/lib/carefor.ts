@@ -154,7 +154,13 @@ export function updateCareFor(viewer: number, id: number, input: { name?: string
 export function deleteCareFor(viewer: number, id: number) {
   const r = get(id, viewer);
   if (r.owner_user_id !== viewer) throw new CareForError(t('Not found'), 404);
-  db.prepare('DELETE FROM cared_for WHERE id = ?').run(id);
+  // the person's tasks go with them – otherwise (ON DELETE SET NULL) they would turn into ordinary household tasks
+  // and reach the assistant, MCP and Home Assistant with names like "Rezept für Oma abholen"
+  db.transaction(() => {
+    db.prepare('DELETE FROM care_log WHERE task_id IN (SELECT id FROM care_tasks WHERE cared_for_id = ?)').run(id);
+    db.prepare('DELETE FROM care_tasks WHERE cared_for_id = ?').run(id);
+    db.prepare('DELETE FROM cared_for WHERE id = ?').run(id);
+  })();
   emit('care');
   return { ok: true };
 }
@@ -199,7 +205,7 @@ export function addCareForTask(viewer: number, id: number, input: { name?: strin
 
 // ------------------------------------------------------------------ recognise it, gently
 
-const CARE_WORDS = /\b(oma|opa|mama|papa|mutter|vater|schwieger\w*|pflege\w*|heim|altenheim|tagespflege|pflegedienst|pflegegrad|reha|hausarzt|rezept|grandma|grandpa|care home|nursing home)\b/i;
+const CARE_WORDS = /\b(omas?|opas?|schwiegermutter|schwiegervater|pflege\w*|altenheim\w*|seniorenheim\w*|tagespflege|reha|hausarzt\w*|rezept[^.\n]{0,30}\b(abholen|holen|einlösen)|(mama|papa|mutter|vater)[^.\n]{0,30}\b(arzt\w*|apotheke|termin\w*)|grandma|grandpa|care home|nursing home)\b/i;
 
 /**
  * Should Aufgaben/Heute ask "Kümmerst du dich um jemanden?" – once, dismissible. Yes when the household form says so

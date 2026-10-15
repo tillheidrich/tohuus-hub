@@ -9,6 +9,7 @@ import { recipeToShopping } from './recipe-list.js';
 import { AREA_TOOL_DEFS, AREA_TOOLS_BY_TOPIC, runAreaTool, undoArea } from './assistant-areas.js';
 import { WISH_TOOL_DEFS, WISH_TOOLS, runWishTool, undoWish } from './assistant-wishes.js';
 import { TASK_TOOL_DEFS, TASK_TOOLS, runTaskTool, undoTask } from './assistant-tasks.js';
+import { HOME_TOOL_DEFS, HOME_TOOLS, runHomeTool, undoHome } from './assistant-home.js';
 import { appHelp } from './assistant-scope.js';
 import { guideOverviewForAi, searchGuide } from './house-guide.js';
 import crypto from 'node:crypto';
@@ -142,7 +143,7 @@ export function runUndo(token: string, userId: number | null, isAdmin = false) {
         break;
       default:
         // area tools (assistant-areas.ts): merged duplicates, adapted recipes, drafted Hausinfo cards, photo stock
-        if (!undoWish(u as { kind?: string; id?: number }) && !undoTask(u as never)) undoArea(u);
+        if (!undoWish(u as { kind?: string; id?: number }) && !undoTask(u as never) && !undoHome(u as never)) undoArea(u);
     }
     db.prepare(`UPDATE assistant_undo SET used_at = datetime('now') WHERE token = ?`).run(token);
   })();
@@ -503,6 +504,7 @@ export const TOOL_DEFS: ToolDef[] = [
   ...AREA_TOOL_DEFS,
   ...WISH_TOOL_DEFS,
   ...TASK_TOOL_DEFS,
+  ...HOME_TOOL_DEFS,
 ];
 
 const TOOLS_BY_TOPIC: Record<string, string[]> = {
@@ -510,7 +512,8 @@ const TOOLS_BY_TOPIC: Record<string, string[]> = {
   cooking: ['cook_ideas', 'check_at_home', 'list_add', 'known_prices', 'plan_meal', 'recipe_to_list'],
   money: ['money_summary', 'known_prices', 'log_purchase', 'budget_set'],
   wishes: WISH_TOOLS,
-  tasks: TASK_TOOLS,
+  // Aufgaben plus Im Kopf, Rückblick, Unterwegs (assistant-home.ts)
+  tasks: [...TASK_TOOLS, ...HOME_TOOLS],
   help: ['app_help'],
 };
 
@@ -599,6 +602,8 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
         if (wish !== undefined) return wish;
         const task = runTaskTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
         if (task !== undefined) return task;
+        const home = runHomeTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
+        if (home !== undefined) return home;
         const area = runAreaTool({ actor: ctx.actor, userId: ctx.userId, record: (kind, summary, undo, ref) => record(ctx, kind, summary, undo as Undo | null, ref) }, name, a);
         return area === undefined ? { error: `unknown tool ${name}` } : area;
       }

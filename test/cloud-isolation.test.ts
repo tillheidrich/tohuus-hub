@@ -32,7 +32,7 @@ Object.assign(process.env, {
   // list2 J: the operator's view of the anonymous weekly-question counts
 });
 
-const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code', 'MARKERA-money', 'MARKERA-file', 'MARKERA-wish', 'MARKERA-task'];
+const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code', 'MARKERA-money', 'MARKERA-file', 'MARKERA-wish', 'MARKERA-task', 'MARKERA-mind', 'MARKERA-carefor'];
 const mails: { to: string; text: string }[] = [];
 
 let ipSeq = 1;
@@ -161,6 +161,11 @@ beforeAll(async () => {
   expect(task.status, task.text).toBe(200);
   const careList = await A.post('/api/list/lists', { name: 'MARKERA-list', kind: 'care', note: 'MARKERA-note' });
   expect(careList.status, careList.text).toBe(200);
+  // Im Kopf and Für wen ich da bin (15 Oct 2026): shared on purpose, so a leak would show
+  expect((await A.post('/api/mind', { text: 'MARKERA-mind Samstag', visibility: 'household' })).status).toBe(200);
+  const cf = await A.post('/api/carefor', { name: 'MARKERA-carefor', visibility: 'household' });
+  expect(cf.status, cf.text).toBe(200);
+  expect((await A.post(`/api/carefor/${cf.json.id}/log`, { kind: 'visit', note: 'MARKERA-carefor Besuch' })).status).toBe(200);
   expect((await A.post('/api/shopping', { text: 'MARKERA-listitem', list_id: careList.json.id })).status).toBe(200);
   expect((await A.post('/api/offers/scan', { text: 'Lidl\nMARKERA-offer 1,99 €' })).status).toBe(200);
   expect((await A.req('PUT', '/api/list/lunchbox', { enabled: true, items: ['MARKERA-lunch'] })).status).toBe(200);

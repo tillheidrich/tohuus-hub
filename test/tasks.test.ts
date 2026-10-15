@@ -731,6 +731,19 @@ describe('Wochenrückblick – positive, mine only for me (weekly.ts)', () => {
     expect(JSON.stringify(r)).not.toMatch(/weniger als|less than|mehr als/);
   });
 
+  it('lists the tasks done for a card the person picks – private ones only in their own part', async () => {
+    const day = new Date().toISOString().slice(0, 10);
+    const priv = (await sam.req('POST', '/api/care', { name: 'Steuer sortieren', category: 'house', interval_n: 1, interval_unit: 'month', visibility: 'private' })).json.id;
+    await sam.req('POST', `/api/care/${priv}/done`, {});
+    const r = (await sam.req('GET', `/api/week-review?week=${day}`)).json;
+    expect(r.household.tasks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'Fenster putzen', times: expect.any(Number) })]));
+    expect(r.household.tasks.map((x: any) => x.name)).not.toContain('Steuer sortieren');
+    expect(r.mine.tasks.map((x: any) => x.name)).toEqual(expect.arrayContaining(['Fenster putzen', 'Steuer sortieren']));
+    const m = (await mira.req('GET', `/api/week-review?week=${day}`)).json;
+    expect(JSON.stringify(m)).not.toContain('Steuer sortieren');
+    expect((await sam.req('GET', `/api/month-review?month=${day}`)).json.mine.tasks.map((x: any) => x.name)).toContain('Steuer sortieren');
+  });
+
   it('can be switched off per person and marked as seen', async () => {
     expect((await sam.req('PUT', '/api/week-review/settings', { on: false })).json.on).toBe(false);
     const r = (await sam.req('GET', '/api/week-review')).json;

@@ -16,10 +16,10 @@ struct NewListSheet: View {
     @FocusState private var focused: Bool
 
     private static let presets: [(String, String, String)] = [
-        ("DIY store", "store", "hammer"),
-        ("Drugstore", "store", "drop"),
-        ("Presents", "gifts", "gift"),
-        ("For Grandma", "care", "heart"),
+        (L("DIY store"), "store", "hammer"),
+        (L("Drugstore"), "store", "drop"),
+        (L("Presents"), "gifts", "gift"),
+        (L("For Grandma"), "care", "heart"),
     ]
 
     private var canHide: Bool { me?.isMember == true }
@@ -30,8 +30,8 @@ struct NewListSheet: View {
                 Section {
                     ShopChipFlow {
                         ForEach(Array(Self.presets.enumerated()), id: \.offset) { _, p in
-                            ShopToggleChip(title: L(p.0), systemImage: p.2, on: false) {
-                                Task { await create(L(p.0), kind: p.1) }
+                            ShopToggleChip(title: p.0, systemImage: p.2, on: false) {
+                                Task { await create(p.0, kind: p.1) }
                             }
                         }
                     }

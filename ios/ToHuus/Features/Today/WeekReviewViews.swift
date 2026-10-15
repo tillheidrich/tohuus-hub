@@ -9,6 +9,14 @@ struct WeekReview: Decodable, Sendable {
     struct Part: Decodable, Sendable {
         var title: String
         @Lossy var cards: [YearReview.Card]
+        /// tasks done in the period (household: shared ones; mine: what the viewer did, private ones included).
+        /// Missing on older servers.
+        var tasks: [DoneTask]?
+        var doneTasks: [DoneTask] { tasks ?? [] }
+    }
+    struct DoneTask: Decodable, Sendable, Hashable {
+        var name: String
+        var times: Int
     }
     /// week | month (GET /api/month-review has the same shape)
     var period: String?
@@ -144,6 +152,7 @@ struct WeekReviewView: View {
     @State private var error: String?
     @State private var loading = false
     @State private var sharing: ShareCardSpec?
+    @State private var sharingTasks: TasksShare?
 
     private var isMonth: Bool { period == "month" }
 
@@ -166,10 +175,23 @@ struct WeekReviewView: View {
                         EmptyStateView(systemImage: "sparkles", title: quiet)
                     } else {
                         if !d.household.cards.isEmpty {
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(d.household.title).font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
-                                Spacer(minLength: Theme.Space.s2)
+                            let title = Text(d.household.title).font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                            let buttons = HStack(spacing: Theme.Space.s3) {
+                                if !d.household.doneTasks.isEmpty {
+                                    tasksButton { sharingTasks = TasksShare(tasks: d.household.doneTasks, scope: "household", eyebrow: eyebrow(d, personal: false)) }
+                                }
                                 ShareCardButton(title: isMonth ? L("Share the month") : L("Share the week")) { sharing = summarySpec(d) }
+                            }
+                            ViewThatFits(in: .horizontal) {
+                                HStack(alignment: .firstTextBaseline) {
+                                    title
+                                    Spacer(minLength: Theme.Space.s2)
+                                    buttons
+                                }
+                                VStack(alignment: .leading, spacing: 0) {
+                                    title
+                                    buttons
+                                }
                             }
                             ForEach(d.household.cards) { c in
                                 ReviewCardView(card: c) { sharing = cardSpec(c, d, personal: false) }
@@ -178,7 +200,14 @@ struct WeekReviewView: View {
                         if let m = d.mine, !m.cards.isEmpty {
                             VStack(alignment: .leading, spacing: 2) {
                                 Label(m.title, systemImage: "hand.thumbsup").font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
-                                Text(L("Only you see this part.")).font(.footnote).foregroundStyle(Theme.ink3)
+                                HStack(alignment: .center, spacing: Theme.Space.s2) {
+                                    Text(L("Only you see this part.")).font(.footnote).foregroundStyle(Theme.ink3)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    if !m.doneTasks.isEmpty {
+                                        Spacer(minLength: Theme.Space.s2)
+                                        tasksButton { sharingTasks = TasksShare(tasks: m.doneTasks, scope: "mine", eyebrow: eyebrow(d, personal: true)) }
+                                    }
+                                }
                             }
                             .padding(.top, Theme.Space.s2)
                             ForEach(m.cards) { c in
@@ -215,6 +244,11 @@ struct WeekReviewView: View {
         .refreshable { await load() }
         .task(id: period + (day ?? "")) { await load() }
         .sheet(item: $sharing) { spec in ShareCardSheet(spec: spec) }
+        .sheet(item: $sharingTasks) { x in TasksShareSheet(share: x) }
+    }
+
+    private func tasksButton(_ action: @escaping () -> Void) -> some View {
+        ShareCardButton(title: L("Share tasks"), systemImage: "checklist", action: action)
     }
 
     private func range(_ d: WeekReview) -> String {
@@ -287,6 +321,85 @@ struct WeekReviewView: View {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+}
+
+/// What "Aufgaben teilen" opens with: the done tasks of one part, which part, and the card's eyebrow.
+struct TasksShare: Identifiable {
+    var tasks: [WeekReview.DoneTask]
+    /// household | mine
+    var scope: String
+    var eyebrow: String
+    var id: String { scope + "|" + eyebrow }
+}
+
+/// "Welche Aufgaben erledigt wurden" (Till, 15 Oct 2026, web: TasksShareSheet): instead of only "12 Aufgaben erledigt",
+/// a card with the tasks themselves – the person picks which (up to six). What was picked last time is picked again if it
+/// was done again; otherwise the first three.
+struct TasksShareSheet: View {
+    static let max = 6
+    let share: TasksShare
+    @State private var picked: [String]
+
+    init(share: TasksShare) {
+        self.share = share
+        let names = share.tasks.map(\.name)
+        let again = (UserDefaults.standard.stringArray(forKey: Self.key(share.scope)) ?? []).filter { names.contains($0) }
+        _picked = State(initialValue: Array((again.isEmpty ? names : again).prefix(min(3, Self.max))))
+    }
+
+    static func key(_ scope: String) -> String { "tohuus.review.tasks." + scope }
+
+    var body: some View {
+        ShareCardSheet(spec: spec, heading: L("Which tasks go on the picture?")) {
+            VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                Text(LF("Pick up to %lld. Only what you pick is on the picture.", Self.max))
+                    .font(.footnote).foregroundStyle(Theme.ink3)
+                    .fixedSize(horizontal: false, vertical: true)
+                FlowLayout(spacing: 4) {
+                    ForEach(share.tasks, id: \.name) { x in chip(x) }
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(L("Tasks"))
+            }
+        }
+        .onChange(of: picked) { _, v in UserDefaults.standard.set(v, forKey: Self.key(share.scope)) }
+    }
+
+    private func chip(_ x: WeekReview.DoneTask) -> some View {
+        let on = picked.contains(x.name)
+        let full = !on && picked.count >= Self.max
+        return Button {
+            if on { picked.removeAll { $0 == x.name } } else if !full { picked.append(x.name) }
+        } label: {
+            HStack(spacing: 0) {
+                Text(x.name)
+                if x.times > 1 { Text(verbatim: " · \(x.times)×").foregroundStyle(on ? Theme.onPrimary.opacity(0.8) : Theme.ink3) }
+            }
+            .font(.subheadline)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .foregroundStyle(on ? Theme.onPrimary : Theme.ink)
+            .background(on ? Theme.primary : Theme.surface, in: Capsule())
+            .overlay(Capsule().stroke(on ? Color.clear : Theme.line, lineWidth: 1))
+            // the visible chip stays small; the tap area is at least 44 pt high
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(full)
+        .opacity(full ? 0.45 : 1)
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+
+    private var spec: ShareCardSpec {
+        let chosen = share.tasks.filter { picked.contains($0.name) }
+        let total = chosen.reduce(0) { $0 + $1.times }
+        let title = share.scope == "mine"
+            ? (total == 1 ? L("task done by you") : L("tasks done by you"))
+            : (total == 1 ? L("task done together") : L("tasks done together"))
+        return ShareCardSpec(area: "tasks", eyebrow: share.eyebrow, value: total > 0 ? String(total) : "", title: title, text: nil,
+                             list: chosen.map { $0.times > 1 ? "\($0.name) · \($0.times)×" : $0.name })
     }
 }
 

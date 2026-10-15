@@ -177,7 +177,8 @@ struct ShareCardCanvas: View {
                 }
                 if !spec.list.isEmpty {
                     VStack(alignment: .leading, spacing: 14) {
-                        ForEach(Array(spec.list.prefix(3).enumerated()), id: \.offset) { _, item in
+                        // a list the person picked themselves (erledigte Aufgaben) may be longer when there is no text
+                        ForEach(Array(spec.list.prefix((spec.text ?? "").isEmpty ? 6 : 3).enumerated()), id: \.offset) { _, item in
                             Text("·  " + item).font(.system(size: 38)).lineLimit(1)
                         }
                     }
@@ -214,17 +215,32 @@ enum ShareCardRenderer {
 }
 
 /// "Als Bild teilen": choose the format, see the picture, then the share sheet (Instagram, WhatsApp, Photos …).
-struct ShareCardSheet: View {
+/// `header` sits above the format choice (e.g. the task chips of the week review); the picture follows `spec` live.
+struct ShareCardSheet<Header: View>: View {
     let spec: ShareCardSpec
+    let heading: String?
+    let header: () -> Header
     @Environment(\.dismiss) private var dismiss
     @State private var format: ShareCardFormat = .story
     @State private var image: UIImage?
     @State private var failed = false
 
+    init(spec: ShareCardSpec, heading: String? = nil, @ViewBuilder header: @escaping () -> Header) {
+        self.spec = spec
+        self.heading = heading
+        self.header = header
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                    if let heading {
+                        Text(heading).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
+                    }
+                    header()
                     Picker(L("Format"), selection: $format) {
                         ForEach(ShareCardFormat.allCases) { f in Text(f.title).tag(f) }
                     }
@@ -261,6 +277,7 @@ struct ShareCardSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { dismiss() } } }
             .onChange(of: format) { render() }
+            .onChange(of: spec) { render() }
             .onAppear { render() }
         }
     }
@@ -288,13 +305,20 @@ struct ShareCardSheet: View {
     }
 }
 
+extension ShareCardSheet where Header == EmptyView {
+    init(spec: ShareCardSpec) {
+        self.init(spec: spec, heading: nil) { EmptyView() }
+    }
+}
+
 /// A small "Teilen" button for a card (opens ShareCardSheet through the caller's `.sheet(item:)`).
 struct ShareCardButton: View {
     var title: String = L("Share")
+    var systemImage: String = "square.and.arrow.up"
     let action: () -> Void
     var body: some View {
         Button(action: action) {
-            Label(title, systemImage: "square.and.arrow.up")
+            Label(title, systemImage: systemImage)
                 .font(.subheadline.weight(.semibold))
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())

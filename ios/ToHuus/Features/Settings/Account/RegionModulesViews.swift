@@ -176,15 +176,16 @@ struct ModulesView: View {
         var id: String { key }
     }
 
-    private let items: [Item] = [
-        Item(key: "stock", label: "Pantry", hint: "What is at home and what should be eaten soon.", icon: "shippingbox"),
-        Item(key: "cook", label: "Cook", hint: "Recipes, ideas from what you have, a week plan if you like.", icon: "frying.pan"),
-        Item(key: "money", label: "Money", hint: "What food and household cost, from your receipts.", icon: "eurosign.circle"),
-        Item(key: "treats", label: "Treats", hint: "Wishes from the sofa: tea, a snack, a drink.", icon: "cup.and.saucer"),
-        Item(key: "homeinfo", label: "Home info", hint: "Care tasks and things to know about the home.", icon: "wrench.and.screwdriver"),
-        Item(key: "guests", label: "Guests & party", hint: "Guest links, a party board, orders from guests.", icon: "party.popper"),
-        Item(key: "ha", label: "Home Assistant", hint: "Only if you run Home Assistant.", icon: "house"),
-    ]
+    /// localized here (literal keys), so gen_strings.py finds them
+    private var items: [Item] { [
+        Item(key: "stock", label: L("Pantry"), hint: L("What is at home and what should be eaten soon."), icon: "shippingbox"),
+        Item(key: "cook", label: L("Cook"), hint: L("Recipes, ideas from what you have, a week plan if you like."), icon: "frying.pan"),
+        Item(key: "money", label: L("Money"), hint: L("What food and household cost, from your receipts."), icon: "eurosign.circle"),
+        Item(key: "treats", label: L("Treats"), hint: L("Wishes from the sofa: tea, a snack, a drink."), icon: "cup.and.saucer"),
+        Item(key: "homeinfo", label: L("Home info"), hint: L("Care tasks and things to know about the home."), icon: "wrench.and.screwdriver"),
+        Item(key: "guests", label: L("Guests & party"), hint: L("Guest links, a party board, orders from guests."), icon: "party.popper"),
+        Item(key: "ha", label: "Home Assistant", hint: L("Only if you run Home Assistant."), icon: "house"),
+    ] }
 
     var body: some View {
         List {
@@ -193,8 +194,8 @@ struct ModulesView: View {
                     Text(L("always")).font(.subheadline).foregroundStyle(Theme.ink3)
                 }
                 ForEach(items) { i in
-                    row(icon: i.icon, label: L(i.label), hint: L(i.hint)) {
-                        Toggle(L(i.label), isOn: Binding(get: { modules[i.key] ?? true }, set: { v in Task { await set(i.key, v) } }))
+                    row(icon: i.icon, label: i.label, hint: i.hint) {
+                        Toggle(i.label, isOn: Binding(get: { modules[i.key] ?? true }, set: { v in Task { await set(i.key, v) } }))
                             .labelsHidden()
                             .tint(Theme.primary)
                             .disabled(!app.isAdmin)

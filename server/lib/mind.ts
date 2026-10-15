@@ -108,8 +108,10 @@ const DONE_DAYS = 14;
 /** My heads-up list and what the others shared: open thoughts (any age) and what got done in the last two weeks. */
 export function mindList(viewer: number) {
   const rows = db
-    .prepare(`SELECT * FROM mind_items WHERE kind = 'open' OR done_at >= datetime('now', ?) ORDER BY COALESCE(done_at, created_at) DESC, id DESC LIMIT 400`)
-    .all(`-${DONE_DAYS} days`) as Row[];
+    .prepare(
+      `SELECT * FROM mind_items WHERE (kind = 'open' OR done_at >= datetime('now', ?)) AND (user_id = ? OR visibility = 'household') ORDER BY COALESCE(done_at, created_at) DESC, id DESC LIMIT 400`,
+    )
+    .all(`-${DONE_DAYS} days`, viewer) as Row[];
   const people = names();
   const seen = rows.filter((r) => canSeeMind(r, viewer)).map((r) => view(r, viewer, people));
   return {
@@ -234,10 +236,9 @@ export function nodMind(viewer: number, id: number) {
 export function mindDoneBy(viewer: number, from: string, to: string) {
   // what I did – also when someone else wrote it down for me ("Mira hat den Geschirrspüler ausgeräumt")
   return db
-    .prepare(`SELECT text FROM mind_items WHERE COALESCE(done_by, user_id) = ? AND kind = 'done' AND done_at BETWEEN ? AND ? AND (user_id = ? OR visibility = 'household') ORDER BY done_at DESC`)
-    .all(viewer, `${from} 00:00:00`, `${to} 23:59:59`, viewer) as {
-    text: string;
-  }[];
+    .prepare(`SELECT text, user_id, visibility, hide_from FROM mind_items WHERE COALESCE(done_by, user_id) = ? AND kind = 'done' AND done_at BETWEEN ? AND ? ORDER BY done_at DESC`)
+    .all(viewer, `${from} 00:00:00`, `${to} 23:59:59`)
+    .filter((r) => canSeeMind(r as Row, viewer)) as { text: string }[];
 }
 
 /** Weekly review, household part: how many shared things got done on the side – a number, no names, no texts. */

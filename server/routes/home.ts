@@ -361,7 +361,8 @@ const mindBody = z.object({
   due_on: z.string().regex(/^\d{4}-\d\d-\d\d$/).nullable().optional(),
   /** brain dump: one thought per line */
   many: z.boolean().optional(),
-  text: z.string().max(400).optional(),
+  // a brain dump holds up to 20 lines (each cut to 200 in mind.ts)
+  text: z.string().max(4400).optional(),
   kind: z.enum(['open', 'done']).optional(),
   visibility: z.enum(['private', 'household']).optional(),
   hide_from: z.array(z.number().int().positive()).max(20).optional(),
@@ -398,7 +399,9 @@ r.post(
   mindRun((me, req) => {
     const item = mindList(me).mine.open.find((x) => x.id === mindId(req));
     if (!item) throw new MindError(t('Not found'), 404);
-    const task = createCareTask({ name: item.text.slice(0, 120), category: 'house', visibility: item.visibility === 'private' ? 'private' : 'household' } as Parameters<typeof createCareTask>[0], me);
+    // hidden from someone ("Geschenk für Mira") → the task stays private, or Mira would see it under Aufgaben
+    const hidden = item.visibility === 'private' || item.hide_from.length > 0;
+    const task = createCareTask({ name: item.text.slice(0, 120), category: 'house', visibility: hidden ? 'private' : 'household' } as Parameters<typeof createCareTask>[0], me);
     deleteMind(me, item.id);
     return task;
   }),
@@ -505,10 +508,16 @@ r.post('/guest-tasks/:id/done', (req, res) => {
   res.json({ ok: true, message: t('Done – thank you!') });
 });
 
+/** YYYY-MM-DD that is a real day (2026-13-40 passes a regex but breaks the date maths) */
+const realDay = z
+  .string()
+  .regex(/^\d{4}-\d\d-\d\d$/)
+  .refine((d) => !Number.isNaN(Date.parse(`${d}T12:00:00Z`)) && new Date(`${d}T12:00:00Z`).toISOString().slice(0, 10) === d);
+
 // ---------------------------------------------------------------- Monatsrückblick (lib/weekly.ts)
 r.get('/month-review', (req, res) => {
   if (req.actor?.role === 'guest' || req.actor?.houseGuest) return void res.status(403).json({ error: t('Not available for guests') });
-  const m = z.string().regex(/^\d{4}-\d\d-\d\d$/).optional().safeParse(req.query.month || undefined);
+  const m = realDay.optional().safeParse(req.query.month || undefined);
   res.json(monthReview(memberOf(req), m.success ? m.data : undefined));
 });
 
@@ -516,7 +525,7 @@ r.get('/month-review', (req, res) => {
 
 r.get('/week-review', (req, res) => {
   if (req.actor?.role === 'guest' || req.actor?.houseGuest) return void res.status(403).json({ error: t('Not available for guests') });
-  const w = z.string().regex(/^\d{4}-\d\d-\d\d$/).optional().safeParse(req.query.week || undefined);
+  const w = realDay.optional().safeParse(req.query.week || undefined);
   res.json(weekReview(memberOf(req), w.success ? w.data : undefined));
 });
 r.put('/week-review/settings', (req, res) => {
