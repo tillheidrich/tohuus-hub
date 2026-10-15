@@ -49,7 +49,7 @@ DATA_DIR/
 | `MAIL_SMTP_PORT` | – | port of the inbound SMTP listener inside the container (e.g. `2525`, Coolify maps 25 to it) |
 | `MAIL_TLS_CERT_FILE`, `MAIL_TLS_KEY_FILE` | – | certificate for STARTTLS on the SMTP listener |
 | `MAIL_INBOUND_SECRET` | – | ≥ 16 characters; enables the webhook `POST /api/mail/inbound` |
-| `CLOUD_SIGNUP` | – | `open` \| `invite` \| `closed` (default **`invite`** – the beta gate, see [Beta gate](#beta-gate); old `true`/`false` = open/closed). Overridden by the back office setting `signup.mode` |
+| `CLOUD_SIGNUP` | – | `open` \| `invite` \| `closed` (default **`open`** since the final release of 15 Oct 2026, before `invite` – see [Beta gate](#beta-gate); old `true`/`false` = open/closed). Overridden by the back office setting `signup.mode` |
 | `SUPPORT_EMAIL` | – | address shown to ask for an access code (default `tohuus@tillheidrich.de`; back office setting `support.email` wins) |
 | `CLOUD_NAME` | – | name in `/api/instance` (default "ToHuus Cloud") |
 | `HOUSEHOLD_POOL_MAX`, `HOUSEHOLD_POOL_IDLE_MIN` | – | connection pool (64, 10) |
@@ -492,9 +492,10 @@ Back office › **Konten** (`server/routes/operator-accounts.ts`, `web/src/pages
 
 ## Beta gate
 
-`server/lib/beta.ts`. While ToHuus is in TestFlight nobody opens an account at the cloud domain without being let in.
+`server/lib/beta.ts`. Since the final release (15 Oct 2026) sign-up is **open** by default; the gate stays for when an
+operator wants it again (`invite` or `closed` in /betrieb › Einstellungen or `CLOUD_SIGNUP`).
 
-- **Modes**: `open` · `invite` (default) · `closed`. `GET /api/instance` → `signup: mode !== 'closed'`, `signupMode`,
+- **Modes**: `open` (default) · `invite` · `closed`. `GET /api/instance` → `signup: mode !== 'closed'`, `signupMode`,
   `support` (address to ask for a code).
 - **Gated** (only when a NEW account is created): `POST /api/cloud/signup` (web and app, body `betaCode`), Sign in with
   Apple in the app (`POST /api/auth/apple`, body `betaCode`) and on the web (`GET /api/auth/apple/start?code=…`, the

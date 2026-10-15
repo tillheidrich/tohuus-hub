@@ -4,6 +4,17 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Final release instead of beta (docs/release-1.0.md):
+  - Sign-up is open by default.
+  - Licence codes for a month, a year or for good in /betrieb › Geschenke.
+  - No beta or TestFlight texts; the update screen opens the App Store; iOS build 10.
+- Share cards: the text fills the picture. One scale for number, title, text and list; no text with opacity (web, iOS, website).
+- Web: "Was essen wir diese Woche?" plans like iOS. "Gern" puts the meal on the next free evening.
+- Design review:
+  - Secondary text without opacity (web, iOS).
+  - Tap targets ≥ 44 pt and Dynamic Type fixes (iOS).
+  - Review chips follow Dutch Detail.
+
 - Rückblick: "Aufgaben teilen" – pick which done tasks go on the share picture (web and iOS). `GET /api/week-review` and `/api/month-review` add `household.tasks` / `mine.tasks` (docs/week-review.md).
 - Assistant: new tools `mind_list`, `mind_add`, `review`, `away_status` and `home_plan_set`. A household guest can be the doer. General household questions are answered as rules of thumb (docs/assistant.md).
 - Privacy and security fixes from the review:
