@@ -58,6 +58,7 @@ DATA_DIR/
 | `MIN_IOS_BUILD` | – | builds of the iPhone app below this number show only "Bitte aktualisiere ToHuus" (`/api/instance` → `minIosBuild`); set it after an API change older builds can't follow. `/api/instance` also carries `betaGift` (`'haushalt'\|'plus'\|null`, runtime setting `beta.gift`), so the app hides "14 Tage, dann Free" during the beta |
 | `BETA_ALLOWLIST` | – | Comma-separated addresses that may sign up without an access code, in addition to the allowlist in the back office (e.g. the App Review account on a fresh cloud) |
 | `BETA_GIFT` | – | `haushalt` or `plus`: every cloud household gets at least this plan during the beta. Fallback for the back-office setting `beta.gift` (the back office wins when set) |
+| `BETA_GIFT_EXCEPT` | – | Comma-separated household ids left out of the beta gift (they keep their own trial/plan). For the App Review household, so the reviewer sees the plans with StoreKit prices and can buy in the sandbox – see `docs/ios-app-review.md` |
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
 | `APPLE_APP_IDS` | – | comma-separated `<TeamID>.<bundle id>` for `webcredentials` in `/.well-known/apple-app-site-association`, default `FVS7WVTQ67.de.heidrichdigital.tohuus` |
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |
@@ -239,7 +240,8 @@ helpers are shared with the self-host member passkeys (`server/lib/auth-passkeys
   means "try again").
 - **Register** (signed in, cookie session or app token): `POST /api/auth/passkeys/options { password }` – a fresh
   password check as for deleting a household (`confirmAccount`: wrong/missing → `400 { needPassword: true }`;
-  accounts without a password confirm with a fresh e-mail link → `400 { needEmailConfirm: true }`) → WebAuthn
+  accounts without a password confirm with a fresh e-mail link → `400 { needEmailConfirm: true }`; the iPhone app has
+  no browser session and sends `{ code }` instead, the 6-digit code from that mail) → WebAuthn
   creation options (`rp.id`, `user.name` = account e-mail, `excludeCredentials`). Then
   `POST /api/auth/passkeys { response, name? }` → `{ id }` (`409` if that credential is already saved).
 - **List / rename / delete**: `GET /api/auth/passkeys` → `[{ id, name, device_type, backed_up, created_at,

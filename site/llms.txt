@@ -2,7 +2,7 @@
 
 > ToHuus remembers for your household what is there, what is missing and what it costs, from your receipts and your list. For iPhone and the browser, in ToHuus Cloud or on your own server.
 
-ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app in ToHuus Cloud, or self-hosted with Docker as a web app with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info and holiday handovers for guests and sitters. Servers in Germany, no tracking, no ads, open source (AGPL).
+ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app, in ToHuus Cloud or self-hosted with Docker, with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, keeps the household's recurring tasks and appointments (with Apple Reminders and calendar sync), lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info for guests, babysitters and house sitters (guest Wi-Fi with a join QR code, how things work, house rules, bedtimes, important numbers; codes such as door or alarm codes are kept apart, revealed only on purpose and never sent to AI) plus holiday handovers. For heads with a lot going on (ADHD, autism, a packed week) tasks split into small steps, a focus view shows one thing at a time, a visible timer helps to start, a personal gentle mode drops red warnings and counters, and an allowance for extras keeps impulse buys in view; there are no streaks, points or rankings. Servers in Germany, no tracking, no ads, open source (AGPL).
 
 ## Website
 - [ToHuus (English)](https://tohuus.heidrich-digital.de/): what it does, pricing, privacy, self-hosting
@@ -11,15 +11,19 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Source code](https://github.com/tillheidrich/tohuus-hub)
 
 ## Help (English)
-- [Help & tips](https://tohuus.heidrich-digital.de/help/): How-tos for ToHuus: the list, receipts, speaking, AI on or off, recipe packs, Home Assistant, privacy and subscriptions. No sign-in, no tracking.
+- [Help & tips](https://tohuus.heidrich-digital.de/help/): How-tos for ToHuus: the list, receipts, tasks, the assistant, AI on or off, recipe packs, Home Assistant, privacy and subscriptions. No sign-in, no tracking.
 - [Getting started](https://tohuus.heidrich-digital.de/help/getting-started.html): Create an account, say who belongs to the household and meet the five areas.
 - [Shopping together](https://tohuus.heidrich-digital.de/help/shopping-together.html): Live on every phone, adding while someone is in the shop, and splitting the aisles.
 - [Sharing receipts](https://tohuus.heidrich-digital.de/help/receipts.html): E-receipts, PDF, photos and text: how receipts get into ToHuus and what happens to them.
-- [Speak and the assistant](https://tohuus.heidrich-digital.de/help/speak.html): What the “Speak” button does, what it adds and how to undo it.
+- [Tasks](https://tohuus.heidrich-digital.de/help/tasks.html): What needs doing at home, once or again and again, who does it and who keeps what in mind.
+- [When your head is full](https://tohuus.heidrich-digital.de/help/a-lot-on-your-mind.html): Small steps, one thing at a time, a visible timer and gentle mode: for heads with a lot going on.
+- [House info for guests and babysitters](https://tohuus.heidrich-digital.de/help/house-info.html): From the guest Wi-Fi to the coffee machine: cards with everything someone looking after your home needs to know, and a link without an account.
+- [The assistant](https://tohuus.heidrich-digital.de/help/speak.html): What the assistant does, what it adds and how to undo it.
 - [With or without AI](https://tohuus.heidrich-digital.de/help/ai-on-or-off.html): What works without AI, what it adds, and how to switch it off for the household, yourself or a child.
 - [The ToHuus recipe pack](https://tohuus.heidrich-digital.de/help/recipe-pack.html): Many recipes at once: the format, a prompt for your own AI and the way back out.
 - [Connect Home Assistant](https://tohuus.heidrich-digital.de/help/home-assistant.html): Step by step with HACS and a code from the app, for ToHuus Cloud and your own server.
 - [Connect Claude or ChatGPT](https://tohuus.heidrich-digital.de/help/connect-claude-chatgpt.html): Connect your household to the AI assistant you already use, through MCP.
+- [Reminders and calendars](https://tohuus.heidrich-digital.de/help/reminders-calendar.html): Shopping lists, tasks and appointments in Apple Reminders, Apple Calendar, Nextcloud, Google Calendar or Outlook.
 - [From your own server to the cloud](https://tohuus.heidrich-digital.de/help/move-to-the-cloud.html): Taking a self-hosted household into ToHuus Cloud.
 - [Self-hosting with Docker](https://tohuus.heidrich-digital.de/help/self-hosting.html): ToHuus on your own server, free under the AGPL-3.0.
 - [Privacy in short](https://tohuus.heidrich-digital.de/help/privacy-in-short.html): Where your data lives, who sees it and what never happens.
@@ -27,9 +31,9 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Frequently asked questions](https://tohuus.heidrich-digital.de/help/faq.html): Short answers to what people often ask.
 
 ## Hilfe (Deutsch)
-- [Hilfe & Tipps](https://tohuus.heidrich-digital.de/hilfe/): Anleitungen für ToHuus: Liste, Bons, Kochen, Geld, Sprechen, Home Assistant, Datenschutz und Abo. Ohne Anmeldung, ohne Tracking.
+- [Hilfe & Tipps](https://tohuus.heidrich-digital.de/hilfe/): Anleitungen für ToHuus: Liste, Bons, Kochen, Aufgaben, Geld, der Assistent, Home Assistant, Datenschutz und Abo. Ohne Anmeldung, ohne Tracking.
 - [Erste Schritte](https://tohuus.heidrich-digital.de/hilfe/erste-schritte.html): Konto anlegen, sagen, wer dazugehört, und die fünf Bereiche kennenlernen.
-- [So funktioniert ToHuus](https://tohuus.heidrich-digital.de/hilfe/so-funktioniert-tohuus.html): Wie ToHuus sich merkt, was fehlt, und warum jede Zeile sagt, woher sie kommt.
+- [So funktioniert ToHuus](https://tohuus.heidrich-digital.de/hilfe/so-funktioniert-tohuus.html): Wie ToHuus sich merkt, was fehlt, warum jede Zeile sagt, woher sie kommt, und wie du alles findest.
 - [Die Einkaufsliste](https://tohuus.heidrich-digital.de/hilfe/einkaufsliste.html): Eine Liste für alle, Schnelleingabe, „Ich hol’s“ und der Modus für den Laden.
 - [Gemeinsam einkaufen](https://tohuus.heidrich-digital.de/hilfe/gemeinsam-einkaufen.html): Live auf allen Handys, ergänzen, während jemand im Laden steht, und zu zweit losziehen.
 - [Was ToHuus sich merkt](https://tohuus.heidrich-digital.de/hilfe/merkt-sich.html): Kaufrhythmus, Vorschläge, „Haben wir noch“ und warum kein Vorrat nötig ist.
@@ -40,18 +44,20 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Das ToHuus-Rezeptpaket](https://tohuus.heidrich-digital.de/hilfe/rezeptpaket.html): Viele Rezepte auf einmal: das Format, ein Prompt für deine eigene KI und der Weg zurück.
 - [Cookidoo, Monsieur Cuisine und andere Küchenmaschinen](https://tohuus.heidrich-digital.de/hilfe/cookidoo.html): Wie Rezepte aus Cookidoo, Monsieur Cuisine, Cookit und anderen Küchenmaschinen-Apps neben ToHuus funktionieren.
 - [Geld: Lebensmittel und Haushalt](https://tohuus.heidrich-digital.de/hilfe/geld.html): Was ein Monat gekostet hat, wo, wofür, und was teurer geworden ist.
-- [Sprechen und der Assistent](https://tohuus.heidrich-digital.de/hilfe/sprechen.html): Was der Knopf „Sprechen“ kann, was er einträgt und wie du es zurücknimmst.
+- [Aufgaben](https://tohuus.heidrich-digital.de/hilfe/aufgaben.html): Was zu Hause zu tun ist, einmal oder immer wieder, wer es macht und wer was im Blick hat.
+- [Wenn der Kopf voll ist](https://tohuus.heidrich-digital.de/hilfe/kopf-voll.html): Kleine Schritte, eins nach dem anderen, ein sichtbarer Timer und der sanfte Modus: für Köpfe, in denen viel los ist.
+- [Der Assistent](https://tohuus.heidrich-digital.de/hilfe/sprechen.html): Was der Assistent kann, was er einträgt und wie du es zurücknimmst.
 - [Mit oder ohne KI](https://tohuus.heidrich-digital.de/hilfe/ki-an-oder-aus.html): Was ohne KI geht, was sie dazu bringt, und wie du sie für Haushalt, dich oder Kinder abschaltest.
-- [Hausinfo für Gäste und Babysitter](https://tohuus.heidrich-digital.de/hilfe/hausinfo.html): Karten mit allem, was jemand wissen muss, der auf euer Zuhause aufpasst.
+- [Hausinfo für Gäste und Babysitter](https://tohuus.heidrich-digital.de/hilfe/hausinfo.html): Vom Gäste-WLAN bis zur Kaffeemaschine: Karten mit allem, was jemand wissen muss, der bei euch aufpasst oder zu Besuch ist.
 - [Codes sicher teilen](https://tohuus.heidrich-digital.de/hilfe/hausinfo-codes.html): Türcode, WLAN, Alarmanlage: wie ToHuus Codes behandelt.
-- [Der Babysitter-Link](https://tohuus.heidrich-digital.de/hilfe/babysitter.html): Ein Link ohne Konto: wo was ist, eine Notiz und die Sprachbefehle.
+- [Der Babysitter-Link](https://tohuus.heidrich-digital.de/hilfe/babysitter.html): Ein Link ohne Konto: Hausinfo, wo was ist und eine Notiz, auch offline und zum Ausdrucken.
 - [Gäste und Rechte](https://tohuus.heidrich-digital.de/hilfe/gaeste.html): Gast-Links ohne Konto und feste Gäste mit eigenen Stufen.
 - [Haushalt teilen](https://tohuus.heidrich-digital.de/hilfe/haushalt-teilen.html): Mitglieder einladen, Kinder anlegen und einen zweiten Haushalt mitversorgen.
 - [Wer sieht was?](https://tohuus.heidrich-digital.de/hilfe/wer-sieht-was.html): Was gemeinsam ist, was privat bleibt und was nur du siehst.
 - [Benachrichtigungen](https://tohuus.heidrich-digital.de/hilfe/benachrichtigungen.html): Wann ToHuus sich meldet, wie du es einstellst und wie es ruhig bleibt.
 - [Home Assistant verbinden](https://tohuus.heidrich-digital.de/hilfe/home-assistant.html): Schritt für Schritt über HACS, mit Code aus der App, für ToHuus Cloud und eigenen Server.
 - [Mit Claude oder ChatGPT verbinden](https://tohuus.heidrich-digital.de/hilfe/claude-chatgpt.html): Deinen Haushalt über MCP mit dem KI-Assistenten verbinden, den du schon nutzt.
-- [Apple Erinnerungen oder Nextcloud spiegeln](https://tohuus.heidrich-digital.de/hilfe/erinnerungen-spiegeln.html): Die Einkaufsliste zusätzlich in einer anderen Listen-App, über CalDAV.
+- [Erinnerungen und Kalender](https://tohuus.heidrich-digital.de/hilfe/erinnerungen-spiegeln.html): Einkaufslisten, Aufgaben und Termine in Apple Erinnerungen, Apple Kalender, Nextcloud, Google Kalender oder Outlook.
 - [Vom eigenen Server in die Cloud](https://tohuus.heidrich-digital.de/hilfe/umzug-in-die-cloud.html): Einen selbst gehosteten Haushalt in die ToHuus Cloud mitnehmen.
 - [Selbst hosten mit Docker](https://tohuus.heidrich-digital.de/hilfe/selbst-hosten.html): ToHuus auf deinem eigenen Server, kostenlos unter AGPL-3.0.
 - [Deine Daten mitnehmen](https://tohuus.heidrich-digital.de/hilfe/daten-export.html): Export, Rezeptpaket und was beim Löschen passiert.
@@ -61,6 +67,12 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Häufige Fragen](https://tohuus.heidrich-digital.de/hilfe/fragen.html): Kurze Antworten auf das, was oft gefragt wird.
 
 ## Ratgeber
+- [Mental Load im Haushalt: Was ist das und wie verteilt man ihn fair?](https://tohuus.heidrich-digital.de/ratgeber/mental-load-haushalt-fair-verteilen.html): Mental Load ist das Drandenken, Planen und Im-Blick-Behalten im Haushalt. Er ist unsichtbar und ungleich verteilt. So macht ihr ihn sichtbar und teilt ihn fair.
+- [Haushalt mit ADHS: Was hilft, wenn der Kopf voll ist?](https://tohuus.heidrich-digital.de/ratgeber/haushalt-mit-adhs.html): Mit ADHS ist im Haushalt oft der Anfang das Schwerste. Kleine Schritte, eins nach dem anderen, ein Timer und Erinnerungen außerhalb des Kopfes helfen.
+- [Wie lange ist was haltbar? MHD, Verbrauchsdatum und nach dem Öffnen](https://tohuus.heidrich-digital.de/ratgeber/haltbarkeit-lebensmittel-nach-dem-oeffnen.html): Nach dem MHD ist vieles noch gut, nach dem Verbrauchsdatum nicht. Was für Eier, Käse, Wurst, Marmelade und Milch gilt, auch nach dem Öffnen.
+- [Infos für Babysitter und Gäste: vom WLAN bis zur Kaffeemaschine](https://tohuus.heidrich-digital.de/ratgeber/infos-fuer-gaeste-wlan-kaffeemaschine.html): Was Besuch, Großeltern und Babysitter bei euch wissen müssen, schreibt ihr einmal auf: WLAN, Geräte, Hausregeln. Codes wie der Türcode bleiben getrennt.
+- [Spontankäufe im Griff: So klappt ein Wochenbudget für Extras](https://tohuus.heidrich-digital.de/ratgeber/spontankaeufe-wochenbudget-extras.html): Süßes, Chips, Eis und Getränke landen gern spontan im Wagen. Ein festes Wochenbudget für Extras hilft, ohne Verbote und ohne schlechtes Gewissen.
+- [Putzplan ohne Punkte und Streit: für WG, Paar und Familie](https://tohuus.heidrich-digital.de/ratgeber/putzplan-wg-paar-familie.html): Ein Putzplan klappt, wenn jede Aufgabe einen Rhythmus hat, klar ist, wer dran ist und wer dran denkt, und niemand Punkte zählt. So geht es in WG, Paar und Familie.
 - [Einkaufsliste teilen: so klappt es in Familie, Paar und WG](https://tohuus.heidrich-digital.de/ratgeber/einkaufsliste-teilen.html): Eine geteilte Einkaufsliste klappt, wenn alle in dieselbe Liste schreiben, Änderungen sofort sehen und klar ist, wer gerade was holt.
 - [Wie oft einkaufen? Wocheneinkauf oder lieber öfter](https://tohuus.heidrich-digital.de/ratgeber/wie-oft-einkaufen.html): Ein großer Wocheneinkauf spart Wege und Spontankäufe, kleine Einkäufe halten Frisches frisch. Für viele passt eine Mischung aus beidem am besten.
 - [Mental Load beim Einkaufen: Wer denkt daran, was fehlt?](https://tohuus.heidrich-digital.de/ratgeber/mental-load-einkaufen.html): Beim Einkaufen ist das Drandenken die eigentliche Arbeit, und sie liegt meist bei Frauen. So verteilt ihr sie fairer, ohne ständig nachzufragen.
@@ -83,6 +95,26 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Haushalts-App ohne Tracking: worauf ihr achten solltet](https://tohuus.heidrich-digital.de/ratgeber/haushalts-app-datenschutz.html): Prüft bei einer Haushalts-App, wo die Daten liegen, ob sie trackt oder Werbung zeigt, wer im Haushalt was sieht und ob Export und Löschen gehen.
 
 ## Fakten rund um Einkauf, Kochen und Haushaltsgeld
+- 43,4 %: So viel mehr unbezahlte Arbeit leisteten Frauen 2022 als Männer, knapp 29,5 gegenüber 20,5 Stunden pro Woche. (Destatis 2025, https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Zeitverwendung/Ergebnisse/_inhalt.html)
+- 62 %: So wahrscheinlich übernehmen erwerbstätige Frauen die Alltagsorganisation überwiegend selbst, bei Männern sind es 20 Prozent (Modellwerte, 2023). (WSI 2023, https://www.boeckler.de/de/pressemitteilungen-2675-alltagsorganisation-bei-paaren-und-familien-51349.htm)
+- 74 %: Leben Kinder im Haushalt, steigt dieser Wert bei erwerbstätigen Frauen auf 74 Prozent (Modellwert, WSI 2023). (WSI 2023, https://www.boeckler.de/de/pressemitteilungen-2675-alltagsorganisation-bei-paaren-und-familien-51349.htm)
+- 4 Teile: Denkarbeit im Haushalt heißt: Bedarf erkennen, Möglichkeiten suchen, entscheiden und im Blick behalten (Daminger 2019). (Daminger, ASR 2019, https://doi.org/10.1177/0003122419859007)
+- 4,7 %: So viele Erwachsene zwischen 18 und 64 zeigten 2012 in einer repräsentativen Befragung in Deutschland ADHS-Anzeichen (Selbsteinschätzung, keine Diagnose). (de Zwaan u. a. 2012, https://link.springer.com/doi/10.1007/s00406-011-0211-9)
+- 25,7: So viele neue ADHS-Diagnosen pro 10.000 gesetzlich versicherte Erwachsene gab es 2024, nach 8,6 im Jahr 2015 (vorläufig). (Zi, Ärzteblatt 2025, https://www.aerzteblatt.de/archiv/inzidenz-von-adhs-spektrum-stoerungen-bei-erwachsenen)
+- 5 Minuten: Mit einem kurzen, sichtbaren Timer fällt das Anfangen leichter. In ToHuus wird dabei nichts gezählt oder gespeichert. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/kopf-voll.html)
+- 28 Tage: So lange nach dem Legen liegt das vorgeschriebene Mindesthaltbarkeitsdatum von rohen Eiern. (Verbraucherzentrale 2026, https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/eier-haltbarkeit-und-lagerung-58925)
+- 6 Wochen: Bis zu so lange halten Eier im Kühlschrank bei höchstens 7 Grad. Nach dem MHD nur noch gut durchgegart essen. (Verbraucherzentrale 2026, https://www.verbraucherzentrale.de/wissen/lebensmittel/auswaehlen-zubereiten-aufbewahren/eier-haltbarkeit-und-lagerung-58925)
+- 107 von 230: Bei so vielen geprüften Produkten stand kein Zeitraum, wie lange sie nach dem Öffnen halten (Marktchecks 2018 und 2023). (Verbraucherzentrale 2025, https://www.verbraucherzentrale.de/wissen/lebensmittel/lebensmittel-nach-dem-oeffnen-gekuehlt-lagern-angaben-oft-zu-vage-109122)
+- 74,5 kg: So viele Lebensmittel warf jede Person 2022 im eigenen Haushalt weg, Schalen und Kaffeesatz mitgezählt. (Umweltbundesamt 2025, https://umweltbundesamt.de/themen/abfall-ressourcen/abfallwirtschaft/abfallvermeidung/lebensmittelabfaelle)
+- 20 Zeichen: So lang sollte ein WLAN-Passwort laut BSI mindestens sein, aus zusammenhanglosen Zeichen, auch beim Gäste-WLAN. (BSI 2026, https://www.bsi.bund.de/DE/Themen/Verbraucherinnen-und-Verbraucher/Informationen-und-Empfehlungen/Cyber-Sicherheitsempfehlungen/Router-WLAN-VPN/Schritt-fuer-Schritt-zum-Gaeste-WLAN/Schritt-fuer-Schritt-zum-Gaeste-WLAN_node.html)
+- Nicht aushängen: Zugangsdaten fürs WLAN nirgends aushängen, sondern auf Nachfrage weitergeben, zum Beispiel per QR-Code, rät das BSI. (BSI 2026, https://www.bsi.bund.de/DE/Themen/Verbraucherinnen-und-Verbraucher/Informationen-und-Empfehlungen/Cyber-Sicherheitsempfehlungen/Router-WLAN-VPN/Schritt-fuer-Schritt-zum-Gaeste-WLAN/Schritt-fuer-Schritt-zum-Gaeste-WLAN_node.html)
+- Ohne App: Gäste öffnen die Hausinfo von ToHuus über einen Link oder QR-Code, ohne App und ohne Konto, auch offline lesbar. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/hausinfo.html)
+- 335 €: So viel gaben private Haushalte in Deutschland 2023 im Schnitt pro Monat für Nahrungsmittel aus, ohne Restaurant und Café. (Destatis 2026, https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/06/PD26_204_639.html)
+- 8 %: So viel der Ausgaben für Nahrungsmittel ging 2023 an Zucker und Süßwaren. (Destatis 2026, https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/06/PD26_204_639.html)
+- 75 €: So viel gaben Haushalte 2023 im Schnitt pro Monat für Getränke aus, 45 Prozent davon für alkoholische. (Destatis 2026, https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/06/PD26_204_639.html)
+- 56 %: So viele Verheiratete in den USA nannten 2016 das Teilen der Hausarbeit sehr wichtig für eine gute Ehe, mehr als Kinder (43 Prozent). (Pew Research 2016, https://www.pewresearch.org/short-reads/2016/11/30/sharing-chores-a-key-to-good-marriage-say-majority-of-married-adults/)
+- 13 Stunden: So viel Zeit verbrachten Frauen 2022 pro Woche mit klassischer Hausarbeit wie Kochen, Putzen und Wäsche, Männer deutlich weniger. (Destatis 2025, https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Zeitverwendung/Ergebnisse/_inhalt.html)
+- 0 Ranglisten: ToHuus führt keine Ranglisten und keine Serien. Sterne gibt es nur, wenn ihr sie einschaltet, und dann zählt vor allem eure Woche zusammen. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/aufgaben.html)
 - 84 %: Wer größere Einkäufe plant, nutzt meist einen handgeschriebenen Zettel: 84 Prozent laut Forsa-Umfrage für den BVLH 2020. (BVLH/Forsa 2020, https://www.bvlh.net/fileadmin/user_upload/MI_21-09-2020_Einkaufsplanung_final.pdf)
 - 57,7 %: In gut 57 Prozent der Haushalte in Deutschland lebten 2024 zwei oder mehr Personen, die sich den Einkauf teilen können. (Statistisches Bundesamt 2024, https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Haushalte-Familien/Tabellen/1-3-privathaushalte-neuer-zeitvergleich.html)
 - 44 %: Ende 2023 sagten 44 Prozent der Väter, sie seien allein für den Lebensmitteleinkauf zuständig. 2020 waren es 34 Prozent. (YouGov 2024, https://yougov.com/de-de/artikel/49258-immer-mehr-deutsche-vater-heute-allein-verantwortlich-fur-den-lebensmitteleinkauf-ihrer-familie)

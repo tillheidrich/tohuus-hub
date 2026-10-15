@@ -17,7 +17,18 @@ final class AppModel {
     private(set) var userName: String?
     var notice: String?
     var showAssistant = false
+    /// the screen the assistant is opened from (server assistant-areas.ts CONTEXTS) – its tools and hints follow it, like the web
+    var assistantContext: String?
+    /// pushed screens (Aufgaben, Hausinfo, Bring mir was) set their own context and give the tab's back when they go
+    var screenContext: String?
     var showPaywall = false
+    /// global search (GlobalSearchView) and the Mehr sheet – opened from the magnifier and the avatar on every root screen
+    var showSearch = false
+    var showMore = false
+    /// a ToHuus label link opened from outside (QR scanned with the camera app – universal link ".../q/<code>")
+    var pendingLabel: String?
+    /// Zuhause tab: "tasks" or "stock" (HomeView), set when someone opens /aufgaben or the pantry from elsewhere
+    var homeSegment: String?
     /// set by deep links (tohuus://shopping from the widget)
     var requestedTab: String?
     /// iPad kitchen mode (big week plan, recipe step by step, list to tick)
@@ -74,6 +85,10 @@ final class AppModel {
     private(set) var singleHousehold = false
     /// a permanent guest (Mehr shows the handover shared with them instead of trips and care)
     private(set) var isGuest = false
+    /// the permanent guest's level (order | stock | recipes | family | paused) – Mehr filters like the web's guestAllows
+    private(set) var guestLevel: String?
+    /// an admin of the household (GET /api/me actor.role)
+    private(set) var isAdmin = false
 
     func loadAIState() async {
         guard let api else { return }
@@ -82,6 +97,8 @@ final class AppModel {
             if let m = me.modules { modules = m }
             singleHousehold = me.isSingleHousehold
             isGuest = me.isGuest
+            guestLevel = me.guestLevel
+            isAdmin = me.role == "admin"
             if let p = me.listPrefs { ListPrefsSync.adopt(p) }
         }
         if let s: AIStatus = try? await api.get("api/assistant/status") {
@@ -202,9 +219,12 @@ final class AppModel {
     }
 
     func finishSignIn(server: URL, mode: String, response: AppAuthResponse) {
+        // another server or account joins this iPhone: keep the active one to switch back (Start/ConnectKit.swift)
+        if phase == .signedIn { rememberCurrentConnection() }
         let s = SessionInfo(serverURL: server, mode: mode, householdId: response.householdId, deviceName: Self.deviceName)
         s.save()
         SessionInfo.token = response.token
+        ConnectionVault.forget(token: response.token)
         session = s
         households = response.households
         saveHouseholds()

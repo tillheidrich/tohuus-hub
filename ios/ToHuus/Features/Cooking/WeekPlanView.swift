@@ -78,12 +78,15 @@ struct WeekPlanSection: View {
     @State private var showRotation = false
     @State private var showVotes = false
     @State private var dropTarget: String?
+    @State private var showBoard = false
+    @State private var cookidoo: CookidooStatus?
 
     private var today: String { CookDay.today() }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s3) {
             header
+            if model.plan != nil { WeekGlanceCard(model: model) { showBoard = true } }
             if let error = model.error { ErrorBanner(message: error) { Task { await model.load(store.api) } } }
             if model.plan == nil && model.loading {
                 ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
@@ -106,6 +109,10 @@ struct WeekPlanSection: View {
         }
         .sheet(isPresented: $showRotation) { RotationSheet(store: store, from: model.from, feedback: feedback) { Task { await model.load(store.api) } } }
         .sheet(isPresented: $showVotes) { VotesSheet(store: store) { Task { await model.load(store.api) } } }
+        .sheet(isPresented: $showBoard, onDismiss: { Task { await model.load(store.api) } }) {
+            PlanBoardSheet(store: store, model: model)
+        }
+        .task { if !app.isCloud { cookidoo = try? await store.api.cookidooStatus() } }
     }
 
     private var header: some View {
@@ -167,7 +174,15 @@ struct WeekPlanSection: View {
         .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(day == today ? Theme.primary.opacity(0.6) : Theme.line, lineWidth: 1))
         .opacity(day < today ? 0.7 : 1)
         .dropDestination(for: String.self) { items, _ in
-            guard day >= today, let id = items.compactMap(PlanDrag.init(payload:)).first?.id else { return false }
+            guard day >= today else { return false }
+            if let r = items.compactMap(RecipeDrag.init(payload:)).first {
+                Task {
+                    do { try await store.api.planEntry(day: day, recipeId: r.id, title: nil, servings: nil); Haptics.success() } catch { feedback.fail(error) }
+                    await model.load(store.api)
+                }
+                return true
+            }
+            guard let id = items.compactMap(PlanDrag.init(payload:)).first?.id else { return false }
             Task { await move(id, to: day) }
             return true
         } isTargeted: { on in dropTarget = on ? day : (dropTarget == day ? nil : dropTarget) }
@@ -250,6 +265,32 @@ struct WeekPlanSection: View {
                 Label((model.overlay?.votes ?? 0) > 0 ? LCF("Who wants what? · %d open", model.overlay?.votes ?? 0) : LC("Who wants what?"), systemImage: "person.3")
             }
             .buttonStyle(SecondaryButtonStyle())
+            HStack(spacing: Theme.Space.s3) {
+                if cookidoo?.pull == true {
+                    Button { Task { await syncCookidoo() } } label: {
+                        Label(model.busy == "cdo" ? L("Checking Cookidoo…") : L("Sync Cookidoo"), systemImage: "arrow.triangle.2.circlepath").lineLimit(1)
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .disabled(!model.busy.isEmpty)
+                }
+                CookPrintMenu(store: store, ticketType: "week", ticketDay: model.from, title: L("Meal plan"),
+                              html: { CookPrint.weekHTML(CookPrint.weekRows(model), from: model.from) },
+                              text: { CookPrint.weekText(CookPrint.weekRows(model), from: model.from) },
+                              feedback: feedback) {
+                    Label(L("Print or share week"), systemImage: "printer")
+                        .lineLimit(1)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(Theme.lineStrong, lineWidth: 1))
+                }
+            }
+            if let push = cookidoo?.push, let at = push.at {
+                Label(LF("Cookidoo week last received %@: %d dishes", ServerDate.relative(at) ?? at, push.events ?? 0), systemImage: "checkmark.circle")
+                    .font(.caption).foregroundStyle(Theme.ink3)
+            }
             Text(LC("Drag a meal to another day, or tap it for more."))
                 .font(.footnote).foregroundStyle(Theme.ink3)
         }
@@ -291,6 +332,20 @@ struct WeekPlanSection: View {
             await store.refreshList()
             feedback.say(n == 0 ? LC("All set – nothing missing for the week") : n == 1 ? LC("Added 1 ingredient to the shopping list") : LCF("Added %d ingredients to the shopping list", n))
         } catch { feedback.fail(error) }
+    }
+
+    private func syncCookidoo() async {
+        model.busy = "cdo"
+        defer { model.busy = "" }
+        do {
+            let r = try await store.api.cookidooSync()
+            if let err = r.error, !err.isEmpty { feedback.say(err) } else {
+                let n = r.added ?? 0
+                feedback.say(n == 0 ? LF("Cookidoo synced – %d entries, nothing new", r.events ?? 0) : n == 1 ? L("Imported 1 meal from Cookidoo") : LF("Imported %d meals from Cookidoo", n))
+                store.touch("recipes")
+            }
+        } catch { feedback.fail(error) }
+        await model.load(store.api)
     }
 
     private func toggleCooked(_ e: WeekEntry) async {
@@ -377,6 +432,8 @@ struct MealSheet: View {
                         Divider()
                         action(LC("Open recipe"), LC("Ingredients, steps, mark as cooked."), "book") { openRecipe(RecipeRef(id: rid, planEntryId: e.id)) }
                     }
+                    Divider()
+                    MealBoxActionRow(store: store, entry: e)
                     Divider()
                     action(LC("Remove from plan"), LC("The recipe stays in your collection."), "trash", tint: Theme.empty) { await remove(e) }
                 }
@@ -586,6 +643,7 @@ struct PlanPickerSheet: View {
                             }
                         }
                         .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                        PlanBoxPicksSection(store: store, day: day, slot: slot, feedback: feedback) { onDone(); dismiss() }
                         Button { showVote = true } label: { Label(LC("Can’t decide? Let everyone vote"), systemImage: "person.3") }
                             .buttonStyle(SecondaryButtonStyle())
                     }

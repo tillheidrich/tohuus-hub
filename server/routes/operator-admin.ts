@@ -56,7 +56,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
 
   r.get('/operator/settings', fresh, (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ settings: runtimeSettingsView(), ai: effective(), signupMode: signupMode(), supportEmail: supportEmail(), keys: RUNTIME_KEYS });
+    res.json({ settings: runtimeSettingsView(), ai: effective(), signupMode: signupMode(), supportEmail: supportEmail(), pointsOn: runtimeSetting('points') === 'on', yearReviewOn: runtimeSetting('year_review') === 'on', keys: RUNTIME_KEYS });
   });
 
   const MODEL = z.string().trim().max(120).regex(/^[\w.:/@+-]+$/, 'model id');
@@ -72,6 +72,8 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     'signup.mode': z.enum(SIGNUP_MODES as [string, ...string[]]),
     'support.email': z.string().trim().max(254).email(),
     'beta.gift': z.enum(['haushalt', 'plus']),
+    points: z.enum(['on', 'off']),
+    year_review: z.enum(['on', 'off']),
   };
 
   r.put('/operator/settings', fresh, (req, res) => {

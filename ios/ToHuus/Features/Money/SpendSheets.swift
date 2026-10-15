@@ -247,6 +247,8 @@ struct SpendReceiptView: View {
     @State private var toast: ToastMessage?
     @State private var openList: Int?
     @State private var splitting = false
+    /// "Nur einige Posten teilen": the chosen lines (entry keys) while picking
+    @State private var pick: Set<String>?
 
     private var members: [MoneyMember] { meta?.members ?? [] }
 
@@ -261,8 +263,29 @@ struct SpendReceiptView: View {
                 }
                 Section {
                     ForEach(d.entries) { e in
-                        NavigationLink { SpendLineView(store: store, entry: e, meta: meta) } label: { SpendEntryRow(e: e) }
+                        if let chosen = pick {
+                            Button {
+                                var n = chosen
+                                if n.contains(e.key) { n.remove(e.key) } else { n.insert(e.key) }
+                                pick = n
+                            } label: {
+                                HStack(spacing: Theme.Space.s3) {
+                                    Image(systemName: chosen.contains(e.key) ? "checkmark.circle.fill" : "circle")
+                                        .font(.title3)
+                                        .foregroundStyle(chosen.contains(e.key) ? Theme.primary : Theme.ink3)
+                                    SpendEntryRow(e: e)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(chosen.contains(e.key) ? .isSelected : [])
+                            .accessibilityHint(LF("Choose %@", e.name))
+                        } else {
+                            NavigationLink { SpendLineView(store: store, entry: e, meta: meta) } label: { SpendEntryRow(e: e) }
+                        }
                     }
+                } footer: {
+                    if pick != nil { Text(L("Tap the items you want to split, e.g. only the drinks for the party.")) }
                 }
                 // q-money: who paid, single lines for one person, personal receipt, split as a money list
                 if members.count > 1 && d.personal == nil {
@@ -295,11 +318,20 @@ struct SpendReceiptView: View {
                     } footer: { Text(L("Personal receipts are only in your “Just mine” – nobody else sees them, not even in the household numbers.")) }
                 }
                 Section {
-                    Button {
-                        Task { await split() }
-                    } label: { HStack { Label(L("Split this receipt"), systemImage: "person.2"); if splitting { Spacer(); ProgressView() } } }
-                        .disabled(splitting)
-                }
+                    if let chosen = pick {
+                        Button {
+                            Task { await split(.entries(Array(chosen))) }
+                        } label: { HStack { Label(LF("Split the selection (%d)", chosen.count), systemImage: "person.2"); if splitting { Spacer(); ProgressView() } } }
+                            .disabled(splitting || chosen.isEmpty)
+                        Button(L("Cancel"), role: .cancel) { pick = nil }
+                    } else {
+                        Button {
+                            Task { await split(.receipt(receiptId)) }
+                        } label: { HStack { Label(L("Split this receipt"), systemImage: "person.2"); if splitting { Spacer(); ProgressView() } } }
+                            .disabled(splitting)
+                        Button { pick = [] } label: { Label(L("Split only some items"), systemImage: "checklist") }
+                    }
+                } footer: { Text(L("A money list shows who gives whom how much. ToHuus never moves money.")) }
                 Section(L("Tags for the whole receipt")) {
                     TagEditor(label: L("Tags"), values: $tags, suggestions: meta?.tags ?? [])
                         .onChange(of: tags) { _, v in Task { try? await store.api.setReceiptTags(receiptId, tags: v); store.touch("imports") } }
@@ -334,12 +366,13 @@ struct SpendReceiptView: View {
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
 
-    private func split() async {
+    private func split(_ from: MoneySource) async {
         splitting = true
         defer { splitting = false }
         do {
-            let l = try await store.api.createMoneyList(title: data?.store, people: nil, count: nil, from: .receipt(receiptId), privateList: false, shareWith: [])
+            let l = try await store.api.createMoneyList(title: data?.store, people: nil, count: nil, from: from, privateList: false, shareWith: [])
             store.touch("imports")
+            pick = nil
             openList = l.id
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }

@@ -195,4 +195,11 @@ export const auth: Record<string, string> = {
   'Add passkey': 'Passkey hinzufügen',
   'A passkey signs you in to all your households. Please confirm with your password.':
     'Ein Passkey meldet dich in all deinen Haushalten an. Bitte bestätige mit deinem Passwort.',
+  // iPhone-App verbinden (AppConnect.tsx)
+  'Connect the iPhone app': 'iPhone-App verbinden',
+  'Open ToHuus on the iPhone, tap “Scan QR code” and point it here. You don’t need to type an address or a password.':
+    'Öffne ToHuus auf dem iPhone, tipp auf „QR-Code scannen“ und halt es hierauf. Adresse und Passwort brauchst du dann nicht.',
+  'QR code for the iPhone app': 'QR-Code für die iPhone-App',
+  'Or type the code in the app. It works once, for {min} more minutes.': 'Oder tipp den Code in der App ein. Er gilt einmal, noch {min} Minuten.',
+  'Show QR code': 'QR-Code zeigen',
 };

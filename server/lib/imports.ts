@@ -309,7 +309,7 @@ export function applyImport(id: number, actor: string) {
       // a list tick within 3 days already put (part of) this into stock – don't book it twice (shopping-trust.ts)
       const already = l.qty > 0 ? takeTickBooking(productId, purchaseDay, p.track_mode === 'level' ? 1 : l.qty, id) : 0;
       const qty = p.track_mode === 'level' ? undefined : l.qty - already;
-      const bestBefore = l.best_before ?? (p.shelf_days && l.qty > 0 ? new Date(Date.now() + p.shelf_days * 86400000).toISOString().slice(0, 10) : null);
+      const bestBefore = l.best_before ?? null; // none printed → adjustStock estimates it (fresh-shelf.ts)
       if (p.track_mode === 'level') {
         if (!already) adjustStock({ productId, locationId: l.location_id, set: l.qty < 0 ? 0 : 3, reason: 'import', actor, ref: `import:${id}`, silent: true });
       } else if (qty) adjustStock({ productId, locationId: l.location_id, delta: qty, bestBefore, reason: 'import', actor, ref: `import:${id}`, silent: true });

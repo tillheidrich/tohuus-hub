@@ -16,6 +16,8 @@
  *   signup.mode       'open' | 'invite' | 'closed'   (overrides CLOUD_SIGNUP, beta.ts)
  *   support.email     address shown in "frag gern per Mail nach" (default tohuus@tillheidrich.de)
  *   beta.gift         'haushalt' | 'plus'   every cloud household gets at least this plan as a gift (gifts.ts)
+ *   points            'on' | 'off'   households may switch on stars (points.ts); off by default
+ *   year_review       'on' | 'off'   the year in review "Euer Jahr to Huus" (review.ts); off by default
  *
  * The AI key is write-only: the API only ever returns its last 4 characters.
  */
@@ -28,7 +30,7 @@ import { aiRuntime } from './ai.js';
 import { deriveKey } from './crypto-keys.js';
 
 export const AI_ENV_KEYS = ['AI_API_KEY', 'AI_BASE_URL', 'AI_MODEL_TEXT', 'AI_MODEL_VISION', 'AI_MODEL_VISION_HARD', 'AI_MODEL_AUDIO', 'AI_MODEL_FALLBACKS'] as const;
-export const RUNTIME_KEYS = [...AI_ENV_KEYS, 'ai.cloud', 'signup.mode', 'support.email', 'beta.gift'] as const;
+export const RUNTIME_KEYS = [...AI_ENV_KEYS, 'ai.cloud', 'signup.mode', 'support.email', 'beta.gift', 'points', 'year_review'] as const;
 export type RuntimeKey = (typeof RUNTIME_KEYS)[number];
 export const SECRET_KEYS: readonly RuntimeKey[] = ['AI_API_KEY'];
 export const isRuntimeKey = (k: string): k is RuntimeKey => (RUNTIME_KEYS as readonly string[]).includes(k);

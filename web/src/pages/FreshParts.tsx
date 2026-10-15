@@ -136,7 +136,8 @@ interface ProductFresh {
   freezer_days: number | null;
   default_freezer_days: number;
   has_freezer: boolean;
-  entries: { id: number; location_id: number; qty: number; best_before: string | null; opened_day: string | null; frozen_at: string | null; in_freezer: boolean; use_by: string | null }[];
+  entries: { id: number; location_id: number; qty: number; best_before: string | null; opened_day: string | null; frozen_at: string | null; in_freezer: boolean; use_by: string | null; use_by_estimated?: boolean; bb_estimated?: boolean }[];
+  open_days_estimated?: boolean;
   can_open: boolean;
   can_freeze: boolean;
   can_thaw: boolean;
@@ -182,7 +183,7 @@ export function FreshPanel({ p, locations }: { p: any; locations: Location[] }) 
           </button>
         ) : (
           f.can_open && (
-            <button className="btn sm" onClick={() => run('open', {}, (r) => (r.use_by ? t('Opened – use by {date}', { date: fmtDate(r.use_by) }) : t('Marked as opened')))}>
+            <button className="btn sm" onClick={() => run('open', {}, (r) => (r.use_by ? t(r.estimated ? 'Opened – keeps about until {date}' : 'Opened – use by {date}', { date: fmtDate(r.use_by) }) : t('Marked as opened')))}>
               {t('Opened')}
             </button>
           )
@@ -205,7 +206,7 @@ export function FreshPanel({ p, locations }: { p: any; locations: Location[] }) 
                     since: e.frozen_at ? ` ${t('since {date}', { date: fmtDate(e.frozen_at) })}` : '',
                     date: fmtDate(e.best_before),
                   })
-                : t('{qty} opened {date} · use by {until}', { qty: fmtQty(p, e.qty), date: fmtDate(e.opened_day), until: fmtDate(e.use_by) })}
+                : t(e.use_by_estimated ? '{qty} opened {date} · keeps about until {until}' : '{qty} opened {date} · use by {until}', { qty: fmtQty(p, e.qty), date: fmtDate(e.opened_day), until: fmtDate(e.use_by) })}
             </div>
           ))}
         </div>
@@ -231,7 +232,7 @@ export function FreshPanel({ p, locations }: { p: any; locations: Location[] }) 
         </span>
         {!leftover && (
           <button className="linkish small" onClick={() => setSheet('shelf')}>
-            {f.open_days ? t('{n} days after opening', { n: f.open_days }) : t('Shelf life')}
+            {f.open_days ? t(f.open_days_estimated ? 'about {n} days after opening' : '{n} days after opening', { n: f.open_days }) : t('Shelf life')}
           </button>
         )}
         {leftover && f.recipe_id && (

@@ -77,4 +77,5 @@ export const de_list2: Record<string, string> = {
   'until {date}': 'bis {date}',
   'Offer not found': 'Angebot nicht gefunden',
   'On offer: {what}': 'Im Angebot: {what}',
+  'Please enter an amount above zero.': 'Bitte gib einen Wert über null ein.',
 };

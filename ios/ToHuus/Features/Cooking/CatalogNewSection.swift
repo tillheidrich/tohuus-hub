@@ -9,6 +9,8 @@ struct CatalogNewSection: View {
     @State private var list: CatalogList?
     @State private var busy: Int?
     @State private var error: String?
+    @State private var detail: CatalogCard?
+    @State private var showAll = false
 
     private var cards: [CatalogCard] {
         guard let list else { return [] }
@@ -19,9 +21,15 @@ struct CatalogNewSection: View {
         Group {
             if !cards.isEmpty {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
-                    Text(list?.newThisWeek.isEmpty == false ? L("New this week") : L("New from ToHuus"))
-                        .font(.headline).foregroundStyle(Theme.ink)
-                        .accessibilityAddTraits(.isHeader)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(list?.newThisWeek.isEmpty == false ? L("New this week") : L("New from ToHuus"))
+                            .font(.headline).foregroundStyle(Theme.ink)
+                            .accessibilityAddTraits(.isHeader)
+                        Spacer()
+                        if (list?.recent.count ?? 0) > cards.count {
+                            Button(L("Show all")) { showAll = true }.font(.subheadline.weight(.semibold))
+                        }
+                    }
                     Text(L("ToHuus recipes – simple everyday dishes")).font(.footnote).foregroundStyle(Theme.ink2)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(alignment: .top, spacing: Theme.Space.s3) {
@@ -33,6 +41,19 @@ struct CatalogNewSection: View {
             }
         }
         .task { list = try? await store.api.catalogRecipes() }
+        .sheet(item: $detail) { c in
+            CatalogDetailSheet(store: store, card: c, savedId: list?.saved[String(c.id)],
+                               onSaved: { id in list?.saved[String(c.id)] = id }, openRecipe: openRecipe)
+        }
+        .sheet(isPresented: $showAll) {
+            NavigationStack {
+                CatalogAllView(store: store) { ref in
+                    showAll = false
+                    Task { @MainActor in try? await Task.sleep(for: .milliseconds(450)); openRecipe(ref) }
+                }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { showAll = false } } }
+            }
+        }
     }
 
     private func card(_ c: CatalogCard) -> some View {
@@ -68,7 +89,12 @@ struct CatalogNewSection: View {
             }
             .frame(width: 160, height: 120)
             .clipShape(RoundedRectangle(cornerRadius: 6))
-            .accessibilityHidden(true)
+            .contentShape(Rectangle())
+            .onTapGesture { detail = c }
+            .accessibilityElement()
+            .accessibilityLabel(LF("Show %@", c.title))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { detail = c }
             Text(c.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
                 .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             if let m = c.timeMin { Text(LF("%d min", m)).font(.caption).foregroundStyle(Theme.ink2) }

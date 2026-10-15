@@ -2,6 +2,7 @@
  * Shopping in the store: sections ("aisles"), per-store learned walking order, basket + checkout,
  * claims ("I'll take care of it"), natural-language quick add and offline replay.
  */
+import { itemIsExtra } from './extras.js';
 import { db, migrate, onDbReady } from '../db.js';
 import { BASE_CATEGORIES } from './basedata.js';
 import { emit } from './bus.js';
@@ -281,6 +282,8 @@ export interface ShopItem {
   list_id?: number | null;
   /** list2: manual order inside the aisle (drag & drop) */
   sort_key?: number | null;
+  /** counts toward the weekly extras allowance (extras.ts) */
+  extra?: boolean;
 }
 
 export function claimsOf(kind: 'shopping' | 'plan') {
@@ -297,16 +300,17 @@ export function claimsOf(kind: 'shopping' | 'plan') {
 export function shoppingItems(viewer?: Viewer): ShopItem[] {
   const rows = db
     .prepare(
-      `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit, p.buy_at AS product_buy_at,
+      `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit, p.buy_at AS product_buy_at, p.is_extra AS product_is_extra,
          (SELECT COALESCE(SUM(qty),0) FROM stock st WHERE st.product_id = s.product_id) AS in_stock
        FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id
        WHERE s.cleared_at IS NULL AND (s.checked_at IS NULL OR s.in_basket = 1 OR s.checked_at > datetime('now', '-1 day'))
        ORDER BY s.checked_at IS NOT NULL, s.created_at DESC`,
     )
-    .all() as (Omit<ShopItem, 'section' | 'claim' | 'buy_at' | 'origin'> & { buy_at: string | null; product_buy_at: string | null; origin_detail: string | null })[];
+    .all() as (Omit<ShopItem, 'section' | 'claim' | 'buy_at' | 'origin'> & { buy_at: string | null; product_buy_at: string | null; product_is_extra: number | null; origin_detail: string | null })[];
   const claims = claimsOf('shopping');
-  return decorateItems(applyShareView(rows, viewer, claims)).map(({ product_buy_at, ...r }) => ({
+  return decorateItems(applyShareView(rows, viewer, claims)).map(({ product_buy_at, product_is_extra, ...r }) => ({
     ...r,
+    extra: itemIsExtra({ ...r, extra: (r as { extra?: unknown }).extra as number | null, product_is_extra }),
     buy_at: itemBuyAt({ buy_at: r.buy_at, product_buy_at }),
     origin: originOf(r),
     section: sectionOf(r),

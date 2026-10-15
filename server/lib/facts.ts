@@ -1,6 +1,6 @@
 /**
  * "Gut zu wissen" (area: explain): short, sourced facts around the app's topics – food waste, best-before vs use-by,
- * shopping lists, mental load, stockpiling, unit prices, food prices – and what ToHuus does about each.
+ * shopping lists, mental load, tasks, ADHD-friendly habits, guest Wi-Fi, stockpiling, unit prices, food prices – and what ToHuus does about each.
  * The data is server/data/facts.json (one place for web and iOS); every number there has a primary source with
  * link and retrieval date (docs/facts.md). Nothing household-specific, nothing personal.
  */
@@ -18,7 +18,7 @@ interface RawFact {
   sources: { title: string; publisher: string; url: string; retrieved: string; note?: string }[];
 }
 
-export const TOPICS = ['food-waste', 'dates', 'shopping-list', 'mental-load', 'stockpiling', 'unit-prices', 'prices'] as const;
+export const TOPICS = ['food-waste', 'dates', 'shopping-list', 'mental-load', 'tasks', 'focus', 'house-info', 'stockpiling', 'unit-prices', 'prices'] as const;
 
 export function facts(lang: FactLang = 'de') {
   return {

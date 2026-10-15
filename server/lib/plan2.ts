@@ -215,7 +215,7 @@ export function setEntryServings(id: number, servings: number | null) {
 }
 
 /** Plan a dish with optional one-off servings in one go. */
-export function planEntry(input: { day: string; recipe_id?: number | null; title?: string; slot?: string; note?: string | null; servings?: number | null; source?: string }) {
+export function planEntry(input: { day: string; recipe_id?: number | null; title?: string; slot?: string; note?: string | null; servings?: number | null; source?: string; added_by?: string | null }) {
   const id = addPlan(input);
   if (input.servings) setEntryServings(id, input.servings);
   return getEntry(id);

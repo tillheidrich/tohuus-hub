@@ -23,6 +23,8 @@ struct ToHuusApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                // a device in kid mode stays locked to the kid screen, even after a relaunch (KidModeView.swift)
+                .kidModeGate()
                 .environment(app)
                 .environment(storeKit)
                 .tint(Theme.primary)
@@ -51,7 +53,7 @@ struct ToHuusApp: App {
                 Button(L("Search")) { app.requestSearch() }
                     .keyboardShortcut("f", modifiers: .command)
                     .disabled(app.phase != .signedIn)
-                Button(L("Speak")) { app.showAssistant = true }
+                Button(L("Assistant")) { app.showAssistant = true }
                     .keyboardShortcut("k", modifiers: .command)
                     .disabled(app.phase != .signedIn)
             }
@@ -60,7 +62,14 @@ struct ToHuusApp: App {
 
     /// tohuus://assistant, tohuus://shopping (widget) and the other tabs
     private func handle(_ url: URL) {
+        // a ToHuus QR label scanned with the camera app (universal link of the cloud host): https://…/q/<code>
+        if url.scheme == "https", url.path.hasPrefix("/q/") {
+            if app.phase == .signedIn { app.pendingLabel = url.absoluteString }
+            return
+        }
         guard url.scheme == "tohuus" else { return }
+        // tohuus://connect?server=…&code=… (QR code from the web app) – also before anyone is signed in
+        if ConnectInbox.shared.receive(url) { return }
         guard app.phase == .signedIn else { return }
         switch url.host() {
         case "assistant": app.showAssistant = true
@@ -98,6 +107,8 @@ struct RootView: View {
                         .sheet(isPresented: Binding(get: { app.askSampleData }, set: { app.askSampleData = $0 })) {
                             SampleQuestionView().interactiveDismissDisabled()
                         }
+                        // then the first-run setup for an admin of a new household (Start/FirstRunView.swift)
+                        .firstRunSetup(store: store)
                 } else {
                     ProgressView()
                 }
@@ -105,6 +116,8 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: app.phase)
+        // "Mit tohuus.example.de verbinden?" for links from the camera (Start/OwnServerView.swift)
+        .connectLinkSheet()
     }
 }
 

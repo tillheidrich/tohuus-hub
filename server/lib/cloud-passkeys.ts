@@ -172,7 +172,8 @@ export function appleAppSiteAssociation() {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  return { webcredentials: { apps } };
+  // applinks: QR label links ".../q/<code>" open the iPhone app instead of Safari
+  return { webcredentials: { apps }, applinks: { details: [{ appIDs: apps, components: [{ '/': '/q/*', comment: 'ToHuus QR labels' }] }] } };
 }
 
 export const _test = { challenges };

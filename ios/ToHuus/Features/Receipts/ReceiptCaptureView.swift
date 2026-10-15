@@ -19,6 +19,8 @@ struct ReceiptCaptureView: View {
     @State private var applied: Set<Int> = []
     @State private var error: String?
     @State private var showEBon = false
+    @State private var showShelf = false
+    @State private var showText = false
     @State private var openImport: Int?
 
     typealias UploadFile = (name: String, mime: String, data: Data)
@@ -70,12 +72,26 @@ struct ReceiptCaptureView: View {
                         Label(L("Photograph a paper list"), systemImage: "list.bullet.rectangle")
                     }
                     .buttonStyle(SecondaryButtonStyle())
+                    // web Imports: photo › cupboard / freezer, and the text mode
+                    Button {
+                        showShelf = true
+                    } label: {
+                        Label(L("Photograph a cupboard or freezer"), systemImage: "refrigerator")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    Button {
+                        showText = true
+                    } label: {
+                        Label(L("Type or paste lines"), systemImage: "text.alignleft")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
                     if uploading {
                         HStack { ProgressView(); Text(L("Reading the receipt …")).foregroundStyle(Theme.ink2) }
                     }
                     if let error { ErrorBanner(message: error) }
                     ForEach(results, id: \.stableId) { r in resultRow(r) }
                     MailAddressSection(store: store)
+                    InboxStatusCard(store: store)
                     NavigationLink {
                         ImportsListView(store: store)
                     } label: {
@@ -91,6 +107,8 @@ struct ReceiptCaptureView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { dismiss() } } }
             .sheet(isPresented: $showPaperList) { PaperListSheet(store: store) }
+            .sheet(isPresented: $showShelf) { StocktakeSheet(store: store) { id in openImport = id } }
+            .sheet(isPresented: $showText) { TextImportSheet(store: store) { id in openImport = id } }
             .sheet(isPresented: $showEBon) {
                 EBonSheet(store: store) { r in
                     if let id = r.id { openImport = id }

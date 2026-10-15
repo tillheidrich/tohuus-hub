@@ -210,7 +210,9 @@ function StockEntryRow({ s, p, lname, locations, onChange }: { s: any; p: any; l
         <div className="title small">{lname(s.location_id)}</div>
         <button className="linkish" style={{ color: s.best_before ? 'var(--ink-2)' : 'var(--ink-3)', fontWeight: 500 }} onClick={() => setEditDate(!editDate)}>
           {s.best_before ? expiryText(s.best_before) : t('Add best-before date')}
+          {s.best_before && s.bb_estimated ? ` · ${t('estimated')}` : ''}
         </button>
+        {editDate && s.bb_estimated ? <p className="muted small" style={{ margin: '4px 0 0' }}>{t('Estimated from the usual shelf life. Enter the date from the pack and it is exact.')}</p> : null}
         {editDate && (
           <input
             type="date"

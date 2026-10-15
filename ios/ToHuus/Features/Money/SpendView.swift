@@ -1,3 +1,4 @@
+import Charts
 import SwiftUI
 
 /// "Geld im Detail" – web: Spending.tsx. Week / month / year / all time, the last 12 periods, every bar and every
@@ -92,6 +93,7 @@ struct SpendView: View {
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
                     Button { Task { await export(all: false) } } label: { Label(LF("CSV – %@", periodTitle), systemImage: "tablecells") }
+                    Button { Task { await export(all: false, format: "json") } } label: { Label(LF("JSON – %@", periodTitle), systemImage: "curlybraces") }
                     Button { Task { await export(all: true) } } label: { Label(L("Everything (CSV)"), systemImage: "tray.full") }
                 } label: {
                     if exporting { ProgressView() } else { Image(systemName: "square.and.arrow.up") }
@@ -298,24 +300,31 @@ struct SpendView: View {
         }
     }
 
+    /// "Wohin das Geld ging": goods and deposit as one calm stacked bar (Swift Charts), discounts, own expenses and the
+    /// estimated value of thrown-away food as plain facts beside it. Values as text, never only colour.
     private func composition(_ s: SpendStats) -> some View {
         let goods = s.goods ?? s.total
         let dep = s.deposit ?? 0
-        let goodsShare = s.total > 0 ? goods / s.total : 1
+        let depShare = s.total > 0 ? Int((dep / s.total * 100).rounded()) : 0
+        let parts: [(String, Double, Color)] = [(L("Goods"), goods, Theme.primary), (L("Deposit"), dep, Theme.mustard)].filter { $0.1 > 0 }
         return section(L("Where the money went")) {
             Card {
-                GeometryReader { g in
-                    HStack(spacing: 2) {
-                        Rectangle().fill(Theme.primary).frame(width: max(4, g.size.width * goodsShare))
-                        if dep > 0 { Rectangle().fill(Theme.mustard) }
-                    }
-                    .clipShape(Capsule())
+                Chart(parts, id: \.0) { p in
+                    BarMark(x: .value(L("Amount"), p.1), y: .value(L("Total"), ""))
+                        .foregroundStyle(p.2)
+                        .accessibilityLabel(p.0)
+                        .accessibilityValue(Money.format(p.1, currency: s.currency))
                 }
-                .frame(height: 12)
+                .chartXAxis(.hidden)
+                .chartYAxis(.hidden)
+                .chartLegend(.hidden)
+                .chartXScale(domain: 0...max(goods + dep, 0.01))
+                .frame(height: 22)
+                .clipShape(Capsule())
                 .accessibilityLabel(LF("Goods %@, deposit %@", Money.format(goods), Money.format(dep)))
                 HStack(spacing: Theme.Space.s4) {
                     legend(Theme.primary, L("Goods"), Money.format(goods))
-                    legend(Theme.mustard, L("Deposit"), Money.format(dep))
+                    legend(Theme.mustard, L("Deposit"), Money.format(dep) + (dep > 0 ? " (\(depShare) %)" : ""))
                 }
                 HStack(alignment: .top, spacing: Theme.Space.s5) {
                     fact(L("Saved through discounts"), (s.discounts ?? 0) > 0 ? Money.format(s.discounts) : "–")
@@ -390,16 +399,17 @@ struct SpendView: View {
         }
     }
 
-    private func export(all: Bool) async {
+    /// GET /api/spend/export – CSV for spreadsheets or JSON with summary, into the share sheet (Files, Numbers, mail …)
+    private func export(all: Bool, format: String = "csv") async {
         exporting = true
         defer { exporting = false }
         do {
-            let data = try await store.api.spendExportCSV(period: all ? "all" : kind, date: all || kind == "all" ? nil : anchor, tag: all ? nil : tag, view: view)
+            let data = try await store.api.spendExport(format: format, period: all ? "all" : kind, date: all || kind == "all" ? nil : anchor, tag: all ? nil : tag, view: view)
             let name: String
-            if all || kind == "all" { name = "tohuus-ausgaben-alles.csv" }
+            if all || kind == "all" { name = "tohuus-ausgaben-alles.\(format)" }
             else {
                 let r = stats.map { ($0.from, $0.to) } ?? (anchor, anchor)
-                name = "tohuus-ausgaben-\(r.0)_\(r.1).csv"
+                name = "tohuus-ausgaben-\(r.0)_\(r.1).\(format)"
             }
             let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
             try data.write(to: url, options: .atomic)

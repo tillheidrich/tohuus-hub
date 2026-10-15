@@ -143,7 +143,7 @@ function steps(form: HouseholdForm = 'family'): Step[] {
       id: 'speak',
       route: '/',
       targets: ['.assist-fab'],
-      title: t('Speak'),
+      title: t('Assistant'),
       body: t('Say or type “milk is out, and we need something for Sunday”. With AI switched on it also helps on every screen; without AI the simple sentences still work. Every change can be undone.'),
     },
     {

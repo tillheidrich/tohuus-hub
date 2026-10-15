@@ -6,6 +6,7 @@
  *  - likes/dislikes per person; allergies and birth years only with the household's consent (ai.health_share),
  *  - the week plan and this month's money.
  */
+import { dueCareTasks } from './care.js';
 import { db, getSetting, lang } from '../db.js';
 import { t } from '../i18n.js';
 import { listMemory } from './memory.js';
@@ -24,7 +25,7 @@ export interface ContextViewer {
 }
 
 /** What a message is about – decides which context lines and tools the model gets (smaller prompts). */
-export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests' | 'wishes' | 'help';
+export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests' | 'wishes' | 'tasks' | 'help';
 /** what an unclear message gets; stock, house and guests come from the screen (assistant-areas.ts) or clear words */
 export const ALL_TOPICS: Topic[] = ['shopping', 'cooking', 'money'];
 
@@ -37,12 +38,24 @@ export function topicsOf(message: string): Topic[] {
   if (/bald weg|muss weg|läuft ab|laeuft ab|abgelaufen|kühlschrank|kuehlschrank|vorrat|use soon|expir|fridge|pantry/.test(m)) out.add('stock');
   if (/alexa|google home|hey siri|siri\b|home assistant|babysitter|heizung|rollladen|rollläden|sicherung|wasserhaupthahn|müll(abfuhr|tonne)|wlan|wifi|fernbedienung|hausinfo|house info/.test(m)) out.add('house');
   if (/gäste|gaeste|party|feier|geburtstag|grillen|guests|birthday/.test(m)) out.add('guests');
+  // Aufgaben (assistant-tasks.ts): chores, care & deadlines, who keeps what in mind, taking turns
+  if (/aufgabe|to-?do|putz|sauber mach|bad\b|badezimmer|staubsaug|saugen|wisch|staub|wäsche|waesche|bettwäsche|handtücher|müll|muell|altglas|altpapier|fenster|backofen|blumen gieß|pflanzen gieß|gießen|erledig|wer ist dran|ist dran\b|abwechsel|zuständig|zustaendig|im blick|kümmer|kuemmer|hausarbeit|haushalt\w*|mental load|verteil|fair\b|frist|wasserfilter|rauchmelder|entkalk|reifen|reisepass|ausweis|erinner mich|termin\w*|kalender|um \d{1,2}(:\d\d)? uhr|schornsteinfeger|handwerker|elternabend|chore|task|appointment|calendar|clean|vacuum|laundry|bins?\b|whose turn|take turns|housework/.test(m)) out.add('tasks');
   // wish lists / Merkliste (assistant-wishes.ts): "merk dir die Kekse aus dem Artikel", "was wünscht sich Mika?"
   if (/merkliste|wunsch|wünsch|wuensch|geschenk|schenken|wishlist|\bwish|\bgift|merk dir\b.*(artikel|link|https?:)|save (this|it) for later/.test(m)) out.add('wishes');
   // questions about the app itself (assistant-scope.ts › app_help)
   const help = /\bwie (geht|kann ich|mache ich|funktioniert|stelle? ich)|\bwo (finde|ist|sind|stell|kann ich)|\bkann (ich|man|tohuus|die app)|\bgeht das\b|einstellung|funktion|\babo\b|\bplus\b|\btour\b|hilfe|\bhow (do|can|does)\b|\bwhere (is|are|do|can)\b|\bcan (i|tohuus|the app)\b|settings|\bhelp\b/.test(m);
   if (help) out.add('help');
   return out.size ? [...out] : [...ALL_TOPICS];
+}
+
+/** Aufgaben due now (household only – private tasks never reach the assistant). */
+function tasksLine() {
+  try {
+    const xs = dueCareTasks();
+    return xs.length ? `Tasks due: ${xs.slice(0, 10).map((x) => `${x.name} (${x.state}${x.doer ? `, ${x.doer.name}` : ''}${x.assignee ? `, in mind: ${x.assignee.name}` : ''})`).join('; ')}` : 'Tasks due: none';
+  } catch {
+    return '';
+  }
 }
 
 /** "Bald weg": what should be used soon – names and days only. */
@@ -114,6 +127,7 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
     has('cooking') ? `In stock (as recorded): ${pantry.map((p) => p.name).join(', ') || 'nothing recorded'}. Saved recipes: ${recipeCount}.` : '',
     has('stock') || has('cooking') ? useSoonLine() : '',
     has('cooking') && week.length ? `Plan: ${week.map((w) => `${w.day} ${w.slot}: ${w.title}`).join('; ')}` : '',
+    has('tasks') ? tasksLine() : '',
     has('money') && money ? `Money: week ${fmtMoney(money.week)}, month ${fmtMoney(money.month)}${money.budget ? `, budget ${fmtMoney(money.budget.amount)} (${fmtMoney(money.budget.left)} left)` : ''}` : '',
     memory.length ? `Remembered: ${memory.map((m) => `[${m.id}] ${m.text}`).join(' | ')}` : '',
   ].filter(Boolean);

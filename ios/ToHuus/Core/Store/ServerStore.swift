@@ -189,14 +189,17 @@ final class ServerStore: HouseholdStore {
         await flush()
     }
 
-    func addProduct(_ productId: Int, name: String) async {
-        let op = PendingOp.add(name, productId: productId, localId: nextLocalId)
+    /// `onShownList`: from the list screen, onto the list that is shown (else the main list, as before)
+    func addProduct(_ productId: Int, name: String, qty: Double? = nil, onShownList: Bool = false) async {
+        var op = PendingOp.add(name, productId: productId, qty: qty, localId: nextLocalId)
+        if onShownList { op.listId = listId.flatMap(Int.init) }
         nextLocalId -= 1
         await enqueue(op)
     }
 
-    func setChecked(_ item: ShopItem, _ on: Bool) async {
-        await enqueue(.check(item.id, on: on, toStock: true))
+    /// `toStock`: "Beim Abhaken einräumen" (the person's switch on the list, default on)
+    func setChecked(_ item: ShopItem, _ on: Bool, toStock: Bool = true) async {
+        await enqueue(.check(item.id, on: on, toStock: on && toStock))
     }
 
     func setInBasket(_ item: ShopItem, _ on: Bool, storeId: Int?) async {

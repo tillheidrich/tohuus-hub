@@ -9,6 +9,9 @@ import { Backups, Members } from './DataSettings';
 import { DataReset, TourButton } from './Tour';
 import { MyAccount, SignInAdmin } from './AuthSettings';
 import { HaTodoCard, PushCard } from '../shop/ShopSettings';
+import { ExtrasSettingsCard } from '../shop/extras';
+import { StarsSettingsCard } from './Stars';
+import { FocusSettingsCard } from '../focus/Focus';
 import { InboxSettingsCard } from './Retail';
 import { KidsSettings } from './KidsSettings';
 import { MyPerson, PeopleSection } from '../people/People';
@@ -34,7 +37,7 @@ import { AiSwitchesCard, ConnectAssistantCard } from './AiSettings';
 import { MoveInCard, MoveOutCard } from './MoveSettings';
 import { MyListViewCard } from '../shop/trust';
 import { NotifyMine } from './NotifyMine';
-import { CalDavCard } from '../shop/bridges';
+import { CalDavCard, CalendarFeedCard } from '../shop/bridges';
 import { LunchboxCard } from '../shop/forms';
 import { PulseSettingsCard } from '../pulse';
 import { ModulesCard } from './Modules';
@@ -111,6 +114,8 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'plan' && cloud && <CloudAccountCard />}
       {tab === 'home' && <Household me={me} admin={admin} />}
       {tab === 'home' && <ModulesCard admin={admin} />}
+      {tab === 'home' && <ExtrasSettingsCard admin={admin} />}
+      {tab === 'home' && <StarsSettingsCard admin={admin} />}
       {tab === 'home' && <LunchboxCard />}
       {tab === 'home' && <PulseSettingsCard admin={admin} />}
       {tab === 'home' && <AwayEntryCard />}
@@ -118,7 +123,9 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'account' && <MyPerson me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
       {tab === 'account' && me.actor.userId && <MyListViewCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <FocusSettingsCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalDavCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarFeedCard />}
       {tab === 'account' && <MyAccount me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <ShareSetupCard me={me} />}
       {tab === 'members' && <PeopleSection me={me} admin={admin} />}

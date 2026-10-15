@@ -553,3 +553,53 @@
   font-size: var(--fs-s);
   color: var(--ink-2);
 }
+/* Extras im Wocheneinkauf (extras.tsx) – quiet, never red */
+.extras-bar {
+  margin-top: 8px;
+}
+.extras-b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.extras-b .muted {
+  font-weight: 400;
+}
+.extras-meter {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.extras-meter span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+}
+.extras-meter .planned {
+  background: var(--primary-soft, var(--line));
+  opacity: 0.9;
+}
+.extras-meter .used {
+  background: var(--primary);
+}
+.extras-more p {
+  margin: 6px 0 0;
+}
+.extra-mark {
+  margin-left: 6px;
+  vertical-align: -1px;
+  color: var(--ink-3);
+}

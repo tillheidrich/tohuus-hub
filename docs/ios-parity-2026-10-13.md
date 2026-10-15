@@ -1,52 +1,43 @@
-# Web ↔ iOS parity, 13 Oct 2026
+# Web ↔ iOS parity (updated 14 Oct 2026, evening)
 
-What the web app can do that the iPhone app (1.0 build 5 + the changes on `claude/tohuus-status-btntbq`) cannot yet.
-The app has one web view (`ios/ToHuus/Features/Settings/WebSettingsView.swift`, Mehr › "Weitere Einstellungen in
-der Web-App") that signs in with a one-time link and opens `/einstellungen` – every web settings tab is reachable
-there; other pages are not linked from the app.
+**Decision 14 Oct 2026:** the iPhone app makes no compromises against the web app. Every web function exists natively,
+on ToHuus Cloud and on a self-hosted server. A new web feature is not done until the iOS screen exists (CLAUDE.md).
+Structure on both: `docs/design/ux-benchmark-2026-10-14.md`.
 
-| Web feature | Web | iOS | What is missing |
-|---|---|---|---|
-| Home & care tasks ("Pflege") | `/pflege` | web page in the app (Mehr › Pflege & Fristen) | list, intervals, done + undo, due section on Today (only the push arrives) |
-| Trip / away mode | `/urlaub` | web page in the app (Mehr › Urlaub / unterwegs) | trips, quiet notifications, use-up/freeze, checklist, packing (templates, stock), holiday kitchen, sitter link, welcome home, away banner |
-| Holiday handover | trip › Übergabe, `/uebergabe` | web page in the app (in the trip; guests: Mehr › Übergabe) | items with rhythm, who sees it, ticks, templates, media, guest view |
-| Places & categories editing | Settings › places | web view | create, rename, reorder, delete; categories; household form |
-| Notification routing | Settings › notify | partial | channels (push/e-mail/summary), lock-screen text, "only at home"; household matrix via web view |
-| Shopping-list extras | `shop/forms.tsx`, `bridges.tsx` | partial | WG balance/personal rows, lunchbox regulars, care fridge check, CalDAV, import from Bring!/AnyList/CSV, start mode, offers per shop |
-| Recipe import | Kochen › add | partial | blank new recipe, bulk recipe photos |
-| Week plan | `Week.tsx`, `Plan2.tsx` | covered | meal-box picks, print, Cookidoo sync |
-| Favourites, cook mode | `/lieblinge`, `CookMode.tsx` | missing/partial | favourites page; step-by-step cook mode on iPhone (kitchen mode exists) |
-| Receipts | `/import…` | partial | recognition rules page, forwarding address, per-line payer, cupboard photo mode |
-| Spending / budgets | `/ausgaben` | covered | composition chart |
-| Money lists | `money/lists.tsx` | covered | picking single receipt lines |
-| Product detail extras | `Product.tsx` | partial | "on the order menu" toggle, shelf-life settings, labels |
-| QR labels | `/etiketten` | missing | creating/printing label sheets (scanning works) |
-| Bring mir was | `/bestellen`, `/bestellen/karte` | partial | menu editor, guest/party modes |
-| Guests & party | `/bar` | partial/missing | order board, bar menu tab, party host flow |
-| People admin | Settings › members | partial | children, permanent guests with level, kind switch, login links, roles/removal, sign-in policy (web view) |
-| Hausinfo | `/hausinfo` | partial | templates, reveal log, A4 sheet, per-link selection, finer visibility |
-| Wishes, quick check, "Wo ist was?", memory, help, billing | | covered | |
-| AI settings | Settings › access | partial | OAuth connections, tokens, recognition status (web view) |
-| Account & security | Settings › account | partial | e-mail/password, passkeys, TOTP, sessions, household name/language/appearance/region, modules (web view) |
-| Data | Settings › data | web view | full export, CSV import, move in/out, start over |
-| Today extras | `Today.tsx` | partial | card order, pulse question, care/away/party banners, getting started, full first-run setup |
+## Status
 
-Probably web-only on purpose: back office, Home Assistant, printers, displays/kiosk, Telegram/Matrix, IMAP, Cookidoo
-sync, kid tablet mode, party TV board, public guest/invite pages, share landing (the app has a share extension), move
-in/out, `/scan` (native scanner).
+Every page and settings tab of the web app now has a native screen. The notes per area list screens, endpoints and
+debug launch arguments:
 
-## Order to close the gaps
+| Area | Notes |
+|---|---|
+| Account, security, household basics, appearance, region, modules, AI | `docs/ios-native-account.md` |
+| People, kids and kid mode, permanent guests, sign-in rules | `docs/ios-native-people.md` |
+| Places & categories, product extras, QR labels, favourites, stock | `docs/ios-native-places.md` |
+| Notifications, channels, displays, Home Assistant, Cookidoo, printers, mail inbox, data & backups | `docs/ios-native-integrations.md` |
+| Shopping (WG balance, lunchbox, care list, list import, offers, shop mode, start mode) | `docs/ios-native-shopping.md` |
+| Cooking (editor, cook mode, week board, printing, meal boxes, recipe tools, Cookidoo) | `docs/ios-native-cooking.md` |
+| Money & receipts (recognition, who paid, inbox, cupboard photos, charts, exports) | `docs/ios-native-money.md` |
+| Bring mir was, guests & party (menu editor, order board, kitchen board, recap) | `docs/ios-native-treats.md` |
+| Own server, several servers, Heute, first-run setup, tour, help, scanned labels | `docs/ios-native-start.md` |
+| Aufgaben, Wer hat was im Blick, Erinnerungen & Kalender | `docs/tasks.md`, `docs/ios-0.2.md` |
+| Global search | `docs/search.md` |
+| Joining by invitation link (cloud and own server), weekly question settings | `ios/ToHuus/Features/Start/JoinInviteView.swift`, `Features/Today/TodayExtras.swift` |
 
-1. Care tasks · 2. Trip / away mode · 3. Holiday handover · 4. Packing and holiday kitchen · 5. Places & categories ·
-6. Notification routing · 7. Party host and order board · 8. Treats menu editor · 9. People admin · 10. Shopping-list
-household forms. Then: native data export, recognition rules + forwarding address, blank recipe, favourites,
-Hausinfo templates/log/print, account security.
+`WebPageView` is left only for single sign-on linking (the provider's own sign-in page) and the old
+"Web settings" screen, which is no longer linked.
 
-iPad: the app is universal (`TARGETED_DEVICE_FAMILY: "1,2"`, sidebar via `NavigationSplitView` in `MainTabView`).
+## Web only on purpose
 
-## Bridge since 13 Oct (branch `claude/tohuus-status-btntbq`)
+- The party **TV board** and its pairing page: they run on a TV or tablet browser without an account. The app shows the pairing code, QR and link, opens the board in a Safari view (AirPlay works).
+- The **guest page** behind a guest link (`/g/…`) and public invite pages: for people without the app.
+- The operator **back office** (`/betrieb`).
+- Turning on **web push** in a browser (a browser permission; the app lists and removes those browsers) and Web Bluetooth printing.
+- Downloading the server **error log** (`/diag/errors`) and the **"What's new"** list.
+- Creating a **passkey on a self-hosted server**: Apple only allows the app to create passkeys for the domains in its entitlements (ToHuus Cloud). On an own server the app signs in through the browser instead; listing and removing passkeys works.
 
-`WebPageView` (`ios/ToHuus/Features/Settings/WebSettingsView.swift`) opens any web page signed in. Mehr in the app
-now has *Urlaub / unterwegs* (`/urlaub`, with the handover tab), *Pflege & Fristen* (`/pflege`, when the area is
-switched on) and, for permanent guests, *Übergabe* (`/uebergabe`). Native screens for these stay the next step
-(order above).
+## Still to check on a device
+
+Nothing here was built in Xcode (no Xcode in the agent container; every file passes `swiftc -parse`). Risky spots are
+listed at the end of each `docs/ios-native-*.md`. Run `cd ios && xcodegen generate` first (new usage text for writing
+calendar entries in `project.yml`).

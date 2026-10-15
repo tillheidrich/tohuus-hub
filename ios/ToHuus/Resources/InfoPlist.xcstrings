@@ -136,6 +136,40 @@
           }
         }
       }
+    },
+    "NSCalendarsWriteOnlyAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus trägt nur dann etwas ein, wenn du auf „In den Kalender“ tippst und speicherst. Deinen Kalender liest ToHuus nicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus only adds an entry when you tap “Add to calendar” and save it. ToHuus does not read your calendar."
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur wenn dein ToHuus-Server bei dir zu Hause läuft: ToHuus verbindet sich mit ihm in deinem Heimnetz."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only if your ToHuus server runs at home: ToHuus connects to it in your home network."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

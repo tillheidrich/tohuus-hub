@@ -1,17 +1,31 @@
 import AuthenticationServices
 import SwiftUI
+import Vision
 
-/// First screen of the App Store app – ToHuus Cloud only (self-hosting lives on GitHub with the web app):
-/// brand, one-line promise, "Konto erstellen", "Anmelden", Sign in with Apple, privacy and terms.
+/// First screen of the App Store app: brand, one-line promise, ToHuus Cloud ("Konto erstellen", "Anmelden", Sign in
+/// with Apple), other servers/accounts already on this iPhone, and "Eigener Server" for a self-hosted ToHuus (address,
+/// password, browser sign-in or the QR code from the web app – decision 14 Oct 2026). Privacy and terms at the bottom.
+/// `adding`: shown as a sheet from Mehr › Server & Haushalte to add another server or account.
 struct StartView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.dismiss) private var dismiss
+    var adding = false
     @State private var path: [Step] = []
     @State private var error: String?
+    @State private var saved: [SavedConnection] = []
+    @State private var opening: String?
+    @State private var scanning = false
+    @State private var connecting = false
+    @State private var startStore: ObjectIdentifier?
 
     enum Step: Hashable {
         case signIn
         case signUp
         case code
+        /// "Eigener Server", optionally with an address (a scanned QR code that only carries the address)
+        case ownServer(String = "")
+        /// an invitation link (JoinInviteView)
+        case invite(String = "")
     }
 
     var body: some View {
@@ -19,11 +33,12 @@ struct StartView: View {
             ScrollView {
                 VStack(spacing: Theme.Space.s6) {
                     header
-                    if let notice = app.notice {
+                    if let notice = app.notice, !adding {
                         Text(notice).font(.subheadline).foregroundStyle(Theme.info)
                             .padding(Theme.Space.s3).frame(maxWidth: .infinity, alignment: .leading)
                             .background(Theme.infoSoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
                     }
+                    if !saved.isEmpty && !adding { savedSection }
                     VStack(spacing: Theme.Space.s3) {
                         AppleSignInButton(kind: .signIn, error: $error)
                         Button(L("Create account")) { path.append(.signUp) }
@@ -32,11 +47,12 @@ struct StartView: View {
                             .buttonStyle(SecondaryButtonStyle())
                     }
                     if let error { ErrorBanner(message: error) }
-                    if app.instance?.signupMode == "invite" { BetaNote() }
-                    if app.instance?.betaGift == nil {
+                    if cloudInstance?.signupMode == "invite" { BetaNote() }
+                    if cloudInstance?.betaGift == nil {
                         Text(L("14 days with everything, without payment details. Then Free, unless you choose a plan."))
                             .font(.footnote).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
                     }
+                    ownServerSection
                     LegalLinks()
                 }
                 .padding(Theme.Space.s5)
@@ -49,7 +65,22 @@ struct StartView: View {
                 case .signIn: SignInView(path: $path)
                 case .signUp: SignUpView()
                 case .code: EmailCodeView()
+                case .ownServer(let a): OwnServerView(initialAddress: a)
+                case .invite(let l): JoinInviteView(initialLink: l)
                 }
+            }
+            .toolbar {
+                if adding { ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } } }
+            }
+            .sheet(isPresented: $scanning) {
+                ScannerSheet(title: L("Scan QR code"), symbologies: [.qr]) { code in Task { await scanned(code) } }
+            }
+            .overlay { if connecting { connectingOverlay } }
+            // adding from Mehr: once the new server/account is active, the sheet goes
+            .onChange(of: app.store.map { ObjectIdentifier($0) }) { _, new in if adding, new != startStore { dismiss() } }
+            .onAppear {
+                saved = app.savedConnections
+                startStore = app.store.map { ObjectIdentifier($0) }
             }
             .task { _ = try? await app.loadInstance(app.cloudServer) }
             #if DEBUG
@@ -58,15 +89,140 @@ struct StartView: View {
                 if d.string(forKey: "debugStartSignup") != nil || d.bool(forKey: "debugStartSignUp") { path = [.signUp] }
                 else if d.bool(forKey: "debugStartSignIn") { path = [.signIn] }
                 else if d.bool(forKey: "debugStartCode") { path = [.code] }
+                else if d.bool(forKey: "debugStartOwnServer") { path = [.ownServer(d.string(forKey: "debugOwnServer") ?? "")] }
             }
             #endif
+        }
+        .onDisappear {
+            // adding was cancelled: the active server's instance again (the cloud's was loaded for the sign-up)
+            guard adding, let s = app.session, !s.isCloud, app.store.map({ ObjectIdentifier($0) }) == startStore else { return }
+            Task { _ = try? await app.loadInstance(s.serverURL) }
+        }
+    }
+
+    /// the beta gate and the trial note belong to ToHuus Cloud (app.instance may already be another server's)
+    private var cloudInstance: InstanceInfo? { app.instance?.isCloud == false ? nil : app.instance }
+
+    /// Other servers/accounts this iPhone is still signed in to – one tap back in.
+    private var savedSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            Text(L("On this iPhone")).font(.footnote.weight(.semibold)).foregroundStyle(Theme.ink3)
+                .textCase(.uppercase)
+            ForEach(saved) { c in
+                Button {
+                    Task {
+                        opening = c.id
+                        if !(await app.openSaved(c)) { error = L("This sign-in has expired. Please sign in again."); saved = app.savedConnections }
+                        opening = nil
+                    }
+                } label: {
+                    HStack(spacing: Theme.Space.s3) {
+                        Image(systemName: c.isCloud ? "cloud" : "server.rack")
+                            .foregroundStyle(Theme.primaryText)
+                            .frame(width: 36, height: 36)
+                            .background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(c.title).font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
+                            if !c.subtitle.isEmpty { Text(c.subtitle).font(.caption).foregroundStyle(Theme.ink2) }
+                        }
+                        Spacer(minLength: 0)
+                        if opening == c.id { ProgressView() } else { Image(systemName: "chevron.right").foregroundStyle(Theme.ink3) }
+                    }
+                    .padding(Theme.Space.s3)
+                    .frame(minHeight: 56)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                    .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(opening != nil)
+                .accessibilityLabel(LF("Continue with %@", [c.title, c.subtitle].filter { !$0.isEmpty }.joined(separator: ", ")))
+                .contextMenu {
+                    Button(role: .destructive) {
+                        ConnectionVault.remove(id: c.id)
+                        saved = app.savedConnections
+                    } label: { Label(L("Remove from this iPhone"), systemImage: "trash") }
+                }
+            }
+        }
+    }
+
+    /// Self-hosted ToHuus: a quiet second path below the cloud buttons.
+    private var ownServerSection: some View {
+        VStack(spacing: Theme.Space.s3) {
+            HStack(spacing: Theme.Space.s3) {
+                Rectangle().fill(Theme.line).frame(height: 1)
+                Text(L("Running ToHuus yourself?")).font(.footnote).foregroundStyle(Theme.ink3).fixedSize()
+                Rectangle().fill(Theme.line).frame(height: 1)
+            }
+            .accessibilityElement(children: .combine)
+            HStack(spacing: Theme.Space.s3) {
+                Button {
+                    path.append(.ownServer())
+                } label: {
+                    Label(L("Own server"), systemImage: "server.rack").frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+                Button {
+                    scanning = true
+                } label: {
+                    Label(L("Scan QR code"), systemImage: "qrcode.viewfinder").frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+            }
+            .font(.subheadline.weight(.semibold))
+            Text(L("Everything is included on your own server. The QR code is in the web app under Settings › My account."))
+                .font(.caption).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
+            Button { path.append(.invite()) } label: {
+                Label(L("I have an invitation"), systemImage: "envelope.open").frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.bordered)
+            .font(.subheadline.weight(.semibold))
+        }
+        .padding(.top, Theme.Space.s2)
+    }
+
+    private var connectingOverlay: some View {
+        VStack(spacing: Theme.Space.s3) {
+            ProgressView()
+            Text(L("Connecting …")).font(.subheadline).foregroundStyle(Theme.ink2)
+        }
+        .padding(Theme.Space.s6)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+        .accessibilityElement(children: .combine)
+    }
+
+    /// A QR code from the web app (tohuus://connect…) – or a plain address, which opens "Eigener Server".
+    private func scanned(_ text: String) async {
+        // an invitation's QR code (web: Einladen › QR)
+        if JoinInviteView.parse(text) != nil {
+            scanning = false
+            path.append(.invite(text))
+            return
+        }
+        guard let link = ConnectLink(text: text) else {
+            if text.contains("."), AppModel.normalise(text) != nil, !text.lowercased().hasPrefix("tohuus:") {
+                path.append(.ownServer(text))
+            } else {
+                error = L("This QR code isn’t from ToHuus. In the web app: Settings › My account › “Connect the iPhone app”.")
+            }
+            return
+        }
+        connecting = true
+        defer { connecting = false }
+        error = nil
+        do {
+            try await app.connect(link)
+            Haptics.success()
+        } catch {
+            self.error = APIError.from(error).localizedDescription
         }
     }
 
     private var header: some View {
         VStack(spacing: Theme.Space.s3) {
             BrandMark(size: 72)
-                .padding(.top, Theme.Space.s10)
+                .padding(.top, adding ? Theme.Space.s4 : Theme.Space.s10)
                 .accessibilityHidden(true)
             Text("ToHuus").font(Theme.title(34)).foregroundStyle(Theme.ink)
             Text(L("ToHuus remembers what’s missing at home."))

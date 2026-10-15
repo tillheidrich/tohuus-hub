@@ -89,6 +89,23 @@ Server configuration (environment only; the key is never written to the data vol
 | `APNS_ENV` | `production`, `sandbox` or unset = what each device reported (TestFlight/App Store = production, Xcode debug builds = sandbox) |
 | `APNS_HOST` | tests only: another endpoint (`http://localhost:…` speaks HTTP/2 without TLS) |
 
+### iPhone push on a self-hosted server
+
+APNs only accepts a provider token signed with a key of the developer team that publishes the app (team
+`FVS7WVTQ67`, topic `de.heidrichdigital.tohuus`). That key stays with ToHuus Cloud, so a self-hosted server cannot
+send push to the App Store app. What happens today:
+
+- Without `APNS_*` the server answers `channels.apns.configured: false` in `GET /api/notify/prefs` and in the answer
+  of `POST /api/push/apns`; the app still registers its device token, nothing is sent, and the iPhone app's
+  notification settings show "not set up on this server". Everything else in the app works.
+- Self-hosters who want notifications on the phone use Web Push (the web app added to the home screen, iOS 16.4+),
+  ntfy, Telegram, Gotify, Matrix, e-mail or the Home Assistant companion app.
+- `APNS_*` on a self-hosted server only makes sense for someone who builds and signs the iOS app with their own
+  team and bundle id (`APNS_TOPIC` = that bundle id).
+
+Open decision: a push relay run by ToHuus Cloud (self-hosted server → authenticated relay → APNs) would close the gap;
+it is not built.
+
 Delivery: HTTP/2 to `api.push.apple.com` / `api.sandbox.push.apple.com`, provider token ES256 (`kid`, `iss`, `iat`)
 renewed every 50 minutes (and once more on `ExpiredProviderToken`), `apns-push-type: alert`, priority 10 only for
 urgent messages, expiry 6 hours, `apns-collapse-id` from the de-duplication key. Tokens answered with 410,

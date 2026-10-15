@@ -223,6 +223,8 @@ struct ProductInfo: Decodable, Sendable, Identifiable, Hashable {
         var locationId: Int?
         var qty: Double?
         var bestBefore: String?
+        /// 1 = estimated from the usual shelf life (server: fresh-shelf.ts), not the printed date
+        var bbEstimated: Int?
         var openedAt: String?
     }
 
@@ -437,6 +439,25 @@ struct MoneyOverview: Decodable, Sendable {
     var budgetLeft: Double?
     var budgetState: String?
     var historyLimited = false
+    /// receipts and own expenses of the month, newest first – a row opens the receipt with its items
+    var purchases: [Purchase] = []
+
+    struct Purchase: Decodable, Sendable, Identifiable, Hashable {
+        var key: String
+        /// receipt | expense
+        var kind: String
+        var id: Int
+        var day: String
+        var store: String?
+        var title: String
+        var total: Double = 0
+        var items: Int = 0
+        var preview: [String] = []
+        var excluded = false
+        var personal = false
+        /// own expense: the entry itself (opens the expense form)
+        var entry: SpendEntry?
+    }
 
     struct Amount: Sendable, Identifiable, Hashable {
         var label: String
@@ -488,11 +509,13 @@ struct MoneyOverview: Decodable, Sendable {
             else {
                 vsLastMonth = v.first("pct", "percent", "diffPct", "changePct")?.double
                 lastMonthTotal = v.first("total", "last", "previous", "lastMonth")?.double
-                if vsLastMonth == nil, let last = lastMonthTotal, last > 0, let t = total { vsLastMonth = (t - last) / last * 100 }
+                // pct: null is the server's "nothing to compare up to this day" – no guess from the whole last month
+                if vsLastMonth == nil, v["pct"] == nil, let last = lastMonthTotal, last > 0, let t = total { vsLastMonth = (t - last) / last * 100 }
             }
         }
         priceChanges = (try? c.decode(Lossy<PriceChange>.self, forKey: AnyKey("priceChanges")).wrappedValue) ?? []
         hints = (try? c.decode(Lossy<Notice>.self, forKey: AnyKey("hints")).wrappedValue) ?? []
+        purchases = (try? c.decode(Lossy<Purchase>.self, forKey: AnyKey("purchases")).wrappedValue) ?? []
     }
 
     static func amounts(_ v: JSONValue?) -> [Amount] {

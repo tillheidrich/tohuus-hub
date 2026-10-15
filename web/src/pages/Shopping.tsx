@@ -20,6 +20,7 @@ import {
   Trash,
   WifiSlash,
   X,
+  Sparkle,
 } from '@phosphor-icons/react';
 import { DemoTag, useDemoMarks } from './Samples';
 import { useQuery } from '@tanstack/react-query';
@@ -33,6 +34,7 @@ import { getOr, useInstance } from '../data';
 import { originLabel, rhythmLine } from '../origin';
 import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
 import { ItemEditor, lastBoughtLine, substituteLine } from '../shop/ItemEditor';
+import { ExtrasBar } from '../shop/extras';
 import '../shop/list2.css';
 import { useDrag } from '../dnd';
 import '../dnd.css';
@@ -441,6 +443,7 @@ export function Shopping() {
       <TripsBar trips={trips.data ?? []} />
       {!inStore && view && <AtStoreChips stores={view.stores} value={atStore} onChange={pickAt} />}
       {view && <EstimateLine e={view.estimate} />}
+      {!inStore && <ExtrasBar guest={Boolean(me.data?.actor.houseGuest)} />}
       {currentList?.kind === 'care' && currentList.note && (
         <p className="handover-note">
           <b>{t('Handover')}:</b> {currentList.note}
@@ -909,6 +912,7 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
             <ShareMark s={i.share} size={big ? 16 : 13} />
             {qty}
             {i.text}
+            {i.extra && <Sparkle size={big ? 15 : 12} className="extra-mark" aria-label={t('Extra')} />}
           </span>
           {(sub || i.claim || isDemo) && (
             <span className="sub">

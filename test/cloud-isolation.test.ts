@@ -27,10 +27,12 @@ Object.assign(process.env, {
   BASE_URL: base,
   LANGUAGE: 'en',
   TRUST_PROXY_HOPS: '1',
+  // the year in review (lib/review.ts) is off by default – on here so the sweep checks its data
+  YEAR_REVIEW: 'on',
   // list2 J: the operator's view of the anonymous weekly-question counts
 });
 
-const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code', 'MARKERA-money', 'MARKERA-file', 'MARKERA-wish'];
+const MARKERS = ['MarkerAHome', 'MARKERA-shop', 'MARKERA-prod', 'MARKERA-recipe', 'MARKERA-guest', 'MARKERA-display', 'MARKERA-room', 'MarkerATill', 'markera@example.org', 'MARKERA-memory', 'MARKERA-chat', 'MARKERA-store', 'MARKERA-list', 'MARKERA-listitem', 'MARKERA-note', 'MARKERA-offer', 'MARKERA-lunch', 'MARKERA-caldav', 'MARKERA-phone', 'MARKERA-trip', 'MARKERA-house', 'MARKERA-code', 'MARKERA-money', 'MARKERA-file', 'MARKERA-wish', 'MARKERA-task'];
 const mails: { to: string; text: string }[] = [];
 
 let ipSeq = 1;
@@ -154,6 +156,9 @@ beforeAll(async () => {
   const wl = await A.post('/api/wishes/lists', { name: 'MARKERA-wish Liste', for_name: 'Oma' });
   expect(wl.status).toBe(200);
   expect((await A.post(`/api/wishes/lists/${wl.json.id}/items`, { title: 'MARKERA-wish Buch', price: 12 })).status).toBe(200);
+  // Aufgaben (14 Oct 2026): a household chore with a sub-item, due today
+  const task = await A.post('/api/care', { name: 'MARKERA-task', category: 'house', next_due: new Date().toISOString().slice(0, 10), checklist: [{ text: 'MARKERA-sub' }] });
+  expect(task.status, task.text).toBe(200);
   const careList = await A.post('/api/list/lists', { name: 'MARKERA-list', kind: 'care', note: 'MARKERA-note' });
   expect(careList.status, careList.text).toBe(200);
   expect((await A.post('/api/shopping', { text: 'MARKERA-listitem', list_id: careList.json.id })).status).toBe(200);
@@ -224,13 +229,15 @@ async function sweep(c: Client) {
 
 describe('cloud isolation', () => {
   it('walks every GET route: household B never sees a marker of household A', async () => {
+    // an extra on A's list (Extras allowance, lib/extras.ts) – added last, the list finish above clears the rest
+    expect((await A.post('/api/shopping', { text: 'MARKERA-shop Schokolade' })).status).toBe(200);
     const a = await sweep(A);
     // sanity: the sweep reaches A's data
     expect(a.routes).toBeGreaterThan(100);
     expect(a.found.length).toBeGreaterThan(5);
     // the feature routes are part of the walk and show A's data to A
     const routes = getRoutes();
-    for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/cook/ideas', '/api/memory', '/api/assistant/conversations', '/api/assistant/conversations/:id', '/api/assistant/status', '/api/assistant/settings'])
+    for (const r of ['/api/focus/prefs', '/api/blick/cards', '/api/calendar/feeds', '/api/today', '/api/rhythm', '/api/money/overview', '/api/cook/ideas', '/api/memory', '/api/assistant/conversations', '/api/assistant/conversations/:id', '/api/assistant/status', '/api/assistant/settings'])
       expect(routes, r).toContain(r);
     const seen = new Set(a.found.map((f) => f.path));
     for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/memory', '/api/assistant/conversations']) expect(seen, r).toContain(r);
@@ -239,6 +246,7 @@ describe('cloud isolation', () => {
     // q-money: money lists and the expense attachment
     for (const r of ['/api/money/lists', '/api/money/lists/1', '/api/spend/expenses/1', '/api/spend/expenses/1/attachment']) expect(seen, r).toContain(r);
     for (const r of ['/api/wishes/lists', '/api/wishes/lists/1', '/api/wishes/items/1']) expect(seen, r).toContain(r);
+    for (const r of ['/api/care', '/api/care/due', '/api/care/1', '/api/care/1/ics', '/api/blick', '/api/list/extras', '/api/review']) expect(seen, r).toContain(r);
     // Hausinfo GET routes are part of the walk; A sees its cards, nobody ever gets a code value from a GET
     for (const r of ['/api/house-guide', '/api/house-guide/templates', '/api/house-guide/links/:id', '/api/house-guide/codes/:id/views', '/api/house-guide/log', '/api/guest/:token/house', '/api/facts'])
       expect(routes, r).toContain(r);
@@ -251,6 +259,9 @@ describe('cloud isolation', () => {
     expect(b.leaks).toEqual([]);
     // B cannot reveal A's code by id either
     expect((await B.post(`/api/house-guide/codes/${houseCodeA}/reveal`, {})).status).toBe(404);
+    // global search: A finds its own things, B finds nothing of A's
+    expect(JSON.stringify((await A.get('/api/search?q=MARKERA')).json.groups)).toContain('MARKERA');
+    expect(JSON.stringify((await B.get('/api/search?q=MARKERA')).json.groups)).not.toContain('MARKERA');
     // and without any session nothing leaks either
     const anon = await sweep(new Client());
     expect(anon.found).toEqual([]);
@@ -714,6 +725,8 @@ describe('plans and quotas', () => {
       expect(s0.effective).toBe(false);
       expect(s0.consent).toMatchObject({ required: true, given: false, household: false });
       expect(s0.consent.processor).toContain('Mistral');
+      // everyone who receives the data is named (App Store guideline 5.1.2(i))
+      expect(s0.consent.processor).toContain('OpenRouter');
       const policy = await import('../server/lib/ai-policy');
       expect(tenancy.runInHousehold(hE, () => policy.aiOffReason(undefined))).toBe('consent');
       // the admin agrees: for herself and for the household's background jobs

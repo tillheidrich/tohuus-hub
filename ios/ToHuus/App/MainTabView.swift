@@ -1,9 +1,12 @@
 import SwiftUI
 import UIKit
 
-/// The five areas (Heute · Einkauf · Vorrat · Kochen · Geld) plus "Mehr".
+/// The five areas (UX benchmark 2.1: Heute · Einkauf · Kochen · Zuhause · Geld) plus "Mehr".
+/// `pantry` stays for old links and widgets – it opens Zuhause on the Vorrat side.
 enum AppArea: String, CaseIterable, Hashable, Identifiable {
-    case today, shopping, pantry, cooking, money, more
+    case today, shopping, cooking, home, money, pantry, more
+    /// the tabs, in order
+    static let tabs: [AppArea] = [.today, .shopping, .cooking, .home, .money]
     var id: String { rawValue }
 
     var title: String {
@@ -11,6 +14,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .today: return L("Today")
         case .shopping: return L("Shopping")
         case .pantry: return L("Pantry")
+        case .home: return L("Home")
         case .cooking: return L("Cooking")
         case .money: return L("Money")
         case .more: return L("More")
@@ -22,6 +26,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .today: return "sun.max"
         case .shopping: return "cart"
         case .pantry: return "cabinet"
+        case .home: return "house"
         case .cooking: return "fork.knife"
         case .money: return "eurosign.circle"
         case .more: return "ellipsis.circle"
@@ -40,11 +45,14 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
 
     static func from(_ s: String?) -> AppArea? {
         guard let s else { return nil }
-        return AppArea(rawValue: s)
+        switch s {
+        case "pantry", "stock", "tasks", "care": return .home
+        default: return AppArea(rawValue: s)
+        }
     }
 }
 
-/// iPhone (compact width): tab bar with five tabs, "Mehr" behind the avatar on Heute.
+/// iPhone (compact width): tab bar with five tabs, "Mehr" behind the avatar at the top right of every root screen.
 /// iPad and wide windows (regular width): a sidebar with the five areas and "Mehr" (NavigationSplitView).
 /// The layout follows the size class, so Split View, Slide Over and Stage Manager switch between both on the fly.
 struct MainTabView: View {
@@ -66,6 +74,17 @@ struct MainTabView: View {
                 sidebarLayout
             } else {
                 tabLayout
+            }
+        }
+        .onChange(of: area, initial: true) { _, a in
+            // the assistant gets the tab's screen, like the web's floating button (assistant-areas.ts CONTEXTS)
+            switch a {
+            case .shopping: app.assistantContext = "shopping"
+            case .pantry: app.assistantContext = "stock"
+            case .home: break // HomeView sets "tasks" or "stock"
+            case .cooking: app.assistantContext = "cook"
+            case .money: app.assistantContext = "money"
+            default: app.assistantContext = nil
             }
         }
         .onAppear {
@@ -94,12 +113,25 @@ struct MainTabView: View {
         #endif
         .onChange(of: app.modules) { _, _ in if !visible(area) { area = .today } }
         .onChange(of: app.addRequest) { _, _ in area = .shopping }
-        .onChange(of: app.searchRequest) { _, _ in if area != .cooking && area != .pantry { area = visible(.pantry) ? .pantry : .cooking } }
+        .onChange(of: app.searchRequest) { _, _ in
+            if area != .cooking && area != .home {
+                if visible(.home) && app.moduleOn("stock") { app.homeSegment = "stock"; area = .home } else { area = .cooking }
+            }
+        }
         .sheet(isPresented: $app.showAssistant) {
             AssistantSheet(store: store)
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(store: store)
+        }
+        .sheet(isPresented: $app.showMore) {
+            SettingsView(store: store)
+        }
+        .sheet(isPresented: $app.showSearch) {
+            GlobalSearchView(store: store)
+        }
+        .sheet(item: Binding(get: { app.pendingLabel.map(ScannedLabel.init) }, set: { app.pendingLabel = $0?.raw })) { l in
+            LabelQuickActionView(raw: l.raw, store: store)
         }
         .sheet(isPresented: $app.showPaywall) {
             PaywallView()
@@ -122,7 +154,7 @@ struct MainTabView: View {
 
     /// ToHuus Cloud: ask once whether AI may be used (App Store guideline 5.1.2(i)); never over the tour or for children
     private func askAIConsent() async {
-        guard !AIConsentView.asked, !app.isChild, !app.isGuest, !app.askSampleData else { return }
+        guard !AIConsentView.wasAsked(app), !app.isChild, !app.isGuest, !app.askSampleData else { return }
         await app.loadAIState()
         if app.aiConsentNeeded && app.aiAvailable && !showTour { showAIConsent = true }
     }
@@ -140,17 +172,17 @@ struct MainTabView: View {
                 .tabItem { Label(AppArea.shopping.title, systemImage: AppArea.shopping.icon) }
                 .badge(store.list.openCount)
                 .tag(AppArea.shopping)
-            if visible(.pantry) {
-                PantryView(store: store)
-                    .tabEntrance()
-                    .tabItem { Label(AppArea.pantry.title, systemImage: AppArea.pantry.icon) }
-                    .tag(AppArea.pantry)
-            }
             if visible(.cooking) {
                 CookingView(store: store)
                     .tabEntrance()
                     .tabItem { Label(AppArea.cooking.title, systemImage: AppArea.cooking.icon) }
                     .tag(AppArea.cooking)
+            }
+            if visible(.home) {
+                HomeView(store: store)
+                    .tabEntrance()
+                    .tabItem { Label(AppArea.home.title, systemImage: AppArea.home.icon) }
+                    .tag(AppArea.home)
             }
             if visible(.money) {
                 MoneyView(store: store)
@@ -173,7 +205,7 @@ struct MainTabView: View {
         NavigationSplitView {
             List(selection: Binding<AppArea?>(get: { area }, set: { if let a = $0 { area = a } })) {
                 Section {
-                    ForEach(AppArea.allCases.filter { $0 != .more && visible($0) }) { a in
+                    ForEach(AppArea.tabs.filter { visible($0) }) { a in
                         NavigationLink(value: a) {
                             Label(a.title, systemImage: a.icon)
                                 .badge(a == .shopping ? store.list.openCount : 0)
@@ -198,7 +230,7 @@ struct MainTabView: View {
                 Button {
                     app.showAssistant = true
                 } label: {
-                    Label(L("Speak"), systemImage: "mic.fill")
+                    Label(L("Assistant"), systemImage: "sparkles")
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(Theme.Space.s4)
@@ -217,7 +249,8 @@ struct MainTabView: View {
         switch a {
         case .today: TodayView(store: store, openSettings: { area = .more }, openTab: { area = $0 })
         case .shopping: ShoppingView(store: store)
-        case .pantry: PantryView(store: store)
+        case .pantry: HomeView(store: store)
+        case .home: HomeView(store: store)
         case .cooking: CookingView(store: store)
         case .money: MoneyView(store: store)
         case .more: SettingsView(store: store, embedded: true)
@@ -226,10 +259,22 @@ struct MainTabView: View {
 }
 
 extension MainTabView {
-    func visible(_ a: AppArea) -> Bool { a.module.map { app.moduleOn($0) } ?? true }
+    func visible(_ a: AppArea) -> Bool {
+        let level = app.isGuest ? (app.guestLevel ?? "paused") : nil
+        switch a {
+        // Zuhause: tasks always, stock when switched on – guests only with a level that opens one of them
+        case .home: return MoreAccess.guestAllows(level, "/aufgaben") || (app.moduleOn("stock") && MoreAccess.guestAllows(level, "/bestand"))
+        case .cooking: return app.moduleOn("cook") && MoreAccess.guestAllows(level, "/kochen")
+        case .money: return app.moduleOn("money") && MoreAccess.guestAllows(level, "/geld")
+        case .today: return true
+        default: return a.module.map { app.moduleOn($0) } ?? true
+        }
+    }
 
     func applyRequestedTab(_ t: String?) {
         guard let t else { return }
+        if t == "pantry" || t == "stock" { app.homeSegment = "stock" }
+        if t == "tasks" || t == "care" { app.homeSegment = "tasks" }
         let a = AppArea.from(t) ?? .today
         area = visible(a) ? a : .today
         app.requestedTab = nil
@@ -246,15 +291,15 @@ struct AssistantButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "mic.fill")
-                .font(.system(size: 20, weight: .semibold))
+            Image(systemName: "sparkles")
+                .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Theme.onPrimary)
                 .frame(width: 56, height: 56)
                 .background(Theme.primary, in: Circle())
                 .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
         }
         .hoverEffect(.lift)
-        .accessibilityLabel(L("Speak"))
-        .accessibilityHint(L("Speak or type what you need"))
+        .accessibilityLabel(L("Assistant"))
+        .accessibilityHint(L("Ask, say or type what you need"))
     }
 }

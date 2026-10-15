@@ -106,7 +106,8 @@ describe('photo queue, status and retry', () => {
     // joined queries (week plan) show it too
     db.prepare(`INSERT INTO meal_plan (day, slot, recipe_id, title) VALUES ('2030-01-01', 'abend', ?, 'Apfelkuchen')`).run(id);
     expect(plan.getPlan('2030-01-01', '2030-01-01')[0].image_path).toBe('https://img.photos.invalid/apfel.jpg');
-  });
+    // waits up to 30 s for the unreachable host above – CI's resolver can take a few seconds for .invalid
+  }, 40_000);
 
   it('status counts from the database; after 3 tries a photo counts as failed until retried', async () => {
     let s = (await call('GET', '/recipes/import/images')).json;

@@ -1,5 +1,8 @@
-import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
+import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, MagnifyingGlass, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
 import { DemoNudge } from './Samples';
+import { TasksTodayCard } from './TasksToday';
+import { StarsCard } from './Stars';
+import { ReviewTeaser } from './Review';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
@@ -59,6 +62,7 @@ export function Today({ me }: { me: Me }) {
   const pulse = usePulse(!gl);
   const now = new Date();
   const date = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
+  const localDay = () => new Intl.DateTimeFormat('sv-SE').format(new Date());
 
   const head = (
     <header className="today-head">
@@ -74,6 +78,9 @@ export function Today({ me }: { me: Me }) {
           <Plus size={20} />
         </button>
       )}
+      <button className="icon-btn" onClick={() => window.dispatchEvent(new Event('tohuus:search'))} aria-label={t('Search')} title={t('Search')}>
+        <MagnifyingGlass size={20} />
+      </button>
       <button className="avatar-btn" onClick={() => nav('/mehr')} aria-label={t('More: settings, people, guests …')} title={t('More')}>
         <Avatar name={me.actor.name} personKey={me.actor.userId ? `u${me.actor.userId}` : null} size={40} />
       </button>
@@ -114,6 +121,13 @@ export function Today({ me }: { me: Me }) {
       <TodayCards
         cards={[
           ['rhythm', <DueCard items={d.rhythm} legacy={d.legacy} />],
+          ['tasks', guestAllows(gl, '/aufgaben') ? (
+            <>
+              <TasksTodayCard today={localDay()} />
+              <StarsCard guest={Boolean(gl)} />
+              <ReviewTeaser guest={Boolean(gl)} />
+            </>
+          ) : null],
           ['list', guestAllows(gl, '/einkauf') ? <ListCard d={d} /> : null],
           ['still', d.stillHave.length > 0 ? <StillHaveCard items={d.stillHave} /> : null],
           ['cook', guestAllows(gl, '/kochen') && d.cookToday ? <CookCard c={d.cookToday} /> : null],

@@ -44,6 +44,7 @@ import * as cloudAuthModule from '../lib/cloud-auth.js';
 import * as cloudPasskeys from '../lib/cloud-passkeys.js';
 import * as cloudApple from '../lib/cloud-apple.js';
 import { householdPerson, isHouseholdAdmin, syncMembership } from '../lib/membership-sync.js';
+import { appPair } from './app-pair.js';
 
 export const instance = Router();
 export const appAuth = Router();
@@ -122,6 +123,8 @@ instance.get('/instance', (_req, res) => {
       oidc: !cloudMode() && ssoReady(),
       // Sign in with Apple (cloud only): the web button needs the Services ID (lib/cloud-apple.ts); the app always can
       apple: cloudMode() && Boolean(cloudApple.appleServicesId()),
+      /** the iPhone app can connect by QR code / one-time code and by signing in in the browser (routes/app-pair.ts) */
+      appPair: true,
     },
     // beta gate (lib/beta.ts): `signup` = the sign-up page is offered at all; `signupMode` says whether it needs an
     // access code ('invite'); `support` is the address to ask for one
@@ -309,6 +312,9 @@ appAuth.get('/auth/app/web-link/:token', async (req, res, next) => {
     next(e);
   }
 });
+
+// connect the app by a one-time code, QR code or the browser sign-in (routes/app-pair.ts)
+appAuth.use(appPair);
 
 function currentTokenHash(req: Request) {
   const a = req.headers.authorization;
@@ -1082,8 +1088,9 @@ cloud.post(
   '/auth/passkeys/options',
   wrap(async (req) => {
     const id = await identity(req);
-    const b = z.object({ password: z.string().max(200).optional() }).parse(req.body ?? {});
-    await confirmAccount(req, id.accountId, b.password);
+    // `code`: the iPhone app has no browser session – an account without a password types the code from the mail
+    const b = z.object({ password: z.string().max(200).optional(), code: z.string().max(20).optional() }).parse(req.body ?? {});
+    await confirmAccount(req, id.accountId, b.password, undefined, b.code);
     return cloudPasskeys.accountRegistrationOptions(id.accountId);
   }),
 );

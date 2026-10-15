@@ -23,6 +23,8 @@ final class AssistantModel {
 
     /// AI is off for this member – the built-in reader answers
     var basic = false
+    /// the screen it was opened from (shopping, stock, cook, money, house, guests, tasks) – like the web
+    var context: String?
 
     func send(_ text: String, store: ServerStore) async {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -31,7 +33,7 @@ final class AssistantModel {
         sending = true
         defer { sending = false }
         do {
-            let r = try await store.api.chat(t, conversationId: conversationId, basic: basic)
+            let r = try await store.api.chat(t, conversationId: conversationId, basic: basic, context: context)
             receive(r, store: store)
         } catch {
             handle(error)
@@ -136,7 +138,12 @@ struct AssistantSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        .onAppear { model.basic = !app.aiOn }
+        .onAppear {
+            model.basic = !app.aiOn
+            model.context = app.screenContext ?? app.assistantContext
+        }
+        // agreeing to AI right here (AIConsentPrompt) switches from simple sentences to the full assistant
+        .onChange(of: app.aiOn) { _, on in model.basic = !on }
         #if DEBUG
         .task {
             if let m = UserDefaults.standard.string(forKey: "debugAssistantMessage"), model.messages.isEmpty {
@@ -148,6 +155,7 @@ struct AssistantSheet: View {
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            AIConsentPrompt()
             if !app.aiOn {
                 Label(app.aiLocked ? L("AI is switched off for you. ToHuus still understands simple sentences like “milk and bread”.")
                                    : L("Without AI: ToHuus understands simple sentences like “milk and bread” or “what's on the list?”."),

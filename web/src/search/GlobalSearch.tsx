@@ -1,0 +1,199 @@
+/**
+ * Global search (UX benchmark 2.4, server: routes/search.ts, iOS: GlobalSearchView.swift): one field for every
+ * function and setting (a static registry, with words people actually type) and for the household's things
+ * (Vorrat, the list, recipes, tasks, Hausinfo, people – filtered by the server like each area).
+ * Opens with ⌘K / Ctrl+K or "/" anywhere, and from the magnifier in the page head.
+ */
+import { MagnifyingGlass, X } from '@phosphor-icons/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { get, post, invalidate } from '../api';
+import { t } from '../i18n';
+import { moreGroups, TABS } from '../nav';
+import { guestAllows } from '../people/access';
+import { useToast } from '../ui';
+
+interface Hit {
+  key: string;
+  title: string;
+  sub?: string;
+  to?: string;
+  run?: () => void;
+}
+
+interface ServerGroups {
+  products?: { id: number; name: string; brand: string | null; in_stock: boolean | null }[];
+  list?: { id: number; text: string; list: string }[];
+  recipes?: { id: number; title: string; with: string | null }[];
+  tasks?: { id: number; name: string; next_due: string | null; private: boolean }[];
+  house?: { id: number; title: string }[];
+  people?: { key: string; name: string }[];
+}
+
+/** functions and settings – label, where, and the words people search for */
+function registry(): { label: string; to: string; words: string }[] {
+  const s = (tab: string) => `/einstellungen?tab=${tab}`;
+  return [
+    { label: t('My account'), to: s('account'), words: 'konto passwort e-mail name passkey zwei-schritt anmelden abmelden geräte sitzungen' },
+    { label: t('Household'), to: s('home'), words: 'haushalt name sprache region was nutzt ihr module brotdose' },
+    { label: t('Members'), to: s('members'), words: 'personen mitglieder kinder gäste einladen rolle admin' },
+    { label: t('Places & categories'), to: s('places'), words: 'orte räume kategorien regal schrank' },
+    { label: t('Notifications'), to: s('notify'), words: 'benachrichtigungen push mitteilungen e-mail ruhezeiten' },
+    { label: t('Access & AI'), to: s('access'), words: 'ki assistent datenschutz mcp claude chatgpt token zugriff' },
+    { label: t('Displays'), to: s('displays'), words: 'display bildschirm tablet kiosk' },
+    { label: t('Printers & tickets'), to: s('print'), words: 'drucker bon zettel ticket' },
+    { label: t('Data & backups'), to: s('data'), words: 'daten export sicherung backup import umzug löschen' },
+    { label: 'Home Assistant', to: s('ha'), words: 'home assistant smart home hacs' },
+    { label: t('Reminders & Calendar'), to: '/aufgaben', words: 'apple erinnerungen kalender caldav google outlook abo termine' },
+    { label: t('QR labels'), to: '/etiketten', words: 'etiketten qr drucken aufkleber' },
+    { label: t('Mental load check'), to: '/denkarbeit', words: 'mental load denkarbeit unsichtbare arbeit karten wer denkt an was fair verteilen' },
+    { label: t('One thing at a time'), to: '/fokus', words: 'fokus konzentration adhs ads timer eins nach dem anderen anfangen' },
+    { label: t('Calm & focus'), to: s('account'), words: 'sanfter modus ruhig adhs ads autismus weniger überfordert erinnerungen bündeln' },
+    { label: t('Extras in the weekly shop'), to: s('home'), words: 'extras kontingent luxus naschen süßes spaß budget woche' },
+    { label: t('Plan & storage'), to: s('plan'), words: 'abo plan speicher bezahlen preis' },
+    { label: t('Help'), to: '/hilfe', words: 'hilfe frage support' },
+  ];
+}
+
+export function GlobalSearch({ guest, admin, cloud, modules, onClose }: { guest?: string; admin: boolean; cloud: boolean; modules?: Record<string, boolean>; onClose: () => void }) {
+  const [q, setQ] = useState('');
+  const [server, setServer] = useState<ServerGroups>({});
+  const [sel, setSel] = useState(0);
+  const input = useRef<HTMLInputElement>(null);
+  const nav = useNavigate();
+  const toast = useToast();
+
+  useEffect(() => input.current?.focus(), []);
+  useEffect(() => {
+    const n = q.trim();
+    if (n.length < 2) return setServer({});
+    // a late answer for an older query must not overwrite the newer one
+    let live = true;
+    const timer = setTimeout(() => {
+      get<{ groups: ServerGroups }>(`/search?q=${encodeURIComponent(n)}`)
+        .then((r) => live && setServer(r.groups))
+        .catch(() => live && setServer({}));
+    }, 180);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [q]);
+
+  const functions = useMemo(() => {
+    const all = [
+      ...TABS.map((x) => ({ label: x.label(), to: x.to, words: '' })),
+      ...moreGroups({ guest, admin, cloud, modules }).flatMap((g) => g.items.map((i) => ({ label: i.label, to: i.to, words: g.title }))),
+      ...registry().filter((x) => guestAllows(guest as never, x.to.split('?')[0])),
+    ];
+    const seen = new Set<string>();
+    return all.filter((x) => (seen.has(x.label) ? false : (seen.add(x.label), true)));
+  }, [guest, admin, cloud, modules]);
+
+  const groups = useMemo(() => {
+    const n = q.trim().toLowerCase();
+    if (!n) return [] as { title: string; hits: Hit[] }[];
+    const out: { title: string; hits: Hit[] }[] = [];
+    const fn = functions.filter((x) => `${x.label} ${x.words}`.toLowerCase().includes(n)).slice(0, 6);
+    if (fn.length) out.push({ title: t('Functions & settings'), hits: fn.map((x) => ({ key: `f${x.to}${x.label}`, title: x.label, to: x.to })) });
+    if (server.list?.length) out.push({ title: t('On the list'), hits: server.list.map((x) => ({ key: `l${x.id}`, title: x.text, sub: x.list, to: '/einkauf' })) });
+    if (server.products?.length)
+      out.push({ title: t('Pantry'), hits: server.products.map((x) => ({ key: `p${x.id}`, title: x.name, sub: x.in_stock === false ? t('not at home') : x.brand ?? undefined, to: `/bestand/${x.id}` })) });
+    if (server.tasks?.length) out.push({ title: t('Tasks'), hits: server.tasks.map((x) => ({ key: `t${x.id}`, title: x.name, sub: x.next_due ?? undefined, to: `/aufgaben?task=${x.id}` })) });
+    if (server.recipes?.length)
+      out.push({ title: t('Recipes'), hits: server.recipes.map((x) => ({ key: `r${x.id}`, title: x.title, sub: x.with ? t('with {what}', { what: x.with }) : undefined, to: `/rezepte/${x.id}` })) });
+    if (server.house?.length) out.push({ title: t('House info'), hits: server.house.map((x) => ({ key: `h${x.id}`, title: x.title, to: '/hausinfo' })) });
+    if (server.people?.length) out.push({ title: t('People'), hits: server.people.map((x) => ({ key: `u${x.key}`, title: x.name, to: '/einstellungen?tab=members' })) });
+    // nothing to open? offer to add it
+    const text = q.trim();
+    out.push({
+      title: t('Add'),
+      hits: [
+        {
+          key: 'add-list',
+          title: t('Put “{text}” on the list', { text }),
+          run: () =>
+            post('/shopping', { text })
+              .then(() => {
+                invalidate('shopping');
+                toast({ text: t('“{text}” is on the list', { text }) });
+              })
+              .catch((e) => toast({ text: (e as Error).message, error: true })),
+        },
+        ...(guest ? [] : [{ key: 'add-task', title: t('New task “{text}”', { text }), to: `/aufgaben?new=${encodeURIComponent(text)}` }]),
+      ],
+    });
+    return out;
+  }, [q, functions, server, guest, toast]);
+
+  const flat = groups.flatMap((g) => g.hits);
+  const open = (h: Hit) => {
+    onClose();
+    if (h.run) h.run();
+    else if (h.to) nav(h.to);
+  };
+
+  return (
+    <div className="gsearch-backdrop" onClick={onClose}>
+      <div className="gsearch card" role="dialog" aria-modal="true" aria-label={t('Search')} onClick={(e) => e.stopPropagation()}>
+        <div className="gsearch-field">
+          <MagnifyingGlass size={20} aria-hidden="true" />
+          <input
+            ref={input}
+            className="grow"
+            value={q}
+            placeholder={t('Search everything: milk, bathroom, password …')}
+            aria-label={t('Search')}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setSel(0);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') onClose();
+              else if (e.key === 'ArrowDown') { e.preventDefault(); setSel((v) => Math.min(flat.length - 1, v + 1)); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); setSel((v) => Math.max(0, v - 1)); }
+              else if (e.key === 'Enter' && flat[sel]) open(flat[sel]);
+            }}
+          />
+          <button className="icon-btn plain" onClick={onClose} aria-label={t('Close')}>
+            <X size={18} />
+          </button>
+        </div>
+        <div className="gsearch-results">
+          {!q.trim() && <p className="muted small" style={{ padding: '8px 4px' }}>{t('Find a function, a setting or anything in your household.')}</p>}
+          {groups.map((g) => (
+            <div key={g.title}>
+              <div className="eyebrow" style={{ margin: '10px 4px 4px' }}>{g.title}</div>
+              {g.hits.map((h) => {
+                const i = flat.indexOf(h);
+                return (
+                  <button key={h.key} className={`li gsearch-hit ${i === sel ? 'on' : ''}`} onMouseEnter={() => setSel(i)} onClick={() => open(h)}>
+                    <span className="grow">
+                      <span className="title">{h.title}</span>
+                      {h.sub && <span className="sub">{h.sub}</span>}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** ⌘K / Ctrl+K / "/" opens the search (not while typing somewhere else) */
+export function useSearchHotkey(open: () => void) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName));
+      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !typing)) {
+        e.preventDefault();
+        open();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+}

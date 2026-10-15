@@ -107,7 +107,7 @@ Zurück-Navigation ist echt: jeder Schritt zeigt den gespeicherten Stand (gewäh
 | Wort für die Mitglieder | Haushalt | Haushalt | Familie | WG |
 | Tour-Texte | ohne „wer holt’s“, ohne Kinder | ohne Kinder | wie bisher | ohne Kinder |
 
-Server: nichts wird nach Form verboten. Ausgaben pro Person in der WG sind **nicht** umgesetzt: Belege kennen heute keinen Käufer pro Person; das wäre ein eigenes Datenfeld (offen).
+Server: nichts wird nach Form verboten. Ausgaben pro Person in der WG gibt es seit Oktober 2026: „Wer hat bezahlt“ je Bon und Ausgabe (`paid_by`), Posten für eine Person (`for_user_id`), „Nur meins“ und die Monatsbilanz mit den wenigsten Überweisungen (`hhforms.ts`, docs/money.md).
 
 ## 6. API und MCP
 
@@ -133,5 +133,4 @@ Server: nichts wird nach Form verboten. Ausgaben pro Person in der WG sind **nic
 ## 8. Offene Punkte
 
 - Die illustrierte „Als Zuhause“-Ansicht in Einstellungen › Orte nutzt `HomeArt` und eine einfache Raumliste; die eigentliche Illustration liefert der Design-Agent (gleiche Daten: `GET /api/locations` mit `depth`/`parent_id`).
-- Ausgaben je Person in der WG (siehe oben).
 - Ziehen zum Umsortieren nur am Desktop (HTML5 Drag & Drop) und nur innerhalb derselben Ebene; mobil die Pfeile. Umhängen in einen anderen Elternort über „Liegt in“.

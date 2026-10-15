@@ -1,5 +1,5 @@
 /** Weekly meal plan: manual entries, auto-fill from suggestions, Cookidoo "Meine Woche" via Home Assistant. */
-import { db, getSetting, lang } from '../db.js';
+import { db, getSetting, lang, migrate } from '../db.js';
 import { recipeImageSql } from './recipe-images.js';
 import { emit } from './bus.js';
 import { addToShopping, localDay, matchIngredient } from './catalog.js';
@@ -13,6 +13,10 @@ import { scaleText, servingsFactor } from './scale.js';
 import { addRecipeLine, type RecipeLine } from './recipe-list.js';
 import { nobodyHomeOn } from './away-state.js';
 import { featureOff } from './tenancy.js';
+
+
+// Wer hat was im Blick (14 Oct 2026, docs/tasks.md): who planned a meal – planning is work too
+migrate('blick-1', `ALTER TABLE meal_plan ADD COLUMN added_by TEXT;`);
 
 export interface PlanEntry {
   id: number;
@@ -49,7 +53,7 @@ export function getPlan(from: string, to: string) {
     })[];
 }
 
-export function addPlan(input: { day: string; recipe_id?: number | null; title?: string; slot?: string; note?: string | null; source?: string; external_id?: string | null }) {
+export function addPlan(input: { day: string; recipe_id?: number | null; title?: string; slot?: string; note?: string | null; source?: string; external_id?: string | null; added_by?: string | null }) {
   let title = input.title?.trim() ?? '';
   if (input.recipe_id) {
     const r = db.prepare('SELECT title FROM recipes WHERE id = ?').get(input.recipe_id) as { title: string } | undefined;
@@ -58,8 +62,8 @@ export function addPlan(input: { day: string; recipe_id?: number | null; title?:
   }
   if (!title) throw userError(t('Title is missing'));
   const info = db
-    .prepare('INSERT INTO meal_plan (day, slot, recipe_id, title, note, source, external_id) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .run(input.day, input.slot ?? 'abend', input.recipe_id ?? null, title, input.note ?? null, input.source ?? 'manual', input.external_id ?? null);
+    .prepare('INSERT INTO meal_plan (day, slot, recipe_id, title, note, source, external_id, added_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(input.day, input.slot ?? 'abend', input.recipe_id ?? null, title, input.note ?? null, input.source ?? 'manual', input.external_id ?? null, input.added_by ?? null);
   emit('recipes');
   return Number(info.lastInsertRowid);
 }

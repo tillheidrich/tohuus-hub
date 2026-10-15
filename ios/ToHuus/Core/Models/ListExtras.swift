@@ -38,6 +38,9 @@ struct Offer: Decodable, Sendable, Identifiable, Hashable {
     var productId: Int?
     var hints: [String]?
     var onList: Bool?
+    /// due by the household's own rhythm, or just put on the list from this offer
+    var due: Bool?
+    var added: Bool?
 }
 
 /// GET /api/prices/cheapest → [{ productId, name, saving, shops: [{ shop, price, day, base }] }]

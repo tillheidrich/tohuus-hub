@@ -26,17 +26,27 @@ struct AppTourView: View {
         var p: [Page] = [
             Page(id: "today", symbol: "sun.max", title: L("Today: the one page to glance at"),
                  body: L("What is running out, what should be eaten soon and what is planned. On most days a quick look here is all it takes.")),
+            Page(id: "add", symbol: "plus.circle", title: L("Adding things takes seconds"),
+                 body: L("Scan a barcode, upload a receipt, take a photo or just type “2 milk, parcel tape”. Nobody has to type in the whole house.")),
             Page(id: "shopping", symbol: "basket", title: L("One shopping list for everyone"),
                  body: app.singleHousehold
                     ? L("ToHuus remembers what you buy and how often. What is probably due comes as a suggestion – it only goes on the list after a yes. Every row says where it came from.")
                     : L("Everyone adds to the same list. ToHuus remembers what you buy and how often; what is probably due comes as a suggestion, and every row says where it came from.")),
-            Page(id: "money", symbol: "creditcard", title: L("Receipts and money"),
-                 body: L("Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.")),
-            Page(id: "cook", symbol: "fork.knife", title: L("What shall we eat?"),
-                 body: L("Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.")),
-            Page(id: "speak", symbol: "mic", title: L("Speak"),
-                 body: L("Say “milk is out, and we need something for Sunday”. ToHuus puts it on the list and tells you what it added. Every change can be undone.")),
         ]
+        if app.moduleOn("stock") {
+            p.append(Page(id: "stock", symbol: "cabinet", title: L("Stock is optional"),
+                          body: L("Nobody has to keep a stock list. If you like, see what is at home place by place – “Where’s what?” finds the plasters in seconds.")))
+        }
+        if app.moduleOn("money") {
+            p.append(Page(id: "money", symbol: "creditcard", title: L("Receipts and money"),
+                          body: L("Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.")))
+        }
+        if app.moduleOn("cook") {
+            p.append(Page(id: "cook", symbol: "fork.knife", title: L("What shall we eat?"),
+                          body: L("Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.")))
+        }
+        p.append(Page(id: "speak", symbol: "sparkles", title: L("Assistant"),
+                      body: L("Say “milk is out, and we need something for Sunday”. ToHuus puts it on the list and tells you what it added. Every change can be undone.")))
         if !app.singleHousehold && app.moduleOn("treats") {
             p.append(Page(id: "treats", symbol: "heart", title: L("Bring mir was"),
                           body: L("Stuck on the sofa or putting the kids to bed? Ask for a little something in two taps, someone at home says “I’ll bring it”. Guests can ask through a link.")))

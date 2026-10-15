@@ -29,6 +29,8 @@ struct InstanceInfo: Decodable, Sendable {
         var passwordMin: Int?
         /// ToHuus Cloud: Sign in with Apple on the web (the app can always use it in the cloud)
         var apple: JSONValue?
+        /// connecting the app by QR code / one-time code and the browser sign-in (POST /api/auth/app/pair…)
+        var appPair: JSONValue?
     }
 
     struct Features: Decodable, Sendable {
@@ -76,6 +78,8 @@ struct AppAuthResponse: Decodable, Sendable {
     var household: JSONValue?
     /// Sign in with Apple: a new account and household were created (the app asks about sample data)
     var created: Bool?
+    /// joining by invitation (POST /api/invite/:token, client "ios") answers the member's name on top level
+    var name: String?
 
     /// The active household: an id string/number or an object with `id`.
     var householdId: String? {
@@ -86,7 +90,7 @@ struct AppAuthResponse: Decodable, Sendable {
         return households.first?.id.value
     }
 
-    var userName: String? { user?["name"]?.string ?? account?["name"]?.string }
+    var userName: String? { user?["name"]?.string ?? account?["name"]?.string ?? name }
 }
 
 /// GET /api/cloud/me
@@ -120,6 +124,8 @@ struct MeResponse: Decodable, Sendable {
     var role: String? { actor?["role"]?.string }
     /// a permanent guest of the household (actor.houseGuest { level, … }) – sees only what is shared with guests
     var isGuest: Bool { actor?["houseGuest"]?["level"]?.string != nil }
+    /// the guest's level right now: order | stock | recipes | family | paused (nil = lives here)
+    var guestLevel: String? { actor?["houseGuest"]?["level"]?.string }
     /// children (kid devices or a child role) see AI as locked
     var isChild: Bool {
         let kind = actor?["kind"]?.string

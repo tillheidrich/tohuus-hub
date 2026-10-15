@@ -372,6 +372,8 @@ struct RecipeFull: Decodable, Sendable, Identifiable {
     var notes: String?
     var sourceUrl: String?
     var sourceType: String?
+    /// 0 = the steps live in the original app (Cookidoo, Monsieur Cuisine …) – recipes2
+    var instructionsAvailable: JSONValue?
     @Lossy var steps: [Step]
     @Lossy var ingredients: [Ingredient]
     @Lossy var log: [LogEntry]
@@ -399,6 +401,8 @@ struct RecipeFull: Decodable, Sendable, Identifiable {
         var productId: Int?
         var optional: JSONValue?
         var pantry: JSONValue?
+        /// original line of a translated recipe (open recipe database)
+        var orig: String?
         var isPantry: Bool { pantry?.bool ?? false }
     }
     struct LogEntry: Decodable, Sendable, Hashable {

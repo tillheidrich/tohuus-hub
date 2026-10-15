@@ -108,7 +108,8 @@ struct UsualsSheet: View {
     }
 }
 
-/// Offers from a flyer the household photographs itself (nothing from offer feeds): POST /api/offers/scan.
+/// Offers from what the household brings in itself (nothing from offer feeds): a flyer photo, a link to a flyer picture
+/// or PDF, or pasted text (POST /api/offers/scan) – grouped per shop, matched with the list and what is due.
 struct OffersView: View {
     let store: ServerStore
     @Environment(\.dismiss) private var dismiss
@@ -118,49 +119,76 @@ struct OffersView: View {
     @State private var scanning = false
     @State private var error: String?
     @State private var missing = false
+    @State private var link = ""
+    @State private var pasted = ""
+
+    private struct OfferShopGroup: Identifiable {
+        let shop: String
+        let offers: [Offer]
+        var id: String { shop }
+    }
+
+    private static func hot(_ o: Offer) -> Bool { o.due == true || o.onList == true }
+
+    /// per shop: shops with something due or on the list first, then by name; offers without a shop last
+    private var byShop: [OfferShopGroup] {
+        let groups = Dictionary(grouping: offers) { ($0.shop ?? "").trimmingCharacters(in: .whitespaces) }
+        return groups.map { key, value in
+            OfferShopGroup(shop: key, offers: value.sorted { Self.hot($0) && !Self.hot($1) })
+        }
+        .sorted { a, b in
+            if a.shop.isEmpty != b.shop.isEmpty { return !a.shop.isEmpty }
+            let ha = a.offers.contains(where: Self.hot)
+            let hb = b.offers.contains(where: Self.hot)
+            if ha != hb { return ha }
+            return a.shop.localizedCaseInsensitiveCompare(b.shop) == .orderedAscending
+        }
+    }
+
+    private var linkOK: Bool {
+        let u = link.trimmingCharacters(in: .whitespaces)
+        return u.hasPrefix("http://") || u.hasPrefix("https://")
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     if VNDocumentCameraAvailable.isSupported {
-                        Button { showCamera = true } label: { Label(L("Photograph a flyer"), systemImage: "camera") }
+                        Button { showCamera = true } label: { Label(L("Photograph a flyer page"), systemImage: "camera") }
                     }
                     PhotosPicker(selection: $photo, matching: .images) { Label(L("Choose a flyer photo"), systemImage: "photo") }
+                    HStack {
+                        TextField(L("Link to a flyer picture or PDF"), text: $link)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .submitLabel(.go)
+                            .onSubmit { Task { await scanLink() } }
+                        Button(L("Read")) { Task { await scanLink() } }
+                            .disabled(scanning || !linkOK)
+                    }
+                    TextField(L("…or paste: “Lidl until 18.10. coffee 9,99 €”"), text: $pasted, axis: .vertical)
+                        .lineLimit(2...5)
+                    if !pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Button { Task { await scanText() } } label: { Label(L("Read the text"), systemImage: "tag") }
+                            .disabled(scanning)
+                    }
                     if scanning { HStack { ProgressView(); Text(L("Reading …")) } }
                     if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
+                } header: {
+                    Text(L("An offer"))
                 } footer: {
-                    Text(L("Only what you photograph yourself – ToHuus doesn't fetch offers from anywhere."))
+                    Text(L("A flyer page, a price tag or a shared offer – ToHuus checks it against your list and what is due. Nothing is fetched from offer sites."))
                 }
                 if missing { Text(L("Your server doesn't have this section yet.")).foregroundStyle(Theme.ink3) }
-                ForEach(offers) { o in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(o.name).font(.headline)
-                            Spacer()
-                            if let p = o.price { Text(Money.format(p)).font(.headline).foregroundStyle(Theme.primaryText) }
+                ForEach(byShop) { group in
+                    Section {
+                        ForEach(group.offers) { o in
+                            OfferRowView(offer: o, store: store) { await load() }
                         }
-                        Text([o.shop, o.size, o.validTo.flatMap { ServerDate.shortDay($0) }.map { LF("until %@", $0) }].compactMap { $0 }.joined(separator: " · "))
-                            .font(.caption).foregroundStyle(Theme.ink3)
-                        ForEach(o.hints ?? [], id: \.self) { h in Text(h).font(.caption).foregroundStyle(Theme.ink2) }
-                        if o.onList != true {
-                            Button(L("Put it on the list")) {
-                                Task {
-                                    try? await store.api.addOffer(o.id)
-                                    Haptics.success()
-                                    await load()
-                                    await store.refreshList()
-                                }
-                            }
-                            .buttonStyle(.bordered).controlSize(.small)
-                        } else {
-                            Text(L("on the list")).font(.caption).foregroundStyle(Theme.primaryText)
-                        }
-                    }
-                    .swipeActions {
-                        Button(role: .destructive) { Task { try? await store.api.deleteOffer(o.id); await load() } } label: {
-                            Label(L("Remove"), systemImage: "trash")
-                        }
+                    } header: {
+                        Label(group.shop.isEmpty ? L("Other shops") : group.shop, systemImage: "storefront")
                     }
                 }
             }
@@ -169,6 +197,7 @@ struct OffersView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
             .task { await load() }
+            .refreshable { await load() }
             .onChange(of: photo) { _, item in
                 guard let item else { return }
                 Task {
@@ -194,14 +223,130 @@ struct OffersView: View {
         guard let jpeg = img.jpegData(compressionQuality: 0.8) else { return }
         scanning = true
         defer { scanning = false }
+        do { finish(try await store.api.scanOffers(jpeg: jpeg)) } catch { self.error = APIError.from(error).localizedDescription }
+        await load()
+    }
+
+    private func scanLink() async {
+        let u = link.trimmingCharacters(in: .whitespaces)
+        guard linkOK else { return }
+        scanning = true
+        defer { scanning = false }
         do {
-            let found = try await store.api.scanOffers(jpeg: jpeg)
-            error = found.isEmpty ? L("No offers found on the photo.") : nil
-            await load()
-        } catch {
-            self.error = APIError.from(error).localizedDescription
+            finish(try await store.api.scanOffers(url: u))
+            if error == nil { link = "" }
+        } catch { self.error = APIError.from(error).localizedDescription }
+        await load()
+    }
+
+    private func scanText() async {
+        let t = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return }
+        scanning = true
+        defer { scanning = false }
+        do {
+            finish(try await store.api.scanOffers(text: t))
+            if error == nil { pasted = "" }
+        } catch { self.error = APIError.from(error).localizedDescription }
+        await load()
+    }
+
+    private func finish(_ found: [Offer]) {
+        error = found.isEmpty ? L("No prices found – try a sharper photo or paste the text.") : nil
+        if !found.isEmpty { Haptics.success() }
+    }
+}
+
+/// One offer: price, name, shop and hints, with "auf die Liste" and swipe to remove.
+struct OfferRowView: View {
+    let offer: Offer
+    let store: ServerStore
+    var compact = false
+    let changed: () async -> Void
+
+    private var hot: Bool { offer.due == true || offer.onList == true }
+
+    private var subline: String {
+        var parts: [String] = []
+        if compact, let s = offer.shop, !s.isEmpty { parts.append(s) }
+        if let s = offer.size, !s.isEmpty { parts.append(s) }
+        if let d = ServerDate.shortDay(offer.validTo) { parts.append(LF("until %@", d)) }
+        parts += (offer.hints ?? []).filter { !$0.isEmpty }
+        return parts.joined(separator: " · ")
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: Theme.Space.s3) {
+            Text(offer.price.map { Money.format($0) } ?? "–")
+                .font(.subheadline.weight(.bold))
+                .monospacedDigit()
+                .foregroundStyle(hot ? Theme.onPrimary : Theme.primaryText)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(hot ? Theme.primary : Theme.primarySoft, in: RoundedRectangle(cornerRadius: 8))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(offer.name).font(.subheadline.weight(.semibold))
+                if !subline.isEmpty { Text(subline).font(.caption).foregroundStyle(Theme.ink3).lineLimit(2) }
+            }
+            Spacer(minLength: 0)
+            if offer.onList == true || offer.added == true {
+                Text(L("on the list")).font(.caption).foregroundStyle(Theme.primaryText)
+            } else {
+                Button {
+                    Task {
+                        try? await store.api.addOffer(offer.id)
+                        Haptics.success()
+                        store.touch("shopping")
+                        await changed()
+                        await store.refreshList()
+                    }
+                } label: {
+                    Image(systemName: "plus.circle.fill").font(.title2).tapTarget()
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.primary)
+                .accessibilityLabel(LF("Put %@ on the list", offer.name))
+            }
+        }
+        .swipeActions {
+            Button(role: .destructive) {
+                Task {
+                    try? await store.api.deleteOffer(offer.id)
+                    await changed()
+                }
+            } label: {
+                Label(L("Remove"), systemImage: "trash")
+            }
         }
     }
+}
+
+/// On the main list (not in the shop): up to six current offers somebody brought in; nothing when there are none.
+struct OffersStripSection: View {
+    let store: ServerStore
+    let openAll: () -> Void
+    @State private var offers: [Offer] = []
+
+    var body: some View {
+        Group {
+            if !offers.isEmpty {
+                Section {
+                    ForEach(offers.prefix(6)) { o in
+                        OfferRowView(offer: o, store: store, compact: true) { await load() }
+                    }
+                } header: {
+                    HStack {
+                        Text(L("Offers"))
+                        Spacer()
+                        Button(L("All offers"), action: openAll).font(.footnote)
+                    }
+                }
+            }
+        }
+        .task(id: store.revision("shopping")) { await load() }
+    }
+
+    private func load() async { offers = (try? await store.api.offers()) ?? [] }
 }
 
 enum VNDocumentCameraAvailable {

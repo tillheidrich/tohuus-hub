@@ -10,6 +10,8 @@ struct ImportsListView: View {
     @State private var loaded = false
     @State private var error: String?
     @State private var showEBon = false
+    @State private var showShelf = false
+    @State private var showText = false
     @State private var openId: Int?
     @State private var toast: ToastMessage?
 
@@ -20,9 +22,18 @@ struct ImportsListView: View {
                     Button { onAddReceipt() } label: { Label(L("Add receipt"), systemImage: "doc.text.viewfinder") }
                 }
                 Button { showEBon = true } label: { Label(L("Digital receipt (QR code or link)"), systemImage: "qrcode.viewfinder") }
+                Button { showShelf = true } label: { Label(L("Photograph a cupboard or freezer"), systemImage: "refrigerator") }
+                Button { showText = true } label: { Label(L("Type or paste lines"), systemImage: "text.alignleft") }
             } footer: {
                 Text(L("Many checkouts show a QR code for the digital receipt. Scan it and ToHuus fetches the receipt."))
             }
+            // receipts by e-mail: the cloud address, or the self-hosted mailbox (each hides itself where it doesn't apply)
+            Section {
+                MailAddressSection(store: store)
+                InboxStatusCard(store: store)
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
             if let error {
                 Section { ErrorBanner(message: error) { Task { await load() } } }
                     .listRowBackground(Color.clear)
@@ -43,6 +54,11 @@ struct ImportsListView: View {
                 if !rest.isEmpty {
                     Section(L("History")) { ForEach(rest) { row($0) } }
                 }
+                Section {
+                    NavigationLink { ReceiptRecognitionView(store: store) } label: {
+                        Label(L("Receipt recognition"), systemImage: "sparkles")
+                    }
+                } footer: { Text(L("How well your receipts are read, and what ToHuus learned from your corrections.")) }
             } else if !loaded {
                 Section { HStack { Spacer(); ProgressView(); Spacer() } }.listRowBackground(Color.clear)
             }
@@ -53,6 +69,8 @@ struct ImportsListView: View {
         .refreshable { await load() }
         .task(id: store.revision("imports")) { await load() }
         .navigationDestination(item: $openId) { id in ImportReviewView(store: store, importId: id) }
+        .sheet(isPresented: $showShelf) { StocktakeSheet(store: store) { id in openId = id } }
+        .sheet(isPresented: $showText) { TextImportSheet(store: store) { id in openId = id } }
         .sheet(isPresented: $showEBon) {
             EBonSheet(store: store) { result in
                 if result.duplicate == true { toast = ToastMessage(text: L("This receipt was already there.")) }

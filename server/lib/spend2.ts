@@ -522,6 +522,38 @@ export function aggregate(entries: Entry[]) {
   };
 }
 
+/**
+ * The purchases of a set of entries, newest first – one row per receipt or own expense, for "Geld" (tap → details).
+ * `total` counts what is counted; a purchase whose entries are all left out has `excluded: true`.
+ */
+export function purchasesOf(entries: Entry[], limit = 80) {
+  const groups = groupBy(entries, (e) => (e.receipt_id ? `r:${e.receipt_id}` : `e:${e.id}`));
+  return [...groups]
+    .map(([key, xs]) => {
+      const first = xs[0];
+      const counted = xs.filter((e) => !e.excluded);
+      return {
+        key,
+        kind: first.receipt_id ? ('receipt' as const) : ('expense' as const),
+        id: first.receipt_id ?? first.id,
+        day: first.day,
+        store: first.store,
+        // own expense: where (if given), and what it was underneath
+        title: first.receipt_id || first.store?.trim() ? first.store : first.name,
+        total: sum(counted),
+        items: first.receipt_id ? xs.filter((e) => !e.deposit).length : (first.items?.length ?? 0),
+        // the three biggest items, so the row says what the money went on
+        preview: first.receipt_id ? xs.filter((e) => !e.deposit).sort((a, b) => b.price - a.price).slice(0, 3).map((e) => e.name) : first.store?.trim() && first.name !== first.store ? [first.name] : [],
+        excluded: counted.length === 0,
+        personal: Boolean(first.personal),
+        /** own expense: the entry itself, so a client can open the expense form right away */
+        entry: first.receipt_id ? null : first,
+      };
+    })
+    .sort((a, b) => (a.day === b.day ? b.id - a.id : a.day < b.day ? 1 : -1))
+    .slice(0, limit);
+}
+
 /** Saved through discounts on the receipts in a set of entries (receipt parsers store meta.discounts). */
 function discountsFor(entries: Entry[]) {
   const ids = [...new Set(entries.filter((e) => !e.excluded && e.receipt_id).map((e) => e.receipt_id!))];
