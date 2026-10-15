@@ -89,7 +89,7 @@ struct GuestTasksCard: View {
     private func due(_ t: GuestTask) -> String? {
         guard let d = t.nextDue else { return nil }
         let day = t.state == "today" ? L("today") : (ServerDate.shortDay(d) ?? d)
-        return t.dueTime.map { "\(day), \($0)" } ?? day
+        return t.dueTime.map { day + ", " + TaskTime.label($0) } ?? day
     }
 
     private func done(_ t: GuestTask) async {

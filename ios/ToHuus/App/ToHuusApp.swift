@@ -127,10 +127,10 @@ struct UpdateNeededView: View {
         VStack(spacing: Theme.Space.s4) {
             Image(systemName: "arrow.down.app").font(.largeTitle).foregroundStyle(Theme.primary).accessibilityHidden(true)
             Text(L("Please update ToHuus")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
-            Text(L("This version no longer fits ToHuus Cloud. Install the latest build in TestFlight or the App Store – your data is safe."))
+            Text(L("This version no longer fits ToHuus Cloud. Install the latest version from the App Store – your data is safe."))
                 .multilineTextAlignment(.center).foregroundStyle(Theme.ink2)
-            if let url = URL(string: "itms-beta://") {
-                Link(L("Open TestFlight"), destination: url).buttonStyle(PrimaryButtonStyle())
+            if let url = URL(string: "itms-apps://apps.apple.com/app/id6822059656") {
+                Link(L("Open in the App Store"), destination: url).buttonStyle(PrimaryButtonStyle())
             }
         }
         .padding(Theme.Space.s6)

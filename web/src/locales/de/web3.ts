@@ -227,4 +227,17 @@ export const web3: Record<string, string> = {
   'Withdraw consent': 'Zustimmung zurückziehen',
   'Agree and use AI': 'Zustimmen und KI nutzen',
   'Receipts by mail and children use AI only after an admin agreed.': 'Bons per Mail und Kinder nutzen KI erst, wenn ein Admin zugestimmt hat.',
+  // final release (15 Oct 2026): free licences as codes, no beta wording
+  'A gift for every household': 'Geschenk für alle Haushalte',
+  'Gift for everyone switched off': 'Geschenk für alle ausgeschaltet',
+  'A month': 'Ein Monat',
+  'A year': 'Ein Jahr',
+  'Lifetime': 'Für immer',
+  'Free licences for people who are interested: a month, a year or for good. Create one code per household and send it. An admin of the household redeems it on the web (Settings › Plan); it then works on every device, the iPhone included. The iPhone app has no code field – Apple does not allow unlocking features with own codes there.':
+    'Kostenlose Lizenzen für Interessierte: ein Monat, ein Jahr oder für immer. Leg einen Code pro Haushalt an und schick ihn los. Eine Admin-Person des Haushalts löst ihn im Web ein (Einstellungen › Abo); danach gilt er auf allen Geräten, auch auf dem iPhone. Die iPhone-App hat kein Code-Feld – Apple erlaubt dort keine eigenen Freischaltcodes.',
+  'e.g. Mira, met at the market': 'z. B. Mira, vom Markt',
+  'While this is on, every household in ToHuus Cloud gets this plan – nobody pays, nothing is bought. Switch it off and each household has what it has on its own again (trial, code, App Store, Free). Nothing is deleted.':
+    'Solange das an ist, bekommt jeder Haushalt in der ToHuus Cloud diesen Plan – niemand zahlt, nichts wird gekauft. Schaltest du es aus, hat jeder Haushalt wieder, was er selbst hat (Testzeit, Code, App Store, Free). Gelöscht wird nichts.',
+  'A gift from us – nothing is charged. When it ends, every household keeps what it has on its own – nothing is deleted.':
+    'Ein Geschenk von uns – es wird nichts abgebucht. Endet es, behält jeder Haushalt, was er selbst hat – gelöscht wird nichts.',
 };

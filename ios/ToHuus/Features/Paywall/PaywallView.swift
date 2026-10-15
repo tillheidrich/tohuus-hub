@@ -90,11 +90,16 @@ struct PaywallView: View {
 
     private func giftNote(_ gift: BillingStatus.Gift) -> some View {
         VStack(alignment: .leading, spacing: Theme.Space.s2) {
-            Label(gift.kind == "beta" ? L("Free during the beta") : L("A gift for your household"), systemImage: "gift")
+            Label(gift.kind == "beta" ? L("A gift for every household") : L("A gift for your household"), systemImage: "gift")
                 .font(.headline).foregroundStyle(Theme.primaryText)
             Group {
                 if gift.kind == "beta" {
-                    Text(L("While ToHuus is being tested, nobody pays – thank you for helping. When the beta ends, your household keeps what it has on its own. Nothing is charged automatically and nothing is deleted."))
+                    // the operator's gift for every household (server kind "beta") – shown neutrally
+                    if gift.forever != true, let d = ServerDate.parse(gift.until) {
+                        Text(LF("Every household has this plan as a gift until %@. After that your household keeps what it has on its own – nothing is charged automatically and nothing is deleted.", d.formatted(date: .long, time: .omitted)))
+                    } else {
+                        Text(L("Every household has this plan as a gift right now. Nothing is charged automatically and nothing is deleted."))
+                    }
                 } else if gift.forever == true {
                     Text(L("Your household has this plan for good. Nothing is charged."))
                 } else if let d = ServerDate.parse(gift.until) {

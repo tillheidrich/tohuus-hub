@@ -132,71 +132,174 @@ private struct CardBrandMark: View {
     }
 }
 
+/// One line on a card, measured and placed by `ShareCardLayout` (the same rows as `layoutCard` in web/src/share/cards.tsx).
+struct ShareCardRow {
+    var text: String
+    var font: UIFont
+    /// space above the row
+    var before: CGFloat
+    var lineHeight: CGFloat
+    /// quiet rows (eyebrow, text) use the area's accent colour – never opacity on text
+    var quiet = false
+    var tracking: CGFloat = 0
+    var dx: CGFloat = 0
+}
+
+/// The text fills the card (15 Oct 2026, Till: "Text soll das Bild besser ausfüllen"): one scale for value, title, text
+/// and list – the largest that fits between the brand line and the footer. Typography is the lever, not decoration.
+/// System fonts (the brand fonts aren't in the app), same rule and sizes as the web canvas.
+enum ShareCardLayout {
+    static func sans(_ size: CGFloat, _ weight: UIFont.Weight = .regular) -> UIFont { .systemFont(ofSize: size, weight: weight) }
+
+    static func serif(_ size: CGFloat) -> UIFont {
+        let base = UIFont.systemFont(ofSize: size, weight: .regular)
+        guard let d = base.fontDescriptor.withDesign(.serif) else { return base }
+        return UIFont(descriptor: d, size: size)
+    }
+
+    static func width(_ text: String, _ font: UIFont, tracking: CGFloat = 0) -> CGFloat {
+        var attrs: [NSAttributedString.Key: Any] = [.font: font]
+        if tracking != 0 { attrs[.kern] = tracking }
+        return ceil((text as NSString).size(withAttributes: attrs).width)
+    }
+
+    /// greedy word wrap, like `lines()` on the web
+    static func lines(_ text: String, _ font: UIFont, max: CGFloat, tracking: CGFloat = 0) -> [String] {
+        var out: [String] = []
+        var cur = ""
+        for word in text.split(whereSeparator: { $0.isWhitespace }).map(String.init) {
+            let next = cur.isEmpty ? word : cur + " " + word
+            if width(next, font, tracking: tracking) > max && !cur.isEmpty {
+                out.append(cur)
+                cur = word
+            } else {
+                cur = next
+            }
+        }
+        if !cur.isEmpty { out.append(cur) }
+        return out
+    }
+
+    /// The value as large as fits on one line (a word like "Dienstag" needs to shrink).
+    static func fitSize(_ text: String, start: CGFloat, max: CGFloat) -> CGFloat {
+        var size = start
+        while size > 80 {
+            if width(text, serif(size)) <= max { break }
+            size -= 8
+        }
+        return size
+    }
+
+    static func build(_ spec: ShareCardSpec, story: Bool, max: CGFloat, k: CGFloat) -> (rows: [ShareCardRow], height: CGFloat) {
+        var rows: [ShareCardRow] = []
+        // the eyebrow stays small on purpose – it is a label
+        let eb = sans(30, .semibold)
+        for l in lines(spec.eyebrow.uppercased(), eb, max: max, tracking: 2.4).prefix(2) {
+            rows.append(ShareCardRow(text: l, font: eb, before: 0, lineHeight: 42, quiet: true, tracking: 2.4))
+        }
+        if !spec.value.isEmpty {
+            // a short number is the picture itself (one loud element per card); a word stays a little smaller
+            let short = spec.value.count <= 4
+            let base: CGFloat = short ? (story ? 360 : 300) : (story ? 280 : 230)
+            let vs = min(fitSize(spec.value, start: (base * k).rounded(), max: max), story ? 720 : 560)
+            rows.append(ShareCardRow(text: spec.value, font: serif(vs), before: (18 * k).rounded(), lineHeight: vs * 0.98, dx: -vs * 0.03))
+        }
+        let ts = min((60 * k).rounded(), 124)
+        let tf = sans(ts, .semibold)
+        for (i, l) in lines(spec.title, tf, max: max).prefix(4).enumerated() {
+            rows.append(ShareCardRow(text: l, font: tf, before: i == 0 ? (26 * k).rounded() : 0, lineHeight: ts * 1.12))
+        }
+        if let text = spec.text, !text.isEmpty {
+            let xs = min((40 * k).rounded(), 66)
+            let xf = sans(xs)
+            // never cut a sourced fact short: up to ten lines, the scale makes room
+            for (i, l) in lines(text, xf, max: max).prefix(10).enumerated() {
+                rows.append(ShareCardRow(text: l, font: xf, before: i == 0 ? (30 * k).rounded() : 0, lineHeight: xs * 1.3, quiet: true))
+            }
+        }
+        if !spec.list.isEmpty {
+            let ls = min((40 * k).rounded(), 68)
+            let lf = sans(ls)
+            // a list the person picked themselves (erledigte Aufgaben) may be longer when there is no text
+            let n = (spec.text ?? "").isEmpty ? 6 : 3
+            for (i, item) in spec.list.prefix(n).enumerated() {
+                let first = lines(item, lf, max: max - ls).first ?? item
+                rows.append(ShareCardRow(text: "·  " + first, font: lf, before: i == 0 ? (30 * k).rounded() : 0, lineHeight: ls * 1.32))
+            }
+        }
+        return (rows, rows.reduce(0) { $0 + $1.before + $1.lineHeight })
+    }
+
+    /// All rows at the largest scale (0.7–2.4) whose height fits `room` (lines re-wrap at every size, so it's searched).
+    static func plan(_ spec: ShareCardSpec, story: Bool, max: CGFloat, room: CGFloat) -> (rows: [ShareCardRow], height: CGFloat) {
+        var lo: CGFloat = 0.7, hi: CGFloat = 2.4
+        for _ in 0..<14 {
+            let mid = (lo + hi) / 2
+            if build(spec, story: story, max: max, k: mid).height <= room { lo = mid } else { hi = mid }
+        }
+        return build(spec, story: story, max: max, k: lo)
+    }
+}
+
 /// One card at its real pixel size (1 pt = 1 px when rendered at scale 1). Fixed sizes – it's a picture, not UI.
 struct ShareCardCanvas: View {
     let spec: ShareCardSpec
     let format: ShareCardFormat
 
+    private static let pad: CGFloat = 88
+
     var body: some View {
         let c = ShareCardTheme.colors(spec.area)
         let size = format.size
         let story = format == .story
+        let max = size.width - Self.pad * 2
         let foot = spec.source.map { L("Source") + ": " + $0 } ?? L("Made with ToHuus") + " · " + ShareFooter.host
+        let footLines = min(2, Swift.max(1, ShareCardLayout.lines(foot, ShareCardLayout.sans(28), max: max).count))
+        // content box: below the brand line, above the footer (same numbers as the web canvas)
+        let headerBottom = format.safe.top + (story ? 0 : 16) + 64 + (story ? 120 : 84)
+        let boxTop = headerBottom + (story ? 40 : 8)
+        let footTop = size.height - format.safe.bottom - CGFloat(footLines - 1) * 38 - 28
+        let boxBottom = footTop - (story ? 96 : 64)
+        let room = boxBottom - boxTop
+        let plan = ShareCardLayout.plan(spec, story: story, max: max, room: room)
+        let top = boxTop + Swift.max(0, (room - plan.height) / 2)
         ZStack(alignment: .topLeading) {
             c.bg
+            // decoration, not text: the arch may stay quiet
             DoorArch(story: story).fill(c.fg.opacity(0.08))
+            HStack(spacing: 20) {
+                CardBrandMark(fg: c.fg, bg: c.bg)
+                Text(verbatim: "ToHuus").font(.system(size: 46, weight: .semibold)).foregroundStyle(c.fg)
+            }
+            .padding(.leading, Self.pad)
+            .padding(.top, format.safe.top + (story ? 0 : 16))
             VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 20) {
-                    CardBrandMark(fg: c.fg, bg: c.bg)
-                    Text(verbatim: "ToHuus").font(.system(size: 46, weight: .semibold))
+                ForEach(Array(plan.rows.enumerated()), id: \.offset) { _, row in
+                    Text(verbatim: row.text)
+                        .font(Font(row.font as CTFont))
+                        .tracking(row.tracking)
+                        .foregroundStyle(row.quiet ? c.accent : c.fg)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .frame(height: row.lineHeight, alignment: .leading)
+                        .offset(x: row.dx)
+                        .padding(.top, row.before)
                 }
-                .padding(.top, story ? 0 : 16)
-                Color.clear.frame(height: story ? 120 : 84)
-                Text(spec.eyebrow.uppercased())
-                    .font(.system(size: 30, weight: .semibold))
-                    .tracking(2.4)
-                    .opacity(0.8)
-                    .lineLimit(2)
-                Text(spec.value)
-                    .font(.system(size: story ? 300 : 240, weight: .regular, design: .serif))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.3)
-                    .padding(.leading, -(story ? 9 : 7))
-                Text(spec.title)
-                    .font(.system(size: 60, weight: .semibold))
-                    .lineLimit(3)
-                    .lineSpacing(10)
-                    .padding(.top, story ? 12 : 4)
-                if let t = spec.text, !t.isEmpty {
-                    Text(t)
-                        .font(.system(size: 40))
-                        .lineSpacing(12)
-                        .opacity(0.85)
-                        .lineLimit(4)
-                        .padding(.top, 28)
-                }
-                if !spec.list.isEmpty {
-                    VStack(alignment: .leading, spacing: 14) {
-                        // a list the person picked themselves (erledigte Aufgaben) may be longer when there is no text
-                        ForEach(Array(spec.list.prefix((spec.text ?? "").isEmpty ? 6 : 3).enumerated()), id: \.offset) { _, item in
-                            Text("·  " + item).font(.system(size: 38)).lineLimit(1)
-                        }
-                    }
-                    .padding(.top, 30)
-                }
-                Spacer(minLength: 24)
+            }
+            .padding(.leading, Self.pad)
+            .padding(.top, top)
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer(minLength: 0)
                 Text(foot)
                     .font(.system(size: 28))
-                    .opacity(0.7)
+                    .foregroundStyle(c.accent)
                     .lineLimit(2)
             }
-            .foregroundStyle(c.fg)
-            .padding(.horizontal, 88)
-            .padding(.top, format.safe.top)
+            .padding(.horizontal, Self.pad)
             .padding(.bottom, format.safe.bottom)
-            .frame(width: size.width, height: size.height, alignment: .topLeading)
+            .frame(width: size.width, height: size.height, alignment: .bottomLeading)
         }
-        .frame(width: size.width, height: size.height)
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
         .clipped()
         .environment(\.colorScheme, .light)
         .environment(\.dynamicTypeSize, .large)

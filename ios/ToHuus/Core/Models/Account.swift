@@ -184,7 +184,7 @@ struct BillingStatus: Decodable, Sendable {
     var planLabel: String {
         if let gift {
             let name = plan == "haushalt" ? L("Household") : L("Plus")
-            if gift.kind == "beta" { return LF("%@ – a gift during the beta", name) }
+            if gift.kind == "beta" { return LF("%@ – a gift for every household", name) }
             if gift.forever == true { return LF("%@ – for good", name) }
             return LF("%@ – a gift", name)
         }

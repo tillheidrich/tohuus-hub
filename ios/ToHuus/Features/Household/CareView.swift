@@ -868,7 +868,7 @@ private struct CareTaskForm: View {
                         if let t = time {
                             HStack {
                                 DatePicker(L("Time (optional)"), selection: Binding(get: { t }, set: { time = $0 }), displayedComponents: .hourAndMinute)
-                                Button { time = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.ink3) }
+                                Button { time = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.ink3).tapTarget() }
                                     .buttonStyle(.plain)
                                     .accessibilityLabel(L("Remove"))
                             }
@@ -931,7 +931,7 @@ private struct CareTaskForm: View {
                     }
                     HStack {
                         TextField(L("e.g. sink, mirror, floor"), text: $newItem).submitLabel(.done).onSubmit { addItem() }
-                        Button { addItem() } label: { Image(systemName: "plus.circle.fill") }
+                        Button { addItem() } label: { Image(systemName: "plus.circle.fill").tapTarget() }
                             .disabled(newItem.trimmingCharacters(in: .whitespaces).isEmpty)
                             .accessibilityLabel(L("Add"))
                     }
@@ -1079,7 +1079,7 @@ private struct OptionalDate: View {
         if let d = date {
             HStack {
                 DatePicker(title, selection: Binding(get: { d }, set: { date = $0 }), displayedComponents: .date)
-                Button { date = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.ink3) }
+                Button { date = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.ink3).tapTarget() }
                     .buttonStyle(.plain)
                     .accessibilityLabel(L("Remove"))
             }

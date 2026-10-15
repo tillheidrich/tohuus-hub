@@ -374,14 +374,15 @@ struct TasksShareSheet: View {
         } label: {
             HStack(spacing: 0) {
                 Text(x.name)
-                if x.times > 1 { Text(verbatim: " · \(x.times)×").foregroundStyle(on ? Theme.onPrimary.opacity(0.8) : Theme.ink3) }
+                if x.times > 1 { Text(verbatim: " · \(x.times)×").foregroundStyle(on ? Theme.onPrimary : Theme.ink3) }
             }
             .font(.subheadline)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .foregroundStyle(on ? Theme.onPrimary : Theme.ink)
-            .background(on ? Theme.primary : Theme.surface, in: Capsule())
-            .overlay(Capsule().stroke(on ? Color.clear : Theme.line, lineWidth: 1))
+            // Dutch Detail: chips are square-ish (6 pt), pills only for avatars and dots
+            .background(on ? Theme.primary : Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.sm))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.sm).stroke(on ? Color.clear : Theme.lineStrong, lineWidth: 1))
             // the visible chip stays small; the tap area is at least 44 pt high
             .frame(minHeight: 44)
             .contentShape(Rectangle())
@@ -413,7 +414,7 @@ struct ReviewCardView: View {
         VStack(alignment: .leading, spacing: 4) {
             VStack(alignment: .leading, spacing: 4) {
                 Image(systemName: ReviewStyle.icon(c.area)).font(.title3).foregroundStyle(Theme.ink2).accessibilityHidden(true)
-                Text(c.value).font(.system(.largeTitle, design: .rounded, weight: .bold)).foregroundStyle(Theme.ink)
+                Text(c.value).font(.system(.largeTitle, design: .serif, weight: .regular)).foregroundStyle(Theme.ink)
                     .minimumScaleFactor(0.6).lineLimit(2)
                 Text(c.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
                 if let t = c.text { Text(t).font(.footnote).foregroundStyle(Theme.ink2) }

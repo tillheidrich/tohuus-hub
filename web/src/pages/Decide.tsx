@@ -8,9 +8,10 @@
  * - "Was schaffst du heute?" (Aufgaben, due and overdue): mach ich heute · darf warten · erledigt
  * Never shaming: letting go and waiting are as valid as doing.
  */
-import { Check, CheckCircle, Clock, PushPin, Sun, Wind } from '@phosphor-icons/react';
+import { CalendarCheck, Check, CheckCircle, Clock, Heart, PushPin, Sun, Wind, X } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { del, fmtDate, invalidate, patch, post, useApi } from '../api';
+import { del, fmtDate, get, invalidate, patch, post, useApi } from '../api';
+import { useEffect } from 'react';
 import { t } from '../i18n';
 import { Sheet, useToast } from '../ui';
 import type { CareTask } from './Care';
@@ -127,6 +128,95 @@ export function TodayDeckSheet({ tasks, onClose }: { tasks: CareTask[]; onClose:
           icons={{ yes: <Sun size={24} weight="fill" />, no: <Clock size={24} />, super: <Check size={24} weight="bold" /> }}
           buttonLabels={{ yes: t('I’ll do it today'), no: t('May wait'), super: t('Done') }}
         />
+      )}
+    </Sheet>
+  );
+}
+
+/**
+ * "Was essen wir diese Woche?" (15 Oct 2026, the same as iOS WeekMealDeck.swift): ideas from what is at home
+ * (GET /api/recipes/suggest), one at a time. Right = "Gern" puts it on the next free evening of the coming seven days
+ * (POST /api/plan2/entries, like planning by hand), left = "Heute nicht". Evenings marked away / eating out and evenings
+ * that already have a meal are skipped; after 19:00 tonight counts as taken.
+ */
+export function WeekMealDeckSheet({ onClose }: { onClose: () => void }) {
+  const toast = useToast();
+  const [ideas, setIdeas] = useState<{ recipe: { id: number; title: string; image_path?: string | null; time_min?: number | null }; reasons?: string[]; have?: number; need?: number }[] | null>(null);
+  const [free, setFree] = useState<string[]>([]);
+  const [idx, setIdx] = useState(0);
+  const [planned, setPlanned] = useState(0);
+  useEffect(() => {
+    const start = plusDays(new Date().getHours() >= 19 ? 1 : 0);
+    Promise.all([
+      get<any[]>('/recipes/suggest?limit=10'),
+      get<{ days: string[]; entries: { day: string; slot?: string | null }[] }>(`/plan?from=${start}&days=7`),
+      get<{ marks?: { day: string }[] }>(`/plan2/week?from=${start}&days=7`).catch(() => ({ marks: [] })),
+    ])
+      .then(([s, plan, week]) => {
+        const marked = new Set((week.marks ?? []).map((m) => m.day));
+        setFree(plan.days.filter((d) => !marked.has(d) && !plan.entries.some((e) => e.day === d && (e.slot ?? 'abend') === 'abend')));
+        setIdeas((s ?? []).slice(0, 10));
+      })
+      .catch((e: Error) => toast({ text: e.message, error: true }));
+  }, []);
+  const weekday = (d: string) => new Intl.DateTimeFormat(undefined, { weekday: 'long' }).format(new Date(`${d}T12:00:00`));
+  const rest = (ideas ?? []).slice(idx);
+  const swipe = async (dir: SwipeDir) => {
+    const cur = rest[0];
+    if (!cur) return;
+    if (dir === 'yes') {
+      const day = free[0];
+      if (!day) {
+        toast({ text: t('No free evening left this week.') });
+        return;
+      }
+      try {
+        await post('/plan2/entries', { day, slot: 'abend', recipe_id: cur.recipe.id });
+        setFree((f) => f.slice(1));
+        setPlanned((n) => n + 1);
+        invalidate('plan');
+      } catch (e) {
+        toast({ text: (e as Error).message, error: true });
+        return;
+      }
+    }
+    setIdx((i) => i + 1);
+  };
+  const done = ideas != null && (rest.length === 0 || (free.length === 0 && planned > 0));
+  return (
+    <Sheet open onClose={onClose} title={t('What shall we eat this week?')}>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        {free.length ? t('Swipe right for what you fancy – it goes on the next free evening. Free: {days}.', { days: free.map(weekday).join(', ') }) : t('Swipe right for what you fancy – it goes on the next free evening.')}
+      </p>
+      {ideas == null ? (
+        <div className="skel" style={{ height: 360, borderRadius: 26 }} />
+      ) : ideas.length === 0 ? (
+        <Finished text={t('No suggestions yet')} onClose={onClose} />
+      ) : free.length === 0 && planned === 0 ? (
+        <Finished text={t('Every evening this week is planned.')} onClose={onClose} />
+      ) : done ? (
+        <Finished
+          text={planned === 0 ? t('Nothing planned – that’s fine too.') : planned === 1 ? t('1 evening planned') : t('{n} evenings planned', { n: planned })}
+          onClose={onClose}
+        />
+      ) : (
+        <>
+          <div className="small muted decide-count">{t('{n} of {total}', { n: idx + 1, total: ideas.length })}</div>
+          <SwipeDeck
+            cards={rest.slice(0, 2).map((s) => ({
+              key: s.recipe.id,
+              title: s.recipe.title,
+              image: s.recipe.image_path,
+              sub: (s.reasons ?? []).join(' · ') || null,
+              badges: [s.recipe.time_min ? t('{n} min', { n: s.recipe.time_min }) : null].filter(Boolean) as string[],
+              accentBadge: s.need ? t('{have}/{need} ingredients on hand', { have: s.have ?? 0, need: s.need }) : null,
+            }))}
+            onSwipe={(dir) => swipe(dir)}
+            stamps={{ yes: t('YUM'), no: t('NOT TODAY') }}
+            icons={{ yes: <Heart size={24} weight="fill" />, no: <X size={24} weight="bold" />, super: <CalendarCheck size={24} /> }}
+            buttonLabels={{ yes: t('Yes, gladly'), no: t('Not today'), super: t('Yes, gladly') }}
+          />
+        </>
       )}
     </Sheet>
   );

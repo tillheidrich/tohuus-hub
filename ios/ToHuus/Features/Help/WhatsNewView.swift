@@ -28,7 +28,7 @@ extension APIClient {
     }
 }
 
-/// "Was ist neu" (beta, 15 Oct 2026): a short sheet after the tour on app start or when the app comes back, while the
+/// "Was ist neu" (15 Oct 2026): a short sheet after the tour on app start or when the app comes back, while the
 /// server has entries this person hasn't seen. "Alles klar" marks them seen. Never over the tour, never for guests.
 struct WhatsNewSheet: View {
     let data: WhatsNew
@@ -40,7 +40,7 @@ struct WhatsNewSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.s5) {
-                    Text(L("Thanks for testing ToHuus. This changed since you last looked:"))
+                    Text(L("This changed since you last looked:"))
                         .font(.subheadline).foregroundStyle(Theme.ink2)
                         .fixedSize(horizontal: false, vertical: true)
                     ForEach(data.entries) { e in

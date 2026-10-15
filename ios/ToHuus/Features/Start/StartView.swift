@@ -515,7 +515,7 @@ struct SignUpView: View {
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .font(.body.monospaced())
-                        .accessibilityHint(L("Needed to create an account during the test."))
+                        .accessibilityHint(L("Needed to create an account right now."))
                 } header: {
                     Text(L("Access code"))
                 } footer: {
@@ -588,7 +588,7 @@ struct SignUpView: View {
                     if app.instance?.betaGift == nil {
                         Text(L("14 days of Plus for free, then Free unless you choose a plan. Nothing renews by itself."))
                     } else {
-                        Text(L("During the beta your household gets the plan as a gift. Nothing is charged."))
+                        Text(L("Right now every household gets the plan as a gift. Nothing is charged."))
                     }
                     Text(L("By creating an account you accept the terms and the privacy policy."))
                     LegalLinks().frame(maxWidth: .infinity, alignment: .leading)
@@ -644,7 +644,7 @@ struct SignUpView: View {
     }
 }
 
-/// Beta gate: "ToHuus ist gerade im kleinen Test. Du brauchst einen Zugangscode – frag gern per Mail nach." with the
+/// Sign-up gate: "Neue Konten gibt es gerade nur mit Zugangscode – frag gern per Mail danach." with the
 /// mail link (support address from /api/instance).
 struct BetaNote: View {
     @Environment(AppModel.self) private var app
@@ -654,7 +654,7 @@ struct BetaNote: View {
 
     var body: some View {
         VStack(alignment: compact ? .leading : .center, spacing: 4) {
-            Text(L("ToHuus is in a small test right now. You need an access code – feel free to ask by e-mail."))
+            Text(L("New accounts need an access code right now – feel free to ask by e-mail."))
                 .multilineTextAlignment(compact ? .leading : .center)
                 .fixedSize(horizontal: false, vertical: true)
             if let url = URL(string: "mailto:\(address)?subject=ToHuus%20Zugangscode") {

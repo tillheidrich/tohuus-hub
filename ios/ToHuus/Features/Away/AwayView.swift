@@ -714,7 +714,7 @@ private struct AwayPackTab: View {
                 TextField(L("Add something to pack …"), text: $text)
                     .submitLabel(.done)
                     .onSubmit { add() }
-                Button { add() } label: { Image(systemName: "plus.circle.fill").font(.title3) }
+                Button { add() } label: { Image(systemName: "plus.circle.fill").font(.title3).tapTarget() }
                     .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty)
                     .accessibilityLabel(L("Add"))
             }
@@ -806,6 +806,7 @@ private struct AwayPackTab: View {
             Button { Task { await act("PATCH", "items/\(i.id)", ["done": !i.done], nil) } } label: {
                 Image(systemName: i.done ? "checkmark.circle.fill" : "circle").font(.title3)
                     .foregroundStyle(i.done ? Theme.primary : Theme.ink3)
+                    .tapTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel(i.text)
@@ -921,14 +922,15 @@ private struct AwayKitchenTab: View {
                 ForEach(d.days ?? [], id: \.self) { day in
                     let here = d.meals.filter { $0.day == day }
                     HStack(alignment: .top) {
-                        Text(AwayText.day(day)).font(.subheadline.weight(.semibold)).frame(width: 96, alignment: .leading)
+                        // grows with Dynamic Type instead of cutting the date off
+                        Text(AwayText.day(day)).font(.subheadline.weight(.semibold)).fixedSize().frame(minWidth: 96, alignment: .leading)
                         VStack(alignment: .leading, spacing: 4) {
                             if here.isEmpty { Text(L("nothing planned")).font(.subheadline).foregroundStyle(Theme.ink3) }
                             ForEach(here) { m in
                                 HStack {
                                     Text(m.title).font(.subheadline)
                                     Button { Task { await act("DELETE", "meals/\(m.id)", nil, nil) } } label: {
-                                        Image(systemName: "xmark.circle").foregroundStyle(Theme.ink3)
+                                        Image(systemName: "xmark.circle").foregroundStyle(Theme.ink3).tapTarget()
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityLabel(L("Remove"))
@@ -936,7 +938,7 @@ private struct AwayKitchenTab: View {
                             }
                         }
                         Spacer()
-                        Button { addDay = AwayDayKey(day: day) } label: { Image(systemName: "plus") }
+                        Button { addDay = AwayDayKey(day: day) } label: { Image(systemName: "plus").frame(minWidth: 30, minHeight: 30) }
                             .buttonStyle(.bordered)
                             .accessibilityLabel(L("Add a meal"))
                     }
@@ -958,7 +960,7 @@ private struct AwayKitchenTab: View {
                 }
                 HStack {
                     TextField(L("Add to the holiday list …"), text: $item).submitLabel(.done).onSubmit { addItem() }
-                    Button { addItem() } label: { Image(systemName: "plus.circle.fill").font(.title3) }
+                    Button { addItem() } label: { Image(systemName: "plus.circle.fill").font(.title3).tapTarget() }
                         .disabled(item.trimmingCharacters(in: .whitespaces).isEmpty)
                         .accessibilityLabel(L("Add"))
                 }
@@ -1260,12 +1262,12 @@ private struct AwayHomeTab: View {
                             }
                             Spacer(minLength: 4)
                             Button { Task { await act("POST", "trips/\(id)/expired", ["product_id": x.productId, "action": "toss"], nil) } } label: {
-                                Image(systemName: "trash")
+                                Image(systemName: "trash").frame(minWidth: 30, minHeight: 30)
                             }
                             .buttonStyle(.bordered)
                             .accessibilityLabel(L("Toss"))
                             Button { Task { await act("POST", "trips/\(id)/expired", ["product_id": x.productId, "action": "keep"], nil) } } label: {
-                                Image(systemName: "checkmark")
+                                Image(systemName: "checkmark").frame(minWidth: 30, minHeight: 30)
                             }
                             .buttonStyle(.bordered)
                             .accessibilityLabel(L("Still good"))

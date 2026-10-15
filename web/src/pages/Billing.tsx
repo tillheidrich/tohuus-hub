@@ -45,7 +45,7 @@ export function BillingCard() {
             <dt>{t('Gift')}</dt>
             <dd>
               {s.gift.kind === 'beta'
-                ? t('Free during the beta – thank you for testing')
+                ? t('A gift for every household')
                 : s.gift.forever
                   ? t('For good')
                   : s.gift.until
@@ -122,7 +122,7 @@ export function BillingCard() {
       <RedeemCode />
       <p className="small muted" style={{ margin: 0 }}>
         {s.gift?.kind === 'beta'
-          ? t('During the beta nobody pays. When it ends, every household keeps what it has on its own – nothing is deleted.')
+          ? t('A gift from us – nothing is charged. When it ends, every household keeps what it has on its own – nothing is deleted.')
           : s.gift
             ? t('A gift from us – nothing is charged.')
             : t('Subscriptions are bought in the ToHuus iPhone app for now – one per household, everyone in it benefits. When a subscription ends, the household goes back to Free and nothing is deleted.')}
