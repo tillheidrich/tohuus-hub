@@ -92,9 +92,35 @@ enum PlaceIcon {
         case "sparkles": return "sparkles"
         case "wine", "cup-soda": return "wineglass"
         case "door", "door-open": return "door.left.hand.open"
+        // the rest of web/src/pages/PlacesSettings.tsx PLACE_ICONS (the icon picker in Settings › Places)
+        case "chest-freezer": return "snowflake.circle"
+        case "shelf": return "books.vertical"
+        case "drawer": return "tray.2"
+        case "wardrobe": return "cabinet"
+        case "lockers": return "lock.rectangle.stack"
+        case "jar": return "cup.and.saucer"
+        case "basket": return "basket"
+        case "washing-machine": return "washer"
+        case "toolbox": return "wrench.and.screwdriver"
+        case "cellar": return "stairs"
+        case "warehouse": return "building.2"
+        case "garage": return "car"
+        case "balcony": return "sun.max"
+        case "desk": return "table.furniture"
+        case "couch": return "sofa"
+        case "bed": return "bed.double"
+        case "house": return "house"
+        case "tag": return "tag"
         default: return "square.grid.2x2"
         }
     }
+
+    /// the icons offered for a place (web PLACE_ICONS, same order)
+    static let choices = [
+        "refrigerator", "snowflake", "chest-freezer", "archive", "shelf", "box", "drawer", "wardrobe", "lockers", "jar", "basket",
+        "cooking-pot", "bath", "sparkles", "washing-machine", "toolbox", "cellar", "warehouse", "garage", "balcony", "desk", "couch",
+        "bed", "door", "house", "package",
+    ]
 }
 
 struct CheckStackView: View {

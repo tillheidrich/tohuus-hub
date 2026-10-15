@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Who sees a card or code (server/lib/house-guide.ts Visibility). Admin lists carry it; the app edits the two
-/// everyday switches (everyone at home, babysitter links) and keeps the rest (guest level, single links) as it is.
+/// Who sees a card or code (server/lib/house-guide.ts Visibility). Admin lists carry it; HGVisibilityEditor edits all of
+/// it like the web: everyone at home, permanent guests from a level up, all babysitter links, or single links (codes
+/// with an end date).
 struct HGVisibility: Decodable, Sendable, Hashable {
     var members: Bool
     var guestLevel: String?
@@ -85,10 +86,8 @@ struct HouseCardEditor: View {
                     AreaField(area: $area, areas: areas)
                 }
                 HGCardMediaSection(api: api, cardId: card?.id, media: card?.media ?? [])
-                Section {
-                    Toggle(L("Everyone at home"), isOn: $vis.members)
-                    Toggle(L("All babysitter and house-sitter links"), isOn: $vis.sitters)
-                } header: { Text(L("Who sees it")) } footer: { Text(L("Cards are not secret – codes and passwords belong under Codes.")) }
+                HGVisibilityEditor(api: api, vis: $vis, code: false)
+                Section {} footer: { Text(L("Cards are not secret – codes and passwords belong under Codes.")) }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
                 if card != nil {
                     Section {
@@ -197,10 +196,7 @@ struct HouseCodeEditor: View {
                     AreaField(area: $area, areas: areas)
                     TextField(L("Note (optional, not secret)"), text: $note)
                 }
-                Section {
-                    Toggle(L("Everyone at home"), isOn: $vis.members)
-                    Toggle(L("All babysitter and house-sitter links"), isOn: $vis.sitters)
-                } header: { Text(L("Who sees it")) }
+                HGVisibilityEditor(api: api, vis: $vis, code: true)
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
                 if code != nil {
                     Section { Button(L("Delete code"), role: .destructive) { confirmDelete = true } }
@@ -290,6 +286,16 @@ enum HouseGuideLabels {
     static let topics = ["light", "heating", "blinds", "bins", "laundry", "tv", "kitchen", "kids", "emergency", "numbers", "wifi", "other"]
     static let kinds = ["door", "alarm", "garage", "wifi", "safe", "other"]
 
+    /// card kinds as section titles when grouped by kind (web: TYPE_LABEL)
+    static func typeTitle(_ t: String) -> String {
+        switch t {
+        case "voice": return L("Voice commands")
+        case "routine": return L("Routines")
+        case "contact": return L("Important numbers")
+        default: return L("Tips")
+        }
+    }
+
     static func topic(_ t: String) -> String {
         switch t {
         case "light": return L("Light")
@@ -316,6 +322,63 @@ enum HouseGuideLabels {
         case "safe": return L("Key safe")
         default: return L("Other code")
         }
+    }
+}
+
+/// Who sees this? (web: HouseGuide.tsx VisibilityEditor)
+private struct HGVisibilityEditor: View {
+    let api: APIClient
+    @Binding var vis: HGVisibility
+    /// codes: single links get an end date
+    let code: Bool
+    @State private var links: [GuestLink] = []
+
+    private static let levels: [(String, String)] = [
+        ("", L("No permanent guests")),
+        ("order", L("All permanent guests")),
+        ("stock", L("Guests from “stock”")),
+        ("recipes", L("Guests from “recipes”")),
+        ("family", L("Only guests at “family”")),
+    ]
+
+    var body: some View {
+        Section {
+            Toggle(L("Everyone who lives here"), isOn: $vis.members)
+            Picker(L("Permanent guests"), selection: Binding(get: { vis.guestLevel ?? "" }, set: { vis.guestLevel = $0.isEmpty ? nil : $0 })) {
+                ForEach(Self.levels.indices, id: \.self) { i in Text(Self.levels[i].1).tag(Self.levels[i].0) }
+            }
+            Toggle(L("All babysitter and house-sitter links"), isOn: $vis.sitters)
+        } header: { Text(L("Who sees this?")) }
+        .task { links = (try? await api.guestLinks()) ?? [] }
+        if !links.isEmpty {
+            Section {
+                ForEach(links) { l in
+                    let on = (vis.links ?? []).first { $0.id == l.id }
+                    Toggle(isOn: Binding(get: { on != nil }, set: { v in
+                        var list = vis.links ?? []
+                        if v { list.append(.init(id: l.id, until: nil)) } else { list.removeAll { $0.id == l.id } }
+                        vis.links = list
+                    })) { Label(l.name, systemImage: "link") }
+                    if code, let on {
+                        HStack {
+                            DatePicker(L("Until"), selection: Binding(
+                                get: { ServerDate.parse(on.until) ?? Date() },
+                                set: { d in setUntil(l.id, ServerDate.day(d)) }), displayedComponents: .date)
+                            if on.until != nil {
+                                Button { setUntil(l.id, nil) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.ink3) }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel(L("No end"))
+                            }
+                        }
+                        .font(.subheadline)
+                    }
+                }
+            } header: { Text(code ? L("Or only for these links, until a date:") : L("Or only for these links:")) }
+        }
+    }
+
+    private func setUntil(_ id: Int, _ until: String?) {
+        vis.links = (vis.links ?? []).map { $0.id == id ? .init(id: id, until: until) : $0 }
     }
 }
 

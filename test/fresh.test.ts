@@ -53,6 +53,70 @@ describe('shelf life after opening', () => {
   });
 });
 
+describe('typical shelf life of unopened products', () => {
+  const d = (name: string, cat: string | null = null) => shelf.defaultShelfDays(name, cat);
+  it('knows eggs, dairy, cheese, sausage and jam', () => {
+    expect(d('Bio Freilandeier M 10 St.')).toBe(21);
+    expect(d('Eier Größe L')).toBe(21);
+    expect(d('Vollmilch 3,5%')).toBe(7);
+    expect(d('H-Milch 1,5%')).toBe(90);
+    expect(d('Haferdrink Barista')).toBe(180);
+    expect(d('Naturjoghurt')).toBe(21);
+    expect(d('Parmigiano Reggiano')).toBe(90);
+    expect(d('Gouda jung in Scheiben')).toBe(21);
+    expect(d('Gouda am Stück')).toBe(30);
+    expect(d('Mozzarella')).toBe(14);
+    expect(d('Salami Milano')).toBe(30);
+    expect(d('Kochschinken')).toBe(10);
+    expect(d('Wiener Würstchen')).toBe(14);
+    expect(d('Hackfleisch gemischt')).toBe(1);
+    expect(d('Erdbeer Konfitüre extra')).toBe(365);
+    expect(d('Blütenhonig')).toBe(730);
+  });
+  it('does not guess for sweets, canned, frozen or dry goods', () => {
+    expect(d('Eiernudeln')).toBeNull();
+    expect(d('Schoko-Ostereier')).toBeNull();
+    expect(d('Vollmilch Schokolade')).toBeNull();
+    expect(d('Wiener Würstchen in der Dose')).toBeNull();
+    expect(d('TK Hähnchenbrust')).toBeNull();
+    expect(d('Spaghetti', 'pantry')).toBeNull();
+    expect(d('Irgendwas', 'chilled')).toBe(10);
+    expect(d('Apfelsaft naturtrüb')).toBeNull();
+    expect(d('Kokosmilch')).toBeNull();
+    expect(d('Passierte Tomaten')).toBeNull();
+    expect(d('Kräutertee')).toBeNull();
+    expect(d('Paprika edelsüß')).toBeNull();
+    expect(shelf.defaultOpenDays('Rote Linsen', null)).toBeNull();
+    expect(shelf.defaultOpenDays('Kichererbsen Dose', null)).toBe(3);
+  });
+  it('after opening: jam in the fridge, hard cheese longer than sliced', () => {
+    expect(shelf.defaultOpenDays('Erdbeer Konfitüre', null)).toBe(42);
+    expect(shelf.defaultOpenDays('Parmesan gerieben', null)).toBe(28);
+    expect(shelf.defaultOpenDays('Gouda Scheiben', null)).toBe(14);
+    expect(shelf.defaultOpenDays('Leberwurst fein', null)).toBe(7);
+    expect(shelf.defaultOpenDays('Blütenhonig', null)).toBeNull();
+    expect(shelf.defaultOpenDays('Thunfisch in Öl', null)).toBe(2);
+    expect(shelf.defaultOpenDays('Kidneybohnen Dose', null)).toBe(3);
+    expect(shelf.defaultOpenDays('Gewürzgurken', null)).toBe(30);
+    expect(shelf.defaultOpenDays('Milchreis', null)).toBe(3);
+    expect(shelf.defaultOpenDays('Olivenöl', null)).toBeNull();
+    expect(shelf.defaultOpenDays('Spaghetti', null)).toBeNull();
+    expect(shelf.defaultShelfDays('Tomatensauce Basilikum', null)).toBeNull();
+  });
+  it('marks the use-by after opening as estimated unless the household set its own days', async () => {
+    const id = catalog.createProduct({ name: 'Erdbeer Konfitüre', trackMode: 'count' });
+    catalog.adjustStock({ productId: id, delta: 1, bestBefore: '2027-09-01', reason: 'manual', silent: true });
+    const r = fresh.markOpened(id);
+    expect(r.use_by).toBe(shelf.addDays(catalog.localDay(0), 42));
+    expect(r.estimated).toBe(true);
+    expect(fresh.productFresh(id)!.open_days_estimated).toBe(true);
+    fresh.setShelf(id, { days_after_opening: 30 });
+    const f = fresh.productFresh(id)!;
+    expect(f.open_days_estimated).toBe(false);
+    expect(f.entries[0].use_by_estimated).toBe(false);
+  });
+});
+
 describe('consumption forecast', () => {
   const NOW = Date.parse('2026-10-10T12:00:00Z');
   const ago = (d: number) => new Date(NOW - d * 86400000).toISOString().replace('T', ' ').slice(0, 19);
@@ -109,6 +173,31 @@ describe('fresh actions on a real database', () => {
     // the opened pack is used first
     catalog.adjustStock({ productId: id, delta: -1, reason: 'consume', silent: true });
     expect(catalog.stockOf(id).filter((e) => e.opened_at && e.qty > 0)).toHaveLength(0);
+  });
+
+  it('a purchase without a printed date gets an estimated one; entering the date replaces it', () => {
+    const id = catalog.createProduct({ name: 'Freilandeier 10er', trackMode: 'count', locationId: fresh.fridgeLocationId() });
+    catalog.adjustStock({ productId: id, delta: 10, reason: 'purchase', silent: true });
+    const [e] = catalog.stockOf(id);
+    expect(e.best_before).toBe(shelf.addDays(catalog.localDay(0), 21));
+    expect(e.bb_estimated).toBe(1);
+    expect(fresh.productFresh(id)!.entries[0].bb_estimated).toBe(true);
+    // a passed estimate means "have a look", not "expired"
+    db.prepare('UPDATE stock SET best_before = ? WHERE id = ?').run(shelf.addDays(catalog.localDay(0), -2), e.id);
+    expect(catalog.productStatus(catalog.getProduct(id)!, catalog.stockOf(id), 3).status).toBe('expiring');
+    db.prepare('UPDATE stock SET bb_estimated = 0 WHERE id = ?').run(e.id);
+    expect(catalog.productStatus(catalog.getProduct(id)!, catalog.stockOf(id), 3).status).toBe('expired');
+    // a printed date is never overwritten, and own shelf_days win over the rules
+    const jam = catalog.createProduct({ name: 'Kirschkonfitüre', trackMode: 'count' });
+    catalog.adjustStock({ productId: jam, delta: 1, bestBefore: '2027-05-01', reason: 'purchase', silent: true });
+    expect(catalog.stockOf(jam)[0]).toMatchObject({ best_before: '2027-05-01', bb_estimated: 0 });
+    db.prepare('UPDATE products SET shelf_days = 5 WHERE id = ?').run(jam);
+    catalog.adjustStock({ productId: jam, delta: 1, reason: 'purchase', silent: true });
+    expect(catalog.stockOf(jam).map((x) => x.best_before)).toContain(shelf.addDays(catalog.localDay(0), 5));
+    // manual stock-taking stays undated
+    const cheese = catalog.createProduct({ name: 'Bergkäse', trackMode: 'count' });
+    catalog.adjustStock({ productId: cheese, delta: 1, reason: 'inventory', silent: true });
+    expect(catalog.stockOf(cheese)[0].best_before).toBeNull();
   });
 
   it('fill level: running low from "low" by default, or from "half" when the household chose so', () => {

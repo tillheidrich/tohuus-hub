@@ -141,6 +141,10 @@ extension Lossy: Encodable where T: Encodable {
     func encode(to encoder: Encoder) throws { try wrappedValue.encode(to: encoder) }
 }
 
+// lets types with a @Lossy property keep synthesised Equatable/Hashable
+extension Lossy: Equatable where T: Equatable {}
+extension Lossy: Hashable where T: Hashable {}
+
 extension KeyedDecodingContainer {
     func decode<T>(_ type: Lossy<T>.Type, forKey key: Key) throws -> Lossy<T> {
         (try? decodeIfPresent(type, forKey: key)) ?? Lossy(wrappedValue: [])
@@ -173,6 +177,22 @@ enum JSONCoding {
         let d = JSONDecoder()
         d.keyDecodingStrategy = .convertFromSnakeCase
         return d
+    }
+
+    /// Product bodies (GET /api/products, /api/products/:id) carry `date_kind` – the setting, null = automatic – next to
+    /// `dateKind`, the kind in effect. convertFromSnakeCase maps both to "dateKind" and keeps only one of them, so the
+    /// setting is renamed to `date_kind_setting` first (ProductExtra reads it from there).
+    static func splitDateKind(_ data: Data) -> Data {
+        func fix(_ v: Any) -> Any {
+            if let a = v as? [Any] { return a.map(fix) }
+            guard var o = v as? [String: Any], o["dateKind"] != nil, let setting = o["date_kind"] else { return v }
+            o["date_kind"] = nil
+            o["date_kind_setting"] = setting
+            return o
+        }
+        guard let obj = try? JSONSerialization.jsonObject(with: data),
+              let out = try? JSONSerialization.data(withJSONObject: fix(obj)) else { return data }
+        return out
     }
 
     static func encoder() -> JSONEncoder {

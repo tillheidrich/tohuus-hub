@@ -14,6 +14,7 @@ struct ToastMessage: Equatable, Identifiable {
 
 private struct ToastModifier: ViewModifier {
     @Binding var message: ToastMessage?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content.overlay(alignment: .bottom) {
@@ -30,17 +31,19 @@ private struct ToastModifier: ViewModifier {
                 .padding(Theme.Space.s3)
                 .background(Theme.block, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
                 .shadow(color: .black.opacity(0.2), radius: 10, y: 4)
-                .padding(.horizontal, Theme.Space.s4)
+                .padding(.leading, Theme.Space.s4)
+                // the round assistant button sits bottom right (MainTabView): keep "Rückgängig" out from under it
+                .padding(.trailing, Theme.Space.s4 + 56 + Theme.Space.s2)
                 .padding(.bottom, Theme.Space.s4)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                 .task(id: m.id) {
                     A11yTiming.announce(m.text)
                     await A11yTiming.hold(m.action == nil ? 3 : 6)
-                    if !Task.isCancelled, message?.id == m.id { withAnimation { message = nil } }
+                    if !Task.isCancelled, message?.id == m.id { Motion.perform { message = nil } }
                 }
             }
         }
-        .animation(.easeOut(duration: 0.2), value: message)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: message)
     }
 }
 

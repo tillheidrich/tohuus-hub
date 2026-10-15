@@ -49,7 +49,7 @@ DATA_DIR/
 | `MAIL_SMTP_PORT` | – | port of the inbound SMTP listener inside the container (e.g. `2525`, Coolify maps 25 to it) |
 | `MAIL_TLS_CERT_FILE`, `MAIL_TLS_KEY_FILE` | – | certificate for STARTTLS on the SMTP listener |
 | `MAIL_INBOUND_SECRET` | – | ≥ 16 characters; enables the webhook `POST /api/mail/inbound` |
-| `CLOUD_SIGNUP` | – | `open` \| `invite` \| `closed` (default **`invite`** – the beta gate, see [Beta gate](#beta-gate); old `true`/`false` = open/closed). Overridden by the back office setting `signup.mode` |
+| `CLOUD_SIGNUP` | – | `open` \| `invite` \| `closed` (default **`open`** since the final release of 15 Oct 2026, before `invite` – see [Beta gate](#beta-gate); old `true`/`false` = open/closed). Overridden by the back office setting `signup.mode` |
 | `SUPPORT_EMAIL` | – | address shown to ask for an access code (default `tohuus@tillheidrich.de`; back office setting `support.email` wins) |
 | `CLOUD_NAME` | – | name in `/api/instance` (default "ToHuus Cloud") |
 | `HOUSEHOLD_POOL_MAX`, `HOUSEHOLD_POOL_IDLE_MIN` | – | connection pool (64, 10) |
@@ -58,6 +58,7 @@ DATA_DIR/
 | `MIN_IOS_BUILD` | – | builds of the iPhone app below this number show only "Bitte aktualisiere ToHuus" (`/api/instance` → `minIosBuild`); set it after an API change older builds can't follow. `/api/instance` also carries `betaGift` (`'haushalt'\|'plus'\|null`, runtime setting `beta.gift`), so the app hides "14 Tage, dann Free" during the beta |
 | `BETA_ALLOWLIST` | – | Comma-separated addresses that may sign up without an access code, in addition to the allowlist in the back office (e.g. the App Review account on a fresh cloud) |
 | `BETA_GIFT` | – | `haushalt` or `plus`: every cloud household gets at least this plan during the beta. Fallback for the back-office setting `beta.gift` (the back office wins when set) |
+| `BETA_GIFT_EXCEPT` | – | Comma-separated household ids left out of the beta gift (they keep their own trial/plan). For the App Review household, so the reviewer sees the plans with StoreKit prices and can buy in the sandbox – see `docs/ios-app-review.md` |
 | `APPLE_BUNDLE_ID` | – | default `de.heidrichdigital.tohuus` |
 | `APPLE_APP_IDS` | – | comma-separated `<TeamID>.<bundle id>` for `webcredentials` in `/.well-known/apple-app-site-association`, default `FVS7WVTQ67.de.heidrichdigital.tohuus` |
 | `APPLE_ENVIRONMENTS` | – | StoreKit environments accepted for everyone, default `Production` |
@@ -239,7 +240,8 @@ helpers are shared with the self-host member passkeys (`server/lib/auth-passkeys
   means "try again").
 - **Register** (signed in, cookie session or app token): `POST /api/auth/passkeys/options { password }` – a fresh
   password check as for deleting a household (`confirmAccount`: wrong/missing → `400 { needPassword: true }`;
-  accounts without a password confirm with a fresh e-mail link → `400 { needEmailConfirm: true }`) → WebAuthn
+  accounts without a password confirm with a fresh e-mail link → `400 { needEmailConfirm: true }`; the iPhone app has
+  no browser session and sends `{ code }` instead, the 6-digit code from that mail) → WebAuthn
   creation options (`rp.id`, `user.name` = account e-mail, `excludeCredentials`). Then
   `POST /api/auth/passkeys { response, name? }` → `{ id }` (`409` if that credential is already saved).
 - **List / rename / delete**: `GET /api/auth/passkeys` → `[{ id, name, device_type, backed_up, created_at,
@@ -490,9 +492,10 @@ Back office › **Konten** (`server/routes/operator-accounts.ts`, `web/src/pages
 
 ## Beta gate
 
-`server/lib/beta.ts`. While ToHuus is in TestFlight nobody opens an account at the cloud domain without being let in.
+`server/lib/beta.ts`. Since the final release (15 Oct 2026) sign-up is **open** by default; the gate stays for when an
+operator wants it again (`invite` or `closed` in /betrieb › Einstellungen or `CLOUD_SIGNUP`).
 
-- **Modes**: `open` · `invite` (default) · `closed`. `GET /api/instance` → `signup: mode !== 'closed'`, `signupMode`,
+- **Modes**: `open` (default) · `invite` · `closed`. `GET /api/instance` → `signup: mode !== 'closed'`, `signupMode`,
   `support` (address to ask for a code).
 - **Gated** (only when a NEW account is created): `POST /api/cloud/signup` (web and app, body `betaCode`), Sign in with
   Apple in the app (`POST /api/auth/apple`, body `betaCode`) and on the web (`GET /api/auth/apple/start?code=…`, the

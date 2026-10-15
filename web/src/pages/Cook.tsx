@@ -1,4 +1,4 @@
-import { ArrowsClockwise, Camera, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Package, Plus, TextAa } from '@phosphor-icons/react';
+import { ArrowsClockwise, Camera, Cards, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Package, Plus, TextAa } from '@phosphor-icons/react';
 import { DemoTag, useDemoMarks } from './Samples';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { lang, t } from '../i18n';
 import { WeekPlan } from './Week';
 import { SwipeDeck } from './SwipeDeck';
+import { WeekMealDeckSheet } from './Decide';
 import { VotesCard } from './Plan2';
 import { WhatToEatPanel } from './WhatToEat';
 import { SwapRulesCard } from './RecipeVariant';
@@ -151,8 +152,19 @@ function IdeasView({ onAddRecipe }: { onAddRecipe: () => void }) {
   const deck = sugg.data ?? [];
   const cur = deck[idx % Math.max(1, deck.length)];
   const next = deck[(idx + 1) % Math.max(1, deck.length)];
+  const [weekDeck, setWeekDeck] = useState(false);
   return (
     <>
+      <button type="button" className="hcard deck-entry" onClick={() => setWeekDeck(true)}>
+        <span className="deck-entry-icon" aria-hidden="true">
+          <Cards size={22} />
+        </span>
+        <span className="grow">
+          <b>{t('What shall we eat this week?')}</b>
+          <span className="meta">{t('A few ideas, one at a time – yes puts it on a free evening.')}</span>
+        </span>
+      </button>
+      {weekDeck && <WeekMealDeckSheet onClose={() => setWeekDeck(false)} />}
       <CookIdeas />
       <CatalogNew />
       <WhatToEatPanel onAddRecipe={onAddRecipe} />

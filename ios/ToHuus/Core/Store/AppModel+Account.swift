@@ -1,8 +1,9 @@
 import Foundation
 
-/// Sign-in ways of the cloud-only app and sample data (package D, 1.0).
+/// Sign-in ways for ToHuus Cloud and sample data (package D, 1.0). An own server: Features/Start/ConnectKit.swift.
 extension AppModel {
-    /// The App Store app talks to ToHuus Cloud only. Debug builds may point it elsewhere (`-debugServer`).
+    /// ToHuus Cloud (the start screen's main path). Debug builds may point it elsewhere (`-debugServer`).
+    /// A self-hosted server comes in through "Eigener Server" (OwnServerView) with its own address.
     var cloudServer: URL {
         #if DEBUG
         if let raw = UserDefaults.standard.string(forKey: "debugServer"), let url = URL(string: raw) { return url }

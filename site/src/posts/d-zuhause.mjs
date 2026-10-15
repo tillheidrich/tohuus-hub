@@ -26,7 +26,7 @@ export default [
       ['So hilft ToHuus bei Wunschlisten',
         '<p>In ToHuus gibt es unter Wünsche eigene Wunschlisten und Merklisten. Jeder Wunsch kann ein Foto, mehrere Links mit Preis, eine Notiz und die Angabe „Wer könnte das schenken?“ haben. Wer etwas reserviert oder als gekauft markiert, sieht der Rest der Familie, die beschenkte Person sieht es nie. Soll die ganze Liste geheim bleiben, wählst du „Nur ich“ oder Ausgewählte.</p>'
         + '<p>Zum Teilen wählst du einzelne Wünsche oder alle aus und verschickst sie als Link oder als fertige Nachricht. Auf Wunsch lässt ToHuus weg, was schon reserviert oder gekauft ist, und die Nachricht verrät nie, wer etwas besorgt. Gäste sehen keine Wunschlisten. Wenn du etwas im Laden mitnehmen willst, setzt du es auf die Einkaufsliste, dort steht es privat und nur für die, die auch die Wunschliste sehen.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Darf das Kind die Wunschliste selbst sehen?', 'Ja, wenn ihr das wollt. Es sieht dann seine Wünsche, aber keine Reservierungen. Soll die Liste ganz geheim bleiben, teilt ihr sie nur mit den Erwachsenen.'],
@@ -73,7 +73,7 @@ export default [
       ['So hilft ToHuus beim Partyabend und im Alltag',
         '<p>In ToHuus heißt das Bring mir was. Wer gerade festsitzt, auf dem Sofa oder mit einem Kind auf dem Arm, tippt auf eine Kachel wie „Was Süßes“, „Was zu trinken“, „Was zum Knabbern“ oder „Aus dem Kühlschrank“ und wünscht sich eine Kleinigkeit von eurer Karte. Mit „Was anderes“ geht auch ein freier Wunsch wie eine Decke. Du fragst eine bestimmte Person oder alle, und wer kann, antwortet mit „Ich bring’s“ oder „Geht gerade nicht“. Niemand führt Buch, es gibt keine Punkte und keine Liste, wer was gebracht hat.</p>'
         + '<p>Für Besuch gibt es einen Link oder QR-Code ohne App und ohne Konto. Unter Bring mir was › Party startest du einen Partyabend. Die Gäste bestellen vom Party-Menü, du siehst, was bestellt ist und was noch da ist, und gezählte Sachen erscheinen nur, solange noch etwas da ist. Für einzelne Sachen legst du eine Höchstmenge pro Gast fest, etwa zwei Eis pro Kind, und die Party endet von selbst. Was fehlt, setzt du auf die gemeinsame <a href="../hilfe/einkaufsliste.html">Einkaufsliste</a>.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Wie viel Wasser brauche ich für eine Party?', 'Plant Wasser großzügiger als alles andere, mit und ohne Kohlensäure, und stellt zusätzlich Leitungswasser in Karaffen hin. Übrig gebliebenes Wasser hält sich lange und wird sowieso getrunken.'],
@@ -122,7 +122,7 @@ export default [
       ['So hilft ToHuus mit der Hausinfo',
         '<p>In ToHuus sammelst du unter Mehr › Hausinfo Karten mit allem, was Babysitter, Großeltern oder Gäste wissen müssen: WLAN, Smart Home, Notfallnummern, Müll, Haustiere, mit Fotos und kurzen Videos. Vorlagen helfen beim Anfangen, und pro Karte legst du fest, wer sie sieht. Mit Home Assistant übernimmt ToHuus die Sprachbefehle für Licht und Rollläden, nie aber Schlösser, Alarmanlagen, Kameras oder Garagentore.</p>'
         + '<p>Der <a href="../hilfe/babysitter.html">Babysitter-Link</a> funktioniert ohne App und ohne Konto, als Link oder QR-Code, auch offline lesbar und als A4-Blatt zum Ausdrucken. Du gibst ihm ein Ablaufdatum oder widerrufst ihn. Codes bleiben verdeckt, bis jemand auf „Anzeigen“ tippt, jedes Anzeigen wird festgehalten, und sie gehen nie an eine KI, an Home Assistant oder in einen Export.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Welche Notrufnummern braucht ein Babysitter?', 'Die 112 für Rettungsdienst und Feuerwehr, die 110 für die Polizei, den Giftnotruf eurer Region und die 116117 für den ärztlichen Bereitschaftsdienst. Dazu eure Handynummern und eine Person in der Nähe.'],
@@ -170,7 +170,7 @@ export default [
       ['So hilft ToHuus bei der Urlaubsübergabe',
         '<p>In ToHuus legst du pro Reise eine Urlaubsübergabe an. Jeder Punkt für Tier- und Pflanzensitter, etwa Füttern oder Gießen, bekommt einen Rhythmus und eine Tageszeit, dazu Fotos und kurze Videos. Die Übergabe sehen nur die Gäste, die du auswählst. Wer möchte, hakt ab, was erledigt ist, und nach der Reise nimmst du sie als Vorlage für das nächste Mal.</p>'
         + '<p>Die Person bekommt den Haushüten-Link. Er funktioniert wie der Babysitter-Link ohne App und ohne Konto, zeigt „Wo ist was?“ und deine Notizen zu Pflanzen, Post und Müll und endet am Tag nach eurer Rückkehr. Codes aus der <a href="../hilfe/hausinfo.html">Hausinfo</a> gibst du bis zu einem Datum frei, sie bleiben verdeckt, bis jemand auf „Anzeigen“ tippt.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Was gehört auf eine Checkliste für den Tiersitter?', 'Futter mit Menge und Uhrzeit, Wasser, Katzenklo oder Käfig, Medikamente, Gassirunde, Eigenheiten des Tiers und die Tierarztpraxis mit Notdienst. Dazu eure Erreichbarkeit und eine zweite Person in der Nähe.'],
@@ -217,7 +217,7 @@ export default [
       ['So geht ToHuus mit euren Daten um',
         '<p>Die ToHuus Cloud läuft auf Servern von Hetzner in Deutschland. Jeder Haushalt hat eine eigene, verschlüsselte Datenbank mit eigenem Schlüssel, Fotos und Bon-Dateien sind ebenfalls verschlüsselt. Es gibt kein Tracking, keine Werbung und keine Partnerlinks, weder in der App noch auf der Website, und eure Bons werden nicht verkauft und nicht für Marktforschung ausgewertet. Bon-Fotos liest ToHuus zuerst ohne KI, mit Texterkennung auf dem Server oder direkt auf dem iPhone. Die KI läuft nur über Mistral in Frankreich und lässt sich für den ganzen Haushalt oder für einzelne Personen abschalten, Liste, Vorschläge, Kochen und Geld laufen dann weiter.</p>'
         + '<p>Im Haushalt bleiben private Einträge, private Listen, persönliche Ausgaben und Gespräche mit dem Assistenten bei der Person, der sie gehören, mehr dazu unter <a href="../hilfe/wer-sieht-was.html">Wer sieht was?</a>. Unter Einstellungen › Daten &amp; Sicherung lädt ein Admin alle Daten eures Haushalts herunter. Beim Löschen eines Haushalts in der Cloud wird zuerst sein Schlüssel vernichtet. Wer alles selbst in der Hand haben will, kann ToHuus als Open Source selbst hosten und nutzt es dann als Web-App im Browser, die iPhone-App gibt es nur für die ToHuus Cloud.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Woran erkenne ich, ob eine App trackt?', 'Schaut in die Datenschutzangaben im App Store und in die Datenschutzerklärung. Werbung in der App, Partnerlinks und Formulierungen wie „Weitergabe an Partner“ sind deutliche Hinweise.'],

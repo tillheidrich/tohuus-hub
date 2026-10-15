@@ -19,6 +19,7 @@ struct ItemDetailSheet: View {
     @State private var me: MeLite?
     @State private var members: [Member] = []
     @State private var claimUser: Int?
+    @State private var ownerId: Int?
     // where to buy
     @State private var stores: [String] = []
     @State private var buyAtSuggestions: BuyAtSuggestions?
@@ -37,6 +38,8 @@ struct ItemDetailSheet: View {
             Form {
                 headerSection
                 if canEdit && (me?.claimsOn ?? true) && !members.isEmpty { claimSection }
+                if canEdit && !item.isChecked { placeSection }
+                if canEdit && ownerOffered { ownerSection }
                 Section(L("Note")) {
                     TextField(L("e.g. the big pack, ripe ones, for Sunday"), text: $note, axis: .vertical)
                         .lineLimit(1...3)
@@ -53,6 +56,7 @@ struct ItemDetailSheet: View {
                 } footer: {
                     Text(L("A wish like “rather oat milk” goes into the note."))
                 }
+                if canEdit && !hidden { ExtraToggleSection(api: store.api, item: item) { Task { await store.refreshList() } } }
                 photoSection
                 if canEdit {
                     Section {
@@ -97,6 +101,70 @@ struct ItemDetailSheet: View {
     }
 
     // MARK: sections
+
+    /// rows of the same aisle (for "up / down") and the lists to move to
+    private var siblings: [ShopItem] { store.list.sections.first { $0.items.contains { $0.id == item.id } }?.items ?? [] }
+    private var otherLists: [ListRef] { store.list.lists }
+    /// WG: "Für wen?" – shared or one person (only with at least two people, like the web)
+    private var ownerOffered: Bool {
+        (me?.home?["form"]?.string == "shared" || item.owner != nil) && members.filter { $0.kind != "guest" }.count >= 2
+    }
+
+    /// aisle, order inside the aisle and list (the menu way for what drag & drop does on the web)
+    @ViewBuilder private var placeSection: some View {
+        Section {
+            ShopChipFlow {
+                ForEach(ShopSectionKey.all, id: \.self) { key in
+                    ShopToggleChip(title: ShopSectionKey.label(key), systemImage: ShopSectionKey.icon(key), on: (item.section ?? "other") == key) {
+                        guard (item.section ?? "other") != key else { return }
+                        Task { await place(section: key) }
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+            if siblings.count > 1, let k = siblings.firstIndex(where: { $0.id == item.id }) {
+                HStack {
+                    Text(L("Order in the aisle")).font(.subheadline)
+                    Spacer()
+                    Button { Task { await place(neighbor: siblings[k - 1].id, after: false) } } label: {
+                        Label(L("Up"), systemImage: "arrow.up")
+                    }
+                    .disabled(k == 0)
+                    Button { Task { await place(neighbor: siblings[k + 1].id, after: true) } } label: {
+                        Label(L("Down"), systemImage: "arrow.down")
+                    }
+                    .disabled(k == siblings.count - 1)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            if otherLists.count > 1 {
+                Picker(L("On which list?"), selection: Binding(get: { item.listId ?? 0 }, set: { id in Task { await moveList(id) } })) {
+                    ForEach(otherLists) { l in Text(l.name).tag(l.id.int ?? 0) }
+                }
+            }
+        } header: {
+            Label(L("Aisle"), systemImage: "square.grid.2x2")
+        } footer: {
+            Text(L("Remembered for next time."))
+        }
+    }
+
+    private var ownerSection: some View {
+        Section {
+            ShopChipFlow {
+                ShopToggleChip(title: L("Shared"), on: ownerId == nil) { Task { await setOwner(nil) } }
+                ForEach(members.filter { $0.kind != "guest" }) { m in
+                    ShopToggleChip(title: m.id == me?.userId ? L("Me") : m.name, on: ownerId == m.id) { Task { await setOwner(m.id) } }
+                }
+            }
+            .padding(.vertical, 4)
+        } header: {
+            Label(L("For whom?"), systemImage: "person")
+        } footer: {
+            Text(L("A row for one person counts for them on the receipt, not for everyone."))
+        }
+    }
 
     private var headerSection: some View {
         Section {
@@ -258,6 +326,7 @@ struct ItemDetailSheet: View {
         note = item.note ?? ""
         substitute = item.substitute ?? "unset"
         claimUser = item.claim?.userId
+        ownerId = item.owner?.id
         stores = item.buyAt ?? []
         if let s = item.share {
             visibility = s.isPrivate ? .private : .discreet
@@ -275,6 +344,44 @@ struct ItemDetailSheet: View {
         me = await m
         members = await mem ?? []
         buyAtSuggestions = await sug
+    }
+
+    private func setOwner(_ userId: Int?) async {
+        let before = ownerId
+        ownerId = userId
+        Haptics.tick()
+        do {
+            try await store.api.setItemOwner(item.id, userId: userId)
+            store.touch("shopping")
+            await store.refreshList()
+        } catch {
+            ownerId = before
+            self.error = APIError.from(error).localizedDescription
+        }
+    }
+
+    private func place(section: String? = nil, neighbor: Int? = nil, after: Bool? = nil) async {
+        do {
+            if let section {
+                try await store.api.moveItem(item.id, section: section)
+            } else {
+                try await store.api.placeItem(item.id, neighborId: neighbor, after: after)
+            }
+            Haptics.tick()
+            store.touch("shopping")
+            await store.refreshList()
+            dismiss()
+        } catch { self.error = APIError.from(error).localizedDescription }
+    }
+
+    private func moveList(_ id: Int) async {
+        guard id != (item.listId ?? 0) else { return }
+        do {
+            try await store.api.moveItemToList(item.id, listId: id)
+            Haptics.tick()
+            await store.refreshList()
+            dismiss()
+        } catch { self.error = APIError.from(error).localizedDescription }
     }
 
     private func setClaim(_ userId: Int?) async {

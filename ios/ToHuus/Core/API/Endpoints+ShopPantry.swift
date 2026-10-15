@@ -98,7 +98,7 @@ extension APIClient {
 
     /// GET /api/products/:id once, decoded as ProductInfo and the extra fields
     func productFull(_ id: Int) async throws -> (ProductInfo, ProductExtra) {
-        let data = try await getData("api/products/\(id)")
+        let data = JSONCoding.splitDateKind(try await getData("api/products/\(id)"))
         return (try decode(ProductInfo.self, from: data), (try? decode(ProductExtra.self, from: data)) ?? ProductExtra())
     }
 

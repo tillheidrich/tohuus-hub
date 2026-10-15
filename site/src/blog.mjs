@@ -31,13 +31,14 @@ import einkauf from './posts/a-einkauf.mjs';
 import geld from './posts/b-geld.mjs';
 import kochen from './posts/c-kochen.mjs';
 import zuhause from './posts/d-zuhause.mjs';
+import aufgaben from './posts/e-aufgaben.mjs';
 
 export const BLOG_DIR = { de: 'ratgeber', en: 'blog' };
 
 export const BLOG_COPY = {
   de: {
-    title: 'Ratgeber', label: 'Ratgeber', h1: 'Einkauf, Kochen und Geld im Haushalt',
-    lede: 'Praktische Antworten für Familien, Paare und WGs: wie ihr Einkauf, Essensplanung und Haushaltsgeld gemeinsam organisiert.',
+    title: 'Ratgeber', label: 'Ratgeber', h1: 'Einkauf, Kochen, Geld und Aufgaben im Haushalt',
+    lede: 'Praktische Antworten für Familien, Paare, WGs und alle, die allein wohnen: wie ihr Einkauf, Essensplanung, Haushaltsgeld und Aufgaben organisiert.',
     desc: 'Ratgeber von ToHuus: Einkaufslisten teilen, Essen planen, Haushaltsgeld im Blick behalten, für Familien, Paare und WGs.',
     back: 'Alle Beiträge', other: 'English version', published: 'Veröffentlicht', updated: 'Aktualisiert', faq: 'Häufige Fragen',
     help: 'Passend aus der Hilfe', tryIt: 'ToHuus ausprobieren', tryText: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet.',
@@ -63,7 +64,7 @@ export const BLOG_COPY = {
 
 /** The posts: German ones in site/src/posts/<group>.mjs (one file per topic group), English ones to follow. */
 export const POSTS = {
-  de: [...einkauf, ...geld, ...kochen, ...zuhause],
+  de: [...einkauf, ...geld, ...kochen, ...zuhause, ...aufgaben],
   en: [],
 };
 

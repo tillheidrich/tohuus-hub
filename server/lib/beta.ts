@@ -2,7 +2,8 @@
  * Beta gate of ToHuus Cloud (docs/cloud.md › "Beta gate"). Cloud only.
  *
  * Signup mode: `open` (anyone), `invite` (an allowlisted e-mail address or a valid beta code), `closed` (nobody new).
- * Environment `CLOUD_SIGNUP=open|invite|closed` (old values: `true` = open, `false` = closed; unset = `invite`),
+ * Environment `CLOUD_SIGNUP=open|invite|closed` (old values: `true` = open, `false` = closed; unset = `open` since the
+ * final release of 15 Oct 2026 – before, unset meant `invite`),
  * overridden by the runtime setting `signup.mode` (back office).
  *
  * The gate applies to every way a NEW account is created: e-mail + password (web and app), Sign in with Apple (app
@@ -31,7 +32,8 @@ export function envSignupMode(env: NodeJS.ProcessEnv = process.env): SignupMode 
   const v = (env.CLOUD_SIGNUP ?? '').trim().toLowerCase();
   if (v === 'open' || v === 'true') return 'open';
   if (v === 'closed' || v === 'false') return 'closed';
-  return 'invite';
+  if (v === 'invite') return 'invite';
+  return 'open';
 }
 
 export function signupMode(): SignupMode {

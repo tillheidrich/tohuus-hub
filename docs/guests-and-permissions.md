@@ -26,11 +26,23 @@ A permanent guest (the aunt who is often there, a regular babysitter) is a norma
 
 Every guest, at every level, can manage their own account: profile picture and likes, password, passkeys, sessions, push devices, the tour, and the people directory.
 
-**Never for guests, at any level** (including `family`): settings, data and backups, members, invites, tokens, restore, guest links, channels, displays, kiosk, Telegram, demo data and reset, imports and receipts, spending and budgets, the receipt inbox and waste value, home care, printer setup, sign-in policy and SSO, Home Assistant, kids, people administration, receipt recognition, trips (including sitter links), share tokens and the share inbox, starting the tour for the household.
+**Never for guests, at any level** (including `family`): settings, data and backups, members, invites, tokens, restore, guest links, channels, displays, kiosk, Telegram, demo data and reset, imports and receipts, spending and budgets, the receipt inbox and waste value, home care and tasks (incl. "Wer hat was im Blick"), the extras allowance, printer setup, sign-in policy and SSO, Home Assistant, kids, people administration, receipt recognition, trips (including sitter links), share tokens and the share inbox, starting the tour for the household.
 
 On top of that, a request whose path contains one of these words is always refused for guests: `spend`, `spending`, `budget(s)`, `receipt(s)`, `bon(s)`, `import(s)`, `backup(s)`, `token(s)`, `restore`, `export.json`, `reset`, `settings`, `invite(s)`, `webdav`. Recipe imports (`/recipes/import/…`, `/recipes/open/…`) are the one exception; they follow the recipe rules.
 
 Discreet and private shopping items are hidden from guests, and the overview never shows a guest the import queue.
+
+### Tasks handed to a guest (15 Oct 2026)
+
+Grandma waters the plants and feeds the cats while you're on holiday; your aunt helps at home while you're in hospital, or looks after Felix today. A permanent guest can be given single tasks:
+- as their **doer**;
+- as the **stand-in** in "Zu Hause, solange … weg ist" on a trip. `homePlan` lists permanent guests as takers, marked `guest: true`.
+
+At every level except `paused`, the guest reaches only their own tasks, and only these two routes:
+- `GET /api/guest-tasks`: tasks where they are the doer or stand-in, with name, note, due date, checklist and the stand-in reason.
+- `POST /api/guest-tasks/:id/done`.
+
+The rest of Aufgaben stays closed. Heute shows them as "Deine Aufgaben hier", and each one reminds them on their own devices. A stand-in reminder goes out even while the household is away and otherwise quiet.
 
 ### Temporary overrides
 

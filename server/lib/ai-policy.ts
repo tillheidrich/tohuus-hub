@@ -42,6 +42,12 @@ export type AiOffReason = 'household' | 'person' | 'parents' | 'cloud' | 'consen
 
 /** Who receives the data when AI is used in ToHuus Cloud – shown in the consent text (keep in sync with ai.ts pin). */
 export const AI_PROCESSOR = 'Mistral AI (EU)';
+/**
+ * The consent text names everyone who receives the data (App Store guideline 5.1.2(i)): Mistral runs the model, OpenRouter
+ * routes the request (ai.ts). Same wording as the privacy policy (site/src/legal.mjs › "Sprachmodelle").
+ */
+export const aiProcessorLabel = (lang: string) =>
+  lang === 'de' ? 'Mistral AI (Frankreich), vermittelt über OpenRouter (USA)' : 'Mistral AI (France), routed through OpenRouter (USA)';
 
 /**
  * ToHuus Cloud: the operator can pause AI for the whole cloud (`/betrieb` › Einstellungen, runtime-settings.ts sets

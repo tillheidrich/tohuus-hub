@@ -1,9 +1,9 @@
 /**
- * The assistant's floating button (plan 2026-10-12): microphone + text, on every tab. Tiny on purpose – the sheet
+ * The assistant's floating button (plan 2026-10-12, round assistant icon since 14 Oct 2026): on every tab. Tiny on purpose – the sheet
  * itself is a separate chunk that loads on the first tap. Hidden when the server has no assistant
  * (`/api/instance` → features.assistant, or a 404 from the chat endpoint).
  */
-import { Microphone } from '@phosphor-icons/react';
+import { Sparkle } from '@phosphor-icons/react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { qc } from '../api';
 import { type Instance, isMissing, useInstance } from '../data';
@@ -43,32 +43,24 @@ export function AssistantFab() {
       window.removeEventListener('tohuus:assistant-gone', gone);
     };
   }, []);
-  // compact round mic once the page is scrolled – the label "Sprechen" only at the top
-  const [compact, setCompact] = useState(false);
-  useEffect(() => {
-    const on = () => setCompact(window.scrollY > 48);
-    on();
-    window.addEventListener('scroll', on, { passive: true });
-    return () => window.removeEventListener('scroll', on);
-  }, []);
   const available = hasAssistant(inst.data);
   if (!available && !open) return null;
   return (
     <>
       {available && (
         <button
-          className={compact ? 'assist-fab compact' : 'assist-fab'}
+          className="assist-fab compact"
           onClick={() => {
             setSeed({});
             setOpen(true);
           }}
           onMouseEnter={() => import('./Assistant')}
           onTouchStart={() => import('./Assistant')}
-          aria-label={t('Assistant: say or type what’s missing')}
+          aria-label={t('Assistant')}
+          title={t('Assistant')}
           aria-haspopup="dialog"
         >
-          <Microphone size={22} weight="fill" />
-          {!compact && <span>{t('Speak')}</span>}
+          <Sparkle size={24} weight="fill" />
         </button>
       )}
       {open && (

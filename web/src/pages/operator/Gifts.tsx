@@ -1,9 +1,10 @@
-// /betrieb › Geschenke: the beta gift for everyone and plan codes (server/lib/gifts.ts, docs/cloud.md › Gifts).
+// /betrieb › Geschenke: free licences as codes (a month, a year, for good) and a gift for every household (server/lib/gifts.ts, docs/cloud.md › Gifts).
 import { useState } from 'react';
 import { api, post, put, useApi } from '../../api';
 import { t } from '../../i18n';
 import { Seg, Skeleton, useToast } from '../../ui';
 import { Section, day, useRun } from './shared';
+import { OperatorHardship } from './Hardship';
 
 interface PlanCode {
   id: number;
@@ -36,7 +37,7 @@ export function OperatorGifts() {
   const run = useRun();
   const toast = useToast();
   const [plan, setPlan] = useState<'haushalt' | 'plus'>('plus');
-  const [kind, setKind] = useState<'days' | 'forever'>('forever');
+  const [kind, setKind] = useState<'month' | 'year' | 'forever' | 'days'>('year');
   const [days, setDays] = useState('365');
   const [count, setCount] = useState(1);
   const [maxUses, setMaxUses] = useState('1');
@@ -48,32 +49,33 @@ export function OperatorGifts() {
   const gift = d.betaGift ?? 'off';
   return (
     <div className="stack op-gap">
-      <Section title={t('Gift during the beta')}>
+      <OperatorHardship />
+      <Section title={t('A gift for every household')}>
         <p className="small muted">
-          {t('While this is on, every household in ToHuus Cloud gets this plan – nobody pays, nothing is bought. Switch it off when the beta ends; each household then has what it has on its own (trial, code, App Store, Free). Nothing is deleted.')}
+          {t('While this is on, every household in ToHuus Cloud gets this plan – nobody pays, nothing is bought. Switch it off and each household has what it has on its own again (trial, code, App Store, Free). Nothing is deleted.')}
         </p>
         <Seg<'off' | 'haushalt' | 'plus'>
-          label={t('Gift during the beta')}
+          label={t('A gift for every household')}
           value={gift}
           options={[
             ['off', t('off')],
             ['haushalt', t('Household plan')],
             ['plus', 'Plus'],
           ]}
-          onChange={(v) => run(() => put('/operator/settings', { 'beta.gift': v === 'off' ? null : v }), v === 'off' ? t('Beta gift switched off') : t('Every household now has {plan}', { plan: planName(v) }))}
+          onChange={(v) => run(() => put('/operator/settings', { 'beta.gift': v === 'off' ? null : v }), v === 'off' ? t('Gift for everyone switched off') : t('Every household now has {plan}', { plan: planName(v) }))}
         />
       </Section>
 
       <Section title={t('New gift codes')}>
         <p className="small muted">
-          {t('For after the beta, e.g. a year of Plus or Plus for good for the people who tested. An admin of the household redeems the code on the web (Settings › Plan). The iPhone app has no code field – Apple does not allow unlocking features with own codes there; it shows the plan the household has.')}
+          {t('Free licences for people who are interested: a month, a year or for good. Create one code per household and send it. An admin of the household redeems it on the web (Settings › Plan); it then works on every device, the iPhone included. The iPhone app has no code field – Apple does not allow unlocking features with own codes there.')}
         </p>
         <form
           className="op-form"
           onSubmit={async (e) => {
             e.preventDefault();
             const r = await run(
-              () => post<{ codes: PlanCode[] }>('/operator/gifts/codes', { plan, days: kind === 'forever' ? null : Number(days) || 365, count, maxUses: maxUses ? Number(maxUses) : null, note: note.trim() || null }),
+              () => post<{ codes: PlanCode[] }>('/operator/gifts/codes', { plan, days: kind === 'forever' ? null : kind === 'month' ? 31 : kind === 'year' ? 366 : Number(days) || 365, count, maxUses: maxUses ? Number(maxUses) : null, note: note.trim() || null }),
               t('{n} codes created', { n: count }),
             );
             if (r) {
@@ -88,7 +90,17 @@ export function OperatorGifts() {
           </div>
           <div className="field op-span">
             <span className="label">{t('How long')}</span>
-            <Seg<'days' | 'forever'> label={t('How long')} value={kind} options={[['forever', t('for good')], ['days', t('for a number of days')]]} onChange={setKind} />
+            <Seg<'month' | 'year' | 'forever' | 'days'>
+              label={t('How long')}
+              value={kind}
+              options={[
+                ['month', t('A month')],
+                ['year', t('A year')],
+                ['forever', t('Lifetime')],
+                ['days', t('Days')],
+              ]}
+              onChange={setKind}
+            />
           </div>
           {kind === 'days' && (
             <div className="field">
@@ -106,7 +118,7 @@ export function OperatorGifts() {
           </div>
           <div className="field op-span">
             <label htmlFor="gift-note">{t('Note (for you)')}</label>
-            <input id="gift-note" className="input" value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder={t('e.g. Thank you, beta testers')} />
+            <input id="gift-note" className="input" value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder={t('e.g. Mira, met at the market')} />
           </div>
           <button className="btn primary op-span">{t('Create codes')}</button>
         </form>

@@ -185,6 +185,8 @@ function fromServer(raw: any): Today {
   return {
     greeting: raw.greeting,
     platt: raw.platt ?? null,
+    away: raw.away ?? null,
+    calm: Boolean(raw.calm),
     household: typeof raw.household === 'string' ? raw.household : raw.household?.name,
     rhythm: raw.rhythm ?? [],
     list: {
@@ -210,6 +212,10 @@ export interface Today {
   greeting?: string;
   /** Plattdeutsch saying for this moment (server/lib/platt.ts), German households only. */
   platt?: { id: string; text: string; meaning: string; note: string } | null;
+  /** who is away today (server/lib/away-state.ts awayToday): me → the header says "Nich to Huus" */
+  away?: { me: { until: string } | null; others: { name: string; until: string }[] } | null;
+  /** nothing due, nothing waiting – Heute ends with "Fertig für heute" */
+  calm?: boolean;
   household?: string;
   rhythm: RhythmItem[];
   list: { open: number; recent: ListChange[] };

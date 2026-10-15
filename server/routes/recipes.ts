@@ -321,7 +321,7 @@ r.get('/plan', (req, res) => {
 });
 r.post('/plan', (req, res) => {
   const b = z.object({ day: z.string().regex(dayRe), recipe_id: z.number().nullable().optional(), title: z.string().max(120).optional(), slot: z.enum(['mittag', 'abend']).default('abend'), note: z.string().max(200).nullable().optional() }).parse(req.body);
-  res.json({ id: addPlan(b) });
+  res.json({ id: addPlan({ ...b, added_by: req.actor?.name ?? null }) });
 });
 r.patch('/plan/:id', (req, res) => {
   const b = z.object({ day: z.string().regex(dayRe).optional(), cooked: z.boolean().optional() }).parse(req.body);

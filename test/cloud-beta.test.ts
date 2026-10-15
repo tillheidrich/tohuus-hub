@@ -120,7 +120,9 @@ afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
 describe('beta gate', () => {
   it('defaults to invite in the cloud and says so in /api/instance', async () => {
-    expect(beta.envSignupMode({} as NodeJS.ProcessEnv)).toBe('invite');
+    // final release (15 Oct 2026): unset = open
+    expect(beta.envSignupMode({} as NodeJS.ProcessEnv)).toBe('open');
+    expect(beta.envSignupMode({ CLOUD_SIGNUP: 'invite' } as NodeJS.ProcessEnv)).toBe('invite');
     expect(beta.envSignupMode({ CLOUD_SIGNUP: 'true' } as NodeJS.ProcessEnv)).toBe('open');
     expect(beta.envSignupMode({ CLOUD_SIGNUP: 'false' } as NodeJS.ProcessEnv)).toBe('closed');
     const i = await new Client().get('/api/instance');

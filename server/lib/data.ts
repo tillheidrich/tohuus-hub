@@ -93,6 +93,25 @@ function personalFilter(name: string, viewer: number | null): ((r: Record<string
   if (name === 'share_items')
     return (r) => r.visibility !== 'private' || r.owner_id == null || (viewer != null && (r.owner_id === viewer || parseIds(String(r.share_with ?? '[]')).includes(viewer)));
   if (name === 'shopping_lists') return (r) => mayUseList(r as never, viewer);
+  // private tasks ("nur für mich", care.ts) and their history: only their owner's export
+  if (name === 'care_tasks') return (r) => r.visibility !== 'private' || (viewer != null && r.owner_user_id === viewer);
+  if (name === 'care_log') {
+    const hidden = new Set(
+      (db.prepare(`SELECT id FROM care_tasks WHERE visibility = 'private' AND (owner_user_id IS NULL OR owner_user_id != ?)`).all(viewer ?? -1) as { id: number }[]).map((x) => x.id),
+    );
+    return (r) => !hidden.has(Number(r.task_id));
+  }
+  // Im Kopf (mind.ts): private thoughts and thoughts hidden from the viewer ("Geschenk für Mira") stay out
+  if (name === 'mind_items')
+    return (r) => viewer != null && (r.user_id === viewer || (r.visibility === 'household' && !parseIds(String(r.hide_from ?? '[]')).includes(viewer)));
+  // Für wen ich da bin (carefor.ts, health data): a private person and their log only in their owner's export
+  if (name === 'cared_for') return (r) => r.visibility === 'household' || (viewer != null && r.owner_user_id === viewer);
+  if (name === 'cared_for_log') {
+    const hidden = new Set(
+      (db.prepare(`SELECT id FROM cared_for WHERE visibility = 'private' AND owner_user_id != ?`).all(viewer ?? -1) as { id: number }[]).map((x) => x.id),
+    );
+    return (r) => !hidden.has(Number(r.cared_for_id));
+  }
   const wish = wishExportFilter(name, viewer);
   if (wish) return wish;
   return null;

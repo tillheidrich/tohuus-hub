@@ -120,6 +120,7 @@ struct GuestLink: Decodable, Sendable, Identifiable, Hashable {
     var note: String?
     var expiresAt: String?
     var createdAt: String?
+    var lastSeenAt: String?
 }
 
 /// POST /api/guest-links, POST /api/guest-links/:id/rotate → { token, url }

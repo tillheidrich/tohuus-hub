@@ -14,7 +14,7 @@ export const home: Record<string, string> = {
   New: 'Neu',
   'Water filter, smoke detectors, descaling, tyres, passports: the things nobody keeps in their head. One tap when done – the next date is set automatically.':
     'Wasserfilter, Rauchmelder, Entkalken, Reifen, Ausweise: das, was niemand im Kopf behält. Ein Tipp, wenn’s erledigt ist – der nächste Termin kommt von selbst.',
-  'No tasks yet': 'Noch keine Fristen',
+  'No tasks yet': 'Noch keine Aufgaben',
   'Pick a few from the suggestions below – one tap each. You can adjust the interval later.':
     'Wähl unten ein paar Vorschläge aus – je ein Tipp. Das Intervall kannst du später anpassen.',
   Due: 'Fällig',

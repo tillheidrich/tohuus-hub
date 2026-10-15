@@ -38,7 +38,7 @@ export function addClient(res: Response, guest = false) {
   });
 }
 
-export type Topic = 'stock' | 'products' | 'shopping' | 'recipes' | 'imports' | 'orders' | 'notifications' | 'settings' | 'care' | 'away' | 'tour' | 'wishes';
+export type Topic = 'stock' | 'products' | 'shopping' | 'recipes' | 'imports' | 'orders' | 'notifications' | 'settings' | 'care' | 'away' | 'tour' | 'wishes' | 'mind';
 
 /** In-process listeners (e.g. the Home Assistant to-do sync reacts to shopping changes). */
 const listeners = new Set<(topics: Topic[]) => void>();

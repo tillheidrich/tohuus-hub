@@ -69,7 +69,7 @@ export const share: Record<string, string> = {
     'Installiere die App (Browsermenü → „Zum Startbildschirm“ oder „Installieren“). Danach steht {app} im Teilen-Menü jeder App.',
   'iPhone and iPad': 'iPhone und iPad',
   'iOS doesn’t offer the share menu to web apps. A shortcut with your personal key does the job – it can only put things on the shopping list.':
-    'iOS bietet Web-Apps das Teilen-Menü nicht an. Ein Kurzbefehl mit deinem persönlichen Schlüssel übernimmt das – er kann nur Dinge auf die Einkaufsliste setzen.',
+    'iOS bietet Web-Apps das Teilen-Menü nicht an. Ein Kurzbefehl mit deinem persönlichen Schlüssel übernimmt das – er kann nur Sachen auf die Einkaufsliste setzen.',
   'Your key (shown only once)': 'Dein Schlüssel (wird nur einmal angezeigt)',
   'Open the Shortcuts app → “+” → name it “To the list”.': 'Öffne die App Kurzbefehle → „+“ → nenn ihn „Auf die Liste“.',
   'Tap the “i” (details) → turn on “Show in Share Sheet”, accept Text and URLs.': 'Tipp auf das „i“ (Details) → „Im Share-Sheet anzeigen“ einschalten, Text und URLs annehmen.',

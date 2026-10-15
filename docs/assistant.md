@@ -74,8 +74,12 @@ Four switches, enforced centrally in `server/lib/ai.ts` (`chat()`, `transcribe()
 | Consent (ToHuus Cloud only) `ai.consent` | `user_prefs` per person; household setting `ai.consent` when an admin agrees | each person for themselves (`PATCH { consent }`); an admin's consent also covers the household | **off** until agreed – App Store guideline 5.1.2(i) |
 
 **Consent in ToHuus Cloud** (13 Oct 2026): before the first model request with a person's data, that person agrees
-once (iPhone: a one-time sheet after sign-in and Mehr › Mit oder ohne KI; web: Einstellungen › Zugänge & KI). The text
-names the receiver (`AI_PROCESSOR` in ai-policy.ts: Mistral AI (EU), no training; the app and website name only Mistral – OpenRouter is the API in between and stays listed in the privacy policy as a processor). Requests
+once (iPhone: a one-time sheet after sign-in per person and household, a hint with the consent inside the assistant
+until they decide, and Mehr › Mit oder ohne KI; web: Einstellungen › Zugänge & KI). The text names every receiver
+(`aiProcessorLabel()` in ai-policy.ts, sent as `consent.processor` in the request language: "Mistral AI (Frankreich),
+vermittelt über OpenRouter (USA)" / "Mistral AI (France), routed through OpenRouter (USA)"; since 14 Oct 2026 –
+App Store guideline 5.1.2(i) asks to disclose each third party that receives personal data, and OpenRouter does, see
+`docs/ios-app-review.md`), no training. Requests
 of a person use the person's consent; children and background jobs (receipts by mail) use the household's, given by an
 admin. Without it the reason is `consent` and every feature takes its path without a model. The operator's catalogue
 drafts in `/betrieb` carry no household data and are not affected (`runAsAiActor({ operator: true })`). In the cloud a
@@ -238,3 +242,20 @@ Recordings are never stored: they stay in memory for the transcription and are d
 | `VISION_BASE_URL`, `VISION_API_KEY`, `VISION_MODEL` | older installs; used when no `AI_*` is set (then no audio model unless `AI_MODEL_AUDIO`) |
 
 Every request to OpenRouter carries `provider: { order: ["mistral"], allow_fallbacks: false, data_collection: "deny" }`. Timeouts 60 s (vision 120 s, audio 90 s), two retries with backoff for 429/5xx/timeouts. At start the server checks on OpenRouter's `/models` that the vision model accepts images and logs a warning if not.
+
+
+## Im Kopf, Rückblick, Unterwegs, Gäste (15 Oct 2026, `server/lib/assistant-home.ts`)
+
+Topic `tasks` brings these tools along. Words like "im Kopf", "geschafft", "Dienstreise", "wer ist weg" or "Oma" also select the topic.
+
+| Tool | What |
+|---|---|
+| `mind_list` | Thoughts the household shared, open or done on the side. Private thoughts and thoughts hidden from the viewer never. |
+| `mind_add` | Write down a thought or something done on the side (`done`, `done_by`, a soft `due`, `only_me`), with undo. |
+| `review` | Week or month: the household part, the tasks done together and the speaker's own numbers. No personal lists, never "für wen ich da bin". |
+| `away_status` | Who is away until when, and what happens with the tasks at home. A hospital stay is just "away", without its name or place. |
+| `home_plan_set` | Someone at home or a household guest takes a task, it waits, or it goes back to usual. Only after a yes, with undo. |
+
+- `task_add` / `task_assign`: `doer` may be a household guest ("Oma gießt die Blumen"). `keeps_in_mind` stays for members only.
+- General questions about household tasks ("wie oft Bettwäsche wechseln?") are answered briefly as a rule of thumb, then the assistant offers to make a task of it. No medical, legal or care advice. This instruction is only in the prompt with the tasks topic.
+- `app_help` knows Im Kopf, Rückblick, Abendfrage, Für wen ich da bin, guests helping, swiping and absences of single people.

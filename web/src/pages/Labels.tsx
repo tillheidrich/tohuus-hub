@@ -29,6 +29,7 @@ const KIND_HINT: Record<Exclude<Kind, 'boxes'>, string> = {
 };
 
 /** Printable A4 sheet of QR labels. Codes are random ids mapped on the server; scanning needs a household login. */
+
 export function Labels() {
   const [sp, setSp] = useSearchParams();
   const kind = (['product', 'location', 'care', 'boxes'].includes(sp.get('kind') ?? '') ? sp.get('kind') : 'product') as Kind;

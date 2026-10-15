@@ -41,7 +41,7 @@ export const people: Record<string, string> = {
   'Order & shopping list': 'Bestellen & Einkaufsliste',
   'Can order from the sofa and use the shopping list. Sees nothing else.': 'Kann vom Sofa bestellen und die Einkaufsliste nutzen. Sieht sonst nichts.',
   '+ Stock & where is what': '+ Vorrat & Wo ist was',
-  'Also sees what is in the house and where things are, and can take things out.': 'Sieht auch, was im Haus ist und wo es liegt, und kann Dinge austragen.',
+  'Also sees what is in the house and where things are, and can take things out.': 'Sieht auch, was im Haus ist und wo es liegt, und kann Sachen austragen.',
   '+ Recipes & week plan': '+ Rezepte & Wochenplan',
   'Also sees recipes, the week plan and what to eat, and can rate dishes.': 'Sieht auch Rezepte, Wochenplan und „Was essen wir?“ und kann Gerichte bewerten.',
   'Like family': 'Wie Familie',

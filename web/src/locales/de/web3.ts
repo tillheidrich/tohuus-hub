@@ -107,7 +107,6 @@ export const web3: Record<string, string> = {
   // holiday handover (Handover.tsx)
   "Animals": "Tiere",
   "Bins": "Müll",
-  "Home": "Wohnung",
   "morning": "morgens",
   "midday": "mittags",
   "evening": "abends",
@@ -222,10 +221,23 @@ export const web3: Record<string, string> = {
   'Summaries and reminders by mail, as chosen above. Every such mail has a link to unsubscribe.': 'Zusammenfassungen und Erinnerungen per Mail, so wie oben eingestellt. In jeder dieser Mails steht ein Link zum Abbestellen.',
   'You agreed to AI': 'Du hast der KI zugestimmt',
   'Use AI? You decide.': 'KI nutzen? Du entscheidest.',
-  'When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.':
-    'Wenn du KI nutzt (freie Sätze an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du geschrieben oder fotografiert hast, an {processor}. Es wird nicht zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter.',
+  "When you use AI (free sentences and voice messages to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you write, say or photograph to {processor} – together with what the answer needs from your household, such as the list, stock or recipes. Allergies and children’s details only if your household allows it separately. Nothing is used to train models. Without AI everything else keeps working.":
+    "Wenn du KI nutzt (freie Sätze und Sprachnachrichten an den Assistenten, Fotos von Bons und Kühlschrank, Rezept-Importe), schickt ToHuus, was du schreibst, sagst oder fotografierst, an {processor} – zusammen mit dem, was die Antwort aus eurem Haushalt braucht, etwa Liste, Vorrat oder Rezepte. Allergien und Angaben zu Kindern nur, wenn euer Haushalt das extra erlaubt. Nichts davon wird zum Training von Modellen genutzt. Ohne KI funktioniert alles andere weiter.",
   Privacy: 'Datenschutz',
   'Withdraw consent': 'Zustimmung zurückziehen',
   'Agree and use AI': 'Zustimmen und KI nutzen',
   'Receipts by mail and children use AI only after an admin agreed.': 'Bons per Mail und Kinder nutzen KI erst, wenn ein Admin zugestimmt hat.',
+  // final release (15 Oct 2026): free licences as codes, no beta wording
+  'A gift for every household': 'Geschenk für alle Haushalte',
+  'Gift for everyone switched off': 'Geschenk für alle ausgeschaltet',
+  'A month': 'Ein Monat',
+  'A year': 'Ein Jahr',
+  'Lifetime': 'Für immer',
+  'Free licences for people who are interested: a month, a year or for good. Create one code per household and send it. An admin of the household redeems it on the web (Settings › Plan); it then works on every device, the iPhone included. The iPhone app has no code field – Apple does not allow unlocking features with own codes there.':
+    'Kostenlose Lizenzen für Interessierte: ein Monat, ein Jahr oder für immer. Leg einen Code pro Haushalt an und schick ihn los. Eine Admin-Person des Haushalts löst ihn im Web ein (Einstellungen › Abo); danach gilt er auf allen Geräten, auch auf dem iPhone. Die iPhone-App hat kein Code-Feld – Apple erlaubt dort keine eigenen Freischaltcodes.',
+  'e.g. Mira, met at the market': 'z. B. Mira, vom Markt',
+  'While this is on, every household in ToHuus Cloud gets this plan – nobody pays, nothing is bought. Switch it off and each household has what it has on its own again (trial, code, App Store, Free). Nothing is deleted.':
+    'Solange das an ist, bekommt jeder Haushalt in der ToHuus Cloud diesen Plan – niemand zahlt, nichts wird gekauft. Schaltest du es aus, hat jeder Haushalt wieder, was er selbst hat (Testzeit, Code, App Store, Free). Gelöscht wird nichts.',
+  'A gift from us – nothing is charged. When it ends, every household keeps what it has on its own – nothing is deleted.':
+    'Ein Geschenk von uns – es wird nichts abgebucht. Endet es, behält jeder Haushalt, was er selbst hat – gelöscht wird nichts.',
 };

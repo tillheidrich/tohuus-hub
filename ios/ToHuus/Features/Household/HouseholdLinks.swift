@@ -1,30 +1,76 @@
 import SwiftUI
 
-/// Entry points in "Mehr" › Haushalt: people, invitations, what ToHuus remembers (kept out of SettingsView so the
-/// shared file only gets one line).
-struct HouseholdLinks: View {
+/// Mehr (UX benchmark 2.3, docs/design/ux-benchmark-2026-10-14.md): the household and the devices groups of the one
+/// Mehr list; SettingsView adds the profile row, search, settings and help. What used to be "Rund ums Zuhause",
+/// "Bons & Rezepte" lives in its tab now (Zuhause, Geld, Kochen, Einkauf). Same filters as the web (guest level and the
+/// switched-off areas of "Was nutzt ihr?"). Every entry is native.
+struct MoreSections: View {
     @Environment(AppModel.self) private var app
+    let store: ServerStore
     let api: APIClient
     @State private var open: String?
+    @State private var showFind = false
+    @State private var showCheck = false
+    @State private var findProduct: ProductKey?
 
     var body: some View {
         Group {
-            NavigationLink { HouseholdView(api: api) } label: { Label(L("People & likes"), systemImage: "person.2") }
-            NavigationLink { InvitesView(api: api) } label: { Label(L("Invite someone"), systemImage: "person.badge.plus") }
-            NavigationLink { MemoryView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "text.book.closed") }
-            // "Bring mir was" needs someone at home to ask: hidden for a household of one and when switched off
-            if !app.singleHousehold && app.moduleOn("treats") {
-                NavigationLink { TreatsView(api: api) } label: { Label(L("For me – ask for something"), systemImage: "heart") }
-            }
-            NavigationLink { GuestLinksView(api: api) } label: { Label(L("Guest links"), systemImage: "link") }
-            // not native yet – the web pages, signed in (WebPageView); guests see only the handover shared with them
-            if app.isGuest {
-                NavigationLink { WebPageView(api: api, path: "/uebergabe", title: L("Handover")) } label: { Label(L("Handover"), systemImage: "suitcase") }
-            } else {
-                NavigationLink { WebPageView(api: api, path: "/urlaub", title: L("Trip / away")) } label: { Label(L("Trip / away"), systemImage: "suitcase") }
-                if app.moduleOn("homeinfo") {
-                    NavigationLink { WebPageView(api: api, path: "/pflege", title: L("Home & care")) } label: { Label(L("Home & care"), systemImage: "wrench.and.screwdriver") }
+            // Haushalt: the people and the guests (UX benchmark 2.3 – one list, every function at most two taps away)
+            Section(L("Household")) {
+                if allows("/einstellungen?tab=members") {
+                    NavigationLink { HouseholdView(api: api) } label: { Label(L("People"), systemImage: "person.2") }
+                    // GET/POST /api/invites are for admins (server/routes/invites.ts) – a member would only see "forbidden"
+                    if !app.isGuest && app.isAdmin {
+                        NavigationLink { InvitesView(api: api) } label: { Label(L("Invite someone"), systemImage: "person.badge.plus") }
+                    }
                 }
+                if allows("/bar") {
+                    NavigationLink { GuestsPartyView(store: store) } label: { Label(L("Guests & party"), systemImage: "wineglass") }
+                }
+                if showTreats {
+                    NavigationLink { TreatsView(api: api) } label: { Label(L("Treats"), systemImage: "hand.raised") }
+                }
+                if allows("/merkt-sich") {
+                    NavigationLink { MemoryView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "text.book.closed") }
+                }
+            }
+            // permanent guests: what the Zuhause tab shows members (Hausinfo, Wo ist was?) and their handover
+            if app.isGuest {
+                Section(L("Around the home")) {
+                    if allows("/wo") {
+                        Button { showFind = true } label: { Label(L("Where’s what?"), systemImage: "mappin.and.ellipse") }
+                            .foregroundStyle(Theme.ink)
+                    }
+                    if allows("/hausinfo") {
+                        NavigationLink { HouseGuideView() } label: { Label(L("House info"), systemImage: "info.circle") }
+                    }
+                    if allows("/uebergabe") {
+                        NavigationLink { HandoverGuestView(api: api) } label: { Label(L("Handover"), systemImage: "suitcase") }
+                    }
+                }
+            }
+            // Geräte: everything that connects ToHuus to other things
+            if !app.isGuest {
+                Section(L("Devices & connections")) {
+                    NavigationLink { IntegrationsHubView(api: api) } label: { Label(L("Connections"), systemImage: "point.3.connected.trianglepath.dotted") }
+                    NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
+                    if allows("/etiketten") {
+                        NavigationLink { LabelsView(api: api) } label: { Label(L("QR labels"), systemImage: "qrcode") }
+                    }
+                    NavigationLink { SignedInDevicesView(api: api) } label: { Label(L("Signed-in devices"), systemImage: "laptopcomputer.and.iphone") }
+                }
+            }
+        }
+        .sheet(isPresented: $showFind) { FindView(store: store) { id in
+                showFind = false
+                // the next sheet only after this one has gone
+                Task { try? await Task.sleep(nanoseconds: 500_000_000); findProduct = ProductKey(id: id) }
+            } }
+        .sheet(isPresented: $showCheck) { QuickCheckView(store: store) }
+        .sheet(item: $findProduct) { p in
+            NavigationStack {
+                ProductDetailView(productId: p.id, store: store)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { findProduct = nil } } }
             }
         }
         .sheet(item: Binding(get: { open.map(DebugKey.init) }, set: { open = $0?.id })) { k in
@@ -34,20 +80,75 @@ struct HouseholdLinks: View {
                 case "memory": MemoryView(api: api)
                 case "treats": TreatsView(api: api)
                 case "guestlinks", "guestlink-new": GuestLinksView(api: api)
-                case "house", "housecard-new", "housecard-edit", "housecode-new": HouseGuideView()
+                case "house", "housecard-new", "housecard-edit", "housecode-new", "house-templates", "house-log": HouseGuideView()
+                case "care": CareView(api: api)
+                case "away": AwayView(store: store)
                 default: HouseholdView(api: api)
                 }
             }
         }
         .onAppear {
             #if DEBUG
-            // simulator checks: -debugMore people | invites | memory | treats | guestlinks | house… (with -debugSettings YES)
-            if open == nil, let d = UserDefaults.standard.string(forKey: "debugMore"), ["people", "invites", "memory", "treats", "guestlinks", "guestlink-new", "house", "housecard-new", "housecard-edit", "housecode-new"].contains(d) {
+            // simulator checks: -debugMore people | invites | memory | treats | guestlinks | house… | care | away (with -debugSettings YES)
+            if open == nil, let d = UserDefaults.standard.string(forKey: "debugMore"),
+               ["people", "invites", "memory", "treats", "guestlinks", "guestlink-new", "house", "housecard-new", "housecard-edit",
+                "housecode-new", "house-templates", "house-log", "care", "away"].contains(d) {
                 open = d
             }
             #endif
         }
     }
+
+    /// "Bring mir was" needs someone at home to ask: hidden for a household of one and when switched off
+    private var showTreats: Bool { !app.singleHousehold && allows("/bestellen") }
+
+    private func allows(_ path: String) -> Bool {
+        MoreAccess.guestAllows(app.isGuest ? (app.guestLevel ?? "paused") : nil, path) && MoreAccess.moduleAllows(app.modules, path)
+    }
+}
+
+/// Port of web/src/people/access.ts `guestAllows` and web/src/nav.tsx `moduleOfPath` – keep the three in step
+/// (server/lib/people-policy.ts is the source of truth).
+enum MoreAccess {
+    static func guestAllows(_ level: String?, _ path: String) -> Bool {
+        guard let level else { return true }
+        if level == "paused" { return false }
+        let p = path.split(separator: "?").first.map(String.init) ?? path
+        if p == "/einkauf/wuensche" || p.hasPrefix("/einkauf/wuensche/") { return false }
+        let order = ["/bestellen", "/einkauf", "/einstellungen", "/hilfe", "/hausinfo", "/uebergabe", "/so-funktioniert-tohuus", "/gut-zu-wissen"]
+        let stock = ["/", "/bestand", "/wo", "/abgleich", "/scan", "/q/"]
+        let recipes = ["/kochen", "/rezepte", "/lieblinge"]
+        let familyDeny = ["/import", "/ausgaben", "/geld", "/merkt-sich", "/pflege", "/aufgaben", "/etiketten", "/willkommen", "/urlaub"]
+        func starts(_ list: [String]) -> Bool {
+            list.contains { x in
+                x == "/" ? p == "/" : x.hasSuffix("/") ? p.hasPrefix(x) : (p == x || p.hasPrefix(x + "/"))
+            }
+        }
+        if level == "family" { return !starts(familyDeny) }
+        if starts(order) { return true }
+        if (level == "stock" || level == "recipes") && starts(stock) { return true }
+        if level == "recipes" && starts(recipes) { return true }
+        return false
+    }
+
+    /// "Was nutzt ihr?": which switchable area a path belongs to (nil = always there)
+    static func moduleOf(_ path: String) -> String? {
+        let p = path.split(separator: "?").first.map(String.init) ?? path
+        if p.hasPrefix("/bestand") || p.hasPrefix("/abgleich") || p == "/wo" || p.hasPrefix("/scan") { return "stock" }
+        if p.hasPrefix("/kochen") || p.hasPrefix("/rezepte") { return "cook" }
+        if p.hasPrefix("/geld") || p.hasPrefix("/ausgaben") { return "money" }
+        if p.hasPrefix("/bestellen") { return "treats" }
+        if p.hasPrefix("/bar") { return "guests" }
+        if p.hasPrefix("/pflege") { return "homeinfo" }
+        if path.contains("tab=ha") { return "ha" }
+        return nil
+    }
+
+    static func moduleAllows(_ modules: [String: Bool], _ path: String) -> Bool {
+        guard let m = moduleOf(path) else { return true }
+        return modules[m] ?? true
+    }
 }
 
 private struct DebugKey: Identifiable { let id: String }
+private struct ProductKey: Identifiable { let id: Int }

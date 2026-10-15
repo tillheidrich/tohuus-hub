@@ -22,6 +22,8 @@ import {
   generateKitchenList,
   getTrip,
   haAway,
+  homePlan,
+  setHomePlan,
   kitchenListText,
   listTemplates,
   listTrips,
@@ -65,6 +67,7 @@ const tripBody = z.object({
   kitchen: z.boolean().optional(),
   kitchen_store: z.string().max(60).nullable().optional(),
   sitter: sitter.optional(),
+  kind: z.enum(['holiday', 'work', 'party', 'hospital', 'other']).nullable().optional(),
 });
 
 /** Runs a handler; known errors (AwayError, FreshError …) keep their status. */
@@ -107,6 +110,14 @@ r.patch(
   run((req) => updateTrip(id(req), tripBody.parse(req.body))),
 );
 r.post('/away/trips/:id/stop', run((req) => stopTrip(id(req))));
+// "Was passiert zu Hause?" – who takes what, what may wait (docs/away.md)
+r.get('/away/trips/:id/home', run((req) => homePlan(id(req))));
+r.put(
+  '/away/trips/:id/home/:taskId',
+  run((req) =>
+    setHomePlan(id(req), id(req, 'taskId'), z.object({ mode: z.enum(['take', 'wait', 'usual']), key: z.string().regex(/^[uk]\d+$/).nullable().optional() }).parse(req.body)),
+  ),
+);
 r.delete(
   '/away/trips/:id',
   run((req) => {

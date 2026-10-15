@@ -1,7 +1,8 @@
 /** Onboarding, help, what's new, polish */
+import { latestChange, unseenChanges } from '../../web/src/changelog.js';
 import { Router } from 'express';
 import { z } from 'zod';
-import { db, setSetting } from '../db.js';
+import { db, lang, setSetting } from '../db.js';
 import { LANG_CODES } from '../languages.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
@@ -148,6 +149,27 @@ r.get('/me/prefs', (req, res) => {
   if (!id) return void res.json({ whatsNewSeen: null, createdAt: null });
   const u = db.prepare('SELECT created_at FROM users WHERE id = ?').get(id) as { created_at: string } | undefined;
   res.json({ whatsNewSeen: getUserPref<string | null>(id, 'whatsnew.seen', null), createdAt: u?.created_at ?? null });
+});
+
+/**
+ * "Was ist neu" for the iPhone app (the web app has the same list built in, web/src/changelog.ts): the entries
+ * this person hasn't seen, in their language. During the beta every release gets a short entry.
+ */
+r.get('/whats-new', (req, res) => {
+  const id = uid(req);
+  const seen = id ? getUserPref<string | null>(id, 'whatsnew.seen', null) : null;
+  const u = id ? (db.prepare('SELECT created_at FROM users WHERE id = ?').get(id) as { created_at: string } | undefined) : undefined;
+  const latest = latestChange();
+  // people who joined after the latest release don't need a recap
+  const fresh = Boolean(u?.created_at && u.created_at.slice(0, 10) >= latest.slice(0, 10));
+  const de = lang() === 'de';
+  res.json({
+    latest,
+    seen,
+    entries: fresh
+      ? []
+      : unseenChanges(seen, 3).map((e) => ({ id: e.id, title: de ? e.title.de : e.title.en, items: e.items.map((i) => ({ text: de ? i.de : i.en, to: i.to ?? null })) })),
+  });
 });
 
 r.put('/me/prefs/whats-new', (req, res) => {

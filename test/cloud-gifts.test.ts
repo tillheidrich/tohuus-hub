@@ -111,6 +111,24 @@ describe('beta gift', () => {
   });
 });
 
+describe('beta gift exception (App Review household)', () => {
+  it('a household in BETA_GIFT_EXCEPT keeps its own plan while every other household gets the gift', async () => {
+    const review = await household('beta-gift-review@example.org');
+    const other = await household('beta-gift-other@example.org');
+    rs.setRuntimeSetting('beta.gift', 'plus', 'test');
+    process.env.BETA_GIFT_EXCEPT = ` x , ${review.id}`;
+    try {
+      expect((await review.c.get('/api/billing/status')).json).toMatchObject({ plan: 'trial', source: 'none', gift: null });
+      expect((await other.c.get('/api/billing/status')).json).toMatchObject({ plan: 'plus', source: 'beta' });
+      accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(review.id);
+      expect((await review.c.get('/api/billing/status')).json).toMatchObject({ plan: 'free', gift: null });
+    } finally {
+      rs.setRuntimeSetting('beta.gift', null, 'test');
+      delete process.env.BETA_GIFT_EXCEPT;
+    }
+  });
+});
+
 describe('plan codes', () => {
   it('a code for 30 days of Haushalt, once per household', async () => {
     const a = await household('code-a@example.org');

@@ -1,9 +1,17 @@
-import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
+import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, MagnifyingGlass, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
 import { DemoNudge } from './Samples';
+import { TasksTodayCard } from './TasksToday';
+import { TodayOfferAsks } from './WhoDoesWhat';
+import { StarsCard } from './Stars';
+import { ReviewTeaser } from './Review';
+import { WeekReviewTeaser } from './WeekReview';
+import { MindTodayCard } from './Mind';
+import { CalmCard, CheckinCard, GuestTasksCard } from './Checkin';
+import { CareForHint } from './CareFor';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
-import { invalidate, post, put, qc, useApi } from '../api';
+import { fmtDate, invalidate, post, put, qc, useApi } from '../api';
 import { useDrag } from '../dnd';
 import { PulseCard, usePulse } from '../pulse';
 import '../dnd.css';
@@ -59,21 +67,41 @@ export function Today({ me }: { me: Me }) {
   const pulse = usePulse(!gl);
   const now = new Date();
   const date = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
+  const localDay = () => new Intl.DateTimeFormat('sv-SE').format(new Date());
 
   const head = (
     <header className="today-head">
       <div className="grow">
-        <div className="eyebrow">{date}</div>
+        <div className="eyebrow">
+          {d?.away?.me ? (
+            // small easter egg: away, the app isn't "to Huus" – Low German for "not at home"
+            <span className="away-brand" lang="nds" title={t('Not at home')}>
+              Nich to Huus · {t('back on {date}', { date: fmtDate(d.away.me.until, { weekday: 'short', day: 'numeric', month: 'short' }) })}
+            </span>
+          ) : (
+            date
+          )}
+        </div>
         <h1 className="greet">
           {d?.greeting ?? `${greeting()}, ${me.actor.name}!`}
         </h1>
         {d?.platt && <PlattLine p={d.platt} />}
+        {d?.away?.others.length ? (
+          <p className="small muted away-others">
+            {t('Away: {list}', {
+              list: d.away.others.map((o) => t('{name} (until {date})', { name: o.name, date: fmtDate(o.until, { weekday: 'short', day: 'numeric', month: 'short' }) })).join(', '),
+            })}
+          </p>
+        ) : null}
       </div>
       {guestAllows(gl, '/bestand') && (
         <button className="icon-btn" onClick={() => window.dispatchEvent(new Event('tohuus:add'))} aria-label={t('Add')} title={t('Add')}>
           <Plus size={20} />
         </button>
       )}
+      <button className="icon-btn" onClick={() => window.dispatchEvent(new Event('tohuus:search'))} aria-label={t('Search')} title={t('Search')}>
+        <MagnifyingGlass size={20} />
+      </button>
       <button className="avatar-btn" onClick={() => nav('/mehr')} aria-label={t('More: settings, people, guests …')} title={t('More')}>
         <Avatar name={me.actor.name} personKey={me.actor.userId ? `u${me.actor.userId}` : null} size={40} />
       </button>
@@ -110,10 +138,23 @@ export function Today({ me }: { me: Me }) {
     <div className="today2">
       {head}
       {d.notices.length > 0 && <Notices list={d.notices} />}
+      {gl && <GuestTasksCard />}
       {!gl && <DemoNudge />}
       <TodayCards
         cards={[
           ['rhythm', <DueCard items={d.rhythm} legacy={d.legacy} />],
+          ['tasks', guestAllows(gl, '/aufgaben') ? (
+            <>
+              <TodayOfferAsks />
+              <WeekReviewTeaser guest={Boolean(gl)} />
+              <TasksTodayCard today={localDay()} />
+              <CheckinCard guest={Boolean(gl)} />
+              {!gl && <CareForHint />}
+              <MindTodayCard guest={Boolean(gl)} />
+              <StarsCard guest={Boolean(gl)} />
+              <ReviewTeaser guest={Boolean(gl)} />
+            </>
+          ) : null],
           ['list', guestAllows(gl, '/einkauf') ? <ListCard d={d} /> : null],
           ['still', d.stillHave.length > 0 ? <StillHaveCard items={d.stillHave} /> : null],
           ['cook', guestAllows(gl, '/kochen') && d.cookToday ? <CookCard c={d.cookToday} /> : null],
@@ -122,6 +163,7 @@ export function Today({ me }: { me: Me }) {
         ]}
         canArrange={!gl && Boolean(me.actor.userId)}
       />
+      {d.calm && !gl && <CalmCard />}
     </div>
   );
 }

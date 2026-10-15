@@ -71,4 +71,13 @@ export const de_auth: Record<string, string> = {
   'The provider could not be reached: {reason}': 'Der Anbieter ist nicht erreichbar: {reason}',
   'That code doesn’t match. One more try.': 'Der Code passt nicht. Noch ein Versuch.',
   'That code doesn’t match. {n} more tries.': 'Der Code passt nicht. Noch {n} Versuche.',
+  // connecting the iPhone app (routes/app-pair.ts)
+  'Connect the ToHuus app?': 'ToHuus-App verbinden?',
+  'The ToHuus app on this device signs in as {name}. Only tap “Connect” if you just started this in the app.':
+    'Die ToHuus-App auf diesem Gerät meldet sich als {name} an. Tippe nur auf „Verbinden“, wenn du das gerade in der App gestartet hast.',
+  Connect: 'Verbinden',
+  'The ToHuus app on this device signs in with your account. Only tap “Connect” if you just started this in the app.':
+    'Die ToHuus-App auf diesem Gerät meldet sich mit deinem Konto an. Tippe nur auf „Verbinden“, wenn du das gerade in der App gestartet hast.',
+  'This link is incomplete. Please start again in the app.': 'Dieser Link ist unvollständig. Fang in der App bitte nochmal an.',
+  'This code doesn’t work (any more). Create a new one in the web app.': 'Dieser Code passt nicht (mehr). Erstell in der Web-App einen neuen.',
 };

@@ -1,0 +1,177 @@
+[
+  {
+    "slug": "mental-load-haushalt-fair-verteilen",
+    "title": "Mental Load im Haushalt: Was ist das und wie verteilt man ihn fair?",
+    "teaser": "Was Denkarbeit im Haushalt ist, warum sie keiner sieht und wie ihr sie fair verteilt.",
+    "area": "aufgaben",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/mental-load-haushalt-fair-verteilen.html"
+  },
+  {
+    "slug": "haushalt-mit-adhs",
+    "title": "Haushalt mit ADHS: Was hilft, wenn der Kopf voll ist?",
+    "teaser": "Kleine Schritte, eins nach dem anderen, ein Timer: was hilft, wenn der Kopf voll ist.",
+    "area": "kopf",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/haushalt-mit-adhs.html"
+  },
+  {
+    "slug": "haltbarkeit-lebensmittel-nach-dem-oeffnen",
+    "title": "Wie lange ist was haltbar? MHD, Verbrauchsdatum und nach dem Öffnen",
+    "teaser": "MHD, Verbrauchsdatum und nach dem Öffnen: was für Eier, Käse, Wurst, Marmelade und Milch gilt.",
+    "area": "kochen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/haltbarkeit-lebensmittel-nach-dem-oeffnen.html"
+  },
+  {
+    "slug": "infos-fuer-gaeste-wlan-kaffeemaschine",
+    "title": "Infos für Babysitter und Gäste: vom WLAN bis zur Kaffeemaschine",
+    "teaser": "Einmal aufschreiben, was Gäste fragen: WLAN, Dusche, Kaffeemaschine. Codes bleiben getrennt.",
+    "area": "hausinfo",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/infos-fuer-gaeste-wlan-kaffeemaschine.html"
+  },
+  {
+    "slug": "spontankaeufe-wochenbudget-extras",
+    "title": "Spontankäufe im Griff: So klappt ein Wochenbudget für Extras",
+    "teaser": "Süßes, Chips, Eis: wie ein Wochenbudget für Extras hilft, ohne etwas zu verbieten.",
+    "area": "geld",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/spontankaeufe-wochenbudget-extras.html"
+  },
+  {
+    "slug": "putzplan-wg-paar-familie",
+    "title": "Putzplan ohne Punkte und Streit: für WG, Paar und Familie",
+    "teaser": "Rhythmus, Abwechseln und wer dran denkt: ein Putzplan ohne Punkte für WG, Paar und Familie.",
+    "area": "aufgaben",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/putzplan-wg-paar-familie.html"
+  },
+  {
+    "slug": "einkaufsliste-teilen",
+    "title": "Einkaufsliste teilen: so klappt es in Familie, Paar und WG",
+    "teaser": "Eine Liste für alle, live auf jedem Handy: so klappt die geteilte Einkaufsliste.",
+    "area": "einkauf",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/einkaufsliste-teilen.html"
+  },
+  {
+    "slug": "wie-oft-einkaufen",
+    "title": "Wie oft einkaufen? Wocheneinkauf oder lieber öfter",
+    "teaser": "Wocheneinkauf oder öfter kurz los? Was Zeit und Geld spart.",
+    "area": "einkauf",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/wie-oft-einkaufen.html"
+  },
+  {
+    "slug": "mental-load-einkaufen",
+    "title": "Mental Load beim Einkaufen: Wer denkt daran, was fehlt?",
+    "teaser": "Wer merkt, was fehlt? So verteilt ihr das Drandenken beim Einkaufen.",
+    "area": "einkauf",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/mental-load-einkaufen.html"
+  },
+  {
+    "slug": "nie-wieder-doppelt-kaufen",
+    "title": "Nie wieder doppelt kaufen: so behaltet ihr den Überblick",
+    "teaser": "Was ist noch da, wer bringt es mit? So behaltet ihr den Überblick und kauft nichts doppelt.",
+    "area": "einkauf",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/nie-wieder-doppelt-kaufen.html"
+  },
+  {
+    "slug": "einkaufsliste-nach-gaengen-sortieren",
+    "title": "Einkaufsliste nach Gängen sortieren und schneller einkaufen",
+    "teaser": "Die Liste in der Reihenfolge des Ladens: schneller durch, weniger vergessen.",
+    "area": "einkauf",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/einkaufsliste-nach-gaengen-sortieren.html"
+  },
+  {
+    "slug": "haushaltsbuch-lebensmittel-kassenbon",
+    "title": "Haushaltsbuch für Lebensmittel ohne Tippen: Kassenbons auswerten",
+    "teaser": "Kassenbons statt Tippen: so wird aus Bons ein Haushaltsbuch für Lebensmittel.",
+    "area": "geld",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/haushaltsbuch-lebensmittel-kassenbon.html"
+  },
+  {
+    "slug": "lebensmittelkosten-pro-monat",
+    "title": "Was kostet Essen im Monat? Zahlen für Singles, Paare, Familien",
+    "teaser": "Was Essen im Monat kostet, für Singles, Paare und Familien, mit Zahlen.",
+    "area": "geld",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/lebensmittelkosten-pro-monat.html"
+  },
+  {
+    "slug": "wg-kosten-fair-teilen",
+    "title": "WG-Kosten fair teilen: Einkauf, Pizzaabend und Putzmittel",
+    "teaser": "Einkauf, Pizzaabend, Putzmittel: so teilt ihr WG-Kosten fair.",
+    "area": "geld",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/wg-kosten-fair-teilen.html"
+  },
+  {
+    "slug": "lebensmittelbudget-festlegen",
+    "title": "Lebensmittelbudget festlegen: pro Woche, Monat oder Jahr?",
+    "teaser": "Pro Woche, Monat oder Jahr? So legt ihr ein Lebensmittelbudget fest, das passt.",
+    "area": "geld",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/lebensmittelbudget-festlegen.html"
+  },
+  {
+    "slug": "lebensmittelpreise-preiserhoehungen-erkennen",
+    "title": "Lebensmittelpreise: Preiserhöhungen bei euren Einkäufen erkennen",
+    "teaser": "Kleinere Packung, gleicher Preis? So erkennt ihr Preiserhöhungen bei euren Einkäufen.",
+    "area": "geld",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/lebensmittelpreise-preiserhoehungen-erkennen.html"
+  },
+  {
+    "slug": "wochenplan-essen-familie",
+    "title": "Essensplan für die Woche: kochen, was schon da ist",
+    "teaser": "Ein Essensplan für die Woche, der bei dem anfängt, was schon da ist.",
+    "area": "kochen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/wochenplan-essen-familie.html"
+  },
+  {
+    "slug": "reste-verwerten-lebensmittelverschwendung",
+    "title": "Reste verwerten statt wegwerfen: weniger Essen in der Tonne",
+    "teaser": "Reste verwerten statt wegwerfen: weniger Essen in der Tonne.",
+    "area": "kochen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/reste-verwerten-lebensmittelverschwendung.html"
+  },
+  {
+    "slug": "rezepte-instagram-tiktok-speichern",
+    "title": "Rezepte aus Instagram und TikTok speichern und wirklich kochen",
+    "teaser": "Rezepte aus Instagram und TikTok speichern und wirklich nachkochen.",
+    "area": "kochen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/rezepte-instagram-tiktok-speichern.html"
+  },
+  {
+    "slug": "thermomix-einkaufsliste-cookidoo",
+    "title": "Thermomix und Einkaufsliste: Cookidoo im Familienalltag",
+    "teaser": "Thermomix und Einkaufsliste: Cookidoo-Rezepte im Familienalltag.",
+    "area": "kochen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/thermomix-einkaufsliste-cookidoo.html"
+  },
+  {
+    "slug": "was-essen-wir-heute",
+    "title": "Was essen wir heute? Schnell entscheiden statt grübeln",
+    "teaser": "Schnell entscheiden statt grübeln: was es heute zu essen gibt.",
+    "area": "kochen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/was-essen-wir-heute.html"
+  },
+  {
+    "slug": "wunschliste-teilen-ohne-ueberraschung",
+    "title": "Wunschliste teilen, ohne die Überraschung zu verraten",
+    "teaser": "Wunschliste teilen, ohne zu verraten, wer was schenkt.",
+    "area": "einkauf",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/wunschliste-teilen-ohne-ueberraschung.html"
+  },
+  {
+    "slug": "partyabend-planen-getraenke",
+    "title": "Partyabend planen: Getränke, Snacks und Bring mir was",
+    "teaser": "Getränke, Snacks und eine kleine Karte: so wird der Partyabend entspannt.",
+    "area": "zuhause",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/partyabend-planen-getraenke.html"
+  },
+  {
+    "slug": "babysitter-infoblatt",
+    "title": "Infoblatt für Babysitter: WLAN, Notfallnummern, Smart Home",
+    "teaser": "Notrufnummern, WLAN, Abläufe der Kinder: das Infoblatt für Babysitter.",
+    "area": "hausinfo",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/babysitter-infoblatt.html"
+  },
+  {
+    "slug": "haustiersitter-checkliste-urlaub",
+    "title": "Haustiersitter-Checkliste: Übergabe für Tiere und Pflanzen",
+    "teaser": "Füttern, gießen, Post holen: die Übergabe für Tier- und Haussitter im Urlaub.",
+    "area": "hausinfo",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/haustiersitter-checkliste-urlaub.html"
+  }
+]

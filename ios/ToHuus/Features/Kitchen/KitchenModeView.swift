@@ -166,6 +166,7 @@ private struct KitchenRecipe: View {
     @State private var recipe: Recipe?
     @State private var step = 0
     @State private var error: String?
+    @State private var cookMode = false
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
@@ -182,6 +183,9 @@ private struct KitchenRecipe: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .task(id: recipeId) { await load() }
+        .fullScreenCover(isPresented: $cookMode) {
+            if let recipeId { CookModeView(store: store, recipeId: recipeId) }
+        }
     }
 
     private var chooser: some View {
@@ -205,7 +209,16 @@ private struct KitchenRecipe: View {
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
             }
             VStack(alignment: .leading, spacing: Theme.Space.s5) {
-                Text(r.title).font(Theme.title(34))
+                HStack(alignment: .firstTextBaseline) {
+                    Text(r.title).font(Theme.title(34))
+                    Spacer(minLength: 8)
+                    if !r.steps.isEmpty {
+                        // cook mode: timers from the step text, ingredients to tick, house note first
+                        Button { cookMode = true } label: { Label(L("Start cooking"), systemImage: "flame") }
+                            .buttonStyle(.borderedProminent)
+                            .tint(Theme.primary)
+                    }
+                }
                 if r.steps.isEmpty {
                     Text(L("This recipe has no steps.")).font(.title2).foregroundStyle(Theme.ink2)
                 } else {

@@ -2,6 +2,7 @@
  * Shopping list 2 (market research 12 Oct 2026): trust, a list that fills itself, shopping together, bridges.
  * Mounted under /api in server/index.ts. API reference: docs/shopping-list.md.
  */
+import { createFeed, listFeeds, revokeFeed } from '../lib/calendar.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db.js';
@@ -27,6 +28,7 @@ import { t } from '../i18n.js';
 import { LIST_KINDS, LIST_VISIBILITIES, assertListAccess, createList, deleteList, estimate, guard, listFilter, listLists, listOfItem, moveItemToList, privateRowGuard, updateList, usuals } from '../lib/lists.js';
 import { upload } from './core.js';
 import { receiptVisible } from '../lib/spending.js';
+import { EXTRAS_MODES, extrasWeek, setExtrasSettings, setItemExtra } from '../lib/extras.js';
 
 export const r = Router();
 // mounted last (before the 404): everything here needs a signed-in member, an app or an API token
@@ -87,6 +89,33 @@ r.patch(
       })
       .parse(req.body);
     return updateItem(num(req.params.id), b);
+  }),
+);
+
+// ---------------------------------------------------------------- extras allowance (lib/extras.ts, docs/extras.md)
+
+/** This week's extras: allowance, used, still on the list, left. */
+r.get('/list/extras', (req, res) => {
+  // guest links and permanent guests: no receipt amounts (money stays with members)
+  if (req.actor?.kind === 'guest' || req.actor?.houseGuest) return void res.status(403).json({ error: 'not for guests' });
+  res.json(extrasWeek(userId(req)));
+});
+/** The household's weekly allowance (admins); null switches it off. */
+r.put(
+  '/list/extras/settings',
+  requireAdmin,
+  wrap((req) => {
+    const b = z.object({ mode: z.enum(EXTRAS_MODES), weekly: z.number().positive().max(10000) }).nullable().parse(req.body?.off ? null : req.body);
+    setExtrasSettings(b);
+    return extrasWeek(userId(req));
+  }),
+);
+/** Mark a row as extra (true), not extra (false) or back to automatic (null) – remembered for the product. */
+r.post(
+  '/list/items/:id/extra',
+  wrap((req) => {
+    const b = z.object({ extra: z.boolean().nullable() }).parse(req.body);
+    return setItemExtra(num(req.params.id), b.extra);
   }),
 );
 
@@ -294,6 +323,16 @@ r.post('/caldav/passwords', requireFeature('mirrorLists'), (req, res) => {
 });
 r.delete('/caldav/passwords/:id', (req, res) => res.json({ ok: userId(req) ? revokeAppPassword(userId(req)!, num(req.params.id)) : false }));
 
+/** Calendar subscription (webcal) for Google Calendar, Outlook and others: read-only, per member, revocable. */
+r.get('/calendar/feeds', (req, res) => res.json(userId(req) ? listFeeds(userId(req)!) : []));
+r.post('/calendar/feeds', requireFeature('mirrorLists'), (req, res) => {
+  const b = z.object({ label: z.string().max(60).default(t('Calendar')), with_private: z.boolean().default(false) }).parse(req.body ?? {});
+  const uid = userId(req);
+  if (!uid || req.actor?.houseGuest) return void res.status(400).json({ error: t('Only members with an account can save their own settings.') });
+  res.json(createFeed(uid, b.label, b.with_private));
+});
+r.delete('/calendar/feeds/:id', (req, res) => res.json({ ok: userId(req) ? revokeFeed(userId(req)!, num(req.params.id)) : false }));
+
 /**
  * One-off import from another list app (Google Keep Takeout JSON, Bring! JSON, AnyList/Notes/WhatsApp text, CSV).
  * JSON body `{ text, list_id?, include_checked?, dry_run? }` or multipart `file`. dry_run answers the rows only.
@@ -405,7 +444,8 @@ r.post(
 );
 
 /** Order of the cards on "Heute", per person. */
-const TODAY_CARDS = ['rhythm', 'list', 'still', 'cook', 'money', 'notices', 'pulse'] as const;
+// 'tasks': the Aufgaben card (web TasksToday, iPhone TasksTodayCard) – without it every arrangement with it was refused
+const TODAY_CARDS = ['rhythm', 'tasks', 'list', 'still', 'cook', 'money', 'notices', 'pulse'] as const;
 r.get('/list/today-order', (req, res) => res.json({ order: userId(req) ? getUserPref<string[]>(userId(req)!, 'today.order', []) : [] }));
 r.put('/list/today-order', (req, res) => {
   const b = z.object({ order: z.array(z.enum(TODAY_CARDS)).max(TODAY_CARDS.length) }).parse(req.body);

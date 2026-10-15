@@ -17,7 +17,18 @@ final class AppModel {
     private(set) var userName: String?
     var notice: String?
     var showAssistant = false
+    /// the screen the assistant is opened from (server assistant-areas.ts CONTEXTS) – its tools and hints follow it, like the web
+    var assistantContext: String?
+    /// pushed screens (Aufgaben, Hausinfo, Bring mir was) set their own context and give the tab's back when they go
+    var screenContext: String?
     var showPaywall = false
+    /// global search (GlobalSearchView) and the Mehr sheet – opened from the magnifier and the avatar on every root screen
+    var showSearch = false
+    var showMore = false
+    /// a ToHuus label link opened from outside (QR scanned with the camera app – universal link ".../q/<code>")
+    var pendingLabel: String?
+    /// Zuhause tab: "tasks" or "stock" (HomeView), set when someone opens /aufgaben or the pantry from elsewhere
+    var homeSegment: String?
     /// set by deep links (tohuus://shopping from the widget)
     var requestedTab: String?
     /// iPad kitchen mode (big week plan, recipe step by step, list to tick)
@@ -74,6 +85,12 @@ final class AppModel {
     private(set) var singleHousehold = false
     /// a permanent guest (Mehr shows the handover shared with them instead of trips and care)
     private(set) var isGuest = false
+    /// the permanent guest's level (order | stock | recipes | family | paused) – Mehr filters like the web's guestAllows
+    private(set) var guestLevel: String?
+    /// an admin of the household (GET /api/me actor.role)
+    private(set) var isAdmin = false
+    /// the household's language (GET /api/me → language), e.g. "de"
+    private(set) var householdLanguage: String?
 
     func loadAIState() async {
         guard let api else { return }
@@ -82,12 +99,23 @@ final class AppModel {
             if let m = me.modules { modules = m }
             singleHousehold = me.isSingleHousehold
             isGuest = me.isGuest
+            guestLevel = me.guestLevel
+            isAdmin = me.role == "admin"
+            householdLanguage = me.language
             if let p = me.listPrefs { ListPrefsSync.adopt(p) }
+            ShareFooter.adopt(site: me.siteUrl, on: me.shareFooter)
         }
         if let s: AIStatus = try? await api.get("api/assistant/status") {
             aiStatus = s
             if let p = s.personal { personalAI = p; SharedConfig.defaults.set(p, forKey: Self.personalAIKey) }
         }
+    }
+
+    /// Free plan: the household's plan has no AI (GET /api/assistant/status → planAi false)
+    var planWithoutAI: Bool { aiStatus?.planAi == false }
+    /// German households: "Gut zu wissen" cards (German sources); the device language when the server doesn't say
+    var householdIsGerman: Bool {
+        (householdLanguage ?? Locale.current.language.languageCode?.identifier ?? "de").lowercased().hasPrefix("de")
     }
 
     /// ToHuus Cloud: the person has not agreed to AI yet (server reason "consent")
@@ -202,9 +230,12 @@ final class AppModel {
     }
 
     func finishSignIn(server: URL, mode: String, response: AppAuthResponse) {
+        // another server or account joins this iPhone: keep the active one to switch back (Start/ConnectKit.swift)
+        if phase == .signedIn { rememberCurrentConnection() }
         let s = SessionInfo(serverURL: server, mode: mode, householdId: response.householdId, deviceName: Self.deviceName)
         s.save()
         SessionInfo.token = response.token
+        ConnectionVault.forget(token: response.token)
         session = s
         households = response.households
         saveHouseholds()
@@ -285,6 +316,8 @@ final class AppModel {
         await store.flush()
         await store.refreshList()
         await store.drainUploadQueue(session: session)
+        // Kalender lesen: at most once an hour, only when set up and allowed (CalendarSyncViews.swift)
+        await CalendarSync.shared.runIfDue(api: store.api, household: store.householdKey)
         store.touch("*")
     }
 

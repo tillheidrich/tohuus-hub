@@ -1,7 +1,9 @@
 import {
   ArrowRight,
+  Bathtub,
   Bicycle,
   Car,
+  CalendarPlus,
   Check,
   Coffee,
   Drop,
@@ -10,11 +12,18 @@ import {
   Flame,
   Fan,
   IdentificationCard,
+  ListChecks,
+  LockSimple,
   Plus,
   Printer,
   ShieldCheck,
   Trash,
   Wrench,
+  CalendarBlank,
+  Brain,
+  HandHeart,
+  Sparkle,
+  CaretRight,
 } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -22,8 +31,18 @@ import type { Me } from '../App';
 import { type Location, type Product, del, fmtDate, invalidate, patch, post, useApi } from '../api';
 import { useHousehold } from '../household';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
+import { usePeopleDirectory } from '../people/Avatar';
+import { BlickSection } from './Blick';
+import { Carrying, OfferAsks, OfferBox, WhoDoesWhatSection } from './WhoDoesWhat';
+import { CareForHint } from './CareFor';
+import { ShareTextButton } from '../share/share';
+import { TodayDeckSheet } from './Decide';
+import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
+import { HomeSwitch } from '../home/HomeSwitch';
+import { RatgeberCards } from './RatgeberCards';
+import { FreshStartButton, SplitButton, isGentle, mergeSteps, suggestSteps } from '../focus/Focus';
 
 export type Unit = 'day' | 'week' | 'month' | 'year';
 export interface CareTask {
@@ -46,6 +65,39 @@ export interface CareTask {
   location: { id: number; name: string; icon: string } | null;
   assignee: { id: number; name: string; color: string } | null;
   log?: { id: number; done_on: string; actor: string | null; note: string | null; consumed: number }[];
+  /** Aufgaben (14 Oct 2026): household chore or care & deadline */
+  category: 'house' | 'care';
+  /** private = only its owner sees it ("nur für mich") */
+  visibility: 'household' | 'private';
+  owner_user_id: number | null;
+  /** the rhythm counts from the day it was done, or keeps its days ("every Monday") */
+  anchor: 'done' | 'due';
+  as_needed: boolean;
+  checklist: { text: string; done: boolean }[];
+  doer_key: string | null;
+  doer: { key: string; name: string; color: string } | null;
+  /** taking turns: person keys in order – "done" passes it to the next one */
+  rotation?: string[];
+  /** "Mach ich": who promised it for which day (server: care.ts promiseCareTask) */
+  promise?: { user_id: number; name: string; color: string; day: string; passed: boolean } | null;
+  /** follows collection dates from the household's calendar (server: calsync.ts) */
+  ext_kind?: string | null;
+  /** learned: who did it at least 3 of the last 6 times (server: care.ts usualDoer) */
+  usual?: { user_id: number; name: string; color: string } | null;
+  /** the person this task leans on is away today (a trip of theirs) */
+  away?: { name: string; until: string } | null;
+  /** someone at home takes it while the usual person is away (lib/away.ts homePlan) */
+  stand_in?: { name: string; for: string; until: string } | null;
+  /** may wait until the person is back */
+  waits?: { until: string } | null;
+  /** "Abgeben an …": asked and not answered yet */
+  offer?: { to: { id: number; name: string }; by: { id: number; name: string } | null } | null;
+  /** Termin: with a time the task is a calendar entry (HH:MM, minutes, where) */
+  due_time?: string | null;
+  duration_min?: number | null;
+  place?: string | null;
+  /** detail only: the rhythm the household actually keeps */
+  learned_every_days?: number | null;
 }
 interface Template {
   key: string;
@@ -54,15 +106,19 @@ interface Template {
   unit: Unit | null;
   group: string;
   added: boolean;
+  category?: 'house' | 'care';
+  as_needed?: boolean;
 }
 interface CareData {
   tasks: CareTask[];
   templates: Template[];
   users: { id: number; name: string; color: string }[];
   today: string;
+  me?: number | null;
 }
 
 const TEMPLATE_ICON: Record<string, any> = {
+  'clean-bathroom': Bathtub,
   'water-filter': Drop,
   'descale-coffee': Coffee,
   'descale-thermomix': Coffee,
@@ -81,9 +137,10 @@ const TEMPLATE_ICON: Record<string, any> = {
   passport: IdentificationCard,
   contract: IdentificationCard,
 };
-export const careIcon = (tpl: string | null) => TEMPLATE_ICON[tpl ?? ''] ?? Wrench;
+export const careIcon = (tpl: string | null, category?: string) => TEMPLATE_ICON[tpl ?? ''] ?? (category === 'house' ? ListChecks : Wrench);
 
 const GROUPS: [string, string][] = [
+  ['chores', 'Household'],
   ['kitchen', 'Kitchen'],
   ['house', 'House'],
   ['safety', 'Safety'],
@@ -91,21 +148,45 @@ const GROUPS: [string, string][] = [
   ['papers', 'Papers & contracts'],
 ];
 
-export function intervalLabel(n: number | null, unit: Unit | null) {
+export function intervalLabel(n: number | null, unit: Unit | null, asNeeded = false) {
+  if (asNeeded) return t('when needed');
   if (!n || !unit) return t('fixed date');
   const one: Record<Unit, string> = { day: 'every day', week: 'every week', month: 'every month', year: 'every year' };
   const many: Record<Unit, string> = { day: 'every {n} days', week: 'every {n} weeks', month: 'every {n} months', year: 'every {n} years' };
   return n === 1 ? t(one[unit]) : t(many[unit], { n });
 }
 
-export function dueLabel(x: Pick<CareTask, 'state' | 'days' | 'next_due'>) {
+export function dueLabel(x: Pick<CareTask, 'state' | 'days' | 'next_due'> & { as_needed?: boolean }) {
+  if (x.as_needed && !x.next_due) return t('when needed');
   if (x.state === 'none' || !x.next_due) return t('no date');
-  if (x.state === 'overdue') return x.days === -1 ? t('1 day overdue') : t('{n} days overdue', { n: -(x.days ?? 0) });
+  // gentle mode (focus): no counting of days late
+  if (x.state === 'overdue') return isGentle() ? t('could be done') : x.days === -1 ? t('1 day overdue') : t('{n} days overdue', { n: -(x.days ?? 0) });
   if (x.state === 'today') return t('due today');
   if (x.days === 1) return t('due tomorrow');
   if (x.state === 'soon') return t('due in {n} days', { n: x.days ?? 0 });
   const far = (x.days ?? 0) > 300;
   return t('next: {date}', { date: fmtDate(x.next_due, far ? { month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' }) });
+}
+
+const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240];
+
+/** "Sam macht’s morgen" – and kindly, once the day is over: "Sam hatte es für Mo., 13. Okt. vor" */
+export function promiseLabel(p: NonNullable<CareTask['promise']>) {
+  const today = new Date().toLocaleDateString('sv-SE');
+  const tomorrow = new Date(Date.now() + 864e5).toLocaleDateString('sv-SE');
+  const date = fmtDate(p.day, { weekday: 'short', day: 'numeric', month: 'short' });
+  if (p.passed) return t('{name} had planned it for {date}', { name: p.name, date });
+  if (p.day === today) return t('{name} does it today', { name: p.name });
+  if (p.day === tomorrow) return t('{name} does it tomorrow', { name: p.name });
+  return t('{name} does it on {date}', { name: p.name, date });
+}
+
+export type TaskFilter = 'all' | 'house' | 'care' | 'mine';
+/** "Für mich": my private tasks and the ones I do or keep in mind */
+export function taskMatches(x: CareTask, f: TaskFilter, me?: number | null) {
+  if (f === 'all') return true;
+  if (f === 'mine') return x.visibility === 'private' || (me != null && (x.doer_key === `u${me}` || x.assignee_user_id === me));
+  return (x.category ?? 'care') === f;
 }
 
 const badgeClass = (s: CareTask['state']) => (s === 'overdue' ? 'empty' : s === 'today' ? 'expiring' : s === 'soon' ? 'low' : '');
@@ -127,7 +208,8 @@ export function useCareDone() {
       toast({ text: (e as Error).message, error: true });
     }
   };
-  const done = (task: CareTask) => (task.interval_n ? run(task) : setAsk(task));
+  // fixed-date tasks (passport) ask for the new date; one-offs and "when needed" are simply done
+  const done = (task: CareTask) => (task.interval_n || task.as_needed || task.category === 'house' ? run(task) : setAsk(task));
   const sheet = <NewDateSheet task={ask} onClose={() => setAsk(null)} onSave={(next) => { const tk = ask!; setAsk(null); void run(tk, next ? { next_due: next } : {}); }} />;
   return { done, sheet };
 }
@@ -155,23 +237,40 @@ function NewDateSheet({ task, onClose, onSave }: { task: CareTask | null; onClos
 }
 
 export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareTask; onOpen?: () => void; onDone: () => void; compact?: boolean }) {
-  const I = careIcon(task.template);
+  const I = careIcon(task.template, task.category);
+  const ticked = task.checklist?.filter((x) => x.done).length ?? 0;
   const sub = [
-    compact ? null : intervalLabel(task.interval_n, task.interval_unit),
+    task.promise ? promiseLabel(task.promise) : null,
+    task.ext_kind ? t('from the calendar') : null,
+    task.stand_in
+      ? t('{name} takes it while {who} is away', { name: task.stand_in.name, who: task.stand_in.for })
+      : task.waits
+        ? t('may wait until {date}', { date: fmtDate(task.waits.until, { weekday: 'short', day: 'numeric', month: 'short' }) })
+        : task.away
+          ? t('{name} is away until {date}', { name: task.away.name, date: fmtDate(task.away.until, { weekday: 'short', day: 'numeric', month: 'short' }) })
+          : null,
+    !task.away && !task.doer && !task.rotation?.length && task.usual ? t('usually {name}', { name: task.usual.name }) : null,
+    compact || task.as_needed ? null : intervalLabel(task.interval_n, task.interval_unit),
+    task.checklist?.length ? t('{done} of {total}', { done: ticked, total: task.checklist.length }) : null,
     task.product ? t('{name}: {n} in stock', { name: task.product.name, n: task.product.stock ?? 0 }) : null,
+    task.place,
     task.location?.name,
   ].filter(Boolean);
   return (
     <div className={`li care-li ${onOpen ? 'clickable' : ''}`} onClick={onOpen}>
       <span className={`care-ic ${task.state}`}><I size={20} /></span>
       <div className="grow">
-        <div className="title">{task.name}</div>
+        <div className="title">
+          {task.visibility === 'private' && <LockSimple size={13} aria-label={t('Only for me')} style={{ marginRight: 4, verticalAlign: '-1px' }} />}
+          {task.name}
+        </div>
         <div className="sub">
-          <span className={`care-due ${task.state}`}>{dueLabel(task)}</span>
+          <span className={`care-due ${task.state}`}>{dueLabel(task)}{task.due_time && task.next_due ? `, ${timeLabel(task.due_time)}` : ''}</span>
           {sub.length ? ` · ${sub.join(' · ')}` : ''}
         </div>
       </div>
-      {task.assignee && <span title={t('{name} takes care of it', { name: task.assignee.name })}><Avatar name={task.assignee.name} color={task.assignee.color} size={24} /></span>}
+      {task.doer && <span title={t('{name} does it', { name: task.doer.name })}><Avatar name={task.doer.name} personKey={task.doer.key} color={task.doer.color} size={24} /></span>}
+      {task.assignee && !task.doer && <span title={t('{name} keeps it in mind', { name: task.assignee.name })}><Avatar name={task.assignee.name} color={task.assignee.color} size={24} /></span>}
       <button className={`btn sm care-done ${task.state === 'overdue' || task.state === 'today' ? 'primary' : ''}`} aria-label={t('Done')} onClick={(e) => { e.stopPropagation(); onDone(); }}>
         <Check size={15} weight="bold" /> <span>{t('Done')}</span>
       </button>
@@ -214,18 +313,26 @@ export function Care() {
   const { done, sheet } = useCareDone();
   const [sp] = useSearchParams();
   const [openId, setOpenId] = useState<number | null>(() => Number(sp.get('task')) || null);
-  const [form, setForm] = useState<Partial<CareTask> | null>(null);
+  // ?new=Bad putzen (global search "New task …") opens the form with the name
+  const [form, setForm] = useState<Partial<CareTask> | null>(() => (sp.get('new') ? { name: sp.get('new')!.slice(0, 120), interval_n: null, interval_unit: null, category: 'house' } : null));
   const [showTemplates, setShowTemplates] = useState(false);
+  // Alle · Haushalt · Pflege & Fristen · Für mich (/pflege opens "care")
+  const [filter, setFilter] = useState<TaskFilter>(() => {
+    const f = sp.get('f');
+    return f === 'house' || f === 'care' || f === 'mine' ? f : 'all';
+  });
 
-  const tasks = data?.tasks ?? [];
+  const all = data?.tasks ?? [];
+  const tasks = all.filter((x) => taskMatches(x, filter, data?.me));
+  const [deck, setDeck] = useState(false);
   const dueNow = tasks.filter((x) => ['overdue', 'today', 'soon'].includes(x.state));
   const later = tasks.filter((x) => !['overdue', 'today', 'soon'].includes(x.state));
   const open = tasks.find((x) => x.id === openId) ?? null;
-  const freeTemplates = (data?.templates ?? []).filter((x) => !x.added);
+  const freeTemplates = (data?.templates ?? []).filter((x) => !x.added && (filter === 'all' || filter === 'mine' || (x.category ?? 'care') === filter));
 
   const addTemplate = async (tpl: Template) => {
-    if (!tpl.n) {
-      setForm({ name: t(tpl.name), template: tpl.key, interval_n: null, interval_unit: null });
+    if (!tpl.n && !tpl.as_needed) {
+      setForm({ name: t(tpl.name), template: tpl.key, interval_n: null, interval_unit: null, category: tpl.category ?? 'care' });
       return;
     }
     try {
@@ -247,25 +354,71 @@ export function Care() {
 
   return (
     <div className="rise">
+      <HomeSwitch side="tasks" />
       <header className="page-head">
         <div>
           <div className="eyebrow">
-            {dueNow.length === 0 ? t('Nothing due right now') : dueNow.length === 1 ? t('1 thing due soon') : t('{n} things due soon', { n: dueNow.length })}
+            {dueNow.length === 0 ? t('Nothing due right now') : isGentle() ? t('A few things could be done') : dueNow.length === 1 ? t('1 thing due soon') : t('{n} things due soon', { n: dueNow.length })}
           </div>
-          <h1>{t('Home & care')}</h1>
+          <h1>{t('Tasks')}</h1>
         </div>
         <div className="actions">
+          <button className="btn sm" onClick={() => nav('/fokus')}>
+            {t('One thing at a time')}
+          </button>
+          <FreshStartButton overdue={tasks.filter((x) => x.state === 'overdue').length} />
+          {dueNow.length >= 3 && (
+            <button className="btn sm" onClick={() => setDeck(true)}>
+              {t('What will you manage today?')}
+            </button>
+          )}
+          {dueNow.length > 0 && (
+            <ShareTextButton
+              title={t('Tasks')}
+              medium="tasks"
+              className="btn sm"
+              lines={() => dueNow.filter((x) => x.visibility !== 'private' && !(x as CareTask & { cared_for_id?: number | null }).cared_for_id).map((x) => `☐ ${x.name} (${dueLabel(x)})`)}
+            />
+          )}
           <button className="btn sm" onClick={() => nav('/etiketten?kind=care')}>
             <Printer size={15} /> {t('Labels')}
           </button>
-          <button className="btn sm primary" onClick={() => setForm({ interval_n: 1, interval_unit: 'month' })}>
+          <button
+            className="btn sm primary"
+            onClick={() =>
+              setForm({ interval_n: 1, interval_unit: filter === 'care' ? 'month' : 'week', category: filter === 'care' ? 'care' : 'house', visibility: filter === 'mine' ? 'private' : 'household' })
+            }
+          >
             <Plus size={15} weight="bold" /> {t('New')}
           </button>
         </div>
       </header>
       <p className="small muted" style={{ margin: '-10px 0 18px', maxWidth: 560 }}>
-        {t('Water filter, smoke detectors, descaling, tyres, passports: the things nobody keeps in their head. One tap when done – the next date is set automatically.')}
+        {t('Bathroom, bed linen, water filter, smoke detectors, passports: what has to be done at home, once or again and again – for everyone or only for you. One tap when done – the next date is set automatically.')}
       </p>
+      <OfferAsks tasks={all} me={data?.me} />
+      <div style={{ marginBottom: 16 }}>
+        <Seg<TaskFilter>
+          value={filter}
+          onChange={setFilter}
+          label={t('Show')}
+          options={[
+            ['all', t('All')],
+            ['house', t('Household')],
+            ['care', t('Care & deadlines')],
+            ['mine', t('For me')],
+          ]}
+        />
+      </div>
+      {(() => {
+        // household tasks nobody has in mind yet – counted kindly, never as blame (only where people share the work)
+        const loose = all.filter((x) => x.visibility !== 'private' && !x.assignee_user_id && !x.doer_key && x.state !== 'ok' && x.state !== 'none').length;
+        return loose > 0 && (data?.users?.length ?? 0) > 1 ? (
+          <p className="small muted" style={{ margin: '0 0 14px' }}>
+            {loose === 1 ? t('1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.') : t('{n} due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.', { n: loose })}
+          </p>
+        ) : null;
+      })()}
 
       {tasks.length === 0 ? (
         <div className="card">
@@ -293,6 +446,14 @@ export function Care() {
           )}
         </>
       )}
+
+      <RecentlyDone />
+      <CareForHint />
+      {deck && <TodayDeckSheet tasks={dueNow} onClose={() => setDeck(false)} />}
+      <Carrying onOpenTask={setOpenId} />
+      <WhoDoesWhatSection onOpenTask={setOpenId} />
+      <RatgeberCards areas={['aufgaben', 'kopf']} />
+      <BlickSection onOpenTask={setOpenId} />
 
       {freeTemplates.length > 0 && (
         <section className="section">
@@ -331,6 +492,42 @@ export function Care() {
         </section>
       )}
 
+      {data?.me ? (
+        <div className="stack" style={{ marginTop: 24 }}>
+          <button className="li clickable card nav-row" onClick={() => nav('/einstellungen?tab=account')}>
+            <CalendarBlank size={20} aria-hidden="true" />
+            <span className="grow">
+              <span className="title">{t('Calendar & reminders')}</span>
+              <span className="sub">{t('Read your calendar, Apple Reminders, subscription link – in the settings.')}</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
+          <button className="li clickable card nav-row" onClick={() => nav('/fuer-wen')}>
+            <HandHeart size={20} aria-hidden="true" />
+            <span className="grow">
+              <span className="title">{t('People I look after')}</span>
+              <span className="sub">{t('Visits, appointments, prescriptions – that’s work too.')}</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
+          <button className="li clickable card nav-row" onClick={() => nav('/kopf')}>
+            <Brain size={20} aria-hidden="true" />
+            <span className="grow">
+              <span className="title">{t('On my mind')}</span>
+              <span className="sub">{t('Too small for a list, still work: what you carry around and did on the side.')}</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
+          <button className="li clickable card nav-row" onClick={() => nav('/woche')}>
+            <Sparkle size={20} aria-hidden="true" />
+            <span className="grow">
+              <span className="title">{t('Week in review')}</span>
+              <span className="sub">{t('What you did together last week – and what you did.')}</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
       <TaskDetail
         task={open}
         me={me.data}
@@ -341,6 +538,49 @@ export function Care() {
       />
       <TaskForm initial={form} onClose={() => setForm(null)} />
       {sheet}
+    </div>
+  );
+}
+
+/** "Mach ich – heute / morgen / am Wochenende / am …" (server: POST /care/:id/promise) */
+function PromiseBox({ task, me }: { task: CareTask; me: number }) {
+  const toast = useToast();
+  const [pickDate, setPickDate] = useState(false);
+  const mine = task.promise?.user_id === me;
+  const send = async (when: string | null) => {
+    try {
+      await post(`/care/${task.id}/promise`, { when });
+      invalidate('care');
+      setPickDate(false);
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  return (
+    <div className="care-promise">
+      <b>{t('I’ll do it')}</b>
+      {task.promise && <div className="small muted">{promiseLabel(task.promise)}</div>}
+      <div className="chips" role="group" aria-label={t('I’ll do it')} style={{ marginTop: 6 }}>
+        <button className="chip" onClick={() => send('today')}>{t('Today')}</button>
+        <button className="chip" onClick={() => send('tomorrow')}>{t('Tomorrow')}</button>
+        <button className="chip" onClick={() => send('weekend')}>{t('At the weekend')}</button>
+        <button className="chip" onClick={() => setPickDate((v) => !v)} aria-expanded={pickDate}>{t('Pick a day')}</button>
+        {mine && (
+          <button className="chip" onClick={() => send(null)}>
+            {t('Take it back')}
+          </button>
+        )}
+      </div>
+      {pickDate && (
+        <input
+          type="date"
+          className="input"
+          style={{ marginTop: 8, maxWidth: 220 }}
+          min={new Date().toLocaleDateString('sv-SE')}
+          onChange={(e) => e.target.value && send(e.target.value)}
+          aria-label={t('Pick a day')}
+        />
+      )}
     </div>
   );
 }
@@ -356,6 +596,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
   const detail = useApi<CareTask>(['care', 'task', task?.id ?? 0], task ? `/care/${task.id}` : null);
   const home = useHousehold(); // area: home – no "I'll take care of it" when living alone
   const toast = useToast();
+  const nav = useNavigate();
   if (!task) return null;
   const mine = Boolean(me?.actor.userId && task.assignee_user_id === me.actor.userId);
   const claim = async (v: boolean) => {
@@ -372,18 +613,62 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
       <div className="stack" style={{ gap: 16 }}>
         <div className="row wrap" style={{ gap: 8 }}>
           <span className={`badge ${badgeClass(task.state)}`}>{dueLabel(task)}</span>
-          <span className="badge">{intervalLabel(task.interval_n, task.interval_unit)}</span>
+          <span className="badge">{intervalLabel(task.interval_n, task.interval_unit, task.as_needed)}</span>
+          <span className="badge">{task.category === 'house' ? t('Household') : t('Care & deadlines')}</span>
+          {task.visibility === 'private' && (
+            <span className="badge">
+              <LockSimple size={12} /> {t('Only for me')}
+            </span>
+          )}
           {task.location && <span className="badge">{task.location.name}</span>}
         </div>
         <dl className="kv" style={{ margin: 0 }}>
           <dt>{t('Next due')}</dt>
-          <dd>{task.next_due ? fmtDate(task.next_due, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</dd>
+          <dd>
+            {task.next_due ? fmtDate(task.next_due, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+            {task.next_due && task.due_time ? `, ${timeLabel(task.due_time)} · ${durationLabel(task.duration_min ?? 60)}` : ''}
+          </dd>
+          {task.place && (<><dt>{t('Place')}</dt><dd>{task.place}</dd></>)}
           <dt>{t('Last done')}</dt>
           <dd>{task.last_done ? fmtDate(task.last_done, { day: 'numeric', month: 'long', year: 'numeric' }) : t('unknown')}</dd>
           <dt>{t('Reminder')}</dt>
           <dd>{task.lead_days === 0 ? t('on the day') : task.lead_days === 1 ? t('1 day before') : t('{n} days before', { n: task.lead_days })}</dd>
+          {task.doer && (<><dt>{t('Who does it')}</dt><dd>{task.doer.name}{task.rotation && task.rotation.length > 1 ? ` · ${t('taking turns')}` : ''}</dd></>)}
+          {!task.doer && task.usual && (<><dt>{t('Usually does it')}</dt><dd>{task.usual.user_id === me?.actor.userId ? t('You') : task.usual.name}</dd></>)}
+          {detail.data?.learned_every_days && (
+            <>
+              <dt>{t('Your rhythm')}</dt>
+              <dd>{t('You do it about every {n} days', { n: detail.data.learned_every_days })}</dd>
+            </>
+          )}
           {task.note && (<><dt>{t('Note')}</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{task.note}</dd></>)}
         </dl>
+        {task.next_due && (
+          <a className="btn" href={`/api/care/${task.id}/ics`} download style={{ alignSelf: 'flex-start', minHeight: 44 }}>
+            <CalendarPlus size={18} /> {t('Add to calendar')}
+          </a>
+        )}
+        {task.checklist?.length > 0 && (
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 6 }}>{t('Sub-items')}</div>
+            <div className="list">
+              {task.checklist.map((c, i) => (
+                <label key={i} className="li" style={{ minHeight: 44, gap: 10 }}>
+                  <input
+                    type="checkbox"
+                    checked={c.done}
+                    onChange={(e) =>
+                      patch(`/care/${task.id}`, { checklist: task.checklist.map((x, j) => (j === i ? { ...x, done: e.target.checked } : x)) })
+                        .then(() => invalidate('care'))
+                        .catch((err) => toast({ text: (err as Error).message, error: true }))
+                    }
+                  />
+                  <span className="grow">{c.text}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
         {task.product && (
           <div className="li" style={{ background: 'var(--surface-2)', borderRadius: 14, minHeight: 56 }}>
             <Thumb p={task.product} size={40} />
@@ -393,14 +678,16 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
             </div>
           </div>
         )}
-        {home.ui.claims && <div className="row between care-claim">
+        {me?.actor.userId && !me.actor.houseGuest && <PromiseBox task={task} me={me.actor.userId} />}
+        {me?.actor.userId && !me.actor.houseGuest && <OfferBox task={task} me={me.actor.userId} />}
+        {home.ui.claims && task.visibility !== 'private' && <div className="row between care-claim">
           <div>
-            <b>{t('I’ll take care of it')}</b>
+            <b>{t('I keep it in mind')}</b>
             <div className="small muted">
-              {task.assignee && !mine ? t('{name} takes care of it', { name: task.assignee.name }) : t('So nobody else has to keep it in mind.')}
+              {task.assignee && !mine ? t('{name} keeps it in mind', { name: task.assignee.name }) : t('So nobody else has to keep it in mind.')}
             </div>
           </div>
-          <Toggle on={mine} onChange={claim} label={t('I’ll take care of it')} />
+          <Toggle on={mine} onChange={claim} label={t('I keep it in mind')} />
         </div>}
         {log.length > 0 && (
           <div>
@@ -423,6 +710,8 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
           <button className="btn sm" onClick={() => onEdit(task)}>{t('Edit')}</button>
           <button className="btn sm" onClick={() => onLabel(task)}><Printer size={15} /> {t('Label')}</button>
           <BonButton spec={{ type: 'care', id: task.id }} label={t('Ticket')} />
+          <SplitButton task={task} label={task.checklist?.length ? t('Smaller steps') : undefined} />
+          <button className="btn sm" onClick={() => { onClose(); nav(`/fokus?task=${task.id}`); }}>{t('Focus on this')}</button>
           <div className="grow" />
           <button className="btn primary" onClick={() => { onClose(); onDone(task); }}>
             <Check size={16} weight="bold" /> {t('Done')}
@@ -442,9 +731,15 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
   const toast = useToast();
   const key = initial ? JSON.stringify(initial) : '';
   useEffect(() => setF(initial ? { consume_qty: 1, ...initial } : {}), [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  // all hooks before the early return (the form is always mounted, `initial` toggles)
+  const directory = usePeopleDirectory();
+  const [item, setItem] = useState('');
   if (!initial) return null;
+  const people = directory.filter((p) => p.kind !== 'guest');
   const isNew = !f.id;
-  const fixed = !f.interval_n;
+  const needed = Boolean(f.as_needed);
+  const fixed = !f.interval_n && !needed;
+  const mode: 'interval' | 'fixed' | 'needed' = needed ? 'needed' : fixed ? 'fixed' : 'interval';
   const product = products.data?.find((p) => p.id === f.product_id);
   const set = (patchObj: Partial<CareTask>) => setF((x) => ({ ...x, ...patchObj }));
   const save = async () => {
@@ -453,9 +748,19 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
       const body = {
         name: f.name ?? '',
         template: isNew ? (f.template ?? null) : undefined,
-        interval_n: fixed ? null : Number(f.interval_n) || 1,
-        interval_unit: fixed ? null : (f.interval_unit ?? 'month'),
+        interval_n: fixed || needed ? null : Number(f.interval_n) || 1,
+        interval_unit: fixed || needed ? null : (f.interval_unit ?? 'month'),
+        as_needed: needed,
+        anchor: f.anchor ?? 'done',
+        category: f.category ?? 'care',
+        visibility: f.visibility ?? 'household',
+        doer_key: f.doer_key ?? null,
+        rotation: (f.rotation?.length ?? 0) > 1 ? f.rotation : [],
+        checklist: f.checklist ?? [],
         next_due: f.next_due || null,
+        due_time: !needed && f.next_due && f.due_time ? f.due_time : null,
+        duration_min: !needed && f.next_due && f.due_time ? (f.duration_min ?? 60) : null,
+        place: f.place?.trim() || null,
         last_done: f.last_done || null,
         lead_days: f.lead_days ?? undefined,
         location_id: f.location_id ?? null,
@@ -494,10 +799,25 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
           <label>{t('What?')}</label>
           <input className="input" value={f.name ?? ''} onChange={(e) => set({ name: e.target.value })} placeholder={t('e.g. Change water filter')} autoFocus={isNew} />
         </div>
-        <Seg<'interval' | 'fixed'>
-          value={fixed ? 'fixed' : 'interval'}
-          options={[['interval', t('Repeats')], ['fixed', t('Fixed date')]]}
-          onChange={(v) => set(v === 'fixed' ? { interval_n: null, interval_unit: null } : { interval_n: 1, interval_unit: 'month' })}
+        <Seg<'house' | 'care'>
+          value={f.category ?? 'care'}
+          label={t('Area')}
+          options={[['house', t('Household')], ['care', t('Care & deadlines')]]}
+          onChange={(category) => set({ category })}
+        />
+        <Seg<'interval' | 'fixed' | 'needed'>
+          value={mode}
+          label={t('How often')}
+          options={[['interval', t('Repeats')], ['fixed', t('Once / fixed date')], ['needed', t('When needed')]]}
+          onChange={(v) =>
+            set(
+              v === 'fixed'
+                ? { interval_n: null, interval_unit: null, as_needed: false }
+                : v === 'needed'
+                  ? { interval_n: null, interval_unit: null, as_needed: true, next_due: null }
+                  : { interval_n: 1, interval_unit: f.category === 'house' ? 'week' : 'month', as_needed: false },
+            )
+          }
         />
         {!fixed ? (
           <div className="grid-2">
@@ -520,7 +840,15 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
             </div>
           </div>
         ) : null}
-        <div className="grid-2">
+        {mode === 'interval' && (
+          <Seg<'done' | 'due'>
+            value={f.anchor ?? 'done'}
+            label={t('The next time counts from')}
+            options={[['done', t('when it was done')], ['due', t('the planned day')]]}
+            onChange={(anchor) => set({ anchor })}
+          />
+        )}
+        {!needed && <div className="grid-2">
           <div className="field">
             <label>{fixed ? t('Date (e.g. expiry)') : t('Next due')}</label>
             <input className="input" type="date" value={f.next_due ?? ''} onChange={(e) => set({ next_due: e.target.value || null })} />
@@ -530,6 +858,107 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
             <label>{t('Remind me … days before')}</label>
             <input className="input" type="number" min={0} max={365} inputMode="numeric" value={f.lead_days ?? ''} placeholder={t('automatic')} onChange={(e) => set({ lead_days: e.target.value === '' ? undefined : Number(e.target.value) })} />
           </div>
+        </div>}
+        {!needed && (
+          <div className="grid-2">
+            <div className="field">
+              <label>{t('Time (optional)')}</label>
+              <input className="input" type="time" value={f.due_time ?? ''} onChange={(e) => set({ due_time: e.target.value || null })} />
+              <span className="help">{f.next_due ? t('With a time it is an appointment and shows in your calendar.') : t('Pick a date first.')}</span>
+            </div>
+            {f.due_time ? (
+              <div className="field">
+                <label>{t('How long')}</label>
+                <select className="input" value={f.duration_min ?? 60} onChange={(e) => set({ duration_min: Number(e.target.value) })}>
+                  {DURATIONS.map((m) => <option key={m} value={m}>{durationLabel(m)}</option>)}
+                </select>
+              </div>
+            ) : <div />}
+          </div>
+        )}
+        {!needed && (
+          <div className="field">
+            <label>{t('Place (optional)')}</label>
+            <input className="input" value={f.place ?? ''} maxLength={120} onChange={(e) => set({ place: e.target.value })} placeholder={t('e.g. basement, school, dentist')} />
+          </div>
+        )}
+        <label className="row between">
+          <span>
+            <b>{t('Only for me')}</b>
+            <span className="small muted" style={{ display: 'block' }}>{t('Nobody else sees it – not the household, not the assistant for others, not displays.')}</span>
+          </span>
+          <Toggle on={f.visibility === 'private'} onChange={(v) => set({ visibility: v ? 'private' : 'household' })} label={t('Only for me')} />
+        </label>
+        {f.visibility !== 'private' && people.length > 1 && (
+          <label className="row between">
+            <span>
+              <b>{t('Take turns')}</b>
+              <span className="small muted" style={{ display: 'block' }}>{t('“Done” passes it to the next one.')}</span>
+            </span>
+            <Toggle on={(f.rotation?.length ?? 0) > 1} onChange={(v) => set({ rotation: v ? people.slice(0, 2).map((p) => p.key) : [] })} label={t('Take turns')} />
+          </label>
+        )}
+        {f.visibility !== 'private' && (f.rotation?.length ?? 0) > 1 && (
+          <div className="chips" role="group" aria-label={t('Who takes turns')}>
+            {people.map((p) => {
+              const on = f.rotation!.includes(p.key);
+              return (
+                <button key={p.key} type="button" className={`chip ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => set({ rotation: on ? f.rotation!.filter((k) => k !== p.key) : [...f.rotation!, p.key] })}>
+                  {on && <Check size={13} weight="bold" />} {p.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {f.visibility !== 'private' && people.length > 1 && (f.rotation?.length ?? 0) < 2 && (
+          <div className="field">
+            <label>{t('Who does it (optional)')}</label>
+            <select className="input" value={f.doer_key ?? ''} onChange={(e) => set({ doer_key: e.target.value || null })}>
+              <option value="">{t('Whoever has time')}</option>
+              {people.map((p) => (
+                <option key={p.key} value={p.key}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="field">
+          <label>{t('Sub-items (optional)')}</label>
+          {(f.checklist ?? []).map((c, i) => (
+            <div key={i} className="row" style={{ gap: 6 }}>
+              <span className="grow small">{c.text}</span>
+              <button className="icon-btn sm" onClick={() => set({ checklist: (f.checklist ?? []).filter((_, j) => j !== i) })} aria-label={t('Remove')}>
+                <Trash size={14} />
+              </button>
+            </div>
+          ))}
+          <form
+            className="row"
+            style={{ gap: 6 }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!item.trim()) return;
+              set({ checklist: [...(f.checklist ?? []), { text: item.trim().slice(0, 120), done: false }] });
+              setItem('');
+            }}
+          >
+            <input className="input grow" value={item} onChange={(e) => setItem(e.target.value)} placeholder={t('e.g. sink, mirror, floor')} />
+            {f.name?.trim() && (
+              <button
+                className="btn sm"
+                type="button"
+                onClick={() =>
+                  suggestSteps({ id: f.id, name: f.name!, note: f.note })
+                    .then((r) => set({ checklist: mergeSteps(f.checklist ?? [], r.steps) }))
+                    .catch((e) => toast({ text: (e as Error).message, error: true }))
+                }
+              >
+                {t('Split into small steps')}
+              </button>
+            )}
+            <button className="btn sm" type="submit" disabled={!item.trim()} aria-label={t('Add')}>
+              <Plus size={14} />
+            </button>
+          </form>
         </div>
         <div className="field">
           <label>{t('Uses up a product (optional)')}</label>
@@ -559,12 +988,39 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
         <div className="row">
           {!isNew && <button className="btn ghost danger sm" onClick={remove}><Trash size={15} /> {t('Delete')}</button>}
           <div className="grow" />
-          <button className="btn primary" disabled={busy || !(f.name ?? '').trim() || (fixed && !f.next_due)} onClick={save}>
+          <button className="btn primary" disabled={busy || !(f.name ?? '').trim() || (fixed && !f.next_due && f.category !== 'house')} onClick={save}>
             <Check size={16} weight="bold" /> {t('Save')}
           </button>
         </div>
       </div>
       <ProductPicker open={pick} onClose={() => setPick(false)} onPick={(p) => { set({ product_id: p.id }); setPick(false); }} />
     </Sheet>
+  );
+}
+
+/** "Zuletzt erledigt": the work people did stays visible for two weeks – who did what, newest first. */
+function RecentlyDone() {
+  const q = useApi<{ id: number; task_id: number; done_on: string; actor: string | null; name: string }[]>(['care', 'recent'], '/care/recent');
+  const [all, setAll] = useState(false);
+  const rows = q.data ?? [];
+  if (!rows.length) return null;
+  return (
+    <section className="section">
+      <div className="section-head">
+        <h2>{t('Recently done')}</h2>
+        {rows.length > 5 && <a onClick={() => setAll((v) => !v)}>{all ? t('Show less') : t('Show all {n}', { n: rows.length })}</a>}
+      </div>
+      <div className="list">
+        {(all ? rows : rows.slice(0, 5)).map((r) => (
+          <div key={r.id} className="li" style={{ minHeight: 44 }}>
+            <Check size={16} weight="bold" style={{ color: 'var(--primary)' }} aria-hidden="true" />
+            <div className="grow">
+              <div className="title">{r.name}</div>
+              <div className="sub">{[fmtDate(r.done_on, { weekday: 'short', day: 'numeric', month: 'short' }), r.actor].filter(Boolean).join(' · ')}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -7,6 +7,7 @@
  *   GET/DELETE /api/assistant/conversations[/:id], GET /api/assistant/status, GET/PATCH /api/assistant/settings
  *   GET/POST /api/memory, DELETE /api/memory/:id
  */
+import { limits } from '../lib/plans.js';
 import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
@@ -57,6 +58,8 @@ r.get('/assistant/status', requireAuth, (req, res) => {
       const a = aiStateFor(req.actor?.userId);
       return { household: a.household, personal: a.mine, locked: false, reason: a.reason };
     })(),
+    // the household's plan includes AI (Free has none – the assistant then reads simple commands without AI)
+    planAi: limits().assistantPerMonth !== 0,
     healthShare: healthShareAllowed(),
     healthConsent: healthConsent(),
     language: lang(),

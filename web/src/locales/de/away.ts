@@ -194,4 +194,18 @@ export const away: Record<string, string> = {
   'While away: only urgent notifications; nothing lands on the list by itself if nobody is home. Someone stays home (grandparents)? Then everything carries on for them. Cooking at the holiday flat gets its own small plan and list.': 'Unterwegs: nur dringende Benachrichtigungen; nichts landet von selbst auf der Liste, wenn niemand zu Hause ist. Bleibt jemand da (Großeltern)? Dann läuft für sie alles weiter. Kochen in der Ferienwohnung bekommt einen eigenen kleinen Plan samt Liste.',
   'House sitter: a link like the babysitter link – where is what, plus notes on plants, post and bin days. It ends the day after you’re back.': 'Haushüten: ein Link wie der Babysitter-Link – wo ist was, plus Notizen zu Pflanzen, Post und Müllabfuhr. Er endet am Tag nach eurer Rückkehr.',
   'Back home: a welcome-home list with your usual fresh things and whatever expired, ready on the way back. Home Assistant can report that everyone is away – ToHuus Hub then only suggests away mode.': 'Zurück: eine Willkommen-Liste mit dem Frischen, das ihr sonst kauft, und dem, was abgelaufen ist – fertig schon auf dem Heimweg. Home Assistant kann melden, dass alle weg sind – ToHuus Hub schlägt den Urlaubsmodus dann nur vor.',
+  // only some people away + "Nich to Huus" (15 Oct 2026)
+  Away: 'Unterwegs',
+  'back on {date}': 'zurück am {date}',
+  'Away: {list}': 'Unterwegs: {list}',
+  '{name} (until {date})': '{name} (bis {date})',
+  '{name} is away until {date}': '{name} ist bis {date} weg',
+  'Back again': 'Wieder da',
+  'Who is away?': 'Wer ist weg?',
+  'Only I’m away': 'Nur ich bin weg',
+  'For those away only – the people at home still get them.': 'Nur für die, die weg sind – wer zu Hause ist, bekommt sie weiter.',
+  '{names} away · back on {date}': '{names} unterwegs · zurück am {date}',
+  'Their tasks and turns wait or go to whoever is at home.': 'Aufgaben und Abwechseln gehen so lange an die, die zu Hause sind.',
+  'Only one of you is away – a business trip, a course? Enter just that person: the house runs on, their tasks and turns go to whoever is at home.':
+    'Nur eine Person ist weg – Dienstreise, Lehrgang? Trag nur sie ein: Zu Hause läuft alles weiter, ihre Aufgaben und ihr Abwechseln gehen an die, die da sind.',
 };

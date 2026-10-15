@@ -20,8 +20,6 @@ struct ShoppingView: View {
     @State private var guardText: String?
     @State private var guardMessage = ""
     @State private var tripPrivate = false
-    @State private var newListName = ""
-    @State private var showNewList = false
     @State private var listsSupported = false
     @State private var dropSection: String?
     // 0.3 parity: claims, discreet adding, paste, forecast, list & shop settings
@@ -33,6 +31,18 @@ struct ShoppingView: View {
     @State private var manageList: ListRef?
     @State private var shareText: ShareText?
     @State private var toast: String?
+    // 14 Oct 2026 parity: import, new-list sheet, care check, typing suggestions, put away on tick, aisle order in the shop
+    @State private var showImport = false
+    @State private var showNewListSheet = false
+    @State private var careList: ListRef?
+    @State private var orderStore: StoreRef?
+    @State private var showNewStore = false
+    @State private var newStoreName = ""
+    @State private var showListLook = false
+    @State private var products: [ProductInfo] = []
+    @State private var usualCount: [Int: Int] = [:]
+    @State private var showUnpriced = false
+    @AppStorage("list.toStock") private var toStock = true
     @AppStorage("list.density") private var densityRaw = ListDensity.normal.rawValue
     @AppStorage("list.fontScale") private var fontScale = 1.0
     /// Dynamic Type on top of the list's own size setting (1 at the default text size)
@@ -43,6 +53,8 @@ struct ShoppingView: View {
         let item: ShopItem
         let wasChecked: Bool
         let text: String
+        /// removed rather than ticked: undo puts it back on the list
+        var deleted = false
     }
 
     private var density: ListDensity { ListDensity(rawValue: densityRaw) ?? .normal }
@@ -57,11 +69,7 @@ struct ShoppingView: View {
         NavigationStack {
             List {
                 liveSection
-                if !shopMode {
-                    addSection
-                    if !suggestions.isEmpty { suggestionStrip }
-                    if !forecast.isEmpty { forecastSection }
-                }
+                topSections
                 if let err = store.lastError {
                     ErrorBanner(message: err) { Task { await store.refreshList() } }
                         .listRowBackground(Color.clear)
@@ -72,28 +80,16 @@ struct ShoppingView: View {
                                    message: L("Type what's missing, or tell the assistant."))
                         .listRowBackground(Color.clear)
                 }
-                ForEach(store.list.sections) { section in
-                    Section {
-                        ForEach(section.items) { item in
-                            row(item)
-                                .dropDestination(for: String.self) { items, _ in drop(items, into: section.key) }
-                        }
-                    } header: {
-                        Label(ShopSectionKey.label(section.key), systemImage: ShopSectionKey.icon(section.key))
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(dropSection == section.key ? Theme.primaryText : Theme.ink2)
-                            .dropDestination(for: String.self) { items, _ in drop(items, into: section.key) } isTargeted: { on in
-                                dropSection = on ? section.key : nil
-                            }
-                    }
-                }
+                groupSections
                 if shopMode && !store.list.basket.isEmpty {
                     Section {
                         ForEach(store.list.basket) { item in row(item) }
+                        Toggle(L("Put into stock"), isOn: $toStock)
                         Button {
                             Task {
-                                await store.checkout(toStock: true)
+                                await store.checkout(toStock: toStock)
                                 Haptics.success()
+                                show(L("Done shopping"))
                             }
                         } label: {
                             Label(L("Done shopping"), systemImage: "checkmark.seal")
@@ -106,6 +102,10 @@ struct ShoppingView: View {
                 }
                 doneSection
                 estimateSection
+                if !shopMode && !app.isGuest {
+                    ExtrasListSection(api: store.api, refresh: extrasRefresh)
+                }
+                if !shopMode && !app.isGuest && (me?.claimsOn ?? true) { whoGetsWhatSection }
                 Color.clear.frame(height: 72).listRowBackground(Color.clear)
             }
             .listStyle(.insetGrouped)
@@ -121,6 +121,7 @@ struct ShoppingView: View {
                 await loadSuggestions()
             }
             .navigationTitle(title)
+            .rootChrome()
             .toolbar { toolbar }
             .safeAreaInset(edge: .top) {
                 HStack { SyncBadge(online: store.isOnline, pending: store.pendingCount); Spacer() }
@@ -155,15 +156,35 @@ struct ShoppingView: View {
                 #endif
             }
             .sheet(isPresented: $showPaste) { PasteListSheet(store: store) }
+            .sheet(isPresented: $showImport) { ImportListSheet(store: store) }
+            .sheet(isPresented: $showNewListSheet) { NewListSheet(store: store) }
+            .sheet(item: $careList) { l in CareCheckSheet(list: l, store: store) }
+            .sheet(item: $orderStore) { s in
+                NavigationStack {
+                    StoreOrderView(shop: s, store: store) {}
+                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { orderStore = nil } } }
+                }
+            }
+            .sheet(isPresented: $showListLook) {
+                NavigationStack {
+                    ListDisplaySettingsView()
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { showListLook = false } } }
+                }
+                .presentationDetents([.medium, .large])
+            }
+            .alert(L("Another store"), isPresented: $showNewStore) {
+                TextField(L("e.g. Edeka, dm, weekly market"), text: $newStoreName)
+                Button(L("Add store")) { createStore() }
+                Button(L("Cancel"), role: .cancel) { newStoreName = "" }
+            } message: {
+                Text(L("Each store learns its own aisle order."))
+            }
+            .onChange(of: shopMode) { _, on in UIApplication.shared.isIdleTimerDisabled = on }
+            .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
             .sheet(isPresented: $showShopSettings) { ShopSettingsSheet(store: store) }
             .sheet(item: $manageList) { l in ManageListSheet(list: l, store: store) }
             .sheet(item: $shareText) { t in ShopActivitySheet(items: [t.text]).presentationDetents([.medium, .large]) }
             .overlay(alignment: .top) { toastView }
-            .alert(L("New list"), isPresented: $showNewList) {
-                TextField(L("Name, e.g. Drugstore"), text: $newListName)
-                Button(L("Create")) { createList() }
-                Button(L("Cancel"), role: .cancel) { newListName = "" }
-            }
             .task(id: store.revision("shopping") + store.revision("stock")) {
                 await loadSuggestions()
                 await loadForecast()
@@ -189,7 +210,10 @@ struct ShoppingView: View {
                 enterShop(id)
             }
             .onChange(of: app.addRequest) { _, _ in consumeAdd() }
-            .onAppear { consumeAdd() }
+            .onAppear {
+                consumeAdd()
+                UIApplication.shared.isIdleTimerDisabled = shopMode
+            }
         }
     }
 
@@ -209,7 +233,11 @@ struct ShoppingView: View {
             Section {
                 ForEach(store.list.done) { item in row(item) }
                 Button(L("Finish shopping")) {
-                    Task { await store.checkout(toStock: true); Haptics.success() }
+                    Task {
+                        await store.checkout(toStock: toStock)
+                        Haptics.success()
+                        show(L("Done shopping"))
+                    }
                 }
                 .font(.subheadline.weight(.semibold))
             } header: {
@@ -222,18 +250,35 @@ struct ShoppingView: View {
         }
     }
 
+    /// changes whenever rows, ticks or extra marks change – reloads the extras bar
+    private var extrasRefresh: Int {
+        var h = Hasher()
+        for i in store.list.openItems + store.list.basket + store.list.done { h.combine(i.id); h.combine(i.checkedAt); h.combine(i.extra); h.combine(i.qty) }
+        return h.finalize()
+    }
+
     @ViewBuilder private var estimateSection: some View {
         if let est = store.list.expected, let total = est.total {
             Section {
-                LabeledContent {
-                    Text("≈ " + Money.format(total, currency: est.currency)).font(.headline)
+                Button {
+                    withAnimation { showUnpriced.toggle() }
                 } label: {
-                    VStack(alignment: .leading) {
-                        Text(L("Expected total"))
-                        if let priced = est.priced, let unpriced = est.unpriced, unpriced > 0 {
-                            Text(LF("prices known for %d of %d things", priced, priced + unpriced)).font(.caption).foregroundStyle(Theme.ink3)
+                    LabeledContent {
+                        Text("≈ " + Money.format(total, currency: est.currency)).font(.headline).foregroundStyle(Theme.ink)
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(L("Expected total")).foregroundStyle(Theme.ink)
+                            if let priced = est.priced, let unpriced = est.unpriced, unpriced > 0 {
+                                Text(LF("prices known for %d of %d things", priced, priced + unpriced)).font(.caption).foregroundStyle(Theme.ink3)
+                            }
                         }
                     }
+                }
+                .buttonStyle(.plain)
+                if showUnpriced {
+                    Text(LF("From the last receipt prices of %d items.", est.priced ?? 0)
+                         + ((est.unpricedNames ?? []).isEmpty ? "" : " " + LF("No price yet: %@.", (est.unpricedNames ?? []).joined(separator: ", "))))
+                        .font(.caption).foregroundStyle(Theme.ink3)
                 }
             }
         }
@@ -250,27 +295,46 @@ struct ShoppingView: View {
     /// Shopping together: trips start by themselves from ticks in a shop (GET /api/shop/trips).
     @ViewBuilder private var liveSection: some View {
         let mine = myTrip?.openAddOns ?? []
-        if !others.isEmpty || !mine.isEmpty {
+        if !others.isEmpty || myTrip != nil {
             Section {
                 ForEach(others) { trip in
                     HStack(spacing: Theme.Space.s3) {
-                        Image(systemName: "figure.walk.motion").foregroundStyle(Theme.primaryText)
+                        ShopMemberDot(name: trip.user.name, color: trip.user.color, size: 32)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(trip.store.map { LF("%@ is shopping at %@", trip.user.name, $0.name) } ?? LF("%@ is shopping right now", trip.user.name))
                                 .font(.subheadline.weight(.semibold))
                             Text(tripLine(trip)).font(.caption).foregroundStyle(Theme.ink3)
+                            if !trip.basket.isEmpty {
+                                Text(trip.basket.map(\.text).joined(separator: ", ")).font(.caption).foregroundStyle(Theme.ink2).lineLimit(2)
+                            }
+                            if !trip.addOns.isEmpty {
+                                Text(L("Asked for") + ": " + trip.addOns.map { $0.done == true ? "✓ " + $0.text : $0.text }.joined(separator: ", "))
+                                    .font(.caption).foregroundStyle(Theme.ink3).lineLimit(2)
+                            }
                         }
                         Spacer(minLength: 0)
                         Button(L("Add a wish")) { wishTrip = trip }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAction(named: L("Add a wish")) { wishTrip = trip }
+                }
+                if let t = myTrip {
+                    Toggle(isOn: Binding(get: { tripPrivate }, set: { setPrivate($0) })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(t.store.map { LF("You’re shopping at %@", $0.name) } ?? L("You’re shopping")).font(.subheadline.weight(.semibold))
+                            Text(tripPrivate ? L("Only you see this trip.") : L("The others see what’s in your basket and can ask you for something."))
+                                .font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    .accessibilityHint(L("My shopping stays private"))
                 }
                 ForEach(mine) { a in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(a.from.map { LF("%@ asks: %@", $0, a.text) } ?? a.text).font(.subheadline)
                         HStack {
-                            Button(L("I'll get it")) { Task { await answer(a, accept: true) } }.buttonStyle(.borderedProminent)
+                            Button(L("I'll get it")) { Task { await answer(a, accept: true) } }.buttonStyle(.borderedProminent).tint(Theme.primary)
                             Button(L("Can't do it")) { Task { await answer(a, accept: false) } }.buttonStyle(.bordered)
                         }
                         .controlSize(.small)
@@ -356,6 +420,10 @@ struct ShoppingView: View {
                         Text(item.productName ?? item.text)
                             .strikethrough(checked)
                             .foregroundStyle(checked ? Theme.ink3 : Theme.ink)
+                        if item.extra == true {
+                            Image(systemName: "sparkles").font(.caption).foregroundStyle(Theme.ink3)
+                                .accessibilityLabel(L("Extra"))
+                        }
                         SampleTag(on: app.sampleMarks.shopping.contains(item.id))
                         if let note = item.note, item.source != "recipe", !note.isEmpty {
                             Text(note).foregroundStyle(Theme.ink3)
@@ -370,6 +438,9 @@ struct ShoppingView: View {
                     }
                     if let share = item.share, !checked {
                         Label(share.subline, systemImage: share.icon).labelStyle(ShopTightLabelStyle()).font(.caption).foregroundStyle(Theme.ink2).lineLimit(2)
+                    }
+                    if !checked, let extra = extraLine(item) {
+                        Text(extra).font(.caption).foregroundStyle(Theme.ink2).lineLimit(2)
                     }
                     if !checked, let claim = item.claim, (me?.claimsOn ?? true) {
                         Label(claimLine(claim), systemImage: "hand.raised.fill").labelStyle(ShopTightLabelStyle())
@@ -389,31 +460,37 @@ struct ShoppingView: View {
         .accessibilityValue(checked ? L("done") : L("open"))
         .accessibilityHint(checked ? L("Double-tap to put it back on the list") : L("Double-tap to tick it off"))
         .accessibilityAction(named: L("Details")) { detailItem = item }
-        .accessibilityAction(named: L("Remove")) { Task { await store.delete(item) } }
+        .accessibilityAction(named: L("Remove")) { remove(item) }
         .draggable(ItemDrag(id: item.id).payload)
-        .swipeActions(edge: .leading) {
-            if !item.isChecked && item.id > 0 && (me?.claimsOn ?? true) {
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            // swipe right = tick, the same as a tap (pon); "I'll get it" second
+            Button { toggle(item) } label: {
+                Label(item.isChecked ? L("Put back") : L("Tick off"), systemImage: item.isChecked ? "arrow.uturn.backward" : "checkmark")
+            }
+            .tint(Theme.primary)
+            if !item.isChecked && item.id > 0 && (me?.claimsOn ?? true) && !app.isGuest {
                 let mine = item.claim != nil && item.claim?.userId == me?.userId
                 Button {
                     Task { await claim(item, on: !mine) }
                 } label: {
                     Label(mine ? L("Release") : L("I'll get it"), systemImage: mine ? "hand.raised.slash" : "hand.raised.fill")
                 }
-                .tint(mine ? Theme.ink3 : Theme.primary)
+                .tint(mine ? Theme.ink3 : Theme.info)
             }
         }
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) {
-                Task { await store.delete(item) }
-            } label: {
-                Label(L("Remove"), systemImage: "trash")
-            }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            // a full swipe left edits rather than deletes – what you need most, without losing a row by accident
             Button {
                 detailItem = item
             } label: {
                 Label(L("Details"), systemImage: "square.and.pencil")
             }
             .tint(Theme.info)
+            Button(role: .destructive) {
+                remove(item)
+            } label: {
+                Label(L("Remove"), systemImage: "trash")
+            }
         }
         .contextMenu {
             Button { detailItem = item } label: { Label(L("Edit row"), systemImage: "square.and.pencil") }
@@ -443,7 +520,7 @@ struct ShoppingView: View {
                     }
                 } label: { Label(L("Move to"), systemImage: "arrow.up.arrow.down") }
             }
-            Button(role: .destructive) { Task { await store.delete(item) } } label: { Label(L("Remove"), systemImage: "trash") }
+            Button(role: .destructive) { remove(item) } label: { Label(L("Remove"), systemImage: "trash") }
         }
     }
 
@@ -494,6 +571,14 @@ struct ShoppingView: View {
         }
     }
 
+    /// remove with a way back (the row is put on the list again; discreet rows stay removed – their name is not here)
+    private func remove(_ item: ShopItem) {
+        Haptics.tick()
+        Task { await store.delete(item) }
+        guard item.share == nil, item.id > 0 else { return }
+        undo = UndoAction(item: item, wasChecked: item.isChecked, text: LF("“%@” removed", item.productName ?? item.text), deleted: true)
+    }
+
     private func toggle(_ item: ShopItem) {
         Haptics.tick()
         let on = !item.isChecked
@@ -501,11 +586,13 @@ struct ShoppingView: View {
             if shopMode {
                 await store.setInBasket(item, on, storeId: store.list.store?.id)
             } else {
-                await store.setChecked(item, on)
+                await store.setChecked(item, on, toStock: toStock)
             }
         }
         if on {
-            undo = UndoAction(item: item, wasChecked: false, text: LF("“%@” ticked off", item.productName ?? item.text))
+            let name = item.productName ?? item.text
+            undo = UndoAction(item: item, wasChecked: false,
+                              text: !shopMode && toStock && item.productId != nil ? LF("%@ put away", name) : LF("“%@” ticked off", name))
         }
     }
 
@@ -520,7 +607,14 @@ struct ShoppingView: View {
                     let target = item
                     undo = nil
                     Task {
-                        if shopMode { await store.setInBasket(target, false, storeId: store.list.store?.id) }
+                        if u.deleted {
+                            let name = target.productName ?? target.text
+                            if let pid = target.productId {
+                                await store.addProduct(pid, name: target.text.isEmpty ? name : target.text, qty: target.qty, onShownList: true)
+                            } else {
+                                await store.add(text: [target.qtyLabel, target.text].compactMap { $0 }.joined(separator: " "))
+                            }
+                        } else if shopMode { await store.setInBasket(target, false, storeId: store.list.store?.id) }
                         else { await store.setChecked(target, false) }
                     }
                 }
@@ -555,6 +649,8 @@ struct ShoppingView: View {
                     .submitLabel(.done)
                     .onSubmit(submit)
                     .onChange(of: input) { _, new in Task { await updatePreview(new) } }
+                    .onChange(of: inputFocused) { _, on in if on { Task { await loadProducts() } } }
+                    .task(id: store.revision("stock")) { products = []; if inputFocused { await loadProducts() } }
                 if !input.isEmpty {
                     Button(L("Add"), action: submit).fontWeight(.semibold)
                 } else {
@@ -579,6 +675,7 @@ struct ShoppingView: View {
                 Label(visibility.explanation, systemImage: visibility.icon)
                     .font(.caption).foregroundStyle(Theme.primaryText)
             }
+            ForEach(typedMatches) { m in typedRow(m.product, qty: m.qty) }
             if preview.count > 1 || preview.first.map({ $0.qty != nil || $0.amount != nil }) == true {
                 Text(preview.map { p in
                     [p.qty.map { $0.rounded() == $0 ? "\(Int($0))×" : "\($0)×" }, p.amount, p.name].compactMap { $0 }.joined(separator: " ")
@@ -605,10 +702,16 @@ struct ShoppingView: View {
         Task {
             // "laut Bon vorgestern gekauft", "im Vorrat 2": ask once, never block (offline: just add)
             let single = QuickAddParser.fragments(text).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count == 1
-            if single, store.isOnline, let hints = try? await store.api.guardHints(text: text), let ask = hints.first(where: \.asks) {
-                guardMessage = ask.text
-                guardText = text
-                return
+            if single, store.isOnline, let hints = try? await store.api.guardHints(text: text) {
+                if let ask = hints.first(where: \.asks) {
+                    guardMessage = ask.text
+                    guardText = text
+                    return
+                }
+                // "steht schon drauf …" and "lieber 250 g?" are worth a line, not a question (like the web)
+                if let note = hints.first(where: { $0.kind == "on_list" }) ?? hints.first(where: { $0.kind == "waste" }) {
+                    show(note.kind == "on_list" ? "\(text.trimmingCharacters(in: .whitespaces)): \(note.text)" : note.text)
+                }
             }
             await store.add(text: text)
         }
@@ -623,48 +726,62 @@ struct ShoppingView: View {
 
     // MARK: suggestions
 
+    /// "Vorschläge": what ToHuus remembers is due – never put on the list silently, always accept or "not now"
     private var suggestionStrip: some View {
         Section {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Theme.Space.s2) {
-                    ForEach(suggestions) { s in
-                        Button {
-                            Task {
-                                do { try await store.api.acceptRhythm(s.productId) } catch { await store.addProduct(s.productId, name: s.name) }
-                                suggestions.removeAll { $0.productId == s.productId }
-                                store.touch("shopping")
-                                await store.refreshList()
+            ForEach(suggestions.prefix(6)) { s in
+                HStack(spacing: Theme.Space.s3) {
+                    Button {
+                        Task { await acceptSuggestion(s) }
+                    } label: {
+                        HStack(spacing: Theme.Space.s3) {
+                            ProductThumb(path: s.image, api: store.api, size: 32)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(s.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+                                Text(s.detail).font(.caption).foregroundStyle(Theme.ink3).lineLimit(1)
                             }
-                        } label: {
-                            HStack(spacing: 6) {
-                                ProductThumb(path: s.image, api: store.api, size: 26)
-                                Image(systemName: "plus").imageScale(.small)
-                                Text(s.name).lineLimit(1)
-                            }
-                                .font(.subheadline)
-                                .padding(.leading, s.image == nil ? 12 : 5).padding(.trailing, 12).padding(.vertical, s.image == nil ? 8 : 5)
-                                .background(Theme.primarySoft, in: Capsule())
-                                .foregroundStyle(Theme.primaryText)
+                            Spacer(minLength: 0)
+                            Image(systemName: "plus.circle.fill").font(.title2).foregroundStyle(Theme.primary)
                         }
-                        .buttonStyle(.plain)
-                        .hoverEffect(.lift)
-                        .contextMenu {
-                            Button(L("Don't suggest")) {
-                                Task {
-                                    try? await store.api.dismissRhythm(s.productId)
-                                    suggestions.removeAll { $0.productId == s.productId }
-                                }
-                            }
-                        }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(LF("Put %@ on the list", s.name))
+                    Button {
+                        Task { await dismissSuggestion(s) }
+                    } label: {
+                        Image(systemName: "xmark").font(.footnote.weight(.semibold)).foregroundStyle(Theme.ink3).tapTarget()
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(LF("Not now: %@", s.name))
                 }
-                .padding(.vertical, 4)
+                .swipeActions {
+                    Button { Task { await dismissSuggestion(s) } } label: { Label(L("Not now"), systemImage: "xmark") }
+                }
             }
         } header: {
-            Text(L("ToHuus remembers – probably due"))
+            HStack {
+                Text(L("Suggestions"))
+                Spacer()
+                Text(L("ToHuus remembers what you buy regularly")).textCase(nil).font(.caption2)
+            }
         }
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+    }
+
+    private func acceptSuggestion(_ s: RhythmItem) async {
+        Haptics.tick()
+        suggestions.removeAll { $0.productId == s.productId }
+        do { try await store.api.acceptRhythm(s.productId) } catch { await store.addProduct(s.productId, name: s.name, onShownList: true) }
+        show(LF("%@ is on the shopping list", s.name))
+        store.touch("shopping")
+        await store.refreshList()
+    }
+
+    /// dismissed twice → the server stops suggesting it
+    private func dismissSuggestion(_ s: RhythmItem) async {
+        Haptics.tick()
+        suggestions.removeAll { $0.productId == s.productId }
+        try? await store.api.dismissRhythm(s.productId)
     }
 
     private func loadSuggestions() async {
@@ -684,15 +801,6 @@ struct ShoppingView: View {
         Task { try? await store.api.setTripPrivacy(on) }
     }
 
-    private func createList() {
-        let name = newListName.trimmingCharacters(in: .whitespaces)
-        newListName = ""
-        guard !name.isEmpty else { return }
-        Task {
-            try? await store.api.createShopList(name: name)
-            await store.refreshList()
-        }
-    }
 
     // MARK: toolbar
 
@@ -724,7 +832,7 @@ struct ShoppingView: View {
             }
             .accessibilityLabel(L("Shop mode"))
         }
-        if store.list.lists.count > 1 || listsSupported {
+        if (store.list.lists.count > 1 || listsSupported) && !app.isGuest {
             ToolbarItem(placement: .principal) {
                 Menu {
                     ForEach(store.list.lists) { l in
@@ -736,7 +844,7 @@ struct ShoppingView: View {
                         }
                     }
                     if listsSupported {
-                        Button { showNewList = true } label: { Label(L("New list"), systemImage: "plus") }
+                        Button { showNewListSheet = true } label: { Label(L("Another list"), systemImage: "plus") }
                     }
                     if let l = store.list.currentList, !l.isMain {
                         Button { manageList = l } label: { Label(L("Edit this list"), systemImage: "pencil") }
@@ -758,18 +866,24 @@ struct ShoppingView: View {
                 Divider()
                 Button { showUsuals = true } label: { Label(L("Our usuals"), systemImage: "star") }
                 Button { showRecent = true } label: { Label(L("Recently done"), systemImage: "clock.arrow.circlepath") }
-                Button { showOffers = true } label: { Label(L("Offers"), systemImage: "tag") }
-                Button { showWishes = true } label: { Label(L("Wishes & Merkliste"), systemImage: "gift") }
+                if !app.isGuest {
+                    Button { showOffers = true } label: { Label(L("Offers"), systemImage: "tag") }
+                    Button { showWishes = true } label: { Label(L("Wishes & Merkliste"), systemImage: "gift") }
+                }
                 Divider()
                 Button { showPaste = true } label: { Label(L("Paste a list"), systemImage: "doc.on.clipboard") }
+                Button { showImport = true } label: { Label(L("From another app"), systemImage: "square.and.arrow.down.on.square") }
                 Button { Task { await shareList() } } label: { Label(L("Share the list"), systemImage: "square.and.arrow.up") }
+                Divider()
+                Toggle(isOn: $toStock) { Label(L("Put away when checked off"), systemImage: "archivebox") }
+                Button { showListLook = true } label: { Label(L("How the list looks for me"), systemImage: "textformat.size") }
                 Button { showShopSettings = true } label: { Label(L("Shops & aisles"), systemImage: "storefront") }
             } label: {
                 // receipts, paper lists, usuals, wishes, sharing – more than receipts, so the general "more" symbol
                 Image(systemName: "ellipsis.circle")
             }
             .accessibilityLabel(L("More for the list"))
-            .accessibilityHint(L("Receipts, paper lists, usuals, wishes and sharing"))
+            .accessibilityHint(L("Receipts, paper lists, usuals, offers, import, sharing and how the list looks"))
         }
     }
 }
@@ -944,7 +1058,8 @@ extension ShoppingView {
         do {
             let text = try await store.api.exportList()
             guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { show(L("The list is empty.")); return }
-            shareText = ShareText(text: (store.list.currentList?.name ?? L("Shopping list")) + "\n" + text)
+            let lines = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            shareText = ShareText(text: ShareText.make(title: store.list.currentList?.name ?? L("Shopping list"), lines: lines, medium: "list"))
         } catch {
             show(APIError.from(error).localizedDescription)
         }
@@ -974,4 +1089,311 @@ struct ShopActivitySheet: UIViewControllerRepresentable {
     let items: [Any]
     func makeUIViewController(context: Context) -> UIActivityViewController { UIActivityViewController(activityItems: items, applicationActivities: nil) }
     func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - 14 Oct 2026 parity: groups, "I'm at", care lists, shop tools, typing suggestions, who gets what
+
+/// One block of the list: an aisle (or another store / a care list in the shop), or "Mira is getting these" while
+/// someone else is shopping – what they took on waits in their group, nobody buys it twice.
+struct ShopGroup: Identifiable {
+    let key: String
+    let title: String
+    let items: [ShopItem]
+    var taken = false
+    var id: String { key }
+}
+
+/// a product that matches what is being typed (and the quantity typed with it)
+struct TypedMatch: Identifiable {
+    let product: ProductInfo
+    let qty: Double?
+    var id: Int { product.id }
+}
+
+extension ShoppingView {
+    fileprivate var isMainList: Bool { (store.list.listId?.value ?? "0") == "0" }
+
+    fileprivate func sectionTitle(_ key: String) -> String {
+        if key.hasPrefix("list:") {
+            let id = String(key.dropFirst(5))
+            return store.list.lists.first { $0.id.value == id }?.name ?? L("Other list")
+        }
+        return ShopSectionKey.label(key)
+    }
+
+    fileprivate var groups: [ShopGroup] {
+        var shoppers: [Int: String] = [:]
+        for t in others { if let id = t.user.id { shoppers[id] = t.user.name } }
+        let taken: (ShopItem) -> Bool = { i in i.claim?.userId.map { shoppers[$0] != nil } ?? false }
+        var out = store.list.sections.map { ShopGroup(key: $0.key, title: sectionTitle($0.key), items: $0.items.filter { !taken($0) }) }
+            .filter { !$0.items.isEmpty }
+        let open = store.list.sections.flatMap(\.items)
+        for (uid, name) in shoppers.sorted(by: { $0.value < $1.value }) {
+            let theirs = open.filter { $0.claim?.userId == uid }
+            if !theirs.isEmpty { out.append(ShopGroup(key: "taken:\(uid)", title: LF("%@ is getting these", name), items: theirs, taken: true)) }
+        }
+        return out
+    }
+
+    /// "Ich bin bei …": sorts the list by that shop's aisles without switching to the shop view
+    fileprivate var atStoreSection: some View {
+        Section {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Theme.Space.s2) {
+                    Label(L("I’m at"), systemImage: "storefront").font(.footnote.weight(.semibold)).foregroundStyle(Theme.ink2)
+                    ForEach(store.list.stores) { s in
+                        let on = store.storeId == s.id && !shopMode
+                        ShopToggleChip(title: s.name, on: on) {
+                            Haptics.tick()
+                            Task { await store.setStore(on ? nil : s.id, shopMode: false) }
+                        }
+                        .accessibilityHint(L("Sorts the list by this shop's aisles"))
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+    }
+
+    /// a list somebody shops for someone else: the handover note and the fridge check before the visit
+    fileprivate func careSection(_ l: ListRef) -> some View {
+        Section {
+            if let note = l.note, !note.isEmpty {
+                Label {
+                    Text(L("Handover") + ": ").fontWeight(.semibold) + Text(note)
+                } icon: {
+                    Image(systemName: "note.text").foregroundStyle(Theme.primaryText)
+                }
+                .font(.subheadline)
+            }
+            Button { careList = l } label: {
+                Label(L("Fridge check before the visit"), systemImage: "refrigerator")
+            }
+        }
+    }
+
+    /// in the shop: switch the shop, add one, set its aisle order
+    fileprivate var shopToolsSection: some View {
+        Section {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Theme.Space.s2) {
+                    ForEach(store.list.stores) { s in
+                        ShopToggleChip(title: s.name, systemImage: "storefront", on: store.list.store?.id == s.id) {
+                            Haptics.tick()
+                            enterShop(s.id)
+                        }
+                    }
+                    ShopToggleChip(title: L("Other store"), systemImage: "plus", on: false) { showNewStore = true }
+                }
+                .padding(.vertical, 2)
+            }
+            HStack {
+                Label(L("Sorted by aisle · works without a connection, too"), systemImage: "arrow.up.arrow.down")
+                    .font(.caption).foregroundStyle(Theme.ink3)
+                Spacer(minLength: 0)
+                if let s = store.list.store, store.list.sections.count > 1 {
+                    Button(L("Change the aisle order")) { orderStore = s }.font(.caption.weight(.semibold))
+                }
+            }
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+    }
+
+    fileprivate func createStore() {
+        let name = newStoreName.trimmingCharacters(in: .whitespaces)
+        newStoreName = ""
+        guard !name.isEmpty else { return }
+        Task {
+            do {
+                try await store.api.createStore(name: name)
+                let all = (try? await store.api.stores()) ?? []
+                Haptics.success()
+                enterShop(all.last { $0.name == name }?.id)
+            } catch {
+                show(APIError.from(error).localizedDescription)
+            }
+        }
+    }
+
+    /// "Wer holt was" – who said "I'll get it" for what, just so nobody buys twice (no points, no ranking)
+    @ViewBuilder fileprivate var whoGetsWhatSection: some View {
+        let open = store.list.sections.flatMap(\.items)
+        let claimed = open.filter { $0.claim != nil }
+        if !claimed.isEmpty {
+            let names = Array(Set(claimed.compactMap { $0.claim?.name })).sorted()
+            Section {
+                ForEach(names, id: \.self) { name in
+                    let mine = claimed.filter { $0.claim?.name == name }
+                    HStack(alignment: .top, spacing: Theme.Space.s3) {
+                        ShopMemberDot(name: name, color: mine.first?.claim?.color, size: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(name).font(.subheadline.weight(.semibold))
+                            Text(mine.map { $0.productName ?? $0.text }.joined(separator: ", ")).font(.caption).foregroundStyle(Theme.ink2)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+                let rest = open.filter { $0.claim == nil }
+                if !rest.isEmpty {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Still open")).font(.subheadline.weight(.semibold))
+                        Text(rest.map { $0.productName ?? $0.text }.joined(separator: ", ")).font(.caption).foregroundStyle(Theme.ink3).lineLimit(3)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            } header: {
+                Text(L("Who gets what"))
+            } footer: {
+                Text(L("Just so nobody buys it twice. No points, no ranking."))
+            }
+        }
+    }
+
+    /// second line of a row: for whom (WG), where to buy, and in the shop what was bought last time
+    fileprivate func extraLine(_ item: ShopItem) -> String? {
+        var parts: [String] = []
+        if let o = item.owner?.name { parts.append(LF("for %@", o)) }
+        if let b = item.buyAt, !b.isEmpty { parts.append(LF("at %@", b.joined(separator: ", "))) }
+        if shopMode, (item.note ?? "").isEmpty, let l = item.lastBought {
+            let last = [l.name, l.size, l.shop, l.price.map { Money.format($0) }].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+            if !last.isEmpty { parts.append(LF("last time: %@", last)) }
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    // MARK: typing suggestions (fast add, like pon / That Shopping List)
+
+    /// products matching what is typed: exact, then starts with, then a word starts with, then contains –
+    /// the often-bought first. One fragment only ("2 milk" still matches milk and keeps the 2).
+    fileprivate var typedMatches: [TypedMatch] {
+        guard !input.isEmpty, !products.isEmpty else { return [] }
+        let parsed = QuickAddParser.parse(input)
+        guard parsed.count == 1, let first = parsed.first else { return [] }
+        let n = first.name.trimmingCharacters(in: .whitespaces).lowercased()
+        guard n.count >= 2 else { return [] }
+        func rank(_ p: ProductInfo) -> Int? {
+            let name = p.name.lowercased()
+            if name == n { return 0 }
+            if name.hasPrefix(n) { return 1 }
+            if name.split(separator: " ").contains(where: { $0.hasPrefix(n) }) { return 2 }
+            if (p.brand.map { "\($0) \(p.name)" } ?? p.name).lowercased().contains(n) { return 3 }
+            return nil
+        }
+        let scored = products.compactMap { p in rank(p).map { (p, $0) } }
+        let top = scored.sorted { a, b in
+            if a.1 != b.1 { return a.1 < b.1 }
+            let ca = usualCount[a.0.id] ?? 0, cb = usualCount[b.0.id] ?? 0
+            if ca != cb { return ca > cb }
+            return a.0.name.count < b.0.name.count
+        }
+        return top.prefix(6).map { TypedMatch(product: $0.0, qty: first.qty) }
+    }
+
+    fileprivate func typedRow(_ p: ProductInfo, qty: Double?) -> some View {
+        let onList = store.list.openItems.contains { $0.productId == p.id }
+        let stock = (p.total ?? 0) > 0 ? LF("%@ in stock", Self.number(p.total ?? 0)) : L("not in stock")
+        return Button {
+            addSuggested(p, qty: qty)
+        } label: {
+            HStack(spacing: Theme.Space.s3) {
+                ProductThumb(path: p.imagePath, api: store.api, size: 32)
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 4) {
+                        if let q = qty, q != 1 { Text(Self.number(q) + "×").foregroundStyle(Theme.primaryText).fontWeight(.semibold) }
+                        Text(p.name).foregroundStyle(Theme.ink)
+                    }
+                    .font(.subheadline)
+                    Text([p.brand, onList ? L("already on the list") : stock].compactMap { $0 }.joined(separator: " · "))
+                        .font(.caption).foregroundStyle(onList ? Theme.primaryText : Theme.ink3)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "plus.circle").foregroundStyle(Theme.primary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(LF("Put %@ on the list", p.name))
+    }
+
+    fileprivate static func number(_ v: Double) -> String {
+        v.rounded() == v ? String(Int(v)) : String(v).replacingOccurrences(of: ".", with: ",")
+    }
+
+    /// a tapped suggestion: linked to the product, the field empties and keeps the keyboard for the next one
+    fileprivate func addSuggested(_ p: ProductInfo, qty: Double?) {
+        Haptics.tick()
+        input = ""
+        preview = []
+        inputFocused = true
+        if visibility != .all {
+            let vis = visibility
+            visibility = .all
+            let text = qty.map { "\(Self.number($0)) \(p.name)" } ?? p.name
+            Task { await addHidden(text, vis) }
+            return
+        }
+        Task { await store.addProduct(p.id, name: p.name, qty: qty, onShownList: true) }
+    }
+
+    fileprivate func loadProducts() async {
+        guard products.isEmpty, !app.isGuest else { return }
+        products = (try? await store.api.products()) ?? []
+        let u = (try? await store.api.usuals()) ?? []
+        usualCount = Dictionary(u.map { ($0.productId, $0.count ?? 0) }, uniquingKeysWith: { a, _ in a })
+    }
+}
+
+extension ShoppingView {
+    @ViewBuilder fileprivate var topSections: some View {
+        if !shopMode {
+            addSection
+            if !store.list.stores.isEmpty { atStoreSection }
+            if let l = store.list.currentList, l.kind == "care" { careSection(l) }
+            if isMainList && !app.isGuest {
+                LunchboxSuggestionSection(store: store) { n in show(LF("%d lunchbox things on the list", n)) }
+            }
+            if !suggestions.isEmpty { suggestionStrip }
+            if !forecast.isEmpty { forecastSection }
+            if isMainList && !app.isGuest {
+                OffersStripSection(store: store) { showOffers = true }
+            }
+        } else if !store.list.stores.isEmpty || store.list.store != nil {
+            shopToolsSection
+        }
+    }
+
+    @ViewBuilder fileprivate var groupSections: some View {
+        ForEach(groups) { section in
+            Section {
+                ForEach(section.items) { item in
+                    if section.taken {
+                        row(item)
+                    } else {
+                        row(item)
+                            .dropDestination(for: String.self) { items, _ in drop(items, into: section.key) }
+                    }
+                }
+            } header: {
+                if section.taken {
+                    Label(section.title, systemImage: "figure.walk.motion")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.primaryText)
+                } else {
+                    HStack {
+                        Label(section.title, systemImage: ShopSectionKey.icon(section.key))
+                        Spacer()
+                        Text("\(section.items.count)").monospacedDigit().foregroundStyle(Theme.ink3)
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(dropSection == section.key ? Theme.primaryText : Theme.ink2)
+                    .dropDestination(for: String.self) { items, _ in drop(items, into: section.key) } isTargeted: { on in
+                        dropSection = on ? section.key : nil
+                    }
+                }
+            }
+        }
+    }
 }

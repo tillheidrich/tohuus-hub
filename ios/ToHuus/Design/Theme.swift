@@ -17,6 +17,9 @@ enum Theme {
     static let primaryDark = dynamic(0x104E3C, 0x20684C)
     static let primarySoft = dynamic(0xE4EEE6, 0x1C3229)
     static let primaryText = dynamic(0x176B50, 0x74CDA2)
+    /// the app-wide tint (text buttons, links, toggles): readable on canvas and surface in both modes.
+    /// Filled buttons set `.tint(Theme.primary)` so white text stays readable on them.
+    static let accent = dynamic(0x176B50, 0x74CDA2)
     static let onPrimary = dynamic(0xFFFDF9, 0xF7F5EF)
     static let sage = dynamic(0xA5BAA9, 0x50665A)
     static let sand = dynamic(0xEDE4D5, 0x2E2A22)

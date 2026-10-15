@@ -1,4 +1,5 @@
 /** In-app help (/hilfe): short how-tos for the things people ask about in week one. Area: onboard. */
+import { RatgeberCards } from './RatgeberCards';
 import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, Confetti, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase, UsersThree, ForkKnife, CircleHalf, HandHeart } from '@phosphor-icons/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -314,6 +315,7 @@ export function Help() {
           );
         })}
       </div>
+      <RatgeberCards max={6} />
       <p className="small muted row" style={{ gap: 8, marginTop: 22 }}>
         <Lifebuoy size={16} /> {t('Still stuck? Ask your AI assistant – it can call “getting_started_status” to see what is set up.')}
       </p>

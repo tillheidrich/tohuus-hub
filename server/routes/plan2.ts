@@ -109,7 +109,7 @@ r.post(
         servings: servingsSchema.optional(),
       })
       .parse(req.body ?? {});
-    return planEntry(b);
+    return planEntry({ ...b, added_by: req.actor?.name ?? null });
   }),
 );
 

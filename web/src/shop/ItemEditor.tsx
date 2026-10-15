@@ -8,6 +8,7 @@ import { api, fmtDate, invalidate, patch } from '../api';
 import { t } from '../i18n';
 import { money } from '../region';
 import { Thumb, useToast } from '../ui';
+import { ExtraToggle } from './extras';
 import { type ShopItem, type Substitute, SUBSTITUTE_LABEL } from './sections';
 
 export function substituteLine(s: Substitute | null | undefined) {
@@ -116,6 +117,7 @@ export function ItemEditor({ item, onDone }: { item: ShopItem; onDone?: () => vo
           ))}
         </div>
       </div>
+      {!hidden && <ExtraToggle id={item.id} extra={item.extra} />}
       <div className="field">
         <span className="eyebrow">{t('Photo')}</span>
         <div className="row ie-photo">

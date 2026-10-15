@@ -79,7 +79,7 @@ export function OperatorBeta() {
           </div>
           <div className="field op-span">
             <label htmlFor="op-note">{t('Note (for you)')}</label>
-            <input id="op-note" className="input" value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder={t('e.g. TestFlight group 1')} />
+            <input id="op-note" className="input" value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder={t('e.g. newsletter October')} />
           </div>
           <button className="btn primary op-span">{t('Create codes')}</button>
         </form>

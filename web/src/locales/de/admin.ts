@@ -15,7 +15,7 @@ export const admin: Record<string, string> = {
   // back office – shell
   Overview: 'Übersicht',
   Statistics: 'Statistik',
-  'Beta access': 'Beta-Zugang',
+  'Beta access': 'Zugang per Einladung',
   Log: 'Protokoll',
   Sections: 'Bereiche',
   'Load more': 'Mehr laden',
@@ -214,4 +214,5 @@ export const admin: Record<string, string> = {
   'Create drafts with AI': 'Entwürfe mit KI erstellen',
   Queue: 'Warteschlange',
   'Nothing here.': 'Hier ist nichts.',
+  'e.g. newsletter October': 'z. B. Newsletter Oktober',
 };

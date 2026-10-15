@@ -60,6 +60,8 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
   const [rec, setRec] = useState<{ started: number } | null>(null);
   const [secs, setSecs] = useState(0);
   const [quotaHit, setQuotaHit] = useState(false);
+  // Free has no AI (docs/pricing.md) – a different, calm note with the way to the trial
+  const [noPlanAi, setNoPlanAi] = useState(false);
   const [leftNow, setLeftNow] = useState<number | null | undefined>(undefined);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
@@ -114,6 +116,12 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
       markMissing('/assistant/chat');
       window.dispatchEvent(new Event('tohuus:assistant-gone'));
       update(pendingId, { text: t('The assistant isn’t available on this server.'), pending: false, error: true });
+      return;
+    }
+    // 402 plan.assistant: Free has no AI (docs/pricing.md) – simple list sentences keep working, the trial has everything
+    if (e instanceof ApiError && e.code === 'plan.assistant') {
+      setNoPlanAi(true);
+      update(pendingId, { text: e.message, pending: false });
       return;
     }
     // 402 quota.assistant: this month's messages are used up (simple list sentences keep working, see docs/assistant.md)
@@ -241,7 +249,16 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
           ))}
         </div>
 
-        {exhausted && (
+        {noPlanAi && (
+          <div className="assist-quota" role="status">
+            <b>{t('The assistant with AI comes with Haushalt and Plus.')}</b>
+            <p>{t('Simple things like “milk and bread” or “coffee is out” work without it. With the 14-day trial you can try everything – no payment details.')}</p>
+            <a className="btn sm primary" href="/einstellungen?tab=plan">
+              {t('See plans')}
+            </a>
+          </div>
+        )}
+        {exhausted && !noPlanAi && (
           <div className="assist-quota" role="status">
             <b>{t('This month’s assistant messages are used up.')}</b>
             <p>

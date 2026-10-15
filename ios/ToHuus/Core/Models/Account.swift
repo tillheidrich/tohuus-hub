@@ -29,6 +29,8 @@ struct InstanceInfo: Decodable, Sendable {
         var passwordMin: Int?
         /// ToHuus Cloud: Sign in with Apple on the web (the app can always use it in the cloud)
         var apple: JSONValue?
+        /// connecting the app by QR code / one-time code and the browser sign-in (POST /api/auth/app/pair…)
+        var appPair: JSONValue?
     }
 
     struct Features: Decodable, Sendable {
@@ -76,6 +78,8 @@ struct AppAuthResponse: Decodable, Sendable {
     var household: JSONValue?
     /// Sign in with Apple: a new account and household were created (the app asks about sample data)
     var created: Bool?
+    /// joining by invitation (POST /api/invite/:token, client "ios") answers the member's name on top level
+    var name: String?
 
     /// The active household: an id string/number or an object with `id`.
     var householdId: String? {
@@ -86,7 +90,7 @@ struct AppAuthResponse: Decodable, Sendable {
         return households.first?.id.value
     }
 
-    var userName: String? { user?["name"]?.string ?? account?["name"]?.string }
+    var userName: String? { user?["name"]?.string ?? account?["name"]?.string ?? name }
 }
 
 /// GET /api/cloud/me
@@ -113,6 +117,10 @@ struct MeResponse: Decodable, Sendable {
     var listPrefs: JSONValue?
     /// who lives here: { form: single|couple|family|wg|…, form_chosen, ui } (server/lib/places.ts homeSetup)
     var home: JSONValue?
+    /// the website for the share footer (docs/sharing.md), e.g. https://tohuus.heidrich-digital.de
+    var siteUrl: String?
+    /// the household keeps "— geteilt aus ToHuus · …" under shared texts (admin switch, default on)
+    var shareFooter: Bool?
     /// a household of one (chosen at sign-up) – "Bring mir was" has nobody to ask, like the web
     var isSingleHousehold: Bool { home?["form"]?.string == "single" && (home?["form_chosen"]?.bool ?? home?["formChosen"]?.bool ?? true) }
 
@@ -120,6 +128,8 @@ struct MeResponse: Decodable, Sendable {
     var role: String? { actor?["role"]?.string }
     /// a permanent guest of the household (actor.houseGuest { level, … }) – sees only what is shared with guests
     var isGuest: Bool { actor?["houseGuest"]?["level"]?.string != nil }
+    /// the guest's level right now: order | stock | recipes | family | paused (nil = lives here)
+    var guestLevel: String? { actor?["houseGuest"]?["level"]?.string }
     /// children (kid devices or a child role) see AI as locked
     var isChild: Bool {
         let kind = actor?["kind"]?.string
@@ -174,7 +184,7 @@ struct BillingStatus: Decodable, Sendable {
     var planLabel: String {
         if let gift {
             let name = plan == "haushalt" ? L("Household") : L("Plus")
-            if gift.kind == "beta" { return LF("%@ – a gift during the beta", name) }
+            if gift.kind == "beta" { return LF("%@ – a gift for every household", name) }
             if gift.forever == true { return LF("%@ – for good", name) }
             return LF("%@ – a gift", name)
         }
@@ -183,7 +193,7 @@ struct BillingStatus: Decodable, Sendable {
         case "haushalt": return L("Household")
         case "plus": return lifetime == true ? L("Plus – for good") : L("Plus")
         case "selfhost": return L("Own server – everything included")
-        default: return L("Free")
+        default: return L("Free – without AI")
         }
     }
 
@@ -217,6 +227,8 @@ struct AIStatus: Decodable, Sendable, Equatable {
     var reason: String?
     /// aiState.consent.processor (ToHuus Cloud)
     var processor: String?
+    /// the household's plan includes AI (false on Free: the assistant reads simple sentences without AI)
+    var planAi: Bool?
 
     init(ai: Bool? = nil, voice: Bool? = nil, receiptsAi: Bool? = nil, household: Bool? = nil, personal: Bool? = nil, locked: Bool? = nil, reason: String? = nil) {
         self.ai = ai; self.voice = voice; self.receiptsAi = receiptsAi
@@ -241,5 +253,6 @@ struct AIStatus: Decodable, Sendable, Equatable {
         locked = locked ?? c.first(Bool.self, "aiLocked", "locked", "kidLock")
         reason = reason ?? c.first(String.self, "aiReason", "reason")
         processor = c.first(JSONValue.self, "aiState")?["consent"]?["processor"]?.string
+        planAi = c.first(Bool.self, "planAi")
     }
 }

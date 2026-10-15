@@ -8,6 +8,7 @@
  *   offscreen    element sticking out of the viewport (left/right), or the whole page scrolls sideways
  *   icon-overlap text lying on an icon (svg/img) inside the same button / row
  *   wrap-under   button label wrapping underneath its icon
+ *   tight        text closer than 6 px to the border of the box it sits in (card, button, chip without padding)
  *
  * Usage (playwright must be resolvable – install it in a scratch dir and set NODE_PATH, see docs/ui-audit.md):
  *   node scripts/ui-audit.mjs http://localhost:8080 [--out dir] [--email x --password y] [--only /einkauf,/kochen]
@@ -119,6 +120,49 @@ function detect() {
         const p = el.parentElement;
         const pr = p?.getBoundingClientRect();
         if (!pr || (pr.right <= vw + 1 && pr.left >= -1) || inScroller(p)) add('offscreen', el, `x ${Math.round(r.left)}…${Math.round(r.right)} of ${vw}`);
+      }
+    }
+  }
+
+  // 6 – text glued to the border of its box (a card or chip without padding, 15 Oct 2026)
+  const boxOf = (el) => {
+    for (let a = el; a && a !== document.body; a = a.parentElement) {
+      const c = getComputedStyle(a);
+      const bl = Number.parseFloat(c.borderLeftWidth) || 0;
+      const br = Number.parseFloat(c.borderRightWidth) || 0;
+      const painted = (bl > 0 && c.borderLeftStyle !== 'none' && !/rgba\(.*, 0\)$|transparent/.test(c.borderLeftColor)) || (c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.backgroundColor !== 'transparent' && Number.parseFloat(c.borderTopLeftRadius) > 0);
+      if (painted) return { box: a, bl, br };
+    }
+    return null;
+  };
+  {
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = w.nextNode(); n; n = w.nextNode()) {
+      if (!n.textContent.trim()) continue;
+      const pe = n.parentElement;
+      if (!pe || pe.closest('svg, input, textarea, select, option, script, style') || ignored(pe) || !visible(pe) || inScroller(pe)) continue;
+      const hit = boxOf(pe);
+      if (!hit) continue;
+      const br = hit.box.getBoundingClientRect();
+      // full-width bands (page, tab bar, sheets) have their own gutters; small discs (initials, badges) are centred
+      if (br.width >= vw - 8 || br.width < 48) continue;
+      // text cut with „…" or scrolled on purpose is reported as overflow/clipped, not here
+      let cut = false;
+      for (let a = pe; a && a !== hit.box.parentElement; a = a.parentElement) {
+        const c = getComputedStyle(a);
+        if (c.overflowX !== 'visible' || c.textOverflow === 'ellipsis' || c.whiteSpace === 'pre') cut = true;
+      }
+      if (cut) continue;
+      const rg = document.createRange();
+      rg.selectNodeContents(n);
+      for (const rc of rg.getClientRects()) {
+        if (rc.width < 2) continue;
+        const left = rc.left - (br.left + hit.bl);
+        const right = br.right - hit.br - rc.right;
+        if (left < 6 || right < 6) {
+          add('tight', pe, `${Math.round(Math.min(left, right))}px to the edge of ${desc(hit.box)}`);
+          break;
+        }
       }
     }
   }

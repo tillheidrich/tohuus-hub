@@ -153,4 +153,15 @@ export const cook: Record<string, string> = {
   'Another day': 'Anderer Tag',
   today: 'heute',
   tomorrow: 'morgen',
+  // "Was essen wir diese Woche?" – the deck that plans (Decide.tsx, iOS WeekMealDeck.swift)
+  'What shall we eat this week?': 'Was essen wir diese Woche?',
+  'A few ideas, one at a time – yes puts it on a free evening.': 'Ein paar Ideen, eine nach der anderen – ein Ja legt sie auf einen freien Abend.',
+  'Swipe right for what you fancy – it goes on the next free evening.': 'Wisch nach rechts, worauf du Lust hast – es kommt auf den nächsten freien Abend.',
+  'Swipe right for what you fancy – it goes on the next free evening. Free: {days}.': 'Wisch nach rechts, worauf du Lust hast – es kommt auf den nächsten freien Abend. Frei: {days}.',
+  'No free evening left this week.': 'Diese Woche ist kein Abend mehr frei.',
+  'Every evening this week is planned.': 'Jeder Abend dieser Woche ist schon geplant.',
+  'Nothing planned – that’s fine too.': 'Nichts geplant – auch gut.',
+  '1 evening planned': '1 Abend geplant',
+  '{n} evenings planned': '{n} Abende geplant',
+  'Yes, gladly': 'Gern',
 };

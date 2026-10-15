@@ -12,8 +12,8 @@ import { db } from '../db.js';
 import { currentLang } from '../i18n.js';
 import { aiConfigured } from '../lib/ai.js';
 import {
-  AI_PROCESSOR,
   aiConsentRequired,
+  aiProcessorLabel,
   aiOffReason,
   householdAiConsent,
   householdAiOn,
@@ -43,7 +43,7 @@ export function aiStateFor(userId: number | null | undefined) {
     mine: personAiOn(userId),
     effective: any && reason === null,
     reason: reason ?? (any ? null : 'no_model'),
-    consent: { required: aiConsentRequired(), given: !aiConsentRequired() || personAiConsent(userId), household: !aiConsentRequired() || householdAiConsent(), processor: AI_PROCESSOR, privacyUrl: `${config.siteUrl}/${currentLang() === 'de' ? 'de/datenschutz.html' : 'privacy.html'}` },
+    consent: { required: aiConsentRequired(), given: !aiConsentRequired() || personAiConsent(userId), household: !aiConsentRequired() || householdAiConsent(), processor: aiProcessorLabel(currentLang()), privacyUrl: `${config.siteUrl}/${currentLang() === 'de' ? 'de/datenschutz.html' : 'privacy.html'}` },
   };
 }
 

@@ -26,6 +26,7 @@ import { r as partyRoutes, board as partyBoard } from './routes/party.js';
 import { r as freshRoutes } from './routes/fresh.js';
 import { r as shopRoutes } from './routes/shop.js';
 import { r as homeRoutes } from './routes/home.js';
+import { r as searchRoutes } from './routes/search.js';
 import { r as kioskRoutes, pub as kioskPublic } from './routes/kiosk.js';
 import { r as kidsRoutes, kid as kidDevice } from './routes/kids.js';
 import { r as onboardRoutes } from './routes/onboard.js';
@@ -126,6 +127,8 @@ app.use((_req, res, next) => {
   res.setHeader('Referrer-Policy', 'same-origin');
   res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
   res.setHeader('X-Frame-Options', 'DENY');
+  // HTTPS only from now on for this host (browsers ignore it over plain http; no includeSubDomains – sibling hosts decide for themselves)
+  if (config.baseUrl.startsWith('https://')) res.setHeader('Strict-Transport-Security', 'max-age=15552000');
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
@@ -148,6 +151,17 @@ app.use('/api', (req, res, next) => {
   // only Bearer/x-api-key requests are token-authenticated (resolveActor never falls back to the cookie for them)
   // Apple's form_post comes from appleid.apple.com; it is bound to our own state cookie instead (routes/cloud-apple.ts)
   if (config.multiTenant && req.path === '/auth/apple/callback') return next();
+  // the website's "Wir können uns das nicht leisten" form (routes/cloud.ts): no cookie auth, only from our website
+  if (config.multiTenant && req.path === '/cloud/hardship') {
+    const from = req.headers.origin;
+    let site: string | null = null;
+    try {
+      site = new URL(config.siteUrl).origin;
+    } catch {
+      /* no website configured */
+    }
+    if (!from || from === site || from === ownOrigin) return next();
+  }
   if (req.path.startsWith('/guest/') || req.headers.authorization?.startsWith('Bearer ') || typeof req.headers['x-api-key'] === 'string') return next();
   const origin = req.headers.origin;
   const site = req.headers['sec-fetch-site'];
@@ -221,6 +235,7 @@ app.use('/api', partyRoutes);
 app.use('/api', freshRoutes);
 app.use('/api', shopRoutes);
 app.use('/api', homeRoutes);
+app.use('/api', searchRoutes);
 app.use('/api', kioskRoutes);
 app.use('/api', kidsRoutes);
 app.use('/api', onboardRoutes);
