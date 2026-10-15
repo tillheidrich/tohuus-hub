@@ -526,6 +526,268 @@
           "retrieved": "2026-10-14"
         }
       ]
+    },
+    {
+      "id": "care-at-home",
+      "topic": "care",
+      "title": {
+        "de": "86 Prozent werden zu Hause versorgt",
+        "en": "86 percent are cared for at home"
+      },
+      "text": {
+        "de": "Ende 2023 waren in Deutschland knapp 5,7 Millionen Menschen pflegebedürftig. 4,9 Millionen davon – 86 Prozent – lebten zu Hause, die meisten versorgt von Angehörigen.",
+        "en": "At the end of 2023 almost 5.7 million people in Germany needed care. 4.9 million of them – 86 percent – lived at home, most of them looked after by relatives."
+      },
+      "tohuus": {
+        "de": "„Für wen ich da bin“ gibt dieser Arbeit Platz: Besuche, Termine, Rezepte – privat, außer du teilst es.",
+        "en": "“People I look after” gives this work room: visits, appointments, prescriptions – private unless you share it."
+      },
+      "sources": [
+        {
+          "title": "Destatis, Pflegestatistik 2023 (2024)",
+          "publisher": "Destatis",
+          "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2024/12/PD24_478_224.html",
+          "retrieved": "2026-10-15"
+        }
+      ],
+      "value": "86 %",
+      "card": "pflege-zu-hause"
+    },
+    {
+      "id": "care-elsewhere",
+      "topic": "care",
+      "title": {
+        "de": "Pflege passiert oft in einem zweiten Haushalt",
+        "en": "Care often happens in a second household"
+      },
+      "text": {
+        "de": "64 Prozent der Pflege durch Angehörige findet außerhalb des eigenen Haushalts statt – meist bei den Eltern. Das heißt: Wege, Anrufe, zwei Kühlschränke im Kopf.",
+        "en": "64 percent of care by relatives happens outside the carer’s own household – mostly at the parents’ home. That means trips, calls, two fridges to keep in mind."
+      },
+      "tohuus": {
+        "de": "Was du für jemanden erledigst, kannst du mit einem Tipp festhalten – „Heute da gewesen“.",
+        "en": "What you do for someone can be noted with one tap – “Was there today”."
+      },
+      "sources": [
+        {
+          "title": "DIW Wochenbericht 37/2025",
+          "publisher": "DIW Berlin",
+          "url": "https://www.diw.de/documents/publikationen/73/diw_01.c.973323.de/25-37-1.pdf",
+          "retrieved": "2026-10-15"
+        }
+      ],
+      "value": "64 %",
+      "card": "pflege-zweiter-haushalt"
+    },
+    {
+      "id": "care-appreciation",
+      "topic": "care",
+      "title": {
+        "de": "Viel Hilfe bleibt unsichtbar",
+        "en": "A lot of help stays invisible"
+      },
+      "text": {
+        "de": "41 Prozent der Angehörigen, die aus der Ferne unterstützen, sagen: Andere verkennen, wie viel sie tun.",
+        "en": "41 percent of relatives who help from a distance say: others don’t see how much they do."
+      },
+      "tohuus": {
+        "de": "Im Wochenrückblick steht nur für dich: „3 Mal für jemanden da gewesen – das ist Arbeit, und sie zählt.“",
+        "en": "Your weekly review says, only to you: “3 times there for someone – that’s work, and it counts.”"
+      },
+      "sources": [
+        {
+          "title": "Pflege auf Distanz (Presseinformation)",
+          "publisher": "ZQP",
+          "url": "https://www.zqp.de/wp-content/uploads/ZQP_PI_DistanceCaregiving.pdf",
+          "retrieved": "2026-10-15"
+        }
+      ],
+      "value": "41 %",
+      "card": "pflege-wertschaetzung"
+    },
+    {
+      "id": "care-relief-unused",
+      "topic": "care",
+      "title": {
+        "de": "Entlastung bleibt oft liegen",
+        "en": "Relief often goes unused"
+      },
+      "text": {
+        "de": "In einer großen Befragung riefen 80 Prozent der Pflegenden den Entlastungsbetrag nicht ab. Beratung hilft: das Pflegetelefon des Bundes (030 20179131) oder der Pflegestützpunkt in der Nähe.",
+        "en": "In a large survey, 80 percent of carers did not claim the relief amount (Entlastungsbetrag). Advice helps: the federal care helpline (030 20179131) or a local care advice centre."
+      },
+      "tohuus": {
+        "de": "ToHuus verlinkt die offiziellen Stellen – ohne selbst zu beraten und ohne Beträge, die sich bald ändern.",
+        "en": "ToHuus links to the official places – without giving advice itself and without amounts that will change soon."
+      },
+      "sources": [
+        {
+          "title": "VdK-Pflegestudie 2022",
+          "publisher": "Sozialverband VdK",
+          "url": "https://www.vdk.de/assets/bundesverband/dokumente/publikationen_vdk/Pflegestudie_2021/Naechstenpflege_Alleingelassen-und-in-Buerokratie-erstickt_VdK-Pflegestudie_Zentrale-Studienergebnisse_Forderungen.pdf",
+          "retrieved": "2026-10-15",
+          "note": "Befragung von VdK-Mitgliedern"
+        }
+      ],
+      "value": "80 %",
+      "card": "entlastungsbetrag"
+    },
+    {
+      "id": "single-parents",
+      "topic": "single-parents",
+      "title": {
+        "de": "1,62 Millionen Alleinerziehende",
+        "en": "1.62 million single parents"
+      },
+      "text": {
+        "de": "2025 lebten in Deutschland 1,62 Millionen Alleinerziehende mit minderjährigen Kindern, 84 Prozent davon Mütter.",
+        "en": "In 2025, 1.62 million single parents with minor children lived in Germany, 84 percent of them mothers."
+      },
+      "tohuus": {
+        "de": "Wer allein mit Kindern lebt, sieht in ToHuus keine Vergleiche – nur, was geschafft ist.",
+        "en": "If you live alone with children, ToHuus shows no comparisons – only what got done."
+      },
+      "sources": [
+        {
+          "title": "Destatis, Mikrozensus 2025 (2026)",
+          "publisher": "Destatis",
+          "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/07/PD26_N051_12.html",
+          "retrieved": "2026-10-15"
+        }
+      ],
+      "value": "1,62 Mio.",
+      "card": "alleinerziehende"
+    },
+    {
+      "id": "mental-load-organising",
+      "topic": "mental-load",
+      "title": {
+        "de": "9 von 10 Müttern fühlen sich allein zuständig",
+        "en": "9 in 10 mothers feel solely responsible"
+      },
+      "text": {
+        "de": "In einer US-Studie fühlten sich rund 90 Prozent der Mütter in Partnerschaften allein verantwortlich dafür, die Termine der Familie zu organisieren.",
+        "en": "In a US study about 90 percent of mothers with a partner felt solely responsible for organising the family’s schedule."
+      },
+      "tohuus": {
+        "de": "„Im Kopf“ macht sichtbar, was sonst nur eine Person mit sich herumträgt – privat oder für alle.",
+        "en": "“On my mind” makes visible what otherwise only one person carries around – private or for everyone."
+      },
+      "sources": [
+        {
+          "title": "Ciciolla & Luthar, Sex Roles, 2019",
+          "publisher": "Ciciolla & Luthar, Sex Roles",
+          "url": "https://doi.org/10.1007/s11199-018-1001-x",
+          "retrieved": "2026-10-15"
+        }
+      ],
+      "value": "9 von 10",
+      "card": "mental-load-termine"
+    },
+    {
+      "id": "plan-quiets-mind",
+      "topic": "mental-load",
+      "title": {
+        "de": "Ein Plan beruhigt den Kopf",
+        "en": "A plan quiets the mind"
+      },
+      "text": {
+        "de": "In Laborstudien drängten sich offene Aufgaben weniger in die Gedanken, sobald es einen konkreten Plan dafür gab – wann und wie.",
+        "en": "In lab studies, unfinished tasks intruded less on people’s thoughts once there was a concrete plan for them – when and how."
+      },
+      "tohuus": {
+        "de": "Einen Gedanken in „Im Kopf“ zu legen, gern mit „irgendwann“, ist so ein kleiner Plan.",
+        "en": "Putting a thought into “On my mind”, with a “someday” if you like, is such a small plan."
+      },
+      "sources": [
+        {
+          "title": "Consider it done! Plan making can eliminate the cognitive effects of unfulfilled goals (2011)",
+          "publisher": "Journal of Personality and Social Psychology",
+          "url": "https://doi.org/10.1037/a0024192",
+          "retrieved": "2026-10-15",
+          "note": "Laborstudien"
+        }
+      ],
+      "value": "Plan",
+      "card": "plan-im-kopf"
+    },
+    {
+      "id": "gratitude",
+      "topic": "appreciation",
+      "title": {
+        "de": "Danke wirkt",
+        "en": "Thank you works"
+      },
+      "text": {
+        "de": "Wer sich vom Partner geschätzt fühlt, investiert mehr in die Beziehung und bleibt eher – das zeigen Studien zur Dankbarkeit in Partnerschaften.",
+        "en": "People who feel appreciated by their partner invest more in the relationship and are more likely to stay – studies on gratitude in couples show this."
+      },
+      "tohuus": {
+        "de": "In ToHuus gibt es „Danke“ und „Ich denk mit“ – mit Namen, nie mit Punkten.",
+        "en": "ToHuus has “Thanks” and “I’ll think along” – with names, never with points."
+      },
+      "sources": [
+        {
+          "title": "To have and to hold: Gratitude promotes relationship maintenance in intimate bonds (2012)",
+          "publisher": "Journal of Personality and Social Psychology",
+          "url": "https://doi.org/10.1037/a0028723",
+          "retrieved": "2026-10-15"
+        }
+      ],
+      "value": "Danke",
+      "card": "danke"
+    },
+    {
+      "id": "streaks",
+      "topic": "calm",
+      "title": {
+        "de": "Serien können schaden",
+        "en": "Streaks can backfire"
+      },
+      "text": {
+        "de": "Reißt eine Serie, machen viele danach weniger weiter – besonders, wenn sie sich selbst die Schuld geben.",
+        "en": "When a streak breaks, many people do less afterwards – especially when they blame themselves."
+      },
+      "tohuus": {
+        "de": "Deshalb hat ToHuus keine Serien, keine Punkte, keine Rangliste.",
+        "en": "That is why ToHuus has no streaks, no points and no ranking."
+      },
+      "sources": [
+        {
+          "title": "On or Off Track: How (Broken) Streaks Affect Consumer Decisions (2023)",
+          "publisher": "Journal of Consumer Research",
+          "url": "https://doi.org/10.1093/jcr/ucac029",
+          "retrieved": "2026-10-15"
+        }
+      ],
+      "value": "Serie",
+      "card": "serien"
+    },
+    {
+      "id": "notifications-batched",
+      "topic": "calm",
+      "title": {
+        "de": "Gebündelte Mitteilungen",
+        "en": "Batched notifications"
+      },
+      "text": {
+        "de": "In einer Studie halfen Mitteilungen, die dreimal am Tag gebündelt kamen. Ganz ohne Mitteilungen stieg dagegen die Sorge, etwas zu verpassen.",
+        "en": "In one study, notifications delivered in three batches a day helped. With no notifications at all, the fear of missing out went up."
+      },
+      "tohuus": {
+        "de": "Im sanften Modus kommt eine Nachricht am Tag zu deiner Zeit – und abends fragt ToHuus nur auf „Heute“, nie per Push.",
+        "en": "In gentle mode you get one message a day at your time – and in the evening ToHuus only asks on “Today”, never by push."
+      },
+      "sources": [
+        {
+          "title": "Batching smartphone notifications can improve well-being (2019)",
+          "publisher": "Computers in Human Behavior",
+          "url": "https://doi.org/10.1016/j.chb.2019.07.016",
+          "retrieved": "2026-10-15"
+        }
+      ],
+      "value": "3×",
+      "card": "mitteilungen-buendeln"
     }
   ]
 }

@@ -460,7 +460,7 @@ struct CareForTaskSheet: View {
                     if repeats {
                         Stepper(value: $n, in: 1...365) { Text(LF("every %d", n)) }
                         Picker(L("Unit"), selection: $unit) {
-                            ForEach(units, id: \.0) { u in Text(u.1).tag(u.0) }
+                            ForEach(units.indices, id: \.self) { i in Text(units[i].1).tag(units[i].0) }
                         }
                         .pickerStyle(.segmented)
                         DatePicker(L("First time"), selection: $date, displayedComponents: .date)

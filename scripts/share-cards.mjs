@@ -53,11 +53,11 @@ const FACTS = [
     url: 'https://www.diw.de/documents/publikationen/73/diw_01.c.973323.de/25-37-1.pdf',
   },
   {
-    slug: 'pflege-wertschaetzung', eyebrow: 'Gesehen werden', value: '52 %',
-    title: 'der pflegenden Angehörigen hatten das Gefühl, dass ihre Hilfe nicht geschätzt wird.',
-    text: 'Befragt wurden über 1.000 Pflegende von 40 bis 85, mit Blick auf die letzten sechs Monate.',
-    source: 'ZQP-Studie, 2018',
-    url: 'https://www.aerztezeitung.de/Politik/Pflegende-beklagen-hohe-Belastung-224655.html',
+    slug: 'pflege-wertschaetzung', eyebrow: 'Gesehen werden', value: '41 %',
+    title: 'der Angehörigen, die aus der Ferne helfen, sagen: Andere verkennen, wie viel sie tun.',
+    text: 'Aus einer Befragung von Menschen, die Eltern oder andere Angehörige auf Distanz unterstützen.',
+    source: 'ZQP, Pflege auf Distanz, 2022',
+    url: 'https://www.zqp.de/wp-content/uploads/ZQP_PI_DistanceCaregiving.pdf',
   },
   {
     slug: 'entlastungsbetrag', eyebrow: 'Hilfe, die liegen bleibt', value: '80 %',

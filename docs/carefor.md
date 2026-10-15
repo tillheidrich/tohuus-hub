@@ -5,7 +5,7 @@ Decision of 15 Oct 2026. Till: "Die App muss erkennen, wenn jemand alleinerziehe
 Research with sources: `docs/research/2026-10-15-care-single-parents.md`.
 - 86 % of the 5.7 million people needing care live at home (Destatis 2024).
 - 64 % of carers are women, and 64 % care outside their own household (DIW 2025).
-- 52 % feel their help is not appreciated (ZQP 2018).
+- 41 % of relatives who help from a distance say others don’t see how much they do (ZQP, Pflege auf Distanz, 2022). An often quoted 52 % (ZQP 2018) is only available second-hand, so we don’t use it.
 - 80 % never claim the Entlastungsbetrag (VdK 2022).
 - 1.62 million single parents, 84 % of them women (Destatis 2026).
 

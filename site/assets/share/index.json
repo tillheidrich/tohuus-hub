@@ -34,11 +34,11 @@
       "slug": "pflege-wertschaetzung",
       "kind": "fact",
       "eyebrow": "Gesehen werden",
-      "value": "52 %",
-      "title": "der pflegenden Angehörigen hatten das Gefühl, dass ihre Hilfe nicht geschätzt wird.",
-      "text": "Befragt wurden über 1.000 Pflegende von 40 bis 85, mit Blick auf die letzten sechs Monate.",
-      "source": "ZQP-Studie, 2018",
-      "url": "https://www.aerztezeitung.de/Politik/Pflegende-beklagen-hohe-Belastung-224655.html",
+      "value": "41 %",
+      "title": "der Angehörigen, die aus der Ferne helfen, sagen: Andere verkennen, wie viel sie tun.",
+      "text": "Aus einer Befragung von Menschen, die Eltern oder andere Angehörige auf Distanz unterstützen.",
+      "source": "ZQP, Pflege auf Distanz, 2022",
+      "url": "https://www.zqp.de/wp-content/uploads/ZQP_PI_DistanceCaregiving.pdf",
       "files": {
         "4x5": "pflege-wertschaetzung-4x5.png",
         "9x16": "pflege-wertschaetzung-9x16.png"

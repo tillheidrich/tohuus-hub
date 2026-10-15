@@ -262,7 +262,7 @@ struct WeekReviewView: View {
         defer { loading = false }
         let asked = period
         do {
-            let d = asked == "month" ? try await api.monthReview(month: day) : try await api.weekReview(week: day)
+            let d = try await (asked == "month" ? api.monthReview(month: day) : api.weekReview(week: day))
             guard asked == period else { return }
             data = d
             error = nil

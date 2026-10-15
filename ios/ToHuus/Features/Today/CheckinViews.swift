@@ -191,8 +191,8 @@ struct CheckinCard: View {
     private func save() async {
         busy = true
         defer { busy = false }
-        var items: [[String: Any]] = picked.map { ["task_id": $0.key, "who": $0.value] }
-        items += extra.map { ["text": $0.text, "who": $0.who] }
+        var items: [[String: Any]] = picked.map { p -> [String: Any] in ["task_id": p.key, "who": p.value] }
+        items += extra.map { x -> [String: Any] in ["text": x.text, "who": x.who] }
         let v = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if !v.isEmpty { items.append(["text": String(v.prefix(200)), "who": me]) }
         do {
