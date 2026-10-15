@@ -75,3 +75,24 @@ These are cards for Instagram, WhatsApp Status or a family group. The person cre
 ## 3. Other loops
 
 The research ranks these in order: household invite, temporary list link for people without the app, the footer, recipe card, December recap, and so on. What already exists: the household invite, "Bring mir was" for guests, Hausinfo/babysitter links and wish lists. New on 15 Oct 2026: the footer and the cards. Next: a temporary read-only list link, and a recipe card.
+
+## Text fills the card (15 Oct 2026)
+
+Till: "Der Text auf den Grafiken für Social soll das Bild besser ausfüllen." The rule is the same for all three renderers: web `layoutCard` in web/src/share/cards.tsx, iOS `ShareCardLayout` in ShareCardViews.swift, and the website in scripts/share-cards.mjs.
+
+- **One scale k** (0.7–2.4) for value, title, text and list. The renderer takes the largest k at which the content fits between the brand line and the footer, and centres it in that space.
+  - Story: 40 px extra at the top and 96 px above the footer.
+  - Feed: 8 px and 64 px.
+- **Sizes at k = 1:**
+
+  | Element | Size | Limits |
+  |---|---|---|
+  | Eyebrow | 30, never scales (it is a label) | – |
+  | Value, up to 4 characters | story 360 / feed 300 | one line, at most 720 / 560 |
+  | Value, longer | story 280 / feed 230 | one line, at most 720 / 560 |
+  | Title | 60 | at most 124, ≤ 4 lines |
+  | Text | 40 | at most 66, ≤ 10 lines, so a sourced fact is never cut |
+  | List | 40 | at most 68, ≤ 6 items without text, otherwise 3 |
+
+- **One loud element per card:** the number. Typography carries the card, not decoration.
+- **No opacity on text:** eyebrow, text and footer use the area's accent colour (contrast ≥ 4.5:1). Only the decorative arch keeps 8 % opacity.
