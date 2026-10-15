@@ -331,6 +331,11 @@ struct CareView: View {
                 .pickerStyle(.segmented)
                 if let data {
                     let overdue = data.tasks.filter { $0.state == "overdue" }.count
+                    // "Was schaffst du heute?" – from three due or overdue tasks on, one card at a time
+                    let dueNow = TaskTodayView.candidates(data.tasks)
+                    if dueNow.count >= 3 && data.me != nil {
+                        TaskTodayLink(api: api, tasks: dueNow) { Task { await load() } }
+                    }
                     NavigationLink { FocusView(api: api) } label: { Label(L("One thing at a time"), systemImage: "scope") }
                     FreshStartButton(api: api, overdue: overdue) { text in
                         toast = ToastMessage(text: text)

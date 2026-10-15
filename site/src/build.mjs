@@ -48,7 +48,7 @@ const tfHref = (lang) => {
 const HELP_DIR = { de: 'hilfe', en: 'help' };
 const helpIndexHref = (lang) => (lang === 'de' ? `../${HELP_DIR.de}/` : `${HELP_DIR.en}/`);
 /** Draft status shown on top of every legal page until the owner decides on a legal review. */
-const LEGAL_STATUS = { de: 'Stand: 13.10.2026', en: 'As of 13 October 2026' };
+const LEGAL_STATUS = { de: 'Stand: 15.10.2026', en: 'As of 15 October 2026' };
 
 // ---------------------------------------------------------------- icons (Phosphor regular, like the app)
 const ICONS = {
@@ -84,7 +84,7 @@ const COPY = {
     ogAlt: 'Das ToHuus-Zeichen, der Satz „Damit nicht einer alles im Kopf haben muss.“ und vier gezeichnete Wohnformen.',
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
-    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll', diff: 'was-anders-ist' },
+    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll', diff: 'was-anders-ist', good: 'gut-zu-wissen', calm: 'ruhig-gebaut' },
     nav: [['#funktionen', 'Funktionen'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
@@ -224,12 +224,13 @@ const COPY = {
       list: [
         ['list', 'Ein Ort für Liste, Kochen, Aufgaben und Geld', 'Was ihr einkauft, wird gekocht, und dafür geht das Geld weg. ToHuus verbindet das aus euren Bons und eurer Liste. Vier Apps nebeneinander braucht ihr dafür nicht.'],
         ['users', 'Lernt, wer was macht, ohne Punkte', 'ToHuus merkt sich, wer eine Aufgabe meistens übernimmt, und schlägt es beim nächsten Mal vor. Punkte, Ranglisten und Serien gibt es nicht, Sterne nur, wenn ihr sie einschaltet.'],
-        ['feather', 'Unsichtbare Arbeit wird sichtbar', 'Unter „Im Kopf“ steht, woran jemand gerade denkt, unter „Nebenbei erledigt“, was ohne Liste passiert ist. Die anderen können „Danke“ sagen. Gezählt wird dabei nichts.'],
-        ['suitcase', 'Wenn jemand weg ist', 'Dienstreise, ein Wochenende mit Freunden oder Krankenhaus: Für die Zeit legt ihr fest, wer was übernimmt und was warten darf. Die Aufgaben zeigen dann, wer einspringt.'],
-        ['house', 'Raum für alle, die sich kümmern', 'Wer für Eltern oder Großeltern da ist, legt Besuche, Arzttermine und Besorgungen als Aufgaben an, privat, solange du willst. Allein mit Kindern? Dann gibt es keine Vergleiche, nur den Blick auf das, was du geschafft hast.'],
-        ['moonstars', 'Ruhig gebaut', 'Kein Feed, keine Serien, Mitteilungen auf Wunsch gebündelt zu einer Uhrzeit, die du wählst. Ist für heute alles Wichtige erledigt, sagt ToHuus das und lässt dich in Ruhe.'],
+        ['feather', 'Im Kopf & nebenbei erledigt', 'Unter „Im Kopf“ steht, woran jemand gerade denkt, unter „Nebenbei erledigt“, was ohne Liste passiert ist. Die anderen können „Danke“ sagen. Gezählt wird dabei nichts.'],
+        ['sparkle', 'Was habt ihr heute gelöst?', 'Abends fragt ToHuus auf Heute ab und zu nach, was ihr ohne App geschafft habt. Die Antwort ist immer freundlich, und so lernt ToHuus, wer was macht. Du kannst die Frage abschalten.'],
+        ['house', 'Für wen ich da bin', 'Wer für Eltern oder Großeltern da ist, legt Besuche, Arzttermine und Besorgungen als Aufgaben an, privat, solange du willst. Allein mit Kindern? Dann gibt es keine Vergleiche, nur den Blick auf das, was du geschafft hast.'],
+        ['suitcase', 'Unterwegs, auch einzeln', 'Dienstreise oder Krankenhaus: Für die Zeit legt ihr fest, wer was übernimmt und was warten darf. Die Aufgaben zeigen dann, wer einspringt, und auch feste Gäste wie Oma können Aufgaben übernehmen.'],
+        ['chart', 'Wochen- und Monatsrückblick', '„Das habt ihr geschafft“ für alle und „Das hast du geschafft“ nur für dich, ohne Vergleich und ohne Geld. Eine Karte, die dir gefällt, teilst du als Bild, ohne Namen.'],
+        ['list', 'Wischen zum Entscheiden', 'Was essen wir? Jeder wischt für sich Ja oder Nein, und ihr seht, was alle wollen. Genauso gehst du ältere Gedanken in „Im Kopf“ durch: noch wichtig, erledigt oder loslassen.'],
         ['lock', 'Privat bleibt privat', 'KI nur mit eurer Zustimmung und über Mistral, selbst gehostet mit eigener KI oder ganz ohne. Gesundheitsangaben gehen nur an eine KI, wenn ihr das ausdrücklich erlaubt. Was du über Menschen einträgst, um die du dich kümmerst, nie.'],
-        ['plug', 'Arbeitet mit dem, was ihr nutzt', 'Termine landen in Apple Kalender, Google oder Outlook, Aufgaben auf Wunsch in Apple Erinnerungen. Listen schickst du als Text an Notizen, Mail oder Nachrichten.'],
       ],
       tableH: 'Neben anderen Apps', cols: ['Gut für', 'Was ToHuus anders macht'],
       rows: [
@@ -243,6 +244,24 @@ const COPY = {
       note: 'Stand Oktober 2026, nach den Beschreibungen der Anbieter und unserer eigenen Recherche. Die Namen gehören ihren Inhabern, ToHuus steht in keiner Verbindung zu ihnen.',
       share: 'Zahlen und Sätze zum Teilen', shareHref: 'teilen.html',
     },
+    good: {
+      label: 'Gut zu wissen', h2: 'Was zu Hause oft keiner sieht.',
+      intro: 'Ein paar Zahlen und Befunde rund um Pflege, Denkarbeit und Wertschätzung, jede mit Quelle. Sie beschreiben, was Studien und Statistiken gemessen haben, nicht eine Wirkung von ToHuus.',
+      source: 'Quelle:', more: 'Alle Karten zum Teilen, als Bild für Feed und Story', href: 'teilen.html',
+    },
+    calm: {
+      label: 'Ruhig gebaut', h2: 'Gebaut, damit du schnell wieder weg bist.',
+      intro: 'Was ToHuus mit deinem Stress oder deiner Bildschirmzeit macht, haben wir nicht gemessen, also versprechen wir es auch nicht. Versprechen können wir, wie ToHuus gebaut ist.',
+      list: [
+        'Kein Feed und nichts zum Weiterscrollen. Jede Seite hat ein Ende.',
+        'Keine Serien, keine Punkte, keine Ranglisten. Sterne nur, wenn ihr sie selbst einschaltet.',
+        'Mitteilungen auf Wunsch gebündelt, zu einer Uhrzeit, die du wählst. Werbe-Pushs schicken wir nicht.',
+        '„Fertig für heute“: Ist alles Wichtige erledigt, sagt Heute das. Leg das Handy ruhig weg.',
+        'Die Abendfrage steht nur auf Heute, ohne Push und höchstens jeden zweiten Abend. Du kannst sie abschalten.',
+        'Vieles geht, ohne die App zu öffnen: mit Siri, dem Widget oder der Apple Watch.',
+      ],
+      not: 'Was wir nicht versprechen: weniger Stress, weniger Minuten am Handy oder besseren Schlaf. Dafür müssten wir das erst sauber messen, und das haben wir nicht.',
+    },
     ways: {
       label: 'Zwei Wege', h2: 'In der ToHuus Cloud oder auf deinem eigenen Server.',
       intro: 'Es ist dieselbe App mit demselben Code. Der Unterschied ist, wer den Server betreibt.',
@@ -251,7 +270,7 @@ const COPY = {
         ['Für wen', 'Alle, die einfach anfangen wollen', 'Alle mit eigenem Server, NAS oder Home Assistant'],
         ['Apps', 'iPhone-App und im Browser, auch auf Android. iPad und Apple Watch kommen mit der App', 'Die iPhone-App, verbunden mit deinem Server, und im Browser als Web-App. Dazu Home Assistant und eigene Assistenten über MCP'],
         ['Daten', 'Server in Deutschland (Hetzner), jeder Haushalt mit eigenem Schlüssel verschlüsselt', 'Auf deinem Server, auf Wunsch verschlüsselt'],
-        ['Bon-Fotos und Assistent', 'Dabei, mit Kontingent je nach Tarif. KI abschaltbar für Haushalt, Person und Kinder', 'Mit eigenem KI-Schlüssel oder ganz ohne'],
+        ['Bon-Fotos und Assistent', 'Free ohne KI, ab Haushalt mit KI und Kontingent je nach Tarif. KI abschaltbar für Haushalt, Person und Kinder', 'Mit eigenem KI-Schlüssel oder ganz ohne'],
         ['Claude, ChatGPT (MCP)', 'Über MCP mit Anmeldung (OAuth)', 'Über MCP mit Zugangsschlüssel'],
         ['Home Assistant', 'Über die HACS-Integration, verbunden mit einem Code aus der App', 'Voll, dazu Bon-Postfach, Telegram und Bon-Drucker im eigenen Netz'],
         ['Kosten', 'Free, Haushalt oder Plus', 'Kostenlos, AGPL-3.0'],
@@ -259,15 +278,23 @@ const COPY = {
     },
     prices: {
       label: 'Preise', h2: 'Ein Abo pro Haushalt.',
-      intro: 'Mitglieder und Gäste zahlen nie. Jeder neue Haushalt in der Cloud nutzt 14 Tage lang Plus, ohne Zahlungsdaten. Endet ein Abo, geht der Haushalt auf Free zurück, und nichts wird gelöscht.',
+      intro: 'Mitglieder und Gäste zahlen nie. Jeder neue Haushalt in der Cloud startet von selbst mit 14 Tagen Plus, ohne Zahlungsdaten. Danach geht er auf Free zurück, wenn ihr kein Abo abschließt. Gelöscht wird dabei nichts.',
       per: '/ Monat', or: 'oder', year: '/ Jahr', storage: 'Speicher',
       plans: [
-        { name: 'Free', price: '0 €', sub: 'für immer', storage: '250 MB', items: ['Gemeinsame Liste mit Einkaufsmodus', 'Bons ohne Monatslimit', 'Merkt sich 60 Tage zurück', 'Rezepte von Hand oder per Link', '20 Nachrichten an den Assistenten im Monat'] },
-        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick', 'Verbundene Haushalte zum Mitversorgen', 'Mehr Importe aus Screenshots und Fotos (40 statt 10 am Tag)', '100 Nachrichten im Monat'] },
-        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Wochenplan aus dem, was da ist', 'Monatsauswertung vom Assistenten', 'Neue ToHuus-Rezepte zur Jahreszeit, auch Backen und Küchenmaschine, mit Bild', 'Eigene Bon-Adresse für Bons per Mail (kommt bald)', '1.500 Nachrichten im Monat'], mark: '14 Tage zum Ausprobieren' },
-        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Eigener KI-Schlüssel oder keiner', 'iPhone-App, Web-App, Home Assistant, MCP'], host: true },
+        { name: 'Free', price: '0 €', sub: 'ohne KI', storage: '100 MB', items: ['Gemeinsame Liste mit Einkaufsmodus', 'Aufgaben und „Im Kopf“', 'Wochenplan und Rezepte von Hand', 'Rückblicke und Teilen', 'Der Assistent versteht einfache Sätze wie „Milch und Brot“, ganz ohne KI', 'Merkt sich 30 Tage zurück, 20 Uploads am Tag'] },
+        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Alles aus Free', 'Die ganze Geschichte mit Preisverlauf und Ausgaben', 'Verbundene Haushalte und gespiegelte Listen', 'Bons, Screenshots und Fotos mit KI lesen lassen', '100 Nachrichten an den Assistenten im Monat'] },
+        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Der Assistent für jeden Tag', 'Wochenplan aus dem, was da ist', 'Monatsauswertung und Ersatz aus dem Vorrat', 'Neue ToHuus-Rezepte zur Jahreszeit, mit Bild', '1.500 Nachrichten im Monat. Wird es mehr, antwortet er langsamer, gesperrt wird nie'], mark: '14 Tage zum Ausprobieren' },
+        { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Mit eigener KI, jeder OpenAI-kompatible Anbieter geht, oder ganz ohne', 'iPhone-App, Web-App, Home Assistant, MCP'], host: true },
       ],
+      fund: 'Mit jedem Abo finanziert ihr auch Lizenzen für Familien, die es sich gerade nicht leisten können. Werbung gibt es bei uns nicht, und eure Daten verkaufen wir nicht.',
       note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Während der Beta schenken wir Testhaushalten Haushalt oder Plus. Bezahlt wird in der iPhone-App über Apple.',
+      hardship: {
+        id: 'nicht-leisten', h3: 'Wir können uns das gerade nicht leisten.',
+        p: 'Wenn das Geld gerade nicht reicht, aber der Kopf voll ist, schreib uns. Du bekommst eine Lizenz, ohne Begründung und ohne Formular-Marathon. Wir melden uns per Mail.',
+        email: 'Deine E-Mail-Adresse', name: 'Dein Name', people: 'Wer lebt bei euch?', peopleHint: 'z. B. 2 Erwachsene, 2 Kinder', message: 'Magst du noch was dazuschreiben?',
+        optional: 'wenn du magst', send: 'Anfrage schicken', hp: 'Bitte leer lassen',
+        privacy: 'Wir speichern nur, was du hier einträgst, verschlüsselt in der ToHuus Cloud, und löschen es 180 Tage nach unserer Antwort. Es gibt kein Tracking.', privacyLink: 'Mehr dazu im Datenschutz',
+      },
     },
     privacy: {
       label: 'Datenschutz und Sicherheit', h2: 'Eure Bons arbeiten für euch, nicht für Marktforschung.',
@@ -350,7 +377,7 @@ const COPY = {
         ['Hilft ToHuus bei Spontankäufen?', 'Ihr könnt ein Kontingent für Extras festlegen, pro Woche als Betrag oder als Anzahl. Einträge auf der Liste markiert ihr als Extra, und die Liste zeigt, wie viel davon schon verplant ist. ToHuus sperrt nichts, es zeigt nur, wo ihr steht.'],
         ['Brauche ich einen Thermomix?', 'Nein. Der Kochplaner zeigt Rezepte mit und ohne Küchenmaschine, und ihr könnt danach filtern. Mit Plus gibt es auch ToHuus-Rezepte für Thermomix, Monsieur Cuisine und Cookit, mit den Einstellungen bei jedem Schritt.'],
         ['Wer zahlt, wenn wir zu viert sind?', 'Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder, Gäste und verbundene Haushalte zahlen nichts.'],
-        ['Was passiert, wenn ich das Abo kündige?', 'Der Haushalt geht auf Free zurück. Gelöscht wird nichts. Ihr seht dann die letzten 60 Tage, und der Assistent hat 20 Nachrichten im Monat.'],
+        ['Was passiert, wenn ich das Abo kündige?', 'Der Haushalt geht auf Free zurück. Gelöscht wird nichts. Ihr seht dann die letzten 30 Tage, und der Assistent versteht nur noch einfache Sätze, ohne KI. Mit dem nächsten Abo ist alles wieder da.'],
         ['Was passiert mit meinen Daten, wenn ich lösche?', 'Zuerst wird der Schlüssel des Haushalts vernichtet, damit ist die Datenbank nicht mehr lesbar. Danach werden die Dateien und die Sicherungen des Haushalts gelöscht. Sicherungskopien der Kontoverwaltung, die noch den verschlüsselten Schlüssel enthalten, laufen nach ihrer Frist ab.'],
         ['Ist ToHuus ein Familienkalender?', 'Nein. ToHuus kümmert sich um Einkauf, Kochen, das Geld dafür und die Aufgaben im Haushalt. Termine wie der Schornsteinfeger landen in dem Kalender, den ihr sowieso nutzt, also Apple Kalender, Google oder Outlook. Eine eigene Kalenderansicht oder einen Chat gibt es bewusst nicht, Sterne nur, wenn ihr sie einschaltet.'],
       ],
@@ -369,7 +396,7 @@ const COPY = {
     ogAlt: 'The ToHuus mark, the line “So one person doesn’t have to keep it all in their head.” and four drawn homes.',
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
-    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind', diff: 'what-is-different' },
+    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind', diff: 'what-is-different', good: 'good-to-know', calm: 'calm-by-design' },
     nav: [['#features', 'Features'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
@@ -509,12 +536,13 @@ const COPY = {
       list: [
         ['list', 'One place for the list, cooking, tasks and money', 'What you buy gets cooked, and that is where the money goes. ToHuus links them from your receipts and your list. You do not need four apps side by side.'],
         ['users', 'Learns who does what, without points', 'ToHuus remembers who usually takes on a task and suggests them next time. There are no points, rankings or streaks, and stars only if you switch them on.'],
-        ['feather', 'Invisible work becomes visible', '“On my mind” shows what someone is thinking about, “Done on the side” what happened without a list. The others can say “Thanks”. Nothing is counted.'],
-        ['suitcase', 'When someone is away', 'A business trip, a weekend with friends or a hospital stay: for that time you decide who takes over what and what can wait. The tasks then show who steps in.'],
-        ['house', 'Room for everyone who looks after someone', 'If you look after parents or grandparents, visits, doctor’s appointments and errands become tasks, private for as long as you like. On your own with children? Then there are no comparisons, just a look at what you got done.'],
-        ['moonstars', 'Calm by design', 'No feed, no streaks, notifications bundled at a time you choose if you like. When everything important is done for today, ToHuus says so and leaves you alone.'],
+        ['feather', 'On my mind & done on the side', '“On my mind” shows what someone is thinking about, “Done on the side” what happened without a list. The others can say “Thanks”. Nothing is counted.'],
+        ['sparkle', 'What did you sort out today?', 'Now and then in the evening, Today asks what you got done without the app. The answer is always kind, and it is how ToHuus learns who does what. You can switch the question off.'],
+        ['house', 'People I look after', 'If you look after parents or grandparents, visits, doctor’s appointments and errands become tasks, private for as long as you like. On your own with children? Then there are no comparisons, just a look at what you got done.'],
+        ['suitcase', 'Away, even on your own', 'A business trip or a hospital stay: for that time you decide who takes over what and what can wait. The tasks then show who steps in, and regular guests such as Grandma can take on tasks too.'],
+        ['chart', 'Weekly and monthly review', '“What you all got done” for everyone and “What you got done” just for you, with no comparisons and no money. Share a card you like as an image, without names.'],
+        ['list', 'Swipe to decide', 'What shall we eat? Everyone swipes yes or no on their own, and you see what everyone wants. You go through older thoughts in “On my mind” the same way: still important, done or let go.'],
         ['lock', 'Private stays private', 'AI only with your consent and through Mistral, self-hosted with your own AI or none at all. Health details only go to an AI if you explicitly allow it. What you note about people you look after, never.'],
-        ['plug', 'Works with what you already use', 'Appointments go to Apple Calendar, Google or Outlook, tasks to Apple Reminders if you like. Lists go as text to Notes, Mail or Messages.'],
       ],
       tableH: 'Next to other apps', cols: ['Good for', 'What ToHuus does differently'],
       rows: [
@@ -528,6 +556,24 @@ const COPY = {
       note: 'As of October 2026, based on the providers’ own descriptions and our research. The names belong to their owners; ToHuus is not affiliated with them.',
       share: 'Figures and lines to share', shareHref: 'share.html',
     },
+    good: {
+      label: 'Good to know', h2: 'What often goes unseen at home.',
+      intro: 'A few figures and findings on caring, thinking work and appreciation, each with its source. They describe what studies and statistics measured, not an effect of ToHuus.',
+      source: 'Source:', more: 'All cards to share (in German), as images for feed and stories', href: 'share.html',
+    },
+    calm: {
+      label: 'Calm by design', h2: 'Built so you can put it down again quickly.',
+      intro: 'We have not measured what ToHuus does to your stress or your screen time, so we do not promise anything about it. What we can promise is how ToHuus is built.',
+      list: [
+        'No feed and nothing to keep scrolling. Every page has an end.',
+        'No streaks, no points, no rankings. Stars only if you switch them on yourselves.',
+        'Notifications bundled if you like, at a time you choose. We never send promotional pushes.',
+        '“Done for today”: when everything important is done, Today says so. Feel free to put the phone down.',
+        'The evening question only appears on Today, without a push and at most every other evening. You can switch it off.',
+        'A lot works without opening the app: with Siri, the widget or the Apple Watch.',
+      ],
+      not: 'What we do not promise: less stress, fewer minutes on your phone or better sleep. We would have to measure that properly first, and we have not.',
+    },
     ways: {
       label: 'Two ways', h2: 'In ToHuus Cloud or on your own server.',
       intro: 'It is the same app with the same code. The difference is who runs the server.',
@@ -536,7 +582,7 @@ const COPY = {
         ['Who for', 'Anyone who just wants to start', 'Anyone with a server, a NAS or Home Assistant'],
         ['Apps', 'iPhone app and the browser, Android included. iPad and Apple Watch come with the app', 'The iPhone app, connected to your server, and the browser as a web app. Plus Home Assistant and your own assistants over MCP'],
         ['Data', 'Servers in Germany (Hetzner), every household encrypted with its own key', 'On your server, encrypted if you like'],
-        ['Receipt photos and assistant', 'Included, with an allowance per plan. AI can be switched off for the household, a person or a child', 'With your own AI key, or without'],
+        ['Receipt photos and assistant', 'Free works without AI; from Household on with AI and an allowance per plan. AI can be switched off for the household, a person or a child', 'With your own AI key, or without'],
         ['Claude, ChatGPT (MCP)', 'Through MCP with sign-in (OAuth)', 'Through MCP with an access key'],
         ['Home Assistant', 'Through the HACS integration, connected with a code from the app', 'Fully, plus receipt inbox, Telegram and receipt printer on your network'],
         ['Cost', 'Free, Household or Plus', 'Free, AGPL-3.0'],
@@ -544,15 +590,23 @@ const COPY = {
     },
     prices: {
       label: 'Pricing', h2: 'One subscription per household.',
-      intro: 'Members and guests never pay. Every new household in the cloud gets 14 days of Plus, no payment details needed. When a subscription ends, the household goes back to Free and nothing is deleted.',
+      intro: 'Members and guests never pay. Every new household in the cloud starts with 14 days of Plus on its own, no payment details needed. After that it goes back to Free unless you subscribe. Nothing is deleted.',
       per: '/ month', or: 'or', year: '/ year', storage: 'Storage',
       plans: [
-        { name: 'Free', price: '€0', sub: 'for good', storage: '250 MB', items: ['Shared list with shop mode', 'No monthly limit on receipts', 'Remembers 60 days back', 'Recipes by hand or from a link', '20 assistant messages a month'] },
-        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices, spending and review', 'Connected households for looking after someone', 'More imports from screenshots and photos (40 instead of 10 a day)', '100 messages a month'] },
-        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'Week plan from what is at home', 'Monthly review from the assistant', 'New seasonal ToHuus recipes (in German), baking and kitchen machines too, with pictures', 'Your own receipt address for receipts by mail (coming soon)', '1,500 messages a month'], mark: '14 days to try' },
-        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'Your own AI key, or none', 'iPhone app, web app, Home Assistant, MCP'], host: true },
+        { name: 'Free', price: '€0', sub: 'without AI', storage: '100 MB', items: ['Shared list with shop mode', 'Tasks and “On my mind”', 'Week plan and recipes by hand', 'Reviews and sharing', 'The assistant understands simple sentences like “milk and bread”, no AI involved', 'Remembers 30 days back, 20 uploads a day'] },
+        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Everything in Free', 'The full history with prices and spending', 'Connected households and mirrored lists', 'Receipts, screenshots and photos read with AI', '100 assistant messages a month'] },
+        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'The assistant for every day', 'Week plan from what is at home', 'Monthly review and substitutes from your stock', 'New seasonal ToHuus recipes (in German), with pictures', '1,500 messages a month. Beyond that it answers more slowly, it never locks you out'], mark: '14 days to try' },
+        { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'With your own AI, any OpenAI-compatible provider, or none at all', 'iPhone app, web app, Home Assistant, MCP'], host: true },
       ],
+      fund: 'Every subscription also pays for licences for families who cannot afford one right now. There are no ads, and we do not sell your data.',
       note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. During the beta we often give test households Household or Plus for free. Payment runs through Apple in the iPhone app.',
+      hardship: {
+        id: 'cant-afford', h3: 'We can’t afford this right now.',
+        p: 'If money is tight but your head is full, write to us. You get a licence, no reasons needed and no endless forms. We will reply by e-mail.',
+        email: 'Your e-mail address', name: 'Your name', people: 'Who lives with you?', peopleHint: 'e.g. 2 adults, 2 children', message: 'Anything you would like to add?',
+        optional: 'if you like', send: 'Send request', hp: 'Please leave empty',
+        privacy: 'We only store what you enter here, encrypted in ToHuus Cloud, and delete it 180 days after we reply. There is no tracking.', privacyLink: 'More in the privacy policy',
+      },
     },
     privacy: {
       label: 'Privacy and security', h2: 'Your receipts work for you, not for market research.',
@@ -635,7 +689,7 @@ const COPY = {
         ['Does ToHuus help with impulse buys?', 'You can set an allowance for extras, per week as an amount or a number of items. Mark items on the list as an extra, and the list shows how much of it is used. ToHuus blocks nothing, it just shows where you stand.'],
         ['Do I need a Thermomix?', 'No. The cook planner shows recipes with and without a kitchen machine, and you can filter by it. With Plus there are also ToHuus recipes for Thermomix, Monsieur Cuisine and Cookit, with the settings for each step.'],
         ['Who pays if there are four of us?', 'One subscription covers the whole household. Members, children, guests and connected households pay nothing.'],
-        ['What happens if I cancel?', 'The household goes back to Free. Nothing is deleted. You then see the last 60 days, and the assistant has 20 messages a month.'],
+        ['What happens if I cancel?', 'The household goes back to Free. Nothing is deleted. You then see the last 30 days, and the assistant only understands simple sentences, without AI. With the next subscription everything is back.'],
         ['What happens to my data when I delete it?', 'First the household’s key is destroyed, so the database can no longer be read. Then the household’s files and backups are deleted. Backup copies of the account directory, which still hold the encrypted key, expire after their retention period.'],
         ['Is ToHuus a family calendar?', 'No. ToHuus looks after shopping, cooking, the money for both and the household tasks. Appointments such as the chimney sweep go into the calendar you already use, Apple Calendar, Google or Outlook. There is deliberately no calendar view of its own and no chat; stars only if you switch them on.'],
       ],
@@ -699,7 +753,7 @@ const pageTop = (c, m, b = c.base) => `<!doctype html>
 <title>${m.title}</title>
 <meta name="description" content="${m.desc}">
 <link rel="canonical" href="${m.url}">
-${m.alt.en && m.alt.de ? `<link rel="alternate" hreflang="en" href="${m.alt.en}">
+${m.noindex ? '<meta name="robots" content="noindex">\n' : ''}${m.alt.en && m.alt.de ? `<link rel="alternate" hreflang="en" href="${m.alt.en}">
 <link rel="alternate" hreflang="de" href="${m.alt.de}">
 <link rel="alternate" hreflang="x-default" href="${m.alt.en}">` : ''}
 <meta name="theme-color" content="#f7f5ef">
@@ -793,6 +847,47 @@ const homeMeta = (c) => ({
   enHref: c.lang === 'en' ? './' : '../', deHref: c.lang === 'de' ? './' : 'de/', otherHref: c.other,
 });
 
+/** "Gut zu wissen" on the home page: six share cards (site/assets/share/index.json), German from the index, English here. */
+const HOME_FACTS = ['pflege-zu-hause', 'pflege-wertschaetzung', 'denkarbeit', 'plan-im-kopf', 'danke', 'serien'];
+const HOME_FACTS_EN = {
+  'pflege-zu-hause': { value: '86%', title: 'of people who need care in Germany are looked after at home.', text: 'That is 4.9 of almost 5.7 million people. 14% live in a care home.', source: 'Destatis, care statistics 2023 (2024)' },
+  'pflege-wertschaetzung': { value: '41%', title: 'of relatives who help from a distance say others don’t see how much they do.', text: 'From a survey of people who support parents or other relatives from afar.', source: 'ZQP, Pflege auf Distanz, 2022' },
+  denkarbeit: { value: '4', title: 'parts make up the thinking work at home.', text: 'Anticipating, finding options, deciding, keeping track. Women more often do the anticipating and the keeping track.', source: 'Daminger, American Sociological Review, 2019' },
+  'plan-im-kopf': { value: 'Plan', title: 'With a concrete plan, an open task intrudes on your mind less.', text: 'In lab studies, intrusive thoughts about an open task faded once there was a concrete plan for it.', source: 'Masicampo & Baumeister, JPSP, 2011 (lab studies)' },
+  danke: { value: 'Thanks', title: 'People who feel appreciated invest more in the relationship.', text: 'Couples with more mutual appreciation were more likely to still be together nine months later.', source: 'Gordon et al., Journal of Personality and Social Psychology, 2012' },
+  serien: { value: 'Streak', title: 'When a streak breaks, many people do less afterwards.', text: 'Especially when they blame themselves for it.', source: 'Silverman & Barasch, Journal of Consumer Research, 2023' },
+};
+function homeFacts(c) {
+  if (!SHARE) return [];
+  return HOME_FACTS.map((slug) => {
+    const card = SHARE.cards.find((x) => x.slug === slug);
+    if (!card || !card.url) throw new Error(`home fact ${slug} is not a sourced card in assets/share/index.json`);
+    return c.lang === 'en' ? { ...card, ...HOME_FACTS_EN[slug] } : card;
+  });
+}
+
+/** "Wir können uns das gerade nicht leisten": a plain HTML form to the cloud (docs/pricing.md, server/routes/cloud.ts). */
+const hardshipForm = (c) => {
+  const Hs = c.prices.hardship;
+  const opt = `<small>${Hs.optional}</small>`;
+  return `<div class="hardship reveal" id="${Hs.id}">
+      <div class="hardship-copy">
+        <h3 id="${Hs.id}-h">${Hs.h3}</h3>
+        <p>${Hs.p}</p>
+      </div>
+      <form class="hardship-form" method="post" action="${CLOUD}/api/cloud/hardship" accept-charset="utf-8" aria-labelledby="${Hs.id}-h">
+        <input type="hidden" name="lang" value="${c.lang}">
+        <p class="field"><label for="hs-email">${Hs.email}</label><input id="hs-email" name="email" type="email" required maxlength="254" autocomplete="email" inputmode="email" spellcheck="false"></p>
+        <p class="field"><label for="hs-name">${Hs.name} ${opt}</label><input id="hs-name" name="name" type="text" maxlength="80" autocomplete="given-name"></p>
+        <p class="field"><label for="hs-people">${Hs.people} ${opt}</label><input id="hs-people" name="people" type="text" maxlength="40" aria-describedby="hs-people-hint"><span class="hint" id="hs-people-hint">${Hs.peopleHint}</span></p>
+        <p class="field wide"><label for="hs-message">${Hs.message} ${opt}</label><textarea id="hs-message" name="message" rows="4" maxlength="1000"></textarea></p>
+        <div class="offscreen" aria-hidden="true"><label for="hs-website">${Hs.hp}</label><input id="hs-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+        <p class="hardship-send"><button class="btn primary" type="submit">${ico('send')}<span>${Hs.send}</span></button></p>
+        <p class="hardship-privacy">${ico('lock')}<span>${Hs.privacy} <a href="${LEGAL[c.lang].privacy.file}#website">${Hs.privacyLink}</a></span></p>
+      </form>
+    </div>`;
+};
+
 function page(c) {
   const b = c.base;
   const id = c.ids;
@@ -813,6 +908,8 @@ function page(c) {
   const HI = c.house;
   const N = c.nd;
   const X = c.diff;
+  const G = c.good;
+  const R = c.calm;
   const m = homeMeta(c);
   return `${pageTop(c, m)}<main id="main">
 
@@ -1004,6 +1101,39 @@ ${X.rows.map(([h, a, z]) => `          <tr><th scope="row">${h}</th><td data-col
   </div>
 </section>
 
+<section class="good" id="${id.good}" aria-labelledby="good-h">
+  <div class="wrap">
+    <div class="sec-head">
+      ${label(G.label, ' reveal')}
+      <h2 class="reveal" id="good-h">${G.h2}</h2>
+      <p class="intro reveal">${G.intro}</p>
+    </div>
+    <ul class="good-grid">
+${homeFacts(c).map((f, k) => `      <li class="reveal" style="--d:${(k % 3) * 60}ms"><figure class="fact-card good-card">
+        <p class="fact-v">${f.value}</p>
+        <p class="fact-t">${f.title}</p>
+        <p class="good-x">${f.text}</p>
+        <figcaption>${G.source} <a href="${f.url}">${f.source}</a></figcaption>
+      </figure></li>`).join('\n')}
+    </ul>
+    <p class="more reveal"><a href="${G.href}">${G.more}${ico('arrow')}</a></p>
+  </div>
+</section>
+
+<section class="calm" id="${id.calm}" aria-labelledby="calm-h">
+  <div class="wrap calm-grid">
+    <div class="sec-head">
+      ${label(R.label, ' reveal')}
+      <h2 class="reveal" id="calm-h">${R.h2}</h2>
+      <p class="intro reveal">${R.intro}</p>
+    </div>
+    <div class="calm-card reveal">
+      <ul class="ticks">${R.list.map((x) => `<li>${ico('check')}<span>${x}</span></li>`).join('')}</ul>
+      <p class="calm-not">${R.not}</p>
+    </div>
+  </div>
+</section>
+
 <section class="ways" id="${id.ways}" aria-labelledby="ways-h">
   <div class="wrap">
     <div class="sec-head">
@@ -1063,7 +1193,9 @@ ${P.plans.map((p, k) => `      <li class="plan${p.host ? ' host' : ''}${p.mark ?
         <p class="storage"><span>${P.storage}</span><b>${p.storage}</b></p>
       </li>`).join('\n')}
     </ul>
+    <p class="fund reveal">${ico('users')}<span>${P.fund}</span></p>
     <p class="note reveal">${P.note}</p>
+    ${hardshipForm(c)}
   </div>
 </section>
 
@@ -1580,6 +1712,10 @@ const SHARE_ON_POST = {
   'mental-load-einkaufen': ['denkarbeit', 'plan-im-kopf', 'brand-gesehen-werden'],
   'haushalt-mit-adhs': ['mitteilungen-buendeln', 'serien', 'brand-liegen-lassen'],
   'putzplan-wg-paar-familie': ['danke', 'serien', 'brand-gesehen-werden'],
+  'einkaufsliste-teilen': ['denkarbeit', 'danke', 'brand-nicht-alles'],
+  'wochenplan-essen-familie': ['plan-im-kopf', 'denkarbeit'],
+  'was-essen-wir-heute': ['denkarbeit', 'brand-handy-weg', 'brand-liegen-lassen'],
+  'haushalts-app-datenschutz': ['brand-handy-weg', 'mitteilungen-buendeln', 'brand-nicht-alles'],
 };
 
 /** One card on the share page: the 4:5 image, what it says, its source and the two downloads. */
@@ -1590,9 +1726,9 @@ const shareCard = (c, card, b) => {
   return `<li class="share-item">
         <figure>
           <img src="${src('4x5')}" alt="${alt}" width="1080" height="1350" loading="lazy" decoding="async"${S.lang ? ` lang="${S.lang}"` : ''}>
-          <figcaption${S.lang ? ` lang="${S.lang}"` : ''}><b>${card.kind === 'fact' && card.value ? `${card.value} ` : ''}${card.title}</b>${card.source ? `<span>${SHARE_COPY.de.source} <a href="${card.url}">${card.source}</a></span>` : ''}</figcaption>
+          <figcaption${S.lang ? ` lang="${S.lang}"` : ''}><b id="sc-${card.slug}${b === '../' ? '-p' : ''}">${card.kind === 'fact' && card.value ? `${card.value} ` : ''}${card.title}</b>${card.source ? `<span>${SHARE_COPY.de.source} <a href="${card.url}">${card.source}</a></span>` : ''}</figcaption>
         </figure>
-        <p class="share-dl">${Object.keys(card.files).map((f) => `<a class="btn sm" href="${src(f)}" download="tohuus-${card.files[f]}" aria-label="${S.dlLabel(f, card.title.replace(/"/g, '&quot;'))}">${ico('export')}${S.dl(f)}</a>`).join('')}</p>
+        <p class="share-dl">${Object.keys(card.files).map((f) => `<a class="btn sm" href="${src(f)}" download="tohuus-${card.files[f]}" ${S.lang ? `aria-describedby="sc-${card.slug}${b === '../' ? '-p' : ''}"` : `aria-label="${S.dlLabel(f, card.title.replace(/"/g, '&quot;'))}"`}>${ico('export')}${S.dl(f)}</a>`).join('')}</p>
       </li>`;
 };
 
@@ -1642,6 +1778,7 @@ ${pageFoot(c, m)}
 const shareStrip = (c, p) => {
   const slugs = SHARE && c.lang === 'de' ? SHARE_ON_POST[p.slug] : null;
   if (!slugs) return '';
+  if (new Set(slugs).size !== slugs.length) throw new Error(`share strip for ${p.slug}: a card is listed twice`);
   const cards = slugs.map((sl) => SHARE.cards.find((x) => x.slug === sl)).filter(Boolean);
   if (cards.length !== slugs.length) throw new Error(`share strip for ${p.slug}: unknown card`);
   const S = SHARE_COPY.de;
@@ -1654,6 +1791,72 @@ const shareStrip = (c, p) => {
     </section>
 `;
 };
+
+// ---------------------------------------------------------------- thank-you pages for the hardship form (docs/pricing.md)
+/** The cloud redirects here after the form (server/routes/cloud.ts): de/danke.html or thanks.html, `?error=1` when it failed. */
+const THANKS_FILE = { de: 'de/danke.html', en: 'thanks.html' };
+const THANKS_COPY = {
+  de: {
+    title: 'Danke für deine Nachricht', label: 'Wir können uns das gerade nicht leisten',
+    h1: 'Danke, deine Nachricht ist bei uns.',
+    p: 'Wir lesen jede Anfrage selbst und melden uns per Mail. Das kann ein paar Tage dauern. Schau zur Sicherheit auch im Spam-Ordner nach.',
+    next: 'So geht es weiter', steps: ['Wir lesen deine Nachricht.', 'Du bekommst eine Mail mit einem Code für ToHuus.', 'Den Code löst du im Web unter Einstellungen › Abo › Code einlösen ein.'],
+    errH1: 'Das hat leider nicht geklappt.',
+    errP: 'Deine Anfrage ist nicht bei uns angekommen. Vielleicht gab es eine Störung, oder von dieser Adresse liegt schon eine offene Anfrage bei uns. Versuch es später noch einmal.',
+    again: 'Zurück zum Formular', home: 'Zur Startseite',
+  },
+  en: {
+    title: 'Thank you for your message', label: 'We can’t afford this right now',
+    h1: 'Thank you, we have your message.',
+    p: 'We read every request ourselves and reply by e-mail. It can take a few days. Have a look in your spam folder too, just in case.',
+    next: 'What happens next', steps: ['We read your message.', 'You get an e-mail with a code for ToHuus.', 'You redeem the code on the web under Settings › Plan › Redeem a code.'],
+    errH1: 'Sorry, that did not work.',
+    errP: 'Your request did not reach us. There may have been a hiccup, or there is already an open request from this address. Please try again later.',
+    again: 'Back to the form', home: 'Back to the home page',
+  },
+};
+function thanksPage(c) {
+  const T = THANKS_COPY[c.lang];
+  const de = c.lang === 'de';
+  const m = {
+    title: `${T.title} · ToHuus`, desc: T.p, url: `${SITE}${THANKS_FILE[c.lang]}`, alt: { en: `${SITE}${THANKS_FILE.en}`, de: `${SITE}${THANKS_FILE.de}` },
+    ld: false, navBase: './', bodyClass: 'legal-page thanks-page', noindex: true,
+    enHref: de ? '../thanks.html' : 'thanks.html', deHref: de ? 'danke.html' : 'de/danke.html', otherHref: de ? '../thanks.html' : 'de/danke.html',
+  };
+  const form = `./#${c.prices.hardship.id}`;
+  return `${pageTop(c, m)}
+<main id="main" class="legal">
+
+<section class="legal-head thanks" aria-labelledby="thanks-h">
+  <div class="wrap">
+    ${label(T.label)}
+    <div data-thanks="ok">
+      <h1 id="thanks-h">${T.h1}</h1>
+      <p class="legal-note">${T.p}</p>
+      <div class="legal-summary thanks-steps" role="group" aria-label="${T.next}">
+        <p class="legal-summary-h">${T.next}</p>
+        <ol>${T.steps.map((x, k) => `<li><span>${k + 1}</span>${x}</li>`).join('')}</ol>
+      </div>
+      <p class="legal-links thanks-links"><a href="./">${T.home}${ico('arrow')}</a></p>
+    </div>
+    <div data-thanks="error" hidden>
+      <h1 id="thanks-err-h">${T.errH1}</h1>
+      <p class="legal-note">${T.errP}</p>
+      <p class="legal-links thanks-links"><a href="${form}">${T.again}${ico('arrow')}</a><a href="./">${T.home}${ico('arrow')}</a></p>
+    </div>
+  </div>
+</section>
+<script>(function(){if(!/[?&]error=1(&|$)/.test(location.search))return;var o=document.querySelector('[data-thanks="ok"]'),e=document.querySelector('[data-thanks="error"]');o.hidden=true;e.hidden=false;document.title=${JSON.stringify(`${T.errH1} · ToHuus`)};document.querySelector('.thanks').setAttribute('aria-labelledby','thanks-err-h')})()</script>
+
+</main>
+
+${pageFoot(c, m)}
+
+<script src="${c.base}assets/site.js" defer></script>
+</body>
+</html>
+`;
+}
 
 // guards: house style (no em or en dashes, except in the required provider line) and no family names
 const LEGAL_KINDS = ['privacy', 'terms'];
@@ -1704,6 +1907,11 @@ for (const [file, html, c] of helpPages) {
 fs.writeFileSync(path.join(ROOT, 'index.html'), page(COPY.en));
 fs.mkdirSync(path.join(ROOT, 'de'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'de/index.html'), page(COPY.de));
+for (const c of Object.values(COPY)) {
+  const html = thanksPage(c);
+  checkText(html, THANKS_FILE[c.lang], 0);
+  fs.writeFileSync(path.join(ROOT, THANKS_FILE[c.lang]), html);
+}
 if (SHARE) for (const c of Object.values(COPY)) {
   const html = sharePage(c);
   checkText(html, SHARE_FILE[c.lang], 0);

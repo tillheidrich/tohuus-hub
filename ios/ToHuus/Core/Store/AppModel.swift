@@ -89,6 +89,8 @@ final class AppModel {
     private(set) var guestLevel: String?
     /// an admin of the household (GET /api/me actor.role)
     private(set) var isAdmin = false
+    /// the household's language (GET /api/me → language), e.g. "de"
+    private(set) var householdLanguage: String?
 
     func loadAIState() async {
         guard let api else { return }
@@ -99,6 +101,7 @@ final class AppModel {
             isGuest = me.isGuest
             guestLevel = me.guestLevel
             isAdmin = me.role == "admin"
+            householdLanguage = me.language
             if let p = me.listPrefs { ListPrefsSync.adopt(p) }
             ShareFooter.adopt(site: me.siteUrl, on: me.shareFooter)
         }
@@ -106,6 +109,13 @@ final class AppModel {
             aiStatus = s
             if let p = s.personal { personalAI = p; SharedConfig.defaults.set(p, forKey: Self.personalAIKey) }
         }
+    }
+
+    /// Free plan: the household's plan has no AI (GET /api/assistant/status → planAi false)
+    var planWithoutAI: Bool { aiStatus?.planAi == false }
+    /// German households: "Gut zu wissen" cards (German sources); the device language when the server doesn't say
+    var householdIsGerman: Bool {
+        (householdLanguage ?? Locale.current.language.languageCode?.identifier ?? "de").lowercased().hasPrefix("de")
     }
 
     /// ToHuus Cloud: the person has not agreed to AI yet (server reason "consent")

@@ -25,6 +25,9 @@ struct MindItem: Decodable, Sendable, Identifiable, Hashable {
     @Lossy var nods: [Nod]
     var nodded: Bool = false
     var doneAt: String?
+    var createdAt: String?
+    /// "bis wann?" (YYYY-MM-DD) – only shown, never a reminder
+    var dueOn: String?
 }
 
 struct MindData: Decodable, Sendable {
@@ -33,17 +36,31 @@ struct MindData: Decodable, Sendable {
     var mine: Part
     var others: Part
     @Lossy var members: [Member]
+    /// how many of my older thoughts "Was davon ist noch wichtig?" would ask about
+    var review: Int?
+}
+
+/// GET /api/mind/review – my open thoughts older than a week, not looked at for two weeks (at most ten, oldest first)
+struct MindReview: Decodable, Sendable {
+    @Lossy var items: [MindItem]
 }
 
 extension APIClient {
     /// GET /api/mind – mine (open + done in the last two weeks) and what the others shared with me
     func mind() async throws -> MindData { try await get("api/mind") }
     /// POST /api/mind { text, kind, visibility, hide_from, done_by } – done_by: a member who did it (only for done)
-    func mindAdd(text: String, kind: String, isPrivate: Bool, hideFrom: [Int], doneBy: Int? = nil) async throws {
+    /// many: one thought per line (brain dump, at most 20); dueOn: "bis wann?" for open thoughts (YYYY-MM-DD)
+    func mindAdd(text: String, kind: String, isPrivate: Bool, hideFrom: [Int], doneBy: Int? = nil, many: Bool = false, dueOn: String? = nil) async throws {
         var body: [String: Any] = ["text": text, "kind": kind, "visibility": isPrivate ? "private" : "household", "hide_from": isPrivate ? [] : hideFrom]
         if kind == "done", let doneBy { body["done_by"] = doneBy }
+        if many { body["many"] = true }
+        if kind == "open", let dueOn { body["due_on"] = dueOn }
         _ = try await send("POST", "api/mind", json: body, as: Ignored.self)
     }
+    /// GET /api/mind/review – "Was davon ist noch wichtig?"
+    func mindReview() async throws -> MindReview { try await get("api/mind/review") }
+    /// POST /api/mind/:id/keep – "Noch wichtig": stays, not asked about again for two weeks
+    func mindKeep(_ id: Int) async throws { _ = try await send("POST", "api/mind/\(id)/keep", json: [:], as: Ignored.self) }
     /// PATCH /api/mind/:id – kind (open → done), visibility (either way), hide_from
     func mindUpdate(_ id: Int, _ body: [String: Any]) async throws {
         _ = try await send("PATCH", "api/mind/\(id)", json: body, as: Ignored.self)
@@ -68,6 +85,11 @@ struct MindComposer: View {
     @State private var doneBy: Int?
     @State private var busy = false
     @State private var error: String?
+    /// "Mehrere auf einmal": one thought per line (brain dump)
+    @State private var many = false
+    /// "Bis wann?" – off = "Irgendwann"
+    @State private var hasDue = false
+    @State private var due = Date().addingTimeInterval(86_400)
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s3) {
@@ -76,15 +98,57 @@ struct MindComposer: View {
                 Text(L("Done on the side")).tag("done")
             }
             .pickerStyle(.segmented)
-            HStack(spacing: Theme.Space.s2) {
-                TextField(kind == "done" ? L("e.g. Called the paediatrician, thought of Grandma’s birthday") : L("e.g. What do we eat on Saturday when Sam is out?"), text: $text, axis: .vertical)
-                    .lineLimit(1...3)
-                    .textFieldStyle(.roundedBorder)
-                    .submitLabel(.done)
-                    .onSubmit { Task { await save() } }
-                Button(L("Add")) { Task { await save() } }
-                    .buttonStyle(.borderedProminent).tint(Theme.primary)
-                    .disabled(busy || text.trimmingCharacters(in: .whitespaces).isEmpty)
+            if many {
+                VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                    ZStack(alignment: .topLeading) {
+                        if text.isEmpty {
+                            Text(L("One thought per line"))
+                                .foregroundStyle(Theme.ink3)
+                                .padding(.horizontal, 5).padding(.vertical, 8)
+                                .accessibilityHidden(true)
+                        }
+                        TextEditor(text: $text)
+                            .frame(minHeight: 110)
+                            .scrollContentBackground(.hidden)
+                            .accessibilityLabel(L("One thought per line"))
+                    }
+                    .padding(4)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+                    .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(Theme.line, lineWidth: 1))
+                    Button(lineCount > 1 ? LF("Add %d", lineCount) : L("Add")) { Task { await save() } }
+                        .buttonStyle(.borderedProminent).tint(Theme.primary)
+                        .frame(minHeight: 44)
+                        .disabled(busy || lineCount == 0)
+                }
+            } else {
+                HStack(spacing: Theme.Space.s2) {
+                    TextField(kind == "done" ? L("e.g. Called the paediatrician, thought of Grandma’s birthday") : L("e.g. What do we eat on Saturday when Sam is out?"), text: $text, axis: .vertical)
+                        .lineLimit(1...3)
+                        .textFieldStyle(.roundedBorder)
+                        .submitLabel(.done)
+                        .onSubmit { Task { await save() } }
+                    Button(L("Add")) { Task { await save() } }
+                        .buttonStyle(.borderedProminent).tint(Theme.primary)
+                        .disabled(busy || text.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            Toggle(isOn: $many) {
+                Text(L("Several at once")).font(.subheadline)
+            }
+            .tint(Theme.primary)
+            if kind == "open" {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L("By when?")).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3)
+                    FlowLayout(spacing: 6) {
+                        ChoiceChip(title: L("Sometime"), systemImage: "infinity", on: !hasDue) { hasDue = false }
+                        ChoiceChip(title: L("Pick a day"), systemImage: "calendar", on: hasDue) { hasDue = true }
+                    }
+                    if hasDue {
+                        DatePicker(L("By when?"), selection: $due, in: Date()..., displayedComponents: .date)
+                            .font(.subheadline)
+                    }
+                }
+                .accessibilityElement(children: .contain)
             }
             if kind == "done" && !members.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
@@ -119,6 +183,11 @@ struct MindComposer: View {
         }
     }
 
+    /// lines with something on them (the server takes at most 20)
+    private var lineCount: Int {
+        min(20, text.split(whereSeparator: \.isNewline).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count)
+    }
+
     private func save() async {
         let v = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !v.isEmpty, !busy else { return }
@@ -126,13 +195,17 @@ struct MindComposer: View {
         defer { busy = false }
         do {
             let other = kind == "done" ? doneBy : nil
-            try await api.mindAdd(text: String(v.prefix(200)), kind: kind, isPrivate: other == nil ? isPrivate : false, hideFrom: Array(hide), doneBy: other)
+            let several = many && lineCount > 1
+            try await api.mindAdd(text: String(v.prefix(several ? 400 : 200)), kind: kind, isPrivate: other == nil ? isPrivate : false, hideFrom: Array(hide), doneBy: other,
+                                  many: several, dueOn: kind == "open" && hasDue ? ServerDate.day(due) : nil)
             let name = other.flatMap { id in members.first { $0.id == id }?.name }
-            let msg = kind == "done" ? (name.map { LF("Seen – %@ gets a thank-you.", $0) } ?? L("Seen – nice that you did it."))
+            let msg = several ? LF("%d noted – one per line.", lineCount)
+                : kind == "done" ? (name.map { LF("Seen – %@ gets a thank-you.", $0) } ?? L("Seen – nice that you did it."))
                 : (isPrivate ? L("Noted – only for you.") : L("Noted – the others can see it."))
             text = ""
             hide = []
             doneBy = nil
+            hasDue = false
             error = nil
             onSaved(msg)
         } catch {
@@ -208,6 +281,7 @@ struct MindRow: View {
         }()
         return [
             author,
+            item.kind == "open" ? item.dueOn.map { LF("by %@", ServerDate.shortDay($0) ?? $0) } : nil,
             item.mine ? item.doneBy.map { LF("%@ did it", $0.name) } : nil,
             item.mine && item.visibility == "private" ? L("only for you") : nil,
             item.mine && !hidden.isEmpty ? LF("not for %@", hidden.joined(separator: ", ")) : nil,
@@ -244,6 +318,9 @@ struct MindView: View {
             }
             if let error { Section { ErrorBanner(message: error) { Task { await load() } } } }
             if let d = data {
+                if let n = d.review, n > 0 {
+                    Section { MindReviewLink(api: api, count: n) { Task { await load() } } }
+                }
                 Section(L("On your mind")) {
                     if d.mine.open.isEmpty { Text(L("Nothing right now – or nothing written down.")).font(.subheadline).foregroundStyle(Theme.ink3) }
                     ForEach(d.mine.open) { row($0, d) }
@@ -251,6 +328,7 @@ struct MindView: View {
                 let others = d.others.open + d.others.done
                 if !others.isEmpty { Section(L("With the others")) { ForEach(others) { row($0, d) } } }
                 if !d.mine.done.isEmpty { Section(L("Done on the side")) { ForEach(d.mine.done) { row($0, d) } } }
+                FactCard(api: api, topic: "mental-load", inList: true)
                 Section {} footer: {
                     Text(L("Never to the assistant, Home Assistant or notifications. Done things stay here two weeks and count in your weekly review."))
                 }
@@ -310,6 +388,9 @@ struct MindTodayCard: View {
                         MindComposer(api: api, members: d.members) { msg in toast = ToastMessage(text: msg); Task { await load() } }
                         ForEach(Array((d.others.open + d.others.done).prefix(3))) { x in
                             MindRow(api: api, item: x, members: d.members) { _ in Task { await load() } }
+                        }
+                        if let n = d.review, n > 0 {
+                            MindReviewLink(api: api, count: n) { Task { await load() } }
                         }
                         NavigationLink { MindView(api: api) } label: {
                             HStack {

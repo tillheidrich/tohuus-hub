@@ -65,6 +65,9 @@ struct ShareCardSpec: Identifiable, Hashable {
     var list: [String] = []
     /// facts only: "Quelle: …" instead of the website line
     var source: String?
+    /// facts only: the website's ready pictures (GET /api/facts → images { feed, story }); drawn here when they can't be loaded
+    var remoteFeed: URL?
+    var remoteStory: URL?
     var id: String { [area, eyebrow, value, title].joined(separator: "|") }
 }
 
@@ -263,7 +266,24 @@ struct ShareCardSheet: View {
     }
 
     private func render() {
-        image = ShareCardRenderer.image(spec, format)
+        let f = format
+        if let url = f == .story ? spec.remoteStory : spec.remoteFeed {
+            image = nil
+            failed = false
+            Task { @MainActor in
+                // the website's own picture first (same layout, checked by hand); offline the app draws it
+                var got: UIImage?
+                if let (data, resp) = try? await URLSession.shared.data(from: url),
+                   (resp as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) ?? false {
+                    got = UIImage(data: data)
+                }
+                guard format == f else { return }
+                image = got ?? ShareCardRenderer.image(spec, f)
+                failed = image == nil
+            }
+            return
+        }
+        image = ShareCardRenderer.image(spec, f)
         failed = image == nil
     }
 }

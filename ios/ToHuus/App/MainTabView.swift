@@ -63,6 +63,11 @@ struct MainTabView: View {
     @State private var showSettings = false
     @State private var showTour = false
     @State private var showAIConsent = false
+    /// "Was ist neu" (beta): entries this person hasn't seen yet
+    @State private var whatsNew: WhatsNew?
+    /// "Später" – not again until the next app start
+    @State private var whatsNewLater = false
+    @Environment(\.scenePhase) private var scenePhase
 
     /// kept for the tab version (Heute opens tabs through it)
     typealias Tab = AppArea
@@ -136,13 +141,28 @@ struct MainTabView: View {
         .sheet(isPresented: $app.showPaywall) {
             PaywallView()
         }
-        .sheet(isPresented: $showTour, onDismiss: { Task { await askAIConsent() } }) {
+        .sheet(isPresented: $showTour, onDismiss: {
+            // swiped away also counts as seen – the tour comes once per version
+            AppTourView.markSeen()
+            Task { await askAIConsent(); await checkWhatsNew() }
+        }) {
             AppTourView()
         }
-        .sheet(isPresented: $showAIConsent) {
+        .sheet(isPresented: $showAIConsent, onDismiss: { Task { await checkWhatsNew() } }) {
             AIConsentView()
         }
-        .task { if !showTour { await askAIConsent() } }
+        .sheet(item: $whatsNew, onDismiss: { whatsNewLater = true }) { w in
+            WhatsNewSheet(data: w, api: store.api)
+        }
+        .task {
+            if !showTour {
+                await askAIConsent()
+                await checkWhatsNew()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await checkWhatsNew() } }
+        }
         .onChange(of: app.askSampleData) { _, asking in if !asking { Task { await askAIConsent() } } }
         .sheet(item: Binding(get: { store.cookidooDraft }, set: { store.cookidooDraft = $0 })) { d in
             CookidooConfirmView(store: store, request: d) { _ in store.cookidooDraft = nil }
@@ -157,6 +177,17 @@ struct MainTabView: View {
         guard !AIConsentView.wasAsked(app), !app.isChild, !app.isGuest, !app.askSampleData else { return }
         await app.loadAIState()
         if app.aiConsentNeeded && app.aiAvailable && !showTour { showAIConsent = true }
+    }
+
+    /// "Was ist neu": after the tour and the AI question, on start and when the app becomes active again – never over
+    /// another sheet, never for guests or children, never in UI test and screenshot runs.
+    private func checkWhatsNew() async {
+        guard !showTour, !showAIConsent, whatsNew == nil, !whatsNewLater, !app.isGuest, !app.isChild, !AppTourView.due,
+              UserDefaults.standard.string(forKey: "debugToken") == nil || UserDefaults.standard.bool(forKey: "debugWhatsNew") else { return }
+        guard let w = try? await store.api.whatsNew(), !w.entries.isEmpty, w.latest != nil else { return }
+        // the tour or the AI question may have opened in the meantime
+        guard !showTour, !showAIConsent, !app.showPaywall, !app.showAssistant else { return }
+        whatsNew = w
     }
 
     // MARK: iPhone

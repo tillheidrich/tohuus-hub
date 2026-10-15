@@ -227,6 +227,8 @@ struct AIStatus: Decodable, Sendable, Equatable {
     var reason: String?
     /// aiState.consent.processor (ToHuus Cloud)
     var processor: String?
+    /// the household's plan includes AI (false on Free: the assistant reads simple sentences without AI)
+    var planAi: Bool?
 
     init(ai: Bool? = nil, voice: Bool? = nil, receiptsAi: Bool? = nil, household: Bool? = nil, personal: Bool? = nil, locked: Bool? = nil, reason: String? = nil) {
         self.ai = ai; self.voice = voice; self.receiptsAi = receiptsAi
@@ -251,5 +253,6 @@ struct AIStatus: Decodable, Sendable, Equatable {
         locked = locked ?? c.first(Bool.self, "aiLocked", "locked", "kidLock")
         reason = reason ?? c.first(String.self, "aiReason", "reason")
         processor = c.first(JSONValue.self, "aiState")?["consent"]?["processor"]?.string
+        planAi = c.first(Bool.self, "planAi")
     }
 }

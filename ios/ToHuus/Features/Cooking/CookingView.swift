@@ -206,6 +206,7 @@ struct CookingView: View {
                 switch tab {
                 case 0:
                     CookIdeasStrip(store: store, feedback: feedback, openRecipe: open)
+                    WeekMealDeckEntry(store: store) { Task { await week.load(store.api) } }
                     if app.isCloud { CatalogNewSection(store: store, openRecipe: open) }
                     WhatToEatSection(store: store, feedback: feedback, openRecipe: open, openImport: { showImport = true }, fallback: AnyView(ideas))
                     SuggestDeckSection(store: store, openRecipe: open, addRecipe: { showImport = true })

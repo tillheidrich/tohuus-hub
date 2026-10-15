@@ -142,12 +142,8 @@ struct SuggestDeckSection: View {
     }
 
     private func card(_ s: RecipeSuggestion, top: Bool) -> some View {
-        let badges = [s.recipe.isThermomix ? "Thermomix" : nil, s.recipe.timeMin.map { LF("%d min", Int($0)) }].compactMap { $0 }
-        return VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                Color.clear.frame(height: 240)
-                    .overlay(RemoteImage(url: store.api.imageURL(s.recipe.imagePath), api: store.api, placeholder: "fork.knife"))
-                    .clipped()
+        RecipeSuggestionFace(suggestion: s, api: store.api)
+            .overlay(alignment: .topLeading) {
                 if top && abs(drag.width) > 30 {
                     Text(drag.width > 0 ? L("YUM") : L("NOT TODAY"))
                         .font(.title2.weight(.heavy))
@@ -159,28 +155,15 @@ struct SuggestDeckSection: View {
                         .frame(maxWidth: .infinity, alignment: drag.width > 0 ? .leading : .trailing)
                 }
             }
-            VStack(alignment: .leading, spacing: 6) {
-                Text(s.recipe.title).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(2)
-                if let h = s.have, let n = s.need {
-                    Text(LF("%d/%d ingredients on hand", h, n)).font(.caption.weight(.semibold))
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(Theme.primarySoft, in: Capsule()).foregroundStyle(Theme.primaryText)
-                }
-                if !badges.isEmpty { Text(badges.joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink2) }
-                if let r = s.reasons, !r.isEmpty { Text(r.joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink3).lineLimit(3) }
-            }
-            .padding(Theme.Space.s4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .background(Theme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 26))
-        .overlay(RoundedRectangle(cornerRadius: 26).stroke(Theme.line, lineWidth: 1))
-        .scaleEffect(top ? 1 : 0.96)
-        .offset(y: top ? 0 : 10)
-        .accessibilityElement(children: .combine)
-        .accessibilityHidden(!top)
-        .accessibilityAction(named: L("Yum")) { yes() }
-        .accessibilityAction(named: L("Not today")) { next() }
+            .background(Theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 26))
+            .overlay(RoundedRectangle(cornerRadius: 26).stroke(Theme.line, lineWidth: 1))
+            .scaleEffect(top ? 1 : 0.96)
+            .offset(y: top ? 0 : 10)
+            .accessibilityElement(children: .combine)
+            .accessibilityHidden(!top)
+            .accessibilityAction(named: L("Yum")) { yes() }
+            .accessibilityAction(named: L("Not today")) { next() }
     }
 
     private func next() {
@@ -200,5 +183,36 @@ struct SuggestDeckSection: View {
         withAnimation(reduceMotion ? nil : .spring()) { drag = .zero }
         Haptics.tick()
         openRecipe(RecipeRef(id: r.id))
+    }
+}
+
+/// The face of a recipe suggestion card: photo, title, what is at home, badges and why it is suggested – used by
+/// "Ideen durchblättern" and "Was essen wir diese Woche?" (WeekMealDeck.swift).
+struct RecipeSuggestionFace: View {
+    let suggestion: RecipeSuggestion
+    let api: APIClient
+    var imageHeight: CGFloat = 240
+
+    var body: some View {
+        let s = suggestion
+        let badges = [s.recipe.isThermomix ? "Thermomix" : nil, s.recipe.timeMin.map { LF("%d min", Int($0)) }].compactMap { $0 }
+        VStack(alignment: .leading, spacing: 0) {
+            Color.clear.frame(height: imageHeight)
+                .overlay(RemoteImage(url: api.imageURL(s.recipe.imagePath), api: api, placeholder: "fork.knife"))
+                .clipped()
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(s.recipe.title).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(2)
+                if let h = s.have, let n = s.need {
+                    Text(LF("%d/%d ingredients on hand", h, n)).font(.caption.weight(.semibold))
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Theme.primarySoft, in: Capsule()).foregroundStyle(Theme.primaryText)
+                }
+                if !badges.isEmpty { Text(badges.joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink2) }
+                if let r = s.reasons, !r.isEmpty { Text(r.joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink3).lineLimit(3) }
+            }
+            .padding(Theme.Space.s4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
