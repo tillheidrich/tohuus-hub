@@ -22,6 +22,8 @@ export interface WhoDoesWhat {
   cook_lately: { user_id: number; name: string } | null;
   compare: boolean;
   balance: { state: 'even' | 'leans'; name?: string } | null;
+  /** only mine: a task I did the last 6 times in a row */
+  carrying?: { task_id: number; name: string; times: number }[];
 }
 
 const useRun = () => {
@@ -108,6 +110,32 @@ export function WhoDoesWhatSection({ onOpenTask }: { onOpenTask?: (id: number) =
         </p>
       )}
     </section>
+  );
+}
+
+/** "Du machst das seit Wochen – danke!" – only for the person themselves, then the offer to hand it over. */
+export function Carrying({ onOpenTask }: { onOpenTask?: (id: number) => void }) {
+  const q = useApi<WhoDoesWhat>(['care', 'habits'], '/habits');
+  const run = useRun();
+  const c = q.data?.carrying?.[0];
+  if (!c) return null;
+  return (
+    <div className="card stack carrying-card" role="group" aria-label={c.name}>
+      <span>
+        <HandHeart size={18} aria-hidden="true" style={{ verticalAlign: '-3px', marginRight: 6 }} />
+        {t('You’ve been doing “{task}” for weeks – thank you! Would you like to hand it over for a while?', { task: c.name })}
+      </span>
+      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+        {onOpenTask && (
+          <button className="btn sm primary" onClick={() => onOpenTask(c.task_id)}>
+            <ArrowsLeftRight size={15} aria-hidden="true" /> {t('Hand over …')}
+          </button>
+        )}
+        <button className="btn sm ghost" onClick={() => run(() => post(`/habits/carrying/${c.task_id}/dismiss`), t('Okay – it stays with you.'))}>
+          {t('It’s fine')}
+        </button>
+      </div>
+    </div>
   );
 }
 

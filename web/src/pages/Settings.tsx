@@ -24,6 +24,8 @@ import { CookidooWays } from './CookidooStatus';
 import { PrintSettings } from './Bons';
 import { RecipeImportCenter } from './RecipeImports';
 import { AwayEntryCard } from './Away';
+import { CheckinSettingsCard } from './Checkin';
+import { ShareFooterCard } from '../share/share';
 import { ShareSetupCard, StartModeCard } from './Share';
 import { MenuSettingsCard } from './Menu';
 import { HouseholdAppearanceCard, MyAppearanceCard } from './AppearanceSettings';
@@ -120,11 +122,13 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'home' && <LunchboxCard />}
       {tab === 'home' && <PulseSettingsCard admin={admin} />}
       {tab === 'home' && <AwayEntryCard />}
+      {tab === 'home' && <ShareFooterCard admin={admin} />}
       {tab === 'home' && <MenuSettingsCard />}
       {tab === 'account' && <MyPerson me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
       {tab === 'account' && me.actor.userId && <MyListViewCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <FocusSettingsCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CheckinSettingsCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarReadCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalDavCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarFeedCard />}

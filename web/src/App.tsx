@@ -27,6 +27,7 @@ import { LoadCardsPage } from './pages/LoadCards';
 import { ReviewPage } from './pages/Review';
 import { WeekReviewPage } from './pages/WeekReview';
 import { MindPage } from './pages/Mind';
+import { CareForPage } from './pages/CareFor';
 
 export interface Me {
   /** household + person tag for the offline queue (shop/offline.ts) */
@@ -359,6 +360,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/rueckblick" element={<ReviewPage />} />
               <Route path="/woche" element={<WeekReviewPage />} />
               <Route path="/kopf" element={<MindPage />} />
+              <Route path="/fuer-wen" element={<CareForPage />} />
               <Route path="/pflege" element={<Navigate to="/aufgaben?f=care" replace />} />
               <Route path="/urlaub" element={<Away me={me} />} />
               <Route path="/ausgaben" element={<Spending />} />

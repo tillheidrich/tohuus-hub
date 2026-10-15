@@ -11213,3 +11213,122 @@ ul.mind-list,
   margin: 0;
   padding: 0;
 }
+
+/* Teilen (share/share.tsx, share/cards.tsx) */
+.share-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 220px;
+  overflow: auto;
+  font: inherit;
+  font-size: 0.9rem;
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+}
+.share-card-preview {
+  margin: 14px auto 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  width: min(100%, 300px);
+}
+.share-card-preview.story {
+  aspect-ratio: 9 / 16;
+  width: min(100%, 240px);
+}
+.share-card-preview.feed {
+  aspect-ratio: 4 / 5;
+}
+.share-card-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.share-card-wait {
+  width: 100%;
+  height: 100%;
+}
+.review-share {
+  margin-top: auto;
+  padding-top: 8px;
+}
+.review-note {
+  margin: 6px 0 0;
+  color: var(--ink-2);
+}
+
+/* Abendfrage + Fertig für heute (pages/Checkin.tsx) */
+.checkin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.checkin-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.checkin-who {
+  flex-wrap: wrap;
+}
+.checkin-extra {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.calm-card {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 24px 0 8px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+.calm-card svg {
+  flex: none;
+  color: var(--primary-text);
+}
+
+/* Für wen ich da bin (pages/CareFor.tsx) */
+.carefor-person h2 {
+  overflow-wrap: anywhere;
+}
+.carefor-seen {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+.carefor-seen svg {
+  vertical-align: -3px;
+  margin-right: 6px;
+  color: var(--primary-text);
+}
+.carefor-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.carefor-recent .linkish {
+  margin-left: 6px;
+  min-height: 32px;
+  vertical-align: middle;
+}
+.carefor-person .chips,
+.away-home .chips,
+.checkin-card .chips {
+  flex-wrap: wrap;
+  overflow: visible;
+  mask-image: none;
+  -webkit-mask-image: none;
+}

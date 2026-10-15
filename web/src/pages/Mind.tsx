@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { del, invalidate, patch, post, useApi } from '../api';
 import { t } from '../i18n';
 import { Seg, useToast } from '../ui';
+import { ShareTextButton } from '../share/share';
 
 export interface MindItem {
   id: number;
@@ -24,6 +25,9 @@ export interface MindItem {
   nodded: boolean;
   created_at: string;
   done_at: string | null;
+  /** someone else did it – the author wrote it down */
+  done_by?: { id: number; name: string; color: string } | null;
+  about_me?: boolean;
 }
 interface MindData {
   mine: { open: MindItem[]; done: MindItem[] };
@@ -53,12 +57,18 @@ function Composer({ members, compact = false }: { members: MindData['members']; 
   const [kind, setKind] = useState<'open' | 'done'>('open');
   const [priv, setPriv] = useState(false);
   const [hide, setHide] = useState<number[]>([]);
+  const [doneBy, setDoneBy] = useState<number | null>(null);
   const send = () => {
     if (!text.trim()) return;
-    const body = { text: text.trim(), kind, visibility: priv ? 'private' : 'household', hide_from: priv ? [] : hide };
-    act(() => post('/mind', body), kind === 'done' ? t('Seen – nice that you did it.') : priv ? t('Noted – only for you.') : t('Noted – the others can see it.')).then(() => {
+    const other = kind === 'done' ? doneBy : null;
+    const body = { text: text.trim(), kind, visibility: priv && !other ? 'private' : 'household', hide_from: priv || other ? [] : hide, done_by: other };
+    act(
+      () => post('/mind', body),
+      other ? t('Noted – they’ll see your thanks.') : kind === 'done' ? t('Seen – nice that you did it.') : priv ? t('Noted – only for you.') : t('Noted – the others can see it.'),
+    ).then(() => {
       setText('');
       setHide([]);
+      setDoneBy(null);
     });
   };
   return (
@@ -87,7 +97,20 @@ function Composer({ members, compact = false }: { members: MindData['members']; 
           {t('Add')}
         </button>
       </div>
-      <div className="row wrap mind-who" style={{ gap: 6 }}>
+      {kind === 'done' && members.length > 0 && (
+        <div className="row wrap mind-who" role="radiogroup" aria-label={t('Who did it?')} style={{ gap: 6 }}>
+          <span className="small muted">{t('Who did it?')}</span>
+          <button type="button" role="radio" aria-checked={doneBy == null} className={`chip sm ${doneBy == null ? 'on' : ''}`} onClick={() => setDoneBy(null)}>
+            {t('Me')}
+          </button>
+          {members.map((m) => (
+            <button key={m.id} type="button" role="radio" aria-checked={doneBy === m.id} className={`chip sm ${doneBy === m.id ? 'on' : ''}`} onClick={() => setDoneBy(m.id)}>
+              {m.name}
+            </button>
+          ))}
+        </div>
+      )}
+      {!(kind === 'done' && doneBy != null) && <div className="row wrap mind-who" style={{ gap: 6 }}>
         <button type="button" className={`chip sm ${!priv ? 'on' : ''}`} aria-pressed={!priv} onClick={() => setPriv(false)}>
           <UsersThree size={14} aria-hidden="true" /> {t('For everyone')}
         </button>
@@ -107,7 +130,7 @@ function Composer({ members, compact = false }: { members: MindData['members']; 
               <EyeSlash size={14} aria-hidden="true" /> {t('Not for {name}', { name: m.name })}
             </button>
           ))}
-      </div>
+      </div>}
     </div>
   );
 }
@@ -126,7 +149,9 @@ function Row({ x, members }: { x: MindItem; members: MindData['members'] }) {
         <div className="title">{x.text}</div>
         <div className="sub">
           {[
-            !x.mine && x.by ? (x.kind === 'done' ? t('{name} did it', { name: x.by.name }) : t('{name} has it on their mind', { name: x.by.name })) : null,
+            x.done_by && x.about_me && x.by ? t('{name} noticed you did this – thank you!', { name: x.by.name }) : null,
+            x.done_by && !x.about_me && x.by ? (x.mine ? t('done by {name}', { name: x.done_by.name }) : t('{by} noticed: {name} did it', { by: x.by.name, name: x.done_by.name })) : null,
+            !x.done_by && !x.mine && x.by ? (x.kind === 'done' ? t('{name} did it', { name: x.by.name }) : t('{name} has it on their mind', { name: x.by.name })) : null,
             x.mine && x.visibility === 'private' ? t('only for you') : null,
             x.mine && hidden.length ? t('not for {names}', { names: hidden.join(', ') }) : null,
             nods ? (x.kind === 'done' ? t('Thanks from {names}', { names: nods }) : t('{names} thinks along', { names: nods })) : null,
@@ -204,6 +229,16 @@ export function MindPage() {
           <div className="eyebrow">{t('Seen')}</div>
           <h1>{t('On my mind')}</h1>
         </div>
+        {d && d.mine.open.length + d.mine.done.length > 0 && (
+          <div className="actions">
+            <ShareTextButton
+              title={t('On my mind')}
+              medium="mind"
+              className="btn"
+              lines={() => [...d.mine.open.map((x) => `☐ ${x.text}`), ...d.mine.done.map((x) => `✓ ${x.text}`)]}
+            />
+          </div>
+        )}
       </header>
       <p className="muted" style={{ marginTop: 0 }}>
         {t('Things too small for a list – and still work: what you carry around, what you did on the side. So it gets seen. Only for you or for everyone, switch any time.')}

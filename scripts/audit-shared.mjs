@@ -173,6 +173,7 @@ export async function targets(ctx, inst, fresh) {
     '/rueckblick',
     '/woche',
     '/kopf',
+    '/fuer-wen',
     '/urlaub',
     '/import',
     '/import?mode=photo',

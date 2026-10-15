@@ -21,6 +21,7 @@ import {
   Wrench,
   CalendarBlank,
   Brain,
+  HandHeart,
   Sparkle,
   CaretRight,
 } from '@phosphor-icons/react';
@@ -32,7 +33,9 @@ import { useHousehold } from '../household';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { usePeopleDirectory } from '../people/Avatar';
 import { BlickSection } from './Blick';
-import { OfferAsks, OfferBox, WhoDoesWhatSection } from './WhoDoesWhat';
+import { Carrying, OfferAsks, OfferBox, WhoDoesWhatSection } from './WhoDoesWhat';
+import { CareForHint } from './CareFor';
+import { ShareTextButton } from '../share/share';
 import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
@@ -362,6 +365,14 @@ export function Care() {
             {t('One thing at a time')}
           </button>
           <FreshStartButton overdue={tasks.filter((x) => x.state === 'overdue').length} />
+          {dueNow.length > 0 && (
+            <ShareTextButton
+              title={t('Tasks')}
+              medium="tasks"
+              className="btn sm"
+              lines={() => dueNow.filter((x) => x.visibility !== 'private' && !(x as CareTask & { cared_for_id?: number | null }).cared_for_id).map((x) => `☐ ${x.name} (${dueLabel(x)})`)}
+            />
+          )}
           <button className="btn sm" onClick={() => nav('/etiketten?kind=care')}>
             <Printer size={15} /> {t('Labels')}
           </button>
@@ -430,6 +441,8 @@ export function Care() {
       )}
 
       <RecentlyDone />
+      <CareForHint />
+      <Carrying onOpenTask={setOpenId} />
       <WhoDoesWhatSection onOpenTask={setOpenId} />
       <RatgeberCards areas={['aufgaben', 'kopf']} />
       <BlickSection onOpenTask={setOpenId} />
@@ -478,6 +491,14 @@ export function Care() {
             <span className="grow">
               <span className="title">{t('Calendar & reminders')}</span>
               <span className="sub">{t('Read your calendar, Apple Reminders, subscription link – in the settings.')}</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
+          <button className="li clickable card nav-row" onClick={() => nav('/fuer-wen')}>
+            <HandHeart size={20} aria-hidden="true" />
+            <span className="grow">
+              <span className="title">{t('People I look after')}</span>
+              <span className="sub">{t('Visits, appointments, prescriptions – that’s work too.')}</span>
             </span>
             <CaretRight size={16} aria-hidden="true" />
           </button>

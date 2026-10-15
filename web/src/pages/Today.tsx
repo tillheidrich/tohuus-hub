@@ -6,6 +6,8 @@ import { StarsCard } from './Stars';
 import { ReviewTeaser } from './Review';
 import { WeekReviewTeaser } from './WeekReview';
 import { MindTodayCard } from './Mind';
+import { CalmCard, CheckinCard } from './Checkin';
+import { CareForHint } from './CareFor';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
@@ -145,6 +147,8 @@ export function Today({ me }: { me: Me }) {
               <TodayOfferAsks />
               <WeekReviewTeaser guest={Boolean(gl)} />
               <TasksTodayCard today={localDay()} />
+              <CheckinCard guest={Boolean(gl)} />
+              {!gl && <CareForHint />}
               <MindTodayCard guest={Boolean(gl)} />
               <StarsCard guest={Boolean(gl)} />
               <ReviewTeaser guest={Boolean(gl)} />
@@ -158,6 +162,7 @@ export function Today({ me }: { me: Me }) {
         ]}
         canArrange={!gl && Boolean(me.actor.userId)}
       />
+      {d.calm && !gl && <CalmCard />}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { api, invalidate, patch, post, useApi } from '../api';
 import { useHousehold } from '../household';
 import { locale, t } from '../i18n';
+import { ShareTextButton } from '../share/share';
+import { fmtDate } from '../api';
 import { Seg, Sheet, useToast } from '../ui';
 import { ClaimAvatar, CookPicker, usePlanClaims, useCookSuggestions } from '../shop/claims';
 import { BonButton } from './Bons';
@@ -193,6 +195,19 @@ export function WeekPlan({ cookidoo }: { cookidoo: boolean }) {
         )}
         <RotationButton from={from} overlay={overlay.data} />
         <BonButton spec={{ type: 'week', day: from }} label={t('Print week')} />
+        {planned > 0 && (
+          <ShareTextButton
+            title={t('What we eat this week')}
+            medium="plan"
+            className="btn sm"
+            lines={() =>
+              days.flatMap((d) => {
+                const es = byDay.get(d) ?? [];
+                return es.length ? [`${fmtDate(d, { weekday: 'short', day: 'numeric', month: 'short' })}: ${es.map((e) => e.title).join(', ')}`] : [];
+              })
+            }
+          />
+        )}
       </div>
 
       <PlanPicker day={pick} mark={pick ? marks.get(pick) ?? null : null} onClose={() => setPick(null)} />

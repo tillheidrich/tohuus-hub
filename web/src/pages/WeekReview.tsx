@@ -9,7 +9,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fmtDate, invalidate, post, put, useApi } from '../api';
 import { t } from '../i18n';
-import { Empty, Skeleton, Toggle, useToast } from '../ui';
+import { Empty, Seg, Skeleton, Toggle, useToast } from '../ui';
+import { type CardSpec, ShareCardButton } from '../share/cards';
 
 type Area = 'shop' | 'cook' | 'tasks' | 'pantry' | 'money';
 interface Card {
@@ -21,6 +22,9 @@ interface Card {
   list: string[];
 }
 export interface WeekReview {
+  period?: 'week' | 'month';
+  /** a single parent: said out loud, kindly */
+  note?: string | null;
   from: string;
   to: string;
   on: boolean;
@@ -78,7 +82,21 @@ export function WeekReviewTeaser({ guest }: { guest?: boolean }) {
   );
 }
 
-function Cards({ cards }: { cards: Card[] }) {
+/** A card as a share picture. Personal cards carry no list (it could hold private tasks or thoughts) and
+ *  "für jemanden da gewesen" never the person's name. */
+function cardSpec(c: Card, eyebrow: string, personal: boolean): CardSpec {
+  const neutral = c.key === 'my_carefor';
+  return {
+    area: c.area,
+    eyebrow,
+    value: c.value,
+    title: neutral ? (c.value === '1' ? t('time you were there for someone') : t('times you were there for someone')) : c.title,
+    text: c.text,
+    list: personal ? [] : c.list,
+  };
+}
+
+function Cards({ cards, eyebrow, personal = false }: { cards: Card[]; eyebrow: string; personal?: boolean }) {
   return (
     <ol className="review-cards">
       {cards.map((c) => (
@@ -94,21 +112,41 @@ function Cards({ cards }: { cards: Card[] }) {
               ))}
             </ul>
           )}
+          <span className="review-share">
+            <ShareCardButton spec={cardSpec(c, eyebrow, personal)} className="btn sm ghost" label={t('Share')} />
+          </span>
         </li>
       ))}
     </ol>
   );
 }
 
+/** The whole week (or month) on one picture: the first card big, the next three as a list. Household cards only. */
+function summarySpec(d: WeekReview, when: string): CardSpec {
+  const [first, ...rest] = d.household.cards;
+  return {
+    area: first?.area ?? 'tasks',
+    eyebrow: `${d.period === 'month' ? t('Our month') : t('Our week')} · ${when}`,
+    value: first?.value ?? '',
+    title: first?.title ?? '',
+    text: null,
+    list: rest.slice(0, 3).map((c) => `${c.value} ${c.title}`),
+  };
+}
+
 export function WeekReviewPage() {
   const [params] = useSearchParams();
+  const [period, setPeriod] = useState<'week' | 'month'>(params.get('period') === 'month' ? 'month' : 'week');
   const [week, setWeek] = useState<string | null>(() => (/^\d{4}-\d\d-\d\d$/.test(params.get('week') ?? '') ? params.get('week') : null));
-  const q = useApi<WeekReview>(['week-review', week ?? 'last'], `/week-review${week ? `?week=${week}` : ''}`);
+  const q = useApi<WeekReview>(
+    ['week-review', period, week ?? 'last'],
+    period === 'week' ? `/week-review${week ? `?week=${week}` : ''}` : `/month-review${week ? `?month=${week}` : ''}`,
+  );
   const toast = useToast();
   const d = q.data;
   // opening last week's review counts as seen – "Heute" stops offering it
   useEffect(() => {
-    if (!week && d?.show) post('/week-review/seen', { from: d.from }).then(() => invalidate('week-review')).catch(() => {});
+    if (period === 'week' && !week && d?.show) post('/week-review/seen', { from: d.from }).then(() => invalidate('week-review')).catch(() => {});
   }, [week, d?.show, d?.from]);
   const today = new Date().toISOString().slice(0, 10);
   const setOn = (on: boolean) =>
@@ -119,20 +157,33 @@ export function WeekReviewPage() {
     <div className="rise review-page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">{t('Week in review')}</div>
+          <div className="eyebrow">{period === 'week' ? t('Week in review') : t('Month in review')}</div>
           <h1>{d?.title ?? t('Week in review')}</h1>
+          {d?.note && <p className="review-note">{d.note}</p>}
         </div>
       </header>
+      <Seg
+        value={period}
+        onChange={(v) => {
+          setPeriod(v);
+          setWeek(null);
+        }}
+        label={t('Period')}
+        options={[
+          ['week', t('Week')],
+          ['month', t('Month')],
+        ]}
+      />
       {q.isLoading || !d ? (
         <Skeleton n={3} h={120} />
       ) : (
         <>
           <div className="month-switch" role="group" aria-label={t('Week')}>
-            <button className="icon-btn" onClick={() => setWeek(shift(d.from, -1))} aria-label={t('Previous week')}>
+            <button className="icon-btn" onClick={() => setWeek(shift(d.from, -1))} aria-label={period === 'week' ? t('Previous week') : t('Previous month')}>
               <CaretLeft size={18} />
             </button>
             <b aria-live="polite">{range(d)}</b>
-            <button className="icon-btn" onClick={() => setWeek(shift(d.to, 1))} disabled={shift(d.to, 1) > today} aria-label={t('Next week')}>
+            <button className="icon-btn" onClick={() => setWeek(shift(d.to, 1))} disabled={shift(d.to, 1) > today} aria-label={period === 'week' ? t('Next week') : t('Next month')}>
               <CaretRight size={18} />
             </button>
           </div>
@@ -144,8 +195,11 @@ export function WeekReviewPage() {
             <>
               {d.household.cards.length > 0 && (
                 <section className="section" aria-labelledby="wr-us">
-                  <h2 id="wr-us">{d.household.title}</h2>
-                  <Cards cards={d.household.cards} />
+                  <div className="section-head">
+                    <h2 id="wr-us">{d.household.title}</h2>
+                    <ShareCardButton spec={summarySpec(d, range(d))} label={t('Share the week')} />
+                  </div>
+                  <Cards cards={d.household.cards} eyebrow={`${period === 'week' ? t('Our week') : t('Our month')} · ${range(d)}`} />
                 </section>
               )}
               {d.mine && d.mine.cards.length > 0 && (
@@ -157,7 +211,7 @@ export function WeekReviewPage() {
                   <p className="muted small" style={{ margin: '0 0 10px' }}>
                     {t('Only you see this part.')}
                   </p>
-                  <Cards cards={d.mine.cards} />
+                  <Cards cards={d.mine.cards} eyebrow={`${period === 'week' ? t('My week') : t('My month')} · ${range(d)}`} personal />
                 </section>
               )}
             </>

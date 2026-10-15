@@ -171,7 +171,7 @@ export const moduleAllows = (mods: Record<string, boolean> | undefined, path: st
 export function tabFor(path: string): string {
   if (path === '/') return '/';
   if (path.startsWith('/einkauf')) return '/einkauf';
-  if (['/bestand', '/scan', '/aufgaben', '/fokus', '/denkarbeit', '/woche', '/kopf', '/pflege', '/wo', '/hausinfo', '/urlaub', '/abgleich'].some((p) => path.startsWith(p))) return '/zuhause';
+  if (['/bestand', '/scan', '/aufgaben', '/fokus', '/denkarbeit', '/woche', '/kopf', '/fuer-wen', '/pflege', '/wo', '/hausinfo', '/urlaub', '/abgleich'].some((p) => path.startsWith(p))) return '/zuhause';
   if (path.startsWith('/kochen') || path.startsWith('/rezepte') || path.startsWith('/abstimmung')) return '/kochen';
   if (path.startsWith('/geld') || path.startsWith('/import') || path.startsWith('/ausgaben')) return '/geld';
   return '/mehr';
