@@ -510,7 +510,15 @@ cloudPub.post(
   '/cloud/hardship',
   express.urlencoded({ extended: false, limit: '8kb' }),
   wrap(async (req, res) => {
-    const b = z
+    const form = String(req.headers['content-type'] ?? '').includes('application/x-www-form-urlencoded');
+    const thanks = `${config.siteUrl}/${req.body?.lang === 'en' ? 'thanks.html' : 'de/danke.html'}`;
+    // a plain form never sees raw JSON: rate limit and bad input go to the gentle error page too
+    const fail = (status: number, message: string) => {
+      if (form) return void res.redirect(303, `${thanks}?error=1`);
+      throw new AuthError(status, message);
+    };
+    if (rateLimitedGlobal(`hardship-ip:${req.ip}`, 5, 60 * 60_000)) return fail(429, t('Too many attempts. Please wait a few minutes.'));
+    const parsed = z
       .object({
         email: z.string().max(254),
         name: z.string().max(80).optional(),
@@ -519,10 +527,9 @@ cloudPub.post(
         lang: z.enum(['de', 'en']).optional(),
         website: z.string().max(200).optional(),
       })
-      .parse(req.body ?? {});
-    const form = String(req.headers['content-type'] ?? '').includes('application/x-www-form-urlencoded');
-    if (rateLimitedGlobal(`hardship-ip:${req.ip}`, 5, 60 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
-    const thanks = `${config.siteUrl}/${b.lang === 'en' ? 'thanks.html' : 'de/danke.html'}`;
+      .safeParse(req.body ?? {});
+    if (!parsed.success) return fail(400, 'invalid input');
+    const b = parsed.data;
     try {
       await requestHardship(b);
     } catch (e) {

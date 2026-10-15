@@ -764,7 +764,7 @@ body.legal-page { padding-bottom: 0; }
 .hardship h3 { font-size: clamp(24px, 3vw, 30px); text-wrap: balance; }
 .hardship-copy p { margin-top: 12px; font-size: 17px; color: var(--ink-2); max-width: 48ch; }
 .hardship-form { position: relative; display: grid; gap: 16px; min-width: 0; }
-.field { display: grid; gap: 6px; min-width: 0; }
+.field { display: grid; gap: 6px; min-width: 0; align-content: start; }
 .field label { font-size: 15px; font-weight: 650; }
 .field label small { font-size: 14px; font-weight: 450; color: var(--ink-2); }
 .field input, .field textarea { width: 100%; min-height: 48px; padding: 10px 12px; border: var(--stroke) solid var(--line-strong); border-radius: var(--r-sm); background: var(--canvas); color: var(--ink); font: 400 17px/1.4 var(--font); }
@@ -774,7 +774,7 @@ body.legal-page { padding-bottom: 0; }
 .hardship-send .btn { padding: 0 18px; }
 .hardship-privacy { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ink-2); }
 .hardship-privacy .ico { width: 16px; height: 16px; margin-top: 3px; }
-.hardship-privacy a { display: inline-block; padding: 12px 0; color: var(--primary-text); font-weight: 600; }
+.hardship-privacy a { color: var(--primary-text); font-weight: 600; text-underline-offset: 3px; }
 .offscreen { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 @media (min-width: 720px) {
   .hardship-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
