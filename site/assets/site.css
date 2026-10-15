@@ -142,8 +142,8 @@ section { scroll-margin-top: 12px; }
 .btn:hover .tail { transform: translateX(3px); }
 .btn-2 { display: grid; text-align: left; gap: 2px; }
 .btn-2 b { font-weight: 650; font-size: 16px; }
-.btn-2 small { font-weight: 500; font-size: 13px; opacity: 0.85; }
-.btn.primary .btn-2 small { opacity: 1; } /* full on-primary keeps ≥ 4.5:1 in dark mode */
+.btn-2 small { font-weight: 500; font-size: 13px; color: var(--ink-2); }
+.btn.primary .btn-2 small { color: var(--on-primary); } /* no opacity on text: full on-primary keeps ≥ 4.5:1 in dark mode */
 .btn.sm { min-height: 44px; padding: 0 10px; font-size: 14px; gap: 6px; }
 .btn.sm .ico { width: 16px; height: 16px; }
 .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r-sm); background: none; border: 0; color: var(--ink); cursor: pointer; }
@@ -614,14 +614,6 @@ body.legal-page { padding-bottom: 0; }
 
 /* ------------------------------------------------------------ TestFlight and Home Assistant sections (home page) */
 .tf, .ha { padding: 72px 0; border-top: 1px solid var(--line); }
-.tf-card { max-width: 460px; width: 100%; justify-self: center; }
-.tf-rows { margin-top: 6px; counter-reset: r; }
-.tf-rows li { counter-increment: r; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; padding: 13px 0; font-size: 17px; border-bottom: 1px solid var(--line); }
-.tf-rows li:last-child { border-bottom: 0; }
-.tf-rows li::before { content: counter(r); width: 24px; height: 24px; display: grid; place-items: center; border-radius: var(--r-xs); box-shadow: inset 0 0 0 2px var(--ink); font-size: 13px; font-weight: 700; }
-.tf-foot { padding: 4px 20px 22px; display: grid; gap: 12px; }
-.tf-foot .btn { justify-content: space-between; }
-.tf-foot p { font-size: 14px; color: var(--ink-2); }
 .ha-steps { margin-top: 0; }
 @media (min-width: 960px) { .tf, .ha { padding: 112px 0; } .ha-steps { margin-top: 64px; } }
 
@@ -667,8 +659,6 @@ body.legal-page { padding-bottom: 0; }
   .help-index { padding-bottom: 112px; }
   .help-group { margin-top: 56px; }
 }
-.tf-card .origin-h { flex-direction: column; align-items: flex-start; gap: 2px; }
-.tf-card .origin-h b { font-size: 24px; line-height: 1.2; }
 
 /* ------------------------------------------------------------ blog: fact cards (saved as image by site.js) */
 .fact-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; padding: 0; list-style: none; }
@@ -789,3 +779,40 @@ body.legal-page { padding-bottom: 0; }
 .thanks-steps li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; font-size: 16px; }
 .thanks-steps li span { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); font-weight: 700; font-size: 14px; }
 .thanks-links a { min-height: 44px; }
+
+/* design review 2, 15 Oct 2026: one type scale with more distance between levels, lists with rules instead of
+   boxes (the boxed three-column icon grids repeated in four sections), calmer section rhythm, App Store section */
+h2 { font-size: clamp(32px, 4.8vw, 58px); line-height: 1.06; letter-spacing: -0.02em; }
+.hero h1 { font-size: clamp(42px, 6.2vw, 78px); line-height: 1.02; }
+.intro { font-size: clamp(17px, 1.6vw, 19px); line-height: 1.55; }
+.ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 56px 0 64px; }
+@media (min-width: 960px) {
+  .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 96px 0 104px; }
+}
+/* lists with a dividing rule (nd, diff, who): no box, no shadow; the icon sits beside the title, not above it */
+.nd-grid, .forms { gap: 0 40px; border-top: var(--stroke) solid var(--ink); }
+.nd-grid li, .forms li { padding: 18px 0 20px; border-radius: 0; background: none; box-shadow: none; border-bottom: 1px solid var(--line); }
+.nd-grid li { grid-template-columns: 32px minmax(0, 1fr); gap: 4px 12px; }
+.nd-grid .nd-ico { width: 32px; height: 32px; grid-row: span 2; }
+.nd-grid .nd-ico .ico { width: 18px; height: 18px; }
+.nd-grid b { margin-top: 4px; font-size: 18px; line-height: 1.3; }
+.nd-grid li > span:last-child { grid-column: 2; font-size: 16px; line-height: 1.5; }
+.diff-grid li { grid-template-columns: minmax(0, 1fr); }
+.diff-grid li > span:last-child { grid-column: 1; }
+.diff-grid b { margin-top: 0; font-family: var(--display); font-weight: 400; font-size: 22px; line-height: 1.2; }
+.forms b { font-size: 18px; }
+@media (min-width: 1100px) {
+  .nd-grid li, .forms li { padding: 24px 0 28px; }
+  .forms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .forms li, .forms li:nth-child(4) { grid-column: auto; }
+}
+/* the iPhone app: the button is the one strong element, the start as plain numbered steps */
+.tf .ctas { margin-top: 28px; }
+.tf-points { margin-top: 26px; }
+.tf-start { align-self: start; }
+.tf-start h3 { font-size: clamp(24px, 2.6vw, 30px); }
+.tf-steps { margin-top: 18px; }
+.tf-steps li { grid-template-columns: 40px minmax(0, 1fr); align-items: center; }
+.tf-steps li::before { grid-row: auto; }
+.tf-note { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; color: var(--ink-2); }
+.anchor { display: block; position: relative; top: -24px; height: 0; }

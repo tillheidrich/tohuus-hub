@@ -36,14 +36,11 @@ const PROVIDER = 'Till Heidrich – Content Creation';
 /** Contact data of the provider for the legal pages (Datenschutz, Nutzungsbedingungen). */
 const CONTACT = { MAIL: 'mail@tillheidrich.de', PHONE: '0157 73953819', ADDRESS: ['Rotdornweg 17', '21255 Tostedt'], CLOUD };
 const LEGAL = legalCopy({ PROVIDER, SITE, GH, ...CONTACT });
-/** TestFlight: a prefilled e-mail asks for what we need to invite someone (no form, no tracking). */
+/** Contact address (help pages "Fehlt etwas?"). */
 const TF_MAIL = 'tohuus@tillheidrich.de';
-const tfHref = (lang) => {
-  const body = lang === 'de'
-    ? 'Hallo,\n\nich hätte gern einen TestFlight-Platz für ToHuus.\n\nApple-ID-E-Mail für TestFlight: \nWie viele Personen im Haushalt: \nWo wir meistens einkaufen: \niPhone-Modell: \n\nViele Grüße\n'
-    : 'Hello,\n\nI would like a TestFlight place for ToHuus.\n\nApple ID e-mail for TestFlight: \nHow many people in the household: \nWhere we usually shop: \niPhone model: \n\nBest wishes\n';
-  return `mailto:${TF_MAIL}?subject=${encodeURIComponent('ToHuus TestFlight')}&body=${encodeURIComponent(body)}`;
-};
+/** The App Store page of the app (iPhone, iPad, Apple Watch). */
+const APP_STORE = { de: 'https://apps.apple.com/de/app/tohuus/id6822059656', en: 'https://apps.apple.com/app/tohuus/id6822059656' };
+const appHref = (lang) => APP_STORE[lang];
 /** Help section: German at site/hilfe/, English at site/help/ (help.mjs). From the home and legal pages: */
 const HELP_DIR = { de: 'hilfe', en: 'help' };
 const helpIndexHref = (lang) => (lang === 'de' ? `../${HELP_DIR.de}/` : `${HELP_DIR.en}/`);
@@ -84,14 +81,14 @@ const COPY = {
     ogAlt: 'Das ToHuus-Zeichen, der Satz „Damit nicht einer alles im Kopf haben muss.“ und vier gezeichnete Wohnformen.',
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
-    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll', diff: 'was-anders-ist', good: 'gut-zu-wissen', calm: 'ruhig-gebaut' },
+    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'iphone-app', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll', diff: 'was-anders-ist', good: 'gut-zu-wissen', calm: 'ruhig-gebaut' },
     nav: [['#funktionen', 'Funktionen'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
       label: 'Der smarte Assistent für euren Haushalt',
       h1: 'Damit nicht einer alles <span class="hl">im Kopf</span> haben muss.',
       lede: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet. Dafür reichen eure Kassenbons und eure gemeinsame Liste.',
-      ios: 'TestFlight-Platz anfragen', iosSub: 'iPhone-App, kleiner Testkreis', gh: 'Selbst hosten auf GitHub',
+      ios: 'Im App Store laden', iosSub: 'iPhone, iPad und Apple Watch', gh: 'Selbst hosten auf GitHub',
       facts: ['Server in Deutschland (Hetzner)', 'Kein Tracking, keine Werbung', 'Selbst hosten kostenlos'],
       tiles: { flat: 'Wohnung', shared: 'WG', terraced: 'Reihenhaus', house: 'Haus' },
       tilesLabel: 'Vier gezeichnete Wohnformen: eine Wohnung, eine WG, Reihenhäuser und ein Haus.',
@@ -268,7 +265,7 @@ const COPY = {
       cols: ['ToHuus Cloud', 'Selbst hosten'],
       rows: [
         ['Für wen', 'Alle, die einfach anfangen wollen', 'Alle mit eigenem Server, NAS oder Home Assistant'],
-        ['Apps', 'iPhone-App und im Browser, auch auf Android. iPad und Apple Watch kommen mit der App', 'Die iPhone-App, verbunden mit deinem Server, und im Browser als Web-App. Dazu Home Assistant und eigene Assistenten über MCP'],
+        ['Apps', 'App für iPhone, iPad und Apple Watch, dazu im Browser, auch auf Android', 'Die iPhone-App, verbunden mit deinem Server, und im Browser als Web-App. Dazu Home Assistant und eigene Assistenten über MCP'],
         ['Daten', 'Server in Deutschland (Hetzner), jeder Haushalt mit eigenem Schlüssel verschlüsselt', 'Auf deinem Server, auf Wunsch verschlüsselt'],
         ['Bon-Fotos und Assistent', 'Free ohne KI, ab Haushalt mit KI und Kontingent je nach Tarif. KI abschaltbar für Haushalt, Person und Kinder', 'Mit eigenem KI-Schlüssel oder ganz ohne'],
         ['Claude, ChatGPT (MCP)', 'Über MCP mit Anmeldung (OAuth)', 'Über MCP mit Zugangsschlüssel'],
@@ -287,7 +284,8 @@ const COPY = {
         { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Mit eigener KI, jeder OpenAI-kompatible Anbieter geht, oder ganz ohne', 'iPhone-App, Web-App, Home Assistant, MCP'], host: true },
       ],
       fund: 'Mit jedem Abo finanziert ihr auch Lizenzen für Familien, die es sich gerade nicht leisten können. Werbung gibt es bei uns nicht, und eure Daten verkaufen wir nicht.',
-      note: 'Preise zum Start. Wir prüfen sie im Test mit Familien und passen sie an, wenn sie nicht stimmen. Während der Beta schenken wir Testhaushalten Haushalt oder Plus. Bezahlt wird in der iPhone-App über Apple.',
+      note: 'Preise zum Start. Bezahlt wird in der iPhone-App über Apple.',
+      codes: 'Von uns kannst du auch einen Code bekommen, für einen Monat, ein Jahr oder für immer. Du löst ihn im Browser ein (Einstellungen › Abo › Code einlösen), dann gilt er auf jedem Gerät, auch auf dem iPhone.',
       hardship: {
         id: 'nicht-leisten', h3: 'Wir können uns das gerade nicht leisten.',
         p: 'Wenn das Geld gerade nicht reicht, aber der Kopf voll ist, schreib uns. Du bekommst eine Lizenz, ohne Begründung und ohne Formular-Marathon. Wir melden uns per Mail.',
@@ -333,13 +331,13 @@ const COPY = {
       envComment: '# en oder de',
     },
     tf: {
-      label: 'iPhone-App', h2: 'Teste die iPhone-App mit.',
-      p: 'Die iPhone-App ist im Test über TestFlight, das Testprogramm von Apple. Der Kreis ist klein und geschlossen, die Teilnahme kostet nichts. Wir suchen Haushalte, die ToHuus im Alltag nutzen und ehrlich sagen, was hakt.',
-      points: ['Kleiner, geschlossener Kreis', 'Kostenlos', 'Rückmeldung ausdrücklich erwünscht, auch Kritik', 'iPad und Apple Watch kommen mit der App'],
-      cardTitle: 'Was wir für die Einladung brauchen', cardSub: 'steht schon in der Mail',
-      rows: ['Deine Apple-ID-E-Mail für TestFlight', 'Wie viele Personen im Haushalt leben', 'Wo ihr meistens einkauft', 'Welches iPhone du hast'],
-      cta: 'TestFlight-Platz anfragen', ctaSub: 'öffnet eine vorbereitete Mail',
-      note: 'Wir nutzen die Angaben nur für die Einladung und den Test.',
+      label: 'iPhone-App', h2: 'ToHuus auf dem iPhone.',
+      p: 'Die App gibt es im App Store, für iPhone, iPad und Apple Watch. Sie läuft mit der ToHuus Cloud und mit deinem eigenen Server. Laden kostet nichts, und jeder neue Haushalt in der Cloud nutzt 14 Tage lang Plus, ohne Zahlungsdaten.',
+      points: ['iPhone, iPad und Apple Watch', 'Mit der ToHuus Cloud oder deinem eigenen Server', 'Widget und Teilen aus anderen Apps', 'Ohne App geht ToHuus im Browser, auf jedem Gerät'],
+      cardTitle: 'So fängst du an',
+      rows: ['ToHuus im App Store laden', 'Einen Haushalt anlegen oder einer Einladung folgen', 'Eigener Server? Auf dem Startbildschirm „Eigener Server“ tippen', 'Die ersten Sachen auf die Liste setzen'],
+      cta: 'Im App Store laden', ctaSub: 'iPhone, iPad und Apple Watch',
+      note: 'Bezahlt wird nur, wenn du ein Abo abschließt, in der App über Apple.',
     },
     ha: {
       label: 'Home Assistant', h2: 'ToHuus in Home Assistant.',
@@ -366,7 +364,7 @@ const COPY = {
         ['Muss ich alles abtippen?', 'Nein. Bons kommen als PDF oder Foto herein. Mit Plus bekommt euer Haushalt in der Cloud eine eigene Bon-Adresse (kommt bald), selbst gehostet geht es über ein eigenes Postfach. Was ihr auf der Liste abhakt, zählt ebenfalls als Einkauf. Einen Vorrat müsst ihr nicht pflegen.'],
         ['Funktioniert das ohne REWE?', 'Ja. ToHuus liest auch Bons von Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm und Rossmann, Papierbons per Foto. Wer gar keine Bons sammeln will, hakt einfach auf der Liste ab.'],
         ['Gibt es ToHuus für Android?', 'Eine eigene Android-App gibt es nicht. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst, auf Android genauso wie am Rechner.'],
-        ['Wann kommt die iPhone-App?', `Sie ist im Test über TestFlight, in einem kleinen, geschlossenen Kreis. Einen Platz kannst du <a href="${tfHref('de')}">per Mail anfragen</a>. iPad und Apple Watch kommen mit der App. Sie läuft mit der ToHuus Cloud und mit deinem eigenen Server.`],
+        ['Gibt es ToHuus als iPhone-App?', `Ja, <a href="${appHref('de')}">im App Store</a>, für iPhone, iPad und Apple Watch. Sie läuft mit der ToHuus Cloud und mit deinem eigenen Server.`],
         ['Brauche ich dafür KI?', 'Nein. Liste, Vorschläge, Kochplaner und Ausgaben funktionieren ohne. Bon-Fotos liest ToHuus zuerst mit einer Texterkennung ohne KI, auf dem Server oder direkt auf dem iPhone. Ein Sprachmodell hilft nur, wenn das nicht reicht, und bei freien Fragen an den Assistenten. Auf neueren iPhones kann auf Wunsch Apple Intelligence auf dem Gerät helfen. In der Cloud schaltest du KI erst mit deiner Zustimmung ein, und ihr könnt sie für den Haushalt, für einzelne Personen und für Kinder abschalten.'],
         ['Kann ich meine Rezepte mitbringen?', 'Ja. Per Link von Rezeptseiten, aus Instagram, TikTok, Pinterest oder YouTube, per Foto, aus Apps wie Mealie, Paprika oder Nextcloud Kochbuch, oder viele auf einmal als Rezeptpaket mit Fotos. Hast du Claude oder ChatGPT verbunden, kann deine eigene KI auch hunderte Rezepte samt Fotos in einem Rutsch speichern.'],
         ['Und Cookidoo, Monsieur Cuisine oder Cookit?', 'Teile ein Rezept aus Cookidoo, Monsieur Cuisine, Cookit oder einer anderen Küchenmaschinen-App mit ToHuus oder füge den Link ein, dann bestätigst du Name und Zutaten. Die Schritte kannst du dazuschreiben, als Text einfügen oder aus deinen Screenshots lesen lassen. ToHuus ruft diese Seiten selbst nie ab, und was du mitbringst, bleibt privat in eurem Haushalt.'],
@@ -396,14 +394,14 @@ const COPY = {
     ogAlt: 'The ToHuus mark, the line “So one person doesn’t have to keep it all in their head.” and four drawn homes.',
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
-    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind', diff: 'what-is-different', good: 'good-to-know', calm: 'calm-by-design' },
+    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'iphone-app', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind', diff: 'what-is-different', good: 'good-to-know', calm: 'calm-by-design' },
     nav: [['#features', 'Features'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
       label: 'The smart assistant for your home',
       h1: 'So one person doesn’t have to keep it all <span class="hl">in their head.</span>',
       lede: 'ToHuus remembers for your household what is there, what is missing and what it costs. Your receipts and your shared list are all it needs.',
-      ios: 'Ask for a TestFlight place', iosSub: 'iPhone app, small test group', gh: 'Self-host from GitHub',
+      ios: 'Download on the App Store', iosSub: 'iPhone, iPad and Apple Watch', gh: 'Self-host from GitHub',
       facts: ['Servers in Germany (Hetzner)', 'No tracking, no ads', 'Self-hosting is free'],
       tiles: { flat: 'Flat', shared: 'Flat share', terraced: 'Terraced house', house: 'House' },
       tilesLabel: 'Four drawn homes: a flat, a flat share, terraced houses and a house.',
@@ -580,7 +578,7 @@ const COPY = {
       cols: ['ToHuus Cloud', 'Self-hosted'],
       rows: [
         ['Who for', 'Anyone who just wants to start', 'Anyone with a server, a NAS or Home Assistant'],
-        ['Apps', 'iPhone app and the browser, Android included. iPad and Apple Watch come with the app', 'The iPhone app, connected to your server, and the browser as a web app. Plus Home Assistant and your own assistants over MCP'],
+        ['Apps', 'App for iPhone, iPad and Apple Watch, plus the browser, Android included', 'The iPhone app, connected to your server, and the browser as a web app. Plus Home Assistant and your own assistants over MCP'],
         ['Data', 'Servers in Germany (Hetzner), every household encrypted with its own key', 'On your server, encrypted if you like'],
         ['Receipt photos and assistant', 'Free works without AI; from Household on with AI and an allowance per plan. AI can be switched off for the household, a person or a child', 'With your own AI key, or without'],
         ['Claude, ChatGPT (MCP)', 'Through MCP with sign-in (OAuth)', 'Through MCP with an access key'],
@@ -599,7 +597,8 @@ const COPY = {
         { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'With your own AI, any OpenAI-compatible provider, or none at all', 'iPhone app, web app, Home Assistant, MCP'], host: true },
       ],
       fund: 'Every subscription also pays for licences for families who cannot afford one right now. There are no ads, and we do not sell your data.',
-      note: 'Launch prices. We are testing them with families and will change them if they turn out wrong. During the beta we often give test households Household or Plus for free. Payment runs through Apple in the iPhone app.',
+      note: 'Launch prices. Payment runs through Apple in the iPhone app.',
+      codes: 'You can also get a code from us, for a month, a year or for good. You redeem it in the browser (Settings › Subscription › Redeem code), and then it works on every device, the iPhone included.',
       hardship: {
         id: 'cant-afford', h3: 'We can’t afford this right now.',
         p: 'If money is tight but your head is full, write to us. You get a licence, no reasons needed and no endless forms. We will reply by e-mail.',
@@ -645,13 +644,13 @@ const COPY = {
       envComment: '# en or de',
     },
     tf: {
-      label: 'iPhone app', h2: 'Help us test the iPhone app.',
-      p: 'The iPhone app is being tested on TestFlight, Apple’s test programme. The group is small and closed, and taking part costs nothing. We are looking for households that use ToHuus in everyday life and say honestly what does not work.',
-      points: ['Small, closed group', 'Free', 'Feedback very welcome, criticism included', 'iPad and Apple Watch come with the app'],
-      cardTitle: 'What we need to invite you', cardSub: 'already in the e-mail',
-      rows: ['Your Apple ID e-mail for TestFlight', 'How many people live in the household', 'Where you usually shop', 'Which iPhone you have'],
-      cta: 'Ask for a TestFlight place', ctaSub: 'opens a prepared e-mail',
-      note: 'We only use these details for the invitation and the test.',
+      label: 'iPhone app', h2: 'ToHuus on the iPhone.',
+      p: 'The app is on the App Store, for iPhone, iPad and Apple Watch. It works with ToHuus Cloud and with your own server. Downloading it is free, and every new household in the cloud gets 14 days of Plus, no payment details needed.',
+      points: ['iPhone, iPad and Apple Watch', 'With ToHuus Cloud or your own server', 'Widget and sharing from other apps', 'Without the app, ToHuus runs in the browser on any device'],
+      cardTitle: 'How to start',
+      rows: ['Download ToHuus from the App Store', 'Create a household or follow an invitation', 'Own server? Tap “Own server” on the start screen', 'Put the first things on the list'],
+      cta: 'Download on the App Store', ctaSub: 'iPhone, iPad and Apple Watch',
+      note: 'You only pay if you take out a subscription, in the app through Apple.',
     },
     ha: {
       label: 'Home Assistant', h2: 'ToHuus in Home Assistant.',
@@ -678,7 +677,7 @@ const COPY = {
         ['Do I have to type everything in?', 'No. Receipts come in as a PDF or a photo. With Plus your household gets its own receipt address in the cloud (coming soon), and self-hosted it works through your own inbox. What you tick off the list counts as a purchase too. You do not have to keep a stock list.'],
         ['Does it work without online grocery delivery?', 'Yes. Paper receipts come in as a photo, and if you do not want to collect receipts at all, simply tick things off the list.'],
         ['Is there an Android app?', 'There is no separate Android app. In the browser ToHuus runs as a web app you can add to your home screen, on Android just like on a computer.'],
-        ['When is the iPhone app coming?', `It is being tested on TestFlight in a small, closed group. You can <a href="${tfHref('en')}">ask for a place by e-mail</a>. iPad and Apple Watch come with the app. It works with ToHuus Cloud and with your own server.`],
+        ['Is there an iPhone app?', `Yes, <a href="${appHref('en')}">on the App Store</a>, for iPhone, iPad and Apple Watch. It works with ToHuus Cloud and with your own server.`],
         ['Do I need AI for this?', 'No. The list, suggestions, cook planner and spending all work without it. Receipt photos are read first by text recognition without AI, on the server or right on the iPhone. A language model only helps when that is not enough, and with open questions to the assistant. On newer iPhones Apple Intelligence can help on the device if you like. In the cloud AI only starts with your consent, and you can switch it off for the household, for single people and for children.'],
         ['Can I bring my recipes?', 'Yes. From a link to a recipe site, from Instagram, TikTok, Pinterest or YouTube, from a photo, from apps like Mealie, Paprika or Nextcloud Cookbook, or many at once as a recipe pack with photos. If you connected Claude or ChatGPT, your own AI can save hundreds of recipes with their photos in one go.'],
         ['And Cookidoo, Monsieur Cuisine or Cookit?', 'Share a recipe from Cookidoo, Monsieur Cuisine, Cookit or another kitchen machine app with ToHuus or paste the link, then confirm the name and ingredients. Add the steps yourself, paste them as text or let ToHuus read them from your screenshots. ToHuus never fetches these sites itself, and what you bring along stays private in your household.'],
@@ -920,7 +919,7 @@ function page(c) {
       <h1 id="hero-h">${H.h1}</h1>
       <p class="lede">${H.lede}</p>
       <div class="ctas">
-        <a class="btn primary" href="${tfHref(c.lang)}">${ico('apple')}<span class="btn-2"><b>${H.ios}</b><small>${H.iosSub}</small></span><span class="tail">${ico('mail')}</span></a>
+        <a class="btn primary" href="${appHref(c.lang)}">${ico('apple')}<span class="btn-2"><b>${H.ios}</b><small>${H.iosSub}</small></span><span class="tail">${ico('arrow')}</span></a>
         <a class="btn" href="${GH}">${ico('github')}${H.gh}</a>
       </div>
       <ul class="facts">${H.facts.map((f) => `<li>${ico('check')}${f}</li>`).join('')}</ul>
@@ -1085,7 +1084,7 @@ ${N.list.map(([i, t, s], k) => `      <li class="reveal" style="--d:${(k % 4) * 
       <p class="intro reveal">${X.intro}</p>
     </div>
     <ul class="nd-grid diff-grid">
-${X.list.map(([i, t, s], k) => `      <li class="reveal" style="--d:${(k % 4) * 50}ms"><span class="nd-ico">${ico(i)}</span><b>${t}</b><span>${s}</span></li>`).join('\n')}
+${X.list.map(([, t, s], k) => `      <li class="reveal" style="--d:${(k % 4) * 50}ms"><b>${t}</b><span>${s}</span></li>`).join('\n')}
     </ul>
     <h3 class="diff-table-h reveal">${X.tableH}</h3>
     <div class="table-wrap reveal">
@@ -1153,25 +1152,22 @@ ${T.rows.map(([h, a, z]) => `          <tr><th scope="row">${h}</th><td data-col
 </section>
 
 <section class="tf" id="${id.tf}" aria-labelledby="tf-h">
+  <span class="anchor" id="testflight" aria-hidden="true"></span>
   <div class="wrap how-grid">
     <div>
-      
       <h2 class="reveal" id="tf-h">${TF.h2}</h2>
       <p class="intro reveal">${TF.p}</p>
+      <div class="ctas reveal">
+        <a class="btn primary" href="${appHref(c.lang)}">${ico('apple')}<span class="btn-2"><b>${TF.cta}</b><small>${TF.ctaSub}</small></span><span class="tail">${ico('arrow')}</span></a>
+      </div>
       <ul class="ticks tf-points reveal">${TF.points.map((x) => `<li>${ico('check')}<span>${x}</span></li>`).join('')}</ul>
     </div>
-    <div class="ticket tf-card reveal" role="group" aria-label="${TF.cardTitle}">
-      <div class="ticket-top">
-        <p class="origin-h"><b>${TF.cardTitle}</b><span>${TF.cardSub}</span></p>
-        <ol class="tf-rows">
-${TF.rows.map((r) => `          <li>${r}</li>`).join('\n')}
-        </ol>
-      </div>
-      <div class="tear" aria-hidden="true"></div>
-      <div class="tf-foot">
-        <a class="btn primary" href="${tfHref(c.lang)}">${ico('mail')}<span class="btn-2"><b>${TF.cta}</b><small>${TF.ctaSub}</small></span><span class="tail">${ico('arrow')}</span></a>
-        <p>${TF.note}</p>
-      </div>
+    <div class="tf-start reveal">
+      <h3>${TF.cardTitle}</h3>
+      <ol class="how-steps tf-steps">
+${TF.rows.map((r) => `        <li><b>${r}</b></li>`).join('\n')}
+      </ol>
+      <p class="tf-note">${TF.note}</p>
     </div>
   </div>
 </section>
@@ -1194,7 +1190,7 @@ ${P.plans.map((p, k) => `      <li class="plan${p.host ? ' host' : ''}${p.mark ?
       </li>`).join('\n')}
     </ul>
     <p class="fund reveal">${ico('users')}<span>${P.fund}</span></p>
-    <p class="note reveal">${P.note}</p>
+    <p class="note reveal">${P.note} ${P.codes}</p>
     ${hardshipForm(c)}
   </div>
 </section>
@@ -1359,7 +1355,7 @@ ${pageFoot(c, m)}
 // ---------------------------------------------------------------- help ("Hilfe & Tipps", help.mjs)
 const esc = (x) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const helpKit = (lang) => ({
-  CLOUD: CONTACT.CLOUD, GH, MAIL: TF_MAIL, TF_DE: tfHref('de'), TF_EN: tfHref('en'),
+  CLOUD: CONTACT.CLOUD, GH, MAIL: TF_MAIL, APP_DE: appHref('de'), APP_EN: appHref('en'),
   code: (id, lbl, text) => `<div class="code help-code${lbl === 'Prompt' ? ' prose' : ''}"><div class="code-head"><span>${ico(lbl === 'Terminal' ? 'terminal' : 'code')}${lbl}</span><button class="btn sm copy" type="button" data-copy="${id}" data-done="${COPY[lang].copied}">${ico('copy')}<span>${COPY[lang].copy}</span></button></div><pre id="${id}" tabindex="0" role="region" aria-label="${lbl}">${esc(text)}</pre></div>`,
 });
 const HELP = { de: helpCopy(helpKit('de')).de, en: helpCopy(helpKit('en')).en };

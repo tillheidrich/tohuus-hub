@@ -39,7 +39,7 @@ export default [
       ['So hilft ToHuus beim Mental Load',
         '<p>ToHuus ist dafür gebaut, dass nicht eine Person alles im Kopf haben muss. Unter Aufgaben › Wer hat was im Blick steht für die letzten 28 Tage, wer sich um Einkauf, Kochen, Geld und Aufgaben gekümmert hat. Dort stehen nur Namen, alphabetisch und ohne Zahlen. Deine eigene Zahl siehst nur du, Anteile in Prozent erscheinen erst, wenn alle im Haushalt „Anteile vergleichen“ eingeschaltet haben. Darunter steht, welche Aufgaben gerade niemand im Blick hat.</p>'
         + '<p>Bei jeder Aufgabe gibt es „Wer macht es“ und davon getrennt „Ich hab’s im Blick“. Was ihr regelmäßig kauft, merkt sich ToHuus aus Kassenbons und abgehakten Einträgen und schlägt es vor, wenn es wieder fällig ist. Es gibt keine Ranglisten, Sterne nur, wenn ihr sie selbst einschaltet, und private Einträge zählen nie mit. Mehr dazu in der Hilfe unter <a href="../hilfe/aufgaben.html">Aufgaben</a>.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Was ist Mental Load einfach erklärt?', 'Die Denkarbeit hinter dem Haushalt: merken, was gebraucht wird, Möglichkeiten suchen, entscheiden und im Blick behalten, ob es erledigt ist. Sie kostet Kraft, auch wenn man von außen nichts sieht.'],
@@ -91,7 +91,7 @@ export default [
       ['So hilft ToHuus, wenn der Kopf voll ist',
         '<p>Unter Aufgaben gibt es dafür ein paar Werkzeuge, die allen im Haushalt offenstehen, ohne dass jemand erklären muss, warum er sie nutzt:</p>'
         + '<ul><li><b>Kleine Schritte</b>: Jede Aufgabe lässt sich in Schritte teilen. „In kleine Schritte teilen“ schlägt welche vor, mit KI, wenn euer Haushalt das erlaubt, sonst aus fertigen Schritten für häufige Aufgaben.</li><li><b>Eins nach dem anderen</b>: nur die nächste Aufgabe und darin der nächste Schritt, mit „Geschafft“, „Später“ und „Zu groß? Kleiner machen“.</li><li><b>Sichtbarer Timer</b>: 5, 10, 15 oder 25 Minuten, ein Ring und ein sanftes Signal am Ende. Gespeichert wird nichts.</li><li><b>Sanfter Modus</b>: kein Rot für Überfälliges, „wäre dran“ statt „überfällig“, wenige Sachen auf Heute, Erinnerungen gebündelt einmal am Tag.</li><li><b>Neu anfangen</b>: Überfälliges rückt auf einen frischen Start, zwei Aufgaben pro Tag. Nichts wird als verpasst festgehalten.</li></ul>'
-        + '<p>Es gibt keine Streaks und keine Statistik über dich, und im sanften Modus siehst du auch keine Sterne. Deine Einstellungen sieht niemand sonst im Haushalt. ToHuus ist kein Gesundheits- oder Therapieangebot und ersetzt keine Beratung. Mehr dazu in der Hilfe unter <a href="../hilfe/kopf-voll.html">Wenn der Kopf voll ist</a>. ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Es gibt keine Streaks und keine Statistik über dich, und im sanften Modus siehst du auch keine Sterne. Deine Einstellungen sieht niemand sonst im Haushalt. ToHuus ist kein Gesundheits- oder Therapieangebot und ersetzt keine Beratung. Mehr dazu in der Hilfe unter <a href="../hilfe/kopf-voll.html">Wenn der Kopf voll ist</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Warum fällt Menschen mit ADHS der Haushalt so schwer?', 'Weil er viel Planen, Anfangen und Drandenken verlangt, und genau das fällt mit ADHS oft schwer. Mit Faulheit hat das wenig zu tun.'],
@@ -144,7 +144,7 @@ export default [
       ['So hilft ToHuus bei der Haltbarkeit',
         '<p>Wer im <a href="../hilfe/vorrat.html">Vorrat</a> Bestand führt, bekommt zu frischen Sachen ein geschätztes Haltbarkeitsdatum, ausgehend von der üblichen Haltbarkeit ab dem Kauf. Das Datum steht als „geschätzt“ da, bis jemand das Datum von der Packung einträgt. Tippst du auf „Angebrochen“, rechnet ToHuus mit der üblichen Haltbarkeit nach dem Öffnen, etwa vier Tage für Milch oder Aufschnitt, und zeigt „hält etwa bis“. Pro Produkt kannst du diese Tage selbst ändern.</p>'
         + '<p>Was bald weg sollte, steht auf Heute unter „Zuerst essen“, und der <a href="../hilfe/kochen.html">Kochplaner</a> schlägt bevorzugt Gerichte damit vor. Reste aus dem Kochen landen auf Wunsch ebenfalls dort, am besten innerhalb von drei Tagen. Alle Schätzungen sind Richtwerte und ersetzen nie den Blick auf die Packung und den eigenen Geruchssinn. Beim Verbrauchsdatum gilt immer das, was aufgedruckt ist.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Kann ich Lebensmittel nach dem MHD noch essen?', 'Oft ja, wenn sie richtig gelagert und ungeöffnet waren. Prüft Aussehen, Geruch und Geschmack. Nach dem Verbrauchsdatum dagegen nicht mehr essen.'],
@@ -198,7 +198,7 @@ export default [
       ['So hilft ToHuus mit der Hausinfo',
         '<p>Unter Zuhause › Hausinfo legt ihr Karten an, nach Raum oder nach Art sortiert: Gäste-WLAN, So geht’s hier, Hausregeln und Kinder, Notfall, Sprachbefehle. Jede Karte kann bis zu acht Fotos oder kurze Videos haben. Pro Karte legt ihr fest, wer sie sieht, zum Beispiel alle, die hier wohnen, feste Gäste oder bestimmte Gast-Links. Vorlagen helfen beim Anfangen.</p>'
         + '<p>Codes liegen getrennt von den Karten. Sie sind verdeckt, bis jemand auf „Zeigen“ tippt, beim Gäste-WLAN erscheint dazu ein QR-Code zum Scannen. Gäste bekommen einen Code nur, wenn ihr ihn freigebt, auf Wunsch bis zu einem Datum. Ihr seht, wer einen Code wann angezeigt hat, und Codes gehen nie an den Assistenten, an KI-Assistenten über MCP oder an Home Assistant, und in einen Export nur, wenn ein Admin das ausdrücklich ankreuzt.</p>'
-        + '<p>Gäste brauchen keine App und kein Konto, sie öffnen einen <a href="../hilfe/babysitter.html">Link oder QR-Code</a>. Einmal geöffnet ist die Hausinfo auch ohne Netz lesbar, und über „Drucken“ wird ein A4-Blatt daraus, auf dem statt der Codes „bitte fragen“ steht. ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Gäste brauchen keine App und kein Konto, sie öffnen einen <a href="../hilfe/babysitter.html">Link oder QR-Code</a>. Einmal geöffnet ist die Hausinfo auch ohne Netz lesbar, und über „Drucken“ wird ein A4-Blatt daraus, auf dem statt der Codes „bitte fragen“ steht. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Sollte ich Gästen mein normales WLAN geben?', 'Besser nicht. Das BSI empfiehlt ein eigenes Gäste-WLAN, das eure Geräte vom Besuch trennt. Die meisten Router haben dafür einen Gastzugang.'],
@@ -245,7 +245,7 @@ export default [
       ['So hilft ToHuus mit den Extras',
         '<p>Unter Extras im Wocheneinkauf legt ihr ein Kontingent pro Woche fest, als Betrag oder als Anzahl. ToHuus erkennt typische Extras von selbst, etwa Sachen aus Snacks & Süßes oder Eis, oder Schokolade, Chips, Cola, Bier und Wein. Backschokolade oder Weinessig zählen nicht. Ihr könnt jeden Eintrag von Hand als Extra markieren oder davon befreien, ToHuus merkt sich das für das nächste Mal.</p>'
         + '<p>Beim Betrag rechnet ToHuus mit euren Kassenbons dieser Woche, mit abgehakten Einträgen und mit dem, was noch auf der Liste steht, bewertet mit dem Preis vom letzten Kauf. ToHuus sperrt nichts, und es wird nichts rot. Private Einträge zählen nur für die, die sie sehen dürfen. Mehr dazu in der Hilfe unter <a href="../hilfe/kopf-voll.html">Wenn der Kopf voll ist</a> und <a href="../hilfe/geld.html">Geld</a>.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Wie hoch sollte ein Budget für Extras sein?', 'Schaut in eure Kassenbons der letzten Wochen und setzt das Budget etwas darunter an. Fangt lieber großzügig an und dreht nach einem Monat nach.'],
@@ -294,7 +294,7 @@ export default [
       ['So hilft ToHuus beim Putzplan',
         '<p>Unter Zuhause › Aufgaben legt ihr Aufgaben einmal, immer wieder oder bei Bedarf an, mit festen Wochentagen oder einem Abstand ab dem letzten Erledigen. Vorlagen für die üblichen Hausarbeiten helfen beim Anfangen, und Unterpunkte stehen nach dem Erledigen beim nächsten Mal wieder offen da. Bei „Wer macht es“ wählt ihr ein Mitglied, ein Kind aus euren Kinderprofilen oder „Wer gerade Zeit hat“, mit „Abwechselnd“ gibt „Erledigt“ die Aufgabe an die nächste Person weiter. Unabhängig davon kann jemand sagen „Ich hab’s im Blick“.</p>'
         + '<p>Nach ein paar Malen zeigt ToHuus, wie oft ihr eine Aufgabe wirklich macht. Mit einem Passwort erscheinen eure Aufgaben in Apple Erinnerungen und im Apple Kalender, in beide Richtungen, für Google Kalender und Outlook gibt es ein Kalender-Abo. Punkte, Ranglisten und Belohnungen gibt es nicht. Mehr dazu in der Hilfe unter <a href="../hilfe/aufgaben.html">Aufgaben</a> und <a href="../hilfe/erinnerungen-spiegeln.html">Erinnerungen und Kalender</a>.</p>'
-        + '<p>ToHuus ist gerade in der Beta, einen TestFlight-Platz fragst du auf der <a href="../de/#testflight">Startseite</a> an.</p>'],
+        + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Wie erstelle ich einen fairen Putzplan?', 'Sammelt alle Aufgaben, gebt jeder einen eigenen Rhythmus und legt fest, wer sie macht und wer sie im Blick hat. Bei gemeinsamen Räumen hilft Abwechseln.'],

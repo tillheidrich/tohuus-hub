@@ -9,7 +9,7 @@
  * benachrichtigungen, claude-chatgpt, erinnerungen-spiegeln, umzug-in-die-cloud, selbst-hosten, datenschutz-kurz,
  * abo-und-kuendigen, fragen, aufgaben, kopf-voll.
  *
- * `k` is the toolkit from build.mjs: { code(id, label, text), CLOUD, GH, MAIL, TF_DE, TF_EN }.
+ * `k` is the toolkit from build.mjs: { code(id, label, text), CLOUD, GH, MAIL, APP_DE, APP_EN }.
  */
 
 const p = (...xs) => xs.map((x) => `<p>${x}</p>`).join('');
@@ -50,7 +50,7 @@ export function helpCopy(k) {
         desc: 'Konto anlegen, sagen, wer dazugehört, und die fünf Bereiche kennenlernen.',
         sections: [
           ['Konto oder eigener Server', p(
-            `In der ToHuus Cloud legst du in der iPhone-App oder im Browser unter <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a> ein Konto und einen Haushalt an, mit Mail-Code, Passwort, Passkey oder „Mit Apple anmelden“. Jeder neue Haushalt nutzt 14 Tage lang Plus, ohne Zahlungsdaten. Während der Beta brauchst du zum Anlegen einen Zugangscode oder eine Einladung, dafür schenken wir Testhaushalten oft Haushalt oder Plus.`,
+            `In der ToHuus Cloud legst du in der iPhone-App oder im Browser unter <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a> ein Konto und einen Haushalt an, mit Mail-Code, Passwort, Passkey oder „Mit Apple anmelden“. Jeder neue Haushalt nutzt 14 Tage lang Plus, ohne Zahlungsdaten. Die App findest du <a href="${k.APP_DE}">im App Store</a>.`,
             'Hast du einen eigenen Server, läuft ToHuus dort als Docker-Container. Wie das geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>. Ihr nutzt dann die Web-App im Browser oder die iPhone-App: Dort tippst du auf dem Startbildschirm auf „Eigener Server“ und meldest dich mit Adresse und Passwort an, im Browser oder per QR-Code aus der Web-App.',
           )],
           ['Wer gehört dazu?', p(
@@ -130,7 +130,7 @@ export function helpCopy(k) {
           ['Ohne Netz', p(
             'Im Keller des Supermarkts ist oft kein Empfang. ToHuus merkt sich, was du abhakst, und gleicht ab, sobald wieder Netz da ist.',
           )],
-          ['Auf der Apple Watch', p(`<span class="soon-tag">${'Kommt mit der App'}</span> Mit der iPhone-App kommt eine Apple-Watch-App: die Liste nach Laden sortiert, abhaken mit Rückgängig, auch ohne iPhone in der Nähe.`)],
+          ['Auf der Apple Watch', p(`Zur iPhone-App gehört eine Apple-Watch-App: die Liste nach Laden sortiert, abhaken mit Rückgängig, auch ohne iPhone in der Nähe.`)],
         ],
         related: ['einkaufsliste', 'benachrichtigungen', 'haushalt-teilen'],
       },
@@ -466,7 +466,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'benachrichtigungen', group: 'connect', title: 'Benachrichtigungen',
         desc: 'Wann ToHuus sich meldet, wie du es einstellst und wie es ruhig bleibt.',
         sections: [
-          ['Auf dem iPhone', p(`<span class="soon-tag">In der iPhone-App (gerade im Test)</span> Mitteilungen mit Knöpfen wie „Auf die Liste“, „Mach ich“ oder „Geht nicht“. Pro Ereignis schaltest du sie an oder aus, und Ruhezeiten halten die Nacht frei.`)],
+          ['Auf dem iPhone', p(`In der iPhone-App gibt es Mitteilungen mit Knöpfen wie „Auf die Liste“, „Mach ich“ oder „Geht nicht“. Pro Ereignis schaltest du sie an oder aus, und Ruhezeiten halten die Nacht frei.`)],
           ['Im Browser', p('Legst du die Web-App auf den Startbildschirm, kann sie Push-Mitteilungen schicken: Einstellungen › Benachrichtigungen › Push auf diesem Gerät.')],
           ['Wann', p('Zum Beispiel wenn ein Bon auf die Prüfung wartet, etwas ausgeht, ein Budget knapp wird oder sich ein neues Gerät anmeldet. Eine tägliche Übersicht zu einer festen Uhrzeit ist möglich. Im Urlaub bleibt es still.')],
           ['Selbst gehostet', p('Zusätzlich Telegram, ntfy, Gotify, Matrix, E-Mail und beliebige Webhooks.')],
@@ -663,7 +663,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Auf dem iPhone: Einstellungen › dein Name › Abonnements.',
             'ToHuus wählen und „Abo kündigen“ tippen.',
           ), p('Das Abo läuft bis zum Ende des bezahlten Zeitraums. Danach geht der Haushalt auf Free zurück. Gelöscht wird nichts: Ihr seht dann die letzten 30 Tage, und der Assistent versteht nur noch einfache Sätze, ohne KI.')],
-          ['Preise zum Start', p('Wir prüfen die Preise im Test mit Familien und passen sie an, wenn sie nicht stimmen.')],
+          ['Codes von uns', p('Von uns kannst du auch einen Code bekommen, für einen Monat, ein Jahr oder für immer. Ein Admin eures Haushalts löst ihn im Browser ein, unter Einstellungen › Abo › Code einlösen. Danach gilt er auf jedem Gerät, auch auf dem iPhone. In der iPhone-App selbst geht das nicht.')],
           ['Wenn das Geld gerade nicht reicht', p('Schreib uns über das Formular „Wir können uns das gerade nicht leisten“ bei den <a href="../de/#nicht-leisten">Preisen</a>. Du bekommst eine Lizenz, ohne Begründung. Mit jedem Abo finanzieren andere Haushalte das mit.')],
         ],
         related: ['haushalt-teilen', 'daten-export', 'fragen'],
@@ -686,7 +686,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Brauche ich KI?', p('Nein. Siehe <a href="ki-an-oder-aus.html">Mit oder ohne KI</a>.')],
           ['Gibt es eine Android-App?', p('Nein. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst.')],
           ['Geht die iPhone-App mit meinem eigenen Server?', p('Ja. Auf dem Startbildschirm der App tippst du auf „Eigener Server“. Wie die Anmeldung geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>.')],
-          ['Wann kommt die iPhone-App?', p(`Sie ist im Test über TestFlight, in einem kleinen, geschlossenen Kreis. Einen Platz kannst du per <a href="${k.TF_DE}">Mail anfragen</a>. iPad und Apple Watch kommen mit der App.`)],
+          ['Gibt es ToHuus als iPhone-App?', p(`Ja, <a href="${k.APP_DE}">im App Store</a>, für iPhone, iPad und Apple Watch.`)],
           ['Brauche ich einen Thermomix?', p('Nein. Der Kochplaner zeigt Rezepte mit und ohne Thermomix.')],
           ['Ist ToHuus für ADHS geeignet?', p('Für alle, in deren Kopf viel los ist, gibt es kleine Schritte, eine Ansicht mit nur einer Sache, einen sichtbaren Timer und einen sanften Modus, und nirgends Ranglisten. Sterne gibt es nur, wenn ihr sie einschaltet. Siehe <a href="kopf-voll.html">Wenn der Kopf voll ist</a>.')],
           ['Brauchen Babysitter ein Konto?', p('Nein. Sie bekommen einen Link oder QR-Code und sehen die <a href="hausinfo.html">Hausinfo</a> und was ihr sonst freigebt.')],
@@ -729,7 +729,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         desc: 'Create an account, say who belongs to the household and meet the five areas.',
         sections: [
           ['Account or your own server', p(
-            `In ToHuus Cloud you create an account and a household in the iPhone app or in the browser at <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a>. You can sign in with an e-mail code, a password, a passkey or Sign in with Apple. Every new household gets 14 days of Plus, no payment details needed. During the beta you need an access code or an invitation to sign up, and test households often get Household or Plus for free.`,
+            `In ToHuus Cloud you create an account and a household in the iPhone app or in the browser at <a href="${k.CLOUD}">${k.CLOUD.replace('https://', '')}</a>. You can sign in with an e-mail code, a password, a passkey or Sign in with Apple. Every new household gets 14 days of Plus, no payment details needed. You find the app <a href="${k.APP_EN}">on the App Store</a>.`,
             'If you have your own server, ToHuus runs there as a Docker container (see <a href="self-hosting.html">Self-hosting</a>). You then use the web app in the browser or the iPhone app: on its start screen tap “Own server” and sign in with the address and your password, in the browser or with a QR code from the web app.',
           )],
           ['Who belongs to it?', p('On first start ToHuus only asks this: just you, the two of you, a family, a flat share, or a household you look after. What you see follows from that, and you can change it later.')],
@@ -756,7 +756,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Add while someone is out', p('Thought of something at home? Put it on the list. Whoever is in the shop sees it right away in shop mode, in the right aisle. No phone call needed.')],
           ['Two of you in the shop', p('Tap “I’ll get it” on an item and the others see it is taken. Nobody buys twice, and you can split the aisles.')],
           ['No signal', p('ToHuus remembers what you tick off and syncs as soon as you are back online.')],
-          ['On the Apple Watch', p(`<span class="soon-tag">Comes with the app</span> The iPhone app brings a Watch app: the list sorted by shop, tick off with undo, also without the iPhone nearby.`)],
+          ['On the Apple Watch', p(`The iPhone app comes with a Watch app: the list sorted by shop, tick off with undo, also without the iPhone nearby.`)],
         ],
         related: ['getting-started', 'speak'],
       },
@@ -1059,6 +1059,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['One subscription per household', p('Free costs nothing and works without any AI. Household is €3.99 a month or €34.99 a year, Plus €5.99 a month or €59.99 a year. Members, children, guests and connected households never pay. Self-hosted, everything is free.')],
           ['Trying it', p('Every new cloud household gets 14 days of Plus, no payment details needed. After that it goes to Free unless you subscribe.')],
           ['Paying and cancelling', p('You subscribe in the iPhone app and pay through your Apple ID. To cancel: iPhone Settings › your name › Subscriptions › ToHuus › Cancel subscription. It runs until the end of the paid period, then the household goes back to Free. Nothing is deleted: you then see the last 30 days, and the assistant only understands simple sentences, without AI.')],
+          ['Codes from us', p('You can also get a code from us, for a month, a year or for good. An admin of your household redeems it in the browser under Settings › Subscription › Redeem code. After that it works on every device, the iPhone included. It cannot be redeemed inside the iPhone app.')],
           ['When money is tight', p('Write to us through the form “We can’t afford this right now” under <a href="../#cant-afford">Pricing</a>. You get a licence, no reasons needed. Every subscription helps pay for it.')],
         ],
         related: ['faq', 'privacy-in-short'],
@@ -1071,7 +1072,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Do I need AI?', p('No. See <a href="ai-on-or-off.html">With or without AI</a>.')],
           ['Is there an Android app?', p('No. In the browser ToHuus runs as a web app you can add to your home screen.')],
           ['Does the iPhone app work with my own server?', p('Yes. On the app’s start screen tap “Own server”. How signing in works is under <a href="self-hosting.html">Self-hosting</a>.')],
-          ['When is the iPhone app coming?', p(`It is being tested on TestFlight in a small, closed group. You can <a href="${k.TF_EN}">ask for a place by e-mail</a>. iPad and Apple Watch come with the app.`)],
+          ['Is there an iPhone app?', p(`Yes, <a href="${k.APP_EN}">on the App Store</a>, for iPhone, iPad and Apple Watch.`)],
           ['Do I need a Thermomix?', p('No. The cook planner shows recipes with and without one.')],
           ['Is ToHuus good for ADHD?', p('For everyone with a lot going on in their head there are small steps, a view with just one thing, a visible timer and a gentle mode, and nowhere any points or rankings. See <a href="a-lot-on-your-mind.html">When your head is full</a>.')],
           ['Do babysitters need an account?', p('No. They get a link or QR code and see the <a href="house-info.html">house info</a> and whatever else you share.')],

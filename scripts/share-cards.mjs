@@ -19,7 +19,8 @@
  *
  * Layout (docs/sharing.md): 72 px margin on 4:5; on 9:16 no text in the top 260 px or the bottom 360 px. The script
  * measures every card in the browser and fails when a value is too wide, a title runs over three lines or any text
- * leaves the safe zone. Look at a few PNGs before committing.
+ * leaves the safe zone. Text is scaled to fill the card (one factor k for all text, see FORMATS). Look at a few PNGs
+ * before committing.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -163,14 +164,21 @@ const BRAND = [
 
 const CARDS = [...FACTS, ...BRAND];
 
+/**
+ * Layout (same idea as web/src/share/cards.tsx `layoutCard`): one scale factor k (0.7–2.4) grows value, title,
+ * quote and text together; the script picks the largest k whose content still fits between header and footer and
+ * centres it in that box. Sizes below are at k = 1, each with the most it may grow to.
+ */
 const FORMATS = {
-  '4x5': { w: 1080, h: 1350, top: 72, bottom: 72, side: 72, value: 240 },
-  '9x16': { w: 1080, h: 1920, top: 260, bottom: 360, side: 72, value: 300 },
+  '4x5': { w: 1080, h: 1350, top: 72, bottom: 72, side: 72, value: 300, valueLong: 230, valueMax: 560 },
+  '9x16': { w: 1080, h: 1920, top: 260, bottom: 360, side: 72, value: 360, valueLong: 280, valueMax: 720 },
 };
+const BASE = { title: 60, maxTitle: 124, quote: 80, maxQuote: 140, text: 40, maxText: 66 };
 
+/** No opacity on text: quiet lines (eyebrow, text, source) use an explicit colour of the theme. */
 const THEMES = {
-  fact: { bg: '#f7f5ef', fg: '#181d1a', accent: '#176b50', house: '#176b50', door: '#e8b865' },
-  brand: { bg: '#176b50', fg: '#fffdf9', accent: '#fffdf9', house: '#fffdf9', door: '#e8b865' },
+  fact: { bg: '#f7f5ef', fg: '#181d1a', accent: '#176b50', quiet: '#3f4a44', house: '#176b50', door: '#e8b865' },
+  brand: { bg: '#176b50', fg: '#fffdf9', accent: '#fffdf9', quiet: '#cfdcd1', house: '#fffdf9', door: '#e8b865' },
 };
 
 // ------------------------------------------------------------------ template
@@ -186,11 +194,14 @@ function html(card, fmt) {
   const F = FORMATS[fmt];
   const T = THEMES[card.kind];
   const story = fmt === '9x16';
-  // the door arch of the brand mark, big, bottom right, partly cut off (8 % of the text colour)
+  // the door arch of the brand mark, big, bottom right, partly cut off (decorative, 8 % of the text colour)
   const arch = story ? { w: 760, h: 1180, r: -170, b: -300 } : { w: 620, h: 960, r: -150, b: -260 };
   const foot = card.kind === 'fact' ? `Quelle: ${card.source}` : `Gemacht mit ToHuus · ${SITE_HOST}`;
+  const sz = (base, max) => `min(calc(${base}px * var(--k)), ${max}px)`;
+  const gap = (px) => `calc(${px}px * var(--k))`;
   return `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>${FONTS}
 * { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --k: 1; }
 html, body { width: ${F.w}px; height: ${F.h}px; }
 body { background: ${T.bg}; color: ${T.fg}; font-family: 'Familjen Grotesk', sans-serif; font-synthesis: none; -webkit-font-smoothing: antialiased; }
 .card { position: relative; width: ${F.w}px; height: ${F.h}px; overflow: hidden; background: ${T.bg}; }
@@ -200,48 +211,75 @@ body { background: ${T.bg}; color: ${T.fg}; font-family: 'Familjen Grotesk', san
 .head svg { width: 64px; height: 64px; flex: none; }
 .head span { font-family: 'Hedvig Letters Sans', serif; font-size: 46px; line-height: 1; }
 .body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: ${story ? 48 : 36}px 0; min-height: 0; }
-.eyebrow { font-weight: 600; font-size: 30px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; display: flex; align-items: center; gap: 14px; }
-.eyebrow::before { content: ''; width: 14px; height: 14px; background: ${T.accent}; flex: none; opacity: ${card.kind === 'fact' ? 1 : 0.9}; }
-.value { font-family: 'Hedvig Letters Serif', serif; font-weight: 400; font-size: ${F.value}px; line-height: 1; letter-spacing: -0.02em; color: ${T.accent}; white-space: nowrap; margin: ${story ? 28 : 18}px 0 ${story ? 28 : 20}px; }
-.title { font-weight: 600; font-size: 60px; line-height: 1.14; letter-spacing: -0.005em; text-wrap: balance; }
-.quote { font-family: 'Hedvig Letters Serif', serif; font-weight: 400; font-size: ${story ? 96 : 86}px; line-height: 1.1; letter-spacing: -0.01em; margin-top: ${story ? 36 : 28}px; text-wrap: balance; }
-.text { font-size: 40px; line-height: 1.32; opacity: 0.85; margin-top: ${story ? 32 : 26}px; text-wrap: pretty; }
-.foot { font-size: 28px; line-height: 1.3; opacity: 0.7; max-width: ${card.kind === 'fact' ? 820 : 936}px; }
+.box { flex: none; }
+.eyebrow { font-weight: 600; font-size: 30px; line-height: 1.3; letter-spacing: 0.08em; text-transform: uppercase; color: ${card.kind === 'fact' ? T.accent : T.quiet}; display: flex; align-items: center; gap: 14px; }
+.eyebrow::before { content: ''; width: 14px; height: 14px; background: ${card.kind === 'fact' ? T.accent : T.door}; flex: none; }
+.value { font-family: 'Hedvig Letters Serif', serif; font-weight: 400; font-size: ${sz(card.value && card.value.length <= 4 ? F.value : F.valueLong, F.valueMax)}; line-height: 0.98; letter-spacing: -0.02em; color: ${T.accent}; white-space: nowrap; margin-top: ${gap(story ? 22 : 16)}; }
+.title { font-weight: 600; font-size: ${sz(BASE.title, BASE.maxTitle)}; line-height: 1.12; letter-spacing: -0.005em; margin-top: ${gap(26)}; text-wrap: balance; }
+.quote { font-family: 'Hedvig Letters Serif', serif; font-weight: 400; font-size: ${sz(BASE.quote, BASE.maxQuote)}; line-height: 1.1; letter-spacing: -0.01em; margin-top: ${gap(28)}; text-wrap: balance; }
+.text { font-size: ${sz(BASE.text, BASE.maxText)}; line-height: 1.3; color: ${T.quiet}; margin-top: ${gap(30)}; text-wrap: pretty; }
+.foot { font-size: 28px; line-height: 1.3; color: ${T.quiet}; max-width: ${card.kind === 'fact' ? 820 : 936}px; }
 </style></head><body><div class="card">
 <div class="arch" aria-hidden="true"></div>
 <div class="safe">
   <div class="head" data-t><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 28V14L16 4l12 10v14z" fill="${T.house}"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" fill="${T.door}"/></svg><span>ToHuus</span></div>
-  <div class="body">
+  <div class="body"><div class="box">
     <p class="eyebrow" data-t>${esc(card.eyebrow)}</p>
     ${card.value ? `<p class="value" data-t>${esc(card.value)}</p>` : ''}
     <p class="${card.quote ? 'quote' : 'title'}" data-t>${esc(card.title)}</p>
     ${card.text ? `<p class="text" data-t>${esc(card.text)}</p>` : ''}
-  </div>
+  </div></div>
   <p class="foot" data-t>${esc(foot)}</p>
 </div></div></body></html>`;
 }
 
-/** Runs in the page: shrink the value until it fits, then report anything outside the safe zone. */
+/**
+ * Runs in the page: find the largest scale k (0.7–2.4) at which the content fits the box between header and footer
+ * (the value shrinks on its own until its one line fits the width; titles get at most four lines, quotes six), apply it, then
+ * report anything that still does not fit or leaves the safe zone.
+ */
 function measure({ w, h, top, bottom, side }) {
   const out = [];
-  const v = document.querySelector('.value');
-  if (v) {
-    let size = parseFloat(getComputedStyle(v).fontSize);
-    while (v.scrollWidth > v.clientWidth + 1 && size > 120) { size -= 4; v.style.fontSize = `${size}px`; }
-    if (v.scrollWidth > v.clientWidth + 1) out.push(`value too wide (${v.scrollWidth}px)`);
-  }
-  const t = document.querySelector('.title');
-  if (t) {
-    const lines = Math.round(t.getBoundingClientRect().height / parseFloat(getComputedStyle(t).lineHeight));
-    if (lines > 3) out.push(`title has ${lines} lines`);
-  }
+  const root = document.documentElement;
   const body = document.querySelector('.body');
-  if (body.scrollHeight > body.clientHeight + 1) out.push(`content taller than the space (${body.scrollHeight} > ${body.clientHeight})`);
+  const box = document.querySelector('.box');
+  const v = document.querySelector('.value');
+  const t = document.querySelector('.title, .quote');
+  const room = () => {
+    const cs = getComputedStyle(body);
+    return body.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  };
+  // a title gets at most four lines (as in the app); a quote is the whole card and may take six
+  const maxLines = t.classList.contains('quote') ? 6 : 4;
+  const titleLines = () => Math.round(t.getBoundingClientRect().height / parseFloat(getComputedStyle(t).lineHeight));
+  const apply = (k) => {
+    root.style.setProperty('--k', String(k));
+    if (v) {
+      v.style.fontSize = '';
+      let size = parseFloat(getComputedStyle(v).fontSize);
+      while (v.scrollWidth > v.clientWidth + 1 && size > 80) {
+        size -= 2;
+        v.style.fontSize = `${size}px`;
+      }
+    }
+    return box.getBoundingClientRect().height <= room() + 0.5 && titleLines() <= maxLines;
+  };
+  let lo = 0.7;
+  let hi = 2.4;
+  for (let i = 0; i < 14; i++) {
+    const mid = (lo + hi) / 2;
+    if (apply(mid)) lo = mid;
+    else hi = mid;
+  }
+  apply(lo);
+  if (v && v.scrollWidth > v.clientWidth + 1) out.push(`value too wide (${v.scrollWidth}px)`);
+  if (titleLines() > maxLines) out.push(`title has ${titleLines()} lines`);
+  if (box.getBoundingClientRect().height > room() + 0.5) out.push(`content taller than the space (${Math.round(box.getBoundingClientRect().height)} > ${Math.round(room())})`);
   for (const el of document.querySelectorAll('[data-t]')) {
     const r = el.getBoundingClientRect();
     if (r.top < top - 0.5 || r.bottom > h - bottom + 0.5 || r.left < side - 0.5 || r.right > w - side + 0.5) out.push(`${el.className || el.tagName} outside the safe zone`);
   }
-  return out;
+  return { k: Math.round(lo * 100) / 100, out };
 }
 
 // ------------------------------------------------------------------ render
@@ -264,13 +302,13 @@ try {
       await page.setViewportSize({ width: F.w, height: F.h });
       await page.setContent(html(card, fmt), { waitUntil: 'load' });
       await page.evaluate(() => document.fonts.ready);
-      const issues = await page.evaluate(measure, F);
+      const { k, out: issues } = await page.evaluate(measure, F);
       for (const i of issues) problems.push(`${card.slug} ${fmt}: ${i}`);
       const file = path.join(OUT, `${card.slug}-${fmt}.png`);
       const shot = await page.screenshot({ clip: { x: 0, y: 0, width: F.w, height: F.h } });
       // flat colours and anti-aliased text: a 256-colour palette keeps them sharp at a fraction of the size
       await sharp(shot).png({ palette: true, quality: 95, effort: 10, compressionLevel: 9 }).toFile(file);
-      console.log(`${path.relative(ROOT, file)}${issues.length ? `  ! ${issues.join('; ')}` : ''}`);
+      console.log(`${path.relative(ROOT, file)}  k=${k}${issues.length ? `  ! ${issues.join('; ')}` : ''}`);
     }
   }
 } finally {

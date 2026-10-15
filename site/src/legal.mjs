@@ -56,7 +56,7 @@ export function legalCopy(k) {
       { id: 'daten', h: 'Welche Daten wir verarbeiten und wozu', body:
         h3('Konto')
         + p('Deine E-Mail-Adresse, dein Name, wie er im Haushalt angezeigt wird, dein Passwort (nur als scrypt-Hash, nie im Klartext), ob deine E-Mail-Adresse bestätigt ist, Sprache und Region. Wir brauchen diese Angaben, um dein Konto zu führen, dich anzumelden und dir E-Mails zu schicken, die zum Dienst gehören: Bestätigung der Adresse, Anmeldelinks, Zurücksetzen des Passworts, Einladungen in einen Haushalt und Hinweise auf eine neue Anmeldung. Die tägliche Zusammenfassung und die Erinnerung vor einer Abo-Verlängerung bekommst du nur, solange du sie nicht abbestellst: unter <i>Einstellungen › Benachrichtigungen › Mails von ToHuus</i> oder mit dem Link in jeder dieser Mails. Werbe-E-Mails schicken wir nicht. Meldest du dich mit Apple an, bekommen wir von Apple eine Kennung für dein Konto und, wenn du sie freigibst, deine E-Mail-Adresse oder eine Weiterleitungsadresse von Apple. Löschst du dein Konto, widerrufen wir die Anmeldung mit Apple auch bei Apple. Nutzt du einen Passkey, speichern wir nur seinen öffentlichen Schlüssel; der geheime Teil bleibt auf deinem Gerät.',
-          'Während der Beta braucht eine neue Anmeldung einen Zugangscode oder eine Adresse auf unserer Liste. Wir speichern dazu den Code, wie oft er benutzt wurde, und die freigegebenen E-Mail-Adressen, bis die Beta endet. Rechtsgrundlage: Art. 6 Abs. 1 lit. b und f DSGVO.',
+          'Löst ein Admin einen Code von uns ein (etwa für einen geschenkten Monat), speichern wir den Code, wie oft er benutzt wurde, und welcher Haushalt ihn eingelöst hat. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.',
           'Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertrag über die Nutzung von ToHuus Cloud).',
           'In unserer Kontoverwaltung sehen wir zu jedem Konto nur: E-Mail-Adresse, Name, wann es angelegt, bestätigt und zuletzt genutzt wurde, wie viele Geräte angemeldet sind, in welchen Haushalten es Mitglied ist und mit welcher Rolle. Inhalte eines Haushalts sehen wir dort nie. So halten wir den Dienst sicher und können ein Konto bei Missbrauch pausieren oder entfernen (siehe Nutzungsbedingungen). Jeder solche Schritt wird mit Grund protokolliert, und du bekommst eine E-Mail. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes Interesse ist ein sicherer Betrieb.')
         + h3('Inhalte eures Haushalts')
@@ -185,7 +185,7 @@ export function legalCopy(k) {
     desc: 'Die Bedingungen für ToHuus Cloud, die iPhone-App und die Web-App: Tarife, Kontingente, eure Inhalte, Haftung.',
     summaryH: 'Kurz gesagt',
     summary: [
-      'ToHuus ist in der Testphase. Funktionen können sich ändern, und es kann Ausfälle geben.',
+      'ToHuus wird laufend weiterentwickelt. Funktionen können sich ändern, und es kann Ausfälle geben.',
       'Free kostet nichts. Abos laufen über Apple und werden dort gekündigt.',
       'Eure Inhalte bleiben eure. Wir nutzen sie nur, damit ToHuus für euch funktioniert.',
       'Die Allergie-Warnung ersetzt nicht den Blick auf die Zutatenliste.',
@@ -197,8 +197,8 @@ export function legalCopy(k) {
           'Wer ToHuus auf einem eigenen Server betreibt, braucht diese Bedingungen nicht. Dafür gilt nur die Open-Source-Lizenz (siehe <a href="#open-source">Open Source</a>).',
           'Wie wir mit Daten umgehen, steht in der <a href="datenschutz.html">Datenschutzerklärung</a>.') },
 
-      { id: 'testphase', h: 'Testphase', body:
-        p('ToHuus ist neu und wird gerade mit den ersten Haushalten getestet. Funktionen können sich ändern, dazukommen oder wegfallen, und es kann Fehler und Ausfälle geben. Wir bemühen uns um einen verlässlichen Betrieb und sichern die Daten jede Nacht, können aber in der Testphase keine bestimmte Verfügbarkeit zusagen. Fällt eine Funktion weg, die zu einem bezahlten Tarif gehört, sagen wir das vorher an.') },
+      { id: 'testphase', h: 'Weiterentwicklung und Verfügbarkeit', body:
+        p('ToHuus ist neu und wird laufend weiterentwickelt. Funktionen können sich ändern, dazukommen oder wegfallen, und es kann Fehler und Ausfälle geben. Wir bemühen uns um einen verlässlichen Betrieb und sichern die Daten jede Nacht, können aber keine bestimmte Verfügbarkeit zusagen. Fällt eine Funktion weg, die zu einem bezahlten Tarif gehört, sagen wir das vorher an.') },
 
       { id: 'konto', h: 'Konto und Haushalt', body:
         ul('Ein Konto kannst du ab 18 Jahren anlegen. Kinder und Jugendliche können als Mitglieder oder Gäste eines Haushalts dabei sein, wenn ein Erwachsener sie einlädt und dafür verantwortlich ist.',
@@ -306,7 +306,7 @@ export function legalCopy(k) {
       { id: 'data', h: 'What data we process and why', body:
         h3('Account')
         + p('Your e-mail address, your name as shown in the household, your password (only as a scrypt hash, never in plain text), whether your e-mail address is confirmed, language and region. We need these to run your account, sign you in and send you the e-mails that belong to the service: address confirmation, sign-in links, password resets, household invitations and notices about a new sign-in. You get the daily summary and the reminder before a subscription renews only until you unsubscribe: under <i>Settings › Notifications › Mails from ToHuus</i> or with the link in each of these mails. We do not send marketing e-mails. If you sign in with Apple, Apple gives us an identifier for your account and, if you share it, your e-mail address or a relay address from Apple. If you delete your account, we also revoke the Sign in with Apple link with Apple. If you use a passkey, we only store its public key; the secret part stays on your device.',
-          'During the beta, a new sign-up needs an access code or an address on our list. For this we store the code, how often it was used and the approved e-mail addresses until the beta ends. Legal basis: Art. 6(1)(b) and (f) GDPR.',
+          'When an admin redeems a code from us (for example for a free month), we store the code, how often it was used and which household redeemed it. Legal basis: Art. 6(1)(b) GDPR.',
           'Legal basis: Art. 6(1)(b) GDPR (contract for the use of ToHuus Cloud).',
           'In our account administration we only see, for each account: the e-mail address, the name, when it was created, confirmed and last used, how many devices are signed in, which households it belongs to and with which role. We never see the content of a household there. This keeps the service safe and lets us pause or remove an account in case of abuse (see the terms). Every such step is logged with its reason, and you get an e-mail. Legal basis: Art. 6(1)(f) GDPR; our legitimate interest is running the service safely.')
         + h3('Your household’s content')
@@ -436,7 +436,7 @@ export function legalCopy(k) {
     note: enNote.replace('{file}', 'nutzungsbedingungen.html'),
     summaryH: 'In short',
     summary: [
-      'ToHuus is in testing. Features can change, and there can be outages.',
+      'ToHuus is developed continuously. Features can change, and there can be outages.',
       'Free costs nothing. Subscriptions run through Apple and are cancelled there.',
       'Your content stays yours. We only use it so that ToHuus works for you.',
       'The allergy warning does not replace reading the ingredients list.',
@@ -448,8 +448,8 @@ export function legalCopy(k) {
           'If you run ToHuus on your own server, you do not need these terms. Only the open source licence applies (see <a href="#open-source">Open source</a>).',
           'How we handle data is described in the <a href="privacy.html">privacy policy</a>.') },
 
-      { id: 'testing', h: 'Testing phase', body:
-        p('ToHuus is new and is currently being tested with the first households. Features can change, be added or be removed, and there can be bugs and outages. We aim for reliable operation and back up the data every night, but during testing we cannot promise a particular availability. If a feature that belongs to a paid plan is removed, we will announce it beforehand.') },
+      { id: 'testing', h: 'Development and availability', body:
+        p('ToHuus is new and is developed continuously. Features can change, be added or be removed, and there can be bugs and outages. We aim for reliable operation and back up the data every night, but we cannot promise a particular availability. If a feature that belongs to a paid plan is removed, we will announce it beforehand.') },
 
       { id: 'account', h: 'Account and household', body:
         ul('You can create an account from the age of 18. Children and teenagers can be members or guests of a household if an adult invites them and is responsible for them.',
