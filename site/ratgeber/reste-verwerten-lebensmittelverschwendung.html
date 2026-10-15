@@ -30,7 +30,7 @@
 <link rel="preload" href="../assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'||(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light')})()</script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"BlogPosting","headline":"Reste verwerten statt wegwerfen: weniger Essen in der Tonne","description":"Private Haushalte werfen rund 74,5 kg Lebensmittel pro Kopf und Jahr weg. Mit festen Reste-Tagen, Einfrieren und kleineren Einkäufen wird das weniger.","datePublished":"2026-10-13","dateModified":"2026-10-13","inLanguage":"de","mainEntityOfPage":"https://tohuus.heidrich-digital.de/ratgeber/reste-verwerten-lebensmittelverschwendung.html","image":"https://tohuus.heidrich-digital.de/assets/img/og-de.png","author":{"@type":"Organization","name":"ToHuus","url":"https://tohuus.heidrich-digital.de/de/"},"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToHuus","item":"https://tohuus.heidrich-digital.de/de/"},{"@type":"ListItem","position":2,"name":"Ratgeber","item":"https://tohuus.heidrich-digital.de/ratgeber/"},{"@type":"ListItem","position":3,"name":"Reste verwerten statt wegwerfen: weniger Essen in der Tonne","item":"https://tohuus.heidrich-digital.de/ratgeber/reste-verwerten-lebensmittelverschwendung.html"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Wie viele Lebensmittel wirft ein Haushalt in Deutschland weg?","acceptedAnswer":{"@type":"Answer","text":"Rund 74,5 Kilogramm pro Kopf und Jahr, das sind 58 Prozent aller Lebensmittelabfälle in Deutschland (Zahlen für 2022). Ein Teil davon sind nicht essbare Reste wie Schalen und Knochen."}},{"@type":"Question","name":"Was wird am häufigsten weggeworfen?","acceptedAnswer":{"@type":"Answer","text":"Frisches Obst und Gemüse, mit 35 Prozent der vermeidbaren Abfälle in Haushalten. Danach folgen Brot und Backwaren mit 13 Prozent (GfK-Erhebung 2020)."}},{"@type":"Question","name":"Wie lange kann ich gekochte Reste aufheben?","acceptedAnswer":{"@type":"Answer","text":"Im Kühlschrank in einer geschlossenen Dose meist ein bis zwei Tage. Was länger halten soll, friert ihr am besten gleich mit Datum ein."}},{"@type":"Question","name":"Darf ich Lebensmittel nach dem Mindesthaltbarkeitsdatum noch essen?","acceptedAnswer":{"@type":"Answer","text":"Oft ja, das Datum ist kein Wegwerfdatum. Anschauen, riechen, probieren. Beim Verbrauchsdatum, etwa bei Hackfleisch, gilt das nicht."}}]}]</script>
 </head>
 <body class="legal-page help-page blog-page">
@@ -41,12 +41,7 @@
 <div class="nav">
   <a class="brand" href="../de/" aria-label="ToHuus Startseite"><svg class="mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 28V14L16 4l12 10v14z" class="mk-house"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" class="mk-door"/></svg><span>ToHuus</span></a>
   <nav class="nav-links" aria-label="Hauptnavigation">
-    <a href="../de/#einkauf">Einkauf</a>
-    <a href="../de/#kochen">Kochen</a>
-    <a href="../de/#geld">Geld</a>
-    <a href="../de/#aufgaben">Aufgaben</a>
-    <a href="../de/#bring-mir-was">Bring mir was</a>
-    <a href="../de/#hausinfo">Hausinfo</a>
+    <a href="../de/#funktionen">Funktionen</a>
     <a href="../de/#preise">Preise</a>
     <a href="../de/#datenschutz">Datenschutz</a>
     <a href="../de/#selbst-hosten">Selbst hosten</a>

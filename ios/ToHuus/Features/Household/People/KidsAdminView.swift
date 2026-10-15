@@ -153,7 +153,7 @@ struct KidWishesSection: View {
                             Button(L("Not now")) { Task { await answer(w, approve: false) } }
                                 .buttonStyle(.bordered)
                             Button(L("Approve")) { Task { await answer(w, approve: true) } }
-                                .buttonStyle(.borderedProminent)
+                                .buttonStyle(.borderedProminent).tint(Theme.primary)
                         }
                         .font(.subheadline.weight(.semibold))
                         .disabled(busy != nil)

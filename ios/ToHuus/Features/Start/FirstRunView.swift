@@ -514,7 +514,7 @@ private struct FirstRunWalk: View {
                         Button { answer("missing") } label: {
                             Label(L("Missing"), systemImage: "plus").frame(maxWidth: .infinity, minHeight: 50)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.borderedProminent).tint(Theme.primary)
                     }
                     .font(.body.weight(.semibold))
                     HStack {

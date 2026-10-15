@@ -30,7 +30,7 @@
 <link rel="preload" href="../assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'||(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light')})()</script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"BlogPosting","headline":"Putzplan ohne Punkte und Streit: für WG, Paar und Familie","description":"Ein Putzplan klappt, wenn jede Aufgabe einen Rhythmus hat, klar ist, wer dran ist und wer dran denkt, und niemand Punkte zählt. So geht es in WG, Paar und Familie.","datePublished":"2026-10-14","dateModified":"2026-10-14","inLanguage":"de","mainEntityOfPage":"https://tohuus.heidrich-digital.de/ratgeber/putzplan-wg-paar-familie.html","image":"https://tohuus.heidrich-digital.de/assets/img/og-de.png","author":{"@type":"Organization","name":"ToHuus","url":"https://tohuus.heidrich-digital.de/de/"},"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToHuus","item":"https://tohuus.heidrich-digital.de/de/"},{"@type":"ListItem","position":2,"name":"Ratgeber","item":"https://tohuus.heidrich-digital.de/ratgeber/"},{"@type":"ListItem","position":3,"name":"Putzplan ohne Punkte und Streit: für WG, Paar und Familie","item":"https://tohuus.heidrich-digital.de/ratgeber/putzplan-wg-paar-familie.html"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Wie erstelle ich einen fairen Putzplan?","acceptedAnswer":{"@type":"Answer","text":"Sammelt alle Aufgaben, gebt jeder einen eigenen Rhythmus und legt fest, wer sie macht und wer sie im Blick hat. Bei gemeinsamen Räumen hilft Abwechseln."}},{"@type":"Question","name":"Wie oft sollte man das Bad putzen?","acceptedAnswer":{"@type":"Answer","text":"Das legt ihr selbst fest, viele nehmen einmal pro Woche. ToHuus zeigt nach ein paar Wochen, wie oft ihr es wirklich macht, dann könnt ihr den Plan anpassen."}},{"@type":"Question","name":"Braucht ein Putzplan Punkte oder Belohnungen?","acceptedAnswer":{"@type":"Answer","text":"Nein. Punkte führen leicht zu Streit darüber, was wie viel wert ist. Abwechseln und klare Zuständigkeiten sind einfacher."}},{"@type":"Question","name":"Kann ich den Putzplan in Apple Erinnerungen sehen?","acceptedAnswer":{"@type":"Answer","text":"Ja. Mit einem Passwort erscheinen eure Aufgaben in Apple Erinnerungen. Ein Häkchen dort erledigt die Aufgabe auch in ToHuus."}},{"@type":"Question","name":"Wie beziehe ich Kinder ein?","acceptedAnswer":{"@type":"Answer","text":"Mit kleinen, klaren Aufgaben passend zum Alter, aufgeteilt in Schritte. In ToHuus legt ihr Kinderprofile an und tragt sie bei „Wer macht es“ ein."}}]}]</script>
 </head>
 <body class="legal-page help-page blog-page">
@@ -41,12 +41,7 @@
 <div class="nav">
   <a class="brand" href="../de/" aria-label="ToHuus Startseite"><svg class="mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 28V14L16 4l12 10v14z" class="mk-house"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" class="mk-door"/></svg><span>ToHuus</span></a>
   <nav class="nav-links" aria-label="Hauptnavigation">
-    <a href="../de/#einkauf">Einkauf</a>
-    <a href="../de/#kochen">Kochen</a>
-    <a href="../de/#geld">Geld</a>
-    <a href="../de/#aufgaben">Aufgaben</a>
-    <a href="../de/#bring-mir-was">Bring mir was</a>
-    <a href="../de/#hausinfo">Hausinfo</a>
+    <a href="../de/#funktionen">Funktionen</a>
     <a href="../de/#preise">Preise</a>
     <a href="../de/#datenschutz">Datenschutz</a>
     <a href="../de/#selbst-hosten">Selbst hosten</a>

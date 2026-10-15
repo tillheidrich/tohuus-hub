@@ -85,7 +85,11 @@ final class TodayModel {
     func dismiss(_ item: RhythmItem, store: ServerStore) async -> String? {
         busyIds.insert(item.productId)
         defer { busyIds.remove(item.productId) }
-        try? await store.api.dismissRhythm(item.productId)
+        do {
+            try await store.api.dismissRhythm(item.productId)
+        } catch {
+            return L("Couldn’t save")
+        }
         today?.rhythm.removeAll { $0.productId == item.productId }
         return L("Okay – ToHuus asks again later.")
     }
@@ -410,7 +414,7 @@ struct TodayView: View {
                     } label: {
                         Label(L("Put on the list"), systemImage: "basket").frame(maxWidth: .infinity, minHeight: 36)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.borderedProminent).tint(Theme.primary)
                     .accessibilityLabel(LF("Put %@ on the list", item.name))
                     Button {
                         Task { if let m = await model.dismiss(item, store: store) { toast = ToastMessage(text: m) } }
@@ -502,7 +506,7 @@ struct TodayView: View {
                     Button(cook.missing.count == 1 ? L("Put it on the list") : L("Put the missing on the list")) {
                         Task { if let m = await model.missingToList(cook, store: store) { toast = ToastMessage(text: m) } }
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.borderedProminent).tint(Theme.primary)
                 }
             }
             .controlSize(.small)

@@ -320,7 +320,7 @@ struct CalendarSyncView: View {
 
             if let d = data {
                 Section {
-                    Picker(L("Remind about the bin"), selection: Binding(get: { d.settings.offset }, set: { v in Task { try? await api.calsyncOffset(v); await load() } })) {
+                    Picker(L("Remind about the bin"), selection: Binding(get: { d.settings.offset }, set: { v in Task { await act { try await api.calsyncOffset(v) } } })) {
                         Text(L("the evening before")).tag("evening")
                         Text(L("on the morning")).tag("morning")
                     }
@@ -333,7 +333,7 @@ struct CalendarSyncView: View {
                             }
                             Spacer()
                             if k.off {
-                                Button(L("Switch on again")) { Task { try? await api.calsyncRevive(k.key); await load() } }
+                                Button(L("Switch on again")) { Task { await act { try await api.calsyncRevive(k.key) } } }
                                     .buttonStyle(.bordered)
                             }
                         }
@@ -363,7 +363,7 @@ struct CalendarSyncView: View {
 
             if let d = data {
                 Section {
-                    Toggle(L("AI may match calendar entries with tasks"), isOn: Binding(get: { d.ai.consent }, set: { v in Task { try? await api.calsyncAI(v); await load() } }))
+                    Toggle(L("AI may match calendar entries with tasks"), isOn: Binding(get: { d.ai.consent }, set: { v in Task { await act { try await api.calsyncAI(v) } } }))
                         .tint(Theme.primary)
                         .disabled(!d.ai.available && !d.ai.consent)
                     if d.ai.consent && access && !prefs.readIds.isEmpty {
@@ -422,6 +422,18 @@ struct CalendarSyncView: View {
             await load()
         }
         .refreshable { await load() }
+    }
+
+    /// run a change, reload, and keep the reason visible when it failed (the control jumps back)
+    private func act(_ run: () async throws -> Void) async {
+        var failed: String?
+        do {
+            try await run()
+        } catch {
+            failed = error.localizedDescription
+        }
+        await load()
+        if let failed { error = failed }
     }
 
     private func load() async {

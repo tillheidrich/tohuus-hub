@@ -78,7 +78,7 @@ struct AppTourView: View {
                     Text(page < pages.count ? L("Next") : L("Let’s go"))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.borderedProminent).tint(Theme.primary)
                 .padding(.horizontal, Theme.Space.s5)
                 .padding(.bottom, Theme.Space.s4)
             }

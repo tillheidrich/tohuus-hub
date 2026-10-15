@@ -334,7 +334,7 @@ struct ShoppingView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(a.from.map { LF("%@ asks: %@", $0, a.text) } ?? a.text).font(.subheadline)
                         HStack {
-                            Button(L("I'll get it")) { Task { await answer(a, accept: true) } }.buttonStyle(.borderedProminent)
+                            Button(L("I'll get it")) { Task { await answer(a, accept: true) } }.buttonStyle(.borderedProminent).tint(Theme.primary)
                             Button(L("Can't do it")) { Task { await answer(a, accept: false) } }.buttonStyle(.bordered)
                         }
                         .controlSize(.small)

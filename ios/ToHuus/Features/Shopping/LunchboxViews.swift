@@ -29,7 +29,7 @@ struct LunchboxSuggestionSection: View {
                         }
                         HStack {
                             Button(L("Put on the list")) { Task { await add() } }
-                                .buttonStyle(.borderedProminent)
+                                .buttonStyle(.borderedProminent).tint(Theme.primary)
                                 .disabled(busy)
                             if pausing {
                                 Button(L("Pause")) { Task { await pause() } }.buttonStyle(.bordered)

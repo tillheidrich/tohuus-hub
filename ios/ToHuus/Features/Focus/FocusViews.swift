@@ -66,6 +66,7 @@ struct FocusTimerView: View {
     @State private var left = 300
     @State private var ends: Date?
     @State private var rang = false
+    @ScaledMetric(relativeTo: .largeTitle) private var ring: CGFloat = 150
     private let tick = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
     private let noteId = "focus-timer"
 
@@ -79,10 +80,11 @@ struct FocusTimerView: View {
                     .rotationEffect(.degrees(-90))
                     .animation(reduceMotion ? nil : .linear(duration: 0.5), value: left)
                 Text(String(format: "%d:%02d", left / 60, left % 60))
-                    .font(.system(size: 30, weight: .semibold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded, weight: .semibold))
                     .monospacedDigit()
+                    .minimumScaleFactor(0.6)
             }
-            .frame(width: 150, height: 150)
+            .frame(width: ring, height: ring)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(LF("%d minutes %d seconds left", left / 60, left % 60))
             HStack(spacing: 8) {
@@ -97,11 +99,15 @@ struct FocusTimerView: View {
             }
             HStack(spacing: 8) {
                 ForEach([5, 10, 15, 25], id: \.self) { m in
-                    Button(LF("%d min", m)) { set(m) }
-                        .font(.subheadline.weight(total == m * 60 ? .semibold : .regular))
-                        .padding(.horizontal, 12)
-                        .frame(minHeight: 44)
-                        .background(Capsule().fill(total == m * 60 ? Theme.primary.opacity(0.15) : Theme.line.opacity(0.5)))
+                    Button { set(m) } label: {
+                        Text(LF("%d min", m))
+                            .font(.subheadline.weight(total == m * 60 ? .semibold : .regular))
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 44)
+                            .background(Capsule().fill(total == m * 60 ? Theme.primary.opacity(0.15) : Theme.line.opacity(0.5)))
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
                         .accessibilityAddTraits(total == m * 60 ? .isSelected : [])
                 }
             }
@@ -336,7 +342,7 @@ struct FocusSettingsSection: View {
                 Picker(L("Timer starts with"), selection: Binding(get: { p.timerMin }, set: { v in Task { await save(["timerMin": v]) } })) {
                     ForEach([5, 10, 15, 25], id: \.self) { m in Text(LF("%d min", m)).tag(m) }
                 }
-            } else {
+            } else if error == nil {
                 ProgressView()
             }
             if let error { Text(error).font(.caption).foregroundStyle(Theme.empty) }
@@ -346,7 +352,13 @@ struct FocusSettingsSection: View {
             Text(L("For heads with a lot going on – ADHD, autism or just a full week. Only you see these settings."))
         }
         .task {
-            if let x = try? await api.focusPrefs() { p = x; FocusFlags.apply(x) }
+            do {
+                let x = try await api.focusPrefs()
+                p = x
+                FocusFlags.apply(x)
+            } catch {
+                self.error = error.localizedDescription
+            }
         }
     }
 

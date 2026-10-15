@@ -80,6 +80,8 @@ struct HomeView: View {
                 .frame(minHeight: 36)
                 .background(Theme.surface, in: Capsule())
                 .overlay(Capsule().stroke(Theme.line, lineWidth: 1))
+                .padding(.vertical, 4)
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)

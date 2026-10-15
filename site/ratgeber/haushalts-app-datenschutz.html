@@ -30,7 +30,7 @@
 <link rel="preload" href="../assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'||(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light')})()</script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"BlogPosting","headline":"Haushalts-App ohne Tracking: worauf ihr achten solltet","description":"Prüft bei einer Haushalts-App, wo die Daten liegen, ob sie trackt oder Werbung zeigt, wer im Haushalt was sieht und ob Export und Löschen gehen.","datePublished":"2026-10-13","dateModified":"2026-10-13","inLanguage":"de","mainEntityOfPage":"https://tohuus.heidrich-digital.de/ratgeber/haushalts-app-datenschutz.html","image":"https://tohuus.heidrich-digital.de/assets/img/og-de.png","author":{"@type":"Organization","name":"ToHuus","url":"https://tohuus.heidrich-digital.de/de/"},"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToHuus","item":"https://tohuus.heidrich-digital.de/de/"},{"@type":"ListItem","position":2,"name":"Ratgeber","item":"https://tohuus.heidrich-digital.de/ratgeber/"},{"@type":"ListItem","position":3,"name":"Haushalts-App ohne Tracking: worauf ihr achten solltet","item":"https://tohuus.heidrich-digital.de/ratgeber/haushalts-app-datenschutz.html"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Woran erkenne ich, ob eine App trackt?","acceptedAnswer":{"@type":"Answer","text":"Schaut in die Datenschutzangaben im App Store und in die Datenschutzerklärung. Werbung in der App, Partnerlinks und Formulierungen wie „Weitergabe an Partner“ sind deutliche Hinweise."}},{"@type":"Question","name":"Reicht es, wenn die Server in Deutschland stehen?","acceptedAnswer":{"@type":"Answer","text":"Es ist ein guter Anfang, aber nicht alles. Wichtig ist auch, welche Dienstleister Zugriff haben, ob Daten verschlüsselt sind und ob Daten in Länder außerhalb der EU gehen."}},{"@type":"Question","name":"Kann ich meine Daten aus einer App mitnehmen?","acceptedAnswer":{"@type":"Answer","text":"Ja, nach Artikel 20 der DSGVO habt ihr ein Recht darauf, eure Daten in einem gängigen, maschinenlesbaren Format zu bekommen. Viele Apps haben dafür einen Export in den Einstellungen."}},{"@type":"Question","name":"Sehen andere im Haushalt meine privaten Einträge?","acceptedAnswer":{"@type":"Answer","text":"Das hängt von der App ab. Bei ToHuus sehen andere private Einträge, private Listen und persönliche Ausgaben nicht, auch nicht über den Assistenten, Exporte oder Home Assistant."}}]}]</script>
 </head>
 <body class="legal-page help-page blog-page">
@@ -41,12 +41,7 @@
 <div class="nav">
   <a class="brand" href="../de/" aria-label="ToHuus Startseite"><svg class="mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 28V14L16 4l12 10v14z" class="mk-house"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" class="mk-door"/></svg><span>ToHuus</span></a>
   <nav class="nav-links" aria-label="Hauptnavigation">
-    <a href="../de/#einkauf">Einkauf</a>
-    <a href="../de/#kochen">Kochen</a>
-    <a href="../de/#geld">Geld</a>
-    <a href="../de/#aufgaben">Aufgaben</a>
-    <a href="../de/#bring-mir-was">Bring mir was</a>
-    <a href="../de/#hausinfo">Hausinfo</a>
+    <a href="../de/#funktionen">Funktionen</a>
     <a href="../de/#preise">Preise</a>
     <a href="../de/#datenschutz">Datenschutz</a>
     <a href="../de/#selbst-hosten">Selbst hosten</a>

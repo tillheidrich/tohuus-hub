@@ -30,7 +30,7 @@
 <link rel="preload" href="../assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'||(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light')})()</script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"BlogPosting","headline":"Wie lange ist was haltbar? MHD, Verbrauchsdatum und nach dem Öffnen","description":"Nach dem MHD ist vieles noch gut, nach dem Verbrauchsdatum nicht. Was für Eier, Käse, Wurst, Marmelade und Milch gilt, auch nach dem Öffnen.","datePublished":"2026-10-14","dateModified":"2026-10-14","inLanguage":"de","mainEntityOfPage":"https://tohuus.heidrich-digital.de/ratgeber/haltbarkeit-lebensmittel-nach-dem-oeffnen.html","image":"https://tohuus.heidrich-digital.de/assets/img/og-de.png","author":{"@type":"Organization","name":"ToHuus","url":"https://tohuus.heidrich-digital.de/de/"},"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToHuus","item":"https://tohuus.heidrich-digital.de/de/"},{"@type":"ListItem","position":2,"name":"Ratgeber","item":"https://tohuus.heidrich-digital.de/ratgeber/"},{"@type":"ListItem","position":3,"name":"Wie lange ist was haltbar? MHD, Verbrauchsdatum und nach dem Öffnen","item":"https://tohuus.heidrich-digital.de/ratgeber/haltbarkeit-lebensmittel-nach-dem-oeffnen.html"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Kann ich Lebensmittel nach dem MHD noch essen?","acceptedAnswer":{"@type":"Answer","text":"Oft ja, wenn sie richtig gelagert und ungeöffnet waren. Prüft Aussehen, Geruch und Geschmack. Nach dem Verbrauchsdatum dagegen nicht mehr essen."}},{"@type":"Question","name":"Wie lange halten Eier im Kühlschrank?","acceptedAnswer":{"@type":"Answer","text":"Laut Verbraucherzentrale bis zu sechs Wochen bei höchstens 7 Grad. Nach dem MHD, 28 Tage nach dem Legen, nur noch gut durchgegart essen."}},{"@type":"Question","name":"Wie lange hält offene Marmelade?","acceptedAnswer":{"@type":"Answer","text":"Gekaufte Konfitüre meist mehrere Monate im Kühlschrank, wenn ihr sie mit einem sauberen Löffel herausnehmt. Fruchtaufstriche mit wenig Zucker halten kürzer."}},{"@type":"Question","name":"Gilt das MHD auch nach dem Öffnen?","acceptedAnswer":{"@type":"Answer","text":"Nein. Das Datum gilt für die geschlossene Packung. Danach zählt die Angabe nach dem Öffnen, und wenn die fehlt: kühl lagern, Öffnungsdatum notieren, vor dem Essen prüfen."}},{"@type":"Question","name":"Woher hat ToHuus die Haltbarkeit?","acceptedAnswer":{"@type":"Answer","text":"Aus Richtwerten für übliche Lebensmittel. Sie stehen als geschätzt da, bis ihr das Datum von der Packung eintragt, und lassen sich pro Produkt ändern."}}]}]</script>
 </head>
 <body class="legal-page help-page blog-page">
@@ -41,12 +41,7 @@
 <div class="nav">
   <a class="brand" href="../de/" aria-label="ToHuus Startseite"><svg class="mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 28V14L16 4l12 10v14z" class="mk-house"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" class="mk-door"/></svg><span>ToHuus</span></a>
   <nav class="nav-links" aria-label="Hauptnavigation">
-    <a href="../de/#einkauf">Einkauf</a>
-    <a href="../de/#kochen">Kochen</a>
-    <a href="../de/#geld">Geld</a>
-    <a href="../de/#aufgaben">Aufgaben</a>
-    <a href="../de/#bring-mir-was">Bring mir was</a>
-    <a href="../de/#hausinfo">Hausinfo</a>
+    <a href="../de/#funktionen">Funktionen</a>
     <a href="../de/#preise">Preise</a>
     <a href="../de/#datenschutz">Datenschutz</a>
     <a href="../de/#selbst-hosten">Selbst hosten</a>

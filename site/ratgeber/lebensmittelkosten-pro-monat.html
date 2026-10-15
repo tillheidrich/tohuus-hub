@@ -30,7 +30,7 @@
 <link rel="preload" href="../assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'||(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light')})()</script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"BlogPosting","headline":"Was kostet Essen im Monat? Zahlen für Singles, Paare, Familien","description":"Haushalte in Deutschland gaben 2024 im Schnitt 457 Euro im Monat für Essen, Getränke und Tabak aus, Singles 270 Euro, Familien zu viert 759 Euro.","datePublished":"2026-10-13","dateModified":"2026-10-13","inLanguage":"de","mainEntityOfPage":"https://tohuus.heidrich-digital.de/ratgeber/lebensmittelkosten-pro-monat.html","image":"https://tohuus.heidrich-digital.de/assets/img/og-de.png","author":{"@type":"Organization","name":"ToHuus","url":"https://tohuus.heidrich-digital.de/de/"},"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToHuus","item":"https://tohuus.heidrich-digital.de/de/"},{"@type":"ListItem","position":2,"name":"Ratgeber","item":"https://tohuus.heidrich-digital.de/ratgeber/"},{"@type":"ListItem","position":3,"name":"Was kostet Essen im Monat? Zahlen für Singles, Paare, Familien","item":"https://tohuus.heidrich-digital.de/ratgeber/lebensmittelkosten-pro-monat.html"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Wie viel gibt ein Single im Monat für Lebensmittel aus?","acceptedAnswer":{"@type":"Answer","text":"Einpersonenhaushalte gaben 2024 laut Statistischem Bundesamt im Schnitt 270 Euro im Monat für Nahrungsmittel, Getränke und Tabakwaren aus. Essen im Restaurant oder in der Kantine kommt noch dazu."}},{"@type":"Question","name":"Was kostet Essen für eine Familie mit zwei Kindern?","acceptedAnswer":{"@type":"Answer","text":"Haushalte mit vier Personen gaben 2024 im Schnitt 759 Euro im Monat für Nahrungsmittel, Getränke und Tabakwaren aus. Das sind knapp 190 Euro pro Person."}},{"@type":"Question","name":"Sind Drogerieartikel in den Zahlen enthalten?","acceptedAnswer":{"@type":"Answer","text":"Nein, Drogerieartikel wie Spülmittel oder Windeln zählt die Statistik nicht zu Nahrungsmitteln. Wer seine eigenen Bons vergleicht, sollte sie deshalb getrennt betrachten."}},{"@type":"Question","name":"Woher kommen die Zahlen?","acceptedAnswer":{"@type":"Answer","text":"Aus den Laufenden Wirtschaftsrechnungen 2024 und der Einkommens- und Verbrauchsstichprobe 2023 des Statistischen Bundesamts. In beiden Erhebungen schreiben Haushalte ihre Ausgaben auf."}}]}]</script>
 </head>
 <body class="legal-page help-page blog-page">
@@ -41,12 +41,7 @@
 <div class="nav">
   <a class="brand" href="../de/" aria-label="ToHuus Startseite"><svg class="mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 28V14L16 4l12 10v14z" class="mk-house"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" class="mk-door"/></svg><span>ToHuus</span></a>
   <nav class="nav-links" aria-label="Hauptnavigation">
-    <a href="../de/#einkauf">Einkauf</a>
-    <a href="../de/#kochen">Kochen</a>
-    <a href="../de/#geld">Geld</a>
-    <a href="../de/#aufgaben">Aufgaben</a>
-    <a href="../de/#bring-mir-was">Bring mir was</a>
-    <a href="../de/#hausinfo">Hausinfo</a>
+    <a href="../de/#funktionen">Funktionen</a>
     <a href="../de/#preise">Preise</a>
     <a href="../de/#datenschutz">Datenschutz</a>
     <a href="../de/#selbst-hosten">Selbst hosten</a>

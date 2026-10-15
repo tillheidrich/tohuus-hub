@@ -172,7 +172,7 @@ struct ReceiptCaptureView: View {
                                 } catch { self.error = APIError.from(error).localizedDescription }
                             }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.borderedProminent).tint(Theme.primary)
                         NavigationLink {
                             ImportReviewView(store: store, importId: id)
                         } label: {

@@ -305,6 +305,8 @@ struct CareView: View {
     @State private var filter: TaskFilter?
     @State private var recent: [CareRecent] = []
     @State private var allRecent = false
+    /// the initials circle grows with Dynamic Type
+    @ScaledMetric(relativeTo: .caption) private var initial: CGFloat = 24
     @State private var reloads = 0
 
     private var current: TaskFilter { filter ?? initialFilter }
@@ -440,21 +442,30 @@ struct CareView: View {
             }
             Spacer(minLength: 4)
             if let d = t.doer {
-                Text(String(d.name.prefix(1))).font(.caption.weight(.semibold)).foregroundStyle(Theme.onPrimary)
-                    .frame(width: 24, height: 24).background(Theme.clay, in: Circle())
+                Text(String(d.name.prefix(1))).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink)
+                    .frame(width: initial, height: initial).background(Theme.lowSoft, in: Circle())
+                    .overlay(Circle().stroke(Theme.clay, lineWidth: 1))
                     .accessibilityLabel(LF("%@ does it", d.name))
             } else if let a = t.assignee {
-                Text(String(a.name.prefix(1))).font(.caption.weight(.semibold)).foregroundStyle(Theme.onPrimary)
-                    .frame(width: 24, height: 24).background(Theme.sage, in: Circle())
+                Text(String(a.name.prefix(1))).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink)
+                    .frame(width: initial, height: initial).background(Theme.sand, in: Circle())
+                    .overlay(Circle().stroke(Theme.sage, lineWidth: 1))
                     .accessibilityLabel(LF("%@ keeps it in mind", a.name))
             }
-            Button { done(t) } label: { Label(L("Done"), systemImage: "checkmark").labelStyle(.titleAndIcon).font(.caption.weight(.semibold)) }
+            Button { done(t) } label: {
+                Label(L("Done"), systemImage: "checkmark").labelStyle(.titleAndIcon).font(.caption.weight(.semibold))
+                    .frame(minHeight: 32)
+            }
                 .buttonStyle(.bordered)
                 .tint(t.state == "overdue" || t.state == "today" ? Theme.primary : Theme.ink2)
-                .frame(minHeight: 44)
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
         }
         .contentShape(Rectangle())
         .onTapGesture { detail = t }
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { detail = t }
         .accessibilityAction(named: L("Details")) { detail = t }
     }
 

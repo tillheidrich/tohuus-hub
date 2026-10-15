@@ -27,7 +27,7 @@ struct ToHuusApp: App {
                 .kidModeGate()
                 .environment(app)
                 .environment(storeKit)
-                .tint(Theme.primary)
+                .tint(Theme.accent)
                 .preferredColorScheme(AppAppearance(rawValue: appearance)?.scheme)
                 .task {
                     storeKit.report = { [app] jws in

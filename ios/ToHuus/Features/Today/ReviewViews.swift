@@ -152,7 +152,7 @@ struct YearReviewView: View {
     private func cardView(_ c: YearReview.Card) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Image(systemName: ReviewStyle.icon(c.area)).font(.title3).foregroundStyle(Theme.ink2).accessibilityHidden(true)
-            Text(c.value).font(.system(size: 34, weight: .bold, design: .rounded)).foregroundStyle(Theme.ink)
+            Text(c.value).font(.system(.largeTitle, design: .rounded, weight: .bold)).foregroundStyle(Theme.ink)
                 .minimumScaleFactor(0.6).lineLimit(2)
             Text(c.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
             if let t = c.text { Text(t).font(.footnote).foregroundStyle(Theme.ink2) }

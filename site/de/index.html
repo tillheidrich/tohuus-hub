@@ -32,7 +32,7 @@
 <link rel="preload" href="../assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'||(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light')})()</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus","description":"ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet, aus euren Kassenbons und eurer Liste. Für iPhone und im Browser, in der ToHuus Cloud oder auf dem eigenen Server.","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web, Docker","license":"https://www.gnu.org/licenses/agpl-3.0.html","url":"https://tohuus.heidrich-digital.de/de/","image":"https://tohuus.heidrich-digital.de/assets/img/og-de.png","codeRepository":"https://github.com/tillheidrich/tohuus-hub","inLanguage":["en","de"],"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}}
 </script>
@@ -45,12 +45,7 @@
 <div class="nav">
   <a class="brand" href="./" aria-label="ToHuus Startseite"><svg class="mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 28V14L16 4l12 10v14z" class="mk-house"/><path d="M12.5 28v-6.5a3.5 3.5 0 0 1 7 0V28z" class="mk-door"/></svg><span>ToHuus</span></a>
   <nav class="nav-links" aria-label="Hauptnavigation">
-    <a href="#einkauf">Einkauf</a>
-    <a href="#kochen">Kochen</a>
-    <a href="#geld">Geld</a>
-    <a href="#aufgaben">Aufgaben</a>
-    <a href="#bring-mir-was">Bring mir was</a>
-    <a href="#hausinfo">Hausinfo</a>
+    <a href="#funktionen">Funktionen</a>
     <a href="#preise">Preise</a>
     <a href="#datenschutz">Datenschutz</a>
     <a href="#selbst-hosten">Selbst hosten</a>
@@ -70,7 +65,7 @@
 <section class="hero" aria-labelledby="hero-h">
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <p class="label">Einkaufs- und Haushaltsassistent</p>
+      <p class="label">Der smarte Assistent für euren Haushalt</p>
       <h1 id="hero-h">Damit nicht einer alles <span class="hl">im Kopf</span> haben muss.</h1>
       <p class="lede">ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet. Dafür reichen eure Kassenbons und eure gemeinsame Liste.</p>
       <div class="ctas">
@@ -152,7 +147,7 @@
 <section class="ask" aria-labelledby="ask-h">
   <div class="wrap ask-grid">
     <div>
-      <p class="label reveal">Haben wir noch …?</p>
+      
       <h2 class="reveal" id="ask-h">Meistens weiß es nur eine Person.</h2>
       <p class="intro reveal">Ob noch Kaffee da ist, was diese Woche gekocht wird und wann das Waschmittel alle ist, weiß in vielen Haushalten genau einer. Die anderen fragen nach oder kaufen doppelt. ToHuus nimmt diesen Teil aus dem Kopf und legt ihn dorthin, wo alle nachsehen können.</p>
       <p class="pull reveal">Danach wissen alle, was fehlt, und keiner muss es sich merken.</p>
@@ -172,16 +167,16 @@
   </div>
 </section>
 
-<section class="jobs" aria-labelledby="jobs-h">
+<section class="jobs" id="funktionen" aria-labelledby="jobs-h">
   <div class="wrap">
     <div class="sec-head">
-      <p class="label reveal">Was ToHuus macht</p>
+      
       <h2 class="reveal" id="jobs-h">Einkauf, Kochen und Geld hängen zusammen.</h2>
       <p class="intro reveal">Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei. Und um das, was ein Zuhause sonst noch ausmacht: die Aufgaben, die immer wiederkommen, einander was Gutes tun und Wünsche festhalten.</p>
     </div>
     <article class="job" id="einkauf" aria-labelledby="einkauf-h">
       <div class="job-copy reveal">
-        <p class="job-no"><span>1</span>Einkauf</p>
+        <p class="job-no">Einkauf</p>
         <h3 id="einkauf-h">ToHuus merkt sich, was fehlt.</h3>
         <p>Aus euren Bons und dem, was ihr auf der Liste abhakt, sieht ToHuus, wie oft ihr etwas kauft. Ist es wieder so weit, erscheint es als Vorschlag mit Grund. Einen Vorrat müsst ihr dafür nicht führen.</p>
         <ul class="ticks"><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Eine Liste, live auf allen Handys, auch während einer im Laden steht</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Wer etwas übernimmt, tippt auf „Ich hol’s“</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Im Laden nach Gängen sortiert, auch ohne Netz</span></li></ul>
@@ -196,7 +191,7 @@
     </article>
     <article class="job flip" id="kochen" aria-labelledby="kochen-h">
       <div class="job-copy reveal">
-        <p class="job-no"><span>2</span>Kochen</p>
+        <p class="job-no">Kochen</p>
         <h3 id="kochen-h">Daraus könnt ihr heute kochen.</h3>
         <p>Der Kochplaner fängt bei dem an, was zu Hause ist. Er zeigt, was sofort geht, wo nur eine Zutat fehlt und was bald weg muss. Wer mag, plant die Woche, und was dafür fehlt, kommt mit einem Tipp auf die Liste.</p>
         <ul class="ticks"><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Rezepte von Hand, per Link, vom Foto oder aus anderen Apps</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Viele auf einmal als Rezeptpaket, auch von deiner eigenen KI gebaut</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Mit und ohne Küchenmaschine, Allergien werden beim Vorschlagen berücksichtigt</span></li></ul>
@@ -211,7 +206,7 @@
     </article>
     <article class="job" id="geld" aria-labelledby="geld-h">
       <div class="job-copy reveal">
-        <p class="job-no"><span>3</span>Geld</p>
+        <p class="job-no">Geld</p>
         <h3 id="geld-h">Ihr seht, wohin das Geld für Essen und Haushalt geht.</h3>
         <p>Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.</p>
         <ul class="ticks"><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Ausgaben nach Monat, Laden und Kategorie</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Preisänderungen bei Sachen, die ihr oft kauft</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Budgets pro Woche, Monat oder Jahr, für alle oder nur für dich, mit Hinweis bei 80 Prozent</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Export als CSV</span></li></ul>
@@ -226,7 +221,7 @@
     </article>
     <article class="job flip" id="aufgaben" aria-labelledby="aufgaben-h">
       <div class="job-copy reveal">
-        <p class="job-no"><span>4</span>Aufgaben</p>
+        <p class="job-no">Aufgaben</p>
         <h3 id="aufgaben-h">Wer bringt diese Woche den Müll raus?</h3>
         <p>Bad putzen, Bettwäsche wechseln, den Wasserfilter tauschen oder der Termin mit dem Schornsteinfeger: ToHuus merkt sich, was wann dran ist und wer es macht. Wenn ihr euch abwechselt, gibt „Erledigt“ die Aufgabe an den Nächsten weiter. Ranglisten gibt es nicht, Sterne nur, wenn ihr sie einschaltet. Dafür gibt es einen ruhigen Blick darauf, wer gerade woran denkt.</p>
         <ul class="ticks"><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Einmal, wiederkehrend oder bei Bedarf, für alle oder nur für dich</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Termine mit Uhrzeit stehen in Apple Kalender, Google oder Outlook, Aufgaben in Apple Erinnerungen</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Auch Kinder können dran sein, und was keiner im Blick hat, fällt auf</span></li></ul>
@@ -241,7 +236,7 @@
     </article>
     <article class="job" id="bring-mir-was" aria-labelledby="bring-mir-was-h">
       <div class="job-copy reveal">
-        <p class="job-no"><span>5</span>Bring mir was</p>
+        <p class="job-no">Bring mir was</p>
         <h3 id="bring-mir-was-h">Einer liegt auf dem Sofa, einer steht in der Küche.</h3>
         <p>Wer gerade festsitzt, im Bett, beim Zubettbringen oder mit Kind auf dem Arm, wünscht sich mit zwei Tipps eine Kleinigkeit. Die anderen sehen es sofort, einer sagt „Ich bring’s“, und eure Karte zeigt nur, was wirklich da ist. Für Besuch gibt es eine eigene Karte, und am Partyabend bestellen die Gäste direkt von eurer Partykarte.</p>
         <ul class="ticks"><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Eure eigene Karte: Süßes, Getränke, Snacks, aus dem Kühlschrank</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Gäste wünschen sich etwas über einen Link, ganz ohne App</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Party: ihr seht, was bestellt ist und was noch da ist</span></li></ul>
@@ -256,7 +251,7 @@
     </article>
     <article class="job flip" id="wuensche" aria-labelledby="wuensche-h">
       <div class="job-copy reveal">
-        <p class="job-no"><span>6</span>Wünsche</p>
+        <p class="job-no">Wünsche</p>
         <h3 id="wuensche-h">Wunschlisten, die nichts verraten.</h3>
         <p>Geburtstag, Weihnachten oder einfach eine Merkliste: Wünsche mit Foto, mehreren Links, Preis und Notiz. Wer etwas reserviert, sieht der Rest der Familie, die beschenkte Person aber nie. Eine Liste lässt sich ganz oder in Teilen per Nachricht verschicken.</p>
         <ul class="ticks"><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Foto, Links, Preis und „wer könnte das schenken“</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Private Listen, die nur du siehst</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Teilen als Link oder fertige Nachricht</span></li></ul>
@@ -276,7 +271,7 @@
   <div class="wrap">
     <div class="house-grid">
       <div>
-        <p class="label reveal">Hausinfo</p>
+        
         <h2 class="reveal" id="house-h">Vom Gäste-WLAN bis zur Kaffeemaschine.</h2>
         <p class="intro reveal">Wer bei euch übernachtet, auf die Kinder aufpasst oder die Katze füttert, fragt meistens dasselbe: Wie ist das WLAN-Passwort, wie geht die Heizung, wann müssen die Kinder ins Bett? In der Hausinfo schreibt ihr das einmal auf, danach schickt ihr nur noch einen Link.</p>
         <ol class="house-path">
@@ -343,7 +338,7 @@
 <section class="how" id="so-merkt-es-sich" aria-labelledby="how-h">
   <div class="wrap how-grid">
     <div>
-      <p class="label reveal">So merkt es sich</p>
+      
       <h2 class="reveal" id="how-h">Ihr entscheidet, was auf die Liste kommt.</h2>
       <p class="intro reveal">ToHuus macht Vorschläge und schreibt nie still etwas auf eure Liste. Jede Zeile zeigt, woher sie kommt.</p>
       <ol class="how-steps">
@@ -373,7 +368,7 @@
 <section class="who" id="fuer-wen" aria-labelledby="who-h">
   <div class="wrap">
     <div class="sec-head">
-      <p class="label reveal">Für wen</p>
+      
       <h2 class="reveal" id="who-h">Für jeden Haushalt, in dem eingekauft wird.</h2>
       <p class="intro reveal">Beim Start fragt ToHuus nur, wer dazugehört. Danach richtet sich, was ihr seht.</p>
     </div>
@@ -391,7 +386,7 @@
 <section class="nd" id="kopf-voll" aria-labelledby="nd-h">
   <div class="wrap">
     <div class="sec-head">
-      <p class="label reveal">Wenn der Kopf voll ist</p>
+      
       <h2 class="reveal" id="nd-h">Für Köpfe, in denen viel los ist.</h2>
       <p class="intro reveal">Mit ADHS, Autismus oder einfach in einer vollen Woche ist oft der Anfang das Schwerste: Wo fange ich an, was war noch mal dran, und wie lange dauert das überhaupt? Ein paar Sachen in ToHuus sind genau dafür gebaut. Sie helfen allen im Haushalt, und niemand muss erklären, warum.</p>
     </div>
@@ -427,7 +422,7 @@
 <section class="ways" id="zwei-wege" aria-labelledby="ways-h">
   <div class="wrap">
     <div class="sec-head">
-      <p class="label reveal">Zwei Wege</p>
+      
       <h2 class="reveal" id="ways-h">In der ToHuus Cloud oder auf deinem eigenen Server.</h2>
       <p class="intro reveal">Es ist dieselbe App mit demselben Code. Der Unterschied ist, wer den Server betreibt.</p>
     </div>
@@ -451,7 +446,7 @@
 <section class="tf" id="testflight" aria-labelledby="tf-h">
   <div class="wrap how-grid">
     <div>
-      <p class="label reveal">iPhone-App</p>
+      
       <h2 class="reveal" id="tf-h">Teste die iPhone-App mit.</h2>
       <p class="intro reveal">Die iPhone-App ist im Test über TestFlight, das Testprogramm von Apple. Der Kreis ist klein und geschlossen, die Teilnahme kostet nichts. Wir suchen Haushalte, die ToHuus im Alltag nutzen und ehrlich sagen, was hakt.</p>
       <ul class="ticks tf-points reveal"><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Kleiner, geschlossener Kreis</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Kostenlos</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>Rückmeldung ausdrücklich erwünscht, auch Kritik</span></li><li><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span>iPad und Apple Watch kommen mit der App</span></li></ul>
@@ -547,7 +542,7 @@
 <section class="host" id="selbst-hosten" aria-labelledby="host-h">
   <div class="wrap host-grid">
     <div>
-      <p class="label reveal">Selbst hosten</p>
+      
       <h2 class="reveal" id="host-h">Für alle mit eigenem Server.</h2>
       <p class="intro reveal">Ein Docker-Container und eine SQLite-Datei, kostenlos unter AGPL-3.0. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst. Die iPhone-App verbindest du mit deinem Server, am einfachsten mit dem QR-Code aus der Web-App. Ein Konto bei uns brauchst du dafür nicht.</p>
       <dl class="facts-list">
@@ -589,7 +584,7 @@
 <section class="ha" id="home-assistant" aria-labelledby="ha-h">
   <div class="wrap how-grid">
     <div>
-      <p class="label reveal">Home Assistant</p>
+      
       <h2 class="reveal" id="ha-h">ToHuus in Home Assistant.</h2>
       <p class="intro reveal">Die Integration bringt die Einkaufsliste als To-do-Liste, Sensoren für Fälliges, die Liste und die Ausgaben, den Wochenplan als Kalender und ToHuus-Mitteilungen nach Home Assistant. Verbunden wird mit einem Code aus der App, für die ToHuus Cloud genauso wie für den eigenen Server. Home Assistant baut die Verbindung selbst auf, bei dir zu Hause muss nichts aus dem Internet erreichbar sein.</p>
       <p class="more reveal"><a href="../hilfe/home-assistant.html">Schritt für Schritt, mit Beispiel-Dashboard<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a></p>
@@ -605,7 +600,7 @@
 <section class="why" id="warum" aria-labelledby="why-h">
   <div class="wrap why-grid">
     <div class="reveal">
-      <p class="label">Warum es ToHuus gibt</p>
+      
       <p class="word" id="why-h">To Huus<small>Plattdeutsch für „zu Hause“.</small></p>
     </div>
     <div class="reveal">

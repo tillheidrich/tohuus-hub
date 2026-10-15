@@ -213,12 +213,12 @@ struct MoneyView: View {
 
     private var monthSwitcher: some View {
         HStack {
-            Button { shift(-1) } label: { Image(systemName: "chevron.left") }
+            Button { shift(-1) } label: { Image(systemName: "chevron.left").tapTarget() }
                 .accessibilityLabel(L("Previous month"))
             Spacer()
             Text(month.formatted(.dateTime.month(.wide).year())).font(.headline)
             Spacer()
-            Button { shift(1) } label: { Image(systemName: "chevron.right") }
+            Button { shift(1) } label: { Image(systemName: "chevron.right").tapTarget() }
                 .disabled(Calendar.current.isDate(month, equalTo: Date(), toGranularity: .month))
                 .accessibilityLabel(L("Next month"))
         }
@@ -353,7 +353,9 @@ struct MoneyView: View {
                 .buttonStyle(.plain)
             }
             if o.purchases.count > 6 {
-                Button(allPurchases ? L("Show less") : LF("Show all %d", o.purchases.count)) { allPurchases.toggle() }
+                Button { allPurchases.toggle() } label: {
+                    Text(allPurchases ? L("Show less") : LF("Show all %d", o.purchases.count)).frame(minHeight: 44).contentShape(Rectangle())
+                }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Theme.primaryText)
                     .frame(minHeight: 44)

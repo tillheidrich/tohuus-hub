@@ -85,10 +85,10 @@ const COPY = {
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
     legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'testflight', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll' },
-    nav: [['#einkauf', 'Einkauf'], ['#kochen', 'Kochen'], ['#geld', 'Geld'], ['#aufgaben', 'Aufgaben'], ['#bring-mir-was', 'Bring mir was'], ['#hausinfo', 'Hausinfo'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
+    nav: [['#funktionen', 'Funktionen'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
     rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
     hero: {
-      label: 'Einkaufs- und Haushaltsassistent',
+      label: 'Der smarte Assistent für euren Haushalt',
       h1: 'Damit nicht einer alles <span class="hl">im Kopf</span> haben muss.',
       lede: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet. Dafür reichen eure Kassenbons und eure gemeinsame Liste.',
       ios: 'TestFlight-Platz anfragen', iosSub: 'iPhone-App, kleiner Testkreis', gh: 'Selbst hosten auf GitHub',
@@ -345,10 +345,10 @@ const COPY = {
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
     legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'testflight', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind' },
-    nav: [['#shopping', 'Shopping'], ['#cooking', 'Cooking'], ['#money', 'Money'], ['#tasks', 'Tasks'], ['#bring-me-something', 'Bring me something'], ['#house-info', 'House info'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
+    nav: [['#features', 'Features'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
     rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
-      label: 'Shopping and household assistant',
+      label: 'The smart assistant for your home',
       h1: 'So one person doesn’t have to keep it all <span class="hl">in their head.</span>',
       lede: 'ToHuus remembers for your household what is there, what is missing and what it costs. Your receipts and your shared list are all it needs.',
       ios: 'Ask for a TestFlight place', iosSub: 'iPhone app, small test group', gh: 'Self-host from GitHub',
@@ -675,7 +675,7 @@ ${m.alt.en && m.alt.de ? `<link rel="alternate" hreflang="en" href="${m.alt.en}"
 <link rel="preload" href="${b}assets/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${b}assets/fonts/hedvig-letters-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${b}assets/site.css">
-<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'?'dark':'light')})()</script>
+<script>(function(){var d=document.documentElement;d.classList.add('js');var t=null;try{t=localStorage.getItem('tohuus.site.theme')}catch(e){}d.setAttribute('data-theme',t==='dark'||(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light')})()</script>
 ${m.ld ? `<script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"ToHuus","description":"${c.desc}","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web, Docker","license":"https://www.gnu.org/licenses/agpl-3.0.html","url":"${c.url}","image":"${SITE}assets/img/og-${c.lang}.png","codeRepository":"${GH}","inLanguage":["en","de"],"publisher":{"@type":"Organization","name":"Heidrich Digital","url":"https://heidrich-digital.de"}}
 </script>
@@ -788,7 +788,7 @@ function page(c) {
 <section class="ask" aria-labelledby="ask-h">
   <div class="wrap ask-grid">
     <div>
-      ${label(A.label, ' reveal')}
+      
       <h2 class="reveal" id="ask-h">${A.h2}</h2>
       <p class="intro reveal">${A.p}</p>
       <p class="pull reveal">${A.p2}</p>
@@ -803,16 +803,16 @@ ${A.list.map((q) => `        <li><s>${q}</s>${ico('check', 'ico ok')}</li>`).joi
   </div>
 </section>
 
-<section class="jobs" aria-labelledby="jobs-h">
+<section class="jobs" id="${c.lang === 'de' ? 'funktionen' : 'features'}" aria-labelledby="jobs-h">
   <div class="wrap">
     <div class="sec-head">
-      ${label(J.label, ' reveal')}
+      
       <h2 class="reveal" id="jobs-h">${J.h2}</h2>
       <p class="intro reveal">${J.intro}</p>
     </div>
 ${J.list.map((j, k) => `    <article class="job${k % 2 ? ' flip' : ''}" id="${j.id}" aria-labelledby="${j.id}-h">
       <div class="job-copy reveal">
-        <p class="job-no"><span>${j.no}</span>${j.label}</p>
+        <p class="job-no">${j.label}</p>
         <h3 id="${j.id}-h">${j.h3}</h3>
         <p>${j.p}</p>
         <ul class="ticks">${j.points.map((p) => `<li>${ico('check')}<span>${p}</span></li>`).join('')}</ul>
@@ -829,7 +829,7 @@ ${J.list.map((j, k) => `    <article class="job${k % 2 ? ' flip' : ''}" id="${j.
   <div class="wrap">
     <div class="house-grid">
       <div>
-        ${label(HI.label, ' reveal')}
+        
         <h2 class="reveal" id="house-h">${HI.h2}</h2>
         <p class="intro reveal">${HI.intro}</p>
         <ol class="house-path">
@@ -875,7 +875,7 @@ ${L.list.map(([i, t, s], k) => `          <li class="reveal" style="--d:${k * 70
 <section class="how" id="${id.how}" aria-labelledby="how-h">
   <div class="wrap how-grid">
     <div>
-      ${label(W.label, ' reveal')}
+      
       <h2 class="reveal" id="how-h">${W.h2}</h2>
       <p class="intro reveal">${W.intro}</p>
       <ol class="how-steps">
@@ -898,7 +898,7 @@ ${W.rows.map(([t, o, k]) => `          <li class="o-${k}"><span class="box" aria
 <section class="who" id="${id.who}" aria-labelledby="who-h">
   <div class="wrap">
     <div class="sec-head">
-      ${label(F.label, ' reveal')}
+      
       <h2 class="reveal" id="who-h">${F.h2}</h2>
       <p class="intro reveal">${F.intro}</p>
     </div>
@@ -912,7 +912,7 @@ ${F.forms.map(([shape, t, s], k) => `      <li class="reveal" style="--d:${k * 5
 <section class="nd" id="${id.nd}" aria-labelledby="nd-h">
   <div class="wrap">
     <div class="sec-head">
-      ${label(N.label, ' reveal')}
+      
       <h2 class="reveal" id="nd-h">${N.h2}</h2>
       <p class="intro reveal">${N.intro}</p>
     </div>
@@ -933,7 +933,7 @@ ${N.list.map(([i, t, s], k) => `      <li class="reveal" style="--d:${(k % 4) * 
 <section class="ways" id="${id.ways}" aria-labelledby="ways-h">
   <div class="wrap">
     <div class="sec-head">
-      ${label(T.label, ' reveal')}
+      
       <h2 class="reveal" id="ways-h">${T.h2}</h2>
       <p class="intro reveal">${T.intro}</p>
     </div>
@@ -951,7 +951,7 @@ ${T.rows.map(([h, a, z]) => `          <tr><th scope="row">${h}</th><td data-col
 <section class="tf" id="${id.tf}" aria-labelledby="tf-h">
   <div class="wrap how-grid">
     <div>
-      ${label(TF.label, ' reveal')}
+      
       <h2 class="reveal" id="tf-h">${TF.h2}</h2>
       <p class="intro reveal">${TF.p}</p>
       <ul class="ticks tf-points reveal">${TF.points.map((x) => `<li>${ico('check')}<span>${x}</span></li>`).join('')}</ul>
@@ -1010,7 +1010,7 @@ ${D.facts.map(([i, t, s], k) => `      <div class="reveal" style="--d:${(k % 3) 
 <section class="host" id="${id.host}" aria-labelledby="host-h">
   <div class="wrap host-grid">
     <div>
-      ${label(S.label, ' reveal')}
+      
       <h2 class="reveal" id="host-h">${S.h2}</h2>
       <p class="intro reveal">${S.p}</p>
       <dl class="facts-list">
@@ -1045,7 +1045,7 @@ ${S.steps.map(([t, s]) => `          <li><b>${t}</b><span>${s}</span></li>`).joi
 <section class="ha" id="${id.ha}" aria-labelledby="ha-h">
   <div class="wrap how-grid">
     <div>
-      ${label(HA.label, ' reveal')}
+      
       <h2 class="reveal" id="ha-h">${HA.h2}</h2>
       <p class="intro reveal">${HA.p}</p>
       <p class="more reveal"><a href="${helpIndexHref(c.lang)}home-assistant.html">${HA.link}${ico('arrow')}</a></p>
@@ -1059,7 +1059,7 @@ ${HA.steps.map(([t, x], k) => `      <li class="reveal" style="--d:${k * 60}ms">
 <section class="why" id="${id.why}" aria-labelledby="why-h">
   <div class="wrap why-grid">
     <div class="reveal">
-      ${label(Y.label)}
+      
       <p class="word" id="why-h">${Y.word}<small>${Y.wordSub}</small></p>
     </div>
     <div class="reveal">
