@@ -15,7 +15,7 @@ struct WeekMealDeckSheet: View {
 
     private let actions = [
         SwipeDeckAction(id: "no", title: L("Not today"), systemImage: "xmark", direction: .left),
-        SwipeDeckAction(id: "yes", title: L("Yes, please"), systemImage: "heart", direction: .right, prominent: true),
+        SwipeDeckAction(id: "yes", title: L("Yes, gladly"), systemImage: "heart", direction: .right, prominent: true),
     ]
 
     var body: some View {

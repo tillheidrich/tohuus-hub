@@ -83,7 +83,7 @@ struct SettingsView: View {
                 }
                 SampleDataSettingsSection()
                 Section(L("Plan & storage")) {
-                    LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free") : L("Own server – everything included")))
+                    LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free – without AI") : L("Own server – everything included")))
                     if let b = app.billing, b.isPaid {
                         if let r = ServerDate.parse(b.renewsAt) {
                             LabeledContent(L("Renews on"), value: r.formatted(date: .abbreviated, time: .omitted))

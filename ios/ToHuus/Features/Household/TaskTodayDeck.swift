@@ -11,8 +11,8 @@ struct TaskTodayView: View {
     @State private var error: String?
 
     private let actions = [
-        SwipeDeckAction(id: "wait", title: L("Can wait"), systemImage: "clock.arrow.circlepath", direction: .left),
-        SwipeDeckAction(id: "done", title: L("Done"), systemImage: "checkmark"),
+        SwipeDeckAction(id: "wait", title: L("May wait"), systemImage: "clock.arrow.circlepath", direction: .left),
+        SwipeDeckAction(id: "done", title: L("Completed"), systemImage: "checkmark"),
         SwipeDeckAction(id: "today", title: L("I’ll do it today"), systemImage: "hand.raised", direction: .right, prominent: true),
     ]
 

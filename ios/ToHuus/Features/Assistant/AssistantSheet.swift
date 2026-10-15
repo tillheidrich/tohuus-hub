@@ -18,6 +18,8 @@ final class AssistantModel {
     var input = ""
     private(set) var sending = false
     private(set) var quotaHit = false
+    /// Free: the plan has no AI assistant (402 plan.assistant) – simple sentences keep working
+    var planHit = false
     var error: String?
     private var conversationId: String?
 
@@ -36,7 +38,18 @@ final class AssistantModel {
             let r = try await store.api.chat(t, conversationId: conversationId, basic: basic, context: context)
             receive(r, store: store)
         } catch {
-            handle(error)
+            // Free: no AI in the plan – read the same sentence again without AI instead of leaving it unanswered
+            if case .planAssistant = APIError.from(error), !basic {
+                planHit = true
+                basic = true
+                do {
+                    receive(try await store.api.chat(t, conversationId: conversationId, basic: true, context: context), store: store)
+                } catch {
+                    handle(error)
+                }
+            } else {
+                handle(error)
+            }
         }
     }
 
@@ -71,7 +84,11 @@ final class AssistantModel {
 
     private func handle(_ error: Error) {
         let e = APIError.from(error)
-        if case .quota = e {
+        if case .planAssistant = e {
+            planHit = true
+            // back to simple sentences: the next message is read without AI instead of failing again
+            basic = true
+        } else if case .quota = e {
             quotaHit = true
             messages.append(Message(fromUser: false, text: e.localizedDescription))
         } else {
@@ -112,6 +129,7 @@ struct AssistantSheet: View {
                             ForEach(model.messages) { m in bubble(m).id(m.id) }
                             if model.sending { ProgressView().padding(.leading, 8) }
                             if model.quotaHit { quotaHint }
+                            if model.planHit && !model.messages.isEmpty { planHint }
                         }
                         .padding(Theme.Space.s4)
                     }
@@ -139,11 +157,11 @@ struct AssistantSheet: View {
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .onAppear {
-            model.basic = !app.aiOn
+            model.basic = !app.aiOn || app.planWithoutAI
             model.context = app.screenContext ?? app.assistantContext
         }
         // agreeing to AI right here (AIConsentPrompt) switches from simple sentences to the full assistant
-        .onChange(of: app.aiOn) { _, on in model.basic = !on }
+        .onChange(of: app.aiOn) { _, on in model.basic = !on || app.planWithoutAI }
         #if DEBUG
         .task {
             if let m = UserDefaults.standard.string(forKey: "debugAssistantMessage"), model.messages.isEmpty {
@@ -155,8 +173,9 @@ struct AssistantSheet: View {
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            if model.planHit || app.planWithoutAI { planHint }
             AIConsentPrompt()
-            if !app.aiOn {
+            if !app.aiOn && !(model.planHit || app.planWithoutAI) {
                 Label(app.aiLocked ? L("AI is switched off for you. ToHuus still understands simple sentences like “milk and bread”.")
                                    : L("Without AI: ToHuus understands simple sentences like “milk and bread” or “what's on the list?”."),
                       systemImage: app.aiLocked ? "lock" : "text.bubble")
@@ -208,6 +227,21 @@ struct AssistantSheet: View {
             .background(m.fromUser ? Theme.primary : Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
             .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(m.fromUser ? Color.clear : Theme.line, lineWidth: 1))
             if !m.fromUser { Spacer(minLength: 40) }
+        }
+    }
+
+    /// Free plan: calm, no alarm – simple commands still work (App Store: the plans are bought in the app, no codes)
+    private var planHint: some View {
+        Card(title: L("Simple sentences work"), systemImage: "text.bubble") {
+            Text(L("The assistant with AI comes with Household and Plus – try it free for 14 days."))
+                .font(.subheadline).foregroundStyle(Theme.ink2)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(L("Until then ToHuus understands simple sentences like “milk and bread” or “what's on the list?”."))
+                .font(.footnote).foregroundStyle(Theme.ink3)
+                .fixedSize(horizontal: false, vertical: true)
+            if app.purchasesAvailable {
+                Button(L("See plans")) { showPaywall = true }.buttonStyle(PrimaryButtonStyle())
+            }
         }
     }
 

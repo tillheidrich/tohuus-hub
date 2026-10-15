@@ -149,6 +149,10 @@ struct TodayView: View {
                     if let error = model.error { ErrorBanner(message: error) { Task { await reload() } } }
                     if let t = model.today {
                         notices(t)
+                        // a permanent guest: what the household handed to them (GET /api/guest-tasks)
+                        if app.isGuest {
+                            GuestTasksCard(api: store.api, refresh: refreshKey) { msg in toast = ToastMessage(text: msg) }
+                        }
                         if !app.isGuest { SampleNudgeCard() }
                         if let g = model.started, g.showChecklist == true, app.isAdmin || g.admin == true {
                             TodayChecklistCard(g: g, open: openChecklist, hide: { Task { await model.hideChecklist(store: store) } })
@@ -168,7 +172,10 @@ struct TodayView: View {
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }
                         // "Fertig für heute": a quiet end – nothing to keep scrolling
-                        if t.calm == true && !app.isGuest { CalmCard() }
+                        if t.calm == true && !app.isGuest {
+                            CalmCard()
+                            FactCard(api: store.api, topic: "calm")
+                        }
                     } else if model.limited || !store.isOnline {
                         listCard(open: store.list.openCount, recent: [])
                     } else if model.loading {

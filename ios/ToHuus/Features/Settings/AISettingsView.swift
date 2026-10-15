@@ -270,6 +270,7 @@ struct OnDeviceAISection: View {
         case .available: return L("Ready on this iPhone")
         case .notEnabled: return L("Switch on Apple Intelligence in the iPhone settings first.")
         case .notReady: return L("Apple Intelligence is still getting ready on this iPhone.")
+        case .languageNotSupported: return L("Apple Intelligence doesn’t speak this iPhone’s language yet. Receipts and lists are read as before.")
         case .notSupported: return L("Not available on this iPhone.")
         }
     }

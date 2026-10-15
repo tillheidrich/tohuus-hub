@@ -63,7 +63,7 @@ struct PaywallView: View {
 
     private var currentPlan: some View {
         Card(title: LF("Household “%@”", app.activeHousehold?.name ?? L("Our home")), systemImage: "house") {
-            Text(app.billing?.planLabel ?? L("Free")).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
+            Text(app.billing?.planLabel ?? L("Free – without AI")).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
             if app.billing?.plan == "trial", let d = ServerDate.parse(app.billing?.trialEndsAt ?? app.activeHousehold?.trialEndsAt) {
                 let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: d).day ?? 0)
                 Text(LF("Everything included for %d more days (until %@). After that Free – nothing is charged automatically.",
@@ -192,12 +192,12 @@ struct PaywallView: View {
     }
 
     private var freeCard: some View {
-        Card(title: L("Free"), systemImage: "leaf") {
+        Card(title: L("Free – without AI"), systemImage: "leaf") {
             ForEach(PlanText.points(plan: "free", limits: app.billing?.plans?["free"]), id: \.self) { p in
                 Label(p, systemImage: "checkmark").font(.subheadline).foregroundStyle(Theme.ink2)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Text(L("Free stays free – the list, stock and recipes always work.")).font(.footnote).foregroundStyle(Theme.ink3)
+            Text(L("Free stays free – the list, stock and recipes always work, without AI. The assistant with AI comes with Household and Plus.")).font(.footnote).foregroundStyle(Theme.ink3)
         }
     }
 
@@ -256,12 +256,14 @@ enum PlanText {
         if f?["weekPlanFromPantry"]?.bool == true { out.append(L("Week plan from what you have at home")) }
         if f?["monthlyAnalysis"]?.bool == true { out.append(L("A look back at every month")) }
         if f?["plusRecipes"]?.bool == true { out.append(L("New ToHuus recipes for the season, with pictures")) }
-        if let n = l["assistantPerMonth"]?.int {
+        if l["assistantPerMonth"]?.int == 0 {
+            out.append(L("Without AI: the assistant understands simple sentences like “milk and bread”"))
+        } else if let n = l["assistantPerMonth"]?.int {
             out.append(l["assistantThrottleOnly"]?.bool == true
                        ? LF("%d assistant messages a month – after that slower, never blocked", n)
                        : LF("%d assistant messages a month", n))
         }
-        if let n = l["receiptAiPerDay"]?.int { out.append(LF("Up to %d receipt photos read a day", n)) }
+        if let n = l["receiptAiPerDay"]?.int, n > 0 { out.append(LF("Up to %d receipt photos read a day", n)) }
         if let b = l["storageBytes"]?.double {
             out.append(LF("%@ for receipts and photos", ByteCountFormatter.string(fromByteCount: Int64(b), countStyle: .binary)))
         }
@@ -277,7 +279,7 @@ enum PlanText {
             return [L("The whole history: prices, spending, what you buy how often"), L("Connected households and shared lists"),
                     LF("%d assistant messages a month", 100), LF("%@ for receipts and photos", "2 GB")]
         default:
-            return [LF("The last %d days in view", 60), LF("%d assistant messages a month", 20), LF("%@ for receipts and photos", "250 MB")]
+            return [LF("The last %d days in view", 30), L("Without AI: the assistant understands simple sentences like “milk and bread”"), LF("%@ for receipts and photos", "100 MB")]
         }
     }
 }

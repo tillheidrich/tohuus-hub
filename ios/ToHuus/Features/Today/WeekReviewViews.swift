@@ -186,6 +186,9 @@ struct WeekReviewView: View {
                             }
                         }
                     }
+                    // one fact per screen: for a single parent theirs, otherwise about being thanked
+                    FactCard(api: api, topic: (d.note ?? "").isEmpty ? "appreciation" : "single-parents")
+                        .padding(.top, Theme.Space.s2)
                     if d.mine != nil && !isMonth {
                         Toggle(isOn: Binding(get: { d.on }, set: { v in Task { await setOn(v) } })) {
                             VStack(alignment: .leading, spacing: 2) {

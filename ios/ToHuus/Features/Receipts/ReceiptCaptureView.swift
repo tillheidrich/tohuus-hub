@@ -202,7 +202,8 @@ struct ReceiptCaptureView: View {
             // Apple Intelligence on this iPhone (if the person chose it): tidy the lines before they are sent
             if OnDeviceAI.active(app) {
                 uploading = true
-                if let tidy = await OnDeviceAI.tidyReceipt(lines) { lines = tidy }
+                let raw = lines
+                if let tidy = await OnDeviceAI.withTimeout({ await OnDeviceAI.tidyReceipt(raw) }) { lines = tidy }
                 uploading = false
             }
             do {

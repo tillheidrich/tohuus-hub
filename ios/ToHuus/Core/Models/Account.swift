@@ -193,7 +193,7 @@ struct BillingStatus: Decodable, Sendable {
         case "haushalt": return L("Household")
         case "plus": return lifetime == true ? L("Plus – for good") : L("Plus")
         case "selfhost": return L("Own server – everything included")
-        default: return L("Free")
+        default: return L("Free – without AI")
         }
     }
 

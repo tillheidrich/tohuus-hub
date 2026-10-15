@@ -92,6 +92,8 @@ final class APIClient: Sendable {
             throw APIError.server(status: 401, message: message)
         case 404 where obj?["error"] == nil || message == "not found" || message == "Not found" || code == "not_found":
             throw APIError.notFound
+        case 402 where code == "plan.assistant":
+            throw APIError.planAssistant(message)
         case _ where isQuota:
             throw APIError.quota(message)
         default:

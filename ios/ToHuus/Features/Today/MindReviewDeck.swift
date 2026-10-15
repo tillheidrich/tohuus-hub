@@ -11,7 +11,7 @@ struct MindReviewView: View {
 
     private let actions = [
         SwipeDeckAction(id: "letgo", title: L("Let go"), systemImage: "leaf", direction: .left),
-        SwipeDeckAction(id: "done", title: L("Done"), systemImage: "checkmark", direction: .up),
+        SwipeDeckAction(id: "done", title: L("Completed"), systemImage: "checkmark", direction: .up),
         SwipeDeckAction(id: "keep", title: L("Still important"), systemImage: "brain", direction: .right, prominent: true),
     ]
 

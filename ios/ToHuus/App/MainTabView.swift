@@ -184,6 +184,8 @@ struct MainTabView: View {
     private func checkWhatsNew() async {
         guard !showTour, !showAIConsent, whatsNew == nil, !whatsNewLater, !app.isGuest, !app.isChild, !AppTourView.due,
               UserDefaults.standard.string(forKey: "debugToken") == nil || UserDefaults.standard.bool(forKey: "debugWhatsNew") else { return }
+        // guests and children never get it (asked fresh: the app's own state may not be loaded yet)
+        if let me = try? await store.api.me(), me.isGuest || me.isChild { return }
         guard let w = try? await store.api.whatsNew(), !w.entries.isEmpty, w.latest != nil else { return }
         // the tour or the AI question may have opened in the meantime
         guard !showTour, !showAIConsent, !app.showPaywall, !app.showAssistant else { return }

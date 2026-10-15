@@ -6,7 +6,8 @@ import SwiftUI
 /// – both can be changed later in Einstellungen › Mit oder ohne KI.
 struct AppTourView: View {
     /// bump when the tour gets pages people who saw it should see
-    static let version = 1
+    /// 2 (15 Oct 2026): Im Kopf, Für wen ich da bin, Unterwegs, Wochenrückblick
+    static let version = 2
     static let seenKey = "tour.ios.version"
 
     @Environment(AppModel.self) private var app
@@ -44,6 +45,16 @@ struct AppTourView: View {
         if app.moduleOn("cook") {
             p.append(Page(id: "cook", symbol: "fork.knife", title: L("What shall we eat?"),
                           body: L("Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.")))
+        }
+        if !app.isGuest {
+            p.append(Page(id: "mind", symbol: "brain", title: L("On my mind & done on the side"),
+                          body: L("Too small for a list and still work: write down what you carry around, and what you did on the side. So it gets seen – only for you or for everyone.")))
+            p.append(Page(id: "carefor", symbol: "heart.circle", title: L("Who I’m there for"),
+                          body: L("Visits, calls, the GP appointment: if you look after a parent or a neighbour, it gets its own place here – and it counts.")))
+            p.append(Page(id: "away", symbol: "suitcase", title: L("Away on your own"),
+                          body: L("When one of you is away, “What happens at home” shows who takes what – and what may simply wait until they’re back.")))
+            p.append(Page(id: "review", symbol: "rectangle.stack", title: L("Your week, looked back on"),
+                          body: L("Once a week a kind look at what you managed together – no ranking. Share a card as a picture if you like.")))
         }
         p.append(Page(id: "speak", symbol: "sparkles", title: L("Assistant"),
                       body: L("Say “milk is out, and we need something for Sunday”. ToHuus puts it on the list and tells you what it added. Every change can be undone.")))
@@ -84,8 +95,10 @@ struct AppTourView: View {
             }
             .background(Theme.canvas)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(L("Skip tour")) { finish() }
+                // skippable on every page, top right; swiping goes through the pages
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(L("Skip")) { finish() }
+                        .accessibilityLabel(L("Skip tour"))
                 }
             }
         }
@@ -159,8 +172,13 @@ struct AppTourView: View {
     }
 
     private func finish() {
-        UserDefaults.standard.set(Self.version, forKey: Self.seenKey)
+        Self.markSeen()
         dismiss()
+    }
+
+    /// the tour comes once per version – finished, skipped or swiped away
+    static func markSeen() {
+        if UserDefaults.standard.integer(forKey: seenKey) < version { UserDefaults.standard.set(version, forKey: seenKey) }
     }
 
     /// shown once per tour version after signing in (not in UI tests or screenshot runs; -debugTour YES forces it)

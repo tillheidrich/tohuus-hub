@@ -451,7 +451,15 @@ typealias AwayAct = @MainActor (String, String, [String: Any]?, String?) async -
 
 /// GET /api/away/trips/:id/home – "Was passiert zu Hause?"
 struct AwayHomePlan: Decodable, Sendable {
-    struct Taker: Decodable, Sendable, Hashable, Identifiable { var key: String; var name: String; var id: String { key } }
+    struct Taker: Decodable, Sendable, Hashable, Identifiable {
+        var key: String
+        var name: String
+        /// a permanent guest who can help too (Oma waters the plants)
+        var guest: Bool?
+        var id: String { key }
+        /// "Oma (Gast)"
+        var label: String { guest == true ? LF("%@ (guest)", name) : name }
+    }
     struct Choice: Decodable, Sendable, Hashable { var mode: String; var key: String? }
     struct Item: Decodable, Sendable, Hashable, Identifiable {
         var taskId: Int
@@ -495,7 +503,7 @@ private struct AwayHomePlanSection: View {
                             Text(sub(x, p)).font(.caption).foregroundStyle(Theme.ink3)
                             FlowLayout(spacing: 6) {
                                 ForEach(p.takers) { k in
-                                    ChoiceChip(title: LF("%@ takes it", k.name), on: x.choice?.mode == "take" && x.choice?.key == k.key) { set(x, "take", k.key) }
+                                    ChoiceChip(title: LF("%@ takes it", k.label), on: x.choice?.mode == "take" && x.choice?.key == k.key) { set(x, "take", k.key) }
                                 }
                                 ChoiceChip(title: L("May wait"), on: x.choice?.mode == "wait") { set(x, "wait", nil) }
                                 if x.choice != nil { ChoiceChip(title: L("As usual"), on: false) { set(x, "usual", nil) } }
@@ -520,7 +528,7 @@ private struct AwayHomePlanSection: View {
             x.due.map { AwayText.day($0) },
             x.person.map { x.personAway ? LF("usually %@ – away", $0) : LF("usually %@", $0) },
             x.choice == nil ? (x.suggestion == "wait" ? L("Suggestion: may wait")
-                               : x.suggestion == "take" ? p.takers.first { $0.key == x.suggestKey }.map { LF("Suggestion: %@ takes it", $0.name) } : nil) : nil,
+                               : x.suggestion == "take" ? p.takers.first { $0.key == x.suggestKey }.map { LF("Suggestion: %@ takes it", $0.label) } : nil) : nil,
         ].compactMap { $0 }.joined(separator: " · ")
     }
 

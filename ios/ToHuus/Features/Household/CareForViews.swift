@@ -155,6 +155,7 @@ struct CareForView: View {
                         Text(L("Links to official pages. ToHuus doesn’t advise – it shows where to get advice."))
                     }
                 }
+                FactCard(api: api, topic: "care", inList: true)
                 Section {} footer: {
                     Text(L("Never to the assistant, Home Assistant, widgets or exports. Private people and their tasks are only for you."))
                 }

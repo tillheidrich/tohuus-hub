@@ -3,7 +3,7 @@ import SwiftUI
 /// GET /api/whats-new → { latest, seen, entries: [{ id, title, items: [{ text, to }] }] } – newest first, only what
 /// this person hasn't seen (server: routes/onboard.ts; web: changelog.ts). People who joined after the latest
 /// release get no entries.
-struct WhatsNew: Decodable, Sendable {
+struct WhatsNew: Decodable, Sendable, Identifiable {
     struct Entry: Decodable, Sendable, Identifiable, Hashable {
         struct Item: Decodable, Sendable, Hashable {
             var text: String
@@ -17,6 +17,7 @@ struct WhatsNew: Decodable, Sendable {
     var latest: String?
     var seen: String?
     @Lossy var entries: [Entry]
+    var id: String { latest ?? "whats-new" }
 }
 
 extension APIClient {
