@@ -826,6 +826,15 @@ h2.h3 {
   cursor: default;
   transform: none;
 }
+/* a disabled primary button looks disabled, not like a broken green one */
+.btn.primary:disabled,
+.btn.accent:disabled {
+  opacity: 1;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  border-color: var(--line);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
 .btn.primary,
 .btn.accent {
   background: var(--primary);
@@ -9754,7 +9763,8 @@ button.li {
 }
 .entry-tile > * {
   max-width: 100%;
-  overflow-wrap: anywhere;
+  /* break long words at syllables (hyphens from body), never in the middle of "Einkaufszettel" */
+  overflow-wrap: break-word;
 }
 .entry-tile > svg {
   flex-shrink: 0;
@@ -11052,3 +11062,67 @@ html.gentle .badge.empty {
   outline: 1.5px dashed var(--primary);
   outline-offset: 2px;
 }
+
+/* ------------------------------------------------------------ design review 15 Oct 2026 (web app) */
+/* Heute: the three tiles stack on narrow phones */
+@media (max-width: 420px) {
+  .entry-grid { grid-template-columns: 1fr; }
+  .entry-tile { flex-direction: row; align-items: center; min-height: 56px; gap: 12px; }
+}
+/* segmented controls keep their own width; .seg.full fills the row */
+.seg { align-self: flex-start; }
+.seg.full { display: flex; align-self: stretch; }
+.seg.full button { flex: 1; }
+/* chip rows scroll to the screen edge and fade out instead of being cut off inside the margin */
+.home-doors {
+  margin: 0 calc(var(--page-gutter, 16px) * -1);
+  padding: 2px var(--page-gutter, 16px);
+  scroll-padding: 0 var(--page-gutter, 16px);
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+}
+/* list rows on phones: "Ich hol's" as an icon so the name gets the room */
+.claim-btn { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 480px) {
+  .claim-btn { min-width: 44px; padding: 0 10px; justify-content: center; }
+  .claim-btn .claim-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Vorrat: a slimmer stepper (the tap area stays 44 px via ::before on touch) */
+  .stepper button { width: 32px; height: 32px; }
+  .stepper .val { min-width: 24px; }
+}
+
+/* Denkarbeit-Check: four short answers as one compact control (was four outlined chips per card) */
+.load-answers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.load-answers button {
+  min-height: 44px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.load-answers button.on {
+  background: var(--ink);
+  color: var(--canvas);
+}
+.load-answers button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* a button row that leads somewhere: title + wrapping explanation (e.g. Aufgaben › Kalender & Erinnerungen) */
+.nav-row { gap: 12px; padding: 12px 16px; width: 100%; text-align: left; font: inherit; color: inherit; }
+.nav-row .grow { display: flex; flex-direction: column; min-width: 0; }
+.nav-row .sub { white-space: normal; }

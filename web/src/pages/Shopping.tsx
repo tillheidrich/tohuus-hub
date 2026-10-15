@@ -930,8 +930,9 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
         </span>
       )}
       {onClaim && !on && (
-        <button className="btn sm claim-btn" onClick={onClaim}>
-          {t('I’ll get it')}
+        <button className="btn sm claim-btn" onClick={onClaim} aria-label={t('I’ll get it')}>
+          <HandHeart size={16} aria-hidden="true" />
+          <span className="claim-label">{t('I’ll get it')}</span>
         </button>
       )}
       {onMore && !on && (

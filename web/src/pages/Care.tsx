@@ -19,6 +19,8 @@ import {
   ShieldCheck,
   Trash,
   Wrench,
+  CalendarBlank,
+  CaretRight,
 } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -27,8 +29,6 @@ import { type Location, type Product, del, fmtDate, invalidate, patch, post, use
 import { useHousehold } from '../household';
 import { Avatar, Empty, ProductPicker, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { usePeopleDirectory } from '../people/Avatar';
-import { CalDavCard, CalendarFeedCard } from '../shop/bridges';
-import { CalendarReadCard } from './CalendarSync';
 import { BlickSection } from './Blick';
 import { OfferAsks, OfferBox, WhoDoesWhatSection } from './WhoDoesWhat';
 import { durationLabel, timeLabel } from './taskTime';
@@ -458,9 +458,14 @@ export function Care() {
 
       {data?.me ? (
         <div className="stack" style={{ marginTop: 24 }}>
-          <CalendarReadCard />
-          <CalDavCard />
-          <CalendarFeedCard />
+          <button className="li clickable card nav-row" onClick={() => nav('/einstellungen?tab=account')}>
+            <CalendarBlank size={20} aria-hidden="true" />
+            <span className="grow">
+              <span className="title">{t('Calendar & reminders')}</span>
+              <span className="sub">{t('Read your calendar, Apple Reminders, subscription link – in the settings.')}</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
         </div>
       ) : null}
       <TaskDetail

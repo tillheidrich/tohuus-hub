@@ -61,7 +61,7 @@ export function Avatar({
   const [broken, setBroken] = useState(false);
   const hit = face ? null : lookup(dir, name ?? '', personKey);
   const f: Face = face ?? hit?.face ?? { type: 'initials' };
-  const c = color ?? hit?.color ?? '#2f5bea';
+  const c = personColor(color ?? hit?.color ?? '#3d5a80');
   if (f.type === 'photo' && !broken)
     return (
       <span className={`avatar avatar-photo ${className}`} style={{ width: size, height: size, background: c }}>
@@ -88,3 +88,20 @@ export function Avatar({
     </span>
   );
 }
+
+/** the earlier, more saturated person colours → their calmer twins (stored values stay as they are) */
+const CALMER: Record<string, string> = {
+  '#2f5bea': '#3d5a80',
+  '#d0603a': '#b5553a',
+  '#1d9a63': '#2f7d5b',
+  '#8e44ad': '#7a4f8f',
+  '#c2185b': '#a83f62',
+  '#b97c0c': '#94660f',
+  '#f2a33a': '#8a6a2a',
+  '#0f8a8a': '#2c7a7b',
+  '#e0622a': '#b5553a',
+  '#8a4fd8': '#7a4f8f',
+  '#d43f6f': '#a83f62',
+  '#0f8a9d': '#2c7a7b',
+};
+export const personColor = (c: string) => CALMER[c.toLowerCase()] ?? c;

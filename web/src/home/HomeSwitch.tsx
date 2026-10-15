@@ -33,6 +33,7 @@ export function HomeSwitch({ side }: { side: 'tasks' | 'stock' }) {
       {both && (
         <Seg<'tasks' | 'stock'>
           value={side}
+          full
           label={t('Home')}
           options={[['tasks', t('Tasks')], ['stock', t('Pantry')]]}
           onChange={(v) => nav(v === 'tasks' ? '/aufgaben' : '/bestand')}

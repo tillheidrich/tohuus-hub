@@ -29,6 +29,9 @@ interface Deck {
   members: number;
 }
 
+/** short labels for the answer buttons (the full one is the accessible name) */
+const SHORT: Record<Answer, string> = { me: 'Me', shared: 'We share', other: 'Someone else', na: 'Not for us' };
+
 export const ANSWERS: [Answer, string][] = [
   ['me', 'Mostly me'],
   ['shared', 'We share it'],
@@ -154,10 +157,10 @@ export function LoadCardsPage() {
           <div key={c.key} className="card loadcard">
             <div className="eyebrow">{d.areas.find((a) => a.key === c.area)?.title}</div>
             <p className="loadcard-text">{c.text}</p>
-            <div className="chips" role="radiogroup" aria-label={c.text}>
+            <div className="load-answers" role="radiogroup" aria-label={c.text}>
               {ANSWERS.map(([a, label]) => (
-                <button key={a} role="radio" aria-checked={c.mine === a} className={`chip ${c.mine === a ? 'on' : ''}`} onClick={() => answer(c.key, a)}>
-                  {t(label)}
+                <button key={a} role="radio" aria-checked={c.mine === a} aria-label={t(label)} className={c.mine === a ? 'on' : ''} onClick={() => answer(c.key, a)}>
+                  {t(SHORT[a])}
                 </button>
               ))}
             </div>
@@ -168,7 +171,8 @@ export function LoadCardsPage() {
                   .join(' · ')}
               </p>
             )}
-            {c.help && (
+            {/* the hint matters where it takes something off your head: shown once you said "mostly me" */}
+            {c.help && c.mine === 'me' && (
               <button className="linkish small" style={{ marginTop: 8 }} onClick={() => nav(c.help!.path)}>
                 {t('How ToHuus helps')}: {c.help.text} <ArrowRight size={12} />
               </button>

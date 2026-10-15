@@ -234,4 +234,9 @@ export const tasks: Record<string, string> = {
   'Probably {name} cooks': 'Kocht voraussichtlich {name}',
   '{name} usually cooks on this weekday.': 'An diesem Wochentag kocht meistens {name}.',
   '{name} has cooked most of the time lately.': '{name} hat zuletzt meistens gekocht.',
+  'Calendar & reminders': 'Kalender & Erinnerungen',
+  'Read your calendar, Apple Reminders, subscription link – in the settings.': 'Kalender lesen, Apple Erinnerungen, Abo-Link – in den Einstellungen.',
+  'We share': 'Geteilt',
+  'Someone else': 'Jemand anders',
+  'Not for us': 'Bei uns nicht',
 };

@@ -79,7 +79,7 @@ enum GuestLevels {
 
 /// The person colours of the web (People.tsx PERSON_COLORS).
 enum PersonColors {
-    static let all = ["#2f5bea", "#d0603a", "#1d9a63", "#8e44ad", "#c2185b", "#b97c0c", "#f2a33a", "#0f8a8a"]
+    static let all = ["#3d5a80", "#b5553a", "#2f7d5b", "#7a4f8f", "#a83f62", "#94660f", "#8a6a2a", "#2c7a7b"]
 }
 
 /// POST /api/people/users/:id/login-link → { url?, sent, email?, expires_hours }

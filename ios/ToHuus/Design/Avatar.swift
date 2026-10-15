@@ -11,7 +11,7 @@ struct AvatarView: View {
     var api: APIClient?
 
     var body: some View {
-        let c = Color(hexString: color) ?? Color(UIColor(hex: 0x2F5BEA))
+        let c = Color(hexString: PersonColor.calm(color)) ?? Color(UIColor(hex: 0x3D5A80))
         Group {
             if face?.type == "photo", let img = face?.image, let api {
                 RemoteImage(url: api.imageURL(img), api: api, placeholder: "person.fill")

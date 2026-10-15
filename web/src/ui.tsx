@@ -107,7 +107,7 @@ export function Toggle({ on, onChange, label, disabled }: { on: boolean; onChang
   return <button ref={ref} type="button" role="switch" aria-label={label ?? auto} aria-checked={on} disabled={disabled} className={`toggle ${on ? 'on' : ''}`} onClick={() => onChange(!on)} />;
 }
 
-export function Seg<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label?: string }) {
+export function Seg<T extends string>({ value, options, onChange, label, full }: { value: T; options: [T, string][]; onChange: (v: T) => void; label?: string; full?: boolean }) {
   // an ink indicator slides under the active option (briefing: category switch 160–240 ms)
   const ref = useRef<HTMLDivElement>(null);
   const [ind, setInd] = useState<{ x: number; w: number } | null>(null);
@@ -121,7 +121,7 @@ export function Seg<T extends string>({ value, options, onChange, label }: { val
     return () => ro?.disconnect();
   }, [value, options.length]);
   return (
-    <div className={`seg ${ind ? 'measured' : ''}`} ref={ref} role="group" aria-label={label}>
+    <div className={`seg${full ? ' full' : ''} ${ind ? 'measured' : ''}`} ref={ref} role="group" aria-label={label}>
       {ind && <span className="seg-ind" aria-hidden="true" style={{ width: ind.w, transform: `translateX(${ind.x}px)` }} />}
       {options.map(([v, l]) => (
         <button key={v} className={v === value ? 'on' : ''} aria-pressed={v === value} onClick={() => onChange(v)} type="button">

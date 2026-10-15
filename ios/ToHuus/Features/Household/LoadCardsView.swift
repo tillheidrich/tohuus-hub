@@ -45,6 +45,8 @@ enum LoadAnswers {
     static let all: [(key: String, title: String)] = [
         ("me", "Mostly me"), ("shared", "We share it"), ("other", "Mostly someone else"), ("na", "Not our thing"),
     ]
+    /// short labels for the answer buttons (the full one is the accessibility label)
+    static let short: [String: String] = ["me": "Me", "shared": "We share", "other": "Someone else", "na": "Not for us"]
 }
 
 /// Entry row (Aufgaben › Wer hat was im Blick)
@@ -142,18 +144,27 @@ struct LoadCardsView: View {
         Section {
             VStack(alignment: .leading, spacing: 10) {
                 Text(c.text).font(.headline)
-                FlowLayout(spacing: 8) {
+                // four short answers as one compact control (web: .load-answers)
+                HStack(spacing: 4) {
                     ForEach(LoadAnswers.all, id: \.key) { a in
+                        let on = c.mine == a.key
                         Button { Task { await answer(c, a.key) } } label: {
-                            Text(L(a.title)).font(.subheadline)
-                                .padding(.horizontal, 12).frame(minHeight: 44)
-                                .background(Capsule().fill(c.mine == a.key ? Theme.primary.opacity(0.18) : Theme.line.opacity(0.5)))
-                                .overlay(Capsule().stroke(c.mine == a.key ? Theme.primary : .clear, lineWidth: 1.5))
+                            Text(L(LoadAnswers.short[a.key] ?? a.title))
+                                .font(.footnote.weight(.semibold))
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(0.85)
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                                .foregroundStyle(on ? Theme.canvas : Theme.ink2)
+                                .background(on ? Theme.ink : Color.clear, in: RoundedRectangle(cornerRadius: Theme.Radius.sm))
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityAddTraits(c.mine == a.key ? .isSelected : [])
+                        .accessibilityLabel(L(a.title))
+                        .accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }
+                .padding(3)
+                .background(Theme.surface2, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
                 if let h = c.household {
                     Text(LoadAnswers.all.compactMap { a in
                         let names = h.who[a.key] ?? []
@@ -161,7 +172,7 @@ struct LoadCardsView: View {
                     }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(Theme.ink3)
                 }
-                if let help = c.help {
+                if let help = c.help, c.mine == "me" {
                     Label("\(L("How ToHuus helps")): \(help.text)", systemImage: "sparkles").font(.caption).foregroundStyle(Theme.ink2)
                 }
                 if c.mine == "me" {

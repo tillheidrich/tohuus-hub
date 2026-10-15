@@ -4,6 +4,10 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Design review (docs/design/2026-10-15-design-review.md):
+  - Website: dark mode follows the device; 6-item nav; wider gutters; larger phones; fewer labels; calmer hero; bar below the hero; 44 px targets; new screenshots.
+  - Web app: stacking tiles on Heute; full-width and fitting segmented controls; fading chip rows; calendar settings out of Aufgaben; compact Denkarbeit answers; icon "Ich hol's" on phones; clearer disabled buttons; earthy person colours.
+  - iOS: readable tint in dark mode; contrast of initials; row buttons; 44 pt targets; toast with Reduce Motion; visible errors; Dynamic Type for numbers.
 - Wer macht was (docs/who-does-what.md):
   - ToHuus learns who usually does a task ("meistens Sam") and who cooked lately or on which weekday. The week plan suggests that person for open meals, faded; only a tap enters them.
   - "So eintragen?" turns a habit into the doer. "Abgeben an …" asks another member, who answers yes or no on Heute.

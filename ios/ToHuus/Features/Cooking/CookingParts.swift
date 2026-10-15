@@ -13,7 +13,7 @@ struct PersonDot: View {
             .font(.system(size: size * 0.45, weight: .semibold))
             .foregroundStyle(.white)
             .frame(width: size, height: size)
-            .background(Color(hexString: color) ?? Theme.sage, in: Circle())
+            .background(Color(hexString: PersonColor.calm(color)) ?? Theme.sage, in: Circle())
             .accessibilityHidden(true)
     }
 }
@@ -228,4 +228,14 @@ enum AmountScale {
         }
         return out
     }
+}
+
+/// The earlier, more saturated person colours → their calmer twins (web: people/Avatar.tsx personColor).
+enum PersonColor {
+    static let calmer: [String: String] = [
+        "#2f5bea": "#3d5a80", "#d0603a": "#b5553a", "#1d9a63": "#2f7d5b", "#8e44ad": "#7a4f8f",
+        "#c2185b": "#a83f62", "#b97c0c": "#94660f", "#f2a33a": "#8a6a2a", "#0f8a8a": "#2c7a7b",
+        "#e0622a": "#b5553a", "#8a4fd8": "#7a4f8f", "#d43f6f": "#a83f62", "#0f8a9d": "#2c7a7b",
+    ]
+    static func calm(_ c: String?) -> String? { c.map { calmer[$0.lowercased()] ?? $0 } }
 }
