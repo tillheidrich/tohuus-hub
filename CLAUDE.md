@@ -2,7 +2,7 @@
 
 ToHuus is the smart assistant of a home that does not try to be the tool for everything (Till, 15 Oct 2026: „der smarte Assistent, der nicht den Anspruch hat, das Tool für alles zu sein“) – it takes from other tools what is household work (e.g. bin dates from the family calendar) instead of replacing them. It is the shopping and household assistant of a home: it remembers what is missing (Einkauf), what to cook from what is there (Kochen) and where the money for food and household goes (Geld), and which household tasks are due and who keeps what in mind (Aufgaben, decision 14 Oct 2026 – for one person, a shared flat or a family; see `docs/tasks.md`). Tasks with a time are appointments and go into the person's own calendar app (CalDAV, subscription link, single entry) – ToHuus has no calendar view of its own. It is **not** a family calendar, chat, points system, nutrition/health log or tracking tool: no streaks or rankings; optional stars only when the server allows them and a household admin switches them on (`docs/points.md`). Strategy source: Outline wiki, collection "ToHuus Hub / Fredirando" (newest handover pages first).
 
-Status of 13 Oct 2026 and the open work: [docs/status-2026-10-13.md](docs/status-2026-10-13.md); latest handover: [docs/uebergabe-2026-10-14-nacht.md](docs/uebergabe-2026-10-14-nacht.md) (before: docs/uebergabe-2026-10-13-abend.md).
+Status of 13 Oct 2026 and the open work: [docs/status-2026-10-13.md](docs/status-2026-10-13.md); latest handover: [docs/uebergabe-2026-10-15.md](docs/uebergabe-2026-10-15.md) – release 1.0, the beta is over (before: docs/uebergabe-2026-10-14-nacht.md).
 
 ## Repo map
 
@@ -31,7 +31,7 @@ iOS: `cd ios && xcodegen generate && open ToHuus.xcodeproj` (team FVS7WVTQ67, bu
 
 ## Two modes, one codebase
 
-- **ToHuus Cloud** (`MULTI_TENANT=true`): many households, one encrypted SQLite file per household (`DATA_DIR/households/<uuid>/tohuus.db`), accounts in encrypted `accounts.db`, envelope encryption with `TOHUUS_MASTER_KEY`. Live at https://cloud.tohuus.heidrich-digital.de (Coolify app `tohuus-cloud`). Back office for operators at `/betrieb`. Sign-up is gated by the beta gate (`CLOUD_SIGNUP=invite` by default; codes/allowlist in `/betrieb`). See `docs/cloud.md`.
+- **ToHuus Cloud** (`MULTI_TENANT=true`): many households, one encrypted SQLite file per household (`DATA_DIR/households/<uuid>/tohuus.db`), accounts in encrypted `accounts.db`, envelope encryption with `TOHUUS_MASTER_KEY`. Live at https://cloud.tohuus.heidrich-digital.de (Coolify app `tohuus-cloud`). Back office for operators at `/betrieb`. Sign-up is open since release 1.0 (15 Oct 2026, `docs/release-1.0.md`); the gate (`CLOUD_SIGNUP=invite|closed`) stays available. Free licences are plan codes (a month, a year, for good) in `/betrieb › Geschenke`, redeemed on the web – the iPhone app has no code field (Apple 3.1.1). See `docs/cloud.md`.
 - **Self-hosted** (`MULTI_TENANT=false`): one household, web app/PWA, Home Assistant, MCP. Since 14 Oct 2026 the App Store app connects to a self-hosted server too ("Eigener Server" on the start screen; replaces the cloud-only decision of 12 Oct): every feature works on both, purchases exist only in the cloud.
 - **Web ↔ iOS parity** (decision 14 Oct 2026): every web function exists natively in the iOS app, no compromises and no web views for features. A new web feature is not done until the iOS screen exists (and the other way round). Structure and UX benchmark: `docs/design/ux-benchmark-2026-10-14.md`.
 
