@@ -98,4 +98,6 @@ export const de_away: Record<string, string> = {
   '{task} – {name} is away': '{task} – {name} ist weg',
   'Hand it over before you leave, or someone at home takes it.': 'Vorher abgeben – oder jemand, der zu Hause ist, übernimmt.',
   '{name} is away until {date} – can someone at home do it?': '{name} ist bis {date} weg – kann das jemand machen, der zu Hause ist?',
+  'Pick someone who is at home.': 'Wähl jemanden, der zu Hause ist.',
+  '{name} does it while {who} is away.': '{name} übernimmt, solange {who} weg ist.',
 };

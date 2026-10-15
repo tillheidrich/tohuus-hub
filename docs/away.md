@@ -37,6 +37,30 @@ Examples are a business trip, a course, or a few days at a friend's. Web: "Nur i
 - **Home Assistant:** the house stays `home`, so one person's trip never turns the heating down. `people_away` lists the names.
 - **More than one trip at a time:** different people may be away at the same time on different trips. One person can't be on two trips at once (409). When the trips together cover everyone, the week plan treats those days as "nobody home".
 
+## What for, and what happens at home (15 Oct 2026)
+
+Till's examples:
+- Mira is on a stag do with wellness in Austria.
+- Sam is on a business trip.
+- One of the parents is in hospital, or a parent and a child are.
+
+Each of these changes what has to be done at home and what may be left. Fair Play calls such events "Wild Cards" and agrees on a "Minimum Standard of Care" for them. We copy the idea and leave out the card game.
+
+- **"Wofür?"** (`kind`): `holiday`, `work`, `party`, `hospital` or `other`. It is chosen when the trip or absence is entered and can be left empty.
+  - `hospital` is health data. The assistant, MCP and Home Assistant only ever see "Unterwegs", without the trip's name or place, and the kind is never sent out.
+- **"Zu Hause, solange … weg ist"** (`GET /api/away/trips/:id/home`) covers the household tasks that fall due during the absence and lean on someone who is away (doer, keeper or the person who usually does it). For each one the household chooses:
+  - **"{name} übernimmt":** someone at home takes it while the trip runs. The task shows that person as the doer: "Mira übernimmt, solange Sam weg ist".
+  - **"Darf warten":** the due date moves to the day after the return, and the task shows "darf warten bis …". Ending the trip early brings the date forward to the next day. Changing the return date moves it along. Cancelling or deleting the trip, or choosing "Wie immer" again, restores the old date.
+  - **"Wie immer":** no change.
+- **Suggestions only, nothing changes on its own:**
+  - Something that can wait (weekly or rarer, not a calendar date like the bins, not an appointment) gets "darf warten".
+  - Otherwise the suggestion is "{name} übernimmt", naming the person at home who did it most recently.
+  - For a hospital stay (`relief`), the tasks of the people at home that can wait are suggested too: "Jetzt darf mehr liegen bleiben – das Zuhause muss nicht perfekt sein."
+- **API:**
+  - `PUT /api/away/trips/:id/home/:taskId { mode: take|wait|usual, key?: u<id> }`
+  - Tasks carry `stand_in: { name, for, until }` and `waits: { until }`.
+  - The trip carries `kind` and `relief`.
+
 ## "Nich to Huus"
 
 Low German for "not at home". While a person is away themselves:

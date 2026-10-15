@@ -5,6 +5,7 @@ import { TodayOfferAsks } from './WhoDoesWhat';
 import { StarsCard } from './Stars';
 import { ReviewTeaser } from './Review';
 import { WeekReviewTeaser } from './WeekReview';
+import { MindTodayCard } from './Mind';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
@@ -144,6 +145,7 @@ export function Today({ me }: { me: Me }) {
               <TodayOfferAsks />
               <WeekReviewTeaser guest={Boolean(gl)} />
               <TasksTodayCard today={localDay()} />
+              <MindTodayCard guest={Boolean(gl)} />
               <StarsCard guest={Boolean(gl)} />
               <ReviewTeaser guest={Boolean(gl)} />
             </>

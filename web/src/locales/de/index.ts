@@ -29,6 +29,7 @@ import { quality } from './quality';
 import { people } from './people';
 import { tour } from './tour';
 import { tasks } from './tasks';
+import { mind } from './mind';
 import { ha2 } from './ha2';
 import { menu } from './menu';
 import { design } from './design';
@@ -39,7 +40,7 @@ import { web2 } from './web2';
 import { core } from './core';
 
 
-export const de: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print, ...share, ...labels, ...away, ...plan2, ...recipes2, ...quality, ...people, ...tour, ...ha2, ...menu, ...design, ...fixes, ...places, ...order, ...web2, ...core, ...list2, ...recipepack, ...houseguide, ...explain, ...assist, ...cloudops, ...account, ...admin, ...money2, ...wish, ...a11y, ...web3, ...tasks };
+export const de: Record<string, string> = { ...app, ...stock, ...cook, ...imports, ...guest, ...data, ...party, ...fresh, ...shop, ...home, ...kiosk, ...kids, ...onboard, ...retail, ...ha, ...channels, ...intl, ...cook2, ...auth, ...spend2, ...print, ...share, ...labels, ...away, ...plan2, ...recipes2, ...quality, ...people, ...tour, ...ha2, ...menu, ...design, ...fixes, ...places, ...order, ...web2, ...core, ...list2, ...recipepack, ...houseguide, ...explain, ...assist, ...cloudops, ...account, ...admin, ...money2, ...wish, ...a11y, ...web3, ...tasks, ...mind };
 import { list2 } from './list2';
 
 

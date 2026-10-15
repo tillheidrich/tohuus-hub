@@ -13,6 +13,7 @@ import { db } from '../db.js';
 import { t } from '../i18n.js';
 import { canSeeTask, listCareTasks } from './care.js';
 import { addDays } from './fresh-shelf.js';
+import { mindDoneBy, mindDoneShared } from './mind.js';
 import { getUserPref, setUserPref } from './onboard.js';
 import { region } from './region.js';
 import { cookCards, fmtN, pantryCards, type ReviewCard, shopCards, taskCards } from './review.js';
@@ -55,6 +56,10 @@ function mine(viewer: number, from: string, to: string): ReviewCard[] {
   const noted = (db.prepare(`SELECT COUNT(*) n FROM shopping_items WHERE added_by = ? AND created_at BETWEEN ? AND ?`).get(me.name, ...range) as { n: number }).n;
   if (noted) cards.push({ key: 'my_noticed', area: 'shop', value: fmtN(noted), title: noted === 1 ? t('thing you noticed was missing') : t('things you noticed were missing'), text: t('Noticing is work too.'), list: [] });
   const receipts = (db.prepare(`SELECT COUNT(*) n FROM imports WHERE actor = ? AND created_at BETWEEN ? AND ? AND status != 'discarded'`).get(me.name, ...range) as { n: number }).n;
+  // Im Kopf: what you did on the side or thought of – never written on a list, still seen (only by you here)
+  const side = mindDoneBy(viewer, from, to);
+  if (side.length)
+    cards.push({ key: 'my_mind', area: 'tasks', value: fmtN(side.length), title: side.length === 1 ? t('thing done on the side or thought of') : t('things done on the side or thought of'), text: t('Never on a list – still counts.'), list: side.slice(0, 3).map((x) => x.text) });
   if (receipts) cards.push({ key: 'my_receipts', area: 'money', value: fmtN(receipts), title: receipts === 1 ? t('receipt brought in') : t('receipts brought in'), text: null, list: [] });
   return cards;
 }
@@ -70,6 +75,8 @@ export function weekReview(viewer: number | null, week?: string) {
     ...taskCards(from, end),
     ...pantryCards(from, end, { ...prev, text: '{n} fewer thrown away than the week before.' }),
   ];
+  const side = mindDoneShared(from, end);
+  if (side) household.push({ key: 'mind_done', area: 'tasks', value: fmtN(side), title: side === 1 ? t('thing done on the side') : t('things done on the side'), text: t('Never on a list – still counts.'), list: [] });
   const personal = viewer != null ? mine(viewer, from, end) : [];
   const cur = periodRange('week', today(), region().weekStart);
   // living alone: "Das habt ihr geschafft" would sound odd – the household part is simply "Zu Hause"

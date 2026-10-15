@@ -20,6 +20,7 @@ import {
   Trash,
   Wrench,
   CalendarBlank,
+  Brain,
   Sparkle,
   CaretRight,
 } from '@phosphor-icons/react';
@@ -81,6 +82,10 @@ export interface CareTask {
   usual?: { user_id: number; name: string; color: string } | null;
   /** the person this task leans on is away today (a trip of theirs) */
   away?: { name: string; until: string } | null;
+  /** someone at home takes it while the usual person is away (lib/away.ts homePlan) */
+  stand_in?: { name: string; for: string; until: string } | null;
+  /** may wait until the person is back */
+  waits?: { until: string } | null;
   /** "Abgeben an …": asked and not answered yet */
   offer?: { to: { id: number; name: string }; by: { id: number; name: string } | null } | null;
   /** Termin: with a time the task is a calendar entry (HH:MM, minutes, where) */
@@ -233,7 +238,13 @@ export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareT
   const sub = [
     task.promise ? promiseLabel(task.promise) : null,
     task.ext_kind ? t('from the calendar') : null,
-    task.away ? t('{name} is away until {date}', { name: task.away.name, date: fmtDate(task.away.until, { weekday: 'short', day: 'numeric', month: 'short' }) }) : null,
+    task.stand_in
+      ? t('{name} takes it while {who} is away', { name: task.stand_in.name, who: task.stand_in.for })
+      : task.waits
+        ? t('may wait until {date}', { date: fmtDate(task.waits.until, { weekday: 'short', day: 'numeric', month: 'short' }) })
+        : task.away
+          ? t('{name} is away until {date}', { name: task.away.name, date: fmtDate(task.away.until, { weekday: 'short', day: 'numeric', month: 'short' }) })
+          : null,
     !task.away && !task.doer && !task.rotation?.length && task.usual ? t('usually {name}', { name: task.usual.name }) : null,
     compact || task.as_needed ? null : intervalLabel(task.interval_n, task.interval_unit),
     task.checklist?.length ? t('{done} of {total}', { done: ticked, total: task.checklist.length }) : null,
@@ -467,6 +478,14 @@ export function Care() {
             <span className="grow">
               <span className="title">{t('Calendar & reminders')}</span>
               <span className="sub">{t('Read your calendar, Apple Reminders, subscription link – in the settings.')}</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
+          <button className="li clickable card nav-row" onClick={() => nav('/kopf')}>
+            <Brain size={20} aria-hidden="true" />
+            <span className="grow">
+              <span className="title">{t('On my mind')}</span>
+              <span className="sub">{t('Too small for a list, still work: what you carry around and did on the side.')}</span>
             </span>
             <CaretRight size={16} aria-hidden="true" />
           </button>

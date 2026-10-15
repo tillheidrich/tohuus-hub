@@ -63,6 +63,12 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     /// the person this task leans on is away today (server: care.ts awayOf)
     var away: AwayNote?
     struct AwayNote: Decodable, Sendable, Hashable { var name: String; var until: String }
+    /// someone at home takes it while the usual person is away (server: away.ts homePlan)
+    var standIn: StandIn?
+    struct StandIn: Decodable, Sendable, Hashable { var name: String; var `for`: String; var until: String }
+    /// may wait until the person is back
+    var waits: Waits?
+    struct Waits: Decodable, Sendable, Hashable { var until: String }
     /// "Abgeben an …": asked and not answered yet
     var offer: Offer?
     struct Usual: Decodable, Sendable, Hashable { var userId: Int; var name: String; var color: String? }
@@ -372,7 +378,19 @@ struct CareView: View {
                     } header: { Text(L("Recently done")) }
                 }
                 BlickSection(api: api, refresh: reloads) { id in detail = data.tasks.first { $0.id == id } }
-                if data.me != nil { WeekReviewLink(api: api) }
+                if data.me != nil {
+                    Section {
+                        NavigationLink { MindView(api: api) } label: {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(L("On my mind"))
+                                    Text(L("Too small for a list, still work: what you carry around and did on the side.")).font(.caption).foregroundStyle(Theme.ink3)
+                                }
+                            } icon: { Image(systemName: "brain").foregroundStyle(Theme.primaryText) }
+                        }
+                    }
+                    WeekReviewLink(api: api)
+                }
                 RatgeberSection(api: api, areas: ["aufgaben", "kopf"])
                 templates(data)
             } else if error == nil {
@@ -435,7 +453,9 @@ struct CareView: View {
                 let items = t.checklist ?? []
                 let sub = [t.promise.map { CareLabels.promise($0) },
                            t.extKind == nil ? nil : L("from the calendar"),
-                           t.away.map { LF("%@ is away until %@", $0.name, AwayText.day($0.until)) },
+                           t.standIn.map { LF("%@ takes it while %@ is away", $0.name, $0.for) }
+                               ?? t.waits.map { LF("may wait until %@", AwayText.day($0.until)) }
+                               ?? t.away.map { LF("%@ is away until %@", $0.name, AwayText.day($0.until)) },
                            t.away == nil && t.doer == nil && (t.rotation ?? []).isEmpty ? t.usual.map { LF("usually %@", $0.name) } : nil,
                            t.asNeeded == true ? nil : CareLabels.interval(t.intervalN, t.intervalUnit),
                            items.isEmpty ? nil : LF("%d of %d", items.filter(\.done).count, items.count),

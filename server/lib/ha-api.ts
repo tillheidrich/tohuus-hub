@@ -485,7 +485,10 @@ function wire() {
       const line = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
       for (const c of clients) c.res.write(line);
     };
-    send('change', { topics, at: Date.now() });
+    // people's heads (lib/mind.ts) are not Home Assistant's business – not even that something changed
+    const shown = topics.filter((x) => x !== 'mind');
+    if (!shown.length) return;
+    send('change', { topics: shown, at: Date.now() });
     if (topics.includes('notifications')) {
       const rows = db.prepare(`SELECT id, event, title, body, payload, created_at FROM notifications WHERE id > ? AND json_extract(payload, '$.personal_for') IS NULL ORDER BY id LIMIT 20`).all(Math.max(0, last.id)) as {
         id: number;

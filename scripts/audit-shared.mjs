@@ -172,6 +172,7 @@ export async function targets(ctx, inst, fresh) {
     '/denkarbeit',
     '/rueckblick',
     '/woche',
+    '/kopf',
     '/urlaub',
     '/import',
     '/import?mode=photo',

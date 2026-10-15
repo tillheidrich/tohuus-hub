@@ -68,6 +68,53 @@ migrate(
    );`,
 );
 
+// 15 Oct 2026: why someone is away (it changes what happens at home) and the plan for the tasks at home
+migrate('away-kind', `ALTER TABLE away_trips ADD COLUMN kind TEXT; ALTER TABLE away_trips ADD COLUMN task_plan TEXT NOT NULL DEFAULT '{}';`);
+
+/** holiday · work (business trip) · party (stag/hen do, wellness, a weekend off) · hospital (hospital, rehab – health data:
+ *  never to AI, MCP, Home Assistant or exports) · other */
+export const TRIP_KINDS = ['holiday', 'work', 'party', 'hospital', 'other'] as const;
+export type TripKind = (typeof TRIP_KINDS)[number];
+
+/** Per task while someone is away: someone at home takes it (key u<id>/k<id>), or it may wait until they're back
+ *  (`prev`: the due date before it was moved, to put it back). */
+export interface PlanEntry {
+  mode: 'take' | 'wait';
+  key?: string;
+  prev?: string | null;
+}
+
+export function parsePlan(raw: string | null | undefined): Record<string, PlanEntry> {
+  try {
+    const v = JSON.parse(raw || '{}');
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  } catch {
+    return {};
+  }
+}
+
+/** The plan for this task today: "Sam übernimmt" while the trip runs, "darf warten" until it ends. */
+export function taskPlanOn(taskId: number, day = awayDay(0)): (PlanEntry & { until: string; trip_id: number; travellers: string[] }) | null {
+  try {
+    const rows = db.prepare(`SELECT id, start_day, end_day, travellers, task_plan FROM away_trips WHERE status = 'active' AND end_day >= ? AND task_plan != '{}'`).all(day) as {
+      id: number;
+      start_day: string;
+      end_day: string;
+      travellers: string;
+      task_plan: string;
+    }[];
+    for (const r of rows) {
+      const e = parsePlan(r.task_plan)[String(taskId)];
+      if (!e) continue;
+      if (e.mode === 'take' && r.start_day > day) continue;
+      return { ...e, until: r.end_day, trip_id: r.id, travellers: parseList(r.travellers) };
+    }
+  } catch {
+    /* older schema */
+  }
+  return null;
+}
+
 export interface TripRow {
   id: number;
   name: string;
@@ -87,6 +134,8 @@ export interface TripRow {
   checked_expired: string;
   status: 'active' | 'ended' | 'cancelled';
   welcome_done: number;
+  kind?: string | null;
+  task_plan?: string;
   created_by: string | null;
   created_at: string;
   updated_at: string;

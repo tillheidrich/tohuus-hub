@@ -47,6 +47,7 @@ function registry(): { label: string; to: string; words: string }[] {
     { label: t('Reminders & Calendar'), to: '/aufgaben', words: 'apple erinnerungen kalender caldav google outlook abo termine' },
     { label: t('QR labels'), to: '/etiketten', words: 'etiketten qr drucken aufkleber' },
     { label: t('Mental load check'), to: '/denkarbeit', words: 'mental load denkarbeit unsichtbare arbeit karten wer denkt an was fair verteilen' },
+    { label: t('On my mind'), to: '/kopf', words: 'im kopf gedanken nebenbei erledigt dran gedacht gesehen mental load denke an privat' },
     { label: t('Week in review'), to: '/woche', words: 'woche wochenrückblick rückblick geschafft letzte woche week review' },
     { label: t('One thing at a time'), to: '/fokus', words: 'fokus konzentration adhs ads timer eins nach dem anderen anfangen' },
     { label: t('Calm & focus'), to: s('account'), words: 'sanfter modus ruhig adhs ads autismus weniger überfordert erinnerungen bündeln' },

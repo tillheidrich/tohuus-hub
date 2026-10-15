@@ -1,0 +1,278 @@
+import SwiftUI
+
+// Im Kopf (server: lib/mind.ts, docs/mind.md, web: pages/Mind.tsx).
+// What a person carries around without it being a task, and what they did on the side without writing it down –
+// so it gets seen. Private or for everyone, switchable any time; a household entry can be hidden from single members
+// (a present for them). "Ich denk mit" / "Danke" show names, never counts. Never to the assistant, MCP, Home Assistant,
+// notifications, widgets or exports.
+
+struct MindItem: Decodable, Sendable, Identifiable, Hashable {
+    struct Person: Decodable, Sendable, Hashable { var id: Int; var name: String; var color: String? }
+    struct Nod: Decodable, Sendable, Hashable { var id: Int; var name: String }
+    var id: Int
+    var text: String
+    /// open (im Kopf) | done (nebenbei erledigt)
+    var kind: String
+    var mine: Bool = false
+    var by: Person?
+    /// private | household
+    var visibility: String
+    var hideFrom: [Int] = []
+    @Lossy var nods: [Nod]
+    var nodded: Bool = false
+    var doneAt: String?
+}
+
+struct MindData: Decodable, Sendable {
+    struct Part: Decodable, Sendable { @Lossy var open: [MindItem]; @Lossy var done: [MindItem] }
+    struct Member: Decodable, Sendable, Hashable, Identifiable { var id: Int; var name: String }
+    var mine: Part
+    var others: Part
+    @Lossy var members: [Member]
+}
+
+extension APIClient {
+    /// GET /api/mind – mine (open + done in the last two weeks) and what the others shared with me
+    func mind() async throws -> MindData { try await get("api/mind") }
+    /// POST /api/mind { text, kind, visibility, hide_from }
+    func mindAdd(text: String, kind: String, isPrivate: Bool, hideFrom: [Int]) async throws {
+        _ = try await send("POST", "api/mind", json: ["text": text, "kind": kind, "visibility": isPrivate ? "private" : "household", "hide_from": isPrivate ? [] : hideFrom], as: Ignored.self)
+    }
+    /// PATCH /api/mind/:id – kind (open → done), visibility (either way), hide_from
+    func mindUpdate(_ id: Int, _ body: [String: Any]) async throws {
+        _ = try await send("PATCH", "api/mind/\(id)", json: body, as: Ignored.self)
+    }
+    func mindDelete(_ id: Int) async throws { _ = try await send("DELETE", "api/mind/\(id)", as: Ignored.self) }
+    /// POST /api/mind/:id/nod – "Ich denk mit" / "Danke" (tap again to take it back)
+    func mindNod(_ id: Int) async throws { _ = try await send("POST", "api/mind/\(id)/nod", json: [:], as: Ignored.self) }
+    /// POST /api/mind/:id/task – a thought becomes a task (private stays private)
+    func mindToTask(_ id: Int) async throws { _ = try await send("POST", "api/mind/\(id)/task", json: [:], as: Ignored.self) }
+}
+
+/// Write down what's on your mind – or what you just did on the side.
+struct MindComposer: View {
+    let api: APIClient
+    let members: [MindData.Member]
+    var onSaved: (String) -> Void = { _ in }
+    @State private var text = ""
+    @State private var kind = "open"
+    @State private var isPrivate = false
+    @State private var hide: Set<Int> = []
+    @State private var busy = false
+    @State private var error: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s3) {
+            Picker(L("What is it?"), selection: $kind) {
+                Text(L("On my mind")).tag("open")
+                Text(L("Done on the side")).tag("done")
+            }
+            .pickerStyle(.segmented)
+            HStack(spacing: Theme.Space.s2) {
+                TextField(kind == "done" ? L("e.g. Called the paediatrician, thought of Grandma’s birthday") : L("e.g. What do we eat on Saturday when Sam is out?"), text: $text, axis: .vertical)
+                    .lineLimit(1...3)
+                    .textFieldStyle(.roundedBorder)
+                    .submitLabel(.done)
+                    .onSubmit { Task { await save() } }
+                Button(L("Add")) { Task { await save() } }
+                    .buttonStyle(.borderedProminent).tint(Theme.primary)
+                    .disabled(busy || text.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            FlowLayout(spacing: 6) {
+                ChoiceChip(title: L("For everyone"), systemImage: "person.3", on: !isPrivate) { isPrivate = false }
+                ChoiceChip(title: L("Only for me"), systemImage: "lock", on: isPrivate) { isPrivate = true }
+                if !isPrivate && members.count > 1 {
+                    ForEach(members) { m in
+                        ChoiceChip(title: LF("Not for %@", m.name), systemImage: "eye.slash", on: hide.contains(m.id)) {
+                            if hide.contains(m.id) { hide.remove(m.id) } else { hide.insert(m.id) }
+                        }
+                    }
+                }
+            }
+            if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
+        }
+    }
+
+    private func save() async {
+        let v = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !v.isEmpty, !busy else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            try await api.mindAdd(text: String(v.prefix(200)), kind: kind, isPrivate: isPrivate, hideFrom: Array(hide))
+            let msg = kind == "done" ? L("Seen – nice that you did it.") : (isPrivate ? L("Noted – only for you.") : L("Noted – the others can see it."))
+            text = ""
+            hide = []
+            error = nil
+            onSaved(msg)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
+/// One entry: mine with actions (done, private ↔ everyone, make it a task, delete), others' with "Ich denk mit" / "Danke".
+struct MindRow: View {
+    let api: APIClient
+    let item: MindItem
+    let members: [MindData.Member]
+    var onChanged: (String?) -> Void = { _ in }
+    @State private var error: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            HStack(alignment: .top, spacing: Theme.Space.s3) {
+                Image(systemName: item.kind == "done" ? "checkmark.circle.fill" : "brain")
+                    .foregroundStyle(item.kind == "done" ? Theme.sage : Theme.ink2)
+                    .frame(width: 24)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.text).foregroundStyle(Theme.ink)
+                    if !sub.isEmpty { Text(sub).font(.caption).foregroundStyle(Theme.ink3) }
+                }
+                Spacer(minLength: 0)
+                if !item.mine {
+                    Button { act(nil) { try await api.mindNod(item.id) } } label: {
+                        Label(item.kind == "done" ? L("Thanks") : L("I’ll think along"), systemImage: item.nodded ? "hand.thumbsup.fill" : "hand.thumbsup")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(item.nodded ? Theme.primary : nil)
+                    .frame(minHeight: 44)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            if item.mine {
+                FlowLayout(spacing: 6) {
+                    if item.kind == "open" {
+                        ChoiceChip(title: L("Done"), systemImage: "checkmark", on: false) { act(L("Done – and seen.")) { try await api.mindUpdate(item.id, ["kind": "done"]) } }
+                    }
+                    ChoiceChip(title: item.visibility == "private" ? L("Show everyone") : L("Only for me"), systemImage: item.visibility == "private" ? "eye" : "lock", on: false) {
+                        act(nil) { try await api.mindUpdate(item.id, ["visibility": item.visibility == "private" ? "household" : "private"]) }
+                    }
+                    if item.kind == "open" {
+                        ChoiceChip(title: L("Make it a task"), systemImage: "checklist", on: false) { act(L("It’s a task now")) { try await api.mindToTask(item.id) } }
+                    }
+                    ChoiceChip(title: L("Delete"), systemImage: "trash", on: false) { act(nil) { try await api.mindDelete(item.id) } }
+                }
+                .padding(.leading, 36)
+            }
+            if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var sub: String {
+        let hidden = item.hideFrom.compactMap { id in members.first { $0.id == id }?.name }
+        let nods = item.nods.map(\.name).joined(separator: ", ")
+        return [
+            !item.mine ? item.by.map { item.kind == "done" ? LF("%@ did it", $0.name) : LF("%@ has it on their mind", $0.name) } : nil,
+            item.mine && item.visibility == "private" ? L("only for you") : nil,
+            item.mine && !hidden.isEmpty ? LF("not for %@", hidden.joined(separator: ", ")) : nil,
+            nods.isEmpty ? nil : (item.kind == "done" ? LF("Thanks from %@", nods) : LF("%@ thinks along", nods)),
+        ].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    private func act(_ done: String?, _ fn: @escaping () async throws -> Void) {
+        Task {
+            do {
+                try await fn()
+                error = nil
+                onChanged(done)
+            } catch {
+                self.error = error.localizedDescription
+            }
+        }
+    }
+}
+
+/// "Im Kopf" – the page (Heute card and Aufgaben link lead here)
+struct MindView: View {
+    let api: APIClient
+    @State private var data: MindData?
+    @State private var error: String?
+    @State private var toast: ToastMessage?
+
+    var body: some View {
+        List {
+            Section {
+                Text(L("Things too small for a list – and still work: what you carry around, what you did on the side. So it gets seen. Only for you or for everyone, switch any time."))
+                    .font(.subheadline).foregroundStyle(Theme.ink2)
+                MindComposer(api: api, members: data?.members ?? []) { msg in toast = ToastMessage(text: msg); Task { await load() } }
+            }
+            if let error { Section { ErrorBanner(message: error) { Task { await load() } } } }
+            if let d = data {
+                Section(L("On your mind")) {
+                    if d.mine.open.isEmpty { Text(L("Nothing right now – or nothing written down.")).font(.subheadline).foregroundStyle(Theme.ink3) }
+                    ForEach(d.mine.open) { row($0, d) }
+                }
+                let others = d.others.open + d.others.done
+                if !others.isEmpty { Section(L("With the others")) { ForEach(others) { row($0, d) } } }
+                if !d.mine.done.isEmpty { Section(L("Done on the side")) { ForEach(d.mine.done) { row($0, d) } } }
+                Section {} footer: {
+                    Text(L("Never to the assistant, Home Assistant or notifications. Done things stay here two weeks and count in your weekly review."))
+                }
+            }
+        }
+        .themedList()
+        .navigationTitle(L("On my mind"))
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await load() }
+        .refreshable { await load() }
+        .toast($toast)
+    }
+
+    private func row(_ x: MindItem, _ d: MindData) -> some View {
+        MindRow(api: api, item: x, members: d.members) { msg in
+            if let msg { toast = ToastMessage(text: msg) }
+            Task { await load() }
+        }
+    }
+
+    private func load() async {
+        do {
+            data = try await api.mind()
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
+/// Heute: write something down in passing, and see what the others carry (a few, newest first).
+struct MindTodayCard: View {
+    let api: APIClient
+    let refresh: Int
+    @State private var data: MindData?
+    @State private var toast: ToastMessage?
+
+    var body: some View {
+        Group {
+            if let d = data {
+                Card(title: L("On my mind"), systemImage: "brain") {
+                    VStack(alignment: .leading, spacing: Theme.Space.s3) {
+                        MindComposer(api: api, members: d.members) { msg in toast = ToastMessage(text: msg); Task { await load() } }
+                        ForEach(Array((d.others.open + d.others.done).prefix(3))) { x in
+                            MindRow(api: api, item: x, members: d.members) { _ in Task { await load() } }
+                        }
+                        NavigationLink { MindView(api: api) } label: {
+                            HStack {
+                                Text(d.mine.open.isEmpty ? L("Open") : LF("%d on your mind", d.mine.open.count)).font(.subheadline.weight(.semibold))
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.caption).accessibilityHidden(true)
+                            }
+                            .foregroundStyle(Theme.primaryText)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .toast($toast)
+            }
+        }
+        .task(id: refresh) { await load() }
+    }
+
+    private func load() async { data = try? await api.mind() }
+}

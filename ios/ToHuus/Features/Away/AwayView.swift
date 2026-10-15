@@ -24,6 +24,10 @@ struct AwayTrip: Decodable, Sendable, Identifiable, Hashable {
     var travellers: [String]?
     var home: [String]?
     var everyoneAway: Bool?
+    /// holiday · work · party · hospital · other (nil: not said)
+    var kind: String?
+    /// hospital: relief for the people at home – more may wait
+    var relief: Bool?
     var useUpDays: Int?
     var quiet: Bool?
     var pauseAuto: Bool?
@@ -445,6 +449,102 @@ struct AwayView: View {
 /// method, path below /api/away/, JSON body, toast text on success
 typealias AwayAct = @MainActor (String, String, [String: Any]?, String?) async -> Void
 
+/// GET /api/away/trips/:id/home – "Was passiert zu Hause?"
+struct AwayHomePlan: Decodable, Sendable {
+    struct Taker: Decodable, Sendable, Hashable, Identifiable { var key: String; var name: String; var id: String { key } }
+    struct Choice: Decodable, Sendable, Hashable { var mode: String; var key: String? }
+    struct Item: Decodable, Sendable, Hashable, Identifiable {
+        var taskId: Int
+        var name: String
+        var due: String?
+        var person: String?
+        var personAway: Bool = false
+        var canWait: Bool = false
+        /// take | wait | usual
+        var suggestion: String
+        var suggestKey: String?
+        var choice: Choice?
+        var id: Int { taskId }
+    }
+    var relief: Bool = false
+    @Lossy var takers: [Taker]
+    @Lossy var items: [Item]
+}
+
+enum AwayKinds {
+    static let all: [(String, String)] = [
+        ("holiday", L("Holiday")), ("work", L("Business trip")), ("party", L("Celebrating & time off")), ("hospital", L("Hospital & rehab")), ("other", L("Something else")),
+    ]
+}
+
+/// "Zu Hause, solange … weg ist": who takes what, what may wait until they're back (server: away.ts homePlan).
+private struct AwayHomePlanSection: View {
+    let api: APIClient
+    let trip: AwayTrip
+    @State private var plan: AwayHomePlan?
+    @State private var error: String?
+
+    var body: some View {
+        Group {
+            if let p = plan, !p.items.isEmpty || p.relief {
+                Section {
+                    if p.items.isEmpty { Text(L("Nothing falls due in these days.")).font(.subheadline).foregroundStyle(Theme.ink3) }
+                    ForEach(p.items) { x in
+                        VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                            Text(x.name)
+                            Text(sub(x, p)).font(.caption).foregroundStyle(Theme.ink3)
+                            FlowLayout(spacing: 6) {
+                                ForEach(p.takers) { k in
+                                    ChoiceChip(title: LF("%@ takes it", k.name), on: x.choice?.mode == "take" && x.choice?.key == k.key) { set(x, "take", k.key) }
+                                }
+                                ChoiceChip(title: L("May wait"), on: x.choice?.mode == "wait") { set(x, "wait", nil) }
+                                if x.choice != nil { ChoiceChip(title: L("As usual"), on: false) { set(x, "usual", nil) } }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
+                } header: {
+                    Text(LF("At home while %@ is away", (trip.travellers ?? []).joined(separator: ", ")))
+                } footer: {
+                    Text(p.relief ? L("Hospital and rehab weigh on everyone. More may wait now – the house doesn’t have to be perfect.")
+                                  : L("Who takes what – and what may simply wait until they’re back. Suggestions only, you decide."))
+                }
+            }
+        }
+        .task(id: trip.id) { await load() }
+    }
+
+    private func sub(_ x: AwayHomePlan.Item, _ p: AwayHomePlan) -> String {
+        [
+            x.due.map { AwayText.day($0) },
+            x.person.map { x.personAway ? LF("usually %@ – away", $0) : LF("usually %@", $0) },
+            x.choice == nil ? (x.suggestion == "wait" ? L("Suggestion: may wait")
+                               : x.suggestion == "take" ? p.takers.first { $0.key == x.suggestKey }.map { LF("Suggestion: %@ takes it", $0.name) } : nil) : nil,
+        ].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    private func set(_ x: AwayHomePlan.Item, _ mode: String, _ key: String?) {
+        Task {
+            do {
+                plan = try await api.send("PUT", "api/away/trips/\(trip.id)/home/\(x.taskId)", json: ["mode": mode, "key": key.map { $0 as Any } ?? NSNull()], as: AwayHomePlan.self)
+                error = nil
+            } catch {
+                self.error = error.localizedDescription
+            }
+        }
+    }
+
+    private func load() async {
+        do {
+            plan = try await api.get("api/away/trips/\(trip.id)/home")
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
 enum AwayTab: String, CaseIterable, Identifiable {
     case before, pack, kitchen, sitter, handover, home
     var id: String { rawValue }
@@ -491,6 +591,7 @@ private struct AwayBeforeTab: View {
     var body: some View {
         let t = d.trip
         let house = t.everyoneAway != false
+        if t.phase != "after" && t.phase != "done" { AwayHomePlanSection(api: store.api, trip: t) }
         if house, t.phase == "planned", let start = ServerDate.parse(t.startDay) {
             let from = Calendar.current.date(byAdding: .day, value: -(t.useUpDays ?? 4), to: start) ?? start
             Section {
@@ -1217,6 +1318,7 @@ private struct AwayTripForm: View {
     @State private var pauseAuto = true
     @State private var kitchen = false
     @State private var kitchenStore = ""
+    @State private var kind: String? = "holiday"
     @State private var busy = false
     @State private var error: String?
 
@@ -1228,6 +1330,17 @@ private struct AwayTripForm: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    FlowLayout(spacing: 6) {
+                        ForEach(AwayKinds.all, id: \.0) { k in
+                            ChoiceChip(title: k.1, on: kind == k.0) { kind = kind == k.0 ? nil : k.0 }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                } header: { Text(L("What for?")) } footer: {
+                    Text(kind == "hospital" ? L("Stays in the household: the assistant, Home Assistant and notifications only ever say “away”.")
+                                            : L("It changes what happens at home – e.g. what may wait."))
+                }
                 Section {
                     TextField(L("e.g. Autumn holidays"), text: $name)
                     TextField(L("e.g. Baltic Sea"), text: $place)
@@ -1321,6 +1434,7 @@ private struct AwayTripForm: View {
     private func fill() {
         guard let t = trip else {
             if let only {
+                kind = "work"
                 travellers = [only]
                 start = Date()
                 end = Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date()
@@ -1340,6 +1454,7 @@ private struct AwayTripForm: View {
         pauseAuto = t.pauseAuto ?? true
         kitchen = t.kitchen ?? false
         kitchenStore = t.kitchenStore ?? ""
+        kind = t.kind
     }
 
     private func toggle(_ n: String) {
@@ -1371,6 +1486,7 @@ private struct AwayTripForm: View {
             "quiet": quiet,
             "pause_auto": pauseAuto,
             "kitchen": kitchen && !partial,
+            "kind": awayNul(kind),
             "kitchen_store": awayNul(ks.isEmpty ? nil : String(ks.prefix(60))),
         ]
         do {

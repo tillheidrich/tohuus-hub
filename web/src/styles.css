@@ -11175,3 +11175,41 @@ html.gentle .badge.empty {
   margin: 6px 0 0;
   overflow-wrap: anywhere;
 }
+
+/* Im Kopf (pages/Mind.tsx) */
+.mind-li {
+  align-items: flex-start;
+  gap: 12px;
+}
+.mind-li .title {
+  overflow-wrap: anywhere;
+}
+.mind-ic {
+  flex: none;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+.mind-li.done .mind-ic {
+  color: var(--sage);
+}
+.mind-actions .chip,
+.mind-who .chip {
+  min-height: 36px;
+}
+.mind-card .mind-compose .seg {
+  align-self: stretch;
+}
+.away-home-li .chips {
+  flex-wrap: wrap;
+}
+.away-who .chip {
+  flex: none;
+  white-space: nowrap;
+  overflow: visible;
+}
+ul.mind-list,
+.away-home ul.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}

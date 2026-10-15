@@ -4,6 +4,17 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Im Kopf (docs/mind.md): "Im Kopf" (thoughts that aren't tasks yet) and "Nebenbei erledigt" (what never was on a list).
+  - Private or for everyone, switchable any time. A household entry can be hidden from single members.
+  - Others can tap "Ich denk mit" or "Danke". Only names are shown, never counts.
+  - Counts in the weekly review.
+  - Never sent to the assistant, MCP, Home Assistant, notifications or exports.
+  - API: `/api/mind`. Web `/kopf` and iOS, each with a card on Heute.
+- Unterwegs (docs/away.md): "Wofür?" (holiday, business trip, celebrating, hospital, other) and "Zu Hause, solange … weg ist".
+  - For each task: someone at home takes it, or it may wait until after the return.
+  - A hospital stay suggests more relief.
+  - The hospital reason never reaches the assistant, MCP or Home Assistant.
+  - API: `GET/PUT /api/away/trips/:id/home`, plus `stand_in` and `waits` on tasks. Web and iOS.
 - Unterwegs (docs/away.md): only some people away ("Nur ich bin weg").
   - The house runs on: notifications stay quiet only for the people away, turns skip them, tasks show "Sam ist bis Fr. weg", and the cook suggestion leaves them out.
   - Several people can be away at the same time on different trips.

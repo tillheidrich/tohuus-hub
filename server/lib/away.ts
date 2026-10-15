@@ -15,7 +15,7 @@ import { db, getSetting, setSetting } from '../db.js';
 import { fmtDay, t } from '../i18n.js';
 import { randomToken, sha256 } from './auth.js';
 import { emit } from './bus.js';
-import { listCareTasks } from './care.js';
+import { listCareTasks, type CareView } from './care.js';
 import { deleteTripHandover } from './handover.js';
 import { addToShopping, adjustStock, getProduct, listProducts, matchIngredient, matchProduct } from './catalog.js';
 import { categoryKeyOf, entryExpiry, openDaysFor } from './fresh-shelf.js';
@@ -29,6 +29,10 @@ import {
   awayDay,
   awayPeople,
   householdTrip,
+  parsePlan,
+  TRIP_KINDS,
+  type PlanEntry,
+  type TripKind,
   currentTrip,
   dayDiff,
   everyoneAway,
@@ -101,6 +105,10 @@ export function tripView(trip: TripRow, today = awayDay(0)) {
     travellers: parseList(trip.travellers),
     home: parseList(trip.home),
     everyone_away: everyoneAway(trip),
+    /** holiday · work · party · hospital · other (null: not said) */
+    kind: (trip.kind as TripKind | null | undefined) ?? null,
+    /** hospital or rehab: the people at home get relief – more may wait */
+    relief: trip.kind === 'hospital',
     use_up_days: trip.use_up_days,
     quiet: Boolean(trip.quiet),
     pause_auto: Boolean(trip.pause_auto),
@@ -138,7 +146,10 @@ export interface TripInput {
   kitchen?: boolean;
   kitchen_store?: string | null;
   sitter?: SitterNotes;
+  kind?: TripKind | null;
 }
+
+const cleanKind = (k: unknown): TripKind | null => (TRIP_KINDS as readonly string[]).includes(String(k)) ? (k as TripKind) : null;
 
 const cleanNames = (list: string[] | undefined) => [...new Set((list ?? []).map((s) => String(s).trim().slice(0, 40)).filter(Boolean))].slice(0, 20);
 
@@ -170,8 +181,8 @@ export function createTrip(input: TripInput, actor: string) {
   if (overlap) throw new AwayError(t('These days overlap with “{name}”.', { name: overlap.name }), 409);
   const info = db
     .prepare(
-      `INSERT INTO away_trips (name, place, start_day, end_day, travellers, home, use_up_days, quiet, pause_auto, kitchen, kitchen_store, sitter, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO away_trips (name, place, start_day, end_day, travellers, home, use_up_days, quiet, pause_auto, kitchen, kitchen_store, sitter, created_by, kind)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       input.name?.trim().slice(0, 80) || (input.place?.trim() ? input.place.trim().slice(0, 80) : travellers.length < allUsers.length ? t('Away') : t('Trip')),
@@ -187,6 +198,7 @@ export function createTrip(input: TripInput, actor: string) {
       input.kitchen_store?.trim().slice(0, 60) || null,
       JSON.stringify(cleanSitter(input.sitter ?? {})),
       actor,
+      cleanKind(input.kind),
     );
   emit('away', 'recipes', 'shopping');
   return Number(info.lastInsertRowid);
@@ -211,7 +223,7 @@ export function updateTrip(id: number, input: TripInput) {
   const sitter = input.sitter ? cleanSitter({ ...parseObj<SitterNotes>(cur.sitter, {}), ...input.sitter }) : parseObj<SitterNotes>(cur.sitter, {});
   db.prepare(
     `UPDATE away_trips SET name = ?, place = ?, start_day = ?, end_day = ?, travellers = ?, home = ?, use_up_days = ?, quiet = ?, pause_auto = ?,
-       kitchen = ?, kitchen_store = ?, sitter = ?, updated_at = datetime('now') WHERE id = ?`,
+       kitchen = ?, kitchen_store = ?, sitter = ?, kind = ?, updated_at = datetime('now') WHERE id = ?`,
   ).run(
     input.name !== undefined ? input.name.trim().slice(0, 80) || cur.name : cur.name,
     input.place !== undefined ? input.place?.trim().slice(0, 80) || null : cur.place,
@@ -225,10 +237,13 @@ export function updateTrip(id: number, input: TripInput) {
     input.kitchen !== undefined ? (input.kitchen ? 1 : 0) : cur.kitchen,
     input.kitchen_store !== undefined ? input.kitchen_store?.trim().slice(0, 60) || null : cur.kitchen_store,
     JSON.stringify(sitter),
+    input.kind !== undefined ? cleanKind(input.kind) : (cur.kind ?? null),
     id,
   );
   // the sitter sees the new notes and dates right away
   const trip = getTrip(id)!;
+  // a longer or shorter absence: what waits, waits until the new return
+  if (trip.end_day !== cur.end_day) moveWaiting(cur, shiftDay(trip.end_day, 1));
   if (trip.sitter_link_id) {
     db.prepare(`UPDATE guest_links SET note = ?, expires_at = ? WHERE id = ? AND revoked = 0`).run(sitterNote(trip), `${shiftDay(trip.end_day, 1)} 23:59:59`, trip.sitter_link_id);
   }
@@ -242,9 +257,12 @@ export function stopTrip(id: number) {
   const today = awayDay(0);
   if (trip.status !== 'active') return tripView(trip);
   if (today < trip.start_day) {
+    releasePlan(trip);
     db.prepare(`UPDATE away_trips SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?`).run(id);
   } else {
     const end = today > trip.end_day ? trip.end_day : today;
+    // back early: what was waiting is due from tomorrow, not from the planned return
+    if (end < trip.end_day) moveWaiting(trip, shiftDay(end, 1));
     db.prepare(`UPDATE away_trips SET status = 'ended', end_day = ?, updated_at = datetime('now') WHERE id = ?`).run(end, id);
   }
   // the house sitter link ends with the trip
@@ -257,6 +275,7 @@ export function stopTrip(id: number) {
 export function deleteTrip(id: number) {
   deleteTripHandover(id);
   const trip = needTrip(id);
+  if (trip.status === 'active') releasePlan(trip);
   if (trip.sitter_link_id) db.prepare('UPDATE guest_links SET revoked = 1 WHERE id = ?').run(trip.sitter_link_id);
   db.prepare('DELETE FROM away_trips WHERE id = ?').run(id);
   emit('away', 'recipes', 'shopping');
@@ -269,6 +288,115 @@ export function finishWelcome(id: number) {
 }
 
 /** Household members (for "who travels") – names only. */
+// ------------------------------------------------------------------ at home while someone is away (15 Oct 2026)
+
+/** The people on a trip as directory keys (members u<id>, children k<id>), matched by name. */
+function tripKeys(trip: TripRow) {
+  const names = new Set(parseList(trip.travellers).map((x) => x.toLowerCase()));
+  const users = (db.prepare(`SELECT id, name FROM users WHERE COALESCE(kind, 'member') != 'guest'`).all() as { id: number; name: string }[]).map((u) => ({ key: `u${u.id}`, name: u.name }));
+  let kids: { key: string; name: string }[] = [];
+  try {
+    kids = (db.prepare('SELECT id, name FROM kid_profiles').all() as { id: number; name: string }[]).map((k) => ({ key: `k${k.id}`, name: k.name }));
+  } catch {
+    /* no child profiles */
+  }
+  const all = [...users, ...kids];
+  return { away: new Set(all.filter((p) => names.has(p.name.toLowerCase())).map((p) => p.key)), takers: users.filter((u) => !names.has(u.name.toLowerCase())) };
+}
+
+/** May this task simply wait until they're back? Not a daily one, not a date from the calendar (bins), not an appointment. */
+const canWait = (x: CareView) => !(x as { ext_kind?: string | null }).ext_kind && !x.due_time && (x.interval_unit === 'week' || x.interval_unit === 'month' || x.interval_unit === 'year' || !x.interval_unit);
+
+/**
+ * "Was passiert zu Hause?" – the household's tasks that fall due while someone is away and lean on them (doer, keeper or
+ * the person who usually does it): someone at home takes it, or it may wait. For a hospital stay (relief) also the
+ * tasks of the people at home that can wait – they carry enough right now. Suggestions only; nothing changes until chosen.
+ */
+export function homePlan(tripId: number) {
+  const trip = needTrip(tripId);
+  const plan = parsePlan(trip.task_plan);
+  const { away, takers } = tripKeys(trip);
+  const relief = trip.kind === 'hospital';
+  const items = [];
+  for (const x of listCareTasks()) {
+    if (x.archived || x.visibility === 'private') continue;
+    const chosen = plan[String(x.id)] ?? null;
+    // a waiting task was moved to after the return – it still belongs here
+    const due = chosen?.mode === 'wait' ? (chosen.prev ?? x.next_due) : x.next_due;
+    if (!chosen && (!due || due > trip.end_day)) continue;
+    const leanKey = (chosen?.mode === 'take' ? null : x.doer?.key) ?? (x.assignee ? `u${x.assignee.id}` : null) ?? (x.usual ? `u${x.usual.user_id}` : null);
+    const original = x.stand_in ? null : leanKey;
+    const leansAway = Boolean(original && away.has(original)) || Boolean(chosen);
+    if (!leansAway && !relief) continue;
+    const wait = canWait(x);
+    const last = db.prepare(`SELECT actor_user_id FROM care_log WHERE task_id = ? AND actor_user_id IS NOT NULL ORDER BY done_on DESC, id DESC LIMIT 5`).all(x.id) as { actor_user_id: number }[];
+    const likely = takers.find((tk) => last.some((l) => `u${l.actor_user_id}` === tk.key)) ?? takers[0] ?? null;
+    const suggestion: 'take' | 'wait' | 'usual' = leansAway ? (wait || !likely ? 'wait' : 'take') : wait ? 'wait' : 'usual';
+    items.push({
+      task_id: x.id,
+      name: x.name,
+      due,
+      person: original ? (x.doer && x.doer.key === original ? x.doer.name : (x.assignee?.name ?? x.usual?.name ?? null)) : null,
+      person_away: Boolean(original && away.has(original)),
+      can_wait: wait,
+      suggestion,
+      suggest_key: suggestion === 'take' ? (likely?.key ?? null) : null,
+      choice: chosen ? { mode: chosen.mode, key: chosen.key ?? null } : null,
+    });
+  }
+  items.sort((a, b) => Number(b.person_away) - Number(a.person_away) || String(a.due).localeCompare(String(b.due)));
+  return { trip_id: trip.id, kind: (trip.kind as TripKind | null) ?? null, relief, takers, items };
+}
+
+/** Choose for one task: someone at home takes it, it waits until the day after the return, or as usual. */
+export function setHomePlan(tripId: number, taskId: number, input: { mode: 'take' | 'wait' | 'usual'; key?: string | null }) {
+  const trip = needTrip(tripId);
+  const row = db.prepare('SELECT id, next_due, visibility FROM care_tasks WHERE id = ?').get(taskId) as { id: number; next_due: string | null; visibility: string } | undefined;
+  if (!row || row.visibility === 'private') throw new AwayError(t('Not found'), 404);
+  const plan = parsePlan(trip.task_plan);
+  const cur: PlanEntry | undefined = plan[String(taskId)];
+  const after = shiftDay(trip.end_day, 1);
+  const putBack = () => {
+    if (cur?.mode === 'wait' && row.next_due === after) db.prepare('UPDATE care_tasks SET next_due = ? WHERE id = ?').run(cur.prev ?? null, taskId);
+  };
+  if (input.mode === 'usual') {
+    putBack();
+    delete plan[String(taskId)];
+  } else if (input.mode === 'wait') {
+    if (cur?.mode !== 'wait') {
+      const prev = row.next_due;
+      if (prev && prev <= trip.end_day) db.prepare('UPDATE care_tasks SET next_due = ? WHERE id = ?').run(after, taskId);
+      plan[String(taskId)] = { mode: 'wait', prev };
+    }
+  } else {
+    const { takers } = tripKeys(trip);
+    const key = input.key && takers.some((tk) => tk.key === input.key) ? input.key : null;
+    if (!key) throw new AwayError(t('Pick someone who is at home.'));
+    putBack();
+    plan[String(taskId)] = { mode: 'take', key };
+  }
+  db.prepare(`UPDATE away_trips SET task_plan = ?, updated_at = datetime('now') WHERE id = ?`).run(JSON.stringify(plan), trip.id);
+  emit('away', 'care');
+  return homePlan(trip.id);
+}
+
+/** The return moved: waiting tasks follow it. */
+function moveWaiting(trip: TripRow, to: string) {
+  const after = shiftDay(trip.end_day, 1);
+  for (const [id, e] of Object.entries(parsePlan(trip.task_plan))) {
+    if (e.mode === 'wait') db.prepare('UPDATE care_tasks SET next_due = ? WHERE id = ? AND next_due = ?').run(to, Number(id), after);
+  }
+}
+
+/** A trip is deleted or cancelled: waiting tasks get their due date back. */
+function releasePlan(trip: TripRow) {
+  const after = shiftDay(trip.end_day, 1);
+  for (const [id, e] of Object.entries(parsePlan(trip.task_plan))) {
+    if (e.mode === 'wait') db.prepare('UPDATE care_tasks SET next_due = ? WHERE id = ? AND next_due = ?').run(e.prev ?? null, Number(id), after);
+  }
+  db.prepare(`UPDATE away_trips SET task_plan = '{}' WHERE id = ?`).run(trip.id);
+}
+
 export function members() {
   return db.prepare('SELECT id, name, color FROM users ORDER BY id').all() as { id: number; name: string; color: string }[];
 }
@@ -392,21 +520,9 @@ export function checklist(trip: TripRow, today = awayDay(0)): CheckItem[] {
 }
 
 /** Only some people are away: the house runs on – what's left is what they usually do while they're gone. */
-function personalChecklist(trip: TripRow, done: Record<string, boolean>, today: string): CheckItem[] {
-  const names = new Set(parseList(trip.travellers).map((x) => x.toLowerCase()));
+function personalChecklist(trip: TripRow, done: Record<string, boolean>, _today: string): CheckItem[] {
+  // their tasks are in "Was passiert zu Hause?" (homePlan) – here only what to take along
   const items: Omit<CheckItem, 'done'>[] = [];
-  for (const c of listCareTasks()) {
-    if (!c.next_due || c.next_due > trip.end_day || c.next_due < shiftDay(today, -30)) continue;
-    if (c.next_due < trip.start_day && c.state !== 'overdue' && c.state !== 'today' && c.state !== 'soon') continue;
-    const who = c.doer?.name ?? c.assignee?.name ?? (!c.doer ? c.usual?.name : null);
-    if (!who || !names.has(who.toLowerCase())) continue;
-    items.push({
-      key: `care:${c.id}`,
-      text: t('{task} – {name} is away', { task: c.name, name: who }),
-      detail: t('Hand it over before you leave, or someone at home takes it.'),
-      goto: 'care',
-    });
-  }
   const fromStock = (db.prepare(`SELECT text FROM away_items WHERE trip_id = ? AND kind = 'pack' AND product_id IS NOT NULL AND out_qty = 0`).all(trip.id) as { text: string }[]).map((r) => r.text);
   if (fromStock.length) items.push({ key: 'pack-stock', text: t('Take along from stock'), detail: fromStock.slice(0, 6).join(', '), goto: 'packing' });
   return items.map((i) => ({ ...i, done: Boolean(done[i.key]) }));
@@ -998,7 +1114,7 @@ export function haAway() {
     active: c?.phase === 'during',
     quiet: Boolean(c?.phase === 'during' && c.trip.quiet),
     trip: view
-      ? { id: view.id, name: view.name, place: view.place, start: view.start_day, end: view.end_day, phase: view.phase, travellers: view.travellers, home: view.home, everyone_away: view.everyone_away }
+      ? { id: view.id, name: view.kind === 'hospital' ? t('Away') : view.name, place: view.kind === 'hospital' ? null : view.place, start: view.start_day, end: view.end_day, phase: view.phase, travellers: view.travellers, home: view.home, everyone_away: view.everyone_away }
       : null,
     suggest_start: Boolean(sug),
     presence: p ? { everyone_away: p.everyone_away, since: p.since } : null,

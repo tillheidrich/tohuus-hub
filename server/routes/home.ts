@@ -40,6 +40,7 @@ import { BIN_KINDS, calsyncView, reviveKind, setCalendarAiConsent, setCalsyncSet
 import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
+import { addMind, deleteMind, MindError, mindList, nodMind, updateMind } from '../lib/mind.js';
 import { priceHistory, pricedProducts, setSpendingTarget, spendingCsv, spendingSummary, spendingTarget } from '../lib/spending.js';
 
 export const r = Router();
@@ -348,6 +349,43 @@ r.post('/calsync/suggest', async (req, res) => {
     res.status(err.status ?? (err.code === 'ai.disabled' ? 403 : 502)).json({ error: err.message, code: err.code });
   }
 });
+
+// ---------------------------------------------------------------- Im Kopf (lib/mind.ts, docs/mind.md) – members only
+
+const mindBody = z.object({
+  text: z.string().max(400).optional(),
+  kind: z.enum(['open', 'done']).optional(),
+  visibility: z.enum(['private', 'household']).optional(),
+  hide_from: z.array(z.number().int().positive()).max(20).optional(),
+});
+/** members only: guests, house guests and guest links never see anybody's head */
+const mindRun = (fn: (me: number, req: Request) => unknown) => (req: Request, res: Response) => {
+  const me = req.actor?.role === 'guest' ? null : memberOf(req);
+  if (!me) return void res.status(403).json({ error: t('Only household members can do this') });
+  try {
+    res.json(fn(me, req));
+  } catch (e) {
+    if (e instanceof MindError) return void res.status(e.status).json({ error: e.message });
+    throw e;
+  }
+};
+const mindId = (req: Request) => Number(req.params.id) || 0;
+r.get('/mind', mindRun((me) => mindList(me)));
+r.post('/mind', mindRun((me, req) => addMind(me, mindBody.parse(req.body))));
+r.patch('/mind/:id', mindRun((me, req) => updateMind(me, mindId(req), mindBody.parse(req.body))));
+r.delete('/mind/:id', mindRun((me, req) => deleteMind(me, mindId(req))));
+r.post('/mind/:id/nod', mindRun((me, req) => nodMind(me, mindId(req))));
+/** "Wird eine Aufgabe": a thought becomes a task (private stays private) and leaves the head */
+r.post(
+  '/mind/:id/task',
+  mindRun((me, req) => {
+    const item = mindList(me).mine.open.find((x) => x.id === mindId(req));
+    if (!item) throw new MindError(t('Not found'), 404);
+    const task = createCareTask({ name: item.text.slice(0, 120), category: 'house', visibility: item.visibility === 'private' ? 'private' : 'household' } as Parameters<typeof createCareTask>[0], me);
+    deleteMind(me, item.id);
+    return task;
+  }),
+);
 
 // ---------------------------------------------------------------- Wochenrückblick (lib/weekly.ts, docs/week-review.md)
 

@@ -29,12 +29,100 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
-import { del, fmtDate, get, invalidate, patch, post, useApi } from '../api';
+import { del, fmtDate, get, invalidate, patch, post, put, useApi } from '../api';
 import { Empty, ProductPicker, Seg, Sheet, Skeleton, Stepper, Thumb, Toggle, useToast } from '../ui';
 import { t } from '../i18n';
 import { HandoverTab } from './Handover';
 
 type Phase = 'planned' | 'before' | 'during' | 'after' | 'done';
+type TripKind = 'holiday' | 'work' | 'party' | 'hospital' | 'other';
+const KINDS: [TripKind, string][] = [
+  ['holiday', 'Holiday'],
+  ['work', 'Business trip'],
+  ['party', 'Celebrating & time off'],
+  ['hospital', 'Hospital & rehab'],
+  ['other', 'Something else'],
+];
+
+interface HomePlanItem {
+  task_id: number;
+  name: string;
+  due: string | null;
+  person: string | null;
+  person_away: boolean;
+  can_wait: boolean;
+  suggestion: 'take' | 'wait' | 'usual';
+  suggest_key: string | null;
+  choice: { mode: 'take' | 'wait'; key: string | null } | null;
+}
+
+/** "Was passiert zu Hause?" – who takes what while someone is away, what may wait (docs/away.md). */
+function HomePlanSection({ tr }: { tr: Trip }) {
+  const q = useApi<{ relief: boolean; takers: { key: string; name: string }[]; items: HomePlanItem[] }>(['away', 'home', tr.id], `/away/trips/${tr.id}/home`);
+  const toast = useToast();
+  const d = q.data;
+  if (!d || (!d.items.length && !d.relief)) return null;
+  const set = (x: HomePlanItem, mode: 'take' | 'wait' | 'usual', key?: string | null) =>
+    put(`/away/trips/${tr.id}/home/${x.task_id}`, { mode, key: key ?? null })
+      .then(() => invalidate('away', 'care'))
+      .catch(fail(toast));
+  const names = tr.travellers.join(', ');
+  return (
+    <section className="away-home" aria-labelledby="away-home-h">
+      <div className="section-head">
+        <h2 id="away-home-h">{t('At home while {names} is away', { names })}</h2>
+      </div>
+      <p className="small muted" style={{ margin: '0 0 10px' }}>
+        {d.relief
+          ? t('Hospital and rehab weigh on everyone. More may wait now – the house doesn’t have to be perfect.')
+          : t('Who takes what – and what may simply wait until they’re back. Suggestions only, you decide.')}
+      </p>
+      {d.items.length === 0 ? (
+        <p className="small muted">{t('Nothing falls due in these days.')}</p>
+      ) : (
+        <ul className="list">
+          {d.items.map((x) => {
+            const mode = x.choice?.mode ?? null;
+            return (
+              <li key={x.task_id} className="li away-home-li">
+                <span className="away-li-ic" aria-hidden="true">
+                  {x.choice?.mode === 'wait' ? <ArrowCounterClockwise size={18} /> : <House size={18} />}
+                </span>
+                <div className="grow" style={{ minWidth: 0 }}>
+                  <div className="title">{x.name}</div>
+                  <div className="sub">
+                    {[
+                      x.due ? dayLabel(x.due) : null,
+                      x.person ? (x.person_away ? t('usually {name} – away', { name: x.person }) : t('usually {name}', { name: x.person })) : null,
+                      !x.choice ? (x.suggestion === 'wait' ? t('Suggestion: may wait') : x.suggestion === 'take' && x.suggest_key ? t('Suggestion: {name} takes it', { name: d.takers.find((k) => k.key === x.suggest_key)?.name ?? '' }) : null) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </div>
+                  <div className="chips" role="group" aria-label={x.name} style={{ marginTop: 6 }}>
+                    {d.takers.map((k) => (
+                      <button key={k.key} className={`chip sm ${mode === 'take' && x.choice?.key === k.key ? 'on' : ''}`} onClick={() => set(x, 'take', k.key)}>
+                        {t('{name} takes it', { name: k.name })}
+                      </button>
+                    ))}
+                    <button className={`chip sm ${mode === 'wait' ? 'on' : ''}`} onClick={() => set(x, 'wait')}>
+                      {t('May wait')}
+                    </button>
+                    {mode && (
+                      <button className="chip sm" onClick={() => set(x, 'usual')}>
+                        {t('As usual')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
 interface Trip {
   id: number;
   name: string;
@@ -45,6 +133,10 @@ interface Trip {
   travellers: string[];
   home: string[];
   everyone_away: boolean;
+  /** holiday · work · party · hospital · other */
+  kind: TripKind | null;
+  /** hospital: relief for the people at home */
+  relief: boolean;
   use_up_days: number;
   quiet: boolean;
   pause_auto: boolean;
@@ -77,6 +169,8 @@ const range = (tr: Pick<Trip, 'start_day' | 'end_day'>) => `${fmtDate(tr.start_d
 
 function phaseLine(tr: Trip) {
   if (tr.phase === 'planned') return tr.days_to_start === 1 ? t('Starts tomorrow') : t('Starts in {n} days', { n: tr.days_to_start });
+  // one person away: there are no use-it-up days, the house runs on
+  if (tr.phase === 'before' && !tr.everyone_away) return tr.days_to_start === 0 ? t('Starts today') : tr.days_to_start === 1 ? t('Starts tomorrow') : t('Starts in {n} days', { n: tr.days_to_start });
   if (tr.phase === 'before') return tr.days_to_start === 0 ? t('Starts today') : tr.days_to_start === 1 ? t('Use-it-up days · starts tomorrow') : t('Use-it-up days · starts in {n} days', { n: tr.days_to_start });
   if (tr.phase === 'during') return tr.days_to_end === 0 ? t('Away · back today') : t('Away · back on {date}', { date: dayLabel(tr.end_day) });
   if (tr.phase === 'after') return t('Welcome back');
@@ -398,6 +492,7 @@ function BeforeTab({ id, d }: { id: number; d: any }) {
   const upFrom = addDays(tr.start_day, -tr.use_up_days);
   return (
     <div className="stack" style={{ gap: 22 }}>
+      {tr.phase !== 'after' && tr.phase !== 'done' && <HomePlanSection tr={tr} />}
       {tr.everyone_away && tr.phase === 'planned' && (
         <p className="small muted" style={{ margin: 0 }}>
           {t('From {date}, meal ideas and the week plan prefer what would otherwise go off, and fresh things stay off the shopping list.', { date: dayLabel(upFrom) })}
@@ -458,7 +553,7 @@ function BeforeTab({ id, d }: { id: number; d: any }) {
         </section>
       )}
 
-      <section>
+      {(tr.everyone_away || d.checklist.length > 0) && <section>
         <div className="section-head">
           <h2>{t('Before you leave')}</h2>
           <span className="small muted">{t('{done} of {total}', { done: d.checklist.filter((c: any) => c.done).length, total: d.checklist.length })}</span>
@@ -482,7 +577,7 @@ function BeforeTab({ id, d }: { id: number; d: any }) {
           ))}
         </div>
         <p className="small muted" style={{ margin: '8px 2px 0' }}>{t('Generated from your home – nothing to maintain. Tick off what’s done, ignore the rest.')}</p>
-      </section>
+      </section>}
     </div>
   );
 }
@@ -1146,6 +1241,7 @@ function TripSheet({ trip, only, open, members, onClose, onSaved }: { trip: Trip
     pause_auto: true,
     kitchen: false,
     kitchen_store: '',
+    kind: (only ? 'work' : 'holiday') as TripKind | null,
   });
   const [f, setF] = useState(blank);
   const [extra, setExtra] = useState('');
@@ -1167,6 +1263,7 @@ function TripSheet({ trip, only, open, members, onClose, onSaved }: { trip: Trip
             pause_auto: trip.pause_auto,
             kitchen: trip.kitchen,
             kitchen_store: trip.kitchen_store,
+            kind: trip.kind,
           }
         : blank(),
     );
@@ -1193,6 +1290,7 @@ function TripSheet({ trip, only, open, members, onClose, onSaved }: { trip: Trip
       pause_auto: f.pause_auto,
       kitchen: f.kitchen,
       kitchen_store: f.kitchen_store.trim() || null,
+      kind: f.kind,
     };
     try {
       if (trip) {
@@ -1221,6 +1319,21 @@ function TripSheet({ trip, only, open, members, onClose, onSaved }: { trip: Trip
       }
     >
       <div className="stack">
+        <div className="field">
+          <label>{t('What for?')}</label>
+          <div className="chips" role="group" aria-label={t('What for?')}>
+            {KINDS.map(([k, label]) => (
+              <button key={k} type="button" className={`chip ${f.kind === k ? 'on' : ''}`} aria-pressed={f.kind === k} onClick={() => setF({ ...f, kind: f.kind === k ? null : k })}>
+                {t(label)}
+              </button>
+            ))}
+          </div>
+          <div className="help">
+            {f.kind === 'hospital'
+              ? t('Stays in the household: the assistant, Home Assistant and notifications only ever say “away”.')
+              : t('It changes what happens at home – e.g. what may wait.')}
+          </div>
+        </div>
         <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
           <div className="field grow" style={{ minWidth: 160 }}>
             <label>{t('Name')}</label>

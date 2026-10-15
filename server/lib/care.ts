@@ -11,7 +11,7 @@ import { config } from '../config.js';
 import { db, lang, migrate } from '../db.js';
 import { localeOf } from '../languages.js';
 import { t, userError } from '../i18n.js';
-import { awayPeople, isAway } from './away-state.js';
+import { awayPeople, isAway, taskPlanOn } from './away-state.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, localDay, matchProduct, stockOf } from './catalog.js';
 import { notify } from './notify.js';
@@ -358,12 +358,17 @@ export function careView(row: CareRow, today = localDay(0)) {
   const ds = dueState(row.next_due, row.lead_days, today);
   const stock = p ? stockOf(p.id).reduce((s, e) => s + e.qty, 0) : null;
   const usual = row.visibility === 'private' ? null : usualDoer(row.id);
+  // someone is away: "Sam übernimmt" or "darf warten" (lib/away.ts homePlan)
+  const plan = row.visibility === 'private' ? null : taskPlanOn(row.id, today);
+  const standIn = plan?.mode === 'take' ? personOf(plan.key ?? null) : null;
   return {
     ...row,
     archived: Boolean(row.archived),
     as_needed: Boolean(row.as_needed),
     checklist: parseChecklist(row.checklist),
-    doer: personOf(row.doer_key),
+    doer: standIn ?? personOf(row.doer_key),
+    stand_in: standIn ? { name: standIn.name, for: plan!.travellers.join(', '), until: plan!.until } : null,
+    waits: plan?.mode === 'wait' ? { until: plan.until } : null,
     rotation: parseKeys(row.rotation),
     state: ds.state,
     days: ds.days,
@@ -768,7 +773,9 @@ export async function checkCareDue() {
       event: 'care.due',
       title: t('{name}: {when}', { name: task.name, when }),
       message: [
-        task.away
+        task.stand_in
+          ? t('{name} does it while {who} is away.', { name: task.stand_in.name, who: task.stand_in.for })
+          : task.away
           ? t('{name} is away until {date} – can someone at home do it?', { name: task.away.name, date: fmtDayShort(task.away.until) })
           : task.assignee
             ? t('{name} takes care of it.', { name: task.assignee.name })

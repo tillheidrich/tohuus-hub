@@ -226,6 +226,7 @@ struct TodayView: View {
         case .tasks:
             TodayOfferAsks(api: store.api, refresh: refreshKey)
             if !app.isGuest { WeekReviewTeaser(api: store.api, refresh: refreshKey) }
+            if !app.isGuest { MindTodayCard(api: store.api, refresh: refreshKey) }
             TasksTodayCard(api: store.api, refresh: refreshKey)
             StarsCard(api: store.api, refresh: refreshKey)
             if !app.isGuest { ReviewTeaser(api: store.api, refresh: refreshKey) }

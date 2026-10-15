@@ -313,4 +313,44 @@ describe('away: only some people (15 Oct 2026)', () => {
     const id2 = (care.createCareTask({ name: 'Plants', interval_n: 1, interval_unit: 'week', next_due: day(1), doer_key: `u${sam}` } as any) as any).id;
     expect(care.careView(care.getCareTask(id2)!).away).toEqual({ name: 'Sam', until: day(4) });
   });
+
+  it('what happens at home: someone takes it, it waits, or as usual – and a hospital stay gives relief', async () => {
+    const care = await import('../server/lib/care');
+    db.prepare('DELETE FROM care_tasks').run();
+    const sam = uid('Sam');
+    const mira = uid('Mira');
+    const bins = (care.createCareTask({ name: 'Bins out', interval_n: 1, interval_unit: 'day', next_due: day(1), doer_key: `u${sam}` } as any) as any).id;
+    const windows = (care.createCareTask({ name: 'Windows', interval_n: 1, interval_unit: 'month', next_due: day(2), doer_key: `u${sam}` } as any) as any).id;
+    const bath = (care.createCareTask({ name: 'Bathroom', interval_n: 1, interval_unit: 'week', next_due: day(2), doer_key: `u${mira}` } as any) as any).id;
+    const id = away.createTrip({ start_day: day(0), end_day: day(4), travellers: ['Sam'], kind: 'work' }, 'Sam');
+    let p = away.homePlan(id);
+    // Mira's bathroom is not part of a business trip; Sam's daily bins → Mira takes it, the windows can wait
+    expect(p.items.map((x: any) => x.task_id).sort()).toEqual([bins, windows].sort());
+    expect(p.items.find((x: any) => x.task_id === bins)).toMatchObject({ suggestion: 'take', suggest_key: `u${mira}`, person_away: true });
+    expect(p.items.find((x: any) => x.task_id === windows)).toMatchObject({ suggestion: 'wait' });
+    away.setHomePlan(id, bins, { mode: 'take', key: `u${mira}` });
+    away.setHomePlan(id, windows, { mode: 'wait' });
+    const vb = care.careView(care.getCareTask(bins)!);
+    expect(vb.doer?.key).toBe(`u${mira}`);
+    expect(vb.stand_in).toEqual({ name: 'Mira', for: 'Sam', until: day(4) });
+    expect(care.getCareTask(windows)!.next_due).toBe(day(5));
+    expect(care.careView(care.getCareTask(windows)!).waits).toEqual({ until: day(4) });
+    // nobody at home can't take it
+    expect(() => away.setHomePlan(id, bins, { mode: 'take', key: `u${sam}` })).toThrow();
+    // back to usual → the date comes back
+    away.setHomePlan(id, windows, { mode: 'usual' });
+    expect(care.getCareTask(windows)!.next_due).toBe(day(2));
+    // back early: waiting things are due tomorrow
+    away.setHomePlan(id, windows, { mode: 'wait' });
+    away.stopTrip(id);
+    expect(care.getCareTask(windows)!.next_due).toBe(day(1));
+    // hospital: relief – Mira's bathroom may wait too
+    const h = away.createTrip({ start_day: day(10), end_day: day(20), travellers: ['Sam'], kind: 'hospital' }, 'Sam');
+    db.prepare('UPDATE care_tasks SET next_due = ? WHERE id = ?').run(day(12), bath);
+    p = away.homePlan(h);
+    expect(p.relief).toBe(true);
+    expect(p.items.find((x: any) => x.task_id === bath)).toMatchObject({ suggestion: 'wait', person_away: false });
+    // the reason never reaches Home Assistant or the assistant
+    expect(away.tripView(away.getTrip(h)!).kind).toBe('hospital');
+  });
 });
