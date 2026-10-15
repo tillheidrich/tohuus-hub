@@ -15,6 +15,7 @@ import { applyShareView, notPrivate } from './share-core.js';
 import { fmtWhen, originOf } from './shopping-trust.js';
 import { today as todayDay } from './spend2.js';
 import { awayToday } from './away-state.js';
+import { listCareTasks } from './care.js';
 import { contextNow, pickSaying, plattHello } from './platt.js';
 
 export interface TodayViewer {
@@ -52,6 +53,15 @@ function rhythmCard(r: RhythmItem, locale: string) {
     origin: r.origin,
     label: r.label,
   };
+}
+
+/** Tasks this person sees that are due today or overdue. */
+function dueNow(viewer: number | null) {
+  try {
+    return listCareTasks({ viewer }).filter((x) => x.state === 'today' || x.state === 'overdue').length;
+  } catch {
+    return 0;
+  }
 }
 
 export function todayAggregate(viewer?: TodayViewer | null) {
@@ -134,6 +144,8 @@ export function todayAggregate(viewer?: TodayViewer | null) {
     greeting: greeting(viewer?.name),
     platt: platt(viewer),
     away: awayToday(viewer?.userId ?? null),
+    // "Für heute ist alles Wichtige erledigt" – nothing due or overdue, nothing waiting for a look: put the phone away
+    calm: notices.length === 0 && dueNow(viewer?.userId ?? null) === 0,
     household: { name: getSetting('household.name', t('Our home')) },
     rhythm: rhythm.filter((r) => r.suggested).slice(0, 5).map((r) => rhythmCard(r, locale)),
     list: { open, recent },

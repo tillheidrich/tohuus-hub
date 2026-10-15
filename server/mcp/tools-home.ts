@@ -39,7 +39,7 @@ export function register(s: McpServer, actorName: string) {
       annotations: RO,
     },
     async ({ due_only }) => {
-      const list = listCareTasks().filter((x) => !due_only || ['overdue', 'today', 'soon'].includes(x.state));
+      const list = listCareTasks({ outside: true }).filter((x) => !due_only || ['overdue', 'today', 'soon'].includes(x.state));
       return text({ tasks: list.map(compactTask), templates_available: CARE_TEMPLATES.map((t) => t.key) });
     },
   );

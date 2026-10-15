@@ -23,6 +23,7 @@ import { canSeeTask, getCareTask, listCareTasks, updateCareTask, usualDoer } fro
 import { localDay } from './catalog.js';
 import { addDays } from './fresh-shelf.js';
 import { notify } from './notify.js';
+import { getUserPref, setUserPref } from './onboard.js';
 
 interface Member {
   id: number;
@@ -150,7 +151,30 @@ export function whoDoesWhat(viewer: number | null) {
     cook_lately: cookLately(today),
     compare,
     balance,
+    carrying: viewer != null ? carrying(viewer, people.length, shared) : [],
   };
+}
+
+/**
+ * "Du machst das seit Wochen" – only for the person themselves: a task they did the last 6 times in a row, in a
+ * household of two or more grown-ups. First a thank-you, then the offer to hand it over (or swap). Never shown to
+ * the others, never a comparison; dismissed for good with one tap. A tiresome task can feel lonelier than it is.
+ */
+function carrying(viewer: number, memberCount: number, shared: ReturnType<typeof listCareTasks>) {
+  if (memberCount < 2) return [];
+  const skip = new Set(getUserPref<number[]>(viewer, 'carry.dismissed', []));
+  const out: { task_id: number; name: string; times: number }[] = [];
+  for (const task of shared) {
+    if (skip.has(task.id) || task.rotation?.length || task.offer || task.as_needed) continue;
+    const last = db.prepare('SELECT actor_user_id FROM care_log WHERE task_id = ? ORDER BY done_on DESC, id DESC LIMIT 6').all(task.id) as { actor_user_id: number | null }[];
+    if (last.length === 6 && last.every((r) => r.actor_user_id === viewer)) out.push({ task_id: task.id, name: task.name, times: last.length });
+  }
+  return out.slice(0, 2);
+}
+
+export function dismissCarrying(viewer: number, taskId: number) {
+  setUserPref(viewer, 'carry.dismissed', [...new Set([...getUserPref<number[]>(viewer, 'carry.dismissed', []), taskId])].slice(-200));
+  return { ok: true };
 }
 
 /** "So eintragen": the learned person becomes the task's doer – or the proposal is dismissed for good. */

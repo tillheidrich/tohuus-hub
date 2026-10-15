@@ -72,7 +72,7 @@ describe('GET /api/today', () => {
     const r = await get('/api/today');
     expect(r.status).toBe(200);
     const o = r.json;
-    expect(Object.keys(o).sort()).toEqual(['away', 'cookToday', 'date', 'greeting', 'household', 'list', 'money', 'notices', 'platt', 'rhythm', 'stillHave'].sort());
+    expect(Object.keys(o).sort()).toEqual(['away', 'calm', 'cookToday', 'date', 'greeting', 'household', 'list', 'money', 'notices', 'platt', 'rhythm', 'stillHave'].sort());
     expect(o.greeting).toMatch(/Till$/);
     expect(o.household.name).toBeTruthy();
     expect(o.rhythm.length).toBeLessThanOrEqual(5);

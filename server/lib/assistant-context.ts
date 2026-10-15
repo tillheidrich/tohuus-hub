@@ -51,7 +51,7 @@ export function topicsOf(message: string): Topic[] {
 /** Aufgaben due now (household only – private tasks never reach the assistant). */
 function tasksLine() {
   try {
-    const xs = dueCareTasks();
+    const xs = dueCareTasks({ outside: true });
     return xs.length ? `Tasks due: ${xs.slice(0, 10).map((x) => `${x.name} (${x.state}${x.doer ? `, ${x.doer.name}` : ''}${x.assignee ? `, in mind: ${x.assignee.name}` : ''})`).join('; ')}` : 'Tasks due: none';
   } catch {
     return '';

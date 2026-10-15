@@ -552,7 +552,7 @@ const meals: Adapter = {
 const care: Adapter = {
   topic: 'care',
   local() {
-    return listCareTasks()
+    return listCareTasks({ outside: true })
       .filter((c) => c.next_due && (c.state === 'overdue' || c.state === 'today'))
       .map((c) => ({ id: `${c.id}.${c.next_due!.replace(/\D/g, '')}`, key: norm(c.name), fields: { title: c.name, done: false }, touchedAt: null }));
   },

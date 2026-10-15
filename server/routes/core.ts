@@ -89,6 +89,10 @@ r.get('/me', (req, res) => {
     actor,
     household: getSetting('household.name', t('Our home')),
     brand: brand(),
+    // sharing lists, ideas and cards (docs/sharing.md): the website for the "geteilt mit ToHuus" footer, and whether
+    // the household wants that footer at all (an admin switch, on by default)
+    site_url: config.siteUrl,
+    share_footer: getSetting<boolean>('share.footer', true) !== false,
     // "Nich to Huus": the person is away right now (their own trip or the household's) – the app header says so
     away_until: actor.kind === 'user' && actor.userId ? (awayToday(actor.userId).me?.until ?? null) : null,
     language: lang(),

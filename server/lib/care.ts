@@ -429,16 +429,18 @@ const STATE_RANK: Record<DueState, number> = { overdue: 0, today: 1, soon: 2, ok
  * Tasks a viewer may see. Without `viewer` (Home Assistant, MCP, displays, print, trips, the assistant's shared
  * context) private tasks are left out; `allPrivate` is only for the scheduler, which notifies each owner alone.
  */
-export function listCareTasks(opts: { includeArchived?: boolean; viewer?: number | null; allPrivate?: boolean } = {}) {
+export function listCareTasks(opts: { includeArchived?: boolean; viewer?: number | null; allPrivate?: boolean; outside?: boolean } = {}) {
   const today = localDay(0);
   const rows = db.prepare(`SELECT * FROM care_tasks ${opts.includeArchived ? '' : 'WHERE archived = 0'}`).all() as CareRow[];
   return rows
     .filter((r) => opts.allPrivate || canSeeTask(r, opts.viewer))
+    // `outside` (assistant, MCP, Home Assistant): tasks for someone a member looks after are health data – never (carefor.ts)
+    .filter((r) => !opts.outside || !(r as CareRow & { cared_for_id?: number | null }).cared_for_id)
     .map((r) => careView(r, today))
     .sort((a, b) => STATE_RANK[a.state] - STATE_RANK[b.state] || (a.next_due ?? '9').localeCompare(b.next_due ?? '9') || a.name.localeCompare(b.name));
 }
 
-export function dueCareTasks(opts: { viewer?: number | null; allPrivate?: boolean } = {}) {
+export function dueCareTasks(opts: { viewer?: number | null; allPrivate?: boolean; outside?: boolean } = {}) {
   return listCareTasks(opts).filter((x) => x.state === 'overdue' || x.state === 'today' || x.state === 'soon');
 }
 
@@ -745,10 +747,11 @@ export function careLog(id: number, limit = 20) {
 export function findCareTask(ref: string | number) {
   if (typeof ref === 'number') {
     const row = getCareTask(ref);
-    return row && canSeeTask(row) ? row : undefined;
+    return row && canSeeTask(row) && !(row as CareRow & { cared_for_id?: number | null }).cared_for_id ? row : undefined;
   }
   const q = ref.toLowerCase().trim();
-  const rows = db.prepare(`SELECT * FROM care_tasks WHERE archived = 0 AND visibility != 'private'`).all() as CareRow[];
+  // Home Assistant and MCP only: tasks for someone a member looks after stay out (health data, carefor.ts)
+  const rows = (db.prepare(`SELECT * FROM care_tasks WHERE archived = 0 AND visibility != 'private'`).all() as (CareRow & { cared_for_id?: number | null })[]).filter((r) => !r.cared_for_id);
   return rows.find((r) => r.name.toLowerCase() === q) ?? rows.find((r) => r.name.toLowerCase().includes(q)) ?? rows.find((r) => q.includes(r.name.toLowerCase()));
 }
 

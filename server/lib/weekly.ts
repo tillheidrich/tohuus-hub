@@ -13,7 +13,9 @@ import { db } from '../db.js';
 import { t } from '../i18n.js';
 import { canSeeTask, listCareTasks } from './care.js';
 import { addDays } from './fresh-shelf.js';
+import { careForWeek } from './carefor.js';
 import { mindDoneBy, mindDoneShared } from './mind.js';
+import { householdPeople } from './places.js';
 import { getUserPref, setUserPref } from './onboard.js';
 import { region } from './region.js';
 import { cookCards, fmtN, pantryCards, type ReviewCard, shopCards, taskCards } from './review.js';
@@ -66,31 +68,67 @@ function mine(viewer: number, from: string, to: string): ReviewCard[] {
 
 /** The household's week (no names) and, for a member, their own. `week`: any day of the week wanted, default last week. */
 export function weekReview(viewer: number | null, week?: string) {
-  const { from, to } = week ? periodRange('week', week, region().weekStart) : lastWeek();
+  return periodReview(viewer, 'week', week);
+}
+
+/** The same for a month (15 Oct 2026): `month` any day of it, default last month. Never offered on Heute by itself. */
+export function monthReview(viewer: number | null, month?: string) {
+  return periodReview(viewer, 'month', month);
+}
+
+function periodReview(viewer: number | null, period: 'week' | 'month', day?: string) {
+  const ws = region().weekStart;
+  const last = () => (period === 'week' ? lastWeek() : periodRange('month', addDays(periodRange('month', today(), ws).from, -1), ws));
+  const { from, to } = day ? periodRange(period, day, ws) : last();
   const end = to > today() ? today() : to;
-  const prev = periodRange('week', addDays(from, -1), region().weekStart);
+  const prev = periodRange(period, addDays(from, -1), ws);
   const household = [
     ...shopCards(from, end).filter((c) => c.key !== 'shop_day'),
     ...cookCards(from, end),
     ...taskCards(from, end),
-    ...pantryCards(from, end, { ...prev, text: '{n} fewer thrown away than the week before.' }),
+    ...pantryCards(from, end, { ...prev, text: period === 'week' ? '{n} fewer thrown away than the week before.' : '{n} fewer thrown away than the month before.' }),
   ];
   const side = mindDoneShared(from, end);
   if (side) household.push({ key: 'mind_done', area: 'tasks', value: fmtN(side), title: side === 1 ? t('thing done on the side') : t('things done on the side'), text: t('Never on a list – still counts.'), list: [] });
   const personal = viewer != null ? mine(viewer, from, end) : [];
-  const cur = periodRange('week', today(), region().weekStart);
+  // looking after someone (carefor.ts) – only in the person's own part
+  if (viewer != null) {
+    const cf = careForWeek(viewer, from, end);
+    if (cf.count)
+      personal.unshift({
+        key: 'my_carefor',
+        area: 'tasks',
+        value: fmtN(cf.count),
+        title: cf.count === 1 ? t('time you were there for {names}', { names: cf.names.join(', ') }) : t('times you were there for {names}', { names: cf.names.join(', ') }),
+        text: t('That’s work – and it counts.'),
+        list: [],
+      });
+  }
+  const cur = periodRange('week', today(), ws);
+  const people = householdPeople();
   // living alone: "Das habt ihr geschafft" would sound odd – the household part is simply "Zu Hause"
   const alone = (db.prepare(`SELECT COUNT(*) n FROM users WHERE COALESCE(kind, 'member') != 'guest'`).get() as { n: number }).n <= 1;
+  const singleParent = people.adults === 1 && people.kids > 0;
   return {
+    period,
     from,
     to,
     on: viewer != null ? weekReviewOn(viewer) : true,
     // "Heute" shows last week's review in the first three days of a new week, until "Gesehen"
-    show: viewer != null && weekReviewOn(viewer) && !week && today() <= addDays(cur.from, 2) && getUserPref<string | null>(viewer, PREF_SEEN, null) !== from && household.length + personal.length > 0,
-    title: t('Your week at home'),
-    household: { title: alone ? t('At home') : t('This is what you did together'), cards: household },
+    show:
+      period === 'week' &&
+      viewer != null &&
+      weekReviewOn(viewer) &&
+      !day &&
+      today() <= addDays(cur.from, 2) &&
+      getUserPref<string | null>(viewer, PREF_SEEN, null) !== from &&
+      household.length + personal.length > 0,
+    title: period === 'week' ? t('Your week at home') : t('Your month at home'),
+    /** a single parent carries it all – said out loud, kindly */
+    note: singleParent && household.length + personal.length > 0 ? t('All of it on your shoulders – and look what you did.') : null,
+    household: { title: alone || singleParent ? t('At home') : t('This is what you did together'), cards: household },
     mine: viewer != null ? { title: t('This is what you did'), cards: personal } : null,
-    quiet: household.length === 0 && personal.length === 0 ? t('A quiet week – that’s allowed too.') : null,
+    quiet: household.length === 0 && personal.length === 0 ? (period === 'week' ? t('A quiet week – that’s allowed too.') : t('A quiet month – that’s allowed too.')) : null,
   };
 }
 

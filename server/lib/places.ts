@@ -365,12 +365,37 @@ export function homePreset(): HomePreset | null {
   return (PRESETS as readonly string[]).includes(p ?? '') ? (p as HomePreset) : null;
 }
 
+/**
+ * Who carries the household (15 Oct 2026): grown-up members and child profiles. One grown-up with children = a single
+ * parent – the app then never compares (there's nobody to compare with) and says out loud how much that is.
+ */
+export function householdPeople() {
+  let adults = 0;
+  let kids = 0;
+  try {
+    adults = (db.prepare(`SELECT COUNT(*) n FROM users WHERE COALESCE(kind, 'member') NOT IN ('guest','kid','child') AND COALESCE(role, '') NOT IN ('child','kid')`).get() as { n: number }).n;
+  } catch {
+    /* older schema */
+  }
+  try {
+    kids = (db.prepare('SELECT COUNT(*) n FROM kid_profiles').get() as { n: number }).n;
+  } catch {
+    /* no child profiles */
+  }
+  return { adults, kids };
+}
+
 export function homeSetup() {
   const raw = getSetting<string | null>('household.form', null);
   const form = householdForm();
+  const people = householdPeople();
   return {
     form,
     form_chosen: (FORMS as readonly string[]).includes(raw ?? ''),
+    adults: people.adults,
+    kids: people.kids,
+    /** one grown-up with children (detected, never asked): no comparisons, more appreciation */
+    single_parent: people.adults === 1 && people.kids > 0 && form !== 'shared',
     preset: homePreset(),
     /** presentation defaults that follow the form – nothing is forbidden on the server */
     ui: {

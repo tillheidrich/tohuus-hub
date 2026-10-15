@@ -29,6 +29,8 @@ migrate(
    );
    CREATE INDEX mind_items_user ON mind_items(user_id, kind);`,
 );
+// "Mira hat heute den Geschirrspüler ausgeräumt" – written down by someone else (the evening question, checkin.ts)
+migrate('mind-2', `ALTER TABLE mind_items ADD COLUMN done_by INTEGER REFERENCES users(id) ON DELETE SET NULL;`);
 
 export class MindError extends Error {
   constructor(
@@ -49,6 +51,7 @@ interface Row {
   nods: string;
   created_at: string;
   done_at: string | null;
+  done_by?: number | null;
 }
 
 const ids = (raw: string): number[] => {
@@ -71,12 +74,16 @@ const names = () => new Map((db.prepare('SELECT id, name, color FROM users').all
 function view(row: Row, viewer: number, people = names()) {
   const mine = row.user_id === viewer;
   const author = people.get(row.user_id);
+  const doer = row.done_by && row.done_by !== row.user_id ? people.get(row.done_by) : undefined;
   return {
     id: row.id,
     text: row.text,
     kind: row.kind,
     mine,
     by: author ? { id: row.user_id, name: author.name, color: author.color } : null,
+    /** someone else did it, the author wrote it down ("Danke, Mira!") */
+    done_by: doer ? { id: row.done_by!, name: doer.name, color: doer.color } : null,
+    about_me: row.done_by === viewer && row.user_id !== viewer,
     visibility: row.visibility,
     // only the author sees whom it is hidden from
     hide_from: mine ? ids(row.hide_from) : [],
@@ -128,13 +135,17 @@ export interface MindInput {
   kind?: 'open' | 'done';
   visibility?: 'private' | 'household';
   hide_from?: number[];
+  /** done by another member (only for `done`; such an entry is always for the household – it's about them) */
+  done_by?: number | null;
 }
 
 export function addMind(viewer: number, input: MindInput) {
   const kind = input.kind === 'done' ? 'done' : 'open';
+  const other =
+    kind === 'done' && input.done_by && input.done_by !== viewer && db.prepare(`SELECT 1 FROM users WHERE id = ? AND COALESCE(kind, 'member') != 'guest'`).get(input.done_by) ? input.done_by : null;
   const info = db
-    .prepare(`INSERT INTO mind_items (user_id, text, kind, visibility, hide_from, done_at) VALUES (?, ?, ?, ?, ?, ${kind === 'done' ? "datetime('now')" : 'NULL'})`)
-    .run(viewer, cleanText(input.text ?? ''), kind, input.visibility === 'private' ? 'private' : 'household', cleanHide(input.hide_from, viewer));
+    .prepare(`INSERT INTO mind_items (user_id, text, kind, visibility, hide_from, done_at, done_by) VALUES (?, ?, ?, ?, ?, ${kind === 'done' ? "datetime('now')" : 'NULL'}, ?)`)
+    .run(viewer, cleanText(input.text ?? ''), kind, other || input.visibility !== 'private' ? 'household' : 'private', other ? '[]' : cleanHide(input.hide_from, viewer), other);
   emit('mind');
   return view(db.prepare('SELECT * FROM mind_items WHERE id = ?').get(Number(info.lastInsertRowid)) as Row, viewer);
 }
@@ -175,7 +186,10 @@ export function nodMind(viewer: number, id: number) {
 
 /** Weekly review: what this person did on the side or thought of (their private ones too – that part is only for them). */
 export function mindDoneBy(viewer: number, from: string, to: string) {
-  return db.prepare(`SELECT text FROM mind_items WHERE user_id = ? AND kind = 'done' AND done_at BETWEEN ? AND ? ORDER BY done_at DESC`).all(viewer, `${from} 00:00:00`, `${to} 23:59:59`) as {
+  // what I did – also when someone else wrote it down for me ("Mira hat den Geschirrspüler ausgeräumt")
+  return db
+    .prepare(`SELECT text FROM mind_items WHERE COALESCE(done_by, user_id) = ? AND kind = 'done' AND done_at BETWEEN ? AND ? AND (user_id = ? OR visibility = 'household') ORDER BY done_at DESC`)
+    .all(viewer, `${from} 00:00:00`, `${to} 23:59:59`, viewer) as {
     text: string;
   }[];
 }

@@ -97,7 +97,7 @@ function personKey(name: unknown, ctx: Ctx): string | null | undefined {
 }
 
 function findTask(ref: unknown) {
-  const all = listCareTasks();
+  const all = listCareTasks({ outside: true });
   const id = typeof ref === 'number' ? ref : /^\d+$/.test(String(ref ?? '').trim()) ? Number(ref) : null;
   if (id) return all.find((x) => x.id === id);
   const q = norm(String(ref ?? ''));
@@ -126,7 +126,7 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
     const f = a.filter ?? 'due';
     const q = typeof a.query === 'string' ? norm(a.query) : '';
     // shared view: private tasks (anyone's) are left out
-    const xs = listCareTasks()
+    const xs = listCareTasks({ outside: true })
       .filter((x) => (f === 'due' ? ['overdue', 'today', 'soon'].includes(x.state) : f === 'house' ? x.category === 'house' : f === 'care' ? x.category !== 'house' : true))
       .filter((x) => !q || norm(x.name).includes(q))
       .slice(0, 30);
@@ -221,7 +221,7 @@ export function undoTask(u: { kind?: string; id?: number; actor?: string; before
  * Also usable outside the assistant (Wer hat was im Blick).
  */
 export function tasksOverview(days = 28) {
-  const shared = listCareTasks().filter((x) => canSeeTask(x));
+  const shared = listCareTasks({ outside: true }).filter((x) => canSeeTask(x));
   const sharedIds = new Set(shared.map((x) => x.id));
   const done = (db
     .prepare(`SELECT task_id, actor FROM care_log WHERE done_on >= date('now', ?)`)

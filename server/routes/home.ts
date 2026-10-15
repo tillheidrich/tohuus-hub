@@ -1,7 +1,7 @@
 /** Home care: maintenance cycles, spending, QR labels */
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
-import { db } from '../db.js';
+import { db, setSetting } from '../db.js';
 import { fmtDay, t } from '../i18n.js';
 import { requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
@@ -41,6 +41,10 @@ import { eventIcs } from '../lib/calendar.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
 import { addMind, deleteMind, MindError, mindList, nodMind, updateMind } from '../lib/mind.js';
+import { checkinSave, checkinSkip, checkinView, setCheckinOn } from '../lib/checkin.js';
+import { addCareFor, addCareForTask, careForHint, careForList, deleteCareFor, deleteCareForLog, dismissCareForHint, logCareFor, updateCareFor } from '../lib/carefor.js';
+import { dismissCarrying } from '../lib/habits.js';
+import { monthReview } from '../lib/weekly.js';
 import { priceHistory, pricedProducts, setSpendingTarget, spendingCsv, spendingSummary, spendingTarget } from '../lib/spending.js';
 
 export const r = Router();
@@ -353,6 +357,7 @@ r.post('/calsync/suggest', async (req, res) => {
 // ---------------------------------------------------------------- Im Kopf (lib/mind.ts, docs/mind.md) – members only
 
 const mindBody = z.object({
+  done_by: z.number().int().positive().nullable().optional(),
   text: z.string().max(400).optional(),
   kind: z.enum(['open', 'done']).optional(),
   visibility: z.enum(['private', 'household']).optional(),
@@ -365,7 +370,8 @@ const mindRun = (fn: (me: number, req: Request) => unknown) => (req: Request, re
   try {
     res.json(fn(me, req));
   } catch (e) {
-    if (e instanceof MindError) return void res.status(e.status).json({ error: e.message });
+    const status = (e as { status?: number }).status;
+    if (e instanceof MindError || (status && status >= 400 && status < 500)) return void res.status(status ?? 400).json({ error: (e as Error).message });
     throw e;
   }
 };
@@ -386,6 +392,82 @@ r.post(
     return task;
   }),
 );
+
+// ---------------------------------------------------------------- "Was habt ihr heute gelöst?" (lib/checkin.ts, docs/checkin.md)
+
+r.get('/checkin', mindRun((me) => checkinView(me)));
+r.post(
+  '/checkin',
+  mindRun((me, req) =>
+    checkinSave(
+      me,
+      z
+        .object({ items: z.array(z.object({ task_id: z.number().int().positive().nullable().optional(), text: z.string().max(200).nullable().optional(), who: z.number().int().positive().nullable().optional() })).max(20) })
+        .parse(req.body).items,
+    ),
+  ),
+);
+r.post('/checkin/skip', mindRun((me) => checkinSkip(me)));
+r.put('/checkin/settings', mindRun((me, req) => setCheckinOn(me, z.object({ on: z.boolean() }).parse(req.body).on)));
+
+// ---------------------------------------------------------------- Für wen ich da bin (lib/carefor.ts, docs/carefor.md)
+
+const careForBody = z.object({
+  name: z.string().max(60).optional(),
+  relation: z.string().max(40).nullable().optional(),
+  place: z.enum(['home', 'own', 'care_home', 'other']).optional(),
+  visibility: z.enum(['private', 'household']).optional(),
+  archived: z.boolean().optional(),
+});
+r.get('/carefor', mindRun((me) => careForList(me)));
+r.get('/carefor/hint', mindRun((me) => careForHint(me)));
+r.post('/carefor/hint/dismiss', mindRun((me) => dismissCareForHint(me)));
+r.post('/carefor', mindRun((me, req) => addCareFor(me, careForBody.parse(req.body))));
+r.patch('/carefor/:id', mindRun((me, req) => updateCareFor(me, mindId(req), careForBody.parse(req.body))));
+r.delete('/carefor/:id', mindRun((me, req) => deleteCareFor(me, mindId(req))));
+r.post(
+  '/carefor/:id/log',
+  mindRun((me, req) =>
+    logCareFor(me, mindId(req), z.object({ kind: z.enum(['visit', 'call', 'appointment', 'errand', 'other']).optional(), note: z.string().max(200).nullable().optional(), day: z.string().nullable().optional() }).parse(req.body)),
+  ),
+);
+r.delete('/carefor/log/:id', mindRun((me, req) => deleteCareForLog(me, mindId(req))));
+r.post(
+  '/carefor/:id/tasks',
+  mindRun((me, req) =>
+    addCareForTask(
+      me,
+      mindId(req),
+      z
+        .object({
+          name: z.string().max(120),
+          interval_n: z.number().int().min(1).max(365).nullable().optional(),
+          interval_unit: z.enum(['day', 'week', 'month', 'year']).nullable().optional(),
+          next_due: z.string().regex(/^\d{4}-\d\d-\d\d$/).nullable().optional(),
+          due_time: z.string().regex(/^\d\d:\d\d$/).nullable().optional(),
+        })
+        .parse(req.body),
+    ),
+  ),
+);
+
+// ---------------------------------------------------------------- "Du machst das seit Wochen" (lib/habits.ts carrying)
+r.post('/habits/carrying/:id/dismiss', mindRun((me, req) => dismissCarrying(me, mindId(req))));
+
+// ---------------------------------------------------------------- sharing (docs/sharing.md): the footer is the household's choice
+r.put('/share/settings', (req, res) => {
+  if (req.actor?.role !== 'admin') return void res.status(403).json({ error: t('Only admins can change this') });
+  const b = z.object({ footer: z.boolean() }).parse(req.body);
+  setSetting('share.footer', b.footer);
+  res.json({ footer: b.footer });
+});
+
+// ---------------------------------------------------------------- Monatsrückblick (lib/weekly.ts)
+r.get('/month-review', (req, res) => {
+  if (req.actor?.role === 'guest' || req.actor?.houseGuest) return void res.status(403).json({ error: t('Not available for guests') });
+  const m = z.string().regex(/^\d{4}-\d\d-\d\d$/).optional().safeParse(req.query.month || undefined);
+  res.json(monthReview(memberOf(req), m.success ? m.data : undefined));
+});
 
 // ---------------------------------------------------------------- Wochenrückblick (lib/weekly.ts, docs/week-review.md)
 
