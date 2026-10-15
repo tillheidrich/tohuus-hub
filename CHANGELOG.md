@@ -4,6 +4,14 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Free without any AI (docs/pricing.md): the minimum for 0 €, and the 14-day trial for every new household.
+  - The assistant answers 402 `plan.assistant` with a calm note; simple commands still work.
+  - The website form "Wir können uns das gerade nicht leisten" (`POST /api/cloud/hardship`) leads to back office › Härtefälle, where one click gifts a single-use code by e-mail. The operators' address is never shown.
+- Guests can take tasks (docs/guests-and-permissions.md): as doer or as stand-in on a trip. Their own narrow `/api/guest-tasks` and "Deine Aufgaben hier" on Heute.
+  - When everyone is away, things that can't wait (bins, daily tasks, appointments) are still reminded once.
+- Im Kopf: brain dump with one thought per line, an optional "bis wann" (no reminder), and "Was davon ist noch wichtig?" one at a time (keep · let go · done). Aufgaben: "Was schaffst du heute?" (today · may wait · done). Both use the same swipe deck as meal ideas, with buttons and arrow keys.
+- "Gut zu wissen" on the matching screens: 11 new facts with primary sources (care, single parents, appreciation, calm, mental load), shareable as a card.
+- "Was ist neu" for the iPhone app too (`GET /api/whats-new`), and a tour step for the new areas.
 - Teilen (docs/sharing.md):
   - Lists, Im Kopf, due tasks and the week plan go to Apple Notes, Mail or messages as text.
   - Shared texts end with an optional "— geteilt aus ToHuus" line (admin switch, `PUT /api/share/settings`; `/api/me` has `site_url` and `share_footer`).

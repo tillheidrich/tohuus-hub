@@ -20,6 +20,14 @@ Our team research (`docs/research/2026-10-14-team-review.md`) showed the same th
   - The person's own part gets "Sachen nebenbei erledigt oder dran gedacht", with up to three texts, private ones included.
   - The household part only gets a number ("Sachen nebenbei erledigt"), with no texts and no names. Entries hidden from someone don't count there.
 
+## Brain dump, "irgendwann", tidying up (15 Oct 2026)
+
+ADHD apps (Goblin.tools, Tiimo, Structured, Llama Life, Saner.AI) agree on one point: getting things out of your head comes first, sorting comes later. A concrete plan quiets open loops (Masicampo & Baumeister 2011, lab studies).
+
+- **"Mehrere auf einmal":** one thought per line (`POST /api/mind { many: true, text }`, at most 20). List markers like "- ", "• " and "1." are dropped.
+- **"Bis wann?":** an optional soft date (`due_on`). It is shown as "bis 24. Dez.", with no reminder, no red and no overdue state. Left empty, it means "irgendwann".
+- **"Was davon ist noch wichtig?":** older thoughts (more than a week old, not looked at for two weeks, at most ten) come up one at a time. You swipe "Noch wichtig" (`POST /api/mind/:id/keep`), "Loslassen" (delete) or "Erledigt". Letting go is allowed. `GET /api/mind/review`; the count is `review` in `GET /api/mind`.
+
 ## Privacy
 
 - **Visibility:** each entry is `private` (only the author) or `household`. It can be switched either way at any time.

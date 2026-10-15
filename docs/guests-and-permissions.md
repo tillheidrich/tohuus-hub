@@ -32,6 +32,18 @@ On top of that, a request whose path contains one of these words is always refus
 
 Discreet and private shopping items are hidden from guests, and the overview never shows a guest the import queue.
 
+### Tasks handed to a guest (15 Oct 2026)
+
+Grandma waters the plants and feeds the cats while you're on holiday; your aunt helps at home while you're in hospital, or looks after Felix today. A permanent guest can be given single tasks:
+- as their **doer**;
+- as the **stand-in** in "Zu Hause, solange … weg ist" on a trip. `homePlan` lists permanent guests as takers, marked `guest: true`.
+
+At every level except `paused`, the guest reaches only their own tasks, and only these two routes:
+- `GET /api/guest-tasks`: tasks where they are the doer or stand-in, with name, note, due date, checklist and the stand-in reason.
+- `POST /api/guest-tasks/:id/done`.
+
+The rest of Aufgaben stays closed. Heute shows them as "Deine Aufgaben hier", and each one reminds them on their own devices. A stand-in reminder goes out even while the household is away and otherwise quiet.
+
 ### Temporary overrides
 
 An admin can change a guest's level for a while: "full access until Sunday", "only ordering this weekend", or "paused until …". The effective level is computed from the clock on every request, so an override ends on time even if the server was down. The scheduler only clears expired overrides and tells open apps to refresh.
