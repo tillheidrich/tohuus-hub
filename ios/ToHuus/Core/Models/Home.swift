@@ -5,6 +5,8 @@ struct TodayPayload: Decodable, Sendable {
     var greeting: String?
     /// Plattdeutsch saying for this moment (server/lib/platt.ts); German households only.
     var platt: Platt?
+    /// who is away today (server: away-state.ts awayToday) – me → the header says "Nich to Huus"
+    var away: TodayAway?
     var household: JSONValue?
     @Lossy var rhythm: [RhythmItem]
     var list: TodayList?
@@ -14,6 +16,13 @@ struct TodayPayload: Decodable, Sendable {
     @Lossy var notices: [Notice]
 
     var householdName: String? { household?.string ?? household?["name"]?.string }
+
+    struct TodayAway: Decodable, Sendable, Hashable {
+        struct Me: Decodable, Sendable, Hashable { var until: String }
+        struct Other: Decodable, Sendable, Hashable { var name: String; var until: String }
+        var me: Me?
+        @Lossy var others: [Other]
+    }
 
     struct Platt: Decodable, Sendable, Hashable {
         var id: String

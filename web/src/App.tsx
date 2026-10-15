@@ -40,6 +40,8 @@ export interface Me {
   };
   household: string;
   brand?: string;
+  /** last day of the person's own absence today, else null ("Nich to Huus" in the header) */
+  away_until?: string | null;
   language?: string;
   features: { vision: boolean; email: boolean };
   appearance?: Appearance;
@@ -252,7 +254,14 @@ function Shell({ me }: { me: Me }) {
       <aside className="sidebar" aria-label={t('Main navigation')}>
         <NavLink to={guestAllows(gl, '/') ? '/' : '/einkauf'} className="brand">
           <BrandMark />
-          <span>ToHuus</span>
+          {/* easter egg: away, it's "Nich to Huus" – Low German for "not at home" */}
+          {me.away_until ? (
+            <span lang="nds" title={t('Not at home')}>
+              Nich to Huus
+            </span>
+          ) : (
+            <span>ToHuus</span>
+          )}
         </NavLink>
         <button className="side-search" onClick={openSearch} aria-keyshortcuts="Meta+K">
           <MagnifyingGlass size={18} />

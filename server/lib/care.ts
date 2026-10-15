@@ -11,6 +11,7 @@ import { config } from '../config.js';
 import { db, lang, migrate } from '../db.js';
 import { localeOf } from '../languages.js';
 import { t, userError } from '../i18n.js';
+import { awayPeople, isAway } from './away-state.js';
 import { emit } from './bus.js';
 import { addToShopping, adjustStock, getProduct, localDay, matchProduct, stockOf } from './catalog.js';
 import { notify } from './notify.js';
@@ -311,11 +312,29 @@ function parseKeys(raw: string | null): string[] {
   }
 }
 
-/** taking turns: who is next after `current` (the first one when nobody or someone else had it) */
-export function nextInTurn(rotation: string[], current: string | null) {
+/** taking turns: who is next after `current` (the first one when nobody or someone else had it).
+ *  `day`: skip whoever is away that day (a trip of theirs) – their turn simply comes the time after. */
+export function nextInTurn(rotation: string[], current: string | null, day?: string | null) {
   if (rotation.length < 2) return current;
   const i = current ? rotation.indexOf(current) : -1;
+  for (let k = 1; k <= rotation.length; k++) {
+    const next = rotation[(i + k) % rotation.length];
+    if (!day || !isAway(next, day)) return next;
+  }
   return rotation[(i + 1) % rotation.length];
+}
+
+/** The person this task leans on (doer, else who keeps it in mind, else who usually does it) – when they are away
+ *  today: their name and the last day away, so the others see it's theirs for now. */
+function awayOf(keys: (string | null | undefined)[], today: string) {
+  const away = awayPeople(today);
+  for (const k of keys) {
+    if (!k) continue;
+    const p = away.find((a) => a.key === k);
+    if (p) return { name: p.name, until: p.until };
+    return null;
+  }
+  return null;
 }
 
 /** u<id> = a member, k<id> = a child profile (people directory keys) */
@@ -338,6 +357,7 @@ export function careView(row: CareRow, today = localDay(0)) {
   const who = row.assignee_user_id ? (db.prepare('SELECT id, name, color FROM users WHERE id = ?').get(row.assignee_user_id) as { id: number; name: string; color: string } | undefined) : undefined;
   const ds = dueState(row.next_due, row.lead_days, today);
   const stock = p ? stockOf(p.id).reduce((s, e) => s + e.qty, 0) : null;
+  const usual = row.visibility === 'private' ? null : usualDoer(row.id);
   return {
     ...row,
     archived: Boolean(row.archived),
@@ -352,8 +372,10 @@ export function careView(row: CareRow, today = localDay(0)) {
     assignee: who ?? null,
     promise: promiseOf(row, today),
     // learned, never for private tasks (they are one person's anyway)
-    usual: row.visibility === 'private' ? null : usualDoer(row.id),
+    usual,
     offer: offerOf(row),
+    // "Sam ist bis Freitag weg" – somebody at home takes it for now
+    away: row.visibility === 'private' ? null : awayOf([row.doer_key, row.assignee_user_id ? `u${row.assignee_user_id}` : null, usual ? `u${usual.user_id}` : null], today),
   };
 }
 export type CareView = ReturnType<typeof careView>;
@@ -654,7 +676,7 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
     const fresh = row.checklist ? JSON.stringify(parseChecklist(row.checklist).map((x) => ({ ...x, done: false }))) : null;
     const oneOff = !nextDue && !row.interval_n && !row.as_needed && !ext;
     // taking turns: the next person has it next time
-    const doer = row.rotation ? nextInTurn(parseKeys(row.rotation), row.doer_key) : row.doer_key;
+    const doer = row.rotation ? nextInTurn(parseKeys(row.rotation), row.doer_key, nextDue) : row.doer_key;
     db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, checklist = ?, archived = ?, doer_key = ?, promised_by = NULL, promised_for = NULL, updated_at = datetime('now') WHERE id = ?`).run(
       doneOn, nextDue, fresh, oneOff ? 1 : row.archived, doer, id,
     );
@@ -746,7 +768,13 @@ export async function checkCareDue() {
       event: 'care.due',
       title: t('{name}: {when}', { name: task.name, when }),
       message: [
-        task.assignee ? t('{name} takes care of it.', { name: task.assignee.name }) : !task.doer && task.usual ? t('{name} usually does it.', { name: task.usual.name }) : null,
+        task.away
+          ? t('{name} is away until {date} – can someone at home do it?', { name: task.away.name, date: fmtDayShort(task.away.until) })
+          : task.assignee
+            ? t('{name} takes care of it.', { name: task.assignee.name })
+            : !task.doer && task.usual
+              ? t('{name} usually does it.', { name: task.usual.name })
+              : null,
         task.product ? t('Needs: {product} ({n} in stock).', { product: task.product.name, n: task.product.stock ?? 0 }) : null,
         task.note,
       ]

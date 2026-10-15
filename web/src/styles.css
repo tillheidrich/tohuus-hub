@@ -11165,3 +11165,13 @@ html.gentle .badge.empty {
   padding: 14px 16px;
   align-items: center;
 }
+
+/* "Nich to Huus" – Heute while the person is away (pages/Today.tsx) */
+.away-brand {
+  color: var(--primary-text, var(--primary));
+  font-weight: 600;
+}
+.away-others {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}

@@ -23,6 +23,7 @@ import {
   Snowflake,
   Suitcase,
   Trash,
+  User,
   X,
 } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState } from 'react';
@@ -135,6 +136,10 @@ export function AwayBanner() {
     ]
       .filter(Boolean)
       .join(' · ');
+  } else if (tr.phase === 'during' && !tr.everyone_away) {
+    // only some are away: the house runs on as usual
+    title = t('{names} away · back on {date}', { names: tr.travellers.join(', '), date: dayLabel(tr.end_day) });
+    sub = t('Their tasks and turns wait or go to whoever is at home.');
   } else if (tr.phase === 'during') {
     title = t('Away mode · back on {date}', { date: dayLabel(tr.end_day) });
     sub = tr.quiet ? t('Only urgent notifications until then.') : t('Notifications as usual.');
@@ -174,7 +179,7 @@ export function AwayEntryCard() {
 
 export function Away({ me }: { me: Me }) {
   const q = useApi<{ summary: Summary; trips: Trip[]; members: { id: number; name: string; color: string }[] }>('away', '/away');
-  const [edit, setEdit] = useState<Trip | 'new' | null>(null);
+  const [edit, setEdit] = useState<Trip | 'new' | 'me' | null>(null);
   const [openId, setOpenId] = useState<number | null>(null);
   const nav = useNavigate();
   const toast = useToast();
@@ -189,6 +194,9 @@ export function Away({ me }: { me: Me }) {
           <h1>{t('Trip / away')}</h1>
         </div>
         <div className="actions">
+          <button className="btn ghost" onClick={() => setEdit('me')}>
+            <User size={16} /> {t('Only I’m away')}
+          </button>
           <button className="btn" onClick={() => setEdit('new')}>
             <Plus size={16} /> {t('New trip')}
           </button>
@@ -212,6 +220,9 @@ export function Away({ me }: { me: Me }) {
             <div className="card away-empty">
               <Empty icon={<AirplaneTilt size={28} />} art="suitcase" title={t('Going away?')} action={{ label: t('Plan a trip'), icon: <Plus size={16} />, onClick: () => setEdit('new') }}>
                 {t('Enter the dates once. In the days before, ToHuus Hub suggests meals that use up what would go off and stops putting fresh things on the list. While you’re away, only urgent notifications come through. On the way back, a welcome-home list is ready.')}
+                <span className="small muted" style={{ display: 'block', marginTop: 8 }}>
+                  {t('Only one of you is away – a business trip, a course? Enter just that person: the house runs on, their tasks and turns go to whoever is at home.')}
+                </span>
               </Empty>
             </div>
           )}
@@ -239,7 +250,8 @@ export function Away({ me }: { me: Me }) {
         </>
       )}
       <TripSheet
-        trip={edit === 'new' ? null : edit}
+        trip={edit === 'new' || edit === 'me' ? null : edit}
+        only={edit === 'me' ? me.actor.name : null}
         open={edit !== null}
         members={q.data?.members ?? []}
         onClose={() => setEdit(null)}
@@ -261,6 +273,7 @@ export function Away({ me }: { me: Me }) {
 type Tab = 'before' | 'pack' | 'kitchen' | 'sitter' | 'home' | 'handover';
 
 function defaultTab(tr: Trip): Tab {
+  if (!tr.everyone_away) return 'before';
   if (tr.welcome_ready || tr.phase === 'after' || tr.phase === 'done') return 'home';
   if (tr.phase === 'during') return tr.kitchen ? 'kitchen' : 'sitter';
   return 'before';
@@ -301,14 +314,17 @@ function TripDetail({ id, onEdit, onClosed }: { id: number; onEdit: (tr: Trip) =
       })
       .catch(fail(toast));
   };
-  const tabs: [Tab, string][] = [
-    ['before', t('Before')],
-    ['pack', t('Packing')],
-    ['kitchen', t('Kitchen')],
-    ['sitter', t('House sitter')],
-    ['handover', t('Handover')],
-    ['home', t('Back home')],
-  ];
+  // only some are away: no holiday kitchen, house sitter or welcome-home list – the house runs on
+  const tabs: [Tab, string][] = (
+    [
+      ['before', t('Before')],
+      ['pack', t('Packing')],
+      ['kitchen', t('Kitchen')],
+      ['sitter', t('House sitter')],
+      ['handover', t('Handover')],
+      ['home', t('Back home')],
+    ] as [Tab, string][]
+  ).filter(([k]) => tr.everyone_away || (k !== 'kitchen' && k !== 'sitter' && k !== 'home'));
   return (
     <>
       <div className={`card away-hero phase-${tr.phase}`}>
@@ -324,7 +340,7 @@ function TripDetail({ id, onEdit, onClosed }: { id: number; onEdit: (tr: Trip) =
           </button>
         </div>
         <div className="away-who">
-          <span className="small muted">{t('Travelling')}:</span>
+          <span className="small muted">{tr.everyone_away ? t('Travelling') : t('Away')}:</span>
           {tr.travellers.map((n) => <span key={n} className="chip sm on">{n}</span>)}
           {tr.home.length > 0 && <span className="small muted" style={{ marginLeft: 6 }}>{t('Staying home')}:</span>}
           {tr.home.map((n) => <span key={n} className="chip sm">{n}</span>)}
@@ -338,7 +354,7 @@ function TripDetail({ id, onEdit, onClosed }: { id: number; onEdit: (tr: Trip) =
         <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
           {tr.status === 'active' && tr.phase !== 'done' && tr.phase !== 'after' && (
             <button className="btn sm" onClick={stop}>
-              {tr.phase === 'during' ? <><House size={15} /> {t('We’re back')}</> : <><X size={15} /> {t('Cancel trip')}</>}
+              {tr.phase === 'during' ? <><House size={15} /> {tr.everyone_away ? t('We’re back') : t('Back again')}</> : <><X size={15} /> {t('Cancel trip')}</>}
             </button>
           )}
           <button className="btn sm ghost" onClick={remove}>
@@ -382,12 +398,12 @@ function BeforeTab({ id, d }: { id: number; d: any }) {
   const upFrom = addDays(tr.start_day, -tr.use_up_days);
   return (
     <div className="stack" style={{ gap: 22 }}>
-      {tr.phase === 'planned' && (
+      {tr.everyone_away && tr.phase === 'planned' && (
         <p className="small muted" style={{ margin: 0 }}>
           {t('From {date}, meal ideas and the week plan prefer what would otherwise go off, and fresh things stay off the shopping list.', { date: dayLabel(upFrom) })}
         </p>
       )}
-      <section id="away-useup">
+      {tr.everyone_away && <section id="away-useup">
         <div className="section-head">
           <h2>{t('Use up first')}</h2>
         </div>
@@ -417,7 +433,7 @@ function BeforeTab({ id, d }: { id: number; d: any }) {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
       {d.recipes.length > 0 && (
         <section>
@@ -1116,14 +1132,14 @@ function HomeTab({ id, d }: { id: number; d: any }) {
 
 // ------------------------------------------------------------------ create / edit
 
-function TripSheet({ trip, open, members, onClose, onSaved }: { trip: Trip | null; open: boolean; members: { id: number; name: string; color: string }[]; onClose: () => void; onSaved: (id: number) => void }) {
+function TripSheet({ trip, only, open, members, onClose, onSaved }: { trip: Trip | null; only?: string | null; open: boolean; members: { id: number; name: string; color: string }[]; onClose: () => void; onSaved: (id: number) => void }) {
   const toast = useToast();
   const blank = () => ({
     name: '',
     place: '',
-    start_day: addDays(localToday(), 7),
-    end_day: addDays(localToday(), 14),
-    travellers: members.map((m) => m.name),
+    start_day: only ? localToday() : addDays(localToday(), 7),
+    end_day: only ? addDays(localToday(), 3) : addDays(localToday(), 14),
+    travellers: only ? [only] : members.map((m) => m.name),
     home: [] as string[],
     use_up_days: 4,
     quiet: true,
@@ -1154,17 +1170,19 @@ function TripSheet({ trip, open, members, onClose, onSaved }: { trip: Trip | nul
           }
         : blank(),
     );
-  }, [open, trip?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, trip?.id, only]); // eslint-disable-line react-hooks/exhaustive-deps
   const toggleMember = (name: string) => setF((x) => ({ ...x, travellers: x.travellers.includes(name) ? x.travellers.filter((n) => n !== name) : [...x.travellers, name] }));
   // members who don't travel stay at home – together with the extra names (e.g. grandparents)
   const memberHome = members.map((m) => m.name).filter((n) => !f.travellers.includes(n));
   const extraTravellers = f.travellers.filter((n) => !members.some((m) => m.name === n));
+  // only some are away: no fridge, holiday kitchen or paused list – the house runs on
+  const partial = memberHome.length + f.home.length > 0;
   const save = async () => {
     if (!f.start_day || !f.end_day) return toast({ text: t('Please pick the dates of the trip.'), error: true });
     if (f.end_day < f.start_day) return toast({ text: t('The trip cannot end before it starts.'), error: true });
     setBusy(true);
     const body = {
-      name: f.name.trim() || f.place.trim() || t('Trip'),
+      name: f.name.trim() || f.place.trim() || (partial ? t('Away') : t('Trip')),
       place: f.place.trim() || null,
       start_day: f.start_day,
       end_day: f.end_day,
@@ -1195,7 +1213,7 @@ function TripSheet({ trip, open, members, onClose, onSaved }: { trip: Trip | nul
     <Sheet
       open={open}
       onClose={onClose}
-      title={trip ? t('Edit trip') : t('New trip')}
+      title={trip ? t('Edit trip') : only ? t('Only I’m away') : t('New trip')}
       footer={
         <button className="btn primary block" disabled={busy} onClick={save}>
           {trip ? t('Save') : t('Save trip')}
@@ -1224,7 +1242,7 @@ function TripSheet({ trip, open, members, onClose, onSaved }: { trip: Trip | nul
           </div>
         </div>
         <div className="field">
-          <label>{t('Who travels?')}</label>
+          <label>{t('Who is away?')}</label>
           <div className="row wrap" style={{ gap: 8 }}>
             {members.map((m) => (
               <button key={m.id} type="button" className={`chip ${f.travellers.includes(m.name) ? 'on' : ''}`} onClick={() => toggleMember(m.name)}>
@@ -1273,36 +1291,40 @@ function TripSheet({ trip, open, members, onClose, onSaved }: { trip: Trip | nul
           )}
           <div className="help">{memberHome.length + f.home.length ? t('Someone stays home: the week plan and the shopping list carry on for them.') : t('Nobody stays home: the week plan leaves the trip days empty.')}</div>
         </div>
-        <div className="field">
+        {!partial && <div className="field">
           <label>{t('Start using things up')}</label>
           <Seg
             value={String(f.use_up_days) as '0' | '2' | '4' | '7'}
             onChange={(v) => setF({ ...f, use_up_days: Number(v) })}
             options={[['0', t('off')], ['2', t('2 days before')], ['4', t('4 days before')], ['7', t('a week before')]]}
           />
-        </div>
+        </div>}
         <label className="row away-toggle">
           <div className="grow">
             <b>{t('Only urgent notifications')}</b>
-            <div className="small muted">{t('No “milk is low”, digest or reminders while you’re away – sign-in alerts still come through.')}</div>
+            <div className="small muted">
+              {partial
+                ? t('For those away only – the people at home still get them.')
+                : t('No “milk is low”, digest or reminders while you’re away – sign-in alerts still come through.')}
+            </div>
           </div>
           <Toggle on={f.quiet} onChange={(v) => setF({ ...f, quiet: v })} label={t('Only urgent notifications')} />
         </label>
-        <label className="row away-toggle">
+        {!partial && <label className="row away-toggle">
           <div className="grow">
             <b>{t('Pause automatic suggestions')}</b>
             <div className="small muted">{t('Nothing lands on the shopping list by itself while nobody is home.')}</div>
           </div>
           <Toggle on={f.pause_auto} onChange={(v) => setF({ ...f, pause_auto: v })} label={t('Pause automatic suggestions')} />
-        </label>
-        <label className="row away-toggle">
+        </label>}
+        {!partial && <label className="row away-toggle">
           <div className="grow">
             <b>{t('Holiday kitchen')}</b>
             <div className="small muted">{t('Cooking at the holiday flat: a small meal plan with its own shopping list.')}</div>
           </div>
           <Toggle on={f.kitchen} onChange={(v) => setF({ ...f, kitchen: v })} label={t('Holiday kitchen')} />
-        </label>
-        {f.kitchen && (
+        </label>}
+        {!partial && f.kitchen && (
           <div className="field">
             <label>{t('Shop for the holiday list')}</label>
             <input className="input" value={f.kitchen_store} placeholder={t('Holiday flat')} onChange={(e) => setF({ ...f, kitchen_store: e.target.value })} />

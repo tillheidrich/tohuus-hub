@@ -35,6 +35,23 @@
         }
       }
     },
+    "%@ (until %@)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (until %@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (bis %@)"
+          }
+        }
+      }
+    },
     "%@ added": {
       "extractionState": "manual",
       "localizations": {
@@ -473,6 +490,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ lädt dich zu %@ ein."
+          }
+        }
+      }
+    },
+    "%@ is away until %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is away until %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist bis %@ weg"
           }
         }
       }
@@ -9759,6 +9793,23 @@
         }
       }
     },
+    "Away": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterwegs"
+          }
+        }
+      }
+    },
     "Away mode is on": {
       "extractionState": "manual",
       "localizations": {
@@ -9810,6 +9861,23 @@
         }
       }
     },
+    "Away: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterwegs: %@"
+          }
+        }
+      }
+    },
     "A–Z": {
       "extractionState": "manual",
       "localizations": {
@@ -9857,6 +9925,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zurück"
+          }
+        }
+      }
+    },
+    "Back again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back again"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wieder da"
           }
         }
       }
@@ -21230,6 +21315,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für den ganzen Haushalt"
+          }
+        }
+      }
+    },
+    "For those away only – the people at home still get them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For those away only – the people at home still get them."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur für die, die weg sind – wer zu Hause ist, bekommt sie weiter."
           }
         }
       }
@@ -34341,6 +34443,23 @@
         }
       }
     },
+    "Not at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not at home"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht zu Hause"
+          }
+        }
+      }
+    },
     "Not available on this iPhone.": {
       "extractionState": "manual",
       "localizations": {
@@ -37367,6 +37486,23 @@
         }
       }
     },
+    "Only I’m away": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only I’m away"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur ich bin weg"
+          }
+        }
+      }
+    },
     "Only a count per week and answer – no name, no household. Off by default.": {
       "extractionState": "manual",
       "localizations": {
@@ -37771,6 +37907,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nur auf diesem Gerät"
+          }
+        }
+      }
+    },
+    "Only one of you is away – a business trip, a course? Enter just that person: the house runs on, their tasks and turns go to whoever is at home.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only one of you is away – a business trip, a course? Enter just that person: the house runs on, their tasks and turns go to whoever is at home."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur eine Person ist weg – Dienstreise, Lehrgang? Trag nur sie ein: Zu Hause läuft alles weiter, ihre Aufgaben und ihr Abwechseln gehen an die, die da sind."
           }
         }
       }
@@ -64329,6 +64482,23 @@
         }
       }
     },
+    "Who is away?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who is away?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer ist weg?"
+          }
+        }
+      }
+    },
     "Who is home": {
       "extractionState": "manual",
       "localizations": {
@@ -64631,23 +64801,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wer sich abwechselt"
-          }
-        }
-      }
-    },
-    "Who travels?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Who travels?"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wer fährt mit?"
           }
         }
       }
@@ -67725,6 +67878,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "unterwegs"
+          }
+        }
+      }
+    },
+    "back on %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "back on %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zurück am %@"
           }
         }
       }

@@ -1,3 +1,4 @@
+import { awayToday } from '../lib/away-state.js';
 import { Router } from 'express';
 import { itemIsExtra } from '../lib/extras.js';
 import multer from 'multer';
@@ -88,6 +89,8 @@ r.get('/me', (req, res) => {
     actor,
     household: getSetting('household.name', t('Our home')),
     brand: brand(),
+    // "Nich to Huus": the person is away right now (their own trip or the household's) – the app header says so
+    away_until: actor.kind === 'user' && actor.userId ? (awayToday(actor.userId).me?.until ?? null) : null,
     language: lang(),
     region: regionInfo(),
     features: { vision: visionAvailable(), email: smtpEnabled() },

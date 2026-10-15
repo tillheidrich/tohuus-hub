@@ -79,6 +79,8 @@ export interface CareTask {
   ext_kind?: string | null;
   /** learned: who did it at least 3 of the last 6 times (server: care.ts usualDoer) */
   usual?: { user_id: number; name: string; color: string } | null;
+  /** the person this task leans on is away today (a trip of theirs) */
+  away?: { name: string; until: string } | null;
   /** "Abgeben an …": asked and not answered yet */
   offer?: { to: { id: number; name: string }; by: { id: number; name: string } | null } | null;
   /** Termin: with a time the task is a calendar entry (HH:MM, minutes, where) */
@@ -231,7 +233,8 @@ export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareT
   const sub = [
     task.promise ? promiseLabel(task.promise) : null,
     task.ext_kind ? t('from the calendar') : null,
-    !task.doer && !task.rotation?.length && task.usual ? t('usually {name}', { name: task.usual.name }) : null,
+    task.away ? t('{name} is away until {date}', { name: task.away.name, date: fmtDate(task.away.until, { weekday: 'short', day: 'numeric', month: 'short' }) }) : null,
+    !task.away && !task.doer && !task.rotation?.length && task.usual ? t('usually {name}', { name: task.usual.name }) : null,
     compact || task.as_needed ? null : intervalLabel(task.interval_n, task.interval_unit),
     task.checklist?.length ? t('{done} of {total}', { done: ticked, total: task.checklist.length }) : null,
     task.product ? t('{name}: {n} in stock', { name: task.product.name, n: task.product.stock ?? 0 }) : null,

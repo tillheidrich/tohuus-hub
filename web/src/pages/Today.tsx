@@ -8,7 +8,7 @@ import { WeekReviewTeaser } from './WeekReview';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
-import { invalidate, post, put, qc, useApi } from '../api';
+import { fmtDate, invalidate, post, put, qc, useApi } from '../api';
 import { useDrag } from '../dnd';
 import { PulseCard, usePulse } from '../pulse';
 import '../dnd.css';
@@ -69,11 +69,27 @@ export function Today({ me }: { me: Me }) {
   const head = (
     <header className="today-head">
       <div className="grow">
-        <div className="eyebrow">{date}</div>
+        <div className="eyebrow">
+          {d?.away?.me ? (
+            // small easter egg: away, the app isn't "to Huus" – Low German for "not at home"
+            <span className="away-brand" lang="nds" title={t('Not at home')}>
+              Nich to Huus · {t('back on {date}', { date: fmtDate(d.away.me.until, { weekday: 'short', day: 'numeric', month: 'short' }) })}
+            </span>
+          ) : (
+            date
+          )}
+        </div>
         <h1 className="greet">
           {d?.greeting ?? `${greeting()}, ${me.actor.name}!`}
         </h1>
         {d?.platt && <PlattLine p={d.platt} />}
+        {d?.away?.others.length ? (
+          <p className="small muted away-others">
+            {t('Away: {list}', {
+              list: d.away.others.map((o) => t('{name} (until {date})', { name: o.name, date: fmtDate(o.until, { weekday: 'short', day: 'numeric', month: 'short' }) })).join(', '),
+            })}
+          </p>
+        ) : null}
       </div>
       {guestAllows(gl, '/bestand') && (
         <button className="icon-btn" onClick={() => window.dispatchEvent(new Event('tohuus:add'))} aria-label={t('Add')} title={t('Add')}>

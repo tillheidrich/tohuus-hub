@@ -94,4 +94,8 @@ export const de_away: Record<string, string> = {
   Eggs: 'Eier',
   Fruit: 'Obst',
   Vegetables: 'Gemüse',
+  // only some people away (15 Oct 2026)
+  '{task} – {name} is away': '{task} – {name} ist weg',
+  'Hand it over before you leave, or someone at home takes it.': 'Vorher abgeben – oder jemand, der zu Hause ist, übernimmt.',
+  '{name} is away until {date} – can someone at home do it?': '{name} ist bis {date} weg – kann das jemand machen, der zu Hause ist?',
 };

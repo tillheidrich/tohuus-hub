@@ -4,6 +4,12 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Unterwegs (docs/away.md): only some people away ("Nur ich bin weg").
+  - The house runs on: notifications stay quiet only for the people away, turns skip them, tasks show "Sam ist bis Fr. weg", and the cook suggestion leaves them out.
+  - Several people can be away at the same time on different trips.
+  - Fix: a trip where not every member travels no longer counts as "everyone away", so the week plan, shopping suggestions and Home Assistant stay as at home.
+  - Easter egg: while you're away, the app says "Nich to Huus".
+  - API: `away_until` in `/api/me`, `away` in `/api/today` and in each care task, `people_away` for Home Assistant. Web and iOS.
 - Wochenrückblick (docs/week-review.md): "Das habt ihr geschafft" for the household (no names) and "Das hast du geschafft" only for the person. Positive only: no comparisons between people, no money. On Heute at the start of the week until "Gesehen"; page `/woche` for any week; personal switch. API: `GET /api/week-review`, `PUT /api/week-review/settings`, `POST /api/week-review/seen`. Web and iOS.
 - Design review (docs/design/2026-10-15-design-review.md):
   - Website: dark mode follows the device; 6-item nav; wider gutters; larger phones; fewer labels; calmer hero; bar below the hero; 44 px targets; new screenshots.

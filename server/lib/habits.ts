@@ -14,6 +14,7 @@
  * agreed to compare (the Blick opt-in) – and it is weighed by areas carried, not by how often: one person cooking
  * every day and another doing five other things is balanced.
  */
+import { isAway } from './away-state.js';
 import { db, getSetting, setSetting } from '../db.js';
 import { t, userError } from '../i18n.js';
 import { compareOptIn } from './blick.js';
@@ -77,6 +78,8 @@ export function cookSuggestions(from: string, to: string, today = localDay(0)) {
   for (const e of open) {
     const sameDay = dominant(hist.filter((h) => weekday(h.day) === weekday(e.day)), (h) => h.user_id, 3);
     const p = sameDay ? people.get(sameDay.id) : lately ? people.get(lately.user_id) : undefined;
+    // nobody is suggested for a day they're away (a trip of theirs)
+    if (p && isAway(`u${p.id}`, e.day)) continue;
     if (p) out.push({ entry_id: e.id, day: e.day, user_id: p.id, name: p.name, color: p.color, why: sameDay ? 'weekday' : 'lately' });
   }
   return { lately, suggestions: out };

@@ -14,6 +14,7 @@ import { boughtText, rhythmList, type RhythmItem } from './rhythm.js';
 import { applyShareView, notPrivate } from './share-core.js';
 import { fmtWhen, originOf } from './shopping-trust.js';
 import { today as todayDay } from './spend2.js';
+import { awayToday } from './away-state.js';
 import { contextNow, pickSaying, plattHello } from './platt.js';
 
 export interface TodayViewer {
@@ -132,6 +133,7 @@ export function todayAggregate(viewer?: TodayViewer | null) {
     date: day,
     greeting: greeting(viewer?.name),
     platt: platt(viewer),
+    away: awayToday(viewer?.userId ?? null),
     household: { name: getSetting('household.name', t('Our home')) },
     rhythm: rhythm.filter((r) => r.suggested).slice(0, 5).map((r) => rhythmCard(r, locale)),
     list: { open, recent },

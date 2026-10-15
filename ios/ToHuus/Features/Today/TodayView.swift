@@ -259,13 +259,24 @@ struct TodayView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: Theme.Space.s3) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                    .font(.caption.weight(.semibold)).textCase(.uppercase).foregroundStyle(Theme.ink3)
+                if let until = model.today?.away?.me?.until {
+                    // small easter egg: away, the app isn't "to Huus" – Low German for "not at home"
+                    Text("Nich to Huus · " + LF("back on %@", AwayText.day(until)))
+                        .font(.caption.weight(.semibold)).textCase(.uppercase).foregroundStyle(Theme.primaryText)
+                        .accessibilityLabel(L("Not at home") + ", " + LF("back on %@", AwayText.day(until)))
+                } else {
+                    Text(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                        .font(.caption.weight(.semibold)).textCase(.uppercase).foregroundStyle(Theme.ink3)
+                }
                 Text(model.today?.greeting ?? defaultGreeting)
                     .font(Theme.title())
                     .foregroundStyle(Theme.ink)
                     .accessibilityAddTraits(.isHeader)
                 if let p = model.today?.platt { PlattLine(platt: p) }
+                if let others = model.today?.away?.others, !others.isEmpty {
+                    Text(LF("Away: %@", others.map { LF("%@ (until %@)", $0.name, AwayText.day($0.until)) }.joined(separator: ", ")))
+                        .font(.footnote).foregroundStyle(Theme.ink2)
+                }
                 if let hh = model.today?.householdName ?? app.activeHousehold?.name {
                     Text(hh).font(.subheadline).foregroundStyle(Theme.ink2)
                 }

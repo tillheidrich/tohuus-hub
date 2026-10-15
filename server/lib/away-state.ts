@@ -131,12 +131,13 @@ export function phaseOf(trip: Pick<TripRow, 'start_day' | 'end_day' | 'use_up_da
 const RANK: Record<Phase, number> = { during: 0, before: 1, after: 2, planned: 3, done: 9 };
 
 /** The trip that matters today (during > before > after > the next planned one), or null. */
-export function currentTrip(today = awayDay(0)): { trip: TripRow; phase: Phase } | null {
+export function currentTrip(today = awayDay(0), only?: (trip: TripRow) => boolean): { trip: TripRow; phase: Phase } | null {
   const rows = db
     .prepare(`SELECT * FROM away_trips WHERE status != 'cancelled' AND end_day >= ? ORDER BY start_day, id`)
     .all(shiftDay(today, -AFTER_DAYS - 1)) as TripRow[];
   let best: { trip: TripRow; phase: Phase } | null = null;
   for (const trip of rows) {
+    if (only && !only(trip)) continue;
     const phase = phaseOf(trip, today);
     if (phase === 'done') continue;
     if (!best || RANK[phase] < RANK[best.phase]) best = { trip, phase };
@@ -144,8 +145,77 @@ export function currentTrip(today = awayDay(0)): { trip: TripRow; phase: Phase }
   return best;
 }
 
-/** Everyone in the household travels (nobody listed as staying home). */
-export const everyoneAway = (trip: Pick<TripRow, 'home'>) => parseList(trip.home).length === 0;
+/** Members (accounts, no guests) whose name is not among the travellers – they are at home. */
+function membersAtHome(travellers: string[]) {
+  const away = new Set(travellers.map((x) => x.toLowerCase()));
+  const users = db.prepare(`SELECT name FROM users WHERE COALESCE(kind, 'member') != 'guest'`).all() as { name: string }[];
+  return users.filter((u) => !away.has(u.name.toLowerCase()));
+}
+
+/** Everyone in the household travels: nobody listed as staying home and every member among the travellers.
+ *  A trip of one person (business trip, a course, a few days at a friend's) is not "everyone away". */
+export const everyoneAway = (trip: Pick<TripRow, 'home'> & Partial<Pick<TripRow, 'travellers'>>) =>
+  parseList(trip.home).length === 0 && (trip.travellers == null || membersAtHome(parseList(trip.travellers)).length === 0);
+
+export interface AwayPerson {
+  /** people directory key: u<id> member, k<id> child profile */
+  key: string;
+  user_id: number | null;
+  name: string;
+  /** last day away (latest end of the trips that day) */
+  until: string;
+  trip_id: number;
+}
+
+/**
+ * Who is away on `day` – across every running trip, so two people can be away at the same time on different trips.
+ * Travellers are stored by name; members and child profiles are matched case-insensitively.
+ */
+export function awayPeople(day = awayDay(0)): AwayPerson[] {
+  try {
+    const trips = db.prepare(`SELECT id, travellers, end_day FROM away_trips WHERE status = 'active' AND start_day <= ? AND end_day >= ?`).all(day, day) as {
+      id: number;
+      travellers: string;
+      end_day: string;
+    }[];
+    if (!trips.length) return [];
+    const people = [
+      ...(db.prepare(`SELECT id, name FROM users WHERE COALESCE(kind, 'member') != 'guest'`).all() as { id: number; name: string }[]).map((u) => ({ key: `u${u.id}`, user_id: u.id, name: u.name })),
+      ...(() => {
+        try {
+          return (db.prepare('SELECT id, name FROM kid_profiles').all() as { id: number; name: string }[]).map((k) => ({ key: `k${k.id}`, user_id: null, name: k.name }));
+        } catch {
+          return [];
+        }
+      })(),
+    ];
+    const out = new Map<string, AwayPerson>();
+    for (const tr of trips) {
+      const names = new Set(parseList(tr.travellers).map((x) => x.toLowerCase()));
+      for (const p of people) {
+        if (!names.has(p.name.toLowerCase())) continue;
+        const prev = out.get(p.key);
+        if (!prev || tr.end_day > prev.until) out.set(p.key, { ...p, until: tr.end_day, trip_id: tr.id });
+      }
+    }
+    return [...out.values()];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Heute: am I away (then the header says "Nich to Huus" – Low German for "not at home"), and who else is.
+ * Only members' names, never why or where (a trip's name and place stay on the trip).
+ */
+export function awayToday(userId: number | null | undefined, day = awayDay(0)) {
+  const all = awayPeople(day);
+  const me = userId != null ? all.find((p) => p.user_id === userId) : undefined;
+  return { me: me ? { until: me.until } : null, others: all.filter((p) => p !== me).map((p) => ({ name: p.name, until: p.until })) };
+}
+
+/** Is this person (u<id> / k<id>) away on `day`? */
+export const isAway = (key: string | null | undefined, day = awayDay(0)) => Boolean(key) && awayPeople(day).some((p) => p.key === key);
 
 // ------------------------------------------------------------------ hooks used by other modules
 
@@ -163,14 +233,31 @@ export const QUIET_EVENTS = new Set([
   'kids.wish',
 ]);
 
-/** notify(): should this message stay quiet because the household is away? */
+/** The household-wide trip that matters today – only trips on which everyone is away (one person's trip doesn't count). */
+export function householdTrip(today = awayDay(0)) {
+  return currentTrip(today, (trip) => everyoneAway(trip));
+}
+
+/** notify(): should this message stay quiet because the whole household is away? */
 export function quietWhileAway(event: string, urgent = false): boolean {
   if (urgent || !QUIET_EVENTS.has(event)) return false;
   try {
-    const c = currentTrip();
+    const c = householdTrip();
     return Boolean(c && c.phase === 'during' && c.trip.quiet);
   } catch {
     return false;
+  }
+}
+
+/** notify(): members who are away themselves (on a trip with quiet notifications) get no routine messages on their
+ *  own devices – the people at home still do. */
+export function quietUsers(event: string, urgent = false): number[] {
+  if (urgent || !QUIET_EVENTS.has(event)) return [];
+  try {
+    const quiet = new Set((db.prepare(`SELECT id FROM away_trips WHERE status = 'active' AND quiet = 1 AND start_day <= ? AND end_day >= ?`).all(awayDay(0), awayDay(0)) as { id: number }[]).map((r) => r.id));
+    return awayPeople().filter((p) => p.user_id != null && quiet.has(p.trip_id)).map((p) => p.user_id!);
+  } catch {
+    return [];
   }
 }
 
@@ -190,11 +277,12 @@ export function isPerishable(p: { name: string; category_id: number | null; shel
  */
 export function skipAutoShopping(p: { name: string; category_id: number | null; shelf_days?: number | null; date_kind?: string | null }): boolean {
   try {
-    const c = currentTrip();
+    // somebody stays at home → they still shop as usual, before and during
+    const c = householdTrip();
     if (!c) return false;
     if (c.phase === 'before') return isPerishable(p);
     // somebody stays at home → they still shop as usual
-    if (c.phase === 'during' && c.trip.pause_auto) return everyoneAway(c.trip);
+    if (c.phase === 'during' && c.trip.pause_auto) return true;
     return false;
   } catch {
     return false;
@@ -204,7 +292,7 @@ export function skipAutoShopping(p: { name: string; category_id: number | null; 
 /** "Use it up": during the run-up, recipes that use what would expire before the return get a push. */
 export function useUpWindow(today = awayDay(0)): { trip_id: number; name: string; start: string; until: string } | null {
   try {
-    const c = currentTrip(today);
+    const c = householdTrip(today);
     if (!c || c.phase !== 'before') return null;
     return { trip_id: c.trip.id, name: c.trip.name, start: c.trip.start_day, until: c.trip.end_day };
   } catch {
@@ -215,8 +303,11 @@ export function useUpWindow(today = awayDay(0)): { trip_id: number; name: string
 /** Home week plan: a day nobody is at home needs no dinner (autofill leaves it empty). */
 export function nobodyHomeOn(day: string): boolean {
   try {
-    const rows = db.prepare(`SELECT home FROM away_trips WHERE status = 'active' AND start_day <= ? AND end_day >= ?`).all(day, day) as { home: string }[];
-    return rows.some((r) => parseList(r.home).length === 0);
+    const rows = db.prepare(`SELECT home, travellers FROM away_trips WHERE status = 'active' AND start_day <= ? AND end_day >= ?`).all(day, day) as { home: string; travellers: string }[];
+    if (rows.some((r) => everyoneAway(r))) return true;
+    // two trips at the same time can cover everyone too (Sam on a business trip, the others at the grandparents')
+    const away = new Set(rows.flatMap((r) => parseList(r.travellers).map((x) => x.toLowerCase())));
+    return rows.length > 1 && rows.every((r) => parseList(r.home).length === 0) && membersAtHome([...away]).length === 0;
   } catch {
     return false;
   }

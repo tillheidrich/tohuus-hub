@@ -217,6 +217,7 @@ struct AwayView: View {
     @State private var confirmStop = false
     @State private var confirmDelete = false
     @State private var toast: ToastMessage?
+    @State private var meName: String?
 
     private var shownId: Int? { openId ?? overview?.summary.trip?.id }
 
@@ -234,6 +235,14 @@ struct AwayView: View {
                                    message: L("Enter the dates once. In the days before, ToHuus Hub suggests meals that use up what would go off and stops putting fresh things on the list. While you’re away, only urgent notifications come through. On the way back, a welcome-home list is ready."),
                                    art: .suitcase, actionTitle: L("Plan a trip"), action: { editing = AwayEditTarget(trip: nil) })
                         .listRowBackground(Color.clear)
+                    if let me = meName {
+                        Section {
+                            Button { editing = AwayEditTarget(trip: nil, only: me) } label: { Label(L("Only I’m away"), systemImage: "person") }
+                                .frame(minHeight: 44)
+                        } footer: {
+                            Text(L("Only one of you is away – a business trip, a course? Enter just that person: the house runs on, their tasks and turns go to whoever is at home."))
+                        }
+                    }
                 } else {
                     HStack { Spacer(); ProgressView(); Spacer() }.listRowBackground(Color.clear)
                 }
@@ -263,14 +272,20 @@ struct AwayView: View {
         .navigationTitle(L("Trip / away"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { editing = AwayEditTarget(trip: nil) } label: { Image(systemName: "plus") }
+                Menu {
+                    Button { editing = AwayEditTarget(trip: nil) } label: { Label(L("New trip"), systemImage: "suitcase") }
+                    if let me = meName {
+                        Button { editing = AwayEditTarget(trip: nil, only: me) } label: { Label(L("Only I’m away"), systemImage: "person") }
+                    }
+                } label: { Image(systemName: "plus") }
                     .accessibilityLabel(L("New trip"))
             }
         }
         .task { await load() }
+        .task { meName = (try? await api.me())?.name }
         .refreshable { await load() }
         .sheet(item: $editing) { e in
-            AwayTripForm(api: api, trip: e.trip, members: overview?.members ?? []) { id, isNew in
+            AwayTripForm(api: api, trip: e.trip, only: e.only, members: overview?.members ?? []) { id, isNew in
                 if isNew { toast = ToastMessage(text: L("Trip saved")) }
                 openId = id == overview?.summary.trip?.id ? nil : id
                 tab = nil
@@ -313,7 +328,7 @@ struct AwayView: View {
                 Text("\(AwayText.range(t)) · \((t.nights ?? 0) == 1 ? L("1 night") : LF("%d nights", t.nights ?? 0))")
                     .font(.subheadline).foregroundStyle(Theme.ink2)
                 if !(t.travellers ?? []).isEmpty {
-                    Text("\(L("Travelling")): \((t.travellers ?? []).joined(separator: ", "))").font(.caption).foregroundStyle(Theme.ink2)
+                    Text("\(t.everyoneAway == false ? L("Away") : L("Travelling")): \((t.travellers ?? []).joined(separator: ", "))").font(.caption).foregroundStyle(Theme.ink2)
                 }
                 if !(t.home ?? []).isEmpty {
                     Text("\(L("Staying home")): \((t.home ?? []).joined(separator: ", "))").font(.caption).foregroundStyle(Theme.ink2)
@@ -333,7 +348,7 @@ struct AwayView: View {
             Button { editing = AwayEditTarget(trip: t) } label: { Label(L("Edit"), systemImage: "pencil") }
             if t.status == "active" && t.phase != "done" && t.phase != "after" {
                 Button { confirmStop = true } label: {
-                    Label(t.phase == "during" ? L("We’re back") : L("Cancel trip"), systemImage: t.phase == "during" ? "house" : "xmark")
+                    Label(t.phase == "during" ? (t.everyoneAway == false ? L("Back again") : L("We’re back")) : L("Cancel trip"), systemImage: t.phase == "during" ? "house" : "xmark")
                 }
             }
             Button(role: .destructive) { confirmDelete = true } label: { Label(L("Delete"), systemImage: "trash") }
@@ -345,7 +360,7 @@ struct AwayView: View {
         return Section {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    ForEach(AwayTab.allCases) { x in
+                    ForEach(AwayTab.tabs(t)) { x in
                         ChoiceChip(title: x.title, on: current == x) { withAnimation { tab = x } }
                     }
                 }
@@ -381,7 +396,7 @@ struct AwayView: View {
 
     private var stopTitle: String {
         let p = detail?.trip.phase
-        return p == "planned" || p == "before" ? L("Cancel trip") : L("We’re back")
+        return p == "planned" || p == "before" ? L("Cancel trip") : (detail?.trip.everyoneAway == false ? L("Back again") : L("We’re back"))
     }
 
     // MARK: actions
@@ -445,7 +460,13 @@ enum AwayTab: String, CaseIterable, Identifiable {
         }
     }
 
+    /// only some are away: no holiday kitchen, house sitter or welcome-home list – the house runs on
+    static func tabs(_ t: AwayTrip) -> [AwayTab] {
+        t.everyoneAway == false ? allCases.filter { $0 != .kitchen && $0 != .sitter && $0 != .home } : allCases
+    }
+
     static func defaultTab(_ t: AwayTrip) -> AwayTab {
+        if t.everyoneAway == false { return .before }
         if t.welcomeReady == true || t.phase == "after" || t.phase == "done" { return .home }
         if t.phase == "during" { return t.kitchen == true ? .kitchen : .sitter }
         return .before
@@ -454,6 +475,8 @@ enum AwayTab: String, CaseIterable, Identifiable {
 
 struct AwayEditTarget: Identifiable {
     var trip: AwayTrip?
+    /// "Nur ich bin weg": a new absence of just this person
+    var only: String? = nil
     let id = UUID()
 }
 
@@ -467,14 +490,15 @@ private struct AwayBeforeTab: View {
 
     var body: some View {
         let t = d.trip
-        if t.phase == "planned", let start = ServerDate.parse(t.startDay) {
+        let house = t.everyoneAway != false
+        if house, t.phase == "planned", let start = ServerDate.parse(t.startDay) {
             let from = Calendar.current.date(byAdding: .day, value: -(t.useUpDays ?? 4), to: start) ?? start
             Section {
                 Text(LF("From %@, meal ideas and the week plan prefer what would otherwise go off, and fresh things stay off the shopping list.", AwayText.day(ServerDate.day(from))))
                     .font(.footnote).foregroundStyle(Theme.ink2)
             }
         }
-        Section(L("Use up first")) {
+        if house { Section(L("Use up first")) {
             if d.useUp.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("Nothing would go off")).font(.headline)
@@ -501,7 +525,7 @@ private struct AwayBeforeTab: View {
                     }
                 }
             }
-        }
+        } }
         if !d.recipes.isEmpty {
             Section(L("Cook these before you leave")) {
                 ForEach(d.recipes) { r in
@@ -1177,6 +1201,7 @@ private struct AwayHomeTab: View {
 private struct AwayTripForm: View {
     let api: APIClient
     let trip: AwayTrip?
+    var only: String? = nil
     let members: [Member]
     let onSaved: (Int, Bool) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -1197,6 +1222,8 @@ private struct AwayTripForm: View {
 
     private var memberNames: [String] { members.map(\.name) }
     private var memberHome: [String] { memberNames.filter { !travellers.contains($0) } }
+    /// only some are away: no fridge, holiday kitchen or paused list – the house runs on
+    private var partial: Bool { memberHome.count + home.count > 0 }
 
     var body: some View {
         NavigationStack {
@@ -1220,7 +1247,7 @@ private struct AwayTripForm: View {
                         }
                     }
                     .padding(.vertical, 4)
-                } header: { Text(L("Who travels?")) } footer: {
+                } header: { Text(L("Who is away?")) } footer: {
                     Text(L("Not everyone has to come along. Kids or guests without an account: add them below."))
                 }
                 Section {
@@ -1241,7 +1268,7 @@ private struct AwayTripForm: View {
                     Text(memberHome.count + home.count > 0 ? L("Someone stays home: the week plan and the shopping list carry on for them.")
                                                            : L("Nobody stays home: the week plan leaves the trip days empty."))
                 }
-                Section(L("Start using things up")) {
+                if !partial { Section(L("Start using things up")) {
                     Picker(L("Start using things up"), selection: $useUpDays) {
                         Text(L("off")).tag(0)
                         Text(L("2 days before")).tag(2)
@@ -1249,15 +1276,16 @@ private struct AwayTripForm: View {
                         Text(L("a week before")).tag(7)
                     }
                     .pickerStyle(.segmented)
-                }
+                } }
                 Section {
                     Toggle(isOn: $quiet) {
                         VStack(alignment: .leading) {
                             Text(L("Only urgent notifications"))
-                            Text(L("No “milk is low”, digest or reminders while you’re away – sign-in alerts still come through.")).font(.caption).foregroundStyle(Theme.ink3)
+                            Text(partial ? L("For those away only – the people at home still get them.")
+                                         : L("No “milk is low”, digest or reminders while you’re away – sign-in alerts still come through.")).font(.caption).foregroundStyle(Theme.ink3)
                         }
                     }
-                    Toggle(isOn: $pauseAuto) {
+                    if !partial { Toggle(isOn: $pauseAuto) {
                         VStack(alignment: .leading) {
                             Text(L("Pause automatic suggestions"))
                             Text(L("Nothing lands on the shopping list by itself while nobody is home.")).font(.caption).foregroundStyle(Theme.ink3)
@@ -1271,14 +1299,14 @@ private struct AwayTripForm: View {
                     }
                     if kitchen {
                         TextField(L("Holiday flat"), text: $kitchenStore)
-                    }
+                    } }
                 } footer: {
-                    if kitchen { Text(L("Shop for the holiday list")) }
+                    if kitchen && !partial { Text(L("Shop for the holiday list")) }
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             }
             .themedList()
-            .navigationTitle(trip == nil ? L("New trip") : L("Edit trip"))
+            .navigationTitle(trip == nil ? (only != nil ? L("Only I’m away") : L("New trip")) : L("Edit trip"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
@@ -1292,7 +1320,13 @@ private struct AwayTripForm: View {
 
     private func fill() {
         guard let t = trip else {
-            travellers = memberNames
+            if let only {
+                travellers = [only]
+                start = Date()
+                end = Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date()
+            } else {
+                travellers = memberNames
+            }
             return
         }
         name = t.name
@@ -1327,7 +1361,7 @@ private struct AwayTripForm: View {
         let n = name.trimmingCharacters(in: .whitespaces)
         let ks = kitchenStore.trimmingCharacters(in: .whitespaces)
         let body: [String: Any] = [
-            "name": String((n.isEmpty ? (p.isEmpty ? L("Trip") : p) : n).prefix(80)),
+            "name": String((n.isEmpty ? (p.isEmpty ? (partial ? L("Away") : L("Trip")) : p) : n).prefix(80)),
             "place": awayNul(p.isEmpty ? nil : String(p.prefix(80))),
             "start_day": ServerDate.day(start),
             "end_day": ServerDate.day(end),
@@ -1336,7 +1370,7 @@ private struct AwayTripForm: View {
             "use_up_days": useUpDays,
             "quiet": quiet,
             "pause_auto": pauseAuto,
-            "kitchen": kitchen,
+            "kitchen": kitchen && !partial,
             "kitchen_store": awayNul(ks.isEmpty ? nil : String(ks.prefix(60))),
         ]
         do {

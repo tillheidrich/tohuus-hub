@@ -27,6 +27,8 @@ import { activeIngredients, effectiveIngredients, variantContext } from './varia
 import {
   AFTER_DAYS,
   awayDay,
+  awayPeople,
+  householdTrip,
   currentTrip,
   dayDiff,
   everyoneAway,
@@ -146,11 +148,15 @@ function validateDays(start: string, end: string) {
   if (dayDiff(start, end) > 366) throw new AwayError(t('That is a very long trip – at most a year, please.'));
 }
 
-/** Members who are not listed as travellers stay at home (plus anyone named explicitly, e.g. grandparents). */
-function membersNotTravelling(travellers: string[]) {
-  const users = db.prepare('SELECT name FROM users ORDER BY id').all() as { name: string }[];
-  const lower = new Set(travellers.map((x) => x.toLowerCase()));
-  return users.map((u) => u.name).filter((n) => !lower.has(n.toLowerCase()));
+/** A running trip in these days with one of the same travellers – two people may be away at the same time on
+ *  different trips (a business trip and a course), one person can't be on two trips at once. */
+function overlapping(start: string, end: string, travellers: string[], exceptId = 0) {
+  const mine = new Set(travellers.map((x) => x.toLowerCase()));
+  const rows = db.prepare(`SELECT name, travellers FROM away_trips WHERE status = 'active' AND id != ? AND start_day <= ? AND end_day >= ?`).all(exceptId, end, start) as {
+    name: string;
+    travellers: string;
+  }[];
+  return rows.find((r) => parseList(r.travellers).some((x) => mine.has(x.toLowerCase())));
 }
 
 export function createTrip(input: TripInput, actor: string) {
@@ -160,7 +166,7 @@ export function createTrip(input: TripInput, actor: string) {
   const allUsers = (db.prepare('SELECT name FROM users ORDER BY id').all() as { name: string }[]).map((u) => u.name);
   const travellers = cleanNames(input.travellers?.length ? input.travellers : allUsers);
   const home = cleanNames(input.home ?? []);
-  const overlap = db.prepare(`SELECT name FROM away_trips WHERE status = 'active' AND start_day <= ? AND end_day >= ?`).get(end, start) as { name: string } | undefined;
+  const overlap = overlapping(start, end, travellers);
   if (overlap) throw new AwayError(t('These days overlap with “{name}”.', { name: overlap.name }), 409);
   const info = db
     .prepare(
@@ -168,7 +174,7 @@ export function createTrip(input: TripInput, actor: string) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
-      input.name?.trim().slice(0, 80) || (input.place?.trim() ? input.place.trim().slice(0, 80) : t('Trip')),
+      input.name?.trim().slice(0, 80) || (input.place?.trim() ? input.place.trim().slice(0, 80) : travellers.length < allUsers.length ? t('Away') : t('Trip')),
       input.place?.trim().slice(0, 80) || null,
       start,
       end,
@@ -200,9 +206,7 @@ export function updateTrip(id: number, input: TripInput) {
   const start = input.start_day ?? cur.start_day;
   const end = input.end_day ?? cur.end_day;
   validateDays(start, end);
-  const overlap = db
-    .prepare(`SELECT name FROM away_trips WHERE status = 'active' AND id != ? AND start_day <= ? AND end_day >= ?`)
-    .get(id, end, start) as { name: string } | undefined;
+  const overlap = overlapping(start, end, input.travellers ? cleanNames(input.travellers) : parseList(cur.travellers), id);
   if (overlap) throw new AwayError(t('These days overlap with “{name}”.', { name: overlap.name }), 409);
   const sitter = input.sitter ? cleanSitter({ ...parseObj<SitterNotes>(cur.sitter, {}), ...input.sitter }) : parseObj<SitterNotes>(cur.sitter, {});
   db.prepare(
@@ -351,6 +355,7 @@ export function checklist(trip: TripRow, today = awayDay(0)): CheckItem[] {
   const done = parseObj<Record<string, boolean>>(trip.checklist, {});
   const sitter = parseObj<SitterNotes>(trip.sitter, {});
   const items: Omit<CheckItem, 'done'>[] = [];
+  if (!everyoneAway(trip)) return personalChecklist(trip, done, today);
   const perishables = useUpList(trip, today);
   if (perishables.length)
     items.push({
@@ -383,6 +388,27 @@ export function checklist(trip: TripRow, today = awayDay(0)): CheckItem[] {
   const fromStock = (db.prepare(`SELECT text FROM away_items WHERE trip_id = ? AND kind = 'pack' AND product_id IS NOT NULL AND out_qty = 0`).all(trip.id) as { text: string }[]).map((r) => r.text);
   if (fromStock.length) items.push({ key: 'pack-stock', text: t('Take along from stock'), detail: fromStock.slice(0, 6).join(', '), goto: 'packing' });
   if (sitter.name && !trip.sitter_link_id) items.push({ key: 'sitter', text: t('Send {name} the house-sitter link', { name: sitter.name }), detail: null, goto: 'sitter' });
+  return items.map((i) => ({ ...i, done: Boolean(done[i.key]) }));
+}
+
+/** Only some people are away: the house runs on – what's left is what they usually do while they're gone. */
+function personalChecklist(trip: TripRow, done: Record<string, boolean>, today: string): CheckItem[] {
+  const names = new Set(parseList(trip.travellers).map((x) => x.toLowerCase()));
+  const items: Omit<CheckItem, 'done'>[] = [];
+  for (const c of listCareTasks()) {
+    if (!c.next_due || c.next_due > trip.end_day || c.next_due < shiftDay(today, -30)) continue;
+    if (c.next_due < trip.start_day && c.state !== 'overdue' && c.state !== 'today' && c.state !== 'soon') continue;
+    const who = c.doer?.name ?? c.assignee?.name ?? (!c.doer ? c.usual?.name : null);
+    if (!who || !names.has(who.toLowerCase())) continue;
+    items.push({
+      key: `care:${c.id}`,
+      text: t('{task} – {name} is away', { task: c.name, name: who }),
+      detail: t('Hand it over before you leave, or someone at home takes it.'),
+      goto: 'care',
+    });
+  }
+  const fromStock = (db.prepare(`SELECT text FROM away_items WHERE trip_id = ? AND kind = 'pack' AND product_id IS NOT NULL AND out_qty = 0`).all(trip.id) as { text: string }[]).map((r) => r.text);
+  if (fromStock.length) items.push({ key: 'pack-stock', text: t('Take along from stock'), detail: fromStock.slice(0, 6).join(', '), goto: 'packing' });
   return items.map((i) => ({ ...i, done: Boolean(done[i.key]) }));
 }
 
@@ -962,7 +988,8 @@ export function startFromPresence(actor: string) {
 
 /** For the HA integration's state call: a binary sensor "away" with the trip as attributes. */
 export function haAway() {
-  const c = currentTrip();
+  // the house is "away" only when everyone is – one person's business trip must not turn the heating down
+  const c = householdTrip();
   const sug = presenceSuggestion();
   const p = presence();
   const view = c ? tripView(c.trip) : null;
@@ -975,6 +1002,7 @@ export function haAway() {
       : null,
     suggest_start: Boolean(sug),
     presence: p ? { everyone_away: p.everyone_away, since: p.since } : null,
+    people_away: awayPeople().map((x) => ({ name: x.name, until: x.until })),
   };
 }
 
@@ -984,13 +1012,17 @@ export function awaySummary() {
   const today = awayDay(0);
   const c = currentTrip(today);
   const suggestion = presenceSuggestion();
-  if (!c) return { trip: null, phase: null as Phase | null, suggestion };
+  // who is away today – also when it is only one person
+  const people = awayPeople(today).map((x) => ({ key: x.key, name: x.name, until: x.until }));
+  if (!c) return { trip: null, phase: null as Phase | null, suggestion, people };
   const view = tripView(c.trip, today);
   const products = listProducts();
-  const useUp = c.phase === 'before' || c.phase === 'planned' ? useUpList(c.trip, today, products) : [];
+  // the fridge, the welcome list and "what expired" only matter when the house was empty
+  const house = view.everyone_away;
+  const useUp = house && (c.phase === 'before' || c.phase === 'planned') ? useUpList(c.trip, today, products) : [];
   const list = c.phase === 'before' ? checklist(c.trip, today) : [];
-  const expired = view.welcome_ready ? expiredWhileAway(c.trip, products) : [];
-  const welcome = view.welcome_ready && !view.welcome_done ? welcomeList(c.trip, today) : [];
+  const expired = house && view.welcome_ready ? expiredWhileAway(c.trip, products) : [];
+  const welcome = house && view.welcome_ready && !view.welcome_done ? welcomeList(c.trip, today) : [];
   const outstanding = (db.prepare(`SELECT COUNT(*) n FROM away_items WHERE trip_id = ? AND kind = 'pack' AND out_qty > 0 AND back = 0`).get(c.trip.id) as { n: number }).n;
   return {
     trip: view,
@@ -1001,6 +1033,7 @@ export function awaySummary() {
     welcome: { count: welcome.filter((x) => !x.on_list).length, on_list: welcome.filter((x) => x.on_list).length },
     expired: { count: expired.length },
     to_book_back: outstanding,
+    people,
   };
 }
 
@@ -1010,18 +1043,19 @@ export function tripDetail(id: number) {
   const today = awayDay(0);
   const view = tripView(trip, today);
   const products = listProducts();
+  const house = view.everyone_away;
   return {
     trip: view,
-    use_up: useUpList(trip, today, products),
-    recipes: view.phase === 'before' ? useUpRecipes() : [],
+    use_up: house ? useUpList(trip, today, products) : [],
+    recipes: house && view.phase === 'before' ? useUpRecipes() : [],
     checklist: checklist(trip, today),
     packing: packItems(id),
     templates: listTemplates(),
     stock_suggestions: view.phase === 'after' || view.phase === 'done' ? [] : stockSuggestions(id),
     meals: kitchenMeals(id),
     kitchen_list: shopItems(id),
-    expired: view.welcome_ready || view.phase === 'done' ? expiredWhileAway(trip, products) : [],
-    welcome: view.welcome_ready ? welcomeList(trip, today) : [],
+    expired: house && (view.welcome_ready || view.phase === 'done') ? expiredWhileAway(trip, products) : [],
+    welcome: house && view.welcome_ready ? welcomeList(trip, today) : [],
     days: Array.from({ length: Math.min(60, view.nights + 1) }, (_, i) => shiftDay(trip.start_day, i)),
     after_days: AFTER_DAYS,
   };

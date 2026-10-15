@@ -60,6 +60,9 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     var extKind: String?
     /// learned: who did it at least 3 of the last 6 times (server: care.ts usualDoer)
     var usual: Usual?
+    /// the person this task leans on is away today (server: care.ts awayOf)
+    var away: AwayNote?
+    struct AwayNote: Decodable, Sendable, Hashable { var name: String; var until: String }
     /// "Abgeben an …": asked and not answered yet
     var offer: Offer?
     struct Usual: Decodable, Sendable, Hashable { var userId: Int; var name: String; var color: String? }
@@ -432,7 +435,8 @@ struct CareView: View {
                 let items = t.checklist ?? []
                 let sub = [t.promise.map { CareLabels.promise($0) },
                            t.extKind == nil ? nil : L("from the calendar"),
-                           t.doer == nil && (t.rotation ?? []).isEmpty ? t.usual.map { LF("usually %@", $0.name) } : nil,
+                           t.away.map { LF("%@ is away until %@", $0.name, AwayText.day($0.until)) },
+                           t.away == nil && t.doer == nil && (t.rotation ?? []).isEmpty ? t.usual.map { LF("usually %@", $0.name) } : nil,
                            t.asNeeded == true ? nil : CareLabels.interval(t.intervalN, t.intervalUnit),
                            items.isEmpty ? nil : LF("%d of %d", items.filter(\.done).count, items.count),
                            t.product.map { LF("%@: %@ in stock", $0.name, Self.qty($0.stock ?? 0)) },
