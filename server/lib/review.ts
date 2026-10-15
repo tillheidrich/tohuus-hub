@@ -48,13 +48,13 @@ export interface ReviewCard {
   list: string[];
 }
 
-const fmtN = (n: number) => n.toLocaleString(locale());
+export const fmtN = (n: number) => n.toLocaleString(locale());
 
 function top(rows: { name: string; n: number }[], k = 3) {
   return rows.filter((r) => r.name?.trim()).slice(0, k).map((r) => r.name.trim());
 }
 
-function shopCards(from: string, to: string): ReviewCard[] {
+export function shopCards(from: string, to: string): ReviewCard[] {
   const range = [`${from} 00:00:00`, `${to} 23:59:59`];
   const added = (db.prepare(`SELECT COUNT(*) n FROM shopping_items WHERE created_at BETWEEN ? AND ? AND ${notPrivate('id')}`).get(...range) as { n: number }).n;
   const bought = (db.prepare(`SELECT COUNT(*) n FROM shopping_items WHERE checked_at BETWEEN ? AND ? AND ${notPrivate('id')}`).get(...range) as { n: number }).n;
@@ -79,7 +79,7 @@ function shopCards(from: string, to: string): ReviewCard[] {
   return cards;
 }
 
-function cookCards(from: string, to: string): ReviewCard[] {
+export function cookCards(from: string, to: string): ReviewCard[] {
   const planned = (db.prepare(`SELECT COUNT(*) n FROM meal_plan WHERE day BETWEEN ? AND ?`).get(from, to) as { n: number }).n;
   const dishes = db
     .prepare(`SELECT title AS name, COUNT(*) AS n FROM meal_plan WHERE day BETWEEN ? AND ? GROUP BY lower(title) HAVING n >= 2 ORDER BY n DESC, title LIMIT 3`)
@@ -96,7 +96,7 @@ function cookCards(from: string, to: string): ReviewCard[] {
   return cards;
 }
 
-function taskCards(from: string, to: string): ReviewCard[] {
+export function taskCards(from: string, to: string): ReviewCard[] {
   // household tasks only – private ones never count
   const shared = new Map(listCareTasks().filter((x) => canSeeTask(x)).map((x) => [x.id, x.name]));
   const rows = db.prepare(`SELECT task_id FROM care_log WHERE done_on BETWEEN ? AND ?`).all(from, to) as { task_id: number }[];
@@ -113,7 +113,8 @@ function taskCards(from: string, to: string): ReviewCard[] {
   return [{ key: 'tasks_done', area: 'tasks', value: fmtN(done), title: t('household tasks done'), text: t('Done most often:'), list: top(most) }];
 }
 
-function pantryCards(from: string, to: string): ReviewCard[] {
+/** `before`: the period to compare thrown-away food with (default: the same days a year earlier); only "fewer" is said */
+export function pantryCards(from: string, to: string, before?: { from: string; to: string; text: string }): ReviewCard[] {
   const count = (reasons: string, a: string, b: string) =>
     (db.prepare(`SELECT COUNT(*) n FROM movements WHERE reason IN (${reasons}) AND created_at BETWEEN ? AND ?`).get(`${a} 00:00:00`, `${b} 23:59:59`) as { n: number }).n;
   const used = count(`'consume'`, from, to);
@@ -121,7 +122,7 @@ function pantryCards(from: string, to: string): ReviewCard[] {
   const thrown = count(`'waste','expired'`, from, to);
   const y = Number(from.slice(0, 4));
   // last year up to the same day, so a running year is compared fairly
-  const lastThrown = count(`'waste','expired'`, `${y - 1}${from.slice(4)}`, `${y - 1}${to.slice(4)}`);
+  const lastThrown = before ? count(`'waste','expired'`, before.from, before.to) : count(`'waste','expired'`, `${y - 1}${from.slice(4)}`, `${y - 1}${to.slice(4)}`);
   const less = lastThrown - thrown;
   return [
     {
@@ -129,7 +130,7 @@ function pantryCards(from: string, to: string): ReviewCard[] {
       area: 'pantry',
       value: fmtN(used),
       title: t('things used up from the pantry'),
-      text: less > 0 ? t('{n} fewer thrown away than the year before.', { n: fmtN(less) }) : null,
+      text: less > 0 ? t(before?.text ?? '{n} fewer thrown away than the year before.', { n: fmtN(less) }) : null,
       list: [],
     },
   ];

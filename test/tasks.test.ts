@@ -710,3 +710,35 @@ describe('Wer macht was – habits, proposals, handing over (habits.ts)', () => 
     expect((await anon.req('GET', '/api/habits')).status).toBe(401);
   });
 });
+
+describe('Wochenrückblick – positive, mine only for me (weekly.ts)', () => {
+  it('household part without names, my part only for me', async () => {
+    const day = new Date().toISOString().slice(0, 10);
+    db.prepare(`INSERT INTO shopping_items (text, added_by, checked_at, checked_by) VALUES ('Hafermilch', 'Sam', datetime('now'), 'Sam')`).run();
+    const task = (await sam.req('POST', '/api/care', { name: 'Fenster putzen', category: 'house', interval_n: 1, interval_unit: 'month' })).json.id;
+    await sam.req('POST', `/api/care/${task}/done`, {});
+    const r = (await sam.req('GET', `/api/week-review?week=${day}`)).json;
+    expect(r.household.cards.map((c: any) => c.key)).toContain('shop_bought');
+    const mine = r.mine.cards.map((c: any) => c.key);
+    expect(mine).toEqual(expect.arrayContaining(['my_shop', 'my_tasks', 'my_noticed']));
+    expect(r.mine.cards.find((c: any) => c.key === 'my_tasks').list).toContain('Fenster putzen');
+    // the household part names nobody
+    expect(JSON.stringify(r.household)).not.toMatch(/Sam|Mira/);
+    // Mira's own part has none of Sam's
+    const m = (await mira.req('GET', `/api/week-review?week=${day}`)).json;
+    expect(JSON.stringify(m.mine)).not.toContain('Fenster putzen');
+    // only positive: no comparison between people, no "less"
+    expect(JSON.stringify(r)).not.toMatch(/weniger als|less than|mehr als/);
+  });
+
+  it('can be switched off per person and marked as seen', async () => {
+    expect((await sam.req('PUT', '/api/week-review/settings', { on: false })).json.on).toBe(false);
+    const r = (await sam.req('GET', '/api/week-review')).json;
+    expect(r.on).toBe(false);
+    expect(r.show).toBe(false);
+    await sam.req('PUT', '/api/week-review/settings', { on: true });
+    expect((await sam.req('POST', '/api/week-review/seen', { from: r.from })).status).toBe(200);
+    expect((await sam.req('GET', '/api/week-review')).json.show).toBe(false);
+    expect((await new Client().req('GET', '/api/week-review')).status).toBe(401);
+  });
+});

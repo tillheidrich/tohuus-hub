@@ -20,6 +20,7 @@ import {
   Trash,
   Wrench,
   CalendarBlank,
+  Sparkle,
   CaretRight,
 } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
@@ -463,6 +464,14 @@ export function Care() {
             <span className="grow">
               <span className="title">{t('Calendar & reminders')}</span>
               <span className="sub">{t('Read your calendar, Apple Reminders, subscription link – in the settings.')}</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
+          <button className="li clickable card nav-row" onClick={() => nav('/woche')}>
+            <Sparkle size={20} aria-hidden="true" />
+            <span className="grow">
+              <span className="title">{t('Week in review')}</span>
+              <span className="sub">{t('What you did together last week – and what you did.')}</span>
             </span>
             <CaretRight size={16} aria-hidden="true" />
           </button>

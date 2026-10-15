@@ -9640,6 +9640,23 @@
         }
       }
     },
+    "At the start of each week, until you’ve seen it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the start of each week, until you’ve seen it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Wochenanfang, bis du ihn gesehen hast."
+          }
+        }
+      }
+    },
     "At the weekend": {
       "extractionState": "manual",
       "localizations": {
@@ -38132,6 +38149,23 @@
         }
       }
     },
+    "Only you see this part.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only you see this part."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Teil siehst nur du."
+          }
+        }
+      }
+    },
     "Only you see this trip.": {
       "extractionState": "manual",
       "localizations": {
@@ -48672,6 +48706,23 @@
         }
       }
     },
+    "Seen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesehen"
+          }
+        }
+      }
+    },
     "Select all (%d)": {
       "extractionState": "manual",
       "localizations": {
@@ -50861,6 +50912,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Namen auf der Anmeldeseite zeigen"
+          }
+        }
+      }
+    },
+    "Show on Heute": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show on Heute"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf „Heute“ zeigen"
           }
         }
       }
@@ -62272,6 +62340,23 @@
         }
       }
     },
+    "Week in review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week in review"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wochenrückblick"
+          }
+        }
+      }
+    },
     "Week plan": {
       "extractionState": "manual",
       "localizations": {
@@ -63254,6 +63339,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was hättest du gern?"
+          }
+        }
+      }
+    },
+    "What you did together last week – and what you did.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you did together last week – and what you did."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was ihr letzte Woche geschafft habt – und was du."
           }
         }
       }

@@ -25,6 +25,7 @@ import { AreaAssist } from './assistant/AreaAssist';
 import { FocusPage, useFocusPrefs } from './focus/Focus';
 import { LoadCardsPage } from './pages/LoadCards';
 import { ReviewPage } from './pages/Review';
+import { WeekReviewPage } from './pages/WeekReview';
 
 export interface Me {
   /** household + person tag for the offline queue (shop/offline.ts) */
@@ -346,6 +347,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/fokus" element={<FocusPage />} />
               <Route path="/denkarbeit" element={<LoadCardsPage />} />
               <Route path="/rueckblick" element={<ReviewPage />} />
+              <Route path="/woche" element={<WeekReviewPage />} />
               <Route path="/pflege" element={<Navigate to="/aufgaben?f=care" replace />} />
               <Route path="/urlaub" element={<Away me={me} />} />
               <Route path="/ausgaben" element={<Spending />} />

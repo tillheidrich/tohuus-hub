@@ -4,6 +4,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Wochenrückblick (docs/week-review.md): "Das habt ihr geschafft" for the household (no names) and "Das hast du geschafft" only for the person. Positive only: no comparisons between people, no money. On Heute at the start of the week until "Gesehen"; page `/woche` for any week; personal switch. API: `GET /api/week-review`, `PUT /api/week-review/settings`, `POST /api/week-review/seen`. Web and iOS.
 - Design review (docs/design/2026-10-15-design-review.md):
   - Website: dark mode follows the device; 6-item nav; wider gutters; larger phones; fewer labels; calmer hero; bar below the hero; 44 px targets; new screenshots.
   - Web app: stacking tiles on Heute; full-width and fitting segmented controls; fading chip rows; calendar settings out of Aufgaben; compact Denkarbeit answers; icon "Ich hol's" on phones; clearer disabled buttons; earthy person colours.

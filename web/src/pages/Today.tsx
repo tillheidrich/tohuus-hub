@@ -4,6 +4,7 @@ import { TasksTodayCard } from './TasksToday';
 import { TodayOfferAsks } from './WhoDoesWhat';
 import { StarsCard } from './Stars';
 import { ReviewTeaser } from './Review';
+import { WeekReviewTeaser } from './WeekReview';
 import { Fragment, type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
@@ -125,6 +126,7 @@ export function Today({ me }: { me: Me }) {
           ['tasks', guestAllows(gl, '/aufgaben') ? (
             <>
               <TodayOfferAsks />
+              <WeekReviewTeaser guest={Boolean(gl)} />
               <TasksTodayCard today={localDay()} />
               <StarsCard guest={Boolean(gl)} />
               <ReviewTeaser guest={Boolean(gl)} />

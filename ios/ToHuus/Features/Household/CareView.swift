@@ -369,6 +369,7 @@ struct CareView: View {
                     } header: { Text(L("Recently done")) }
                 }
                 BlickSection(api: api, refresh: reloads) { id in detail = data.tasks.first { $0.id == id } }
+                if data.me != nil { WeekReviewLink(api: api) }
                 RatgeberSection(api: api, areas: ["aufgaben", "kopf"])
                 templates(data)
             } else if error == nil {

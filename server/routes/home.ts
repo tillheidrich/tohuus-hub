@@ -34,6 +34,7 @@ import { LOAD_ANSWERS, loadCards, setLoadAnswer, taskFromCard } from '../lib/loa
 import { BLICK_AREAS, type BlickArea, blickOverview, setCompareOptIn } from '../lib/blick.js';
 import { pointsWeek, setPointsSettings } from '../lib/points.js';
 import { reviewAllowed, reviewSeason, yearReview } from '../lib/review.js';
+import { markWeekSeen, setWeekReviewOn, weekReview } from '../lib/weekly.js';
 import { answerOffer, answerProposal, cookSuggestions, offerTask, whoDoesWhat } from '../lib/habits.js';
 import { BIN_KINDS, calsyncView, reviveKind, setCalendarAiConsent, setCalsyncSettings, suggestFromEvents, syncDates } from '../lib/calsync.js';
 import { eventIcs } from '../lib/calendar.js';
@@ -346,6 +347,24 @@ r.post('/calsync/suggest', async (req, res) => {
     const err = e as { status?: number; code?: string; message: string };
     res.status(err.status ?? (err.code === 'ai.disabled' ? 403 : 502)).json({ error: err.message, code: err.code });
   }
+});
+
+// ---------------------------------------------------------------- Wochenrückblick (lib/weekly.ts, docs/week-review.md)
+
+r.get('/week-review', (req, res) => {
+  if (req.actor?.role === 'guest' || req.actor?.houseGuest) return void res.status(403).json({ error: t('Not available for guests') });
+  const w = z.string().regex(/^\d{4}-\d\d-\d\d$/).optional().safeParse(req.query.week || undefined);
+  res.json(weekReview(memberOf(req), w.success ? w.data : undefined));
+});
+r.put('/week-review/settings', (req, res) => {
+  const me = memberOf(req);
+  if (!me) return void res.status(403).json({ error: t('Only household members can do this') });
+  res.json(setWeekReviewOn(me, z.object({ on: z.boolean() }).parse(req.body).on));
+});
+r.post('/week-review/seen', (req, res) => {
+  const me = memberOf(req);
+  if (!me) return void res.status(403).json({ error: t('Only household members can do this') });
+  res.json(markWeekSeen(me, z.object({ from: z.string().regex(/^\d{4}-\d\d-\d\d$/) }).parse(req.body).from));
 });
 
 // ---------------------------------------------------------------- Rückblick (lib/review.ts, docs/review.md) – off by default

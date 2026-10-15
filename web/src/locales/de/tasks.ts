@@ -239,4 +239,10 @@ export const tasks: Record<string, string> = {
   'We share': 'Geteilt',
   'Someone else': 'Jemand anders',
   'Not for us': 'Bei uns nicht',
+  'Week in review': 'Wochenrückblick',
+  Seen: 'Gesehen',
+  'What you did together last week – and what you did.': 'Was ihr letzte Woche geschafft habt – und was du.',
+  'Only you see this part.': 'Diesen Teil siehst nur du.',
+  'Show on Heute': 'Auf „Heute“ zeigen',
+  'At the start of each week, until you’ve seen it.': 'Zum Wochenanfang, bis du ihn gesehen hast.',
 };
