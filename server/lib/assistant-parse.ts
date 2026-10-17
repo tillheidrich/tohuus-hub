@@ -49,7 +49,8 @@ export const TASKY =
 
 /** A list-looking sentence that is really a task – on the tasks screen anything that is not plainly a product list. */
 export function looksLikeTask(text: string, context?: string | null): boolean {
-  if (TASKY.test(text)) return true;
+  // "Eier und was für Sonntag" is shopping for Sunday – a day after für/for does not make a task
+  if (TASKY.test(text.replace(/\b(?:für|fuer|for|zum|zu)\s+\S+/gi, ' '))) return true;
   return context === 'tasks' && !/\b(?:kaufen|einkaufen|besorgen|liste|brauchen|fehlt|alle|buy|need|list)\b/i.test(text);
 }
 
