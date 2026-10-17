@@ -46,7 +46,7 @@
   --shadow-float: 0 12px 30px -14px rgba(16, 20, 18, 0.55);
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
   --wrap: 1200px;
-  --gutter: 16px;
+  --gutter: 20px;
   color-scheme: light;
 }
 :root[data-theme='dark'] {
@@ -82,6 +82,7 @@
   --shadow-float: 0 12px 30px -14px rgba(0, 0, 0, 0.8);
   color-scheme: dark;
 }
+@media (min-width: 400px) { :root { --gutter: 24px; } }
 @media (min-width: 768px) { :root { --gutter: 32px; } }
 @media (min-width: 1200px) { :root { --gutter: 40px; } }
 
@@ -141,20 +142,21 @@ section { scroll-margin-top: 12px; }
 .btn:hover .tail { transform: translateX(3px); }
 .btn-2 { display: grid; text-align: left; gap: 2px; }
 .btn-2 b { font-weight: 650; font-size: 16px; }
-.btn-2 small { font-weight: 500; font-size: 13px; opacity: 0.85; }
-.btn.primary .btn-2 small { opacity: 1; } /* full on-primary keeps ≥ 4.5:1 in dark mode */
-.btn.sm { min-height: 34px; padding: 0 10px; font-size: 14px; gap: 6px; }
+.btn-2 small { font-weight: 500; font-size: 13px; color: var(--ink-2); }
+.btn.primary .btn-2 small { color: var(--on-primary); } /* no opacity on text: full on-primary keeps ≥ 4.5:1 in dark mode */
+.btn.sm { min-height: 44px; padding: 0 10px; font-size: 14px; gap: 6px; }
 .btn.sm .ico { width: 16px; height: 16px; }
 .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r-sm); background: none; border: 0; color: var(--ink); cursor: pointer; }
 .icon-btn:hover { background: var(--surface-2); }
 
 /* ------------------------------------------------------------ header */
 .nav { display: flex; align-items: center; gap: 8px; max-width: var(--wrap); margin: 0 auto; padding: 12px var(--gutter); }
+.brand .mark { flex: none; }
 .brand { display: inline-flex; align-items: center; gap: 10px; margin-right: auto; font-family: var(--brand-font); font-size: 23px; letter-spacing: -0.01em; text-decoration: none; }
 .mark .mk-house { fill: var(--primary); }
 .mark .mk-door { fill: var(--mustard); }
 .nav-links { display: none; }
-.lang { display: flex; height: 36px; padding: 2px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 var(--stroke) var(--ink); }
+.lang { display: flex; height: 44px; padding: 2px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 var(--stroke) var(--ink); }
 .lang a { display: grid; place-items: center; min-width: 38px; font-size: 13px; font-weight: 700; text-decoration: none; border-radius: var(--r-xs); color: var(--ink-2); }
 .lang a[aria-current] { background: var(--ink); color: var(--canvas); }
 .theme-btn .sun { display: none; }
@@ -164,14 +166,14 @@ section { scroll-margin-top: 12px; }
   .nav-wrap { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--canvas) 92%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
   .nav { gap: 6px; padding: 14px var(--gutter); }
   .nav-links { display: flex; gap: 2px; margin-right: 10px; }
-  .nav-links a { padding: 8px 11px; border-radius: var(--r-sm); font-size: 15px; font-weight: 500; text-decoration: none; }
+  .nav-links a { padding: 8px 11px; border-radius: var(--r-sm); font-size: 15px; font-weight: 500; text-decoration: none; white-space: nowrap; }
   .nav-links a:hover { background: var(--sand); }
   html { scroll-padding-top: 80px; }
 }
-/* 960 to 1199 px: ten links have to fit on one line */
+/* 960 to 1199 px: eleven links have to fit on one line */
 @media (min-width: 960px) and (max-width: 1199px) {
-  .nav-links { margin-right: 4px; }
-  .nav-links a { padding: 8px 6px; font-size: 14px; }
+  .nav-links { margin-right: 4px; gap: 0; }
+  .nav-links a { padding: 8px 5px; font-size: 14px; }
 }
 
 /* ------------------------------------------------------------ device frame */
@@ -192,7 +194,7 @@ section { scroll-margin-top: 12px; }
 /* ------------------------------------------------------------ hero */
 .hero { padding: 16px 0 72px; }
 .hero-grid { display: grid; gap: 48px; }
-.hero h1 { margin-top: 18px; font-family: var(--display); font-weight: 400; font-size: clamp(40px, 6.6vw, 72px); line-height: 1.05; letter-spacing: -0.022em; text-wrap: balance; }
+.hero h1 { margin-top: 18px; font-family: var(--display); font-weight: 400; font-size: clamp(40px, 5.4vw, 64px); line-height: 1.05; letter-spacing: -0.022em; text-wrap: balance; }
 .hero h1 .hl { display: inline-block; padding: 0.02em 0.2em 0.04em; background: var(--block); color: var(--on-block); border-radius: 0.7em 0.7em 0.08em 0.08em; }
 .platt { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; color: var(--ink-2); max-width: 46ch; }
 .platt-hi { font-weight: 600; color: var(--ink); }
@@ -238,23 +240,23 @@ section { scroll-margin-top: 12px; }
 .ia-bird .b-beak { fill: var(--clay); }
 @media (min-width: 960px) {
   .hero { padding: 40px 0 112px; }
-  .hero-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 56px; align-items: center; }
+  .hero-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr); gap: 56px; align-items: center; }
   .hero-art .home-tiles { inset: 4% -2% auto; gap: 16px; }
   .hero-art .home-tiles .home-tile:nth-child(2n) { transform: translateY(56px); }
   .hero-device { margin-top: 40px; }
 }
 
 /* ------------------------------------------------------------ section rhythm */
-.ask, .jobs, .how, .who, .ways, .prices, .privacy, .host, .why, .faq { padding: 64px 0 72px; border-top: var(--stroke) solid var(--ink); }
+.ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 64px 0 72px; border-top: var(--stroke) solid var(--ink); }
 .levels { padding: 8px 0 72px; }
 @media (min-width: 960px) {
-  .ask, .jobs, .how, .who, .ways, .prices, .privacy, .host, .why, .faq { padding: 112px 0 120px; }
+  .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 112px 0 120px; }
   .levels { padding: 0 0 120px; }
 }
 
 /* ------------------------------------------------------------ "Haben wir noch …?" + receipt */
 .ask-grid { display: grid; gap: 48px; align-items: center; }
-.pull { margin-top: 24px; padding-left: 16px; border-left: 3px solid var(--primary); font-family: var(--display); font-size: clamp(21px, 2.4vw, 26px); line-height: 1.35; max-width: 30ch; }
+.pull { margin-top: 32px; font-family: var(--display); font-size: clamp(24px, 2.8vw, 30px); line-height: 1.35; max-width: 30ch; }
 .receipt { position: relative; background: var(--surface); padding: 20px 20px 18px; margin: 9px 0; max-width: 420px; width: 100%; justify-self: center; transform: rotate(-1.2deg); filter: drop-shadow(0 12px 18px rgba(24, 29, 26, 0.12)); }
 .receipt::before, .receipt::after { content: ''; position: absolute; left: 0; right: 0; height: 9px; background: linear-gradient(135deg, var(--surface) 50%, transparent 50%) 0 0 / 14px 9px repeat-x, linear-gradient(225deg, var(--surface) 50%, transparent 50%) 0 0 / 14px 9px repeat-x; }
 .receipt::before { top: -9px; transform: scaleY(-1); }
@@ -286,7 +288,7 @@ section { scroll-margin-top: 12px; }
 .job-shape.s3 { background: var(--sage-soft); border-radius: var(--r-sm) 180px var(--r-sm) var(--r-sm); }
 .job-shape.s4 { background: var(--sand); border-radius: 180px var(--r-sm) 180px var(--r-sm); }
 .job-shape.s5 { background: var(--primary-soft); border-radius: 50% 50% var(--r-sm) var(--r-sm); }
-.job-visual .device { width: min(280px, 68vw); }
+.job-visual .device { width: min(320px, 84vw); }
 @media (min-width: 960px) {
   .job { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 80px; margin-top: 88px; }
   .job + .job { padding-top: 88px; }
@@ -371,6 +373,46 @@ section { scroll-margin-top: 12px; }
   .forms li { grid-column: span 2; }
   .forms li:nth-child(4) { grid-column: 2 / span 2; }
 }
+
+/* ------------------------------------------------------------ house info (Hausinfo) */
+.house-grid { display: grid; gap: 40px; align-items: center; }
+.house-path { margin-top: 28px; display: grid; }
+.house-path li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; padding: 16px 0; border-top: 1px solid var(--line); }
+.house-path li > div { display: grid; gap: 2px; min-width: 0; }
+.house-path b { font-size: 18px; font-weight: 650; }
+.house-path span:not(.hp-ico) { font-size: 16px; color: var(--ink-2); }
+.hp-ico { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--sand); color: var(--ink); }
+.house-visual { position: relative; display: grid; justify-items: center; gap: 18px; margin: 0; padding: 28px 0 0; isolation: isolate; min-width: 0; }
+.house-visual .job-shape { top: 0; }
+.house-pair { display: flex; justify-content: center; align-items: flex-start; gap: 12px; max-width: 100%; }
+.house-pair .device { width: min(250px, calc(50vw - 24px)); padding: 6px; border-radius: 34px; }
+.house-pair .device-screen { border-radius: 28px; }
+.house-pair .device .sb { font-size: 10px; }
+.house-pair .device + .device { margin-top: 44px; }
+.house-visual figcaption { font-size: 14px; color: var(--ink-2); text-align: center; max-width: 44ch; }
+.house-for { margin-top: 48px; }
+.house-for ul { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+.house-for li { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 var(--stroke) var(--line-strong); font-size: 16px; font-weight: 550; }
+.house-for .ico { color: var(--primary-text); }
+.house .facts-grid { margin-top: 32px; }
+@media (min-width: 960px) {
+  .house-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 80px; }
+  .house-pair { gap: 18px; }
+  .house-pair .device { padding: 8px; border-radius: 42px; }
+  .house-pair .device-screen { border-radius: 34px; }
+  .house-for { margin-top: 72px; }
+}
+
+/* ------------------------------------------------------------ a lot on your mind (neurodivergent households) */
+.nd-grid { margin-top: 36px; display: grid; gap: 12px; }
+.nd-grid li { display: grid; align-content: start; gap: 6px; padding: 20px; border-radius: var(--r); background: var(--surface); box-shadow: inset 0 0 0 var(--stroke) var(--line-strong); }
+.nd-grid b { font-weight: 650; font-size: 18px; margin-top: 6px; }
+.nd-grid li > span:last-child { font-size: 16px; color: var(--ink-2); }
+.nd-ico { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--sage-soft); color: var(--ink); }
+.nd-grid li:nth-child(4n + 2) .nd-ico { background: var(--sand); }
+.nd-grid li:nth-child(4n + 3) .nd-ico { background: var(--primary-soft); }
+@media (min-width: 720px) { .nd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .nd-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* ------------------------------------------------------------ two ways (table) */
 .table-wrap { margin-top: 36px; }
@@ -572,14 +614,6 @@ body.legal-page { padding-bottom: 0; }
 
 /* ------------------------------------------------------------ TestFlight and Home Assistant sections (home page) */
 .tf, .ha { padding: 72px 0; border-top: 1px solid var(--line); }
-.tf-card { max-width: 460px; width: 100%; justify-self: center; }
-.tf-rows { margin-top: 6px; counter-reset: r; }
-.tf-rows li { counter-increment: r; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; padding: 13px 0; font-size: 17px; border-bottom: 1px solid var(--line); }
-.tf-rows li:last-child { border-bottom: 0; }
-.tf-rows li::before { content: counter(r); width: 24px; height: 24px; display: grid; place-items: center; border-radius: var(--r-xs); box-shadow: inset 0 0 0 2px var(--ink); font-size: 13px; font-weight: 700; }
-.tf-foot { padding: 4px 20px 22px; display: grid; gap: 12px; }
-.tf-foot .btn { justify-content: space-between; }
-.tf-foot p { font-size: 14px; color: var(--ink-2); }
 .ha-steps { margin-top: 0; }
 @media (min-width: 960px) { .tf, .ha { padding: 112px 0; } .ha-steps { margin-top: 64px; } }
 
@@ -606,7 +640,7 @@ body.legal-page { padding-bottom: 0; }
 .help-body .help-steps { margin-top: 12px; display: grid; gap: 0; counter-reset: h; }
 .help-body .help-steps li { counter-increment: h; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .help-body .help-steps li::before { content: counter(h); width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--canvas); font-size: 13px; font-weight: 700; }
-.help-tip { padding: 14px 16px; border-left: 3px solid var(--mustard); background: var(--surface-2); border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+.help-tip { padding: 14px 16px; background: var(--surface-2); border-radius: var(--r-sm); }
 .help-body .code { margin-top: 12px; padding: 0 0 4px; }
 .help-body .code-head { margin-top: 0; }
 .help-body .code pre { max-width: 100%; }
@@ -625,8 +659,6 @@ body.legal-page { padding-bottom: 0; }
   .help-index { padding-bottom: 112px; }
   .help-group { margin-top: 56px; }
 }
-.tf-card .origin-h { flex-direction: column; align-items: flex-start; gap: 2px; }
-.tf-card .origin-h b { font-size: 24px; line-height: 1.2; }
 
 /* ------------------------------------------------------------ blog: fact cards (saved as image by site.js) */
 .fact-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; padding: 0; list-style: none; }
@@ -655,3 +687,132 @@ body.legal-page { padding-bottom: 0; }
 .blog-sources { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }
 .blog-sources ol { margin-top: 10px; padding-left: 20px; display: grid; gap: 6px; font-size: 15px; }
 .blog-sources a { color: var(--primary-text); overflow-wrap: anywhere; }
+.nd-visual { margin: 32px auto 0; max-width: 620px; }
+
+/* design review 15 Oct 2026 (docs/design/2026-10-15-design-review.md) */
+.job-no span { display: none; }
+@media (max-width: 719px) {
+  .code pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  /* the two phones side by side were too small to read: one under the other */
+  .house-pair { flex-direction: column; align-items: center; gap: 24px; }
+  .house-pair .device { width: min(300px, 80vw); padding: 8px; border-radius: 42px; }
+  .house-pair .device-screen { border-radius: 34px; }
+  .house-pair .device + .device { margin-top: 0; }
+}
+/* nd-grid: 3 columns from 1100 px (above) */
+.foot a { display: inline-block; padding: 12px 0; }
+/* the bottom bar on phones shows up once the hero is out of view (site.js), so it never covers the first screen */
+@media (max-width: 959px) {
+  .rail { transition: transform 0.25s ease; }
+  html.js .rail:not(.on) { transform: translateY(120%); }
+}
+@media (prefers-reduced-motion: reduce) { .rail { transition: none; } }
+
+/* what makes ToHuus different, and the share cards (15 Oct 2026, docs/sharing.md, docs/marketing/2026-10-15-growth-and-positioning.md) */
+.diff-table-h { margin-top: 56px; font-size: clamp(22px, 2.6vw, 28px); }
+.diff .table-wrap { margin-top: 20px; }
+.compare.vs thead th .mark { display: block; margin-bottom: 8px; }
+.compare.vs tbody td:nth-child(2) { background: none; color: var(--ink-2); }
+.compare.vs tbody td:nth-child(3) { background: var(--primary-soft); color: var(--ink); }
+@media (max-width: 719px) {
+  .compare.vs tbody td:nth-child(2) { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+  .compare.vs tbody td:nth-child(3) { box-shadow: inset 0 0 0 1px var(--sage); }
+}
+.share-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 28px 14px; margin-top: 24px; padding: 0; list-style: none; }
+.legal-body section ul.share-grid { display: grid; gap: 28px 16px; }
+.legal-body section ul.share-grid li { padding-left: 0; }
+.legal-body section ul.share-grid li::before { display: none; }
+.share-item { display: flex; flex-direction: column; min-width: 0; }
+.share-item figure { margin: 0; }
+.share-item img { display: block; width: 100%; height: auto; border-radius: var(--r); box-shadow: 0 0 0 1px var(--line); }
+.share-item figcaption { display: grid; gap: 4px; margin-top: 12px; }
+.share-item figcaption b { font-weight: 650; font-size: 16px; line-height: 1.35; }
+.share-item figcaption span { font-size: 14px; color: var(--ink-2); }
+.share-item figcaption a { color: var(--primary-text); overflow-wrap: anywhere; }
+.legal-body .share-dl, .share-dl { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 12px; }
+.share-index .note { margin-top: 48px; }
+.blog-facts-link { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (min-width: 720px) { .share-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 36px 20px; } }
+
+/* good to know (fact cards from assets/share/index.json), calm by design, the hardship form, thank-you pages (15 Oct 2026) */
+.good-grid { margin-top: 36px; display: grid; gap: 14px; }
+.good-grid > li { display: flex; min-width: 0; }
+.good-card { width: 100%; min-height: 0; }
+.good-card .fact-t { font-size: 18px; font-weight: 600; }
+.good-x { font-size: 15px; line-height: 1.45; color: #d5e3da; }
+.good-card figcaption { overflow-wrap: anywhere; }
+@media (min-width: 720px) { .good-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .good-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; } }
+.calm-grid { display: grid; gap: 32px; align-items: start; }
+.calm-card { padding: 24px 22px; border-radius: var(--r-lg); background: var(--surface); box-shadow: inset 0 0 0 var(--stroke) var(--line-strong); }
+.calm-card .ticks { margin-top: 0; gap: 12px; }
+.calm-not { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line-strong); font-size: 15px; color: var(--ink-2); }
+@media (min-width: 960px) { .calm-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 64px; } }
+.fund { margin-top: 28px; display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; border-radius: var(--r); background: var(--primary-soft); font-size: 16px; font-weight: 550; max-width: 76ch; }
+.fund .ico { margin-top: 2px; color: var(--primary-text); }
+.hardship { margin-top: 48px; display: grid; gap: 24px; padding: 24px 20px; border-radius: var(--r-lg); background: var(--surface); box-shadow: inset 0 0 0 var(--stroke) var(--line-strong); scroll-margin-top: 24px; }
+.hardship h3 { font-size: clamp(24px, 3vw, 30px); text-wrap: balance; }
+.hardship-copy p { margin-top: 12px; font-size: 17px; color: var(--ink-2); max-width: 48ch; }
+.hardship-form { position: relative; display: grid; gap: 16px; min-width: 0; }
+.field { display: grid; gap: 6px; min-width: 0; align-content: start; }
+.field label { font-size: 15px; font-weight: 650; }
+.field label small { font-size: 14px; font-weight: 450; color: var(--ink-2); }
+.field input, .field textarea { width: 100%; min-height: 48px; padding: 10px 12px; border: var(--stroke) solid var(--line-strong); border-radius: var(--r-sm); background: var(--canvas); color: var(--ink); font: 400 17px/1.4 var(--font); }
+.field textarea { min-height: 112px; resize: vertical; }
+.field input:focus-visible, .field textarea:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 1px; border-color: var(--primary-text); }
+.field .hint { font-size: 14px; color: var(--ink-2); }
+.hardship-send .btn { padding: 0 18px; }
+.hardship-privacy { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.hardship-privacy .ico { width: 16px; height: 16px; margin-top: 3px; }
+.hardship-privacy a { color: var(--primary-text); font-weight: 600; text-underline-offset: 3px; }
+.offscreen { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+@media (min-width: 720px) {
+  .hardship-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hardship-form .field:first-of-type, .hardship-form .wide, .hardship-send, .hardship-privacy { grid-column: 1 / -1; }
+}
+@media (min-width: 960px) {
+  .hardship { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 48px; padding: 36px; }
+}
+.thanks [data-thanks] { max-width: 760px; }
+.thanks-steps { margin-top: 28px; }
+.thanks-steps ol { margin-top: 14px; display: grid; gap: 10px; }
+.thanks-steps li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; font-size: 16px; }
+.thanks-steps li span { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); font-weight: 700; font-size: 14px; }
+.thanks-links a { min-height: 44px; }
+
+/* design review 2, 15 Oct 2026: one type scale with more distance between levels, lists with rules instead of
+   boxes (the boxed three-column icon grids repeated in four sections), calmer section rhythm, App Store section */
+h2 { font-size: clamp(32px, 4.8vw, 58px); line-height: 1.06; letter-spacing: -0.02em; }
+.hero h1 { font-size: clamp(42px, 6.2vw, 78px); line-height: 1.02; }
+.intro { font-size: clamp(17px, 1.6vw, 19px); line-height: 1.55; }
+.ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 56px 0 64px; }
+@media (min-width: 960px) {
+  .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 96px 0 104px; }
+}
+/* lists with a dividing rule (nd, diff, who): no box, no shadow; the icon sits beside the title, not above it */
+.nd-grid, .forms { gap: 0 40px; border-top: var(--stroke) solid var(--ink); }
+.nd-grid li, .forms li { padding: 18px 0 20px; border-radius: 0; background: none; box-shadow: none; border-bottom: 1px solid var(--line); }
+.nd-grid li { grid-template-columns: 32px minmax(0, 1fr); gap: 4px 12px; }
+.nd-grid .nd-ico { width: 32px; height: 32px; grid-row: span 2; }
+.nd-grid .nd-ico .ico { width: 18px; height: 18px; }
+.nd-grid b { margin-top: 4px; font-size: 18px; line-height: 1.3; }
+.nd-grid li > span:last-child { grid-column: 2; font-size: 16px; line-height: 1.5; }
+.diff-grid li { grid-template-columns: minmax(0, 1fr); }
+.diff-grid li > span:last-child { grid-column: 1; }
+.diff-grid b { margin-top: 0; font-family: var(--display); font-weight: 400; font-size: 22px; line-height: 1.2; }
+.forms b { font-size: 18px; }
+@media (min-width: 1100px) {
+  .nd-grid li, .forms li { padding: 24px 0 28px; }
+  .forms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .forms li, .forms li:nth-child(4) { grid-column: auto; }
+}
+/* the iPhone app: the button is the one strong element, the start as plain numbered steps */
+.tf .ctas { margin-top: 28px; }
+.tf-points { margin-top: 26px; }
+.tf-start { align-self: start; }
+.tf-start h3 { font-size: clamp(24px, 2.6vw, 30px); }
+.tf-steps { margin-top: 18px; }
+.tf-steps li { grid-template-columns: 40px minmax(0, 1fr); align-items: center; }
+.tf-steps li::before { grid-row: auto; }
+.tf-note { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; color: var(--ink-2); }
+.anchor { display: block; position: relative; top: -24px; height: 0; }

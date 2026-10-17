@@ -1,9 +1,15 @@
 /**
- * "Mehr" (plan 2026-10-12): everything that is not one of the five tabs – settings, people, guests, Bring mir was,
- * displays, Home Assistant, labels, data … Reached from the avatar on Heute and from the desktop sidebar.
+ * "Mehr" (UX benchmark 2.3): one list – Haushalt, Einstellungen, Geräte & Verbindungen, Hilfe – with the search on top,
+ * so every function is at most two taps away. Reached from the avatar on Heute and from the desktop sidebar.
  */
 import {
+  Bell,
   CaretRight,
+  MagnifyingGlass,
+  Printer,
+  Sparkle,
+  SquaresFour,
+  UserCircle,
   ChartBar,
   ClipboardText,
   CreditCard,
@@ -17,6 +23,7 @@ import {
   Info,
   BookOpen,
   Lightbulb,
+  ListChecks,
   MapPin,
   Notebook,
   Martini,
@@ -37,7 +44,7 @@ import { t } from '../i18n';
 import { moreGroups } from '../nav';
 import { Avatar } from '../ui';
 
-const ICONS: Record<string, Icon> = { Gift, Info, BookOpen, Lightbulb, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
+const ICONS: Record<string, Icon> = { Bell, Printer, Sparkle, SquaresFour, UserCircle, Gift, Info, BookOpen, Lightbulb, ListChecks, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
 
 export function More({ me }: { me: Me }) {
   const nav = useNavigate();
@@ -56,6 +63,10 @@ export function More({ me }: { me: Me }) {
           {t('My account')}
         </button>
       </header>
+      <button className="more-search" onClick={() => window.dispatchEvent(new Event('tohuus:search'))}>
+        <MagnifyingGlass size={18} aria-hidden="true" />
+        <span>{t('Find a setting or function')}</span>
+      </button>
       <div className="more-groups">
         {groups.map((g) => (
           <section key={g.key}>

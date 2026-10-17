@@ -14,7 +14,28 @@ export function usePlanClaims() {
   return useMemo(() => new Map((q.data ?? []).map((c) => [c.ref_id, c])), [q.data]);
 }
 
-export function ClaimAvatar({ claim, size = 22 }: { claim?: Claim | null; size?: number }) {
+export interface CookSuggestion {
+  entry_id: number;
+  day: string;
+  user_id: number;
+  name: string;
+  color: string;
+  why: 'weekday' | 'lately';
+}
+
+/** entry id → who probably cooks (server: habits.ts – weekday habit, else who cooked lately). Only a suggestion. */
+export function useCookSuggestions(from: string, to: string) {
+  const q = useApi<{ suggestions: CookSuggestion[] }>(['plan', 'cook-suggest', from, to], `/habits/cook?from=${from}&to=${to}`);
+  return useMemo(() => new Map((q.data?.suggestions ?? []).map((s) => [s.entry_id, s])), [q.data]);
+}
+
+export function ClaimAvatar({ claim, suggested, size = 22 }: { claim?: Claim | null; suggested?: CookSuggestion | null; size?: number }) {
+  if (!claim && suggested)
+    return (
+      <span className="claim-av suggested" title={t('Probably {name} cooks', { name: suggested.name })}>
+        <Avatar name={suggested.name} color={suggested.color} size={size} />
+      </span>
+    );
   if (!claim) return null;
   return (
     <span className="claim-av" title={t('{name} cooks', { name: claim.name })}>
@@ -24,7 +45,7 @@ export function ClaimAvatar({ claim, size = 22 }: { claim?: Claim | null; size?:
 }
 
 /** Member picker in the meal sheet: tap a person to say who cooks, tap again to clear. */
-export function CookPicker({ entryId, claim }: { entryId: number; claim?: Claim | null }) {
+export function CookPicker({ entryId, claim, suggested }: { entryId: number; claim?: Claim | null; suggested?: CookSuggestion | null }) {
   const me = useApi<Me>('me', '/me');
   const members = useApi<{ id: number; name: string; color: string }[]>(['shopping', 'members'], '/shop/members');
   const toast = useToast();
@@ -44,11 +65,18 @@ export function CookPicker({ entryId, claim }: { entryId: number; claim?: Claim 
       <div className="eyebrow row" style={{ gap: 6 }}>
         <HandHeart size={14} /> {claim ? t('{name} cooks', { name: claim.name }) : t('Who cooks?')}
       </div>
+      {!claim && suggested && (
+        <p className="small muted" style={{ margin: 0 }}>
+          {suggested.why === 'weekday'
+            ? t('{name} usually cooks on this weekday.', { name: suggested.name })
+            : t('{name} has cooked most of the time lately.', { name: suggested.name })}
+        </p>
+      )}
       <div className="who-pick">
         {members.data.map((m) => {
           const on = claim?.user_id === m.id;
           return (
-            <button key={m.id} className={on ? 'on' : ''} onClick={() => set(m.id, !on)}>
+            <button key={m.id} className={on ? 'on' : !claim && suggested?.user_id === m.id ? 'suggested' : ''} onClick={() => set(m.id, !on)}>
               <Avatar name={m.name} color={m.color} size={30} />
               <span>{m.id === me.data?.actor.userId ? t('Me') : m.name}</span>
             </button>

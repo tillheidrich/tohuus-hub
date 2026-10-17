@@ -63,7 +63,7 @@ struct PaywallView: View {
 
     private var currentPlan: some View {
         Card(title: LF("Household “%@”", app.activeHousehold?.name ?? L("Our home")), systemImage: "house") {
-            Text(app.billing?.planLabel ?? L("Free")).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
+            Text(app.billing?.planLabel ?? L("Free – without AI")).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
             if app.billing?.plan == "trial", let d = ServerDate.parse(app.billing?.trialEndsAt ?? app.activeHousehold?.trialEndsAt) {
                 let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: d).day ?? 0)
                 Text(LF("Everything included for %d more days (until %@). After that Free – nothing is charged automatically.",
@@ -90,11 +90,16 @@ struct PaywallView: View {
 
     private func giftNote(_ gift: BillingStatus.Gift) -> some View {
         VStack(alignment: .leading, spacing: Theme.Space.s2) {
-            Label(gift.kind == "beta" ? L("Free during the beta") : L("A gift for your household"), systemImage: "gift")
+            Label(gift.kind == "beta" ? L("A gift for every household") : L("A gift for your household"), systemImage: "gift")
                 .font(.headline).foregroundStyle(Theme.primaryText)
             Group {
                 if gift.kind == "beta" {
-                    Text(L("While ToHuus is being tested, nobody pays – thank you for helping. When the beta ends, your household keeps what it has on its own. Nothing is charged automatically and nothing is deleted."))
+                    // the operator's gift for every household (server kind "beta") – shown neutrally
+                    if gift.forever != true, let d = ServerDate.parse(gift.until) {
+                        Text(LF("Every household has this plan as a gift until %@. After that your household keeps what it has on its own – nothing is charged automatically and nothing is deleted.", d.formatted(date: .long, time: .omitted)))
+                    } else {
+                        Text(L("Every household has this plan as a gift right now. Nothing is charged automatically and nothing is deleted."))
+                    }
                 } else if gift.forever == true {
                     Text(L("Your household has this plan for good. Nothing is charged."))
                 } else if let d = ServerDate.parse(gift.until) {
@@ -137,6 +142,7 @@ struct PaywallView: View {
             if let product {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(product.displayPrice) \(product.periodLabel)").font(.headline).foregroundStyle(Theme.ink)
+                    IntroOfferLine(product: product)
                     if yearly, let monthly = storeKit.product(plan: plan, yearly: false) {
                         let saving = 1 - (product.price as NSDecimalNumber).doubleValue / ((monthly.price as NSDecimalNumber).doubleValue * 12)
                         if saving > 0.05 { Text(LF("%d %% cheaper than monthly", Int(saving * 100))).font(.caption).foregroundStyle(Theme.primaryText) }
@@ -191,12 +197,12 @@ struct PaywallView: View {
     }
 
     private var freeCard: some View {
-        Card(title: L("Free"), systemImage: "leaf") {
+        Card(title: L("Free – without AI"), systemImage: "leaf") {
             ForEach(PlanText.points(plan: "free", limits: app.billing?.plans?["free"]), id: \.self) { p in
                 Label(p, systemImage: "checkmark").font(.subheadline).foregroundStyle(Theme.ink2)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Text(L("Free stays free – the list, stock and recipes always work.")).font(.footnote).foregroundStyle(Theme.ink3)
+            Text(L("Free stays free – the list, stock and recipes always work, without AI. The assistant with AI comes with Household and Plus.")).font(.footnote).foregroundStyle(Theme.ink3)
         }
     }
 
@@ -255,12 +261,14 @@ enum PlanText {
         if f?["weekPlanFromPantry"]?.bool == true { out.append(L("Week plan from what you have at home")) }
         if f?["monthlyAnalysis"]?.bool == true { out.append(L("A look back at every month")) }
         if f?["plusRecipes"]?.bool == true { out.append(L("New ToHuus recipes for the season, with pictures")) }
-        if let n = l["assistantPerMonth"]?.int {
+        if l["assistantPerMonth"]?.int == 0 {
+            out.append(L("Without AI: the assistant understands simple sentences like “milk and bread”"))
+        } else if let n = l["assistantPerMonth"]?.int {
             out.append(l["assistantThrottleOnly"]?.bool == true
                        ? LF("%d assistant messages a month – after that slower, never blocked", n)
                        : LF("%d assistant messages a month", n))
         }
-        if let n = l["receiptAiPerDay"]?.int { out.append(LF("Up to %d receipt photos read a day", n)) }
+        if let n = l["receiptAiPerDay"]?.int, n > 0 { out.append(LF("Up to %d receipt photos read a day", n)) }
         if let b = l["storageBytes"]?.double {
             out.append(LF("%@ for receipts and photos", ByteCountFormatter.string(fromByteCount: Int64(b), countStyle: .binary)))
         }
@@ -276,7 +284,49 @@ enum PlanText {
             return [L("The whole history: prices, spending, what you buy how often"), L("Connected households and shared lists"),
                     LF("%d assistant messages a month", 100), LF("%@ for receipts and photos", "2 GB")]
         default:
-            return [LF("The last %d days in view", 60), LF("%d assistant messages a month", 20), LF("%@ for receipts and photos", "250 MB")]
+            return [LF("The last %d days in view", 30), L("Without AI: the assistant understands simple sentences like “milk and bread”"), LF("%@ for receipts and photos", "100 MB")]
         }
+    }
+}
+
+/// An introductory offer set up in App Store Connect (e.g. a free trial), with what it costs afterwards – only for people
+/// who can still get it (App Store guideline 3.1.2: the terms are clear before buying).
+struct IntroOfferLine: View {
+    let product: Product
+    @State private var eligible = false
+
+    var body: some View {
+        Group {
+            if eligible, let offer = product.subscription?.introductoryOffer {
+                Text(text(offer)).font(.caption).foregroundStyle(Theme.ink2).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .task(id: product.id) { eligible = await product.subscription?.isEligibleForIntroOffer ?? false }
+    }
+
+    private func text(_ offer: Product.SubscriptionOffer) -> String {
+        let length = Self.length(offer.period, times: offer.paymentMode == .payAsYouGo ? offer.periodCount : 1)
+        let after = "\(product.displayPrice) \(product.periodLabel)"
+        if offer.paymentMode == .freeTrial {
+            return LF("First %@ free, then %@. Cancel before the end and nothing is charged.", length, after)
+        }
+        return LF("%@ for the first %@, then %@.", offer.displayPrice, length, after)
+    }
+
+    /// "2 weeks", "1 month" in the app's language
+    static func length(_ p: Product.SubscriptionPeriod, times: Int) -> String {
+        let n = p.value * max(times, 1)
+        var c = DateComponents()
+        switch p.unit {
+        case .day: c.day = n
+        case .week: c.weekOfMonth = n
+        case .month: c.month = n
+        case .year: c.year = n
+        @unknown default: c.day = n
+        }
+        let f = DateComponentsFormatter()
+        f.unitsStyle = .full
+        f.allowedUnits = [.day, .weekOfMonth, .month, .year]
+        return f.string(from: c) ?? ""
     }
 }

@@ -136,6 +136,57 @@
           }
         }
       }
+    },
+    "NSCalendarsWriteOnlyAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus trägt nur dann etwas ein, wenn du auf „In den Kalender“ tippst und speicherst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus only adds an entry when you tap “Add to calendar” and save it."
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur wenn dein ToHuus-Server bei dir zu Hause läuft: ToHuus verbindet sich mit ihm in deinem Heimnetz."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only if your ToHuus server runs at home: ToHuus connects to it in your home network."
+          }
+        }
+      }
+    },
+    "NSCalendarsFullAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur wenn du es unter Aufgaben › Kalender einschaltest: ToHuus liest die Kalender, die du auswählst, und findet darin Termine wie die Müllabfuhr. Auf Wunsch trägt ToHuus eure Aufgaben in einen Kalender deiner Wahl ein. Von einer Abfuhr verlassen nur Art und Tag dein iPhone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only if you switch it on under Tasks › Calendar: ToHuus reads the calendars you pick to find dates like the bin collection, and can write your household tasks into a calendar you choose. Only the kind and day of a collection leave your iPhone."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

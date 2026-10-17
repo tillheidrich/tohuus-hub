@@ -1,16 +1,30 @@
 import PhotosUI
 import SwiftUI
 
-/// "Produkt bearbeiten" (web Product.tsx ProductSheet): name, brand, category, place and exact spot, how it is
-/// counted, minimum, note and image. PATCH /api/products/:id with only what changed.
+/// "Produkt bearbeiten" (web Product.tsx ProductForm): name, brand, size, category, place and exact spot, how it is
+/// counted, minimum, date on the pack, always stocked, on the order menu ("Bring mir was"), note and image; find a
+/// picture again, delete (admins). PATCH /api/products/:id with only what changed.
 struct ProductEditSheet: View {
     let product: ProductInfo
     let extra: ProductExtra
+    var more = ProductMore()
     let places: [Place]
     let categories: [ProductCategory]
     let store: ServerStore
     let saved: () -> Void
+    var deleted: () -> Void = {}
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var app: AppModel?
+    @State private var size = ""
+    @State private var isStaple = false
+    @State private var orderable = false
+    @State private var orderGroup = ""
+    /// nil = automatic by name
+    @State private var dateKind: String?
+    @State private var autoKind: String?
+    @State private var confirmDelete = false
+    @State private var finding = false
+    @State private var note: String?
     @State private var name = ""
     @State private var brand = ""
     @State private var categoryId: Int?
@@ -43,6 +57,15 @@ struct ProductEditSheet: View {
                     }
                     TextField(L("Name"), text: $name)
                     TextField(L("Brand"), text: $brand)
+                    TextField(L("Size, e.g. 500g, 1l, 6 rolls"), text: $size)
+                    Button {
+                        Task { await findImage() }
+                    } label: {
+                        HStack { Label(L("Find image"), systemImage: "arrow.triangle.2.circlepath"); if finding { Spacer(); ProgressView() } }
+                    }
+                    .disabled(finding)
+                } footer: {
+                    if let note { Text(note) }
                 }
                 Section(L("Category")) {
                     Picker(L("Category"), selection: $categoryId) {
@@ -90,12 +113,59 @@ struct ProductEditSheet: View {
                 } footer: {
                     Text(trackFooter)
                 }
+                if trackMode != "none" {
+                    Section {
+                        Picker(L("Date on the pack"), selection: $dateKind) {
+                            Text(L("Automatic")).tag(String?.none)
+                            Text(L("Best before")).tag(String?.some("best_before"))
+                            Text(L("Use by")).tag(String?.some("use_by"))
+                        }
+                        .pickerStyle(.segmented)
+                    } header: {
+                        Text(L("Date on the pack"))
+                    } footer: {
+                        Text(dateFooter)
+                    }
+                }
+                Section {
+                    Toggle(isOn: $isStaple) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("Always stocked"))
+                            Text(L("A staple – counts as available for recipes.")).font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    Toggle(isOn: $orderable.animation()) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("On the order menu"))
+                            Text(L("Family and guests can order it. Pictures, choices and groups are set in the menu.")).font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    if orderable {
+                        TextField(L("Bar section, e.g. drinks, ice cream, snacks"), text: $orderGroup)
+                    }
+                }
+                .tint(Theme.primary)
                 Section(L("Note")) {
                     TextField(L("e.g. only the lactose-free one"), text: $notes, axis: .vertical).lineLimit(1...3)
                 }
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
+                if app?.isAdmin == true {
+                    Section {
+                        Button(role: .destructive) { confirmDelete = true } label: { Label(L("Delete"), systemImage: "trash") }
+                    }
+                }
             }
             .themedList()
+            .confirmationDialog(LF("Delete %@?", product.name), isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button(L("Delete"), role: .destructive) { Task { await remove() } }
+            } message: {
+                Text(L("The product, its stock and its history are removed."))
+            }
+            .task(id: name) {
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                let n = name.trimmingCharacters(in: .whitespaces)
+                if !Task.isCancelled, !n.isEmpty { autoKind = try? await store.api.autoDateKind(n) }
+            }
             .navigationTitle(L("Edit product"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -126,7 +196,38 @@ struct ProductEditSheet: View {
         }
     }
 
+    private var dateFooter: String {
+        let auto = dateKind == nil && autoKind != nil ? LF("Automatic: %@.", autoKind == "use_by" ? L("use-by") : L("best-before")) + " " : ""
+        return auto + ((dateKind ?? autoKind) == "use_by"
+            ? L("Use by (minced meat, fresh fish, poultry, raw milk): after the date, don’t eat it anymore.")
+            : L("Best before: after the date it is usually still fine – look, smell, taste."))
+    }
+
+    private func findImage() async {
+        finding = true
+        defer { finding = false }
+        let ok = (try? await store.api.findProductImage(product.id)) ?? false
+        note = ok ? L("Image found") : L("No matching image found")
+        if ok, let (p, _) = try? await store.api.productFull(product.id) { imagePath = p.imagePath }
+        saved()
+    }
+
+    private func remove() async {
+        do {
+            try await store.api.deleteProduct(product.id)
+            Haptics.success()
+            store.touch("products", "stock")
+            dismiss()
+            deleted()
+        } catch { self.error = APIError.from(error).localizedDescription }
+    }
+
     private func fill() {
+        size = more.size ?? product.size ?? ""
+        isStaple = more.isStaple ?? extra.isStaple ?? false
+        orderable = more.orderable ?? false
+        orderGroup = more.orderGroup ?? ""
+        dateKind = more.dateKind ?? product.dateKind
         name = product.name
         imagePath = product.imagePath
         brand = product.brand ?? ""
@@ -134,8 +235,9 @@ struct ProductEditSheet: View {
         placeId = product.defaultLocationId
         spot = product.spot ?? ""
         trackMode = product.trackMode ?? "count"
-        if trackMode == "level" { minQty = minQty >= 2 ? 2 : 0 }
         minQty = Int((product.minQty ?? 0).rounded())
+        // fill level: running low from "low" (0) or "half" (2) – the picker only knows these two
+        if trackMode == "level" { minQty = minQty >= 2 ? 2 : 0 }
         unit = product.unit ?? ""
         notes = product.notes ?? ""
     }
@@ -155,6 +257,11 @@ struct ProductEditSheet: View {
         if (trackMode == "count" || trackMode == "level") && Double(minQty) != (product.minQty ?? 0) { f["min_qty"] = minQty }
         if trackMode == "count" && !t(unit).isEmpty && t(unit) != (product.unit ?? "") { f["unit"] = t(unit) }
         if t(notes) != (product.notes ?? "") { f["notes"] = null(notes) }
+        if t(size) != (more.size ?? product.size ?? "") { f["size"] = null(size) }
+        if isStaple != (more.isStaple ?? extra.isStaple ?? false) { f["is_staple"] = isStaple }
+        if orderable != (more.orderable ?? false) { f["orderable"] = orderable }
+        if orderable && t(orderGroup) != (more.orderGroup ?? "") { f["order_group"] = null(orderGroup) }
+        if trackMode != "none" && dateKind != (more.dateKind ?? product.dateKind) { f["date_kind"] = dateKind.map { $0 as Any } ?? NSNull() }
         do {
             if !f.isEmpty {
                 let body = try JSONSerialization.data(withJSONObject: f)

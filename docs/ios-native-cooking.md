@@ -1,0 +1,33 @@
+# iOS: Kochen nativ (Stand 14. Oktober 2026)
+
+Abgleich der Web-Seiten `web/src/pages/{Cook,Recipe,CookMode,Week,Plan2,RecipeImports,RecipePhotos,RecipePackage,RecipeServings,RecipeVariant,CloudRecipes,WhatToEat,Leftovers,CookidooSheet}.tsx` mit `ios/ToHuus/Features/Cooking/*` und `Features/Kitchen/KitchenModeView.swift`. Alles nutzt dieselben Endpunkte wie das Web, funktioniert mit ToHuus Cloud und mit einem eigenen Server. Keine Server-Änderungen.
+
+## Was neu nativ ist
+
+| Web | iOS | Endpunkte |
+|---|---|---|
+| „Rezept hinzufügen › Leer“ + Rezept-Editor (Textfelder) | `RecipeEditorView` – neues Rezept und Bearbeiten mit echten Zeilen: Zutaten (Haus-Symbol = „immer im Haus“, optional, verschieben, wischen zum Löschen), Schritte mit Abschnitt und Geräte-Einstellungen (Gerät, Zeit, Temperatur, Stufe, Modus), Schlagwörter als Chips, Foto, „Mehrere Zeilen einfügen“ (Aufzählungen/Nummern werden entfernt), Rückfrage beim Verwerfen. Produkt-Zuordnung einer Zutat bleibt, solange die Zeile gleich bleibt. Ersetzt das alte Textfeld-Formular (`RecipeEditSheet` entfernt). | `POST /api/recipes`, `PUT /api/recipes/:id`, `DELETE /api/recipes/:id`, `POST /api/recipes/:id/image` |
+| Kochmodus (`CookMode.tsx`) | `CookModeView` (Vollbild): Seite „Bevor es losgeht“ mit Hausnotiz und Zutaten zum Abhaken (Mengen folgen den Portionen), ein Schritt pro Seite (wischen oder Weiter/Zurück, Pfeiltasten), Schriftgröße normal/groß/sehr groß, Bildschirm bleibt an, Geräte-Chips, **Timer** aus dem Schritttext und der Geräte-Zeit („10 Min.“, „1–2 Std.“, „30 Sek.“) – mehrere parallel, Pause/+1 Min./Stopp, Ton + Haptik, lokale Mitteilung bei gesperrtem Telefon. Am Ende „Gekocht!“ → „Guten Appetit!“-Sheet. Auch aus Küchenmodus und Rezeptkarten (lange drücken). | `GET /api/recipes/:id`, `GET /api/cook2/recipes/:id/variant`, `POST /api/recipes/:id/cooked` |
+| Rezeptseite: „Original-Zutatenzeilen“, „Schritte in Cookidoo …“ | Aufklappbare Originalzeilen übersetzter Rezepte; Karte „Schritte in {App}“ mit Link, wenn die Schritte nur in der Geräte-App liegen (`instructions_available = 0` oder Geräte-Plattform ohne Schritte). | – |
+| Bon-Button (Rezept / „Woche drucken“) | `CookPrintMenu`: AirPrint oder PDF (eigene A4-Seite mit Foto, Zutaten, Schritten / Wochentabelle mit Koch:in), „Als Text teilen“, und auf eigenen Servern mit Bondrucker derselbe Bon wie im Web. | `GET /api/print/info`, `POST /api/print/print {type: recipe|week}` |
+| Reste: `PlanBoxPicks`, `MealBoxAction`, `LabelModePick` | Planer-Auswahl zeigt „Reste & Eingefrorenes“ (ein Tipp plant die Dose für den Tag). Im Mahlzeiten-Sheet: geplante Dose öffnen (`BoxDetail`) oder Reste wegstellen mit Etikett (`PutAwaySheet`). Im „Guten Appetit!“-Sheet: „Etikett für die Dose machen“ → Etiketten zum Drucken/Teilen. | `GET /api/labels/boxes?status=active`, `POST /api/labels/boxes/:code/plan {day, slot}`, `POST /api/labels/boxes` (mit `plan_id`, `labelled`), `GET /api/labels/boxes/:code/label.png` |
+| Woche: „Cookidoo abgleichen“ | Knopf erscheint, wenn der Server Home Assistant mit Token kennt (`pull`), plus Zeile „zuletzt empfangen“ vom HACS-Push. Nur eigener Server. | `GET /api/cook2/cookidoo/status`, `POST /api/plan/cookidoo-sync` |
+| Wochenplan per Drag & Drop | **Neu, besser als Web/Meal planner/Lilara:** `WeekGlanceCard` oben im Plan („4 von 6 Tagen geplant“, Tagespunkte, „2 Mahlzeiten brauchen noch eine Person am Herd.“) und `PlanBoardSheet` „Woche planen“: sieben Tage oben, Ablage unten (Ideen aus dem Vorrat / Lieblinge / alle, mit Suche). Gericht auf einen Tag ziehen – oder antippen und dann den Tag (VoiceOver-tauglich) –, geplante Gerichte zwischen Tagen ziehen, lange drücken = „Für Tag planen“, Rückgängig im Toast. Rezeptkarten sind auch im normalen Wochenplan ablegbar (iPad). | `POST /api/plan2/entries` (Antwort: Eintrag mit `id`), `PATCH /api/plan/:id`, `DELETE /api/plan/:id` |
+| Rezepte-Raster (`rcard`) | `RecipeLibrarySection`: Foto-Karten (TM-Chip, Herz, „30 Min. · 3× gekocht“), Filter Lieblinge/Thermomix/≤ 30 Min./noch nie gekocht, Sortierung A–Z/zuletzt/am häufigsten, Suche auch in Schlagwörtern, „mit: …“-Zutatensuche; lange drücken: Kochen starten, Für Tag planen, Liebling, Fehlendes auf die Liste. | `GET /api/recipes`, `GET /api/recipes/search?with=` |
+| „Daraus könnt ihr heute kochen“ + „Ideen durchblättern“ | `CookIdeasStrip` (fehlende Zeilen mit einem Tipp auf die Liste, jeweils mit Rezeptzeile als Notiz) und `SuggestDeckSection` (Karten wischen: rechts = Lecker öffnet, links = nächste; Thermomix-Filter; Reduce Motion beachtet). | `GET /api/cook/ideas`, `POST /api/recipes/:id/shopping {only}`, `GET /api/recipes/suggest?limit=20&thermomix=` |
+| Einstellungen › Rezepte (`RecipeImportCenter`, `RecipePhotosCard`, `AiImportSheet`) | `RecipeToolsView` „Rezept-Werkzeuge“: Foto-Status mit Fortschritt, „Fehlende Fotos nachladen“, **„Fotos über dieses Telefon laden“** (Ersatz für den Browser-Weg: lädt drei parallel, ≤ 1600 px JPEG, Stopp), offene Rezeptdatenbank, Rezeptpaket/andere Apps, „Mit jeder KI importieren“ (Prompt kopieren, Antwort einfügen → Vorschau), Export als JSON. | `GET /api/recipes/import/images`, `POST …/images/retry`, `GET …/images/missing`, `POST …/images/:id`, `GET /api/recipes/import/ai-template`, `POST /api/recipes/import/paste`, `GET /api/recipes/export.json` |
+| ToHuus-Rezepte (`CatalogSheet`) | Antippen einer Karte öffnet `CatalogDetailSheet` (Herkunft, Allergene, Zutaten, Schritte, Speichern / „In euren Rezepten öffnen“ / Plus); „Alle zeigen“ → `CatalogAllView`. Nur Cloud. | `GET /api/cloud-recipes`, `GET /api/cloud-recipes/:id`, `POST /api/cloud-recipes/:id/save` |
+| Import-Sheet | Neuer Reiter „Leer“ (öffnet den Editor); nach Link/Foto/Text-Import öffnet sich das neue Rezept direkt (wie im Web). | `POST /api/recipes/import/{url,photo,text}` → `{ id }` |
+| Kopf „Lieblinge“ | Herz in der Kochen-Leiste öffnet das native `FavouritesView`. | `GET /api/people/favourites` |
+
+Plus-Menü in der Kochen-Leiste: Neues Rezept, Übernehmen (Link/Foto/Text), Rezepte entdecken, Rezept-Werkzeuge.
+
+## Debug-Startargumente
+
+`-debugCook new` (Editor), `-debugCook tools` (Rezept-Werkzeuge), zusätzlich zu den bestehenden `wte|week|recipes|recipe:<id>|open|import|package|with:<x>|open:<q>` und `-debugCookWeek <n>`.
+
+## Bewusst nicht nativ
+
+- A4-Etikettenbogen (`/etiketten`, PDF mit Layout-Wahl) gehört zum Bereich Vorrat/Etiketten; aus dem Kochen heraus gibt es Etikett drucken (AirPrint) und teilen.
+- Bondrucker per Bluetooth/USB direkt vom Gerät (`ticket.escpos`, experimentell im Web) – iOS nutzt den Server-Druck (`/print/print`).
+- Regionale Mengenumrechnung im Schritttext (`RegionAmounts`) – Zutatenmengen werden wie bisher nach Portionen skaliert.

@@ -7,7 +7,7 @@ import { notify, notifySettings } from './notify.js';
 import { suggest } from './recipes.js';
 import { haSettings, syncCookidoo } from './plan.js';
 import { fmtDay, t } from '../i18n.js';
-import { checkCareDue } from './care.js';
+import { checkCareDue, sendCareBundles } from './care.js';
 import { checkBudgets } from './spend2.js';
 import { startPartyScheduler } from './party.js';
 import { startPeopleScheduler } from './people.js';
@@ -96,6 +96,7 @@ export async function householdTick() {
   try {
     await checkExpiry();
     await checkCareDue().catch((e) => console.warn('[care]', (e as Error).message));
+    await sendCareBundles().catch((e) => console.warn('[care bundle]', (e as Error).message));
     await checkBudgets().catch((e) => console.warn('[budgets]', (e as Error).message));
     await rotationTick().catch((e) => console.warn('[rotation]', (e as Error).message));
     await sendDigest();

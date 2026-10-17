@@ -5,6 +5,8 @@ struct TodayPayload: Decodable, Sendable {
     var greeting: String?
     /// Plattdeutsch saying for this moment (server/lib/platt.ts); German households only.
     var platt: Platt?
+    /// who is away today (server: away-state.ts awayToday) – me → the header says "Nich to Huus"
+    var away: TodayAway?
     var household: JSONValue?
     @Lossy var rhythm: [RhythmItem]
     var list: TodayList?
@@ -12,8 +14,17 @@ struct TodayPayload: Decodable, Sendable {
     var cookToday: CookToday?
     var money: TodayMoney?
     @Lossy var notices: [Notice]
+    /// "Fertig für heute": nothing due or overdue for me and nothing waiting for a look (docs/checkin.md)
+    var calm: Bool?
 
     var householdName: String? { household?.string ?? household?["name"]?.string }
+
+    struct TodayAway: Decodable, Sendable, Hashable {
+        struct Me: Decodable, Sendable, Hashable { var until: String }
+        struct Other: Decodable, Sendable, Hashable { var name: String; var until: String }
+        var me: Me?
+        @Lossy var others: [Other]
+    }
 
     struct Platt: Decodable, Sendable, Hashable {
         var id: String
@@ -223,6 +234,8 @@ struct ProductInfo: Decodable, Sendable, Identifiable, Hashable {
         var locationId: Int?
         var qty: Double?
         var bestBefore: String?
+        /// 1 = estimated from the usual shelf life (server: fresh-shelf.ts), not the printed date
+        var bbEstimated: Int?
         var openedAt: String?
     }
 
@@ -437,6 +450,25 @@ struct MoneyOverview: Decodable, Sendable {
     var budgetLeft: Double?
     var budgetState: String?
     var historyLimited = false
+    /// receipts and own expenses of the month, newest first – a row opens the receipt with its items
+    var purchases: [Purchase] = []
+
+    struct Purchase: Decodable, Sendable, Identifiable, Hashable {
+        var key: String
+        /// receipt | expense
+        var kind: String
+        var id: Int
+        var day: String
+        var store: String?
+        var title: String
+        var total: Double = 0
+        var items: Int = 0
+        var preview: [String] = []
+        var excluded = false
+        var personal = false
+        /// own expense: the entry itself (opens the expense form)
+        var entry: SpendEntry?
+    }
 
     struct Amount: Sendable, Identifiable, Hashable {
         var label: String
@@ -488,11 +520,13 @@ struct MoneyOverview: Decodable, Sendable {
             else {
                 vsLastMonth = v.first("pct", "percent", "diffPct", "changePct")?.double
                 lastMonthTotal = v.first("total", "last", "previous", "lastMonth")?.double
-                if vsLastMonth == nil, let last = lastMonthTotal, last > 0, let t = total { vsLastMonth = (t - last) / last * 100 }
+                // pct: null is the server's "nothing to compare up to this day" – no guess from the whole last month
+                if vsLastMonth == nil, v["pct"] == nil, let last = lastMonthTotal, last > 0, let t = total { vsLastMonth = (t - last) / last * 100 }
             }
         }
         priceChanges = (try? c.decode(Lossy<PriceChange>.self, forKey: AnyKey("priceChanges")).wrappedValue) ?? []
         hints = (try? c.decode(Lossy<Notice>.self, forKey: AnyKey("hints")).wrappedValue) ?? []
+        purchases = (try? c.decode(Lossy<Purchase>.self, forKey: AnyKey("purchases")).wrappedValue) ?? []
     }
 
     static func amounts(_ v: JSONValue?) -> [Amount] {

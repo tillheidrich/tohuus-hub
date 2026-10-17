@@ -1,4 +1,6 @@
+import { awayToday } from '../lib/away-state.js';
 import { Router } from 'express';
+import { itemIsExtra } from '../lib/extras.js';
 import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled } from '../config.js';
@@ -51,6 +53,7 @@ import { setDateKind } from '../lib/retail.js';
 import { applyShareView, isMasked, notPrivate } from '../lib/share-core.js';
 import { canUseList, privateRowGuard } from '../lib/lists.js';
 import { uploadQuota } from '../lib/plans.js';
+import { queueScope } from '../lib/tenancy.js';
 import { clearChecked, removeItem, tickItem, withOrigin } from '../lib/shopping-trust.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
@@ -86,6 +89,12 @@ r.get('/me', (req, res) => {
     actor,
     household: getSetting('household.name', t('Our home')),
     brand: brand(),
+    // sharing lists, ideas and cards (docs/sharing.md): the website for the "geteilt mit ToHuus" footer, and whether
+    // the household wants that footer at all (an admin switch, on by default)
+    site_url: config.siteUrl,
+    share_footer: getSetting<boolean>('share.footer', true) !== false,
+    // "Nich to Huus": the person is away right now (their own trip or the household's) – the app header says so
+    away_until: actor.kind === 'user' && actor.userId ? (awayToday(actor.userId).me?.until ?? null) : null,
     language: lang(),
     region: regionInfo(),
     features: { vision: visionAvailable(), email: smtpEnabled() },
@@ -97,6 +106,8 @@ r.get('/me', (req, res) => {
     // "Was nutzen wir?" – areas the household switched off are hidden in the app (data stays)
     modules: modules(),
     version: process.env.npm_package_version ?? '0.1.0',
+    // stamps the web app's offline queue (shop/offline.ts) – changes are only replayed for this household and person
+    scope: queueScope(actor.kind === 'user' ? actor.userId : null, actor.kind),
   });
 });
 
@@ -370,8 +381,9 @@ r.patch('/stock/:id', (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  db.prepare(`UPDATE stock SET best_before = ?, opened_at = ?, location_id = ?, updated_at = datetime('now') WHERE id = ?`).run(
+  db.prepare(`UPDATE stock SET best_before = ?, bb_estimated = ?, opened_at = ?, location_id = ?, updated_at = datetime('now') WHERE id = ?`).run(
     b.best_before === undefined ? s.best_before : b.best_before,
+    b.best_before === undefined ? s.bb_estimated : 0,
     b.opened_at === undefined ? s.opened_at : b.opened_at,
     b.location_id ?? s.location_id,
     s.id,
@@ -413,7 +425,7 @@ r.get('/lookup/match', (req, res) => {
 r.get('/shopping', (req, res) => {
   const items = db
     .prepare(
-      `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit,
+      `SELECT s.*, p.name AS product_name, p.brand, p.image_path, p.category_id, p.unit, p.is_extra AS product_is_extra,
          (SELECT COALESCE(SUM(qty),0) FROM stock st WHERE st.product_id = s.product_id) AS in_stock
        FROM shopping_items s LEFT JOIN products p ON p.id = s.product_id
        WHERE s.cleared_at IS NULL AND (s.checked_at IS NULL OR s.checked_at > datetime('now', '-1 day'))
@@ -421,7 +433,8 @@ r.get('/shopping', (req, res) => {
     )
     .all() as { id: number; text: string; product_id: number | null; note: string | null; source: string; added_by: string | null; created_at: string; origin_detail: string | null }[];
   // discreet / private entries (area: share): real names only for their owner; every row says where it came from
-  res.json(withOrigin(applyShareView(items, { userId: req.actor?.userId ?? null })));
+  const marked = items.map((x) => ({ ...x, extra: itemIsExtra(x as Parameters<typeof itemIsExtra>[0]) }));
+  res.json(withOrigin(applyShareView(marked, { userId: req.actor?.userId ?? null })));
 });
 
 r.post('/shopping', (req, res) => {

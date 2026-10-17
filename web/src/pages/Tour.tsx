@@ -115,6 +115,13 @@ function steps(form: HouseholdForm = 'family'): Step[] {
       body: t('Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.'),
     },
     {
+      id: 'tasks',
+      route: '/aufgaben',
+      targets: [TITLE],
+      title: t('Tasks, your head and the people you look after'),
+      body: t('Household tasks without points. “On my mind” for thoughts without a deadline – private or for everyone. “People I look after” for visits and appointments. And when someone is away, ToHuus asks who takes what and what may wait.'),
+    },
+    {
       id: 'receipts',
       route: '/geld',
       targets: nav('/geld'),
@@ -143,7 +150,7 @@ function steps(form: HouseholdForm = 'family'): Step[] {
       id: 'speak',
       route: '/',
       targets: ['.assist-fab'],
-      title: t('Speak'),
+      title: t('Assistant'),
       body: t('Say or type “milk is out, and we need something for Sunday”. With AI switched on it also helps on every screen; without AI the simple sentences still work. Every change can be undone.'),
     },
     {

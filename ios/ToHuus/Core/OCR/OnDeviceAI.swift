@@ -27,13 +27,20 @@ enum OnDeviceAI {
         case notEnabled
         /// still downloading or preparing
         case notReady
+        /// the model is there, but not for the iPhone's language (Apple adds languages step by step)
+        case languageNotSupported
     }
 
     static var state: State {
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *) {
-            switch SystemLanguageModel.default.availability {
-            case .available: return .available
+            let model = SystemLanguageModel.default
+            switch model.availability {
+            case .available:
+                // German and English receipts: the model must speak the iPhone's language, otherwise it would throw
+                // unsupportedLanguageOrLocale on every request – then the plain on-device reading is used, as before
+                let code = Locale.current.language.languageCode
+                return model.supportedLanguages.contains { $0.languageCode == code } ? .available : .languageNotSupported
             case .unavailable(.appleIntelligenceNotEnabled): return .notEnabled
             case .unavailable(.modelNotReady): return .notReady
             case .unavailable: return .notSupported
@@ -46,6 +53,20 @@ enum OnDeviceAI {
 
     /// chosen, allowed for this person and ready on this device
     @MainActor static func active(_ app: AppModel) -> Bool { chosen && !app.aiLocked && state == .available }
+
+    /// The model is a help, never a wait: after `seconds` the caller goes on without it (nil); the model call is
+    /// cancelled in the background.
+    static func withTimeout<T: Sendable>(_ seconds: Double = 20, _ work: @escaping @Sendable () async -> T?) async -> T? {
+        let once = ResumeOnce<T?>()
+        return await withCheckedContinuation { (cont: CheckedContinuation<T?, Never>) in
+            let job = Task { once.resume(cont, with: await work()) }
+            Task {
+                try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                job.cancel()
+                once.resume(cont, with: nil)
+            }
+        }
+    }
 
     // MARK: receipts
 
@@ -113,6 +134,19 @@ enum OnDeviceAI {
         }
         #endif
         return nil
+    }
+}
+
+/// resumes a continuation exactly once (the model's answer or the timeout, whichever comes first)
+private final class ResumeOnce<T: Sendable>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var done = false
+    func resume(_ c: CheckedContinuation<T, Never>, with value: T) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !done else { return }
+        done = true
+        c.resume(returning: value)
     }
 }
 

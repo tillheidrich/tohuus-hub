@@ -74,26 +74,7 @@ struct GuestLinksView: View {
     }
 
     private func row(_ g: GuestLink) -> some View {
-        HStack(spacing: Theme.Space.s3) {
-            Image(systemName: g.scopes.contains("stock") ? "figure.and.child.holdinghands" : "wineglass")
-                .foregroundStyle(Theme.primaryText)
-                .frame(width: 36, height: 36)
-                .background(Theme.primarySoft, in: Circle())
-            VStack(alignment: .leading, spacing: 2) {
-                Text(g.name).font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
-                Text(g.scopes.map(Self.scopeLabel).joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink2)
-                Text(expiry(g)).font(.caption).foregroundStyle(Theme.ink3)
-            }
-            Spacer(minLength: 0)
-            Button { rotating = g } label: { Image(systemName: "qrcode") }
-                .buttonStyle(.borderless)
-                .frame(minWidth: 44, minHeight: 44)
-                .accessibilityLabel(L("New link with QR code"))
-        }
-        .swipeActions {
-            Button(role: .destructive) { Task { await revoke(g) } } label: { Label(L("Revoke"), systemImage: "xmark") }
-        }
-        .accessibilityAction(named: L("Revoke")) { Task { await revoke(g) } }
+        GuestLinkRow(link: g, onRotate: { rotating = g }, onRevoke: { Task { await revoke(g) } })
     }
 
     static func scopeLabel(_ s: String) -> String {
@@ -103,11 +84,6 @@ struct GuestLinksView: View {
         case "shopping": return L("Shopping list")
         default: return s
         }
-    }
-
-    private func expiry(_ g: GuestLink) -> String {
-        guard let d = ServerDate.parse(g.expiresAt) else { return L("No expiry") }
-        return d < Date() ? L("Expired") : LF("Valid until %@", d.formatted(.dateTime.day().month(.abbreviated).hour().minute()))
     }
 
     private func load() async {
@@ -128,6 +104,60 @@ struct GuestLinksView: View {
             links?.removeAll { $0.id == g.id }
             toast = ToastMessage(text: LF("“%@” no longer works.", g.name))
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
+    }
+}
+
+/// One guest link: what it allows, until when, when it was last used; new link (QR) and revoke by swipe.
+struct GuestLinkRow: View {
+    let link: GuestLink
+    let onRotate: () -> Void
+    let onRevoke: () -> Void
+
+    var body: some View {
+        let g = link
+        HStack(spacing: Theme.Space.s3) {
+            Image(systemName: g.scopes.contains("stock") ? "figure.and.child.holdinghands" : "wineglass")
+                .foregroundStyle(Theme.primaryText)
+                .frame(width: 36, height: 36)
+                .background(Theme.primarySoft, in: Circle())
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(g.name).font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
+                    if g.expiresAt == nil {
+                        Text(L("no expiry")).font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .foregroundStyle(Theme.low)
+                            .background(Theme.lowSoft, in: Capsule())
+                    }
+                }
+                Text(g.scopes.map(GuestLinksView.scopeLabel).joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink2)
+                Text([expiry, used].joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink3)
+            }
+            Spacer(minLength: 0)
+            Button(action: onRotate) { Image(systemName: "qrcode") }
+                .buttonStyle(.borderless)
+                .frame(minWidth: 44, minHeight: 44)
+                .accessibilityLabel(L("New link with QR code"))
+        }
+        .swipeActions {
+            Button(role: .destructive, action: onRevoke) { Label(L("Revoke"), systemImage: "xmark") }
+        }
+        .contextMenu {
+            Button(action: onRotate) { Label(L("New link with QR code"), systemImage: "qrcode") }
+            Button(role: .destructive, action: onRevoke) { Label(L("Revoke"), systemImage: "xmark") }
+        }
+        .accessibilityAction(named: L("Revoke"), onRevoke)
+    }
+
+    private var expiry: String {
+        guard let d = ServerDate.parse(link.expiresAt) else { return L("No expiry") }
+        return d < Date() ? L("Expired") : LF("Valid until %@", d.formatted(.dateTime.day().month(.abbreviated).hour().minute()))
+    }
+
+    private var used: String {
+        guard let r = ServerDate.relative(link.lastSeenAt) else { return L("never used") }
+        return LF("last used %@", r)
     }
 }
 

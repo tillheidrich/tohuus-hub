@@ -65,7 +65,7 @@ export function AiSwitchesCard() {
         <div className="card pad stack" role="group" aria-labelledby="ai-consent-h" style={{ background: 'var(--surface-2, transparent)' }}>
           <h3 id="ai-consent-h" style={{ margin: 0 }}>{d.consent.given ? t('You agreed to AI') : t('Use AI? You decide.')}</h3>
           <p className="small" style={{ margin: 0 }}>
-            {t('When you use AI (free sentences to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you typed or photographed to {processor}. It is not used to train models. Without AI everything else keeps working.', { processor: d.consent.processor })}
+            {t('When you use AI (free sentences and voice messages to the assistant, receipt and fridge photos, recipe imports), ToHuus sends what you write, say or photograph to {processor} – together with what the answer needs from your household, such as the list, stock or recipes. Allergies and children’s details only if your household allows it separately. Nothing is used to train models. Without AI everything else keeps working.', { processor: d.consent.processor })}
           </p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             {d.consent.given ? (

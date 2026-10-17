@@ -20,7 +20,9 @@ import {
   Trash,
   WifiSlash,
   X,
+  Sparkle,
 } from '@phosphor-icons/react';
+import { shareText, useShareMeta } from '../share/share';
 import { DemoTag, useDemoMarks } from './Samples';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -33,6 +35,7 @@ import { getOr, useInstance } from '../data';
 import { originLabel, rhythmLine } from '../origin';
 import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
 import { ItemEditor, lastBoughtLine, substituteLine } from '../shop/ItemEditor';
+import { ExtrasBar } from '../shop/extras';
 import '../shop/list2.css';
 import { useDrag } from '../dnd';
 import '../dnd.css';
@@ -101,6 +104,7 @@ function overlay(view: ShopView | undefined, me: Me | undefined): ShopView | und
 }
 
 export function Shopping() {
+  const shareMeta = useShareMeta();
   const me = useApi<Me>('me', '/me');
   const [storeId, setStoreId] = useState<number | null>(() => Number(storeGet('sw.shop.store', '0')) || null);
   const [mode, setMode] = useState<'list' | 'store'>(() => (storeGet('sw.shop.mode', 'list') === 'store' ? 'store' : 'list'));
@@ -368,7 +372,9 @@ export function Shopping() {
   };
 
   const share = async () => {
-    const txt = await get<string>('/shopping/export.txt');
+    // "— geteilt aus ToHuus" when the household keeps it on (docs/sharing.md)
+    const raw = await get<string>('/shopping/export.txt');
+    const txt = shareMeta.footer ? shareText('', raw.split('\n'), 'list', shareMeta).trim() : raw;
     if (navigator.share) {
       try {
         await navigator.share({ title: t('Shopping list'), text: txt });
@@ -441,6 +447,7 @@ export function Shopping() {
       <TripsBar trips={trips.data ?? []} />
       {!inStore && view && <AtStoreChips stores={view.stores} value={atStore} onChange={pickAt} />}
       {view && <EstimateLine e={view.estimate} />}
+      {!inStore && <ExtrasBar guest={Boolean(me.data?.actor.houseGuest)} />}
       {currentList?.kind === 'care' && currentList.note && (
         <p className="handover-note">
           <b>{t('Handover')}:</b> {currentList.note}
@@ -909,6 +916,7 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
             <ShareMark s={i.share} size={big ? 16 : 13} />
             {qty}
             {i.text}
+            {i.extra && <Sparkle size={big ? 15 : 12} className="extra-mark" aria-label={t('Extra')} />}
           </span>
           {(sub || i.claim || isDemo) && (
             <span className="sub">
@@ -926,8 +934,9 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
         </span>
       )}
       {onClaim && !on && (
-        <button className="btn sm claim-btn" onClick={onClaim}>
-          {t('I’ll get it')}
+        <button className="btn sm claim-btn" onClick={onClaim} aria-label={t('I’ll get it')}>
+          <HandHeart size={16} aria-hidden="true" />
+          <span className="claim-label">{t('I’ll get it')}</span>
         </button>
       )}
       {onMore && !on && (

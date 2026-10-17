@@ -117,7 +117,7 @@ export function RegionCard({ admin }: { admin: boolean }) {
       </div>
 
       <dl className="rg-facts small">
-        <div><dt>{t('Prices')}</dt><dd className="mono">{sample(r.locale, r.currency)}</dd></div>
+        <div><dt>{t('Prices')}</dt><dd className="num">{sample(r.locale, r.currency)}</dd></div>
         <div><dt>{t('Units')}</dt><dd>{r.units === 'us' ? t('US customary (oz, lb, cups)') : t('Metric (g, kg, ml)')}</dd></div>
         <div><dt>{t('Week starts')}</dt><dd>{r.week_start_day === 0 ? t('Sunday') : t('Monday')}</dd></div>
         <div><dt>{t('Receipts')}</dt><dd>{r.receipt_grammar ? t(RECEIPTS[r.receipt_grammar]) : t('Photos and PDFs via the vision model')}</dd></div>

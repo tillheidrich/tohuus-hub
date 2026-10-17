@@ -247,11 +247,51 @@ describe('personal entries stay with their person', () => {
     expect(JSON.stringify((await req('mira', 'GET', '/api/wg/balance')).json)).not.toContain('29.99');
     expect(keys(await req('mika', 'GET', `/api/spend/entries?period=month&date=${today}&view=mine`))).toContain(`l:${r.lines[0].id}`);
     expect(keys(await req('mika', 'GET', `/api/spend/entries?period=month&date=${today}`))).not.toContain(`l:${r.lines[0].id}`);
+    // Geld › Einkäufe: only in Mika's own view
+    const ids = (j: any) => (j.purchases as any[]).filter((p) => p.kind === 'receipt').map((p) => p.id);
+    expect(ids((await req('mira', 'GET', '/api/money/overview')).json)).not.toContain(r.id);
+    expect(ids((await req('mika', 'GET', '/api/money/overview')).json)).not.toContain(r.id);
+    const own = (await req('mika', 'GET', '/api/money/overview?view=mine')).json.purchases.find((p: any) => p.id === r.id);
+    expect(own).toMatchObject({ kind: 'receipt', personal: true, items: 1, preview: ['Rasierer'] });
   });
 
   it('back to the household', async () => {
     expect((await req('mika', 'POST', `/api/spend/receipts/${personalReceipt}/personal`, { for_user_id: null })).status).toBe(200);
     expect((await req('mira', 'GET', `/api/imports/${personalReceipt}`)).status).toBe(200);
+  });
+
+  it('Rückblick: money counts the household only, and nobody in gentle mode sees it', async () => {
+    const { yearReview } = await import('../server/lib/review');
+    process.env.YEAR_REVIEW = 'on';
+    const r = yearReview(mira);
+    const money = r.cards.find((c) => c.key === 'money_total');
+    expect(money).toBeTruthy();
+    expect(JSON.stringify(r)).not.toContain('Buchladen');
+    const { setFocusPrefs } = await import('../server/lib/focus');
+    setFocusPrefs(mika, { gentle: true });
+    expect(yearReview(mika).cards.some((c) => c.area === 'money')).toBe(false);
+    setFocusPrefs(mika, { gentle: false });
+    delete process.env.YEAR_REVIEW;
+  });
+
+  it('Geld lists the month’s purchases newest first – a receipt opens with its items, an expense carries its entry', async () => {
+    const r = receipt('Mira', [
+      { name: 'Milch', price: 1.19 },
+      { name: 'Brot', price: 2.49 },
+      { name: 'Äpfel', price: 2.99 },
+      { name: 'Käse', price: 3.49 },
+    ]);
+    const o = (await req('mira', 'GET', '/api/money/overview')).json;
+    const p = o.purchases.find((x: any) => x.kind === 'receipt' && x.id === r.id);
+    expect(p).toMatchObject({ items: 4, preview: ['Käse', 'Äpfel', 'Brot'], excluded: false, personal: false, entry: null });
+    expect(p.total).toBeCloseTo(10.16, 2);
+    const days = o.purchases.map((x: any) => x.day);
+    expect([...days].sort().reverse()).toEqual(days);
+    const detail = (await req('mira', 'GET', `/api/spend/receipts/${p.id}`)).json;
+    expect(detail.entries.map((e: any) => e.name)).toEqual(expect.arrayContaining(['Milch', 'Käse']));
+    const ex = o.purchases.find((x: any) => x.kind === 'expense');
+    expect(ex?.entry?.kind).toBe('expense');
+    expect(ex?.entry?.id).toBe(ex?.id);
   });
 });
 

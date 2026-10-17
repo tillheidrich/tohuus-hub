@@ -332,7 +332,8 @@ export function displayData(d: DisplayRow, nowMs = Date.now()): DisplayData {
   }
   if (on('care')) {
     const names = showNamesOnLogin();
-    const due = dueCareTasks();
+    // a shared display: no tasks for someone a member looks after (health data, carefor.ts)
+    const due = dueCareTasks({ outside: true });
     out.care = {
       count: due.length,
       items: due.slice(0, 6).map((c) => ({ name: c.name, state: c.state, when: inDays(c.days), who: names ? (c.assignee?.name ?? null) : null })),

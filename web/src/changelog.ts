@@ -17,6 +17,36 @@ export interface ChangeEntry {
 
 export const CHANGELOG: ChangeEntry[] = [
   {
+    id: '2026-10-15.2',
+    title: { en: 'Seen: on your mind, what you solved, who you look after', de: 'Gesehen werden: Im Kopf, heute gelöst, für wen du da bist' },
+    items: [
+      { en: '“On my mind”: get thoughts out of your head – private or for everyone, with a “someday” if you like. And “done on the side” for what never was on a list.', de: '„Im Kopf“: Gedanken loswerden – privat oder für alle, gern mit „irgendwann“. Und „Nebenbei erledigt“ für das, was nie auf einer Liste stand.', to: '/kopf' },
+      { en: 'In the evening Heute may ask “What did you solve today?” – two taps, and the others get a thank-you.', de: 'Abends fragt Heute ab und zu „Was habt ihr heute gelöst?“ – zwei Tipps, und die anderen bekommen ein Danke.', to: '/' },
+      { en: '“People I look after”: visits, appointments, prescriptions – that’s work, and it gets room here. Private unless you share it.', de: '„Für wen ich da bin“: Besuche, Termine, Rezepte – das ist Arbeit und bekommt hier Platz. Privat, außer du teilst es.', to: '/fuer-wen' },
+      { en: 'Swipe to decide: what to eat this week, what’s still on your mind, what can wait.', de: 'Wischen zum Entscheiden: was ihr diese Woche esst, was dir noch im Kopf ist, was warten darf.', to: '/kochen' },
+      { en: 'Share lists to Notes or Mail, and your week as a picture for stories.', de: 'Listen in Notizen oder per Mail teilen, und eure Woche als Bild für Stories.', to: '/woche' },
+    ],
+  },
+  {
+    id: '2026-10-15',
+    title: { en: 'Away, one by one – and a look back at your week', de: 'Einzeln unterwegs – und ein Blick auf eure Woche' },
+    items: [
+      { en: '“Only I’m away”: a business trip or a hospital stay – the house runs on, tasks go to whoever is home or may wait.', de: '„Nur ich bin weg“: Dienstreise oder Krankenhaus – zu Hause läuft alles weiter, Aufgaben gehen an die, die da sind, oder dürfen warten.', to: '/urlaub' },
+      { en: 'Guests can help too: Grandma waters the plants, your aunt helps while you’re in hospital.', de: 'Auch Gäste können helfen: Oma gießt die Blumen, die Tante hilft, während du im Krankenhaus bist.', to: '/urlaub' },
+      { en: 'Your week and your month at home – only what went well, no comparisons.', de: 'Eure Woche und euer Monat to Huus – nur, was gut lief, ohne Vergleiche.', to: '/woche' },
+      { en: 'ToHuus learns who usually does what, and suggests who cooks.', de: 'ToHuus lernt, wer was meistens macht, und schlägt vor, wer kocht.', to: '/aufgaben' },
+    ],
+  },
+  {
+    id: '2026-10-14',
+    title: { en: 'Tasks for the whole household', de: 'Aufgaben für den ganzen Haushalt' },
+    items: [
+      { en: 'Household tasks with taking turns, “I’ll do it” and who keeps what in mind – no points, no ranking.', de: 'Aufgaben im Haushalt mit Abwechseln, „Mach ich“ und wer was im Blick hat – ohne Punkte, ohne Rangliste.', to: '/aufgaben' },
+      { en: 'Bin dates from your calendar, and tasks in your own calendar app.', de: 'Mülltermine aus eurem Kalender, und Aufgaben in deiner eigenen Kalender-App.', to: '/einstellungen?tab=account' },
+      { en: 'The assistant button is a small sparkle now – the microphone inside still listens.', de: 'Der Assistent-Knopf ist jetzt ein kleiner Stern – das Mikrofon darin hört weiter zu.' },
+    ],
+  },
+  {
     id: '2026-10-12',
     title: { en: 'Faster, five tabs and “Today” at a glance', de: 'Schneller, fünf Tabs und „Heute“ auf einen Blick' },
     items: [

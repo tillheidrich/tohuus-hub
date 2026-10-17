@@ -153,8 +153,56 @@ struct SampleDataSettingsSection: View {
     @State private var confirm = false
     @State private var busy = false
     @State private var message: String?
+    /// the household is still empty: offer the example household (web: Settings › Data › DemoCard)
+    @State private var empty = false
 
     var body: some View {
+        Group {
+            if app.hasSampleData || message != nil {
+                removeSection
+            } else if empty && app.isHouseholdAdmin {
+                Section {
+                    Button {
+                        Task { await load() }
+                    } label: {
+                        HStack {
+                            Label(L("Load sample data"), systemImage: "sparkles")
+                            Spacer()
+                            if busy { ProgressView() }
+                        }
+                    }
+                    .disabled(busy)
+                } header: {
+                    Text(L("Look around with sample data"))
+                } footer: {
+                    Text(L("Your household is still empty. Load an example household to try things out – everything it adds is marked and can be removed in one go."))
+                }
+            }
+        }
+        .task {
+            if !app.hasSampleData, app.isHouseholdAdmin, let g = try? await app.api?.gettingStarted() {
+                empty = (g.counts?.products ?? 1) == 0
+            }
+        }
+    }
+
+    private func load() async {
+        busy = true
+        defer { busy = false }
+        do {
+            try await app.api?.loadSampleData()
+            await app.refreshSamples()
+            app.store?.touch("*")
+            await app.store?.refreshList()
+            empty = false
+            message = L("Sample data loaded – it is marked and can be removed any time.")
+            Haptics.success()
+        } catch {
+            message = APIError.from(error).localizedDescription
+        }
+    }
+
+    @ViewBuilder private var removeSection: some View {
         if app.hasSampleData || message != nil {
             Section {
                 if app.hasSampleData {

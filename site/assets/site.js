@@ -3,7 +3,7 @@
   var d = document.documentElement;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // light / dark: light by default; a choice is remembered on this device only
+  // light / dark: follows the device until the visitor picks one (remembered on this device only)
   var btn = document.querySelector('.theme-btn');
   var meta = document.querySelectorAll('meta[name="theme-color"]');
   function paint(t) {
@@ -17,6 +17,16 @@
     try { localStorage.setItem('tohuus.site.theme', t); } catch (e) { /* private mode */ }
     paint(t);
   });
+  // the phone bar at the bottom: only once the hero is out of view (pages without a hero: right away)
+  var rail = document.querySelector('.rail');
+  var hero = document.querySelector('.hero');
+  if (rail) {
+    if (hero && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { rail.classList.toggle('on', !e.isIntersecting); });
+      }, { threshold: 0 }).observe(hero);
+    } else rail.classList.add('on');
+  }
   // reveals
   var els = document.querySelectorAll('.reveal');
   if ('IntersectionObserver' in window && !reduce) {

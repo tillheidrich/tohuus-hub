@@ -209,7 +209,7 @@ export async function finishOidc(q: { state?: string; code?: string; error?: str
 
 // ---------------------------------------------------------------- members
 
-const COLORS = ['#2f5bea', '#1d9a63', '#e0622a', '#8a4fd8', '#d43f6f', '#0f8a9d'];
+const COLORS = ['#3d5a80', '#2f7d5b', '#b5553a', '#7a4f8f', '#a83f62', '#2c7a7b'];
 export const subjectKey = (issuer: string, sub: string) => `${trimIssuer(issuer)}|${sub}`;
 const emailVerified = (v: unknown) => v === true || v === 'true';
 

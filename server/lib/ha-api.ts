@@ -255,7 +255,7 @@ export function careEvents(start?: unknown, end?: unknown) {
   const r = range(start, end);
   const today = localDay(0);
   const out: { uid: string; task_id: number; date: string; summary: string; description: string; state: string; overdue: boolean }[] = [];
-  for (const c of listCareTasks()) {
+  for (const c of listCareTasks({ outside: true })) {
     if (!c.next_due) continue;
     let day = c.next_due;
     // an overdue task shows on today, so it doesn't vanish into the past
@@ -311,7 +311,7 @@ export function haState() {
     )
     .all() as any[];
 
-  const care = listCareTasks();
+  const care = listCareTasks({ outside: true });
   const due = care.filter((c) => c.state === 'overdue' || c.state === 'today' || c.state === 'soon');
   const nextCare = care.filter((c) => c.next_due).sort((a, b) => a.next_due!.localeCompare(b.next_due!))[0] ?? null;
 
@@ -485,7 +485,10 @@ function wire() {
       const line = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
       for (const c of clients) c.res.write(line);
     };
-    send('change', { topics, at: Date.now() });
+    // people's heads (lib/mind.ts) are not Home Assistant's business – not even that something changed
+    const shown = topics.filter((x) => x !== 'mind');
+    if (!shown.length) return;
+    send('change', { topics: shown, at: Date.now() });
     if (topics.includes('notifications')) {
       const rows = db.prepare(`SELECT id, event, title, body, payload, created_at FROM notifications WHERE id > ? AND json_extract(payload, '$.personal_for') IS NULL ORDER BY id LIMIT 20`).all(Math.max(0, last.id)) as {
         id: number;

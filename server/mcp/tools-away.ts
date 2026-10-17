@@ -1,3 +1,4 @@
+import { t } from '../i18n.js';
 /** MCP tools: away mode (trip / vacation) – status, start/stop, packing list, welcome-home list. */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -37,10 +38,12 @@ function tripFor(id?: number | null) {
 function compactTrip(id: number) {
   const tr = getTrip(id)!;
   const v = tripView(tr);
+  // a hospital stay is health data: the assistant and MCP clients see only "away" (docs/away.md)
+  const health = v.kind === 'hospital';
   return {
     id: v.id,
-    name: v.name,
-    place: v.place,
+    name: health ? t('Away') : v.name,
+    place: health ? null : v.place,
     from: v.start_day,
     to: v.end_day,
     phase: v.phase,
@@ -70,7 +73,7 @@ export function register(s: McpServer, actorName: string) {
       return text({
         trip: compactTrip(tr.id),
         use_up_before_leaving: sum.phase === 'before' || sum.phase === 'planned' ? useUpList(tr).map((x) => ({ name: x.name, use_by: x.use_by, can_freeze: x.can_freeze })) : undefined,
-        checklist: sum.phase === 'before' ? checklist(tr).map((c) => ({ item: c.text, detail: c.detail ?? undefined, done: c.done })) : undefined,
+        checklist: sum.phase === 'before' && tr.kind !== 'hospital' ? checklist(tr, undefined, true).map((c) => ({ item: c.text, detail: c.detail ?? undefined, done: c.done })) : undefined,
         welcome_home: sum.trip.welcome_ready ? welcomeList(tr).map((w) => ({ name: w.name, reason: w.reason, on_shopping_list: w.on_list })) : undefined,
         suggestion: sum.suggestion ?? undefined,
       });
@@ -119,7 +122,7 @@ export function register(s: McpServer, actorName: string) {
       const tr = tripFor(trip_id);
       if (!tr) return err('No trip found.');
       const v = stopTrip(tr.id);
-      return text({ ok: true, trip: { id: v.id, name: v.name, status: v.status, phase: v.phase, to: v.end_day } });
+      return text({ ok: true, trip: { id: v.id, name: v.kind === 'hospital' ? t('Away') : v.name, status: v.status, phase: v.phase, to: v.end_day } });
     },
   );
 
@@ -142,6 +145,8 @@ export function register(s: McpServer, actorName: string) {
     async (a) => {
       const tr = tripFor(a.trip_id);
       if (!tr) return err('No trip found. Plan one with start_trip first.');
+      // a hospital stay is health data (what's packed says a lot): only in the app itself
+      if (tr.kind === 'hospital') return err('This trip’s packing list is only in the ToHuus app.');
       try {
         if (a.action === 'add') {
           for (const x of a.items ?? []) addPackItem(tr.id, { text: x });
@@ -159,7 +164,7 @@ export function register(s: McpServer, actorName: string) {
         return err((e as Error).message);
       }
       return text({
-        trip: tr.name,
+        trip: tr.kind === 'hospital' ? t('Away') : tr.name,
         items: packItems(tr.id).map((i) => ({ id: i.id, text: i.text, packed: i.done, from_stock: i.product_id ? { product_id: i.product_id, qty: i.qty, booked_out: i.out_qty } : undefined })),
       });
     },
@@ -178,7 +183,7 @@ export function register(s: McpServer, actorName: string) {
       const tr = tripFor(trip_id) ?? lastTrip();
       if (!tr) return err('No trip found.');
       if (add_to_shopping_list) return text({ ok: true, ...welcomeToShopping(tr, null, actorName) });
-      return text({ trip: tr.name, items: welcomeList(tr).map((w) => ({ name: w.name, reason: w.reason, on_shopping_list: w.on_list })) });
+      return text({ trip: tr.kind === 'hospital' ? t('Away') : tr.name, items: welcomeList(tr).map((w) => ({ name: w.name, reason: w.reason, on_shopping_list: w.on_list })) });
     },
   );
 }

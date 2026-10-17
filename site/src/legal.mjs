@@ -56,7 +56,7 @@ export function legalCopy(k) {
       { id: 'daten', h: 'Welche Daten wir verarbeiten und wozu', body:
         h3('Konto')
         + p('Deine E-Mail-Adresse, dein Name, wie er im Haushalt angezeigt wird, dein Passwort (nur als scrypt-Hash, nie im Klartext), ob deine E-Mail-Adresse bestätigt ist, Sprache und Region. Wir brauchen diese Angaben, um dein Konto zu führen, dich anzumelden und dir E-Mails zu schicken, die zum Dienst gehören: Bestätigung der Adresse, Anmeldelinks, Zurücksetzen des Passworts, Einladungen in einen Haushalt und Hinweise auf eine neue Anmeldung. Die tägliche Zusammenfassung und die Erinnerung vor einer Abo-Verlängerung bekommst du nur, solange du sie nicht abbestellst: unter <i>Einstellungen › Benachrichtigungen › Mails von ToHuus</i> oder mit dem Link in jeder dieser Mails. Werbe-E-Mails schicken wir nicht. Meldest du dich mit Apple an, bekommen wir von Apple eine Kennung für dein Konto und, wenn du sie freigibst, deine E-Mail-Adresse oder eine Weiterleitungsadresse von Apple. Löschst du dein Konto, widerrufen wir die Anmeldung mit Apple auch bei Apple. Nutzt du einen Passkey, speichern wir nur seinen öffentlichen Schlüssel; der geheime Teil bleibt auf deinem Gerät.',
-          'Während der Beta braucht eine neue Anmeldung einen Zugangscode oder eine Adresse auf unserer Liste. Wir speichern dazu den Code, wie oft er benutzt wurde, und die freigegebenen E-Mail-Adressen, bis die Beta endet. Rechtsgrundlage: Art. 6 Abs. 1 lit. b und f DSGVO.',
+          'Löst ein Admin einen Code von uns ein (etwa für einen geschenkten Monat), speichern wir den Code, wie oft er benutzt wurde, und welcher Haushalt ihn eingelöst hat. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.',
           'Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertrag über die Nutzung von ToHuus Cloud).',
           'In unserer Kontoverwaltung sehen wir zu jedem Konto nur: E-Mail-Adresse, Name, wann es angelegt, bestätigt und zuletzt genutzt wurde, wie viele Geräte angemeldet sind, in welchen Haushalten es Mitglied ist und mit welcher Rolle. Inhalte eines Haushalts sehen wir dort nie. So halten wir den Dienst sicher und können ein Konto bei Missbrauch pausieren oder entfernen (siehe Nutzungsbedingungen). Jeder solche Schritt wird mit Grund protokolliert, und du bekommst eine E-Mail. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes Interesse ist ein sicherer Betrieb.')
         + h3('Inhalte eures Haushalts')
@@ -132,6 +132,7 @@ export function legalCopy(k) {
           ['Zähler für Anmeldeversuche', 'Im Arbeitsspeicher, höchstens eine Stunde.'],
           ['Kaufbelege von Apple', 'Bis der Haushalt gelöscht wird, dann löschen wir sie mit. Verkäufer ist Apple, die Kaufbelege führt Apple. Aus den Sicherungskopien der Kontoverwaltung verschwinden sie mit deren Ablauf.'],
           ['Nach dem Ende eines Abos', 'Wird nichts gelöscht. Der Haushalt geht auf den Tarif Free zurück.'],
+          ['Anfragen über das Formular „Wir können uns das gerade nicht leisten“', '180 Tage nach unserer Antwort. Aus den Sicherungskopien der Kontoverwaltung verschwinden sie mit deren Ablauf.'],
         ]) },
 
       { id: 'apple', h: 'Käufe über Apple', body:
@@ -143,13 +144,14 @@ export function legalCopy(k) {
         p('ToHuus enthält kein Tracking, keine Werbung, keine Analyse-Werkzeuge und keine Bausteine von Drittanbietern. Die iPhone-App nutzt nur Funktionen von iOS selbst.')
         + ul('<b>Web-App:</b> ein technisch notwendiges Sitzungs-Cookie, das dich angemeldet hält (bis zu 180 Tage), und ein Zwischenspeicher, damit die App schnell lädt und die Liste auch ohne Netz funktioniert. Weitere Cookies setzen wir nicht.',
           '<b>iPhone-App:</b> das Geräte-Token für die Anmeldung im Schlüsselbund (Keychain) von iOS, dazu ein Zwischenspeicher für die Liste und Aufträge, die noch an den Server gehen müssen. Widget und Teilen-Funktion lesen diese Daten auf dem Gerät mit.',
-          '<b>Berechtigungen:</b> Kamera (Barcodes, Bons, Fotos und Videos für die Hausinfo), Mikrofon und Spracherkennung (Spracheingabe für den Assistenten), Standort (nur wenn du den Hinweis im Laden einschaltest: Das iPhone merkt, wenn du an einem eurer Läden bist; der Standort bleibt auf dem Gerät und wird nicht an uns geschickt). Schaltest du Apple Intelligence in ToHuus ein, läuft sie ganz auf dem iPhone. Die App fragt jeweils erst, wenn du die Funktion nutzt, und du kannst die Erlaubnis in den iOS-Einstellungen wieder entziehen.')
+          '<b>Berechtigungen:</b> Kamera (Barcodes, Bons, Fotos und Videos für die Hausinfo), Mikrofon und Spracherkennung (Spracheingabe für den Assistenten), Standort (nur wenn du den Hinweis im Laden einschaltest: Das iPhone merkt, wenn du an einem eurer Läden bist; der Standort bleibt auf dem Gerät und wird nicht an uns geschickt), Kalender (nur wenn du unter Aufgaben › Kalender „Euren Kalender lesen“ einschaltest: Das iPhone liest nur die Kalender, die du auswählst, und erkennt darin die Müllabfuhr. An uns gehen nur Art und Tag einer Abfuhr, keine anderen Termine. Auf Wunsch trägt die App Aufgaben des Haushalts in einen Kalender deiner Wahl ein. Titel und Tage der nächsten 30 Tage gehen nur dann an das Sprachmodell, wenn du den Abgleich mit KI eigens erlaubst und „Vorschläge holen“ tippst; gespeichert wird dabei nichts). Schaltest du Apple Intelligence in ToHuus ein, läuft sie ganz auf dem iPhone. Die App fragt jeweils erst, wenn du die Funktion nutzt, und du kannst die Erlaubnis in den iOS-Einstellungen wieder entziehen.')
         + p('Rechtsgrundlage für das Speichern auf deinem Gerät ist § 25 Abs. 2 Nr. 2 TDDDG, weil es für den von dir gewünschten Dienst unbedingt erforderlich ist.') },
 
       { id: 'website', h: 'Diese Website', body:
         p('Diese Website setzt keine Cookies, trackt nicht und lädt nichts von Dritten. Schriften und Bilder liegen auf demselben Server. Unsere E-Mails laden beim Öffnen die Schriften von dieser Website; dabei sieht GitHub wie beim Aufruf der Website deine IP-Adresse. Wer das nicht möchte, lässt externe Inhalte im Mailprogramm ausgeschaltet; die Mail bleibt lesbar.',
           'Ausgeliefert wird sie über GitHub Pages von GitHub, Inc. (USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse ist eine sichere, verlässliche Auslieferung der Website.',
-          'Wählst du das dunkle Design, merkt sich dein Browser diese Wahl im lokalen Speicher. An uns wird sie nicht übertragen.') },
+          'Wählst du das dunkle Design, merkt sich dein Browser diese Wahl im lokalen Speicher. An uns wird sie nicht übertragen.',
+          'Das Formular „Wir können uns das gerade nicht leisten“ schickt deine Angaben direkt an die ToHuus Cloud: deine E-Mail-Adresse und, wenn du magst, deinen Namen, wer bei euch lebt und eine Nachricht. Wir speichern sie verschlüsselt in der Kontoverwaltung und schicken sie als Mail an die Betreiber, um dir zu antworten und dir gegebenenfalls einen Code für einen Tarif zu schenken. Deine IP-Adresse nutzen wir nur im Arbeitsspeicher, um zu viele Anfragen zu bremsen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Wir löschen die Anfrage 180 Tage nach unserer Antwort.') },
 
       { id: 'selbst-hosten', h: 'Selbst gehostete Server', body:
         p('ToHuus ist Open Source und lässt sich auf einem eigenen Server betreiben. Verantwortlich für die Daten auf einem solchen Server ist, wer ihn betreibt, nicht wir. Das gilt auch, wenn du die iPhone-App mit deinem eigenen Server verbindest: Die App schickt dann keine Daten an uns. Welcher KI-Dienst dort genutzt wird, legt der Betreiber fest. Käufe gibt es mit einem eigenen Server nicht.',
@@ -183,7 +185,7 @@ export function legalCopy(k) {
     desc: 'Die Bedingungen für ToHuus Cloud, die iPhone-App und die Web-App: Tarife, Kontingente, eure Inhalte, Haftung.',
     summaryH: 'Kurz gesagt',
     summary: [
-      'ToHuus ist in der Testphase. Funktionen können sich ändern, und es kann Ausfälle geben.',
+      'ToHuus wird laufend weiterentwickelt. Funktionen können sich ändern, und es kann Ausfälle geben.',
       'Free kostet nichts. Abos laufen über Apple und werden dort gekündigt.',
       'Eure Inhalte bleiben eure. Wir nutzen sie nur, damit ToHuus für euch funktioniert.',
       'Die Allergie-Warnung ersetzt nicht den Blick auf die Zutatenliste.',
@@ -195,8 +197,8 @@ export function legalCopy(k) {
           'Wer ToHuus auf einem eigenen Server betreibt, braucht diese Bedingungen nicht. Dafür gilt nur die Open-Source-Lizenz (siehe <a href="#open-source">Open Source</a>).',
           'Wie wir mit Daten umgehen, steht in der <a href="datenschutz.html">Datenschutzerklärung</a>.') },
 
-      { id: 'testphase', h: 'Testphase', body:
-        p('ToHuus ist neu und wird gerade mit den ersten Haushalten getestet. Funktionen können sich ändern, dazukommen oder wegfallen, und es kann Fehler und Ausfälle geben. Wir bemühen uns um einen verlässlichen Betrieb und sichern die Daten jede Nacht, können aber in der Testphase keine bestimmte Verfügbarkeit zusagen. Fällt eine Funktion weg, die zu einem bezahlten Tarif gehört, sagen wir das vorher an.') },
+      { id: 'testphase', h: 'Weiterentwicklung und Verfügbarkeit', body:
+        p('ToHuus ist neu und wird laufend weiterentwickelt. Funktionen können sich ändern, dazukommen oder wegfallen, und es kann Fehler und Ausfälle geben. Wir bemühen uns um einen verlässlichen Betrieb und sichern die Daten jede Nacht, können aber keine bestimmte Verfügbarkeit zusagen. Fällt eine Funktion weg, die zu einem bezahlten Tarif gehört, sagen wir das vorher an.') },
 
       { id: 'konto', h: 'Konto und Haushalt', body:
         ul('Ein Konto kannst du ab 18 Jahren anlegen. Kinder und Jugendliche können als Mitglieder oder Gäste eines Haushalts dabei sein, wenn ein Erwachsener sie einlädt und dafür verantwortlich ist.',
@@ -206,8 +208,8 @@ export function legalCopy(k) {
 
       { id: 'tarife', h: 'Tarife und Preise', body:
         dl([
-          ['Free', '0 €. Gemeinsame Liste mit Einkaufsmodus, Bons ohne Limit, ToHuus merkt sich 60 Tage zurück, Rezepte von Hand oder per Link, 20 Nachrichten an den Assistenten im Monat, 250 MB Speicher.'],
-          ['Haushalt', '3,99 € im Monat oder 34,99 € im Jahr. Dazu die ganze Geschichte mit Preisverlauf, Ausgaben und Rückblick, verbundene Haushalte, Import aus Screenshots und Fotos von Papierlisten, 100 Nachrichten im Monat, 2 GB Speicher.'],
+          ['Free', '0 €, ohne KI. Gemeinsame Liste mit Einkaufsmodus, Aufgaben, „Im Kopf“, Wochenplan und Rezepte von Hand, Rückblicke und Teilen. Der Assistent versteht nur einfache Sätze ohne KI. ToHuus merkt sich 30 Tage zurück, 20 Uploads am Tag, 100 MB Speicher.'],
+          ['Haushalt', '3,99 € im Monat oder 34,99 € im Jahr. Dazu die ganze Geschichte mit Preisverlauf und Ausgaben, verbundene Haushalte, Bons, Screenshots und Fotos von Papierlisten mit KI lesen, 100 Nachrichten im Monat, 2 GB Speicher.'],
           ['Plus', '5,99 € im Monat oder 59,99 € im Jahr. Dazu Wochenplan aus dem, was da ist, Monatsauswertung vom Assistenten, 1.500 Nachrichten im Monat, 5 GB Speicher.'],
         ])
         + p('Maßgeblich ist der Preis, den der App Store beim Kauf anzeigt. Jeder neue Haushalt nutzt 14 Tage lang den Tarif Plus, ohne Zahlungsdaten und ohne dass danach automatisch ein Abo beginnt. Nach der Testphase oder wenn ein Abo endet, geht der Haushalt auf Free zurück. Gelöscht wird dabei nichts. Ältere Einträge sind dann bis zum nächsten Abo nicht sichtbar.') },
@@ -222,11 +224,11 @@ export function legalCopy(k) {
       { id: 'kontingente', h: 'Kontingente und faire Nutzung', body:
         p('Damit der Dienst für alle bezahlbar bleibt, gelten je Haushalt diese Grenzen:')
         + dl([
-          ['Nachrichten an den Assistenten', 'Free 20, Haushalt 100, Plus 1.500 im Monat. Ist das Kontingent aufgebraucht, versteht der Assistent weiter die üblichen Sätze wie „Milch ist alle“ ohne Sprachmodell. In Plus wird über 1.500 nicht gesperrt, die Antworten werden kürzer.'],
-          ['Bons mit Sprachmodell lesen', 'Free 15, Haushalt 40, Plus 60 am Tag. Bons als PDF der meisten Märkte brauchen kein Sprachmodell und sind nicht begrenzt.'],
-          ['Importe mit Sprachmodell', 'Rezepte und Produkte aus Links, Texten oder Fotos: Free 10, Haushalt 40, Plus 100 am Tag.'],
-          ['Uploads', 'Free 60, Haushalt 200, Plus 300 am Tag.'],
-          ['Speicher', 'Free 250 MB, Haushalt 2 GB, Plus 5 GB für Fotos, Bon-Dateien und Datenbank. Ist der Speicher voll, sind neue Uploads gesperrt, bis ihr Platz schafft oder den Tarif wechselt. Gelöscht wird nichts, und kleine Änderungen im Alltag funktionieren weiter.'],
+          ['Nachrichten an den Assistenten', 'Free keine (ohne KI), Haushalt 100, Plus 1.500 im Monat. In Free und wenn das Kontingent aufgebraucht ist, versteht der Assistent weiter die üblichen Sätze wie „Milch ist alle“ ohne Sprachmodell. In Plus wird über 1.500 nicht gesperrt, die Antworten werden kürzer.'],
+          ['Bons mit Sprachmodell lesen', 'Free keine, Haushalt 40, Plus 60 am Tag. Bons als PDF der meisten Märkte brauchen kein Sprachmodell und sind nicht begrenzt.'],
+          ['Importe mit Sprachmodell', 'Rezepte und Produkte aus Links, Texten oder Fotos: Free keine, Haushalt 40, Plus 100 am Tag.'],
+          ['Uploads', 'Free 20, Haushalt 200, Plus 300 am Tag.'],
+          ['Speicher', 'Free 100 MB, Haushalt 2 GB, Plus 5 GB für Fotos, Bon-Dateien und Datenbank. Ist der Speicher voll, sind neue Uploads gesperrt, bis ihr Platz schafft oder den Tarif wechselt. Gelöscht wird nichts, und kleine Änderungen im Alltag funktionieren weiter.'],
         ])
         + p('Bitte nutze ToHuus für deinen Haushalt und nicht automatisiert in großen Mengen. Ändern wir Kontingente zu deinem Nachteil, gilt das für laufende Abos erst ab dem nächsten Abrechnungszeitraum, und wir sagen es vorher an.') },
 
@@ -304,7 +306,7 @@ export function legalCopy(k) {
       { id: 'data', h: 'What data we process and why', body:
         h3('Account')
         + p('Your e-mail address, your name as shown in the household, your password (only as a scrypt hash, never in plain text), whether your e-mail address is confirmed, language and region. We need these to run your account, sign you in and send you the e-mails that belong to the service: address confirmation, sign-in links, password resets, household invitations and notices about a new sign-in. You get the daily summary and the reminder before a subscription renews only until you unsubscribe: under <i>Settings › Notifications › Mails from ToHuus</i> or with the link in each of these mails. We do not send marketing e-mails. If you sign in with Apple, Apple gives us an identifier for your account and, if you share it, your e-mail address or a relay address from Apple. If you delete your account, we also revoke the Sign in with Apple link with Apple. If you use a passkey, we only store its public key; the secret part stays on your device.',
-          'During the beta, a new sign-up needs an access code or an address on our list. For this we store the code, how often it was used and the approved e-mail addresses until the beta ends. Legal basis: Art. 6(1)(b) and (f) GDPR.',
+          'When an admin redeems a code from us (for example for a free month), we store the code, how often it was used and which household redeemed it. Legal basis: Art. 6(1)(b) GDPR.',
           'Legal basis: Art. 6(1)(b) GDPR (contract for the use of ToHuus Cloud).',
           'In our account administration we only see, for each account: the e-mail address, the name, when it was created, confirmed and last used, how many devices are signed in, which households it belongs to and with which role. We never see the content of a household there. This keeps the service safe and lets us pause or remove an account in case of abuse (see the terms). Every such step is logged with its reason, and you get an e-mail. Legal basis: Art. 6(1)(f) GDPR; our legitimate interest is running the service safely.')
         + h3('Your household’s content')
@@ -380,6 +382,7 @@ export function legalCopy(k) {
           ['Counters for sign-in attempts', 'In memory, one hour at most.'],
           ['Purchase records from Apple', 'Until the household is deleted, then we delete them too. Apple is the seller and keeps the purchase records. They disappear from the backups of the account database as those expire.'],
           ['After a subscription ends', 'Nothing is deleted. The household goes back to the Free plan.'],
+          ['Requests through the form “We can’t afford this right now”', '180 days after we reply. They disappear from the backups of the account database as those expire.'],
         ]) },
 
       { id: 'apple', h: 'Purchases through Apple', body:
@@ -391,13 +394,14 @@ export function legalCopy(k) {
         p('ToHuus contains no tracking, no ads, no analytics tools and no third-party components. The iPhone app only uses features of iOS itself.')
         + ul('<b>Web app:</b> a technically necessary session cookie that keeps you signed in (up to 180 days), and a cache so the app loads quickly and the list works without a connection. We set no other cookies.',
           '<b>iPhone app:</b> the device token for signing in, in the iOS keychain, plus a cache for the list and for changes still waiting to go to the server. The widget and the share extension read this data on the device.',
-          '<b>Permissions:</b> camera (barcodes, receipts, photos and videos for the house info), microphone and speech recognition (voice input for the assistant), location (only if you turn on the hint in the shop: the iPhone notices when you are at one of your shops; the location stays on the device and is not sent to us). If you turn on Apple Intelligence in ToHuus, it runs entirely on the iPhone. The app only asks when you use the feature, and you can withdraw permission in the iOS settings.')
+          '<b>Permissions:</b> camera (barcodes, receipts, photos and videos for the house info), microphone and speech recognition (voice input for the assistant), location (only if you turn on the hint in the shop: the iPhone notices when you are at one of your shops; the location stays on the device and is not sent to us), calendars (only if you turn on “Read your existing calendar” under Tasks › Calendar: the iPhone reads only the calendars you pick and finds the bin collection in them. Only the kind and day of a collection are sent to us, no other appointments. If you want, the app writes household tasks into a calendar you choose. Titles and days of the next 30 days go to the language model only if you separately allow the AI check and tap “Get suggestions”; nothing is stored). If you turn on Apple Intelligence in ToHuus, it runs entirely on the iPhone. The app only asks when you use the feature, and you can withdraw permission in the iOS settings.')
         + p('The legal basis for storing on your device is section 25(2) no. 2 TDDDG (German Telecommunications Digital Services Data Protection Act), because it is strictly necessary for the service you asked for.') },
 
       { id: 'website', h: 'This website', body:
         p('This website sets no cookies, does not track you and loads nothing from third parties. Fonts and images are served from the same server. Our e-mails load their fonts from this website when you open them; as with a visit to the website, GitHub sees your IP address. If you don\'t want that, keep external content switched off in your mail app; the mail stays readable.',
           'It is served through GitHub Pages by GitHub, Inc. (USA). When you visit it, GitHub processes technically necessary data such as your IP address to deliver the page and protect it from attacks. Legal basis: Art. 6(1)(f) GDPR. Our legitimate interest is delivering the website securely and reliably.',
-          'If you choose the dark theme, your browser remembers that choice in its local storage. It is not sent to us.') },
+          'If you choose the dark theme, your browser remembers that choice in its local storage. It is not sent to us.',
+          'The form “We can’t afford this right now” sends your details straight to ToHuus Cloud: your e-mail address and, if you like, your name, who lives with you and a message. We store them encrypted in the account directory and send them as an e-mail to the operators, so we can reply and, where it fits, give you a code for a plan. We use your IP address only in memory to slow down too many requests. Legal basis: Art. 6(1)(b) GDPR. We delete the request 180 days after we reply.') },
 
       { id: 'self-hosting', h: 'Self-hosted servers', body:
         p('ToHuus is open source and can run on your own server. Whoever runs such a server is responsible for the data on it, not us. This also applies when you connect the iPhone app to your own server: the app then sends no data to us. The operator decides which AI service is used there. There are no purchases with your own server.',
@@ -432,7 +436,7 @@ export function legalCopy(k) {
     note: enNote.replace('{file}', 'nutzungsbedingungen.html'),
     summaryH: 'In short',
     summary: [
-      'ToHuus is in testing. Features can change, and there can be outages.',
+      'ToHuus is developed continuously. Features can change, and there can be outages.',
       'Free costs nothing. Subscriptions run through Apple and are cancelled there.',
       'Your content stays yours. We only use it so that ToHuus works for you.',
       'The allergy warning does not replace reading the ingredients list.',
@@ -444,8 +448,8 @@ export function legalCopy(k) {
           'If you run ToHuus on your own server, you do not need these terms. Only the open source licence applies (see <a href="#open-source">Open source</a>).',
           'How we handle data is described in the <a href="privacy.html">privacy policy</a>.') },
 
-      { id: 'testing', h: 'Testing phase', body:
-        p('ToHuus is new and is currently being tested with the first households. Features can change, be added or be removed, and there can be bugs and outages. We aim for reliable operation and back up the data every night, but during testing we cannot promise a particular availability. If a feature that belongs to a paid plan is removed, we will announce it beforehand.') },
+      { id: 'testing', h: 'Development and availability', body:
+        p('ToHuus is new and is developed continuously. Features can change, be added or be removed, and there can be bugs and outages. We aim for reliable operation and back up the data every night, but we cannot promise a particular availability. If a feature that belongs to a paid plan is removed, we will announce it beforehand.') },
 
       { id: 'account', h: 'Account and household', body:
         ul('You can create an account from the age of 18. Children and teenagers can be members or guests of a household if an adult invites them and is responsible for them.',
@@ -455,8 +459,8 @@ export function legalCopy(k) {
 
       { id: 'plans', h: 'Plans and prices', body:
         dl([
-          ['Free', '€0. Shared list with shop mode, unlimited receipts, ToHuus remembers 60 days back, recipes by hand or from a link, 20 assistant messages a month, 250 MB storage.'],
-          ['Household (Haushalt)', '€3.99 a month or €34.99 a year. Adds the full history with price history, spending and review, connected households, import from screenshots and photos of paper lists, 100 messages a month, 2 GB storage.'],
+          ['Free', '€0, without AI. Shared list with shop mode, tasks, “On my mind”, week plan and recipes by hand, reviews and sharing. The assistant only understands simple sentences, without AI. ToHuus remembers 30 days back, 20 uploads a day, 100 MB storage.'],
+          ['Household (Haushalt)', '€3.99 a month or €34.99 a year. Adds the full history with price history and spending, connected households, receipts, screenshots and photos of paper lists read with AI, 100 messages a month, 2 GB storage.'],
           ['Plus', '€5.99 a month or €59.99 a year. Adds the week plan from what is at home, a monthly review from the assistant, 1,500 messages a month, 5 GB storage.'],
         ])
         + p('The price shown by the App Store at the time of purchase applies. Every new household gets 14 days of the Plus plan, without payment details and without a subscription starting automatically afterwards. After the trial, or when a subscription ends, the household goes back to Free. Nothing is deleted. Older entries are then hidden until the next subscription.') },
@@ -471,11 +475,11 @@ export function legalCopy(k) {
       { id: 'allowances', h: 'Allowances and fair use', body:
         p('To keep the service affordable for everyone, these limits apply per household:')
         + dl([
-          ['Assistant messages', 'Free 20, Household 100, Plus 1,500 a month. When the allowance is used up, the assistant still understands the usual sentences such as “we are out of milk” without a language model. In Plus nothing is blocked above 1,500; the answers get shorter.'],
-          ['Reading receipts with a language model', 'Free 15, Household 40, Plus 60 a day. PDF receipts from most shops need no language model and are not limited.'],
-          ['Imports with a language model', 'Recipes and products from links, texts or photos: Free 10, Household 40, Plus 100 a day.'],
-          ['Uploads', 'Free 60, Household 200, Plus 300 a day.'],
-          ['Storage', 'Free 250 MB, Household 2 GB, Plus 5 GB for photos, receipt files and the database. When storage is full, new uploads are blocked until you free up space or change plan. Nothing is deleted, and small everyday changes keep working.'],
+          ['Assistant messages', 'Free none (no AI), Household 100, Plus 1,500 a month. In Free and when the allowance is used up, the assistant still understands the usual sentences such as “we are out of milk” without a language model. In Plus nothing is blocked above 1,500; the answers get shorter.'],
+          ['Reading receipts with a language model', 'Free none, Household 40, Plus 60 a day. PDF receipts from most shops need no language model and are not limited.'],
+          ['Imports with a language model', 'Recipes and products from links, texts or photos: Free none, Household 40, Plus 100 a day.'],
+          ['Uploads', 'Free 20, Household 200, Plus 300 a day.'],
+          ['Storage', 'Free 100 MB, Household 2 GB, Plus 5 GB for photos, receipt files and the database. When storage is full, new uploads are blocked until you free up space or change plan. Nothing is deleted, and small everyday changes keep working.'],
         ])
         + p('Please use ToHuus for your household and not automatically in large volumes. If we change allowances to your disadvantage, this applies to running subscriptions only from the next billing period, and we announce it beforehand.') },
 

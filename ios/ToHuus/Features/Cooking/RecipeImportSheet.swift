@@ -17,6 +17,8 @@ struct RecipeImportSheet: View {
     let store: ServerStore
     /// a recipe from the open database was saved → open it (CookingView)
     var openRecipe: ((Int) -> Void)?
+    /// "Leer": write a new recipe by hand (CookingView opens the editor)
+    var newBlank: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var mode = 0
     @State private var url = ""
@@ -55,6 +57,7 @@ struct RecipeImportSheet: View {
                     Text(L("Link")).tag(0)
                     Text(L("Photo")).tag(1)
                     Text(L("Text")).tag(2)
+                    if newBlank != nil { Text(L("Blank")).tag(3) }
                 }
                 .pickerStyle(.segmented)
                 switch mode {
@@ -75,11 +78,20 @@ struct RecipeImportSheet: View {
                     } footer: {
                         Text(L("A cookbook page, a handwritten card or the display of a kitchen appliance."))
                     }
-                default:
+                case 2:
                     Section {
                         TextEditor(text: $text).frame(minHeight: 180)
                     } footer: {
                         Text(L("Paste the recipe – title, ingredients and steps."))
+                    }
+                default:
+                    Section {
+                        Button {
+                            dismiss()
+                            newBlank?()
+                        } label: { Label(L("Write a new recipe"), systemImage: "square.and.pencil") }
+                    } footer: {
+                        Text(L("Grandma's card, your own dish: title, ingredients and steps by hand – a photo if you like."))
                     }
                 }
                 if busy { HStack { ProgressView(); Text(L("Reading …")) } }
@@ -95,7 +107,7 @@ struct RecipeImportSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L("Take it over")) { Task { await run() } }.disabled(busy || !ready)
+                    if mode != 3 { Button(L("Take it over")) { Task { await run() } }.disabled(busy || !ready) }
                 }
             }
             .sheet(item: $cookidoo) { d in
@@ -111,7 +123,8 @@ struct RecipeImportSheet: View {
         switch mode {
         case 0: return url.lowercased().hasPrefix("http")
         case 1: return !photos.isEmpty
-        default: return text.trimmingCharacters(in: .whitespacesAndNewlines).count > 10
+        case 2: return text.trimmingCharacters(in: .whitespacesAndNewlines).count > 10
+        default: return false
         }
     }
 
@@ -120,6 +133,7 @@ struct RecipeImportSheet: View {
         defer { busy = false }
         message = nil
         do {
+            var newId: Int?
             switch mode {
             case 0:
                 var body: [String: Any] = ["url": url.trimmingCharacters(in: .whitespaces)]
@@ -131,6 +145,7 @@ struct RecipeImportSheet: View {
                     return
                 }
                 guard (200..<300).contains(r.status) else { throw APIError.server(status: r.status, message: r.body["error"]?.string ?? "") }
+                newId = r.body["id"]?.int
             case 1:
                 var mp = Multipart()
                 for (i, item) in photos.enumerated() {
@@ -138,13 +153,15 @@ struct RecipeImportSheet: View {
                         mp.addFile("files", filename: "recipe-\(i + 1).jpg", mimeType: "image/jpeg", data: jpg)
                     }
                 }
-                _ = try await store.api.upload("api/recipes/import/photo", multipart: mp, as: Ignored.self, timeout: 180)
+                newId = try await store.api.upload("api/recipes/import/photo", multipart: mp, as: JSONValue.self, timeout: 180)["id"]?.int
             default:
-                _ = try await store.api.send("POST", "api/recipes/import/text", json: ["text": text], as: Ignored.self, timeout: 90)
+                newId = try await store.api.send("POST", "api/recipes/import/text", json: ["text": text], as: JSONValue.self, timeout: 90)["id"]?.int
             }
             store.touch("recipes")
             Haptics.success()
             dismiss()
+            // like the web: the new recipe opens right away
+            if let newId { openRecipe?(newId) }
         } catch {
             message = APIError.from(error).localizedDescription
         }

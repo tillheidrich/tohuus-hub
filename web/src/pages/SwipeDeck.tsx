@@ -27,6 +27,8 @@ export function SwipeDeck({
   stamps,
   hint,
   disabled = false,
+  icons,
+  buttonLabels,
 }: {
   /** cards[0] is on top, cards[1] peeks out behind */
   cards: DeckCard[];
@@ -35,6 +37,10 @@ export function SwipeDeck({
   stamps?: Partial<Record<SwipeDir, string>>;
   hint?: ReactNode;
   disabled?: boolean;
+  /** other icons for the buttons (e.g. a check for "done" instead of the heart) */
+  icons?: Partial<Record<SwipeDir, ReactNode>>;
+  /** visible words under the buttons – where the meaning isn't obvious (keep, let go, done) */
+  buttonLabels?: Partial<Record<SwipeDir, string>>;
 }) {
   const top = cards[0];
   const behind = cards[1];
@@ -76,17 +82,26 @@ export function SwipeDeck({
         <Card key={`t-${top.key}`} card={top} fly={fly} onRelease={decide} allowSuper={allowSuper} label={label} />
       </div>
       <div className="deck-actions">
-        <button className="round" onClick={() => decide('no')} aria-label={label.no} disabled={disabled}>
-          <ThumbsDown size={24} />
-        </button>
-        {allowSuper && (
-          <button className="round super" onClick={() => decide('super')} aria-label={label.super} disabled={disabled}>
-            <Heart size={24} weight="fill" />
+        <span className="deck-btn">
+          <button className="round" onClick={() => decide('no')} aria-label={buttonLabels?.no ?? label.no} disabled={disabled}>
+            {icons?.no ?? <ThumbsDown size={24} />}
           </button>
+          {buttonLabels?.no && <span className="small" aria-hidden="true">{buttonLabels.no}</span>}
+        </span>
+        {allowSuper && (
+          <span className="deck-btn">
+            <button className="round super" onClick={() => decide('super')} aria-label={buttonLabels?.super ?? label.super} disabled={disabled}>
+              {icons?.super ?? <Heart size={24} weight="fill" />}
+            </button>
+            {buttonLabels?.super && <span className="small" aria-hidden="true">{buttonLabels.super}</span>}
+          </span>
         )}
-        <button className="round yes" onClick={() => decide('yes')} aria-label={label.yes} disabled={disabled}>
-          <ThumbsUp size={24} weight="fill" />
-        </button>
+        <span className="deck-btn">
+          <button className="round yes" onClick={() => decide('yes')} aria-label={buttonLabels?.yes ?? label.yes} disabled={disabled}>
+            {icons?.yes ?? <ThumbsUp size={24} weight="fill" />}
+          </button>
+          {buttonLabels?.yes && <span className="small" aria-hidden="true">{buttonLabels.yes}</span>}
+        </span>
       </div>
       {hint && <p className="small muted" style={{ textAlign: 'center', marginTop: 10 }}>{hint}</p>}
     </div>

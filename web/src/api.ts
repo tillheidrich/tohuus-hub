@@ -114,6 +114,8 @@ export interface StockEntry {
   location_id: number;
   qty: number;
   best_before: string | null;
+  /** 1 = estimated from the usual shelf life, not the printed date */
+  bb_estimated?: number;
   opened_at: string | null;
 }
 

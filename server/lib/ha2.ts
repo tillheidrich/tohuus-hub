@@ -18,7 +18,7 @@ import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
 import { t, userError } from '../i18n.js';
 import { emit, onEmit } from './bus.js';
-import { addInterval, completeCareTask, listCareTasks } from './care.js';
+import { addInterval, canSeeTask, completeCareTask, getCareTask, listCareTasks } from './care.js';
 import { setPresence as setAwayPresence } from './away.js';
 import { addToShopping, adjustStock, getProduct, localDay } from './catalog.js';
 import { sendHaEvent } from './ha-api.js';
@@ -552,7 +552,7 @@ const meals: Adapter = {
 const care: Adapter = {
   topic: 'care',
   local() {
-    return listCareTasks()
+    return listCareTasks({ outside: true })
       .filter((c) => c.next_due && (c.state === 'overdue' || c.state === 'today'))
       .map((c) => ({ id: `${c.id}.${c.next_due!.replace(/\D/g, '')}`, key: norm(c.name), fields: { title: c.name, done: false }, touchedAt: null }));
   },
@@ -966,7 +966,7 @@ function describeCode(code: string) {
   const row = db.prepare('SELECT kind, ref_id FROM qr_codes WHERE code = ?').get(code) as { kind: string; ref_id: number } | undefined;
   if (!row) return null;
   if (row.kind === 'product') return { kind: 'product', name: getProduct(row.ref_id)?.name ?? '?' };
-  if (row.kind === 'care') return { kind: 'care', name: (db.prepare('SELECT name FROM care_tasks WHERE id = ?').get(row.ref_id) as { name: string } | undefined)?.name ?? '?' };
+  if (row.kind === 'care') return { kind: 'care', name: (db.prepare(`SELECT name FROM care_tasks WHERE id = ? AND visibility != 'private'`).get(row.ref_id) as { name: string } | undefined)?.name ?? '?' };
   if (row.kind === 'location') return { kind: 'location', name: (db.prepare('SELECT name FROM locations WHERE id = ?').get(row.ref_id) as { name: string } | undefined)?.name ?? '?' };
   return null;
 }
@@ -1020,6 +1020,8 @@ export function runQuickAction(code: string, action: TagAction, actor: string): 
     }
   }
   if (row.kind === 'care' && action === 'done') {
+    const task = getCareTask(row.ref_id);
+    if (!task || !canSeeTask(task)) return { ok: false, message: t('This label is no longer valid.') };
     const out = completeCareTask(row.ref_id, actor);
     return { ok: true, message: t('Done – next time: {date}', { date: out.task.next_due ?? '–' }) };
   }

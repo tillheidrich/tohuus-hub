@@ -1,7 +1,8 @@
 import StoreKit
 import SwiftUI
 
-/// "Mehr": account, household, plan & storage, devices, sign out, delete account, legal, web settings.
+/// "Mehr": account, household, the same groups as the web's Mehr (MoreSections), settings, plan & storage, devices,
+/// sign out, delete account, legal, web settings.
 struct SettingsView: View {
     let store: ServerStore
     /// iPad sidebar: shown as an area, not as a sheet (no "Done")
@@ -26,41 +27,37 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(L("Account")) {
-                    if app.isCloud {
-                        Button {
-                            newName = app.userName ?? ""
-                            renaming = true
-                        } label: {
-                            LabeledContent(L("Name")) {
-                                HStack(spacing: 6) {
-                                    Text(app.userName ?? "–")
-                                    Image(systemName: "pencil").font(.footnote).accessibilityHidden(true)
+                // profile row: my account, security, devices (UX benchmark 2.3)
+                Section {
+                    if let api = app.api {
+                        NavigationLink { MyAccountView(api: api) } label: {
+                            HStack(spacing: Theme.Space.s3) {
+                                PersonAvatar(name: app.userName ?? "?", size: 44, api: api)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(app.userName ?? "–").font(.headline)
+                                    Text([app.activeHousehold?.name, email].compactMap { $0 }.joined(separator: " · "))
+                                        .font(.caption).foregroundStyle(Theme.ink3)
                                 }
                             }
                         }
-                        .foregroundStyle(Theme.ink)
-                        .accessibilityHint(L("Change your name"))
-                    } else {
-                        LabeledContent(L("Name"), value: app.userName ?? "–")
+                        .accessibilityHint(L("Name, e-mail, password and security"))
                     }
-                    if let email { LabeledContent(L("E-mail"), value: email) }
-                    LabeledContent(L("Server"), value: app.isCloud ? L("ToHuus Cloud") : (app.session?.serverURL.host() ?? ""))
-                }
-                Section(L("Household")) {
-                    if app.households.count > 1 {
-                        Picker(L("Active household"), selection: Binding(
-                            get: { app.activeHousehold?.id.value ?? "" },
-                            set: { id in if let h = app.households.first(where: { $0.id.value == id }) { app.switchHousehold(h) } }
-                        )) {
-                            ForEach(app.households) { h in Text(h.name ?? h.id.value).tag(h.id.value) }
-                        }
-                    } else {
-                        LabeledContent(L("Household"), value: app.activeHousehold?.name ?? "–")
+                    Button { app.showSearch = true } label: {
+                        Label(L("Find a setting or function"), systemImage: "magnifyingglass")
                     }
-                    if let api = app.api { HouseholdLinks(api: api) }
+                    .foregroundStyle(Theme.ink2)
                 }
-                Section {
+                if let api = app.api { MoreSections(store: store, api: api) }
+                Section(L("Settings")) {
+                    if let api = app.api, !app.isGuest {
+                        NavigationLink { HouseholdBasicsView(api: api) } label: { Label(L("Household settings"), systemImage: "house") }
+                        NavigationLink { PlacesSettingsView(api: api) } label: { Label(L("Places & categories"), systemImage: "square.grid.2x2") }
+                    }
+                    NavigationLink { ConnectionsView() } label: {
+                        LabeledContent {
+                            Text(app.isCloud ? L("ToHuus Cloud") : (app.session?.serverURL.host() ?? ""))
+                        } label: { Label(L("Servers & households"), systemImage: "server.rack") }
+                    }
                     NavigationLink { NotificationSettingsView() } label: { Label(L("Notifications"), systemImage: "bell") }
                     NavigationLink { StoreArrivalView(store: store) } label: { Label(L("Hint in the shop"), systemImage: "location") }
                     NavigationLink { AISettingsView() } label: {
@@ -70,23 +67,23 @@ struct SettingsView: View {
                         } label: { Label(L("With or without AI"), systemImage: "sparkles") }
                     }
                     NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
+                    if let api = app.api, !app.isGuest {
+                        NavigationLink { StartModeView(api: api, isAdmin: app.isAdmin) } label: { Label(L("What should be tracked?"), systemImage: "checklist") }
+                        LunchboxSettingsLink(api: api)
+                        NavigationLink { DataSettingsView(api: api) } label: { Label(L("Data & backups"), systemImage: "externaldrive") }
+                    }
                     AppearancePicker()
                 }
-                if app.moduleOn("homeinfo") {
-                    Section {
-                        NavigationLink { HouseGuideView() } label: { Label(L("House info"), systemImage: "house") }
-                    }
-                }
-                Section(L("Knowing")) {
+                Section(L("Help")) {
+                    NavigationLink { HelpCenterView(store: store) } label: { Label(L("Help"), systemImage: "questionmark.circle") }
                     Button { showTour = true } label: { Label(L("Take the tour"), systemImage: "map") }
                     NavigationLink { HowItWorksView() } label: { Label(L("How ToHuus works"), systemImage: "lightbulb") }
                     NavigationLink { FactsView() } label: { Label(L("Good to know"), systemImage: "book") }
-                    NavigationLink { HelpListView() } label: { Label(L("Help"), systemImage: "questionmark.circle") }
                     NavigationLink { ErrorLogView() } label: { Label(L("Error log"), systemImage: "ladybug") }
                 }
                 SampleDataSettingsSection()
                 Section(L("Plan & storage")) {
-                    LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free") : L("Own server – everything included")))
+                    LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free – without AI") : L("Own server – everything included")))
                     if let b = app.billing, b.isPaid {
                         if let r = ServerDate.parse(b.renewsAt) {
                             LabeledContent(L("Renews on"), value: r.formatted(date: .abbreviated, time: .omitted))
@@ -119,34 +116,6 @@ struct SettingsView: View {
                             }
                         }
                     }
-                }
-                Section {
-                    ForEach(devices) { d in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(d.label)
-                                if let u = ServerDate.relative(d.lastUsedAt ?? d.createdAt) { Text(u).font(.caption).foregroundStyle(Theme.ink3) }
-                            }
-                            Spacer()
-                            if d.current == true { Text(L("this device")).font(.caption).foregroundStyle(Theme.primaryText) }
-                        }
-                        .swipeActions {
-                            if d.current != true {
-                                Button(role: .destructive) {
-                                    Task { try? await app.api?.revokeDevice(d.id.value); await loadDevices() }
-                                } label: { Label(L("Sign out"), systemImage: "xmark") }
-                            }
-                        }
-                    }
-                } header: {
-                    Text(L("Signed-in apps"))
-                } footer: {
-                    if !devices.isEmpty { Text(L("Swipe to sign out a device.")) }
-                }
-                Section {
-                    Button(L("More settings in the web app")) { showWeb = true }
-                } footer: {
-                    Text(L("Guests, displays, Home Assistant and other rare settings live in the web app."))
                 }
                 Section(L("Legal")) {
                     Link(L("Privacy"), destination: Legal.privacy(app.instance))

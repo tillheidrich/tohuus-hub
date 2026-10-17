@@ -53,7 +53,8 @@ export interface Person {
   email_confirmed?: boolean;
 }
 
-export const PERSON_COLORS = ['#2f5bea', '#d0603a', '#1d9a63', '#8e44ad', '#c2185b', '#b97c0c', '#f2a33a', '#0f8a8a'];
+// earthy, all readable with light initials (design review 15 Oct 2026) – no saturated blue
+export const PERSON_COLORS = ['#3d5a80', '#b5553a', '#2f7d5b', '#7a4f8f', '#a83f62', '#94660f', '#8a6a2a', '#2c7a7b'];
 
 /** English source text; shown via t() */
 export const LEVELS: { key: GuestLevel; title: string; text: string }[] = [

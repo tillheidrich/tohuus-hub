@@ -28,6 +28,7 @@ import { tickItem } from '../lib/shopping-trust.js';
 import { activeTrips, endTrip } from '../lib/trips.js';
 import { setHouseholdStores, storeChoices, storesChosen } from '../lib/stores.js';
 import { region } from '../lib/region.js';
+import { queueScope } from '../lib/tenancy.js';
 import { deleteDevice, listDevices, sendPush, subscribe, unsubscribe, vapidKeys } from '../lib/webpush.js';
 import { t } from '../i18n.js';
 import { canUseList, privateRowGuard } from '../lib/lists.js';
@@ -188,7 +189,9 @@ const OpSchema = z.discriminatedUnion('type', [
 ]);
 
 r.post('/shop/sync', (req, res) => {
-  const b = z.object({ ops: z.array(OpSchema).max(500) }).parse(req.body);
+  const b = z.object({ ops: z.array(OpSchema).max(500), scope: z.string().max(40).optional() }).parse(req.body);
+  // the web queue says whose changes these are (GET /api/me › scope): never replay them into another household or person
+  if (b.scope && b.scope !== queueScope(req.actor?.kind === 'user' ? req.actor.userId : null, req.actor?.kind)) return void res.status(409).json({ error: 'queue of another account', scope_mismatch: true });
   res.json({ results: replayOps(b.ops, { name: actorName(req), userId: userId(req) ?? undefined }) });
 });
 

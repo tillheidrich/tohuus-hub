@@ -4,7 +4,7 @@ import { db, getSetting } from '../db.js';
 import { emit } from './bus.js';
 import { t } from '../i18n.js';
 import { actionsFor, pushDeviceCount, sendPush } from './webpush.js';
-import { quietWhileAway } from './away-state.js';
+import { quietUsers, quietWhileAway } from './away-state.js';
 import { sendApns } from './apns.js';
 import { personEventOf, queueDigest, recipients, textFor } from './notify-prefs.js';
 import { eventHidden } from './modules.js';
@@ -198,6 +198,12 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
 export async function notify(input: NotifyInput): Promise<{ channels: string[]; skipped?: boolean; quiet?: boolean }> {
   // away mode: only urgent things while nobody is around to act on "milk is low"
   if (quietWhileAway(input.event, input.urgent)) return { channels: [], skipped: true, quiet: true };
+  // only some are away: their own devices stay quiet, the people at home still hear about the milk
+  const awayIds = quietUsers(input.event, input.urgent);
+  if (awayIds.length) {
+    if (input.toUserId != null && awayIds.includes(input.toUserId)) return { channels: [], skipped: true, quiet: true };
+    input = { ...input, exceptUserIds: [...new Set([...(input.exceptUserIds ?? []), ...awayIds])] };
+  }
   // "Was nutzen wir?" (modules.ts): a switched-off area tells nobody anything
   if (eventHidden(input.event, input.data)) return { channels: [], skipped: true };
   if (input.dedupeKey) {
@@ -255,7 +261,7 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
     if (personal?.job) jobs.push(personal.job.then((ok): [string, boolean] => ['ha_app', ok]).catch((): [string, boolean] => ['ha_app', false]));
     if (pushOn && pushDeviceCount() > 0 && input.toUserId !== null)
       jobs.push(
-        sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { userId: input.toUserId, excludeUserIds: personal?.skipPushUsers })
+        sendPush({ title: input.title, body: input.message, url, event: input.event, tag: input.dedupeKey, actions: actionsFor(input.event, input.data), data: input.data }, { userId: input.toUserId, excludeUserIds: [...(personal?.skipPushUsers ?? []), ...(input.exceptUserIds ?? [])] })
           .then((ok): [string, boolean] => ['push', ok])
           .catch((): [string, boolean] => ['push', false]),
       );

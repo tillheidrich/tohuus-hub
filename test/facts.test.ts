@@ -8,13 +8,13 @@ process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-facts-'));
 /** "Gut zu wissen": every number has a primary source with link and retrieval date; both languages say the same. */
 describe('facts', async () => {
   const { facts, rawFacts } = await import('../server/lib/facts');
-  const PRIMARY = /(^|\.)(umweltbundesamt\.de|zugutfuerdietonne\.de|verbraucherzentrale\.de|boeckler\.de|bbk\.bund\.de|gesetze-im-internet\.de|destatis\.de|thuenen\.de|bmel\.de|bzfe\.de)$/;
+  const PRIMARY = /(^|\.)(umweltbundesamt\.de|zugutfuerdietonne\.de|verbraucherzentrale\.de|boeckler\.de|bbk\.bund\.de|gesetze-im-internet\.de|destatis\.de|diw\.de|vdk\.de|zqp\.de|thuenen\.de|bmel\.de|bzfe\.de|gesundheitsinformation\.de|bsi\.bund\.de|doi\.org|link\.springer\.com)$/;
   const nums = (s: string) => (s.replace(/(\d) (\d{3})\b/g, '$1$2').match(/\d+(?:[.,]\d+)?/g) ?? []).map((n) => n.replace(',', '.').replace(/^(\d)\.(\d{3})$/, '$1$2')).sort();
 
-  it('10–15 facts, each sourced from a primary source with a date', () => {
+  it('10–40 facts, each sourced from a primary source with a date', () => {
     const all = rawFacts();
     expect(all.length).toBeGreaterThanOrEqual(10);
-    expect(all.length).toBeLessThanOrEqual(15);
+    expect(all.length).toBeLessThanOrEqual(40);
     expect(new Set(all.map((f) => f.id)).size).toBe(all.length);
     for (const f of all) {
       expect(f.sources.length, f.id).toBeGreaterThan(0);

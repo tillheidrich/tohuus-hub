@@ -110,6 +110,11 @@ struct Fact: Decodable, Sendable, Identifiable, Hashable {
     var tohuus: String?
     var topic: String?
     var sources: [Source] = []
+    /// the big number or word for a card ("86 %", "Danke") – nil for the older facts
+    var value: String?
+    /// the website's ready share pictures (4:5 feed, 9:16 story)
+    var imageFeed: String?
+    var imageStory: String?
 
     struct Source: Decodable, Sendable, Hashable {
         var title: String?
@@ -128,6 +133,11 @@ struct Fact: Decodable, Sendable, Identifiable, Hashable {
         text = c.first(String.self, "text", "body", "summary")
         tohuus = c.first(String.self, "tohuus")
         topic = c.first(String.self, "topic", "area", "category")
+        value = c.first(String.self, "value")
+        if let img = c.first(JSONValue.self, "images") {
+            imageFeed = img["feed"]?.string
+            imageStory = img["story"]?.string
+        }
         if let list = try? c.decode(Lossy<Source>.self, forKey: AnyKey("sources")), !list.wrappedValue.isEmpty {
             sources = list.wrappedValue
         } else if let one = c.first(JSONValue.self, "source") {

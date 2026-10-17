@@ -6,41 +6,9 @@ are German and English.
 
 ## 1. Review notes (App Review Information › Notes)
 
-> ToHuus is a shopping and household assistant for families, couples and flatshares: a shared shopping list that
-> learns from receipts how often a household buys things, meal ideas from what is at home, and where the money for
-> food goes. It works with ToHuus Cloud (servers in Germany) only.
->
-> **Sign-in for review:** use the demo account below (e-mail and password) or "Sign in with Apple". New sign-ups are
-> limited to invited testers during the beta; the demo account is already let in. If you create a new account, enter
-> the access code below when asked.
->
-> - Demo account: `appreview@tillheidrich.de` / password in the "Sign-in information" fields
-> - Access code for a new account: (see "Sign-in information" › notes)
->
-> The demo household has sample data (marked "Beispiel"): a shopping list, things at home, recipes, receipts and
-> spending, so every area can be tried without real purchases.
->
-> **Things worth knowing**
-> - Subscriptions (Haushalt, Plus) are sold only through the App Store (StoreKit 2, guideline 3.1.1). During the
->   beta every household gets Plus as a gift; the paywall then says so and shows no prices. Restore purchases,
->   manage subscription and redeem an offer code are on the paywall. No other way to pay is mentioned in the app.
-> - Account deletion: Settings › Delete account (5.1.1(v)); it deletes the account and, for the last admin, the
->   household with its data. Sign in with Apple tokens are revoked on deletion (needs `APPLE_SIWA_KEY_*` set in the cloud).
-> - AI: the assistant ("Sprechen") and receipt photo reading use Mistral (EU) through OpenRouter when the household
->   switches AI on. Everything else works without AI; each person and each child can be switched off. Apple
->   Intelligence (iOS 26+) is optional, off by default, and runs on the device only.
-> - Location: only for the optional "Hint in the shop" (geofence around the household's own shops); the location
->   stays on the device.
-> - Microphone and speech recognition: only for dictating to the assistant.
-> - Health-related data: allergies are stored only if the household enters them; they reach a language model only
->   after an explicit consent.
-> - Guest links and the babysitter link open in Safari for people without the app.
->
-> Contact during review: tohuus@tillheidrich.de
-
-Before submitting: create the review account in the cloud (`scripts/seed-screenshots.mjs` fills a household with
-sample data), put its address on the beta allowlist in `/betrieb › Beta-Zugang`, and create one access code with a
-note "App Review".
+Moved to [ios-app-review.md](ios-app-review.md) (14 Oct 2026, with the full guideline checklist): the app now also
+works with an own server, the assistant button is the round sparkle (no "Sprechen"), the AI consent names Mistral and
+OpenRouter, and the review household must be left out of the beta gift (`BETA_GIFT_EXCEPT`) so the plans can be bought.
 
 ## 2. App Privacy (App Store Connect › App Privacy)
 
@@ -57,6 +25,9 @@ Tracking: **No**. Data linked to the user, all for **App Functionality** only, n
 | Financial Info | Other Financial Info | spending from receipts and manual entries |
 | Health & Fitness | Health | allergies, only when entered and consented |
 | Diagnostics | Other Diagnostic Data | error log (server errors, unreadable answers, no content), stored with the household id |
+
+AI: content sent to the language model (Mistral through OpenRouter) is processed on our behalf for App Functionality
+and not used for training – it is covered by the types above, not "shared with third parties for their own use".
 
 Not collected: location (stays on the device), contacts, browsing history, search history, advertising data, crash
 data from third parties (no SDKs). The privacy manifest `ios/ToHuus/Resources/PrivacyInfo.xcprivacy` declares the

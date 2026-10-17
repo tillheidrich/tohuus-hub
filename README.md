@@ -69,7 +69,10 @@ A complete reference with where each feature sits in the app is in [docs/feature
 - **Discreet items**: mark an entry "discreet" and everyone else sees a neutral placeholder such as "Drugstore item", or "only me" so nobody else sees it at all. The real name never reaches Home Assistant, Telegram, displays, printed lists, guest links or AI assistants.
 - **Share into the app**: installed as a web app on Android or desktop, ToHuus Hub appears in the share menu. Share a WhatsApp list, a recipe link or a receipt photo. On iPhone, a Shortcut with a personal key does the same for the shopping list.
 - **Treats („Bring mir was“)**: do each other a good turn. Whoever is stuck with bedtime, ill in bed or working late asks for "vanilla ice cream, please" or "tea with honey" – the others get a push with "I'll bring it" or "Can't right now". No points, no ranking, just a private thanks.
-- **Home care**: water filter, smoke detectors, descaling, tyres, passport expiry. Templates, reminders, one tap to mark done.
+- **Tasks (Aufgaben)**: household chores next to care and deadlines (water filter, smoke detectors, descaling, tyres, passport expiry), private tasks only you see, rhythms by weekday or "after done", sub-items, who does it and taking turns, tasks with a time as calendar entries. Small steps and a gentle focus mode for busy heads. Templates, reminders, one tap to mark done. See [docs/tasks.md](docs/tasks.md) and [docs/focus.md](docs/focus.md).
+- **Apple Reminders and calendars**: the server is its own CalDAV server (shopping list and tasks two-way in Apple Reminders, appointments in Apple Calendar, with a per-member app password) and offers a read-only calendar link for Google Calendar, Outlook and others.
+- **Search** across stock, lists, recipes, tasks and settings (⌘K or `/` on the web), with the same privacy as each area.
+- **Who keeps what in mind (Blick)**: who noticed, planned and did what, names only, no ranking.
 - **Receipt-style tickets** for shopping lists, kitchen orders, care tasks and recipe cards, printed on an ESC/POS thermal printer or sent to Telegram, Matrix, Gotify or e-mail.
 - **Kitchen and wall displays** that also run on old tablets, plus a PNG for e-ink frames.
 
@@ -112,6 +115,10 @@ A complete reference with where each feature sits in the app is in [docs/feature
 ### Trips
 
 - **Away mode**: before a trip, use up what would go off, a packing list (items from stock are booked out and back), a short checklist. During it, notifications stay quiet and automatic shopping suggestions pause, an optional "holiday kitchen" has its own meals and list, and a house-sitter link ends the day after you return. Afterwards there is a welcome-home list and a check of what expired.
+
+### iPhone app
+
+The ToHuus app from the App Store works with your own server too: on its start screen tap "Eigener Server" ("Own server"). Every feature is included, no plans and no payments. See [iPhone app with your own server](#iphone-app-with-your-own-server) below.
 
 ### Home Assistant
 
@@ -174,7 +181,35 @@ docker compose up -d --build
 
 The compose file can also pull the prebuilt image `ghcr.io/tillheidrich/tohuus-hub:latest`. Data lives in `./data` (mounted at `/data`). Open `http://localhost:8080`.
 
-On the first start the admin chooses "start empty" or "explore with demo data". Demo rows are marked and can be removed in one go under *Settings › Data & backups*. Put the app behind HTTPS; passkeys and the share target need it.
+On the first start the admin chooses "start empty" or "explore with demo data". Demo rows are marked and can be removed in one go under *Settings › Data & backups*. Put the app behind HTTPS; passkeys, the share target, the iPhone app outside your home network and Apple Reminders need it.
+
+Set `BASE_URL` to the address your phones use (for example `https://tohuus.example.org`), not `localhost`: it goes into QR codes for the iPhone app, guest links, CalDAV and calendar links, notifications and the passkey domain.
+
+### iPhone app with your own server
+
+1. Install ToHuus from the App Store and tap **Eigener Server** ("Own server") on the start screen.
+2. Enter the address you open ToHuus with in the browser. The app needs `https` with a valid certificate. Plain `http` only works for addresses in your home network (IP addresses, `.local` names, names without a dot) – that is Apple's App Transport Security.
+3. Sign in with your name or e-mail and password (plus the two-step code if you use one), or **in the browser** (passkey, e-mail link, SSO – a page asks "Connect the ToHuus app?"), or scan the **QR code** from the web app under *Settings › My account › Connect the iPhone app*.
+
+On your own server everything in the app is included; there are no plans or payments. A passkey created right in the app only works with ToHuus Cloud (Apple ties it to our domain); on your own server use the browser sign-in for passkeys.
+
+**Push notifications on the iPhone** go through Apple (APNs) and need the signing key of the developer account that publishes the app. Self-hosted servers do not have that key, so the app shows "not set up on this server" and sends no push. Everything else in the app works. For notifications on the phone use one of these instead: the web app added to the home screen (Web Push, iOS 16.4 or newer), ntfy, Telegram, Gotify, Matrix, e-mail or the Home Assistant companion app (see [docs/notifications.md](docs/notifications.md#iphone-push-on-a-self-hosted-server)).
+
+### Updating
+
+```bash
+git pull && docker compose up -d --build     # or: docker compose pull && docker compose up -d
+```
+
+Database migrations run by themselves on the next start. Before the first pending migration the server copies the database to `data/backups/tohuus-<date>-manual.db`, so the state right before the update is always kept. Migrations only run once; restarting is safe.
+
+### Backups and restore
+
+- Every night a backup goes to `data/backups/` (with rotation), optionally also to a WebDAV folder such as Nextcloud. *Settings › Data & backups* has "Back up now", the list of backups and "Restore".
+- With `DB_ENCRYPTION_KEY` set, backups are encrypted with the same key. Keep the key somewhere else than the data folder: without it no backup can be read.
+- Back up the whole `data/` folder (database, `images/`, `imports/`, `backups/`) with your usual tool as well; the nightly file only holds the database.
+- **Restore by hand** (for example when a new version doesn't start): stop the container, copy the backup you want to `data/restore-pending.db`, start again. The server swaps it in before opening the database and keeps the replaced one in `data/backups/replaced/`. Details: [docs/data-and-reset.md](docs/data-and-reset.md).
+- `scripts/restore-check.ts` and `scripts/restore-files.ts` are for ToHuus Cloud (many households, S3 off-site copy) and are not needed for a self-hosted server.
 
 ### Environment variables
 
@@ -195,7 +230,8 @@ Every variable the server reads. Only `BASE_URL` and the admin account matter fo
 | `SEED_DEMO` | `false` | `true` loads the demo household once, on a start when there are no products yet. Demo rows are marked and removable. |
 | `TZ` | `Europe/Berlin` | Time zone for best-before dates, the daily digest and the nightly backup. |
 | `TRUST_PROXY_HOPS` | `1` | Number of reverse proxies in front, for rate limiting by client IP. |
-| `AI_API_KEY` | none | Turns on the assistant, voice and receipt photos. With only this set, ToHuus uses OpenRouter pinned to Mistral (EU, no fallbacks, no data collection). See [docs/assistant.md](docs/assistant.md). |
+| `AI_API_KEY` | none | Turns on the assistant, voice and receipt photos. With only this set, ToHuus uses OpenRouter pinned to Mistral (EU provider only, no data collection; other Mistral models step in when one is busy). See [docs/assistant.md](docs/assistant.md). |
+| `AI_MODEL_FALLBACKS` | other Mistral models | Comma-separated models tried in turn when the main one is rate-limited or down; `-` = none. |
 | `AI_BASE_URL` | `https://openrouter.ai/api/v1` | Any OpenAI-compatible endpoint (Mistral, Ollama, vLLM …). The provider pin is only sent to OpenRouter. |
 | `AI_MODEL_TEXT` / `AI_MODEL_VISION` | `mistralai/mistral-small-2603` | Assistant and photo models. |
 | `AI_MODEL_VISION_HARD` | `mistralai/mistral-large-4-0` | Second try for receipts whose lines don't add up. |
@@ -216,7 +252,17 @@ Every variable the server reads. Only `BASE_URL` and the admin account matter fo
 | `OFF_USER_AGENT` | `ToHuusHub/0.1 (…)` | User agent for Open Food Facts. Please put a contact in it. |
 | `TELEGRAM_API_URL` | `https://api.telegram.org` | A self-hosted Telegram Bot API server, if you run one. |
 | `RECEIPT_FEEDBACK_MAIL` | none | Address for the "mail" button when someone shares an anonymised receipt. Nothing is sent automatically. |
+| `OCR_DISABLED` | none | `1` turns off text recognition for receipt photos (tesseract, built into the Docker image). |
+| `TESSERACT_BIN` | `tesseract` | Path to the tesseract binary when you run without Docker. |
+| `LEGAL_PRIVACY_URL` / `LEGAL_TERMS_URL` / `LEGAL_IMPRINT_URL` | none | Your own privacy policy, terms and imprint, linked in the web and iPhone app. Without them the links point to the ToHuus website. |
+| `SITE_URL` | `https://tohuus.heidrich-digital.de` | Where help and legal links point (web and iPhone app). |
+| `SSE_MAX_TOTAL` | `5000` | Maximum number of open live-update connections. |
+| `MULTI_TENANT` | `false` | Leave it off for a self-hosted server. `true` is ToHuus Cloud mode (many households, needs `TOHUUS_MASTER_KEY`, see [docs/cloud.md](docs/cloud.md)). |
+| `NODE_ENV` | `production` in Docker | `production` hides error details from server errors (only a reference code is shown). |
+| `APNS_KEY_ID` / `APNS_TEAM_ID` / `APNS_KEY_P8` / `APNS_TOPIC` / `APNS_ENV` | none | iPhone push. Only works with the key of the developer account that signs the app, so not for the App Store app on a self-hosted server (see above and [docs/notifications.md](docs/notifications.md)). |
 | `APP_SECRET` | none | Read but currently unused. |
+
+Everything else the server reads (`TOHUUS_MASTER_KEY`, `CLOUD_*`, `BETA_*`, `APPLE_*`, `BACKUP_S3_*`, `MAIL_INBOUND_*`, `MAIL_SMTP_PORT`, `OPERATOR_EMAILS`, `ADMIN_HOST`, `AI_PRICE*`, `MIN_IOS_BUILD`, `SUPPORT_EMAIL`, `MOVE_MAX_MB`, `HOUSEHOLD_POOL_*` …) is for ToHuus Cloud only and documented in [docs/cloud.md](docs/cloud.md).
 
 Web Push keys are generated on first use and stored in the database.
 

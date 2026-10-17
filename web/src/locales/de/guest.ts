@@ -141,7 +141,7 @@ export const guest: Record<string, string> = {
   Colour: 'Farbe',
   Create: 'Anlegen',
   Locations: 'Orte',
-  'The “floors” of your home: where things live.': 'Die Orte deines Zuhauses: wo Dinge stehen.',
+  'The “floors” of your home: where things live.': 'Die Orte deines Zuhauses: wo eure Sachen stehen.',
   'Directions, e.g. in the hallway, second door on the right': 'Wegbeschreibung, z. B. im Flur, zweite Tür rechts',
   Delete: 'Löschen',
   'New place, e.g. hallway cupboard, shelf above the fridge': 'Neuer Ort, z. B. Flurschrank, Regal über dem Kühlschrank',

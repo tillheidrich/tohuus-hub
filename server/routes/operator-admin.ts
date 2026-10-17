@@ -23,6 +23,7 @@ import { accountsDb, getHousehold, isUuid } from '../lib/accounts.js';
 import { DEFAULT_FALLBACKS, aiConfig, fallbackModels, pingModel, type ModelKind } from '../lib/ai.js';
 import { addAllowlist, createBetaCode, listAllowlist, listBetaCodes, removeAllowlist, revokeBetaCode, signupMode, SIGNUP_MODES } from '../lib/beta.js';
 import { betaGift, createPlanCode, listPlanCodes, revokePlanCode } from '../lib/gifts.js';
+import { declineHardship, grantHardship, HardshipError, listHardship } from '../lib/hardship.js';
 import { sendErrors } from './diag.js';
 import { audit, auditLog } from '../lib/operator.js';
 import { runStatsNightly, statsView } from '../lib/stats.js';
@@ -56,7 +57,7 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
 
   r.get('/operator/settings', fresh, (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ settings: runtimeSettingsView(), ai: effective(), signupMode: signupMode(), supportEmail: supportEmail(), keys: RUNTIME_KEYS });
+    res.json({ settings: runtimeSettingsView(), ai: effective(), signupMode: signupMode(), supportEmail: supportEmail(), pointsOn: runtimeSetting('points') === 'on', yearReviewOn: runtimeSetting('year_review') === 'on', keys: RUNTIME_KEYS });
   });
 
   const MODEL = z.string().trim().max(120).regex(/^[\w.:/@+-]+$/, 'model id');
@@ -72,6 +73,8 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     'signup.mode': z.enum(SIGNUP_MODES as [string, ...string[]]),
     'support.email': z.string().trim().max(254).email(),
     'beta.gift': z.enum(['haushalt', 'plus']),
+    points: z.enum(['on', 'off']),
+    year_review: z.enum(['on', 'off']),
   };
 
   r.put('/operator/settings', fresh, (req, res) => {
@@ -134,6 +137,31 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
       res.json({ codes });
     } catch (e) {
       if (/UNIQUE/.test((e as Error).message)) return void res.status(409).json({ error: 'this code exists already' });
+      throw e;
+    }
+  });
+
+  // ---------------------------------------------------------------- "Wir können uns das nicht leisten" (lib/hardship.ts)
+
+  r.get('/operator/hardship', fresh, (_req, res) => res.json({ requests: listHardship() }));
+  r.post('/operator/hardship/:id/grant', fresh, async (req, res) => {
+    const b = z.object({ plan: z.enum(['haushalt', 'plus']).default('plus'), days: z.number().int().min(1).max(3650).nullable().default(365) }).parse(req.body ?? {});
+    try {
+      const out = await grantHardship(Number(req.params.id), b.plan, b.days, who(req));
+      audit(who(req), 'hardship.grant', String(req.params.id), { plan: b.plan, days: b.days });
+      res.json(out);
+    } catch (e) {
+      if (e instanceof HardshipError) return void res.status(e.status).json({ error: e.message });
+      throw e;
+    }
+  });
+  r.post('/operator/hardship/:id/decline', fresh, (req, res) => {
+    try {
+      const out = declineHardship(Number(req.params.id));
+      audit(who(req), 'hardship.decline', String(req.params.id));
+      res.json(out);
+    } catch (e) {
+      if (e instanceof HardshipError) return void res.status(e.status).json({ error: e.message });
       throw e;
     }
   });

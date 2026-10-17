@@ -32,7 +32,7 @@ struct ErrorLogView: View {
                 }
             }
             Section {
-                ShareLink(item: text, subject: Text("ToHuus – Fehlerprotokoll")) {
+                ShareLink(item: text, subject: Text(L("ToHuus – error log"))) {
                     Label(L("Share error log"), systemImage: "square.and.arrow.up")
                 }
                 .disabled(entries.isEmpty)

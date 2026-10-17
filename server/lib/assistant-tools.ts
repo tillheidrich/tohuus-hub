@@ -8,6 +8,8 @@
 import { recipeToShopping } from './recipe-list.js';
 import { AREA_TOOL_DEFS, AREA_TOOLS_BY_TOPIC, runAreaTool, undoArea } from './assistant-areas.js';
 import { WISH_TOOL_DEFS, WISH_TOOLS, runWishTool, undoWish } from './assistant-wishes.js';
+import { TASK_TOOL_DEFS, TASK_TOOLS, runTaskTool, undoTask } from './assistant-tasks.js';
+import { HOME_TOOL_DEFS, HOME_TOOLS, runHomeTool, undoHome } from './assistant-home.js';
 import { appHelp } from './assistant-scope.js';
 import { guideOverviewForAi, searchGuide } from './house-guide.js';
 import crypto from 'node:crypto';
@@ -141,11 +143,11 @@ export function runUndo(token: string, userId: number | null, isAdmin = false) {
         break;
       default:
         // area tools (assistant-areas.ts): merged duplicates, adapted recipes, drafted Hausinfo cards, photo stock
-        if (!undoWish(u as { kind?: string; id?: number })) undoArea(u);
+        if (!undoWish(u as { kind?: string; id?: number }) && !undoTask(u as never) && !undoHome(u as never)) undoArea(u);
     }
     db.prepare(`UPDATE assistant_undo SET used_at = datetime('now') WHERE token = ?`).run(token);
   })();
-  emit('shopping', 'stock', 'recipes', 'imports');
+  emit('shopping', 'stock', 'recipes', 'imports', 'care');
   return { ok: true, summary: row.summary };
 }
 
@@ -348,7 +350,7 @@ export function planMeal(ctx: ToolCtx, input: { day?: string | null; recipe?: st
   const rec = findRecipe(input.recipe ?? null);
   if (input.recipe && !rec && !input.title) return { error: t('No recipe called “{name}” was found.', { name: String(input.recipe) }) };
   const slot = /mittag|lunch/i.test(input.slot ?? '') ? 'mittag' : 'abend';
-  const id = addPlan({ day, recipe_id: rec?.id ?? null, title: rec ? undefined : (input.title ?? undefined), slot, source: 'assistant' });
+  const id = addPlan({ day, recipe_id: rec?.id ?? null, title: rec ? undefined : (input.title ?? undefined), slot, source: 'assistant', added_by: ctx.actor });
   const title = rec?.title ?? input.title ?? '';
   record(ctx, 'plan_meal', t('Planned {title} for {day}', { title, day: fmtDay(day) }), { kind: 'delete_plan', id });
   return { planned: title, day, slot };
@@ -501,6 +503,8 @@ export const TOOL_DEFS: ToolDef[] = [
   fn('app_help', 'Where a feature lives in the ToHuus app and its help page (for "how do I / where is / can ToHuus …").', { query: { type: 'string' } }, ['query']),
   ...AREA_TOOL_DEFS,
   ...WISH_TOOL_DEFS,
+  ...TASK_TOOL_DEFS,
+  ...HOME_TOOL_DEFS,
 ];
 
 const TOOLS_BY_TOPIC: Record<string, string[]> = {
@@ -508,6 +512,8 @@ const TOOLS_BY_TOPIC: Record<string, string[]> = {
   cooking: ['cook_ideas', 'check_at_home', 'list_add', 'known_prices', 'plan_meal', 'recipe_to_list'],
   money: ['money_summary', 'known_prices', 'log_purchase', 'budget_set'],
   wishes: WISH_TOOLS,
+  // Aufgaben plus Im Kopf, Rückblick, Unterwegs (assistant-home.ts)
+  tasks: [...TASK_TOOLS, ...HOME_TOOLS],
   help: ['app_help'],
 };
 
@@ -594,6 +600,10 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
       default: {
         const wish = runWishTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
         if (wish !== undefined) return wish;
+        const task = runTaskTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
+        if (task !== undefined) return task;
+        const home = runHomeTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
+        if (home !== undefined) return home;
         const area = runAreaTool({ actor: ctx.actor, userId: ctx.userId, record: (kind, summary, undo, ref) => record(ctx, kind, summary, undo as Undo | null, ref) }, name, a);
         return area === undefined ? { error: `unknown tool ${name}` } : area;
       }

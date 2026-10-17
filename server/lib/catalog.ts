@@ -3,10 +3,10 @@ import { db, lang, now } from '../db.js';
 import { commaDecimal } from '../languages.js';
 import { t, userError } from '../i18n.js';
 import { categoryIdByKey, type CategoryKey } from './basedata.js';
-import { unassignedId, usablePlace } from './places.js';
+import { frozenIds, unassignedId, usablePlace } from './places.js';
 import { regionCategoryRules } from './region-categories.js';
 import { emit } from './bus.js';
-import { dateKindOf, entryExpiry, openDaysFor } from './fresh-shelf.js';
+import { dateKindOf, entryExpiry, estimateBestBefore, openDaysFor } from './fresh-shelf.js';
 import { notify, notifySettings } from './notify.js';
 import { skipAutoShopping } from './away-state.js';
 import { nameScore, norm, splitProductName, tokens } from './text.js';
@@ -53,6 +53,8 @@ export interface StockEntry {
   location_id: number;
   qty: number;
   best_before: string | null;
+  /** 1 = best_before is an estimate from the typical shelf life (fresh-shelf.ts), not the printed date */
+  bb_estimated?: number;
   opened_at: string | null;
   updated_at: string;
 }
@@ -67,15 +69,18 @@ export function productStatus(p: ProductRow, entries: StockEntry[], warnDays = n
   const withQty = entries.filter((e) => e.qty > 0);
   // fresh: an opened entry expires at min(best_before, opened + days after opening)
   const od = withQty.some((e) => e.opened_at) ? openDaysFor(p) : null;
-  const dated = withQty.map((e) => entryExpiry(p, e, od)).filter((d): d is string => Boolean(d)).sort();
+  const dates = withQty.map((e) => ({ d: entryExpiry(p, e, od), guess: Boolean(e.bb_estimated) && !e.opened_at }));
+  const dated = dates.map((x) => x.d).filter((d): d is string => Boolean(d)).sort();
   const nextExpiry = dated[0] ?? null;
+  // a passed *estimated* date (no printed date entered) means "have a look", never "expired"
+  const onlyGuessPassed = dates.filter((x) => x.d && x.d < today).every((x) => x.guess);
   let status: Status = 'ok';
   if (p.track_mode === 'none') status = 'untracked';
   else if (total <= 0) status = 'empty';
   // fill level: "knapp" from "wenig" (1, default) or already from "halb" (min_qty 2) – the household's choice per product
   else if (p.track_mode === 'level' ? total <= (p.min_qty >= 2 ? 2 : 1) : p.min_qty > 0 && total < p.min_qty) status = 'low';
   if (nextExpiry && status !== 'empty') {
-    if (nextExpiry < today) status = 'expired';
+    if (nextExpiry < today) status = onlyGuessPassed ? 'expiring' : 'expired';
     else if (nextExpiry <= soon) status = 'expiring';
   }
   // start mode "only what runs out" (area: share): everything else is neither counted nor warned about
@@ -154,6 +159,9 @@ export interface AdjustInput {
   silent?: boolean;
 }
 
+/** buying something (receipt, list tick, order, assistant) – without a printed date the date is estimated (fresh-shelf.ts) */
+const BOUGHT = new Set(['purchase', 'import', 'order', 'photo', 'usual']);
+
 /** Change stock. Positive delta adds a (possibly dated) entry, negative consumes oldest-first (FEFO). */
 export function adjustStock(input: AdjustInput) {
   const p = getProduct(input.productId);
@@ -183,13 +191,19 @@ export function adjustStock(input: AdjustInput) {
     }
     const delta = input.delta ?? 0;
     if (delta > 0) {
+      let bestBefore = input.bestBefore ?? null;
+      let estimated = 0;
+      if (!bestBefore && BOUGHT.has(input.reason) && !frozenIds().has(locationId)) {
+        bestBefore = estimateBestBefore(p);
+        estimated = bestBefore ? 1 : 0;
+      }
       const existing = db
         .prepare('SELECT * FROM stock WHERE product_id = ? AND location_id = ? AND opened_at IS NULL AND IFNULL(best_before, \'\') = IFNULL(?, \'\')')
-        .get(p.id, locationId, input.bestBefore ?? null) as StockEntry | undefined;
+        .get(p.id, locationId, bestBefore) as StockEntry | undefined;
       if (existing) db.prepare('UPDATE stock SET qty = qty + ?, updated_at = ? WHERE id = ?').run(delta, now(), existing.id);
       else
-        db.prepare('INSERT INTO stock (product_id, location_id, qty, best_before) VALUES (?, ?, ?, ?)').run(
-          p.id, locationId, delta, input.bestBefore ?? null,
+        db.prepare('INSERT INTO stock (product_id, location_id, qty, best_before, bb_estimated) VALUES (?, ?, ?, ?, ?)').run(
+          p.id, locationId, delta, bestBefore, estimated,
         );
       logMove(p.id, locationId, delta, input);
     } else if (delta < 0) {
@@ -303,7 +317,7 @@ export function moveStock(productId: number, from: number, to: number, qty: numb
         .prepare(`SELECT id FROM stock WHERE product_id = ? AND location_id = ? AND IFNULL(best_before,'') = IFNULL(?, '')`)
         .get(productId, to, e.best_before) as { id: number } | undefined;
       if (target) db.prepare('UPDATE stock SET qty = qty + ?, updated_at = ? WHERE id = ?').run(take, now(), target.id);
-      else db.prepare('INSERT INTO stock (product_id, location_id, qty, best_before, opened_at) VALUES (?, ?, ?, ?, ?)').run(productId, to, take, e.best_before, e.opened_at);
+      else db.prepare('INSERT INTO stock (product_id, location_id, qty, best_before, bb_estimated, opened_at) VALUES (?, ?, ?, ?, ?, ?)').run(productId, to, take, e.best_before, e.bb_estimated ?? 0, e.opened_at);
       left -= take;
       moved += take;
     }

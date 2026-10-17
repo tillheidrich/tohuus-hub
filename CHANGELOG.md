@@ -4,6 +4,133 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Final release instead of beta (docs/release-1.0.md):
+  - Sign-up is open by default.
+  - Licence codes for a month, a year or for good in /betrieb › Geschenke.
+  - No beta or TestFlight texts; the update screen opens the App Store; iOS build 10.
+- Share cards: the text fills the picture. One scale for number, title, text and list; no text with opacity (web, iOS, website).
+- Web: "Was essen wir diese Woche?" plans like iOS. "Gern" puts the meal on the next free evening.
+- Design review:
+  - Secondary text without opacity (web, iOS).
+  - Tap targets ≥ 44 pt and Dynamic Type fixes (iOS).
+  - Review chips follow Dutch Detail.
+
+- Rückblick: "Aufgaben teilen" – pick which done tasks go on the share picture (web and iOS). `GET /api/week-review` and `/api/month-review` add `household.tasks` / `mine.tasks` (docs/week-review.md).
+- Assistant: new tools `mind_list`, `mind_add`, `review`, `away_status` and `home_plan_set`. A household guest can be the doer. General household questions are answered as rules of thumb (docs/assistant.md).
+- Privacy and security fixes from the review:
+  - The export leaves out other people's private and hidden thoughts, and private people someone looks after with their log.
+  - Tasks for someone looked after stay out of webhooks, HA, chat channels, kiosk, printers, tickets, the sitter note and MCP checklists; their reminders go to members' own devices only.
+  - Deleting such a person deletes their tasks.
+  - A hidden thought becomes a private task.
+  - A hospital stay's packing list is not available over MCP.
+- Website form "Wir können uns das nicht leisten": the CSRF check lets it through from the website; rate limit and bad input lead to the friendly error page.
+- Fixes:
+  - A task that may wait never ends up due earlier than before the trip.
+  - Impossible dates in the review give 400.
+  - "Heute gelöst" counts in the household's time zone.
+  - The brain dump takes 20 full lines.
+  - Permanent guests can read `/api/whats-new`.
+  - The care hint no longer fires on recipes.
+
+- Free without any AI (docs/pricing.md): the minimum for 0 €, and the 14-day trial for every new household.
+  - The assistant answers 402 `plan.assistant` with a calm note; simple commands still work.
+  - The website form "Wir können uns das gerade nicht leisten" (`POST /api/cloud/hardship`) leads to back office › Härtefälle, where one click gifts a single-use code by e-mail. The operators' address is never shown.
+- Guests can take tasks (docs/guests-and-permissions.md): as doer or as stand-in on a trip. Their own narrow `/api/guest-tasks` and "Deine Aufgaben hier" on Heute.
+  - When everyone is away, things that can't wait (bins, daily tasks, appointments) are still reminded once.
+- Im Kopf: brain dump with one thought per line, an optional "bis wann" (no reminder), and "Was davon ist noch wichtig?" one at a time (keep · let go · done). Aufgaben: "Was schaffst du heute?" (today · may wait · done). Both use the same swipe deck as meal ideas, with buttons and arrow keys.
+- "Gut zu wissen" on the matching screens: 11 new facts with primary sources (care, single parents, appreciation, calm, mental load), shareable as a card.
+- "Was ist neu" for the iPhone app too (`GET /api/whats-new`), and a tour step for the new areas.
+- Teilen (docs/sharing.md):
+  - Lists, Im Kopf, due tasks and the week plan go to Apple Notes, Mail or messages as text.
+  - Shared texts end with an optional "— geteilt aus ToHuus" line (admin switch, `PUT /api/share/settings`; `/api/me` has `site_url` and `share_footer`).
+  - Weekly and month review cards can be shared as branded images in 4:5 and 9:16, with no names and nothing private. Web and iOS.
+- "Was habt ihr heute gelöst?" (docs/checkin.md): Heute asks every other evening at most. A task is ticked off for whoever did it, so ToHuus learns; anything else is "nebenbei erledigt", also on someone else's behalf (`done_by`) with a "Danke". The answer is always positive, there is no push, and each person can turn it off. API: `/api/checkin`.
+- Für wen ich da bin (docs/carefor.md): someone you look after, private by default (health data).
+  - Their tasks, "Heute da gewesen", and the weekly review line "Das ist Arbeit – und sie zählt."
+  - Help links (Pflegetelefon, Entlastungsbetrag, wege-zur-pflege.de) without amounts in the code.
+  - A gentle one-time hint. Never shared with the assistant, MCP or Home Assistant.
+  - API: `/api/carefor`.
+- Single parents are detected (one grown-up with children): no comparisons, plus the review note "Alles auf deinen Schultern – und schau, was du geschafft hast."
+- "Du machst das seit Wochen – danke!": only for the person, after six times in a row, then the offer to hand it over. API: `habits.carrying`.
+- Monatsrückblick (`/api/month-review`) next to the week, and "Fertig für heute" on Heute (`today.calm`).
+- Im Kopf (docs/mind.md): "Im Kopf" (thoughts that aren't tasks yet) and "Nebenbei erledigt" (what never was on a list).
+  - Private or for everyone, switchable any time. A household entry can be hidden from single members.
+  - Others can tap "Ich denk mit" or "Danke". Only names are shown, never counts.
+  - Counts in the weekly review.
+  - Never sent to the assistant, MCP, Home Assistant, notifications or exports.
+  - API: `/api/mind`. Web `/kopf` and iOS, each with a card on Heute.
+- Unterwegs (docs/away.md): "Wofür?" (holiday, business trip, celebrating, hospital, other) and "Zu Hause, solange … weg ist".
+  - For each task: someone at home takes it, or it may wait until after the return.
+  - A hospital stay suggests more relief.
+  - The hospital reason never reaches the assistant, MCP or Home Assistant.
+  - API: `GET/PUT /api/away/trips/:id/home`, plus `stand_in` and `waits` on tasks. Web and iOS.
+- Unterwegs (docs/away.md): only some people away ("Nur ich bin weg").
+  - The house runs on: notifications stay quiet only for the people away, turns skip them, tasks show "Sam ist bis Fr. weg", and the cook suggestion leaves them out.
+  - Several people can be away at the same time on different trips.
+  - Fix: a trip where not every member travels no longer counts as "everyone away", so the week plan, shopping suggestions and Home Assistant stay as at home.
+  - Easter egg: while you're away, the app says "Nich to Huus".
+  - API: `away_until` in `/api/me`, `away` in `/api/today` and in each care task, `people_away` for Home Assistant. Web and iOS.
+- Wochenrückblick (docs/week-review.md): "Das habt ihr geschafft" for the household (no names) and "Das hast du geschafft" only for the person. Positive only: no comparisons between people, no money. On Heute at the start of the week until "Gesehen"; page `/woche` for any week; personal switch. API: `GET /api/week-review`, `PUT /api/week-review/settings`, `POST /api/week-review/seen`. Web and iOS.
+- Design review (docs/design/2026-10-15-design-review.md):
+  - Website: dark mode follows the device; 6-item nav; wider gutters; larger phones; fewer labels; calmer hero; bar below the hero; 44 px targets; new screenshots.
+  - Web app: stacking tiles on Heute; full-width and fitting segmented controls; fading chip rows; calendar settings out of Aufgaben; compact Denkarbeit answers; icon "Ich hol's" on phones; clearer disabled buttons; earthy person colours.
+  - iOS: readable tint in dark mode; contrast of initials; row buttons; 44 pt targets; toast with Reduce Motion; visible errors; Dynamic Type for numbers.
+- Wer macht was (docs/who-does-what.md):
+  - ToHuus learns who usually does a task ("meistens Sam") and who cooked lately or on which weekday. The week plan suggests that person for open meals, faded; only a tap enters them.
+  - "So eintragen?" turns a habit into the doer. "Abgeben an …" asks another member, who answers yes or no on Heute.
+  - In Aufgaben, "Wer macht was" shows who carries what. It uses names and no numbers. A judgement on the balance appears only when everyone agreed to compare, and it is weighed by areas carried, not counts.
+  - Web and iPhone.
+  - New endpoints: `GET /api/habits`, `POST /api/habits/proposals/:id`, `GET /api/habits/cook`, `POST /api/care/:id/offer`, `POST /api/care/:id/offer/answer`. Tasks have `usual` and `offer`.
+- Kalender lesen (docs/calendar-sync.md):
+  - The iPhone reads calendars you pick (e.g. the family calendar in iCloud) and finds the bin collection without AI. Each bin becomes one task that follows the dates ("Gelbe Tonne raus", the evening before or on the morning). Only the kind and the day reach the server.
+  - Optionally, household tasks with a date go into an existing calendar, both ways.
+  - "KI darf Kalendereinträge mit Aufgaben abgleichen" is its own consent per person and names the recipients. It suggests household tasks from other entries and stores nothing.
+  - Web: settings card and "aus dem Kalender" on tasks.
+  - New: `GET /api/calsync`, `POST /api/calsync/dates`, `PUT /api/calsync/settings`, `POST /api/calsync/kinds/:kind/revive`, `PUT /api/calsync/ai`, `POST /api/calsync/suggest`; `ext_kind` on tasks.
+  - iOS asks for full calendar access only on that screen (`NSCalendarsFullAccessUsageDescription`). The privacy policy mentions calendars.
+- Web layout: text no longer touches the border in the new cards. Fokus, the Denkarbeit-Check, Extras, Sterne and Ratgeber cards have inner padding, the Denkarbeit answers wrap inside the card, and the teaser text in Aufgaben stays in its row. `scripts/ui-audit.mjs` reports this as `tight`, and the audit now visits `/fokus`, `/denkarbeit` and `/rueckblick`. The website screenshots are renewed.
+- Geld: the month's purchases right on the Geld page ("Einkäufe", newest first) – tap one for its items, prices and who it was for (receipt) or the expense form (web and iPhone). `purchases` in `GET /api/money/overview`.
+- Rückblick "Euer Jahr to Huus" (docs/review.md): the household's year in a few cards – bought, planned, cooked, done, used up, spent – as "wir", no names, no ranking, nothing private, no money in gentle mode. Built but off: needs `YEAR_REVIEW=on` or the back office switch; then on Heute from 1 December to 15 January, page `/rueckblick` (web and iPhone). `GET /api/review`.
+- Web offline queue: queued list changes carry the account they were made in (`scope` in `GET /api/me`) and are only replayed for it; `POST /api/shop/sync` answers 409 for another account's queue. Before, a queue left from one account could be replayed after signing in to another household.
+- Website: the AI facts now say that requests to Mistral are routed through OpenRouter (USA), like the privacy policy; "Bons ohne Monatslimit" (rate limits stay); the Plus receipt address is marked "kommt bald".
+- "Mach ich" for tasks: promise a task for today, tomorrow, the weekend or a day – "Sam macht's morgen"; asked kindly again when the day is over, cleared when done (web and iPhone). `POST /api/care/:id/promise`, `promise` on tasks.
+- Sterne (docs/points.md): optional stars for households, off by default – the server must allow them (`POINTS=on` or the back office) and an admin picks the areas. Week together and your own stars, no ranking, no streaks, hidden in gentle mode. `GET /api/points`, `PUT /api/points/settings`.
+- Copy: "Sache/Sachen" instead of "Ding/Dinge"; the website says "stars only if you switch them on".
+- Gut zu wissen: eight new sourced facts in the app (care gap, thinking work, ADHD everyday help, if-then plans, eggs, opened food, spending on sweets, guest Wi-Fi). Six new Ratgeber posts (mental load, ADHS, shelf life, guest info, extras budget, cleaning plan without points).
+- Code review fixes: the web task form no longer crashes (hook order); "Neu anfangen" leaves appointments, fixed deadlines and fixed weekdays alone; Blick and extras closed to permanent guests, guests no longer counted as members in Blick; rice and tortellini are no extras; shelf-life guesses skip juice, tea, coconut milk, spices and dried pulses; iOS search sends "&" and "+" correctly; the focus view lets go of a finished task; an iOS invitation to a password-free household continues in the browser.
+- Self-hosting: connecting the iPhone app "in the browser" no longer fails with "forbidden" when the server is opened under another address than `BASE_URL` (e.g. its LAN IP) – the confirm page accepts the browser's same-origin signal like every other form. README: iPhone app with your own server (https vs. home-network http), why the App Store app gets no push from a self-hosted server and what to use instead, updating, backups and restore by hand, the new features, and every self-host environment variable (`AI_MODEL_FALLBACKS`, `OCR_DISABLED`, `TESSERACT_BIN`, `SITE_URL`, `LEGAL_*`, `SSE_MAX_TOTAL`, `MULTI_TENANT`, `NODE_ENV`, `APNS_*`); `.env.example` to match.
+- Ratgeber in the apps: guide articles as cards in Hilfe, Aufgaben and the Denkarbeit-Check (web and iPhone); `GET /api/ratgeber?area=` from `server/data/ratgeber.json`, built from the website posts by `node scripts/ratgeber-cards.mjs`.
+- App pairing: the cloud-wide limit now counts only wrong codes, so a flood of claims can't block pairing for everyone.
+- Denkarbeit-Check (docs/mental-load.md): 33 cards for the invisible work at home, answered privately, household view only when everyone agrees, each card links to what ToHuus takes off your head and can become a task (web `/denkarbeit`, iPhone). `GET /api/blick/cards`, `PUT /api/blick/cards/:key`, `POST /api/blick/cards/:key/task`.
+- Security review 14 Oct 2026: CalDAV app passwords and calendar feed links stop working while their member is a permanent guest (they kept full list/task access after "make guest"); permanent guests at level `family` get 403 on `/api/blick` and `/api/list/extras` (task names and receipt amounts); iCalendar output escapes a lone CR; `Strict-Transport-Security` is sent when `BASE_URL` is https; the CalDAV/feed lockout per address now expires and cannot grow without end (`test/security-review-2026-10-14.test.ts`).
+- QR labels scanned with the iPhone camera app open the ToHuus app on the cloud host (`applinks` for `/q/*` in the apple-app-site-association).
+- Für Köpfe, in denen viel los ist (docs/focus.md): "In kleine Schritte teilen" for every task (AI if allowed, else built-in steps), "Eins nach dem anderen" with a visible timer (web `/fokus`, iPhone), a personal gentle mode (no red, no counters, at most N things on Heute, reminders bundled once a day) and "Neu anfangen" for overdue things. `GET/PUT /api/focus/prefs`, `POST /api/care/:id/steps/suggest`, `POST /api/focus/steps`, `POST /api/care/fresh-start`.
+- Extras im Wocheneinkauf (docs/extras.md): a weekly allowance for treats in money or number of things, rows marked automatically or by hand, a quiet bar on the list (web and iPhone). `GET /api/list/extras`, `PUT /api/list/extras/settings`, `POST /api/list/items/:id/extra`, `extra` on list rows.
+- Vorrat: after opening, the use-by is marked "etwa" when it comes from the rule of thumb; more rules (canned food, pickles, fresh pasta, bread, coffee, cereal, sauces) and none for things that keep (honey, oil, vinegar, sugar, flour, rice, pasta). `use_by_estimated` / `open_days_estimated` in `GET /api/fresh/products/:id`, `estimated` in the open answer.
+- App Review (`docs/ios-app-review.md`): the AI consent names everyone who gets the data – `consent.processor` in `GET /api/ai/settings` is now "Mistral AI (Frankreich), vermittelt über OpenRouter (USA)" – and the iPhone text says what is sent (voice messages and the household data an answer needs, too); the iPhone asks per person and household, and the assistant offers the consent right there until you decide. Paywall shows a free trial and the price after it when App Store Connect has one. Purpose strings for the local network (own server at home) and for saving images (share sheet). New `BETA_GIFT_EXCEPT` (household ids without the beta gift) for the review household.
+- Vorrat: bought without a printed date, things get the usual shelf life as an estimate (eggs, milk, cheese, sausage, jam, honey, bread, fruit & veg …), marked "geschätzt" on web and iPhone until someone enters the date from the pack; `stock.bb_estimated`. More after-opening rules (jam, ketchup, mustard, butter, hard cheese, liver sausage). A passed estimate means "have a look", not "expired".
+- iPhone: "Ich habe eine Einladung" on the start screen – paste or scan an invitation link and join, in ToHuus Cloud (`POST /api/invite/:token` with `client: ios`) and on your own server; the weekly question settings in Mehr › Haushalt.
+- Website: an "Aufgaben" section, the iPhone app for self-hosting, new screenshots with the Zuhause tab, help articles "Aufgaben" / "Tasks", "Reminders & calendar", search and the own server in the app.
+
+- iPhone app without compromises (decision 14 Oct 2026): every web function is native – account & security, people, kids & kid mode, permanent guests, places & categories, product extras, QR labels, favourites, shopping extras (WG balance, lunchbox, list import, offers, shop mode), cooking (editor, cook mode with timers, week board, printing), money & receipts (recognition, who paid, charts), Bring mir was & party (menu editor, order board, kitchen board), notifications, connections (Home Assistant, displays, printers, channels, Cookidoo, mail), data & backups, Heute and the first-run setup. Notes per area: `docs/ios-native-*.md`.
+- iPhone app works with your own ToHuus server: address with password and two-step code, sign-in in the browser (with a confirmation page), or a QR code from the web (Settings › My account › "iPhone-App verbinden"; `POST /api/auth/app/pair`, `GET/POST /api/auth/app/pair/start`, `POST /api/auth/app/pair/claim`). Several servers on one iPhone.
+- New structure on web and iPhone (`docs/design/ux-benchmark-2026-10-14.md`): tabs Heute · Einkauf · Kochen · Zuhause · Geld; Zuhause holds Aufgaben and Vorrat with the doors Wo ist was?, Hausinfo, Urlaub; Mehr is one list (Haushalt, Einstellungen, Geräte & Verbindungen, Hilfe); search and Mehr on every screen.
+- Global search: `GET /api/search` (`docs/search.md`) plus a registry of every function and setting; ⌘K / "/" on the web.
+- Cloud: `POST /api/auth/passkeys/options` accepts `{ code }` (code from the confirmation mail), so accounts without a password can add a passkey in the iPhone app.
+- Fixes: `PUT /api/list/today-order` refused the Aufgaben card; the getting-started item "phone" counts the iPhone app with notifications; chore templates in German on the web.
+- Tests: each vitest worker gets its own port block (two files could share a port and reach each other's server); the unreachable-photo test gets the 30 s it waits for.
+
+- Termine (web, iPhone): a task can have a time, length and place and is then a classic calendar entry. Apple Calendar shows "ToHuus · Kalender" and "ToHuus · Mein Kalender" two-way over CalDAV (replaces the read-only "ToHuus · Fällig"); Google Calendar, Outlook and others subscribe to a read-only link (`/api/calendar/feeds`, `/kalender-abo/<secret>.ics`); "In den Kalender" per task (`GET /api/care/:id/ics`, iPhone: Apple's event editor). The assistant's `task_add` takes `time`, `minutes`, `place`.
+
+- Aufgaben (web, iPhone, `docs/tasks.md`): household chores next to care & deadlines, private tasks ("nur für mich"), rhythm by weekday or after done, "bei Bedarf", sub-items, who does it (member or child), taking turns, recently done, the learned rhythm and a "Aufgaben heute" ring on Heute. `/pflege` → `/aufgaben`. New fields on `POST/PATCH /api/care`, new `GET /api/care/recent`.
+- Wer hat was im Blick (`GET /api/blick`, `PUT /api/blick/compare`): who noticed, planned, took care of receipts and did tasks – names only; shares only when every member agrees. `meal_plan.added_by` records who planned a meal.
+- Apple Reminders / Calendar: CalDAV collections "ToHuus · Aufgaben", "ToHuus · Nur für mich" (VTODO, two-way) and "ToHuus · Fällig" (read-only VEVENT). iPhone: Mehr › Aufgaben › Erinnerungen & Kalender.
+- Assistant: round sparkle icon instead of "Sprechen"; tasks tools (`tasks_list`, `task_add`, `task_done`, `task_assign`, `tasks_overview`) and the screen context `tasks`; the iPhone now sends its screen context too. "Hausarbeit" is no longer off topic.
+
+- iPhone/iPad: Urlaub / unterwegs is a native screen with every tab of the web (Vorher, Packen, Küche, Haushüten, Übergabe, Zurück), new / edit trip and the Home Assistant presence suggestion; the Übergabe is native for the trip (items with rhythm, photos/videos, who sees it, ticks, templates, take over) and for permanent guests (Mehr › Übergabe). No API change.
+
+- iPhone/iPad: Mehr is grouped like the web's Mehr (Rund ums Zuhause, Bons & Rezepte, Bring mir was & Gäste, Haushalt & Einstellungen) with the same entries, order and guest/area filters; Hausinfo sits at the top and no longer disappears when "Pflege & Hausinfo" is switched off. Pflege & Fristen is a native screen (due/later, done with undo, templates, history, "Ich kümmere mich", edit). Hausinfo gets everything the web has: templates, "who looked at codes", what each babysitter link shows, guest levels and single links per card/code, search, by room/by kind, the Home Assistant voice list and the A4 sheet "Für den Babysitter" (AirPrint). No API change.
+
 - CI: installs pdftotext and tesseract like the Docker image; tests run in UTC (date tests failed between 22:00 and 24:00 UTC).
 
 - iPhone: tapping the microphone crashed on first use (speech permission answer arrived off the main actor under Swift 6 isolation checks); permission and recognition callbacks are now nonisolated. Build 9.

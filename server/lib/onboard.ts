@@ -104,7 +104,13 @@ export function checklist(userId?: number | null) {
     { key: 'home', done: state.step !== 'home' || state.closed || (Boolean(name) && !defaultNames.includes(name)) },
     ...(single ? [] : [{ key: 'invite' as const, done: count('SELECT COUNT(*) n FROM users') > 1 || safeCount('invites', `SELECT COUNT(*) n FROM invites WHERE revoked = 0 AND (used_at IS NOT NULL OR expires_at > datetime('now'))`) > 0 }]),
     { key: 'stock', done: count(`SELECT COUNT(DISTINCT product_id) n FROM stock WHERE qty > 0${notDemo('product_id', 'products')}`) > 0 },
-    { key: 'phone', done: userId ? safeCount('push_subscriptions', 'SELECT COUNT(*) n FROM push_subscriptions WHERE user_id = ?', userId) > 0 : safeCount('push_subscriptions', 'SELECT COUNT(*) n FROM push_subscriptions') > 0 },
+    // web push on the phone, or the iPhone app with notifications on (apns_devices, lib/apns.ts)
+    {
+      key: 'phone',
+      done: userId
+        ? safeCount('push_subscriptions', 'SELECT COUNT(*) n FROM push_subscriptions WHERE user_id = ?', userId) + safeCount('apns_devices', 'SELECT COUNT(*) n FROM apns_devices WHERE user_id = ?', userId) > 0
+        : safeCount('push_subscriptions', 'SELECT COUNT(*) n FROM push_subscriptions') + safeCount('apns_devices', 'SELECT COUNT(*) n FROM apns_devices') > 0,
+    },
     { key: 'recipe', done: count(`SELECT COUNT(*) n FROM recipes WHERE 1${notDemo('id', 'recipes')}`) > 0 },
   ];
   const done = items.filter((i) => i.done).length;

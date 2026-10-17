@@ -186,6 +186,10 @@ struct ShopItem: Codable, Sendable, Identifiable, Equatable {
     var priceHint: String?
     /// discreet / private entry (area: share) – see ShareInfo
     var share: ShareInfo?
+    /// WG: the row is for one person ("für Mika"), nil = shared (POST /api/list/items/:id/owner)
+    var owner: ShopRowOwner?
+    /// counts toward the weekly extras allowance (server: lib/extras.ts)
+    var extra: Bool?
 
     struct Claim: Codable, Sendable, Equatable {
         var userId: Int?
@@ -230,6 +234,12 @@ struct ShopItem: Codable, Sendable, Identifiable, Equatable {
         if pending == true { parts.append(L("not sent yet")) }
         return parts.filter { !$0.isEmpty }.joined(separator: " · ")
     }
+}
+
+/// `owner` on a list row (WG): the row is for one person ("für Mika"); nil = shared
+struct ShopRowOwner: Codable, Sendable, Hashable {
+    var id: Int?
+    var name: String?
 }
 
 enum ShopSectionKey {

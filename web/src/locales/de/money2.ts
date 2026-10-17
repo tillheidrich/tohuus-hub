@@ -1,6 +1,24 @@
 // Geld: eigene Einträge, Nur meins, Posten für eine Person, Geldlisten (q-money)
 export const money2: Record<string, string> = {
   'Whose money': 'Wessen Geld',
+  Purchases: 'Einkäufe',
+  // Rückblick (pages/Review.tsx)
+  'Year in review': 'Rückblick',
+  'Your year at home {year}': 'Euer Jahr to Huus {year}',
+  'What you did together – no ranking, just what happened.': 'Was ihr zusammen gemacht habt. Ohne Rangliste, einfach was war.',
+  'The year in review is not switched on': 'Der Rückblick ist nicht eingeschaltet',
+  'This server doesn’t offer it (yet).': 'Dieser Server bietet ihn (noch) nicht an.',
+  'Previous year': 'Voriges Jahr',
+  'Next year': 'Nächstes Jahr',
+  'Not much to look back on yet': 'Noch nicht viel zum Zurückschauen',
+  'Use ToHuus for a while – the year fills up by itself.': 'Nutzt ToHuus eine Weile – das Jahr füllt sich von selbst.',
+  'The year in review is on': 'Der Rückblick ist an',
+  'The year in review is off': 'Der Rückblick ist aus',
+  'Off by default. When on, every household gets “Your year at home”: a few cards about the year as “we” – no names, no ranking, nothing private. On “Today” from 1 December to 15 January.':
+    'Standardmäßig aus. Eingeschaltet bekommt jeder Haushalt „Euer Jahr to Huus“: ein paar Karten über das Jahr als „wir“ – ohne Namen, ohne Rangliste, nichts Privates. Auf „Heute“ vom 1. Dezember bis 15. Januar.',
+  '1 article': '1 Artikel',
+  '{n} articles': '{n} Artikel',
+  'Doesn’t count': 'Zählt nicht',
   'Just mine': 'Nur meins',
   'just mine': 'nur meins',
   'your part': 'dein Teil',

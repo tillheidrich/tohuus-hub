@@ -131,6 +131,11 @@ const ACCOUNT: Rule[] = [
   ['W', /^\/tour$/],
   // one's own picture, colour and likes
   any(/^\/people\/me(\/.*)?$/),
+  // tasks handed to this guest ("Oma gießt die Blumen", "die Tante hilft, solange Mira im Krankenhaus ist") – only
+  // their own, read and tick off (15 Oct 2026, docs/guests-and-permissions.md); the rest of Aufgaben stays closed
+  read(/^\/guest-tasks$/),
+  read(/^\/whats-new$/),
+  write(/^\/guest-tasks\/\d+\/done$/),
 ];
 
 const ORDER: Rule[] = [
@@ -197,6 +202,9 @@ const FAMILY_DENY: RegExp[] = [
   /^\/spend(ing)?(\/.*)?$/,
   /^\/retail\/(inbox|waste-value)(\/.*)?$/,
   /^\/care(\/.*)?$/,
+  // "Wer hat was im Blick" (task names, who brought in receipts) and the extras allowance (receipt amounts in money mode)
+  /^\/blick(\/.*)?$/,
+  /^\/list\/extras(\/.*)?$/,
   /^\/print\/(settings|printers)(\/.*)?$/,
   /^\/auth\/(policy|sso|members|device)(\/.*)?$/,
   /^\/ha(\/.*)?$/,

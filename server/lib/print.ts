@@ -481,7 +481,8 @@ export async function autoPrintCare(now = localHm()) {
   if (!printers.length) return 0;
   const s = printSettings();
   if (inQuietHours(now, s.quietFrom, s.quietTo)) return 0;
-  const due = dueCareTasks().filter((c) => c.state === 'today' || c.state === 'overdue');
+  // shared printers: no tasks for someone a member looks after (health data, carefor.ts)
+  const due = dueCareTasks({ outside: true }).filter((c) => c.state === 'today' || c.state === 'overdue');
   let n = 0;
   for (const p of printers)
     for (const c of due) {

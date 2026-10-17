@@ -37,10 +37,18 @@ import {
   type ToolCtx,
 } from './assistant-tools.js';
 import { consumeAssistant, UsageLimitError, type ConsumeResult } from './limits.js';
+import { limits } from './plans.js';
 
 /** HTTP 402 for the apps when the monthly assistant messages are used up. */
 export const assistantQuotaError = () =>
-  new UsageLimitError(t('The assistant messages for this month are used up. Simple things like “milk and bread” still work.'), 402, 'quota.assistant', 0);
+  new UsageLimitError(
+    limits().assistantPerMonth === 0
+      ? t('The assistant with AI comes with Haushalt and Plus – try it free for 14 days. Simple things like “milk and bread” work without it.')
+      : t('The assistant messages for this month are used up. Simple things like “milk and bread” still work.'),
+    402,
+    limits().assistantPerMonth === 0 ? 'plan.assistant' : 'quota.assistant',
+    0,
+  );
 import { fmtMoney } from './money.js';
 
 migrate(

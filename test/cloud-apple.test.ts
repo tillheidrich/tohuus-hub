@@ -162,7 +162,7 @@ describe('Sign in with Apple – app', () => {
     // the paywall reads what each plan includes from the billing status
     const b = await c.get('/api/billing/status', { authorization: `Bearer ${r.json.token}` });
     expect(b.json.plan).toBe('trial');
-    expect(b.json.plans.free.assistantPerMonth).toBe(20);
+    expect(b.json.plans.free.assistantPerMonth).toBe(0);
     expect(b.json.plans.haushalt.features.fullHistory).toBe(true);
     expect(b.json.plans.plus.storageBytes).toBe(5120 * 1024 * 1024);
   });
