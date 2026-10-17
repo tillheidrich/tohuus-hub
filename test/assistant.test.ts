@@ -98,6 +98,13 @@ describe('reading without a model (pure)', () => {
     expect(r.kind).toBe('add');
     expect(r.items.map((i: any) => i.name)).toEqual(['Milch', 'Brot']);
   });
+  it('chores and appointments are tasks, not list items (audit 17.10.)', () => {
+    for (const m of ['Fenster putzen', 'Müll rausbringen', 'Zahnarzt Dienstag', 'Oma anrufen', 'Bad jeden Samstag, Mira und Sam abwechselnd'])
+      expect(parse.looksLikeTask(m), m).toBe(true);
+    for (const m of ['Milch, 2 Paprika und Brot', 'Hafermilch und Brot', 'Waschmittel', 'Milch ist alle']) expect(parse.looksLikeTask(m), m).toBe(false);
+    expect(parse.looksLikeTask('Fahrrad Reifen', 'tasks')).toBe(true);
+    expect(parse.looksLikeTask('Milch kaufen', 'tasks')).toBe(false);
+  });
   it('answers to the assistant are never list items', () => {
     const cases: [string, string][] = [
       ['Ja', 'yes'],

@@ -10,6 +10,7 @@ export const de_assistant: Record<string, string> = {
   'No AI model is set up (AI_API_KEY / AI_MODEL_*).': 'Es ist kein KI-Modell eingerichtet (AI_API_KEY / AI_MODEL_*).',
   'No speech model is set up (AI_MODEL_AUDIO).': 'Es ist kein Sprachmodell eingerichtet (AI_MODEL_AUDIO).',
   'The AI service did not accept the key. Please check AI_API_KEY.': 'Der KI-Dienst hat den Schlüssel nicht angenommen. Bitte prüf AI_API_KEY.',
+  '“{name}” is now in Tasks, due today. Tap it there to set how often and who.': '„{name}“ steht jetzt bei den Aufgaben, fällig heute. Tipp sie dort an, um einzustellen, wie oft und wer.',
   'The assistant is busy right now. Please try again in a moment.': 'Der Assistent ist gerade ausgelastet. Versuch es bitte gleich noch mal.',
   // answers to the assistant ("danke", "nein", "ja" without a model)
   'Gladly.': 'Gern.',

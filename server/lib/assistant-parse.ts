@@ -40,6 +40,19 @@ function items(text: string): ParsedItem[] {
   return parseQuickAdd(text.replace(FILLER, ' ').replace(/\s+/g, ' ')).filter((i) => i.name && i.name.split(' ').length <= 5);
 }
 
+/**
+ * Chores, calls and appointments – things you DO, not things you buy ("Fenster putzen", "Oma anrufen",
+ * "Zahnarzt Dienstag", "Bad jeden Samstag"). Such a sentence is a task, never a shopping-list item.
+ */
+export const TASKY =
+  /\b(?:putzen|sauber\s*machen|aufräumen|aufraeumen|wischen|saugen|staubsaugen|fegen|spülen|abwaschen|waschen|bügeln|buegeln|gießen|giessen|mähen|maehen|rausbringen|raus\s*bringen|wegbringen|ausräumen|einräumen|abholen|bringen|anrufen|zurückrufen|schreiben|erledigen|reparieren|wechseln|tauschen|kündigen|kuendigen|beantragen|verlängern|zahlen|bezahlen|überweisen|ueberweisen|termin|arzt|zahnarzt|friseur|tierarzt|kita|schule|müll|muell|altpapier|wäsche|waesche|jeden|jede|jedes|alle\s+\d+|wöchentlich|woechentlich|täglich|taeglich|monatlich|abwechselnd|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|morgen|übermorgen|clean|tidy|vacuum|mow|water\s+the|take\s+out|call|pick\s+up|appointment|dentist|doctor|every|weekly|daily|monthly|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow)\b/i;
+
+/** A list-looking sentence that is really a task – on the tasks screen anything that is not plainly a product list. */
+export function looksLikeTask(text: string, context?: string | null): boolean {
+  if (TASKY.test(text)) return true;
+  return context === 'tasks' && !/\b(?:kaufen|einkaufen|besorgen|liste|brauchen|fehlt|alle|buy|need|list)\b/i.test(text);
+}
+
 export function parseIntent(input: string): Intent {
   const text = clean(input);
   if (!text) return { kind: 'unknown' };

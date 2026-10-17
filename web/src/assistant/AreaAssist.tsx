@@ -23,7 +23,7 @@ const EXAMPLES = (): Record<ScreenContext, string[]> => ({
 
 export function AreaAssist({ path }: { path: string }) {
   const ctx = screenContext(path);
-  const status = useApi<{ ai: boolean }>(['assistant', 'status'], ctx ? '/assistant/status' : null);
+  const status = useApi<{ ai: boolean; receiptsAi?: boolean }>(['assistant', 'status'], ctx ? '/assistant/status' : null);
   const [photo, setPhoto] = useState(false);
   if (!ctx || !status.data?.ai || !assistantAvailable()) return null;
   return (
@@ -36,7 +36,7 @@ export function AreaAssist({ path }: { path: string }) {
           {x}
         </button>
       ))}
-      {ctx === 'stock' && (
+      {ctx === 'stock' && status.data?.receiptsAi && (
         <button className="chip" onClick={() => setPhoto(true)}>
           <Camera size={14} aria-hidden="true" /> {t('Photo of the fridge')}
         </button>

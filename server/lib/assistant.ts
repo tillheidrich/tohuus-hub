@@ -16,7 +16,7 @@ import { aiOffReason } from './ai-policy.js';
 import { addUsage, aiConfigured, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
 import { buildContext, topicsOf, type Topic } from './assistant-context.js';
 import { CONTEXT_TOPICS, contextHint, type ScreenContext } from './assistant-areas.js';
-import { parseIntent, type Intent } from './assistant-parse.js';
+import { looksLikeTask, parseIntent, type Intent } from './assistant-parse.js';
 import { scopeCheck, SCOPE_DE, SCOPE_EN } from './assistant-scope.js';
 import {
   cookIdeasTool,
@@ -50,6 +50,7 @@ export const assistantQuotaError = () =>
     0,
   );
 import { fmtMoney } from './money.js';
+import { localDay } from './catalog.js';
 
 migrate(
   'assistant-1',
@@ -237,7 +238,10 @@ export async function chatOnce(input: {
   // no model call); anything else answers HTTP 402 { code: 'quota.assistant' }
   // what the built-in reader fully understands (lists, "ist alle", a told purchase, "merk dir") is answered without a
   // model and without counting; everything else – questions, cooking, vague parts – goes to the model when there is one
-  const intent = parseIntent(message);
+  // "Fenster putzen", "Oma anrufen", anything typed on the tasks screen: a task, not a list item (audit 17.10.)
+  const parsed = parseIntent(message);
+  const taskLike = parsed.kind === 'add' && looksLikeTask(message, input.context ?? null);
+  const intent: Intent = taskLike ? { kind: 'unknown' } : parsed;
   const simple = fullyUnderstood(intent);
   // a bare list of products ("Bananen und Haferflocken") means "put these on the list" – also when it was spoken:
   // the recording already counted (input.allowance), but the answer still comes from the built-in reader
@@ -253,7 +257,7 @@ export async function chatOnce(input: {
   let out: { reply: string; mode: 'ai' | 'basic'; usage?: Usage; remaining?: number | null; throttled?: boolean };
   if (allowance && !(simple && overQuota)) {
     if (overQuota) {
-      out = { reply: basicReply(message, ctx), mode: 'basic', remaining: 0 };
+      out = { reply: taskLike ? basicTask(message, ctx) : basicReply(message, ctx), mode: 'basic', remaining: 0 };
     } else {
       try {
         // Plus fair use over the allowance: still answered, just shorter
@@ -268,12 +272,12 @@ export async function chatOnce(input: {
         // a question the built-in reader cannot answer ("ein Rezept für Kinder") gets an honest "busy, try again"
         // instead of "I did not understand"
         const busy = e.code === 'rate_limited' || e.code === 'upstream' || e.code === 'timeout';
-        const reply = ctx.actions.length ? t('Done.') : busy && needsModel ? t('The assistant is busy right now. Please try again in a moment.') : basicReply(message, ctx);
+        const reply = ctx.actions.length ? t('Done.') : busy && needsModel ? t('The assistant is busy right now. Please try again in a moment.') : taskLike ? basicTask(message, ctx) : basicReply(message, ctx);
         out = { reply, mode: 'basic', remaining: allowance.remaining };
       }
     }
   } else {
-    out = { reply: basicReply(message, ctx), mode: 'basic', ...(input.allowance ? { remaining: input.allowance.remaining } : {}) };
+    out = { reply: taskLike ? basicTask(message, ctx) : basicReply(message, ctx), mode: 'basic', ...(input.allowance ? { remaining: input.allowance.remaining } : {}) };
   }
   store(conversationId, 'assistant', out.reply, { actions: ctx.actions, mode: out.mode, tokens: out.usage?.total ?? 0 });
   return {
@@ -348,6 +352,13 @@ const names = (xs: { name?: string; text?: string }[]) => xs.map((x) => x.name ?
 const joinList = (xs: string[]) => (xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} ${t('and')} ${xs[xs.length - 1]}`);
 
 /** The built-in reader: deterministic, no network. Exported for tests. */
+/** Without a model: a task sentence becomes one task, due today – the details come in Aufgaben. */
+export function basicTask(message: string, ctx: ToolCtx): string {
+  const name = message.replace(/[\s.!]+$/g, '').trim().slice(0, 120);
+  const r = runTool(ctx, 'task_add', { name, due: localDay(0) }) as { ok?: boolean; error?: string } | undefined;
+  return r?.ok ? t('“{name}” is now in Tasks, due today. Tap it there to set how often and who.', { name }) : (r?.error ?? t('Done.'));
+}
+
 export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parseIntent(message)): string {
   switch (intent.kind) {
     case 'add': {

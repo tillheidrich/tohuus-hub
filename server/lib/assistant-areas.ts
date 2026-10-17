@@ -60,8 +60,8 @@ export function contextHint(ctx: ScreenContext | null | undefined, de: boolean):
       'Screen: shopping list. Merge or sort duplicates only after a yes (list_tidy apply). For “what do I need for X?”: recipe_get first, else the usual ingredients, then check_at_home; suggest substitutes when something is missing.',
     ],
     stock: [
-      'Bildschirm: Vorrat. „Was muss bald weg?“ → use_soon. Für ein Foto vom Kühlschrank gibt es den Kamera-Knopf. Nichts am Vorrat ändern ohne Ja.',
-      'Screen: stock. “What has to go soon?” → use_soon. For a photo of the fridge there is the camera button. Do not change stock without a yes.',
+      'Bildschirm: Vorrat. „Was muss bald weg?“ → use_soon. Nichts am Vorrat ändern ohne Ja.',
+      'Screen: stock. “What has to go soon?” → use_soon. Do not change stock without a yes.',
     ],
     cook: [
       'Bildschirm: Kochen. Wochenplan aus dem, was da ist: cook_ideas, dann Vorschläge zeigen, plan_meal erst nach Ja. Rezept anpassen (vegetarisch, für 6, ohne Ofen): recipe_get, Änderungen zeigen, recipe_save_adapted erst nach Ja (neues Rezept, Original bleibt). Reste: use_soon.',
