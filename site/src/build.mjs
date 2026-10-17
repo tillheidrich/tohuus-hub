@@ -12,7 +12,8 @@
  * Signature elements: the illustrated homes, the green block with circles, the ticket with punch notches, the
  * receipt with a zigzag edge, arches. Fonts: site/assets/fonts (OFL). Icons: Phosphor, inline sprite at build time.
  *
- * Screenshots: real screens of the web app with invented demo data, 390x844 at 3x, saved as
+ * Screenshots: real screens of the iPhone app (store-assets/tools/web-shots.mjs, build 13) or, for focus, loadcards,
+ * treats and houseinfo-guest, of the web app (scripts/site-shots.mjs), invented demo data, 390x844 at 3x, saved as
  * site/assets/shots/<lang>/<name>-<480|960>.webp. The slots are listed in SHOTS; the build fails if one is missing.
  * How they are made: see the comment at the end of this file.
  */
@@ -92,7 +93,7 @@ const COPY = {
       facts: ['Server in Deutschland (Hetzner)', 'Kein Tracking, keine Werbung', 'Selbst hosten kostenlos'],
       tiles: { flat: 'Wohnung', shared: 'WG', terraced: 'Reihenhaus', house: 'Haus' },
       tilesLabel: 'Vier gezeichnete Wohnformen: eine Wohnung, eine WG, Reihenhäuser und ein Haus.',
-      shot: 'ToHuus auf dem iPhone, Seite Heute: unter „Fällig“ stehen Pizza Margherita, Reis und Spülmittel mit dem Hinweis, wie oft ihr sie kauft, darunter die Karte „Aufgaben heute“ mit „1 von 3 heute geschafft“.',
+      shot: 'ToHuus auf dem iPhone, Seite Heute: unter „Fällig“ stehen Pizza Margherita, Reis und Spülmittel mit dem Hinweis, wie oft ihr sie kauft, jeweils mit Auf die Liste und Haben wir noch, darunter die Karte „Liste“ mit sechs Sachen.',
     },
     ask: {
       label: 'Haben wir noch …?', h2: 'Meistens weiß es nur eine Person.',
@@ -106,19 +107,19 @@ const COPY = {
       intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei. Und um das, was ein Zuhause sonst noch ausmacht: die Aufgaben, die immer wiederkommen, einander was Gutes tun und Wünsche festhalten.',
       list: [
         { id: 'einkauf', no: '1', label: 'Einkauf', h3: 'ToHuus merkt sich, was fehlt.', shot: 'shopping',
-          alt: 'Einkaufsliste in ToHuus: oben die Leiste „Extras diese Woche: 2,58 € von 15,00 €“, darunter Vorschläge wie Pizza Margherita mit „merkt sich: alle ~32 Tage“, darunter nach Bereichen sortierte Einträge mit Ich-hol’s-Knopf und dem Hinweis „im Vorrat knapp“.',
+          alt: 'Einkaufsliste in ToHuus: oben das Feld „Was fehlt?“, darunter Vorschläge wie Pizza Margherita mit „alle ~32 Tage“, darunter nach Bereichen sortierte Einträge wie Erdbeer-Eis mit dem Hinweis „im Vorrat knapp“.',
           p: 'Aus euren Bons und dem, was ihr auf der Liste abhakt, sieht ToHuus, wie oft ihr etwas kauft. Ist es wieder so weit, erscheint es als Vorschlag mit Grund. Einen Vorrat müsst ihr dafür nicht führen.',
           points: ['Eine Liste, live auf allen Handys, auch während einer im Laden steht', 'Wer etwas übernimmt, tippt auf „Ich hol’s“', 'Im Laden nach Gängen sortiert, auch ohne Netz'] },
         { id: 'kochen', no: '2', label: 'Kochen', h3: 'Daraus könnt ihr heute kochen.', shot: 'cook',
-          alt: 'Seite Kochen: „Daraus könnt ihr heute kochen“ mit Gnocchi-Pfanne und Ofengemüse mit Feta, beide mit „Alles da“, dazu Filter mit und ohne Thermomix.',
+          alt: 'Seite Kochen, „Was kochen wir?“: für heute Abend geplant Lasagne, der Knopf „Entscheidet ihr für uns“, Filter nach Zeit und vegetarisch, darunter „Geht sofort“ mit Gnocchi-Pfanne und Ofengemüse mit Feta.',
           p: 'Der Kochplaner fängt bei dem an, was zu Hause ist. Er zeigt, was sofort geht, wo nur eine Zutat fehlt und was bald weg muss. Wer mag, plant die Woche, und was dafür fehlt, kommt mit einem Tipp auf die Liste.',
           points: ['Rezepte von Hand, per Link, vom Foto oder aus anderen Apps', 'Viele auf einmal als Rezeptpaket, auch von deiner eigenen KI gebaut', 'Mit und ohne Küchenmaschine, Allergien werden beim Vorschlagen berücksichtigt'] },
         { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
-          alt: 'Seite Geld für Oktober 2026: bisher 66,26 Euro, 10 Euro weniger als zur gleichen Zeit im Vormonat, darunter der Verlauf pro Woche und die Kategorien.',
+          alt: 'Seite Geld für Oktober 2026: bisher 59,18 Euro, 23 Prozent weniger als im Vormonat, darunter die Einkäufe bei REWE und EDEKA mit Datum und Betrag.',
           p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
           points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Sachen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, für alle oder nur für dich, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
         { id: 'aufgaben', no: '4', label: 'Aufgaben', h3: 'Wer bringt diese Woche den Müll raus?', shot: 'tasks',
-          alt: 'Seite Aufgaben im Bereich Zuhause: Bad putzen und Müll rausbringen sind heute fällig, jeweils mit der Person, die dran ist, darunter der Termin Schornsteinfeger in vier Tagen um 10 Uhr.',
+          alt: 'Seite Aufgaben im Bereich Zuhause: das Feld „Neue Aufgabe, z. B. Papiermüll rausbringen“, darunter fällig Bad putzen (heute) und Müll rausbringen (morgen), jeweils mit der Person, die dran ist, und dem Knopf Fertig.',
           p: 'Bad putzen, Bettwäsche wechseln, den Wasserfilter tauschen oder der Termin mit dem Schornsteinfeger: ToHuus merkt sich, was wann dran ist und wer es macht. Wenn ihr euch abwechselt, gibt „Erledigt“ die Aufgabe an den Nächsten weiter. Ranglisten gibt es nicht, Sterne nur, wenn ihr sie einschaltet. Dafür gibt es einen ruhigen Blick darauf, wer gerade woran denkt.',
           points: ['Einmal, wiederkehrend oder bei Bedarf, für alle oder nur für dich', 'Termine mit Uhrzeit stehen in Apple Kalender, Google oder Outlook, Aufgaben in Apple Erinnerungen', 'Auch Kinder können dran sein, und was keiner im Blick hat, fällt auf'] },
         { id: 'bring-mir-was', no: '5', label: 'Bring mir was', h3: 'Einer liegt auf dem Sofa, einer steht in der Küche.', shot: 'treats',
@@ -126,7 +127,7 @@ const COPY = {
           p: 'Wer gerade festsitzt, im Bett, beim Zubettbringen oder mit Kind auf dem Arm, wünscht sich mit zwei Tipps eine Kleinigkeit. Die anderen sehen es sofort, einer sagt „Ich bring’s“, und eure Karte zeigt nur, was wirklich da ist. Für Besuch gibt es eine eigene Karte, und am Partyabend bestellen die Gäste direkt von eurer Partykarte.',
           points: ['Eure eigene Karte: Süßes, Getränke, Snacks, aus dem Kühlschrank', 'Gäste wünschen sich etwas über einen Link, ganz ohne App', 'Party: ihr seht, was bestellt ist und was noch da ist'] },
         { id: 'wuensche', no: '6', label: 'Wünsche', h3: 'Wunschlisten, die nichts verraten.', shot: 'wishes',
-          alt: 'Seite Wünsche: Listen „Weihnachten für Mika“ mit drei Wünschen, zwei davon vergeben, und die Merkliste „Neue Kekse & Fundstücke“.',
+          alt: 'Seite Wünsche: die Liste „Weihnachten Mika“ mit vier Wünschen, einer davon vergeben, und die „Merkliste Kekse“ mit drei Wünschen.',
           p: 'Geburtstag, Weihnachten oder einfach eine Merkliste: Wünsche mit Foto, mehreren Links, Preis und Notiz. Wer etwas reserviert, sieht der Rest der Familie, die beschenkte Person aber nie. Eine Liste lässt sich ganz oder in Teilen per Nachricht verschicken.',
           points: ['Foto, Links, Preis und „wer könnte das schenken“', 'Private Listen, die nur du siehst', 'Teilen als Link oder fertige Nachricht'] },
       ],
@@ -142,7 +143,7 @@ const COPY = {
         ['aid', 'Für den Notfall', 'Wichtige Nummern stehen ganz oben. Notruf, Giftnotruf, Nachbarn und eure eigenen Nummern gibt es als Vorlage, den Kinderarzt tragt ihr dazu.'],
       ],
       shots: [
-        ['houseinfo', 'Seite Hausinfo: unter Codes das Gäste-WLAN „Berg-Gast“ mit Passwort und QR-Code zum Scannen, darunter die verdeckte Haustür.'],
+        ['houseinfo', 'Seite Hausinfo nach Raum: unter Codes das Gäste-WLAN „Berg-Gast“ und die Haustür, beide verdeckt mit Zeigen-Knopf, darunter Karten fürs Kinderzimmer und die Küche.'],
         ['houseinfo-guest', 'Babysitter-Link von Familie Berg im Bereich Hausinfo, „So funktioniert’s hier“: das Gäste-WLAN verdeckt mit Zeigen-Knopf, darunter im Kinderzimmer die Karten „Schlafenszeiten Mika“ und „Was Mika darf“.'],
       ],
       caption: 'Links eure Hausinfo mit dem Gäste-WLAN, rechts das, was der Babysitter über seinen Link sieht.',
@@ -183,7 +184,7 @@ const COPY = {
     levels: {
       label: 'Einstieg', h2: 'Egal, wie digital ihr schon einkauft.',
       intro: 'Wenn der Einkauf digitaler wird, solltest du auch etwas davon haben. ToHuus arbeitet mit dem, was ihr ohnehin habt. Für den Anfang reicht einer dieser Wege.',
-      shot: 'import', alt: 'Seite Importe: Bons als PDF, Foto, QR-Link oder Text, darunter der Verlauf mit gebuchten Bons von REWE und EDEKA.',
+      shot: 'import', alt: 'Seite Bons: Bon hinzufügen, digitaler Bon per QR-Code oder Link, Schrank fotografieren oder Zeilen einfügen, darunter der Verlauf mit gebuchten Bons von REWE und EDEKA.',
       list: [
         ['receipt', 'Lieferdienst und eBon', 'Bestellt ihr bei REWE oder bekommt ihr digitale Bons, kommen Bestellung und Bon als PDF herein. ToHuus gleicht beides ab und bucht, was wirklich geliefert wurde.'],
         ['camera', 'Bon fotografieren', 'Bei Aldi, Lidl oder auf Papier reicht ein Foto vom Bon. Was ToHuus nicht sicher lesen kann, legt es dir zum Prüfen vor, bevor etwas gebucht wird. Die Texterkennung läuft ohne KI, auf dem Server oder direkt auf deinem iPhone.'],
@@ -405,7 +406,7 @@ const COPY = {
       facts: ['Servers in Germany (Hetzner)', 'No tracking, no ads', 'Self-hosting is free'],
       tiles: { flat: 'Flat', shared: 'Flat share', terraced: 'Terraced house', house: 'House' },
       tilesLabel: 'Four drawn homes: a flat, a flat share, terraced houses and a house.',
-      shot: 'ToHuus on the iPhone, Today page: under “Due” are pizza, rice and washing up liquid with how often you buy them, below them the card “Tasks today” with “1 of 3 done today”.',
+      shot: 'ToHuus on the iPhone, Today page: under “Due” are pizza, rice and washing up liquid with how often you buy them, each with Put on the list and Still have it, below them the card “List” with six things.',
     },
     ask: {
       label: 'Do we still have …?', h2: 'Usually only one person knows.',
@@ -419,19 +420,19 @@ const COPY = {
       intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three. And after the rest of what makes a home: the tasks that keep coming back, doing each other a good turn and keeping track of wishes.',
       list: [
         { id: 'shopping', no: '1', label: 'Shopping', h3: 'ToHuus remembers what is missing.', shot: 'shopping',
-          alt: 'Shopping list in ToHuus: at the top the bar “Extras this week: £2.20 of £15.00”, then suggestions such as pizza with “remembers: every ~32 days”, below them items sorted by section with an I’ll-get-it button and the note “running low in stock”.',
+          alt: 'Shopping list in ToHuus: the field “What’s missing?” on top, below it suggestions like pizza with “every ~32 days”, below that entries sorted by area such as strawberry ice cream with “running low in stock”.',
           p: 'From your receipts and what you tick off the list, ToHuus learns how often you buy things. When something is due again, it shows up as a suggestion with its reason. You do not have to keep a stock list for that.',
           points: ['One list, live on every phone, also while someone is in the shop', 'Whoever takes something taps “I’ll get it”', 'Sorted by aisle in the shop, even without signal'] },
         { id: 'cooking', no: '2', label: 'Cooking', h3: 'You can cook this today.', shot: 'cook',
-          alt: 'Cook page: “You can cook this today” with a gnocchi skillet and roast vegetables with feta, both marked “everything is at home”, plus filters with and without Thermomix.',
+          alt: 'Cooking page, “What shall we cook?”: creamed spinach with potatoes and fried egg planned for tonight, the button “You decide for us”, filters for time and vegetarian, below it “Works right now” with a gnocchi skillet and roast vegetables.',
           p: 'The cook planner starts with what is at home. It shows what works right now, where only one ingredient is missing and what should be used soon. Plan the week if you like, and whatever it needs goes on the list in one tap.',
           points: ['Recipes by hand, from a link, a photo or other apps', 'Many at once as a recipe pack, even built by your own AI', 'With or without a kitchen machine, and allergies are taken into account'] },
         { id: 'money', no: '3', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
-          alt: 'Money page for October 2026: £33.70 so far, £27 less than at this point last month, with the weekly line and the categories below.',
+          alt: 'Money page for October 2026: £47.40 so far, 22 % less than last month, below it the purchases at Tesco and Sainsbury’s with date and amount.',
           p: 'Every receipt counts. ToHuus shows what a month cost, in which shop and for which category, and compares it with the month before. You do not need to keep a ledger.',
           points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week, month or year, shared or just for you, with a note at 80 percent', 'CSV export'] },
         { id: 'tasks', no: '4', label: 'Tasks', h3: 'Whose turn is it to take out the bins?', shot: 'tasks',
-          alt: 'Tasks page in the Home area: cleaning the bathroom and taking out the bins are due today, each with the person whose turn it is, below it the chimney sweep appointment in four days at 10 o’clock.',
+          alt: 'Tasks page in the Home area: the field “New task, e.g. take out the paper bin”, below it due Clean the bathroom (today) and Take out the bins (tomorrow), each with the person whose turn it is and a Done button.',
           p: 'Cleaning the bathroom, changing the bed linen, the water filter or the chimney sweep’s visit: ToHuus remembers what is due when and who does it. If you take turns, “Done” passes the task on to the next person. There are no rankings, just a calm look at who keeps what in mind, and stars only if you switch them on.',
           points: ['Once, recurring or when needed, for everyone or only for you', 'Appointments with a time show up in Apple Calendar, Google or Outlook, tasks in Apple Reminders', 'Children can have a turn too, and what nobody keeps in mind gets noticed'] },
         { id: 'bring-me-something', no: '5', label: 'Bring me something', h3: 'One of you is on the sofa, one is in the kitchen.', shot: 'treats',
@@ -439,7 +440,7 @@ const COPY = {
           p: 'Whoever is stuck, in bed, at bedtime or with a child on their arm, asks for a little something in two taps. The others see it right away, someone says “I’ll bring it”, and your menu only shows what is actually at home. Visitors get their own menu, and on party night guests order straight from your party menu.',
           points: ['Your own menu: sweets, drinks, snacks, from the fridge', 'Guests ask through a link, no app needed', 'Party: you see what was ordered and what is left'] },
         { id: 'wishes', no: '6', label: 'Wishes', h3: 'Wish lists that give nothing away.', shot: 'wishes',
-          alt: 'Wishes page: the list “Christmas for Mika” with three wishes and the saved list “New biscuits & finds”.',
+          alt: 'Wishes page: the list “Christmas for Mika” with three wishes and “New biscuits & finds” with two.',
           p: 'Birthdays, Christmas or just a list of things to remember: wishes with a photo, several links, a price and a note. The family sees who reserved what, the person it is for never does. Send a whole list or part of it as a message.',
           points: ['Photo, links, price and “who could give this”', 'Private lists only you can see', 'Share as a link or a ready-made message'] },
       ],
@@ -455,7 +456,7 @@ const COPY = {
         ['aid', 'In an emergency', 'Important numbers come first. Emergency, poison advice, neighbours and your own numbers come as a template, and you add the GP.'],
       ],
       shots: [
-        ['houseinfo', 'House info page: under Codes the guest Wi-Fi “Berg-Guest” with its password and a QR code to scan, below it the hidden front door code.'],
+        ['houseinfo', 'House info page by room: under Codes the guest Wi-Fi “Berg-Guest” and the front door, both hidden with a Show button, below them cards for the kids’ room and the kitchen.'],
         ['houseinfo-guest', 'The Bergs’ babysitter link in the house info tab, “How things work here”: the guest Wi-Fi hidden with a Show button, below it in the kids’ room the cards “Bedtimes for Mika” and “What Mika may do”.'],
       ],
       caption: 'Left: your house info with the guest Wi-Fi. Right: what the babysitter sees through their link.',
@@ -496,7 +497,7 @@ const COPY = {
     levels: {
       label: 'Getting started', h2: 'However digital your shopping already is.',
       intro: 'If shopping is going digital anyway, you should get something out of it too. ToHuus works with what you already have. One of these is enough to start.',
-      shot: 'import', alt: 'Imports page: receipts as PDF, photo, QR link or text, with the history of booked receipts from Tesco and Sainsbury’s below.',
+      shot: 'import', alt: 'Receipts page: add a receipt, digital receipt via QR code or link, photograph a cupboard or paste lines, below it the history of booked receipts from Tesco and Sainsbury’s.',
       list: [
         ['receipt', 'Delivery and e-receipts', 'If you order groceries online or get digital receipts, the order and the receipt come in as a PDF. ToHuus matches them and books what was actually delivered.'],
         ['camera', 'Snap the receipt', 'For a paper receipt, a photo is enough. Anything ToHuus cannot read with confidence is shown to you for a check before it is booked. Text recognition runs without AI, on the server or right on your iPhone.'],
