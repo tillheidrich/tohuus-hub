@@ -98,6 +98,98 @@ export function TasksTodayCard({ today }: { today: string }) {
   );
 }
 
+/** one entry of GET /api/care › ahead (server/lib/task-outlook.ts) */
+interface AheadItem {
+  id: number;
+  when: 'tonight' | 'tomorrow' | 'later';
+  day: string;
+  evening: boolean;
+  pickup: string | null;
+  now: boolean;
+}
+
+const weekday = (d: string) => fmtDate(d, { weekday: 'long' });
+
+/** "heute Abend rausstellen", "morgen fällig", "am Montag" … */
+export function aheadLabel(a: AheadItem, dueTime?: string | null) {
+  if (a.evening) {
+    const when = a.when === 'tonight' ? t('tonight: put out') : a.when === 'tomorrow' ? t('tomorrow evening: put out') : t('{day} evening: put out', { day: weekday(a.day) });
+    return a.pickup ? `${when} · ${t('collection {day}', { day: weekday(a.pickup) })}` : when;
+  }
+  if (a.when === 'tomorrow') return dueTime ? t('tomorrow {time}', { time: timeLabel(dueTime) }) : t('due tomorrow');
+  return t('on {day}', { day: weekday(a.day) });
+}
+
+/**
+ * Heute › Demnächst (17 Oct 2026): a calm look at tomorrow (Friday and Saturday: the next two days) and at the
+ * bins by the evening they go out – "heute Abend rausstellen" from 17:00 comes first. The server picks
+ * (lib/task-outlook.ts, GET /api/care › ahead); gentle mode shows fewer and never presses.
+ */
+export function TasksAheadCard() {
+  const q = useApi<{ tasks: TaskLite[]; ahead?: AheadItem[] }>('care', '/care');
+  const focus = useFocusPrefs();
+  const nav = useNavigate();
+  const toast = useToast();
+  const byId = new Map((q.data?.tasks ?? []).map((x) => [x.id, x]));
+  const items = (q.data?.ahead ?? []).filter((a) => byId.has(a.id));
+  if (!items.length) return null;
+  const max = focus?.gentle ? Math.min(2, focus?.todayMax ?? 2) : 3;
+  const done = async (x: TaskLite) => {
+    try {
+      const r = await post<{ task: TaskLite }>(`/care/${x.id}/done`, {});
+      invalidate('care');
+      toast({
+        text: r.task.next_due ? t('Done. Next time: {date}', { date: fmtDate(r.task.next_due, { day: 'numeric', month: 'short' }) }) : t('Done.'),
+        action: { label: t('Undo'), run: () => post(`/care/${x.id}/undo`).then(() => invalidate('care')) },
+      });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  return (
+    <section className="hcard" aria-labelledby="h-ahead">
+      <div className="hcard-h">
+        <h2 id="h-ahead">
+          <span className="shape c" aria-hidden="true" />
+          {t('Coming up')}
+        </h2>
+        <button className="linkish" onClick={() => nav('/aufgaben')}>
+          {t('All tasks')} <ArrowRight size={14} />
+        </button>
+      </div>
+      <div className="meta" style={{ marginBottom: 6 }}>{t('So nothing catches you off guard.')}</div>
+      <ul className="hrows">
+        {items.slice(0, max).map((a) => {
+          const x = byId.get(a.id)!;
+          return (
+            <li key={a.id} className="hrow">
+              <div className="grow">
+                <b>
+                  {x.visibility === 'private' && <LockSimple size={13} aria-label={t('Only for me')} style={{ marginRight: 4, verticalAlign: '-1px' }} />}
+                  {x.name}
+                </b>
+                <span className="meta" style={a.now ? { color: 'var(--primary)' } : undefined}>
+                  {[aheadLabel(a, x.due_time), x.place, x.doer?.name].filter(Boolean).join(' · ')}
+                </span>
+              </div>
+              {a.when === 'tonight' && (
+                <button className="btn sm" onClick={() => done(x)} aria-label={t('Done: {name}', { name: x.name })}>
+                  <Check size={15} weight="bold" /> {t('Done')}
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {items.length > max && !focus?.gentle && (
+        <button className="linkish" style={{ marginTop: 8 }} onClick={() => nav('/aufgaben')}>
+          {t('{n} more', { n: items.length - max })} <ArrowRight size={12} />
+        </button>
+      )}
+    </section>
+  );
+}
+
 /** Progress ring – calm, no confetti; respects reduced motion through the global CSS rule. */
 function Ring({ done, total }: { done: number; total: number }) {
   const r = 20;

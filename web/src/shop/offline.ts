@@ -83,7 +83,9 @@ export function useOfflineState() {
   return useSyncExternalStore(subscribe, () => snapshot);
 }
 
-const isNetworkError = (e: unknown) => !(e instanceof ApiError) && (e instanceof TypeError || !navigator.onLine);
+// no answer at all (api.ts: status 0) or the server / its proxy is down (502–504): queue the change, never lose it
+const isNetworkError = (e: unknown) =>
+  e instanceof ApiError ? e.status === 0 || (e.status >= 502 && e.status <= 504) : e instanceof TypeError || !navigator.onLine;
 
 /**
  * Run a change against the server; without a connection it is queued and replayed later.

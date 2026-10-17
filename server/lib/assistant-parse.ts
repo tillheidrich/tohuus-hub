@@ -12,6 +12,8 @@ export type Intent =
   | { kind: 'find'; query: string }
   | { kind: 'purchase'; shop: string | null; total: number | null; when: 'today' | 'yesterday'; items: ParsedItem[] }
   | { kind: 'due' }
+  /** "Was steht heute an?", "Was ist morgen?" – the tasks of that day (assistant-tasks.ts tasks_list) */
+  | { kind: 'tasks'; day: 'today' | 'tomorrow' }
   | { kind: 'list' }
   | { kind: 'cook' }
   | { kind: 'money' }
@@ -54,6 +56,22 @@ export function looksLikeTask(text: string, context?: string | null): boolean {
   return context === 'tasks' && !/\b(?:kaufen|einkaufen|besorgen|liste|brauchen|fehlt|alle|buy|need|list)\b/i.test(text);
 }
 
+/** "Was steht heute an?", "Was ist morgen?", "Was müssen wir heute machen?", "What's on tomorrow?" → which day, else null.
+ *  Only questions; cooking, shopping and money questions with a day keep their own meaning. */
+export function tasksDay(text: string): 'today' | 'tomorrow' | null {
+  const s = text.replace(/[!?.…]+$/g, '').trim();
+  if (!/^(?:was|wat|welche[rsn]?|what(?:'?s)?|which|any|gibt|steht|zeig|show|und)\b/i.test(s) && !/\?\s*$/.test(text)) return null;
+  if (/\b(?:kochen|koch|essen|cook|eat|dinner|lunch|abendessen|mittagessen|frühstück|liste|list|einkauf\w*|kaufen|besorgen|buy|shopping|geld|budget|ausgaben|money|wetter|weather)\b/i.test(s)) return null;
+  const day = /(?:^|[^\p{L}])(?:übermorgen|uebermorgen)/iu.test(s) ? null : /(?<!\p{L})(?:morgen|tomorrow)(?!\p{L})/iu.test(s) && !/\bguten\s+morgen\b|\bmorgens\b/i.test(s) ? 'tomorrow' : /\b(?:heute|today|tonight)\b/i.test(s) ? 'today' : null;
+  if (day) {
+    // "Was ist morgen?", "Und heute?" – the bare question
+    if (/^(?:und\s+)?(?:was\s+(?:ist|gibt'?s|geht)\s+)?(?:denn\s+)?(?:(?:für\s+)?heute|morgen)(?:\s+(?:los|so))?$/i.test(s) || /^what\s+about\s+(?:today|tomorrow)$/i.test(s)) return day;
+    return /\b(?:an|ansteht|dran|zu\s+tun|aufgaben?|erledigen|machen|tun|los|fällig|faellig|termine?|plan|on|due|tasks?|to-?dos?|do|planned)\b/i.test(s) ? day : null;
+  }
+  // "Was steht an?" without a day means today
+  return /^was\s+steht\s+(?:so\s+|noch\s+|jetzt\s+)?an$/i.test(s) ? 'today' : null;
+}
+
 export function parseIntent(input: string): Intent {
   const text = clean(input);
   if (!text) return { kind: 'unknown' };
@@ -87,6 +105,8 @@ export function parseIntent(input: string): Intent {
     return { kind: 'purchase', when: m[4]?.toLowerCase() === 'yesterday' ? 'yesterday' : 'today', shop: m[2], items: items(m[1]), total: money(m[3]) };
 
   // questions
+  const day = tasksDay(input.trim());
+  if (day) return { kind: 'tasks', day };
   if ((m = text.match(/^(?:haben\s+wir|hamma|gibt\s+es|gibt's|ist)\s+(?:noch\s+)?(?:genug\s+)?(.+?)(?:\s+(?:da|im\s+haus|zu\s+hause|daheim))?\s*\??$/i)) && !/kochen|essen|liste|fällig/i.test(m[1]))
     return { kind: 'find', query: clean(m[1]) };
   if ((m = text.match(/^(?:do\s+we\s+(?:still\s+)?have|have\s+we\s+got|is\s+there)\s+(?:any\s+|some\s+|enough\s+)?(.+?)(?:\s+(?:left|at\s+home))?\s*\??$/i))) return { kind: 'find', query: clean(m[1]) };

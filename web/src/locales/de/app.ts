@@ -84,4 +84,10 @@ export const app: Record<string, string> = {
   'Type a list': 'Liste tippen',
   '“2x milk, parcel tape …” – gets matched up.': '„2x Milch, Paketband …“ – wird zugeordnet.',
   'Unexpected answer from the server': 'Unerwartete Antwort vom Server',
+  // offline reads (api.ts, offline-note.tsx)
+  'ToHuus can’t be reached right now. Please try again in a moment.': 'ToHuus ist gerade nicht erreichbar. Versuch es gleich noch mal.',
+  'ToHuus can’t be reached right now. Nothing was changed – please try again in a moment.': 'ToHuus ist gerade nicht erreichbar. Es wurde nichts geändert – versuch es gleich noch mal.',
+  'Offline · as of {time}': 'Offline – Stand von {time}',
+  'Offline · last saved state': 'Offline – zuletzt gespeicherter Stand',
+  'You’re seeing the last saved state. Changes work again once ToHuus is reachable.': 'Du siehst den zuletzt gespeicherten Stand. Ändern geht wieder, sobald ToHuus erreichbar ist.',
 };

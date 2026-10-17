@@ -5,8 +5,21 @@ const DATA = `${VERSION}-data`;
 // things shared into the app (share target) wait here until the /teilen page picks them up – survives SW updates
 const SHARE = 'tohuus-share';
 const SHELL_URLS = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/apple-touch-icon.png'];
-// API reads the app needs to show the shopping list without a connection (network first, cache as fallback)
-const API_CACHED = [/^\/api\/me$/, /^\/api\/today$/, /^\/api\/instance$/, /^\/api\/shop\/list/, /^\/api\/shop\/stores$/, /^\/api\/shopping$/, /^\/api\/categories$/, /^\/api\/overview$/, /^\/api\/claims/, /^\/api\/shop\/members$/];
+// API reads the app needs without a connection or while the server is down (network first, cache as fallback):
+// the shopping list, Heute, Aufgaben, Vorrat, Wochenplan/Rezepte, Hausinfo (codes stripped, see API_STRIP).
+// Not here on purpose: money, receipts, spending, guest links, code reveals, settings, anything admin.
+const API_CACHED = [
+  /^\/api\/me$/, /^\/api\/today$/, /^\/api\/instance$/, /^\/api\/shop\/list/, /^\/api\/shop\/stores$/, /^\/api\/shopping$/,
+  /^\/api\/categories$/, /^\/api\/overview$/, /^\/api\/claims/, /^\/api\/shop\/members$/,
+  /^\/api\/care$/, /^\/api\/care\/recent$/, /^\/api\/care\/due$/,
+  /^\/api\/products$/, /^\/api\/locations$/,
+  /^\/api\/plan$/, /^\/api\/plan2\/week$/, /^\/api\/recipes$/,
+  /^\/api\/house-guide$/,
+];
+// keys emptied before an answer is stored: house-guide codes never go into the cache (values only come from a reveal)
+const API_STRIP = { '/api/house-guide': ['codes'] };
+// a read that takes longer than this falls back to the stored answer – no endless spinner when the server hangs
+const API_TIMEOUT_MS = 8000;
 
 /** Hashed files of the current build (written by vite.config.ts). Every route is its own chunk since v4, so
  * they are all cached up front – otherwise a page never opened online (e.g. the shopping list) would not open offline. */
@@ -55,16 +68,78 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-async function networkFirst(req, cacheName) {
-  const cache = await caches.open(cacheName);
+/**
+ * The server itself isn't answering: a proxy error page (502/503/504 without the app's JSON) or the reverse proxy's
+ * "404 page not found" when the app container is gone (Traefik/Coolify during an outage). The app's own errors are JSON.
+ */
+function serverDown(res) {
+  // a read that fails on the server is better shown from the last answer than as an error (same as the iPhone app)
+  if (res.status >= 500) return true;
+  return res.status === 404 && !(res.headers.get('content-type') ?? '').includes('json');
+}
+
+/** A copy of the answer as it may be stored: codes stripped, the time it was saved in a header. */
+async function storable(path, res) {
+  const headers = new Headers(res.headers);
+  headers.set('X-ToHuus-Saved', String(Date.now()));
+  const strip = API_STRIP[path];
+  if (!strip) return new Response(await res.clone().blob(), { status: res.status, headers });
   try {
-    const res = await fetch(req);
-    if (res.ok) cache.put(req, res.clone());
+    const body = await res.clone().json();
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
+    for (const k of strip) if (k in body) body[k] = [];
+    headers.delete('content-length');
+    return new Response(JSON.stringify(body), { status: res.status, headers });
+  } catch {
+    return null;
+  }
+}
+
+/** The stored answer, marked so the page can say "Offline · as of 14:32" (api.ts reads X-ToHuus-Offline). */
+async function fromCache(cache, req) {
+  // the exact query first, else any stored answer for the path (last week's plan beats an error)
+  const hit = (await cache.match(req)) ?? (await cache.match(req, { ignoreSearch: true }));
+  if (!hit) return null;
+  const headers = new Headers(hit.headers);
+  headers.set('X-ToHuus-Offline', hit.headers.get('X-ToHuus-Saved') ?? '0');
+  return new Response(await hit.blob(), { status: hit.status, headers });
+}
+
+/**
+ * API reads: network first; the stored answer when there is no network, the server is down (5xx, proxy page) or it
+ * takes longer than API_TIMEOUT_MS. Without a stored answer the network result is passed on as it is.
+ */
+async function apiNetworkFirst(req) {
+  const cache = await caches.open(DATA);
+  const path = new URL(req.url).pathname;
+  const net = fetch(req).then(async (res) => {
+    if (res.ok) {
+      const copy = await storable(path, res);
+      if (copy) await cache.put(req, copy);
+    }
     return res;
+  });
+  // when the stored answer wins the race, a later network failure must not surface as an unhandled rejection
+  net.catch(() => null);
+  let timer;
+  const slow = new Promise((resolve) => {
+    timer = setTimeout(() => resolve('slow'), API_TIMEOUT_MS);
+  });
+  try {
+    const first = await Promise.race([net, slow]);
+    if (first === 'slow') {
+      const hit = await fromCache(cache, req);
+      if (hit) return hit;
+      return await net;
+    }
+    if (serverDown(first)) return (await fromCache(cache, req)) ?? first;
+    return first;
   } catch (e) {
-    const hit = await cache.match(req);
+    const hit = await fromCache(cache, req);
     if (hit) return hit;
     throw e;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -140,7 +215,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) {
     if (url.pathname === '/api/events' || url.pathname.startsWith('/api/guest/')) return;
-    if (API_CACHED.some((re) => re.test(url.pathname))) event.respondWith(networkFirst(req, DATA));
+    if (API_CACHED.some((re) => re.test(url.pathname))) event.respondWith(apiNetworkFirst(req));
     return;
   }
   if (url.pathname.startsWith('/mcp') || url.pathname.startsWith('/img/') || url.pathname.startsWith('/g/')) return;

@@ -1,8 +1,10 @@
 /** What do we eat today, household recipe variants & substitutions, Cookidoo push from HA */
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
-import { getSetting } from '../db.js';
-import { requireAuth } from '../lib/auth.js';
+import { db, getSetting } from '../db.js';
+import { requireAdmin, requireAuth } from '../lib/auth.js';
+import { emit } from '../lib/bus.js';
+import { COOK_STYLES, MACHINES, cookStyles, cookStylesAsked, recipeMachines, setCookStyles } from '../lib/cook-style.js';
 import { missingToList, pickMeal, recordCookidooPush, whatToEat, type WteFilters } from '../lib/cook2.js';
 import { haSettings, importCookidooEvents } from '../lib/plan.js';
 import { getRecipe } from '../lib/recipes.js';
@@ -41,6 +43,33 @@ const h =
       next(e);
     }
   };
+
+// ---------------------------------------------------------------- „Wie kocht ihr?“ (lib/cook-style.ts)
+
+/** The household's cooking style + how many own recipes are written for each machine. */
+function styleView() {
+  const rows = db.prepare('SELECT thermomix, source_type, tags, steps FROM recipes').all() as { thermomix: number; source_type: string; tags: string; steps: string }[];
+  const machineRecipes = Object.fromEntries(MACHINES.map((m) => [m, 0])) as Record<(typeof MACHINES)[number], number>;
+  for (const r of rows) for (const m of recipeMachines(r)) machineRecipes[m]++;
+  return { styles: cookStyles(), asked: cookStylesAsked(), options: COOK_STYLES, machineRecipes };
+}
+
+r.get('/cook2/style', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(styleView());
+});
+
+r.put(
+  '/cook2/style',
+  requireAdmin,
+  h((req) => {
+    const b = z.object({ styles: z.array(z.enum(COOK_STYLES)).max(COOK_STYLES.length) }).parse(req.body ?? {});
+    setCookStyles(b.styles);
+    emit('settings');
+    emit('recipes');
+    return styleView();
+  }),
+);
 
 // ---------------------------------------------------------------- what do we eat today
 

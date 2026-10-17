@@ -36,8 +36,9 @@ import { pointsWeek, setPointsSettings } from '../lib/points.js';
 import { reviewAllowed, reviewSeason, yearReview } from '../lib/review.js';
 import { markWeekSeen, setWeekReviewOn, weekReview } from '../lib/weekly.js';
 import { answerOffer, answerProposal, cookSuggestions, offerTask, whoDoesWhat } from '../lib/habits.js';
-import { BIN_KINDS, calsyncView, reviveKind, setCalendarAiConsent, setCalsyncSettings, suggestFromEvents, syncDates } from '../lib/calsync.js';
+import { BIN_KINDS, calsyncView, decideKinds, disconnectCalendar, ignoreKind, requestRescan, reviveKind, setCalendarAiConsent, setCalsyncSettings, suggestFromEvents, syncDates } from '../lib/calsync.js';
 import { eventIcs } from '../lib/calendar.js';
+import { outlookFor } from '../lib/task-outlook.js';
 import { FreshError, markOpened } from '../lib/fresh.js';
 import { requireFeature } from '../lib/limits.js';
 import { addMind, addMindMany, deleteMind, keepMind, MindError, mindList, mindReview, nodMind, updateMind } from '../lib/mind.js';
@@ -111,6 +112,8 @@ r.get('/care', (req, res) => {
     users: db.prepare('SELECT id, name, color FROM users ORDER BY id').all(),
     me: viewerOf(req),
     today: localDay(0),
+    // Heute › Demnächst: tomorrow, the weekend, bins by the evening they go out (lib/task-outlook.ts)
+    ahead: outlookFor(tasks, localDay(0)),
   });
 });
 
@@ -329,12 +332,39 @@ r.post('/calsync/dates', (req, res) => {
 });
 r.put('/calsync/settings', (req, res) => {
   if (noCalGuest(req, res)) return;
-  res.json({ settings: setCalsyncSettings(z.object({ offset: z.enum(['evening', 'morning']) }).parse(req.body)) });
+  const b = z.object({ offset: z.enum(['evening', 'morning']).optional(), weeks: z.number().int().min(2).max(26).optional() }).parse(req.body ?? {});
+  res.json({ settings: setCalsyncSettings(b) });
 });
 r.post('/calsync/kinds/:kind/revive', (req, res) => {
   if (noCalGuest(req, res)) return;
   reviveKind(z.enum(BIN_KINDS.map((k) => k.key) as [string, ...string[]]).parse(req.params.kind));
   res.json(calsyncView(memberOf(req)));
+});
+/** Switch a found kind off: its task is deleted and a later read does not bring it back (revive turns it on again). */
+r.post('/calsync/kinds/:kind/ignore', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  ignoreKind(z.enum(BIN_KINDS.map((k) => k.key) as [string, ...string[]]).parse(req.params.kind));
+  res.json(calsyncView(memberOf(req)));
+});
+/** The ticked list after a read: `on` are taken over as tasks, `off` are switched off. */
+r.post('/calsync/kinds', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  const kind = z.enum(BIN_KINDS.map((k) => k.key) as [string, ...string[]]);
+  const b = z.object({ on: z.array(kind).max(20).default([]), off: z.array(kind).max(20).default([]) }).parse(req.body ?? {});
+  decideKinds(b.on, b.off);
+  res.json(calsyncView(memberOf(req)));
+});
+/** "Jetzt neu lesen" from the browser: the iPhone reads again the next time the app opens. */
+r.post('/calsync/rescan', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  requestRescan();
+  res.json(calsyncView(memberOf(req)));
+});
+/** "Kalender trennen": all tasks from the calendar, all dates and choices go; phones stop reading. */
+r.post('/calsync/disconnect', (req, res) => {
+  if (noCalGuest(req, res)) return;
+  const r2 = disconnectCalendar();
+  res.json({ ...calsyncView(memberOf(req)), removed: r2.removed });
 });
 /** "KI darf Kalendereinträge mit Aufgaben abgleichen" – per person, own consent */
 r.put('/calsync/ai', (req, res) => {

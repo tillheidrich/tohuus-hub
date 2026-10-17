@@ -4,7 +4,7 @@
  */
 import { ArrowRight, ArrowsClockwise, Basket, BowlFood, CalendarCheck, Camera, ChefHat, Clock, DiceFive, Heart, Link as LinkIcon, Swap, X } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { invalidate, post, useApi } from '../api';
 import { FreezerBucket, type FreezerItem } from './Leftovers';
 import { t } from '../i18n';
@@ -59,6 +59,8 @@ interface Wte {
   empty: boolean;
   has_vegetarian: boolean;
   has_thermomix: boolean;
+  /** own recipes for a kitchen machine the household did not choose („Wie kocht ihr?“) */
+  hidden_machine?: number;
   planned: Planned[];
   ready: Item[];
   one_missing: Item[];
@@ -176,6 +178,12 @@ export function WhatToEatPanel({ onAddRecipe }: { onAddRecipe: () => void }) {
       </div>
       {pick && <PickCard pick={pick} onAgain={() => roll(true)} onClose={clear} busy={busy} onSwap={setSwap} />}
 
+      {(d.hidden_machine ?? 0) > 0 && (
+        <div className="small muted">
+          {d.hidden_machine === 1 ? t('1 recipe for a kitchen machine is not suggested.') : t('{n} recipes for a kitchen machine are not suggested.', { n: d.hidden_machine })}{' '}
+          <Link to="/einstellungen?tab=home">{t('Change how you cook')}</Link>
+        </div>
+      )}
       <div className="chips wte-filters" role="group" aria-label={t('Filters')}>
         {d.has_thermomix && (
           <>

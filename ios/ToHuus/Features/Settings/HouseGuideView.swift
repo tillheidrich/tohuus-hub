@@ -122,6 +122,14 @@ struct HouseGuideView: View {
     var body: some View {
         List {
             if let state { Text(state).foregroundStyle(Theme.ink3) }
+            if let note = OfflineNote.for(["api/house-guide"]) {
+                // codes are never stored on the iPhone (ResponseCache): they need a connection
+                Section {
+                    note
+                    Text(L("Codes only show with a connection.")).font(.footnote).foregroundStyle(Theme.ink3)
+                }
+                .listRowBackground(Color.clear)
+            }
             if let g = guide {
                 let empty = g.cards.isEmpty && g.codes.isEmpty && (g.haVoice?.groups.isEmpty ?? true)
                 if empty {

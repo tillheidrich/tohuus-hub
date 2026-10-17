@@ -100,4 +100,10 @@ export const de_away: Record<string, string> = {
   '{name} is away until {date} – can someone at home do it?': '{name} ist bis {date} weg – kann das jemand machen, der zu Hause ist?',
   'Pick someone who is at home.': 'Wähl jemanden, der zu Hause ist.',
   '{name} does it while {who} is away.': '{name} übernimmt, solange {who} weg ist.',
+  // Urlaubs-Übergabe (handover.ts), 17 Oct 2026
+  'Pick at least one weekday.': 'Wähl mindestens einen Wochentag.',
+  'Pick the day.': 'Wähl den Tag.',
+  'Up to {n} photos or videos per item.': 'Bis zu {n} Fotos oder Videos pro Eintrag.',
+  'That day is not part of the trip.': 'Dieser Tag gehört nicht zur Reise.',
+  'Handover': 'Übergabe',
 };

@@ -79713,6 +79713,822 @@
           }
         }
       }
+    },
+    "Coming up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming up"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demnächst"
+          }
+        }
+      }
+    },
+    "So nothing catches you off guard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So nothing catches you off guard."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Damit dich nichts überrascht."
+          }
+        }
+      }
+    },
+    "tonight: put out": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tonight: put out"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "heute Abend rausstellen"
+          }
+        }
+      }
+    },
+    "tomorrow evening: put out": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tomorrow evening: put out"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "morgen Abend rausstellen"
+          }
+        }
+      }
+    },
+    "%@ evening: put out": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ evening: put out"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ abends rausstellen"
+          }
+        }
+      }
+    },
+    "collection %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "collection %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abfuhr %@"
+          }
+        }
+      }
+    },
+    "tomorrow %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tomorrow %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "morgen %@"
+          }
+        }
+      }
+    },
+    "ToHuus can't be reached right now. Nothing was changed – please try again in a moment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus can't be reached right now. Nothing was changed – please try again in a moment."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus ist gerade nicht erreichbar. Es wurde nichts geändert – versuch es gleich noch mal."
+          }
+        }
+      }
+    },
+    "Offline · as of %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline · as of %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline – Stand von %@"
+          }
+        }
+      }
+    },
+    "You're seeing the last saved state. Changes work again once ToHuus is reachable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're seeing the last saved state. Changes work again once ToHuus is reachable."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du siehst den zuletzt gespeicherten Stand. Ändern geht wieder, sobald ToHuus erreichbar ist."
+          }
+        }
+      }
+    },
+    "Codes only show with a connection.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes only show with a connection."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes siehst du nur mit Verbindung."
+          }
+        }
+      }
+    },
+    "once so far": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "once so far"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bisher einmal"
+          }
+        }
+      }
+    },
+    "next %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "next %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nächste %@"
+          }
+        }
+      }
+    },
+    "%d dates found": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d dates found"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Termine gefunden"
+          }
+        }
+      }
+    },
+    "Only the calendars you tick. We read the next %d weeks.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the calendars you tick. We read the next %d weeks."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur die Kalender mit Haken. Wir lesen die nächsten %d Wochen."
+          }
+        }
+      }
+    },
+    "We read the next %d weeks.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We read the next %d weeks."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir lesen die nächsten %d Wochen."
+          }
+        }
+      }
+    },
+    "up to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "up to %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bis %@"
+          }
+        }
+      }
+    },
+    "Not read yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not read yet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nicht gelesen."
+          }
+        }
+      }
+    },
+    "A new read was asked for – it happens on this iPhone with “Read again now” or the next time the app opens.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new read was asked for – it happens on this iPhone with “Read again now” or the next time the app opens."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu lesen ist angefragt – das passiert auf diesem iPhone mit „Jetzt neu lesen“ oder beim nächsten Öffnen der App."
+          }
+        }
+      }
+    },
+    "How far ahead to read": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How far ahead to read"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie weit vorauslesen"
+          }
+        }
+      }
+    },
+    "%d weeks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d weeks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Wochen"
+          }
+        }
+      }
+    },
+    "recommended": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "recommended"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "empfohlen"
+          }
+        }
+      }
+    },
+    "Found in your calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found in your calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In eurem Kalender gefunden"
+          }
+        }
+      }
+    },
+    "Sperrmüll and the Christmas tree come rarely – with half a year you catch them, too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sperrmüll and the Christmas tree come rarely – with half a year you catch them, too."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sperrmüll und Weihnachtsbaum kommen selten – mit einem halben Jahr erwischt ihr auch die."
+          }
+        }
+      }
+    },
+    "Done – unticked ones stay off.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done – unticked ones stay off."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledigt – was ohne Häkchen war, bleibt aus."
+          }
+        }
+      }
+    },
+    "Take over none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take over none"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine übernehmen"
+          }
+        }
+      }
+    },
+    "Take over %d as tasks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take over %d as tasks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d als Aufgabe übernehmen"
+          }
+        }
+      }
+    },
+    "Which should become tasks?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which should become tasks?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was soll zur Aufgabe werden?"
+          }
+        }
+      }
+    },
+    "On again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On again"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wieder an"
+          }
+        }
+      }
+    },
+    "Switched off – the task is gone and won’t come back with the next read.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switched off – the task is gone and won’t come back with the next read."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeschaltet – die Aufgabe ist weg und kommt beim nächsten Lesen nicht wieder."
+          }
+        }
+      }
+    },
+    "Each bin you keep becomes one task that follows the dates – with taking turns and “Mach ich” like every task. Switched off, its task is deleted and a new read doesn’t bring it back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each bin you keep becomes one task that follows the dates – with taking turns and “Mach ich” like every task. Switched off, its task is deleted and a new read doesn’t bring it back."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede Tonne, die ihr behaltet, wird eine Aufgabe, die den Terminen folgt – mit Abwechseln und „Mach ich“ wie jede Aufgabe. Ausgeschaltet wird ihre Aufgabe gelöscht, und neues Lesen bringt sie nicht zurück."
+          }
+        }
+      }
+    },
+    "Read again now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read again now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt neu lesen"
+          }
+        }
+      }
+    },
+    "Disconnect calendar and remove everything from it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect calendar and remove everything from it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender trennen und alles daraus entfernen"
+          }
+        }
+      }
+    },
+    "You can connect it again any time – then ToHuus asks again what should become a task.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can connect it again any time – then ToHuus asks again what should become a task."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du kannst ihn jederzeit neu verbinden – dann fragt ToHuus wieder, was zur Aufgabe werden soll."
+          }
+        }
+      }
+    },
+    "How your tasks get into your calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How your tasks get into your calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So kommen eure Aufgaben in euren Kalender"
+          }
+        }
+      }
+    },
+    "Disconnect the calendar?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect the calendar?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender trennen?"
+          }
+        }
+      }
+    },
+    "Disconnect and remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect and remove"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trennen und entfernen"
+          }
+        }
+      }
+    },
+    "Disconnect the calendar? All tasks that came from it are deleted, and the iPhone stops reading it. You can connect it again any time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect the calendar? All tasks that came from it are deleted, and the iPhone stops reading it. You can connect it again any time."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Aufgaben, die aus dem Kalender entstanden sind, werden gelöscht, und das iPhone liest ihn nicht mehr. Du kannst ihn jederzeit neu verbinden."
+          }
+        }
+      }
+    },
+    "Calendar disconnected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar disconnected"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender getrennt"
+          }
+        }
+      }
+    },
+    "Apple Calendar (iPhone, Mac): set up “Reminders & Calendar” once. Tasks with a date then show in “ToHuus · Kalender”, and moving them there moves the task.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Calendar (iPhone, Mac): set up “Reminders & Calendar” once. Tasks with a date then show in “ToHuus · Kalender”, and moving them there moves the task."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Kalender (iPhone, Mac): einmal „Erinnerungen & Kalender“ einrichten. Aufgaben mit Datum stehen dann in „ToHuus · Kalender“, und wenn du sie dort verschiebst, verschiebt sich die Aufgabe mit."
+          }
+        }
+      }
+    },
+    "Google Calendar, Outlook and others: create a subscription link and add it there. Read-only, it updates about every hour.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Calendar, Outlook and others: create a subscription link and add it there. Read-only, it updates about every hour."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Kalender, Outlook und andere: einen Abo-Link erstellen und dort hinzufügen. Nur zum Lesen, er aktualisiert sich etwa stündlich."
+          }
+        }
+      }
+    },
+    "Into a calendar you already have (e.g. your family calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Both ways”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into a calendar you already have (e.g. your family calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Both ways”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In einen Kalender, den ihr schon habt (z. B. euren Familienkalender): hier in der App unter Aufgaben › Euren Kalender lesen › „In beide Richtungen“."
+          }
+        }
+      }
+    },
+    "Just one task: open it and tap “Add to calendar”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just one task: open it and tap “Add to calendar”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur eine Aufgabe: öffnen und auf „In den Kalender“ tippen."
+          }
+        }
+      }
+    },
+    "Private tasks only appear when you choose so. The bins from your calendar are not written back – they are in there already.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private tasks only appear when you choose so. The bins from your calendar are not written back – they are in there already."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Aufgaben erscheinen nur, wenn du das so wählst. Die Tonnen aus eurem Kalender werden nicht zurückgeschrieben – die stehen da ja schon drin."
+          }
+        }
+      }
+    },
+    "Apple Calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Kalender"
+          }
+        }
+      }
+    },
+    "Google, Outlook": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google, Outlook"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google, Outlook"
+          }
+        }
+      }
+    },
+    "Your own calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Euer eigener Kalender"
+          }
+        }
+      }
+    },
+    "Into your calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into your calendar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In euren Kalender"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -9,6 +9,7 @@ import { Router, type NextFunction, type Request, type Response } from 'express'
 import { db } from '../db.js';
 import { t } from '../i18n.js';
 import { accountById } from '../lib/accounts.js';
+import { cookStyles, fitsStyles } from '../lib/cook-style.js';
 import { requireAuth } from '../lib/auth.js';
 import { cloudIdentity } from '../lib/cloud-auth.js';
 import { catalogDb, getCatalogRow, publicRecipe, publishedRecipes, readCatalogImage } from '../lib/cloud-recipes.js';
@@ -51,7 +52,9 @@ cloudRecipes.get('/cloud-recipes', (_req, res) => {
   // Plus recipes show up for everyone (with a lock) – opening and saving them needs Plus
   const plus = entitlement('plusRecipes');
   const mark = <T extends { plus: boolean }>(c: T) => ({ ...c, locked: c.plus && !plus });
-  const p = publishedRecipes();
+  // „Wie kocht ihr?“: Thermomix, Monsieur Cuisine, Cookit … only for households that cook with one (cook-style.ts)
+  const styles = cookStyles();
+  const p = publishedRecipes(24, (data) => fitsStyles(data, styles));
   res.json({ newThisWeek: p.newThisWeek.map(mark), recent: p.recent.map(mark), saved: savedMap(), plus });
 });
 

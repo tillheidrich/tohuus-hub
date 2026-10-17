@@ -3,7 +3,8 @@ import { type ComponentType, lazy, type ReactNode, Suspense, useCallback, useEff
 import { setQueueScope } from './shop/offline';
 import { CrashBoundary } from './crash';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { ApiError, connectEvents, useApi } from './api';
+import { ApiError, connectEvents, noteDataScope, useApi } from './api';
+import { OfflineNote } from './offline-note';
 import { AssistantFab } from './assistant/Fab';
 import { BrandMark } from './art';
 import { applyBrand } from './brand';
@@ -140,6 +141,8 @@ function Authed() {
   const [signIn, setSignIn] = useState(false);
   // only this account's offline changes are replayed
   useEffect(() => setQueueScope(me.data?.scope), [me.data?.scope]);
+  // answers kept for offline belong to one account and household only (api.ts › noteDataScope)
+  useEffect(() => noteDataScope(me.data?.scope), [me.data?.scope]);
   if (me.isLoading) return <Blank />;
   const out = (me.error && (me.error as ApiError).status === 401) || !me.data;
   // list2: the session ran out while somebody is in the store – the last list keeps working, sign-in comes at sync
@@ -323,6 +326,7 @@ function Shell({ me }: { me: Me }) {
             <GuestBanner me={me} />
           </Suspense>
         )}
+        <OfflineNote />
         <div key={loc.pathname} className="page-fade">
           {/* a page that fails shows a card with "Neu laden" here – tab bar and sidebar stay (./crash.tsx) */}
           <CrashBoundary>

@@ -44,6 +44,7 @@ import { CalendarReadCard } from './CalendarSync';
 import { LunchboxCard } from '../shop/forms';
 import { PulseSettingsCard } from '../pulse';
 import { ModulesCard } from './Modules';
+import { CookStyleCard } from './CookStyle';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -117,6 +118,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'plan' && cloud && <CloudAccountCard />}
       {tab === 'home' && <Household me={me} admin={admin} />}
       {tab === 'home' && <ModulesCard admin={admin} />}
+      {tab === 'home' && <CookStyleCard admin={admin} />}
       {tab === 'home' && <ExtrasSettingsCard admin={admin} />}
       {tab === 'home' && <StarsSettingsCard admin={admin} />}
       {tab === 'home' && <LunchboxCard />}

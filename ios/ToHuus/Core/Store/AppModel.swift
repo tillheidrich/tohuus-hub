@@ -258,7 +258,10 @@ final class AppModel {
         let api = APIClient(baseURL: s.serverURL, token: token, householdId: s.householdId) { [weak self] in
             Task { @MainActor in self?.handleUnauthorized() }
         }
-        let st = ServerStore(api: api, householdKey: s.householdId ?? s.serverURL.host() ?? "default")
+        let householdKey = s.householdId ?? s.serverURL.host() ?? "default"
+        // offline reads (Heute, Aufgaben, Vorrat …): only this household's stay on the device (ResponseCache.swift)
+        ResponseCache.activate(household: ResponseCache.owner(household: householdKey, token: token))
+        let st = ServerStore(api: api, householdKey: householdKey)
         st.householdName = activeHousehold?.name
         store = st
         st.startEvents()
@@ -354,6 +357,7 @@ final class AppModel {
         SessionInfo.clear()
         SharedConfig.defaults.removeObject(forKey: Self.householdsKey)
         SharedConfig.defaults.removeObject(forKey: Self.userKey)
+        ResponseCache.wipeAll()
         ShoppingCache.wipeAll()
         WidgetSnapshot.clear()
         session = nil

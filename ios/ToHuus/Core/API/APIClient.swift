@@ -39,10 +39,16 @@ final class APIClient: Sendable {
         return u
     }
 
-    func request(_ method: String, _ path: String, query: [URLQueryItem] = [], timeout: TimeInterval = 30) throws -> URLRequest {
+    /// Reads that have a stored answer to fall back on (ResponseCache, the shopping list) give up after 10 s without an
+    /// answer – nobody should look at a spinner for half a minute because the server is gone. Everything else (exports,
+    /// label sheets, writes) keeps 30 s unless the caller says otherwise.
+    static let readTimeout: TimeInterval = 10
+
+    func request(_ method: String, _ path: String, query: [URLQueryItem] = [], timeout: TimeInterval? = nil) throws -> URLRequest {
         var req = URLRequest(url: try url(path, query: query))
         req.httpMethod = method
-        req.timeoutInterval = timeout
+        let quick = method == "GET" && (path.hasPrefix("api/shop/list") || ResponseCache(household: "", path: path, query: []) != nil)
+        req.timeoutInterval = timeout ?? (quick ? Self.readTimeout : 30)
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         if let householdId { req.setValue(householdId, forHTTPHeaderField: "X-Household") }
@@ -74,6 +80,7 @@ final class APIClient: Sendable {
         let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
         if (200..<300).contains(status) { return data }
         let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        if Self.serverUnreachable(status: status, json: obj, body: data) { throw APIError.offline }
         let message = (obj?["error"] as? String) ?? (obj?["message"] as? String) ?? HTTPURLResponse.localizedString(forStatusCode: status)
         if status >= 500 {
             // the server logged it too (with the code in the message) – the app's log says where it happened
@@ -132,12 +139,43 @@ final class APIClient: Sendable {
     }
 
     func get<T: Decodable>(_ path: String, query: [URLQueryItem] = [], as type: T.Type = T.self) async throws -> T {
-        let data = try await perform(try request("GET", path, query: query))
+        let data = try await getData(path, query: query)
         return try decode(T.self, from: data)
     }
 
+    /// GET. For the screens ResponseCache keeps (Heute, Aufgaben, Vorrat, Kochen, Hausinfo) a fresh answer is stored,
+    /// and when the server can't be reached (no network, timeout, DNS, 5xx, proxy without the app) the last stored
+    /// answer comes back instead of an error; OfflineReads then tells the screen to say "Offline · as of …".
     func getData(_ path: String, query: [URLQueryItem] = []) async throws -> Data {
-        try await perform(try request("GET", path, query: query))
+        let req = try request("GET", path, query: query)
+        let household = ResponseCache.owner(household: householdId ?? baseURL.host() ?? "default", token: token)
+        guard token != nil, let slot = ResponseCache(household: household, path: path, query: query) else {
+            return try await perform(req)
+        }
+        do {
+            let data = try await perform(req)
+            slot.save(data)
+            let p = slot.path
+            Task { @MainActor in OfflineReads.shared.mark(p, savedAt: nil) }
+            return data
+        } catch let e as APIError where ResponseCache.shouldFallBack(e) {
+            guard let hit = slot.load() else { throw e }
+            let p = slot.path
+            Task { @MainActor in OfflineReads.shared.mark(p, savedAt: hit.savedAt) }
+            return hit.data
+        }
+    }
+
+    /// The server itself isn't answering: a proxy error page (502/503/504 without the app's JSON) or the reverse
+    /// proxy's "404 page not found" when the app container is gone (Traefik/Coolify during an outage or redeploy).
+    /// The app's own 404 is always JSON (server/index.ts), so "not on this server yet" still works.
+    static func serverUnreachable(status: Int, json: [String: Any]?, body: Data) -> Bool {
+        if [502, 503, 504].contains(status) { return json == nil }
+        if status == 404, json == nil {
+            let text = String(decoding: body.prefix(200), as: UTF8.self).lowercased()
+            return text.contains("404 page not found") || text.contains("no available server")
+        }
+        return false
     }
 
     func send<T: Decodable>(_ method: String, _ path: String, json: [String: Any]? = nil, as type: T.Type = T.self,

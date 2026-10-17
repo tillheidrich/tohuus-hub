@@ -37,7 +37,11 @@ export const TASK_TOOL_DEFS: ToolDef[] = [
   fn(
     'tasks_list',
     'Household tasks (chores like bathroom, vacuuming, bins; care & deadlines like water filter, passport): what is due, who keeps it in mind, who does it, taking turns. Private tasks are not shown.',
-    { filter: { type: 'string', enum: ['due', 'all', 'house', 'care'] }, query: { type: 'string', description: 'part of a task name' } },
+    {
+      filter: { type: 'string', enum: ['due', 'all', 'house', 'care'] },
+      query: { type: 'string', description: 'part of a task name' },
+      on: { type: 'string', description: 'YYYY-MM-DD – only tasks due on that day (e.g. tomorrow)' },
+    },
   ),
   fn(
     'task_add',
@@ -126,9 +130,10 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
   if (name === 'tasks_list') {
     const f = a.filter ?? 'due';
     const q = typeof a.query === 'string' ? norm(a.query) : '';
+    const on = typeof a.on === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(a.on) ? a.on : null;
     // shared view: private tasks (anyone's) are left out
     const xs = listCareTasks({ outside: true })
-      .filter((x) => (f === 'due' ? ['overdue', 'today', 'soon'].includes(x.state) : f === 'house' ? x.category === 'house' : f === 'care' ? x.category !== 'house' : true))
+      .filter((x) => (on ? x.next_due === on && !x.as_needed : f === 'due' ? ['overdue', 'today', 'soon'].includes(x.state) : f === 'house' ? x.category === 'house' : f === 'care' ? x.category !== 'house' : true))
       .filter((x) => !q || norm(x.name).includes(q))
       .slice(0, 30);
     return { tasks: xs.map(compact), more: xs.length === 30 ? 'only the first 30' : undefined };

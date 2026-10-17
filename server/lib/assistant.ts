@@ -257,7 +257,7 @@ export async function chatOnce(input: {
   let out: { reply: string; mode: 'ai' | 'basic'; usage?: Usage; remaining?: number | null; throttled?: boolean };
   if (allowance && !(simple && overQuota)) {
     if (overQuota) {
-      out = { reply: taskLike ? basicTask(message, ctx) : basicReply(message, ctx), mode: 'basic', remaining: 0 };
+      out = { reply: taskLike ? basicTask(message, ctx) : basicReply(message, ctx, intent, input.context ?? null), mode: 'basic', remaining: 0 };
     } else {
       try {
         // Plus fair use over the allowance: still answered, just shorter
@@ -272,12 +272,12 @@ export async function chatOnce(input: {
         // a question the built-in reader cannot answer ("ein Rezept für Kinder") gets an honest "busy, try again"
         // instead of "I did not understand"
         const busy = e.code === 'rate_limited' || e.code === 'upstream' || e.code === 'timeout';
-        const reply = ctx.actions.length ? t('Done.') : busy && needsModel ? t('The assistant is busy right now. Please try again in a moment.') : taskLike ? basicTask(message, ctx) : basicReply(message, ctx);
+        const reply = ctx.actions.length ? t('Done.') : busy && needsModel ? t('The assistant is busy right now. Please try again in a moment.') : taskLike ? basicTask(message, ctx) : basicReply(message, ctx, intent, input.context ?? null);
         out = { reply, mode: 'basic', remaining: allowance.remaining };
       }
     }
   } else {
-    out = { reply: taskLike ? basicTask(message, ctx) : basicReply(message, ctx), mode: 'basic', ...(input.allowance ? { remaining: input.allowance.remaining } : {}) };
+    out = { reply: taskLike ? basicTask(message, ctx) : basicReply(message, ctx, intent, input.context ?? null), mode: 'basic', ...(input.allowance ? { remaining: input.allowance.remaining } : {}) };
   }
   store(conversationId, 'assistant', out.reply, { actions: ctx.actions, mode: out.mode, tokens: out.usage?.total ?? 0 });
   return {
@@ -359,8 +359,36 @@ export function basicTask(message: string, ctx: ToolCtx): string {
   return r?.ok ? t('“{name}” is now in Tasks, due today. Tap it there to set how often and who.', { name }) : (r?.error ?? t('Done.'));
 }
 
-export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parseIntent(message)): string {
+/** One task in a spoken answer: "Zahnarzt um 10:00 (Lea)". */
+type TaskBit = { name: string; when?: string; time?: string; does_it?: string | null };
+const taskBit = (x: TaskBit) => {
+  const n = x.time ? t('{name} at {time}', { name: x.name, time: x.time }) : x.name;
+  return x.does_it ? `${n} (${x.does_it})` : n;
+};
+
+/** "Was steht heute an?" / "Was ist morgen?" / "Was ist fällig?" on the tasks screen – from tasks_list, without a model. */
+export function basicTasks(ctx: ToolCtx, day: 'today' | 'tomorrow'): string {
+  if (day === 'tomorrow') {
+    const r = runTool(ctx, 'tasks_list', { filter: 'all', on: localDay(1) }) as { tasks?: TaskBit[] } | undefined;
+    const xs = r?.tasks ?? [];
+    return xs.length ? t('Tomorrow: {items}.', { items: joinList(xs.map(taskBit)) }) : t('Nothing on for tomorrow.');
+  }
+  const r = runTool(ctx, 'tasks_list', { filter: 'due' }) as { tasks?: TaskBit[] } | undefined;
+  const xs = r?.tasks ?? [];
+  const today = xs.filter((x) => x.when === 'due today');
+  const overdue = xs.filter((x) => x.when === 'overdue');
+  const soon = xs.filter((x) => x.when === 'due soon').slice(0, 3);
+  const parts: string[] = [];
+  parts.push(today.length ? t('Today: {items}.', { items: joinList(today.map(taskBit)) }) : t('Nothing on for today.'));
+  if (overdue.length) parts.push(t('Still open: {items}.', { items: joinList(overdue.map(taskBit)) }));
+  if (!today.length && !overdue.length && soon.length) parts.push(t('Coming up: {items}.', { items: joinList(soon.map(taskBit)) }));
+  return parts.join(' ');
+}
+
+export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parseIntent(message), context: ScreenContext | null = null): string {
   switch (intent.kind) {
+    case 'tasks':
+      return basicTasks(ctx, intent.day);
     case 'add': {
       if (!intent.items.length) break;
       const added: string[] = [];
@@ -400,6 +428,8 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
         : t('Noted: {items} at {shop}.', { items: joinList(names(intent.items)), shop: intent.shop ?? '–' });
     }
     case 'due': {
+      // on the tasks screen "Was ist fällig?" means tasks, not shopping
+      if (context === 'tasks') return basicTasks(ctx, 'today');
       const due = rhythmDueTool();
       return due.length ? t('Probably due: {items}. Shall I put them on the list?', { items: joinList(due.map((d) => d.name)) }) : t('Nothing seems due right now.');
     }

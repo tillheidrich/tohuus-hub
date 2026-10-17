@@ -353,9 +353,13 @@ export function adminRecipe(r: CatalogRow) {
 
 export const getCatalogRow = (id: number) => catalogDb().prepare('SELECT * FROM catalog_recipes WHERE id = ?').get(id) as CatalogRow | undefined;
 
-/** Published recipes: "new this week" (last 7 days) and the latest ones. */
-export function publishedRecipes(limit = 24) {
-  const rows = catalogDb().prepare(`SELECT * FROM catalog_recipes WHERE state = 'published' ORDER BY published_at DESC, id DESC LIMIT ?`).all(limit) as CatalogRow[];
+/**
+ * Published recipes: "new this week" (last 7 days) and the latest ones. `fits` leaves out recipes the household
+ * should not see in the list – kitchen-machine recipes for machines it does not have („Wie kocht ihr?“, cook-style.ts).
+ */
+export function publishedRecipes(limit = 24, fits?: (data: ImportRecipe) => boolean) {
+  const all = catalogDb().prepare(`SELECT * FROM catalog_recipes WHERE state = 'published' ORDER BY published_at DESC, id DESC LIMIT ?`).all(fits ? 2000 : limit) as CatalogRow[];
+  const rows = (fits ? all.filter((r) => fits(JSON.parse(r.data) as ImportRecipe)) : all).slice(0, limit);
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().replace('T', ' ').slice(0, 19);
   return { newThisWeek: rows.filter((r) => (r.published_at ?? '') >= weekAgo).map(publicCard), recent: rows.map(publicCard) };
 }

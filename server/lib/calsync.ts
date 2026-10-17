@@ -7,8 +7,13 @@
  * days, doctor's appointments and everything else stay on the phone.
  *
  * Each kind becomes one household task ("Gelbe Tonne raus") whose date follows the collection dates: done → the next
- * date from the calendar, no interval. Rotation, "Mach ich" and reminders work as for every task. Archiving the task
- * means "not wanted" – it is not created again.
+ * date from the calendar, no interval. Rotation, "Mach ich" and reminders work as for every task.
+ *
+ * Since 17 Oct 2026 a newly found kind is only *proposed* (state 'new'): the person ticks which ones to take over.
+ * A kind switched off (state 'ignored') loses its task (deleted, not hidden) and is never made again by a later read,
+ * until it is switched on again. Archiving or deleting the task by hand counts as switched off, too.
+ * "Kalender trennen" removes every task that came from the calendar, all dates and all choices.
+ * The phone reads HORIZON_DAYS ahead (26 weeks, see there).
  *
  * KI-Abgleich: for everything the rules don't know, a person may switch on "KI darf Kalendereinträge mit Aufgaben
  * abgleichen" (own consent, `calsync.ai` in user_prefs, naming the recipients). Then the phone sends the titles and
@@ -21,7 +26,7 @@ import { t } from '../i18n.js';
 import { aiEnabled, assertAiAllowed, chat } from './ai.js';
 import { aiOffReason } from './ai-policy.js';
 import { emit } from './bus.js';
-import { careHooks, createCareTask, getCareTask, updateCareTask } from './care.js';
+import { careHooks, createCareTask, deleteCareTask, getCareTask, updateCareTask } from './care.js';
 import { localDay } from './catalog.js';
 import { addDays } from './fresh-shelf.js';
 import { consumeAssistant } from './limits.js';
@@ -41,6 +46,25 @@ migrate(
      task_id INTEGER REFERENCES care_tasks(id) ON DELETE SET NULL
    );`,
 );
+
+// state: 'on' = the kind's task is wanted, 'ignored' = switched off (no task, not made again). No row = not decided yet.
+migrate('calsync-2', `ALTER TABLE calsync_kinds ADD COLUMN state TEXT NOT NULL DEFAULT 'on';`);
+
+/**
+ * How far ahead the phone reads, set per household (2–26 weeks), default 26 weeks. 12 weeks would catch weekly to
+ * four-weekly bins (Grünschnitt every 4 weeks = 3 dates, enough for a rhythm), but Sperrmüll comes once or twice a
+ * year and the Christmas tree only in January – from October on, half a year reaches both. Reading more costs nothing
+ * noticeable: EventKit reads locally and only matched bin days (kind + day) are sent. Before 17 Oct 2026 it was a
+ * fixed 120 days (about 17 weeks). The server enforces the window too: days beyond it are not stored.
+ */
+export const MIN_WEEKS = 2;
+export const MAX_WEEKS = 26;
+export const DEFAULT_WEEKS = 26;
+export const HORIZON_DAYS = DEFAULT_WEEKS * 7;
+/** the first day that is no longer read: today + weeks × 7 (so "4 weeks" = today and the 27 days after it) */
+export function horizonEnd(today = localDay(0)) {
+  return addDays(today, calsyncSettings().weeks * 7);
+}
 
 export interface BinKind {
   key: string;
@@ -73,13 +97,24 @@ const SETTINGS = 'calsync.settings';
 export interface CalsyncSettings {
   /** evening = the task is due the day before (put the bin out the evening before), morning = on the day */
   offset: BinOffset;
+  /** how many weeks ahead the calendar is read (MIN_WEEKS–MAX_WEEKS) */
+  weeks: number;
 }
+const clampWeeks = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? Math.min(MAX_WEEKS, Math.max(MIN_WEEKS, Math.round(n))) : DEFAULT_WEEKS);
 export function calsyncSettings(): CalsyncSettings {
   const v = getSetting<Partial<CalsyncSettings> | null>(SETTINGS, null);
-  return { offset: v?.offset === 'morning' ? 'morning' : 'evening' };
+  return { offset: v?.offset === 'morning' ? 'morning' : 'evening', weeks: clampWeeks(v?.weeks) };
 }
-export function setCalsyncSettings(v: CalsyncSettings) {
-  setSetting(SETTINGS, { offset: v.offset === 'morning' ? 'morning' : 'evening' });
+/** Change evening/morning and/or the weeks read ahead. A new number of weeks asks the phone to read again. */
+export function setCalsyncSettings(v: Partial<CalsyncSettings>) {
+  const before = calsyncSettings();
+  const next = { offset: v.offset ? (v.offset === 'morning' ? 'morning' : 'evening') : before.offset, weeks: v.weeks === undefined ? before.weeks : clampWeeks(v.weeks) };
+  setSetting(SETTINGS, next);
+  if (next.weeks !== before.weeks) {
+    // fewer weeks: what lies beyond is not read any more; more weeks: the phone reads again
+    db.prepare('DELETE FROM calsync_dates WHERE day >= ?').run(horizonEnd());
+    setSetting('calsync.rescan', nowStamp());
+  }
   for (const k of BIN_KINDS) refreshTask(k.key);
   emit('care');
   return calsyncSettings();
@@ -128,7 +163,9 @@ export interface SyncInput {
 /** The phone's matches for a window: replaces what this source said for that window before, makes or updates tasks. */
 export function syncDates(input: SyncInput) {
   const kinds = new Set(BIN_KINDS.map((k) => k.key));
-  const dates = input.dates.filter((d) => kinds.has(d.kind) && d.day >= input.from && d.day <= input.to);
+  // the household's window counts, whatever an (older) phone read: nothing beyond today + weeks
+  const end = horizonEnd();
+  const dates = input.dates.filter((d) => kinds.has(d.kind) && d.day >= input.from && d.day <= input.to && d.day < end);
   const created: string[] = [];
   db.transaction(() => {
     db.prepare('DELETE FROM calsync_dates WHERE source = ? AND day BETWEEN ? AND ?').run(input.source, input.from, input.to);
@@ -137,51 +174,145 @@ export function syncDates(input: SyncInput) {
     // old collection dates are not needed any more
     db.prepare('DELETE FROM calsync_dates WHERE day < ?').run(addDays(localDay(0), -60));
   })();
+  // kinds already wanted follow the new dates; new ones wait for the person's tick, switched-off ones stay off
+  const proposed: string[] = [];
   for (const kind of new Set(dates.map((d) => d.kind))) {
-    const mapped = db.prepare('SELECT task_id FROM calsync_kinds WHERE kind = ?').get(kind) as { task_id: number | null } | undefined;
-    // archived or deleted on purpose → not wanted, never made again
-    if (mapped) {
-      refreshTask(kind);
-      continue;
-    }
-    const def = BIN_KINDS.find((k) => k.key === kind)!;
-    const first = nextDate(kind, addDays(localDay(0), -1));
-    if (!first) continue;
-    const task = createCareTask({ name: t(def.name), category: 'house', next_due: first, lead_days: 0 } as never) as { id: number };
-    db.prepare(`UPDATE care_tasks SET ext_kind = ? WHERE id = ?`).run(kind, task.id);
-    db.prepare('INSERT INTO calsync_kinds (kind, task_id) VALUES (?, ?)').run(kind, task.id);
-    created.push(kind);
+    const state = kindState(kind);
+    if (state === 'on') refreshTask(kind);
+    else if (state === 'new') proposed.push(kind);
   }
-  setSetting('calsync.last', new Date().toISOString().replace('T', ' ').slice(0, 19));
+  setSetting('calsync.last', nowStamp());
+  setSetting('calsync.window', { from: input.from, to: input.to });
+  setSetting('calsync.rescan', null);
   emit('care');
-  return { ok: true, stored: dates.length, created };
+  return { ok: true, stored: dates.length, created, proposed };
+}
+
+function nowStamp() {
+  return new Date().toISOString().replace('T', ' ').slice(0, 19);
+}
+
+export type KindState = 'new' | 'on' | 'ignored';
+
+/** 'new' = found, not decided yet; 'on' = has its task; 'ignored' = switched off, or its task archived/deleted by hand. */
+export function kindState(kind: string): KindState {
+  const row = db.prepare('SELECT task_id, state FROM calsync_kinds WHERE kind = ?').get(kind) as { task_id: number | null; state: string } | undefined;
+  if (!row) return 'new';
+  if (row.state === 'ignored') return 'ignored';
+  const task = taskOf(kind);
+  return task && !task.archived ? 'on' : 'ignored';
+}
+
+/** Take a kind over: its task back from the archive, or a new one (also without a date yet – it gets one on the next read). */
+export function enableKind(kind: string) {
+  const def = BIN_KINDS.find((k) => k.key === kind);
+  if (!def) return;
+  const task = taskOf(kind);
+  if (task) {
+    if (task.archived) updateCareTask(task.id, { archived: false } as never);
+    db.prepare(`UPDATE calsync_kinds SET state = 'on' WHERE kind = ?`).run(kind);
+  } else {
+    const first = nextDate(kind, addDays(localDay(0), -1));
+    const made = createCareTask({ name: t(def.name), category: 'house', next_due: first, lead_days: 0 } as never) as { id: number };
+    db.prepare(`UPDATE care_tasks SET ext_kind = ? WHERE id = ?`).run(kind, made.id);
+    db.prepare(`INSERT INTO calsync_kinds (kind, task_id, state) VALUES (?, ?, 'on') ON CONFLICT(kind) DO UPDATE SET task_id = excluded.task_id, state = 'on'`).run(kind, made.id);
+  }
+  refreshTask(kind);
+  emit('care');
+}
+
+/** Switch a kind off: its tasks are deleted (not hidden) and a later read does not bring them back. */
+export function ignoreKind(kind: string) {
+  if (!BIN_KINDS.some((k) => k.key === kind)) return;
+  const ids = db.prepare('SELECT id FROM care_tasks WHERE ext_kind = ?').all(kind) as { id: number }[];
+  for (const r of ids) deleteCareTask(r.id);
+  db.prepare(`INSERT INTO calsync_kinds (kind, task_id, state) VALUES (?, NULL, 'ignored') ON CONFLICT(kind) DO UPDATE SET task_id = NULL, state = 'ignored'`).run(kind);
+  emit('care');
+}
+
+/** The ticked list after a read: ticked ones are taken over, the others switched off. */
+export function decideKinds(on: string[], off: string[]) {
+  for (const k of on) enableKind(k);
+  for (const k of off) if (!on.includes(k)) ignoreKind(k);
+}
+
+/** Ask the phone(s) to read again (the browser cannot read the calendar itself). Cleared by the next read. */
+export function requestRescan() {
+  setSetting('calsync.rescan', nowStamp());
+  emit('care');
+}
+
+/**
+ * "Kalender trennen": every task that came from the calendar is deleted, all dates and choices are forgotten.
+ * Phones that were set up before this moment stop reading and take their own entries out (`disconnected_at`).
+ */
+export function disconnectCalendar() {
+  const keys = BIN_KINDS.map((k) => k.key);
+  const ids = db.prepare(`SELECT id FROM care_tasks WHERE ext_kind IN (${keys.map(() => '?').join(',')})`).all(...keys) as { id: number }[];
+  db.transaction(() => {
+    for (const r of ids) deleteCareTask(r.id);
+    db.prepare('DELETE FROM calsync_dates').run();
+    db.prepare('DELETE FROM calsync_kinds').run();
+  })();
+  setSetting('calsync.last', null);
+  setSetting('calsync.window', null);
+  setSetting('calsync.rescan', null);
+  setSetting('calsync.disconnected', nowStamp());
+  emit('care');
+  return { removed: ids.length };
+}
+
+/** The usual gap between collections in days (median), or null with fewer than two dates. */
+function rhythmDays(days: string[]): number | null {
+  if (days.length < 2) return null;
+  const gaps: number[] = [];
+  for (let i = 1; i < days.length; i++) gaps.push(Math.round((Date.parse(days[i]) - Date.parse(days[i - 1])) / 86_400_000));
+  gaps.sort((a, b) => a - b);
+  return gaps[Math.floor(gaps.length / 2)];
 }
 
 /** For the settings screens: the rules, the next dates per kind and the tasks – no titles, no other events. */
 export function calsyncView(viewer: number | null) {
   const today = localDay(0);
-  const upcoming = db
-    .prepare(`SELECT kind, MIN(day) AS day, COUNT(DISTINCT day) AS n FROM calsync_dates WHERE day >= ? GROUP BY kind ORDER BY day`)
-    .all(today) as { kind: string; day: string; n: number }[];
+  const all = db.prepare(`SELECT DISTINCT kind, day FROM calsync_dates ORDER BY day`).all() as { kind: string; day: string }[];
+  const decided = new Set((db.prepare('SELECT kind FROM calsync_kinds').all() as { kind: string }[]).map((r) => r.kind));
   return {
     settings: calsyncSettings(),
     last_sync: getSetting<string | null>('calsync.last', null),
+    /** how far ahead the phone reads, and the window of the last read */
+    horizon_days: calsyncSettings().weeks * 7,
+    horizon_weeks: calsyncSettings().weeks,
+    horizon_min_weeks: MIN_WEEKS,
+    horizon_max_weeks: MAX_WEEKS,
+    window: getSetting<{ from: string; to: string } | null>('calsync.window', null),
+    rescan_requested: getSetting<string | null>('calsync.rescan', null),
+    disconnected_at: getSetting<string | null>('calsync.disconnected', null),
     kinds: BIN_KINDS.map((k) => {
-      const up = upcoming.find((u) => u.kind === k.key);
+      const days = all.filter((d) => d.kind === k.key).map((d) => d.day);
+      const ahead = days.filter((d) => d >= today);
       const task = taskOf(k.key);
-      return { key: k.key, name: t(k.name), patterns: k.patterns, next: up?.day ?? null, dates: up?.n ?? 0, task_id: task?.id ?? null, off: Boolean(task?.archived) };
+      const state: KindState | null = decided.has(k.key) ? kindState(k.key) : ahead.length ? 'new' : null;
+      return {
+        key: k.key,
+        name: t(k.name),
+        patterns: k.patterns,
+        next: ahead[0] ?? null,
+        dates: ahead.length,
+        upcoming: ahead.slice(0, 4),
+        rhythm_days: rhythmDays(days),
+        task_id: state === 'on' ? (task?.id ?? null) : null,
+        /** null = never found and never decided */
+        state,
+        off: state === 'ignored',
+      };
     }),
     ai: aiConsentView(viewer),
   };
 }
 
-/** Turn a kind back on after its task was archived ("doch wieder"). */
+/** Turn a kind back on ("doch wieder"): same as taking it over. */
 export function reviveKind(kind: string) {
-  const task = taskOf(kind);
-  if (task?.archived) updateCareTask(task.id, { archived: false } as never);
-  if (task) refreshTask(kind);
-  else db.prepare('DELETE FROM calsync_kinds WHERE kind = ?').run(kind);
-  emit('care');
+  enableKind(kind);
 }
 
 // ------------------------------------------------------------------ KI-Abgleich (own consent per person)

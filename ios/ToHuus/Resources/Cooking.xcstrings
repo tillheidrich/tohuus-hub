@@ -511,6 +511,23 @@
         }
       }
     },
+    "%d of your recipes are written for it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d of your recipes are written for it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d eurer Rezepte sind dafür geschrieben."
+          }
+        }
+      }
+    },
     "%d photos": {
       "extractionState": "manual",
       "localizations": {
@@ -592,6 +609,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Rezepte"
+          }
+        }
+      }
+    },
+    "%d recipes for a kitchen machine are not suggested.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d recipes for a kitchen machine are not suggested."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Rezepte für eine Küchenmaschine werden nicht vorgeschlagen."
           }
         }
       }
@@ -800,6 +834,23 @@
         }
       }
     },
+    "1 of your recipes is written for it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 of your recipes is written for it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 eurer Rezepte ist dafür geschrieben."
+          }
+        }
+      }
+    },
     "1 portion": {
       "extractionState": "manual",
       "localizations": {
@@ -830,6 +881,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 Bewertung"
+          }
+        }
+      }
+    },
+    "1 recipe for a kitchen machine is not suggested.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 recipe for a kitchen machine is not suggested."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Rezept für eine Küchenmaschine wird nicht vorgeschlagen."
           }
         }
       }
@@ -1157,6 +1225,23 @@
         }
       }
     },
+    "Another cooking machine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another cooking machine"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere Küchenmaschine"
+          }
+        }
+      }
+    },
     "Another day": {
       "extractionState": "manual",
       "localizations": {
@@ -1357,6 +1442,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keine Idee? Lasst alle abstimmen"
+          }
+        }
+      }
+    },
+    "Change how you cook": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change how you cook"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kochweise ändern"
           }
         }
       }
@@ -2245,6 +2347,23 @@
         }
       }
     },
+    "For example Bosch Cookit, Kenwood or a Companion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example Bosch Cookit, Kenwood or a Companion."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Beispiel Bosch Cookit, Kenwood oder ein Companion."
+          }
+        }
+      }
+    },
     "For example: “oat milk instead of milk” or “rice instead of potatoes”.": {
       "extractionState": "manual",
       "localizations": {
@@ -2449,6 +2568,23 @@
         }
       }
     },
+    "How do you cook?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How do you cook?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie kocht ihr?"
+          }
+        }
+      }
+    },
     "How do you vote?": {
       "extractionState": "manual",
       "localizations": {
@@ -2598,6 +2734,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zubereitung"
+          }
+        }
+      }
+    },
+    "Just normal, on the stove and in the oven": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just normal, on the stove and in the oven"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganz normal am Herd und im Ofen"
           }
         }
       }
@@ -3911,6 +4064,23 @@
         }
       }
     },
+    "Pots, pans, a baking tray.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pots, pans, a baking tray."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Topf, Pfanne, Backblech."
+          }
+        }
+      }
+    },
     "Previous week": {
       "extractionState": "manual",
       "localizations": {
@@ -4060,6 +4230,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rezepte mit %@ – die meisten Treffer zuerst. Dafür muss nichts im Vorrat stehen."
+          }
+        }
+      }
+    },
+    "Recipes with Thermomix settings and Cookidoo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes with Thermomix settings and Cookidoo."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rezepte mit Thermomix-Einstellungen und Cookidoo."
           }
         }
       }
@@ -4591,6 +4778,23 @@
         }
       }
     },
+    "So we only suggest what works in your kitchen. Several answers are fine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So we only suggest what works in your kitchen. Several answers are fine."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Damit wir nur vorschlagen, was in eurer Küche klappt. Mehrere Antworten sind okay."
+          }
+        }
+      }
+    },
     "Something else": {
       "extractionState": "manual",
       "localizations": {
@@ -4880,6 +5084,23 @@
         }
       }
     },
+    "The cooking machine from Lidl.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cooking machine from Lidl."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Küchenmaschine von Lidl."
+          }
+        }
+      }
+    },
     "The file is larger than 100 MB.": {
       "extractionState": "manual",
       "localizations": {
@@ -5080,6 +5301,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für diese Regel bleibt das Rezept wie geschrieben."
+          }
+        }
+      }
+    },
+    "ToHuus only suggests recipes for kitchen machines you have. Saved recipes stay where they are.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus only suggests recipes for kitchen machines you have. Saved recipes stay where they are."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus schlägt nur Rezepte für Küchenmaschinen vor, die ihr habt. Gespeicherte Rezepte bleiben, wo sie sind."
           }
         }
       }

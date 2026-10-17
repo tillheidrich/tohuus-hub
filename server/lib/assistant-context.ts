@@ -18,6 +18,7 @@ import { notPrivate } from './share-core.js';
 import { today } from './spend2.js';
 import { addDays } from './spend2.js';
 import { eatFirst } from './fresh.js';
+import { cookStyleLine } from './cook-style.js';
 
 export interface ContextViewer {
   userId?: number | null;
@@ -124,6 +125,8 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
       ? `People: ${people.map((p: any) => `${p.name}${p.likes.length ? ` likes ${p.likes.join(', ')}` : ''}${p.dislikes.length ? `; dislikes ${p.dislikes.join(', ')}` : ''}${p.allergies?.length ? `; allergies ${p.allergies.join(', ')}` : ''}`).join(' | ')}`
       : '',
     has('cooking') && !consent ? 'Health data is not shared with you; ToHuus filters unsuitable recipes itself.' : '',
+    // „Wie kocht ihr?“ (cook-style.ts): no Thermomix ideas for households that cook on the stove
+    has('cooking') ? cookStyleLine() : '',
     has('shopping') ? `List: ${list.join(', ') || 'empty'}` : '',
     has('shopping') && due.length ? `Probably due: ${due.map((d) => d.name).join(', ')}` : '',
     has('cooking') ? `In stock (as recorded): ${pantry.map((p) => p.name).join(', ') || 'nothing recorded'}. Saved recipes: ${recipeCount}.` : '',

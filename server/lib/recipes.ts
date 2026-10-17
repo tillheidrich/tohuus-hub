@@ -8,6 +8,7 @@ import { peopleSignals } from './people-signals.js';
 import { awayDay, useUpWindow } from './away-state.js';
 import { cleanText, durationMinutes, findRecipeNode, imageUrl, ingredientLines, instructionSteps, jsonLdBlocks, oneLine, recipeTags, yieldServings } from './recipe-jsonld.js';
 import { displayImage } from './recipe-images.js';
+import { cookStyles, fitsStyles } from './cook-style.js';
 
 export interface RecipeInput {
   title: string;
@@ -154,7 +155,11 @@ export interface Suggestion {
 }
 
 /** Rank recipes by what is in the house now, what expires soon, favourites and how long ago they were cooked. */
-export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxMissing?: number } = {}): Suggestion[] {
+/**
+ * `allMachines`: also recipes for kitchen machines the household does not have („Wie kocht ihr?“, cook-style.ts).
+ * By default they stay out of every suggestion – the recipes themselves stay in the library.
+ */
+export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxMissing?: number; allMachines?: boolean } = {}): Suggestion[] {
   const products = listProducts();
   const byId = new Map(products.map((p) => [p.id, p]));
   const recipes = listRecipes();
@@ -173,7 +178,9 @@ export function suggest(opts: { thermomix?: boolean | null; limit?: number; maxM
   // away mode "use it up": in the days before a trip, what would go off while away counts extra
   const away = useUpWindow();
   const awayToday = awayDay(0);
+  const styles = cookStyles();
   for (const r of recipes) {
+    if (!opts.allMachines && !fitsStyles(r, styles)) continue;
     if (opts.thermomix === true && !r.thermomix) continue;
     if (opts.thermomix === false && r.thermomix) continue;
     const eff = effectiveIngredients(r, byRecipe.get(r.id) ?? [], ctx);

@@ -77,6 +77,7 @@ struct WishesView: View {
         }
         .themedList()
         .navigationTitle(L("Wishes"))
+        .assistantScreen("wishes")
         .searchable(text: $query, prompt: L("Search all wishes"))
         .task(id: query) { await search() }
         .navigationDestination(for: Int.self) { id in WishListDetailView(api: api, listId: id) }

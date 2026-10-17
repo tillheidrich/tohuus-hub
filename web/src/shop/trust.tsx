@@ -4,7 +4,7 @@
  */
 import { ArrowCounterClockwise, CaretDown, CloudArrowUp, CloudCheck, WifiSlash } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
-import { invalidate, post, put, relTime, useApi } from '../api';
+import { invalidate, post, put, relTime, useApi, useOfflineSince } from '../api';
 import { t } from '../i18n';
 import { Seg, Sheet, useToast } from '../ui';
 import { useOfflineState } from './offline';
@@ -23,6 +23,7 @@ function ago(ms: number) {
 /** "Abgeglichen vor 3 s" / "Offline – 2 Änderungen warten" – always visible above the list. */
 export function SyncLine({ updatedAt, signedOut = false }: { updatedAt: number; signedOut?: boolean }) {
   const off = useOfflineState();
+  const stale = useOfflineSince();
   const [, tick] = useState(0);
   useEffect(() => {
     const id = window.setInterval(() => tick((n) => n + 1), 5000);
@@ -35,12 +36,14 @@ export function SyncLine({ updatedAt, signedOut = false }: { updatedAt: number; 
         <span>{off.pending ? t('Not signed in – {n} changes wait for the next sign-in', { n: off.pending }) : t('Not signed in – the list is from {when}', { when: updatedAt ? ago(updatedAt) : '–' })}</span>
       </p>
     );
-  if (!off.online)
+  // the server is down while the phone is online: the service worker answered from the stored list (api.ts)
+  const from = stale != null ? stale : updatedAt;
+  if (!off.online || stale != null)
     return (
       <p className="sync-line off" role="status">
         <WifiSlash size={16} />
         <span className="badge-off">{t('Offline')}</span>
-        <span>{off.pending ? (off.pending === 1 ? t('1 change will sync') : t('{n} changes will sync', { n: off.pending })) : updatedAt ? t('List from {when}', { when: ago(updatedAt) }) : ''}</span>
+        <span>{off.pending ? (off.pending === 1 ? t('1 change will sync') : t('{n} changes will sync', { n: off.pending })) : from ? t('List from {when}', { when: ago(from) }) : ''}</span>
       </p>
     );
   if (off.pending)

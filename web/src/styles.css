@@ -11424,3 +11424,29 @@ ul.mind-list,
   background: var(--primary-soft);
   color: var(--primary);
 }
+
+/* offline: a page shows the last saved answers because ToHuus can't be reached (offline-note.tsx) */
+.offline-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--r);
+  background: var(--info-soft);
+  color: var(--ink);
+}
+.offline-note svg {
+  color: var(--info);
+  flex: none;
+  margin-top: 2px;
+}
+.offline-note b {
+  display: block;
+  font-size: 0.95rem;
+}
+.offline-note span {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}

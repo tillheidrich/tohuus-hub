@@ -107,3 +107,31 @@ describe('list_add guards (TestFlight 13.10.)', () => {
   });
 });
 
+
+describe('screen context per page (web/src/assistant/areas.ts, audit 17.10.)', () => {
+  it('maps every assistant screen, keeps "Für wen ich da bin" out and knows every context on the server', async () => {
+    const { screenContext } = await import('../web/src/assistant/areas');
+    const cases: [string, string | null][] = [
+      ['/', 'tasks'],
+      ['/aufgaben', 'tasks'],
+      ['/kopf', 'tasks'],
+      ['/rueckblick', 'tasks'],
+      ['/woche', 'tasks'],
+      ['/urlaub', 'tasks'],
+      ['/fokus', 'tasks'],
+      ['/einkauf', 'shopping'],
+      ['/einkauf/wuensche', 'wishes'],
+      ['/einkauf/wuensche/3', 'wishes'],
+      ['/wo', 'stock'],
+      ['/bestand/7', 'stock'],
+      ['/kochen', 'cook'],
+      ['/fuer-wen', null],
+      ['/einstellungen', null],
+      ['/wohnung', null],
+    ];
+    for (const [p, c] of cases) expect([p, screenContext(p)]).toEqual([p, c]);
+    for (const [, c] of cases) if (c) expect(areas.CONTEXTS).toContain(c);
+    expect(areas.CONTEXT_TOPICS.wishes).toEqual(['wishes']);
+    expect(areas.contextHint('wishes', true)).toMatch(/wish_lists/);
+  });
+});

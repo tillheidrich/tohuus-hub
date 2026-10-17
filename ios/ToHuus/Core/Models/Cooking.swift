@@ -245,6 +245,8 @@ struct WhatToEat: Decodable, Sendable {
     var empty: Bool?
     var hasVegetarian: Bool?
     var hasThermomix: Bool?
+    /// own recipes for a kitchen machine the household did not choose („Wie kocht ihr?“, cook-style.ts)
+    var hiddenMachine: Int?
     @Lossy var planned: [Planned]
     @Lossy var ready: [WteCard]
     @Lossy var oneMissing: [WteCard]

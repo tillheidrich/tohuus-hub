@@ -254,6 +254,7 @@ struct PantryView: View {
     private var list: some View {
             List {
                 filterBar
+                if let note = OfflineNote.for(["api/products"]) { note.listRowBackground(Color.clear) }
                 if let error = model.error {
                     ErrorBanner(message: error) { Task { await model.load(store.api) } }.listRowBackground(Color.clear)
                 }

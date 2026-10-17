@@ -11,6 +11,21 @@ struct CareData: Decodable, Sendable {
     var today: String?
     /** the signed-in member (filter "Für mich") */
     var me: Int?
+    /// Heute › Demnächst: tomorrow, the weekend, bins by the evening they go out (server: lib/task-outlook.ts)
+    @Lossy var ahead: [CareAhead]
+}
+
+/// one entry of GET /api/care › ahead (web: TasksToday.tsx AheadItem)
+struct CareAhead: Decodable, Sendable, Hashable, Identifiable {
+    var id: Int
+    /// tonight | tomorrow | later
+    var when: String
+    var day: String
+    /// a bin: goes out the evening before the collection
+    var evening: Bool?
+    var pickup: String?
+    /// from 17:00 on the evening it goes out
+    var now: Bool?
 }
 
 struct CareTask: Decodable, Sendable, Identifiable, Hashable {
@@ -388,6 +403,7 @@ struct CareView: View {
                 }
                 .frame(minHeight: 44)
             }
+            if let note = OfflineNote.for(["api/care", "api/care/recent"]) { Section { note }.listRowBackground(Color.clear) }
             if let error { Section { ErrorBanner(message: error) { Task { await load() } } }.listRowBackground(Color.clear) }
             if let data {
                 if data.me != nil {
@@ -462,6 +478,7 @@ struct CareView: View {
             Section {
                 NavigationLink { CalendarSyncView(api: api, household: app.store?.householdKey ?? "default") } label: { Label(L("Read your existing calendar"), systemImage: "calendar.badge.checkmark") }
                 NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
+                NavigationLink { TasksToCalendarHelpView(api: api) } label: { Label(L("How your tasks get into your calendar"), systemImage: "calendar.badge.plus") }
                 NavigationLink { LabelsView(api: api, kind: .care) } label: { Label(L("Labels"), systemImage: "qrcode") }
             } footer: {
                 Text(L("Your tasks in Apple Reminders, your appointments in your calendar."))

@@ -158,7 +158,9 @@ struct AssistantSheet: View {
         .presentationDragIndicator(.visible)
         .onAppear {
             model.basic = !app.aiOn || app.planWithoutAI
-            model.context = app.screenContext ?? app.assistantContext
+            // "none": a screen that must not send its context (Für wen ich da bin – health information)
+            let screen = app.screenContext ?? app.assistantContext
+            model.context = screen == "none" ? nil : screen
         }
         // agreeing to AI right here (AIConsentPrompt) switches from simple sentences to the full assistant
         .onChange(of: app.aiOn) { _, on in model.basic = !on || app.planWithoutAI }
@@ -312,4 +314,20 @@ struct AssistantSheet: View {
             }
         }
     }
+}
+
+/// The screen the assistant is opened from (server/lib/assistant-areas.ts CONTEXTS), like the web's screenContext():
+/// set while the view is shown. "none" keeps the tab's context away too (health information).
+private struct AssistantScreen: ViewModifier {
+    @Environment(AppModel.self) private var app
+    let context: String
+    func body(content: Content) -> some View {
+        content
+            .onAppear { app.screenContext = context }
+            .onDisappear { if app.screenContext == context { app.screenContext = nil } }
+    }
+}
+
+extension View {
+    func assistantScreen(_ context: String) -> some View { modifier(AssistantScreen(context: context)) }
 }

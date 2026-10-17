@@ -11,6 +11,9 @@
  *   money     monthly review in plain words, saving hints from own receipts, "Warum war der Oktober teurer?" (money_compare)
  *   house     "Wir haben Alexa und Hue im Wohnzimmer" → draft Hausinfo cards (house_draft_cards, admins) – never codes
  *   guests    shopping for a party with quantities per guest count (check_at_home + list_add)
+ *   tasks     Aufgaben, Im Kopf, Rückblick, Urlaub, Fokus (tasks_list, mind_add, review, away_status …)
+ *   wishes    wish lists and the Merkliste (wish_lists, wish_add) – never reservations
+ *   (none)    "Für wen ich da bin": health data, deliberately without a screen context
  *
  * Privacy as everywhere: tool results pass redactForAssistant (Art. 9 filter) in runTool; Hausinfo codes never reach
  * a model; quotas are counted by the assistant before any model call.
@@ -27,7 +30,7 @@ import { notPrivate } from './share-core.js';
 import { norm } from './text.js';
 import { entitlement } from './plans.js';
 
-export const CONTEXTS = ['shopping', 'stock', 'cook', 'money', 'house', 'guests', 'tasks'] as const;
+export const CONTEXTS = ['shopping', 'stock', 'cook', 'money', 'house', 'guests', 'tasks', 'wishes'] as const;
 export type ScreenContext = (typeof CONTEXTS)[number];
 
 /** Topics (assistant-context.ts) a screen brings with it, besides what the message itself is about. */
@@ -39,6 +42,7 @@ export const CONTEXT_TOPICS: Record<ScreenContext, string[]> = {
   house: ['house'],
   guests: ['shopping', 'guests'],
   tasks: ['tasks'],
+  wishes: ['wishes'],
 };
 
 /** Area tools by topic (merged into assistant-tools.ts TOOLS_BY_TOPIC). */
@@ -78,6 +82,10 @@ export function contextHint(ctx: ScreenContext | null | undefined, de: boolean):
     tasks: [
       'Bildschirm: Aufgaben. Was heute ansteht: tasks_list. Neue Aufgaben, Zuständigkeiten und Abwechseln nur nach Ja (task_add, task_assign; auch ein fester Gast wie Oma kann es machen). Fragen zur Verteilung: tasks_overview, freundlich und ohne Rangliste beschreiben; Planen und Bemerken ist auch Arbeit. Allgemeine Fragen (wie oft Bettwäsche, womit entkalken) kurz als Richtwert beantworten und eine Aufgabe anbieten. Gedanken ohne Frist: mind_add. Was geschafft wurde: review. Jemand ist weg: away_status, dann home_plan_set nach Ja. Private Aufgaben und Gedanken siehst du nicht.',
       'Screen: tasks. What is due: tasks_list. New tasks, who does what and taking turns only after a yes (task_add, task_assign; a permanent guest like grandma can do it too). Questions about how work is shared: tasks_overview, kindly and without ranking; planning and noticing is work too. General questions (how often bed linen, how to descale) briefly as a rule of thumb, then offer a task. Thoughts without a deadline: mind_add. What got done: review. Someone is away: away_status, then home_plan_set after a yes. You never see private tasks or thoughts.',
+    ],
+    wishes: [
+      'Bildschirm: Wunschlisten. Was auf den Listen steht: wish_lists. Einen Wunsch oder Link nur eintragen, wenn die Person es jetzt möchte (wish_add, sonst ihre eigene Merkliste). Wer etwas reserviert oder schon gekauft hat, siehst du nie – nichts verraten, nichts raten.',
+      'Screen: wish lists. What is on the lists: wish_lists. Add a wish or link only when the person wants it now (wish_add, else their own Merkliste). You never see who reserved or already bought something – reveal nothing, guess nothing.',
     ],
     guests: [
       'Bildschirm: Gäste/Bring mir was. Einkauf für eine Feier: Mengen nach Gästezahl grob schätzen und als Schätzung sagen, mit check_at_home prüfen, nur Fehlendes nach Ja mit list_add.',

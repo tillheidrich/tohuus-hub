@@ -43,6 +43,7 @@ import { t } from '../i18n';
 import { HomeSwitch } from '../home/HomeSwitch';
 import { RatgeberCards } from './RatgeberCards';
 import { FreshStartButton, SplitButton, isGentle, mergeSteps, suggestSteps } from '../focus/Focus';
+import { TasksToCalendarHelp } from './CalendarSync';
 
 export type Unit = 'day' | 'week' | 'month' | 'year';
 export interface CareTask {
@@ -546,6 +547,7 @@ export function Care() {
             </span>
             <CaretRight size={16} aria-hidden="true" />
           </button>
+          <TasksToCalendarHelp />
           <button className="li clickable card nav-row" onClick={() => nav('/fuer-wen')}>
             <HandHeart size={20} aria-hidden="true" />
             <span className="grow">

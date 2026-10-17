@@ -13,6 +13,7 @@ import { ingredientCore, suggest, type Suggestion } from './recipes.js';
 import { norm } from './text.js';
 import { termMatches } from './variants.js';
 import { t } from '../i18n.js';
+import { cookStyles, fitsStyles } from './cook-style.js';
 
 /** "in the fridge" only when the leftovers really sit in a chilled place (area: home). */
 const frozenOrChilled = (locationId: number | null | undefined) => {
@@ -248,7 +249,10 @@ export function whatToEat(f: WteFilters = {}) {
     };
   });
 
-  const recipes = db.prepare('SELECT tags, thermomix, time_min FROM recipes').all() as { tags: string; thermomix: number; time_min: number | null }[];
+  // „Wie kocht ihr?“ (cook-style.ts): recipes for machines the household does not have stay out – and out of the filters
+  const styles = cookStyles();
+  const allRecipes = db.prepare('SELECT tags, thermomix, time_min, source_type, steps FROM recipes').all() as { tags: string; thermomix: number; time_min: number | null; source_type: string; steps: string }[];
+  const recipes = allRecipes.filter((r) => fitsStyles(r, styles));
   return {
     today,
     filters: f,
@@ -256,6 +260,9 @@ export function whatToEat(f: WteFilters = {}) {
     empty: count === 0,
     has_vegetarian: recipes.some((r) => isVegetarian(JSON.parse(r.tags || '[]'))),
     has_thermomix: recipes.some((r) => r.thermomix),
+    /** own recipes for a kitchen machine the household did not choose – kept, but not suggested (hint + link to the setting) */
+    hidden_machine: allRecipes.length - recipes.length,
+    cook_styles: styles,
     planned,
     ready: readyS.slice(0, 8).map((s) => toItem(s, products, false)),
     one_missing: oneS.slice(0, 6).map((s) => toItem(s, products, true)),

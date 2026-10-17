@@ -89,6 +89,9 @@ struct MainTabView: View {
             case .home: break // HomeView sets "tasks" or "stock"
             case .cooking: app.assistantContext = "cook"
             case .money: app.assistantContext = "money"
+            // Heute: "Was steht heute an?" (web: "/" → tasks)
+            case .today: app.assistantContext = "tasks"
+            // Mehr: the screens set their own (Wünsche "wishes", Urlaub/unterwegs "tasks"; Einstellungen none)
             default: app.assistantContext = nil
             }
         }

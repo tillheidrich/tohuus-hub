@@ -137,6 +137,7 @@ struct YearReviewView: View {
         }
         .canvasBackground()
         .navigationTitle(data?.title ?? L("Year in review"))
+        .assistantScreen("tasks")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }
         .task(id: year ?? 0) { await load() }

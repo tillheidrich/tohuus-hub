@@ -1,4 +1,5 @@
 import { QueryClient, useQuery } from '@tanstack/react-query';
+import { useSyncExternalStore } from 'react';
 import { locale, num, t } from './i18n';
 
 export const qc = new QueryClient({
@@ -26,13 +27,82 @@ function friendly(code: string | undefined, fallback: string) {
   return fallback;
 }
 
+// ------------------------------------------------------------------ offline reads (public/sw.js)
+
+/**
+ * When the server can't be reached, the service worker answers some reads (Heute, Aufgaben, Vorrat, Wochenplan,
+ * Hausinfo, the list) from the last stored answer and marks it with X-ToHuus-Offline: <saved at, ms>. The app then
+ * shows "Offline · as of 14:32" (OfflineNote) instead of an error; the first fresh answer clears it again.
+ * `since` is the oldest stored answer on screen, 0 when the time is unknown (stored by an older app version).
+ */
+let offlineSince: number | null = null;
+const offlineListeners = new Set<() => void>();
+function setOfflineSince(v: number | null) {
+  if (v === offlineSince) return;
+  offlineSince = v;
+  offlineListeners.forEach((l) => l());
+}
+function noteRead(r: Response) {
+  const mark = r.headers.get('X-ToHuus-Offline');
+  if (mark == null) return setOfflineSince(null);
+  const at = Number(mark) || 0;
+  setOfflineSince(offlineSince == null ? at : Math.min(offlineSince, at));
+}
+/** ms timestamp of the stored answer shown right now (0 = unknown), or null while everything is fresh */
+export function useOfflineSince() {
+  return useSyncExternalStore(
+    (fn) => {
+      offlineListeners.add(fn);
+      return () => offlineListeners.delete(fn);
+    },
+    () => offlineSince,
+  );
+}
+
+/** Forget every stored answer (sign-out, another account or household on this browser). */
+export function clearOfflineData() {
+  setOfflineSince(null);
+  try {
+    navigator.serviceWorker?.controller?.postMessage('clearData');
+  } catch {
+    /* no service worker */
+  }
+}
+
+/** Called with GET /api/me › scope: a different account or household than last time drops the stored answers. */
+export function noteDataScope(scope: string | null | undefined) {
+  if (!scope) return;
+  try {
+    const prev = localStorage.getItem('sw.data.scope');
+    if (prev && prev !== scope) clearOfflineData();
+    localStorage.setItem('sw.data.scope', scope);
+  } catch {
+    /* storage blocked */
+  }
+}
+
+/** The fetch failed without any answer (no network, DNS, server gone). Status 0, so callers can tell it apart. */
+export const isUnreachable = (e: unknown) => e instanceof ApiError && e.status === 0;
+
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown; form?: FormData } = {}): Promise<T> {
-  const r = await fetch(`/api${path}`, {
-    method: opts.method ?? (opts.body || opts.form ? 'POST' : 'GET'),
-    headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
-    body: opts.form ?? (opts.body ? JSON.stringify(opts.body) : undefined),
-    credentials: 'same-origin',
-  });
+  const method = opts.method ?? (opts.body || opts.form ? 'POST' : 'GET');
+  let r: Response;
+  try {
+    r = await fetch(`/api${path}`, {
+      method,
+      headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
+      body: opts.form ?? (opts.body ? JSON.stringify(opts.body) : undefined),
+      credentials: 'same-origin',
+    });
+  } catch {
+    // reads: nothing stored for this page yet; writes: say plainly that nothing was saved (the list queues its own)
+    throw new ApiError(0, method === 'GET' ? t('ToHuus can’t be reached right now. Please try again in a moment.') : t('ToHuus can’t be reached right now. Nothing was changed – please try again in a moment.'));
+  }
+  if (method === 'GET' && r.ok) noteRead(r);
+  if (method === 'POST' && path === '/auth/logout' && r.ok) clearOfflineData();
+  // the server (or the proxy in front of it) is down: same plain words instead of "Bad Gateway"
+  const down = r.status >= 502 && r.status <= 504 && !r.headers.get('content-type')?.includes('json');
+  if (down) throw new ApiError(r.status, method === 'GET' ? t('ToHuus can’t be reached right now. Please try again in a moment.') : t('ToHuus can’t be reached right now. Nothing was changed – please try again in a moment.'));
   const isJson = r.headers.get('content-type')?.includes('json');
   const data = isJson ? await r.json() : await r.text();
   if (!r.ok) {

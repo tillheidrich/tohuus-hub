@@ -39,6 +39,7 @@ import { StorePicker } from '../shop/StorePicker';
 
 import { type GettingStarted, type Room, type Step, STEPS, useGettingStarted, useOnboardingRedirect } from '../onboarding-state';
 import { StepModules } from './Modules';
+import { StepCookStyle } from './CookStyle';
 export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
 
 // ================================================================== wizard
@@ -54,10 +55,11 @@ export { type GettingStarted, useGettingStarted, useOnboardingRedirect };
  */
 // list2: 'use' – „Was nutzt ihr?“ right after „Wer gehört dazu?“ (modules)
 // 'shops' – „Wo kauft ihr meistens ein?“ (no chain preset, server/lib/stores.ts); skipped when sign-up already asked
-type Flow = 'who' | 'use' | 'shops' | 'list' | 'walk' | 'invite' | 'receipt';
-const FLOW: Flow[] = ['who', 'use', 'shops', 'list', 'walk', 'invite', 'receipt'];
+// 'cook' – „Wie kocht ihr?“ (CookStyle.tsx, server/lib/cook-style.ts): skippable, only when cooking is switched on
+type Flow = 'who' | 'use' | 'cook' | 'shops' | 'list' | 'walk' | 'invite' | 'receipt';
+const FLOW: Flow[] = ['who', 'use', 'cook', 'shops', 'list', 'walk', 'invite', 'receipt'];
 /** the server keeps the old step names – map the new flow onto them so progress survives a reload */
-const SERVER_STEP: Record<Flow, Step> = { who: 'home', use: 'home', shops: 'home', list: 'where', walk: 'places', invite: 'invite', receipt: 'stock' };
+const SERVER_STEP: Record<Flow, Step> = { who: 'home', use: 'home', cook: 'home', shops: 'home', list: 'where', walk: 'places', invite: 'invite', receipt: 'stock' };
 const FROM_SERVER: Partial<Record<Step, Flow>> = { home: 'who', where: 'list', places: 'walk', spots: 'walk', invite: 'invite', stock: 'receipt' };
 const LEGACY: Step[] = ['places', 'spots', 'stock'];
 
@@ -72,6 +74,8 @@ export function Onboarding({ me }: { me: Me }) {
   const tour = useTourInfo();
   // asked once: at cloud sign-up or here
   const shopsQ = useApi<StoreChoices>(['shop-choices'], '/shop/stores/choices');
+  // „Wie kocht ihr?“ only when the cooking area is on (it can be switched off one step earlier)
+  const modulesQ = useApi<{ cook?: boolean }>(['settings', 'modules'], '/modules');
   // snapshot when the flow starts, so answering does not shift the step list under the person
   const shopsAsked = useRef<boolean | null>(null);
   if (shopsQ.data && shopsAsked.current === null) shopsAsked.current = shopsQ.data.chosen;
@@ -96,7 +100,7 @@ export function Onboarding({ me }: { me: Me }) {
   if (legacy && LEGACY.includes(legacy)) return <LegacyOnboarding g={g.data} first={legacy} />;
 
   const curForm: OnbForm = form ?? (g.data.home?.form_chosen ? (g.data.home.form as OnbForm) : 'couple');
-  const steps = FLOW.filter((s) => !(s === 'invite' && curForm === 'single') && !(s === 'shops' && shopsAsked.current !== false));
+  const steps = FLOW.filter((s) => !(s === 'invite' && curForm === 'single') && !(s === 'shops' && shopsAsked.current !== false) && !(s === 'cook' && modulesQ.data?.cook === false));
   const cur: Flow = steps.includes(step) ? step : 'receipt';
   const idx = steps.indexOf(cur);
   const go = (s: Flow) => {
@@ -135,6 +139,7 @@ export function Onboarding({ me }: { me: Me }) {
         />
       )}
       {cur === 'use' && <StepModules onBack={back} onNext={next} />}
+      {cur === 'cook' && <StepCookStyle onBack={back} onNext={next} />}
       {cur === 'shops' && shopsQ.data && <StepShops data={shopsQ.data} onBack={back} onNext={next} />}
       {cur === 'list' && (
         <StepList

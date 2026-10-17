@@ -233,6 +233,7 @@ struct FocusView: View {
         }
         .canvasBackground()
         .navigationTitle(L("One thing at a time"))
+        .assistantScreen("tasks")
         .task { await load() }
         .refreshable { await load() }
         .toast($toast)

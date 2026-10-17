@@ -202,6 +202,7 @@ struct CookingView: View {
                     Text(L("Recipes")).tag(2)
                 }
                 .pickerStyle(.segmented)
+                if let note = OfflineNote.for(tab == 1 ? ["api/plan"] : ["api/recipes", "api/cook/ideas"]) { note }
                 if let error = model.error, tab == 2 { ErrorBanner(message: error) { Task { await model.load(store.api) } } }
                 switch tab {
                 case 0:

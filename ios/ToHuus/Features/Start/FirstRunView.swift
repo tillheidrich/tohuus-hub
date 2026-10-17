@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The first-run setup for a new household (web: pages/Onboarding.tsx, /willkommen), list first, no stock-keeping:
-/// 1 "Wer gehört dazu?" (form + name) → 2 "Was nutzt ihr?" (areas) → 3 "Wo kauft ihr meistens ein?" (skipped when
+/// 1 "Wer gehört dazu?" (form + name) → 2 "Was nutzt ihr?" (areas) → 2b "Wie kocht ihr?" (CookStyleViews.swift, only
+/// with the cooking area on, skippable) → 3 "Wo kauft ihr meistens ein?" (skipped when
 /// sign-up asked) → 4 "Wo ist eure Liste heute?" (paste, photo, fresh) → 5 the 30-second walk "da · fehlt · egal"
 /// → 6 "Wer kauft sonst ein?" (invite link + QR, not for one-person households) → 7 receipt + notifications.
 /// Every step can be skipped; progress is kept on the server (PATCH /api/onboarding), so the web continues it too.
@@ -10,9 +11,9 @@ struct FirstRunView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
 
-    enum Step: String, CaseIterable { case who, use, shops, list, walk, invite, finish }
+    enum Step: String, CaseIterable { case who, use, cook, shops, list, walk, invite, finish }
     /// the server keeps the older step names (onboarding-state.ts STEPS)
-    private static let serverStep: [Step: String] = [.who: "home", .use: "home", .shops: "home", .list: "where", .walk: "places", .invite: "invite", .finish: "stock"]
+    private static let serverStep: [Step: String] = [.who: "home", .use: "home", .cook: "home", .shops: "home", .list: "where", .walk: "places", .invite: "invite", .finish: "stock"]
     private static let fromServer: [String: Step] = ["home": .who, "where": .list, "places": .walk, "spots": .walk, "invite": .invite, "stock": .finish]
 
     @State private var step: Step = .who
@@ -20,6 +21,8 @@ struct FirstRunView: View {
     @State private var form: String?
     @State private var homeName = ""
     @State private var shopsAsked = true
+    /// „Wie kocht ihr?“ only while the cooking area is on (it can be switched off one step earlier)
+    @State private var cookOn = true
     @State private var showReceipt = false
     @State private var showPaperList = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -28,6 +31,7 @@ struct FirstRunView: View {
         Step.allCases.filter { s in
             if s == .invite && form == "single" { return false }
             if s == .shops && shopsAsked { return false }
+            if s == .cook && !cookOn { return false }
             return true
         }
     }
@@ -81,7 +85,8 @@ struct FirstRunView: View {
     @ViewBuilder private var content: some View {
         switch step {
         case .who: FirstRunWho(form: $form, name: $homeName) { next() }
-        case .use: FirstRunModules { next() }
+        case .use: FirstRunModules { Task { await loadModules(); next() } }
+        case .cook: FirstRunCookStyle(api: store.api) { next() }
         case .shops: FirstRunShops { next() }
         case .list: FirstRunList(store: store, photo: { showPaperList = true }) { next() }
         case .walk: FirstRunWalk(store: store, form: form ?? "couple") { next() }
@@ -102,7 +107,12 @@ struct FirstRunView: View {
         }
         // asked once: at cloud sign-up or here
         if let c: JSONValue = try? await store.api.get("api/shop/stores/choices") { shopsAsked = c["chosen"]?.bool ?? true }
+        await loadModules()
         loaded = true
+    }
+
+    private func loadModules() async {
+        if let m: [String: Bool] = try? await store.api.get("api/modules") { cookOn = m["cook"] ?? true }
     }
 
     private func go(_ s: Step) {
@@ -340,6 +350,45 @@ private struct FirstRunModules: View {
             modules = old
             self.error = APIError.from(error).localizedDescription
         }
+    }
+}
+
+// MARK: 2b · Wie kocht ihr?
+
+/// Skippable: "Skip" keeps the default (only stove and oven, no machine recipes).
+private struct FirstRunCookStyle: View {
+    let api: APIClient
+    let next: () -> Void
+    @State private var model = CookStyleModel()
+    @State private var busy = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s4) {
+            StepHeader(title: LC("How do you cook?"),
+                       lead: LC("So we only suggest what works in your kitchen. Several answers are fine."))
+            VStack(spacing: Theme.Space.s3) {
+                CookStylePicker(model: model) { styles in Task { await model.save(api, styles) } }
+            }
+            .padding(Theme.Space.s3)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+            if let e = model.error { ErrorBanner(message: e) }
+            NextButton(busy: busy) {
+                Task {
+                    // "Next" without touching anything still records the answer
+                    if model.loaded && !model.asked {
+                        busy = true
+                        await model.save(api, model.styles)
+                        busy = false
+                    }
+                    next()
+                }
+            }
+            Button(L("Skip")) { next() }
+                .frame(maxWidth: .infinity)
+                .foregroundStyle(Theme.ink2)
+        }
+        .task { await model.load(api) }
     }
 }
 

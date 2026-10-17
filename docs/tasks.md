@@ -75,6 +75,21 @@ For calendars without CalDAV (Google Calendar, Outlook): `GET /kalender-abo/<sec
 - iOS: `CareView.swift`, `TasksTodayCard.swift`, `BlickSection.swift`, `CalDavView.swift` (password + subscription), `AddToCalendar.swift` (Apple's event editor, prefilled; iOS 17 needs no calendar permission for it).
 - Web: "In den Kalender" downloads `/api/care/:id/ics`; `CalendarFeedCard` (shop/bridges.tsx) on Aufgaben and Settings › My account.
 
+## Heute › Demnächst (17 Oct 2026)
+
+Heute shows what is due today or overdue; the card *Demnächst* looks ahead so nothing surprises the household
+(`server/lib/task-outlook.ts`, `GET /api/care` › `ahead`, web `TasksAheadCard` in `TasksToday.tsx`, iOS `TasksAheadCard`
+in `TasksTodayCard.swift`):
+
+- tasks due tomorrow; on Friday and Saturday the next two days (Saturday sees Monday's collection),
+- tasks whose own lead time (`lead_days`) has started, never more than 7 days ahead,
+- bins (calendar kind `ext_kind`, template `bins`, or a title like "Restmüll"/"Tonne") by the **evening they go out**:
+  calendar bins with "am Vorabend" already carry that evening as their date, everything else goes out the evening
+  before its due day. Labels: "heute Abend rausstellen · Abfuhr Montag", "morgen Abend rausstellen".
+- From 17:00 (household time zone) a bin going out tonight has `now: true`: first in the list, in the primary colour,
+  never red. Only tonight's items get a *Erledigt* button.
+- Gentle mode: at most two, no "n more". Tasks that may wait (away) and "when needed" tasks are left out.
+
 ## "Mach ich" (14 Oct 2026)
 
 A promise with a day: *Heute*, *Morgen*, *Am Wochenende* (Saturday; today when it's already the weekend) or a date.

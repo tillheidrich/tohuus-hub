@@ -19,7 +19,8 @@ enum APIError: Error, LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .offline: return L("No connection right now. ToHuus keeps your changes and sends them later.")
+        // the shopping list queues its changes itself and never shows this; everywhere else nothing was saved
+        case .offline: return L("ToHuus can't be reached right now. Nothing was changed – please try again in a moment.")
         case .unauthorized: return L("You have been signed out. Please sign in again.")
         case .quota(let m): return m.isEmpty ? L("This month's assistant messages are used up.") : m
         case .planAssistant(let m): return m.isEmpty ? L("The assistant with AI comes with Household and Plus – try it free for 14 days.") : m

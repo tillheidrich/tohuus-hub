@@ -19,9 +19,17 @@ struct CalsyncData: Decodable, Sendable {
         var dates: Int = 0
         var taskId: Int?
         var off: Bool = false
+        /// the next few collection days, the usual gap in days, and nil/"new"/"on"/"ignored"
+        var upcoming: [String]?
+        var rhythmDays: Int?
+        var state: String?
         var id: String { key }
     }
-    struct Settings: Decodable, Sendable { var offset: String }
+    struct Settings: Decodable, Sendable {
+        var offset: String
+        var weeks: Int?
+    }
+    struct Window: Decodable, Sendable { var from: String; var to: String }
     struct AI: Decodable, Sendable {
         var consent: Bool
         var available: Bool
@@ -29,7 +37,14 @@ struct CalsyncData: Decodable, Sendable {
     }
     var settings: Settings
     var lastSync: String?
+    var horizonDays: Int?
+    var horizonWeeks: Int?
+    var window: Window?
+    var rescanRequested: String?
+    var disconnectedAt: String?
     @Lossy var kinds: [Kind]
+
+    var weeks: Int { settings.weeks ?? horizonWeeks ?? 26 }
     var ai: AI
 }
 
@@ -57,6 +72,17 @@ extension APIClient {
         _ = try await send("PUT", "api/calsync/settings", json: ["offset": offset], as: Ignored.self)
     }
     func calsyncRevive(_ kind: String) async throws { _ = try await send("POST", "api/calsync/kinds/\(kind)/revive", as: Ignored.self) }
+    /// switch a kind off: its task is deleted, a later read does not bring it back
+    func calsyncIgnore(_ kind: String) async throws { _ = try await send("POST", "api/calsync/kinds/\(kind)/ignore", as: Ignored.self) }
+    /// the ticked list: on → tasks, off → switched off
+    func calsyncDecide(on: [String], off: [String]) async throws {
+        _ = try await send("POST", "api/calsync/kinds", json: ["on": on, "off": off], as: Ignored.self)
+    }
+    func calsyncWeeks(_ weeks: Int) async throws {
+        _ = try await send("PUT", "api/calsync/settings", json: ["weeks": weeks], as: Ignored.self)
+    }
+    /// all tasks from the calendar, all dates and choices go
+    func calsyncDisconnect() async throws { _ = try await send("POST", "api/calsync/disconnect", as: Ignored.self) }
     func calsyncAI(_ consent: Bool) async throws { _ = try await send("PUT", "api/calsync/ai", json: ["consent": consent], as: Ignored.self) }
     func calsyncSuggest(_ events: [(title: String, day: String, time: String?)]) async throws -> [CalsyncSuggestion] {
         let body: [String: Any] = ["events": events.map { e -> [String: Any] in
@@ -82,6 +108,8 @@ struct CalendarSyncPrefs: Codable, Equatable {
     /// a meaningless id for this phone's reading (two phones on one calendar dedupe by day on the server)
     var source = "ios-" + UUID().uuidString.lowercased()
     var lastRun: Double = 0
+    /// when reading was set up on this phone – a "Kalender trennen" (from anywhere) after it ends reading here
+    var connectedAt: Double?
 
     var active: Bool { !readIds.isEmpty || writeId != nil }
 
@@ -111,11 +139,41 @@ final class CalendarSync {
 
     var calendars: [EKCalendar] { hasAccess ? store.calendars(for: .event).sorted { ($0.source.title, $0.title) < ($1.source.title, $1.title) } : [] }
 
-    /// When the app becomes active: at most once an hour, only when the person set it up and allowed access.
+    /// When the app becomes active: at most once an hour, only when the person set it up and allowed access –
+    /// and right away when someone asked for a new read in the browser (or changed the weeks) or disconnected.
     func runIfDue(api: APIClient, household: String) async {
         let p = CalendarSyncPrefs.load(household)
-        guard p.active, hasAccess, Date().timeIntervalSince1970 - p.lastRun > 3600 else { return }
+        guard p.active, hasAccess else { return }
+        if Date().timeIntervalSince1970 - p.lastRun <= 3600 {
+            guard let data = try? await api.calsync() else { return }
+            let asked = data.rescanRequested != nil && !p.readIds.isEmpty
+            guard asked || Self.disconnected(data, p) else { return }
+        }
         _ = try? await run(api: api, household: household)
+    }
+
+    /// "Kalender trennen" happened after this phone was set up
+    static func disconnected(_ data: CalsyncData, _ p: CalendarSyncPrefs) -> Bool {
+        guard let at = ServerDate.parse(data.disconnectedAt) else { return false }
+        return (p.connectedAt ?? 0) < at.timeIntervalSince1970
+    }
+
+    /// Stop reading and writing on this phone and take ToHuus' own entries out of the calendar again.
+    func forget(household: String) {
+        var p = CalendarSyncPrefs.load(household)
+        if hasAccess {
+            for (_, eid) in p.written {
+                if let event = store.calendarItem(withIdentifier: eid) as? EKEvent { try? store.remove(event, span: .thisEvent, commit: false) }
+            }
+            try? store.commit()
+        }
+        p.readIds = []
+        p.writeId = nil
+        p.written = [:]
+        p.stamps = [:]
+        p.skipped = []
+        p.connectedAt = nil
+        p.save(household)
     }
 
     struct SyncResult { var found = 0; var written = 0; var moved = 0 }
@@ -130,16 +188,23 @@ final class CalendarSync {
         var result = SyncResult()
         let cal = Calendar.current
         let start = cal.startOfDay(for: Date())
+        let data = try await api.calsync()
+        // disconnected (here or in the browser) after this phone was set up: stop, take our entries out
+        if Self.disconnected(data, p) {
+            running = false
+            forget(household: household)
+            return result
+        }
 
         // 1 – bins: the server's rules, matched here; only kind + day leave the phone
         let readCals = store.calendars(for: .event).filter { p.readIds.contains($0.calendarIdentifier) }
         if !readCals.isEmpty {
-            let data = try await api.calsync()
             let rules: [(String, NSRegularExpression)] = data.kinds.compactMap { k in
                 guard let re = try? NSRegularExpression(pattern: k.patterns.joined(separator: "|"), options: [.caseInsensitive]) else { return nil }
                 return (k.key, re)
             }
-            let end = cal.date(byAdding: .day, value: 120, to: start)!
+            // as far ahead as the household chose (Aufgaben › Kalender), the last day is end - 1
+            let end = cal.date(byAdding: .day, value: data.horizonDays ?? data.weeks * 7, to: start)!
             let events = store.events(matching: store.predicateForEvents(withStart: start, end: end, calendars: readCals))
             var seen = Set<String>()
             var dates: [(kind: String, day: String)] = []
@@ -150,7 +215,7 @@ final class CalendarSync {
                 let day = ServerDate.day(e.startDate)
                 if seen.insert("\(kind)|\(day)").inserted { dates.append((kind, day)) }
             }
-            try await api.calsyncDates(source: p.source, from: ServerDate.day(start), to: ServerDate.day(end), dates: dates)
+            try await api.calsyncDates(source: p.source, from: ServerDate.day(start), to: ServerDate.day(cal.date(byAdding: .day, value: -1, to: end)!), dates: dates)
             result.found = dates.count
         }
 
@@ -261,7 +326,26 @@ struct CalendarSyncView: View {
     @State private var error: String?
     @State private var suggestions: [CalsyncSuggestion] = []
     @State private var asked = false
+    /// the ticked list of newly found kinds (all ticked until someone unticks)
+    @State private var picked: Set<String> = []
+    @State private var pickedFor: [String] = []
+    @State private var confirmDisconnect = false
     private var sync: CalendarSync { CalendarSync.shared }
+    private static let weekChoices = [2, 4, 8, 12, 16, 20, 26]
+
+    private func rhythm(_ k: CalsyncData.Kind) -> String? {
+        guard let d = k.rhythmDays else { return k.dates == 1 ? L("once so far") : nil }
+        if (6...8).contains(d) { return L("every week") }
+        let w = Int((Double(d) / 7).rounded())
+        if w >= 2 && abs(d - w * 7) <= 2 { return LF("every %d weeks", w) }
+        return LF("about every %d days", d)
+    }
+
+    private func sub(_ k: CalsyncData.Kind) -> String {
+        [k.next.map { LF("next %@", ServerDate.shortDay($0) ?? $0) } ?? L("no date ahead"),
+         rhythm(k),
+         k.dates > 1 ? LF("%d dates found", k.dates) : nil].compactMap { $0 }.joined(separator: " · ")
+    }
 
     var body: some View {
         List {
@@ -294,6 +378,7 @@ struct CalendarSyncView: View {
                         let on = prefs.readIds.contains(c.calendarIdentifier)
                         Button {
                             if on { prefs.readIds.removeAll { $0 == c.calendarIdentifier } } else { prefs.readIds.append(c.calendarIdentifier) }
+                            if prefs.connectedAt == nil && !prefs.readIds.isEmpty { prefs.connectedAt = Date().timeIntervalSince1970 }
                             prefs.save(household)
                         } label: {
                             HStack {
@@ -314,35 +399,106 @@ struct CalendarSyncView: View {
                 } header: {
                     Text(L("Read these calendars"))
                 } footer: {
-                    Text(L("Only the calendars you tick. ToHuus looks 4 months ahead."))
+                    Text(LF("Only the calendars you tick. We read the next %d weeks.", data?.weeks ?? 26))
                 }
             }
 
             if let d = data {
                 Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(LF("We read the next %d weeks.", d.weeks))
+                        if let last = ServerDate.relative(d.lastSync) {
+                            Text(LF("Last read %@", last) + (d.window.flatMap { ServerDate.shortDay($0.to) }.map { " · " + LF("up to %@", $0) } ?? ""))
+                                .font(.footnote).foregroundStyle(Theme.ink2)
+                        } else {
+                            Text(L("Not read yet.")).font(.footnote).foregroundStyle(Theme.ink3)
+                        }
+                        if d.rescanRequested != nil {
+                            Text(L("A new read was asked for – it happens on this iPhone with “Read again now” or the next time the app opens."))
+                                .font(.footnote).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                    Picker(L("How far ahead to read"), selection: Binding(get: { d.weeks }, set: { v in Task { await changeWeeks(v) } })) {
+                        ForEach(Array(Set(Self.weekChoices + [d.weeks])).sorted(), id: \.self) { n in
+                            Text(n == 26 ? LF("%d weeks", n) + " (" + L("recommended") + ")" : LF("%d weeks", n)).tag(n)
+                        }
+                    }
+                } header: {
+                    Text(L("Found in your calendar"))
+                } footer: {
+                    Text(L("Sperrmüll and the Christmas tree come rarely – with half a year you catch them, too."))
+                }
+
+                let fresh = d.kinds.filter { $0.state == "new" }
+                if !fresh.isEmpty {
+                    Section {
+                        ForEach(fresh) { k in
+                            let on = picked.contains(k.key)
+                            Button {
+                                if on { picked.remove(k.key) } else { picked.insert(k.key) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: on ? "checkmark.circle.fill" : "circle")
+                                        .foregroundStyle(on ? Theme.primaryText : Theme.ink3)
+                                        .font(.title3)
+                                        .accessibilityHidden(true)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(k.name).foregroundStyle(Theme.ink)
+                                        Text(sub(k)).font(.caption).foregroundStyle(Theme.ink3)
+                                    }
+                                    Spacer()
+                                }
+                                .frame(minHeight: 44)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(on ? .isSelected : [])
+                        }
+                        Button {
+                            Task {
+                                await act {
+                                    try await api.calsyncDecide(on: fresh.map(\.key).filter { picked.contains($0) },
+                                                                off: fresh.map(\.key).filter { !picked.contains($0) })
+                                }
+                                note = L("Done – unticked ones stay off.")
+                            }
+                        } label: {
+                            Text(picked.isEmpty ? L("Take over none") : LF("Take over %d as tasks", fresh.filter { picked.contains($0.key) }.count))
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent).tint(Theme.primary)
+                        .frame(minHeight: 44)
+                    } header: {
+                        Text(L("Which should become tasks?"))
+                    }
+                }
+
+                Section {
                     Picker(L("Remind about the bin"), selection: Binding(get: { d.settings.offset }, set: { v in Task { await act { try await api.calsyncOffset(v) } } })) {
                         Text(L("the evening before")).tag("evening")
                         Text(L("on the morning")).tag("morning")
                     }
-                    ForEach(d.kinds.filter { $0.taskId != nil || $0.next != nil }) { k in
-                        HStack {
+                    ForEach(d.kinds.filter { $0.state == "on" || $0.state == "ignored" }) { k in
+                        Toggle(isOn: Binding(get: { k.state == "on" }, set: { v in
+                            Task {
+                                await act { if v { try await api.calsyncRevive(k.key) } else { try await api.calsyncIgnore(k.key) } }
+                                note = v ? L("On again") : L("Switched off – the task is gone and won’t come back with the next read.")
+                            }
+                        })) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(k.name)
-                                Text(k.off ? L("switched off") : k.next.map { LF("next collection %@", ServerDate.shortDay($0) ?? $0) } ?? L("no date ahead"))
+                                Text(k.state == "ignored" ? L("switched off") + " · " + sub(k) : sub(k))
                                     .font(.caption).foregroundStyle(Theme.ink3)
                             }
-                            Spacer()
-                            if k.off {
-                                Button(L("Switch on again")) { Task { await act { try await api.calsyncRevive(k.key) } } }
-                                    .buttonStyle(.bordered)
-                            }
                         }
+                        .tint(Theme.primary)
                         .frame(minHeight: 44)
                     }
                 } header: {
                     Text(L("Bin collection"))
                 } footer: {
-                    Text(L("Each bin becomes one task that follows the dates – with taking turns and “Mach ich” like every task. Don’t want one? Archive the task."))
+                    Text(L("Each bin you keep becomes one task that follows the dates – with taking turns and “Mach ich” like every task. Switched off, its task is deleted and a new read doesn’t bring it back."))
                 }
             }
 
@@ -402,7 +558,7 @@ struct CalendarSyncView: View {
                     Button {
                         Task { await runNow() }
                     } label: {
-                        HStack { Label(L("Sync now"), systemImage: "arrow.triangle.2.circlepath"); if busy { Spacer(); ProgressView() } }
+                        HStack { Label(L("Read again now"), systemImage: "arrow.triangle.2.circlepath"); if busy { Spacer(); ProgressView() } }
                     }
                     .frame(minHeight: 44)
                     .disabled(busy)
@@ -413,9 +569,38 @@ struct CalendarSyncView: View {
                     }
                 }
             }
+
+            if prefs.active || data?.lastSync != nil || (data?.kinds.contains { $0.state != nil } ?? false) {
+                Section {
+                    Button(role: .destructive) {
+                        confirmDisconnect = true
+                    } label: {
+                        Label(L("Disconnect calendar and remove everything from it"), systemImage: "calendar.badge.minus")
+                    }
+                    .frame(minHeight: 44)
+                    .disabled(busy)
+                } footer: {
+                    Text(L("You can connect it again any time – then ToHuus asks again what should become a task."))
+                }
+            }
+
+            Section {
+                NavigationLink { TasksToCalendarHelpView(api: api) } label: {
+                    Label(L("How your tasks get into your calendar"), systemImage: "calendar.badge.plus")
+                }
+            }
         }
         .themedList()
         .navigationTitle(L("Calendar"))
+        .confirmationDialog(L("Disconnect the calendar?"), isPresented: $confirmDisconnect, titleVisibility: .visible) {
+            Button(L("Disconnect and remove"), role: .destructive) { Task { await disconnect() } }
+            Button(L("Cancel"), role: .cancel) {}
+        } message: {
+            Text(L("Disconnect the calendar? All tasks that came from it are deleted, and the iPhone stops reading it. You can connect it again any time."))
+        }
+        .onChange(of: data?.kinds.filter { $0.state == "new" }.map(\.key) ?? []) { _, keys in
+            if keys != pickedFor { pickedFor = keys; picked = Set(keys) }
+        }
         .task {
             prefs = CalendarSyncPrefs.load(household)
             access = sync.hasAccess
@@ -460,6 +645,27 @@ struct CalendarSyncView: View {
         }
     }
 
+    /// a new number of weeks: save it, then read again right away when this phone reads
+    private func changeWeeks(_ weeks: Int) async {
+        await act { try await api.calsyncWeeks(weeks) }
+        if access && !prefs.readIds.isEmpty { await runNow() }
+    }
+
+    private func disconnect() async {
+        busy = true
+        defer { busy = false }
+        do {
+            try await api.calsyncDisconnect()
+            sync.forget(household: household)
+            prefs = CalendarSyncPrefs.load(household)
+            suggestions = []
+            note = L("Calendar disconnected")
+            await load()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     private func suggest() async {
         busy = true
         defer { busy = false }
@@ -482,5 +688,34 @@ struct CalendarSyncView: View {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+}
+
+/// "So kommen eure Aufgaben in euren Kalender" – the way back (web: TasksToCalendarHelp in pages/CalendarSync.tsx).
+struct TasksToCalendarHelpView: View {
+    let api: APIClient
+
+    var body: some View {
+        List {
+            Section {
+                Text(L("Apple Calendar (iPhone, Mac): set up “Reminders & Calendar” once. Tasks with a date then show in “ToHuus · Kalender”, and moving them there moves the task."))
+                NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
+            } header: { Text(L("Apple Calendar")) }
+            Section {
+                Text(L("Google Calendar, Outlook and others: create a subscription link and add it there. Read-only, it updates about every hour."))
+                NavigationLink { CalDavView(api: api) } label: { Label(L("Calendar subscription for Google, Outlook and others"), systemImage: "link") }
+            } header: { Text(L("Google, Outlook")) }
+            Section {
+                Text(L("Into a calendar you already have (e.g. your family calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Both ways”."))
+            } header: { Text(L("Your own calendar")) }
+            Section {
+                Text(L("Just one task: open it and tap “Add to calendar”."))
+            } footer: {
+                Text(L("Private tasks only appear when you choose so. The bins from your calendar are not written back – they are in there already."))
+            }
+        }
+        .font(.subheadline)
+        .themedList()
+        .navigationTitle(L("Into your calendar"))
     }
 }

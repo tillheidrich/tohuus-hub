@@ -107,6 +107,22 @@ struct WhatToEatSection: View {
     }
 
     private func filterChips(_ d: WhatToEat) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            if let n = d.hiddenMachine, n > 0 {
+                NavigationLink { CookStyleSettingsView(api: store.api) } label: {
+                    (Text(n == 1 ? LC("1 recipe for a kitchen machine is not suggested.") : LCF("%d recipes for a kitchen machine are not suggested.", n))
+                        .foregroundStyle(Theme.ink2)
+                     + Text(" ") + Text(LC("Change how you cook")).foregroundStyle(Theme.primaryText))
+                        .font(.caption)
+                        .multilineTextAlignment(.leading)
+                }
+                .buttonStyle(.plain)
+            }
+            filterChipRow(d)
+        }
+    }
+
+    private func filterChipRow(_ d: WhatToEat) -> some View {
         FlowLayout {
             if d.hasThermomix == true {
                 CookChip(title: "Thermomix", on: filters.tm == "1") { var f = filters; f.tm = f.tm == "1" ? "" : "1"; setFilters(f) }

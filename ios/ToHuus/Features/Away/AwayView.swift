@@ -274,6 +274,7 @@ struct AwayView: View {
         }
         .themedList()
         .navigationTitle(L("Trip / away"))
+        .assistantScreen("tasks")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {

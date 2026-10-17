@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, MagnifyingGlass, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
 import { DemoNudge } from './Samples';
-import { TasksTodayCard } from './TasksToday';
+import { TasksAheadCard, TasksTodayCard } from './TasksToday';
 import { TodayOfferAsks } from './WhoDoesWhat';
 import { StarsCard } from './Stars';
 import { ReviewTeaser } from './Review';
@@ -148,6 +148,7 @@ export function Today({ me }: { me: Me }) {
               <TodayOfferAsks />
               <WeekReviewTeaser guest={Boolean(gl)} />
               <TasksTodayCard today={localDay()} />
+              <TasksAheadCard />
               <CheckinCard guest={Boolean(gl)} />
               {!gl && <CareForHint />}
               <MindTodayCard guest={Boolean(gl)} />

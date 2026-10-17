@@ -105,6 +105,19 @@ describe('reading without a model (pure)', () => {
     expect(parse.looksLikeTask('Fahrrad Reifen', 'tasks')).toBe(true);
     expect(parse.looksLikeTask('Milch kaufen', 'tasks')).toBe(false);
   });
+  it('"Was steht heute an?" and "Was ist morgen?" ask for the tasks of that day (audit 17.10.)', () => {
+    for (const m of ['Was steht heute an?', 'Was steht an?', 'Was ist heute zu tun', 'Was müssen wir heute machen?', 'Was ist heute fällig?', 'Und heute?', "What's on today?"])
+      expect(p(m), m).toEqual({ kind: 'tasks', day: 'today' });
+    for (const m of ['Was ist morgen?', 'Was steht morgen an?', 'Welcher Müll ist morgen dran?', 'what is due tomorrow?'])
+      expect(p(m), m).toEqual({ kind: 'tasks', day: 'tomorrow' });
+    // cooking, shopping, the weather and plain list sentences keep their meaning
+    expect(p('Was kochen wir morgen?').kind).toBe('cook');
+    expect(p('Was ist fällig?').kind).toBe('due');
+    expect(p('Was steht übermorgen an?').kind).not.toBe('tasks');
+    expect(p('Guten Morgen').kind).toBe('hello');
+    expect(p('Wie wird das Wetter morgen in Hamburg?').kind).toBe('unknown');
+    expect(parse.looksLikeTask('Zahnarzt morgen')).toBe(true);
+  });
   it('answers to the assistant are never list items', () => {
     const cases: [string, string][] = [
       ['Ja', 'yes'],
@@ -260,6 +273,26 @@ describe('without a model configured', () => {
     expect((await till.req('GET', '/api/memory')).json.map((x: any) => x.text)).toContain('wir Brot beim Bäcker kaufen');
     // not about the household: a friendly answer instead (assistant-scope.ts)
     expect((await till.chat('Wie wird das Wetter?')).json).toMatchObject({ mode: 'basic', scope: 'off_topic' });
+  });
+
+  it('"Was steht heute an?" / "Was ist fällig?" on the tasks screen / "Was ist morgen?" answer from the tasks (audit 17.10.)', async () => {
+    const { runTool } = await import('../server/lib/assistant-tools');
+    const ctx = { actor: 'Till', userId: 1, actions: [] as any[] };
+    const ask = (message: string, context?: string) => till.req('POST', '/api/assistant/chat', { message, ...(context ? { context } : {}) });
+    expect((await ask('Was steht heute an?')).json.reply).toBe('Heute steht nichts an.');
+    expect((await ask('Was ist morgen?')).json.reply).toBe('Für morgen steht nichts an.');
+    runTool(ctx, 'task_add', { name: 'Bad putzen', due: catalog.localDay(0) });
+    runTool(ctx, 'task_add', { name: 'Fenster putzen', due: catalog.localDay(-2) });
+    runTool(ctx, 'task_add', { name: 'Zahnarzt', due: catalog.localDay(1), time: '10:00' });
+    runTool(ctx, 'task_add', { name: 'Tagebuch', due: catalog.localDay(0), only_me: true });
+    const today = await ask('Was steht heute an?');
+    expect(today.json).toMatchObject({ mode: 'basic', actions: [] });
+    expect(today.json.reply).toBe('Heute dran: Bad putzen. Noch offen: Fenster putzen.');
+    // on the tasks screen "fällig" means tasks; elsewhere it still means the shopping rhythm
+    expect((await ask('Was ist fällig?', 'tasks')).json.reply).toBe('Heute dran: Bad putzen. Noch offen: Fenster putzen.');
+    expect((await ask('Was ist fällig?', 'shopping')).json.reply).not.toMatch(/Bad putzen/);
+    expect((await ask('Was ist morgen?')).json.reply).toBe('Morgen dran: Zahnarzt um 10:00.');
+    db.prepare(`DELETE FROM care_tasks WHERE name IN ('Bad putzen', 'Fenster putzen', 'Zahnarzt', 'Tagebuch')`).run();
   });
 
   it('stores conversations per person, keeps them private and deletable', async () => {

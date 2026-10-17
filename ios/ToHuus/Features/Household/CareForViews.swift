@@ -165,6 +165,8 @@ struct CareForView: View {
         }
         .themedList()
         .navigationTitle(L("Who I’m there for"))
+        // health information: the assistant gets no screen context here
+        .assistantScreen("none")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

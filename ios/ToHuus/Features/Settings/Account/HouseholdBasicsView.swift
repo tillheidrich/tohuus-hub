@@ -64,6 +64,9 @@ struct HouseholdBasicsView: View {
                 NavigationLink { ModulesView(api: api) } label: {
                     Label(L("What do you use?"), systemImage: "square.grid.2x2")
                 }
+                NavigationLink { CookStyleSettingsView(api: api) } label: {
+                    Label(LC("How do you cook?"), systemImage: "frying.pan")
+                }
             } footer: {
                 if !app.isAdmin { Text(L("Only admins can change this.")) }
             }

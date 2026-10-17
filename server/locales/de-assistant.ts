@@ -123,4 +123,22 @@ export const de_assistant: Record<string, string> = {
   '{n} receipts are waiting for a quick look': '{n} Bons warten auf einen kurzen Blick',
   'Budget for this month is used up': 'Das Budget für diesen Monat ist aufgebraucht',
   '{left} left in this month’s budget': 'Noch {left} im Budget für diesen Monat',
+  // Im Kopf, Zuhause-Plan und Gesundheits-Hinweis (assistant-home.ts, assistant-tools.ts), 17 Oct 2026
+  'Written down as done: “{text}”': 'Als erledigt notiert: „{text}“',
+  '{n} things written down as done': '{n} Sachen als erledigt notiert',
+  'In your head – only for you: “{text}”': 'Im Kopf – nur für dich: „{text}“',
+  'In your head: “{text}”': 'Im Kopf: „{text}“',
+  '{n} thoughts written down': '{n} Gedanken notiert',
+  '“{task}”: {name} takes it': '„{task}“: {name} übernimmt',
+  '“{task}” may wait': '„{task}“ darf warten',
+  '“{task}” as usual': '„{task}“ wie immer',
+  'That sounds like health information. Please add allergies under People › Allergies; ToHuus asks there once whether it may store them.': 'Das klingt nach Gesundheitsdaten. Allergien trägst du bitte unter Leute › Allergien ein – ToHuus fragt dort einmal, ob es sie speichern darf.',
+  // Aufgaben ohne KI: „Was steht heute an?“, „Was ist morgen?“ (assistant.ts basicTasks), 17 Oct 2026
+  '{name} at {time}': '{name} um {time}',
+  'Today: {items}.': 'Heute dran: {items}.',
+  'Nothing on for today.': 'Heute steht nichts an.',
+  'Still open: {items}.': 'Noch offen: {items}.',
+  'Coming up: {items}.': 'Bald dran: {items}.',
+  'Tomorrow: {items}.': 'Morgen dran: {items}.',
+  'Nothing on for tomorrow.': 'Für morgen steht nichts an.',
 };

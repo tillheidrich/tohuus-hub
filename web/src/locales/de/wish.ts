@@ -104,4 +104,7 @@ export const wish: Record<string, string> = {
   'Leave out what is already reserved or bought': 'Was schon reserviert oder gekauft ist, weglassen',
   'Share …': 'Teilen …',
   'The message never says who reserved or bought something.': 'Die Nachricht verrät nie, wer etwas reserviert oder gekauft hat.',
+  // Assistent auf den Wunschlisten (AreaAssist.tsx), 17 Oct 2026
+  'What’s on the wish lists?': 'Was steht auf den Wunschlisten?',
+  'Put a Lego train on my Merkliste': 'Setz eine Lego-Eisenbahn auf meine Merkliste',
 };

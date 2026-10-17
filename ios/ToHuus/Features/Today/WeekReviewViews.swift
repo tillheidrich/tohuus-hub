@@ -240,6 +240,7 @@ struct WeekReviewView: View {
         }
         .canvasBackground()
         .navigationTitle(data?.title ?? (isMonth ? L("Month in review") : L("Week in review")))
+        .assistantScreen("tasks")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }
         .task(id: period + (day ?? "")) { await load() }

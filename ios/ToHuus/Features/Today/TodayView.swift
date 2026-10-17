@@ -146,6 +146,7 @@ struct TodayView: View {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
                     header
                     SyncBadge(online: store.isOnline, pending: store.pendingCount)
+                    if let note = OfflineNote.for(["api/today"]) { note }
                     if let error = model.error { ErrorBanner(message: error) { Task { await reload() } } }
                     if let t = model.today {
                         notices(t)
@@ -245,6 +246,7 @@ struct TodayView: View {
             if !app.isGuest { WeekReviewTeaser(api: store.api, refresh: refreshKey) }
             if !app.isGuest { MindTodayCard(api: store.api, refresh: refreshKey) }
             TasksTodayCard(api: store.api, refresh: refreshKey)
+            TasksAheadCard(api: store.api, refresh: refreshKey)
             StarsCard(api: store.api, refresh: refreshKey)
             if !app.isGuest { ReviewTeaser(api: store.api, refresh: refreshKey) }
         case .list: listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])

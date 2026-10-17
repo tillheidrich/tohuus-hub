@@ -336,6 +336,7 @@ struct MindView: View {
         }
         .themedList()
         .navigationTitle(L("On my mind"))
+        .assistantScreen("tasks")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if let d = data, !(d.mine.open.isEmpty && d.mine.done.isEmpty) {

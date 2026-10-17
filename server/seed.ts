@@ -12,6 +12,7 @@ import { BASE_CATEGORIES, BASE_LOCATIONS, baseName, categoryIdByKey, locationIdB
 import { saveRecipe } from './lib/recipes.js';
 import { linkCategoryDefaults, localizeBaseNames } from './lib/places.js';
 import { captureDemo } from './lib/demo.js';
+import { cookStylesAsked, setCookStyles } from './lib/cook-style.js';
 
 /** The seven neutral base places (fridge, freezer, pantry …) – only for the demo and tests, never unasked. */
 export function ensureBasePlaces() {
@@ -401,6 +402,8 @@ function demoRecipeImage(recipeId: number, slug: string): string | null {
 }
 
 function seedRecipes() {
+  // the demo family cooks with a Thermomix (four demo recipes) – „Wie kocht ihr?“ otherwise hides them (cook-style.ts)
+  if (!cookStylesAsked()) setCookStyles(['normal', 'thermomix']);
   for (const [r, cookedDaysAgo, image] of (lang() === 'en' ? RECIPES_EN : RECIPES_DE)) {
     const id = saveRecipe(r);
     const img = demoRecipeImage(id, image);
