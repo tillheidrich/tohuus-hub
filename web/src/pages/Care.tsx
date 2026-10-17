@@ -305,6 +305,49 @@ export function CareDueSection() {
   );
 }
 
+/** Type a task, press Enter: done. Once, due today; the details (repeat, who, time) come later by tapping it. */
+function QuickAddTask({ filter }: { filter: TaskFilter }) {
+  const toast = useToast();
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const add = async () => {
+    const name = text.trim().slice(0, 120);
+    if (!name || busy) return;
+    setBusy(true);
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    try {
+      await post('/care', { name, next_due: today, category: filter === 'care' ? 'care' : 'house', visibility: filter === 'mine' ? 'private' : 'household' });
+      setText('');
+      invalidate('care');
+      toast({ text: t('“{name}” added', { name }) });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="composer" style={{ marginBottom: 16 }}>
+      <label className="add-field">
+        <span className="sr-only">{t('Add a task')}</span>
+        <input
+          placeholder={t('New task, e.g. take out the paper bin')}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && add()}
+          enterKeyHint="done"
+          autoComplete="off"
+          maxLength={120}
+        />
+      </label>
+      <button className="add-btn" onClick={add} disabled={!text.trim() || busy} aria-label={t('Add')}>
+        <Plus size={22} weight="bold" />
+      </button>
+    </div>
+  );
+}
+
 export function Care() {
   const { data, isLoading, error } = useApi<CareData>('care', '/care');
   const me = useApi<Me>('me', '/me');
@@ -396,6 +439,7 @@ export function Care() {
       <p className="small muted" style={{ margin: '-10px 0 18px', maxWidth: 560 }}>
         {t('Bathroom, bed linen, water filter, smoke detectors, passports: what has to be done at home, once or again and again – for everyone or only for you. One tap when done – the next date is set automatically.')}
       </p>
+      <QuickAddTask filter={filter} />
       <OfferAsks tasks={all} me={data?.me} />
       <div style={{ marginBottom: 16 }}>
         <Seg<TaskFilter>

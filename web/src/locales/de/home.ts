@@ -73,6 +73,8 @@ export const home: Record<string, string> = {
   Label: 'Etikett',
   'Delete “{name}”?': '„{name}“ löschen?',
   'New task': 'Neue Frist',
+  'Add a task': 'Aufgabe hinzufügen',
+  'New task, e.g. take out the paper bin': 'Neue Aufgabe, z. B. Papiermüll rausbringen',
   'Edit task': 'Frist bearbeiten',
   'What?': 'Was?',
   'e.g. Change water filter': 'z. B. Wasserfilter wechseln',

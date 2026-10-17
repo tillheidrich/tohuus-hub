@@ -317,8 +317,31 @@ struct CareView: View {
     /// the initials circle grows with Dynamic Type
     @ScaledMetric(relativeTo: .caption) private var initial: CGFloat = 24
     @State private var reloads = 0
+    /// quick add: type, return, done (once, due today – details later by tapping the task)
+    @State private var quickName = ""
+    @State private var quickBusy = false
+    @FocusState private var quickFocus: Bool
 
     private var current: TaskFilter { filter ?? initialFilter }
+
+    private func quickAdd() async {
+        let name = String(quickName.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
+        guard !name.isEmpty, !quickBusy else { return }
+        quickBusy = true
+        defer { quickBusy = false }
+        do {
+            try await api.saveCareTask(id: nil, [
+                "name": name,
+                "next_due": ServerDate.day(Date()),
+                "category": current == .care ? "care" : "house",
+                "visibility": current == .mine ? "private" : "household",
+            ])
+            quickName = ""
+            Haptics.tick()
+            toast = ToastMessage(text: LF("“%@” added", name))
+            await load()
+        } catch { self.error = APIError.from(error).localizedDescription }
+    }
 
     var body: some View {
         List {
@@ -349,6 +372,21 @@ struct CareView: View {
                             .font(.footnote).foregroundStyle(Theme.ink3)
                     }
                 }
+            }
+            Section {
+                HStack(spacing: Theme.Space.s2) {
+                    TextField(L("New task, e.g. take out the paper bin"), text: $quickName)
+                        .focused($quickFocus)
+                        .submitLabel(.done)
+                        .onSubmit { Task { await quickAdd() } }
+                    Button { Task { await quickAdd() } } label: {
+                        Image(systemName: "plus.circle.fill").font(.title2).foregroundStyle(Theme.primaryText)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(quickName.trimmingCharacters(in: .whitespaces).isEmpty || quickBusy)
+                    .accessibilityLabel(L("Add a task"))
+                }
+                .frame(minHeight: 44)
             }
             if let error { Section { ErrorBanner(message: error) { Task { await load() } } }.listRowBackground(Color.clear) }
             if let data {

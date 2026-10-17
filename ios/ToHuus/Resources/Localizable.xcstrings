@@ -79679,6 +79679,40 @@
           }
         }
       }
+    },
+    "New task, e.g. take out the paper bin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New task, e.g. take out the paper bin"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufgabe, z. B. Papiermüll rausbringen"
+          }
+        }
+      }
+    },
+    "Add a task": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a task"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe hinzufügen"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
