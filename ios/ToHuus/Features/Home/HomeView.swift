@@ -11,6 +11,9 @@ struct HomeView: View {
     @State private var product: Int?
 
     enum Door: String, Identifiable { case find, house, away; var id: String { rawValue } }
+    #if DEBUG
+    @MainActor private static var debugDoorOpened = false
+    #endif
 
     private var level: String? { app.isGuest ? (app.guestLevel ?? "paused") : nil }
     private var stockOn: Bool { app.moduleOn("stock") && MoreAccess.guestAllows(level, "/bestand") }
@@ -32,6 +35,16 @@ struct HomeView: View {
         .onChange(of: app.homeSegment, initial: true) { _, s in
             if let s { segment = s; app.homeSegment = nil }
         }
+        #if DEBUG
+        // screenshot runs: -debugHomeDoor house | find | away opens the door the way a tap on its chip does (with
+        // -debugTab tasks). Replaces -debugSettings YES -debugMore house, whose sheet over "Mehr" no longer stays up.
+        .task {
+            guard !Self.debugDoorOpened, let raw = UserDefaults.standard.string(forKey: "debugHomeDoor"), let d = Door(rawValue: raw) else { return }
+            Self.debugDoorOpened = true
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            door = d
+        }
+        #endif
         .sheet(item: $door) { d in
             switch d {
             case .find:
