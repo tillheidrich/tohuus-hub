@@ -90,6 +90,14 @@ describe('reading without a model (pure)', () => {
     for (const m of ['Hallo', 'hallo!', 'Test', 'test 2', 'Moin', 'Hi', 'Guten Morgen', 'Wer bist du?', 'Was kannst du?', 'Hilfe', 'Hey ToHuus']) expect(p(m).kind, m).toBe('hello');
     for (const m of ['Milch', 'Testosteron-Shampoo', 'Hafermilch und Brot']) expect(p(m).kind, m).toBe('add');
   });
+  it('emoji are never list items (TestFlight 15.10.)', () => {
+    for (const m of ['😂', '🙈🙈', '🎉 🥳', '…😅', '🇩🇪']) expect(p(m).kind, m).toBe('hello');
+    expect(p('👍')).toEqual({ kind: 'reply', answer: 'yes' });
+    expect(p('❤️')).toEqual({ kind: 'reply', answer: 'thanks' });
+    const r = p('🥛 Milch, 🍞 Brot 😋') as any;
+    expect(r.kind).toBe('add');
+    expect(r.items.map((i: any) => i.name)).toEqual(['Milch', 'Brot']);
+  });
   it('answers to the assistant are never list items', () => {
     const cases: [string, string][] = [
       ['Ja', 'yes'],

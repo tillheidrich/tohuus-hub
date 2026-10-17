@@ -45,6 +45,13 @@ export function parseIntent(input: string): Intent {
   if (!text) return { kind: 'unknown' };
   let m: RegExpMatchArray | null;
 
+  // emoji only ("👍", "😂🙈", "❤️") – a reaction, never a list item (TestFlight feedback 15.10.)
+  if (!/[\p{L}\p{N}]/u.test(text)) {
+    if (/[👍👌✅✔☑🆗]/u.test(text)) return { kind: 'reply', answer: 'yes' };
+    if (/[👎❌✖🚫]/u.test(text)) return { kind: 'reply', answer: 'no' };
+    if (/[🙏❤♥💕💖😊🥰😍🤗]/u.test(text)) return { kind: 'reply', answer: 'thanks' };
+    return { kind: 'hello' };
+  }
   const r = replyOf(text);
   if (r) return { kind: 'reply', answer: r };
   if (SMALLTALK.test(text.replace(/[!?.…]+$/g, '').trim())) return { kind: 'hello' };
@@ -150,8 +157,12 @@ function readClause(raw: string): { item?: ListItem; vague?: string } | null {
 }
 
 /** All clauses must be understood (items or something vague) and at least one must be an item. */
-function readItems(text: string): { items: ListItem[]; vague: string[] } | null {
-  if (/[?]/.test(text) || text.length > 300) return null;
+/** pictographs, flags, skin tones, joiners and variation selectors – "🥛 Milch 😋" is "Milch" */
+export const EMOJI = /[\p{Extended_Pictographic}\p{Regional_Indicator}\u{1F3FB}-\u{1F3FF}\u200D\uFE0E\uFE0F\u20E3]/gu;
+
+function readItems(raw: string): { items: ListItem[]; vague: string[] } | null {
+  const text = clean(raw.replace(EMOJI, ' '));
+  if (!text || /[?]/.test(text) || text.length > 300) return null;
   const out: ListItem[] = [];
   const vague: string[] = [];
   for (const part of text.split(CLAUSES)) {

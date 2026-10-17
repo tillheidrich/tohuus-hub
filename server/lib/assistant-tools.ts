@@ -35,7 +35,7 @@ import { originOf, tickItem } from './shopping-trust.js';
 import { addDays, addExpense, deleteExpense, setBudget, today } from './spend2.js';
 import { nameScore, norm } from './text.js';
 import type { ParsedItem } from './shopparse.js';
-import { SMALLTALK, replyOf } from './assistant-parse.js';
+import { EMOJI, SMALLTALK, replyOf } from './assistant-parse.js';
 import type { ToolDef } from './ai.js';
 
 migrate(
@@ -220,8 +220,9 @@ export function listAdd(ctx: ToolCtx, items: { name: string; qty?: number | null
   const names: string[] = [];
   const already: string[] = [];
   for (const raw0 of items.slice(0, 30)) {
-    const name = raw0.name?.trim();
-    if (!name || replyOf(name) || SMALLTALK.test(name.replace(/[!?.…]+$/g, ''))) continue;
+    // emoji are decoration, not products: "🥛 Milch" is Milch, "👍" is nothing (TestFlight feedback 15.10.)
+    const name = raw0.name?.replace(EMOJI, ' ').replace(/\s+/g, ' ').trim();
+    if (!name || !/[\p{L}\p{N}]/u.test(name) || replyOf(name) || SMALLTALK.test(name.replace(/[!?.…]+$/g, ''))) continue;
     const packs = typeof raw0.qty === 'number' && Number.isInteger(raw0.qty) && raw0.qty >= 1 && raw0.qty <= MAX_PACKS ? raw0.qty : null;
     const amount = raw0.amount?.trim() || (typeof raw0.qty === 'number' && packs === null && raw0.qty > 0 ? String(raw0.qty).replace('.', ',') : '');
     const raw = { ...raw0, qty: packs, note: [amount, raw0.note?.trim()].filter(Boolean).join(' · ') || null };
