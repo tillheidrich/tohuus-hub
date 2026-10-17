@@ -6,6 +6,9 @@ import SwiftUI
 struct JoinInviteView: View {
     @Environment(AppModel.self) private var app
     var initialLink = ""
+    /// an access code (TOHU-…) was pasted: the start screen opens "Konto erstellen" with it
+    var onAccessCode: ((String) -> Void)?
+    @State private var hint: String?
     @State private var link = ""
     @State private var server: URL?
     @State private var token: String?
@@ -40,16 +43,20 @@ struct JoinInviteView: View {
         Form {
             if info == nil {
                 Section {
-                    TextField(L("Invitation link"), text: $link, axis: .vertical)
+                    TextField(L("Code or link"), text: $link, axis: .vertical)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
-                    PasteButton(payloadType: String.self) { s in if let first = s.first { link = first } }
-                    Button(L("Open invitation")) { Task { await open() } }
+                        .onChange(of: link) { _, _ in hint = nil; error = nil }
+                    PasteButton(payloadType: String.self) { s in
+                        if let first = s.first { link = first; Task { await open() } }
+                    }
+                    Button(L("Continue")) { Task { await open() } }
                         .disabled(busy || link.trimmingCharacters(in: .whitespaces).isEmpty)
                 } footer: {
-                    Text(L("The link from the message, for example https://…/einladung/…"))
+                    Text(L("Paste what was in the message: an access code like TOHU-… or an invitation link."))
                 }
+                if let hint { Section { Text(hint).foregroundStyle(Theme.ink2) } }
             } else if let info {
                 Section {
                     Text(LF("%@ invites you to %@.", info.invitedBy ?? L("Someone"), info.household ?? "ToHuus"))
@@ -120,8 +127,34 @@ struct JoinInviteView: View {
 
     private func open() async {
         error = nil
-        guard let (base, t) = Self.parse(link) else {
-            error = L("This doesn’t look like an invitation link.")
+        hint = nil
+        let base: URL
+        let t: String
+        switch StartCode(link) {
+        case .empty: return
+        case .invite(let b, let tok):
+            base = b ?? app.cloudServer
+            t = tok
+        case .access(let code):
+            if let onAccessCode { onAccessCode(code) } else { hint = L("That’s an access code for a new account. Go back and tap “Create account” – you can type it in there.") }
+            return
+        case .gift:
+            // own plan codes are never redeemed in the app (App Store 3.1.1, docs/cloud.md › plan codes)
+            hint = L("That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Plan.")
+            return
+        case .connect(let c):
+            busy = true
+            defer { busy = false }
+            do {
+                try await app.connect(c)
+                Haptics.success()
+            } catch { self.error = APIError.from(error).localizedDescription }
+            return
+        case .address:
+            hint = L("That’s the address of ToHuus, not an invitation. To get in: go back and tap “Create account” (with your access code) or “Sign in”.")
+            return
+        case .unknown:
+            error = L("We don’t recognise that. Invitation links start with https://, access codes with TOHU-.")
             return
         }
         busy = true
@@ -159,5 +192,56 @@ struct JoinInviteView: View {
                 try await app.signIn(server: server, mode: "selfhost", login: who, password: password, code: nil)
             }
         } catch { self.error = APIError.from(error).localizedDescription }
+    }
+}
+
+/// What was pasted into a code or link field at the start (same rules as the web: web/src/startCodes.ts, tested in
+/// test/start-codes.test.ts). Tester feedback 18 Oct 2026: an access code in the invitation field must not end in
+/// "doesn’t look like an invitation link".
+enum StartCode: Equatable {
+    case empty
+    /// beta gate access code (server/lib/beta.ts) → "Konto erstellen" with the code filled in
+    case access(String)
+    /// plan code GIFT-… (server/lib/gifts.ts) – web only
+    case gift(String)
+    /// household invitation: server (nil = ToHuus Cloud, a bare token) + token
+    case invite(URL?, String)
+    /// tohuus://connect… from the web app
+    case connect(ConnectLink)
+    /// just a web address
+    case address
+    case unknown
+
+    init(_ raw: String) {
+        let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if s.isEmpty { self = .empty; return }
+        if let c = ConnectLink(text: s) { self = .connect(c); return }
+        if let (base, token) = JoinInviteView.parse(s) { self = .invite(base, token); return }
+        if let c = Self.prefixed(s, "TOHU") { self = .access(c); return }
+        if let c = Self.prefixed(s, "GIFT") { self = .gift(c); return }
+        if let r = s.range(of: #"https?://[^\s"'<>]+"#, options: .regularExpression) {
+            if let q = URLComponents(string: String(s[r]))?.queryItems?.first(where: { $0.name == "code" })?.value, !q.isEmpty {
+                self = StartCode(q)
+            } else {
+                self = .address
+            }
+            return
+        }
+        if s.range(of: #"^[A-Za-z0-9_-]{24,}$"#, options: .regularExpression) != nil { self = .invite(nil, s); return }
+        if s.range(of: #"^[A-Za-z0-9-]{6,23}$"#, options: .regularExpression) != nil, s.contains(where: \.isNumber) {
+            self = .access(s.uppercased())
+            return
+        }
+        self = .unknown
+    }
+
+    /// "TOHU-82BM-3EYT", also "tohu 82bm 3eyt" or "TOHU82BM3EYT", also inside a longer message
+    static func prefixed(_ raw: String, _ prefix: String) -> String? {
+        let up = raw.uppercased()
+        let pattern = "(?:^|[^A-Z0-9])\(prefix)[\\s_-]*([A-Z0-9]{4})[\\s_-]*([A-Z0-9]{4})(?![A-Z0-9])"
+        guard let re = try? NSRegularExpression(pattern: pattern),
+              let m = re.firstMatch(in: up, range: NSRange(up.startIndex..., in: up)), m.numberOfRanges == 3,
+              let a = Range(m.range(at: 1), in: up), let b = Range(m.range(at: 2), in: up) else { return nil }
+        return "\(prefix)-\(up[a])-\(up[b])"
     }
 }

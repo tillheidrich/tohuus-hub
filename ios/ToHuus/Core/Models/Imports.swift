@@ -109,6 +109,12 @@ struct ApplyResult: Decodable, Sendable {
     var created: Int?
 }
 
+/// DELETE /api/imports/:id → stock bookings taken back, products only this receipt created removed
+struct ImportDeleteResult: Decodable, Sendable {
+    var reverted: Int?
+    var removedProducts: Int?
+}
+
 /// POST /api/imports/url → createImport result { id, merged?, duplicate? }
 struct UrlImportResult: Decodable, Sendable {
     var id: Int?

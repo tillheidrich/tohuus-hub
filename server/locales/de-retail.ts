@@ -24,4 +24,15 @@ export const de_retail: Record<string, string> = {
   '{name}: use-by date passed – please don’t eat it anymore': '{name}: Verbrauchsdatum vorbei – bitte nicht mehr essen',
   '{name}: past best-before – look, smell, taste; often still fine': '{name}: MHD vorbei – anschauen, riechen, probieren; oft noch gut',
   '{product} – use by {date} ({qty} left).': '{product} – zu verbrauchen bis {date} ({qty} da).',
+  // receipts: reading, pasting, changing a booked one (18.10.2026)
+  'The receipt could not be read right now (AI busy, text recognition found no receipt lines). Try again in a few minutes, or upload the receipt as a PDF.':
+    'Der Bon ließ sich gerade nicht lesen (KI ausgelastet, die Texterkennung hat keine Bon-Zeilen gefunden). Versuch es in ein paar Minuten noch mal oder lade den Bon als PDF hoch.',
+  'This looks like a receipt, but ToHuus could not read it. Share or upload the receipt as a PDF or a photo instead.':
+    'Das sieht nach einem Kassenbon aus, ToHuus konnte ihn aber nicht lesen. Teil oder lade den Bon lieber als PDF oder Foto hoch.',
+  'That is {n} lines – too many for one list. Paste up to {max} things, one per line. A receipt is best shared as a PDF or a photo.':
+    'Das sind {n} Zeilen – zu viele für eine Liste. Füg bis zu {max} Sachen ein, eine pro Zeile. Einen Kassenbon teilst du am besten als PDF oder Foto.',
+  'Nothing found to match.': 'Nichts gefunden, was sich zuordnen lässt.',
+  'Open the receipt for changes first.': 'Öffne den Bon zuerst zum Ändern.',
+  'added by hand': 'von Hand ergänzt',
+  'Invalid date': 'Ungültiges Datum',
 };

@@ -12,6 +12,8 @@ import { lang, t } from '../i18n';
 import { useApi } from '../api';
 import { StorePicker } from '../shop/StorePicker';
 import { AppleButton, appleErrorKey } from './AppleSignIn';
+import { classifyStartCode } from '../startCodes';
+import { invitePath, startCodeHint } from './StartCodeBox';
 
 /** Beta gate (ToHuus Cloud): the one sentence and the mail link to ask for an access code. */
 export function BetaNotice({ support }: { support?: string }) {
@@ -45,8 +47,14 @@ export function Signup() {
   const [busy, setBusy] = useState(false);
   // after Sign in with Apple came back without a usable code (`/signup?apple=invite|code`)
   const [appleBack] = useState(appleErrorKey);
-  const [err, setErr] = useState(appleBack.text);
-  const [code, setCode] = useState('');
+  // Apple came back without a code: say what to do, in that order
+  const [err, setErr] = useState(appleBack.key === 'invite' ? t('Type your access code first, then tap “Sign up with Apple” again.') : appleBack.text);
+  // the code from the sign-in page's code box or a link (`/signup?code=TOHU-…`)
+  const [code, setCode] = useState(() => new URLSearchParams(location.search).get('code') ?? '');
+  // whatever was pasted into the code field: a whole message with the code, an invitation link, a gift code …
+  const pasted = classifyStartCode(code);
+  const betaCode = pasted.kind === 'access' ? pasted.code : code.trim();
+  const codeHint = pasted.kind === 'invite' || pasted.kind === 'access' || pasted.kind === 'empty' ? '' : startCodeHint(pasted);
   const [shops, setShops] = useState<string[]>([]);
   const region = navigator.language?.split('-')[1]?.toUpperCase() || 'DE';
   const choices = useApi<{ stores: string[]; market: string | null }>(['store-choices', region], `/cloud/store-choices?region=${encodeURIComponent(region)}`);
@@ -70,7 +78,7 @@ export function Signup() {
         region,
         client: 'web',
         stores: shops,
-        ...(code.trim() ? { betaCode: code.trim() } : {}),
+        ...(betaCode ? { betaCode } : {}),
       });
       // a fresh start with the new session: straight into the setup ("Wer gehört dazu?")
       location.replace('/willkommen');
@@ -82,7 +90,7 @@ export function Signup() {
           : c === 'signup.code_invalid'
             ? t('This access code doesn’t work (anymore). Check it or ask for a new one.')
             : c === 'signup.invite'
-              ? t('Please enter your access code.')
+              ? t('Please enter your access code. It looks like TOHU-XXXX-XXXX.')
               : (e as Error).message,
       );
     } finally {
@@ -130,13 +138,26 @@ export function Signup() {
                 aria-describedby="su-code-help"
               />
               <div id="su-code-help">
+                {pasted.kind === 'invite' ? (
+                  <p className="small" role="status">
+                    {t('That’s an invitation into a household – no access code needed.')}{' '}
+                    <a className="linkish" href={invitePath(pasted)}>
+                      {t('Open invitation')}
+                    </a>
+                  </p>
+                ) : codeHint && pasted.kind !== 'unknown' ? (
+                  <p className="small" role="status">
+                    {codeHint}
+                  </p>
+                ) : null}
                 <BetaNotice support={inst.data?.support} />
+                {inst.data?.auth?.apple && <p className="small muted">{t('With Apple: type the code first, then tap “Sign up with Apple”.')}</p>}
               </div>
             </div>
           )}
           {inst.data?.auth?.apple && (
             <>
-              <AppleButton label={t('Sign up with Apple')} code={code} />
+              <AppleButton label={t('Sign up with Apple')} code={betaCode} />
               <div className="auth-or apple-or">
                 <span>{t('or with your e-mail address')}</span>
               </div>

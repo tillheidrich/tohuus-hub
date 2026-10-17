@@ -7,7 +7,20 @@ import { requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import { createProduct, learnAlias, matchProduct } from '../lib/catalog.js';
 import { toVisionJpeg } from '../lib/images.js';
-import { applyImport, createImport, linesToImport, parseDocumentText, pdfToText, saveUpload } from '../lib/imports.js';
+import {
+  addImportLine,
+  applyImport,
+  createImport,
+  deleteImport,
+  deleteImportLine,
+  discardImport,
+  linesToImport,
+  parseDocumentText,
+  pdfToText,
+  reopenImport,
+  saveUpload,
+  updateImportHead,
+} from '../lib/imports.js';
 import { norm, parseGermanNumber, titleCaseReceipt } from '../lib/text.js';
 import { runVision, visionAvailable } from '../lib/vision.js';
 import { upload } from './core.js';
@@ -21,6 +34,7 @@ import { AiError } from '../lib/ai.js';
 import { OcrError, ocrAvailable, ocrImage } from '../lib/ocr.js';
 import { importPurchaseHistory, parseCsv, productForArticle } from '../lib/list-import.js';
 import { receiptVisible, VISIBLE_TO } from '../lib/spending.js';
+import { detectStore } from '../importers/generic.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -85,6 +99,8 @@ r.patch('/imports/:id/lines/:lineId', (req, res) => {
       best_before: z.string().nullable().optional(),
       unit: z.string().max(12).nullable().optional(),
       price: z.number().min(-9999).max(9999).nullable().optional(),
+      /** deposit (Pfand / Leergut): counted as money, never as stock */
+      deposit: z.boolean().optional(),
     })
     .parse(req.body);
   const l = db
@@ -109,6 +125,8 @@ r.patch('/imports/:id/lines/:lineId', (req, res) => {
     b.price === undefined ? l.price : b.price,
     l.id,
   );
+  if (b.deposit !== undefined && b.deposit !== (l.status === 'deposit'))
+    db.prepare('UPDATE import_lines SET status = ?, action = ? WHERE id = ?').run(b.deposit ? 'deposit' : 'ok', b.deposit ? 'skip' : productId ? 'add' : 'new', l.id);
   // corrections become household rules for the next receipts (quality.ts)
   const { learned } = recordCorrection(l, { ...b, action: b.action ?? (action !== l.action ? action : undefined) }, actorName(req));
   emit('imports');
@@ -118,16 +136,39 @@ r.patch('/imports/:id/lines/:lineId', (req, res) => {
 r.post('/imports/:id/apply', (req, res) => res.json(applyImport(Number(req.params.id), actorName(req))));
 
 r.post('/imports/:id/discard', (req, res) => {
-  db.prepare(`UPDATE imports SET status = 'discarded' WHERE id = ? AND status = 'review'`).run(Number(req.params.id));
-  emit('imports');
+  discardImport(Number(req.params.id));
   res.json({ ok: true });
 });
 
-r.delete('/imports/:id', (req, res) => {
-  db.prepare(`DELETE FROM imports WHERE id = ?`).run(Number(req.params.id));
-  emit('imports');
-  res.json({ ok: true });
+/** Delete a receipt. A booked one takes its stock bookings and the products only it created with it. */
+r.delete('/imports/:id', (req, res) => res.json(deleteImport(Number(req.params.id), actorName(req))));
+
+/** Change a booked or discarded receipt: back to "to check" (bookings taken back), then edit and book again. */
+r.post('/imports/:id/reopen', (req, res) => res.json(reopenImport(Number(req.params.id), actorName(req))));
+
+/** Receipt head: shop, purchase date, total, title (any state). */
+r.patch('/imports/:id', (req, res) => {
+  const b = z
+    .object({
+      shop: z.string().max(60).nullable().optional(),
+      date: z.string().regex(/^\d{4}-\d\d-\d\d$/).nullable().optional(),
+      total: z.number().min(-99999).max(99999).nullable().optional(),
+      title: z.string().min(1).max(120).optional(),
+    })
+    .parse(req.body);
+  res.json(updateImportHead(Number(req.params.id), b));
 });
+
+/** Add a line the reading missed (receipt to be checked). */
+r.post('/imports/:id/lines', (req, res) => {
+  const b = z
+    .object({ name: z.string().trim().min(1).max(200), qty: z.number().min(0).max(999).optional(), price: z.number().min(-9999).max(9999).nullable().optional(), deposit: z.boolean().optional() })
+    .parse(req.body);
+  res.json(addImportLine(Number(req.params.id), b));
+});
+
+/** Remove a line (receipt to be checked). */
+r.delete('/imports/:id/lines/:lineId', (req, res) => res.json(deleteImportLine(Number(req.params.id), Number(req.params.lineId))));
 
 /**
  * Universal upload: PDFs (REWE avis / eBon or any text PDF), photos (receipt, shelf, product) and plain text.
@@ -237,18 +278,58 @@ async function importNotPdf(buf: Buffer, name: string, actor: string): Promise<R
   return { error: t('This file is a saved web page, not a PDF, and no receipt was found in it. Open the receipt in the browser and save or share it as a PDF.') };
 }
 
-async function importText(text: string, actor: string) {
+/** a typed or pasted list longer than this is almost certainly something else (a receipt, a whole page) */
+export const MAX_LIST_LINES = 60;
+
+/**
+ * Does pasted or shared text look like a till receipt? Several rows with prices and a total, a known shop or a
+ * high share of priced rows. (17.10.2026: a Lidl receipt shared as text became "Liste vom 17.10.2026" with 330
+ * "items" and was booked into the stock.)
+ */
+export function looksLikeReceiptText(text: string): boolean {
+  const rows = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  const priced = rows.filter((l) => /-?\d{1,4},\d\d(?!\d)/.test(l)).length;
+  if (priced < 4) return false;
+  return /^\s*(?:summe|zu\s+zahlen|gesamtbetrag|gesamtsumme|total|endbetrag)\b/im.test(text) || Boolean(detectStore(text)) || priced >= rows.length * 0.3;
+}
+
+async function importText(text: string, actor: string): Promise<Record<string, unknown>> {
   const parsed = parseDocumentText(text);
   if (parsed) return createImport(parsed, { actor, rawText: text });
-  // simple list: "2x Milch", "Paketband", "3 Dosen Tomaten"
+  if (looksLikeReceiptText(text)) {
+    // a receipt the parsers could not read as it is: the repairs of photo text (repeated blocks, slashed zeros) …
+    const read = receiptFromLines(text.split('\n'), null, 'ocr-device', null);
+    if (read && !read.parsed.meta.guessed) {
+      read.parsed.meta.source = 'text';
+      return createImport(read.parsed, { actor, rawText: text });
+    }
+    // … then the model, if the household uses AI …
+    if (visionAvailable()) {
+      try {
+        const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
+        if (lines.length) return createImport(linesToImport('receipt', t('Receipt {shop}', { shop: detectStore(text)?.name ?? '' }).trim(), lines, { shop: detectStore(text)?.name ?? null }), { actor, rawText: text });
+      } catch (e) {
+        if (!(e instanceof AiError) && !(e instanceof UsageLimitError)) throw e;
+      }
+    }
+    // … else every "name … price" row as a guess, to be checked – never a shopping list with hundreds of rows
+    if (read) {
+      read.parsed.meta.source = 'text';
+      return createImport(read.parsed, { actor, rawText: text });
+    }
+    return { error: t('This looks like a receipt, but ToHuus could not read it. Share or upload the receipt as a PDF or a photo instead.') };
+  }
+  // simple list: "2x Milch", "Paketband", "3 Dosen Tomaten" – rows without a letter (prices, dates, lines) are no items
   const lines = text
     .split(/\n|;/)
     .map((l) => l.replace(/^[-*•\s]+/, '').trim())
-    .filter(Boolean)
+    .filter((l) => l && /[A-Za-zÄÖÜäöüß]{2,}/.test(l))
     .map((l) => {
       const m = l.match(/^(\d+(?:[.,]\d+)?)\s*(?:x|×|stk\.?|stück|dosen?|flaschen?|packungen?|pck\.?)?\s+(.*)$/i);
       return m ? { name: m[2], qty: parseGermanNumber(m[1]) } : { name: l, qty: 1 };
     });
+  if (!lines.length) return { error: t('Nothing found to match.') };
+  if (lines.length > MAX_LIST_LINES) return { error: t('That is {n} lines – too many for one list. Paste up to {max} things, one per line. A receipt is best shared as a PDF or a photo.', { n: lines.length, max: MAX_LIST_LINES }) };
   return createImport(linesToImport('text', t('List from {date}', { date: fmtDay(new Date()) }), lines), { actor, rawText: text });
 }
 

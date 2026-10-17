@@ -167,7 +167,18 @@ function hintFor(name: string, vatRate: number | null | undefined): CategoryHint
   return 'toiletries';
 }
 
-function parseDate(text: string): { iso: string; time: string | null } | null {
+const MONTHS: Record<string, number> = {
+  januar: 1, jan: 1, februar: 2, feb: 2, märz: 3, maerz: 3, mär: 3, april: 4, apr: 4, mai: 5, juni: 6, jun: 6, juli: 7, jul: 7,
+  august: 8, aug: 8, september: 9, sep: 9, sept: 9, oktober: 10, okt: 10, november: 11, nov: 11, dezember: 12, dez: 12,
+};
+
+/**
+ * Purchase date of a receipt. A date with a time next to it ("17.10.26 18:42") is the till's own stamp and beats a
+ * plain date further up (a coupon "gültig bis 27.10.2026", a delivery date). Shop apps head a digital receipt with
+ * "13. September" (Lidl Plus): without a year it is the latest such day that is not in the future.
+ */
+export function parseDate(text: string, today: Date = new Date()): { iso: string; time: string | null } | null {
+  let plain: { iso: string; time: string | null } | null = null;
   for (const m of text.matchAll(/(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})(?!\d)(?:\D{0,12}?(\d{1,2}):(\d{2}))?/g)) {
     const day = Number(m[1]);
     const month = Number(m[2]);
@@ -175,8 +186,22 @@ function parseDate(text: string): { iso: string; time: string | null } | null {
     if (year < 100) year += 2000;
     if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000 || year > 2100) continue;
     const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const time = m[4] ? `${m[4].padStart(2, '0')}:${m[5]}` : null;
-    return { iso, time };
+    const time = m[4] && Number(m[4]) < 24 ? `${m[4].padStart(2, '0')}:${m[5]}` : null;
+    if (time) return { iso, time };
+    plain ??= { iso, time };
+  }
+  if (plain) return plain;
+  const named = text.match(/(?:^|[^\d])(\d{1,2})\.\s*(Januar|Februar|M(?:ä|ae)rz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)(?:\s+(\d{4}))?(?![a-zäöü])/i);
+  if (named) {
+    const day = Number(named[1]);
+    const month = MONTHS[named[2].toLowerCase()];
+    if (day >= 1 && day <= 31 && month) {
+      let year = named[3] ? Number(named[3]) : today.getFullYear();
+      const iso = (y: number) => `${y}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      if (!named[3] && iso(year) > todayIso) year -= 1;
+      return { iso: iso(year), time: null };
+    }
   }
   return null;
 }

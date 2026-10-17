@@ -80529,6 +80529,499 @@
           }
         }
       }
+    },
+    "I have an access code": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I have an access code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich habe einen Zugangscode"
+          }
+        }
+      }
+    },
+    "Code or link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code or link"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code oder Link"
+          }
+        }
+      }
+    },
+    "Paste what was in the message: an access code like TOHU-… or an invitation link.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste what was in the message: an access code like TOHU-… or an invitation link."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füg ein, was in der Nachricht stand: einen Zugangscode wie TOHU-… oder einen Einladungslink."
+          }
+        }
+      }
+    },
+    "That’s an access code for a new account. Go back and tap “Create account” – you can type it in there.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That’s an access code for a new account. Go back and tap “Create account” – you can type it in there."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist ein Zugangscode für ein neues Konto. Geh zurück und tipp auf „Konto erstellen“, dort gibst du ihn ein."
+          }
+        }
+      }
+    },
+    "That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That’s a gift code for a plan, not an access code. It can’t be used in the app."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist ein Geschenkcode für ein Abo, kein Zugangscode. In der App lässt er sich nicht einlösen."
+          }
+        }
+      }
+    },
+    "That’s the address of ToHuus, not an invitation. To get in: go back and tap “Create account” (with your access code) or “Sign in”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That’s the address of ToHuus, not an invitation. To get in: go back and tap “Create account” (with your access code) or “Sign in”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist die Adresse von ToHuus, keine Einladung. So kommst du rein: zurück und auf „Konto erstellen“ (mit deinem Zugangscode) oder „Anmelden“ tippen."
+          }
+        }
+      }
+    },
+    "We don’t recognise that. Invitation links start with https://, access codes with TOHU-.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We don’t recognise that. Invitation links start with https://, access codes with TOHU-."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das erkennen wir nicht. Einladungslinks beginnen mit https://, Zugangscodes mit TOHU-."
+          }
+        }
+      }
+    },
+    "There’s no account for this Apple ID yet. Type your access code below, then tap “Continue with Apple” again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There’s no account for this Apple ID yet. Type your access code below, then tap “Continue with Apple” again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für diese Apple-ID gibt es noch kein Konto. Gib unten deinen Zugangscode ein und tipp dann noch einmal auf „Mit Apple fortfahren“."
+          }
+        }
+      }
+    },
+    "With Apple: type the code first, then tap “Continue with Apple”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With Apple: type the code first, then tap “Continue with Apple”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Apple: erst den Code eingeben, dann auf „Mit Apple fortfahren“ tippen."
+          }
+        }
+      }
+    },
+    "That’s an invitation into a household – no access code needed. Go back and tap “I have an invitation”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That’s an invitation into a household – no access code needed. Go back and tap “I have an invitation”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist eine Einladung in einen Haushalt, dafür brauchst du keinen Zugangscode. Geh zurück und tipp auf „Ich habe eine Einladung“."
+          }
+        }
+      }
+    },
+    "That’s a link to connect the app with a server. Go back and use “Scan QR code”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That’s a link to connect the app with a server. Go back and use “Scan QR code”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist ein Link, der die App mit einem Server verbindet. Geh zurück und nutze „QR scannen“."
+          }
+        }
+      }
+    },
+    "Add a line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a line"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeile hinzufügen"
+          }
+        }
+      }
+    },
+    "Shop, date, total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop, date, total"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laden, Datum, Summe"
+          }
+        }
+      }
+    },
+    "Change receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change receipt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon ändern"
+          }
+        }
+      }
+    },
+    "Delete receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete receipt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon löschen"
+          }
+        }
+      }
+    },
+    "Delete this receipt?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this receipt?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Bon löschen?"
+          }
+        }
+      }
+    },
+    "Everything it booked is taken back: stock, spending and the products only this receipt created.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything it booked is taken back: stock, spending and the products only this receipt created."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles, was er gebucht hat, wird zurückgenommen: Vorrat, Ausgaben und die Produkte, die nur dieser Bon angelegt hat."
+          }
+        }
+      }
+    },
+    "The receipt is removed from the history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receipt is removed from the history."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Bon verschwindet aus dem Verlauf."
+          }
+        }
+      }
+    },
+    "remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "remove"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entfernen"
+          }
+        }
+      }
+    },
+    "Bookings taken back – change what you like, then book it in again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookings taken back – change what you like, then book it in again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buchungen zurückgenommen – ändere, was du magst, und buch den Bon dann wieder ein."
+          }
+        }
+      }
+    },
+    "Receipt opened again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt opened again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon wieder geöffnet."
+          }
+        }
+      }
+    },
+    "“Change receipt” takes back what it booked; you correct it and book it in again. “Delete receipt” takes everything back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Change receipt” takes back what it booked; you correct it and book it in again. “Delete receipt” takes everything back."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Bon ändern“ nimmt zurück, was er gebucht hat; du korrigierst ihn und buchst ihn neu ein. „Bon löschen“ nimmt alles zurück."
+          }
+        }
+      }
+    },
+    "After discounts – what you paid for this line.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After discounts – what you paid for this line."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Rabatten – was du für diese Zeile bezahlt hast."
+          }
+        }
+      }
+    },
+    "Deposit (Pfand) – counts as money, not as stock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deposit (Pfand) – counts as money, not as stock"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pfand – zählt als Geld, nicht als Vorrat"
+          }
+        }
+      }
+    },
+    "Date of purchase": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date of purchase"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einkaufsdatum"
+          }
+        }
+      }
+    },
+    "Empty: the day the receipt was added counts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty: the day the receipt was added counts."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer: Es zählt der Tag, an dem der Bon hinzugefügt wurde."
+          }
+        }
+      }
+    },
+    "Total paid": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total paid"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezahlte Summe"
+          }
+        }
+      }
+    },
+    "You find it under Money › Receipts. There you can change or delete it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You find it under Money › Receipts. There you can change or delete it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du findest ihn unter Geld › Bons. Dort kannst du ihn ändern oder löschen."
+          }
+        }
+      }
+    },
+    "It waits under Money › Receipts › To check until you book it in.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It waits under Money › Receipts › To check until you book it in."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er wartet unter Geld › Bons › Zu prüfen, bis du ihn einbuchst."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

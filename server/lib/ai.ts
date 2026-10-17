@@ -240,6 +240,8 @@ export interface ChatResult {
   toolCalls: ToolCall[];
   usage: Usage;
   model: string;
+  /** "stop", "length" (cut off at max_tokens) … when the provider reports it */
+  finishReason?: string | null;
 }
 
 export interface ChatOptions {
@@ -377,7 +379,8 @@ async function once(cfg: AiConfig, body: Record<string, unknown>, timeoutMs: num
     completion: Number(u.completion_tokens) || 0,
     total: Number(u.total_tokens) || (Number(u.prompt_tokens) || 0) + (Number(u.completion_tokens) || 0),
   };
-  return { content, toolCalls, usage, model: String(j.model ?? body.model) };
+  const finishReason = j?.choices?.[0]?.finish_reason ?? j?.choices?.[0]?.native_finish_reason ?? null;
+  return { content, toolCalls, usage, model: String(j.model ?? body.model), finishReason: finishReason == null ? null : String(finishReason) };
 }
 
 export function addUsage(a: Usage, b: Usage): Usage {
@@ -385,17 +388,122 @@ export function addUsage(a: Usage, b: Usage): Usage {
 }
 export { zeroUsage };
 
-/** Pull the first JSON object out of a model answer (code fences and chatter around it are fine). */
-export function extractJson(s: string): any {
-  const cleaned = s.replace(/```(?:json)?/g, '').trim();
-  const start = cleaned.indexOf('{');
-  const end = cleaned.lastIndexOf('}');
-  if (start < 0 || end < start) throw new AiError(t('No JSON answer from the model'), 'bad_response', 502);
-  try {
-    return JSON.parse(cleaned.slice(start, end + 1));
-  } catch {
-    throw new AiError(t('No JSON answer from the model'), 'bad_response', 502);
+/**
+ * Pull the JSON object out of a model answer. Tolerates what models actually send (18.10.2026, ToHuus Cloud log
+ * "[vision] second try failed Keine JSON-Antwort vom Modell"):
+ *   - code fences and chatter before or after the object
+ *   - reasoning blocks of the Mistral reasoning models ([THINK]…[/THINK], <think>…</think>) – their braces used to
+ *     make the "first { to last }" slice invalid
+ *   - several objects (an example in the chatter, then the answer): the last complete one that parses wins
+ *   - a bare array (`arrayKey` wraps it: `[...]` → `{ lines: [...] }`)
+ *   - an answer cut off at the token limit: closed after the last complete element (`_truncated: true`)
+ */
+export function extractJson(s: string, opts: { arrayKey?: string } = {}): any {
+  const text = String(s ?? '')
+    .replace(/\[THINK\][\s\S]*?\[\/THINK\]/gi, '')
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/```(?:json|JSON)?/g, '')
+    .trim();
+  const wrapped = (v: unknown) => (Array.isArray(v) ? { [opts.arrayKey ?? 'items']: v } : v);
+  // cut off at the token limit (the answer ends inside the object): repair that object first – its complete inner
+  // objects (single receipt lines) must not be mistaken for the answer
+  const first = text.search(opts.arrayKey ? /[{[]/ : /\{/);
+  if (first >= 0 && balancedEnd(text, first) < 0) {
+    const fixed = repairTruncatedJson(text.slice(first));
+    if (fixed !== null) {
+      try {
+        const v = wrapped(JSON.parse(fixed)) as Record<string, unknown>;
+        if (v && typeof v === 'object') return Object.assign(v, { _truncated: true });
+      } catch {
+        /* not JSON after all – look for complete objects */
+      }
+    }
   }
+  const values: unknown[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch !== '{' && !(ch === '[' && opts.arrayKey)) continue;
+    const end = balancedEnd(text, i);
+    if (end < 0) continue;
+    try {
+      values.push(JSON.parse(text.slice(i, end + 1)));
+      i = end;
+    } catch {
+      /* not JSON (prose with braces) – look further */
+    }
+  }
+  const wrap = (v: unknown) => (Array.isArray(v) ? { [opts.arrayKey ?? 'items']: v } : v);
+  const objects = values.filter((v) => v && typeof v === 'object');
+  if (objects.length) return wrap(objects[objects.length - 1]);
+  // cut off: repair from the first opening bracket
+  const start = text.search(opts.arrayKey ? /[{[]/ : /\{/);
+  if (start >= 0) {
+    const fixed = repairTruncatedJson(text.slice(start));
+    if (fixed !== null) {
+      try {
+        const v = wrap(JSON.parse(fixed)) as Record<string, unknown>;
+        if (v && typeof v === 'object') return Object.assign(v, { _truncated: true });
+      } catch {
+        /* fall through */
+      }
+    }
+  }
+  // the detail goes to logs: its shape only, never the content (it can be a receipt)
+  throw new AiError(t('No JSON answer from the model'), 'bad_response', 502, `len=${text.length} braces=${(text.match(/[{}]/g) ?? []).length} think=${/\[\/?THINK\]|<\/?think>/i.test(String(s ?? ''))}`);
+}
+
+/** Index of the bracket that closes the one at `start` (strings and escapes respected), or -1. */
+function balancedEnd(s: string, start: number): number {
+  const stack: string[] = [];
+  let inStr = false;
+  for (let i = start; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      if (c === '\\') i++;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '{' || c === '[') stack.push(c === '{' ? '}' : ']');
+    else if (c === '}' || c === ']') {
+      if (stack.pop() !== c) return -1;
+      if (!stack.length) return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * JSON that stops in the middle (token limit): cut back to the last complete element inside an array or object
+ * and close what is still open. Returns null when nothing complete is left.
+ */
+export function repairTruncatedJson(s: string): string | null {
+  const stack: string[] = [];
+  let inStr = false;
+  let cut = -1;
+  let cutStack: string[] = [];
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      if (c === '\\') i++;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '{' || c === '[') stack.push(c === '{' ? '}' : ']');
+    else if (c === '}' || c === ']') {
+      stack.pop();
+      if (!stack.length) return s.slice(0, i + 1);
+      cut = i + 1;
+      cutStack = [...stack];
+    } else if (c === ',' && stack.length) {
+      // a complete scalar member before the comma ("total": 12.5,) is a safe place to cut as well
+      cut = i;
+      cutStack = [...stack];
+    }
+  }
+  if (cut < 0) return null;
+  return s.slice(0, cut).replace(/,\s*$/, '') + cutStack.reverse().join('');
 }
 
 /**
@@ -500,6 +608,14 @@ export async function checkVisionModel(): Promise<string | null> {
       if (!inputs.includes('image')) warning = `[ai] vision model ${model} does not accept images (inputs: ${inputs.join(', ') || 'unknown'}) – receipt photos will fail`;
     }
     if (warning) console.warn(warning);
+    // the second-try model and the stand-ins for a busy model must take images too (18.10.2026)
+    const others = [cfg.models.visionHard, ...fallbackModels('vision', model), ...(cfg.models.visionHard ? fallbackModels('visionHard', cfg.models.visionHard) : [])];
+    for (const id of [...new Set(others.filter((x): x is string => Boolean(x) && x !== model))]) {
+      const o = (j?.data ?? []).find((x: any) => x?.id === id);
+      const inputs: string[] = o?.architecture?.input_modalities ?? [];
+      if (!o) console.warn(`[ai] vision stand-in model ${id} is not listed by OpenRouter`);
+      else if (!inputs.includes('image')) console.warn(`[ai] vision stand-in model ${id} does not accept images – it would fail on photos`);
+    }
     return warning;
   } catch {
     return null;

@@ -16,6 +16,9 @@ struct ImportReviewView: View {
     @State private var placeFor: ImportLine?
     @State private var fixFor: ImportLine?
     @State private var confirmDiscard = false
+    @State private var confirmDelete = false
+    @State private var showHead = false
+    @State private var showAddLine = false
     @State private var toast: ToastMessage?
     /// GET /api/quality/imports/:id – how the receipt was read (web: RecognitionCard, GradeBadge)
     @State private var report: RecognitionReport?
@@ -28,6 +31,7 @@ struct ImportReviewView: View {
                     // list2 G: who paid and for whom; care lists – lines for the household you shop for
                     WhoPaidPanel(store: store, importId: importId)
                     banners(imp)
+                    if imp.readonly { changeActions(imp) }
                     if imp.kind != "shelf", let report {
                         RecognitionCardView(store: store, importId: importId, readonly: imp.readonly, report: report) {
                             Task { await load() }
@@ -51,6 +55,10 @@ struct ImportReviewView: View {
                     if imp.lines.isEmpty {
                         EmptyStateView(art: .receipt, title: L("No lines on this receipt."))
                     }
+                    if !imp.readonly {
+                        Button { showAddLine = true } label: { Label(L("Add a line"), systemImage: "plus") }
+                            .frame(minHeight: 44)
+                    }
                 }
                 .padding(Theme.Space.s4)
                 .padding(.bottom, imp.readonly ? Theme.Space.s4 : 96)
@@ -64,11 +72,21 @@ struct ImportReviewView: View {
         .navigationTitle(L("Check receipt"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if let imp, !imp.readonly {
+            if let imp {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        Button { Task { await rematch() } } label: { Label(L("Match again"), systemImage: "arrow.triangle.2.circlepath") }
-                        Button(role: .destructive) { confirmDiscard = true } label: { Label(L("Discard receipt"), systemImage: "trash") }
+                        Button { showHead = true } label: { Label(L("Shop, date, total"), systemImage: "pencil") }
+                        if imp.readonly {
+                            Button { Task { await reopen(imp) } } label: {
+                                Label(imp.status == "applied" ? L("Change receipt") : L("Open again"), systemImage: "arrow.uturn.backward")
+                            }
+                            Button(role: .destructive) { confirmDelete = true } label: { Label(L("Delete receipt"), systemImage: "trash") }
+                        } else {
+                            Button { Task { await rematch() } } label: { Label(L("Match again"), systemImage: "arrow.triangle.2.circlepath") }
+                            Button { showAddLine = true } label: { Label(L("Add a line"), systemImage: "plus") }
+                            Button(role: .destructive) { confirmDiscard = true } label: { Label(L("Discard receipt"), systemImage: "xmark.bin") }
+                            Button(role: .destructive) { confirmDelete = true } label: { Label(L("Delete receipt"), systemImage: "trash") }
+                        }
                     } label: { Image(systemName: "ellipsis.circle") }
                     .accessibilityLabel(L("More"))
                 }
@@ -99,6 +117,19 @@ struct ImportReviewView: View {
             LineFixSheet(line: line) { body in
                 Task { await update(line, body) }
             }
+        }
+        .confirmationDialog(L("Delete this receipt?"), isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button(L("Delete receipt"), role: .destructive) { Task { await deleteReceipt() } }
+        } message: {
+            Text(imp?.status == "applied"
+                 ? L("Everything it booked is taken back: stock, spending and the products only this receipt created.")
+                 : L("The receipt is removed from the history."))
+        }
+        .sheet(isPresented: $showHead) {
+            if let imp { ImportHeadSheet(imp: imp) { body in Task { await saveHead(body) } } }
+        }
+        .sheet(isPresented: $showAddLine) {
+            AddImportLineSheet { body in Task { await addLine(body) } }
         }
         .confirmationDialog(L("Discard this receipt?"), isPresented: $confirmDiscard, titleVisibility: .visible) {
             Button(L("Discard"), role: .destructive) { Task { await discard() } }
@@ -203,6 +234,7 @@ struct ImportReviewView: View {
                         }
                         pill(placeName(l.locationId), "mappin") { placeFor = l }
                         pill(L("correct"), "pencil") { fixFor = l }
+                        pill(L("remove"), "trash") { Task { await removeLine(l) } }
                     }
                     .padding(.top, 2)
                 } else if readonly, let pn = l.productName {
@@ -211,6 +243,10 @@ struct ImportReviewView: View {
             }
             Spacer(minLength: 4)
             VStack(alignment: .trailing, spacing: 6) {
+                if !readonly && l.isDeposit {
+                    Button(L("correct")) { fixFor = l }
+                        .font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3).frame(minHeight: 32)
+                }
                 if !readonly && !l.isDeposit {
                     if !l.skipped { qtyStepper(l) }
                     Button(l.skipped ? L("include after all") : L("skip")) {
@@ -359,6 +395,77 @@ struct ImportReviewView: View {
         }
     }
 
+    /// booked: back to "to check", its stock bookings taken back; discarded: open again
+    private func reopen(_ imp: ImportDetail) async {
+        do {
+            try await store.api.reopenImport(importId)
+            store.touch("imports", "stock", "shopping", "products")
+            toast = ToastMessage(text: imp.status == "applied" ? L("Bookings taken back – change what you like, then book it in again.") : L("Receipt opened again."))
+            await load()
+        } catch {
+            toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+        }
+    }
+
+    private func deleteReceipt() async {
+        do {
+            _ = try await store.api.deleteImport(importId)
+            store.touch("imports", "stock", "shopping", "products")
+            Haptics.success()
+            dismiss()
+        } catch {
+            toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+        }
+    }
+
+    private func saveHead(_ body: [String: JSONValue]) async {
+        do {
+            try await store.api.patchImportHead(importId, body)
+            store.touch("imports")
+            await load()
+        } catch {
+            toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+        }
+    }
+
+    private func addLine(_ body: [String: JSONValue]) async {
+        do {
+            try await store.api.addImportLine(importId, body)
+            store.touch("imports")
+            await load()
+        } catch {
+            toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+        }
+    }
+
+    private func removeLine(_ l: ImportLine) async {
+        do {
+            try await store.api.deleteImportLine(importId: importId, lineId: l.id)
+            store.touch("imports")
+            await load()
+        } catch {
+            toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+        }
+    }
+
+    /// below the "Booked on …" note: change it (takes the bookings back) or delete it
+    private func changeActions(_ imp: ImportDetail) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            HStack(spacing: Theme.Space.s3) {
+                Button { Task { await reopen(imp) } } label: {
+                    Label(imp.status == "applied" ? L("Change receipt") : L("Open again"), systemImage: "arrow.uturn.backward")
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                Button(role: .destructive) { confirmDelete = true } label: { Label(L("Delete receipt"), systemImage: "trash") }
+                    .buttonStyle(SecondaryButtonStyle())
+            }
+            if imp.status == "applied" {
+                Text(L("“Change receipt” takes back what it booked; you correct it and book it in again. “Delete receipt” takes everything back."))
+                    .font(.caption).foregroundStyle(Theme.ink3)
+            }
+        }
+    }
+
     private func rematch() async {
         do {
             let n = try await store.api.rematchImport(importId)
@@ -473,6 +580,8 @@ struct LineFixSheet: View {
     @State private var qty = ""
     @State private var unit = "Stk"
     @State private var price = ""
+    @State private var name = ""
+    @State private var deposit = false
     @State private var invalid = false
 
     var body: some View {
@@ -480,6 +589,9 @@ struct LineFixSheet: View {
             Form {
                 Section {
                     Text(line.receiptName ?? line.raw ?? line.name).font(.callout.monospaced()).foregroundStyle(Theme.ink2)
+                }
+                Section(L("Name")) {
+                    TextField(L("Name"), text: $name)
                 }
                 Section {
                     TextField(L("Quantity"), text: $qty).keyboardType(.decimalPad)
@@ -492,8 +604,13 @@ struct LineFixSheet: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                Section(L("Price on the receipt")) {
+                Section {
                     TextField("0,00", text: $price).keyboardType(.decimalPad)
+                } header: { Text(L("Price on the receipt")) } footer: {
+                    Text(L("After discounts – what you paid for this line."))
+                }
+                Section {
+                    Toggle(L("Deposit (Pfand) – counts as money, not as stock"), isOn: $deposit)
                 }
                 if invalid { Section { Text(L("Please enter a valid number.")).foregroundStyle(Theme.empty) } }
             }
@@ -508,6 +625,8 @@ struct LineFixSheet: View {
                 qty = num(line.qty)
                 unit = line.unit.flatMap { ImportUnits.all.contains($0) ? $0 : nil } ?? "Stk"
                 price = line.price.map(num) ?? ""
+                name = line.name
+                deposit = line.isDeposit
             }
         }
         .presentationDetents([.medium, .large])
@@ -531,7 +650,125 @@ struct LineFixSheet: View {
         if q != line.qty { body["qty"] = .number(q) }
         if unit != (line.unit ?? "Stk") { body["unit"] = (unit == "Stk" && line.unit == nil) ? .null : .string(unit) }
         if p != line.price { body["price"] = p.map { .number($0) } ?? .null }
+        let n = name.trimmingCharacters(in: .whitespaces)
+        if !n.isEmpty && n != line.name { body["name"] = .string(n) }
+        if deposit != line.isDeposit { body["deposit"] = .bool(deposit) }
         dismiss()
         if !body.isEmpty { onSave(body) }
+    }
+}
+
+/// Shop, purchase date and total of a receipt (any state – spending reads them live). Web: ImportReview HeadSheet.
+struct ImportHeadSheet: View {
+    let imp: ImportDetail
+    let onSave: ([String: JSONValue]) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var shop = ""
+    @State private var hasDate = false
+    @State private var date = Date()
+    @State private var total = ""
+    @State private var invalid = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(L("Shop")) { TextField("Lidl", text: $shop) }
+                Section {
+                    Toggle(L("Date of purchase"), isOn: $hasDate)
+                    if hasDate { DatePicker(L("Date of purchase"), selection: $date, in: ...Date(), displayedComponents: .date) }
+                } footer: { Text(L("Empty: the day the receipt was added counts.")) }
+                Section(L("Total paid")) { TextField("0,00", text: $total).keyboardType(.decimalPad) }
+                if invalid { Section { Text(L("Please enter a valid number.")).foregroundStyle(Theme.empty) } }
+            }
+            .themedList()
+            .navigationTitle(L("Shop, date, total"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button(L("Save")) { save() } }
+            }
+            .onAppear {
+                shop = imp.shop ?? ""
+                total = imp.total.map { String(format: "%.2f", $0).replacingOccurrences(of: ".", with: ",") } ?? ""
+                if let d = imp.meta?["date"]?.string, d.count >= 10, let parsed = Self.day.date(from: String(d.prefix(10))) {
+                    hasDate = true
+                    date = parsed
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private static let day: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private func save() {
+        let t = total.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: ",", with: ".")
+        let value = t.isEmpty ? nil : Double(t)
+        if !t.isEmpty && value == nil { invalid = true; return }
+        let s = shop.trimmingCharacters(in: .whitespaces)
+        let body: [String: JSONValue] = [
+            "shop": s.isEmpty ? .null : .string(s),
+            "date": hasDate ? .string(Self.day.string(from: date)) : .null,
+            "total": value.map { .number($0) } ?? .null,
+        ]
+        dismiss()
+        onSave(body)
+    }
+}
+
+/// A line the reading missed (receipt to check). Web: ImportReview AddLineSheet.
+struct AddImportLineSheet: View {
+    let onSave: ([String: JSONValue]) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+    @State private var qty = "1"
+    @State private var price = ""
+    @State private var deposit = false
+    @State private var invalid = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(L("Name")) { TextField(L("Name"), text: $name) }
+                Section(L("Quantity")) { TextField("1", text: $qty).keyboardType(.decimalPad) }
+                Section(L("Price on the receipt")) { TextField("0,00", text: $price).keyboardType(.decimalPad) }
+                Section { Toggle(L("Deposit (Pfand) – counts as money, not as stock"), isOn: $deposit) }
+                if invalid { Section { Text(L("Please enter a valid number.")).foregroundStyle(Theme.empty) } }
+            }
+            .themedList()
+            .navigationTitle(L("Add a line"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(L("Add")) { save() }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func parse(_ s: String) -> Double? {
+        let t = s.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: ",", with: ".")
+        return t.isEmpty ? nil : Double(t)
+    }
+
+    private func save() {
+        guard let q = parse(qty), q >= 0, q <= 999 else { invalid = true; return }
+        let p = parse(price)
+        if !price.trimmingCharacters(in: .whitespaces).isEmpty && p == nil { invalid = true; return }
+        dismiss()
+        onSave([
+            "name": .string(name.trimmingCharacters(in: .whitespaces)),
+            "qty": .number(q),
+            "price": p.map { .number($0) } ?? .null,
+            "deposit": .bool(deposit),
+        ])
     }
 }

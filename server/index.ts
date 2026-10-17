@@ -12,6 +12,7 @@ import { config } from './config.js';
 import { UsageLimitError } from './lib/limits.js';
 import { gzipApi, precompressedStatic } from './lib/compress.js';
 import { lang, onDbReady } from './db.js';
+import { claim, withPageMeta } from './lib/page-meta.js';
 import { t } from './i18n.js';
 import { startScheduler } from './lib/scheduler.js';
 import { handleMcp } from './mcp/server.js';
@@ -286,7 +287,7 @@ if (webDir) {
   app.get('/manifest.webmanifest', (_req, res) => {
     const m = JSON.parse(fs.readFileSync(path.join(webDir, 'manifest.webmanifest'), 'utf8'));
     const c = CANVAS[theme() === 'dark' ? 'dark' : 'light'];
-    Object.assign(m, { background_color: c, theme_color: c, description: t('Less on your mind. More at home.') });
+    Object.assign(m, { background_color: c, theme_color: c, description: claim(lang()) });
     res.type('application/manifest+json').setHeader('Cache-Control', 'no-cache').send(JSON.stringify(m));
   });
   // pre-compressed .br/.gz from the build (scripts/precompress.mjs) for clients that accept them
@@ -308,7 +309,8 @@ if (webDir) {
       if (!adminHtml) return void res.status(404).type('text/plain').send('not found');
       return void res.type('html').setHeader('Cache-Control', 'no-store').send(adminHtml);
     }
-    res.type('html').setHeader('Cache-Control', 'no-cache').send(withLang(html));
+    // link previews in messengers: name, claim and image (lib/page-meta.ts)
+    res.type('html').setHeader('Cache-Control', 'no-cache').send(withPageMeta(withLang(html), { lang: lang(), path: req.path, baseUrl: config.baseUrl }));
   });
 }
 

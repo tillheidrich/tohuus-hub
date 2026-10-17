@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { config } from '../config.js';
-import { importsDir, readStoredFile, writeStoredFile } from './images.js';
+import { deleteImage, importsDir, readStoredFile, writeStoredFile } from './images.js';
 import { db, getSetting } from '../db.js';
 import { detectReweKind, isSameShopping, parseReweAvis, parseReweEbon, reconcile } from '../importers/rewe.js';
 import type { ParsedImport, ParsedLine } from '../importers/types.js';
@@ -283,6 +283,7 @@ export function applyImport(id: number, actor: string) {
   const lines = db.prepare('SELECT * FROM import_lines WHERE import_id = ? ORDER BY sort').all(id) as any[];
   let applied = 0;
   const created: number[] = [];
+  const ticked: number[] = [];
   // purchase day of the receipt (not the day it is approved) – for matching list ticks that already booked stock
   const metaDate = (() => {
     try {
@@ -315,15 +316,179 @@ export function applyImport(id: number, actor: string) {
       } else if (qty) adjustStock({ productId, locationId: l.location_id, delta: qty, bestBefore, reason: 'import', actor, ref: `import:${id}`, silent: true });
       applied++;
       // bought → tick it off the shopping list
-      if (l.qty > 0)
+      if (l.qty > 0) {
+        for (const s of db.prepare(`SELECT id FROM shopping_items WHERE product_id = ? AND checked_at IS NULL`).all(productId) as { id: number }[]) ticked.push(s.id);
         db.prepare(`UPDATE shopping_items SET checked_at = datetime('now'), checked_by = ? WHERE product_id = ? AND checked_at IS NULL`).run(actor, productId);
+      }
     }
-    db.prepare(`UPDATE imports SET status = 'applied', applied_at = datetime('now') WHERE id = ?`).run(id);
+    // products this booking created – taken away again when the receipt is deleted (revertImport)
+    const meta = (() => {
+      try {
+        return JSON.parse(imp.meta || '{}');
+      } catch {
+        return {};
+      }
+    })();
+    if (created.length) meta.createdProducts = [...new Set([...(Array.isArray(meta.createdProducts) ? meta.createdProducts : []), ...created])];
+    meta.tickedItems = ticked;
+    db.prepare(`UPDATE imports SET status = 'applied', applied_at = datetime('now'), meta = ? WHERE id = ?`).run(JSON.stringify(meta), id);
   });
   tx();
   for (const pid of created) enqueueEnrich(pid);
   emit('imports', 'stock', 'products', 'shopping');
   return { applied, created: created.length };
+}
+
+// ------------------------------------------------------------------ change or take back a booked receipt
+//
+// Christina, 17.10.2026: "Wie bekomme ich Eingebuchtes wieder weg?" A booked receipt can be
+//   - reopened (reopenImport): its stock bookings are taken back, it is "to check" again – edit anything, book again
+//   - deleted (deleteImport): bookings taken back, products it created and nothing else uses removed, receipt gone
+// Spending and the price history read the receipt's lines live (only while it is booked), so they follow by themselves.
+
+const readMeta = (raw: string | null | undefined): Record<string, any> => {
+  try {
+    return JSON.parse(raw || '{}') ?? {};
+  } catch {
+    return {};
+  }
+};
+
+/** Stock movements of the booking reversed (each once), list ticks and tick bookings released. */
+function revertBookings(id: number, actor: string): number {
+  const moves = db.prepare(`SELECT * FROM movements WHERE ref = ?`).all(`import:${id}`) as { id: number; product_id: number; location_id: number | null; delta: number }[];
+  let n = 0;
+  for (const m of moves) {
+    if (!m.delta || !getProduct(m.product_id)) continue;
+    adjustStock({ productId: m.product_id, locationId: m.location_id, delta: -m.delta, reason: 'undo', actor, ref: `import-undo:${id}`, silent: true });
+    n++;
+  }
+  // reversed once – a later booking of the same receipt gets fresh movements
+  db.prepare(`UPDATE movements SET ref = ? WHERE ref = ?`).run(`import:${id}:undone`, `import:${id}`);
+  db.prepare(`UPDATE shopping_items SET booked_import_id = NULL WHERE booked_import_id = ?`).run(id);
+  const imp = db.prepare('SELECT meta FROM imports WHERE id = ?').get(id) as { meta: string } | undefined;
+  const ticked: number[] = Array.isArray(readMeta(imp?.meta).tickedItems) ? readMeta(imp?.meta).tickedItems : [];
+  for (const sid of ticked) db.prepare(`UPDATE shopping_items SET checked_at = NULL, checked_by = NULL WHERE id = ? AND checked_at IS NOT NULL`).run(sid);
+  return n;
+}
+
+/** Products the receipt created (meta.createdProducts; older receipts: their "new" lines) that nothing else uses. */
+function removeCreatedProducts(id: number): number {
+  const imp = db.prepare('SELECT meta FROM imports WHERE id = ?').get(id) as { meta: string } | undefined;
+  const meta = readMeta(imp?.meta);
+  const ids = new Set<number>(Array.isArray(meta.createdProducts) ? meta.createdProducts.map(Number) : []);
+  if (!Array.isArray(meta.createdProducts))
+    for (const r of db.prepare(`SELECT product_id FROM import_lines WHERE import_id = ? AND action = 'new' AND product_id IS NOT NULL`).all(id) as { product_id: number }[]) ids.add(r.product_id);
+  let removed = 0;
+  for (const pid of ids) {
+    const p = getProduct(pid);
+    if (!p) continue;
+    const used =
+      (db.prepare(`SELECT COUNT(*) n FROM movements WHERE product_id = ? AND (ref IS NULL OR ref NOT IN (?, ?, ?))`).get(pid, `import:${id}`, `import:${id}:undone`, `import-undo:${id}`) as { n: number }).n +
+      (db.prepare(`SELECT COUNT(*) n FROM import_lines WHERE product_id = ? AND import_id != ?`).get(pid, id) as { n: number }).n +
+      (db.prepare(`SELECT COUNT(*) n FROM recipe_ingredients WHERE product_id = ?`).get(pid) as { n: number }).n +
+      (db.prepare(`SELECT COUNT(*) n FROM shopping_items WHERE product_id = ?`).get(pid) as { n: number }).n +
+      (db.prepare(`SELECT COUNT(*) n FROM stock WHERE product_id = ? AND qty > 0`).get(pid) as { n: number }).n;
+    if (used) continue;
+    deleteImage(p.image_path);
+    db.prepare('DELETE FROM products WHERE id = ?').run(pid);
+    removed++;
+  }
+  if (removed || ids.size) db.prepare('UPDATE imports SET meta = ? WHERE id = ?').run(JSON.stringify({ ...meta, createdProducts: [] }), id);
+  return removed;
+}
+
+/** A booked receipt back to "to check" (bookings taken back); a discarded one simply opens again. */
+export function reopenImport(id: number, actor: string) {
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
+  if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
+  if (imp.status === 'review') return { status: 'review', reverted: 0 };
+  let reverted = 0;
+  const tx = db.transaction(() => {
+    if (imp.status === 'applied') {
+      reverted = revertBookings(id, actor);
+      // products created by the booking exist now: the lines point at them instead of creating them again
+      db.prepare(`UPDATE import_lines SET action = 'add' WHERE import_id = ? AND action = 'new' AND product_id IS NOT NULL`).run(id);
+    }
+    db.prepare(`UPDATE imports SET status = 'review', applied_at = NULL WHERE id = ?`).run(id);
+  });
+  tx();
+  emit('imports', 'stock', 'shopping', 'products');
+  return { status: 'review', reverted };
+}
+
+/** Discard a receipt that is to be checked; products left over from an earlier booking go when nothing uses them. */
+export function discardImport(id: number) {
+  const tx = db.transaction(() => {
+    const r = db.prepare(`UPDATE imports SET status = 'discarded' WHERE id = ? AND status = 'review'`).run(id);
+    if (r.changes) removeCreatedProducts(id);
+  });
+  tx();
+  emit('imports', 'products');
+}
+
+/** Delete a receipt for good – a booked one takes its bookings and the products only it created with it. */
+export function deleteImport(id: number, actor: string) {
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
+  if (!imp) return { ok: true, reverted: 0, removedProducts: 0 };
+  let reverted = 0;
+  let removedProducts = 0;
+  const tx = db.transaction(() => {
+    if (imp.status === 'applied') reverted = revertBookings(id, actor);
+    removedProducts = removeCreatedProducts(id);
+    db.prepare(`DELETE FROM imports WHERE id = ?`).run(id);
+  });
+  tx();
+  emit('imports', 'stock', 'products', 'shopping');
+  return { ok: true, reverted, removedProducts };
+}
+
+/**
+ * Receipt head: shop, date, total, title – in every state (spending reads them live). The date is the purchase day
+ * ("YYYY-MM-DD"), null = unknown (the day it was added counts).
+ */
+export function updateImportHead(id: number, b: { shop?: string | null; date?: string | null; total?: number | null; title?: string }) {
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
+  if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
+  const meta = readMeta(imp.meta);
+  if (b.date !== undefined) {
+    if (b.date !== null && !/^\d{4}-\d\d-\d\d$/.test(b.date)) throw userError(t('Invalid date'));
+    meta.date = b.date;
+    meta.dateFrom = b.date ? 'person' : null;
+  }
+  const shop = b.shop === undefined ? imp.shop : b.shop?.trim() || null;
+  db.prepare('UPDATE imports SET shop = ?, total = ?, title = ?, meta = ? WHERE id = ?').run(
+    shop,
+    b.total === undefined ? imp.total : b.total,
+    b.title?.trim() || imp.title,
+    JSON.stringify(meta),
+    id,
+  );
+  emit('imports');
+  return { ok: true };
+}
+
+/** A line the reading missed (only while the receipt is to be checked). */
+export function addImportLine(id: number, b: { name: string; qty?: number; price?: number | null; deposit?: boolean }) {
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
+  if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
+  if (imp.status !== 'review') throw Object.assign(userError(t('Open the receipt for changes first.')), { status: 409 });
+  const sort = (db.prepare('SELECT COALESCE(MAX(sort), -1) + 1 AS s FROM import_lines WHERE import_id = ?').get(id) as { s: number }).s;
+  const name = b.name.trim();
+  insertLines(id, [{ raw: name, name, qty: b.qty ?? 1, price: b.price ?? null, unitPrice: b.price ?? null, status: b.deposit ? 'deposit' : 'ok', note: t('added by hand') }], sort);
+  emit('imports');
+  const row = db.prepare('SELECT id FROM import_lines WHERE import_id = ? ORDER BY id DESC LIMIT 1').get(id) as { id: number };
+  return { id: row.id };
+}
+
+/** Remove a line (only while the receipt is to be checked). */
+export function deleteImportLine(id: number, lineId: number) {
+  const r = db
+    .prepare(`DELETE FROM import_lines WHERE id = ? AND import_id = ? AND import_id IN (SELECT id FROM imports WHERE status = 'review')`)
+    .run(lineId, id);
+  if (!r.changes) throw Object.assign(userError(t('Open the receipt for changes first.')), { status: 409 });
+  emit('imports');
+  return { ok: true };
 }
 
 /** Turn loosely structured lines (vision / MCP / text) into a ParsedImport. */

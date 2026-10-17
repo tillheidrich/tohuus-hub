@@ -325,9 +325,13 @@ export function LineFixSheet({ line, importId, onClose }: { line: any | null; im
   const [qty, setQty] = useState('');
   const [unit, setUnit] = useState<string>('Stk');
   const [price, setPrice] = useState('');
+  const [name, setName] = useState('');
+  const [deposit, setDeposit] = useState(false);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (!line) return;
+    setName(line.name ?? '');
+    setDeposit(line.status === 'deposit');
     setQty(String(line.qty ?? 1).replace('.', ','));
     setUnit(line.unit && (UNITS as readonly string[]).includes(line.unit) ? line.unit : 'Stk');
     setPrice(line.price != null ? String(line.price).replace('.', ',') : '');
@@ -345,6 +349,8 @@ export function LineFixSheet({ line, importId, onClose }: { line: any | null; im
     if (q !== line.qty) body.qty = q;
     if (unit !== (line.unit ?? 'Stk')) body.unit = unit === 'Stk' && !line.unit ? null : unit;
     if (p !== (line.price ?? null)) body.price = p;
+    if (name.trim() && name.trim() !== line.name) body.name = name.trim();
+    if (deposit !== (line.status === 'deposit')) body.deposit = deposit;
     if (!Object.keys(body).length) {
       onClose();
       return;
@@ -368,6 +374,10 @@ export function LineFixSheet({ line, importId, onClose }: { line: any | null; im
         <div className="stack">
           <div className="small muted mono">{line.receipt_name ?? line.raw ?? line.name}</div>
           <div className="field">
+            <label>{t('Name')}</label>
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} />
+          </div>
+          <div className="field">
             <label>{t('Quantity')}</label>
             <input className="input" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} />
             <div className="help">{t('A pack of 10 eggs on one line? Enter 10 – it is remembered as the pack size.')}</div>
@@ -379,7 +389,12 @@ export function LineFixSheet({ line, importId, onClose }: { line: any | null; im
           <div className="field">
             <label>{t('Price on the receipt')}</label>
             <input className="input" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0,00" />
+            <div className="help">{t('After discounts – what you paid for this line.')}</div>
           </div>
+          <label className="row" style={{ gap: 8 }}>
+            <input type="checkbox" checked={deposit} onChange={(e) => setDeposit(e.target.checked)} />
+            <span>{t('Deposit (Pfand) – counts as money, not as stock')}</span>
+          </label>
           <button className="btn primary" disabled={busy} onClick={save}>
             {t('Save')}
           </button>

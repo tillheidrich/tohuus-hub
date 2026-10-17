@@ -23,6 +23,28 @@ extension APIClient {
     /// POST /api/imports/:id/discard (status review → discarded)
     func discardImport(_ id: Int) async throws { _ = try await send("POST", "api/imports/\(id)/discard", as: Ignored.self) }
 
+    /// POST /api/imports/:id/reopen – a booked receipt back to "to check" (its stock bookings are taken back);
+    /// a discarded one opens again
+    func reopenImport(_ id: Int) async throws { _ = try await send("POST", "api/imports/\(id)/reopen", as: Ignored.self) }
+
+    /// DELETE /api/imports/:id → { reverted, removedProducts } – a booked receipt takes its bookings with it
+    func deleteImport(_ id: Int) async throws -> ImportDeleteResult { try await send("DELETE", "api/imports/\(id)") }
+
+    /// PATCH /api/imports/:id { shop?, date? (YYYY-MM-DD | null), total? } – any state
+    func patchImportHead(_ id: Int, _ body: [String: JSONValue]) async throws {
+        _ = try await send("PATCH", "api/imports/\(id)", body: body, as: Ignored.self)
+    }
+
+    /// POST /api/imports/:id/lines { name, qty, price, deposit } – a line the reading missed (to check only)
+    func addImportLine(_ id: Int, _ body: [String: JSONValue]) async throws {
+        _ = try await send("POST", "api/imports/\(id)/lines", body: body, as: Ignored.self)
+    }
+
+    /// DELETE /api/imports/:id/lines/:lineId (to check only)
+    func deleteImportLine(importId: Int, lineId: Int) async throws {
+        _ = try await send("DELETE", "api/imports/\(importId)/lines/\(lineId)", as: Ignored.self)
+    }
+
     /// POST /api/imports/:id/rematch → { matched } – tries "new" lines against the catalogue again
     func rematchImport(_ id: Int) async throws -> Int {
         (try await send("POST", "api/imports/\(id)/rematch", as: RematchResult.self)).matched ?? 0

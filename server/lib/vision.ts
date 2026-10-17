@@ -4,7 +4,8 @@
  * ToHuus Hub works without it — then photo imports are not available, but PDF imports, barcodes, manual entry
  * and MCP (where the assistant does the reading) still are.
  */
-import { aiConfig, aiEnabled, assertAiAllowed, chat, extractJson, type ContentPart } from './ai.js';
+import { AiError, aiConfig, aiEnabled, assertAiAllowed, chat, extractJson, fallbackModels, type ContentPart } from './ai.js';
+import { logError } from './errorlog.js';
 import { redactReceipt } from './redact.js';
 import { consumeImportAi, consumeReceiptAi } from './limits.js';
 
@@ -17,11 +18,24 @@ import { visionRegionHint as regionHint } from './region-hints.js';
 export type VisionTask = 'receipt' | 'shelf' | 'recipe' | 'product' | 'text-recipe' | 'text-items' | 'offer' | 'ingredients';
 
 const PROMPTS: Record<VisionTask, string> = {
-  receipt: `You are reading a till receipt or an order confirmation from a grocery store or drugstore.
+  receipt: `You are reading a till receipt or an order confirmation from a grocery store or drugstore: a photo of the paper
+receipt, or screenshots of a digital receipt in a shop app (e.g. Lidl Plus "Kassenbons").
 Return ONLY JSON: {"shop": string|null, "date": "YYYY-MM-DD"|null, "total": number|null,
-"lines": [{"name": string, "qty": number, "price": number|null, "deposit": boolean}]}
-Rules: one entry per item line. qty = number of items (1 for goods sold by weight). Bottle deposits / returns as deposit=true.
-Leave out discounts, totals, payment and tax lines. Keep the names exactly as printed.`,
+"lines": [{"name": string, "qty": number, "price": number|null, "discount": number|null, "deposit": boolean}]}
+Rules:
+- One entry per product. qty = number of items (1 for goods sold by weight). price = the amount printed for the product
+  line, BEFORE discounts.
+- A quantity row ("4 x 0,49", "0,45 x 6", "0,512 kg x 2,99 EUR/kg") belongs to the product on the same row or the row
+  above it. It is never an entry of its own.
+- Discount rows (Rabatt, Lidl Plus Rabatt, Preisvorteil, Coupon, "RABATT 30%") are never entries: add their amount as a
+  positive number to "discount" of the product they belong to (the product above them).
+- Deposit (Pfand) and deposit returns (Pfandrückgabe, Leergut) are entries with deposit=true; returns have a negative price.
+- Leave out the total, payment (Karte, Kreditkarte, bar), tax table, address, "Bonkopie", savings summaries
+  ("Gesamter Preisvorteil") and app buttons. total = the amount after "zu zahlen" / "Summe".
+- date = the purchase date printed on the receipt (often next to the time, e.g. "17.10.26 18:42", or as a heading like
+  "13. September" in a shop app). Never a coupon or validity date. null when no date is visible – do not guess.
+- Several images can be overlapping screenshots or parts of ONE long receipt: list every product only once.
+- Keep the names exactly as printed.`,
   shelf: `You see a photo from a household (e.g. freezer, fridge, pantry shelf, storage shelf).
 List the recognisable products. Return ONLY JSON:
 {"lines": [{"name": string, "brand": string|null, "qty": number, "confidence": number, "best_before": "YYYY-MM-DD"|null, "days_left": number|null}]}
@@ -87,15 +101,53 @@ export function receiptLooksRight(j: any): boolean {
   if (!lines.length) return false;
   const total = num(j?.total);
   if (total == null || total <= 0) return true;
-  const priced = lines.map((l: any) => num(l.price)).filter((x: number | null): x is number => x != null);
+  const priced = lines.filter((l: any) => num(l.price) != null);
   if (priced.length < lines.length * 0.6) return false;
-  const sum = priced.reduce((a: number, b: number) => a + b, 0);
-  return Math.abs(sum - total) <= Math.max(0.1, total * 0.15);
+  // discounts are given per product (prompt) – an answer from an older prompt without them still passes at 15 %
+  const sum = priced.reduce((a: number, l: any) => a + num(l.price)! - Math.abs(num(l.discount) ?? 0), 0);
+  const tol = lines.some((l: any) => num(l.discount)) ? Math.max(0.05, total * 0.02) : Math.max(0.1, total * 0.15);
+  return Math.abs(sum - total) <= tol;
 }
 
+/** enough room for a long receipt (60+ lines) – also for the reasoning models, whose thinking counts here as well */
+const MAX_TOKENS = 12_000;
+
+/**
+ * One model answer as JSON. A model that answers without JSON (or cut off beyond repair) is not the end: the next
+ * image model of the fallback list gets the same request once (18.10.2026: "[vision] second try failed Keine
+ * JSON-Antwort vom Modell" several times an evening). Every failure is counted in the error log (/betrieb › Fehler).
+ */
 async function ask(task: VisionTask, content: ContentPart[], kind: 'vision' | 'visionHard') {
-  const res = await chat({ kind, temperature: 0.1, messages: [{ role: 'user', content }] });
-  return extractJson(res.content);
+  const primary = aiConfig()?.models[kind] ?? null;
+  const tries: (string | undefined)[] = [undefined, ...(primary ? fallbackModels(kind, primary).slice(0, 1) : [])];
+  let last: unknown = null;
+  const used = new Set<string>();
+  for (const model of tries) {
+    // the first call may already have stepped over to this model (rate limit) – no point asking it twice
+    if (model && used.has(model)) continue;
+    const res = await chat({ kind, model, temperature: 0.1, maxTokens: MAX_TOKENS, json: true, messages: [{ role: 'user', content }] });
+    used.add(res.model);
+    if (!model) used.add(primary ?? '');
+    try {
+      const j = extractJson(res.content, { arrayKey: 'lines' });
+      if (j?._truncated) noteVisionFailure(task, res.model, 'truncated', `finish=${res.finishReason ?? '?'}`);
+      return j;
+    } catch (e) {
+      last = e;
+      const detail = `finish=${res.finishReason ?? '?'} ${(e as AiError).detail ?? ''}`.trim();
+      console.warn(`[vision] ${res.model} answered without JSON (${detail})`);
+      noteVisionFailure(task, res.model, 'no_json', detail);
+    }
+  }
+  throw last ?? new AiError(t('No JSON answer from the model'), 'bad_response', 502);
+}
+
+/**
+ * Vision failures in the error log (server source, kind "vision"): the operator sees in /betrieb › Fehler how often
+ * reading photos fails and why – without any receipt content (only task, model and the error code).
+ */
+export function noteVisionFailure(task: VisionTask, model: string | null, code: string, detail?: string) {
+  logError({ source: 'server', kind: 'vision', message: `Vision ${task}: ${code}${model ? ` (${model})` : ''}`, stack: detail ?? null, route: '/api/imports/upload' });
 }
 
 export async function runVision(task: VisionTask, input: { images?: string[]; text?: string }): Promise<any> {
@@ -113,13 +165,24 @@ export async function runVision(task: VisionTask, input: { images?: string[]; te
   const text = input.text && task === 'text-items' ? redactReceipt(input.text).text : input.text;
   const content: ContentPart[] = [{ type: 'text', text: prompt(task) + (text ? `\n\n---\n${text}` : '') }];
   for (const img of input.images ?? []) content.push({ type: 'image_url', image_url: { url: img } });
-  const j = await ask(task, content, 'vision');
+  let j: any;
+  try {
+    j = await ask(task, content, 'vision');
+  } catch (e) {
+    // busy / down / no JSON from every model: counted, then the caller decides (receipts fall back to text recognition)
+    if (e instanceof AiError && e.code !== 'bad_response') noteVisionFailure(task, aiConfig()?.models.vision ?? null, e.code, e.detail?.slice(0, 200));
+    const passing = e instanceof AiError && ['bad_response', 'rate_limited', 'upstream', 'timeout'].includes(e.code);
+    if (task !== 'receipt' || !passing || !aiEnabled('visionHard')) throw e;
+    // the stronger model is a second chance for receipts when the first one gave nothing usable
+    return ask(task, content, 'visionHard');
+  }
   if (task === 'receipt' && !receiptLooksRight(j) && aiEnabled('visionHard')) {
     try {
       const second = await ask(task, content, 'visionHard');
       if (receiptLooksRight(second) || !Array.isArray(j?.lines) || !j.lines.length) return second;
     } catch (e) {
       console.warn('[vision] second try failed', (e as Error).message);
+      if (e instanceof AiError && e.code !== 'bad_response') noteVisionFailure(task, aiConfig()?.models.visionHard ?? null, e.code, e.detail?.slice(0, 200));
     }
   }
   return j;

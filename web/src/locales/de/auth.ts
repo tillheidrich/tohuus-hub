@@ -202,4 +202,20 @@ export const auth: Record<string, string> = {
   'QR code for the iPhone app': 'QR-Code für die iPhone-App',
   'Or type the code in the app. It works once, for {min} more minutes.': 'Oder tipp den Code in der App ein. Er gilt einmal, noch {min} Minuten.',
   'Show QR code': 'QR-Code zeigen',
+  // start pages: one field for every code and link (web/src/startCodes.ts, pages/StartCodeBox.tsx), 18 Oct 2026
+  'I have an access code or an invitation': 'Ich habe einen Zugangscode oder eine Einladung',
+  'Access code or invitation link': 'Zugangscode oder Einladungslink',
+  'Paste what was in the message – a code like TOHU-… or a link.': 'Füg ein, was in der Nachricht stand: einen Code wie TOHU-… oder einen Link.',
+  'This is a gift code for a plan, not an access code. Create your account or sign in first – then an admin of the household redeems it in the browser under Settings › Plan.':
+    'Das ist ein Geschenkcode für ein Abo, kein Zugangscode. Leg zuerst dein Konto an oder melde dich an. Danach löst ihn jemand mit Verwaltungsrechten im Browser unter Einstellungen › Abo ein.',
+  'This link is for the iPhone app. Open it on the iPhone, or scan the QR code with the app.': 'Dieser Link ist für die iPhone-App. Öffne ihn auf dem iPhone oder scanne den QR-Code mit der App.',
+  'That’s the address of ToHuus, not an invitation. To get in: create an account (with your access code) or sign in.':
+    'Das ist die Adresse von ToHuus, keine Einladung. So kommst du rein: Konto anlegen (mit deinem Zugangscode) oder anmelden.',
+  'We don’t recognise that. Invitation links start with https://, access codes with TOHU-.': 'Das erkennen wir nicht. Einladungslinks beginnen mit https://, Zugangscodes mit TOHU-.',
+  'Right now a new account needs an access code (it looks like TOHU-XXXX-XXXX).': 'Für ein neues Konto brauchst du gerade einen Zugangscode. Er sieht so aus: TOHU-XXXX-XXXX.',
+  'Type your access code first, then tap “Sign up with Apple” again.': 'Gib zuerst deinen Zugangscode ein und tipp dann noch einmal auf „Mit Apple registrieren“.',
+  'Please enter your access code. It looks like TOHU-XXXX-XXXX.': 'Bitte gib deinen Zugangscode ein. Er sieht so aus: TOHU-XXXX-XXXX.',
+  'That’s an invitation into a household – no access code needed.': 'Das ist eine Einladung in einen Haushalt. Dafür brauchst du keinen Zugangscode.',
+  'Open invitation': 'Einladung öffnen',
+  'With Apple: type the code first, then tap “Sign up with Apple”.': 'Mit Apple: erst den Code eingeben, dann auf „Mit Apple registrieren“ tippen.',
 };

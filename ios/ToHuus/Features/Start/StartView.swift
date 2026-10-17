@@ -20,7 +20,8 @@ struct StartView: View {
 
     enum Step: Hashable {
         case signIn
-        case signUp
+        /// "Konto erstellen" – `code`: an access code to fill in, `apple`: Sign in with Apple needed one (beta gate)
+        case signUp(code: String = "", apple: Bool = false)
         case code
         /// "Eigener Server", optionally with an address (a scanned QR code that only carries the address)
         case ownServer(String = "")
@@ -40,14 +41,32 @@ struct StartView: View {
                     }
                     if !saved.isEmpty && !adding { savedSection }
                     VStack(spacing: Theme.Space.s3) {
-                        AppleSignInButton(kind: .signIn, error: $error)
-                        Button(L("Create account")) { path.append(.signUp) }
+                        // a new Apple ID during the beta (signup mode "invite") needs an access code: on to "Konto
+                        // erstellen", code first, then "Mit Apple fortfahren" there (tester feedback 18 Oct 2026)
+                        AppleSignInButton(kind: .signIn, error: $error, onNeedsCode: inviteOnly ? {
+                            error = nil
+                            path.append(.signUp(apple: true))
+                        } : nil)
+                        Button(L("Create account")) { path.append(.signUp()) }
                             .buttonStyle(PrimaryButtonStyle())
                         Button(L("Sign in")) { path.append(.signIn) }
                             .buttonStyle(SecondaryButtonStyle())
                     }
                     if let error { ErrorBanner(message: error) }
-                    if cloudInstance?.signupMode == "invite" { BetaNote() }
+                    if inviteOnly { BetaNote() }
+                    VStack(spacing: Theme.Space.s2) {
+                        if inviteOnly {
+                            Button { path.append(.signUp()) } label: {
+                                Label(L("I have an access code"), systemImage: "key").frame(maxWidth: .infinity, minHeight: 44)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        Button { path.append(.invite()) } label: {
+                            Label(L("I have an invitation"), systemImage: "envelope.open").frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .font(.subheadline.weight(.semibold))
                     if cloudInstance?.betaGift == nil {
                         Text(L("14 days with everything, without payment details. Then Free, unless you choose a plan."))
                             .font(.footnote).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
@@ -63,10 +82,14 @@ struct StartView: View {
             .navigationDestination(for: Step.self) { step in
                 switch step {
                 case .signIn: SignInView(path: $path)
-                case .signUp: SignUpView()
+                case .signUp(let code, let apple): SignUpView(initialCode: code, afterApple: apple)
                 case .code: EmailCodeView()
                 case .ownServer(let a): OwnServerView(initialAddress: a)
-                case .invite(let l): JoinInviteView(initialLink: l)
+                case .invite(let l):
+                    JoinInviteView(initialLink: l) { code in
+                        // an access code pasted as an "invitation": straight to "Konto erstellen" with it
+                        path = [.signUp(code: code)]
+                    }
                 }
             }
             .toolbar {
@@ -86,7 +109,7 @@ struct StartView: View {
             #if DEBUG
             .onAppear {
                 let d = UserDefaults.standard
-                if d.string(forKey: "debugStartSignup") != nil || d.bool(forKey: "debugStartSignUp") { path = [.signUp] }
+                if d.string(forKey: "debugStartSignup") != nil || d.bool(forKey: "debugStartSignUp") { path = [.signUp()] }
                 else if d.bool(forKey: "debugStartSignIn") { path = [.signIn] }
                 else if d.bool(forKey: "debugStartCode") { path = [.code] }
                 else if d.bool(forKey: "debugStartOwnServer") { path = [.ownServer(d.string(forKey: "debugOwnServer") ?? "")] }
@@ -102,6 +125,8 @@ struct StartView: View {
 
     /// the beta gate and the trial note belong to ToHuus Cloud (app.instance may already be another server's)
     private var cloudInstance: InstanceInfo? { app.instance?.isCloud == false ? nil : app.instance }
+    /// ToHuus Cloud lets new accounts in only with an access code (GET /api/instance → signupMode "invite")
+    private var inviteOnly: Bool { cloudInstance?.signupMode == "invite" }
 
     /// Other servers/accounts this iPhone is still signed in to – one tap back in.
     private var savedSection: some View {
@@ -173,11 +198,6 @@ struct StartView: View {
             .font(.subheadline.weight(.semibold))
             Text(L("Everything is included on your own server. The QR code is in the web app under Settings › My account."))
                 .font(.caption).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
-            Button { path.append(.invite()) } label: {
-                Label(L("I have an invitation"), systemImage: "envelope.open").frame(maxWidth: .infinity, minHeight: 44)
-            }
-            .buttonStyle(.bordered)
-            .font(.subheadline.weight(.semibold))
         }
         .padding(.top, Theme.Space.s2)
     }
@@ -275,6 +295,8 @@ struct AppleSignInButton: View {
     /// beta gate and "Wo kauft ihr meistens ein?" – used only when Apple creates a new account
     var betaCode: String?
     var stores: [String]?
+    /// start screen during the beta: a new Apple ID was refused for lack of an access code – go and ask for it
+    var onNeedsCode: (() -> Void)?
     @State private var nonce = ""
     @State private var busy = false
 
@@ -311,7 +333,10 @@ struct AppleSignInButton: View {
         do {
             try await app.signInWithApple(cred, nonce: nonce, betaCode: betaCode, stores: stores)
         } catch {
-            self.error = APIError.from(error).localizedDescription
+            let e = APIError.from(error)
+            // 403 here = the beta gate (signup.invite / signup.code_invalid): no account for this Apple ID yet
+            if let onNeedsCode, case .server(403, _) = e { onNeedsCode(); return }
+            self.error = e.localizedDescription
         }
     }
 }
@@ -490,6 +515,10 @@ struct EmailCodeView: View {
 /// ToHuus Cloud sign-up with the one onboarding question "Wer gehört dazu?" – or with Apple.
 struct SignUpView: View {
     @Environment(AppModel.self) private var app
+    /// access code from the invitation field or a link
+    var initialCode = ""
+    /// Sign in with Apple on the start screen needed a code: say so at the top
+    var afterApple = false
     @State private var name = ""
     @State private var email = ""
     @State private var password = ""
@@ -510,20 +539,31 @@ struct SignUpView: View {
     var body: some View {
         Form {
             if invite {
+                if afterApple {
+                    Section {
+                        Text(L("There’s no account for this Apple ID yet. Type your access code below, then tap “Continue with Apple” again."))
+                            .foregroundStyle(Theme.info)
+                    }
+                }
                 Section {
-                    TextField(L("Access code"), text: $betaCode)
+                    TextField(L("Access code"), text: $betaCode, prompt: Text(verbatim: "TOHU-XXXX-XXXX"))
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .font(.body.monospaced())
                         .accessibilityHint(L("Needed to create an account right now."))
+                    if let codeHint { Text(codeHint).font(.footnote).foregroundStyle(Theme.ink2) }
                 } header: {
                     Text(L("Access code"))
                 } footer: {
-                    BetaNote(compact: true)
+                    VStack(alignment: .leading, spacing: 4) {
+                        BetaNote(compact: true)
+                        Text(L("With Apple: type the code first, then tap “Continue with Apple”."))
+                            .font(.footnote).foregroundStyle(Theme.ink2)
+                    }
                 }
             }
             Section {
-                AppleSignInButton(kind: .signUp, error: $error, betaCode: betaCode.trimmingCharacters(in: .whitespaces), stores: stores)
+                AppleSignInButton(kind: .signUp, error: $error, betaCode: cleanCode, stores: stores)
                     .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
                     .listRowBackground(Color.clear)
             } footer: {
@@ -598,10 +638,27 @@ struct SignUpView: View {
         .scrollContentBackground(.hidden)
         .canvasBackground()
         .navigationTitle(L("Create account"))
+        .onAppear { if betaCode.isEmpty && !initialCode.isEmpty { betaCode = initialCode } }
         .task { if choices == nil { choices = try? await APIClient(baseURL: app.cloudServer).storeChoices() } }
     }
 
     private var invite: Bool { app.instance?.signupMode == "invite" }
+
+    /// the code field takes whatever was pasted (a whole message, a link with ?code=) – the code is picked out
+    private var cleanCode: String {
+        if case .access(let c) = StartCode(betaCode) { return c }
+        return betaCode.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// something else than an access code in the code field: one sentence what it is
+    private var codeHint: String? {
+        switch StartCode(betaCode) {
+        case .invite: return L("That’s an invitation into a household – no access code needed. Go back and tap “I have an invitation”.")
+        case .gift: return L("That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Plan.")
+        case .connect: return L("That’s a link to connect the app with a server. Go back and use “Scan QR code”.")
+        default: return nil
+        }
+    }
 
     /// alphabetical shops of the region, the weekly market, then own entries – nothing preselected
     private var shopOptions: [String] {
@@ -637,7 +694,7 @@ struct SignUpView: View {
             try await app.signUp(server: app.cloudServer, email: email.trimmingCharacters(in: .whitespaces), password: password,
                                  name: name.trimmingCharacters(in: .whitespaces),
                                  householdName: householdName.trimmingCharacters(in: .whitespaces), form: form,
-                                 betaCode: betaCode.trimmingCharacters(in: .whitespaces), stores: stores)
+                                 betaCode: cleanCode, stores: stores)
         } catch {
             self.error = APIError.from(error).localizedDescription
         }

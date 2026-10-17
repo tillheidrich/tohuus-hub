@@ -41,6 +41,11 @@ export interface OcrOptions {
   /** page segmentation mode: 6 = one block of text (receipts, lists), 4 = columns, 11 = sparse text (flyers) */
   psm?: 4 | 6 | 11;
   timeoutMs?: number;
+  /**
+   * "grey" (default): luminance. "ink": the darkest colour channel per pixel – light blue or grey print (the
+   * discount rows of a Lidl Plus receipt) becomes as dark as black print, the white paper stays white.
+   */
+  variant?: 'grey' | 'ink';
 }
 
 export class OcrError extends Error {
@@ -97,9 +102,9 @@ async function slot<T>(fn: () => Promise<T>): Promise<T> {
 // ------------------------------------------------------------------ preprocessing
 
 /** Upright, greyscale, normalised PNG in a size Tesseract likes. Exported for tests. */
-export async function preprocess(buf: Buffer): Promise<Buffer> {
+export async function preprocess(buf: Buffer, variant: 'grey' | 'ink' = 'grey'): Promise<Buffer> {
   try {
-    const upright = await sharp(buf, { limitInputPixels: 50_000_000, failOn: 'error' }).rotate().flatten({ background: '#ffffff' }).greyscale().png({ compressionLevel: 1 }).toBuffer();
+    const upright = variant === 'ink' ? await inkChannel(buf) : await sharp(buf, { limitInputPixels: 50_000_000, failOn: 'error' }).rotate().flatten({ background: '#ffffff' }).greyscale().png({ compressionLevel: 1 }).toBuffer();
     const img = sharp(upright);
     const meta = await img.metadata();
     let w = meta.width ?? 0;
@@ -117,6 +122,53 @@ export async function preprocess(buf: Buffer): Promise<Buffer> {
     if (e instanceof OcrError) throw e;
     throw new OcrError(t('This image could not be read.'), 'bad_image');
   }
+}
+
+/** min(R, G, B) per pixel as a one-channel PNG (see OcrOptions.variant). */
+async function inkChannel(buf: Buffer): Promise<Buffer> {
+  const { data, info } = await sharp(buf, { limitInputPixels: 50_000_000, failOn: 'error' })
+    .rotate()
+    .flatten({ background: '#ffffff' })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const out = Buffer.alloc(info.width * info.height);
+  const ch = info.channels;
+  if (ch < 3) data.copy(out, 0, 0, out.length);
+  else for (let i = 0, j = 0; j < out.length; i += ch, j++) out[j] = Math.min(data[i], data[i + 1], data[i + 2]);
+  return sharp(out, { raw: { width: info.width, height: info.height, channels: 1 } }).png({ compressionLevel: 1 }).toBuffer();
+}
+
+/**
+ * A long receipt in one tall image (a screenshot of a whole digital receipt, a stitched photo) would be shrunk until
+ * the text is unreadable – for Tesseract (long side ≤ 3200 px) and even more for the model (≤ 1600 px). Such images
+ * are cut into overlapping slices of about 1.5 × their width (at most `max`). Normal photos come back unchanged.
+ */
+export async function receiptSlices(buf: Buffer, max = 8): Promise<Buffer[]> {
+  let meta: Awaited<ReturnType<ReturnType<typeof sharp>['metadata']>>;
+  try {
+    meta = await sharp(buf, { limitInputPixels: 50_000_000, failOn: 'none' }).metadata();
+  } catch {
+    return [buf];
+  }
+  let w = meta.width ?? 0;
+  let h = meta.height ?? 0;
+  // EXIF orientation 5–8 swaps width and height
+  if ((meta.orientation ?? 1) >= 5) [w, h] = [h, w];
+  if (!w || !h || h / w <= 2.6) return [buf];
+  const upright = await sharp(buf, { limitInputPixels: 50_000_000, failOn: 'none' }).rotate().png({ compressionLevel: 1 }).toBuffer();
+  let tile = Math.round(w * 1.5);
+  const overlap = () => Math.round(tile * 0.12);
+  // more slices than allowed: taller slices
+  while (Math.ceil((h - overlap()) / (tile - overlap())) > max) tile = Math.round(tile * 1.25);
+  const out: Buffer[] = [];
+  for (let top = 0; top < h; top += tile - overlap()) {
+    const height = Math.min(tile, h - top);
+    if (height < tile * 0.15 && out.length) break;
+    out.push(await sharp(upright).extract({ left: 0, top, width: w, height }).png({ compressionLevel: 1 }).toBuffer());
+    if (top + height >= h) break;
+  }
+  return out;
 }
 
 // ------------------------------------------------------------------ tesseract
@@ -202,7 +254,7 @@ export async function ocrImage(buf: Buffer, opts: OcrOptions = {}): Promise<OcrR
   if (!installed?.length) throw new OcrError(t('Text recognition is not installed on this server.'), 'unavailable');
   const wanted = (opts.lang ?? 'deu+eng').split('+').filter((l) => installed.includes(l));
   const lang = (wanted.length ? wanted : installed.slice(0, 1)).join('+');
-  const png = await preprocess(buf);
+  const png = await preprocess(buf, opts.variant);
   return slot(async () => {
     const t0 = Date.now();
     const tsv = await runTesseract(png, lang, opts.psm ?? 6, opts.timeoutMs ?? 45_000);

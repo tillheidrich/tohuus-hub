@@ -10,6 +10,7 @@ import { setLang, t } from '../i18n';
 import { useNavigate } from 'react-router-dom';
 import { useInstance } from '../data';
 import { AppleButton, appleError } from './AppleSignIn';
+import { StartCodeBox } from './StartCodeBox';
 
 type Method = 'passkey' | 'link' | 'password' | 'sso';
 export interface AuthOptions {
@@ -338,9 +339,9 @@ export function Login() {
         <div className="login-hero">
           <p className="eyebrow label-sq">{o?.cloud ? 'ToHuus Cloud' : t('Open source · on your own server')}</p>
           <h1 className="login-h1">
-            {t('Less on your mind.')}
+            {t('ToHuus remembers')}
             <br />
-            <span className="hl">{t('More at home.')}</span>
+            <span className="hl">{t('what’s missing at home.')}</span>
           </h1>
           <p className="login-lede">{t('Flat, shared flat, terraced house or house: ToHuus brings shopping, supplies and recipes together.')}</p>
         </div>
@@ -362,13 +363,19 @@ function SignupHint() {
   const inst = useInstance();
   const nav = useNavigate();
   if (inst.data?.mode !== 'cloud' || !inst.data.signup) return null;
+  // beta gate (signupMode 'invite'): new accounts need an access code – say so here, not only after a failed try
+  const invite = inst.data.signupMode === 'invite';
   return (
-    <p className="small muted signup-hint">
-      {t('New to ToHuus?')}{' '}
-      <button className="linkish" onClick={() => nav('/signup')}>
-        {t('Create a household')}
-      </button>
-    </p>
+    <div className="stack signup-hint" style={{ gap: 8 }}>
+      <p className="small muted" style={{ margin: 0 }}>
+        {t('New to ToHuus?')}{' '}
+        <button className="linkish" onClick={() => nav('/signup')}>
+          {t('Create a household')}
+        </button>
+      </p>
+      {invite && <p className="small muted" style={{ margin: 0 }}>{t('Right now a new account needs an access code (it looks like TOHU-XXXX-XXXX).')}</p>}
+      <StartCodeBox open={invite} />
+    </div>
   );
 }
 

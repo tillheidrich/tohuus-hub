@@ -153,6 +153,18 @@ struct ReceiptCaptureView: View {
         Card {
             if let e = r.error {
                 Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(Theme.low).font(.subheadline)
+                // a receipt that was read but does not add up is still there – it must be reachable from here
+                if let id = r.id {
+                    NavigationLink {
+                        ImportReviewView(store: store, importId: id)
+                    } label: {
+                        Label(L("Check the lines first"), systemImage: "list.bullet.rectangle")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .frame(minHeight: 44)
+                    Text(L("It waits under Money › Receipts › To check until you book it in."))
+                        .font(.caption).foregroundStyle(Theme.ink3)
+                }
             } else {
                 Label(r.title ?? r.file ?? L("Receipt"), systemImage: "checkmark.circle").foregroundStyle(Theme.primaryText)
                 if r.duplicate == true {
@@ -160,6 +172,8 @@ struct ReceiptCaptureView: View {
                 } else if let id = r.id {
                     if applied.contains(id) {
                         Text(L("Taken over. ToHuus remembers it.")).font(.caption).foregroundStyle(Theme.ink2)
+                        Text(L("You find it under Money › Receipts. There you can change or delete it."))
+                            .font(.caption).foregroundStyle(Theme.ink3)
                         NavigationLink(L("Show receipt")) { ImportReviewView(store: store, importId: id) }
                             .font(.subheadline)
                     } else {
