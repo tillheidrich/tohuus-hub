@@ -182,7 +182,7 @@ enum SearchRegistry {
         var id: String { title + (tab ?? target.rawValue) }
     }
 
-    static func all(app: AppModel) -> [Entry] {
+    @MainActor static func all(app: AppModel) -> [Entry] {
         var out: [Entry] = [
             Entry(title: L("Today"), words: "heute start übersicht", icon: "sun.max", tab: "today"),
             Entry(title: L("Shopping"), words: "einkauf liste einkaufen laden", icon: "cart", tab: "shopping"),
@@ -226,7 +226,7 @@ enum SearchRegistry {
         return out
     }
 
-    static func matches(_ q: String, app: AppModel) -> [Entry] {
+    @MainActor static func matches(_ q: String, app: AppModel) -> [Entry] {
         let n = q.lowercased()
         return Array(all(app: app).filter { "\($0.title) \($0.words)".lowercased().contains(n) }.prefix(6))
     }

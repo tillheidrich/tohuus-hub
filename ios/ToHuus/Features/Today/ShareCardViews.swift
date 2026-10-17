@@ -367,7 +367,7 @@ struct ShareCardSheet<Header: View>: View {
                         .font(.footnote).foregroundStyle(Theme.ink3)
                     if let image {
                         let picture = Image(uiImage: image)
-                        ShareLink(item: picture, subject: Text(spec.title), preview: SharePreview(spec.title, image: picture)) {
+                        ShareLink(item: picture, subject: Text(spec.title), preview: SwiftUI.SharePreview(spec.title, image: picture)) {
                             Label(L("Share"), systemImage: "square.and.arrow.up")
                         }
                         .buttonStyle(PrimaryButtonStyle())

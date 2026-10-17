@@ -477,7 +477,7 @@ struct KidFormSheet: View {
             try await api.saveKid(k.id, ["pin": NSNull()])
             saved()
             dismiss()
-        } catch { error = APIError.from(error).localizedDescription }
+        } catch { self.error = APIError.from(error).localizedDescription }
     }
 }
 

@@ -203,7 +203,7 @@ struct ReceiptCaptureView: View {
             if OnDeviceAI.active(app) {
                 uploading = true
                 let raw = lines
-                if let tidy = await OnDeviceAI.withTimeout({ await OnDeviceAI.tidyReceipt(raw) }) { lines = tidy }
+                if let tidy = await OnDeviceAI.withTimeout(20, { await OnDeviceAI.tidyReceipt(raw) }) { lines = tidy }
                 uploading = false
             }
             do {

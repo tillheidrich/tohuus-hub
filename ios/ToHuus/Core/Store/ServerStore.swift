@@ -202,7 +202,8 @@ final class ServerStore: HouseholdStore {
     }
 
     /// `toStock`: "Beim Abhaken einräumen" (the person's switch on the list, default on)
-    func setChecked(_ item: ShopItem, _ on: Bool, toStock: Bool = true) async {
+    func setChecked(_ item: ShopItem, _ on: Bool) async { await setChecked(item, on, toStock: true) }
+    func setChecked(_ item: ShopItem, _ on: Bool, toStock: Bool) async {
         await enqueue(.check(item.id, on: on, toStock: on && toStock))
     }
 

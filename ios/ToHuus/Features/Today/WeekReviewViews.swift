@@ -68,12 +68,12 @@ enum WeekDays {
     }
     static func label(_ day: String) -> String {
         guard let d = iso.date(from: day) else { return day }
-        return d.formatted(.dateTime.day().month(.abbreviated).locale(Locale.current).timeZone(TimeZone(identifier: "UTC")!))
+        return d.formatted(Date.FormatStyle(locale: Locale.current, timeZone: TimeZone(identifier: "UTC")!).day().month(.abbreviated))
     }
     /// "Oktober 2026"
     static func monthLabel(_ day: String) -> String {
         guard let d = iso.date(from: day) else { return day }
-        return d.formatted(.dateTime.month(.wide).year().locale(Locale.current).timeZone(TimeZone(identifier: "UTC")!))
+        return d.formatted(Date.FormatStyle(locale: Locale.current, timeZone: TimeZone(identifier: "UTC")!).month(.wide).year())
     }
     static var today: String {
         let f = DateFormatter()

@@ -220,7 +220,7 @@ struct CookModeView: View {
                                 timers.start(label: LF("Step %d", i + 1) + " · " + (recipe?.title ?? ""), seconds: secs)
                                 Haptics.tick()
                             } label: {
-                                Label(LF("Timer %@", CookTimers.format(secs)), systemImage: "timer")
+                                Label(LF("Timer %@", CookTimers.format(TimeInterval(secs))), systemImage: "timer")
                                     .font(.headline)
                                     .padding(.horizontal, 14).frame(minHeight: 48)
                                     .background(Theme.mustard.opacity(0.25), in: Capsule())

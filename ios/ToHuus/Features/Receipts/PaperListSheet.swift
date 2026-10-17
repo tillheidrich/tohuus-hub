@@ -81,7 +81,7 @@ struct PaperListSheet: View {
         for img in images { all += (try? await DeviceOCR.lines(in: img)) ?? [] }
         var items = DeviceOCR.listItems(all)
         // Apple Intelligence on this iPhone (if chosen) fixes handwriting before the server's reader sees it
-        if OnDeviceAI.active(app), let tidy = await OnDeviceAI.withTimeout({ [all] in await OnDeviceAI.tidyList(all) }) { items = tidy }
+        if OnDeviceAI.active(app), let tidy = await OnDeviceAI.withTimeout(20, { [all] in await OnDeviceAI.tidyList(all) }) { items = tidy }
         // the server's list reader (same parser as quick add) when it is there; the local filter otherwise
         if !items.isEmpty, let r = try? await store.api.importLines(items, mode: "list"), r.kind == "list", !r.items.isEmpty {
             items = r.items.map { i in

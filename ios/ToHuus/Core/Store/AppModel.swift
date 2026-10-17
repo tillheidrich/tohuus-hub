@@ -200,7 +200,7 @@ final class AppModel {
         return info
     }
 
-    static func normalise(_ raw: String) -> URL? {
+    nonisolated static func normalise(_ raw: String) -> URL? {
         var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if let r = s.range(of: #"https?://[^\s"'<>]+"#, options: .regularExpression) { s = String(s[r]) }
         if !s.lowercased().hasPrefix("http") { s = "https://" + s }
