@@ -101,7 +101,7 @@ struct WhoDoesWhatSection: View {
                         Text(d.people.first(where: { $0.userId == p.userId })?.me == true
                              ? LF("You usually do “%@”. Write it down like that?", p.name)
                              : LF("%@ usually does “%@”. Write it down like that?", p.userName, p.name)).font(.subheadline)
-                        HStack {
+                        AdaptiveButtonRow { _ in
                             Button(L("Yes, like that")) { Task { await answer(p, true) } }
                                 .buttonStyle(.borderedProminent).tint(Theme.primary)
                             Button(L("Leave it open")) { Task { await answer(p, false) } }
@@ -184,7 +184,7 @@ struct OfferAsks: View {
                     VStack(alignment: .leading, spacing: Theme.Space.s2) {
                         Label(LF("%@ asks: will you take over “%@”?", t.offer?.by?.name ?? "", t.name), systemImage: "hand.raised")
                             .font(.subheadline)
-                        HStack {
+                        AdaptiveButtonRow { _ in
                             Button(L("Yes, I’ll take it")) { Task { await answer(t, true) } }
                                 .buttonStyle(.borderedProminent).tint(Theme.primary)
                             Button(L("Rather not")) { Task { await answer(t, false) } }

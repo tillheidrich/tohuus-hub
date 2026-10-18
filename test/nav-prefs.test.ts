@@ -76,6 +76,11 @@ describe('nav prefs (lib)', () => {
     expect(np.cleanNavTabs([])).toEqual([]);
   });
 
+  it('knows Bring mir was, Wünsche and Hausinfo – not the party mode', () => {
+    expect(np.cleanNavTabs(['orders', 'party', 'wishes', 'houseinfo'])).toEqual(['orders', 'wishes', 'houseinfo']);
+    expect(np.NAV_AREAS).toContain('orders');
+  });
+
   it('stores per person and goes back to the default with null', () => {
     expect(np.setNavTabs(uidA, ['knowledge', 'shopping'])).toEqual(['knowledge', 'shopping']);
     expect(np.navTabs(uidA)).toEqual(['knowledge', 'shopping']);

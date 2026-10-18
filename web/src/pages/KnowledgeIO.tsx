@@ -171,9 +171,18 @@ export function KnowledgeImport({ open, onClose }: { open: boolean; onClose: () 
       >
         {!preview ? (
           <div className="kn-io">
+            {/* pasting first – most notes live in Notes, a mail or a few cells (Till 18 Oct 2026); a file second */}
             <p className="muted" style={{ marginTop: 0 }}>
-              {t('Markdown, text, CSV or a ToHuus export. Notes from Obsidian or Notion work too. You see everything before it is saved.')}
+              {t('Paste text, from Notes, an e-mail or cells from Excel or Numbers. Or choose a file (CSV, text, Markdown). You see everything before it is saved.')}
             </p>
+            {!file && (
+              <>
+                <label className="small muted" htmlFor="kn-io-text">
+                  {t('Paste text')}
+                </label>
+                <textarea id="kn-io-text" className="input kn-io-text" rows={6} value={text} maxLength={MAX_KB * 1024} onChange={(e) => setText(e.target.value)} placeholder={t('## Mika\n- Shoe size: 28\n- Clothing size: 116')} />
+              </>
+            )}
             <input
               ref={input}
               type="file"
@@ -185,17 +194,11 @@ export function KnowledgeImport({ open, onClose }: { open: boolean; onClose: () 
                 setFile(f && f.size <= MAX_KB * 1024 ? f : null);
               }}
             />
+            {!file && <span className="small muted">{t('Or choose a file')}</span>}
             <button type="button" className="btn kn-io-file" onClick={() => input.current?.click()}>
               <UploadSimple size={18} /> {file ? file.name : t('Choose file')}
             </button>
-            {!file && (
-              <>
-                <label className="small muted" htmlFor="kn-io-text">
-                  {t('Or paste text')}
-                </label>
-                <textarea id="kn-io-text" className="input kn-io-text" rows={6} value={text} maxLength={MAX_KB * 1024} onChange={(e) => setText(e.target.value)} placeholder={t('## Mika\n- Shoe size: 28\n- Clothing size: 116')} />
-              </>
-            )}
+            <p className="small muted" style={{ margin: 0 }}>{t('Exports from Obsidian or Notion (Markdown) work too.')}</p>
             <div className="field">
               <span className="small muted">{t('Who sees the new entries?')}</span>
               <Seg value={target} options={[['household', t('Whole household')], ['me', t('Only me')]]} onChange={setTarget} full />

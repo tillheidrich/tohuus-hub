@@ -30,6 +30,15 @@ de = json.load(open(os.path.join(root, "tools", "strings_de.json"), encoding="ut
 for extra_file in sorted(os.listdir(os.path.join(root, "tools"))):
     if extra_file.startswith("strings_de_") and extra_file.endswith(".json"):
         de.update(json.load(open(os.path.join(root, "tools", extra_file), encoding="utf-8")))
+# keys only reached through L(variable) (dictionaries, server values like country names) – the regex can't see them
+keys.update(json.load(open(os.path.join(root, "tools", "strings_de_dynamic.json"), encoding="utf-8")))
+# German texts added straight into the catalog (parallel agents) survive a regeneration
+cat_path = os.path.join(root, "ToHuus", "Resources", "Localizable.xcstrings")
+if os.path.exists(cat_path):
+    for k, e in json.load(open(cat_path, encoding="utf-8"))["strings"].items():
+        v = e.get("localizations", {}).get("de", {}).get("stringUnit", {}).get("value")
+        if v and k not in de:
+            de[k] = v
 missing = sorted(k for k in keys if k not in de)
 strings = {}
 for k in sorted(keys):

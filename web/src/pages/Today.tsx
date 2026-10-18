@@ -20,6 +20,7 @@ import { type CookToday, imgSrc, type Notice, type RhythmItem, type StillHave, t
 import { locale, t } from '../i18n';
 import { originLine, rhythmLine } from '../origin';
 import { guestAllows } from '../people/access';
+import { moduleAllows } from '../nav';
 import { money } from '../region';
 import { Avatar, Empty, expiryText, useToast } from '../ui';
 
@@ -65,6 +66,8 @@ export function Today({ me }: { me: Me }) {
   const d = q.data;
   // list2 J: the weekly F&F question (opt-in, only Sunday/Monday)
   const pulse = usePulse(!gl);
+  // "Bring mir was": open wishes for me and my own – the card only shows while something is open
+  const orders = useTodayOrders(moduleAllows(me.modules, '/bestellen') && guestAllows(gl, '/bestellen'), Boolean(gl));
   const now = new Date();
   const date = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
   const localDay = () => new Intl.DateTimeFormat('sv-SE').format(new Date());
@@ -161,6 +164,7 @@ export function Today({ me }: { me: Me }) {
           ['cook', guestAllows(gl, '/kochen') && d.cookToday ? <CookCard c={d.cookToday} /> : null],
           ['money', guestAllows(gl, '/geld') && d.money ? <MoneyCard m={d.money} /> : null],
           ['pulse', pulse.data?.question ? <PulseCard pulse={pulse.data} /> : null],
+          ['orders', orders.forMe.length + orders.own.length > 0 ? <OrdersCard {...orders} /> : null],
         ]}
         canArrange={!gl && Boolean(me.actor.userId)}
       />
@@ -432,6 +436,51 @@ function MoneyCard({ m }: { m: NonNullable<TodayData['money']> }) {
         </div>
       )}
       {m.month === 0 && <p className="meta">{t('Share a receipt and ToHuus shows where the money for food and household goes.')}</p>}
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ Bring mir was
+
+type TodayOrder = { id: number; status: string; guest_name?: string | null; for_user_id?: number | null; by_name?: string | null; note?: string | null; lines: { name: string; qty: number }[] };
+const orderItems = (o: TodayOrder) => (o.lines.length ? o.lines.map((l) => `${l.qty}× ${l.name}`).join(', ') : o.note ? `„${o.note}“` : '');
+
+/**
+ * "Bring mir was" on Heute (an arrangeable card like the others, key `orders`): what the others asked you for and
+ * your own open wishes. Shown only while something is open – the full page is /bestellen.
+ */
+function useTodayOrders(on: boolean, guest: boolean) {
+  const reqs = useApi<TodayOrder[]>(['orders', 'today-requests'], on && !guest ? '/bar/requests' : null);
+  const mine = useApi<TodayOrder[]>(['orders', 'today-mine'], on ? '/bar/my-orders' : null);
+  const open = (o: TodayOrder) => o.status === 'new' || o.status === 'accepted';
+  return { forMe: on ? (reqs.data ?? []).filter(open) : [], own: on ? (mine.data ?? []).filter(open) : [] };
+}
+
+function OrdersCard({ forMe, own }: { forMe: TodayOrder[]; own: TodayOrder[] }) {
+  const nav = useNavigate();
+  return (
+    <section className="hcard" aria-labelledby="h-orders">
+      <CardHead title={t('Treats')} shape="c" link={{ label: t('Open'), to: '/bestellen' }} />
+      <ul className="hrows">
+        {forMe.slice(0, 3).map((o) => (
+          <li key={`r${o.id}`} className="hrow">
+            <span className={`mk ${o.status === 'accepted' ? 'ok' : 'soon'}`} aria-hidden="true" />
+            <button className="grow plain-row" onClick={() => nav('/bestellen')}>
+              <b>{o.for_user_id ? t('{name} asks you', { name: o.guest_name ?? '' }) : t('{name} would love something', { name: o.guest_name ?? '' })}</b>
+              <span className="meta">{[orderItems(o), o.status === 'accepted' && o.by_name ? t('Coming right up – {name} is bringing it', { name: o.by_name }) : null].filter(Boolean).join(' · ')}</span>
+            </button>
+          </li>
+        ))}
+        {own.slice(0, 2).map((o) => (
+          <li key={`m${o.id}`} className="hrow">
+            <span className={`mk ${o.status === 'accepted' ? 'ok' : 'soon'}`} aria-hidden="true" />
+            <button className="grow plain-row" onClick={() => nav('/bestellen')}>
+              <b>{orderItems(o) || t('Your wish')}</b>
+              <span className="meta">{o.status === 'accepted' ? (o.by_name ? t('Coming right up – {name} is bringing it', { name: o.by_name }) : t('Coming right up')) : t('Waiting for a reply')}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

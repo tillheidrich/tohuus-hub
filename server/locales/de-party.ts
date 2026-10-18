@@ -20,4 +20,5 @@ export const de_party: Record<string, string> = {
   '{name} ends in 15 minutes': '{name} endet in 15 Minuten',
   '{name} has ended': '{name} ist vorbei',
   '{name} is all gone – sorry!': '{name} ist leider alle!',
+  'We’ll let you know when it’s ready': 'Wir sagen Bescheid, wenn es fertig ist',
 };

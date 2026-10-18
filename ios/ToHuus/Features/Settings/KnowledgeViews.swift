@@ -32,6 +32,10 @@ enum Help {
         ("datenschutz-kurz", L("Privacy in short")),
         ("abo-und-kuendigen", L("Subscription and cancelling")),
         ("fragen", L("Frequent questions")),
+        ("haushaltswissen", L("Household knowledge")),
+        ("deine-leiste", L("Your bar")),
+        ("bring-mir-was", L("Bring me something")),
+        ("ki-grenzen", L("Fair AI limits")),
     ]
 }
 
@@ -64,15 +68,23 @@ struct HelpListView: View {
     }
 }
 
-/// "So funktioniert ToHuus" – the product in five short points, in the app's own words.
+/// "So funktioniert ToHuus" – the product in short points, in the app's own words (updated 18 Oct 2026, Build 16).
 struct HowItWorksView: View {
     private let points: [(icon: String, title: String, text: String)] = [
-        ("cart", L("One list for everyone"),
-         L("Whoever notices something is missing puts it on the list – by typing, speaking or from a receipt. Every row shows where it came from.")),
+        ("house", L("One place for the household"),
+         L("What's missing, what's coming up, what needs doing, what it costs and what you know about your home. Shopping is where it starts, not the whole app.")),
+        ("square.and.pencil", L("Write it in, ToHuus sorts it"),
+         L("“Out of milk” goes on the list, “Yellow bin every two weeks” to the tasks, “Mika is shoe size 31 now” into the household knowledge. If ToHuus isn't sure, it asks instead of guessing.")),
         ("clock.arrow.circlepath", L("ToHuus remembers"),
          L("From receipts and ticks ToHuus learns how often you buy things. When something is probably due, it suggests it – it never puts anything on the list by itself.")),
-        ("arrow.uturn.backward", L("Suggestions, not automatic"),
-         L("Every suggestion shows its reason, and everything can be undone. Say “not now” twice and ToHuus stops suggesting it.")),
+        ("brain", L("Your household's memory"),
+         L("Sizes, measurements and meter readings that only one person used to know. Now you ask ToHuus. And the assistant – or your own AI via MCP – answers without guessing, because it knows what applies at your place.")),
+        ("calendar.badge.clock", L("Coming up"),
+         L("Today shows what's next: tomorrow's appointments, who has taken something on, and the bin the evening before.")),
+        ("arrow.uturn.backward", L("Suggestions, and everything can be undone"),
+         L("Every suggestion shows its reason. Ticked off or deleted by mistake? Undo brings it back – also for what the assistant did.")),
+        ("rectangle.bottomthird.inset.filled", L("Your bar"),
+         L("Today, Shopping, Cooking, Tasks and Stock to start with. Bring Money, Knowledge or Bring me something down when you need them – each person their own.")),
         ("fork.knife", L("Cook with what's at home"),
          L("ToHuus shows what you can cook today and what's missing for it. The week plan is optional.")),
         ("eurosign.circle", L("Know where the money goes"),
@@ -90,6 +102,9 @@ struct HowItWorksView: View {
                     }
                 }
                 HelpLink(slug: "so-funktioniert-tohuus", title: L("Read more"))
+                HelpLink(slug: "haushaltswissen", title: L("Household knowledge"))
+                HelpLink(slug: "deine-leiste", title: L("Your bar"))
+                HelpLink(slug: "ki-grenzen", title: L("Fair AI limits"))
                 HelpLink(slug: "wer-sieht-was", title: L("Who sees what?"))
             }
             .padding(Theme.Space.s4)

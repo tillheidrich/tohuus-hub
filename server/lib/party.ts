@@ -60,6 +60,14 @@ migrate(
   CREATE INDEX idx_orders_client ON orders(client_id);`,
 );
 
+// Till, 18 Oct 2026: „Abholen an der Theke“ was hard-coded – every party is different. The line under „Scan & order“
+// on the TV board is the host's own now (null = the neutral default).
+migrate('party-2', `ALTER TABLE parties ADD COLUMN pickup_hint TEXT;`);
+
+export const PICKUP_HINT_MAX = 80;
+export const defaultPickupHint = () => t('We’ll let you know when it’s ready');
+export const pickupHintOf = (p: { pickup_hint?: string | null }) => p.pickup_hint?.trim() || defaultPickupHint();
+
 // ---------------------------------------------------------------- time helpers (SQLite UTC "YYYY-MM-DD HH:MM:SS")
 
 export const sqlTime = (ms: number) => new Date(ms).toISOString().replace('T', ' ').slice(0, 19);
@@ -90,6 +98,7 @@ export interface PartyRow {
   warned_at: string | null;
   created_by: string | null;
   purged_at: string | null;
+  pickup_hint?: string | null;
 }
 
 const httpError = (status: number, msg: string) => Object.assign(new Error(msg), { status });
@@ -374,11 +383,12 @@ export function extendParty(id: number, minutes: number, nowMs = Date.now()) {
   return getParty(id)!;
 }
 
-export function updateParty(id: number, b: { name?: string; show_names?: boolean; idle_min?: number }) {
+export function updateParty(id: number, b: { name?: string; show_names?: boolean; idle_min?: number; pickup_hint?: string | null }) {
   const p = getParty(id);
   if (!p) throw httpError(404, 'not found');
   if (b.name?.trim()) db.prepare('UPDATE parties SET name = ? WHERE id = ?').run(b.name.trim().slice(0, 60), id);
   if (b.show_names !== undefined) db.prepare('UPDATE parties SET show_names = ? WHERE id = ?').run(b.show_names ? 1 : 0, id);
+  if (b.pickup_hint !== undefined) db.prepare('UPDATE parties SET pickup_hint = ? WHERE id = ?').run(b.pickup_hint?.trim().slice(0, PICKUP_HINT_MAX) || null, id);
   if (b.idle_min !== undefined) db.prepare('UPDATE parties SET idle_min = ?, warned_at = NULL WHERE id = ?').run(Math.max(0, Math.min(600, Math.round(b.idle_min))), id);
   emit('orders');
   return getParty(id)!;
@@ -503,6 +513,8 @@ export function partyView(p: PartyRow, nowMs = Date.now()) {
     ended_at: p.ended_at,
     end_reason: p.end_reason,
     show_names: Boolean(p.show_names),
+    pickup_hint: p.pickup_hint ?? null,
+    pickup_hint_default: defaultPickupHint(),
     guest_url: guestUrl(p),
     board_url: boardUrl(p),
     board_path: p.display_token ? `/party/board/${p.display_token}` : null,
@@ -548,6 +560,7 @@ export function boardData(displayToken: string, member: boolean, nowMs = Date.no
     member,
     ended: false as const,
     join_url: guestUrl(p),
+    pickup_hint: pickupHintOf(p),
     menu,
     orders,
     served: (db.prepare(`SELECT COUNT(*) AS n FROM orders WHERE party_id = ? AND status = 'done'`).get(p.id) as { n: number }).n,

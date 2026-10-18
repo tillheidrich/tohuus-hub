@@ -42,7 +42,11 @@ struct SettingsView: View {
                         }
                         .accessibilityHint(L("Name, e-mail, password and security"))
                     }
-                    Button { app.showSearch = true } label: {
+                    Button {
+                        // Mehr is itself a sheet: a second sheet from the root would never show (the row seemed dead) –
+                        // close Mehr first, then open the search from the root
+                        app.openSearch()
+                    } label: {
                         Label(L("Find a setting or function"), systemImage: "magnifyingglass")
                     }
                     .foregroundStyle(Theme.ink2)
@@ -111,7 +115,7 @@ struct SettingsView: View {
                         }
                     }
                     if app.purchasesAvailable {
-                        Button(app.billing?.isPaid == true ? L("Manage plan") : L("See plans")) { app.openPaywall("settings"); if !embedded { dismiss() } }
+                        Button(app.billing?.isPaid == true ? L("Manage plan") : L("See plans")) { app.openPaywall("settings") }
                         if app.billing?.source == "apple" || app.billing?.isPaid == true {
                             Button(L("Manage subscription")) {
                                 // Apple's sheet; the plain link when it can't be shown (e.g. the subscription is on another Apple account)

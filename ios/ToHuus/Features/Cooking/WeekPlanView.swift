@@ -271,7 +271,7 @@ struct WeekPlanSection: View {
             .disabled(!model.busy.isEmpty)
             Text(LC("Fills free evenings with what you can cook from what's at home. Nothing planned gets overwritten."))
                 .font(.caption).foregroundStyle(Theme.ink3)
-            HStack(spacing: Theme.Space.s3) {
+            AdaptiveButtonRow(spacing: Theme.Space.s3) { _ in
                 Button { Task { await shop() } } label: { Label(LC("Shop for the week"), systemImage: "cart.badge.plus") }
                     .buttonStyle(SecondaryButtonStyle())
                     .disabled(!model.busy.isEmpty || (model.plan?.entries.isEmpty ?? true))

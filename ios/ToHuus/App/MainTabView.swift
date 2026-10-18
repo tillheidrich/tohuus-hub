@@ -10,11 +10,15 @@ import UIKit
 /// to Heute in their own order (Haushaltswissen too); then the tab bar and the top of the iPad sidebar show exactly
 /// those, and every other area is a row at the top of Mehr. The raw values are the ids the server stores.
 enum AppArea: String, CaseIterable, Hashable, Identifiable {
-    case today, shopping, cooking, tasks, stock, money, knowledge, more
-    /// the areas, in order of the tab bar (the default – Haushaltswissen only comes in by an own choice)
+    case today, shopping, cooking, tasks, stock, money, knowledge, orders, wishes, houseinfo, more
+    /// the areas, in order of the tab bar (the default – the extra areas only come in by an own choice)
     static let tabs: [AppArea] = [.today, .shopping, .cooking, .tasks, .stock, .money]
-    /// the areas a person can put next to Heute ("Deine Leiste")
-    static let pickable: [AppArea] = [.shopping, .cooking, .tasks, .stock, .money, .knowledge]
+    /// the areas a person can put next to Heute ("Deine Leiste", same ids as server/lib/nav-prefs.ts). After the five
+    /// main areas the pages of their own that otherwise sit in Mehr or behind a door (18 Oct 2026): Haushaltswissen,
+    /// Bring mir was, Wünsche (door on top of Einkauf), Hausinfo (door on top of Aufgaben). No party mode (off for the start)
+    static let pickable: [AppArea] = [.shopping, .cooking, .tasks, .stock, .money, .knowledge, .orders, .wishes, .houseinfo]
+    /// the main areas – only these become rows at the top of Mehr; the extra ones keep their own row or door
+    static let main: [AppArea] = [.shopping, .cooking, .tasks, .stock, .money]
     /// places in the iPhone tab bar
     static let barLimit = 5
     /// places next to Heute
@@ -30,6 +34,9 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .cooking: return L("Cooking")
         case .money: return L("Money")
         case .knowledge: return L("Knowledge")
+        case .orders: return L("Treats")
+        case .wishes: return L("Wishes")
+        case .houseinfo: return L("House info")
         case .more: return L("More")
         }
     }
@@ -43,6 +50,9 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .cooking: return "fork.knife"
         case .money: return "eurosign.circle"
         case .knowledge: return "brain"
+        case .orders: return "hand.raised"
+        case .wishes: return "gift"
+        case .houseinfo: return "info.circle"
         case .more: return "ellipsis.circle"
         }
     }
@@ -54,6 +64,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .cooking: return "cook"
         case .money: return "money"
         case .knowledge: return "knowledge"
+        case .orders: return "treats"
         default: return nil
         }
     }
@@ -65,6 +76,9 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case "pantry", "stock": return .stock
         case "tasks", "care", "home": return .tasks
         case "knowledge", "wissen": return .knowledge
+        case "treats", "orders", "bestellen": return .orders
+        case "wishes", "wuensche": return .wishes
+        case "house", "houseinfo", "hausinfo": return .houseinfo
         default: return AppArea(rawValue: s)
         }
     }
@@ -80,6 +94,10 @@ extension AppModel {
         case .cooking: return moduleOn("cook") && MoreAccess.guestAllows(level, "/kochen")
         case .money: return moduleOn("money") && MoreAccess.guestAllows(level, "/geld")
         case .knowledge: return moduleOn("knowledge") && MoreAccess.guestAllows(level, "/wissen")
+        // "Bring mir was" needs someone at home to ask – hidden for a household of one, like its row in Mehr
+        case .orders: return !singleHousehold && moduleOn("treats") && MoreAccess.guestAllows(level, "/bestellen")
+        case .wishes: return MoreAccess.guestAllows(level, "/einkauf/wuensche")
+        case .houseinfo: return MoreAccess.guestAllows(level, "/hausinfo")
         case .today, .shopping, .more: return true
         }
     }
@@ -103,10 +121,11 @@ extension AppModel {
     var sidebarAreas: [AppArea] { ownBar == nil ? AppArea.tabs.filter { areaVisible($0) } : barAreas }
 
     /// areas without a place in the bar → rows at the top of Mehr. Default: only Geld (when five others are on).
-    /// With an own bar: every area that isn't in it – except Haushaltswissen, which has its row in Mehr › Haushalt.
+    /// With an own bar: every main area that isn't in it – the extra ones (Haushaltswissen, Bring mir was …) keep
+    /// their own row in Mehr or their door.
     var areasInMore: [AppArea] {
         guard ownBar != nil else { return moneyInMore ? [.money] : [] }
-        return AppArea.pickable.filter { $0 != .knowledge && areaVisible($0) && !barAreas.contains($0) }
+        return AppArea.main.filter { areaVisible($0) && !barAreas.contains($0) }
     }
 
     /// Geld is there but has no place in the default iPhone tab bar → first row in Mehr
@@ -291,7 +310,7 @@ struct MainTabView: View {
             ForEach(app.barAreas) { a in
                 Group {
                     if a == .today {
-                        TodayView(store: store, openSettings: { showSettings = true }, openTab: { select($0) })
+                        TodayView(store: store, openSettings: { app.showMore = true }, openTab: { select($0) })
                     } else {
                         detail(a)
                     }
@@ -383,6 +402,10 @@ struct MainTabView: View {
             if let api = app.api {
                 NavigationStack { KnowledgeView(api: api).rootChrome() }
             }
+        // the extra areas of "Deine Leiste" – otherwise rows in Mehr (Bring mir was) or doors
+        case .orders: NavigationStack { TreatsView(api: store.api).rootChrome() }
+        case .wishes: NavigationStack { WishesView(api: store.api).rootChrome() }
+        case .houseinfo: NavigationStack { HouseGuideView().rootChrome() }
         case .more: SettingsView(store: store, embedded: true)
         }
     }
@@ -415,7 +438,8 @@ extension MainTabView {
         case .stock: app.assistantContext = "stock"
         case .cooking: app.assistantContext = "cook"
         case .money: app.assistantContext = "money"
-        case .knowledge, .more: app.assistantContext = nil
+        case .wishes: app.assistantContext = "wishes"
+        case .knowledge, .orders, .houseinfo, .more: app.assistantContext = nil
         }
     }
 

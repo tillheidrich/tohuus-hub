@@ -251,7 +251,8 @@ function Shell({ me }: { me: Me }) {
   }, [openSearch]);
   // the desktop sidebar's Mehr: with an own bar, the other areas come first (on a phone they are rows of /mehr)
   const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods, areas: navPref ? areasInMore(gl, mods, navPref) : undefined });
-  const activeTab = tabFor(loc.pathname);
+  // an extra area in the own bar (Wünsche, Hausinfo …) is lit on its own pages (nav.tsx tabFor)
+  const activeTab = tabFor(loc.pathname, navPref ? phoneTabs.map((l) => l.key) : undefined);
   // gentle mode (focus): no "needs attention" counter on Vorrat
   const focus = useFocusPrefs(Boolean(me.actor.userId) && !me.actor.houseGuest);
   const badge = (key: string) => (key === '/einkauf' && openCount ? openCount : key === '/bestand' && attention && !focus?.gentle ? attention : 0);

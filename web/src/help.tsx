@@ -40,6 +40,11 @@ export const HELP_SLUGS = [
   'datenschutz-kurz',
   'abo-und-kuendigen',
   'fragen',
+  'haushaltswissen',
+  'deine-leiste',
+  'bring-mir-was',
+  'ki-grenzen',
+  'aufgaben',
 ] as const;
 export type HelpSlug = (typeof HELP_SLUGS)[number];
 

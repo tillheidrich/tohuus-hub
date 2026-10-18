@@ -314,7 +314,7 @@ struct AwayView: View {
                 Label(L("Looks like everyone is away"), systemImage: "airplane").font(.headline)
                 Text(LF("Home Assistant hasn’t seen anyone at home for %d hours. Start away mode?", s.hours ?? 24))
                     .font(.subheadline).foregroundStyle(Theme.ink2)
-                HStack {
+                AdaptiveButtonRow { _ in
                     Button(L("Start away mode")) { Task { await act("POST", "suggestion/start", nil, done: L("Away mode is on")) } }
                         .buttonStyle(.borderedProminent).tint(Theme.primary)
                     Button(L("Not now")) { Task { await act("POST", "suggestion/dismiss", nil) } }

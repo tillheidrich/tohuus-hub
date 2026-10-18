@@ -672,7 +672,7 @@ struct CalendarSyncView: View {
                             Text(s.name).font(.subheadline.weight(.semibold))
                             Text("\(ServerDate.shortDay(s.day) ?? s.day)\(s.time.map { " · " + TaskTime.label($0) } ?? "") · \(s.title)")
                                 .font(.caption).foregroundStyle(Theme.ink3)
-                            HStack {
+                            AdaptiveButtonRow { _ in
                                 Button(L("Take over as a task")) { Task { await accept(s) } }.buttonStyle(.borderedProminent).tint(Theme.primary)
                                 Button(L("No")) { suggestions.removeAll { $0 == s } }.buttonStyle(.bordered)
                             }

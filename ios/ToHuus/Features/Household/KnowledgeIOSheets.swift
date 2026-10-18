@@ -76,23 +76,28 @@ struct KnowledgeImportSheet: View {
 
     private var form: some View {
         Form {
+            // pasting comes first – most notes live in Notes, a mail or a few cells (Till 18 Oct 2026); a file second
             Section {
-                Text(L("Markdown, text, CSV or a ToHuus export. Notes from Obsidian or Notion work too. You see everything before it is saved."))
+                Text(L("Paste text, from Notes, an e-mail or cells from Excel or Numbers. Or choose a file (CSV, text, Markdown). You see everything before it is saved."))
                     .font(.subheadline).foregroundStyle(Theme.ink2)
+            }
+            if source == nil {
+                Section(L("Paste text")) {
+                    TextEditor(text: $pasted)
+                        .font(.system(.footnote, design: .monospaced))
+                        .frame(minHeight: 120)
+                        .accessibilityLabel(L("Paste text"))
+                }
+            }
+            Section {
                 Button { picking = true } label: {
                     Label(source?.filename ?? L("Choose file"), systemImage: source == nil ? "doc.badge.plus" : "doc.text")
                 }
                 if source != nil {
                     Button(L("Remove file"), role: .destructive) { source = nil }
                 }
-            }
-            if source == nil {
-                Section(L("Or paste text")) {
-                    TextEditor(text: $pasted)
-                        .font(.system(.footnote, design: .monospaced))
-                        .frame(minHeight: 120)
-                        .accessibilityLabel(L("Or paste text"))
-                }
+            } header: { Text(source == nil ? L("Or choose a file") : L("File")) } footer: {
+                Text(L("Exports from Obsidian or Notion (Markdown) work too."))
             }
             Section {
                 Picker(L("Who sees the new entries?"), selection: $target) {

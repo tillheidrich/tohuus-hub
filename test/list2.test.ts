@@ -320,6 +320,8 @@ describe('H: drag & drop on the server', () => {
     expect((await req('PUT', '/api/list/today-order', { order: ['nope'] })).status).toBe(400);
     // the Aufgaben card can be arranged too (web and iPhone send 'tasks')
     expect((await req('PUT', '/api/list/today-order', { order: ['tasks', 'money', 'list'] })).json).toEqual({ order: ['tasks', 'money', 'list'] });
+    // and the Bring mir was card (18 Oct 2026)
+    expect((await req('PUT', '/api/list/today-order', { order: ['orders', 'list'] })).json).toEqual({ order: ['orders', 'list'] });
     await req('PUT', '/api/list/today-order', { order: ['money', 'list'] });
     expect((await req('GET', '/api/list/today-order')).json.order).toEqual(['money', 'list']);
   });

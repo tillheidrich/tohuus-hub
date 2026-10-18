@@ -149,6 +149,13 @@ describe('D: notifications per person', () => {
     expect(JSON.stringify(list)).not.toContain(SAM_TOKEN);
     // Mira does not see Sam's devices
     expect((await mira('GET', '/api/push/apns')).json).toEqual([]);
+    // the test button says why nothing arrived: Mira has no iPhone registered, Sam has
+    const none = (await mira('POST', '/api/push/apns/test', {})).json;
+    expect(none).toMatchObject({ sent: 0, configured: true, devices: 0, reasons: [] });
+    const t = (await sam('POST', '/api/push/apns/test', {})).json;
+    expect(t.configured).toBe(true);
+    expect(t.devices).toBeGreaterThanOrEqual(1);
+    expect(Array.isArray(t.reasons)).toBe(true);
     // no quiet hours for the rest of this file (it may run at night)
     expect((await sam('PUT', '/api/notify/prefs', { quiet: null })).status).toBe(200);
     expect((await mira('PUT', '/api/notify/prefs', { quiet: null })).status).toBe(200);

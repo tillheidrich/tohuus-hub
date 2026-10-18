@@ -15,6 +15,9 @@ final class TodayModel {
     var order: [String] = []
     private(set) var pulse: PulseState?
     private(set) var started: GettingStarted?
+    /// "Bring mir was": open wishes the others have for me, and my own open ones (the card only shows while there are some)
+    private(set) var treatsForMe: [TreatOrder] = []
+    private(set) var treatsMine: [TreatOrder] = []
 
     func load(_ store: ServerStore, guest: Bool, admin: Bool) async {
         loading = true
@@ -38,6 +41,9 @@ final class TodayModel {
         if !guest, let o = try? await store.api.todayOrder() { order = o }
         pulse = guest ? nil : try? await store.api.pulse()
         started = admin ? try? await store.api.gettingStarted() : nil
+        let open: (TreatOrder) -> Bool = { $0.status == "new" || $0.status == "accepted" }
+        treatsForMe = guest ? [] : ((try? await store.api.treatRequests()) ?? []).filter(open)
+        treatsMine = ((try? await store.api.myTreats()) ?? []).filter(open)
     }
 
     func saveOrder(_ keys: [TodayCardKey], store: ServerStore) async -> String? {
@@ -131,7 +137,7 @@ struct TodayView: View {
     @State private var showFirstRun = false
     @State private var path = NavigationPath()
 
-    private enum Push: Hashable { case imports, invites, notifications, recipe(Int, Int?) }
+    private enum Push: Hashable { case imports, invites, notifications, treats, recipe(Int, Int?) }
 
     private var refreshKey: Int {
         store.revision("shopping") + store.revision("stock") + store.revision("recipes") + store.revision("imports")
@@ -198,6 +204,7 @@ struct TodayView: View {
                 case .imports: ImportsListView(store: store)
                 case .invites: InvitesView(api: store.api)
                 case .notifications: NotificationSettingsView()
+                case .treats: TreatsView(api: store.api)
                 case .recipe(let id, let plan): RecipeDetailView(recipeId: id, store: store, planEntryId: plan)
                 }
             }
@@ -231,6 +238,9 @@ struct TodayView: View {
             return app.moduleOn("cook") && allows("/kochen")
         case .money: return t.money != nil && app.moduleOn("money") && allows("/geld")
         case .pulse: return model.pulse?.question != nil && !app.isGuest
+        case .orders:
+            guard app.moduleOn("treats"), !app.singleHousehold, allows("/bestellen") else { return false }
+            return !(model.treatsForMe.isEmpty && model.treatsMine.isEmpty)
         }
     }
 
@@ -253,6 +263,7 @@ struct TodayView: View {
         case .still: EatSoonCard(items: t.stillHave, store: store)
         case .cook: if let c = t.cookToday { cookCard(c) }
         case .money: if let m = t.money { moneyCard(m) }
+        case .orders: ordersCard
         case .pulse:
             if let p = model.pulse {
                 TodayPulseCard(api: store.api, pulse: p) {
@@ -533,7 +544,7 @@ struct TodayView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            HStack {
+            AdaptiveButtonRow { _ in
                 Button(L("More ideas")) { openTab(.cooking) }.buttonStyle(.bordered)
                 if !cook.missing.isEmpty {
                     Button(cook.missing.count == 1 ? L("Put it on the list") : L("Put the missing on the list")) {
@@ -558,6 +569,46 @@ struct TodayView: View {
         }
         if let t = cook.timeMin, t > 0 { parts.append(LF("%d min", Int(t))) }
         return parts.filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+
+    // MARK: Bring mir was
+
+    /// what the others asked me for and my own open wishes – tap opens Bring mir was
+    private var ordersCard: some View {
+        Button {
+            path.append(Push.treats)
+        } label: {
+            Card(title: L("Treats"), systemImage: TodayCardKey.orders.symbol) {
+                VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                    ForEach(model.treatsForMe.prefix(3)) { o in
+                        orderRow(o.forUserId != nil ? LF("%@ asks you", o.guestName ?? "") : LF("%@ would love something", o.guestName ?? ""),
+                                 [o.itemsText, o.status == "accepted" ? o.byName.map { LF("Coming right up – %@ is bringing it", $0) } : nil]
+                                    .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "),
+                                 done: o.status == "accepted")
+                    }
+                    ForEach(model.treatsMine.prefix(2)) { o in
+                        orderRow(o.itemsText.isEmpty ? L("Your wish") : o.itemsText,
+                                 o.status == "accepted" ? (o.byName.map { LF("Coming right up – %@ is bringing it", $0) } ?? L("Coming right up")) : L("Waiting for a reply"),
+                                 done: o.status == "accepted")
+                    }
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func orderRow(_ title: String, _ meta: String, done: Bool) -> some View {
+        HStack(alignment: .top, spacing: Theme.Space.s2) {
+            Image(systemName: done ? "checkmark.circle.fill" : "circle").foregroundStyle(done ? Theme.primary : Theme.ink3).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+                if !meta.isEmpty { Text(meta).font(.caption).foregroundStyle(Theme.ink2) }
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.ink3).accessibilityHidden(true)
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 
     // MARK: 5 · Geld

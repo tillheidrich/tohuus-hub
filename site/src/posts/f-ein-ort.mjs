@@ -18,8 +18,13 @@ export default [
         '<p>Im Laden stehen und nicht wissen, ob das Kind jetzt 30 oder 31 trägt. Ein neues Rollo bestellen wollen und das Maß nicht finden. Der Netzbetreiber fragt nach dem Zählerstand, und der Zettel vom letzten Jahr ist weg. Das sind keine Aufgaben und keine Termine, sondern Wissen über euer Zuhause, das irgendwer irgendwann mal aufgeschrieben hat.</p>'
         + '<p>Meistens liegt es an Orten, die nicht dafür gemacht sind: in einem alten Chat, auf der Rückseite eines Briefumschlags, in einer Notiz auf genau einem Handy oder im Kopf von genau einer Person. Wer gerade fragt, muss diese Person fragen.</p>'],
       ['Was typischerweise dazugehört',
-        '<ul><li><b>Personen</b>: Schuh-, Jacken- und Hemdgrößen, Lieblingskuchen, was jemand nicht verträgt</li><li><b>Räume</b>: Maße von Rollos, Fenstern und Vorhängen, welche Glühbirne in welche Lampe gehört</li><li><b>Dinge</b>: Zählernummern und Zählerstände, Staubsaugerbeutel, Filter für Dunstabzug oder Wasserkanne, wann die Heizung zuletzt gewartet wurde</li></ul>'
-        + '<p>Was nicht dazugehört: Passwörter, PIN und Türcodes. Die brauchen einen eigenen, geschützten Platz, in ToHuus sind das die Codes in der Hausinfo.</p>'],
+        '<ul><li><b>Personen</b>: Schuh- und Kleidergrößen der Kinder, Lieblingskuchen, was jemand mag und was nicht, Unverträglichkeiten und Allergien, die Nummer der Kinderärztin</li><li><b>Räume</b>: Maße von Rollos, Fenstern und Vorhängen, welcher Sockel in welche Lampe gehört (E14, E27 oder GU10), wo der Hauptwasserhahn und der Sicherungskasten sind</li><li><b>Dinge</b>: Zählernummern und Zählerstände, Staubsaugerbeutel, Filter für Dunstabzug oder Wasserkanne, die Reifengröße vom Auto, wann die Heizung zuletzt gewartet wurde</li><li><b>Regeln</b>: was bei euch in welche Tonne gehört, wohin der Sperrmüll angemeldet wird, welche Batterien in die Fernbedienung kommen</li></ul>'
+        + '<p>Was nicht dazugehört: Passwörter, PIN, WLAN-Schlüssel und Türcodes. Die brauchen einen eigenen, geschützten Platz, in ToHuus sind das die Codes in der Hausinfo.</p>'],
+      ['Warum das entlastet',
+        '<p>In vielen Haushalten trägt eine Person das meiste davon im Kopf. Sie wird gefragt, wenn im Laden die Größe fehlt, wenn der Ableser vor der Tür steht oder wenn die Birne im Flur kaputt ist. Jede Frage ist klein, aber zusammen sind es viele, und sie kommen zu jeder Tageszeit. Die Soziologin Allison Daminger hat diese Denkarbeit 2019 in vier Teile zerlegt: vorausdenken, Möglichkeiten finden, entscheiden und nachhalten (<a href="https://doi.org/10.1177/0003122419859007">American Sociological Review</a>). Das Wissen übers Zuhause gehört zum Nachhalten, und genau das sieht von außen niemand.</p>'
+        + '<p>Steht es an einem Ort, an dem alle nachsehen können, fragt man ToHuus statt dieser einen Person. Pflegen muss man dafür nichts: Was sich ändert, trägt einfach ein, wer es gerade merkt.</p>'],
+      ['Auch für die KI',
+        '<p>Ein Assistent kann nur mit dem arbeiten, was er über euch weiß. Ohne Haushaltswissen rät er bei der Schuhgröße oder fragt zurück. Mit Haushaltswissen antwortet er, für den Assistenten in ToHuus genauso wie für Claude oder ChatGPT, wenn ihr sie über MCP verbindet. Mehr dazu im Beitrag <a href="ki-braucht-kontext.html">Warum auch die beste KI ohne Kontext nur rät</a>.</p>'],
       ['Warum ein fester Ort hilft',
         '<p>Aufschreiben allein reicht nicht, man muss es auch wiederfinden. Hilfreich ist eine einfache Form: <i>wer oder was</i>, <i>welche Eigenschaft</i>, <i>welcher Wert</i>. Also „Mika · Schuhgröße: 31“ statt „Mika hat glaube ich jetzt 31, oder?“. Dann findet man es über die Person, über den Raum oder über die Suche.</p>'
         + '<p>Dazu kommt ein Effekt, den man aus der Forschung kennt. In Studien von <a href="https://doi.org/10.1037/a0024192">Masicampo und Baumeister (2011)</a> drängten sich offene Dinge weniger in die Gedanken, sobald es einen konkreten Plan dafür gab. Ein festes „steht in ToHuus“ ist kein Plan, aber es nimmt die Frage aus dem Kopf, wo das noch mal war.</p>'],
@@ -28,7 +33,7 @@ export default [
         + '<p>Als Mira im Schuhladen steht, fragt sie den Assistenten: „Welche Schuhgröße hat Mika?“ Die Antwort steht da, ohne dass jemand zu Hause ans Telefon muss.</p>'],
       ['So hilft ToHuus dabei',
         '<p>In ToHuus heißt das Haushaltswissen „Was ToHuus sich merkt“. Jede Karte gehört zu einem Mitglied, einem Kinderprofil, einem Ort aus „Wo ist was?“, einem Produkt oder einer freien Bezeichnung wie „Rollo Erdgeschoss“. Ihr tippt einen Satz oder sagt ihn dem Assistenten, kurze Sätze wie „Rollo Wohnzimmer 120 x 160“ versteht ToHuus auch ganz ohne KI. Gibt es zur selben Sache schon eine Karte, bekommt sie den neuen Wert, und der alte bleibt im Verlauf.</p>'
-        + '<ul><li>Jede Karte gilt für den ganzen Haushalt oder nur für dich. Private Karten sieht niemand sonst.</li><li>Gesundheitsangaben wie die Telefonnummer der Kinderärztin bleiben privat, bis du sie ausdrücklich teilst, und gehen ohne eure Zustimmung nie an eine KI.</li><li>Codes und Passwörter nimmt ToHuus hier nicht an und verweist auf die Hausinfo.</li><li>Feste Gäste sehen nur Karten, die ihr für Gäste freigebt.</li><li>Was schon in einer Notiz-App steht, bringt ihr mit: als Markdown (auch aus Obsidian oder Notion exportiert), TXT, CSV oder JSON. Exportieren geht jederzeit.</li></ul>'
+        + '<ul><li>Jede Karte gilt für den ganzen Haushalt oder nur für dich. Private Karten sieht niemand sonst.</li><li>Gesundheitsangaben wie die Telefonnummer der Kinderärztin bleiben privat, bis du sie ausdrücklich teilst, und gehen ohne eure Zustimmung nie an eine KI.</li><li>Codes und Passwörter nimmt ToHuus hier nicht an und verweist auf die Hausinfo.</li><li>Feste Gäste sehen nur Karten, die ihr für Gäste freigebt.</li><li>Was schon irgendwo steht, holt ihr rein: Text aus Notizen oder Mails einfügen oder eine Liste wählen (Excel, Numbers, Google Tabellen als CSV, Textdatei). Ihr seht vorher alles. Wie das geht, steht im Beitrag <a href="notizen-und-listen-uebernehmen.html">Notizen und Listen in den Haushalt holen</a>.</li><li>Sichern geht jederzeit als Datei, in Markdown, CSV oder JSON.</li></ul>'
         + tail],
     ],
     faq: [
@@ -37,14 +42,16 @@ export default [
       ['Sehen alle im Haushalt meine Einträge?', 'Nur die, die du für den Haushalt anlegst. Einträge nur für dich sieht niemand sonst, Gesundheitsangaben sind von sich aus privat.'],
       ['Geht der alte Wert verloren, wenn ich etwas ändere?', 'Nein. Die Karte zeigt den neuen Wert, die früheren stehen mit Datum im Verlauf und lassen sich zurückholen.'],
       ['Brauche ich dafür KI?', 'Nein. Kurze Sätze wie „Mika Schuhgröße 31“ liest ToHuus ohne KI. Mit KI versteht der Assistent auch freiere Formulierungen.'],
+      ['Muss ich alles abtippen, was schon in Notizen steht?', 'Nein. Text aus Notizen oder Mails einfügen oder eine Liste als CSV oder Textdatei wählen. ToHuus zeigt vorher, was es erkannt hat.'],
     ],
     facts: [
       { value: '1 Satz', text: 'So viel braucht eine Karte im Haushaltswissen von ToHuus, etwa „Rollo Wohnzimmer 120 x 160“. Das geht auch ohne KI.', source: 'ToHuus', url: help('erste-schritte') },
     ],
     sources: [
       ['Masicampo, E. J., & Baumeister, R. F. (2011): Consider it done! Plan making can eliminate the cognitive effects of unfulfilled goals. JPSP 101(4)', 'https://doi.org/10.1037/a0024192'],
+      ['Daminger, A. (2019): The Cognitive Dimension of Household Labor. American Sociological Review 84(4)', 'https://doi.org/10.1177/0003122419859007'],
     ],
-    help: ['erste-schritte', 'hausinfo', 'datenschutz-kurz'],
+    help: ['haushaltswissen', 'hausinfo', 'datenschutz-kurz'],
   },
   {
     slug: 'tonne-am-vorabend-erinnerung', area: 'aufgaben', status: 'published', date: '2026-10-18',
@@ -175,5 +182,172 @@ export default [
       ['Gibt es Push-Mitteilungen?', 'Apple-Push nicht vom eigenen Server. Dafür Web Push, ntfy, Telegram oder E-Mail.'],
     ],
     help: ['selbst-hosten', 'home-assistant', 'umzug-in-die-cloud'],
+  },
+  {
+    slug: 'ki-braucht-kontext', area: 'wissen', status: 'published', date: '2026-10-18',
+    title: 'Warum auch die beste KI ohne Kontext nur rät',
+    desc: 'Ein Sprachmodell weiß viel über die Welt, aber nichts über euer Zuhause. Welche Schuhgröße Mika hat oder welcher Filter in die Haube gehört, muss irgendwo stehen.',
+    answer: 'Eine KI kann nur mit dem arbeiten, was sie über euch weiß. Fragt ihr nach der Schuhgröße eures Kindes oder dem Filter für die Dunstabzugshaube, rät sie oder fragt zurück. Erst wenn das Wissen über euren Haushalt an einem Ort steht, kann ein Assistent damit etwas anfangen. In ToHuus ist das das Haushaltswissen, und es funktioniert auch ganz ohne KI.',
+    sections: [
+      ['Was eine KI weiß und was nicht',
+        '<p>Sprachmodelle haben aus riesigen Textmengen gelernt, wie Sprache funktioniert und was allgemein bekannt ist. Wie man den Fettfilter einer Dunstabzugshaube reinigt, erklären sie ziemlich gut. Welche Haube bei euch hängt und welcher Filter da reinpasst, wissen sie nicht, denn das stand in keinem Text, aus dem sie gelernt haben.</p>'
+        + '<p>Fragt man trotzdem, passiert eins von zwei Dingen. Entweder die KI fragt zurück, dann muss doch jemand nachschauen. Oder sie antwortet mit etwas, das plausibel klingt, aber für euch nicht stimmt. Bei einer Schuhgröße ist das ärgerlich, bei einer Allergie kann es gefährlich werden.</p>'],
+      ['Kontext heißt: was bei euch gilt',
+        '<p>Gemeint ist hier nichts Technisches. Es sind die Fakten, die nur ihr kennt:</p>'
+        + '<ul><li>wer zum Haushalt gehört und was jemand nicht verträgt</li><li>welche Größen die Kinder gerade tragen</li><li>welche Maße Fenster und Rollos haben und welche Glühbirne in welche Lampe gehört</li><li>welcher Zähler welche Nummer hat und wann die Heizung zuletzt gewartet wurde</li><li>was bei euch in welche Tonne gehört</li></ul>'
+        + '<p>Steht das irgendwo, wo der Assistent nachsehen darf, wird aus „Das kann ich leider nicht wissen“ eine brauchbare Antwort: „Mika trägt seit März Größe 32.“</p>'],
+      ['Warum eine Notiz dafür selten reicht',
+        '<p>Viele haben solche Sachen in einer Notiz auf dem Handy. Das ist besser als nichts, hat aber zwei Haken. Die Notiz liegt meistens bei genau einer Person, und die anderen fragen weiter diese Person. Außerdem ist ein langer Text für Menschen und Assistenten gleich schwer zu lesen: Gilt die 31 noch, oder steht weiter unten schon die 32?</p>'
+        + '<p>Hilfreich ist eine einfache Form: wer oder was, welche Eigenschaft, welcher Wert. „Mika · Schuhgröße: 32“ versteht ein Mensch so schnell wie ein Assistent, und ein alter Wert lässt sich klar vom neuen trennen.</p>'],
+      ['Ein Beispiel: Familie Berg',
+        '<p>Mira steht im Baumarkt und will Ersatzbirnen für die Flurlampe mitnehmen. Früher hätte sie Sam angerufen, und der hätte auf die Leiter steigen müssen. Jetzt fragt sie den Assistenten in ToHuus: „Welche Birne gehört in die Flurlampe?“ Die Antwort kommt aus einer Karte, die Sam vor ein paar Wochen angelegt hat: „Flurlampe · Sockel: E14, warmweiß“.</p>'
+        + '<p>Am Abend fragt Sam seinen eigenen KI-Assistenten, den er über MCP mit ToHuus verbunden hat, welche Winterreifen er bestellen muss. Der Assistent liest die Reifengröße aus dem Haushaltswissen. Raten muss er nicht.</p>'],
+      ['So hilft ToHuus dabei',
+        '<p>Das Haushaltswissen ist das Gedächtnis eures Haushalts. Jede Karte gehört zu einer Person, einem Raum oder einem Ding und hat einen Verlauf. Der Assistent in ToHuus schaut dort nach, wenn ihr ihn etwas fragt, und trägt auf Wunsch etwas ein. Wer lieber Claude, ChatGPT oder einen anderen Assistenten nutzt, verbindet ihn über MCP und gibt ihm damit denselben Zugang.</p>'
+        + '<ul><li>Ohne KI geht es auch: Kurze Sätze wie „Mika Schuhgröße 32“ liest ToHuus selbst, und die Suche findet jede Karte.</li><li>Private Karten sieht nur, wem sie gehören, auch kein Assistent einer anderen Person.</li><li>Gesundheitsangaben wie Allergien gehen nur an eine KI, wenn ihr das ausdrücklich erlaubt.</li><li>Codes und Passwörter gehören in die Hausinfo und gehen nie an eine KI.</li></ul>'
+        + tail],
+    ],
+    faq: [
+      ['Weiß eine KI nicht sowieso alles?', 'Nein. Sie weiß viel Allgemeines, aber nichts über euren Haushalt, solange es nirgends steht. Fehlt dieses Wissen, rät sie oder fragt zurück.'],
+      ['Brauche ich KI, damit das Haushaltswissen etwas bringt?', 'Nein. Jede Karte findet ihr über die Suche, die Person, den Raum oder das Ding. Die KI ist nur ein weiterer Weg zu fragen.'],
+      ['Bekommt die KI alles zu sehen?', 'Nur, was die fragende Person sehen darf. Private Karten anderer nie, Gesundheitsangaben nur mit eurer Erlaubnis, Codes und Passwörter nie.'],
+      ['Kann ich meinen eigenen KI-Assistenten nutzen?', 'Ja. Über MCP verbindet ihr Claude, ChatGPT oder einen anderen Assistenten mit eurem Haushalt. Er sieht das Haushaltswissen dann nach denselben Regeln.'],
+    ],
+    facts: [
+      { value: '1 Ort', text: 'Was ihr übers Zuhause wisst, steht in ToHuus an einer Stelle: für euch, für den Assistenten und auf Wunsch für eure eigene KI.', source: 'ToHuus', url: help('haushaltswissen') },
+    ],
+    help: ['haushaltswissen', 'sprechen', 'claude-chatgpt'],
+  },
+  {
+    slug: 'notizen-und-listen-uebernehmen', area: 'wissen', status: 'published', date: '2026-10-18',
+    title: 'Notizen und Listen in den Haushalt holen, ohne abzutippen',
+    desc: 'Größen in einer Notiz, Zählerstände in einer Tabelle, Maße in einer alten Mail: So holt ihr das in ToHuus, seht vorher alles und sichert es jederzeit wieder als Datei.',
+    answer: 'Abtippen müsst ihr nichts. Text aus einer Notiz oder Mail fügt ihr einfach ein, oder ihr wählt eine Liste als Datei, etwa aus Excel, Numbers oder Google Tabellen als CSV oder eine Textdatei. ToHuus zeigt vorher jede erkannte Zeile, und ihr hakt an, was übernommen wird. Genauso sichert ihr das Haushaltswissen jederzeit als Datei.',
+    sections: [
+      ['Wo das Wissen heute steht',
+        '<p>Kaum ein Haushalt fängt bei null an. Die Kleidergrößen der Kinder stehen in einer Notiz, die Zählerstände in einer Tabelle, die jemand jedes Jahr ergänzt, und das Maß fürs Rollo steckt in der Bestellbestätigung vom letzten Mal. Das alles noch einmal abzutippen, macht niemand gern. Also bleibt es meistens, wo es ist.</p>'],
+      ['Text einfügen',
+        '<p>Am schnellsten geht es mit Kopieren und Einfügen. Markiert den Text in eurer Notiz oder Mail, kopiert ihn und fügt ihn in ToHuus unter Haushaltswissen › Importieren ein. ToHuus liest jede Zeile für sich:</p>'
+        + '<ul><li>„Mika Schuhgröße 31“ wird eine Karte für Mika, genauso „Schuhgröße: 31“ unter einer Zeile „Mika:“.</li><li>„Rollo Wohnzimmer 120 x 160“ wird eine Karte fürs Wohnzimmer.</li><li>Zeilen ohne klare Angabe kommen als Notiz mit, damit nichts verloren geht.</li></ul>'],
+      ['Eine Liste wählen',
+        '<p>Habt ihr eine Tabelle, speichert sie als CSV. Das geht in Excel, Numbers und Google Tabellen über „Exportieren“ oder „Herunterladen“. Am besten hat sie drei Spalten: wer oder was, welche Eigenschaft, welcher Wert, also zum Beispiel „Strom“, „Zählerstand“, „41230“. Überschriften auf Deutsch oder Englisch erkennt ToHuus, ohne Überschrift zählt die Reihenfolge der Spalten. Eine einfache Textdatei geht genauso.</p>'
+        + '<p>Wer Notizen in Obsidian oder Notion führt, exportiert sie als Markdown. Überschriften werden dabei zur Person oder zum Ding, Links werden zu normalem Text.</p>'],
+      ['Erst ansehen, dann übernehmen',
+        '<p>Gespeichert wird nichts, bevor ihr es gesehen habt. Die Vorschau zeigt jede erkannte Karte und was mit ihr passiert:</p>'
+        + '<ul><li><b>neu</b>: die Karte gibt es noch nicht</li><li><b>neuer Wert</b>: die Karte gibt es schon, der alte Wert wandert in den Verlauf</li><li><b>unverändert</b>: steht schon genau so drin</li><li><b>nicht übernommen</b>: Codes und Passwörter, die gehören in die Hausinfo</li></ul>'
+        + '<p>Ihr hakt an, was rein soll, und wählt, ob es für den ganzen Haushalt ist oder nur für euch. Gesundheitsangaben wie die Nummer der Kinderärztin bleiben dabei immer privat. Hat etwas nicht gepasst, nimmt „Rückgängig“ den ganzen Import auf einmal zurück.</p>'],
+      ['Als Datei sichern',
+        '<p>Andersherum geht es genauso. Unter Haushaltswissen › Exportieren bekommt ihr eine Datei als Markdown, CSV oder JSON, mit allem oder nur mit dem, was die Suche gerade zeigt. Auf dem iPhone legt ihr sie über „In Dateien sichern“ ab, zum Beispiel in iCloud Drive. Exportiert wird nur, was ihr selbst sehen dürft, und jede dieser Dateien lässt sich später wieder einlesen.</p>'],
+      ['Ein Beispiel: Familie Berg',
+        '<p>Mira hat seit Jahren eine Notiz „Größen Mika“ auf dem Handy. Sie kopiert sie, fügt sie in ToHuus ein und sieht in der Vorschau sechs Karten: Schuhe, Jacke, Hose, Handschuhe, Mütze und Fahrradhelm. Zwei Zeilen, die keine Größe sind, kommen als Notiz mit. Sie hakt alles an und wählt „Ganzer Haushalt“.</p>'
+        + '<p>Sam führt die Zählerstände in einer Tabelle. Er speichert sie als CSV und wählt die Datei aus. Bei „Strom · Zählerstand“ steht „neuer Wert“, weil Mira den Stand vom Sommer schon eingetragen hatte. Der landet im Verlauf, die Karte zeigt den aktuellen.</p>'],
+      ['So hilft ToHuus dabei',
+        '<p>Import und Export gehören zum Haushaltswissen und funktionieren ganz ohne KI, auf dem iPhone und im Browser. Eine Datei darf bis zu 512 KB groß sein, pro Import kommen bis zu 200 Einträge herein. Wer seinen eigenen KI-Assistenten über MCP verbunden hat, kann ihm auch einfach eine Notiz geben und sagen: „Trag das ins Haushaltswissen ein.“</p>'
+        + tail],
+    ],
+    faq: [
+      ['Muss ich meine Notizen abtippen?', 'Nein. Text einfügen oder eine Datei wählen reicht. ToHuus zeigt vorher, was es erkannt hat.'],
+      ['Welche Dateien gehen?', 'Textdateien, CSV aus Excel, Numbers oder Google Tabellen, Markdown und JSON. PDF, Word-Dateien und Bilder nicht.'],
+      ['Was passiert mit Einträgen, die es schon gibt?', 'Die Karte bekommt den neuen Wert, der alte bleibt im Verlauf. Wer das nicht will, lässt vorhandene Karten beim Import einfach, wie sie sind.'],
+      ['Kann ich alles wieder exportieren?', 'Ja, jederzeit als Markdown, CSV oder JSON. Jede dieser Dateien lässt sich wieder einlesen.'],
+    ],
+    help: ['haushaltswissen', 'daten-export'],
+  },
+  {
+    slug: 'haushalts-app-leiste-anpassen', area: 'zuhause', status: 'published', date: '2026-10-18',
+    title: 'Die Leiste unten so, wie ihr lebt',
+    desc: 'Heute, Einkauf, Kochen, Aufgaben und Vorrat sind der Anfang. Was ihr öfter braucht, etwa Geld oder das Haushaltswissen, holt jede Person für sich nach unten.',
+    answer: 'In ToHuus stellt jede Person die Leiste unten selbst zusammen. Heute bleibt vorn, dazu kommen bis zu vier Bereiche in eigener Reihenfolge: Einkauf, Kochen, Aufgaben, Vorrat, Geld, Wissen, Bring mir was, Wünsche oder Hausinfo. Was nicht in der Leiste ist, steht unter „Mehr“. Einstellen geht unter Einstellungen › Deine Leiste oder mit langem Drücken auf die Leiste.',
+    sections: [
+      ['Warum nicht alle dieselbe Leiste brauchen',
+        '<p>Im Haushalt macht selten jede Person dasselbe. Wer einkauft und kocht, braucht Liste und Kochplaner jeden Tag. Wer die Ausgaben im Blick hat, schaut eher auf Geld. Und wer abends ständig nach dem WLAN-Passwort oder Mikas Schuhgröße gefragt wird, hätte Hausinfo oder Haushaltswissen gern mit einem Tipp erreichbar.</p>'
+        + '<p>Mehr als fünf Plätze bleiben auf dem Handy kaum gut bedienbar. Deshalb wählt jede Person selbst, was dort steht.</p>'],
+      ['Der Anfang: Heute, Einkauf, Kochen, Aufgaben, Vorrat',
+        '<p>So startet ToHuus. <b>Heute</b> zeigt, was fällig ist, was bald weg muss und was demnächst kommt. <b>Einkauf</b> ist die gemeinsame Liste, <b>Kochen</b> der Kochplaner, <b>Aufgaben</b> das, was zu Hause zu tun ist, und <b>Vorrat</b> das, was da ist. Habt ihr Kochen oder Vorrat unter „Was nutzt ihr?“ abgeschaltet, rückt Geld nach.</p>'],
+      ['Was ihr nach unten holen könnt',
+        '<ul><li><b>Geld</b>: was Essen und Haushalt kosten</li><li><b>Wissen</b>: das Haushaltswissen mit Größen, Maßen und Zählerständen</li><li><b>Bring mir was</b>: sich zu Hause eine Kleinigkeit wünschen</li><li><b>Wünsche</b>: Wunschlisten und Merklisten</li><li><b>Hausinfo</b>: WLAN, wie die Heizung geht, wichtige Nummern</li></ul>'
+        + '<p>Heute bleibt immer vorn, und der Assistent bleibt der runde Knopf unten rechts. Werkzeuge und Einstellungen wie Personen, Urlaub oder „Wo ist was?“ findet ihr weiter unter „Mehr“.</p>'],
+      ['So stellt ihr sie um',
+        '<ol><li>Lange auf die Leiste drücken oder unter „Mehr“ auf „Leiste anpassen“ tippen. Im Browser geht es auch über Einstellungen › Deine Leiste.</li><li>Mit dem grünen Plus holt ihr einen Bereich dazu, mit dem roten Minus nehmt ihr ihn raus.</li><li>Am Griff zieht ihr die Bereiche in die Reihenfolge, die ihr wollt.</li><li>„Wie am Anfang“ setzt alles zurück.</li></ol>'
+        + '<p>Die Leiste gilt für dich, auf dem iPhone und im Browser gleich. Die anderen im Haushalt behalten ihre eigene.</p>'],
+      ['Ein Beispiel: Familie Berg',
+        '<p>Sam kocht fast jeden Abend und kauft dafür ein, in den Vorrat schaut er selten. Seine Leiste: Heute, Einkauf, Kochen, Aufgaben, Wissen. Mira behält die Ausgaben im Blick und wird ständig nach Mikas Größen gefragt. Ihre Leiste: Heute, Einkauf, Aufgaben, Geld, Wissen. Bring mir was nutzen beide eher abends und holen es sich bei Bedarf über „Mehr“.</p>'],
+      ['So hilft ToHuus dabei',
+        '<p>ToHuus speichert die Leiste pro Person, damit iPhone, iPad und Browser gleich aussehen. Auf dem iPad und am Computer zeigt die Seitenleiste zuerst deine Bereiche, die übrigen folgen darunter. Schaltet ihr einen Bereich für den Haushalt ab, fällt er aus allen Leisten weg. Feste Gäste bekommen immer die Standardleiste.</p>'
+        + tail],
+    ],
+    faq: [
+      ['Kann ich die Leiste in ToHuus anpassen?', 'Ja. Heute bleibt vorn, dazu kommen bis zu vier Bereiche in deiner Reihenfolge. Lange auf die Leiste drücken oder Einstellungen › Deine Leiste öffnen.'],
+      ['Ändert das die Leiste für alle?', 'Nein. Jede Person hat ihre eigene Leiste, auf dem iPhone und im Browser gleich.'],
+      ['Wo finde ich Bereiche, die nicht in der Leiste sind?', 'Unter „Mehr“. Dort stehen oben die Hauptbereiche, die übrigen behalten ihre gewohnte Zeile.'],
+    ],
+    help: ['deine-leiste', 'erste-schritte'],
+  },
+  {
+    slug: 'haushalt-mit-eigenem-ki-assistenten', area: 'assistent', status: 'published', date: '2026-10-18',
+    title: 'ToHuus mit dem eigenen KI-Assistenten nutzen: so geht MCP',
+    desc: 'Wer Claude, ChatGPT oder einen anderen Assistenten nutzt, verbindet ihn über MCP mit dem Haushalt. Dann weiß er, was ansteht und was ihr übers Zuhause wisst.',
+    answer: 'MCP ist ein offenes Protokoll, über das KI-Assistenten auf andere Programme zugreifen. ToHuus bietet dafür eine eigene Adresse an. Verbindet ihr Claude, ChatGPT oder einen anderen Assistenten damit, kann er Liste, Aufgaben, Rezepte und das Haushaltswissen lesen und auf Wunsch ändern, nach denselben Regeln wie in der App. Ihr meldet euch mit eurem ToHuus-Konto an und legt fest, was er darf.',
+    sections: [
+      ['Worum es geht',
+        '<p>Viele nutzen inzwischen einen KI-Assistenten für alles Mögliche. Über euren Haushalt weiß der aber nichts, solange es ihm niemand sagt. Mit MCP müsst ihr das nicht jedes Mal neu erklären. Ihr gebt ihm einmal einen festen Zugang zu ToHuus, und danach könnt ihr dort fragen „Was steht diese Woche noch an?“ oder ein Foto vom Kühlschrank schicken und sagen „Setz auf die Liste, was fehlt“.</p>'],
+      ['Was der Assistent damit kann',
+        '<ul><li>die Einkaufsliste lesen, ergänzen und abhaken</li><li>Aufgaben und Termine anlegen und sagen, was demnächst kommt</li><li>im Haushaltswissen nachsehen und auf Wunsch etwas eintragen, auch eine ganze eingefügte Notiz</li><li>Rezepte, Wochenplan, Vorrat und Ausgaben lesen</li></ul>'
+        + '<p>Er ändert nur etwas, wenn ihr ihn darum bittet. Einkäufe, die er festhält, warten erst in der Prüfung.</p>'],
+      ['So verbindet ihr ihn',
+        '<ol><li>In Claude unter Einstellungen › Connectors › Eigenen Connector hinzufügen, in ChatGPT unter Einstellungen › Connectors, je nach Tarif im Entwicklermodus.</li><li>Die MCP-Adresse eintragen. Sie steht in der Hilfe unter <a href="../hilfe/claude-chatgpt.html">Mit Claude oder ChatGPT verbinden</a>.</li><li>Mit dem ToHuus-Konto anmelden, den Haushalt wählen und festlegen, ob der Assistent nur lesen oder auch ändern darf.</li></ol>'],
+      ['Was er nicht sieht',
+        '<ul><li>private Einträge und Aufgaben anderer</li><li>Codes aus der Hausinfo</li><li>Allergien, Angaben zu Kindern und andere Gesundheitsangaben, außer ihr kreuzt das beim Verbinden an und der Haushalt erlaubt es</li></ul>'
+        + '<p>Unter Einstellungen › Zugänge & KI seht ihr jede Verbindung und könnt sie beenden. Ein Admin kann MCP für den ganzen Haushalt abschalten.</p>'],
+      ['Und die KI-Grenzen?',
+        '<p>Fragt ihr euren eigenen Assistenten, arbeitet dort dessen Sprachmodell, bei dem Anbieter, den ihr ohnehin nutzt. Von den Nachrichten an den Assistenten in ToHuus geht dabei nichts ab. Wer viel mit KI arbeitet, fährt mit diesem Weg oft gut.</p>'],
+      ['Ein Beispiel: Familie Berg',
+        '<p>Sam plant die Woche ohnehin mit Claude. Seit er ToHuus verbunden hat, fragt er sonntags: „Was steht diese Woche an, und was kochen wir mit dem, was da ist?“ Claude liest Aufgaben, Vorrat und Rezepte und schlägt drei Abende vor. Sam sagt „Plan die ein und setz auf die Liste, was fehlt“, und ein paar Sekunden später steht es auf Miras Handy.</p>'],
+      ['So hilft ToHuus dabei',
+        '<p>Die MCP-Adresse gibt es in der ToHuus Cloud und auf dem eigenen Server. Selbst gehostet verbindet ihr euch genauso oder mit einem Zugangsschlüssel. Behandelt so einen Schlüssel wie ein Passwort.</p>'
+        + tail],
+    ],
+    faq: [
+      ['Was ist MCP?', 'Das Model Context Protocol ist ein offener Standard, über den KI-Assistenten auf andere Programme zugreifen. ToHuus bietet dafür eine eigene Adresse an.'],
+      ['Welche Assistenten gehen?', 'Claude, ChatGPT und andere Assistenten, die eigene MCP-Verbindungen mit Anmeldung erlauben.'],
+      ['Sieht der Assistent alles?', 'Nur, was du selbst sehen darfst. Gesundheitsangaben nur mit ausdrücklicher Erlaubnis, Codes aus der Hausinfo nie.'],
+      ['Kann ich die Verbindung wieder trennen?', 'Ja, unter Einstellungen › Zugänge & KI, jederzeit und sofort.'],
+    ],
+    help: ['claude-chatgpt', 'haushaltswissen', 'ki-an-oder-aus'],
+  },
+  {
+    slug: 'wenn-die-ki-pausiert', area: 'assistent', status: 'published', date: '2026-10-18',
+    title: 'Wenn die KI pausiert: was ohne sie geht und warum es eine Grenze gibt',
+    desc: 'Jede KI-Nachricht kostet Geld. Deshalb hat ToHuus eine faire Obergrenze im Monat. Was dann passiert, was ohne KI weiterläuft und wie ihr selten an die Grenze kommt.',
+    answer: 'Jede Nachricht an ein Sprachmodell kostet Geld, deshalb hat ToHuus pro Haushalt eine Grenze im Monat. Mit Plus und in der Testphase sind es 800 Nachrichten in voller Länge, danach werden die Antworten kürzer, und ab 1.500 pausiert die KI bis zum Monatsende. Mit Haushalt sind es 100 Nachrichten. Liste, Aufgaben, Haushaltswissen und die häufigen kurzen Sätze an den Assistenten laufen auch in der Pause weiter.',
+    sections: [
+      ['Warum es überhaupt eine Grenze gibt',
+        '<p>Für viele Antworten fragt der Assistent in der ToHuus Cloud ein Sprachmodell von Mistral. Das kostet pro Nachricht einen kleinen Betrag, ein Bon-Foto etwas mehr. Bei den meisten Haushalten ist das im Abo locker drin. Ohne Grenze könnten aber einzelne Haushalte so viel verbrauchen, dass ihr Abo es nicht mehr trägt, und das zahlen dann alle anderen mit.</p>'
+        + '<p>Wir haben die Grenze deshalb so gelegt, dass sie im Alltag kaum jemand erreicht, und schreiben offen hin, wo sie liegt. Eine „unbegrenzte“ KI, die dann doch irgendwo still gedrosselt wird, wollten wir nicht.</p>'],
+      ['Die Grenzen im Monat',
+        '<ul><li><b>Plus und Testphase</b>: 800 Nachrichten in voller Länge. Danach kommen kürzere Antworten, ab 1.500 Nachrichten pausiert die KI bis zum Monatsende.</li><li><b>Haushalt</b>: 100 Nachrichten an den Assistenten, gedacht für ab und zu.</li><li><b>Kostenbremse</b>: Für jeden Haushalt gibt es zusätzlich einen festen Höchstbetrag für KI im Monat. Wird er erreicht, etwa durch sehr viele Bon-Fotos auf einmal, pausiert die KI auch früher.</li><li><b>Selbst gehostet</b>: keine Grenze von uns, ihr nehmt euren eigenen Schlüssel oder gar keinen.</li></ul>'
+        + '<p>Eine gesprochene Nachricht zählt einmal, egal wie lang sie ist. Wie viele Nachrichten euer Haushalt in diesem Monat schon hatte, steht unter Einstellungen › Abo.</p>'],
+      ['Was ohne KI weiterläuft',
+        '<p>Die Pause betrifft nur das Sprachmodell. Alles andere bleibt, wie es ist:</p>'
+        + '<ul><li>Liste, Vorschläge aus dem Kaufrhythmus, Aufgaben, Vorrat, Kochplaner und Geld</li><li>das Haushaltswissen mit Suche, Import und Export, neue Karten auch mit einem Satz wie „Mika Schuhgröße 32“</li><li>die häufigen kurzen Sätze an den Assistenten, etwa „Milch ist alle und 2 Paprika“ oder „Merk dir …“</li><li>Bon-Fotos, die dann die Texterkennung auf dem Server liest, und PDF-Bons wie immer</li><li>euer eigener KI-Assistent über MCP</li></ul>'
+        + '<p>ToHuus sagt an den passenden Stellen, dass die KI für diesen Monat pausiert. Nachberechnet wird nichts.</p>'],
+      ['Wie ihr selten an die Grenze kommt',
+        '<ul><li>Mehrere Sachen in einen Satz packen: „Milch, Brot und Spüli fehlen, und Samstag ist Bad dran“ ist eine Nachricht.</li><li>Für die Liste reicht oft das Eingabefeld, dort wird nichts gezählt.</li><li>Digitale Bons als PDF teilen statt den Bildschirm zu fotografieren, PDF-Bons liest ToHuus ohne KI.</li></ul>'],
+      ['Ein Beispiel: Familie Berg',
+        '<p>Familie Berg hat Plus und schreibt dem Assistenten ein paar Mal am Tag, meistens kurze Sachen für die Liste und die Aufgaben. Im Oktober kommen sie auf gut 200 Nachrichten und merken von der Grenze nichts. Im Dezember planen sie mit dem Assistenten die Feiertage, fotografieren jeden Bon und fragen viel nach Rezepten. Kurz vor Silvester steht auf Heute, dass die KI bis Monatsende pausiert. Die Einkaufsliste für Silvester schreiben sie trotzdem, über das Eingabefeld und mit kurzen Sätzen an den Assistenten.</p>'],
+      ['So hilft ToHuus dabei',
+        '<p>Wer die KI gar nicht will, schaltet sie für den Haushalt, für sich oder für ein Kind ab. Dann geht keine einzige Anfrage an ein Sprachmodell, und ToHuus funktioniert trotzdem. Mehr dazu steht in der Hilfe unter <a href="../hilfe/ki-grenzen.html">Faire KI-Grenzen</a> und <a href="../hilfe/ki-an-oder-aus.html">Mit oder ohne KI</a>.</p>'
+        + tail],
+    ],
+    faq: [
+      ['Ist die KI in ToHuus unbegrenzt?', 'Nein. Mit Plus und in der Testphase gibt es 800 Nachrichten in voller Länge im Monat, danach kürzere Antworten und ab 1.500 eine Pause bis Monatsende. Mit Haushalt sind es 100 Nachrichten.'],
+      ['Was geht, wenn die KI pausiert?', 'Fast alles: Liste, Aufgaben, Vorrat, Kochplaner, Geld, Haushaltswissen und die häufigen kurzen Sätze an den Assistenten. Bon-Fotos liest dann die Texterkennung.'],
+      ['Kostet die Pause etwas extra?', 'Nein. Es wird nichts nachberechnet, und im nächsten Monat ist die KI wieder da.'],
+      ['Gibt es die Grenze auch selbst gehostet?', 'Nein. Dort nutzt ihr euren eigenen KI-Schlüssel oder gar keinen.'],
+    ],
+    facts: [
+      { value: '800', text: 'Nachrichten in voller Länge hat der Assistent mit Plus und in der Testphase im Monat. Danach werden die Antworten kürzer.', source: 'ToHuus', url: help('ki-grenzen') },
+    ],
+    help: ['ki-grenzen', 'ki-an-oder-aus', 'sprechen'],
   },
 ];

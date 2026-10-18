@@ -215,4 +215,6 @@ export const admin: Record<string, string> = {
   Queue: 'Warteschlange',
   'Nothing here.': 'Hier ist nichts.',
   'e.g. newsletter October': 'z. B. Newsletter Oktober',
+  Yearly: 'Jährlich',
+  Monthly: 'Monatlich',
 };

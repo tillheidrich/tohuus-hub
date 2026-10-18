@@ -3,7 +3,7 @@
  * changes with or without AI, what other people see, privacy – and short sourced facts (GET /api/facts) with what
  * ToHuus does about each. Plain words, no promises about "KI".
  */
-import { ArrowSquareOut, BookOpen, Brain, Eye, Lightbulb, ListChecks, LockSimple, Receipt } from '@phosphor-icons/react';
+import { ArrowSquareOut, BookOpen, Brain, CalendarCheck, Eye, House, Lightbulb, ListChecks, LockSimple, Notebook, Receipt, SquaresFour } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import type { Me } from '../App';
 import { useApi } from '../api';
@@ -21,6 +21,17 @@ interface Section {
 
 function sections(ai: boolean | null): Section[] {
   return [
+    {
+      id: 'place',
+      icon: <House size={20} />,
+      title: t('One place for the household'),
+      points: [
+        t('What is missing, what is coming up, what needs doing, what it costs and what you know about your home. Shopping is where it starts, not the whole app.'),
+        t('Write it in and ToHuus sorts it: “out of milk” goes on the list, “yellow bin every two weeks” to the tasks, “Mika is shoe size 31 now” into the household knowledge. If ToHuus is not sure, it asks instead of guessing.'),
+        t('ToHuus does not replace your calendar or notes app. It takes what belongs to the household, such as bin dates from your calendar, and puts tasks back there if you like.'),
+      ],
+      slug: 'so-funktioniert-tohuus',
+    },
     {
       id: 'remember',
       icon: <Receipt size={20} />,
@@ -44,6 +55,36 @@ function sections(ai: boolean | null): Section[] {
       slug: 'einkaufsliste',
     },
     {
+      id: 'knowledge',
+      icon: <Notebook size={20} />,
+      title: t('Your household’s memory'),
+      points: [
+        t('Sizes, measurements, meter readings, which filter fits the cooker hood: what only one person used to know becomes a card in the household knowledge. Then you ask ToHuus instead of that person.'),
+        t('Nothing to maintain: whoever notices a change enters the new value, the old one stays in the history. Notes come in by pasting text or picking a list (CSV, text file), and you can save everything as a file.'),
+        t('This is also what makes AI useful: an assistant can only work with what it knows about you. With the household knowledge the assistant, or your own AI via MCP, answers without guessing.'),
+      ],
+      slug: 'haushaltswissen',
+    },
+    {
+      id: 'coming',
+      icon: <CalendarCheck size={20} />,
+      title: t('Coming up, and everything can be undone'),
+      points: [
+        t('On Today, “Coming up” shows what is next tomorrow and in the next days, and who has taken it on. The bin is there the evening before.'),
+        t('Ticked off or deleted by mistake? “Undo” brings it back.'),
+      ],
+      slug: 'aufgaben',
+    },
+    {
+      id: 'bar',
+      icon: <SquaresFour size={20} />,
+      title: t('Your bar'),
+      points: [
+        t('The bar starts with Today, Shopping, Cooking, Tasks and Stock. Money, Knowledge, Bring me something and more can be added, each person for themselves.'),
+      ],
+      slug: 'deine-leiste',
+    },
+    {
       id: 'ai',
       icon: <Brain size={20} />,
       title: t('With and without AI'),
@@ -52,6 +93,7 @@ function sections(ai: boolean | null): Section[] {
         t('Without AI: the list, receipts as eBon or PDF, purchase rhythm, money, recipes from links with recipe data, and simple sentences like “milk, 2 peppers and bread”.'),
         t('With AI: receipt photos, recipes from photos, screenshots and social media posts, open questions to the assistant and help on each screen. Suggestions always wait for your yes.'),
         t('In ToHuus Cloud, AI runs on Mistral models in the EU (no training on your data). Only what a request needs is sent; allergies and children’s details only with the household’s consent, house codes never.'),
+        t('In the cloud there is an open monthly limit: with Plus and the trial 800 full-length messages, then shorter replies, from 1,500 AI pauses until the month ends. Everything without AI keeps working.'),
       ].filter(Boolean),
       slug: 'ki-an-oder-aus',
     },

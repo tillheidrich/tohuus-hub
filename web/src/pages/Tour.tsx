@@ -70,72 +70,51 @@ const MORE = '.avatar-btn';
 const TITLE = '.main h1';
 
 /** The steps, in the household language (built at render time so t() picks the right dictionary).
- * The wording follows the household form (area: home): no "who is getting it" alone, no kids outside a family. */
-function steps(form: HouseholdForm = 'family'): Step[] {
+ * Short again since 18 Oct 2026: six pages plus the end – the rest is found on the way. Switched-off areas
+ * ("Was nutzt ihr?") and Bring mir was in a household of one are left out. No party mode (off for the start). */
+function steps(form: HouseholdForm = 'family', mods?: Record<string, boolean>): Step[] {
+  const on = (m: string) => !mods || mods[m] !== false;
   return [
     {
-      id: 'today',
+      id: 'bar',
+      route: '/',
+      targets: ['.tabbar', '.sidebar .nav-group'],
+      title: t('Your bar, the way you need it'),
+      body: t('Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Your bar) to choose what goes there, like Treats or Knowledge. Everything else is under More.'),
+    },
+    {
+      id: 'ahead',
       route: '/',
       targets: ['.main .page-head h1', '.main h1'],
-      title: t('Today: the one page to glance at'),
-      body: t('What is running out, what should be eaten soon and what is planned. On most days a quick look here is all it takes.'),
+      title: t('Coming up: thought of in time'),
+      body: t('Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out.'),
     },
     {
-      id: 'add',
-      route: '/',
-      targets: ['.today-head .icon-btn', '.sidebar .side-add'],
-      title: t('Adding things takes seconds'),
-      body: t('Scan a barcode, upload a receipt, take a photo or just type “2 milk, parcel tape”. Nobody has to type in the whole house.'),
-    },
-    {
-      id: 'shopping',
-      route: '/einkauf',
-      targets: nav('/einkauf'),
-      title: t('One shopping list for everyone'),
-      body:
-        form === 'single'
-          ? t('ToHuus remembers what you buy and how often. What is probably due comes as a suggestion – it only goes on the list after a yes. Every row says where it came from.')
-          : t('Everyone adds to the same list. ToHuus remembers what you buy and how often; what is probably due comes as a suggestion, and every row says where it came from.'),
-    },
-    {
-      id: 'stock',
-      route: '/bestand',
-      targets: nav('/bestand'),
-      title: t('Stock is optional'),
-      body:
-        form === 'family'
-          ? t('Nobody has to keep a stock list. If you like, see what is at home place by place – “Where’s what?” finds the plasters, handy for anyone looking after the kids, too.')
-          : t('Nobody has to keep a stock list. If you like, see what is at home place by place – “Where’s what?” finds the plasters in seconds.'),
-    },
-    {
-      id: 'cook',
-      route: '/kochen',
-      targets: nav('/kochen'),
-      title: t('What shall we eat?'),
-      body: t('Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.'),
-    },
-    {
-      id: 'tasks',
+      id: 'undo',
       route: '/aufgaben',
       targets: [TITLE],
-      title: t('Tasks, your head and the people you look after'),
-      body: t('Household tasks without points. “On my mind” for thoughts without a deadline – private or for everyone. “People I look after” for visits and appointments. And when someone is away, ToHuus asks who takes what and what may wait.'),
+      title: t('Ticked off by mistake?'),
+      body: t('Tap “Undo” right after. Later you find it in Tasks under “Recently done”.'),
     },
+    ...(on('knowledge')
+      ? [
+          {
+            id: 'knowledge',
+            route: '/wissen',
+            targets: [TITLE],
+            title: t('Household knowledge: write it down once'),
+            body: t('Mika’s shoe size, the filter for the cooker hood, where the main water tap is. What usually only one of you knows is there for everyone. Notes you already have come in with “Import”.'),
+          },
+        ]
+      : []),
     {
-      id: 'receipts',
-      route: '/geld',
-      targets: nav('/geld'),
-      title: t('Receipts and money'),
-      body: t('Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.'),
+      id: 'speak',
+      route: '/',
+      targets: ['.assist-fab'],
+      title: t('Just tell the assistant'),
+      body: t('“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone.'),
     },
-    {
-      id: 'wishes',
-      route: '/einkauf/wuensche',
-      targets: [TITLE],
-      title: t('Wishes'),
-      body: t('Wish lists with photo, links and price. Who reserved what stays hidden from the person it is for. Private lists only you can see.'),
-    },
-    ...(form === 'single'
+    ...(form === 'single' || !on('treats')
       ? []
       : [
           {
@@ -143,28 +122,14 @@ function steps(form: HouseholdForm = 'family'): Step[] {
             route: '/bestellen',
             targets: [TITLE],
             title: t('Bring mir was'),
-            body: t('Stuck on the sofa or putting the kids to bed? Ask for a little something in two taps, someone at home says “I’ll bring it”. Guests can ask through a link.'),
+            body: t('Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”.'),
           },
         ]),
-    {
-      id: 'speak',
-      route: '/',
-      targets: ['.assist-fab'],
-      title: t('Assistant'),
-      body: t('Say or type “milk is out, and we need something for Sunday”. With AI switched on it also helps on every screen; without AI the simple sentences still work. Every change can be undone.'),
-    },
-    {
-      id: 'more',
-      route: '/mehr',
-      targets: [MORE, ...nav('/mehr'), TITLE],
-      title: t('More: house info, trips and how it works'),
-      body: t('Under More you find the house info for babysitters and guests (with photos and short videos), the handover for whoever looks after pets and plants while you are away, “How ToHuus works” and the settings, including AI on or off.'),
-    },
     {
       id: 'done',
       targets: [],
       title: t('That’s the tour'),
-      body: t('You can take it again any time under Help. Start small: one shopping list and a receipt or two – ToHuus takes it from there.'),
+      body: t('You can take it again any time under Help. Everything else, from house info to settings, is under More.'),
     },
   ];
 }
@@ -233,6 +198,7 @@ export function TourHost({ me }: { me: Me }) {
       {open !== null && (
         <TourOverlay
           start={open}
+          mods={me.modules}
           onStep={(step) => save({ status: 'active', step })}
           onClose={(status, step) => {
             setOpen(null);
@@ -254,9 +220,9 @@ interface Rect {
   height: number;
 }
 
-function TourOverlay({ start, onStep, onClose }: { start: number; onStep: (step: number) => void; onClose: (status: 'done' | 'skipped' | 'paused', step: number) => void }) {
+function TourOverlay({ start, mods, onStep, onClose }: { start: number; mods?: Record<string, boolean>; onStep: (step: number) => void; onClose: (status: 'done' | 'skipped' | 'paused', step: number) => void }) {
   const home = useHousehold();
-  const all = useMemo(() => steps(home.form), [home.form]);
+  const all = useMemo(() => steps(home.form, mods), [home.form, mods]);
   const [i, setI] = useState(Math.min(start, all.length - 1));
   const [rect, setRect] = useState<Rect | null>(null);
   const [viaMore, setViaMore] = useState(false);

@@ -1,0 +1,23 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSMicrophoneUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus uses the microphone when you dictate something for the list."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus nutzt das Mikrofon, wenn du etwas für die Liste diktierst."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

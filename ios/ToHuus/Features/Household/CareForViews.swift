@@ -549,7 +549,7 @@ struct CareForHintCard: View {
                     .font(.subheadline).foregroundStyle(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            HStack(spacing: Theme.Space.s3) {
+            AdaptiveButtonRow(spacing: Theme.Space.s3) { _ in
                 Button { adding = true } label: { Text(L("Yes, add them")).frame(minHeight: 32) }
                     .buttonStyle(.borderedProminent).tint(Theme.primary)
                 Button { Task { await dismissHint() } } label: { Text(L("No thanks")).frame(minHeight: 32) }
@@ -610,7 +610,7 @@ struct CarryingSection: View {
                                 .font(.subheadline).foregroundStyle(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
-                        HStack(spacing: Theme.Space.s3) {
+                        AdaptiveButtonRow(spacing: Theme.Space.s3) { _ in
                             Button { onHandOver(c.taskId) } label: { Text(L("Hand over …")).frame(minHeight: 32) }
                                 .buttonStyle(.borderedProminent).tint(Theme.primary)
                             Button { Task { await dismiss(c) } } label: { Text(L("It’s fine")).frame(minHeight: 32) }

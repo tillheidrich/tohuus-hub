@@ -149,7 +149,7 @@ struct KidWishesSection: View {
                             if busy == w.id { ProgressView() }
                         }
                         .accessibilityElement(children: .combine)
-                        HStack(spacing: Theme.Space.s2) {
+                        AdaptiveButtonRow(spacing: Theme.Space.s2) { _ in
                             Button(L("Not now")) { Task { await answer(w, approve: false) } }
                                 .buttonStyle(.bordered)
                             Button(L("Approve")) { Task { await answer(w, approve: true) } }

@@ -253,6 +253,160 @@
         "4x5": "brand-gesehen-werden-4x5.png",
         "9x16": "brand-gesehen-werden-9x16.png"
       }
+    },
+    {
+      "slug": "brand-haushaltswissen",
+      "kind": "brand",
+      "eyebrow": "Haushaltswissen",
+      "value": "Steht drin.",
+      "title": "Schuhgröße, Rollo-Maß, Zählerstand: an einem Ort.",
+      "text": "Was sonst nur einer im Kopf hat, fragt ihr jetzt ToHuus. Zu pflegen gibt es nichts.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-haushaltswissen-4x5.png",
+        "9x16": "brand-haushaltswissen-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-kontext",
+      "kind": "brand",
+      "eyebrow": "KI braucht Kontext",
+      "value": "Kontext.",
+      "title": "Auch die beste KI rät, solange sie nicht weiß, was bei euch gilt.",
+      "text": "ToHuus ist das Gedächtnis, mit dem der Assistent und deine eigene KI etwas anfangen können.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-kontext-4x5.png",
+        "9x16": "brand-kontext-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-notizen",
+      "kind": "brand",
+      "eyebrow": "Ohne Abtippen",
+      "value": "Einfügen.",
+      "title": "Notizen und Listen rein, ohne abzutippen.",
+      "text": "Text einfügen oder eine Liste wählen. Du siehst vorher alles und sicherst es jederzeit als Datei.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-notizen-4x5.png",
+        "9x16": "brand-notizen-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-leiste",
+      "kind": "brand",
+      "eyebrow": "Deine Leiste",
+      "value": "Deins.",
+      "title": "Die Leiste unten so, wie du lebst.",
+      "text": "Heute bleibt vorn, den Rest wählst du selbst: Geld, Wissen, Bring mir was oder Hausinfo.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-leiste-4x5.png",
+        "9x16": "brand-leiste-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-tonne",
+      "kind": "brand",
+      "eyebrow": "Demnächst",
+      "value": "17 Uhr.",
+      "title": "Die Tonne steht schon am Vorabend auf Heute.",
+      "text": "Die Abfuhrtermine kommen auf Wunsch aus eurem Kalender. Ersetzen muss ToHuus ihn dafür nicht.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-tonne-4x5.png",
+        "9x16": "brand-tonne-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-rueckgaengig",
+      "kind": "brand",
+      "eyebrow": "Aus Versehen",
+      "value": "Zurück.",
+      "title": "Falsch abgehakt? Ein Tipp, und es ist wieder da.",
+      "text": "Alles lässt sich zurücknehmen, auch was der Assistent eingetragen hat.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-rueckgaengig-4x5.png",
+        "9x16": "brand-rueckgaengig-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-bring-mir-was",
+      "kind": "brand",
+      "eyebrow": "Bring mir was",
+      "value": "Tee?",
+      "title": "Auf dem Sofa festgesessen? Wünsch dir was.",
+      "text": "Wer kann, sagt „Ich bring’s“. Ohne Punkte und ohne Liste, wer was gebracht hat.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-bring-mir-was-4x5.png",
+        "9x16": "brand-bring-mir-was-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-eigene-ki",
+      "kind": "brand",
+      "eyebrow": "Eigener Assistent",
+      "value": "MCP.",
+      "title": "Claude, ChatGPT und Co. wissen, was bei euch ansteht.",
+      "text": "Über MCP verbunden, nach denselben Regeln wie in der App. Codes aus der Hausinfo nie.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-eigene-ki-4x5.png",
+        "9x16": "brand-eigene-ki-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-ki-grenze",
+      "kind": "brand",
+      "eyebrow": "Faire KI-Grenze",
+      "value": "800",
+      "title": "Nachrichten in voller Länge im Monat. Die Grenze steht offen da.",
+      "text": "Mit Plus und in der Testphase. Pausiert die KI, laufen Liste, Aufgaben und Wissen weiter.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-ki-grenze-4x5.png",
+        "9x16": "brand-ki-grenze-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-14-tage",
+      "kind": "brand",
+      "eyebrow": "Ausprobieren",
+      "value": "14 Tage.",
+      "title": "Alles testen, ohne Zahlungsdaten.",
+      "text": "Danach Abo oder nur noch lesen, gelöscht wird nichts. Selbst gehostet ist ToHuus kostenlos.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-14-tage-4x5.png",
+        "9x16": "brand-14-tage-9x16.png"
+      }
+    },
+    {
+      "slug": "brand-selbst-hosten",
+      "kind": "brand",
+      "eyebrow": "Selbst hosten",
+      "value": "0 €.",
+      "title": "ToHuus auf dem eigenen Server.",
+      "text": "Ein Docker-Container, eine SQLite-Datei, AGPL-3.0. KI nur, wenn du willst.",
+      "source": null,
+      "url": null,
+      "files": {
+        "4x5": "brand-selbst-hosten-4x5.png",
+        "9x16": "brand-selbst-hosten-9x16.png"
+      }
     }
   ]
 }

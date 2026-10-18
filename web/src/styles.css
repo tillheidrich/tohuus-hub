@@ -815,6 +815,24 @@ h2.h3 {
   user-select: none;
   transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), opacity var(--dur-fast);
 }
+/* button labels never break at syllables („Ge-bracht“, Till 18 Oct 2026): a short label stays whole, a row of
+   buttons wraps as a whole (.btn-row) instead */
+.btn,
+button {
+  -webkit-hyphens: manual;
+  hyphens: manual;
+  overflow-wrap: normal;
+}
+/* several buttons side by side: they wrap onto the next line instead of squeezing their labels */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.btn-row > .btn {
+  white-space: nowrap;
+}
 .btn:hover {
   background: color-mix(in srgb, var(--ink) 5%, transparent);
 }
@@ -5133,6 +5151,27 @@ html.board-mode body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+/* phone / portrait (one column, QR on top): the floating bar covered the QR code (Till, 18 Oct 2026) –
+   here it sits in the flow above the board instead of floating over it */
+@media (max-aspect-ratio: 4/3) and (max-width: 999px) {
+  .board-controls {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 0 12px auto;
+  }
+  .board-controls.hidden {
+    transform: none;
+  }
+}
+@media (min-aspect-ratio: 4/3), (min-width: 1000px) {
+  /* two columns: keep the title clear of the floating bar on the right */
+  .gb-head {
+    padding-right: min(300px, 28vw);
+  }
 }
 
 /* guest view */

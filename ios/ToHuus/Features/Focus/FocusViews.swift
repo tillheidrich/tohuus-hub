@@ -210,7 +210,7 @@ struct FocusView: View {
                     Button { Task { await doneStep(t) } } label: { Label(L("Done it"), systemImage: "checkmark") }
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(busy)
-                    HStack {
+                    AdaptiveButtonRow { _ in
                         Button(L("Later")) {
                             skipped.removeAll { $0 == t.id }
                             skipped.append(t.id)

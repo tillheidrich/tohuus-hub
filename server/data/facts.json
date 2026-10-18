@@ -788,6 +788,56 @@
       ],
       "value": "3×",
       "card": "mitteilungen-buendeln"
+    },
+    {
+      "id": "knowledge-keeping-track",
+      "topic": "knowledge",
+      "title": {
+        "de": "Im Blick behalten ist Arbeit",
+        "en": "Keeping track is work"
+      },
+      "text": {
+        "de": "In einer Studie mit 35 Paaren gehörte das Im-Blick-Behalten zu den vier Schritten der Denkarbeit im Haushalt. Es lag öfter bei den Frauen und blieb für die anderen meist unsichtbar.",
+        "en": "In a study of 35 couples, keeping track was one of the four steps of household thinking work. It fell to women more often and mostly stayed invisible to the others."
+      },
+      "tohuus": {
+        "de": "Im Haushaltswissen steht, was sonst eine Person im Kopf behält: Größen, Maße, Zählerstände. Gefragt wird dann ToHuus, nicht sie.",
+        "en": "Household knowledge holds what one person would otherwise keep in their head: sizes, measurements, meter readings. Then you ask ToHuus, not them."
+      },
+      "sources": [
+        {
+          "title": "The Cognitive Dimension of Household Labor",
+          "publisher": "American Sociological Review (Allison Daminger)",
+          "url": "https://doi.org/10.1177/0003122419859007",
+          "retrieved": "2026-10-18",
+          "note": "Qualitative Studie, 70 Interviews mit 35 Paaren in den USA – nicht repräsentativ."
+        }
+      ]
+    },
+    {
+      "id": "knowledge-fixed-place",
+      "topic": "knowledge",
+      "title": {
+        "de": "Ein fester Ort beruhigt den Kopf",
+        "en": "A fixed place quiets the mind"
+      },
+      "text": {
+        "de": "In Laborversuchen drängten sich offene Aufgaben weniger in die Gedanken, sobald es einen konkreten Plan dafür gab.",
+        "en": "In lab studies, open tasks intruded on people’s thoughts less once there was a concrete plan for them."
+      },
+      "tohuus": {
+        "de": "„Steht in ToHuus“ ist so ein fester Ort: Wo die Schuhgröße oder das Rollo-Maß steht, muss es sich niemand mehr merken.",
+        "en": "“It’s in ToHuus” is such a fixed place: once the shoe size or the blind measurement is written down, nobody has to remember it."
+      },
+      "sources": [
+        {
+          "title": "Consider it done! Plan making can eliminate the cognitive effects of unfulfilled goals",
+          "publisher": "Journal of Personality and Social Psychology (Masicampo & Baumeister, 2011)",
+          "url": "https://doi.org/10.1037/a0024192",
+          "retrieved": "2026-10-18",
+          "note": "Laborstudien mit Studierenden – über den Alltag zu Hause sagen sie nur indirekt etwas."
+        }
+      ]
     }
   ]
 }

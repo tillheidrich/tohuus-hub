@@ -45,3 +45,8 @@ The web app keeps the same list in `web/src/help.ts` (`HELP_SLUGS`) – a test c
 | `datenschutz-kurz` | Datenschutz kurz erklärt | What is stored where, AI, deletion | Website, settings |
 | `abo-und-kuendigen` | Abo und Kündigen | Plans, App Store, "Abo verwalten", renewal reminder | Settings › Plan & storage |
 | `fragen` | Häufige Fragen | FAQ | Website |
+| `haushaltswissen` | Haushaltswissen | Cards for sizes, measurements, meter readings; adding with one sentence, import (paste text, CSV, text file, Markdown, JSON) with preview, export, who sees what (18 Oct 2026) | Wissen |
+| `deine-leiste` | Deine Leiste | The bar at the bottom per person: start set, what can be added, how to change it (18 Oct 2026) | Einstellungen › Deine Leiste |
+| `bring-mir-was` | Bring mir was | Asking for a little something at home, „Ich bring’s“, no points (18 Oct 2026) | Bring mir was |
+| `ki-grenzen` | Faire KI-Grenzen | Monthly limits per plan, cost cap, what keeps working during a pause (18 Oct 2026) | Settings › Plan, assistant |
+| `aufgaben` | Aufgaben | Tasks once/recurring/when needed, who does it, Demnächst and the bin, undo, appointments, private calendar (18 Oct 2026) | Aufgaben, So funktioniert ToHuus |

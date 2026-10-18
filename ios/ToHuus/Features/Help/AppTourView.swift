@@ -7,7 +7,8 @@ import SwiftUI
 struct AppTourView: View {
     /// bump when the tour gets pages people who saw it should see
     /// 2 (15 Oct 2026): Im Kopf, Für wen ich da bin, Unterwegs, Wochenrückblick
-    static let version = 2
+    /// 3 (18 Oct 2026): short again – Deine Leiste, Demnächst, Rückgängig, Haushaltswissen, Assistent, Bring mir was
+    static let version = 3
     static let seenKey = "tour.ios.version"
 
     @Environment(AppModel.self) private var app
@@ -23,51 +24,26 @@ struct AppTourView: View {
         let body: String
     }
 
+    /// six short pages (18 Oct 2026) – the rest of the app is found on the way; the AI choice comes last
     private var pages: [Page] {
         var p: [Page] = [
-            Page(id: "today", symbol: "sun.max", title: L("Today: the one page to glance at"),
-                 body: L("What is running out, what should be eaten soon and what is planned. On most days a quick look here is all it takes.")),
-            Page(id: "add", symbol: "plus.circle", title: L("Adding things takes seconds"),
-                 body: L("Scan a barcode, upload a receipt, take a photo or just type “2 milk, parcel tape”. Nobody has to type in the whole house.")),
-            Page(id: "shopping", symbol: "basket", title: L("One shopping list for everyone"),
-                 body: app.singleHousehold
-                    ? L("ToHuus remembers what you buy and how often. What is probably due comes as a suggestion – it only goes on the list after a yes. Every row says where it came from.")
-                    : L("Everyone adds to the same list. ToHuus remembers what you buy and how often; what is probably due comes as a suggestion, and every row says where it came from.")),
+            Page(id: "bar", symbol: "dock.rectangle", title: L("Your bar, the way you need it"),
+                 body: L("Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Your bar) to choose what goes there, like Treats or Knowledge. Everything else is under More.")),
+            Page(id: "ahead", symbol: "calendar", title: L("Coming up: thought of in time"),
+                 body: L("Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out.")),
+            Page(id: "undo", symbol: "arrow.uturn.backward", title: L("Ticked off by mistake?"),
+                 body: L("Tap “Undo” right after. Later you find it in Tasks under “Recently done”.")),
         ]
-        if app.moduleOn("stock") {
-            p.append(Page(id: "stock", symbol: "cabinet", title: L("Stock is optional"),
-                          body: L("Nobody has to keep a stock list. If you like, see what is at home place by place – “Where’s what?” finds the plasters in seconds.")))
+        if app.moduleOn("knowledge") {
+            p.append(Page(id: "knowledge", symbol: "brain", title: L("Household knowledge: write it down once"),
+                          body: L("Mika’s shoe size, the filter for the cooker hood, where the main water tap is. What usually only one of you knows is there for everyone. Notes you already have come in with “Import”.")))
         }
-        if app.moduleOn("money") {
-            p.append(Page(id: "money", symbol: "creditcard", title: L("Receipts and money"),
-                          body: L("Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.")))
-        }
-        if app.moduleOn("cook") {
-            p.append(Page(id: "cook", symbol: "fork.knife", title: L("What shall we eat?"),
-                          body: L("Ideas from what is already at home, a week plan if you want one, and recipes from links, photos or a recipe package. Missing ingredients go on the list with one tap.")))
-        }
-        if !app.isGuest {
-            p.append(Page(id: "mind", symbol: "brain", title: L("On my mind & done on the side"),
-                          body: L("Too small for a list and still work: write down what you carry around, and what you did on the side. So it gets seen – only for you or for everyone.")))
-            p.append(Page(id: "carefor", symbol: "heart.circle", title: L("Who I’m there for"),
-                          body: L("Visits, calls, the GP appointment: if you look after a parent or a neighbour, it gets its own place here – and it counts.")))
-            p.append(Page(id: "away", symbol: "suitcase", title: L("Away on your own"),
-                          body: L("When one of you is away, “What happens at home” shows who takes what – and what may simply wait until they’re back.")))
-            p.append(Page(id: "review", symbol: "rectangle.stack", title: L("Your week, looked back on"),
-                          body: L("Once a week a kind look at what you managed together – no ranking. Share a card as a picture if you like.")))
-        }
-        p.append(Page(id: "speak", symbol: "sparkles", title: L("Assistant"),
-                      body: L("Say “milk is out, and we need something for Sunday”. ToHuus puts it on the list and tells you what it added. Every change can be undone.")))
+        p.append(Page(id: "speak", symbol: "sparkles", title: L("Just tell the assistant"),
+                      body: L("“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone.")))
         if !app.singleHousehold && app.moduleOn("treats") {
-            p.append(Page(id: "treats", symbol: "heart", title: L("Bring mir was"),
-                          body: L("Stuck on the sofa or putting the kids to bed? Ask for a little something in two taps, someone at home says “I’ll bring it”. Guests can ask through a link.")))
+            p.append(Page(id: "treats", symbol: "hand.raised", title: L("Bring mir was"),
+                          body: L("Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”.")))
         }
-        p.append(Page(id: "wishes", symbol: "gift", title: L("Wishes"),
-                      body: L("Wish lists with photo, links and price. Who reserved what stays hidden from the person it is for. Private lists only you can see.")))
-        p.append(Page(id: "house", symbol: "house", title: L("House info and trips"),
-                      body: L("For babysitters and guests: Wi-Fi, smart home, emergency numbers, with photos and short videos. When you are away, a handover for whoever feeds the cat or waters the plants.")))
-        p.append(Page(id: "glance", symbol: "applewatch", title: L("At a glance"),
-                      body: L("Widgets on the home and lock screen, the shopping trip on the lock screen while you shop, and the list on your Apple Watch.")))
         return p
     }
 

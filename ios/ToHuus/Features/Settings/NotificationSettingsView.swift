@@ -400,8 +400,19 @@ struct NotificationSettingsView: View {
     private func testPush() async {
         guard let api = app.api else { return }
         do {
-            let n = try await api.sendTestPush()
-            testResult = n > 0 ? L("Sent – it should arrive in a few seconds.") : L("No iPhone of yours is registered yet. Close and reopen the app, then try again.")
+            // register this iPhone again first – the token may never have reached this server
+            await PushManager.shared.sendToken()
+            let r = try await api.sendTestPush()
+            if r.sent > 0 {
+                testResult = L("Sent – it should arrive in a few seconds.")
+            } else if !r.configured {
+                testResult = L("This server can't send iPhone notifications yet: whoever runs it still has to add the Apple key (APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_P8).")
+            } else if r.devices == 0 {
+                testResult = PushManager.shared.lastError.map { LF("This iPhone couldn't register: %@", $0) }
+                    ?? L("No iPhone of yours is registered yet. Close and reopen the app, then try again.")
+            } else {
+                testResult = LF("Apple didn't deliver the message (%@).", r.reasons.joined(separator: ", "))
+            }
         } catch {
             testResult = APIError.from(error).localizedDescription
         }

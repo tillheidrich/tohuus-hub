@@ -83606,6 +83606,1859 @@
           }
         }
       }
+    },
+    "This server can't send iPhone notifications yet: whoever runs it still has to add the Apple key (APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_P8).": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server kann noch keine iPhone-Mitteilungen schicken: Wer ihn betreibt, muss erst den Apple-Schlüssel hinterlegen (APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_P8)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server can't send iPhone notifications yet: whoever runs it still has to add the Apple key (APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_P8)."
+          }
+        }
+      }
+    },
+    "This iPhone couldn't register: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses iPhone konnte sich nicht anmelden: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone couldn't register: %@"
+          }
+        }
+      }
+    },
+    "Apple didn't deliver the message (%@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple hat die Mitteilung nicht zugestellt (%@)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple didn't deliver the message (%@)."
+          }
+        }
+      }
+    },
+    "Bring in notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notizen übernehmen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring in notes"
+          }
+        }
+      }
+    },
+    "From Markdown, Notion, Obsidian, CSV or a text file. You see everything before it’s saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Markdown, Notion, Obsidian, CSV oder einer Textdatei. Du siehst vorher alles."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From Markdown, Notion, Obsidian, CSV or a text file. You see everything before it’s saved."
+          }
+        }
+      }
+    },
+    "Save as file": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als Datei sichern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as file"
+          }
+        }
+      }
+    },
+    "Markdown, CSV or JSON – for a backup or other apps.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markdown, CSV oder JSON – fürs Backup oder andere Apps."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markdown, CSV or JSON – for a backup or other apps."
+          }
+        }
+      }
+    },
+    "Already have notes?": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schon Notizen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already have notes?"
+          }
+        }
+      }
+    },
+    "Your bar, the way you need it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your bar, the way you need it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Leiste, so wie du sie brauchst"
+          }
+        }
+      }
+    },
+    "Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Your bar) to choose what goes there, like Treats or Knowledge. Everything else is under More.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Your bar) to choose what goes there, like Treats or Knowledge. Everything else is under More."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unten stehen Heute, Einkauf, Kochen und Aufgaben. Halt die Leiste lange gedrückt (oder Einstellungen › Deine Leiste) und leg selbst fest, was dort steht, zum Beispiel Bring mir was oder Wissen. Alles andere findest du unter Mehr."
+          }
+        }
+      }
+    },
+    "Coming up: thought of in time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming up: thought of in time"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demnächst: rechtzeitig dran gedacht"
+          }
+        }
+      }
+    },
+    "Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unter Heute siehst du, was in den nächsten Tagen ansteht. Die Tonne kommt schon am Vorabend, denn dann muss sie raus."
+          }
+        }
+      }
+    },
+    "Ticked off by mistake?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticked off by mistake?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Versehen abgehakt?"
+          }
+        }
+      }
+    },
+    "Tap “Undo” right after. Later you find it in Tasks under “Recently done”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap “Undo” right after. Later you find it in Tasks under “Recently done”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipp direkt danach auf „Rückgängig“. Später findest du es in Aufgaben unter „Zuletzt erledigt“."
+          }
+        }
+      }
+    },
+    "Household knowledge: write it down once": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household knowledge: write it down once"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haushaltswissen: einmal aufschreiben"
+          }
+        }
+      }
+    },
+    "Just tell the assistant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just tell the assistant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag’s einfach dem Assistenten"
+          }
+        }
+      }
+    },
+    "“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Mira hat Dienstag um 15 Uhr Zahnarzt“ landet mit Datum bei den Aufgaben, „Mika hat jetzt Schuhgröße 29“ im Wissen, „Milch ist alle“ auf der Liste. Er sagt dir, was er gemacht hat, und alles lässt sich rückgängig machen."
+          }
+        }
+      }
+    },
+    "Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liegst du krank auf dem Sofa oder hast gerade die Hände voll? Wünsch dir mit zwei Tipps einen Tee, und jemand zu Hause sagt „Ich bring’s“."
+          }
+        }
+      }
+    },
+    "You can take it again any time under Help. Everything else, from house info to settings, is under More.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can take it again any time under Help. Everything else, from house info to settings, is under More."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Tour findest du jederzeit wieder unter Hilfe. Alles andere, von der Hausinfo bis zu den Einstellungen, steht unter Mehr."
+          }
+        }
+      }
+    },
+    "Waiting for a reply": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for a reply"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten auf Antwort"
+          }
+        }
+      }
+    },
+    "never": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "never"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nie"
+          }
+        }
+      }
+    },
+    "1–2 times": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1–2 times"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1–2 Mal"
+          }
+        }
+      }
+    },
+    "3–5 times": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3–5 times"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3–5 Mal"
+          }
+        }
+      }
+    },
+    "more often": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "more often"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "öfter"
+          }
+        }
+      }
+    },
+    "noticed what was missing or shopped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noticed what was missing or shopped"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hat gemerkt, was fehlt, oder eingekauft"
+          }
+        }
+      }
+    },
+    "planned what to eat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "planned what to eat"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hat geplant, was es gibt"
+          }
+        }
+      }
+    },
+    "brought in receipts and bills": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "brought in receipts and bills"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hat Bons und Rechnungen erfasst"
+          }
+        }
+      }
+    },
+    "did household tasks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "did household tasks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hat Aufgaben erledigt"
+          }
+        }
+      }
+    },
+    "German till receipts and REWE documents": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "German till receipts and REWE documents"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deutsche Kassenbons und REWE-Dokumente"
+          }
+        }
+      }
+    },
+    "UK till receipts (Clubcard, Nectar, multibuy savings)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UK till receipts (Clubcard, Nectar, multibuy savings)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Britische Kassenbons (Clubcard, Nectar, Mehrfachrabatte)"
+          }
+        }
+      }
+    },
+    "US till receipts (sales tax, coupons, bottle deposits, lb weights)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US till receipts (sales tax, coupons, bottle deposits, lb weights)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US-Kassenbons (Sales Tax, Coupons, Flaschenpfand, Gewichte in lb)"
+          }
+        }
+      }
+    },
+    "Swedish till receipts (moms, pant, Stammis and member prices)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swedish till receipts (moms, pant, Stammis and member prices)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schwedische Kassenbons (Moms, Pant, Stammis- und Mitgliederpreise)"
+          }
+        }
+      }
+    },
+    "Germany": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Germany"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deutschland"
+          }
+        }
+      }
+    },
+    "Austria": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Austria"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Österreich"
+          }
+        }
+      }
+    },
+    "Switzerland": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switzerland"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schweiz"
+          }
+        }
+      }
+    },
+    "United Kingdom": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "United Kingdom"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vereinigtes Königreich"
+          }
+        }
+      }
+    },
+    "Ireland": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ireland"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irland"
+          }
+        }
+      }
+    },
+    "United States": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "United States"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USA"
+          }
+        }
+      }
+    },
+    "Sweden": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweden"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schweden"
+          }
+        }
+      }
+    },
+    "Denmark": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denmark"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dänemark"
+          }
+        }
+      }
+    },
+    "Norway": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Norway"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Norwegen"
+          }
+        }
+      }
+    },
+    "Netherlands": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netherlands"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niederlande"
+          }
+        }
+      }
+    },
+    "Mika’s shoe size, the filter for the cooker hood, where the main water tap is. What usually only one of you knows is there for everyone. Notes you already have come in with “Import”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mika’s shoe size, the filter for the cooker hood, where the main water tap is. What usually only one of you knows is there for everyone. Notes you already have come in with “Import”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikas Schuhgröße, der Filter für die Dunstabzugshaube, wo der Hauptwasserhahn ist. Was sonst nur einer von euch weiß, steht hier für alle. Notizen, die du schon hast, holst du über „Importieren“ rein."
+          }
+        }
+      }
+    },
+    "Numbers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numbers"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zahlen"
+          }
+        }
+      }
+    },
+    "Likes and dislikes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Likes and dislikes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorlieben"
+          }
+        }
+      }
+    },
+    "Mira jacket size 116": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mira jacket size 116"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mira Jackengröße 116"
+          }
+        }
+      }
+    },
+    "Blind living room 120 x 160": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blind living room 120 x 160"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rollo Wohnzimmer 120 × 160"
+          }
+        }
+      }
+    },
+    "Cooker hood filter 20 x 30": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooker hood filter 20 x 30"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dunstabzug Filter 20 × 30"
+          }
+        }
+      }
+    },
+    "Main water tap in the basement, on the left": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main water tap in the basement, on the left"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hauptwasserhahn im Keller links"
+          }
+        }
+      }
+    },
+    "Electricity meter 1ESY1160": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Electricity meter 1ESY1160"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stromzähler 1ESY1160"
+          }
+        }
+      }
+    },
+    "Sam doesn’t eat mushrooms": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sam doesn’t eat mushrooms"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sam isst keine Pilze"
+          }
+        }
+      }
+    },
+    "Whoever keeps it all in their head gets asked all the time. Now you ask ToHuus. And the assistant is only as good as what it knows about your home.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whoever keeps it all in their head gets asked all the time. Now you ask ToHuus. And the assistant is only as good as what it knows about your home."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer alles im Kopf hat, wird ständig gefragt. Jetzt fragt man ToHuus. Und der Assistent ist nur so gut wie das, was er über euer Zuhause weiß."
+          }
+        }
+      }
+    },
+    "Tap one to try it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap one to try it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Ausprobieren antippen"
+          }
+        }
+      }
+    },
+    "Paste text from Notes or e-mails, or pick a list (CSV, text; from Excel or Numbers just copy the cells). You see everything first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste text from Notes or e-mails, or pick a list (CSV, text; from Excel or Numbers just copy the cells). You see everything first."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text aus Notizen oder Mails einfügen oder eine Liste wählen (CSV, Text; aus Excel oder Numbers einfach die Zellen kopieren). Du siehst vorher alles."
+          }
+        }
+      }
+    },
+    "Paste text, from Notes, an e-mail or cells from Excel or Numbers. Or choose a file (CSV, text, Markdown). You see everything before it is saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste text, from Notes, an e-mail or cells from Excel or Numbers. Or choose a file (CSV, text, Markdown). You see everything before it is saved."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füg Text ein, aus Notizen, einer Mail oder Zellen aus Excel oder Numbers. Oder wähl eine Datei (CSV, Text, Markdown). Du siehst alles, bevor etwas gespeichert wird."
+          }
+        }
+      }
+    },
+    "Or choose a file": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or choose a file"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oder eine Datei wählen"
+          }
+        }
+      }
+    },
+    "File": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datei"
+          }
+        }
+      }
+    },
+    "Exports from Obsidian or Notion (Markdown) work too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exports from Obsidian or Notion (Markdown) work too."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporte aus Obsidian oder Notion (Markdown) gehen auch."
+          }
+        }
+      }
+    },
+    "Guest links and orders from guests.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guest links and orders from guests."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gäste-Links und was Gäste sich wünschen."
+          }
+        }
+      }
+    },
+    "Guests order by QR code, a kitchen and TV board. For bigger parties.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guests order by QR code, a kitchen and TV board. For bigger parties."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gäste bestellen per QR-Code, dazu Küchen- und TV-Anzeige. Für größere Feiern."
+          }
+        }
+      }
+    },
+    "Wishes from home and from guests show up here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wishes from home and from guests show up here."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier landen Wünsche von zu Hause und von Gästen."
+          }
+        }
+      }
+    },
+    "Hint under “Scan & order”": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hint under “Scan & order”"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinweis unter „Scannen & bestellen“"
+          }
+        }
+      }
+    },
+    "We’ll let you know when it’s ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We’ll let you know when it’s ready"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir sagen Bescheid, wenn es fertig ist"
+          }
+        }
+      }
+    },
+    "Shown on the TV next to the QR code. E.g. “Grab it at the bar” or “We’ll bring it to you”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shown on the TV next to the QR code. E.g. “Grab it at the bar” or “We’ll bring it to you”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steht auf dem Fernseher neben dem QR-Code. Zum Beispiel „Holt’s euch an der Bar“ oder „Wir bringen’s euch“."
+          }
+        }
+      }
+    },
+    "A cost cap per household can pause AI earlier – for example after a great many receipt photos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A cost cap per household can pause AI earlier – for example after a great many receipt photos."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Kostenbremse pro Haushalt kann die KI früher pausieren lassen, etwa nach sehr vielen Bon-Fotos."
+          }
+        }
+      }
+    },
+    "After 800 messages replies get shorter; from 1,500 AI pauses until the month ends. Household: 100 messages a month.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After 800 messages replies get shorter; from 1,500 AI pauses until the month ends. Household: 100 messages a month."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach 800 Nachrichten werden die Antworten kürzer, ab 1.500 pausiert die KI bis zum Monatsende. Haushalt: 100 Nachrichten im Monat."
+          }
+        }
+      }
+    },
+    "Already in a note? Menu “…” › Import: paste text from notes or emails, or pick a list (Excel, Numbers, Google Sheets as CSV, a text file). You see everything before it is saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in a note? Menu “…” › Import: paste text from notes or emails, or pick a list (Excel, Numbers, Google Sheets as CSV, a text file). You see everything before it is saved."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steht es schon in einer Notiz? Menü „…“ › Importieren: Text aus Notizen oder Mails einfügen oder eine Liste wählen (Excel, Numbers, Google Tabellen als CSV, Textdatei). Du siehst alles, bevor es gespeichert wird."
+          }
+        }
+      }
+    },
+    "Claude: Settings › Connectors › “Add custom connector”. ChatGPT: Settings › Connectors (developer mode on some plans).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude: Settings › Connectors › “Add custom connector”. ChatGPT: Settings › Connectors (developer mode on some plans)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude: Einstellungen › Connectors › „Eigenen Connector hinzufügen“. ChatGPT: Einstellungen › Connectors (je nach Tarif im Entwicklermodus)."
+          }
+        }
+      }
+    },
+    "Codes and Wi-Fi belong in the house info. Health details stay private and only reach an AI if your household allows it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes and Wi-Fi belong in the house info. Health details stay private and only reach an AI if your household allows it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes und WLAN gehören in die Hausinfo. Gesundheitsangaben bleiben privat und gehen nur an eine KI, wenn euer Haushalt das erlaubt."
+          }
+        }
+      }
+    },
+    "Collection dates can come from your calendar: Tasks › Read your existing calendar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collection dates can come from your calendar: Tasks › Read your existing calendar."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abfuhrtermine können aus eurem Kalender kommen: Aufgaben › Euren Kalender lesen."
+          }
+        }
+      }
+    },
+    "Coming up, the bin and undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming up, the bin and undo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demnächst, die Tonne und Rückgängig"
+          }
+        }
+      }
+    },
+    "Drag the handles to reorder. “Back to the start” resets it. Today always stays first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the handles to reorder. “Back to the start” resets it. Today always stays first."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am Griff ziehen, um die Reihenfolge zu ändern. „Wie am Anfang“ setzt alles zurück. Heute bleibt immer vorn."
+          }
+        }
+      }
+    },
+    "During a pause the list, tasks, stock, money, knowledge and short sentences to the assistant keep working; receipt photos are read by text recognition. Nothing is charged extra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "During a pause the list, tasks, stock, money, knowledge and short sentences to the assistant keep working; receipt photos are read by text recognition. Nothing is charged extra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In der Pause laufen Liste, Aufgaben, Vorrat, Geld, Wissen und kurze Sätze an den Assistenten weiter, Bon-Fotos liest die Texterkennung. Nachberechnet wird nichts."
+          }
+        }
+      }
+    },
+    "Every suggestion shows its reason. Ticked off or deleted by mistake? Undo brings it back – also for what the assistant did.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every suggestion shows its reason. Ticked off or deleted by mistake? Undo brings it back – also for what the assistant did."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Vorschlag zeigt seinen Grund. Aus Versehen abgehakt oder gelöscht? „Rückgängig“ holt es zurück, auch bei dem, was der Assistent gemacht hat."
+          }
+        }
+      }
+    },
+    "Export: everything or what the search shows, as Markdown, CSV or JSON – “Save to Files” keeps a copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export: everything or what the search shows, as Markdown, CSV or JSON – “Save to Files” keeps a copy."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportieren: alles oder das, was die Suche zeigt, als Markdown, CSV oder JSON. „In Dateien sichern“ legt eine Kopie ab."
+          }
+        }
+      }
+    },
+    "Fair AI limits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fair AI limits"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faire KI-Grenzen"
+          }
+        }
+      }
+    },
+    "Guests & babysitter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guests & babysitter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gäste & Babysitter"
+          }
+        }
+      }
+    },
+    "Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gäste › neuer Link: eine Vorlage wählen, Besuch, Babysitter oder Großeltern, und festlegen, was sie sehen, zum Beispiel die Hausinfo, ausgewählte Orte zum Nachsehen und eine Notiz."
+          }
+        }
+      }
+    },
+    "Household knowledge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household knowledge"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haushaltswissen"
+          }
+        }
+      }
+    },
+    "Household knowledge: sizes, measurements, meter readings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household knowledge: sizes, measurements, meter readings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haushaltswissen: Größen, Maße, Zählerstände"
+          }
+        }
+      }
+    },
+    "It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Access & AI lists every connection; end one there and it stops at once.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Access & AI lists every connection; end one there and it stops at once."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er sieht Liste, Aufgaben, Rezepte und Haushaltswissen nach denselben Regeln wie du, Codes aus der Hausinfo nie. Unter Einstellungen › Zugänge & KI steht jede Verbindung. Beendest du eine, ist sie sofort getrennt."
+          }
+        }
+      }
+    },
+    "Knowledge (in More or in your bar): type a sentence like “Mika shoe size 31” or “Living room blind 120 x 160” – this works without AI too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knowledge (in More or in your bar): type a sentence like “Mika shoe size 31” or “Living room blind 120 x 160” – this works without AI too."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wissen (in „Mehr“ oder in deiner Leiste): einen Satz tippen wie „Mika Schuhgröße 31“ oder „Rollo Wohnzimmer 120 x 160“. Das geht auch ohne KI."
+          }
+        }
+      }
+    },
+    "One place for the household": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One place for the household"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Ort für den Haushalt"
+          }
+        }
+      }
+    },
+    "Paste the MCP address from the help page below. On your own server it is your server's address with /mcp at the end.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the MCP address from the help page below. On your own server it is your server's address with /mcp at the end."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die MCP-Adresse von der Hilfeseite unten einfügen. Auf dem eigenen Server ist es die Adresse deines Servers mit /mcp am Ende."
+          }
+        }
+      }
+    },
+    "Plus and the trial: 800 full-length messages a month. Everything else keeps working when AI pauses.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus and the trial: 800 full-length messages a month. Everything else keeps working when AI pauses."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus und Testphase: 800 Nachrichten in voller Länge im Monat. Pausiert die KI, läuft alles andere weiter."
+          }
+        }
+      }
+    },
+    "Private tasks can go into a calendar of your own: Tasks › Read your existing calendar › “Your private tasks”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private tasks can go into a calendar of your own: Tasks › Read your existing calendar › “Your private tasks”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Aufgaben können in einen eigenen Kalender: Aufgaben › Euren Kalender lesen › „Deine privaten Aufgaben“."
+          }
+        }
+      }
+    },
+    "Share the link or show the QR code. Give it an end date or revoke it at any time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the link or show the QR code. Give it an end date or revoke it at any time."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den Link teilen oder den QR-Code zeigen. Ein Ablaufdatum setzen oder ihn jederzeit widerrufen."
+          }
+        }
+      }
+    },
+    "Sign in with your ToHuus account, pick the household and whether the assistant may only read or also change things.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with your ToHuus account, pick the household and whether the assistant may only read or also change things."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit deinem ToHuus-Konto anmelden, den Haushalt wählen und festlegen, ob der Assistent nur lesen oder auch ändern darf."
+          }
+        }
+      }
+    },
+    "Sizes, measurements and meter readings that only one person used to know. Now you ask ToHuus. And the assistant – or your own AI via MCP – answers without guessing, because it knows what applies at your place.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sizes, measurements and meter readings that only one person used to know. Now you ask ToHuus. And the assistant – or your own AI via MCP – answers without guessing, because it knows what applies at your place."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Größen, Maße und Zählerstände, die bisher nur eine Person wusste. Jetzt fragt ihr ToHuus. Und der Assistent oder eure eigene KI über MCP antwortet, ohne zu raten, weil sie weiß, was bei euch gilt."
+          }
+        }
+      }
+    },
+    "Someone who is here often gets a permanent guest account with a level that decides what they see.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone who is here often gets a permanent guest account with a level that decides what they see."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer oft da ist, bekommt ein festes Gastkonto mit einer Stufe, die bestimmt, was er sieht."
+          }
+        }
+      }
+    },
+    "Something changed? Just enter the new value. The old one stays in the history with its date.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something changed? Just enter the new value. The old one stays in the history with its date."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hat sich etwas geändert? Einfach den neuen Wert eintragen. Der alte bleibt mit Datum im Verlauf."
+          }
+        }
+      }
+    },
+    "Suggestions, and everything can be undone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions, and everything can be undone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschläge, und alles lässt sich zurücknehmen"
+          }
+        }
+      }
+    },
+    "The bin appears the evening before with “tonight: put out” – from 5 pm at the very top. On Fridays and Saturdays it looks two days ahead.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The bin appears the evening before with “tonight: put out” – from 5 pm at the very top. On Fridays and Saturdays it looks two days ahead."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Tonne steht schon am Vorabend mit „heute Abend rausstellen“ da, ab 17 Uhr ganz oben. Freitags und samstags schaut „Demnächst“ zwei Tage voraus."
+          }
+        }
+      }
+    },
+    "The green plus adds an area – Money, Knowledge, Bring me something, Wishes or House info. The red minus removes one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The green plus adds an area – Money, Knowledge, Bring me something, Wishes or House info. The red minus removes one."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das grüne Plus holt einen Bereich dazu, etwa Geld, Wissen, Bring mir was, Wünsche oder Hausinfo. Das rote Minus nimmt ihn raus."
+          }
+        }
+      }
+    },
+    "Ticked off by mistake? Tap “Undo” and it's back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticked off by mistake? Tap “Undo” and it's back."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Versehen abgehakt? Auf „Rückgängig“ tippen, und es ist wieder da."
+          }
+        }
+      }
+    },
+    "Today shows what's next: tomorrow's appointments, who has taken something on, and the bin the evening before.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today shows what's next: tomorrow's appointments, who has taken something on, and the bin the evening before."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute zeigt, was als Nächstes kommt: die Termine von morgen, wer sich etwas vorgenommen hat, und die Tonne schon am Vorabend."
+          }
+        }
+      }
+    },
+    "Today, Shopping, Cooking, Tasks and Stock to start with. Bring Money, Knowledge or Bring me something down when you need them – each person their own.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, Shopping, Cooking, Tasks and Stock to start with. Bring Money, Knowledge or Bring me something down when you need them – each person their own."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am Anfang Heute, Einkauf, Kochen, Aufgaben und Vorrat. Geld, Wissen oder Bring mir was holst du dir nach unten, wenn du sie brauchst, jede Person für sich."
+          }
+        }
+      }
+    },
+    "Touch and hold the bar, or tap “Adjust the bar” in More.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch and hold the bar, or tap “Adjust the bar” in More."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lange auf die Leiste drücken oder in „Mehr“ auf „Leiste anpassen“ tippen."
+          }
+        }
+      }
+    },
+    "Visitors, the babysitter or grandparents get a link – no app, no account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visitors, the babysitter or grandparents get a link – no app, no account."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Besuch, Babysitter oder Großeltern bekommen einen Link, ohne App und ohne Konto."
+          }
+        }
+      }
+    },
+    "What only one person used to know – now everyone asks ToHuus. Nothing to maintain.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What only one person used to know – now everyone asks ToHuus. Nothing to maintain."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was bisher nur eine Person wusste, fragt ihr jetzt ToHuus. Zu pflegen gibt es nichts."
+          }
+        }
+      }
+    },
+    "What's missing, what's coming up, what needs doing, what it costs and what you know about your home. Shopping is where it starts, not the whole app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's missing, what's coming up, what needs doing, what it costs and what you know about your home. Shopping is where it starts, not the whole app."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was fehlt, was ansteht, was zu tun ist, was es kostet und was ihr übers Zuhause wisst. Einkaufen ist der Einstieg, nicht die ganze App."
+          }
+        }
+      }
+    },
+    "What's next – right on Today, without opening a calendar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's next – right on Today, without opening a calendar."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was als Nächstes kommt, direkt auf Heute, ohne einen Kalender zu öffnen."
+          }
+        }
+      }
+    },
+    "Which areas sit at the bottom – everyone chooses their own.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which areas sit at the bottom – everyone chooses their own."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welche Bereiche unten stehen, wählt jede Person selbst."
+          }
+        }
+      }
+    },
+    "Write it in, ToHuus sorts it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it in, ToHuus sorts it"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reinschreiben, ToHuus sortiert"
+          }
+        }
+      }
+    },
+    "Your household's memory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household's memory"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gedächtnis eures Haushalts"
+          }
+        }
+      }
+    },
+    "Your own assistant uses its own AI – it doesn't use up the messages of the ToHuus assistant.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own assistant uses its own AI – it doesn't use up the messages of the ToHuus assistant."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein eigener Assistent nutzt seine eigene KI. Von den Nachrichten des ToHuus-Assistenten geht dabei nichts ab."
+          }
+        }
+      }
+    },
+    "“Coming up” on Today shows tomorrow and the next days, and who has taken something on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Coming up” on Today shows tomorrow and the next days, and who has taken something on."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Demnächst“ auf Heute zeigt morgen und die nächsten Tage, und wer sich etwas vorgenommen hat."
+          }
+        }
+      }
+    },
+    "“Out of milk” goes on the list, “Yellow bin every two weeks” to the tasks, “Mika is shoe size 31 now” into the household knowledge. If ToHuus isn't sure, it asks instead of guessing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Out of milk” goes on the list, “Yellow bin every two weeks” to the tasks, “Mika is shoe size 31 now” into the household knowledge. If ToHuus isn't sure, it asks instead of guessing."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Milch ist alle“ kommt auf die Liste, „Gelbe Tonne alle zwei Wochen“ zu den Aufgaben und „Mika hat jetzt Schuhgröße 31“ ins Haushaltswissen. Ist ToHuus unsicher, fragt es nach, statt zu raten."
+          }
+        }
+      }
+    },
+    "Party mode is off at first. If you need it, switch it on under Settings › What do you use?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Party mode is off at first. If you need it, switch it on under Settings › What do you use?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Party-Modus ist am Anfang aus. Wer ihn braucht, schaltet ihn unter Einstellungen › Was nutzt ihr? ein."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

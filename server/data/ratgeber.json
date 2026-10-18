@@ -9,9 +9,23 @@
       "date": "2026-10-18"
     },
     {
+      "slug": "haushalt-mit-eigenem-ki-assistenten",
+      "title": "ToHuus mit dem eigenen KI-Assistenten nutzen: so geht MCP",
+      "teaser": "Claude, ChatGPT und Co. mit dem Haushalt verbinden, nach denselben Regeln wie in der App.",
+      "area": "assistent",
+      "date": "2026-10-18"
+    },
+    {
       "slug": "haushalts-app-14-tage-testen",
       "title": "14 Tage testen, dann entscheiden: So funktioniert das Abo von ToHuus",
       "teaser": "Jeder neue Haushalt in der ToHuus Cloud nutzt 14 Tage lang alles, ohne Zahlungsdaten. Danach entscheidet ihr: Abo, selbst hosten oder nur …",
+      "area": "zuhause",
+      "date": "2026-10-18"
+    },
+    {
+      "slug": "haushalts-app-leiste-anpassen",
+      "title": "Die Leiste unten so, wie ihr lebt",
+      "teaser": "Heute bleibt vorn, den Rest wählt jede Person selbst: Geld, Wissen, Bring mir was oder Hausinfo.",
       "area": "zuhause",
       "date": "2026-10-18"
     },
@@ -25,8 +39,22 @@
     {
       "slug": "haushaltswissen-an-einem-ort",
       "title": "Schuhgrößen, Rollo-Maße, Zählerstände: Haushaltswissen an einem Ort",
-      "teaser": "Schuhgröße, Rollo-Maß, Zählerstand: Was ihr übers Zuhause wisst, liegt oft auf Zetteln oder in einem Kopf. So sammelt ihr es an einem Ort …",
-      "area": "hausinfo",
+      "teaser": "Was sonst nur einer im Kopf hat, steht an einem Ort. Ihr fragt ToHuus statt dieser einen Person.",
+      "area": "wissen",
+      "date": "2026-10-18"
+    },
+    {
+      "slug": "ki-braucht-kontext",
+      "title": "Warum auch die beste KI ohne Kontext nur rät",
+      "teaser": "Eine KI weiß nichts über euer Zuhause. Erst mit eurem Haushaltswissen antwortet sie, statt zu raten.",
+      "area": "wissen",
+      "date": "2026-10-18"
+    },
+    {
+      "slug": "notizen-und-listen-uebernehmen",
+      "title": "Notizen und Listen in den Haushalt holen, ohne abzutippen",
+      "teaser": "Text einfügen oder eine Liste wählen, vorher alles sehen und jederzeit als Datei sichern.",
+      "area": "wissen",
       "date": "2026-10-18"
     },
     {
@@ -34,6 +62,13 @@
       "title": "Tonne am Vorabend: Erinnerungen, ohne den Kalender zu ersetzen",
       "teaser": "Die Tonne muss am Abend vorher raus, nicht am Abfuhrtag. So erinnert ToHuus rechtzeitig daran, mit den Terminen aus eurem Kalender, ohne …",
       "area": "aufgaben",
+      "date": "2026-10-18"
+    },
+    {
+      "slug": "wenn-die-ki-pausiert",
+      "title": "Wenn die KI pausiert: was ohne sie geht und warum es eine Grenze gibt",
+      "teaser": "800 Nachrichten in voller Länge mit Plus, eine offene Grenze, und was ohne KI weiterläuft.",
+      "area": "assistent",
       "date": "2026-10-18"
     },
     {

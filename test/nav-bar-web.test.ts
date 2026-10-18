@@ -52,4 +52,31 @@ describe('Deine Leiste (web nav)', () => {
     expect(cleanNav(null)).toBeNull();
     expect(tabFor('/wissen')).toBe('/wissen');
   });
+
+  it('Bring mir was, Wünsche and Hausinfo can take a place – and keep their own row when not in it', () => {
+    const pref = cleanNav(['orders', 'shopping', 'wishes', 'houseinfo']);
+    expect(pref).toEqual(['orders', 'shopping', 'wishes', 'houseinfo']);
+    expect(keys(myBar(undefined, {}, pref))).toEqual(['/', '/bestellen', '/einkauf', '/einkauf/wuensche', '/hausinfo']);
+    // only main areas move to the top of Mehr
+    expect(keys(areasInMore(undefined, {}, pref).tabs)).toEqual(['/kochen', '/aufgaben', '/bestand', '/geld']);
+    // the party mode is no area of the bar (off for the start)
+    expect(keys(myBar(undefined, {}, cleanNav(['party', 'tasks'])))).toEqual(['/', '/aufgaben']);
+  });
+
+  it('respects "Was nutzt ihr?": Bring mir was leaves with its module', () => {
+    const pref = cleanNav(['orders', 'shopping']);
+    expect(keys(myBar(undefined, { treats: false }, pref))).toEqual(['/', '/einkauf']);
+    const ids = nav.pickableAreas(undefined, { treats: false }).map((p) => p.id);
+    expect(ids).not.toContain('orders');
+    expect(nav.pickableAreas(undefined, {}).map((p) => p.id)).toEqual(['shopping', 'cooking', 'tasks', 'stock', 'money', 'knowledge', 'orders', 'wishes', 'houseinfo']);
+  });
+
+  it('lights an extra area of the own bar on its pages, otherwise the area it belongs to', () => {
+    expect(tabFor('/einkauf/wuensche/3')).toBe('/einkauf');
+    expect(tabFor('/einkauf/wuensche/3', ['/', '/einkauf', '/einkauf/wuensche'])).toBe('/einkauf/wuensche');
+    expect(tabFor('/einkauf', ['/', '/einkauf', '/einkauf/wuensche'])).toBe('/einkauf');
+    expect(tabFor('/hausinfo')).toBe('/aufgaben');
+    expect(tabFor('/hausinfo', ['/', '/hausinfo'])).toBe('/hausinfo');
+    expect(tabFor('/bestellen', ['/', '/bestellen'])).toBe('/bestellen');
+  });
 });

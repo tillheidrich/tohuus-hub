@@ -62,23 +62,23 @@ export default [
         + '<p>Für Snacks gilt dasselbe Prinzip. Lieber zwei Sorten in ausreichender Menge als sechs angebrochene Tüten, von denen am Ende die Hälfte übrig ist.</p>'],
       ['Eine Karte mit dem, was wirklich da ist',
         '<p>Die meiste Unruhe auf einer Party entsteht in der Küche. Gäste fragen, was es gibt, öffnen den Kühlschrank auf der Suche nach der Limo, und die Person, die gastgibt, erklärt zum fünften Mal, wo die Gläser stehen. Eine kleine Karte nimmt das ab. Sie darf schlicht sein, solange sie stimmt.</p>'
-        + '<ul><li>Schreibt nur auf, was im Haus ist, und streicht, was alle ist.</li><li>Trennt Alkoholfreies und Alkoholisches, damit niemand fragen muss.</li><li>Notiert bei Kindern dazu, was sie sich ohne Rückfrage nehmen dürfen.</li><li>Legt fest, wo die Gäste abholen, zum Beispiel an der Küchentheke.</li></ul>'
+        + '<ul><li>Schreibt nur auf, was im Haus ist, und streicht, was alle ist.</li><li>Trennt Alkoholfreies und Alkoholisches, damit niemand fragen muss.</li><li>Notiert bei Kindern dazu, was sie sich ohne Rückfrage nehmen dürfen.</li><li>Legt fest, wo die Gäste sich etwas nehmen können, zum Beispiel in der Küche.</li></ul>'
         + '<p>Wer mag, setzt pro Gast eine Grenze für bestimmte Dinge, etwa für das letzte Eis. Das klingt streng, verhindert aber, dass die Kinder nach einer Stunde alles weggegessen haben.</p><p>Wenn Gäste mit Allergien kommen, gehört das ebenfalls auf die Karte. Ein kurzer Vermerk wie „ohne Nüsse“ oder „vegan“ neben dem Gericht erspart euch den ganzen Abend dieselbe Frage, und wer unsicher ist, sieht es auf einen Blick, ohne nachfragen zu müssen.</p>'],
       ['Damit nach der Party weniger übrig bleibt',
         '<p>Nach einem Fest steht oft mehr im Kühlschrank als vorher. Private Haushalte verursachen den größten Teil der Lebensmittelabfälle in Deutschland. Laut <a href="https://www.bmleh.de/DE/themen/ernaehrung/lebensmittelverschwendung/studie-lebensmittelabfaelle-deutschland.html">Bundesministerium für Landwirtschaft, Ernährung und Heimat</a> waren es 2022 rund 58 Prozent, etwa 74,5 Kilogramm pro Kopf und Jahr.</p>'
         + '<p>Für eine Party heißt das vor allem, vom Bestand aus zu planen. Schaut vor dem Einkauf, was schon da ist, und kauft nur nach, was wirklich fehlt. Was übrig bleibt, kommt am nächsten Tag auf den Tisch, bevor ihr neu einkauft. Getränke halten sich ohnehin, Dips und belegte Brote eher nicht, also davon lieber etwas weniger.</p><p>Hilfreich ist auch, Reste gleich am Abend aufzuteilen. Wer mag, nimmt in einer Dose etwas mit nach Hause, der Rest wandert gut verschlossen in den Kühlschrank. Notiert euch nach der Party kurz, was übrig war und was gefehlt hat. Beim nächsten Fest habt ihr damit eine Einkaufsliste, die zu euren Gästen passt.</p>'],
       ['Ein Beispiel: Miras Geburtstag bei Familie Berg',
-        '<p>Mira feiert ihren Geburtstag mit zwanzig Leuten zu Hause. Sam schaut zwei Tage vorher, was da ist: zwei Kästen Wasser, Saft, ein Kasten Bier, Chips und Salzstangen. Auf die Liste kommen alkoholfreies Bier, Limo und Eis für die Kinder. Am Abend hängt an der Haustür ein QR-Code. Die Gäste scannen ihn, sehen die Karte für den Abend und wünschen sich ein Getränk, Ben holt es aus dem Kühlschrank und stellt es an die Theke. Mika darf sich zwei Eis nehmen, dann ist für die Kinder Schluss mit Eis.</p>'
+        '<p>Mira feiert ihren Geburtstag mit zwanzig Leuten zu Hause. Sam schaut zwei Tage vorher, was da ist: zwei Kästen Wasser, Saft, ein Kasten Bier, Chips und Salzstangen. Auf die Liste kommen alkoholfreies Bier, Limo und Eis für die Kinder. Am Abend hängt in der Küche ein Zettel mit dem, was es gibt, Alkoholfreies oben. Mika darf sich zwei Eis nehmen, dann ist für die Kinder Schluss mit Eis.</p>'
         + '<p>Am Sonntag liegt Sam mit Halsweh auf dem Sofa und wünscht sich Tee mit Honig. Mira hat gerade die Hände frei und bringt ihn. Mehr steckt hinter der Idee nicht.</p>'],
-      ['So hilft ToHuus beim Partyabend und im Alltag',
+      ['So hilft ToHuus im Alltag',
         '<p>In ToHuus heißt das Bring mir was. Wer gerade festsitzt, auf dem Sofa oder mit einem Kind auf dem Arm, tippt auf eine Kachel wie „Was Süßes“, „Was zu trinken“, „Was zum Knabbern“ oder „Aus dem Kühlschrank“ und wünscht sich eine Kleinigkeit von eurer Karte. Mit „Was anderes“ geht auch ein freier Wunsch wie eine Decke. Du fragst eine bestimmte Person oder alle, und wer kann, antwortet mit „Ich bring’s“ oder „Geht gerade nicht“. Niemand führt Buch, es gibt keine Punkte und keine Liste, wer was gebracht hat.</p>'
-        + '<p>Für Besuch gibt es einen Link oder QR-Code ohne App und ohne Konto. Unter Bring mir was › Party startest du einen Partyabend. Die Gäste bestellen vom Party-Menü, du siehst, was bestellt ist und was noch da ist, und gezählte Sachen erscheinen nur, solange noch etwas da ist. Für einzelne Sachen legst du eine Höchstmenge pro Gast fest, etwa zwei Eis pro Kind, und die Party endet von selbst. Was fehlt, setzt du auf die gemeinsame <a href="../hilfe/einkaufsliste.html">Einkaufsliste</a>.</p>'
+        + '<p>Für den Partyabend selbst hilft ToHuus vor allem vorher und nachher: Im Vorrat seht ihr, was schon da ist, und was fehlt, setzt ihr mit einem Tipp auf die gemeinsame <a href="../hilfe/einkaufsliste.html">Einkaufsliste</a>. Was übrig bleibt, steht am nächsten Tag oben auf Heute, damit es zuerst gegessen wird.</p>'
         + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Wie viel Wasser brauche ich für eine Party?', 'Plant Wasser großzügiger als alles andere, mit und ohne Kohlensäure, und stellt zusätzlich Leitungswasser in Karaffen hin. Übrig gebliebenes Wasser hält sich lange und wird sowieso getrunken.'],
       ['Sollte ich alkoholfreie Alternativen anbieten?', 'Ja. Alkoholfreies Bier wird in Deutschland seit Jahren mehr produziert, 2025 waren es gut 616 Millionen Liter. Ein, zwei gute alkoholfreie Sorten gehören auf jede Karte.'],
-      ['Brauchen Gäste eine App, um etwas zu bestellen?', 'Bei ToHuus nicht. Gäste öffnen einen Link oder scannen einen QR-Code und wählen von der Karte, ohne App und ohne Konto.'],
+      ['Was ist Bring mir was?', 'Eine Funktion in ToHuus für zu Hause: Wer festsitzt, wünscht sich mit zwei Tipps eine Kleinigkeit, und wer kann, sagt „Ich bring’s“. Punkte oder eine Liste, wer was gebracht hat, gibt es nicht.'],
       ['Wie verhindere ich, dass nach der Party viel übrig bleibt?', 'Plant vom Bestand aus, kauft nur nach, was fehlt, und nehmt bei frischen Sachen wie Dips und belegten Broten lieber etwas weniger. Reste kommen am nächsten Tag zuerst auf den Tisch.'],
     ],
     facts: [
@@ -86,7 +86,6 @@ export default [
       { value: '616 Mio. l', text: 'So viel alkoholfreies Bier wurde 2025 in Deutschland produziert, 6,5 Prozent mehr als im Vorjahr.', source: 'Destatis 2026', url: 'https://www.destatis.de/DE/Presse/Pressemitteilungen/Zahl-der-Woche/2026/PD26_28_p002.html' },
       { value: '128,8 l', text: 'So viel Mineral- und Heilwasser trank jede Person in Deutschland 2025 im Schnitt.', source: 'VDM 2026', url: 'https://www.vdm-bonn.de/presse/pressemitteilungen/mineralwasser-absatz-steigt-2025-deutlich/' },
       { value: '74,5 kg', text: 'So viele Lebensmittel warf jede Person 2022 im eigenen Haushalt weg, das sind 58 Prozent aller Lebensmittelabfälle.', source: 'BMLEH 2022', url: 'https://www.bmleh.de/DE/themen/ernaehrung/lebensmittelverschwendung/studie-lebensmittelabfaelle-deutschland.html' },
-      { value: 'Ohne App', text: 'Gäste bestellen bei ToHuus über einen Link oder QR-Code vom Party-Menü, ohne App und ohne Konto.', source: 'ToHuus', url: help('gaeste') },
     ],
     sources: [
       ['Destatis: 6,0 % weniger Bier im Jahr 2025 abgesetzt', 'https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/02/PD26_037_73.html'],
@@ -94,7 +93,7 @@ export default [
       ['Verband Deutscher Mineralbrunnen: Mineralwasser-Absatz steigt 2025 deutlich', 'https://www.vdm-bonn.de/presse/pressemitteilungen/mineralwasser-absatz-steigt-2025-deutlich/'],
       ['BMLEH: Lebensmittelabfälle in Deutschland, aktuelle Zahlen nach Sektoren', 'https://www.bmleh.de/DE/themen/ernaehrung/lebensmittelverschwendung/studie-lebensmittelabfaelle-deutschland.html'],
     ],
-    help: ['gaeste', 'einkaufsliste', 'haushalt-teilen'],
+    help: ['bring-mir-was', 'einkaufsliste', 'vorrat'],
   },
 
   {

@@ -451,7 +451,7 @@ struct ImportReviewView: View {
     /// below the "Booked on …" note: change it (takes the bookings back) or delete it
     private func changeActions(_ imp: ImportDetail) -> some View {
         VStack(alignment: .leading, spacing: Theme.Space.s2) {
-            HStack(spacing: Theme.Space.s3) {
+            AdaptiveButtonRow(spacing: Theme.Space.s3) { _ in
                 Button { Task { await reopen(imp) } } label: {
                     Label(imp.status == "applied" ? L("Change receipt") : L("Open again"), systemImage: "arrow.uturn.backward")
                 }

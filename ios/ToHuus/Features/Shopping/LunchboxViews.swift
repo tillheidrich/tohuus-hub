@@ -31,7 +31,7 @@ struct LunchboxSuggestionSection: View {
                         DatePicker(L("Holidays until"), selection: $until, in: Date()..., displayedComponents: .date)
                             .font(.subheadline)
                     }
-                    HStack {
+                    AdaptiveButtonRow { _ in
                         Button(L("Put on the list")) { Task { await add() } }
                             .buttonStyle(.borderedProminent).tint(Theme.primary)
                             .disabled(busy)

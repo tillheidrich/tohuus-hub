@@ -55,10 +55,13 @@ struct GuestsPartyView: View {
         return k
     }
     private var canEdit: Bool { !app.isGuest }
+    /// party mode: its own switch in „Was nutzt ihr?“, off for the start (docs/party-modus.md). Off: no party card,
+    /// no „Party“ filter, the screen is just „Gäste“. Guest links, the board and the menu stay.
+    private var partyOn: Bool { app.modules["party"] == true }
 
     var body: some View {
         List {
-            partySection
+            if partyOn { partySection }
             Section {
                 Picker(L("Show"), selection: $tab) {
                     Text(L("Board")).tag(Tab.board)
@@ -77,7 +80,7 @@ struct GuestsPartyView: View {
             }
         }
         .themedList()
-        .navigationTitle(L("Guests & party"))
+        .navigationTitle(partyOn ? L("Guests & party") : L("Guests"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -206,25 +209,24 @@ struct GuestsPartyView: View {
                 }
             }
             if canEdit {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: Theme.Space.s2) { startButton; recapButton }
-                    VStack(alignment: .leading, spacing: Theme.Space.s2) { startButton; recapButton }
-                }
+                VStack(spacing: Theme.Space.s2) { startButton; recapButton }
             }
         }
         .padding(.vertical, Theme.Space.s2)
     }
 
+    // own styles instead of .borderedProminent + Label: icon and text centred as one block (Till, 18 Oct 2026:
+    // „Party starten“ sat off centre in the green button)
     private var startButton: some View {
-        Button { showStart = true } label: { Label(L("Start a party"), systemImage: "party.popper") }
-            .buttonStyle(.borderedProminent).tint(Theme.primary).controlSize(.large)
+        Button { showStart = true } label: { ButtonLabel(L("Start a party"), systemImage: "party.popper") }
+            .buttonStyle(PrimaryButtonStyle())
     }
 
     @ViewBuilder
     private var recapButton: some View {
         if let last = lastEnded {
-            Button(LF("Recap: %@", last.name)) { recap = RecapKey(id: last.id) }
-                .buttonStyle(.bordered).controlSize(.large)
+            Button { recap = RecapKey(id: last.id) } label: { ButtonLabel(LF("Recap: %@", last.name)) }
+                .buttonStyle(SecondaryButtonStyle())
         }
     }
 
@@ -272,12 +274,21 @@ struct GuestsPartyView: View {
                     }
                 }
                 .tint(Theme.primary)
-                HStack {
-                    Button { Task { await extend(p) } } label: { Label(L("1 hour longer"), systemImage: "plus") }
-                        .buttonStyle(.bordered)
-                    Spacer()
-                    Button(role: .destructive) { confirmEnd = true } label: { Label(L("End party"), systemImage: "stop.fill") }
-                        .buttonStyle(.bordered)
+                PickupHintField(party: p) { v in await setPickupHint(p, v) }
+                ViewThatFits(in: .horizontal) {
+                    HStack {
+                        Button { Task { await extend(p) } } label: { ButtonLabel(L("1 hour longer"), systemImage: "plus") }
+                            .buttonStyle(.bordered)
+                        Spacer(minLength: Theme.Space.s2)
+                        Button(role: .destructive) { confirmEnd = true } label: { ButtonLabel(L("End party"), systemImage: "stop.fill") }
+                            .buttonStyle(.bordered)
+                    }
+                    VStack(spacing: Theme.Space.s2) {
+                        Button { Task { await extend(p) } } label: { ButtonLabel(L("1 hour longer"), systemImage: "plus", wide: true) }
+                            .buttonStyle(.bordered)
+                        Button(role: .destructive) { confirmEnd = true } label: { ButtonLabel(L("End party"), systemImage: "stop.fill", wide: true) }
+                            .buttonStyle(.bordered)
+                    }
                 }
                 .controlSize(.regular)
             }
@@ -320,7 +331,7 @@ struct GuestsPartyView: View {
                 Text(L("All")).tag(Filter.all)
                 Text(L("At home")).tag(Filter.home)
                 Text(L("Guests")).tag(Filter.guests)
-                Text(L("Party")).tag(Filter.party)
+                if partyOn { Text(L("Party")).tag(Filter.party) }
             }
             .pickerStyle(.segmented)
             .listRowBackground(Color.clear)
@@ -355,7 +366,7 @@ struct GuestsPartyView: View {
         switch filter {
         case .guests: return L("Nobody has asked for anything yet.")
         case .party: return L("No party orders yet. Start a party above – guests scan the QR code and pick up at the counter.")
-        default: return L("Wishes from home, guests and the party show up here.")
+        default: return partyOn ? L("Wishes from home, guests and the party show up here.") : L("Wishes from home and from guests show up here.")
         }
     }
 
@@ -505,6 +516,11 @@ struct GuestsPartyView: View {
         catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
 
+    private func setPickupHint(_ p: PartyInfo, _ v: String) async {
+        do { party = try await api.updateParty(p.id, pickupHint: v) }
+        catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
+    }
+
     private func extend(_ p: PartyInfo) async {
         do {
             party = try await api.extendParty(p.id, minutes: 60)
@@ -549,6 +565,37 @@ struct GuestsPartyView: View {
             links?.removeAll { $0.id == g.id }
             toast = ToastMessage(text: LF("“%@” no longer works.", g.name))
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
+    }
+}
+
+/// Till, 18 Oct 2026: „Abholen an der Theke“ was fixed text – every party is different. The host writes the line under
+/// „Scan & order“ on the TV board; empty = the neutral default (web: Party.tsx PickupHintField).
+private struct PickupHintField: View {
+    let party: PartyInfo
+    let save: (String) async -> Void
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(L("Hint under “Scan & order”")).font(.subheadline)
+            TextField(party.pickupHintDefault ?? L("We’ll let you know when it’s ready"), text: $text)
+                .textFieldStyle(.roundedBorder)
+                .submitLabel(.done)
+                .focused($focused)
+                .onSubmit { commit() }
+                .onChange(of: focused) { _, f in if !f { commit() } }
+                .onChange(of: text) { _, v in if v.count > 80 { text = String(v.prefix(80)) } }
+            Text(L("Shown on the TV next to the QR code. E.g. “Grab it at the bar” or “We’ll bring it to you”."))
+                .font(.caption).foregroundStyle(Theme.ink3).fixedSize(horizontal: false, vertical: true)
+        }
+        .task(id: party.id) { text = party.pickupHint ?? "" }
+    }
+
+    private func commit() {
+        let v = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard v != (party.pickupHint ?? "") else { return }
+        Task { await save(v) }
     }
 }
 
@@ -597,21 +644,24 @@ struct BoardOrderRow: View {
                     .background(Theme.surface2, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
             }
             if o.isOpen {
-                HStack(spacing: Theme.Space.s2) {
-                    Button(role: .destructive) { confirmDecline = true } label: {
-                        Label(o.isServed ? L("Decline") : L("Can’t right now"), systemImage: "xmark")
+                // one line while all three fit; otherwise the two forward steps side by side and „Geht gerade nicht“
+                // below, then all stacked – the labels are never squeezed or hyphenated (Till, 18 Oct 2026)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Theme.Space.s2) {
+                        declineButton(wide: false)
+                        Spacer(minLength: Theme.Space.s2)
+                        forwardButtons(wide: false)
                     }
-                    .buttonStyle(.bordered)
-                    Spacer(minLength: 0)
-                    if o.status == "new" {
-                        Button(o.isServed ? L("On it") : L("I’ll bring it")) { run("accepted") }
-                            .buttonStyle(.bordered)
+                    VStack(spacing: Theme.Space.s2) {
+                        HStack(spacing: Theme.Space.s2) { forwardButtons(wide: true) }
+                        declineButton(wide: true)
                     }
-                    Button { run("done") } label: { Label(o.isServed ? L("Served") : L("Brought it"), systemImage: "checkmark") }
-                        .buttonStyle(.borderedProminent).tint(Theme.primary)
+                    VStack(spacing: Theme.Space.s2) {
+                        forwardButtons(wide: true)
+                        declineButton(wide: true)
+                    }
                 }
-                .controlSize(.small)
-                .buttonStyle(.borderless)
+                .controlSize(.regular)
                 .disabled(busy)
             }
         }
@@ -652,6 +702,23 @@ struct BoardOrderRow: View {
             }
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private func declineButton(wide: Bool) -> some View {
+        Button(role: .destructive) { confirmDecline = true } label: {
+            ButtonLabel(order.isServed ? L("Decline") : L("Can’t right now"), systemImage: "xmark", wide: wide)
+        }
+        .buttonStyle(.bordered)
+    }
+
+    @ViewBuilder
+    private func forwardButtons(wide: Bool) -> some View {
+        if order.status == "new" {
+            Button { run("accepted") } label: { ButtonLabel(order.isServed ? L("On it") : L("I’ll bring it"), wide: wide) }
+                .buttonStyle(.bordered)
+        }
+        Button { run("done") } label: { ButtonLabel(order.isServed ? L("Served") : L("Brought it"), systemImage: "checkmark", wide: wide) }
+            .buttonStyle(.borderedProminent).tint(Theme.primary)
     }
 
     private var badgeInk: Color {

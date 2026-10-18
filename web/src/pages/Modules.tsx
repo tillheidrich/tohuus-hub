@@ -3,14 +3,14 @@
  * areas leave the navigation, "Heute" and notifications; their data stays and comes back.
  * Used in onboarding (after "Wer gehört dazu?") and in Settings › Haushalt.
  */
-import { ArrowLeft, ArrowRight, Basket, Brain, ChefHat, Coins, Confetti, HandHeart, House, Package, Wrench } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, Basket, Brain, ChefHat, Coins, Confetti, HandHeart, House, Martini, Package, Wrench } from '@phosphor-icons/react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { invalidate, put, useApi } from '../api';
 import { t } from '../i18n';
 import { Toggle, useToast } from '../ui';
 import './modules.css';
 
-export type ModuleKey = 'stock' | 'cook' | 'money' | 'treats' | 'homeinfo' | 'guests' | 'ha' | 'knowledge';
+export type ModuleKey = 'stock' | 'cook' | 'money' | 'treats' | 'homeinfo' | 'guests' | 'ha' | 'knowledge' | 'party';
 export type Modules = Record<ModuleKey, boolean>;
 
 const ITEMS: { key: ModuleKey | 'shopping'; label: string; hint: string; icon: ReactNode }[] = [
@@ -21,15 +21,20 @@ const ITEMS: { key: ModuleKey | 'shopping'; label: string; hint: string; icon: R
   { key: 'treats', label: 'Treats', hint: 'Wishes from the sofa: tea, a snack, a drink.', icon: <HandHeart size={22} /> },
   { key: 'homeinfo', label: 'Home info', hint: 'Care tasks and things to know about the home.', icon: <Wrench size={22} /> },
   { key: 'knowledge', label: 'What ToHuus remembers', hint: 'Sizes, measurements, numbers. So nobody has to ask you.', icon: <Brain size={22} /> },
-  { key: 'guests', label: 'Guests & party', hint: 'Guest links, a party board, orders from guests.', icon: <Confetti size={22} /> },
+  { key: 'guests', label: 'Guests', hint: 'Guest links and orders from guests.', icon: <Confetti size={22} /> },
+  // party mode (18 Oct 2026): off for the start, not offered in onboarding (docs/party-modus.md)
+  { key: 'party', label: 'Party mode', hint: 'Guests order by QR code, a kitchen and TV board. For bigger parties.', icon: <Martini size={22} /> },
   { key: 'ha', label: 'Home Assistant', hint: 'Only if you run Home Assistant.', icon: <House size={22} /> },
 ];
 
-export function ModulesPicker({ value, onChange, disabled = false }: { value: Modules; onChange: (key: ModuleKey, on: boolean) => void; disabled?: boolean }) {
+// party is opt-in: on only when explicitly true; everything else is on unless switched off
+const isOn = (value: Modules, key: ModuleKey) => (key === 'party' ? value.party === true : value[key] !== false);
+
+export function ModulesPicker({ value, onChange, disabled = false, onboarding = false }: { value: Modules; onChange: (key: ModuleKey, on: boolean) => void; disabled?: boolean; onboarding?: boolean }) {
   return (
     <div className="mod-list">
-      {ITEMS.map((i) => (
-        <div key={i.key} className={`mod-row ${i.key === 'shopping' || value[i.key as ModuleKey] !== false ? 'on' : ''}`}>
+      {ITEMS.filter((i) => !(onboarding && i.key === 'party')).map((i) => (
+        <div key={i.key} className={`mod-row ${i.key === 'shopping' || isOn(value, i.key as ModuleKey) ? 'on' : ''}`}>
           <span className="mod-ic" aria-hidden>
             {i.icon}
           </span>
@@ -40,7 +45,7 @@ export function ModulesPicker({ value, onChange, disabled = false }: { value: Mo
           {i.key === 'shopping' ? (
             <span className="small muted">{t('always')}</span>
           ) : (
-            <Toggle on={value[i.key as ModuleKey] !== false} onChange={(v) => !disabled && onChange(i.key as ModuleKey, v)} label={t(i.label)} />
+            <Toggle on={isOn(value, i.key as ModuleKey)} onChange={(v) => !disabled && onChange(i.key as ModuleKey, v)} label={t(i.label)} />
           )}
         </div>
       ))}
@@ -100,7 +105,7 @@ export function StepModules({ onBack, onNext }: { onBack: () => void; onNext: ()
           {t('Switch off what you don’t need – the app gets smaller. You can switch it back on any time.')}
         </p>
       </header>
-      {m && <ModulesPicker value={m} onChange={set} />}
+      {m && <ModulesPicker value={m} onChange={set} onboarding />}
       <div className="onb-foot">
         <button className="btn ghost" onClick={onBack}>
           <ArrowLeft size={18} /> {t('Back')}

@@ -31,14 +31,21 @@ function files(dir: string): string[] {
 function serverKeys(): Map<string, string> {
   const out = new Map<string, string>();
   const re = /(?<![\w$.])t\(\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1\s*[,)]/g;
+  // both arms of t(n === 1 ? 'one …' : '{n} …')
+  const ternary = /(?<![\w$.])t\(\s*[^()'"`?]{1,80}\?\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1\s*:\s*(['"`])((?:\\.|(?!\3)[^\\])*)\3\s*[,)]/g;
   for (const f of files(ROOT)) {
     const src = fs.readFileSync(f, 'utf8');
-    for (const m of src.matchAll(re)) {
-      if (m[1] === '`' && m[2].includes('${')) continue;
-      const key = m[2].replace(/\\(['"`\\])/g, '$1').replace(/\\n/g, '\n');
-      if (!key.trim()) continue;
-      const line = src.slice(0, m.index).split('\n').length;
+    const add = (quote: string, raw: string, index: number) => {
+      if (quote === '`' && raw.includes('${')) return;
+      const key = raw.replace(/\\(['"`\\])/g, '$1').replace(/\\n/g, '\n');
+      if (!key.trim()) return;
+      const line = src.slice(0, index).split('\n').length;
       if (!out.has(key)) out.set(key, `${path.relative(ROOT, f)}:${line}`);
+    };
+    for (const m of src.matchAll(re)) add(m[1], m[2], m.index!);
+    for (const m of src.matchAll(ternary)) {
+      add(m[1], m[2], m.index!);
+      add(m[3], m[4], m.index!);
     }
   }
   return out;

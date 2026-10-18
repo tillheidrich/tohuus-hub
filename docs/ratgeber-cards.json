@@ -173,5 +173,47 @@
     "teaser": "Füttern, gießen, Post holen: die Übergabe für Tier- und Haussitter im Urlaub.",
     "area": "hausinfo",
     "url": "https://tohuus.heidrich-digital.de/ratgeber/haustiersitter-checkliste-urlaub.html"
+  },
+  {
+    "slug": "haushaltswissen-an-einem-ort",
+    "title": "Schuhgrößen, Rollo-Maße, Zählerstände: Haushaltswissen an einem Ort",
+    "teaser": "Was sonst nur einer im Kopf hat, steht an einem Ort. Ihr fragt ToHuus statt dieser einen Person.",
+    "area": "wissen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/haushaltswissen-an-einem-ort.html"
+  },
+  {
+    "slug": "ki-braucht-kontext",
+    "title": "Warum auch die beste KI ohne Kontext nur rät",
+    "teaser": "Eine KI weiß nichts über euer Zuhause. Erst mit eurem Haushaltswissen antwortet sie, statt zu raten.",
+    "area": "wissen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/ki-braucht-kontext.html"
+  },
+  {
+    "slug": "notizen-und-listen-uebernehmen",
+    "title": "Notizen und Listen in den Haushalt holen, ohne abzutippen",
+    "teaser": "Text einfügen oder eine Liste wählen, vorher alles sehen und jederzeit als Datei sichern.",
+    "area": "wissen",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/notizen-und-listen-uebernehmen.html"
+  },
+  {
+    "slug": "haushalts-app-leiste-anpassen",
+    "title": "Die Leiste unten so, wie ihr lebt",
+    "teaser": "Heute bleibt vorn, den Rest wählt jede Person selbst: Geld, Wissen, Bring mir was oder Hausinfo.",
+    "area": "zuhause",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/haushalts-app-leiste-anpassen.html"
+  },
+  {
+    "slug": "haushalt-mit-eigenem-ki-assistenten",
+    "title": "ToHuus mit dem eigenen KI-Assistenten nutzen: so geht MCP",
+    "teaser": "Claude, ChatGPT und Co. mit dem Haushalt verbinden, nach denselben Regeln wie in der App.",
+    "area": "assistent",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/haushalt-mit-eigenem-ki-assistenten.html"
+  },
+  {
+    "slug": "wenn-die-ki-pausiert",
+    "title": "Wenn die KI pausiert: was ohne sie geht und warum es eine Grenze gibt",
+    "teaser": "800 Nachrichten in voller Länge mit Plus, eine offene Grenze, und was ohne KI weiterläuft.",
+    "area": "assistent",
+    "url": "https://tohuus.heidrich-digital.de/ratgeber/wenn-die-ki-pausiert.html"
   }
 ]

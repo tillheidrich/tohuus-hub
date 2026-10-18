@@ -136,11 +136,20 @@ struct SyncBadge: View {
     }
 }
 
+// Button text (Till, 18 Oct 2026: „Ge-bracht“, „Geht gerade nicht“ on three lines, „Party starten“ off centre):
+// labels stay whole – one line, shrinking a little before they would break; a word is never split at a syllable.
+// Too little room for several buttons side by side → AdaptiveButtonRow stacks them instead of squeezing the text.
+// Icon and text are centred together (ButtonLabel), so a title without an icon sits in the middle too.
+
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.body.weight(.semibold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .multilineTextAlignment(.center)
             .foregroundStyle(Theme.onPrimary)
+            .padding(.horizontal, Theme.Space.s3)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(configuration.isPressed ? Theme.primaryDark : Theme.primary, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
@@ -153,11 +162,52 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.body.weight(.semibold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .multilineTextAlignment(.center)
             .foregroundStyle(Theme.primaryText)
+            .padding(.horizontal, Theme.Space.s3)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
             .background(configuration.isPressed ? Theme.primarySoft : Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
             .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(Theme.lineStrong, lineWidth: 1))
+    }
+}
+
+/// Text (and optional icon) for a button: one line, never hyphenated, icon and text centred as one block.
+/// `wide`: fills the width (stacked buttons in AdaptiveButtonRow).
+struct ButtonLabel: View {
+    let title: String
+    var systemImage: String?
+    var wide = false
+
+    init(_ title: String, systemImage: String? = nil, wide: Bool = false) {
+        self.title = title
+        self.systemImage = systemImage
+        self.wide = wide
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let systemImage { Image(systemName: systemImage).accessibilityHidden(true) }
+            Text(title).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: wide ? .infinity : nil)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Several buttons side by side while every label fits on one line; otherwise stacked full width. The closure gets
+/// `wide` (true when stacked) to pass on to ButtonLabel. Never squeezes a label into two lines or a hyphen.
+struct AdaptiveButtonRow<Content: View>: View {
+    var spacing: CGFloat = Theme.Space.s2
+    @ViewBuilder var content: (_ wide: Bool) -> Content
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: spacing) { content(false) }
+            VStack(alignment: .leading, spacing: spacing) { content(true) }
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 /** In-app help (/hilfe): short how-tos for the things people ask about in week one. Area: onboard. */
 import { RatgeberCards } from './RatgeberCards';
-import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, Confetti, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase, UsersThree, ForkKnife, CircleHalf, HandHeart } from '@phosphor-icons/react';
+import { ArrowRight, Receipt, BowlFood, CalendarCheck, CaretDown, ChatCircleDots, DeviceMobile, House, Sparkle, Database, Lifebuoy, ShareNetwork, EyeSlash, Repeat, ChefHat, Suitcase, UsersThree, ForkKnife, CircleHalf, HandHeart, Notebook, SquaresFour, Gauge } from '@phosphor-icons/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../api';
@@ -33,6 +33,56 @@ export function Help() {
 
   const topics: Topic[] = [
     {
+      id: 'wissen',
+      icon: <Notebook size={20} />,
+      title: t('Household knowledge: sizes, measurements, meter readings'),
+      lead: t('What only one person used to know – now everyone asks ToHuus. Nothing to maintain.'),
+      steps: [
+        t('Knowledge (in More or in your bar): type a sentence like “Mika shoe size 31” or “Living room blind 120 x 160” – this works without AI too.'),
+        t('Something changed? Just enter the new value. The old one stays in the history with its date.'),
+        t('Already in a note? “Import”: paste text from notes or emails, or pick a list (Excel, Numbers, Google Sheets as CSV, a text file). You see everything before it is saved.'),
+        t('“Export”: everything or what the search shows, as Markdown, CSV or JSON.'),
+        t('Codes and Wi-Fi belong in the house info. Health details stay private and only reach an AI if your household allows it.'),
+      ],
+      link: { label: t('Open household knowledge'), to: '/wissen' },
+    },
+    {
+      id: 'leiste',
+      icon: <SquaresFour size={20} />,
+      title: t('Your bar'),
+      lead: t('Which areas sit at the bottom – everyone chooses their own.'),
+      steps: [
+        t('On the phone: touch and hold the bar, or “Adjust the bar” at the end of More. On a computer: right-click the areas in the sidebar.'),
+        t('The green plus adds an area – Money, Knowledge, Bring me something, Wishes or House info. The red minus removes one.'),
+        t('Drag the handles to reorder. “Back to the start” resets it. Today always stays first.'),
+      ],
+      link: { label: t('Open your bar'), to: '/leiste' },
+    },
+    {
+      id: 'demnaechst',
+      icon: <CalendarCheck size={20} />,
+      title: t('Coming up, the bin and undo'),
+      lead: t('What’s next – right on Today, without opening a calendar.'),
+      steps: [
+        t('“Coming up” on Today shows tomorrow and the next days, and who has taken something on.'),
+        t('The bin appears the evening before with “tonight: put out” – from 5 pm at the very top. On Fridays and Saturdays it looks two days ahead.'),
+        t('Collection dates can come from your calendar: in the iPhone app under Tasks › Read your existing calendar.'),
+        t('Ticked off by mistake? Tap “Undo” and it’s back.'),
+      ],
+      link: { label: t('Open tasks'), to: '/aufgaben' },
+    },
+    {
+      id: 'ki-grenzen',
+      icon: <Gauge size={20} />,
+      title: t('Fair AI limits'),
+      lead: t('Plus and the trial: 800 full-length messages a month. Everything else keeps working when AI pauses.'),
+      steps: [
+        t('After 800 messages replies get shorter; from 1,500 AI pauses until the month ends. Household: 100 messages a month. Self-hosted: no limit from us.'),
+        t('A cost cap per household can pause AI earlier – for example after a great many receipt photos.'),
+        t('During a pause the list, tasks, stock, money, knowledge and short sentences to the assistant keep working; receipt photos are read by text recognition. Nothing is charged extra.'),
+      ],
+    },
+    {
       id: 'phone',
       icon: <DeviceMobile size={20} />,
       title: t('On your phone, with push'),
@@ -63,10 +113,10 @@ export function Help() {
       title: t('Claude, ChatGPT & co. (MCP)'),
       lead: t('Your AI assistant can read and update the household – e.g. a receipt photo: “put this into the household app”.'),
       steps: [
-        t('Settings › Access & AI › New access › “AI assistant”.'),
-        t('Copy the MCP link that is shown.'),
-        t('Claude: Settings › Connectors › “Add custom connector”, paste the link. ChatGPT: Settings › Connectors (developer mode).'),
-        t('Treat the link like a password. If it leaks, delete the access in the app – it stops working at once.'),
+        t('Claude: Settings › Connectors › “Add custom connector”. ChatGPT: Settings › Connectors (developer mode on some plans).'),
+        t('Paste the address {url}/mcp and sign in with your ToHuus account. Pick the household and whether the assistant may only read or also change things.', { url: base.replace(/\/$/, '') }),
+        t('It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Access & AI lists every connection; end one there and it stops at once.'),
+        t('Your own assistant uses its own AI – it doesn’t use up the messages of the ToHuus assistant.'),
       ],
       link: { label: t('Open access settings'), to: '/einstellungen?tab=access' },
     },
@@ -80,7 +130,7 @@ export function Help() {
         t('Settings › Access & AI › New access › “Home Assistant” – copy the token.'),
         t('In Home Assistant add the ToHuus Hub integration and paste this address and the token.'),
         t('Without HACS: the same access also gives you a YAML package as a fallback.'),
-        t('Already using Bring!, Mealie or the HA app for some of this? Settings › Home Assistant shows what Home Assistant already does and keeps it in step – take over the suggestions with one tap.'),
+        t('Already using another list app, Mealie or the HA app for some of this? Settings › Home Assistant shows what Home Assistant already does and keeps it in step – take over the suggestions with one tap.'),
       ],
       link: { label: t('Open access settings'), to: '/einstellungen?tab=access' },
     },
@@ -94,20 +144,18 @@ export function Help() {
         t('“How would you like it?” is a note for the person bringing it. “Who brings it?” asks one person – or whoever can.'),
         t('The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Mira is bringing it”.'),
         t('Once it’s there you can say thanks. Nobody keeps score – no points, no list of who brought what.'),
-        t('Living alone? Then the page is just for guests and parties.'),
       ],
       link: { label: t('Open Treats'), to: '/bestellen' },
     },
     {
       id: 'guests',
-      icon: <Confetti size={20} />,
-      title: t('Guests, party & babysitter'),
-      lead: t('Guests ask for what is really there – no app, no account.'),
+      icon: <ShareNetwork size={20} />,
+      title: t('Guests & babysitter'),
+      lead: t('Visitors, the babysitter or grandparents get a link – no app, no account.'),
       steps: [
-        t('Treats › Party › “Start a party”: pick the menu, the party ends by itself.'),
-        t('Show it on the TV: open {url}/party on the TV and type the 4-digit code from “Show on TV”.', { url: base.replace(/^https?:\/\//, '') }),
-        t('Guests scan the QR code and order; you get a push and tap “Ready”. Stock is booked by itself.'),
-        t('Visitors, the babysitter or grandparents: Treats › Guests – a link with what they may ask for, chosen places read-only and a note.'),
+        t('Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note.'),
+        t('Share the link or show the QR code. Give it an end date or revoke it at any time.'),
+        t('Party mode is off at first. If you need it, switch it on under Settings › What do you use?'),
         t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.'),
       ],
       link: { label: t('Open guests'), to: '/bestellen?mode=guests' },
@@ -118,11 +166,11 @@ export function Help() {
       title: t('The menu: tea, ice cream, snacks'),
       lead: t('Everything people can ask for lives in one menu – things from your stock and things that are simply there, like tap water or tea.'),
       steps: [
-        t('Treats › “Edit menu” (also in Settings › Household and in the party setup).'),
+        t('Treats › “Edit menu” (also in Settings › Household).'),
         t('“Add from stock”: crisps, cola, ice cream – they show “all gone” (or disappear) when they run out, and serving books them out.'),
         t('“Menu-only item”: tap water, coffee, cappuccino – never counted. Link up to three ingredients from stock (milk, coffee): when one runs low it says “maybe not”.'),
         t('Choices like size, milk or sugar: single or several, required or optional, with a preselected default.'),
-        t('Who sees it: everyone, only at parties, only for family – or hidden for now. Templates get you started in one tap.'),
+        t('Who sees it: everyone, only for family – or hidden for now. Templates get you started in one tap.'),
       ],
       link: { label: t('Open the menu'), to: '/bestellen/karte' },
     },

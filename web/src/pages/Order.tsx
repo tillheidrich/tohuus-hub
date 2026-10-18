@@ -22,7 +22,7 @@ import { Empty, Seg, Sheet, Thumb, useToast } from '../ui';
 import { Links, Orders } from './Bar';
 import { OrderMenu } from './Guest';
 import { EditMenuButton } from './Menu';
-import { PartyCard } from './Party';
+import { PartyCard, usePartyModule } from './Party';
 
 type Mode = 'me' | 'guests' | 'party';
 type Kind = 'home' | 'guest' | 'party';
@@ -48,7 +48,9 @@ export function Order({ me }: { me: Me }) {
   const houseGuest = Boolean(me.actor.houseGuest);
   // living alone: nobody to bring anything – the page is for guests and parties only
   const single = home.form_chosen && home.form === 'single';
-  const modes: Mode[] = houseGuest ? ['me'] : single ? ['guests', 'party'] : ['me', 'guests', 'party'];
+  // party mode: its own switch, off for the start (docs/party-modus.md)
+  const party = usePartyModule();
+  const modes: Mode[] = (houseGuest ? ['me'] : single ? ['guests', 'party'] : ['me', 'guests', 'party']).filter((m) => party || m !== 'party') as Mode[];
   const asked = params.get('mode') as Mode | null;
   const mode: Mode = asked && modes.includes(asked) ? asked : modes[0];
   const setMode = (m: Mode) => setParams(m === modes[0] ? {} : { mode: m }, { replace: true });
@@ -62,7 +64,7 @@ export function Order({ me }: { me: Me }) {
       <header className="page-head">
         <div>
           <div className="eyebrow">{eyebrow}</div>
-          <h1>{single ? t('Guests & party') : t('Treats')}</h1>
+          <h1>{single ? (party ? t('Guests & party') : t('Guests')) : t('Treats')}</h1>
         </div>
         {!houseGuest && (
           <div className="actions">
@@ -565,7 +567,7 @@ function Inbox({ me }: { me: Me }) {
                 </div>
                 {o.note && o.lines.length > 0 && <div className="treat-note">„{o.note}“</div>}
                 {o.status === 'new' && declining !== o.id && (
-                  <div className="row t-act" style={{ gap: 8 }}>
+                  <div className="btn-row t-act">
                     <button className="btn primary sm" onClick={() => set(o.id, 'accepted')}>
                       <Check size={16} weight="bold" /> {t('I’ll bring it')}
                     </button>
@@ -595,7 +597,7 @@ function Inbox({ me }: { me: Me }) {
                   </div>
                 )}
                 {o.status === 'accepted' && (
-                  <div className="row t-act" style={{ gap: 8 }}>
+                  <div className="btn-row t-act">
                     <span className="small">
                       <b>{mineToBring ? t('You’re bringing it') : treatStatus('home', 'accepted', o.by_name)}</b>
                     </span>

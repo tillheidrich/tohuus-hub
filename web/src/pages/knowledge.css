@@ -120,6 +120,29 @@ button.kn-open {
   gap: 8px;
   justify-content: center;
 }
+.kn-example-group {
+  margin-top: 10px;
+}
+.kn-example-title {
+  margin-bottom: 6px;
+  text-align: center;
+}
+.kn-io-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  margin-top: 16px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.kn-io-row .grow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .kn-photo-thumb {
   width: 44px;
   height: 44px;

@@ -12,7 +12,7 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 
 ## Help (English)
 - [Help & tips](https://tohuus.heidrich-digital.de/help/): How-tos for ToHuus: the list, receipts, tasks, the assistant, AI on or off, recipe packs, Home Assistant, privacy and subscriptions. No sign-in, no tracking.
-- [Getting started](https://tohuus.heidrich-digital.de/help/getting-started.html): Create an account, say who belongs to the household and meet the five areas.
+- [Getting started](https://tohuus.heidrich-digital.de/help/getting-started.html): Create an account, say who belongs to the household and meet the areas.
 - [Shopping together](https://tohuus.heidrich-digital.de/help/shopping-together.html): Live on every phone, adding while someone is in the shop, and splitting the aisles.
 - [Sharing receipts](https://tohuus.heidrich-digital.de/help/receipts.html): E-receipts, PDF, photos and text: how receipts get into ToHuus and what happens to them.
 - [Tasks](https://tohuus.heidrich-digital.de/help/tasks.html): What needs doing at home, once or again and again, who does it and who keeps what in mind.
@@ -28,12 +28,25 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Self-hosting with Docker](https://tohuus.heidrich-digital.de/help/self-hosting.html): ToHuus on your own server, free under the AGPL-3.0.
 - [Privacy in short](https://tohuus.heidrich-digital.de/help/privacy-in-short.html): Where your data lives, who sees it and what never happens.
 - [Subscription and cancelling](https://tohuus.heidrich-digital.de/help/subscription.html): Trial, Household and Plus, how you pay and what happens when you cancel.
+- [How ToHuus works](https://tohuus.heidrich-digital.de/help/how-tohuus-works.html): One place for the household: how ToHuus remembers what is missing, what is coming up and what you know.
+- [Home knowledge](https://tohuus.heidrich-digital.de/help/household-knowledge.html): Sizes, measurements, meter readings and whatever else you know about your home: add it, find it, bring it in, save it as a file.
+- [Your bar](https://tohuus.heidrich-digital.de/help/your-bar.html): Everyone chooses which areas sit in the bar at the bottom.
+- [Bring me something](https://tohuus.heidrich-digital.de/help/bring-me-something.html): Ask for a little something at home, and whoever can brings it.
+- [Fair AI limits](https://tohuus.heidrich-digital.de/help/ai-limits.html): How many messages the assistant has a month, what happens then and what keeps working without AI.
+- [The shopping list](https://tohuus.heidrich-digital.de/help/shopping-list.html): One list for everyone, quick entry, “I’ll get it” and shop mode.
+- [Stock (optional)](https://tohuus.heidrich-digital.de/help/stock.html): Keep stock if you like. ToHuus does not need it.
+- [Who sees what?](https://tohuus.heidrich-digital.de/help/who-sees-what.html): What is shared, what stays private and what only you see.
+- [Guests and permissions](https://tohuus.heidrich-digital.de/help/guests.html): Guest links without an account, and regular guests with their own levels.
+- [The babysitter link](https://tohuus.heidrich-digital.de/help/babysitter-link.html): A link without an account: house info, where things are and a note, offline and printable too.
+- [Sharing codes safely](https://tohuus.heidrich-digital.de/help/sharing-codes.html): Door code, Wi-Fi, alarm: how ToHuus treats codes.
+- [Notifications](https://tohuus.heidrich-digital.de/help/notifications.html): When ToHuus gets in touch, how to set it up and how it stays quiet.
+- [Taking your data with you](https://tohuus.heidrich-digital.de/help/your-data.html): Export, recipe pack, home knowledge as a file and what happens when you delete.
 - [Frequently asked questions](https://tohuus.heidrich-digital.de/help/faq.html): Short answers to what people often ask.
 
 ## Hilfe (Deutsch)
 - [Hilfe & Tipps](https://tohuus.heidrich-digital.de/hilfe/): Anleitungen für ToHuus: Liste, Bons, Kochen, Aufgaben, Geld, der Assistent, Home Assistant, Datenschutz und Abo. Ohne Anmeldung, ohne Tracking.
-- [Erste Schritte](https://tohuus.heidrich-digital.de/hilfe/erste-schritte.html): Konto anlegen, sagen, wer dazugehört, und die fünf Bereiche kennenlernen.
-- [So funktioniert ToHuus](https://tohuus.heidrich-digital.de/hilfe/so-funktioniert-tohuus.html): Wie ToHuus sich merkt, was fehlt, warum jede Zeile sagt, woher sie kommt, und wie du alles findest.
+- [Erste Schritte](https://tohuus.heidrich-digital.de/hilfe/erste-schritte.html): Konto anlegen, sagen, wer dazugehört, und die Bereiche kennenlernen.
+- [So funktioniert ToHuus](https://tohuus.heidrich-digital.de/hilfe/so-funktioniert-tohuus.html): Ein Ort für den Haushalt: wie ToHuus sich merkt, was fehlt, was ansteht und was ihr wisst, und wie du alles findest.
 - [Die Einkaufsliste](https://tohuus.heidrich-digital.de/hilfe/einkaufsliste.html): Eine Liste für alle, Schnelleingabe, „Ich hol’s“ und der Modus für den Laden.
 - [Gemeinsam einkaufen](https://tohuus.heidrich-digital.de/hilfe/gemeinsam-einkaufen.html): Live auf allen Handys, ergänzen, während jemand im Laden steht, und zu zweit losziehen.
 - [Was ToHuus sich merkt](https://tohuus.heidrich-digital.de/hilfe/merkt-sich.html): Kaufrhythmus, Vorschläge, „Haben wir noch“ und warum kein Vorrat nötig ist.
@@ -63,6 +76,10 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Deine Daten mitnehmen](https://tohuus.heidrich-digital.de/hilfe/daten-export.html): Export, Rezeptpaket und was beim Löschen passiert.
 - [Datenschutz kurz erklärt](https://tohuus.heidrich-digital.de/hilfe/datenschutz-kurz.html): Wo eure Daten liegen, wer sie sieht und was nie passiert.
 - [Abo und Kündigen](https://tohuus.heidrich-digital.de/hilfe/abo-und-kuendigen.html): Testphase, Haushalt und Plus, wie bezahlt wird und was beim Kündigen passiert.
+- [Haushaltswissen](https://tohuus.heidrich-digital.de/hilfe/haushaltswissen.html): Größen, Maße, Zählerstände und was ihr sonst übers Zuhause wisst: eintragen, finden, übernehmen und als Datei sichern.
+- [Deine Leiste](https://tohuus.heidrich-digital.de/hilfe/deine-leiste.html): Welche Bereiche unten in der Leiste stehen, stellt jede Person für sich ein.
+- [Bring mir was](https://tohuus.heidrich-digital.de/hilfe/bring-mir-was.html): Sich zu Hause eine Kleinigkeit wünschen, und wer kann, bringt sie.
+- [Faire KI-Grenzen](https://tohuus.heidrich-digital.de/hilfe/ki-grenzen.html): Wie viele Nachrichten der Assistent im Monat hat, was danach passiert und was ohne KI weiterläuft.
 - [Gut zu wissen](https://tohuus.heidrich-digital.de/hilfe/gut-zu-wissen.html): Kurze Hinweise rund um Einkauf, Lagern und Kochen, jeweils mit Quelle.
 - [Häufige Fragen](https://tohuus.heidrich-digital.de/hilfe/fragen.html): Kurze Antworten auf das, was oft gefragt wird.
 
@@ -72,6 +89,11 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Aufgaben im Haushalt verteilen: wer macht es, wer denkt dran?](https://tohuus.heidrich-digital.de/ratgeber/aufgaben-im-haushalt-verteilen.html): Aufgaben im Haushalt fair verteilen heißt, das Machen und das Drandenken zu klären. Mit Abwechseln, klaren Zusagen und ohne Punkte. So klappt es im Alltag.
 - [14 Tage testen, dann entscheiden: So funktioniert das Abo von ToHuus](https://tohuus.heidrich-digital.de/ratgeber/haushalts-app-14-tage-testen.html): Jeder neue Haushalt in der ToHuus Cloud nutzt 14 Tage lang alles, ohne Zahlungsdaten. Danach entscheidet ihr: Abo, selbst hosten oder nur lesen. Gelöscht wird nichts.
 - [Haushalts-App selbst hosten: ToHuus auf dem eigenen Server](https://tohuus.heidrich-digital.de/ratgeber/haushalts-app-selbst-hosten.html): ToHuus läuft kostenlos auf dem eigenen Server, als Docker-Container mit einer SQLite-Datei. Mit iPhone-App, Web-App, Home Assistant und KI nur, wenn ihr wollt.
+- [Warum auch die beste KI ohne Kontext nur rät](https://tohuus.heidrich-digital.de/ratgeber/ki-braucht-kontext.html): Ein Sprachmodell weiß viel über die Welt, aber nichts über euer Zuhause. Welche Schuhgröße Mika hat oder welcher Filter in die Haube gehört, muss irgendwo stehen.
+- [Notizen und Listen in den Haushalt holen, ohne abzutippen](https://tohuus.heidrich-digital.de/ratgeber/notizen-und-listen-uebernehmen.html): Größen in einer Notiz, Zählerstände in einer Tabelle, Maße in einer alten Mail: So holt ihr das in ToHuus, seht vorher alles und sichert es jederzeit wieder als Datei.
+- [Die Leiste unten so, wie ihr lebt](https://tohuus.heidrich-digital.de/ratgeber/haushalts-app-leiste-anpassen.html): Heute, Einkauf, Kochen, Aufgaben und Vorrat sind der Anfang. Was ihr öfter braucht, etwa Geld oder das Haushaltswissen, holt jede Person für sich nach unten.
+- [ToHuus mit dem eigenen KI-Assistenten nutzen: so geht MCP](https://tohuus.heidrich-digital.de/ratgeber/haushalt-mit-eigenem-ki-assistenten.html): Wer Claude, ChatGPT oder einen anderen Assistenten nutzt, verbindet ihn über MCP mit dem Haushalt. Dann weiß er, was ansteht und was ihr übers Zuhause wisst.
+- [Wenn die KI pausiert: was ohne sie geht und warum es eine Grenze gibt](https://tohuus.heidrich-digital.de/ratgeber/wenn-die-ki-pausiert.html): Jede KI-Nachricht kostet Geld. Deshalb hat ToHuus eine faire Obergrenze im Monat. Was dann passiert, was ohne KI weiterläuft und wie ihr selten an die Grenze kommt.
 - [Mental Load im Haushalt: Was ist das und wie verteilt man ihn fair?](https://tohuus.heidrich-digital.de/ratgeber/mental-load-haushalt-fair-verteilen.html): Mental Load ist das Drandenken, Planen und Im-Blick-Behalten im Haushalt. Er ist unsichtbar und ungleich verteilt. So macht ihr ihn sichtbar und teilt ihn fair.
 - [Haushalt mit ADHS: Was hilft, wenn der Kopf voll ist?](https://tohuus.heidrich-digital.de/ratgeber/haushalt-mit-adhs.html): Mit ADHS ist im Haushalt oft der Anfang das Schwerste. Kleine Schritte, eins nach dem anderen, ein Timer und Erinnerungen außerhalb des Kopfes helfen.
 - [Wie lange ist was haltbar? MHD, Verbrauchsdatum und nach dem Öffnen](https://tohuus.heidrich-digital.de/ratgeber/haltbarkeit-lebensmittel-nach-dem-oeffnen.html): Nach dem MHD ist vieles noch gut, nach dem Verbrauchsdatum nicht. Was für Eier, Käse, Wurst, Marmelade und Milch gilt, auch nach dem Öffnen.
@@ -102,6 +124,8 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 ## Fakten rund um Einkauf, Kochen und Haushaltsgeld
 - 1 Satz: So viel braucht eine Karte im Haushaltswissen von ToHuus, etwa „Rollo Wohnzimmer 120 x 160“. Das geht auch ohne KI. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/erste-schritte.html)
 - 14 Tage: So lange nutzt jeder neue Haushalt in der ToHuus Cloud alles aus Plus, ohne Zahlungsdaten. Danach wird nichts gelöscht. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/abo-und-kuendigen.html)
+- 1 Ort: Was ihr übers Zuhause wisst, steht in ToHuus an einer Stelle: für euch, für den Assistenten und auf Wunsch für eure eigene KI. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/haushaltswissen.html)
+- 800: Nachrichten in voller Länge hat der Assistent mit Plus und in der Testphase im Monat. Danach werden die Antworten kürzer. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/ki-grenzen.html)
 - 43,4 %: So viel mehr unbezahlte Arbeit leisteten Frauen 2022 als Männer, knapp 29,5 gegenüber 20,5 Stunden pro Woche. (Destatis 2025, https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Einkommen-Konsum-Lebensbedingungen/Zeitverwendung/Ergebnisse/_inhalt.html)
 - 62 %: So wahrscheinlich übernehmen erwerbstätige Frauen die Alltagsorganisation überwiegend selbst, bei Männern sind es 20 Prozent (Modellwerte, 2023). (WSI 2023, https://www.boeckler.de/de/pressemitteilungen-2675-alltagsorganisation-bei-paaren-und-familien-51349.htm)
 - 74 %: Leben Kinder im Haushalt, steigt dieser Wert bei erwerbstätigen Frauen auf 74 Prozent (Modellwert, WSI 2023). (WSI 2023, https://www.boeckler.de/de/pressemitteilungen-2675-alltagsorganisation-bei-paaren-und-familien-51349.htm)
@@ -209,7 +233,6 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - 616 Mio. l: So viel alkoholfreies Bier wurde 2025 in Deutschland produziert, 6,5 Prozent mehr als im Vorjahr. (Destatis 2026, https://www.destatis.de/DE/Presse/Pressemitteilungen/Zahl-der-Woche/2026/PD26_28_p002.html)
 - 128,8 l: So viel Mineral- und Heilwasser trank jede Person in Deutschland 2025 im Schnitt. (VDM 2026, https://www.vdm-bonn.de/presse/pressemitteilungen/mineralwasser-absatz-steigt-2025-deutlich/)
 - 74,5 kg: So viele Lebensmittel warf jede Person 2022 im eigenen Haushalt weg, das sind 58 Prozent aller Lebensmittelabfälle. (BMLEH 2022, https://www.bmleh.de/DE/themen/ernaehrung/lebensmittelverschwendung/studie-lebensmittelabfaelle-deutschland.html)
-- Ohne App: Gäste bestellen bei ToHuus über einen Link oder QR-Code vom Party-Menü, ohne App und ohne Konto. (ToHuus, https://tohuus.heidrich-digital.de/hilfe/gaeste.html)
 - 112: Die Notrufnummer 112 gilt seit 1991 in der ganzen EU und ist von jedem Telefon kostenlos erreichbar (Stand 2026). (EU, Your Europe 2026, https://europa.eu/youreurope/citizens/travel/security-and-emergencies/emergency/index_de.htm)
 - 116117: Der ärztliche Bereitschaftsdienst ist rund um die Uhr ohne Vorwahl und kostenfrei erreichbar (Stand 2026). (KBV, 116117.de 2026, https://www.116117.de/de/aerztlicher-bereitschaftsdienst.php)
 - 45.372: So oft wurde der Giftnotruf München 2024 um Rat gefragt. (Giftnotruf München 2024, https://toxikologie.mri.tum.de/sites/default/files/2025-05/jahresbericht_2024_2.pdf)

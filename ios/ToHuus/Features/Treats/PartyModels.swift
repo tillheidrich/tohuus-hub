@@ -76,6 +76,9 @@ struct PartyInfo: Decodable, Sendable, Identifiable, Hashable {
     var autoEndReason: String?
     var endedAt: String?
     var showNames: Bool?
+    /// the line under „Scan & order“ on the TV board – the host's own (nil = server default, see pickupHintDefault)
+    var pickupHint: String?
+    var pickupHintDefault: String?
     var guestUrl: String?
     var boardUrl: String?
     var boardPath: String?
@@ -97,7 +100,7 @@ struct PartyInfo: Decodable, Sendable, Identifiable, Hashable {
 
     static func == (a: PartyInfo, b: PartyInfo) -> Bool {
         a.id == b.id && a.status == b.status && a.openOrders == b.openOrders && a.pairCode == b.pairCode
-            && a.showNames == b.showNames && a.autoEndAt == b.autoEndAt && a.menu.count == b.menu.count && a.name == b.name
+            && a.showNames == b.showNames && a.pickupHint == b.pickupHint && a.autoEndAt == b.autoEndAt && a.menu.count == b.menu.count && a.name == b.name
     }
     func hash(into h: inout Hasher) { h.combine(id) }
 
@@ -366,6 +369,12 @@ extension APIClient {
             "show_names": showNames, "template_id": templateId ?? NSNull(),
         ])
     }
+    /// empty → back to the neutral default
+    func updateParty(_ id: Int, pickupHint: String) async throws -> PartyInfo {
+        let v = pickupHint.trimmingCharacters(in: .whitespacesAndNewlines)
+        return try await send("PATCH", "api/parties/\(id)", json: ["pickup_hint": v.isEmpty ? NSNull() : String(v.prefix(80))])
+    }
+
     func updateParty(_ id: Int, showNames: Bool) async throws -> PartyInfo {
         try await send("PATCH", "api/parties/\(id)", json: ["show_names": showNames])
     }

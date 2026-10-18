@@ -297,8 +297,11 @@ r.post(
   '/push/apns/test',
   wrap(async (req) => {
     const uid = userId(req);
-    if (!uid) return { sent: 0 };
-    return { sent: await sendApns([uid], { title: t('Test from ToHuus Hub'), body: t('Push notifications reach this device.'), path: '/', event: 'test', urgent: true }) };
+    if (!uid) return { sent: 0, configured: apnsConfigured(), devices: 0, reasons: [] };
+    // why nothing arrived matters more than the count: no Apple key on this server, no iPhone registered, or Apple refused
+    const report = { reasons: [] as string[] };
+    const sent = await sendApns([uid], { title: t('Test from ToHuus Hub'), body: t('Push notifications reach this device.'), path: '/', event: 'test', urgent: true }, report);
+    return { sent, configured: apnsConfigured(), devices: listApnsDevices(uid).length, reasons: [...new Set(report.reasons)] };
   }),
 );
 
@@ -447,7 +450,7 @@ r.post(
 
 /** Order of the cards on "Heute", per person. */
 // 'tasks': the Aufgaben card (web TasksToday, iPhone TasksTodayCard) – without it every arrangement with it was refused
-const TODAY_CARDS = ['rhythm', 'tasks', 'list', 'still', 'cook', 'money', 'notices', 'pulse'] as const;
+const TODAY_CARDS = ['rhythm', 'tasks', 'list', 'still', 'cook', 'money', 'notices', 'pulse', 'orders'] as const;
 r.get('/list/today-order', (req, res) => res.json({ order: userId(req) ? getUserPref<string[]>(userId(req)!, 'today.order', []) : [] }));
 r.put('/list/today-order', (req, res) => {
   const b = z.object({ order: z.array(z.enum(TODAY_CARDS)).max(TODAY_CARDS.length) }).parse(req.body);

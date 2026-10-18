@@ -147,8 +147,8 @@ const COPY = {
           points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Sachen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
         { id: 'wissen', no: '6', label: 'Haushaltswissen', h3: 'Was ihr übers Zuhause wisst, an einem Ort.', shot: 'knowledge',
           alt: 'Seite „Was ToHuus sich merkt“: Karten nach Personen, Räumen und Dingen, zum Beispiel Mikas Schuhgröße, das Rollo im Wohnzimmer und der Zählerstand für Strom.',
-          p: 'Schuhgrößen, Rollo-Maße, Zählerstände, welcher Beutel in den Staubsauger gehört: Das steht sonst auf Zetteln, in alten Chats oder in genau einem Kopf. In ToHuus wird daraus eine Karte, zum Beispiel „Mika · Schuhgröße: 31“. Ändert sich der Wert, bleibt der alte im Verlauf.',
-          points: ['Eintragen mit einem Satz, etwa „Rollo Wohnzimmer 120 x 160“, das geht auch ohne KI', 'Für den ganzen Haushalt oder nur für dich', 'Gesundheitsangaben bleiben privat, Codes und Passwörter gehören in die Hausinfo', 'Mitbringen aus Markdown (auch aus Obsidian oder Notion exportiert), TXT, CSV oder JSON, und jederzeit wieder exportieren'] },
+          p: 'Mikas Schuhgröße, das Maß fürs Rollo im Bad, die Zählernummer, welcher Filter in die Dunstabzugshaube gehört, wo der Hauptwasserhahn ist: Das steht sonst auf Zetteln, in alten Chats oder im Kopf von genau einer Person, die dann ständig gefragt wird. In ToHuus wird daraus eine Karte, zum Beispiel „Mika · Schuhgröße: 31“. Ab dann fragt ihr ToHuus. Ändert sich der Wert, bleibt der alte im Verlauf, und zu pflegen gibt es nichts.',
+          points: ['Eintragen mit einem Satz, etwa „Rollo Wohnzimmer 120 x 160“, das geht auch ohne KI', 'Text aus Notizen oder Mails einfügen oder eine Liste wählen (Excel, Numbers, Google Tabellen als CSV, Textdatei). Du siehst vorher alles', 'Für den ganzen Haushalt oder nur für dich, Gesundheitsangaben bleiben privat, Codes und WLAN gehören in die Hausinfo', 'Das Gedächtnis, mit dem auch die KI etwas anfangen kann: der Assistent in ToHuus und auf Wunsch deine eigene über MCP'] },
         { id: 'assistent', no: '7', label: 'Assistent', h3: 'Ein Satz reicht.', shot: 'assistant',
           alt: 'Der Assistent in ToHuus: die Nachricht „Milch ist alle und Spüli fast leer“ und die Antwort, was auf die Liste gekommen ist, mit der Möglichkeit, es zurückzunehmen.',
           p: '„Milch ist alle und Spüli fast leer“, „Schornsteinfeger am Dienstag um halb neun“, „Merk dir, Mikas Jackengröße ist 128“. Der Assistent setzt es auf die Liste, legt die Aufgabe an oder trägt es ins Haushaltswissen ein und sagt dir, was er gemacht hat. Jeder Schritt lässt sich zurücknehmen.',
@@ -156,7 +156,7 @@ const COPY = {
       ],
       moreLabel: 'Und dazu',
       more: [
-        ['coffee', 'Bring mir was', 'Wer auf dem Sofa festsitzt, wünscht sich mit zwei Tipps eine Kleinigkeit, und einer sagt „Ich bring’s“. Auch für Besuch und den Partyabend.'],
+        ['coffee', 'Bring mir was', 'Wer auf dem Sofa festsitzt, wünscht sich mit zwei Tipps eine Kleinigkeit, und einer sagt „Ich bring’s“. Ohne Punkte und ohne Liste, wer was gebracht hat.'],
         ['gift', 'Wünsche', 'Wunschlisten mit Foto, Link und Preis. Wer etwas reserviert, sieht die Familie, die beschenkte Person nie.'],
         ['wifi', 'Hausinfo', 'Gäste-WLAN, wie die Heizung geht und wichtige Nummern, für Babysitter und Besuch über einen Link ohne Konto.'],
         ['suitcase', 'Wenn ihr weg seid', 'Die Übergabe für Tier- und Blumensitter, mit Fotos und einem Link, der nach eurer Rückkehr endet.'],
@@ -310,8 +310,8 @@ const COPY = {
       per: '/ Monat', or: 'oder', year: '/ Jahr', storage: 'Speicher',
       plans: [
         { name: 'Testphase', price: '0 €', sub: '14 Tage', storage: '5 GB', items: ['Alles aus Plus, 14 Tage lang', 'Startet mit jedem neuen Haushalt, ohne Zahlungsdaten', 'Danach ab 3,99 € im Monat, abgebucht wird nichts von selbst', 'Ohne Abo bleibt alles sichtbar und exportierbar'] },
-        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Gemeinsame Liste mit Einkaufsmodus, Aufgaben, Wochenplan und Rezepte', 'Die ganze Geschichte mit Preisverlauf und Ausgaben', 'Verbundene Haushalte und gespiegelte Listen', 'Bons, Screenshots und Fotos mit KI lesen lassen', 'Haushaltswissen mit Import und Export', 'Der Assistent für ab und zu'] },
-        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Der Assistent für jeden Tag', 'Wochenplan aus dem, was da ist', 'Monatsauswertung und Ersatz aus dem Vorrat', 'Neue ToHuus-Rezepte zur Jahreszeit, mit Bild', 'Viel mehr Nachrichten an den Assistenten, mit einer fairen Obergrenze pro Monat'], mark: '14 Tage zum Ausprobieren' },
+        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Gemeinsame Liste mit Einkaufsmodus, Aufgaben, Wochenplan und Rezepte', 'Die ganze Geschichte mit Preisverlauf und Ausgaben', 'Verbundene Haushalte und gespiegelte Listen', 'Bons, Screenshots und Fotos mit KI lesen lassen', 'Haushaltswissen mit Import und Export', 'Der Assistent für ab und zu, 100 Nachrichten im Monat'] },
+        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Der Assistent für jeden Tag', 'Wochenplan aus dem, was da ist', 'Monatsauswertung und Ersatz aus dem Vorrat', 'Neue ToHuus-Rezepte zur Jahreszeit, mit Bild', '800 Nachrichten an den Assistenten in voller Länge im Monat, danach kürzer, mit einer offenen Obergrenze'], mark: '14 Tage zum Ausprobieren' },
         { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Mit eigener KI, jeder OpenAI-kompatible Anbieter geht, oder ganz ohne', 'iPhone-App, Web-App, Home Assistant, MCP'], host: true },
       ],
       fund: 'Mit jedem Abo finanziert ihr auch Lizenzen für Familien, die es sich gerade nicht leisten können. Werbung gibt es bei uns nicht, und eure Daten verkaufen wir nicht.',
@@ -489,8 +489,8 @@ const COPY = {
           points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week, month or year, with a note at 80 percent', 'CSV export'] },
         { id: 'knowledge', no: '6', label: 'Home knowledge', h3: 'What you know about your home, in one place.', shot: 'knowledge',
           alt: 'The page “What ToHuus remembers”: cards by person, room and thing, for example Mika’s shoe size, the living room blind and the electricity meter reading.',
-          p: 'Shoe sizes, blind measurements, meter readings, which bags fit the hoover: otherwise that lives on scraps of paper, in old chats or in exactly one head. In ToHuus it becomes a card, for example “Mika · Shoe size: 12”. When the value changes, the old one stays in the history.',
-          points: ['Add it in one sentence, like “Living room blind 120 x 160”, which works without AI too', 'For the whole household or only for you', 'Health details stay private, codes and passwords belong in the house info', 'Bring it along from Markdown (Obsidian or Notion exports too), TXT, CSV or JSON, and export it any time'] },
+          p: 'Mika’s shoe size, the bathroom blind, the meter number, which filter fits the cooker hood, where the main water tap is: otherwise that lives on scraps of paper, in old chats or in the head of one person who keeps getting asked. In ToHuus it becomes a card, for example “Mika · Shoe size: 12”. From then on you ask ToHuus. When the value changes, the old one stays in the history, and there is nothing to maintain.',
+          points: ['Add it in one sentence, like “Living room blind 120 x 160”, which works without AI too', 'Paste text from notes or emails, or pick a list (Excel, Numbers, Google Sheets as CSV, a text file). You see everything first', 'For the whole household or only for you, health details stay private, codes and Wi-Fi belong in the house info', 'The memory that makes AI useful: the assistant in ToHuus, and your own one via MCP if you like'] },
         { id: 'assistant', no: '7', label: 'Assistant', h3: 'One sentence is enough.', shot: 'assistant',
           alt: 'The assistant in ToHuus: a message asking to add milk and washing-up liquid and the answer saying what went on the list, with a way to undo it.',
           p: '“We’re out of milk and nearly out of washing-up liquid”, “Boiler service on Tuesday at half past eight”, “Remember, Mika’s coat size is 7 to 8 years”. The assistant puts it on the list, adds the chore or saves it to your home knowledge and tells you what it did. Every step can be undone.',
@@ -498,7 +498,7 @@ const COPY = {
       ],
       moreLabel: 'Also inside',
       more: [
-        ['coffee', 'Bring me something', 'Stuck on the sofa? Ask for a little something in two taps, and someone says “I’ll bring it”. Also for visitors and party night.'],
+        ['coffee', 'Bring me something', 'Stuck on the sofa? Ask for a little something in two taps, and someone says “I’ll bring it”. No points, no tally of who brought what.'],
         ['gift', 'Wishes', 'Wish lists with photo, link and price. The family sees who reserved what, the person it is for never does.'],
         ['wifi', 'House info', 'Guest Wi-Fi, how the heating works and important numbers, for sitters and visitors through a link, no account needed.'],
         ['suitcase', 'While you’re away', 'The handover for pet and plant sitters, with photos and a link that ends after you are back.'],
@@ -652,8 +652,8 @@ const COPY = {
       per: '/ month', or: 'or', year: '/ year', storage: 'Storage',
       plans: [
         { name: 'Trial', price: '€0', sub: '14 days', storage: '5 GB', items: ['Everything in Plus for 14 days', 'Starts with every new household, no payment details', 'Then from €3.99 a month, nothing is charged on its own', 'Without a plan everything stays visible and exportable'] },
-        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Shared list with shop mode, tasks, week plan and recipes', 'The full history with prices and spending', 'Connected households and mirrored lists', 'Receipts, screenshots and photos read with AI', 'Home knowledge with import and export', 'The assistant now and then'] },
-        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'The assistant for every day', 'Week plan from what is at home', 'Monthly review and substitutes from your stock', 'New seasonal ToHuus recipes (in German), with pictures', 'Far more assistant messages, with a fair monthly limit'], mark: '14 days to try' },
+        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Shared list with shop mode, tasks, week plan and recipes', 'The full history with prices and spending', 'Connected households and mirrored lists', 'Receipts, screenshots and photos read with AI', 'Home knowledge with import and export', 'The assistant now and then, 100 messages a month'] },
+        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'The assistant for every day', 'Week plan from what is at home', 'Monthly review and substitutes from your stock', 'New seasonal ToHuus recipes (in German), with pictures', '800 full-length assistant messages a month, then shorter replies, with an open upper limit'], mark: '14 days to try' },
         { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'With your own AI, any OpenAI-compatible provider, or none at all', 'iPhone app, web app, Home Assistant, MCP'], host: true },
       ],
       fund: 'Every subscription also pays for licences for families who cannot afford one right now. There are no ads, and we do not sell your data.',
@@ -1453,7 +1453,8 @@ function helpMeta(c, a) {
   const otherHref = `../${HELP_DIR[other]}/${otherFile}`;
   return {
     title: a ? `${a.title} · ToHuus` : `${H.title} · ToHuus`, desc: a ? a.desc : H.desc,
-    url: url(c.lang, self), alt: { [c.lang]: url(c.lang, self), [other]: url(other, otherFile || './') }, ld: false,
+    // hreflang only between real translations: an article without an existing pair has none (like blog posts)
+    url: url(c.lang, self), alt: { [c.lang]: url(c.lang, self), [other]: a ? (otherFile ? url(other, otherFile) : null) : url(other, './') }, ld: false,
     navBase: c.lang === 'de' ? '../de/' : '../', home: c.lang === 'de' ? '../de/' : '../', legalBase: c.lang === 'de' ? '../de/' : '../',
     helpHref: './', isHelp: true, bodyClass: 'legal-page help-page',
     enHref: c.lang === 'en' ? self : otherHref, deHref: c.lang === 'de' ? self : otherHref, otherHref,
@@ -1763,8 +1764,8 @@ const SHARE_FILE = { de: 'de/teilen.html', en: 'share.html' };
 const SHARE_COPY = {
   de: {
     title: 'Zum Teilen: Zahlen und Sätze rund ums Zuhause', h1: 'Zum Teilen',
-    desc: 'Karten zu Pflege, Alleinerziehenden, Mental Load und einem ruhigen Haushalt, jede Zahl mit Quelle. Als Bild für Feed, Story und WhatsApp Status.',
-    lede: 'Zahlen und Sätze rund um Pflege, Alleinerziehende und die Denkarbeit zu Hause. Jede Zahl hat ihre Quelle unten auf der Karte. Speicher dir eine Karte und teil sie, wo du magst.',
+    desc: 'Karten zu Pflege, Alleinerziehenden, Mental Load, Haushaltswissen und einem ruhigen Haushalt, jede Zahl mit Quelle. Als Bild für Feed, Story und WhatsApp Status.',
+    lede: 'Zahlen und Sätze rund um Pflege, Alleinerziehende und die Denkarbeit zu Hause, jede Zahl mit ihrer Quelle unten auf der Karte. Dazu Karten, wie ToHuus gebaut ist: Haushaltswissen, Deine Leiste, die Tonne am Vorabend und eine KI mit offener Grenze. Speicher dir eine Karte und teil sie, wo du magst.',
     formats: '4:5 passt in den Feed, 9:16 in Story und WhatsApp Status.',
     facts: 'Zahlen mit Quelle', brand: 'Von ToHuus', source: 'Quelle:',
     dl: (f) => (f === '4x5' ? '4:5 laden' : '9:16 laden'), dlLabel: (f, t) => `${t}, Bild im Format ${f === '4x5' ? '4:5' : '9:16'} laden`,
@@ -1793,6 +1794,17 @@ const SHARE_ON_POST = {
   'wochenplan-essen-familie': ['plan-im-kopf', 'denkarbeit'],
   'was-essen-wir-heute': ['denkarbeit', 'brand-handy-weg', 'brand-liegen-lassen'],
   'haushalts-app-datenschutz': ['brand-handy-weg', 'mitteilungen-buendeln', 'brand-nicht-alles'],
+  'haushaltswissen-an-einem-ort': ['brand-haushaltswissen', 'denkarbeit', 'brand-kontext'],
+  'ki-braucht-kontext': ['brand-kontext', 'brand-haushaltswissen', 'brand-eigene-ki'],
+  'notizen-und-listen-uebernehmen': ['brand-notizen', 'brand-haushaltswissen'],
+  'haushalts-app-leiste-anpassen': ['brand-leiste', 'brand-handy-weg'],
+  'haushalt-mit-eigenem-ki-assistenten': ['brand-eigene-ki', 'brand-kontext'],
+  'wenn-die-ki-pausiert': ['brand-ki-grenze', 'brand-liegen-lassen'],
+  'tonne-am-vorabend-erinnerung': ['brand-tonne', 'brand-rueckgaengig', 'plan-im-kopf'],
+  'aufgaben-im-haushalt-verteilen': ['denkarbeit', 'brand-rueckgaengig', 'serien'],
+  'haushalts-app-14-tage-testen': ['brand-14-tage', 'brand-selbst-hosten'],
+  'haushalts-app-selbst-hosten': ['brand-selbst-hosten', 'brand-eigene-ki'],
+  'partyabend-planen-getraenke': ['brand-bring-mir-was', 'brand-handy-weg'],
 };
 
 /** One card on the share page: the 4:5 image, what it says, its source and the two downloads. */

@@ -73,7 +73,13 @@ type SayResult =
   | { kind: 'form'; draft: { subject: string | null; subjectRef: string | null; property: string | null; value: string | null; text: string } };
 
 /** examples for the empty state – a tap puts them into the field */
-const EXAMPLES = () => [t('Mika shoe size 28'), t('Blind ground floor 120 x 160'), t('Cooker hood filter size 20 x 30'), t('Electricity meter number 1ESY1160'), t('Paediatrician 04181 12345')];
+/** examples for the empty state, grouped like the cards later – a tap puts one into the field (same on iOS) */
+const EXAMPLE_GROUPS = () => [
+  { title: t('Kids'), items: [t('Mika shoe size 28'), t('Mira jacket size 116')] },
+  { title: t('House'), items: [t('Blind living room 120 x 160'), t('Cooker hood filter 20 x 30'), t('Main water tap in the basement, on the left')] },
+  { title: t('Numbers'), items: [t('Electricity meter 1ESY1160'), t('Paediatrician 04181 12345')] },
+  { title: t('Likes and dislikes'), items: [t('Sam doesn’t eat mushrooms')] },
+];
 
 const ORIGIN: Record<string, string> = { app: 'in the app', web: 'in the app', assistant: 'via the assistant', telegram: 'via Telegram', share: 'shared', mcp: 'via MCP' };
 
@@ -232,13 +238,20 @@ export function KnowledgePage({ me }: { me: Me }) {
             {!guest && (
               <>
                 <p style={{ margin: '0 0 10px' }}>{t('Sizes, measurements, numbers. Write a sentence above, ToHuus sorts it. For example:')}</p>
-                <div className="kn-examples">
-                  {EXAMPLES().map((x) => (
-                    <button key={x} type="button" className="chip" onClick={() => setText(x)}>
-                      {x}
-                    </button>
-                  ))}
-                </div>
+                {EXAMPLE_GROUPS().map((g) => (
+                  <div key={g.title} className="kn-example-group">
+                    <div className="small muted kn-example-title">{g.title}</div>
+                    <div className="kn-examples">
+                      {g.items.map((x) => (
+                        <button key={x} type="button" className="chip" onClick={() => setText(x)}>
+                          {x}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {/* why it helps – and why even the best AI needs to know your home */}
+                <p style={{ margin: '12px 0 0' }}>{t('Whoever keeps it all in their head gets asked all the time. Now you ask ToHuus. And the assistant is only as good as what it knows about your home.')}</p>
                 <p className="small muted" style={{ margin: '10px 0 0' }}>{t('Doctors and other health things stay with you unless you share them.')}</p>
               </>
             )}
@@ -275,6 +288,15 @@ export function KnowledgePage({ me }: { me: Me }) {
             ))}
           </div>
         </>
+      )}
+      {!guest && !q.isLoading && (
+        <button type="button" className="card pad kn-io-row" onClick={() => setIo('import')}>
+          <UploadSimple size={20} aria-hidden="true" />
+          <span className="grow">
+            <b>{t('Import')}</b>
+            <span className="small muted">{t('Paste text from Notes or e-mails, or pick a list (CSV, text; from Excel or Numbers just copy the cells). You see everything first.')}</span>
+          </span>
+        </button>
       )}
       {!guest && (
         <p className="small muted kn-foot">

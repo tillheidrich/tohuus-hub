@@ -48,6 +48,9 @@ export interface PartyView {
   auto_end_reason: 'time' | 'idle' | null;
   ended_at: string | null;
   show_names: boolean;
+  /** the line under „Scan & order“ on the TV board (null = default) */
+  pickup_hint?: string | null;
+  pickup_hint_default?: string;
   guest_url: string | null;
   board_url: string | null;
   board_path: string | null;
@@ -80,6 +83,15 @@ function useQrSvg(url: string | null | undefined, dark = '#17181a') {
     QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark, light: '#ffffff' } }).then(setSvg).catch(() => setSvg(''));
   }, [url, dark]);
   return svg;
+}
+
+/**
+ * Party mode is its own switch in „Was nutzt ihr?“ since 18 Oct 2026 – off for the start (docs/party-modus.md).
+ * Off: no party card, no „Party“ tab, „Gäste & Party“ is just „Gäste“. Data stays.
+ */
+export function usePartyModule(): boolean {
+  const me = useApi<{ modules?: Record<string, boolean> }>('me', '/me');
+  return me.data?.modules?.party === true;
 }
 
 const usePartyCurrent = () => useApi<PartyView | null>(['orders', 'party-current'], '/party/current');
@@ -222,6 +234,7 @@ function LiveParty({ p, onEnded }: { p: PartyView; onEnded: (id: number) => void
         </div>
         <Toggle on={p.show_names} onChange={setNames} label={t('Guest names on the TV')} />
       </div>
+      <PickupHintField p={p} />
       <div className="row" style={{ marginTop: 12, flexWrap: 'wrap' }}>
         <button className="btn sm" onClick={extend}>
           <Plus size={14} weight="bold" /> {t('1 hour longer')}
@@ -234,6 +247,34 @@ function LiveParty({ p, onEnded }: { p: PartyView; onEnded: (id: number) => void
       <TvSheet open={tv} onClose={() => setTv(false)} p={p} />
       <GuestQrSheet open={qr} onClose={() => setQr(false)} p={p} />
       <MenuSheet open={menu} onClose={() => setMenu(false)} p={p} />
+    </div>
+  );
+}
+
+/** Till, 18 Oct 2026: the hint under „Scan & order“ on the TV is the host's own (every party is different). */
+function PickupHintField({ p }: { p: PartyView }) {
+  const [v, setV] = useState(p.pickup_hint ?? '');
+  useEffect(() => setV(p.pickup_hint ?? ''), [p.id, p.pickup_hint]);
+  const save = async () => {
+    const next = v.trim();
+    if (next === (p.pickup_hint ?? '')) return;
+    await patch(`/parties/${p.id}`, { pickup_hint: next || null });
+    invalidate('orders');
+  };
+  return (
+    <div className="field" style={{ marginTop: 12 }}>
+      <label htmlFor="pickup-hint">{t('Hint under “Scan & order”')}</label>
+      <input
+        id="pickup-hint"
+        className="input"
+        maxLength={80}
+        value={v}
+        placeholder={p.pickup_hint_default ?? t('We’ll let you know when it’s ready')}
+        onChange={(e) => setV(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+      />
+      <div className="help">{t('Shown on the TV next to the QR code. E.g. “Grab it at the bar” or “We’ll bring it to you”.')}</div>
     </div>
   );
 }
@@ -729,6 +770,7 @@ interface BoardData {
   brand: string;
   language: string;
   join_url?: string | null;
+  pickup_hint?: string;
   menu?: { id: number; name: string; image_path: string | null; group: string; available: boolean; hint: string | null }[];
   orders?: BoardOrder[];
   served?: number;
@@ -964,7 +1006,7 @@ function GuestBoard({ d, now }: { d: BoardData; now: number }) {
         </div>
         <div className="gb-scan">
           <b>{t('Scan & order')}</b>
-          <span>{t('Pick it up at the counter when it’s ready')}</span>
+          <span>{d.pickup_hint || t('We’ll let you know when it’s ready')}</span>
         </div>
         <div className="gb-host mono">{host}</div>
       </section>

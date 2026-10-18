@@ -226,7 +226,8 @@ export function apnsPayload(m: ApnsMessage) {
 const DEAD = new Set(['BadDeviceToken', 'Unregistered', 'DeviceTokenNotForTopic', 'ExpiredToken']);
 
 /** Send to every device of these members. Returns how many devices accepted it. */
-export async function sendApns(userIds: number[], msg: ApnsMessage): Promise<number> {
+/** `report` collects Apple's reasons for refused deliveries (shown by the test button). */
+export async function sendApns(userIds: number[], msg: ApnsMessage, report?: { reasons: string[] }): Promise<number> {
   const c = apnsConfig();
   if (!c || !userIds.length) return 0;
   const devices = db.prepare(`SELECT id, token, env, fails FROM apns_devices WHERE user_id IN (${userIds.map(() => '?').join(',')})`).all(...userIds) as {
@@ -254,7 +255,10 @@ export async function sendApns(userIds: number[], msg: ApnsMessage): Promise<num
       if (r.status === 200) {
         ok++;
         db.prepare(`UPDATE apns_devices SET fails = 0, last_ok_at = datetime('now') WHERE id = ?`).run(d.id);
-      } else if (r.status === 410 || (r.reason && DEAD.has(r.reason)) || d.fails >= 9) {
+        return;
+      }
+      report?.reasons.push(r.reason ?? `HTTP ${r.status}`);
+      if (r.status === 410 || (r.reason && DEAD.has(r.reason)) || d.fails >= 9) {
         db.prepare('DELETE FROM apns_devices WHERE id = ?').run(d.id);
       } else {
         db.prepare('UPDATE apns_devices SET fails = fails + 1 WHERE id = ?').run(d.id);

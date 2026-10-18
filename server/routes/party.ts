@@ -12,6 +12,7 @@ import {
   extendParty,
   getParty,
   listTemplates,
+  PICKUP_HINT_MAX,
   liveParty,
   pairWithCode,
   partyView,
@@ -58,7 +59,14 @@ r.post('/parties', (req, res) => {
 });
 
 r.patch('/parties/:id', (req, res) => {
-  const b = z.object({ name: z.string().max(60).optional(), show_names: z.boolean().optional(), idle_min: z.number().int().min(0).max(600).optional() }).parse(req.body);
+  const b = z
+    .object({
+      name: z.string().max(60).optional(),
+      show_names: z.boolean().optional(),
+      idle_min: z.number().int().min(0).max(600).optional(),
+      pickup_hint: z.string().max(PICKUP_HINT_MAX).nullable().optional(),
+    })
+    .parse(req.body);
   try {
     res.json(partyView(updateParty(Number(req.params.id), b)));
   } catch (e) {

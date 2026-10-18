@@ -291,7 +291,7 @@ private struct FirstRunModules: View {
         ("treats", "heart", L("Treats"), L("Wishes from the sofa: tea, a snack, a drink.")),
         ("homeinfo", "wrench.and.screwdriver", L("Home info"), L("Care tasks and things to know about the home.")),
         ("knowledge", "brain", L("What ToHuus remembers"), L("Sizes, measurements, numbers. So nobody has to ask you.")),
-        ("guests", "party.popper", L("Guests & party"), L("Guest links, a party board, orders from guests.")),
+        ("guests", "person.2", L("Guests"), L("Guest links and orders from guests.")),
         ("ha", "house.circle", "Home Assistant", L("Only if you run Home Assistant.")),
     ]
 

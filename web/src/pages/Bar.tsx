@@ -5,21 +5,22 @@ import { type Location, type Product, del, fmtQty, invalidate, patch, post, relT
 import { Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { Ic } from '../placeicons';
 import { locale, t } from '../i18n';
-import { PartyCard } from './Party';
+import { PartyCard, usePartyModule } from './Party';
 import { BonButton } from './Bons';
 import { EditMenuButton } from './Menu';
 
 export function Bar() {
   const [tab, setTab] = useState<'orders' | 'links' | 'menu'>('orders');
+  const party = usePartyModule();
   return (
     <div>
       <header className="page-head">
         <div>
           <div className="eyebrow">{t('Everything that comes in')}</div>
-          <h1>{t('Guests & party')}</h1>
+          <h1>{party ? t('Guests & party') : t('Guests')}</h1>
         </div>
       </header>
-      <PartyCard />
+      {party && <PartyCard />}
       <div className="tabs-inline">
         <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}>{t('Board')}</button>
         <button className={tab === 'links' ? 'on' : ''} onClick={() => setTab('links')}>{t('Guest links')}</button>
@@ -84,7 +85,7 @@ export function Orders({ filter, empty }: { filter?: (o: any) => boolean; empty?
           </ul>
           {o.note && <p className="small" style={{ background: 'var(--surface-2)', padding: '8px 10px', borderRadius: 10 }}>{t('“{note}”', { note: o.note })}</p>}
           {['new', 'accepted'].includes(o.status) && (
-            <div className="row">
+            <div className="btn-row">
               <button className="btn ghost danger sm" onClick={() => set(o.id, 'declined')}>
                 <X size={14} /> {o.guest_link_id || o.party_id ? t('Decline') : t('Can’t right now')}
               </button>

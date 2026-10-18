@@ -13,9 +13,21 @@ Abgeschaltete Bereiche („Was nutzt ihr?“) und für Gäste gesperrte Bereiche
 ## „Deine Leiste“ (pro Person)
 
 - **Heute** bleibt fest an Platz 1. Dazu bis zu **vier** Bereiche, in eigener Reihenfolge: Einkauf, Kochen, Aufgaben,
-  Vorrat, Geld, Wissen (Haushaltswissen). Der Assistent bleibt der runde Knopf unten rechts und ist kein Bereich.
-- Alles, was nicht in der Leiste ist, steht oben in **„Mehr“** (Haushaltswissen nicht doppelt: es hat seine Zeile unter
-  Haushalt). Auf dem iPad und im Desktop-Web zeigt die Seitenleiste dann genau die eigene Leiste, die übrigen Bereiche
+  Vorrat, Geld, Wissen (Haushaltswissen), **Bring mir was**, **Wünsche**, **Hausinfo**. Der Assistent
+  bleibt der runde Knopf unten rechts und ist kein Bereich.
+- Die zusätzlichen Bereiche (seit 18.10.2026) sind eigenständige Seiten, die man oft direkt braucht, die aber sonst in
+  „Mehr“ (Wissen, Bring mir was) oder hinter einer Tür stecken (Wünsche oben in Einkauf, Hausinfo oben in
+  Aufgaben). Wer Bring mir was jeden Abend nutzt oder WLAN-Code und Müllplan ständig braucht, holt sie nach unten.
+  Nicht wählbar sind Seiten, die nur Werkzeug oder Einstellung sind (Personen, Urlaub, Wo ist was?, Etiketten …), und
+  der Party-Modus (für den Start abgeschaltet; die alte Id `party` wird still verworfen).
+- Bring mir was folgt dem Modul `treats` („Was nutzt ihr?“). Bring mir was fehlt auf dem iPhone außerdem im
+  Ein-Personen-Haushalt (wie seine Zeile in „Mehr“).
+- Auf **Heute** gibt es dazu die Karte „Bring mir was“ (Schlüssel `orders` in `GET/PUT /api/list/today-order`): offene
+  Wünsche an dich und deine eigenen offenen Wünsche. Sie erscheint nur, solange etwas offen ist, und lässt sich dann wie
+  jede andere Karte unter „Karten anordnen“ verschieben (Web `Today.tsx` OrdersCard, iOS `TodayCardKey.orders`).
+- Alles, was nicht in der Leiste ist, steht oben in **„Mehr“** – nur die Hauptbereiche Einkauf, Kochen, Aufgaben, Vorrat,
+  Geld. Die zusätzlichen Bereiche erscheinen dort nicht doppelt, sie behalten ihre Zeile oder Tür. Ist ein zusätzlicher
+  Bereich in der Leiste, leuchtet er auf seinen Seiten (Web: `tabFor(path, own)`), sonst der Bereich, zu dem er gehört. Auf dem iPad und im Desktop-Web zeigt die Seitenleiste dann genau die eigene Leiste, die übrigen Bereiche
   folgen direkt darunter.
 - Ist ein gewählter Bereich abgeschaltet, fällt er einfach weg (die Leiste wird kürzer, kein leerer Tab).
 - **Wo einstellen:** Einstellungen › „Deine Leiste“ (iOS: Abschnitt Einstellungen in „Mehr“; Web: Mehr › Einstellungen ›
@@ -32,7 +44,8 @@ Abgeschaltete Bereiche („Was nutzt ihr?“) und für Gäste gesperrte Bereiche
 - Server: `user_prefs` Schlüssel `nav` (keine Migration nötig), `server/lib/nav-prefs.ts`.
   `GET /api/nav`, `PUT /api/nav { tabs: string[] | null }` (null = Standard), `GET /api/me` → `nav: { tabs, areas, slots }`.
   Unbekannte Ids werden still verworfen (ältere/neuere Apps), doppelte entfernt, höchstens vier.
-- Ids überall gleich: `shopping, cooking, tasks, stock, money, knowledge` (= `AppArea.rawValue` auf iOS).
+- Ids überall gleich: `shopping, cooking, tasks, stock, money, knowledge, orders, wishes, houseinfo`
+  (= `AppArea.rawValue` auf iOS). Pfade im Web: `/bestellen`, `/einkauf/wuensche`, `/hausinfo`.
 - Offline: die Wahl wirkt sofort auf dem Gerät (iOS `UserDefaults` `nav.tabs`, Web `localStorage` `tohuus.nav`) und wird
   mit einem „pending“-Merker beim nächsten `/api/me` an den Server geschickt.
 - Tests: `test/nav-prefs.test.ts` (Speicherung, API, pro Person), `test/nav-bar-web.test.ts` (Leiste, Seitenleiste, Mehr).

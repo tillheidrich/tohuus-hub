@@ -163,17 +163,15 @@ struct TreatsView: View {
                     }
                     switch o.status {
                     case "new":
-                        ViewThatFits(in: .horizontal) {
-                            HStack(spacing: Theme.Space.s2) { bringButton(o); cantButton(o) }
-                            VStack(alignment: .leading, spacing: Theme.Space.s2) { bringButton(o); cantButton(o) }
-                        }
+                        AdaptiveButtonRow { wide in bringButton(o, wide: wide); cantButton(o, wide: wide) }
                     case "accepted":
-                        HStack(spacing: Theme.Space.s2) {
-                            Text(o.byName == app.userName ? L("You’re bringing it") : o.statusLine)
-                                .font(.caption.weight(.semibold)).foregroundStyle(Theme.ink2)
-                            Spacer(minLength: 0)
-                            Button { Task { await answer(o, "done") } } label: { Label(L("Brought it"), systemImage: "checkmark") }
-                                .buttonStyle(.borderedProminent).tint(Theme.primary).controlSize(.small)
+                        let line = Text(o.byName == app.userName ? L("You’re bringing it") : o.statusLine)
+                            .font(.caption.weight(.semibold)).foregroundStyle(Theme.ink2)
+                        let brought = Button { Task { await answer(o, "done") } } label: { ButtonLabel(L("Brought it"), systemImage: "checkmark") }
+                            .buttonStyle(.borderedProminent).tint(Theme.primary).controlSize(.regular)
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: Theme.Space.s2) { line; Spacer(minLength: Theme.Space.s2); brought }
+                            VStack(alignment: .leading, spacing: Theme.Space.s2) { line.fixedSize(horizontal: false, vertical: true); brought }
                         }
                     case "done":
                         if o.thankedAt != nil {
@@ -193,13 +191,13 @@ struct TreatsView: View {
         }
     }
 
-    private func bringButton(_ o: TreatOrder) -> some View {
-        Button { Task { await answer(o, "accepted") } } label: { Label(L("I’ll bring it"), systemImage: "checkmark") }
+    private func bringButton(_ o: TreatOrder, wide: Bool = false) -> some View {
+        Button { Task { await answer(o, "accepted") } } label: { ButtonLabel(L("I’ll bring it"), systemImage: "checkmark", wide: wide) }
             .buttonStyle(.borderedProminent).tint(Theme.primary).controlSize(.regular)
     }
 
-    private func cantButton(_ o: TreatOrder) -> some View {
-        Button(L("Can’t right now")) { declining = o }.buttonStyle(.bordered).controlSize(.regular)
+    private func cantButton(_ o: TreatOrder, wide: Bool = false) -> some View {
+        Button { declining = o } label: { ButtonLabel(L("Can’t right now"), wide: wide) }.buttonStyle(.bordered).controlSize(.regular)
     }
 
     // MARK: my own wishes

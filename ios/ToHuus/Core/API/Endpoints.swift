@@ -365,9 +365,13 @@ extension APIClient {
         _ = try await send("POST", "api/notify/presence", json: ["home": home, "source": "app"], as: Ignored.self)
     }
     /// POST /api/push/apns/test → { sent } – a test notification to this person's devices
-    func sendTestPush() async throws -> Int {
+    struct TestPushResult { var sent: Int; var configured: Bool; var devices: Int; var reasons: [String] }
+    /// POST /api/push/apns/test – also says why nothing arrived (no Apple key on the server, no iPhone registered, Apple refused)
+    func sendTestPush() async throws -> TestPushResult {
         let r = try await send("POST", "api/push/apns/test", json: [String: String](), as: JSONValue.self)
-        return r["sent"]?.int ?? 0
+        let sent = r["sent"]?.int ?? 0
+        return TestPushResult(sent: sent, configured: r["configured"]?.bool ?? true, devices: r["devices"]?.int ?? sent,
+                              reasons: r["reasons"]?.array?.compactMap(\.string) ?? [])
     }
 
     /// PUT /api/notify/prefs { mailOff } – all optional mails for this person off/on

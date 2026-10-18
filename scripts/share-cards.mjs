@@ -160,6 +160,62 @@ const BRAND = [
     title: 'Im Kopf & nebenbei erledigt.',
     text: 'Was du im Kopf trägst oder nebenbei erledigst, sehen die anderen, wenn du magst. Und sagen mit einem Tipp: Danke.',
   },
+  // Build 16 (18 Oct 2026): what is new. Brand cards describe how ToHuus is built, no effect claims, no names.
+  {
+    slug: 'brand-haushaltswissen', eyebrow: 'Haushaltswissen', value: 'Steht drin.',
+    title: 'Schuhgröße, Rollo-Maß, Zählerstand: an einem Ort.',
+    text: 'Was sonst nur einer im Kopf hat, fragt ihr jetzt ToHuus. Zu pflegen gibt es nichts.',
+  },
+  {
+    slug: 'brand-kontext', eyebrow: 'KI braucht Kontext', value: 'Kontext.',
+    title: 'Auch die beste KI rät, solange sie nicht weiß, was bei euch gilt.',
+    text: 'ToHuus ist das Gedächtnis, mit dem der Assistent und deine eigene KI etwas anfangen können.',
+  },
+  {
+    slug: 'brand-notizen', eyebrow: 'Ohne Abtippen', value: 'Einfügen.',
+    title: 'Notizen und Listen rein, ohne abzutippen.',
+    text: 'Text einfügen oder eine Liste wählen. Du siehst vorher alles und sicherst es jederzeit als Datei.',
+  },
+  {
+    slug: 'brand-leiste', eyebrow: 'Deine Leiste', value: 'Deins.',
+    title: 'Die Leiste unten so, wie du lebst.',
+    text: 'Heute bleibt vorn, den Rest wählst du selbst: Geld, Wissen, Bring mir was oder Hausinfo.',
+  },
+  {
+    slug: 'brand-tonne', eyebrow: 'Demnächst', value: '17 Uhr.',
+    title: 'Die Tonne steht schon am Vorabend auf Heute.',
+    text: 'Die Abfuhrtermine kommen auf Wunsch aus eurem Kalender. Ersetzen muss ToHuus ihn dafür nicht.',
+  },
+  {
+    slug: 'brand-rueckgaengig', eyebrow: 'Aus Versehen', value: 'Zurück.',
+    title: 'Falsch abgehakt? Ein Tipp, und es ist wieder da.',
+    text: 'Alles lässt sich zurücknehmen, auch was der Assistent eingetragen hat.',
+  },
+  {
+    slug: 'brand-bring-mir-was', eyebrow: 'Bring mir was', value: 'Tee?',
+    title: 'Auf dem Sofa festgesessen? Wünsch dir was.',
+    text: 'Wer kann, sagt „Ich bring’s“. Ohne Punkte und ohne Liste, wer was gebracht hat.',
+  },
+  {
+    slug: 'brand-eigene-ki', eyebrow: 'Eigener Assistent', value: 'MCP.',
+    title: 'Claude, ChatGPT und Co. wissen, was bei euch ansteht.',
+    text: 'Über MCP verbunden, nach denselben Regeln wie in der App. Codes aus der Hausinfo nie.',
+  },
+  {
+    slug: 'brand-ki-grenze', eyebrow: 'Faire KI-Grenze', value: '800',
+    title: 'Nachrichten in voller Länge im Monat. Die Grenze steht offen da.',
+    text: 'Mit Plus und in der Testphase. Pausiert die KI, laufen Liste, Aufgaben und Wissen weiter.',
+  },
+  {
+    slug: 'brand-14-tage', eyebrow: 'Ausprobieren', value: '14 Tage.',
+    title: 'Alles testen, ohne Zahlungsdaten.',
+    text: 'Danach Abo oder nur noch lesen, gelöscht wird nichts. Selbst gehostet ist ToHuus kostenlos.',
+  },
+  {
+    slug: 'brand-selbst-hosten', eyebrow: 'Selbst hosten', value: '0 €.',
+    title: 'ToHuus auf dem eigenen Server.',
+    text: 'Ein Docker-Container, eine SQLite-Datei, AGPL-3.0. KI nur, wenn du willst.',
+  },
 ].map((c) => ({ ...c, kind: 'brand' }));
 
 const CARDS = [...FACTS, ...BRAND];

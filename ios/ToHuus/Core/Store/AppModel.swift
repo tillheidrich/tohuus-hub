@@ -26,7 +26,18 @@ final class AppModel {
     var paywallReason: String?
     func openPaywall(_ reason: String? = nil) {
         paywallReason = reason
-        showPaywall = true
+        afterMoreCloses { self.showPaywall = true }
+    }
+    func openSearch() { afterMoreCloses { self.showSearch = true } }
+    /// Mehr is a sheet; a second sheet from the root never appears on top of it (buttons there seemed dead).
+    /// Close Mehr first, then open the next one once the dismiss animation is through.
+    private func afterMoreCloses(_ open: @escaping @MainActor () -> Void) {
+        guard showMore else { return open() }
+        showMore = false
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            open()
+        }
     }
     /// global search (GlobalSearchView) and the Mehr sheet – opened from the magnifier and the avatar on every root screen
     var showSearch = false

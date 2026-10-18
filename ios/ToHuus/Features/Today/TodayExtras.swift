@@ -90,7 +90,7 @@ extension APIClient {
 
 /// The cards of Heute that can be arranged (server list2.ts TODAY_CARDS) – the web's default order.
 enum TodayCardKey: String, CaseIterable, Identifiable {
-    case rhythm, tasks, list, still, cook, money, pulse
+    case rhythm, tasks, list, still, cook, money, pulse, orders
     var id: String { rawValue }
 
     var title: String {
@@ -102,6 +102,7 @@ enum TodayCardKey: String, CaseIterable, Identifiable {
         case .cook: return L("Cook today?")
         case .money: return L("Money")
         case .pulse: return L("One question for the week")
+        case .orders: return L("Treats")
         }
     }
 
@@ -114,6 +115,7 @@ enum TodayCardKey: String, CaseIterable, Identifiable {
         case .cook: return "fork.knife"
         case .money: return "eurosign.circle"
         case .pulse: return "questionmark.bubble"
+        case .orders: return "hand.raised"
         }
     }
 

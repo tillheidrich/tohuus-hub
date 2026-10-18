@@ -22,6 +22,31 @@ struct HelpCenterView: View {
 
     private var topics: [Topic] {
         var t: [Topic] = [
+            Topic(id: "knowledge", symbol: "brain", title: L("Household knowledge: sizes, measurements, meter readings"),
+                  lead: L("What only one person used to know – now everyone asks ToHuus. Nothing to maintain."),
+                  steps: [
+                      L("Knowledge (in More or in your bar): type a sentence like “Mika shoe size 31” or “Living room blind 120 x 160” – this works without AI too."),
+                      L("Something changed? Just enter the new value. The old one stays in the history with its date."),
+                      L("Already in a note? Menu “…” › Import: paste text from notes or emails, or pick a list (Excel, Numbers, Google Sheets as CSV, a text file). You see everything before it is saved."),
+                      L("Export: everything or what the search shows, as Markdown, CSV or JSON – “Save to Files” keeps a copy."),
+                      L("Codes and Wi-Fi belong in the house info. Health details stay private and only reach an AI if your household allows it."),
+                  ], slug: "haushaltswissen"),
+            Topic(id: "bar", symbol: "rectangle.bottomthird.inset.filled", title: L("Your bar"),
+                  lead: L("Which areas sit at the bottom – everyone chooses their own."),
+                  steps: [
+                      L("Touch and hold the bar, or tap “Adjust the bar” in More."),
+                      L("The green plus adds an area – Money, Knowledge, Bring me something, Wishes or House info. The red minus removes one."),
+                      L("Drag the handles to reorder. “Back to the start” resets it. Today always stays first."),
+                  ], slug: "deine-leiste"),
+            Topic(id: "coming", symbol: "calendar.badge.clock", title: L("Coming up, the bin and undo"),
+                  lead: L("What's next – right on Today, without opening a calendar."),
+                  steps: [
+                      L("“Coming up” on Today shows tomorrow and the next days, and who has taken something on."),
+                      L("The bin appears the evening before with “tonight: put out” – from 5 pm at the very top. On Fridays and Saturdays it looks two days ahead."),
+                      L("Collection dates can come from your calendar: Tasks › Read your existing calendar."),
+                      L("Private tasks can go into a calendar of your own: Tasks › Read your existing calendar › “Your private tasks”."),
+                      L("Ticked off by mistake? Tap “Undo” and it's back."),
+                  ], slug: "aufgaben"),
             Topic(id: "iphone", symbol: "iphone", title: L("ToHuus on your iPhone"),
                   lead: L("Share sheet, widgets, Apple Watch and notifications – the shortcuts that save the most taps."),
                   steps: [
@@ -89,12 +114,13 @@ struct HelpCenterView: View {
                            ]))
         }
         if app.moduleOn("guests") {
-            t.append(Topic(id: "guests", symbol: "party.popper", title: L("Guests, party & babysitter"),
-                           lead: L("Guests ask for what is really there – no app, no account."),
+            t.append(Topic(id: "guests", symbol: "person.badge.key", title: L("Guests & babysitter"),
+                           lead: L("Visitors, the babysitter or grandparents get a link – no app, no account."),
                            steps: [
-                               L("Treats › Party › “Start a party”: pick the menu, the party ends by itself."),
-                               L("Guests scan the QR code and order; you get a push and tap “Ready”. Stock is booked by itself."),
-                               L("Visitors, the babysitter or grandparents: Treats › Guests – a link with what they may ask for, chosen places read-only and a note."),
+                               L("Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note."),
+                               L("Share the link or show the QR code. Give it an end date or revoke it at any time."),
+                               L("Someone who is here often gets a permanent guest account with a level that decides what they see."),
+                               L("Party mode is off at first. If you need it, switch it on under Settings › What do you use?"),
                            ], slug: "gaeste"))
         }
         t.append(Topic(id: "people", symbol: "person.3", title: L("People: pictures, children, permanent guests, favourites"),
@@ -114,10 +140,11 @@ struct HelpCenterView: View {
         t.append(Topic(id: "mcp", symbol: "bubble.left.and.text.bubble.right", title: L("Claude, ChatGPT & co. (MCP)"),
                        lead: L("Your AI assistant can read and update the household – e.g. a receipt photo: “put this into the household app”."),
                        steps: [
-                           L("Settings › Access & AI › New access › “AI assistant”."),
-                           L("Copy the MCP link that is shown."),
-                           L("Claude: Settings › Connectors › “Add custom connector”, paste the link. ChatGPT: Settings › Connectors (developer mode)."),
-                           L("Treat the link like a password. If it leaks, delete the access in the app – it stops working at once."),
+                           L("Claude: Settings › Connectors › “Add custom connector”. ChatGPT: Settings › Connectors (developer mode on some plans)."),
+                           L("Paste the MCP address from the help page below. On your own server it is your server's address with /mcp at the end."),
+                           L("Sign in with your ToHuus account, pick the household and whether the assistant may only read or also change things."),
+                           L("It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Access & AI lists every connection; end one there and it stops at once."),
+                           L("Your own assistant uses its own AI – it doesn't use up the messages of the ToHuus assistant."),
                        ], slug: "claude-chatgpt"))
         if app.moduleOn("ha") {
             t.append(Topic(id: "ha", symbol: "house.circle", title: L("Home Assistant"),
@@ -127,6 +154,15 @@ struct HelpCenterView: View {
                                L("Settings › Access & AI › New access › “Home Assistant” – copy the token."),
                                L("In Home Assistant add the ToHuus Hub integration and paste this address and the token."),
                            ], slug: "home-assistant"))
+        }
+        if app.isCloud {
+            t.append(Topic(id: "ailimits", symbol: "gauge.with.dots.needle.33percent", title: L("Fair AI limits"),
+                           lead: L("Plus and the trial: 800 full-length messages a month. Everything else keeps working when AI pauses."),
+                           steps: [
+                               L("After 800 messages replies get shorter; from 1,500 AI pauses until the month ends. Household: 100 messages a month."),
+                               L("A cost cap per household can pause AI earlier – for example after a great many receipt photos."),
+                               L("During a pause the list, tasks, stock, money, knowledge and short sentences to the assistant keep working; receipt photos are read by text recognition. Nothing is charged extra."),
+                           ], slug: "ki-grenzen"))
         }
         if !app.isCloud {
             t.append(Topic(id: "backups", symbol: "externaldrive", title: L("Backups & your data"),

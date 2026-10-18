@@ -126,4 +126,10 @@ export const party: Record<string, string> = {
   '{n} open orders': '{n} offene Bestellungen',
   '{n} orders are still open': '{n} Bestellungen sind noch offen',
   '{n} things are on the shopping list': '{n} Sachen stehen auf der Einkaufsliste',
+  // 18 Oct 2026: party mode is its own switch, the pickup hint is the host's own (docs/party-modus.md)
+  'Guest links and orders from guests.': 'Gäste-Links und was Gäste sich wünschen.',
+  'Guests order by QR code, a kitchen and TV board. For bigger parties.': 'Gäste bestellen per QR-Code, dazu Küchen- und TV-Anzeige. Für größere Feiern.',
+  'Hint under “Scan & order”': 'Hinweis unter „Scannen & bestellen“',
+  'We’ll let you know when it’s ready': 'Wir sagen Bescheid, wenn es fertig ist',
+  'Shown on the TV next to the QR code. E.g. “Grab it at the bar” or “We’ll bring it to you”.': 'Steht auf dem Fernseher neben dem QR-Code. Zum Beispiel „Holt’s euch an der Bar“ oder „Wir bringen’s euch“.',
 };

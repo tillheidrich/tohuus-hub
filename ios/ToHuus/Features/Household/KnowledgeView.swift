@@ -37,9 +37,14 @@ struct KnowledgeView: View {
         }
     }
 
-    /// examples for the empty state – a tap puts them into the field
-    private var examples: [String] {
-        [L("Mika shoe size 28"), L("Blind ground floor 120 x 160"), L("Cooker hood filter size 20 x 30"), L("Electricity meter number 1ESY1160"), L("Paediatrician 04181 12345")]
+    /// examples for the empty state, grouped like the cards later – a tap puts one into the field (same as the web)
+    private var exampleGroups: [(title: String, symbol: String, items: [String])] {
+        [
+            (L("Kids"), "figure.and.child.holdinghands", [L("Mika shoe size 28"), L("Mira jacket size 116")]),
+            (L("House"), "house", [L("Blind living room 120 x 160"), L("Cooker hood filter 20 x 30"), L("Main water tap in the basement, on the left")]),
+            (L("Numbers"), "number", [L("Electricity meter 1ESY1160"), L("Paediatrician 04181 12345")]),
+            (L("Likes and dislikes"), "heart", [L("Sam doesn’t eat mushrooms")]),
+        ]
     }
 
     var body: some View {
@@ -85,27 +90,25 @@ struct KnowledgeView: View {
             } else {
                 HStack { Spacer(); ProgressView(); Spacer() }
             }
+            if !guest, list != nil { fileSection }
             if !guest {
                 Section {} footer: { Text(L("ToHuus is no notebook and no calendar: only what belongs to your home. Codes and passwords go into House info › Codes.")) }
             }
         }
         .themedList()
         .searchable(text: $search, prompt: L("Search, e.g. shoe size"))
-        .navigationTitle(L("What ToHuus remembers"))
+        .navigationTitle(L("Knowledge"))
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if !guest {
-                ToolbarItem(placement: .primaryAction) {
+                // labelled, not a bare "…" (Till 18 Oct 2026) – the rows below say more
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(L("Import")) { importing = true }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { editing = KnowledgeDraft() } label: { Image(systemName: "plus") }
                         .accessibilityLabel(L("Add yourself"))
                 }
-            }
-            ToolbarItem(placement: .secondaryAction) {
-                Menu {
-                    if !guest { Button { importing = true } label: { Label(L("Import"), systemImage: "square.and.arrow.down") } }
-                    Button { exporting = true } label: { Label(L("Export"), systemImage: "square.and.arrow.up") }
-                        .disabled((list?.entries.isEmpty ?? true))
-                } label: { Image(systemName: "ellipsis.circle") }
-                .accessibilityLabel(L("Import and export"))
             }
         }
         .sheet(isPresented: $importing) { KnowledgeImportSheet(api: api) { msg, undo in done(msg, undo) } }
@@ -159,21 +162,61 @@ struct KnowledgeView: View {
     }
 
     private var emptySection: some View {
-        Section {
-            EmptyStateView(systemImage: "brain", title: guest ? L("Nothing shared with guests yet") : L("What do you all know about your home?"),
-                           message: guest ? nil : L("Sizes, measurements, numbers. Write a sentence above, ToHuus sorts it. For example:"))
-                .listRowBackground(Color.clear)
+        Group {
+            Section {
+                EmptyStateView(systemImage: "brain", title: guest ? L("Nothing shared with guests yet") : L("What do you all know about your home?"),
+                               message: guest ? nil : L("Sizes, measurements, numbers. Write a sentence above, ToHuus sorts it. For example:"))
+            }
+            .listRowBackground(Color.clear)
             if !guest {
-                FlowLayout(spacing: 8) {
-                    ForEach(examples, id: \.self) { x in
-                        Button(x) { text = x }
-                            .buttonStyle(.bordered)
-                            .tint(Theme.primary)
-                    }
+                Section {
+                    // why it helps – and why even the best AI needs to know your home
+                    Text(L("Whoever keeps it all in their head gets asked all the time. Now you ask ToHuus. And the assistant is only as good as what it knows about your home."))
+                        .font(.subheadline).foregroundStyle(Theme.ink2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Text(L("Doctors and other health things stay with you unless you share them.")).font(.caption).foregroundStyle(Theme.ink3)
+                Section {
+                    ForEach(exampleGroups, id: \.title) { g in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label(g.title, systemImage: g.symbol).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink2)
+                            FlowLayout(spacing: 8) {
+                                ForEach(g.items, id: \.self) { x in
+                                    Button(x) { text = x }
+                                        .buttonStyle(.bordered)
+                                        .tint(Theme.primary)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                } header: { Text(L("Tap one to try it")) } footer: { Text(L("Doctors and other health things stay with you unless you share them.")) }
             }
         }
+    }
+
+    /// import and export as visible rows – hidden in a "…" menu nobody found them
+    private var fileSection: some View {
+        Section {
+            Button { importing = true } label: {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Import")).foregroundStyle(Theme.ink)
+                        Text(L("Paste text from Notes or e-mails, or pick a list (CSV, text; from Excel or Numbers just copy the cells). You see everything first."))
+                            .font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                } icon: { Image(systemName: "square.and.arrow.down") }
+            }
+            if !(list?.entries.isEmpty ?? true) {
+                Button { exporting = true } label: {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("Save as file")).foregroundStyle(Theme.ink)
+                            Text(L("Markdown, CSV or JSON – for a backup or other apps.")).font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    } icon: { Image(systemName: "square.and.arrow.up") }
+                }
+            }
+        } header: { Text(L("Already have notes?")) }
     }
 
     private func load() async {
