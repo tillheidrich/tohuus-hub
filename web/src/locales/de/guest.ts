@@ -28,7 +28,6 @@ export const guest: Record<string, string> = {
   'No links yet.': 'Noch keine Links.',
   'Guests don’t need an account. They only see what you share – never quantities, purchases or other rooms.': 'Gäste brauchen kein Konto. Sie sehen nur, was du freigibst – nie Mengen, Einkäufe oder andere Räume.',
   'Guest link': 'Gäste-Link',
-  'Party / visitors': 'Party / Besuch',
   'Babysitter / family': 'Babysitter / Familie',
   'What’s it for?': 'Wofür?',
   'Barbecue, babysitter, grandma …': 'Grillabend, Babysitter, Oma …',

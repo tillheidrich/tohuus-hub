@@ -260,7 +260,7 @@ async function legacyToday(): Promise<Today> {
   }
   const notices: Notice[] = [];
   for (const i of o.imports ?? []) notices.push({ kind: 'import', text: i.title, to: `/import/${i.id}` });
-  for (const x of o.orders ?? []) if (!x.party_id) notices.push({ kind: 'order', text: x.guest_name, to: x.guest_link_id ? '/bar' : '/bestellen' });
+  for (const x of o.orders ?? []) notices.push({ kind: 'order', text: x.guest_name, to: '/bestellen' });
   return {
     household: o.household,
     rhythm: [],

@@ -91,6 +91,10 @@ struct KnowledgeView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }
             }
             if !guest, list != nil { fileSection }
+            // „Gut zu wissen“ (18 Oct 2026): quiet, at the end of the list, not while searching
+            if !guest, list != nil, search.trimmingCharacters(in: .whitespaces).isEmpty {
+                FactCard(api: api, topic: "knowledge", inList: true)
+            }
             if !guest {
                 Section {} footer: { Text(L("ToHuus is no notebook and no calendar: only what belongs to your home. Codes and passwords go into House info › Codes.")) }
             }

@@ -68,7 +68,7 @@ export interface Printer {
   cut: pos.Cut;
   darkness: number;
   feed_lines: number;
-  auto_orders: 'off' | 'party' | 'all';
+  auto_orders: 'off' | 'all';
   auto_care: boolean;
   auto_since: string | null;
   is_default: boolean;
@@ -77,7 +77,8 @@ export interface Printer {
   created_at: string;
 }
 
-const toPrinter = (r: any): Printer => ({ ...r, paper: r.paper === 58 ? 58 : 80, auto_care: Boolean(r.auto_care), is_default: Boolean(r.is_default) });
+// 'party' (only orders of the former party mode, column CHECK still allows it) reads as 'off'
+const toPrinter = (r: any): Printer => ({ ...r, paper: r.paper === 58 ? 58 : 80, auto_orders: r.auto_orders === 'all' ? 'all' : 'off', auto_care: Boolean(r.auto_care), is_default: Boolean(r.is_default) });
 
 export function listPrinters(): Printer[] {
   return (db.prepare('SELECT * FROM print_printers ORDER BY is_default DESC, name, id').all() as any[]).map(toPrinter);
@@ -107,7 +108,7 @@ export interface PrinterInput {
   cut?: pos.Cut;
   darkness?: number;
   feed_lines?: number;
-  auto_orders?: 'off' | 'party' | 'all';
+  auto_orders?: 'off' | 'all';
   auto_care?: boolean;
   is_default?: boolean;
 }
@@ -444,7 +445,7 @@ export const channelLabel = (c: SendChannel) => ({ telegram: 'Telegram', matrix:
 
 const inflight = new ScopedSet<string>();
 
-/** New orders → every printer with auto-print on ("party" = only orders that belong to a party). */
+/** New wishes („Bring mir was“, from home and from guests) → every printer with auto-print on. */
 export async function autoPrintOrders() {
   const printers = listPrinters().filter((p) => p.auto_orders !== 'off');
   if (!printers.length) return 0;
@@ -453,7 +454,7 @@ export async function autoPrintOrders() {
     const rows = db
       .prepare(
         `SELECT o.id FROM orders o WHERE o.status IN ('new','accepted') AND o.created_at >= COALESCE(?, o.created_at)
-           AND o.created_at > datetime('now', '-6 hours') ${p.auto_orders === 'party' ? 'AND o.party_id IS NOT NULL' : ''}
+           AND o.created_at > datetime('now', '-6 hours')
            AND NOT EXISTS (SELECT 1 FROM print_jobs j WHERE j.printer_id = ? AND j.auto_key = 'order:' || o.id)
          ORDER BY o.id LIMIT 10`,
       )

@@ -6,6 +6,8 @@ import SwiftUI
 struct ImportReviewView: View {
     let store: ServerStore
     let importId: Int
+    /// open the "add discount or deposit" / "read again with AI" step right away (receipt capture card)
+    var start: ReceiptFixStart? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var imp: ImportDetail?
     @State private var places: [Place] = []
@@ -35,6 +37,9 @@ struct ImportReviewView: View {
                     if imp.kind != "shelf", let report {
                         RecognitionCardView(store: store, importId: importId, readonly: imp.readonly, report: report) {
                             Task { await load() }
+                        }
+                        if !imp.readonly {
+                            ReceiptFixSection(store: store, imp: imp, report: report, onChanged: { await load() }, start: start)
                         }
                     }
                     let look = imp.lines.filter(\.needsLook)
@@ -218,7 +223,7 @@ struct ImportReviewView: View {
                 if l.statusLabel != nil || l.note != nil || ["learned", "suggested", "unmatched"].contains(grade ?? "") {
                     FlowLayout(spacing: 6) {
                         if let s = l.statusLabel { StatusPill(text: s, status: l.statusTone) }
-                        GradeBadge(grade: grade)
+                        GradeBadge(grade: grade, isNew: report?.isNew(l.id) ?? false)
                         if let n = l.note { Text(n).font(.caption).foregroundStyle(Theme.ink3) }
                     }
                 }

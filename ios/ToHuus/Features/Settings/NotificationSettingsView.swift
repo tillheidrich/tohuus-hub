@@ -410,6 +410,9 @@ struct NotificationSettingsView: View {
             } else if r.devices == 0 {
                 testResult = PushManager.shared.lastError.map { LF("This iPhone couldn't register: %@", $0) }
                     ?? L("No iPhone of yours is registered yet. Close and reopen the app, then try again.")
+            } else if r.reasons.contains("BadEnvironmentKeyInToken") {
+                // Apple's code in words (server: apns.ts apnsReasonText)
+                testResult = L("The Apple key on the server is not valid for this environment (sandbox/production). Whoever runs the server needs an APNs key for “Sandbox & Production”.")
             } else {
                 testResult = LF("Apple didn't deliver the message (%@).", r.reasons.joined(separator: ", "))
             }

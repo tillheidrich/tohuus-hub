@@ -105,8 +105,6 @@ const GuestBanner = page(() => import('./people/People'), 'GuestBanner');
 const PausedScreen = page(() => import('./people/People'), 'PausedScreen');
 const KidMode = page(() => import('./pages/Kids'), 'KidMode');
 const Guest = page(() => import('./pages/Guest'), 'Guest');
-const PartyBoard = page(() => import('./pages/Party'), 'PartyBoard');
-const PartyPair = page(() => import('./pages/Party'), 'PartyPair');
 const Invite = page(() => import('./pages/Invite'), 'Invite');
 const AuthLanding = page(() => import('./pages/AuthLanding'), 'AuthLanding');
 const Login = page(() => import('./pages/Login'), 'Login');
@@ -131,8 +129,6 @@ export function App() {
   const kidTablet = kidLock();
   if (kidTablet) return <Navigate to={`/kids/${kidTablet}`} replace />;
   if (loc.pathname.startsWith('/g/')) return wrap(<Routes><Route path="/g/:token" element={<Guest />} /></Routes>);
-  // party kiosk board and TV pairing work without login
-  if (loc.pathname === '/party' || loc.pathname.startsWith('/party/')) return wrap(<Routes><Route path="/party" element={<PartyPair />} /><Route path="/party/board/:token" element={<PartyBoard />} /><Route path="*" element={<PartyPair />} /></Routes>);
   if (loc.pathname.startsWith('/einladung/')) return wrap(<Routes><Route path="/einladung/:token" element={<Invite />} /></Routes>);
   // e-mail links: sign-in link, confirm address, new password (area: auth)
   if (loc.pathname.startsWith('/anmelden/')) return wrap(<Routes><Route path="/anmelden/:kind" element={<AuthLanding />} /></Routes>);

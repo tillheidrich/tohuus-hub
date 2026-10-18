@@ -55,6 +55,8 @@ export function overview() {
     .all() as any[];
   const imports = db.prepare(`SELECT id, kind, title, created_at, (SELECT COUNT(*) FROM import_lines l WHERE l.import_id = i.id) AS lines FROM imports i WHERE status = 'review' AND private_for IS NULL ORDER BY id DESC`).all();
   const orders = db.prepare(`SELECT o.*, (SELECT json_group_array(json_object('name', name, 'qty', qty, 'options', json(options))) FROM order_lines WHERE order_id = o.id) AS lines FROM orders o WHERE status IN ('new','accepted') ORDER BY id DESC`).all() as any[];
+  // rows of the former party mode stay in the database but are never shown (removed 18 Oct 2026)
+  const open = orders.filter((o) => !o.party_id).map(({ party_id: _legacy, ...o }) => o);
   const activity = db
     .prepare(`SELECT m.*, p.name, p.unit, p.track_mode FROM movements m JOIN products p ON p.id = m.product_id ORDER BY m.id DESC LIMIT 8`)
     .all();
@@ -73,13 +75,13 @@ export function overview() {
       expired: tracked.filter((p) => p.status === 'expired').length,
       shopping: shopping.length,
       imports: imports.length,
-      orders: orders.length,
+      orders: open.length,
     },
     attention,
     locations: locs,
     shopping: shopping.slice(0, 6),
     imports,
-    orders: orders.map((o) => ({ ...o, lines: JSON.parse(o.lines) })),
+    orders: open.map((o) => ({ ...o, lines: JSON.parse(o.lines) })),
     activity,
     planned,
     tonight: tonight.map((s) => ({

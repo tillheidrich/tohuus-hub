@@ -294,8 +294,11 @@ extension APIClient {
 
     /// POST /api/imports/lines { lines, source: 'ocr-device', mode } – text Apple Vision read on the iPhone.
     /// receipt → an import in review; list → suggested items.
-    func importLines(_ lines: [String], mode: String) async throws -> LinesImport {
-        try await send("POST", "api/imports/lines", json: ["lines": lines, "source": "ocr-device", "mode": mode])
+    func importLines(_ lines: [String], mode: String, alt: [String]? = nil) async throws -> LinesImport {
+        var body: [String: Any] = ["lines": lines, "source": "ocr-device", "mode": mode]
+        // the same receipt tidied by Apple Intelligence: the server uses it only when it reads better
+        if let alt, !alt.isEmpty { body["alt"] = alt }
+        return try await send("POST", "api/imports/lines", json: body)
     }
 
     func applyImport(_ id: Int) async throws { _ = try await send("POST", "api/imports/\(id)/apply", as: Ignored.self) }

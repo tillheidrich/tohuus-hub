@@ -11,20 +11,14 @@ export const menu: Record<string, string> = {
   'The order menu: coffee, drinks, snacks': 'Die Bestellkarte: Kaffee, Getränke, Snacks',
   'Everything people can order lives in one menu – things from your stock and things that are simply there, like tap water or coffee.':
     'Alles, was man bestellen kann, steht auf einer Karte – Sachen aus dem Bestand und Sachen, die einfach da sind, wie Leitungswasser oder Kaffee.',
-  'Order › “Edit menu” (also in Settings › Household and in the party setup).': 'Bestellen › „Karte bearbeiten“ (auch unter Einstellungen › Haushalt und beim Party-Start).',
   '“Add from stock”: crisps, cola, ice cream – they show “all gone” (or disappear) when they run out, and serving books them out.':
     '„Aus dem Bestand“: Chips, Cola, Eis – sie zeigen „alle“ (oder verschwinden), wenn nichts mehr da ist, und beim Servieren wird ausgebucht.',
   '“Menu-only item”: tap water, coffee, cappuccino – never counted. Link up to three ingredients from stock (milk, coffee): when one runs low it says “maybe not”.':
     '„Nur auf der Karte“: Leitungswasser, Kaffee, Cappuccino – wird nie gezählt. Verknüpf bis zu drei Zutaten aus dem Bestand (Milch, Kaffee): Wird eine knapp, steht da „vielleicht nicht“.',
   'Choices like size, milk or sugar: single or several, required or optional, with a preselected default.':
     'Auswahl wie Größe, Milch oder Zucker: eins oder mehrere, Pflicht oder freiwillig, mit Vorauswahl.',
-  'Who sees it: everyone, only at parties, only for family – or hidden for now. Templates get you started in one tap.':
-    'Wer es sieht: alle, nur bei Partys, nur die Familie – oder erst mal versteckt. Mit Vorlagen geht der Start mit einem Tipp.',
   'Open the menu': 'Karte öffnen',
-  Parties: 'Partys',
   Hidden: 'Versteckt',
-  'Everyone who can order sees it – family, guests and parties.': 'Alle, die bestellen können, sehen es – Familie, Gäste und Partys.',
-  'Only while a party is on – handy for the sparkling wine.': 'Nur während einer Party – praktisch für den Sekt.',
   'Only household members see it, not guests.': 'Nur die Familie sieht es, Gäste nicht.',
   'Nobody sees it right now. It stays here for later.': 'Gerade sieht es niemand. Es bleibt hier für später.',
   'Order & guests': 'Bestellen & Gäste',
@@ -34,11 +28,9 @@ export const menu: Record<string, string> = {
   'Remove “{name}”? Its {n} items move to “{other}”.': '„{name}“ entfernen? Die {n} Sachen darin kommen zu „{other}“.',
   'Remove “{name}” and take its {n} items off the menu?': '„{name}“ entfernen und die {n} Sachen darin von der Karte nehmen?',
   'The menu': 'Die Karte',
-  'What the family, guests and parties can order. Changes show up right away.': 'Was Familie, Gäste und Partys bestellen können. Änderungen sind sofort sichtbar.',
   'Only the household can change the menu – you can look at it here.': 'Die Karte kann nur der Haushalt ändern – anschauen kannst du sie hier.',
   'Add from stock': 'Aus dem Bestand',
   'Menu-only item': 'Nur auf der Karte',
-  'A party is on – items for “Parties” are visible right now.': 'Gerade läuft eine Party – Sachen für „Partys“ sind jetzt sichtbar.',
   'The menu couldn’t be loaded': 'Die Karte konnte nicht geladen werden',
   'Nothing on the menu yet': 'Noch nichts auf der Karte',
   'Start with a template, add drinks and snacks from your stock, or make your own items like tap water or coffee.':

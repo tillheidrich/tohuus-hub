@@ -272,7 +272,6 @@ struct PrintersView: View {
 
     private func autoOrdersLabel(_ a: String?) -> String {
         switch a {
-        case "party": return L("during parties")
         case "all": return L("always")
         default: return L("off")
         }
@@ -389,7 +388,6 @@ struct PrinterEditSheet: View {
                 Section {
                     Picker(L("Print new orders automatically"), selection: $autoOrders) {
                         Text(L("off")).tag("off")
-                        Text(L("during parties")).tag("party")
                         Text(L("always")).tag("all")
                     }
                     Toggle(L("Print care tasks when they are due"), isOn: $autoCare).tint(Theme.primary)

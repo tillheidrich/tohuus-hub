@@ -108,8 +108,8 @@ A complete reference with where each feature sits in the app is in [docs/feature
 - **Profile pictures**: a photo, a drawn animal or initials.
 - **Kids without a login**: a paired kid tablet shows pictures of what a child may wish for. Every wish waits for a parent.
 - **Permanent guests** (the aunt who is often there, a regular babysitter) sign in with their own account at one of four levels, with temporary overrides. See [docs/guests-and-permissions.md](docs/guests-and-permissions.md).
-- **Guests and party mode**: the same mechanics for visitors, the babysitter and grandparents – a link or QR code lets guests ask for what is actually there. A party adds a TV board with a join QR, a kitchen view and an automatic end.
-- **Menu editor**: decide what the household, guests and parties can ask for, from stock or menu-only (tap water, cappuccino), with optional ingredients that are booked out per serving.
+- **Guests**: the same „Bring mir was“ for visitors, the babysitter and grandparents – a link or QR code lets guests wish for something that is actually there, and it lands in the same list as the wishes from home.
+- **Menu editor**: decide what the household and guests can ask for, from stock or menu-only (tap water, cappuccino), with optional ingredients that are booked out per serving.
 - **Babysitter link**: read-only "where is what" for chosen places, with a note (emergency numbers, bedtime) and an optional list of voice commands the sitter may use. Locks, alarms, cameras and garage doors are never on that list.
 
 ### Trips
@@ -164,7 +164,7 @@ Details: [docs/data-and-reset.md](docs/data-and-reset.md).
 | Where-is-what with exact spot and babysitter link | ✅ | no | no | no | no |
 | Shopping list with store order, offline, live sync | ✅ | basic | ✅ | basic | ✅ |
 | Recipes, week plan, "what can we cook from stock" | ✅ | ✅ | ✅ | ✅ (strong recipe scraper) | recipes only |
-| Guest bar and party mode with TV board | ✅ | no | no | no | no |
+| Guests wish for something via link, same list as at home | ✅ | no | no | no | no |
 | Kid mode with parent approval | ✅ | no | no | no | no |
 | MCP server for AI assistants | ✅ | no | no | no | no |
 | Home Assistant | HACS integration, two-way topics | HACS integration | not checked | official integration (calendar, to-do) | official integration (to-do) |
@@ -307,7 +307,7 @@ The test suite has 455 tests in 32 files (October 2026). CI runs tests and the b
 
 ### How an area is structured
 
-Features are grouped into areas (party, fresh, shop, labels, away, plan2, recipes2, people, ha2, menu and so on). An area usually has:
+Features are grouped into areas (fresh, shop, labels, away, plan2, recipes2, people, ha2, menu and so on). An area usually has:
 
 - `server/routes/<area>.ts`: an Express router, mounted under `/api` in `server/index.ts`.
 - `server/lib/<area>.ts`: the logic, plus its tables through a named migration.

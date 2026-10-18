@@ -17,6 +17,7 @@
 import crypto from 'node:crypto';
 import http2 from 'node:http2';
 import { db, migrate } from '../db.js';
+import { t } from '../i18n.js';
 
 migrate(
   'apns-1',
@@ -224,6 +225,13 @@ export function apnsPayload(m: ApnsMessage) {
 }
 
 const DEAD = new Set(['BadDeviceToken', 'Unregistered', 'DeviceTokenNotForTopic', 'ExpiredToken']);
+
+/** Apple's refusal codes in words, for the test button (null = no explanation, the code is shown as is). */
+export function apnsReasonText(reason: string | null | undefined): string | null {
+  if (reason === 'BadEnvironmentKeyInToken')
+    return t('The Apple key on the server is not valid for this environment (sandbox/production). Whoever runs the server needs an APNs key for “Sandbox & Production”.');
+  return null;
+}
 
 /** Send to every device of these members. Returns how many devices accepted it. */
 /** `report` collects Apple's reasons for refused deliveries (shown by the test button). */

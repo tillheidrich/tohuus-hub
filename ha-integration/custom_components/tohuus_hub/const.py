@@ -68,7 +68,6 @@ EVENT_TYPES: Final = [
     "shopping.added",
     "digest.daily",
     "care.due",
-    "party.ending",
     "kids.wish",
     "budget.warning",
     "plan.vote",

@@ -574,11 +574,34 @@ const TOOLS_BY_TOPIC: Record<string, string[]> = {
   knowledge: [...KNOWLEDGE_TOOLS, ...KNOWLEDGE_IO_TOOLS],
 };
 
-/** Only the tools a message can need (fewer tokens, fewer wrong calls). */
-export function toolsFor(topics: string[], screen = false): ToolDef[] {
+/**
+ * The tasks topic by what the message asks (18 Oct 2026, cost: the tasks screen sent every task, Im-Kopf, Rückblick
+ * and Unterwegs tool with every call). The core three always come; the others when the words point to them.
+ */
+const TASK_CORE = ['tasks_list', 'task_add', 'task_done'];
+const TASK_EXTRA: [RegExp, string[]][] = [
+  [/doch (?:noch )?nicht|versehen|zurück|zurueck|wieder offen|rückgängig|rueckgaengig|not done|by mistake|undo/i, ['task_undo_done']],
+  [/raus\b|tonne|abfuhr|demnächst|demnaechst|heute abend|morgen|übermorgen|coming up|tonight|tomorrow|\bbins?\b/i, ['tasks_coming_up']],
+  [/\bwer\b|\bdran\b|zuständig|zustaendig|übernimm|uebernimm|im blick|abwechsel|kümmer|kuemmer|\bwho\b|turn|assign|in mind/i, ['task_assign']],
+  [/fair|verteil|wer macht|überblick|ueberblick|mental load|\bshare|split/i, ['tasks_overview']],
+  [/im kopf|gedanke|kopf frei|nebenbei|brain ?dump|on my mind|on the side/i, ['mind_list', 'mind_add']],
+  [/rückblick|rueckblick|geschafft|diese woche|letzte woche|this week|last week|review/i, ['review']],
+  [/\bweg\b|urlaub|reise|krankenhaus|unterwegs|abwesen|nicht da\b|übernimmt|uebernimmt|warten|\baway\b|\btrip\b|takes over/i, ['away_status', 'home_plan_set']],
+];
+export function taskToolsFor(message: string): string[] {
+  return [...TASK_CORE, ...TASK_EXTRA.filter(([re]) => re.test(message)).flatMap(([, xs]) => xs)];
+}
+
+/**
+ * Only the tools a message can need (fewer tokens, fewer wrong calls). With `message`, the tasks topic is narrowed to
+ * what it asks (taskToolsFor) and "forget" only comes when something should be forgotten.
+ */
+export function toolsFor(topics: string[], screen = false, message?: string): ToolDef[] {
   // the per-screen tools (assistant-areas.ts) come with a screen context; stock, house and guests always bring theirs
   const area = (t: string) => (screen || ['stock', 'house', 'guests'].includes(t) ? (AREA_TOOLS_BY_TOPIC[t] ?? []) : []);
-  const names = new Set(['remember', 'forget', ...topics.flatMap((t) => [...(TOOLS_BY_TOPIC[t] ?? []), ...area(t)])]);
+  const byTopic = (t: string) => (t === 'tasks' && message !== undefined ? taskToolsFor(message) : (TOOLS_BY_TOPIC[t] ?? []));
+  const forget = message === undefined || /vergiss|vergessen|lösch|loesch|stimmt nicht mehr|forget|delete|remove/i.test(message);
+  const names = new Set(['remember', ...(forget ? ['forget'] : []), ...topics.flatMap((t) => [...byTopic(t), ...area(t)])]);
   return TOOL_DEFS.filter((d) => names.has(d.function.name));
 }
 

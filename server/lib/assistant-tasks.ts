@@ -39,35 +39,35 @@ const fn = (name: string, description: string, properties: Record<string, unknow
 export const TASK_TOOL_DEFS: ToolDef[] = [
   fn(
     'tasks_list',
-    'Household tasks (chores like bathroom, vacuuming, bins; care & deadlines like water filter, passport): what is due, who keeps it in mind, who does it, taking turns. Private tasks are not shown.',
+    'Household tasks (chores; care & deadlines): what is due, who keeps it in mind, who does it, turns. No private tasks.',
     {
       filter: { type: 'string', enum: ['due', 'all', 'house', 'care'] },
-      query: { type: 'string', description: 'part of a task name' },
-      on: { type: 'string', description: 'YYYY-MM-DD – only tasks due on that day (e.g. tomorrow)' },
+      query: { type: 'string', description: 'part of the name' },
+      on: { type: 'string', description: 'YYYY-MM-DD: due that day' },
     },
   ),
   fn(
     'task_add',
-    'Create a task – only when the person asks for it now. Rhythm: every n day|week|month|year, or as_needed, or a single due date. only_me=true makes it private (nobody else sees it).',
+    'Create a task, only when asked now. Rhythm every_n + every_unit, or as_needed, or one due date. only_me = private.',
     {
       name: { type: 'string' },
-      area: { type: 'string', enum: ['house', 'care'], description: 'house = household chore (default), care = care & deadlines' },
+      area: { type: 'string', enum: ['house', 'care'], description: 'house (default) or care & deadlines' },
       every_n: { type: 'integer', minimum: 1, maximum: 1000 },
       every_unit: { type: 'string', enum: ['day', 'week', 'month', 'year'] },
       as_needed: { type: 'boolean' },
-      due: { type: 'string', description: 'YYYY-MM-DD, first or only date' },
-      time: { type: 'string', description: 'HH:MM – makes it an appointment (calendar entry); needs due' },
-      minutes: { type: 'integer', minimum: 5, maximum: 1440, description: 'how long the appointment takes' },
-      place: { type: 'string', description: 'where the appointment is' },
-      keep_days: { type: 'boolean', description: 'true = keeps its days ("every Saturday") instead of counting from the day it was done' },
+      due: { type: 'string', description: 'YYYY-MM-DD' },
+      time: { type: 'string', description: 'HH:MM = appointment, needs due' },
+      minutes: { type: 'integer', minimum: 5, maximum: 1440 },
+      place: { type: 'string' },
+      keep_days: { type: 'boolean', description: 'keeps its weekday ("every Saturday")' },
       only_me: { type: 'boolean' },
-      doer: { type: 'string', description: 'name of the person who does it – a member or a household guest (e.g. grandma who waters the plants)' },
-      take_turns: { type: 'array', items: { type: 'string' }, description: 'names, in order, who take turns' },
-      steps: { type: 'array', items: { type: 'string' }, description: 'sub-items, e.g. sink, mirror, floor' },
+      doer: { type: 'string', description: 'who does it (member or household guest)' },
+      take_turns: { type: 'array', items: { type: 'string' }, description: 'names in turn order' },
+      steps: { type: 'array', items: { type: 'string' }, description: 'sub-items' },
     },
     ['name'],
   ),
-  fn('task_done', 'Mark a task as done (the next date and whose turn it is follow by themselves) – when the person says they did it.', { task: { type: 'string', description: 'task name or id' } }, ['task']),
+  fn('task_done', 'Mark a task done when the person says they did it (next date and turn follow).', { task: { type: 'string', description: 'name or id' } }, ['task']),
   fn(
     'task_undo_done',
     'Take back the last "done" of a task when it was not done after all ("Biotonne war doch noch nicht raus", "aus Versehen abgehakt"): dates and whose turn it is go back. Only the newest entry; own entries, someone else\'s only an admin.',
@@ -139,6 +139,45 @@ const compact = (x: ReturnType<typeof listCareTasks>[number]) => ({
   steps: x.checklist.length ? `${x.checklist.filter((c) => c.done).length}/${x.checklist.length}` : undefined,
 });
 
+/**
+ * task_add – the assistant and MCP (add_task, 18 Oct 2026) create tasks the same way: rhythm or a single date, a time
+ * makes it an appointment (calendar entry), area house = household chore. `ctx.userId` null = the household itself
+ * (MCP API token): no private tasks then.
+ */
+export function addTask(ctx: Ctx, a: any, record: Rec): unknown {
+  const title = String(a.name ?? '').trim().slice(0, 120);
+  if (!title) return { error: 'name missing' };
+  // the household itself (an MCP API token) has no person a private task could belong to
+  if (!ctx.userId && a.only_me === true) return { error: 'A private task needs a signed-in member.' };
+  const turns = Array.isArray(a.take_turns) ? a.take_turns.map((n: unknown) => personKey(n, ctx)).filter((k: unknown): k is string => typeof k === 'string') : [];
+  const doer = personKey(a.doer, ctx, true);
+  const unit = ['day', 'week', 'month', 'year'].includes(a.every_unit) ? (a.every_unit as IntervalUnit) : null;
+  const n = unit ? Math.max(1, Math.min(1000, Number(a.every_n) || 1)) : null;
+  const input: CareInput = {
+    name: title,
+    category: a.area === 'care' ? 'care' : 'house',
+    visibility: a.only_me === true ? 'private' : 'household',
+    interval_n: a.as_needed ? null : n,
+    interval_unit: a.as_needed ? null : unit,
+    as_needed: a.as_needed === true || (!unit && !a.due),
+    next_due: typeof a.due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(a.due) ? a.due : null,
+    anchor: a.keep_days === true ? 'due' : 'done',
+    doer_key: a.only_me ? null : (doer ?? null),
+    rotation: a.only_me ? null : turns.length > 1 ? turns : null,
+    checklist: Array.isArray(a.steps) ? a.steps.slice(0, 30).map((s: unknown) => ({ text: String(s), done: false })) : null,
+    due_time: typeof a.time === 'string' && /^\d{1,2}:\d{2}$/.test(a.time) ? a.time : null,
+    duration_min: Number.isInteger(a.minutes) ? a.minutes : null,
+    place: typeof a.place === 'string' ? a.place : null,
+  };
+  try {
+    const task = createCareTask(input, ctx.userId ?? null);
+    record('task_add', input.visibility === 'private' ? t('Task “{name}” added – only for you', { name: task.name }) : t('Task “{name}” added', { name: task.name }), { kind: 'task_delete', id: task.id });
+    return { ok: true, task: input.visibility === 'private' ? { id: task.id, name: task.name, private: true } : compact(task) };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknown {
   if (!TASK_TOOLS.includes(name)) return undefined;
   if (name === 'tasks_list') {
@@ -156,37 +195,7 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
   if (name === 'tasks_coming_up') return comingUp();
   if (!ctx.userId) return { error: 'Only a signed-in member can change tasks.' };
 
-  if (name === 'task_add') {
-    const title = String(a.name ?? '').trim().slice(0, 120);
-    if (!title) return { error: 'name missing' };
-    const turns = Array.isArray(a.take_turns) ? a.take_turns.map((n: unknown) => personKey(n, ctx)).filter((k: unknown): k is string => typeof k === 'string') : [];
-    const doer = personKey(a.doer, ctx, true);
-    const unit = ['day', 'week', 'month', 'year'].includes(a.every_unit) ? (a.every_unit as IntervalUnit) : null;
-    const n = unit ? Math.max(1, Math.min(1000, Number(a.every_n) || 1)) : null;
-    const input: CareInput = {
-      name: title,
-      category: a.area === 'care' ? 'care' : 'house',
-      visibility: a.only_me === true ? 'private' : 'household',
-      interval_n: a.as_needed ? null : n,
-      interval_unit: a.as_needed ? null : unit,
-      as_needed: a.as_needed === true || (!unit && !a.due),
-      next_due: typeof a.due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(a.due) ? a.due : null,
-      anchor: a.keep_days === true ? 'due' : 'done',
-      doer_key: a.only_me ? null : (doer ?? null),
-      rotation: a.only_me ? null : turns.length > 1 ? turns : null,
-      checklist: Array.isArray(a.steps) ? a.steps.slice(0, 30).map((s: unknown) => ({ text: String(s), done: false })) : null,
-      due_time: typeof a.time === 'string' && /^\d{1,2}:\d{2}$/.test(a.time) ? a.time : null,
-      duration_min: Number.isInteger(a.minutes) ? a.minutes : null,
-      place: typeof a.place === 'string' ? a.place : null,
-    };
-    try {
-      const task = createCareTask(input, ctx.userId);
-      record('task_add', input.visibility === 'private' ? t('Task “{name}” added – only for you', { name: task.name }) : t('Task “{name}” added', { name: task.name }), { kind: 'task_delete', id: task.id });
-      return { ok: true, task: input.visibility === 'private' ? { id: task.id, name: task.name, private: true } : compact(task) };
-    } catch (e) {
-      return { error: (e as Error).message };
-    }
-  }
+  if (name === 'task_add') return addTask(ctx, a, record);
 
   const task = findTask(a.task);
   if (!task) return { error: `No task matches "${a.task}". Use tasks_list.` };

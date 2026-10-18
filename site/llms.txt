@@ -33,6 +33,13 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Your bar](https://tohuus.heidrich-digital.de/help/your-bar.html): Everyone chooses which areas sit in the bar at the bottom.
 - [Bring me something](https://tohuus.heidrich-digital.de/help/bring-me-something.html): Ask for a little something at home, and whoever can brings it.
 - [Fair AI limits](https://tohuus.heidrich-digital.de/help/ai-limits.html): How many messages the assistant has a month, what happens then and what keeps working without AI.
+- [What ToHuus remembers](https://tohuus.heidrich-digital.de/help/what-tohuus-remembers.html): Buying rhythm, suggestions, “We still have it”, why you need no stock, and where home knowledge lives.
+- [Cooking with what is at home](https://tohuus.heidrich-digital.de/help/cooking.html): Ideas from what you have, the week plan, servings and your house version.
+- [Recipes from links, social media and photos](https://tohuus.heidrich-digital.de/help/importing-recipes.html): Bring in recipes from websites, posts, photos and other apps.
+- [Cookidoo, Monsieur Cuisine and other kitchen machines](https://tohuus.heidrich-digital.de/help/kitchen-machines.html): How recipes from Cookidoo, Monsieur Cuisine, Cookit and other kitchen machine apps work alongside ToHuus.
+- [Money: groceries and household](https://tohuus.heidrich-digital.de/help/money.html): What a month cost, where, on what, and what got more expensive.
+- [Sharing the household](https://tohuus.heidrich-digital.de/help/sharing-the-household.html): Invite members, add children and look after a second household.
+- [Good to know](https://tohuus.heidrich-digital.de/help/good-to-know.html): Short notes on shopping, storing food, cooking and your home, each with its source.
 - [The shopping list](https://tohuus.heidrich-digital.de/help/shopping-list.html): One list for everyone, quick entry, “I’ll get it” and shop mode.
 - [Stock (optional)](https://tohuus.heidrich-digital.de/help/stock.html): Keep stock if you like. ToHuus does not need it.
 - [Who sees what?](https://tohuus.heidrich-digital.de/help/who-sees-what.html): What is shared, what stays private and what only you see.
@@ -49,7 +56,7 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [So funktioniert ToHuus](https://tohuus.heidrich-digital.de/hilfe/so-funktioniert-tohuus.html): Ein Ort für den Haushalt: wie ToHuus sich merkt, was fehlt, was ansteht und was ihr wisst, und wie du alles findest.
 - [Die Einkaufsliste](https://tohuus.heidrich-digital.de/hilfe/einkaufsliste.html): Eine Liste für alle, Schnelleingabe, „Ich hol’s“ und der Modus für den Laden.
 - [Gemeinsam einkaufen](https://tohuus.heidrich-digital.de/hilfe/gemeinsam-einkaufen.html): Live auf allen Handys, ergänzen, während jemand im Laden steht, und zu zweit losziehen.
-- [Was ToHuus sich merkt](https://tohuus.heidrich-digital.de/hilfe/merkt-sich.html): Kaufrhythmus, Vorschläge, „Haben wir noch“ und warum kein Vorrat nötig ist.
+- [Was ToHuus sich merkt](https://tohuus.heidrich-digital.de/hilfe/merkt-sich.html): Kaufrhythmus, Vorschläge, „Haben wir noch“, warum kein Vorrat nötig ist und wo das Haushaltswissen steht.
 - [Kassenbons einlesen](https://tohuus.heidrich-digital.de/hilfe/kassenbons.html): REWE eBon, PDF, Foto und Text: wie Bons zu ToHuus kommen und was damit passiert.
 - [Vorrat (freiwillig)](https://tohuus.heidrich-digital.de/hilfe/vorrat.html): Wer mag, führt Bestand. Nötig ist das für ToHuus nicht.
 - [Kochen mit dem, was da ist](https://tohuus.heidrich-digital.de/hilfe/kochen.html): Ideen aus dem Vorhandenen, der Wochenplan, Portionen und eure Hausversion.
@@ -80,7 +87,7 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Deine Leiste](https://tohuus.heidrich-digital.de/hilfe/deine-leiste.html): Welche Bereiche unten in der Leiste stehen, stellt jede Person für sich ein.
 - [Bring mir was](https://tohuus.heidrich-digital.de/hilfe/bring-mir-was.html): Sich zu Hause eine Kleinigkeit wünschen, und wer kann, bringt sie.
 - [Faire KI-Grenzen](https://tohuus.heidrich-digital.de/hilfe/ki-grenzen.html): Wie viele Nachrichten der Assistent im Monat hat, was danach passiert und was ohne KI weiterläuft.
-- [Gut zu wissen](https://tohuus.heidrich-digital.de/hilfe/gut-zu-wissen.html): Kurze Hinweise rund um Einkauf, Lagern und Kochen, jeweils mit Quelle.
+- [Gut zu wissen](https://tohuus.heidrich-digital.de/hilfe/gut-zu-wissen.html): Kurze Hinweise rund um Einkauf, Lagern, Kochen und das Zuhause, jeweils mit Quelle.
 - [Häufige Fragen](https://tohuus.heidrich-digital.de/hilfe/fragen.html): Kurze Antworten auf das, was oft gefragt wird.
 
 ## Ratgeber

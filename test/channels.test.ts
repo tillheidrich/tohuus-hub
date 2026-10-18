@@ -179,7 +179,7 @@ describe('outgoing + buttons', () => {
   });
 
   it('keyboards map events to actions', () => {
-    expect(tg.keyboardFor('order.new', { order_id: 5 })[0].map((b) => b.callback_data)).toEqual(['a:order-accept:5', 'a:order-done:5']);
+    expect(tg.keyboardFor('order.new', { order_id: 5 })[0].map((b) => b.callback_data)).toEqual(['a:order-accept:5', 'a:order-decline:5']);
     expect(tg.keyboardFor('kids.wish', { wish_id: 3 })[0].map((b) => b.callback_data)).toEqual(['a:kid-approve:3', 'a:kid-decline:3']);
     expect(tg.keyboardFor('care.due', { care_task_id: 2 })[0][0].callback_data).toBe('a:care-done:2');
     expect(tg.keyboardFor('stock.low', { product_id: 2, on_shopping_list: true })).toEqual([]);

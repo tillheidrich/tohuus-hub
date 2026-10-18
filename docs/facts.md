@@ -305,6 +305,24 @@ Das BSI empfiehlt ein eigenes Gäste-WLAN, das Besuch vom eigenen Netz trennt; P
 
 See `food-spending-2023` above (household spending on food, sweets and drinks) and the existing `food-prices`, `unit-price` and `food-waste-cost` facts.
 
+### Haushaltswissen (18 Oct 2026)
+
+#### Im Blick behalten ist Arbeit (`knowledge-keeping-track`, topic `knowledge`)
+
+In einer Studie mit 35 Paaren gehörte das Im-Blick-Behalten zu den vier Schritten der Denkarbeit im Haushalt. Es lag öfter bei den Frauen und blieb für die anderen meist unsichtbar.
+
+*ToHuus:* Im Haushaltswissen steht, was sonst eine Person im Kopf behält: Größen, Maße, Zählerstände. Gefragt wird dann ToHuus, nicht sie.
+
+- Allison Daminger, American Sociological Review 84 (4), 609–633: [The Cognitive Dimension of Household Labor](https://doi.org/10.1177/0003122419859007), abgerufen 2026-10-18 – qualitative Studie, 70 Interviews mit 35 Paaren in den USA, nicht repräsentativ. Same source as `cognitive-labor-four-parts`. Strength: moderate. Checked via search (abstract).
+
+#### Ein fester Ort beruhigt den Kopf (`knowledge-fixed-place`, topic `knowledge`)
+
+In Laborversuchen drängten sich offene Aufgaben weniger in die Gedanken, sobald es einen konkreten Plan dafür gab.
+
+*ToHuus:* „Steht in ToHuus“ ist so ein fester Ort: Wo die Schuhgröße oder das Rollo-Maß steht, muss es sich niemand mehr merken.
+
+- Masicampo, Baumeister, Journal of Personality and Social Psychology 101 (4), 667–683: [Consider it done! Plan making can eliminate the cognitive effects of unfulfilled goals](https://doi.org/10.1037/a0024192), abgerufen 2026-10-18 – Laborstudien mit Studierenden; über den Alltag zu Hause sagen sie nur indirekt etwas. Same source as `plan-making-offload`. The transfer from „plan“ to „written down in a fixed place“ is our reading, not a finding of the study. Strength: weak to moderate. Checked via search.
+
 ### Checked but not used (14 Oct 2026)
 
 - **Shared lists reduce duplicate purchases:** no primary source with a number found. The closest is the GfK figure above (13 Prozent of avoidable waste from buying too much or too large packs, `food-waste-wrong-amount`), which is about amounts, not duplicates. Claims like "shared lists save X Euro" stay out.

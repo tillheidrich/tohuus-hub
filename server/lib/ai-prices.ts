@@ -6,6 +6,9 @@
  * The table holds the models ToHuus uses by default (ai.ts DEFAULT_MODELS and DEFAULT_FALLBACKS), with OpenRouter's
  * list prices, read on 18 Oct 2026 (openrouter.ai/mistralai). Mistral Large 4 was listed at 0.68/2.09 "50 % off";
  * the table keeps the full price (1.36/4.18, assumption) so the cost cap never counts too little.
+ * Mistral Medium 3.1 (mistralai/mistral-medium-3.1, 0.40/2.00, images in, 131k context; checked again 18 Oct 2026) is
+ * the second receipt try since 18 Oct 2026 instead of Large 4. Medium 3.5 (mistralai/mistral-medium-3-5) costs 1.50/7.50
+ * – more than Large 4, so not used.
  * Used by the operator page (operator.ts, stats.ts) and the cost cap per household (plans.ts).
  */
 export const MODEL_PRICES: Record<string, [number, number]> = {
@@ -13,6 +16,7 @@ export const MODEL_PRICES: Record<string, [number, number]> = {
   'mistralai/mistral-medium-3.1': [0.4, 2],
   'mistralai/mistral-large-2512': [0.5, 1.5],
   'mistralai/mistral-large-4-0': [1.36, 4.18],
+  'mistralai/mistral-medium-3-5': [1.5, 7.5],
   'mistralai/voxtral-small-24b-2507': [0.1, 0.3],
 };
 export const DEFAULT_PRICE: [number, number] = [0.15, 0.6];

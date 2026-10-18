@@ -123,10 +123,9 @@ export const list2: Record<string, string> = {
   'What is at home and what should be eaten soon.': 'Was da ist und was bald weg sollte.',
   'Recipes, ideas from what you have, a week plan if you like.': 'Rezepte, Ideen aus dem, was da ist, und ein Wochenplan, wenn ihr mögt.',
   'What food and household cost, from your receipts.': 'Was Essen und Haushalt kosten – aus euren Bons.',
-  'Wishes from the sofa: tea, a snack, a drink.': 'Wünsche vom Sofa: Tee, ein Snack, ein Getränk.',
+  'Wishes from the sofa: tea, a snack, a drink. Guests too, with a link.': 'Wünsche vom Sofa: Tee, ein Snack, ein Getränk. Gäste auch, per Link.',
   'Home info': 'Hausinfo',
   'Care tasks and things to know about the home.': 'Pflege-Aufgaben und was man übers Zuhause wissen muss.',
-  'Guest links, a party board, orders from guests.': 'Gäste-Links, Partytafel, Bestellungen von Gästen.',
   'Only if you run Home Assistant.': 'Nur, wenn ihr Home Assistant nutzt.',
   always: 'immer',
   // E – bridges

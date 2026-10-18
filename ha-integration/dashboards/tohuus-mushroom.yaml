@@ -90,13 +90,6 @@ views:
             icon: mdi:wrench-clock
             icon_color: "{{ 'red' if state_attr('sensor.tohuus_hub_care_due', 'overdue') else ('orange' if states('sensor.tohuus_hub_care_due') | int(0) > 0 else 'green') }}"
           - type: custom:mushroom-template-card
-            entity: sensor.tohuus_hub_party
-            primary: "{{ 'Party: ' ~ state_attr('sensor.tohuus_hub_party', 'name') if is_state('sensor.tohuus_hub_party', 'live') else 'No party' }}"
-            secondary: >-
-              {% if is_state('sensor.tohuus_hub_party', 'live') %}{{ state_attr('sensor.tohuus_hub_party', 'open_orders') }} open orders{% else %}Start one in ToHuus Hub{% endif %}
-            icon: mdi:party-popper
-            icon_color: "{{ 'pink' if is_state('sensor.tohuus_hub_party', 'live') else 'grey' }}"
-          - type: custom:mushroom-template-card
             entity: sensor.tohuus_hub_kid_wishes
             primary: Kid wishes
             secondary: >-

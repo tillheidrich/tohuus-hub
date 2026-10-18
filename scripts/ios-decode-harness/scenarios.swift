@@ -60,7 +60,6 @@ for l in lists where l.id.value != "0" && l.kind == "care" { if let n = l.id.int
     await check("careCheck(\(n))") { try await api.careCheck(listId: n) }
     await check("careSpent(\(n))") { try await api.careSpent(listId: n) }
 } }
-for r in ((try? await api.recentParties()) ?? []).prefix(2) { await check("partyRecap(\(r.id))") { try await api.partyRecap(r.id) } }
 await check("menuSuggestions") { try await api.menuSuggestions("Cola") }
 await check("houseGuide") { try await api.get("api/house-guide", as: HouseGuide.self) }
 await check("aiSettings") { try await api.get("api/ai/settings", as: AISettings.self) }
@@ -225,7 +224,7 @@ await check("money after") { try await api.moneyOverview(month: month) }
 await check("spendEntries after") { try await api.spendEntries(from: String(today.prefix(7)) + "-01", to: today) }
 await check("shopList after") { try api.decode(ShopList.self, from: try await api.shopList()) }
 }
-// ---------- second scenario: away, party, kids, house guide, wishes – only when MUT2=1
+// ---------- second scenario: away, kids, house guide, wishes – only when MUT2=1
 if ProcessInfo.processInfo.environment["MUT2"] == "1" {
 let tomorrow = ServerDate.day(Date().addingTimeInterval(86400))
 let inAWeek = ServerDate.day(Date().addingTimeInterval(86400 * 7))
@@ -242,15 +241,6 @@ if let o = try? await api.awayOverview(), let t = o.trips.first {
     await check("saveHandoverItem") { try await api.saveHandoverItem(id: nil, trip: t.id, HandoverItemInput(kind: "pet", title: "Katze füttern", instructions: "2x", rhythm: "daily", weekdays: [], day: nil, slots: ["morning"])) }
     await check("handoverOverview after") { try await api.handoverOverview(trip: t.id) }
     await check("awayOverview after") { try await api.awayOverview() }
-}
-let bar = (try? await api.barProducts()) ?? []
-let picks = bar.filter { $0.orderable == true }.prefix(3).map { PartyMenuPick(productId: $0.id, maxPerGuest: 2) }
-await check("startParty") { try await api.startParty(name: "Harness-Feier", hours: 4, idleMin: 60, items: Array(picks), showNames: true, templateId: nil) }
-if let p = try? await api.currentParty() {
-    await check("updateParty") { try await api.updateParty(p.id, showNames: false) }
-    await check("extendParty") { try await api.extendParty(p.id) }
-    await check("endParty") { try await api.endParty(p.id) }
-    await check("partyRecap") { try await api.partyRecap(p.id) }
 }
 if let k = (try? await api.kids())?.first {
     await check("pairKidDevice") { try await api.pairKidDevice(k.id, label: "iPad", days: 30) }
@@ -291,7 +281,6 @@ if let m = menu.first {
 }
 await check("myTreats") { try await api.myTreats() }
 await check("treatRequests") { try await api.treatRequests() }
-await check("barOrders") { try await api.barOrders() }
 await check("remember") { try await api.remember("Mika mag keine Pilze", onlyMe: false) }
 await check("memory") { try await api.memory() }
 await check("addExpense") { try await api.addExpense(amount: 9.99, day: d0, store: "Kiosk", category: "Sonstiges", note: nil, tags: []) }

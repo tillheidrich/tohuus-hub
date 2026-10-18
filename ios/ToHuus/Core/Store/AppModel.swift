@@ -44,6 +44,10 @@ final class AppModel {
     var showMore = false
     /// a ToHuus label link opened from outside (QR scanned with the camera app – universal link ".../q/<code>")
     var pendingLabel: String?
+    /// „Öffnen in ToHuus“ (Files, Mail): a knowledge file waiting for the import sheet with its preview
+    var openedKnowledgeFile: OpenedKnowledgeFile?
+    /// a short note about an opened file (not signed in, too big, taken over)
+    var openFileNotice: String?
     /// set by deep links (tohuus://shopping from the widget; tasks, stock and the old pantry/home – AppArea.from)
     var requestedTab: String?
     /// iPad kitchen mode (big week plan, recipe step by step, list to tick)

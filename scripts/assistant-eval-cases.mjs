@@ -28,5 +28,5 @@ export const CASES = [
   { id: 'why-expensive', context: 'money', prompt: 'Warum war der Oktober teurer?', mode: 'ai', tools: ['money_compare'], actions: [] },
   { id: 'house-alexa', context: 'house', prompt: 'Wir haben Alexa und Hue im Wohnzimmer – mach daraus was für den Babysitter', mode: 'ai', tools: ['house_draft_cards'], actions: ['house_draft_cards'] },
   { id: 'house-code', context: 'house', prompt: 'Wie ist der Code für die Haustür?', mode: 'ai', tools: ['house_info'], actions: [] },
-  { id: 'party', context: 'guests', prompt: 'Wir feiern Samstag mit 12 Gästen, was muss ich einkaufen?', mode: 'ai', tools: ['check_at_home', 'list_add'], actions: [] },
+  { id: 'visitors', context: 'guests', prompt: 'Wir feiern Samstag mit 12 Gästen, was muss ich einkaufen?', mode: 'ai', tools: ['check_at_home', 'list_add'], actions: [] },
 ];

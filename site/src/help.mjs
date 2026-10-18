@@ -159,9 +159,10 @@ export function helpCopy(k) {
         related: ['einkaufsliste', 'benachrichtigungen', 'haushalt-teilen'],
       },
       {
-        slug: 'merkt-sich', group: 'shop', title: 'Was ToHuus sich merkt',
-        desc: 'Kaufrhythmus, Vorschläge, „Haben wir noch“ und warum kein Vorrat nötig ist.',
+        slug: 'merkt-sich', pair: 'what-tohuus-remembers', group: 'shop', title: 'Was ToHuus sich merkt',
+        desc: 'Kaufrhythmus, Vorschläge, „Haben wir noch“, warum kein Vorrat nötig ist und wo das Haushaltswissen steht.',
         sections: [
+          ['Zwei Arten, sich etwas zu merken', p('ToHuus merkt sich, wie oft ihr etwas kauft, darum geht es auf dieser Seite. Und es merkt sich, was ihr übers Zuhause wisst, etwa Größen, Maße und Zählerstände. Das steht in der App unter „Wissen“, mehr dazu unter <a href="haushaltswissen.html">Haushaltswissen</a>.')],
           ['Der Kaufrhythmus', p(
             'Ab drei Käufen eines Produkts schätzt ToHuus, wie oft ihr es kauft. Je mehr Käufe, desto sicherer die Schätzung. Lücken wie ein Urlaub werden ausgelassen.',
           )],
@@ -171,7 +172,7 @@ export function helpCopy(k) {
           ['Was nie auftaucht', p('Diskrete und private Einträge erscheinen nie als Vorschlag.')],
           ['Wie weit zurück', p('Mit Haushalt und Plus bleibt die ganze Geschichte, selbst gehostet sowieso. Ohne Abo könnt ihr sie weiter ansehen und exportieren.')],
         ],
-        related: ['so-funktioniert-tohuus', 'kassenbons', 'vorrat'],
+        related: ['so-funktioniert-tohuus', 'haushaltswissen', 'kassenbons'],
       },
       {
         slug: 'kassenbons', pair: 'receipts', group: 'shop', title: 'Kassenbons einlesen',
@@ -188,6 +189,8 @@ export function helpCopy(k) {
           ['Prüfen vor dem Buchen', p(
             'Alle Bons findest du unter Geld › Bons. Jeder Bon wartet erst in der Prüfung: Zeilen, erkannte Produkte, Mengen und Preise. Was ToHuus nicht sicher lesen konnte, ist markiert. Korrigierst du eine Zeile, merkt sich ToHuus das für diesen Laden.',
             'Pfand wird nie als Vorrat gebucht. Geht Text eines Bons an die KI, entfernt ToHuus vorher Karten- und Bonusnummern, TSE-Daten und die Adresse.',
+            'Geht die Summe nicht auf, kannst du „Rabatt oder Pfand ergänzen“ (der Betrag ist schon eingetragen) oder „Nochmal mit KI lesen“. Dafür geht das Foto bzw. die PDF einmal an die KI, das zählt als eine KI-Lesung.',
+            'Mit „Fotos auf diesem iPhone lesen“ bleibt das Foto auf dem iPhone, bis du selbst „Nochmal mit KI lesen“ tippst.',
           )],
           ['Welche Läden', p('Am besten getestet ist REWE. Für Lidl, Aldi, Edeka, Netto, Kaufland, Penny, dm, Rossmann und weitere gibt es einen allgemeinen Leser, der mit nachgebauten Bons getestet ist. Echte, anonymisierte Bons helfen: In jeder Prüfung gibt es dafür „Erkennung verbessern helfen“. Verschickt wird dabei nichts von allein.')],
           ['Bons per Mail (Plus, Cloud)', p('<span class="soon-tag">Kommt bald</span> Mit Plus bekommt euer Haushalt eine eigene Bon-Adresse (Einstellungen › Bons per Mail). Leite eBons dorthin weiter oder richte im Mailprogramm eine Regel für den Absender ein. ToHuus nimmt nur echte Bons und Lieferavise. Bestellbestätigungen, etwa vom REWE Abholservice, werden nicht gebucht, denn gekauft ist erst, was auf dem eBon steht. Alles andere verwirft ToHuus, ohne es zu speichern. Über „Neue Adresse“ machst du die alte ungültig.')],
@@ -209,7 +212,7 @@ export function helpCopy(k) {
         related: ['merkt-sich', 'kochen'],
       },
       {
-        slug: 'kochen', group: 'cook', title: 'Kochen mit dem, was da ist',
+        slug: 'kochen', pair: 'cooking', group: 'cook', title: 'Kochen mit dem, was da ist',
         desc: 'Ideen aus dem Vorhandenen, der Wochenplan, Portionen und eure Hausversion.',
         sections: [
           ['Was essen wir heute?', p('Der Kochplaner fängt bei dem an, was zu Hause ist: was sofort geht, wo nur eine Zutat fehlt (ein Tipp setzt sie auf die Liste) und was bald weg muss. Filter für Zeit, vegetarisch, mit oder ohne Thermomix.')],
@@ -220,7 +223,7 @@ export function helpCopy(k) {
         related: ['rezepte-importieren', 'rezeptpaket', 'cookidoo'],
       },
       {
-        slug: 'rezepte-importieren', group: 'cook', title: 'Rezepte per Link, Social Media und Foto',
+        slug: 'rezepte-importieren', pair: 'importing-recipes', group: 'cook', title: 'Rezepte per Link, Social Media und Foto',
         desc: 'Rezepte von Webseiten, aus Posts, von Fotos und aus anderen Apps übernehmen.',
         sections: [
           ['Per Link', p('Unter Kochen › + Rezept › Link fügst du die Adresse einer Rezeptseite ein. Die meisten Rezeptseiten liefern ihre Daten in einem Standardformat mit, das ToHuus direkt liest: Zutaten, Schritte, Zeiten und Foto. Aus anderen Apps geht das auch über „Teilen“.')],
@@ -272,7 +275,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         related: ['rezepte-importieren', 'daten-export', 'kochen'],
       },
       {
-        slug: 'cookidoo', group: 'cook', title: 'Cookidoo, Monsieur Cuisine und andere Küchenmaschinen',
+        slug: 'cookidoo', pair: 'kitchen-machines', group: 'cook', title: 'Cookidoo, Monsieur Cuisine und andere Küchenmaschinen',
         desc: 'Wie Rezepte aus Cookidoo, Monsieur Cuisine, Cookit und anderen Küchenmaschinen-Apps neben ToHuus funktionieren.',
         sections: [
           ['Welche Apps', p('Das gilt für Cookidoo (Thermomix), Monsieur Cuisine, Home Connect mit dem Bosch Cookit, Kenwood World, die Companion-Apps von Tefal, Moulinex und Krups, Magimix Cook Expert, den KitchenAid Cook Processor, Cecotec Mambo und Philips NutriU. Offene Rezeptseiten wie Kitchen Stories oder Ninja Kitchen übernimmst du ganz normal per Link.')],
@@ -285,7 +288,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         related: ['kochen', 'rezeptpaket', 'home-assistant'],
       },
       {
-        slug: 'geld', group: 'money', title: 'Geld: Lebensmittel und Haushalt',
+        slug: 'geld', pair: 'money', group: 'money', title: 'Geld: Lebensmittel und Haushalt',
         desc: 'Was ein Monat gekostet hat, wo, wofür, und was teurer geworden ist.',
         sections: [
           ['Der Monat', p('Jeder Bon zählt mit. Die Seite Geld zeigt, was der Monat gekostet hat, nach Woche, Laden und Kategorie, und vergleicht mit dem Vormonat bis zum gleichen Tag.')],
@@ -462,14 +465,14 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'gaeste', pair: 'guests', group: 'people', title: 'Gäste und Rechte',
         desc: 'Gast-Links ohne Konto und feste Gäste mit eigenen Stufen.',
         sections: [
-          ['Gast-Links', p('Ein Link oder QR-Code ohne Konto, mit Vorlagen für Besuch, Babysitter und Großeltern. Je nach Link sieht man die Hausinfo, schaut nach, wo etwas ist, oder schreibt auf die Liste. Ablaufdatum optional, widerrufen jederzeit.', 'Der Party-Modus ist am Anfang aus. Wer ihn braucht, schaltet ihn unter Einstellungen › Was nutzt ihr? ein.')],
+          ['Gast-Links', p('Ein Link oder QR-Code ohne Konto, mit Vorlagen für Besuch, Babysitter und Großeltern. Je nach Link sieht man die Hausinfo, schaut nach, wo etwas ist, oder schreibt auf die Liste. Ablaufdatum optional, widerrufen jederzeit.', 'Sollen sich Gäste etwas wünschen können, teilst du den Link direkt in <a href="bring-mir-was.html">Bring mir was</a> unter „Gäste einladen“. Ihre Wünsche landen dort in derselben Liste wie eure eigenen.')],
           ['Feste Gäste', p('Wer oft da ist, bekommt ein eigenes Konto mit einer Stufe: nur bestellen und Liste, dazu Vorrat, dazu Rezepte, oder fast wie ein Mitglied. Eine Stufe lässt sich auf Zeit ändern oder pausieren.')],
           ['Was Gäste nie sehen', p('Einstellungen, Bons, Ausgaben, Budgets, Sicherungen und Zugänge, auf keiner Stufe. Diskrete und private Einträge auf der Liste auch nicht.')],
         ],
         related: ['babysitter', 'haushalt-teilen', 'wer-sieht-was'],
       },
       {
-        slug: 'haushalt-teilen', group: 'people', title: 'Haushalt teilen',
+        slug: 'haushalt-teilen', pair: 'sharing-the-household', group: 'people', title: 'Haushalt teilen',
         desc: 'Mitglieder einladen, Kinder anlegen und einen zweiten Haushalt mitversorgen.',
         sections: [
           ['Mitglieder', p('Unter Einstellungen › Mitglieder erstellst du einen Einladungslink. Wer ihn öffnet, legt sein eigenes Passwort an und ist dabei. Admins dürfen alles einstellen, Mitglieder nutzen den Haushalt im Alltag.')],
@@ -754,12 +757,13 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         slug: 'bring-mir-was', pair: 'bring-me-something', group: 'home', title: 'Bring mir was',
         desc: 'Sich zu Hause eine Kleinigkeit wünschen, und wer kann, bringt sie.',
         sections: [
-          ['Wofür', p('Auf dem Sofa festgesessen, krank im Bett oder ein Kind auf dem Arm: Mit Bring mir was wünschst du dir eine Kleinigkeit, und jemand im Haushalt bringt sie. Das gibt es, sobald ihr zu mehreren seid.')],
+          ['Wofür', p('Auf dem Sofa festgesessen, krank im Bett oder ein Kind auf dem Arm: Mit Bring mir was wünschst du dir eine Kleinigkeit, und jemand im Haushalt bringt sie. Gäste können das auch, über einen Link.')],
           ['So geht es', ol(
             'Bring mir was öffnen, über „Mehr“ oder deine Leiste.',
             'Eine Kachel wählen, etwa „Was Süßes“, „Was zu trinken“ oder „Aus dem Kühlschrank“, oder mit „Was anderes“ einen freien Wunsch schreiben, zum Beispiel Tee mit Honig.',
             'Eine bestimmte Person fragen oder alle.',
           ), p('Die anderen bekommen eine Mitteilung mit „Ich bring’s“ oder „Geht gerade nicht“ und einem kurzen Grund. Du siehst, wer es bringt, und kannst danach Danke sagen.')],
+          ['Gäste wünschen sich auch was', p('Schick Gästen den Link: Sie wünschen sich was, ihr bringt’s. In Bring mir was tippst du auf „Gäste einladen“ und teilst einen Link oder zeigst den QR-Code. Gäste brauchen keine App und kein Konto, sie sehen nur, was ihr für Gäste auf die Karte gestellt habt, nie Mengen oder Einkäufe.', 'Ihr Wunsch landet bei euch in derselben Liste wie die Wünsche von zu Hause, mit „Gast“ und dem Namen davor. Ihr antwortet mit denselben Knöpfen, „Ich bring’s“ und „Gebracht“, und der Gast sieht auf seinem Handy, wie es steht. Das geht auch, wenn du allein wohnst.')],
           ['Was es nicht gibt', p('Punkte, Ranglisten oder eine Liste, wer was gebracht hat. Niemand führt Buch.')],
           ['Eure Karte', p('Was auf den Kacheln zur Auswahl steht, legt ihr unter Bring mir was › Bearbeiten fest, auf Wunsch mit Bild und Auswahl wie „mit Milch“.')],
           ['Abschalten', p('Wer Bring mir was nicht braucht, schaltet es unter „Was nutzt ihr?“ in den Einstellungen ab.')],
@@ -790,10 +794,10 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         related: ['ki-an-oder-aus', 'sprechen', 'abo-und-kuendigen'],
       },
       {
-        slug: 'gut-zu-wissen', group: 'start', title: 'Gut zu wissen',
-        desc: 'Kurze Hinweise rund um Einkauf, Lagern und Kochen, jeweils mit Quelle.',
+        slug: 'gut-zu-wissen', pair: 'good-to-know', group: 'start', title: 'Gut zu wissen',
+        desc: 'Kurze Hinweise rund um Einkauf, Lagern, Kochen und das Zuhause, jeweils mit Quelle.',
         sections: [
-          ['Was dort steht', p('Unter Mehr › Gut zu wissen sammelt ToHuus kurze Hinweise rund um Einkauf, Lagern und Kochen. Jeder Hinweis nennt seine Quelle, damit du nachlesen kannst.')],
+          ['Was dort steht', p('Unter Mehr › Gut zu wissen sammelt ToHuus kurze Hinweise rund um Einkauf, Lagern, Kochen und das, was man zu Hause im Blick behalten muss. Jeder Hinweis nennt seine Quelle, damit du nachlesen kannst.')],
           ['Was es nicht ist', p('Keine Ernährungs- oder Gesundheitsberatung. Bei Allergien und Unverträglichkeiten zählt, was eure Ärztin oder euer Arzt sagt.')],
         ],
         related: ['kochen', 'so-funktioniert-tohuus'],
@@ -829,7 +833,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
     desc: 'How-tos for ToHuus: the list, receipts, tasks, the assistant, AI on or off, recipe packs, Home Assistant, privacy and subscriptions. No sign-in, no tracking.',
     label: 'Help & tips',
     h1: 'How does ToHuus work?',
-    lede: 'Short guides to what ToHuus does today. Anything not finished yet is marked “Coming soon”. The full set of articles is in German.',
+    lede: 'Short guides to what ToHuus does today. Anything not finished yet is marked “Coming soon”.',
     soon: 'Coming soon',
     soonLong: 'Coming soon: this is being built. This page says what is planned and what you can do today.',
     related: 'Related',
@@ -842,6 +846,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
       ['shop', 'Shopping'],
       ['cook', 'Cooking'],
       ['home', 'Home'],
+      ['money', 'Money'],
       ['ai', 'Assistant and AI'],
       ['people', 'Guests and house info'],
       ['connect', 'Connect'],
@@ -882,7 +887,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['No signal', p('ToHuus remembers what you tick off and syncs as soon as you are back online.')],
           ['On the Apple Watch', p(`The iPhone app comes with a Watch app: the list sorted by shop, tick off with undo, also without the iPhone nearby.`)],
         ],
-        related: ['getting-started', 'speak'],
+        related: ['shopping-list', 'notifications', 'sharing-the-household'],
       },
       {
         slug: 'receipts', pair: 'kassenbons', group: 'shop', title: 'Sharing receipts',
@@ -890,10 +895,10 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Digital receipts', p('Share an e-receipt or order PDF with ToHuus, for example from your mail app. For REWE in Germany, ToHuus matches the order with the receipt and books what was actually delivered.')],
           ['Paper receipts', p('Take a photo in the app. ToHuus first reads the text itself on the server (text recognition without AI) and checks that the lines add up to the total. Only if they do not and AI is on, Mistral reads the photo again.', 'With AI off it stays with text recognition. Lines read unclearly are marked, you correct them in the check.')],
-          ['Check before booking', p('You find all receipts under Money › Receipts. Every receipt waits for a check first. Anything ToHuus could not read with confidence is marked. Correct a line and ToHuus remembers it for that shop. Before receipt text goes to the AI, card and loyalty numbers, TSE data and the address are removed.')],
+          ['Check before booking', p('You find all receipts under Money › Receipts. Every receipt waits for a check first. Anything ToHuus could not read with confidence is marked. Correct a line and ToHuus remembers it for that shop. Before receipt text goes to the AI, card and loyalty numbers, TSE data and the address are removed.', 'If the total does not add up, you can “Add discount or deposit” (the amount is already filled in) or “Read again with AI”. For that the photo or PDF goes to the AI once, which counts as one AI read.', 'With “Read photos on this iPhone” the photo stays on the iPhone until you tap “Read again with AI” yourself.')],
           ['Which shops', p('REWE is tested best. Other German chains, UK, US and Swedish receipts have parsers tested with synthetic receipts. Anonymised real receipts help: every check has “Help improve recognition”. Nothing is sent by itself.')],
         ],
-        related: ['ai-on-or-off', 'getting-started'],
+        related: ['money', 'ai-on-or-off', 'what-tohuus-remembers'],
       },
       {
         slug: 'tasks', pair: 'aufgaben', group: 'home', title: 'Tasks',
@@ -1045,7 +1050,7 @@ Keep the recipe's language and do not invent anything.`), p('Check the preview b
             'No passwords for the AI and no automated fetching from other people’s accounts or services.',
           )],
         ],
-        related: ['getting-started', 'faq'],
+        related: ['importing-recipes', 'your-data', 'cooking'],
       },
       {
         slug: 'home-assistant', pair: 'home-assistant', group: 'connect', title: 'Connect Home Assistant',
@@ -1190,7 +1195,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Codes from us', p('You can also get a code from us, for a month, a year or for good. An admin of your household redeems it in the browser under Settings › Subscription › Redeem code. After that it works on every device, the iPhone included. It cannot be redeemed inside the iPhone app.')],
           ['When money is tight', p('Write to us through the form “We can’t afford this right now” under <a href="../#cant-afford">Pricing</a>. You get a licence, no reasons needed. Every subscription helps pay for it.')],
         ],
-        related: ['faq', 'privacy-in-short'],
+        related: ['sharing-the-household', 'your-data', 'faq'],
       },
       {
         slug: 'how-tohuus-works', pair: 'so-funktioniert-tohuus', group: 'start', title: 'How ToHuus works',
@@ -1240,8 +1245,9 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         slug: 'bring-me-something', pair: 'bring-mir-was', group: 'home', title: 'Bring me something',
         desc: 'Ask for a little something at home, and whoever can brings it.',
         sections: [
-          ['What it is for', p('Stuck on the sofa, ill in bed or with a child in your arms: ask for a little something, and someone at home brings it. It is there as soon as more than one person lives with you.')],
+          ['What it is for', p('Stuck on the sofa, ill in bed or with a child in your arms: ask for a little something, and someone at home brings it. Guests can do it too, with a link.')],
           ['How', ol('Open Bring me something, under “More” or in your bar.', 'Tap a tile such as something sweet, something to drink or from the fridge, or write a free wish like tea with honey.', 'Ask one person or everyone.'), p('The others get a notification with “I’ll bring it” or “Can’t right now” and a short reason. You see who is bringing it and can say thanks.')],
+          ['Guests can wish for something too', p('Send guests the link: they wish for something, you bring it. In Bring me something, tap “Invite guests” and share a link or show the QR code. Guests need no app and no account. They only see what you put on the menu for guests, never quantities or purchases.', 'Their wish lands in the same list as the wishes from home, with “Guest” and the name in front. You answer with the same buttons, “I’ll bring it” and “Brought it”, and the guest sees on their phone how it is going. This works if you live alone, too.')],
           ['What it does not have', p('No points, no rankings, no tally of who brought what.')],
         ],
         related: ['a-lot-on-your-mind', 'your-bar'],
@@ -1262,6 +1268,87 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         related: ['ai-on-or-off', 'speak', 'subscription'],
       },
       {
+        slug: 'what-tohuus-remembers', pair: 'merkt-sich', group: 'shop', title: 'What ToHuus remembers',
+        desc: 'Buying rhythm, suggestions, “We still have it”, why you need no stock, and where home knowledge lives.',
+        sections: [
+          ['Two kinds of remembering', p('ToHuus remembers how often you buy things, and that is what this page is about. It also remembers what you know about your home, such as sizes, measurements and meter readings. That lives in the app under “Knowledge”, see <a href="household-knowledge.html">Home knowledge</a>.')],
+          ['The buying rhythm', p('After three purchases of a product, ToHuus estimates how often you buy it. The more purchases, the better the estimate. Gaps like a holiday are left out.')],
+          ['When a suggestion comes', p('When a product is due again, is not already on the list and you have not just turned it down twice. If you keep stock for a product and there is enough at home, no suggestion comes.', 'Every suggestion says why, for example “remembers: every ~9 days”. It only goes on the list when you tap it. “We still have it” puts it off for a while.')],
+          ['What never shows up', p('Discreet and private items never appear as suggestions.')],
+          ['How far back', p('With Household and Plus the whole history stays, and self-hosted anyway. Without a subscription you can still look at it and export it.')],
+        ],
+        related: ['how-tohuus-works', 'household-knowledge', 'receipts'],
+      },
+      {
+        slug: 'cooking', pair: 'kochen', group: 'cook', title: 'Cooking with what is at home',
+        desc: 'Ideas from what you have, the week plan, servings and your house version.',
+        sections: [
+          ['What are we eating today?', p('The cook planner starts with what is at home: what you can cook right away, where only one ingredient is missing (one tap puts it on the list) and what should be used soon. Filters for time, vegetarian, with or without a Thermomix.')],
+          ['Week plan', p('Plan lunch or dinner, move things around and put everything the week still needs on the list with one tap. If you like, fill free evenings with suggestions from your stock.')],
+          ['Servings and house version', p('Change the servings on the recipe page. In the house version you adapt a recipe to your household without changing the original. Your favourites are under Cooking too.')],
+          ['Allergies', p('Add allergies and dislikes per person. A dish with an allergen gets a note and is never planned in on its own. Allergies are health data: ToHuus asks for your consent the first time, and they only go to the AI if you explicitly allow it.')],
+        ],
+        related: ['importing-recipes', 'recipe-pack', 'kitchen-machines'],
+      },
+      {
+        slug: 'importing-recipes', pair: 'rezepte-importieren', group: 'cook', title: 'Recipes from links, social media and photos',
+        desc: 'Bring in recipes from websites, posts, photos and other apps.',
+        sections: [
+          ['From a link', p('Under Cooking › + Recipe › Link, paste the address of a recipe page. Most recipe sites include their data in a standard format that ToHuus reads directly: ingredients, steps, times and a photo. From other apps this works through “Share” too.')],
+          ['From social media', p('On Instagram, TikTok and the like, the recipe is usually in the caption or only in the video. You can still share the link, and ToHuus takes whatever it can read from the page. If that does not work, take a screenshot of the caption and add it as a photo.')],
+          ['From a photo or text', p('Up to six photos per recipe, for example the front and back of a recipe card or a page from a cookbook. Photos and pasted text are read with AI. With AI off, you type the recipe in or use a <a href="recipe-pack.html">recipe pack</a> made by your own AI.')],
+          ['From kitchen machine apps', p('Cookidoo, Monsieur Cuisine, Cookit and similar apps only show their recipes after you sign in. In ToHuus Cloud you therefore confirm the name and ingredients yourself, easiest with pasted text. More under <a href="kitchen-machines.html">Cookidoo, Monsieur Cuisine and other kitchen machines</a>.')],
+          ['From other apps', p('Under Settings › Recipes, ToHuus takes exports from Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl and CSV. You see a preview first and choose.')],
+          ['Only your own content', tip('Bring in recipes for yourself and your household. Other people’s recipes belong to them: saving them to cook is fine, passing them on is not.')],
+        ],
+        related: ['recipe-pack', 'cooking', 'kitchen-machines'],
+      },
+      {
+        slug: 'kitchen-machines', pair: 'cookidoo', group: 'cook', title: 'Cookidoo, Monsieur Cuisine and other kitchen machines',
+        desc: 'How recipes from Cookidoo, Monsieur Cuisine, Cookit and other kitchen machine apps work alongside ToHuus.',
+        sections: [
+          ['Which apps', p('This is about Cookidoo (Thermomix), Monsieur Cuisine, Home Connect with the Bosch Cookit, Kenwood World, the companion apps from Tefal, Moulinex and Krups, Magimix Cook Expert, the KitchenAid Cook Processor, Cecotec Mambo and Philips NutriU. Open recipe sites like Kitchen Stories or Ninja Kitchen work with a normal link.')],
+          ['In ToHuus Cloud', p('ToHuus does not access your account with these apps and fetches nothing from them itself, photos included. Share a recipe with ToHuus or paste the link, then confirm the name and ingredients. You can add the steps yourself or have them read from your own screenshots. Everything stays private in your household.')],
+          ['Paste the text', p('The quickest way: copy the whole recipe in the app, paste it in ToHuus under “Paste text” and tap “Read with AI”. ToHuus sorts it into name, ingredients and steps; you check it and save. With AI off, ToHuus sorts by line: lines with amounts become ingredients, the rest becomes steps.')],
+          ['Many at once, with photos', p('If you have connected your own AI like Claude or ChatGPT over MCP, it can save recipes with steps and photos in one go, even hundreds. Or upload a <a href="recipe-pack.html">recipe pack</a> with photos, on the iPhone straight from the Files app. Photos that only arrive as a link are loaded by your own device: in the browser under Settings › Recipes › Recipe photos with “Load photos through this browser”.')],
+          ['Self-hosted with Home Assistant', p('Self-hosted, ToHuus reads public recipe pages from these apps like any other recipe page. If you use the official Cookidoo integration in Home Assistant, the ToHuus integration brings your Cookidoo week into the week plan. Details under <a href="home-assistant.html">Home Assistant</a>.')],
+          ['Your own appliance recipes', p('Recipes with appliance steps (time, temperature, speed, reverse) come in through a <a href="recipe-pack.html">recipe pack</a>, for example made from photos of your own cookbook. That works for the Thermomix as well as for Monsieur Cuisine or Cookit.')],
+        ],
+        related: ['cooking', 'recipe-pack', 'home-assistant'],
+      },
+      {
+        slug: 'money', pair: 'geld', group: 'money', title: 'Money: groceries and household',
+        desc: 'What a month cost, where, on what, and what got more expensive.',
+        sections: [
+          ['The month', p('Every receipt counts. The Money page shows what the month cost, by week, shop and category, and compares it with last month up to the same day.')],
+          ['Prices', p('For things you buy often, ToHuus shows price changes against the 90 days before, per kilo or litre where possible.')],
+          ['Budget and hints', p('A budget per week, month or year is optional, for the whole household or just for you under “Only mine”. Hints only come from your own receipts, for example when something was cheaper in another of your shops. There are no outside offers, ads or affiliate links.')],
+          ['Without a receipt', p('Add the market or the bakery by hand, or just say it: “Spent 6.40 at the bakery.” Everything can be exported as CSV.')],
+          ['How far back', p('Household and Plus show the whole history. Without a subscription it stays visible, but nothing new is added.')],
+        ],
+        related: ['receipts', 'subscription'],
+      },
+      {
+        slug: 'sharing-the-household', pair: 'haushalt-teilen', group: 'people', title: 'Sharing the household',
+        desc: 'Invite members, add children and look after a second household.',
+        sections: [
+          ['Members', p('Under Settings › Members you create an invite link. Whoever opens it sets their own password and is in. Admins can change every setting, members use the household day to day.')],
+          ['Children', p('Children need no account. They get a profile with an animal and, if you like, a kids’ tablet view with big pictures. Their wishes wait for a parent.')],
+          ['Two households', p('If you also shop for your parents or grandparents, connect the two households and see what is missing there. That is part of the Household plan.')],
+          ['Who pays', p('One subscription covers the whole household. Members, children, guests and connected households pay nothing.')],
+        ],
+        related: ['who-sees-what', 'guests', 'subscription'],
+      },
+      {
+        slug: 'good-to-know', pair: 'gut-zu-wissen', group: 'start', title: 'Good to know',
+        desc: 'Short notes on shopping, storing food, cooking and your home, each with its source.',
+        sections: [
+          ['What is there', p('Under More › Good to know, ToHuus collects short notes on shopping, storing food, cooking and keeping track at home. Every note names its source so you can read up on it.')],
+          ['What it is not', p('No nutrition or health advice. With allergies and intolerances, what your doctor says counts.')],
+        ],
+        related: ['cooking', 'how-tohuus-works'],
+      },
+      {
         slug: 'shopping-list', pair: 'einkaufsliste', group: 'shop', title: 'The shopping list',
         desc: 'One list for everyone, quick entry, “I’ll get it” and shop mode.',
         sections: [
@@ -1270,7 +1357,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Ticking off and hiding', p('Hide ticked items with one tap. Nothing is deleted: ToHuus keeps counting them as purchases for the rhythm.')],
           ['Discreet and private', p('Under “Who sees it?” you make an item <b>discreet</b> (the others only see a placeholder like “Drugstore item”) or <b>only for you</b>. The real name never goes to Home Assistant, displays, guest links or AI assistants.')],
         ],
-        related: ['shopping-together', 'who-sees-what'],
+        related: ['shopping-together', 'what-tohuus-remembers', 'who-sees-what'],
       },
       {
         slug: 'stock', pair: 'vorrat', group: 'home', title: 'Stock (optional)',
@@ -1282,7 +1369,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['When something is low', p('You decide per product. When counting, with “keep at least”: below that it counts as low and goes on the list if you like. With fill levels choose “low from low” or already “from half”.')],
           ['Places', p('You decide which places exist at your home. ToHuus does not assume a cellar, chest freezer or pantry.')],
         ],
-        related: ['shopping-list', 'how-tohuus-works'],
+        related: ['what-tohuus-remembers', 'cooking'],
       },
       {
         slug: 'who-sees-what', pair: 'wer-sieht-was', group: 'people', title: 'Who sees what?',
@@ -1299,11 +1386,11 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         slug: 'guests', pair: 'gaeste', group: 'people', title: 'Guests and permissions',
         desc: 'Guest links without an account, and regular guests with their own levels.',
         sections: [
-          ['Guest links', p('A link or QR code without an account, with templates for visitors, babysitters and grandparents. Depending on the link, people see the house info, look up where things are or write on the list. An end date is optional, revoking works at any time.', 'Party mode is off at first. If you need it, switch it on under Settings › What do you use?.')],
+          ['Guest links', p('A link or QR code without an account, with templates for visitors, babysitters and grandparents. Depending on the link, people see the house info, look up where things are or write on the list. An end date is optional, revoking works at any time.', 'If guests should be able to wish for something, share the link right in <a href="bring-me-something.html">Bring me something</a> under “Invite guests”. Their wishes land there in the same list as your own.')],
           ['Regular guests', p('Someone who is often there gets their own account with a level that decides what they see, from list only up to almost like a member. A level can be changed for a while or paused.')],
           ['What guests never see', p('Settings, receipts, spending, budgets, backups and access keys, on no level. Discreet and private list items neither.')],
         ],
-        related: ['babysitter-link', 'house-info', 'who-sees-what'],
+        related: ['babysitter-link', 'sharing-the-household', 'who-sees-what'],
       },
       {
         slug: 'babysitter-link', pair: 'babysitter', group: 'people', title: 'The babysitter link',

@@ -185,4 +185,20 @@ nach außen“). No labels (ADHS, personality types). Examples use Mira, Mika, S
 - The admin JSON export filters private rows but exports the full history of a shared entry (incl. values from before
   it was shared).
 - A deleted card keeps its photo file (needed for undo); no cleanup job yet.
-- „Öffnen in …“ / share extension for .md/.csv files on the iPhone (document types in Info.plist + onOpenURL) – today the import goes through the Files picker.
+- Share extension for .md/.csv files on the iPhone (the share sheet's ToHuus entry) – „Öffnen in ToHuus“ works since 18 Oct (below).
+
+## Nachtrag 18 Oct 2026: „Gut zu wissen“ and „Öffnen in ToHuus“
+
+- **Fact card:** the knowledge screen shows one sourced fact of topic `knowledge` (server/data/facts.json, docs/facts.md
+  `knowledge-keeping-track`, `knowledge-fixed-place`) at the end of the list – quiet, not while searching, not for
+  guests. iPhone `FactCard(api:, topic: "knowledge", inList: true)` in KnowledgeView, web `<FactStrip topics={['knowledge']} />`
+  in pages/Knowledge.tsx.
+- **„Öffnen in ToHuus“ (iPhone):** ios/project.yml declares `CFBundleDocumentTypes` (Viewer, rank Alternate) for
+  `public.plain-text`, `public.comma-separated-values-text`, `net.daringfireball.markdown`, `public.json`,
+  `LSSupportsOpeningDocumentsInPlace: false` (iOS hands over a copy) and imports the Markdown type
+  (`UTImportedTypeDeclarations`, .md/.markdown). `ToHuusApp.handle` → `openFile`: reads the copy (≤ 512 KB, the
+  import limit), deletes the Inbox copy, and sets `AppModel.openedKnowledgeFile`; MainTabView opens
+  `KnowledgeImportSheet(initialSource:)`, which goes straight to the preview. Not signed in → note „Melde dich zuerst
+  bei ToHuus an …“ (also after a cold start that ends on the start screen); household guests → „Ins Haushaltswissen
+  importieren kann nur, wer hier wohnt.“; after taking over, the result as a short note. Needs `xcodegen generate`
+  (Info.plist is generated); the local Info.plist was updated by hand on 18 Oct.

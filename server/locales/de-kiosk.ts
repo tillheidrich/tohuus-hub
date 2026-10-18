@@ -34,8 +34,6 @@ export const de_kiosk: Record<string, string> = {
   'Shopping list': 'Einkaufsliste',
   'Nothing due at home.': 'Zu Hause ist nichts fällig.',
   'Due at home': 'Fällig zu Hause',
-  'Open the party board': 'Party-Board öffnen',
-  'Party running': 'Party läuft',
   'No widgets switched on for this display.': 'Für dieses Display sind keine Bausteine eingeschaltet.',
   'offline – retrying': 'offline – versuche es weiter',
   'live': 'live',

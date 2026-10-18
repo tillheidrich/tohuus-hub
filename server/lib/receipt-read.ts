@@ -13,8 +13,13 @@
 import type { ParsedImport, ParsedLine } from '../importers/types.js';
 import { t } from '../i18n.js';
 import { AiError } from './ai.js';
-import { toVisionJpeg } from './images.js';
-import { linesToImport, parseDocumentText } from './imports.js';
+import { execFile } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { promisify } from 'node:util';
+import { importsDir, readStoredFile, toVisionJpeg } from './images.js';
+import { linesToImport, parseDocumentText, pdfToText } from './imports.js';
 import { UsageLimitError } from './limits.js';
 import { ocrAvailable, ocrImage, OcrError, receiptSlices, type OcrLine } from './ocr.js';
 import { parseDate } from '../importers/generic.js';
@@ -103,7 +108,7 @@ export function resolveSlashedZeros(lines: string[], maxFlips = 14): { lines: st
     for (const v of pick) for (const at of v.at) out[v.line] = out[v.line].slice(0, at) + '0' + out[v.line].slice(at + 1);
     return out;
   };
-  const clean = (p: ParsedImport) => !p.meta.receiptDiscount && p.lines.every((l) => l.status !== 'ok' || (l.price ?? 0) >= 0);
+  const clean = (p: ParsedImport) => !p.meta.receiptDiscount && !p.meta.sumAssumed && p.lines.every((l) => l.status !== 'ok' || (l.price ?? 0) >= 0);
   const sig = (p: ParsedImport) => p.lines.map((l) => `${l.name}|${l.qty}|${l.price}|${l.status}`).join(';');
   let visited = 0;
   for (let budget = 1; budget <= maxFlips; budget++) {
@@ -201,11 +206,13 @@ export function receiptFromLines(rawLines: string[], detail: Pick<OcrLine, 'text
   const lines = rawLines.map(normalizeOcrPrices);
   const conf = new Map((detail ?? []).flatMap((d) => [[d.text.trim(), d.confidence] as const, [normalizeOcrPrices(d.text).trim(), d.confidence] as const]));
   let parsed = parseDocumentText(lines.join('\n'));
-  if (!parsed?.meta.sumMatches) {
+  // a total that only adds up with a filled-in discount/deposit row (generic.ts) is a last resort: repairs first
+  const exact = (p: ParsedImport | null | undefined) => Boolean(p?.meta.sumMatches && !p.meta.sumAssumed);
+  if (!exact(parsed)) {
     // repairs, each only taken when the receipt then adds up: overlapping screenshots, then slashed zeros
     const deduped = dropRepeatedBlocks(lines);
     const viaDedup = deduped.length < lines.length ? parseDocumentText(deduped.join('\n')) : null;
-    if (viaDedup?.meta.sumMatches) {
+    if (exact(viaDedup) && viaDedup) {
       parsed = viaDedup;
       parsed.meta.repeatedRowsDropped = lines.length - deduped.length;
     } else {
@@ -240,6 +247,8 @@ export function receiptFromLines(rawLines: string[], detail: Pick<OcrLine, 'text
 /** "≥ 1 product line, as many priced as possible, adds up" – the better of two readings of the same photos. */
 function better(a: ReceiptRead, b: ReceiptRead): boolean {
   if (a.sumMatches !== b.sumMatches) return Boolean(a.sumMatches);
+  // adds up as read beats adds up with a filled-in discount/deposit row
+  if (Boolean(a.parsed.meta.sumAssumed) !== Boolean(b.parsed.meta.sumAssumed)) return !a.parsed.meta.sumAssumed;
   if (Boolean(a.parsed.meta.guessed) !== Boolean(b.parsed.meta.guessed)) return !a.parsed.meta.guessed;
   return a.parsed.lines.length > b.parsed.lines.length;
 }
@@ -311,6 +320,140 @@ export function receiptDate(modelDate: unknown, ocrText: string | null, today = 
   return { date: s.slice(0, 10), from: 'ai' };
 }
 
+/**
+ * The image model reads the receipt photos (counted against the household's daily receipt-AI limit by runVision; AI
+ * switched off → refused there before anything is sent). `known` is what text recognition or an earlier reading
+ * found: shop and total when the model gives none, and its text for the purchase date.
+ */
+export async function readReceiptWithModel(images: Buffer[], pages: Buffer[][] | null, ocrText: string | null, known: Pick<ParsedImport, 'shop' | 'total'> | null) {
+  const slices = (pages ?? (await Promise.all(images.map((i) => receiptSlices(i))))).flat();
+  const forModel = slices.length <= 8 ? slices : images;
+  const j = await runVision('receipt', { images: await Promise.all(forModel.map((i) => toVisionJpeg(i))) });
+  const lines = modelReceiptLines(Array.isArray(j?.lines) ? j.lines : []);
+  const shop = typeof j?.shop === 'string' && j.shop.trim() ? j.shop.trim() : (known?.shop ?? null);
+  const when = receiptDate(j?.date, ocrText);
+  const imp = linesToImport('receipt', t('Receipt {shop}', { shop: shop ?? '' }).trim(), lines, {
+    shop,
+    total: typeof j?.total === 'number' ? j.total : (known?.total ?? null),
+    date: when.date,
+  });
+  const sum = Math.round(lines.reduce((a, l) => a + (l.price ?? 0), 0) * 100) / 100;
+  const total = imp.total ?? null;
+  const adds = total != null && Math.abs(sum - total) <= 0.021;
+  imp.meta = { source: 'ai', sumMatches: adds, itemsSum: sum, dateFrom: when.from, truncated: Boolean(j?._truncated) || undefined };
+  return { imp, adds };
+}
+
+// ------------------------------------------------------------------ AI for every receipt source (18.10.2026)
+//
+// Till: "Das muss auch bei PDFs etc. so gehen!" – the model as a second look (automatic, once per receipt, when the
+// total does not add up and the household uses AI) and on request ("Read again with AI") for photos, PDFs, files,
+// digital receipts, the mail inbox and pasted text. Every model call goes through runVision: counted against the
+// daily "receipts with AI" (plans.ts consume('receiptAi')), its tokens and cost booked (ai.ts › aiUsageHook →
+// ai_usage_daily + the household's monthly cost cap); used up, paused or read-only → refused before anything is sent.
+
+const pexec = promisify(execFile);
+
+/** The pages of a stored PDF as PNG images (poppler), at most `maxPages`. Plain bytes only in a private temp dir. */
+export async function pdfPageImages(file: string, maxPages = 4): Promise<Buffer[]> {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-pdfimg-'));
+  try {
+    const tmp = path.join(dir, 'in.pdf');
+    fs.writeFileSync(tmp, readStoredFile(file), { mode: 0o600 });
+    await pexec('pdftoppm', ['-r', '150', '-png', '-f', '1', '-l', String(maxPages), tmp, path.join(dir, 'p')], { timeout: 60000 });
+    return fs
+      .readdirSync(dir)
+      .filter((f) => /^p-?\d+\.png$/.test(f))
+      .sort()
+      .map((f) => fs.readFileSync(path.join(dir, f)));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** Where the original of a receipt is: stored photos / a PDF (imports.source_file, comma-separated) and its text. */
+export interface ReceiptSource {
+  images?: Buffer[];
+  pdfFile?: string | null;
+  text?: string | null;
+}
+
+/** Stored files of an import → a source (missing files are skipped). */
+export function storedSource(sourceFile: string | null, rawText: string | null): ReceiptSource {
+  const out: ReceiptSource = { text: rawText };
+  for (const name of (sourceFile ?? '').split(',').map((s) => s.trim()).filter(Boolean)) {
+    const file = path.join(importsDir(), path.basename(name));
+    if (!fs.existsSync(file)) continue;
+    if (/\.pdf$/i.test(name)) out.pdfFile = file;
+    else if (/\.(jpe?g|png|webp|heic)$/i.test(name)) (out.images ??= []).push(readStoredFile(file));
+  }
+  return out;
+}
+
+const sumOf = (lines: { price?: number | null }[]) => Math.round(lines.reduce((a, l) => a + (l.price ?? 0), 0) * 100) / 100;
+
+/** Receipt text → the model (task text-items, redacted by runVision); the total comes from what is known. */
+async function readTextWithModel(text: string, known: Pick<ParsedImport, 'shop' | 'total'> | null) {
+  const j = await runVision('text-items', { text: text.slice(0, 12000) });
+  const lines = modelReceiptLines(Array.isArray(j?.lines) ? j.lines : []);
+  const total = typeof j?.total === 'number' ? j.total : (known?.total ?? null);
+  const when = receiptDate(null, text);
+  const imp = linesToImport('receipt', t('Receipt {shop}', { shop: known?.shop ?? '' }).trim(), lines, { shop: known?.shop ?? null, total, date: when.date });
+  const sum = sumOf(lines);
+  const adds = total != null && Math.abs(sum - total) <= 0.021;
+  imp.meta = { source: 'ai', sumMatches: adds, itemsSum: sum, dateFrom: when.from, aiInput: 'text' };
+  return { imp, adds };
+}
+
+/**
+ * The model reads a receipt from what there is: photos as images; a PDF first as its text (cheaper, nothing more than
+ * the text leaves), and only when that does not add up its rendered pages as images; otherwise the text alone.
+ * Each model call counts as one receipt read with AI.
+ */
+export async function aiReadSource(src: ReceiptSource, known: Pick<ParsedImport, 'shop' | 'total'> | null) {
+  if (src.images?.length) return readReceiptWithModel(src.images, null, src.text ?? null, known);
+  if (src.pdfFile) {
+    const text = src.text ?? (await pdfToText(src.pdfFile).catch(() => ''));
+    if (text.trim().length > 30) {
+      const viaText = await readTextWithModel(text, known);
+      if (viaText.adds) return viaText;
+    }
+    const pages = await pdfPageImages(src.pdfFile);
+    if (pages.length) {
+      const r = await readReceiptWithModel(pages, null, text || null, known);
+      r.imp.meta.aiInput = 'pdf-pages';
+      return r;
+    }
+  }
+  if (src.text && src.text.trim()) return readTextWithModel(src.text, known);
+  return null;
+}
+
+/**
+ * The automatic second look: the parser's reading does not add up (or only with a filled-in row) and the household
+ * uses AI → the model reads the source once. Its reading is taken only when it adds up; any refusal (AI off, daily
+ * limit, cost cap, read-only) or model failure leaves the parser's reading as it is – nothing is sent without credit.
+ */
+export async function aiSecondLook(parsed: ParsedImport, src: ReceiptSource): Promise<ParsedImport | null> {
+  if (parsed.meta.sumMatches && !parsed.meta.sumAssumed) return null;
+  if (!visionAvailable()) return null;
+  try {
+    const r = await aiReadSource(src, { shop: parsed.shop ?? null, total: parsed.total ?? null });
+    if (!r?.adds || !r.imp.lines.length) return null;
+    const imp = r.imp;
+    imp.title = parsed.title;
+    imp.ref = parsed.ref ?? null;
+    imp.date = parsed.date ?? imp.date ?? null;
+    imp.shop = parsed.shop ?? imp.shop ?? null;
+    imp.meta = { ...imp.meta, aiAuto: true, parserSumMatches: Boolean(parsed.meta.sumMatches), store: parsed.meta.store ?? null };
+    return imp;
+  } catch (e) {
+    if (e instanceof UsageLimitError || e instanceof AiError) return null;
+    if ((e as { status?: number })?.status === 403 || (e as { status?: number })?.status === 402) return null;
+    throw e;
+  }
+}
+
 /** Receipt photos → an import (see the file comment for the routing). Throws a user-facing error when nothing works. */
 export async function readReceiptPhotos(images: Buffer[]): Promise<ReceiptRead> {
   let ocrRead: ReceiptRead | null = null;
@@ -330,7 +473,7 @@ export async function readReceiptPhotos(images: Buffer[]): Promise<ReceiptRead> 
           read.parsed.meta.ocrVariant = variant;
           if (!ocrRead || better(read, ocrRead)) ocrRead = read;
         }
-        if (ocrRead?.sumMatches) break;
+        if (ocrRead?.sumMatches && !ocrRead.parsed.meta.sumAssumed) break;
       }
     } catch (e) {
       if (!(e instanceof OcrError)) throw e;
@@ -338,25 +481,12 @@ export async function readReceiptPhotos(images: Buffer[]): Promise<ReceiptRead> 
       console.warn('[ocr]', e.code, e.message);
     }
   }
-  // validated by the printed total: no model needed
-  if (ocrRead?.sumMatches) return ocrRead;
+  // validated by the printed total: no model needed (a filled-in row still lets the model try, if the household uses it)
+  if (ocrRead?.sumMatches && !ocrRead.parsed.meta.sumAssumed) return ocrRead;
   if (visionAvailable()) {
     try {
-      const slices = pages.flat();
-      const forModel = slices.length <= 8 ? slices : images;
-      const j = await runVision('receipt', { images: await Promise.all(forModel.map((i) => toVisionJpeg(i))) });
-      const lines = modelReceiptLines(Array.isArray(j?.lines) ? j.lines : []);
-      const shop = typeof j?.shop === 'string' && j.shop.trim() ? j.shop.trim() : ((ocrRead?.parsed.shop as string | undefined) ?? null);
-      const when = receiptDate(j?.date, ocrText);
-      const imp = linesToImport('receipt', t('Receipt {shop}', { shop: shop ?? '' }).trim(), lines, {
-        shop,
-        total: typeof j?.total === 'number' ? j.total : (ocrRead?.parsed.total ?? null),
-        date: when.date,
-      });
-      const sum = Math.round(lines.reduce((a, l) => a + (l.price ?? 0), 0) * 100) / 100;
-      const total = imp.total ?? null;
-      const adds = total != null && Math.abs(sum - total) <= 0.021;
-      imp.meta = { source: 'ai', ocrTried: Boolean(ocrRead), ocrConfidence: ocrRead?.confidence ?? null, sumMatches: adds, itemsSum: sum, dateFrom: when.from, truncated: Boolean(j?._truncated) || undefined };
+      const { imp, adds } = await readReceiptWithModel(images, pages, ocrText, ocrRead?.parsed ?? null);
+      imp.meta = { ...imp.meta, ocrTried: Boolean(ocrRead), ocrConfidence: ocrRead?.confidence ?? null };
       // the model's reading wins when it adds up, or when text recognition has nothing to offer
       if (imp.lines.length && (adds || !ocrRead || ocrRead.parsed.meta.guessed)) return { parsed: imp, via: 'ai', confidence: null, sumMatches: adds };
       if (!ocrRead && !imp.lines.length) throw new AiError(t('No receipt lines were recognised in the photo. A sharper photo in good light, flat and straight, helps.'), 'bad_response', 422);

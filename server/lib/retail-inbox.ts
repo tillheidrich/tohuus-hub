@@ -7,6 +7,7 @@
  * Settings: 'retail.inbox' (no secrets) and 'retail.inbox.password' (the key matches the export filter
  * /token|passw|secret/, so the password never leaves the server in an export).
  */
+import { aiSecondLook } from './receipt-read.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ImapFlow } from 'imapflow';
@@ -192,7 +193,9 @@ export async function processMessage(msg: MailMessage, deps: MailDeps): Promise<
     const opts = { actor: MAIL_ACTOR, sourceFile: path.basename(file), rawText: text };
     const parsed = parseDocumentText(text, a.filename ?? undefined);
     if (parsed) {
-      out.imports.push({ file: a.filename ?? undefined, ...createImport(parsed, opts) });
+      // the total does not add up: the model reads it once (text first, then the pages), if the household uses AI
+      const better = deps.allowVision ? await aiSecondLook(parsed, { pdfFile: file, text }) : null;
+      out.imports.push({ file: a.filename ?? undefined, ...createImport(better ?? parsed, opts) });
     } else if (deps.allowVision && visionAvailable() && text.trim().length > 30) {
       try {
         const j = await runVision('text-items', { text: text.slice(0, 12000) });
@@ -211,7 +214,8 @@ export async function processMessage(msg: MailMessage, deps: MailDeps): Promise<
     for (const body of bodies) {
       const parsed = parseDocumentText(body);
       if (parsed) {
-        out.imports.push(createImport(parsed, { actor: MAIL_ACTOR, rawText: body }));
+        const better = deps.allowVision ? await aiSecondLook(parsed, { text: body }) : null;
+        out.imports.push(createImport(better ?? parsed, { actor: MAIL_ACTOR, rawText: body }));
         break;
       }
     }

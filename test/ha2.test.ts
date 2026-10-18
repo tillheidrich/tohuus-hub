@@ -384,7 +384,7 @@ describe('voice commands', () => {
     const link = Number(db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES ('x', 'Sitter', '["stock"]', '[1]')`).run().lastInsertRowid);
     // babysitter / house-sitter links ("where is what") show it by default, other links never by default
     expect(voice.guestVoice(link)!.items.map((i) => i.name)).toEqual(expect.arrayContaining(['Wohnzimmer Licht', 'Leselampe']));
-    const bar = Number(db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES ('y', 'Party', '["bar"]', '[]')`).run().lastInsertRowid);
+    const bar = Number(db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES ('y', 'Besuch', '["bar"]', '[]')`).run().lastInsertRowid);
     expect(voice.guestVoice(bar)).toBeNull();
     voice.setVoiceLink(link, false);
     expect(voice.guestVoice(link)).toBeNull();

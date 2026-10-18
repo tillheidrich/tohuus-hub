@@ -62,6 +62,8 @@ struct ToHuusApp: App {
 
     /// tohuus://assistant, tohuus://shopping (widget) and the other tabs
     private func handle(_ url: URL) {
+        // „Öffnen in ToHuus“ from Files, Mail or Notes: a knowledge file (.md, .txt, .csv, .json) → import with preview
+        if url.isFileURL { openFile(url); return }
         // a ToHuus QR label scanned with the camera app (universal link of the cloud host): https://…/q/<code>
         if url.scheme == "https", url.path.hasPrefix("/q/") {
             if app.phase == .signedIn { app.pendingLabel = url.absoluteString }
@@ -78,6 +80,34 @@ struct ToHuusApp: App {
         case "kitchen": app.showKitchen = true
         default: break
         }
+    }
+
+    /// A knowledge file handed to ToHuus: read the copy, then the import sheet shows what would be taken over.
+    private func openFile(_ url: URL) {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer {
+            if scoped { url.stopAccessingSecurityScopedResource() }
+            // the system's copy in Documents/Inbox is ours to clean up
+            if url.path.contains("/Inbox/") { try? FileManager.default.removeItem(at: url) }
+        }
+        // a cold start still restores the session (.launching): the file waits for the signed-in app (RootView)
+        guard app.phase != .start else {
+            app.openFileNotice = L("Sign in to ToHuus first, then open the file again.")
+            return
+        }
+        guard !(app.phase == .signedIn && app.isGuest) else {
+            app.openFileNotice = L("Only people who live here can import into the household knowledge.")
+            return
+        }
+        guard let data = try? Data(contentsOf: url) else {
+            app.openFileNotice = L("ToHuus couldn’t read this file.")
+            return
+        }
+        guard data.count <= APIClient.knowledgeImportMaxBytes else {
+            app.openFileNotice = LF("The file is too big (at most %lld KB).", APIClient.knowledgeImportMaxBytes / 1024)
+            return
+        }
+        app.openedKnowledgeFile = OpenedKnowledgeFile(source: KnowledgeImportSource(filename: url.lastPathComponent, data: data))
     }
 }
 
@@ -119,6 +149,17 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.2), value: app.phase)
         // "Mit tohuus.example.de verbinden?" for links from the camera (Start/OwnServerView.swift)
         .connectLinkSheet()
+        // a file opened with „Öffnen in ToHuus“: not signed in, too big, or what the import took over
+        // a file opened during a cold start, but nobody is signed in after all
+        .onChange(of: app.phase) { _, phase in
+            if phase == .start, app.openedKnowledgeFile != nil {
+                app.openedKnowledgeFile = nil
+                app.openFileNotice = L("Sign in to ToHuus first, then open the file again.")
+            }
+        }
+        .alert(app.openFileNotice ?? "", isPresented: Binding(get: { app.openFileNotice != nil }, set: { if !$0 { app.openFileNotice = nil } })) {
+            Button(L("OK"), role: .cancel) {}
+        }
     }
 }
 

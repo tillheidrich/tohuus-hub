@@ -68,7 +68,7 @@ beforeAll(async () => {
   catalog.adjustStock({ productId: beer, delta: 10, reason: 'test', silent: true });
   apiToken = auth.createApiToken('Kitchen tablet', 'full').token;
   guestToken = auth.randomToken(12);
-  db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES (?, 'Garden party', '["bar"]', '[]')`).run(auth.sha256(guestToken));
+  db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES (?, 'Garden visit', '["bar"]', '[]')`).run(auth.sha256(guestToken));
 
   const express = (await import('express')).default;
   const cookieParser = (await import('cookie-parser')).default;

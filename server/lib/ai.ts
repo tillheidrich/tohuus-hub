@@ -11,7 +11,9 @@
  *   AI_API_KEY
  *   AI_MODEL_TEXT        default mistralai/mistral-small-2603
  *   AI_MODEL_VISION      default mistralai/mistral-small-2603
- *   AI_MODEL_VISION_HARD default mistralai/mistral-large-4-0 (second try for receipts that do not add up)
+ *   AI_MODEL_VISION_HARD default mistralai/mistral-medium-3.1 (second try for receipts that do not add up; since
+ *                        18 Oct 2026 Medium instead of Large 4 – a quarter of the price, Large 4 only steps in when
+ *                        Medium is busy or gone, DEFAULT_FALLBACKS)
  *   AI_MODEL_AUDIO       default mistralai/voxtral-small-24b-2507
  * Older installs: VISION_BASE_URL / VISION_API_KEY / VISION_MODEL keep working when no AI_* is set.
  *
@@ -26,7 +28,7 @@ export const OPENROUTER = 'https://openrouter.ai/api/v1';
 export const DEFAULT_MODELS = {
   text: 'mistralai/mistral-small-2603',
   vision: 'mistralai/mistral-small-2603',
-  visionHard: 'mistralai/mistral-large-4-0',
+  visionHard: 'mistralai/mistral-medium-3.1',
   audio: 'mistralai/voxtral-small-24b-2507',
 } as const;
 
@@ -41,7 +43,7 @@ export type ModelKind = 'text' | 'vision' | 'visionHard' | 'audio';
 export const DEFAULT_FALLBACKS: Record<ModelKind, string[]> = {
   text: ['mistralai/mistral-medium-3.1', 'mistralai/mistral-large-2512'],
   vision: ['mistralai/mistral-medium-3.1', 'mistralai/mistral-large-4-0'],
-  visionHard: ['mistralai/mistral-medium-3.1'],
+  visionHard: ['mistralai/mistral-large-4-0'],
   audio: [],
 };
 
@@ -201,6 +203,8 @@ function errorFor(status: number, body: string): AiError {
 }
 
 const retryable = (e: unknown) => e instanceof AiError && (e.code === 'rate_limited' || e.code === 'upstream' || e.code === 'timeout');
+/** the model itself is not offered (any more): OpenRouter answers 404 "No endpoints found" – the next model may be */
+const modelGone = (e: unknown) => e instanceof AiError && e.code === 'bad_request' && /no endpoints|not a valid model|model[^.]{0,40}(?:not found|does not exist|not available|unavailable)/i.test(e.detail ?? '');
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // ------------------------------------------------------------------ chat
@@ -322,8 +326,8 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
         if (!retryable(e) || attempt === tries) break;
       }
     }
-    // only "busy / down / slow" moves on to the next model; a wrong request or key would fail there too
-    if (!retryable(last)) break;
+    // only "busy / down / slow" or "this model is gone" moves on to the next model; a wrong request or key would fail there too
+    if (!retryable(last) && !modelGone(last)) break;
     if (opts.deadline && opts.deadline - Date.now() < 2000) break;
     if (i < chain.length - 1) console.warn(`[ai] ${m} unavailable (${(last as AiError).code}), trying ${chain[i + 1]}`);
   }

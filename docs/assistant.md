@@ -1,5 +1,7 @@
 # The assistant
 
+> 18.10.2026: Der Party-Modus wurde auf Tills Entscheidung entfernt (siehe [party-modus.md](party-modus.md)). Gäste wünschen sich jetzt über den Gäste-Link aus „Bring mir was“ etwas; alles landet in einer Liste.
+
 The floating button on every tab (microphone and text). ToHuus' assistant is the household's shopping and household helper, cook planner and money helper: short answers, writes only when asked, every write can be undone. It is never a doctor or a nutrition coach and never says "allergen-free".
 
 Code: [`server/lib/assistant.ts`](../server/lib/assistant.ts) (conversation, model loop, built-in reader), [`assistant-tools.ts`](../server/lib/assistant-tools.ts) (tools and undo), [`assistant-parse.ts`](../server/lib/assistant-parse.ts) (reading without a model), [`assistant-context.ts`](../server/lib/assistant-context.ts) (what the model is told), [`ai.ts`](../server/lib/ai.ts) (the model client), routes in [`server/routes/assistant.ts`](../server/routes/assistant.ts).
@@ -236,7 +238,7 @@ Recordings are never stored: they stay in memory for the transcription and are d
 | `AI_BASE_URL` | `https://openrouter.ai/api/v1` |
 | `AI_MODEL_TEXT` | `mistralai/mistral-small-2603` |
 | `AI_MODEL_VISION` | `mistralai/mistral-small-2603` |
-| `AI_MODEL_VISION_HARD` | `mistralai/mistral-large-4-0` (second try for receipts that don't add up) |
+| `AI_MODEL_VISION_HARD` | `mistralai/mistral-medium-3.1` (second try for receipts that don't add up; until 18 Oct 2026 Large 4, which now only steps in when Medium is busy or gone – docs/pricing.md Nachtrag 3) |
 | `AI_MODEL_AUDIO` | `mistralai/voxtral-small-24b-2507` |
 | `AI_MODEL_FALLBACKS` | other Mistral models tried in turn on 429/5xx/timeouts (comma-separated, `-` = none). Default with OpenRouter: text `mistralai/mistral-medium-3.1,mistralai/mistral-large-2512`, vision `mistralai/mistral-medium-3.1,mistralai/mistral-large-4-0`; own endpoints: none |
 | `VISION_BASE_URL`, `VISION_API_KEY`, `VISION_MODEL` | older installs; used when no `AI_*` is set (then no audio model unless `AI_MODEL_AUDIO`) |
@@ -259,3 +261,15 @@ Topic `tasks` brings these tools along. Words like "im Kopf", "geschafft", "Dien
 - `task_add` / `task_assign`: `doer` may be a household guest ("Oma gießt die Blumen"). `keeps_in_mind` stays for members only.
 - General questions about household tasks ("wie oft Bettwäsche wechseln?") are answered briefly as a rule of thumb, then the assistant offers to make a task of it. No medical, legal or care advice. This instruction is only in the prompt with the tasks topic.
 - `app_help` knows Im Kopf, Rückblick, Abendfrage, Für wen ich da bin, guests helping, swiping and absences of single people.
+
+## Nachtrag 18 Oct 2026: ticking off without AI, smaller prompts
+
+- „Ich hab den Müll rausgebracht“, „Müll ist rausgebracht“, „Spülmaschine ausgeräumt“, „hab gestaubsaugt“, „I took the
+  bins out“: `assistant-parse.ts doneOf` → intent `task_done`, `assistant-done.ts matchDone` finds the open task
+  (object words, bins as a group, verb stem). The verb must fit when the task has one – stem and particle: „ausgeräumt“ never ticks off „einräumen“, „aufgeräumt“ never „ausräumen“, „rausgestellt“ never „reinholen“ (`verbFits`); being due only decides between fitting tasks. A task without a verb („Staubsaugen“, „Biotonne raus“) or a plain „erledigt“ always fits. One → `task_done` with undo („Super, „X“ ist abgehakt.“),
+  several → „Welche meinst du: A und B? Sag z. B. „A erledigt“.“, already ticked today → says so, none → „Zu „X“
+  finde ich keine offene Aufgabe …“. No model, nothing counted. Tests: `test/assistant-new.test.ts` › „ticking off a
+  task without AI“.
+- Prompt size: capped „Remembered“ line and task tools by request – numbers in docs/pricing.md (Nachtrag 3),
+  `test/assistant-cost.test.ts`.
+

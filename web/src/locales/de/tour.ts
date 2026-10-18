@@ -101,7 +101,7 @@ export const tour: Record<string, string> = {
   'Recipes & plan': 'Rezepte & Plan',
   'Recipes, cooking history, week plan, swap rules': 'Rezepte, Kochverlauf, Wochenplan, Tauschregeln',
   'Shopping & orders': 'Einkauf & Bestellungen',
-  'Shopping list, orders, parties, wishes': 'Einkaufsliste, Bestellungen, Partys, Wünsche',
+  'Shopping list, orders, wishes': 'Einkaufsliste, Bestellungen, Wünsche',
   'Receipts & spending': 'Kassenbons & Ausgaben',
   'Imported receipts, expenses, tags': 'Importierte Bons, Ausgaben, Schlagwörter',
   'Everything household data': 'Alle Haushaltsdaten',
@@ -119,6 +119,6 @@ export const tour: Record<string, string> = {
   'Mika’s shoe size, the filter for the cooker hood, where the main water tap is. What usually only one of you knows is there for everyone. Notes you already have come in with “Import”.': 'Mikas Schuhgröße, der Filter für die Dunstabzugshaube, wo der Hauptwasserhahn ist. Was sonst nur einer von euch weiß, steht hier für alle. Notizen, die du schon hast, holst du über „Importieren“ rein.',
   'Just tell the assistant': 'Sag’s einfach dem Assistenten',
   '“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone.': '„Mira hat Dienstag um 15 Uhr Zahnarzt“ landet mit Datum bei den Aufgaben, „Mika hat jetzt Schuhgröße 29“ im Wissen, „Milch ist alle“ auf der Liste. Er sagt dir, was er gemacht hat, und alles lässt sich rückgängig machen.',
-  'Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”.': 'Liegst du krank auf dem Sofa oder hast gerade die Hände voll? Wünsch dir mit zwei Tipps einen Tee, und jemand zu Hause sagt „Ich bring’s“.',
+  'Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”. Guests too, with a link.': 'Liegst du krank auf dem Sofa oder hast gerade die Hände voll? Wünsch dir mit zwei Tipps einen Tee, und jemand zu Hause sagt „Ich bring’s“. Gäste auch, per Link.',
   'You can take it again any time under Help. Everything else, from house info to settings, is under More.': 'Die Tour findest du jederzeit wieder unter Hilfe. Alles andere, von der Hausinfo bis zu den Einstellungen, steht unter Mehr.',
 };

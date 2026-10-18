@@ -20,6 +20,8 @@ export type Intent =
   | { kind: 'money'; shop?: string }
   /** "Die Biotonne war doch noch nicht raus" – take back the last "done" of that task (assistant-tasks.ts task_undo_done) */
   | { kind: 'undo_done'; task: string }
+  // "Ich hab den Müll rausgebracht", "Spülmaschine ausgeräumt", "hab gestaubsaugt" – an open task ticked off (18 Oct 2026)
+  | { kind: 'task_done'; what: string; verb: string }
   /** "Was muss heute Abend raus?", "Was kommt demnächst?" – Heute › Demnächst (task-outlook.ts) */
   | { kind: 'outlook' }
   /** "Mika hat jetzt 29" – a new value for a remembered fact (memory.ts) */
@@ -102,6 +104,35 @@ export function undoDoneOf(text: string): string | null {
   if ((m = s.match(/^(.+?)\s+(?:aus\s+versehen|versehentlich)\s+abgehakt$/i))) return m[1].replace(TASK_ARTICLE, '').trim();
   if ((m = s.match(/^(?:bitte\s+)?(?:nimm|setz|mach)\s+(.+?)\s+(?:wieder\s+)?(?:zurück|zurueck|auf\s+offen|offen)$/i)) && !/^(?:das|es|alles|dies|that|it)$/i.test(m[1])) return m[1].replace(TASK_ARTICLE, '').trim();
   if ((m = s.match(/^(.+?)\s+(?:wasn'?t|was\s+not|isn'?t|is\s+not)\s+(?:actually\s+)?(?:done|out)(?:\s+after\s+all)?$/i))) return m[1].replace(TASK_ARTICLE, '').trim();
+  return null;
+}
+
+// participles that say a household job is done; never "gekauft/geholt/besorgt" (that is a purchase)
+const DONE_PART = String.raw`rausgebracht|rausgestellt|reingeholt|reingebracht|reingestellt|aufgemacht|zugemacht|rausgetragen|weggebracht|runtergebracht|ausgeräumt|ausgeraeumt|eingeräumt|eingeraeumt|aufgeräumt|aufgeraeumt|gestaubsaugt|staubgesaugt|gesaugt|geputzt|gewischt|gegossen|gefüttert|gefuettert|gewechselt|gewaschen|aufgehängt|aufgehaengt|abgehängt|abgehaengt|zusammengelegt|gebügelt|gebuegelt|geleert|ausgeleert|entkalkt|abgewaschen|gespült|gespuelt|gemäht|gemaeht|abgetaut|bezogen|saubergemacht|sauber\s+gemacht|erledigt|gemacht`;
+const DONE_FILL = String.raw`(?:(?:gerade|grad|eben|schon|jetzt|heute|auch|endlich|mal)\s+)*`;
+
+/**
+ * "Ich hab den Müll rausgebracht", "Müll ist rausgebracht", "Spülmaschine ausgeräumt", "hab gestaubsaugt",
+ * "I took the bins out" → what (may be empty) and the verb. Pure; which task it is decides assistant-done.ts.
+ */
+export function doneOf(text: string): { what: string; verb: string } | null {
+  const s = text.replace(/[!.…]+$/g, '').trim();
+  // a question, or several things at once ("Butter auf die Liste und Käse ist leer") – not for this reader
+  if (/\?/.test(s) || s.length > 80 || /\b(?:liste|list|und|and|aber|but)\b/i.test(s)) return null;
+  const strip = (x: string) => x.replace(/^(?:(?:den|die|das|der|dem|unsere?n?|meine?n?|the|my|our)\s+)+/i, '').trim();
+  let m: RegExpMatchArray | null;
+  if ((m = s.match(new RegExp(String.raw`^(?:ich\s+|wir\s+)?(?:hab(?:e)?|habe\s+ich|hab\s+ich|haben(?:\s+wir)?)\s+${DONE_FILL}(.*?)\s*(${DONE_PART})$`, 'i'))))
+    return { what: strip(m[1]), verb: m[2].toLowerCase() };
+  if ((m = s.match(new RegExp(String.raw`^(.+?)\s+(?:ist|sind|wurde|wurden)\s+${DONE_FILL}(${DONE_PART}|raus|draußen|draussen|sauber)$`, 'i'))))
+    return { what: strip(m[1]), verb: m[2].toLowerCase() };
+  // "Spülmaschine ausgeräumt", "Müll rausgebracht" – a short noun phrase and the participle
+  if ((m = s.match(new RegExp(String.raw`^((?:\S+\s+){0,3}?\S+)\s+(${DONE_PART})$`, 'i'))) && !/^(?:ich|wir|du|er|sie|es|hab\w*|hast|hat|habt|ist|sind|wurde\w*|was|wer|wann|wo)\b/i.test(m[1]))
+    return { what: strip(m[1]), verb: m[2].toLowerCase() };
+  if ((m = s.match(new RegExp(String.raw`^(${DONE_PART})$`, 'i')))) return { what: '', verb: m[1].toLowerCase() };
+  if ((m = s.match(/^(?:i|we)\s+(?:just\s+|have\s+|'ve\s+|already\s+)*(took\s+out|taken\s+out|emptied|unloaded|vacuumed|hoovered|cleaned|watered|fed|changed|washed|mopped)\s+(.+?)(?:\s+out)?$/i)))
+    return { what: strip(m[2]), verb: m[1].toLowerCase() };
+  if ((m = s.match(/^(?:i|we)\s+(?:just\s+|have\s+|'ve\s+|already\s+)*(?:took|taken)\s+(.+?)\s+out$/i))) return { what: strip(m[1]), verb: 'took out' };
+  if ((m = s.match(/^(.+?)\s+(?:is|are)\s+(?:now\s+)?(?:done|out|emptied)$/i))) return { what: strip(m[1]), verb: 'done' };
   return null;
 }
 
@@ -251,6 +282,9 @@ export function parseIntent(input: string): Intent {
   // "Die Biotonne war doch noch nicht raus" – a task ticked off too early, never a list line
   const undone = undoDoneOf(input.trim());
   if (undone) return { kind: 'undo_done', task: undone };
+  // "Ich hab den Müll rausgebracht" – an open task to tick off, never a list line
+  const done = doneOf(input.trim().replace(/\s+/g, ' '));
+  if (done) return { kind: 'task_done', ...done };
   // "Mika hat jetzt 29" – a new value for something ToHuus remembers
   const fact = factUpdateOf(text);
   if (fact) return { kind: 'fact', text: fact };

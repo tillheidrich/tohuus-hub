@@ -209,7 +209,7 @@ const EVENT_LABEL: Record<string, string> = {
   'stock.empty': 'Something has run out',
   'stock.expiring': 'Best-before date coming up',
   'import.review': 'Import waiting for review',
-  'order.new': 'Someone would love something (home, guests, party)',
+  'order.new': 'Someone would love something (home or guests)',
   'order.status': 'Answer to your wish (only to you)',
   'shopping.added': 'New item on the shopping list',
   'digest.daily': 'Daily digest (once a day)',

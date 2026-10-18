@@ -1,31 +1,27 @@
 /**
  * „Bring mir was“ (formerly „Verwöhnen“) / "Treats" / „Ompyssling“ – doing each other a good turn.
  *
- * Three modes on one page:
- * - For me (everyday, default for couples, families and flat shares): someone stuck with bedtime, a sick partner,
- *   someone working late asks for "vanilla ice cream, please" from the sofa or bed – the others get a push with
- *   one-tap "I'll bring it" / "Can't right now". Big friendly tiles from the menu and from real stock.
- * - Guests: links and QR codes for visitors, babysitters, grandparents.
- * - Party: the bar with board and kitchen view.
+ * One „Bring mir was“ (Till, 18 Oct 2026: „führe das beides zusammen“): someone stuck with bedtime, a sick partner,
+ * someone working late asks for "vanilla ice cream, please" from the sofa or bed – and guests wish for something
+ * through a shared link or QR code. Both land in the same list ("For you") with the same one-tap
+ * "I'll bring it" / "Can't right now" / "Brought it". The invite button for guests sits right here.
  * No points, no ranking, no count of who brought what – only a tiny private "thanks".
  */
-import { Basket, ChatCenteredText, Check, Coffee, Confetti, Cookie, Heart, IceCream, Minus, Package, Plus, Popcorn, ThermometerCold, Users, X } from '@phosphor-icons/react';
+import { Basket, ChatCenteredText, Check, Coffee, Heart, IceCream, Minus, Package, Plus, Popcorn, QrCode, ThermometerCold, Users, X } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { type ReactNode, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { api, invalidate, patch, post, relTime, useApi } from '../api';
 import { useHousehold } from '../household';
 import { t } from '../i18n';
 import { Avatar } from '../people/Avatar';
 import { Empty, Seg, Sheet, Thumb, useToast } from '../ui';
-import { Links, Orders } from './Bar';
+import { QrSheet } from './Bar';
 import { OrderMenu } from './Guest';
 import { EditMenuButton } from './Menu';
-import { PartyCard, usePartyModule } from './Party';
 
-type Mode = 'me' | 'guests' | 'party';
-type Kind = 'home' | 'guest' | 'party';
+type Kind = 'home' | 'guest';
 
 /** Short reasons for "Can't right now" – the same English source as the server (DECLINE_REASONS). */
 const REASONS = ['In a few minutes', 'It’s all gone', 'I’m not home', 'My hands are full'];
@@ -33,7 +29,6 @@ const REASONS = ['In a few minutes', 'It’s all gone', 'I’m not home', 'My ha
 /** The warm status line (mirrors server/lib/orders.ts statusLine). */
 export function treatStatus(kind: Kind, status: string, by?: string | null, reason?: string | null): string {
   if (status === 'declined') return reason ? t('Not right now – {reason}', { reason: t(reason) }) : t('Not right now');
-  if (kind === 'party') return status === 'done' ? t('Ready at the counter') : status === 'accepted' ? t('Being made') : t('Received');
   if (status === 'accepted') return by ? t('Coming right up – {name} is bringing it', { name: by }) : t('Coming right up');
   if (status === 'done') return kind === 'guest' ? t('On its way to you') : by ? t('Brought by {name}', { name: by }) : t('Brought');
   return kind === 'guest' ? t('Received') : t('Sent – waiting for an “I’ll bring it”');
@@ -44,27 +39,15 @@ const itemsText = (o: any) =>
 
 export function Order({ me }: { me: Me }) {
   const home = useHousehold();
-  const [params, setParams] = useSearchParams();
   const houseGuest = Boolean(me.actor.houseGuest);
-  // living alone: nobody to bring anything – the page is for guests and parties only
+  // living alone: nobody at home to bring anything – the page is for wishes from guests
   const single = home.form_chosen && home.form === 'single';
-  // party mode: its own switch, off for the start (docs/party-modus.md)
-  const party = usePartyModule();
-  const modes: Mode[] = (houseGuest ? ['me'] : single ? ['guests', 'party'] : ['me', 'guests', 'party']).filter((m) => party || m !== 'party') as Mode[];
-  const asked = params.get('mode') as Mode | null;
-  const mode: Mode = asked && modes.includes(asked) ? asked : modes[0];
-  const setMode = (m: Mode) => setParams(m === modes[0] ? {} : { mode: m }, { replace: true });
-  const eyebrow = {
-    me: t('Do each other a good turn'),
-    guests: t('Visitors, babysitters, grandparents'),
-    party: t('Bar, board and kitchen view'),
-  }[mode];
   return (
     <div className="treats">
       <header className="page-head">
         <div>
-          <div className="eyebrow">{eyebrow}</div>
-          <h1>{single ? (party ? t('Guests & party') : t('Guests')) : t('Treats')}</h1>
+          <div className="eyebrow">{single ? t('Visitors, babysitters, grandparents') : t('Do each other a good turn')}</div>
+          <h1>{t('Treats')}</h1>
         </div>
         {!houseGuest && (
           <div className="actions">
@@ -72,19 +55,7 @@ export function Order({ me }: { me: Me }) {
           </div>
         )}
       </header>
-      {modes.length > 1 && (
-        <div className="treat-modes">
-          <Seg
-            value={mode}
-            onChange={setMode}
-            label={t('Mode')}
-            options={modes.map((m) => [m, { me: t('Bring me something'), guests: t('Guests'), party: t('Party') }[m]] as [Mode, string])}
-          />
-        </div>
-      )}
-      {mode === 'me' && <ForMe me={me} />}
-      {mode === 'guests' && <GuestsMode />}
-      {mode === 'party' && <PartyMode />}
+      {single ? <GuestsOnly me={me} /> : <ForMe me={me} />}
     </div>
   );
 }
@@ -227,7 +198,7 @@ function Everyday({ me }: { me: Me }) {
       setBusy(false);
     }
   };
-  const open = (mine.data ?? []).filter((o) => o.kind !== 'party' || o.status !== 'done').slice(0, 4);
+  const open = (mine.data ?? []).slice(0, 4);
 
   return (
     <div className="treat-grid">
@@ -259,6 +230,8 @@ function Everyday({ me }: { me: Me }) {
 
       <div className="treat-side">
         <Inbox me={me} />
+
+        {!me.actor.houseGuest && <InviteGuests />}
 
         {open.length > 0 && (
           <section className="treat-sec">
@@ -529,7 +502,7 @@ function MyWish({ o }: { o: any }) {
 }
 
 /** What the others asked for and I could bring – one tap "I'll bring it" or "Can't right now" with a reason. */
-function Inbox({ me }: { me: Me }) {
+function Inbox({ me, empty }: { me: Me; empty?: string }) {
   const reqs = useQuery<any[]>({
     queryKey: ['orders', 'treats-requests'],
     queryFn: () => api('/bar/requests'),
@@ -547,7 +520,14 @@ function Inbox({ me }: { me: Me }) {
     }
   };
   const list = reqs.data ?? [];
-  if (!list.length) return null;
+  if (!list.length)
+    return empty && !reqs.isLoading ? (
+      <div className="card">
+        <Empty icon={<Users size={26} />} title={t('Nothing open right now')}>
+          {empty}
+        </Empty>
+      </div>
+    ) : null;
   return (
     <section className="ticket treat-inbox" aria-label={t('For you')}>
       <div className="ticket-h">
@@ -561,7 +541,10 @@ function Inbox({ me }: { me: Me }) {
             <li key={o.id}>
               <span className={`mk ${o.status === 'done' ? 'ok' : ''}`} aria-hidden />
               <div>
-                <span className="t-title">{o.for_user_id ? t('{name} asks you', { name: o.guest_name }) : t('{name} would love something', { name: o.guest_name })}</span>
+                {/* wishes from the guest link carry "Guest: name" – same list, same buttons */}
+                <span className="t-title">
+                  {o.kind === 'guest' ? t('Guest: {name}', { name: o.guest_name }) : o.for_user_id ? t('{name} asks you', { name: o.guest_name }) : t('{name} would love something', { name: o.guest_name })}
+                </span>
                 <div className="meta">
                   <span>{[itemsText(o), relTime(o.created_at)].join(' · ')}</span>
                 </div>
@@ -571,8 +554,8 @@ function Inbox({ me }: { me: Me }) {
                     <button className="btn primary sm" onClick={() => set(o.id, 'accepted')}>
                       <Check size={16} weight="bold" /> {t('I’ll bring it')}
                     </button>
-                    <button className="btn sm" onClick={() => setDeclining(o.id)}>
-                      {t('Can’t right now')}
+                    <button className="btn danger sm" onClick={() => setDeclining(o.id)}>
+                      <X size={16} weight="bold" /> {t('Can’t right now')}
                     </button>
                   </div>
                 )}
@@ -627,55 +610,74 @@ function Inbox({ me }: { me: Me }) {
   );
 }
 
-// ------------------------------------------------------------------ guests
+// ------------------------------------------------------------------ guests: the invite sits right here
 
-function GuestsMode() {
-  const nav = useNavigate();
+/** Living alone: no tiles for "bring me" – only the guests' wishes and the invite. */
+function GuestsOnly({ me }: { me: Me }) {
   return (
     <div className="stack" style={{ gap: 22 }}>
-      <section className="card pad treat-intro">
-        <h2>{t('For visitors, babysitters and grandparents')}</h2>
-        <p className="muted">
-          {t(
-            'A link or QR code – no app, no account. Guests ask for what you put on the menu for guests, can find things in the places you share and add to the shopping list if you allow it. They never see quantities or purchases.',
-          )}
-        </p>
-        <div className="row wrap" style={{ gap: 8 }}>
-          <button className="btn sm" onClick={() => nav('/bestellen/karte')}>
-            {t('What guests can ask for')}
-          </button>
-        </div>
-      </section>
-      <section>
-        <h3 className="treat-h3">{t('Guest links')}</h3>
-        <Links />
-      </section>
-      <section>
-        <h3 className="treat-h3">{t('What guests want right now')}</h3>
-        <Orders filter={(o) => Boolean(o.guest_link_id) && !o.party_id} empty={t('Nobody has asked for anything yet.')} />
-      </section>
+      <InviteGuests />
+      <Inbox me={me} empty={t('Nobody has asked for anything yet.')} />
     </div>
   );
 }
 
-// ------------------------------------------------------------------ party
-
-function PartyMode() {
+/**
+ * "Invite guests": a link or QR code for visitors – no app, no account. Guests wish for something from the menu and
+ * it lands in the same list as the wishes from home. Babysitter and grandparents links (with "Where is what?",
+ * shopping list, house info) live in Guests.
+ */
+export function InviteGuests() {
   const nav = useNavigate();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [qr, setQr] = useState<{ name: string; url: string } | null>(null);
+  const [f, setF] = useState({ name: t('Visit'), days: 2 });
+  const [busy, setBusy] = useState(false);
+  const create = async () => {
+    setBusy(true);
+    try {
+      const r = await post('/guest-links', { name: f.name.trim() || t('Visit'), scopes: ['bar'], days: f.days, location_ids: [] });
+      invalidate('guest-links');
+      setOpen(false);
+      setQr({ name: f.name.trim() || t('Visit'), url: r.url });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
-    <div className="stack" style={{ gap: 22 }}>
-      <PartyCard />
-      <section>
-        <div className="row between" style={{ marginBottom: 8 }}>
-          <h3 className="treat-h3" style={{ margin: 0 }}>
-            {t('At the bar')}
-          </h3>
-          <button className="btn ghost sm" onClick={() => nav('/bar')}>
-            <Confetti size={16} /> {t('Whole board')}
+    <section className="treat-sec treat-invite">
+      <div className="eyebrow label-sq">{t('Invite guests')}</div>
+      <p className="small" style={{ margin: '6px 0 10px' }}>{t('Send guests the link: they wish for something, you bring it.')}</p>
+      <div className="row wrap" style={{ gap: 8 }}>
+        <button className="btn sm primary" onClick={() => setOpen(true)}>
+          <QrCode size={16} /> {t('Share link or QR code')}
+        </button>
+        <button className="btn sm ghost" onClick={() => nav('/bar')}>
+          {t('Guest links')}
+        </button>
+      </div>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('Invite guests')}>
+        <div className="stack">
+          <p className="muted" style={{ margin: 0 }}>
+            {t('No app, no account. Guests see what you put on the menu for guests – never quantities or purchases. Their wishes show up here with “Guest”.')}
+          </p>
+          <div className="field">
+            <label htmlFor="invite-name">{t('What’s it for?')}</label>
+            <input id="invite-name" className="input" value={f.name} maxLength={60} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t('Barbecue, babysitter, grandma …')} />
+          </div>
+          <div className="field">
+            <label>{t('Valid for')}</label>
+            <Seg value={String(f.days)} onChange={(v) => setF({ ...f, days: Number(v) })} options={[['1', t('1 day')], ['2', t('Weekend')], ['14', t('2 weeks')]]} />
+          </div>
+          <button className="btn primary lg" disabled={busy} onClick={create}>
+            {t('Create link')}
           </button>
         </div>
-        <Orders filter={(o) => Boolean(o.party_id)} empty={t('No party orders yet. Start a party above – guests scan the QR code and pick up at the counter.')} />
-      </section>
-    </div>
+      </Sheet>
+      <QrSheet item={qr} onClose={() => setQr(null)} toast={toast} />
+    </section>
   );
 }

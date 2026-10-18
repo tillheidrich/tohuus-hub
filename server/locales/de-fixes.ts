@@ -64,7 +64,6 @@ export const de_fixes: Record<string, string> = {
   Stock: 'Vorrat',
   Receipts: 'Kassenbons',
   Care: 'Pflege',
-  Party: 'Party',
   Wish: 'Wunsch',
   Budget: 'Budget',
   Test: 'Test',

@@ -13,6 +13,7 @@ import { api, ApiError, del, invalidate, patch, post, relTime, useApi } from '..
 import { t } from '../i18n';
 import { useHealthConsent } from '../people/HealthConsent';
 import { Empty, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { FactStrip } from './FactStrip';
 import { KnowledgeExport, KnowledgeImport } from './KnowledgeIO';
 import './knowledge.css';
 
@@ -298,6 +299,8 @@ export function KnowledgePage({ me }: { me: Me }) {
           </span>
         </button>
       )}
+      {/* „Gut zu wissen“ (18 Oct 2026): quiet, at the end, not while searching – same as the iPhone */}
+      {!guest && !q.isLoading && !query.trim() && <FactStrip topics={['knowledge']} />}
       {!guest && (
         <p className="small muted kn-foot">
           {t('ToHuus is no notebook and no calendar: only what belongs to your home. Codes and passwords go into')} <Link to="/hausinfo">{t('House info')}</Link>.

@@ -31,8 +31,8 @@ async def test_sensors(hass: HomeAssistant, mock_api, entry, state: dict[str, An
     assert [i["name"] for i in low.attributes["items"]] == [i["name"] for i in state["low"]]
     assert hass.states.get("sensor.tohuus_hub_shopping_list").state == str(state["counts"]["shopping"])
     assert hass.states.get("sensor.tohuus_hub_tonight").state == state["tonight"]["title"]
-    assert hass.states.get("sensor.tohuus_hub_party").state == "off"
-    assert hass.states.get("binary_sensor.tohuus_hub_party_running").state == "off"
+    # the party mode was removed on 18 Oct 2026 – no party entities anymore
+    assert hass.states.get("sensor.tohuus_hub_party") is None
     assert hass.states.get("binary_sensor.tohuus_hub_something_expired").state == ("on" if state["counts"]["expired"] else "off")
     nxt = hass.states.get("sensor.tohuus_hub_next_care_task")
     assert nxt.state.startswith(state["care"]["next"]["next_due"]) or nxt.state.endswith("+00:00")

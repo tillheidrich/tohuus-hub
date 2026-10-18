@@ -10,7 +10,7 @@ import { t } from '../i18n';
 import { Empty, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
 
 type Layout = 'kitchen' | 'hallway' | 'minimal';
-type Widget = 'clock' | 'meals' | 'eat_first' | 'low' | 'shopping' | 'care' | 'party';
+type Widget = 'clock' | 'meals' | 'eat_first' | 'low' | 'shopping' | 'care';
 
 interface Display {
   id: number;
@@ -52,7 +52,6 @@ const widgetLabel = (w: Widget) =>
     low: t('Low & out'),
     shopping: t('Shopping list (count & top items)'),
     care: t('Due at home'),
-    party: t('Party banner while a party runs'),
   })[w];
 const seenVia = (v: Display['last_seen_via']) => (v === 'image' ? t('as image') : v === 'json' ? t('as data') : t('as page'));
 

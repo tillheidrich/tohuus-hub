@@ -96,20 +96,18 @@ describe('answers', () => {
 });
 
 describe('status texts', () => {
-  it('speak warmly at home and stay practical for guests and parties', () => {
+  it('speak warmly at home and stay practical for guests', () => {
     expect(orders.statusLine('home', 'new')).toBe('Sent – waiting for an “I’ll bring it”');
     expect(orders.statusLine('home', 'accepted', 'Lea')).toBe('Coming right up – Lea is bringing it');
     expect(orders.statusLine('home', 'done', 'Lea')).toBe('Brought by Lea');
     expect(orders.statusLine('guest', 'done')).toBe('On its way to you');
-    expect(orders.statusLine('party', 'done')).toBe('Ready at the counter');
     expect(orders.statusLine('home', 'declined', 'Lea', 'In a few minutes')).toBe('Not right now – In a few minutes');
     expect(orders.statusLine('home', 'declined')).toBe('Not right now');
   });
 
-  it('tells household, guest and party orders apart', () => {
+  it('tells household and guest wishes apart', () => {
     expect(orders.orderKind({ user_id: 1 })).toBe('home');
     expect(orders.orderKind({ guest_link_id: 3 })).toBe('guest');
-    expect(orders.orderKind({ user_id: 1, party_id: 2 })).toBe('party');
   });
 });
 
@@ -123,6 +121,54 @@ describe('thanks', () => {
     expect(orders.thankOrder(id, till)).toEqual({ ok: true, already: true });
     // the bringer sees it on their side, nobody keeps a count
     expect(orders.requestsFor(lea).find((o) => o.id === id)?.thanked_at).toBeTruthy();
+  });
+});
+
+// Till, 18 Oct 2026: „den Partymodus komplett raus“ – and „führe das beides zusammen“: one „Bring mir was“
+describe('one „Bring mir was“ for home and guests', () => {
+  const guestLink = () =>
+    Number(db.prepare(`INSERT INTO guest_links (token, name, scopes, location_ids) VALUES (?, 'Besuch', '["bar"]', '[]')`).run(`h${Math.random()}`).lastInsertRowid);
+
+  it('a wish from a guest link lands in everyone’s list at home, with the same buttons and one notification switch', async () => {
+    db.prepare(`UPDATE orders SET status = 'declined'`).run();
+    const link = guestLink();
+    const id = orders.createOrder({ guest_name: 'Mia', lines: [{ product_id: iceCream, qty: 1, options: [] }] }, { guestLinkId: link, name: 'Mia', linkName: 'Besuch', clientId: 'device-aaaaaaaaaaaaaaaa' });
+    for (const uid of [till, lea, jonas]) expect(orders.requestsFor(uid).find((o) => o.id === id)).toMatchObject({ kind: 'guest', guest_name: 'Mia', status: 'new' });
+    const { keyboardFor } = await import('../server/lib/telegram');
+    const { actionsFor } = await import('../server/lib/webpush');
+    const { personEventOf } = await import('../server/lib/notify-prefs');
+    const { moduleOfEvent } = await import('../server/lib/modules');
+    expect(keyboardFor('order.new', { order_id: id, kind: 'guest' })).toEqual(keyboardFor('order.new', { order_id: id, kind: 'home' }));
+    expect(actionsFor('order.new', { order_id: id, kind: 'guest' }).map((a) => a.action)).toEqual(['order-accept', 'order-decline']);
+    expect(personEventOf('order.new', { kind: 'guest' })).toBe('order.new');
+    expect(moduleOfEvent('order.new', { kind: 'guest' })).toBe('treats');
+    // "I’ll bring it" and "Brought it" as at home; the guest's phone shows the warm status
+    expect(actions.runNotifyAction('order-accept', { order_id: id }, 'Lea').summary).toBe('Lea is bringing it');
+    orders.setOrderStatus(id, 'done', { by: { userId: lea, name: 'Lea' } });
+    const seen = orders.listOrders('guest_link_id = ? AND client_id = ?', link, 'device-aaaaaaaaaaaaaaaa')[0];
+    expect(orders.statusLine(seen.kind, seen.status, seen.by_name)).toBe('On its way to you');
+    expect(orders.requestsFor(lea).find((o) => o.id === id)?.status).toBe('done');
+    expect(orders.requestsFor(jonas).find((o) => o.id === id)).toBeUndefined();
+  });
+
+  it('guests only get what the menu shares with them – never family-only or hidden items, never more than is there', async () => {
+    const menu = await import('../server/lib/menu');
+    const pizza = catalog.createProduct({ name: 'Pizza Margherita', trackMode: 'none', orderable: true, orderGroup: 'Food' });
+    menu.syncMenu();
+    menu.setAvailability(pizza, 'family');
+    const link = guestLink();
+    expect(orders.orderMenu(false).some((i) => i.id === pizza)).toBe(false);
+    expect(() => orders.createOrder({ guest_name: 'Mia', lines: [{ product_id: pizza, qty: 1, options: [] }] }, { guestLinkId: link, name: 'Mia' })).toThrow();
+    expect(() => orders.createOrder({ guest_name: 'Mia', lines: [{ product_id: iceCream, qty: 20, options: [] }] }, { guestLinkId: link, name: 'Mia' })).toThrow(/left|all gone/);
+  });
+
+  it('rows of the former party mode stay in the database but never show up or break a list', () => {
+    db.prepare(`INSERT INTO parties (name, status) VALUES ('Old party', 'ended')`).run();
+    const pid = (db.prepare('SELECT MAX(id) AS id FROM parties').get() as { id: number }).id;
+    const old = Number(db.prepare(`INSERT INTO orders (guest_name, status, party_id, user_id) VALUES ('Gast', 'new', ?, ?)`).run(pid, till).lastInsertRowid);
+    expect(orders.requestsFor(lea).some((o) => o.id === old)).toBe(false);
+    expect(orders.listOrders('o.id = ?', old)).toEqual([]);
+    expect(db.prepare('SELECT COUNT(*) AS n FROM parties').get()).toEqual({ n: 1 });
   });
 });
 

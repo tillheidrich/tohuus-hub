@@ -119,7 +119,7 @@ struct DisplaysView: View {
         }
     }
 
-    static let defaultWidgets = ["clock", "meals", "eat_first", "low", "shopping", "care", "party"]
+    static let defaultWidgets = ["clock", "meals", "eat_first", "low", "shopping", "care"]
 
     private func row(_ d: DisplayRow) -> some View {
         var parts = [Self.layoutLabel(d.layout ?? "kitchen")]
@@ -183,7 +183,6 @@ struct DisplaysView: View {
         case "low": return L("Low & out")
         case "shopping": return L("Shopping list (count & top items)")
         case "care": return L("Due at home")
-        case "party": return L("Party banner while a party runs")
         default: return w
         }
     }

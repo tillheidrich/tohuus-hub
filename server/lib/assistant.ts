@@ -20,6 +20,7 @@ import { aiOffReason } from './ai-policy.js';
 import { addUsage, aiConfigured, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
 import { buildContext, topicsOf, type Topic } from './assistant-context.js';
 import { CONTEXT_TOPICS, contextHint, type ScreenContext } from './assistant-areas.js';
+import { matchDone } from './assistant-done.js';
 import { looksLikeTask, parseIntent, taskWhen, type Intent } from './assistant-parse.js';
 import { scopeCheck, SCOPE_DE, SCOPE_EN } from './assistant-scope.js';
 import {
@@ -315,16 +316,18 @@ export function fullyUnderstood(intent: Intent): boolean {
   // "danke", "nein" need no model; "ja" and "speicher das Rezept" do (they refer to the last answer)
   if (intent.kind === 'reply') return intent.answer === 'thanks' || intent.answer === 'no';
   // "Mika hat jetzt 29": a corrected value of something remembered (memory.ts) – no model needed
-  return ['purchase', 'remember', 'forget', 'list', 'fact', 'note_import', 'knowledge_history', 'knowledge_visibility'].includes(intent.kind);
+  // "Müll rausgebracht": ticking off an open task (assistant-done.ts) – no model needed
+  return ['purchase', 'remember', 'forget', 'list', 'fact', 'note_import', 'knowledge_history', 'knowledge_visibility', 'task_done'].includes(intent.kind);
 }
 
 /** The prompt for one message: only the context lines and tools its topics need (plus the screen's). Exported for tests. */
 export function promptFor(message: string, user: AssistantUser, context: ScreenContext | null = null) {
   const fromText = topicsOf(message);
   const topics = [...new Set([...(context ? CONTEXT_TOPICS[context] : []), ...(context && fromText.length === 3 ? [] : fromText)])] as Topic[];
-  const ctxText = buildContext({ purpose: 'assistant', viewer: { userId: user.userId, name: user.name }, topics });
+  // the message also ranks what ToHuus remembers (the line has a cap, assistant-context.ts) and picks the tools
+  const ctxText = buildContext({ purpose: 'assistant', viewer: { userId: user.userId, name: user.name }, topics, query: message });
   const hint = contextHint(context, lang() === 'de');
-  const tools = toolsFor(topics, Boolean(context));
+  const tools = toolsFor(topics, Boolean(context), message);
   // "ein Rezept für Kinder": the model writes the recipe itself and may save it after a yes
   if (/rezept|recipe/i.test(message) && !tools.some((d) => d.function.name === 'recipe_save_adapted')) {
     tools.push(...TOOL_DEFS.filter((d) => d.function.name === 'recipe_save_adapted'));
@@ -409,6 +412,18 @@ export function basicUndoDone(ctx: ToolCtx, task: string): string {
   return r?.error ?? t('Nothing to undo');
 }
 
+/** "Ich hab den Müll rausgebracht" without a model: one clear open task → ticked off (undo in the answer), several → ask. */
+export function basicTaskDone(ctx: ToolCtx, what: string, verb: string): string {
+  if (ctx.guest) return t('Only people who live here can change this.');
+  const m = matchDone(what, verb);
+  const label = what || verb;
+  if (m.kind === 'none') return t('I can’t find an open task for “{what}”. You can add it under Tasks.', { what: label });
+  if (m.kind === 'already') return t('“{name}” is already ticked off today.', { name: m.task.name });
+  if (m.kind === 'several') return t('Which one do you mean: {items}? Say e.g. “{example} done”.', { items: joinList(m.tasks.map((x) => x.name)), example: m.tasks[0].name });
+  const r = runTool(ctx, 'task_done', { task: m.task.id }) as { ok?: boolean; error?: string } | undefined;
+  return r?.ok ? t('Nice, “{name}” is ticked off.', { name: m.task.name }) : (r?.error ?? t('Done.'));
+}
+
 /** One task in a spoken answer: "Zahnarzt um 10:00 (Lea)". */
 type TaskBit = { name: string; when?: string; time?: string; does_it?: string | null };
 const taskBit = (x: TaskBit) => {
@@ -480,6 +495,8 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
       return basicOutlook(ctx, message);
     case 'undo_done':
       return basicUndoDone(ctx, intent.task);
+    case 'task_done':
+      return basicTaskDone(ctx, intent.what, intent.verb);
     case 'recall': {
       const a = recallAnswer(ctx, intent.subject, intent.property);
       if (a) return a;

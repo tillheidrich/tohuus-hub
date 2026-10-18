@@ -71,7 +71,9 @@ enum OnDeviceAI {
     // MARK: receipts
 
     /// Cleans the lines Apple Vision read from a receipt into "Name 1,99" lines plus the total, in the shape the
-    /// server's receipt parser reads (`POST /api/imports/lines`). Guard against invented numbers: an item is only kept
+    /// server's receipt parser reads (`POST /api/imports/lines`). Since 18 Oct 2026 it is only a second reading sent
+    /// next to Apple Vision's own lines (`alt`): the server takes it only when the plain lines do not add up and it does
+    /// (the model had dropped a discount and a deposit row and read "Eier 6St" as 6 eggs). Guard against invented numbers: an item is only kept
     /// when its price appears in the recognised text. Returns nil when the model is not there or the result is thin –
     /// the caller then sends the raw lines as before.
     static func tidyReceipt(_ lines: [String]) async -> [String]? {
@@ -80,16 +82,19 @@ enum OnDeviceAI {
             do {
                 let session = LanguageModelSession(instructions: """
                     You read the text of a German or English supermarket receipt that was recognised by OCR.
-                    Return the shop name, every bought item with its quantity and the price paid for that line, the total \
-                    and the date as written. Copy names and numbers from the text, never invent anything. Leave out \
-                    payment, tax, card and bonus lines.
+                    Return the shop name, every line with an amount in the order of the receipt, the total and the date \
+                    as written. Copy names and numbers from the text, never invent anything. Discount rows (Rabatt, \
+                    Lidl Plus Rabatt, Preisvorteil, Coupon) are lines with a negative price. Deposit rows (Pfand, \
+                    Leergut, EM, EW) are lines too. The quantity is only what is printed as "2 x" or "1,19 x 2"; a pack \
+                    size in the name ("6St", "10er", "500g", "1,5l") is part of the name, never the quantity. Leave out \
+                    payment, tax and card lines.
                     """)
                 let text = lines.prefix(160).joined(separator: "\n")
                 let r = try await session.respond(to: text, generating: TidyReceipt.self).content
                 let raw = lines.joined(separator: " ")
                 let digitsOnly = raw.replacingOccurrences(of: ",", with: ".")
-                func seen(_ p: Double) -> Bool { digitsOnly.contains(String(format: "%.2f", p)) }
-                let items = r.items.filter { $0.price > 0 && seen($0.price) && !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+                func seen(_ p: Double) -> Bool { digitsOnly.contains(String(format: "%.2f", abs(p))) }
+                let items = r.items.filter { $0.price != 0 && seen($0.price) && !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
                 guard items.count >= max(1, r.items.count / 2) else { return nil }
                 var out: [String] = []
                 if let shop = r.shop, !shop.isEmpty { out.append(shop) }
@@ -171,7 +176,7 @@ struct TidyReceiptItem {
     var name: String
     @Guide(description: "How many, 1 when not printed")
     var quantity: Int
-    @Guide(description: "Price paid for this line")
+    @Guide(description: "Amount printed for this line; negative for a discount")
     var price: Double
 }
 

@@ -12,7 +12,6 @@ export const kiosk: Record<string, string> = {
   'Low & out': 'Knapp & leer',
   'Shopping list (count & top items)': 'Einkaufsliste (Anzahl & die ersten Sachen)',
   'Due at home': 'Fällig zu Hause',
-  'Party banner while a party runs': 'Party-Hinweis, solange eine Party läuft',
   'as image': 'als Bild',
   'as data': 'als Daten',
   'as page': 'als Seite',

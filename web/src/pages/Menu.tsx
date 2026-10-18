@@ -1,6 +1,6 @@
 /**
  * The order menu editor (/bestellen/karte): groups, items, options, availability, stock links.
- * One place for everything the family, guests and parties can order. Area: menu.
+ * One place for everything the family and guests can ask for in „Bring mir was“. Area: menu.
  */
 import { ArrowDown, ArrowLeft, ArrowUp, Camera, DotsSixVertical, ForkKnife, Lightning, MagnifyingGlass, Package, PencilSimple, Plus, Sparkle, Trash, X } from '@phosphor-icons/react';
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
@@ -13,7 +13,7 @@ import { t } from '../i18n';
 
 // ------------------------------------------------------------------ types
 
-type Availability = 'available' | 'hidden' | 'party' | 'family';
+type Availability = 'available' | 'hidden' | 'family';
 interface MenuOption {
   group: string;
   choices: string[];
@@ -62,7 +62,6 @@ interface MenuGroup {
 }
 interface MenuData {
   groups: MenuGroup[];
-  party_live: boolean;
   count: number;
 }
 
@@ -71,16 +70,15 @@ const refresh = () => invalidate('products', 'orders');
 
 /** "Family" only in a family; elsewhere the members are the household or the flat share (area: home). */
 const householdLabel = () => householdWord(qc.getQueryData<Me>(['me'])?.home?.form ?? 'family');
-const availLabel = (a: Availability) => ({ available: t('Everyone'), party: t('Parties'), family: householdLabel(), hidden: t('Hidden') })[a];
+const availLabel = (a: Availability) => ({ available: t('Everyone'), family: householdLabel(), hidden: t('Hidden') })[a];
 const availHelp = (a: Availability) =>
   ({
-    available: t('Everyone sees it – your household, guests and parties.'),
-    party: t('Only while a party is on – handy for the sparkling wine.'),
+    available: t('Everyone sees it – your household and guests.'),
     family: t('Only household members see it, not guests.'),
     hidden: t('Nobody sees it right now. It stays here for later.'),
   })[a];
 
-/** Small entry point used on the order page, the bar page and the party setup. */
+/** Small entry point used on the „Bring mir was“ page. */
 export function EditMenuButton({ className = 'btn ghost', label }: { className?: string; label?: string }) {
   const nav = useNavigate();
   return (
@@ -208,7 +206,7 @@ export function MenuEditor({ me }: { me: Me }) {
             </button>
           </div>
           <h1>{t('The menu')}</h1>
-          <p className="muted" style={{ margin: '6px 0 0' }}>{t('The little things your household can ask each other for – and what guests and parties see. Changes show up right away.')}</p>
+          <p className="muted" style={{ margin: '6px 0 0' }}>{t('The little things your household can ask each other for – and what guests see. Changes show up right away.')}</p>
         </div>
       </header>
 
@@ -230,8 +228,6 @@ export function MenuEditor({ me }: { me: Me }) {
           </button>
         </div>
       )}
-
-      {m.data?.party_live && <div className="note-card" style={{ margin: '0 0 16px' }}>{t('A party is on – items for “Parties” are visible right now.')}</div>}
 
       {m.isLoading && <Skeleton n={4} h={64} />}
       {m.error && (
@@ -763,7 +759,7 @@ function ItemSheet({ open, item, groups, presetGroup, onClose }: { open: boolean
 
           <div className="field">
             <label>{t('Who sees it')}</label>
-            <Seg<Availability> value={f.availability} onChange={(v) => set('availability', v)} options={(['available', 'party', 'family', 'hidden'] as Availability[]).map((a) => [a, availLabel(a)])} />
+            <Seg<Availability> value={f.availability} onChange={(v) => set('availability', v)} options={(['available', 'family', 'hidden'] as Availability[]).map((a) => [a, availLabel(a)])} />
             <div className="help">{availHelp(f.availability)}</div>
           </div>
 

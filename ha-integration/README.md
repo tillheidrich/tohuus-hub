@@ -25,12 +25,11 @@ Works with **ToHuus Cloud** and with **your own ToHuus Hub** (Docker). You conne
 | `sensor.tohuus_hub_eat_first` | What should be eaten first, leftovers included. |
 | `sensor.tohuus_hub_frozen_portions` | Frozen portions in labelled containers; `thaw` lists planned meals to take out of the freezer. |
 | `sensor.tohuus_hub_shopping_list` | Number of open items, names as `items`. |
-| `sensor.tohuus_hub_open_orders` | Open orders from the sofa or the party. |
+| `sensor.tohuus_hub_open_orders` | Open „Bring mir was“ wishes, from home and from guest links. |
 | `sensor.tohuus_hub_care_due` / `_next_care_task` | Tasks due (list in `tasks`) / timestamp of the next one. |
-| `sensor.tohuus_hub_party` | `off` or `live`, with name, end time and order counts. |
 | `sensor.tohuus_hub_kid_wishes` | Wishes from kid mode waiting for a parent. |
 | `sensor.tohuus_hub_receipts_to_review` | Imported receipts waiting for a check. |
-| `binary_sensor.tohuus_hub_party_running`, `_something_expired` | For conditions and badges. |
+| `binary_sensor.tohuus_hub_something_expired` | For conditions and badges. |
 | `button.tohuus_hub_check_receipt_inbox`, `_fill_week`, `_backup_now` | One tap. |
 | `image.tohuus_hub_display_<n>` | Each kitchen display from ToHuus Hub (Settings › Displays) as an image, re-rendered when data changes. |
 | `event.tohuus_hub_notification` | The latest ToHuus Hub notification (low stock, new order, care due …). |
@@ -128,7 +127,7 @@ Every ToHuus Hub notification is fired on the event bus as `tohuus_hub_event`:
 event_type: tohuus_hub_event
 data:
   event: order.new          # stock.low, stock.empty, stock.expiring, import.review, order.new,
-  type: order_new           # order.status, shopping.added, digest.daily, care.due, party.ending, kids.wish
+  type: order_new           # order.status, shopping.added, digest.daily, care.due, kids.wish
   title: Order from Lea
   message: 2× Cola
   url: http://tohuus.local:8080/bar
@@ -137,7 +136,7 @@ data:
 ```
 
 ```yaml
-# Flash the living room light on a new party order
+# Flash the living room light on a new wish
 automation:
   - alias: New order
     triggers:
@@ -157,13 +156,13 @@ The same notifications drive `event.tohuus_hub_notification`, so you can also pi
 
 Ready-made dashboards are in [`dashboards/`](dashboards/):
 
-- **`tohuus-core.yaml`** – built-in cards only. *Kitchen* view: tonight's meal with photo, eat first, shopping list (to-do card), low and empty products, care tasks, party, kid wishes. *Wall* view for a landscape tablet: clock, tonight, shopping list, the kitchen display image, a week calendar.
+- **`tohuus-core.yaml`** – built-in cards only. *Kitchen* view: tonight's meal with photo, eat first, shopping list (to-do card), low and empty products, care tasks, kid wishes. *Wall* view for a landscape tablet: clock, tonight, shopping list, the kitchen display image, a week calendar.
 - **`tohuus-mushroom.yaml`** – the same with [Mushroom](https://github.com/piitaya/lovelace-mushroom) cards (install Mushroom from HACS first).
 
 Paste the file into a dashboard's *Raw configuration editor*.
 
 What it looks like (screenshots of the dashboards follow with the first public release, see RELEASE.md):
-- *Kitchen, phone*: three stacked sections. On top the recipe photo of tonight's dinner with its name and a "Fill the week" tile; below a short "Eat first" list with days left. Middle: the shopping list as an interactive to-do card, then two tiles with running-low and run-out counts and the product names. Bottom: care tasks due, the next care date, a one-week list calendar of meals and care, party status and open orders; kid wishes and "something expired" only appear when relevant.
+- *Kitchen, phone*: three stacked sections. On top the recipe photo of tonight's dinner with its name and a "Fill the week" tile; below a short "Eat first" list with days left. Middle: the shopping list as an interactive to-do card, then two tiles with running-low and run-out counts and the product names. Bottom: care tasks due, the next care date, a one-week list calendar of meals and care and open wishes; kid wishes and "something expired" only appear when relevant.
 - *Wall, tablet*: three columns. Left: large clock, tonight's dinner with photo, five "eat first" items. Middle: the full shopping list. Right: the ToHuus Hub kitchen display picture, a glance row (low / best before / care / orders) and the week's meal plan.
 
 ## Coming from the YAML package?

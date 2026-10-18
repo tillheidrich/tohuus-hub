@@ -15,7 +15,7 @@ const ROOT = path.join(__dirname, '..', 'server');
 // strings that are the same in German on purpose (names, loan words); keys made only of placeholders pass anyway
 const SAME_IN_GERMAN = new Set<string>([
   'Budget', 'Post', 'Home Assistant Assist', 'Timer', 'Dashboard', 'Admin', 'live', 'Display', 'ToHuus Cloud',
-  'Cappuccino', 'Espresso', 'Extras', 'Toppings', 'Snacks', 'Pizza', 'Person {n}', 'Party', 'Party: {name}', 'Sofa', 'optional', 'Link', 'Passkey',
+  'Cappuccino', 'Espresso', 'Extras', 'Toppings', 'Snacks', 'Pizza', 'Person {n}', 'Sofa', 'optional', 'Link', 'Passkey',
 ]);
 const onlyPlaceholders = (s: string) => !/\p{L}/u.test(s.replace(/\{\w+\}/g, ''));
 

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The order menu (web: /bestellen/karte, Menu.tsx): groups, items, pictures, choices, who sees what, stock links and
-/// templates – one place for everything the household, guests and parties can ask for.
+/// templates – one place for everything the household and guests can ask for in „Bring mir was“.
 /// Native: drag to reorder items (Edit), swipe to hide or take off the menu, hold for "who sees it".
 /// Permanent guests can look but not change (like the web).
 struct MenuEditorView: View {
@@ -30,15 +30,11 @@ struct MenuEditorView: View {
     var body: some View {
         List {
             Section {
-                Text(L("The little things your household can ask each other for – and what guests and parties see. Changes show up right away."))
+                Text(L("The little things your household can ask each other for – and what guests see. Changes show up right away."))
                     .font(.subheadline).foregroundStyle(Theme.ink2)
                 if !canEdit {
                     Label(L("Only the household can change the menu – you can look at it here."), systemImage: "eye")
                         .font(.footnote).foregroundStyle(Theme.ink2)
-                }
-                if data?.partyLive == true {
-                    Label(L("A party is on – items for “Parties” are visible right now."), systemImage: "party.popper")
-                        .font(.footnote).foregroundStyle(Theme.clay)
                 }
             }
             if canEdit {

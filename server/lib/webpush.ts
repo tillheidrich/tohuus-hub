@@ -89,11 +89,8 @@ export interface PushMessage {
 export function actionsFor(event: string, data: Record<string, unknown> = {}): { action: string; title: string }[] {
   if ((event === 'stock.low' || event === 'stock.empty') && data.product_id && !data.on_shopping_list)
     return [{ action: 'shop-add', title: t('Add to list') }];
-  // at home: "I'll bring it" / "Can't right now"; guests and parties: "On it" / "Ready"
-  if (event === 'order.new' && data.order_id)
-    return data.kind === 'home'
-      ? [{ action: 'order-accept', title: t('I’ll bring it') }, { action: 'order-decline', title: t('Can’t right now') }]
-      : [{ action: 'order-accept', title: t('On it') }, { action: 'order-done', title: t('Ready') }];
+  // „Bring mir was“ – the same two buttons for wishes from home and from guests
+  if (event === 'order.new' && data.order_id) return [{ action: 'order-accept', title: t('I’ll bring it') }, { action: 'order-decline', title: t('Can’t right now') }];
   if (event === 'care.due' && data.care_task_id) return [{ action: 'care-done', title: t('Done') }];
   if (event === 'kids.wish' && data.wish_id) return [{ action: 'kid-approve', title: t('Approve') }, { action: 'kid-decline', title: t('Not now') }];
   return [];

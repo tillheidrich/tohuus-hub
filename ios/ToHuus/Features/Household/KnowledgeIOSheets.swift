@@ -4,9 +4,17 @@ import UniformTypeIdentifiers
 /// Haushaltswissen: import and export (docs/knowledge.md › Import und Export). Same as the web (KnowledgeIO.tsx):
 /// a file from Files (Markdown, text, CSV, JSON – also Obsidian/Notion exports) or pasted text → preview → take over
 /// the picked rows, with one undo. Export as Markdown, CSV or JSON through the share sheet ("In Dateien sichern" too).
+/// A file handed to ToHuus with „Öffnen in ToHuus“ (ToHuusApp.handle) – shown in the import sheet below.
+struct OpenedKnowledgeFile: Identifiable {
+    let id = UUID()
+    let source: KnowledgeImportSource
+}
+
 struct KnowledgeImportSheet: View {
     let api: APIClient
     var onDone: (String, String?) -> Void
+    /// a file opened from outside: the sheet starts with it and goes straight to the preview
+    var initialSource: KnowledgeImportSource? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var picking = false
     @State private var source: KnowledgeImportSource?
@@ -71,6 +79,11 @@ struct KnowledgeImportSheet: View {
                 Text(L("Allergies are health data. ToHuus stores them encrypted in your household and only uses them for warnings on recipes. They only go to the assistant if you allow that in the settings."))
             }
             .overlay { if busy { ProgressView() } }
+            .task {
+                guard let initialSource, source == nil, preview == nil else { return }
+                source = initialSource
+                await showPreview()
+            }
         }
     }
 

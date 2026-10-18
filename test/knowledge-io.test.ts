@@ -464,6 +464,32 @@ describe('MCP: knowledge and task tools', () => {
     expect((await callTool(rw, 'undo_task_done', { task: 'Biotonne' })).isError).toBe(true);
   });
 
+  it('add_task over MCP: an appointment with date and time, a household chore, the name read like the assistant does', async () => {
+    const care = await import('../server/lib/care');
+    const appt = await callTool(mcpToken, 'add_task', { name: 'Elternabend', date: '2030-03-14', time: '19:30', minutes: 90, place: 'Schule' });
+    expect(appt).toMatchObject({ isError: false, data: { ok: true, appointment: true, task: { name: 'Elternabend', next_due: '2030-03-14', time: '19:30', place: 'Schule' } } });
+    const row = care.getCareTask(appt.data.task.id)!;
+    expect(row).toMatchObject({ due_time: '19:30', duration_min: 90, category: 'house' });
+    // the day and time inside the name, like "Zahnarzt Dienstag um 10" in the assistant
+    const said = await callTool(mcpToken, 'add_task', { name: 'Zahnarzt Dienstag um 10', area: 'care' });
+    expect(said.data.task).toMatchObject({ name: 'Zahnarzt', time: '10:00', area: 'care & deadlines' });
+    expect(new Date(`${said.data.task.next_due}T12:00:00Z`).getUTCDay()).toBe(2);
+    // a household chore with a rhythm
+    const chore = await callTool(mcpToken, 'add_task', { name: 'Bad putzen', every: 1, unit: 'week' });
+    expect(chore.data.task).toMatchObject({ name: 'Bad putzen', area: 'household' });
+    expect(chore.data.task.time).toBeUndefined();
+    expect(chore.data.appointment).toBe(false);
+    // the household token has no person: no private task
+    expect((await callTool(mcpToken, 'add_task', { name: 'Geheim', only_me: true })).isError).toBe(true);
+    // a member connection may; mcp:read gets no add_task at all
+    const rw = await connect(mira, 'write');
+    expect((await callTool(rw, 'add_task', { name: 'Geschenk besorgen', only_me: true })).data).toMatchObject({ ok: true, task: { private: true } });
+    expect(toolNames(await mcp(await connect(sam, 'read')))).not.toContain('add_task');
+    const { buildMcpServer } = await import('../server/mcp/server');
+    expect(Object.keys((buildMcpServer('Test', { readOnly: true }) as any)._registeredTools)).not.toContain('add_task');
+    for (const id of [appt.data.task.id, said.data.task.id, chore.data.task.id]) care.deleteCareTask(id);
+  });
+
   it('no token: 401 with WWW-Authenticate and the metadata', async () => {
     const r = await mcp(null);
     expect(r.status).toBe(401);

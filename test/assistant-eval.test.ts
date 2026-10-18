@@ -29,7 +29,7 @@ const AREA_CALLS: Record<string, [string, unknown][]> = {
   'why-expensive': [['money_compare', { month: '2026-10' }]],
   'house-alexa': [['house_draft_cards', { cards: [{ type: 'voice', title: 'Licht im Wohnzimmer', body: 'Alexa, Wohnzimmer an', area: 'Wohnzimmer', topic: 'light' }, { type: 'tip', title: 'Haustür', body: 'PIN: 4711' }] }]],
   'house-code': [['house_info', { query: 'Haustür Code' }]],
-  party: [['check_at_home', { items: ['Brot', 'Getränke'] }]],
+  visitors: [['check_at_home', { items: ['Brot', 'Getränke'] }]],
 };
 
 function scriptedModel(c: (typeof CASES)[number], log: { tools: string[][]; system: string[]; bodies: string[] }) {
@@ -140,7 +140,9 @@ describe('assistant eval (scripted model)', () => {
       if (c.id === 'tidy-list') expect(out.actions[0].summary).toMatch(/1/);
       // small prompts: a short system prompt and only the tools the topic needs
       for (const sys of log.system) expect(sys.length, `${c.id}: system prompt size`).toBeLessThan(3000);
-      for (const tools of log.tools) expect(tools.length, `${c.id}: tools offered`).toBeLessThan(16);
+      // 18 Oct 2026: the tasks topic only brings the tools the message asks for (assistant-tools.ts taskToolsFor),
+      // "forget" only when asked – sizes per screen: test/assistant-cost.test.ts
+      for (const tools of log.tools) expect(tools.length, `${c.id}: tools offered`).toBeLessThan(15);
     });
   }
 

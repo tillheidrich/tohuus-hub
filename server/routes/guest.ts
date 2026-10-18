@@ -9,8 +9,8 @@ import { addToShopping, listProducts } from '../lib/catalog.js';
 import { findInGuide, findThings } from '../lib/find.js';
 import { linkHasGuide } from '../lib/house-guide.js';
 import { viewerTrips } from '../lib/handover.js';
-import { DECLINE_REASONS, createOrder, helpers, listOrders, orderMenu, orderSchema, requestsFor, setOrderStatus, thankOrder } from '../lib/orders.js';
-import { guestClientId, partyForGuest, partyIdForLink, partyMenu } from '../lib/party.js';
+import { DECLINE_REASONS, NOT_LEGACY, createOrder, helpers, listOrders, orderMenu, orderSchema, requestsFor, setOrderStatus, thankOrder } from '../lib/orders.js';
+import { guestClientId } from '../lib/order-stock.js';
 import { t } from '../i18n.js';
 import { notPrivate } from '../lib/share-core.js';
 import { isHouseGuest } from '../lib/people-policy.js';
@@ -44,7 +44,6 @@ guest.get('/:token', (req, res) => {
     house_guide: linkHasGuide(req.actor!.guestLinkId!) > 0,
     // a holiday handover shared with this link (handover.ts) – the page then shows it first
     handover: viewerTrips({ linkId: req.actor!.guestLinkId! }).length > 0,
-    party: partyForGuest(req.actor!.guestLinkId, guestClientId(req, res)),
   });
 });
 
@@ -55,8 +54,7 @@ guest.get('/:token/menu', (req, res) => {
     res.status(403).json({ error: 'forbidden' });
     return;
   }
-  const party = partyIdForLink(req.actor!.guestLinkId);
-  res.json(party ? partyMenu(party, guestClientId(req, res)) : orderMenu(false));
+  res.json(orderMenu(false));
 });
 
 guest.post('/:token/orders', (req, res) => {
@@ -70,10 +68,7 @@ guest.post('/:token/orders', (req, res) => {
     return;
   }
   const cid = guestClientId(req, res);
-  // a party link is shared by many phones: limit per device, with a generous cap for the whole link
-  const limited = partyIdForLink(req.actor!.guestLinkId)
-    ? rateLimited(`order:${req.actor!.guestLinkId}:${cid}`, 15, 10 * 60_000) || rateLimited(`order:${req.actor!.guestLinkId}`, 300, 10 * 60_000)
-    : rateLimited(`order:${req.actor!.guestLinkId}`, 15, 10 * 60_000);
+  const limited = rateLimited(`order:${req.actor!.guestLinkId}`, 15, 10 * 60_000);
   if (limited) {
     res.status(429).json({ error: t('Lots of orders right now – take a breath and try again in a moment.') });
     return;
@@ -86,7 +81,7 @@ guest.post('/:token/orders', (req, res) => {
 });
 
 guest.get('/:token/orders', (req, res) => {
-  // only this device's orders (per-device cookie) – other guests' names and notes stay private
+  // only this device's wishes (per-device cookie) – other guests' names and notes stay private
   res.json(
     listOrders(
       "guest_link_id = ? AND client_id = ? AND (status IN ('new','accepted') OR updated_at > datetime('now','-12 hours'))",
@@ -140,7 +135,7 @@ guest.post('/:token/shopping', (req, res) => {
   res.json(addToShopping({ text, source: 'guest', addedBy: t('Guest: {name}', { name: req.actor!.name }) }));
 });
 
-/** Admin side: links and incoming orders. */
+/** Admin side: links and incoming wishes („Bring mir was“). */
 export const guestAdmin = Router();
 guestAdmin.use(requireAuth);
 
@@ -215,11 +210,11 @@ guestAdmin.get('/orders', (req, res) => {
       `SELECT o.*, g.name AS link_name,
          (SELECT json_group_array(json_object('product_id', product_id, 'name', name, 'qty', qty, 'options', json(options), 'note', note)) FROM order_lines WHERE order_id = o.id) AS lines
        FROM orders o LEFT JOIN guest_links g ON g.id = o.guest_link_id
-       ${all ? '' : "WHERE o.status IN ('new','accepted') OR o.updated_at > datetime('now','-12 hours')"}
+       WHERE ${NOT_LEGACY} ${all ? '' : "AND (o.status IN ('new','accepted') OR o.updated_at > datetime('now','-12 hours'))"}
        ORDER BY o.id DESC LIMIT 100`,
     )
     .all() as any[];
-  res.json(rows.map((o) => ({ ...o, lines: JSON.parse(o.lines) })));
+  res.json(rows.map(({ party_id: _legacy, ...o }) => ({ ...o, lines: JSON.parse(o.lines) })));
 });
 
 guestAdmin.patch('/orders/:id', (req, res) => {

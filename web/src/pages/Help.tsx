@@ -144,6 +144,7 @@ export function Help() {
         t('“How would you like it?” is a note for the person bringing it. “Who brings it?” asks one person – or whoever can.'),
         t('The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Mira is bringing it”.'),
         t('Once it’s there you can say thanks. Nobody keeps score – no points, no list of who brought what.'),
+        t('Guests too: “Invite guests” shares a link or QR code. Guests wish for something without an app, and it lands in the same list as “Guest: name”, with the same buttons.'),
       ],
       link: { label: t('Open Treats'), to: '/bestellen' },
     },
@@ -155,10 +156,10 @@ export function Help() {
       steps: [
         t('Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note.'),
         t('Share the link or show the QR code. Give it an end date or revoke it at any time.'),
-        t('Party mode is off at first. If you need it, switch it on under Settings › What do you use?'),
+        t('Wishes from guests are answered in Treats – the link for that is shared there under “Invite guests”.'),
         t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.'),
       ],
-      link: { label: t('Open guests'), to: '/bestellen?mode=guests' },
+      link: { label: t('Open guests'), to: '/bar' },
     },
     {
       id: 'karte',

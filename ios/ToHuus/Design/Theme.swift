@@ -31,6 +31,8 @@ enum Theme {
     static let lowSoft = dynamic(0xF6E5DC, 0x33241D)
     static let empty = dynamic(0x9E2F24, 0xE58A7E)
     static let emptySoft = dynamic(0xF7E1DC, 0x35201C)
+    /// "Can’t right now" / decline: reads as a no, next to the green "I’ll bring it"
+    static let decline = empty
     static let info = dynamic(0x2F5E7A, 0x8DBAD6)
     static let infoSoft = dynamic(0xE2ECF1, 0x1A2A33)
     static let block = dynamic(0x104E3C, 0x163A2E)

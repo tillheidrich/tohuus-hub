@@ -9,7 +9,7 @@ import { TICKET_TYPES } from '../lib/tickets.js';
 const text = (v: unknown) => ({ content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 1) }] });
 
 const TYPE_HELP =
-  'shopping = shopping list grouped by aisle (optional store_id), order = kitchen ticket for a sofa/party order (id = order id), ' +
+  'shopping = shopping list grouped by aisle (optional store_id), order = ticket for a „Bring mir was“ wish from home or a guest (id = order id), ' +
   'care = home-care task with a "scan when done" QR (id = care task id), wish = kid wish (id = wish id), recipe = recipe card with the household variant (id = recipe id), ' +
   'week = week meal plan (optional day = start date YYYY-MM-DD), note = free fridge note (text, optional title), test = printer test page.';
 

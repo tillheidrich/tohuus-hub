@@ -10,7 +10,7 @@
  *             (recipe_get → recipe_save_adapted as a new recipe), substitutes, leftovers (use_soon)
  *   money     monthly review in plain words, saving hints from own receipts, "Warum war der Oktober teurer?" (money_compare)
  *   house     "Wir haben Alexa und Hue im Wohnzimmer" → draft Hausinfo cards (house_draft_cards, admins) – never codes
- *   guests    shopping for a party with quantities per guest count (check_at_home + list_add)
+ *   guests    shopping for visitors with quantities per guest count (check_at_home + list_add)
  *   tasks     Aufgaben, Im Kopf, Rückblick, Urlaub, Fokus (tasks_list, mind_add, review, away_status …)
  *   wishes    wish lists and the Merkliste (wish_lists, wish_add) – never reservations
  *   knowledge Haushaltswissen cards: correct, delete, share, make private (knowledge_change, knowledge.ts)
@@ -95,7 +95,7 @@ export function contextHint(ctx: ScreenContext | null | undefined, de: boolean):
     ],
     guests: [
       'Bildschirm: Gäste/Bring mir was. Einkauf für eine Feier: Mengen nach Gästezahl grob schätzen und als Schätzung sagen, mit check_at_home prüfen, nur Fehlendes nach Ja mit list_add.',
-      'Screen: guests/treats. Shopping for a party: estimate amounts per guest count and say it is an estimate, check with check_at_home, add only what is missing after a yes with list_add.',
+      'Screen: guests/treats. Shopping for visitors or a celebration: estimate amounts per guest count and say it is an estimate, check with check_at_home, add only what is missing after a yes with list_add.',
     ],
   };
   return H[ctx][de ? 0 : 1];

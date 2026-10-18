@@ -550,3 +550,318 @@ describe('take back or change a booked receipt', () => {
     expect((await api('POST', `/api/imports/${r.id}/apply`)).json.applied).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------- Build 17, iPhone reading (18.10.2026)
+//
+// A Lidl Plus receipt with a light blue "Lidl Plus Rabatt" row and a deposit row, read on the iPhone. Apple
+// Intelligence tidied the lines and dropped both rows, and turned "Bioland Eier OKT 6St" into "6 x Bioland Eier OKT":
+// 11,74 instead of 11,29. Fixture photo: test/fixtures/lidl-plus-rabatt-pfand.jpg.
+
+/** what the server got from Build 17 (Apple Vision, then the on-device model) */
+const TIDIED = ['LiDL', 'Avocado 1,69', '2 x H-Milch 1,5% 2,38', 'Kölln Müsli Keks 3,79', '6 x Bioland Eier OKT 2,99', 'Sprudel Apfel-Kiwi 0,89', 'SUMME 11,29', 'OKT 6St'];
+/** Apple Vision's own lines (fragments on one height joined by two spaces), the blue row included */
+const VISION = [
+  'LIDL',
+  'EUR',
+  'Avocado Stk.  1,69 A',
+  'Lidl Plus Rabatt  -0,70',
+  'H-Milch 1,5%  1,19 x  2  2,38 A',
+  'Kölln Müsli Keks  3,79 A',
+  'Bioland Eier OKT 6St  2,99 A',
+  'Sprudel Apfel-Kiwi  0,89 B',
+  'Pfand 0,25 EM  0,25 B',
+  'zu zahlen  11,29',
+  'Karte  11,29',
+  'MWST%  MWST  +  Netto  =  Brutto',
+  'A  7 %  0,66  9,49  10,15',
+  'B 19 %  0,18  0,96  1,14',
+  'Summe  0,84  10,45  11,29',
+  'Mit Lidl Plus',
+  '0,70 EUR gespart',
+];
+/** Apple Vision without the light rows (blue discount and the deposit missed) */
+const VISION_FAINT = VISION.filter((l) => !/Rabatt|^Pfand/.test(l));
+
+const expectFullRead = (p: { total?: number | null; meta: Record<string, unknown>; lines: any[] }) => {
+  expect(p.total).toBe(11.29);
+  expect(p.meta.sumMatches).toBe(true);
+  const avocado = line(p, 'Avocado');
+  expect(avocado).toMatchObject({ name: 'Avocado', qty: 1, price: 0.99 });
+  expect(avocado.note).toMatch(/Lidl Plus Rabatt -0,70/);
+  expect(line(p, 'H-Milch')).toMatchObject({ qty: 2, unitPrice: 1.19, price: 2.38 });
+  expect(line(p, 'Bioland Eier')).toMatchObject({ name: 'Bioland Eier 6St', qty: 1, price: 2.99 });
+  expect(line(p, 'Kölln Müsli Keks')).toMatchObject({ qty: 1, price: 3.79 });
+  const deposit = p.lines.filter((l) => l.status === 'deposit');
+  expect(deposit).toHaveLength(1);
+  expect(deposit[0].price).toBe(0.25);
+  expect(goods(p)).toHaveLength(5);
+  expect(p.lines.some((l) => /rabatt/i.test(l.name))).toBe(false);
+};
+
+describe('Lidl receipt with discount and deposit, read on the iPhone', () => {
+  it('the full text: Avocado 0,99 after the discount, milk 2 × 1,19, eggs one 6-pack, deposit apart, 11,29', () => {
+    const p = generic.parseGenericReceipt(VISION.join('\n'))!;
+    expectFullRead(p);
+    expect(p.meta.savingsHint).toBe(0.7);
+    expect(p.meta.sumAssumed).toBeUndefined();
+    // the same as a laid-out receipt (wide columns, indented discount)
+    const wide = VISION.map((l) => l.replace(/^Lidl Plus/, '     Lidl Plus').replace(/ {2}/g, '        ')).join('\n');
+    expectFullRead(generic.parseGenericReceipt(wide)!);
+  });
+
+  it('the tidied text as it arrives today: names clean, eggs not 6 pieces, milk 2 × 1,19, a discount of 0,45 suggested', () => {
+    const p = generic.parseGenericReceipt(TIDIED.join('\n'))!;
+    expect(p.total).toBe(11.29);
+    expect(p.meta.sumMatches).toBe(false);
+    expect(line(p, 'H-Milch')).toMatchObject({ name: 'H-Milch 1,5%', qty: 2, unitPrice: 1.19 });
+    expect(line(p, 'Bioland Eier')).toMatchObject({ name: 'Bioland Eier', qty: 1, price: 2.99 });
+    expect(p.meta.fixSuggestion).toEqual({ kind: 'discount', amount: 0.45 });
+  });
+
+  it('discount and deposit rows missed, "Mit Lidl Plus 0,70 EUR gespart" on the receipt: both filled in, marked to check', () => {
+    const p = generic.parseGenericReceipt(VISION_FAINT.join('\n'))!;
+    expect(p.meta.sumMatches).toBe(true);
+    expect(p.meta.sumAssumed).toBe(true);
+    expect(p.meta.assumed).toEqual([
+      { kind: 'discount', amount: 0.7 },
+      { kind: 'deposit', amount: 0.25 },
+    ]);
+    expect(p.meta.receiptDiscount).toBe(-0.7);
+    const dep = p.lines.find((l) => l.status === 'deposit')!;
+    expect(dep).toMatchObject({ name: 'Pfand', price: 0.25 });
+    expect(dep.depositFor ?? null).toBeNull();
+  });
+
+  it('a pack size is no quantity, a leading count only when the total splits into whole cents', () => {
+    const p = generic.parseGenericReceipt(['LIDL', '6 x Bio Eier 6St  2,99 A', '2 x Joghurt  0,98 A', '3 x Brötchen  1,00 A', 'zu zahlen  4,97'].join('\n'))!;
+    expect(line(p, 'Bio Eier')).toMatchObject({ qty: 1, price: 2.99 });
+    expect(line(p, 'Joghurt')).toMatchObject({ qty: 2, unitPrice: 0.49 });
+    expect(line(p, 'Brötchen')).toMatchObject({ qty: 1, price: 1 });
+    expect(p.meta.sumMatches).toBe(true);
+  });
+
+  it('device lines + the tidied lines: the plain reading wins when it adds up; the review shows "new" products', async () => {
+    const r = await api('POST', '/api/imports/lines', { lines: VISION, alt: TIDIED, source: 'ocr-device', mode: 'receipt' });
+    expect(r.status).toBe(200);
+    expect(r.json).toMatchObject({ kind: 'receipt', sumMatches: true });
+    const imp = (await api('GET', `/api/imports/${r.json.id}`)).json;
+    expectFullRead({ total: imp.total, meta: { sumMatches: true }, lines: imp.lines.map((l: any) => ({ ...l, unitPrice: l.qty ? Math.round((l.price / l.qty) * 100) / 100 : l.price })) });
+    expect(imp.meta.tidiedOnDevice).toBeUndefined();
+    const q = await import('../server/lib/quality');
+    const rep = q.importReport(r.json.id);
+    expect(rep.sum_matches).toBe(true);
+    // no catalogue products yet: the goods become new products – "new", not "not recognised"
+    const avocado = imp.lines.find((l: any) => l.name === 'Avocado');
+    expect(rep.lines.find((l) => l.id === avocado.id)).toMatchObject({ grade: 'unmatched', new: true });
+    expect(rep.new_lines).toBeGreaterThanOrEqual(3);
+  });
+
+  it('only the tidied lines add up: they are taken', () => {
+    const tidyOk = ['LIDL', 'Avocado 0,99', '2 x H-Milch 1,5% 2,38', 'Kölln Müsli Keks 3,79', 'Bioland Eier 6St 2,99', 'Sprudel Apfel-Kiwi 0,89', 'Pfand 0,25', 'SUMME 11,29'];
+    return import('../server/routes/imports').then(({ pickDeviceReading }) => {
+      const pick = pickDeviceReading(['LIDL', 'Avocad0 1,6', 'zu zahlen 11,29'], tidyOk, null)!;
+      expect(pick.tidied).toBe(true);
+      expect(pick.read.sumMatches).toBe(true);
+      expect(pickDeviceReading(VISION, tidyOk, null)!.tidied).toBe(false);
+    });
+  });
+
+  it('build 17 text (tidied only): the review offers the missing discount, and adding it makes the total add up', async () => {
+    const r = await api('POST', '/api/imports/lines', { lines: TIDIED, source: 'ocr-device', mode: 'receipt' });
+    expect(r.json.sumMatches).toBe(false);
+    const q = await import('../server/lib/quality');
+    let rep = q.importReport(r.json.id);
+    expect(rep.sum_matches).toBe(false);
+    expect(rep.difference).toBe(-0.45);
+    expect(rep.fix_suggestion).toEqual({ kind: 'discount', amount: 0.45 });
+    const imp = (await api('GET', `/api/imports/${r.json.id}`)).json;
+    const avocado = imp.lines.find((l: any) => l.name === 'Avocado');
+    // the real gap: Lidl Plus discount 0,70 on the avocado, deposit 0,25
+    expect((await api('POST', `/api/imports/${r.json.id}/adjust`, { kind: 'discount', amount: 0.7, line_id: avocado.id })).status).toBe(200);
+    rep = q.importReport(r.json.id);
+    expect(rep.difference).toBe(0.25);
+    expect(rep.fix_suggestion).toEqual({ kind: 'deposit', amount: 0.25 });
+    expect((await api('POST', `/api/imports/${r.json.id}/adjust`, { kind: 'deposit', amount: 0.25 })).status).toBe(200);
+    rep = q.importReport(r.json.id);
+    expect(rep.sum_matches).toBe(true);
+    expect(rep.difference).toBeNull();
+    const after = (await api('GET', `/api/imports/${r.json.id}`)).json;
+    expect(after.lines.find((l: any) => l.id === avocado.id)).toMatchObject({ price: 0.99 });
+    expect(after.lines.find((l: any) => l.status === 'deposit')).toMatchObject({ name: 'Pfand', price: 0.25, action: 'skip' });
+    // a discount for the whole purchase (no line) and a too large discount
+    expect((await api('POST', `/api/imports/${r.json.id}/adjust`, { kind: 'discount', amount: 5, line_id: avocado.id })).status).toBe(400);
+    expect((await api('POST', `/api/imports/${r.json.id}/adjust`, { kind: 'discount', amount: 0.1 })).status).toBe(200);
+    expect(q.importReport(r.json.id).receipt_discount).toBe(-0.1);
+  });
+
+  it.skipIf(!hasTesseract)('the photo through text recognition on the server: 11,29 and the discount on the avocado', async () => {
+    const r = await read.readReceiptPhotos([img('lidl-plus-rabatt-pfand.jpg')]);
+    expect(r.parsed.total).toBe(11.29);
+    expect(r.sumMatches).toBe(true);
+    expect(line(r.parsed, 'Avocado')).toMatchObject({ price: 0.99 });
+    expect(r.parsed.lines.filter((l) => l.status === 'deposit').map((l) => l.price)).toEqual([0.25]);
+  }, 60_000);
+});
+
+describe('read the receipt again with AI (review button)', () => {
+  const MODEL_LIDL = {
+    shop: 'Lidl',
+    total: 11.29,
+    date: null,
+    lines: [
+      { name: 'Avocado', qty: 1, price: 1.69, discount: 0.7, deposit: false },
+      { name: 'H-Milch 1,5%', qty: 2, price: 2.38, discount: null, deposit: false },
+      { name: 'Kölln Müsli Keks', qty: 1, price: 3.79, discount: null, deposit: false },
+      { name: 'Bioland Eier 6St', qty: 1, price: 2.99, discount: null, deposit: false },
+      { name: 'Sprudel Apfel-Kiwi', qty: 1, price: 0.89, discount: null, deposit: false },
+      { name: 'Pfand 0,25 EM', qty: 1, price: 0.25, discount: null, deposit: true },
+    ],
+  };
+  const reread = (id: number, photo: boolean) => {
+    const f = new FormData();
+    if (photo) f.append('files', new Blob([new Uint8Array(img('lidl-plus-rabatt-pfand.jpg'))], { type: 'image/jpeg' }), 'bon.jpg');
+    return fetch(`${base}/api/imports/${id}/reread-ai`, { method: 'POST', headers: { cookie }, body: f }).then(async (r) => ({ status: r.status, json: (await r.json()) as any }));
+  };
+
+  it('proposal first, then the lines are replaced (own corrections kept), undo puts the old lines back', async () => {
+    const r = await api('POST', '/api/imports/lines', { lines: TIDIED, source: 'ocr-device', mode: 'receipt' });
+    const id = r.json.id;
+    const before = (await api('GET', `/api/imports/${id}`)).json;
+    // the person matched the avocado to a product of their own
+    const pid = catalog.createProduct({ name: 'Avocado Hass' });
+    const avo = before.lines.find((l: any) => l.name === 'Avocado');
+    await api('PATCH', `/api/imports/${id}/lines/${avo.id}`, { product_id: pid, action: 'add' });
+
+    // AI off: refused before anything is sent
+    expect((await reread(id, true)).status).toBe(403);
+    process.env.AI_API_KEY = 'sk-test';
+    let calls = 0;
+    ai.setAiFetch(async (_url, init) => {
+      calls++;
+      return reply(JSON.stringify(MODEL_LIDL), JSON.parse(String(init.body)).model);
+    });
+    // no photo sent and none stored (device text only): ask for it again
+    const none = await reread(id, false);
+    expect(none.status).toBe(422);
+    expect(none.json.code).toBe('photo.missing');
+    expect(calls).toBe(0);
+
+    const p = await reread(id, true);
+    expect(p.status).toBe(200);
+    expect(calls).toBe(1);
+    expect(p.json.proposal).toMatchObject({ total: 11.29, sumMatches: true });
+    expect(p.json.current).toMatchObject({ itemsSum: 11.74, sumMatches: false, lines: 5 });
+    // nothing changed yet
+    expect((await api('GET', `/api/imports/${id}`)).json.lines).toHaveLength(5);
+
+    const ok = await api('POST', `/api/imports/${id}/reread-ai/apply`);
+    expect(ok.json).toMatchObject({ ok: true, lines: 6, carried: 1 });
+    const after = (await api('GET', `/api/imports/${id}`)).json;
+    expect(after.lines.find((l: any) => l.name === 'Avocado')).toMatchObject({ price: 0.99, product_id: pid, action: 'add' });
+    expect(after.lines.find((l: any) => l.status === 'deposit')).toMatchObject({ price: 0.25 });
+    const q = await import('../server/lib/quality');
+    expect(q.importReport(id)).toMatchObject({ sum_matches: true, difference: null });
+
+    expect((await api('POST', `/api/imports/${id}/reread-ai/undo`)).status).toBe(200);
+    const back = (await api('GET', `/api/imports/${id}`)).json;
+    expect(back.lines.map((l: any) => [l.name, l.price])).toEqual(before.lines.map((l: any) => [l.name, l.price]));
+    expect(back.lines.find((l: any) => l.name === 'Avocado')).toMatchObject({ product_id: pid });
+    expect(q.importReport(id).sum_matches).toBe(false);
+
+    // a booked receipt is not read again
+    await api('POST', `/api/imports/${id}/apply`);
+    expect((await reread(id, true)).status).toBe(409);
+  }, 60_000);
+});
+
+describe('AI as a second look for every receipt source (once, only when the total does not add up)', () => {
+  const MODEL_OK = {
+    shop: 'Lidl',
+    total: 11.29,
+    lines: [
+      { name: 'Avocado', qty: 1, price: 1.69, discount: 0.7 },
+      { name: 'H-Milch 1,5%', qty: 2, price: 2.38 },
+      { name: 'Kölln Müsli Keks', qty: 1, price: 3.79 },
+      { name: 'Bioland Eier 6St', qty: 1, price: 2.99 },
+      { name: 'Sprudel Apfel-Kiwi', qty: 1, price: 0.89 },
+      { name: 'Pfand 0,25 EM', qty: 1, price: 0.25, deposit: true },
+    ],
+  };
+  const MODEL_WRONG = { ...MODEL_OK, lines: MODEL_OK.lines.slice(0, 3) };
+  /** the model: `onText` answers text requests, images always get the right reading */
+  const mockModel = (onText: object) => {
+    const calls: ('text' | 'image')[] = [];
+    process.env.AI_API_KEY = 'sk-test';
+    ai.setAiFetch(async (_url, init) => {
+      const body = JSON.parse(String(init.body));
+      const hasImage = JSON.stringify(body.messages).includes('image_url');
+      calls.push(hasImage ? 'image' : 'text');
+      return reply(JSON.stringify(hasImage ? MODEL_OK : onText), body.model);
+    });
+    return calls;
+  };
+  const uploadFile = async (data: Buffer, type: string, name: string) => {
+    const f = new FormData();
+    f.append('files', new Blob([new Uint8Array(data)], { type }), name);
+    const res = await fetch(`${base}/api/imports/upload`, { method: 'POST', headers: { cookie }, body: f });
+    return ((await res.json()) as any).results[0];
+  };
+
+  it('pasted text that does not add up: the model reads the text once and its reading is taken', async () => {
+    const calls = mockModel(MODEL_OK);
+    const r = await uploadText(TIDIED.join('\n'));
+    expect(calls).toEqual(['text']);
+    const imp = (await api('GET', `/api/imports/${r.id}`)).json;
+    expect(imp.meta).toMatchObject({ source: 'ai', aiAuto: true, sumMatches: true });
+    expect(imp.lines.find((l: any) => l.name === 'Avocado')).toMatchObject({ price: 0.99 });
+    // a receipt that adds up never goes to the model
+    calls.length = 0;
+    await uploadText(VISION.join('\n').replace('Kölln Müsli Keks', 'Kölln Hafer Keks'));
+    expect(calls).toEqual([]);
+  });
+
+  it.skipIf(!hasPdftotext)('a PDF: its text first; when that does not add up, the rendered page as an image', async () => {
+    const calls = mockModel(MODEL_WRONG);
+    const r = await uploadFile(pdfOf(VISION_FAINT.filter((l) => !/gespart|Mit Lidl/.test(l))), 'application/pdf', 'bon.pdf');
+    expect(calls).toEqual(['text', 'image']);
+    const imp = (await api('GET', `/api/imports/${r.id}`)).json;
+    expect(imp.meta).toMatchObject({ source: 'ai', aiAuto: true, aiInput: 'pdf-pages', sumMatches: true });
+    expect(imp.lines.filter((l: any) => l.status === 'deposit')).toHaveLength(1);
+  }, 60_000);
+
+  it('AI off: nothing is sent, the parser reading stays', async () => {
+    const calls = mockModel(MODEL_OK);
+    delete process.env.AI_API_KEY;
+    const r = await uploadText(TIDIED.join('\n'));
+    expect(calls).toEqual([]);
+    expect((await api('GET', `/api/imports/${r.id}`)).json.meta.sumMatches).toBe(false);
+  });
+
+  it.skipIf(!hasTesseract)('a photo is kept while the receipt is checked: "read again with AI" uses it, booking removes it', async () => {
+    const r = await uploadFile(img('lidl-plus-rabatt-pfand.jpg'), 'image/jpeg', 'bon.jpg');
+    const row = () => dbm.db.prepare('SELECT source_file FROM imports WHERE id = ?').get(r.id) as { source_file: string | null };
+    expect(row().source_file).toMatch(/\.jpg$/);
+    const file = path.join(dir, 'imports', row().source_file!);
+    expect(fs.existsSync(file)).toBe(true);
+    const calls = mockModel(MODEL_OK);
+    const res = await fetch(`${base}/api/imports/${r.id}/reread-ai`, { method: 'POST', headers: { cookie }, body: new FormData() });
+    const j = (await res.json()) as any;
+    expect(res.status).toBe(200);
+    expect(j.input).toBe('image');
+    expect(calls).toEqual(['image']);
+    await api('POST', `/api/imports/${r.id}/reread-ai/apply`);
+    await api('POST', `/api/imports/${r.id}/apply`);
+    expect(row().source_file).toBeNull();
+    expect(fs.existsSync(file)).toBe(false);
+  }, 60_000);
+
+  it('pasted text read again with AI: only the text goes out', async () => {
+    delete process.env.AI_API_KEY;
+    const r = await uploadText(TIDIED.join('\n').replace('Sprudel', 'Wasser'));
+    const calls = mockModel(MODEL_OK);
+    const res = await fetch(`${base}/api/imports/${r.id}/reread-ai`, { method: 'POST', headers: { cookie }, body: new FormData() });
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as any).input).toBe('text');
+    expect(calls).toEqual(['text']);
+  });
+});

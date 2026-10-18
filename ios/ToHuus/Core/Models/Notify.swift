@@ -105,7 +105,6 @@ struct NotifyPrefs: Decodable, Sendable, Equatable {
         case "order.status": return L("My wish was answered")
         case "digest.daily": return L("Daily overview")
         case "care.due": return L("Care is due")
-        case "party.ending": return L("Party ends soon")
         case "kids.wish": return L("A child made a wish")
         case "auth.new_device": return L("New sign-in")
         case "budget.warning": return L("Budget nearly used")

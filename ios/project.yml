@@ -14,7 +14,7 @@ settings:
     DEVELOPMENT_TEAM: "$(TOHUUS_TEAM_ID)"
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "17"
+    CURRENT_PROJECT_VERSION: "18"
     SWIFT_VERSION: "5.0"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     TARGETED_DEVICE_FAMILY: "1,2"
@@ -59,6 +59,22 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: de.heidrichdigital.tohuus
             CFBundleURLSchemes: [tohuus]
+        # „Öffnen in ToHuus“ for knowledge files from Files, Mail or Notes (.md, .txt, .csv, .json): the import sheet
+        # with its preview opens (ToHuusApp.handle → KnowledgeImportSheet). A copy is handed over, never the original.
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Household knowledge (text, CSV, Markdown, JSON)
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.plain-text, public.comma-separated-values-text, net.daringfireball.markdown, public.json]
+        LSSupportsOpeningDocumentsInPlace: false
+        # Markdown has no system type on iOS: declared here so .md files offer ToHuus too
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: net.daringfireball.markdown
+            UTTypeDescription: Markdown
+            UTTypeConformsTo: [public.plain-text]
+            UTTypeTagSpecification:
+              public.filename-extension: [md, markdown]
+              public.mime-type: [text/markdown]
         NSCameraUsageDescription: "ToHuus uses the camera to scan barcodes, receipts and paper lists."
         # the share sheet's "Save Image" (leftover and meal-box cards, printer previews) needs this key, or the app is terminated
         # a self-hosted server at a home address (http://192.168.…, tohuus.local) triggers the local network prompt

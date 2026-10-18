@@ -72,13 +72,14 @@ export default [
         + '<p>Am Sonntag liegt Sam mit Halsweh auf dem Sofa und wünscht sich Tee mit Honig. Mira hat gerade die Hände frei und bringt ihn. Mehr steckt hinter der Idee nicht.</p>'],
       ['So hilft ToHuus im Alltag',
         '<p>In ToHuus heißt das Bring mir was. Wer gerade festsitzt, auf dem Sofa oder mit einem Kind auf dem Arm, tippt auf eine Kachel wie „Was Süßes“, „Was zu trinken“, „Was zum Knabbern“ oder „Aus dem Kühlschrank“ und wünscht sich eine Kleinigkeit von eurer Karte. Mit „Was anderes“ geht auch ein freier Wunsch wie eine Decke. Du fragst eine bestimmte Person oder alle, und wer kann, antwortet mit „Ich bring’s“ oder „Geht gerade nicht“. Niemand führt Buch, es gibt keine Punkte und keine Liste, wer was gebracht hat.</p>'
+        + '<p>Ist Besuch da, tippst du in Bring mir was auf „Gäste einladen“ und teilst einen Link oder QR-Code. Gäste wünschen sich ohne App und ohne Konto etwas von eurer Karte, und der Wunsch landet bei euch in derselben Liste, mit „Gast“ davor. Wer kann, sagt „Ich bring’s“.</p>'
         + '<p>Für den Partyabend selbst hilft ToHuus vor allem vorher und nachher: Im Vorrat seht ihr, was schon da ist, und was fehlt, setzt ihr mit einem Tipp auf die gemeinsame <a href="../hilfe/einkaufsliste.html">Einkaufsliste</a>. Was übrig bleibt, steht am nächsten Tag oben auf Heute, damit es zuerst gegessen wird.</p>'
         + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Wie viel Wasser brauche ich für eine Party?', 'Plant Wasser großzügiger als alles andere, mit und ohne Kohlensäure, und stellt zusätzlich Leitungswasser in Karaffen hin. Übrig gebliebenes Wasser hält sich lange und wird sowieso getrunken.'],
       ['Sollte ich alkoholfreie Alternativen anbieten?', 'Ja. Alkoholfreies Bier wird in Deutschland seit Jahren mehr produziert, 2025 waren es gut 616 Millionen Liter. Ein, zwei gute alkoholfreie Sorten gehören auf jede Karte.'],
-      ['Was ist Bring mir was?', 'Eine Funktion in ToHuus für zu Hause: Wer festsitzt, wünscht sich mit zwei Tipps eine Kleinigkeit, und wer kann, sagt „Ich bring’s“. Punkte oder eine Liste, wer was gebracht hat, gibt es nicht.'],
+      ['Was ist Bring mir was?', 'Eine Funktion in ToHuus für zu Hause: Wer festsitzt, wünscht sich mit zwei Tipps eine Kleinigkeit, und wer kann, sagt „Ich bring’s“. Gäste machen das über einen Link, ohne App. Punkte oder eine Liste, wer was gebracht hat, gibt es nicht.'],
       ['Wie verhindere ich, dass nach der Party viel übrig bleibt?', 'Plant vom Bestand aus, kauft nur nach, was fehlt, und nehmt bei frischen Sachen wie Dips und belegten Broten lieber etwas weniger. Reste kommen am nächsten Tag zuerst auf den Tisch.'],
     ],
     facts: [

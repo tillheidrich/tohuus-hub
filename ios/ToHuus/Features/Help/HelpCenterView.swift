@@ -111,6 +111,7 @@ struct HelpCenterView: View {
                                L("“How would you like it?” is a note for the person bringing it. “Who brings it?” asks one person – or whoever can."),
                                L("The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Mira is bringing it”."),
                                L("Once it’s there you can say thanks. Nobody keeps score – no points, no list of who brought what."),
+                               L("Guests too: “Invite guests” shares a link or QR code. Guests wish for something without an app, and it lands in the same list as “Guest: name”, with the same buttons."),
                            ]))
         }
         if app.moduleOn("guests") {
@@ -120,7 +121,7 @@ struct HelpCenterView: View {
                                L("Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note."),
                                L("Share the link or show the QR code. Give it an end date or revoke it at any time."),
                                L("Someone who is here often gets a permanent guest account with a level that decides what they see."),
-                               L("Party mode is off at first. If you need it, switch it on under Settings › What do you use?"),
+                               L("Wishes from guests are answered in Treats – the link for that is shared there under “Invite guests”."),
                            ], slug: "gaeste"))
         }
         t.append(Topic(id: "people", symbol: "person.3", title: L("People: pictures, children, permanent guests, favourites"),

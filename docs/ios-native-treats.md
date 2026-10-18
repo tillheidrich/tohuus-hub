@@ -1,5 +1,7 @@
 # iOS native: Bring mir was, Gäste & Party, Karte
 
+> 18.10.2026: Der Party-Modus wurde auf Tills Entscheidung entfernt (siehe [party-modus.md](party-modus.md)). Gäste wünschen sich jetzt über den Gäste-Link aus „Bring mir was“ etwas; alles landet in einer Liste.
+
 Status 14 Oct 2026. Everything the web does under `/bestellen`, `/bestellen/karte` and `/bar` is native in the iOS app now,
 except the TV board, which stays a web page on purpose (see below). Code: `ios/ToHuus/Features/Treats/`.
 German strings: `ios/tools/strings_de_treats2.json`.

@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { db } from '../db.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
-import { APNS_TOKEN, apnsConfigured, listDevices as listApnsDevices, registerDevice, removeDevice, sendApns } from '../lib/apns.js';
+import { APNS_TOKEN, apnsConfigured, apnsReasonText, listDevices as listApnsDevices, registerDevice, removeDevice, sendApns } from '../lib/apns.js';
 import { MODULES, modules, setModules } from '../lib/modules.js';
 import { config } from '../config.js';
 import { PERSON_EVENTS, memberEmail, personPrefs, presence, setPersonPrefs, setPresence } from '../lib/notify-prefs.js';
@@ -297,11 +297,13 @@ r.post(
   '/push/apns/test',
   wrap(async (req) => {
     const uid = userId(req);
-    if (!uid) return { sent: 0, configured: apnsConfigured(), devices: 0, reasons: [] };
+    if (!uid) return { sent: 0, configured: apnsConfigured(), devices: 0, reasons: [], hints: [] };
     // why nothing arrived matters more than the count: no Apple key on this server, no iPhone registered, or Apple refused
     const report = { reasons: [] as string[] };
     const sent = await sendApns([uid], { title: t('Test from ToHuus Hub'), body: t('Push notifications reach this device.'), path: '/', event: 'test', urgent: true }, report);
-    return { sent, configured: apnsConfigured(), devices: listApnsDevices(uid).length, reasons: [...new Set(report.reasons)] };
+    const reasons = [...new Set(report.reasons)];
+    // Apple's codes in words where we know them (e.g. BadEnvironmentKeyInToken)
+    return { sent, configured: apnsConfigured(), devices: listApnsDevices(uid).length, reasons, hints: reasons.map(apnsReasonText).filter((x): x is string => Boolean(x)) };
   }),
 );
 

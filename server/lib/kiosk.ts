@@ -24,7 +24,6 @@ import { localDay } from './catalog.js';
 import { showNamesOnLogin } from './data.js';
 import { eatFirst } from './fresh.js';
 import { overview } from './overview.js';
-import { liveParty } from './party.js';
 import { getPlan } from './plan.js';
 import { householdAppearance } from './appearance.js';
 import { ScopedMap } from './tenancy.js';
@@ -52,14 +51,15 @@ migrate(
 
 export const LAYOUTS = ['kitchen', 'hallway', 'minimal'] as const;
 export type Layout = (typeof LAYOUTS)[number];
-export const WIDGETS = ['clock', 'meals', 'eat_first', 'low', 'shopping', 'care', 'party'] as const;
+// 'party' (banner of the former party mode) was dropped on 18 Oct 2026 – stored lists lose it in cleanWidgets()
+export const WIDGETS = ['clock', 'meals', 'eat_first', 'low', 'shopping', 'care'] as const;
 export type Widget = (typeof WIDGETS)[number];
 
 /** What each layout shows unless the admin switches widgets off or on. */
 export const LAYOUT_WIDGETS: Record<Layout, Widget[]> = {
-  kitchen: ['clock', 'meals', 'eat_first', 'low', 'shopping', 'party'],
-  hallway: ['clock', 'meals', 'shopping', 'care', 'party'],
-  minimal: ['clock', 'meals', 'shopping', 'party'],
+  kitchen: ['clock', 'meals', 'eat_first', 'low', 'shopping'],
+  hallway: ['clock', 'meals', 'shopping', 'care'],
+  minimal: ['clock', 'meals', 'shopping'],
 };
 
 export interface DisplayRow {
@@ -267,7 +267,6 @@ export interface DisplayData {
   low?: { empty: number; low: number; items: { name: string; image_path: string | null; status: 'low' | 'empty' }[] };
   shopping?: { count: number; items: string[] };
   care?: { count: number; items: { name: string; state: string; when: string; who: string | null }[] };
-  party?: { name: string; board_path: string | null; until: string | null } | null;
 }
 interface MealItem {
   title: string;
@@ -338,10 +337,6 @@ export function displayData(d: DisplayRow, nowMs = Date.now()): DisplayData {
       count: due.length,
       items: due.slice(0, 6).map((c) => ({ name: c.name, state: c.state, when: inDays(c.days), who: names ? (c.assignee?.name ?? null) : null })),
     };
-  }
-  if (on('party')) {
-    const p = liveParty();
-    out.party = p ? { name: p.name, board_path: p.display_token ? `/party/board/${p.display_token}` : null, until: p.ends_at } : null;
   }
   return out;
 }
@@ -451,13 +446,6 @@ function careCard(d: DisplayData) {
   return card('care', t('Due at home'), body, c.count ? ` <span class="n">${c.count}</span>` : '');
 }
 
-export function partyHtml(d: DisplayData) {
-  const p = d.party;
-  if (!p) return '';
-  const link = p.board_path ? `<a class="btn" href="${esc(p.board_path)}">${esc(t('Open the party board'))}</a>` : '';
-  return `<div class="party"><div><div class="eyebrow">${esc(t('Party running'))}</div><b>${esc(p.name)}</b></div>${link}</div>`;
-}
-
 /** The changing part of the page (refreshed by the script without reloading). */
 export function mainHtml(d: DisplayData) {
   const w = new Set(d.display.widgets);
@@ -480,7 +468,7 @@ export function mainHtml(d: DisplayData) {
 }
 
 export function fragment(d: DisplayData) {
-  return { main: mainHtml(d), party: partyHtml(d), layout: d.display.layout, widgets: d.display.widgets, night_from: d.display.night_from, night_to: d.display.night_to, at: d.now };
+  return { main: mainHtml(d), layout: d.display.layout, widgets: d.display.widgets, night_from: d.display.night_from, night_to: d.display.night_to, at: d.now };
 }
 
 const CSS = `
@@ -497,9 +485,6 @@ body{font-family:'Familjen Grotesk Variable',-apple-system,'Segoe UI',Roboto,'He
 .greet{text-align:right}
 .greet b{display:block;font-family:'Hedvig Letters Serif',Georgia,serif;font-size:2.1rem;font-weight:400;letter-spacing:-.01em;font-synthesis:none}
 .greet span{color:var(--ink-3);font-size:1.15rem}
-.party{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;background:var(--hero);color:var(--hero-ink);border-radius:.6rem;padding:1rem 1.4rem;margin-bottom:1.2rem}
-.party b{font-size:1.5rem}.party .eyebrow{color:var(--hero-2)}
-.btn{display:inline-block;background:var(--hero-ink);color:var(--hero);border-radius:.4rem;padding:.6rem 1.2rem;font-weight:600;text-decoration:none;font-size:1.05rem}
 #main{display:-webkit-flex;display:flex;-webkit-flex:1;flex:1;min-height:0;margin:0 -.6rem}
 .col{-webkit-flex:1 1 0;flex:1 1 0;min-width:0;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;padding:0 .6rem}
 .card{position:relative;-webkit-flex:none;flex:none;background:var(--surface);border-radius:.6rem;border:2px solid var(--ink);padding:1.4rem 1.5rem;margin-bottom:1.2rem;box-shadow:var(--shadow);overflow:hidden;min-height:0}
@@ -594,7 +579,6 @@ export function pageHtml(token: string, d: DisplayData) {
 ${d.display.widgets.includes('clock') ? `<div><div class="time" id="time">${esc(d.time)}</div><div class="date" id="date">${esc(d.date)}</div></div>` : '<div></div>'}
 <div class="greet"><b id="greet">${esc(d.greeting)}</b><span>${esc(d.household)}</span></div>
 </header>
-<div id="party">${partyHtml(d)}</div>
 <div id="main">${mainHtml(d)}</div>
 <div class="foot"><span>${esc(d.display.name)}</span><span class="st" id="st">${esc(t('live'))}</span></div>
 </div>
@@ -632,7 +616,7 @@ var busy=false;
 function load(){if(busy)return;busy=true;var x=new XMLHttpRequest();x.open('GET','/api/display/'+token+'/fragment?_='+new Date().getTime(),true);
 x.onreadystatechange=function(){if(x.readyState!==4)return;busy=false;
 if(x.status===200){try{var r=JSON.parse(x.responseText);if(r.layout!==layout){location.reload();return}
-document.getElementById('main').innerHTML=r.main;document.getElementById('party').innerHTML=r.party;nf=r.night_from||'';nt=r.night_to||'';status(true);tick()}catch(e){status(false)}}
+document.getElementById('main').innerHTML=r.main;nf=r.night_from||'';nt=r.night_to||'';status(true);tick()}catch(e){status(false)}}
 else if(x.status===404){location.reload()}else{status(false)}};
 try{x.send()}catch(e){busy=false;status(false)}}
 var timer=null;function soon(){if(timer)clearTimeout(timer);timer=setTimeout(load,700)}
@@ -725,14 +709,6 @@ export async function renderPng(d: DisplayData, o: ImageOpts): Promise<Buffer> {
   y += Math.round(30 * s);
   shapes.push(`<rect x="${pad}" y="${y}" width="${W - pad * 2}" height="${Math.max(1, Math.round(2 * s))}" fill="${ink}"/>`);
   y += Math.round(18 * s);
-
-  // party banner
-  if (d.party) {
-    const bh = Math.round(40 * s);
-    shapes.push(`<rect x="${pad}" y="${y}" width="${W - pad * 2}" height="${bh}" rx="${Math.round(8 * s)}" fill="${ink}"/>`);
-    await text(`${t('Party running')}: ${d.party.name}`, { x: pad + 14 * s, y: y + 8 * s, size: 20 * s, weight: 700, color: '#ffffff', maxW: W - pad * 2 - 28 * s });
-    y += bh + Math.round(14 * s);
-  }
 
   // footer lines (care / eat first / low) – computed first to know how much room the columns get
   const foot: string[] = [];

@@ -162,6 +162,14 @@ struct ReceiptCaptureView: View {
                             .font(.subheadline.weight(.semibold))
                     }
                     .frame(minHeight: 44)
+                    // the total does not add up: often just a discount or deposit row the photo did not show
+                    NavigationLink {
+                        ImportReviewView(store: store, importId: id, start: .adjust)
+                    } label: {
+                        Label(L("Add discount or deposit"), systemImage: "plus.circle")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .frame(minHeight: 44)
                     Text(L("It waits under Money › Receipts › To check until you book it in."))
                         .font(.caption).foregroundStyle(Theme.ink3)
                 }
@@ -207,23 +215,28 @@ struct ReceiptCaptureView: View {
             uploading = true
             error = nil
             var lines: [String] = []
-            for img in images { lines += (try? await DeviceOCR.lines(in: img)) ?? [] }
+            for img in images { lines += (try? await DeviceOCR.receiptLines(in: img)) ?? [] }
             uploading = false
             if lines.isEmpty {
                 error = L("No text found on the photo. Try again in better light.")
                 return
             }
-            // Apple Intelligence on this iPhone (if the person chose it): tidy the lines before they are sent
+            // Apple Intelligence on this iPhone (if the person chose it): a tidied second reading sent NEXT TO the plain
+            // lines – the server takes it only when it adds up and the plain lines do not (18 Oct 2026: the model had
+            // dropped the Lidl Plus discount and the deposit row)
+            var alt: [String]? = nil
             if OnDeviceAI.active(app) {
                 uploading = true
                 let raw = lines
-                if let tidy = await OnDeviceAI.withTimeout(20, { await OnDeviceAI.tidyReceipt(raw) }) { lines = tidy }
+                alt = await OnDeviceAI.withTimeout(20, { await OnDeviceAI.tidyReceipt(raw) })
                 uploading = false
             }
             do {
                 uploading = true
                 defer { uploading = false }
-                let r = try await store.api.importLines(lines, mode: "receipt")
+                let r = try await store.api.importLines(lines, mode: "receipt", alt: alt)
+                // the photo stays on this iPhone for this session – "Read again with AI" can use it without asking again
+                if let id = r.id { ReceiptPhotoCache.put(id, images) }
                 let note = r.sumMatches == false ? L("The total doesn't add up – please check the lines.") : nil
                 results = [ImportResult(file: nil, id: r.id, error: note, title: r.title ?? L("Receipt"), duplicate: nil, lines: nil)] + results
                 store.touch("imports")

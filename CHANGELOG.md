@@ -4,6 +4,8 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Party mode removed (Till, 18 Oct 2026): no party routes, MCP tools, `party.*` notifications, module `party`, TV/kitchen board, party menus or templates any more (docs/party-modus.md; code in Git history up to 265276f). No data deleted: the party tables stay unused, old party orders are hidden. One „Bring mir was“ instead: guests wish for something through the guest link ("Invite guests" right in Bring mir was), their wishes land in the same list as "Guest: name" with the same buttons and notifications; the area "Guests" keeps the links for babysitters and grandparents. Home Assistant: `sensor.tohuus_hub_party` and `binary_sensor.tohuus_hub_party_running` removed.
+- iPhone push test: Apple's `BadEnvironmentKeyInToken` is explained in words (the server's APNs key must be for "Sandbox & Production").
 - Haushaltswissen „Was ToHuus sich merkt“ (docs/knowledge.md): cards subject · property · value on people, rooms, products or free subjects, with history (restore, remove), note, photo, „Nur ich / Ganzer Haushalt“ (share and make private), „Gäste sehen es auch“, delete with undo; „Schreib es ToHuus“ reads sentences without AI. New API `/api/knowledge` (+ `/say`, history, photo), migration `knowledge-1` on `ai_memory`, module switch `knowledge`, assistant screen `knowledge` and tool `knowledge_change`. Web `/wissen`, iPhone Mehr › Haushalt; shown in person and place sheets and linked from Hausinfo.
 - Final release instead of beta (docs/release-1.0.md):
   - Sign-up is open by default.

@@ -20,6 +20,7 @@ import { today } from './spend2.js';
 import { addDays } from './spend2.js';
 import { eatFirst } from './fresh.js';
 import { cookStyleLine } from './cook-style.js';
+import { norm } from './text.js';
 
 export interface ContextViewer {
   userId?: number | null;
@@ -99,7 +100,32 @@ function useSoonLine() {
   }
 }
 
-export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: ContextViewer | null; topics?: Topic[] }) {
+/** The "Remembered" line for the model has a cap (18 Oct 2026, cost): a household that told ToHuus 80 things sent
+ *  ~4 700 characters with every call. The entries that share words with the message come first, then the newest. */
+export const MEMORY_LINE_MAX = 1200;
+export const MEMORY_ENTRIES_MAX = 25;
+
+export function rememberedLine(memory: { id: number; text: string }[], query = ''): string {
+  if (!memory.length) return '';
+  const words = new Set(norm(query).split(' ').filter((w) => w.length >= 3));
+  const score = (text: string) => {
+    const ws = norm(text).split(' ');
+    return ws.filter((w) => words.has(w) || [...words].some((q) => q.length >= 4 && w.length >= 4 && (w.startsWith(q) || q.startsWith(w)))).length;
+  };
+  const ranked = memory.map((m) => ({ m, s: score(m.text) })).sort((a, b) => b.s - a.s || b.m.id - a.m.id);
+  const parts: string[] = [];
+  let len = 0;
+  for (const { m } of ranked) {
+    const part = `[${m.id}] ${m.text}`;
+    if (parts.length >= MEMORY_ENTRIES_MAX || len + part.length + 3 > MEMORY_LINE_MAX) break;
+    parts.push(part);
+    len += part.length + 3;
+  }
+  const rest = memory.length - parts.length;
+  return `Remembered: ${parts.join(' | ')}${rest > 0 ? ` (+${rest} more remembered – knowledge_find or ask)` : ''}`;
+}
+
+export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: ContextViewer | null; topics?: Topic[]; query?: string }) {
   const topics = new Set(opts.topics ?? ALL_TOPICS);
   const consent = healthShareAllowed();
   const red = redactForAssistant(consent);
@@ -167,7 +193,8 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
       ? 'General questions about household tasks (how often, how, with what, how to share fairly): answer briefly as a rule of thumb, then offer to make a task. No medical, legal or care advice – point to official sources.'
       : '',
     has('money') && money ? `Money: week ${fmtMoney(money.week)}, month ${fmtMoney(money.month)}${money.budget ? `, budget ${fmtMoney(money.budget.amount)} (${fmtMoney(money.budget.left)} left)` : ''}` : '',
-    memory.length ? `Remembered: ${memory.map((m) => `[${m.id}] ${m.text}`).join(' | ')}` : '',
+    // MCP gets everything; the assistant a capped line, the fitting entries first
+    opts.purpose === 'assistant' ? rememberedLine(memory, opts.query ?? '') : memory.length ? `Remembered: ${memory.map((m) => `[${m.id}] ${m.text}`).join(' | ')}` : '',
   ].filter(Boolean);
   return { data, text: red.text(lines.join('\n')) };
 }

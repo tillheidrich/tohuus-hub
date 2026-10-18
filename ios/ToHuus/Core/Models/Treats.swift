@@ -53,7 +53,7 @@ struct TreatOrder: Decodable, Sendable, Identifiable, Hashable {
     var byName: String?
     var reason: String?
     var thankedAt: String?
-    /// home | guest | party
+    /// home | guest (a wish through the shared guest link)
     var kind: String?
     @Lossy var lines: [Line]
 
@@ -86,7 +86,6 @@ struct TreatOrder: Decodable, Sendable, Identifiable, Hashable {
         if status == "declined" {
             return reason.map { LF("Not right now – %@", TreatReasons.label($0)) } ?? L("Not right now")
         }
-        if k == "party" { return status == "done" ? L("Ready at the counter") : status == "accepted" ? L("Being made") : L("Received") }
         if status == "accepted" { return byName.map { LF("Coming right up – %@ is bringing it", $0) } ?? L("Coming right up") }
         if status == "done" { return k == "guest" ? L("On its way to you") : byName.map { LF("Brought by %@", $0) } ?? L("Brought") }
         return k == "guest" ? L("Received") : L("Sent – waiting for an “I’ll bring it”")

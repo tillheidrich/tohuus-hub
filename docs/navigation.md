@@ -18,8 +18,8 @@ Abgeschaltete Bereiche („Was nutzt ihr?“) und für Gäste gesperrte Bereiche
 - Die zusätzlichen Bereiche (seit 18.10.2026) sind eigenständige Seiten, die man oft direkt braucht, die aber sonst in
   „Mehr“ (Wissen, Bring mir was) oder hinter einer Tür stecken (Wünsche oben in Einkauf, Hausinfo oben in
   Aufgaben). Wer Bring mir was jeden Abend nutzt oder WLAN-Code und Müllplan ständig braucht, holt sie nach unten.
-  Nicht wählbar sind Seiten, die nur Werkzeug oder Einstellung sind (Personen, Urlaub, Wo ist was?, Etiketten …), und
-  der Party-Modus (für den Start abgeschaltet; die alte Id `party` wird still verworfen).
+  Nicht wählbar sind Seiten, die nur Werkzeug oder Einstellung sind (Personen, Urlaub, Wo ist was?, Etiketten …); eine
+  unbekannte gespeicherte Id wird still verworfen.
 - Bring mir was folgt dem Modul `treats` („Was nutzt ihr?“). Bring mir was fehlt auf dem iPhone außerdem im
   Ein-Personen-Haushalt (wie seine Zeile in „Mehr“).
 - Auf **Heute** gibt es dazu die Karte „Bring mir was“ (Schlüssel `orders` in `GET/PUT /api/list/today-order`): offene

@@ -9,7 +9,6 @@ export const assist: Record<string, string> = {
   'Why was this month more expensive?': 'Warum war dieser Monat teurer?',
   'Where can we save?': 'Wo können wir sparen?',
   'We have Alexa and Hue in the living room – write it up for the babysitter': 'Wir haben Alexa und Hue im Wohnzimmer – schreib das für den Babysitter auf',
-  'Party on Saturday with 12 guests – what do we need?': 'Samstag Feier mit 12 Gästen – was brauchen wir?',
   'Photo of the fridge': 'Foto vom Kühlschrank',
   'Photo of the fridge or a cupboard': 'Foto vom Kühlschrank oder Schrank',
   'ToHuus suggests what it sees, with an estimated best-before. Nothing is saved until you tick and confirm.': 'ToHuus schlägt vor, was es sieht, mit geschätztem Haltbarkeitsdatum. Gespeichert wird erst, was du anhakst und bestätigst.',

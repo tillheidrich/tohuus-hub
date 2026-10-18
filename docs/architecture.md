@@ -1,5 +1,7 @@
 # Architecture
 
+> 18.10.2026: Der Party-Modus wurde auf Tills Entscheidung entfernt (siehe [party-modus.md](party-modus.md)). Gäste wünschen sich jetzt über den Gäste-Link aus „Bring mir was“ etwas; alles landet in einer Liste.
+
 A guide for developers and coding agents who want to change ToHuus Hub. It describes the code as it is; the history is in [CHANGELOG.md](../CHANGELOG.md).
 
 ToHuus Hub is one Node.js process with one SQLite database per household: self-hosted it serves exactly one household, as **ToHuus Cloud** (`MULTI_TENANT=true`, see [cloud.md](cloud.md)) many, each in its own encrypted database. The server renders nothing except a few small pages for displays and serves a React single-page app. There is no message queue, no Redis and no separate worker; background jobs run on timers in the same process.

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Router } from 'express';
+import sharp from 'sharp';
 import { z } from 'zod';
 import { db } from '../db.js';
 import { requireAuth } from '../lib/auth.js';
@@ -8,7 +9,9 @@ import { emit } from '../lib/bus.js';
 import { createProduct, learnAlias, matchProduct } from '../lib/catalog.js';
 import { toVisionJpeg } from '../lib/images.js';
 import {
+  addAdjustment,
   addImportLine,
+  applyAiProposal,
   applyImport,
   createImport,
   deleteImport,
@@ -19,6 +22,8 @@ import {
   pdfToText,
   reopenImport,
   saveUpload,
+  storeAiProposal,
+  undoAiProposal,
   updateImportHead,
 } from '../lib/imports.js';
 import { norm, parseGermanNumber, titleCaseReceipt } from '../lib/text.js';
@@ -28,7 +33,7 @@ import { safeFetch } from '../lib/net.js';
 import { fmtDay, t } from '../i18n.js';
 import { recordCorrection } from '../lib/quality.js';
 import { uploadQuota } from '../lib/plans.js';
-import { parseListLines, readListPhoto, readReceiptPhotos, receiptFromLines } from '../lib/receipt-read.js';
+import { aiReadSource, aiSecondLook, parseListLines, readListPhoto, readReceiptPhotos, receiptFromLines, storedSource, type ReceiptSource } from '../lib/receipt-read.js';
 import { UsageLimitError } from '../lib/limits.js';
 import { AiError } from '../lib/ai.js';
 import { OcrError, ocrAvailable, ocrImage } from '../lib/ocr.js';
@@ -167,8 +172,86 @@ r.post('/imports/:id/lines', (req, res) => {
   res.json(addImportLine(Number(req.params.id), b));
 });
 
+/**
+ * A discount or deposit row the reading missed, in one step (the review's "Add discount or deposit"):
+ *   POST /api/imports/:id/adjust { kind: 'discount'|'deposit', amount, line_id? } – a discount goes onto line_id (or the
+ *   whole purchase), a deposit becomes a deposit row.
+ */
+r.post('/imports/:id/adjust', (req, res) => {
+  const b = z
+    .object({ kind: z.enum(['discount', 'deposit']), amount: z.number().min(0.01).max(999), line_id: z.number().int().positive().nullable().optional() })
+    .parse(req.body);
+  res.json(addAdjustment(Number(req.params.id), { kind: b.kind, amount: b.amount, lineId: b.line_id ?? null }));
+});
+
+/**
+ * Read the receipt again with the image model (the review's "Read again with AI"; Till, 18.10.2026).
+ *   POST /api/imports/:id/reread-ai  multipart "files" (the photo(s); without them the photo stored with the receipt)
+ *     → { proposal: { lines, total, shop, sumMatches, itemsSum }, current: { itemsSum, total, sumMatches, lines } }
+ *   POST /api/imports/:id/reread-ai/apply → the proposal replaces the lines (own corrections carried over)
+ *   POST /api/imports/:id/reread-ai/undo  → the lines from before
+ * Counts as one receipt read by AI (daily limit, plans.ts); AI off for the household or the person → 403 before
+ * anything is sent. Only while the receipt is to be checked. On the iPhone the app asks first, because with
+ * "read photos on this iPhone" only text left the phone until now.
+ */
+r.post('/imports/:id/reread-ai', upload.array('files', 8), async (req, res) => {
+  const id = Number(req.params.id);
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as { id: number; status: string; shop: string | null; total: number | null; source_file: string | null; raw_text: string | null; meta: string } | undefined;
+  if (!imp) return void res.status(404).json({ error: t('Import not found') });
+  if (imp.status !== 'review') return void res.status(409).json({ error: t('Open the receipt for changes first.') });
+  // what goes to the model: photos or a PDF sent now (the iPhone keeps the photo it read), else what is stored with
+  // the receipt (photo, PDF), else its text (pasted lines, a mail or web receipt) – then only the text goes out
+  const files = (req.files as Express.Multer.File[]) ?? [];
+  const sent = files.filter((f) => f.mimetype.startsWith('image/')).map((f) => f.buffer);
+  const sentPdf = files.find((f) => f.mimetype === 'application/pdf' || looksLikePdf(f.buffer));
+  let src: ReceiptSource = storedSource(imp.source_file, imp.raw_text);
+  if (sent.length) src = { images: sent, text: imp.raw_text };
+  else if (sentPdf) src = { pdfFile: saveUpload(sentPdf.buffer, '.pdf'), text: null };
+  const meta0 = JSON.parse(imp.meta || '{}');
+  // device-read lines are no receipt text the model can do better with: the photo is needed
+  const textOnly = !src.images?.length && !src.pdfFile;
+  if (!src.images?.length && !src.pdfFile && (!src.text?.trim() || meta0.source === 'ocr-device' || meta0.source === 'ocr'))
+    return void res.status(422).json({ error: t('The photo of this receipt is not stored. Choose it once more.'), code: 'photo.missing' });
+  if (!visionAvailable()) return void res.status(403).json({ error: t('AI is switched off for you or this household. You can switch it on in Settings › With or without AI.'), code: 'ai.off' });
+  let read;
+  try {
+    read = await aiReadSource(src, { shop: imp.shop, total: imp.total });
+  } catch (e) {
+    if (e instanceof UsageLimitError) throw e;
+    if (e instanceof AiError) return void res.status(e.status ?? 502).json({ error: e.message, code: e.code });
+    throw e;
+  }
+  if (!read || !read.imp.lines.length) return void res.status(422).json({ error: t('The AI found no receipt lines on the photo. A sharper photo in good light helps.') });
+  const proposal = storeAiProposal(id, read.imp);
+  const lines = db.prepare('SELECT price FROM import_lines WHERE import_id = ?').all(id) as { price: number | null }[];
+  const meta = JSON.parse(imp.meta || '{}');
+  const itemsSum = Math.round((lines.reduce((a, l) => a + (l.price ?? 0), 0) + (Number(meta.receiptDiscount) || 0)) * 100) / 100;
+  res.json({ proposal, input: textOnly ? 'text' : (read.imp.meta.aiInput ?? 'image'), current: { lines: lines.length, itemsSum, total: imp.total, sumMatches: imp.total != null && Math.abs(itemsSum - imp.total) <= 0.021 } });
+});
+r.post('/imports/:id/reread-ai/apply', (req, res) => res.json(applyAiProposal(Number(req.params.id))));
+r.post('/imports/:id/reread-ai/undo', (req, res) => res.json(undoAiProposal(Number(req.params.id))));
+
 /** Remove a line (receipt to be checked). */
 r.delete('/imports/:id/lines/:lineId', (req, res) => res.json(deleteImportLine(Number(req.params.id), Number(req.params.lineId))));
+
+/**
+ * Receipt photos kept with the import while it is checked: shrunk to a JPEG (long side ≤ 2400 px), encrypted at rest and
+ * counted against the storage quota like every stored file (saveUpload). No room left → not kept (the review then asks
+ * for the photo again). Returns the comma-separated file names for imports.source_file.
+ */
+export async function keepReceiptPhotos(images: Buffer[]): Promise<string | null> {
+  const names: string[] = [];
+  for (const img of images.slice(0, 8)) {
+    try {
+      const jpg = await sharp(img, { failOn: 'none' }).rotate().resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer();
+      names.push(path.basename(saveUpload(jpg, '.jpg')));
+    } catch (e) {
+      console.warn('[imports] receipt photo not kept:', (e as Error).message);
+      break;
+    }
+  }
+  return names.length ? names.join(',') : null;
+}
 
 /**
  * Universal upload: PDFs (REWE avis / eBon or any text PDF), photos (receipt, shelf, product) and plain text.
@@ -196,7 +279,9 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
       }
       const parsed = parseDocumentText(text, f.originalname);
       if (parsed) {
-        results.push({ file: f.originalname, ...createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
+        // the total does not add up: the model reads it once (text first, then the rendered pages), if the household uses AI
+        const better = await aiSecondLook(parsed, { pdfFile: file, text });
+        results.push({ file: f.originalname, ...createImport(better ?? parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
       } else if (isPrintedEbonMail(text)) {
         // the eBon mail printed as a PDF: the receipt is its attachment, not in the printout
         results.push({ file: f.originalname, error: t('This is the eBon e-mail itself, the receipt is attached to it as a PDF. Upload the attachment, or forward the e-mail to your household’s ToHuus address.') });
@@ -217,7 +302,9 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
     // receipts: text recognition + parsers first, the model only when the sum does not check out (receipt-read.ts)
     try {
       const read = await readReceiptPhotos(images.map((i) => i.buffer));
-      const out = createImport(read.parsed, { actor: actorName(req), rawText: null });
+      // the photo stays with the receipt while it is checked ("Read again with AI"); removed when booked or deleted
+      const kept = await keepReceiptPhotos(images.map((i) => i.buffer));
+      const out = createImport(read.parsed, { actor: actorName(req), rawText: null, sourceFile: kept });
       results.push({ file: images.map((i) => i.originalname).join(', '), ...out, via: read.via, confidence: read.confidence, sumMatches: read.sumMatches });
     } catch (e) {
       const x = e as { status?: number; message?: string };
@@ -295,7 +382,7 @@ export function looksLikeReceiptText(text: string): boolean {
 
 async function importText(text: string, actor: string): Promise<Record<string, unknown>> {
   const parsed = parseDocumentText(text);
-  if (parsed) return createImport(parsed, { actor, rawText: text });
+  if (parsed) return createImport((await aiSecondLook(parsed, { text })) ?? parsed, { actor, rawText: text });
   if (looksLikeReceiptText(text)) {
     // a receipt the parsers could not read as it is: the repairs of photo text (repeated blocks, slashed zeros) …
     const read = receiptFromLines(text.split('\n'), null, 'ocr-device', null);
@@ -355,7 +442,7 @@ r.post('/imports/url', async (req, res) => {
     }
     const parsed = parseDocumentText(text);
     if (parsed) {
-      res.json(createImport(parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }));
+      res.json(createImport((await aiSecondLook(parsed, { pdfFile: file, text })) ?? parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }));
       return;
     }
     if (visionAvailable()) {
@@ -370,7 +457,8 @@ r.post('/imports/url', async (req, res) => {
     const text = htmlText(buf.toString('utf8'));
     const parsed = parseDocumentText(text);
     if (parsed) {
-      res.json(createImport(parsed, { actor: actorName(req) }));
+      // the fetched text stays with the receipt (for "Read again with AI": only this text goes to the model)
+      res.json(createImport((await aiSecondLook(parsed, { text })) ?? parsed, { actor: actorName(req), rawText: text }));
       return;
     }
     if (visionAvailable()) {
@@ -383,8 +471,22 @@ r.post('/imports/url', async (req, res) => {
 });
 
 /**
+ * Apple Vision's lines vs. the same receipt tidied by the on-device model: the model may drop discount and deposit rows
+ * or read a pack size ("Eier 6St") as a quantity (18.10.2026, Lidl: 11,74 instead of 11,29). The plain reading wins
+ * unless only the tidied one adds up to the printed total.
+ */
+export function pickDeviceReading(lines: string[], alt: string[] | null, confidence: number | null) {
+  const raw = receiptFromLines(lines, null, 'ocr-device', confidence);
+  const tidy = alt?.length ? receiptFromLines(alt, null, 'ocr-device', confidence) : null;
+  const exact = (r: typeof raw) => Boolean(r?.sumMatches && !r.parsed.meta.sumAssumed);
+  if (tidy && !exact(raw) && (exact(tidy) || !raw || (raw.parsed.meta.guessed && !tidy.parsed.meta.guessed))) return { read: tidy, lines: alt!, tidied: true };
+  if (raw) return { read: raw, lines, tidied: false };
+  return tidy ? { read: tidy, lines: alt!, tidied: true } : null;
+}
+
+/**
  * Text lines recognised on the device (iPhone: Apple Vision) – nothing is uploaded but the text.
- *   POST /api/imports/lines { lines: string[], source: 'ocr-device', mode?: 'auto'|'receipt'|'list', confidence?: 0..1 }
+ *   POST /api/imports/lines { lines: string[], source: 'ocr-device', mode?: 'auto'|'receipt'|'list', confidence?: 0..1, alt?: string[] }
  *   receipt (or auto and it parses as one) → { kind: 'receipt', id, via: 'ocr-device', sumMatches, confidence }
  *   list (or auto and it is not a receipt) → { kind: 'list', items: [{ name, qty, confidence }] } – suggestions only
  */
@@ -395,13 +497,17 @@ r.post('/imports/lines', (req, res) => {
       source: z.literal('ocr-device'),
       mode: z.enum(['auto', 'receipt', 'list']).optional(),
       confidence: z.number().min(0).max(1).nullable().optional(),
+      // the same receipt tidied by the on-device model (Apple Intelligence) – only used when it reads better
+      alt: z.array(z.string().max(300)).max(400).optional(),
     })
     .parse(req.body);
   const mode = b.mode ?? 'auto';
   if (mode !== 'list') {
-    const read = receiptFromLines(b.lines, null, 'ocr-device', b.confidence ?? null);
+    const pick = pickDeviceReading(b.lines, b.alt ?? null, b.confidence ?? null);
+    const read = pick?.read ?? null;
     if (read && (mode === 'receipt' || !read.parsed.meta.guessed)) {
-      const out = createImport(read.parsed, { actor: actorName(req), rawText: b.lines.join('\n') });
+      if (pick?.tidied) read.parsed.meta.tidiedOnDevice = true;
+      const out = createImport(read.parsed, { actor: actorName(req), rawText: pick!.lines.join('\n') });
       res.json({ kind: 'receipt', ...out, via: read.via, sumMatches: read.sumMatches, confidence: read.confidence });
       return;
     }

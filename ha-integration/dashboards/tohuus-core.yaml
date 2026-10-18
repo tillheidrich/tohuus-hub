@@ -99,9 +99,6 @@ views:
               - calendar.tohuus_hub_meal_plan
             initial_view: listWeek
           - type: tile
-            entity: sensor.tohuus_hub_party
-            name: Party
-          - type: tile
             entity: sensor.tohuus_hub_open_orders
             name: Open orders
           - type: tile

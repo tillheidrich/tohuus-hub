@@ -153,7 +153,7 @@ const printerBody = z.object({
   cut: z.enum(['partial', 'full', 'none']).optional(),
   darkness: z.number().int().min(-2).max(2).optional(),
   feed_lines: z.number().int().min(0).max(12).optional(),
-  auto_orders: z.enum(['off', 'party', 'all']).optional(),
+  auto_orders: z.enum(['off', 'all']).optional(),
   auto_care: z.boolean().optional(),
   is_default: z.boolean().optional(),
 });

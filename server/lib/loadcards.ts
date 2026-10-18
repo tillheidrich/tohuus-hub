@@ -51,7 +51,7 @@ export const DECK: Card[] = [
   { key: 'use_up', area: 'cook', text: 'Remembering what has to be used up', help: { text: '“Eat me first” shows what has to go soon.', path: '/bestand' } },
   { key: 'diets', area: 'cook', text: 'Keeping allergies and diets in mind', help: { text: 'Recipes and suggestions respect what the household set.', path: '/kochen' } },
   { key: 'lunchbox', area: 'cook', text: 'Thinking of lunchboxes', help: { text: 'The lunchbox list fills itself once a week.', path: '/einkauf' } },
-  { key: 'visitors_food', area: 'cook', text: 'Planning food for visitors and parties', help: { text: 'Party planning and “Bring mir was” collect what guests would like.', path: '/kochen' } },
+  { key: 'visitors_food', area: 'cook', text: 'Planning food for visitors', help: { text: 'Guests wish for something with a link – it lands in “Bring mir was”.', path: '/bestellen' } },
   { key: 'budget', area: 'money', text: 'Keeping an eye on the food budget', help: { text: 'Receipts become an overview by themselves – no typing.', path: '/geld' } },
   { key: 'receipts', area: 'money', text: 'Collecting receipts and bills', help: { text: 'Photograph a receipt or forward the e-receipt – ToHuus reads it.', path: '/geld' } },
   { key: 'contracts', area: 'money', text: 'Keeping track of contracts and subscriptions', help: { text: 'Deadlines are tasks with a reminder – in Apple Reminders too.', path: '/aufgaben' } },

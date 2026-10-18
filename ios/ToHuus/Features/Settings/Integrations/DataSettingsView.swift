@@ -284,7 +284,7 @@ struct StartOverSection: View {
         switch s {
         case "stock": return L("Products, stock, history, barcodes")
         case "recipes": return L("Recipes, cooking history, week plan, swap rules")
-        case "shopping": return L("Shopping list, orders, parties, wishes")
+        case "shopping": return L("Shopping list, orders, wishes")
         case "receipts": return L("Imported receipts, expenses, tags")
         default: return L("All of the above plus care tasks, notifications and other household entries")
         }

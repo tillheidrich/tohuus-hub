@@ -136,7 +136,7 @@ struct SyncBadge: View {
     }
 }
 
-// Button text (Till, 18 Oct 2026: „Ge-bracht“, „Geht gerade nicht“ on three lines, „Party starten“ off centre):
+// Button text (Till, 18 Oct 2026: „Ge-bracht“ and „Geht gerade nicht“ on three lines, a long label off centre):
 // labels stay whole – one line, shrinking a little before they would break; a word is never split at a syllable.
 // Too little room for several buttons side by side → AdaptiveButtonRow stacks them instead of squeezing the text.
 // Icon and text are centred together (ButtonLabel), so a title without an icon sits in the middle too.

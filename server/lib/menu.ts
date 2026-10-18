@@ -1,7 +1,7 @@
 /**
- * The order menu ("Karte"): what the household, guests, parties and the sofa can order.
+ * The order menu ("Karte"): what the household and guests can ask for in „Bring mir was“.
  *
- * A menu item is a product row with `orderable = 1` – that keeps orders, the party menu, the order board and
+ * A menu item is a product row with `orderable = 1` – that keeps wishes, guest links and
  * stock booking on one code path. Two kinds:
  *   - from stock: a real tracked product (crisps, ice cream, cola). It is marked "out" (or hidden) when
  *     stock runs out, and serving an order books it out (orders.ts, unchanged behaviour).
@@ -10,7 +10,7 @@
  *     "maybe not", and serving books a small per-serving amount of each counted ingredient.
  *
  * Extra menu data lives in menu_groups / menu_items / menu_ingredients. `products.order_group` is kept in sync
- * with the group name so older readers (party board, exports) keep working, and a change made elsewhere
+ * with the group name so older readers (exports) keep working, and a change made elsewhere
  * (product page) is picked up by `syncMenu()`.
  */
 import { z } from 'zod';
@@ -19,7 +19,7 @@ import { t } from '../i18n.js';
 import { categoryIdByKey } from './basedata.js';
 import { emit } from './bus.js';
 import { adjustStock, createProduct, listProducts } from './catalog.js';
-import { availableQty, livePartyId, reservedByProduct } from './party.js';
+import { availableQty, reservedByProduct } from './order-stock.js';
 import { norm } from './text.js';
 
 migrate(
@@ -52,8 +52,10 @@ migrate(
   ALTER TABLE orders ADD COLUMN ingredients_booked INTEGER NOT NULL DEFAULT 0;`,
 );
 
-export const AVAILABILITY = ['available', 'hidden', 'party', 'family'] as const;
+export const AVAILABILITY = ['available', 'hidden', 'family'] as const;
 export type Availability = (typeof AVAILABILITY)[number];
+/** The column's CHECK still allows the value of the former party mode (legacy rows): it reads as "hidden". */
+export const asAvailability = (a: string | null | undefined): Availability => ((AVAILABILITY as readonly string[]).includes(a ?? 'available') ? ((a ?? 'available') as Availability) : 'hidden');
 export const MAX_INGREDIENTS = 3;
 
 const httpError = (status: number, msg: string) => Object.assign(new Error(msg), { status });
@@ -204,16 +206,13 @@ type P = ReturnType<typeof listProducts>[number];
 export interface MenuCtx {
   /** a household member (not a permanent guest, not a guest link) */
   family: boolean;
-  /** a party is on (party link, or any menu while a party is live) */
-  party: boolean;
 }
 
 /** May this item appear for this kind of viewer at all? (ignores stock) */
-export function allowedFor(availability: Availability | undefined, ctx: MenuCtx) {
-  const a = availability ?? 'available';
+export function allowedFor(availability: string | undefined, ctx: MenuCtx) {
+  const a = asAvailability(availability);
   if (a === 'hidden') return false;
   if (a === 'family') return ctx.family;
-  if (a === 'party') return ctx.party;
   return true;
 }
 
@@ -258,35 +257,6 @@ export function itemState(p: P, ings: IngredientRow[], byId: Map<number, P>, res
   return { state: 'ok', available: true, hint: null };
 }
 
-/** Extra fields for any guest-facing menu entry (also the party menu). */
-export function menuDecor() {
-  const items = itemRows();
-  const ings = ingredientRows();
-  const products = listProducts();
-  const byId = new Map(products.map((p) => [p.id, p]));
-  const reserved = reservedByProduct();
-  return (productId: number) => {
-    const mi = items.get(productId);
-    const p = byId.get(productId);
-    const st = p ? itemState(p, ings.get(productId) ?? [], byId, reserved) : null;
-    return {
-      description: mi?.description ?? null,
-      ask_note: Boolean(mi?.ask_note),
-      note_hint: mi?.note_hint ?? null,
-      options: normalizeOptions(p?.order_options),
-      /** only the ingredient part ("maybe not") – stock "all gone" is decided by the caller */
-      maybe_hint: st?.state === 'maybe' ? st.hint : null,
-    };
-  };
-}
-
-/** Product ids that guests (party links, guest links) must never see on a menu: hidden and family-only. */
-export function blockedForGuests(): Set<number> {
-  return new Set(
-    (db.prepare(`SELECT product_id FROM menu_items WHERE availability IN ('hidden','family')`).all() as { product_id: number }[]).map((r) => r.product_id),
-  );
-}
-
 /** Orderable product ids this viewer may order from the menu (stock is checked separately). */
 export function orderableIds(ctx: MenuCtx): Set<number> {
   const items = itemRows();
@@ -329,8 +299,6 @@ export function guestMenu(ctx: MenuCtx, products = listProducts(), reserved = re
       unit: p.unit,
     }));
 }
-
-export const isPartyOn = () => livePartyId() != null;
 
 // ---------------------------------------------------------------- serving: book ingredients
 
@@ -389,7 +357,7 @@ export function menuView() {
       group_id: mi.group_id,
       sort: mi.sort,
       description: mi.description,
-      availability: mi.availability,
+      availability: asAvailability(mi.availability),
       when_out: mi.when_out,
       ask_note: Boolean(mi.ask_note),
       note_hint: mi.note_hint,
@@ -417,7 +385,6 @@ export function menuView() {
   const sorted = (arr: ReturnType<typeof view>[]) => arr.sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name));
   return {
     groups: gs.map((g) => ({ id: g.id, name: g.name, sort: g.sort, items: sorted(byGroup.get(g.id) ?? []) })),
-    party_live: isPartyOn(),
     count: onMenu.length,
   };
 }

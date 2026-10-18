@@ -626,8 +626,8 @@ function runCoreMigrations(d: DB) {
 }
 
 /**
- * Named, append-only migrations for feature modules: call `migrate('party-1', sql)` at module load.
- * A name runs exactly once; never edit the SQL of a name that has shipped – add 'party-2' instead.
+ * Named, append-only migrations for feature modules: call `migrate('menu-1', sql)` at module load.
+ * A name runs exactly once; never edit the SQL of a name that has shipped – add 'menu-2' instead.
  * Every name is also kept in a registry: cloud household databases replay it when they are opened.
  */
 const registry: { name: string; sql: string }[] = [];

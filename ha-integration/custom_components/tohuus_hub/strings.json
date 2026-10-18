@@ -134,7 +134,6 @@
         "shopping_added": "Added to the shopping list",
         "digest_daily": "Daily summary",
         "care_due": "Care task due",
-        "party_ending": "Party ending",
         "kids_wish": "Kid wish",
         "budget_warning": "Budget hint",
         "plan_vote": "Meal vote",
@@ -179,13 +178,6 @@
       "tonight": {
         "name": "Tonight"
       },
-      "party": {
-        "name": "Party",
-        "state": {
-          "off": "Off",
-          "live": "Running"
-        }
-      },
       "kid_wishes": {
         "name": "Kid wishes waiting"
       },
@@ -203,9 +195,6 @@
       }
     },
     "binary_sensor": {
-      "party_running": {
-        "name": "Party running"
-      },
       "something_expired": {
         "name": "Something expired"
       },
@@ -257,7 +246,6 @@
               "shopping_added": "Added to shopping list",
               "digest_daily": "Daily summary",
               "care_due": "Care task due",
-              "party_ending": "Party ending",
               "kids_wish": "Kid wish",
               "budget_warning": "Budget hint",
               "plan_vote": "Meal vote",
@@ -424,7 +412,7 @@
     },
     "order": {
       "name": "Order",
-      "description": "Orders from the sofa or for the party – shows up in ToHuus Hub like any other order.",
+      "description": "A wish from the sofa – shows up in ToHuus Hub like any other wish (Bring mir was).",
       "fields": {
         "product": {
           "name": "Product",

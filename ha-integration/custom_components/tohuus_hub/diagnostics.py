@@ -31,7 +31,6 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ToHuusC
         "displays": len(data.get("displays") or []),
         "has": {k: k in data for k in ("due", "money", "sync")},
         "sync": {k: (v or {}).get("mode") for k, v in (data.get("sync") or {}).items()},
-        "party": async_redact_data(data.get("party") or {}, TO_REDACT),
         "cookidoo": {
             "entity_id": rt.cookidoo.entity_id,
             "last_result": rt.cookidoo.last_result,

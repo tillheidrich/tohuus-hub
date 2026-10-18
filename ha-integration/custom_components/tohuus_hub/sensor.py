@@ -1,4 +1,4 @@
-"""Sensors: counts with item lists as attributes, tonight's meal, next care task, party status."""
+"""Sensors: counts with item lists as attributes, tonight's meal, next care task."""
 
 from __future__ import annotations
 
@@ -73,11 +73,6 @@ def _spend_attrs(d: dict) -> dict[str, Any]:
     m = _money(d)
     b = m.get("budget") or {}
     return {"week": m.get("week"), "month": m.get("month"), "budget": b.get("amount"), "budget_left": b.get("left"), "budget_state": b.get("state")}
-
-
-def _party_attrs(d: dict) -> dict[str, Any]:
-    p = d.get("party") or {}
-    return {k: p.get(k) for k in ("name", "started_at", "ends_at", "open_orders", "new_orders", "orders_total", "guest_url") if k in p}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -199,15 +194,6 @@ SENSORS: tuple[ToHuusSensorDescription, ...] = (
         value_fn=lambda d: ((d.get("tonight") or {}).get("title") or None),
         attrs_fn=_tonight_attrs,
         picture_fn=lambda d: (d.get("tonight") or {}).get("image_url"),
-    ),
-    ToHuusSensorDescription(
-        key="party",
-        translation_key="party",
-        icon="mdi:party-popper",
-        device_class=SensorDeviceClass.ENUM,
-        options=["off", "live"],
-        value_fn=lambda d: (d.get("party") or {}).get("status", "off"),
-        attrs_fn=_party_attrs,
     ),
     ToHuusSensorDescription(
         key="kid_wishes",

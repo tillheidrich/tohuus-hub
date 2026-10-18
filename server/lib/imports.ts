@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { config } from '../config.js';
-import { deleteImage, importsDir, readStoredFile, writeStoredFile } from './images.js';
+import { deleteImage, importsDir, readStoredFile, removeStoredFile, writeStoredFile } from './images.js';
 import { db, getSetting } from '../db.js';
 import { detectReweKind, isSameShopping, parseReweAvis, parseReweEbon, reconcile } from '../importers/rewe.js';
 import type { ParsedImport, ParsedLine } from '../importers/types.js';
@@ -91,7 +91,8 @@ function insertLines(importId: number, lines: (ParsedLine & { receiptName?: stri
         l.note,
         l.substituteFor ? t('Substitute for: {name}', { name: l.substituteFor }) : null,
         l.depositFor ? t('Deposit for: {name}', { name: l.depositFor }) : null,
-        l.ocrConfidence != null && l.ocrConfidence < 0.75 ? t('Read unclearly – please check') : null,
+        // a deposit row generic.ts filled in from the total (the photo did not show it)
+        /\(assumed from the total\)/.test(l.raw ?? '') ? t('Not read on the photo – added so the total adds up, please check') : l.ocrConfidence != null && l.ocrConfidence < 0.75 ? t('Read unclearly – please check') : null,
       ]
         .filter(Boolean)
         .join(' · ') || null;
@@ -276,6 +277,21 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
   return null;
 }
 
+/**
+ * Stored originals of a receipt (imports.source_file, comma-separated): photos go once the receipt is booked (they were
+ * only kept for "Read again with AI" while checking), PDFs stay as the document; everything goes when it is deleted.
+ */
+export function removeSourceFiles(id: number, which: 'photos' | 'all') {
+  const row = db.prepare('SELECT source_file FROM imports WHERE id = ?').get(id) as { source_file: string | null } | undefined;
+  if (!row?.source_file) return 0;
+  const names = row.source_file.split(',').map((s) => s.trim()).filter(Boolean);
+  const gone = names.filter((n) => which === 'all' || /\.(jpe?g|png|webp|heic)$/i.test(n));
+  for (const n of gone) removeStoredFile(path.join(importsDir(), path.basename(n)));
+  const left = names.filter((n) => !gone.includes(n));
+  db.prepare('UPDATE imports SET source_file = ? WHERE id = ?').run(left.length ? left.join(',') : null, id);
+  return gone.length;
+}
+
 export function applyImport(id: number, actor: string) {
   const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
   if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
@@ -334,6 +350,7 @@ export function applyImport(id: number, actor: string) {
     db.prepare(`UPDATE imports SET status = 'applied', applied_at = datetime('now'), meta = ? WHERE id = ?`).run(JSON.stringify(meta), id);
   });
   tx();
+  removeSourceFiles(id, 'photos');
   for (const pid of created) enqueueEnrich(pid);
   emit('imports', 'stock', 'products', 'shopping');
   return { applied, created: created.length };
@@ -424,6 +441,7 @@ export function discardImport(id: number) {
     if (r.changes) removeCreatedProducts(id);
   });
   tx();
+  removeSourceFiles(id, 'photos');
   emit('imports', 'products');
 }
 
@@ -436,6 +454,7 @@ export function deleteImport(id: number, actor: string) {
   const tx = db.transaction(() => {
     if (imp.status === 'applied') reverted = revertBookings(id, actor);
     removedProducts = removeCreatedProducts(id);
+    removeSourceFiles(id, 'all');
     db.prepare(`DELETE FROM imports WHERE id = ?`).run(id);
   });
   tx();
@@ -479,6 +498,128 @@ export function addImportLine(id: number, b: { name: string; qty?: number; price
   emit('imports');
   const row = db.prepare('SELECT id FROM import_lines WHERE import_id = ? ORDER BY id DESC LIMIT 1').get(id) as { id: number };
   return { id: row.id };
+}
+
+/**
+ * The total does not add up and a discount or deposit row is missing (light blue "Lidl Plus Rabatt", a faint "Pfand"
+ * row): add it in one step. A discount goes onto the product it belongs to (its price is then what was paid) or, without
+ * one, onto the whole purchase; a deposit becomes a deposit row (money, not stock). Only while the receipt is checked.
+ */
+export function addAdjustment(id: number, b: { kind: 'discount' | 'deposit'; amount: number; lineId?: number | null }) {
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
+  if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
+  if (imp.status !== 'review') throw Object.assign(userError(t('Open the receipt for changes first.')), { status: 409 });
+  const amount = Math.round(Math.abs(b.amount) * 100) / 100;
+  if (!(amount > 0)) throw Object.assign(userError(t('Please enter a valid number.')), { status: 400 });
+  const label = (n: number) => n.toFixed(2).replace('.', ',');
+  if (b.kind === 'deposit') {
+    const r = addImportLine(id, { name: t('Deposit'), qty: 1, price: amount, deposit: true });
+    return { ok: true, kind: 'deposit', lineId: r.id };
+  }
+  if (b.lineId) {
+    const l = db.prepare(`SELECT * FROM import_lines WHERE id = ? AND import_id = ?`).get(b.lineId, id) as { id: number; price: number | null; note: string | null } | undefined;
+    if (!l) throw Object.assign(userError(t('Line not found')), { status: 404 });
+    const price = Math.round(((l.price ?? 0) - amount) * 100) / 100;
+    if (price < 0) throw Object.assign(userError(t('The discount is larger than the price of this line.')), { status: 400 });
+    const note = [l.note, t('Discount -{amount} (added)', { amount: label(amount) })].filter(Boolean).join(' · ');
+    db.prepare('UPDATE import_lines SET price = ?, note = ? WHERE id = ?').run(price, note, l.id);
+  } else {
+    const meta = readMeta(imp.meta);
+    meta.receiptDiscount = Math.round(((Number(meta.receiptDiscount) || 0) - amount) * 100) / 100;
+    db.prepare('UPDATE imports SET meta = ? WHERE id = ?').run(JSON.stringify(meta), id);
+  }
+  emit('imports');
+  return { ok: true, kind: 'discount', lineId: b.lineId ?? null };
+}
+
+// ------------------------------------------------------------------ read again with AI (18.10.2026)
+//
+// Till: "Warum kommt da nicht direkt die KI ins Spiel? … nochmal mit KI versuchen." The review can let the image model
+// read the receipt photo again (routes/imports.ts › reread-ai). The model's lines are a proposal first (meta.aiProposal);
+// only on "take it" they replace the lines – the person's own corrections carried over where the same product shows up
+// again – and "undo" puts the earlier lines back (meta.beforeAi).
+
+const normName = (s: string | null | undefined) => String(s ?? '').toLowerCase().replace(/[^a-zäöüß0-9]+/g, ' ').trim();
+
+/** Store the model's reading as a proposal next to the receipt (nothing changes yet). */
+export function storeAiProposal(id: number, parsed: ParsedImport) {
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
+  if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
+  const meta = readMeta(imp.meta);
+  meta.aiProposal = {
+    at: new Date().toISOString(),
+    shop: parsed.shop ?? null,
+    total: parsed.total ?? null,
+    date: parsed.date ?? null,
+    sumMatches: Boolean(parsed.meta.sumMatches),
+    itemsSum: parsed.meta.itemsSum ?? null,
+    lines: parsed.lines.map((l) => ({ name: l.name, qty: l.qty, price: l.price ?? null, deposit: l.status === 'deposit' })),
+  };
+  db.prepare('UPDATE imports SET meta = ? WHERE id = ?').run(JSON.stringify(meta), id);
+  emit('imports');
+  return meta.aiProposal;
+}
+
+/** Take the stored proposal: lines replaced (corrections carried over), the earlier state kept for "undo". */
+export function applyAiProposal(id: number) {
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
+  if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
+  if (imp.status !== 'review') throw Object.assign(userError(t('Open the receipt for changes first.')), { status: 409 });
+  const meta = readMeta(imp.meta);
+  const prop = meta.aiProposal;
+  if (!prop || !Array.isArray(prop.lines) || !prop.lines.length) throw Object.assign(userError(t('Nothing to take over – read the receipt with AI first.')), { status: 409 });
+  const old = db.prepare('SELECT * FROM import_lines WHERE import_id = ? ORDER BY sort').all(id) as Record<string, any>[];
+  const parsed = linesToImport('receipt', imp.title, prop.lines);
+  let carried = 0;
+  const tx = db.transaction(() => {
+    db.prepare('DELETE FROM import_lines WHERE import_id = ?').run(id);
+    insertLines(id, parsed.lines.map((l) => ({ ...l, receiptName: l.name })));
+    // learned household rules on the new lines, as for any new receipt
+    applyRulesToImport(id);
+    const fresh = db.prepare('SELECT * FROM import_lines WHERE import_id = ? ORDER BY sort').all(id) as Record<string, any>[];
+    const used = new Set<number>();
+    for (const n of fresh) {
+      const o = old.find((x) => !used.has(x.id) && x.corrected && x.status === n.status && [normName(x.name), normName(x.receipt_name)].includes(normName(n.name)));
+      if (!o) continue;
+      used.add(o.id);
+      db.prepare('UPDATE import_lines SET product_id = ?, action = ?, location_id = ?, unit = ?, corrected = 1, for_user_id = ?, for_list_id = ? WHERE id = ?').run(
+        o.product_id, o.action, o.location_id, o.unit, o.for_user_id ?? null, o.for_list_id ?? null, n.id,
+      );
+      carried++;
+    }
+    const m2 = { ...meta, beforeAi: { lines: old, shop: imp.shop, total: imp.total, meta: { source: meta.source ?? null, sumMatches: meta.sumMatches ?? null, itemsSum: meta.itemsSum ?? null, receiptDiscount: meta.receiptDiscount ?? null, parser: meta.parser ?? null, date: meta.date ?? null } } } as Record<string, any>;
+    delete m2.aiProposal;
+    Object.assign(m2, { source: 'ai', parser: null, rereadAi: true, sumMatches: Boolean(prop.sumMatches), itemsSum: prop.itemsSum, receiptDiscount: null, sumAssumed: undefined, assumed: undefined, fixSuggestion: undefined });
+    if (prop.date && !m2.date) m2.date = prop.date;
+    db.prepare('UPDATE imports SET shop = ?, total = ?, meta = ? WHERE id = ?').run(imp.shop ?? prop.shop ?? null, prop.total ?? imp.total, JSON.stringify(m2), id);
+  });
+  tx();
+  emit('imports');
+  return { ok: true, lines: parsed.lines.length, carried };
+}
+
+/** Back to the lines before the AI reading. */
+export function undoAiProposal(id: number) {
+  const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(id) as ImportRow | undefined;
+  if (!imp) throw Object.assign(userError(t('Import not found')), { status: 404 });
+  if (imp.status !== 'review') throw Object.assign(userError(t('Open the receipt for changes first.')), { status: 409 });
+  const meta = readMeta(imp.meta);
+  const before = meta.beforeAi;
+  if (!before || !Array.isArray(before.lines)) throw Object.assign(userError(t('Nothing to undo.')), { status: 409 });
+  const tx = db.transaction(() => {
+    db.prepare('DELETE FROM import_lines WHERE import_id = ?').run(id);
+    for (const row of before.lines as Record<string, any>[]) {
+      const cols = Object.keys(row);
+      db.prepare(`INSERT INTO import_lines (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`).run(...cols.map((c) => row[c]));
+    }
+    const m2 = { ...meta, ...before.meta } as Record<string, any>;
+    delete m2.beforeAi;
+    delete m2.rereadAi;
+    db.prepare('UPDATE imports SET shop = ?, total = ?, meta = ? WHERE id = ?').run(before.shop ?? null, before.total ?? null, JSON.stringify(m2), id);
+  });
+  tx();
+  emit('imports');
+  return { ok: true };
 }
 
 /** Remove a line (only while the receipt is to be checked). */

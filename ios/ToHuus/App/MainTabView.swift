@@ -15,7 +15,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
     static let tabs: [AppArea] = [.today, .shopping, .cooking, .tasks, .stock, .money]
     /// the areas a person can put next to Heute ("Deine Leiste", same ids as server/lib/nav-prefs.ts). After the five
     /// main areas the pages of their own that otherwise sit in Mehr or behind a door (18 Oct 2026): Haushaltswissen,
-    /// Bring mir was, Wünsche (door on top of Einkauf), Hausinfo (door on top of Aufgaben). No party mode (off for the start)
+    /// Bring mir was, Wünsche (door on top of Einkauf), Hausinfo (door on top of Aufgaben).
     static let pickable: [AppArea] = [.shopping, .cooking, .tasks, .stock, .money, .knowledge, .orders, .wishes, .houseinfo]
     /// the main areas – only these become rows at the top of Mehr; the extra ones keep their own row or door
     static let main: [AppArea] = [.shopping, .cooking, .tasks, .stock, .money]
@@ -160,6 +160,8 @@ struct MainTabView: View {
     @State private var whatsNew: WhatsNew?
     /// "Später" – not again until the next app start
     @State private var whatsNewLater = false
+    /// what the import of an opened file took over – shown once the sheet is gone
+    @State private var openedFileDone: String?
     @Environment(\.scenePhase) private var scenePhase
 
     /// kept for the tab version (Heute opens tabs through it)
@@ -245,6 +247,12 @@ struct MainTabView: View {
         }
         .sheet(item: Binding(get: { app.pendingLabel.map(ScannedLabel.init) }, set: { app.pendingLabel = $0?.raw })) { l in
             LabelQuickActionView(raw: l.raw, store: store)
+        }
+        // „Öffnen in ToHuus“ for a knowledge file (ToHuusApp.handle): the import with its preview; the note after closing
+        .sheet(item: $app.openedKnowledgeFile, onDismiss: {
+            if let msg = openedFileDone { openedFileDone = nil; app.openFileNotice = msg }
+        }) { f in
+            KnowledgeImportSheet(api: store.api, onDone: { msg, _ in openedFileDone = msg }, initialSource: f.source)
         }
         .sheet(isPresented: $app.showPaywall, onDismiss: { app.paywallReason = nil }) {
             PaywallView()

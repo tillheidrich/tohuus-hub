@@ -134,7 +134,6 @@
         "shopping_added": "Lagt på inköpslistan",
         "digest_daily": "Daglig sammanfattning",
         "care_due": "Skötseluppgift förfaller",
-        "party_ending": "Festen slutar",
         "kids_wish": "Barnets önskan",
         "budget_warning": "Budgetvarning",
         "plan_vote": "Matomröstning",
@@ -179,13 +178,6 @@
       "tonight": {
         "name": "I kväll"
       },
-      "party": {
-        "name": "Fest",
-        "state": {
-          "off": "Av",
-          "live": "Pågår"
-        }
-      },
       "kid_wishes": {
         "name": "Barnens önskningar"
       },
@@ -203,9 +195,6 @@
       }
     },
     "binary_sensor": {
-      "party_running": {
-        "name": "Fest pågår"
-      },
       "something_expired": {
         "name": "Något har gått ut"
       },
@@ -257,7 +246,6 @@
               "shopping_added": "Tillagt på inköpslistan",
               "digest_daily": "Dagens sammanfattning",
               "care_due": "Skötsel att göra",
-              "party_ending": "Festen slutar",
               "kids_wish": "Barnets önskan",
               "budget_warning": "Budgetvarning",
               "plan_vote": "Matomröstning",

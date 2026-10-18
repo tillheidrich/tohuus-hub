@@ -209,8 +209,7 @@ enum SearchRegistry {
                 Entry(title: L("Reminders & Calendar"), words: "apple erinnerungen kalender caldav google outlook abo termine", icon: "checklist.checked", target: .calendar),
                 Entry(title: L("QR labels"), words: "etiketten qr drucken aufkleber", icon: "qrcode", target: .labels),
                 Entry(title: L("Signed-in devices"), words: "geräte abmelden sitzungen", icon: "laptopcomputer.and.iphone", target: .devices),
-                Entry(title: app.modules["party"] == true ? L("Guests & party") : L("Guests"),
-                      words: app.modules["party"] == true ? "gäste party bar gastlink" : "gäste bar gastlink", icon: "wineglass", target: .guests),
+                Entry(title: L("Guests"), words: "gäste besuch babysitter gastlink", icon: "wineglass", target: .guests),
                 Entry(title: L("What ToHuus remembers"), words: "gedächtnis merkt sich wissen schuhgröße größe maß nummer", icon: "brain", target: .memory),
                 Entry(title: L("Wishes & Merkliste"), words: "wünsche geschenke merkliste", icon: "gift", target: .wishes),
                 Entry(title: L("Receipts & imports"), words: "bons kassenbon rechnung import", icon: "doc.text", target: .receipts),
@@ -251,7 +250,7 @@ enum SearchRegistry {
         case .help: HelpCenterView(store: store)
         case .servers: ConnectionsView()
         case .devices: SignedInDevicesView(api: api)
-        case .guests: GuestsPartyView(store: store)
+        case .guests: GuestLinksView(api: api, guestsArea: true)
         case .treats: TreatsView(api: api)
         case .memory: KnowledgeView(api: api)
         case .wishes: WishesView(api: api)

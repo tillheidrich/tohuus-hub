@@ -48,7 +48,6 @@ export const DEFAULT_PRIORITIES: Record<string, number> = {
   'shopping.added': 2,
   'digest.daily': 2,
   'care.due': 5,
-  'party.ending': 5,
   'kids.wish': 8,
   'budget.warning': 4,
   'plan.vote': 5,

@@ -30,7 +30,6 @@ import { setRecipeImage, setRecipeImageUrl } from '../lib/recipes2.js';
 import { addPlan, autofill, getPlan, planShopping, shiftPlan, weekDays } from '../lib/plan.js';
 import { localDay } from '../lib/catalog.js';
 import { register as register_data } from './tools-data.js';
-import { register as register_party } from './tools-party.js';
 import { register as register_fresh } from './tools-fresh.js';
 import { register as register_shop } from './tools-shop.js';
 import { register as register_home } from './tools-home.js';
@@ -599,7 +598,6 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
   register_wish(s, actorName);
   register_house(s, actorName);
   register_data(s, actorName);
-  register_party(s, actorName);
   register_fresh(s, actorName);
   register_shop(s, actorName);
   register_home(s, actorName);

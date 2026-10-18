@@ -42,7 +42,6 @@ export const de_list2: Record<string, string> = {
   'A vote on what to eat': 'Abstimmung übers Essen',
   'The week plan was filled from the rotation': 'Der Wochenplan wurde aus der Rotation gefüllt',
   'A care task is due': 'Eine Pflege-Aufgabe ist fällig',
-  'The party is ending': 'Die Party endet bald',
   'Something new in ToHuus': 'Neues in ToHuus',
   'Your summary': 'Deine Zusammenfassung',
   Summary: 'Zusammenfassung',
@@ -78,4 +77,6 @@ export const de_list2: Record<string, string> = {
   'Offer not found': 'Angebot nicht gefunden',
   'On offer: {what}': 'Im Angebot: {what}',
   'Please enter an amount above zero.': 'Bitte gib einen Wert über null ein.',
+  // iPhone push test: Apple's BadEnvironmentKeyInToken in words (apns.ts apnsReasonText)
+  'The Apple key on the server is not valid for this environment (sandbox/production). Whoever runs the server needs an APNs key for “Sandbox & Production”.': 'Der Apple-Schlüssel auf dem Server gilt nicht für diese Umgebung (Sandbox/Produktion). Wer den Server betreibt, braucht einen APNs-Schlüssel für „Sandbox & Production“.',
 };

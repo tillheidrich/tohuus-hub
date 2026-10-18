@@ -1,4 +1,4 @@
-"""Binary sensors: party running, something expired, away mode."""
+"""Binary sensors: something expired, away mode."""
 
 from __future__ import annotations
 
@@ -27,14 +27,6 @@ class ToHuusBinaryDescription(BinarySensorEntityDescription):
 
 
 BINARY_SENSORS: tuple[ToHuusBinaryDescription, ...] = (
-    ToHuusBinaryDescription(
-        key="party_running",
-        translation_key="party_running",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        icon="mdi:party-popper",
-        is_on_fn=lambda d: (d.get("party") or {}).get("status") == "live",
-        attrs_fn=lambda d: {"name": (d.get("party") or {}).get("name"), "ends_at": (d.get("party") or {}).get("ends_at")},
-    ),
     ToHuusBinaryDescription(
         key="something_expired",
         translation_key="something_expired",

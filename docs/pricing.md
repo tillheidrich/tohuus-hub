@@ -104,3 +104,40 @@ Decision of 15 Oct 2026. Till: "In der Free-Version wirklich nur das Minimum. Ma
   - Without SMTP the code is shown in the back office instead, to be passed on by hand.
 - **Privacy:** the record holds only what the person typed. It is deleted 180 days after it was answered. There is no tracking.
 - **Transparency on the website:** "Mit jedem Abo finanziert ihr auch Lizenzen für Familien, die es sich gerade nicht leisten können."
+
+## Nachtrag 18.10.2026 (3): KI-Kosten gesenkt – zweiter Bon-Versuch und Assistent-Kontext
+
+**Zweiter Bon-Versuch:** `AI_MODEL_VISION_HARD` ist jetzt **Mistral Medium 3.1** (`mistralai/mistral-medium-3.1`,
+OpenRouter 0,40 / 2,00 $ je Mio. Token, Bilder ja, 131k Kontext; geprüft 18.10.) statt Mistral Large 4 (1,36 / 4,18 $
+als Vollpreis angesetzt). Large 4 springt nur ein, wenn Medium ausgelastet/weg ist (`DEFAULT_FALLBACKS.visionHard`;
+neu: auch bei 404 „No endpoints found“, `ai.ts modelGone`). Mistral Medium 3.5 (`mistralai/mistral-medium-3-5`,
+1,50 / 7,50 $) ist teurer als Large 4 und wird nicht genutzt; Preis steht trotzdem in `ai-prices.ts`.
+
+| Bon mit zweitem Versuch (3.100 / 1.200 Token) | vorher Large 4 | jetzt Medium 3.1 |
+|---|---|---|
+| zweiter Versuch | + 0,92 ct $ | **+ 0,36 ct $** (−61 %) |
+| Bon im Mittel (jeder 4. braucht den zweiten Versuch) | ≈ 0,35 ct $ | **≈ 0,21 ct $** |
+
+**Assistent-Kontext** (gemessen mit `test/assistant-cost.test.ts`, Haushalt mit 80 gemerkten Einträgen; Zeichen
+System-Prompt + Werkzeugdefinitionen, Token ≈ Zeichen/4):
+
+| Nachricht (Bildschirm) | vorher | nachher |
+|---|---|---|
+| „Haben wir noch Kaffee?“ (–) | 6.897 + 3.224 Z., 11 Werkzeuge, ≈ 2.530 Tok. | 3.376 + 2.982 Z., 10 W., **≈ 1.590 Tok. (−37 %)** |
+| „Was kochen wir heute?“ (Kochen) | 7.500 + 3.641, 11 W., ≈ 2.785 | 3.979 + 3.399, 10 W., **≈ 1.845 (−34 %)** |
+| „Was steht diese Woche an?“ (Aufgaben) | 7.693 + 7.172, 14 W., ≈ 3.716 | 4.172 + 2.680, 5 W., **≈ 1.713 (−54 %)** |
+| „Leg Bad putzen auf Samstag“ (Aufgaben) | ≈ 3.716, 14 W. | 4.172 + 2.215, 4 W., **≈ 1.597 (−57 %)** |
+| „Wer ist diese Woche mit dem Müll dran?“ (Aufgaben) | ≈ 3.716, 14 W. | 4.172 + 3.186, 6 W., **≈ 1.840 (−50 %)** |
+| „Welche Schuhgröße hat Mika?“ (Wissen) | 7.209 + 2.262, 5 W., ≈ 2.368 | 3.470 + 2.020, 4 W., **≈ 1.373 (−42 %)** |
+
+Wie: (1) Die Zeile „Remembered“ hat eine Obergrenze (`assistant-context.ts` `MEMORY_LINE_MAX` 1.200 Zeichen,
+`MEMORY_ENTRIES_MAX` 25), Einträge mit Wörtern aus der Nachricht zuerst, dann die neuesten, Rest als „+N more
+remembered“. MCP bekommt weiter alles. (2) Aufgaben-Thema nach Anfrage (`assistant-tools.ts` `taskToolsFor`):
+`tasks_list`, `task_add`, `task_done` immer, die übrigen (Zurücknehmen, Demnächst, Zuständig, Überblick, Im Kopf,
+Rückblick, Unterwegs) nur bei passenden Wörtern; `forget` nur bei „vergiss/lösch …“. (3) Werkzeugbeschreibungen der
+Aufgaben gekürzt. Grenzen im Test: ≤ 10 Werkzeuge, < 8.000 Zeichen je Aufruf. Pro Runde gilt die Ersparnis bei jedem
+Werkzeug-Durchlauf erneut (bis 4 Runden). Eine typische Nachricht (2 Runden) sinkt damit von ≈ 7.700 auf ≈ 4.500
+Eingabe-Token, ≈ 0,13 → ≈ 0,08 ct $ (Annahme, nicht live gemessen).
+
+Außerdem ohne KI (kostet nichts): „Ich hab den Müll rausgebracht“, „Spülmaschine ausgeräumt“, „hab gestaubsaugt“
+haken die passende offene Aufgabe ab (`assistant-done.ts`, mit Rückgängig; mehrere Treffer → Rückfrage).

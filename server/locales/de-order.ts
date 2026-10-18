@@ -1,9 +1,8 @@
-// German server strings for „Bring mir was“ (order mode: household wishes, guests, party) – area: order
+// German server strings for „Bring mir was“ (wishes from home and from guests via link) – area: order
 export const de_order: Record<string, string> = {
   Treats: 'Bring mir was',
   'Not right now – {reason}': 'Geht gerade nicht – {reason}',
   'Not right now': 'Geht gerade nicht',
-  'Ready at the counter': 'Steht bereit an der Theke',
   'Being made': 'Wird gemacht',
   Received: 'Ist angekommen',
   'Coming right up – {name} is bringing it': 'Kommt gleich – {name} bringt’s',
@@ -18,7 +17,6 @@ export const de_order: Record<string, string> = {
   'My hands are full': 'Hab grad die Hände voll',
   '{name} asks you for something': '{name} fragt dich nach was',
   '{name} would love something': '{name} hätte gern was',
-  'Party order from {name}': 'Party-Bestellung von {name}',
   '{name} (guest) would like something': '{name} (Gast) hätte gern was',
   'Only the person who asked can say thanks.': 'Danke sagen kann nur, wer sich was gewünscht hat.',
   'Say thanks once it’s there.': 'Sag Danke, sobald es da ist.',
@@ -35,4 +33,8 @@ export const de_order: Record<string, string> = {
   For: 'Für',
   'Who brings it': 'Wer bringt’s',
   'Open in the app': 'In der App öffnen',
+  'This area is switched off.': 'Dieser Bereich ist ausgeschaltet.',
+  Guest: 'Gast',
+  'Only {n} × {name} left.': 'Nur noch {n}× {name} da.',
+  '{name} is all gone – sorry!': '{name} ist leider alle!',
 };

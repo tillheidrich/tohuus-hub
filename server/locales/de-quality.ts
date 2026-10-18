@@ -18,4 +18,18 @@ export const de_quality: Record<string, string> = {
   'receipt, till and branch numbers': 'Bon-, Kassen- und Filialnummern',
   'exact dates (moved to the 1st of the month)': 'genaue Daten (auf den Monatsersten verschoben)',
   'exact times (rounded to the hour)': 'genaue Uhrzeiten (auf die volle Stunde gerundet)',
+  // missing discount / deposit rows (18.10.2026)
+  'Not read on the photo – added so the total adds up, please check': 'Auf dem Foto nicht gelesen – ergänzt, damit die Summe stimmt. Bitte kurz prüfen',
+  Deposit: 'Pfand',
+  'Please enter a valid number.': 'Bitte gib eine gültige Zahl ein.',
+  'Line not found': 'Zeile nicht gefunden',
+  'The discount is larger than the price of this line.': 'Der Rabatt ist größer als der Preis dieser Zeile.',
+  'Discount -{amount} (added)': 'Rabatt -{amount} (ergänzt)',
+  // read again with AI
+  'Nothing to take over – read the receipt with AI first.': 'Noch nichts zum Übernehmen – lass den Bon erst mit KI lesen.',
+  'Nothing to undo.': 'Da gibt es nichts rückgängig zu machen.',
+  'The photo of this receipt is not stored. Choose it once more.': 'Das Foto von diesem Bon ist nicht gespeichert. Wähl es bitte noch einmal aus.',
+  'AI is switched off for you or this household. You can switch it on in Settings › With or without AI.':
+    'KI ist für dich oder diesen Haushalt aus. Du kannst sie unter Einstellungen › Mit oder ohne KI einschalten.',
+  'The AI found no receipt lines on the photo. A sharper photo in good light helps.': 'Die KI hat auf dem Foto keine Bonzeilen gefunden. Ein schärferes Foto bei gutem Licht hilft.',
 };

@@ -43,7 +43,6 @@ export const PERSON_EVENTS = [
   { key: 'import.review', label: 'A receipt was recognised', module: 'money', on: false },
   { key: 'plan.reminder', label: 'Reminder for the week plan', module: 'cook', on: false },
   { key: 'order.new', label: 'A wish (Treats)', module: 'treats', on: true },
-  { key: 'guest.order', label: 'An order from guests', module: 'guests', on: false },
   { key: 'budget.warning', label: 'Budget hint', module: 'money', on: false },
   // since 13 Oct 2026 every event is the person's own choice; calm defaults: on only what asks something of you
   { key: 'stock.low', label: 'Something is running low', module: 'stock', on: false },
@@ -54,7 +53,6 @@ export const PERSON_EVENTS = [
   { key: 'plan.vote', label: 'A vote on what to eat', module: 'cook', on: true },
   { key: 'plan.rotation', label: 'The week plan was filled from the rotation', module: 'cook', on: false },
   { key: 'care.due', label: 'A care task is due', module: 'homeinfo', on: false },
-  { key: 'party.ending', label: 'The party is ending', module: 'guests', on: false },
   // cloud: only admins of a household in the trial get it, twice at most (trial-end.ts, 18 Oct 2026)
   { key: 'billing.trial', label: 'My trial ends soon', module: null, on: true },
 ] as const;
@@ -135,7 +133,7 @@ export function presence(userId: number): boolean | null {
 
 /** Which person event a household notification is (null = not a personal one). */
 export function personEventOf(event: string, data: Record<string, unknown> = {}): PersonEvent | null {
-  if (event === 'order.new') return data.kind === 'guest' || data.kind === 'party' ? 'guest.order' : 'order.new';
+  // wishes from home and from guests (shared link) are one „Bring mir was“ – one switch for both
   return (PERSON_EVENTS.find((e) => e.key === event)?.key as PersonEvent | undefined) ?? null;
 }
 

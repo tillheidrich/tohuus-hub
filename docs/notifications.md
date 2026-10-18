@@ -20,7 +20,6 @@ ToHuus Hub tells the household when something needs attention. There are two lay
 | `import.review` | off | a receipt was recognised and waits for a look |
 | `plan.reminder` | off | Sunday evening: next week is still empty (only when the week plan is used) |
 | `order.new` | on | a „Bring mir was“ wish |
-| `guest.order` | off | an order from guests or a party (`order.new` with `kind` guest/party) |
 | `budget.warning` | off | budget hint |
 | `stock.low` | off | something is running low |
 | `stock.empty` | off | something is used up |
@@ -30,7 +29,6 @@ ToHuus Hub tells the household when something needs attention. There are two lay
 | `plan.vote` | on | a vote on what to eat |
 | `plan.rotation` | off | the week plan was filled from the rotation |
 | `care.due` | off | a care task is due |
-| `party.ending` | off | the party is ending |
 
 Channels per event: `apns` (iPhone), `push` (browser), `digest` (one e-mail a day at the household's digest hour, to the
 member's confirmed address – their own in self-host, their account's in the cloud). Events of an area the household
@@ -147,11 +145,10 @@ Each event can go to any number of shared channels; the matrix decides which. Fo
 | `stock.low`, `stock.empty` | an item runs low or out (it also goes on the shopping list, unless switched off) |
 | `stock.expiring` | best-before or use-by is near or passed (warning days are configurable) |
 | `import.review` | an import waits for review |
-| `order.new`, `order.status` | a new order from the sofa, a guest or a party; its status changed |
+| `order.new`, `order.status` | a new wish from home or from a guest link (one „Bring mir was“, one switch, same buttons); its status changed |
 | `shopping.added` | something was added to the list |
 | `digest.daily` | the daily overview at a chosen hour: use soon, running low, the list, a cooking idea |
 | `care.due` | a home care task is due |
-| `party.ending` | a party ends in 15 minutes (extend it in the app), and when it has ended |
 | `kids.wish` | a child made a wish |
 | `auth.new_device` | a new sign-in, only to the member concerned |
 | `budget.warning` | a spending budget is likely to be exceeded |

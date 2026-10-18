@@ -71,7 +71,7 @@ const TITLE = '.main h1';
 
 /** The steps, in the household language (built at render time so t() picks the right dictionary).
  * Short again since 18 Oct 2026: six pages plus the end – the rest is found on the way. Switched-off areas
- * ("Was nutzt ihr?") and Bring mir was in a household of one are left out. No party mode (off for the start). */
+ * ("Was nutzt ihr?") and Bring mir was in a household of one are left out. */
 function steps(form: HouseholdForm = 'family', mods?: Record<string, boolean>): Step[] {
   const on = (m: string) => !mods || mods[m] !== false;
   return [
@@ -122,7 +122,7 @@ function steps(form: HouseholdForm = 'family', mods?: Record<string, boolean>): 
             route: '/bestellen',
             targets: [TITLE],
             title: t('Bring mir was'),
-            body: t('Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”.'),
+            body: t('Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”. Guests too, with a link.'),
           },
         ]),
     {
@@ -459,7 +459,7 @@ type Scope = 'stock' | 'recipes' | 'shopping' | 'receipts' | 'everything';
 const SCOPE_TEXT: Record<Scope, { title: string; sub: string }> = {
   stock: { title: 'Stock & products', sub: 'Products, stock, history, barcodes' },
   recipes: { title: 'Recipes & plan', sub: 'Recipes, cooking history, week plan, swap rules' },
-  shopping: { title: 'Shopping & orders', sub: 'Shopping list, orders, parties, wishes' },
+  shopping: { title: 'Shopping & orders', sub: 'Shopping list, orders, wishes' },
   receipts: { title: 'Receipts & spending', sub: 'Imported receipts, expenses, tags' },
   everything: { title: 'Everything household data', sub: 'All of the above plus care tasks, notifications and other household entries' },
 };

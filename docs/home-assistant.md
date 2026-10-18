@@ -1,5 +1,7 @@
 # Home Assistant
 
+> 18.10.2026: Der Party-Modus wurde auf Tills Entscheidung entfernt (siehe [party-modus.md](party-modus.md)). Gäste wünschen sich jetzt über den Gäste-Link aus „Bring mir was“ etwas; alles landet in einer Liste.
+
 ToHuus Hub talks to Home Assistant in three ways. Use the first; the others exist for special cases.
 
 | Way | What | When |
@@ -143,7 +145,7 @@ All accept `config_entry_id` (only needed with more than one ToHuus Hub) and ret
 | `tohuus_hub.mark_used_up` | `product` | Stock to zero, onto the shopping list |
 | `tohuus_hub.add_stock` | `product`, `quantity` = 1, `best_before` | Books a purchase |
 | `tohuus_hub.plan_meal` | `recipe` **or** `title`, `date` = today, `slot` = `dinner` | Adds to the week plan |
-| `tohuus_hub.order` | `product` + `quantity`, or `items` [{product, qty, options}], `note`, `name` | Creates an order (sofa / party), goes through the normal order flow incl. push |
+| `tohuus_hub.order` | `product` + `quantity`, or `items` [{product, qty, options}], `note`, `name` | Creates a „Bring mir was“ wish, goes through the normal order flow incl. push |
 | `tohuus_hub.approve_kid_wish` | `wish_id`, `approve` = true | Approves (→ order) or declines a wish |
 | `tohuus_hub.complete_care_task` | `task` (name or number) | Marks done, next date calculated |
 
@@ -208,11 +210,10 @@ data:
 | `stock.low` / `stock.empty` | a watched product drops below its minimum / runs out | `product_id` … |
 | `stock.expiring` | daily check, best before within the warning days | |
 | `import.review` | a receipt/import waits for review | |
-| `order.new` / `order.status` | new order / status change (sofa, guests, party, approved kid wish) | `order_id`, `guest`, `items` |
+| `order.new` / `order.status` | new wish / status change (home, guest link, approved kid wish) | `order_id`, `guest`, `items` |
 | `shopping.added` | someone added to the list in the app | |
 | `digest.daily` | daily summary | |
 | `care.due` | a care task becomes due | |
-| `party.ending` | party ends in 15 minutes | |
 | `kids.wish` | a kid asked for something | |
 | `test` | *Settings › Notifications › Test* | |
 
@@ -232,7 +233,7 @@ The integration uses a small, versioned API that other tools can use too. Authen
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/api/ha/v1/info` | `api`, `instance_id` (stable per installation), `household`, `base_url`, `language`, `scope`, `features` |
-| GET | `/api/ha/v1/state` | everything above in one call: `counts`, `low`, `empty`, `expiring`, `shopping`, `todo`, `orders`, `care` {due, next}, `eat_first`, `tonight`, `tomorrow`, `next_meal`, `party`, `kid_wishes`, `displays`; since integration 0.3: `due` [{product_id, name, every_days, last_bought, due_on, origin, label}] (purchase rhythm suggestions, sensitive products never), `money` {currency, week, month, budget} and `sync` {shopping\|meals\|care: {mode, modes, entities}} |
+| GET | `/api/ha/v1/state` | everything above in one call: `counts`, `low`, `empty`, `expiring`, `shopping`, `todo`, `orders`, `care` {due, next}, `eat_first`, `tonight`, `tomorrow`, `next_meal`, `kid_wishes`, `displays`; since integration 0.3: `due` [{product_id, name, every_days, last_bought, due_on, origin, label}] (purchase rhythm suggestions, sensitive products never), `money` {currency, week, month, budget} and `sync` {shopping\|meals\|care: {mode, modes, entities}} |
 | POST | `/api/ha/v1/bridge/leader` | `{topic: shopping\|meals\|care, mode}` – who leads per topic (`two_way` both, `from_ha` Home Assistant, `to_ha` ToHuus, `off`); HA token or admin |
 | GET | `/api/ha/v1/events` | server-sent events: `hello`, `change` ({topics}), `tohuus` (notification) |
 | GET | `/api/ha/v1/todo` | `{items: [{uid, summary, status, description, product_id, qty, …}]}` |

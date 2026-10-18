@@ -75,7 +75,6 @@ export const print: Record<string, string> = {
   'Wish ticket': 'Wunsch-Bon',
   darker: 'dunkler',
   default: 'Standard',
-  'during parties': 'bei Partys',
   'e.g. Back at six – soup is in the fridge': 'z. B. Bin um sechs zurück – Suppe steht im Kühlschrank',
   failed: 'fehlgeschlagen',
   'full cut': 'ganz abschneiden',

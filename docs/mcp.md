@@ -106,9 +106,11 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 
 `list_food_votes`, `start_food_vote`, `cast_food_vote`, `finish_food_vote`, `plan_rotation`, `save_plan_template`, `set_plan_rotation`, `apply_plan_rotation`, `mark_plan_day` (away, eating out), `set_plan_servings`
 
-### Guests, party and order menu (8)
+### Treats and order menu (5)
 
-`start_party`, `end_party`, `party_status`, `set_order_status`; `menu_list`, `menu_add_item`, `menu_update_item`, `menu_set_availability`
+(The party tools `start_party`, `end_party`, `party_status` were removed with the party mode on 18 Oct 2026.)
+
+`set_order_status`; `menu_list`, `menu_add_item`, `menu_update_item`, `menu_set_availability`
 
 ### Kids (2)
 
@@ -154,6 +156,7 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 | `knowledge_delete` | Delete one card (`destructiveHint`) |
 | `tasks_coming_up` | Heute › Demnächst: bins by the evening they go out, tomorrow, lead times (read-only) |
 | `undo_task_done` | Take back the newest "done" of a task (app rules: own ticks, others only an admin member) |
+| `add_task` | New task the way the assistant makes it (`assistant-tasks.ts addTask`): household chore (`area: house`, default) or care & deadline; `date` + `time` (+ `minutes`, `place`) = appointment in the calendar; without date/time the name is read like the assistant does („Zahnarzt Dienstag um 10“); rhythm `every` + `unit`, `as_needed`, `doer`, `take_turns`, `steps`; nothing given = due today. `only_me` only for a member connection. Write tool – not offered to `mcp:read` / read-only households |
 
 **Who is asking:** an OAuth connection acts as its member – it sees household cards plus that member's own private
 ones, never anyone else's. An API token acts for the household: household cards only; `only_me`, sharing and
@@ -181,3 +184,8 @@ To count them yourself:
 ```bash
 grep -c "registerTool(" server/mcp/*.ts
 ```
+
+## Nachtrag 18 Oct 2026
+
+- `add_task` (above): appointments and household tasks over MCP, same logic as the assistant. Tests:
+  `test/knowledge-io.test.ts` › „add_task over MCP“ (API token, OAuth member, mcp:read, read-only build).

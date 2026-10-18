@@ -134,7 +134,6 @@
         "shopping_added": "Auf die Einkaufsliste gesetzt",
         "digest_daily": "Tageszusammenfassung",
         "care_due": "Pflege-Aufgabe fällig",
-        "party_ending": "Party endet",
         "kids_wish": "Kinderwunsch",
         "budget_warning": "Budget-Hinweis",
         "plan_vote": "Abstimmung zum Essen",
@@ -179,13 +178,6 @@
       "tonight": {
         "name": "Heute Abend"
       },
-      "party": {
-        "name": "Party",
-        "state": {
-          "off": "Aus",
-          "live": "Läuft"
-        }
-      },
       "kid_wishes": {
         "name": "Offene Kinderwünsche"
       },
@@ -203,9 +195,6 @@
       }
     },
     "binary_sensor": {
-      "party_running": {
-        "name": "Party läuft"
-      },
       "something_expired": {
         "name": "Etwas ist abgelaufen"
       },
@@ -257,7 +246,6 @@
               "shopping_added": "Auf die Einkaufsliste gesetzt",
               "digest_daily": "Tageszusammenfassung",
               "care_due": "Pflege-Aufgabe fällig",
-              "party_ending": "Party endet",
               "kids_wish": "Kinderwunsch",
               "budget_warning": "Budget-Hinweis",
               "plan_vote": "Abstimmung zum Essen",
@@ -424,7 +412,7 @@
     },
     "order": {
       "name": "Bestellen",
-      "description": "Bestellt vom Sofa oder für die Party – erscheint in ToHuus Hub wie jede andere Bestellung.",
+      "description": "Ein Wunsch vom Sofa – erscheint in ToHuus Hub wie jeder andere Wunsch (Bring mir was).",
       "fields": {
         "product": {
           "name": "Produkt",

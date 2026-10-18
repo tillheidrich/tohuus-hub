@@ -92,7 +92,7 @@ describe('ticket renderers', () => {
   it('kitchen ticket shows order number, options and per-item notes; an old Fredirando choice no longer changes it', async () => {
     const id = orders.createOrder({ note: 'and a blanket', lines: [{ product_id: coffee, qty: 2, options: ['Oat'], note: 'extra hot' }] }, { userId: 1, name: 'Lea' });
     let lines = svgText(tickets.renderSvg(await tickets.buildTicket({ type: 'order', id }, 58), 58).svg);
-    // a wish from home is a "please bring" slip (area: order); guest and party orders stay kitchen tickets
+    // a wish from home is a "please bring" slip (area: order); wishes from a guest link stay kitchen tickets
     expect(lines).toContain('PLEASE BRING');
     expect(lines).toContain(`#${String(id).padStart(3, '0')}`);
     expect(lines).toContain('2×');
@@ -204,9 +204,11 @@ describe('automations', () => {
     expect(logged.map((l) => l.auto_key)).toEqual([`order:${fresh}`]);
   });
 
-  it('"party only" skips sofa orders', async () => {
+  it('a stored "party only" of the former party mode reads as off and prints nothing', async () => {
     for (const p of print.listPrinters()) print.deletePrinter(p.id);
-    print.savePrinter({ name: 'Party', host: '127.0.0.1', port, auto_orders: 'party' });
+    const saved = print.savePrinter({ name: 'Old', host: '127.0.0.1', port, auto_orders: 'off' });
+    db.prepare(`UPDATE print_printers SET auto_orders = 'party' WHERE id = ?`).run(saved.id);
+    expect(print.listPrinters().find((p) => p.id === saved.id)?.auto_orders).toBe('off');
     orders.createOrder({ lines: [{ product_id: coffee, qty: 1, options: [] }] }, { userId: 1, name: 'Lea' });
     expect(await print.autoPrintOrders()).toBe(0);
   });

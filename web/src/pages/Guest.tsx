@@ -57,8 +57,6 @@ export interface OrderSource {
   send: (body: unknown) => Promise<unknown>;
   /** household member: name is known, everything in the house is orderable */
   member?: string;
-  /** party link: pick-up at the counter instead of "we bring it" */
-  party?: boolean;
 }
 
 export function Guest() {
@@ -79,7 +77,7 @@ export function Guest() {
   useEffect(() => {
     if (!info.data) return;
     applyBrand();
-    document.title = `${info.data.household} · Bar`;
+    document.title = `${info.data.household} · ${t('Bring me something')}`;
   }, [info.data]);
   // Guests see the household's language, not their browser's. Idempotent, so safe during render.
   if (info.data) {
@@ -91,11 +89,7 @@ export function Guest() {
   if (info.error)
     return (
       <div className="guest">
-        {info.data?.party ? (
-          <Empty icon={<Martini size={26} />} title={t('The party is over – thanks for coming!')}>{t('Ordering is closed now.')}</Empty>
-        ) : (
-          <Empty icon={<Martini size={26} />} title={t('This link is no longer valid')}>{t('Just ask for a new one.')}</Empty>
-        )}
+        <Empty icon={<Martini size={26} />} title={t('This link is no longer valid')}>{t('Just ask for a new one.')}</Empty>
       </div>
     );
   return (
@@ -104,16 +98,16 @@ export function Guest() {
           <div className="eyebrow">{info.data.household} · {info.data.name}</div>
           <h1 style={{ marginBottom: 6 }}>{tab === 'handover' ? t('While we’re away') : tab === 'bar' ? t('Fancy something?') : tab === 'stock' ? t('Where is what?') : tab === 'house' ? t('How things work here') : t('What’s missing?')}</h1>
           <p className="muted" style={{ marginTop: 0 }}>
-            {tab === 'handover' ? t('What to do and how – tick it if you like, so we know all is well.') : tab === 'bar' ? (info.data.party ? t('Order here – we’ll call you when it’s ready at the counter.') : t('Drinks, ice cream and snacks – just order and we’ll bring it over.')) : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : tab === 'house' ? t('Voice commands, tips and important numbers – stays readable without a connection once opened.') : t('Add it to our shopping list.')}
+            {tab === 'handover' ? t('What to do and how – tick it if you like, so we know all is well.') : tab === 'bar' ? t('Drinks, ice cream and snacks – just order and we’ll bring it over.') : tab === 'stock' ? t('Everything you might look for in the house – with the exact spot.') : tab === 'house' ? t('Voice commands, tips and important numbers – stays readable without a connection once opened.') : t('Add it to our shopping list.')}
           </p>
       </>
       {info.data.note && <div className="note-card" style={{ margin: '14px 0' }}>{info.data.note}</div>}
       {scopes.length > 1 && (
         <div style={{ margin: '14px 0' }}>
-          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bar'), stock: t('Where is what?'), shopping: t('Shopping list'), house: t('House info'), handover: t('Handover') } as Record<string, string>)[s] ?? s]) as any} />
+          <Seg value={tab} onChange={setTab} options={scopes.map((s) => [s, ({ bar: t('Bring me something'), stock: t('Where is what?'), shopping: t('Shopping list'), house: t('House info'), handover: t('Handover') } as Record<string, string>)[s] ?? s]) as any} />
         </div>
       )}
-      {tab === 'bar' && <OrderMenu src={{ key: `guest-${token}`, party: Boolean(info.data.party), menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
+      {tab === 'bar' && <OrderMenu src={{ key: `guest-${token}`, menu: () => gapi(token, '/menu'), orders: () => gapi(token, '/orders'), send: (b) => gapi(token, '/orders', b) }} />}
       {tab === 'stock' && <GuestStock token={token} />}
       {tab === 'shopping' && <GuestShopping token={token} />}
       {tab === 'house' && <GuestHouse token={token} household={info.data.household} />}
@@ -127,8 +121,6 @@ const STATUS_TEXT = () => ({
   // warm status lines, the same wording as at home (area: order)
   plain: { new: t('Received'), accepted: t('Coming right up'), done: t('On its way to you'), declined: t('Not right now') },
   fredi: { new: t('Order received'), accepted: t('Being prepared'), done: t('Delivered – enjoy your meal!'), declined: t('Sorry, currently unavailable') },
-  party: { new: t('Received'), accepted: t('Being made'), done: t('Ready at the counter'), declined: t('Not right now') },
-  fredParty: { new: t('Order received'), accepted: t('In the kitchen'), done: t('Ready for pickup – enjoy!'), declined: t('Sorry, currently unavailable') },
 });
 
 export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: boolean }) {
@@ -225,7 +217,7 @@ export function OrderMenu({ src, fredi = false }: { src: OrderSource; fredi?: bo
             return (
               <div key={o.id} className="li" style={{ minHeight: 52, display: 'block', padding: '12px 14px' }}>
                 <div className="row between">
-                  <b className="small">{STATUS_TEXT()[src.party ? (fredi ? 'fredParty' : 'party') : fredi ? 'fredi' : 'plain'][o.status as 'new']}</b>
+                  <b className="small">{STATUS_TEXT()[fredi ? 'fredi' : 'plain'][o.status as 'new']}</b>
                   {fredi && o.status === 'accepted' && <span className="small muted">{t('approx. 2 min')}</span>}
                 </div>
                 <div className="small muted" style={{ marginTop: 2 }}>{o.lines.length ? o.lines.map((l: any) => `${l.qty}× ${l.name}${l.note ? ` („${l.note}“)` : ''}`).join(', ') : o.note ? `„${o.note}“` : ''}</div>

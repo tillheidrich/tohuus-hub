@@ -62,7 +62,7 @@ The demo follows the household language. Every row it inserts is recorded in the
 |---|---|
 | Stock | products, stock, history, receipt aliases and learned receipt rules, barcodes, quick-check confirmations, leftover and freezer boxes, order menu items, product QR labels |
 | Recipes | recipes, ingredients, cooking log, ratings, house versions, swap rules, week plan, day marks, plan templates, food votes, "who cooks" claims |
-| Shopping | shopping list and its discreet entries, store ticks, orders, parties and party templates, kid wishes, "I'll get it" claims |
+| Shopping | shopping list and its discreet entries, store ticks, orders (incl. the unused tables of the former party mode), kid wishes, "I'll get it" claims |
 | Receipts | imports, import lines, manual expenses, spending tags and exclusions |
 | Everything | all of the above plus care tasks, trips, order menu groups, notifications, print history, QR labels (except place labels) and every other household table |
 | *Places & categories too* (option) | places, categories and place photos, replaced by the default set. Only together with stock; printed place labels stop working. |

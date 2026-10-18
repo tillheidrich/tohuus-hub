@@ -36,7 +36,7 @@ struct HouseholdNotifyView: View {
         IxPair("stock.empty", L("Something has run out")),
         IxPair("stock.expiring", L("Best-before date coming up")),
         IxPair("import.review", L("Import waiting for review")),
-        IxPair("order.new", L("Someone would love something (home, guests, party)")),
+        IxPair("order.new", L("Someone would love something (home or guests)")),
         IxPair("order.status", L("Answer to your wish (only to you)")),
         IxPair("shopping.added", L("New item on the shopping list")),
         IxPair("digest.daily", L("Daily digest (once a day)")),

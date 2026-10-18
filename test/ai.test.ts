@@ -62,7 +62,7 @@ describe('configuration', () => {
     expect(c.models).toEqual({
       text: 'mistralai/mistral-small-2603',
       vision: 'mistralai/mistral-small-2603',
-      visionHard: 'mistralai/mistral-large-4-0',
+      visionHard: 'mistralai/mistral-medium-3.1',
       audio: 'mistralai/voxtral-small-24b-2507',
     });
     expect(vision.visionAvailable()).toBe(true);
@@ -237,8 +237,23 @@ describe('vision through the client', () => {
     fake([answer(JSON.stringify(bad)), answer('```json\n' + JSON.stringify(good) + '\n```')]);
     const j = await vision.runVision('receipt', { images: ['data:image/jpeg;base64,AAAA'] });
     expect(j.lines).toHaveLength(2);
-    expect(calls.map((c) => c.body.model)).toEqual(['mistralai/mistral-small-2603', 'mistralai/mistral-large-4-0']);
+    expect(calls.map((c) => c.body.model)).toEqual(['mistralai/mistral-small-2603', 'mistralai/mistral-medium-3.1']);
     expect(calls.every((c) => c.body.provider?.data_collection === 'deny')).toBe(true);
+  });
+
+  it('the second try is Mistral Medium; Large 4 only when Medium is not there (18 Oct 2026, cost)', async () => {
+    process.env.AI_API_KEY = 'k';
+    expect(ai.fallbackModels('visionHard', 'mistralai/mistral-medium-3.1')).toEqual(['mistralai/mistral-large-4-0']);
+    const bad = { shop: 'Aldi', total: 12.4, lines: [{ name: 'Milch', qty: 1, price: 1.1 }] };
+    const good = { shop: 'Aldi', total: 12.4, lines: [{ name: 'Milch', qty: 1, price: 1.1 }, { name: 'Kaffee', qty: 1, price: 11.3 }] };
+    fake([answer(JSON.stringify(bad)), () => ({ status: 404, text: '{"error":{"message":"No endpoints found for mistralai/mistral-medium-3.1."}}' }), answer(JSON.stringify(good))]);
+    const j = await vision.runVision('receipt', { images: ['data:image/jpeg;base64,AAAA'] });
+    expect(j.lines).toHaveLength(2);
+    expect(calls.map((c) => c.body.model)).toEqual(['mistralai/mistral-small-2603', 'mistralai/mistral-medium-3.1', 'mistralai/mistral-large-4-0']);
+    // Medium costs less than a third of Large 4 per receipt
+    const [mi, mo] = (await import('../server/lib/ai-prices')).priceOf('mistralai/mistral-medium-3.1');
+    const [li, lo] = (await import('../server/lib/ai-prices')).priceOf('mistralai/mistral-large-4-0');
+    expect(mi * 3000 + mo * 1500).toBeLessThan((li * 3000 + lo * 1500) / 2);
   });
 
   it('a receipt that adds up is taken at once', async () => {

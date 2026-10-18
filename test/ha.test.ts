@@ -82,7 +82,7 @@ describe('state and services', () => {
     expect(s.api).toBe(1);
     expect(s.instance_id).toBe(ha.instanceId());
     expect(s.counts.shopping).toBe(s.shopping.length);
-    expect(s.party.status).toBe('off');
+    expect((s as Record<string, unknown>).party).toBeUndefined();
     expect(s.care.due.some((c) => c.name === 'Filter')).toBe(true);
   });
 

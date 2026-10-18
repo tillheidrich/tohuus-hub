@@ -1,11 +1,15 @@
 import SwiftUI
 
-/// Links for visitors, babysitters and grandparents (web: Bar.tsx `Links`, Order.tsx "Gäste"): no app, no account.
+/// Links for visitors, babysitters and grandparents (web: Bar.tsx – the area „Gäste“): no app, no account.
+/// Wishes from guests are answered in „Bring mir was“ (one list for home and guests since 18 Oct 2026); as the area
+/// „Gäste“ (`guestsArea`) this screen points there on top.
 /// Guests ask for what is on the guest menu, find things in shared places and add to the list if allowed – they
 /// never see quantities or purchases. Tokens are stored hashed: a link's URL is shown only right after creating it
 /// (or after "new link").
 struct GuestLinksView: View {
     let api: APIClient
+    /// opened as the area „Gäste“ (not from the house info): title „Gäste“ and the pointer to „Bring mir was“
+    var guestsArea = false
     @State private var links: [GuestLink]?
     @State private var error: String?
     @State private var creating: GuestLinkDraft?
@@ -17,6 +21,16 @@ struct GuestLinksView: View {
 
     var body: some View {
         List {
+            if guestsArea {
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L("Guests would like something?")).font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
+                        Text(L("That runs through Treats: share the link there – guests wish for something, you bring it."))
+                            .font(.subheadline).foregroundStyle(Theme.ink2).fixedSize(horizontal: false, vertical: true)
+                    }
+                    NavigationLink { TreatsView(api: api) } label: { Label(L("Open Treats"), systemImage: "hand.raised") }
+                }
+            }
             Section {
                 Text(L("A link or QR code – no app, no account. Guests ask for what you put on the menu for guests, can find things in the places you share and add to the shopping list if you allow it. They never see quantities or purchases."))
                     .font(.subheadline).foregroundStyle(Theme.ink2)
@@ -44,7 +58,7 @@ struct GuestLinksView: View {
             }
         }
         .themedList()
-        .navigationTitle(L("Guest links"))
+        .navigationTitle(guestsArea ? L("Guests") : L("Guest links"))
         .task { await load() }
         .refreshable { await load() }
         .sheet(item: $creating) { d in
@@ -79,7 +93,7 @@ struct GuestLinksView: View {
 
     static func scopeLabel(_ s: String) -> String {
         switch s {
-        case "bar": return L("Ask for something")
+        case "bar": return L("Bring me something")
         case "stock": return L("Where is what?")
         case "shopping": return L("Shopping list")
         default: return s

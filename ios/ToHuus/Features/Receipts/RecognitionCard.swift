@@ -3,6 +3,8 @@ import SwiftUI
 /// Short, calm mark for a line on the receipt check – nothing for lines that were simply recognised (web: GradeBadge).
 struct GradeBadge: View {
     let grade: String?
+    /// unmatched, but a clean name: becomes a new product when booked
+    var isNew: Bool = false
 
     var body: some View {
         switch grade {
@@ -15,7 +17,7 @@ struct GradeBadge: View {
             .padding(.horizontal, 8).padding(.vertical, 3)
             .background(Theme.infoSoft, in: Capsule())
         case "suggested": StatusPill(text: L("likely"), status: "low")
-        case "unmatched": StatusPill(text: L("not recognised"), status: nil)
+        case "unmatched": StatusPill(text: isNew ? L("new") : L("not recognised"), status: nil)
         default: EmptyView()
         }
     }
@@ -72,7 +74,9 @@ struct RecognitionCardView: View {
                         if learned > 0 { legend(Theme.info, LF("learned from your corrections: %d", learned)) }
                         legend(Theme.primary, LF("recognised: %d", sure))
                         if suggested > 0 { legend(Theme.mustard, LF("likely, please check: %d", suggested)) }
-                        if unmatched > 0 { legend(Theme.lineStrong, LF("not recognised: %d", unmatched)) }
+                        let fresh = report.newLines ?? 0
+                        if fresh > 0 { legend(Theme.lineStrong, LF("new products: %d", fresh)) }
+                        if unmatched - fresh > 0 { legend(Theme.lineStrong, LF("not recognised: %d", unmatched - fresh)) }
                     }
                     Divider().overlay(Theme.line)
                     HStack(alignment: .top, spacing: Theme.Space.s3) {

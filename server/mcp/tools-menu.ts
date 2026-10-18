@@ -1,4 +1,4 @@
-/** MCP tools: the order menu (what the family, guests and parties can order). */
+/** MCP tools: the order menu (what the family and guests can ask for in „Bring mir was“). */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { listProducts } from '../lib/catalog.js';
@@ -53,13 +53,13 @@ export function register(s: McpServer, _actorName: string) {
     {
       title: 'List the order menu',
       description:
-        'The household order menu (drinks, hot drinks, snacks, ice cream …) by group: each item with its source (from stock or menu-only), availability (available / hidden / party = only at parties / family = only for family), current state (ok, few, out, maybe = an ingredient is low) and options.',
+        'The household order menu (drinks, hot drinks, snacks, ice cream …) by group: each item with its source (from stock or menu-only), availability (available / hidden / family = only for family), current state (ok, few, out, maybe = an ingredient is low) and options.',
       inputSchema: {},
       annotations: RO,
     },
     async () => {
       const v = menuView();
-      return text({ party_live: v.party_live, groups: v.groups.map((g) => ({ id: g.id, name: g.name, items: g.items.map(compactItem) })) });
+      return text({ groups: v.groups.map((g) => ({ id: g.id, name: g.name, items: g.items.map(compactItem) })) });
     },
   );
 
@@ -171,7 +171,7 @@ export function register(s: McpServer, _actorName: string) {
     'menu_set_availability',
     {
       title: 'Show or hide an order menu item',
-      description: 'available = everyone can order it; hidden = nobody sees it; party = only while a party is on; family = only household members, not guests.',
+      description: 'available = everyone can order it; hidden = nobody sees it; family = only household members, not guests.',
       inputSchema: {
         item: z.union([z.string(), z.number()]).describe('Menu item name or id'),
         availability: z.enum(AVAILABILITY),

@@ -2,12 +2,12 @@ import { ArrowCounterClockwise, ArrowLeft, ArrowsClockwise, CaretDown, CheckCirc
 import { WhoPaidPanel } from '../shop/forms';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { type Location, del, fmtDate, invalidate, patch, post, qc, useApi } from '../api';
-import { ProductPicker, Sheet, Skeleton, Stepper, Thumb, useToast } from '../ui';
+import { type Location, api, del, fmtDate, invalidate, patch, post, qc, useApi } from '../api';
+import { ProductPicker, Seg, Sheet, Skeleton, Stepper, Thumb, useToast } from '../ui';
 import { Ic } from '../placeicons';
 import { num, t } from '../i18n';
 import { money } from '../region';
-import { GradeBadge, LineFixSheet, RecognitionCard, useRecognition } from './QualityReport';
+import { GradeBadge, LineFixSheet, RecognitionCard, type Recognition, useRecognition } from './QualityReport';
 
 /** line status (API value) → [English display label, badge class] */
 const STATUS: Record<string, [string, string]> = {
@@ -35,6 +35,7 @@ export function ImportReview() {
   const [addOpen, setAddOpen] = useState(false);
   const rec = useRecognition(Number(id));
   const gradeOf = (lid: number) => rec.data?.lines.find((x) => x.id === lid)?.grade;
+  const isNewLine = (lid: number) => Boolean(rec.data?.lines.find((x) => x.id === lid)?.new);
 
   const groups = useMemo(() => {
     const lines = imp?.lines ?? [];
@@ -111,7 +112,7 @@ export function ImportReview() {
           {l.receipt_name && l.receipt_name !== l.name && <div className="rcpt">{t('Receipt: {name}', { name: l.receipt_name })}</div>}
           <div className="target">
             {label && <span className={`badge ${cls}`}>{t(label)}</span>}
-            {!skip && <GradeBadge grade={grade} />}
+            {!skip && <GradeBadge grade={grade} isNew={isNewLine(l.id)} />}
             {l.note && <span className="small muted">{l.note}</span>}
           </div>
           {!readonly && !skip && (
@@ -243,6 +244,7 @@ export function ImportReview() {
           <RecognitionCard importId={imp.id} readonly={readonly} />
         </div>
       )}
+      {imp.kind !== 'shelf' && !readonly && rec.data && <ReceiptFix imp={imp} rec={rec.data} />}
 
       {groups.look.length > 0 && (
         <section style={{ marginBottom: 20 }}>
@@ -423,6 +425,262 @@ function AddLineSheet({ open, importId, onClose }: { open: boolean; importId: nu
           {t('Add')}
         </button>
       </div>
+    </Sheet>
+  );
+}
+
+// ------------------------------------------------------------------ total does not add up: fix it in one step (18.10.2026)
+
+const fmtAmount = (n: number) => n.toFixed(2).replace('.', ',');
+
+/**
+ * Below the recognition card while a receipt is checked: when the total does not add up, "Add discount or deposit"
+ * (amount prefilled with the gap) and "Read again with AI"; rows filled in from the total are named; after an AI
+ * reading it can be undone. When it adds up, "Read again with AI" stays available as a quiet link.
+ */
+function ReceiptFix({ imp, rec }: { imp: any; rec: Recognition }) {
+  const toast = useToast();
+  const [adjust, setAdjust] = useState(false);
+  const [reread, setReread] = useState(false);
+  const off = rec.sum_matches === false;
+  const unclear = (rec.counts?.unmatched ?? 0) - (rec.new_lines ?? 0);
+  const many = rec.goods > 2 && unclear >= rec.goods / 2;
+  const left = rec.ai?.left;
+  const undo = async () => {
+    try {
+      await post(`/imports/${imp.id}/reread-ai/undo`);
+      invalidate('import', 'quality', 'imports');
+      toast({ text: t('Back to the earlier lines.') });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  return (
+    <div className="stack" style={{ gap: 10, marginBottom: 16 }}>
+      {Boolean(rec.assumed?.length) && (
+        <div className="banner" style={{ cursor: 'default' }}>
+          <span className="ic"><Info size={20} /></span>
+          <div className="small">
+            {t('Not on the photo, added so the total adds up: {list}. Please check quickly.', {
+              list: (rec.assumed ?? []).map((a) => (a.kind === 'discount' ? t('discount -{amount}', { amount: fmtAmount(a.amount) }) : t('deposit {amount}', { amount: fmtAmount(a.amount) }))).join(' · '),
+            })}
+          </div>
+        </div>
+      )}
+      {(off || many) && (
+        <div className="banner" style={{ cursor: 'default', background: 'var(--low-soft, var(--surface-2))' }}>
+          <span className="ic"><Info size={20} /></span>
+          <div className="grow stack" style={{ gap: 8 }}>
+            <div className="small">
+              {off && rec.difference != null
+                ? rec.difference < 0
+                  ? t('{amount} too much in the lines – usually a discount that was not read.', { amount: money(-rec.difference) })
+                  : t('{amount} missing in the lines – often deposit or a line that was not read.', { amount: money(rec.difference) })
+                : t('Many lines were not recognised.')}
+            </div>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              {off && (
+                <button className="btn" onClick={() => setAdjust(true)}>
+                  <Plus size={16} /> {t('Add discount or deposit')}
+                </button>
+              )}
+              {rec.ai?.available !== false && (
+                <button className="btn" onClick={() => setReread(true)}>
+                  <Sparkle size={16} /> {t('Read again with AI')}
+                </button>
+              )}
+            </div>
+            {left != null && left <= 5 && <div className="small muted">{left === 0 ? t('No AI readings left for today.') : t('AI readings left today: {n}', { n: left })}</div>}
+          </div>
+        </div>
+      )}
+      <div className="row" style={{ gap: 14, flexWrap: 'wrap' }}>
+        {!off && !many && rec.ai?.available && (
+          <button className="linkish small" onClick={() => setReread(true)}>
+            <Sparkle size={12} /> {t('Read again with AI')}
+          </button>
+        )}
+        {rec.ai_undo && (
+          <button className="linkish small" onClick={undo}>
+            <ArrowCounterClockwise size={12} /> {t('Undo the AI reading')}
+          </button>
+        )}
+      </div>
+      <AdjustSheet open={adjust} imp={imp} rec={rec} onClose={() => setAdjust(false)} />
+      <RereadSheet open={reread} imp={imp} rec={rec} onClose={() => setReread(false)} />
+    </div>
+  );
+}
+
+/** A missed discount (onto its product or the whole purchase) or deposit, amount prefilled with the gap. */
+function AdjustSheet({ open, imp, rec, onClose }: { open: boolean; imp: any; rec: Recognition; onClose: () => void }) {
+  const toast = useToast();
+  const [kind, setKind] = useState<'discount' | 'deposit'>('discount');
+  const [amount, setAmount] = useState('');
+  const [lineId, setLineId] = useState('');
+  useEffect(() => {
+    if (!open) return;
+    const d = rec.difference ?? 0;
+    setKind(d < 0 ? 'discount' : 'deposit');
+    setAmount(d ? fmtAmount(Math.abs(d)) : '');
+    setLineId('');
+  }, [open, rec.difference]);
+  const items = (imp.lines ?? []).filter((l: any) => l.status === 'ok' && (l.price ?? 0) > 0);
+  const save = async () => {
+    const n = parseNum(amount);
+    if (n == null || !Number.isFinite(n) || n <= 0) return toast({ text: t('Please enter a valid number.'), error: true });
+    try {
+      await post(`/imports/${imp.id}/adjust`, { kind, amount: n, line_id: kind === 'discount' && lineId ? Number(lineId) : null });
+      invalidate('import', 'quality', 'imports');
+      onClose();
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  return (
+    <Sheet open={open} onClose={onClose} title={t('Add discount or deposit')}>
+      <div className="stack">
+        <Seg value={kind} onChange={setKind} full options={[['discount', t('Discount')], ['deposit', t('Deposit')]]} />
+        <div className="field">
+          <label>{t('Amount')}</label>
+          <input className="input" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" />
+        </div>
+        {kind === 'discount' ? (
+          <div className="field">
+            <label>{t('On which item?')}</label>
+            <select className="input" value={lineId} onChange={(e) => setLineId(e.target.value)}>
+              <option value="">{t('On the whole purchase')}</option>
+              {items.map((l: any) => (
+                <option key={l.id} value={l.id}>
+                  {l.name} · {money(l.price)}
+                </option>
+              ))}
+            </select>
+            <div className="help">{t('The discount usually sits right below its item on the receipt.')}</div>
+          </div>
+        ) : (
+          <div className="help">{t('Deposit counts as money, not as stock.')}</div>
+        )}
+        <button className="btn primary" onClick={save}>
+          {t('Add')}
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
+/**
+ * "Read again with AI": says once what goes to the AI, then shows the AI's reading next to the current one; only
+ * "Take it" replaces the lines (own corrections are kept, undo afterwards). Without a stored photo: choose it again.
+ */
+function RereadSheet({ open, imp, rec, onClose }: { open: boolean; imp: any; rec: Recognition; onClose: () => void }) {
+  const toast = useToast();
+  const nav = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [res, setRes] = useState<any>(null);
+  const [needPhoto, setNeedPhoto] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    setFile(null);
+    setRes(null);
+    setNeedPhoto(false);
+  }, [open]);
+  const what = file ? (file.type === 'application/pdf' ? t('the PDF of this receipt') : t('the photo of this receipt')) : rec.has_source ? t('the photo or PDF of this receipt') : t('the text of this receipt');
+  const run = async () => {
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      if (file) fd.append('files', file);
+      const r = await api(`/imports/${imp.id}/reread-ai`, { method: 'POST', form: fd });
+      setRes(r);
+      invalidate('quality');
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code === 'photo.missing') setNeedPhoto(true);
+      else toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const take = async () => {
+    setBusy(true);
+    try {
+      const r = await post(`/imports/${imp.id}/reread-ai/apply`);
+      invalidate('import', 'quality', 'imports');
+      toast({ text: r.carried ? t('AI reading taken – your {n} corrections are kept.', { n: r.carried }) : t('AI reading taken.') });
+      onClose();
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const p = res?.proposal;
+  return (
+    <Sheet open={open} onClose={onClose} title={t('Read again with AI')}>
+      {rec.ai && !rec.ai.available ? (
+        <div className="stack">
+          <div className="small">
+            {rec.ai.paused || rec.ai.left === 0
+              ? t('No AI readings left for today. Tomorrow it works again – or add the missing row yourself.')
+              : t('AI is off for you or this household. If you want it, switch it on in Settings › With or without AI.')}
+          </div>
+          {!rec.ai.paused && rec.ai.left !== 0 && (
+            <button className="btn" onClick={() => nav('/einstellungen')}>
+              {t('Open settings')}
+            </button>
+          )}
+        </div>
+      ) : !p ? (
+        <div className="stack">
+          {needPhoto && <div className="small">{t('The photo of this receipt is not stored. Choose it once more.')}</div>}
+          {(needPhoto || !rec.has_source) && (
+            <div className="field">
+              <label>{t('Photo or PDF of the receipt')}</label>
+              <input className="input" type="file" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            </div>
+          )}
+          <div className="small">{t('For this, {what} goes to the AI (Mistral, France, via OpenRouter). Just this once.', { what })}</div>
+          {rec.ai?.left != null && <div className="small muted">{t('Counts as one AI reading – {n} left today.', { n: rec.ai.left })}</div>}
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn ghost" onClick={onClose}>
+              {t('Cancel')}
+            </button>
+            <button className="btn primary" disabled={busy || (needPhoto && !file)} onClick={run}>
+              <Sparkle size={16} /> {busy ? t('Reading …') : t('Read with AI')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="stack">
+          <div className="small">
+            {t('Now: {n} lines, {sum}', { n: res.current.lines, sum: money(res.current.itemsSum ?? 0) })}
+            {res.current.sumMatches ? ' ✓' : ''}
+          </div>
+          <div className="small">
+            <b>{t('AI: {n} lines, {sum}', { n: p.lines.length, sum: money(p.itemsSum ?? 0) })}</b>
+            {p.sumMatches ? ` ✓ ${t('adds up')}` : ''}
+          </div>
+          <div className="list">
+            {p.lines.map((l: any, i: number) => (
+              <div key={i} className="li">
+                <div className="grow small">{l.qty !== 1 ? `${num(l.qty)} × ` : ''}{l.name}{l.deposit ? ` · ${t('deposit')}` : ''}</div>
+                <span className="small mono">{l.price != null ? money(l.price) : '–'}</span>
+              </div>
+            ))}
+          </div>
+          <div className="small muted">{t('Your own corrections stay where the same item shows up. You can undo it afterwards.')}</div>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn ghost" onClick={onClose}>
+              {t('Keep the current lines')}
+            </button>
+            <button className="btn primary" disabled={busy} onClick={take}>
+              {t('Take the AI reading')}
+            </button>
+          </div>
+        </div>
+      )}
     </Sheet>
   );
 }

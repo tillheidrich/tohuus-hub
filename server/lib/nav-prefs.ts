@@ -12,7 +12,7 @@ import { getUserPref, setUserPref } from './onboard.js';
  * The first five are the main areas. After them the pages of their own that otherwise sit in "Mehr" or behind a door
  * (18 Oct 2026): Haushaltswissen, Bring mir was (orders, module "treats"),
  * Wünsche (wishes, door on top of Einkauf), Hausinfo (houseinfo, door on top of Aufgaben). They only come into the bar
- * by an own choice and keep their usual row when they are not in it. The party mode is no area here (off for the start).
+ * by an own choice and keep their usual row when they are not in it.
  */
 export const NAV_AREAS = ['shopping', 'cooking', 'tasks', 'stock', 'money', 'knowledge', 'orders', 'wishes', 'houseinfo'] as const;
 export type NavArea = (typeof NAV_AREAS)[number];

@@ -181,12 +181,10 @@ struct ModulesView: View {
         Item(key: "stock", label: L("Pantry"), hint: L("What is at home and what should be eaten soon."), icon: "shippingbox"),
         Item(key: "cook", label: L("Cook"), hint: L("Recipes, ideas from what you have, a week plan if you like."), icon: "frying.pan"),
         Item(key: "money", label: L("Money"), hint: L("What food and household cost, from your receipts."), icon: "eurosign.circle"),
-        Item(key: "treats", label: L("Treats"), hint: L("Wishes from the sofa: tea, a snack, a drink."), icon: "cup.and.saucer"),
+        Item(key: "treats", label: L("Treats"), hint: L("Wishes from the sofa: tea, a snack, a drink. Guests too, with a link."), icon: "cup.and.saucer"),
         Item(key: "homeinfo", label: L("Home info"), hint: L("Care tasks and things to know about the home."), icon: "wrench.and.screwdriver"),
         Item(key: "knowledge", label: L("What ToHuus remembers"), hint: L("Sizes, measurements, numbers. So nobody has to ask you."), icon: "brain"),
-        Item(key: "guests", label: L("Guests"), hint: L("Guest links and orders from guests."), icon: "person.2"),
-        // party mode (18 Oct 2026): off for the start, on only when explicitly switched on (docs/party-modus.md)
-        Item(key: "party", label: L("Party mode"), hint: L("Guests order by QR code, a kitchen and TV board. For bigger parties."), icon: "party.popper"),
+        Item(key: "guests", label: L("Guests"), hint: L("Links for visitors, babysitter and grandparents, house info for guests."), icon: "person.2"),
         Item(key: "ha", label: "Home Assistant", hint: L("Only if you run Home Assistant."), icon: "house"),
     ] }
 
@@ -198,7 +196,7 @@ struct ModulesView: View {
                 }
                 ForEach(items) { i in
                     row(icon: i.icon, label: i.label, hint: i.hint) {
-                        Toggle(i.label, isOn: Binding(get: { modules[i.key] ?? (i.key != "party") }, set: { v in Task { await set(i.key, v) } }))
+                        Toggle(i.label, isOn: Binding(get: { modules[i.key] ?? true }, set: { v in Task { await set(i.key, v) } }))
                             .labelsHidden()
                             .tint(Theme.primary)
                             .disabled(!app.isAdmin)

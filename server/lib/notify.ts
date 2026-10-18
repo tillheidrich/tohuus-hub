@@ -28,7 +28,6 @@ export type NotifyEvent =
   | 'shopping.added'
   | 'digest.daily'
   | 'care.due'
-  | 'party.ending'
   | 'kids.wish'
   | 'auth.new_device'
   | 'budget.warning'
@@ -88,7 +87,6 @@ const EVENT_EYEBROW: Partial<Record<NotifyEvent, string>> = {
   'shopping.added': 'Shopping list',
   'digest.daily': 'Daily overview',
   'care.due': 'Care',
-  'party.ending': 'Party',
   'kids.wish': 'Wish',
   'auth.new_device': 'Security',
   'budget.warning': 'Budget',
@@ -122,7 +120,6 @@ export const DEFAULT_NOTIFY: NotifySettings = {
     'shopping.added': { ha: false, webhook: true, ntfy: false, email: false, push: false },
     'digest.daily': { ha: true, webhook: true, ntfy: false, email: true, push: false },
     'care.due': { ha: true, webhook: true, ntfy: true, email: false, push: true },
-    'party.ending': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     'kids.wish': { ha: true, webhook: true, ntfy: true, email: false, push: true },
     // goes only to the member concerned (their own devices / verified address) – see server/lib/auth-sessions.ts
     'auth.new_device': { ha: false, webhook: false, ntfy: false, email: true, push: true },

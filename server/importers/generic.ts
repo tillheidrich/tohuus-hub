@@ -206,6 +206,40 @@ export function parseDate(text: string, today: Date = new Date()): { iso: string
   return null;
 }
 
+/**
+ * Item name as printed, without till noise: "Avocado Stk." → "Avocado" (a unit word without a number is no pack
+ * size), runs of spaces. Pack sizes stay ("Bioland Eier 6St" – the product keeps "6St" as its size, never a quantity).
+ */
+export function cleanItemName(name: string): string {
+  return name
+    .replace(/\s{2,}/g, ' ')
+    .replace(/(?<![\d,.])\s+(?:stk|st|stck|stück)\.?$/i, '')
+    .trim();
+}
+
+/** typical German deposit amounts per bottle/can/crate (Einweg 0,25, Mehrweg 0,08 / 0,15, Kasten 1,50 / 3,10 / 3,42) */
+const DEPOSIT_UNITS = [0.25, 0.15, 0.08];
+
+/** Does `amount` look like deposit (1–12 bottles of one kind)? */
+export function looksLikeDeposit(amount: number): boolean {
+  const cents = Math.round(amount * 100);
+  if (cents <= 0 || cents > 300) return false;
+  return DEPOSIT_UNITS.some((u) => {
+    const uc = Math.round(u * 100);
+    return cents % uc === 0 && cents / uc <= 12;
+  });
+}
+
+/** "Mit Lidl Plus 0,70 EUR gespart", "Sie haben 1,20 € gespart", "Ersparnis 0,50" → 0.70 (the savings the receipt prints). */
+export function savingsHint(text: string): number | null {
+  const m =
+    text.match(/(?:mit\s+lidl\s+plus|sie\s+haben|du\s+hast|heute|insgesamt)[\s\n]+(?:[a-zäöü ]{0,20}?)(\d{1,3},\d\d)\s*(?:EUR|€)?[\s\n]+gespart/i) ??
+    text.match(/(?:ersparnis|gespart|eingespart|sie\s+sparen|du\s+sparst)\s*:?\s*(\d{1,3},\d\d)\s*(?:EUR|€)?/i);
+  if (!m) return null;
+  const v = money(m[1]);
+  return v > 0 ? v : null;
+}
+
 interface Pending {
   qty?: number;
   unitPrice?: number;
@@ -230,7 +264,7 @@ function readItems(rows: string[], item: RegExp, tax: Map<string, number>) {
     const code = taxCode?.replace(/\*/g, '').toUpperCase();
     const l: GenericLine = {
       raw,
-      name: name.replace(/\s{2,}/g, ' ').trim(),
+      name: cleanItemName(name) || name.trim(),
       qty,
       unit: null,
       price,
@@ -325,10 +359,23 @@ function readItems(rows: string[], item: RegExp, tax: Map<string, number>) {
         inlineQty = Number(glued[2]);
         inlineUnit = money(glued[3]);
       }
+      // "2 x H-Milch 1,5%   2,38" (shop apps, tidied text): a quantity in front of the name – only when the line total
+      // splits into whole cents and the number is not the pack size printed in the name ("6 x Eier 6St 2,99" is one pack)
+      const lead = !inlineQty && price > 0 ? name.match(/^(\d{1,2})\s*[x×]\s+(.*[A-Za-zÄÖÜäöü].*)$/) : null;
+      if (lead) {
+        const n = Number(lead[1]);
+        const cents = Math.round(price * 100);
+        const pack = lead[2].match(/(\d+)\s?(?:st\.?|stk\.?|stück|er)\b/i);
+        name = lead[2].trim();
+        if (n >= 2 && cents % n === 0 && !(pack && Number(pack[1]) === n)) {
+          inlineQty = n;
+          inlineUnit = cents / n / 100;
+        }
+      }
       if (!DEPOSIT.test(name) && price < 0) {
         const code = m[7]?.replace(/\*/g, '').toUpperCase();
         const core = name.replace(VOID, '').replace(RETURN, '').trim();
-        const sameItem = (l: GenericLine) => l.status === 'ok' && (l.price ?? 0) > 0 && l.name.toLowerCase() === core.toLowerCase();
+        const sameItem = (l: GenericLine) => l.status === 'ok' && (l.price ?? 0) > 0 && l.name.toLowerCase() === (cleanItemName(core) || core).toLowerCase();
         const isVoid = VOID.test(name) || (!RETURN.test(name) && last != null && sameItem(last) && near(last.unitPrice ?? NaN, -price));
         if (isVoid) {
           // cashier void: take the item off again (one piece of it)
@@ -396,19 +443,47 @@ export function parseGenericReceipt(text: string, opts: GenericOptions = {}): Pa
   const { lines, total } = res;
   const goods = lines.filter((l) => l.status !== 'deposit');
   if (goods.length === 0) return null;
-  const sum = Math.round((lines.reduce((s, l) => s + (l.price ?? 0), 0) + res.receiptDiscount) * 100) / 100;
-  const sumMatches = total != null && near(sum, total, 0.021);
+  let sum = Math.round((lines.reduce((s, l) => s + (l.price ?? 0), 0) + res.receiptDiscount) * 100) / 100;
+  let sumMatches = total != null && near(sum, total, 0.021);
   const store = detectStore(clean);
   // every till receipt has a total; without it (or without a store and a matching sum) it is probably
   // a newsletter or an offer list, not a receipt
   if (total == null || (!sumMatches && !store)) return null;
+
+  // Lidl prints short codes behind some names ("Bioland Eier OKT 6St") – they say nothing about the product
+  if (store?.key === 'lidl') for (const l of lines) l.name = l.name.replace(/\s+OKT\b/g, '').trim() || l.name;
+
+  // The total does not add up, and the gap is a discount or deposit row the text recognition missed (light blue
+  // "Lidl Plus Rabatt", a faint "Pfand" row; 18.10.2026): the receipt's own "Mit Lidl Plus 0,70 EUR gespart" and the
+  // usual deposit amounts say what is missing. Filled in, marked "please check" – never silently.
+  const saved = savingsHint(clean);
+  let receiptDiscount = res.receiptDiscount;
+  const assumed: { kind: 'discount' | 'deposit'; amount: number }[] = [];
+  let suggestion: { kind: 'discount' | 'deposit' | 'line'; amount: number } | null = null;
+  if (!sumMatches) {
+    const diff = Math.round((total - sum) * 100) / 100;
+    const missingDiscount = saved != null ? Math.round((saved + res.discounts) * 100) / 100 : 0;
+    const rest = Math.round((diff + missingDiscount) * 100) / 100;
+    if (missingDiscount > 0 && (near(rest, 0) || looksLikeDeposit(rest))) {
+      assumed.push({ kind: 'discount', amount: missingDiscount });
+      receiptDiscount = Math.round((receiptDiscount - missingDiscount) * 100) / 100;
+      if (!near(rest, 0)) assumed.push({ kind: 'deposit', amount: rest });
+    } else if (looksLikeDeposit(diff)) assumed.push({ kind: 'deposit', amount: diff });
+    else suggestion = diff < 0 ? { kind: 'discount', amount: -diff } : { kind: diff <= 3 ? 'deposit' : 'line', amount: diff };
+    for (const a of assumed.filter((x) => x.kind === 'deposit'))
+      lines.push({ raw: `Pfand ${a.amount.toFixed(2).replace('.', ',')} (assumed from the total)`, name: 'Pfand', qty: 1, unit: null, price: a.amount, unitPrice: a.amount, status: 'deposit', ocrConfidence: 0.5 });
+    if (assumed.length) {
+      sum = Math.round((lines.reduce((s, l) => s + (l.price ?? 0), 0) + receiptDiscount) * 100) / 100;
+      sumMatches = near(sum, total, 0.021);
+    }
+  }
 
   if (store?.drugstore) for (const l of lines) if (l.status !== 'deposit') l.categoryHint = hintFor(l.name, l.vatRate);
 
   // the deposit printed right below a drink belongs to it ("Pfand 0,25" under "Spezi 0,33l")
   lines.forEach((l, i) => {
     const prev = lines[i - 1];
-    if (l.status === 'deposit' && (l.price ?? 0) > 0 && prev && prev.status === 'ok') l.depositFor = prev.name;
+    if (l.status === 'deposit' && (l.price ?? 0) > 0 && prev && prev.status === 'ok' && !l.raw.includes('(assumed')) l.depositFor = prev.name;
   });
 
   // the till footer "Datum Uhrzeit Filiale Pos Bed Bon" + the values below it (Edeka) beats any other date
@@ -432,7 +507,14 @@ export function parseGenericReceipt(text: string, opts: GenericOptions = {}): Pa
       sumMatches,
       itemsSum: sum,
       discounts: res.discounts,
-      receiptDiscount: res.receiptDiscount || null,
+      receiptDiscount: receiptDiscount || null,
+      // what the receipt says it saved ("Mit Lidl Plus 0,70 EUR gespart")
+      savingsHint: saved,
+      // rows filled in from the total (missed by text recognition) – the review asks to check them
+      sumAssumed: assumed.length ? true : undefined,
+      assumed: assumed.length ? assumed : undefined,
+      // the gap when nothing could be filled in: what probably is missing
+      fixSuggestion: suggestion ?? undefined,
       parser: 'generic',
     },
     lines,

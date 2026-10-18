@@ -26,7 +26,19 @@ export interface Recognition {
   items_sum: number | null;
   total: number | null;
   receipt_discount: number | null;
-  lines: { id: number; grade: LineGrade; confidence: number; corrected: boolean; rule_id: number | null }[];
+  /** receipt total minus the lines (null when it adds up) */
+  difference?: number | null;
+  fix_suggestion?: { kind: 'discount' | 'deposit' | 'line'; amount: number } | null;
+  /** rows filled in from the total because the photo did not show them */
+  assumed?: { kind: 'discount' | 'deposit'; amount: number }[];
+  new_lines?: number;
+  /** "Read again with AI": available now, and today's allowance (left null = no daily limit) */
+  ai?: { available: boolean; left: number | null; per_day: number | null; paused: boolean };
+  ai_rereadable?: boolean;
+  ai_undo?: boolean;
+  ai_auto?: boolean;
+  has_source?: boolean;
+  lines: { id: number; grade: LineGrade; new?: boolean; confidence: number; corrected: boolean; rule_id: number | null }[];
   counts: Record<LineGrade, number>;
   goods: number;
   auto_share: number | null;
@@ -45,9 +57,11 @@ export function useRecognition(importId: number | null | undefined) {
 }
 
 /** short, calm label for a line – nothing for lines that were simply recognised */
-export function GradeBadge({ grade }: { grade?: LineGrade }) {
+export function GradeBadge({ grade, isNew }: { grade?: LineGrade; isNew?: boolean }) {
   if (grade === 'learned') return <span className="badge info">{t('learned')}</span>;
   if (grade === 'suggested') return <span className="badge low">{t('likely')}</span>;
+  // no product yet, but a clean name: it becomes a new product when booked
+  if (grade === 'unmatched' && isNew) return <span className="badge q-badge-none">{t('new')}</span>;
   if (grade === 'unmatched') return <span className="badge q-badge-none">{t('not recognised')}</span>;
   return null;
 }
@@ -114,7 +128,8 @@ export function RecognitionCard({ importId, readonly }: { importId: number; read
             {c.learned > 0 && <span><i style={{ background: 'var(--info)' }} />{t('learned from your corrections: {n}', { n: c.learned })}</span>}
             <span><i style={{ background: 'var(--accent)' }} />{t('recognised: {n}', { n: c.sure + c.ignored })}</span>
             {c.suggested > 0 && <span><i style={{ background: 'var(--low)' }} />{t('likely, please check: {n}', { n: c.suggested })}</span>}
-            {c.unmatched > 0 && <span><i style={{ background: 'var(--line-strong)' }} />{t('not recognised: {n}', { n: c.unmatched })}</span>}
+            {(r.new_lines ?? 0) > 0 && <span><i style={{ background: 'var(--line-strong)' }} />{t('new products: {n}', { n: r.new_lines ?? 0 })}</span>}
+            {c.unmatched - (r.new_lines ?? 0) > 0 && <span><i style={{ background: 'var(--line-strong)' }} />{t('not recognised: {n}', { n: c.unmatched - (r.new_lines ?? 0) })}</span>}
           </div>
 
           <div className="q-row">

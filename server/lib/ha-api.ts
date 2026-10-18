@@ -17,7 +17,6 @@ import { eatFirst } from './fresh.js';
 import { boxesSummary, listBoxes } from './labels.js';
 import { listWishes } from './kids.js';
 import { listDisplays } from './kiosk.js';
-import { liveParty, partyView } from './party.js';
 import { addPlan, getPlan } from './plan.js';
 import { suggest } from './recipes.js';
 import { quickAdd } from './shop.js';
@@ -328,8 +327,6 @@ export function haState() {
       .filter((p) => !p.cooked)
       .sort((a, b) => a.day.localeCompare(b.day) || (SLOT_ORDER[a.slot] ?? 9) - (SLOT_ORDER[b.slot] ?? 9))[0] ?? null;
 
-  const lp = liveParty();
-  const party = lp ? partyView(lp) : null;
   const wishes = listWishes('pending');
   const displays = listDisplays().map((d) => ({ id: d.id, name: d.name, layout: d.layout }));
   const imports = (db.prepare(`SELECT COUNT(*) AS n FROM imports WHERE status = 'review' AND private_for IS NULL`).get() as { n: number }).n;
@@ -387,9 +384,6 @@ export function haState() {
         : null,
     tomorrow: tomorrow.map((p) => ({ title: p.title, slot: p.slot, recipe_id: p.recipe_id })),
     next_meal: nextMeal ? { id: nextMeal.id, date: nextMeal.day, slot: nextMeal.slot, title: nextMeal.title, recipe_id: nextMeal.recipe_id, image_url: absUrl(nextMeal.image_path) } : null,
-    party: party
-      ? { status: 'live', id: party.id, name: party.name, started_at: party.started_at, ends_at: party.auto_end_at ?? party.ends_at, open_orders: party.open_orders, new_orders: party.new_orders, orders_total: party.orders_total, guest_url: party.guest_url }
-      : { status: 'off' },
     kid_wishes: wishes.map((w) => ({ id: w.id, kid: w.kid_name, name: w.name, qty: w.qty, created_at: w.created_at, image_url: absUrl(w.image_path) })),
     displays,
     /** away mode (trip): state home | planned | before | away | back – for a binary sensor "away" */

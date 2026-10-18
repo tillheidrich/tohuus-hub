@@ -92,7 +92,6 @@ export const explain: Record<string, string> = {
   "Visitors, the babysitter or grandparents get a link – no app, no account.": "Besuch, Babysitter oder Großeltern bekommen einen Link, ohne App und ohne Konto.",
   "Share the link or show the QR code. Give it an end date or revoke it at any time.": "Den Link teilen oder den QR-Code zeigen. Ein Ablaufdatum setzen oder ihn jederzeit widerrufen.",
   "The green plus adds an area – Money, Knowledge, Bring me something, Wishes or House info. The red minus removes one.": "Das grüne Plus holt einen Bereich dazu, etwa Geld, Wissen, Bring mir was, Wünsche oder Hausinfo. Das rote Minus nimmt ihn raus.",
-  "Party mode is off at first. If you need it, switch it on under Settings › What do you use?": "Der Party-Modus ist am Anfang aus. Wer ihn braucht, schaltet ihn unter Einstellungen › Was nutzt ihr? ein.",
   'Short, with sources': 'Kurz und mit Quellen',
   'A few facts around shopping, cooking and money at home – and what ToHuus does about them. Every number links to where it comes from.':
     'Ein paar Fakten rund ums Einkaufen, Kochen und Geld zu Hause – und was ToHuus dafür tut. Jede Zahl verlinkt ihre Quelle.',

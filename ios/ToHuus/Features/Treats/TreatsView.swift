@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// "Für mich" (web: web/src/pages/Order.tsx, mode "me"): stuck on the sofa, in bed or with bedtime – ask for a little
-/// something, someone at home brings it. The others answer "I'll bring it" / "Can't right now"; the person who asked
-/// can say a tiny private "thanks". No points, no count of who brought what.
+/// „Bring mir was“ (web: web/src/pages/Order.tsx): stuck on the sofa, in bed or with bedtime – ask for a little
+/// something, someone at home brings it. Guests wish for something through the shared link („Gäste einladen“ right
+/// here) and land in the same list as „Gast: Name“. The others answer "I'll bring it" / "Can't right now"; the person
+/// who asked can say a tiny private "thanks". No points, no count of who brought what.
 struct TreatsView: View {
     let api: APIClient
     @Environment(AppModel.self) private var app
@@ -18,6 +19,9 @@ struct TreatsView: View {
     @State private var checkout = false
     @State private var declining: TreatOrder?
     @State private var toast: ToastMessage?
+    /// „Gäste einladen“: the visitors preset (only wishes), then the QR / share sheet
+    @State private var inviting: GuestLinkDraft?
+    @State private var invited: GuestLinksView.ShownLink?
 
     struct CartLine: Identifiable, Hashable {
         var productId: Int
@@ -43,7 +47,8 @@ struct TreatsView: View {
                 intro
                 if let error { ErrorBanner(message: error) { Task { await load() } } }
                 if !requests.isEmpty { inbox }
-                let open = mine.filter { $0.kind != "party" || $0.status != "done" }.prefix(4)
+                if !app.isGuest { inviteCard }
+                let open = mine.prefix(4)
                 if !open.isEmpty {
                     VStack(alignment: .leading, spacing: Theme.Space.s2) {
                         SectionLabel(L("Your wishes"))
@@ -58,7 +63,7 @@ struct TreatsView: View {
         .canvasBackground()
         // an answered request changes in place ("I'll bring it" → on its way), the cart bar slides in
         .motion(value: (requests + mine).map { "\($0.id):\($0.status)" } + ["\(count)"])
-        .navigationTitle(L("For me"))
+        .navigationTitle(L("Treats"))
         .onAppear { app.screenContext = "guests" }
         .onDisappear { if app.screenContext == "guests" { app.screenContext = nil } }
         .navigationBarTitleDisplayMode(.inline)
@@ -94,7 +99,27 @@ struct TreatsView: View {
             Button(L("Just “not now”")) { Task { await answer(o, "declined") } }
             Button(L("Cancel"), role: .cancel) {}
         }
+        .sheet(item: $inviting) { d in
+            GuestLinkForm(api: api, draft: d) { name, r in invited = GuestLinksView.ShownLink(name: name, url: r.url, expiresAt: nil) }
+        }
+        .sheet(item: $invited) { s in GuestLinkShareSheet(name: s.name, url: s.url) }
         .toast($toast)
+    }
+
+    // MARK: guests – the invite sits right here (web: Order.tsx InviteGuests)
+
+    private var inviteCard: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s2) {
+            SectionLabel(L("Invite guests"))
+            Text(L("Send guests the link: they wish for something, you bring it."))
+                .font(.subheadline).foregroundStyle(Theme.ink2).fixedSize(horizontal: false, vertical: true)
+            Button { inviting = .visitors } label: { ButtonLabel(L("Share link or QR code"), systemImage: "qrcode") }
+                .buttonStyle(.bordered).tint(Theme.primary).controlSize(.regular)
+        }
+        .padding(Theme.Space.s3)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
     }
 
     // MARK: intro + who brings it
@@ -150,7 +175,8 @@ struct TreatsView: View {
                     HStack(alignment: .top, spacing: Theme.Space.s3) {
                         PersonAvatar(name: o.guestName ?? "?", key: o.userId.map { "u\($0)" }, size: 36, api: api)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(o.forUserId != nil ? LF("%@ asks you", o.guestName ?? "") : LF("%@ would love something", o.guestName ?? ""))
+                            // wishes from the guest link carry „Gast: Name“ – same list, same buttons
+                            Text(o.kind == "guest" ? LF("Guest: %@", o.guestName ?? "") : o.forUserId != nil ? LF("%@ asks you", o.guestName ?? "") : LF("%@ would love something", o.guestName ?? ""))
                                 .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
                             Text([o.itemsText, ServerDate.relative(o.createdAt)].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
                                 .font(.subheadline).foregroundStyle(Theme.ink2)
@@ -197,7 +223,9 @@ struct TreatsView: View {
     }
 
     private func cantButton(_ o: TreatOrder, wide: Bool = false) -> some View {
-        Button { declining = o } label: { ButtonLabel(L("Can’t right now"), wide: wide) }.buttonStyle(.bordered).controlSize(.regular)
+        // a "no" looks like a no: red (Theme.decline), never green like „Ich bring’s“
+        Button(role: .destructive) { declining = o } label: { ButtonLabel(L("Can’t right now"), systemImage: "xmark", wide: wide) }
+            .buttonStyle(.bordered).tint(Theme.decline).controlSize(.regular)
     }
 
     // MARK: my own wishes

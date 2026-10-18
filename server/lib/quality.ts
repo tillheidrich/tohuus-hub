@@ -19,6 +19,9 @@ import { detectStore, storeName } from '../importers/generic.js';
 import { emit } from './bus.js';
 import { getProduct, learnAlias } from './catalog.js';
 import { parseDocumentText } from './imports.js';
+import { aiPaused, limits, usage } from './plans.js';
+import { config } from '../config.js';
+import { visionAvailable } from './vision.js';
 import { REDACTION_LABELS, redactReceipt, type RedactionKind } from './redact.js';
 import { norm } from './text.js';
 
@@ -102,6 +105,7 @@ interface ImportRow {
   shop: string | null;
   total: number | null;
   raw_text: string | null;
+  source_file?: string | null;
   meta: string;
   created_at: string;
 }
@@ -498,6 +502,15 @@ export function gradeLine(l: Pick<LineRow, 'status' | 'action' | 'product_id' | 
   return 'unmatched';
 }
 
+/** Receipt reading with AI right now: available at all, and what is left of today's allowance (plans.ts). */
+export function aiReadState(): { available: boolean; left: number | null; per_day: number | null; paused: boolean } {
+  const available = visionAvailable();
+  const max = limits().receiptAiPerDay;
+  if (!config.multiTenant || max === null) return { available, left: null, per_day: null, paused: false };
+  const paused = aiPaused() === 'cost';
+  return { available: available && max > 0 && !paused, left: paused ? 0 : Math.max(0, max - usage('receiptAi')), per_day: max, paused };
+}
+
 export function importReport(importId: number) {
   const imp = db.prepare('SELECT * FROM imports WHERE id = ?').get(importId) as ImportRow | undefined;
   if (!imp) throw new QualityError(t('Import not found'));
@@ -509,8 +522,25 @@ export function importReport(importId: number) {
     // the grade describes the recognition, so it is computed from the line as it came in (plus rules)
     const g = gradeLine(orig && !l.rule_id ? { ...l, product_id: orig.product_id, confidence: orig.confidence, action: orig.action as LineRow['action'] } : l);
     counts[g]++;
-    return { id: l.id, grade: g, confidence: Math.round((orig && !l.rule_id ? orig.confidence : l.confidence) * 100) / 100, corrected: Boolean(l.corrected), rule_id: l.rule_id };
+    // no product in the catalogue yet, but a clean name: becomes a new product when booked – "new", not "not recognised"
+    const isNew = g === 'unmatched' && l.action === 'new' && /[A-Za-zÄÖÜäöüß]{3,}/.test(l.name);
+    return { id: l.id, grade: g, new: isNew, confidence: Math.round((orig && !l.rule_id ? orig.confidence : l.confidence) * 100) / 100, corrected: Boolean(l.corrected), rule_id: l.rule_id };
   });
+  // the sum check follows the lines as they are now (a discount or deposit added in the review counts); for readings
+  // whose total is the plain sum of their lines (generic parser, model, OCR guesses) – REWE documents keep theirs
+  let sumMatches: boolean | null = meta.sumMatches ?? null;
+  let itemsSum: number | null = meta.itemsSum ?? null;
+  const live = sumMatches != null && imp.total != null && (meta.parser === 'generic' || meta.source === 'ai' || meta.guessed);
+  if (live) {
+    itemsSum = Math.round((lines.reduce((a, l) => a + (l.price ?? 0), 0) + (Number(meta.receiptDiscount) || 0)) * 100) / 100;
+    sumMatches = Math.abs(itemsSum - imp.total!) <= 0.021;
+  }
+  const difference = sumMatches === false && itemsSum != null && imp.total != null ? Math.round((imp.total - itemsSum) * 100) / 100 : null;
+  // what the gap probably is: below the lines = a discount; a small amount above = deposit; more = a missing line
+  const fix =
+    difference == null || Math.abs(difference) < 0.01
+      ? null
+      : { kind: difference < 0 ? 'discount' : difference <= 3 ? 'deposit' : 'line', amount: Math.abs(difference) };
   const goods = lines.length - counts.none;
   let storeVia: string = meta.storeVia ?? (meta.store ? 'header' : null) ?? (imp.kind.startsWith('rewe') ? 'layout' : imp.shop ? 'model' : 'unknown');
   if (!imp.shop) storeVia = 'unknown';
@@ -524,10 +554,23 @@ export function importReport(importId: number) {
     store_detected: meta.storeDetected ?? null,
     store_learnable: Boolean(sig),
     parser: meta.parser ?? (imp.kind.startsWith('rewe') ? 'rewe' : imp.kind === 'photo' || imp.kind === 'receipt' && !meta.parser ? 'model' : imp.kind),
-    sum_matches: meta.sumMatches ?? null,
-    items_sum: meta.itemsSum ?? null,
+    sum_matches: sumMatches,
+    items_sum: itemsSum,
     total: imp.total,
     receipt_discount: meta.receiptDiscount ?? null,
+    difference,
+    fix_suggestion: fix,
+    // rows filled in from the total when the photo did not show them ("please check")
+    assumed: Array.isArray(meta.assumed) ? meta.assumed : [],
+    savings_hint: meta.savingsHint ?? null,
+    new_lines: perLine.filter((l) => l.new).length,
+    // "Read again with AI": can it run now, and how many receipts with AI are left today (null = no daily limit)
+    ai: aiReadState(),
+    ai_rereadable: imp.status === 'review',
+    ai_undo: Boolean(meta.beforeAi),
+    ai_auto: Boolean(meta.aiAuto),
+    ai_proposal: meta.aiProposal ? { at: meta.aiProposal.at, lines: meta.aiProposal.lines?.length ?? 0, sumMatches: Boolean(meta.aiProposal.sumMatches), total: meta.aiProposal.total ?? null } : null,
+    has_source: Boolean(imp.source_file),
     lines: perLine,
     counts,
     goods,

@@ -84,8 +84,7 @@ export const BAR_LIMIT = 5;
 /**
  * the areas a person can put into the bar – same ids on the server (lib/nav-prefs.ts) and on iOS (AppArea).
  * After the five main areas: pages of their own that otherwise sit in Mehr or behind a door (18 Oct 2026) –
- * Haushaltswissen, Bring mir was, Wünsche (door on top of Einkauf), Hausinfo (door on top of Aufgaben). The party mode
- * is no area of the bar (switched off for the start).
+ * Haushaltswissen, Bring mir was, Wünsche (door on top of Einkauf), Hausinfo (door on top of Aufgaben).
  */
 export const NAV_AREAS = ['shopping', 'cooking', 'tasks', 'stock', 'money', 'knowledge', 'orders', 'wishes', 'houseinfo'] as const;
 export type NavArea = (typeof NAV_AREAS)[number];
@@ -228,7 +227,7 @@ export function moreGroups(opts: {
         // Haushaltswissen (18 Oct 2026): first row of Haushalt, its own symbol; guests see what is shared with them
         { to: '/wissen', label: t('What ToHuus remembers'), icon: 'Brain' },
         { to: '/einstellungen?tab=members', label: t('People'), icon: 'UsersThree' },
-        { to: '/bar', label: opts.modules?.party ? t('Guests & party') : t('Guests'), icon: 'Martini' },
+        { to: '/bar', label: t('Guests'), icon: 'Martini' },
         { to: '/bestellen', label: t('Treats'), icon: 'HandHeart' },
         // permanent guests: what members find on top of Aufgaben and Vorrat, and their handover
         ...(opts.guest

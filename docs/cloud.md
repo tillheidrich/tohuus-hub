@@ -1,5 +1,7 @@
 # ToHuus Cloud – operations
 
+> 18.10.2026: Der Party-Modus wurde auf Tills Entscheidung entfernt (siehe [party-modus.md](party-modus.md)). Gäste wünschen sich jetzt über den Gäste-Link aus „Bring mir was“ etwas; alles landet in einer Liste.
+
 ToHuus Cloud is the same image as the self-hosted ToHuus Hub, started with `MULTI_TENANT=true`. It holds many
 households; each one has its own encrypted SQLite database. This page is for whoever runs the cloud instance.
 The binding product and API contract is [plan-2026-10-12.md](plan-2026-10-12.md); the code map is

@@ -1,7 +1,7 @@
 /**
  * "Treats" (DE „Bring mir was“, formerly „Verwöhnen“, SV „Ompyssling“): someone in the household asks for a little something from the sofa or
- * from bed and somebody else brings it – plus the same mechanics for guests (visit, babysitter, grandparents) and
- * parties (bar). One code path for all three; `orderKind()` tells them apart for wording and notifications.
+ * from bed and somebody else brings it – and guests (visit, babysitter, grandparents) do the same through a shared link.
+ * One „Bring mir was“: both land in the same list with the same buttons; `orderKind()` only changes the wording.
  */
 import { recipients } from './notify-prefs.js';
 import { z } from 'zod';
@@ -11,8 +11,8 @@ import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { adjustStock, listProducts } from './catalog.js';
 import { notify } from './notify.js';
-import { assertAvailable, assertPartyLimits, availableQty, livePartyId, partyIdForLink, partyMenuIds, reservedByProduct } from './party.js';
-import { blockedForGuests, bookIngredients, cleanLineOptions, guestMenu, isPartyOn, orderableIds } from './menu.js';
+import { assertAvailable, availableQty, reservedByProduct } from './order-stock.js';
+import { bookIngredients, cleanLineOptions, guestMenu, orderableIds } from './menu.js';
 import { isGuestUser } from './people-policy.js';
 import { pushDeviceCount, sendPush } from './webpush.js';
 
@@ -26,12 +26,60 @@ migrate(
    ALTER TABLE orders ADD COLUMN thanked_at TEXT;`,
 );
 
-export type OrderKind = 'home' | 'guest' | 'party';
-/** Household request (sofa, bed, kid wish, voice), guest link, or party (every order during a live party). */
-export function orderKind(o: { user_id?: number | null; guest_link_id?: number | null; party_id?: number | null }): OrderKind {
-  if (o.party_id) return 'party';
-  if (o.guest_link_id) return 'guest';
-  return 'home';
+// Legacy schema of the party mode (removed 18 Oct 2026 on Till's decision, code in Git history up to 265276f).
+// The SQL stays exactly as shipped so older databases and fresh ones look the same: the tables are left unused,
+// orders.client_id is still the guest's device id, and orders.party_id only marks old rows that are ignored.
+migrate(
+  'party-1',
+  `CREATE TABLE parties (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'live' CHECK (status IN ('live','ended')),
+    started_at TEXT NOT NULL DEFAULT (datetime('now')),
+    ends_at TEXT,
+    idle_min INTEGER NOT NULL DEFAULT 90,
+    bumped_at TEXT,
+    ended_at TEXT,
+    end_reason TEXT,
+    guest_link_id INTEGER REFERENCES guest_links(id) ON DELETE SET NULL,
+    guest_token TEXT,
+    display_token TEXT,
+    display_token_hash TEXT UNIQUE,
+    pair_code TEXT,
+    pair_expires_at TEXT,
+    show_names INTEGER NOT NULL DEFAULT 0,
+    warned_at TEXT,
+    created_by TEXT,
+    purged_at TEXT
+  );
+  CREATE TABLE party_menu_items (
+    party_id INTEGER NOT NULL REFERENCES parties(id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    max_per_guest INTEGER,
+    sort INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (party_id, product_id)
+  );
+  CREATE TABLE party_templates (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    items TEXT NOT NULL DEFAULT '[]',
+    settings TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  ALTER TABLE orders ADD COLUMN party_id INTEGER REFERENCES parties(id) ON DELETE SET NULL;
+  ALTER TABLE orders ADD COLUMN client_id TEXT;
+  CREATE INDEX idx_orders_party ON orders(party_id);
+  CREATE INDEX idx_orders_client ON orders(client_id);`,
+);
+migrate('party-2', `ALTER TABLE parties ADD COLUMN pickup_hint TEXT;`);
+
+/** Rows from the former party mode: kept in the database, never shown or counted again. */
+export const NOT_LEGACY = 'o.party_id IS NULL';
+
+export type OrderKind = 'home' | 'guest';
+/** A wish from someone at home (sofa, bed, kid wish, voice) or from a guest through a shared link. */
+export function orderKind(o: { user_id?: number | null; guest_link_id?: number | null }): OrderKind {
+  return o.guest_link_id ? 'guest' : 'home';
 }
 
 /** Short reasons for "Can't right now" – English source, translated on display (web) and in notifications. */
@@ -40,7 +88,6 @@ export const DECLINE_REASONS = ['In a few minutes', 'It’s all gone', 'I’m no
 /** The warm status line shown to the person who asked (and in notifications). */
 export function statusLine(kind: OrderKind, status: string, by?: string | null, reason?: string | null): string {
   if (status === 'declined') return reason ? t('Not right now – {reason}', { reason: t(reason) }) : t('Not right now');
-  if (kind === 'party') return status === 'done' ? t('Ready at the counter') : status === 'accepted' ? t('Being made') : t('Received');
   if (status === 'accepted') return by ? t('Coming right up – {name} is bringing it', { name: by }) : t('Coming right up');
   if (status === 'done') return kind === 'guest' ? t('On its way to you') : by ? t('Brought by {name}', { name: by }) : t('Brought');
   return kind === 'guest' ? t('Received') : t('Sent – waiting for an “I’ll bring it”');
@@ -81,7 +128,7 @@ export type OrderInput = z.infer<typeof orderSchema>;
 export function orderMenu(member: boolean, opts: { family?: boolean } = {}) {
   const products = listProducts();
   const reserved = reservedByProduct();
-  const bar = guestMenu({ family: opts.family ?? member, party: isPartyOn() }, products, reserved);
+  const bar = guestMenu({ family: opts.family ?? member }, products, reserved);
   if (!member) return bar;
   const tag = tagger(products);
   const onBar = new Set(bar.map((b) => b.id));
@@ -138,17 +185,12 @@ export function createOrder(
 ) {
   // `member` lets a household-side caller (an approved kid wish) order everything in the house without a user id
   const member = who.member ?? Boolean(who.userId);
-  // party links order from the party menu; during a party every order (sofa included) shows up on the board
-  const linkParty = partyIdForLink(who.guestLinkId);
-  const partyId = linkParty ?? livePartyId();
-  const menuIds = linkParty ? partyMenuIds(linkParty) : null;
-  // the menu's availability rules (hidden / only at parties / only for family) – area: menu
+  // the menu's availability rules (hidden / only for family) – area: menu
   const family = member && !isGuestUser(who.userId);
-  const blocked = menuIds ? blockedForGuests() : null;
-  const onMenu = menuIds ? null : orderableIds({ family, party: partyId != null });
+  const onMenu = orderableIds({ family });
   const products = new Map(
     listProducts()
-      .filter((p) => (menuIds ? menuIds.has(p.id) && !blocked!.has(p.id) : onMenu!.has(p.id) || (member && p.track_mode !== 'none')))
+      .filter((p) => onMenu.has(p.id) || (member && p.track_mode !== 'none'))
       .map((p) => [p.id, p]),
   );
   // only orderable products, options only from the product's own choices
@@ -162,13 +204,12 @@ export function createOrder(
   // "who brings it" only between household members – a guest can't pick a person, and not oneself
   const target = who.userId && input.bring_by && input.bring_by !== who.userId ? (helpers(who.userId).find((u) => u.id === input.bring_by) ?? null) : null;
   const oid = db.transaction(() => {
-    // guests can't be promised the last bottle twice; party links also respect "max per guest"
+    // guests can't be promised the last bottle twice
     if (!member) assertAvailable(lines, products);
-    if (linkParty) assertPartyLimits(linkParty, who.clientId ?? null, lines);
     const id = Number(
       db
-        .prepare('INSERT INTO orders (guest_link_id, user_id, guest_name, note, party_id, client_id, for_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)')
-        .run(who.guestLinkId ?? null, who.userId ?? null, name, input.note?.trim() || null, partyId, who.clientId ?? null, target?.id ?? null).lastInsertRowid,
+        .prepare('INSERT INTO orders (guest_link_id, user_id, guest_name, note, client_id, for_user_id) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(who.guestLinkId ?? null, who.userId ?? null, name, input.note?.trim() || null, who.clientId ?? null, target?.id ?? null).lastInsertRowid,
     );
     const ins = db.prepare('INSERT INTO order_lines (order_id, product_id, name, qty, options, note) VALUES (?, ?, ?, ?, ?, ?)');
     for (const l of lines) ins.run(id, l.product_id, products.get(l.product_id)!.name, l.qty, JSON.stringify(l.options), l.note);
@@ -181,14 +222,15 @@ export function createOrder(
       return `${l.qty}× ${products.get(l.product_id)!.name}${extra.length ? ` (${extra.join(', ')})` : ''}`;
     })
     .join(', ');
-  const kind = orderKind({ guest_link_id: who.guestLinkId, party_id: partyId });
+  const kind = orderKind({ guest_link_id: who.guestLinkId });
   const what = input.note ? (text ? t('{items} – “{note}”', { items: text, note: input.note }) : `„${input.note}“`) : text;
   void notify({
     event: 'order.new',
     // at home it's a wish, not an order: "Mira would love something" – and only the chosen person's phone rings
-    title: kind === 'home' ? (target ? t('{name} asks you for something', { name }) : t('{name} would love something', { name })) : kind === 'party' ? t('Party order from {name}', { name }) : t('{name} (guest) would like something', { name }),
+    title: kind === 'home' ? (target ? t('{name} asks you for something', { name }) : t('{name} would love something', { name })) : t('{name} (guest) would like something', { name }),
     message: what,
-    path: kind === 'home' ? '/bestellen' : '/bar',
+    // one „Bring mir was“ for wishes from home and from guests
+    path: '/bestellen',
     toUserId: target?.id,
     data: { order_id: oid, guest: name, link: who.linkName ?? null, items: lines.length, kind, for_user_id: target?.id ?? null },
   });
@@ -198,10 +240,10 @@ export function createOrder(
 export function listOrders(where: string, ...args: (number | string)[]) {
   const rows = db
     .prepare(
-      `SELECT o.id, o.guest_name, o.status, o.note, o.created_at, o.updated_at, o.user_id, o.guest_link_id, o.party_id,
+      `SELECT o.id, o.guest_name, o.status, o.note, o.created_at, o.updated_at, o.user_id, o.guest_link_id,
          o.for_user_id, (SELECT name FROM users WHERE id = o.for_user_id) AS for_name, o.by_name, o.reason, o.thanked_at,
          (SELECT json_group_array(json_object('name', name, 'qty', qty, 'options', json(options), 'note', note)) FROM order_lines WHERE order_id = o.id) AS lines
-       FROM orders o WHERE ${where} ORDER BY id DESC LIMIT 20`,
+       FROM orders o WHERE ${NOT_LEGACY} AND (${where}) ORDER BY id DESC LIMIT 20`,
     )
     .all(...args) as any[];
   return rows.map((o) => ({ ...o, kind: orderKind(o), lines: JSON.parse(o.lines) }));
@@ -209,11 +251,12 @@ export function listOrders(where: string, ...args: (number | string)[]) {
 
 /**
  * What others in the household asked for and that I could bring: open requests addressed to me or to whoever can,
- * plus the ones I brought in the last hours (so I see a "thanks"). Guest and party orders live on the board (/bar).
+ * plus the ones I brought in the last hours (so I see a "thanks"). Wishes from guests (shared link) are in the same
+ * list – they are never addressed to one person, so everyone at home sees them.
  */
 export function requestsFor(userId: number) {
   return listOrders(
-    `o.guest_link_id IS NULL AND o.party_id IS NULL AND COALESCE(o.user_id, -1) != ?
+    `COALESCE(o.user_id, -1) != ?
      AND ((o.status IN ('new','accepted') AND (o.for_user_id IS NULL OR o.for_user_id = ? OR o.by_user_id = ?))
           OR (o.status = 'done' AND o.by_user_id = ? AND o.updated_at > datetime('now','-12 hours')))`,
     userId,
@@ -263,7 +306,7 @@ export function setOrderStatus(id: number, status: OrderStatus, opts: StatusOpts
     event: 'order.status',
     title: statusLine(kind, status, bringer, reason),
     message: what,
-    path: kind === 'home' ? '/bestellen' : '/bar',
+    path: '/bestellen',
     // only the person who asked – guests have no account, so nobody's phone rings for them
     toUserId: o.user_id ?? null,
     data: { order_id: o.id, status, kind, by: bringer, reason },

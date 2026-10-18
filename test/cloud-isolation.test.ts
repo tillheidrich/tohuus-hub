@@ -189,7 +189,7 @@ afterAll(() => {
 
 function getRoutes(): string[] {
   const out = new Set<string>();
-  const prefixes = ['/api/guest', '/api/party-board', '/api/kid', '/api'];
+  const prefixes = ['/api/guest', '/api/kid', '/api'];
   const walk = (stack: any[], prefix: string) => {
     for (const layer of stack) {
       if (layer.route) {

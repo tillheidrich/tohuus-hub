@@ -59,8 +59,8 @@ describe('Deine Leiste (web nav)', () => {
     expect(keys(myBar(undefined, {}, pref))).toEqual(['/', '/bestellen', '/einkauf', '/einkauf/wuensche', '/hausinfo']);
     // only main areas move to the top of Mehr
     expect(keys(areasInMore(undefined, {}, pref).tabs)).toEqual(['/kochen', '/aufgaben', '/bestand', '/geld']);
-    // the party mode is no area of the bar (off for the start)
-    expect(keys(myBar(undefined, {}, cleanNav(['party', 'tasks'])))).toEqual(['/', '/aufgaben']);
+    // unknown ids are dropped
+    expect(keys(myBar(undefined, {}, cleanNav(['nope', 'tasks'])))).toEqual(['/', '/aufgaben']);
   });
 
   it('respects "Was nutzt ihr?": Bring mir was leaves with its module', () => {

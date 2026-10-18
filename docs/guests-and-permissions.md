@@ -89,7 +89,7 @@ A guest link is a random token (stored as a hash) with a name, an optional expir
 | `stock` | read-only "where is what" for the chosen places: names and spots, no quantities; an optional note; optionally the voice command guide |
 | `shopping` | add to the shopping list |
 
-A babysitter link is a guest link with the `stock` scope and a note. A house-sitter link is created from a trip and ends the day after the trip. A party creates its own short-lived link that stops working when the party ends.
+A babysitter link is a guest link with the `stock` scope and a note. A house-sitter link is created from a trip and ends the day after the trip. Wishes through a guest link land in „Bring mir was“ next to the wishes from home; the link for that is shared there under „Gäste einladen“.
 
 The voice command guide on a sitter page never lists locks, alarms, cameras, people, trackers, garage doors or gates, even if someone adds them by hand ([`server/lib/ha2-safety.ts`](../server/lib/ha2-safety.ts)). Scripts only appear when an admin adds them explicitly.
 

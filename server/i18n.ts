@@ -7,7 +7,6 @@ import { lang } from './db.js';
 import { localeOf, type Lang } from './languages.js';
 import { de as deBase } from './locales/de.js';
 import { de_data } from './locales/de-data.js';
-import { de_party } from './locales/de-party.js';
 import { de_fresh } from './locales/de-fresh.js';
 import { de_shop } from './locales/de-shop.js';
 import { de_home } from './locales/de-home.js';
@@ -42,7 +41,7 @@ import { de_money } from './locales/de-money.js';
 import { de_money2 } from './locales/de-money2.js';
 import { de_core } from './locales/de-core.js';
 
-const de = { ...deBase, ...de_data, ...de_party, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order, ...de_assistant, ...de_rhythm, ...de_money, ...de_core, ...de_list2, ...de_recipepack, ...de_houseguide, ...de_cloudops, ...de_account, ...de_admin, ...de_money2, ...de_wish, ...de_knowledge, ...de_billing };
+const de = { ...deBase, ...de_data, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order, ...de_assistant, ...de_rhythm, ...de_money, ...de_core, ...de_list2, ...de_recipepack, ...de_houseguide, ...de_cloudops, ...de_account, ...de_admin, ...de_money2, ...de_wish, ...de_knowledge, ...de_billing };
 import { de_list2 } from './locales/de-list2.js';
 import { de_admin } from './locales/de-admin.js';
 

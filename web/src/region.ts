@@ -1,6 +1,6 @@
 /**
  * Household region on the web side: currency, number locale, units, first day of the week.
- * Separate from the UI language (i18n.ts). The server sends it with /me (and guest/party info);
+ * Separate from the UI language (i18n.ts). The server sends it with /me (and the guest info);
  * `setRegion()` stores it here and in localStorage so the next start formats right away.
  *
  *   money(3.49)        → "£3.49" / "3,49 €" / "$3.49" / "3,49 kr"

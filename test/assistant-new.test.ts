@@ -492,3 +492,80 @@ describe('Haushaltswissen with a model: read with history, take over a pasted no
     expect(memory.listMemory({ includeSensitive: true }).some((m: any) => /Mützengröße/.test(m.text))).toBe(false);
   });
 });
+
+// ------------------------------------------------------------------ "Müll rausgebracht" without a model (18 Oct, assistant-done.ts)
+
+describe('ticking off a task without AI', () => {
+  it('reads the sentences (pure), the old meanings stay', () => {
+    const p = (s: string) => parse.parseIntent(s);
+    expect(p('Ich hab den Müll rausgebracht')).toEqual({ kind: 'task_done', what: 'Müll', verb: 'rausgebracht' });
+    expect(p('Müll ist rausgebracht')).toEqual({ kind: 'task_done', what: 'Müll', verb: 'rausgebracht' });
+    expect(p('Spülmaschine ausgeräumt')).toEqual({ kind: 'task_done', what: 'Spülmaschine', verb: 'ausgeräumt' });
+    expect(p('hab gestaubsaugt')).toEqual({ kind: 'task_done', what: '', verb: 'gestaubsaugt' });
+    expect(p('Hab gerade die Blumen gegossen!')).toEqual({ kind: 'task_done', what: 'Blumen', verb: 'gegossen' });
+    expect(p('I took the bins out')).toEqual({ kind: 'task_done', what: 'bins', verb: 'took out' });
+    expect(p('Hab den Müll aus Versehen abgehakt').kind).toBe('undo_done');
+    expect(p('Die Biotonne war doch noch nicht raus').kind).toBe('undo_done');
+    expect(p('Hab bei Aldi Milch und Brot gekauft').kind).toBe('purchase');
+    expect(p('Hast du den Müll rausgebracht?').kind).not.toBe('task_done');
+    expect(p('Milch ist alle').kind).toBe('add');
+  });
+
+  it('ticks off the one open task with undo, asks when several fit, says so when none fits', async () => {
+    const mk = (name: string, due = day(0)) => (care.createCareTask({ name, category: 'house', interval_n: 1, interval_unit: 'week', next_due: due } as never, tillId) as { id: number }).id;
+    const out = mk('Spülmaschine ausräumen');
+    const into = mk('Spülmaschine einräumen');
+    const vac = mk('Staubsaugen');
+    const r = await till.chat('Spülmaschine ausgeräumt');
+    expect(r.json.mode).toBe('basic');
+    expect(r.json.reply).toBe('Super, „Spülmaschine ausräumen“ ist abgehakt.');
+    expect(care.getCareTask(out)!.last_done).toBe(day(0));
+    expect(care.getCareTask(into)!.last_done).toBeNull();
+    expect((await till.req('POST', `/api/assistant/undo/${r.json.actions[0].undo}`)).json.ok).toBe(true);
+    expect(care.getCareTask(out)!.last_done).toBeNull();
+
+    expect((await lea.chat('hab gestaubsaugt')).json.reply).toBe('Super, „Staubsaugen“ ist abgehakt.');
+    expect((await lea.chat('Hab gestaubsaugt')).json.reply).toBe('„Staubsaugen“ ist heute schon abgehakt.');
+
+    // two bins due: ask which one, nothing ticked
+    const bio = mk('Biotonne raus');
+    const yellow = mk('Gelbe Tonne raus');
+    const a = await till.chat('Ich hab den Müll rausgebracht');
+    expect(a.json.reply).toBe('Welche meinst du: Biotonne raus und Gelbe Tonne raus? Sag z. B. „Biotonne raus erledigt“.');
+    expect(a.json.actions).toEqual([]);
+    expect((await till.chat('Biotonne ist raus')).json.reply).toBe('Super, „Biotonne raus“ ist abgehakt.');
+    // the bio bin is done → "Müll" now clearly means the yellow one
+    expect((await till.chat('Müll ist rausgebracht')).json.reply).toBe('Super, „Gelbe Tonne raus“ ist abgehakt.');
+    expect((await till.chat('Fenster geputzt')).json.reply).toBe('Zu „Fenster“ finde ich keine offene Aufgabe. Du kannst sie unter Aufgaben anlegen.');
+    for (const id of [out, into, vac, bio, yellow]) care.deleteCareTask(id);
+  });
+});
+
+describe('the verb has to fit (aus-/ein-, auf-/zu-, raus-/rein-)', () => {
+  it('never ticks off the opposite task, also when only that one is due', async () => {
+    const mk = (name: string, due: string) => (care.createCareTask({ name, category: 'house', interval_n: 1, interval_unit: 'week', next_due: due } as never, tillId) as { id: number }).id;
+    // only "einräumen" is due – "ausgeräumt" must still not touch it
+    const into = mk('Spülmaschine einräumen', day(0));
+    expect((await till.chat('Spülmaschine ausgeräumt')).json.reply).toBe('Zu „Spülmaschine“ finde ich keine offene Aufgabe. Du kannst sie unter Aufgaben anlegen.');
+    expect(care.getCareTask(into)!.last_done).toBeNull();
+    const out = mk('Spülmaschine ausräumen', day(5));
+    expect((await till.chat('Spülmaschine ausgeräumt')).json.reply).toBe('Super, „Spülmaschine ausräumen“ ist abgehakt.');
+    expect(care.getCareTask(into)!.last_done).toBeNull();
+    expect((await till.chat('Hab die Spülmaschine eingeräumt')).json.reply).toBe('Super, „Spülmaschine einräumen“ ist abgehakt.');
+    expect(care.getCareTask(out)!.last_done).toBe(day(0));
+
+    const up = mk('Kinderzimmer aufräumen', day(0));
+    const shut = mk('Fenster zumachen', day(0));
+    expect((await till.chat('Kinderzimmer ausgeräumt')).json.reply).toBe('Zu „Kinderzimmer“ finde ich keine offene Aufgabe. Du kannst sie unter Aufgaben anlegen.');
+    expect((await till.chat('Fenster aufgemacht')).json.reply).toBe('Zu „Fenster“ finde ich keine offene Aufgabe. Du kannst sie unter Aufgaben anlegen.');
+    expect(care.getCareTask(shut)!.last_done).toBeNull();
+    expect((await till.chat('Kinderzimmer aufgeräumt')).json.reply).toBe('Super, „Kinderzimmer aufräumen“ ist abgehakt.');
+
+    const bins = mk('Gartenstühle reinholen', day(0));
+    expect((await till.chat('Gartenstühle rausgestellt')).json.reply).toBe('Zu „Gartenstühle“ finde ich keine offene Aufgabe. Du kannst sie unter Aufgaben anlegen.');
+    expect(care.getCareTask(bins)!.last_done).toBeNull();
+    // "erledigt" has no verb of its own – it fits any task
+    expect((await till.chat('Gartenstühle reinholen erledigt')).json.reply).toBe('Super, „Gartenstühle reinholen“ ist abgehakt.');
+    for (const id of [into, out, up, shut, bins]) care.deleteCareTask(id);
+  });
+});

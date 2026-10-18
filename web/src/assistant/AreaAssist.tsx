@@ -17,7 +17,7 @@ const EXAMPLES = (): Record<ScreenContext, string[]> => ({
   cook: [t('Plan the week with what we have'), t('Make it vegetarian for 6')],
   money: [t('Why was this month more expensive?'), t('Where can we save?')],
   house: [t('We have Alexa and Hue in the living room – write it up for the babysitter')],
-  guests: [t('Party on Saturday with 12 guests – what do we need?')],
+  guests: [t('12 guests on Saturday – what do we need?')],
   tasks: [t('What’s due today?'), t('Bathroom every Saturday, Mira and Sam take turns'), t('How do we share the housework?')],
   wishes: [t('What’s on the wish lists?'), t('Put a Lego train on my Merkliste')],
   knowledge: [t('Mika has 29 now'), t('Make the blind measurement visible to everyone')],

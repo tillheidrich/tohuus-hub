@@ -24,12 +24,39 @@ struct RecognitionReport: Decodable, Sendable {
     var counts: Counts?
     var goods: Int?
     var rules: Int?
+    /// receipt total minus the lines (nil when it adds up)
+    var difference: Double?
+    /// rows filled in from the total because the photo did not show them
+    @Lossy var assumed: [Assumed]
+    /// unmatched lines with a clean name: they become new products ("new", not "not recognised")
+    var newLines: Int?
+    /// "Read again with AI": available now, today's allowance (left nil = no daily limit)
+    var ai: AIState?
+    var aiUndo: Bool?
+    var hasSource: Bool?
 
     struct LineGrade: Decodable, Sendable, Hashable {
         var id: Int
         /// learned | sure | suggested | unmatched | ignored | none
         var grade: String?
+        var new: Bool?
         var corrected: Bool?
+    }
+
+    struct Assumed: Decodable, Sendable, Hashable {
+        var kind: String
+        var amount: Double
+        var label: String {
+            let a = String(format: "%.2f", amount).replacingOccurrences(of: ".", with: ",")
+            return kind == "discount" ? LF("discount -%@", a) : LF("deposit %@", a)
+        }
+    }
+
+    struct AIState: Decodable, Sendable {
+        var available: Bool
+        var left: Int?
+        var perDay: Int?
+        var paused: Bool?
     }
 
     struct Counts: Decodable, Sendable {
@@ -41,6 +68,7 @@ struct RecognitionReport: Decodable, Sendable {
     }
 
     func grade(of lineId: Int) -> String? { lines.first { $0.id == lineId }?.grade }
+    func isNew(_ lineId: Int) -> Bool { lines.first { $0.id == lineId }?.new == true }
 }
 
 /// GET /api/quality/imports/:id/fixture?names=1|0 – the anonymised test file, built on request, sent nowhere.

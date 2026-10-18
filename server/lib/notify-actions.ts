@@ -83,8 +83,8 @@ export function runNotifyAction(action: NotifyAction, data: Record<string, unkno
       on_shopping_list: r.on_shopping_list,
     };
   }
-  const o = db.prepare('SELECT id, status, user_id, guest_link_id, party_id FROM orders WHERE id = ?').get(ref) as
-    | { id: number; status: string; user_id: number | null; guest_link_id: number | null; party_id: number | null }
+  const o = db.prepare('SELECT id, status, user_id, guest_link_id FROM orders WHERE id = ?').get(ref) as
+    | { id: number; status: string; user_id: number | null; guest_link_id: number | null }
     | undefined;
   if (!o) throw httpError(404, 'not found');
   const kind = orderKind(o);
@@ -93,7 +93,7 @@ export function runNotifyAction(action: NotifyAction, data: Record<string, unkno
   if (action === 'order-accept') {
     if (o.status === 'new') setOrderStatus(o.id, 'accepted', { by });
     const status = o.status === 'new' ? 'accepted' : o.status;
-    return { ok: true, summary: o.status === 'new' ? (kind === 'home' ? t('{name} is bringing it', { name: actor }) : t('Accepted by {name}', { name: actor })) : statusText(o.status), status, kind };
+    return { ok: true, summary: o.status === 'new' ? t('{name} is bringing it', { name: actor }) : statusText(o.status), status, kind };
   }
   if (action === 'order-decline') {
     if (open) setOrderStatus(o.id, 'declined', { by });
@@ -102,7 +102,7 @@ export function runNotifyAction(action: NotifyAction, data: Record<string, unkno
   // order-done
   if (open) setOrderStatus(o.id, 'done', { by });
   const status = open ? 'done' : o.status;
-  return { ok: true, summary: status === 'done' && o.status !== 'done' ? (kind === 'home' ? t('Brought by {name}', { name: actor }) : t('Served by {name}', { name: actor })) : statusText(o.status), status, kind };
+  return { ok: true, summary: status === 'done' && o.status !== 'done' ? t('Brought by {name}', { name: actor }) : statusText(o.status), status, kind };
 }
 
 /** A notification button only knows the actor's display name; map it back to a member when it is unique. */

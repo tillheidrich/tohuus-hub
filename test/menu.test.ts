@@ -10,7 +10,6 @@ let db: typeof import('../server/db').db;
 let catalog: typeof import('../server/lib/catalog');
 let menu: typeof import('../server/lib/menu');
 let orders: typeof import('../server/lib/orders');
-let party: typeof import('../server/lib/party');
 
 let cappuccino: number;
 let espresso: number;
@@ -42,12 +41,11 @@ beforeAll(async () => {
   catalog.adjustStock({ productId: beans, set: 3, reason: 'test', silent: true });
   menu = await import('../server/lib/menu');
   orders = await import('../server/lib/orders');
-  party = await import('../server/lib/party');
 });
 
 const items = () => menu.menuView().groups.flatMap((g) => g.items);
 const item = (id: number) => items().find((i) => i.id === id)!;
-const guestIds = (ctx: { family: boolean; party: boolean }) => menu.guestMenu(ctx).map((i) => i.id);
+const guestIds = (ctx: { family: boolean }) => menu.guestMenu(ctx).map((i) => i.id);
 
 describe('migration of existing orderable products', () => {
   it('puts every orderable product into a group without losing anything', () => {
@@ -80,24 +78,24 @@ describe('migration of existing orderable products', () => {
 describe('availability', () => {
   it('marks a stock item out when it runs out, or hides it', () => {
     expect(item(iceCream).state).toBe('out');
-    const g = menu.guestMenu({ family: false, party: false });
+    const g = menu.guestMenu({ family: false });
     expect(g.find((i) => i.id === iceCream)?.available).toBe(false);
     menu.updateItem(iceCream, { when_out: 'hide' });
-    expect(guestIds({ family: false, party: false })).not.toContain(iceCream);
+    expect(guestIds({ family: false })).not.toContain(iceCream);
     catalog.adjustStock({ productId: iceCream, delta: 1, reason: 'test', silent: true });
-    expect(guestIds({ family: false, party: false })).toContain(iceCream);
+    expect(guestIds({ family: false })).toContain(iceCream);
     expect(item(iceCream).state).toBe('few');
   });
 
-  it('applies hidden / only at parties / only for family', () => {
+  it('applies hidden / only for family; a stored "only at parties" (former party mode) reads as hidden', () => {
     menu.setAvailability(espresso, 'family');
-    menu.setAvailability(cola, 'party');
-    expect(guestIds({ family: false, party: false })).not.toContain(espresso);
-    expect(guestIds({ family: true, party: false })).toContain(espresso);
-    expect(guestIds({ family: true, party: false })).not.toContain(cola);
-    expect(guestIds({ family: false, party: true })).toContain(cola);
+    expect(guestIds({ family: false })).not.toContain(espresso);
+    expect(guestIds({ family: true })).toContain(espresso);
+    db.prepare(`UPDATE menu_items SET availability = 'party' WHERE product_id = ?`).run(cola);
+    expect(item(cola).availability).toBe('hidden');
+    expect(guestIds({ family: true })).not.toContain(cola);
     menu.setAvailability(cola, 'hidden');
-    expect(guestIds({ family: true, party: true })).not.toContain(cola);
+    expect(guestIds({ family: true })).not.toContain(cola);
     // household members still find a hidden stock item in "everything else in the house"
     expect(orders.orderMenu(true).find((i) => i.id === cola)?.bar).toBe(false);
     expect(orders.orderMenu(false).map((i) => i.id)).not.toContain(cola);
@@ -111,13 +109,11 @@ describe('availability', () => {
     menu.setAvailability(espresso, 'available');
   });
 
-  it('keeps family-only and hidden items off the party menu', () => {
+  it('keeps family-only and hidden items off the menu a guest link sees', () => {
     menu.setAvailability(espresso, 'family');
-    const p = party.startParty({ name: 'Garden party', hours: 2 }, 'Till');
-    const ids = party.partyMenu(p.id, null).map((m) => m.id);
+    const ids = orders.orderMenu(false).map((m) => m.id);
     expect(ids).toContain(cappuccino);
     expect(ids).not.toContain(espresso);
-    party.endParty(p.id, 'manual');
     menu.setAvailability(espresso, 'available');
   });
 });
@@ -142,7 +138,7 @@ describe('ingredients from stock', () => {
     const it = item(cappuccino);
     expect(it.state).toBe('maybe');
     expect(it.hint).toContain('Milk');
-    expect(menu.guestMenu({ family: false, party: false }).find((i) => i.id === cappuccino)?.available).toBe(true);
+    expect(menu.guestMenu({ family: false }).find((i) => i.id === cappuccino)?.available).toBe(true);
   });
 
   it('refuses untracked ingredients and more than three', () => {

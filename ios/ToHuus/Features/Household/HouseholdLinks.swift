@@ -49,7 +49,7 @@ struct MoreSections: View {
                     }
                 }
                 if allows("/bar") {
-                    NavigationLink { GuestsPartyView(store: store) } label: { Label(app.modules["party"] == true ? L("Guests & party") : L("Guests"), systemImage: "wineglass") }
+                    NavigationLink { GuestLinksView(api: api, guestsArea: true) } label: { Label(L("Guests"), systemImage: "wineglass") }
                 }
                 if showTreats {
                     NavigationLink { TreatsView(api: api) } label: { Label(L("Treats"), systemImage: "hand.raised") }
@@ -100,7 +100,7 @@ struct MoreSections: View {
                 case "invites": InvitesView(api: api)
                 case "memory": KnowledgeView(api: api)
                 case "treats": TreatsView(api: api)
-                case "guests": GuestsPartyView(store: store)
+                case "guests": GuestLinksView(api: api, guestsArea: true)
                 case "guestlinks", "guestlink-new": GuestLinksView(api: api)
                 case "house", "housecard-new", "housecard-edit", "housecode-new", "house-templates", "house-log": HouseGuideView()
                 case "care": CareView(api: api)

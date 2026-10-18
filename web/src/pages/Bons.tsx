@@ -33,7 +33,7 @@ interface PrinterRow {
   cut: 'partial' | 'full' | 'none';
   darkness: number;
   feed_lines: number;
-  auto_orders: 'off' | 'party' | 'all';
+  auto_orders: 'off' | 'all';
   auto_care: boolean;
   is_default: boolean;
   last_ok_at: string | null;
@@ -315,7 +315,7 @@ async function printBluetooth(spec: BonSpec, paper: Paper): Promise<string> {
 // ---------------------------------------------------------------- Settings › Printers & tickets
 
 const darknessLabel = (d: number) => ({ '-2': t('very light'), '-1': t('lighter'), '0': t('normal'), '1': t('darker'), '2': t('very dark') })[String(d)] ?? t('normal');
-const autoOrdersLabel = (a: PrinterRow['auto_orders']) => ({ off: t('off'), party: t('during parties'), all: t('always') })[a];
+const autoOrdersLabel = (a: PrinterRow['auto_orders']) => ({ off: t('off'), all: t('always') })[a] ?? t('off');
 
 export function PrintSettings({ admin }: { admin: boolean }) {
   const q = useApi<PrintInfo>('print-info', '/print/info');
@@ -604,7 +604,7 @@ function PrinterSheet({ p, onClose }: { p: PrinterRow | null; onClose: () => voi
         </div>
         <div className="field">
           <label>{t('Print new orders automatically')}</label>
-          <Seg value={f.auto_orders} onChange={(v) => set('auto_orders', v)} options={[['off', t('off')], ['party', t('during parties')], ['all', t('always')]]} />
+          <Seg value={f.auto_orders} onChange={(v) => set('auto_orders', v)} options={[['off', t('off')], ['all', t('always')]]} />
           <div className="help">{t('A kitchen ticket for every new sofa or guest order – only orders that come in after you switch this on.')}</div>
         </div>
         <div className="row between">

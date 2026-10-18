@@ -222,11 +222,8 @@ const userName = (id: number | null) => (id ? ((db.prepare('SELECT name FROM use
 export function keyboardFor(event: string, data: Record<string, unknown> = {}, url?: string): Keyboard {
   const cb = (text: string, action: string, id: unknown): Button => ({ text, callback_data: `a:${action}:${Number(id)}` });
   if ((event === 'stock.low' || event === 'stock.empty') && data.product_id && !data.on_shopping_list) return [[cb(t('Add to list'), 'shop-add', data.product_id)]];
-  // at home "I'll bring it" / "Can't right now", for guests and parties "On it" / "Ready"
-  if (event === 'order.new' && data.order_id)
-    return data.kind === 'home'
-      ? [[cb(t('I’ll bring it'), 'order-accept', data.order_id), cb(t('Can’t right now'), 'order-decline', data.order_id)]]
-      : [[cb(t('On it'), 'order-accept', data.order_id), cb(t('Ready'), 'order-done', data.order_id)]];
+  // „Bring mir was“ – the same two buttons for wishes from home and from guests
+  if (event === 'order.new' && data.order_id) return [[cb(t('I’ll bring it'), 'order-accept', data.order_id), cb(t('Can’t right now'), 'order-decline', data.order_id)]];
   if (event === 'kids.wish' && data.wish_id) return [[cb(t('Approve'), 'kid-approve', data.wish_id), cb(t('Not now'), 'kid-decline', data.wish_id)]];
   if (event === 'care.due' && data.care_task_id) return [[cb(t('Done'), 'care-done', data.care_task_id)]];
   if (event === 'import.review' && url && /^https:\/\//.test(url)) return [[{ text: t('Check now'), url }]];
@@ -625,8 +622,8 @@ async function onCallback(q: TgCallback) {
   try {
     const r = runNotifyAction(action, { [key]: Number(m[2]) }, actor);
     summary = r.summary;
-    // accepted, but not served yet: keep the "Ready" button
-    if (action === 'order-accept' && r.status === 'accepted') keep = [[{ text: r.kind === 'home' ? t('Brought it') : t('Ready'), callback_data: `a:order-done:${Number(m[2])}` }]];
+    // accepted, but not brought yet: keep the "Brought it" button
+    if (action === 'order-accept' && r.status === 'accepted') keep = [[{ text: t('Brought it'), callback_data: `a:order-done:${Number(m[2])}` }]];
   } catch (e) {
     summary = (e as { status?: number }).status === 404 ? t('This is no longer there.') : t('Sorry, that didn’t work: {error}', { error: (e as Error).message });
   }

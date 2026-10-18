@@ -201,15 +201,13 @@ interface OrderRow {
   note: string | null;
   created_at: string;
   user_id: number | null;
-  party_id: number | null;
   guest_link_id: number | null;
   for_user_id?: number | null;
 }
 
 /**
  * Who ordered. Every order carries a name since wave 6 (guests must give one), and the kitchen ticket is for the
- * people preparing it – so the name is always printed, also at parties (the public party board still follows the
- * party's "show names" switch).
+ * people preparing it – so the name is always printed.
  */
 export function orderWho(o: OrderRow): { name: string | null; sofa: boolean } {
   return { name: o.guest_name?.trim() || null, sofa: Boolean(o.user_id) };
@@ -223,7 +221,7 @@ function orderTicket(spec: TicketSpec): Ticket {
   const no = `#${String(o.id).padStart(3, '0')}`;
   const time = new Intl.DateTimeFormat(locale(), { timeZone: config.timezone, hour: '2-digit', minute: '2-digit' }).format(sqlDate(o.created_at));
   // a household request ("bring me a vanilla ice cream") is a wish slip, not a kitchen order
-  const home = !o.guest_link_id && !o.party_id;
+  const home = !o.guest_link_id;
   const title = fredi() ? t('Delivery note') : home ? t('Please bring') : t('Kitchen ticket');
   const meta: [string, string][] = [
     [home ? t('Wish') : t('Order'), no],
@@ -253,7 +251,7 @@ function orderTicket(spec: TicketSpec): Ticket {
     title,
     file: fredi() ? 'delivery-note' : 'kitchen-ticket',
     summary: `${title} ${no}`,
-    blocks: [...header(title, meta), ...body, ...footer(appUrl(home ? '/bestellen' : '/bar'), home ? t('Open in the app') : t('Open the order board'), fredi() ? t('Thanks for ordering with Fredirando!') : undefined)],
+    blocks: [...header(title, meta), ...body, ...footer(appUrl('/bestellen'), t('Open in the app'), fredi() ? t('Thanks for ordering with Fredirando!') : undefined)],
   };
 }
 

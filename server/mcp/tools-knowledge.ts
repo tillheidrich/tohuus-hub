@@ -12,7 +12,9 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { db } from '../db.js';
 import { currentAiActor } from '../lib/ai-policy.js';
-import { runTaskTool } from '../lib/assistant-tasks.js';
+import { taskWhen } from '../lib/assistant-parse.js';
+import { addTask, runTaskTool } from '../lib/assistant-tasks.js';
+import { localDay } from '../lib/catalog.js';
 import { deleteEntry, getEntry, KnowledgeError, createEntry, updateEntry, type KViewer } from '../lib/knowledge.js';
 import { EXPORT_FORMATS, exportKnowledge, findForAi, importNote } from '../lib/knowledge-io.js';
 import { healthShareAllowed } from '../lib/people-signals.js';
@@ -199,6 +201,66 @@ export function register(s: McpServer, actorName: string) {
     async ({ task }) => {
       const out = runTaskTool(taskCtx(), 'task_undo_done', { task }, () => {}) as { error?: string };
       return out?.error ? fail(out.error) : text(out);
+    },
+  );
+
+  s.registerTool(
+    'add_task',
+    {
+      title: 'Add a task or appointment',
+      description:
+        'Creates a household task (area house: chores like vacuuming, bins, bathroom) or a care task / deadline (area care) – the same way the ToHuus assistant does. ' +
+        'With a date and a time it is an appointment and shows up in the calendar (Termine). The name may carry the day and time in German or English ("Zahnarzt Dienstag um 10", ' +
+        '"Elternabend am 24.10. um 19 Uhr") when date/time are not passed. Without date and rhythm it is due today. Rhythm: every + unit. ' +
+        'only_me makes it private (only for a member connection).',
+      inputSchema: {
+        name: z.string().min(1).max(160).describe('What to do, e.g. "Bad putzen", or with day/time "Zahnarzt Dienstag um 10"'),
+        date: z.string().regex(/^\d{4}-\d\d-\d\d$/).optional().describe('YYYY-MM-DD – first or only date'),
+        time: z.string().regex(/^\d{1,2}:\d{2}$/).optional().describe('HH:MM – makes it an appointment (calendar entry)'),
+        minutes: z.number().int().min(5).max(1440).optional().describe('How long the appointment takes'),
+        place: z.string().max(120).optional().describe('Where the appointment is'),
+        area: z.enum(['house', 'care']).optional().describe('house = household chore (default), care = care & deadlines'),
+        every: z.number().int().min(1).max(1000).optional().describe('Rhythm number, e.g. 2'),
+        unit: z.enum(['day', 'week', 'month', 'year']).optional().describe('Rhythm unit'),
+        as_needed: z.boolean().optional().describe('No date, done when needed'),
+        doer: z.string().max(60).optional().describe('Who does it (a member or a household guest)'),
+        take_turns: z.array(z.string().max(60)).max(10).optional().describe('Names, in order, who take turns'),
+        steps: z.array(z.string().max(120)).max(30).optional().describe('Sub-items, e.g. sink, mirror, floor'),
+        only_me: z.boolean().optional(),
+      },
+      annotations: RW,
+    },
+    async (a) => {
+      const today = localDay(0);
+      let name = a.name.trim();
+      let date = a.date ?? null;
+      let time = a.time ?? null;
+      // "Zahnarzt Dienstag um 10" – the assistant's reader takes day and time out of the name
+      if (!date && !time && !a.every && !a.as_needed) {
+        const w = taskWhen(name, today);
+        name = w.name;
+        date = w.day;
+        time = w.time;
+      }
+      if (time && !date) date = today;
+      if (!date && !a.every && !a.as_needed) date = today;
+      const out = addTask(taskCtx(), {
+        name,
+        due: date,
+        time,
+        minutes: a.minutes,
+        place: a.place,
+        area: a.area ?? 'house',
+        every_n: a.every,
+        every_unit: a.unit ?? (a.every ? 'week' : undefined),
+        as_needed: a.as_needed,
+        doer: a.doer,
+        take_turns: a.take_turns,
+        steps: a.steps,
+        only_me: a.only_me,
+      }, () => {}) as { ok?: boolean; error?: string; task?: unknown };
+      if (out?.error) return fail(out.error);
+      return text({ ...out, appointment: Boolean(time), in_calendar: Boolean(time) });
     },
   );
 }

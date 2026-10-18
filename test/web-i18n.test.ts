@@ -13,7 +13,7 @@ const LOCALES = path.join(ROOT, 'locales', 'de');
 
 // the same in German on purpose (names, loan words); keys made only of placeholders/symbols pass anyway
 const SAME_IN_GERMAN = new Set<string>([
-  'Budget', 'Admin', 'Dashboard', 'Display', 'Timer', 'Home Assistant', 'ToHuus', 'ToHuus Cloud', 'Party', 'Link', 'Passkey',
+  'Budget', 'Admin', 'Dashboard', 'Display', 'Timer', 'Home Assistant', 'ToHuus', 'ToHuus Cloud', 'Link', 'Passkey',
   'Snacks', 'Extras', 'Toppings', 'Pizza', 'optional', 'live', 'Post', 'Plus', 'Free', 'Matrix', 'Telegram', 'Gotify', 'ntfy',
   'Webhook', 'Cookidoo', 'Thermomix', 'Markdown', 'CSV', 'JSON', 'PDF', 'Name', 'Status', 'Start', 'Info', 'Tag', 'Sofa',
   'Bring mir was', // feature name, German in both languages

@@ -367,9 +367,10 @@ describe('with a model (fake)', () => {
     expect(bodies[0].messages[0].role).toBe('system');
     expect(bodies[0].messages[0].content).toMatch(/Du bist ToHuus/);
     expect(bodies[0].messages[0].content).toMatch(/Brot beim Bäcker/);
-    expect(bodies[0].tools.map((t: any) => t.function.name)).toEqual(expect.arrayContaining(['list_add', 'check_at_home', 'stock_find', 'cook_ideas', 'remember', 'forget']));
-    // only the tools this message can need
+    expect(bodies[0].tools.map((t: any) => t.function.name)).toEqual(expect.arrayContaining(['list_add', 'check_at_home', 'stock_find', 'cook_ideas', 'remember']));
+    // only the tools this message can need ("forget" only when something should be forgotten, 18 Oct 2026)
     expect(bodies[0].tools.map((t: any) => t.function.name)).not.toContain('money_summary');
+    expect(bodies[0].tools.map((t: any) => t.function.name)).not.toContain('forget');
     expect(bodies[0].provider).toEqual({ order: ['mistral'], allow_fallbacks: false, data_collection: 'deny' });
     await till.req('POST', `/api/assistant/undo/${r.json.actions[0].undo}`);
   });

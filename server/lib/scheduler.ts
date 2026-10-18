@@ -9,7 +9,6 @@ import { haSettings, syncCookidoo } from './plan.js';
 import { fmtDay, t } from '../i18n.js';
 import { checkCareDue, sendCareBundles } from './care.js';
 import { checkBudgets } from './spend2.js';
-import { startPartyScheduler } from './party.js';
 import { startPeopleScheduler } from './people.js';
 import { startInboxPoller } from './retail-inbox.js';
 import { notPrivate } from './share-core.js';
@@ -117,7 +116,6 @@ export async function householdTick() {
  */
 export function startScheduler() {
   startPeopleScheduler();
-  startPartyScheduler();
   startInboxPoller();
   let busy = false;
   const tick = async () => {
